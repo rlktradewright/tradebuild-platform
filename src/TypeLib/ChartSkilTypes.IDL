@@ -1,0 +1,249 @@
+// Generated .IDL file (by the OLE/COM Object Viewer)
+// 
+// typelib filename: ChartSkilTypes.dll
+
+[
+  uuid(b51712d1-0ba6-43f1-8025-14ac8c1c017d),
+  version(1.0),
+  helpstring("ChartSkil Type Library"),
+
+]
+library ChartSkilTypes
+{
+    // TLib :     // TLib : OLE Automation : {00020430-0000-0000-C000-000000000046}
+    importlib("stdole2.tlb");
+
+    // Forward declare all types defined in this typelib
+    interface IGraphicObject;
+    interface IRectangle;
+    interface IInterval;
+
+
+    // Types    
+
+    typedef [uuid(461b3b8a-3cfa-49c8-82a8-eff8c23a906e),
+      version(1.0),
+      helpstring("Defines a rectangle")
+    ]
+    struct TRectangle {
+
+	[helpstring("Indicates whether the rectangle's values are valid")]
+	VARIANT_BOOL isValid;
+
+	[helpstring("The X coordinate of the rectangle's left side")]
+	double left;
+
+	[helpstring("The X coordinate of the rectangle's right side")]
+	double right;
+
+	[helpstring("The Y coordinate of the rectangle's bottom side")]
+	double bottom;
+
+	[helpstring("The Y coordinate of the rectangle's top side")]
+	double top;
+    };
+
+
+    // Enums
+
+    typedef [uuid(34e41de0-c228-44b4-8b55-3d0beb81c80f),
+      version(1.0),
+      helpstring("Specifies the range of values allowed for layer numbers")
+    ]
+    enum {
+	[helpstring("The smallest layer number that can be assigned to a graphic object")]
+	MinLayer = 0,
+	[helpstring("The largest layer number that can be assigned to a graphic object")]
+	MaxLayer = 255
+    } LayerNumberRange;
+
+
+    typedef [uuid(184fc84e-3d72-4bcb-973e-935cb92be492),
+      version(1.0),
+      helpstring("Defines capability constants")
+    ]
+    enum {
+	[helpstring("The graphic object supports complex bounding")]
+	ComplexBounding = 1,
+	[helpstring("The graphic object supports partial redraw")]
+	PartialRedraw = 2,
+	[helpstring("The graphic object uses block undraw")]
+	BlockUndraw = 4
+    } Capabilities;
+
+    // Interfaces
+
+    [
+      uuid(a3d29cad-9fb5-42f5-8d13-c23debb709d2),
+      version(1.0),
+      nonextensible,
+      helpstring("Implemented by classes whose objects are to be drawn on a chart region")
+    ]
+    interface IGraphicObject : IUnknown {
+
+	// Properties=================================================
+        
+	[propget, 
+         helpstring("Indicates that the object is not to be drawn at present")
+        ]
+        HRESULT noDraw([out, retval] VARIANT_BOOL* );
+
+        [propget, 
+         helpstring("Returns a rectangle that encloses the object")
+        ]
+        HRESULT boundingRectangle(
+			[in] VARIANT_BOOL xBoundsChanged,
+			[in] VARIANT_BOOL yBoundsChanged,
+			[in] VARIANT_BOOL gaugeChanged,
+			[in] double gaugeX,
+			[in] double gaugeY,
+			[in, out] struct TRectangle* regionRect,
+			[out, retval] struct TRectangle* );
+
+        [propget, 
+         helpstring("Returns a bit-sgnificant value that indicates the object's capabilities")]
+        HRESULT capabilities([out, retval] long* );
+
+        [propget, 
+         helpstring("Indicates that the object extends over more than one period")]
+        HRESULT extendedObject([out, retval] VARIANT_BOOL* );
+
+        [propget, 
+         helpstring("Indicates that the object's bounding rectangle depends on the drawing surface's gauge (ie pixels per unit)")
+        ]
+        HRESULT gaugeDependent([out, retval] VARIANT_BOOL* );
+
+        [propput, 
+         helpstring("Supplies the graphic object handle")]
+        HRESULT handle([in] long periodNumber );
+
+        [propget, 
+         helpstring("Indicates that the object is to be visible in the chart region when it autoscales (provided it is within the horizontal bounds of the chart region's visible area)")]
+        HRESULT includeInAutoscale([out, retval] VARIANT_BOOL* );
+
+        [propput, 
+         helpstring("Indicates whether the graphic object is currently in scope")]
+        HRESULT inScope([in] VARIANT_BOOL inScope );
+
+        [propget, 
+         helpstring("Returns the number of the layer on which the object is to be drawn")]
+        HRESULT layer([out, retval] long* );
+
+        [propget, 
+         helpstring("Returns the period number at which the object is located")]
+        HRESULT periodNumber([out, retval] long* );
+
+        [propget, 
+         helpstring("Indicates that the object's bounding rectangle depends on the drawing surface's current bounds")
+        ]
+        HRESULT scaleDependent([out, retval] VARIANT_BOOL* );
+
+        [propput, 
+         helpstring("Indicates whether the graphic object is currently visible")]
+        HRESULT visible([in] VARIANT_BOOL visible );
+
+	// Methods =====================================================
+
+        [helpstring("Returns an array of rectangles that cover the object at the specified period number")]
+        HRESULT boundingRectanglesAt([in] long periodNumber, 
+			[out, retval] SAFEARRAY(struct TRectangle)* );
+
+        [helpstring("Tells the object to draw the part(s) of itself contained in the specified rectangles")]
+        HRESULT draw([in, out] SAFEARRAY(struct TRectangle)* areas);
+
+        [helpstring("Tels the object to undraw the part of itself contained in the specified rectangle")]
+        HRESULT undraw([in, out] struct TRectangle* area);
+
+    };
+
+    [
+      uuid(62d2f0dd-100a-4a8d-9612-226036635bbb),
+      version(1.0),
+      nonextensible,
+      oleautomation
+    ]
+    interface IRectangle : IUnknown {
+
+	// Properties=================================================
+        
+        [propget,
+	 helpstring("Returns the Y coordinate of the bottom of the rectangle")]
+        HRESULT bottom([out, retval] double* );
+
+        [propget,
+	 helpstring("Returns the X coordinate of the left edge of the rectangle")]
+        HRESULT left([out, retval] double* );
+        [propget,
+	 helpstring("Returns the X coordinate of the right edge of the rectangle")]
+        HRESULT right([out, retval] double* );
+
+        [propget,
+	 helpstring("Returns the Y coordinate of the top of the rectangle")]
+        HRESULT top([out, retval] double* );
+
+        [propget,
+	 helpstring("Returns an IInterval corresponding to the rectangle's width")]
+        HRESULT XInterval([out, retval] IInterval** );
+
+        [propget,
+	 helpstring("Returns an IInterval corresponding to the rectangle's height")]
+        HRESULT YInterval([out, retval] IInterval** );
+
+	// Methods =====================================================
+
+        [helpstring("Returns an IRectangle that is the intersection of this IRectangle with the supplied IRectangle ")]
+        HRESULT intersection(
+			[in] IRectangle* aRectangle, 
+			[out, retval] IRectangle** );
+
+        [helpstring("Indicates whether this IRectangle overlaps the supplied IRectangle")]
+        HRESULT overlaps(
+			[in] IRectangle* aRectangle, 
+			[out, retval] VARIANT_BOOL* );
+
+        [helpstring("Returns an IInterval that is the intersection of this IRectangle's XInterval with the supplied IRectangle's XInterval")]
+        HRESULT XIntersection(
+			[in] IRectangle* aRectangle, 
+			[out, retval] IInterval** );
+
+        [helpstring("Returns an IInterval that is the intersection of this IRectangle's YInterval with the supplied IRectangle's YInterval")]
+        HRESULT YIntersection(
+			[in] IRectangle* aRectangle, 
+			[out, retval] IInterval** );
+
+    };
+
+
+
+    [
+      uuid(e44d82ec-d6ab-432d-8e91-aef2c326de8a),
+      version(1.0),
+      nonextensible,
+      oleautomation
+    ]
+    interface IInterval : IUnknown {
+
+	// Properties=================================================
+        
+        [propget, 
+         helpstring("Returns the end value of the interval")]
+        HRESULT endValue([out, retval] double* );
+
+        [propget, 
+         helpstring("Returns the start value of the interval")]
+        HRESULT startValue([out, retval] double* );
+
+	// Methods =====================================================
+
+        [helpstring("Returns an IInterval that is the intersection of this IInterval with the supplied IInterval")]
+        HRESULT intersection(
+			[in] IInterval* anInterval, 
+			[out, retval] IInterval** );
+
+        [helpstring("Indicates whether this IInterval overlaps the supplied IInterval")]
+        HRESULT overlaps(
+			[in] IInterval* anInterval, 
+			[out, retval] VARIANT_BOOL* );
+
+    };
+}
