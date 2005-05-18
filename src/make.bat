@@ -1,0 +1,1 @@
+"e:\Program Files\Microsoft Visual Studio\VB98\vb6.exe" /make tradebuildplatform.vbg 
