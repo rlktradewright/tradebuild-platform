@@ -1,5 +1,5 @@
 Type=Control
-Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#E:\WINDOWS\System32\stdole2.tlb#OLE Automation
+Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#E:\WINNT\System32\stdole2.tlb#OLE Automation
 Reference=*\G{B51712D1-0BA6-43F1-8025-14AC8C1C017D}#1.0#0#..\TypeLib\chartskiltypes.tlb#ChartSkil Type Library
 UserControl=ChartArea.ctl
 Module=Globals; Globals.bas
@@ -28,7 +28,7 @@ CompatibleMode="1"
 CompatibleEXE32="ChartSkil.ocx"
 MajorVer=1
 MinorVer=0
-RevisionVer=9
+RevisionVer=11
 AutoIncrementVer=1
 ServerSupportFiles=0
 VersionCompanyName="Fastlor Ltd"

@@ -1424,24 +1424,45 @@ gridSpacing = -.scaleHeight / numGridDivisions
 
 mGridTextHeight = .TextHeight("123")
 
-For i = 0 To -10 Step -1
-    mVertGridSpacing = 500 * 10 ^ i
-    If mVertGridSpacing <= gridSpacing Then Exit For
-    mVertGridSpacing = 250 * 10 ^ i
-    If mVertGridSpacing <= gridSpacing Then Exit For
-    mVertGridSpacing = 200 * 10 ^ i
-    If mVertGridSpacing <= gridSpacing Then Exit For
-    mVertGridSpacing = 100 * 10 ^ i
-    If mVertGridSpacing <= gridSpacing Then Exit For
-Next
+Dim log10 As Double
+Dim logSpacing As Double
+Dim exp As Long
+Dim mantissa As Double
+
+log10 = Log(10#)
+logSpacing = Log(gridSpacing) / log10
+
+exp = Int(logSpacing)
+mantissa = logSpacing - exp
+
+If mantissa >= Log(5) / log10 Then
+    mVertGridSpacing = 5 * 10 ^ exp
+ElseIf mantissa >= Log(2.5) / log10 Then
+    mVertGridSpacing = 2.5 * 10 ^ exp
+ElseIf mantissa >= Log(2#) / log10 Then
+    mVertGridSpacing = 2# * 10 ^ exp
+Else
+    mVertGridSpacing = 10 ^ exp
+End If
+
+'For i = 10 To -10 Step -1
+'    mVertGridSpacing = 500 * 10 ^ i
+'    If mVertGridSpacing <= gridSpacing Then Exit For
+'    mVertGridSpacing = 250 * 10 ^ i
+'    If mVertGridSpacing <= gridSpacing Then Exit For
+'    mVertGridSpacing = 200 * 10 ^ i
+'    If mVertGridSpacing <= gridSpacing Then Exit For
+'    mVertGridSpacing = 100 * 10 ^ i
+'    If mVertGridSpacing <= gridSpacing Then Exit For
+'Next
 
 If mIntegerYScale Then
         mYScaleFormatStr = "0"
         mYScaleSubFormatStr = "0"
 Else
     If mVertGridSpacing < 1 Then
-        mYScaleFormatStr = "0." & String(-i - 2, "0")
-        mYScaleSubFormatStr = "0." & String(-i, "0")
+        mYScaleFormatStr = "0." & String(exp, "0")
+        mYScaleSubFormatStr = "0." & String(exp - 2, "0")
     Else
         mYScaleFormatStr = "0.0"
         mYScaleSubFormatStr = "0.00"
