@@ -75,13 +75,17 @@ End Sub
 '================================================================================
 
 Private Function ICommonServiceConsumer_FormatTimestamp( _
-                            ByVal timestamp As Date, _
+                            ByVal Timestamp As Date, _
                             Optional ByVal formatOption As TradeBuildSP.TimestampFormats = 2&, _
                             Optional ByVal formatString As String = "yyyymmddhhnnss" _
                             ) As String
-ICommonServiceConsumer_FormatTimestamp = gFormatTimestamp(timestamp, _
+ICommonServiceConsumer_FormatTimestamp = gFormatTimestamp(Timestamp, _
                                                     formatOption, _
                                                     formatString)
+End Function
+
+Private Function ICommonServiceConsumer_GenerateGUIDString() As String
+ICommonServiceConsumer_GenerateGUIDString = gGenerateGUIDString
 End Function
 
 Private Function ICommonServiceConsumer_GenerateGUID() As TradeBuildSP.GUID
@@ -91,10 +95,6 @@ ICommonServiceConsumer_GenerateGUID.data(0) = lGuid.data(0)
 ICommonServiceConsumer_GenerateGUID.data(1) = lGuid.data(1)
 ICommonServiceConsumer_GenerateGUID.data(2) = lGuid.data(2)
 ICommonServiceConsumer_GenerateGUID.data(3) = lGuid.data(3)
-End Function
-
-Private Function ICommonServiceConsumer_GenerateGUIDString() As String
-ICommonServiceConsumer_GenerateGUIDString = gGenerateGUIDString
 End Function
 
 Private Function ICommonServiceConsumer_GenerateId() As Long
