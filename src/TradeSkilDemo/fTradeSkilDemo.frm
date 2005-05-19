@@ -55,12 +55,11 @@ Begin VB.Form fTradeSkilDemo
       _Version        =   393216
       Style           =   1
       Tabs            =   4
-      Tab             =   1
       TabsPerRow      =   5
       TabHeight       =   520
       TabCaption(0)   =   "&1. Connection"
       TabPicture(0)   =   "fTradeSkilDemo.frx":0015
-      Tab(0).ControlEnabled=   0   'False
+      Tab(0).ControlEnabled=   -1  'True
       Tab(0).Control(0)=   "Frame1"
       Tab(0).Control(0).Enabled=   0   'False
       Tab(0).Control(1)=   "Frame3"
@@ -68,7 +67,7 @@ Begin VB.Form fTradeSkilDemo
       Tab(0).ControlCount=   2
       TabCaption(1)   =   "&2. Tickers"
       TabPicture(1)   =   "fTradeSkilDemo.frx":0031
-      Tab(1).ControlEnabled=   -1  'True
+      Tab(1).ControlEnabled=   0   'False
       Tab(1).Control(0)=   "Picture3"
       Tab(1).Control(0).Enabled=   0   'False
       Tab(1).ControlCount=   1
@@ -211,7 +210,7 @@ Begin VB.Form fTradeSkilDemo
       Begin VB.PictureBox Picture3 
          BorderStyle     =   0  'None
          Height          =   3855
-         Left            =   120
+         Left            =   -74880
          ScaleHeight     =   3855
          ScaleWidth      =   13935
          TabIndex        =   74
@@ -543,7 +542,7 @@ Begin VB.Form fTradeSkilDemo
       Begin VB.Frame Frame3 
          Caption         =   "Socket data"
          Height          =   975
-         Left            =   -69840
+         Left            =   5160
          TabIndex        =   60
          Top             =   480
          Width           =   4455
@@ -593,7 +592,7 @@ Begin VB.Form fTradeSkilDemo
       Begin VB.Frame Frame1 
          Caption         =   "Connection details"
          Height          =   2175
-         Left            =   -74880
+         Left            =   120
          TabIndex        =   59
          Top             =   480
          Width           =   4455
