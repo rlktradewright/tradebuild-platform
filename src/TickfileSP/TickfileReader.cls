@@ -81,6 +81,8 @@ Private mRecordTable(NUM_RECORD_TABLE_ENTRIES - 1) As RecordTableEntry
 Private mCurrentRecordTableEntry As Long
 Private mNextFreeRecordTableEntry As Long
 
+Private mPendingImpliedVolumeTick As Boolean
+
 Private mContract As IContract
 Private mContractSpecifier As IContractSpecifier
 
@@ -149,10 +151,16 @@ ElseIf mRecordsRead Mod mReplayProgressEventFrequency = 0 Then
                             mRecordsRead, _
                             percentComplete
 End If
-Do While ReadNextTickRecord
-    If processTickData Then Exit Do
-Loop
-
+If mPendingImpliedVolumeTick Then
+    mPendingImpliedVolumeTick = False
+    mDataConsumer.Volume mTickerID, _
+                        mRecordTable(mCurrentRecordTableEntry).timestamp, _
+                        mVolume
+Else
+    Do While ReadNextTickRecord
+        If processTickData Then Exit Do
+    Loop
+End If
 End Sub
 
 Private Property Get ITickfileReader_FirstTickFileTime() As Date
@@ -460,7 +468,7 @@ If lookAhead(lookAheadRecord) Then
                 isImpliedTrade = True
             End If
         End If
-    Case TickfileSP.TickTypes.BidSize
+    Case TickfileSP.TickTypes.bidSize
         If mRecordTable(recordIndex).tickPrice = prevTrade And _
             mRecordTable(recordIndex).TickSize = prevTradeSize _
         Then
@@ -528,7 +536,7 @@ lookAheadRecord = -1
 
 Do While lookAhead(lookAheadRecord)
     If mRecordTable(lookAheadRecord).tickType = _
-        TickfileSP.TickTypes.BidSize _
+        TickfileSP.TickTypes.bidSize _
     Then
         If mRecordTable(lookAheadRecord).timestamp - mRecordTable(mCurrentRecordTableEntry).timestamp < 1.01 / 86400# _
         Then
@@ -665,7 +673,7 @@ With mRecordTable(mCurrentRecordTableEntry)
             processTickData = True
         End If
         mPrevBid = .tickPrice
-    Case TickfileSP.TickTypes.BidSize
+    Case TickfileSP.TickTypes.bidSize
         If mPrevBid <> 0 Then
             mDataConsumer.Bid mTickerID, _
                             .timestamp, _
@@ -725,7 +733,7 @@ With mRecordTable(mCurrentRecordTableEntry)
             processVolume
             processTickData = True
         End If
-    Case TickfileSP.TickTypes.LastSize
+    Case TickfileSP.TickTypes.lastSize
     Case TickfileSP.TickTypes.High
         mDataConsumer.High mTickerID, _
                             .timestamp, _
@@ -810,10 +818,7 @@ Do While lookAhead(lookAheadRecord)
         Exit Do
     End If
 Loop
-
-mDataConsumer.Volume mTickerID, _
-                    mRecordTable(mCurrentRecordTableEntry).timestamp, _
-                    mVolume
+mPendingImpliedVolumeTick = True
 End Sub
 
 Private Function ReadNextTickRecord() As Boolean
@@ -936,7 +941,7 @@ With mRecordTable(index)
             If dataFields(TickfileFieldsV2.TickSize) <> &H7FFFFFFF Then
                 .TickSize = dataFields(TickfileFieldsV2.TickSize)
             End If
-        Case TickfileSP.TickTypes.BidSize
+        Case TickfileSP.TickTypes.bidSize
             .TickSize = dataFields(TickfileFieldsV2.TickSize)
         Case TickfileSP.TickTypes.Ask
             .tickPrice = dataFields(TickfileFieldsV2.tickPrice)
@@ -948,7 +953,7 @@ With mRecordTable(index)
         Case TickfileSP.TickTypes.Last
             .tickPrice = dataFields(TickfileFieldsV2.tickPrice)
             .TickSize = dataFields(TickfileFieldsV2.TickSize)
-        Case TickfileSP.TickTypes.LastSize
+        Case TickfileSP.TickTypes.lastSize
             ' shouldn't ever get this
         Case TickfileSP.TickTypes.High
             .tickPrice = dataFields(TickfileFieldsV2.tickPrice)
@@ -968,7 +973,7 @@ With mRecordTable(index)
         Select Case .tickType
         Case TickfileSP.TickTypes.Bid
             .tickPrice = dataFields(TickfileFieldsV1.tickPrice)
-        Case TickfileSP.TickTypes.BidSize
+        Case TickfileSP.TickTypes.bidSize
             .TickSize = dataFields(TickfileFieldsV1.TickSize)
         Case TickfileSP.TickTypes.Ask
             .tickPrice = dataFields(TickfileFieldsV1.tickPrice)
@@ -1002,7 +1007,7 @@ With mRecordTable(index)
         Case ESIGNAL_TICK_TRADE
             .tickType = TICK_TYPE_LAST
             .tickPrice = dataFields(ESignalTickFileFields.lastPrice)
-            .TickSize = dataFields(ESignalTickFileFields.LastSize)
+            .TickSize = dataFields(ESignalTickFileFields.lastSize)
         Case ESIGNAL_TICK_QUOTE
         
             Static esPrevBid As Double
@@ -1011,11 +1016,11 @@ With mRecordTable(index)
             Static esPrevAskSize As Long
             
             If dataFields(ESignalTickFileFields.bidPrice) <> esPrevBid Or _
-                    dataFields(ESignalTickFileFields.BidSize) <> esPrevBidSize _
+                    dataFields(ESignalTickFileFields.bidSize) <> esPrevBidSize _
             Then
                 .tickType = TickfileSP.TickTypes.Bid
                 .tickPrice = dataFields(ESignalTickFileFields.bidPrice)
-                .TickSize = dataFields(ESignalTickFileFields.BidSize)
+                .TickSize = dataFields(ESignalTickFileFields.bidSize)
                 If dataFields(ESignalTickFileFields.AskPrice) <> esPrevAsk Or _
                         dataFields(ESignalTickFileFields.AskSize) <> esPrevAskSize _
                 Then
@@ -1039,7 +1044,7 @@ With mRecordTable(index)
                 End If
             End If
             esPrevBid = dataFields(ESignalTickFileFields.bidPrice)
-            esPrevBidSize = dataFields(ESignalTickFileFields.BidSize)
+            esPrevBidSize = dataFields(ESignalTickFileFields.bidSize)
             esPrevAsk = dataFields(ESignalTickFileFields.AskPrice)
             esPrevAskSize = dataFields(ESignalTickFileFields.AskSize)
         End Select
