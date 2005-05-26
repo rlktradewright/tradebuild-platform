@@ -823,13 +823,19 @@ End Sub
 
 Private Function ReadNextTickRecord() As Boolean
 
+ReadNextTickRecord = True
+
 If mCurrentRecordTableEntry = -1 Then
     If mTsIn Is Nothing Then
+        ReadNextTickRecord = False
         Exit Function
     End If
+ElseIf mCurrentRecordTableEntry <> mNextFreeRecordTableEntry Then
+    ' this means one or more look-ahead records are waiting to be processed
+    ReadNextTickRecord = True
+    Exit Function
 End If
     
-ReadNextTickRecord = True
 If Not readRecord(mCurrentRecordTableEntry) Then
     Set mTsIn = Nothing
     mServiceConsumer.TickfileReplayComplete
