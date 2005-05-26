@@ -154,7 +154,7 @@ End If
 If mPendingImpliedVolumeTick Then
     mPendingImpliedVolumeTick = False
     mDataConsumer.Volume mTickerID, _
-                        mRecordTable(mCurrentRecordTableEntry).timestamp, _
+                        mCurrentTimestamp, _
                         mVolume
 Else
     Do While ReadNextTickRecord
