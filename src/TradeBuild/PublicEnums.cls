@@ -32,14 +32,14 @@ End Type
 
 Public Type TickerListenData
     TickerID As Long
-    price As Double
+    Price As Double
     Size As Long
 End Type
 
 Public Type TickerListenMDData
     TickerID As Long
     side As DOMSides
-    price As Double
+    Price As Double
     Size As Long
     marketDataReRequested As Boolean
 End Type
@@ -50,7 +50,7 @@ Public Type TickerListenRawMDData
     marketMaker As String
     operation As DOMOperations
     side As DOMSides
-    price As Double
+    Price As Double
     Size As Long
 End Type
 
@@ -76,7 +76,7 @@ Public Type TWSSocketMsgTickPrice
     Version         As Long
     TickerID        As Long
     TickType        As TWSSocketTickTypes
-    price           As Double
+    Price           As Double
     Size            As Long
 End Type
 
@@ -224,7 +224,7 @@ Public Type TWSSocketMsgExecutionData
     execExchange    As String
     side            As String
     quantity        As Long
-    price           As Double
+    Price           As Double
     permId          As Long
     clientID        As Long
 End Type
@@ -236,7 +236,7 @@ Public Type TWSSocketMsgMarketDepth
     position        As Long
     operation       As Long
     side            As Long
-    price           As Double
+    Price           As Double
     Size            As Long
 End Type
 
@@ -248,7 +248,7 @@ Public Type TWSSocketMsgMarketDepthL2
     marketMaker     As String
     operation       As Long
     side            As Long
-    price           As Double
+    Price           As Double
     Size            As Long
 End Type
 
@@ -480,8 +480,13 @@ Public Enum SecurityTypes
     SecTypeIndex
 End Enum
 
+Public Enum StandardListenValueTypes
+    DebugInfo = TradebuildSP.StandardListenValueTypes.Debug
+    LogInfo = TradebuildSP.StandardListenValueTypes.Log
+    TraceInfo = TradebuildSP.StandardListenValueTypes.Trace
+End Enum
+
 Public Enum TickerColumnIds
-    
     columnName = &H8&
     ColumnDescription = &H10&
     ColumnSymbol = &H20&
@@ -516,8 +521,8 @@ Public Enum TickerStateCodes
 End Enum
 
 Public Enum TickfileFormatType
-    FileBased = TradeBuildSP.TickfileFormatType.FileBased
-    StreamBased = TradeBuildSP.TickfileFormatType.StreamBased
+    FileBased = TradebuildSP.TickfileFormatTypes.FileBased
+    StreamBased = TradebuildSP.TickfileFormatTypes.StreamBased
 End Enum
 
 Public Enum TickTypes

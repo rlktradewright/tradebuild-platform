@@ -328,6 +328,7 @@ Set mAllOrders = New Collection
 mConnectionState = ConnectionStates.ConnNotConnected
 Set mOrderSimulator = New AdvancedOrderSimulator
 Set mListeners = New listeners
+Set gListeners = mListeners
 Set mTickers = New Tickers
 Set gTickers = mTickers
 

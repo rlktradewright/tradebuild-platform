@@ -126,6 +126,13 @@ Private Function ICommonServiceConsumer_NewContractSpecifier() As TradeBuildSP.I
 Set ICommonServiceConsumer_NewContractSpecifier = New contractSpecifier
 End Function
 
+Private Sub ICommonServiceConsumer_NotifyListeners( _
+                            ByVal value As Variant, _
+                            ByVal valueType As Long, _
+                            ByVal Timestamp As Date)
+gListeners.notify value, valueType, Timestamp
+End Sub
+
 Private Sub ICommonServiceConsumer_RegisterServiceProvider( _
                             ByVal handle As Long, _
                             ByVal spType As TradeBuildSP.ServiceProviderTypes)

@@ -31,6 +31,8 @@ End Type
 Public gServiceProviders As ServiceProviders
 Public gTradeBuildAPI As TradeBuildAPI
 Public gTickers As Tickers
+Public gListeners As listeners
+
 
 '================================================================================
 ' External function declarations
@@ -318,8 +320,8 @@ MsgBox s
 End Sub
 
 Public Function gTickfileSpecifierToString(tickfileSpec As TradeBuild.TickfileSpecifier) As String
-If tickfileSpec.filename <> "" Then
-    gTickfileSpecifierToString = tickfileSpec.filename
+If tickfileSpec.Filename <> "" Then
+    gTickfileSpecifierToString = tickfileSpec.Filename
 Else
     gTickfileSpecifierToString = "Contract: " & _
                                 Replace(tickfileSpec.contractSpecifier.ToString, vbCrLf, "; ") & _
