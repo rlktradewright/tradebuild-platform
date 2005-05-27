@@ -163,12 +163,20 @@ library TradeBuildSP
 
    } StandardSPErrorCodes;
 
+    typedef [uuid(4fa2ef4f-d6b1-4201-965c-9e0550f0960f), 
+	version(1.0)]
+    enum {
+        Log = 1,
+        Trace = 2,
+	Debug = 3
+    } StandardListenValueTypes;
+
     typedef [uuid(8139f349-68b8-4e48-bf72-2dc4cdaeb8a8), 
 	version(1.0)]
     enum {
         FileBased = 1,
         StreamBased = 2
-    } TickfileFormatType;
+    } TickfileFormatTypes;
 
     typedef [uuid(810E7E7B-C092-48CB-B5B1-B48443DD8D08), version(1.0)]
     enum {
@@ -261,7 +269,7 @@ library TradeBuildSP
     struct tagTickfileFormatSpecifier {
 
         [helpstring("Indicates the type of tickfile format")]
-	TickfileFormatType FormatType;
+	TickfileFormatTypes FormatType;
 
         [helpstring("Bitmask of TickfileServiceProviderCapabilities values indicating the capabilities supported by this tickfile format")]
 	long Capabilities;
@@ -576,6 +584,11 @@ library TradeBuildSP
 
 	HRESULT NewContractSpecifier(
 			[out, retval] IContractSpecifier**);
+
+	HRESULT NotifyListeners(
+			[in] VARIANT value,
+			[in] long valueType,
+			[in] DATE timestamp);
 
 	HRESULT RegisterServiceProvider(
 			[in] long handle,
