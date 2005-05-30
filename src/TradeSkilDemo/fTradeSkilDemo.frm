@@ -1253,12 +1253,20 @@ End Sub
 Private Sub Form_Load()
 
 Dim TickfileSP As TickfileSP.TickfileServiceProvider
+Dim TBContractInfoSP As TBInfoBase.ContractInfoServiceProvider
+Dim TBSQLDBTickfileSP As TBInfoBase.TickfileServiceProvider
 
 Me.Top = 0
 Me.Left = 0
 Me.Height = StandardFormHeight
 
 Set mTradeBuildAPI = New TradeBuildAPI
+
+Set TBContractInfoSP = New TBInfoBase.ContractInfoServiceProvider
+mTradeBuildAPI.ServiceProviders.Add TBContractInfoSP
+
+Set TBSQLDBTickfileSP = New TBInfoBase.TickfileServiceProvider
+mTradeBuildAPI.ServiceProviders.Add TBSQLDBTickfileSP
 
 Set TickfileSP = New TickfileSP.TickfileServiceProvider
 mTradeBuildAPI.ServiceProviders.Add TickfileSP
