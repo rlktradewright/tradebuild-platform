@@ -445,9 +445,15 @@ Else
 End If
 
 If delayMillisecs < 30 Then
-    ' process immediately
+    ' process immediately. Note that if the tick was received synchronously, this
+    ' is achieved simply by exiting from this procedure and winding back down into the
+    ' Play routine. For ticks recieved asynchronously, we use the timer with a very short
+    ' delay: this is to prevent calling back into the Service Provider before it has
+    ' completed the function that raised the tick event.
     If Not mTickReceivedSynchronously Then
-        Play
+        mCurrentTick.Timed = True
+        mTimer.TimerIntervalMillisecs = 1
+        mTimer.StartTimer
     End If
 Else
     mCurrentTick.Timed = True
