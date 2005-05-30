@@ -77,7 +77,7 @@ Private mInstrumentFactory As TradingDO.cInstrumentFactory
 '================================================================================
 
 Private Sub Class_Initialize()
-mName = App.ProductName
+mName = ContractInfoSPName
 Set mTimer = New IntervalTimer
 mTimer.RepeatNotifications = False
 mTimer.TimerIntervalMillisecs = 1
@@ -102,7 +102,7 @@ With ServiceProviderDetails
     .FileDescription = App.FileDescription
     .LegalCopyright = App.LegalCopyright
     .LegalTrademarks = App.LegalTrademarks
-    .Path = App.Path
+    .path = App.path
     .ProductName = App.ProductName
     .Vendor = App.CompanyName
     .VersionMajor = App.Major
