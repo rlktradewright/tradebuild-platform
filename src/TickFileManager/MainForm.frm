@@ -766,6 +766,8 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 
+Implements TradeBuild.IListener
+
 Private WithEvents mTradeBuildAPI As TradeBuildAPI
 Attribute mTradeBuildAPI.VB_VarHelpID = -1
 Private WithEvents mTicker As Ticker
@@ -833,6 +835,7 @@ End Sub
 
 Private Sub Form_Load()
 Dim TickfileSP As TickfileSP.TickfileServiceProvider
+Dim SQLDBTickfileSP As TBInfoBase.TickfileServiceProvider
 Dim contractInfoSP As TBInfoBase.ContractInfoServiceProvider
 Dim i As Long
 
@@ -846,6 +849,19 @@ If mTradeBuildAPI Is Nothing Then
     Exit Sub
 End If
 
+mTradeBuildAPI.addListener Me, TradeBuild.StandardListenValueTypes.LogInfo
+
+On Error Resume Next
+Set SQLDBTickfileSP = New TBInfoBase.TickfileServiceProvider
+On Error GoTo 0
+If SQLDBTickfileSP Is Nothing Then
+    handleFatalError 998, _
+                    "The TradeBuild SQLDB Tickfile Service Provider is not installed.", _
+                    "Form_Load"
+    Exit Sub
+End If
+mTradeBuildAPI.ServiceProviders.Add SQLDBTickfileSP
+
 On Error Resume Next
 Set TickfileSP = New TickfileSP.TickfileServiceProvider
 On Error GoTo 0
@@ -855,7 +871,6 @@ If TickfileSP Is Nothing Then
                     "Form_Load"
     Exit Sub
 End If
-
 mTradeBuildAPI.ServiceProviders.Add TickfileSP
 
 On Error Resume Next
@@ -867,7 +882,6 @@ If mQuoteTrackerSP Is Nothing Then
                     "Form_Load"
     Exit Sub
 End If
-
 mQuoteTrackerSP.ConnectionRetryIntervalSecs = 10
 mQuoteTrackerSP.password = ""
 mTradeBuildAPI.ServiceProviders.Add mQuoteTrackerSP
@@ -881,7 +895,6 @@ If contractInfoSP Is Nothing Then
                     "Form_Load"
     Exit Sub
 End If
-
 mTradeBuildAPI.ServiceProviders.Add contractInfoSP
 
 mSupportedOutputFormats = mTradeBuildAPI.SupportedOutputTickfileFormats
@@ -916,6 +929,16 @@ mOutputPath = App.Path
 If Not ProcessCommandLineArgs Then
     Unload Me
 End If
+End Sub
+
+Private Sub IListener_notify( _
+                            ByVal valueType As Long, _
+                            ByVal data As Variant, _
+                            ByVal Timestamp As Date)
+Select Case valueType
+Case TradeBuild.StandardListenValueTypes.LogInfo
+    writeStatusMessage "Log: " & data
+End Select
 End Sub
 
 Private Sub ClearTickfileListButton_Click()
@@ -1025,9 +1048,9 @@ Else
         Set instrument = mInstrFactory.Load(SymbolText, ExpiryText)
         If Not instrument Is Nothing Then
             Set mContract = New Contract
-            mContract.marketName = instrument.symbol
-            mContract.minimumTick = instrument.TickSize
-            mContract.multiplier = instrument.TickValue / instrument.TickSize
+            mContract.marketName = instrument.Symbol
+            mContract.minimumTick = instrument.tickSize
+            mContract.multiplier = instrument.TickValue / instrument.tickSize
             ReDim theOrderTypes(3) As OrderTypes
             theOrderTypes(0) = OrderTypes.OrderTypeLimit
             theOrderTypes(1) = OrderTypes.OrderTypeMarket
@@ -1035,14 +1058,14 @@ Else
             theOrderTypes(3) = OrderTypes.OrderTypeStopLimit
             mContract.OrderTypes = theOrderTypes
             mContract.specifier = New ContractSpecifier
-            mContract.specifier.currencyCode = instrument.currencyCode
+            mContract.specifier.CurrencyCode = instrument.CurrencyCode
             mContract.specifier.exchange = instrument.exchange
             mContract.specifier.Expiry = instrument.Month
             mContract.specifier.LocalSymbol = instrument.ShortName
             mContract.specifier.SecType = IIf(instrument.category = "STK", SecurityTypes.SecTypeStock, _
                                         IIf(instrument.category = "FUT", SecurityTypes.SecTypeFuture, _
                                         SecurityTypes.SecTypeOption))
-            mContract.specifier.symbol = instrument.symbol
+            mContract.specifier.Symbol = instrument.Symbol
             ReDim exchanges(0) As String
             exchanges(0) = instrument.exchange
             mContract.validExchanges = exchanges
@@ -1123,7 +1146,7 @@ End Select
 checkOKToGetContract
 End Sub
 
-Private Sub mTicker_errorMessage(ByVal timestamp As Date, _
+Private Sub mTicker_errorMessage(ByVal Timestamp As Date, _
                                 ByVal id As Long, _
                                 ByVal errorCode As TradeBuild.ApiErrorCodes, _
                                 ByVal errorMsg As String)
@@ -1142,12 +1165,12 @@ handleFatalError err.Number, err.description, "mTicker_errorMessage"
 End Sub
 
 Private Sub mTicker_outputTickfileCreated( _
-                            ByVal timestamp As Date, _
+                            ByVal Timestamp As Date, _
                             ByVal filename As String)
 writeStatusMessage "Created output tickfile: " & filename
 End Sub
 
-Private Sub mTicker_replayCompleted(ByVal timestamp As Date)
+Private Sub mTicker_replayCompleted(ByVal Timestamp As Date)
 On Error GoTo err
 
 ConvertButton.Enabled = True
@@ -1180,7 +1203,7 @@ ReplayProgressBar.Max = 100
 ReplayProgressBar.value = 0
 TickfileList.ListIndex = tickfileIndex
 writeStatusMessage "Converting " & TickfileList.List(TickfileList.ListIndex)
-ReplayContractLabel.Caption = "Symbol:   " & pContract.specifier.symbol & vbCrLf & _
+ReplayContractLabel.Caption = "Symbol:   " & pContract.specifier.Symbol & vbCrLf & _
                             "Type:     " & secTypeToString(pContract.specifier.SecType) & vbCrLf & _
                             IIf(pContract.specifier.SecType <> SecurityTypes.SecTypeStock, "Expiry:   " & pContract.specifier.Expiry & vbCrLf, "") & _
                             "Exchange: " & pContract.specifier.exchange
@@ -1237,7 +1260,7 @@ mTicker.replaySpeed = 0
 mTicker.StartTicker , , True, True
 End Sub
 
-Private Sub mTradeBuildAPI_connected(ByVal timestamp As Date)
+Private Sub mTradeBuildAPI_connected(ByVal Timestamp As Date)
 Dim lContractSpecifier As ContractSpecifier
 
 On Error GoTo err
@@ -1254,7 +1277,7 @@ err:
 handleFatalError err.Number, err.description, "mTradeBuildAPI_connected"
 End Sub
 
-Private Sub mTradeBuildAPI_connecting(ByVal timestamp As Date)
+Private Sub mTradeBuildAPI_connecting(ByVal Timestamp As Date)
 On Error GoTo err
 writeStatusMessage "Connecting"
 DisconnectButton.Enabled = True
@@ -1264,7 +1287,7 @@ err:
 handleFatalError err.Number, err.description, "mTradeBuildAPI_connecting"
 End Sub
 
-Private Sub mTradeBuildAPI_connectionToTWSClosed(ByVal timestamp As Date)
+Private Sub mTradeBuildAPI_connectionToTWSClosed(ByVal Timestamp As Date)
 On Error GoTo err
 
 DisconnectButton.Enabled = False
@@ -1277,7 +1300,7 @@ err:
 handleFatalError err.Number, err.description, "mTradeBuildAPI_connectionClosed"
 End Sub
 
-Private Sub mTradeBuildAPI_Contract(ByVal timestamp As Date, _
+Private Sub mTradeBuildAPI_Contract(ByVal Timestamp As Date, _
                                     ByVal pContract As Contract)
 On Error GoTo err
 Set mContract = pContract
@@ -1292,7 +1315,7 @@ err:
 handleFatalError err.Number, err.description, "mTradeBuildAPI_Contract"
 End Sub
 
-Private Sub mTradeBuildAPI_ContractInvalid(ByVal timestamp As Date, _
+Private Sub mTradeBuildAPI_ContractInvalid(ByVal Timestamp As Date, _
                     ByVal pContractSpecifier As TradeBuild.ContractSpecifier)
 
 On Error GoTo err
@@ -1300,7 +1323,7 @@ Set mContract = Nothing
 ContractDetailsText = ""
 enableContractFields
 
-writeStatusMessage "Contract not valid: symbol=" & pContractSpecifier.symbol & _
+writeStatusMessage "Contract not valid: symbol=" & pContractSpecifier.Symbol & _
                     "; type=" & secTypeToString(pContractSpecifier.SecType) & _
                     "; expiry=" & pContractSpecifier.Expiry & _
                     "; exchange=" & pContractSpecifier.exchange & _
@@ -1315,7 +1338,7 @@ err:
 handleFatalError err.Number, err.description, "mTradeBuildAPI_contractInvalid"
 End Sub
 
-Private Sub mTradeBuildAPI_errorMessage(ByVal timestamp As Date, _
+Private Sub mTradeBuildAPI_errorMessage(ByVal Timestamp As Date, _
                         ByVal id As Long, _
                         ByVal errorCode As ApiErrorCodes, _
                         ByVal errorMsg As String)
@@ -1719,7 +1742,7 @@ End If
 If symbolValue <> "" Then
     Set contractSpec = New TradeBuild.ContractSpecifier
     With contractSpec
-        .symbol = symbolValue
+        .Symbol = symbolValue
         .LocalSymbol = localSymbolValue
         .SecType = secTypeFromString(secTypeValue)
         .Expiry = IIf(.SecType = SecurityTypes.SecTypeFuture Or _
@@ -1728,7 +1751,7 @@ If symbolValue <> "" Then
                         monthValue, _
                         "")
         .exchange = exchangeValue
-        .currencyCode = currencyValue
+        .CurrencyCode = currencyValue
         If .SecType = SecurityTypes.SecTypeFuturesOption Or _
             .SecType = SecurityTypes.SecTypeOption _
         Then
@@ -1800,7 +1823,7 @@ Dim lContractSpecifier As ContractSpecifier
 On Error GoTo err
 
 Set lContractSpecifier = New ContractSpecifier
-lContractSpecifier.symbol = SymbolText
+lContractSpecifier.Symbol = SymbolText
 lContractSpecifier.SecType = secTypeFromString(TypeCombo)
 lContractSpecifier.Expiry = IIf(lContractSpecifier.SecType = SecurityTypes.SecTypeFuture Or _
                                 lContractSpecifier.SecType = SecurityTypes.SecTypeFuturesOption Or _
