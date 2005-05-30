@@ -380,6 +380,7 @@ End Property
 
 Friend Sub CloseInputFile()
 mReader.CloseInputFile
+mState = TickfileStateCodes.TickfileNotPlaying
 End Sub
 
 Friend Sub PauseReplay()
