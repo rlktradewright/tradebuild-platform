@@ -187,25 +187,25 @@ Private Sub ITickfileWriter_writeMarketDepthData( _
                             ByVal side As Long, _
                             ByVal price As Currency, _
                             ByVal size As Long)
-Dim typebyte As Byte
-Dim sizetype As SizeTypes
+Dim typeByte As Byte
+Dim sizeType As SizeTypes
 Dim sideOperationPositionByte As Byte
 
 If price = 0# Then Exit Sub
 
 CheckIfNewPeriod timestamp
 
-typebyte = TickTypes.marketDepth
+typeByte = TickTypes.marketDepth
 
-sizetype = GetSizeType(size)
-typebyte = typebyte Or (sizetype * SizeTypeShifter)
+sizeType = GetSizeType(size)
+typeByte = typeByte Or (sizeType * SizeTypeShifter)
 
-If timestamp = mTimestamp Then typebyte = typebyte Or NoTimestamp
+If timestamp = mTimestamp Then typeByte = typeByte Or NoTimestamp
 
 If mBasePrice = 0# Then mBasePrice = price
-If price < mBasePrice Then typebyte = typebyte Or NegativeTicks
+If price < mBasePrice Then typeByte = typeByte Or NegativeTicks
 
-WriteByte typebyte
+WriteByte typeByte
 WriteTimestamp timestamp
 sideOperationPositionByte = CByte(position)
 sideOperationPositionByte = sideOperationPositionByte Or CByte(operation * OperationShifter)
@@ -213,19 +213,19 @@ sideOperationPositionByte = sideOperationPositionByte Or CByte(side * SideShifte
 WriteByte sideOperationPositionByte
 
 WritePrice price
-WriteSize size, sizetype
+WriteSize size, sizeType
 WriteString marketmaker
 End Sub
 
 Private Sub ITickfileWriter_writeMarketDepthReset( _
                             ByVal timestamp As Date)
-Dim typebyte As Byte
+Dim typeByte As Byte
 
-typebyte = TickTypes.MarketDepthReset
+typeByte = TickTypes.MarketDepthReset
 
-If timestamp = mTimestamp Then typebyte = typebyte Or NoTimestamp
+If timestamp = mTimestamp Then typeByte = typeByte Or NoTimestamp
 
-WriteByte typebyte
+WriteByte typeByte
 WriteTimestamp timestamp
 End Sub
 
@@ -260,6 +260,10 @@ Private Sub mTickWriter_Error( _
 mCommonServiceConsumer.ServiceProviderError errorCode, _
                                     errorDesc, _
                                     mServiceProviderName
+End Sub
+
+Private Sub mTickWriter_Ready()
+mServiceConsumer.Ready
 End Sub
 
 '================================================================================
@@ -357,56 +361,56 @@ End If
 End Sub
 
 Private Sub WritePriceRecord( _
-                            ByVal ticktype As TickTypes, _
+                            ByVal tickType As TickTypes, _
                             ByVal timestamp As Date, _
                             ByVal price As Double)
-Dim typebyte As Byte
+Dim typeByte As Byte
 
 CheckIfNewPeriod timestamp
 
-typebyte = ticktype
+typeByte = tickType
 
-If timestamp = mTimestamp Then typebyte = typebyte Or NoTimestamp
+If timestamp = mTimestamp Then typeByte = typeByte Or NoTimestamp
 
 If mBasePrice = 0# Then mBasePrice = price
-If price < mBasePrice Then typebyte = typebyte Or NegativeTicks
+If price < mBasePrice Then typeByte = typeByte Or NegativeTicks
 
-WriteByte typebyte
+WriteByte typeByte
 WriteTimestamp timestamp
 WritePrice price
 End Sub
 
 Private Sub WriteQuoteRecord( _
-                            ByVal ticktype As TickTypes, _
+                            ByVal tickType As TickTypes, _
                             ByVal timestamp As Date, _
                             ByVal price As Double, _
                             ByVal size As Long)
-Dim typebyte As Byte
-Dim sizetype As SizeTypes
+Dim typeByte As Byte
+Dim sizeType As SizeTypes
 
 CheckIfNewPeriod timestamp
 
-typebyte = ticktype
+typeByte = tickType
 
-sizetype = GetSizeType(size)
-typebyte = typebyte Or (sizetype * SizeTypeShifter)
+sizeType = GetSizeType(size)
+typeByte = typeByte Or (sizeType * SizeTypeShifter)
 
-If timestamp = mTimestamp Then typebyte = typebyte Or NoTimestamp
+If timestamp = mTimestamp Then typeByte = typeByte Or NoTimestamp
 
 If mBasePrice = 0# Then mBasePrice = price
-If price < mBasePrice Then typebyte = typebyte Or NegativeTicks
+If price < mBasePrice Then typeByte = typeByte Or NegativeTicks
 
-WriteByte typebyte
+WriteByte typeByte
 
 WriteTimestamp timestamp
 
 WritePrice price
 
-WriteSize size, sizetype
+WriteSize size, sizeType
 End Sub
 
-Private Sub WriteSize(ByVal size As Long, ByVal sizetype As SizeTypes)
-Select Case sizetype
+Private Sub WriteSize(ByVal size As Long, ByVal sizeType As SizeTypes)
+Select Case sizeType
 Case SizeTypes.ShortSize
     Debug.Assert size < &H100&
     WriteByte CByte(size)
@@ -423,24 +427,24 @@ End Select
 End Sub
 
 Private Sub WriteSizeRecord( _
-                            ByVal ticktype As TickTypes, _
+                            ByVal tickType As TickTypes, _
                             ByVal timestamp As Date, _
                             ByVal size As Long)
-Dim typebyte As Byte
-Dim sizetype As SizeTypes
+Dim typeByte As Byte
+Dim sizeType As SizeTypes
 
 CheckIfNewPeriod timestamp
 
-typebyte = ticktype
+typeByte = tickType
 
-sizetype = GetSizeType(size)
-typebyte = typebyte Or (sizetype * SizeTypeShifter)
+sizeType = GetSizeType(size)
+typeByte = typeByte Or (sizeType * SizeTypeShifter)
 
-If timestamp = mTimestamp Then typebyte = typebyte Or NoTimestamp
+If timestamp = mTimestamp Then typeByte = typeByte Or NoTimestamp
 
-WriteByte typebyte
+WriteByte typeByte
 WriteTimestamp timestamp
-WriteSize size, sizetype
+WriteSize size, sizeType
 End Sub
 
 Private Sub WriteString(ByVal theString As String)

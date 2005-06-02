@@ -199,6 +199,9 @@ mCommonServiceConsumer.ServiceProviderError errorCode, _
                                     mServiceProviderName
 End Sub
 
+Private Sub mTickReader_Ready()
+mServiceConsumer.Ready mInputTickfileSpecifier, 0
+End Sub
 
 '================================================================================
 ' Properties
@@ -251,7 +254,6 @@ Dim lInstrumentFactory As TradingDO.cInstrumentFactory
 
 mInputTickfileSpecifier = RHS
 
-mServiceConsumer.Ready RHS, 0
 End Property
 
 Friend Property Get InputTickfileSpecifier() As TradeBuildSP.TickfileSpecifier
