@@ -46,18 +46,6 @@ Option Explicit
 ' Types
 '================================================================================
 
-Private Type Tick
-    timestamp       As Date
-    TickType        As TradeBuild.TickTypes
-    TickPrice       As Double
-    TickSize        As Long
-    Volume          As Long
-    MDPosition      As Long
-    MDMarketMaker   As String
-    MDOperation     As Long
-    MDSide          As Long
-End Type
-
 '================================================================================
 ' Member variables
 '================================================================================
@@ -107,7 +95,7 @@ If mPendingWrites.Count <> 0 Then
         With pendingWrite
             Select Case .TickType
             Case bid
-                mWriter.writeBid timestamp, .TickPrice, .TickSize
+                mWriter.writeBid .timestamp, .TickPrice, .TickSize
             Case ask
                 mWriter.writeAsk .timestamp, .TickPrice, .TickSize
             Case Last
