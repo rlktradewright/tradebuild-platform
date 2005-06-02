@@ -95,6 +95,7 @@ Private Property Let ITickfileWriter_Contract(ByVal RHS As IContract)
 If Not RHS Is Nothing Then
     Set mContract = RHS.Clone
 End If
+mServiceConsumer.Ready
 End Property
 
 Private Property Get ITickfileWriter_FormatIdentifier() As String
@@ -227,8 +228,8 @@ tfPath = IIf(mPath <> "", mPath, App.path)
 If Right$(tfPath, 1) <> "\" Then tfPath = tfPath & "\"
 
 With mContract.Specifier
-    tfPath = tfPath & UCase$(.symbol) & .Expiry & "\"
-    tfName = UCase$(.symbol) & .Expiry & "-" _
+    tfPath = tfPath & UCase$(.Symbol) & .Expiry & "\"
+    tfName = UCase$(.Symbol) & .Expiry & "-" _
             & format(timestamp, "yyyymmdd-hhmmss") & ".csv"
     Set mTsOut = mFileSys.CreateTextFile(tfPath & tfName)
     
@@ -237,7 +238,7 @@ With mContract.Specifier
     mTsOut.WriteLine "tickfile," & _
                 TICKFILE_CURR_VERSION & "," & _
                 .exchange & "," & _
-                .symbol & "," & _
+                .Symbol & "," & _
                 .Expiry & "," & _
                 CDbl(timestamp) & "," & _
                 FormatDateTime(timestamp, vbGeneralDate)
@@ -270,7 +271,7 @@ mServiceConsumer.OutputTickfileCreated mTickerID, tfPath & tfName
 mTsOut.WriteLine TICKFILE_DECLARER & "," & _
             TICKFILE_CURR_VERSION & "," & _
             UCase$(mContract.Specifier.exchange) & "," & _
-            UCase$(mContract.Specifier.symbol) & "," & _
+            UCase$(mContract.Specifier.Symbol) & "," & _
             mContract.Specifier.Expiry & "," & _
             CDbl(timestamp) & "," & _
             FormatDateTime(timestamp, vbGeneralDate)
