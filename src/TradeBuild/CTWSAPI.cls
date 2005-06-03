@@ -1684,10 +1684,10 @@ With mTickerTable(TickerID)
         .writeMktDataToTickfile = True
         .writeMktDepthToTickfile = includeMarketDepthInTickfile
         Set .TickfileWriter = pTickfileWriter
-'    Else
-'        .writeMktDataToTickfile = False
-'        .writeMktDepthToTickfile = False
-'        Set .TickfileWriter = Nothing
+    ElseIf Not .TickfileWriter Is Nothing Then
+        .writeMktDataToTickfile = False
+        .writeMktDepthToTickfile = False
+        Set .TickfileWriter = Nothing
     End If
     If (.writeMktDataToTickfile And .writeMktDepthToTickfile) Or _
         .DOMEventsRequired <> DOMEvents.DOMNoEvents _
