@@ -102,7 +102,7 @@ With ServiceProviderDetails
     .FileDescription = App.FileDescription
     .LegalCopyright = App.LegalCopyright
     .LegalTrademarks = App.LegalTrademarks
-    .path = App.path
+    .Path = App.Path
     .ProductName = App.ProductName
     .Vendor = App.CompanyName
     .VersionMajor = App.Major
@@ -189,7 +189,7 @@ With mRequests(mFirstRequestID).ContractSpecifier
     Set instrumentSummaries = mInstrumentFactory.loadEx( _
                                     .Symbol, _
                                     secTypeToString(.SecType), _
-                                    .Expiry, _
+                                    Left$(.Expiry, 6), _
                                     .Exchange, _
                                     .CurrencyCode)
 End With
