@@ -1432,8 +1432,8 @@ Dim mantissa As Double
 log10 = Log(10#)
 logSpacing = Log(gridSpacing) / log10
 
-exp = Int(logSpacing)
-mantissa = logSpacing - exp
+exp = Fix(logSpacing)
+mantissa = Abs(logSpacing) - Abs(exp)
 
 If mantissa >= Log(5) / log10 Then
     mVertGridSpacing = 5 * 10 ^ exp
@@ -1461,8 +1461,8 @@ If mIntegerYScale Then
         mYScaleSubFormatStr = "0"
 Else
     If mVertGridSpacing < 1 Then
-        mYScaleFormatStr = "0." & String(exp, "0")
-        mYScaleSubFormatStr = "0." & String(exp - 2, "0")
+        mYScaleFormatStr = "0." & String(Abs(exp), "0")
+        mYScaleSubFormatStr = "0." & String(Abs(exp - 2), "0")
     Else
         mYScaleFormatStr = "0.0"
         mYScaleSubFormatStr = "0.00"
