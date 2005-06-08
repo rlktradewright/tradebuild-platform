@@ -66,6 +66,9 @@ Private mDescription As String
 Private mSessionStartTime As Date
 Private mSessionEndTime As Date
 
+Private mReferenceSessionStartTime As Date
+Private mReferenceSessionEndTime As Date
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
@@ -391,12 +394,12 @@ Public Property Let specifier(ByVal value As contractSpecifier)
 Set mSpecifier = value
 End Property
 
-Friend Property Let timestamp(ByVal value As Date)
+Friend Property Let Timestamp(ByVal value As Date)
 mTimestamp = value
 End Property
 
-Friend Property Get timestamp() As Date
-timestamp = mTimestamp
+Friend Property Get Timestamp() As Date
+Timestamp = mTimestamp
 End Property
 
 Public Property Get tradingClass() As String
@@ -418,6 +421,20 @@ End Property
 '================================================================================
 ' Methods
 '================================================================================
+
+Public Function BarStartTime( _
+                            ByVal theTime As Date, _
+                            ByVal BarLength As Long) As Date
+Dim offset As Long
+Dim theTimeMins As Long
+
+offset = DatePart("n", mSessionStartTime)
+theTimeMins = Fix(TimeValue(theTime) * 1440) ' minutes since midnight
+BarStartTime = DateValue(theTime) + _
+            (BarLength * Fix((theTimeMins - offset) / BarLength) + _
+                offset) / 1440
+
+End Function
 
 Public Function clone() As Contract
 
@@ -519,6 +536,49 @@ For Each exchange In nodeList
 Next
 
 End Sub
+
+Public Function IsTimeInSession(ByVal Timestamp As Date) As Boolean
+Dim referenceDate As Date
+Dim referenceTime As Date
+
+If Timestamp >= mReferenceSessionEndTime Then
+
+    ' recalculate the reference session times
+    
+    referenceDate = DateValue(Timestamp)
+    referenceTime = TimeValue(Timestamp)
+    
+    If mSessionStartTime < mSessionEndTime Then
+        ' session doesn't span midnight
+        If referenceTime < mSessionEndTime Then
+            mReferenceSessionStartTime = referenceDate + mSessionStartTime
+            mReferenceSessionEndTime = referenceDate + mSessionEndTime
+        Else
+            mReferenceSessionStartTime = referenceDate + 1 + mSessionStartTime
+            mReferenceSessionEndTime = referenceDate + 1 + mSessionEndTime
+        End If
+    ElseIf mSessionStartTime > mSessionEndTime Then
+        ' session spans midnight
+        If referenceTime >= mSessionEndTime Then
+            mReferenceSessionStartTime = referenceDate + mSessionStartTime
+            mReferenceSessionEndTime = referenceDate + 1 + mSessionEndTime
+        Else
+            mReferenceSessionStartTime = referenceDate - 1 + mSessionStartTime
+            mReferenceSessionEndTime = referenceDate + mSessionEndTime
+        End If
+    Else
+        ' this instrument trades 24hrs
+        mReferenceSessionStartTime = "01/01/1900"
+        mReferenceSessionEndTime = "31/12/2099"
+    End If
+End If
+
+If Timestamp >= mReferenceSessionStartTime And _
+    Timestamp < mReferenceSessionEndTime _
+Then
+    IsTimeInSession = True
+End If
+End Function
 
 Public Function ToString() As String
 Dim i As Long
