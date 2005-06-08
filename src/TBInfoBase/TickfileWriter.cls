@@ -286,7 +286,7 @@ Friend Property Let Tickerid(ByVal value As Long)
 mTickerID = value
 End Property
 
-Friend Property Let TickfileOutputServiceConsumer(ByVal RHS As ITickfileInputServiceConsumer)
+Friend Property Let TickfileOutputServiceConsumer(ByVal RHS As ITickfileOutputServiceConsumer)
 Set mServiceConsumer = RHS
 End Property
 
