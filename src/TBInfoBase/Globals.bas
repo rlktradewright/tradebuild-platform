@@ -23,6 +23,7 @@ Public Const TickTypeBits As Byte = &HF
 Public Const TickfileFormatTradeBuildSQL As String = "urn:tradewright.com:names.tickfileformats.TradeBuildSQL"
 
 Public Const ContractInfoSPName As String = "TradeBuild Contract Info Service Provider"
+Public Const HistoricDataSPName As String = "TradeBuild Historic Data Service Provider"
 Public Const SQLDBTickfileSPName As String = "TradeBuild SQLDB Tickfile Service Provider"
 
 '================================================================================
@@ -51,6 +52,15 @@ End Enum
 ' Procedures
 '================================================================================
 
+Public Function gHistDataCapabilities() As Long
+gHistDataCapabilities = _
+            HistoricDataServiceProviderCapabilities.HistDataStore
+End Function
+
+Public Function gHistDataSupports(ByVal capabilities As Long) As Boolean
+gHistDataSupports = (gHistDataCapabilities And capabilities)
+End Function
+
 Public Function gSQLDBCapabilities() As Long
 gSQLDBCapabilities = _
             TickfileServiceProviderCapabilities.Record Or _
@@ -60,11 +70,8 @@ gSQLDBCapabilities = _
             TickfileServiceProviderCapabilities.PositionExact
 End Function
 
-Public Function gSQLDBSupports( _
-                            ByVal capabilities As Long) As Boolean
-
+Public Function gSQLDBSupports(ByVal capabilities As Long) As Boolean
 gSQLDBSupports = (gSQLDBCapabilities And capabilities)
-
 End Function
 
 

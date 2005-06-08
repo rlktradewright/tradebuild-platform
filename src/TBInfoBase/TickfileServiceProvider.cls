@@ -164,7 +164,9 @@ End Property
 Private Function ITickfileServiceProvider_Supports( _
                             ByVal capabilities As Long, _
                             Optional ByVal FormatIdentifier As String) As Boolean
-If FormatIdentifier = TickfileFormatTradeBuildSQL Then
+If FormatIdentifier = TickfileFormatTradeBuildSQL Or _
+    FormatIdentifier = "" _
+Then
     ITickfileServiceProvider_Supports = gSQLDBSupports(capabilities)
 End If
 End Function

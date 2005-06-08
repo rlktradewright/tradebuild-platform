@@ -200,6 +200,10 @@ mCommonServiceConsumer.ServiceProviderError errorCode, _
 End Sub
 
 Private Sub mTickReader_Ready()
+mWaitingForTickData = True
+mTickReader.FetchData TickfileFormatTradeBuildSQL, _
+                        Int(mInputTickfileSpecifier.From / OneMinute) * OneMinute, _
+                        Int((mInputTickfileSpecifier.To + FiftyNineSeconds) / OneMinute) * OneMinute
 mServiceConsumer.Ready mInputTickfileSpecifier, 0
 End Sub
 
@@ -212,33 +216,10 @@ Set mCommonServiceConsumer = RHS
 End Property
 
 Friend Property Let Contract(ByVal value As IContract)
-Dim lInstrumentFactory As TradingDO.cInstrumentFactory
 If Not value Is Nothing Then
     Set mContract = value.Clone
 End If
-
-Set lInstrumentFactory = New TradingDO.cInstrumentFactory
-
-With mContract.Specifier
-    Set mInstrument = lInstrumentFactory.loadBySpec(.Symbol, _
-                                secTypeToString(.SecType), _
-                                Left$(.Expiry, 6), _
-                                .Exchange, _
-                                .CurrencyCode, _
-                                .Strike, _
-                                .Right, _
-                                .LocalSymbol)
-End With
-Debug.Assert Not mInstrument Is Nothing
-
 mTickSize = mContract.MinimumTick
-
-Set mTickReader = mInstrument.CreateTickDataAccessor
-
-mWaitingForTickData = True
-mTickReader.FetchData TickfileFormatTradeBuildSQL, _
-                        Int(mInputTickfileSpecifier.From / OneMinute) * OneMinute, _
-                        Int((mInputTickfileSpecifier.To + FiftyNineSeconds) / OneMinute) * OneMinute
 End Property
 
 Friend Property Get Contract() As IContract
@@ -253,6 +234,22 @@ Friend Property Let InputTickfileSpecifier(RHS As TradeBuildSP.TickfileSpecifier
 Dim lInstrumentFactory As TradingDO.cInstrumentFactory
 
 mInputTickfileSpecifier = RHS
+
+Set lInstrumentFactory = New TradingDO.cInstrumentFactory
+
+With mInputTickfileSpecifier.ContractSpecifier
+    Set mInstrument = lInstrumentFactory.loadBySpec(.Symbol, _
+                                secTypeToString(.SecType), _
+                                Left$(.Expiry, 6), _
+                                .Exchange, _
+                                .CurrencyCode, _
+                                .Strike, _
+                                .Right, _
+                                .LocalSymbol)
+End With
+Debug.Assert Not mInstrument Is Nothing
+
+Set mTickReader = mInstrument.CreateTickDataAccessor
 
 End Property
 
