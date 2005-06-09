@@ -70,6 +70,11 @@ library TradeBuildSP
         DOMLast = 2
     } DOMSides;
 
+    typedef [uuid(e0132d3f-a956-484d-a703-062027df9f8d), version(1.0)]
+    enum {
+        HistDataStore = 1
+    } HistoricDataServiceProviderCapabilities;
+
     typedef [uuid(CA5FFDA3-757C-4CB6-B86E-AD4C524E49D2), version(1.0)]
     enum {
         LegSamePos = 0,
@@ -159,7 +164,19 @@ library TradeBuildSP
     	TFDataSourceNotResponding = 2007,
 
 	[helpstring("Trying again to connect to the tickfile's data source")]
-    	TFRetryConnectDataSource = 2008	
+    	TFRetryConnectDataSource = 2008,
+
+	[helpstring("Unable to connect to the contract data source")]
+    	CICantConnectDataSource = 2100,
+
+	[helpstring("Trying again to connect to the contract data source")]
+    	CIRetryConnectDataSource = 2101,
+
+	[helpstring("Unable to connect to the historical data source")]
+    	HDCantConnectDataSource = 2200,
+
+	[helpstring("Trying again to connect to the historical data source")]
+    	HDRetryConnectDataSource = 2201
 
    } StandardSPErrorCodes;
 
@@ -227,6 +244,9 @@ library TradeBuildSP
 
         [helpstring("Contains the period length in minutes for the required data")]
 	long BarLengthMinutes;
+
+	[helpstring("Specifies the type of bar data required")]
+	BarTypes type;
 
         [helpstring("Specifies the start date and time for the data")]
         DATE From;
@@ -320,7 +340,6 @@ library TradeBuildSP
 	// Methods =====================================================
 
         HRESULT Bar(
-                        [in] long tickerid, 
                         [in] Bar* data);
 
     };
@@ -340,9 +359,7 @@ library TradeBuildSP
 			[in] BSTR errorMessage,
 			[in, optional, defaultvalue(NoValidId)] long id);
 
-	HRESULT Ready(                            
-			[in] TickfileSpecifier* tickfileSpec,
-			[in] long tickfileSizeBytes);
+	HRESULT Ready();
 
         HRESULT BarDataComplete();
 
@@ -368,9 +385,10 @@ library TradeBuildSP
 			[in] BSTR errorMessage,
 			[in, optional, defaultvalue(NoValidId)] long id);
 
-        HRESULT Ready(
-			[in] long numberOfBars,
+        HRESULT OutputBarfileCreated(
                         [in] BSTR filename);
+
+        HRESULT Ready();
 
     };
 
@@ -421,13 +439,11 @@ library TradeBuildSP
 
 
         HRESULT CreateBarDataReader(
-			[in] long tickerID,
 			[in] IBarDataConsumer* dataConsumer,
 			[in] IBarDataInputServiceConsumer* serviceConsumer,
 			[out, retval] IBarDataReader** );
 
         HRESULT CreateBarDataWriter(
-			[in] long tickerID,
 			[in] IBarDataOutputServiceConsumer* serviceConsumer,
 			[in] IContractSpecifier* contractSpec,
                         [in, optional, defaultvalue("")] BSTR location, 
@@ -450,9 +466,6 @@ library TradeBuildSP
     interface IBarDataWriter : IUnknown {
 
 	// Properties ==================================================
-
-        [propput]
-        HRESULT ContractSpecifier([in] IContractSpecifier* );
 
         [propget]
         HRESULT ContractSpecifier([out, retval] IContractSpecifier** );
@@ -1043,6 +1056,8 @@ library TradeBuildSP
         HRESULT OutputTickfileCreated(
                         [in] long tickerid, 
                         [in] BSTR filename);
+
+        HRESULT Ready();
 
     };
 
