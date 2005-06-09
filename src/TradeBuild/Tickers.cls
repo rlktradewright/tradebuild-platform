@@ -23,24 +23,24 @@ Option Explicit
 
 Event ask( _
                 ByVal key As String, _
-                ByVal timestamp As Date, _
-                ByVal price As Double, _
+                ByVal Timestamp As Date, _
+                ByVal Price As Double, _
                 ByVal Size As Long)
 
 Event bid( _
                 ByVal key As String, _
-                ByVal timestamp As Date, _
-                ByVal price As Double, _
+                ByVal Timestamp As Date, _
+                ByVal Price As Double, _
                 ByVal Size As Long)
 
 Event Change( _
                 ByVal key As String, _
-                ByVal timestamp As Date, _
+                ByVal Timestamp As Date, _
                 ByVal amount As Double)
 
 Event ChangePercent( _
                 ByVal key As String, _
-                ByVal timestamp As Date, _
+                ByVal Timestamp As Date, _
                 ByVal amount As Double)
 
 Event ContractInvalid( _
@@ -49,20 +49,20 @@ Event ContractInvalid( _
                 
 Event DOMClearCell( _
                 ByVal key As String, _
-                ByVal timestamp As Date, _
+                ByVal Timestamp As Date, _
                 ByVal side As DOMSides, _
-                ByVal price As Double)
+                ByVal Price As Double)
                 
 Event DOMSetCell( _
                 ByVal key As String, _
-                ByVal timestamp As Date, _
+                ByVal Timestamp As Date, _
                 ByVal side As DOMSides, _
-                ByVal price As Double, _
+                ByVal Price As Double, _
                 ByVal Size As Long)
                 
 Event DOMReset( _
                 ByVal key As String, _
-                ByVal timestamp As Date, _
+                ByVal Timestamp As Date, _
                 ByVal marketDataReRequested As Boolean)
                 
 Event DuplicateTickerRequest( _
@@ -71,28 +71,28 @@ Event DuplicateTickerRequest( _
 
 Event High( _
                 ByVal key As String, _
-                ByVal timestamp As Date, _
-                ByVal price As Double)
+                ByVal Timestamp As Date, _
+                ByVal Price As Double)
 
 Event Low( _
                 ByVal key As String, _
-                ByVal timestamp As Date, _
-                ByVal price As Double)
+                ByVal Timestamp As Date, _
+                ByVal Price As Double)
 
 Event MarketDepthNotAvailable( _
                 ByVal key As String, _
-                ByVal timestamp As Date, _
+                ByVal Timestamp As Date, _
                 ByVal reason As String)
 
 Event OutputTickfileCreated( _
                 ByVal key As String, _
-                ByVal timestamp As Date, _
-                ByVal Filename As String)
+                ByVal Timestamp As Date, _
+                ByVal filename As String)
                 
 Event PreviousClose( _
                 ByVal key As String, _
-                ByVal timestamp As Date, _
-                ByVal price As Double)
+                ByVal Timestamp As Date, _
+                ByVal Price As Double)
 
 Event TickerAdded( _
                 ByVal pTicker As ticker)
@@ -105,32 +105,32 @@ Event TickerRemoved( _
 
 Event trade( _
                 ByVal key As String, _
-                ByVal timestamp As Date, _
-                ByVal price As Double, _
+                ByVal Timestamp As Date, _
+                ByVal Price As Double, _
                 ByVal Size As Long)
 
 Event UpdateMarketDepth( _
                 ByVal key As String, _
-                ByVal timestamp As Date, _
+                ByVal Timestamp As Date, _
                 ByVal position As Long, _
                 ByVal operation As DOMOperations, _
                 ByVal side As DOMSides, _
-                ByVal price As Double, _
+                ByVal Price As Double, _
                 ByVal Size As Long)
                 
 Event UpdateMarketDepthL2( _
                 ByVal key As String, _
-                ByVal timestamp As Date, _
+                ByVal Timestamp As Date, _
                 ByVal position As Long, _
                 ByVal marketMaker As String, _
                 ByVal operation As DOMOperations, _
                 ByVal side As DOMSides, _
-                ByVal price As Double, _
+                ByVal Price As Double, _
                 ByVal Size As Long)
 
 Event Volume( _
                 ByVal key As String, _
-                ByVal timestamp As Date, _
+                ByVal Timestamp As Date, _
                 ByVal Size As Long)
 
 
@@ -342,9 +342,9 @@ End Property
 'DefaultReplaySpeed = mDefaultReplaySpeed
 'End Property
 
-Public Property Get Item(ByVal index As Variant) As ticker
-Attribute Item.VB_UserMemId = 0
-Set Item = mTickers.Item(index)
+Public Property Get item(ByVal index As Variant) As ticker
+Attribute item.VB_UserMemId = 0
+Set item = mTickers.item(index)
 End Property
 
 Friend Property Let MaxTickers(ByVal value As Long)
@@ -358,6 +358,7 @@ End Property
 Public Function add(ByVal key As String, _
                     Optional ByVal position As Long = -1) As ticker
 Set add = New ticker
+add.Tickers = Me
 add.key = key
 add.position = position
 'add.OutputTickfileFormat = DefaultOutputTickfileFormat
@@ -400,32 +401,32 @@ mColumnNames(columnNameIndex) = columnName
 mColumnMask = mColumnMask Or columnId
 End Sub
 
-Friend Sub ask(ByVal timestamp As Date, ByVal tickerid As Long, ByVal price As Double, ByVal Size As Long)
+Friend Sub ask(ByVal Timestamp As Date, ByVal TickerID As Long, ByVal Price As Double, ByVal Size As Long)
 If mRS.State <> adStateClosed Then
-    mRS.Bookmark = mTickerTable(tickerid).Bookmark
+    mRS.Bookmark = mTickerTable(TickerID).Bookmark
     If (mColumnMask And TickerColumnIds.ColumnAsk) <> 0 Then
-        mRS(mColumnNames(TickerColumnNameIndexes.ColumnAsk)) = Format(price, mTickerTable(tickerid).formatString)
+        mRS(mColumnNames(TickerColumnNameIndexes.ColumnAsk)) = Format(Price, mTickerTable(TickerID).formatString)
     End If
     If (mColumnMask And TickerColumnIds.ColumnAskSize) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnAskSize)) = Size
     End If
     mRS.Update
 End If
-RaiseEvent ask(mTickerTable(tickerid).key, timestamp, price, Size)
+RaiseEvent ask(mTickerTable(TickerID).key, Timestamp, Price, Size)
 End Sub
 
-Friend Sub bid(ByVal timestamp As Date, ByVal tickerid As Long, ByVal price As Double, ByVal Size As Long)
+Friend Sub bid(ByVal Timestamp As Date, ByVal TickerID As Long, ByVal Price As Double, ByVal Size As Long)
 If mRS.State <> adStateClosed Then
-    mRS.Bookmark = mTickerTable(tickerid).Bookmark
+    mRS.Bookmark = mTickerTable(TickerID).Bookmark
     If (mColumnMask And TickerColumnIds.ColumnBid) <> 0 Then
-        mRS(mColumnNames(TickerColumnNameIndexes.ColumnBid)) = Format(price, mTickerTable(tickerid).formatString)
+        mRS(mColumnNames(TickerColumnNameIndexes.ColumnBid)) = Format(Price, mTickerTable(TickerID).formatString)
     End If
     If (mColumnMask And TickerColumnIds.ColumnBidSize <> 0) Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnBidSize)) = Size
     End If
     mRS.Update
 End If
-RaiseEvent bid(mTickerTable(tickerid).key, timestamp, price, Size)
+RaiseEvent bid(mTickerTable(TickerID).key, Timestamp, Price, Size)
 End Sub
 
 Public Sub ClearColumns()
@@ -442,30 +443,31 @@ End Sub
 Friend Sub ContractInvalid(ByVal ticker As ticker, _
                             ByVal contractSpec As contractSpecifier)
 RaiseEvent ContractInvalid(ticker, contractSpec)
+Hide ticker
 End Sub
 
 Friend Sub DOMClearCell( _
-                ByVal tickerid As Long, _
-                ByVal timestamp As Date, _
+                ByVal TickerID As Long, _
+                ByVal Timestamp As Date, _
                 ByVal side As DOMSides, _
-                ByVal price As Double)
-RaiseEvent DOMClearCell(mTickerTable(tickerid).key, timestamp, side, price)
+                ByVal Price As Double)
+RaiseEvent DOMClearCell(mTickerTable(TickerID).key, Timestamp, side, Price)
 End Sub
                 
 Friend Sub DOMSetCell( _
-                ByVal tickerid As Long, _
-                ByVal timestamp As Date, _
+                ByVal TickerID As Long, _
+                ByVal Timestamp As Date, _
                 ByVal side As DOMSides, _
-                ByVal price As Double, _
+                ByVal Price As Double, _
                 ByVal Size As Long)
-RaiseEvent DOMSetCell(mTickerTable(tickerid).key, timestamp, side, price, Size)
+RaiseEvent DOMSetCell(mTickerTable(TickerID).key, Timestamp, side, Price, Size)
 End Sub
                 
 Friend Sub DOMReset( _
-                ByVal tickerid As Long, _
-                ByVal timestamp As Date, _
+                ByVal TickerID As Long, _
+                ByVal Timestamp As Date, _
                 ByVal marketDataReRequested As Boolean)
-RaiseEvent DOMReset(mTickerTable(tickerid).key, timestamp, marketDataReRequested)
+RaiseEvent DOMReset(mTickerTable(TickerID).key, Timestamp, marketDataReRequested)
 End Sub
                 
 Friend Sub DuplicateTickerRequest(ByVal ticker As ticker, _
@@ -555,68 +557,68 @@ For Each ticker In mTickers
 Next
 End Sub
 
-Friend Sub High(ByVal timestamp As Date, ByVal tickerid As Long, ByVal price As Double)
+Friend Sub High(ByVal Timestamp As Date, ByVal TickerID As Long, ByVal Price As Double)
 If mRS.State <> adStateClosed Then
-    mRS.Bookmark = mTickerTable(tickerid).Bookmark
+    mRS.Bookmark = mTickerTable(TickerID).Bookmark
     If (mColumnMask And TickerColumnIds.ColumnHigh) <> 0 Then
-        mRS(mColumnNames(TickerColumnNameIndexes.ColumnHigh)) = Format(price, mTickerTable(tickerid).formatString)
+        mRS(mColumnNames(TickerColumnNameIndexes.ColumnHigh)) = Format(Price, mTickerTable(TickerID).formatString)
     End If
     mRS.Update
 End If
-RaiseEvent High(mTickerTable(tickerid).key, timestamp, price)
+RaiseEvent High(mTickerTable(TickerID).key, Timestamp, Price)
 End Sub
 
-Friend Sub Last(ByVal timestamp As Date, _
-                    ByVal tickerid As Long, _
-                    ByVal price As Double, _
+Friend Sub Last(ByVal Timestamp As Date, _
+                    ByVal TickerID As Long, _
+                    ByVal Price As Double, _
                     ByVal Size As Long, _
                     ByVal Change As Double, _
                     ByVal ChangePercent As Double)
 If mRS.State <> adStateClosed Then
-    mRS.Bookmark = mTickerTable(tickerid).Bookmark
+    mRS.Bookmark = mTickerTable(TickerID).Bookmark
     If (mColumnMask And TickerColumnIds.ColumnTrade) <> 0 Then
-        mRS(mColumnNames(TickerColumnNameIndexes.ColumnTrade)) = Format(price, mTickerTable(tickerid).formatString)
+        mRS(mColumnNames(TickerColumnNameIndexes.ColumnTrade)) = Format(Price, mTickerTable(TickerID).formatString)
     End If
     If (mColumnMask And TickerColumnIds.ColumnTradeSize) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnTradeSize)) = Size
     End If
     If (mColumnMask And TickerColumnIds.ColumnChange) <> 0 Then
-        mRS(mColumnNames(TickerColumnNameIndexes.ColumnChange)) = Format(Change, IIf(Change >= 0, "+", "-") & mTickerTable(tickerid).formatString)
+        mRS(mColumnNames(TickerColumnNameIndexes.ColumnChange)) = Format(Change, IIf(Change >= 0, "+", "-") & mTickerTable(TickerID).formatString)
     End If
     If (mColumnMask And TickerColumnIds.ColumnChangePercent) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnChangePercent)) = Format(ChangePercent, IIf(ChangePercent >= 0, "+", "-") & "0.00\%")
     End If
     mRS.Update
 End If
-RaiseEvent trade(mTickerTable(tickerid).key, timestamp, price, Size)
-RaiseEvent Change(mTickerTable(tickerid).key, timestamp, Change)
-RaiseEvent ChangePercent(mTickerTable(tickerid).key, timestamp, ChangePercent)
+RaiseEvent trade(mTickerTable(TickerID).key, Timestamp, Price, Size)
+RaiseEvent Change(mTickerTable(TickerID).key, Timestamp, Change)
+RaiseEvent ChangePercent(mTickerTable(TickerID).key, Timestamp, ChangePercent)
 End Sub
 
-Friend Sub Low(ByVal timestamp As Date, ByVal tickerid As Long, ByVal price As Double)
+Friend Sub Low(ByVal Timestamp As Date, ByVal TickerID As Long, ByVal Price As Double)
 If mRS.State <> adStateClosed Then
-    mRS.Bookmark = mTickerTable(tickerid).Bookmark
+    mRS.Bookmark = mTickerTable(TickerID).Bookmark
     If (mColumnMask And TickerColumnIds.ColumnLow) <> 0 Then
-        mRS(mColumnNames(TickerColumnNameIndexes.ColumnLow)) = Format(price, mTickerTable(tickerid).formatString)
+        mRS(mColumnNames(TickerColumnNameIndexes.ColumnLow)) = Format(Price, mTickerTable(TickerID).formatString)
     End If
     mRS.Update
 End If
-RaiseEvent Low(mTickerTable(tickerid).key, timestamp, price)
+RaiseEvent Low(mTickerTable(TickerID).key, Timestamp, Price)
 End Sub
 
 Friend Sub MarketDepthNotAvailable( _
-                ByVal timestamp As Date, _
-                ByVal tickerid As Long, _
+                ByVal Timestamp As Date, _
+                ByVal TickerID As Long, _
                 ByVal reason As String)
-RaiseEvent MarketDepthNotAvailable(mTickerTable(tickerid).key, timestamp, reason)
+RaiseEvent MarketDepthNotAvailable(mTickerTable(TickerID).key, Timestamp, reason)
 End Sub
 
 Friend Sub OutputTickfileCreated( _
-                ByVal timestamp As Date, _
-                ByVal tickerid As Long, _
-                ByVal Filename As String)
+                ByVal Timestamp As Date, _
+                ByVal TickerID As Long, _
+                ByVal filename As String)
 
-RaiseEvent OutputTickfileCreated(mTickerTable(tickerid).key, timestamp, Filename)
+RaiseEvent OutputTickfileCreated(mTickerTable(TickerID).key, Timestamp, filename)
 End Sub
                 
 Public Sub MoveTicker(ByVal key As String, _
@@ -634,36 +636,36 @@ Attribute NewEnum.VB_MemberFlags = "40"
 Set NewEnum = mTickers.[_NewEnum]
 End Function
 
-Friend Sub PrevClose(ByVal timestamp As Date, _
-                    ByVal tickerid As Long, _
-                    ByVal price As Double, _
+Friend Sub PrevClose(ByVal Timestamp As Date, _
+                    ByVal TickerID As Long, _
+                    ByVal Price As Double, _
                     ByVal Change As Double, _
                     ByVal ChangePercent As Double)
 If mRS.State <> adStateClosed Then
-    mRS.Bookmark = mTickerTable(tickerid).Bookmark
+    mRS.Bookmark = mTickerTable(TickerID).Bookmark
     If (mColumnMask And TickerColumnIds.ColumnClose) <> 0 Then
-        mRS(mColumnNames(TickerColumnNameIndexes.ColumnClose)) = Format(price, mTickerTable(tickerid).formatString)
+        mRS(mColumnNames(TickerColumnNameIndexes.ColumnClose)) = Format(Price, mTickerTable(TickerID).formatString)
     End If
     If (mColumnMask And TickerColumnIds.ColumnChange) <> 0 Then
-        mRS(mColumnNames(TickerColumnNameIndexes.ColumnChange)) = Format(Change, IIf(Change >= 0, "+", "-") & mTickerTable(tickerid).formatString)
+        mRS(mColumnNames(TickerColumnNameIndexes.ColumnChange)) = Format(Change, IIf(Change >= 0, "+", "-") & mTickerTable(TickerID).formatString)
     End If
     If (mColumnMask And TickerColumnIds.ColumnChangePercent) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnChangePercent)) = Format(ChangePercent, IIf(ChangePercent >= 0, "+", "-") & "0.00\%")
     End If
     mRS.Update
 End If
-RaiseEvent PreviousClose(mTickerTable(tickerid).key, timestamp, price)
+RaiseEvent PreviousClose(mTickerTable(TickerID).key, Timestamp, Price)
 End Sub
 
 Friend Sub Hide(ByVal pTicker As ticker)
-If pTicker.ID = -1 Or mDeleting Then Exit Sub
+If pTicker.id = -1 Or mDeleting Then Exit Sub
 
 On Error Resume Next            ' in case this ticker has already been hidden
 
-mRS.Bookmark = mTickerTable(pTicker.ID).Bookmark
+mRS.Bookmark = mTickerTable(pTicker.id).Bookmark
 mRS.Delete
 mRS.Update
-mTickerTable(pTicker.ID).key = ""
+mTickerTable(pTicker.id).key = ""
 
 End Sub
 
@@ -672,7 +674,7 @@ pTicker.State = TickerStateCodes.Dead
 If Not pTicker.Contract Is Nothing Then pTicker.StopTicker
 Hide pTicker
 mTickers.Remove pTicker.key
-pTicker.ID = -1
+pTicker.id = -1
 pTicker.key = ""
 RaiseEvent TickerRemoved(pTicker)
 End Sub
@@ -680,20 +682,20 @@ End Sub
 Friend Sub StartTicker(ByVal pTicker As ticker)
 Dim NewTicker As Boolean
 
-If mTickerTable(pTicker.ID).key = pTicker.key Then
+If mTickerTable(pTicker.id).key = pTicker.key Then
     ' this happens when multiple tickfiles are being replayed on the
     ' second and subsequent tickfiles
     NewTicker = False
 Else
     NewTicker = True
-    mTickerTable(pTicker.ID).key = pTicker.key
+    mTickerTable(pTicker.id).key = pTicker.key
 End If
     
 
 If pTicker.Contract.NumberOfDecimals = 0 Then
-    mTickerTable(pTicker.ID).formatString = "0"
+    mTickerTable(pTicker.id).formatString = "0"
 Else
-    mTickerTable(pTicker.ID).formatString = "0." & String(pTicker.Contract.NumberOfDecimals, "0")
+    mTickerTable(pTicker.id).formatString = "0." & String(pTicker.Contract.NumberOfDecimals, "0")
 End If
 
 setTickerFields pTicker, NewTicker
@@ -702,15 +704,15 @@ pTicker.State = TickerStateCodes.Running
 RaiseEvent TickerReady(pTicker)
 End Sub
 
-Friend Sub Volume(ByVal timestamp As Date, ByVal tickerid As Long, ByVal Size As Long)
+Friend Sub Volume(ByVal Timestamp As Date, ByVal TickerID As Long, ByVal Size As Long)
 If mRS.State <> adStateClosed Then
-    mRS.Bookmark = mTickerTable(tickerid).Bookmark
+    mRS.Bookmark = mTickerTable(TickerID).Bookmark
     If (mColumnMask And TickerColumnIds.ColumnVolume) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnVolume)) = Size
     End If
     mRS.Update
 End If
-RaiseEvent Volume(mTickerTable(tickerid).key, timestamp, Size)
+RaiseEvent Volume(mTickerTable(TickerID).key, Timestamp, Size)
 End Sub
 
 '================================================================================
@@ -766,13 +768,13 @@ End Select
 End Function
 
 Private Sub setTickerFields(ByVal pTicker As ticker, ByVal NewTicker As Boolean)
-Dim tickerid As Long
-tickerid = pTicker.ID
+Dim TickerID As Long
+TickerID = pTicker.id
 If NewTicker Then
     mRS.AddNew
-    mTickerTable(tickerid).Bookmark = mRS.Bookmark
+    mTickerTable(TickerID).Bookmark = mRS.Bookmark
 Else
-    mRS.Bookmark = mTickerTable(tickerid).Bookmark
+    mRS.Bookmark = mTickerTable(TickerID).Bookmark
 End If
 mRS("Key") = pTicker.key
 mRS("Position") = pTicker.position
@@ -809,19 +811,19 @@ End With
 
 With pTicker
     If (mColumnMask And TickerColumnIds.ColumnBid) <> 0 Then
-        mRS(mColumnNames(TickerColumnNameIndexes.ColumnBid)) = Format(.BidPrice, , mTickerTable(tickerid).formatString)
+        mRS(mColumnNames(TickerColumnNameIndexes.ColumnBid)) = Format(.BidPrice, , mTickerTable(TickerID).formatString)
     End If
     If (mColumnMask And TickerColumnIds.ColumnBidSize) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnBidSize)) = .bidSize
     End If
     If (mColumnMask And TickerColumnIds.ColumnAsk) <> 0 Then
-        mRS(mColumnNames(TickerColumnNameIndexes.ColumnAsk)) = Format(.AskPrice, mTickerTable(tickerid).formatString)
+        mRS(mColumnNames(TickerColumnNameIndexes.ColumnAsk)) = Format(.AskPrice, mTickerTable(TickerID).formatString)
     End If
     If (mColumnMask And TickerColumnIds.ColumnAskSize) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnAskSize)) = .AskSize
     End If
     If (mColumnMask And TickerColumnIds.ColumnTrade) <> 0 Then
-        mRS(mColumnNames(TickerColumnNameIndexes.ColumnTrade)) = Format(.TradePrice, mTickerTable(tickerid).formatString)
+        mRS(mColumnNames(TickerColumnNameIndexes.ColumnTrade)) = Format(.TradePrice, mTickerTable(TickerID).formatString)
     End If
     If (mColumnMask And TickerColumnIds.ColumnTradeSize) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnTradeSize)) = .TradeSize
@@ -830,16 +832,16 @@ With pTicker
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnVolume)) = .Volume
     End If
     If (mColumnMask And TickerColumnIds.ColumnHigh) <> 0 Then
-        mRS(mColumnNames(TickerColumnNameIndexes.ColumnHigh)) = Format(.HighPrice, mTickerTable(tickerid).formatString)
+        mRS(mColumnNames(TickerColumnNameIndexes.ColumnHigh)) = Format(.HighPrice, mTickerTable(TickerID).formatString)
     End If
     If (mColumnMask And TickerColumnIds.ColumnLow) <> 0 Then
-        mRS(mColumnNames(TickerColumnNameIndexes.ColumnLow)) = Format(.LowPrice, mTickerTable(tickerid).formatString)
+        mRS(mColumnNames(TickerColumnNameIndexes.ColumnLow)) = Format(.LowPrice, mTickerTable(TickerID).formatString)
     End If
     If (mColumnMask And TickerColumnIds.ColumnClose) <> 0 Then
-        mRS(mColumnNames(TickerColumnNameIndexes.ColumnClose)) = Format(.ClosePrice, mTickerTable(tickerid).formatString)
+        mRS(mColumnNames(TickerColumnNameIndexes.ColumnClose)) = Format(.ClosePrice, mTickerTable(TickerID).formatString)
     End If
     If (mColumnMask And TickerColumnIds.ColumnChange) <> 0 Then
-        mRS(mColumnNames(TickerColumnNameIndexes.ColumnChange)) = Format(.Change, mTickerTable(tickerid).formatString)
+        mRS(mColumnNames(TickerColumnNameIndexes.ColumnChange)) = Format(.Change, mTickerTable(TickerID).formatString)
     End If
     If (mColumnMask And TickerColumnIds.ColumnChangePercent) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnChangePercent)) = Format(.ChangePercent, "+0.00")
