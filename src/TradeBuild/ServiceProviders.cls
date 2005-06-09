@@ -151,6 +151,14 @@ Case TradeBuildSP.ServiceProviderTypes.ContractInfo
     End If
 Case TradeBuildSP.ServiceProviderTypes.ExchangeSimulator
 Case TradeBuildSP.ServiceProviderTypes.HistoricalData
+    Dim histDataSp As TradeBuildSP.IBarDataServiceProvider
+    
+    On Error Resume Next
+    Set histDataSp = mServiceProviders(handle).SPObject
+    On Error GoTo 0
+    If Not histDataSp Is Nothing Then
+        regOk = True
+    End If
 Case TradeBuildSP.ServiceProviderTypes.LiveOrderSubmission
 Case TradeBuildSP.ServiceProviderTypes.OrderPersistence
 Case TradeBuildSP.ServiceProviderTypes.RealtimeData
@@ -285,9 +293,46 @@ Set mServiceProviders(add).SPObject = serviceProvider
 serviceProvider.Link Me, add
 End Function
 
+Friend Function CreateHistoricalDataWriter( _
+                            ByVal serviceConsumer As TradeBuildSP.IBarDataOutputServiceConsumer, _
+                            ByVal contractSpec As TradeBuild.contractSpecifier, _
+                            ByVal historicDataPath As String _
+                            ) As TradeBuild.HistoricDataWriter
+                            
+Dim histDataSp As TradeBuildSP.IBarDataServiceProvider
+Dim histDataSPWriter As TradeBuildSP.IBarDataWriter
+Dim histDataWriter As TradeBuild.HistoricDataWriter
+Dim i As Long
+
+For i = 0 To mMaxSPIndex
+    If Not mServiceProviders(i).SPObject Is Nothing Then
+        If (mServiceProviders(i).SPTypes And TradeBuildSP.ServiceProviderTypes.HistoricalData) <> 0 Then
+            Set histDataSp = mServiceProviders(i).SPObject
+            If histDataSp.Supports(TradeBuildSP.HistoricDataServiceProviderCapabilities.HistDataStore) _
+            Then
+                Exit For
+            Else
+                Set histDataSp = Nothing
+            End If
+        End If
+    End If
+Next
+
+If histDataSp Is Nothing Then Exit Function
+
+Set histDataSPWriter = histDataSp.CreateBarDataWriter(serviceConsumer, _
+                                                    contractSpec, _
+                                                    historicDataPath)
+
+Set histDataWriter = New TradeBuild.HistoricDataWriter
+histDataWriter.ServiceProviderWriter = histDataSPWriter
+Set CreateHistoricalDataWriter = histDataWriter
+
+End Function
+
 Friend Function CreateTickfileReader( _
                                     ByVal TickerID As Long, _
-                                    ByVal tfManager As TradeBuild.TickFileManager, _
+                                    ByVal serviceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
                                     ByVal inputTickfileFormatID As String _
                                     ) As TradeBuild.TickfileReader
 Dim tickfileSp As TradeBuildSP.ITickfileServiceProvider
@@ -315,16 +360,17 @@ If tickfileSp Is Nothing Then Exit Function
 Set tfReader = New TradeBuild.TickfileReader
 Set tickfileSPReader = tickfileSp.CreateTickfileReader(TickerID, _
                                                     tfReader, _
-                                                    tfManager, _
+                                                    serviceConsumer, _
                                                     inputTickfileFormatID)
 
 tfReader.ServiceProviderReader = tickfileSPReader
 
 Set CreateTickfileReader = tfReader
 End Function
+
 Friend Function CreateTickfileWriter( _
                             ByVal TickerID As Long, _
-                            ByVal tfManager As TradeBuild.TickFileManager, _
+                            ByVal serviceConsumer As TradeBuildSP.ITickfileOutputServiceConsumer, _
                             ByVal outputTickfileFormatID As String, _
                             ByVal outputTickFilePath As String _
                             ) As TradeBuild.TickfileWriter
@@ -353,7 +399,7 @@ If tickfileSp Is Nothing Then Exit Function
 
 Set tfWriter = New TradeBuild.TickfileWriter
 Set tickfileSPWriter = tickfileSp.CreateTickfileWriter(TickerID, _
-                                                    tfManager, _
+                                                    serviceConsumer, _
                                                     outputTickfileFormatID, _
                                                     outputTickFilePath)
 
