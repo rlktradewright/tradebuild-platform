@@ -9,6 +9,10 @@ Public Const S_OK = 0
 Public Const NoValidID As Long = -1
 Public Const InitialMaxTickers As Long = 100&
 
+Public Const MinDouble As Double = 4.94065645841247E-324
+Public Const MaxDouble As Double = 1.79769313486231E+308
+
+
 '================================================================================
 ' Enums
 '================================================================================
