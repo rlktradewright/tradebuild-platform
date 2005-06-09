@@ -66,6 +66,7 @@ Private mDescription As String
 Private mSessionStartTime As Date
 Private mSessionEndTime As Date
 
+Private mReferenceTime As Date
 Private mReferenceSessionStartTime As Date
 Private mReferenceSessionEndTime As Date
 
@@ -136,6 +137,14 @@ End Property
 Private Sub IContract_FromXML(ByVal contractXML As String)
 FromXML contractXML
 End Sub
+
+Private Sub IContract_GetSessionTimes(ByVal timestamp As Date, SessionStartTime As Date, SessionEndTime As Date)
+GetSessionTimes timestamp, SessionStartTime, SessionEndTime
+End Sub
+
+Private Function IContract_IsTimeInSession(ByVal timestamp As Date) As Boolean
+IContract_IsTimeInSession = IsTimeInSession(timestamp)
+End Function
 
 Private Property Get IContract_Key() As String
 IContract_Key = key
@@ -394,12 +403,12 @@ Public Property Let specifier(ByVal value As contractSpecifier)
 Set mSpecifier = value
 End Property
 
-Friend Property Let Timestamp(ByVal value As Date)
+Friend Property Let timestamp(ByVal value As Date)
 mTimestamp = value
 End Property
 
-Friend Property Get Timestamp() As Date
-Timestamp = mTimestamp
+Friend Property Get timestamp() As Date
+timestamp = mTimestamp
 End Property
 
 Public Property Get tradingClass() As String
@@ -435,6 +444,15 @@ BarStartTime = DateValue(theTime) + _
                 offset) / 1440
 
 End Function
+
+Public Sub GetSessionTimes( _
+                            ByVal timestamp As Date, _
+                            ByRef SessionStartTime As Date, _
+                            ByRef SessionEndTime As Date)
+CalcSessionTimes timestamp
+SessionStartTime = mReferenceSessionStartTime
+SessionEndTime = mReferenceSessionEndTime
+End Sub
 
 Public Function clone() As Contract
 
@@ -537,44 +555,12 @@ Next
 
 End Sub
 
-Public Function IsTimeInSession(ByVal Timestamp As Date) As Boolean
-Dim referenceDate As Date
-Dim referenceTime As Date
+Public Function IsTimeInSession(ByVal timestamp As Date) As Boolean
 
-If Timestamp >= mReferenceSessionEndTime Then
+CalcSessionTimes timestamp
 
-    ' recalculate the reference session times
-    
-    referenceDate = DateValue(Timestamp)
-    referenceTime = TimeValue(Timestamp)
-    
-    If mSessionStartTime < mSessionEndTime Then
-        ' session doesn't span midnight
-        If referenceTime < mSessionEndTime Then
-            mReferenceSessionStartTime = referenceDate + mSessionStartTime
-            mReferenceSessionEndTime = referenceDate + mSessionEndTime
-        Else
-            mReferenceSessionStartTime = referenceDate + 1 + mSessionStartTime
-            mReferenceSessionEndTime = referenceDate + 1 + mSessionEndTime
-        End If
-    ElseIf mSessionStartTime > mSessionEndTime Then
-        ' session spans midnight
-        If referenceTime >= mSessionEndTime Then
-            mReferenceSessionStartTime = referenceDate + mSessionStartTime
-            mReferenceSessionEndTime = referenceDate + 1 + mSessionEndTime
-        Else
-            mReferenceSessionStartTime = referenceDate - 1 + mSessionStartTime
-            mReferenceSessionEndTime = referenceDate + mSessionEndTime
-        End If
-    Else
-        ' this instrument trades 24hrs
-        mReferenceSessionStartTime = "01/01/1900"
-        mReferenceSessionEndTime = "31/12/2099"
-    End If
-End If
-
-If Timestamp >= mReferenceSessionStartTime And _
-    Timestamp < mReferenceSessionEndTime _
+If timestamp >= mReferenceSessionStartTime And _
+    timestamp < mReferenceSessionEndTime _
 Then
     IsTimeInSession = True
 End If
@@ -694,4 +680,47 @@ End Function
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub CalcSessionTimes(ByVal timestamp As Date)
+Dim referenceDate As Date
+Dim referenceTime As Date
+
+If timestamp >= mReferenceSessionEndTime Or _
+    timestamp < mReferenceTime _
+Then
+
+    ' recalculate the reference session times
+    
+    mReferenceTime = timestamp
+    referenceDate = DateValue(mReferenceTime)
+    referenceTime = TimeValue(mReferenceTime)
+    
+    If mSessionStartTime < mSessionEndTime Then
+        ' session doesn't span midnight
+        If referenceTime < mSessionEndTime Then
+            mReferenceSessionStartTime = referenceDate + mSessionStartTime
+            mReferenceSessionEndTime = referenceDate + mSessionEndTime
+        Else
+            mReferenceSessionStartTime = referenceDate + 1 + mSessionStartTime
+            mReferenceSessionEndTime = referenceDate + 1 + mSessionEndTime
+        End If
+    ElseIf mSessionStartTime > mSessionEndTime Then
+        ' session spans midnight
+        If referenceTime >= mSessionEndTime Then
+            mReferenceSessionStartTime = referenceDate + mSessionStartTime
+            mReferenceSessionEndTime = referenceDate + 1 + mSessionEndTime
+        Else
+            mReferenceSessionStartTime = referenceDate - 1 + mSessionStartTime
+            mReferenceSessionEndTime = referenceDate + mSessionEndTime
+        End If
+    Else
+        ' this instrument trades 24hrs
+        mReferenceSessionStartTime = "01/01/1900"
+        mReferenceSessionEndTime = "31/12/2099"
+    End If
+End If
+
+End Sub
+
+
 
