@@ -1457,7 +1457,9 @@ Friend Sub RequestMarketDataEx(ByVal pContractSpecifier As contractSpecifier, _
                             Optional ByVal noVolumeAdjustments As Boolean = False, _
                             Optional ByVal noImpliedTrades As Boolean = False)
 
-Dim lContracts As Contracts
+'Dim lContracts As Contracts
+
+Dim lTickerID As Long
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
     RaiseEvent errorMessage(gCurrentTime, _
@@ -1467,18 +1469,37 @@ If mConnectionState <> ConnectionStates.ConnConnected Then
     Exit Sub
 End If
 
-UpdateTickerTableEntry pTicker.id, _
+lTickerID = pTicker.id
+UpdateTickerTableEntry lTickerID, _
                         pContractSpecifier, _
                         DOMEventsRequired, _
                         pTickfileWriter, _
                         includeMarketDepthInTickfile, _
                         noVolumeAdjustments, _
                         noImpliedTrades
-Set lContracts = New Contracts
-reqContract pTicker.id, _
-            lContracts, _
-            pContractSpecifier, _
-            True
+
+If findTickerTableIndex(pContractSpecifier, lTickerID) <> -1 Then
+    ' a ticker for this contract is already running
+    With mTickerTable(lTickerID)
+        .tickerObj.Contract = Nothing
+        .tickerObj.id = -1
+        .tickerObj.DuplicateTickerRequest .contractSpecifier
+        mTickers.DuplicateTickerRequest .tickerObj, .contractSpecifier
+'        RaiseEvent errorMessage(gCurrentTime, _
+'                                lTickerID, _
+'                                ApiErrorCodes.TickerAlreadyRunningForThisContract, _
+'                                "A ticker has already been started for the contract specified in this ticker")
+        releaseTickerTableEntry lTickerID
+    End With
+Else
+    reqMarketData lTickerID
+End If
+
+'Set lContracts = New Contracts
+'reqContract pTicker.id, _
+'            lContracts, _
+'            pContractSpecifier, _
+'            True
 
 End Sub
 
@@ -2367,8 +2388,8 @@ Case 200    ' security definition not known
         With mTickerTable(id Mod INCARNATION_INCREMENT)
             RaiseEvent ContractInvalid(Timestamp, _
                                         .contractSpecifier)
-            mTickers.ContractInvalid .tickerObj, .contractSpecifier
             .tickerObj.ContractInvalid
+            mTickers.ContractInvalid .tickerObj, .contractSpecifier
             releaseTickerTableEntry (id Mod INCARNATION_INCREMENT)
         End With
     Else
