@@ -17,6 +17,8 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
+Implements TradeBuildSP.ITickfileOutputServiceConsumer
+
 '================================================================================
 ' Events
 '================================================================================
@@ -83,7 +85,7 @@ Event MarketDepthNotAvailable( _
 
 Event OutputTickfileCreated( _
                 ByVal Timestamp As Date, _
-                ByVal Filename As String)
+                ByVal filename As String)
                 
 Event PreviousClose( _
                 ByVal Timestamp As Date, _
@@ -147,7 +149,13 @@ Private mTickerID As Long
 Private mKey As String
 Private mPosition As Long
 
+Private mTickers As Tickers
+
 Private mState As TickerStateCodes
+
+Private mTimeframes As TradeBuild.Timeframes
+
+Private mCurrTickfileIndex As Long
 
 Private mBidPrice As Double
 Private mBidSize As Long
@@ -162,6 +170,8 @@ Private mVolume As Long
 Private mChange As Double
 Private mChangePercent As Double
 
+Private WithEvents mContracts As TradeBuild.Contracts
+Attribute mContracts.VB_VarHelpID = -1
 Private mContract As Contract
 
 Private mListeners As listeners
@@ -179,8 +189,16 @@ Private mReplaySpeed As Long
 Private mReplayProgressEventFrequency As Long
 Private mTimestampAdjustmentStart As Double
 Private mTimestampAdjustmentEnd As Double
+
+Private mWriteToTickFile As Boolean
 Private mOutputTickfileFormat As String
 Private mOutputTickFilePath As String
+Private mIncludeMarketDepthInTickfile As Boolean
+Private mDOMEventsRequired As TradeBuild.DOMEvents
+Private mNoVolumeAdjustments As Boolean
+Private mNoImpliedTrades As Boolean
+
+Private mWriter As TradeBuild.TickfileWriter
 
 Private mClock As clock
 
@@ -197,7 +215,79 @@ mState = TickerStateCodes.Created
 Set mListeners = New listeners
 mTickerID = gTradeBuildAPI.AllocateTickerTableEntry(Me)
 Set mClock = New clock
+Set mTimeframes = New TradeBuild.Timeframes
+mTimeframes.ticker = Me
+mCurrTickfileIndex = -1
 mReplayProgressEventFrequency = 25
+End Sub
+
+'================================================================================
+' TradeBuildSP.ITickfileOutputServiceConsumer Interface Members
+'================================================================================
+
+Private Sub ITickfileOutputServiceConsumer_Error( _
+                            ByVal errorCode As TradeBuildSP.StandardSPErrorCodes, _
+                            ByVal errorMessage As String, _
+                            Optional ByVal id As Long = -1&)
+Select Case errorCode
+Case TradeBuildSP.StandardSPErrorCodes.TFCantConnectDataSource
+    RaiseEvent errorMessage(gCurrentTime, _
+                    NoValidID, _
+                    ApiErrorCodes.TickfileDataSourceNotResponding, _
+                    "Can't connect to tickfile data source for output: " & _
+                    errorMessage)
+    Set mWriter = Nothing
+    gTradeBuildAPI.UpdateTickerTableEntry mTickerID, _
+                                Nothing, _
+                                mDOMEventsRequired, _
+                                Nothing, _
+                                mIncludeMarketDepthInTickfile, _
+                                mNoVolumeAdjustments, _
+                                mNoImpliedTrades
+Case Else
+    gTradeBuildAPI.SetServiceProviderError errorCode, _
+                        errorMessage, _
+                        "Unknown output Tickfile Service Provider"
+End Select
+End Sub
+
+Private Sub ITickfileOutputServiceConsumer_OutputTickfileCreated( _
+                            ByVal TickerID As Long, _
+                            ByVal filename As String)
+RaiseEvent OutputTickfileCreated(gCurrentTime, _
+                            filename)
+End Sub
+
+Private Sub ITickfileOutputServiceConsumer_Ready()
+mWriter.ServiceProviderWriterReady = True
+End Sub
+
+'================================================================================
+' mContracts Event Handlers
+'================================================================================
+
+Private Sub mContracts_NoMoreContractDetails()
+If mContracts.Count <> 1 Then
+    RaiseEvent ContractInvalid(mContracts.contractSpecifier)
+    mTickers.ContractInvalid Me, mContracts.contractSpecifier
+    Exit Sub
+End If
+
+Set mContract = mContracts(1)
+mTimeframes.Contract = mContract
+
+If mWriteToTickFile Then
+    CreateOutputTickfile
+End If
+
+mState = TickerStateCodes.Starting
+gTradeBuildAPI.RequestMarketDataEx mContract.specifier, _
+                        Me, _
+                        mDOMEventsRequired, _
+                        mWriter, _
+                        mIncludeMarketDepthInTickfile, _
+                        mNoVolumeAdjustments, _
+                        mNoImpliedTrades
 End Sub
 
 '================================================================================
@@ -352,18 +442,16 @@ RaiseEvent errorMessage(Timestamp, _
                                 errorMsg)
 End Sub
 
-Private Sub mTickfileManager_OutputTickfileCreated(ByVal Timestamp As Date, ByVal Filename As String)
-RaiseEvent OutputTickfileCreated(Timestamp, _
-                                Filename)
-End Sub
-
 Private Sub mTickfileManager_QueryReplayNextTickfile(ByVal tickfileIndex As Long, _
                                 ByVal tickfileName As String, _
                                 ByVal TickfileSizeBytes As Long, _
                                 ByVal pContract As Contract, _
                                 continueMode As ReplayContinueModes)
 
+mTimeframes.Reinitialise
 Set mContract = pContract
+mTimeframes.Contract = mContract
+mCurrTickfileIndex = tickfileIndex
 
 RaiseEvent ReplayNextTickfile(tickfileIndex, _
                                 tickfileName, _
@@ -372,6 +460,15 @@ RaiseEvent ReplayNextTickfile(tickfileIndex, _
                                 continueMode)
 
 If continueMode = ReplayContinueModes.ReplayContinue Then
+    mState = TickerStateCodes.Running
+    If mWriteToTickFile Then CreateOutputTickfile
+    gTradeBuildAPI.UpdateTickerTableEntry mTickerID, _
+                                mContract.specifier, _
+                                mDOMEventsRequired, _
+                                mWriter, _
+                                mIncludeMarketDepthInTickfile, _
+                                mNoVolumeAdjustments, _
+                                mNoImpliedTrades
     gTickers.StartTicker Me
     mClock.SimulateTime True
 End If
@@ -379,6 +476,7 @@ End Sub
 
 Private Sub mTickfileManager_ReplayCompleted(ByVal Timestamp As Date)
 RaiseEvent ReplayCompleted(Timestamp)
+mTimeframes.RemoveAll
 mClock.SimulateTime False
 mState = TickerStateCodes.Created
 End Sub
@@ -437,6 +535,7 @@ End Property
 
 Friend Property Let Contract(ByVal value As Contract)
 Set mContract = value
+mTimeframes.Contract = mContract
 RaiseEvent Ready(Timestamp, mContract)
 End Property
 
@@ -476,7 +575,7 @@ Public Property Get LowPrice() As Double
 LowPrice = mLowPrice
 End Property
 
-Public Property Let OutputTickfileFormat(ByVal value As String)
+Public Property Let outputTickfileFormat(ByVal value As String)
 If mState <> TickerStateCodes.Created Then
     err.Raise ErrorCodes.TickerAlreadyInUse, _
             "TradeBuild.Ticker::(Let)OutputTickfileFormat", _
@@ -485,8 +584,8 @@ End If
 mOutputTickfileFormat = value
 End Property
 
-Public Property Get OutputTickfileFormat() As String
-OutputTickfileFormat = mOutputTickfileFormat
+Public Property Get outputTickfileFormat() As String
+outputTickfileFormat = mOutputTickfileFormat
 End Property
 
 Public Property Let outputTickFilePath(ByVal value As String)
@@ -549,10 +648,15 @@ End Property
 
 Friend Property Let State(ByVal value As TickerStateCodes)
 mState = value
+If mState = TickerStateCodes.Dead Then Set mTickers = Nothing
 End Property
 
 Public Property Get State() As TickerStateCodes
 State = mState
+End Property
+
+Friend Property Let Tickers(ByVal value As Tickers)
+Set mTickers = value
 End Property
 
 Public Property Let TickfileContract(ByVal value As Contract)
@@ -579,6 +683,10 @@ If mTickfileManager Is Nothing Then
             "No tickfiles have been selected"
 End If
 TickfileSpecifiers = mTickfileManager.TickfileSpecifiers
+End Property
+
+Public Property Get Timeframes() As TradeBuild.Timeframes
+Set Timeframes = mTimeframes
 End Property
 
 Public Property Get Timestamp() As Date
@@ -633,7 +741,7 @@ End Sub
 Friend Sub ContractInvalid()
 RaiseEvent ContractInvalid(mContract.specifier)
 Set mContract = Nothing
-mTickerID = -1
+State = TickerStateCodes.Dead
 End Sub
 
 Friend Sub DOMClearCell( _
@@ -642,7 +750,7 @@ Friend Sub DOMClearCell( _
                 ByVal price As Double)
 Dim info As TickerListenMDData
 
-
+mState = TickerStateCodes.Running
 mClock.SetTime Timestamp
 info.TickerID = mTickerID
 info.side = side
@@ -659,7 +767,7 @@ Friend Sub DOMSetCell( _
                 ByVal Size As Long)
 Dim info As TickerListenMDData
 
-
+mState = TickerStateCodes.Running
 mClock.SetTime Timestamp
 info.TickerID = mTickerID
 info.side = side
@@ -675,7 +783,7 @@ Friend Sub DOMReset( _
 
 Dim info As TickerListenMDData
 
-
+mState = TickerStateCodes.Running
 mClock.SetTime Timestamp
 info.TickerID = mTickerID
 info.marketDataReRequested = marketDataReRequested
@@ -726,6 +834,8 @@ Friend Sub setAsk(ByVal Timestamp As Date, _
                         ByVal Size As Long)
 Dim info As TickerListenData
 
+mState = TickerStateCodes.Running
+
 mClock.SetTime Timestamp
 mAskPrice = price
 mAskSize = Size
@@ -742,6 +852,8 @@ Friend Sub setBid(ByVal Timestamp As Date, _
                         ByVal Size As Long)
 Dim info As TickerListenData
 
+mState = TickerStateCodes.Running
+
 mClock.SetTime Timestamp
 mBidPrice = price
 mBidSize = Size
@@ -757,6 +869,8 @@ Friend Sub setClosePrice(ByVal Timestamp As Date, ByVal price As Double)
 mClosePrice = price
 
 Dim info As TickerListenData
+
+mState = TickerStateCodes.Running
 
 mClock.SetTime Timestamp
 info.TickerID = mTickerID
@@ -785,6 +899,8 @@ mHighPrice = price
 
 Dim info As TickerListenData
 
+mState = TickerStateCodes.Running
+
 mClock.SetTime Timestamp
 info.TickerID = mTickerID
 info.price = price
@@ -798,6 +914,8 @@ mLowPrice = price
 
 Dim info As TickerListenData
 
+mState = TickerStateCodes.Running
+
 mClock.SetTime Timestamp
 info.TickerID = mTickerID
 info.price = price
@@ -810,6 +928,8 @@ Friend Sub setTrade(ByVal Timestamp As Date, _
                         ByVal price As Double, _
                         ByVal Size As Long)
 Dim info As TickerListenData
+
+mState = TickerStateCodes.Running
 
 mClock.SetTime Timestamp
 mTradePrice = price
@@ -840,6 +960,8 @@ Friend Sub setVolume(ByVal Timestamp As Date, ByVal Size As Long)
 mVolume = Size
 
 Dim info As TickerListenData
+
+mState = TickerStateCodes.Running
 
 mClock.SetTime Timestamp
 info.TickerID = mTickerID
@@ -875,13 +997,6 @@ Public Sub StartTicker(Optional ByVal pContractSpecifier As contractSpecifier, _
                         Optional ByVal includeMarketDepthInTickfile As Boolean = False, _
                         Optional ByVal noVolumeAdjustments As Boolean = False, _
                         Optional ByVal noImpliedTrades As Boolean = False)
-'If mTickerID <> -1 Then
-'    If mTickfileManager Is Nothing Then
-'        err.Raise ErrorCodes.TickerAlreadyInUse, _
-'                        "TradeBuild.Ticker::selectTickfiles", _
-'                        "Ticker is already in use"
-'    End If
-'End If
 If mState = TickerStateCodes.Dead Then err.Raise ErrorCodes.AttemptToUseDeadTickerObject, _
                         "TradeBuild.Ticker::startTicker", _
                         "Can't call startTicker on a dead ticker object"
@@ -893,44 +1008,26 @@ If pContractSpecifier Is Nothing And _
                            "No contract or tickfile has been specified"
 End If
 
-If mTickfileManager Is Nothing And writeToTickFile Then
-    Set mTickfileManager = New TickFileManager
-End If
+mState = TickerStateCodes.Starting
+
+mWriteToTickFile = writeToTickFile
+mIncludeMarketDepthInTickfile = includeMarketDepthInTickfile
+mDOMEventsRequired = DOMEventsRequired
+mNoVolumeAdjustments = noVolumeAdjustments
+mNoImpliedTrades = noImpliedTrades
 
 If Not mTickfileManager Is Nothing Then
-    
-    If writeToTickFile Then
-        mTickfileManager.OutputTickfileFormat = mOutputTickfileFormat
-        mTickfileManager.outputTickFilePath = mOutputTickFilePath
-        mTickfileManager.CreateOutputTickfile Me, _
-                                includeMarketDepthInTickfile
-    End If
-    
-    If mTickfileManager.NumberOfInputTickfiles > 0 Then
-        mState = TickerStateCodes.Running
-        mTickfileManager.Contract = mTickfileContract
-        mTickfileManager.ReplayProgressEventFrequency = mReplayProgressEventFrequency
-        mTickfileManager.replaySpeed = mReplaySpeed
-        mTickfileManager.TimestampAdjustmentStart = mTimestampAdjustmentStart
-        mTickfileManager.TimestampAdjustmentEnd = mTimestampAdjustmentEnd
-        mTickfileManager.StartReplay Me, _
-                                DOMEventsRequired, _
-                                noVolumeAdjustments, _
-                                noImpliedTrades
-        Exit Sub
-    End If
+    mTickfileManager.Contract = mTickfileContract
+    mTickfileManager.ReplayProgressEventFrequency = mReplayProgressEventFrequency
+    mTickfileManager.replaySpeed = mReplaySpeed
+    mTickfileManager.TimestampAdjustmentStart = mTimestampAdjustmentStart
+    mTickfileManager.TimestampAdjustmentEnd = mTimestampAdjustmentEnd
+    mTickfileManager.StartReplay Me
+    Exit Sub
 End If
 
-Set mContract = New Contract
-mContract.specifier = pContractSpecifier
-mState = TickerStateCodes.Starting
-gTradeBuildAPI.RequestMarketDataEx pContractSpecifier, _
-                        Me, _
-                        DOMEventsRequired, _
-                        Nothing, _
-                        includeMarketDepthInTickfile, _
-                        noVolumeAdjustments, _
-                        noImpliedTrades
+Set mContracts = gServiceProviders.RequestContract(pContractSpecifier)
+
 End Sub
 
 Public Sub StopTicker()
@@ -938,11 +1035,15 @@ If mState = TickerStateCodes.Dead Then Exit Sub
 'If mContract Is Nothing Then Exit Sub
 Set mContract = Nothing
 
-If Not mTickfileManager Is Nothing Then
-    mTickfileManager.stopReplay
-Else
-    gTradeBuildAPI.CancelMarketData mTickerID
-    mTickerID = -1
+If mState = TickerStateCodes.Running Or _
+    mState = TickerStateCodes.Paused _
+Then
+    If Not mTickfileManager Is Nothing Then
+        mTickfileManager.stopReplay
+    Else
+        gTradeBuildAPI.CancelMarketData mTickerID
+        mTickerID = -1
+    End If
 End If
 
 mBidPrice = 0
@@ -968,6 +1069,8 @@ Friend Sub UpdateMarketDepth( _
 Dim info As TickerListenRawMDData
 
 
+mState = TickerStateCodes.Running
+
 mClock.SetTime Timestamp
 info.TickerID = mTickerID
 info.position = position
@@ -990,6 +1093,8 @@ Friend Sub UpdateMarketDepthL2( _
 Dim info As TickerListenRawMDData
 
 
+mState = TickerStateCodes.Running
+
 mClock.SetTime Timestamp
 info.TickerID = mTickerID
 info.position = position
@@ -1007,4 +1112,26 @@ End Sub
 ' Helper Functions
 '================================================================================
 
+Private Sub CreateOutputTickfile()
+Dim tfManager As TradeBuild.TickFileManager
 
+If mTickfileManager Is Nothing Then
+    Set tfManager = New TickFileManager
+Else
+    Set tfManager = mTickfileManager
+End If
+
+Set mWriter = tfManager.CreateOutputTickfile(Me, _
+                        mOutputTickfileFormat, _
+                        mOutputTickFilePath)
+mWriter.Contract = mContract
+
+gTradeBuildAPI.UpdateTickerTableEntry mTickerID, _
+                            Nothing, _
+                            mDOMEventsRequired, _
+                            mWriter, _
+                            mIncludeMarketDepthInTickfile, _
+                            mNoVolumeAdjustments, _
+                            mNoImpliedTrades
+
+End Sub
