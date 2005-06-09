@@ -6,10 +6,10 @@ Begin VB.Form MainForm
    ClientHeight    =   6885
    ClientLeft      =   60
    ClientTop       =   345
-   ClientWidth     =   10875
+   ClientWidth     =   10995
    LinkTopic       =   "Form1"
    ScaleHeight     =   6885
-   ScaleWidth      =   10875
+   ScaleWidth      =   10995
    StartUpPosition =   3  'Windows Default
    Begin VB.TextBox StatusText 
       Height          =   1575
@@ -21,19 +21,18 @@ Begin VB.Form MainForm
       TabStop         =   0   'False
       ToolTipText     =   "Status messages"
       Top             =   5160
-      Width           =   10455
+      Width           =   10695
    End
    Begin TabDlg.SSTab SSTab1 
       Height          =   4815
       Left            =   120
       TabIndex        =   27
       Top             =   240
-      Width           =   10455
-      _ExtentX        =   18441
+      Width           =   10695
+      _ExtentX        =   18865
       _ExtentY        =   8493
       _Version        =   393216
       Style           =   1
-      Tabs            =   2
       TabsPerRow      =   4
       TabHeight       =   520
       TabCaption(0)   =   "Tickfile selection"
@@ -80,28 +79,350 @@ Begin VB.Form MainForm
       Tab(1).Control(0)=   "ContractDetailsText"
       Tab(1).Control(0).Enabled=   0   'False
       Tab(1).Control(1)=   "DisconnectButton"
+      Tab(1).Control(1).Enabled=   0   'False
       Tab(1).Control(2)=   "GetContractButton"
+      Tab(1).Control(2).Enabled=   0   'False
       Tab(1).Control(3)=   "RightCombo"
+      Tab(1).Control(3).Enabled=   0   'False
       Tab(1).Control(4)=   "TypeCombo"
+      Tab(1).Control(4).Enabled=   0   'False
       Tab(1).Control(5)=   "SymbolText"
+      Tab(1).Control(5).Enabled=   0   'False
       Tab(1).Control(6)=   "ExpiryText"
+      Tab(1).Control(6).Enabled=   0   'False
       Tab(1).Control(7)=   "ExchangeText"
+      Tab(1).Control(7).Enabled=   0   'False
       Tab(1).Control(8)=   "StrikePriceText"
+      Tab(1).Control(8).Enabled=   0   'False
       Tab(1).Control(9)=   "Frame2"
+      Tab(1).Control(9).Enabled=   0   'False
       Tab(1).Control(10)=   "PortText"
+      Tab(1).Control(10).Enabled=   0   'False
       Tab(1).Control(11)=   "ClientIDText"
+      Tab(1).Control(11).Enabled=   0   'False
       Tab(1).Control(12)=   "ServerText"
+      Tab(1).Control(12).Enabled=   0   'False
       Tab(1).Control(13)=   "Label11"
+      Tab(1).Control(13).Enabled=   0   'False
       Tab(1).Control(14)=   "Label21"
+      Tab(1).Control(14).Enabled=   0   'False
       Tab(1).Control(15)=   "Label17"
+      Tab(1).Control(15).Enabled=   0   'False
       Tab(1).Control(16)=   "Label7"
+      Tab(1).Control(16).Enabled=   0   'False
       Tab(1).Control(17)=   "Label4"
+      Tab(1).Control(17).Enabled=   0   'False
       Tab(1).Control(18)=   "Label5"
+      Tab(1).Control(18).Enabled=   0   'False
       Tab(1).Control(19)=   "Label6"
+      Tab(1).Control(19).Enabled=   0   'False
       Tab(1).Control(20)=   "Label13"
+      Tab(1).Control(20).Enabled=   0   'False
       Tab(1).Control(21)=   "Label3"
+      Tab(1).Control(21).Enabled=   0   'False
       Tab(1).Control(22)=   "Label2"
+      Tab(1).Control(22).Enabled=   0   'False
       Tab(1).ControlCount=   23
+      TabCaption(2)   =   "Bar output"
+      TabPicture(2)   =   "MainForm.frx":0038
+      Tab(2).ControlEnabled=   0   'False
+      Tab(2).Control(0)=   "Frame7"
+      Tab(2).Control(0).Enabled=   0   'False
+      Tab(2).Control(1)=   "Frame6"
+      Tab(2).Control(1).Enabled=   0   'False
+      Tab(2).Control(2)=   "Frame5"
+      Tab(2).Control(2).Enabled=   0   'False
+      Tab(2).Control(3)=   "Frame4"
+      Tab(2).Control(3).Enabled=   0   'False
+      Tab(2).ControlCount=   4
+      Begin VB.Frame Frame7 
+         Caption         =   "Period 4"
+         Height          =   4095
+         Left            =   -66960
+         TabIndex        =   93
+         Top             =   480
+         Width           =   2535
+         Begin VB.PictureBox Picture7 
+            Appearance      =   0  'Flat
+            BorderStyle     =   0  'None
+            ForeColor       =   &H80000008&
+            Height          =   3735
+            Left            =   120
+            ScaleHeight     =   3735
+            ScaleWidth      =   2295
+            TabIndex        =   94
+            Top             =   240
+            Width           =   2295
+            Begin VB.CheckBox IncludeBidAndAskCheck 
+               Caption         =   "Include bid and ask"
+               Height          =   255
+               Index           =   3
+               Left            =   120
+               TabIndex        =   103
+               Top             =   1920
+               Width           =   2175
+            End
+            Begin VB.CheckBox EnableCheck 
+               Caption         =   "Enable"
+               Height          =   255
+               Index           =   3
+               Left            =   120
+               TabIndex        =   97
+               Top             =   120
+               Width           =   2175
+            End
+            Begin VB.TextBox BarLengthText 
+               Height          =   285
+               Index           =   3
+               Left            =   1320
+               TabIndex        =   96
+               Text            =   "60"
+               Top             =   600
+               Width           =   855
+            End
+            Begin VB.TextBox SaveIntervalText 
+               Height          =   285
+               Index           =   3
+               Left            =   1320
+               TabIndex        =   95
+               Text            =   "60"
+               Top             =   1080
+               Width           =   855
+            End
+            Begin VB.Label Label28 
+               Caption         =   "Bar length (minutes)"
+               Height          =   375
+               Left            =   240
+               TabIndex        =   99
+               Top             =   600
+               Width           =   735
+            End
+            Begin VB.Label Label27 
+               Caption         =   "Save interval (seconds)"
+               Height          =   615
+               Left            =   240
+               TabIndex        =   98
+               Top             =   1080
+               Width           =   735
+            End
+         End
+      End
+      Begin VB.Frame Frame6 
+         Caption         =   "Period 3"
+         Height          =   4095
+         Left            =   -69600
+         TabIndex        =   86
+         Top             =   480
+         Width           =   2535
+         Begin VB.PictureBox Picture6 
+            Appearance      =   0  'Flat
+            BorderStyle     =   0  'None
+            ForeColor       =   &H80000008&
+            Height          =   3735
+            Left            =   120
+            ScaleHeight     =   3735
+            ScaleWidth      =   2295
+            TabIndex        =   87
+            Top             =   240
+            Width           =   2295
+            Begin VB.CheckBox IncludeBidAndAskCheck 
+               Caption         =   "Include bid and ask"
+               Height          =   255
+               Index           =   2
+               Left            =   120
+               TabIndex        =   102
+               Top             =   1920
+               Width           =   2175
+            End
+            Begin VB.TextBox SaveIntervalText 
+               Height          =   285
+               Index           =   2
+               Left            =   1320
+               TabIndex        =   90
+               Text            =   "60"
+               Top             =   1080
+               Width           =   855
+            End
+            Begin VB.TextBox BarLengthText 
+               Height          =   285
+               Index           =   2
+               Left            =   1320
+               TabIndex        =   89
+               Text            =   "15"
+               Top             =   600
+               Width           =   855
+            End
+            Begin VB.CheckBox EnableCheck 
+               Caption         =   "Enable"
+               Height          =   255
+               Index           =   2
+               Left            =   120
+               TabIndex        =   88
+               Top             =   120
+               Width           =   2175
+            End
+            Begin VB.Label Label26 
+               Caption         =   "Save interval (seconds)"
+               Height          =   615
+               Left            =   240
+               TabIndex        =   92
+               Top             =   1080
+               Width           =   735
+            End
+            Begin VB.Label Label25 
+               Caption         =   "Bar length (minutes)"
+               Height          =   375
+               Left            =   240
+               TabIndex        =   91
+               Top             =   600
+               Width           =   735
+            End
+         End
+      End
+      Begin VB.Frame Frame5 
+         Caption         =   "Period 2"
+         Height          =   4095
+         Left            =   -72240
+         TabIndex        =   79
+         Top             =   480
+         Width           =   2535
+         Begin VB.PictureBox Picture5 
+            Appearance      =   0  'Flat
+            BorderStyle     =   0  'None
+            ForeColor       =   &H80000008&
+            Height          =   3735
+            Left            =   120
+            ScaleHeight     =   3735
+            ScaleWidth      =   2295
+            TabIndex        =   80
+            Top             =   240
+            Width           =   2295
+            Begin VB.CheckBox IncludeBidAndAskCheck 
+               Caption         =   "Include bid and ask"
+               Height          =   255
+               Index           =   1
+               Left            =   120
+               TabIndex        =   101
+               Top             =   1920
+               Width           =   2175
+            End
+            Begin VB.CheckBox EnableCheck 
+               Caption         =   "Enable"
+               Height          =   255
+               Index           =   1
+               Left            =   120
+               TabIndex        =   83
+               Top             =   120
+               Width           =   2175
+            End
+            Begin VB.TextBox BarLengthText 
+               Height          =   285
+               Index           =   1
+               Left            =   1320
+               TabIndex        =   82
+               Text            =   "5"
+               Top             =   600
+               Width           =   855
+            End
+            Begin VB.TextBox SaveIntervalText 
+               Height          =   285
+               Index           =   1
+               Left            =   1320
+               TabIndex        =   81
+               Text            =   "30"
+               Top             =   1080
+               Width           =   855
+            End
+            Begin VB.Label Label24 
+               Caption         =   "Bar length (minutes)"
+               Height          =   375
+               Left            =   240
+               TabIndex        =   85
+               Top             =   600
+               Width           =   735
+            End
+            Begin VB.Label Label23 
+               Caption         =   "Save interval (seconds)"
+               Height          =   615
+               Left            =   240
+               TabIndex        =   84
+               Top             =   1080
+               Width           =   735
+            End
+         End
+      End
+      Begin VB.Frame Frame4 
+         Caption         =   "Period 1"
+         Height          =   4095
+         Left            =   -74880
+         TabIndex        =   72
+         Top             =   480
+         Width           =   2535
+         Begin VB.PictureBox Picture4 
+            Appearance      =   0  'Flat
+            BorderStyle     =   0  'None
+            ForeColor       =   &H80000008&
+            Height          =   3735
+            Left            =   120
+            ScaleHeight     =   3735
+            ScaleWidth      =   2295
+            TabIndex        =   73
+            Top             =   240
+            Width           =   2295
+            Begin VB.CheckBox IncludeBidAndAskCheck 
+               Caption         =   "Include bid and ask"
+               Height          =   255
+               Index           =   0
+               Left            =   120
+               TabIndex        =   100
+               Top             =   1920
+               Width           =   2175
+            End
+            Begin VB.TextBox SaveIntervalText 
+               Height          =   285
+               Index           =   0
+               Left            =   1320
+               TabIndex        =   78
+               Text            =   "15"
+               Top             =   1080
+               Width           =   855
+            End
+            Begin VB.TextBox BarLengthText 
+               Height          =   285
+               Index           =   0
+               Left            =   1320
+               TabIndex        =   76
+               Text            =   "1"
+               Top             =   600
+               Width           =   855
+            End
+            Begin VB.CheckBox EnableCheck 
+               Caption         =   "Enable"
+               Height          =   255
+               Index           =   0
+               Left            =   120
+               TabIndex        =   74
+               Top             =   120
+               Width           =   2175
+            End
+            Begin VB.Label Label22 
+               Caption         =   "Save interval (seconds)"
+               Height          =   615
+               Left            =   240
+               TabIndex        =   77
+               Top             =   1080
+               Width           =   735
+            End
+            Begin VB.Label Label19 
+               Caption         =   "Bar length (minutes)"
+               Height          =   375
+               Left            =   240
+               TabIndex        =   75
+               Top             =   600
+               Width           =   735
+            End
+         End
+      End
       Begin VB.CommandButton OutputPathButton 
          Caption         =   "..."
          Height          =   375
@@ -251,9 +572,9 @@ Begin VB.Form MainForm
             Width           =   2295
             Begin VB.ListBox FormatList 
                Height          =   645
-               ItemData        =   "MainForm.frx":0038
+               ItemData        =   "MainForm.frx":0054
                Left            =   0
-               List            =   "MainForm.frx":003A
+               List            =   "MainForm.frx":0056
                TabIndex        =   4
                ToolTipText     =   "Select output tickfile format"
                Top             =   0
@@ -264,9 +585,9 @@ Begin VB.Form MainForm
       Begin VB.ComboBox RightCombo 
          Enabled         =   0   'False
          Height          =   315
-         ItemData        =   "MainForm.frx":003C
+         ItemData        =   "MainForm.frx":0058
          Left            =   -68880
-         List            =   "MainForm.frx":003E
+         List            =   "MainForm.frx":005A
          Style           =   2  'Dropdown List
          TabIndex        =   23
          Top             =   3480
@@ -275,9 +596,9 @@ Begin VB.Form MainForm
       Begin VB.ComboBox TypeCombo 
          Enabled         =   0   'False
          Height          =   315
-         ItemData        =   "MainForm.frx":0040
+         ItemData        =   "MainForm.frx":005C
          Left            =   -68880
-         List            =   "MainForm.frx":0042
+         List            =   "MainForm.frx":005E
          Style           =   2  'Dropdown List
          TabIndex        =   19
          Top             =   2040
@@ -410,9 +731,9 @@ Begin VB.Form MainForm
       End
       Begin VB.ListBox TickfileList 
          Height          =   2400
-         ItemData        =   "MainForm.frx":0044
+         ItemData        =   "MainForm.frx":0060
          Left            =   120
-         List            =   "MainForm.frx":0046
+         List            =   "MainForm.frx":0062
          TabIndex        =   45
          TabStop         =   0   'False
          Top             =   480
@@ -523,9 +844,9 @@ Begin VB.Form MainForm
       End
       Begin VB.ComboBox ReplaySpeedCombo 
          Height          =   315
-         ItemData        =   "MainForm.frx":0048
+         ItemData        =   "MainForm.frx":0064
          Left            =   -74040
-         List            =   "MainForm.frx":0077
+         List            =   "MainForm.frx":0093
          Style           =   2  'Dropdown List
          TabIndex        =   28
          ToolTipText     =   "Adjust tickfile replay speed"
@@ -837,6 +1158,7 @@ Private Sub Form_Load()
 Dim TickfileSP As TickfileSP.TickfileServiceProvider
 Dim SQLDBTickfileSP As TBInfoBase.TickfileServiceProvider
 Dim contractInfoSP As TBInfoBase.ContractInfoServiceProvider
+Dim histDataSP As TBInfoBase.HistDataServiceProvider
 Dim i As Long
 
 On Error Resume Next
@@ -896,6 +1218,17 @@ If contractInfoSP Is Nothing Then
     Exit Sub
 End If
 mTradeBuildAPI.ServiceProviders.Add contractInfoSP
+
+On Error Resume Next
+Set histDataSP = New TBInfoBase.HistDataServiceProvider
+On Error GoTo 0
+If histDataSP Is Nothing Then
+    handleFatalError 998, _
+                    "The TradeBuild Historic Data Service Provider is not installed.", _
+                    "Form_Load"
+    Exit Sub
+End If
+mTradeBuildAPI.ServiceProviders.Add histDataSP
 
 mSupportedOutputFormats = mTradeBuildAPI.SupportedOutputTickfileFormats
 
@@ -964,6 +1297,7 @@ disableContractFields
 End Sub
 
 Private Sub ConvertButton_Click()
+Dim i As Long
 
 If ContractFromServiceProviderOption Or _
     ContractInCrescendoDBOption _
@@ -994,6 +1328,17 @@ mQuoteTrackerSP.QTServer = QTServerText.Text
 mQuoteTrackerSP.QTPort = QTPortText.Text
 QTServerText.Enabled = False
 QTPortText.Enabled = False
+
+For i = 0 To EnableCheck.UBound
+    If EnableCheck(i).value = vbChecked Then
+        mTicker.Timeframes.Add BarLengthText(i).Text, _
+                                TradeBuild.TimePeriodUnits.Minute, _
+                                BarLengthText(i).Text & "min", _
+                                0, _
+                                0, _
+                                (IncludeBidAndAskCheck(i).value = vbChecked)
+    End If
+Next
 
 writeStatusMessage "Tickfile conversion started"
 mTicker.StartTicker , , True, True
