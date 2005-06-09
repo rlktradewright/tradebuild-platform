@@ -30,16 +30,28 @@ Public Type SortEntry
     ObjectRef As Object
 End Type
 
+Public Type Tick
+    timestamp       As Date
+    TickType        As TradeBuild.TickTypes
+    TickPrice       As Double
+    TickSize        As Long
+    Volume          As Long
+    MDPosition      As Long
+    MDMarketMaker   As String
+    MDOperation     As Long
+    MDSide          As Long
+End Type
+
 Public Type TickerListenData
     TickerID As Long
-    Price As Double
+    price As Double
     Size As Long
 End Type
 
 Public Type TickerListenMDData
     TickerID As Long
     side As DOMSides
-    Price As Double
+    price As Double
     Size As Long
     marketDataReRequested As Boolean
 End Type
@@ -50,7 +62,7 @@ Public Type TickerListenRawMDData
     marketMaker As String
     operation As DOMOperations
     side As DOMSides
-    Price As Double
+    price As Double
     Size As Long
 End Type
 
@@ -64,8 +76,8 @@ End Type
 
 Public Type TickfileSpecifier
     TickfileFormatID    As String
-    Filename            As String
-    contractSpecifier   As contractSpecifier
+    filename            As String
+    ContractSpecifier   As ContractSpecifier
     From                As Date
     To                  As Date
     EntireSession       As Boolean
@@ -76,7 +88,7 @@ Public Type TWSSocketMsgTickPrice
     Version         As Long
     TickerID        As Long
     TickType        As TWSSocketTickTypes
-    Price           As Double
+    price           As Double
     Size            As Long
 End Type
 
@@ -224,7 +236,7 @@ Public Type TWSSocketMsgExecutionData
     execExchange    As String
     side            As String
     quantity        As Long
-    Price           As Double
+    price           As Double
     permId          As Long
     clientID        As Long
 End Type
@@ -236,7 +248,7 @@ Public Type TWSSocketMsgMarketDepth
     position        As Long
     operation       As Long
     side            As Long
-    Price           As Double
+    price           As Double
     Size            As Long
 End Type
 
@@ -248,7 +260,7 @@ Public Type TWSSocketMsgMarketDepthL2
     marketMaker     As String
     operation       As Long
     side            As Long
-    Price           As Double
+    price           As Double
     Size            As Long
 End Type
 
@@ -327,7 +339,15 @@ Public Enum ApiErrorCodes
     TickfileFormatNotDetermined
     TickfileDataSourceNotResponding
     RetryingConnectionToTickfileDataSource
+    CantConnectHistoricDataSource
+    RetryingConnectionToHistoricDataSource
                             
+End Enum
+
+Public Enum BarTypes
+    BarTypeTrade = TradeBuildSP.BarTypes.trade
+    BarTypeBid = TradeBuildSP.BarTypes.bid
+    BarTypeAsk = TradeBuildSP.BarTypes.ask
 End Enum
 
 Public Enum BulletinTypes
@@ -481,9 +501,9 @@ Public Enum SecurityTypes
 End Enum
 
 Public Enum StandardListenValueTypes
-    DebugInfo = TradebuildSP.StandardListenValueTypes.Debug
-    LogInfo = TradebuildSP.StandardListenValueTypes.Log
-    TraceInfo = TradebuildSP.StandardListenValueTypes.Trace
+    DebugInfo = TradeBuildSP.StandardListenValueTypes.Debug
+    LogInfo = TradeBuildSP.StandardListenValueTypes.Log
+    TraceInfo = TradeBuildSP.StandardListenValueTypes.Trace
 End Enum
 
 Public Enum TickerColumnIds
@@ -521,8 +541,8 @@ Public Enum TickerStateCodes
 End Enum
 
 Public Enum TickfileFormatType
-    FileBased = TradebuildSP.TickfileFormatTypes.FileBased
-    StreamBased = TradebuildSP.TickfileFormatTypes.StreamBased
+    FileBased = TradeBuildSP.TickfileFormatTypes.FileBased
+    StreamBased = TradeBuildSP.TickfileFormatTypes.StreamBased
 End Enum
 
 Public Enum TickTypes
@@ -537,6 +557,16 @@ Public Enum TickTypes
     marketDepth = &H100&
     MarketDepthL2 = &H200&
     MarketDepthReset = &H400&
+End Enum
+
+Public Enum TimePeriodUnits
+    Minute = 2
+    Hour
+    Day
+    Week
+    Month
+    LunarMonth
+    Year
 End Enum
 
 Public Enum TimestampFormats
