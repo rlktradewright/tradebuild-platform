@@ -73,44 +73,44 @@ Begin VB.Form fTradeSkilDemo
       Tab(1).ControlCount=   1
       TabCaption(2)   =   "&3. Orders"
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "ExecutionsList"
-      Tab(2).Control(1)=   "OpenOrdersList"
+      Tab(2).Control(0)=   "OrderButton"
+      Tab(2).Control(1)=   "CancelOrderButton"
       Tab(2).Control(2)=   "ModifyOrderButton"
-      Tab(2).Control(3)=   "CancelOrderButton"
-      Tab(2).Control(4)=   "OrderButton"
+      Tab(2).Control(3)=   "OpenOrdersList"
+      Tab(2).Control(4)=   "ExecutionsList"
       Tab(2).ControlCount=   5
       TabCaption(3)   =   "&4. Replay tickfiles"
       TabPicture(3)   =   "fTradeSkilDemo.frx":004D
       Tab(3).ControlEnabled=   0   'False
-      Tab(3).Control(0)=   "SkipReplayButton"
+      Tab(3).Control(0)=   "Label20"
       Tab(3).Control(0).Enabled=   0   'False
-      Tab(3).Control(1)=   "PlayTickFileButton"
+      Tab(3).Control(1)=   "ReplayContractLabel"
       Tab(3).Control(1).Enabled=   0   'False
-      Tab(3).Control(2)=   "SelectTickfilesButton"
+      Tab(3).Control(2)=   "Label19"
       Tab(3).Control(2).Enabled=   0   'False
-      Tab(3).Control(3)=   "ClearTickfileListButton"
+      Tab(3).Control(3)=   "ReplayProgressLabel"
       Tab(3).Control(3).Enabled=   0   'False
-      Tab(3).Control(4)=   "PauseReplayButton"
+      Tab(3).Control(4)=   "ReplayProgressBar"
       Tab(3).Control(4).Enabled=   0   'False
-      Tab(3).Control(5)=   "StopReplayButton"
+      Tab(3).Control(5)=   "ReplayMarketDepthCheck"
       Tab(3).Control(5).Enabled=   0   'False
-      Tab(3).Control(6)=   "TickfileList"
+      Tab(3).Control(6)=   "RewriteCheck"
       Tab(3).Control(6).Enabled=   0   'False
       Tab(3).Control(7)=   "ReplaySpeedCombo"
       Tab(3).Control(7).Enabled=   0   'False
-      Tab(3).Control(8)=   "RewriteCheck"
+      Tab(3).Control(8)=   "TickfileList"
       Tab(3).Control(8).Enabled=   0   'False
-      Tab(3).Control(9)=   "ReplayMarketDepthCheck"
+      Tab(3).Control(9)=   "StopReplayButton"
       Tab(3).Control(9).Enabled=   0   'False
-      Tab(3).Control(10)=   "ReplayProgressBar"
+      Tab(3).Control(10)=   "PauseReplayButton"
       Tab(3).Control(10).Enabled=   0   'False
-      Tab(3).Control(11)=   "ReplayProgressLabel"
+      Tab(3).Control(11)=   "ClearTickfileListButton"
       Tab(3).Control(11).Enabled=   0   'False
-      Tab(3).Control(12)=   "Label19"
+      Tab(3).Control(12)=   "SelectTickfilesButton"
       Tab(3).Control(12).Enabled=   0   'False
-      Tab(3).Control(13)=   "ReplayContractLabel"
+      Tab(3).Control(13)=   "PlayTickFileButton"
       Tab(3).Control(13).Enabled=   0   'False
-      Tab(3).Control(14)=   "Label20"
+      Tab(3).Control(14)=   "SkipReplayButton"
       Tab(3).Control(14).Enabled=   0   'False
       Tab(3).ControlCount=   15
       Begin VB.CommandButton SkipReplayButton 
@@ -1666,9 +1666,9 @@ End Sub
 
 Private Sub StartTickerButton_Click()
 Dim lTicker As Ticker
-Dim lContractSpecifier As ContractSpecifier
+Dim lContractSpecifier As contractSpecifier
 
-Set lContractSpecifier = New ContractSpecifier
+Set lContractSpecifier = New contractSpecifier
 lContractSpecifier.symbol = SymbolText
 lContractSpecifier.secType = secTypeFromString(TypeCombo)
 lContractSpecifier.expiry = IIf(lContractSpecifier.secType = SecurityTypes.SecTypeFuture Or _
@@ -1872,7 +1872,7 @@ id = Fix(Rnd * 1999999999 + 1)
 End Sub
 
 Private Sub mOrderForm_placeOrder(ByVal pOrder As order, _
-                                ByVal pContractSpecifier As ContractSpecifier, _
+                                ByVal pContractSpecifier As contractSpecifier, _
                                 ByVal passToTWS As Boolean)
 openOrder pContractSpecifier, pOrder
 If passToTWS Then mTradeBuildAPI.placeOrder pContractSpecifier, pOrder
@@ -1927,6 +1927,12 @@ BidSizeLabel.Caption = size
 Exit Sub
 err:
 handleFatalError err.Number, err.Description, "mTicker_bid"
+End Sub
+
+Private Sub mTicker_ContractInvalid(ByVal contractSpecifier As TradeBuild.contractSpecifier)
+writeStatusMessage "Invalid contract details:" & vbCrLf & _
+                    Replace(contractSpecifier.ToString, vbCrLf, "; ")
+StartTickerButton.Enabled = True
 End Sub
 
 Private Sub mTicker_errorMessage(ByVal timestamp As Date, _
@@ -2108,7 +2114,7 @@ End Sub
 
 
 Private Sub mTickers_contractInvalid(ByVal pTicker As Ticker, _
-                ByVal contractSpec As ContractSpecifier)
+                ByVal contractSpec As contractSpecifier)
 writeStatusMessage "Invalid contract details:" & vbCrLf & _
                     Replace(contractSpec.ToString, vbCrLf, "; ")
 StartTickerButton.Enabled = True
@@ -2144,9 +2150,10 @@ handleFatalError err.Number, err.Description, "mTickers_DOMReset"
 End Sub
 
 Private Sub mTickers_DuplicateTickerRequest(ByVal pTicker As TradeBuild.Ticker, _
-                                           ByVal contractSpec As ContractSpecifier)
+                                           ByVal contractSpec As contractSpecifier)
 writeStatusMessage "A ticker is already running for contract: " & _
                     Replace(contractSpec.ToString, vbCrLf, "; ")
+StartTickerButton.Enabled = True
 End Sub
 
 Private Sub mTickers_MarketDepthNotAvailable(ByVal Key As String, _
@@ -2453,7 +2460,7 @@ End Sub
 
 Private Sub mTradeBuildAPI_executionDetails(ByVal timestamp As Date, _
                         ByVal id As Long, _
-                        ByVal pContractSpecifier As ContractSpecifier, _
+                        ByVal pContractSpecifier As contractSpecifier, _
                         ByVal exec As Execution)
 Dim listItem As listItem
 On Error GoTo err
@@ -2482,7 +2489,7 @@ handleFatalError err.Number, err.Description, "mTradeBuildAPI_executionDetails"
 End Sub
 
 Private Sub mTradeBuildAPI_openOrder(ByVal timestamp As Date, _
-                            ByVal pContractSpecifier As ContractSpecifier, _
+                            ByVal pContractSpecifier As contractSpecifier, _
                             ByVal pOrder As order)
 On Error GoTo err
 
@@ -2649,7 +2656,7 @@ MsgBox "A fatal error has occurred. The program will close" & vbCrLf & _
 Unload Me
 End Sub
 
-Private Sub openOrder(ByVal pContractSpecifier As ContractSpecifier, _
+Private Sub openOrder(ByVal pContractSpecifier As contractSpecifier, _
                 ByVal pOrder As order)
 
 Dim listItem As listItem
