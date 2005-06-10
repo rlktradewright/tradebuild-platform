@@ -89,6 +89,9 @@ Private mBarWriter As TradeBuild.HistoricDataWriter
 Private WithEvents mTimer As TimerUtils.IntervalTimer
 Attribute mTimer.VB_VarHelpID = -1
 
+Private mPrevBarVolume As Long
+Private mLatestVolume As Long
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
@@ -172,7 +175,9 @@ Private Sub IListener_notify( _
                             ByVal data As Variant, _
                             ByVal Timestamp As Date)
 Dim tickData As TradeBuild.TickerListenData
-
+Static firstTradeSize As Long   ' nb: this is the size of the very first
+                                ' trade reported. It is needed to get a
+                                ' more accurate volume value for the first bar
 If Not mContract.IsTimeInSession(Timestamp) Then Exit Sub
 
 CheckNewBar Timestamp
@@ -181,17 +186,22 @@ tickData = data
 Select Case valueType
 Case TradeBuildListenValueTypes.ValueTypeTradeBuildAsk
     If mIncludeBidAndAsk Then
-        mAskBar.Tick tickData.Price
+        mAskBar.Tick tickData.price
     End If
 Case TradeBuildListenValueTypes.ValueTypeTradeBuildBid
     If mIncludeBidAndAsk Then
-        mBidBar.Tick tickData.Price
+        mBidBar.Tick tickData.price
     End If
 Case TradeBuildListenValueTypes.ValueTypeTradeBuildTrade
-    mTradeBar.Tick tickData.Price
+    mTradeBar.Tick tickData.price
     mTradeBar.TickSize tickData.Size
+    If firstTradeSize = 0 Then firstTradeSize = tickData.Size
 Case TradeBuildListenValueTypes.ValueTypeTradeBuildVolume
-    mTradeBar.Volume = tickData.Size
+    If mPrevBarVolume = 0 Then
+        mPrevBarVolume = tickData.Size - firstTradeSize
+    End If
+    mTradeBar.Volume = tickData.Size - mPrevBarVolume
+    mLatestVolume = tickData.Size
 End Select
 End Sub
 
@@ -361,6 +371,7 @@ End If
 
 If Not mTradeBar Is Nothing Then
     WriteBars
+    mPrevBarVolume = mLatestVolume
 End If
 
 Set mTradeBar = mTradeBars.add(Format(barTime, "yyyymmddhhnn"))
