@@ -216,7 +216,7 @@ Set mListeners = New listeners
 mTickerID = gTradeBuildAPI.AllocateTickerTableEntry(Me)
 Set mClock = New clock
 Set mTimeframes = New TradeBuild.Timeframes
-mTimeframes.ticker = Me
+mTimeframes.Ticker = Me
 mCurrTickfileIndex = -1
 mReplayProgressEventFrequency = 25
 End Sub
@@ -275,6 +275,8 @@ End If
 
 Set mContract = mContracts(1)
 mTimeframes.Contract = mContract
+
+RaiseEvent Ready(Timestamp, mContract)
 
 If mWriteToTickFile Then
     CreateOutputTickfile
@@ -461,6 +463,7 @@ RaiseEvent ReplayNextTickfile(tickfileIndex, _
 
 If continueMode = ReplayContinueModes.ReplayContinue Then
     mState = TickerStateCodes.Running
+    RaiseEvent Ready(Timestamp, mContract)
     If mWriteToTickFile Then CreateOutputTickfile
     gTradeBuildAPI.UpdateTickerTableEntry mTickerID, _
                                 mContract.specifier, _
@@ -533,11 +536,11 @@ Public Property Get ClosePrice() As Double
 ClosePrice = mClosePrice
 End Property
 
-Friend Property Let Contract(ByVal value As Contract)
-Set mContract = value
-mTimeframes.Contract = mContract
-RaiseEvent Ready(Timestamp, mContract)
-End Property
+'Friend Property Let Contract(ByVal value As Contract)
+'Set mContract = value
+'mTimeframes.Contract = mContract
+'RaiseEvent Ready(Timestamp, mContract)
+'End Property
 
 Public Property Get Contract() As Contract
 Set Contract = mContract
