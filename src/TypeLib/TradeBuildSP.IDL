@@ -738,6 +738,15 @@ library TradeBuildSP
 
         HRESULT FromXML([in] BSTR contractXML);
 
+	HRESULT GetSessionTimes( 	
+			[in] DATE Timestamp, 
+			[in, out] DATE* sessionStartTime,
+			[in, out] DATE* sessionEndTime);
+
+	HRESULT IsTimeInSession(
+			[in] DATE Timestamp, 
+			[out,retval] VARIANT_BOOL*);
+
         HRESULT ToString([out, retval] BSTR* );
 
         HRESULT ToXML([out, retval] BSTR* );
