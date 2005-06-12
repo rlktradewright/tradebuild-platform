@@ -197,7 +197,7 @@ Friend Property Let TickfileFormat(ByVal value As TickfileFormats)
 mTickfileFormat = value
 End Property
 
-Friend Property Let TickfileOutputServiceConsumer(ByVal RHS As ITickfileInputServiceConsumer)
+Friend Property Let TickfileOutputServiceConsumer(ByVal RHS As ITickfileOutputServiceConsumer)
 Set mServiceConsumer = RHS
 End Property
 
