@@ -89,14 +89,14 @@ End Sub
 Private Sub IBarDataWriter_WriteBar(data As TradeBuildSP.Bar)
 With data
     mBarWriter.WriteBar .timestamp, _
-                        .barType, _
-                        .periodMinutes, _
-                        .openPrice, _
-                        .highPrice, _
-                        .lowPrice, _
-                        .closePrice, _
-                        .volume, _
-                        .tickVolume, _
+                        .BarType, _
+                        .PeriodMinutes, _
+                        .OpenPrice, _
+                        .HighPrice, _
+                        .LowPrice, _
+                        .ClosePrice, _
+                        .Volume, _
+                        .TickVolume, _
                         0
 End With
 mBarsWritten = mBarsWritten + 1
@@ -155,7 +155,7 @@ Friend Property Let Path(ByVal value As String)
 mPath = value
 End Property
 
-Friend Property Let TickfileOutputServiceConsumer(ByVal value As IBarDataOutputServiceConsumer)
+Friend Property Let BarDataOutputServiceConsumer(ByVal value As IBarDataOutputServiceConsumer)
 Set mServiceConsumer = value
 End Property
 
