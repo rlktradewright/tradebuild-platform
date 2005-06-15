@@ -75,11 +75,11 @@ End Sub
 '================================================================================
 
 Private Function ICommonServiceConsumer_FormatTimestamp( _
-                            ByVal Timestamp As Date, _
+                            ByVal timestamp As Date, _
                             Optional ByVal formatOption As TradeBuildSP.TimestampFormats = 2&, _
                             Optional ByVal formatString As String = "yyyymmddhhnnss" _
                             ) As String
-ICommonServiceConsumer_FormatTimestamp = gFormatTimestamp(Timestamp, _
+ICommonServiceConsumer_FormatTimestamp = gFormatTimestamp(timestamp, _
                                                     formatOption, _
                                                     formatString)
 End Function
@@ -123,14 +123,14 @@ Set ICommonServiceConsumer_NewContract = New Contract
 End Function
 
 Private Function ICommonServiceConsumer_NewContractSpecifier() As TradeBuildSP.IContractSpecifier
-Set ICommonServiceConsumer_NewContractSpecifier = New contractSpecifier
+Set ICommonServiceConsumer_NewContractSpecifier = New ContractSpecifier
 End Function
 
 Private Sub ICommonServiceConsumer_NotifyListeners( _
                             ByVal value As Variant, _
                             ByVal valueType As Long, _
-                            ByVal Timestamp As Date)
-gListeners.notify value, valueType, Timestamp
+                            ByVal timestamp As Date)
+gListeners.notify value, valueType, timestamp
 End Sub
 
 Private Sub ICommonServiceConsumer_RegisterServiceProvider( _
@@ -293,9 +293,36 @@ Set mServiceProviders(add).SPObject = serviceProvider
 serviceProvider.Link Me, add
 End Function
 
+Friend Function CreateHistoricalDataReader( _
+                            ByVal dataConsumer As TradeBuildSP.IBarDataConsumer, _
+                            ByVal serviceConsumer As TradeBuildSP.IBarDataInputServiceConsumer _
+                            ) As TradeBuildSP.IBarDataReader
+                            
+Dim histDataSp As TradeBuildSP.IBarDataServiceProvider
+Dim histDataSPReader As TradeBuildSP.IBarDataReader
+Dim i As Long
+
+For i = 0 To mMaxSPIndex
+    If Not mServiceProviders(i).SPObject Is Nothing Then
+        If (mServiceProviders(i).SPTypes And TradeBuildSP.ServiceProviderTypes.HistoricalData) <> 0 Then
+            Set histDataSp = mServiceProviders(i).SPObject
+            Exit For
+        End If
+    End If
+Next
+
+If histDataSp Is Nothing Then Exit Function
+
+Set histDataSPReader = histDataSp.CreateBarDataReader(dataConsumer, _
+                                                    serviceConsumer)
+
+Set CreateHistoricalDataReader = histDataSPReader
+
+End Function
+                            
 Friend Function CreateHistoricalDataWriter( _
                             ByVal serviceConsumer As TradeBuildSP.IBarDataOutputServiceConsumer, _
-                            ByVal contractSpec As TradeBuild.contractSpecifier, _
+                            ByVal contractSpec As TradeBuild.ContractSpecifier, _
                             ByVal historicDataPath As String _
                             ) As TradeBuild.HistoricDataWriter
                             
@@ -422,13 +449,13 @@ mServiceProviders(handle).Name = ""
 End Sub
 
 Friend Function RequestContract( _
-                            ByRef contractSpecifier As TradeBuild.contractSpecifier _
+                            ByRef ContractSpecifier As TradeBuild.ContractSpecifier _
                             ) As TradeBuild.Contracts
 Dim lContracts As TradeBuild.Contracts
 Set lContracts = New TradeBuild.Contracts
 Set RequestContract = lContracts
 
-lContracts.contractSpecifier = contractSpecifier
+lContracts.ContractSpecifier = ContractSpecifier
 
 If Not RequestContractFromNextSP(0, lContracts) Then lContracts.LoadComplete
 End Function
