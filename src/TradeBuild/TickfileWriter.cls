@@ -55,6 +55,10 @@ Private mServiceProviderWriterReady As Boolean
 
 Private mPendingWrites As Collection
 
+Private WithEvents mTimer As TimerUtils.IntervalTimer
+
+Private mSelfRef As TradeBuild.TickfileWriter
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
@@ -63,13 +67,22 @@ Private Sub Class_Initialize()
 Set mPendingWrites = New Collection
 End Sub
 
+Private Sub Class_Terminate()
+Debug.Print "TradeBuild.TickfileWriter - object terminated"
+End Sub
+
 '================================================================================
 ' xxxx Interface Members
 '================================================================================
 
 '================================================================================
-' xxxx Event Handlers
+' mTimer Event Handlers
 '================================================================================
+
+Private Sub mTimer_TimerExpired()
+Set mWriter = Nothing
+Set mSelfRef = Nothing
+End Sub
 
 '================================================================================
 ' Properties
@@ -108,7 +121,7 @@ If mPendingWrites.Count <> 0 Then
                 mWriter.writeClose .timestamp, .TickPrice
             Case Volume
                 mWriter.writeVolume .timestamp, .TickSize
-            Case OpenInterest
+            Case openInterest
 
             Case marketDepth
                 mWriter.writeMarketDepthData .timestamp, _
@@ -134,7 +147,17 @@ End Property
 '================================================================================
 
 Public Sub closeOutputFile()
+Debug.Print "TradeBuild.TickfileWriter - closing output tickfile"
 mWriter.closeOutputFile
+
+Set mSelfRef = Me   ' to ensure this object is kept alive while
+                    ' the writer closes down (it may be doing
+                    ' asynchronous writes)
+
+Set mTimer = New TimerUtils.IntervalTimer
+mTimer.RepeatNotifications = False
+mTimer.TimerIntervalSecs = 60
+mTimer.StartTimer
 End Sub
 
 Friend Sub writeAsk(ByVal timestamp As Date, _
