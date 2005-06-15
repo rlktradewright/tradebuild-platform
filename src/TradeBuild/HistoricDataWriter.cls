@@ -55,6 +55,9 @@ Private mServiceProviderWriterReady As Boolean
 
 Private mPendingWrites As Collection
 
+Private WithEvents mTimer As TimerUtils.IntervalTimer
+Attribute mTimer.VB_VarHelpID = -1
+Private mSelfRef As TradeBuild.HistoricDataWriter
 
 '================================================================================
 ' Class Event Handlers
@@ -69,8 +72,13 @@ End Sub
 '================================================================================
 
 '================================================================================
-' XXXX Event Handlers
+' mTimer Event Handlers
 '================================================================================
+
+Private Sub mTimer_TimerExpired()
+Set mWriter = Nothing
+Set mSelfRef = Nothing
+End Sub
 
 '================================================================================
 ' Properties
@@ -101,6 +109,12 @@ End Property
 
 Friend Sub ReleaseDataStore()
 mWriter.ReleaseDataStore
+
+Set mSelfRef = Me
+Set mTimer = New TimerUtils.IntervalTimer
+mTimer.RepeatNotifications = False
+mTimer.TimerIntervalSecs = 60
+mTimer.StartTimer
 End Sub
 
 Friend Sub WriteBar(ByVal theBar As TradeBuild.Bar)
@@ -110,13 +124,13 @@ If Not mServiceProviderWriterReady Then
     mPendingWrites.add theBar
 Else
     With spBar
-        .BarType = theBar.BarType
+        .barType = theBar.barType
         .ClosePrice = theBar.ClosePrice
         .HighPrice = theBar.HighPrice
         .LowPrice = theBar.LowPrice
-        .OpenPrice = theBar.OpenPrice
-        .periodMinutes = theBar.BarLength
-        .TickVolume = theBar.TickVolume
+        .openPrice = theBar.openPrice
+        .PeriodMinutes = theBar.barLength
+        .tickVolume = theBar.tickVolume
         .timestamp = theBar.DateTime
         .Volume = theBar.Volume
     End With
