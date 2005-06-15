@@ -185,6 +185,7 @@ Volume = mVolume
 End Property
 
 Public Property Let Volume(newValue As Long)
+If newValue = 0 Then Exit Property
 mBlank = False
 mVolume = newValue
 End Property
@@ -203,7 +204,6 @@ mTickVolume = mTickVolume + 1
 End Sub
 
 Public Sub TickSize(ByVal Size As Long)
-If Size <> 0 Then mBlank = False
 Volume = Volume + Size
 End Sub
 
