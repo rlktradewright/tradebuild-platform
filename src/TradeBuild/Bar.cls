@@ -67,6 +67,7 @@ Private mBlank As Boolean   ' indicates that there were no ticks during the bar
 '================================================================================
 
 Private Sub Class_Initialize()
+mBlank = True
 mOpen = 0
 mLow = MaxDouble
 mHigh = MinDouble
