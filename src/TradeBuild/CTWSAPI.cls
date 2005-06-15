@@ -3543,7 +3543,7 @@ With mTickerTable(TickerID)
     If .writeMktDataToTickfile Then _
         .TickfileWriter.writeTrade Timestamp, Price, Size
 
-    .accumulatedVolume = .accumulatedVolume + .prevTradeSize
+    .accumulatedVolume = .accumulatedVolume + Size
 
     .prevTrade = Price
     If Size <> 0 Then .prevTradeSize = Size
