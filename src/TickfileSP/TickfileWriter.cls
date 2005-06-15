@@ -98,18 +98,6 @@ End If
 mServiceConsumer.Ready
 End Property
 
-Private Property Get ITickfileWriter_FormatIdentifier() As String
-
-End Property
-
-Private Property Get ITickfileWriter_FormatName() As String
-
-End Property
-
-Private Property Get ITickfileWriter_FormatVersion() As Long
-
-End Property
-
 Private Sub ITickfileWriter_WriteAsk(ByVal timestamp As Date, ByVal price As Double, ByVal size As Long)
 writeTickData timestamp, TICK_ASK, price, size
 End Sub
