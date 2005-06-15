@@ -450,6 +450,9 @@ Private Sub mTickfileManager_QueryReplayNextTickfile(ByVal tickfileIndex As Long
                                 ByVal pContract As Contract, _
                                 continueMode As ReplayContinueModes)
 
+If Not mWriter Is Nothing Then
+    mWriter.closeOutputFile
+End If
 mTimeframes.Reinitialise
 Set mContract = pContract
 mTimeframes.Contract = mContract
@@ -478,6 +481,9 @@ End If
 End Sub
 
 Private Sub mTickfileManager_ReplayCompleted(ByVal Timestamp As Date)
+If Not mWriter Is Nothing Then
+    mWriter.closeOutputFile
+End If
 RaiseEvent ReplayCompleted(Timestamp)
 mTimeframes.RemoveAll
 mClock.SimulateTime False
