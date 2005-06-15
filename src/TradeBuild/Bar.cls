@@ -58,6 +58,7 @@ Private mLow As Double
 Private mClose As Double
 Private mVolume As Long
 Private mTickVolume As Long
+Private mOpenInterest As Long
 Private mDateTime As Date
 Private mBlank As Boolean   ' indicates that there were no ticks during the bar
 
@@ -149,6 +150,15 @@ End Property
 Public Property Let LowPrice(newValue As Double)
 mBlank = False
 mLow = newValue
+End Property
+
+Public Property Get OpenInterest() As Long
+OpenInterest = mOpenInterest
+End Property
+
+Public Property Let OpenInterest(newValue As Long)
+mBlank = False
+mOpenInterest = newValue
 End Property
 
 Public Property Get OpenPrice() As Double

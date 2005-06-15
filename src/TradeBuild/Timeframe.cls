@@ -32,15 +32,17 @@ Option Explicit
 
 Implements TradeBuild.IListener
 Implements TradeBuildSP.IBarDataInputServiceConsumer
-Implements TradeBuildSP.IBarDataConsumer
 Implements TradeBuildSP.IBarDataOutputServiceConsumer
+Implements TradeBuildSP.IBarDataConsumer
 
 '================================================================================
 ' Events
 '================================================================================
 
+Event BarsLoaded()
+
 Event errorMessage( _
-                ByVal Timestamp As Date, _
+                ByVal timestamp As Date, _
                 ByVal errorCode As ApiErrorCodes, _
                 ByVal errorMsg As String)
 
@@ -49,6 +51,7 @@ Event OutputBarfileCreated( _
 
 Event CantCreateHistoricDataWriter()
                 
+
 '================================================================================
 ' Constants
 '================================================================================
@@ -82,9 +85,12 @@ Private mBarLengthMinutes As Long
 Private mSaveIntervalSeconds As Long
 Private mNumberOfBarsToFetch As Long
 
+Private mHistoricDataLoaded As Boolean
+
 Private mIncludeBidAndAsk As Boolean
 
 Private mBarWriter As TradeBuild.HistoricDataWriter
+Private mBarReader As TradeBuildSP.IBarDataReader
 
 Private WithEvents mTimer As TimerUtils.IntervalTimer
 Attribute mTimer.VB_VarHelpID = -1
@@ -98,7 +104,7 @@ Private mLatestVolume As Long
 
 Private Sub Class_Initialize()
 Set mTradeBars = New Bars
-mTradeBars.BarType = TradeBuild.BarTypes.BarTypeTrade
+mTradeBars.barType = TradeBuild.BarTypes.BarTypeTrade
 End Sub
 
 '================================================================================
@@ -106,7 +112,46 @@ End Sub
 '================================================================================
 
 Private Sub IBarDataConsumer_Bar(data As TradeBuildSP.Bar)
+Dim lBar As TradeBuild.Bar
+Dim barTime As Date
+Dim barkey As String
 
+With data
+    barTime = mContract.BarStartTime(.timestamp, mBarLengthMinutes)
+    barkey = CalcBarKey(barTime)
+    
+    ' check whether this bar already exists
+    On Error Resume Next
+    Set lBar = mTradeBars.item(barkey)
+    On Error GoTo 0
+    
+    If Not lBar Is Nothing Then
+        ' update the existing bar
+        lBar.openPrice = .openPrice
+        lBar.HighPrice = .HighPrice
+        lBar.LowPrice = .LowPrice
+        lBar.ClosePrice = .ClosePrice
+        lBar.Volume = .Volume
+        lBar.tickVolume = .tickVolume
+        lBar.openInterest = .openInterest
+    Else
+        Set lBar = mTradeBars.addHistoric( _
+                                barkey, _
+                                .timestamp, _
+                                .barType, _
+                                .PeriodMinutes, _
+                                .openPrice, _
+                                .HighPrice, _
+                                .LowPrice, _
+                                .ClosePrice, _
+                                .Volume, _
+                                .tickVolume, _
+                                .openInterest)
+    End If
+End With
+
+DoEvents
+mBarReader.FireNextBar
 End Sub
 
 '================================================================================
@@ -114,19 +159,20 @@ End Sub
 '================================================================================
 
 Private Sub IBarDataInputServiceConsumer_BarDataComplete()
-
+mHistoricDataLoaded = True
+RaiseEvent BarsLoaded
 End Sub
 
 Private Sub IBarDataInputServiceConsumer_Error(ByVal errorCode As TradeBuildSP.StandardSPErrorCodes, ByVal errorMessage As String, Optional ByVal id As Long = -1&)
 
 End Sub
 
-Private Sub IBarDataInputServiceConsumer_Progress(ByVal Timestamp As Date, ByVal eventsPlayed As Long, ByVal percentComplete As Single)
+Private Sub IBarDataInputServiceConsumer_Progress(ByVal timestamp As Date, ByVal eventsPlayed As Long, ByVal percentComplete As Single)
 
 End Sub
 
 Private Sub IBarDataInputServiceConsumer_Ready()
-
+mBarReader.FireNextBar
 End Sub
 
 '================================================================================
@@ -173,14 +219,16 @@ End Sub
 Private Sub IListener_notify( _
                             ByVal valueType As Long, _
                             ByVal data As Variant, _
-                            ByVal Timestamp As Date)
+                            ByVal timestamp As Date)
 Dim tickData As TradeBuild.TickerListenData
 Static firstTradeSize As Long   ' nb: this is the size of the very first
                                 ' trade reported. It is needed to get a
                                 ' more accurate volume value for the first bar
-If Not mContract.IsTimeInSession(Timestamp) Then Exit Sub
 
-CheckNewBar Timestamp
+If Not mHistoricDataLoaded Then Exit Sub
+If Not mContract.IsTimeInSession(timestamp) Then Exit Sub
+
+CheckNewBar timestamp
 
 tickData = data
 Select Case valueType
@@ -225,12 +273,28 @@ Set BidBars = mBidBars
 End Property
 
 Friend Property Let Contract(ByVal value As Contract)
+Dim barSpecifier As TradeBuildSP.BarDataSpecifier
 Set mContract = value
-Set mBarWriter = gServiceProviders.CreateHistoricalDataWriter(Me, _
-                            mContract.specifier, _
-                            "")
-If mBarWriter Is Nothing Then
-    RaiseEvent CantCreateHistoricDataWriter
+If mSaveIntervalSeconds >= 0 Then
+    Set mBarWriter = gServiceProviders.CreateHistoricalDataWriter(Me, _
+                                mContract.specifier, _
+                                "")
+    If mBarWriter Is Nothing Then
+        RaiseEvent CantCreateHistoricDataWriter
+    End If
+End If
+If mNumberOfBarsToFetch <> 0 Then
+    Set mBarReader = gServiceProviders.CreateHistoricalDataReader( _
+                                Me, _
+                                Me)
+    barSpecifier.BarLengthMinutes = mBarLengthMinutes
+    barSpecifier.barType = BarTypes.BarTypeTrade
+    Set barSpecifier.contractSpecifier = mContract.specifier
+    barSpecifier.From = CDate("1 Jan 1970")
+    barSpecifier.To = Now
+    barSpecifier.NumberOfBars = mNumberOfBarsToFetch
+    mBarReader.FetchBars barSpecifier
+    ' other bar types ????????????????????????????????????????
 End If
 End Property
 
@@ -238,16 +302,17 @@ Friend Property Let IncludeBidAndAsk(ByVal value As Boolean)
 mIncludeBidAndAsk = value
 If mIncludeBidAndAsk Then
     Set mAskBars = New Bars
-    mAskBars.BarType = TradeBuild.BarTypes.BarTypeAsk
-    mAskBars.BarLength = mBarLengthMinutes
+    mAskBars.barType = TradeBuild.BarTypes.BarTypeAsk
+    mAskBars.barLength = mBarLengthMinutes
     Set mBidBars = New Bars
-    mBidBars.BarType = TradeBuild.BarTypes.BarTypeBid
-    mBidBars.BarLength = mBarLengthMinutes
+    mBidBars.barType = TradeBuild.BarTypes.BarTypeBid
+    mBidBars.barLength = mBarLengthMinutes
 End If
 End Property
 
 Friend Property Let NumberOfBarsToFetch(ByVal value As Long)
 mNumberOfBarsToFetch = value
+If mNumberOfBarsToFetch = 0 Then mHistoricDataLoaded = True
 End Property
 
 Friend Property Let SaveIntervalSeconds(ByVal value As Long)
@@ -285,6 +350,7 @@ End Property
 
 Friend Sub Finish()
 If Not mBarWriter Is Nothing Then
+    WriteBars
     mBarWriter.ReleaseDataStore
     Set mBarWriter = Nothing
 End If
@@ -296,20 +362,26 @@ End If
 End Sub
 
 Friend Sub Reinitialise()
+If Not mBarWriter Is Nothing Then
+    WriteBars
+    mBarWriter.ReleaseDataStore
+    Set mBarWriter = Nothing
+End If
+
 Set mTradeBars = Nothing
 Set mTradeBars = New Bars
-mTradeBars.BarType = TradeBuild.BarTypes.BarTypeTrade
-mTradeBars.BarLength = mBarLengthMinutes
+mTradeBars.barType = TradeBuild.BarTypes.BarTypeTrade
+mTradeBars.barLength = mBarLengthMinutes
 
 If mIncludeBidAndAsk Then
     Set mAskBars = Nothing
     Set mAskBars = New Bars
-    mAskBars.BarType = TradeBuild.BarTypes.BarTypeAsk
-    mAskBars.BarLength = mBarLengthMinutes
+    mAskBars.barType = TradeBuild.BarTypes.BarTypeAsk
+    mAskBars.barLength = mBarLengthMinutes
     Set mBidBars = Nothing
     Set mBidBars = New Bars
-    mBidBars.BarType = TradeBuild.BarTypes.BarTypeBid
-    mBidBars.BarLength = mBarLengthMinutes
+    mBidBars.barType = TradeBuild.BarTypes.BarTypeBid
+    mBidBars.barLength = mBarLengthMinutes
 End If
 
 Set mTradeBar = Nothing
@@ -333,6 +405,10 @@ End Sub
 ' Helper Functions
 '================================================================================
 
+Private Function CalcBarKey(ByVal barTime As Date) As String
+CalcBarKey = Format(barTime, "yyyymmddhhnn")
+End Function
+
 Private Sub CalcTimePeriod()
 Select Case mTimePeriodUnit
 Case Minute
@@ -350,17 +426,18 @@ Case LunarMonth
 Case Year
         mBarLengthMinutes = -1
 End Select
-mTradeBars.BarLength = mBarLengthMinutes
+mTradeBars.barLength = mBarLengthMinutes
 If mIncludeBidAndAsk Then
-    mAskBars.BarLength = mBarLengthMinutes
-    mBidBars.BarLength = mBarLengthMinutes
+    mAskBars.barLength = mBarLengthMinutes
+    mBidBars.barLength = mBarLengthMinutes
 End If
 End Sub
 
-Private Sub CheckNewBar(ByVal Timestamp As Date)
+Private Sub CheckNewBar(ByVal timestamp As Date)
 Dim barTime As Date
+Dim barkey As String
 
-barTime = mContract.BarStartTime(Timestamp, mBarLengthMinutes)
+barTime = mContract.BarStartTime(timestamp, mBarLengthMinutes)
 If mTradeBar Is Nothing Then
     'drop through
 ElseIf barTime > mTradeBar.DateTime Then
@@ -374,12 +451,22 @@ If Not mTradeBar Is Nothing Then
     mPrevBarVolume = mLatestVolume
 End If
 
-Set mTradeBar = mTradeBars.add(Format(barTime, "yyyymmddhhnn"))
-mTradeBar.DateTime = barTime
+' check whether a bar already exists for this time. This can happen when
+' historical bars have been loaded before the first tick is notified
+barkey = CalcBarKey(barTime)
+Set mTradeBar = Nothing
+On Error Resume Next
+Set mTradeBar = mTradeBars.item(barkey)
+On Error GoTo 0
+If mTradeBar Is Nothing Then
+    Set mTradeBar = mTradeBars.add(barkey)
+    mTradeBar.DateTime = barTime
+    mTradeBars.NotifyAdd barkey
+End If
 If mIncludeBidAndAsk Then
-    Set mAskBar = mAskBars.add(Format(barTime, "yyyymmddhhnn"))
+    Set mAskBar = mAskBars.add(barkey)
     mAskBar.DateTime = barTime
-    Set mBidBar = mBidBars.add(Format(barTime, "yyyymmddhhnn"))
+    Set mBidBar = mBidBars.add(barkey)
     mBidBar.DateTime = barTime
 End If
 End Sub

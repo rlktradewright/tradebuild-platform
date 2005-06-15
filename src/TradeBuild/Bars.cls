@@ -34,6 +34,10 @@ Option Explicit
 ' Events
 '================================================================================
 
+Event BarAdded(ByVal theBar As TradeBuild.Bar)
+Event BarUpdated(ByVal theBar As TradeBuild.Bar)
+Event HistoricBarAdded(ByVal theBar As TradeBuild.Bar)
+
 '================================================================================
 ' Constants
 '================================================================================
@@ -74,15 +78,15 @@ End Sub
 ' Properties
 '================================================================================
 
-Public Property Get BarLength() As Long
-BarLength = mBarLength
+Public Property Get barLength() As Long
+barLength = mBarLength
 End Property
 
-Friend Property Let BarLength(ByVal value As Long)
+Friend Property Let barLength(ByVal value As Long)
 mBarLength = value
 End Property
 
-Friend Property Let BarType(ByVal value As TradeBuild.BarTypes)
+Friend Property Let barType(ByVal value As TradeBuild.BarTypes)
 mBarType = value
 End Property
 
@@ -96,14 +100,53 @@ End Property
 
 Public Function add(ByVal key As String) As Bar
 Set add = New Bar
-add.BarType = mBarType
-add.BarLength = mBarLength
+add.barType = mBarType
+add.barLength = mBarLength
 mBars.add add, key
+End Function
+
+Friend Function addHistoric( _
+                            ByVal key As String, _
+                            ByVal timestamp As Date, _
+                            ByVal barType As TradeBuild.BarTypes, _
+                            ByVal barLength As Long, _
+                            ByVal openPrice As Double, _
+                            ByVal highPrice As Double, _
+                            ByVal lowPrice As Double, _
+                            ByVal closePrice As Double, _
+                            ByVal volume As Long, _
+                            ByVal tickVolume As Long, _
+                            ByVal openInterest As Long) As Bar
+Debug.Assert barType = mBarType
+Debug.Assert barLength = mBarLength
+Set addHistoric = New Bar
+With addHistoric
+    .barType = barType
+    .barLength = barLength
+    .DateTime = timestamp
+    .openPrice = openPrice
+    .highPrice = highPrice
+    .lowPrice = lowPrice
+    .closePrice = closePrice
+    .volume = volume
+    .tickVolume = tickVolume
+    .openInterest = openInterest
+End With
+mBars.add addHistoric, key
+RaiseEvent HistoricBarAdded(addHistoric)
 End Function
 
 Public Function item(index As Variant) As Bar
 Attribute item.VB_UserMemId = 0
 Set item = mBars(index)
+End Function
+
+Friend Function NotifyAdd(index As Variant)
+RaiseEvent BarAdded(item(index))
+End Function
+
+Friend Function NotifyUpdate(index As Variant)
+RaiseEvent BarUpdated(item(index))
 End Function
 
 Public Sub Remove(index As Variant)
