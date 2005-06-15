@@ -126,9 +126,7 @@ End If
 If mWaitingForTickData Then
     mTickRequested = True
 Else
-    If Not processNextTickRecord Then
-        mServiceConsumer.TickfileReplayComplete
-    End If
+    processNextTickRecord
 End If
 
 End Sub
@@ -200,10 +198,22 @@ mCommonServiceConsumer.ServiceProviderError errorCode, _
 End Sub
 
 Private Sub mTickReader_Ready()
+Dim sessionStart As Date
+Dim sessionEnd As Date
+
 mWaitingForTickData = True
-mTickReader.FetchData TickfileFormatTradeBuildSQL, _
-                        Int(mInputTickfileSpecifier.From / OneMinute) * OneMinute, _
-                        Int((mInputTickfileSpecifier.To + FiftyNineSeconds) / OneMinute) * OneMinute
+With mInputTickfileSpecifier
+    If .EntireSession Then
+        mContract.GetSessionTimes .From, sessionStart, sessionEnd
+        mTickReader.FetchData TickfileFormatTradeBuildSQL, _
+                                sessionStart, _
+                                sessionEnd
+    Else
+        mTickReader.FetchData TickfileFormatTradeBuildSQL, _
+                                Int(.From / OneMinute) * OneMinute, _
+                                Int((.To + FiftyNineSeconds) / OneMinute) * OneMinute
+    End If
+End With
 mServiceConsumer.Ready mInputTickfileSpecifier, 0
 End Sub
 
@@ -281,7 +291,7 @@ End Property
 ' Helper Functions
 '================================================================================
 
-Private Function processNextTickRecord() As Boolean
+Private Sub processNextTickRecord()
 Dim tickType As TickTypes
 Dim price As Double
 Dim size As Long
@@ -290,7 +300,10 @@ Dim operation As DOMOperations
 Dim side As DOMSides
 Dim marketmaker As String
 
-If Not ReadRecord(tickType, price, size, position, operation, side, marketmaker) Then Exit Function
+If Not ReadRecord(tickType, price, size, position, operation, side, marketmaker) Then
+    mServiceConsumer.TickfileReplayComplete
+    Exit Sub
+End If
 
 mRecordsRead = mRecordsRead + 1
 
@@ -299,11 +312,11 @@ Case Bid
     mDataConsumer.Bid mTickerID, mCurrentTimestamp, price, size
 Case Ask
     mDataConsumer.Ask mTickerID, mCurrentTimestamp, price, size
-Case closePrice
+Case ClosePrice
     mDataConsumer.PreviousClose mTickerID, mCurrentTimestamp, price
-Case highPrice
+Case HighPrice
     mDataConsumer.High mTickerID, mCurrentTimestamp, price
-Case lowPrice
+Case LowPrice
     mDataConsumer.Low mTickerID, mCurrentTimestamp, price
 Case marketDepth
     If marketmaker = "" Then
@@ -328,12 +341,11 @@ Case MarketDepthReset
     mDataConsumer.ResetMarketDepth mTickerID, mCurrentTimestamp
 Case Trade
     mDataConsumer.Trade mTickerID, mCurrentTimestamp, price, size
-Case volume
-    mDataConsumer.volume mTickerID, mCurrentTimestamp, size
+Case Volume
+    mDataConsumer.Volume mTickerID, mCurrentTimestamp, size
 End Select
 
-processNextTickRecord = True
-End Function
+End Sub
 
 Private Function ReadByte() As Byte
 ReadByte = mData(mDataIndex)
@@ -444,11 +456,11 @@ Do
         ReadQuoteRecord typeByte, price, size, sizeType
     Case Ask
         ReadQuoteRecord typeByte, price, size, sizeType
-    Case closePrice
+    Case ClosePrice
         ReadPriceRecord typeByte, price
-    Case highPrice
+    Case HighPrice
         ReadPriceRecord typeByte, price
-    Case lowPrice
+    Case LowPrice
         ReadPriceRecord typeByte, price
     Case marketDepth
         ReadMarketDepthRecord typeByte, position, marketmaker, operation, side, price, size, sizeType
@@ -456,7 +468,7 @@ Do
         ReadMarketDepthResetRecord typeByte
     Case Trade
         ReadQuoteRecord typeByte, price, size, sizeType
-    Case volume
+    Case Volume
         ReadSizeRecord typeByte, size, sizeType
     End Select
     
