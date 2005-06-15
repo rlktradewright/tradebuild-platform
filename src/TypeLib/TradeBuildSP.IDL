@@ -2,7 +2,7 @@
 
 [
   uuid(3EEF49D2-D9E3-4FFD-ABC7-B7713807A951),
-  version(1.0),
+  version(2.0),
   helpstring("TradeBuild Service Provider Interface Type Library")
 ]
 library TradeBuildSP
@@ -225,15 +225,16 @@ library TradeBuildSP
 
     typedef [uuid(ea114a07-dc5f-481b-8e39-770bab48a507), version(1.0)]
     struct tagBar {
-	DATE timestamp;
-	BarTypes barType;
-	long periodMinutes;
-	double openPrice;
-	double highPrice;
-	double lowPrice;
-	double closePrice;
-	long volume;
-	long tickVolume;
+	DATE Timestamp;
+	BarTypes BarType;
+	long PeriodMinutes;
+	double OpenPrice;
+	double HighPrice;
+	double LowPrice;
+	double ClosePrice;
+	long Volume;
+	long TickVolume;
+	long OpenInterest;
     } Bar;
 
     typedef [uuid(8fe22277-b7a6-4cb7-acdc-cb0dcefe76ff), version(1.0)]
@@ -246,13 +247,16 @@ library TradeBuildSP
 	long BarLengthMinutes;
 
 	[helpstring("Specifies the type of bar data required")]
-	BarTypes type;
+	BarTypes Bartype;
 
         [helpstring("Specifies the start date and time for the data")]
         DATE From;
 
         [helpstring("Specifies the end date and time for the data")]
         DATE To;
+
+	[helpstring("Specifies the maximum number of bars to be returned")]
+	long NumberOfBars;
 
     } BarDataSpecifier;
 
@@ -402,10 +406,6 @@ library TradeBuildSP
 
 	// Properties ==================================================
 
-        [propput]
-        HRESULT BarDataSpecifier(
-                        [in] BarDataSpecifier* );
-
         [propget]
         HRESULT BarDataSpecifier(
                         [out, retval] BarDataSpecifier* );
@@ -415,6 +415,9 @@ library TradeBuildSP
 			[out,retval] long* );
 
 	// Methods =====================================================
+
+	HRESULT FetchBars(
+			[in] BarDataSpecifier* barSpecifier);
 
 	HRESULT ReleaseDataStore();
 
@@ -1183,14 +1186,14 @@ library TradeBuildSP
         [propget]
         HRESULT Contract([out, retval] IContract** );
 
-        [propget]
-        HRESULT FormatIdentifier([out, retval] BSTR* );
+//        [propget]
+//	HRESULT FormatIdentifier([out, retval] BSTR* );
 
-        [propget]
-        HRESULT FormatName([out, retval] BSTR* );
+//        [propget]
+//        HRESULT FormatName([out, retval] BSTR* );
 
-        [propget]
-        HRESULT FormatVersion([out, retval] long* );
+//        [propget]
+//        HRESULT FormatVersion([out, retval] long* );
 
 	// Methods =====================================================
 
