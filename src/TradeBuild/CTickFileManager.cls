@@ -84,8 +84,6 @@ Private mReader As TickfileReader
 Private mTickfileSpecifiers() As TradeBuild.TickfileSpecifier
 Private mCurrTickfileIndex As Long
 
-Private mWriter As TickfileWriter
-
 Private mTickerID As Long
 
 Private WithEvents mTickfileSelector As fTickfileSelector
@@ -219,9 +217,6 @@ If mReader.Contract Is Nothing Then
         Else
             ' we'll use the existing mContract - this one was supplied by
             ' the application to the ticker object
-            If Not mWriter Is Nothing Then
-                mWriter.Contract = mContract
-            End If
             ' we have everything we need to proceed
             playOrNot tfSpec, TickfileSizeBytes
             Exit Sub
@@ -232,23 +227,9 @@ If mReader.Contract Is Nothing Then
         Else
             Set contractSpec = tfSpec.contractSpecifier
         End If
-'        ' we'll query the Contract Details service provider(s) to see if we can
-'        ' determine the contract for this contract spec
-'        If Not mReader.contractSpecifier Is Nothing Then
-'            Set mContracts = gServiceProviders.RequestContract(mReader.contractSpecifier)
-'        Else
-'            Set mContracts = gServiceProviders.RequestContract(tfSpec.contractSpecifier)
-'        End If
-'        Exit Sub
     End If
 Else
     Set contractSpec = mReader.contractSpecifier
-'    Set mContract = mReader.Contract
-'    If Not mWriter Is Nothing Then
-'        mWriter.Contract = mContract
-'    End If
-'    ' we have everything we need to proceed
-'    playOrNot tfSpec, TickfileSizeBytes
 End If
 
 'now query the Contract Details service provider(s) to see if we can
@@ -467,10 +448,6 @@ End Sub
 
 Private Sub FinishTickfile()
 Set mReader = Nothing
-If Not mWriter Is Nothing Then
-    mWriter.closeOutputFile
-    Set mWriter = Nothing
-End If
 StartNextTickfile
 End Sub
 
