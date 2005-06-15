@@ -94,10 +94,13 @@ End Sub
 '================================================================================
 
 Private Sub ITickfileWriter_CloseOutputFile()
+WritePeriodData
 Set mInstrument = Nothing
 mCommonServiceConsumer.NotifyListeners "Total data written: " & mTotalBytes & " bytes", _
                             TradeBuildSP.StandardListenValueTypes.Log, _
                             Now
+' we really ought to get rid of mWriter after a suitable delay, or after we
+' know that all writes hve been completed
 End Sub
 
 Private Property Get ITickfileWriter_Contract() As IContract
@@ -162,21 +165,21 @@ Private Sub ITickfileWriter_writeClose( _
                             ByVal timestamp As Date, _
                             ByVal price As Double)
 If price = 0# Then Exit Sub
-WritePriceRecord TickTypes.closePrice, timestamp, price
+WritePriceRecord TickTypes.ClosePrice, timestamp, price
 End Sub
 
 Private Sub ITickfileWriter_writeHigh( _
                             ByVal timestamp As Date, _
                             ByVal price As Double)
 If price = 0# Then Exit Sub
-WritePriceRecord TickTypes.highPrice, timestamp, price
+WritePriceRecord TickTypes.HighPrice, timestamp, price
 End Sub
 
 Private Sub ITickfileWriter_writeLow( _
                             ByVal timestamp As Date, _
                             ByVal price As Double)
 If price = 0# Then Exit Sub
-WritePriceRecord TickTypes.lowPrice, timestamp, price
+WritePriceRecord TickTypes.LowPrice, timestamp, price
 End Sub
 
 Private Sub ITickfileWriter_writeMarketDepthData( _
@@ -240,7 +243,7 @@ End Sub
 Private Sub ITickfileWriter_writeVolume( _
                             ByVal timestamp As Date, _
                             ByVal size As Long)
-WriteSizeRecord TickTypes.volume, timestamp, size
+WriteSizeRecord TickTypes.Volume, timestamp, size
 End Sub
 
 '================================================================================
