@@ -71,9 +71,19 @@ End Sub
 '================================================================================
 
 Private Function IBarDataServiceProvider_CreateBarDataReader( _
-                            ByVal dataConsumer As TradeBuildSP.IBarDataConsumer, _
+                            ByVal DataConsumer As TradeBuildSP.IBarDataConsumer, _
                             ByVal serviceConsumer As TradeBuildSP.IBarDataInputServiceConsumer _
                             ) As TradeBuildSP.IBarDataReader
+
+Dim reader As HistDataReader
+
+Set reader = New HistDataReader
+Set IBarDataServiceProvider_CreateBarDataReader = reader
+
+reader.CommonServiceConsumer = mCommonServiceConsumer
+reader.BarDataInputServiceConsumer = serviceConsumer
+reader.DataConsumer = DataConsumer
+reader.ServiceProviderName = mName
 
 End Function
 
@@ -89,8 +99,8 @@ Set writer = New HistDataWriter
 Set IBarDataServiceProvider_CreateBarDataWriter = writer
 
 writer.Path = location
-writer.commonServiceConsumer = mCommonServiceConsumer
-writer.TickfileOutputServiceConsumer = serviceConsumer
+writer.CommonServiceConsumer = mCommonServiceConsumer
+writer.BarDataOutputServiceConsumer = serviceConsumer
 writer.ServiceProviderName = mName
 writer.ContractSpecifier = contractSpec
 End Function
@@ -128,9 +138,9 @@ ICommonServiceProvider_Details = details
 End Property
 
 Private Sub ICommonServiceProvider_Link( _
-                            ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
+                            ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
                             ByVal handle As Long)
-Set mCommonServiceConsumer = commonServiceConsumer
+Set mCommonServiceConsumer = CommonServiceConsumer
 mHandle = handle
 mCommonServiceConsumer.RegisterServiceProvider mHandle, _
                             ServiceProviderTypes.HistoricalData
