@@ -62,6 +62,8 @@ Private mOpenInterest As Long
 Private mDateTime As Date
 Private mBlank As Boolean   ' indicates that there were no ticks during the bar
 
+Private mDirty As Boolean
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
@@ -116,6 +118,7 @@ End Property
 
 Public Property Let ClosePrice(newValue As Double)
 mBlank = False
+mDirty = True
 mClose = newValue
 End Property
 
@@ -127,12 +130,21 @@ Public Property Let DateTime(ByVal newValue As Date)
 mDateTime = newValue
 End Property
 
+Friend Property Get Dirty() As Boolean
+Dirty = mDirty
+End Property
+
+Friend Property Let Dirty(ByVal newValue As Boolean)
+mDirty = newValue
+End Property
+
 Public Property Get HighPrice() As Double
 HighPrice = mHigh
 End Property
 
 Public Property Let HighPrice(newValue As Double)
 mBlank = False
+mDirty = True
 mHigh = newValue
 End Property
 
@@ -150,6 +162,7 @@ End Property
 
 Public Property Let LowPrice(newValue As Double)
 mBlank = False
+mDirty = True
 mLow = newValue
 End Property
 
@@ -159,6 +172,7 @@ End Property
 
 Public Property Let OpenInterest(newValue As Long)
 mBlank = False
+mDirty = True
 mOpenInterest = newValue
 End Property
 
@@ -168,6 +182,7 @@ End Property
 
 Public Property Let OpenPrice(newValue As Double)
 mBlank = False
+mDirty = True
 mOpen = newValue
 End Property
 
@@ -177,6 +192,7 @@ End Property
 
 Public Property Let TickVolume(newValue As Long)
 mBlank = False
+mDirty = True
 mTickVolume = newValue
 End Property
 
@@ -186,7 +202,9 @@ End Property
 
 Public Property Let Volume(newValue As Long)
 If newValue = 0 Then Exit Property
-mBlank = False
+' NB: don't set mBlank to false, because a bar with only volume
+' should be considered blank
+mDirty = True
 mVolume = newValue
 End Property
 
