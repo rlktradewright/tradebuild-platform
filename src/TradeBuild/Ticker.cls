@@ -174,7 +174,7 @@ Private WithEvents mContracts As TradeBuild.Contracts
 Attribute mContracts.VB_VarHelpID = -1
 Private mContract As Contract
 
-Private mListeners As listeners
+Private mListeners As Listeners
 
 Private mWritingToTickfile As Boolean
 
@@ -212,7 +212,7 @@ Private mClock As clock
 
 Private Sub Class_Initialize()
 mState = TickerStateCodes.Created
-Set mListeners = New listeners
+Set mListeners = New Listeners
 mTickerID = gTradeBuildAPI.AllocateTickerTableEntry(Me)
 Set mClock = New clock
 Set mTimeframes = New TradeBuild.Timeframes
@@ -1056,6 +1056,8 @@ Then
         mTickerID = -1
     End If
 End If
+
+mTimeframes.RemoveAll
 
 mBidPrice = 0
 mBidSize = 0
