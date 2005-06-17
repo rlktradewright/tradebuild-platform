@@ -42,7 +42,7 @@ Implements TradeBuildSP.IBarDataConsumer
 Event BarsLoaded()
 
 Event errorMessage( _
-                ByVal timestamp As Date, _
+                ByVal Timestamp As Date, _
                 ByVal errorCode As ApiErrorCodes, _
                 ByVal errorMsg As String)
 
@@ -68,6 +68,8 @@ Event CantCreateHistoricDataWriter()
 ' Member variables
 '================================================================================
 
+Private mTicker As TradeBuild.Ticker
+
 Private mTradeBars As Bars
 Private mAskBars As Bars
 Private mBidBars As Bars
@@ -75,6 +77,11 @@ Private mBidBars As Bars
 Private mTradeBar As Bar
 Private mAskBar As Bar
 Private mBidBar As Bar
+
+Private mTradeListenerKey As String
+Private mVolumeListenerKey As String
+Private mAskListenerKey As String
+Private mBidListenerKey As String
 
 Private mContract As TradeBuild.Contract
 
@@ -92,11 +99,17 @@ Private mIncludeBidAndAsk As Boolean
 Private mBarWriter As TradeBuild.HistoricDataWriter
 Private mBarReader As TradeBuildSP.IBarDataReader
 
-Private WithEvents mTimer As TimerUtils.IntervalTimer
-Attribute mTimer.VB_VarHelpID = -1
+Private WithEvents mWriteTimer As TimerUtils.IntervalTimer
+Attribute mWriteTimer.VB_VarHelpID = -1
 
 Private mPrevBarVolume As Long
 Private mLatestVolume As Long
+
+Private WithEvents mHistoricBarTimer As TimerUtils.IntervalTimer
+Attribute mHistoricBarTimer.VB_VarHelpID = -1
+Private mHistReceivingSynchronously As Boolean
+Private mHistoricBar As TradeBuildSP.Bar
+Private mHistoricBarPending As Boolean
 
 '================================================================================
 ' Class Event Handlers
@@ -104,7 +117,7 @@ Private mLatestVolume As Long
 
 Private Sub Class_Initialize()
 Set mTradeBars = New Bars
-mTradeBars.barType = TradeBuild.BarTypes.BarTypeTrade
+mTradeBars.BarType = TradeBuild.BarTypes.BarTypeTrade
 End Sub
 
 '================================================================================
@@ -112,46 +125,15 @@ End Sub
 '================================================================================
 
 Private Sub IBarDataConsumer_Bar(data As TradeBuildSP.Bar)
-Dim lBar As TradeBuild.Bar
-Dim barTime As Date
-Dim barkey As String
-
-With data
-    barTime = mContract.BarStartTime(.timestamp, mBarLengthMinutes)
-    barkey = CalcBarKey(barTime)
-    
-    ' check whether this bar already exists
-    On Error Resume Next
-    Set lBar = mTradeBars.item(barkey)
-    On Error GoTo 0
-    
-    If Not lBar Is Nothing Then
-        ' update the existing bar
-        lBar.openPrice = .openPrice
-        lBar.HighPrice = .HighPrice
-        lBar.LowPrice = .LowPrice
-        lBar.ClosePrice = .ClosePrice
-        lBar.Volume = .Volume
-        lBar.tickVolume = .tickVolume
-        lBar.openInterest = .openInterest
-    Else
-        Set lBar = mTradeBars.addHistoric( _
-                                barkey, _
-                                .timestamp, _
-                                .barType, _
-                                .PeriodMinutes, _
-                                .openPrice, _
-                                .HighPrice, _
-                                .LowPrice, _
-                                .ClosePrice, _
-                                .Volume, _
-                                .tickVolume, _
-                                .openInterest)
-    End If
-End With
-
-DoEvents
-mBarReader.FireNextBar
+mHistoricBarPending = True
+mHistoricBar = data
+If Not mHistReceivingSynchronously Then
+    ' We use the timer with a very short delay: this is to prevent
+    ' calling back into the Service Provider for the next bar
+    ' before it has completed the function that raised the tick event.
+    mHistoricBarTimer.TimerIntervalMillisecs = 1
+    mHistoricBarTimer.StartTimer
+End If
 End Sub
 
 '================================================================================
@@ -160,6 +142,22 @@ End Sub
 
 Private Sub IBarDataInputServiceConsumer_BarDataComplete()
 mHistoricDataLoaded = True
+
+mTradeListenerKey = mTicker.AddListener( _
+                            Me, _
+                            TradeBuildListenValueTypes.ValueTypeTradeBuildTrade)
+mTradeListenerKey = mTicker.AddListener( _
+                            Me, _
+                            TradeBuildListenValueTypes.ValueTypeTradeBuildVolume)
+If mIncludeBidAndAsk Then
+    mBidListenerKey = mTicker.AddListener( _
+                            Me, _
+                            TradeBuildListenValueTypes.ValueTypeTradeBuildBid)
+    mAskListenerKey = mTicker.AddListener( _
+                            Me, _
+                            TradeBuildListenValueTypes.ValueTypeTradeBuildAsk)
+End If
+
 RaiseEvent BarsLoaded
 End Sub
 
@@ -167,12 +165,14 @@ Private Sub IBarDataInputServiceConsumer_Error(ByVal errorCode As TradeBuildSP.S
 
 End Sub
 
-Private Sub IBarDataInputServiceConsumer_Progress(ByVal timestamp As Date, ByVal eventsPlayed As Long, ByVal percentComplete As Single)
+Private Sub IBarDataInputServiceConsumer_Progress(ByVal Timestamp As Date, ByVal eventsPlayed As Long, ByVal percentComplete As Single)
 
 End Sub
 
 Private Sub IBarDataInputServiceConsumer_Ready()
-mBarReader.FireNextBar
+' unwind the stack
+mHistoricBarTimer.TimerIntervalMillisecs = 1
+mHistoricBarTimer.StartTimer
 End Sub
 
 '================================================================================
@@ -219,16 +219,16 @@ End Sub
 Private Sub IListener_notify( _
                             ByVal valueType As Long, _
                             ByVal data As Variant, _
-                            ByVal timestamp As Date)
+                            ByVal Timestamp As Date)
 Dim tickData As TradeBuild.TickerListenData
 Static firstTradeSize As Long   ' nb: this is the size of the very first
                                 ' trade reported. It is needed to get a
                                 ' more accurate volume value for the first bar
 
 If Not mHistoricDataLoaded Then Exit Sub
-If Not mContract.IsTimeInSession(timestamp) Then Exit Sub
+If Not mContract.IsTimeInSession(Timestamp) Then Exit Sub
 
-CheckNewBar timestamp
+CheckNewBar Timestamp
 
 tickData = data
 Select Case valueType
@@ -254,10 +254,18 @@ End Select
 End Sub
 
 '================================================================================
-' mTimer Event Handlers
+' mHistoricBarTimer Event Handlers
 '================================================================================
 
-Private Sub mTimer_TimerExpired()
+Private Sub mHistoricBarTimer_TimerExpired()
+FetchHistoricBars
+End Sub
+
+'================================================================================
+' mWriteTimer Event Handlers
+'================================================================================
+
+Private Sub mWriteTimer_TimerExpired()
 WriteBars
 End Sub
 '================================================================================
@@ -284,14 +292,17 @@ If mSaveIntervalSeconds >= 0 Then
     End If
 End If
 If mNumberOfBarsToFetch <> 0 Then
+    Set mHistoricBarTimer = New TimerUtils.IntervalTimer
+    mHistoricBarTimer.RepeatNotifications = False
+
     Set mBarReader = gServiceProviders.CreateHistoricalDataReader( _
                                 Me, _
                                 Me)
     barSpecifier.BarLengthMinutes = mBarLengthMinutes
-    barSpecifier.barType = BarTypes.BarTypeTrade
+    barSpecifier.BarType = BarTypes.BarTypeTrade
     Set barSpecifier.contractSpecifier = mContract.specifier
     barSpecifier.From = CDate("1 Jan 1970")
-    barSpecifier.To = Now
+    barSpecifier.To = Now + mBarLengthMinutes / 1440    ' ensure we get the latest bar
     barSpecifier.NumberOfBars = mNumberOfBarsToFetch
     mBarReader.FetchBars barSpecifier
     ' other bar types ????????????????????????????????????????
@@ -302,11 +313,11 @@ Friend Property Let IncludeBidAndAsk(ByVal value As Boolean)
 mIncludeBidAndAsk = value
 If mIncludeBidAndAsk Then
     Set mAskBars = New Bars
-    mAskBars.barType = TradeBuild.BarTypes.BarTypeAsk
-    mAskBars.barLength = mBarLengthMinutes
+    mAskBars.BarType = TradeBuild.BarTypes.BarTypeAsk
+    mAskBars.BarLength = mBarLengthMinutes
     Set mBidBars = New Bars
-    mBidBars.barType = TradeBuild.BarTypes.BarTypeBid
-    mBidBars.barLength = mBarLengthMinutes
+    mBidBars.BarType = TradeBuild.BarTypes.BarTypeBid
+    mBidBars.BarLength = mBarLengthMinutes
 End If
 End Property
 
@@ -320,10 +331,14 @@ mSaveIntervalSeconds = value
 
 If mSaveIntervalSeconds < 1 Then Exit Property
 
-Set mTimer = New TimerUtils.IntervalTimer
-mTimer.RepeatNotifications = True
-mTimer.TimerIntervalSecs = mSaveIntervalSeconds
-mTimer.StartTimer
+Set mWriteTimer = New TimerUtils.IntervalTimer
+mWriteTimer.RepeatNotifications = True
+mWriteTimer.TimerIntervalSecs = mSaveIntervalSeconds
+mWriteTimer.StartTimer
+End Property
+
+Friend Property Let Ticker(ByVal value As Ticker)
+Set mTicker = value
 End Property
 
 Friend Property Let timeperiod(ByVal newValue As Long)
@@ -349,39 +364,62 @@ End Property
 '================================================================================
 
 Friend Sub Finish()
-If Not mBarWriter Is Nothing Then
-    WriteBars
-    mBarWriter.ReleaseDataStore
-    Set mBarWriter = Nothing
-End If
-
-If Not mTimer Is Nothing Then
-    mTimer.StopTimer
-    Set mTimer = Nothing
-End If
+Reinitialise
+Set mTicker = Nothing
 End Sub
 
 Friend Sub Reinitialise()
+
+If Not mHistoricBarTimer Is Nothing Then
+    mHistoricBarTimer.StopTimer
+    Set mHistoricBarTimer = Nothing
+End If
+
+If Not mWriteTimer Is Nothing Then
+    mWriteTimer.StopTimer
+    Set mWriteTimer = Nothing
+End If
+
 If Not mBarWriter Is Nothing Then
     WriteBars
     mBarWriter.ReleaseDataStore
     Set mBarWriter = Nothing
+End If
+
+If Not mBarReader Is Nothing Then
+    mBarReader.ReleaseDataStore
+    Set mBarReader = Nothing
+End If
+
+If mTradeListenerKey <> "" Then
+    mTicker.RemoveListener mTradeListenerKey
+End If
+If mVolumeListenerKey <> "" Then
+    mTicker.RemoveListener mVolumeListenerKey
+End If
+If mIncludeBidAndAsk Then
+    If mBidListenerKey <> "" Then
+        mTicker.RemoveListener mBidListenerKey
+    End If
+    If mAskListenerKey <> "" Then
+        mTicker.RemoveListener mAskListenerKey
+    End If
 End If
 
 Set mTradeBars = Nothing
 Set mTradeBars = New Bars
-mTradeBars.barType = TradeBuild.BarTypes.BarTypeTrade
-mTradeBars.barLength = mBarLengthMinutes
+mTradeBars.BarType = TradeBuild.BarTypes.BarTypeTrade
+mTradeBars.BarLength = mBarLengthMinutes
 
 If mIncludeBidAndAsk Then
     Set mAskBars = Nothing
     Set mAskBars = New Bars
-    mAskBars.barType = TradeBuild.BarTypes.BarTypeAsk
-    mAskBars.barLength = mBarLengthMinutes
+    mAskBars.BarType = TradeBuild.BarTypes.BarTypeAsk
+    mAskBars.BarLength = mBarLengthMinutes
     Set mBidBars = Nothing
     Set mBidBars = New Bars
-    mBidBars.barType = TradeBuild.BarTypes.BarTypeBid
-    mBidBars.barLength = mBarLengthMinutes
+    mBidBars.BarType = TradeBuild.BarTypes.BarTypeBid
+    mBidBars.BarLength = mBarLengthMinutes
 End If
 
 Set mTradeBar = Nothing
@@ -389,15 +427,6 @@ Set mAskBar = Nothing
 Set mBidBar = Nothing
 
 Set mContract = Nothing
-
-If Not mBarWriter Is Nothing Then
-    mBarWriter.ReleaseDataStore
-End If
-
-If Not mTimer Is Nothing Then
-    mTimer.StopTimer
-    Set mTimer = Nothing
-End If
 
 End Sub
 
@@ -426,18 +455,18 @@ Case LunarMonth
 Case Year
         mBarLengthMinutes = -1
 End Select
-mTradeBars.barLength = mBarLengthMinutes
+mTradeBars.BarLength = mBarLengthMinutes
 If mIncludeBidAndAsk Then
-    mAskBars.barLength = mBarLengthMinutes
-    mBidBars.barLength = mBarLengthMinutes
+    mAskBars.BarLength = mBarLengthMinutes
+    mBidBars.BarLength = mBarLengthMinutes
 End If
 End Sub
 
-Private Sub CheckNewBar(ByVal timestamp As Date)
+Private Sub CheckNewBar(ByVal Timestamp As Date)
 Dim barTime As Date
 Dim barkey As String
 
-barTime = mContract.BarStartTime(timestamp, mBarLengthMinutes)
+barTime = mContract.BarStartTime(Timestamp, mBarLengthMinutes)
 If mTradeBar Is Nothing Then
     'drop through
 ElseIf barTime > mTradeBar.DateTime Then
@@ -471,21 +500,92 @@ If mIncludeBidAndAsk Then
 End If
 End Sub
 
+Private Sub FetchHistoricBars()
+
+If Not mHistoricBarPending Then
+    mHistReceivingSynchronously = True
+    mBarReader.FireNextBar
+    mHistReceivingSynchronously = False
+End If
+
+Do While mHistoricBarPending
+    ProcessHistoricBar
+
+    mHistReceivingSynchronously = True
+    mBarReader.FireNextBar
+    mHistReceivingSynchronously = False
+
+    DoEvents
+Loop
+
+End Sub
+
+Private Sub ProcessHistoricBar()
+Dim lBar As TradeBuild.Bar
+Dim barTime As Date
+Dim barkey As String
+
+mHistoricBarPending = False
+
+With mHistoricBar
+    'barTime = mContract.BarStartTime(.timestamp, mBarLengthMinutes)
+    barkey = CalcBarKey(.Timestamp)
+    
+    ' check whether this bar already exists
+    On Error Resume Next
+    Set lBar = mTradeBars.item(barkey)
+    On Error GoTo 0
+    
+    If Not lBar Is Nothing Then
+        ' update the existing bar
+        lBar.OpenPrice = .OpenPrice
+        lBar.HighPrice = .HighPrice
+        lBar.LowPrice = .LowPrice
+        lBar.ClosePrice = .ClosePrice
+        lBar.Volume = .Volume
+        lBar.TickVolume = .TickVolume
+        lBar.OpenInterest = .OpenInterest
+    Else
+        Set lBar = mTradeBars.addHistoric( _
+                                barkey, _
+                                .Timestamp, _
+                                .BarType, _
+                                .PeriodMinutes, _
+                                .OpenPrice, _
+                                .HighPrice, _
+                                .LowPrice, _
+                                .ClosePrice, _
+                                .Volume, _
+                                .TickVolume, _
+                                .OpenInterest)
+    End If
+End With
+End Sub
+
 Private Sub WriteBars()
 
 If mSaveIntervalSeconds < 0 Then Exit Sub
 If mTradeBar Is Nothing Then Exit Sub
 
-If Not mTradeBar.Blank Then
+If (Not mTradeBar.Blank) And _
+    mTradeBar.Dirty _
+Then
     mBarWriter.WriteBar mTradeBar
+    mTradeBar.Dirty = False
 End If
 
 If mIncludeBidAndAsk Then
-    If Not mAskBar.Blank Then
+    If (Not mAskBar.Blank) And _
+        mAskBar.Dirty _
+    Then
         mBarWriter.WriteBar mAskBar
+        mAskBar.Dirty = False
     End If
-    If Not mBidBar.Blank Then
+    If (Not mBidBar.Blank) And _
+        mBidBar.Dirty _
+    Then
         mBarWriter.WriteBar mBidBar
+        mBidBar.Dirty = False
     End If
 End If
 
