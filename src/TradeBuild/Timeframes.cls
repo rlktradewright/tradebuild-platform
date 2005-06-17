@@ -52,7 +52,7 @@ Option Explicit
 
 Private mTimeframes As Collection
 
-Private mTicker As TradeBuild.ticker
+Private mTicker As TradeBuild.Ticker
 
 Private mContract As TradeBuild.Contract
 
@@ -87,7 +87,7 @@ Public Property Get Count() As Long
 Count = mTimeframes.Count
 End Property
 
-Friend Property Let ticker(ByVal value As ticker)
+Friend Property Let Ticker(ByVal value As Ticker)
 Set mTicker = value
 End Property
 
@@ -104,18 +104,13 @@ Public Function add( _
                             Optional ByVal IncludeBidAndAsk As Boolean) As Timeframe
 Set add = New Timeframe
 mTimeframes.add add, key
+add.Ticker = mTicker
 add.timeperiod = timeperiod
 add.timeperiodUnit = timeperiodUnit
 add.SaveIntervalSeconds = SaveIntervalSeconds
 add.IncludeBidAndAsk = IncludeBidAndAsk
 add.NumberOfBarsToFetch = NumberOfBarsToFetch
 If Not mContract Is Nothing Then add.Contract = mContract
-mTicker.AddListener add, TradeBuildListenValueTypes.ValueTypeTradeBuildTrade
-mTicker.AddListener add, TradeBuildListenValueTypes.ValueTypeTradeBuildVolume
-If IncludeBidAndAsk Then
-    mTicker.AddListener add, TradeBuildListenValueTypes.ValueTypeTradeBuildBid
-    mTicker.AddListener add, TradeBuildListenValueTypes.ValueTypeTradeBuildAsk
-End If
 End Function
 
 Public Function item(index As Variant) As Timeframe
@@ -130,6 +125,9 @@ Next
 End Sub
 
 Public Sub Remove(index As Variant)
+Dim lTimeframe As TradeBuild.Timeframe
+Set lTimeframe = mTimeframes(index)
+lTimeframe.Finish
 mTimeframes.Remove index
 End Sub
 
