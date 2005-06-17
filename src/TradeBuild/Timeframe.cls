@@ -117,7 +117,7 @@ Private mHistoricBarPending As Boolean
 
 Private Sub Class_Initialize()
 Set mTradeBars = New Bars
-mTradeBars.BarType = TradeBuild.BarTypes.BarTypeTrade
+mTradeBars.barType = TradeBuild.BarTypes.BarTypeTrade
 End Sub
 
 '================================================================================
@@ -143,20 +143,7 @@ End Sub
 Private Sub IBarDataInputServiceConsumer_BarDataComplete()
 mHistoricDataLoaded = True
 
-mTradeListenerKey = mTicker.AddListener( _
-                            Me, _
-                            TradeBuildListenValueTypes.ValueTypeTradeBuildTrade)
-mTradeListenerKey = mTicker.AddListener( _
-                            Me, _
-                            TradeBuildListenValueTypes.ValueTypeTradeBuildVolume)
-If mIncludeBidAndAsk Then
-    mBidListenerKey = mTicker.AddListener( _
-                            Me, _
-                            TradeBuildListenValueTypes.ValueTypeTradeBuildBid)
-    mAskListenerKey = mTicker.AddListener( _
-                            Me, _
-                            TradeBuildListenValueTypes.ValueTypeTradeBuildAsk)
-End If
+ListenToTicker
 
 RaiseEvent BarsLoaded
 End Sub
@@ -299,13 +286,15 @@ If mNumberOfBarsToFetch <> 0 Then
                                 Me, _
                                 Me)
     barSpecifier.BarLengthMinutes = mBarLengthMinutes
-    barSpecifier.BarType = BarTypes.BarTypeTrade
+    barSpecifier.barType = BarTypes.BarTypeTrade
     Set barSpecifier.contractSpecifier = mContract.specifier
     barSpecifier.From = CDate("1 Jan 1970")
     barSpecifier.To = Now + mBarLengthMinutes / 1440    ' ensure we get the latest bar
     barSpecifier.NumberOfBars = mNumberOfBarsToFetch
     mBarReader.FetchBars barSpecifier
     ' other bar types ????????????????????????????????????????
+Else
+    ListenToTicker
 End If
 End Property
 
@@ -313,11 +302,11 @@ Friend Property Let IncludeBidAndAsk(ByVal value As Boolean)
 mIncludeBidAndAsk = value
 If mIncludeBidAndAsk Then
     Set mAskBars = New Bars
-    mAskBars.BarType = TradeBuild.BarTypes.BarTypeAsk
-    mAskBars.BarLength = mBarLengthMinutes
+    mAskBars.barType = TradeBuild.BarTypes.BarTypeAsk
+    mAskBars.barLength = mBarLengthMinutes
     Set mBidBars = New Bars
-    mBidBars.BarType = TradeBuild.BarTypes.BarTypeBid
-    mBidBars.BarLength = mBarLengthMinutes
+    mBidBars.barType = TradeBuild.BarTypes.BarTypeBid
+    mBidBars.barLength = mBarLengthMinutes
 End If
 End Property
 
@@ -408,18 +397,18 @@ End If
 
 Set mTradeBars = Nothing
 Set mTradeBars = New Bars
-mTradeBars.BarType = TradeBuild.BarTypes.BarTypeTrade
-mTradeBars.BarLength = mBarLengthMinutes
+mTradeBars.barType = TradeBuild.BarTypes.BarTypeTrade
+mTradeBars.barLength = mBarLengthMinutes
 
 If mIncludeBidAndAsk Then
     Set mAskBars = Nothing
     Set mAskBars = New Bars
-    mAskBars.BarType = TradeBuild.BarTypes.BarTypeAsk
-    mAskBars.BarLength = mBarLengthMinutes
+    mAskBars.barType = TradeBuild.BarTypes.BarTypeAsk
+    mAskBars.barLength = mBarLengthMinutes
     Set mBidBars = Nothing
     Set mBidBars = New Bars
-    mBidBars.BarType = TradeBuild.BarTypes.BarTypeBid
-    mBidBars.BarLength = mBarLengthMinutes
+    mBidBars.barType = TradeBuild.BarTypes.BarTypeBid
+    mBidBars.barLength = mBarLengthMinutes
 End If
 
 Set mTradeBar = Nothing
@@ -455,10 +444,10 @@ Case LunarMonth
 Case Year
         mBarLengthMinutes = -1
 End Select
-mTradeBars.BarLength = mBarLengthMinutes
+mTradeBars.barLength = mBarLengthMinutes
 If mIncludeBidAndAsk Then
-    mAskBars.BarLength = mBarLengthMinutes
-    mBidBars.BarLength = mBarLengthMinutes
+    mAskBars.barLength = mBarLengthMinutes
+    mBidBars.barLength = mBarLengthMinutes
 End If
 End Sub
 
@@ -520,6 +509,23 @@ Loop
 
 End Sub
 
+Private Sub ListenToTicker()
+mTradeListenerKey = mTicker.AddListener( _
+                            Me, _
+                            TradeBuildListenValueTypes.ValueTypeTradeBuildTrade)
+mTradeListenerKey = mTicker.AddListener( _
+                            Me, _
+                            TradeBuildListenValueTypes.ValueTypeTradeBuildVolume)
+If mIncludeBidAndAsk Then
+    mBidListenerKey = mTicker.AddListener( _
+                            Me, _
+                            TradeBuildListenValueTypes.ValueTypeTradeBuildBid)
+    mAskListenerKey = mTicker.AddListener( _
+                            Me, _
+                            TradeBuildListenValueTypes.ValueTypeTradeBuildAsk)
+End If
+End Sub
+
 Private Sub ProcessHistoricBar()
 Dim lBar As TradeBuild.Bar
 Dim barTime As Date
@@ -538,26 +544,26 @@ With mHistoricBar
     
     If Not lBar Is Nothing Then
         ' update the existing bar
-        lBar.OpenPrice = .OpenPrice
+        lBar.openPrice = .openPrice
         lBar.HighPrice = .HighPrice
         lBar.LowPrice = .LowPrice
         lBar.ClosePrice = .ClosePrice
         lBar.Volume = .Volume
-        lBar.TickVolume = .TickVolume
-        lBar.OpenInterest = .OpenInterest
+        lBar.tickVolume = .tickVolume
+        lBar.openInterest = .openInterest
     Else
         Set lBar = mTradeBars.addHistoric( _
                                 barkey, _
                                 .Timestamp, _
-                                .BarType, _
+                                .barType, _
                                 .PeriodMinutes, _
-                                .OpenPrice, _
+                                .openPrice, _
                                 .HighPrice, _
                                 .LowPrice, _
                                 .ClosePrice, _
                                 .Volume, _
-                                .TickVolume, _
-                                .OpenInterest)
+                                .tickVolume, _
+                                .openInterest)
     End If
 End With
 End Sub
