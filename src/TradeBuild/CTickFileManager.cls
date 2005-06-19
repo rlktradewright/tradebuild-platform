@@ -194,7 +194,7 @@ Dim contractSpec As TradeBuild.contractSpecifier
 
 With tfSpec
     Set .contractSpecifier = tickfileSpec.contractSpecifier
-    .filename = tickfileSpec.filename
+    .Filename = tickfileSpec.Filename
     .From = tickfileSpec.From
     .TickfileFormatID = tickfileSpec.TickfileFormatID
     .To = tickfileSpec.To
@@ -214,6 +214,7 @@ If mReader.Contract Is Nothing Then
                             "Contract details must be supplied for tickfile: " & _
                             gTickfileSpecifierToString(tfSpec))
             Set mReader = Nothing
+            Exit Sub
         Else
             ' we'll use the existing mContract - this one was supplied by
             ' the application to the ticker object
