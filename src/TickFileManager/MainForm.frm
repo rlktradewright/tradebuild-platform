@@ -1232,6 +1232,7 @@ mTradeBuildAPI.ServiceProviders.Add histDataSP
 
 mSupportedOutputFormats = mTradeBuildAPI.SupportedOutputTickfileFormats
 
+FormatList.AddItem "(None)"
 For i = 0 To UBound(mSupportedOutputFormats)
     FormatList.AddItem mSupportedOutputFormats(i).Name
 Next
@@ -1341,7 +1342,11 @@ For i = 0 To EnableCheck.UBound
 Next
 
 writeStatusMessage "Tickfile conversion started"
-mTicker.StartTicker , , True, True
+If mOutputFormat <> "" Then
+    mTicker.StartTicker , , True, True
+Else
+    mTicker.StartTicker , , False
+End If
 End Sub
 
 Private Sub DisconnectButton_Click()
@@ -1361,6 +1366,7 @@ End Sub
 
 Private Sub FormatList_Click()
 Dim i As Long
+mOutputFormat = ""
 For i = 0 To UBound(mSupportedOutputFormats)
     If FormatList.Text = mSupportedOutputFormats(i).Name Then
         mOutputFormat = mSupportedOutputFormats(i).FormalID
