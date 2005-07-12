@@ -28,7 +28,13 @@ Implements IGraphicObject
 '================================================================================
 
 '================================================================================
-' Member variables and constants
+' Constants
+'================================================================================
+
+Private Const BarSemiWidth As Single = 0.4
+
+'================================================================================
+' Member variables
 '================================================================================
 
 Private mSurface As PictureBox
@@ -303,23 +309,12 @@ If blank Then Exit Sub
 
 mSurface.DrawMode = vbCopyPen
 If mDisplayAsCandlestick Then
-'    mSurface.DrawWidth = mOutlineThickness
-'    mSurface.DrawStyle = LineStyles.LineInsideSolid
-'    mSurface.FillStyle = FillStyles.FillTransparent
     If upBar Then
         drawBody mOpen, mClose, colour
     Else
         drawBody mClose, mOpen, colour
     End If
-'    If downBar Or mSolidUpBody Then
-'        mSurface.Line (mPeriodNumber - (mCandleWidth / 2), mOpen)-(mPeriodNumber + (mCandleWidth / 2), mClose), colour, BF
-'    Else
-'        mSurface.Line (mPeriodNumber - (mCandleWidth / 2), mOpen)-(mPeriodNumber + (mCandleWidth / 2), mClose), colour, B
-'    End If
     
-    
-'    mSurface.DrawStyle = LineStyles.LineSolid
-'    mSurface.DrawWidth = mTailThickness
     If upBar Then
         If mLow < mOpen Then
             drawTail mLow, mOpen, colour
@@ -339,30 +334,32 @@ Else
     mSurface.DrawWidth = 1
     mSurface.DrawStyle = LineStyles.LineSolid
     If mBarThickness = 1 Then
-        mSurface.Line (mPeriodNumber - mCandleWidth / 2, mOpen)-(mPeriodNumber, mOpen), IIf(upBar, mUpColour, mDownColour)
+        Dim onePixel As Double
+        onePixel = Abs(Screen.TwipsPerPixelX / (mSurface.Width / mSurface.scaleWidth))
+        mSurface.Line (mPeriodNumber - BarSemiWidth, mOpen)-(mPeriodNumber, mOpen), IIf(upBar, mUpColour, mDownColour)
         mSurface.Line (mPeriodNumber, mLow)-(mPeriodNumber, mHigh), IIf(upBar, mUpColour, mDownColour)
-        mSurface.Line (mPeriodNumber, mClose)-(mPeriodNumber + mCandleWidth / 2, mClose), IIf(upBar, mUpColour, mDownColour)
+        mSurface.Line (mPeriodNumber, mClose)-(mPeriodNumber + BarSemiWidth + onePixel, mClose), IIf(upBar, mUpColour, mDownColour)
     Else
         mSurface.DrawStyle = LineStyles.LineInsideSolid
         barThicknessScaleX = Abs(((mBarThickness - 1) * Screen.TwipsPerPixelX) / (mSurface.Width / mSurface.scaleWidth))
         barThicknessScaleY = Abs(((mBarThickness - 1) * Screen.TwipsPerPixelY) / (mSurface.Height / mSurface.scaleHeight))
         
         If (mOpen - barThicknessScaleY / 2) < mLow Then
-            mSurface.Line (mPeriodNumber - 1.5 * barThicknessScaleX, mLow)-(mPeriodNumber + barThicknessScaleX / 2, mLow + barThicknessScaleY), IIf(upBar, mUpColour, mDownColour), BF
+            mSurface.Line (mPeriodNumber - BarSemiWidth, mLow)-(mPeriodNumber + barThicknessScaleX / 2, mLow + barThicknessScaleY), IIf(upBar, mUpColour, mDownColour), BF
         ElseIf (mOpen + barThicknessScaleY / 2) > mHigh Then
-            mSurface.Line (mPeriodNumber - 1.5 * barThicknessScaleX, mHigh - barThicknessScaleY)-(mPeriodNumber + barThicknessScaleX / 2, mHigh), IIf(upBar, mUpColour, mDownColour), BF
+            mSurface.Line (mPeriodNumber - BarSemiWidth, mHigh - barThicknessScaleY)-(mPeriodNumber + barThicknessScaleX / 2, mHigh), IIf(upBar, mUpColour, mDownColour), BF
         Else
-            mSurface.Line (mPeriodNumber - 1.5 * barThicknessScaleX, mOpen - barThicknessScaleY / 2)-(mPeriodNumber + barThicknessScaleX / 2, mOpen + barThicknessScaleY / 2), IIf(upBar, mUpColour, mDownColour), BF
+            mSurface.Line (mPeriodNumber - BarSemiWidth, mOpen - barThicknessScaleY / 2)-(mPeriodNumber + barThicknessScaleX / 2, mOpen + barThicknessScaleY / 2), IIf(upBar, mUpColour, mDownColour), BF
         End If
         
         mSurface.Line (mPeriodNumber - barThicknessScaleX / 2, mLow)-(mPeriodNumber + barThicknessScaleX / 2, mHigh), IIf(upBar, mUpColour, mDownColour), BF
         
         If (mClose - barThicknessScaleY / 2) < mLow Then
-            mSurface.Line (mPeriodNumber - barThicknessScaleX / 2, mLow)-(mPeriodNumber + 1.5 * barThicknessScaleX, mLow + barThicknessScaleY), IIf(upBar, mUpColour, mDownColour), BF
+            mSurface.Line (mPeriodNumber - barThicknessScaleX / 2, mLow)-(mPeriodNumber + BarSemiWidth, mLow + barThicknessScaleY), IIf(upBar, mUpColour, mDownColour), BF
         ElseIf (mClose + barThicknessScaleY / 2) > mHigh Then
-            mSurface.Line (mPeriodNumber - barThicknessScaleX / 2, mHigh - barThicknessScaleY)-(mPeriodNumber + 1.5 * barThicknessScaleX, mHigh), IIf(upBar, mUpColour, mDownColour), BF
+            mSurface.Line (mPeriodNumber - barThicknessScaleX / 2, mHigh - barThicknessScaleY)-(mPeriodNumber + BarSemiWidth, mHigh), IIf(upBar, mUpColour, mDownColour), BF
         Else
-            mSurface.Line (mPeriodNumber - barThicknessScaleX / 2, mClose - barThicknessScaleY / 2)-(mPeriodNumber + 1.5 * barThicknessScaleX, mClose + barThicknessScaleY / 2), IIf(upBar, mUpColour, mDownColour), BF
+            mSurface.Line (mPeriodNumber - barThicknessScaleX / 2, mClose - barThicknessScaleY / 2)-(mPeriodNumber + BarSemiWidth, mClose + barThicknessScaleY / 2), IIf(upBar, mUpColour, mDownColour), BF
         End If
     End If
 End If
@@ -387,8 +384,6 @@ If upBar And Not mSolidUpBody Then
         mSurface.Line (mPeriodNumber - (mCandleWidth / 2), bottom)-(mPeriodNumber + (mCandleWidth / 2), top), mSurface.backColor, B
         If bottom = mOpen Then
             If mOutlineThickness = 1 Then
-'                mSurface.DrawStyle = LineStyles.LineSolid
-'                mSurface.Line (mPeriodNumber - (mCandleWidth / 2), bottom)-(mPeriodNumber + (mCandleWidth / 2), bottom), colour
                 mSurface.Line (mPeriodNumber - (mCandleWidth / 2), bottom)-(mPeriodNumber + (mCandleWidth / 2), bottom), colour, B
             Else
                 mSurface.Line (mPeriodNumber - (mCandleWidth / 2), bottom)-(mPeriodNumber + (mCandleWidth / 2), bottom + barOutlineScaleY), colour, BF
@@ -396,17 +391,12 @@ If upBar And Not mSolidUpBody Then
         End If
         If top = mClose Then
             If mOutlineThickness = 1 Then
-'                mSurface.DrawStyle = LineStyles.LineSolid
-'                mSurface.Line (mPeriodNumber - (mCandleWidth / 2), top)-(mPeriodNumber + (mCandleWidth / 2), top), colour
                 mSurface.Line (mPeriodNumber - (mCandleWidth / 2), top)-(mPeriodNumber + (mCandleWidth / 2), top), colour, B
             Else
                 mSurface.Line (mPeriodNumber - (mCandleWidth / 2), top - barOutlineScaleY)-(mPeriodNumber + (mCandleWidth / 2), top), colour, BF
             End If
         End If
         If mOutlineThickness = 1 Then
-'            mSurface.DrawStyle = LineStyles.LineSolid
-'            mSurface.Line (mPeriodNumber - (mCandleWidth / 2), bottom)-(mPeriodNumber - (mCandleWidth / 2), top), colour
-'            mSurface.Line (mPeriodNumber + (mCandleWidth / 2), bottom)-(mPeriodNumber + (mCandleWidth / 2), top), colour
             mSurface.Line (mPeriodNumber - (mCandleWidth / 2), bottom)-(mPeriodNumber - (mCandleWidth / 2), top), colour, B
             mSurface.Line (mPeriodNumber + (mCandleWidth / 2), bottom)-(mPeriodNumber + (mCandleWidth / 2), top), colour, B
         Else
@@ -471,11 +461,13 @@ Else
     mSurface.DrawWidth = 1
     mSurface.DrawStyle = LineStyles.LineSolid
     If mBarThickness = 1 Then
+        Dim onePixel As Double
+        onePixel = Abs(Screen.TwipsPerPixelX / (mSurface.Width / mSurface.scaleWidth))
         If mOpen >= area.bottom And mOpen <= area.top Then
-            mSurface.Line (mPeriodNumber - mCandleWidth / 2, mOpen)-(mPeriodNumber, mOpen), colour
+            mSurface.Line (mPeriodNumber - BarSemiWidth, mOpen)-(mPeriodNumber, mOpen), colour
         End If
         If mClose >= area.bottom And mClose <= area.top Then
-            mSurface.Line (mPeriodNumber, mClose)-(mPeriodNumber + mCandleWidth / 2, mClose), colour
+            mSurface.Line (mPeriodNumber, mClose)-(mPeriodNumber + BarSemiWidth + onePixel, mClose), colour
         End If
         mSurface.Line (mPeriodNumber, IIf(area.bottom > mLow, area.bottom, mLow))-(mPeriodNumber, IIf(area.top < mHigh, area.top, mHigh)), colour
     Else
@@ -485,21 +477,21 @@ Else
         
         If mOpen >= area.bottom And mOpen <= area.top Then
             If (mOpen - barThicknessScaleY / 2) < mLow Then
-                mSurface.Line (mPeriodNumber - 1.5 * barThicknessScaleX, mLow)-(mPeriodNumber + barThicknessScaleX / 2, mLow + barThicknessScaleY), colour, BF
+                mSurface.Line (mPeriodNumber - BarSemiWidth, mLow)-(mPeriodNumber + barThicknessScaleX / 2, mLow + barThicknessScaleY), colour, BF
             ElseIf (mOpen + barThicknessScaleY / 2) > mHigh Then
-                mSurface.Line (mPeriodNumber - 1.5 * barThicknessScaleX, mHigh - barThicknessScaleY)-(mPeriodNumber + barThicknessScaleX / 2, mHigh), colour, BF
+                mSurface.Line (mPeriodNumber - BarSemiWidth, mHigh - barThicknessScaleY)-(mPeriodNumber + barThicknessScaleX / 2, mHigh), colour, BF
             Else
-                mSurface.Line (mPeriodNumber - 1.5 * barThicknessScaleX, mOpen - barThicknessScaleY / 2)-(mPeriodNumber + barThicknessScaleX / 2, mOpen + barThicknessScaleY / 2), colour, BF
+                mSurface.Line (mPeriodNumber - BarSemiWidth, mOpen - barThicknessScaleY / 2)-(mPeriodNumber + barThicknessScaleX / 2, mOpen + barThicknessScaleY / 2), colour, BF
             End If
         End If
         
         If mClose >= area.bottom And mClose <= area.top Then
             If (mClose - barThicknessScaleY / 2) < mLow Then
-                mSurface.Line (mPeriodNumber - barThicknessScaleX / 2, mLow)-(mPeriodNumber + 1.5 * barThicknessScaleX, mLow + barThicknessScaleY), colour, BF
+                mSurface.Line (mPeriodNumber - barThicknessScaleX / 2, mLow)-(mPeriodNumber + BarSemiWidth, mLow + barThicknessScaleY), colour, BF
             ElseIf (mClose + barThicknessScaleY / 2) > mHigh Then
-                mSurface.Line (mPeriodNumber - barThicknessScaleX / 2, mHigh - barThicknessScaleY)-(mPeriodNumber + 1.5 * barThicknessScaleX, mHigh), colour, BF
+                mSurface.Line (mPeriodNumber - barThicknessScaleX / 2, mHigh - barThicknessScaleY)-(mPeriodNumber + BarSemiWidth, mHigh), colour, BF
             Else
-                mSurface.Line (mPeriodNumber - barThicknessScaleX / 2, mClose - barThicknessScaleY / 2)-(mPeriodNumber + 1.5 * barThicknessScaleX, mClose + barThicknessScaleY / 2), colour, BF
+                mSurface.Line (mPeriodNumber - barThicknessScaleX / 2, mClose - barThicknessScaleY / 2)-(mPeriodNumber + BarSemiWidth, mClose + barThicknessScaleY / 2), colour, BF
             End If
         End If
         
