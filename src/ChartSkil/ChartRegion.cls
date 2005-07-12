@@ -914,15 +914,14 @@ End Property
 
 Public Property Get regionWidth() As Single
 regionWidth = mScaleWidth
-With mSurface
-    mGaugeX = (.scaleWidth / .Width) * Screen.TwipsPerPixelX
-End With
 End Property
 
 Friend Property Let regionWidth(ByVal value As Single)
 mScaleWidth = value
-mSurface.scaleWidth = value
-
+With mSurface
+    .scaleWidth = value
+    mGaugeX = (.scaleWidth / .Width) * Screen.TwipsPerPixelX
+End With
 End Property
 
 Public Property Get showGrid() As Boolean
@@ -1342,7 +1341,7 @@ End Sub
 
 Friend Sub paintRegion()
 Dim aBarSeries As BarSeries
-Dim aBar As bar
+Dim aBar As Bar
 Dim aDataPointSeries As DataPointSeries
 Dim aDataPoint As DataPoint
 Dim startTimer As Single
