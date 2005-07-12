@@ -101,7 +101,6 @@ Private mScaleLeft As Single
 Private mScaleTop As Single
 
 Private mPrevHeight As Single
-Private mPrevWidth As Single
 
 Private mTwipsPerBar As Long
 
@@ -650,16 +649,14 @@ displayXAxisLabel mPrevCursorX, 100
 End Sub
 
 Private Sub resizeX()
+Dim newScaleWidth As Single
 Dim i As Long
 Dim region As ChartRegion
 
-If UserControl.Width = mPrevWidth Then Exit Sub
+newScaleWidth = CSng(XAxisPicture.Width) / CSng(mTwipsPerBar) - 0.5!
+If newScaleWidth = mScaleWidth Then Exit Sub
 
-'debug.print "resizeX"
-
-mPrevWidth = UserControl.Width
-
-mScaleWidth = CSng(XAxisPicture.Width) / CSng(mTwipsPerBar) - 0.5!
+mScaleWidth = newScaleWidth
 mScaleLeft = YAxisPosition + 7 - mScaleWidth
 XAxisPicture.scaleWidth = mScaleWidth
 XAxisPicture.scaleLeft = mScaleLeft
