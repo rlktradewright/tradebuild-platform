@@ -595,6 +595,7 @@ End If
 End Sub
 
 Private Sub undraw(ByRef area As TRectangle)
+If Not mVisible Then Exit Sub
 If Not area.isvalid Then
     drawBar mSurface.backColor
     mEventProxy.objectUndrawn mHandle, mBoundingRect

@@ -2,8 +2,8 @@ Attribute VB_Name = "Globals"
 Option Explicit
 
 Public Type POINTAPI
-        x As Long
-        y As Long
+        X As Long
+        Y As Long
 End Type
 
 Public Declare Function Polygon Lib "gdi32" (ByVal hdc As Long, _
@@ -26,17 +26,7 @@ Public Const PlusInfinitySingle As Single = 3.402823E+38
 
 Public Const GridlineSpacingCm As Double = 2.5
 
-Public gChartBackColour As Long
-
-Public Function newPoint(ByVal x As Double, _
-                        ByVal y As Double, _
-                        Optional ByVal relative As Boolean = False) As Point
-Set newPoint = New Point
-newPoint.x = x
-newPoint.y = y
-newPoint.relative = relative
-End Function
-
+Public Const TwipsPerCm As Long = 1440 / 2.54
 
 '================================================================================
 ' Rectangle functions

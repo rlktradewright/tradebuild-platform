@@ -45,6 +45,8 @@ Private mHistBarWidth As Single
 Private mMinPeriodInView As Long
 Private mMaxPeriodInView As Long
 
+Private mPrevDataPoint As DataPoint
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -190,8 +192,14 @@ addDataPoint.layer = mLayer
 addDataPoint.lineColour = mLineColour
 addDataPoint.lineStyle = mLineStyle
 addDataPoint.lineThickness = mLineThickness
-mDataPoints.Add addDataPoint
+addDataPoint.prevDataPoint = mPrevDataPoint
+mDataPoints.Add addDataPoint, CStr(periodNumber)
+Set mPrevDataPoint = addDataPoint
 mEventProxy.addGraphicObject addDataPoint
+End Function
+
+Public Function Item(ByVal periodNumber As Long) As DataPoint
+Set Item = mDataPoints(CStr(periodNumber))
 End Function
 
 'Friend Sub periodsInView(ByVal minValue As Long, ByVal maxValue As Long)

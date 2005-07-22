@@ -273,8 +273,13 @@ If mDisplayMode = DisplayModes.displayAsHistogram Then
     With boundingRect
         .left = mPeriodNumber - mHistBarWidth / 2
         .right = mPeriodNumber + mHistBarWidth / 2
-        .bottom = 0
-        .top = mDataValue
+        If mDataValue >= 0 Then
+            .bottom = 0
+            .top = mDataValue
+        Else
+            .bottom = mDataValue
+            .top = 0
+        End If
     End With
 ElseIf drawAsPoint Then
     With boundingRect
@@ -358,6 +363,7 @@ End If
 End Sub
 
 Private Sub undraw()
+If Not mVisible Then Exit Sub
 drawPoint mSurface.backColor
 mEventProxy.objectUndrawn mHandle, mBoundingRect
 End Sub

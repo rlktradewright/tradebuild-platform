@@ -57,7 +57,8 @@ Private mGaugeY As Double
 Private mThicknessOffsetX As Double
 Private mThicknessOffsetY As Double
 
-Private mFixed As Boolean
+Private mFixedX As Boolean
+Private mFixedY As Boolean
 Private mIncludeInAutoscale As Boolean
 Private mExtended As Boolean
 
@@ -146,11 +147,11 @@ Dim rects() As TRectangle
 
 If mBlank Then Exit Function
 
-If mLeftToRight Then
-    If periodNumber > mPoint2.x Then Exit Function
-Else
-    If periodNumber > mPoint1.x Then Exit Function
-End If
+'If mLeftToRight Then
+'    If periodNumber > mPoint2.X Then Exit Function
+'Else
+'    If periodNumber > mPoint1.X Then Exit Function
+'End If
 
 With periodrect
     .left = periodNumber
@@ -180,8 +181,8 @@ If mVertical <> VerticalNot Then
     End If
 Else
     If periodNumber = Int(mRegionRect.right) Or _
-        (mLeftToRight And periodNumber = mPoint2.x) Or _
-        (Not mLeftToRight And periodNumber = mPoint1.x) _
+        (Not mLeftToRight And periodNumber = mPoint2.X And Not mExtendAfter) Or _
+        (Not mLeftToRight And periodNumber = mPoint1.X And Not mExtendBefore) _
     Then
         If mThickness <= 1 Then Exit Function
     End If
@@ -192,12 +193,12 @@ Else
     With rects(0)
         .left = periodNumber
         If mLeftToRight Then
-            If periodNumber < mPoint1.x Then .left = mPoint1.x - 1
+            If periodNumber < mPoint1.X Then .left = mPoint1.X - 1
         Else
-            If periodNumber < mPoint2.x Then .left = mPoint2.x - 1
+            If periodNumber < mPoint2.X Then .left = mPoint2.X - 1
         End If
         If mLeftToRight Then
-            If (Not mExtendAfter And periodNumber = mPoint2.x) Or _
+            If (Not mExtendAfter And periodNumber = mPoint2.X) Or _
                 periodNumber = Int(mRegionRect.right) _
             Then
                 .right = .left
@@ -205,7 +206,7 @@ Else
                 .right = periodNumber + 1
             End If
         Else
-            If (Not mExtendBefore And periodNumber = mPoint1.x) Or _
+            If (Not mExtendBefore And periodNumber = mPoint1.X) Or _
                 periodNumber = Int(mRegionRect.right) _
             Then
                 .right = .left
@@ -222,15 +223,15 @@ Else
             .bottom = mA * .right + mB - mThicknessOffsetY
         End If
         If mLeftToRight Then
-            If (Not mExtendBefore And periodNumber = mPoint1.x) Then .left = .left - mThicknessOffsetX
-            If (Not mExtendAfter And periodNumber = mPoint2.x) Or _
+            If (Not mExtendBefore And periodNumber = mPoint1.X) Then .left = .left - mThicknessOffsetX
+            If (Not mExtendAfter And periodNumber = mPoint2.X) Or _
                 periodNumber = Int(mRegionRect.right) _
             Then
                 .right = .right + mThicknessOffsetX
             End If
         Else
-            If (Not mExtendAfter And periodNumber = mPoint2.x) Then .left = .left - mThicknessOffsetX
-            If (Not mExtendBefore And periodNumber = mPoint1.x) Or _
+            If (Not mExtendAfter And periodNumber = mPoint2.X) Then .left = .left - mThicknessOffsetX
+            If (Not mExtendBefore And periodNumber = mPoint1.X) Or _
                 periodNumber = Int(mRegionRect.right) _
             Then
                 .right = .right + mThicknessOffsetX
@@ -319,7 +320,7 @@ IGraphicObject_periodNumber = -1
 End Property
 
 Private Property Get IGraphicObject_scaleDependent() As Boolean
-IGraphicObject_scaleDependent = mFixed
+IGraphicObject_scaleDependent = mFixedX Or mFixedY
 End Property
 
 Private Sub IGraphicObject_undraw(ByRef area As TRectangle)
@@ -519,44 +520,27 @@ mExtendBefore = newValue
 update
 End Property
 
-Friend Property Get fixed() As Boolean
-fixed = mFixed
+Friend Property Get fixedX() As Boolean
+fixedX = mFixedX
 End Property
 
-Public Property Let fixed(ByVal newValue As Boolean)
-If mFixed = newValue Then Exit Property
+Public Property Let fixedX(ByVal newValue As Boolean)
+If mFixedX = newValue Then Exit Property
 undraw
-mFixed = newValue
-If Not mPoint1 Is Nothing Then
-    If mPoint1.assigned Then
-        If Not mFixed And mPoint1.relative Then
-            ' need to convert to absolute coordinates
-            mPoint1.x = mSurface.scaleLeft + mPoint1.x * mSurface.scaleWidth / 100
-            mPoint1.Y = mSurface.scaleTop + mSurface.scaleHeight - mPoint1.Y * mSurface.scaleHeight / 100
-            mPoint1.relative = False
-        ElseIf mFixed And Not mPoint1.relative Then
-            ' need to convert to relative coordinates
-            mPoint1.x = 100 * (mPoint1.x - mSurface.scaleLeft) / mSurface.scaleWidth
-            mPoint1.Y = -100 * (mPoint1.Y - mSurface.scaleTop - mSurface.scaleHeight) / mSurface.scaleHeight
-            mPoint1.relative = True
-        End If
-    End If
-End If
-If Not mPoint2 Is Nothing Then
-    If mPoint2.assigned Then
-        If Not mFixed And mPoint2.relative Then
-            ' need to convert to absolute coordinates
-            mPoint2.x = mSurface.scaleLeft + mPoint2.x * mSurface.scaleWidth / 100
-            mPoint2.Y = mSurface.scaleTop + mSurface.scaleHeight - mPoint2.Y * mSurface.scaleHeight / 100
-            mPoint2.relative = False
-        ElseIf mFixed And Not mPoint2.relative Then
-            ' need to convert to relative coordinates
-            mPoint2.x = 100 * (mPoint2.x - mSurface.scaleLeft) / mSurface.scaleWidth
-            mPoint2.Y = -100 * (mPoint2.Y - mSurface.scaleTop - mSurface.scaleHeight) / mSurface.scaleHeight
-            mPoint2.relative = True
-        End If
-    End If
-End If
+mFixedX = newValue
+convertPositionX
+update
+End Property
+
+Friend Property Get fixedY() As Boolean
+fixedY = mFixedY
+End Property
+
+Public Property Let fixedY(ByVal newValue As Boolean)
+If mFixedY = newValue Then Exit Property
+undraw
+mFixedY = newValue
+convertPositionY
 update
 End Property
 
@@ -614,29 +598,16 @@ Set point1 = mPoint1
 End Property
 
 Public Property Let point1(ByVal value As Point)
-If value Is Nothing Or Not value.assigned Then Exit Property
+If value Is Nothing Or Not value.isAssigned Then Exit Property
 If Not mPoint1 Is Nothing Then
     If value.equals(mPoint1) Then Exit Property
 End If
 undraw
 Set mPoint1 = value.clone
+convertPosition1
 With mPoint1
-    If Not mFixed And .relative Then
-        ' need to convert to absolute coordinates
-        .x = mSurface.scaleLeft + .x * mSurface.scaleWidth / 100
-        .x = Int(.x + 0.5)
-        .Y = mSurface.scaleTop + mSurface.scaleHeight - .Y * mSurface.scaleHeight / 100
-        .relative = False
-    ElseIf mFixed And Not .relative Then
-        ' need to convert to relative coordinates
-        .x = 100 * (.x - mSurface.scaleLeft) / mSurface.scaleWidth
-        .Y = -100 * (.Y - mSurface.scaleTop - mSurface.scaleHeight) / mSurface.scaleHeight
-        .relative = True
-    Else
-        .x = Int(mPoint1.x + 0.5)
-    End If
     If mPoint2 Is Nothing Then Exit Property
-    If Not mPoint2.assigned Then Exit Property
+    If Not mPoint2.isAssigned Then Exit Property
     setDirection
     mBlank = False
     update
@@ -648,29 +619,16 @@ Set point2 = mPoint2
 End Property
 
 Public Property Let point2(ByVal value As Point)
-If value Is Nothing Or Not value.assigned Then Exit Property
+If value Is Nothing Or Not value.isAssigned Then Exit Property
 If Not mPoint2 Is Nothing Then
     If value.equals(mPoint2) Then Exit Property
 End If
 undraw
-    Set mPoint2 = value.clone
+Set mPoint2 = value.clone
+convertPosition2
 With mPoint2
-    If Not mFixed And .relative Then
-        ' need to convert to absolute coordinates
-        .x = mSurface.scaleLeft + .x * mSurface.scaleWidth / 100
-        .x = Int(.x + 0.5)
-        .Y = mSurface.scaleTop + mSurface.scaleHeight - .Y * mSurface.scaleHeight / 100
-        .relative = False
-    ElseIf mFixed And Not mPoint2.relative Then
-        ' need to convert to relative coordinates
-        .x = 100 * (.x - mSurface.scaleLeft) / mSurface.scaleWidth
-        .Y = -100 * (.Y - mSurface.scaleTop - mSurface.scaleHeight) / mSurface.scaleHeight
-        .relative = True
-    Else
-        .x = Int(.x + 0.5)
-    End If
     If mPoint1 Is Nothing Then Exit Property
-    If Not mPoint1.assigned Then Exit Property
+    If Not mPoint1.isAssigned Then Exit Property
     setDirection
     mBlank = False
     update
@@ -739,11 +697,11 @@ ElseIf mVertical = VerticalDown Then
 End If
 
 With mPoint1
-    x1 = .x
+    x1 = .X
     y1 = .Y
 End With
 With mPoint2
-    x2 = .x
+    x2 = .X
     y2 = .Y
 End With
 
@@ -796,104 +754,102 @@ mBoundingRect.isvalid = False
 If mBlank Then Exit Sub
 
 With mPoint1
-    x1 = .x
-    y1 = .Y
+    x1 = .XAbsolute
+    y1 = .YAbsolute
 End With
 With mPoint2
-    x2 = .x
-    y2 = .Y
+    x2 = .XAbsolute
+    y2 = .YAbsolute
 End With
 
 With mBoundingRect
-    If mFixed Then
-'        .left = mSurface.scaleLeft + mPosition.x * mSurface.scaleWidth / 100
-'        .top = mSurface.scaleTop + mSurface.scaleHeight - mPosition.y * mSurface.scaleHeight / 100
-'        .right = .left + mRawBoundingRect.right
-'        .bottom = .top + mRawBoundingRect.top
-    Else
-        If mVertical <> VerticalNot Then
-            If mBottomToTop Then
-                If mExtendBefore Then
-                    lineInt.startValue = MinusInfinityDouble
-                Else
-                    lineInt.startValue = y1
-                End If
-                If mExtendAfter Then
-                    lineInt.endValue = PlusInfinityDouble
-                Else
-                    lineInt.endValue = y2
-                End If
+    If mVertical <> VerticalNot Then
+        If mBottomToTop Then
+            If mExtendBefore Then
+                lineInt.startValue = MinusInfinityDouble
             Else
-                If mExtendAfter Then
-                    lineInt.startValue = MinusInfinityDouble
-                Else
-                    lineInt.startValue = y2
-                End If
-                If mExtendBefore Then
-                    lineInt.endValue = PlusInfinityDouble
-                Else
-                    lineInt.endValue = y1
-                End If
+                lineInt.startValue = y1
             End If
-            lineInt.isvalid = True
-            regionInt = rectGetYInterval(mRegionRect)
-            rectSetYInterval mBoundingRect, intIntersection(regionInt, lineInt)
-            
-            .left = x1 - mThicknessOffsetX
-            .right = x1 + mThicknessOffsetX
-            .bottom = .bottom - mThicknessOffsetY
-            .top = .top + mThicknessOffsetY
-            .isvalid = True
+            If mExtendAfter Then
+                lineInt.endValue = PlusInfinityDouble
+            Else
+                lineInt.endValue = y2
+            End If
         Else
-            If mLeftToRight Then
-                If mExtendBefore Then
-                    lineInt.startValue = MinusInfinityDouble
-                Else
-                    lineInt.startValue = x1
-                End If
-                If mExtendAfter Then
-                    lineInt.endValue = PlusInfinityDouble
-                Else
-                    lineInt.endValue = x2
-                End If
+            If mExtendAfter Then
+                lineInt.startValue = MinusInfinityDouble
             Else
-                If mExtendAfter Then
-                    lineInt.startValue = MinusInfinityDouble
-                Else
-                    lineInt.startValue = x2
-                End If
-                If mExtendBefore Then
-                    lineInt.endValue = PlusInfinityDouble
-                Else
-                    lineInt.endValue = x1
-                End If
+                lineInt.startValue = y2
             End If
-            lineInt.isvalid = True
-            regionInt = rectGetXInterval(mRegionRect)
-            rectSetXInterval mBoundingRect, intIntersection(regionInt, lineInt)
-            If .right > Int(mRegionRect.right) Then .right = Int(mRegionRect.right)
-            
-            Select Case mDirection
-            Case NE
-                .top = y2 + mThicknessOffsetY
-                .bottom = y1 - mThicknessOffsetY
-            Case NW
-                .top = y2 + mThicknessOffsetY
-                .bottom = y1 - mThicknessOffsetY
-            Case SW
-                .bottom = y2 - mThicknessOffsetY
-                .top = y1 + mThicknessOffsetY
-            Case SE
-                .bottom = y2 - mThicknessOffsetY
-                .top = y1 + mThicknessOffsetY
-            End Select
-            
-            If mThickness > 1 Then
-                .right = .right + mThicknessOffsetX
-                .left = .left - mThicknessOffsetX
+            If mExtendBefore Then
+                lineInt.endValue = PlusInfinityDouble
+            Else
+                lineInt.endValue = y1
             End If
-            .isvalid = True
         End If
+        lineInt.isvalid = True
+        regionInt = rectGetYInterval(mRegionRect)
+        rectSetYInterval mBoundingRect, intIntersection(regionInt, lineInt)
+        
+        .left = x1 - mThicknessOffsetX
+        .right = x1 + mThicknessOffsetX
+        .bottom = .bottom - mThicknessOffsetY
+        .top = .top + mThicknessOffsetY
+        .isvalid = True
+    Else
+        If mLeftToRight Then
+            If mExtendBefore Then
+                lineInt.startValue = MinusInfinityDouble
+            Else
+                lineInt.startValue = x1
+            End If
+            If mExtendAfter Then
+                lineInt.endValue = PlusInfinityDouble
+            Else
+                lineInt.endValue = x2
+            End If
+        Else
+            If mExtendAfter Then
+                lineInt.startValue = MinusInfinityDouble
+            Else
+                lineInt.startValue = x2
+            End If
+            If mExtendBefore Then
+                lineInt.endValue = PlusInfinityDouble
+            Else
+                lineInt.endValue = x1
+            End If
+        End If
+        lineInt.isvalid = True
+        regionInt = rectGetXInterval(mRegionRect)
+        rectSetXInterval mBoundingRect, intIntersection(regionInt, lineInt)
+        
+        If Not .isvalid Then
+            Exit Sub
+        End If
+            
+        If .right > Int(mRegionRect.right) Then .right = Int(mRegionRect.right)
+        
+        Select Case mDirection
+        Case NE
+            .top = mA * .right + mB + mThicknessOffsetY
+            .bottom = mA * .left + mB - mThicknessOffsetY
+        Case NW
+            .top = mA * .left + mB + mThicknessOffsetY
+            .bottom = mA * .right + mB - mThicknessOffsetY
+        Case SW
+            .bottom = mA * .left + mB - mThicknessOffsetY
+            .top = mA * .right + mB + mThicknessOffsetY
+        Case SE
+            .bottom = mA * .right + mB - mThicknessOffsetY
+            .top = mA * .left + mB + mThicknessOffsetY
+        End Select
+        
+        If mThickness > 1 Then
+            .right = .right + mThicknessOffsetX
+            .left = .left - mThicknessOffsetX
+        End If
+        .isvalid = True
     End If
 'Debug.Print "Calc bounds : (" & .left & "," & (mA * .left + mB) & ")-(" & .right & "," & (mA * .right + mB) & ")"
 End With
@@ -906,7 +862,7 @@ End Sub
 Private Sub calcEndArrowConstants()
 Dim hyp As Double
 Dim halfAngle As Double
-Dim x As Double
+Dim X As Double
 Dim Y As Double
 
 If mArrowEndStyle = ArrowNone Then Exit Sub
@@ -920,7 +876,7 @@ mEndArrowX2Offset = -hyp * Sin(Pi / 2 - mLineAngle - halfAngle) * mGaugeX
 mEndArrowY2Offset = -hyp * Cos(Pi / 2 - mLineAngle - halfAngle) * mGaugeY
 
 With mPoint2
-    x = .x
+    X = .X
     Y = .Y
 End With
 
@@ -928,27 +884,27 @@ With mEndArrowRect
     Select Case mDirection
     Case NE
         .bottom = Y + mEndArrowY2Offset - mThicknessOffsetY
-        .left = x + mEndArrowX1Offset - mThicknessOffsetX
+        .left = X + mEndArrowX1Offset - mThicknessOffsetX
         .top = Y + IIf(mEndArrowY1Offset > 0, mEndArrowY1Offset, 0) + mThicknessOffsetY
-        .right = x + IIf(mEndArrowX2Offset > 0, mEndArrowX2Offset, 0) + mThicknessOffsetX
+        .right = X + IIf(mEndArrowX2Offset > 0, mEndArrowX2Offset, 0) + mThicknessOffsetX
         .isvalid = True
     Case NW
         .bottom = Y + mEndArrowY1Offset - mThicknessOffsetY
-        .left = x + IIf(mEndArrowX1Offset < 0, mEndArrowX1Offset, 0) - mThicknessOffsetX
+        .left = X + IIf(mEndArrowX1Offset < 0, mEndArrowX1Offset, 0) - mThicknessOffsetX
         .top = Y + IIf(mEndArrowY2Offset > 0, mEndArrowY2Offset, 0) + mThicknessOffsetY
-        .right = x + mEndArrowX2Offset + mThicknessOffsetX
+        .right = X + mEndArrowX2Offset + mThicknessOffsetX
         .isvalid = True
     Case SW
         .bottom = Y + IIf(mEndArrowY1Offset < 0, mEndArrowY1Offset, 0) - mThicknessOffsetY
-        .left = x + IIf(mEndArrowX2Offset < 0, mEndArrowX2Offset, 0) - mThicknessOffsetX
+        .left = X + IIf(mEndArrowX2Offset < 0, mEndArrowX2Offset, 0) - mThicknessOffsetX
         .top = Y + mEndArrowY2Offset + mThicknessOffsetY
-        .right = x + mEndArrowX1Offset + mThicknessOffsetX
+        .right = X + mEndArrowX1Offset + mThicknessOffsetX
         .isvalid = True
     Case SE
         .bottom = Y + IIf(mEndArrowY2Offset < 0, mEndArrowY2Offset, 0) - mThicknessOffsetY
-        .left = x + mEndArrowX2Offset - mThicknessOffsetX
+        .left = X + mEndArrowX2Offset - mThicknessOffsetX
         .top = Y + mEndArrowY1Offset + mThicknessOffsetY
-        .right = x + IIf(mEndArrowX1Offset > 0, mEndArrowX1Offset, 0) + mThicknessOffsetX
+        .right = X + IIf(mEndArrowX1Offset > 0, mEndArrowX1Offset, 0) + mThicknessOffsetX
         .isvalid = True
     End Select
     'Debug.Assert (.right - .left) < 5 And (.top - .bottom) < 5
@@ -958,7 +914,7 @@ End Sub
 Private Sub calcStartArrowConstants()
 Dim hyp As Double
 Dim halfAngle As Double
-Dim x As Double
+Dim X As Double
 Dim Y As Double
 
 If mArrowStartStyle = ArrowNone Then Exit Sub
@@ -972,7 +928,7 @@ mStartArrowX2Offset = hyp * Sin(Pi / 2 - mLineAngle - halfAngle) * mGaugeX
 mStartArrowY2Offset = hyp * Cos(Pi / 2 - mLineAngle - halfAngle) * mGaugeY
 
 With mPoint1
-    x = .x
+    X = .X
     Y = .Y
 End With
 
@@ -980,27 +936,27 @@ With mStartArrowRect
     Select Case mDirection
     Case NE
         .bottom = Y + IIf(mStartArrowY1Offset < 0, mStartArrowY1Offset, 0) - mThicknessOffsetY
-        .left = x + IIf(mStartArrowX2Offset < 0, mStartArrowX2Offset, 0) - mThicknessOffsetX
+        .left = X + IIf(mStartArrowX2Offset < 0, mStartArrowX2Offset, 0) - mThicknessOffsetX
         .top = Y + mStartArrowY2Offset + mThicknessOffsetY
-        .right = x + mStartArrowX1Offset + mThicknessOffsetY
+        .right = X + mStartArrowX1Offset + mThicknessOffsetY
         .isvalid = True
     Case NW
         .bottom = Y + IIf(mEndArrowY2Offset < 0, mEndArrowY2Offset, 0) - mThicknessOffsetY
-        .left = x + mEndArrowX2Offset - mThicknessOffsetX
+        .left = X + mEndArrowX2Offset - mThicknessOffsetX
         .top = Y + mEndArrowY1Offset + mThicknessOffsetY
-        .right = x + IIf(mEndArrowX1Offset > 0, mEndArrowX1Offset, 0) + mThicknessOffsetX
+        .right = X + IIf(mEndArrowX1Offset > 0, mEndArrowX1Offset, 0) + mThicknessOffsetX
         .isvalid = True
     Case SW
         .bottom = Y + mStartArrowY2Offset - mThicknessOffsetY
-        .left = x + mStartArrowX1Offset - mThicknessOffsetX
+        .left = X + mStartArrowX1Offset - mThicknessOffsetX
         .top = Y + IIf(mStartArrowY1Offset > 0, mStartArrowY1Offset, 0) + mThicknessOffsetY
-        .right = x + IIf(mStartArrowX2Offset > 0, mStartArrowX2Offset, 0) + mThicknessOffsetX
+        .right = X + IIf(mStartArrowX2Offset > 0, mStartArrowX2Offset, 0) + mThicknessOffsetX
         .isvalid = True
     Case SE
         .bottom = Y + mStartArrowY1Offset - mThicknessOffsetY
-        .left = x + IIf(mStartArrowX1Offset < 0, mStartArrowX1Offset, 0) - mThicknessOffsetX
+        .left = X + IIf(mStartArrowX1Offset < 0, mStartArrowX1Offset, 0) - mThicknessOffsetX
         .top = Y + IIf(mStartArrowY2Offset > 0, mStartArrowY2Offset, 0) + mThicknessOffsetY
-        .right = x + mStartArrowX2Offset + mThicknessOffsetX
+        .right = X + mStartArrowX2Offset + mThicknessOffsetX
         .isvalid = True
         
 '    Case SW
@@ -1032,6 +988,78 @@ With mStartArrowRect
 End With
 End Sub
 
+Private Sub convertPositionX()
+convertPosition1X
+convertPosition2X
+End Sub
+
+Private Sub convertPositionY()
+convertPosition1Y
+convertPosition2Y
+End Sub
+
+Private Sub convertPosition1()
+convertPosition1X
+convertPosition1Y
+End Sub
+
+Private Sub convertPosition2()
+convertPosition2X
+convertPosition2Y
+End Sub
+
+Private Sub convertPosition1X()
+If mPoint1 Is Nothing Then Exit Sub
+If mFixedX Then
+    If mPoint1.PositionTypeX = PositionAbsolute Then
+        mPoint1.PositionTypeX = PositionRelative
+    End If
+Else
+    If mPoint1.PositionTypeX <> PositionAbsolute Then
+        mPoint1.PositionTypeX = PositionAbsolute
+    End If
+End If
+End Sub
+
+Private Sub convertPosition1Y()
+If mPoint1 Is Nothing Then Exit Sub
+If mFixedY Then
+    If mPoint1.PositionTypeY = PositionAbsolute Then
+        mPoint1.PositionTypeY = PositionRelative
+    End If
+Else
+    If mPoint1.PositionTypeY <> PositionAbsolute Then
+        mPoint1.PositionTypeY = PositionAbsolute
+    End If
+End If
+End Sub
+
+Private Sub convertPosition2X()
+If mPoint2 Is Nothing Then Exit Sub
+If mFixedX Then
+    If mPoint2.PositionTypeX = PositionAbsolute Then
+        mPoint2.PositionTypeX = PositionRelative
+    End If
+Else
+    If mPoint2.PositionTypeX <> PositionAbsolute Then
+        mPoint2.PositionTypeX = PositionAbsolute
+    End If
+End If
+End Sub
+
+Private Sub convertPosition2Y()
+If mPoint2 Is Nothing Then Exit Sub
+If mFixedY Then
+    If mPoint2.PositionTypeY = PositionAbsolute Then
+        mPoint2.PositionTypeY = PositionRelative
+    End If
+Else
+    If mPoint2.PositionTypeY <> PositionAbsolute Then
+        mPoint2.PositionTypeY = PositionAbsolute
+    End If
+End If
+End Sub
+
 Private Sub draw(ByRef area As TRectangle, ByVal undraw As Boolean)
 Dim right As Double
 Dim left As Double
@@ -1043,9 +1071,13 @@ Dim x2 As Double
 Dim y2 As Double
 Dim plg(3) As POINTAPI
 Dim slopeThicknessY As Double
+Dim xBottom As Double
+Dim xTop As Double
 
 If mBlank Or mHidden Then Exit Sub
-If Not mVisible Then Exit Sub
+If Not mVisible Then
+    Exit Sub
+End If
 
 With mSurface
     .DrawMode = vbCopyPen
@@ -1055,12 +1087,12 @@ With mSurface
 End With
     
 With mPoint1
-    x1 = .x
+    x1 = .X
     y1 = .Y
 End With
 
 With mPoint2
-    x2 = .x
+    x2 = .X
     y2 = .Y
 End With
 
@@ -1068,7 +1100,7 @@ If mVertical <> VerticalNot Then
     With area
         If mBottomToTop Then
             If mExtendAfter Then
-                top = mRegionRect.top
+                top = .top
             Else
                 If .top > y2 Then
                     top = y2
@@ -1077,7 +1109,7 @@ If mVertical <> VerticalNot Then
                 End If
             End If
             If mExtendBefore Then
-                bottom = mRegionRect.bottom
+                bottom = .bottom
             Else
                 If .bottom < y1 Then
                     bottom = y1
@@ -1087,7 +1119,7 @@ If mVertical <> VerticalNot Then
             End If
         Else
             If mExtendAfter Then
-                bottom = mRegionRect.bottom
+                bottom = .bottom
             Else
                 If .bottom < y2 Then
                     bottom = y2
@@ -1096,7 +1128,7 @@ If mVertical <> VerticalNot Then
                 End If
             End If
             If mExtendBefore Then
-                top = mRegionRect.top
+                top = .top
             Else
                 If .top > y1 Then
                     top = y1
@@ -1169,6 +1201,25 @@ Else
         Debug.Assert left <= right
         If left <> right Then
             If mThickness = 1 Then
+                ' now calculate the x coordinates that ensure the line
+                ' lies does not go outside the top or bottom of the area
+                ' to be drawn
+                xBottom = (area.bottom - mB) / mA
+                xTop = (area.top - mB) / mA
+                If xBottom > left And xBottom < right Then
+                    If mA >= 0 Then
+                        left = xBottom
+                    Else
+                        right = xBottom
+                    End If
+                End If
+                If xTop > left And xTop < right Then
+                    If mA >= 0 Then
+                        right = xTop
+                    Else
+                        left = xTop
+                    End If
+                End If
                 mSurface.Line (left, mA * left + mB)-(right, mA * right + mB)
             Else
                 If left = x1 Then
@@ -1182,37 +1233,37 @@ Else
                 slopeThicknessY = Abs(mThickness / mLineAngleCos)
                                 
                 If left = x1 Or left = x2 Then
-                    plg(0).x = .ScaleX(left - .scaleLeft, vbUser, vbPixels) - mThickness * mLineAngleSin / 2
+                    plg(0).X = .ScaleX(left - .scaleLeft, vbUser, vbPixels) - mThickness * mLineAngleSin / 2
                     plg(0).Y = .ScaleY(mA * left + mB - .scaleTop, vbUser, vbPixels) - mThickness * mLineAngleCos / 2
                 Else
-                    plg(0).x = .ScaleX(left - .scaleLeft, vbUser, vbPixels)
+                    plg(0).X = .ScaleX(left - .scaleLeft, vbUser, vbPixels)
                     plg(0).Y = .ScaleY(mA * left + mB - .scaleTop, vbUser, vbPixels) - (slopeThicknessY - 2) / 2
                 End If
                 
                 If left = x1 Or left = x2 Then
-                    plg(1).x = .ScaleX(left - .scaleLeft, vbUser, vbPixels) + mThickness * mLineAngleSin / 2
+                    plg(1).X = .ScaleX(left - .scaleLeft, vbUser, vbPixels) + mThickness * mLineAngleSin / 2
                     plg(1).Y = .ScaleY(mA * left + mB - .scaleTop, vbUser, vbPixels) + mThickness * mLineAngleCos / 2
                 Else
-                    plg(1).x = .ScaleX(left - .scaleLeft, vbUser, vbPixels)
+                    plg(1).X = .ScaleX(left - .scaleLeft, vbUser, vbPixels)
                     plg(1).Y = .ScaleY(mA * left + mB - .scaleTop, vbUser, vbPixels) + (slopeThicknessY - 2) / 2
                 End If
                 
                 If right = x1 Or right = x2 Then
-                    plg(2).x = .ScaleX(right - .scaleLeft, vbUser, vbPixels) + mThickness * mLineAngleSin / 2
+                    plg(2).X = .ScaleX(right - .scaleLeft, vbUser, vbPixels) + mThickness * mLineAngleSin / 2
                     plg(2).Y = .ScaleY(mA * right + mB - .scaleTop, vbUser, vbPixels) + mThickness * mLineAngleCos / 2
                 Else
-                    plg(2).x = .ScaleX(right - .scaleLeft, vbUser, vbPixels)
+                    plg(2).X = .ScaleX(right - .scaleLeft, vbUser, vbPixels)
                     plg(2).Y = .ScaleY(mA * right + mB - .scaleTop, vbUser, vbPixels) + (slopeThicknessY - 2) / 2
-                    Debug.Assert IIf(mLeftToRight, plg(2).x <= .ScaleX(x2 - .scaleLeft, vbUser, vbPixels), True)
+                    Debug.Assert IIf(mLeftToRight, plg(2).X <= .ScaleX(x2 - .scaleLeft, vbUser, vbPixels), True)
                 End If
                 
                 If right = x1 Or right = x2 Then
-                    plg(3).x = .ScaleX(right - .scaleLeft, vbUser, vbPixels) - mThickness * mLineAngleSin / 2
+                    plg(3).X = .ScaleX(right - .scaleLeft, vbUser, vbPixels) - mThickness * mLineAngleSin / 2
                     plg(3).Y = .ScaleY(mA * right + mB - .scaleTop, vbUser, vbPixels) - mThickness * mLineAngleCos / 2
                 Else
-                    plg(3).x = .ScaleX(right - .scaleLeft, vbUser, vbPixels)
+                    plg(3).X = .ScaleX(right - .scaleLeft, vbUser, vbPixels)
                     plg(3).Y = .ScaleY(mA * right + mB - .scaleTop, vbUser, vbPixels) - (slopeThicknessY - 2) / 2
-                    Debug.Assert IIf(mLeftToRight, plg(3).x <= .ScaleX(x2 - .scaleLeft, vbUser, vbPixels), True)
+                    Debug.Assert IIf(mLeftToRight, plg(3).X <= .ScaleX(x2 - .scaleLeft, vbUser, vbPixels), True)
                 End If
                 .DrawStyle = LineStyles.LineInsideSolid
                 .DrawWidth = 1
@@ -1245,12 +1296,12 @@ End If
 End Sub
 
 Private Sub drawArrowEnd(ByRef area As TRectangle, ByVal undraw As Boolean)
-Dim x As Double
+Dim X As Double
 Dim Y As Double
 Dim poly(2) As POINTAPI
 
 With mPoint2
-    x = .x
+    X = .X
     Y = .Y
 End With
 
@@ -1269,19 +1320,19 @@ Select Case mArrowEndStyle
 Case ArrowNone
 
 Case ArrowSingleOpen
-    mSurface.Line (x, Y)-(x + mEndArrowX1Offset, Y + mEndArrowY1Offset)
-    mSurface.Line (x, Y)-(x + mEndArrowX2Offset, Y + mEndArrowY2Offset)
+    mSurface.Line (X, Y)-(X + mEndArrowX1Offset, Y + mEndArrowY1Offset)
+    mSurface.Line (X, Y)-(X + mEndArrowX2Offset, Y + mEndArrowY2Offset)
 Case ArrowDoubleOpen
 
 Case ArrowClosed
     With mSurface
         .FillStyle = mArrowEndFillStyle
         .FillColor = IIf(undraw, .backColor, mArrowEndFillColor)
-        poly(0).x = .ScaleX(x - .scaleLeft, vbUser, vbPixels)
+        poly(0).X = .ScaleX(X - .scaleLeft, vbUser, vbPixels)
         poly(0).Y = .ScaleY(Y - .scaleTop, vbUser, vbPixels)
-        poly(1).x = .ScaleX(x + mEndArrowX1Offset - .scaleLeft, vbUser, vbPixels)
+        poly(1).X = .ScaleX(X + mEndArrowX1Offset - .scaleLeft, vbUser, vbPixels)
         poly(1).Y = .ScaleY(Y + mEndArrowY1Offset - .scaleTop, vbUser, vbPixels)
-        poly(2).x = .ScaleX(x + mEndArrowX2Offset - .scaleLeft, vbUser, vbPixels)
+        poly(2).X = .ScaleX(X + mEndArrowX2Offset - .scaleLeft, vbUser, vbPixels)
         poly(2).Y = .ScaleY(Y + mEndArrowY2Offset - .scaleTop, vbUser, vbPixels)
         Polygon .hdc, poly(0), 3
     End With
@@ -1297,21 +1348,15 @@ Case ArrowBarb
 
 End Select
 
-'With mEndArrowRect
-'    mSurface.DrawWidth = 1
-'    mSurface.ForeColor = IIf(undraw, mSurface.backColor, vbBlack)
-'    mSurface.FillStyle = FillTransparent
-'    mSurface.Line (.left, .bottom)-(.right, .top), , B
-'End With
 End Sub
 
 Private Sub drawArrowStart(ByRef area As TRectangle, ByVal undraw As Boolean)
-Dim x As Double
+Dim X As Double
 Dim Y As Double
 Dim poly(2) As POINTAPI
 
 With mPoint1
-    x = .x
+    X = .X
     Y = .Y
 End With
 
@@ -1330,19 +1375,19 @@ Select Case mArrowStartStyle
 Case ArrowNone
 
 Case ArrowSingleOpen
-    mSurface.Line (x, Y)-(x + mStartArrowX1Offset, Y + mStartArrowY1Offset)
-    mSurface.Line (x, Y)-(x + mStartArrowX2Offset, Y + mStartArrowY2Offset)
+    mSurface.Line (X, Y)-(X + mStartArrowX1Offset, Y + mStartArrowY1Offset)
+    mSurface.Line (X, Y)-(X + mStartArrowX2Offset, Y + mStartArrowY2Offset)
 Case ArrowDoubleOpen
 
 Case ArrowClosed
     With mSurface
         .FillStyle = mArrowStartFillStyle
         .FillColor = IIf(undraw, .backColor, mArrowStartFillColor)
-        poly(0).x = .ScaleX(x - .scaleLeft, vbUser, vbPixels)
+        poly(0).X = .ScaleX(X - .scaleLeft, vbUser, vbPixels)
         poly(0).Y = .ScaleY(Y - .scaleTop, vbUser, vbPixels)
-        poly(1).x = .ScaleX(x + mStartArrowX1Offset - .scaleLeft, vbUser, vbPixels)
+        poly(1).X = .ScaleX(X + mStartArrowX1Offset - .scaleLeft, vbUser, vbPixels)
         poly(1).Y = .ScaleY(Y + mStartArrowY1Offset - .scaleTop, vbUser, vbPixels)
-        poly(2).x = .ScaleX(x + mStartArrowX2Offset - .scaleLeft, vbUser, vbPixels)
+        poly(2).X = .ScaleX(X + mStartArrowX2Offset - .scaleLeft, vbUser, vbPixels)
         poly(2).Y = .ScaleY(Y + mStartArrowY2Offset - .scaleTop, vbUser, vbPixels)
         Polygon .hdc, poly(0), 3
     End With
@@ -1358,12 +1403,6 @@ Case ArrowBarb
 
 End Select
 
-'With mStartArrowRect
-'    mSurface.DrawWidth = 1
-'    mSurface.ForeColor = IIf(undraw, mSurface.backColor, vbBlack)
-'    mSurface.FillStyle = FillTransparent
-'    mSurface.Line (.left, .bottom)-(.right, .top), , B
-'End With
 End Sub
 
 Private Sub setDirection()
@@ -1373,13 +1412,13 @@ Dim x2 As Double
 Dim y2 As Double
 
 With mPoint1
-    x1 = .x
-    y1 = .Y
+    x1 = .XAbsolute
+    y1 = .YAbsolute
 End With
 
 With mPoint2
-    x2 = .x
-    y2 = .Y
+    x2 = .XAbsolute
+    y2 = .YAbsolute
 End With
 
 If x1 = x2 Then
@@ -1419,54 +1458,11 @@ Dim i As Long
 Dim left As Double
 Dim right As Double
 
+If Not mVisible Then Exit Sub
 draw mBoundingRect, True
 mEventProxy.objectUndrawn mHandle, mBoundingRect
 Exit Sub
 
-'If mBlank Or mHidden Then Exit Sub
-'If Not mVisible Then Exit Sub
-'
-'With mSurface
-'    .DrawMode = vbCopyPen
-'    .DrawStyle = LineStyles.LineInsideSolid
-'    .DrawWidth = 1
-'    .ForeColor = .backColor
-'End With
-'With mBoundingRect
-'    If mVertical <> VerticalNot Then
-'        mSurface.Line (.left, .bottom)-(.right, .top), , BF
-'    Else
-'        left = Int(.left + 0.9999)
-'        right = Int(.right) - 1
-'
-'        For i = left To right
-'            If mA > 0 Then
-'                mSurface.Line (i, mA * i + mB - mThicknessOffsetY)- _
-'                            (i + 1, mA * (i + 1) + mB + mThicknessOffsetY), , BF
-'            Else
-'                mSurface.Line (i, mA * i + mB + mThicknessOffsetY)- _
-'                            (i + 1, mA * (i + 1) + mB - mThicknessOffsetY), , BF
-'            End If
-'        Next
-'
-'        If mThickness > 1 Then
-'            mSurface.Line (.left, mA * left + mB - mThicknessOffsetY)- _
-'                        (left, mA * left + mB + mThicknessOffsetY), , BF
-'            mSurface.Line (right, mA * right + mB - mThicknessOffsetY)- _
-'                        (.right, mA * right + mB + mThicknessOffsetY), , BF
-'        End If
-'        'mSurface.Line (.left, mA * .left + mB)-(.right, mA * .right + mB), , BF
-'        'Debug.Print "Line undraw: (" & .left & "," & (mA * .left + mB) & ")-(" & .right & "," & (mA * .right + mB) & ")"
-'    End If
-'
-'    If mArrowEndStyle <> ArrowNone Then
-'        With mEndArrowRect
-'            mSurface.Line (.left, .bottom)-(.right, .top), , BF
-'        End With
-'    End If
-'
-'End With
-'mEventProxy.objectUndrawn mHandle, mBoundingRect
 End Sub
 
 Private Sub update()

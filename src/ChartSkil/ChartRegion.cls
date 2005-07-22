@@ -18,6 +18,10 @@ Option Explicit
 '================================================================================
 
 '================================================================================
+' Constants
+'================================================================================
+
+'================================================================================
 ' Types
 '================================================================================
 
@@ -56,18 +60,18 @@ Private Type VisibleTableEntry
     lastindex           As Long
 End Type
 
-Private Enum InterLayerNumbers
-    LayerBottom = -1
-    LayerBackground = LayerBottom
+Public Enum LayerNumbers
+    LayerBackground = MinLayer
     LayerGrid
-    LayerTitle = MaxLayer + 1
+    LayerLowestUser
+    LayerHIghestUser = MaxLayer - 2
+    LayerTitle
     LayerPointer
-    Layertop = LayerPointer
 End Enum
 
 
 '================================================================================
-' Member variables and constants
+' Member variables
 '================================================================================
 
 Private mRegionNumber As Long
@@ -82,7 +86,7 @@ Private mFirstInScopeIndex As Long
 Private mLastInScopeIndex As Long
 
 Private mVisibleCycle As Long
-Private mVisibleTable(LayerBottom To Layertop) As VisibleTableEntry
+Private mVisibleTable(MinLayer To MaxLayer) As VisibleTableEntry
 
 Private mFirstExtendedIndex As Long
 Private mLastExtendedIndex As Long
@@ -113,10 +117,10 @@ Attribute mEventProxy.VB_VarHelpID = -1
 Private mAutoscale As Boolean
 Private mMinimumHeight As Single
 Private mPrevHeight As Single
-Private mScaleWidth As Single
-Private mScaleHeight As Single
-Private mScaleLeft As Single
-Private mScaleTop As Single
+'Private mScaleWidth As Single
+'Private mScaleHeight As Single
+'Private mScaleLeft As Single
+'Private mScaleTop As Single
 Private mPercentHeight As Double
 Private mMinimumPercentHeight As Double
 Private mYAxisPosition As Long
@@ -126,7 +130,7 @@ Private mRegionRect As TRectangle
 
 Private mGridlineSpacingX As Double
 Private mGridlineSpacingY As Double
-Private mVertGridSpacing As Double
+Private mVerticalGridSpacing As Double
 Private mYScaleFormatStr As String
 Private mYScaleSubFormatStr As String
 Private mGridTextHeight As Double
@@ -175,7 +179,8 @@ Private mTextBoxFillColour As Long
 Private mTextBoxFillStyle As FillStyles
 Private mTextAlign As TextAlignModes
 Private mTextKeepInView As Boolean
-Private mTextFixed As Boolean
+Private mTextFixedX As Boolean
+Private mTextFixedY As Boolean
 Private mTextIncludeInAutoscale As Boolean
 Private mTextExtended As Boolean
 Private mTextPaddingX As Double
@@ -199,7 +204,8 @@ Private mLineArrowEndWidth As Long
 Private mLineArrowEndColor As Long
 Private mLineArrowEndFillColor As Long
 Private mLineArrowEndFillStyle As FillStyles
-Private mLineFixed As Boolean
+Private mLineFixedX As Boolean
+Private mLineFixedY As Boolean
 Private mLineIncludeInAutoscale As Boolean
 Private mLineExtended As Boolean
 
@@ -215,6 +221,8 @@ Private Sub Class_Initialize()
 Dim aFont As StdFont
 Dim i As Long
 
+mNextLayer = LayerNumbers.LayerGrid + 1
+
 ReDim mPeriodTable(1000) As PeriodTableEntry
 ReDim mGraphicObjects(10000) As GraphicObjectTableEntry
 
@@ -227,7 +235,7 @@ mLastExtendedIndex = allocateGraphicObjectTableEntry
 mGraphicObjects(mFirstExtendedIndex).nextExtendedIndex = mLastExtendedIndex
 mGraphicObjects(mLastExtendedIndex).prevExtendedIndex = mFirstExtendedIndex
 
-For i = LayerBottom To Layertop
+For i = MinLayer To MaxLayer
     mVisibleTable(i).firstIndex = allocateGraphicObjectTableEntry
     mVisibleTable(i).lastindex = allocateGraphicObjectTableEntry
 Next
@@ -306,7 +314,8 @@ mLineArrowEndWidth = 8
 mLineArrowEndColor = vbBlack
 mLineArrowEndFillColor = vbBlack
 mLineArrowEndFillStyle = FillStyles.FillSolid
-mLineFixed = False
+mLineFixedX = False
+mLineFixedY = False
 mLineIncludeInAutoscale = False
 mLineExtended = False
 
@@ -327,64 +336,21 @@ Private Sub mEventProxy_objectChanged( _
 Dim layer As Long
 Dim index As Long
 Dim overlaps() As TRectangle
+Dim redrawArea As TRectangle
+
+redrawArea = rectIntersection(areaToRedraw, mRegionRect)
 
 With mGraphicObjects(handle)
     
-'        If .extendedObject And _
-'            (.capabilities And capabilities.ComplexBounding) And _
-'            Not ((.capabilities And capabilities.BlockUndraw) = capabilities.BlockUndraw) _
-'        Then
-'            overlapXInterval = intIntersection(rectGetXInterval(mRegionRect), rectGetXInterval(undrawnArea))
-'            For i = Int(overlapXInterval.startValue + 0.9999) To _
-'                    Int(overlapXInterval.endValue)
-'                boundingRects = .graphObj.boundingRectanglesAt(i)
-'                numRects = -1
-'                On Error Resume Next
-'                numRects = UBound(boundingRects)
-'                On Error GoTo 0
-'                If numRects >= 0 Then
-'                    For j = 0 To numRects
-'                        For k = LayerBottom To Layertop
-'                            index = mGraphicObjects(mVisibleTable(k).firstIndex).nextVisibleIndex
-'                            Do While index <> mVisibleTable(k).lastindex
-'                                With mGraphicObjects(index)
-'                                    If index <> handle Then
-'                                        If rectOverlaps(.boundingRect, boundingRects(j)) Then
-'                                            .graphObj.draw rectIntersection(.boundingRect, boundingRects(j))
-'                                        End If
-'                                    End If
-'                                    index = .nextVisibleIndex
-'                                End With
-'                            Loop
-'                        Next
-'                    Next
-'                End If
-'            Next
-'
-'
-'        Else
-'            For k = LayerBottom To Layertop
-'                index = mGraphicObjects(mVisibleTable(k).firstIndex).nextVisibleIndex
-'                Do While index <> mVisibleTable(k).lastindex
-'                    With mGraphicObjects(index)
-'                        If index <> handle Then
-'                            ' could further optimise this by checking
-'                            ' if .graphobj supports complex bounding
-'                            ' to avoid unnecessary calls to .graphobj.draw
-'                            If rectOverlaps(.boundingRect, undrawnArea) Then
-'                                .graphObj.draw undrawnArea
-'                            End If
-'                        End If
-'                        index = .nextVisibleIndex
-'                    End With
-'                Loop
-'            Next
-'        End If
-'    End If
-    
-    
-    ' now get the new properties for the changed object
+    ' get the new properties for the changed object
     .boundingRect = .graphObj.boundingRectangle(False, False, False, mGaugeX, mGaugeY, mRegionRect)
+    
+    If Not .boundingRect.isvalid Then
+        removeEntryFromInScopeList handle
+        removeEntryFromVisibleList handle
+        Exit Sub
+    End If
+    
     .extendedObject = .graphObj.extendedObject
     .noDraw = .graphObj.noDraw
     If .extendedObject Then
@@ -399,24 +365,28 @@ With mGraphicObjects(handle)
     If Not mSuppressDrawing And Not .noDraw Then
         If graphicObjectIsInScope(handle) Then
             addEntryToInScopeList handle
-            If graphicObjectIsVisible(handle) Then addEntryToVisibleList handle
+            If graphicObjectIsVisible(handle) Then
+                addEntryToVisibleList handle
+            Else
+                Exit Sub
+            End If
         End If
     
-        If areaToRedraw.isvalid Then
+        If redrawArea.isvalid Then
             Dim drawAreas(0) As TRectangle
-            drawAreas(0) = rectIntersection(areaToRedraw, mRegionRect)
+            drawAreas(0) = redrawArea
             .graphObj.draw drawAreas
         End If
     End If
     
     ' now redraw any overlapping objects in higher layers than the changed object
-    If Not mSuppressDrawing And Not .noDraw And areaToRedraw.isvalid Then
-        For layer = .layer + 1 To Layertop
+    If Not mSuppressDrawing And Not .noDraw And redrawArea.isvalid Then
+        For layer = .layer + 1 To MaxLayer
             index = mGraphicObjects(mVisibleTable(layer).firstIndex).nextVisibleIndex
             Do While index <> mVisibleTable(layer).lastindex
                 With mGraphicObjects(index)
                     If index <> handle Then
-                        If getObjectOverlaps(handle, index, areaToRedraw, True, True, overlaps) <> 0 Then
+                        If getObjectOverlaps(handle, index, redrawArea, True, True, overlaps) <> 0 Then
                             .graphObj.draw overlaps
                         End If
                     End If
@@ -425,59 +395,6 @@ With mGraphicObjects(handle)
             Loop
         Next
     End If
-        
-        
-'        If .extendedObject And (.capabilities And capabilities.ComplexBounding) Then
-'            overlapXInterval = intIntersection(rectGetXInterval(mRegionRect), rectGetXInterval(areaToRedraw))
-'            For i = Int(overlapXInterval.startValue + 0.9999) To _
-'                    Int(overlapXInterval.endValue)
-'                boundingRects = .graphObj.boundingRectanglesAt(i)
-'                numRects = -1
-'                On Error Resume Next
-'                numRects = UBound(boundingRects)
-'                On Error GoTo 0
-'                If numRects >= 0 Then
-'                    For j = 0 To numRects
-'                        For k = .layer + 1 To Layertop
-'                            index = mGraphicObjects(mVisibleTable(k).firstIndex).nextVisibleIndex
-'                            Do While index <> mVisibleTable(k).lastindex
-'                                With mGraphicObjects(index)
-'                                    If index <> handle Then
-'                                        If rectOverlaps(.boundingRect, boundingRects(j)) Then
-'                                            .graphObj.draw rectIntersection(.boundingRect, boundingRects(j))
-'                                        End If
-'                                        index = .nextVisibleIndex
-'                                    End If
-'                                End With
-'                            Loop
-'                        Next
-'                    Next
-'                End If
-'            Next
-'
-'
-'        Else
-'            For k = .layer + 1 To Layertop
-'                index = mGraphicObjects(mVisibleTable(k).firstIndex).nextVisibleIndex
-'                Do While index <> mVisibleTable(k).lastindex
-'                    With mGraphicObjects(index)
-'                        If index <> handle Then
-'                            ' could further optimise this by checking
-'                            ' if .graphobj supports complex bounding
-'                            ' to avoid unnecessary calls to .graphobj.draw
-'                            If rectOverlaps(.boundingRect, areaToRedraw) Then
-'                                .graphObj.draw areaToRedraw
-'                            End If
-'                        End If
-'                        index = .nextVisibleIndex
-'                    End With
-'                Loop
-'            Next
-'        End If
-'    End If
-
-
-
 End With
 
 End Sub
@@ -493,7 +410,7 @@ With mGraphicObjects(handle)
     ' redraw objects in the undrawn area, preserving layering
     'If handle = 523 Then Stop
     If Not mSuppressDrawing And undrawnArea.isvalid Then
-        For layer = LayerBottom To Layertop
+        For layer = MinLayer To MaxLayer
             index = mGraphicObjects(mVisibleTable(layer).firstIndex).nextVisibleIndex
             Do While index <> mVisibleTable(layer).lastindex
                 With mGraphicObjects(index)
@@ -513,7 +430,6 @@ End Sub
 Private Sub mEventProxy_boundsExceeded()
 If mAutoscale And Not mSuppressDrawing Then
     calculateVerticalBounds
-    'determineVisibleObjects
     paintRegion
 End If
 End Sub
@@ -526,8 +442,17 @@ End Sub
 ' Properties
 '================================================================================
 
+Public Property Get autoscale() As Boolean
+autoscale = mAutoscale
+End Property
+
 Public Property Let autoscale(ByVal value As Boolean)
 mAutoscale = value
+If mAutoscale Then
+    calculateVerticalBounds
+    determineVisibleObjects True
+    paintRegion
+End If
 End Property
 
 Friend Property Get barCandleWidth() As Single
@@ -806,12 +731,20 @@ Public Property Let lineExtended(ByVal val As Boolean)
 mLineExtended = val
 End Property
 
-Public Property Get lineFixed() As Boolean
-lineFixed = mLineFixed
+Public Property Get lineFixedX() As Boolean
+lineFixedX = mLineFixedX
 End Property
 
-Public Property Let lineFixed(ByVal val As Boolean)
-mLineFixed = val
+Public Property Let lineFixedX(ByVal val As Boolean)
+mLineFixedX = val
+End Property
+
+Public Property Get lineFixedY() As Boolean
+lineFixedY = mLineFixedY
+End Property
+
+Public Property Let lineFixedY(ByVal val As Boolean)
+mLineFixedY = val
 End Property
 
 Public Property Get lineIncludeInAutoscale() As Boolean
@@ -870,29 +803,43 @@ Public Property Let regionBackColor(ByVal val As Long)
 mBackColour = val
 End Property
 
+Public Property Get regionBottom() As Single
+regionBottom = mSurface.scaleTop + mSurface.scaleHeight
+End Property
+
+Friend Property Let regionBottom(ByVal value As Single)
+mSurface.scaleHeight = value - mSurface.scaleTop
+mRegionRect.bottom = value
+End Property
+
 Public Property Get regionHeight() As Single
-regionHeight = mScaleHeight
+regionHeight = -mSurface.scaleHeight
 End Property
 
 Friend Property Let regionHeight(ByVal value As Single)
-If Abs(value) < Abs(mMinimumHeight) Then
-    mScaleHeight = -Abs(minimumHeight)
-Else
-    mScaleHeight = value
-End If
 With mSurface
-    .scaleHeight = value
-    mGaugeY = -(.scaleHeight / .Height) * Screen.TwipsPerPixelY
+    If value < mMinimumHeight Then
+        .scaleHeight = -minimumHeight
+    Else
+        .scaleHeight = -value
+    End If
+    If mGaugeY = 0 Then
+        ' this is the first time regionHeight has been set, so we need to
+        ' set Y gauge for use when graphic objects are added before the
+        ' first call to paint region
+        mGaugeY = calculateGaugeY
+    End If
+    mRegionRect.bottom = .scaleTop + .scaleHeight
 End With
 End Property
 
 Public Property Get regionLeft() As Single
-regionLeft = mScaleLeft
+regionLeft = mSurface.scaleLeft
 End Property
 
 Friend Property Let regionLeft(ByVal value As Single)
-mScaleLeft = value
 mSurface.scaleLeft = value
+mRegionRect.left = value
 End Property
 
 Public Property Get regionNumber() As Long
@@ -904,24 +851,21 @@ mRegionNumber = val
 End Property
 
 Public Property Get regionTop() As Single
-regionTop = mScaleTop
+regionTop = mSurface.scaleTop
 End Property
 
 Friend Property Let regionTop(ByVal value As Single)
-mScaleTop = value
+mSurface.scaleHeight = -(value - (mSurface.scaleTop + mSurface.scaleHeight))
 mSurface.scaleTop = value
+mRegionRect.top = value
 End Property
 
 Public Property Get regionWidth() As Single
-regionWidth = mScaleWidth
+regionWidth = mSurface.scaleWidth
 End Property
 
 Friend Property Let regionWidth(ByVal value As Single)
-mScaleWidth = value
-With mSurface
-    .scaleWidth = value
-    mGaugeX = (.scaleWidth / .Width) * Screen.TwipsPerPixelX
-End With
+mSurface.scaleWidth = value
 End Property
 
 Public Property Get showGrid() As Boolean
@@ -966,7 +910,7 @@ If Not mSuppressDrawing Then
     If mAutoscale Then
         calculateVerticalBounds
     End If
-    determineVisibleObjects
+    determineVisibleObjects True
     paintRegion
 End If
 End Property
@@ -1050,12 +994,20 @@ Public Property Let textExtended(ByVal newValue As Boolean)
 mTextExtended = newValue
 End Property
 
-Friend Property Get textFixed() As Boolean
-textFixed = mTextFixed
+Friend Property Get textFixedX() As Boolean
+textFixedX = mTextFixedX
 End Property
 
-Public Property Let textFixed(ByVal newValue As Boolean)
-mTextFixed = newValue
+Public Property Let textFixedX(ByVal newValue As Boolean)
+mTextFixedX = newValue
+End Property
+
+Friend Property Get textFixedY() As Boolean
+textFixedY = mTextFixedY
+End Property
+
+Public Property Let textFixedY(ByVal newValue As Boolean)
+mTextFixedY = newValue
 End Property
 
 Public Property Get textFont() As StdFont
@@ -1098,6 +1050,10 @@ Public Property Let textPaddingY(ByVal newValue As Double)
 mTextPaddingY = newValue
 End Property
 
+Public Property Get verticalGridSpacing() As Single
+verticalGridSpacing = mVerticalGridSpacing
+End Property
+
 Public Property Get YAxisPosition() As Long
 YAxisPosition = mYAxisPosition
 End Property
@@ -1112,20 +1068,20 @@ End Property
 ' Methods
 '================================================================================
 
-Public Function absoluteToCmX(ByVal x As Double) As Double
-absoluteToCmX = (x - mSurface.scaleLeft) / mSurface.scaleWidth * mSurface.Width * 2.54 / 1440
+Public Function absoluteToCmX(ByVal X As Double) As Double
+absoluteToCmX = (X - mSurface.scaleLeft) / mSurface.scaleWidth * mSurface.Width * 2.54 / 1440
 End Function
 
-Public Function absoluteToCmY(ByVal y As Double) As Double
-absoluteToCmY = -(y - (mSurface.scaleTop + mSurface.scaleHeight)) / mSurface.scaleHeight * mSurface.Height * 2.54 / 1440
+Public Function absoluteToCmY(ByVal Y As Double) As Double
+absoluteToCmY = -(Y - (mSurface.scaleTop + mSurface.scaleHeight)) / mSurface.scaleHeight * mSurface.Height * 2.54 / 1440
 End Function
 
-Public Function absoluteToRelativeX(ByVal x As Double) As Double
-absoluteToRelativeX = 100 * (x - mSurface.scaleLeft) / mSurface.scaleWidth
+Public Function absoluteToRelativeX(ByVal X As Double) As Double
+absoluteToRelativeX = 100 * (X - mSurface.scaleLeft) / mSurface.scaleWidth
 End Function
 
-Public Function absoluteToRelativeY(ByVal y As Double) As Double
-absoluteToRelativeY = -100 * (y - mSurface.scaleTop - mSurface.scaleHeight) / mSurface.scaleHeight
+Public Function absoluteToRelativeY(ByVal Y As Double) As Double
+absoluteToRelativeY = -100 * (Y - mSurface.scaleTop - mSurface.scaleHeight) / mSurface.scaleHeight
 End Function
 
 Public Function addBarSeries(Optional ByVal layer As Long = -1) As BarSeries
@@ -1136,11 +1092,7 @@ addBarSeries.candleWidth = barCandleWidth
 addBarSeries.displayAsCandlestick = barDisplayAsCandlestick
 addBarSeries.downColour = barDownColour
 addBarSeries.eventProxy = mEventProxy
-If layer = -1 Then
-    addBarSeries.layer = getLayer
-Else
-    addBarSeries.layer = getLayer(layer)
-End If
+addBarSeries.layer = getLayer(layer)
 addBarSeries.outlineThickness = barOutlineThickness
 addBarSeries.solidUpBody = barSolidUpBody
 addBarSeries.tailThickness = barTailThickness
@@ -1157,11 +1109,7 @@ addDataPointSeries.eventProxy = mEventProxy
 addDataPointSeries.displayMode = dataPointDisplayMode
 addDataPointSeries.histBarWidth = dataPointHistBarWidth
 addDataPointSeries.includeInAutoscale = dataPointIncludeInAutoscale
-If layer = -1 Then
-    addDataPointSeries.layer = getLayer
-Else
-    addDataPointSeries.layer = getLayer(layer)
-End If
+addDataPointSeries.layer = getLayer(layer)
 addDataPointSeries.lineColour = dataPointLineColour
 addDataPointSeries.lineStyle = dataPointLineStyle
 addDataPointSeries.lineThickness = dataPointLineThickness
@@ -1189,15 +1137,12 @@ With addLine
     .extendAfter = lineExtendAfter
     .extendBefore = lineExtendBefore
     .extended = lineExtended
-    .fixed = lineFixed
+    .fixedX = lineFixedX
+    .fixedY = lineFixedY
     .style = lineStyle
     .thickness = lineThickness
     .includeInAutoscale = lineIncludeInAutoscale
-    If layer = -1 Then
-        .layer = MaxLayer
-    Else
-        .layer = getLayer(layer)
-    End If
+    .layer = getLayer(layer)
 End With
 addGraphicObject addLine
 End Function
@@ -1224,13 +1169,10 @@ With addLineSeries
     .extendAfter = lineExtendAfter
     .extendBefore = lineExtendBefore
     .extended = lineExtended
-    .fixed = lineFixed
+    .fixedX = lineFixedX
+    .fixedY = lineFixedY
     .includeInAutoscale = lineIncludeInAutoscale
-    If layer = -1 Then
-        .layer = MaxLayer
-    Else
-        .layer = getLayer(layer)
-    End If
+    .layer = getLayer(layer)
     .style = lineStyle
     .thickness = lineThickness
 End With
@@ -1265,17 +1207,14 @@ addText.boxStyle = textBoxStyle
 addText.boxThickness = textBoxThickness
 addText.color = textColor
 addText.extended = textExtended
-addText.fixed = textFixed
+addText.fixedX = textFixedX
+addText.fixedY = textFixedY
 addText.font = textFont
 addText.includeInAutoscale = textIncludeInAutoscale
 addText.keepInView = textKeepInView
 addText.paddingX = textPaddingX
 addText.paddingY = textPaddingY
-If layer = -1 Then
-    addText.layer = MaxLayer
-Else
-    addText.layer = getLayer(layer)
-End If
+addText.layer = getLayer(layer)
 addGraphicObject addText
 End Function
 
@@ -1293,55 +1232,56 @@ addTextSeries.boxStyle = textBoxStyle
 addTextSeries.boxThickness = textBoxThickness
 addTextSeries.color = textColor
 addTextSeries.extended = textExtended
-addTextSeries.fixed = textFixed
+addTextSeries.fixedX = textFixedX
+addTextSeries.fixedY = textFixedY
 addTextSeries.font = textFont
 addTextSeries.includeInAutoscale = textIncludeInAutoscale
-If layer = -1 Then
-    addTextSeries.layer = getLayer
-Else
-    addTextSeries.layer = getLayer(layer)
-End If
+addTextSeries.layer = getLayer(layer)
 addTextSeries.keepInView = textKeepInView
 addTextSeries.paddingX = textPaddingX
 addTextSeries.paddingY = textPaddingY
 End Function
 
-Public Function cmToAbsoluteX(ByVal cm As Double) As Double
-cmToAbsoluteX = (1440 * cm / 2.54) / mSurface.Width * mSurface.scaleWidth
-End Function
-
-Public Function cmToAbsoluteY(ByVal cm As Double) As Double
-cmToAbsoluteY = -(1440 * cm / 2.54) / mSurface.Height * mSurface.scaleHeight
-End Function
-
-Public Function cmToRelativeX(ByVal cm As Double) As Double
-cmToRelativeX = (1440 * cm / 2.54) / mSurface.Width * 100
-End Function
-
-Public Function cmToRelativeY(ByVal cm As Double) As Double
-cmToRelativeY = (1440 * cm / 2.54) / mSurface.Height * 100
-End Function
-
-Friend Sub MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal x As Single, ByVal y As Single)
+Friend Sub MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
 Dim yVal As Single
-If y = MinusInfinitySingle Then
+If Y = MinusInfinitySingle Then
     yVal = mSurface.scaleTop + 2 * mSurface.scaleHeight ' make sure the pointer isn't visible
 Else
-    yVal = y
+    yVal = Y
 End If
-If Round(x) >= YAxisPosition Then Exit Sub
+If Round(X) >= YAxisPosition Then Exit Sub
 If mShowCrosshairs Then
     undrawCrosshairs
-    drawCrosshairs x, yVal
+    drawCrosshairs X, yVal
 Else
     undrawPointer
-    drawPointer x, yVal
+    drawPointer X, yVal
 End If
 End Sub
 
+Public Function newDimension(ByVal X As Double, _
+                        ByVal Y As Double) As Dimension
+Set newDimension = New Dimension
+newDimension.surface = mSurface
+newDimension.X = X
+newDimension.Y = Y
+End Function
+
+Public Function newPoint(ByVal X As Double, _
+                        ByVal Y As Double, _
+                        Optional ByVal posnTypeX As PositionType = PositionAbsolute, _
+                        Optional ByVal posnTypeY As PositionType = PositionAbsolute) As Point
+Set newPoint = New Point
+newPoint.surface = mSurface
+newPoint.X = X
+newPoint.Y = Y
+newPoint.PositionTypeX = posnTypeX
+newPoint.PositionTypeY = posnTypeY
+End Function
+
 Friend Sub paintRegion()
 Dim aBarSeries As BarSeries
-Dim aBar As Bar
+Dim aBar As bar
 Dim aDataPointSeries As DataPointSeries
 Dim aDataPoint As DataPoint
 Dim startTimer As Single
@@ -1370,52 +1310,40 @@ startTimer = Timer
 
 heightCm = (mSurface.Height / 1440#) * 2.54
 
-.scaleWidth = regionWidth
-.scaleLeft = regionLeft
-
-
-If mAutoscale Then
-    If .Height <> mPrevHeight Then
-        ' the region has been resized vertically - need to recalculate the position
-        ' of any in-scope gauge-dependent objects
-        
-        ' Note that resizing will have changed scaleheight and scale top, so we first
-        ' need to reset these to their proper values if we're autoscaling
-        
-        .scaleTop = mRegionRect.top
-        .scaleHeight = mRegionRect.bottom - mRegionRect.top
-
-        mPrevHeight = .Height
-    End If
+If .Height <> mPrevHeight Then
+    ' the region has been resized vertically - need to recalculate the position
+    ' of any in-scope gauge-dependent objects
     
-    ' gauge may also have changed if the region has extended through autoscaling
+    ' Note that resizing will have changed scaleheight and scale top, so we first
+    ' need to reset these to their proper values if we're autoscaling
     
-    gaugeX = (.scaleWidth / .Width) * Screen.TwipsPerPixelX
-    gaugeY = -(.scaleHeight / .Height) * Screen.TwipsPerPixelY
-    
-    If gaugeX <> mGaugeX Or gaugeY <> mGaugeY Then
-        mGaugeX = gaugeX
-        mGaugeY = gaugeY
-        index = mGraphicObjects(mFirstInScopeIndex).nextInScopeIndex
-        Do While index <> mLastInScopeIndex
-             With mGraphicObjects(index)
-                If .gaugeDependent Then
-                    .boundingRect = .graphObj.boundingRectangle(False, False, True, mGaugeX, mGaugeY, mRegionRect)
-                    If graphicObjectIsVisible(index) Then
-                        addEntryToVisibleList index
-                    End If
+    .scaleTop = mRegionRect.top
+    .scaleHeight = mRegionRect.bottom - mRegionRect.top
+
+    mPrevHeight = .Height
+End If
+
+' gauge may also have changed if the region has extended through auto- or
+' manual scaling
+
+gaugeX = calculateGaugeX
+gaugeY = calculateGaugeY
+
+If gaugeX <> mGaugeX Or gaugeY <> mGaugeY Then
+    mGaugeX = gaugeX
+    mGaugeY = gaugeY
+    index = mGraphicObjects(mFirstInScopeIndex).nextInScopeIndex
+    Do While index <> mLastInScopeIndex
+         With mGraphicObjects(index)
+            If .gaugeDependent Then
+                .boundingRect = .graphObj.boundingRectangle(False, False, True, mGaugeX, mGaugeY, mRegionRect)
+                If graphicObjectIsVisible(index) Then
+                    addEntryToVisibleList index
                 End If
-                index = .nextInScopeIndex
-            End With
-        Loop
-    End If
-Else
-    If .Height <> mPrevHeight Then
-        ' the region has been resized vertically - the in-scope object list is still
-        ' valid, but we need to recalculate the visible object list
-        
-        determineVisibleObjects
-    End If
+            End If
+            index = .nextInScopeIndex
+        End With
+    Loop
 End If
 
 numGridDivisions = heightCm / mGridlineSpacingY
@@ -1435,31 +1363,20 @@ exp = Fix(logSpacing)
 mantissa = Abs(logSpacing) - Abs(exp)
 
 If mantissa >= Log(5) / log10 Then
-    mVertGridSpacing = 5 * 10 ^ exp
+    mVerticalGridSpacing = 5 * 10 ^ exp
 ElseIf mantissa >= Log(2.5) / log10 Then
-    mVertGridSpacing = 2.5 * 10 ^ exp
+    mVerticalGridSpacing = 2.5 * 10 ^ exp
 ElseIf mantissa >= Log(2#) / log10 Then
-    mVertGridSpacing = 2# * 10 ^ exp
+    mVerticalGridSpacing = 2# * 10 ^ exp
 Else
-    mVertGridSpacing = 10 ^ exp
+    mVerticalGridSpacing = 10 ^ exp
 End If
-
-'For i = 10 To -10 Step -1
-'    mVertGridSpacing = 500 * 10 ^ i
-'    If mVertGridSpacing <= gridSpacing Then Exit For
-'    mVertGridSpacing = 250 * 10 ^ i
-'    If mVertGridSpacing <= gridSpacing Then Exit For
-'    mVertGridSpacing = 200 * 10 ^ i
-'    If mVertGridSpacing <= gridSpacing Then Exit For
-'    mVertGridSpacing = 100 * 10 ^ i
-'    If mVertGridSpacing <= gridSpacing Then Exit For
-'Next
 
 If mIntegerYScale Then
         mYScaleFormatStr = "0"
         mYScaleSubFormatStr = "0"
 Else
-    If mVertGridSpacing < 1 Then
+    If mVerticalGridSpacing < 1 Then
         mYScaleFormatStr = "0." & String(Abs(exp), "0")
         mYScaleSubFormatStr = "0." & String(Abs(exp - 2), "0")
     Else
@@ -1470,22 +1387,22 @@ End If
 
 .DrawWidth = 1
 .DrawMode = vbCopyPen
-z = Int((.scaleTop + .scaleHeight) / mVertGridSpacing) * mVertGridSpacing
+z = Int((.scaleTop + .scaleHeight) / mVerticalGridSpacing) * mVerticalGridSpacing
 Do While z < .scaleTop
     mSurface.Line (.scaleLeft, z)-(YAxisPosition, z), gridColor
     .CurrentX = YAxisPosition + 0.5
     .CurrentY = .CurrentY - mGridTextHeight / 2
     .ForeColor = vbWhite Xor .backColor
     mSurface.Print Format(z, mYScaleFormatStr)
-    z = z + mVertGridSpacing
+    z = z + mVerticalGridSpacing
 Loop
 
-For i = LayerBottom To Layertop
+For i = MinLayer To MaxLayer
     index = mGraphicObjects(mVisibleTable(i).firstIndex).nextVisibleIndex
     Do While index <> mVisibleTable(i).lastindex
         With mGraphicObjects(index)
             Dim drawAreas(0) As TRectangle
-            drawAreas(0) = .boundingRect
+            drawAreas(0) = rectIntersection(.boundingRect, mRegionRect)
             .graphObj.draw drawAreas
             index = .nextVisibleIndex
             counter = counter + 1
@@ -1515,8 +1432,9 @@ If mShowPerformanceText Then
         mPerfText.boxThickness = 1
         mPerfText.boxFillColor = vbActiveTitleBar
         mPerfText.boxFillStyle = FillStyles.FillSolid
-        mPerfText.position = newPoint(5, 2, True)
-        mPerfText.fixed = True
+        mPerfText.position = newPoint(5, 2, PositionRelative, PositionRelative)
+        mPerfText.fixedX = True
+        mPerfText.fixedY = True
         mPerfText.align = TextAlignModes.AlignBottomLeft
         mPerfText.includeInAutoscale = False
         mPerfText.keepInView = True
@@ -1537,48 +1455,44 @@ mDrawn = True
 End Sub
 
 Friend Sub periodsInView(ByVal minValue As Single, ByVal maxValue As Single)
-Dim graphObj As IGraphicObject
-Dim rect As TRectangle
-Dim i As Long
+Dim gaugeChanged As Boolean
+Dim gaugeX As Double
+Dim gaugeY As Double
 
 mMinInViewPeriod = minValue
 mMaxInViewPeriod = maxValue
-mScaleLeft = minValue
-mSurface.scaleLeft = mScaleLeft
+mSurface.scaleLeft = minValue
 mYAxisPosition = maxValue + 1
-mRegionRect.left = mScaleLeft
-mRegionRect.right = maxValue + 0.5
+mRegionRect.left = minValue
+mRegionRect.right = maxValue '+ 0.5
 mRegionRect.isvalid = True
 
+gaugeX = calculateGaugeX
+If gaugeX <> mGaugeX Then
+    gaugeChanged = True
+    mGaugeX = gaugeX
+End If
 If Not mSuppressDrawing Then
     determineInScopeObjects
-    If mAutoscale Then calculateVerticalBounds
-    determineVisibleObjects
+    
+    If mAutoscale Then
+        calculateVerticalBounds
+        gaugeY = calculateGaugeY
+        If gaugeY <> mGaugeY Then
+            gaugeChanged = True
+            mGaugeY = gaugeY
+        End If
+    End If
+    determineVisibleObjects gaugeChanged
 End If
 End Sub
-
-Public Function relativeToCmX(ByVal x As Double) As Double
-relativeToCmX = x * mSurface.Width * 2.54 / 144000
-End Function
-
-Public Function relativeToCmY(ByVal y As Double) As Double
-relativeToCmY = y * mSurface.Height * 2.54 / 144000
-End Function
-
-Public Function relativeToAbsoluteX(ByVal x As Double) As Double
-relativeToAbsoluteX = mSurface.scaleLeft + x * mSurface.scaleWidth / 100
-End Function
-
-Public Function relativeToAbsoluteY(ByVal y As Double) As Double
-relativeToAbsoluteY = mSurface.scaleTop + mSurface.scaleHeight - y * mSurface.scaleHeight / 100
-End Function
 
 Public Sub setTitle(ByVal val As String, _
                         ByVal color As Long, _
                         ByVal font As StdFont)
 Dim title As text
 mTitle = val
-Set title = addText()
+Set title = addText(LayerTitle)
 title.color = color
 title.font = font
 title.box = True
@@ -1587,14 +1501,33 @@ title.boxStyle = LineStyles.LineInvisible
 title.boxThickness = 1
 title.boxFillColor = vbWhite
 title.boxFillStyle = FillStyles.FillSolid
-title.position = newPoint(cmToRelativeX(0.2), cmToRelativeY(relativeToCmY(100) - 0.2), True)
-title.fixed = True
+title.position = newPoint(0.2, 0.2, PositionDistance, PositionCounterDistance)
+title.fixedX = True
+title.fixedY = True
 title.align = TextAlignModes.AlignTopLeft
 title.includeInAutoscale = False
 title.keepInView = True
 title.paddingX = 0.5
-title.layer = LayerTitle
 title.text = mTitle
+End Sub
+
+Public Sub setVerticalScale(ByVal lowValue As Single, _
+                            ByVal highValue As Single)
+Dim gaugeChanged As Boolean
+Dim gaugeY As Double
+
+If mAutoscale Then Exit Sub
+regionTop = highValue
+regionHeight = highValue - lowValue
+gaugeY = calculateGaugeY
+If gaugeY <> mGaugeY Then
+    gaugeChanged = True
+    mGaugeY = gaugeY
+End If
+If Not mSuppressDrawing Then
+    determineVisibleObjects gaugeChanged
+    paintRegion
+End If
 End Sub
 
 '================================================================================
@@ -1710,15 +1643,66 @@ End If
 
 End Function
 
-Private Sub calculateVerticalBounds()
-Dim scaleMax As Double
-Dim scaleMin As Double
-Dim index As Long
+Private Function calculateGaugeX() As Double
+calculateGaugeX = (mSurface.scaleWidth / mSurface.Width) * Screen.TwipsPerPixelX
+End Function
+
+Private Function calculateGaugeY() As Double
+calculateGaugeY = -(mSurface.scaleHeight / mSurface.Height) * Screen.TwipsPerPixelY
+End Function
+
+Private Sub calculateObjectHighAndLowInInterval( _
+                            ByVal index As Long, _
+                            ByRef interval As TInterval, _
+                            ByRef high As Double, _
+                            ByRef low As Double)
+
 Dim j As Long
 Dim k As Long
 Dim rects() As TRectangle
 Dim numrects As Long
 Dim overlapXInterval As TInterval
+
+high = MinusInfinityDouble
+low = PlusInfinityDouble
+
+With mGraphicObjects(index)
+    If (.capabilities And capabilities.ComplexBounding) Then
+        overlapXInterval = intIntersection(interval, rectGetXInterval(.boundingRect))
+        For j = Int(overlapXInterval.startValue + 0.9) To _
+                Int(overlapXInterval.endValue)
+            rects = .graphObj.boundingRectanglesAt(j)
+            numrects = -1
+            On Error Resume Next
+            numrects = UBound(rects)
+            On Error GoTo 0
+            If numrects >= 0 Then
+                For k = 0 To numrects
+                    If rects(k).top > high Then
+                        high = rects(k).top
+                    End If
+                    If rects(k).bottom < low Then
+                        low = rects(k).bottom
+                    End If
+                Next
+            End If
+        Next
+    Else
+        high = .boundingRect.top
+        low = .boundingRect.bottom
+    End If
+End With
+End Sub
+
+Private Sub calculateVerticalBounds()
+Dim objMax As Double
+Dim objMin As Double
+Dim scaleMax As Double
+Dim scaleMin As Double
+Dim index As Long
+Dim newGaugeX As Double
+Dim newGaugeY As Double
+Dim someGaugeDependentObjects As Boolean
 
 If Not mAutoscale Then Exit Sub
 
@@ -1728,33 +1712,22 @@ scaleMin = PlusInfinityDouble
 index = mGraphicObjects(mFirstInScopeIndex).nextInScopeIndex
 Do While index <> mLastInScopeIndex
     With mGraphicObjects(index)
-        If Not .graphObj.noDraw And .includeInAutoscale And Not .scaleDependent Then
-            If (.capabilities And capabilities.ComplexBounding) Then
-                overlapXInterval = intIntersection(rectGetXInterval(mRegionRect), rectGetXInterval(.boundingRect))
-                For j = Int(overlapXInterval.startValue + 0.9) To _
-                        Int(overlapXInterval.endValue)
-                    rects = .graphObj.boundingRectanglesAt(j)
-                    numrects = -1
-                    On Error Resume Next
-                    numrects = UBound(rects)
-                    On Error GoTo 0
-                    If numrects >= 0 Then
-                        For k = 0 To numrects
-                            If rects(k).top > scaleMax Then
-                                scaleMax = rects(k).top
-                            End If
-                            If rects(k).bottom < scaleMin Then
-                                scaleMin = rects(k).bottom
-                            End If
-                        Next
-                    End If
-                Next
+        If Not .graphObj.noDraw And _
+            .includeInAutoscale And _
+            Not .scaleDependent _
+        Then
+            If .gaugeDependent Then
+                someGaugeDependentObjects = True
             Else
-                If .boundingRect.top > scaleMax Then
-                    scaleMax = .boundingRect.top
+                calculateObjectHighAndLowInInterval index, _
+                                                rectGetXInterval(mRegionRect), _
+                                                objMax, _
+                                                objMin
+                If objMax > scaleMax Then
+                    scaleMax = objMax
                 End If
-                If .boundingRect.bottom < scaleMin Then
-                    scaleMin = .boundingRect.bottom
+                If objMin < scaleMin Then
+                    scaleMin = objMin
                 End If
             End If
         End If
@@ -1788,6 +1761,50 @@ With mSurface
     mRegionRect.isvalid = True
 End With
 
+If Not someGaugeDependentObjects Then Exit Sub
+
+' there are gauge-dependent objects that may affect the max and min scales.
+' We need to recalculate their bounds with the new gauge determined from
+' the other objects to get a better estimate of their sizes.
+newGaugeX = calculateGaugeX
+newGaugeY = calculateGaugeY
+index = mGraphicObjects(mFirstInScopeIndex).nextInScopeIndex
+Do While index <> mLastInScopeIndex
+    With mGraphicObjects(index)
+        If Not .graphObj.noDraw And _
+            .includeInAutoscale And _
+            Not .scaleDependent And _
+            .gaugeDependent _
+        Then
+            .boundingRect = .graphObj.boundingRectangle( _
+                                        False, _
+                                        True, _
+                                        True, _
+                                        newGaugeX, _
+                                        newGaugeY, _
+                                        mRegionRect)
+            calculateObjectHighAndLowInInterval index, _
+                                            rectGetXInterval(mRegionRect), _
+                                            objMax, _
+                                            objMin
+            If objMax > scaleMax Then
+                scaleMax = objMax
+            End If
+            If objMin < scaleMin Then
+                scaleMin = objMin
+            End If
+        End If
+        
+        index = .nextInScopeIndex
+    End With
+Loop
+
+With mSurface
+    .scaleHeight = (scaleMin - scaleMax) * 1.05
+    .scaleTop = scaleMax + (scaleMax - scaleMin) * 0.025
+    mRegionRect.top = .scaleTop
+    mRegionRect.bottom = .scaleTop + .scaleHeight
+End With
 End Sub
 
 Private Sub clearInScopeObjectList()
@@ -1808,7 +1825,7 @@ Private Sub clearVisibleObjectList()
 Dim i As Long
 Dim index As Long
 
-For i = LayerBottom To Layertop
+For i = MinLayer To MaxLayer
     index = mGraphicObjects(mVisibleTable(i).firstIndex).nextVisibleIndex
     Do While index <> mVisibleTable(i).lastindex
         With mGraphicObjects(index)
@@ -1868,7 +1885,7 @@ Debug.Print "DetermineInScopeObjects: extended=" & numberExtended & " time=" & 1
 Debug.Print "DetermineInScopeObjects: total=" & numberExamined & " in-scope=" & numberInScope
 End Sub
 
-Private Sub determineVisibleObjects()
+Private Sub determineVisibleObjects(ByVal gaugeChanged As Boolean)
 Dim graphObj As IGraphicObject
 Dim index As Long
 Dim timerIn As Single
@@ -1883,7 +1900,13 @@ index = mGraphicObjects(mFirstInScopeIndex).nextInScopeIndex
 Do While index <> mLastInScopeIndex
     numberExamined = numberExamined + 1
     With mGraphicObjects(index)
-        .boundingRect = .graphObj.boundingRectangle(False, True, False, mGaugeX, mGaugeY, mRegionRect)
+        .boundingRect = .graphObj.boundingRectangle( _
+                                    False, _
+                                    True, _
+                                    gaugeChanged, _
+                                    mGaugeX, _
+                                    mGaugeY, _
+                                    mRegionRect)
         If graphicObjectIsVisible(index) Then
             addEntryToVisibleList index
             numberVisible = numberVisible + 1
@@ -1895,57 +1918,61 @@ Loop
 Debug.Print "DetermineVisibleObjects: total=" & numberExamined & " visible=" & numberVisible & " time=" & 1000 * (Timer - timerIn) & "ms"
 End Sub
 
-Private Sub drawCrosshairs(ByVal x As Single, ByVal y As Single)
+Private Sub drawCrosshairs(ByVal X As Single, ByVal Y As Single)
 Dim lineX As Single
+
+If mSuppressDrawing Then Exit Sub
 
 With mSurface
     .DrawWidth = 1
     .DrawStyle = LineStyles.LineSolid
     .DrawMode = vbXorPen
-    mSurface.Line (.scaleLeft, y)-(YAxisPosition, y), vbRed Xor .backColor
-    lineX = Round(x)
+    mSurface.Line (.scaleLeft, Y)-(YAxisPosition, Y), vbRed Xor .backColor
+    lineX = Round(X)
 '    If lineX < 1 Then lineX = 1
     mSurface.Line (lineX, .scaleTop + .scaleHeight)-(lineX, .scaleTop), vbRed Xor .backColor
     .CurrentX = YAxisPosition + 0.5
-    .CurrentY = y - mGridTextHeight / 2
+    .CurrentY = Y - mGridTextHeight / 2
     .ForeColor = vbRed 'Xor BackColor 'vbWhite 'Xor BackColor
     .FontTransparent = False
-    mSurface.Print Format(y, mYScaleSubFormatStr)
-    mPrevCursorX = x
-    mPrevCursorY = y
+    mSurface.Print Format(Y, mYScaleSubFormatStr)
+    mPrevCursorX = X
+    mPrevCursorY = Y
     
 End With
 
 End Sub
 
-Private Sub drawPointer(ByVal x As Single, ByVal y As Single)
+Private Sub drawPointer(ByVal X As Single, ByVal Y As Single)
 Dim lineX As Single
+
+If mSuppressDrawing Then Exit Sub
 
 With mSurface
     .MousePointer = vbCrosshair
     .DrawWidth = 1
     .DrawStyle = LineStyles.LineSolid
     .DrawMode = vbXorPen
-    lineX = Round(x)
+    lineX = Round(X)
 '    if lineX < 1 Then lineX = 1
     .FillColor = vbYellow Xor .backColor
     .FillStyle = vbSolid
-    mSurface.Circle (lineX, y), cmToAbsoluteX(0.8), vbYellow Xor .backColor
+    mSurface.Circle (lineX, Y), newPoint(0.8, 0, PositionDistance, PositionDistance).XAbsolute - mSurface.scaleLeft, vbYellow Xor .backColor
     ''debug.print "DrawPointer x=" & lineX & " y=" & y
     .CurrentX = YAxisPosition + 0.5
-    .CurrentY = y - mGridTextHeight / 2
+    .CurrentY = Y - mGridTextHeight / 2
     .ForeColor = vbRed 'Xor BackColor 'vbWhite 'Xor BackColor
     .FontTransparent = False
-    mSurface.Print Format(y, mYScaleSubFormatStr)
-    mPrevCursorX = x
-    mPrevCursorY = y
+    mSurface.Print Format(Y, mYScaleSubFormatStr)
+    mPrevCursorX = X
+    mPrevCursorY = Y
     
 End With
 
 End Sub
 
-Private Function getLayer(Optional ByVal layer As Long = &H7FFFFFFF) As Long
-If layer = &H7FFFFFFF Then
+Private Function getLayer(Optional ByVal layer As Long = -1) As Long
+If layer = -1 Then
     getLayer = mNextLayer
     If mNextLayer <> MaxLayer Then
         mNextLayer = mNextLayer + 1
@@ -2173,7 +2200,7 @@ Dim i As Long
 
 mVisibleCycle = mVisibleCycle + 1
 
-For i = LayerBottom To Layertop
+For i = MinLayer To MaxLayer
     mGraphicObjects(mVisibleTable(i).firstIndex).nextVisibleIndex = mVisibleTable(i).lastindex
     mGraphicObjects(mVisibleTable(i).lastindex).prevVisibleIndex = mVisibleTable(i).firstIndex
 Next
@@ -2229,6 +2256,8 @@ Dim nearestGridLine As Single
 Dim nextNearestGridLine As Single
 Dim prevLineX As Single
 
+If mSuppressDrawing Then Exit Sub
+
 With mSurface
     .DrawWidth = 1
     .DrawStyle = LineStyles.LineSolid
@@ -2242,27 +2271,28 @@ With mSurface
     .CurrentY = mPrevCursorY - mGridTextHeight / 2
     .FontTransparent = False
     mSurface.Print Format(mPrevCursorY, mYScaleSubFormatStr)
-    nearestGridLine = Fix((mPrevCursorY + mVertGridSpacing / 2) / mVertGridSpacing) * mVertGridSpacing
-    If Abs(mPrevCursorY - nearestGridLine) < Abs(mGridTextHeight) Then
-        .ForeColor = vbWhite Xor .backColor
-        .CurrentX = YAxisPosition + 0.5
-        .CurrentY = nearestGridLine - mGridTextHeight / 2
-        .FontTransparent = True
-        mSurface.Print Format(nearestGridLine, mYScaleFormatStr)
+    If mVerticalGridSpacing <> 0 Then
+        nearestGridLine = Fix((mPrevCursorY + mVerticalGridSpacing / 2) / mVerticalGridSpacing) * mVerticalGridSpacing
+        If Abs(mPrevCursorY - nearestGridLine) < Abs(mGridTextHeight) Then
+            .ForeColor = vbWhite Xor .backColor
+            .CurrentX = YAxisPosition + 0.5
+            .CurrentY = nearestGridLine - mGridTextHeight / 2
+            .FontTransparent = True
+            mSurface.Print Format(nearestGridLine, mYScaleFormatStr)
+        End If
+        If nearestGridLine >= mPrevCursorY Then
+            nextNearestGridLine = nearestGridLine - mVerticalGridSpacing
+        ElseIf nearestGridLine < mPrevCursorY Then
+            nextNearestGridLine = nearestGridLine + mVerticalGridSpacing
+        End If
+        If Abs(mPrevCursorY - nextNearestGridLine) < Abs(mGridTextHeight) Then
+            .ForeColor = vbWhite Xor .backColor
+            .CurrentX = YAxisPosition + 0.5
+            .CurrentY = nextNearestGridLine - mGridTextHeight / 2
+            .FontTransparent = True
+            mSurface.Print Format(nextNearestGridLine, mYScaleFormatStr)
+        End If
     End If
-    If nearestGridLine >= mPrevCursorY Then
-        nextNearestGridLine = nearestGridLine - mVertGridSpacing
-    ElseIf nearestGridLine < mPrevCursorY Then
-        nextNearestGridLine = nearestGridLine + mVertGridSpacing
-    End If
-    If Abs(mPrevCursorY - nextNearestGridLine) < Abs(mGridTextHeight) Then
-        .ForeColor = vbWhite Xor .backColor
-        .CurrentX = YAxisPosition + 0.5
-        .CurrentY = nextNearestGridLine - mGridTextHeight / 2
-        .FontTransparent = True
-        mSurface.Print Format(nextNearestGridLine, mYScaleFormatStr)
-    End If
-
 End With
 
 End Sub
@@ -2272,6 +2302,8 @@ Dim nearestGridLine As Single
 Dim nextNearestGridLine As Single
 Dim prevLineX As Single
 
+If mSuppressDrawing Then Exit Sub
+
 With mSurface
     .DrawWidth = 1
     .DrawStyle = LineStyles.LineSolid
@@ -2280,34 +2312,35 @@ With mSurface
 '    If prevLineX < 1 Then prevLineX = 1
     .FillColor = vbYellow Xor .backColor
     .FillStyle = vbSolid
-    mSurface.Circle (prevLineX, mPrevCursorY), cmToAbsoluteX(0.8), vbYellow Xor .backColor
+    mSurface.Circle (prevLineX, mPrevCursorY), newPoint(0.8, 0, PositionDistance, PositionDistance).XAbsolute - mSurface.scaleLeft, vbYellow Xor .backColor
     ''debug.print "UndrawPointer x=" & prevLineX & " y=" & mPrevCursorY
     .ForeColor = .backColor
     .CurrentX = YAxisPosition + 0.5
     .CurrentY = mPrevCursorY - mGridTextHeight / 2
     .FontTransparent = False
     mSurface.Print Format(mPrevCursorY, mYScaleSubFormatStr)
-    nearestGridLine = Fix((mPrevCursorY + mVertGridSpacing / 2) / mVertGridSpacing) * mVertGridSpacing
-    If Abs(mPrevCursorY - nearestGridLine) < Abs(mGridTextHeight) Then
-        .ForeColor = vbWhite Xor .backColor
-        .CurrentX = YAxisPosition + 0.5
-        .CurrentY = nearestGridLine - mGridTextHeight / 2
-        .FontTransparent = True
-        mSurface.Print Format(nearestGridLine, mYScaleFormatStr)
+    If mVerticalGridSpacing <> 0 Then
+        nearestGridLine = Fix((mPrevCursorY + mVerticalGridSpacing / 2) / mVerticalGridSpacing) * mVerticalGridSpacing
+        If Abs(mPrevCursorY - nearestGridLine) < Abs(mGridTextHeight) Then
+            .ForeColor = vbWhite Xor .backColor
+            .CurrentX = YAxisPosition + 0.5
+            .CurrentY = nearestGridLine - mGridTextHeight / 2
+            .FontTransparent = True
+            mSurface.Print Format(nearestGridLine, mYScaleFormatStr)
+        End If
+        If nearestGridLine >= mPrevCursorY Then
+            nextNearestGridLine = nearestGridLine - mVerticalGridSpacing
+        ElseIf nearestGridLine < mPrevCursorY Then
+            nextNearestGridLine = nearestGridLine + mVerticalGridSpacing
+        End If
+        If Abs(mPrevCursorY - nextNearestGridLine) < Abs(mGridTextHeight) Then
+            .ForeColor = vbWhite Xor .backColor
+            .CurrentX = YAxisPosition + 0.5
+            .CurrentY = nextNearestGridLine - mGridTextHeight / 2
+            .FontTransparent = True
+            mSurface.Print Format(nextNearestGridLine, mYScaleFormatStr)
+        End If
     End If
-    If nearestGridLine >= mPrevCursorY Then
-        nextNearestGridLine = nearestGridLine - mVertGridSpacing
-    ElseIf nearestGridLine < mPrevCursorY Then
-        nextNearestGridLine = nearestGridLine + mVertGridSpacing
-    End If
-    If Abs(mPrevCursorY - nextNearestGridLine) < Abs(mGridTextHeight) Then
-        .ForeColor = vbWhite Xor .backColor
-        .CurrentX = YAxisPosition + 0.5
-        .CurrentY = nextNearestGridLine - mGridTextHeight / 2
-        .FontTransparent = True
-        mSurface.Print Format(nextNearestGridLine, mYScaleFormatStr)
-    End If
-
 End With
 
 End Sub

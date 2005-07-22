@@ -40,7 +40,8 @@ Private mMinPeriodInView As Long
 Private mMaxPeriodInView As Long
 
 
-Private mFixed As Boolean
+Private mFixedX As Boolean
+Private mFixedY As Boolean
 Private mIncludeInAutoscale As Boolean
 Private mExtended As Boolean
 
@@ -155,12 +156,20 @@ Public Property Let extended(ByVal newValue As Boolean)
 mExtended = newValue
 End Property
 
-Friend Property Get fixed() As Boolean
-fixed = mFixed
+Friend Property Get fixedX() As Boolean
+fixedX = mFixedX
 End Property
 
-Public Property Let fixed(ByVal newValue As Boolean)
-mFixed = newValue
+Public Property Let fixedX(ByVal newValue As Boolean)
+mFixedX = newValue
+End Property
+
+Friend Property Get fixedY() As Boolean
+fixedY = mFixedY
+End Property
+
+Public Property Let fixedY(ByVal newValue As Boolean)
+mFixedY = newValue
 End Property
 
 Public Property Get font() As StdFont
@@ -239,7 +248,8 @@ addText.boxStyle = mBoxStyle
 addText.boxThickness = mBoxThickness
 addText.color = mColour
 addText.eventProxy = mEventProxy
-addText.fixed = mFixed
+addText.fixedX = mFixedX
+addText.fixedY = mFixedY
 addText.font = mFont
 addText.includeInAutoscale = mIncludeInAutoscale
 addText.keepInView = mKeepInView

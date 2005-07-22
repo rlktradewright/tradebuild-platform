@@ -43,7 +43,8 @@ Private mBoundingRect As TRectangle ' the rectangle that surrounds the box (if
 Private mTextRect As TRectangle ' the rectangle containing the text
 Private mBoxRect As TRectangle  ' the rectangle used to draw the box
 
-Private mFixed As Boolean
+Private mFixedX As Boolean
+Private mFixedY As Boolean
 Private mIncludeInAutoscale As Boolean
 Private mExtended As Boolean
 
@@ -63,6 +64,7 @@ Private mPaddingX  As Double
 Private mPaddingY  As Double
 
 Private mPosition As Point
+Private mOffset As Dimension
 Private mAlign As TextAlignModes
 Private mKeepInView As Boolean
 
@@ -103,7 +105,8 @@ If gaugeChanged Then
 End If
 
 If gaugeChanged Or _
-    (mFixed And (xBoundsChanged Or yBoundsChanged)) _
+    (mFixedX And xBoundsChanged) Or _
+    (mFixedY And yBoundsChanged) _
 Then
     calcCurrentBoundingRect
 End If
@@ -125,7 +128,7 @@ draw
 End Sub
 
 Private Property Get IGraphicObject_extendedObject() As Boolean
-IGraphicObject_extendedObject = mExtended Or mFixed
+IGraphicObject_extendedObject = mExtended Or mFixedX
 End Property
 
 Private Property Get IGraphicObject_gaugeDependent() As Boolean
@@ -168,7 +171,7 @@ End If
 End Property
 
 Private Property Get IGraphicObject_scaleDependent() As Boolean
-IGraphicObject_scaleDependent = mFixed
+IGraphicObject_scaleDependent = mFixedX Or mFixedY
 End Property
 
 Private Sub IGraphicObject_undraw(ByRef area As TRectangle)
@@ -287,25 +290,27 @@ mExtended = newValue
 update
 End Property
 
-Friend Property Get fixed() As Boolean
-fixed = mFixed
+Friend Property Get fixedX() As Boolean
+fixedX = mFixedX
 End Property
 
-Public Property Let fixed(ByVal newValue As Boolean)
-If mFixed = newValue Then Exit Property
+Public Property Let fixedX(ByVal newValue As Boolean)
+If mFixedX = newValue Then Exit Property
 undraw
-mFixed = newValue
-If Not mFixed And mPosition.relative Then
-    ' need to convert to absolute coordinates
-    mPosition.x = mSurface.scaleLeft + mPosition.x * mSurface.scaleWidth / 100
-    mPosition.y = mSurface.scaleTop + mSurface.scaleHeight - mPosition.y * mSurface.scaleHeight / 100
-    mPosition.relative = False
-ElseIf mFixed And Not mPosition.relative Then
-    ' need to convert to relative coordinates
-    mPosition.x = 100 * (mPosition.x - mSurface.scaleLeft) / mSurface.scaleWidth
-    mPosition.y = -100 * (mPosition.y - mSurface.scaleTop - mSurface.scaleHeight) / mSurface.scaleHeight
-    mPosition.relative = True
-End If
+mFixedX = newValue
+convertPositionX
+update
+End Property
+
+Friend Property Get fixedY() As Boolean
+fixedY = mFixedY
+End Property
+
+Public Property Let fixedY(ByVal newValue As Boolean)
+If mFixedY = newValue Then Exit Property
+undraw
+mFixedY = newValue
+convertPositionY
 update
 End Property
 
@@ -385,20 +390,21 @@ Set position = mPosition
 End Property
 
 Public Property Let position(ByVal value As Point)
-If value Is Nothing Or Not value.assigned Then Exit Property
+If value Is Nothing Or Not value.isAssigned Then Exit Property
 undraw
 Set mPosition = value.clone
-If Not mFixed And mPosition.relative Then
-    ' need to convert to absolute coordinates
-    mPosition.x = mSurface.scaleLeft + mPosition.x * mSurface.scaleWidth / 100
-    mPosition.y = mSurface.scaleTop + mSurface.scaleHeight - mPosition.y * mSurface.scaleHeight / 100
-    mPosition.relative = False
-ElseIf mFixed And Not mPosition.relative Then
-    ' need to convert to relative coordinates
-    mPosition.x = 100 * (mPosition.x - mSurface.scaleLeft) / mSurface.scaleWidth
-    mPosition.y = -100 * (mPosition.y - mSurface.scaleTop - mSurface.scaleHeight) / mSurface.scaleHeight
-    mPosition.relative = True
-End If
+convertPosition
+update
+End Property
+
+Public Property Get offset() As Dimension
+Set offset = mOffset
+End Property
+
+Public Property Let offset(ByVal value As Dimension)
+If Not value.isAssigned Then Exit Property
+undraw
+Set mOffset = value
 update
 End Property
 
@@ -422,6 +428,76 @@ End Property
 '================================================================================
 ' Methods
 '================================================================================
+
+Friend Sub draw()
+Dim prevFont As StdFont
+Dim textLines() As String
+Dim i As Long
+If mBlank Then Exit Sub
+If Not mVisible Then Exit Sub
+If Not mPosition.isAssigned Then Exit Sub
+mDrawn = True
+
+If Not mFont Is Nothing Then
+        Set prevFont = New StdFont
+        With mSurface.font
+        prevFont.name = .name
+        prevFont.Bold = .Bold
+        prevFont.Italic = .Italic
+        prevFont.Size = .Size
+        prevFont.Charset = .Charset
+        prevFont.Strikethrough = .Strikethrough
+        prevFont.Underline = .Underline
+        prevFont.Weight = .Weight
+            
+        If mFont.Size < 8 Then .Size = mFont.Size
+       .name = mFont.name
+       .Bold = mFont.Bold
+       .Italic = mFont.Italic
+       .Size = mFont.Size
+       .Charset = mFont.Charset
+       .Strikethrough = mFont.Strikethrough
+       .Underline = mFont.Underline
+       .Weight = mFont.Weight
+    End With
+End If
+    
+With mSurface
+    .DrawMode = vbCopyPen
+    .FontTransparent = True
+    If mBox Then
+        .DrawWidth = mBoxThickness
+        .DrawStyle = mBoxStyle
+        .ForeColor = mBoxColour
+        .FillStyle = mBoxFillStyle
+        .FillColor = mBoxFillColour
+        mSurface.Line (mBoxRect.left, mBoxRect.bottom)-(mBoxRect.right, mBoxRect.top), , B
+    End If
+    .CurrentX = mTextRect.left
+    .CurrentY = mTextRect.top
+    .ForeColor = mColour
+    textLines = Split(mText, vbCrLf)
+    For i = 0 To UBound(textLines)
+        mSurface.Print textLines(i)
+        .CurrentX = mTextRect.left
+    Next
+End With
+
+If Not prevFont Is Nothing Then
+    With mSurface.font
+        If prevFont.Size < 8 Then .Size = prevFont.Size
+       .name = prevFont.name
+       .Bold = prevFont.Bold
+       .Italic = prevFont.Italic
+       .Size = prevFont.Size
+       .Charset = prevFont.Charset
+       .Strikethrough = prevFont.Strikethrough
+       .Underline = prevFont.Underline
+       .Weight = prevFont.Weight
+    End With
+End If
+    
+End Sub
 
 '================================================================================
 ' Helper Functions
@@ -490,6 +566,8 @@ End Sub
 Private Sub calcCurrentBoundingRect()
 Dim xshift As Double
 Dim yshift As Double
+Dim xOffset As Double
+Dim yOffset As Double
 Dim XIncrement As Double
 Dim YIncrement As Double
 Dim XLineThickness As Double
@@ -497,24 +575,27 @@ Dim YLineThickness As Double
 
 'If mText = "Started here" Then Stop
 
-If Not mPosition.assigned Then
+If Not mPosition.isAssigned Then
     mBoundingRect.isvalid = False
     Exit Sub
 End If
 
 With mTextRect
-    If mFixed Then
-        .left = mSurface.scaleLeft + mPosition.x * mSurface.scaleWidth / 100
-        .top = mSurface.scaleTop + mSurface.scaleHeight - mPosition.y * mSurface.scaleHeight / 100
-        .right = .left + mRawBoundingRect.right
-        .bottom = .top + mRawBoundingRect.top
-    Else
-        .left = mPosition.x
-        .top = mPosition.y
-        .right = mPosition.x + mRawBoundingRect.right
-        .bottom = mPosition.y + mRawBoundingRect.top
+    .left = mPosition.XAbsolute
+    .right = .left + mRawBoundingRect.right
+    .top = mPosition.YAbsolute
+    .bottom = .top + mRawBoundingRect.top
+    
+    ' now add the offset if any
+    
+    If Not mOffset Is Nothing Then
+        xOffset = mOffset.XAbsolute
+        yOffset = mOffset.YAbsolute
+        .left = .left + xOffset
+        .right = .right + xOffset
+        .bottom = .bottom + yOffset
+        .top = .top + yOffset
     End If
-
     
     ' now adjust the rectangle to take account of alignment
     
@@ -606,74 +687,35 @@ mBoundingRect.isvalid = True
 
 End Sub
 
-Friend Sub draw()
-Dim prevFont As StdFont
-Dim textLines() As String
-Dim i As Long
-If mBlank Then Exit Sub
-If Not mVisible Then Exit Sub
-If Not mPosition.assigned Then Exit Sub
-mDrawn = True
+Private Sub convertPosition()
+convertPositionX
+convertPositionY
+End Sub
 
-If Not mFont Is Nothing Then
-        Set prevFont = New StdFont
-        With mSurface.font
-        prevFont.name = .name
-        prevFont.Bold = .Bold
-        prevFont.Italic = .Italic
-        prevFont.Size = .Size
-        prevFont.Charset = .Charset
-        prevFont.Strikethrough = .Strikethrough
-        prevFont.Underline = .Underline
-        prevFont.Weight = .Weight
-            
-        If mFont.Size < 8 Then .Size = mFont.Size
-       .name = mFont.name
-       .Bold = mFont.Bold
-       .Italic = mFont.Italic
-       .Size = mFont.Size
-       .Charset = mFont.Charset
-       .Strikethrough = mFont.Strikethrough
-       .Underline = mFont.Underline
-       .Weight = mFont.Weight
-    End With
-End If
-    
-With mSurface
-    .DrawMode = vbCopyPen
-    .FontTransparent = True
-    If mBox Then
-        .DrawWidth = mBoxThickness
-        .DrawStyle = mBoxStyle
-        .ForeColor = mBoxColour
-        .FillStyle = mBoxFillStyle
-        .FillColor = mBoxFillColour
-        mSurface.Line (mBoxRect.left, mBoxRect.bottom)-(mBoxRect.right, mBoxRect.top), , B
+Private Sub convertPositionX()
+If mPosition Is Nothing Then Exit Sub
+If mFixedX Then
+    If mPosition.PositionTypeX = PositionAbsolute Then
+        mPosition.PositionTypeX = PositionRelative
     End If
-    .CurrentX = mTextRect.left
-    .CurrentY = mTextRect.top
-    .ForeColor = mColour
-    textLines = Split(mText, vbCrLf)
-    For i = 0 To UBound(textLines)
-        mSurface.Print textLines(i)
-        .CurrentX = mTextRect.left
-    Next
-End With
-
-If Not prevFont Is Nothing Then
-    With mSurface.font
-        If prevFont.Size < 8 Then .Size = prevFont.Size
-       .name = prevFont.name
-       .Bold = prevFont.Bold
-       .Italic = prevFont.Italic
-       .Size = prevFont.Size
-       .Charset = prevFont.Charset
-       .Strikethrough = prevFont.Strikethrough
-       .Underline = prevFont.Underline
-       .Weight = prevFont.Weight
-    End With
+Else
+    If mPosition.PositionTypeX <> PositionAbsolute Then
+        mPosition.PositionTypeX = PositionAbsolute
+    End If
 End If
-    
+End Sub
+
+Private Sub convertPositionY()
+If mPosition Is Nothing Then Exit Sub
+If mFixedY Then
+    If mPosition.PositionTypeY = PositionAbsolute Then
+        mPosition.PositionTypeY = PositionRelative
+    End If
+Else
+    If mPosition.PositionTypeY <> PositionAbsolute Then
+        mPosition.PositionTypeY = PositionAbsolute
+    End If
+End If
 End Sub
 
 Private Sub undraw()
@@ -683,7 +725,7 @@ Dim i As Long
 
 If mBlank Then Exit Sub
 If Not mVisible Then Exit Sub
-If Not mPosition.assigned Then Exit Sub
+If Not mPosition.isAssigned Then Exit Sub
 mDrawn = True
 
 With mSurface

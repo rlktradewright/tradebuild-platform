@@ -38,7 +38,8 @@ Private mEventProxy As ChartRegionEventProxy
 
 Private mName As String
 
-Private mFixed As Boolean
+Private mFixedX As Boolean
+Private mFixedY As Boolean
 Private mIncludeInAutoscale As Boolean
 Private mExtended As Boolean
 
@@ -221,13 +222,22 @@ If mExtendBefore = newValue Then Exit Property
 mExtendBefore = newValue
 End Property
 
-Friend Property Get fixed() As Boolean
-fixed = mFixed
+Friend Property Get fixedX() As Boolean
+fixedX = mFixedX
 End Property
 
-Public Property Let fixed(ByVal newValue As Boolean)
-If mFixed = newValue Then Exit Property
-mFixed = newValue
+Public Property Let fixedX(ByVal newValue As Boolean)
+If mFixedX = newValue Then Exit Property
+mFixedX = newValue
+End Property
+
+Friend Property Get fixedY() As Boolean
+fixedY = mFixedY
+End Property
+
+Public Property Let fixedY(ByVal newValue As Boolean)
+If mFixedY = newValue Then Exit Property
+mFixedY = newValue
 End Property
 
 Public Property Get includeInAutoscale() As Boolean
@@ -283,7 +293,7 @@ End Property
 ' Methods
 '================================================================================
 
-Public Function addLine(Optional ByVal layer As Long = -1) As ChartSkil.Line
+Public Function addLine() As ChartSkil.Line
 Set addLine = New ChartSkil.Line
 With addLine
     .eventProxy = mEventProxy
@@ -304,11 +314,12 @@ With addLine
     .extendAfter = mExtendAfter
     .extendBefore = mExtendBefore
     .extended = mExtended
-    .fixed = mFixed
+    .fixedX = mFixedX
+    .fixedY = mFixedY
     .style = mStyle
     .thickness = mThickness
     .includeInAutoscale = mIncludeInAutoscale
-    .layer = MaxLayer
+    .layer = mLayer
 End With
 mLines.Add addLine
 mEventProxy.addGraphicObject addLine

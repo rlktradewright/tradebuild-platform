@@ -79,11 +79,11 @@ Next
 If mBars.count <> 0 Then mEventProxy.paintRegion
 End Property
 
-Friend Property Get candleWidth() As Single
+Public Property Get candleWidth() As Single
 candleWidth = mCandleWidth
 End Property
 
-Friend Property Let candleWidth(ByVal value As Single)
+Public Property Let candleWidth(ByVal value As Single)
 Dim bar As bar
 If mCandleWidth = value Then Exit Property
 mCandleWidth = value
@@ -232,8 +232,12 @@ addBar.surface = mSurface
 addBar.tailThickness = mTailThickness
 addBar.upColour = mUpColour
 
-mBars.Add addBar
+mBars.Add addBar, CStr(periodNumber)
 mEventProxy.addGraphicObject addBar
+End Function
+
+Public Function Item(ByVal periodNumber As Long) As bar
+Set Item = mBars(CStr(periodNumber))
 End Function
 
 'Friend Sub periodsInView(ByVal minValue As Long, ByVal maxValue As Long)

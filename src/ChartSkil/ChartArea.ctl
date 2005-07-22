@@ -105,6 +105,7 @@ Private mPrevHeight As Single
 Private mTwipsPerBar As Long
 
 Private mYAxisPosition As Long
+Private mYAxisWidthCm As Single
 
 Private mVertGridSpacing As Double
 Private mYScaleFormatStr As String
@@ -232,6 +233,7 @@ mShowCrosshairs = True
 mTwipsPerBar = DefaultTwipsPerBar
 mScaleHeight = -100
 mScaleTop = 100
+mYAxisWidthCm = 1.5
 
 resizeX
 
@@ -253,7 +255,7 @@ End Sub
 Private Sub UserControl_Paint()
 Static paintcount As Long
 paintcount = paintcount + 1
-'debug.print "Control_paint" & paintcount
+Debug.Print "Control_paint" & paintcount
 mPainted = True
 paintAll
 End Sub
@@ -280,8 +282,8 @@ End Sub
 Private Sub ChartZonePicture_MouseMove(index As Integer, _
                                 Button As Integer, _
                                 Shift As Integer, _
-                                x As Single, _
-                                y As Single)
+                                X As Single, _
+                                Y As Single)
 
 Dim region As ChartRegion
 Dim i As Long
@@ -290,13 +292,13 @@ For i = 0 To mRegionsIndex
     Set region = mRegions(i).region
     If i = index - 1 Then
         'debug.print "Mousemove: index=" & index & " region=" & i & " x=" & x & " y=" & y
-        region.MouseMove Button, Shift, x, y
+        region.MouseMove Button, Shift, X, Y
     Else
         'debug.print "Mousemove: index=" & index & " region=" & i & " x=" & x & " y=" & MinusInfinitySingle
-        region.MouseMove Button, Shift, x, MinusInfinitySingle
+        region.MouseMove Button, Shift, X, MinusInfinitySingle
     End If
 Next
-displayXAxisLabel x, 100
+displayXAxisLabel X, 100
 End Sub
 
 'Private Sub ChartZonePicture_Paint(index As Integer)
@@ -339,7 +341,15 @@ chartBackColor = mBackColour
 End Property
 
 Public Property Let chartBackColor(ByVal val As Long)
+Dim i As Long
+
 mBackColour = val
+XAxisPicture.backColor = val
+
+For i = 0 To mRegionsIndex
+    mRegions(i).region.regionBackColor = val
+Next
+paintAll
 End Property
 
 Public Property Get chartHeight() As Single
@@ -349,6 +359,7 @@ End Property
 Public Property Let chartHeight(ByVal value As Single)
 mScaleHeight = value
 PropertyChanged "chartheight"
+paintAll
 End Property
 
 Public Property Get chartLeft() As Single
@@ -370,16 +381,18 @@ End Property
 Public Property Let chartTop(ByVal value As Single)
 mScaleTop = value
 PropertyChanged "charttop"
+paintAll
 End Property
 
 Public Property Get chartWidth() As Single
-chartWidth = mScaleWidth
+chartWidth = YAxisPosition - mScaleLeft
 End Property
 
-Public Property Let chartWidth(ByVal value As Single)
-mScaleWidth = value
-PropertyChanged "chartwidth"
-End Property
+'Public Property Let chartWidth(ByVal value As Single)
+'mScaleWidth = value
+'PropertyChanged "chartwidth"
+'paintAll
+'End Property
 
 Public Property Get currentPeriodNumber() As Long
 currentPeriodNumber = mCurrentPeriodNumber
@@ -482,10 +495,19 @@ End Property
 Public Property Let twipsPerBar(ByVal val As Long)
 mTwipsPerBar = val
 resizeX
+paintAll
 End Property
 
 Public Property Get YAxisPosition() As Long
 YAxisPosition = mYAxisPosition
+End Property
+
+Public Property Get YAxisWidthCm() As Single
+YAxisWidthCm = mYAxisWidthCm
+End Property
+
+Public Property Let YAxisWidthCm(ByVal value As Single)
+mYAxisWidthCm = value
 End Property
 
 '================================================================================
@@ -509,20 +531,20 @@ ChartZonePicture(ChartZonePicture.UBound).Width = UserControl.Width
 ChartZonePicture(ChartZonePicture.UBound).visible = True
 addChartRegion.surface = ChartZonePicture(ChartZonePicture.UBound)
 addChartRegion.suppressDrawing = mSuppressDrawing
-addChartRegion.autoscale = mAutoscale
 addChartRegion.currentTool = mCurrentTool
 addChartRegion.gridColor = mGridColour
 addChartRegion.minimumPercentHeight = minimumPercentHeight
 addChartRegion.percentheight = percentheight
 addChartRegion.regionBackColor = mBackColour
 addChartRegion.regionLeft = mScaleLeft
-addChartRegion.regionHeight = -1
+addChartRegion.regionHeight = 1
 addChartRegion.regionNumber = mRegionsIndex + 2
 addChartRegion.regionTop = 1
 addChartRegion.regionWidth = mScaleWidth
 addChartRegion.showCrosshairs = mShowCrosshairs
 addChartRegion.showGrid = mShowGrid
-addChartRegion.periodsInView mScaleLeft, YAxisPosition - 1
+addChartRegion.periodsInView mScaleLeft, mYAxisPosition - 1
+addChartRegion.autoscale = mAutoscale
 
 If mRegionsIndex = UBound(mRegions) Then
     ReDim Preserve mRegions(UBound(mRegions) + 100) As RegionTableEntry
@@ -559,16 +581,6 @@ For i = 0 To mRegionsIndex
     region.addPeriod mCurrentPeriodNumber
 Next
 
-'shift 1
-End Function
-
-Public Function newPoint(ByVal x As Double, _
-                        ByVal y As Double, _
-                        Optional ByVal relative As Boolean = False) As Point
-Set newPoint = New Point
-newPoint.x = x
-newPoint.y = y
-newPoint.relative = relative
 End Function
 
 Public Function refresh()
@@ -579,18 +591,22 @@ End Function
 ' Helper Functions
 '================================================================================
 
-Private Sub displayXAxisLabel(x As Single, y As Single)
+Private Sub displayXAxisLabel(X As Single, Y As Single)
 Dim thisPeriod As Period
 Dim periodNumber As Long
 Dim prevPeriodNumber As Long
 Dim prevPeriod As Period
 
-If Round(x) >= YAxisPosition Then Exit Sub
+If Round(X) >= mYAxisPosition Then Exit Sub
 If mPeriods.count = 0 Then Exit Sub
 
+On Error Resume Next
+periodNumber = Round(X)
+Set thisPeriod = mPeriods(periodNumber)
+On Error GoTo 0
+If thisPeriod Is Nothing Then Exit Sub
+
 With XAxisPicture
-    .scaleWidth = chartWidth
-    .scaleLeft = chartLeft
     If mNotFirstMouseMove Then
         prevPeriodNumber = Round(mPrevCursorX)
         If prevPeriodNumber > 0 Then
@@ -603,18 +619,16 @@ With XAxisPicture
         End If
     End If
     
-    mPrevCursorX = x
-    mPrevCursorY = y
+    mPrevCursorX = X
+    mPrevCursorY = Y
     mNotFirstMouseMove = True
     
-    If Round(x) <= 0 Then Exit Sub
+    If Round(X) <= 0 Then Exit Sub
     
     .DrawMode = vbXorPen
-    periodNumber = Round(x)
     .CurrentX = periodNumber
-    .CurrentY = y
+    .CurrentY = Y
     .ForeColor = vbRed 'Xor BackColor 'vbWhite 'Xor BackColor
-    Set thisPeriod = mPeriods(periodNumber)
     XAxisPicture.Print Format(thisPeriod.timestamp, "dd/mm hh:nn")
     
 End With
@@ -657,14 +671,16 @@ newScaleWidth = CSng(XAxisPicture.Width) / CSng(mTwipsPerBar) - 0.5!
 If newScaleWidth = mScaleWidth Then Exit Sub
 
 mScaleWidth = newScaleWidth
-mScaleLeft = YAxisPosition + 7 - mScaleWidth
+
+mScaleLeft = mYAxisPosition + _
+            (mYAxisWidthCm * TwipsPerCm / XAxisPicture.Width * mScaleWidth) - _
+            mScaleWidth
 XAxisPicture.scaleWidth = mScaleWidth
 XAxisPicture.scaleLeft = mScaleLeft
 
-XBorderPicture.Width = ((YAxisPosition - chartLeft) / chartWidth) * XAxisPicture.Width
+XBorderPicture.Width = ((mYAxisPosition - chartLeft) / mScaleWidth) * XAxisPicture.Width
 XBorderPicture.left = 0
 XBorderPicture.top = XAxisPicture.top
-YBorderPicture.Height = XAxisPicture.top + Screen.TwipsPerPixelY
 YBorderPicture.left = XBorderPicture.Width
 
 For i = 0 To ChartZonePicture.UBound
@@ -674,7 +690,7 @@ Next
 For i = 0 To mRegionsIndex
     Set region = mRegions(i).region
     region.regionWidth = mScaleWidth
-    region.periodsInView mScaleLeft, YAxisPosition - 1
+    region.periodsInView mScaleLeft, mYAxisPosition - 1
 Next
 
 End Sub
@@ -686,13 +702,16 @@ If UserControl.Height = mPrevHeight Then Exit Sub
 
 mPrevHeight = UserControl.Height
 sizeRegions
+YBorderPicture.Height = XAxisPicture.top + Screen.TwipsPerPixelY
 End Sub
 
 Public Sub scrollX(ByVal value As Long)
 Dim region As ChartRegion
 Dim i As Long
 mYAxisPosition = mYAxisPosition + value
-mScaleLeft = mYAxisPosition + 7 - mScaleWidth
+mScaleLeft = mYAxisPosition + _
+            (mYAxisWidthCm * TwipsPerCm / XAxisPicture.Width * mScaleWidth) - _
+            mScaleWidth
 XAxisPicture.scaleLeft = mScaleLeft
 For i = 0 To mRegionsIndex
     Set region = mRegions(i).region
