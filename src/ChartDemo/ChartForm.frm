@@ -1240,7 +1240,7 @@ Static prevSwingLine As ChartSkil.Line
 Static newSwingLine As ChartSkil.Line
 Static swingAmountTicks As Double
 Static swingingUp As Boolean
-Exit Sub
+
 If swingLineSeries Is Nothing Then
     swingAmountTicks = MinSwingTicksText.Text
     Set swingLineSeries = mPriceRegion.addLineSeries
@@ -1274,7 +1274,7 @@ If swingingUp Then
                 Set newSwingLine = Nothing
                 swingLine.Hidden = False
             End If
-            swingLine.point1 = mPriceRegion.newPoint(prevSwingLine.point2.x, prevSwingLine.point2.Y)
+            swingLine.point1 = mPriceRegion.newPoint(prevSwingLine.point2.X, prevSwingLine.point2.Y)
             swingLine.point2 = mPriceRegion.newPoint(periodNumber, price)
             swingingUp = False
         End If
@@ -1303,7 +1303,7 @@ Else
                 Set newSwingLine = Nothing
                 swingLine.Hidden = False
             End If
-            swingLine.point1 = mPriceRegion.newPoint(prevSwingLine.point2.x, prevSwingLine.point2.Y)
+            swingLine.point1 = mPriceRegion.newPoint(prevSwingLine.point2.X, prevSwingLine.point2.Y)
             swingLine.point2 = mPriceRegion.newPoint(periodNumber, price)
             swingingUp = True
         End If
