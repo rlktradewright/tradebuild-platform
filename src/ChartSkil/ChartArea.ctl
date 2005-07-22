@@ -92,7 +92,6 @@ Private mRegionsIndex As Long
 Private mCurrentPeriodNumber As Long
 
 Private mPeriods As Collection
-Private mXScaleRegion As ChartRegion
 
 Private mAutoscale As Boolean
 Private mScaleWidth As Single
@@ -106,11 +105,6 @@ Private mTwipsPerBar As Long
 
 Private mYAxisPosition As Long
 Private mYAxisWidthCm As Single
-
-Private mVertGridSpacing As Double
-Private mYScaleFormatStr As String
-Private mYScaleSubFormatStr As String
-Private mGridTextHeight As Double
 
 Private mBackColour As Long
 Private mGridColour As Long
@@ -213,10 +207,6 @@ End Enum
 '================================================================================
 
 Private Sub UserControl_Initialize()
-Dim i As Long
-Dim aBar As bar
-Dim last As Double
-Dim aBarSeries As BarSeries
 
 mPrevHeight = UserControl.Height
 
@@ -236,19 +226,6 @@ mScaleTop = 100
 mYAxisWidthCm = 1.5
 
 resizeX
-
-'mScaleWidth = UserControl.Width / mTwipsPerBar
-'mScaleLeft = 7 - chartWidth
-'
-'XBorderPicture.Width = ((YAxisPosition - mScaleLeft) / mScaleWidth) * XAxisPicture.Width
-'XBorderPicture.left = 0
-'XBorderPicture.top = XAxisPicture.top
-'YBorderPicture.Height = XAxisPicture.top + Screen.TwipsPerPixelY
-'YBorderPicture.left = XBorderPicture.Width
-'
-'XAxisPicture.scaleWidth = mScaleWidth
-'XAxisPicture.scaleLeft = mScaleLeft
-'lastVisiblePeriod = 0
 
 End Sub
 
@@ -352,47 +329,13 @@ Next
 paintAll
 End Property
 
-Public Property Get chartHeight() As Single
-chartHeight = mScaleHeight
-End Property
-
-Public Property Let chartHeight(ByVal value As Single)
-mScaleHeight = value
-PropertyChanged "chartheight"
-paintAll
-End Property
-
 Public Property Get chartLeft() As Single
 chartLeft = mScaleLeft
-End Property
-
-Public Property Let chartLeft(ByVal value As Single)
-Dim shiftPeriods As Long
-shiftPeriods = value - mScaleLeft
-mScaleLeft = value
-scrollX shiftPeriods
-PropertyChanged "chartleft"
-End Property
-
-Public Property Get chartTop() As Single
-chartTop = mScaleTop
-End Property
-
-Public Property Let chartTop(ByVal value As Single)
-mScaleTop = value
-PropertyChanged "charttop"
-paintAll
 End Property
 
 Public Property Get chartWidth() As Single
 chartWidth = YAxisPosition - mScaleLeft
 End Property
-
-'Public Property Let chartWidth(ByVal value As Single)
-'mScaleWidth = value
-'PropertyChanged "chartwidth"
-'paintAll
-'End Property
 
 Public Property Get currentPeriodNumber() As Long
 currentPeriodNumber = mCurrentPeriodNumber
@@ -520,10 +463,6 @@ Public Function addChartRegion(ByVal percentheight As Double, _
 ' NB: percentHeight=100 means the region will use whatever space
 ' is available
 '
-Dim i As Long
-Dim top As Long
-Dim aRegion As ChartRegion
-
 Set addChartRegion = New ChartRegion
 Load ChartZonePicture(ChartZonePicture.UBound + 1)
 ChartZonePicture(ChartZonePicture.UBound).align = vbAlignNone
@@ -637,11 +576,9 @@ End Sub
 
 Private Sub paintAll()
 Dim region As ChartRegion
-Dim aPeriod As Period
 Dim i As Long
 
 If mSuppressDrawing Then Exit Sub
-'If Not mPainted Then Exit Sub
 
 mNotFirstMouseMove = False
 
@@ -651,13 +588,6 @@ For i = 0 To mRegionsIndex
 Next
 
 XAxisPicture.Cls
-'For Each aPeriod In mPeriods
-'    If aPeriod.periodNumber >= mScaleLeft And _
-'        aPeriod.periodNumber < YAxisPosition _
-'    Then
-'        XAxisPicture.Line (aPeriod.periodNumber, 0)-(aPeriod.periodNumber + 1, XAxisPicture.Height), aPeriod.backColor, BF
-'    End If
-'Next
 displayXAxisLabel mPrevCursorX, 100
 
 End Sub
@@ -734,7 +664,6 @@ Dim heightReductionFactor As Double
 Dim totalMinimumPercents As Double
 Dim nonFixedAvailableSpacePercent As Double
 Dim availableSpacePercent As Double
-Dim drawingWasAllowed As Boolean
 
 availableSpacePercent = 100
 nonFixedAvailableSpacePercent = 100
@@ -822,20 +751,14 @@ Next
 
 ' Now actually set the heights and positions for the picture boxes
 top = 0
-'If Not suppressDrawing Then
-'    drawingWasAllowed = True
-'    suppressDrawing = True
-'End If
     
 For i = 0 To mRegionsIndex
     Set aRegion = mRegions(i).region
     ChartZonePicture(aRegion.regionNumber).Height = mRegions(i).actualHeight
     ChartZonePicture(aRegion.regionNumber).top = top
     top = top + ChartZonePicture(aRegion.regionNumber).Height
-'    aRegion.regionHeight = aRegion.regionHeight ' reset the drawing surface ScaleHeight
-'    aRegion.regionTop = aRegion.regionTop   ' reset the drawing surface ScaleTop
 Next
-'If drawingWasAllowed Then suppressDrawing = False
+
 sizeRegions = True
 End Function
 

@@ -35,7 +35,6 @@ Private mSurface As PictureBox
 Private mLayer As Long
 
 Private mEventProxy As ChartRegionEventProxy
-Private mName As String
 Private mMinPeriodInView As Long
 Private mMaxPeriodInView As Long
 
@@ -45,7 +44,6 @@ Private mFixedY As Boolean
 Private mIncludeInAutoscale As Boolean
 Private mExtended As Boolean
 
-Private mText As String
 Private mFont As StdFont
 Private mColour As Long
 Private mBox As Boolean

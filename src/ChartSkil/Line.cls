@@ -745,11 +745,6 @@ Dim x2 As Double
 Dim y1 As Double
 Dim y2 As Double
 
-Dim XIncrement As Double
-Dim YIncrement As Double
-Dim XLineThickness As Double
-Dim YLineThickness As Double
-
 mBoundingRect.isvalid = False
 If mBlank Then Exit Sub
 
@@ -1454,9 +1449,6 @@ End If
 End Sub
 
 Private Sub undraw()
-Dim i As Long
-Dim left As Double
-Dim right As Double
 
 If Not mVisible Then Exit Sub
 draw mBoundingRect, True

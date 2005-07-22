@@ -504,10 +504,6 @@ End Sub
 '================================================================================
 
 Private Sub calcRawBoundingRect()
-Dim scaleLeft As Double
-Dim scaleWidth As Double
-Dim scaleTop As Double
-Dim scaleHeight As Double
 Dim prevFont As StdFont
 
 ' NB: calculates the raw dimensions of the bounding box in twips, because
@@ -719,9 +715,6 @@ End If
 End Sub
 
 Private Sub undraw()
-Dim prevFont As StdFont
-Dim textLines() As String
-Dim i As Long
 
 If mBlank Then Exit Sub
 If Not mVisible Then Exit Sub

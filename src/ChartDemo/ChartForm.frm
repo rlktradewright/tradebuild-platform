@@ -685,9 +685,9 @@ mVertGridTextSeries.box = True          ' display a box around the label...
 mVertGridTextSeries.boxColor = vbWhite  ' ... with a white outline...
 mVertGridTextSeries.boxFillColor = vbWhite  ' ... and a white fill
 
-' Create the text object that will display the clock time
+' Create a text object that will display the clock time
 ' Since this is just a single text field, we don't need to create a text series, just
-' use the regions implicit text series
+' use the region's implicit text series
 Set mClockText = mPriceRegion.addText(LayerNumbers.LayerTitle)
 mClockText.Align = AlignTopRight        ' use the top right corner of the text for
                                         ' positioning
@@ -710,7 +710,9 @@ mClockText.fixedY = True                ' the text's Y position is to be fixed (
                                         ' will stay put vertically as well)
 
 ' Define a series of text objects that will be used to label bars periodically
-Set mBarLabelSeries = mPriceRegion.addTextSeries
+Set mBarLabelSeries = mPriceRegion.addTextSeries(LayerNumbers.LayerHIghestUser)
+                                        ' Display them on a high layer but below the
+                                        ' title layer
 mBarLabelSeries.Align = AlignTopCentre  ' Use the top centre of the text for aligning it
 mBarLabelSeries.box = True              ' Draw a box around each text...
 mBarLabelSeries.boxThickness = 1        ' ...with a thickness of 1 pixel...
@@ -776,20 +778,20 @@ mMACDRegion.gridlineSpacingY = 0.5    ' the horizontal grid lines should be abou
                                         ' 5 millimeters apart
 mMACDRegion.setTitle "MACD (12, 24, 5)", vbBlue, Nothing
 
-' Set up a datapoint series for the MACD values on layer 2
-Set mMACDSeries = mMACDRegion.addDataPointSeries(2)
+' Set up a datapoint series for the MACD histogram values on lowest user layer
+Set mMACDHistSeries = mMACDRegion.addDataPointSeries(LayerNumbers.LayerLowestUser)
+mMACDHistSeries.displayMode = DisplayModes.displayAsHistogram
+mMACDHistSeries.lineColour = vbGreen
+
+' Set up a datapoint series for the MACD values on next layer
+Set mMACDSeries = mMACDRegion.addDataPointSeries(LayerNumbers.LayerLowestUser + 1)
 mMACDSeries.displayMode = DisplayModes.DisplayAsLines
 mMACDSeries.lineColour = vbBlue
 
-' Set up a datapoint series for the MACD signal values on layer 3
-Set mMACDSignalSeries = mMACDRegion.addDataPointSeries(3)
+' Set up a datapoint series for the MACD signal values on next layer
+Set mMACDSignalSeries = mMACDRegion.addDataPointSeries(LayerNumbers.LayerLowestUser + 2)
 mMACDSignalSeries.displayMode = DisplayModes.DisplayAsLines
 mMACDSignalSeries.lineColour = vbRed
-
-' Set up a datapoint series for the MACD histogram values on layer 1
-Set mMACDHistSeries = mMACDRegion.addDataPointSeries(1)
-mMACDHistSeries.displayMode = DisplayModes.displayAsHistogram
-mMACDHistSeries.lineColour = vbGreen
 
 ' Create a region to display the volume bars
 Set mVolumeRegion = Chart1.addChartRegion(15)
@@ -1036,7 +1038,6 @@ Private Sub mTickSimulator_TickPrice( _
                 ByVal price As Double)
 Static tickCount As Long
 Static tickCountText As Text
-Dim aFont As StdFont
 Static barText As Text
 Dim bartime As Date
 

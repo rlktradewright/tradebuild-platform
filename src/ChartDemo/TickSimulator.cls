@@ -151,7 +151,6 @@ Public Sub Start(ByVal numberOfBars As Long)
 Dim barcount As Long
 Dim timestamp As Date
 Dim bartime As Double
-Dim startText As Text
 Dim openPrice As Double
 Dim highPrice As Double
 Dim lowPrice As Double

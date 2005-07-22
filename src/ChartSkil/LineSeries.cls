@@ -36,8 +36,6 @@ Private mLayer As Long
 
 Private mEventProxy As ChartRegionEventProxy
 
-Private mName As String
-
 Private mFixedX As Boolean
 Private mFixedY As Boolean
 Private mIncludeInAutoscale As Boolean

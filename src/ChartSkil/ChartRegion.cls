@@ -62,11 +62,11 @@ End Type
 
 Public Enum LayerNumbers
     LayerBackground = MinLayer
-    LayerGrid
-    LayerLowestUser
-    LayerHIghestUser = MaxLayer - 2
-    LayerTitle
-    LayerPointer
+    LayerGrid = MinLayer + 5
+    LayerLowestUser = MinLayer + 10
+    LayerHIghestUser = MaxLayer - 10
+    LayerTitle = MaxLayer - 5
+    LayerPointer = MaxLayer
 End Enum
 
 
@@ -221,7 +221,7 @@ Private Sub Class_Initialize()
 Dim aFont As StdFont
 Dim i As Long
 
-mNextLayer = LayerNumbers.LayerGrid + 1
+mNextLayer = LayerNumbers.LayerLowestUser
 
 ReDim mPeriodTable(1000) As PeriodTableEntry
 ReDim mGraphicObjects(10000) As GraphicObjectTableEntry
@@ -1280,10 +1280,6 @@ newPoint.PositionTypeY = posnTypeY
 End Function
 
 Friend Sub paintRegion()
-Dim aBarSeries As BarSeries
-Dim aBar As bar
-Dim aDataPointSeries As DataPointSeries
-Dim aDataPoint As DataPoint
 Dim startTimer As Single
 Dim heightCm As Single
 Dim numGridDivisions As Double
@@ -1886,7 +1882,6 @@ Debug.Print "DetermineInScopeObjects: total=" & numberExamined & " in-scope=" & 
 End Sub
 
 Private Sub determineVisibleObjects(ByVal gaugeChanged As Boolean)
-Dim graphObj As IGraphicObject
 Dim index As Long
 Dim timerIn As Single
 Dim numberExamined As Long
@@ -1974,7 +1969,7 @@ End Sub
 Private Function getLayer(Optional ByVal layer As Long = -1) As Long
 If layer = -1 Then
     getLayer = mNextLayer
-    If mNextLayer <> MaxLayer Then
+    If mNextLayer <> LayerNumbers.LayerHIghestUser Then
         mNextLayer = mNextLayer + 1
     End If
 Else
