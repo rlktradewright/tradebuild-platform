@@ -117,10 +117,6 @@ Attribute mEventProxy.VB_VarHelpID = -1
 Private mAutoscale As Boolean
 Private mMinimumHeight As Single
 Private mPrevHeight As Single
-'Private mScaleWidth As Single
-'Private mScaleHeight As Single
-'Private mScaleLeft As Single
-'Private mScaleTop As Single
 Private mPercentHeight As Double
 Private mMinimumPercentHeight As Double
 Private mYAxisPosition As Long
@@ -128,9 +124,8 @@ Private mIntegerYScale As Boolean
 
 Private mRegionRect As TRectangle
 
-Private mGridlineSpacingX As Double
 Private mGridlineSpacingY As Double
-Private mVerticalGridSpacing As Double
+Private mScaleGridSpacingY As Double
 Private mYScaleFormatStr As String
 Private mYScaleSubFormatStr As String
 Private mGridTextHeight As Double
@@ -583,14 +578,6 @@ Public Property Let gridColor(ByVal val As Long)
 mGridColour = val
 End Property
 
-Public Property Get gridlineSpacingX() As Double
-gridlineSpacingX = mGridlineSpacingX
-End Property
-
-Public Property Let gridlineSpacingX(ByVal value As Double)
-mGridlineSpacingX = value
-End Property
-
 Public Property Get gridlineSpacingY() As Double
 gridlineSpacingY = mGridlineSpacingY
 End Property
@@ -804,24 +791,24 @@ mBackColour = val
 End Property
 
 Public Property Get regionBottom() As Single
-regionBottom = mSurface.scaleTop + mSurface.scaleHeight
+regionBottom = mSurface.ScaleTop + mSurface.ScaleHeight
 End Property
 
 Friend Property Let regionBottom(ByVal value As Single)
-mSurface.scaleHeight = value - mSurface.scaleTop
+mSurface.ScaleHeight = value - mSurface.ScaleTop
 mRegionRect.bottom = value
 End Property
 
 Public Property Get regionHeight() As Single
-regionHeight = -mSurface.scaleHeight
+regionHeight = -mSurface.ScaleHeight
 End Property
 
 Friend Property Let regionHeight(ByVal value As Single)
 With mSurface
     If value < mMinimumHeight Then
-        .scaleHeight = -minimumHeight
+        .ScaleHeight = -minimumHeight
     Else
-        .scaleHeight = -value
+        .ScaleHeight = -value
     End If
     If mGaugeY = 0 Then
         ' this is the first time regionHeight has been set, so we need to
@@ -829,16 +816,16 @@ With mSurface
         ' first call to paint region
         mGaugeY = calculateGaugeY
     End If
-    mRegionRect.bottom = .scaleTop + .scaleHeight
+    mRegionRect.bottom = .ScaleTop + .ScaleHeight
 End With
 End Property
 
 Public Property Get regionLeft() As Single
-regionLeft = mSurface.scaleLeft
+regionLeft = mSurface.ScaleLeft
 End Property
 
 Friend Property Let regionLeft(ByVal value As Single)
-mSurface.scaleLeft = value
+mSurface.ScaleLeft = value
 mRegionRect.left = value
 End Property
 
@@ -851,21 +838,21 @@ mRegionNumber = val
 End Property
 
 Public Property Get regionTop() As Single
-regionTop = mSurface.scaleTop
+regionTop = mSurface.ScaleTop
 End Property
 
 Friend Property Let regionTop(ByVal value As Single)
-mSurface.scaleHeight = -(value - (mSurface.scaleTop + mSurface.scaleHeight))
-mSurface.scaleTop = value
+mSurface.ScaleHeight = -(value - (mSurface.ScaleTop + mSurface.ScaleHeight))
+mSurface.ScaleTop = value
 mRegionRect.top = value
 End Property
 
 Public Property Get regionWidth() As Single
-regionWidth = mSurface.scaleWidth
+regionWidth = mSurface.ScaleWidth
 End Property
 
 Friend Property Let regionWidth(ByVal value As Single)
-mSurface.scaleWidth = value
+mSurface.ScaleWidth = value
 End Property
 
 Public Property Get showGrid() As Boolean
@@ -1050,39 +1037,17 @@ Public Property Let textPaddingY(ByVal newValue As Double)
 mTextPaddingY = newValue
 End Property
 
-Public Property Get verticalGridSpacing() As Single
-verticalGridSpacing = mVerticalGridSpacing
+Public Property Get scaleGridSpacingY() As Single
+scaleGridSpacingY = mScaleGridSpacingY
 End Property
 
 Public Property Get YAxisPosition() As Long
 YAxisPosition = mYAxisPosition
 End Property
 
-'Public Property Let YAxisPosition(ByVal value As Long)
-'mYAxisPosition = value
-'regionLeft = value - regionWidth + 7
-'mPrevCursorX = value - 1
-'End Property
-
 '================================================================================
 ' Methods
 '================================================================================
-
-Public Function absoluteToCmX(ByVal X As Double) As Double
-absoluteToCmX = (X - mSurface.scaleLeft) / mSurface.scaleWidth * mSurface.Width * 2.54 / 1440
-End Function
-
-Public Function absoluteToCmY(ByVal Y As Double) As Double
-absoluteToCmY = -(Y - (mSurface.scaleTop + mSurface.scaleHeight)) / mSurface.scaleHeight * mSurface.Height * 2.54 / 1440
-End Function
-
-Public Function absoluteToRelativeX(ByVal X As Double) As Double
-absoluteToRelativeX = 100 * (X - mSurface.scaleLeft) / mSurface.scaleWidth
-End Function
-
-Public Function absoluteToRelativeY(ByVal Y As Double) As Double
-absoluteToRelativeY = -100 * (Y - mSurface.scaleTop - mSurface.scaleHeight) / mSurface.scaleHeight
-End Function
 
 Public Function addBarSeries(Optional ByVal layer As Long = -1) As BarSeries
 Set addBarSeries = New BarSeries
@@ -1245,7 +1210,7 @@ End Function
 Friend Sub MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
 Dim yVal As Single
 If Y = MinusInfinitySingle Then
-    yVal = mSurface.scaleTop + 2 * mSurface.scaleHeight ' make sure the pointer isn't visible
+    yVal = mSurface.ScaleTop + 2 * mSurface.ScaleHeight ' make sure the pointer isn't visible
 Else
     yVal = Y
 End If
@@ -1313,8 +1278,8 @@ If .Height <> mPrevHeight Then
     ' Note that resizing will have changed scaleheight and scale top, so we first
     ' need to reset these to their proper values if we're autoscaling
     
-    .scaleTop = mRegionRect.top
-    .scaleHeight = mRegionRect.bottom - mRegionRect.top
+    .ScaleTop = mRegionRect.top
+    .ScaleHeight = mRegionRect.bottom - mRegionRect.top
 
     mPrevHeight = .Height
 End If
@@ -1343,7 +1308,7 @@ If gaugeX <> mGaugeX Or gaugeY <> mGaugeY Then
 End If
 
 numGridDivisions = heightCm / mGridlineSpacingY
-gridSpacing = -.scaleHeight / numGridDivisions
+gridSpacing = -.ScaleHeight / numGridDivisions
 
 mGridTextHeight = .TextHeight("123")
 
@@ -1359,20 +1324,20 @@ exp = Fix(logSpacing)
 mantissa = Abs(logSpacing) - Abs(exp)
 
 If mantissa >= Log(5) / log10 Then
-    mVerticalGridSpacing = 5 * 10 ^ exp
+    mScaleGridSpacingY = 5 * 10 ^ exp
 ElseIf mantissa >= Log(2.5) / log10 Then
-    mVerticalGridSpacing = 2.5 * 10 ^ exp
+    mScaleGridSpacingY = 2.5 * 10 ^ exp
 ElseIf mantissa >= Log(2#) / log10 Then
-    mVerticalGridSpacing = 2# * 10 ^ exp
+    mScaleGridSpacingY = 2# * 10 ^ exp
 Else
-    mVerticalGridSpacing = 10 ^ exp
+    mScaleGridSpacingY = 10 ^ exp
 End If
 
 If mIntegerYScale Then
         mYScaleFormatStr = "0"
         mYScaleSubFormatStr = "0"
 Else
-    If mVerticalGridSpacing < 1 Then
+    If mScaleGridSpacingY < 1 Then
         mYScaleFormatStr = "0." & String(Abs(exp), "0")
         mYScaleSubFormatStr = "0." & String(Abs(exp - 2), "0")
     Else
@@ -1383,14 +1348,14 @@ End If
 
 .DrawWidth = 1
 .DrawMode = vbCopyPen
-z = Int((.scaleTop + .scaleHeight) / mVerticalGridSpacing) * mVerticalGridSpacing
-Do While z < .scaleTop
-    mSurface.Line (.scaleLeft, z)-(YAxisPosition, z), gridColor
+z = Int((.ScaleTop + .ScaleHeight) / mScaleGridSpacingY) * mScaleGridSpacingY
+Do While z < .ScaleTop
+    mSurface.Line (.ScaleLeft, z)-(YAxisPosition, z), gridColor
     .CurrentX = YAxisPosition + 0.5
     .CurrentY = .CurrentY - mGridTextHeight / 2
     .ForeColor = vbWhite Xor .backColor
     mSurface.Print Format(z, mYScaleFormatStr)
-    z = z + mVerticalGridSpacing
+    z = z + mScaleGridSpacingY
 Loop
 
 For i = MinLayer To MaxLayer
@@ -1457,7 +1422,7 @@ Dim gaugeY As Double
 
 mMinInViewPeriod = minValue
 mMaxInViewPeriod = maxValue
-mSurface.scaleLeft = minValue
+mSurface.ScaleLeft = minValue
 mYAxisPosition = maxValue + 1
 mRegionRect.left = minValue
 mRegionRect.right = maxValue '+ 0.5
@@ -1640,11 +1605,11 @@ End If
 End Function
 
 Private Function calculateGaugeX() As Double
-calculateGaugeX = (mSurface.scaleWidth / mSurface.Width) * Screen.TwipsPerPixelX
+calculateGaugeX = (mSurface.ScaleWidth / mSurface.Width) * Screen.TwipsPerPixelX
 End Function
 
 Private Function calculateGaugeY() As Double
-calculateGaugeY = -(mSurface.scaleHeight / mSurface.Height) * Screen.TwipsPerPixelY
+calculateGaugeY = -(mSurface.ScaleHeight / mSurface.Height) * Screen.TwipsPerPixelY
 End Function
 
 Private Sub calculateObjectHighAndLowInInterval( _
@@ -1738,22 +1703,22 @@ With mSurface
         ' so leave default scale
     ElseIf mMinimumHeight <> 0 Then
         If scaleMax - scaleMin < mMinimumHeight Then
-            .scaleHeight = -mMinimumHeight
-            .scaleTop = (scaleMax + scaleMin) / 2 + mMinimumHeight / 2
+            .ScaleHeight = -mMinimumHeight
+            .ScaleTop = (scaleMax + scaleMin) / 2 + mMinimumHeight / 2
         Else
-            .scaleHeight = (scaleMin - scaleMax) * 1.05
-            .scaleTop = scaleMax + (scaleMax - scaleMin) * 0.025
+            .ScaleHeight = (scaleMin - scaleMax) * 1.05
+            .ScaleTop = scaleMax + (scaleMax - scaleMin) * 0.025
         End If
     Else
         If scaleMin = scaleMax Then
             scaleMax = scaleMax * 1.001
             scaleMin = scaleMax * 0.998
         End If
-        .scaleHeight = (scaleMin - scaleMax) * 1.05
-        .scaleTop = scaleMax + (scaleMax - scaleMin) * 0.025
+        .ScaleHeight = (scaleMin - scaleMax) * 1.05
+        .ScaleTop = scaleMax + (scaleMax - scaleMin) * 0.025
     End If
-    mRegionRect.top = .scaleTop
-    mRegionRect.bottom = .scaleTop + .scaleHeight
+    mRegionRect.top = .ScaleTop
+    mRegionRect.bottom = .ScaleTop + .ScaleHeight
     mRegionRect.isvalid = True
 End With
 
@@ -1796,10 +1761,10 @@ Do While index <> mLastInScopeIndex
 Loop
 
 With mSurface
-    .scaleHeight = (scaleMin - scaleMax) * 1.05
-    .scaleTop = scaleMax + (scaleMax - scaleMin) * 0.025
-    mRegionRect.top = .scaleTop
-    mRegionRect.bottom = .scaleTop + .scaleHeight
+    .ScaleHeight = (scaleMin - scaleMax) * 1.05
+    .ScaleTop = scaleMax + (scaleMax - scaleMin) * 0.025
+    mRegionRect.top = .ScaleTop
+    mRegionRect.bottom = .ScaleTop + .ScaleHeight
 End With
 End Sub
 
@@ -1922,10 +1887,10 @@ With mSurface
     .DrawWidth = 1
     .DrawStyle = LineStyles.LineSolid
     .DrawMode = vbXorPen
-    mSurface.Line (.scaleLeft, Y)-(YAxisPosition, Y), vbRed Xor .backColor
+    mSurface.Line (.ScaleLeft, Y)-(YAxisPosition, Y), vbRed Xor .backColor
     lineX = Round(X)
 '    If lineX < 1 Then lineX = 1
-    mSurface.Line (lineX, .scaleTop + .scaleHeight)-(lineX, .scaleTop), vbRed Xor .backColor
+    mSurface.Line (lineX, .ScaleTop + .ScaleHeight)-(lineX, .ScaleTop), vbRed Xor .backColor
     .CurrentX = YAxisPosition + 0.5
     .CurrentY = Y - mGridTextHeight / 2
     .ForeColor = vbRed 'Xor BackColor 'vbWhite 'Xor BackColor
@@ -1952,7 +1917,7 @@ With mSurface
 '    if lineX < 1 Then lineX = 1
     .FillColor = vbYellow Xor .backColor
     .FillStyle = vbSolid
-    mSurface.Circle (lineX, Y), newPoint(0.8, 0, PositionDistance, PositionDistance).XAbsolute - mSurface.scaleLeft, vbYellow Xor .backColor
+    mSurface.Circle (lineX, Y), newPoint(0.8, 0, PositionDistance, PositionDistance).XAbsolute - mSurface.ScaleLeft, vbYellow Xor .backColor
     ''debug.print "DrawPointer x=" & lineX & " y=" & y
     .CurrentX = YAxisPosition + 0.5
     .CurrentY = Y - mGridTextHeight / 2
@@ -2257,17 +2222,17 @@ With mSurface
     .DrawWidth = 1
     .DrawStyle = LineStyles.LineSolid
     .DrawMode = vbXorPen
-    mSurface.Line (.scaleLeft, mPrevCursorY)-(YAxisPosition, mPrevCursorY), vbRed Xor .backColor
+    mSurface.Line (.ScaleLeft, mPrevCursorY)-(YAxisPosition, mPrevCursorY), vbRed Xor .backColor
     prevLineX = Round(mPrevCursorX)
 '    If prevLineX < 1 Then prevLineX = 1
-    mSurface.Line (prevLineX, .scaleTop + .scaleHeight)-(prevLineX, .scaleTop), vbRed Xor .backColor
+    mSurface.Line (prevLineX, .ScaleTop + .ScaleHeight)-(prevLineX, .ScaleTop), vbRed Xor .backColor
     .ForeColor = .backColor
     .CurrentX = YAxisPosition + 0.5
     .CurrentY = mPrevCursorY - mGridTextHeight / 2
     .FontTransparent = False
     mSurface.Print Format(mPrevCursorY, mYScaleSubFormatStr)
-    If mVerticalGridSpacing <> 0 Then
-        nearestGridLine = Fix((mPrevCursorY + mVerticalGridSpacing / 2) / mVerticalGridSpacing) * mVerticalGridSpacing
+    If mScaleGridSpacingY <> 0 Then
+        nearestGridLine = Fix((mPrevCursorY + mScaleGridSpacingY / 2) / mScaleGridSpacingY) * mScaleGridSpacingY
         If Abs(mPrevCursorY - nearestGridLine) < Abs(mGridTextHeight) Then
             .ForeColor = vbWhite Xor .backColor
             .CurrentX = YAxisPosition + 0.5
@@ -2276,9 +2241,9 @@ With mSurface
             mSurface.Print Format(nearestGridLine, mYScaleFormatStr)
         End If
         If nearestGridLine >= mPrevCursorY Then
-            nextNearestGridLine = nearestGridLine - mVerticalGridSpacing
+            nextNearestGridLine = nearestGridLine - mScaleGridSpacingY
         ElseIf nearestGridLine < mPrevCursorY Then
-            nextNearestGridLine = nearestGridLine + mVerticalGridSpacing
+            nextNearestGridLine = nearestGridLine + mScaleGridSpacingY
         End If
         If Abs(mPrevCursorY - nextNearestGridLine) < Abs(mGridTextHeight) Then
             .ForeColor = vbWhite Xor .backColor
@@ -2307,15 +2272,15 @@ With mSurface
 '    If prevLineX < 1 Then prevLineX = 1
     .FillColor = vbYellow Xor .backColor
     .FillStyle = vbSolid
-    mSurface.Circle (prevLineX, mPrevCursorY), newPoint(0.8, 0, PositionDistance, PositionDistance).XAbsolute - mSurface.scaleLeft, vbYellow Xor .backColor
+    mSurface.Circle (prevLineX, mPrevCursorY), newPoint(0.8, 0, PositionDistance, PositionDistance).XAbsolute - mSurface.ScaleLeft, vbYellow Xor .backColor
     ''debug.print "UndrawPointer x=" & prevLineX & " y=" & mPrevCursorY
     .ForeColor = .backColor
     .CurrentX = YAxisPosition + 0.5
     .CurrentY = mPrevCursorY - mGridTextHeight / 2
     .FontTransparent = False
     mSurface.Print Format(mPrevCursorY, mYScaleSubFormatStr)
-    If mVerticalGridSpacing <> 0 Then
-        nearestGridLine = Fix((mPrevCursorY + mVerticalGridSpacing / 2) / mVerticalGridSpacing) * mVerticalGridSpacing
+    If mScaleGridSpacingY <> 0 Then
+        nearestGridLine = Fix((mPrevCursorY + mScaleGridSpacingY / 2) / mScaleGridSpacingY) * mScaleGridSpacingY
         If Abs(mPrevCursorY - nearestGridLine) < Abs(mGridTextHeight) Then
             .ForeColor = vbWhite Xor .backColor
             .CurrentX = YAxisPosition + 0.5
@@ -2324,9 +2289,9 @@ With mSurface
             mSurface.Print Format(nearestGridLine, mYScaleFormatStr)
         End If
         If nearestGridLine >= mPrevCursorY Then
-            nextNearestGridLine = nearestGridLine - mVerticalGridSpacing
+            nextNearestGridLine = nearestGridLine - mScaleGridSpacingY
         ElseIf nearestGridLine < mPrevCursorY Then
-            nextNearestGridLine = nearestGridLine + mVerticalGridSpacing
+            nextNearestGridLine = nearestGridLine + mScaleGridSpacingY
         End If
         If Abs(mPrevCursorY - nextNearestGridLine) < Abs(mGridTextHeight) Then
             .ForeColor = vbWhite Xor .backColor
