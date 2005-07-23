@@ -1343,8 +1343,8 @@ If mIntegerYScale Then
         mYScaleSubFormatStr = "0"
 Else
     If mScaleGridSpacingY < 1 Then
-        mYScaleFormatStr = "0." & String(Abs(exp), "0")
-        mYScaleSubFormatStr = "0." & String(Abs(exp - 2), "0")
+        mYScaleFormatStr = "0." & String(Abs(exp) + 1, "0")
+        mYScaleSubFormatStr = "0." & String(Abs(exp) + 2, "0")
     Else
         mYScaleFormatStr = "0.0"
         mYScaleSubFormatStr = "0.00"
