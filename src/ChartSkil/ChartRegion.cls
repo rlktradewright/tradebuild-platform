@@ -1323,6 +1323,11 @@ logSpacing = Log(gridSpacing) / log10
 exp = Fix(logSpacing)
 mantissa = Abs(logSpacing) - Abs(exp)
 
+If logSpacing < 0 Then
+    exp = exp - 1
+    mantissa = 1 - mantissa
+End If
+
 If mantissa >= Log(5) / log10 Then
     mScaleGridSpacingY = 5 * 10 ^ exp
 ElseIf mantissa >= Log(2.5) / log10 Then
