@@ -69,9 +69,9 @@ Begin VB.Form fTradeSkilDemo
       TabPicture(1)   =   "fTradeSkilDemo.frx":0031
       Tab(1).ControlEnabled=   0   'False
       Tab(1).Control(0)=   "Picture3"
-      Tab(1).Control(0).Enabled=   0   'False
       Tab(1).ControlCount=   1
       TabCaption(2)   =   "&3. Orders"
+      TabPicture(2)   =   "fTradeSkilDemo.frx":004D
       Tab(2).ControlEnabled=   0   'False
       Tab(2).Control(0)=   "OrderButton"
       Tab(2).Control(1)=   "CancelOrderButton"
@@ -80,38 +80,24 @@ Begin VB.Form fTradeSkilDemo
       Tab(2).Control(4)=   "ExecutionsList"
       Tab(2).ControlCount=   5
       TabCaption(3)   =   "&4. Replay tickfiles"
-      TabPicture(3)   =   "fTradeSkilDemo.frx":004D
+      TabPicture(3)   =   "fTradeSkilDemo.frx":0069
       Tab(3).ControlEnabled=   0   'False
       Tab(3).Control(0)=   "Label20"
-      Tab(3).Control(0).Enabled=   0   'False
       Tab(3).Control(1)=   "ReplayContractLabel"
-      Tab(3).Control(1).Enabled=   0   'False
       Tab(3).Control(2)=   "Label19"
-      Tab(3).Control(2).Enabled=   0   'False
       Tab(3).Control(3)=   "ReplayProgressLabel"
-      Tab(3).Control(3).Enabled=   0   'False
       Tab(3).Control(4)=   "ReplayProgressBar"
-      Tab(3).Control(4).Enabled=   0   'False
       Tab(3).Control(5)=   "ReplayMarketDepthCheck"
-      Tab(3).Control(5).Enabled=   0   'False
       Tab(3).Control(6)=   "RewriteCheck"
-      Tab(3).Control(6).Enabled=   0   'False
       Tab(3).Control(7)=   "ReplaySpeedCombo"
-      Tab(3).Control(7).Enabled=   0   'False
       Tab(3).Control(8)=   "TickfileList"
       Tab(3).Control(8).Enabled=   0   'False
       Tab(3).Control(9)=   "StopReplayButton"
-      Tab(3).Control(9).Enabled=   0   'False
       Tab(3).Control(10)=   "PauseReplayButton"
-      Tab(3).Control(10).Enabled=   0   'False
       Tab(3).Control(11)=   "ClearTickfileListButton"
-      Tab(3).Control(11).Enabled=   0   'False
       Tab(3).Control(12)=   "SelectTickfilesButton"
-      Tab(3).Control(12).Enabled=   0   'False
       Tab(3).Control(13)=   "PlayTickFileButton"
-      Tab(3).Control(13).Enabled=   0   'False
       Tab(3).Control(14)=   "SkipReplayButton"
-      Tab(3).Control(14).Enabled=   0   'False
       Tab(3).ControlCount=   15
       Begin VB.CommandButton SkipReplayButton 
          Caption         =   "S&kip"
@@ -182,9 +168,9 @@ Begin VB.Form fTradeSkilDemo
       End
       Begin VB.ComboBox ReplaySpeedCombo 
          Height          =   315
-         ItemData        =   "fTradeSkilDemo.frx":0069
+         ItemData        =   "fTradeSkilDemo.frx":0085
          Left            =   -73800
-         List            =   "fTradeSkilDemo.frx":0098
+         List            =   "fTradeSkilDemo.frx":00B4
          Style           =   2  'Dropdown List
          TabIndex        =   27
          ToolTipText     =   "Adjust tickfile replay speed"
@@ -216,6 +202,15 @@ Begin VB.Form fTradeSkilDemo
          TabIndex        =   74
          Top             =   360
          Width           =   13935
+         Begin VB.CommandButton FullChartButton 
+            Caption         =   "Full chart"
+            Enabled         =   0   'False
+            Height          =   495
+            Left            =   2880
+            TabIndex        =   93
+            Top             =   1680
+            Width           =   975
+         End
          Begin MSDataGridLib.DataGrid TickerGrid 
             Height          =   3735
             Left            =   3960
@@ -382,9 +377,9 @@ Begin VB.Form fTradeSkilDemo
                Begin VB.ComboBox TypeCombo 
                   Enabled         =   0   'False
                   Height          =   315
-                  ItemData        =   "fTradeSkilDemo.frx":013C
+                  ItemData        =   "fTradeSkilDemo.frx":0158
                   Left            =   1200
-                  List            =   "fTradeSkilDemo.frx":013E
+                  List            =   "fTradeSkilDemo.frx":015A
                   Style           =   2  'Dropdown List
                   TabIndex        =   9
                   Top             =   360
@@ -402,9 +397,9 @@ Begin VB.Form fTradeSkilDemo
                Begin VB.ComboBox RightCombo 
                   Enabled         =   0   'False
                   Height          =   315
-                  ItemData        =   "fTradeSkilDemo.frx":0140
+                  ItemData        =   "fTradeSkilDemo.frx":015C
                   Left            =   1200
-                  List            =   "fTradeSkilDemo.frx":0142
+                  List            =   "fTradeSkilDemo.frx":015E
                   Style           =   2  'Dropdown List
                   TabIndex        =   14
                   Top             =   2160
@@ -1265,6 +1260,8 @@ Set mTradeBuildAPI = New TradeBuildAPI
 Set TBContractInfoSP = New TBInfoBase.ContractInfoServiceProvider
 mTradeBuildAPI.ServiceProviders.Add TBContractInfoSP
 
+mTradeBuildAPI.ServiceProviders.Add New TBInfoBase.HistDataServiceProvider
+
 Set TBSQLDBTickfileSP = New TBInfoBase.TickfileServiceProvider
 mTradeBuildAPI.ServiceProviders.Add TBSQLDBTickfileSP
 
@@ -1365,7 +1362,7 @@ ExecutionsList.SortOrder = lvwDescending
 ReplaySpeedCombo.Text = "Actual speed"
 End Sub
 
-Private Sub Form_Unload(Cancel As Integer)
+Private Sub Form_Unload(cancel As Integer)
 Dim i As Integer
 Dim lTicker As Ticker
 
@@ -1395,8 +1392,8 @@ Private Sub ChartButton_Click()
 Dim tickerAppData As TickerApplicationData
 
 Set tickerAppData = mTicker.ApplicationData
-If Not tickerAppData.ChartForm Is Nothing Then
-    tickerAppData.ChartForm.Show vbModeless
+If Not tickerAppData.chartForm Is Nothing Then
+    tickerAppData.chartForm.Show vbModeless
 End If
 End Sub
 
@@ -1450,6 +1447,7 @@ OrderButton.Enabled = False
 StartTickerButton.Enabled = False
 StopTickerButton.Enabled = False
 GridChartButton.Enabled = False
+FullChartButton.Enabled = False
 GridMarketDepthButton.Enabled = False
 MarketDepthButton.Enabled = False
 ChartButton.Enabled = False
@@ -1493,6 +1491,26 @@ Private Sub ExpiryText_Change()
 checkOkToStartTicker
 End Sub
 
+Private Sub FullChartButton_Click()
+Dim Ticker As Ticker
+Dim bookmark As Variant
+Dim chartForm As fChart1
+
+For Each bookmark In TickerGrid.SelBookmarks
+    TickerGrid.bookmark = bookmark           ' select the row
+    TickerGrid.col = 0                       ' make the cell containing the key current
+    Set Ticker = mTickers(TickerGrid.Text)
+    Set chartForm = New fChart1
+    chartForm.minimumTicksHeight = 40
+    chartForm.InitialNumberOfBars = 200
+    chartForm.barLength = 5
+    chartForm.Ticker = Ticker
+    chartForm.Visible = True
+Next
+
+
+End Sub
+
 Private Sub GridChartButton_Click()
 Dim Ticker As Ticker
 Dim tickerAppData As TickerApplicationData
@@ -1503,8 +1521,8 @@ For Each bookmark In TickerGrid.SelBookmarks
     TickerGrid.col = 0                       ' make the cell containing the key current
     Set Ticker = mTickers(TickerGrid.Text)
     Set tickerAppData = Ticker.ApplicationData
-    If Not tickerAppData.ChartForm Is Nothing Then
-        tickerAppData.ChartForm.Show vbModeless
+    If Not tickerAppData.chartForm Is Nothing Then
+        tickerAppData.chartForm.Show vbModeless
     End If
 Next
 
@@ -1752,7 +1770,7 @@ writeStatusMessage "Ticker grid error " & DataError & ": " & TickerGrid.ErrorTex
 Response = 0    ' prevents the grid displaying an error message
 End Sub
 
-Private Sub TickerGrid_SelChange(Cancel As Integer)
+Private Sub TickerGrid_SelChange(cancel As Integer)
 Dim Ticker As Ticker
 Dim bookmark As Variant
 Dim tickerAppData As TickerApplicationData
@@ -1760,11 +1778,13 @@ Dim tickerAppData As TickerApplicationData
 If TickerGrid.SelStartCol <> -1 Then
     StopTickerButton.Enabled = False
     GridChartButton.Enabled = False
+    FullChartButton.Enabled = False
     GridMarketDepthButton.Enabled = False
 Else
     ' the user has clicked on the record selectors
     StopTickerButton.Enabled = True
     GridChartButton.Enabled = True
+    FullChartButton.Enabled = True
     
     If TickerGrid.SelBookmarks.Count = 1 Then
         
@@ -1775,6 +1795,7 @@ Else
         
         If tickerAppData Is Nothing Then
             GridChartButton.Enabled = False
+            FullChartButton.Enabled = False
             MarketDepthButton.Enabled = False
             GridMarketDepthButton.Enabled = False
         Else
@@ -1785,7 +1806,7 @@ Else
                 MarketDepthButton.Enabled = False
                 GridMarketDepthButton.Enabled = False
             End If
-            If Not tickerAppData.ChartForm Is Nothing Then
+            If Not tickerAppData.chartForm Is Nothing Then
                 ChartButton.Enabled = True
             End If
         End If
@@ -2213,13 +2234,13 @@ If pTicker.ApplicationData Is Nothing Then
     Set tickerAppData.TickerProxy = pTicker.Proxy
 End If
 
-Set tickerAppData.ChartForm = New fChart
-tickerAppData.ChartForm.Contract = pTicker.Contract
-tickerAppData.ChartForm.minimumTicksHeight = 40
-tickerAppData.ChartForm.barLength = 1
-tickerAppData.ChartForm.Visible = False
+Set tickerAppData.chartForm = New fChart
+tickerAppData.chartForm.Contract = pTicker.Contract
+tickerAppData.chartForm.minimumTicksHeight = 40
+tickerAppData.chartForm.barLength = 1
+tickerAppData.chartForm.Visible = False
 
-tickerAppData.ChartListenerKey = pTicker.AddListener(tickerAppData.ChartForm, _
+tickerAppData.ChartListenerKey = pTicker.AddListener(tickerAppData.chartForm, _
                                                 TradeBuildListenValueTypes.ValueTypeTradeBuildTrade)
 
 ' NB: the market depth form isn't created until the
@@ -2237,6 +2258,7 @@ Private Sub mTickers_TickerRemoved(ByVal pTicker As Ticker)
 StopTickerButton.Enabled = False
 MarketDepthButton.Enabled = False
 GridChartButton.Enabled = False
+FullChartButton.Enabled = False
 GridMarketDepthButton.Enabled = False
 
 If pTicker Is mTicker Then clearTickerFields
@@ -2344,6 +2366,7 @@ OrderButton.Enabled = False
 StartTickerButton.Enabled = False
 StopTickerButton.Enabled = False
 GridChartButton.Enabled = False
+FullChartButton.Enabled = False
 GridMarketDepthButton.Enabled = False
 MarketDepthButton.Enabled = False
 ChartButton.Enabled = False
@@ -2614,9 +2637,9 @@ If Not tickerAppData.MarketDepthForm Is Nothing Then
     Unload tickerAppData.MarketDepthForm
     Set tickerAppData.MarketDepthForm = Nothing
 End If
-If Not tickerAppData.ChartForm Is Nothing Then
-    Unload tickerAppData.ChartForm
-    Set tickerAppData.ChartForm = Nothing
+If Not tickerAppData.chartForm Is Nothing Then
+    Unload tickerAppData.chartForm
+    Set tickerAppData.chartForm = Nothing
     pTicker.RemoveListener tickerAppData.ChartListenerKey
 End If
 pTicker.ApplicationData = Nothing
