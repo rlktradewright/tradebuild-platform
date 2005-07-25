@@ -8,8 +8,8 @@ Option Explicit
 Public Const NegativeTicks As Byte = &H80
 Public Const NoTimestamp As Byte = &H40
 
+Public Const OneMicrosecond As Double = 1# / 86400000000#
 Public Const OneMinute As Double = 1# / 1440#
-Public Const FiftyNineSeconds As Double = 59# / 86400#
 
 Public Const OperationBits As Byte = &H60
 Public Const OperationShifter As Byte = &H20
@@ -39,13 +39,13 @@ End Enum
 Public Enum TickTypes
     Bid
     Ask
-    closePrice
-    highPrice
-    lowPrice
+    ClosePrice
+    HighPrice
+    LowPrice
     marketDepth
     MarketDepthReset
     Trade
-    volume
+    Volume
 End Enum
 
 '================================================================================
@@ -67,7 +67,8 @@ gSQLDBCapabilities = _
             TickfileServiceProviderCapabilities.RecordMarketDepth Or _
             TickfileServiceProviderCapabilities.Replay Or _
             TickfileServiceProviderCapabilities.ReplayMarketDepth Or _
-            TickfileServiceProviderCapabilities.PositionExact
+            TickfileServiceProviderCapabilities.PositionExact Or _
+            TickfileServiceProviderCapabilities.SaveContractInformation
 End Function
 
 Public Function gSQLDBSupports(ByVal capabilities As Long) As Boolean
@@ -109,3 +110,10 @@ Case SecTypeIndex
 End Select
 End Function
 
+Public Function gTruncateTimeToNextMinute(ByVal timestamp As Date) As Date
+gTruncateTimeToNextMinute = Int((timestamp + OneMinute - OneMicrosecond) / OneMinute) * OneMinute
+End Function
+
+Public Function gTruncateTimeToMinute(ByVal timestamp As Date) As Date
+gTruncateTimeToMinute = Int((timestamp + OneMicrosecond) / OneMinute) * OneMinute
+End Function

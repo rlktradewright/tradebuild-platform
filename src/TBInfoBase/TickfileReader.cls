@@ -210,8 +210,8 @@ With mInputTickfileSpecifier
                                 sessionEnd
     Else
         mTickReader.FetchData TickfileFormatTradeBuildSQL, _
-                                Int(.From / OneMinute) * OneMinute, _
-                                Int((.To + FiftyNineSeconds) / OneMinute) * OneMinute
+                                gTruncateTimeToMinute(.From), _
+                                gTruncateTimeToNextMinute(.To)
     End If
 End With
 mServiceConsumer.Ready mInputTickfileSpecifier, 0
@@ -257,7 +257,12 @@ With mInputTickfileSpecifier.ContractSpecifier
                                 .Right, _
                                 .LocalSymbol)
 End With
-Debug.Assert Not mInstrument Is Nothing
+ 
+If mInstrument Is Nothing Then
+    mServiceConsumer.Error StandardSPErrorCodes.TFContractSpecifierInvalid, _
+                            "The specified contract does not exist"
+    Exit Property
+End If
 
 Set mTickReader = mInstrument.CreateTickDataAccessor
 
@@ -439,6 +444,7 @@ Do
     If mDataIndex > UBound(mData) Then
         If mTickReader.ReadData(mPeriodStartTime, mBasePrice, mData) Then
             mDataIndex = 0
+            mCurrentTimestamp = mPeriodStartTime
         Else
             mDataIndex = -1
             Erase mData

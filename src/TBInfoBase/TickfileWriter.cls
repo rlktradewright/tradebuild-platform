@@ -302,13 +302,15 @@ End Property
 '================================================================================
 
 Private Sub CheckIfNewPeriod(ByVal timestamp As Date)
-If timestamp - mOpeningTimestamp < OneMinute Then Exit Sub
+Dim barTime As Date
+barTime = gTruncateTimeToMinute(timestamp)
+If barTime = mOpeningTimestamp Then Exit Sub
 
 WritePeriodData
 
 ReDim mData(8191) As Byte
 mDataIndex = 0
-mOpeningTimestamp = Int(timestamp / OneMinute) * OneMinute
+mOpeningTimestamp = barTime
 mTimestamp = mOpeningTimestamp
 mBasePrice = 0#
 End Sub
