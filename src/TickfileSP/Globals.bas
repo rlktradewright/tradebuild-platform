@@ -107,11 +107,11 @@ End Enum
 
 Public Enum TickTypes
     Bid = 1
-    BidSize
+    bidSize
     Ask
     AskSize
     Last
-    LastSize
+    lastSize
     High
     Low
     PrevClose
@@ -127,10 +127,10 @@ Public Enum ESignalTickFileFields
     TimestampDate
     TimestampTime
     lastPrice
-    LastSize
+    lastSize
     bidPrice = lastPrice
     AskPrice
-    BidSize
+    bidSize
     AskSize
 End Enum
 
@@ -171,7 +171,8 @@ gCapabilitiesTradeBuildV4 = _
             TickfileServiceProviderCapabilities.RecordMarketDepth Or _
             TickfileServiceProviderCapabilities.Replay Or _
             TickfileServiceProviderCapabilities.ReplayMarketDepth Or _
-            TickfileServiceProviderCapabilities.ReportReplayProgress
+            TickfileServiceProviderCapabilities.ReportReplayProgress Or _
+            TickfileServiceProviderCapabilities.SaveContractInformation
 End Function
 
 Public Function gFormatSpecifiersToString( _
