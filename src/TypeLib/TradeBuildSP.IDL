@@ -166,6 +166,9 @@ library TradeBuildSP
 	[helpstring("Trying again to connect to the tickfile's data source")]
     	TFRetryConnectDataSource = 2008,
 
+	[helpstring("The contract specifier in the tickfile specifier does not refer to a valid contract")]
+    	TFContractSpecifierInvalid = 2009,
+
 	[helpstring("Unable to connect to the contract data source")]
     	CICantConnectDataSource = 2100,
 
@@ -202,7 +205,8 @@ library TradeBuildSP
         Replay = 4,
         PositionExact = 8,
         ReplayMarketDepth = 16,
-	ReportReplayProgress = 32
+	ReportReplayProgress = 32,
+	SaveContractInformation = 64
     } TickfileServiceProviderCapabilities;
 
     typedef [uuid(0EB43BAD-8A73-4B1E-B9A3-B87E89583CC9), 
