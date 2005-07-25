@@ -120,6 +120,10 @@ Set mTradeBars = New Bars
 mTradeBars.barType = TradeBuild.BarTypes.BarTypeTrade
 End Sub
 
+Private Sub Class_Terminate()
+Debug.Print "Timeframe terminated (" & mBarLengthMinutes & " mins)"
+End Sub
+
 '================================================================================
 ' IBarDataConsumer Interface Members
 '================================================================================
@@ -289,7 +293,7 @@ If mNumberOfBarsToFetch <> 0 Then
     barSpecifier.barType = BarTypes.BarTypeTrade
     Set barSpecifier.contractSpecifier = mContract.specifier
     barSpecifier.From = CDate("1 Jan 1970")
-    barSpecifier.To = Now + mBarLengthMinutes / 1440    ' ensure we get the latest bar
+    barSpecifier.To = mTicker.Timestamp + mBarLengthMinutes / 1440     ' ensure we get the latest bar
     barSpecifier.NumberOfBars = mNumberOfBarsToFetch
     mBarReader.FetchBars barSpecifier
     ' other bar types ????????????????????????????????????????
@@ -353,69 +357,26 @@ End Property
 '================================================================================
 
 Friend Sub Finish()
-Reinitialise
+Clear
 Set mTicker = Nothing
 End Sub
 
 Friend Sub Reinitialise()
 
-If Not mHistoricBarTimer Is Nothing Then
-    mHistoricBarTimer.StopTimer
-    Set mHistoricBarTimer = Nothing
-End If
+Clear
 
-If Not mWriteTimer Is Nothing Then
-    mWriteTimer.StopTimer
-    Set mWriteTimer = Nothing
-End If
-
-If Not mBarWriter Is Nothing Then
-    WriteBars
-    mBarWriter.ReleaseDataStore
-    Set mBarWriter = Nothing
-End If
-
-If Not mBarReader Is Nothing Then
-    mBarReader.ReleaseDataStore
-    Set mBarReader = Nothing
-End If
-
-If mTradeListenerKey <> "" Then
-    mTicker.RemoveListener mTradeListenerKey
-End If
-If mVolumeListenerKey <> "" Then
-    mTicker.RemoveListener mVolumeListenerKey
-End If
-If mIncludeBidAndAsk Then
-    If mBidListenerKey <> "" Then
-        mTicker.RemoveListener mBidListenerKey
-    End If
-    If mAskListenerKey <> "" Then
-        mTicker.RemoveListener mAskListenerKey
-    End If
-End If
-
-Set mTradeBars = Nothing
 Set mTradeBars = New Bars
 mTradeBars.barType = TradeBuild.BarTypes.BarTypeTrade
 mTradeBars.barLength = mBarLengthMinutes
 
 If mIncludeBidAndAsk Then
-    Set mAskBars = Nothing
     Set mAskBars = New Bars
     mAskBars.barType = TradeBuild.BarTypes.BarTypeAsk
     mAskBars.barLength = mBarLengthMinutes
-    Set mBidBars = Nothing
     Set mBidBars = New Bars
     mBidBars.barType = TradeBuild.BarTypes.BarTypeBid
     mBidBars.barLength = mBarLengthMinutes
 End If
-
-Set mTradeBar = Nothing
-Set mAskBar = Nothing
-Set mBidBar = Nothing
-
-Set mContract = Nothing
 
 End Sub
 
@@ -489,6 +450,58 @@ If mIncludeBidAndAsk Then
 End If
 End Sub
 
+Private Sub Clear()
+If Not mHistoricBarTimer Is Nothing Then
+    mHistoricBarTimer.StopTimer
+    Set mHistoricBarTimer = Nothing
+End If
+
+If Not mWriteTimer Is Nothing Then
+    mWriteTimer.StopTimer
+    Set mWriteTimer = Nothing
+End If
+
+If Not mBarWriter Is Nothing Then
+    WriteBars
+    mBarWriter.ReleaseDataStore
+    Set mBarWriter = Nothing
+End If
+
+If Not mBarReader Is Nothing Then
+    mBarReader.ReleaseDataStore
+    Set mBarReader = Nothing
+End If
+
+If mTradeListenerKey <> "" Then
+    mTicker.RemoveListener mTradeListenerKey
+    mTradeListenerKey = ""
+End If
+If mVolumeListenerKey <> "" Then
+    mTicker.RemoveListener mVolumeListenerKey
+    mVolumeListenerKey = ""
+End If
+If mIncludeBidAndAsk Then
+    If mBidListenerKey <> "" Then
+        mTicker.RemoveListener mBidListenerKey
+        mBidListenerKey = ""
+    End If
+    If mAskListenerKey <> "" Then
+        mTicker.RemoveListener mAskListenerKey
+        mAskListenerKey = ""
+    End If
+End If
+
+Set mTradeBars = Nothing
+Set mAskBars = Nothing
+Set mBidBars = Nothing
+Set mTradeBar = Nothing
+Set mAskBar = Nothing
+Set mBidBar = Nothing
+
+Set mContract = Nothing
+
+End Sub
+
 Private Sub FetchHistoricBars()
 
 If Not mHistoricBarPending Then
@@ -497,7 +510,7 @@ If Not mHistoricBarPending Then
     mHistReceivingSynchronously = False
 End If
 
-Do While mHistoricBarPending
+Do While mHistoricBarPending And (Not mBarReader Is Nothing)
     ProcessHistoricBar
 
     mHistReceivingSynchronously = True
@@ -513,7 +526,7 @@ Private Sub ListenToTicker()
 mTradeListenerKey = mTicker.AddListener( _
                             Me, _
                             TradeBuildListenValueTypes.ValueTypeTradeBuildTrade)
-mTradeListenerKey = mTicker.AddListener( _
+mVolumeListenerKey = mTicker.AddListener( _
                             Me, _
                             TradeBuildListenValueTypes.ValueTypeTradeBuildVolume)
 If mIncludeBidAndAsk Then

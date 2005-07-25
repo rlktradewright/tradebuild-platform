@@ -37,7 +37,7 @@ Implements TradeBuildSP.ITickfileInputServiceConsumer
 '================================================================================
 
 Event errorMessage( _
-                ByVal Timestamp As Date, _
+                ByVal timestamp As Date, _
                 ByVal id As Long, _
                 ByVal errorCode As ApiErrorCodes, _
                 ByVal errorMsg As String)
@@ -49,7 +49,7 @@ Event QueryReplayNextTickfile( _
                 ByVal pContract As Contract, _
                 ByRef continueMode As ReplayContinueModes)
 
-Event ReplayCompleted(ByVal Timestamp As Date)
+Event ReplayCompleted(ByVal timestamp As Date)
     ' Raised when all tick files have been processed or
     ' stopReplay has been called
 
@@ -177,6 +177,13 @@ Case TradeBuildSP.StandardSPErrorCodes.TFRetryConnectDataSource
     ' don't need to move on to next tickfile - the user can do
     ' that if they want to, or they can fix the reason for
     ' failing to connect (eg start the data source software)
+Case TradeBuildSP.StandardSPErrorCodes.TFContractSpecifierInvalid
+    RaiseEvent errorMessage(gCurrentTime, _
+                    NoValidID, _
+                    ApiErrorCodes.ContractSpecifierInvalid, _
+                    "The specified contract does not exist: " & _
+                    gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex)))
+    Set mReader = Nothing
 Case Else
     gTradeBuildAPI.SetServiceProviderError errorCode, _
                         errorMessage, _
@@ -190,11 +197,11 @@ Private Sub ITickfileInputServiceConsumer_Ready( _
                             ByVal TickfileSizeBytes As Long)
 
 Dim tfSpec As TradeBuild.TickfileSpecifier
-Dim contractSpec As TradeBuild.contractSpecifier
+Dim contractSpec As TradeBuild.ContractSpecifier
 
 With tfSpec
-    Set .contractSpecifier = tickfileSpec.contractSpecifier
-    .Filename = tickfileSpec.Filename
+    Set .ContractSpecifier = tickfileSpec.ContractSpecifier
+    .filename = tickfileSpec.filename
     .From = tickfileSpec.From
     .TickfileFormatID = tickfileSpec.TickfileFormatID
     .To = tickfileSpec.To
@@ -203,8 +210,8 @@ End With
 ' we now determine a contract specifier with which we'll query the
 ' contract info service providers to get the canonical contract definition
 If mReader.Contract Is Nothing Then
-    If mReader.contractSpecifier Is Nothing And _
-        tfSpec.contractSpecifier Is Nothing _
+    If mReader.ContractSpecifier Is Nothing And _
+        tfSpec.ContractSpecifier Is Nothing _
     Then
         If mContract Is Nothing Then
             ' we have no way to determine what the contract is
@@ -223,14 +230,14 @@ If mReader.Contract Is Nothing Then
             Exit Sub
         End If
     Else
-        If Not mReader.contractSpecifier Is Nothing Then
-            Set contractSpec = mReader.contractSpecifier
+        If Not mReader.ContractSpecifier Is Nothing Then
+            Set contractSpec = mReader.ContractSpecifier
         Else
-            Set contractSpec = tfSpec.contractSpecifier
+            Set contractSpec = tfSpec.ContractSpecifier
         End If
     End If
 Else
-    Set contractSpec = mReader.contractSpecifier
+    Set contractSpec = mReader.ContractSpecifier
 End If
 
 'now query the Contract Details service provider(s) to see if we can
@@ -244,11 +251,11 @@ FinishTickfile
 End Sub
 
 Private Sub ITickfileInputServiceConsumer_ReplayProgress( _
-                            ByVal Timestamp As Date, _
+                            ByVal timestamp As Date, _
                             ByVal eventsPlayed As Long, _
                             ByVal percentComplete As Single)
 mReader.percentComplete = percentComplete
-RaiseEvent ReplayProgress(Timestamp, _
+RaiseEvent ReplayProgress(timestamp, _
                             eventsPlayed, _
                             percentComplete)
 End Sub

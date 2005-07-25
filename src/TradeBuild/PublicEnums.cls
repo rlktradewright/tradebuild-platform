@@ -341,6 +341,7 @@ Public Enum ApiErrorCodes
     RetryingConnectionToTickfileDataSource
     CantConnectHistoricDataSource
     RetryingConnectionToHistoricDataSource
+    ContractSpecifierInvalid
                             
 End Enum
 
@@ -553,7 +554,7 @@ Public Enum TickTypes
     Low = &H10&
     PrevClose = &H20&
     Volume = &H40&
-    OpenInterest = &H80&
+    openInterest = &H80&
     marketDepth = &H100&
     MarketDepthL2 = &H200&
     MarketDepthReset = &H400&
