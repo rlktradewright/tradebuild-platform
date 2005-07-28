@@ -1,14 +1,28 @@
 VERSION 5.00
+Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
 Begin VB.UserControl Chart 
    Alignable       =   -1  'True
    AutoRedraw      =   -1  'True
    BackColor       =   &H00FFFFFF&
-   ClientHeight    =   7335
+   ClientHeight    =   7575
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   9390
-   ScaleHeight     =   7335
+   ScaleHeight     =   7575
    ScaleWidth      =   9390
+   Begin MSComCtl2.FlatScrollBar HScroll 
+      Height          =   255
+      Left            =   0
+      TabIndex        =   4
+      Top             =   7320
+      Width           =   9375
+      _ExtentX        =   16536
+      _ExtentY        =   450
+      _Version        =   393216
+      Appearance      =   2
+      Arrows          =   65536
+      Orientation     =   1245185
+   End
    Begin VB.PictureBox YBorderPicture 
       Height          =   6375
       Left            =   8400
@@ -34,7 +48,6 @@ Begin VB.UserControl Chart
       Width           =   8415
    End
    Begin VB.PictureBox XAxisPicture 
-      Align           =   2  'Align Bottom
       AutoRedraw      =   -1  'True
       BackColor       =   &H00FFFFFF&
       Height          =   375
@@ -127,6 +140,8 @@ Private mLeftDragStartPosnY As Single
 
 Private mAllowHorizontalMouseScrolling As Boolean
 Private mAllowVerticalMouseScrolling As Boolean
+
+Private mShowHorizontalScrollBar As Boolean
 
 '================================================================================
 ' Enums
@@ -237,6 +252,8 @@ resizeX
 mAllowHorizontalMouseScrolling = True
 mAllowVerticalMouseScrolling = True
 
+HScroll.Height = 0
+
 End Sub
 
 Private Sub UserControl_Paint()
@@ -252,6 +269,10 @@ Static resizeCount As Long
 resizeCount = resizeCount + 1
 'debug.print "Control_resize: count = " & resizeCount
 mNotFirstMouseMove = False
+HScroll.top = UserControl.Height - HScroll.Height
+HScroll.Width = UserControl.Width
+XAxisPicture.top = HScroll.top - XAxisPicture.Height
+XAxisPicture.Width = UserControl.Width
 resizeX
 resizeY
 paintAll
@@ -325,6 +346,14 @@ Private Sub ChartRegionPicture_MouseUp( _
                             X As Single, _
                             Y As Single)
 If Button = vbLeftButton Then mLeftDragging = False
+End Sub
+
+'================================================================================
+' HScroll Event Handlers
+'================================================================================
+
+Private Sub HScroll_Change()
+scrollX HScroll.value - lastVisiblePeriod
 End Sub
 
 '================================================================================
@@ -453,14 +482,6 @@ Public Property Let lastVisiblePeriod(ByVal value As Long)
 scrollX value - mYAxisPosition + 1
 End Property
 
-Public Property Get showGrid() As Boolean
-showGrid = mShowGrid
-End Property
-
-Public Property Let showGrid(ByVal val As Boolean)
-mShowGrid = val
-End Property
-
 Public Property Get showCrosshairs() As Boolean
 showCrosshairs = mShowCrosshairs
 End Property
@@ -473,6 +494,28 @@ For i = 0 To mRegionsIndex
     Set region = mRegions(i).region
     region.showCrosshairs = val
 Next
+End Property
+
+Public Property Get showGrid() As Boolean
+showGrid = mShowGrid
+End Property
+
+Public Property Let showGrid(ByVal val As Boolean)
+mShowGrid = val
+End Property
+
+Public Property Get showHorizontalScrollBar() As Boolean
+showHorizontalScrollBar = mShowHorizontalScrollBar
+End Property
+
+Public Property Let showHorizontalScrollBar(ByVal val As Boolean)
+mShowHorizontalScrollBar = val
+If mShowHorizontalScrollBar Then
+    HScroll.Height = 255
+Else
+    HScroll.Height = 0
+End If
+resizeY
 End Property
 
 Public Property Get suppressDrawing() As Boolean
@@ -497,6 +540,7 @@ End Property
 Public Property Let twipsPerBar(ByVal val As Long)
 mTwipsPerBar = val
 resizeX
+setHorizontalScrollBar
 paintAll
 End Property
 
@@ -578,7 +622,7 @@ For i = 0 To mRegionsIndex
     Set region = mRegions(i).region
     region.addPeriod mCurrentPeriodNumber
 Next
-
+setHorizontalScrollBar
 End Function
 
 Public Function refresh()
@@ -706,8 +750,21 @@ For i = 0 To mRegionsIndex
     Set region = mRegions(i).region
     region.periodsInView mScaleLeft, mYAxisPosition - 1
 Next
-'mPrevCursorX = mYAxisPosition - 1
+setHorizontalScrollBar
 paintAll
+End Sub
+
+Private Sub setHorizontalScrollBar()
+HScroll.Max = IIf(lastVisiblePeriod > mCurrentPeriodNumber, lastVisiblePeriod, mCurrentPeriodNumber)
+HScroll.Min = IIf(lastVisiblePeriod < (chartWidth - 1), lastVisiblePeriod, chartWidth - 1)
+If HScroll.Max = HScroll.Min Then HScroll.Min = HScroll.Min - 1
+HScroll.value = lastVisiblePeriod
+HScroll.SmallChange = 1
+If chartWidth > (HScroll.Max - HScroll.Min) Then
+    HScroll.LargeChange = HScroll.Max - HScroll.Min
+Else
+    HScroll.LargeChange = chartWidth
+End If
 End Sub
 
 Private Function sizeRegions() As Boolean
