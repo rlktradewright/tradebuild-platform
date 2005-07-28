@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{DBED8E43-5960-49DE-B9A7-BBC22DB93A26}#2.0#0"; "ChartSkil.ocx"
+Object = "{DBED8E43-5960-49DE-B9A7-BBC22DB93A26}#4.0#0"; "ChartSkil.ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
 Begin VB.Form ChartForm 
@@ -25,7 +25,6 @@ Begin VB.Form ChartForm
       Orientation     =   1245185
    End
    Begin VB.PictureBox BasePicture 
-      Align           =   2  'Align Bottom
       Appearance      =   0  'Flat
       BorderStyle     =   0  'None
       ForeColor       =   &H80000008&
@@ -599,11 +598,17 @@ mMACD.SignalPeriods = 5
 End Sub
 
 Private Sub Form_Resize()
+Dim newChartHeight As Single
 ' Adjust the chart control's height. No need to worry about the width as the form
 ' itself notifies the control of width changes because the control has align=vbAlignTop
+BasePicture.Top = Me.ScaleHeight - BasePicture.Height
+BasePicture.Width = Me.ScaleWidth
 HScroll.Top = BasePicture.Top - HScroll.Height
 HScroll.Width = BasePicture.Width
-Chart1.Height = HScroll.Top - Chart1.Top
+newChartHeight = HScroll.Top - Chart1.Top
+If Chart1.Height <> newChartHeight Then
+    Chart1.Height = newChartHeight
+End If
 End Sub
 
 '================================================================================
