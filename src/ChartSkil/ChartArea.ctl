@@ -123,8 +123,10 @@ Private mCurrentTool As ToolTypes
 Private mLeftDragging As Boolean    ' set when the mouse is being dragged with
                                     ' the left button depressed
 Private mLeftDragStartPosnX As Long
+Private mLeftDragStartPosnY As Single
 
 Private mAllowHorizontalMouseScrolling As Boolean
+Private mAllowVerticalMouseScrolling As Boolean
 
 '================================================================================
 ' Enums
@@ -233,6 +235,7 @@ mYAxisWidthCm = 1.5
 resizeX
 
 mAllowHorizontalMouseScrolling = True
+mAllowVerticalMouseScrolling = True
 
 End Sub
 
@@ -264,16 +267,17 @@ End Sub
 '================================================================================
 
 Private Sub ChartRegionPicture_MouseDown( _
-                            Index As Integer, _
+                            index As Integer, _
                             Button As Integer, _
                             Shift As Integer, _
                             X As Single, _
                             Y As Single)
 If Button = vbLeftButton Then mLeftDragging = True
 mLeftDragStartPosnX = Int(X)
+mLeftDragStartPosnY = Y
 End Sub
 
-Private Sub ChartRegionPicture_MouseMove(Index As Integer, _
+Private Sub ChartRegionPicture_MouseMove(index As Integer, _
                                 Button As Integer, _
                                 Shift As Integer, _
                                 X As Single, _
@@ -286,12 +290,23 @@ If mLeftDragging = True Then
     If mAllowHorizontalMouseScrolling Then
         ' the chart needs to be scrolled so that current mouse position
         ' is the value contained in mLeftDragStartPosnX
-        scrollX mLeftDragStartPosnX - Int(X)
+        If mLeftDragStartPosnX <> Int(X) Then
+            scrollX mLeftDragStartPosnX - Int(X)
+        End If
+    End If
+    If mAllowVerticalMouseScrolling Then
+        If mLeftDragStartPosnY <> Y Then
+            With mRegions(index - 1).region
+                If Not .autoscale Then
+                    .scrollVertical mLeftDragStartPosnY - Y
+                End If
+            End With
+        End If
     End If
 Else
     For i = 0 To mRegionsIndex
         Set region = mRegions(i).region
-        If i = Index - 1 Then
+        If i = index - 1 Then
             'debug.print "Mousemove: index=" & index & " region=" & i & " x=" & x & " y=" & y
             region.MouseMove Button, Shift, X, Y
         Else
@@ -304,7 +319,7 @@ End If
 End Sub
 
 Private Sub ChartRegionPicture_MouseUp( _
-                            Index As Integer, _
+                            index As Integer, _
                             Button As Integer, _
                             Shift As Integer, _
                             X As Single, _
@@ -327,6 +342,15 @@ End Property
 Public Property Let allowHorizontalMouseScrolling(ByVal value As Boolean)
 mAllowHorizontalMouseScrolling = value
 PropertyChanged "allowHorizontalMouseScrolling"
+End Property
+
+Public Property Get allowVerticalMouseScrolling() As Boolean
+allowVerticalMouseScrolling = mAllowVerticalMouseScrolling
+End Property
+
+Public Property Let allowVerticalMouseScrolling(ByVal value As Boolean)
+mAllowVerticalMouseScrolling = value
+PropertyChanged "allowVerticalMouseScrolling"
 End Property
 
 Public Property Get autoscale() As Boolean

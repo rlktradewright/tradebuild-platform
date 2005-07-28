@@ -842,7 +842,7 @@ regionTop = mSurface.ScaleTop
 End Property
 
 Friend Property Let regionTop(ByVal value As Single)
-mSurface.ScaleHeight = -(value - (mSurface.ScaleTop + mSurface.ScaleHeight))
+mRegionRect.bottom = mRegionRect.bottom + value - mRegionRect.top
 mSurface.ScaleTop = value
 mRegionRect.top = value
 End Property
@@ -1492,6 +1492,24 @@ If gaugeY <> mGaugeY Then
 End If
 If Not mSuppressDrawing Then
     determineVisibleObjects gaugeChanged
+    paintRegion
+End If
+End Sub
+
+Public Sub scrollVertical(ByVal amount As Single)
+mAutoscale = False
+regionTop = regionTop + amount
+If Not mSuppressDrawing Then
+    determineVisibleObjects False
+    paintRegion
+End If
+End Sub
+
+Public Sub scrollVerticalProportion(ByVal proportion As Single)
+mAutoscale = False
+regionTop = regionTop - proportion * mSurface.ScaleHeight
+If Not mSuppressDrawing Then
+    determineVisibleObjects False
     paintRegion
 End If
 End Sub
