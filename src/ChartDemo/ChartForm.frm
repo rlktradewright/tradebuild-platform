@@ -1,7 +1,6 @@
 VERSION 5.00
 Object = "{DBED8E43-5960-49DE-B9A7-BBC22DB93A26}#4.0#0"; "ChartSkil.ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo"
    ClientHeight    =   8355
@@ -11,19 +10,6 @@ Begin VB.Form ChartForm
    LinkTopic       =   "Form1"
    ScaleHeight     =   8355
    ScaleWidth      =   12015
-   Begin MSComCtl2.FlatScrollBar HScroll 
-      Height          =   255
-      Left            =   0
-      TabIndex        =   14
-      Top             =   6600
-      Width           =   11895
-      _ExtentX        =   20981
-      _ExtentY        =   450
-      _Version        =   393216
-      Appearance      =   2
-      Arrows          =   65536
-      Orientation     =   1245185
-   End
    Begin VB.PictureBox BasePicture 
       Appearance      =   0  'Flat
       BorderStyle     =   0  'None
@@ -579,6 +565,14 @@ Chart1.twipsPerBar = 150            ' specifies the space between bars - there a
 Chart1.suppressDrawing = True       ' tells the chart not to draw anything. This is
                                     ' useful when loading bulk data into the chart
                                     ' as it speeds the loading process considerably
+Chart1.showHorizontalScrollBar = True
+                                    ' show a horizontal scrollbar for navigating back
+                                    ' and forth in the chart
+Chart1.allowHorizontalMouseScrolling = True
+                                    ' alternatively the user can scroll by dragging the
+                                    ' mouse both horizontally...
+Chart1.allowVerticalMouseScrolling = True
+                                    ' ... and vertically
 
 ' create the moving average objects
 Set mMA1 = New ExponentialMovingAverage
@@ -603,9 +597,7 @@ Dim newChartHeight As Single
 ' itself notifies the control of width changes because the control has align=vbAlignTop
 BasePicture.Top = Me.ScaleHeight - BasePicture.Height
 BasePicture.Width = Me.ScaleWidth
-HScroll.Top = BasePicture.Top - HScroll.Height
-HScroll.Width = BasePicture.Width
-newChartHeight = HScroll.Top - Chart1.Top
+newChartHeight = BasePicture.Top - Chart1.Top
 If Chart1.Height <> newChartHeight Then
     Chart1.Height = newChartHeight
 End If
@@ -618,10 +610,6 @@ End Sub
 '================================================================================
 ' Control Event Handlers
 '================================================================================
-
-Private Sub HScroll_Change()
-Chart1.scrollX HScroll.value - Chart1.lastVisiblePeriod
-End Sub
 
 Private Sub LoadButton_Click()
 Dim aFont As StdFont
@@ -779,7 +767,7 @@ mMovAvg3Series.lineThickness = 3        ' ...3 pixels thick
 ' Create a region to display the MACD study
 Set mMACDRegion = Chart1.addChartRegion(20)
                                         ' use 20 percent of the space for this region
-mMACDRegion.gridlineSpacingY = 0.5    ' the horizontal grid lines should be about
+mMACDRegion.gridlineSpacingY = 0.8    ' the horizontal grid lines should be about
                                         ' 5 millimeters apart
 mMACDRegion.setTitle "MACD (12, 24, 5)", vbBlue, Nothing
 
@@ -865,9 +853,6 @@ extendedLine.point2 = mPriceRegion.newPoint(mPeriod.periodNumber - 5, mBarSeries
 ' Position the chart so that the latest period is at the right hand end
 Chart1.lastVisiblePeriod = mPeriod.periodNumber
 
-' set the scroll bars
-setHorizontalScrollBar
-
 ' Now tell the chart to draw itself. Note that this makes it draw every visible object.
 Chart1.suppressDrawing = False
 
@@ -932,11 +917,9 @@ Case "reducespacing"
     If Chart1.twipsPerBar < 50 Then
         Button.Enabled = False
     End If
-    setHorizontalScrollBar
 Case "increasespacing"
     Chart1.twipsPerBar = Chart1.twipsPerBar + 25
     Toolbar1.Buttons("reducespacing").Enabled = True
-    setHorizontalScrollBar
 Case "scaledown"
     currentvScale = mPriceRegion.regionTop - mPriceRegion.regionBottom
     mPriceRegion.autoscale = False
@@ -948,27 +931,17 @@ Case "scaleup"
     mPriceRegion.setVerticalScale mPriceRegion.regionBottom + 0.2 * currentvScale, _
                                 mPriceRegion.regionTop - 0.2 * currentvScale
 Case "scrolldown"
-    currentvScale = mPriceRegion.regionTop - mPriceRegion.regionBottom
-    mPriceRegion.autoscale = False
-    mPriceRegion.setVerticalScale mPriceRegion.regionBottom - 0.2 * currentvScale, _
-                                mPriceRegion.regionTop - 0.2 * currentvScale
+    mPriceRegion.scrollVerticalProportion -0.2
 Case "scrollup"
-    currentvScale = mPriceRegion.regionTop - mPriceRegion.regionBottom
-    mPriceRegion.autoscale = False
-    mPriceRegion.setVerticalScale mPriceRegion.regionBottom + 0.2 * currentvScale, _
-                                mPriceRegion.regionTop + 0.2 * currentvScale
+    mPriceRegion.scrollVerticalProportion 0.2
 Case "scrollleft"
     Chart1.scrollX -(Chart1.chartWidth * 0.2)
-    setHorizontalScrollBar
 Case "scrollright"
     Chart1.scrollX Chart1.chartWidth * 0.2
-    setHorizontalScrollBar
 Case "scrollend"
     Chart1.lastVisiblePeriod = Chart1.currentPeriodNumber
-    setHorizontalScrollBar
 Case "autoscale"
     mPriceRegion.autoscale = True
-    setHorizontalScrollBar
 End Select
 
 Toolbar1.Buttons("autoscale").Enabled = IIf(mPriceRegion.autoscale, False, True)
@@ -1052,7 +1025,6 @@ bartime = calcBarTime(timestamp)
 If bartime > mPeriod.timestamp Then
     Set mPeriod = Chart1.addPeriod(bartime)
     Chart1.scrollX 1
-    setHorizontalScrollBar
     
     drawVerticalGridLine timestamp
 
@@ -1199,14 +1171,6 @@ If mins Mod vertGridIntervalMins = 0 Then
     addGridLine bartime
 End If
 
-End Sub
-
-Private Sub setHorizontalScrollBar()
-HScroll.Max = IIf(Chart1.lastVisiblePeriod > mPeriod.periodNumber, Chart1.lastVisiblePeriod, mPeriod.periodNumber)
-HScroll.Min = IIf(Chart1.lastVisiblePeriod < (Chart1.chartWidth - 1), Chart1.lastVisiblePeriod, Chart1.chartWidth - 1)
-HScroll.value = Chart1.lastVisiblePeriod
-HScroll.SmallChange = 1
-HScroll.LargeChange = Chart1.chartWidth
 End Sub
 
 Private Sub setNewStudyPeriod()
