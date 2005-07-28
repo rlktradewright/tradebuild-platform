@@ -45,7 +45,7 @@ Begin VB.UserControl Chart
       Top             =   6960
       Width           =   9390
    End
-   Begin VB.PictureBox ChartZonePicture 
+   Begin VB.PictureBox ChartRegionPicture 
       AutoRedraw      =   -1  'True
       BackColor       =   &H00FFFFFF&
       Height          =   615
@@ -120,6 +120,11 @@ Private mPainted As Boolean
 
 Private mCurrentTool As ToolTypes
 
+Private mLeftDragging As Boolean    ' set when the mouse is being dragged with
+                                    ' the left button depressed
+Private mLeftDragStartPosnX As Long
+
+Private mAllowHorizontalMouseScrolling As Boolean
 
 '================================================================================
 ' Enums
@@ -227,6 +232,8 @@ mYAxisWidthCm = 1.5
 
 resizeX
 
+mAllowHorizontalMouseScrolling = True
+
 End Sub
 
 Private Sub UserControl_Paint()
@@ -253,10 +260,20 @@ PropBag.WriteProperty "autoscale", mAutoscale, True
 End Sub
 
 '================================================================================
-' ChartZonePicture Event Handlers
+' ChartRegionPicture Event Handlers
 '================================================================================
 
-Private Sub ChartZonePicture_MouseMove(index As Integer, _
+Private Sub ChartRegionPicture_MouseDown( _
+                            Index As Integer, _
+                            Button As Integer, _
+                            Shift As Integer, _
+                            X As Single, _
+                            Y As Single)
+If Button = vbLeftButton Then mLeftDragging = True
+mLeftDragStartPosnX = Int(X)
+End Sub
+
+Private Sub ChartRegionPicture_MouseMove(Index As Integer, _
                                 Button As Integer, _
                                 Shift As Integer, _
                                 X As Single, _
@@ -265,26 +282,35 @@ Private Sub ChartZonePicture_MouseMove(index As Integer, _
 Dim region As ChartRegion
 Dim i As Long
 
-For i = 0 To mRegionsIndex
-    Set region = mRegions(i).region
-    If i = index - 1 Then
-        'debug.print "Mousemove: index=" & index & " region=" & i & " x=" & x & " y=" & y
-        region.MouseMove Button, Shift, X, Y
-    Else
-        'debug.print "Mousemove: index=" & index & " region=" & i & " x=" & x & " y=" & MinusInfinitySingle
-        region.MouseMove Button, Shift, X, MinusInfinitySingle
+If mLeftDragging = True Then
+    If mAllowHorizontalMouseScrolling Then
+        ' the chart needs to be scrolled so that current mouse position
+        ' is the value contained in mLeftDragStartPosnX
+        scrollX mLeftDragStartPosnX - Int(X)
     End If
-Next
-displayXAxisLabel X, 100
+Else
+    For i = 0 To mRegionsIndex
+        Set region = mRegions(i).region
+        If i = Index - 1 Then
+            'debug.print "Mousemove: index=" & index & " region=" & i & " x=" & x & " y=" & y
+            region.MouseMove Button, Shift, X, Y
+        Else
+            'debug.print "Mousemove: index=" & index & " region=" & i & " x=" & x & " y=" & MinusInfinitySingle
+            region.MouseMove Button, Shift, X, MinusInfinitySingle
+        End If
+    Next
+    displayXAxisLabel X, 100
+End If
 End Sub
 
-'Private Sub ChartZonePicture_Paint(index As Integer)
-'mRegions(index - 1).region.paintRegion
-'End Sub
-
-'Private Sub ChartZonePicture_Resize(Index As Integer)
-'refresh
-'End Sub
+Private Sub ChartRegionPicture_MouseUp( _
+                            Index As Integer, _
+                            Button As Integer, _
+                            Shift As Integer, _
+                            X As Single, _
+                            Y As Single)
+If Button = vbLeftButton Then mLeftDragging = False
+End Sub
 
 '================================================================================
 ' XAxisPicture Event Handlers
@@ -293,6 +319,15 @@ End Sub
 '================================================================================
 ' Properties
 '================================================================================
+
+Public Property Get allowHorizontalMouseScrolling() As Boolean
+allowHorizontalMouseScrolling = mAllowHorizontalMouseScrolling
+End Property
+
+Public Property Let allowHorizontalMouseScrolling(ByVal value As Boolean)
+mAllowHorizontalMouseScrolling = value
+PropertyChanged "allowHorizontalMouseScrolling"
+End Property
 
 Public Property Get autoscale() As Boolean
 autoscale = mAutoscale
@@ -464,11 +499,11 @@ Public Function addChartRegion(ByVal percentheight As Double, _
 ' is available
 '
 Set addChartRegion = New ChartRegion
-Load ChartZonePicture(ChartZonePicture.UBound + 1)
-ChartZonePicture(ChartZonePicture.UBound).align = vbAlignNone
-ChartZonePicture(ChartZonePicture.UBound).Width = UserControl.Width
-ChartZonePicture(ChartZonePicture.UBound).visible = True
-addChartRegion.surface = ChartZonePicture(ChartZonePicture.UBound)
+Load ChartRegionPicture(ChartRegionPicture.UBound + 1)
+ChartRegionPicture(ChartRegionPicture.UBound).align = vbAlignNone
+ChartRegionPicture(ChartRegionPicture.UBound).Width = UserControl.Width
+ChartRegionPicture(ChartRegionPicture.UBound).visible = True
+addChartRegion.surface = ChartRegionPicture(ChartRegionPicture.UBound)
 addChartRegion.suppressDrawing = mSuppressDrawing
 addChartRegion.currentTool = mCurrentTool
 addChartRegion.gridColor = mGridColour
@@ -605,16 +640,16 @@ mScaleWidth = newScaleWidth
 mScaleLeft = mYAxisPosition + _
             (mYAxisWidthCm * TwipsPerCm / XAxisPicture.Width * mScaleWidth) - _
             mScaleWidth
-XAxisPicture.scaleWidth = mScaleWidth
-XAxisPicture.scaleLeft = mScaleLeft
+XAxisPicture.ScaleWidth = mScaleWidth
+XAxisPicture.ScaleLeft = mScaleLeft
 
 XBorderPicture.Width = ((mYAxisPosition - chartLeft) / mScaleWidth) * XAxisPicture.Width
 XBorderPicture.left = 0
 XBorderPicture.top = XAxisPicture.top
 YBorderPicture.left = XBorderPicture.Width
 
-For i = 0 To ChartZonePicture.UBound
-    ChartZonePicture(i).Width = UserControl.Width
+For i = 0 To ChartRegionPicture.UBound
+    ChartRegionPicture(i).Width = UserControl.Width
 Next
 
 For i = 0 To mRegionsIndex
@@ -642,7 +677,7 @@ mYAxisPosition = mYAxisPosition + value
 mScaleLeft = mYAxisPosition + _
             (mYAxisWidthCm * TwipsPerCm / XAxisPicture.Width * mScaleWidth) - _
             mScaleWidth
-XAxisPicture.scaleLeft = mScaleLeft
+XAxisPicture.ScaleLeft = mScaleLeft
 For i = 0 To mRegionsIndex
     Set region = mRegions(i).region
     region.periodsInView mScaleLeft, mYAxisPosition - 1
@@ -754,9 +789,9 @@ top = 0
     
 For i = 0 To mRegionsIndex
     Set aRegion = mRegions(i).region
-    ChartZonePicture(aRegion.regionNumber).Height = mRegions(i).actualHeight
-    ChartZonePicture(aRegion.regionNumber).top = top
-    top = top + ChartZonePicture(aRegion.regionNumber).Height
+    ChartRegionPicture(aRegion.regionNumber).Height = mRegions(i).actualHeight
+    ChartRegionPicture(aRegion.regionNumber).top = top
+    top = top + ChartRegionPicture(aRegion.regionNumber).Height
 Next
 
 sizeRegions = True
