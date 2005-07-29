@@ -539,7 +539,7 @@ With mRawBoundingRect
     .left = 0
     .right = mSurface.TextWidth(mText)
     .bottom = 0
-    .top = mSurface.TextHeight(mText)
+    .top = Abs(mSurface.TextHeight(mText))
     .isvalid = True
 End With
 
@@ -580,7 +580,7 @@ With mTextRect
     .left = mPosition.XAbsolute
     .right = .left + mRawBoundingRect.right
     .top = mPosition.YAbsolute
-    .bottom = .top + mRawBoundingRect.top
+    .bottom = .top - mRawBoundingRect.top
     
     ' now add the offset if any
     
@@ -637,12 +637,12 @@ End With
 If mBox Then
     ' make the inside of the box 1mm wider and taller than the text, plus the thickness of the lines
     
-    XIncrement = (1440 * mPaddingX / 25.4) / mSurface.Width * mSurface.scaleWidth
-    YIncrement = -(1440 * (mPaddingY - 0.5) / 25.4) / mSurface.Height * mSurface.scaleHeight
+    XIncrement = (1440 * mPaddingX / 25.4) / mSurface.Width * mSurface.ScaleWidth
+    YIncrement = -(1440 * (mPaddingY - 0.5) / 25.4) / mSurface.Height * mSurface.ScaleHeight
     
     If mBoxThickness > 1 Then
-        XLineThickness = ((mBoxThickness - 1) * Screen.TwipsPerPixelX) / (mSurface.Width / mSurface.scaleWidth)
-        YLineThickness = -((mBoxThickness - 1) * Screen.TwipsPerPixelY) / (mSurface.Height / mSurface.scaleHeight)
+        XLineThickness = ((mBoxThickness - 1) * Screen.TwipsPerPixelX) / (mSurface.Width / mSurface.ScaleWidth)
+        YLineThickness = -((mBoxThickness - 1) * Screen.TwipsPerPixelY) / (mSurface.Height / mSurface.ScaleHeight)
         If mBoxStyle = LineInsideSolid Then
             XIncrement = XIncrement + XLineThickness
             YIncrement = YIncrement + YLineThickness
@@ -743,7 +743,7 @@ calcRawBoundingRect
 calcCurrentBoundingRect
 mEventProxy.objectChanged mHandle, mBoundingRect
 If mIncludeInAutoscale And mBoundingRect.isvalid Then
-    If mBoundingRect.top >= mSurface.scaleTop Or mBoundingRect.bottom <= (mSurface.scaleTop + mSurface.scaleHeight) Then
+    If mBoundingRect.top >= mSurface.ScaleTop Or mBoundingRect.bottom <= (mSurface.ScaleTop + mSurface.ScaleHeight) Then
         mEventProxy.boundsExceeded
     End If
 End If
