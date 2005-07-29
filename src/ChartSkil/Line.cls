@@ -193,9 +193,17 @@ Else
     With rects(0)
         .left = periodNumber
         If mLeftToRight Then
-            If periodNumber < mPoint1.X Then .left = mPoint1.X - 1
+            If periodNumber < mPoint1.X And _
+                Not mExtendBefore _
+            Then
+                .left = mPoint1.X - 1
+            End If
         Else
-            If periodNumber < mPoint2.X Then .left = mPoint2.X - 1
+            If periodNumber < mPoint2.X And _
+                Not mExtendAfter _
+            Then
+                .left = mPoint2.X - 1
+            End If
         End If
         If mLeftToRight Then
             If (Not mExtendAfter And periodNumber = mPoint2.X) Or _
@@ -1228,37 +1236,37 @@ Else
                 slopeThicknessY = Abs(mThickness / mLineAngleCos)
                                 
                 If left = x1 Or left = x2 Then
-                    plg(0).X = .ScaleX(left - .scaleLeft, vbUser, vbPixels) - mThickness * mLineAngleSin / 2
-                    plg(0).Y = .ScaleY(mA * left + mB - .scaleTop, vbUser, vbPixels) - mThickness * mLineAngleCos / 2
+                    plg(0).X = .ScaleX(left - .ScaleLeft, vbUser, vbPixels) - mThickness * mLineAngleSin / 2
+                    plg(0).Y = .ScaleY(mA * left + mB - .ScaleTop, vbUser, vbPixels) - mThickness * mLineAngleCos / 2
                 Else
-                    plg(0).X = .ScaleX(left - .scaleLeft, vbUser, vbPixels)
-                    plg(0).Y = .ScaleY(mA * left + mB - .scaleTop, vbUser, vbPixels) - (slopeThicknessY - 2) / 2
+                    plg(0).X = .ScaleX(left - .ScaleLeft, vbUser, vbPixels)
+                    plg(0).Y = .ScaleY(mA * left + mB - .ScaleTop, vbUser, vbPixels) - (slopeThicknessY - 2) / 2
                 End If
                 
                 If left = x1 Or left = x2 Then
-                    plg(1).X = .ScaleX(left - .scaleLeft, vbUser, vbPixels) + mThickness * mLineAngleSin / 2
-                    plg(1).Y = .ScaleY(mA * left + mB - .scaleTop, vbUser, vbPixels) + mThickness * mLineAngleCos / 2
+                    plg(1).X = .ScaleX(left - .ScaleLeft, vbUser, vbPixels) + mThickness * mLineAngleSin / 2
+                    plg(1).Y = .ScaleY(mA * left + mB - .ScaleTop, vbUser, vbPixels) + mThickness * mLineAngleCos / 2
                 Else
-                    plg(1).X = .ScaleX(left - .scaleLeft, vbUser, vbPixels)
-                    plg(1).Y = .ScaleY(mA * left + mB - .scaleTop, vbUser, vbPixels) + (slopeThicknessY - 2) / 2
+                    plg(1).X = .ScaleX(left - .ScaleLeft, vbUser, vbPixels)
+                    plg(1).Y = .ScaleY(mA * left + mB - .ScaleTop, vbUser, vbPixels) + (slopeThicknessY - 2) / 2
                 End If
                 
                 If right = x1 Or right = x2 Then
-                    plg(2).X = .ScaleX(right - .scaleLeft, vbUser, vbPixels) + mThickness * mLineAngleSin / 2
-                    plg(2).Y = .ScaleY(mA * right + mB - .scaleTop, vbUser, vbPixels) + mThickness * mLineAngleCos / 2
+                    plg(2).X = .ScaleX(right - .ScaleLeft, vbUser, vbPixels) + mThickness * mLineAngleSin / 2
+                    plg(2).Y = .ScaleY(mA * right + mB - .ScaleTop, vbUser, vbPixels) + mThickness * mLineAngleCos / 2
                 Else
-                    plg(2).X = .ScaleX(right - .scaleLeft, vbUser, vbPixels)
-                    plg(2).Y = .ScaleY(mA * right + mB - .scaleTop, vbUser, vbPixels) + (slopeThicknessY - 2) / 2
-                    Debug.Assert IIf(mLeftToRight, plg(2).X <= .ScaleX(x2 - .scaleLeft, vbUser, vbPixels), True)
+                    plg(2).X = .ScaleX(right - .ScaleLeft, vbUser, vbPixels)
+                    plg(2).Y = .ScaleY(mA * right + mB - .ScaleTop, vbUser, vbPixels) + (slopeThicknessY - 2) / 2
+                    Debug.Assert IIf(mLeftToRight, plg(2).X <= .ScaleX(x2 - .ScaleLeft, vbUser, vbPixels), True)
                 End If
                 
                 If right = x1 Or right = x2 Then
-                    plg(3).X = .ScaleX(right - .scaleLeft, vbUser, vbPixels) - mThickness * mLineAngleSin / 2
-                    plg(3).Y = .ScaleY(mA * right + mB - .scaleTop, vbUser, vbPixels) - mThickness * mLineAngleCos / 2
+                    plg(3).X = .ScaleX(right - .ScaleLeft, vbUser, vbPixels) - mThickness * mLineAngleSin / 2
+                    plg(3).Y = .ScaleY(mA * right + mB - .ScaleTop, vbUser, vbPixels) - mThickness * mLineAngleCos / 2
                 Else
-                    plg(3).X = .ScaleX(right - .scaleLeft, vbUser, vbPixels)
-                    plg(3).Y = .ScaleY(mA * right + mB - .scaleTop, vbUser, vbPixels) - (slopeThicknessY - 2) / 2
-                    Debug.Assert IIf(mLeftToRight, plg(3).X <= .ScaleX(x2 - .scaleLeft, vbUser, vbPixels), True)
+                    plg(3).X = .ScaleX(right - .ScaleLeft, vbUser, vbPixels)
+                    plg(3).Y = .ScaleY(mA * right + mB - .ScaleTop, vbUser, vbPixels) - (slopeThicknessY - 2) / 2
+                    Debug.Assert IIf(mLeftToRight, plg(3).X <= .ScaleX(x2 - .ScaleLeft, vbUser, vbPixels), True)
                 End If
                 .DrawStyle = LineStyles.LineInsideSolid
                 .DrawWidth = 1
@@ -1323,12 +1331,12 @@ Case ArrowClosed
     With mSurface
         .FillStyle = mArrowEndFillStyle
         .FillColor = IIf(undraw, .backColor, mArrowEndFillColor)
-        poly(0).X = .ScaleX(X - .scaleLeft, vbUser, vbPixels)
-        poly(0).Y = .ScaleY(Y - .scaleTop, vbUser, vbPixels)
-        poly(1).X = .ScaleX(X + mEndArrowX1Offset - .scaleLeft, vbUser, vbPixels)
-        poly(1).Y = .ScaleY(Y + mEndArrowY1Offset - .scaleTop, vbUser, vbPixels)
-        poly(2).X = .ScaleX(X + mEndArrowX2Offset - .scaleLeft, vbUser, vbPixels)
-        poly(2).Y = .ScaleY(Y + mEndArrowY2Offset - .scaleTop, vbUser, vbPixels)
+        poly(0).X = .ScaleX(X - .ScaleLeft, vbUser, vbPixels)
+        poly(0).Y = .ScaleY(Y - .ScaleTop, vbUser, vbPixels)
+        poly(1).X = .ScaleX(X + mEndArrowX1Offset - .ScaleLeft, vbUser, vbPixels)
+        poly(1).Y = .ScaleY(Y + mEndArrowY1Offset - .ScaleTop, vbUser, vbPixels)
+        poly(2).X = .ScaleX(X + mEndArrowX2Offset - .ScaleLeft, vbUser, vbPixels)
+        poly(2).Y = .ScaleY(Y + mEndArrowY2Offset - .ScaleTop, vbUser, vbPixels)
         Polygon .hdc, poly(0), 3
     End With
 Case ArrowSingleBar
@@ -1378,12 +1386,12 @@ Case ArrowClosed
     With mSurface
         .FillStyle = mArrowStartFillStyle
         .FillColor = IIf(undraw, .backColor, mArrowStartFillColor)
-        poly(0).X = .ScaleX(X - .scaleLeft, vbUser, vbPixels)
-        poly(0).Y = .ScaleY(Y - .scaleTop, vbUser, vbPixels)
-        poly(1).X = .ScaleX(X + mStartArrowX1Offset - .scaleLeft, vbUser, vbPixels)
-        poly(1).Y = .ScaleY(Y + mStartArrowY1Offset - .scaleTop, vbUser, vbPixels)
-        poly(2).X = .ScaleX(X + mStartArrowX2Offset - .scaleLeft, vbUser, vbPixels)
-        poly(2).Y = .ScaleY(Y + mStartArrowY2Offset - .scaleTop, vbUser, vbPixels)
+        poly(0).X = .ScaleX(X - .ScaleLeft, vbUser, vbPixels)
+        poly(0).Y = .ScaleY(Y - .ScaleTop, vbUser, vbPixels)
+        poly(1).X = .ScaleX(X + mStartArrowX1Offset - .ScaleLeft, vbUser, vbPixels)
+        poly(1).Y = .ScaleY(Y + mStartArrowY1Offset - .ScaleTop, vbUser, vbPixels)
+        poly(2).X = .ScaleX(X + mStartArrowX2Offset - .ScaleLeft, vbUser, vbPixels)
+        poly(2).Y = .ScaleY(Y + mStartArrowY2Offset - .ScaleTop, vbUser, vbPixels)
         Polygon .hdc, poly(0), 3
     End With
 Case ArrowSingleBar
@@ -1468,7 +1476,7 @@ calcStartArrowConstants
 calcCurrentBoundingRect
 mEventProxy.objectChanged mHandle, mBoundingRect
 If mIncludeInAutoscale And mBoundingRect.isvalid Then
-    If mBoundingRect.top >= mSurface.scaleTop Or mBoundingRect.bottom <= (mSurface.scaleTop + mSurface.scaleHeight) Then
+    If mBoundingRect.top >= mSurface.ScaleTop Or mBoundingRect.bottom <= (mSurface.ScaleTop + mSurface.ScaleHeight) Then
         mEventProxy.boundsExceeded
     End If
 End If
