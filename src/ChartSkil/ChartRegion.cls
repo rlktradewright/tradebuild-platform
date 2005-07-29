@@ -1453,6 +1453,12 @@ If Not mSuppressDrawing Then
 End If
 End Sub
 
+Public Sub scaleUp(ByVal factor As Single)
+mAutoscale = False
+setVerticalScale regionBottom - factor * mSurface.ScaleHeight / 2, _
+                            regionTop + factor * mSurface.ScaleHeight / 2
+End Sub
+
 Public Sub setTitle(ByVal val As String, _
                         ByVal color As Long, _
                         ByVal font As StdFont)
