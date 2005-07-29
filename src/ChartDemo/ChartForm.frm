@@ -629,8 +629,14 @@ mBarLength = BarLengthText.Text
 ' to addChartRegion specifies the percentage of the available space that the region
 ' should occupy. A value of 100 means use all the available space left over after taking
 ' account of regions with smaller percentages. Since this is the first region
-' created, it uses all the space.
+' created, it uses all the space. NB: you should create at least one region (preferably
+' the first) that uses available space rather than a specific percentage - if you don't
+' then resizing regions by dragging the dividers gives odd results!
+
 Set mPriceRegion = Chart1.addChartRegion(100)
+mPriceRegion.minimumPercentHeight = 25  ' don't let this region drop to more than
+                                        ' 25 percent of the chart by resizing other
+                                        ' regions
 
 mPriceRegion.setTitle "Randomly generated data", vbBlue, Nothing
                             ' set the title text.
@@ -692,7 +698,7 @@ mClockText.boxThickness = 1             ' ...and is 1 pixel thick...
 mClockText.boxColor = vbBlack           ' ...draw the outline black...
 mClockText.boxFillColor = vbWhite       ' ...and fill it white
 mClockText.paddingX = 1                 ' leave 1 mm padding between the text and the box
-mClockText.position = mPriceRegion.newPoint(90, 98, PositionRelative, PositionRelative)
+mClockText.Position = mPriceRegion.newPoint(90, 98, PositionRelative, PositionRelative)
                                         ' position the box 90 percent across the region
                                         ' and 98 percent up the region (this will be
                                         ' the position of the top right corner as
@@ -753,7 +759,7 @@ mMovAvg2Series.displayMode = DisplayModes.DisplayAsLines
                                         ' individual points...
 mMovAvg2Series.lineColour = vbBlue      ' ...in blue
 mMovAvg2Series.lineThickness = 1        ' ...with a thickness of 1 pixel...
-mMovAvg2Series.lineStyle = LineStyles.LineDot
+mMovAvg2Series.LineStyle = LineStyles.LineDot
                                         ' ...and a dotted style
 
 ' Set up a datapoint series for the third moving average
@@ -825,7 +831,7 @@ startText.boxThickness = 1              ' ...1 pixel thick...
 startText.boxFillColor = vbGreen        ' ...and a green fill
 startText.boxFillStyle = FillStyles.FillSolid
                                         ' the fill should be solid (this is the default)
-startText.position = mPriceRegion.newPoint(mbar.periodNumber, mbar.highPrice)
+startText.Position = mPriceRegion.newPoint(mbar.periodNumber, mbar.highPrice)
                                         ' position the text at the high of the current
                                         ' bar...
 startText.offset = mPriceRegion.newDimension(0, 0.4)
@@ -983,7 +989,7 @@ mbar.tick closePrice
 If mPeriod.periodNumber Mod BarLabelFrequency = 0 Then
     Set barText = mBarLabelSeries.addText()
     barText.Text = mPeriod.periodNumber
-    barText.position = mPriceRegion.newPoint(mPeriod.periodNumber, mbar.lowPrice)
+    barText.Position = mPriceRegion.newPoint(mPeriod.periodNumber, mbar.lowPrice)
     barText.offset = mPriceRegion.newDimension(0, -0.3)
 End If
 
@@ -1049,7 +1055,7 @@ If mPeriod.periodNumber Mod BarLabelFrequency = 0 Then
         Set barText = mBarLabelSeries.addText()
         barText.Text = mPeriod.periodNumber
     End If
-    barText.position = mPriceRegion.newPoint(mbar.periodNumber, mbar.lowPrice)
+    barText.Position = mPriceRegion.newPoint(mbar.periodNumber, mbar.lowPrice)
     barText.offset = mPriceRegion.newDimension(0, -0.3)
 Else
     Set barText = Nothing
@@ -1065,7 +1071,7 @@ If tickCountText Is Nothing Then
     tickCountText.boxThickness = 1
     tickCountText.boxFillColor = vbBlack
     tickCountText.boxFillStyle = FillStyles.FillSolid
-    tickCountText.position = mPriceRegion.newPoint(5, 90, PositionRelative, PositionRelative)
+    tickCountText.Position = mPriceRegion.newPoint(5, 90, PositionRelative, PositionRelative)
     tickCountText.fixedX = True
     tickCountText.fixedY = True
     tickCountText.Align = TextAlignModes.AlignTopLeft
@@ -1111,7 +1117,7 @@ vGridLine.point2 = mPriceRegion.newPoint(mPeriod.periodNumber, 999999)
 Set vGridText = mVertGridTextSeries.addText
 vGridText.fixedX = False
 vGridText.fixedY = True
-vGridText.position = mPriceRegion.newPoint(mPeriod.periodNumber, 0#, PositionAbsolute, PositionDistance)
+vGridText.Position = mPriceRegion.newPoint(mPeriod.periodNumber, 0#, PositionAbsolute, PositionDistance)
 vGridText.offset = mPriceRegion.newDimension(0.1, 0)
 vGridText.Text = Format(bartime, "hh:mm")
 End Sub
