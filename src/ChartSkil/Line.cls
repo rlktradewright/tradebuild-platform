@@ -1205,10 +1205,18 @@ Else
         If left <> right Then
             If mThickness = 1 Then
                 ' now calculate the x coordinates that ensure the line
-                ' lies does not go outside the top or bottom of the area
+                ' does not go outside the top or bottom of the area
                 ' to be drawn
-                xBottom = (area.bottom - mB) / mA
-                xTop = (area.top - mB) / mA
+                If mA = 0 Then
+                    xBottom = MinusInfinityDouble
+                Else
+                    xBottom = (area.bottom - mB) / mA
+                End If
+                If mA = 0 Then
+                    xTop = PlusInfinityDouble
+                Else
+                    xTop = (area.top - mB) / mA
+                End If
                 If xBottom > left And xBottom < right Then
                     If mA >= 0 Then
                         left = xBottom

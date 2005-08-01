@@ -114,6 +114,12 @@ Private mDrawn As Boolean
 Private WithEvents mEventProxy As ChartRegionEventProxy
 Attribute mEventProxy.VB_VarHelpID = -1
 
+Private mYAxisRegion As ChartRegion
+Private mYPositionText As text      ' used to indicate the position of the pointer
+                                    ' in the Y axis region
+Private mYGridTexts As TextSeries
+Private mYGridLines As LineSeries
+
 Private mAutoscale As Boolean
 Private mMinimumHeight As Single
 Private mPrevHeight As Single
@@ -788,6 +794,9 @@ End Property
 
 Public Property Let regionBackColor(ByVal val As Long)
 mBackColour = val
+If Not mYAxisRegion Is Nothing Then
+    mYAxisRegion.regionBackColor = val
+End If
 End Property
 
 Public Property Get regionBottom() As Single
@@ -797,6 +806,9 @@ End Property
 Friend Property Let regionBottom(ByVal value As Single)
 mSurface.ScaleHeight = value - mSurface.ScaleTop
 mRegionRect.bottom = value
+If Not mYAxisRegion Is Nothing Then
+    mYAxisRegion.regionBottom = value
+End If
 End Property
 
 Public Property Get regionHeight() As Single
@@ -845,6 +857,9 @@ Friend Property Let regionTop(ByVal value As Single)
 mRegionRect.bottom = mRegionRect.bottom + value - mRegionRect.top
 mSurface.ScaleTop = value
 mRegionRect.top = value
+If Not mYAxisRegion Is Nothing Then
+    mYAxisRegion.regionTop = value
+End If
 End Property
 
 Public Property Get regionWidth() As Single
@@ -861,6 +876,17 @@ End Property
 
 Public Property Let showGrid(ByVal val As Boolean)
 mShowGrid = val
+If mShowGrid Then
+    Set mYGridLines = Me.addLineSeries(LayerNumbers.LayerGrid)
+    mYGridLines.color = mGridColour
+    mYGridLines.extendAfter = True
+    mYGridLines.extendBefore = True
+    mYGridLines.includeInAutoscale = False
+    mYGridLines.style = LineSolid
+    mYGridLines.thickness = 1
+Else
+    Set mYGridLines = Nothing
+End If
 End Property
 
 Friend Property Get showCrosshairs() As Boolean
@@ -899,6 +925,9 @@ If Not mSuppressDrawing Then
     End If
     determineVisibleObjects True
     paintRegion
+End If
+If Not mYAxisRegion Is Nothing Then
+    mYAxisRegion.suppressDrawing = val
 End If
 End Property
 
@@ -1043,6 +1072,42 @@ End Property
 
 Public Property Get YAxisPosition() As Long
 YAxisPosition = mYAxisPosition
+End Property
+
+Friend Property Let YAxisRegion(ByVal value As ChartRegion)
+Dim aFont As StdFont
+
+Set mYAxisRegion = value
+mYAxisRegion.regionBackColor = regionBackColor
+mYAxisRegion.showGrid = False
+mYAxisRegion.regionWidth = 100
+mYAxisRegion.periodsInView 0, 99
+
+Set mYPositionText = mYAxisRegion.addText(LayerNumbers.LayerPointer)
+mYPositionText.align = AlignCentreLeft
+mYPositionText.color = vbRed
+mYPositionText.box = True
+mYPositionText.boxFillColor = mBackColour
+mYPositionText.boxStyle = LineInvisible
+Set aFont = New StdFont
+aFont.name = "Arial"
+aFont.Size = 10
+aFont.Underline = False
+aFont.Bold = True
+mYPositionText.font = aFont
+
+Set mYGridTexts = mYAxisRegion.addTextSeries(LayerNumbers.LayerGrid)
+mYGridTexts.includeInAutoscale = False
+mYGridTexts.align = AlignCentreLeft
+mYGridTexts.color = mGridColour
+mYGridTexts.box = False
+Set aFont = New StdFont
+aFont.name = "Arial"
+aFont.Size = 9
+aFont.Underline = False
+aFont.Bold = False
+mYGridTexts.font = aFont
+
 End Property
 
 '================================================================================
@@ -1351,17 +1416,11 @@ Else
     End If
 End If
 
-.DrawWidth = 1
-.DrawMode = vbCopyPen
-z = Int((.ScaleTop + .ScaleHeight) / mScaleGridSpacingY) * mScaleGridSpacingY
-Do While z < .ScaleTop
-    mSurface.Line (.ScaleLeft, z)-(YAxisPosition, z), gridColor
-    .CurrentX = YAxisPosition + 0.5
-    .CurrentY = .CurrentY - mGridTextHeight / 2
-    .ForeColor = vbWhite Xor .backColor
-    mSurface.Print Format(z, mYScaleFormatStr)
-    z = z + mScaleGridSpacingY
-Loop
+If mShowGrid Then
+    setGridLines
+End If
+
+setGridTexts
 
 For i = MinLayer To MaxLayer
     index = mGraphicObjects(mVisibleTable(i).firstIndex).nextVisibleIndex
@@ -1499,6 +1558,9 @@ End If
 If Not mSuppressDrawing Then
     determineVisibleObjects gaugeChanged
     paintRegion
+End If
+If Not mYAxisRegion Is Nothing Then
+    mYAxisRegion.setVerticalScale lowValue, highValue
 End If
 End Sub
 
@@ -1749,9 +1811,15 @@ With mSurface
     mRegionRect.top = .ScaleTop
     mRegionRect.bottom = .ScaleTop + .ScaleHeight
     mRegionRect.isvalid = True
+    If Not mYAxisRegion Is Nothing Then
+        mYAxisRegion.regionTop = .ScaleTop
+        mYAxisRegion.regionBottom = .ScaleTop + .ScaleHeight
+    End If
 End With
 
-If Not someGaugeDependentObjects Then Exit Sub
+If Not someGaugeDependentObjects Then
+    Exit Sub
+End If
 
 ' there are gauge-dependent objects that may affect the max and min scales.
 ' We need to recalculate their bounds with the new gauge determined from
@@ -1794,6 +1862,10 @@ With mSurface
     .ScaleTop = scaleMax + (scaleMax - scaleMin) * 0.025
     mRegionRect.top = .ScaleTop
     mRegionRect.bottom = .ScaleTop + .ScaleHeight
+    If Not mYAxisRegion Is Nothing Then
+        mYAxisRegion.regionTop = .ScaleTop
+        mYAxisRegion.regionBottom = .ScaleTop + .ScaleHeight
+    End If
 End With
 End Sub
 
@@ -1918,18 +1990,16 @@ With mSurface
     .DrawMode = vbXorPen
     mSurface.Line (.ScaleLeft, Y)-(YAxisPosition, Y), vbRed Xor .backColor
     lineX = Round(X)
-'    If lineX < 1 Then lineX = 1
     mSurface.Line (lineX, .ScaleTop + .ScaleHeight)-(lineX, .ScaleTop), vbRed Xor .backColor
-    .CurrentX = YAxisPosition + 0.5
-    .CurrentY = Y - mGridTextHeight / 2
-    .ForeColor = vbRed 'Xor BackColor 'vbWhite 'Xor BackColor
-    .FontTransparent = False
-    mSurface.Print Format(Y, mYScaleSubFormatStr)
     mPrevCursorX = X
     mPrevCursorY = Y
     
 End With
 
+If Not mYAxisRegion Is Nothing Then
+    mYPositionText.position = mYAxisRegion.newPoint(10, Y, PositionAbsolute, PositionAbsolute)
+    mYPositionText.text = Format(Y, mYScaleSubFormatStr)
+End If
 End Sub
 
 Private Sub drawPointer(ByVal X As Single, ByVal Y As Single)
@@ -1943,16 +2013,9 @@ With mSurface
     .DrawStyle = LineStyles.LineSolid
     .DrawMode = vbXorPen
     lineX = Round(X)
-'    if lineX < 1 Then lineX = 1
     .FillColor = vbYellow Xor .backColor
     .FillStyle = vbSolid
     mSurface.Circle (lineX, Y), newPoint(0.8, 0, PositionDistance, PositionDistance).XAbsolute - mSurface.ScaleLeft, vbYellow Xor .backColor
-    ''debug.print "DrawPointer x=" & lineX & " y=" & y
-    .CurrentX = YAxisPosition + 0.5
-    .CurrentY = Y - mGridTextHeight / 2
-    .ForeColor = vbRed 'Xor BackColor 'vbWhite 'Xor BackColor
-    .FontTransparent = False
-    mSurface.Print Format(Y, mYScaleSubFormatStr)
     mPrevCursorX = X
     mPrevCursorY = Y
     
@@ -2240,6 +2303,66 @@ With mGraphicObjects(index)
 End With
 End Sub
 
+Private Sub setGridLines()
+Dim z As Double
+Dim i As Long
+Dim aLine As ChartSkil.Line
+Dim currSuppress As Boolean
+
+If mYGridLines Is Nothing Then Exit Sub
+
+currSuppress = mSuppressDrawing
+mSuppressDrawing = True
+z = Int((mSurface.ScaleTop + mSurface.ScaleHeight) / mScaleGridSpacingY) * mScaleGridSpacingY
+Do While z < mSurface.ScaleTop
+    i = i + 1
+    If i > mYGridLines.count Then
+        Set aLine = mYGridLines.addLine
+    Else
+        Set aLine = mYGridLines.Item(i)
+    End If
+    aLine.point1 = Me.newPoint(0, z, PositionRelative, PositionAbsolute)
+    aLine.point2 = Me.newPoint(100, z, PositionRelative, PositionAbsolute)
+    addEntryToVisibleList aLine.handle
+    z = z + mScaleGridSpacingY
+Loop
+For i = i + 1 To mYGridLines.count
+    Set aLine = mYGridLines.Item(i)
+    aLine.point1 = Me.newPoint(-1000, 0, PositionAbsolute, PositionAbsolute)
+    aLine.point2 = Me.newPoint(-1000, 0, PositionAbsolute, PositionAbsolute)
+Next
+mSuppressDrawing = currSuppress
+End Sub
+
+Private Sub setGridTexts()
+Dim z As Double
+Dim i As Long
+Dim aText As text
+Dim currSuppress As Boolean
+
+If mYGridTexts Is Nothing Then Exit Sub
+
+currSuppress = mSuppressDrawing
+mSuppressDrawing = True
+z = Int((mSurface.ScaleTop + mSurface.ScaleHeight) / mScaleGridSpacingY) * mScaleGridSpacingY
+Do While z < mSurface.ScaleTop
+    i = i + 1
+    If i > mYGridTexts.count Then
+        Set aText = mYGridTexts.addText
+    Else
+        Set aText = mYGridTexts.Item(i)
+    End If
+    aText.text = Format(z, mYScaleFormatStr)
+    aText.position = mYAxisRegion.newPoint(1, z, PositionAbsolute, PositionAbsolute)
+    z = z + mScaleGridSpacingY
+Loop
+For i = i + 1 To mYGridTexts.count
+    Set aText = mYGridTexts.Item(i)
+    aText.text = ""
+Next
+mSuppressDrawing = currSuppress
+End Sub
+
 Private Sub undrawCrosshairs()
 Dim nearestGridLine As Single
 Dim nextNearestGridLine As Single
@@ -2253,35 +2376,7 @@ With mSurface
     .DrawMode = vbXorPen
     mSurface.Line (.ScaleLeft, mPrevCursorY)-(YAxisPosition, mPrevCursorY), vbRed Xor .backColor
     prevLineX = Round(mPrevCursorX)
-'    If prevLineX < 1 Then prevLineX = 1
     mSurface.Line (prevLineX, .ScaleTop + .ScaleHeight)-(prevLineX, .ScaleTop), vbRed Xor .backColor
-    .ForeColor = .backColor
-    .CurrentX = YAxisPosition + 0.5
-    .CurrentY = mPrevCursorY - mGridTextHeight / 2
-    .FontTransparent = False
-    mSurface.Print Format(mPrevCursorY, mYScaleSubFormatStr)
-    If mScaleGridSpacingY <> 0 Then
-        nearestGridLine = Fix((mPrevCursorY + mScaleGridSpacingY / 2) / mScaleGridSpacingY) * mScaleGridSpacingY
-        If Abs(mPrevCursorY - nearestGridLine) < Abs(mGridTextHeight) Then
-            .ForeColor = vbWhite Xor .backColor
-            .CurrentX = YAxisPosition + 0.5
-            .CurrentY = nearestGridLine - mGridTextHeight / 2
-            .FontTransparent = True
-            mSurface.Print Format(nearestGridLine, mYScaleFormatStr)
-        End If
-        If nearestGridLine >= mPrevCursorY Then
-            nextNearestGridLine = nearestGridLine - mScaleGridSpacingY
-        ElseIf nearestGridLine < mPrevCursorY Then
-            nextNearestGridLine = nearestGridLine + mScaleGridSpacingY
-        End If
-        If Abs(mPrevCursorY - nextNearestGridLine) < Abs(mGridTextHeight) Then
-            .ForeColor = vbWhite Xor .backColor
-            .CurrentX = YAxisPosition + 0.5
-            .CurrentY = nextNearestGridLine - mGridTextHeight / 2
-            .FontTransparent = True
-            mSurface.Print Format(nextNearestGridLine, mYScaleFormatStr)
-        End If
-    End If
 End With
 
 End Sub
@@ -2298,38 +2393,9 @@ With mSurface
     .DrawStyle = LineStyles.LineSolid
     .DrawMode = vbXorPen
     prevLineX = Round(mPrevCursorX)
-'    If prevLineX < 1 Then prevLineX = 1
     .FillColor = vbYellow Xor .backColor
     .FillStyle = vbSolid
     mSurface.Circle (prevLineX, mPrevCursorY), newPoint(0.8, 0, PositionDistance, PositionDistance).XAbsolute - mSurface.ScaleLeft, vbYellow Xor .backColor
-    ''debug.print "UndrawPointer x=" & prevLineX & " y=" & mPrevCursorY
-    .ForeColor = .backColor
-    .CurrentX = YAxisPosition + 0.5
-    .CurrentY = mPrevCursorY - mGridTextHeight / 2
-    .FontTransparent = False
-    mSurface.Print Format(mPrevCursorY, mYScaleSubFormatStr)
-    If mScaleGridSpacingY <> 0 Then
-        nearestGridLine = Fix((mPrevCursorY + mScaleGridSpacingY / 2) / mScaleGridSpacingY) * mScaleGridSpacingY
-        If Abs(mPrevCursorY - nearestGridLine) < Abs(mGridTextHeight) Then
-            .ForeColor = vbWhite Xor .backColor
-            .CurrentX = YAxisPosition + 0.5
-            .CurrentY = nearestGridLine - mGridTextHeight / 2
-            .FontTransparent = True
-            mSurface.Print Format(nearestGridLine, mYScaleFormatStr)
-        End If
-        If nearestGridLine >= mPrevCursorY Then
-            nextNearestGridLine = nearestGridLine - mScaleGridSpacingY
-        ElseIf nearestGridLine < mPrevCursorY Then
-            nextNearestGridLine = nearestGridLine + mScaleGridSpacingY
-        End If
-        If Abs(mPrevCursorY - nextNearestGridLine) < Abs(mGridTextHeight) Then
-            .ForeColor = vbWhite Xor .backColor
-            .CurrentX = YAxisPosition + 0.5
-            .CurrentY = nextNearestGridLine - mGridTextHeight / 2
-            .FontTransparent = True
-            mSurface.Print Format(nextNearestGridLine, mYScaleFormatStr)
-        End If
-    End If
 End With
 
 End Sub

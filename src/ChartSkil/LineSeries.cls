@@ -189,6 +189,10 @@ If mColour = newValue Then Exit Property
 mColour = newValue
 End Property
 
+Public Property Get count() As Long
+count = mLines.count
+End Property
+
 Friend Property Let eventProxy(ByVal value As ChartRegionEventProxy)
 Set mEventProxy = value
 End Property
@@ -321,6 +325,11 @@ With addLine
 End With
 mLines.Add addLine
 mEventProxy.addGraphicObject addLine
+End Function
+
+Public Function Item(ByVal index As Long) As ChartSkil.Line
+Attribute Item.VB_UserMemId = 0
+Set Item = mLines(index)
 End Function
 
 Public Function NewEnum() As IUnknown

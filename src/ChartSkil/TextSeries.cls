@@ -142,6 +142,10 @@ Public Property Let color(ByVal newValue As Long)
 mColour = newValue
 End Property
 
+Public Property Get count() As Long
+count = mTexts.count
+End Property
+
 Friend Property Let eventProxy(ByVal value As ChartRegionEventProxy)
 Set mEventProxy = value
 End Property
@@ -256,6 +260,11 @@ addText.paddingX = mPaddingX
 addText.paddingY = mPaddingY
 mTexts.Add addText
 mEventProxy.addGraphicObject addText
+End Function
+
+Public Function Item(ByVal index As Long) As text
+Attribute Item.VB_UserMemId = 0
+Set Item = mTexts(index)
 End Function
 
 Public Function NewEnum() As IUnknown

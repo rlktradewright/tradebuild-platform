@@ -10,6 +10,19 @@ Begin VB.UserControl Chart
    ClientWidth     =   9390
    ScaleHeight     =   7575
    ScaleWidth      =   9390
+   Begin VB.PictureBox YAxisPicture 
+      AutoRedraw      =   -1  'True
+      BackColor       =   &H80000005&
+      Height          =   615
+      Index           =   0
+      Left            =   8400
+      ScaleHeight     =   555
+      ScaleWidth      =   915
+      TabIndex        =   4
+      Top             =   6360
+      Visible         =   0   'False
+      Width           =   975
+   End
    Begin VB.PictureBox RegionDividerPicture 
       BorderStyle     =   0  'None
       Height          =   25
@@ -17,15 +30,15 @@ Begin VB.UserControl Chart
       Left            =   0
       MousePointer    =   7  'Size N S
       ScaleHeight     =   30
-      ScaleWidth      =   8415
-      TabIndex        =   5
+      ScaleWidth      =   9375
+      TabIndex        =   3
       Top             =   6240
-      Width           =   8415
+      Width           =   9375
    End
    Begin MSComCtl2.FlatScrollBar HScroll 
       Height          =   255
       Left            =   0
-      TabIndex        =   4
+      TabIndex        =   2
       Top             =   7320
       Width           =   9375
       _ExtentX        =   16536
@@ -34,30 +47,6 @@ Begin VB.UserControl Chart
       Appearance      =   2
       Arrows          =   65536
       Orientation     =   1245185
-   End
-   Begin VB.PictureBox YBorderPicture 
-      Height          =   6375
-      Left            =   8400
-      ScaleHeight     =   6375
-      ScaleWidth      =   30
-      TabIndex        =   3
-      TabStop         =   0   'False
-      Top             =   0
-      Width           =   30
-   End
-   Begin VB.PictureBox XBorderPicture 
-      Appearance      =   0  'Flat
-      BackColor       =   &H00000000&
-      BorderStyle     =   0  'None
-      ForeColor       =   &H80000008&
-      Height          =   15
-      Left            =   0
-      ScaleHeight     =   15
-      ScaleWidth      =   8415
-      TabIndex        =   2
-      Top             =   6360
-      Visible         =   0   'False
-      Width           =   8415
    End
    Begin VB.PictureBox XAxisPicture 
       AutoRedraw      =   -1  'True
@@ -303,7 +292,7 @@ End Sub
 '================================================================================
 
 Private Sub ChartRegionPicture_MouseDown( _
-                            Index As Integer, _
+                            index As Integer, _
                             Button As Integer, _
                             Shift As Integer, _
                             X As Single, _
@@ -313,7 +302,7 @@ mLeftDragStartPosnX = Int(X)
 mLeftDragStartPosnY = Y
 End Sub
 
-Private Sub ChartRegionPicture_MouseMove(Index As Integer, _
+Private Sub ChartRegionPicture_MouseMove(index As Integer, _
                                 Button As Integer, _
                                 Shift As Integer, _
                                 X As Single, _
@@ -332,7 +321,7 @@ If mLeftDragging = True Then
     End If
     If mAllowVerticalMouseScrolling Then
         If mLeftDragStartPosnY <> Y Then
-            With mRegions(Index - 1).region
+            With mRegions(index - 1).region
                 If Not .autoscale Then
                     .scrollVertical mLeftDragStartPosnY - Y
                 End If
@@ -342,7 +331,7 @@ If mLeftDragging = True Then
 Else
     For i = 0 To mRegionsIndex
         Set region = mRegions(i).region
-        If i = Index - 1 Then
+        If i = index - 1 Then
             'debug.print "Mousemove: index=" & index & " region=" & i & " x=" & x & " y=" & y
             region.MouseMove Button, Shift, X, Y
         Else
@@ -355,7 +344,7 @@ End If
 End Sub
 
 Private Sub ChartRegionPicture_MouseUp( _
-                            Index As Integer, _
+                            index As Integer, _
                             Button As Integer, _
                             Shift As Integer, _
                             X As Single, _
@@ -376,7 +365,7 @@ End Sub
 '================================================================================
 
 Private Sub RegionDividerPicture_MouseDown( _
-                            Index As Integer, _
+                            index As Integer, _
                             Button As Integer, _
                             Shift As Integer, _
                             X As Single, _
@@ -388,7 +377,7 @@ mUserResizingRegions = True
 End Sub
 
 Private Sub RegionDividerPicture_MouseMove( _
-                            Index As Integer, _
+                            index As Integer, _
                             Button As Integer, _
                             Shift As Integer, _
                             X As Single, _
@@ -400,7 +389,7 @@ Dim prevPercentHeight As Double
 
 If Not mLeftDragging = True Then Exit Sub
 
-currRegion = Index + 1  ' we resize the region below the divider
+currRegion = index + 1  ' we resize the region below the divider
 vertChange = mLeftDragStartPosnY - Y
 newHeight = mRegions(currRegion).actualHeight + vertChange
 
@@ -426,7 +415,7 @@ End If
 End Sub
 
 Private Sub RegionDividerPicture_MouseUp( _
-                            Index As Integer, _
+                            index As Integer, _
                             Button As Integer, _
                             Shift As Integer, _
                             X As Single, _
@@ -641,11 +630,23 @@ Public Function addChartRegion(ByVal percentheight As Double, _
 ' NB: percentHeight=100 means the region will use whatever space
 ' is available
 '
+
+Dim YAxisRegion As ChartRegion
+
 Set addChartRegion = New ChartRegion
+
 Load ChartRegionPicture(ChartRegionPicture.UBound + 1)
 ChartRegionPicture(ChartRegionPicture.UBound).align = vbAlignNone
-ChartRegionPicture(ChartRegionPicture.UBound).Width = UserControl.Width
+ChartRegionPicture(ChartRegionPicture.UBound).Width = _
+    UserControl.ScaleWidth * (mYAxisPosition - chartLeft) / XAxisPicture.ScaleWidth
 ChartRegionPicture(ChartRegionPicture.UBound).visible = True
+
+Load YAxisPicture(YAxisPicture.UBound + 1)
+YAxisPicture(YAxisPicture.UBound).align = vbAlignNone
+YAxisPicture(YAxisPicture.UBound).left = ChartRegionPicture(ChartRegionPicture.UBound).Width
+YAxisPicture(YAxisPicture.UBound).Width = UserControl.ScaleWidth - YAxisPicture(YAxisPicture.UBound).left
+YAxisPicture(YAxisPicture.UBound).visible = True
+
 addChartRegion.surface = ChartRegionPicture(ChartRegionPicture.UBound)
 addChartRegion.suppressDrawing = mSuppressDrawing
 addChartRegion.currentTool = mCurrentTool
@@ -657,7 +658,7 @@ addChartRegion.regionLeft = mScaleLeft
 addChartRegion.regionHeight = 1
 addChartRegion.regionNumber = mRegionsIndex + 2
 addChartRegion.regionTop = 1
-addChartRegion.regionWidth = mScaleWidth
+addChartRegion.regionWidth = mYAxisPosition - mScaleLeft
 addChartRegion.showCrosshairs = mShowCrosshairs
 addChartRegion.showGrid = mShowGrid
 addChartRegion.periodsInView mScaleLeft, mYAxisPosition - 1
@@ -677,6 +678,12 @@ If mRegionsIndex <> 0 Then
     RegionDividerPicture(mRegionsIndex).visible = True
 End If
 
+Set YAxisRegion = New ChartRegion
+YAxisRegion.surface = YAxisPicture(YAxisPicture.UBound)
+YAxisRegion.regionHeight = 1
+YAxisRegion.regionTop = 1
+addChartRegion.YAxisRegion = YAxisRegion
+
 If Not sizeRegions Then
     ' can't fit this all in! So remove the added region,
     Set addChartRegion = Nothing
@@ -687,6 +694,7 @@ If Not sizeRegions Then
     mRegionsIndex = mRegionsIndex - 1
     Unload ChartRegionPicture(ChartRegionPicture.UBound)
     Unload RegionDividerPicture(RegionDividerPicture.UBound)
+    Unload YAxisPicture(YAxisPicture.UBound)
 End If
 
 End Function
@@ -800,13 +808,9 @@ mScaleLeft = mYAxisPosition + _
 XAxisPicture.ScaleWidth = mScaleWidth
 XAxisPicture.ScaleLeft = mScaleLeft
 
-XBorderPicture.Width = ((mYAxisPosition - chartLeft) / mScaleWidth) * XAxisPicture.Width
-XBorderPicture.left = 0
-XBorderPicture.top = XAxisPicture.top
-YBorderPicture.left = XBorderPicture.Width
-
 For i = 0 To ChartRegionPicture.UBound
-    ChartRegionPicture(i).Width = UserControl.Width
+    YAxisPicture(i).left = UserControl.Width - YAxisPicture(i).Width
+    ChartRegionPicture(i).Width = YAxisPicture(i).left
 Next
 
 For i = 0 To RegionDividerPicture.UBound
@@ -815,7 +819,7 @@ Next
 
 For i = 0 To mRegionsIndex
     Set region = mRegions(i).region
-    region.regionWidth = mScaleWidth
+    region.regionWidth = mYAxisPosition - mScaleLeft
     region.periodsInView mScaleLeft, mYAxisPosition - 1
 Next
 
@@ -828,7 +832,6 @@ If UserControl.Height = mPrevHeight Then Exit Sub
 
 mPrevHeight = UserControl.Height
 sizeRegions
-YBorderPicture.Height = XAxisPicture.top + Screen.TwipsPerPixelY
 End Sub
 
 Public Sub scrollX(ByVal value As Long)
@@ -982,7 +985,9 @@ top = 0
 For i = 0 To mRegionsIndex
     Set aRegion = mRegions(i).region
     ChartRegionPicture(aRegion.regionNumber).Height = mRegions(i).actualHeight
+    YAxisPicture(aRegion.regionNumber).Height = mRegions(i).actualHeight
     ChartRegionPicture(aRegion.regionNumber).top = top
+    YAxisPicture(aRegion.regionNumber).top = top
     top = top + ChartRegionPicture(aRegion.regionNumber).Height
     If i <> mRegionsIndex Then
         RegionDividerPicture(i).top = top
