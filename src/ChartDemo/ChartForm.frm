@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{DBED8E43-5960-49DE-B9A7-BBC22DB93A26}#4.1#0"; "ChartSkil.ocx"
+Object = "{DBED8E43-5960-49DE-B9A7-BBC22DB93A26}#4.3#0"; "ChartSkil.ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo"
@@ -531,12 +531,6 @@ Private mVolume As DataPoint                ' the current volume datapoint
 Private mPrevBarVolume As Long              ' the previous volume datapoint
 Private mCumVolume As Long                  ' the cumulative volume
 
-Private mVertGridLineSeries As LineSeries   ' used to define properties for the
-                                            ' vertical grid lines
-Private mVertGridTextSeries As TextSeries   ' used to define properties for the
-                                            ' text labels that show the time for the
-                                            ' vertical grid lines
-
 Private WithEvents mClockTimer As TimerUtils.IntervalTimer
 Attribute mClockTimer.VB_VarHelpID = -1
 Private mClockText As Text                  ' displays the current time on the chart
@@ -623,6 +617,7 @@ LoadButton.Enabled = False  ' prevent the user pressing load again. In a future
 
 mTickSize = TickSizeText.Text
 mBarLength = BarLengthText.Text
+Chart1.periodLengthMinutes = mBarLength
 
 ' Set up the region of the chart that will display the price bars. You can have as
 ' many regions as you like on a chart. They are arranged vertically, and the parameter
@@ -661,28 +656,6 @@ mBarSeries.displayAsCandlestick = False
                                     ' draw this bar series as bars not candlesticks
 mBarSeries.solidUpBody = True       ' draw up candlesticks with solid bodies
                                     ' (ignored if displaying as bars)
-
-' Create a series of lines for the vertical grid lines. A future version of the control
-' will draw these automatically, but in this version we have to tell the control when
-' to draw them.
-Set mVertGridLineSeries = mPriceRegion.addLineSeries(LayerNumbers.LayerGrid)
-                                        ' the argument requests that they be displayed
-                                        ' on the grid layer, which is the lowest layer
-                                        ' except for the chart background
-mVertGridLineSeries.Color = &H808080    ' grey
-mVertGridLineSeries.Style = LineDash    ' use dashed lines
-mVertGridLineSeries.thickness = 1       ' 1 pixel thick
-mVertGridLineSeries.extendAfter = True  ' means they extend on after their end points
-mVertGridLineSeries.extendBefore = True ' means they extend back before their start points
-
-' Create a series of texts to label the vertical grid lines with their times. A future
-' version of the control will draw these automatically, but in this version we have to
-' tell the control when to draw them.
-Set mVertGridTextSeries = mPriceRegion.addTextSeries(LayerNumbers.LayerGrid)
-mVertGridTextSeries.Color = &H808080    ' grey
-mVertGridTextSeries.box = True          ' display a box around the label...
-mVertGridTextSeries.boxColor = vbWhite  ' ... with a white outline...
-mVertGridTextSeries.boxFillColor = vbWhite  ' ... and a white fill
 
 ' Create a text object that will display the clock time
 ' Since this is just a single text field, we don't need to create a text series, just
@@ -970,8 +943,6 @@ Dim barText As Text
 Set mPeriod = Chart1.addPeriod(timestamp)
 Chart1.lastVisiblePeriod = mPeriod.periodNumber
 
-drawVerticalGridLine timestamp
-
 Set mbar = mBarSeries.addBar(mPeriod.periodNumber)
 
 mbar.tick openPrice
@@ -1025,8 +996,6 @@ If bartime > mPeriod.timestamp Then
     Set mPeriod = Chart1.addPeriod(bartime)
     Chart1.scrollX 1
     
-    drawVerticalGridLine timestamp
-
     Set mbar = mBarSeries.addBar(mPeriod.periodNumber)
     mbar.periodNumber = mPeriod.periodNumber
     
@@ -1101,20 +1070,6 @@ End Sub
 ' Helper Functions
 '================================================================================
 
-Private Sub addGridLine(ByVal bartime As Date)
-Dim vGridLine As ChartSkil.Line
-Dim vGridText As Text
-Set vGridLine = mVertGridLineSeries.addLine
-vGridLine.point1 = mPriceRegion.newPoint(mPeriod.periodNumber, 0)
-vGridLine.point2 = mPriceRegion.newPoint(mPeriod.periodNumber, 999999)
-Set vGridText = mVertGridTextSeries.addText
-vGridText.fixedX = False
-vGridText.fixedY = True
-vGridText.position = mPriceRegion.newPoint(mPeriod.periodNumber, 0#, PositionAbsolute, PositionDistance)
-vGridText.offset = mPriceRegion.newDimension(0.1, 0)
-vGridText.Text = Format(bartime, "hh:mm")
-End Sub
-
 Private Function calcBarTime(ByVal timestamp As Date) As Date
 calcBarTime = Int(CDbl(timestamp) * 1440 / mBarLength) * mBarLength / 1440
 End Function
@@ -1133,42 +1088,6 @@ mMACD.datavalue value
 If Not IsEmpty(mMACD.MACDValue) Then mMACDPoint.datavalue = mMACD.MACDValue
 If Not IsEmpty(mMACD.MACDSignalValue) Then mMACDSignalPoint.datavalue = mMACD.MACDSignalValue
 If Not IsEmpty(mMACD.MACDHistValue) Then mMACDHistPoint.datavalue = mMACD.MACDHistValue
-
-End Sub
-
-Private Sub drawVerticalGridLine(ByVal bartime As Date)
-Dim vertGridIntervalMins As Long
-Dim mins As Long
-
-Select Case mBarLength
-Case 1
-    vertGridIntervalMins = 15
-Case 2
-    vertGridIntervalMins = 30
-Case 3
-    vertGridIntervalMins = 30
-Case 5
-    vertGridIntervalMins = 60
-Case 10
-    vertGridIntervalMins = 60
-Case 15
-    vertGridIntervalMins = 60
-Case 30
-    vertGridIntervalMins = 120
-Case 60
-    vertGridIntervalMins = 360
-Case Else
-    ' in all other cases just draw a vertical gridline every 10 bars
-    If mPeriod.periodNumber Mod 10 = 0 Then
-        addGridLine bartime
-    End If
-    Exit Sub
-End Select
-
-mins = Int(((bartime + 1 / 86400) - Int(bartime)) * 1440)
-If mins Mod vertGridIntervalMins = 0 Then
-    addGridLine bartime
-End If
 
 End Sub
 

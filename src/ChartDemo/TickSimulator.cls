@@ -214,14 +214,6 @@ generateSimulatedPrice = prevprice + mTickSize * mPriceChange(Fix(Rnd() * NumPri
 prevprice = generateSimulatedPrice
 End Function
 
-Private Function generateSimulatedVolume() As Long
-Static prevVolume As Long
-If prevVolume = 0 Then prevVolume = 25 * mBarLength
-'Randomize
-generateSimulatedVolume = Abs(mBarLength * (prevVolume + Int(Rnd() * 101 - 50)))
-prevVolume = generateSimulatedVolume
-End Function
-
 Private Function generateSimulatedTickVolume() As Long
 Randomize
 generateSimulatedTickVolume = mTickVolume(Fix(Rnd() * NumTickVolumeElements))
