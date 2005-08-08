@@ -118,8 +118,14 @@ Private mPrevHeight As Single
 
 Private mTwipsPerBar As Long
 
+Private mXAxisRegion As ChartRegion
+Private mXCursorText As text
+
 Private mYAxisPosition As Long
 Private mYAxisWidthCm As Single
+
+Private mSessionStartTime As Date
+Private mPeriodLengthMinutes As Long
 
 Private mBackColour As Long
 Private mGridColour As Long
@@ -163,6 +169,10 @@ Enum ArrowStyles
     ArrowBarb
 End Enum
 
+Enum ErrorCodes
+    InvalidPropertyValue = 380
+End Enum
+
 Enum FillStyles
     FillSolid = vbFSSolid ' 0 Solid
     FillTransparent = vbFSTransparent ' 1 (Default) Transparent
@@ -182,6 +192,12 @@ Enum LineStyles
     LineDashDotDot = vbDashDotDot
     LineInvisible = vbInvisible
     LineInsideSolid = vbInsideSolid
+End Enum
+
+Enum PointerStyles
+    PointerNone
+    PointerCrosshairs
+    PointerDisc
 End Enum
 
 Enum TextAlignModes
@@ -233,6 +249,7 @@ End Enum
 '================================================================================
 
 Private Sub UserControl_Initialize()
+Dim aFont As StdFont
 
 mPrevHeight = UserControl.Height
 
@@ -240,6 +257,7 @@ ReDim mRegions(100) As RegionTableEntry
 mRegionsIndex = -1
 
 Set mPeriods = New Collection
+mPeriodLengthMinutes = 5
 
 mBackColour = vbWhite
 mGridColour = &HC0C0C0
@@ -257,6 +275,30 @@ mAllowHorizontalMouseScrolling = True
 mAllowVerticalMouseScrolling = True
 
 HScroll.Height = 0
+
+Set mXAxisRegion = New ChartRegion
+mXAxisRegion.surface = XAxisPicture
+mXAxisRegion.periodLengthMinutes = mPeriodLengthMinutes
+mXAxisRegion.pointerStyle = PointerNone
+mXAxisRegion.regionBackColor = mBackColour
+mXAxisRegion.regionHeight = 1
+mXAxisRegion.regionTop = 1
+mXAxisRegion.sessionStartTime = mSessionStartTime
+mXAxisRegion.showGrid = False
+mXAxisRegion.showGridText = True
+
+Set mXCursorText = mXAxisRegion.addText(LayerNumbers.LayerPointer)
+mXCursorText.align = AlignTopLeft
+mXCursorText.color = vbRed
+mXCursorText.box = True
+mXCursorText.boxFillColor = mBackColour
+mXCursorText.boxStyle = LineInvisible
+Set aFont = New StdFont
+aFont.name = "Arial"
+aFont.Size = 10
+aFont.Underline = False
+aFont.Bold = True
+mXCursorText.font = aFont
 
 End Sub
 
@@ -546,6 +588,23 @@ Public Property Let lastVisiblePeriod(ByVal value As Long)
 scrollX value - mYAxisPosition + 1
 End Property
 
+Public Property Get periodLengthMinutes() As Long
+periodLengthMinutes = mPeriodLengthMinutes
+End Property
+
+Public Property Let periodLengthMinutes(ByVal val As Long)
+mPeriodLengthMinutes = val
+mXAxisRegion.periodLengthMinutes = val
+End Property
+
+Public Property Get sessionStartTime() As Date
+sessionStartTime = mSessionStartTime
+End Property
+
+Public Property Let sessionStartTime(ByVal val As Date)
+mSessionStartTime = val
+End Property
+
 Public Property Get showCrosshairs() As Boolean
 showCrosshairs = mShowCrosshairs
 End Property
@@ -556,7 +615,11 @@ Dim region As ChartRegion
 mShowCrosshairs = val
 For i = 0 To mRegionsIndex
     Set region = mRegions(i).region
-    region.showCrosshairs = val
+    If val Then
+        region.pointerStyle = PointerCrosshairs
+    Else
+        region.pointerStyle = PointerDisc
+    End If
 Next
 End Property
 
@@ -594,7 +657,7 @@ For i = 0 To mRegionsIndex
     Set region = mRegions(i).region
     region.suppressDrawing = val
 Next
-'If Not mSuppressDrawing Then paintAll
+mXAxisRegion.suppressDrawing = val
 End Property
 
 Public Property Get twipsPerBar() As Long
@@ -663,6 +726,8 @@ addChartRegion.showCrosshairs = mShowCrosshairs
 addChartRegion.showGrid = mShowGrid
 addChartRegion.periodsInView mScaleLeft, mYAxisPosition - 1
 addChartRegion.autoscale = mAutoscale
+addChartRegion.periodLengthMinutes = mPeriodLengthMinutes
+addChartRegion.sessionStartTime = mSessionStartTime
 
 If mRegionsIndex = UBound(mRegions) Then
     ReDim Preserve mRegions(UBound(mRegions) + 100) As RegionTableEntry
@@ -712,8 +777,9 @@ mPeriods.Add addPeriod, CStr(addPeriod.periodNumber)
 
 For i = 0 To mRegionsIndex
     Set region = mRegions(i).region
-    region.addPeriod mCurrentPeriodNumber
+    region.addPeriod mCurrentPeriodNumber, timestamp
 Next
+mXAxisRegion.addPeriod mCurrentPeriodNumber, timestamp
 setHorizontalScrollBar
 End Function
 
@@ -745,32 +811,14 @@ Set thisPeriod = mPeriods(periodNumber)
 On Error GoTo 0
 If thisPeriod Is Nothing Then Exit Sub
 
-With XAxisPicture
-    If mNotFirstMouseMove Then
-        prevPeriodNumber = Round(mPrevCursorX)
-        If prevPeriodNumber > 0 Then
-            .DrawMode = vbXorPen
-            .ForeColor = .backColor
-            .CurrentX = prevPeriodNumber
-            .CurrentY = 100
-            Set prevPeriod = mPeriods(prevPeriodNumber)
-            XAxisPicture.Print Format(prevPeriod.timestamp, "dd/mm hh:nn")
-        End If
-    End If
-    
-    mPrevCursorX = X
-    mPrevCursorY = Y
-    mNotFirstMouseMove = True
-    
-    If Round(X) <= 0 Then Exit Sub
-    
-    .DrawMode = vbXorPen
-    .CurrentX = periodNumber
-    .CurrentY = Y
-    .ForeColor = vbRed 'Xor BackColor 'vbWhite 'Xor BackColor
-    XAxisPicture.Print Format(thisPeriod.timestamp, "dd/mm hh:nn")
-    
-End With
+mXAxisRegion.suppressDrawing = True
+mXCursorText.position = mXAxisRegion.newPoint( _
+                            periodNumber, _
+                            0, _
+                            PositionAbsolute, _
+                            PositionCounterDistance)
+mXCursorText.text = Format(thisPeriod.timestamp, "dd/mm hh:nn")
+mXAxisRegion.suppressDrawing = False
 
 End Sub
 
@@ -786,9 +834,7 @@ For i = 0 To mRegionsIndex
     Set region = mRegions(i).region
     region.paintRegion
 Next
-
-XAxisPicture.Cls
-displayXAxisLabel mPrevCursorX, 100
+mXAxisRegion.paintRegion
 
 End Sub
 
@@ -837,6 +883,7 @@ End Sub
 Public Sub scrollX(ByVal value As Long)
 Dim region As ChartRegion
 Dim i As Long
+If value = 0 Then Exit Sub
 mYAxisPosition = mYAxisPosition + value
 mScaleLeft = mYAxisPosition + _
             (mYAxisWidthCm * TwipsPerCm / XAxisPicture.Width * mScaleWidth) - _
@@ -846,6 +893,7 @@ For i = 0 To mRegionsIndex
     Set region = mRegions(i).region
     region.periodsInView mScaleLeft, mYAxisPosition - 1
 Next
+mXAxisRegion.periodsInView mScaleLeft, mScaleLeft + mScaleWidth
 setHorizontalScrollBar
 paintAll
 End Sub
@@ -958,14 +1006,14 @@ Next
 ' that needs to be respected
 For i = 0 To mRegionsIndex
     Set aRegion = mRegions(i).region
-    If mRegions(i).useAvailableSpace And _
-        aRegion.minimumPercentHeight <> 0 _
-    Then
+    If mRegions(i).useAvailableSpace Then
         mRegions(i).actualHeight = 0
-        If (nonFixedAvailableSpacePercent / numAvailableSpaceRegions) < aRegion.minimumPercentHeight Then
-            mRegions(i).actualHeight = aRegion.minimumPercentHeight * availableHeight / 100
-            nonFixedAvailableSpacePercent = nonFixedAvailableSpacePercent - aRegion.minimumPercentHeight
-            numAvailableSpaceRegions = numAvailableSpaceRegions - 1
+        If aRegion.minimumPercentHeight <> 0 Then
+            If (nonFixedAvailableSpacePercent / numAvailableSpaceRegions) < aRegion.minimumPercentHeight Then
+                mRegions(i).actualHeight = aRegion.minimumPercentHeight * availableHeight / 100
+                nonFixedAvailableSpacePercent = nonFixedAvailableSpacePercent - aRegion.minimumPercentHeight
+                numAvailableSpaceRegions = numAvailableSpaceRegions - 1
+            End If
         End If
     End If
 Next

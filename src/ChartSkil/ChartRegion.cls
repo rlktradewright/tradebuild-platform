@@ -120,6 +120,13 @@ Private mYPositionText As text      ' used to indicate the position of the point
 Private mYGridTexts As TextSeries
 Private mYGridLines As LineSeries
 
+Private mXGridTexts As TextSeries
+Private mXGridLines As LineSeries
+Private mShowGridText As Boolean
+
+Private mSessionStartTime As Date
+Private mPeriodLengthMinutes As Long
+
 Private mAutoscale As Boolean
 Private mMinimumHeight As Single
 Private mPrevHeight As Single
@@ -139,8 +146,9 @@ Private mGridTextHeight As Double
 Private mBackColour As Long
 Private mGridColour As Long
 Private mShowGrid As Boolean
-Private mShowCrosshairs As Boolean
 Private mShowPerformanceText As Boolean
+
+Private mPointerStyle As PointerStyles
 
 Private mPrevCursorX As Single
 Private mPrevCursorY As Single
@@ -788,6 +796,49 @@ Public Property Let percentheight(ByVal value As Double)
 mPercentHeight = value
 End Property
 
+Friend Property Let periodLengthMinutes(ByVal val As Long)
+mPeriodLengthMinutes = val
+End Property
+
+Public Property Get pointerStyle() As PointerStyles
+pointerStyle = mPointerStyle
+End Property
+
+Public Property Let pointerStyle(ByVal value As PointerStyles)
+
+If mPointerStyle = value Then Exit Property
+
+If Not mDrawn Then
+    mPointerStyle = value
+    Exit Property
+End If
+
+Select Case mPointerStyle
+Case PointerNone
+
+Case PointerCrosshairs
+    undrawCrosshairs
+Case PointerDisc
+    undrawPointer
+End Select
+
+mPointerStyle = value
+
+Select Case mPointerStyle
+Case PointerNone
+
+Case PointerCrosshairs
+    mSurface.MousePointer = vbDefault
+Case PointerDisc
+    mSurface.MousePointer = vbCrosshair
+Case Else
+    Err.Raise ErrorCodes.InvalidPropertyValue, _
+            "ChartSkil.ChartRegion::(let)pointerStyle", _
+            "Value must be a member of the PointerStyles enum"
+End Select
+
+End Property
+
 Public Property Get regionBackColor() As Long
 regionBackColor = mBackColour
 End Property
@@ -870,6 +921,33 @@ Friend Property Let regionWidth(ByVal value As Single)
 mSurface.ScaleWidth = value
 End Property
 
+Friend Property Let sessionStartTime(ByVal val As Date)
+mSessionStartTime = val
+End Property
+
+'/**
+'*
+'* Deprecated - use pointerStyle instead
+'*
+'*/
+Friend Property Get showCrosshairs() As Boolean
+showCrosshairs = (mPointerStyle = PointerCrosshairs)
+End Property
+
+'/**
+'*
+'* Deprecated - use pointerStyle instead
+'*
+'*/
+Friend Property Let showCrosshairs(ByVal val As Boolean)
+Dim style As PointerStyles
+If val Then
+    pointerStyle = PointerCrosshairs
+Else
+    pointerStyle = PointerDisc
+End If
+End Property
+
 Public Property Get showGrid() As Boolean
 showGrid = mShowGrid
 End Property
@@ -877,6 +955,15 @@ End Property
 Public Property Let showGrid(ByVal val As Boolean)
 mShowGrid = val
 If mShowGrid Then
+    Set mXGridLines = Me.addLineSeries(LayerNumbers.LayerGrid)
+    mXGridLines.color = mGridColour
+    mXGridLines.fixedY = True
+    mXGridLines.extendAfter = True
+    mXGridLines.extendBefore = True
+    mXGridLines.includeInAutoscale = False
+    mXGridLines.style = LineSolid
+    mXGridLines.thickness = 1
+    
     Set mYGridLines = Me.addLineSeries(LayerNumbers.LayerGrid)
     mYGridLines.color = mGridColour
     mYGridLines.extendAfter = True
@@ -885,26 +972,36 @@ If mShowGrid Then
     mYGridLines.style = LineSolid
     mYGridLines.thickness = 1
 Else
+    Set mXGridLines = Nothing
     Set mYGridLines = Nothing
 End If
 End Property
 
-Friend Property Get showCrosshairs() As Boolean
-showCrosshairs = mShowCrosshairs
+Public Property Get showGridText() As Boolean
+showGridText = mShowGridText
 End Property
 
-Friend Property Let showCrosshairs(ByVal val As Boolean)
-If mShowCrosshairs = val Then Exit Property
-mShowCrosshairs = val
-If Not mDrawn Then Exit Property
-If mShowCrosshairs Then
-    undrawPointer
-    mSurface.MousePointer = vbDefault
-Else
-    undrawCrosshairs
-    mSurface.MousePointer = vbCrosshair
-End If
+Public Property Let showGridText(ByVal val As Boolean)
+Dim aFont As StdFont
 
+mShowGridText = val
+If mShowGridText Then
+    Set mXGridTexts = Me.addTextSeries(LayerNumbers.LayerGrid)
+    mXGridTexts.align = AlignBottomCentre
+    mXGridTexts.box = True
+    mXGridTexts.boxFillColor = mBackColour
+    mXGridTexts.boxStyle = LineInvisible
+    mXGridTexts.extended = True
+    mXGridTexts.color = mGridColour
+    Set aFont = New StdFont
+    aFont.name = "Arial"
+    aFont.Size = 9
+    aFont.Underline = False
+    aFont.Bold = False
+    mXGridTexts.font = aFont
+Else
+    Set mXGridTexts = Nothing
+End If
 End Property
 
 Public Property Get showPerformanceText() As Boolean
@@ -1082,6 +1179,7 @@ mYAxisRegion.regionBackColor = regionBackColor
 mYAxisRegion.showGrid = False
 mYAxisRegion.regionWidth = 100
 mYAxisRegion.periodsInView 0, 99
+mYAxisRegion.pointerStyle = PointerNone
 
 Set mYPositionText = mYAxisRegion.addText(LayerNumbers.LayerPointer)
 mYPositionText.align = AlignCentreLeft
@@ -1208,19 +1306,10 @@ With addLineSeries
 End With
 End Function
 
-Friend Sub addPeriod(ByVal periodNumber As Long)
-If periodNumber > UBound(mPeriodTable) Then
-    ReDim Preserve mPeriodTable(UBound(mPeriodTable) + 1000) As PeriodTableEntry
-End If
-
-With mPeriodTable(periodNumber)
-    If .firstIndex = 0 Then
-        .firstIndex = allocateGraphicObjectTableEntry
-        .lastindex = allocateGraphicObjectTableEntry
-        mGraphicObjects(.firstIndex).nextPeriodIndex = .lastindex
-        mGraphicObjects(.lastindex).prevPeriodIndex = .firstIndex
-    End If
-End With
+Friend Sub addPeriod(ByVal periodNumber As Long, _
+                    ByVal timestamp As Date)
+addNewPeriod periodNumber
+setVerticalGridLine timestamp, periodNumber
 End Sub
 
 Public Function addText(Optional ByVal layer As Long = -1) As text
@@ -1279,14 +1368,20 @@ If Y = MinusInfinitySingle Then
 Else
     yVal = Y
 End If
+
 If Round(X) >= YAxisPosition Then Exit Sub
-If mShowCrosshairs Then
+
+Select Case mPointerStyle
+Case PointerNone
+
+Case PointerCrosshairs
     undrawCrosshairs
     drawCrosshairs X, yVal
-Else
+Case PointerDisc
     undrawPointer
     drawPointer X, yVal
-End If
+End Select
+
 End Sub
 
 Public Function newDimension(ByVal X As Double, _
@@ -1417,10 +1512,10 @@ Else
 End If
 
 If mShowGrid Then
-    setGridLines
+    setHorizontalGridLines
 End If
 
-setGridTexts
+setHorizontalGridTexts
 
 For i = MinLayer To MaxLayer
     index = mGraphicObjects(mVisibleTable(i).firstIndex).nextVisibleIndex
@@ -1435,11 +1530,14 @@ For i = MinLayer To MaxLayer
     Loop
 Next
 
-If mShowCrosshairs Then
+Select Case mPointerStyle
+Case PointerNone
+
+Case PointerCrosshairs
     drawCrosshairs mPrevCursorX, mPrevCursorY
-Else
+Case PointerDisc
     drawPointer mPrevCursorX, mPrevCursorY
-End If
+End Select
 
 If mShowPerformanceText Then
     If mPerfText Is Nothing Then
@@ -1477,6 +1575,8 @@ End If
 End With
 
 mDrawn = True
+
+If Not mYAxisRegion Is Nothing Then mYAxisRegion.paintRegion
 End Sub
 
 Friend Sub periodsInView(ByVal minValue As Single, ByVal maxValue As Single)
@@ -1620,7 +1720,7 @@ With mGraphicObjects(index)
             removeEntryFromPeriodList index
         End If
         If newPeriodNumber < 1 Then Exit Sub
-        addPeriod newPeriodNumber  ' in case the period hasn't been added yet
+        addNewPeriod newPeriodNumber  ' in case the period hasn't been added yet
         lastindex = mPeriodTable(newPeriodNumber).lastindex
         .periodNumber = newPeriodNumber
         .nextPeriodIndex = lastindex
@@ -1684,6 +1784,51 @@ End If
 addGraphicObject = handle
 End Function
 
+Private Sub addNewPeriod(ByVal periodNumber As Long)
+If periodNumber > UBound(mPeriodTable) Then
+    ReDim Preserve mPeriodTable(UBound(mPeriodTable) + 1000) As PeriodTableEntry
+End If
+
+With mPeriodTable(periodNumber)
+    If .firstIndex = 0 Then
+        .firstIndex = allocateGraphicObjectTableEntry
+        .lastindex = allocateGraphicObjectTableEntry
+        mGraphicObjects(.firstIndex).nextPeriodIndex = .lastindex
+        mGraphicObjects(.lastindex).prevPeriodIndex = .firstIndex
+    End If
+End With
+End Sub
+
+Private Sub addVerticalGridLine(ByVal periodNumber As Long, _
+                                ByVal timestamp As Date)
+Dim vGridLine As ChartSkil.Line
+Dim vGridText As text
+
+If mShowGrid Then
+    Set vGridLine = mXGridLines.addLine
+    vGridLine.point1 = newPoint(periodNumber, _
+                                0, _
+                                PositionAbsolute, _
+                                PositionRelative)
+    vGridLine.point2 = newPoint(periodNumber, _
+                                100, _
+                                PositionAbsolute, _
+                                PositionRelative)
+End If
+
+If mShowGridText Then
+    Set vGridText = mXGridTexts.addText
+    vGridText.fixedX = False
+    vGridText.fixedY = True
+    vGridText.position = newPoint(periodNumber, _
+                                0#, _
+                                PositionAbsolute, _
+                                PositionDistance)
+    vGridText.text = Format(timestamp, "hh:mm")
+End If
+
+End Sub
+
 Private Function allocateGraphicObjectTableEntry() As Long
 Static graphicObjectsIndex As Long
 allocateGraphicObjectTableEntry = graphicObjectsIndex
@@ -1701,6 +1846,11 @@ End Function
 
 Private Function calculateGaugeY() As Double
 calculateGaugeY = -(mSurface.ScaleHeight / mSurface.Height) * Screen.TwipsPerPixelY
+End Function
+
+Private Function calculateMinutesFromMidnight( _
+                            ByVal timestamp As Date) As Long
+calculateMinutesFromMidnight = Int((timestamp - Int(timestamp) + 1 / 86400000) * 1440)
 End Function
 
 Private Sub calculateObjectHighAndLowInInterval( _
@@ -2021,6 +2171,10 @@ With mSurface
     
 End With
 
+If Not mYAxisRegion Is Nothing Then
+    mYPositionText.position = mYAxisRegion.newPoint(10, Y, PositionAbsolute, PositionAbsolute)
+    mYPositionText.text = Format(Y, mYScaleSubFormatStr)
+End If
 End Sub
 
 Private Function getLayer(Optional ByVal layer As Long = -1) As Long
@@ -2303,7 +2457,7 @@ With mGraphicObjects(index)
 End With
 End Sub
 
-Private Sub setGridLines()
+Private Sub setHorizontalGridLines()
 Dim z As Double
 Dim i As Long
 Dim aLine As ChartSkil.Line
@@ -2334,7 +2488,7 @@ Next
 mSuppressDrawing = currSuppress
 End Sub
 
-Private Sub setGridTexts()
+Private Sub setHorizontalGridTexts()
 Dim z As Double
 Dim i As Long
 Dim aText As text
@@ -2361,6 +2515,45 @@ For i = i + 1 To mYGridTexts.count
     aText.text = ""
 Next
 mSuppressDrawing = currSuppress
+End Sub
+
+Private Sub setVerticalGridLine(ByVal timestamp As Date, _
+                            ByVal periodNumber As Long)
+Dim vertGridIntervalMins As Long
+Dim mins As Long
+Dim sessionOffsetMins As Long
+
+Select Case mPeriodLengthMinutes
+Case 1
+    vertGridIntervalMins = 15
+Case 2
+    vertGridIntervalMins = 30
+Case 3
+    vertGridIntervalMins = 30
+Case 5
+    vertGridIntervalMins = 60
+Case 10
+    vertGridIntervalMins = 60
+Case 15
+    vertGridIntervalMins = 60
+Case 30
+    vertGridIntervalMins = 120
+Case 60
+    vertGridIntervalMins = 360
+Case Else
+    ' in all other cases just draw a vertical gridline every 10 bars
+    If periodNumber Mod 10 = 0 Then
+        addVerticalGridLine periodNumber, timestamp
+    End If
+    Exit Sub
+End Select
+
+sessionOffsetMins = calculateMinutesFromMidnight(mSessionStartTime) Mod 60
+mins = calculateMinutesFromMidnight(timestamp)
+If (mins - sessionOffsetMins) Mod vertGridIntervalMins = 0 Then
+    addVerticalGridLine periodNumber, timestamp
+End If
+
 End Sub
 
 Private Sub undrawCrosshairs()

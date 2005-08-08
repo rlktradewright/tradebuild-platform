@@ -143,15 +143,8 @@ End Property
 Private Function IGraphicObject_boundingRectanglesAt(ByVal periodNumber As Long) As ChartSkilTypes.TRectangle()
 Dim periodrect As TRectangle
 Dim rects() As TRectangle
-'Dim numrects As Long
 
 If mBlank Then Exit Function
-
-'If mLeftToRight Then
-'    If periodNumber > mPoint2.X Then Exit Function
-'Else
-'    If periodNumber > mPoint1.X Then Exit Function
-'End If
 
 With periodrect
     .left = periodNumber
@@ -168,16 +161,8 @@ If mVertical <> VerticalNot Then
     If vertRect.isvalid Then
         
         ReDim rects(0) As TRectangle
-        'numrects = 1
 
         rects(0) = vertRect
-'        With rects(0)
-'            .bottom = mRegionRect.bottom
-'            .top = mRegionRect.top
-'            .left = periodNumber - mThicknessOffsetX
-'            .right = periodNumber + mThicknessOffsetX
-'            .isvalid = True
-'        End With
     End If
 Else
     If periodNumber = Int(mRegionRect.right) Or _
@@ -188,7 +173,6 @@ Else
     End If
     
     ReDim rects(0) As TRectangle
-'    numrects = 1
     
     With rects(0)
         .left = periodNumber
@@ -252,16 +236,11 @@ End If
 If Not mArrowEndStyle = ArrowNone Then
     If rectOverlaps(mEndArrowRect, periodrect) Then
         rects(0) = rectUnion(rects(0), mEndArrowRect)
-'        ReDim Preserve rects(numrects) As TRectangle
-'        rects(numrects) = mEndArrowRect       ' give the whole arrow rect
-'        numrects = numrects + 1
     End If
 End If
 If Not mArrowStartStyle = ArrowNone Then
     If rectOverlaps(mStartArrowRect, periodrect) Then
         rects(0) = rectUnion(rects(0), mStartArrowRect)
-'        ReDim Preserve rects(numrects) As TRectangle
-'        rects(numrects) = mStartArrowRect       ' give the whole arrow rect
     End If
 End If
 IGraphicObject_boundingRectanglesAt = rects
