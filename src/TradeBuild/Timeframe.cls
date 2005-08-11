@@ -239,7 +239,7 @@ Case TradeBuildListenValueTypes.ValueTypeTradeBuildVolume
     If mPrevBarVolume = 0 Then
         mPrevBarVolume = tickData.Size - firstTradeSize
     End If
-    mTradeBar.Volume = tickData.Size - mPrevBarVolume
+    mTradeBar.volume = tickData.Size - mPrevBarVolume
     mLatestVolume = tickData.Size
 End Select
 End Sub
@@ -435,7 +435,7 @@ End If
 barkey = CalcBarKey(barTime)
 Set mTradeBar = Nothing
 On Error Resume Next
-Set mTradeBar = mTradeBars.item(barkey)
+Set mTradeBar = mTradeBars.Item(barkey)
 On Error GoTo 0
 If mTradeBar Is Nothing Then
     Set mTradeBar = mTradeBars.add(barkey)
@@ -541,27 +541,25 @@ End Sub
 
 Private Sub ProcessHistoricBar()
 Dim lBar As TradeBuild.Bar
-Dim barTime As Date
 Dim barkey As String
 
 mHistoricBarPending = False
 
 With mHistoricBar
-    'barTime = mContract.BarStartTime(.timestamp, mBarLengthMinutes)
     barkey = CalcBarKey(.Timestamp)
     
     ' check whether this bar already exists
     On Error Resume Next
-    Set lBar = mTradeBars.item(barkey)
+    Set lBar = mTradeBars.Item(barkey)
     On Error GoTo 0
     
     If Not lBar Is Nothing Then
         ' update the existing bar
         lBar.openPrice = .openPrice
-        lBar.HighPrice = .HighPrice
-        lBar.LowPrice = .LowPrice
-        lBar.ClosePrice = .ClosePrice
-        lBar.Volume = .Volume
+        lBar.highPrice = .highPrice
+        lBar.lowPrice = .lowPrice
+        lBar.closePrice = .closePrice
+        lBar.volume = .volume
         lBar.tickVolume = .tickVolume
         lBar.openInterest = .openInterest
     Else
@@ -571,10 +569,10 @@ With mHistoricBar
                                 .barType, _
                                 .PeriodMinutes, _
                                 .openPrice, _
-                                .HighPrice, _
-                                .LowPrice, _
-                                .ClosePrice, _
-                                .Volume, _
+                                .highPrice, _
+                                .lowPrice, _
+                                .closePrice, _
+                                .volume, _
                                 .tickVolume, _
                                 .openInterest)
     End If
