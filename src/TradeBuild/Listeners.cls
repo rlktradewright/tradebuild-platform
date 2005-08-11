@@ -71,7 +71,6 @@ Public Function add(ByVal newListener As IListener, _
                 Optional ByVal valueType As Long = ListenerValueTypes.ValueTypesAll) As String
 Dim key As String
 Dim listeners As Collection
-Dim listener As IListener
 
 If valueType <> ListenerValueTypes.ValueTypesAll Then
     On Error Resume Next
