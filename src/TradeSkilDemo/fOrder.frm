@@ -572,7 +572,7 @@ Event createOrder(ByRef order As order)  ' causes the main form to create a new 
 Event nextOCAID(ByRef id As Long) ' used to get the next OCA group id from the main form
 Event placeOrder( _
                 ByVal pOrder As order, _
-                ByVal pContractSpecifier As ContractSpecifier, _
+                ByVal pContractSpecifier As contractSpecifier, _
                 ByVal passToTWS As Boolean)
 
 Private mContract As Contract
@@ -599,14 +599,6 @@ Private Enum BracketTabs
     StopOrder
     TargetOrder
 End Enum
-
-Private Enum BracketOrderComponents
-    EntryOrder
-    StopOrder
-    TargetOrder
-End Enum
-
-Private mBracketOrderComponent As BracketOrderComponents
 
 Private Sub Form_Initialize()
 InitCommonControls
@@ -1063,7 +1055,7 @@ End Function
 Private Sub placeOrder(ByVal pOrder As order, _
                         ByVal transmit As Boolean, _
                         ByVal passToTWS As Boolean)
-Dim lContractSpecifier As ContractSpecifier
+Dim lContractSpecifier As contractSpecifier
 
 With pOrder
     .openClose = "O"
