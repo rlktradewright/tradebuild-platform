@@ -113,7 +113,6 @@ End Sub
 '================================================================================
 
 Private Function ITickfileServiceProvider_CreateTickfileReader( _
-                            ByVal Tickerid As Long, _
                             ByVal dataConsumer As TradeBuildSP.IStreamingDataConsumer, _
                             ByVal serviceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
                             ByVal FormatIdentifier As String) As TradeBuildSP.ITickfileReader
@@ -124,11 +123,9 @@ Set ITickfileServiceProvider_CreateTickfileReader = reader
 reader.CommonServiceConsumer = mCommonServiceConsumer
 reader.TickfileInputServiceConsumer = serviceConsumer
 reader.StreamingDataConsumer = dataConsumer
-reader.Tickerid = Tickerid
 End Function
 
 Private Function ITickfileServiceProvider_CreateTickfileWriter( _
-                            ByVal Tickerid As Long, _
                             ByVal serviceConsumer As TradeBuildSP.ITickfileOutputServiceConsumer, _
                             Optional ByVal FormatIdentifier As String = "", _
                             Optional ByVal location As String = "") As TradeBuildSP.ITickfileWriter
@@ -141,7 +138,6 @@ writer.Path = location
 writer.CommonServiceConsumer = mCommonServiceConsumer
 writer.TickfileOutputServiceConsumer = serviceConsumer
 writer.ServiceProviderName = mName
-writer.Tickerid = Tickerid
 End Function
 
 Private Sub ITickfileServiceProvider_StopAll()

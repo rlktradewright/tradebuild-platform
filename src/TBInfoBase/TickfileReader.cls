@@ -55,7 +55,6 @@ Implements ITickfileReader
 Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mServiceConsumer As ITickfileInputServiceConsumer
 Private mDataConsumer As IStreamingDataConsumer
-Private mTickerID As Long
 Private mServiceProviderName As String
 
 Private mReplayProgressEventFrequency As Long
@@ -280,10 +279,6 @@ Friend Property Let StreamingDataConsumer(ByVal RHS As IStreamingDataConsumer)
 Set mDataConsumer = RHS
 End Property
 
-Friend Property Let Tickerid(ByVal value As Long)
-mTickerID = value
-End Property
-
 Friend Property Let TickfileInputServiceConsumer(ByVal RHS As ITickfileInputServiceConsumer)
 Set mServiceConsumer = RHS
 End Property
@@ -314,27 +309,25 @@ mRecordsRead = mRecordsRead + 1
 
 Select Case tickType
 Case Bid
-    mDataConsumer.Bid mTickerID, mCurrentTimestamp, price, size
+    mDataConsumer.Bid mCurrentTimestamp, price, size
 Case Ask
-    mDataConsumer.Ask mTickerID, mCurrentTimestamp, price, size
+    mDataConsumer.Ask mCurrentTimestamp, price, size
 Case ClosePrice
-    mDataConsumer.PreviousClose mTickerID, mCurrentTimestamp, price
+    mDataConsumer.PreviousClose mCurrentTimestamp, price
 Case HighPrice
-    mDataConsumer.High mTickerID, mCurrentTimestamp, price
+    mDataConsumer.High mCurrentTimestamp, price
 Case LowPrice
-    mDataConsumer.Low mTickerID, mCurrentTimestamp, price
+    mDataConsumer.Low mCurrentTimestamp, price
 Case marketDepth
     If marketmaker = "" Then
-        mDataConsumer.UpdateMktDepth mTickerID, _
-                                    mCurrentTimestamp, _
+        mDataConsumer.UpdateMktDepth mCurrentTimestamp, _
                                     position, _
                                     operation, _
                                     side, _
                                     price, _
                                     size
     Else
-        mDataConsumer.UpdateMktDepthL2 mTickerID, _
-                                    mCurrentTimestamp, _
+        mDataConsumer.UpdateMktDepthL2 mCurrentTimestamp, _
                                     position, _
                                     marketmaker, _
                                     operation, _
@@ -343,11 +336,11 @@ Case marketDepth
                                     size
     End If
 Case MarketDepthReset
-    mDataConsumer.ResetMarketDepth mTickerID, mCurrentTimestamp
+    mDataConsumer.ResetMarketDepth mCurrentTimestamp, False
 Case Trade
-    mDataConsumer.Trade mTickerID, mCurrentTimestamp, price, size
+    mDataConsumer.Trade mCurrentTimestamp, price, size
 Case Volume
-    mDataConsumer.Volume mTickerID, mCurrentTimestamp, size
+    mDataConsumer.Volume mCurrentTimestamp, size
 End Select
 
 End Sub
