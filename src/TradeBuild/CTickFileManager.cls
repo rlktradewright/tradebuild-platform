@@ -45,7 +45,7 @@ Event errorMessage( _
 Event QueryReplayNextTickfile( _
                 ByVal tickfileIndex As Long, _
                 ByVal tickfileName As String, _
-                ByVal TickfileSizeBytes As Long, _
+                ByVal tickfileSizeBytes As Long, _
                 ByVal pContract As Contract, _
                 ByRef continueMode As ReplayContinueModes)
 
@@ -84,7 +84,7 @@ Private mReader As TickfileReader
 Private mTickfileSpecifiers() As TradeBuild.TickfileSpecifier
 Private mCurrTickfileIndex As Long
 
-Private mTickerID As Long
+Private mTicker As Ticker
 
 Private WithEvents mTickfileSelector As fTickfileSelector
 Attribute mTickfileSelector.VB_VarHelpID = -1
@@ -193,14 +193,13 @@ End Select
 End Sub
 
 Private Sub ITickfileInputServiceConsumer_Ready( _
-                            tickfileSpec As TradeBuildSP.TickfileSpecifier, _
-                            ByVal TickfileSizeBytes As Long)
-
+                tickfileSpec As TradeBuildSP.TickfileSpecifier, _
+                ByVal tickfileSizeBytes As Long)
 Dim tfSpec As TradeBuild.TickfileSpecifier
-Dim contractSpec As TradeBuild.ContractSpecifier
+Dim contractSpec As TradeBuild.contractSpecifier
 
 With tfSpec
-    Set .ContractSpecifier = tickfileSpec.ContractSpecifier
+    Set .contractSpecifier = tickfileSpec.contractSpecifier
     .filename = tickfileSpec.filename
     .From = tickfileSpec.From
     .TickfileFormatID = tickfileSpec.TickfileFormatID
@@ -210,8 +209,8 @@ End With
 ' we now determine a contract specifier with which we'll query the
 ' contract info service providers to get the canonical contract definition
 If mReader.Contract Is Nothing Then
-    If mReader.ContractSpecifier Is Nothing And _
-        tfSpec.ContractSpecifier Is Nothing _
+    If mReader.contractSpecifier Is Nothing And _
+        tfSpec.contractSpecifier Is Nothing _
     Then
         If mContract Is Nothing Then
             ' we have no way to determine what the contract is
@@ -226,18 +225,18 @@ If mReader.Contract Is Nothing Then
             ' we'll use the existing mContract - this one was supplied by
             ' the application to the ticker object
             ' we have everything we need to proceed
-            playOrNot tfSpec, TickfileSizeBytes
+            playOrNot tfSpec, tickfileSizeBytes
             Exit Sub
         End If
     Else
-        If Not mReader.ContractSpecifier Is Nothing Then
-            Set contractSpec = mReader.ContractSpecifier
+        If Not mReader.contractSpecifier Is Nothing Then
+            Set contractSpec = mReader.contractSpecifier
         Else
-            Set contractSpec = tfSpec.ContractSpecifier
+            Set contractSpec = tfSpec.contractSpecifier
         End If
     End If
 Else
-    Set contractSpec = mReader.ContractSpecifier
+    Set contractSpec = mReader.contractSpecifier
 End If
 
 'now query the Contract Details service provider(s) to see if we can
@@ -276,7 +275,7 @@ Else
     Set mContract = mContracts(1)
     If Not mReader Is Nothing Then
         mReader.Contract = mContract
-        playOrNot mTickfileSpecifiers(mCurrTickfileIndex), mReader.TickfileSizeBytes
+        playOrNot mTickfileSpecifiers(mCurrTickfileIndex), mReader.tickfileSizeBytes
     End If
 End If
 
@@ -300,7 +299,7 @@ End Sub
 
 Friend Property Let Contract(ByVal value As Contract)
 If Not value Is Nothing Then
-    Set mContract = value.clone
+    Set mContract = value.Clone
 End If
 End Property
 
@@ -403,12 +402,11 @@ mCurrTickfileIndex = -1
 End Sub
 
 Friend Function CreateOutputTickfile( _
-                ByVal pTicker As ticker, _
+                ByVal pTicker As Ticker, _
                 ByVal outputTickfileFormat As String, _
                 ByVal outputTickFilePath As String) As TradeBuild.TickfileWriter
             
 Set CreateOutputTickfile = gServiceProviders.CreateTickfileWriter( _
-                            mTickerID, _
                             pTicker, _
                             outputTickfileFormat, _
                             outputTickFilePath)
@@ -433,9 +431,9 @@ FinishTickfile
 End Sub
 
 Friend Sub StartReplay( _
-                ByVal pTicker As ticker)
+                ByVal pTicker As Ticker)
                 
-mTickerID = pTicker.id
+Set mTicker = pTicker
 
 StartNextTickfile
 
@@ -461,14 +459,14 @@ End Sub
 
 Private Sub playOrNot( _
                             tickfileSpec As TradeBuild.TickfileSpecifier, _
-                            ByVal TickfileSizeBytes As Long)
+                            ByVal tickfileSizeBytes As Long)
 
 Dim continueMode As ReplayContinueModes
 
 RaiseEvent QueryReplayNextTickfile( _
                 mCurrTickfileIndex, _
                 gTickfileSpecifierToString(tickfileSpec), _
-                TickfileSizeBytes, _
+                tickfileSizeBytes, _
                 mContract, _
                 continueMode)
 
@@ -479,9 +477,7 @@ Case ReplayContinueModes.ReplayCancelAllFiles
 Case ReplayContinueModes.ReplayCancelThisFile
     SkipTickfile
 Case ReplayContinueModes.ReplayContinue
-    gTradeBuildAPI.StartSimulatorMarket mTickerID, _
-                                        mContract.specifier, _
-                                        (mReplaySpeed <> 0)
+    
     mReader.StartReplay
 End Select
 
@@ -489,7 +485,6 @@ End Sub
 
 Private Sub SetupNextTickfile()
 Dim lTickfileSpecifier As TradeBuild.TickfileSpecifier
-Dim continueMode As ReplayContinueModes
 
 Set mReader = Nothing
 Do
@@ -500,7 +495,7 @@ Do
     
     lTickfileSpecifier = mTickfileSpecifiers(mCurrTickfileIndex)
     Set mReader = gServiceProviders.CreateTickfileReader( _
-                                    mTickerID, _
+                                    mTicker, _
                                     Me, _
                                     lTickfileSpecifier.TickfileFormatID)
     

@@ -50,6 +50,7 @@ Event preFill( _
 
 
 Private Type MarketTableEntry
+    inUse                   As Boolean
     contractSpecifier       As contractSpecifier
     bid                     As Double
     bidSize                 As Long
@@ -104,9 +105,9 @@ Friend Property Let simulateExchangeDelays(ByVal value As Boolean)
 mSimulateExchangeDelays = value
 End Property
 
-Friend Property Let MaxTickers(ByVal value As Long)
-ReDim Preserve mMarketTable(value - 1) As MarketTableEntry
-End Property
+'Friend Property Let MaxTickers(ByVal value As Long)
+'ReDim Preserve mMarketTable(value - 1) As MarketTableEntry
+'End Property
 
 Friend Sub cancelOrder(ByVal id As Long)
 Dim lOrder As Order
@@ -450,19 +451,38 @@ With mMarketTable(lOrder.marketIndex)
 End With
 End Sub
 
-Friend Sub startMarket(ByVal TickerID As Long, _
-                    ByVal pContractSpecifier As contractSpecifier)
-With mMarketTable(TickerID)
-    Set .contractSpecifier = pContractSpecifier
+Friend Function startMarket( _
+                    ByVal pContractSpecifier As contractSpecifier) As Long
+Dim i As Long
+
+startMarket = -1
+
+For i = 0 To UBound(mMarketTable)
+    If (Not mMarketTable(i).inUse) Then
+        startMarket = i
+        Exit For
+    End If
+Next
+
+If startMarket = -1 Then
+    startMarket = UBound(mMarketTable) + 1
+    ReDim Preserve mMarketTable(UBound(mMarketTable) + 20) As MarketTableEntry
+End If
+
+mMarketTable(startMarket).inUse = True
+With mMarketTable(startMarket)
+    Set .contractSpecifier = pContractSpecifier.clone
     Set .activeOrders = New Collection
     Set .pendingOrders = New Collection
     Set .clock = New clock
     .clock.SimulateTime True
 End With
-End Sub
 
-Friend Sub stopMarket(ByVal TickerID As Long)
-With mMarketTable(TickerID)
+End Function
+
+Friend Sub stopMarket(ByVal handle As Long)
+With mMarketTable(handle)
+    .inUse = False
     Set .contractSpecifier = Nothing
     Set .activeOrders = Nothing
     Set .pendingOrders = Nothing
@@ -582,7 +602,6 @@ End With
 End Sub
 
 Private Function delay() As Long
-Randomize
 delay = 200 + Fix(Rnd() * 300 + 1)
 End Function
 
@@ -767,7 +786,7 @@ Mid(execId, 18, 6) = ".01.01"
 exec.execId = execId
 exec.orderId = pOrder.id
 exec.permId = pOrder.permId
-exec.Price = fillPrice
+exec.price = fillPrice
 exec.quantity = pOrder.quantity
 exec.side = IIf(pOrder.action = OrderActions.ActionBuy, ExecSides.SideBuy, ExecSides.SideSell)
 exec.time = Format(mMarketTable(pOrder.marketIndex).clock.timestamp, "yyyymmdd hh:nn:ss")

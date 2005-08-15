@@ -133,9 +133,13 @@ End Sub
 
 Public Sub Remove(index As Variant)
 Dim lTimeframe As TradeBuild.Timeframe
+On Error Resume Next
 Set lTimeframe = mTimeframes(index)
-lTimeframe.Finish
-mTimeframes.Remove index
+On Error GoTo 0
+If Not lTimeframe Is Nothing Then
+    lTimeframe.Finish
+    mTimeframes.Remove index
+End If
 End Sub
 
 Public Sub RemoveAll()
@@ -144,7 +148,7 @@ Dim lTimeframe As TradeBuild.Timeframe
 For i = mTimeframes.Count To 1 Step -1
     Set lTimeframe = mTimeframes(i)
     lTimeframe.Finish
-    mTimeframes.Remove (i)
+    mTimeframes.Remove i
 Next
 End Sub
 

@@ -524,7 +524,7 @@ With specifierObj
     Set ComboLegs = specifier.selectSingleNode("combolegs")
     Set nodeList = ComboLegs.selectNodes("comboleg")
     For Each ComboLeg In nodeList
-        Set comboLegObj = .ComboLegs.NewComboLeg()
+        Set comboLegObj = New ComboLeg
         .ComboLegs.add ComboLeg
         comboLegObj.action = ComboLeg.getAttribute("action")
         comboLegObj.contractID = ComboLeg.getAttribute("contractid")

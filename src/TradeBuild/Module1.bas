@@ -36,6 +36,7 @@ Public gServiceProviders As ServiceProviders
 Public gTradeBuildAPI As TradeBuildAPI
 Public gTickers As Tickers
 Public gListeners As listeners
+Public gOrderSimulator As AdvancedOrderSimulator
 
 
 '================================================================================
@@ -324,11 +325,11 @@ MsgBox s
 End Sub
 
 Public Function gTickfileSpecifierToString(tickfileSpec As TradeBuild.TickfileSpecifier) As String
-If tickfileSpec.Filename <> "" Then
-    gTickfileSpecifierToString = tickfileSpec.Filename
+If tickfileSpec.filename <> "" Then
+    gTickfileSpecifierToString = tickfileSpec.filename
 Else
     gTickfileSpecifierToString = "Contract: " & _
-                                Replace(tickfileSpec.contractSpecifier.ToString, vbCrLf, "; ") & _
+                                Replace(tickfileSpec.ContractSpecifier.ToString, vbCrLf, "; ") & _
                             ": From: " & FormatDateTime(tickfileSpec.From, vbGeneralDate) & _
                             " To: " & FormatDateTime(tickfileSpec.To, vbGeneralDate)
 End If

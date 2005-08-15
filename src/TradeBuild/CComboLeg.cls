@@ -8,7 +8,7 @@ BEGIN
 END
 Attribute VB_Name = "ComboLeg"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -63,7 +63,7 @@ Private mOpenClose As LegOpenClose
 '================================================================================
 
 '================================================================================
-' ICommonServiceConsumer Interface Members
+' IComboLeg Interface Members
 '================================================================================
 
 Private Property Let IComboLeg_Action(ByVal RHS As String)

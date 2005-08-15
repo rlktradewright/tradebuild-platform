@@ -59,7 +59,7 @@ Set mComboLegs = New Collection
 End Sub
 
 Private Sub Class_ReadProperties(PropBag As PropertyBag)
-Dim lComboLeg As ComboLeg
+Dim lComboLeg As comboLeg
 Dim pb As PropertyBag
 Dim ComboLegs() As Byte
 Dim i As Long
@@ -82,7 +82,7 @@ err:
 End Sub
 
 Private Sub Class_WriteProperties(PropBag As PropertyBag)
-Dim lComboLeg As ComboLeg
+Dim lComboLeg As comboLeg
 Dim pb As PropertyBag
 Dim ComboLegs() As Byte
 Dim i As Long
@@ -103,8 +103,13 @@ End Sub
 ' IComboLegs Interface Members
 '================================================================================
 
+Private Sub IComboLegs_Add(ByVal comboLeg As TradeBuildSP.IComboLeg, _
+                        Optional ByVal key As String = "")
+add comboLeg, key
+End Sub
+
 Private Function IComboLegs_Clone() As TradeBuildSP.IComboLegs
-Set IComboLegs_Clone = clone
+Set IComboLegs_Clone = Clone
 End Function
 
 Private Property Get IComboLegs_Count() As Long
@@ -112,11 +117,11 @@ IComboLegs_Count = Count
 End Property
 
 Private Function IComboLegs_Item(ByVal index As Variant) As TradeBuildSP.IComboLeg
-Set IComboLegs_Item = Item(index)
+Set IComboLegs_Item = item(index)
 End Function
 
-Private Function IComboLegs_NewComboLeg(Optional ByVal key As String = "") As TradeBuildSP.IComboLeg
-Set IComboLegs_NewComboLeg = NewComboLeg(key)
+Private Function IComboLegs_NewComboLeg() As TradeBuildSP.IComboLeg
+Set IComboLegs_NewComboLeg = New comboLeg
 End Function
 
 Private Sub IComboLegs_Remove(ByVal index As Variant)
@@ -139,36 +144,33 @@ End Property
 ' Methods
 '================================================================================
 
-Friend Sub add(ByVal pComboLeg As ComboLeg, _
+Friend Sub add(ByVal pComboLeg As comboLeg, _
                 Optional ByVal key As String)
 If key <> "" Then
-    mComboLegs.add NewComboLeg, key
+    mComboLegs.add pComboLeg.Clone, key
 Else
-    mComboLegs.add NewComboLeg
+    mComboLegs.add pComboLeg.Clone
 End If
 End Sub
 
-Public Function clone() As ComboLegs
-Dim cl As ComboLeg
-Set clone = New ComboLegs
+Public Function Clone() As ComboLegs
+Dim cl As comboLeg
+Set Clone = New ComboLegs
 For Each cl In mComboLegs
-    clone.add cl.clone
+    Clone.add cl.Clone
 Next
 End Function
 
-Public Function Item(ByVal index As Long) As ComboLeg
-Set Item = mComboLegs(index)
-End Function
-
-Public Function NewComboLeg(Optional ByVal key As String) As ComboLeg
-Set NewComboLeg = New ComboLeg
-add NewComboLeg, key
+Public Function item(ByVal index As Long) As comboLeg
+Dim theItem As comboLeg
+Set theItem = mComboLegs(index)
+item = theItem.Clone
 End Function
 
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
-   Set NewEnum = mComboLegs.[_NewEnum]
+Set NewEnum = mComboLegs.[_NewEnum]
 End Function
 
 Public Sub Remove(ByVal index As Variant)
@@ -178,4 +180,6 @@ End Sub
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+
 

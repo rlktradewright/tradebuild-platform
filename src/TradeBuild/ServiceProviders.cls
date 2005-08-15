@@ -75,11 +75,11 @@ End Sub
 '================================================================================
 
 Private Function ICommonServiceConsumer_FormatTimestamp( _
-                            ByVal timestamp As Date, _
+                            ByVal Timestamp As Date, _
                             Optional ByVal formatOption As TradeBuildSP.TimestampFormats = 2&, _
                             Optional ByVal formatString As String = "yyyymmddhhnnss" _
                             ) As String
-ICommonServiceConsumer_FormatTimestamp = gFormatTimestamp(timestamp, _
+ICommonServiceConsumer_FormatTimestamp = gFormatTimestamp(Timestamp, _
                                                     formatOption, _
                                                     formatString)
 End Function
@@ -123,14 +123,14 @@ Set ICommonServiceConsumer_NewContract = New Contract
 End Function
 
 Private Function ICommonServiceConsumer_NewContractSpecifier() As TradeBuildSP.IContractSpecifier
-Set ICommonServiceConsumer_NewContractSpecifier = New ContractSpecifier
+Set ICommonServiceConsumer_NewContractSpecifier = New contractSpecifier
 End Function
 
 Private Sub ICommonServiceConsumer_NotifyListeners( _
                             ByVal value As Variant, _
                             ByVal valueType As Long, _
-                            ByVal timestamp As Date)
-gListeners.notify value, valueType, timestamp
+                            ByVal Timestamp As Date)
+gListeners.notify value, valueType, Timestamp
 End Sub
 
 Private Sub ICommonServiceConsumer_RegisterServiceProvider( _
@@ -241,6 +241,7 @@ Else
     lContracts.LoadComplete
 End If
 End Sub
+
 '================================================================================
 ' XXXX Event Handlers
 '================================================================================
@@ -322,7 +323,7 @@ End Function
                             
 Friend Function CreateHistoricalDataWriter( _
                             ByVal serviceConsumer As TradeBuildSP.IBarDataOutputServiceConsumer, _
-                            ByVal contractSpec As TradeBuild.ContractSpecifier, _
+                            ByVal contractSpec As TradeBuild.contractSpecifier, _
                             ByVal historicDataPath As String _
                             ) As TradeBuild.HistoricDataWriter
                             
@@ -358,7 +359,7 @@ Set CreateHistoricalDataWriter = histDataWriter
 End Function
 
 Friend Function CreateTickfileReader( _
-                                    ByVal TickerID As Long, _
+                                    ByVal pTicker As Ticker, _
                                     ByVal serviceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
                                     ByVal inputTickfileFormatID As String _
                                     ) As TradeBuild.TickfileReader
@@ -385,8 +386,8 @@ Next
 If tickfileSp Is Nothing Then Exit Function
 
 Set tfReader = New TradeBuild.TickfileReader
-Set tickfileSPReader = tickfileSp.CreateTickfileReader(TickerID, _
-                                                    tfReader, _
+tfReader.dataConsumer = pTicker
+Set tickfileSPReader = tickfileSp.CreateTickfileReader(tfReader, _
                                                     serviceConsumer, _
                                                     inputTickfileFormatID)
 
@@ -396,7 +397,6 @@ Set CreateTickfileReader = tfReader
 End Function
 
 Friend Function CreateTickfileWriter( _
-                            ByVal TickerID As Long, _
                             ByVal serviceConsumer As TradeBuildSP.ITickfileOutputServiceConsumer, _
                             ByVal outputTickfileFormatID As String, _
                             ByVal outputTickFilePath As String _
@@ -425,8 +425,7 @@ Next
 If tickfileSp Is Nothing Then Exit Function
 
 Set tfWriter = New TradeBuild.TickfileWriter
-Set tickfileSPWriter = tickfileSp.CreateTickfileWriter(TickerID, _
-                                                    serviceConsumer, _
+Set tickfileSPWriter = tickfileSp.CreateTickfileWriter(serviceConsumer, _
                                                     outputTickfileFormatID, _
                                                     outputTickFilePath)
 
@@ -449,13 +448,13 @@ mServiceProviders(handle).Name = ""
 End Sub
 
 Friend Function RequestContract( _
-                            ByRef ContractSpecifier As TradeBuild.ContractSpecifier _
+                            ByRef contractSpecifier As TradeBuild.contractSpecifier _
                             ) As TradeBuild.Contracts
 Dim lContracts As TradeBuild.Contracts
 Set lContracts = New TradeBuild.Contracts
 Set RequestContract = lContracts
 
-lContracts.ContractSpecifier = ContractSpecifier
+lContracts.contractSpecifier = contractSpecifier
 
 If Not RequestContractFromNextSP(0, lContracts) Then lContracts.LoadComplete
 End Function

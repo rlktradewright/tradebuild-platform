@@ -31,7 +31,7 @@ Public Type SortEntry
 End Type
 
 Public Type Tick
-    timestamp       As Date
+    Timestamp       As Date
     TickType        As TradeBuild.TickTypes
     TickPrice       As Double
     TickSize        As Long
@@ -43,26 +43,26 @@ Public Type Tick
 End Type
 
 Public Type TickerListenData
-    TickerID As Long
-    price As Double
+    TickerKey As String
+    Price As Double
     Size As Long
 End Type
 
 Public Type TickerListenMDData
-    TickerID As Long
+    TickerKey As String
     side As DOMSides
-    price As Double
+    Price As Double
     Size As Long
     marketDataReRequested As Boolean
 End Type
 
 Public Type TickerListenRawMDData
-    TickerID As Long
+    TickerKey As String
     position As Long
     marketMaker As String
     operation As DOMOperations
     side As DOMSides
-    price As Double
+    Price As Double
     Size As Long
 End Type
 
@@ -77,7 +77,7 @@ End Type
 Public Type TickfileSpecifier
     TickfileFormatID    As String
     filename            As String
-    ContractSpecifier   As ContractSpecifier
+    contractSpecifier   As contractSpecifier
     From                As Date
     To                  As Date
     EntireSession       As Boolean
@@ -88,7 +88,7 @@ Public Type TWSSocketMsgTickPrice
     Version         As Long
     TickerID        As Long
     TickType        As TWSSocketTickTypes
-    price           As Double
+    Price           As Double
     Size            As Long
 End Type
 
@@ -236,7 +236,7 @@ Public Type TWSSocketMsgExecutionData
     execExchange    As String
     side            As String
     quantity        As Long
-    price           As Double
+    Price           As Double
     permId          As Long
     clientID        As Long
 End Type
@@ -248,7 +248,7 @@ Public Type TWSSocketMsgMarketDepth
     position        As Long
     operation       As Long
     side            As Long
-    price           As Double
+    Price           As Double
     Size            As Long
 End Type
 
@@ -260,7 +260,7 @@ Public Type TWSSocketMsgMarketDepthL2
     marketMaker     As String
     operation       As Long
     side            As Long
-    price           As Double
+    Price           As Double
     Size            As Long
 End Type
 
@@ -384,6 +384,25 @@ Public Enum DOMSides
 End Enum
 
 Public Enum ErrorCodes
+    ' generic error codes defined by VB
+    InvalidProcedureCall = 5
+    Overflow = 6
+    SubscriptOutOfRange = 9
+    DivisionByZero = 11
+    TypeMismatch = 13
+    FileNotFound = 53
+    FileAlreadyOpen = 55
+    FileAlreadyExists = 58
+    DiskFull = 61
+    PermissionDenied = 70
+    PathNotFound = 76
+    InvalidObjectReference = 91
+    
+    InvalidPropertyValue = 380
+    InvalidPropertyArrayIndex = 381
+    
+    
+    ' non-generic error codes
     InvalidTickerID = vbObjectError + 512
     NotReceivingMarketDepth
     TickfileReplayProhibitsLiveOrders
@@ -413,6 +432,7 @@ Public Enum ErrorCodes
     ServiceProviderNameInvalid
     InvalidServiceProviderHandle
     UnknownOrderTypeFromTWS
+    InvalidArgument
 End Enum
 
 Public Enum ExecSides
@@ -538,6 +558,7 @@ Public Enum TickerStateCodes
     Starting
     Running
     Paused
+    Closing
     Dead
 End Enum
 
@@ -554,7 +575,7 @@ Public Enum TickTypes
     Low = &H10&
     PrevClose = &H20&
     Volume = &H40&
-    openInterest = &H80&
+    OpenInterest = &H80&
     marketDepth = &H100&
     MarketDepthL2 = &H200&
     MarketDepthReset = &H400&
