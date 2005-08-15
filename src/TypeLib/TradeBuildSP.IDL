@@ -548,15 +548,16 @@ library TradeBuildSP
 
 	// Methods =====================================================
 
+	HRESULT Add([in] IComboLeg* comboLeg,
+			[in, optional, defaultvalue("")] BSTR key); 
+
         HRESULT Clone([out, retval] IComboLegs** );
 
         HRESULT Item(
                         [in] VARIANT index, 
                         [out, retval] IComboLeg** );
 
-        HRESULT NewComboLeg(
-			[in, optional, defaultvalue("")] BSTR key,
-			[out, retval] IcomboLeg**);
+        HRESULT NewComboLeg([out, retval] IcomboLeg**);
 
 //        [id(DISPID_NEWENUM), hidden]
  //       HRESULT NewEnum([out, retval] IUnknown** );
@@ -960,49 +961,41 @@ library TradeBuildSP
 
         [helpstring("Notifies an ask value")]
         HRESULT Ask(
-                        [in] long tickerid, 
                         [in] DATE timestamp, 
                         [in] double price, 
                         [in] long size);
 
         HRESULT Bid(
-                        [in] long tickerid, 
                         [in] DATE timestamp, 
                         [in] double price, 
                         [in] long size);
 
         HRESULT High(
-                        [in] long tickerid, 
                         [in] DATE timestamp, 
                         [in] double price);
 
         HRESULT Low(
-                        [in] long tickerid, 
                         [in] DATE timestamp, 
                         [in] double price);
 
         HRESULT OpenInterest(
-                        [in] long tickerid, 
                         [in] DATE timestamp, 
                         [in] long size);
 
         HRESULT PreviousClose(
-                        [in] long tickerid, 
                         [in] DATE timestamp, 
                         [in] double price);
 
         HRESULT ResetMarketDepth(
-                        [in] long tickerid, 
-                        [in] DATE timestamp);
+                        [in] DATE timestamp,
+			[in] VARIANT_BOOL marketDepthReRequested);
 
         HRESULT Trade(
-                        [in] long tickerid, 
                         [in] DATE timestamp, 
                         [in] double price, 
                         [in] long size);
 
         HRESULT UpdateMktDepth(
-                        [in] long tickerid, 
                         [in] DATE timestamp, 
                         [in] long Position, 
                         [in] DOMOperations operation, 
@@ -1011,7 +1004,6 @@ library TradeBuildSP
                         [in] long size);
 
         HRESULT UpdateMktDepthL2(
-                        [in] long tickerid, 
                         [in] DATE timestamp, 
                         [in] long Position, 
                         [in] BSTR marketMaker, 
@@ -1021,7 +1013,6 @@ library TradeBuildSP
                         [in] long size);
 
         HRESULT Volume(
-                        [in] long tickerid, 
                         [in] DATE timestamp, 
                         [in] long size);
     };
@@ -1070,7 +1061,6 @@ library TradeBuildSP
 			[in, optional, defaultvalue(NoValidId)] long id);
 
         HRESULT OutputTickfileCreated(
-                        [in] long tickerid, 
                         [in] BSTR filename);
 
         HRESULT Ready();
@@ -1152,14 +1142,12 @@ library TradeBuildSP
 
 
         HRESULT CreateTickfileReader(
-			[in] long tickerID,
 			[in] IStreamingDataConsumer* dataConsumer,
 			[in] ITickfileInputServiceConsumer* serviceConsumer,
                         [in] BSTR formatIdentifier, 
 			[out, retval] ITickfileReader** );
 
         HRESULT CreateTickfileWriter(
-			[in] long tickerID,
 			[in] ITickfileOutputServiceConsumer* serviceConsumer,
                         [in, optional, defaultvalue("")] BSTR formatIdentifier, 
                         [in, optional, defaultvalue("")] BSTR location, 
