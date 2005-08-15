@@ -118,7 +118,6 @@ End Sub
 '================================================================================
 
 Private Function ITickfileServiceProvider_CreateTickfileReader( _
-                            ByVal tickerid As Long, _
                             ByVal dataConsumer As TradeBuildSP.IStreamingDataConsumer, _
                             ByVal serviceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
                             ByVal FormatIdentifier As String) As TradeBuildSP.ITickfileReader
@@ -128,13 +127,11 @@ Set ITickfileServiceProvider_CreateTickfileReader = reader
 reader.commonServiceConsumer = mCommonServiceConsumer
 reader.TickfileInputServiceConsumer = serviceConsumer
 reader.StreamingDataConsumer = dataConsumer
-reader.tickerid = tickerid
 reader.ConnectionRetryIntervalSecs = mConnectionRetryIntervalSecs
 reader.Connect mQTServer, mQTPort, mPassword
 End Function
 
 Private Function ITickfileServiceProvider_CreateTickfileWriter( _
-                            ByVal tickerid As Long, _
                             ByVal serviceConsumer As TradeBuildSP.ITickfileOutputServiceConsumer, _
                             Optional ByVal FormatIdentifier As String = "", _
                             Optional ByVal location As String = "") As TradeBuildSP.ITickfileWriter
