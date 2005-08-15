@@ -70,7 +70,6 @@ End Type
 Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mServiceConsumer As ITickfileInputServiceConsumer
 Private mDataConsumer As IStreamingDataConsumer
-Private mTickerID As Long
 
 Private mReplayProgressEventFrequency As Long
 
@@ -153,8 +152,7 @@ ElseIf mRecordsRead Mod mReplayProgressEventFrequency = 0 Then
 End If
 If mPendingImpliedVolumeTick Then
     mPendingImpliedVolumeTick = False
-    mDataConsumer.Volume mTickerID, _
-                        mCurrentTimestamp, _
+    mDataConsumer.Volume mCurrentTimestamp, _
                         mVolume
 Else
     Do While ReadNextTickRecord
@@ -236,10 +234,6 @@ End Property
 
 Friend Property Get InputTickfileSpecifier() As TradeBuildSP.TickfileSpecifier
 InputTickfileSpecifier = mInputTickfileSpecifier
-End Property
-
-Friend Property Let tickerid(ByVal value As Long)
-mTickerID = value
 End Property
 
 Friend Property Let StreamingDataConsumer(ByVal RHS As IStreamingDataConsumer)
@@ -658,15 +652,13 @@ With mRecordTable(mCurrentRecordTableEntry)
     Case TickfileSP.TickTypes.Bid
         If .TickSize = 0 Then
             If Not lookForBidSize Then
-                mDataConsumer.Bid mTickerID, _
-                                .timestamp, _
+                mDataConsumer.Bid .timestamp, _
                                 .tickPrice, _
                                 mPrevBidSize
                 processTickData = True
             End If
         Else
-            mDataConsumer.Bid mTickerID, _
-                            .timestamp, _
+            mDataConsumer.Bid .timestamp, _
                             .tickPrice, _
                             .TickSize
             mPrevBidSize = .TickSize
@@ -675,8 +667,7 @@ With mRecordTable(mCurrentRecordTableEntry)
         mPrevBid = .tickPrice
     Case TickfileSP.TickTypes.bidSize
         If mPrevBid <> 0 Then
-            mDataConsumer.Bid mTickerID, _
-                            .timestamp, _
+            mDataConsumer.Bid .timestamp, _
                             mPrevBid, _
                             .TickSize
             mPrevBidSize = .TickSize
@@ -685,15 +676,13 @@ With mRecordTable(mCurrentRecordTableEntry)
     Case TickfileSP.TickTypes.Ask
         If .TickSize = 0 Then
             If Not lookForAskSize Then
-                mDataConsumer.Ask mTickerID, _
-                                .timestamp, _
+                mDataConsumer.Ask .timestamp, _
                                 .tickPrice, _
                                 mPrevAskSize
                 processTickData = True
             End If
         Else
-            mDataConsumer.Ask mTickerID, _
-                            .timestamp, _
+            mDataConsumer.Ask .timestamp, _
                             .tickPrice, _
                             .TickSize
             mPrevAskSize = .TickSize
@@ -702,8 +691,7 @@ With mRecordTable(mCurrentRecordTableEntry)
         mPrevAsk = .tickPrice
     Case TickfileSP.TickTypes.AskSize
             If mPrevAsk <> 0 Then
-            mDataConsumer.Ask mTickerID, _
-                            .timestamp, _
+            mDataConsumer.Ask .timestamp, _
                             mPrevAsk, _
                             .TickSize
             mPrevAskSize = .TickSize
@@ -721,8 +709,7 @@ With mRecordTable(mCurrentRecordTableEntry)
             ' ignore implied trades
         ElseIf .TickSize <> 0 Then
             processLastSizeCorrection
-            mDataConsumer.Trade mTickerID, _
-                                .timestamp, _
+            mDataConsumer.Trade .timestamp, _
                                 .tickPrice, _
                                 .TickSize
             processDuplicateLast
@@ -735,31 +722,26 @@ With mRecordTable(mCurrentRecordTableEntry)
         End If
     Case TickfileSP.TickTypes.lastSize
     Case TickfileSP.TickTypes.High
-        mDataConsumer.High mTickerID, _
-                            .timestamp, _
+        mDataConsumer.High .timestamp, _
                             .tickPrice
         processTickData = True
     Case TickfileSP.TickTypes.Low
-        mDataConsumer.Low mTickerID, _
-                            .timestamp, _
+        mDataConsumer.Low .timestamp, _
                             .tickPrice
         processTickData = True
     Case TickfileSP.TickTypes.PrevClose
-        mDataConsumer.PreviousClose mTickerID, _
-                                    .timestamp, _
+        mDataConsumer.PreviousClose .timestamp, _
                                     .tickPrice
         processTickData = True
     Case TickfileSP.TickTypes.Volume
-        mDataConsumer.Volume mTickerID, _
-                            .timestamp, _
+        mDataConsumer.Volume .timestamp, _
                             .TickSize
         mVolume = .TickSize
         processTickData = True
     Case TickfileSP.TickTypes.LastSizeCorrection
     Case TickfileSP.TickTypes.marketDepth
         If .MDMarketMaker = "" Then
-            mDataConsumer.updateMktDepth mTickerID, _
-                                        .timestamp, _
+            mDataConsumer.updateMktDepth .timestamp, _
                                         .MDposition, _
                                         .MDOperation, _
                                         .MDSide, _
@@ -767,8 +749,7 @@ With mRecordTable(mCurrentRecordTableEntry)
                                         .TickSize
             processTickData = True
         Else
-            mDataConsumer.UpdateMktDepthL2 mTickerID, _
-                                        .timestamp, _
+            mDataConsumer.UpdateMktDepthL2 .timestamp, _
                                         .MDposition, _
                                         .MDMarketMaker, _
                                         .MDOperation, _
@@ -778,8 +759,7 @@ With mRecordTable(mCurrentRecordTableEntry)
             processTickData = True
         End If
     Case TickfileSP.TickTypes.MarketDepthReset
-        mDataConsumer.ResetMarketDepth mTickerID, _
-                                        .timestamp
+        mDataConsumer.ResetMarketDepth .timestamp, False
         processTickData = True
     End Select
     .processed = True

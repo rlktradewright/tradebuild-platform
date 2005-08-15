@@ -221,7 +221,7 @@ With mContract.Specifier
             & format(timestamp, "yyyymmdd-hhmmss") & ".csv"
     Set mTsOut = mFileSys.CreateTextFile(tfPath & tfName)
     
-    mServiceConsumer.OutputTickfileCreated mTickerID, tfPath & tfName
+    mServiceConsumer.OutputTickfileCreated tfPath & tfName
     
     mTsOut.WriteLine "tickfile," & _
                 TICKFILE_CURR_VERSION & "," & _
@@ -255,7 +255,7 @@ tfPath = tfPath & UCase$(mContract.Specifier.LocalSymbol) & "\"
 tfName = UCase$(mContract.Specifier.LocalSymbol) & "-" & _
         format(timestamp, "yyyymmdd-hhmmss") & ".tck"
 Set mTsOut = mFileSys.CreateTextFile(tfPath & tfName)
-mServiceConsumer.OutputTickfileCreated mTickerID, tfPath & tfName
+mServiceConsumer.OutputTickfileCreated tfPath & tfName
 mTsOut.WriteLine TICKFILE_DECLARER & "," & _
             TICKFILE_CURR_VERSION & "," & _
             UCase$(mContract.Specifier.exchange) & "," & _
