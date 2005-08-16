@@ -31,11 +31,11 @@ Public Type SortEntry
 End Type
 
 Public Type Tick
-    Timestamp       As Date
+    timestamp       As Date
     TickType        As TradeBuild.TickTypes
     TickPrice       As Double
     TickSize        As Long
-    Volume          As Long
+    volume          As Long
     MDPosition      As Long
     MDMarketMaker   As String
     MDOperation     As Long
@@ -44,14 +44,14 @@ End Type
 
 Public Type TickerListenData
     TickerKey As String
-    Price As Double
+    price As Double
     Size As Long
 End Type
 
 Public Type TickerListenMDData
     TickerKey As String
     side As DOMSides
-    Price As Double
+    price As Double
     Size As Long
     marketDataReRequested As Boolean
 End Type
@@ -62,7 +62,7 @@ Public Type TickerListenRawMDData
     marketMaker As String
     operation As DOMOperations
     side As DOMSides
-    Price As Double
+    price As Double
     Size As Long
 End Type
 
@@ -86,16 +86,16 @@ End Type
 Public Type TWSSocketMsgTickPrice
     msgType         As TWSSocketInMsgTypes
     Version         As Long
-    TickerID        As Long
+    tickerid        As Long
     TickType        As TWSSocketTickTypes
-    Price           As Double
+    price           As Double
     Size            As Long
 End Type
 
 Public Type TWSSocketMsgTickSize
     msgType         As TWSSocketInMsgTypes
     Version         As Long
-    TickerID        As Long
+    tickerid        As Long
     TickType        As TWSSocketTickTypes
     Size            As Long
 End Type
@@ -236,7 +236,7 @@ Public Type TWSSocketMsgExecutionData
     execExchange    As String
     side            As String
     quantity        As Long
-    Price           As Double
+    price           As Double
     permId          As Long
     clientID        As Long
 End Type
@@ -244,23 +244,23 @@ End Type
 Public Type TWSSocketMsgMarketDepth
     msgType         As TWSSocketInMsgTypes
     Version         As Long
-    TickerID        As Long
+    tickerid        As Long
     position        As Long
     operation       As Long
     side            As Long
-    Price           As Double
+    price           As Double
     Size            As Long
 End Type
 
 Public Type TWSSocketMsgMarketDepthL2
     msgType         As TWSSocketInMsgTypes
     Version         As Long
-    TickerID        As Long
+    tickerid        As Long
     position        As Long
     marketMaker     As String
     operation       As Long
     side            As Long
-    Price           As Double
+    price           As Double
     Size            As Long
 End Type
 
@@ -384,7 +384,7 @@ Public Enum DOMSides
 End Enum
 
 Public Enum ErrorCodes
-    ' generic error codes defined by VB
+    ' generic run-time error codes defined by VB
     InvalidProcedureCall = 5
     Overflow = 6
     SubscriptOutOfRange = 9
@@ -400,7 +400,6 @@ Public Enum ErrorCodes
     
     InvalidPropertyValue = 380
     InvalidPropertyArrayIndex = 381
-    
     
     ' non-generic error codes
     InvalidTickerID = vbObjectError + 512
@@ -433,6 +432,22 @@ Public Enum ErrorCodes
     InvalidServiceProviderHandle
     UnknownOrderTypeFromTWS
     InvalidArgument
+
+    ' generic error codes
+    ArithmeticException = vbObjectError + 1024  ' an exceptional arithmetic condition has occurred
+    ArrayIndexOutOfBoundsException  ' an array has been accessed with an illegal index
+    ClassCastException              ' attempt to cast an object to class of which it is not an instance
+    IllegalArgumentException        ' method has been passed an illegal or inappropriate argument
+    IllegalStateException           ' a method has been invoked at an illegal or inappropriate time
+    IndexOutOfBoundsException       ' an index of some sort (such as to an array, to a string, or to a vector) is out of range
+    NullPointerException            ' attempt to use Nothing in a case where an object is required
+    NumberFormatException           ' attempt to convert a string to one of the numeric types, but the string does not have the appropriate format
+    RuntimeException                ' an unspecified runtime error has occurred
+    SecurityException               ' a security violation has occurred
+    UnsupportedOperationException   ' the requested operation is not supported
+
+
+
 End Enum
 
 Public Enum ExecSides
@@ -574,8 +589,8 @@ Public Enum TickTypes
     High = &H8&
     Low = &H10&
     PrevClose = &H20&
-    Volume = &H40&
-    OpenInterest = &H80&
+    volume = &H40&
+    openInterest = &H80&
     marketDepth = &H100&
     MarketDepthL2 = &H200&
     MarketDepthReset = &H400&
