@@ -469,6 +469,7 @@ End Sub
 
 Friend Sub stopReplay()
 If Not mReader Is Nothing Then
+    stopProgressTimer
     mReader.stopReplay
     Set mReader = Nothing
 End If
@@ -482,10 +483,7 @@ End Sub
 
 Private Sub FinishTickfile()
 Set mReader = Nothing
-If Not mProgressTimer Is Nothing Then
-    mProgressTimer.StopTimer
-    Set mProgressTimer = Nothing
-End If
+stopProgressTimer
 StartNextTickfile
 End Sub
 
@@ -586,3 +584,10 @@ Then
 End If
 End Sub
 
+Private Sub stopProgressTimer()
+
+If mProgressTimer Is Nothing Then Exit Sub
+
+mProgressTimer.StopTimer
+Set mProgressTimer = Nothing
+End Sub
