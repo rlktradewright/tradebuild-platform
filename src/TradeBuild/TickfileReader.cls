@@ -290,7 +290,7 @@ firstTickFileTime = mReader.firstTickFileTime
 End Property
 
 Friend Property Let InputTickfileSpecifier(RHS As TradeBuild.TickfileSpecifier)
-Dim tfSpec As TradeBuildSP.TickfileSpecifier
+Dim tfSpec As TradeBuildSP.TickfileSpec
 With tfSpec
     Set .contractSpecifier = RHS.contractSpecifier
     .filename = RHS.filename
