@@ -39,7 +39,7 @@ Event AddListener(ByVal newListener As IListener, _
                 ByRef listenerKey As String)
 
 Event Application( _
-                ByRef data As Object)
+                ByVal data As Variant)
 
 Event CancelMarketDepth(ByVal forceCancel As Boolean)
 
@@ -57,13 +57,13 @@ Event GetChangePercent(ByRef value As Double)
 
 Event GetClosePrice(ByRef price As Double)
 
-Event GetContract(ByRef contract As contract)
+Event GetContract(ByRef Contract As Contract)
 
 Event GetDescription(ByRef value As String)
 
 Event GetHighPrice(ByRef price As Double)
 
-Event GetId(ByRef ID As Long)
+Event GetId(ByRef id As Long)
 
 Event GetKey(ByRef key As String)
 
@@ -79,7 +79,7 @@ Event GetTradePrice(ByRef price As Double)
 
 Event GetTradeSize(ByRef Size As Long)
 
-Event GetVolume(ByRef Volume As Long)
+Event GetVolume(ByRef volume As Long)
 
 Event PauseTicker()
 
@@ -94,7 +94,7 @@ Event SetTickfileSpecifiers(ByRef value() As TradeBuild.TickfileSpecifier)
 
 Event SkipTicker()
 
-Event StartTicker(ByVal pContractSpecifier As ContractSpecifier, _
+Event StartTicker(ByVal pContractSpecifier As contractSpecifier, _
                         ByVal DOMEventsRequired As DOMEvents, _
                         ByVal writeToTickFile As Boolean, _
                         ByVal includeMarketDepthInTickfile As Boolean, _
@@ -159,32 +159,32 @@ Friend Property Get ChangePercent() As Double
 RaiseEvent GetChangePercent(ChangePercent)
 End Property
 
-Friend Property Get ClosePrice() As Double
-RaiseEvent GetClosePrice(ClosePrice)
+Friend Property Get closePrice() As Double
+RaiseEvent GetClosePrice(closePrice)
 End Property
 
-Friend Property Get contract() As contract
-RaiseEvent GetContract(contract)
+Friend Property Get Contract() As Contract
+RaiseEvent GetContract(Contract)
 End Property
 
 Friend Property Get Description() As String
 RaiseEvent GetDescription(Description)
 End Property
 
-Friend Property Get HighPrice() As Double
-RaiseEvent GetHighPrice(HighPrice)
+Friend Property Get highPrice() As Double
+RaiseEvent GetHighPrice(highPrice)
 End Property
 
-Friend Property Get ID() As Long
-RaiseEvent GetId(ID)
+Friend Property Get id() As Long
+RaiseEvent GetId(id)
 End Property
 
 Friend Property Get key() As String
 RaiseEvent GetKey(key)
 End Property
 
-Friend Property Get LowPrice() As Double
-RaiseEvent GetLowPrice(LowPrice)
+Friend Property Get lowPrice() As Double
+RaiseEvent GetLowPrice(lowPrice)
 End Property
 
 Friend Property Get position() As Long
@@ -211,8 +211,8 @@ Friend Property Get TradeSize() As Long
 RaiseEvent GetTradeSize(TradeSize)
 End Property
 
-Friend Property Get Volume() As Long
-RaiseEvent GetVolume(Volume)
+Friend Property Get volume() As Long
+RaiseEvent GetVolume(volume)
 End Property
 
 '================================================================================
@@ -224,7 +224,7 @@ Friend Function AddListener(ByVal newListener As IListener, _
 RaiseEvent AddListener(newListener, valueType, AddListener)
 End Function
 
-Friend Sub FireApplicationEvent(ByRef data As Object)
+Friend Sub FireApplicationEvent(ByRef data As Variant)
 RaiseEvent Application(data)
 End Sub
 
@@ -254,7 +254,7 @@ RaiseEvent RequestMarketDepth(DOMEventsRequired, _
                         writeToTickFile)
 End Sub
 
-Friend Sub StartTicker(ByVal pContractSpecifier As ContractSpecifier, _
+Friend Sub StartTicker(ByVal pContractSpecifier As contractSpecifier, _
                         Optional ByVal DOMEventsRequired As DOMEvents = DOMNoEvents, _
                         Optional ByVal writeToTickFile As Boolean = False, _
                         Optional ByVal includeMarketDepthInTickfile As Boolean = False, _

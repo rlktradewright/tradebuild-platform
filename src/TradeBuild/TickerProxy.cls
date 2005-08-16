@@ -96,12 +96,12 @@ Public Property Get ChangePercent() As Double
 ChangePercent = mEventProxy.ChangePercent
 End Property
 
-Public Property Get ClosePrice() As Double
-ClosePrice = mEventProxy.ClosePrice
+Public Property Get closePrice() As Double
+closePrice = mEventProxy.closePrice
 End Property
 
-Public Property Get contract() As contract
-contract = mEventProxy.contract
+Public Property Get Contract() As Contract
+Contract = mEventProxy.Contract
 End Property
 
 Public Property Get Description() As String
@@ -112,20 +112,20 @@ Friend Property Get EventProxy() As TickerProxyEventProxy
 Set EventProxy = mEventProxy
 End Property
 
-Public Property Get HighPrice() As Double
-HighPrice = mEventProxy.HighPrice
+Public Property Get highPrice() As Double
+highPrice = mEventProxy.highPrice
 End Property
 
-Public Property Get ID() As Long
-ID = mEventProxy.ID
+Public Property Get id() As Long
+id = mEventProxy.id
 End Property
 
 Public Property Get key() As String
 key = mEventProxy.key
 End Property
 
-Public Property Get LowPrice() As Double
-LowPrice = mEventProxy.LowPrice
+Public Property Get lowPrice() As Double
+lowPrice = mEventProxy.lowPrice
 End Property
 
 Public Property Get position() As Long
@@ -152,8 +152,8 @@ Public Property Get TradeSize() As Long
 TradeSize = mEventProxy.TradeSize
 End Property
 
-Public Property Get Volume() As Long
-Volume = mEventProxy.Volume
+Public Property Get volume() As Long
+volume = mEventProxy.volume
 End Property
 
 '================================================================================
@@ -165,7 +165,7 @@ Public Function AddListener(ByVal newListener As IListener, _
 AddListener = mEventProxy.AddListener(newListener, valueType)
 End Function
 
-Public Sub FireApplicationEvent(ByRef data As Object)
+Public Sub FireApplicationEvent(ByRef data As Variant)
 mEventProxy.FireApplicationEvent data
 End Sub
 
@@ -195,7 +195,7 @@ mEventProxy.RequestMarketDepth DOMEventsRequired, _
                         writeToTickFile
 End Sub
 
-Public Sub StartTicker(ByVal pContractSpecifier As ContractSpecifier, _
+Public Sub StartTicker(ByVal pContractSpecifier As contractSpecifier, _
                         Optional ByVal DOMEventsRequired As DOMEvents = DOMNoEvents, _
                         Optional ByVal writeToTickFile As Boolean = False, _
                         Optional ByVal includeMarketDepthInTickfile As Boolean = False, _
