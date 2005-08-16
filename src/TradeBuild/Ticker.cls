@@ -31,7 +31,7 @@ Event ask( _
 
 Event Application( _
                 ByVal timestamp As Date, _
-                ByRef data As Object)
+                ByVal data As Variant)
 
 Event bid( _
                 ByVal timestamp As Date, _
@@ -99,7 +99,7 @@ Event ReplayCompleted(ByVal timestamp As Date)
 Event ReplayNextTickfile( _
                 ByVal tickfileIndex As Long, _
                 ByVal tickfileName As String, _
-                ByVal TickfileSizeBytes As Long, _
+                ByVal tickfileSizeBytes As Long, _
                 ByVal pContract As Contract, _
                 ByRef continueMode As ReplayContinueModes)
 
@@ -192,6 +192,7 @@ Attribute mTickfileManager.VB_VarHelpID = -1
 Private mTickfileContract           As Contract
 Private mReplaySpeed                As Long
 Private mReplayProgressEventFrequency As Long
+Private mReplayProgressEventIntervalMillisecs As Long
 Private mTimestampAdjustmentStart   As Double
 Private mTimestampAdjustmentEnd     As Double
 
@@ -691,7 +692,7 @@ Private Sub mProxy_AddListener(ByVal newListener As IListener, _
 listenerKey = AddListener(newListener, valueType)
 End Sub
 
-Private Sub mProxy_Application(data As Object)
+Private Sub mProxy_Application(ByVal data As Variant)
 RaiseEvent Application(timestamp, data)
 End Sub
 
@@ -835,7 +836,7 @@ End Sub
 
 Private Sub mTickfileManager_QueryReplayNextTickfile(ByVal tickfileIndex As Long, _
                                 ByVal tickfileName As String, _
-                                ByVal TickfileSizeBytes As Long, _
+                                ByVal tickfileSizeBytes As Long, _
                                 ByVal pContract As Contract, _
                                 continueMode As ReplayContinueModes)
 
@@ -850,7 +851,7 @@ mCurrTickfileIndex = tickfileIndex
 
 RaiseEvent ReplayNextTickfile(tickfileIndex, _
                                 tickfileName, _
-                                TickfileSizeBytes, _
+                                tickfileSizeBytes, _
                                 pContract, _
                                 continueMode)
 
@@ -1030,11 +1031,36 @@ If mState <> TickerStateCodes.Created Then
             "TradeBuild.Ticker::(Let)ReplayProgressEventFrequency", _
             "Ticker is already in use"
 End If
+If value < 0 Then
+    err.Raise ErrorCodes.InvalidPropertyValue, _
+            "TradeBuild.Ticker::(Let)ReplayProgressEventFrequency", _
+            "Value cannot be less than 0"
+End If
+
 mReplayProgressEventFrequency = value
 End Property
 
 Public Property Get ReplayProgressEventFrequency() As Long
 ReplayProgressEventFrequency = mReplayProgressEventFrequency
+End Property
+
+Public Property Let ReplayProgressEventIntervalMillisecs(ByVal value As Long)
+If mState <> TickerStateCodes.Created Then
+    err.Raise ErrorCodes.TickerAlreadyInUse, _
+            "TradeBuild.Ticker::(Let)ReplayProgressEventIntervalMillisecs", _
+            "Ticker is already in use"
+End If
+If value < 50 Then
+    err.Raise ErrorCodes.InvalidPropertyValue, _
+            "TradeBuild.Ticker::(Let)ReplayProgressEventIntervalMillisecs", _
+            "Value must be greater than 50"
+End If
+
+mReplayProgressEventIntervalMillisecs = value
+End Property
+
+Public Property Get ReplayProgressEventIntervalMillisecs() As Long
+ReplayProgressEventIntervalMillisecs = mReplayProgressEventIntervalMillisecs
 End Property
 
 Public Property Let replaySpeed(ByVal value As Long)
