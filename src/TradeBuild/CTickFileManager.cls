@@ -45,7 +45,7 @@ Event errorMessage( _
 Event QueryReplayNextTickfile( _
                 ByVal tickfileIndex As Long, _
                 ByVal tickfileName As String, _
-                ByVal tickfileSizeBytes As Long, _
+                ByVal TickfileSizeBytes As Long, _
                 ByVal pContract As Contract, _
                 ByRef continueMode As ReplayContinueModes)
 
@@ -91,8 +91,15 @@ Attribute mTickfileSelector.VB_VarHelpID = -1
 
 Private mReplaySpeed As Long
 Private mReplayProgressEventFrequency As Long
+Private mReplayProgressEventIntervalMillisecs As Long
 Private mTimestampAdjustmentStart As Double
 Private mTimestampAdjustmentEnd As Double
+
+Private mEventsPlayed As Long
+Private mPercentComplete As Single
+
+Private WithEvents mProgressTimer As TimerUtils.IntervalTimer
+Attribute mProgressTimer.VB_VarHelpID = -1
 
 '================================================================================
 ' Class Event Handlers
@@ -193,17 +200,18 @@ End Select
 End Sub
 
 Private Sub ITickfileInputServiceConsumer_Ready( _
-                tickfileSpec As TradeBuildSP.TickfileSpecifier, _
-                ByVal tickfileSizeBytes As Long)
+                TickfileSpec As TradeBuildSP.TickfileSpec, _
+                ByVal TickfileSizeBytes As Long)
+
 Dim tfSpec As TradeBuild.TickfileSpecifier
 Dim contractSpec As TradeBuild.contractSpecifier
 
 With tfSpec
-    Set .contractSpecifier = tickfileSpec.contractSpecifier
-    .filename = tickfileSpec.filename
-    .From = tickfileSpec.From
-    .TickfileFormatID = tickfileSpec.TickfileFormatID
-    .To = tickfileSpec.To
+    Set .contractSpecifier = TickfileSpec.contractSpecifier
+    .filename = TickfileSpec.filename
+    .From = TickfileSpec.From
+    .TickfileFormatID = TickfileSpec.TickfileFormatID
+    .To = TickfileSpec.To
 End With
 
 ' we now determine a contract specifier with which we'll query the
@@ -225,7 +233,7 @@ If mReader.Contract Is Nothing Then
             ' we'll use the existing mContract - this one was supplied by
             ' the application to the ticker object
             ' we have everything we need to proceed
-            playOrNot tfSpec, tickfileSizeBytes
+            playOrNot tfSpec, TickfileSizeBytes
             Exit Sub
         End If
     Else
@@ -253,10 +261,14 @@ Private Sub ITickfileInputServiceConsumer_ReplayProgress( _
                             ByVal timestamp As Date, _
                             ByVal eventsPlayed As Long, _
                             ByVal percentComplete As Single)
+mEventsPlayed = eventsPlayed
+mPercentComplete = percentComplete
 mReader.percentComplete = percentComplete
-RaiseEvent ReplayProgress(timestamp, _
-                            eventsPlayed, _
-                            percentComplete)
+If mReplaySpeed <> 0 And mReplayProgressEventFrequency > 0 Then
+    RaiseEvent ReplayProgress(timestamp, _
+                                eventsPlayed, _
+                                percentComplete)
+End If
 End Sub
 
 '================================================================================
@@ -275,10 +287,20 @@ Else
     Set mContract = mContracts(1)
     If Not mReader Is Nothing Then
         mReader.Contract = mContract
-        playOrNot mTickfileSpecifiers(mCurrTickfileIndex), mReader.tickfileSizeBytes
+        playOrNot mTickfileSpecifiers(mCurrTickfileIndex), mReader.TickfileSizeBytes
     End If
 End If
 
+End Sub
+
+'================================================================================
+' mProgressTimer Event Handlers
+'================================================================================
+
+Private Sub mProgressTimer_TimerExpired()
+RaiseEvent ReplayProgress(mTicker.timestamp, _
+                        mEventsPlayed, _
+                        mPercentComplete)
 End Sub
 
 '================================================================================
@@ -304,6 +326,11 @@ End If
 End Property
 
 Friend Property Get firstTickFileTime() As Date
+If mReader Is Nothing Then
+    err.Raise ErrorCodes.IllegalStateException, _
+                "TradeBuild.TickFileManage::firstTickFileTime", _
+                "Tickfile reader not yet created"
+End If
 firstTickFileTime = mReader.firstTickFileTime
 End Property
 
@@ -315,32 +342,33 @@ If NumberOfInputTickfiles = -1 Then NumberOfInputTickfiles = 0
 End Property
 
 Friend Property Let ReplayProgressEventFrequency(ByVal value As Long)
-If mReplaySpeed <> 0 Or value = 0 Then
-    mReplayProgressEventFrequency = 1
-Else
-    mReplayProgressEventFrequency = value
-End If
-If Not mReader Is Nothing Then
-    mReader.ReplayProgressEventFrequency = value
-End If
+mReplayProgressEventFrequency = value
+setReplayAttributes
 End Property
 
 Friend Property Get ReplayProgressEventFrequency() As Long
-ReplayProgressEventFrequency = mReader.ReplayProgressEventFrequency
+If mReader Is Nothing Then
+    ReplayProgressEventFrequency = mReplayProgressEventFrequency
+Else
+    ReplayProgressEventFrequency = mReader.ReplayProgressEventFrequency
+End If
+End Property
+
+Friend Property Let ReplayProgressEventIntervalMillisecs(ByVal value As Long)
+mReplayProgressEventIntervalMillisecs = value
+End Property
+
+Friend Property Get ReplayProgressEventIntervalMillisecs() As Long
+ReplayProgressEventIntervalMillisecs = mReplayProgressEventIntervalMillisecs
 End Property
 
 Friend Property Let replaySpeed(ByVal value As Long)
 mReplaySpeed = value
-If Not mReader Is Nothing Then
-    mReader.replaySpeed = value
-End If
-If mReplaySpeed <> 0 Then
-    ReplayProgressEventFrequency = 1
-End If
+setReplayAttributes
 End Property
 
 Friend Property Get replaySpeed() As Long
-replaySpeed = mReader.replaySpeed
+replaySpeed = mReplaySpeed
 End Property
 
 Friend Property Get State() As TradeBuildSP.TickfileStateCodes
@@ -454,19 +482,23 @@ End Sub
 
 Private Sub FinishTickfile()
 Set mReader = Nothing
+If Not mProgressTimer Is Nothing Then
+    mProgressTimer.StopTimer
+    Set mProgressTimer = Nothing
+End If
 StartNextTickfile
 End Sub
 
 Private Sub playOrNot( _
-                            tickfileSpec As TradeBuild.TickfileSpecifier, _
-                            ByVal tickfileSizeBytes As Long)
+                            TickfileSpec As TradeBuild.TickfileSpecifier, _
+                            ByVal TickfileSizeBytes As Long)
 
 Dim continueMode As ReplayContinueModes
 
 RaiseEvent QueryReplayNextTickfile( _
                 mCurrTickfileIndex, _
-                gTickfileSpecifierToString(tickfileSpec), _
-                tickfileSizeBytes, _
+                gTickfileSpecifierToString(TickfileSpec), _
+                TickfileSizeBytes, _
                 mContract, _
                 continueMode)
 
@@ -477,10 +509,20 @@ Case ReplayContinueModes.ReplayCancelAllFiles
 Case ReplayContinueModes.ReplayCancelThisFile
     SkipTickfile
 Case ReplayContinueModes.ReplayContinue
-    
+    startProgressTimer
     mReader.StartReplay
 End Select
 
+End Sub
+
+Private Sub setReplayAttributes()
+If mReader Is Nothing Then Exit Sub
+If mReplaySpeed = 0 Or mReplayProgressEventFrequency = 0 Then
+    mReader.ReplayProgressEventFrequency = 10
+Else
+    mReader.ReplayProgressEventFrequency = mReplayProgressEventFrequency
+End If
+mReader.replaySpeed = mReplaySpeed
 End Sub
 
 Private Sub SetupNextTickfile()
@@ -499,8 +541,7 @@ Do
                                     Me, _
                                     lTickfileSpecifier.TickfileFormatID)
     
-    mReader.ReplayProgressEventFrequency = mReplayProgressEventFrequency
-    mReader.replaySpeed = mReplaySpeed
+    setReplayAttributes
     mReader.TimestampAdjustmentStart = mTimestampAdjustmentStart
     mReader.TimestampAdjustmentEnd = mTimestampAdjustmentEnd
     
@@ -524,8 +565,24 @@ If mReader Is Nothing Then
 End If
  
 If mReader.State = TradeBuildSP.TickfileStateCodes.TickfilePaused Then
+    startProgressTimer
     mReader.StartReplay
 End If
 
+End Sub
+
+Private Sub startProgressTimer()
+If mReplayProgressEventIntervalMillisecs <> 0 Or _
+    mReplaySpeed = 0 _
+Then
+    Set mProgressTimer = New TimerUtils.IntervalTimer
+    mProgressTimer.RepeatNotifications = True
+    If mReplayProgressEventIntervalMillisecs = 0 Then
+        mProgressTimer.TimerIntervalMillisecs = 500
+    Else
+        mProgressTimer.TimerIntervalMillisecs = mReplayProgressEventIntervalMillisecs
+    End If
+    mProgressTimer.StartTimer
+End If
 End Sub
 
