@@ -313,7 +313,7 @@ library TradeBuildSP
     } TickfileFormatSpecifier;
 
     typedef [uuid(53fb89b4-d006-42b8-a060-44c781882dd4), version(1.0)]
-    struct tagTickfileSpecifier {
+    struct tagTickfileSpec {
 
         [helpstring("Identifies the tickfile format")]
 	BSTR TickfileFormatID;
@@ -333,7 +333,7 @@ library TradeBuildSP
 	[helpstring("Indicates that the timespan is the whole of the session in which the From value falls")]
 	VARIANT_BOOL EntireSession;
 
-    } TickfileSpecifier;
+    } TickfileSpec;
 
     // Interfaces *************************************************************************
 
@@ -1033,7 +1033,7 @@ library TradeBuildSP
 			[in, optional, defaultvalue(NoValidId)] long id);
 
 	HRESULT Ready(                            
-			[in] TickfileSpecifier* tickfileSpec,
+			[in] TickfileSpec* tickfileSpec,
 			[in] long tickfileSizeBytes);
 
         HRESULT TickfileReplayComplete();
@@ -1094,11 +1094,11 @@ library TradeBuildSP
 
         [propput]
         HRESULT InputTickfileSpecifier(
-                        [in] TickfileSpecifier* );
+                        [in] TickfileSpec* );
 
         [propget]
         HRESULT InputTickfileSpecifier(
-                        [out, retval] TickfileSpecifier* );
+                        [out, retval] TickfileSpec* );
 
         [propput]
         HRESULT ReplayProgressEventFrequency(
