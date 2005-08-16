@@ -75,7 +75,7 @@ Private mCurrentTimestamp As Date
 
 Private mRecordsRead As Long
 
-Private mInputTickfileSpecifier As TradeBuildSP.TickfileSpecifier
+Private mInputTickfileSpecifier As TradeBuildSP.TickfileSpec
 
 Private mFirstTickFileTime As Date
 
@@ -134,11 +134,11 @@ Private Property Get ITickfileReader_FirstTickFileTime() As Date
 ITickfileReader_FirstTickFileTime = FirstTickFileTime
 End Property
 
-Private Property Let ITickfileReader_InputTickfileSpecifier(RHS As TradeBuildSP.TickfileSpecifier)
+Private Property Let ITickfileReader_InputTickfileSpecifier(RHS As TradeBuildSP.TickfileSpec)
 InputTickfileSpecifier = RHS
 End Property
 
-Private Property Get ITickfileReader_InputTickfileSpecifier() As TradeBuildSP.TickfileSpecifier
+Private Property Get ITickfileReader_InputTickfileSpecifier() As TradeBuildSP.TickfileSpec
 ITickfileReader_InputTickfileSpecifier = InputTickfileSpecifier
 End Property
 
@@ -239,7 +239,7 @@ Friend Property Get FirstTickFileTime() As Date
 FirstTickFileTime = mFirstTickFileTime
 End Property
 
-Friend Property Let InputTickfileSpecifier(RHS As TradeBuildSP.TickfileSpecifier)
+Friend Property Let InputTickfileSpecifier(RHS As TradeBuildSP.TickfileSpec)
 Dim lInstrumentFactory As TradingDO.cInstrumentFactory
 
 mInputTickfileSpecifier = RHS
@@ -267,7 +267,7 @@ Set mTickReader = mInstrument.CreateTickDataAccessor
 
 End Property
 
-Friend Property Get InputTickfileSpecifier() As TradeBuildSP.TickfileSpecifier
+Friend Property Get InputTickfileSpecifier() As TradeBuildSP.TickfileSpec
 InputTickfileSpecifier = mInputTickfileSpecifier
 End Property
 
