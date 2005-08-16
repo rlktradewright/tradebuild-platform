@@ -99,7 +99,7 @@ Event ReplayCompleted(ByVal timestamp As Date)
 Event ReplayNextTickfile( _
                 ByVal tickfileIndex As Long, _
                 ByVal tickfileName As String, _
-                ByVal tickfileSizeBytes As Long, _
+                ByVal TickfileSizeBytes As Long, _
                 ByVal pContract As Contract, _
                 ByRef continueMode As ReplayContinueModes)
 
@@ -183,7 +183,7 @@ Private mContract                   As Contract
 
 Private mListeners                  As listeners
 
-Private mApplicationData            As Object
+Private mApplicationData            As Variant
 Private WithEvents mProxy           As TickerProxyEventProxy
 Attribute mProxy.VB_VarHelpID = -1
 
@@ -836,7 +836,7 @@ End Sub
 
 Private Sub mTickfileManager_QueryReplayNextTickfile(ByVal tickfileIndex As Long, _
                                 ByVal tickfileName As String, _
-                                ByVal tickfileSizeBytes As Long, _
+                                ByVal TickfileSizeBytes As Long, _
                                 ByVal pContract As Contract, _
                                 continueMode As ReplayContinueModes)
 
@@ -851,7 +851,7 @@ mCurrTickfileIndex = tickfileIndex
 
 RaiseEvent ReplayNextTickfile(tickfileIndex, _
                                 tickfileName, _
-                                tickfileSizeBytes, _
+                                TickfileSizeBytes, _
                                 pContract, _
                                 continueMode)
 
@@ -894,12 +894,20 @@ End Sub
 ' Properties
 '================================================================================
 
-Public Property Get ApplicationData() As Object
-Set ApplicationData = mApplicationData
+Public Property Get ApplicationData() As Variant
+If VarType(mApplicationData) = vbObject Then
+    Set ApplicationData = mApplicationData
+Else
+    ApplicationData = mApplicationData
+End If
 End Property
 
-Public Property Let ApplicationData(ByVal data As Object)
-Set mApplicationData = data
+Public Property Let ApplicationData(ByVal data As Variant)
+If VarType(data) = vbObject Then
+    Set mApplicationData = data
+Else
+    mApplicationData = data
+End If
 End Property
 
 Public Property Get AskPrice() As Double
