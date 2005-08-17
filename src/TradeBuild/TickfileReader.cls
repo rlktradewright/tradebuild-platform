@@ -97,6 +97,10 @@ Private Sub Class_Initialize()
 mState = TickfileStateCodes.TickfileNotPlaying
 End Sub
 
+Private Sub Class_Terminate()
+Debug.Print "TradeBuild.TickfileReader terminated"
+End Sub
+
 '================================================================================
 ' TradeBuildSP.IStreamingDataConsumer Interface Members
 '================================================================================
@@ -361,6 +365,7 @@ End Property
 
 Friend Sub CloseInputFile()
 mReader.CloseInputFile
+Set mReader = Nothing
 mState = TickfileStateCodes.TickfileNotPlaying
 End Sub
 
@@ -385,7 +390,7 @@ If mTimer Is Nothing Then
     mTimer.RepeatNotifications = False
 End If
 
-' start replay using the time to unwind the current stack
+' start replay using the timer to unwind the current stack
 mTimer.TimerIntervalMillisecs = 1
 mTimer.StartTimer
 

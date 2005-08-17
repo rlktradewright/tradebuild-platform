@@ -328,7 +328,7 @@ End Property
 Public Function add(ByVal key As String, _
                     Optional ByVal position As Long = -1) As Ticker
 Set add = New Ticker
-add.Tickers = Me
+add.tickers = Me
 add.key = key
 add.position = position
 If Not add Is Nothing Then
@@ -421,6 +421,11 @@ Friend Sub ContractInvalid(ByVal Ticker As Ticker, _
 RaiseEvent ContractInvalid(Ticker, contractSpec)
 Hide Ticker
 End Sub
+
+Public Function createTickFileManager() As tickfileManager
+Set createTickFileManager = New tickfileManager
+createTickFileManager.tickers = Me
+End Function
 
 Friend Sub DOMClearCell( _
                 ByVal key As String, _
@@ -658,7 +663,7 @@ mRS.Update
 End Sub
 
 Public Sub Remove(ByVal pTicker As Ticker)
-If Not pTicker.Contract Is Nothing Then pTicker.StopTicker
+If pTicker.State <> TickerStateCodes.Closing Then pTicker.StopTicker
 Hide pTicker
 mTickers.Remove pTicker.key
 pTicker.key = ""
