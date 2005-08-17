@@ -76,6 +76,10 @@ If Right$(mPath, 1) <> "\" Then mPath = mPath & "\"
 Set mFileSys = CreateObject("scripting.filesystemobject")
 End Sub
 
+Private Sub Class_Terminate()
+Debug.Print "TickfileSP.TickfileWriter terminated"
+End Sub
+
 '================================================================================
 ' ITickfileWriter Interface Members
 '================================================================================
@@ -85,6 +89,8 @@ If Not mTsOut Is Nothing Then
     mTsOut.Close
     Set mTsOut = Nothing
 End If
+Set mCommonServiceConsumer = Nothing
+Set mServiceConsumer = Nothing
 End Sub
 
 Private Property Get ITickfileWriter_Contract() As IContract

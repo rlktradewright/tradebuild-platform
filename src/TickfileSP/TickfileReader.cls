@@ -119,6 +119,10 @@ mNextFreeRecordTableEntry = 0
 mReplayProgressEventFrequency = 1
 End Sub
 
+Private Sub Class_Terminate()
+Debug.Print "TickfileSP.TickfileReader terminated"
+End Sub
+
 '================================================================================
 ' ITickfileReader Interface Members
 '================================================================================
@@ -126,6 +130,9 @@ End Sub
 Private Sub ITickfileReader_CloseInputFile()
 If Not mTsIn Is Nothing Then mTsIn.Close
 Set mTsIn = Nothing
+Set mCommonServiceConsumer = Nothing
+Set mServiceConsumer = Nothing
+Set mDataConsumer = Nothing
 End Sub
 
 Private Property Let ITickfileReader_Contract(ByVal RHS As TradeBuildSP.IContract)
