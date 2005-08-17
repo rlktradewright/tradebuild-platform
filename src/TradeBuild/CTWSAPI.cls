@@ -692,6 +692,7 @@ With mTickerTable(TickerID)
                     "TradeBuild.TradeBuildAPI::cancelMarketDepth", _
                     "Ticker id " & TickerID & " not currently receiving market depth"
     End If
+    mTickerTable(TickerID).receivingMarketDepth = False
 End With
 
 addData CANCEL_MKT_DEPTH
