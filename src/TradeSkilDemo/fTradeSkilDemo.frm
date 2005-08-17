@@ -55,49 +55,49 @@ Begin VB.Form fTradeSkilDemo
       _Version        =   393216
       Style           =   1
       Tabs            =   4
+      Tab             =   1
       TabsPerRow      =   5
       TabHeight       =   520
       TabCaption(0)   =   "&1. Connection"
       TabPicture(0)   =   "fTradeSkilDemo.frx":0015
-      Tab(0).ControlEnabled=   -1  'True
-      Tab(0).Control(0)=   "Frame1"
-      Tab(0).Control(0).Enabled=   0   'False
-      Tab(0).Control(1)=   "Frame3"
-      Tab(0).Control(1).Enabled=   0   'False
+      Tab(0).ControlEnabled=   0   'False
+      Tab(0).Control(0)=   "Frame3"
+      Tab(0).Control(1)=   "Frame1"
       Tab(0).ControlCount=   2
       TabCaption(1)   =   "&2. Tickers"
       TabPicture(1)   =   "fTradeSkilDemo.frx":0031
-      Tab(1).ControlEnabled=   0   'False
+      Tab(1).ControlEnabled=   -1  'True
       Tab(1).Control(0)=   "Picture3"
+      Tab(1).Control(0).Enabled=   0   'False
       Tab(1).ControlCount=   1
       TabCaption(2)   =   "&3. Orders"
       TabPicture(2)   =   "fTradeSkilDemo.frx":004D
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "OrderButton"
-      Tab(2).Control(1)=   "CancelOrderButton"
+      Tab(2).Control(0)=   "ExecutionsList"
+      Tab(2).Control(1)=   "OpenOrdersList"
       Tab(2).Control(2)=   "ModifyOrderButton"
-      Tab(2).Control(3)=   "OpenOrdersList"
-      Tab(2).Control(4)=   "ExecutionsList"
+      Tab(2).Control(3)=   "CancelOrderButton"
+      Tab(2).Control(4)=   "OrderButton"
       Tab(2).ControlCount=   5
       TabCaption(3)   =   "&4. Replay tickfiles"
       TabPicture(3)   =   "fTradeSkilDemo.frx":0069
       Tab(3).ControlEnabled=   0   'False
-      Tab(3).Control(0)=   "Label20"
-      Tab(3).Control(1)=   "ReplayContractLabel"
-      Tab(3).Control(2)=   "Label19"
-      Tab(3).Control(3)=   "ReplayProgressLabel"
-      Tab(3).Control(4)=   "ReplayProgressBar"
-      Tab(3).Control(5)=   "ReplayMarketDepthCheck"
-      Tab(3).Control(6)=   "RewriteCheck"
+      Tab(3).Control(0)=   "SkipReplayButton"
+      Tab(3).Control(1)=   "PlayTickFileButton"
+      Tab(3).Control(2)=   "SelectTickfilesButton"
+      Tab(3).Control(3)=   "ClearTickfileListButton"
+      Tab(3).Control(4)=   "PauseReplayButton"
+      Tab(3).Control(5)=   "StopReplayButton"
+      Tab(3).Control(6)=   "TickfileList"
+      Tab(3).Control(6).Enabled=   0   'False
       Tab(3).Control(7)=   "ReplaySpeedCombo"
-      Tab(3).Control(8)=   "TickfileList"
-      Tab(3).Control(8).Enabled=   0   'False
-      Tab(3).Control(9)=   "StopReplayButton"
-      Tab(3).Control(10)=   "PauseReplayButton"
-      Tab(3).Control(11)=   "ClearTickfileListButton"
-      Tab(3).Control(12)=   "SelectTickfilesButton"
-      Tab(3).Control(13)=   "PlayTickFileButton"
-      Tab(3).Control(14)=   "SkipReplayButton"
+      Tab(3).Control(8)=   "RewriteCheck"
+      Tab(3).Control(9)=   "ReplayMarketDepthCheck"
+      Tab(3).Control(10)=   "ReplayProgressBar"
+      Tab(3).Control(11)=   "ReplayProgressLabel"
+      Tab(3).Control(12)=   "Label19"
+      Tab(3).Control(13)=   "ReplayContractLabel"
+      Tab(3).Control(14)=   "Label20"
       Tab(3).ControlCount=   15
       Begin VB.CommandButton SkipReplayButton 
          Caption         =   "S&kip"
@@ -196,21 +196,12 @@ Begin VB.Form fTradeSkilDemo
       Begin VB.PictureBox Picture3 
          BorderStyle     =   0  'None
          Height          =   3855
-         Left            =   -74880
+         Left            =   120
          ScaleHeight     =   3855
          ScaleWidth      =   13935
          TabIndex        =   74
          Top             =   360
          Width           =   13935
-         Begin VB.CommandButton FullChartButton 
-            Caption         =   "Full chart"
-            Enabled         =   0   'False
-            Height          =   495
-            Left            =   2880
-            TabIndex        =   93
-            Top             =   1680
-            Width           =   975
-         End
          Begin MSDataGridLib.DataGrid TickerGrid 
             Height          =   3735
             Left            =   3960
@@ -537,7 +528,7 @@ Begin VB.Form fTradeSkilDemo
       Begin VB.Frame Frame3 
          Caption         =   "Socket data"
          Height          =   975
-         Left            =   5160
+         Left            =   -69840
          TabIndex        =   60
          Top             =   480
          Width           =   4455
@@ -587,7 +578,7 @@ Begin VB.Form fTradeSkilDemo
       Begin VB.Frame Frame1 
          Caption         =   "Connection details"
          Height          =   2175
-         Left            =   120
+         Left            =   -74880
          TabIndex        =   59
          Top             =   480
          Width           =   4455
@@ -1095,6 +1086,8 @@ Private WithEvents mTicker As Ticker
 Attribute mTicker.VB_VarHelpID = -1
 Private mTickerFormatString As String
 
+Private WithEvents mTickfileManager As TickFileManager
+Attribute mTickfileManager.VB_VarHelpID = -1
 Private mTimestamp As Date
 
 Private WithEvents mOrderForm As fOrder
@@ -1119,9 +1112,9 @@ Private Enum TickerGridColumns
     Volume
     Change
     ChangePercent
-    HighPrice
-    LowPrice
-    ClosePrice
+    highPrice
+    lowPrice
+    closePrice
     Description
     symbol
     secType
@@ -1389,18 +1382,15 @@ ModifyOrderButton.Enabled = False
 End Sub
 
 Private Sub ChartButton_Click()
-Dim tickerAppData As TickerApplicationData
-
-Set tickerAppData = mTicker.ApplicationData
-If Not tickerAppData.chartForm Is Nothing Then
-    tickerAppData.chartForm.Show vbModeless
-End If
+createChart mTicker
+GridChartButton.Enabled = False
+ChartButton.Enabled = False
 End Sub
 
 Private Sub ClearTickfileListButton_Click()
 TickfileList.Clear
 ClearTickfileListButton.Enabled = False
-mTicker.clearTickfileNames
+mTickfileManager.ClearTickfileSpecifiers
 PlayTickFileButton.Enabled = False
 PauseReplayButton.Enabled = False
 SkipReplayButton.Enabled = False
@@ -1447,7 +1437,6 @@ OrderButton.Enabled = False
 StartTickerButton.Enabled = False
 StopTickerButton.Enabled = False
 GridChartButton.Enabled = False
-FullChartButton.Enabled = False
 GridMarketDepthButton.Enabled = False
 MarketDepthButton.Enabled = False
 ChartButton.Enabled = False
@@ -1491,46 +1480,23 @@ Private Sub ExpiryText_Change()
 checkOkToStartTicker
 End Sub
 
-Private Sub FullChartButton_Click()
-Dim Ticker As Ticker
-Dim bookmark As Variant
-Dim chartForm As fChart1
-
-For Each bookmark In TickerGrid.SelBookmarks
-    TickerGrid.bookmark = bookmark           ' select the row
-    TickerGrid.col = 0                       ' make the cell containing the key current
-    Set Ticker = mTickers(TickerGrid.Text)
-    Set chartForm = New fChart1
-    chartForm.minimumTicksHeight = 40
-    chartForm.InitialNumberOfBars = 200
-    chartForm.barLength = 5
-    chartForm.Ticker = Ticker
-    chartForm.Visible = True
-Next
-
-
-End Sub
-
 Private Sub GridChartButton_Click()
-Dim Ticker As Ticker
-Dim tickerAppData As TickerApplicationData
+Dim lTicker As Ticker
 Dim bookmark As Variant
 
 For Each bookmark In TickerGrid.SelBookmarks
     TickerGrid.bookmark = bookmark           ' select the row
     TickerGrid.col = 0                       ' make the cell containing the key current
-    Set Ticker = mTickers(TickerGrid.Text)
-    Set tickerAppData = Ticker.ApplicationData
-    If Not tickerAppData.chartForm Is Nothing Then
-        tickerAppData.chartForm.Show vbModeless
-    End If
+    Set lTicker = mTickers(TickerGrid.Text)
+    createChart lTicker
 Next
 
+GridChartButton.Enabled = False
+ChartButton.Enabled = False
 End Sub
 
 Private Sub GridMarketDepthButton_Click()
 Dim Ticker As Ticker
-Dim tickerAppData As TickerApplicationData
 Dim bookmark As Variant
 
 GridMarketDepthButton.Enabled = False
@@ -1605,7 +1571,7 @@ Private Sub PauseReplayButton_Click()
 PlayTickFileButton.Enabled = True
 PauseReplayButton.Enabled = False
 writeStatusMessage "Tickfile replay paused"
-mTicker.PauseTicker
+mTickfileManager.PauseReplay
 End Sub
 
 Private Sub PlayTickFileButton_Click()
@@ -1627,14 +1593,14 @@ StopReplayButton.Enabled = True
 ReplayProgressBar.Visible = True
 ConnectButton.Enabled = False
 
-If mTicker.State = TickerStateCodes.Paused Then
+If Not mTicker Is Nothing Then
     writeStatusMessage "Tickfile replay resumed"
 Else
     writeStatusMessage "Tickfile replay started"
+    mTickfileManager.ReplayProgressEventIntervalMillisecs = 250
 End If
-mTicker.ReplayProgressEventFrequency = 10
-mTicker.replaySpeed = ReplaySpeedCombo.ItemData(ReplaySpeedCombo.ListIndex)
-mTicker.StartTicker Nothing, DOMProcessedEvents, (RewriteCheck = vbChecked)
+mTickfileManager.replaySpeed = ReplaySpeedCombo.ItemData(ReplaySpeedCombo.ListIndex)
+mTickfileManager.StartReplay
 End Sub
 
 Private Sub PortText_Change()
@@ -1650,8 +1616,8 @@ End If
 End Sub
 
 Private Sub ReplaySpeedCombo_Click()
-If Not mTicker Is Nothing Then
-    mTicker.replaySpeed = ReplaySpeedCombo.ItemData(ReplaySpeedCombo.ListIndex)
+If Not mTickfileManager Is Nothing Then
+    mTickfileManager.replaySpeed = ReplaySpeedCombo.ItemData(ReplaySpeedCombo.ListIndex)
 End If
 End Sub
 
@@ -1660,16 +1626,15 @@ checkOkToStartTicker
 End Sub
 
 Private Sub SelectTickfilesButton_Click()
-Set mTicker = mTickers.Add(Format(1000000000 * Rnd), "0")
-mTicker.outputTickFilePath = App.Path
-mTicker.selectTickFiles
+Set mTickfileManager = mTickers.createTickFileManager
+mTickfileManager.ShowTickfileSelectionDialogue
 End Sub
 
 Private Sub SkipReplayButton_Click()
 writeStatusMessage "Tickfile skipped"
 clearTickerAppData mTicker
 clearTickerFields
-mTicker.SkipTicker
+mTickfileManager.SkipTickfile
 End Sub
 
 Private Sub SocketDataCheck_Click()
@@ -1707,13 +1672,11 @@ End If
 
 StartTickerButton.Enabled = False
 
-Set lTicker = mTickers.Add(Format(CLng(1000000000 * Rnd)), "0")
-lTicker.outputTickFilePath = App.Path
-
-lTicker.StartTicker lContractSpecifier, _
-                    DOMEvents.DOMNoEvents, _
-                    RecordCheck = vbChecked, _
-                    RecordCheck = vbChecked And MarketDepthCheck = vbChecked
+Set lTicker = createTicker
+lTicker.DOMEventsRequired = DOMEvents.DOMNoEvents
+lTicker.writeToTickfile = (RecordCheck = vbChecked)
+lTicker.includeMarketDepthInTickfile = (RecordCheck = vbChecked And MarketDepthCheck = vbChecked)
+lTicker.StartTicker lContractSpecifier
 
 SymbolText.SetFocus
 End Sub
@@ -1739,8 +1702,6 @@ End Sub
 Private Sub StopTickerButton_Click()
 Dim Ticker As Ticker
 Dim bookmark As Variant
-
-SymbolText.SetFocus
 
 For Each bookmark In TickerGrid.SelBookmarks
     TickerGrid.bookmark = bookmark           ' select the row
@@ -1771,20 +1732,16 @@ Response = 0    ' prevents the grid displaying an error message
 End Sub
 
 Private Sub TickerGrid_SelChange(cancel As Integer)
-Dim Ticker As Ticker
-Dim bookmark As Variant
 Dim tickerAppData As TickerApplicationData
 
 If TickerGrid.SelStartCol <> -1 Then
     StopTickerButton.Enabled = False
     GridChartButton.Enabled = False
-    FullChartButton.Enabled = False
     GridMarketDepthButton.Enabled = False
 Else
     ' the user has clicked on the record selectors
     StopTickerButton.Enabled = True
     GridChartButton.Enabled = True
-    FullChartButton.Enabled = True
     
     If TickerGrid.SelBookmarks.Count = 1 Then
         
@@ -1793,30 +1750,23 @@ Else
         Set mTicker = mTickers(TickerGrid.Text)
         Set tickerAppData = mTicker.ApplicationData
         
-        If tickerAppData Is Nothing Then
-            GridChartButton.Enabled = False
-            FullChartButton.Enabled = False
+        If tickerAppData.MarketDepthForm Is Nothing Then
+            MarketDepthButton.Enabled = True
+            GridMarketDepthButton.Enabled = True
+        Else
             MarketDepthButton.Enabled = False
             GridMarketDepthButton.Enabled = False
+        End If
+        If tickerAppData.chartform Is Nothing Then
+            ChartButton.Enabled = True
+            GridChartButton.Enabled = True
         Else
-            If tickerAppData.MarketDepthForm Is Nothing Then
-                MarketDepthButton.Enabled = True
-                GridMarketDepthButton.Enabled = True
-            Else
-                MarketDepthButton.Enabled = False
-                GridMarketDepthButton.Enabled = False
-            End If
-            If Not tickerAppData.chartForm Is Nothing Then
-                ChartButton.Enabled = True
-            End If
+            ChartButton.Enabled = False
+            GridChartButton.Enabled = False
         End If
         
         Set mCurrentContract = mTicker.Contract
-        If mCurrentContract.NumberOfDecimals = 0 Then
-            mTickerFormatString = "0"
-        Else
-            mTickerFormatString = "0." & String(mCurrentContract.NumberOfDecimals, "0")
-        End If
+        mTickerFormatString = mTicker.priceFormatString
         
         SymbolLabel.Caption = mCurrentContract.specifier.localSymbol
         BidSizeLabel.Caption = mTicker.bidSize
@@ -1826,12 +1776,14 @@ Else
         LastSizeLabel.Caption = mTicker.TradeSize
         LastLabel.Caption = Format(mTicker.TradePrice, mTickerFormatString)
         VolumeLabel.Caption = mTicker.Volume
-        HighLabel.Caption = Format(mTicker.HighPrice, mTickerFormatString)
-        LowLabel.Caption = Format(mTicker.LowPrice, mTickerFormatString)
-        CloseLabel.Caption = Format(mTicker.ClosePrice, mTickerFormatString)
+        HighLabel.Caption = Format(mTicker.highPrice, mTickerFormatString)
+        LowLabel.Caption = Format(mTicker.lowPrice, mTickerFormatString)
+        CloseLabel.Caption = Format(mTicker.closePrice, mTickerFormatString)
     Else
         MarketDepthButton.Enabled = False
         GridMarketDepthButton.Enabled = False
+        ChartButton.Enabled = False
+        GridChartButton.Enabled = False
     End If
 End If
 
@@ -1899,33 +1851,47 @@ openOrder pContractSpecifier, pOrder
 If passToTWS Then mTradeBuildAPI.placeOrder pContractSpecifier, pOrder
 End Sub
 
-Private Sub mTicker_Application(ByVal timestamp As Date, data As Object)
+Private Sub mTicker_Application(ByVal timestamp As Date, ByVal data As Variant)
 Dim Ticker As Ticker
-Dim tickerAppData As TickerApplicationData
-Dim bookmark As Variant
+Dim eventCode As ApplicationEventCodes
 
-' this fires when the market depth form for this ticker is unloaded. This may be
-' either because the user closed the market depth form, or because the user
-' stopped the ticker.
+' this fires when the market depth form or the chart from for this ticker are
+' unloaded. This may be either because the user closed the form, or because the
+' user stopped the ticker.
 
 If mTicker.State = TickerStateCodes.Dead Then Exit Sub
 
-MarketDepthButton.Enabled = True
+eventCode = CLng(data)
+
+Select Case eventCode
+Case MarketDepthFormClosed
+    MarketDepthButton.Enabled = True
+Case ChartFormClosed
+    ChartButton.Enabled = True
+End Select
 
 ' if the current selection in the ticker grid is this ticker, then enable
-' the GridMarketDepthButton
-For Each bookmark In TickerGrid.SelBookmarks
-    TickerGrid.bookmark = bookmark           ' select the row
+' the GridMarketDepthButton or GridChartButton
+If TickerGrid.SelBookmarks.Count = 1 Then
+    TickerGrid.bookmark = TickerGrid.SelBookmarks(0)    ' select the row
     TickerGrid.col = 0                       ' make the cell containing the key current
     Set Ticker = mTickers(TickerGrid.Text)
-    If Ticker Is mTicker Then GridMarketDepthButton.Enabled = True
-Next
+    If Ticker Is mTicker Then
+        Select Case eventCode
+        Case MarketDepthFormClosed
+            MarketDepthButton.Enabled = True
+            GridMarketDepthButton.Enabled = True
+        Case ChartFormClosed
+            GridChartButton.Enabled = True
+        End Select
+    End If
+End If
+
 End Sub
 
 Private Sub mTicker_ask(ByVal timestamp As Date, _
                         ByVal price As Double, _
                         ByVal size As Long)
-Dim msg As String
 On Error GoTo err
 mTimestamp = timestamp
 AskLabel.Caption = Format(price, mTickerFormatString)
@@ -1939,7 +1905,6 @@ End Sub
 Private Sub mTicker_bid(ByVal timestamp As Date, _
                         ByVal price As Double, _
                         ByVal size As Long)
-Dim msg As String
 On Error GoTo err
 mTimestamp = timestamp
 BidLabel.Caption = Format(price, mTickerFormatString)
@@ -1951,9 +1916,14 @@ handleFatalError err.Number, err.Description, "mTicker_bid"
 End Sub
 
 Private Sub mTicker_ContractInvalid(ByVal contractSpecifier As TradeBuild.contractSpecifier)
+On Error GoTo err
 writeStatusMessage "Invalid contract details:" & vbCrLf & _
                     Replace(contractSpecifier.ToString, vbCrLf, "; ")
 StartTickerButton.Enabled = True
+
+Exit Sub
+err:
+handleFatalError err.Number, err.Description, "mTicker_ContractInvalid"
 End Sub
 
 Private Sub mTicker_errorMessage(ByVal timestamp As Date, _
@@ -2007,111 +1977,9 @@ err:
 handleFatalError err.Number, err.Description, "mTicker_previousClose"
 End Sub
 
-Private Sub mTicker_replayCompleted(ByVal timestamp As Date)
-On Error GoTo err
-mTimestamp = timestamp
-
-clearTickerFields
-
-If Not mOrderForm Is Nothing Then
-    Unload mOrderForm
-    Set mOrderForm = Nothing
-End If
-OrderButton.Enabled = False
-ChartButton.Enabled = False
-MarketDepthButton.Enabled = False
-PlayTickFileButton.Enabled = True
-PauseReplayButton.Enabled = False
-SkipReplayButton.Enabled = False
-StopReplayButton.Enabled = False
-
-SelectTickfilesButton.Enabled = True
-ClearTickfileListButton.Enabled = True
-RewriteCheck.Enabled = True
-ReplayMarketDepthCheck.Enabled = False
-ReplayProgressBar.value = 0
-ReplayProgressBar.Visible = False
-ReplayContractLabel.Caption = ""
-ReplayProgressLabel.Caption = ""
-
-ServerText.Enabled = True
-PortText.Enabled = True
-ClientIDText.Enabled = True
-SocketDataCheck.Enabled = True
-LogDataCheck.Enabled = True
-SimulateOrdersCheck.Enabled = True
-checkOKToConnect
-
-writeStatusMessage "Tickfile replay completed"
-
-Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTicker_replayCompleted"
-End Sub
-
-Private Sub mTicker_replayNextTickfile(ByVal tickfileIndex As Long, _
-                                    ByVal tickfileName As String, _
-                                    ByVal tickfileSizeBytes As Long, _
-                                    ByVal pContract As Contract, _
-                                    ByRef continueMode As ReplayContinueModes)
-On Error GoTo err
-
-clearTickerAppData mTicker
-clearTickerFields
-
-OpenOrdersList.ListItems.Clear
-ExecutionsList.ListItems.Clear
-
-Set mOrdersCol = New Collection
-Set mContractCol = New Collection
-Set mCurrentContract = pContract
-mContractCol.Add pContract, pContract.specifier.localSymbol
-
-ReplayProgressBar.Min = 0
-ReplayProgressBar.Max = 100
-ReplayProgressBar.value = 0
-TickfileList.ListIndex = tickfileIndex
-ReplayContractLabel.Caption = Replace(pContract.specifier.ToString, vbCrLf, "; ")
-
-
-Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTicker_replayNextTickfile"
-End Sub
-
-Private Sub mTicker_replayProgress(ByVal tickfileTimestamp As Date, _
-                                    ByVal eventsPlayed As Long, _
-                                    ByVal percentComplete As Single)
-On Error GoTo err
-mTimestamp = tickfileTimestamp
-ReplayProgressBar.value = percentComplete
-ReplayProgressBar.Refresh
-ReplayProgressLabel.Caption = tickfileTimestamp & _
-                                "  Processed " & _
-                                eventsPlayed & _
-                                " events"
-
-Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTicker_replayProgress"
-End Sub
-
-Private Sub mTicker_TickfilesSelected()
-Dim tickfiles() As TradeBuild.TickfileSpecifier
-Dim i As Long
-TickfileList.Clear
-tickfiles = mTicker.TickfileSpecifiers
-For i = 0 To UBound(tickfiles)
-    TickfileList.AddItem tickfiles(i).Filename
-Next
-checkOkToStartReplay
-ClearTickfileListButton.Enabled = True
-End Sub
-
 Private Sub mTicker_trade(ByVal timestamp As Date, _
                             ByVal price As Double, _
                             ByVal size As Long)
-Dim msg As String
 On Error GoTo err
 mTimestamp = timestamp
 LastLabel.Caption = Format(price, mTickerFormatString)
@@ -2214,11 +2082,7 @@ If pTicker Is mTicker Then
 
     SymbolLabel.Caption = mCurrentContract.specifier.localSymbol
     
-    If mCurrentContract.NumberOfDecimals = 0 Then
-        mTickerFormatString = "0"
-    Else
-        mTickerFormatString = "0." & String(mTicker.Contract.NumberOfDecimals, "0")
-    End If
+    mTickerFormatString = mTicker.priceFormatString
 End If
 
 On Error Resume Next
@@ -2228,24 +2092,6 @@ End If
 
 On Error GoTo err
 
-If pTicker.ApplicationData Is Nothing Then
-    Set tickerAppData = New TickerApplicationData
-    pTicker.ApplicationData = tickerAppData
-    Set tickerAppData.TickerProxy = pTicker.Proxy
-End If
-
-Set tickerAppData.chartForm = New fChart
-tickerAppData.chartForm.Contract = pTicker.Contract
-tickerAppData.chartForm.minimumTicksHeight = 40
-tickerAppData.chartForm.barLength = 1
-tickerAppData.chartForm.Visible = False
-
-tickerAppData.ChartListenerKey = pTicker.AddListener(tickerAppData.chartForm, _
-                                                TradeBuildListenValueTypes.ValueTypeTradeBuildTrade)
-
-' NB: the market depth form isn't created until the
-' user clicks the Market Depth button.
-    
 StartTickerButton.Enabled = True
 
 Exit Sub
@@ -2255,15 +2101,164 @@ End Sub
 
 Private Sub mTickers_TickerRemoved(ByVal pTicker As Ticker)
 
+' The following seems to be needed to prevent the TickerGrid_Error
+' event being fired. Otherwise, disabling StopTickerButton causes the focus
+' to go the the TickerGrid, which then causes an error.
+If SymbolText.Enabled Then
+    SymbolText.SetFocus
+Else
+    ReplaySpeedCombo.SetFocus
+End If
+
 StopTickerButton.Enabled = False
 MarketDepthButton.Enabled = False
 GridChartButton.Enabled = False
-FullChartButton.Enabled = False
 GridMarketDepthButton.Enabled = False
 
-If pTicker Is mTicker Then clearTickerFields
+If pTicker Is mTicker Then
+    clearTickerFields
+    Set mTicker = Nothing
+End If
 
 clearTickerAppData pTicker
+pTicker.ApplicationData = Empty
+End Sub
+
+Private Sub mTickfileManager_errorMessage( _
+                ByVal timestamp As Date, _
+                ByVal id As Long, _
+                ByVal errorCode As TradeBuild.ApiErrorCodes, _
+                ByVal errorMsg As String)
+On Error GoTo err
+mTimestamp = timestamp
+writeStatusMessage "Error " & errorCode & ": " & id & ": " & errorMsg
+
+Exit Sub
+err:
+handleFatalError err.Number, err.Description, "mTickfileManager_errorMessage"
+End Sub
+
+Private Sub mTickfileManager_QueryReplayNextTickfile( _
+                ByVal tickfileIndex As Long, _
+                ByVal tickfileName As String, _
+                ByVal TickfileSizeBytes As Long, _
+                ByVal pContract As TradeBuild.Contract, _
+                continueMode As TradeBuild.ReplayContinueModes)
+On Error GoTo err
+
+If tickfileIndex <> 0 Then
+    clearTickerAppData mTicker
+    clearTickerFields
+    Set mTicker = Nothing
+End If
+
+OpenOrdersList.ListItems.Clear
+ExecutionsList.ListItems.Clear
+
+Set mOrdersCol = New Collection
+Set mContractCol = New Collection
+Set mCurrentContract = pContract
+mContractCol.Add pContract, pContract.specifier.localSymbol
+
+ReplayProgressBar.Min = 0
+ReplayProgressBar.Max = 100
+ReplayProgressBar.value = 0
+TickfileList.ListIndex = tickfileIndex
+ReplayContractLabel.Caption = Replace(pContract.specifier.ToString, vbCrLf, "; ")
+
+
+Exit Sub
+err:
+handleFatalError err.Number, err.Description, "mTickfileManager_QueryReplayNextTickfile"
+End Sub
+
+Private Sub mTickfileManager_ReplayCompleted(ByVal timestamp As Date)
+On Error GoTo err
+mTimestamp = timestamp
+
+clearTickerAppData mTicker
+
+If Not mOrderForm Is Nothing Then
+    Unload mOrderForm
+    Set mOrderForm = Nothing
+End If
+OrderButton.Enabled = False
+ChartButton.Enabled = False
+MarketDepthButton.Enabled = False
+PlayTickFileButton.Enabled = True
+PauseReplayButton.Enabled = False
+SkipReplayButton.Enabled = False
+StopReplayButton.Enabled = False
+
+SelectTickfilesButton.Enabled = True
+ClearTickfileListButton.Enabled = True
+RewriteCheck.Enabled = True
+ReplayMarketDepthCheck.Enabled = False
+ReplayProgressBar.value = 0
+ReplayProgressBar.Visible = False
+ReplayContractLabel.Caption = ""
+ReplayProgressLabel.Caption = ""
+
+ServerText.Enabled = True
+PortText.Enabled = True
+ClientIDText.Enabled = True
+SocketDataCheck.Enabled = True
+LogDataCheck.Enabled = True
+SimulateOrdersCheck.Enabled = True
+checkOKToConnect
+
+writeStatusMessage "Tickfile replay completed"
+
+Exit Sub
+err:
+handleFatalError err.Number, err.Description, "mTickfileManager_ReplayCompleted"
+End Sub
+
+Private Sub mTickfileManager_ReplayProgress( _
+                ByVal tickfileTimestamp As Date, _
+                ByVal eventsPlayed As Long, _
+                ByVal percentComplete As Single)
+On Error GoTo err
+mTimestamp = tickfileTimestamp
+ReplayProgressBar.value = percentComplete
+ReplayProgressLabel.Caption = tickfileTimestamp & _
+                                "  Processed " & _
+                                eventsPlayed & _
+                                " events"
+
+Exit Sub
+err:
+handleFatalError err.Number, err.Description, "mTickfileManager_ReplayProgress"
+End Sub
+
+Private Sub mTickfileManager_TickerAllocated(ByVal pTicker As TradeBuild.Ticker)
+On Error GoTo err
+Set mTicker = pTicker
+initialiseTicker mTicker
+mTicker.DOMEventsRequired = DOMProcessedEvents
+mTicker.writeToTickfile = (RewriteCheck = vbChecked)
+mTicker.includeMarketDepthInTickfile = True
+
+Exit Sub
+err:
+handleFatalError err.Number, err.Description, "mTickfileManager_TickerAllocated"
+End Sub
+
+Private Sub mTickfileManager_TickfilesSelected()
+Dim tickfiles() As TradeBuild.TickfileSpecifier
+Dim i As Long
+On Error GoTo err
+TickfileList.Clear
+tickfiles = mTickfileManager.TickfileSpecifiers
+For i = 0 To UBound(tickfiles)
+    TickfileList.AddItem tickfiles(i).Filename
+Next
+checkOkToStartReplay
+ClearTickfileListButton.Enabled = True
+
+Exit Sub
+err:
+handleFatalError err.Number, err.Description, "mTickfileManager_TickfilesSelected"
 End Sub
 
 Private Sub mTimer_TimerExpired()
@@ -2366,7 +2361,6 @@ OrderButton.Enabled = False
 StartTickerButton.Enabled = False
 StopTickerButton.Enabled = False
 GridChartButton.Enabled = False
-FullChartButton.Enabled = False
 GridMarketDepthButton.Enabled = False
 MarketDepthButton.Enabled = False
 ChartButton.Enabled = False
@@ -2455,7 +2449,6 @@ Private Sub mTradeBuildAPI_errorMessage(ByVal timestamp As Date, _
                         ByVal id As Long, _
                         ByVal errorCode As ApiErrorCodes, _
                         ByVal errorMsg As String)
-Dim listItem As listItem
 Dim spError As ServiceProviderError
 
 On Error GoTo err
@@ -2637,12 +2630,11 @@ If Not tickerAppData.MarketDepthForm Is Nothing Then
     Unload tickerAppData.MarketDepthForm
     Set tickerAppData.MarketDepthForm = Nothing
 End If
-If Not tickerAppData.chartForm Is Nothing Then
-    Unload tickerAppData.chartForm
-    Set tickerAppData.chartForm = Nothing
-    pTicker.RemoveListener tickerAppData.ChartListenerKey
+If Not tickerAppData.chartform Is Nothing Then
+    Unload tickerAppData.chartform
+    Set tickerAppData.chartform = Nothing
 End If
-pTicker.ApplicationData = Nothing
+'pTicker.ApplicationData = Nothing
 End Sub
 
 Private Sub clearTickerFields()
@@ -2659,6 +2651,25 @@ LowLabel.Caption = ""
 CloseLabel.Caption = ""
 ChartButton.Enabled = False
 End Sub
+
+Private Sub createChart(ByVal pTicker As Ticker)
+Dim chartform As fChart1
+
+If Not pTicker.ApplicationData.chartform Is Nothing Then Exit Sub
+
+Set chartform = New fChart1
+chartform.minimumTicksHeight = 40
+chartform.InitialNumberOfBars = 200
+chartform.barLength = 5
+chartform.Ticker = pTicker
+chartform.Visible = True
+Set pTicker.ApplicationData.chartform = chartform
+End Sub
+
+Private Function createTicker() As Ticker
+Set createTicker = mTickers.Add(Format(CLng(1000000000 * Rnd)), "0")
+initialiseTicker createTicker
+End Function
 
 Private Sub handleFatalError(ByVal errNum As Long, _
                             ByVal Description As String, _
@@ -2677,6 +2688,12 @@ MsgBox "A fatal error has occurred. The program will close" & vbCrLf & _
         vbCritical, _
         "Fatal error"
 Unload Me
+End Sub
+
+Private Sub initialiseTicker(ByVal pTicker As Ticker)
+pTicker.outputTickfilePath = App.Path
+pTicker.ApplicationData = New TickerApplicationData
+Set pTicker.ApplicationData.TickerProxy = pTicker.Proxy
 End Sub
 
 Private Sub openOrder(ByVal pContractSpecifier As contractSpecifier, _
@@ -2796,13 +2813,13 @@ col.Alignment = dbgRight
 Set col = TickerGrid.Columns(TickerGridColumns.ChangePercent)
 col.width = TickerGridColumnWidths.ChangePercentWidth * TickerGrid.width / 100
 col.Alignment = dbgRight
-Set col = TickerGrid.Columns(TickerGridColumns.HighPrice)
+Set col = TickerGrid.Columns(TickerGridColumns.highPrice)
 col.width = TickerGridColumnWidths.highWidth * TickerGrid.width / 100
 col.Alignment = dbgRight
-Set col = TickerGrid.Columns(TickerGridColumns.LowPrice)
+Set col = TickerGrid.Columns(TickerGridColumns.lowPrice)
 col.width = TickerGridColumnWidths.lowWidth * TickerGrid.width / 100
 col.Alignment = dbgRight
-Set col = TickerGrid.Columns(TickerGridColumns.ClosePrice)
+Set col = TickerGrid.Columns(TickerGridColumns.closePrice)
 col.width = TickerGridColumnWidths.closeWidth * TickerGrid.width / 100
 col.Alignment = dbgRight
 Set col = TickerGrid.Columns(TickerGridColumns.symbol)
@@ -2884,47 +2901,24 @@ col.Alignment = dbgRight
 End Sub
 
 Private Sub showMarketDepthForm(ByVal pTicker As Ticker)
-Dim msg As String
 Dim tickerAppData As TickerApplicationData
 Dim mktDepthForm As fMarketDepth
 
 Set tickerAppData = pTicker.ApplicationData
 
+If Not tickerAppData.MarketDepthForm Is Nothing Then Exit Sub
 
-If tickerAppData.MarketDepthForm Is Nothing Then
-    Set mktDepthForm = New fMarketDepth
-    Set tickerAppData.MarketDepthForm = mktDepthForm
-End If
+Set mktDepthForm = New fMarketDepth
+Set tickerAppData.MarketDepthForm = mktDepthForm
 
-mktDepthForm.Contract = pTicker.Contract
-If pTicker.TradePrice <> 0 Then
-    mktDepthForm.initialPrice = pTicker.TradePrice
-ElseIf pTicker.BidPrice <> 0 Then
-    mktDepthForm.initialPrice = pTicker.BidPrice <> 0
-ElseIf pTicker.AskPrice <> 0 Then
-    mktDepthForm.initialPrice = pTicker.AskPrice
-End If
 mktDepthForm.numberOfRows = 100
 mktDepthForm.numberOfVisibleRows = 20
-
-If pTicker.TradePrice <> 0 Then
-    mktDepthForm.setDOMCell mTimestamp, DOMSides.DOMLast, pTicker.TradePrice, pTicker.TradeSize
-End If
-If pTicker.AskPrice <> 0 Then
-    mktDepthForm.setDOMCell mTimestamp, DOMSides.DOMAsk, pTicker.AskPrice, pTicker.AskSize
-End If
-If pTicker.BidPrice <> 0 Then
-    mktDepthForm.setDOMCell mTimestamp, DOMSides.DOMBid, pTicker.BidPrice, pTicker.bidSize
-End If
-
-tickerAppData.MarketDepthListenerKey = pTicker.AddListener(mktDepthForm, _
-                                            TradeBuildListenValueTypes.ValueTypeTradeBuildMarketdepth)
-
-mktDepthForm.Show vbModeless
+mktDepthForm.Ticker = pTicker
 
 pTicker.RequestMarketDepth DOMEvents.DOMProcessedEvents, _
                         IIf(RecordCheck = vbChecked, True, False)
 
+mktDepthForm.Show vbModeless
 End Sub
 
 Private Sub writeStatusMessage(message As String)

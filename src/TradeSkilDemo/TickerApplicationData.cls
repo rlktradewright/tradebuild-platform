@@ -17,11 +17,9 @@ Option Explicit
 ' Description
 '================================================================================
 '
-' Used to store information used by TradeSKilDemo in a ticker object's
+' Used to store information used by TradeSkilDemo in a ticker object's
 ' ApplicationData property.
 '
-' NB: ideally this would be a Type rather than a class, but VB won't allow
-' UDTs to be used in this way (presumably because this is an Exe project).
 
 '================================================================================
 ' Amendment history
@@ -47,6 +45,11 @@ Option Explicit
 ' Enums
 '================================================================================
 
+Public Enum ApplicationEventCodes
+    MarketDepthFormClosed = 1
+    ChartFormClosed
+End Enum
+
 '================================================================================
 ' Types
 '================================================================================
@@ -57,10 +60,8 @@ Option Explicit
 
 Public WithEvents MarketDepthForm As Form
 Attribute MarketDepthForm.VB_VarHelpID = -1
-Public WithEvents ChartForm As Form
-Attribute ChartForm.VB_VarHelpID = -1
-Public ChartListenerKey As String
-Public MarketDepthListenerKey As String
+Public WithEvents chartform As Form
+Attribute chartform.VB_VarHelpID = -1
 Public TickerProxy As TickerProxy
 Attribute TickerProxy.VB_VarHelpID = -1
 
@@ -76,26 +77,19 @@ Attribute TickerProxy.VB_VarHelpID = -1
 ' ChartForm Event Handlers
 '================================================================================
 
-Private Sub ChartForm_QueryUnload(Cancel As Integer, _
-                            UnloadMode As Integer)
-If UnloadMode = vbFormControlMenu Then
-    Cancel = 1          ' prevent the form from closing, as this would lose
-                        ' all the data displayed so far
-    ChartForm.Visible = False
-Else
-    Set ChartForm = Nothing
-End If
+Private Sub ChartForm_Unload(cancel As Integer)
+Set chartform = Nothing
+TickerProxy.FireApplicationEvent ApplicationEventCodes.ChartFormClosed
 End Sub
 
 '================================================================================
 ' MarketDepthForm Event Handlers
 '================================================================================
 
-Private Sub MarketDepthForm_Unload(Cancel As Integer)
+Private Sub MarketDepthForm_Unload(cancel As Integer)
 Set MarketDepthForm = Nothing
 TickerProxy.CancelMarketDepth
-TickerProxy.RemoveListener MarketDepthListenerKey
-TickerProxy.FireApplicationEvent Nothing
+TickerProxy.FireApplicationEvent ApplicationEventCodes.MarketDepthFormClosed
 End Sub
 
 '================================================================================

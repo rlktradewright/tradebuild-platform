@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "msflxgrd.ocx"
+Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
 Begin VB.Form fMarketDepth 
    Caption         =   "Market Depth"
    ClientHeight    =   5535
@@ -30,6 +30,13 @@ Option Explicit
 
 Implements IListener
 
+Public Enum MarketDepthErrorCodes
+    InvalidPropertyValue = vbObjectError + 512
+End Enum
+
+Private mTicker As Ticker
+Private mListenerKey As String
+
 Private mContract As Contract
 Private mInitialPrice As Double
 Private mPriceIncrement As Double
@@ -53,7 +60,7 @@ Private Enum DOMColumns
     PriceLeft
     bidSize
     LastSize
-    askSize
+    AskSize
     PriceRight
 End Enum
 
@@ -105,14 +112,26 @@ setCellContents 0, DOMColumns.LastSize, "Last"
 DOMGrid.ColWidth(DOMColumns.LastSize) = 14 * DOMGrid.width / 100
 DOMGrid.ColAlignment(DOMColumns.LastSize) = flexAlignCenterCenter
 
-setCellContents 0, DOMColumns.askSize, "Asks"
-DOMGrid.ColWidth(DOMColumns.askSize) = 14 * DOMGrid.width / 100
-DOMGrid.ColAlignment(DOMColumns.askSize) = flexAlignCenterCenter
+setCellContents 0, DOMColumns.AskSize, "Asks"
+DOMGrid.ColWidth(DOMColumns.AskSize) = 14 * DOMGrid.width / 100
+DOMGrid.ColAlignment(DOMColumns.AskSize) = flexAlignCenterCenter
 
 setCellContents 0, DOMColumns.PriceRight, "Price"
 DOMGrid.ColWidth(DOMColumns.PriceRight) = 24 * DOMGrid.width / 100
 DOMGrid.ColAlignment(DOMColumns.PriceRight) = flexAlignLeftCenter
 
+mNumberOfRows = 50
+mNumberOfVisibleRows = 20
+End Sub
+
+Private Sub Form_Terminate()
+Debug.Print "Market depth form terminated"
+End Sub
+
+Private Sub Form_Unload(cancel As Integer)
+If mListenerKey <> "" Then
+    mTicker.RemoveListener mListenerKey
+End If
 End Sub
 
 Private Sub IListener_notify(ByVal valueType As Long, ByVal data As Variant, ByVal timestamp As Date)
@@ -124,41 +143,84 @@ Case TradeBuildListenValueTypes.ValueTypeTradeBuildMarketdepth
         ' this is a reset notification
         reset
     ElseIf mdInfo.size = 0 Then
-        clearDOMCell timestamp, mdInfo.side, mdInfo.price
+        clearDOMCell mdInfo.side, mdInfo.price
     Else
-        setDOMCell timestamp, mdInfo.side, mdInfo.price, mdInfo.size
+        setDOMCell mdInfo.side, mdInfo.price, mdInfo.size
     End If
 End Select
 
 End Sub
 
-Public Property Let Contract(ByVal value As Contract)
-Set mContract = value
+Private Property Let initialPrice(ByVal value As Double)
+If mInitialPrice <> 0 Then Exit Property
+mInitialPrice = value
+End Property
+
+Public Property Let numberOfRows(ByVal value As Long)
+
+If value < 5 Then
+    err.Raise MarketDepthErrorCodes.InvalidPropertyValue, _
+                "TradeSkilDemo.fMarketDepth::numberOfRows()", _
+                "Invalid property value"
+End If
+If mNumberOfVisibleRows <> 0 And value < mNumberOfVisibleRows Then
+    err.Raise MarketDepthErrorCodes.InvalidPropertyValue, _
+                "TradeSkilDemo.fMarketDepth::numberOfRows()", _
+                "Invalid property value"
+End If
+
+mNumberOfRows = value
+End Property
+
+Public Property Let numberOfVisibleRows(ByVal value As Long)
+
+If value < 5 Then
+    err.Raise MarketDepthErrorCodes.InvalidPropertyValue, _
+                "TradeSkilDemo.fMarketDepth::numberOfVisibleRows()", _
+                "Invalid property value"
+End If
+If mNumberOfRows <> 0 And value > mNumberOfRows Then
+    err.Raise MarketDepthErrorCodes.InvalidPropertyValue, _
+                "TradeSkilDemo.fMarketDepth::numberOfVisibleRows()", _
+                "Invalid property value"
+End If
+
+mNumberOfVisibleRows = value
+End Property
+
+Public Property Let Ticker(ByVal value As Ticker)
+Set mTicker = value
+Set mContract = mTicker.Contract
 Me.Caption = "Market depth for " & _
             mContract.specifier.localSymbol & _
             " on " & _
             mContract.specifier.exchange
-'mPriceIncrement = IIf(mContract.specifier.currencyCode = "GBP", 100 * mContract.minimumTick, mContract.minimumTick)
 mPriceIncrement = mContract.minimumTick
-'If mPriceIncrement < 0.01 Then mPriceIncrement = 0.01
-End Property
+mFormatString = mTicker.priceFormatString
 
-Public Property Let initialPrice(ByVal value As Double)
-If mInitialPrice <> 0 Then Exit Property
-mInitialPrice = value
-setupRows
-End Property
+If mTicker.TradePrice <> 0 Then
+    initialPrice = mTicker.TradePrice
+ElseIf mTicker.BidPrice <> 0 Then
+    initialPrice = mTicker.BidPrice
+ElseIf mTicker.AskPrice <> 0 Then
+    initialPrice = mTicker.AskPrice
+End If
 
-Public Property Let numberOfRows(ByVal value As Long)
-If mNumberOfRows <> 0 Then Exit Property
-mNumberOfRows = value
 setupRows
-End Property
 
-Public Property Let numberOfVisibleRows(ByVal value As Long)
-If mNumberOfVisibleRows <> 0 Then Exit Property
-mNumberOfVisibleRows = value
-setupRows
+If mTicker.TradePrice <> 0 Then
+    setDOMCell DOMSides.DOMLast, mTicker.TradePrice, mTicker.TradeSize
+End If
+If mTicker.AskPrice <> 0 Then
+    setDOMCell DOMSides.DOMAsk, mTicker.AskPrice, mTicker.AskSize
+End If
+If mTicker.BidPrice <> 0 Then
+    setDOMCell DOMSides.DOMBid, mTicker.BidPrice, mTicker.bidSize
+End If
+
+mListenerKey = mTicker.AddListener(Me, _
+                                            TradeBuildListenValueTypes.ValueTypeTradeBuildMarketdepth)
+
 End Property
 
 
@@ -218,7 +280,7 @@ Private Sub clearDisplay(ByVal side As DOMSides, ByVal price As Double)
 checkEnoughRows price
 Select Case side
 Case DOMSides.DOMAsk
-    setCellContents calcRowNumber(price), DOMColumns.askSize, ""
+    setCellContents calcRowNumber(price), DOMColumns.AskSize, ""
 Case DOMSides.DOMBid
     setCellContents calcRowNumber(price), DOMColumns.bidSize, ""
 Case DOMSides.DOMLast
@@ -227,7 +289,6 @@ End Select
 End Sub
 
 Public Sub clearDOMCell( _
-                ByVal timestamp As Date, _
                 ByVal side As DOMSides, _
                 ByVal price As Double)
 clearDisplay side, price
@@ -253,7 +314,7 @@ Then
             Case DOMColumns.LastSize
                 DOMGrid.CellBackColor = GridColours.BGLast
                 DOMGrid.CellFontBold = True
-            Case DOMColumns.askSize
+            Case DOMColumns.AskSize
                 DOMGrid.CellBackColor = GridColours.BGAsk
             Case Else
                 DOMGrid.CellBackColor = GridColours.BGDefault
@@ -285,7 +346,6 @@ End Sub
 
 
 Public Sub setDOMCell( _
-                ByVal timestamp As Date, _
                 ByVal side As DOMSides, _
                 ByVal price As Double, _
                 ByVal size As Long)
@@ -303,7 +363,7 @@ Private Sub setDisplay(ByVal side As DOMSides, ByVal price As Double, ByVal size
 checkEnoughRows price
 Select Case side
 Case DOMSides.DOMAsk
-    setCellContents calcRowNumber(price), DOMColumns.askSize, size
+    setCellContents calcRowNumber(price), DOMColumns.AskSize, size
 Case DOMSides.DOMBid
     setCellContents calcRowNumber(price), DOMColumns.bidSize, size
 Case DOMSides.DOMLast
@@ -315,22 +375,9 @@ End Sub
 Private Sub setupRows()
 Dim i As Long
 Dim price As Double
-Dim currentListHeight  As Long
 Dim currentGridHeight  As Long
 
-If mInitialPrice = 0 Or _
-    mNumberOfRows = 0 Or _
-    mNumberOfVisibleRows = 0 Or _
-    mPriceIncrement = 0 _
-Then Exit Sub
-
 mBasePrice = mInitialPrice - (mPriceIncrement * Int(mNumberOfRows / 2))
-
-If mContract.NumberOfDecimals = 0 Then
-    mFormatString = "0"
-Else
-    mFormatString = "0." & String(mContract.NumberOfDecimals, "0")
-End If
 
 For i = 0 To mNumberOfRows - 1
     price = mBasePrice + (i * mPriceIncrement)
