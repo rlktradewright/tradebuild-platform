@@ -76,63 +76,63 @@ Begin VB.Form MainForm
       TabCaption(1)   =   "Contract details"
       TabPicture(1)   =   "MainForm.frx":001C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "ContractDetailsText"
+      Tab(1).Control(0)=   "Label2"
       Tab(1).Control(0).Enabled=   0   'False
-      Tab(1).Control(1)=   "DisconnectButton"
+      Tab(1).Control(1)=   "Label3"
       Tab(1).Control(1).Enabled=   0   'False
-      Tab(1).Control(2)=   "GetContractButton"
+      Tab(1).Control(2)=   "Label13"
       Tab(1).Control(2).Enabled=   0   'False
-      Tab(1).Control(3)=   "RightCombo"
+      Tab(1).Control(3)=   "Label6"
       Tab(1).Control(3).Enabled=   0   'False
-      Tab(1).Control(4)=   "TypeCombo"
+      Tab(1).Control(4)=   "Label5"
       Tab(1).Control(4).Enabled=   0   'False
-      Tab(1).Control(5)=   "SymbolText"
+      Tab(1).Control(5)=   "Label4"
       Tab(1).Control(5).Enabled=   0   'False
-      Tab(1).Control(6)=   "ExpiryText"
+      Tab(1).Control(6)=   "Label7"
       Tab(1).Control(6).Enabled=   0   'False
-      Tab(1).Control(7)=   "ExchangeText"
+      Tab(1).Control(7)=   "Label17"
       Tab(1).Control(7).Enabled=   0   'False
-      Tab(1).Control(8)=   "StrikePriceText"
+      Tab(1).Control(8)=   "Label21"
       Tab(1).Control(8).Enabled=   0   'False
-      Tab(1).Control(9)=   "Frame2"
+      Tab(1).Control(9)=   "Label11"
       Tab(1).Control(9).Enabled=   0   'False
-      Tab(1).Control(10)=   "PortText"
+      Tab(1).Control(10)=   "ServerText"
       Tab(1).Control(10).Enabled=   0   'False
       Tab(1).Control(11)=   "ClientIDText"
       Tab(1).Control(11).Enabled=   0   'False
-      Tab(1).Control(12)=   "ServerText"
+      Tab(1).Control(12)=   "PortText"
       Tab(1).Control(12).Enabled=   0   'False
-      Tab(1).Control(13)=   "Label11"
+      Tab(1).Control(13)=   "Frame2"
       Tab(1).Control(13).Enabled=   0   'False
-      Tab(1).Control(14)=   "Label21"
+      Tab(1).Control(14)=   "StrikePriceText"
       Tab(1).Control(14).Enabled=   0   'False
-      Tab(1).Control(15)=   "Label17"
+      Tab(1).Control(15)=   "ExchangeText"
       Tab(1).Control(15).Enabled=   0   'False
-      Tab(1).Control(16)=   "Label7"
+      Tab(1).Control(16)=   "ExpiryText"
       Tab(1).Control(16).Enabled=   0   'False
-      Tab(1).Control(17)=   "Label4"
+      Tab(1).Control(17)=   "SymbolText"
       Tab(1).Control(17).Enabled=   0   'False
-      Tab(1).Control(18)=   "Label5"
+      Tab(1).Control(18)=   "TypeCombo"
       Tab(1).Control(18).Enabled=   0   'False
-      Tab(1).Control(19)=   "Label6"
+      Tab(1).Control(19)=   "RightCombo"
       Tab(1).Control(19).Enabled=   0   'False
-      Tab(1).Control(20)=   "Label13"
+      Tab(1).Control(20)=   "GetContractButton"
       Tab(1).Control(20).Enabled=   0   'False
-      Tab(1).Control(21)=   "Label3"
+      Tab(1).Control(21)=   "DisconnectButton"
       Tab(1).Control(21).Enabled=   0   'False
-      Tab(1).Control(22)=   "Label2"
+      Tab(1).Control(22)=   "ContractDetailsText"
       Tab(1).Control(22).Enabled=   0   'False
       Tab(1).ControlCount=   23
       TabCaption(2)   =   "Bar output"
       TabPicture(2)   =   "MainForm.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "Frame7"
+      Tab(2).Control(0)=   "Frame4"
       Tab(2).Control(0).Enabled=   0   'False
-      Tab(2).Control(1)=   "Frame6"
+      Tab(2).Control(1)=   "Frame5"
       Tab(2).Control(1).Enabled=   0   'False
-      Tab(2).Control(2)=   "Frame5"
+      Tab(2).Control(2)=   "Frame6"
       Tab(2).Control(2).Enabled=   0   'False
-      Tab(2).Control(3)=   "Frame4"
+      Tab(2).Control(3)=   "Frame7"
       Tab(2).Control(3).Enabled=   0   'False
       Tab(2).ControlCount=   4
       Begin VB.Frame Frame7 
@@ -1091,6 +1091,8 @@ Implements TradeBuild.IListener
 
 Private WithEvents mTradeBuildAPI As TradeBuildAPI
 Attribute mTradeBuildAPI.VB_VarHelpID = -1
+Private WithEvents mTickfileManager As TradeBuild.TickFileManager
+Attribute mTickfileManager.VB_VarHelpID = -1
 Private WithEvents mTicker As Ticker
 Attribute mTicker.VB_VarHelpID = -1
 Private mOutputFormat As String
@@ -1268,7 +1270,7 @@ End Sub
 Private Sub IListener_notify( _
                             ByVal valueType As Long, _
                             ByVal data As Variant, _
-                            ByVal Timestamp As Date)
+                            ByVal timestamp As Date)
 Select Case valueType
 Case TradeBuild.StandardListenValueTypes.LogInfo
     writeStatusMessage "Log: " & data
@@ -1278,7 +1280,7 @@ End Sub
 Private Sub ClearTickfileListButton_Click()
 TickfileList.Clear
 ClearTickfileListButton.Enabled = False
-mTicker.clearTickfileNames
+mTickfileManager.ClearTickfileSpecifiers
 ConvertButton.Enabled = False
 StopButton.Enabled = False
 End Sub
@@ -1307,7 +1309,7 @@ Then
         writeStatusMessage "Can't convert - no contract details are available"
         Exit Sub
     Else
-        mTicker.TickfileContract = mContract
+        mTickfileManager.Contract = mContract
     End If
 End If
 
@@ -1317,13 +1319,11 @@ ConvertButton.Enabled = False
 StopButton.Enabled = True
 ReplayProgressBar.Visible = True
 
-mTicker.replaySpeed = 0
+mTickfileManager.replaySpeed = 0
 If AdjustTimestampsCheck = vbChecked Then
-    mTicker.TimestampAdjustmentStart = AdjustSecondsStartText
-    mTicker.TimestampAdjustmentEnd = AdjustSecondsEndText
+    mTickfileManager.TimestampAdjustmentStart = AdjustSecondsStartText
+    mTickfileManager.TimestampAdjustmentEnd = AdjustSecondsEndText
 End If
-mTicker.OutputTickfileFormat = mOutputFormat
-mTicker.outputTickFilePath = mOutputPath
 
 mQuoteTrackerSP.QTServer = QTServerText.Text
 mQuoteTrackerSP.QTPort = QTPortText.Text
@@ -1342,11 +1342,7 @@ For i = 0 To EnableCheck.UBound
 Next
 
 writeStatusMessage "Tickfile conversion started"
-If mOutputFormat <> "" Then
-    mTicker.StartTicker , , True, True
-Else
-    mTicker.StartTicker , , False
-End If
+mTickfileManager.StartReplay
 End Sub
 
 Private Sub DisconnectButton_Click()
@@ -1431,6 +1427,116 @@ Else
 End If
 End Sub
 
+Private Sub mTickfileManager_errorMessage(ByVal timestamp As Date, ByVal id As Long, ByVal errorCode As TradeBuild.ApiErrorCodes, ByVal errorMsg As String)
+On Error GoTo err
+Select Case errorCode
+Case ApiErrorCodes.NoContractDetails
+    writeStatusMessage "Error " & errorCode & ": " & errorMsg
+    
+Case Else
+    writeStatusMessage "Error " & errorCode & ": " & id & ": " & errorMsg
+End Select
+
+Exit Sub
+err:
+handleFatalError err.Number, err.description, "mTickfileManager_errorMessage"
+End Sub
+
+Private Sub mTickfileManager_QueryReplayNextTickfile( _
+                ByVal tickfileIndex As Long, _
+                ByVal tickfileName As String, _
+                ByVal tickfileSizeBytes As Long, _
+                ByVal pContract As TradeBuild.Contract, _
+                continueMode As TradeBuild.ReplayContinueModes)
+On Error GoTo err
+
+ReplayProgressBar.Min = 0
+ReplayProgressBar.Max = 100
+ReplayProgressBar.value = 0
+TickfileList.ListIndex = tickfileIndex
+writeStatusMessage "Converting " & TickfileList.List(TickfileList.ListIndex)
+ReplayContractLabel.Caption = "Symbol:   " & pContract.specifier.Symbol & vbCrLf & _
+                            "Type:     " & secTypeToString(pContract.specifier.SecType) & vbCrLf & _
+                            IIf(pContract.specifier.SecType <> SecurityTypes.SecTypeStock, "Expiry:   " & pContract.specifier.Expiry & vbCrLf, "") & _
+                            "Exchange: " & pContract.specifier.exchange
+
+Exit Sub
+err:
+handleFatalError err.Number, err.description, "mTickfileManager_QueryReplayNextTickfile"
+End Sub
+
+Private Sub mTickfileManager_ReplayCompleted(ByVal timestamp As Date)
+On Error GoTo err
+
+ConvertButton.Enabled = True
+StopButton.Enabled = False
+SelectTickfilesButton.Enabled = True
+ClearTickfileListButton.Enabled = True
+ReplayProgressBar.value = 0
+ReplayProgressBar.Visible = False
+ReplayContractLabel.Caption = ""
+ReplayProgressLabel.Caption = ""
+
+writeStatusMessage "Tickfile conversion completed"
+
+If mRun Then Unload Me
+
+Exit Sub
+err:
+handleFatalError err.Number, err.description, "mTickfileManager_ReplayCompleted"
+
+End Sub
+
+Private Sub mTickfileManager_ReplayProgress( _
+                            ByVal tickfileTimestamp As Date, _
+                            ByVal eventsPlayed As Long, _
+                            ByVal percentComplete As Single)
+
+On Error GoTo err
+ReplayProgressBar.value = percentComplete
+ReplayProgressBar.Refresh
+ReplayProgressLabel.Caption = tickfileTimestamp & _
+                                "  Processed " & _
+                                eventsPlayed & _
+                                " events"
+
+Exit Sub
+err:
+handleFatalError err.Number, err.description, "mTickfileManager_ReplayProgress"
+End Sub
+
+Private Sub mTickfileManager_TickerAllocated(ByVal pTicker As TradeBuild.Ticker)
+On Error GoTo err
+Set mTicker = pTicker
+mTicker.outputTickfilePath = mOutputPath
+mTicker.outputTickfileFormat = mOutputFormat
+If mOutputFormat <> "" Then
+    mTicker.writeToTickfile = True
+    mTicker.includeMarketDepthInTickfile = True
+End If
+
+Exit Sub
+err:
+handleFatalError err.Number, err.description, "mTickfileManager_TickerAllocated"
+End Sub
+
+Private Sub mTickfileManager_TickfilesSelected()
+On Error GoTo err
+Dim tickfiles() As TradeBuild.TickfileSpecifier
+Dim i As Long
+TickfileList.Clear
+tickfiles = mTickfileManager.TickfileSpecifiers
+For i = 0 To UBound(tickfiles)
+    TickfileList.AddItem tickfiles(i).filename
+Next
+ConvertButton.Enabled = True
+ClearTickfileListButton.Enabled = True
+
+Exit Sub
+err:
+handleFatalError err.Number, err.description, "mTickfileManager_TickfilesSelected"
+End Sub
+
 Private Sub OutputPathButton_Click()
 Dim pathChooser As AppFramework.CPathChooser
 Set pathChooser = New AppFramework.CPathChooser
@@ -1443,10 +1549,9 @@ mOutputPath = OutputPathText.Text
 End Sub
 
 Private Sub SelectTickfilesButton_Click()
-Set mTicker = mTradeBuildAPI.Tickers.Add(GenerateGUIDString)
+Set mTickfileManager = mTradeBuildAPI.Tickers.createTickFileManager
 
-mTicker.outputTickFilePath = mOutputPath
-mTicker.selectTickfiles
+mTickfileManager.ShowTickfileSelectionDialogue
 QTServerText.Enabled = True
 QTPortText.Enabled = True
 
@@ -1497,7 +1602,7 @@ End Select
 checkOKToGetContract
 End Sub
 
-Private Sub mTicker_errorMessage(ByVal Timestamp As Date, _
+Private Sub mTicker_errorMessage(ByVal timestamp As Date, _
                                 ByVal id As Long, _
                                 ByVal errorCode As TradeBuild.ApiErrorCodes, _
                                 ByVal errorMsg As String)
@@ -1516,86 +1621,13 @@ handleFatalError err.Number, err.description, "mTicker_errorMessage"
 End Sub
 
 Private Sub mTicker_outputTickfileCreated( _
-                            ByVal Timestamp As Date, _
+                            ByVal timestamp As Date, _
                             ByVal filename As String)
 writeStatusMessage "Created output tickfile: " & filename
 End Sub
 
-Private Sub mTicker_replayCompleted(ByVal Timestamp As Date)
-On Error GoTo err
-
-ConvertButton.Enabled = True
-StopButton.Enabled = False
-SelectTickfilesButton.Enabled = True
-ClearTickfileListButton.Enabled = True
-ReplayProgressBar.value = 0
-ReplayProgressBar.Visible = False
-ReplayContractLabel.Caption = ""
-ReplayProgressLabel.Caption = ""
-
-writeStatusMessage "Tickfile conversion completed"
-
-If mRun Then Unload Me
-
-Exit Sub
-err:
-handleFatalError err.Number, err.description, "mTicker_replayCompleted"
-End Sub
-
-Private Sub mTicker_replayNextTickfile(ByVal tickfileIndex As Long, _
-                                    ByVal tickfileName As String, _
-                                    ByVal tickfileSizeBytes As Long, _
-                                    ByVal pContract As Contract, _
-                                    ByRef continueMode As ReplayContinueModes)
-On Error GoTo err
-
-ReplayProgressBar.Min = 0
-ReplayProgressBar.Max = 100
-ReplayProgressBar.value = 0
-TickfileList.ListIndex = tickfileIndex
-writeStatusMessage "Converting " & TickfileList.List(TickfileList.ListIndex)
-ReplayContractLabel.Caption = "Symbol:   " & pContract.specifier.Symbol & vbCrLf & _
-                            "Type:     " & secTypeToString(pContract.specifier.SecType) & vbCrLf & _
-                            IIf(pContract.specifier.SecType <> SecurityTypes.SecTypeStock, "Expiry:   " & pContract.specifier.Expiry & vbCrLf, "") & _
-                            "Exchange: " & pContract.specifier.exchange
-
-Exit Sub
-err:
-handleFatalError err.Number, err.description, "mTicker_replayNextTickfile"
-End Sub
-
-Private Sub mTicker_ReplayProgress( _
-                            ByVal tickfileTimestamp As Date, _
-                            ByVal eventsPlayed As Long, _
-                            ByVal percentComplete As Single)
-
-On Error GoTo err
-ReplayProgressBar.value = percentComplete
-ReplayProgressBar.Refresh
-ReplayProgressLabel.Caption = tickfileTimestamp & _
-                                "  Processed " & _
-                                eventsPlayed & _
-                                " events"
-
-Exit Sub
-err:
-handleFatalError err.Number, err.description, "mTicker_replayProgress"
-End Sub
-
-Private Sub mTicker_TickfilesSelected()
-Dim tickfiles() As TradeBuild.TickfileSpecifier
-Dim i As Long
-TickfileList.Clear
-tickfiles = mTicker.TickfileSpecifiers
-For i = 0 To UBound(tickfiles)
-    TickfileList.AddItem tickfiles(i).filename
-Next
-ConvertButton.Enabled = True
-ClearTickfileListButton.Enabled = True
-End Sub
-
 Private Sub mTimer_TimerExpired()
-Set mTicker = mTradeBuildAPI.Tickers.Add(GenerateGUIDString)
+Set mTickfileManager = mTradeBuildAPI.Tickers.createTickFileManager
 
 mQuoteTrackerSP.QTServer = QTServerText.Text
 mQuoteTrackerSP.QTPort = QTPortText.Text
@@ -1603,15 +1635,13 @@ mQuoteTrackerSP.QTPort = QTPortText.Text
 QTServerText.Enabled = False
 QTPortText.Enabled = False
 
-mTicker.OutputTickfileFormat = mOutputFormat
-mTicker.outputTickFilePath = mOutputPath
-mTicker.TickfileSpecifiers = mTickfileSpecifiers
-mTicker.replaySpeed = 0
+mTickfileManager.TickfileSpecifiers = mTickfileSpecifiers
+mTickfileManager.replaySpeed = 0
 
-mTicker.StartTicker , , True, True
+mTickfileManager.StartReplay
 End Sub
 
-Private Sub mTradeBuildAPI_connected(ByVal Timestamp As Date)
+Private Sub mTradeBuildAPI_connected(ByVal timestamp As Date)
 Dim lContractSpecifier As ContractSpecifier
 
 On Error GoTo err
@@ -1628,7 +1658,7 @@ err:
 handleFatalError err.Number, err.description, "mTradeBuildAPI_connected"
 End Sub
 
-Private Sub mTradeBuildAPI_connecting(ByVal Timestamp As Date)
+Private Sub mTradeBuildAPI_connecting(ByVal timestamp As Date)
 On Error GoTo err
 writeStatusMessage "Connecting"
 DisconnectButton.Enabled = True
@@ -1638,7 +1668,7 @@ err:
 handleFatalError err.Number, err.description, "mTradeBuildAPI_connecting"
 End Sub
 
-Private Sub mTradeBuildAPI_connectionToTWSClosed(ByVal Timestamp As Date)
+Private Sub mTradeBuildAPI_connectionToTWSClosed(ByVal timestamp As Date)
 On Error GoTo err
 
 DisconnectButton.Enabled = False
@@ -1651,7 +1681,7 @@ err:
 handleFatalError err.Number, err.description, "mTradeBuildAPI_connectionClosed"
 End Sub
 
-Private Sub mTradeBuildAPI_Contract(ByVal Timestamp As Date, _
+Private Sub mTradeBuildAPI_Contract(ByVal timestamp As Date, _
                                     ByVal pContract As Contract)
 On Error GoTo err
 Set mContract = pContract
@@ -1666,7 +1696,7 @@ err:
 handleFatalError err.Number, err.description, "mTradeBuildAPI_Contract"
 End Sub
 
-Private Sub mTradeBuildAPI_ContractInvalid(ByVal Timestamp As Date, _
+Private Sub mTradeBuildAPI_ContractInvalid(ByVal timestamp As Date, _
                     ByVal pContractSpecifier As TradeBuild.ContractSpecifier)
 
 On Error GoTo err
@@ -1689,7 +1719,7 @@ err:
 handleFatalError err.Number, err.description, "mTradeBuildAPI_contractInvalid"
 End Sub
 
-Private Sub mTradeBuildAPI_errorMessage(ByVal Timestamp As Date, _
+Private Sub mTradeBuildAPI_errorMessage(ByVal timestamp As Date, _
                         ByVal id As Long, _
                         ByVal errorCode As ApiErrorCodes, _
                         ByVal errorMsg As String)
