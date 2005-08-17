@@ -108,6 +108,10 @@ Public Property Get Description() As String
 Description = mEventProxy.Description
 End Property
 
+Public Property Get DOMEventsRequired() As DOMEvents
+DOMEventsRequired = mEventProxy.DOMEventsRequired
+End Property
+
 Friend Property Get EventProxy() As TickerProxyEventProxy
 Set EventProxy = mEventProxy
 End Property
@@ -120,6 +124,10 @@ Public Property Get id() As Long
 id = mEventProxy.id
 End Property
 
+Public Property Get includeMarketDepthInTickfile() As Boolean
+includeMarketDepthInTickfile = mEventProxy.includeMarketDepthInTickfile
+End Property
+
 Public Property Get key() As String
 key = mEventProxy.key
 End Property
@@ -128,20 +136,44 @@ Public Property Get lowPrice() As Double
 lowPrice = mEventProxy.lowPrice
 End Property
 
+Public Property Get noImpliedTrades() As Boolean
+noImpliedTrades = mEventProxy.noImpliedTrades
+End Property
+
+Public Property Get noVolumeAdjustments() As Boolean
+noVolumeAdjustments = mEventProxy.noVolumeAdjustments
+End Property
+
+Public Property Get outputTickfileFormat() As String
+outputTickfileFormat = mEventProxy.outputTickfileFormat
+End Property
+
+Public Property Get outputTickfilePath() As String
+outputTickfilePath = mEventProxy.outputTickfilePath
+End Property
+
 Public Property Get position() As Long
 position = mEventProxy.position
+End Property
+
+Public Property Get priceFormatString() As String
+priceFormatString = mEventProxy.priceFormatString
+End Property
+
+Public Property Get replayingTickfile() As Boolean
+replayingTickfile = mEventProxy.replayingTickfile
 End Property
 
 Public Property Get State() As TickerStateCodes
 State = mEventProxy.State
 End Property
 
-Public Property Let TickfileSpecifiers(value() As TradeBuild.TickfileSpecifier)
-mEventProxy.TickfileSpecifiers = value
+Public Property Get timeframes() As TradeBuild.timeframes
+timeframes = mEventProxy.timeframes
 End Property
 
-Public Property Get TickfileSpecifiers() As TradeBuild.TickfileSpecifier()
-TickfileSpecifiers = mEventProxy.TickfileSpecifiers
+Public Property Get timestamp() As Date
+timestamp = mEventProxy.timestamp
 End Property
 
 Public Property Get TradePrice() As Double
@@ -154,6 +186,10 @@ End Property
 
 Public Property Get volume() As Long
 volume = mEventProxy.volume
+End Property
+
+Public Property Let writeToTickfile(ByVal value As Boolean)
+writeToTickfile = mEventProxy.writeToTickfile
 End Property
 
 '================================================================================
@@ -173,40 +209,18 @@ Public Sub CancelMarketDepth(Optional ByVal forceCancel As Boolean = False)
 mEventProxy.CancelMarketDepth forceCancel
 End Sub
 
-Public Sub PauseTicker()
-mEventProxy.PauseTicker
-End Sub
-
 Public Sub RemoveListener(ByVal key As String)
 mEventProxy.RemoveListener key
 End Sub
 
-Public Sub selectTickFiles()
-mEventProxy.selectTickFiles
-End Sub
-
-Public Sub SkipTicker()
-mEventProxy.SkipTicker
-End Sub
-
 Public Sub RequestMarketDepth(ByVal DOMEventsRequired As DOMEvents, _
-                            ByVal writeToTickFile As Boolean)
+                            ByVal writeToTickfile As Boolean)
 mEventProxy.RequestMarketDepth DOMEventsRequired, _
-                        writeToTickFile
+                        writeToTickfile
 End Sub
 
-Public Sub StartTicker(ByVal pContractSpecifier As contractSpecifier, _
-                        Optional ByVal DOMEventsRequired As DOMEvents = DOMNoEvents, _
-                        Optional ByVal writeToTickFile As Boolean = False, _
-                        Optional ByVal includeMarketDepthInTickfile As Boolean = False, _
-                        Optional ByVal noVolumeAdjustments As Boolean = False, _
-                        Optional ByVal noImpliedTrades As Boolean = False)
-mEventProxy.StartTicker pContractSpecifier, _
-                        DOMEventsRequired, _
-                        writeToTickFile, _
-                        includeMarketDepthInTickfile, _
-                        noVolumeAdjustments, _
-                        noImpliedTrades
+Public Sub StartTicker(ByVal pContractSpecifier As contractSpecifier)
+mEventProxy.StartTicker pContractSpecifier
 End Sub
 
 Public Sub StopTicker()
