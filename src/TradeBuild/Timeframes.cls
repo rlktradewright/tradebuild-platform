@@ -113,15 +113,16 @@ add.NumberOfBarsToFetch = NumberOfBarsToFetch
 If Not mContract Is Nothing Then add.Contract = mContract
 End Function
 
-Friend Sub FinishAll()
+Friend Sub Finish()
 Dim lTimeframe As TradeBuild.Timeframe
 For Each lTimeframe In mTimeframes
     lTimeframe.Finish
 Next
+Set mTicker = Nothing
 End Sub
 
-Public Function item(index As Variant) As Timeframe
-Set item = mTimeframes(index)
+Public Function Item(index As Variant) As Timeframe
+Set Item = mTimeframes(index)
 End Function
 
 Friend Sub Reinitialise()

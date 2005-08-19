@@ -1222,7 +1222,7 @@ Set mProxy = Nothing
 
 mState = TickerStateCodes.Dead
 
-mTimeframes.FinishAll
+mTimeframes.Finish
 
 mBidPrice = 0
 mBidSize = 0
