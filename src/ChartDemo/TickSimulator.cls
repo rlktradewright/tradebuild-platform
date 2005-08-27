@@ -79,6 +79,8 @@ Private mTickSize As Double
 Private mPriceChange
 Private mTickVolume
 
+Private mTickCount As Long
+
 Private mBarLength As Long
 
 Private mCumVolume As Long
@@ -120,6 +122,7 @@ Private Sub mTimer_TimerExpired()
 Dim timestamp As Date
 Dim volume As Long
 
+mTickCount = mTickCount + 1
 timestamp = Now
 RaiseEvent TickPrice(timestamp, generateSimulatedPrice)
 volume = generateSimulatedTickVolume
@@ -139,6 +142,10 @@ Public Property Let StartPrice(ByVal value As Double)
 mStartPrice = value
 End Property
 
+Public Property Get TickCount() As Long
+TickCount = mTickCount
+End Property
+
 Public Property Let TickSize(ByVal value As Double)
 mTickSize = value
 End Property
@@ -147,7 +154,7 @@ End Property
 ' Methods
 '================================================================================
 
-Public Sub Start(ByVal numberOfBars As Long)
+Public Sub StartSimulation(ByVal numberOfBars As Long)
 Dim barcount As Long
 Dim timestamp As Date
 Dim bartime As Double
@@ -157,7 +164,7 @@ Dim lowPrice As Double
 Dim closePrice As Double
 Dim volume As Long
 
-timestamp = Now - numberOfBars * mBarLength / 1440
+timestamp = Now - (numberOfBars - 1) * mBarLength / 1440
 bartime = calcBarTime(timestamp)
 lowPrice = 999999
 
@@ -186,7 +193,10 @@ Do While barcount < numberOfBars
         closePrice = 0
         volume = 0
         
-        DoEvents
+        If barcount Mod 50 = 0 Then
+            Debug.Print "DoEvents" & barcount
+            DoEvents
+        End If
     End If
 Loop
 
@@ -197,6 +207,11 @@ mTimer.TimerIntervalSecs = 5
 mTimer.StartTimer
 
 End Sub
+
+Public Sub StopSimulation()
+If Not mTimer Is Nothing Then mTimer.StopTimer
+End Sub
+
 
 '================================================================================
 ' Helper Functions
