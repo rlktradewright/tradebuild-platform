@@ -1300,8 +1300,6 @@ disableContractFields
 End Sub
 
 Private Sub ConvertButton_Click()
-Dim i As Long
-
 If ContractFromServiceProviderOption Or _
     ContractInCrescendoDBOption _
 Then
@@ -1329,17 +1327,6 @@ mQuoteTrackerSP.QTServer = QTServerText.Text
 mQuoteTrackerSP.QTPort = QTPortText.Text
 QTServerText.Enabled = False
 QTPortText.Enabled = False
-
-For i = 0 To EnableCheck.UBound
-    If EnableCheck(i).value = vbChecked Then
-        mTicker.Timeframes.Add BarLengthText(i).Text, _
-                                TradeBuild.TimePeriodUnits.Minute, _
-                                BarLengthText(i).Text & "min", _
-                                0, _
-                                0, _
-                                (IncludeBidAndAskCheck(i).value = vbChecked)
-    End If
-Next
 
 writeStatusMessage "Tickfile conversion started"
 mTickfileManager.StartReplay
@@ -1506,6 +1493,7 @@ handleFatalError err.Number, err.description, "mTickfileManager_ReplayProgress"
 End Sub
 
 Private Sub mTickfileManager_TickerAllocated(ByVal pTicker As TradeBuild.Ticker)
+Dim i As Long
 On Error GoTo err
 Set mTicker = pTicker
 mTicker.outputTickfilePath = mOutputPath
@@ -1514,6 +1502,17 @@ If mOutputFormat <> "" Then
     mTicker.writeToTickfile = True
     mTicker.includeMarketDepthInTickfile = True
 End If
+
+For i = 0 To EnableCheck.UBound
+    If EnableCheck(i).value = vbChecked Then
+        mTicker.Timeframes.Add BarLengthText(i).Text, _
+                                TradeBuild.TimePeriodUnits.Minute, _
+                                BarLengthText(i).Text & "min", _
+                                0, _
+                                0, _
+                                (IncludeBidAndAskCheck(i).value = vbChecked)
+    End If
+Next
 
 Exit Sub
 err:
