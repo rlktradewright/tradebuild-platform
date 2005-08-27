@@ -31,7 +31,8 @@ Option Explicit
 
 Private mLines As Collection
 
-Private mSurface As PictureBox
+'Private mSurface As PictureBox
+Private mCanvas As canvas
 Private mLayer As Long
 
 Private mEventProxy As ChartRegionEventProxy
@@ -180,6 +181,10 @@ Public Property Let arrowStartWidth(ByVal newValue As Long)
 mArrowStartWidth = newValue
 End Property
 
+Friend Property Let canvas(ByVal value As canvas)
+Set mCanvas = value
+End Property
+
 Public Property Get color() As Long
 color = mColour
 End Property
@@ -287,10 +292,6 @@ If mThickness = newValue Then Exit Property
 mThickness = newValue
 End Property
 
-Friend Property Let surface(ByVal value As PictureBox)
-Set mSurface = value
-End Property
-
 '================================================================================
 ' Methods
 '================================================================================
@@ -299,7 +300,7 @@ Public Function addLine() As ChartSkil.Line
 Set addLine = New ChartSkil.Line
 With addLine
     .eventProxy = mEventProxy
-    .surface = mSurface
+    .canvas = mCanvas
     .arrowEndColor = mArrowEndColor
     .arrowEndFillColor = mArrowEndFillColor
     .arrowEndFillStyle = mArrowEndFillStyle
@@ -327,6 +328,10 @@ mLines.Add addLine
 mEventProxy.addGraphicObject addLine
 End Function
 
+Friend Sub finish()
+Set mCanvas = Nothing
+End Sub
+
 Public Function Item(ByVal index As Long) As ChartSkil.Line
 Attribute Item.VB_UserMemId = 0
 Set Item = mLines(index)
@@ -336,6 +341,13 @@ Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
    Set NewEnum = mLines.[_NewEnum]
 End Function
+
+Friend Sub removeAll()
+Dim i As Long
+For i = mLines.count To 1 Step -1
+    mLines.Remove (i)
+Next
+End Sub
 
 '================================================================================
 ' Helper Functions

@@ -27,7 +27,8 @@ Option Explicit
 
 Private mBars As Collection
 
-Private mSurface As PictureBox
+'Private mSurface As PictureBox
+Private mCanvas As canvas
 Private mLayer As Long
 
 Private mEventProxy As ChartRegionEventProxy
@@ -77,6 +78,10 @@ For Each bar In mBars
     bar.barThickness = mBarThickness
 Next
 If mBars.count <> 0 Then mEventProxy.paintRegion
+End Property
+
+Friend Property Let canvas(ByVal value As canvas)
+Set mCanvas = value
 End Property
 
 Public Property Get candleWidth() As Single
@@ -181,10 +186,6 @@ Next
 If mBars.count <> 0 Then mEventProxy.paintRegion
 End Property
 
-Friend Property Let surface(ByVal value As PictureBox)
-Set mSurface = value
-End Property
-
 Public Property Get tailThickness() As Long
 tailThickness = mTailThickness
 End Property
@@ -228,7 +229,7 @@ addBar.eventProxy = mEventProxy
 addBar.layer = mLayer
 addBar.outlineThickness = mOutlineThickness
 addBar.solidUpBody = mSolidUpBody
-addBar.surface = mSurface
+addBar.canvas = mCanvas
 addBar.tailThickness = mTailThickness
 addBar.upColour = mUpColour
 
@@ -236,20 +237,20 @@ mBars.Add addBar, CStr(periodNumber)
 mEventProxy.addGraphicObject addBar
 End Function
 
+Friend Sub finish()
+Set mCanvas = Nothing
+End Sub
+
 Public Function Item(ByVal periodNumber As Long) As bar
 Set Item = mBars(CStr(periodNumber))
 End Function
 
-'Friend Sub periodsInView(ByVal minValue As Long, ByVal maxValue As Long)
-'Dim aBar As Bar
-'Dim graphObj As IGraphicObject
-'mMinPeriodInView = minValue
-'mMaxPeriodInView = maxValue
-'For Each aBar In mBars
-'    Set graphObj = aBar
-'    graphObj.isInView mMinPeriodInView, mMaxPeriodInView
-'Next
-'End Sub
+Friend Sub removeAll()
+Dim i As Long
+For i = mBars.count To 1 Step -1
+    mBars.Remove (i)
+Next
+End Sub
 
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4

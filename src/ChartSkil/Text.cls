@@ -27,7 +27,7 @@ Implements IGraphicObject
 ' Member variables and constants
 '================================================================================
 
-Private mSurface As PictureBox
+Private mCanvas As canvas
 Private mLayer As Long
 Private mHandle As Long
 
@@ -81,10 +81,10 @@ mBlank = True
 
 Set mPosition = New Point
 
-mRawBoundingRect.isvalid = False
-mBoundingRect.isvalid = False
-mTextRect.isvalid = False
-mBoxRect.isvalid = False
+mRawBoundingRect.isValid = False
+mBoundingRect.isValid = False
+mTextRect.isValid = False
+mBoxRect.isValid = False
 End Sub
 
 '================================================================================
@@ -98,18 +98,29 @@ Private Property Get IGraphicObject_boundingRectangle( _
                         ByVal gaugeX As Double, _
                         ByVal gaugeY As Double, _
                         ByRef regionRect As TRectangle) As ChartSkilTypes.TRectangle
-'If mText = "Started here" Then Stop
-If gaugeChanged Then
-    'If mText = "Started here" Then Stop
+Static prevGaugeX As Double
+Static prevGaugeY As Double
+Static prevRect As TRectangle
+Dim canvasChanges As Long
+
+canvasChanges = mCanvas.compareTo(prevGaugeX, prevGaugeY, prevRect)
+If (canvasChanges And CanvasComparisonCodes.GaugeChangedX) Or _
+    (canvasChanges And CanvasComparisonCodes.GaugeChangedY) _
+Then
     calcRawBoundingRect
 End If
 
-If gaugeChanged Or _
-    (mFixedX And xBoundsChanged) Or _
-    (mFixedY And yBoundsChanged) _
+If (canvasChanges And CanvasComparisonCodes.GaugeChangedX) Or _
+    (canvasChanges And CanvasComparisonCodes.GaugeChangedY) Or _
+    (mFixedX And (canvasChanges And CanvasComparisonCodes.BoundsChangedX)) Or _
+    (mFixedY And (canvasChanges And CanvasComparisonCodes.BoundsChangedY)) _
 Then
     calcCurrentBoundingRect
 End If
+
+prevGaugeX = mCanvas.gaugeX
+prevGaugeY = mCanvas.gaugeY
+prevRect = mCanvas.boundary
 
 IGraphicObject_boundingRectangle = mBoundingRect
 End Property
@@ -122,7 +133,9 @@ Private Property Get IGraphicObject_capabilities() As Long
 IGraphicObject_capabilities = capabilities.blockUndraw
 End Property
 
-Private Sub IGraphicObject_draw(ByRef areas() As TRectangle)
+Private Sub IGraphicObject_draw( _
+                ByRef areas() As TRectangle, _
+                ByVal hdc As Long)
 'If mText = "Started here" Then Stop
 draw
 End Sub
@@ -130,6 +143,10 @@ End Sub
 Private Property Get IGraphicObject_extendedObject() As Boolean
 IGraphicObject_extendedObject = mExtended Or mFixedX
 End Property
+
+Private Sub IGraphicObject_finish()
+Set mCanvas = Nothing
+End Sub
 
 Private Property Get IGraphicObject_gaugeDependent() As Boolean
 IGraphicObject_gaugeDependent = True
@@ -156,7 +173,7 @@ IGraphicObject_noDraw = mBlank
 End Property
 
 Private Property Get IGraphicObject_periodNumber() As Long
-If mExtended Or Not mBoundingRect.isvalid Then
+If mExtended Or Not mBoundingRect.isValid Then
     IGraphicObject_periodNumber = -1
 Else
     Select Case mAlign
@@ -174,7 +191,9 @@ Private Property Get IGraphicObject_scaleDependent() As Boolean
 IGraphicObject_scaleDependent = mFixedX Or mFixedY
 End Property
 
-Private Sub IGraphicObject_undraw(ByRef area As TRectangle)
+Private Sub IGraphicObject_undraw( _
+                ByRef area As TRectangle, _
+                ByVal hdc As Long)
 undraw
 End Sub
 
@@ -262,6 +281,10 @@ If mBoxThickness = newValue Then Exit Property
 undraw
 mBoxThickness = newValue
 update
+End Property
+
+Friend Property Let canvas(ByVal value As canvas)
+Set mCanvas = value
 End Property
 
 Public Property Get color() As Long
@@ -356,7 +379,10 @@ update
 End Property
 
 Friend Property Let layer(ByVal value As Long)
+If mLayer = value Then Exit Property
+undraw
 mLayer = value
+update
 End Property
 
 Public Property Get layer() As Long
@@ -392,7 +418,7 @@ End Property
 Public Property Let position(ByVal value As Point)
 If value Is Nothing Or Not value.isAssigned Then Exit Property
 undraw
-Set mPosition = value.clone
+Set mPosition = value
 convertPosition
 update
 End Property
@@ -406,10 +432,6 @@ If Not value.isAssigned Then Exit Property
 undraw
 Set mOffset = value
 update
-End Property
-
-Friend Property Let surface(ByVal value As PictureBox)
-Set mSurface = value
 End Property
 
 Public Property Let text(value As String)
@@ -430,72 +452,25 @@ End Property
 '================================================================================
 
 Friend Sub draw()
-Dim prevFont As StdFont
-Dim textLines() As String
-Dim i As Long
 If mBlank Then Exit Sub
 If Not mVisible Then Exit Sub
 If Not mPosition.isAssigned Then Exit Sub
 mDrawn = True
 
-If Not mFont Is Nothing Then
-        Set prevFont = New StdFont
-        With mSurface.font
-        prevFont.name = .name
-        prevFont.Bold = .Bold
-        prevFont.Italic = .Italic
-        prevFont.Size = .Size
-        prevFont.Charset = .Charset
-        prevFont.Strikethrough = .Strikethrough
-        prevFont.Underline = .Underline
-        prevFont.Weight = .Weight
-            
-        If mFont.Size < 8 Then .Size = mFont.Size
-       .name = mFont.name
-       .Bold = mFont.Bold
-       .Italic = mFont.Italic
-       .Size = mFont.Size
-       .Charset = mFont.Charset
-       .Strikethrough = mFont.Strikethrough
-       .Underline = mFont.Underline
-       .Weight = mFont.Weight
-    End With
-End If
-    
-With mSurface
-    .DrawMode = vbCopyPen
-    .FontTransparent = True
+With mCanvas
     If mBox Then
-        .DrawWidth = mBoxThickness
-        .DrawStyle = mBoxStyle
-        .ForeColor = mBoxColour
-        .FillStyle = mBoxFillStyle
-        .FillColor = mBoxFillColour
-        mSurface.Line (mBoxRect.left, mBoxRect.bottom)-(mBoxRect.right, mBoxRect.top), , B
+        .setPenAttributes mBoxColour, _
+                        mBoxThickness, _
+                        mBoxStyle, _
+                        DrawModes.DrawModeCopyPen
+        .setBrushAttributes mBoxFillColour, mBoxFillStyle
+        .drawRectangle mBoxRect.left, mBoxRect.bottom, mBoxRect.right, mBoxRect.top
     End If
-    .CurrentX = mTextRect.left
-    .CurrentY = mTextRect.top
-    .ForeColor = mColour
-    textLines = Split(mText, vbCrLf)
-    For i = 0 To UBound(textLines)
-        mSurface.Print textLines(i)
-        .CurrentX = mTextRect.left
-    Next
+    
+    .setTextAttributes mColour, mFont, True
+'    If mText = "Volume" Then Stop
+    .drawText mText, mTextRect.left, mTextRect.top
 End With
-
-If Not prevFont Is Nothing Then
-    With mSurface.font
-        If prevFont.Size < 8 Then .Size = prevFont.Size
-       .name = prevFont.name
-       .Bold = prevFont.Bold
-       .Italic = prevFont.Italic
-       .Size = prevFont.Size
-       .Charset = prevFont.Charset
-       .Strikethrough = prevFont.Strikethrough
-       .Underline = prevFont.Underline
-       .Weight = prevFont.Weight
-    End With
-End If
     
 End Sub
 
@@ -504,58 +479,20 @@ End Sub
 '================================================================================
 
 Private Sub calcRawBoundingRect()
-Dim prevFont As StdFont
 
 ' NB: calculates the raw dimensions of the bounding box in twips, because
 ' the scale may not have been finalised when this is called, and is anyway
 ' subject to change
 If mText = "" Then Exit Sub
 
-If Not mFont Is Nothing Then
-    Set prevFont = New StdFont
-    With mSurface.font
-        prevFont.name = .name
-        prevFont.Bold = .Bold
-        prevFont.Italic = .Italic
-        prevFont.Size = .Size
-        prevFont.Charset = .Charset
-        prevFont.Strikethrough = .Strikethrough
-        prevFont.Underline = .Underline
-        prevFont.Weight = .Weight
-        
-        If mFont.Size < 8 Then .Size = mFont.Size
-       .name = mFont.name
-       .Bold = mFont.Bold
-       .Italic = mFont.Italic
-       .Size = mFont.Size
-       .Charset = mFont.Charset
-       .Strikethrough = mFont.Strikethrough
-       .Underline = mFont.Underline
-       .Weight = mFont.Weight
-    End With
-End If
-    
+mCanvas.setTextAttributes mColour, mFont, True
 With mRawBoundingRect
     .left = 0
-    .right = mSurface.TextWidth(mText)
+    .right = mCanvas.TextWidth(mText)
     .bottom = 0
-    .top = Abs(mSurface.TextHeight(mText))
-    .isvalid = True
+    .top = mCanvas.TextHeight(mText)
+    .isValid = True
 End With
-
-If Not prevFont Is Nothing Then
-    With mSurface.font
-        If prevFont.Size < 8 Then .Size = prevFont.Size
-       .name = prevFont.name
-       .Bold = prevFont.Bold
-       .Italic = prevFont.Italic
-       .Size = prevFont.Size
-       .Charset = prevFont.Charset
-       .Strikethrough = prevFont.Strikethrough
-       .Underline = prevFont.Underline
-       .Weight = prevFont.Weight
-    End With
-End If
 
 End Sub
 
@@ -569,24 +506,24 @@ Dim YIncrement As Double
 Dim XLineThickness As Double
 Dim YLineThickness As Double
 
-'If mText = "Started here" Then Stop
+'If mText = "Volume" Then Stop
 
 If Not mPosition.isAssigned Then
-    mBoundingRect.isvalid = False
+    mBoundingRect.isValid = False
     Exit Sub
 End If
 
 With mTextRect
-    .left = mPosition.XAbsolute
+    .left = mPosition.XLogical
     .right = .left + mRawBoundingRect.right
-    .top = mPosition.YAbsolute
+    .top = mPosition.YLogical
     .bottom = .top - mRawBoundingRect.top
     
     ' now add the offset if any
     
     If Not mOffset Is Nothing Then
-        xOffset = mOffset.XAbsolute
-        yOffset = mOffset.YAbsolute
+        xOffset = mOffset.XLogical
+        yOffset = mOffset.YLogical
         .left = .left + xOffset
         .right = .right + xOffset
         .bottom = .bottom + yOffset
@@ -637,12 +574,12 @@ End With
 If mBox Then
     ' make the inside of the box 1mm wider and taller than the text, plus the thickness of the lines
     
-    XIncrement = (1440 * mPaddingX / 25.4) / mSurface.Width * mSurface.ScaleWidth
-    YIncrement = -(1440 * (mPaddingY - 0.5) / 25.4) / mSurface.Height * mSurface.ScaleHeight
+    XIncrement = mCanvas.convertDistanceToLogicalX(mPaddingX / 10)
+    YIncrement = mCanvas.convertDistanceToLogicalY((mPaddingY - 0.5) / 10)
     
     If mBoxThickness > 1 Then
-        XLineThickness = ((mBoxThickness - 1) * Screen.TwipsPerPixelX) / (mSurface.Width / mSurface.ScaleWidth)
-        YLineThickness = -((mBoxThickness - 1) * Screen.TwipsPerPixelY) / (mSurface.Height / mSurface.ScaleHeight)
+        XLineThickness = mCanvas.convertPixelsToLogicalX(mBoxThickness - 1)
+        YLineThickness = mCanvas.convertPixelsToLogicalY(mBoxThickness - 1)
         If mBoxStyle = LineInsideSolid Then
             XIncrement = XIncrement + XLineThickness
             YIncrement = YIncrement + YLineThickness
@@ -677,9 +614,9 @@ Else
     mBoxRect = mTextRect
     mBoundingRect = mTextRect
 End If
-mTextRect.isvalid = True
-mBoxRect.isvalid = True
-mBoundingRect.isvalid = True
+mTextRect.isValid = True
+mBoxRect.isValid = True
+mBoundingRect.isValid = True
 
 End Sub
 
@@ -691,12 +628,12 @@ End Sub
 Private Sub convertPositionX()
 If mPosition Is Nothing Then Exit Sub
 If mFixedX Then
-    If mPosition.PositionTypeX = PositionAbsolute Then
-        mPosition.PositionTypeX = PositionRelative
+    If mPosition.CoordinateSystemX = CoordsLogical Then
+        mPosition.CoordinateSystemX = CoordsRelative
     End If
 Else
-    If mPosition.PositionTypeX <> PositionAbsolute Then
-        mPosition.PositionTypeX = PositionAbsolute
+    If mPosition.CoordinateSystemX <> CoordsLogical Then
+        mPosition.CoordinateSystemX = CoordsLogical
     End If
 End If
 End Sub
@@ -704,12 +641,12 @@ End Sub
 Private Sub convertPositionY()
 If mPosition Is Nothing Then Exit Sub
 If mFixedY Then
-    If mPosition.PositionTypeY = PositionAbsolute Then
-        mPosition.PositionTypeY = PositionRelative
+    If mPosition.CoordinateSystemY = CoordsLogical Then
+        mPosition.CoordinateSystemY = CoordsRelative
     End If
 Else
-    If mPosition.PositionTypeY <> PositionAbsolute Then
-        mPosition.PositionTypeY = PositionAbsolute
+    If mPosition.CoordinateSystemY <> CoordsLogical Then
+        mPosition.CoordinateSystemY = CoordsLogical
     End If
 End If
 End Sub
@@ -721,14 +658,13 @@ If Not mVisible Then Exit Sub
 If Not mPosition.isAssigned Then Exit Sub
 mDrawn = True
 
-With mSurface
-    .DrawMode = vbCopyPen
-    .DrawWidth = 1
-    .DrawStyle = LineStyles.LineInsideSolid
-    .ForeColor = .backColor
-    .FillStyle = FillStyles.FillSolid
-    .FillColor = .backColor
-    mSurface.Line (mBoundingRect.left, mBoundingRect.bottom)-(mBoundingRect.right, mBoundingRect.top), , B
+With mCanvas
+    .setPenAttributes .backColor, _
+                    1, _
+                    LineStyles.LineInsideSolid, _
+                    DrawModes.DrawModeCopyPen
+    .setBrushAttributes .backColor, FillStyles.FillSolid
+    .drawRectangle mBoundingRect.left, mBoundingRect.bottom, mBoundingRect.right, mBoundingRect.top
 End With
 mEventProxy.objectUndrawn mHandle, mBoundingRect
 
@@ -742,9 +678,9 @@ End If
 calcRawBoundingRect
 calcCurrentBoundingRect
 mEventProxy.objectChanged mHandle, mBoundingRect
-If mIncludeInAutoscale And mBoundingRect.isvalid Then
-    If mBoundingRect.top >= mSurface.ScaleTop Or mBoundingRect.bottom <= (mSurface.ScaleTop + mSurface.ScaleHeight) Then
-        mEventProxy.boundsExceeded
-    End If
-End If
+'If mIncludeInAutoscale And mBoundingRect.isvalid Then
+'    If mBoundingRect.top >= mSurface.ScaleTop Or mBoundingRect.bottom <= (mSurface.ScaleTop + mSurface.ScaleHeight) Then
+'        mEventProxy.boundsExceeded
+'    End If
+'End If
 End Sub

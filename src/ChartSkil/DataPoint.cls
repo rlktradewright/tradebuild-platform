@@ -31,7 +31,7 @@ Implements IGraphicObject
 ' Member variables and constants
 '================================================================================
 
-Private mSurface As PictureBox
+Private mCanvas As canvas
 Private mLayer As Long
 Private mHandle As Long
 
@@ -67,7 +67,7 @@ Private mPrevDataPoint As DataPoint
 Private Sub Class_Initialize()
 mBlank = True
 
-mBoundingRect.isvalid = False
+mBoundingRect.isValid = False
 End Sub
 
 '================================================================================
@@ -80,9 +80,22 @@ Private Property Get IGraphicObject_boundingRectangle( _
                         ByVal gaugeX As Double, _
                         ByVal gaugeY As Double, _
                         ByRef regionRect As TRectangle) As ChartSkilTypes.TRectangle
-If gaugeChanged Then
+Static prevGaugeX As Double
+Static prevGaugeY As Double
+Static prevRect As TRectangle
+Dim canvasChanges As Long
+
+canvasChanges = mCanvas.compareTo(prevGaugeX, prevGaugeY, prevRect)
+If (canvasChanges And CanvasComparisonCodes.GaugeChangedX) Or _
+    (canvasChanges And CanvasComparisonCodes.GaugeChangedY) _
+Then
     mBoundingRect = calcBoundingRect
 End If
+
+prevGaugeX = mCanvas.gaugeX
+prevGaugeY = mCanvas.gaugeY
+prevRect = mCanvas.boundary
+
 IGraphicObject_boundingRectangle = mBoundingRect
 End Property
 
@@ -94,13 +107,19 @@ Private Property Get IGraphicObject_capabilities() As Long
 IGraphicObject_capabilities = capabilities.PartialRedraw
 End Property
 
-Private Sub IGraphicObject_draw(ByRef areas() As TRectangle)
+Private Sub IGraphicObject_draw( _
+                ByRef areas() As TRectangle, _
+                ByVal hdc As Long)
 draw
 End Sub
 
 Private Property Get IGraphicObject_extendedObject() As Boolean
 IGraphicObject_extendedObject = False
 End Property
+
+Private Sub IGraphicObject_finish()
+Set mCanvas = Nothing
+End Sub
 
 Private Property Get IGraphicObject_gaugeDependent() As Boolean
 Select Case mDisplayMode
@@ -143,7 +162,9 @@ Private Property Get IGraphicObject_scaleDependent() As Boolean
 IGraphicObject_scaleDependent = False
 End Property
 
-Private Sub IGraphicObject_undraw(ByRef area As TRectangle)
+Private Sub IGraphicObject_undraw( _
+                ByRef area As TRectangle, _
+                ByVal hdc As Long)
 undraw
 End Sub
 
@@ -162,6 +183,10 @@ End Property
 
 Public Property Get blank() As Boolean
 blank = mBlank
+End Property
+
+Friend Property Let canvas(ByVal value As canvas)
+Set mCanvas = value
 End Property
 
 Public Property Get dataValue() As Double
@@ -214,12 +239,10 @@ End Property
 
 Friend Property Let lineStyle(ByVal value As LineStyles)
 mLineStyle = value
-mSurface.DrawStyle = value
 End Property
 
 Friend Property Let lineThickness(ByVal value As Long)
 mLineThickness = value
-mSurface.DrawWidth = value
 calcBoundingRect
 End Property
 
@@ -243,10 +266,6 @@ Public Property Let prevDataPoint(ByVal newValue As DataPoint)
 Set mPrevDataPoint = newValue
 End Property
 
-Friend Property Let surface(ByVal value As PictureBox)
-Set mSurface = value
-End Property
-
 Public Property Get visible() As Boolean
 visible = mVisible
 End Property
@@ -266,8 +285,8 @@ Dim thicknessScaleY As Double
 Dim prevPeriod As Long
 Dim prevValue As Double
 
-thicknessScaleX = Abs((((mLineThickness + 2) * Screen.TwipsPerPixelX) / mSurface.Width) * mSurface.scaleWidth)
-thicknessScaleY = Abs((((mLineThickness + 2) * Screen.TwipsPerPixelY) / mSurface.Height) * mSurface.scaleHeight)
+thicknessScaleX = mCanvas.convertPixelsToLogicalX(mLineThickness + 2)
+thicknessScaleY = mCanvas.convertPixelsToLogicalY(mLineThickness + 2)
 
 If mDisplayMode = DisplayModes.displayAsHistogram Then
     With boundingRect
@@ -321,7 +340,7 @@ ElseIf mDisplayMode = DisplayModes.DisplayAsSteppedLines Then
         End If
     End With
 End If
-boundingRect.isvalid = True
+boundingRect.isValid = True
 calcBoundingRect = boundingRect
 End Function
 
@@ -346,25 +365,29 @@ End Function
 Private Sub drawPoint(ByVal colour As Long)
 If blank Then Exit Sub
 If Not mVisible Then Exit Sub
-mSurface.DrawWidth = mLineThickness
-mSurface.DrawStyle = mLineStyle
-mSurface.DrawMode = vbCopyPen
+
+mCanvas.setPenAttributes colour, _
+                        mLineThickness, _
+                        mLineStyle, _
+                        DrawModes.DrawModeCopyPen
+
 If mDisplayMode = DisplayModes.displayAsHistogram Then
-    mSurface.Line (mPeriodNumber - mHistBarWidth / 2, 0)-(mPeriodNumber + mHistBarWidth / 2, mDataValue), colour, BF
+    mCanvas.setBrushAttributes colour, FillStyles.FillSolid
+    mCanvas.drawRectangle mPeriodNumber - mHistBarWidth / 2, 0, mPeriodNumber + mHistBarWidth / 2, mDataValue
 ElseIf drawAsPoint Then
-    mSurface.PSet (mPeriodNumber, mDataValue), colour
+    mCanvas.drawPoint mPeriodNumber, mDataValue
 ElseIf mDisplayMode = DisplayModes.DisplayAsLines Then
-    mSurface.Line (mPrevDataPoint.periodNumber, mPrevDataPoint.dataValue)-(mPeriodNumber, mDataValue), colour
+    mCanvas.drawLine mPrevDataPoint.periodNumber, mPrevDataPoint.dataValue, mPeriodNumber, mDataValue
 ElseIf mDisplayMode = DisplayModes.DisplayAsSteppedLines Then
-    mSurface.Line (mPrevDataPoint.periodNumber, mPrevDataPoint.dataValue)-(mPeriodNumber - 0.5, mPrevDataPoint.dataValue), colour
-    mSurface.Line (periodNumber - 0.5, mPrevDataPoint.dataValue)-(mPeriodNumber - 0.5, mDataValue), colour
-    mSurface.Line (periodNumber - 0.5, mDataValue)-(mPeriodNumber, mDataValue), colour
+    mCanvas.drawLine mPrevDataPoint.periodNumber, mPrevDataPoint.dataValue, mPeriodNumber - 0.5, mPrevDataPoint.dataValue
+    mCanvas.drawLine periodNumber - 0.5, mPrevDataPoint.dataValue, mPeriodNumber - 0.5, mDataValue
+    mCanvas.drawLine periodNumber - 0.5, mDataValue, mPeriodNumber, mDataValue
 End If
 End Sub
 
 Private Sub undraw()
 If Not mVisible Then Exit Sub
-drawPoint mSurface.backColor
+drawPoint mCanvas.backColor
 mEventProxy.objectUndrawn mHandle, mBoundingRect
 End Sub
 
@@ -375,10 +398,10 @@ If mHandle = 0 Then
 End If
 mBoundingRect = calcBoundingRect
 mEventProxy.objectChanged mHandle, mBoundingRect
-If mIncludeInAutoscale And mBoundingRect.isvalid Then
-    If mBoundingRect.top >= mSurface.scaleTop Or mBoundingRect.bottom <= (mSurface.scaleTop + mSurface.scaleHeight) Then
-        mEventProxy.boundsExceeded
-    End If
-End If
+'If mIncludeInAutoscale And mBoundingRect.isvalid Then
+'    If mBoundingRect.top >= mSurface.ScaleTop Or mBoundingRect.bottom <= (mSurface.ScaleTop + mSurface.ScaleHeight) Then
+'        mEventProxy.boundsExceeded
+'    End If
+'End If
 End Sub
 

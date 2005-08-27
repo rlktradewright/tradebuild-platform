@@ -37,7 +37,7 @@ Private Const BarSemiWidth As Single = 0.4
 ' Member variables
 '================================================================================
 
-Private mSurface As PictureBox
+Private mCanvas As canvas
 Private mLayer As Long
 Private mHandle As Long
 
@@ -79,7 +79,7 @@ mHigh = MinusInfinityDouble
 mClose = 0
 mBlank = True
 
-mBoundingRect.isvalid = False
+mBoundingRect.isValid = False
 End Sub
 
 '================================================================================
@@ -104,7 +104,9 @@ Private Property Get IGraphicObject_capabilities() As Long
 IGraphicObject_capabilities = capabilities.PartialRedraw
 End Property
 
-Private Sub IGraphicObject_draw(ByRef areas() As TRectangle)
+Private Sub IGraphicObject_draw( _
+                ByRef areas() As TRectangle, _
+                ByVal hdc As Long)
 Dim i As Long
 For i = 0 To UBound(areas)
     draw areas(i)
@@ -114,6 +116,10 @@ End Sub
 Private Property Get IGraphicObject_extendedObject() As Boolean
 IGraphicObject_extendedObject = False
 End Property
+
+Private Sub IGraphicObject_finish()
+Set mCanvas = Nothing
+End Sub
 
 Private Property Get IGraphicObject_gaugeDependent() As Boolean
 IGraphicObject_gaugeDependent = False
@@ -147,7 +153,9 @@ Private Property Get IGraphicObject_scaleDependent() As Boolean
 IGraphicObject_scaleDependent = False
 End Property
 
-Private Sub IGraphicObject_undraw(ByRef area As TRectangle)
+Private Sub IGraphicObject_undraw( _
+                ByRef area As TRectangle, _
+                ByVal hdc As Long)
 undraw area
 End Sub
 
@@ -167,22 +175,21 @@ Friend Property Let barThickness(ByVal value As Long)
 mBarThickness = value
 End Property
 
+Public Property Get blank() As Boolean
+blank = mBlank
+End Property
+
 Friend Property Let candleWidth(ByVal value As Single)
 mCandleWidth = value
 End Property
 
-Public Property Get blank() As Boolean
-blank = mBlank
+Friend Property Let canvas(ByVal value As canvas)
+Set mCanvas = value
 End Property
 
 Public Property Get closePrice() As Double
 closePrice = mClose
 End Property
-
-'Public Property Let closePrice(newValue As Double)
-'mClose = newValue
-'mBlank = False
-'End Property
 
 Friend Property Let displayAsCandlestick(ByVal value As Boolean)
 mDisplayAsCandlestick = value
@@ -208,12 +215,6 @@ Public Property Get highPrice() As Double
 highPrice = mHigh
 End Property
 
-'Public Property Let highPrice(newValue As Double)
-'mHigh = newValue
-'mBlank = False
-'mBoundingRect.top = newValue
-'End Property
-
 Public Property Get inScope() As Boolean
 inScope = mInScope
 End Property
@@ -230,20 +231,9 @@ Public Property Get lowPrice() As Double
 lowPrice = mLow
 End Property
 
-'Public Property Let lowPrice(newValue As Double)
-'mLow = newValue
-'mBlank = False
-'mBoundingRect.bottom = newValue
-'End Property
-
 Public Property Get openPrice() As Double
 openPrice = mOpen
 End Property
-
-'Public Property Let openPrice(newValue As Double)
-'mOpen = newValue
-'mBlank = False
-'End Property
 
 Friend Property Let outlineThickness(ByVal value As Long)
 mOutlineThickness = value
@@ -261,10 +251,6 @@ End Property
 
 Friend Property Let solidUpBody(ByVal value As Boolean)
 mSolidUpBody = value
-End Property
-
-Friend Property Let surface(ByVal value As PictureBox)
-Set mSurface = value
 End Property
 
 Friend Property Let tailThickness(ByVal value As Long)
@@ -292,7 +278,7 @@ End Property
 '================================================================================
 
 Private Sub draw(ByRef area As TRectangle)
-If Not area.isvalid Then
+If Not area.isValid Then
     drawBar IIf(upBar, mUpColour, mDownColour)
 Else
     drawPartialBar area, IIf(upBar, mUpColour, mDownColour)
@@ -307,7 +293,6 @@ Dim barThicknessScaleY As Double
 If Not mVisible Then Exit Sub
 If blank Then Exit Sub
 
-mSurface.DrawMode = vbCopyPen
 If mDisplayAsCandlestick Then
     If upBar Then
         drawBody mOpen, mClose, colour
@@ -331,35 +316,71 @@ If mDisplayAsCandlestick Then
         End If
     End If
 Else
-    mSurface.DrawWidth = 1
-    mSurface.DrawStyle = LineStyles.LineSolid
+    mCanvas.setBrushAttributes colour, FillStyles.FillSolid
     If mBarThickness = 1 Then
         Dim onePixel As Double
-        onePixel = Abs(Screen.TwipsPerPixelX / (mSurface.Width / mSurface.scaleWidth))
-        mSurface.Line (mPeriodNumber - BarSemiWidth, mOpen)-(mPeriodNumber, mOpen), IIf(upBar, mUpColour, mDownColour)
-        mSurface.Line (mPeriodNumber, mLow)-(mPeriodNumber, mHigh), IIf(upBar, mUpColour, mDownColour)
-        mSurface.Line (mPeriodNumber, mClose)-(mPeriodNumber + BarSemiWidth + onePixel, mClose), IIf(upBar, mUpColour, mDownColour)
+        onePixel = mCanvas.convertPixelsToLogicalX(1)
+        mCanvas.setPenAttributes colour, _
+                                1, _
+                                LineStyles.LineSolid, _
+                                DrawModes.DrawModeCopyPen
+        mCanvas.drawLine mPeriodNumber - BarSemiWidth, _
+                        mOpen, _
+                        mPeriodNumber, _
+                        mOpen
+        mCanvas.drawLine mPeriodNumber, _
+                        mLow, _
+                        mPeriodNumber, _
+                        mHigh
+        mCanvas.drawLine mPeriodNumber, _
+                        mClose, _
+                        mPeriodNumber + BarSemiWidth + onePixel, _
+                        mClose
     Else
-        mSurface.DrawStyle = LineStyles.LineInsideSolid
-        barThicknessScaleX = Abs(((mBarThickness - 1) * Screen.TwipsPerPixelX) / (mSurface.Width / mSurface.scaleWidth))
-        barThicknessScaleY = Abs(((mBarThickness - 1) * Screen.TwipsPerPixelY) / (mSurface.Height / mSurface.scaleHeight))
+        mCanvas.setPenAttributes colour, _
+                                1, _
+                                LineStyles.LineInsideSolid, _
+                                DrawModes.DrawModeCopyPen
+        barThicknessScaleX = mCanvas.convertPixelsToLogicalX(mBarThickness - 1)
+        barThicknessScaleY = mCanvas.convertPixelsToLogicalY(mBarThickness - 1)
         
         If (mOpen - barThicknessScaleY / 2) < mLow Then
-            mSurface.Line (mPeriodNumber - BarSemiWidth, mLow)-(mPeriodNumber + barThicknessScaleX / 2, mLow + barThicknessScaleY), IIf(upBar, mUpColour, mDownColour), BF
+            mCanvas.drawRectangle mPeriodNumber - BarSemiWidth, _
+                                    mLow, _
+                                    mPeriodNumber + barThicknessScaleX / 2, _
+                                    mLow + barThicknessScaleY
         ElseIf (mOpen + barThicknessScaleY / 2) > mHigh Then
-            mSurface.Line (mPeriodNumber - BarSemiWidth, mHigh - barThicknessScaleY)-(mPeriodNumber + barThicknessScaleX / 2, mHigh), IIf(upBar, mUpColour, mDownColour), BF
+            mCanvas.drawRectangle mPeriodNumber - BarSemiWidth, _
+                                    mHigh - barThicknessScaleY, _
+                                    mPeriodNumber + barThicknessScaleX / 2, _
+                                    mHigh
         Else
-            mSurface.Line (mPeriodNumber - BarSemiWidth, mOpen - barThicknessScaleY / 2)-(mPeriodNumber + barThicknessScaleX / 2, mOpen + barThicknessScaleY / 2), IIf(upBar, mUpColour, mDownColour), BF
+            mCanvas.drawRectangle mPeriodNumber - BarSemiWidth, _
+                                    mOpen - barThicknessScaleY / 2, _
+                                    mPeriodNumber + barThicknessScaleX / 2, _
+                                    mOpen + barThicknessScaleY / 2
         End If
         
-        mSurface.Line (mPeriodNumber - barThicknessScaleX / 2, mLow)-(mPeriodNumber + barThicknessScaleX / 2, mHigh), IIf(upBar, mUpColour, mDownColour), BF
+        mCanvas.drawRectangle mPeriodNumber - barThicknessScaleX / 2, _
+                                mLow, _
+                                mPeriodNumber + barThicknessScaleX / 2, _
+                                mHigh
         
         If (mClose - barThicknessScaleY / 2) < mLow Then
-            mSurface.Line (mPeriodNumber - barThicknessScaleX / 2, mLow)-(mPeriodNumber + BarSemiWidth, mLow + barThicknessScaleY), IIf(upBar, mUpColour, mDownColour), BF
+            mCanvas.drawRectangle mPeriodNumber - barThicknessScaleX / 2, _
+                                    mLow, _
+                                    mPeriodNumber + BarSemiWidth, _
+                                    mLow + barThicknessScaleY
         ElseIf (mClose + barThicknessScaleY / 2) > mHigh Then
-            mSurface.Line (mPeriodNumber - barThicknessScaleX / 2, mHigh - barThicknessScaleY)-(mPeriodNumber + BarSemiWidth, mHigh), IIf(upBar, mUpColour, mDownColour), BF
+            mCanvas.drawRectangle mPeriodNumber - barThicknessScaleX / 2, _
+                                    mHigh - barThicknessScaleY, _
+                                    mPeriodNumber + BarSemiWidth, _
+                                    mHigh
         Else
-            mSurface.Line (mPeriodNumber - barThicknessScaleX / 2, mClose - barThicknessScaleY / 2)-(mPeriodNumber + BarSemiWidth, mClose + barThicknessScaleY / 2), IIf(upBar, mUpColour, mDownColour), BF
+            mCanvas.drawRectangle mPeriodNumber - barThicknessScaleX / 2, _
+                                    mClose - barThicknessScaleY / 2, _
+                                    mPeriodNumber + BarSemiWidth, _
+                                    mClose + barThicknessScaleY / 2
         End If
     End If
 End If
@@ -369,44 +390,76 @@ End Sub
 Private Sub drawBody(ByVal bottom As Double, ByVal top As Double, ByVal colour As Long)
 Dim barOutlineScaleX As Double
 Dim barOutlineScaleY As Double
-mSurface.DrawWidth = 1
-mSurface.FillStyle = FillStyles.FillSolid
+mCanvas.setPenAttributes colour, _
+                        mOutlineThickness, _
+                        LineStyles.LineInsideSolid, _
+                        DrawModes.DrawModeCopyPen
 If upBar And Not mSolidUpBody Then
-    mSurface.FillColor = mSurface.backColor
-    barOutlineScaleX = Abs(((mOutlineThickness - 1) * Screen.TwipsPerPixelX) / (mSurface.Width / mSurface.scaleWidth))
-    barOutlineScaleY = Abs(((mOutlineThickness - 1) * Screen.TwipsPerPixelY) / (mSurface.Height / mSurface.scaleHeight))
+    mCanvas.setBrushAttributes mCanvas.backColor, FillStyles.FillSolid
+    barOutlineScaleX = mCanvas.convertPixelsToLogicalX(mOutlineThickness - 1)
+    barOutlineScaleY = mCanvas.convertPixelsToLogicalY(mOutlineThickness - 1)
     If bottom = mOpen And top = mClose Then
-        mSurface.DrawStyle = LineStyles.LineInsideSolid
-        mSurface.DrawWidth = mOutlineThickness
-        mSurface.Line (mPeriodNumber - (mCandleWidth / 2), bottom)-(mPeriodNumber + (mCandleWidth / 2), top), colour, B
+        mCanvas.drawLine mPeriodNumber - (mCandleWidth / 2), _
+                        bottom, _
+                        mPeriodNumber + (mCandleWidth / 2), _
+                        top
     Else
-        mSurface.DrawStyle = LineStyles.LineInsideSolid
-        mSurface.Line (mPeriodNumber - (mCandleWidth / 2), bottom)-(mPeriodNumber + (mCandleWidth / 2), top), mSurface.backColor, B
+        mCanvas.drawLine mPeriodNumber - (mCandleWidth / 2), _
+                        bottom, _
+                        mPeriodNumber + (mCandleWidth / 2), _
+                        top
         If bottom = mOpen Then
             If mOutlineThickness = 1 Then
-                mSurface.Line (mPeriodNumber - (mCandleWidth / 2), bottom)-(mPeriodNumber + (mCandleWidth / 2), bottom), colour, B
+                mCanvas.drawLine mPeriodNumber - (mCandleWidth / 2), _
+                                bottom, _
+                                mPeriodNumber + (mCandleWidth / 2), _
+                                bottom
             Else
-                mSurface.Line (mPeriodNumber - (mCandleWidth / 2), bottom)-(mPeriodNumber + (mCandleWidth / 2), bottom + barOutlineScaleY), colour, BF
+                mCanvas.drawRectangle mPeriodNumber - (mCandleWidth / 2), _
+                                bottom, _
+                                mPeriodNumber + (mCandleWidth / 2), _
+                                bottom + barOutlineScaleY
             End If
         End If
         If top = mClose Then
             If mOutlineThickness = 1 Then
-                mSurface.Line (mPeriodNumber - (mCandleWidth / 2), top)-(mPeriodNumber + (mCandleWidth / 2), top), colour, B
+                mCanvas.drawLine mPeriodNumber - (mCandleWidth / 2), _
+                                top, _
+                                mPeriodNumber + (mCandleWidth / 2), _
+                                top
             Else
-                mSurface.Line (mPeriodNumber - (mCandleWidth / 2), top - barOutlineScaleY)-(mPeriodNumber + (mCandleWidth / 2), top), colour, BF
+                mCanvas.drawRectangle mPeriodNumber - (mCandleWidth / 2), _
+                                top - barOutlineScaleY, _
+                                mPeriodNumber + (mCandleWidth / 2), _
+                                top
             End If
         End If
         If mOutlineThickness = 1 Then
-            mSurface.Line (mPeriodNumber - (mCandleWidth / 2), bottom)-(mPeriodNumber - (mCandleWidth / 2), top), colour, B
-            mSurface.Line (mPeriodNumber + (mCandleWidth / 2), bottom)-(mPeriodNumber + (mCandleWidth / 2), top), colour, B
+            mCanvas.drawLine mPeriodNumber - (mCandleWidth / 2), _
+                            bottom, _
+                            mPeriodNumber - (mCandleWidth / 2), _
+                            top
+            mCanvas.drawLine mPeriodNumber + (mCandleWidth / 2), _
+                            bottom, _
+                            mPeriodNumber + (mCandleWidth / 2), _
+                            top
         Else
-            mSurface.Line (mPeriodNumber - (mCandleWidth / 2), bottom)-(mPeriodNumber - (mCandleWidth / 2) + barOutlineScaleX, top), colour, BF
-            mSurface.Line (mPeriodNumber + (mCandleWidth / 2) - barOutlineScaleX, bottom)-(mPeriodNumber + (mCandleWidth / 2), top), colour, BF
+            mCanvas.drawRectangle mPeriodNumber - (mCandleWidth / 2), _
+                            bottom, _
+                            mPeriodNumber - (mCandleWidth / 2) + barOutlineScaleX, _
+                            top
+            mCanvas.drawRectangle mPeriodNumber + (mCandleWidth / 2) - barOutlineScaleX, _
+                            bottom, _
+                            mPeriodNumber + (mCandleWidth / 2), _
+                            top
         End If
     End If
 Else
-    mSurface.DrawStyle = LineStyles.LineInsideSolid
-    mSurface.Line (mPeriodNumber - (mCandleWidth / 2), bottom)-(mPeriodNumber + (mCandleWidth / 2), top), colour, BF
+    mCanvas.setBrushAttributes colour, FillStyles.FillSolid
+    mCanvas.drawRectangle mPeriodNumber - (mCandleWidth / 2), _
+                        bottom, _
+                        mPeriodNumber + (mCandleWidth / 2), _
+                        top
 End If
 End Sub
 
@@ -416,10 +469,7 @@ Dim barThicknessScaleY As Double
 If Not mVisible Then Exit Sub
 If blank Then Exit Sub
 
-mSurface.DrawMode = vbCopyPen
 If mDisplayAsCandlestick Then
-    mSurface.DrawWidth = mOutlineThickness
-    mSurface.DrawStyle = LineStyles.LineInsideSolid
     If downBar Then
         If area.top < mClose Then
             drawTail IIf(mLow < area.bottom, area.bottom, mLow), area.top, colour
@@ -458,64 +508,96 @@ If mDisplayAsCandlestick Then
         End If
     End If
 Else
-    mSurface.DrawWidth = 1
-    mSurface.DrawStyle = LineStyles.LineSolid
+    mCanvas.setPenAttributes colour, _
+                            1, _
+                            LineStyles.LineInsideSolid, _
+                            DrawModes.DrawModeCopyPen
     If mBarThickness = 1 Then
         Dim onePixel As Double
-        onePixel = Abs(Screen.TwipsPerPixelX / (mSurface.Width / mSurface.scaleWidth))
+        onePixel = mCanvas.convertPixelsToLogicalX(1)
         If mOpen >= area.bottom And mOpen <= area.top Then
-            mSurface.Line (mPeriodNumber - BarSemiWidth, mOpen)-(mPeriodNumber, mOpen), colour
+            mCanvas.drawLine mPeriodNumber - BarSemiWidth, _
+                            mOpen, _
+                            mPeriodNumber, _
+                            mOpen
         End If
         If mClose >= area.bottom And mClose <= area.top Then
-            mSurface.Line (mPeriodNumber, mClose)-(mPeriodNumber + BarSemiWidth + onePixel, mClose), colour
+            mCanvas.drawLine mPeriodNumber, _
+                            mClose, _
+                            mPeriodNumber + BarSemiWidth + onePixel, _
+                            mClose
         End If
-        mSurface.Line (mPeriodNumber, IIf(area.bottom > mLow, area.bottom, mLow))-(mPeriodNumber, IIf(area.top < mHigh, area.top, mHigh)), colour
+        mCanvas.drawLine mPeriodNumber, _
+                        IIf(area.bottom > mLow, area.bottom, mLow), _
+                        mPeriodNumber, _
+                        IIf(area.top < mHigh, area.top, mHigh)
     Else
-        mSurface.DrawStyle = LineStyles.LineInsideSolid
-        barThicknessScaleX = Abs(((mBarThickness - 1) * Screen.TwipsPerPixelX) / (mSurface.Width / mSurface.scaleWidth))
-        barThicknessScaleY = Abs(((mBarThickness - 1) * Screen.TwipsPerPixelY) / (mSurface.Height / mSurface.scaleHeight))
+        mCanvas.setBrushAttributes colour, FillStyles.FillSolid
+        barThicknessScaleX = mCanvas.convertPixelsToLogicalX(mBarThickness - 1)
+        barThicknessScaleY = mCanvas.convertPixelsToLogicalY(mBarThickness - 1)
         
         If mOpen >= area.bottom And mOpen <= area.top Then
             If (mOpen - barThicknessScaleY / 2) < mLow Then
-                mSurface.Line (mPeriodNumber - BarSemiWidth, mLow)-(mPeriodNumber + barThicknessScaleX / 2, mLow + barThicknessScaleY), colour, BF
+                mCanvas.drawRectangle mPeriodNumber - BarSemiWidth, _
+                                mLow, _
+                                mPeriodNumber + barThicknessScaleX / 2, _
+                                mLow + barThicknessScaleY
             ElseIf (mOpen + barThicknessScaleY / 2) > mHigh Then
-                mSurface.Line (mPeriodNumber - BarSemiWidth, mHigh - barThicknessScaleY)-(mPeriodNumber + barThicknessScaleX / 2, mHigh), colour, BF
+                mCanvas.drawRectangle mPeriodNumber - BarSemiWidth, _
+                                mHigh - barThicknessScaleY, _
+                                mPeriodNumber + barThicknessScaleX / 2, _
+                                mHigh
             Else
-                mSurface.Line (mPeriodNumber - BarSemiWidth, mOpen - barThicknessScaleY / 2)-(mPeriodNumber + barThicknessScaleX / 2, mOpen + barThicknessScaleY / 2), colour, BF
+                mCanvas.drawRectangle mPeriodNumber - BarSemiWidth, _
+                                mOpen - barThicknessScaleY / 2, _
+                                mPeriodNumber + barThicknessScaleX / 2, _
+                                mOpen + barThicknessScaleY / 2
             End If
         End If
         
         If mClose >= area.bottom And mClose <= area.top Then
             If (mClose - barThicknessScaleY / 2) < mLow Then
-                mSurface.Line (mPeriodNumber - barThicknessScaleX / 2, mLow)-(mPeriodNumber + BarSemiWidth, mLow + barThicknessScaleY), colour, BF
+                mCanvas.drawRectangle mPeriodNumber - barThicknessScaleX / 2, _
+                                mLow, _
+                                mPeriodNumber + BarSemiWidth, _
+                                mLow + barThicknessScaleY
             ElseIf (mClose + barThicknessScaleY / 2) > mHigh Then
-                mSurface.Line (mPeriodNumber - barThicknessScaleX / 2, mHigh - barThicknessScaleY)-(mPeriodNumber + BarSemiWidth, mHigh), colour, BF
+                mCanvas.drawRectangle mPeriodNumber - barThicknessScaleX / 2, _
+                                mHigh - barThicknessScaleY, _
+                                mPeriodNumber + BarSemiWidth, _
+                                mHigh
             Else
-                mSurface.Line (mPeriodNumber - barThicknessScaleX / 2, mClose - barThicknessScaleY / 2)-(mPeriodNumber + BarSemiWidth, mClose + barThicknessScaleY / 2), colour, BF
+                mCanvas.drawRectangle mPeriodNumber - barThicknessScaleX / 2, _
+                                mClose - barThicknessScaleY / 2, _
+                                mPeriodNumber + BarSemiWidth, _
+                                mClose + barThicknessScaleY / 2
             End If
         End If
         
-        mSurface.Line (mPeriodNumber - barThicknessScaleX / 2, IIf(area.bottom > mLow, area.bottom, mLow))-(mPeriodNumber + barThicknessScaleX / 2, IIf(area.top < mHigh, area.top, mHigh)), colour, BF
+        mCanvas.drawRectangle mPeriodNumber - barThicknessScaleX / 2, _
+                        IIf(area.bottom > mLow, area.bottom, mLow), _
+                        mPeriodNumber + barThicknessScaleX / 2, _
+                        IIf(area.top < mHigh, area.top, mHigh)
     End If
-End If
-
-If mHigh >= mSurface.scaleTop Or mLow <= (mSurface.scaleTop + mSurface.scaleHeight) Then
-    mEventProxy.boundsExceeded
 End If
 
 End Sub
 
 Private Sub drawTail(ByVal bottom As Double, ByVal top As Double, ByVal colour As Long)
 Dim tailThicknessScaleX As Double
-mSurface.DrawWidth = 1
+mCanvas.setPenAttributes colour, _
+                        1, _
+                        LineStyles.LineInsideSolid, _
+                        DrawModes.DrawModeCopyPen
 If mTailThickness > 1 Then
-    mSurface.DrawStyle = LineStyles.LineInsideSolid
-    mSurface.FillStyle = FillStyles.FillTransparent
-    tailThicknessScaleX = Abs(((mTailThickness - 1) * Screen.TwipsPerPixelX) / (mSurface.Width / mSurface.scaleWidth))
-    mSurface.Line (mPeriodNumber - tailThicknessScaleX / 2, bottom)-(mPeriodNumber + tailThicknessScaleX / 2, top), colour, BF
+    mCanvas.setBrushAttributes colour, FillStyles.FillSolid
+    tailThicknessScaleX = mCanvas.convertPixelsToLogicalX(mTailThickness - 1)
+    mCanvas.drawRectangle mPeriodNumber - tailThicknessScaleX / 2, _
+                    bottom, _
+                    mPeriodNumber + tailThicknessScaleX / 2, _
+                    top
 Else
-    mSurface.DrawStyle = LineStyles.LineInsideSolid
-    mSurface.Line (mPeriodNumber, bottom)-(mPeriodNumber, top), colour, B
+    mCanvas.drawRectangle mPeriodNumber, bottom, mPeriodNumber, top
 End If
 End Sub
 
@@ -526,7 +608,7 @@ If Price = mClose Then Exit Sub
 
 If Not mBlank Then
     With clearRect
-        .isvalid = False
+        .isValid = False
         If upBar Then
             If Price < mOpen Then
                 ' is now a downbar so redraw the whole thing
@@ -534,19 +616,19 @@ If Not mBlank Then
                 .right = mPeriodNumber + mCandleWidth / 2
                 .bottom = IIf(Price < mLow, Price, mLow)
                 .top = mHigh
-                .isvalid = True
+                .isValid = True
             ElseIf Price < mClose Then
                 .left = mPeriodNumber - mCandleWidth / 2
                 .right = mPeriodNumber + mCandleWidth / 2
                 .bottom = Price
                 .top = mClose
-                .isvalid = True
+                .isValid = True
             ElseIf Price > mClose Then
                 .left = mPeriodNumber - mCandleWidth / 2
                 .right = mPeriodNumber + mCandleWidth / 2
                 .bottom = mClose
                 .top = Price
-                .isvalid = True
+                .isValid = True
             End If
         Else
             If Price >= mOpen Then
@@ -555,22 +637,22 @@ If Not mBlank Then
                 .right = mPeriodNumber + mCandleWidth / 2
                 .bottom = mLow
                 .top = IIf(Price > mHigh, Price, mHigh)
-                .isvalid = True
+                .isValid = True
             ElseIf Price > mClose Then
                 .left = mPeriodNumber - mCandleWidth / 2
                 .right = mPeriodNumber + mCandleWidth / 2
                 .bottom = mClose
                 .top = Price
-                .isvalid = True
+                .isValid = True
             ElseIf Price < mClose Then
                 .left = mPeriodNumber - mCandleWidth / 2
                 .right = mPeriodNumber + mCandleWidth / 2
                 .bottom = Price
                 .top = mClose
-                .isvalid = True
+                .isValid = True
             End If
         End If
-        If .isvalid Then undraw clearRect
+        If .isValid Then undraw clearRect
     End With
 End If
 
@@ -583,24 +665,24 @@ If Price < mLow Then
     mLow = Price
     mBoundingRect.bottom = Price
 End If
-mBoundingRect.isvalid = True
+mBoundingRect.isValid = True
 mClose = Price
 mBlank = False
 
 mEventProxy.objectChanged mHandle, mBoundingRect
 
-If mHigh >= mSurface.scaleTop Or mLow <= (mSurface.scaleTop + mSurface.scaleHeight) Then
-    mEventProxy.boundsExceeded
-End If
+'If mHigh >= mSurface.ScaleTop Or mLow <= (mSurface.ScaleTop + mSurface.ScaleHeight) Then
+'    mEventProxy.boundsExceeded
+'End If
 End Sub
 
 Private Sub undraw(ByRef area As TRectangle)
 If Not mVisible Then Exit Sub
-If Not area.isvalid Then
-    drawBar mSurface.backColor
+If Not area.isValid Then
+    drawBar mCanvas.backColor
     mEventProxy.objectUndrawn mHandle, mBoundingRect
 Else
-    drawPartialBar area, mSurface.backColor
+    drawPartialBar area, mCanvas.backColor
     mEventProxy.objectUndrawn mHandle, area
 End If
 End Sub

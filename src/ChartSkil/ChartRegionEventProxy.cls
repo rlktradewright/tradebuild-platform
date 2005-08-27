@@ -69,10 +69,6 @@ Friend Sub addGraphicObject(ByVal graphObj As IGraphicObject)
 RaiseEvent addGraphicObject(graphObj)
 End Sub
 
-Friend Sub boundsExceeded()
-RaiseEvent boundsExceeded
-End Sub
-
 Friend Sub objectChanged(ByVal handle As Long, _
                     ByRef areaToRedraw As TRectangle)
 RaiseEvent objectChanged(handle, areaToRedraw)

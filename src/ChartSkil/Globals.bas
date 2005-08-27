@@ -1,17 +1,8 @@
 Attribute VB_Name = "Globals"
 Option Explicit
 
-Public Type POINTAPI
-        X As Long
-        Y As Long
-End Type
-
-Public Declare Function Polygon Lib "gdi32" (ByVal hdc As Long, _
-                                            lpPoint As POINTAPI, _
-                                            ByVal nCount As Long) As Long
-
 Public Type TInterval
-    isvalid         As Boolean
+    isValid         As Boolean
     startValue      As Double
     endValue        As Double
 End Type
@@ -44,7 +35,7 @@ Dim endValue1 As Double
 Dim startValue2 As Double
 Dim endValue2 As Double
 
-If Not int1.isvalid Or Not int2.isvalid Then Exit Function
+If Not int1.isValid Or Not int2.isValid Then Exit Function
 
 startValue1 = int1.startValue
 endValue1 = int1.endValue
@@ -59,19 +50,19 @@ With intIntersection
         Else
             .endValue = endValue2
         End If
-        .isvalid = True
+        .isValid = True
         Exit Function
     End If
     If endValue1 >= startValue2 And endValue1 <= endValue2 Then
         .endValue = endValue1
         .startValue = startValue2
-        .isvalid = True
+        .isValid = True
         Exit Function
     End If
     If startValue1 < startValue2 And endValue1 > endValue2 Then
         .startValue = startValue2
         .endValue = endValue2
-        .isvalid = True
+        .isValid = True
         Exit Function
     End If
 End With
@@ -94,13 +85,26 @@ End If
 intOverlaps = False
 End Function
 
+Public Function rectEquals( _
+                        ByRef rect1 As TRectangle, _
+                        ByRef rect2 As TRectangle) As Boolean
+With rect1
+    If Not .isValid Or Not rect2.isValid Then Exit Function
+    If .bottom <> rect2.bottom Then Exit Function
+    If .left <> rect2.left Then Exit Function
+    If .top <> rect2.top Then Exit Function
+    If .right <> rect2.right Then Exit Function
+End With
+rectEquals = True
+End Function
+
 Public Sub rectInitialise(ByRef rect As TRectangle)
 With rect
-    .isvalid = False
-    .left = MinusInfinityDouble
-    .right = PlusInfinityDouble
-    .bottom = MinusInfinityDouble
-    .top = PlusInfinityDouble
+    .isValid = False
+    .left = PlusInfinityDouble
+    .right = MinusInfinityDouble
+    .bottom = PlusInfinityDouble
+    .top = MinusInfinityDouble
 End With
 End Sub
 
@@ -116,7 +120,7 @@ With rectIntersection
     .right = xInt.endValue
     .bottom = yint.startValue
     .top = yint.endValue
-    If xInt.isvalid And yint.isvalid Then .isvalid = True
+    If xInt.isValid And yint.isValid Then .isValid = True
 End With
 End Function
 
@@ -145,7 +149,7 @@ Public Function rectGetXInterval(ByRef rect As TRectangle) As TInterval
 With rectGetXInterval
 .startValue = rect.left
 .endValue = rect.right
-.isvalid = rect.isvalid
+.isValid = rect.isValid
 End With
 End Function
 
@@ -153,7 +157,7 @@ Public Function rectGetYInterval(ByRef rect As TRectangle) As TInterval
 With rectGetYInterval
     .startValue = rect.bottom
     .endValue = rect.top
-    .isvalid = rect.isvalid
+    .isValid = rect.isValid
 End With
 End Function
 
@@ -161,7 +165,7 @@ Public Sub rectSetXInterval(ByRef rect As TRectangle, ByRef interval As TInterva
 With rect
     .left = interval.startValue
     .right = interval.endValue
-    .isvalid = interval.isvalid
+    .isValid = interval.isValid
 End With
 End Sub
 
@@ -169,22 +173,22 @@ Public Sub rectSetYInterval(ByRef rect As TRectangle, ByRef interval As TInterva
 With rect
     .bottom = interval.startValue
     .top = interval.endValue
-    .isvalid = interval.isvalid
+    .isValid = interval.isValid
 End With
 End Sub
 
 Public Function rectUnion(ByRef rect1 As TRectangle, ByRef rect2 As TRectangle) As TRectangle
-If Not (rect1.isvalid And rect2.isvalid) Then
-    If rect1.isvalid Then
+If Not (rect1.isValid And rect2.isValid) Then
+    If rect1.isValid Then
         rectUnion = rect1
-    ElseIf rect2.isvalid Then
+    ElseIf rect2.isValid Then
         rectUnion = rect2
     End If
     Exit Function
 End If
 
 With rectUnion
-    .isvalid = False
+    .isValid = False
     
     If rect1.left < rect2.left Then
         .left = rect1.left
@@ -206,7 +210,18 @@ With rectUnion
     Else
         .right = rect2.right
     End If
-    .isvalid = True
+    .isValid = True
 End With
 End Function
+
+Public Sub rectValidate(ByRef rect As TRectangle)
+With rect
+    If .left <= .right And .bottom <= .top Then
+        .isValid = True
+    Else
+        .isValid = False
+    End If
+End With
+End Sub
+
 

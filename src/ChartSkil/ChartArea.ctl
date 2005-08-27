@@ -169,6 +169,32 @@ Enum ArrowStyles
     ArrowBarb
 End Enum
 
+Public Enum CoordinateSystems
+    CoordsLogical = 0
+    CoordsRelative
+    CoordsDistance        ' Measured from left or bottom of region
+    CoordsCounterDistance ' Measured from right or top of region
+End Enum
+
+Enum DrawModes
+    DrawModeBlackness = vbBlackness
+    DrawModeCopyPen = vbCopyPen
+    DrawModeInvert = vbInvert
+    DrawModeMaskNotPen = vbMaskNotPen
+    DrawModeMaskPen = vbMaskPen
+    DrawModeMaskPenNot = vbMaskPenNot
+    DrawModeMergeNotPen = vbMergeNotPen
+    DrawModeMergePen = vbMergePen
+    DrawModeMergePenNot = vbMergePenNot
+    DrawModeNop = vbNop
+    DrawModeNotCopyPen = vbNotCopyPen
+    DrawModeNotMaskPen = vbNotMaskPen
+    DrawModeNotMergePen = vbNotMergePen
+    DrawModeNotXorPen = vbNotXorPen
+    DrawModeWhiteness = vbWhiteness
+    DrawModeXorPen = vbXorPen
+End Enum
+
 Enum ErrorCodes
     InvalidPropertyValue = 380
 End Enum
@@ -249,57 +275,8 @@ End Enum
 '================================================================================
 
 Private Sub UserControl_Initialize()
-Dim aFont As StdFont
-
-mPrevHeight = UserControl.Height
-
-ReDim mRegions(100) As RegionTableEntry
-mRegionsIndex = -1
-
-Set mPeriods = New Collection
-mPeriodLengthMinutes = 5
-
-mBackColour = vbWhite
-mGridColour = &HC0C0C0
-mShowGrid = True
-mShowCrosshairs = True
-
-mTwipsPerBar = DefaultTwipsPerBar
-mScaleHeight = -100
-mScaleTop = 100
-mYAxisWidthCm = 1.5
-
-resizeX
-
-mAllowHorizontalMouseScrolling = True
-mAllowVerticalMouseScrolling = True
-
-HScroll.Height = 0
-
-Set mXAxisRegion = New ChartRegion
-mXAxisRegion.surface = XAxisPicture
-mXAxisRegion.periodLengthMinutes = mPeriodLengthMinutes
-mXAxisRegion.pointerStyle = PointerNone
-mXAxisRegion.regionBackColor = mBackColour
-mXAxisRegion.regionHeight = 1
-mXAxisRegion.regionTop = 1
-mXAxisRegion.sessionStartTime = mSessionStartTime
-mXAxisRegion.showGrid = False
-mXAxisRegion.showGridText = True
-
-Set mXCursorText = mXAxisRegion.addText(LayerNumbers.LayerPointer)
-mXCursorText.align = AlignTopLeft
-mXCursorText.color = vbRed
-mXCursorText.box = True
-mXCursorText.boxFillColor = mBackColour
-mXCursorText.boxStyle = LineInvisible
-Set aFont = New StdFont
-aFont.name = "Arial"
-aFont.Size = 10
-aFont.Underline = False
-aFont.Bold = True
-mXCursorText.font = aFont
-
+initialise
+createXAxisRegion
 End Sub
 
 Private Sub UserControl_Paint()
@@ -315,14 +292,18 @@ Static resizeCount As Long
 resizeCount = resizeCount + 1
 'debug.print "Control_resize: count = " & resizeCount
 mNotFirstMouseMove = False
-HScroll.top = UserControl.Height - HScroll.Height
-HScroll.Width = UserControl.Width
-XAxisPicture.top = HScroll.top - XAxisPicture.Height
-XAxisPicture.Width = UserControl.Width
+HScroll.top = UserControl.height - HScroll.height
+HScroll.width = UserControl.width
+XAxisPicture.top = HScroll.top - XAxisPicture.height
+XAxisPicture.width = UserControl.width
 resizeX
 resizeY
 paintAll
 'debug.print "Exit Control_resize"
+End Sub
+
+Private Sub UserControl_Terminate()
+Debug.Print "ChartSkil Usercontrol terminated"
 End Sub
 
 Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
@@ -337,18 +318,18 @@ Private Sub ChartRegionPicture_MouseDown( _
                             index As Integer, _
                             Button As Integer, _
                             Shift As Integer, _
-                            X As Single, _
-                            Y As Single)
+                            x As Single, _
+                            y As Single)
 If Button = vbLeftButton Then mLeftDragging = True
-mLeftDragStartPosnX = Int(X)
-mLeftDragStartPosnY = Y
+mLeftDragStartPosnX = Int(x)
+mLeftDragStartPosnY = y
 End Sub
 
 Private Sub ChartRegionPicture_MouseMove(index As Integer, _
                                 Button As Integer, _
                                 Shift As Integer, _
-                                X As Single, _
-                                Y As Single)
+                                x As Single, _
+                                y As Single)
 
 Dim region As ChartRegion
 Dim i As Long
@@ -357,15 +338,15 @@ If mLeftDragging = True Then
     If mAllowHorizontalMouseScrolling Then
         ' the chart needs to be scrolled so that current mouse position
         ' is the value contained in mLeftDragStartPosnX
-        If mLeftDragStartPosnX <> Int(X) Then
-            scrollX mLeftDragStartPosnX - Int(X)
+        If mLeftDragStartPosnX <> Int(x) Then
+            scrollX mLeftDragStartPosnX - Int(x)
         End If
     End If
     If mAllowVerticalMouseScrolling Then
-        If mLeftDragStartPosnY <> Y Then
+        If mLeftDragStartPosnY <> y Then
             With mRegions(index - 1).region
                 If Not .autoscale Then
-                    .scrollVertical mLeftDragStartPosnY - Y
+                    .scrollVertical mLeftDragStartPosnY - y
                 End If
             End With
         End If
@@ -375,13 +356,13 @@ Else
         Set region = mRegions(i).region
         If i = index - 1 Then
             'debug.print "Mousemove: index=" & index & " region=" & i & " x=" & x & " y=" & y
-            region.MouseMove Button, Shift, X, Y
+            region.MouseMove Button, Shift, x, y
         Else
             'debug.print "Mousemove: index=" & index & " region=" & i & " x=" & x & " y=" & MinusInfinitySingle
-            region.MouseMove Button, Shift, X, MinusInfinitySingle
+            region.MouseMove Button, Shift, x, MinusInfinitySingle
         End If
     Next
-    displayXAxisLabel X, 100
+    displayXAxisLabel x, 100
 End If
 End Sub
 
@@ -389,8 +370,8 @@ Private Sub ChartRegionPicture_MouseUp( _
                             index As Integer, _
                             Button As Integer, _
                             Shift As Integer, _
-                            X As Single, _
-                            Y As Single)
+                            x As Single, _
+                            y As Single)
 If Button = vbLeftButton Then mLeftDragging = False
 End Sub
 
@@ -410,11 +391,11 @@ Private Sub RegionDividerPicture_MouseDown( _
                             index As Integer, _
                             Button As Integer, _
                             Shift As Integer, _
-                            X As Single, _
-                            Y As Single)
+                            x As Single, _
+                            y As Single)
 If Button = vbLeftButton Then mLeftDragging = True
-mLeftDragStartPosnX = Int(X)
-mLeftDragStartPosnY = Y
+mLeftDragStartPosnX = Int(x)
+mLeftDragStartPosnY = y
 mUserResizingRegions = True
 End Sub
 
@@ -422,8 +403,8 @@ Private Sub RegionDividerPicture_MouseMove( _
                             index As Integer, _
                             Button As Integer, _
                             Shift As Integer, _
-                            X As Single, _
-                            Y As Single)
+                            x As Single, _
+                            y As Single)
 Dim vertChange As Long
 Dim currRegion As Long
 Dim newHeight As Long
@@ -432,7 +413,7 @@ Dim prevPercentHeight As Double
 If Not mLeftDragging = True Then Exit Sub
 
 currRegion = index + 1  ' we resize the region below the divider
-vertChange = mLeftDragStartPosnY - Y
+vertChange = mLeftDragStartPosnY - y
 newHeight = mRegions(currRegion).actualHeight + vertChange
 
 ' the region table indicates the requested percentage used by each region
@@ -460,8 +441,8 @@ Private Sub RegionDividerPicture_MouseUp( _
                             index As Integer, _
                             Button As Integer, _
                             Shift As Integer, _
-                            X As Single, _
-                            Y As Single)
+                            x As Single, _
+                            y As Single)
 If Button = vbLeftButton Then mLeftDragging = False
 mUserResizingRegions = False
 End Sub
@@ -594,6 +575,7 @@ End Property
 
 Public Property Let periodLengthMinutes(ByVal val As Long)
 mPeriodLengthMinutes = val
+If mXAxisRegion Is Nothing Then createXAxisRegion
 mXAxisRegion.periodLengthMinutes = val
 End Property
 
@@ -638,9 +620,9 @@ End Property
 Public Property Let showHorizontalScrollBar(ByVal val As Boolean)
 mShowHorizontalScrollBar = val
 If mShowHorizontalScrollBar Then
-    HScroll.Height = 255
+    HScroll.height = 255
 Else
-    HScroll.Height = 0
+    HScroll.height = 0
 End If
 resizeY
 End Property
@@ -657,6 +639,7 @@ For i = 0 To mRegionsIndex
     Set region = mRegions(i).region
     region.suppressDrawing = val
 Next
+If mXAxisRegion Is Nothing Then createXAxisRegion
 mXAxisRegion.suppressDrawing = val
 End Property
 
@@ -700,14 +683,14 @@ Set addChartRegion = New ChartRegion
 
 Load ChartRegionPicture(ChartRegionPicture.UBound + 1)
 ChartRegionPicture(ChartRegionPicture.UBound).align = vbAlignNone
-ChartRegionPicture(ChartRegionPicture.UBound).Width = _
+ChartRegionPicture(ChartRegionPicture.UBound).width = _
     UserControl.ScaleWidth * (mYAxisPosition - chartLeft) / XAxisPicture.ScaleWidth
 ChartRegionPicture(ChartRegionPicture.UBound).visible = True
 
 Load YAxisPicture(YAxisPicture.UBound + 1)
 YAxisPicture(YAxisPicture.UBound).align = vbAlignNone
-YAxisPicture(YAxisPicture.UBound).left = ChartRegionPicture(ChartRegionPicture.UBound).Width
-YAxisPicture(YAxisPicture.UBound).Width = UserControl.ScaleWidth - YAxisPicture(YAxisPicture.UBound).left
+YAxisPicture(YAxisPicture.UBound).left = ChartRegionPicture(ChartRegionPicture.UBound).width
+YAxisPicture(YAxisPicture.UBound).width = UserControl.ScaleWidth - YAxisPicture(YAxisPicture.UBound).left
 YAxisPicture(YAxisPicture.UBound).visible = True
 
 addChartRegion.surface = ChartRegionPicture(ChartRegionPicture.UBound)
@@ -718,10 +701,9 @@ addChartRegion.minimumPercentHeight = minimumPercentHeight
 addChartRegion.percentheight = percentheight
 addChartRegion.regionBackColor = mBackColour
 addChartRegion.regionLeft = mScaleLeft
-addChartRegion.regionHeight = 1
 addChartRegion.regionNumber = mRegionsIndex + 2
+addChartRegion.regionBottom = 0
 addChartRegion.regionTop = 1
-addChartRegion.regionWidth = mYAxisPosition - mScaleLeft
 addChartRegion.showCrosshairs = mShowCrosshairs
 addChartRegion.showGrid = mShowGrid
 addChartRegion.periodsInView mScaleLeft, mYAxisPosition - 1
@@ -745,7 +727,7 @@ End If
 
 Set YAxisRegion = New ChartRegion
 YAxisRegion.surface = YAxisPicture(YAxisPicture.UBound)
-YAxisRegion.regionHeight = 1
+YAxisRegion.regionBottom = 0
 YAxisRegion.regionTop = 1
 addChartRegion.YAxisRegion = YAxisRegion
 
@@ -779,8 +761,25 @@ For i = 0 To mRegionsIndex
     Set region = mRegions(i).region
     region.addPeriod mCurrentPeriodNumber, timestamp
 Next
+If mXAxisRegion Is Nothing Then createXAxisRegion
 mXAxisRegion.addPeriod mCurrentPeriodNumber, timestamp
 setHorizontalScrollBar
+End Function
+
+Public Function clearChart()
+Dim i As Long
+
+mCurrentPeriodNumber = 0
+For i = 0 To mRegionsIndex
+    mRegions(i).region.clearRegion
+    Unload ChartRegionPicture(i + 1)
+    Unload YAxisPicture(i + 1)
+    If i <> mRegionsIndex Then Unload RegionDividerPicture(i + 1)
+Next
+If Not mXAxisRegion Is Nothing Then mXAxisRegion.clearRegion
+Set mXAxisRegion = Nothing
+
+initialise
 End Function
 
 Public Function refresh()
@@ -793,32 +792,89 @@ End Function
 
 Private Function calcAvailableHeight() As Long
 calcAvailableHeight = XAxisPicture.top - _
-                    mRegionsIndex * RegionDividerPicture(0).Height
+                    mRegionsIndex * RegionDividerPicture(0).height
 End Function
 
-Private Sub displayXAxisLabel(X As Single, Y As Single)
+Private Sub createXAxisRegion()
+Dim aFont As StdFont
+Set mXAxisRegion = New ChartRegion
+mXAxisRegion.surface = XAxisPicture
+mXAxisRegion.periodLengthMinutes = mPeriodLengthMinutes
+mXAxisRegion.pointerStyle = PointerNone
+mXAxisRegion.regionBackColor = mBackColour
+mXAxisRegion.regionBottom = 0
+mXAxisRegion.regionTop = 1
+mXAxisRegion.sessionStartTime = mSessionStartTime
+mXAxisRegion.showGrid = False
+mXAxisRegion.showGridText = True
+
+Set mXCursorText = mXAxisRegion.addText(LayerNumbers.LayerPointer)
+mXCursorText.align = AlignTopLeft
+mXCursorText.color = vbRed
+mXCursorText.box = True
+mXCursorText.boxFillColor = mBackColour
+mXCursorText.boxStyle = LineInvisible
+Set aFont = New StdFont
+aFont.name = "Arial"
+aFont.Size = 10
+aFont.Underline = False
+aFont.Bold = True
+mXCursorText.font = aFont
+End Sub
+
+Private Sub displayXAxisLabel(x As Single, y As Single)
 Dim thisPeriod As Period
 Dim periodNumber As Long
 Dim prevPeriodNumber As Long
 Dim prevPeriod As Period
 
-If Round(X) >= mYAxisPosition Then Exit Sub
+If Round(x) >= mYAxisPosition Then Exit Sub
 If mPeriods.count = 0 Then Exit Sub
 
 On Error Resume Next
-periodNumber = Round(X)
+periodNumber = Round(x)
 Set thisPeriod = mPeriods(periodNumber)
 On Error GoTo 0
 If thisPeriod Is Nothing Then Exit Sub
 
+If mXAxisRegion Is Nothing Then createXAxisRegion
 mXAxisRegion.suppressDrawing = True
 mXCursorText.position = mXAxisRegion.newPoint( _
                             periodNumber, _
                             0, _
-                            PositionAbsolute, _
-                            PositionCounterDistance)
+                            CoordsLogical, _
+                            CoordsCounterDistance)
 mXCursorText.text = Format(thisPeriod.timestamp, "dd/mm hh:nn")
 mXAxisRegion.suppressDrawing = False
+
+End Sub
+
+Private Sub initialise()
+
+mPrevHeight = UserControl.height
+
+ReDim mRegions(100) As RegionTableEntry
+mRegionsIndex = -1
+
+Set mPeriods = New Collection
+mPeriodLengthMinutes = 5
+
+mBackColour = vbWhite
+mGridColour = &HC0C0C0
+mShowGrid = True
+mShowCrosshairs = True
+
+mTwipsPerBar = DefaultTwipsPerBar
+mScaleHeight = -100
+mScaleTop = 100
+mYAxisWidthCm = 1.5
+
+resizeX
+
+mAllowHorizontalMouseScrolling = True
+mAllowVerticalMouseScrolling = True
+
+HScroll.height = 0
 
 End Sub
 
@@ -834,6 +890,7 @@ For i = 0 To mRegionsIndex
     Set region = mRegions(i).region
     region.paintRegion
 Next
+If mXAxisRegion Is Nothing Then createXAxisRegion
 mXAxisRegion.paintRegion
 
 End Sub
@@ -843,40 +900,41 @@ Dim newScaleWidth As Single
 Dim i As Long
 Dim region As ChartRegion
 
-newScaleWidth = CSng(XAxisPicture.Width) / CSng(mTwipsPerBar) - 0.5!
+newScaleWidth = CSng(XAxisPicture.width) / CSng(mTwipsPerBar) - 0.5!
 If newScaleWidth = mScaleWidth Then Exit Sub
 
 mScaleWidth = newScaleWidth
 
 mScaleLeft = mYAxisPosition + _
-            (mYAxisWidthCm * TwipsPerCm / XAxisPicture.Width * mScaleWidth) - _
+            (mYAxisWidthCm * TwipsPerCm / XAxisPicture.width * mScaleWidth) - _
             mScaleWidth
-XAxisPicture.ScaleWidth = mScaleWidth
-XAxisPicture.ScaleLeft = mScaleLeft
 
 For i = 0 To ChartRegionPicture.UBound
-    YAxisPicture(i).left = UserControl.Width - YAxisPicture(i).Width
-    ChartRegionPicture(i).Width = YAxisPicture(i).left
+    YAxisPicture(i).left = UserControl.width - YAxisPicture(i).width
+    ChartRegionPicture(i).width = YAxisPicture(i).left
 Next
 
 For i = 0 To RegionDividerPicture.UBound
-    RegionDividerPicture(i).Width = UserControl.Width
+    RegionDividerPicture(i).width = UserControl.width
 Next
 
 For i = 0 To mRegionsIndex
     Set region = mRegions(i).region
-    region.regionWidth = mYAxisPosition - mScaleLeft
     region.periodsInView mScaleLeft, mYAxisPosition - 1
 Next
+If Not mXAxisRegion Is Nothing Then
+    mXAxisRegion.periodsInView mScaleLeft, mScaleLeft + mScaleWidth
+End If
 
+setHorizontalScrollBar
 End Sub
 
 Private Sub resizeY()
-If UserControl.Height = mPrevHeight Then Exit Sub
+If UserControl.height = mPrevHeight Then Exit Sub
 
 'debug.print "resizeY"
 
-mPrevHeight = UserControl.Height
+mPrevHeight = UserControl.height
 sizeRegions
 End Sub
 
@@ -886,13 +944,14 @@ Dim i As Long
 If value = 0 Then Exit Sub
 mYAxisPosition = mYAxisPosition + value
 mScaleLeft = mYAxisPosition + _
-            (mYAxisWidthCm * TwipsPerCm / XAxisPicture.Width * mScaleWidth) - _
+            (mYAxisWidthCm * TwipsPerCm / XAxisPicture.width * mScaleWidth) - _
             mScaleWidth
 XAxisPicture.ScaleLeft = mScaleLeft
 For i = 0 To mRegionsIndex
     Set region = mRegions(i).region
     region.periodsInView mScaleLeft, mYAxisPosition - 1
 Next
+If mXAxisRegion Is Nothing Then createXAxisRegion
 mXAxisRegion.periodsInView mScaleLeft, mScaleLeft + mScaleWidth
 setHorizontalScrollBar
 paintAll
@@ -1032,14 +1091,15 @@ top = 0
     
 For i = 0 To mRegionsIndex
     Set aRegion = mRegions(i).region
-    ChartRegionPicture(aRegion.regionNumber).Height = mRegions(i).actualHeight
-    YAxisPicture(aRegion.regionNumber).Height = mRegions(i).actualHeight
+    ChartRegionPicture(aRegion.regionNumber).height = mRegions(i).actualHeight
+    YAxisPicture(aRegion.regionNumber).height = mRegions(i).actualHeight
     ChartRegionPicture(aRegion.regionNumber).top = top
     YAxisPicture(aRegion.regionNumber).top = top
-    top = top + ChartRegionPicture(aRegion.regionNumber).Height
+    top = top + ChartRegionPicture(aRegion.regionNumber).height
+    aRegion.resizedY
     If i <> mRegionsIndex Then
         RegionDividerPicture(i).top = top
-        top = top + RegionDividerPicture(i).Height
+        top = top + RegionDividerPicture(i).height
     End If
 Next
 

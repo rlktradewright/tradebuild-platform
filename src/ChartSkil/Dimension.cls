@@ -37,7 +37,7 @@ Private mX As Double
 Private mXAssigned As Boolean
 Private mY As Double
 Private mYAssigned As Boolean
-Private mSurface As PictureBox
+Private mCanvas As canvas
 
 '================================================================================
 ' Class Event Handlers
@@ -51,6 +51,14 @@ Private mSurface As PictureBox
 ' Properties
 '================================================================================
 
+Friend Property Get canvas() As canvas
+Set canvas = mCanvas
+End Property
+
+Friend Property Let canvas(ByVal value As canvas)
+Set mCanvas = value
+End Property
+
 Public Property Get isAssigned() As Boolean
 isAssigned = (mXAssigned And mYAssigned)
 End Property
@@ -63,60 +71,45 @@ Friend Property Get isAssignedY() As Boolean
 isAssignedY = mYAssigned
 End Property
 
-Friend Property Get surface() As PictureBox
-Set surface = mSurface
+Public Property Get x() As Double
+x = mX
 End Property
 
-Friend Property Let surface(ByVal value As PictureBox)
-Set mSurface = value
-End Property
-
-Public Property Get X() As Double
-X = mX
-End Property
-
-Friend Property Let X(ByVal value As Double)
+Friend Property Let x(ByVal value As Double)
 mX = value
 mXAssigned = True
 End Property
 
-Friend Property Get XAbsolute() As Double
-XAbsolute = (mX * TwipsPerCm) / mSurface.Width * mSurface.scaleWidth
+Friend Property Get XLogical() As Double
+XLogical = mCanvas.convertDistanceToLogicalX(mX)
 End Property
 
-Public Property Get Y() As Double
-Y = mY
+Public Property Get y() As Double
+y = mY
 End Property
 
-Friend Property Let Y(ByVal value As Double)
+Friend Property Let y(ByVal value As Double)
 mY = value
 mYAssigned = True
 End Property
 
-Friend Property Get YAbsolute() As Double
-YAbsolute = -(mY * TwipsPerCm) / mSurface.Height * mSurface.scaleHeight
+Friend Property Get YLogical() As Double
+YLogical = mCanvas.convertDistanceToLogicalY(mY)
 End Property
 
 '================================================================================
 ' Methods
 '================================================================================
 
-Public Function clone() As Point
-Set clone = New Point
-clone.surface = mSurface
-If mXAssigned Then clone.X = mX
-If mYAssigned Then clone.Y = mY
-End Function
-
 Public Function equals(ByVal aPoint As Point) As Boolean
 If aPoint Is Nothing Then Exit Function
 If aPoint Is Me Then Exit Function
 With aPoint
-    If Not .surface Is mSurface Then Exit Function
+    If Not .canvas Is mCanvas Then Exit Function
     If .isAssignedX <> mXAssigned Then Exit Function
     If .isAssignedY <> mYAssigned Then Exit Function
-    If .X <> mX Then Exit Function
-    If .Y <> mY Then Exit Function
+    If .x <> mX Then Exit Function
+    If .y <> mY Then Exit Function
 End With
 equals = True
 End Function

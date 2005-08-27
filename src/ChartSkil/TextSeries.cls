@@ -31,7 +31,8 @@ Option Explicit
 
 Private mTexts As Collection
 
-Private mSurface As PictureBox
+'Private mSurface As PictureBox
+Private mCanvas As canvas
 Private mLayer As Long
 
 Private mEventProxy As ChartRegionEventProxy
@@ -134,6 +135,10 @@ Public Property Let boxThickness(ByVal newValue As Long)
 mBoxThickness = newValue
 End Property
 
+Friend Property Let canvas(ByVal value As canvas)
+Set mCanvas = value
+End Property
+
 Public Property Get color() As Long
 color = mColour
 End Property
@@ -230,17 +235,13 @@ Public Property Let paddingY(ByVal newValue As Double)
 mPaddingY = newValue
 End Property
 
-Friend Property Let surface(ByVal value As PictureBox)
-Set mSurface = value
-End Property
-
 '================================================================================
 ' Methods
 '================================================================================
 
 Public Function addText() As text
 Set addText = New text
-addText.surface = mSurface
+addText.canvas = mCanvas
 addText.align = mAlign
 addText.box = mBox
 addText.boxColor = mBoxColour
@@ -262,6 +263,10 @@ mTexts.Add addText
 mEventProxy.addGraphicObject addText
 End Function
 
+Friend Sub finish()
+Set mCanvas = Nothing
+End Sub
+
 Public Function Item(ByVal index As Long) As text
 Attribute Item.VB_UserMemId = 0
 Set Item = mTexts(index)
@@ -272,6 +277,13 @@ Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
    Set NewEnum = mTexts.[_NewEnum]
 End Function
+
+Friend Sub removeAll()
+Dim i As Long
+For i = mTexts.count To 1 Step -1
+    mTexts.Remove (i)
+Next
+End Sub
 
 '================================================================================
 ' Helper Functions

@@ -27,7 +27,7 @@ Implements IGraphicObject
 ' Member variables and constants
 '================================================================================
 
-Private mSurface As PictureBox
+Private mCanvas  As canvas
 Private mLayer As Long
 Private mHandle As Long
 
@@ -106,10 +106,10 @@ Private mLineAngleCos As Double
 Private Sub Class_Initialize()
 mBlank = True
 
-mBoundingRect.isvalid = False
-mStartArrowRect.isvalid = False
-mEndArrowRect.isvalid = False
-mRegionRect.isvalid = False
+mBoundingRect.isValid = False
+mStartArrowRect.isValid = False
+mEndArrowRect.isValid = False
+mRegionRect.isValid = False
 End Sub
 
 '================================================================================
@@ -124,12 +124,18 @@ Private Property Get IGraphicObject_boundingRectangle( _
                         ByVal gaugeY As Double, _
                         ByRef regionRect As TRectangle) As ChartSkilTypes.TRectangle
 
-mRegionRect = regionRect
-mGaugeX = gaugeX
-mGaugeY = gaugeY
-If gaugeChanged Or _
-    xBoundsChanged Or _
-    yBoundsChanged _
+Dim canvasChanges As Long
+
+canvasChanges = mCanvas.compareTo(mGaugeX, mGaugeY, mRegionRect)
+
+mRegionRect = mCanvas.boundary
+mGaugeX = mCanvas.gaugeX
+mGaugeY = mCanvas.gaugeY
+
+If (canvasChanges And CanvasComparisonCodes.GaugeChangedX) Or _
+    (canvasChanges And CanvasComparisonCodes.GaugeChangedY) Or _
+    (canvasChanges And CanvasComparisonCodes.BoundsChangedX) Or _
+    (canvasChanges And CanvasComparisonCodes.BoundsChangedY) _
 Then
     calcConstants
     calcEndArrowConstants
@@ -151,14 +157,14 @@ With periodrect
     .right = periodNumber + 1
     .bottom = mRegionRect.bottom
     .top = mRegionRect.top
-    .isvalid = True
+    .isValid = True
 End With
 
 If mVertical <> VerticalNot Then
     Dim vertRect As TRectangle
     
     vertRect = rectIntersection(mBoundingRect, periodrect)
-    If vertRect.isvalid Then
+    If vertRect.isValid Then
         
         ReDim rects(0) As TRectangle
 
@@ -166,8 +172,8 @@ If mVertical <> VerticalNot Then
     End If
 Else
     If periodNumber = Int(mRegionRect.right) Or _
-        (Not mLeftToRight And periodNumber = mPoint2.X And Not mExtendAfter) Or _
-        (Not mLeftToRight And periodNumber = mPoint1.X And Not mExtendBefore) _
+        (Not mLeftToRight And periodNumber = mPoint2.x And Not mExtendAfter) Or _
+        (Not mLeftToRight And periodNumber = mPoint1.x And Not mExtendBefore) _
     Then
         If mThickness <= 1 Then Exit Function
     End If
@@ -177,20 +183,20 @@ Else
     With rects(0)
         .left = periodNumber
         If mLeftToRight Then
-            If periodNumber < mPoint1.X And _
+            If periodNumber < mPoint1.x And _
                 Not mExtendBefore _
             Then
-                .left = mPoint1.X - 1
+                .left = mPoint1.x - 1
             End If
         Else
-            If periodNumber < mPoint2.X And _
+            If periodNumber < mPoint2.x And _
                 Not mExtendAfter _
             Then
-                .left = mPoint2.X - 1
+                .left = mPoint2.x - 1
             End If
         End If
         If mLeftToRight Then
-            If (Not mExtendAfter And periodNumber = mPoint2.X) Or _
+            If (Not mExtendAfter And periodNumber = mPoint2.x) Or _
                 periodNumber = Int(mRegionRect.right) _
             Then
                 .right = .left
@@ -198,7 +204,7 @@ Else
                 .right = periodNumber + 1
             End If
         Else
-            If (Not mExtendBefore And periodNumber = mPoint1.X) Or _
+            If (Not mExtendBefore And periodNumber = mPoint1.x) Or _
                 periodNumber = Int(mRegionRect.right) _
             Then
                 .right = .left
@@ -215,21 +221,21 @@ Else
             .bottom = mA * .right + mB - mThicknessOffsetY
         End If
         If mLeftToRight Then
-            If (Not mExtendBefore And periodNumber = mPoint1.X) Then .left = .left - mThicknessOffsetX
-            If (Not mExtendAfter And periodNumber = mPoint2.X) Or _
+            If (Not mExtendBefore And periodNumber = mPoint1.x) Then .left = .left - mThicknessOffsetX
+            If (Not mExtendAfter And periodNumber = mPoint2.x) Or _
                 periodNumber = Int(mRegionRect.right) _
             Then
                 .right = .right + mThicknessOffsetX
             End If
         Else
-            If (Not mExtendAfter And periodNumber = mPoint2.X) Then .left = .left - mThicknessOffsetX
-            If (Not mExtendBefore And periodNumber = mPoint1.X) Or _
+            If (Not mExtendAfter And periodNumber = mPoint2.x) Then .left = .left - mThicknessOffsetX
+            If (Not mExtendBefore And periodNumber = mPoint1.x) Or _
                 periodNumber = Int(mRegionRect.right) _
             Then
                 .right = .right + mThicknessOffsetX
             End If
         End If
-        .isvalid = True
+        .isValid = True
     End With
 End If
 
@@ -251,7 +257,9 @@ IGraphicObject_capabilities = capabilities.ComplexBounding Or _
                             capabilities.PartialRedraw
 End Property
 
-Private Sub IGraphicObject_draw(ByRef areas() As TRectangle)
+Private Sub IGraphicObject_draw( _
+                ByRef areas() As TRectangle, _
+                ByVal hdc As Long)
 Dim i As Long
 Dim j As Long
 Dim areasToRedraw() As TRectangle
@@ -277,6 +285,10 @@ End Sub
 Private Property Get IGraphicObject_extendedObject() As Boolean
 IGraphicObject_extendedObject = True 'mExtended Or mFixed
 End Property
+
+Private Sub IGraphicObject_finish()
+Set mCanvas = Nothing
+End Sub
 
 Private Property Get IGraphicObject_gaugeDependent() As Boolean
 IGraphicObject_gaugeDependent = True
@@ -310,7 +322,9 @@ Private Property Get IGraphicObject_scaleDependent() As Boolean
 IGraphicObject_scaleDependent = mFixedX Or mFixedY
 End Property
 
-Private Sub IGraphicObject_undraw(ByRef area As TRectangle)
+Private Sub IGraphicObject_undraw( _
+                ByRef area As TRectangle, _
+                ByVal hdc As Long)
 undraw
 End Sub
 
@@ -455,6 +469,10 @@ mArrowStartWidth = newValue
 update
 End Property
 
+Friend Property Let canvas(ByVal value As canvas)
+Set mCanvas = value
+End Property
+
 Public Property Get color() As Long
 color = mColour
 End Property
@@ -590,7 +608,7 @@ If Not mPoint1 Is Nothing Then
     If value.equals(mPoint1) Then Exit Property
 End If
 undraw
-Set mPoint1 = value.clone
+Set mPoint1 = value
 convertPosition1
 With mPoint1
     If mPoint2 Is Nothing Then Exit Property
@@ -611,7 +629,7 @@ If Not mPoint2 Is Nothing Then
     If value.equals(mPoint2) Then Exit Property
 End If
 undraw
-Set mPoint2 = value.clone
+Set mPoint2 = value
 convertPosition2
 With mPoint2
     If mPoint1 Is Nothing Then Exit Property
@@ -644,10 +662,6 @@ mThickness = newValue
 update
 End Property
 
-Friend Property Let surface(ByVal value As PictureBox)
-Set mSurface = value
-End Property
-
 Public Property Get vertical() As Verticals
 vertical = mVertical
 End Property
@@ -672,6 +686,9 @@ Dim y2 As Double
 
 If mBlank Then Exit Sub
 
+mGaugeX = mCanvas.gaugeX
+mGaugeY = mCanvas.gaugeY
+
 mThicknessOffsetX = mGaugeX * mThickness / 2
 mThicknessOffsetY = mGaugeY * mThickness / 2
 
@@ -684,12 +701,12 @@ ElseIf mVertical = VerticalDown Then
 End If
 
 With mPoint1
-    x1 = .X
-    y1 = .Y
+    x1 = .XLogical
+    y1 = .YLogical
 End With
 With mPoint2
-    x2 = .X
-    y2 = .Y
+    x2 = .XLogical
+    y2 = .YLogical
 End With
 
 mA = (y2 - y1) / (x2 - x1)
@@ -732,16 +749,16 @@ Dim x2 As Double
 Dim y1 As Double
 Dim y2 As Double
 
-mBoundingRect.isvalid = False
+mBoundingRect.isValid = False
 If mBlank Then Exit Sub
 
 With mPoint1
-    x1 = .XAbsolute
-    y1 = .YAbsolute
+    x1 = .XLogical
+    y1 = .YLogical
 End With
 With mPoint2
-    x2 = .XAbsolute
-    y2 = .YAbsolute
+    x2 = .XLogical
+    y2 = .YLogical
 End With
 
 With mBoundingRect
@@ -769,7 +786,7 @@ With mBoundingRect
                 lineInt.endValue = y1
             End If
         End If
-        lineInt.isvalid = True
+        lineInt.isValid = True
         regionInt = rectGetYInterval(mRegionRect)
         rectSetYInterval mBoundingRect, intIntersection(regionInt, lineInt)
         
@@ -777,7 +794,7 @@ With mBoundingRect
         .right = x1 + mThicknessOffsetX
         .bottom = .bottom - mThicknessOffsetY
         .top = .top + mThicknessOffsetY
-        .isvalid = True
+        .isValid = True
     Else
         If mLeftToRight Then
             If mExtendBefore Then
@@ -802,11 +819,11 @@ With mBoundingRect
                 lineInt.endValue = x1
             End If
         End If
-        lineInt.isvalid = True
+        lineInt.isValid = True
         regionInt = rectGetXInterval(mRegionRect)
         rectSetXInterval mBoundingRect, intIntersection(regionInt, lineInt)
         
-        If Not .isvalid Then
+        If Not .isValid Then
             Exit Sub
         End If
             
@@ -831,7 +848,7 @@ With mBoundingRect
             .right = .right + mThicknessOffsetX
             .left = .left - mThicknessOffsetX
         End If
-        .isvalid = True
+        .isValid = True
     End If
 'Debug.Print "Calc bounds : (" & .left & "," & (mA * .left + mB) & ")-(" & .right & "," & (mA * .right + mB) & ")"
 End With
@@ -844,8 +861,8 @@ End Sub
 Private Sub calcEndArrowConstants()
 Dim hyp As Double
 Dim halfAngle As Double
-Dim X As Double
-Dim Y As Double
+Dim x As Double
+Dim y As Double
 
 If mArrowEndStyle = ArrowNone Then Exit Sub
 If mBlank Then Exit Sub
@@ -858,36 +875,36 @@ mEndArrowX2Offset = -hyp * Sin(Pi / 2 - mLineAngle - halfAngle) * mGaugeX
 mEndArrowY2Offset = -hyp * Cos(Pi / 2 - mLineAngle - halfAngle) * mGaugeY
 
 With mPoint2
-    X = .X
-    Y = .Y
+    x = .XLogical
+    y = .YLogical
 End With
 
 With mEndArrowRect
     Select Case mDirection
     Case NE
-        .bottom = Y + mEndArrowY2Offset - mThicknessOffsetY
-        .left = X + mEndArrowX1Offset - mThicknessOffsetX
-        .top = Y + IIf(mEndArrowY1Offset > 0, mEndArrowY1Offset, 0) + mThicknessOffsetY
-        .right = X + IIf(mEndArrowX2Offset > 0, mEndArrowX2Offset, 0) + mThicknessOffsetX
-        .isvalid = True
+        .bottom = y + mEndArrowY2Offset - mThicknessOffsetY
+        .left = x + mEndArrowX1Offset - mThicknessOffsetX
+        .top = y + IIf(mEndArrowY1Offset > 0, mEndArrowY1Offset, 0) + mThicknessOffsetY
+        .right = x + IIf(mEndArrowX2Offset > 0, mEndArrowX2Offset, 0) + mThicknessOffsetX
+        .isValid = True
     Case NW
-        .bottom = Y + mEndArrowY1Offset - mThicknessOffsetY
-        .left = X + IIf(mEndArrowX1Offset < 0, mEndArrowX1Offset, 0) - mThicknessOffsetX
-        .top = Y + IIf(mEndArrowY2Offset > 0, mEndArrowY2Offset, 0) + mThicknessOffsetY
-        .right = X + mEndArrowX2Offset + mThicknessOffsetX
-        .isvalid = True
+        .bottom = y + mEndArrowY1Offset - mThicknessOffsetY
+        .left = x + IIf(mEndArrowX1Offset < 0, mEndArrowX1Offset, 0) - mThicknessOffsetX
+        .top = y + IIf(mEndArrowY2Offset > 0, mEndArrowY2Offset, 0) + mThicknessOffsetY
+        .right = x + mEndArrowX2Offset + mThicknessOffsetX
+        .isValid = True
     Case SW
-        .bottom = Y + IIf(mEndArrowY1Offset < 0, mEndArrowY1Offset, 0) - mThicknessOffsetY
-        .left = X + IIf(mEndArrowX2Offset < 0, mEndArrowX2Offset, 0) - mThicknessOffsetX
-        .top = Y + mEndArrowY2Offset + mThicknessOffsetY
-        .right = X + mEndArrowX1Offset + mThicknessOffsetX
-        .isvalid = True
+        .bottom = y + IIf(mEndArrowY1Offset < 0, mEndArrowY1Offset, 0) - mThicknessOffsetY
+        .left = x + IIf(mEndArrowX2Offset < 0, mEndArrowX2Offset, 0) - mThicknessOffsetX
+        .top = y + mEndArrowY2Offset + mThicknessOffsetY
+        .right = x + mEndArrowX1Offset + mThicknessOffsetX
+        .isValid = True
     Case SE
-        .bottom = Y + IIf(mEndArrowY2Offset < 0, mEndArrowY2Offset, 0) - mThicknessOffsetY
-        .left = X + mEndArrowX2Offset - mThicknessOffsetX
-        .top = Y + mEndArrowY1Offset + mThicknessOffsetY
-        .right = X + IIf(mEndArrowX1Offset > 0, mEndArrowX1Offset, 0) + mThicknessOffsetX
-        .isvalid = True
+        .bottom = y + IIf(mEndArrowY2Offset < 0, mEndArrowY2Offset, 0) - mThicknessOffsetY
+        .left = x + mEndArrowX2Offset - mThicknessOffsetX
+        .top = y + mEndArrowY1Offset + mThicknessOffsetY
+        .right = x + IIf(mEndArrowX1Offset > 0, mEndArrowX1Offset, 0) + mThicknessOffsetX
+        .isValid = True
     End Select
     'Debug.Assert (.right - .left) < 5 And (.top - .bottom) < 5
 End With
@@ -896,8 +913,8 @@ End Sub
 Private Sub calcStartArrowConstants()
 Dim hyp As Double
 Dim halfAngle As Double
-Dim X As Double
-Dim Y As Double
+Dim x As Double
+Dim y As Double
 
 If mArrowStartStyle = ArrowNone Then Exit Sub
 If mBlank Then Exit Sub
@@ -910,36 +927,36 @@ mStartArrowX2Offset = hyp * Sin(Pi / 2 - mLineAngle - halfAngle) * mGaugeX
 mStartArrowY2Offset = hyp * Cos(Pi / 2 - mLineAngle - halfAngle) * mGaugeY
 
 With mPoint1
-    X = .X
-    Y = .Y
+    x = .XLogical
+    y = .YLogical
 End With
 
 With mStartArrowRect
     Select Case mDirection
     Case NE
-        .bottom = Y + IIf(mStartArrowY1Offset < 0, mStartArrowY1Offset, 0) - mThicknessOffsetY
-        .left = X + IIf(mStartArrowX2Offset < 0, mStartArrowX2Offset, 0) - mThicknessOffsetX
-        .top = Y + mStartArrowY2Offset + mThicknessOffsetY
-        .right = X + mStartArrowX1Offset + mThicknessOffsetY
-        .isvalid = True
+        .bottom = y + IIf(mStartArrowY1Offset < 0, mStartArrowY1Offset, 0) - mThicknessOffsetY
+        .left = x + IIf(mStartArrowX2Offset < 0, mStartArrowX2Offset, 0) - mThicknessOffsetX
+        .top = y + mStartArrowY2Offset + mThicknessOffsetY
+        .right = x + mStartArrowX1Offset + mThicknessOffsetY
+        .isValid = True
     Case NW
-        .bottom = Y + IIf(mEndArrowY2Offset < 0, mEndArrowY2Offset, 0) - mThicknessOffsetY
-        .left = X + mEndArrowX2Offset - mThicknessOffsetX
-        .top = Y + mEndArrowY1Offset + mThicknessOffsetY
-        .right = X + IIf(mEndArrowX1Offset > 0, mEndArrowX1Offset, 0) + mThicknessOffsetX
-        .isvalid = True
+        .bottom = y + IIf(mEndArrowY2Offset < 0, mEndArrowY2Offset, 0) - mThicknessOffsetY
+        .left = x + mEndArrowX2Offset - mThicknessOffsetX
+        .top = y + mEndArrowY1Offset + mThicknessOffsetY
+        .right = x + IIf(mEndArrowX1Offset > 0, mEndArrowX1Offset, 0) + mThicknessOffsetX
+        .isValid = True
     Case SW
-        .bottom = Y + mStartArrowY2Offset - mThicknessOffsetY
-        .left = X + mStartArrowX1Offset - mThicknessOffsetX
-        .top = Y + IIf(mStartArrowY1Offset > 0, mStartArrowY1Offset, 0) + mThicknessOffsetY
-        .right = X + IIf(mStartArrowX2Offset > 0, mStartArrowX2Offset, 0) + mThicknessOffsetX
-        .isvalid = True
+        .bottom = y + mStartArrowY2Offset - mThicknessOffsetY
+        .left = x + mStartArrowX1Offset - mThicknessOffsetX
+        .top = y + IIf(mStartArrowY1Offset > 0, mStartArrowY1Offset, 0) + mThicknessOffsetY
+        .right = x + IIf(mStartArrowX2Offset > 0, mStartArrowX2Offset, 0) + mThicknessOffsetX
+        .isValid = True
     Case SE
-        .bottom = Y + mStartArrowY1Offset - mThicknessOffsetY
-        .left = X + IIf(mStartArrowX1Offset < 0, mStartArrowX1Offset, 0) - mThicknessOffsetX
-        .top = Y + IIf(mStartArrowY2Offset > 0, mStartArrowY2Offset, 0) + mThicknessOffsetY
-        .right = X + mStartArrowX2Offset + mThicknessOffsetX
-        .isvalid = True
+        .bottom = y + mStartArrowY1Offset - mThicknessOffsetY
+        .left = x + IIf(mStartArrowX1Offset < 0, mStartArrowX1Offset, 0) - mThicknessOffsetX
+        .top = y + IIf(mStartArrowY2Offset > 0, mStartArrowY2Offset, 0) + mThicknessOffsetY
+        .right = x + mStartArrowX2Offset + mThicknessOffsetX
+        .isValid = True
         
 '    Case SW
 '        .bottom = y + mStartArrowY2Offset - mThicknessOffsetY
@@ -993,12 +1010,12 @@ End Sub
 Private Sub convertPosition1X()
 If mPoint1 Is Nothing Then Exit Sub
 If mFixedX Then
-    If mPoint1.PositionTypeX = PositionAbsolute Then
-        mPoint1.PositionTypeX = PositionRelative
+    If mPoint1.CoordinateSystemX = CoordsLogical Then
+        mPoint1.CoordinateSystemX = CoordsRelative
     End If
 Else
-    If mPoint1.PositionTypeX <> PositionAbsolute Then
-        mPoint1.PositionTypeX = PositionAbsolute
+    If mPoint1.CoordinateSystemX <> CoordsLogical Then
+        mPoint1.CoordinateSystemX = CoordsLogical
     End If
 End If
 End Sub
@@ -1006,12 +1023,12 @@ End Sub
 Private Sub convertPosition1Y()
 If mPoint1 Is Nothing Then Exit Sub
 If mFixedY Then
-    If mPoint1.PositionTypeY = PositionAbsolute Then
-        mPoint1.PositionTypeY = PositionRelative
+    If mPoint1.CoordinateSystemY = CoordsLogical Then
+        mPoint1.CoordinateSystemY = CoordsRelative
     End If
 Else
-    If mPoint1.PositionTypeY <> PositionAbsolute Then
-        mPoint1.PositionTypeY = PositionAbsolute
+    If mPoint1.CoordinateSystemY <> CoordsLogical Then
+        mPoint1.CoordinateSystemY = CoordsLogical
     End If
 End If
 End Sub
@@ -1019,12 +1036,12 @@ End Sub
 Private Sub convertPosition2X()
 If mPoint2 Is Nothing Then Exit Sub
 If mFixedX Then
-    If mPoint2.PositionTypeX = PositionAbsolute Then
-        mPoint2.PositionTypeX = PositionRelative
+    If mPoint2.CoordinateSystemX = CoordsLogical Then
+        mPoint2.CoordinateSystemX = CoordsRelative
     End If
 Else
-    If mPoint2.PositionTypeX <> PositionAbsolute Then
-        mPoint2.PositionTypeX = PositionAbsolute
+    If mPoint2.CoordinateSystemX <> CoordsLogical Then
+        mPoint2.CoordinateSystemX = CoordsLogical
     End If
 End If
 End Sub
@@ -1032,12 +1049,12 @@ End Sub
 Private Sub convertPosition2Y()
 If mPoint2 Is Nothing Then Exit Sub
 If mFixedY Then
-    If mPoint2.PositionTypeY = PositionAbsolute Then
-        mPoint2.PositionTypeY = PositionRelative
+    If mPoint2.CoordinateSystemY = CoordsLogical Then
+        mPoint2.CoordinateSystemY = CoordsRelative
     End If
 Else
-    If mPoint2.PositionTypeY <> PositionAbsolute Then
-        mPoint2.PositionTypeY = PositionAbsolute
+    If mPoint2.CoordinateSystemY <> CoordsLogical Then
+        mPoint2.CoordinateSystemY = CoordsLogical
     End If
 End If
 End Sub
@@ -1051,7 +1068,7 @@ Dim x1 As Double
 Dim y1 As Double
 Dim x2 As Double
 Dim y2 As Double
-Dim plg(3) As POINTAPI
+Dim vertices(3) As Point
 Dim slopeThicknessY As Double
 Dim xBottom As Double
 Dim xTop As Double
@@ -1061,21 +1078,19 @@ If Not mVisible Then
     Exit Sub
 End If
 
-With mSurface
-    .DrawMode = vbCopyPen
-    .DrawStyle = mStyle
-    .DrawWidth = mThickness
-    .ForeColor = IIf(undraw, .backColor, mColour)
-End With
+mCanvas.setPenAttributes IIf(undraw, mCanvas.backColor, mColour), _
+                        mThickness, _
+                        mStyle, _
+                        DrawModes.DrawModeCopyPen
     
 With mPoint1
-    x1 = .X
-    y1 = .Y
+    x1 = .x
+    y1 = .y
 End With
 
 With mPoint2
-    x2 = .X
-    y2 = .Y
+    x2 = .XLogical
+    y2 = .YLogical
 End With
 
 If mVertical <> VerticalNot Then
@@ -1120,8 +1135,8 @@ If mVertical <> VerticalNot Then
             End If
         End If
     End With
-    mSurface.Line (x1, bottom)-(x1, top)
-    mSurface.PSet (x1, top)
+    mCanvas.drawLine x1, bottom, x1, top
+    mCanvas.drawPoint x1, top
 Else
     With area
         
@@ -1179,7 +1194,7 @@ Else
 '        End If
     End With
     
-    With mSurface
+    With mCanvas
         Debug.Assert left <= right
         If left <> right Then
             If mThickness = 1 Then
@@ -1210,70 +1225,90 @@ Else
                         left = xTop
                     End If
                 End If
-                mSurface.Line (left, mA * left + mB)-(right, mA * right + mB)
+                .drawLine left, mA * left + mB, right, mA * right + mB
             Else
+                .setPenAttributes mColour, _
+                                mThickness, _
+                                LineStyles.LineSolid, _
+                                DrawModes.DrawModeCopyPen
                 If left = x1 Then
-                    mSurface.PSet (left, y1)
+                    .drawPoint left, y1
                 ElseIf left = x2 Then
-                    mSurface.PSet (left, y2)
+                    .drawPoint left, y2
                 End If
-                
-                'mSurface.Line (left, mA * left + mB)-(right, mA * right + mB)
                 
                 slopeThicknessY = Abs(mThickness / mLineAngleCos)
                                 
                 If left = x1 Or left = x2 Then
-                    plg(0).X = .ScaleX(left - .ScaleLeft, vbUser, vbPixels) - mThickness * mLineAngleSin / 2
-                    plg(0).Y = .ScaleY(mA * left + mB - .ScaleTop, vbUser, vbPixels) - mThickness * mLineAngleCos / 2
+                    Set vertices(0) = .newPoint(left - .convertPixelsToLogicalX(mThickness) * mLineAngleSin / 2, _
+                                            mA * left + mB - .convertPixelsToLogicalY(mThickness) * mLineAngleCos / 2, _
+                                            CoordsLogical, _
+                                            CoordsLogical)
                 Else
-                    plg(0).X = .ScaleX(left - .ScaleLeft, vbUser, vbPixels)
-                    plg(0).Y = .ScaleY(mA * left + mB - .ScaleTop, vbUser, vbPixels) - (slopeThicknessY - 2) / 2
+                    Set vertices(0) = .newPoint(left, _
+                                            mA * left + mB - .convertPixelsToLogicalY(slopeThicknessY - 2) / 2, _
+                                            CoordsLogical, _
+                                            CoordsLogical)
                 End If
                 
                 If left = x1 Or left = x2 Then
-                    plg(1).X = .ScaleX(left - .ScaleLeft, vbUser, vbPixels) + mThickness * mLineAngleSin / 2
-                    plg(1).Y = .ScaleY(mA * left + mB - .ScaleTop, vbUser, vbPixels) + mThickness * mLineAngleCos / 2
+                    Set vertices(1) = .newPoint(left + .convertPixelsToLogicalX(mThickness) * mLineAngleSin / 2, _
+                                            mA * left + mB + .convertPixelsToLogicalY(mThickness) * mLineAngleCos / 2, _
+                                            CoordsLogical, _
+                                            CoordsLogical)
                 Else
-                    plg(1).X = .ScaleX(left - .ScaleLeft, vbUser, vbPixels)
-                    plg(1).Y = .ScaleY(mA * left + mB - .ScaleTop, vbUser, vbPixels) + (slopeThicknessY - 2) / 2
+                    Set vertices(1) = .newPoint(left, _
+                                            mA * left + mB + .convertPixelsToLogicalY(slopeThicknessY - 2) / 2, _
+                                            CoordsLogical, _
+                                            CoordsLogical)
                 End If
                 
                 If right = x1 Or right = x2 Then
-                    plg(2).X = .ScaleX(right - .ScaleLeft, vbUser, vbPixels) + mThickness * mLineAngleSin / 2
-                    plg(2).Y = .ScaleY(mA * right + mB - .ScaleTop, vbUser, vbPixels) + mThickness * mLineAngleCos / 2
+                    Set vertices(2) = .newPoint(right + .convertPixelsToLogicalX(mThickness) * mLineAngleSin / 2, _
+                                            mA * right + mB + .convertPixelsToLogicalY(mThickness) * mLineAngleCos / 2, _
+                                            CoordsLogical, _
+                                            CoordsLogical)
                 Else
-                    plg(2).X = .ScaleX(right - .ScaleLeft, vbUser, vbPixels)
-                    plg(2).Y = .ScaleY(mA * right + mB - .ScaleTop, vbUser, vbPixels) + (slopeThicknessY - 2) / 2
-                    Debug.Assert IIf(mLeftToRight, plg(2).X <= .ScaleX(x2 - .ScaleLeft, vbUser, vbPixels), True)
+                    Set vertices(2) = .newPoint(right, _
+                                            mA * right + mB + .convertPixelsToLogicalY(slopeThicknessY - 2) / 2, _
+                                            CoordsLogical, _
+                                            CoordsLogical)
                 End If
                 
                 If right = x1 Or right = x2 Then
-                    plg(3).X = .ScaleX(right - .ScaleLeft, vbUser, vbPixels) - mThickness * mLineAngleSin / 2
-                    plg(3).Y = .ScaleY(mA * right + mB - .ScaleTop, vbUser, vbPixels) - mThickness * mLineAngleCos / 2
+                    Set vertices(3) = .newPoint(right - .convertPixelsToLogicalX(mThickness) * mLineAngleSin / 2, _
+                                            mA * right + mB - .convertPixelsToLogicalY(mThickness) * mLineAngleCos / 2, _
+                                            CoordsLogical, _
+                                            CoordsLogical)
                 Else
-                    plg(3).X = .ScaleX(right - .ScaleLeft, vbUser, vbPixels)
-                    plg(3).Y = .ScaleY(mA * right + mB - .ScaleTop, vbUser, vbPixels) - (slopeThicknessY - 2) / 2
-                    Debug.Assert IIf(mLeftToRight, plg(3).X <= .ScaleX(x2 - .ScaleLeft, vbUser, vbPixels), True)
+                    Set vertices(3) = .newPoint(right, _
+                                            mA * right + mB - .convertPixelsToLogicalY(slopeThicknessY - 2) / 2, _
+                                            CoordsLogical, _
+                                            CoordsLogical)
                 End If
-                .DrawStyle = LineStyles.LineInsideSolid
-                .DrawWidth = 1
-                .FillStyle = FillStyles.FillSolid
-                .FillColor = IIf(undraw, .backColor, mColour)
+                .setPenAttributes mColour, _
+                                1, _
+                                LineStyles.LineSolid, _
+                                DrawModes.DrawModeCopyPen
+                .setBrushAttributes mColour, _
+                                FillStyles.FillSolid
                 
-                Polygon .hdc, plg(0), 4
+                .drawPolygon vertices
                 
-                .DrawWidth = mThickness
+                .setPenAttributes mColour, _
+                                mThickness, _
+                                LineStyles.LineSolid, _
+                                DrawModes.DrawModeCopyPen
                 If right = x1 Then
-                    mSurface.PSet (right, y1)
+                    .drawPoint right, y1
                 ElseIf right = x2 Then
-                    mSurface.PSet (right, y2)
+                    .drawPoint right, y2
                 End If
                 
                 Debug.Assert IIf(mLeftToRight, right <= x2, True)
                 Debug.Assert IIf(mLeftToRight, True, right <= x1)
             End If
         End If
-'            Debug.Print "Line draw  : (" & .left & "," & (mA * .left + mB) & ")-(" & right & "," & (mA * right + mB) & ")"
     End With
 End If
 If mArrowEndStyle <> ArrowNone Then
@@ -1286,45 +1321,40 @@ End If
 End Sub
 
 Private Sub drawArrowEnd(ByRef area As TRectangle, ByVal undraw As Boolean)
-Dim X As Double
-Dim Y As Double
-Dim poly(2) As POINTAPI
+Dim x As Double
+Dim y As Double
+Dim vertices(2) As Point
 
 With mPoint2
-    X = .X
-    Y = .Y
+    x = .XLogical
+    y = .YLogical
 End With
 
 If Not rectOverlaps(mEndArrowRect, area) Then Exit Sub
 
-' Now draw the whole arrow
-
-With mSurface
-    .DrawMode = vbCopyPen
-    .DrawStyle = LineStyles.LineSolid
-    .DrawWidth = mThickness
-    .ForeColor = IIf(undraw, .backColor, mArrowEndColor)
-End With
+mCanvas.setPenAttributes IIf(undraw, mCanvas.backColor, mColour), _
+                        mThickness, _
+                        mStyle, _
+                        DrawModes.DrawModeCopyPen
 
 Select Case mArrowEndStyle
 Case ArrowNone
 
 Case ArrowSingleOpen
-    mSurface.Line (X, Y)-(X + mEndArrowX1Offset, Y + mEndArrowY1Offset)
-    mSurface.Line (X, Y)-(X + mEndArrowX2Offset, Y + mEndArrowY2Offset)
+    mCanvas.drawLine x, y, x + mEndArrowX1Offset, y + mEndArrowY1Offset
+    mCanvas.drawLine x, y, x + mEndArrowX2Offset, y + mEndArrowY2Offset
 Case ArrowDoubleOpen
 
 Case ArrowClosed
-    With mSurface
-        .FillStyle = mArrowEndFillStyle
-        .FillColor = IIf(undraw, .backColor, mArrowEndFillColor)
-        poly(0).X = .ScaleX(X - .ScaleLeft, vbUser, vbPixels)
-        poly(0).Y = .ScaleY(Y - .ScaleTop, vbUser, vbPixels)
-        poly(1).X = .ScaleX(X + mEndArrowX1Offset - .ScaleLeft, vbUser, vbPixels)
-        poly(1).Y = .ScaleY(Y + mEndArrowY1Offset - .ScaleTop, vbUser, vbPixels)
-        poly(2).X = .ScaleX(X + mEndArrowX2Offset - .ScaleLeft, vbUser, vbPixels)
-        poly(2).Y = .ScaleY(Y + mEndArrowY2Offset - .ScaleTop, vbUser, vbPixels)
-        Polygon .hdc, poly(0), 3
+    With mCanvas
+        .setBrushAttributes IIf(undraw, .backColor, mArrowEndFillColor), mArrowEndFillStyle
+        
+        Set vertices(0) = .newPoint(x, y)
+        Set vertices(1) = .newPoint(x + mEndArrowX1Offset, _
+                                    y + mEndArrowY1Offset)
+        Set vertices(2) = .newPoint(x + mEndArrowX2Offset, _
+                                    y + mEndArrowY2Offset)
+        .drawPolygon vertices
     End With
 Case ArrowSingleBar
 
@@ -1341,45 +1371,40 @@ End Select
 End Sub
 
 Private Sub drawArrowStart(ByRef area As TRectangle, ByVal undraw As Boolean)
-Dim X As Double
-Dim Y As Double
-Dim poly(2) As POINTAPI
+Dim x As Double
+Dim y As Double
+Dim vertices(2) As Point
 
 With mPoint1
-    X = .X
-    Y = .Y
+    x = .XLogical
+    y = .YLogical
 End With
 
 If Not rectOverlaps(mStartArrowRect, area) Then Exit Sub
 
-' Now draw the whole arrow
-
-With mSurface
-    .DrawMode = vbCopyPen
-    .DrawStyle = LineStyles.LineSolid
-    .DrawWidth = mThickness
-    .ForeColor = IIf(undraw, .backColor, mArrowStartColor)
-End With
+mCanvas.setPenAttributes IIf(undraw, mCanvas.backColor, mColour), _
+                        mThickness, _
+                        mStyle, _
+                        DrawModes.DrawModeCopyPen
 
 Select Case mArrowStartStyle
 Case ArrowNone
 
 Case ArrowSingleOpen
-    mSurface.Line (X, Y)-(X + mStartArrowX1Offset, Y + mStartArrowY1Offset)
-    mSurface.Line (X, Y)-(X + mStartArrowX2Offset, Y + mStartArrowY2Offset)
+    mCanvas.drawLine x, y, x + mStartArrowX1Offset, y + mStartArrowY1Offset
+    mCanvas.drawLine x, y, x + mStartArrowX2Offset, y + mStartArrowY2Offset
 Case ArrowDoubleOpen
 
 Case ArrowClosed
-    With mSurface
-        .FillStyle = mArrowStartFillStyle
-        .FillColor = IIf(undraw, .backColor, mArrowStartFillColor)
-        poly(0).X = .ScaleX(X - .ScaleLeft, vbUser, vbPixels)
-        poly(0).Y = .ScaleY(Y - .ScaleTop, vbUser, vbPixels)
-        poly(1).X = .ScaleX(X + mStartArrowX1Offset - .ScaleLeft, vbUser, vbPixels)
-        poly(1).Y = .ScaleY(Y + mStartArrowY1Offset - .ScaleTop, vbUser, vbPixels)
-        poly(2).X = .ScaleX(X + mStartArrowX2Offset - .ScaleLeft, vbUser, vbPixels)
-        poly(2).Y = .ScaleY(Y + mStartArrowY2Offset - .ScaleTop, vbUser, vbPixels)
-        Polygon .hdc, poly(0), 3
+    With mCanvas
+        .setBrushAttributes IIf(undraw, .backColor, mArrowEndFillColor), mArrowEndFillStyle
+        
+        Set vertices(0) = .newPoint(x, y)
+        Set vertices(1) = .newPoint(x + mStartArrowX1Offset, _
+                                    y + mStartArrowY1Offset)
+        Set vertices(2) = .newPoint(x + mStartArrowX2Offset, _
+                                    y + mStartArrowY2Offset)
+        .drawPolygon vertices
     End With
 Case ArrowSingleBar
 
@@ -1402,13 +1427,13 @@ Dim x2 As Double
 Dim y2 As Double
 
 With mPoint1
-    x1 = .XAbsolute
-    y1 = .YAbsolute
+    x1 = .XLogical
+    y1 = .YLogical
 End With
 
 With mPoint2
-    x2 = .XAbsolute
-    y2 = .YAbsolute
+    x2 = .XLogical
+    y2 = .YLogical
 End With
 
 If x1 = x2 Then
@@ -1462,11 +1487,11 @@ calcEndArrowConstants
 calcStartArrowConstants
 calcCurrentBoundingRect
 mEventProxy.objectChanged mHandle, mBoundingRect
-If mIncludeInAutoscale And mBoundingRect.isvalid Then
-    If mBoundingRect.top >= mSurface.ScaleTop Or mBoundingRect.bottom <= (mSurface.ScaleTop + mSurface.ScaleHeight) Then
-        mEventProxy.boundsExceeded
-    End If
-End If
+'If mIncludeInAutoscale And mBoundingRect.isvalid Then
+'    If mBoundingRect.top >= mSurface.ScaleTop Or mBoundingRect.bottom <= (mSurface.ScaleTop + mSurface.ScaleHeight) Then
+'        mEventProxy.boundsExceeded
+'    End If
+'End If
 End Sub
 
 

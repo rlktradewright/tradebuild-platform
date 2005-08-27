@@ -28,7 +28,8 @@ Option Explicit
 Private Const DefaultHistBarWidth As Single = 0.5
 Private mDataPoints As Collection
 
-Private mSurface As PictureBox
+'Private mSurface As PictureBox
+Private mCanvas As canvas
 Private mLayer As Long
 
 Private mEventProxy As ChartRegionEventProxy
@@ -75,6 +76,10 @@ End Sub
 '================================================================================
 ' Properties
 '================================================================================
+
+Friend Property Let canvas(ByVal value As canvas)
+Set mCanvas = value
+End Property
 
 Public Property Get count() As Long
 count = mDataPoints.count
@@ -172,17 +177,13 @@ Public Property Let name(ByVal value As String)
 mName = value
 End Property
 
-Friend Property Let surface(ByVal value As PictureBox)
-Set mSurface = value
-End Property
-
 '================================================================================
 ' Methods
 '================================================================================
 
 Public Function addDataPoint(ByVal periodNumber As Long) As DataPoint
 Set addDataPoint = New DataPoint
-addDataPoint.surface = mSurface
+addDataPoint.canvas = mCanvas
 addDataPoint.periodNumber = periodNumber
 addDataPoint.histBarWidth = mHistBarWidth
 addDataPoint.displayMode = mDisplayMode
@@ -198,24 +199,20 @@ Set mPrevDataPoint = addDataPoint
 mEventProxy.addGraphicObject addDataPoint
 End Function
 
+Friend Sub finish()
+Set mCanvas = Nothing
+End Sub
+
 Public Function Item(ByVal periodNumber As Long) As DataPoint
 Set Item = mDataPoints(CStr(periodNumber))
 End Function
 
-'Friend Sub periodsInView(ByVal minValue As Long, ByVal maxValue As Long)
-'Dim aDataPoint As DataPoint
-'mMinPeriodInView = minValue
-'mMaxPeriodInView = maxValue
-'For Each aDataPoint In mDataPoints
-'    If aDataPoint.periodNumber >= mMinPeriodInView And _
-'        aDataPoint.periodNumber <= mMaxPeriodInView _
-'    Then
-'        aDataPoint.inView = True
-'    Else
-'        aDataPoint.inView = False
-'    End If
-'Next
-'End Sub
+Friend Sub removeAll()
+Dim i As Long
+For i = mDataPoints.count To 1 Step -1
+    mDataPoints.Remove (i)
+Next
+End Sub
 
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
