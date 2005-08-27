@@ -18,7 +18,6 @@ library ChartSkilTypes
     interface IRectangle;
     interface IInterval;
 
-
     // Types    
 
     typedef [uuid(461b3b8a-3cfa-49c8-82a8-eff8c23a906e),
@@ -149,10 +148,17 @@ library ChartSkilTypes
 			[out, retval] SAFEARRAY(struct TRectangle)* );
 
         [helpstring("Tells the object to draw the part(s) of itself contained in the specified rectangles")]
-        HRESULT draw([in, out] SAFEARRAY(struct TRectangle)* areas);
+        HRESULT draw(
+		[in, out] SAFEARRAY(struct TRectangle)* areas,
+		[in] long hDC);
+
+        [helpstring("Tells the object that it is no longer in use")]
+	HRESULT finish();
 
         [helpstring("Tels the object to undraw the part of itself contained in the specified rectangle")]
-        HRESULT undraw([in, out] struct TRectangle* area);
+        HRESULT undraw(
+		[in, out] struct TRectangle* area,
+		[in] long hDC);
 
     };
 
@@ -246,4 +252,6 @@ library ChartSkilTypes
 			[out, retval] VARIANT_BOOL* );
 
     };
+
+
 }
