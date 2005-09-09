@@ -34,6 +34,13 @@ Option Explicit
 ' Events
 '================================================================================
 
+Event CloseChanged()
+Event HighChanged()
+Event LowChanged()
+Event OpenChanged()
+Event TickVolumeChanged()
+Event VolumeChanged()
+
 '================================================================================
 ' Constants
 '================================================================================
@@ -88,19 +95,19 @@ End Sub
 ' Properties
 '================================================================================
 
-Public Property Get BarLength() As Long
-BarLength = mBarLength
+Public Property Get barLength() As Long
+barLength = mBarLength
 End Property
 
-Public Property Let BarLength(ByVal value As Long)
+Public Property Let barLength(ByVal value As Long)
 mBarLength = value
 End Property
 
-Public Property Get BarType() As TradeBuild.BarTypes
-BarType = mBarType
+Public Property Get barType() As TradeBuild.BarTypes
+barType = mBarType
 End Property
 
-Public Property Let BarType(ByVal value As TradeBuild.BarTypes)
+Public Property Let barType(ByVal value As TradeBuild.BarTypes)
 mBarType = value
 End Property
 
@@ -112,21 +119,21 @@ Public Property Let Blank(ByVal newValue As Boolean)
 mBlank = newValue
 End Property
 
-Public Property Get ClosePrice() As Double
-ClosePrice = mClose
+Public Property Get closeValue() As Double
+closeValue = mClose
 End Property
 
-Public Property Let ClosePrice(newValue As Double)
+Public Property Let closeValue(newValue As Double)
 mBlank = False
 mDirty = True
 mClose = newValue
 End Property
 
-Public Property Get DateTime() As Date
-DateTime = mDateTime
+Public Property Get datetime() As Date
+datetime = mDateTime
 End Property
 
-Public Property Let DateTime(ByVal newValue As Date)
+Public Property Let datetime(ByVal newValue As Date)
 mDateTime = newValue
 End Property
 
@@ -138,11 +145,11 @@ Friend Property Let Dirty(ByVal newValue As Boolean)
 mDirty = newValue
 End Property
 
-Public Property Get HighPrice() As Double
-HighPrice = mHigh
+Public Property Get highValue() As Double
+highValue = mHigh
 End Property
 
-Public Property Let HighPrice(newValue As Double)
+Public Property Let highValue(newValue As Double)
 mBlank = False
 mDirty = True
 mHigh = newValue
@@ -156,51 +163,51 @@ Public Property Get IsDownBar() As Boolean
 IsDownBar = (mClose <= mOpen)
 End Property
 
-Public Property Get LowPrice() As Double
-LowPrice = mLow
+Public Property Get lowValue() As Double
+lowValue = mLow
 End Property
 
-Public Property Let LowPrice(newValue As Double)
+Public Property Let lowValue(newValue As Double)
 mBlank = False
 mDirty = True
 mLow = newValue
 End Property
 
-Public Property Get OpenInterest() As Long
-OpenInterest = mOpenInterest
+Public Property Get openInterest() As Long
+openInterest = mOpenInterest
 End Property
 
-Public Property Let OpenInterest(newValue As Long)
+Public Property Let openInterest(newValue As Long)
 mBlank = False
 mDirty = True
 mOpenInterest = newValue
 End Property
 
-Public Property Get OpenPrice() As Double
-OpenPrice = mOpen
+Public Property Get openValue() As Double
+openValue = mOpen
 End Property
 
-Public Property Let OpenPrice(newValue As Double)
+Public Property Let openValue(newValue As Double)
 mBlank = False
 mDirty = True
 mOpen = newValue
 End Property
 
-Public Property Get TickVolume() As Long
-TickVolume = mTickVolume
+Public Property Get tickVolume() As Long
+tickVolume = mTickVolume
 End Property
 
-Public Property Let TickVolume(newValue As Long)
+Public Property Let tickVolume(newValue As Long)
 mBlank = False
 mDirty = True
 mTickVolume = newValue
 End Property
 
-Public Property Get Volume() As Long
-Volume = mVolume
+Public Property Get volume() As Long
+volume = mVolume
 End Property
 
-Public Property Let Volume(newValue As Long)
+Public Property Let volume(newValue As Long)
 If newValue = 0 Then Exit Property
 ' NB: don't set mBlank to false, because a bar with only volume
 ' should be considered blank
@@ -212,17 +219,37 @@ End Property
 ' Methods
 '================================================================================
 
-Public Sub Tick(ByVal price As Double)
+Public Sub Tick(ByVal value As Double)
+Dim OpenChanged As Boolean
+Dim HighChanged As Boolean
+Dim LowChanged As Boolean
+
 mBlank = False
-If mOpen = 0 Then mOpen = price
-If price > mHigh Then mHigh = price
-If price < mLow Then mLow = price
-mClose = price
+If mOpen = 0 Then
+    mOpen = value
+    OpenChanged = True
+End If
+If value > mHigh Then
+    mHigh = value
+    HighChanged = True
+End If
+If value < mLow Then
+    mLow = value
+    LowChanged = True
+End If
+mClose = value
 mTickVolume = mTickVolume + 1
+    
+If OpenChanged Then RaiseEvent OpenChanged
+If HighChanged Then RaiseEvent HighChanged
+If LowChanged Then RaiseEvent LowChanged
+RaiseEvent CloseChanged
+RaiseEvent TickVolumeChanged
 End Sub
 
-Public Sub TickSize(ByVal Size As Long)
-Volume = Volume + Size
+Public Sub TickSize(ByVal size As Long)
+volume = volume + size
+RaiseEvent VolumeChanged
 End Sub
 
 '================================================================================
