@@ -21,8 +21,46 @@ Option Explicit
 ' Types
 '================================================================================
 
+Public Type CurrentBarEvent
+    Source          As Object
+    currentBar      As TradeBuild.Bar
+End Type
+
+Public Type GenericEvent
+    Source          As Object
+End Type
+
 Public Type GUID
     data(4) As Long
+End Type
+
+Public Type PriceChangeEvent
+    Source          As Object
+    change          As Double
+    ChangePercent   As Double
+End Type
+
+Public Type ProcessedMarketDepthEvent
+    Source          As Object
+    side            As DOMSides
+    price           As Double
+    size            As Long
+End Type
+
+Public Type QuoteEvent
+    Source          As Object
+    price           As Double
+    size            As Long
+End Type
+
+Public Type RawMarketDepthEvent
+    Source          As Object
+    position        As Long
+    marketMaker     As String
+    operation       As DOMOperations
+    side            As DOMSides
+    price           As Double
+    size            As Long
 End Type
 
 Public Type SortEntry
@@ -40,30 +78,6 @@ Public Type Tick
     MDMarketMaker   As String
     MDOperation     As Long
     MDSide          As Long
-End Type
-
-Public Type TickerListenData
-    TickerKey As String
-    price As Double
-    Size As Long
-End Type
-
-Public Type TickerListenMDData
-    TickerKey As String
-    side As DOMSides
-    price As Double
-    Size As Long
-    marketDataReRequested As Boolean
-End Type
-
-Public Type TickerListenRawMDData
-    TickerKey As String
-    position As Long
-    marketMaker As String
-    operation As DOMOperations
-    side As DOMSides
-    price As Double
-    Size As Long
 End Type
 
 Public Type TickfileFormatSpecifier
@@ -86,18 +100,18 @@ End Type
 Public Type TWSSocketMsgTickPrice
     msgType         As TWSSocketInMsgTypes
     Version         As Long
-    tickerid        As Long
+    TickerID        As Long
     TickType        As TWSSocketTickTypes
     price           As Double
-    Size            As Long
+    size            As Long
 End Type
 
 Public Type TWSSocketMsgTickSize
     msgType         As TWSSocketInMsgTypes
     Version         As Long
-    tickerid        As Long
+    TickerID        As Long
     TickType        As TWSSocketTickTypes
-    Size            As Long
+    size            As Long
 End Type
 
 Public Type TWSSocketMsgOrderStatus
@@ -244,24 +258,24 @@ End Type
 Public Type TWSSocketMsgMarketDepth
     msgType         As TWSSocketInMsgTypes
     Version         As Long
-    tickerid        As Long
+    TickerID        As Long
     position        As Long
     operation       As Long
     side            As Long
     price           As Double
-    Size            As Long
+    size            As Long
 End Type
 
 Public Type TWSSocketMsgMarketDepthL2
     msgType         As TWSSocketInMsgTypes
     Version         As Long
-    tickerid        As Long
+    TickerID        As Long
     position        As Long
     marketMaker     As String
     operation       As Long
     side            As Long
     price           As Double
-    Size            As Long
+    size            As Long
 End Type
 
 Public Type TWSSocketMsgNewsBulletins
@@ -375,6 +389,7 @@ Public Enum DOMOperations
     DOMInsert
     DOMUpdate
     DOMDelete
+    DOMResetDisplay
 End Enum
 
 Public Enum DOMSides
@@ -431,7 +446,6 @@ Public Enum ErrorCodes
     ServiceProviderNameInvalid
     InvalidServiceProviderHandle
     UnknownOrderTypeFromTWS
-    InvalidArgument
 
     ' generic error codes
     ArithmeticException = vbObjectError + 1024  ' an exceptional arithmetic condition has occurred
@@ -466,6 +480,13 @@ Public Enum LegOpenClose
     LegOpenPos
     LegClosePos
     LegUnknownPos
+End Enum
+
+Public Enum MarketDepthTypes
+    MarketDepthAny
+    MarketDepthProcessed
+    MarketDepthRaw
+    MarketDepthRawL2
 End Enum
 
 Public Enum OptionRights
@@ -519,6 +540,18 @@ Public Enum OrderTypes
     OrderTypeQuote
     MaxOrderType = OrderTypeQuote
 End Enum
+
+'Public Enum QuoteTypes
+'    QuoteTypeAsk = 1
+'    QuoteTypeBid
+'    QuoteTypePrevClose
+'    QuoteTypeHigh
+'    QuoteTypeLow
+'    QuoteTypeTrade
+'    QuoteTypeVolume
+'    QuoteTypeChange
+'    QuoteTypeChangePercent
+'End Enum
 
 Public Enum ReplayContinueModes
     ReplayContinue
@@ -586,8 +619,8 @@ Public Enum TickTypes
     bid = &H1&
     ask = &H2&
     Last = &H4&
-    High = &H8&
-    Low = &H10&
+    high = &H8&
+    low = &H10&
     PrevClose = &H20&
     volume = &H40&
     openInterest = &H80&
@@ -615,20 +648,9 @@ End Enum
 
 Public Enum TradeBuildListenValueTypes
 
-    ValueTypeTradeBuildAsk = 100
-    ValueTypeTradeBuildAskSize
-    ValueTypeTradeBuildBid
-    ValueTypeTradeBuildBidSize
-    ValueTypeTradeBuildClose
-    ValueTypeTradeBuildHigh
-    ValueTypeTradeBuildLow
-    ValueTypeTradeBuildTrade
-    ValueTypeTradeBuildVolume
-    ValueTypeTradeBuildMarketdepth
-    ValueTypeTradeBuildRawMarketdepth
-    ValueTypeTradeBuildRawMarketdepthL2
-    ValueTypeTradeBuildChange
-    ValueTypeTradeBuildChangePercent
+    ValueTypeTickerQuote = 100
+    ValueTypeTickerMarketDepth
+    ValueTypeBarEvent
 
     
     

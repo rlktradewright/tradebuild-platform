@@ -34,10 +34,6 @@ Option Explicit
 ' Events
 '================================================================================
 
-Event AddListener(ByVal newListener As IListener, _
-                ByRef valueType As Long, _
-                ByRef listenerKey As String)
-
 Event Application( _
                 ByVal data As Variant)
 
@@ -261,11 +257,6 @@ End Property
 '================================================================================
 ' Methods
 '================================================================================
-
-Friend Function AddListener(ByVal newListener As IListener, _
-                        ByVal valueType As Long) As String
-RaiseEvent AddListener(newListener, valueType, AddListener)
-End Function
 
 Friend Sub FireApplicationEvent(ByRef data As Variant)
 RaiseEvent Application(data)

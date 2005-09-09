@@ -12,6 +12,7 @@ Public Const InitialMaxTickers As Long = 100&
 Public Const MinDouble As Double = 4.94065645841247E-324
 Public Const MaxDouble As Double = 1.79769313486231E+308
 
+Public Const OneSecond As Double = 1.15740740740741E-05
 
 '================================================================================
 ' Enums
@@ -34,7 +35,7 @@ End Type
 
 Public gServiceProviders As ServiceProviders
 Public gTradeBuildAPI As TradeBuildAPI
-Public gTickers As Tickers
+Public gTickers As tickers
 Public gListeners As listeners
 Public gOrderSimulator As AdvancedOrderSimulator
 
@@ -324,13 +325,13 @@ Next
 MsgBox s
 End Sub
 
-Public Function gTickfileSpecifierToString(tickfileSpec As TradeBuild.TickfileSpecifier) As String
-If tickfileSpec.filename <> "" Then
-    gTickfileSpecifierToString = tickfileSpec.filename
+Public Function gTickfileSpecifierToString(TickfileSpec As TradeBuild.TickfileSpecifier) As String
+If TickfileSpec.filename <> "" Then
+    gTickfileSpecifierToString = TickfileSpec.filename
 Else
     gTickfileSpecifierToString = "Contract: " & _
-                                Replace(tickfileSpec.ContractSpecifier.ToString, vbCrLf, "; ") & _
-                            ": From: " & FormatDateTime(tickfileSpec.From, vbGeneralDate) & _
-                            " To: " & FormatDateTime(tickfileSpec.To, vbGeneralDate)
+                                Replace(TickfileSpec.contractSpecifier.ToString, vbCrLf, "; ") & _
+                            ": From: " & FormatDateTime(TickfileSpec.From, vbGeneralDate) & _
+                            " To: " & FormatDateTime(TickfileSpec.To, vbGeneralDate)
 End If
 End Function

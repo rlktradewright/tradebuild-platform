@@ -196,11 +196,6 @@ End Property
 ' Methods
 '================================================================================
 
-Public Function AddListener(ByVal newListener As IListener, _
-                        ByVal valueType As Long) As String
-AddListener = mEventProxy.AddListener(newListener, valueType)
-End Function
-
 Public Sub FireApplicationEvent(ByRef data As Variant)
 mEventProxy.FireApplicationEvent data
 End Sub

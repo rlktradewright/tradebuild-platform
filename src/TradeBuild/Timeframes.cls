@@ -104,6 +104,7 @@ Public Function add( _
                             Optional ByVal IncludeBidAndAsk As Boolean) As Timeframe
 Set add = New Timeframe
 mTimeframes.add add, key
+add.key = key
 add.Ticker = mTicker
 add.timeperiod = timeperiod
 add.timeperiodUnit = timeperiodUnit
