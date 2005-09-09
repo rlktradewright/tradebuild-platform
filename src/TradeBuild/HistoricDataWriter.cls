@@ -125,14 +125,14 @@ If Not mServiceProviderWriterReady Then
 Else
     With spBar
         .barType = theBar.barType
-        .ClosePrice = theBar.ClosePrice
-        .HighPrice = theBar.HighPrice
-        .LowPrice = theBar.LowPrice
-        .openPrice = theBar.openPrice
+        .closePrice = theBar.closeValue
+        .highPrice = theBar.highValue
+        .lowPrice = theBar.lowValue
+        .openPrice = theBar.openValue
         .PeriodMinutes = theBar.barLength
         .tickVolume = theBar.tickVolume
-        .timestamp = theBar.DateTime
-        .Volume = theBar.Volume
+        .Timestamp = theBar.datetime
+        .volume = theBar.volume
     End With
     mWriter.WriteBar spBar
 End If
