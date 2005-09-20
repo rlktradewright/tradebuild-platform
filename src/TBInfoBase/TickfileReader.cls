@@ -68,12 +68,10 @@ Attribute mInstrument.VB_VarHelpID = -1
 Private WithEvents mTickReader As TradingDO.TickDataAccessor
 Attribute mTickReader.VB_VarHelpID = -1
 
-Private mWaitingForTickData As Boolean
-Private mTickRequested As Boolean
-
 Private mTickSize As Double
 
 Private mCurrentTimestamp As Date
+Private mTypeByte As Byte
 
 Private mRecordsRead As Long
 
@@ -123,7 +121,6 @@ End Property
 
 Private Sub ITickfileReader_FireNextTick()
 Dim percentComplete As Single
-Dim typeByte As Byte
 
 If mRecordsRead = 0 Then
 ElseIf mRecordsRead Mod mReplayProgressEventFrequency = 0 Then
@@ -131,14 +128,10 @@ ElseIf mRecordsRead Mod mReplayProgressEventFrequency = 0 Then
                             mRecordsRead, _
                             0#
 End If
-If mWaitingForTickData Then
-    mTickRequested = True
-Else
-    If checkRecord(typeByte) Then
-        processNextTickRecord typeByte
-    Else
-        mServiceConsumer.TickfileReplayComplete
-    End If
+
+processNextTickRecord mTypeByte
+If Not checkRecord(mTypeByte) Then
+    mServiceConsumer.TickfileReplayComplete
 End If
 
 End Sub
@@ -189,8 +182,7 @@ mServiceConsumer.Error StandardSPErrorCodes.TFCantConnectDataSource, _
 End Sub
 
 Private Sub mTickReader_DataFetched()
-Dim typeByte As Byte
-If Not checkRecord(typeByte) Then
+If Not checkRecord(mTypeByte) Then
     If mReadyNotified Then
         mServiceConsumer.TickfileReplayComplete
     Else
@@ -203,11 +195,6 @@ If Not mReadyNotified Then
     mFirstTickFileTime = mCurrentTimestamp
     mReadyNotified = True
     mServiceConsumer.Ready mInputTickfileSpecifier, 0
-End If
-mWaitingForTickData = False
-If mTickRequested Then
-    mTickRequested = False
-    processNextTickRecord typeByte
 End If
 End Sub
 
@@ -223,7 +210,6 @@ Private Sub mTickReader_Ready()
 Dim sessionStart As Date
 Dim sessionEnd As Date
 
-mWaitingForTickData = True
 With mInputTickfileSpecifier
     If .EntireSession Then
         mContract.GetSessionTimes .From, sessionStart, sessionEnd
