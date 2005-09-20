@@ -57,6 +57,8 @@ Private mServiceConsumer As ITickfileInputServiceConsumer
 Private mDataConsumer As IStreamingDataConsumer
 Private mServiceProviderName As String
 
+Private mReadyNotified As Boolean
+
 Private mReplayProgressEventFrequency As Long
 
 Private mContract As IContract
@@ -90,6 +92,11 @@ Private mBasePrice As Double
 '================================================================================
 
 Private Sub Class_Initialize()
+' the following ensure that the first call to checkRecord does not
+' cause an error due to mData being empty
+ReDim mData(0) As Byte
+mDataIndex = 1
+
 mReplayProgressEventFrequency = 10
 End Sub
 
@@ -116,6 +123,8 @@ End Property
 
 Private Sub ITickfileReader_FireNextTick()
 Dim percentComplete As Single
+Dim typeByte As Byte
+
 If mRecordsRead = 0 Then
 ElseIf mRecordsRead Mod mReplayProgressEventFrequency = 0 Then
     mServiceConsumer.ReplayProgress mCurrentTimestamp, _
@@ -125,7 +134,11 @@ End If
 If mWaitingForTickData Then
     mTickRequested = True
 Else
-    processNextTickRecord
+    If checkRecord(typeByte) Then
+        processNextTickRecord typeByte
+    Else
+        mServiceConsumer.TickfileReplayComplete
+    End If
 End If
 
 End Sub
@@ -176,15 +189,25 @@ mServiceConsumer.Error StandardSPErrorCodes.TFCantConnectDataSource, _
 End Sub
 
 Private Sub mTickReader_DataFetched()
-If Not mTickReader.ReadData(mPeriodStartTime, mBasePrice, mData) Then
-    mServiceConsumer.TickfileReplayComplete
+Dim typeByte As Byte
+If Not checkRecord(typeByte) Then
+    If mReadyNotified Then
+        mServiceConsumer.TickfileReplayComplete
+    Else
+        mServiceConsumer.Error StandardSPErrorCodes.TFTickfileEmpty, _
+                                "No data for this specifier"
+    End If
     Exit Sub
 End If
-mCurrentTimestamp = mPeriodStartTime
+If Not mReadyNotified Then
+    mFirstTickFileTime = mCurrentTimestamp
+    mReadyNotified = True
+    mServiceConsumer.Ready mInputTickfileSpecifier, 0
+End If
 mWaitingForTickData = False
 If mTickRequested Then
     mTickRequested = False
-    processNextTickRecord
+    processNextTickRecord typeByte
 End If
 End Sub
 
@@ -213,7 +236,7 @@ With mInputTickfileSpecifier
                                 gTruncateTimeToNextMinute(.To)
     End If
 End With
-mServiceConsumer.Ready mInputTickfileSpecifier, 0
+
 End Sub
 
 '================================================================================
@@ -291,7 +314,7 @@ End Property
 ' Helper Functions
 '================================================================================
 
-Private Sub processNextTickRecord()
+Private Function checkRecord(ByRef typeByte As Byte) As Boolean
 Dim tickType As TickTypes
 Dim price As Double
 Dim size As Long
@@ -300,12 +323,49 @@ Dim operation As DOMOperations
 Dim side As DOMSides
 Dim marketmaker As String
 
-If Not ReadRecord(tickType, price, size, position, operation, side, marketmaker) Then
-    mServiceConsumer.TickfileReplayComplete
-    Exit Sub
+Do
+    If mDataIndex > UBound(mData) Then
+        If mTickReader.ReadData(mPeriodStartTime, mBasePrice, mData) Then
+            mDataIndex = 0
+            mCurrentTimestamp = mPeriodStartTime
+        Else
+            mDataIndex = -1
+            Erase mData
+            checkRecord = False
+            Exit Function
+        End If
+    End If
+    
+    typeByte = ReadByte
+    
+    ReadTimestamp typeByte
+    
+    If mCurrentTimestamp >= mInputTickfileSpecifier.From Then
+        Exit Do
+    End If
+    
+    ReadRecord typeByte, tickType, price, size, position, operation, side, marketmaker
+Loop
+
+If mCurrentTimestamp >= mInputTickfileSpecifier.To Then
+    checkRecord = False
+    Exit Function
 End If
 
 mRecordsRead = mRecordsRead + 1
+checkRecord = True
+End Function
+
+Private Sub processNextTickRecord(ByVal typeByte As Byte)
+Dim tickType As TickTypes
+Dim price As Double
+Dim size As Long
+Dim position As Long
+Dim operation As DOMOperations
+Dim side As DOMSides
+Dim marketmaker As String
+
+ReadRecord typeByte, tickType, price, size, position, operation, side, marketmaker
 
 Select Case tickType
 Case Bid
@@ -374,10 +434,6 @@ Private Sub ReadMarketDepthRecord( _
                             ByVal sizeType As SizeTypes)
 Dim sideOperationPositionByte As Byte
 
-If (typeByte And NoTimestamp) = 0 Then
-    ReadTimestamp
-End If
-
 sideOperationPositionByte = ReadByte
 position = sideOperationPositionByte And PositionBits
 operation = (sideOperationPositionByte And OperationBits) / OperationShifter
@@ -388,9 +444,6 @@ marketmaker = ReadString
 End Sub
 
 Private Sub ReadMarketDepthResetRecord(ByVal typeByte)
-If (typeByte And NoTimestamp) = 0 Then
-    ReadTimestamp
-End If
 End Sub
 
 Private Sub ReadPrice(ByVal typeByte As Byte, _
@@ -404,9 +457,6 @@ End Sub
 
 Private Sub ReadPriceRecord(ByVal typeByte As Byte, _
                             ByRef price As Double)
-If (typeByte And NoTimestamp) = 0 Then
-    ReadTimestamp
-End If
 ReadPrice typeByte, price
 End Sub
 
@@ -414,14 +464,12 @@ Private Sub ReadQuoteRecord(ByVal typeByte As Byte, _
                             ByRef price As Double, _
                             ByRef size As Long, _
                             ByVal sizeType As SizeTypes)
-If (typeByte And NoTimestamp) = 0 Then
-    ReadTimestamp
-End If
 ReadPrice typeByte, price
 ReadSize sizeType, size
 End Sub
 
-Private Function ReadRecord( _
+Private Sub ReadRecord( _
+                            ByVal typeByte As Byte, _
                             ByRef tickType As TickTypes, _
                             ByRef price As Double, _
                             ByRef size As Long, _
@@ -429,57 +477,34 @@ Private Function ReadRecord( _
                             ByRef operation As DOMOperations, _
                             ByRef side As DOMSides, _
                             ByRef marketmaker As String _
-                            ) As Boolean
-Dim typeByte As Byte
+                            )
 Dim sizeType As SizeTypes
 
-Do
-    If mDataIndex > UBound(mData) Then
-        If mTickReader.ReadData(mPeriodStartTime, mBasePrice, mData) Then
-            mDataIndex = 0
-            mCurrentTimestamp = mPeriodStartTime
-        Else
-            mDataIndex = -1
-            Erase mData
-            ReadRecord = False
-            Exit Function
-        End If
-    End If
-    
-    typeByte = ReadByte
-    tickType = typeByte And TickTypeBits
-    sizeType = (typeByte And SizeTypeBits) / SizeTypeShifter
-    
-    Select Case tickType
-    Case Bid
-        ReadQuoteRecord typeByte, price, size, sizeType
-    Case Ask
-        ReadQuoteRecord typeByte, price, size, sizeType
-    Case ClosePrice
-        ReadPriceRecord typeByte, price
-    Case HighPrice
-        ReadPriceRecord typeByte, price
-    Case LowPrice
-        ReadPriceRecord typeByte, price
-    Case marketDepth
-        ReadMarketDepthRecord typeByte, position, marketmaker, operation, side, price, size, sizeType
-    Case MarketDepthReset
-        ReadMarketDepthResetRecord typeByte
-    Case Trade
-        ReadQuoteRecord typeByte, price, size, sizeType
-    Case Volume
-        ReadSizeRecord typeByte, size, sizeType
-    End Select
-    
-Loop Until mCurrentTimestamp >= mInputTickfileSpecifier.From
+tickType = typeByte And TickTypeBits
+sizeType = (typeByte And SizeTypeBits) / SizeTypeShifter
 
-If mCurrentTimestamp >= mInputTickfileSpecifier.To Then
-    ReadRecord = False
-    Exit Function
-End If
+Select Case tickType
+Case Bid
+    ReadQuoteRecord typeByte, price, size, sizeType
+Case Ask
+    ReadQuoteRecord typeByte, price, size, sizeType
+Case ClosePrice
+    ReadPriceRecord typeByte, price
+Case HighPrice
+    ReadPriceRecord typeByte, price
+Case LowPrice
+    ReadPriceRecord typeByte, price
+Case marketDepth
+    ReadMarketDepthRecord typeByte, position, marketmaker, operation, side, price, size, sizeType
+Case MarketDepthReset
+    ReadMarketDepthResetRecord typeByte
+Case Trade
+    ReadQuoteRecord typeByte, price, size, sizeType
+Case Volume
+    ReadSizeRecord typeByte, size, sizeType
+End Select
 
-ReadRecord = True
-End Function
+End Sub
 
 Private Sub ReadSize(ByVal sizeType As SizeTypes, _
                             ByRef size As Long)
@@ -496,9 +521,6 @@ End Sub
 Private Sub ReadSizeRecord(ByVal typeByte As Byte, _
                             ByRef size As Long, _
                             ByVal sizeType As SizeTypes)
-If (typeByte And NoTimestamp) = 0 Then
-    ReadTimestamp
-End If
 ReadSize sizeType, size
 End Sub
 
@@ -517,10 +539,12 @@ Next
 ReadString = ar
 End Function
 
-Private Sub ReadTimestamp()
+Private Sub ReadTimestamp(ByVal typeByte As Byte)
 Dim diff As Long
-diff = ReadInt
-mCurrentTimestamp = mPeriodStartTime + (diff / (86400 * 1000))
+If (typeByte And NoTimestamp) = 0 Then
+    diff = ReadInt
+    mCurrentTimestamp = mPeriodStartTime + (diff / (86400 * 1000))
+End If
 End Sub
 
 
