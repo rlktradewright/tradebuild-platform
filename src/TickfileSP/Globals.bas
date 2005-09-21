@@ -19,6 +19,7 @@ Public Const TICK_HIGH As String = "H"
 Public Const TICK_LOW As String = "L"
 Public Const TICK_CLOSE As String = "C"
 Public Const TICK_VOLUME As String = "V"
+Public Const TICK_OPEN_INTEREST As String = "I"
 Public Const TICK_MARKET_DEPTH As String = "D"
 Public Const TICK_MARKET_DEPTH_RESET As String = "R"
 
@@ -70,6 +71,7 @@ Public Enum TickfileFieldsV3
     tickPrice
     TickSize
     Volume = tickPrice
+    OpenInterest = tickPrice
     MDposition = tickPrice
     MDMarketMaker
     MDOperation
@@ -119,6 +121,7 @@ Public Enum TickTypes
     LastSizeCorrection
     marketDepth
     MarketDepthReset
+    OpenInterest
     Unknown = -1
 End Enum
 

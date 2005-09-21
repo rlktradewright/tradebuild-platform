@@ -56,7 +56,6 @@ Private Type RecordTableEntry
     tickType As TickfileSP.TickTypes
     tickPrice As Double
     TickSize As Long
-    Volume As Long
     MDposition As Long
     MDMarketMaker As String
     MDOperation As Long
@@ -420,7 +419,6 @@ With mRecordTable(index)
     .TickSize = 0
     .tickType = TICK_TYPE_UNKNOWN
     .timestamp = 0
-    .Volume = 0
 End With
 End Sub
 
@@ -768,6 +766,10 @@ With mRecordTable(mCurrentRecordTableEntry)
     Case TickfileSP.TickTypes.MarketDepthReset
         mDataConsumer.ResetMarketDepth .timestamp, False
         processTickData = True
+    Case TickfileSP.TickTypes.OpenInterest
+        mDataConsumer.OpenInterest .timestamp, _
+                            .TickSize
+        processTickData = True
     End Select
     .processed = True
 End With
@@ -923,6 +925,9 @@ With mRecordTable(index)
         Case TICK_VOLUME
             .tickType = TickfileSP.TickTypes.Volume
             .TickSize = dataFields(TickfileFieldsV3.Volume)
+        Case TICK_OPEN_INTEREST
+            .tickType = TickfileSP.TickTypes.OpenInterest
+            .TickSize = dataFields(TickfileFieldsV3.OpenInterest)
         End Select
     Case TickFileVersions.CrescendoV2
         .timestamp = CDate(dataFields(TickfileFieldsV2.timestamp))
