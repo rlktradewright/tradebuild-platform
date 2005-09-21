@@ -232,6 +232,10 @@ WriteByte typeByte
 WriteTimestamp timestamp
 End Sub
 
+Private Sub ITickfileWriter_WriteOpenInterest(ByVal timestamp As Date, ByVal size As Long)
+WriteSizeRecord TickTypes.OpenInterest, timestamp, size
+End Sub
+
 Private Sub ITickfileWriter_writeTrade( _
                             ByVal timestamp As Date, _
                             ByVal price As Double, _

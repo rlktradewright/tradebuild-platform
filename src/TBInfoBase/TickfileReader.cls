@@ -387,6 +387,8 @@ Case Trade
     mDataConsumer.Trade mCurrentTimestamp, price, size
 Case Volume
     mDataConsumer.Volume mCurrentTimestamp, size
+Case OpenInterest
+    mDataConsumer.OpenInterest mCurrentTimestamp, size
 End Select
 
 End Sub

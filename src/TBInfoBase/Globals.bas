@@ -46,6 +46,7 @@ Public Enum TickTypes
     MarketDepthReset
     Trade
     Volume
+    OpenInterest
 End Enum
 
 '================================================================================
