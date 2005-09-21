@@ -28,14 +28,66 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 
-Implements IListener
+
+'================================================================================
+' Description
+'================================================================================
+'
+'
+'================================================================================
+' Amendment history
+'================================================================================
+'
+'
+'
+'
+
+'================================================================================
+' Interfaces
+'================================================================================
+
+Implements ProcessedMarketDepthListener
+
+'================================================================================
+' Events
+'================================================================================
+
+'================================================================================
+' Constants
+'================================================================================
+
+'================================================================================
+' Enums
+'================================================================================
+
+Private Enum DOMColumns
+    PriceLeft
+    bidSize
+    LastSize
+    AskSize
+    PriceRight
+End Enum
+
+Private Enum GridColours
+    BGDefault = &HE1F4FD
+    BGBid = &HD6C6F2
+    BGAsk = &HFAE968
+    BGLast = &HC1F7CA
+End Enum
 
 Public Enum MarketDepthErrorCodes
     InvalidPropertyValue = vbObjectError + 512
 End Enum
 
+'================================================================================
+' Types
+'================================================================================
+
+'================================================================================
+' Member variables
+'================================================================================
+
 Private mTicker As Ticker
-Private mListenerKey As String
 
 Private mContract As Contract
 Private mInitialPrice As Double
@@ -56,25 +108,9 @@ Private mHalted As Boolean
 
 Private mFormatString As String
 
-Private Enum DOMColumns
-    PriceLeft
-    bidSize
-    LastSize
-    AskSize
-    PriceRight
-End Enum
-
-Private Enum GridColours
-    BGDefault = &HE1F4FD
-    BGBid = &HD6C6F2
-    BGAsk = &HFAE968
-    BGLast = &HC1F7CA
-End Enum
-
-Private Sub DOMGrid_Click()
-DOMGrid.row = 1
-DOMGrid.col = 0
-End Sub
+'================================================================================
+' Form Event Handlers
+'================================================================================
 
 Private Sub Form_Initialize()
 InitCommonControls
@@ -129,27 +165,41 @@ Debug.Print "Market depth form terminated"
 End Sub
 
 Private Sub Form_Unload(cancel As Integer)
-If mListenerKey <> "" Then
-    mTicker.RemoveListener mListenerKey
-End If
+mTicker.removeProcessedMarketDepthListener Me
 End Sub
 
-Private Sub IListener_notify(ByVal valueType As Long, ByVal data As Variant, ByVal timestamp As Date)
-Select Case valueType
-Case TradeBuildListenValueTypes.ValueTypeTradeBuildMarketdepth
-    Dim mdInfo As TickerListenMDData
-    mdInfo = data
-    If mdInfo.price = 0 And mdInfo.size = 0 Then
-        ' this is a reset notification
-        reset
-    ElseIf mdInfo.size = 0 Then
-        clearDOMCell mdInfo.side, mdInfo.price
-    Else
-        setDOMCell mdInfo.side, mdInfo.price, mdInfo.size
-    End If
-End Select
+'================================================================================
+' Form Control Event Handlers
+'================================================================================
 
+Private Sub DOMGrid_Click()
+DOMGrid.row = 1
+DOMGrid.col = 0
 End Sub
+
+'================================================================================
+' ProcessedMarketDepthListener Interface Members
+'================================================================================
+
+Private Sub ProcessedMarketDepthListener_clearMarketDepthCell(ev As TradeBuild.ProcessedMarketDepthEvent)
+clearDOMCell ev.side, ev.price
+End Sub
+
+Private Sub ProcessedMarketDepthListener_resetMarketDepth(ev As TradeBuild.GenericEvent)
+reset
+End Sub
+
+Private Sub ProcessedMarketDepthListener_setMarketDepthCell(ev As TradeBuild.ProcessedMarketDepthEvent)
+setDOMCell ev.side, ev.price, ev.size
+End Sub
+
+'================================================================================
+' XXXX Event Handlers
+'================================================================================
+
+'================================================================================
+' Properties
+'================================================================================
 
 Private Property Let initialPrice(ByVal value As Double)
 If mInitialPrice <> 0 Then Exit Property
@@ -218,10 +268,49 @@ If mTicker.BidPrice <> 0 Then
     setDOMCell DOMSides.DOMBid, mTicker.BidPrice, mTicker.bidSize
 End If
 
-mListenerKey = mTicker.AddListener(Me, _
-                                            TradeBuildListenValueTypes.ValueTypeTradeBuildMarketdepth)
+mTicker.addProcessedMarketDepthListener Me
 
 End Property
+
+'================================================================================
+' Methods
+'================================================================================
+
+Public Sub reset()
+mHalted = True
+DOMGrid.Clear
+Me.Caption = "Market depth data halted"
+ReDim mAskPrices(20) As Double
+ReDim mBidPrices(20) As Double
+
+mInitialPrice = mCurrentLast
+
+mMaxAskPricesIndex = 0
+mMaxBidPricesIndex = 0
+
+mCurrentLast = 0#
+
+setupRows
+End Sub
+
+
+Public Sub setDOMCell( _
+                ByVal side As DOMSides, _
+                ByVal price As Double, _
+                ByVal size As Long)
+If mHalted Then
+    mHalted = False
+    Me.Caption = "Market depth for " & _
+                mContract.specifier.localSymbol & _
+                " on " & _
+                mContract.specifier.exchange
+End If
+setDisplay side, price, size
+End Sub
+                
+'================================================================================
+' Helper Functions
+'================================================================================
 
 
 Private Function calcRowNumber(ByVal price As Double) As Long
@@ -327,38 +416,6 @@ End If
 DOMGrid.TextMatrix(row, col) = value
 End Sub
 
-Public Sub reset()
-mHalted = True
-DOMGrid.Clear
-Me.Caption = "Market depth data halted"
-ReDim mAskPrices(20) As Double
-ReDim mBidPrices(20) As Double
-
-mInitialPrice = mCurrentLast
-
-mMaxAskPricesIndex = 0
-mMaxBidPricesIndex = 0
-
-mCurrentLast = 0#
-
-setupRows
-End Sub
-
-
-Public Sub setDOMCell( _
-                ByVal side As DOMSides, _
-                ByVal price As Double, _
-                ByVal size As Long)
-If mHalted Then
-    mHalted = False
-    Me.Caption = "Market depth for " & _
-                mContract.specifier.localSymbol & _
-                " on " & _
-                mContract.specifier.exchange
-End If
-setDisplay side, price, size
-End Sub
-                
 Private Sub setDisplay(ByVal side As DOMSides, ByVal price As Double, ByVal size As Long)
 checkEnoughRows price
 Select Case side
