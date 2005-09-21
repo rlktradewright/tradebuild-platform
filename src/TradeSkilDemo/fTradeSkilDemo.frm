@@ -69,55 +69,35 @@ Begin VB.Form fTradeSkilDemo
       TabPicture(1)   =   "fTradeSkilDemo.frx":0031
       Tab(1).ControlEnabled=   0   'False
       Tab(1).Control(0)=   "Picture3"
-      Tab(1).Control(0).Enabled=   0   'False
       Tab(1).ControlCount=   1
       TabCaption(2)   =   "&3. Orders"
       TabPicture(2)   =   "fTradeSkilDemo.frx":004D
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "ExecutionsList"
-      Tab(2).Control(0).Enabled=   0   'False
-      Tab(2).Control(1)=   "OpenOrdersList"
-      Tab(2).Control(1).Enabled=   0   'False
+      Tab(2).Control(0)=   "OrderButton"
+      Tab(2).Control(1)=   "CancelOrderButton"
       Tab(2).Control(2)=   "ModifyOrderButton"
-      Tab(2).Control(2).Enabled=   0   'False
-      Tab(2).Control(3)=   "CancelOrderButton"
-      Tab(2).Control(3).Enabled=   0   'False
-      Tab(2).Control(4)=   "OrderButton"
-      Tab(2).Control(4).Enabled=   0   'False
+      Tab(2).Control(3)=   "OpenOrdersList"
+      Tab(2).Control(4)=   "ExecutionsList"
       Tab(2).ControlCount=   5
       TabCaption(3)   =   "&4. Replay tickfiles"
       TabPicture(3)   =   "fTradeSkilDemo.frx":0069
       Tab(3).ControlEnabled=   0   'False
-      Tab(3).Control(0)=   "Label20"
-      Tab(3).Control(0).Enabled=   0   'False
-      Tab(3).Control(1)=   "ReplayContractLabel"
-      Tab(3).Control(1).Enabled=   0   'False
-      Tab(3).Control(2)=   "Label19"
-      Tab(3).Control(2).Enabled=   0   'False
-      Tab(3).Control(3)=   "ReplayProgressLabel"
-      Tab(3).Control(3).Enabled=   0   'False
-      Tab(3).Control(4)=   "ReplayProgressBar"
-      Tab(3).Control(4).Enabled=   0   'False
-      Tab(3).Control(5)=   "ReplayMarketDepthCheck"
-      Tab(3).Control(5).Enabled=   0   'False
-      Tab(3).Control(6)=   "RewriteCheck"
+      Tab(3).Control(0)=   "SkipReplayButton"
+      Tab(3).Control(1)=   "PlayTickFileButton"
+      Tab(3).Control(2)=   "SelectTickfilesButton"
+      Tab(3).Control(3)=   "ClearTickfileListButton"
+      Tab(3).Control(4)=   "PauseReplayButton"
+      Tab(3).Control(5)=   "StopReplayButton"
+      Tab(3).Control(6)=   "TickfileList"
       Tab(3).Control(6).Enabled=   0   'False
       Tab(3).Control(7)=   "ReplaySpeedCombo"
-      Tab(3).Control(7).Enabled=   0   'False
-      Tab(3).Control(8)=   "TickfileList"
-      Tab(3).Control(8).Enabled=   0   'False
-      Tab(3).Control(9)=   "StopReplayButton"
-      Tab(3).Control(9).Enabled=   0   'False
-      Tab(3).Control(10)=   "PauseReplayButton"
-      Tab(3).Control(10).Enabled=   0   'False
-      Tab(3).Control(11)=   "ClearTickfileListButton"
-      Tab(3).Control(11).Enabled=   0   'False
-      Tab(3).Control(12)=   "SelectTickfilesButton"
-      Tab(3).Control(12).Enabled=   0   'False
-      Tab(3).Control(13)=   "PlayTickFileButton"
-      Tab(3).Control(13).Enabled=   0   'False
-      Tab(3).Control(14)=   "SkipReplayButton"
-      Tab(3).Control(14).Enabled=   0   'False
+      Tab(3).Control(8)=   "RewriteCheck"
+      Tab(3).Control(9)=   "ReplayMarketDepthCheck"
+      Tab(3).Control(10)=   "ReplayProgressBar"
+      Tab(3).Control(11)=   "ReplayProgressLabel"
+      Tab(3).Control(12)=   "Label19"
+      Tab(3).Control(13)=   "ReplayContractLabel"
+      Tab(3).Control(14)=   "Label20"
       Tab(3).ControlCount=   15
       Begin VB.CommandButton SkipReplayButton 
          Caption         =   "S&kip"
@@ -1094,29 +1074,88 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 
+'================================================================================
+' Description
+'================================================================================
+'
+'
+'================================================================================
+' Amendment history
+'================================================================================
+'
+'
+'
+'
 
-Private WithEvents mTradeBuildAPI As TradeBuildAPI
-Attribute mTradeBuildAPI.VB_VarHelpID = -1
-Private WithEvents mTimer As IntervalTimer
-Attribute mTimer.VB_VarHelpID = -1
+'================================================================================
+' Interfaces
+'================================================================================
 
-Private WithEvents mTickers As Tickers
-Attribute mTickers.VB_VarHelpID = -1
-Private WithEvents mTicker As Ticker
-Attribute mTicker.VB_VarHelpID = -1
-Private mTickerFormatString As String
+'================================================================================
+' Events
+'================================================================================
 
-Private WithEvents mTickfileManager As TickFileManager
-Attribute mTickfileManager.VB_VarHelpID = -1
-Private mTimestamp As Date
+'================================================================================
+' Constants
+'================================================================================
 
-Private WithEvents mOrderForm As fOrder
-Attribute mOrderForm.VB_VarHelpID = -1
+' Percentage widths of the Open Orders columns
+Private Const OpenOrdersOrderIDWidth = 9
+Private Const OpenOrdersStatusWidth = 12
+Private Const OpenOrdersActionWidth = 7
+Private Const OpenOrdersQuantityWidth = 8
+Private Const OpenOrdersSymbolWidth = 8
+Private Const OpenOrdersOrdertypeWidth = 10
+Private Const OpenOrdersPriceWidth = 10
+Private Const OpenOrdersAuxPriceWidth = 10
+Private Const OpenOrdersParentIDWidth = 9
+Private Const OpenOrdersOCAGroupWidth = 9
 
-Private mContractCol As Collection
-Private mCurrentContract As Contract
+' Percentage widths of the Open Orders columns
+Private Const ExecutionsExecIdWidth = 25
+Private Const ExecutionsOrderIDWidth = 10
+Private Const ExecutionsActionWidth = 8
+Private Const ExecutionsQuantityWidth = 8
+Private Const ExecutionsSymbolWidth = 8
+Private Const ExecutionsPriceWidth = 10
+Private Const ExecutionsTimeWidth = 23
 
-Private mOrdersCol As Collection
+Private Const StandardFormHeight = 7230
+Private Const ExtendedFormHeight = 9750
+
+'================================================================================
+' Enums
+'================================================================================
+
+Private Enum ExecutionsColumns
+    execId = 1
+    orderID
+    Action
+    quantity
+    symbol
+    price
+    Time
+End Enum
+
+Private Enum MainSSTABTabNumbers
+    Connection
+    Tickers
+    Orders
+    ReplayTickfiles
+End Enum
+
+Private Enum OpenOrdersColumns
+    orderID = 1
+    status
+    Action
+    quantity
+    symbol
+    orderType
+    price
+    auxPrice
+    parentId
+    ocaGroup
+End Enum
 
 Private Enum TickerGridColumns
     Key
@@ -1198,61 +1237,40 @@ Private Enum TickerGridSummaryColumnWidths
     ChangePercentWidth = 8
 End Enum
 
-Private Enum OpenOrdersColumns
-    orderID = 1
-    status
-    Action
-    quantity
-    symbol
-    orderType
-    price
-    auxPrice
-    parentId
-    ocaGroup
-End Enum
+'================================================================================
+' Types
+'================================================================================
 
-' Percentage widths of the Open Orders columns
-Private Const OpenOrdersOrderIDWidth = 9
-Private Const OpenOrdersStatusWidth = 12
-Private Const OpenOrdersActionWidth = 7
-Private Const OpenOrdersQuantityWidth = 8
-Private Const OpenOrdersSymbolWidth = 8
-Private Const OpenOrdersOrdertypeWidth = 10
-Private Const OpenOrdersPriceWidth = 10
-Private Const OpenOrdersAuxPriceWidth = 10
-Private Const OpenOrdersParentIDWidth = 9
-Private Const OpenOrdersOCAGroupWidth = 9
+'================================================================================
+' Member variables
+'================================================================================
 
-Private Enum ExecutionsColumns
-    execId = 1
-    orderID
-    Action
-    quantity
-    symbol
-    price
-    Time
-End Enum
+Private WithEvents mTradeBuildAPI As TradeBuildAPI
+Attribute mTradeBuildAPI.VB_VarHelpID = -1
+Private WithEvents mTimer As IntervalTimer
+Attribute mTimer.VB_VarHelpID = -1
 
-' Percentage widths of the Open Orders columns
-Private Const ExecutionsExecIdWidth = 25
-Private Const ExecutionsOrderIDWidth = 10
-Private Const ExecutionsActionWidth = 8
-Private Const ExecutionsQuantityWidth = 8
-Private Const ExecutionsSymbolWidth = 8
-Private Const ExecutionsPriceWidth = 10
-Private Const ExecutionsTimeWidth = 23
+Private WithEvents mTickers As Tickers
+Attribute mTickers.VB_VarHelpID = -1
+Private WithEvents mTicker As Ticker
+Attribute mTicker.VB_VarHelpID = -1
+Private mTickerFormatString As String
 
-Private Const StandardFormHeight = 7230
-Private Const ExtendedFormHeight = 9750
+Private WithEvents mTickfileManager As TickFileManager
+Attribute mTickfileManager.VB_VarHelpID = -1
+Private mTimestamp As Date
 
-Private Enum MainSSTABTabNumbers
-    Connection
-    Tickers
-    Orders
-    ReplayTickfiles
-End Enum
+Private WithEvents mOrderForm As fOrder
+Attribute mOrderForm.VB_VarHelpID = -1
 
+Private mContractCol As Collection
+Private mCurrentContract As Contract
 
+Private mOrdersCol As Collection
+
+'================================================================================
+' Form Event Handlers
+'================================================================================
 
 Private Sub Form_Initialize()
 InitCommonControls
@@ -1394,6 +1412,14 @@ For i = Forms.Count - 1 To 0 Step -1
    Unload Forms(i)
 Next
 End Sub
+
+'================================================================================
+' XXXX Interface Members
+'================================================================================
+
+'================================================================================
+' Form Control Event Handlers
+'================================================================================
 
 Private Sub CancelOrderButton_Click()
 mTradeBuildAPI.cancelOrder CLng(Right$(OpenOrdersList.SelectedItem.Key, Len(OpenOrdersList.SelectedItem.Key) - 1))
@@ -1846,8 +1872,9 @@ End Select
 checkOkToStartTicker
 End Sub
 
-
-
+'================================================================================
+' mOrderForm Event Handlers
+'================================================================================
 
 Private Sub mOrderForm_cancelOrder(ByVal orderID As Variant)
 mTradeBuildAPI.cancelOrder orderID
@@ -1870,6 +1897,10 @@ Private Sub mOrderForm_placeOrder(ByVal pOrder As order, _
 openOrder pContractSpecifier, pOrder
 If passToTWS Then mTradeBuildAPI.placeOrder pContractSpecifier, pOrder
 End Sub
+
+'================================================================================
+' mTicker Event Handlers
+'================================================================================
 
 Private Sub mTicker_Application(ByVal timestamp As Date, ByVal data As Variant)
 Dim Ticker As Ticker
@@ -2021,6 +2052,9 @@ err:
 handleFatalError err.Number, err.Description, "mTicker_volume"
 End Sub
 
+'================================================================================
+' mTickers Event Handlers
+'================================================================================
 
 Private Sub mTickers_contractInvalid(ByVal pTicker As Ticker, _
                 ByVal contractSpec As contractSpecifier)
@@ -2091,7 +2125,6 @@ End Sub
 
 Private Sub mTickers_TickerReady( _
                 ByVal pTicker As Ticker)
-Dim tickerAppData As TickerApplicationData
 
 On Error GoTo err
 
@@ -2144,6 +2177,10 @@ clearTickerAppData pTicker
 pTicker.ApplicationData = Empty
 End Sub
 
+'================================================================================
+' mTickfileManager Event Handlers
+'================================================================================
+
 Private Sub mTickfileManager_errorMessage( _
                 ByVal timestamp As Date, _
                 ByVal id As Long, _
@@ -2192,9 +2229,8 @@ err:
 handleFatalError err.Number, err.Description, "mTickfileManager_QueryReplayNextTickfile"
 End Sub
 
-Private Sub mTickfileManager_ReplayCompleted(ByVal timestamp As Date)
+Private Sub mTickfileManager_ReplayCompleted()
 On Error GoTo err
-mTimestamp = timestamp
 
 clearTickerAppData mTicker
 
@@ -2281,6 +2317,10 @@ err:
 handleFatalError err.Number, err.Description, "mTickfileManager_TickfilesSelected"
 End Sub
 
+'================================================================================
+' mTimer Event Handlers
+'================================================================================
+
 Private Sub mTimer_TimerExpired()
 Dim theTime As Date
 If Not mTicker Is Nothing Then
@@ -2290,6 +2330,10 @@ Else
 End If
 DateTimeLabel.Caption = Format(theTime, "dd/mm/yy") & vbCrLf & Format(theTime, "hh:mm:ss")
 End Sub
+
+'================================================================================
+' mTradeBuildAPI Event Handlers
+'================================================================================
 
 Private Sub mTradeBuildAPI_connected(ByVal timestamp As Date)
 Dim execFilter As ExecutionFilter
@@ -2346,7 +2390,10 @@ err:
 handleFatalError err.Number, err.Description, "mTradeBuildAPI_connected"
 End Sub
 
-Private Sub mTradeBuildAPI_connectFailed(ByVal timestamp As Date, ByVal Description As String, ByVal retrying As Boolean)
+Private Sub mTradeBuildAPI_connectFailed( _
+                ByVal timestamp As Date, _
+                ByVal Description As String, _
+                ByVal retrying As Boolean)
 ConnectButton.Enabled = True
 DisconnectButton.Enabled = False
 writeStatusMessage "Connection attempt failed"
@@ -2370,7 +2417,9 @@ Private Sub mTradeBuildAPI_connectionToIBRecovered(ByVal timestamp As Date)
 writeStatusMessage "Connection from TWS to IB has been restored successfully"
 End Sub
 
-Private Sub mTradeBuildAPI_connectionToTWSClosed(ByVal timestamp As Date)
+Private Sub mTradeBuildAPI_connectionToTWSClosed( _
+                ByVal timestamp As Date, _
+                ByVal reconnecting As Boolean)
 On Error GoTo err
 
 mTimestamp = timestamp
@@ -2408,7 +2457,7 @@ ExecutionsList.ListItems.Clear
 If Not mOrderForm Is Nothing Then Unload mOrderForm
 Set mOrderForm = Nothing
 
-writeStatusMessage "Connection closed"
+writeStatusMessage "Connection closed" & IIf(reconnecting, " - attmepting to reconnect", "")
 
 checkOkToStartReplay
 
@@ -2592,7 +2641,17 @@ err:
 handleFatalError err.Number, err.Description, "mTradeBuildAPI_orderStatus"
 End Sub
 
+'================================================================================
+' Properties
+'================================================================================
 
+'================================================================================
+' Methods
+'================================================================================
+
+'================================================================================
+' Helper Functions
+'================================================================================
 
 Private Sub checkOKToConnect()
 If PortText <> "" And ClientIDText <> "" And _

@@ -567,6 +567,28 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 
+
+'================================================================================
+' Description
+'================================================================================
+'
+'
+'================================================================================
+' Amendment history
+'================================================================================
+'
+'
+'
+'
+
+'================================================================================
+' Interfaces
+'================================================================================
+
+'================================================================================
+' Events
+'================================================================================
+
 Event cancelOrder(ByVal orderID)
 Event createOrder(ByRef order As order)  ' causes the main form to create a new order
 Event nextOCAID(ByRef id As Long) ' used to get the next OCA group id from the main form
@@ -574,6 +596,35 @@ Event placeOrder( _
                 ByVal pOrder As order, _
                 ByVal pContractSpecifier As contractSpecifier, _
                 ByVal passToTWS As Boolean)
+
+'================================================================================
+' Constants
+'================================================================================
+
+'================================================================================
+' Enums
+'================================================================================
+
+Private Enum BracketTabs
+    EntryOrder = 1
+    StopOrder
+    TargetOrder
+End Enum
+
+Private Enum OrderSchemes
+    SimpleOrder
+    BracketOrder
+    OCAOrder
+    CombinationOrder
+End Enum
+
+'================================================================================
+' Types
+'================================================================================
+
+'================================================================================
+' Member variables
+'================================================================================
 
 Private mContract As Contract
 
@@ -587,18 +638,9 @@ Private mOCAOrders As Collection
 
 Private mInitialising As Boolean
 
-Private Enum OrderSchemes
-    SimpleOrder
-    BracketOrder
-    OCAOrder
-    CombinationOrder
-End Enum
-
-Private Enum BracketTabs
-    EntryOrder = 1
-    StopOrder
-    TargetOrder
-End Enum
+'================================================================================
+' Form Event Handlers
+'================================================================================
 
 Private Sub Form_Initialize()
 InitCommonControls
@@ -648,6 +690,14 @@ Private Sub Form_Unload(cancel As Integer)
 reset
 End Sub
 
+'================================================================================
+' XXXX Interface Members
+'================================================================================
+
+'================================================================================
+' Form Control Event Handlers
+'================================================================================
+
 Private Sub ActionCombo_Click()
 
 If mInitialising Then Exit Sub
@@ -682,8 +732,8 @@ QuantityText.Enabled = True
 Select Case BracketTabStrip.SelectedItem.Index
 Case BracketTabs.EntryOrder
     Set mCurrentOrder = mEntryOrder
-    TypeCombo = orderTypeToString(IIf(mCurrentOrder.orderType = orderTypes.OrderTypeNone, _
-                                    orderTypes.OrderTypeLimit, _
+    TypeCombo = orderTypeToString(IIf(mCurrentOrder.orderType = OrderTypes.OrderTypeNone, _
+                                    OrderTypes.OrderTypeLimit, _
                                     mCurrentOrder.orderType))
 Case BracketTabs.StopOrder
     If mStopOrder Is Nothing Then
@@ -694,8 +744,8 @@ Case BracketTabs.StopOrder
         mStopOrder.quantity = QuantityText
     End If
     Set mCurrentOrder = mStopOrder
-    TypeCombo = orderTypeToString(IIf(mCurrentOrder.orderType = orderTypes.OrderTypeNone, _
-                                    orderTypes.OrderTypeStop, _
+    TypeCombo = orderTypeToString(IIf(mCurrentOrder.orderType = OrderTypes.OrderTypeNone, _
+                                    OrderTypes.OrderTypeStop, _
                                     mCurrentOrder.orderType))
 Case BracketTabs.TargetOrder
     If mTargetOrder Is Nothing Then
@@ -706,8 +756,8 @@ Case BracketTabs.TargetOrder
         mTargetOrder.quantity = QuantityText
     End If
     Set mCurrentOrder = mTargetOrder
-    TypeCombo = orderTypeToString(IIf(mCurrentOrder.orderType = orderTypes.OrderTypeNone, _
-                                    orderTypes.OrderTypeLimit, _
+    TypeCombo = orderTypeToString(IIf(mCurrentOrder.orderType = OrderTypes.OrderTypeNone, _
+                                    OrderTypes.OrderTypeLimit, _
                                     mCurrentOrder.orderType))
 End Select
 
@@ -801,11 +851,11 @@ Case OrderSchemes.SimpleOrder
 Case OrderSchemes.BracketOrder
     placeOrder mEntryOrder, False, True
     If Not mStopOrder Is Nothing Then
-        If mStopOrder.orderType <> orderTypes.OrderTypeNone Then
+        If mStopOrder.orderType <> OrderTypes.OrderTypeNone Then
             mStopOrder.parentId = mEntryOrder.id
             If mTargetOrder Is Nothing Then
                 placeOrder mStopOrder, True, True
-            ElseIf mTargetOrder.orderType <> orderTypes.OrderTypeNone Then
+            ElseIf mTargetOrder.orderType <> OrderTypes.OrderTypeNone Then
                 placeOrder mStopOrder, False, True
             Else
                 placeOrder mStopOrder, True, True
@@ -814,7 +864,7 @@ Case OrderSchemes.BracketOrder
         Set mStopOrder = Nothing
     End If
     If Not mTargetOrder Is Nothing Then
-        If mTargetOrder.orderType <> orderTypes.OrderTypeNone Then
+        If mTargetOrder.orderType <> OrderTypes.OrderTypeNone Then
             mTargetOrder.parentId = mEntryOrder.id
             placeOrder mTargetOrder, True, True
         End If
@@ -897,12 +947,13 @@ If Not mCurrentOrder Is Nothing Then
 End If
 End Sub
 
+'================================================================================
+' XXXX Event Handlers
+'================================================================================
 
-'=================================================================================
-'
+'================================================================================
 ' Properties
-'
-'=================================================================================
+'================================================================================
 
 Public Property Let Contract(ByVal value As Contract)
 Dim orderType As Variant
@@ -915,7 +966,7 @@ ExchangeText = mContract.specifier.exchange
 StrikeText = IIf(mContract.specifier.strike = 0, "", mContract.specifier.strike)
 RightText = optionRightToString(mContract.specifier.Right)
 TypeCombo.Clear
-For Each orderType In mContract.orderTypes
+For Each orderType In mContract.OrderTypes
     TypeCombo.AddItem orderTypeToString(orderType)
 Next
 TypeCombo.ListIndex = 0
@@ -983,11 +1034,9 @@ Else
 End If
 End Property
 
-'=================================================================================
-'
+'================================================================================
 ' Methods
-'
-'=================================================================================
+'================================================================================
 
 Public Sub orderCompleted(ByVal value As order)
 If value Is mModifiedOrder Then
@@ -999,11 +1048,9 @@ End If
 
 End Sub
 
-'=================================================================================
-'
-' Helper functions
-'
-'=================================================================================
+'================================================================================
+' Helper Functions
+'================================================================================
 
 Private Sub createEntryOrder()
 
@@ -1023,32 +1070,32 @@ Set mCurrentOrder = mEntryOrder
 
 End Sub
 
-Private Function orderTypeFromString(ByVal value As String) As orderTypes
+Private Function orderTypeFromString(ByVal value As String) As OrderTypes
 Select Case value
 Case StrOrderTypeMarket
-    orderTypeFromString = orderTypes.OrderTypeMarket
+    orderTypeFromString = OrderTypes.OrderTypeMarket
 Case StrOrderTypeMarketClose
-    orderTypeFromString = orderTypes.OrderTypeMarketClose
+    orderTypeFromString = OrderTypes.OrderTypeMarketClose
 Case StrOrderTypeLimit
-    orderTypeFromString = orderTypes.OrderTypeLimit
+    orderTypeFromString = OrderTypes.OrderTypeLimit
 Case StrOrderTypeLimitClose
-    orderTypeFromString = orderTypes.OrderTypeLimitClose
+    orderTypeFromString = OrderTypes.OrderTypeLimitClose
 Case StrOrderTypePegMarket
-    orderTypeFromString = orderTypes.OrderTypePegMarket
+    orderTypeFromString = OrderTypes.OrderTypePegMarket
 Case StrOrderTypeStop
-    orderTypeFromString = orderTypes.OrderTypeStop
+    orderTypeFromString = OrderTypes.OrderTypeStop
 Case StrOrderTypeStopLimit
-    orderTypeFromString = orderTypes.OrderTypeStopLimit
+    orderTypeFromString = OrderTypes.OrderTypeStopLimit
 Case StrOrderTypeTrail
-    orderTypeFromString = orderTypes.OrderTypeTrail
+    orderTypeFromString = OrderTypes.OrderTypeTrail
 Case StrOrderTypeRelative
-    orderTypeFromString = orderTypes.OrderTypeRelative
+    orderTypeFromString = OrderTypes.OrderTypeRelative
 Case StrOrderTypeVWAP
-    orderTypeFromString = orderTypes.OrderTypeVWAP
+    orderTypeFromString = OrderTypes.OrderTypeVWAP
 Case StrOrderTypeMarketToLimit
-    orderTypeFromString = orderTypes.OrderTypeMarketToLimit
+    orderTypeFromString = OrderTypes.OrderTypeMarketToLimit
 Case StrOrderTypeQuote
-    orderTypeFromString = orderTypes.OrderTypeQuote
+    orderTypeFromString = OrderTypes.OrderTypeQuote
 End Select
 End Function
 
