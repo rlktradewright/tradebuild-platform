@@ -77,49 +77,27 @@ Begin VB.Form MainForm
       TabPicture(1)   =   "MainForm.frx":001C
       Tab(1).ControlEnabled=   0   'False
       Tab(1).Control(0)=   "Label2"
-      Tab(1).Control(0).Enabled=   0   'False
       Tab(1).Control(1)=   "Label3"
-      Tab(1).Control(1).Enabled=   0   'False
       Tab(1).Control(2)=   "Label13"
-      Tab(1).Control(2).Enabled=   0   'False
       Tab(1).Control(3)=   "Label6"
-      Tab(1).Control(3).Enabled=   0   'False
       Tab(1).Control(4)=   "Label5"
-      Tab(1).Control(4).Enabled=   0   'False
       Tab(1).Control(5)=   "Label4"
-      Tab(1).Control(5).Enabled=   0   'False
       Tab(1).Control(6)=   "Label7"
-      Tab(1).Control(6).Enabled=   0   'False
       Tab(1).Control(7)=   "Label17"
-      Tab(1).Control(7).Enabled=   0   'False
       Tab(1).Control(8)=   "Label21"
-      Tab(1).Control(8).Enabled=   0   'False
       Tab(1).Control(9)=   "Label11"
-      Tab(1).Control(9).Enabled=   0   'False
       Tab(1).Control(10)=   "ServerText"
-      Tab(1).Control(10).Enabled=   0   'False
       Tab(1).Control(11)=   "ClientIDText"
-      Tab(1).Control(11).Enabled=   0   'False
       Tab(1).Control(12)=   "PortText"
-      Tab(1).Control(12).Enabled=   0   'False
       Tab(1).Control(13)=   "Frame2"
-      Tab(1).Control(13).Enabled=   0   'False
       Tab(1).Control(14)=   "StrikePriceText"
-      Tab(1).Control(14).Enabled=   0   'False
       Tab(1).Control(15)=   "ExchangeText"
-      Tab(1).Control(15).Enabled=   0   'False
       Tab(1).Control(16)=   "ExpiryText"
-      Tab(1).Control(16).Enabled=   0   'False
       Tab(1).Control(17)=   "SymbolText"
-      Tab(1).Control(17).Enabled=   0   'False
       Tab(1).Control(18)=   "TypeCombo"
-      Tab(1).Control(18).Enabled=   0   'False
       Tab(1).Control(19)=   "RightCombo"
-      Tab(1).Control(19).Enabled=   0   'False
       Tab(1).Control(20)=   "GetContractButton"
-      Tab(1).Control(20).Enabled=   0   'False
       Tab(1).Control(21)=   "DisconnectButton"
-      Tab(1).Control(21).Enabled=   0   'False
       Tab(1).Control(22)=   "ContractDetailsText"
       Tab(1).Control(22).Enabled=   0   'False
       Tab(1).ControlCount=   23
@@ -127,13 +105,9 @@ Begin VB.Form MainForm
       TabPicture(2)   =   "MainForm.frx":0038
       Tab(2).ControlEnabled=   0   'False
       Tab(2).Control(0)=   "Frame4"
-      Tab(2).Control(0).Enabled=   0   'False
       Tab(2).Control(1)=   "Frame5"
-      Tab(2).Control(1).Enabled=   0   'False
       Tab(2).Control(2)=   "Frame6"
-      Tab(2).Control(2).Enabled=   0   'False
       Tab(2).Control(3)=   "Frame7"
-      Tab(2).Control(3).Enabled=   0   'False
       Tab(2).ControlCount=   4
       Begin VB.Frame Frame7 
          Caption         =   "Period 4"
@@ -1087,7 +1061,44 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 
+'================================================================================
+' Description
+'================================================================================
+'
+'
+'================================================================================
+' Amendment history
+'================================================================================
+'
+'
+'
+'
+
+'================================================================================
+' Interfaces
+'================================================================================
+
 Implements TradeBuild.IListener
+
+'================================================================================
+' Events
+'================================================================================
+
+'================================================================================
+' Constants
+'================================================================================
+
+'================================================================================
+' Enums
+'================================================================================
+
+'================================================================================
+' Types
+'================================================================================
+
+'================================================================================
+' Member variables
+'================================================================================
 
 Private WithEvents mTradeBuildAPI As TradeBuildAPI
 Attribute mTradeBuildAPI.VB_VarHelpID = -1
@@ -1119,16 +1130,9 @@ Private mTickfileSpecifiers() As TradeBuild.TickfileSpecifier
 Private WithEvents mTimer As TimerUtils.IntervalTimer
 Attribute mTimer.VB_VarHelpID = -1
 
-
-Private Sub AdjustTimestampsCheck_Click()
-If AdjustTimestampsCheck = vbChecked Then
-    AdjustSecondsStartText.Enabled = True
-    AdjustSecondsEndText.Enabled = True
-Else
-    AdjustSecondsStartText.Enabled = False
-    AdjustSecondsEndText.Enabled = False
-End If
-End Sub
+'================================================================================
+' Form Event Handlers
+'================================================================================
 
 Private Sub Form_Initialize()
 On Error GoTo err
@@ -1267,6 +1271,10 @@ If Not ProcessCommandLineArgs Then
 End If
 End Sub
 
+'================================================================================
+' IListener Interface Members
+'================================================================================
+
 Private Sub IListener_notify( _
                             ByVal valueType As Long, _
                             ByVal data As Variant, _
@@ -1275,6 +1283,20 @@ Select Case valueType
 Case TradeBuild.StandardListenValueTypes.LogInfo
     writeStatusMessage "Log: " & data
 End Select
+End Sub
+
+'================================================================================
+' Form Control Event Handlers
+'================================================================================
+
+Private Sub AdjustTimestampsCheck_Click()
+If AdjustTimestampsCheck = vbChecked Then
+    AdjustSecondsStartText.Enabled = True
+    AdjustSecondsEndText.Enabled = True
+Else
+    AdjustSecondsStartText.Enabled = False
+    AdjustSecondsEndText.Enabled = False
+End If
 End Sub
 
 Private Sub ClearTickfileListButton_Click()
@@ -1339,11 +1361,11 @@ enableContractFields
 DisconnectButton.Enabled = False
 End Sub
 
-Private Sub ExpiryText_Change()
+Private Sub ExchangeText_Change()
 checkOKToGetContract
 End Sub
 
-Private Sub ExchangeText_Change()
+Private Sub ExpiryText_Change()
 checkOKToGetContract
 End Sub
 
@@ -1414,6 +1436,103 @@ Else
 End If
 End Sub
 
+Private Sub OutputPathButton_Click()
+Dim pathChooser As AppFramework.CPathChooser
+Set pathChooser = New AppFramework.CPathChooser
+pathChooser.Choose
+OutputPathText.Text = pathChooser.Path
+End Sub
+
+Private Sub OutputPathText_Change()
+mOutputPath = OutputPathText.Text
+End Sub
+
+Private Sub SelectTickfilesButton_Click()
+Set mTickfileManager = mTradeBuildAPI.Tickers.createTickFileManager
+
+mTickfileManager.ShowTickfileSelectionDialogue
+QTServerText.Enabled = True
+QTPortText.Enabled = True
+
+End Sub
+
+Private Sub StopButton_Click()
+ConvertButton.Enabled = True
+StopButton.Enabled = False
+SelectTickfilesButton.Enabled = True
+ClearTickfileListButton.Enabled = True
+mTicker.StopTicker
+End Sub
+
+Private Sub SymbolText_Change()
+checkOKToGetContract
+End Sub
+
+Private Sub TypeCombo_Click()
+
+Select Case secTypeFromString(TypeCombo)
+Case SecurityTypes.SecTypeFuture
+    ExpiryText.Enabled = True
+    StrikePriceText.Enabled = False
+    RightCombo.Enabled = False
+Case SecurityTypes.SecTypeStock
+    ExpiryText.Enabled = False
+    StrikePriceText.Enabled = False
+    RightCombo.Enabled = False
+Case SecurityTypes.SecTypeOption
+    ExpiryText.Enabled = True
+    StrikePriceText.Enabled = True
+    RightCombo.Enabled = True
+Case SecurityTypes.SecTypeFuturesOption
+    ExpiryText.Enabled = True
+    StrikePriceText.Enabled = True
+    RightCombo.Enabled = True
+Case SecurityTypes.SecTypeCash
+    ExpiryText.Enabled = False
+    StrikePriceText.Enabled = False
+    RightCombo.Enabled = False
+Case SecurityTypes.SecTypeBag
+    writeStatusMessage "BAG type is not implemented"
+    ExpiryText.Enabled = False
+    StrikePriceText.Enabled = False
+    RightCombo.Enabled = False
+End Select
+
+checkOKToGetContract
+End Sub
+
+'================================================================================
+' mTicker Event Handlers
+'================================================================================
+
+Private Sub mTicker_errorMessage(ByVal timestamp As Date, _
+                                ByVal id As Long, _
+                                ByVal errorCode As TradeBuild.ApiErrorCodes, _
+                                ByVal errorMsg As String)
+On Error GoTo err
+Select Case errorCode
+Case ApiErrorCodes.NoContractDetails
+    writeStatusMessage "Error " & errorCode & ": " & errorMsg
+    
+Case Else
+    writeStatusMessage "Error " & errorCode & ": " & id & ": " & errorMsg
+End Select
+
+Exit Sub
+err:
+handleFatalError err.Number, err.description, "mTicker_errorMessage"
+End Sub
+
+Private Sub mTicker_outputTickfileCreated( _
+                            ByVal timestamp As Date, _
+                            ByVal filename As String)
+writeStatusMessage "Created output tickfile: " & filename
+End Sub
+
+'================================================================================
+' mTickfileManager Event Handlers
+'================================================================================
+
 Private Sub mTickfileManager_errorMessage(ByVal timestamp As Date, ByVal id As Long, ByVal errorCode As TradeBuild.ApiErrorCodes, ByVal errorMsg As String)
 On Error GoTo err
 Select Case errorCode
@@ -1452,7 +1571,7 @@ err:
 handleFatalError err.Number, err.description, "mTickfileManager_QueryReplayNextTickfile"
 End Sub
 
-Private Sub mTickfileManager_ReplayCompleted(ByVal timestamp As Date)
+Private Sub mTickfileManager_ReplayCompleted()
 On Error GoTo err
 
 ConvertButton.Enabled = True
@@ -1536,94 +1655,9 @@ err:
 handleFatalError err.Number, err.description, "mTickfileManager_TickfilesSelected"
 End Sub
 
-Private Sub OutputPathButton_Click()
-Dim pathChooser As AppFramework.CPathChooser
-Set pathChooser = New AppFramework.CPathChooser
-pathChooser.Choose
-OutputPathText.Text = pathChooser.Path
-End Sub
-
-Private Sub OutputPathText_Change()
-mOutputPath = OutputPathText.Text
-End Sub
-
-Private Sub SelectTickfilesButton_Click()
-Set mTickfileManager = mTradeBuildAPI.Tickers.createTickFileManager
-
-mTickfileManager.ShowTickfileSelectionDialogue
-QTServerText.Enabled = True
-QTPortText.Enabled = True
-
-End Sub
-
-Private Sub StopButton_Click()
-ConvertButton.Enabled = True
-StopButton.Enabled = False
-SelectTickfilesButton.Enabled = True
-ClearTickfileListButton.Enabled = True
-mTicker.StopTicker
-End Sub
-
-Private Sub SymbolText_Change()
-checkOKToGetContract
-End Sub
-
-Private Sub TypeCombo_Click()
-
-Select Case secTypeFromString(TypeCombo)
-Case SecurityTypes.SecTypeFuture
-    ExpiryText.Enabled = True
-    StrikePriceText.Enabled = False
-    RightCombo.Enabled = False
-Case SecurityTypes.SecTypeStock
-    ExpiryText.Enabled = False
-    StrikePriceText.Enabled = False
-    RightCombo.Enabled = False
-Case SecurityTypes.SecTypeOption
-    ExpiryText.Enabled = True
-    StrikePriceText.Enabled = True
-    RightCombo.Enabled = True
-Case SecurityTypes.SecTypeFuturesOption
-    ExpiryText.Enabled = True
-    StrikePriceText.Enabled = True
-    RightCombo.Enabled = True
-Case SecurityTypes.SecTypeCash
-    ExpiryText.Enabled = False
-    StrikePriceText.Enabled = False
-    RightCombo.Enabled = False
-Case SecurityTypes.SecTypeBag
-    writeStatusMessage "BAG type is not implemented"
-    ExpiryText.Enabled = False
-    StrikePriceText.Enabled = False
-    RightCombo.Enabled = False
-End Select
-
-checkOKToGetContract
-End Sub
-
-Private Sub mTicker_errorMessage(ByVal timestamp As Date, _
-                                ByVal id As Long, _
-                                ByVal errorCode As TradeBuild.ApiErrorCodes, _
-                                ByVal errorMsg As String)
-On Error GoTo err
-Select Case errorCode
-Case ApiErrorCodes.NoContractDetails
-    writeStatusMessage "Error " & errorCode & ": " & errorMsg
-    
-Case Else
-    writeStatusMessage "Error " & errorCode & ": " & id & ": " & errorMsg
-End Select
-
-Exit Sub
-err:
-handleFatalError err.Number, err.description, "mTicker_errorMessage"
-End Sub
-
-Private Sub mTicker_outputTickfileCreated( _
-                            ByVal timestamp As Date, _
-                            ByVal filename As String)
-writeStatusMessage "Created output tickfile: " & filename
-End Sub
+'================================================================================
+' mTimer Event Handlers
+'================================================================================
 
 Private Sub mTimer_TimerExpired()
 Set mTickfileManager = mTradeBuildAPI.Tickers.createTickFileManager
@@ -1640,8 +1674,11 @@ mTickfileManager.replaySpeed = 0
 mTickfileManager.StartReplay
 End Sub
 
+'================================================================================
+' mTradeBuildAPI Event Handlers
+'================================================================================
+
 Private Sub mTradeBuildAPI_connected(ByVal timestamp As Date)
-Dim lContractSpecifier As ContractSpecifier
 
 On Error GoTo err
 
@@ -1667,7 +1704,9 @@ err:
 handleFatalError err.Number, err.description, "mTradeBuildAPI_connecting"
 End Sub
 
-Private Sub mTradeBuildAPI_connectionToTWSClosed(ByVal timestamp As Date)
+Private Sub mTradeBuildAPI_connectionToTWSClosed( _
+                ByVal timestamp As Date, _
+                ByVal reconnecting As Boolean)
 On Error GoTo err
 
 DisconnectButton.Enabled = False
@@ -1745,6 +1784,20 @@ err:
 handleFatalError err.Number, err.description, "mTradeBuildAPI_errorMessage"
 End Sub
 
+'================================================================================
+' Properties
+'================================================================================
+
+'================================================================================
+' Methods
+'================================================================================
+
+'================================================================================
+' Helper Functions
+'================================================================================
+
+
+
 Private Sub checkOKToGetContract()
 If ContractFromServiceProviderOption Then
     If PortText <> "" And ClientIDText <> "" And _
@@ -1775,20 +1828,6 @@ Else
     Else
         GetContractButton.Enabled = False
     End If
-End If
-End Sub
-
-Private Sub unpackDateTimeString( _
-                            ByVal timestampString As String, _
-                            ByRef dateOut As Date, _
-                            ByRef timeOut As Date)
-dateOut = CDate(mMonths(Mid$(timestampString, 5, 2)) & " " & _
-                            Mid$(timestampString, 7, 2) & " " & _
-                            Left$(timestampString, 4))
-If Len(timestampString) = 14 Then
-    timeOut = CDate(Mid$(timestampString, 9, 2) & ":" & _
-                            Mid$(timestampString, 11, 2) & ":" & _
-                            Mid(timestampString, 13, 2))
 End If
 End Sub
 
@@ -1884,7 +1923,6 @@ Next
 End Sub
 
 Private Function ProcessCommandLineArgs() As Boolean
-Dim arg As String
 Dim symbolValue As String
 Dim localSymbolValue As String
 Dim secTypeValue As String
@@ -2246,6 +2284,20 @@ Case "IND"
     secTypeFromString = SecTypeIndex
 End Select
 End Function
+
+Private Sub unpackDateTimeString( _
+                            ByVal timestampString As String, _
+                            ByRef dateOut As Date, _
+                            ByRef timeOut As Date)
+dateOut = CDate(mMonths(Mid$(timestampString, 5, 2)) & " " & _
+                            Mid$(timestampString, 7, 2) & " " & _
+                            Left$(timestampString, 4))
+If Len(timestampString) = 14 Then
+    timeOut = CDate(Mid$(timestampString, 9, 2) & ":" & _
+                            Mid$(timestampString, 11, 2) & ":" & _
+                            Mid(timestampString, 13, 2))
+End If
+End Sub
 
 Private Sub writeStatusMessage(message As String)
 Dim timeString As String
