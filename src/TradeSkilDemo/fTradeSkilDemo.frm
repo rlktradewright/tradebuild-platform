@@ -2099,22 +2099,18 @@ writeStatusMessage "A ticker is already running for contract: " & _
 StartTickerButton.Enabled = True
 End Sub
 
-Private Sub mTickers_MarketDepthNotAvailable(ByVal Key As String, _
-                            ByVal timestamp As Date, _
+Private Sub mTickers_MarketDepthNotAvailable( _
+                            ByVal pTicker As TradeBuild.Ticker, _
                             ByVal reason As String)
 Dim tickerAppData As TickerApplicationData
-Dim Ticker As Ticker
 
 On Error GoTo err
-mTimestamp = timestamp
-
-Set Ticker = mTickers(Key)
 
 writeStatusMessage "No market depth for " & _
-                    Ticker.Contract.specifier.localSymbol & _
+                    pTicker.Contract.specifier.localSymbol & _
                     ": " & reason
 
-Set tickerAppData = Ticker.ApplicationData
+Set tickerAppData = pTicker.ApplicationData
 Unload tickerAppData.MarketDepthForm
 Set tickerAppData.MarketDepthForm = Nothing
 
