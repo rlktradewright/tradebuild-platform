@@ -417,7 +417,7 @@ With mRecordTable(index)
     .TickSize = 0
     .tickPrice = 0#
     .TickSize = 0
-    .tickType = TICK_TYPE_UNKNOWN
+    .tickType = TickTypes.Unknown
     .timestamp = 0
 End With
 End Sub
@@ -977,20 +977,20 @@ With mRecordTable(index)
             .tickPrice = dataFields(TickfileFieldsV1.tickPrice)
         Case TickfileSP.TickTypes.AskSize
             .TickSize = dataFields(TickfileFieldsV1.TickSize)
-        Case TICK_TYPE_LAST
+        Case TickfileSP.TickTypes.Last
             .tickPrice = dataFields(TickfileFieldsV1.tickPrice)
             .TickSize = dataFields(TickfileFieldsV1.TickSize)
-        Case TICK_TYPE_LAST_SIZE
+        Case TickfileSP.TickTypes.lastSize
             ' shouldn't ever get this
-        Case TICK_TYPE_HIGH
+        Case TickfileSP.TickTypes.High
             .tickPrice = dataFields(TickfileFieldsV1.tickPrice)
-        Case TICK_TYPE_LOW
+        Case TickfileSP.TickTypes.Low
             .tickPrice = dataFields(TickfileFieldsV1.tickPrice)
-        Case TICK_TYPE_CLOSE
+        Case TickfileSP.TickTypes.PrevClose
             .tickPrice = dataFields(TickfileFieldsV1.tickPrice)
-        Case TICK_TYPE_VOLUME
+        Case TickfileSP.TickTypes.Volume
             .TickSize = dataFields(TickfileFieldsV1.TickSize)
-        Case TICK_TYPE_LAST_SIZE_CORRECTION
+        Case TickfileSP.TickTypes.LastSizeCorrection
             .TickSize = dataFields(TickfileFieldsV1.TickSize)
         End Select
     Case TickFileVersions.ESignal
@@ -1003,7 +1003,7 @@ With mRecordTable(index)
         ticktypeStr = dataFields(ESignalTickFileFields.tickType)
         Select Case ticktypeStr
         Case ESIGNAL_TICK_TRADE
-            .tickType = TICK_TYPE_LAST
+            .tickType = TickfileSP.TickTypes.Last
             .tickPrice = dataFields(ESignalTickFileFields.lastPrice)
             .TickSize = dataFields(ESignalTickFileFields.lastSize)
         Case ESIGNAL_TICK_QUOTE

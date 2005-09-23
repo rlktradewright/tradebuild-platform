@@ -104,33 +104,33 @@ End If
 mServiceConsumer.Ready
 End Property
 
-Private Sub ITickfileWriter_WriteAsk(ByVal Timestamp As Date, ByVal price As Double, ByVal size As Long)
-writeTickData Timestamp, TICK_ASK, price, size
+Private Sub ITickfileWriter_WriteAsk(ByVal timestamp As Date, ByVal price As Double, ByVal size As Long)
+writeTickData timestamp, TICK_ASK, price, size
 End Sub
 
-Private Sub ITickfileWriter_writeBid(ByVal Timestamp As Date, ByVal price As Double, ByVal size As Long)
-writeTickData Timestamp, TICK_BID, price, size
+Private Sub ITickfileWriter_writeBid(ByVal timestamp As Date, ByVal price As Double, ByVal size As Long)
+writeTickData timestamp, TICK_BID, price, size
 End Sub
 
-Private Sub ITickfileWriter_writeClose(ByVal Timestamp As Date, ByVal price As Double)
-writeTickData Timestamp, TICK_CLOSE, price
+Private Sub ITickfileWriter_writeClose(ByVal timestamp As Date, ByVal price As Double)
+writeTickData timestamp, TICK_CLOSE, price
 End Sub
 
-Private Sub ITickfileWriter_writeHigh(ByVal Timestamp As Date, ByVal price As Double)
-writeTickData Timestamp, TICK_HIGH, price
+Private Sub ITickfileWriter_writeHigh(ByVal timestamp As Date, ByVal price As Double)
+writeTickData timestamp, TICK_HIGH, price
 End Sub
 
-Private Sub ITickfileWriter_writeLow(ByVal Timestamp As Date, ByVal price As Double)
-writeTickData Timestamp, TICK_LOW, price
+Private Sub ITickfileWriter_writeLow(ByVal timestamp As Date, ByVal price As Double)
+writeTickData timestamp, TICK_LOW, price
 End Sub
 
-Private Sub ITickfileWriter_writeMarketDepthData(ByVal Timestamp As Date, ByVal Position As Long, ByVal marketMaker As String, ByVal operation As Long, ByVal side As Long, ByVal price As Currency, ByVal size As Long)
+Private Sub ITickfileWriter_writeMarketDepthData(ByVal timestamp As Date, ByVal Position As Long, ByVal marketMaker As String, ByVal operation As Long, ByVal side As Long, ByVal price As Currency, ByVal size As Long)
 Select Case mTickfileFormat
 Case TickfileFormats.TickfileTradeBuild
-    If mTsOut Is Nothing Then createTradeBuildTickFile Timestamp
+    If mTsOut Is Nothing Then createTradeBuildTickFile timestamp
     
-    mTsOut.WriteLine CDbl(Timestamp) & "," & _
-                mCommonServiceConsumer.FormatTimestamp(Timestamp, TimestampFormats.TimestampTimeOnly) & "," & _
+    mTsOut.WriteLine CDbl(timestamp) & "," & _
+                mCommonServiceConsumer.FormatTimestamp(timestamp, TimestampFormats.TimestampTimeOnly) & "," & _
                 TICK_MARKET_DEPTH & "," & _
                 Position & "," & _
                 marketMaker & "," & _
@@ -143,13 +143,13 @@ Case TickfileFormats.TickfileCrescendo
 End Select
 End Sub
 
-Private Sub ITickfileWriter_writeMarketDepthReset(ByVal Timestamp As Date)
+Private Sub ITickfileWriter_writeMarketDepthReset(ByVal timestamp As Date)
 Select Case mTickfileFormat
 Case TickfileFormats.TickfileTradeBuild
-    If mTsOut Is Nothing Then createTradeBuildTickFile Timestamp
+    If mTsOut Is Nothing Then createTradeBuildTickFile timestamp
     
-    mTsOut.WriteLine CDbl(Timestamp) & "," & _
-                mCommonServiceConsumer.FormatTimestamp(Timestamp, TimestampFormats.TimestampTimeOnly) & "," & _
+    mTsOut.WriteLine CDbl(timestamp) & "," & _
+                mCommonServiceConsumer.FormatTimestamp(timestamp, TimestampFormats.TimestampTimeOnly) & "," & _
                 TICK_MARKET_DEPTH_RESET
 
 Case TickfileFormats.TickfileCrescendo
@@ -157,16 +157,16 @@ Case TickfileFormats.TickfileCrescendo
 End Select
 End Sub
 
-Private Sub ITickfileWriter_WriteOpenInterest(ByVal Timestamp As Date, ByVal size As Long)
-writeTickData Timestamp, TICK_OPEN_INTEREST, , size
+Private Sub ITickfileWriter_WriteOpenInterest(ByVal timestamp As Date, ByVal size As Long)
+writeTickData timestamp, TICK_OPEN_INTEREST, , size
 End Sub
 
-Private Sub ITickfileWriter_writeTrade(ByVal Timestamp As Date, ByVal price As Double, ByVal size As Long)
-writeTickData Timestamp, TICK_TRADE, price, size
+Private Sub ITickfileWriter_writeTrade(ByVal timestamp As Date, ByVal price As Double, ByVal size As Long)
+writeTickData timestamp, TICK_TRADE, price, size
 End Sub
 
-Private Sub ITickfileWriter_writeVolume(ByVal Timestamp As Date, ByVal size As Long)
-writeTickData Timestamp, TICK_VOLUME, , size
+Private Sub ITickfileWriter_writeVolume(ByVal timestamp As Date, ByVal size As Long)
+writeTickData timestamp, TICK_VOLUME, , size
 End Sub
 
 '================================================================================
@@ -215,7 +215,7 @@ End Property
 ' Helper Functions
 '================================================================================
 
-Private Sub createCrescendoTickfile(ByVal Timestamp As Date)
+Private Sub createCrescendoTickfile(ByVal timestamp As Date)
 Dim tfPath As String
 Dim tfName As String
 Const TICKFILE_CURR_VERSION As Integer = 2
@@ -228,7 +228,7 @@ If Right$(tfPath, 1) <> "\" Then tfPath = tfPath & "\"
 With mContract.Specifier
     tfPath = tfPath & UCase$(.Symbol) & .Expiry & "\"
     tfName = UCase$(.Symbol) & .Expiry & "-" _
-            & format(Timestamp, "yyyymmdd-hhmmss") & ".csv"
+            & format(timestamp, "yyyymmdd-hhmmss") & ".csv"
     Set mTsOut = mFileSys.CreateTextFile(tfPath & tfName)
     
     mServiceConsumer.OutputTickfileCreated tfPath & tfName
@@ -238,8 +238,8 @@ With mContract.Specifier
                 .exchange & "," & _
                 .Symbol & "," & _
                 .Expiry & "," & _
-                CDbl(Timestamp) & "," & _
-                FormatDateTime(Timestamp, vbGeneralDate)
+                CDbl(timestamp) & "," & _
+                FormatDateTime(timestamp, vbGeneralDate)
 End With
 
 Exit Sub
@@ -253,7 +253,7 @@ Else
 End If
 End Sub
 
-Private Sub createTradeBuildTickFile(ByVal Timestamp As Date)
+Private Sub createTradeBuildTickFile(ByVal timestamp As Date)
 Dim tfPath As String
 Dim tfName As String
 
@@ -263,7 +263,7 @@ tfPath = IIf(mPath <> "", mPath, App.path)
 If Right$(tfPath, 1) <> "\" Then tfPath = tfPath & "\"
 tfPath = tfPath & UCase$(mContract.Specifier.LocalSymbol) & "\"
 tfName = UCase$(mContract.Specifier.LocalSymbol) & "-" & _
-        format(Timestamp, "yyyymmdd-hhmmss") & ".tck"
+        format(timestamp, "yyyymmdd-hhmmss") & ".tck"
 Set mTsOut = mFileSys.CreateTextFile(tfPath & tfName)
 mServiceConsumer.OutputTickfileCreated tfPath & tfName
 mTsOut.WriteLine TICKFILE_DECLARER & "," & _
@@ -271,8 +271,8 @@ mTsOut.WriteLine TICKFILE_DECLARER & "," & _
             UCase$(mContract.Specifier.exchange) & "," & _
             UCase$(mContract.Specifier.Symbol) & "," & _
             mContract.Specifier.Expiry & "," & _
-            CDbl(Timestamp) & "," & _
-            FormatDateTime(Timestamp, vbGeneralDate)
+            CDbl(timestamp) & "," & _
+            FormatDateTime(timestamp, vbGeneralDate)
 mTsOut.WriteLine CONTRACT_DETAILS_MARKER & mContract.ToXML
 
 Exit Sub
@@ -287,11 +287,11 @@ End If
 End Sub
 
 Private Sub writeTickData( _
-                        ByVal Timestamp As Date, _
+                        ByVal timestamp As Date, _
                         ByVal tickType As String, _
                         Optional ByVal price As Double = -1#, _
                         Optional ByVal size As Long = -1&)
-Dim crescendoTickType As TradingEngine.TickTypes
+Dim crescendoTickType As TickTypes
 Static priceFormatString As String
 
 
@@ -305,32 +305,32 @@ End If
 
 Select Case mTickfileFormat
 Case TickfileFormats.TickfileTradeBuild
-    If mTsOut Is Nothing Then createTradeBuildTickFile Timestamp
-    mTsOut.WriteLine CDbl(Timestamp) & "," & _
-                mCommonServiceConsumer.FormatTimestamp(Timestamp, TimestampFormats.TimestampTimeOnly) & "," & _
+    If mTsOut Is Nothing Then createTradeBuildTickFile timestamp
+    mTsOut.WriteLine CDbl(timestamp) & "," & _
+                mCommonServiceConsumer.FormatTimestamp(timestamp, TimestampFormats.TimestampTimeOnly) & "," & _
                 tickType & "," & _
                 IIf(price <> -1#, format(price, priceFormatString), "") & _
                 IIf(size = -1&, "", IIf(price = -1#, size, "," & size))
 Case TickfileFormats.TickfileCrescendo
-    If mTsOut Is Nothing Then createCrescendoTickfile Timestamp
+    If mTsOut Is Nothing Then createCrescendoTickfile timestamp
     Select Case tickType
     Case TICK_BID
-        crescendoTickType = TradingEngine.TickTypes.TICK_TYPE_BID
+        crescendoTickType = TickTypes.Bid
     Case TICK_ASK
-        crescendoTickType = TradingEngine.TickTypes.TICK_TYPE_OFFER
+        crescendoTickType = TickTypes.Ask
     Case TICK_TRADE
-        crescendoTickType = TradingEngine.TickTypes.TICK_TYPE_LAST
+        crescendoTickType = TickTypes.Last
     Case TICK_HIGH
-        crescendoTickType = TradingEngine.TickTypes.TICK_TYPE_HIGH
+        crescendoTickType = TickTypes.High
     Case TICK_LOW
-        crescendoTickType = TradingEngine.TickTypes.TICK_TYPE_LOW
+        crescendoTickType = TickTypes.Low
     Case TICK_CLOSE
-        crescendoTickType = TradingEngine.TickTypes.TICK_TYPE_CLOSE
+        crescendoTickType = TickTypes.PrevClose
     Case TICK_VOLUME
-        crescendoTickType = TradingEngine.TickTypes.TICK_TYPE_VOLUME
+        crescendoTickType = TickTypes.Volume
     End Select
-    mTsOut.WriteLine CDbl(Timestamp) & "," & _
-                FormatDateTime(Timestamp, vbGeneralDate) & "," & _
+    mTsOut.WriteLine CDbl(timestamp) & "," & _
+                FormatDateTime(timestamp, vbGeneralDate) & "," & _
                 crescendoTickType & "," & _
                 price & "," & _
                 size
