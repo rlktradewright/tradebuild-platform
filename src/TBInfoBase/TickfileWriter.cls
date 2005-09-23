@@ -64,9 +64,9 @@ Private mServiceProviderName As String
 
 Private mTickerID As Long
 Private mContract As IContract
-Private WithEvents mInstrument As TradingDO.cInstrument
+Private WithEvents mInstrument As TradingDO2.cInstrument
 Attribute mInstrument.VB_VarHelpID = -1
-Private WithEvents mTickWriter As TradingDO.TickDataAccessor
+Private WithEvents mTickWriter As TradingDO2.TickDataAccessor
 Attribute mTickWriter.VB_VarHelpID = -1
 
 Private mPath As String
@@ -108,13 +108,13 @@ Set ITickfileWriter_Contract = mContract
 End Property
 
 Private Property Let ITickfileWriter_Contract(ByVal RHS As IContract)
-Dim lInstrumentFactory As TradingDO.cInstrumentFactory
+Dim lInstrumentFactory As TradingDO2.cInstrumentFactory
 
 If Not RHS Is Nothing Then
     Set mContract = RHS.Clone
 End If
 
-Set lInstrumentFactory = New TradingDO.cInstrumentFactory
+Set lInstrumentFactory = New TradingDO2.cInstrumentFactory
 With mContract.Specifier
     Set mInstrument = lInstrumentFactory.loadBySpec(.Symbol, _
                                 secTypeToString(.SecType), _

@@ -59,9 +59,9 @@ Private mServiceProviderName As String
 
 Private mBarDataSpecifier  As TradeBuildSP.BarDataSpecifier
 Private mContractSpecifier As IContractSpecifier
-Private WithEvents mInstrument As TradingDO.cInstrument
+Private WithEvents mInstrument As TradingDO2.cInstrument
 Attribute mInstrument.VB_VarHelpID = -1
-Private WithEvents mBarReader As TradingDO.BarDataAccessor
+Private WithEvents mBarReader As TradingDO2.BarDataAccessor
 Attribute mBarReader.VB_VarHelpID = -1
 
 Private mWaitingForBarData As Boolean
@@ -82,11 +82,11 @@ End Property
 
 Private Sub IBarDataReader_FetchBars( _
                             barSpecifier As TradeBuildSP.BarDataSpecifier)
-Dim lInstrumentFactory As TradingDO.cInstrumentFactory
+Dim lInstrumentFactory As TradingDO2.cInstrumentFactory
 
 mBarDataSpecifier = barSpecifier
 
-Set lInstrumentFactory = New TradingDO.cInstrumentFactory
+Set lInstrumentFactory = New TradingDO2.cInstrumentFactory
 
 With mBarDataSpecifier.ContractSpecifier
     Set mInstrument = lInstrumentFactory.loadBySpec(.Symbol, _

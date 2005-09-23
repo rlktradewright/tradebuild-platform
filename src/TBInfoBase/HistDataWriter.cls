@@ -57,9 +57,9 @@ Private mServiceConsumer As IBarDataOutputServiceConsumer
 Private mServiceProviderName As String
 
 Private mContractSpec As IContractSpecifier
-Private WithEvents mInstrument As TradingDO.cInstrument
+Private WithEvents mInstrument As TradingDO2.cInstrument
 Attribute mInstrument.VB_VarHelpID = -1
-Private WithEvents mBarWriter As TradingDO.BarDataAccessor
+Private WithEvents mBarWriter As TradingDO2.BarDataAccessor
 Attribute mBarWriter.VB_VarHelpID = -1
 
 Private mPath As String
@@ -128,13 +128,13 @@ Set mCommonServiceConsumer = value
 End Property
 
 Friend Property Let ContractSpecifier(ByVal RHS As TradeBuildSP.IContractSpecifier)
-Dim lInstrumentFactory As TradingDO.cInstrumentFactory
+Dim lInstrumentFactory As TradingDO2.cInstrumentFactory
 
 If Not RHS Is Nothing Then
     Set mContractSpec = RHS.Clone
 End If
 
-Set lInstrumentFactory = New TradingDO.cInstrumentFactory
+Set lInstrumentFactory = New TradingDO2.cInstrumentFactory
 With mContractSpec
     Set mInstrument = lInstrumentFactory.loadBySpec(.Symbol, _
                                 secTypeToString(.SecType), _

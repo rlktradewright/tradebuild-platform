@@ -69,7 +69,7 @@ Private mName As String
 Private WithEvents mTimer As IntervalTimer
 Attribute mTimer.VB_VarHelpID = -1
 
-Private mInstrumentFactory As TradingDO.cInstrumentFactory
+Private mInstrumentFactory As TradingDO2.cInstrumentFactory
 
 
 '================================================================================
@@ -113,9 +113,9 @@ ICommonServiceProvider_Details = ServiceProviderDetails
 End Property
 
 Private Sub ICommonServiceProvider_Link( _
-                            ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
+                            ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
                             ByVal handle As Long)
-Set mCommonServiceConsumer = commonServiceConsumer
+Set mCommonServiceConsumer = CommonServiceConsumer
 mHandle = handle
 mCommonServiceConsumer.RegisterServiceProvider handle, _
                                             ServiceProviderTypes.ContractInfo
@@ -176,9 +176,9 @@ End Function
 '================================================================================
 
 Private Sub mTimer_TimerExpired()
-Dim instrumentSummaries As TradingDO.cInstrumentSummaries
-Dim instrumentSummary As TradingDO.cInstrumentSummary
-Dim instrument As TradingDO.cInstrument
+Dim instrumentSummaries As TradingDO2.cInstrumentSummaries
+Dim instrumentSummary As TradingDO2.cInstrumentSummary
+Dim instrument As TradingDO2.cInstrument
 Dim Contract As IContract
 Dim OrderTypes() As TradeBuildSP.OrderTypes
 Dim validExchanges() As String

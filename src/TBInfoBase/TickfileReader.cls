@@ -63,9 +63,9 @@ Private mReplayProgressEventFrequency As Long
 
 Private mContract As IContract
 Private mContractSpecifier As IContractSpecifier
-Private WithEvents mInstrument As TradingDO.cInstrument
+Private WithEvents mInstrument As TradingDO2.cInstrument
 Attribute mInstrument.VB_VarHelpID = -1
-Private WithEvents mTickReader As TradingDO.TickDataAccessor
+Private WithEvents mTickReader As TradingDO2.TickDataAccessor
 Attribute mTickReader.VB_VarHelpID = -1
 
 Private mTickSize As Double
@@ -249,11 +249,11 @@ FirstTickFileTime = mFirstTickFileTime
 End Property
 
 Friend Property Let InputTickfileSpecifier(RHS As TradeBuildSP.TickfileSpec)
-Dim lInstrumentFactory As TradingDO.cInstrumentFactory
+Dim lInstrumentFactory As TradingDO2.cInstrumentFactory
 
 mInputTickfileSpecifier = RHS
 
-Set lInstrumentFactory = New TradingDO.cInstrumentFactory
+Set lInstrumentFactory = New TradingDO2.cInstrumentFactory
 
 With mInputTickfileSpecifier.ContractSpecifier
     Set mInstrument = lInstrumentFactory.loadBySpec(.Symbol, _
