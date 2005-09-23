@@ -49,7 +49,7 @@ Event QueryReplayNextTickfile( _
                 ByVal pContract As Contract, _
                 ByRef continueMode As ReplayContinueModes)
 
-Event ReplayCompleted(ByVal timestamp As Date)
+Event ReplayCompleted()
     ' Raised when all tick files have been processed or
     ' stopReplay has been called
 
@@ -87,11 +87,13 @@ Private mReader                     As TickfileReader
 Private mTickfileSpecifiers()       As TradeBuild.TickfileSpecifier
 Private mCurrTickfileIndex          As Long
 
-Private mTickers                    As tickers
+Private mTickers                    As Tickers
 Private mTicker                     As Ticker
 
 Private WithEvents mTickfileSelector As fTickfileSelector
 Attribute mTickfileSelector.VB_VarHelpID = -1
+
+Private mReplayInProgress           As Boolean
 
 Private mReplaySpeed                As Long
 Private mReplayProgressEventFrequency As Long
@@ -411,7 +413,7 @@ Else
 End If
 End Property
 
-Friend Property Let tickers(ByVal value As tickers)
+Friend Property Let Tickers(ByVal value As Tickers)
 Set mTickers = value
 End Property
 
@@ -482,12 +484,12 @@ End Sub
 Friend Function CreateOutputTickfile( _
                 ByVal pTicker As Ticker, _
                 ByVal outputTickfileFormat As String, _
-                ByVal outputTickFilePath As String) As TradeBuild.TickfileWriter
+                ByVal outputTickfilePath As String) As TradeBuild.TickfileWriter
             
 Set CreateOutputTickfile = gServiceProviders.CreateTickfileWriter( _
                             pTicker, _
                             outputTickfileFormat, _
-                            outputTickFilePath)
+                            outputTickfilePath)
 
 End Function
 
@@ -531,18 +533,21 @@ FinishTickfile
 End Sub
 
 Public Sub StartReplay()
+mReplayInProgress = True
 StartNextTickfile
 End Sub
 
 Public Sub stopReplay()
+If Not mReplayInProgress Then Exit Sub
+mReplayInProgress = False
 If Not mReader Is Nothing Then
     stopProgressTimer
     mReader.stopReplay
     Set mReader = Nothing
 End If
 mCurrTickfileIndex = -1
-mTickers.Remove mTicker
-RaiseEvent ReplayCompleted(gCurrentTime)
+If Not mTicker Is Nothing Then mTickers.Remove mTicker
+RaiseEvent ReplayCompleted
 End Sub
 
 '================================================================================
@@ -576,6 +581,8 @@ Case ReplayContinueModes.ReplayCancelAllFiles
 Case ReplayContinueModes.ReplayCancelThisFile
     SkipTickfile
 Case ReplayContinueModes.ReplayContinue
+    mTicker.timestamp = mReader.firstTickFileTime
+    mContract.setSession mTicker.timestamp
     mTicker.Contract = mContract
     startProgressTimer
     mReader.StartReplay
@@ -605,7 +612,7 @@ Do
     
     Set mTicker = mTickers.add(gGenerateGUIDString)
     mTicker.tickfileManager = Me
-    mTicker.ReplayingTickfile = True
+    mTicker.replayingTickfile = True
     mTicker.clockRate = mReplaySpeed
     RaiseEvent TickerAllocated(mTicker)
     
@@ -633,7 +640,8 @@ If mReader Is Nothing Then
     SetupNextTickfile
     If mReader Is Nothing Then
         mCurrTickfileIndex = -1
-        RaiseEvent ReplayCompleted(gCurrentTime)
+        mReplayInProgress = False
+        RaiseEvent ReplayCompleted
         Exit Sub
     End If
 End If

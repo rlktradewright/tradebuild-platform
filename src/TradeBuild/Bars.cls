@@ -106,7 +106,7 @@ End Property
 
 Friend Property Let Contract(ByVal value As Contract)
 Set mContract = value
-mLastBarStartTime = mContract.SessionEndTime - mBarLength / 1440
+mLastBarStartTime = mContract.currentSessionEndTime - mBarLength / 1440
 End Property
 
 Public Property Get Count() As Long
@@ -206,7 +206,7 @@ inside = (highValue(ref - 1) <= highValue(ref)) And (lowValue(ref - 1) >= lowVal
 End Property
 
 Public Property Get isFirstBarInSession(Optional ByVal ref As Integer) As Variant
-isFirstBarInSession = Abs(getTargetBar(ref).datetime - mContract.SessionStartTime) < OneSecond
+isFirstBarInSession = Abs(getTargetBar(ref).datetime - mContract.currentSessionStartTime) < OneSecond
 End Property
 
 Public Property Get isLastBarInSession() As Boolean
@@ -314,19 +314,19 @@ End Property
 ' Methods
 '================================================================================
 
-Friend Function add(ByVal Timestamp As Date) As Bar
+Friend Function add(ByVal timestamp As Date) As Bar
 Set add = New Bar
 add.barType = mBarType
 add.barLength = mBarLength
-add.datetime = Timestamp
-mBars.add add, CalcBarKey(Timestamp)
+add.datetime = timestamp
+mBars.add add, CalcBarKey(timestamp)
 mCurrentBarNumber = mCurrentBarNumber + 1
 If isFirstBarInSession Then mFirstSessionBarNumber = mCurrentBarNumber
 RaiseEvent BarAdded(add)
 End Function
 
 Friend Function addHistoric( _
-                            ByVal Timestamp As Date, _
+                            ByVal timestamp As Date, _
                             ByVal barType As TradeBuild.BarTypes, _
                             ByVal barLength As Long, _
                             ByVal openValue As Double, _
@@ -342,7 +342,7 @@ Set addHistoric = New Bar
 With addHistoric
     .barType = barType
     .barLength = barLength
-    .datetime = Timestamp
+    .datetime = timestamp
     .openValue = openValue
     .highValue = highValue
     .lowValue = lowValue
@@ -351,18 +351,18 @@ With addHistoric
     .TickVolume = TickVolume
     .openInterest = openInterest
 End With
-mBars.add addHistoric, CalcBarKey(Timestamp)
+mBars.add addHistoric, CalcBarKey(timestamp)
 mCurrentBarNumber = mCurrentBarNumber + 1
 If isFirstBarInSession Then mFirstSessionBarNumber = mCurrentBarNumber
 RaiseEvent HistoricBarAdded(addHistoric)
 End Function
 
-Public Function item(index As Variant) As Bar
-Attribute item.VB_UserMemId = 0
+Public Function Item(index As Variant) As Bar
+Attribute Item.VB_UserMemId = 0
 If VarType(index) = vbDate Then
-    Set item = mBars(CalcBarKey(CDate(index)))
+        Set Item = mBars(CalcBarKey(CDate(index)))
 Else
-    Set item = mBars(index)
+    Set Item = mBars(index)
 End If
 End Function
 
@@ -392,7 +392,7 @@ Then
             "<ref> out of bounds"
 End If
 
-Set getTargetBar = mBars.item(refToBarNumber(ref))
+Set getTargetBar = mBars.Item(refToBarNumber(ref))
 End Function
 
 Private Function refToBarNumber(ByVal ref As Long) As Long

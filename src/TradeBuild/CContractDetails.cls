@@ -67,8 +67,8 @@ Private mSessionStartTime As Date
 Private mSessionEndTime As Date
 
 Private mReferenceTime As Date
-Private mReferenceSessionStartTime As Date
-Private mReferenceSessionEndTime As Date
+Private mCurrentSessionStartTime As Date
+Private mCurrentSessionEndTime As Date
 
 '================================================================================
 ' Class Event Handlers
@@ -115,7 +115,7 @@ End Sub
 '================================================================================
 
 Private Function IContract_Clone() As TradeBuildSP.IContract
-Set IContract_Clone = clone
+Set IContract_Clone = Clone
 End Function
 
 Private Property Let IContract_ContractID(ByVal RHS As Long)
@@ -138,12 +138,12 @@ Private Sub IContract_FromXML(ByVal contractXML As String)
 FromXML contractXML
 End Sub
 
-Private Sub IContract_GetSessionTimes(ByVal timestamp As Date, SessionStartTime As Date, SessionEndTime As Date)
-GetSessionTimes timestamp, SessionStartTime, SessionEndTime
+Private Sub IContract_GetSessionTimes(ByVal timestamp As Date, sessionStartTime As Date, sessionEndTime As Date)
+GetSessionTimes timestamp, sessionStartTime, sessionEndTime
 End Sub
 
 Private Function IContract_IsTimeInSession(ByVal timestamp As Date) As Boolean
-IContract_IsTimeInSession = IsTimeInSession(timestamp)
+IContract_IsTimeInSession = isTimeInSession(timestamp)
 End Function
 
 Private Property Get IContract_Key() As String
@@ -257,19 +257,19 @@ IContract_OrderTypes = lOrderTypes
 End Property
 
 Private Property Let IContract_SessionEndTime(ByVal RHS As Date)
-SessionEndTime = RHS
+sessionEndTime = RHS
 End Property
 
 Private Property Get IContract_SessionEndTime() As Date
-IContract_SessionEndTime = SessionEndTime
+IContract_SessionEndTime = sessionEndTime
 End Property
 
 Private Property Let IContract_SessionStartTime(ByVal RHS As Date)
-SessionStartTime = RHS
+sessionStartTime = RHS
 End Property
 
 Private Property Get IContract_SessionStartTime() As Date
-IContract_SessionStartTime = SessionStartTime
+IContract_SessionStartTime = sessionStartTime
 End Property
 
 Private Property Let IContract_Specifier(ByVal RHS As TradeBuildSP.IContractSpecifier)
@@ -323,6 +323,14 @@ End Property
 
 Public Property Let contractID(ByVal value As Long)
 mContractID = value
+End Property
+
+Public Property Get currentSessionEndTime() As Date
+currentSessionEndTime = mCurrentSessionEndTime
+End Property
+
+Public Property Get currentSessionStartTime() As Date
+currentSessionStartTime = mCurrentSessionStartTime
 End Property
 
 Friend Property Let Description(ByVal value As String)
@@ -379,20 +387,20 @@ Public Property Let OrderTypes(ByRef value() As TradeBuild.OrderTypes)
 mOrderTypes = value
 End Property
 
-Public Property Let SessionStartTime(ByVal value As Date)
+Public Property Let sessionStartTime(ByVal value As Date)
 mSessionStartTime = value
 End Property
 
-Public Property Get SessionStartTime() As Date
-SessionStartTime = mSessionStartTime
+Public Property Get sessionStartTime() As Date
+sessionStartTime = mSessionStartTime
 End Property
 
-Public Property Let SessionEndTime(ByVal value As Date)
+Public Property Let sessionEndTime(ByVal value As Date)
 mSessionEndTime = value
 End Property
 
-Public Property Get SessionEndTime() As Date
-SessionEndTime = mSessionEndTime
+Public Property Get sessionEndTime() As Date
+sessionEndTime = mSessionEndTime
 End Property
 
 Public Property Get specifier() As contractSpecifier
@@ -432,44 +440,48 @@ End Property
 '================================================================================
 
 Public Function BarStartTime( _
-                            ByVal theTime As Date, _
-                            ByVal BarLength As Long) As Date
+                            ByVal timestamp As Date, _
+                            ByVal barLength As Long) As Date
 Dim offset As Long
+Dim theDate As Long
+Dim theTime As Double
 Dim theTimeMins As Long
 
 offset = DatePart("n", mSessionStartTime)
-theTimeMins = Fix(TimeValue(theTime) * 1440) ' minutes since midnight
-BarStartTime = DateValue(theTime) + _
-            (BarLength * Fix((theTimeMins - offset) / BarLength) + _
+theDate = Fix(CDbl(timestamp))
+' NB: don't use TimeValue to get the time, as VB rounds it to
+' the nearest second
+theTime = CDbl(timestamp) - theDate
+theTimeMins = Fix(theTime * 1440) ' minutes since midnight
+BarStartTime = theDate + _
+            (barLength * Fix((theTimeMins - offset) / barLength) + _
                 offset) / 1440
 
 End Function
 
 Public Sub GetSessionTimes( _
                             ByVal timestamp As Date, _
-                            ByRef SessionStartTime As Date, _
-                            ByRef SessionEndTime As Date)
-CalcSessionTimes timestamp
-SessionStartTime = mReferenceSessionStartTime
-SessionEndTime = mReferenceSessionEndTime
+                            ByRef sessionStartTime As Date, _
+                            ByRef sessionEndTime As Date)
+CalcSessionTimes timestamp, sessionStartTime, sessionEndTime
 End Sub
 
-Public Function clone() As Contract
+Public Function Clone() As Contract
 
-Set clone = New Contract
+Set Clone = New Contract
 
-With clone
+With Clone
     .contractID = mContractID
     .marketName = mMarketName
     .minimumTick = mMinimumTick
     .multiplier = mMultiplier
     .OrderTypes = mOrderTypes
-    .specifier = mSpecifier.clone
+    .specifier = mSpecifier.Clone
     .tradingClass = mTradingClass
     .validExchanges = mValidExchanges
     .Description = mDescription
-    .SessionEndTime = mSessionEndTime
-    .SessionStartTime = SessionStartTime
+    .sessionEndTime = mSessionEndTime
+    .sessionStartTime = sessionStartTime
     '.NumberOfDecimals = mNumberOfDecimals  ' set automatically by minimumTick
 End With
 End Function
@@ -484,8 +496,8 @@ Dim orderType As IXMLDOMElement
 Dim exchanges As IXMLDOMElement
 Dim exchange As IXMLDOMElement
 Dim ComboLegs As IXMLDOMElement
-Dim ComboLeg As IXMLDOMElement
-Dim comboLegObj As ComboLeg
+Dim comboLeg As IXMLDOMElement
+Dim comboLegObj As comboLeg
 Dim nodeList As IXMLDOMNodeList
 Dim i As Long
 
@@ -523,14 +535,14 @@ With specifierObj
     
     Set ComboLegs = specifier.selectSingleNode("combolegs")
     Set nodeList = ComboLegs.selectNodes("comboleg")
-    For Each ComboLeg In nodeList
-        Set comboLegObj = New ComboLeg
-        .ComboLegs.add ComboLeg
-        comboLegObj.action = ComboLeg.getAttribute("action")
-        comboLegObj.contractID = ComboLeg.getAttribute("contractid")
-        comboLegObj.exchange = ComboLeg.getAttribute("exchange")
-        comboLegObj.openClose = ComboLeg.getAttribute("openclose")
-        comboLegObj.ratio = ComboLeg.getAttribute("ratio")
+    For Each comboLeg In nodeList
+        Set comboLegObj = New comboLeg
+        .ComboLegs.add comboLeg
+        comboLegObj.action = comboLeg.getAttribute("action")
+        comboLegObj.contractID = comboLeg.getAttribute("contractid")
+        comboLegObj.exchange = comboLeg.getAttribute("exchange")
+        comboLegObj.openClose = comboLeg.getAttribute("openclose")
+        comboLegObj.ratio = comboLeg.getAttribute("ratio")
     Next
     
 End With
@@ -555,16 +567,24 @@ Next
 
 End Sub
 
-Public Function IsTimeInSession(ByVal timestamp As Date) As Boolean
+Public Function isTimeInSession(ByVal timestamp As Date) As Boolean
 
-CalcSessionTimes timestamp
-
-If timestamp >= mReferenceSessionStartTime And _
-    timestamp < mReferenceSessionEndTime _
+If timestamp >= mCurrentSessionStartTime And _
+    timestamp < mCurrentSessionEndTime _
 Then
-    IsTimeInSession = True
+    isTimeInSession = True
 End If
 End Function
+
+Friend Sub setSession( _
+                ByVal timestamp As Date)
+If timestamp >= mCurrentSessionEndTime Or _
+    timestamp < mReferenceTime _
+Then
+    mReferenceTime = timestamp
+    CalcSessionTimes timestamp, mCurrentSessionStartTime, mCurrentSessionEndTime
+End If
+End Sub
 
 Public Function ToString() As String
 Dim i As Long
@@ -617,8 +637,8 @@ Dim orderType As IXMLDOMElement
 Dim exchanges As IXMLDOMElement
 Dim exchange As IXMLDOMElement
 Dim ComboLegs As IXMLDOMElement
-Dim ComboLeg As IXMLDOMElement
-Dim comboLegObj As ComboLeg
+Dim comboLeg As IXMLDOMElement
+Dim comboLegObj As comboLeg
 Dim i As Long
 
 Set XMLdoc = New DOMDocument30
@@ -649,13 +669,13 @@ specifier.setAttribute "strike", mSpecifier.strike
 Set ComboLegs = XMLdoc.createElement("combolegs")
 specifier.appendChild ComboLegs
 For Each comboLegObj In mSpecifier.ComboLegs
-    Set ComboLeg = XMLdoc.createElement("comboleg")
-    ComboLegs.appendChild ComboLeg
-    ComboLeg.setAttribute "action", comboLegObj.action
-    ComboLeg.setAttribute "contractid", comboLegObj.contractID
-    ComboLeg.setAttribute "exchange", comboLegObj.exchange
-    ComboLeg.setAttribute "openclose", comboLegObj.openClose
-    ComboLeg.setAttribute "ratio", comboLegObj.ratio
+    Set comboLeg = XMLdoc.createElement("comboleg")
+    ComboLegs.appendChild comboLeg
+    comboLeg.setAttribute "action", comboLegObj.action
+    comboLeg.setAttribute "contractid", comboLegObj.contractID
+    comboLeg.setAttribute "exchange", comboLegObj.exchange
+    comboLeg.setAttribute "openclose", comboLegObj.openClose
+    comboLeg.setAttribute "ratio", comboLegObj.ratio
 Next
 
 Set OrderTypes = XMLdoc.createElement("ordertypes")
@@ -681,43 +701,37 @@ End Function
 ' Helper Functions
 '================================================================================
 
-Private Sub CalcSessionTimes(ByVal timestamp As Date)
+Friend Sub CalcSessionTimes(ByVal timestamp As Date, _
+                            ByRef sessionStartTime As Date, _
+                            ByRef sessionEndTime As Date)
 Dim referenceDate As Date
 Dim referenceTime As Date
 
-If timestamp >= mReferenceSessionEndTime Or _
-    timestamp < mReferenceTime _
-Then
+referenceDate = DateValue(timestamp)
+referenceTime = TimeValue(timestamp)
 
-    ' recalculate the reference session times
-    
-    mReferenceTime = timestamp
-    referenceDate = DateValue(mReferenceTime)
-    referenceTime = TimeValue(mReferenceTime)
-    
-    If mSessionStartTime < mSessionEndTime Then
-        ' session doesn't span midnight
-        If referenceTime < mSessionEndTime Then
-            mReferenceSessionStartTime = referenceDate + mSessionStartTime
-            mReferenceSessionEndTime = referenceDate + mSessionEndTime
-        Else
-            mReferenceSessionStartTime = referenceDate + 1 + mSessionStartTime
-            mReferenceSessionEndTime = referenceDate + 1 + mSessionEndTime
-        End If
-    ElseIf mSessionStartTime > mSessionEndTime Then
-        ' session spans midnight
-        If referenceTime >= mSessionEndTime Then
-            mReferenceSessionStartTime = referenceDate + mSessionStartTime
-            mReferenceSessionEndTime = referenceDate + 1 + mSessionEndTime
-        Else
-            mReferenceSessionStartTime = referenceDate - 1 + mSessionStartTime
-            mReferenceSessionEndTime = referenceDate + mSessionEndTime
-        End If
+If mSessionStartTime < mSessionEndTime Then
+    ' session doesn't span midnight
+    If referenceTime < mSessionEndTime Then
+        sessionStartTime = referenceDate + mSessionStartTime
+        sessionEndTime = referenceDate + mSessionEndTime
     Else
-        ' this instrument trades 24hrs
-        mReferenceSessionStartTime = "01/01/1900"
-        mReferenceSessionEndTime = "31/12/2099"
+        sessionStartTime = referenceDate + 1 + mSessionStartTime
+        sessionEndTime = referenceDate + 1 + mSessionEndTime
     End If
+ElseIf mSessionStartTime > mSessionEndTime Then
+    ' session spans midnight
+    If referenceTime >= mSessionEndTime Then
+        sessionStartTime = referenceDate + mSessionStartTime
+        sessionEndTime = referenceDate + 1 + mSessionEndTime
+    Else
+        sessionStartTime = referenceDate - 1 + mSessionStartTime
+        sessionEndTime = referenceDate + mSessionEndTime
+    End If
+Else
+    ' this instrument trades 24hrs
+    sessionStartTime = "01/01/1900"
+    sessionEndTime = "31/12/2099"
 End If
 
 End Sub

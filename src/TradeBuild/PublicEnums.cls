@@ -36,7 +36,7 @@ End Type
 
 Public Type PriceChangeEvent
     Source          As Object
-    change          As Double
+    Change          As Double
     ChangePercent   As Double
 End Type
 
@@ -44,13 +44,13 @@ Public Type ProcessedMarketDepthEvent
     Source          As Object
     side            As DOMSides
     price           As Double
-    size            As Long
+    Size            As Long
 End Type
 
 Public Type QuoteEvent
     Source          As Object
     price           As Double
-    size            As Long
+    Size            As Long
 End Type
 
 Public Type RawMarketDepthEvent
@@ -60,7 +60,7 @@ Public Type RawMarketDepthEvent
     operation       As DOMOperations
     side            As DOMSides
     price           As Double
-    size            As Long
+    Size            As Long
 End Type
 
 Public Type SortEntry
@@ -73,7 +73,6 @@ Public Type Tick
     TickType        As TradeBuild.TickTypes
     TickPrice       As Double
     TickSize        As Long
-    volume          As Long
     MDPosition      As Long
     MDMarketMaker   As String
     MDOperation     As Long
@@ -100,18 +99,18 @@ End Type
 Public Type TWSSocketMsgTickPrice
     msgType         As TWSSocketInMsgTypes
     Version         As Long
-    TickerID        As Long
+    tickerid        As Long
     TickType        As TWSSocketTickTypes
     price           As Double
-    size            As Long
+    Size            As Long
 End Type
 
 Public Type TWSSocketMsgTickSize
     msgType         As TWSSocketInMsgTypes
     Version         As Long
-    TickerID        As Long
+    tickerid        As Long
     TickType        As TWSSocketTickTypes
-    size            As Long
+    Size            As Long
 End Type
 
 Public Type TWSSocketMsgOrderStatus
@@ -258,24 +257,24 @@ End Type
 Public Type TWSSocketMsgMarketDepth
     msgType         As TWSSocketInMsgTypes
     Version         As Long
-    TickerID        As Long
+    tickerid        As Long
     position        As Long
     operation       As Long
     side            As Long
     price           As Double
-    size            As Long
+    Size            As Long
 End Type
 
 Public Type TWSSocketMsgMarketDepthL2
     msgType         As TWSSocketInMsgTypes
     Version         As Long
-    TickerID        As Long
+    tickerid        As Long
     position        As Long
     marketMaker     As String
     operation       As Long
     side            As Long
     price           As Double
-    size            As Long
+    Size            As Long
 End Type
 
 Public Type TWSSocketMsgNewsBulletins
@@ -496,6 +495,7 @@ Public Enum OptionRights
 End Enum
     
 Public Enum OrderActions
+    ActionNone
     ActionBuy = 1
     ActionSell
 End Enum
@@ -525,7 +525,7 @@ End Enum
 
 Public Enum OrderTypes
     MinOrderType = 0
-    OrderTypeNone
+    OrderTypeNone = MinOrderType
     OrderTypeMarket
     OrderTypeMarketClose
     OrderTypeLimit
@@ -538,7 +538,9 @@ Public Enum OrderTypes
     OrderTypeVWAP
     OrderTypeMarketToLimit
     OrderTypeQuote
-    MaxOrderType = OrderTypeQuote
+    OrderTypeAutoStop
+    OrderTypeAutoLimit
+    MaxOrderType = OrderTypeAutoLimit
 End Enum
 
 'Public Enum QuoteTypes
@@ -599,6 +601,7 @@ Public Enum TickerColumnIds
     ColumnClose = &H200000
     ColumnChange = &H400000
     ColumnChangePercent = &H800000
+    ColumnOpenInterest = &H1000000
 End Enum
 
 Public Enum TickerStateCodes
@@ -620,7 +623,7 @@ Public Enum TickTypes
     ask = &H2&
     Last = &H4&
     high = &H8&
-    low = &H10&
+    Low = &H10&
     PrevClose = &H20&
     volume = &H40&
     openInterest = &H80&
