@@ -38,10 +38,6 @@ Event bid( _
                 ByVal price As Double, _
                 ByVal size As Long)
 
-Event ChangePercent( _
-                ByVal timestamp As Date, _
-                ByVal amount As Double)
-
 Event ContractInvalid( _
                 ByVal contractSpecifier As contractSpecifier)
                 
@@ -70,7 +66,7 @@ Event high( _
                 ByVal timestamp As Date, _
                 ByVal price As Double)
 
-Event low( _
+Event Low( _
                 ByVal timestamp As Date, _
                 ByVal price As Double)
 
@@ -78,6 +74,10 @@ Event MarketDepthNotAvailable( _
                 ByVal timestamp As Date, _
                 ByVal reason As String)
 
+Event openInterest( _
+                ByVal timestamp As Date, _
+                ByVal size As Long)
+                
 Event OutputTickfileCreated( _
                 ByVal timestamp As Date, _
                 ByVal filename As String)
@@ -88,7 +88,7 @@ Event previousClose( _
 
 Event priceChange( _
                 ByVal timestamp As Date, _
-                ByVal change As Double, _
+                ByVal Change As Double, _
                 ByVal ChangePercent As Double)
 
 Event Ready( _
@@ -115,6 +115,12 @@ Event trade( _
                 ByVal timestamp As Date, _
                 ByVal price As Double, _
                 ByVal size As Long)
+
+Event tradingSessionEnded( _
+                ByVal timestamp As Date)
+
+Event tradingSessionStarted( _
+                ByVal timestamp As Date)
 
 Event updateMarketDepth( _
                 ByVal timestamp As Date, _
@@ -157,7 +163,7 @@ Private mPosition                   As Long
 Private mBookmark                   As Variant
 Private mPriceFormatString          As String
 
-Private mTickers                    As tickers
+Private mTickers                    As Tickers
 
 Private mState                      As TickerStateCodes
 
@@ -175,6 +181,7 @@ Private mHighPrice                  As Double
 Private mLowPrice                   As Double
 Private mClosePrice                 As Double
 Private mVolume                     As Long
+Private mOpenInterest               As Long
 Private mChange                     As Double
 Private mChangePercent              As Double
 
@@ -221,6 +228,8 @@ Private mPriceChangeListeners       As Collection
 Private mProcessedMarketDepthListeners  As Collection
 Private mRawMarketDepthListeners  As Collection
 
+Private mTickNumber                 As Long
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -255,10 +264,11 @@ Private Sub IStreamingDataConsumer_Ask( _
                             ByVal timestamp As Date, _
                             ByVal price As Double, _
                             ByVal size As Long)
-
+mTickNumber = mTickNumber + 1
 If mState <> Running Then Exit Sub    ' ticker has been stopped
     
 mClock.SetTime timestamp
+checkInSession timestamp
 mAskPrice = price
 mAskSize = size
 
@@ -271,9 +281,7 @@ mAskSize = size
 fireAsk price, size
 RaiseEvent ask(timestamp, price, size)
 
-mTickers.ask timestamp, _
-            mKey, _
-            mBookmark, _
+mTickers.ask mBookmark, _
             mPriceFormatString, _
             price, _
             size
@@ -302,9 +310,11 @@ Private Sub IStreamingDataConsumer_Bid( _
                             ByVal price As Double, _
                             ByVal size As Long)
 
+mTickNumber = mTickNumber + 1
 If mState <> Running Then Exit Sub     ' ticker has been stopped
         
 mClock.SetTime timestamp
+checkInSession timestamp
 mBidPrice = price
 mBidSize = size
 
@@ -317,9 +327,7 @@ mBidSize = size
 fireBid price, size
 RaiseEvent bid(timestamp, price, size)
 
-mTickers.bid timestamp, _
-            mKey, _
-            mBookmark, _
+mTickers.bid mBookmark, _
             mPriceFormatString, _
             price, _
             size
@@ -347,18 +355,18 @@ Private Sub IStreamingDataConsumer_High( _
                             ByVal timestamp As Date, _
                             ByVal price As Double)
 
+mTickNumber = mTickNumber + 1
 If mState <> Running Then Exit Sub    ' ticker has been stopped
 
 mHighPrice = price
 
 mClock.SetTime timestamp
+checkInSession timestamp
 
 fireHigh price
 RaiseEvent high(timestamp, price)
 
-mTickers.high timestamp, _
-            mKey, _
-            mBookmark, _
+mTickers.high mBookmark, _
             mPriceFormatString, _
             price
 
@@ -370,18 +378,18 @@ Private Sub IStreamingDataConsumer_Low( _
                             ByVal timestamp As Date, _
                             ByVal price As Double)
 
+mTickNumber = mTickNumber + 1
 If mState <> Running Then Exit Sub    ' ticker has been stopped
 
 mLowPrice = price
 
 mClock.SetTime timestamp
+checkInSession timestamp
 
 fireLow price
-RaiseEvent low(timestamp, price)
+RaiseEvent Low(timestamp, price)
 
-mTickers.low timestamp, _
-            mKey, _
-            mBookmark, _
+mTickers.Low mBookmark, _
             mPriceFormatString, _
             price
 
@@ -392,6 +400,20 @@ End Sub
 Private Sub IStreamingDataConsumer_OpenInterest( _
                             ByVal timestamp As Date, _
                             ByVal size As Long)
+mTickNumber = mTickNumber + 1
+If mState <> Running Then Exit Sub    ' ticker has been stopped
+
+mOpenInterest = size
+
+mClock.SetTime timestamp
+checkInSession timestamp
+
+fireOpenInterest size
+RaiseEvent openInterest(timestamp, size)
+mTickers.openInterest mBookmark, _
+                    size
+                    
+'If mWriteToTickFile Then mWriter.writeOpenInterest timestamp, size
 
 End Sub
 
@@ -399,11 +421,13 @@ Private Sub IStreamingDataConsumer_PreviousClose( _
                             ByVal timestamp As Date, _
                             ByVal price As Double)
 
+mTickNumber = mTickNumber + 1
 If mState <> Running Then Exit Sub    ' ticker has been stopped
     
 mClosePrice = price
 
 mClock.SetTime timestamp
+checkInSession timestamp
 
 firePreviousClose price
 RaiseEvent previousClose(timestamp, price)
@@ -415,12 +439,10 @@ If mTradePrice <> 0 Then
     RaiseEvent priceChange(timestamp, mChange, mChangePercent)
 End If
 
-mTickers.PrevClose timestamp, _
-            mKey, _
-            mBookmark, _
+mTickers.PrevClose mBookmark, _
             mPriceFormatString, _
             price, _
-            change, _
+            Change, _
             ChangePercent
     
 If mWriteToTickFile Then mWriter.writeClose timestamp, price
@@ -430,6 +452,12 @@ End Sub
 Private Sub IStreamingDataConsumer_ResetMarketDepth( _
                             ByVal timestamp As Date, _
                             ByVal marketDepthReRequested As Boolean)
+
+mTickNumber = mTickNumber + 1
+If mState <> Running Then Exit Sub    ' ticker has been stopped
+    
+mClock.SetTime timestamp
+checkInSession timestamp
 
 DOMReset timestamp, marketDepthReRequested
     
@@ -442,8 +470,12 @@ Private Sub IStreamingDataConsumer_Trade( _
                             ByVal price As Double, _
                             ByVal size As Long)
 
+mTickNumber = mTickNumber + 1
 If mState <> Running Then Exit Sub    ' ticker has been stopped
     
+mClock.SetTime timestamp
+checkInSession timestamp
+
 notifyTrade timestamp, price, size
 
 If mWriteToTickFile Then mWriter.writeTrade timestamp, price, size
@@ -460,7 +492,11 @@ Private Sub IStreamingDataConsumer_UpdateMktDepth( _
                             ByVal price As Double, _
                             ByVal size As Long)
 
+mTickNumber = mTickNumber + 1
 If Not mState = Running Then Exit Sub    ' ticker has been stopped
+
+mClock.SetTime timestamp
+checkInSession timestamp
 
 DOMRawUpdate timestamp, _
             position, _
@@ -516,8 +552,12 @@ Private Sub IStreamingDataConsumer_UpdateMktDepthL2( _
                             ByVal price As Double, _
                             ByVal size As Long)
 
+mTickNumber = mTickNumber + 1
 If mState <> Running Then Exit Sub
         
+mClock.SetTime timestamp
+checkInSession timestamp
+
 DOMRawUpdateL2 timestamp, _
                 position, _
                 marketMaker, _
@@ -542,7 +582,11 @@ Private Sub IStreamingDataConsumer_Volume( _
                             ByVal timestamp As Date, _
                             ByVal size As Long)
 
+mTickNumber = mTickNumber + 1
 If mState <> Running Then Exit Sub    ' ticker has been stopped
+
+mClock.SetTime timestamp
+checkInSession timestamp
 
 If size = 0 Then Exit Sub
 
@@ -781,9 +825,9 @@ value = mWriteToTickFile
 End Sub
 
 Private Sub mProxy_RequestMarketDepth(ByVal DOMEventsRequired As DOMEvents, _
-                                    ByVal writeToTickFile As Boolean)
+                                    ByVal writeToTickfile As Boolean)
 RequestMarketDepth DOMEventsRequired, _
-                    writeToTickFile
+                    writeToTickfile
 End Sub
 
 Private Sub mProxy_StartTicker(ByVal pContractSpecifier As contractSpecifier)
@@ -838,8 +882,8 @@ Friend Property Let bookmark(ByVal value As Variant)
 mBookmark = value
 End Property
 
-Public Property Get change() As Double
-change = mChange
+Public Property Get Change() As Double
+Change = mChange
 End Property
 
 Public Property Get ChangePercent() As Double
@@ -866,14 +910,13 @@ RaiseEvent Ready(timestamp, mContract)
 mState = TickerStateCodes.Running
 If mWriteToTickFile Then CreateOutputTickfile
 mTickers.StartTicker Me
-mClock.SimulateTime True
 mSimulatorHandle = gOrderSimulator.startMarket(mContract.specifier)
 gOrderSimulator.simulateExchangeDelays = (mClock.Rate <> 0)
 End Property
 
 Public Property Get Contract() As Contract
 If Not mContract Is Nothing Then
-    Set Contract = mContract.Clone
+    Set Contract = mContract
 End If
 End Property
 
@@ -970,7 +1013,7 @@ Public Property Get outputTickfileFormat() As String
 outputTickfileFormat = mOutputTickfileFormat
 End Property
 
-Public Property Let outputTickFilePath(ByVal value As String)
+Public Property Let outputTickfilePath(ByVal value As String)
 If mState <> TickerStateCodes.Created Then
     err.Raise ErrorCodes.TickerAlreadyInUse, _
             "TradeBuild.Ticker::(Let)OutputTickFilePath", _
@@ -979,8 +1022,8 @@ End If
 mOutputTickFilePath = value
 End Property
 
-Public Property Get outputTickFilePath() As String
-outputTickFilePath = mOutputTickFilePath
+Public Property Get outputTickfilePath() As String
+outputTickfilePath = mOutputTickFilePath
 End Property
 
 Friend Property Let position(ByVal value As Long)
@@ -1018,16 +1061,25 @@ Public Property Get State() As TickerStateCodes
 State = mState
 End Property
 
+Friend Property Let Tickers(ByVal value As Tickers)
+Set mTickers = value
+End Property
+
 Friend Property Let tickfileManager(ByVal value As tickfileManager)
 Set mTickfileManager = value
 End Property
 
-Friend Property Let tickers(ByVal value As tickers)
-Set mTickers = value
+Public Property Get tickNumber() As Long
+tickNumber = mTickNumber
 End Property
 
 Public Property Get timeframes() As TradeBuild.timeframes
 Set timeframes = mTimeframes
+End Property
+
+Friend Property Let timestamp(ByVal value As Date)
+mClock.SimulateTime True
+mClock.SetTime value
 End Property
 
 Public Property Get timestamp() As Date
@@ -1046,7 +1098,7 @@ Public Property Get volume() As Long
 volume = mVolume
 End Property
 
-Public Property Let writeToTickFile(ByVal value As Boolean)
+Public Property Let writeToTickfile(ByVal value As Boolean)
 If mState <> TickerStateCodes.Created Then
     err.Raise ErrorCodes.TickerAlreadyInUse, _
             "TradeBuild.Ticker::(Let)writeToTickFile", _
@@ -1055,8 +1107,8 @@ End If
 mWriteToTickFile = value
 End Property
 
-Public Property Get writeToTickFile() As Boolean
-writeToTickFile = mWriteToTickFile
+Public Property Get writeToTickfile() As Boolean
+writeToTickfile = mWriteToTickFile
 End Property
 
 '================================================================================
@@ -1097,6 +1149,11 @@ Set mContract = Nothing
 State = TickerStateCodes.Dead
 End Sub
 
+Public Function isTimeInSession(ByVal timestamp As Date) As Boolean
+If mContract Is Nothing Then Exit Function
+isTimeInSession = mContract.isTimeInSession(timestamp)
+End Function
+
 Friend Sub MarketDepthNotAvailable( _
                 ByVal reason As String)
 RaiseEvent MarketDepthNotAvailable(timestamp, reason)
@@ -1109,33 +1166,33 @@ End Sub
 Public Sub removePriceChangeListener(ByVal value As PriceChangeListener)
 Dim i As Long
 For i = 1 To mPriceChangeListeners.Count
-    If mPriceChangeListeners.item(i) Is value Then mPriceChangeListeners.Remove i
+    If mPriceChangeListeners.Item(i) Is value Then mPriceChangeListeners.Remove i
 Next
 End Sub
 
 Public Sub removeProcessedMarketDepthListener(ByVal value As ProcessedMarketDepthListener)
 Dim i As Long
 For i = 1 To mProcessedMarketDepthListeners.Count
-    If mProcessedMarketDepthListeners.item(i) Is value Then mProcessedMarketDepthListeners.Remove i
+    If mProcessedMarketDepthListeners.Item(i) Is value Then mProcessedMarketDepthListeners.Remove i
 Next
 End Sub
 
 Public Sub removeQuoteListener(ByVal value As QuoteListener)
 Dim i As Long
 For i = 1 To mQuoteListeners.Count
-    If mQuoteListeners.item(i) Is value Then mQuoteListeners.Remove i
+    If mQuoteListeners.Item(i) Is value Then mQuoteListeners.Remove i
 Next
 End Sub
 
 Public Sub removeRawMarketDepthListener(ByVal value As RawMarketDepthListener)
 Dim i As Long
 For i = 1 To mRawMarketDepthListeners.Count
-    If mRawMarketDepthListeners.item(i) Is value Then mRawMarketDepthListeners.Remove i
+    If mRawMarketDepthListeners.Item(i) Is value Then mRawMarketDepthListeners.Remove i
 Next
 End Sub
 
 Public Sub RequestMarketDepth(ByVal DOMEventsRequired As DOMEvents, _
-                            ByVal writeToTickFile As Boolean)
+                            ByVal writeToTickfile As Boolean)
 
 If mState = TickerStateCodes.Closing Then Exit Sub
 
@@ -1145,20 +1202,20 @@ If mState = TickerStateCodes.Dead Then
                     "Can't call requestMarketDepth on a dead ticker object"
 End If
                         
-If DOMEventsRequired = DOMEvents.DOMNoEvents And Not writeToTickFile Then
+If DOMEventsRequired = DOMEvents.DOMNoEvents And Not writeToTickfile Then
     err.Raise ErrorCodes.IllegalArgumentException, _
                 "TradeBuild.Ticker::requestMarketDepth", _
                 "writeToTickFile must be true if DOMEventsRequired=DOMNoevents"
 End If
 
-If writeToTickFile And mWriter Is Nothing Then
+If writeToTickfile And mWriter Is Nothing Then
     err.Raise ErrorCodes.IllegalArgumentException, _
                 "TradeBuild.Ticker::requestMarketDepth", _
                 "Can't write market depth to tickfile: no output tickfile for this ticker"
 End If
 
 
-mIncludeMarketDepthInTickfile = writeToTickFile
+mIncludeMarketDepthInTickfile = writeToTickfile
 
 If Not mReceivingMarketDepth Then
     mDOMEventsRequired = DOMEventsRequired
@@ -1297,6 +1354,24 @@ End Sub
 ' Helper Functions
 '================================================================================
 
+Private Sub checkInSession(ByVal timestamp As Date)
+Static sessionStartNotified As Boolean
+If mContract Is Nothing Then Exit Sub
+If CDbl(mContract.currentSessionEndTime) <> 0# And _
+    timestamp >= mContract.currentSessionEndTime _
+Then
+    RaiseEvent tradingSessionEnded(timestamp)
+    sessionStartNotified = False
+End If
+mContract.setSession timestamp
+If timestamp >= mContract.currentSessionStartTime And _
+    Not sessionStartNotified _
+Then
+    RaiseEvent tradingSessionStarted(timestamp)
+    sessionStartNotified = True
+End If
+End Sub
+
 Private Sub CreateOutputTickfile()
 Dim tfManager As TradeBuild.tickfileManager
 
@@ -1332,10 +1407,6 @@ mClock.SetTime timestamp
 
 fireClearMarketDepthCell side, price
 RaiseEvent DOMClearCell(timestamp, side, price)
-mTickers.DOMClearCell mKey, _
-                    timestamp, _
-                    side, _
-                    price
 End Sub
                 
 Private Sub DOMRawUpdate( _
@@ -1391,7 +1462,6 @@ mClock.SetTime timestamp
 
 fireResetMarketDepth
 RaiseEvent DOMReset(timestamp, marketDepthReRequested)
-mTickers.DOMReset Me, timestamp, marketDepthReRequested
 End Sub
                 
 Private Sub DOMSetCell( _
@@ -1406,11 +1476,6 @@ mClock.SetTime timestamp
 
 fireSetMarketDepthCell side, price, size
 RaiseEvent DOMSetCell(timestamp, side, price, size)
-mTickers.DOMSetCell mKey, _
-                    timestamp, _
-                    side, _
-                    price, _
-                    size
 End Sub
                 
 Private Sub fireAsk(ByVal price As Double, _
@@ -1469,7 +1534,7 @@ Set quote.Source = Me
 quote.price = price
 quote.size = 0
 For Each listener In mQuoteListeners
-    listener.low quote
+    listener.Low quote
 Next
 End Sub
 
@@ -1495,15 +1560,15 @@ For Each listener In mQuoteListeners
 Next
 End Sub
 
-Private Sub firePriceChange(ByVal change As Double, _
+Private Sub firePriceChange(ByVal Change As Double, _
                 ByVal ChangePercent As Double)
 Dim listener As PriceChangeListener
 Dim priceChange As PriceChangeEvent
 Set priceChange.Source = Me
-priceChange.change = change
+priceChange.Change = Change
 priceChange.ChangePercent = ChangePercent
 For Each listener In mPriceChangeListeners
-    listener.change priceChange
+    listener.Change priceChange
 Next
 End Sub
 
@@ -1557,6 +1622,7 @@ Private Sub fireUpdateMarketDepth( _
 Dim listener As RawMarketDepthListener
 Dim rawMarketDepth As RawMarketDepthEvent
 Set rawMarketDepth.Source = Me
+rawMarketDepth.position = position
 rawMarketDepth.marketMaker = marketMaker
 rawMarketDepth.operation = operation
 rawMarketDepth.side = side
@@ -1624,7 +1690,6 @@ Private Sub notifyTrade( _
                             ByVal price As Double, _
                             ByVal size As Long)
 
-mClock.SetTime timestamp
 mTradePrice = price
 mTradeSize = size
 
@@ -1644,13 +1709,11 @@ If mClosePrice <> 0 Then
     RaiseEvent priceChange(timestamp, mChange, mChangePercent)
 End If
 
-mTickers.Last timestamp, _
-            mKey, _
-            mBookmark, _
+mTickers.Last mBookmark, _
             mPriceFormatString, _
             price, _
             size, _
-            change, _
+            Change, _
             ChangePercent
 
 If mPrevTrade <> 0 And price <> mPrevTrade Then
@@ -1674,12 +1737,11 @@ Private Sub notifyVolume(ByVal timestamp As Date, ByVal size As Long)
 mVolume = size
 
 mClock.SetTime timestamp
+checkInSession timestamp
 
 fireVolume size
 RaiseEvent volume(timestamp, size)
-mTickers.volume timestamp, _
-            mKey, _
-            mBookmark, _
+mTickers.volume mBookmark, _
             size
 End Sub
 

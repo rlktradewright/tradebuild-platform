@@ -109,6 +109,7 @@ Private mBarLengthMinutes As Long
 
 Private mSaveIntervalSeconds As Long
 Private mNumberOfBarsToFetch As Long
+Private mExcludeCurrentBar As Boolean
 
 Private mHistoricDataLoaded As Boolean
 
@@ -431,13 +432,22 @@ If mNumberOfBarsToFetch <> 0 Then
     barSpecifier.barType = BarTypes.BarTypeTrade
     Set barSpecifier.contractSpecifier = mContract.specifier
     barSpecifier.From = CDate("1 Jan 1970")
-    barSpecifier.To = mTicker.Timestamp + mBarLengthMinutes / 1440     ' ensure we get the latest bar
+    If mExcludeCurrentBar Then
+        barSpecifier.To = mTicker.Timestamp
+    Else
+        ' ensure we get the latest bar
+        barSpecifier.To = mTicker.Timestamp + mBarLengthMinutes / 1440
+    End If
     barSpecifier.NumberOfBars = mNumberOfBarsToFetch
     mBarReader.FetchBars barSpecifier
     ' other bar types ????????????????????????????????????????
 Else
     ListenToTicker
 End If
+End Property
+
+Friend Property Let excludeCurrentBar(ByVal value As Boolean)
+mExcludeCurrentBar = value
 End Property
 
 Public Property Get historicDataLoaded() As Boolean
@@ -537,7 +547,7 @@ End Sub
 Public Sub removeCurrentBarListener(ByVal value As CurrentBarListener)
 Dim i As Long
 For i = 1 To mCurrentBarListeners.Count
-    If mCurrentBarListeners.item(i) Is value Then mCurrentBarListeners.Remove i
+    If mCurrentBarListeners.Item(i) Is value Then mCurrentBarListeners.Remove i
 Next
 End Sub
 
@@ -590,7 +600,7 @@ End If
 ' historical bars have been loaded before the first tick is notified
 Set mTradeBar = Nothing
 On Error Resume Next
-Set mTradeBar = mTradeBars.item(barTime)
+Set mTradeBar = mTradeBars.Item(barTime)
 On Error GoTo 0
 If mTradeBar Is Nothing Then
     Set mTradeBar = mTradeBars.add(barTime)
@@ -687,7 +697,7 @@ Private Function isQuoteToBeProcessed() As Boolean
 Dim Timestamp As Date
 If Not mHistoricDataLoaded Then Exit Function
 Timestamp = mTicker.Timestamp
-If Not mContract.IsTimeInSession(Timestamp) Then Exit Function
+If Not mContract.isTimeInSession(Timestamp) Then Exit Function
 CheckNewBar Timestamp
 isQuoteToBeProcessed = True
 End Function
@@ -704,7 +714,7 @@ mHistoricBarPending = False
 With mHistoricBar
     ' check whether this bar already exists
     On Error Resume Next
-    Set lBar = mTradeBars.item(.Timestamp)
+    Set lBar = mTradeBars.Item(.Timestamp)
     On Error GoTo 0
     
     If Not lBar Is Nothing Then

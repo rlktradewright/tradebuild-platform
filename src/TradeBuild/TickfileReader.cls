@@ -48,7 +48,7 @@ Implements TradeBuildSP.IStreamingDataConsumer
 ' Types
 '================================================================================
 
-Private Type Tick
+Private Type TickStruct
     UnProcessed     As Boolean
     Timed           As Boolean
     timestamp       As Date
@@ -67,7 +67,7 @@ End Type
 ' Member variables
 '================================================================================
 
-Private mCurrentTick As Tick
+Private mCurrentTick As TickStruct
 
 Private mReader As TradeBuildSP.ITickfileReader
 
@@ -138,7 +138,7 @@ Private Sub IStreamingDataConsumer_High( _
                             ByVal price As Double)
 With mCurrentTick
     .UnProcessed = True
-    .TickType = TradeBuild.TickTypes.High
+    .TickType = TradeBuild.TickTypes.high
     .timestamp = AdjustTimestamp(timestamp)
     .TickPrice = price
 End With
@@ -493,14 +493,14 @@ With mCurrentTick
         mDataConsumer.trade .timestamp, _
                             .TickPrice, _
                             .TickSize
-    Case TradeBuild.TickTypes.High
-        mDataConsumer.High .timestamp, _
+    Case TradeBuild.TickTypes.high
+        mDataConsumer.high .timestamp, _
                             .TickPrice
     Case TradeBuild.TickTypes.Low
         mDataConsumer.Low .timestamp, _
                             .TickPrice
     Case TradeBuild.TickTypes.PrevClose
-        mDataConsumer.PreviousClose .timestamp, _
+        mDataConsumer.previousClose .timestamp, _
                                     .TickPrice
     Case TradeBuild.TickTypes.volume
         mDataConsumer.volume .timestamp, _
@@ -521,7 +521,7 @@ With mCurrentTick
                                             .TickPrice, _
                                             .TickSize
     Case TradeBuild.TickTypes.MarketDepthReset
-        mDataConsumer.ResetMarketDepth .timestamp, .marketDepthReRequested
+        mDataConsumer.resetMarketDepth .timestamp, .marketDepthReRequested
     End Select
     .UnProcessed = False
     mCurrentTimestamp = .timestamp

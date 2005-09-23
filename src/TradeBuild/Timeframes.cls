@@ -101,7 +101,8 @@ Public Function add( _
                             ByVal key As String, _
                             ByVal NumberOfBarsToFetch As Long, _
                             Optional ByVal SaveIntervalSeconds As Long = -1&, _
-                            Optional ByVal IncludeBidAndAsk As Boolean) As Timeframe
+                            Optional ByVal IncludeBidAndAsk As Boolean, _
+                            Optional ByVal excludeCurrentBar As Boolean = False) As Timeframe
 Set add = New Timeframe
 mTimeframes.add add, key
 add.key = key
@@ -111,6 +112,7 @@ add.timeperiodUnit = timeperiodUnit
 add.SaveIntervalSeconds = SaveIntervalSeconds
 add.IncludeBidAndAsk = IncludeBidAndAsk
 add.NumberOfBarsToFetch = NumberOfBarsToFetch
+add.excludeCurrentBar = excludeCurrentBar
 If Not mContract Is Nothing Then add.Contract = mContract
 End Function
 

@@ -188,7 +188,7 @@ Public Property Get volume() As Long
 volume = mEventProxy.volume
 End Property
 
-Public Property Let writeToTickfile(ByVal value As Boolean)
+Public Property Get writeToTickfile() As Boolean
 writeToTickfile = mEventProxy.writeToTickfile
 End Property
 
