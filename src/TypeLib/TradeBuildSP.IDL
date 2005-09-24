@@ -1232,6 +1232,11 @@ library TradeBuildSP
         HRESULT WriteVolume(
                         [in] DATE timestamp, 
                         [in] long size);
+
+        HRESULT WriteOpenInterest(
+                        [in] DATE timestamp, 
+                        [in] long size);
+
     };
 
 };
