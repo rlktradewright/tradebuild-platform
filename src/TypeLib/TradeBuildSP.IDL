@@ -95,6 +95,14 @@ library TradeBuildSP
         OptPut = 2
     } OptionRights;
 
+    typedef [uuid(9f77deb1-43ef-484a-8138-f029377382bf
+), version(1.0)]
+    enum {
+	ActionNone = 0,
+	ActionBuy = 1,
+	ActionSell = 2
+    } OrderActions;
+
     typedef [uuid(0B9D5098-388C-42B8-839D-C268A42457E9), version(1.0)]
     enum {
         OrderTypeNone = 0,
@@ -497,10 +505,10 @@ library TradeBuildSP
 	// Properties ==================================================
 
         [propget]
-        HRESULT Action([out, retval] BSTR* );
+        HRESULT Action([out, retval] OrderActions* );
 
         [propput]
-        HRESULT Action([in] BSTR );
+        HRESULT Action([in] OrderActions );
 
         [propget]
         HRESULT ContractID([out, retval] long* );
