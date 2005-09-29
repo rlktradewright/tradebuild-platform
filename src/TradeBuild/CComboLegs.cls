@@ -45,6 +45,7 @@ Implements TradeBuildSP.IComboLegs
 '================================================================================
 
 Private mComboLegs As Collection
+Private mLocked As Boolean
 
 '================================================================================
 ' Enums
@@ -59,7 +60,7 @@ Set mComboLegs = New Collection
 End Sub
 
 Private Sub Class_ReadProperties(PropBag As PropertyBag)
-Dim lComboLeg As comboLeg
+Dim lComboLeg As ComboLeg
 Dim pb As PropertyBag
 Dim ComboLegs() As Byte
 Dim i As Long
@@ -82,7 +83,7 @@ err:
 End Sub
 
 Private Sub Class_WriteProperties(PropBag As PropertyBag)
-Dim lComboLeg As comboLeg
+Dim lComboLeg As ComboLeg
 Dim pb As PropertyBag
 Dim ComboLegs() As Byte
 Dim i As Long
@@ -103,13 +104,13 @@ End Sub
 ' IComboLegs Interface Members
 '================================================================================
 
-Private Sub IComboLegs_Add(ByVal comboLeg As TradeBuildSP.IComboLeg, _
+Private Sub IComboLegs_Add(ByVal ComboLeg As TradeBuildSP.IComboLeg, _
                         Optional ByVal key As String = "")
-add comboLeg, key
+add ComboLeg, key
 End Sub
 
 Private Function IComboLegs_Clone() As TradeBuildSP.IComboLegs
-Set IComboLegs_Clone = Clone
+Set IComboLegs_Clone = clone
 End Function
 
 Private Property Get IComboLegs_Count() As Long
@@ -121,7 +122,7 @@ Set IComboLegs_Item = item(index)
 End Function
 
 Private Function IComboLegs_NewComboLeg() As TradeBuildSP.IComboLeg
-Set IComboLegs_NewComboLeg = New comboLeg
+Set IComboLegs_NewComboLeg = New ComboLeg
 End Function
 
 Private Sub IComboLegs_Remove(ByVal index As Variant)
@@ -140,31 +141,63 @@ Public Property Get Count() As Long
 Count = mComboLegs.Count
 End Property
 
+Friend Property Let locked(ByVal value As Boolean)
+mLocked = value
+End Property
+
+Friend Property Get locked() As Boolean
+locked = mLocked
+End Property
+
+
 '================================================================================
 ' Methods
 '================================================================================
 
-Friend Sub add(ByVal pComboLeg As comboLeg, _
+Friend Sub add(ByVal pComboLeg As ComboLeg, _
                 Optional ByVal key As String)
 If key <> "" Then
-    mComboLegs.add pComboLeg.Clone, key
+    mComboLegs.add pComboLeg, key
 Else
-    mComboLegs.add pComboLeg.Clone
+    mComboLegs.add pComboLeg
 End If
 End Sub
 
-Public Function Clone() As ComboLegs
-Dim cl As comboLeg
-Set Clone = New ComboLegs
+Public Function addLeg( _
+                ByVal key As String, _
+                ByVal contractID As Long, _
+                ByVal action As String, _
+                ByVal ratio As Long, _
+                ByVal exchange As String, _
+                ByVal openClose As LegOpenClose) As ComboLeg
+
+If mLocked Then
+    err.Raise ErrorCodes.IllegalStateException, _
+                "TradeBuild.ComboLegs::addLeg", _
+                "Can't add leg: the object is locked"
+End If
+
+Set addLeg = New ComboLeg
+addLeg.contractID = contractID
+addLeg.action = action
+addLeg.ratio = ratio
+addLeg.exchange = exchange
+addLeg.openClose = openClose
+add addLeg, key
+End Function
+
+Friend Function clone() As ComboLegs
+Dim cl As ComboLeg
+Set clone = New ComboLegs
 For Each cl In mComboLegs
-    Clone.add cl.Clone
+    clone.add cl.clone
 Next
 End Function
 
-Public Function item(ByVal index As Long) As comboLeg
-Dim theItem As comboLeg
+Public Function item(ByVal index As Variant) As ComboLeg
+Dim theItem As ComboLeg
 Set theItem = mComboLegs(index)
-item = theItem.Clone
+item = theItem
 End Function
 
 Public Function NewEnum() As IUnknown

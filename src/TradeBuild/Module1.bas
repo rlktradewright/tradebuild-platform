@@ -35,9 +35,12 @@ End Type
 
 Public gServiceProviders As ServiceProviders
 Public gTradeBuildAPI As TradeBuildAPI
-Public gTickers As tickers
+Public gTickers As Tickers
 Public gListeners As listeners
 Public gOrderSimulator As AdvancedOrderSimulator
+
+Public gNextOrderID As Long
+Public gAllOrders As Collection
 
 
 '================================================================================
@@ -74,7 +77,7 @@ Public Function gCurrentTime() As Date
 gCurrentTime = CDbl(Int(Now)) + (CDbl(Timer) / 86400#)
 End Function
 
-Public Function gFormatTimestamp(ByVal Timestamp As Date, _
+Public Function gFormatTimestamp(ByVal timestamp As Date, _
                                 Optional ByVal formatOption As TimestampFormats = TimestampDateAndTime, _
                                 Optional ByVal formatString As String = "yyyymmddhhnnss") As String
 Dim timestampDays As Long
@@ -82,10 +85,10 @@ Dim timestampSecs As Double
 Dim timestampAsDate As Date
 Dim milliseconds As Long
 
-timestampDays = Int(Timestamp)
-timestampSecs = Int((Timestamp - Int(Timestamp)) * 86400) / 86400#
+timestampDays = Int(timestamp)
+timestampSecs = Int((timestamp - Int(timestamp)) * 86400) / 86400#
 timestampAsDate = CDate(CDbl(timestampDays) + timestampSecs)
-milliseconds = CLng((Timestamp - timestampAsDate) * 86400# * 1000#)
+milliseconds = CLng((timestamp - timestampAsDate) * 86400# * 1000#)
 
 If milliseconds >= 1000& Then
     milliseconds = milliseconds - 1000&
@@ -256,6 +259,30 @@ Next
 gToHex = s
 End Function
 
+Public Function LegOpenCloseFromString(ByVal value As String) As TradeBuild.LegOpenClose
+Select Case UCase$(value)
+Case ""
+    LegOpenCloseFromString = LegUnknownPos
+Case "SAME"
+    LegOpenCloseFromString = LegSamePos
+Case "OPEN"
+    LegOpenCloseFromString = LegOpenPos
+Case "CLOSE"
+    LegOpenCloseFromString = LegClosePos
+End Select
+End Function
+
+Public Function LegOpenCloseToString(ByVal value As TradeBuild.LegOpenClose) As String
+Select Case value
+Case LegSamePos
+    LegOpenCloseToString = "SAME"
+Case LegOpenPos
+    LegOpenCloseToString = "OPEN"
+Case LegClosePos
+    LegOpenCloseToString = "CLOSE"
+End Select
+End Function
+
 Public Function OptRightFromString(ByVal value As String) As OptionRights
 Select Case UCase$(value)
 Case ""
@@ -275,6 +302,24 @@ Case OptCall
     OptRightToString = "Call"
 Case OptPut
     OptRightToString = "Put"
+End Select
+End Function
+
+Public Function orderActionFromString(ByVal value As String) As OrderActions
+Select Case UCase$(value)
+Case "BUY"
+    orderActionFromString = OrderActions.ActionBuy
+Case "SELL"
+    orderActionFromString = OrderActions.ActionSell
+End Select
+End Function
+
+Public Function orderActionToString(ByVal value As OrderActions) As String
+Select Case value
+Case OrderActions.ActionBuy
+    orderActionToString = "BUY"
+Case OrderActions.ActionSell
+    orderActionToString = "SELL"
 End Select
 End Function
 

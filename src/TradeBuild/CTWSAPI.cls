@@ -44,9 +44,9 @@ Event connectionToIBClosed(ByVal timestamp As Date)
 
 Event connectionToIBRecovered(ByVal timestamp As Date)
 
-Event Contract( _
+Event contract( _
                 ByVal timestamp As Date, _
-                ByVal pContract As Contract)
+                ByVal pContract As contract)
     ' Raised when details for a security are received from TWS.
 
 Event ContractInvalid( _
@@ -117,7 +117,7 @@ Event updateMarketDepth( _
                 ByVal position As Long, _
                 ByVal operation As DOMOperations, _
                 ByVal side As DOMSides, _
-                ByVal price As Double, _
+                ByVal Price As Double, _
                 ByVal Size As Long)
                 
 Event UpdateMarketDepthL2( _
@@ -127,7 +127,7 @@ Event UpdateMarketDepthL2( _
                 ByVal marketMaker As String, _
                 ByVal operation As DOMOperations, _
                 ByVal side As DOMSides, _
-                ByVal price As Double, _
+                ByVal Price As Double, _
                 ByVal Size As Long)
 
 Event updateNewsBulletin( _
@@ -212,9 +212,6 @@ Private mTickerTable() As TickerTableEntry
 Private mContractDetailsRequest As ContractDtlsReq
 Private mFirstContractDetailsReceived As Boolean
 
-Private mNextOrderID As Long
-Private mAllOrders As Collection
-
 Private WithEvents mOrderSimulator As AdvancedOrderSimulator
 Attribute mOrderSimulator.VB_VarHelpID = -1
 Private mSimulateOrders As Boolean
@@ -249,7 +246,7 @@ Set gTradeBuildAPI = Me
 ReDim mTickerTable(InitialMaxTickers) As TickerTableEntry
 ReDim mBufferIn(1023) As Byte
 ReDim mBufferOut(1023) As Byte
-Set mAllOrders = New Collection
+Set gAllOrders = New Collection
 mConnectionState = ConnectionStates.ConnNotConnected
 Set mOrderSimulator = New AdvancedOrderSimulator
 Set gOrderSimulator = mOrderSimulator
@@ -258,7 +255,7 @@ Set gListeners = mListeners
 Set mTickers = New Tickers
 Set gTickers = mTickers
 
-mNextOrderID = 1
+gNextOrderID = 1
 
 ReDim mExchangeCodes(100) As String
 mMaxExchangeCodesIndex = -1
@@ -417,7 +414,7 @@ End Sub
 Private Sub mSocket_Error(ByVal Number As Integer, _
                         Description As String, _
                         ByVal Scode As Long, _
-                        ByVal Source As String, _
+                        ByVal source As String, _
                         ByVal HelpFile As String, _
                         ByVal HelpContext As Long, _
                         CancelDisplay As Boolean)
@@ -526,7 +523,7 @@ Private Sub mOrderSimulator_executionDetails(ByVal timestamp As Date, _
                                             ByVal exec As Execution)
 RaiseEvent ExecutionDetails(timestamp, _
                             id, _
-                            pContractSpecifier.Clone, _
+                            pContractSpecifier, _
                             exec)
 End Sub
 
@@ -534,7 +531,7 @@ Private Sub mOrderSimulator_openOrder(ByVal timestamp As Date, _
                                     ByVal pContractSpecifier As contractSpecifier, _
                                     ByVal pOrder As Order)
 RaiseEvent openOrder(timestamp, _
-                    pContractSpecifier.Clone, _
+                    pContractSpecifier, _
                     pOrder)
 End Sub
 
@@ -567,7 +564,7 @@ Private Sub mOrderSimulator_preFill(ByVal timestamp As Date, _
                                     fillSize As Long)
 RaiseEvent preFill(timestamp, _
                     Order, _
-                    pContractSpecifier.Clone, _
+                    pContractSpecifier, _
                     fillPrice, _
                     fillSize)
 End Sub
@@ -646,10 +643,10 @@ Public Function AddListener(ByVal newListener As IListener, _
 mListeners.add newListener, valueType
 End Function
 
-Public Sub CancelMarketData(ByVal tickerid As Long)
+Public Sub CancelMarketData(ByVal TickerID As Long)
 If mConnectionState <> ConnectionStates.ConnConnected Then
     RaiseEvent errorMessage(gCurrentTime, _
-                            tickerid, _
+                            TickerID, _
                             ApiErrorCodes.NotConnected, _
                             LoadResString(ApiErrorCodes.NotConnected))
     Exit Sub
@@ -657,17 +654,16 @@ End If
 Dim id As Long
 Const Version = 2
 
-If Not mTickerTable(tickerid).inUse Then
+If Not mTickerTable(TickerID).inUse Then
     err.Raise InvalidTickerID, _
     "TradeBuild.TradeBuildAPI::CancelMarketData", _
-    "Invalid ticker id " & tickerid
+    "Invalid ticker id " & TickerID
 End If
 
-id = tickerid + mTickerTable(tickerid).incarnation
+id = TickerID + mTickerTable(TickerID).incarnation
 
-If mTickerTable(tickerid).receivingMarketDepth Then CancelMarketDepth tickerid
-releaseTickerTableEntry tickerid
-mOrderSimulator.stopMarket tickerid
+If mTickerTable(TickerID).receivingMarketDepth Then CancelMarketDepth TickerID
+releaseTickerTableEntry TickerID
 addData CANCEL_MKT_DATA
 addData Version
 addData id
@@ -675,10 +671,10 @@ send
 
 End Sub
 
-Public Sub CancelMarketDepth(ByVal tickerid As Long)
+Public Sub CancelMarketDepth(ByVal TickerID As Long)
 If mConnectionState <> ConnectionStates.ConnConnected Then
     RaiseEvent errorMessage(gCurrentTime, _
-                tickerid, _
+                TickerID, _
                 ApiErrorCodes.NotConnected, _
                 LoadResString(ApiErrorCodes.NotConnected))
     Exit Sub
@@ -686,21 +682,21 @@ End If
 
 Const Version = 1
 
-With mTickerTable(tickerid)
+With mTickerTable(TickerID)
     If Not .inUse Then err.Raise ErrorCodes.InvalidTickerID, _
                                     "TradeBuild.TradeBuildAPI::cancelMarketDepth", _
-                                    "Invalid ticker id " & tickerid
+                                    "Invalid ticker id " & TickerID
     If Not .receivingMarketDepth Then
         err.Raise ErrorCodes.NotReceivingMarketDepth, _
                     "TradeBuild.TradeBuildAPI::cancelMarketDepth", _
-                    "Ticker id " & tickerid & " not currently receiving market depth"
+                    "Ticker id " & TickerID & " not currently receiving market depth"
     End If
-    mTickerTable(tickerid).receivingMarketDepth = False
+    mTickerTable(TickerID).receivingMarketDepth = False
 End With
 
 addData CANCEL_MKT_DEPTH
 addData Version
-addData MARKET_DEPTH_TICKER_BASE + tickerid
+addData MARKET_DEPTH_TICKER_BASE + TickerID
 send
 
 End Sub
@@ -735,7 +731,7 @@ Then
     Exit Sub
 End If
 
-Set lOrder = mAllOrders(CStr(orderId))
+Set lOrder = gAllOrders(CStr(orderId))
 If mSimulateOrders Or lOrder.simulated Then
     mOrderSimulator.cancelOrder orderId
     Exit Sub
@@ -784,15 +780,6 @@ RaiseEvent errorMessage(gCurrentTime, _
                 ApiErrorCodes.ConnectFail, _
                 LoadResString(ApiErrorCodes.ConnectFail))
 End Sub
-
-Public Function createOrder() As Order
-Dim lOrder As Order
-Set lOrder = New Order
-lOrder.id = mNextOrderID
-mAllOrders.add lOrder, CStr(mNextOrderID)
-mNextOrderID = mNextOrderID + 1
-Set createOrder = lOrder.Clone   ' return a copy of the order to the app
-End Function
 
 Public Sub disconnect()
 mDisconnectedByApplication = True
@@ -845,15 +832,93 @@ Public Function NewContracts() As Contracts
 Set NewContracts = New Contracts
 End Function
 
+Public Function newContractSpecifier( _
+                Optional ByVal localSymbol As String, _
+                Optional ByVal symbol As String, _
+                Optional ByVal exchange As String, _
+                Optional ByVal secType As SecurityTypes = SecTypeStock, _
+                Optional ByVal currencyCode As String, _
+                Optional ByVal expiry As String, _
+                Optional ByVal strike As Double, _
+                Optional ByVal right As OptionRights = OptNone) As TradeBuild.contractSpecifier
+
+Dim source As String: source = "TradeBuild.TradeBuildAPI::newContractSpecifier"
+
+If localSymbol = "" And symbol = "" Then
+    err.Raise ErrorCodes.IllegalArgumentException, _
+                source, _
+                "Symbol must be supplied if localSymbol is not supplied"
+End If
+
+If exchange <> "" And _
+    Not IsValidExchangeCode(exchange) _
+Then
+    err.Raise ErrorCodes.IllegalArgumentException, _
+                source, _
+                "'" & exchange & "' is not a valid exchange code"
+End If
+
+Select Case secType
+Case 0  ' ie not supplied
+Case SecTypeStock
+Case SecTypeFuture
+    If expiry <> "" Then
+' need to write a function to validate the expiry format
+'        err.Raise ErrorCodes.IllegalArgumentException, _
+'                    source, _
+'                    "expiry must be supplied"
+    End If
+Case SecTypeOption, SecTypeFuturesOption
+    If expiry <> "" Then
+' need to write a function to validate the expiry format
+'        err.Raise ErrorCodes.IllegalArgumentException, _
+'                    source, _
+'                    "expiry must be supplied"
+    End If
+    If strike < 0 Then
+        err.Raise ErrorCodes.IllegalArgumentException, _
+                    source, _
+                    "strike must be > 0"
+    End If
+    Select Case right
+    Case OptCall
+    Case OptPut
+    Case OptNone
+    Case Else
+        err.Raise ErrorCodes.IllegalArgumentException, _
+                    source, _
+                    "'" & right & "' is not a valid option right"
+    End Select
+Case SecTypeCash
+Case SecTypeBag
+Case SecTypeIndex
+Case Else
+    err.Raise ErrorCodes.IllegalArgumentException, _
+                source, _
+                "'" & secType & "' is not a valid secType"
+End Select
+
+Set newContractSpecifier = New TradeBuild.contractSpecifier
+With newContractSpecifier
+    .localSymbol = localSymbol
+    .symbol = symbol
+    .exchange = exchange
+    .secType = SecTypeBag
+    .currencyCode = currencyCode
+    .expiry = expiry
+    .strike = strike
+    .right = right
+End With
+End Function
+
 Public Function NewTicker() As Ticker
 Static keySeq As Long
 keySeq = keySeq + 1
 Set NewTicker = mTickers.add("$" & keySeq)
 End Function
 
-
-Public Sub placeOrder(ByVal pContractSpecifier As contractSpecifier, _
-                    ByVal pOrder As Order)
+Public Sub placeOrder(ByVal pOrder As Order)
+Dim specifier As TradeBuild.contractSpecifier
 
 If mConnectionState <> ConnectionStates.ConnConnected And _
    Not mSimulateOrders _
@@ -868,9 +933,11 @@ End If
 pOrder.clientID = mClientID
 
 If mSimulateOrders Or pOrder.simulated Then
-    mOrderSimulator.placeOrder pContractSpecifier, pOrder
+    mOrderSimulator.placeOrder pOrder
     Exit Sub
 End If
+
+Set specifier = pOrder.contract.specifier
 
 Const Version = 11
 addData PLACE_ORDER
@@ -878,7 +945,7 @@ addData Version
 addData pOrder.id
 
 ' send contract fields
-With pContractSpecifier
+With specifier
     addData .symbol
     addData secTypeToString(.secType)
     addData Left$(.expiry, 6)
@@ -895,8 +962,8 @@ With pOrder
     addData .quantity
     addData orderTypeToString(.orderType)
     If mServerVersion <= 10 And _
-        (UCase$(pContractSpecifier.exchange) = "LIFFE" Or _
-        UCase$(pContractSpecifier.exchange) = "LSE") _
+        (UCase$(specifier.exchange) = "LIFFE" Or _
+        UCase$(specifier.exchange) = "LSE") _
     Then
         addData .limitPrice / 100
         addData .auxPrice / 100
@@ -924,20 +991,20 @@ With pOrder
 End With
 
 ' Send combo legs for BAG requests
-If mServerVersion >= 8 And pContractSpecifier.secType = SecurityTypes.SecTypeBag Then
-    With pContractSpecifier
+If mServerVersion >= 8 And specifier.secType = SecurityTypes.SecTypeBag Then
+    With specifier
         If .ComboLegs.Count = 0 Then
             addData 0
         Else
             addData .ComboLegs.Count
-            Dim comboLeg As comboLeg
-            For Each comboLeg In .ComboLegs
-                With comboLeg
+            Dim ComboLeg As ComboLeg
+            For Each ComboLeg In .ComboLegs
+                With ComboLeg
                     addData .contractID
                     addData .ratio
                     addData orderActionToString(.action)
                     addData .exchange
-                    addData .openClose
+                    addData LegOpenCloseToString(.openClose)
                 End With
             Next
         End If
@@ -1062,6 +1129,8 @@ If mConnectionState <> ConnectionStates.ConnConnected Then
     Exit Function
 End If
 
+pContractSpecifier.locked = True
+
 Set RequestContract = New Contracts
 RequestContract.contractSpecifier = pContractSpecifier
 
@@ -1088,7 +1157,7 @@ If mConnectionState <> ConnectionStates.ConnConnected Then
     Exit Function
 End If
 
-
+pContractSpecifier.locked = True
 reqContract -1, pContracts, pContractSpecifier, False
 
 Exit Function
@@ -1191,6 +1260,8 @@ If mConnectionState <> ConnectionStates.ConnConnected Then
     Exit Function
 End If
 
+pContractSpecifier.locked = True
+
 lTickerID = AllocateTickerTableEntry(dataConsumer)
 RequestMarketDataEx = lTickerID
 Set mTickerTable(lTickerID).contractSpecifier = pContractSpecifier
@@ -1213,11 +1284,11 @@ Then
 End If
 
 With mTickerTable(pTicker.id)
-    If pTicker.Contract Is Nothing Then err.Raise ErrorCodes.InvalidTickerID, "TradeBuild.TradeBuildAPI::requestMarketDepth", "Invalid ticker: key=" & pTicker.key
+    If pTicker.contract Is Nothing Then err.Raise ErrorCodes.InvalidTickerID, "TradeBuild.TradeBuildAPI::requestMarketDepth", "Invalid ticker: key=" & pTicker.key
     .receivingMarketDepth = True
 End With
 
-reqMarketDepth pTicker.id, pTicker.Contract.specifier
+reqMarketDepth pTicker.id, pTicker.contract.specifier
 
 End Sub
 
@@ -1374,7 +1445,7 @@ If mConnectionState <> ConnectionStates.ConnConnected Then
         Exit Sub
     End If
     mConnectionState = ConnectionStates.ConnConnected
-    Set mAllOrders = New Collection
+    Set gAllOrders = New Collection
     RaiseEvent connected(gCurrentTime)
 End If
 
@@ -1620,7 +1691,7 @@ End Sub
 Private Sub getContractData(ByVal Version As Long)
 Dim listendata As TWSSocketMsgContractData
 Dim timestamp As Date
-Dim lContract As Contract
+Dim lContract As contract
 Dim minimumTick As Double
 Dim multiplier As Long
 Dim OrderTypes As String
@@ -1633,10 +1704,11 @@ Dim j As Long
 
 timestamp = gCurrentTime
 
-Set lContract = New Contract
+Set lContract = New contract
 With lContract
     .timestamp = timestamp
     .specifier = New contractSpecifier
+    .specifier.locked = True
     .specifier.symbol = getString
     .specifier.secType = secTypeFromString(getString)
     .specifier.expiry = getString
@@ -1833,13 +1905,14 @@ Dim timestamp As Date: timestamp = gCurrentTime
 Dim secType As String
 Dim right As String
 Dim side As String
-Dim price As Double
+Dim Price As Double
 
 Dim id As Long: id = getLong
 
 Dim lContractSpecifier As contractSpecifier
 Set lContractSpecifier = New contractSpecifier
 With lContractSpecifier
+    .locked = True
     .symbol = getString
     secType = getString
     .secType = secTypeFromString(secType)
@@ -1863,11 +1936,11 @@ With exec
     side = getString
     .side = execSideFromString(side)
     .quantity = getLong
-    price = getDouble
+    Price = getDouble
     If lContractSpecifier.currencyCode = "GBP" Then
-        .price = price * 100
+        .Price = Price * 100
     Else
-        .price = price
+        .Price = Price
     End If
 End With
 
@@ -1875,7 +1948,7 @@ If Version >= 2 Then exec.permId = getLong
 
 If Version >= 3 Then exec.clientID = getLong
    
-RaiseEvent ExecutionDetails(timestamp, id, lContractSpecifier.Clone, exec)
+RaiseEvent ExecutionDetails(timestamp, id, lContractSpecifier, exec)
 
 If mEnableListeners Then
     listendata.msgType = TWSSocketInMsgTypes.EXECUTION_DATA
@@ -1896,7 +1969,7 @@ If mEnableListeners Then
         listendata.execId = .execId
         listendata.orderId = id
         listendata.permId = .permId
-        listendata.price = price
+        listendata.Price = Price
         listendata.quantity = .quantity
         listendata.side = side
         listendata.time = .time
@@ -1957,7 +2030,7 @@ Dim id As Long: id = getLong
 Dim position As Long: position = getLong
 Dim operation As Long: operation = getLong
 Dim side As Long: side = getLong
-Dim price As Double: price = getDouble
+Dim Price As Double: Price = getDouble
 Dim Size As Long: Size = getLong
 
 timestamp = gCurrentTime
@@ -1967,17 +2040,17 @@ processMarketDepth timestamp, _
                 position, _
                 operation, _
                 side, _
-                price, _
+                Price, _
                 Size
 
 If mEnableListeners Then
     listendata.msgType = TWSSocketInMsgTypes.MARKET_DEPTH
     listendata.operation = operation
     listendata.position = position
-    listendata.price = price
+    listendata.Price = Price
     listendata.side = side
     listendata.Size = Size
-    listendata.tickerid = id
+    listendata.TickerID = id
     listendata.Version = Version
     
     mListeners.notify listendata, _
@@ -1995,7 +2068,7 @@ Dim position As Long: position = getLong
 Dim marketMaker As String: marketMaker = getString
 Dim operation As Long: operation = getLong
 Dim side As Long: side = getLong
-Dim price As Double: price = getDouble
+Dim Price As Double: Price = getDouble
 Dim Size As Long: Size = getLong
 
 With mTickerTable(id - MARKET_DEPTH_TICKER_BASE)
@@ -2006,7 +2079,7 @@ With mTickerTable(id - MARKET_DEPTH_TICKER_BASE)
                         marketMaker, _
                         operation, _
                         side, _
-                        price, _
+                        Price, _
                         Size
                         
     End If
@@ -2017,10 +2090,10 @@ If mEnableListeners Then
     listendata.marketMaker = marketMaker
     listendata.operation = operation
     listendata.position = position
-    listendata.price = price
+    listendata.Price = Price
     listendata.side = side
     listendata.Size = Size
-    listendata.tickerid = id
+    listendata.TickerID = id
     listendata.Version = Version
     
     mListeners.notify listendata, _
@@ -2059,11 +2132,11 @@ Private Sub getNextValidId(ByVal Version As Long)
 Dim listendata As TWSSocketMsgNextValidId
 Dim timestamp As Date: timestamp = gCurrentTime
 
-mNextOrderID = getLong
+gNextOrderID = getLong
 
 If mEnableListeners Then
     listendata.msgType = TWSSocketInMsgTypes.NEXT_VALID_ID
-    listendata.id = mNextOrderID
+    listendata.id = gNextOrderID
     listendata.Version = Version
     
     mListeners.notify listendata, _
@@ -2087,7 +2160,7 @@ Dim timeInForce As String
 id = getLong
 
 On Error Resume Next
-Set lOrder = mAllOrders(CStr(id))
+Set lOrder = gAllOrders(CStr(id))
 On Error GoTo 0
 
 If lOrder Is Nothing Then
@@ -2095,13 +2168,14 @@ If lOrder Is Nothing Then
     ' for which we haven't yet had the openOrder notification
     Set lOrder = New Order
     lOrder.id = id
-    mAllOrders.add lOrder, CStr(id)
+    gAllOrders.add lOrder, CStr(id)
 End If
 
 ' read contract fields
 Dim lContractSpecifier As contractSpecifier
 Set lContractSpecifier = New contractSpecifier
 With lContractSpecifier
+    .locked = True
     .symbol = getString
     secType = getString
     .secType = secTypeFromString(secType)
@@ -2153,7 +2227,7 @@ With lOrder
     
 End With
 
-RaiseEvent openOrder(timestamp, lContractSpecifier.Clone, lOrder.Clone)
+RaiseEvent openOrder(timestamp, lContractSpecifier, lOrder.clone)
 
 If mEnableListeners Then
     listendata.msgType = TWSSocketInMsgTypes.OPEN_ORDER
@@ -2225,14 +2299,14 @@ If Version >= 4 Then lastFillPrice = getDouble
 If Version >= 5 Then clientID = getLong
 
 On Error Resume Next
-Set lOrder = mAllOrders(CStr(id))
+Set lOrder = gAllOrders(CStr(id))
 On Error GoTo 0
 If lOrder Is Nothing Then
     ' this must be an open order from the previous API session, but
     ' for which we haven't yet had the openOrder notification
     Set lOrder = New Order
     lOrder.id = id
-    mAllOrders.add lOrder, CStr(id)
+    gAllOrders.add lOrder, CStr(id)
     ' don't notify the user program because it won't know about this
     ' order yet
     dontNotify = False
@@ -2288,6 +2362,7 @@ Dim lContractSpecifier As contractSpecifier
 
 Set lContractSpecifier = New contractSpecifier
 With lContractSpecifier
+    .locked = True
     .symbol = getString
     secType = getString
     .secType = secTypeFromString(secType)
@@ -2312,7 +2387,7 @@ If Version >= 3 Then
 End If
 Dim accountName As String: If Version >= 4 Then accountName = getString
                          
-RaiseEvent updatePortfolioValue(timestamp, lContractSpecifier.Clone, position, marketPrice, marketValue, averageCost, unrealizedPNL, realizedPNL, accountName)
+RaiseEvent updatePortfolioValue(timestamp, lContractSpecifier, position, marketPrice, marketValue, averageCost, unrealizedPNL, realizedPNL, accountName)
 
 If mEnableListeners Then
     listendata.msgType = TWSSocketInMsgTypes.PORTFOLIO_VALUE
@@ -2344,27 +2419,27 @@ End Sub
 Private Sub getTickPrice(ByVal Version As Long)
 Dim listendata As TWSSocketMsgTickPrice
 Dim timestamp As Date
-Dim price As Double
+Dim Price As Double
 Dim Size As Long
 Dim TickType As Long
-Dim tickerid As Long
-tickerid = getLong
+Dim TickerID As Long
+TickerID = getLong
 TickType = getLong
-price = getDouble
+Price = getDouble
 If Version >= 2 Then Size = getLong
 timestamp = gCurrentTime
 
 processTickPrice timestamp, _
-                tickerid Mod INCARNATION_INCREMENT, _
+                TickerID Mod INCARNATION_INCREMENT, _
                 TickType, _
-                price, _
+                Price, _
                 Size
 
 If mEnableListeners Then
     listendata.msgType = TWSSocketInMsgTypes.TICK_PRICE
-    listendata.price = price
+    listendata.Price = Price
     listendata.Size = Size
-    listendata.tickerid = tickerid
+    listendata.TickerID = TickerID
     listendata.TickType = TickType
     listendata.Version = Version
     
@@ -2380,21 +2455,21 @@ Dim listendata As TWSSocketMsgTickSize
 Dim timestamp As Date
 Dim Size As Long
 Dim TickType As Long
-Dim tickerid As Long
-tickerid = getLong
+Dim TickerID As Long
+TickerID = getLong
 TickType = getLong
 Size = getLong
 timestamp = gCurrentTime
 
 processTickSize timestamp, _
-                tickerid Mod INCARNATION_INCREMENT, _
+                TickerID Mod INCARNATION_INCREMENT, _
                 TickType, _
                 Size
 
 If mEnableListeners Then
     listendata.msgType = TWSSocketInMsgTypes.TICK_PRICE
     listendata.Size = Size
-    listendata.tickerid = tickerid
+    listendata.TickerID = TickerID
     listendata.TickType = TickType
     listendata.Version = Version
     
@@ -2422,24 +2497,6 @@ Case OptCall
     optionRightToString = "CALL"
 Case OptPut
     optionRightToString = "PUT"
-End Select
-End Function
-
-Private Function orderActionFromString(ByVal value As String) As OrderActions
-Select Case UCase$(value)
-Case "BUY"
-    orderActionFromString = OrderActions.ActionBuy
-Case "SELL"
-    orderActionFromString = OrderActions.ActionSell
-End Select
-End Function
-
-Private Function orderActionToString(ByVal value As OrderActions) As String
-Select Case value
-Case OrderActions.ActionBuy
-    orderActionToString = "BUY"
-Case OrderActions.ActionSell
-    orderActionToString = "SELL"
 End Select
 End Function
 
@@ -2549,47 +2606,47 @@ End Select
 End Function
 
 Private Sub ProcessAsk(ByVal timestamp As Date, _
-                            ByVal tickerid As Long, _
-                            ByVal price As Double, _
+                            ByVal TickerID As Long, _
+                            ByVal Price As Double, _
                             ByVal Size As Long)
 
-With mTickerTable(tickerid)
+With mTickerTable(TickerID)
 
     If Not .inUse Then Exit Sub     ' ticker has been stopped
         
     .dataConsumer.ask timestamp, _
-                price, _
+                Price, _
                 Size
 End With
 End Sub
 
 Private Sub ProcessBid(ByVal timestamp As Date, _
-                            ByVal tickerid As Long, _
-                            ByVal price As Double, _
+                            ByVal TickerID As Long, _
+                            ByVal Price As Double, _
                             ByVal Size As Long)
-With mTickerTable(tickerid)
+With mTickerTable(TickerID)
 
     If Not .inUse Then Exit Sub     ' ticker has been stopped
         
     .dataConsumer.bid timestamp, _
-                price, _
+                Price, _
                 Size
 End With
 End Sub
 
 Private Sub ProcessClose(ByVal timestamp As Date, _
-                            ByVal tickerid As Long, _
-                            ByVal price As Double)
+                            ByVal TickerID As Long, _
+                            ByVal Price As Double)
 
-With mTickerTable(tickerid)
+With mTickerTable(TickerID)
 
     If Not .inUse Then Exit Sub     ' ticker has been stopped
     
-    .dataConsumer.previousClose timestamp, price
+    .dataConsumer.previousClose timestamp, Price
 End With
 End Sub
 
-Private Sub processContract(ByVal pContract As Contract)
+Private Sub processContract(ByVal pContract As contract)
 
 If Not mFirstContractDetailsReceived Then
     mFirstContractDetailsReceived = True
@@ -2617,15 +2674,15 @@ End If
 With mContractDetailsRequest
     .Contracts.AddContract pContract
     If Not .InternalRequest Then
-        RaiseEvent Contract(pContract.timestamp, pContract.Clone)
+        RaiseEvent contract(pContract.timestamp, pContract)
     End If
 End With
 
 End Sub
 
 Private Sub processContractError()
-Dim tickerid As Long
-Dim lContract As Contract
+Dim TickerID As Long
+Dim lContract As contract
 
 With mContractDetailsRequest
     If .Contracts.Count > 0 Then
@@ -2695,42 +2752,42 @@ mFirstContractDetailsReceived = False
 End Sub
 
 Private Sub ProcessHigh(ByVal timestamp As Date, _
-                            ByVal tickerid As Long, _
-                            ByVal price As Double)
+                            ByVal TickerID As Long, _
+                            ByVal Price As Double)
 
-With mTickerTable(tickerid)
+With mTickerTable(TickerID)
 
     If Not .inUse Then Exit Sub     ' ticker has been stopped
 
-    .dataConsumer.high timestamp, price
+    .dataConsumer.high timestamp, Price
     
 End With
 End Sub
 
 Private Sub ProcessLast(ByVal timestamp As Date, _
-                            ByVal tickerid As Long, _
-                            ByVal price As Double, _
+                            ByVal TickerID As Long, _
+                            ByVal Price As Double, _
                             ByVal Size As Long)
 
-With mTickerTable(tickerid)
+With mTickerTable(TickerID)
 
     If Not .inUse Then Exit Sub     ' ticker has been stopped
         
     .dataConsumer.trade timestamp, _
-            price, _
+            Price, _
             Size
 End With
 End Sub
 
 Private Sub ProcessLow(ByVal timestamp As Date, _
-                            ByVal tickerid As Long, _
-                            ByVal price As Double)
+                            ByVal TickerID As Long, _
+                            ByVal Price As Double)
 
-With mTickerTable(tickerid)
+With mTickerTable(TickerID)
 
     If Not .inUse Then Exit Sub     ' ticker has been stopped
 
-    .dataConsumer.Low timestamp, price
+    .dataConsumer.Low timestamp, Price
 
 End With
 End Sub
@@ -2740,7 +2797,7 @@ Private Sub processMarketDepth(ByVal timestamp As Date, _
                                 ByVal position As Long, _
                                 ByVal operation As DOMOperations, _
                                 ByVal side As DOMSides, _
-                                ByVal price As Double, _
+                                ByVal Price As Double, _
                                 ByVal Size As Long)
 
 With mTickerTable(id)
@@ -2751,23 +2808,23 @@ With mTickerTable(id)
                 position, _
                 operation, _
                 side, _
-                price, _
+                Price, _
                 Size
     
 End With
 End Sub
 
 Private Sub processTickPrice(ByVal timestamp As Date, _
-                            ByVal tickerid As Long, _
+                            ByVal TickerID As Long, _
                             ByVal TickType As TWSSocketTickTypes, _
-                            ByVal price As Double, _
+                            ByVal Price As Double, _
                             ByVal Size As Long)
 
-With mTickerTable(tickerid)
+With mTickerTable(TickerID)
 
     If Not .inUse Then Exit Sub     ' ticker has been stopped
 
-    If price < (0.5 * .prevTrade) Then
+    If Price < (0.5 * .prevTrade) Then
         Exit Sub        ' ignore invalid prices
     End If
     
@@ -2775,54 +2832,54 @@ With mTickerTable(tickerid)
     Case TICK_BID
         Size = IIf(Size <> 0, Size, .prevBidSize)
         ProcessBid timestamp, _
-                    tickerid, _
-                    price, _
+                    TickerID, _
+                    Price, _
                     Size
-        .prevBid = price
+        .prevBid = Price
         If Size <> 0 Then .prevBidSize = Size
     
     Case TICK_ASK
         Size = IIf(Size <> 0, Size, .prevAskSize)
         ProcessAsk timestamp, _
-                    tickerid, _
-                    price, _
+                    TickerID, _
+                    Price, _
                     Size
         
-        .prevAsk = price
+        .prevAsk = Price
         If Size <> 0 Then .prevAskSize = Size
     
     Case TICK_LAST
         Size = IIf(Size <> 0, Size, .prevTradeSize)
         ProcessLast timestamp, _
-                    tickerid, _
-                    price, _
+                    TickerID, _
+                    Price, _
                     Size
-        .prevTrade = price
+        .prevTrade = Price
         If Size <> 0 Then .prevTradeSize = Size
     
     Case TICK_HIGH
         ProcessHigh timestamp, _
-                    tickerid, _
-                    price
+                    TickerID, _
+                    Price
     Case TICK_LOW
         ProcessLow timestamp, _
-                    tickerid, _
-                    price
+                    TickerID, _
+                    Price
     Case TICK_CLOSE
         ProcessClose timestamp, _
-                    tickerid, _
-                    price
+                    TickerID, _
+                    Price
     End Select
 End With
 
 End Sub
 
 Private Sub processTickSize(ByVal timestamp As Date, _
-                            ByVal tickerid As Long, _
+                            ByVal TickerID As Long, _
                             ByVal TickType As TWSSocketTickTypes, _
                             ByVal Size As Long)
 
-With mTickerTable(tickerid)
+With mTickerTable(TickerID)
     
     If Not .inUse Then Exit Sub     ' ticker has been stopped
     
@@ -2836,7 +2893,7 @@ With mTickerTable(tickerid)
         
         .prevBidSize = Size
         ProcessBid timestamp, _
-                    tickerid, _
+                    TickerID, _
                     .prevBid, _
                     Size
     Case TICK_ASK_SIZE
@@ -2847,7 +2904,7 @@ With mTickerTable(tickerid)
         End If
         
         ProcessAsk timestamp, _
-                    tickerid, _
+                    TickerID, _
                     .prevAsk, _
                     Size
     Case TICK_LAST_SIZE
@@ -2859,12 +2916,12 @@ With mTickerTable(tickerid)
         
         .prevTradeSize = Size
         ProcessLast timestamp, _
-                    tickerid, _
+                    TickerID, _
                     .prevTrade, _
                     Size
     Case TICK_VOLUME
         processVolume timestamp, _
-                    tickerid, _
+                    TickerID, _
                     Size
         
     End Select
@@ -2873,10 +2930,10 @@ End With
 End Sub
 
 Private Sub processVolume(ByVal timestamp As Date, _
-                            ByVal tickerid As Long, _
+                            ByVal TickerID As Long, _
                             ByVal Size As Long)
 
-With mTickerTable(tickerid)
+With mTickerTable(TickerID)
 
     If Not .inUse Then Exit Sub     ' ticker has been stopped
 
@@ -2915,8 +2972,8 @@ If Not mSocket Is Nothing Then
 End If
 End Sub
 
-Private Sub releaseTickerTableEntry(ByVal tickerid As Long)
-With mTickerTable(tickerid)
+Private Sub releaseTickerTableEntry(ByVal TickerID As Long)
+With mTickerTable(TickerID)
     .inUse = False
     .incarnation = .incarnation + INCARNATION_INCREMENT
     Set .contractSpecifier = Nothing
@@ -2931,7 +2988,7 @@ With mTickerTable(tickerid)
 End With
 End Sub
 
-Private Sub reqContract(ByVal tickerid As Long, _
+Private Sub reqContract(ByVal TickerID As Long, _
                         ByVal Contracts As Contracts, _
                         ByVal contractSpecifier As contractSpecifier, _
                         ByVal internal As Boolean)
@@ -2943,10 +3000,12 @@ If Not mContractDetailsRequest Is Nothing Then
                 "An existing request has not yet completed"
 End If
 
+contractSpecifier.locked = True
+
 Set mContractDetailsRequest = New ContractDtlsReq
-mContractDetailsRequest.tickerid = tickerid
+mContractDetailsRequest.TickerID = TickerID
 mContractDetailsRequest.Contracts = Contracts
-mContractDetailsRequest.contractSpecifier = contractSpecifier.Clone
+mContractDetailsRequest.contractSpecifier = contractSpecifier
 mContractDetailsRequest.InternalRequest = internal
 
 If Not IsValidExchangeCode(contractSpecifier.exchange) Then
@@ -2991,9 +3050,9 @@ With mTickerTable(tickerTableIndex).contractSpecifier
     ' Add combo legs for BAG requests
     If mServerVersion >= 8 And .secType = SecurityTypes.SecTypeBag Then
         addData .ComboLegs.Count
-        Dim comboLeg As comboLeg
-        For Each comboLeg In .ComboLegs
-            With comboLeg
+        Dim ComboLeg As ComboLeg
+        For Each ComboLeg In .ComboLegs
+            With ComboLeg
                 addData .contractID
                 addData .ratio
                 addData orderActionToString(.action)
@@ -3007,14 +3066,14 @@ End With
 
 End Sub
 
-Private Sub reqMarketDepth(ByVal tickerid As Long, _
+Private Sub reqMarketDepth(ByVal TickerID As Long, _
                         ByVal contractSpec As contractSpecifier)
 
 Const Version = 1
 
 addData REQ_MKT_DEPTH
 addData Version
-addData tickerid + MARKET_DEPTH_TICKER_BASE
+addData TickerID + MARKET_DEPTH_TICKER_BASE
 With contractSpec
     addData .symbol
     addData secTypeToString(.secType)

@@ -129,7 +129,7 @@ Set mContractSpecifier = value
 End Property
 
 Public Property Get contractSpecifier() As contractSpecifier
-Set contractSpecifier = mContractSpecifier.clone
+Set contractSpecifier = mContractSpecifier
 End Property
 
 Public Property Get Count() As Long
@@ -154,10 +154,14 @@ Attribute Item.VB_UserMemId = 0
 Set Item = mContracts(index)
 End Function
 
-Public Sub Load(ByVal contractSpec As contractSpecifier, Optional ByVal add As Boolean = False)
+Public Sub Load( _
+                ByVal contractSpec As contractSpecifier, _
+                Optional ByVal add As Boolean = False)
 Dim i As Long
 
 On Error GoTo err
+
+contractSpec.locked = True
 
 If Not add Then
     For i = mContracts.Count To 1 Step -1

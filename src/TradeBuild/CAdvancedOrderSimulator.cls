@@ -192,13 +192,14 @@ With mMarketTable(lOrder.marketIndex)
 End With
 End Sub
 
-Friend Sub placeOrder(ByVal pContractSpecifier As contractSpecifier, _
-                    ByVal pOrder As Order)
+Friend Sub placeOrder(ByVal pOrder As Order)
 
 Dim lOrder As Order
+Dim specifier As TradeBuild.contractSpecifier
 Dim pendingOrder As Order
 Dim newOrder As Boolean
 Dim marketIndex As Long
+Dim i As Long
 
 Select Case pOrder.orderType
 Case TradeBuild.OrderTypes.OrderTypeMarket, _
@@ -210,15 +211,23 @@ Case Else
     Exit Sub
 End Select
 
-For marketIndex = 0 To UBound(mMarketTable)
-    If pContractSpecifier.Equals(mMarketTable(marketIndex).contractSpecifier) Then Exit For
-Next
+marketIndex = pOrder.marketIndex
+Set specifier = pOrder.contract.specifier
 
-If marketIndex > UBound(mMarketTable) Then
+If marketIndex < 0 Then
+    For i = 0 To UBound(mMarketTable)
+        If specifier.Equals(mMarketTable(i).contractSpecifier) Then
+            marketIndex = i
+            Exit For
+        End If
+    Next
+End If
+
+If marketIndex < 0 Or marketIndex > UBound(mMarketTable) Then
     err.Raise ErrorCodes.UnexpectedContract, _
             "TradeBuild.CAdvancedOrderSimulator::placeOrder", _
             "Unexpected contract: " & vbCrLf & _
-            pContractSpecifier.ToString
+            specifier.ToString
 End If
 
 On Error Resume Next
@@ -227,7 +236,7 @@ On Error GoTo 0
 
 If lOrder Is Nothing Then
     newOrder = True
-    Set lOrder = pOrder.Clone
+    Set lOrder = pOrder.clone
     lOrder.marketIndex = marketIndex
     lOrder.permId = mNextPermId
     mNextPermId = mNextPermId + 1
@@ -426,7 +435,7 @@ End If
 
 mMarketTable(startMarket).inUse = True
 With mMarketTable(startMarket)
-    Set .contractSpecifier = pContractSpecifier.Clone
+    Set .contractSpecifier = pContractSpecifier
     Set .activeOrders = New Collection
     Set .pendingOrders = New Collection
     Set .clock = New clock
@@ -446,14 +455,14 @@ End With
 End Sub
 
 Friend Sub bid(ByVal timestamp As Date, _
-                ByVal TickerID As Long, _
+                ByVal marketIndex As Long, _
                 ByVal bid As Double)
                 
 Dim lOrder As Order
 
-If Not mSimulateExchangeDelays Then handlePendingSubmitOrders TickerID
+If Not mSimulateExchangeDelays Then handlePendingSubmitOrders marketIndex
 
-With mMarketTable(TickerID)
+With mMarketTable(marketIndex)
     .clock.SetTime timestamp
     .bid = bid
     For Each lOrder In .activeOrders
@@ -477,14 +486,14 @@ End With
 End Sub
 
 Friend Sub ask(ByVal timestamp As Date, _
-                ByVal TickerID As Long, _
+                ByVal marketIndex As Long, _
                 ByVal ask As Double)
                 
 Dim lOrder As Order
 
-If Not mSimulateExchangeDelays Then handlePendingSubmitOrders TickerID
+If Not mSimulateExchangeDelays Then handlePendingSubmitOrders marketIndex
 
-With mMarketTable(TickerID)
+With mMarketTable(marketIndex)
     .clock.SetTime timestamp
     .ask = ask
     For Each lOrder In .activeOrders
@@ -508,15 +517,15 @@ End With
 End Sub
 
 Friend Sub trade(ByVal timestamp As Date, _
-                ByVal TickerID As Long, _
+                ByVal marketIndex As Long, _
                 ByVal trade As Double)
                 
 Dim lOrder As Order
 
 
-If Not mSimulateExchangeDelays Then handlePendingSubmitOrders TickerID
+If Not mSimulateExchangeDelays Then handlePendingSubmitOrders marketIndex
 
-With mMarketTable(TickerID)
+With mMarketTable(marketIndex)
     .clock.SetTime timestamp
     For Each lOrder In .activeOrders
         If lOrder.status = OrderStatuses.OrderStatusSubmitted Then
@@ -743,13 +752,13 @@ Mid(execId, 18, 6) = ".01.01"
 exec.execId = execId
 exec.orderId = pOrder.id
 exec.permId = pOrder.permId
-exec.price = fillPrice
+exec.Price = fillPrice
 exec.quantity = pOrder.quantity
 exec.side = IIf(pOrder.action = OrderActions.ActionBuy, ExecSides.SideBuy, ExecSides.SideSell)
 exec.time = Format(mMarketTable(pOrder.marketIndex).clock.timestamp, "yyyymmdd hh:nn:ss")
 
 RaiseEvent preFill(mMarketTable(pOrder.marketIndex).clock.timestamp, _
-                    pOrder.Clone, _
+                    pOrder.clone, _
                     lContractSpecifier, _
                     lFillPrice, _
                     lFillSize)
@@ -767,7 +776,7 @@ RaiseEvent ExecutionDetails(mMarketTable(pOrder.marketIndex).clock.timestamp, _
 
 RaiseEvent openOrder(mMarketTable(pOrder.marketIndex).clock.timestamp, _
                     lContractSpecifier, _
-                    pOrder.Clone)
+                    pOrder.clone)
                     
 RaiseEvent orderStatus(mMarketTable(pOrder.marketIndex).clock.timestamp, _
                         pOrder.id, _

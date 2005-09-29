@@ -70,9 +70,15 @@ Private mReferenceTime As Date
 Private mCurrentSessionStartTime As Date
 Private mCurrentSessionEndTime As Date
 
+Private mMarketIndex As Long
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
+
+Private Sub Class_Initialize()
+mMarketIndex = -1
+End Sub
 
 Private Sub Class_ReadProperties(PropBag As PropertyBag)
 Dim i As Long
@@ -115,7 +121,7 @@ End Sub
 '================================================================================
 
 Private Function IContract_Clone() As TradeBuildSP.IContract
-Set IContract_Clone = Clone
+Set IContract_Clone = clone
 End Function
 
 Private Property Let IContract_ContractID(ByVal RHS As Long)
@@ -321,7 +327,7 @@ Public Property Get contractID() As Long
 contractID = mContractID
 End Property
 
-Public Property Let contractID(ByVal value As Long)
+Friend Property Let contractID(ByVal value As Long)
 mContractID = value
 End Property
 
@@ -349,7 +355,7 @@ Public Property Get marketName() As String
 marketName = mMarketName
 End Property
 
-Public Property Let marketName(ByVal value As String)
+Friend Property Let marketName(ByVal value As String)
 mMarketName = value
 End Property
 
@@ -357,7 +363,7 @@ Public Property Get minimumTick() As Double
 minimumTick = mMinimumTick
 End Property
 
-Public Property Let minimumTick(ByVal value As Double)
+Friend Property Let minimumTick(ByVal value As Double)
 Dim minTickString As String
 
 mMinimumTick = value
@@ -371,7 +377,7 @@ Public Property Get multiplier() As Long
 multiplier = mMultiplier
 End Property
 
-Public Property Let multiplier(ByVal value As Long)
+Friend Property Let multiplier(ByVal value As Long)
 mMultiplier = value
 End Property
 
@@ -383,11 +389,11 @@ Public Property Get OrderTypes() As TradeBuild.OrderTypes()
 OrderTypes = mOrderTypes
 End Property
 
-Public Property Let OrderTypes(ByRef value() As TradeBuild.OrderTypes)
+Friend Property Let OrderTypes(ByRef value() As TradeBuild.OrderTypes)
 mOrderTypes = value
 End Property
 
-Public Property Let sessionStartTime(ByVal value As Date)
+Friend Property Let sessionStartTime(ByVal value As Date)
 mSessionStartTime = value
 End Property
 
@@ -395,7 +401,7 @@ Public Property Get sessionStartTime() As Date
 sessionStartTime = mSessionStartTime
 End Property
 
-Public Property Let sessionEndTime(ByVal value As Date)
+Friend Property Let sessionEndTime(ByVal value As Date)
 mSessionEndTime = value
 End Property
 
@@ -403,11 +409,19 @@ Public Property Get sessionEndTime() As Date
 sessionEndTime = mSessionEndTime
 End Property
 
+Friend Property Get marketIndex() As Long
+marketIndex = mMarketIndex
+End Property
+
+Friend Property Let marketIndex(ByVal value As Long)
+mMarketIndex = value
+End Property
+
 Public Property Get specifier() As contractSpecifier
 Set specifier = mSpecifier
 End Property
 
-Public Property Let specifier(ByVal value As contractSpecifier)
+Friend Property Let specifier(ByVal value As contractSpecifier)
 Set mSpecifier = value
 End Property
 
@@ -423,7 +437,7 @@ Public Property Get tradingClass() As String
 tradingClass = mTradingClass
 End Property
 
-Public Property Let tradingClass(ByVal value As String)
+Friend Property Let tradingClass(ByVal value As String)
 mTradingClass = value
 End Property
 
@@ -431,7 +445,7 @@ Public Property Get validExchanges() As String()
 validExchanges = mValidExchanges
 End Property
 
-Public Property Let validExchanges(ByRef value() As String)
+Friend Property Let validExchanges(ByRef value() As String)
 mValidExchanges = value
 End Property
 
@@ -466,17 +480,17 @@ Public Sub GetSessionTimes( _
 CalcSessionTimes timestamp, sessionStartTime, sessionEndTime
 End Sub
 
-Public Function Clone() As Contract
+Friend Function clone() As contract
 
-Set Clone = New Contract
+Set clone = New contract
 
-With Clone
+With clone
     .contractID = mContractID
     .marketName = mMarketName
     .minimumTick = mMinimumTick
     .multiplier = mMultiplier
     .OrderTypes = mOrderTypes
-    .specifier = mSpecifier.Clone
+    .specifier = mSpecifier.clone
     .tradingClass = mTradingClass
     .validExchanges = mValidExchanges
     .Description = mDescription
@@ -486,9 +500,9 @@ With Clone
 End With
 End Function
 
-Public Sub FromXML(ByVal contractXML As String)
+Friend Sub FromXML(ByVal contractXML As String)
 Dim XMLdoc As DOMDocument30
-Dim Contract As IXMLDOMElement
+Dim contract As IXMLDOMElement
 Dim specifier As IXMLDOMElement
 Dim specifierObj As contractSpecifier
 Dim OrderTypes As IXMLDOMElement
@@ -496,8 +510,8 @@ Dim orderType As IXMLDOMElement
 Dim exchanges As IXMLDOMElement
 Dim exchange As IXMLDOMElement
 Dim ComboLegs As IXMLDOMElement
-Dim comboLeg As IXMLDOMElement
-Dim comboLegObj As comboLeg
+Dim ComboLeg As IXMLDOMElement
+Dim comboLegObj As ComboLeg
 Dim nodeList As IXMLDOMNodeList
 Dim i As Long
 
@@ -509,21 +523,22 @@ If XMLdoc.parseError.errorCode <> 0 Then
             "Contract XML cannot be parsed"
 End If
 
-Set Contract = XMLdoc.selectSingleNode("contract")
-mContractID = Contract.getAttribute("contractid")
-mMarketName = Contract.getAttribute("marketname")
-minimumTick = Contract.getAttribute("minimumtick")
-mMultiplier = Contract.getAttribute("multiplier")
-mTradingClass = Contract.getAttribute("tradingclass")
-mSessionStartTime = Contract.getAttribute("sessionstarttime")
-mSessionEndTime = Contract.getAttribute("sessionendtime")
-mDescription = Contract.getAttribute("description")
-mNumberOfDecimals = Contract.getAttribute("numberofdecimals")
+Set contract = XMLdoc.selectSingleNode("contract")
+mContractID = contract.getAttribute("contractid")
+mMarketName = contract.getAttribute("marketname")
+minimumTick = contract.getAttribute("minimumtick")
+mMultiplier = contract.getAttribute("multiplier")
+mTradingClass = contract.getAttribute("tradingclass")
+mSessionStartTime = contract.getAttribute("sessionstarttime")
+mSessionEndTime = contract.getAttribute("sessionendtime")
+mDescription = contract.getAttribute("description")
+mNumberOfDecimals = contract.getAttribute("numberofdecimals")
 
-Set specifier = Contract.selectSingleNode("specifier")
+Set specifier = contract.selectSingleNode("specifier")
 Set specifierObj = New contractSpecifier
 Me.specifier = specifierObj
 With specifierObj
+    .locked = True
     .currencyCode = specifier.getAttribute("currencycode")
     .exchange = specifier.getAttribute("exchange")
     .expiry = specifier.getAttribute("expiry")
@@ -535,19 +550,19 @@ With specifierObj
     
     Set ComboLegs = specifier.selectSingleNode("combolegs")
     Set nodeList = ComboLegs.selectNodes("comboleg")
-    For Each comboLeg In nodeList
-        Set comboLegObj = New comboLeg
-        .ComboLegs.add comboLeg
-        comboLegObj.action = comboLeg.getAttribute("action")
-        comboLegObj.contractID = comboLeg.getAttribute("contractid")
-        comboLegObj.exchange = comboLeg.getAttribute("exchange")
-        comboLegObj.openClose = comboLeg.getAttribute("openclose")
-        comboLegObj.ratio = comboLeg.getAttribute("ratio")
+    For Each ComboLeg In nodeList
+        Set comboLegObj = New ComboLeg
+        .ComboLegs.add ComboLeg
+        comboLegObj.action = ComboLeg.getAttribute("action")
+        comboLegObj.contractID = ComboLeg.getAttribute("contractid")
+        comboLegObj.exchange = ComboLeg.getAttribute("exchange")
+        comboLegObj.openClose = ComboLeg.getAttribute("openclose")
+        comboLegObj.ratio = ComboLeg.getAttribute("ratio")
     Next
     
 End With
 
-Set OrderTypes = Contract.selectSingleNode("ordertypes")
+Set OrderTypes = contract.selectSingleNode("ordertypes")
 Set nodeList = OrderTypes.selectNodes("ordertype")
 ReDim mOrderTypes(nodeList.length) As TradeBuild.OrderTypes
 i = 0
@@ -556,7 +571,7 @@ For Each orderType In nodeList
     i = i + 1
 Next
 
-Set exchanges = Contract.selectSingleNode("exchanges")
+Set exchanges = contract.selectSingleNode("exchanges")
 Set nodeList = exchanges.selectNodes("exchange")
 ReDim mValidExchanges(nodeList.length) As String
 i = 0
@@ -574,6 +589,17 @@ If timestamp >= mCurrentSessionStartTime And _
 Then
     isTimeInSession = True
 End If
+End Function
+
+Public Function newOrder() As Order
+Dim lOrder As Order
+Set lOrder = New Order
+lOrder.id = gNextOrderID
+gAllOrders.add lOrder, CStr(gNextOrderID)
+gNextOrderID = gNextOrderID + 1
+lOrder.contract = Me
+lOrder.marketIndex = mMarketIndex
+Set newOrder = lOrder.clone   ' return a copy of the order to the app
 End Function
 
 Friend Sub setSession( _
@@ -630,33 +656,33 @@ End Function
 
 Public Function ToXML() As String
 Dim XMLdoc As DOMDocument30
-Dim Contract As IXMLDOMElement
+Dim contract As IXMLDOMElement
 Dim specifier As IXMLDOMElement
 Dim OrderTypes As IXMLDOMElement
 Dim orderType As IXMLDOMElement
 Dim exchanges As IXMLDOMElement
 Dim exchange As IXMLDOMElement
 Dim ComboLegs As IXMLDOMElement
-Dim comboLeg As IXMLDOMElement
-Dim comboLegObj As comboLeg
+Dim ComboLeg As IXMLDOMElement
+Dim comboLegObj As ComboLeg
 Dim i As Long
 
 Set XMLdoc = New DOMDocument30
-Set Contract = XMLdoc.createElement("contract")
-Set XMLdoc.documentElement = Contract
-Contract.setAttribute "xmlns", "urn:tradewright.com:tradebuild"
-Contract.setAttribute "contractid", mContractID
-Contract.setAttribute "marketname", mMarketName
-Contract.setAttribute "minimumtick", mMinimumTick
-Contract.setAttribute "multiplier", mMultiplier
-Contract.setAttribute "tradingclass", mTradingClass
-Contract.setAttribute "sessionstarttime", Format(mSessionStartTime, "hh:mm:ss")
-Contract.setAttribute "sessionendtime", Format(mSessionEndTime, "hh:mm:ss")
-Contract.setAttribute "description", mDescription
-Contract.setAttribute "numberofdecimals", mNumberOfDecimals
+Set contract = XMLdoc.createElement("contract")
+Set XMLdoc.documentElement = contract
+contract.setAttribute "xmlns", "urn:tradewright.com:tradebuild"
+contract.setAttribute "contractid", mContractID
+contract.setAttribute "marketname", mMarketName
+contract.setAttribute "minimumtick", mMinimumTick
+contract.setAttribute "multiplier", mMultiplier
+contract.setAttribute "tradingclass", mTradingClass
+contract.setAttribute "sessionstarttime", Format(mSessionStartTime, "hh:mm:ss")
+contract.setAttribute "sessionendtime", Format(mSessionEndTime, "hh:mm:ss")
+contract.setAttribute "description", mDescription
+contract.setAttribute "numberofdecimals", mNumberOfDecimals
 
 Set specifier = XMLdoc.createElement("specifier")
-Contract.appendChild specifier
+contract.appendChild specifier
 specifier.setAttribute "symbol", mSpecifier.symbol
 specifier.setAttribute "sectype", mSpecifier.secType
 specifier.setAttribute "expiry", mSpecifier.expiry
@@ -669,17 +695,17 @@ specifier.setAttribute "strike", mSpecifier.strike
 Set ComboLegs = XMLdoc.createElement("combolegs")
 specifier.appendChild ComboLegs
 For Each comboLegObj In mSpecifier.ComboLegs
-    Set comboLeg = XMLdoc.createElement("comboleg")
-    ComboLegs.appendChild comboLeg
-    comboLeg.setAttribute "action", comboLegObj.action
-    comboLeg.setAttribute "contractid", comboLegObj.contractID
-    comboLeg.setAttribute "exchange", comboLegObj.exchange
-    comboLeg.setAttribute "openclose", comboLegObj.openClose
-    comboLeg.setAttribute "ratio", comboLegObj.ratio
+    Set ComboLeg = XMLdoc.createElement("comboleg")
+    ComboLegs.appendChild ComboLeg
+    ComboLeg.setAttribute "action", comboLegObj.action
+    ComboLeg.setAttribute "contractid", comboLegObj.contractID
+    ComboLeg.setAttribute "exchange", comboLegObj.exchange
+    ComboLeg.setAttribute "openclose", comboLegObj.openClose
+    ComboLeg.setAttribute "ratio", comboLegObj.ratio
 Next
 
 Set OrderTypes = XMLdoc.createElement("ordertypes")
-Contract.appendChild OrderTypes
+contract.appendChild OrderTypes
 For i = 0 To UBound(mOrderTypes)
     Set orderType = XMLdoc.createElement("ordertype")
     OrderTypes.appendChild orderType
@@ -687,7 +713,7 @@ For i = 0 To UBound(mOrderTypes)
 Next
 
 Set exchanges = XMLdoc.createElement("exchanges")
-Contract.appendChild exchanges
+contract.appendChild exchanges
 For i = 0 To UBound(mValidExchanges)
     Set exchange = XMLdoc.createElement("exchange")
     exchanges.appendChild exchange

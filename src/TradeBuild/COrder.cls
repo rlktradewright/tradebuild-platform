@@ -13,51 +13,52 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
+Private mContract       As TradeBuild.contract
 
-Private mMarketIndex      As Long
-Private mAtExchange      As Boolean
-Private mSimulated       As Boolean
-Private mStatus          As OrderStatuses
-Private mIdentifier      As Long
-Private mClientID        As Long
-Private mPermId          As Long
+Private mMarketIndex     As Long
+Private mAtExchange     As Boolean
+Private mSimulated      As Boolean
+Private mStatus         As OrderStatuses
+Private mIdentifier     As Long
+Private mClientID       As Long
+Private mPermId         As Long
     
-Private mAction          As OrderActions
-Private mQuantity        As Long
-Private mQuantityFilled  As Long
-Private mAveragePrice    As Double
-Private mLastFillPrice   As Double
-Private mOrderType       As TradeBuild.OrderTypes
-Private mLimitPrice      As Double
-Private mAuxPrice        As Double
+Private mAction         As OrderActions
+Private mQuantity       As Long
+Private mQuantityFilled As Long
+Private mAveragePrice   As Double
+Private mLastFillPrice  As Double
+Private mOrderType      As TradeBuild.OrderTypes
+Private mLimitPrice     As Double
+Private mAuxPrice       As Double
     
     ' extended order fields
-Private mTif             As OrderTifs
-Private mOcaGroup        As String
-Private mAccount         As String
-Private mOpenClose       As String
-Private mOrigin          As OrderOrigins
-Private mOrderRef        As String
-Private mTransmit        As Boolean
-Private mParentId        As Long
-Private mBlockOrder      As Boolean
-Private mSweepToFill     As Boolean
-Private mDisplaySize     As Long
-Private mTriggerMethod   As TriggerMethods
-Private mIgnoreRth       As Boolean
-Private mHidden          As Boolean
+Private mTif            As OrderTifs
+Private mOcaGroup       As String
+Private mAccount        As String
+Private mOpenClose      As String
+Private mOrigin         As OrderOrigins
+Private mOrderRef       As String
+Private mTransmit       As Boolean
+Private mParentId       As Long
+Private mBlockOrder     As Boolean
+Private mSweepToFill    As Boolean
+Private mDisplaySize    As Long
+Private mTriggerMethod  As TriggerMethods
+Private mIgnoreRth      As Boolean
+Private mHidden         As Boolean
 Private mDiscretionaryAmt As Double
-Private mGoodAfterTime   As String
+Private mGoodAfterTime  As String
 Private mGoodTillDate   As String
     
     ' share allocation
 Private mSharesAllocation As String
     
     'fa
-Private mFAGroup         As String
-Private mFAProfile       As String
-Private mFAMethod        As String
-Private mFAPercentage    As String
+Private mFAGroup        As String
+Private mFAProfile      As String
+Private mFAMethod       As String
+Private mFAPercentage   As String
     
 Private Sub Class_Initialize()
 mStatus = OrderStatuses.OrderStatusCreated
@@ -120,6 +121,14 @@ End Property
 
 Public Property Get clientID() As Long
 clientID = mClientID
+End Property
+
+Friend Property Let contract(ByVal value As TradeBuild.contract)
+Set mContract = value
+End Property
+
+Public Property Get contract() As TradeBuild.contract
+Set contract = mContract
 End Property
 
 Public Property Let displaySize(ByVal value As Long)
@@ -370,6 +379,8 @@ End Property
 Public Function clone() As Order
 Set clone = New Order
 With clone
+    .contract = mContract
+    .marketIndex = mMarketIndex
     .simulated = mSimulated
     .status = mStatus
     .id = mIdentifier

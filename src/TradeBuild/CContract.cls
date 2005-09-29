@@ -1,14 +1,14 @@
 VERSION 1.0 CLASS
 BEGIN
   MultiUse = -1  'True
-  Persistable = 1  'Persistable
+  Persistable = 0  'NotPersistable
   DataBindingBehavior = 0  'vbNone
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
 Attribute VB_Name = "ContractSpecifier"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = True
+Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -61,6 +61,8 @@ Private mExchange     As String
 Private mCurrency     As String
 Private mLocalSymbol  As String
 Private mComboLegs    As ComboLegs
+
+Private mLocked As Boolean
 
 '================================================================================
 ' Class Event Handlers
@@ -196,11 +198,12 @@ End Function
 Public Property Get ComboLegs() As ComboLegs
 If mComboLegs Is Nothing Then
     Set mComboLegs = New ComboLegs
+    If mLocked Then mComboLegs.locked = True
 End If
 Set ComboLegs = mComboLegs
 End Property
 
-Public Property Let currencyCode(ByVal value As String)
+Friend Property Let currencyCode(ByVal value As String)
 mCurrency = UCase$(value)
 End Property
 
@@ -208,7 +211,7 @@ Public Property Get currencyCode() As String
 currencyCode = mCurrency
 End Property
 
-Public Property Let exchange(ByVal value As String)
+Friend Property Let exchange(ByVal value As String)
 mExchange = UCase$(value)
 End Property
 
@@ -216,7 +219,7 @@ Public Property Get exchange() As String
 exchange = mExchange
 End Property
 
-Public Property Let expiry(ByVal value As String)
+Friend Property Let expiry(ByVal value As String)
 mExpiry = value
 End Property
 
@@ -235,7 +238,7 @@ key = mLocalSymbol & "|" & _
     mCurrency
 End Property
 
-Public Property Let localSymbol(ByVal value As String)
+Friend Property Let localSymbol(ByVal value As String)
 mLocalSymbol = UCase$(value)
 End Property
 
@@ -243,7 +246,16 @@ Public Property Get localSymbol() As String
 localSymbol = mLocalSymbol
 End Property
 
-Public Property Let right(ByVal value As OptionRights)
+Friend Property Let locked(ByVal value As Boolean)
+mLocked = value
+If Not mComboLegs Is Nothing Then mComboLegs.locked = mLocked
+End Property
+
+Friend Property Get locked() As Boolean
+locked = mLocked
+End Property
+
+Friend Property Let right(ByVal value As OptionRights)
 mRight = value
 End Property
 
@@ -251,7 +263,7 @@ Public Property Get right() As OptionRights
 right = mRight
 End Property
 
-Public Property Let secType(ByVal value As SecurityTypes)
+Friend Property Let secType(ByVal value As SecurityTypes)
 mSecType = value
 End Property
 
@@ -259,7 +271,7 @@ Public Property Get secType() As SecurityTypes
 secType = mSecType
 End Property
 
-Public Property Let strike(ByVal value As Double)
+Friend Property Let strike(ByVal value As Double)
 mStrike = value
 End Property
 
@@ -267,7 +279,7 @@ Public Property Get strike() As Double
 strike = mStrike
 End Property
 
-Public Property Let symbol(ByVal value As String)
+Friend Property Let symbol(ByVal value As String)
 mSymbol = UCase$(value)
 End Property
 
@@ -279,7 +291,7 @@ End Property
 ' Methods
 '================================================================================
 
-Public Function clone() As contractSpecifier
+Friend Function clone() As contractSpecifier
 Set clone = New contractSpecifier
 With clone
     If Not mComboLegs Is Nothing Then
@@ -293,10 +305,12 @@ With clone
     .secType = mSecType
     .strike = mStrike
     .symbol = mSymbol
+    .locked = mLocked
 End With
 End Function
 
 Public Function Equals(ByVal pContractSpecifier As contractSpecifier) As Boolean
+If pContractSpecifier Is Me Then Equals = True
 Equals = (Me.key = pContractSpecifier.key)
 End Function
 

@@ -46,7 +46,7 @@ Event QueryReplayNextTickfile( _
                 ByVal tickfileIndex As Long, _
                 ByVal tickfileName As String, _
                 ByVal TickfileSizeBytes As Long, _
-                ByVal pContract As Contract, _
+                ByVal pContract As contract, _
                 ByRef continueMode As ReplayContinueModes)
 
 Event ReplayCompleted()
@@ -81,7 +81,7 @@ Event TickfilesSelected()
 
 Private WithEvents mContracts       As Contracts
 Attribute mContracts.VB_VarHelpID = -1
-Private mContract                   As Contract
+Private mContract                   As contract
 
 Private mReader                     As TickfileReader
 Private mTickfileSpecifiers()       As TradeBuild.TickfileSpecifier
@@ -227,7 +227,7 @@ End With
 
 ' we now determine a contract specifier with which we'll query the
 ' contract info service providers to get the canonical contract definition
-If mReader.Contract Is Nothing Then
+If mReader.contract Is Nothing Then
     If mReader.contractSpecifier Is Nothing And _
         tfSpec.contractSpecifier Is Nothing _
     Then
@@ -297,7 +297,7 @@ If mContracts.Count <> 1 Then
 Else
     Set mContract = mContracts(1)
     If Not mReader Is Nothing Then
-        mReader.Contract = mContract
+        mReader.contract = mContract
         playOrNot mTickfileSpecifiers(mCurrTickfileIndex), mReader.TickfileSizeBytes
     End If
 End If
@@ -330,9 +330,9 @@ End Sub
 ' Properties
 '================================================================================
 
-Public Property Let Contract(ByVal value As Contract)
+Public Property Let contract(ByVal value As contract)
 If Not value Is Nothing Then
-    Set mContract = value.Clone
+    Set mContract = value
 End If
 End Property
 
@@ -557,6 +557,7 @@ End Sub
 Private Sub FinishTickfile()
 stopProgressTimer
 Set mReader = Nothing
+mTicker.tickfileReplayCompleted
 Set mTicker = Nothing
 StartNextTickfile
 End Sub
@@ -583,7 +584,7 @@ Case ReplayContinueModes.ReplayCancelThisFile
 Case ReplayContinueModes.ReplayContinue
     mTicker.timestamp = mReader.firstTickFileTime
     mContract.setSession mTicker.timestamp
-    mTicker.Contract = mContract
+    mTicker.contract = mContract
     startProgressTimer
     mReader.StartReplay
 End Select
@@ -611,7 +612,7 @@ Do
     End If
     
     Set mTicker = mTickers.add(gGenerateGUIDString)
-    mTicker.tickfileManager = Me
+    mTicker.TickFileManager = Me
     mTicker.replayingTickfile = True
     mTicker.clockRate = mReplaySpeed
     RaiseEvent TickerAllocated(mTicker)

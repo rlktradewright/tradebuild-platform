@@ -53,7 +53,7 @@ Implements TradeBuildSP.IComboLeg
 '================================================================================
 
 Private mContractID As Long
-Private mAction As String
+Private mAction As OrderActions
 Private mRatio As Long
 Private mExchange As String
 Private mOpenClose As LegOpenClose
@@ -66,16 +66,16 @@ Private mOpenClose As LegOpenClose
 ' IComboLeg Interface Members
 '================================================================================
 
-Private Property Let IComboLeg_Action(ByVal RHS As String)
+Private Property Let IComboLeg_Action(ByVal RHS As TradeBuildSP.OrderActions)
 action = RHS
 End Property
 
-Private Property Get IComboLeg_Action() As String
+Private Property Get IComboLeg_Action() As TradeBuildSP.OrderActions
 IComboLeg_Action = action
 End Property
 
 Private Function IComboLeg_Clone() As TradeBuildSP.IComboLeg
-Set IComboLeg_Clone = Clone
+Set IComboLeg_Clone = clone
 End Function
 
 Private Property Let IComboLeg_ContractID(ByVal RHS As Long)
@@ -122,11 +122,11 @@ End Function
 ' Properties
 '================================================================================
 
-Public Property Get action() As String
+Public Property Get action() As TradeBuild.OrderActions
 action = mAction
 End Property
 
-Public Property Let action(ByVal value As String)
+Friend Property Let action(ByVal value As TradeBuild.OrderActions)
 mAction = UCase$(value)
 End Property
 
@@ -134,7 +134,7 @@ Public Property Get contractID() As Long
 contractID = mContractID
 End Property
 
-Public Property Let contractID(ByVal value As Long)
+Friend Property Let contractID(ByVal value As Long)
 mContractID = value
 End Property
 
@@ -142,11 +142,11 @@ Public Property Get exchange() As String
 exchange = mExchange
 End Property
 
-Public Property Let exchange(ByVal value As String)
+Friend Property Let exchange(ByVal value As String)
 mExchange = UCase$(value)
 End Property
 
-Public Property Let openClose(ByVal value As LegOpenClose)
+Friend Property Let openClose(ByVal value As LegOpenClose)
 mOpenClose = value
 End Property
 
@@ -158,7 +158,7 @@ Public Property Get ratio() As Long
 ratio = mRatio
 End Property
 
-Public Property Let ratio(ByVal value As Long)
+Friend Property Let ratio(ByVal value As Long)
 mRatio = value
 End Property
 
@@ -166,9 +166,9 @@ End Property
 ' Methods
 '================================================================================
 
-Public Function Clone() As ComboLeg
-Set Clone = New ComboLeg
-With Clone
+Friend Function clone() As ComboLeg
+Set clone = New ComboLeg
+With clone
     .action = mAction
     .contractID = mContractID
     .exchange = mExchange
@@ -179,7 +179,7 @@ End Function
 
 Public Function ToString() As String
 
-ToString = "action=" & mAction & vbCrLf & _
+ToString = "action=" & orderActionToString(mAction) & vbCrLf & _
             vbTab & "contractid=" & mContractID & vbCrLf & _
             vbTab & "exchange=" & mExchange & vbCrLf & _
             vbTab & "openclose=" & mOpenClose & vbCrLf & _
