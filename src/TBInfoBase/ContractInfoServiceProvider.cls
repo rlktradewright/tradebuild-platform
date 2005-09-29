@@ -187,6 +187,7 @@ Set mInstrumentFactory = New cInstrumentFactory
 
 With mRequests(mFirstRequestID).ContractSpecifier
     Set instrumentSummaries = mInstrumentFactory.loadEx( _
+                                    .LocalSymbol, _
                                     .Symbol, _
                                     secTypeToString(.SecType), _
                                     Left$(.Expiry, 6), _
