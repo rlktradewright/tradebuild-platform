@@ -119,7 +119,7 @@ ICommonServiceConsumer_GUIDToString = gGUIDToString(lGuid)
 End Function
 
 Private Function ICommonServiceConsumer_NewContract() As TradeBuildSP.IContract
-Set ICommonServiceConsumer_NewContract = New Contract
+Set ICommonServiceConsumer_NewContract = New contract
 End Function
 
 Private Function ICommonServiceConsumer_NewContractSpecifier() As TradeBuildSP.IContractSpecifier
@@ -236,7 +236,9 @@ Dim lContracts As TradeBuild.Contracts
 Set lContracts = pContracts
 If lContracts.Count = 0 Then
     ' try another service provider if any
-    If Not RequestContractFromNextSP(handle + 1, pContracts) Then lContracts.LoadComplete
+    If Not RequestContractFromNextSP(handle + 1, pContracts) Then
+        lContracts.ContractSpecifierInvalid
+    End If
 Else
     lContracts.LoadComplete
 End If

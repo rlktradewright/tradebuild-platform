@@ -903,7 +903,7 @@ With newContractSpecifier
     .localSymbol = localSymbol
     .symbol = symbol
     .exchange = exchange
-    .secType = SecTypeBag
+    .secType = secType
     .currencyCode = currencyCode
     .expiry = expiry
     .strike = strike
@@ -2745,7 +2745,7 @@ With mContractDetailsRequest
 '            End With
 '            releaseTickerTableEntry TickerID
         Else
-            .Contracts.ContractSpecifierInvalid .contractSpecifier
+            .Contracts.ContractSpecifierInvalid
             .Contracts.LoadComplete
         End If
     End If

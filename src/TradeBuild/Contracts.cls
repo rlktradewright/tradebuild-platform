@@ -37,7 +37,7 @@ Implements TradeBuildSP.IContracts
 '================================================================================
 
 Event ContractDetailsReceived( _
-                ByVal pContract As Contract)
+                ByVal pContract As contract)
 Event ContractSpecifierInvalid( _
                 ByVal contractSpecifier As contractSpecifier)
 Event NoMoreContractDetails()
@@ -91,7 +91,7 @@ contractSpecifier = RHS
 End Property
 
 Private Sub IContracts_ContractSpecifierInvalid()
-ContractSpecifierInvalid mContractSpecifier
+ContractSpecifierInvalid
 End Sub
 
 Private Property Get IContracts_Count() As Long
@@ -140,16 +140,16 @@ End Property
 ' Methods
 '================================================================================
 
-Friend Sub AddContract(ByVal pContract As Contract)
+Friend Sub AddContract(ByVal pContract As contract)
 mContracts.add pContract, pContract.specifier.key
 RaiseEvent ContractDetailsReceived(pContract)
 End Sub
 
-Friend Sub ContractSpecifierInvalid(ByVal contractSpec As contractSpecifier)
-RaiseEvent ContractSpecifierInvalid(contractSpec)
+Friend Sub ContractSpecifierInvalid()
+RaiseEvent ContractSpecifierInvalid(mContractSpecifier)
 End Sub
 
-Public Function Item(ByVal index As Variant) As Contract
+Public Function Item(ByVal index As Variant) As contract
 Attribute Item.VB_UserMemId = 0
 Set Item = mContracts(index)
 End Function

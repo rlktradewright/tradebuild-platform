@@ -291,8 +291,8 @@ End Property
 ' Methods
 '================================================================================
 
-Friend Function clone() As contractSpecifier
-Set clone = New contractSpecifier
+Friend Function clone() As ContractSpecifier
+Set clone = New ContractSpecifier
 With clone
     If Not mComboLegs Is Nothing Then
         .ComboLegs = mComboLegs.clone
@@ -309,12 +309,12 @@ With clone
 End With
 End Function
 
-Public Function Equals(ByVal pContractSpecifier As contractSpecifier) As Boolean
+Public Function Equals(ByVal pContractSpecifier As ContractSpecifier) As Boolean
 If pContractSpecifier Is Me Then Equals = True
 Equals = (Me.key = pContractSpecifier.key)
 End Function
 
-Public Function FuzzyEquals(ByVal pContractSpecifier As contractSpecifier) As Boolean
+Public Function FuzzyEquals(ByVal pContractSpecifier As ContractSpecifier) As Boolean
 FuzzyEquals = (Me.secType = pContractSpecifier.secType And _
                 Me.symbol = pContractSpecifier.symbol)
 End Function
@@ -324,21 +324,20 @@ Dim comboLegObj As ComboLeg
 Dim i As Long
 
 ToString = IIf(mLocalSymbol <> "", "localsymbol=" & mLocalSymbol & vbCrLf, "")
-ToString = ToString & "symbol=" & mSymbol & vbCrLf & _
-        "sectype="
+ToString = ToString & "symbol=" & mSymbol & vbCrLf
 Select Case mSecType
 Case SecTypeStock
-    ToString = ToString & "SecTypeStock" & vbCrLf
+    ToString = "sectype=" & ToString & "SecTypeStock" & vbCrLf
 Case SecTypeFuture
-    ToString = ToString & "SecTypeFuture" & vbCrLf
+    ToString = "sectype=" & ToString & "SecTypeFuture" & vbCrLf
 Case SecTypeOption
-    ToString = ToString & "SecTypeOption" & vbCrLf
+    ToString = "sectype=" & ToString & "SecTypeOption" & vbCrLf
 Case SecTypeFuturesOption
-    ToString = ToString & "SecTypeFuturesOption" & vbCrLf
+    ToString = "sectype=" & ToString & "SecTypeFuturesOption" & vbCrLf
 Case SecTypeCash
-    ToString = ToString & "SecTypeCash" & vbCrLf
+    ToString = "sectype=" & ToString & "SecTypeCash" & vbCrLf
 Case SecTypeBag
-    ToString = ToString & "SecTypeBag" & vbCrLf
+    ToString = "sectype=" & ToString & "SecTypeBag" & vbCrLf
 End Select
 ToString = ToString & _
         IIf(mExpiry <> "", "expiry=" & mExpiry & vbCrLf, "") & _
