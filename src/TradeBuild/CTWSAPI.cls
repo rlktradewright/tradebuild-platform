@@ -117,7 +117,7 @@ Event updateMarketDepth( _
                 ByVal position As Long, _
                 ByVal operation As DOMOperations, _
                 ByVal side As DOMSides, _
-                ByVal Price As Double, _
+                ByVal price As Double, _
                 ByVal Size As Long)
                 
 Event UpdateMarketDepthL2( _
@@ -127,7 +127,7 @@ Event UpdateMarketDepthL2( _
                 ByVal marketMaker As String, _
                 ByVal operation As DOMOperations, _
                 ByVal side As DOMSides, _
-                ByVal Price As Double, _
+                ByVal price As Double, _
                 ByVal Size As Long)
 
 Event updateNewsBulletin( _
@@ -836,7 +836,7 @@ Public Function newContractSpecifier( _
                 Optional ByVal localSymbol As String, _
                 Optional ByVal symbol As String, _
                 Optional ByVal exchange As String, _
-                Optional ByVal secType As SecurityTypes = SecTypeStock, _
+                Optional ByVal secType As SecurityTypes = SecTypeNone, _
                 Optional ByVal currencyCode As String, _
                 Optional ByVal expiry As String, _
                 Optional ByVal strike As Double, _
@@ -1910,7 +1910,7 @@ Dim timestamp As Date: timestamp = gCurrentTime
 Dim secType As String
 Dim right As String
 Dim side As String
-Dim Price As Double
+Dim price As Double
 
 Dim id As Long: id = getLong
 
@@ -1941,11 +1941,11 @@ With exec
     side = getString
     .side = execSideFromString(side)
     .quantity = getLong
-    Price = getDouble
+    price = getDouble
     If lContractSpecifier.currencyCode = "GBP" Then
-        .Price = Price * 100
+        .price = price * 100
     Else
-        .Price = Price
+        .price = price
     End If
 End With
 
@@ -1974,7 +1974,7 @@ If mEnableListeners Then
         listendata.execId = .execId
         listendata.orderId = id
         listendata.permId = .permId
-        listendata.Price = Price
+        listendata.price = price
         listendata.quantity = .quantity
         listendata.side = side
         listendata.time = .time
@@ -2035,7 +2035,7 @@ Dim id As Long: id = getLong
 Dim position As Long: position = getLong
 Dim operation As Long: operation = getLong
 Dim side As Long: side = getLong
-Dim Price As Double: Price = getDouble
+Dim price As Double: price = getDouble
 Dim Size As Long: Size = getLong
 
 timestamp = gCurrentTime
@@ -2045,14 +2045,14 @@ processMarketDepth timestamp, _
                 position, _
                 operation, _
                 side, _
-                Price, _
+                price, _
                 Size
 
 If mEnableListeners Then
     listendata.msgType = TWSSocketInMsgTypes.MARKET_DEPTH
     listendata.operation = operation
     listendata.position = position
-    listendata.Price = Price
+    listendata.price = price
     listendata.side = side
     listendata.Size = Size
     listendata.tickerid = id
@@ -2073,7 +2073,7 @@ Dim position As Long: position = getLong
 Dim marketMaker As String: marketMaker = getString
 Dim operation As Long: operation = getLong
 Dim side As Long: side = getLong
-Dim Price As Double: Price = getDouble
+Dim price As Double: price = getDouble
 Dim Size As Long: Size = getLong
 
 With mTickerTable(id - MARKET_DEPTH_TICKER_BASE)
@@ -2084,7 +2084,7 @@ With mTickerTable(id - MARKET_DEPTH_TICKER_BASE)
                         marketMaker, _
                         operation, _
                         side, _
-                        Price, _
+                        price, _
                         Size
                         
     End If
@@ -2095,7 +2095,7 @@ If mEnableListeners Then
     listendata.marketMaker = marketMaker
     listendata.operation = operation
     listendata.position = position
-    listendata.Price = Price
+    listendata.price = price
     listendata.side = side
     listendata.Size = Size
     listendata.tickerid = id
@@ -2424,25 +2424,25 @@ End Sub
 Private Sub getTickPrice(ByVal Version As Long)
 Dim listendata As TWSSocketMsgTickPrice
 Dim timestamp As Date
-Dim Price As Double
+Dim price As Double
 Dim Size As Long
 Dim TickType As Long
 Dim tickerid As Long
 tickerid = getLong
 TickType = getLong
-Price = getDouble
+price = getDouble
 If Version >= 2 Then Size = getLong
 timestamp = gCurrentTime
 
 processTickPrice timestamp, _
                 tickerid Mod INCARNATION_INCREMENT, _
                 TickType, _
-                Price, _
+                price, _
                 Size
 
 If mEnableListeners Then
     listendata.msgType = TWSSocketInMsgTypes.TICK_PRICE
-    listendata.Price = Price
+    listendata.price = price
     listendata.Size = Size
     listendata.tickerid = tickerid
     listendata.TickType = TickType
@@ -2612,7 +2612,7 @@ End Function
 
 Private Sub ProcessAsk(ByVal timestamp As Date, _
                             ByVal tickerid As Long, _
-                            ByVal Price As Double, _
+                            ByVal price As Double, _
                             ByVal Size As Long)
 
 With mTickerTable(tickerid)
@@ -2620,34 +2620,34 @@ With mTickerTable(tickerid)
     If Not .inUse Then Exit Sub     ' ticker has been stopped
         
     .dataConsumer.ask timestamp, _
-                Price, _
+                price, _
                 Size
 End With
 End Sub
 
 Private Sub ProcessBid(ByVal timestamp As Date, _
                             ByVal tickerid As Long, _
-                            ByVal Price As Double, _
+                            ByVal price As Double, _
                             ByVal Size As Long)
 With mTickerTable(tickerid)
 
     If Not .inUse Then Exit Sub     ' ticker has been stopped
         
     .dataConsumer.bid timestamp, _
-                Price, _
+                price, _
                 Size
 End With
 End Sub
 
 Private Sub ProcessClose(ByVal timestamp As Date, _
                             ByVal tickerid As Long, _
-                            ByVal Price As Double)
+                            ByVal price As Double)
 
 With mTickerTable(tickerid)
 
     If Not .inUse Then Exit Sub     ' ticker has been stopped
     
-    .dataConsumer.previousClose timestamp, Price
+    .dataConsumer.previousClose timestamp, price
 End With
 End Sub
 
@@ -2758,20 +2758,20 @@ End Sub
 
 Private Sub ProcessHigh(ByVal timestamp As Date, _
                             ByVal tickerid As Long, _
-                            ByVal Price As Double)
+                            ByVal price As Double)
 
 With mTickerTable(tickerid)
 
     If Not .inUse Then Exit Sub     ' ticker has been stopped
 
-    .dataConsumer.high timestamp, Price
+    .dataConsumer.high timestamp, price
     
 End With
 End Sub
 
 Private Sub ProcessLast(ByVal timestamp As Date, _
                             ByVal tickerid As Long, _
-                            ByVal Price As Double, _
+                            ByVal price As Double, _
                             ByVal Size As Long)
 
 With mTickerTable(tickerid)
@@ -2779,20 +2779,20 @@ With mTickerTable(tickerid)
     If Not .inUse Then Exit Sub     ' ticker has been stopped
         
     .dataConsumer.trade timestamp, _
-            Price, _
+            price, _
             Size
 End With
 End Sub
 
 Private Sub ProcessLow(ByVal timestamp As Date, _
                             ByVal tickerid As Long, _
-                            ByVal Price As Double)
+                            ByVal price As Double)
 
 With mTickerTable(tickerid)
 
     If Not .inUse Then Exit Sub     ' ticker has been stopped
 
-    .dataConsumer.Low timestamp, Price
+    .dataConsumer.Low timestamp, price
 
 End With
 End Sub
@@ -2802,7 +2802,7 @@ Private Sub processMarketDepth(ByVal timestamp As Date, _
                                 ByVal position As Long, _
                                 ByVal operation As DOMOperations, _
                                 ByVal side As DOMSides, _
-                                ByVal Price As Double, _
+                                ByVal price As Double, _
                                 ByVal Size As Long)
 
 With mTickerTable(id)
@@ -2813,7 +2813,7 @@ With mTickerTable(id)
                 position, _
                 operation, _
                 side, _
-                Price, _
+                price, _
                 Size
     
 End With
@@ -2822,14 +2822,14 @@ End Sub
 Private Sub processTickPrice(ByVal timestamp As Date, _
                             ByVal tickerid As Long, _
                             ByVal TickType As TWSSocketTickTypes, _
-                            ByVal Price As Double, _
+                            ByVal price As Double, _
                             ByVal Size As Long)
 
 With mTickerTable(tickerid)
 
     If Not .inUse Then Exit Sub     ' ticker has been stopped
 
-    If Price < (0.5 * .prevTrade) Then
+    If price < (0.5 * .prevTrade) Then
         Exit Sub        ' ignore invalid prices
     End If
     
@@ -2838,42 +2838,42 @@ With mTickerTable(tickerid)
         Size = IIf(Size <> 0, Size, .prevBidSize)
         ProcessBid timestamp, _
                     tickerid, _
-                    Price, _
+                    price, _
                     Size
-        .prevBid = Price
+        .prevBid = price
         If Size <> 0 Then .prevBidSize = Size
     
     Case TICK_ASK
         Size = IIf(Size <> 0, Size, .prevAskSize)
         ProcessAsk timestamp, _
                     tickerid, _
-                    Price, _
+                    price, _
                     Size
         
-        .prevAsk = Price
+        .prevAsk = price
         If Size <> 0 Then .prevAskSize = Size
     
     Case TICK_LAST
         Size = IIf(Size <> 0, Size, .prevTradeSize)
         ProcessLast timestamp, _
                     tickerid, _
-                    Price, _
+                    price, _
                     Size
-        .prevTrade = Price
+        .prevTrade = price
         If Size <> 0 Then .prevTradeSize = Size
     
     Case TICK_HIGH
         ProcessHigh timestamp, _
                     tickerid, _
-                    Price
+                    price
     Case TICK_LOW
         ProcessLow timestamp, _
                     tickerid, _
-                    Price
+                    price
     Case TICK_CLOSE
         ProcessClose timestamp, _
                     tickerid, _
-                    Price
+                    price
     End Select
 End With
 

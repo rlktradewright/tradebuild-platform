@@ -21,7 +21,11 @@ Option Explicit
 ' Events
 '================================================================================
 
-'
+
+Event ContractAmbiguous( _
+                ByVal pTicker As Ticker, _
+                ByVal contractSpec As contractSpecifier)
+                
 Event ContractInvalid( _
                 ByVal pTicker As Ticker, _
                 ByVal contractSpec As contractSpecifier)
@@ -311,14 +315,20 @@ For i = 0 To UBound(mColumnNames)
 Next
 End Sub
 
+Friend Sub ContractAmbiguous(ByVal Ticker As Ticker, _
+                            ByVal contractSpec As contractSpecifier)
+RaiseEvent ContractAmbiguous(Ticker, contractSpec)
+Hide Ticker
+End Sub
+
 Friend Sub ContractInvalid(ByVal Ticker As Ticker, _
                             ByVal contractSpec As contractSpecifier)
 RaiseEvent ContractInvalid(Ticker, contractSpec)
 Hide Ticker
 End Sub
 
-Public Function createTickFileManager() As tickfileManager
-Set createTickFileManager = New tickfileManager
+Public Function createTickFileManager() As TickFileManager
+Set createTickFileManager = New TickFileManager
 createTickFileManager.Tickers = Me
 End Function
 
@@ -609,7 +619,7 @@ Else
 End If
 mRS("Key") = pTicker.key
 mRS("Position") = pTicker.position
-With pTicker.Contract
+With pTicker.contract
     
     If (mColumnMask And TickerColumnIds.columnName) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.columnName)) = .specifier.localSymbol

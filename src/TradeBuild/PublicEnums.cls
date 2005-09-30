@@ -562,7 +562,8 @@ Public Enum ReplayContinueModes
 End Enum
 
 Public Enum SecurityTypes
-    SecTypeStock = 1
+    SecTypeNone
+    SecTypeStock
     SecTypeFuture
     SecTypeOption
     SecTypeFuturesOption
