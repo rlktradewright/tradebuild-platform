@@ -1,7 +1,6 @@
 Type=Exe
 Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#E:\WINNT\System32\stdole2.tlb#OLE Automation
 Reference=*\G{420B2830-E718-11CF-893D-00A0C9054228}#1.0#0#E:\WINNT\system32\scrrun.dll#Microsoft Scripting Runtime
-Reference=*\G{1A7D04A0-58BB-4761-A08D-1F53D5FE508C}#2.0#0#..\..\CrescendoTrader\TradingEngine\TradingEngine.dll#TradingEngine
 Reference=*\G{1B78E244-45D7-423A-AEA1-E5BBAC807BDE}#42.0#0#..\..\TradeWright Common\appframework\appframework.dll#AppFramework
 Reference=*\G{4CD8AC11-78BE-4101-B5BC-F7505F278F8F}#1.2#0#..\..\TradeWright Common\timerutils\timerutils.dll#TradeWright Interval Timer Utilities
 Reference=*\G{B99E6CD6-8F65-4C7A-8FCA-70C97379752F}#1.1#0#..\TBInfoBase\TBInfoBase.dll#TradeWright TradeBuild Information Base
@@ -24,7 +23,7 @@ Description="TradeBuild Tickfile Manager"
 CompatibleMode="0"
 MajorVer=1
 MinorVer=0
-RevisionVer=63
+RevisionVer=64
 AutoIncrementVer=1
 ServerSupportFiles=0
 VersionCompanyName="Fastlor Ltd"
