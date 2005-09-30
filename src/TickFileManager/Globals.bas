@@ -185,20 +185,20 @@ End Select
 End Function
 
 Public Function secTypeFromString(ByVal value As String) As SecurityTypes
-Select Case UCase$(value)
-Case "Stock"
+Select Case LCase$(value)
+Case "stock"
     secTypeFromString = SecTypeStock
-Case "Future"
+Case "future"
     secTypeFromString = SecTypeFuture
-Case "Option"
+Case "option"
     secTypeFromString = SecTypeOption
-Case "Futures Option"
+Case "futures option"
     secTypeFromString = SecTypeFuturesOption
-Case "Cash"
+Case "cash"
     secTypeFromString = SecTypeCash
-Case "Bag"
+Case "bag"
     secTypeFromString = SecTypeBag
-Case "Index"
+Case "index"
     secTypeFromString = SecTypeIndex
 End Select
 End Function
