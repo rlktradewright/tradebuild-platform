@@ -164,11 +164,11 @@ IContractSpecifier_Right = right
 End Property
 
 Private Property Let IContractSpecifier_SecType(ByVal RHS As TradeBuildSP.SecurityTypes)
-secType = RHS
+sectype = RHS
 End Property
 
 Private Property Get IContractSpecifier_SecType() As TradeBuildSP.SecurityTypes
-IContractSpecifier_SecType = secType
+IContractSpecifier_SecType = sectype
 End Property
 
 Private Property Let IContractSpecifier_Strike(ByVal RHS As Double)
@@ -263,12 +263,12 @@ Public Property Get right() As OptionRights
 right = mRight
 End Property
 
-Friend Property Let secType(ByVal value As SecurityTypes)
+Friend Property Let sectype(ByVal value As SecurityTypes)
 mSecType = value
 End Property
 
-Public Property Get secType() As SecurityTypes
-secType = mSecType
+Public Property Get sectype() As SecurityTypes
+sectype = mSecType
 End Property
 
 Friend Property Let strike(ByVal value As Double)
@@ -302,7 +302,7 @@ With clone
     .expiry = mExpiry
     .localSymbol = mLocalSymbol
     .right = mRight
-    .secType = mSecType
+    .sectype = mSecType
     .strike = mStrike
     .symbol = mSymbol
     .locked = mLocked
@@ -315,7 +315,7 @@ Equals = (Me.key = pContractSpecifier.key)
 End Function
 
 Public Function FuzzyEquals(ByVal pContractSpecifier As ContractSpecifier) As Boolean
-FuzzyEquals = (Me.secType = pContractSpecifier.secType And _
+FuzzyEquals = (Me.sectype = pContractSpecifier.sectype And _
                 Me.symbol = pContractSpecifier.symbol)
 End Function
 
@@ -325,32 +325,14 @@ Dim i As Long
 
 ToString = IIf(mLocalSymbol <> "", "localsymbol=" & mLocalSymbol & vbCrLf, "")
 ToString = ToString & "symbol=" & mSymbol & vbCrLf
-Select Case mSecType
-Case SecTypeStock
-    ToString = "sectype=" & ToString & "SecTypeStock" & vbCrLf
-Case SecTypeFuture
-    ToString = "sectype=" & ToString & "SecTypeFuture" & vbCrLf
-Case SecTypeOption
-    ToString = "sectype=" & ToString & "SecTypeOption" & vbCrLf
-Case SecTypeFuturesOption
-    ToString = "sectype=" & ToString & "SecTypeFuturesOption" & vbCrLf
-Case SecTypeCash
-    ToString = "sectype=" & ToString & "SecTypeCash" & vbCrLf
-Case SecTypeBag
-    ToString = "sectype=" & ToString & "SecTypeBag" & vbCrLf
-End Select
+ToString = ToString & secTypeToString(mSecType) & vbCrLf
 ToString = ToString & _
         IIf(mExpiry <> "", "expiry=" & mExpiry & vbCrLf, "") & _
         IIf(mExchange <> "", "exchange=" & mExchange & vbCrLf, "") & _
         IIf(mCurrency <> "", "currencycode=" & mCurrency & vbCrLf, "")
-                
 Select Case mRight
-Case OptNone
-Case OptCall
-    ToString = ToString & "right=Call" & vbCrLf
-    ToString = ToString & "strike=" & mStrike & vbCrLf
-Case OptPut
-    ToString = ToString & "right=Put" & vbCrLf
+Case OptCall, OptPut
+    ToString = ToString & OptRightToString(mRight)
     ToString = ToString & "strike=" & mStrike & vbCrLf
 End Select
 
