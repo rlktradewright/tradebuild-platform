@@ -1711,7 +1711,6 @@ timestamp = gCurrentTime
 
 Set lContract = New contract
 With lContract
-    .timestamp = timestamp
     .specifier = New contractSpecifier
     .specifier.locked = True
     .specifier.symbol = getString
