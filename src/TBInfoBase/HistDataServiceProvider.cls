@@ -143,7 +143,8 @@ Private Sub ICommonServiceProvider_Link( _
 Set mCommonServiceConsumer = CommonServiceConsumer
 mHandle = handle
 mCommonServiceConsumer.RegisterServiceProvider mHandle, _
-                            ServiceProviderTypes.HistoricalData
+                            ServiceProviderTypes.HistoricalData, _
+                            ProviderKey
 
 End Sub
 

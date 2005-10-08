@@ -87,13 +87,6 @@ End Sub
 ' ICommonServiceProvider Interface Members
 '================================================================================
 
-Private Property Let ICommonServiceProvider_CommonServiceConsumer( _
-                            ByVal RHS As TradeBuildSP.ICommonServiceConsumer)
-Set mCommonServiceConsumer = RHS
-mCommonServiceConsumer.RegisterServiceProvider ServiceProviderTypes.ContractInfo, _
-                                            Me
-End Property
-
 Private Property Get ICommonServiceProvider_Details() As TradeBuildSP.ServiceProviderDetails
 Dim ServiceProviderDetails  As TradeBuildSP.ServiceProviderDetails
 With ServiceProviderDetails
@@ -118,7 +111,8 @@ Private Sub ICommonServiceProvider_Link( _
 Set mCommonServiceConsumer = CommonServiceConsumer
 mHandle = handle
 mCommonServiceConsumer.RegisterServiceProvider handle, _
-                                            ServiceProviderTypes.ContractInfo
+                                            ServiceProviderTypes.ContractInfo, _
+                                            ProviderKey
 End Sub
 
 Private Property Get ICommonServiceProvider_Name() As String

@@ -26,6 +26,8 @@ Public Const ContractInfoSPName As String = "TradeBuild Contract Info Service Pr
 Public Const HistoricDataSPName As String = "TradeBuild Historic Data Service Provider"
 Public Const SQLDBTickfileSPName As String = "TradeBuild SQLDB Tickfile Service Provider"
 
+Public Const ProviderKey As String = "TradeBuild"
+
 '================================================================================
 ' Enums
 '================================================================================

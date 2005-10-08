@@ -96,7 +96,8 @@ Private Sub ICommonServiceProvider_Link( _
 Set mCommonServiceConsumer = CommonServiceConsumer
 mHandle = handle
 mCommonServiceConsumer.RegisterServiceProvider mHandle, _
-                            ServiceProviderTypes.Tickfile
+                            ServiceProviderTypes.Tickfile, _
+                            ProviderKey
 
 End Sub
 
@@ -113,7 +114,7 @@ End Sub
 '================================================================================
 
 Private Function ITickfileServiceProvider_CreateTickfileReader( _
-                            ByVal dataConsumer As TradeBuildSP.IStreamingDataConsumer, _
+                            ByVal DataConsumer As TradeBuildSP.IStreamingDataConsumer, _
                             ByVal serviceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
                             ByVal FormatIdentifier As String) As TradeBuildSP.ITickfileReader
 Dim reader As TickfileReader
@@ -122,7 +123,7 @@ Set reader = New TickfileReader
 Set ITickfileServiceProvider_CreateTickfileReader = reader
 reader.CommonServiceConsumer = mCommonServiceConsumer
 reader.TickfileInputServiceConsumer = serviceConsumer
-reader.StreamingDataConsumer = dataConsumer
+reader.StreamingDataConsumer = DataConsumer
 End Function
 
 Private Function ITickfileServiceProvider_CreateTickfileWriter( _
