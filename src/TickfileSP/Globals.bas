@@ -6,6 +6,7 @@ Option Explicit
 '================================================================================
 
 Public Const ServiceProviderName As String = "TickfileSP"
+Public Const ProviderKey As String = "TickfileSP"
 
 Public Const TICKFILE_CURR_VERSION As Integer = 4
 
@@ -46,7 +47,7 @@ End Enum
 
 Public Enum TickfileFieldsV1
     TimestampString
-    exchange
+    Exchange
     Symbol
     Expiry
     tickType
@@ -83,7 +84,7 @@ End Enum
 Public Enum TickfileHeaderFieldsV2
     ContentDeclarer
     version
-    exchange
+    Exchange
     Symbol
     Expiry
     StartTime
@@ -92,7 +93,7 @@ End Enum
 Public Enum TickfileHeaderFieldsV3
     ContentDeclarer
     version
-    exchange
+    Exchange
     Symbol
     Expiry
     StartTime

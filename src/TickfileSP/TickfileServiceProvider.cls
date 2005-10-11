@@ -96,7 +96,8 @@ Private Sub ICommonServiceProvider_Link( _
 Set mCommonServiceConsumer = commonServiceConsumer
 mHandle = handle
 mCommonServiceConsumer.RegisterServiceProvider mHandle, _
-                            ServiceProviderTypes.Tickfile
+                            ServiceProviderTypes.Tickfile, _
+                            ProviderKey
 
 End Sub
 
