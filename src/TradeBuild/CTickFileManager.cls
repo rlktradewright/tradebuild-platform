@@ -38,7 +38,7 @@ Implements TradeBuildSP.ITickfileInputServiceConsumer
 
 Event errorMessage( _
                 ByVal timestamp As Date, _
-                ByVal id As Long, _
+                ByVal tickfileIndex As Long, _
                 ByVal errorCode As ApiErrorCodes, _
                 ByVal errorMsg As String)
 
@@ -79,7 +79,7 @@ Event TickfilesSelected()
 ' Member variables
 '================================================================================
 
-Private WithEvents mContracts       As Contracts
+Private WithEvents mContracts       As contracts
 Attribute mContracts.VB_VarHelpID = -1
 Private mContract                   As contract
 
@@ -132,63 +132,63 @@ Private Sub ITickfileInputServiceConsumer_Error( _
 Select Case errorCode
 Case TradeBuildSP.StandardSPErrorCodes.TFTickfileDoesntExist
     RaiseEvent errorMessage(gCurrentTime, _
-                    NoValidID, _
+                    mCurrTickfileIndex, _
                     ApiErrorCodes.TickfileEmpty, _
                     "Empty tickfile: " & _
                     gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex)))
     SkipTickfile
 Case TradeBuildSP.StandardSPErrorCodes.TFTickfileEmpty
     RaiseEvent errorMessage(gCurrentTime, _
-                    NoValidID, _
+                    mCurrTickfileIndex, _
                     ApiErrorCodes.TickfileEmpty, _
                     "Empty tickfile: " & _
                     gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex)))
     SkipTickfile
 Case TradeBuildSP.StandardSPErrorCodes.TFTickfileInvalid
     RaiseEvent errorMessage(gCurrentTime, _
-                    NoValidID, _
+                    mCurrTickfileIndex, _
                     ApiErrorCodes.TickfileInvalid, _
                     "Not a valid tickfile: " & _
                     gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex)))
     SkipTickfile
 Case TradeBuildSP.StandardSPErrorCodes.TFTickfileVersionNotSupported
     RaiseEvent errorMessage(gCurrentTime, _
-                    NoValidID, _
+                    mCurrTickfileIndex, _
                     ApiErrorCodes.TickfileVersionNotSupported, _
                     "Tickfile version not supported: " & _
                     gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex)))
     SkipTickfile
 Case TradeBuildSP.StandardSPErrorCodes.TFContractDetailsInvalid
     RaiseEvent errorMessage(gCurrentTime, _
-                    NoValidID, _
+                    mCurrTickfileIndex, _
                     ApiErrorCodes.ContractDetailsInvalid, _
                     "Tickfile contains invalid contract details: " & _
                     gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex)))
     SkipTickfile
 Case TradeBuildSP.StandardSPErrorCodes.TFNoContractDetails
     RaiseEvent errorMessage(gCurrentTime, _
-                    NoValidID, _
+                    mCurrTickfileIndex, _
                     ApiErrorCodes.NoContractDetails, _
                     "Tickfile contains no contract details: " & _
                     gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex)))
     SkipTickfile
 Case TradeBuildSP.StandardSPErrorCodes.TFDataSourceNotResponding
     RaiseEvent errorMessage(gCurrentTime, _
-                    NoValidID, _
+                    mCurrTickfileIndex, _
                     ApiErrorCodes.TickfileDataSourceNotResponding, _
                     "Tickfile data source not responding: " & _
                     gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex)))
     FinishTickfile
 Case TradeBuildSP.StandardSPErrorCodes.TFCantConnectDataSource
     RaiseEvent errorMessage(gCurrentTime, _
-                    NoValidID, _
+                    mCurrTickfileIndex, _
                     ApiErrorCodes.TickfileDataSourceNotResponding, _
                     "Can't connect to tickfile data source: " & _
                     gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex)))
     FinishTickfile
 Case TradeBuildSP.StandardSPErrorCodes.TFRetryConnectDataSource
     RaiseEvent errorMessage(gCurrentTime, _
-                    NoValidID, _
+                    mCurrTickfileIndex, _
                     ApiErrorCodes.RetryingConnectionToTickfileDataSource, _
                     "Retrying connection to tickfile data source: " & _
                     gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex)))
@@ -197,7 +197,7 @@ Case TradeBuildSP.StandardSPErrorCodes.TFRetryConnectDataSource
     ' failing to connect (eg start the data source software)
 Case TradeBuildSP.StandardSPErrorCodes.TFContractSpecifierInvalid
     RaiseEvent errorMessage(gCurrentTime, _
-                    NoValidID, _
+                    mCurrTickfileIndex, _
                     ApiErrorCodes.ContractSpecifierInvalid, _
                     "The specified contract does not exist: " & _
                     gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex)))
@@ -234,7 +234,7 @@ If mReader.contract Is Nothing Then
         If mContract Is Nothing Then
             ' we have no way to determine what the contract is
             RaiseEvent errorMessage(Now, _
-                            NoValidID, _
+                            mCurrTickfileIndex, _
                             ApiErrorCodes.NoContractDetails, _
                             "Contract details must be supplied for tickfile: " & _
                             gTickfileSpecifierToString(tfSpec))
@@ -255,7 +255,7 @@ If mReader.contract Is Nothing Then
         End If
     End If
 Else
-    Set contractSpec = mReader.contractSpecifier
+    Set contractSpec = mReader.contract.specifier
 End If
 
 'now query the Contract Details service provider(s) to see if we can
@@ -266,6 +266,7 @@ End Sub
 Private Sub ITickfileInputServiceConsumer_TickfileReplayComplete()
 mReader.CloseInputFile
 FinishTickfile
+StartNextTickfile
 End Sub
 
 Private Sub ITickfileInputServiceConsumer_ReplayProgress( _
@@ -290,7 +291,7 @@ Private Sub mContracts_NoMoreContractDetails()
 If mContracts.Count <> 1 Then
     ' we have no way to determine uniquely what the contract is
     RaiseEvent errorMessage(Now, _
-                    NoValidID, _
+                    mCurrTickfileIndex, _
                     ApiErrorCodes.ContractDetailsInvalid, _
                     "Invalid contract details in tickfile: " & _
                     gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex)))
@@ -518,7 +519,7 @@ End Sub
 
 Friend Sub SkipThisTickfile(ByVal pTicker As Ticker)
 If pTicker Is Nothing Or (Not pTicker Is mTicker) Then Exit Sub
-mReader.stopReplay
+If Not mReader Is Nothing Then mReader.stopReplay
 FinishTickfile
 End Sub
 
@@ -530,6 +531,7 @@ If mTicker Is Nothing Or mReader Is Nothing Then
 End If
 mReader.stopReplay
 FinishTickfile
+StartNextTickfile
 End Sub
 
 Public Sub StartReplay()
@@ -559,7 +561,6 @@ stopProgressTimer
 Set mReader = Nothing
 mTicker.tickfileReplayCompleted
 Set mTicker = Nothing
-StartNextTickfile
 End Sub
 
 Private Sub playOrNot( _
