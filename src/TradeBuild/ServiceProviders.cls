@@ -135,7 +135,8 @@ End Sub
 
 Private Sub ICommonServiceConsumer_RegisterServiceProvider( _
                             ByVal handle As Long, _
-                            ByVal spType As TradeBuildSP.ServiceProviderTypes)
+                            ByVal spType As TradeBuildSP.ServiceProviderTypes, _
+                            ByVal key As String)
 Dim regOk As Boolean
 mServiceProviders(handle).SPTypes = mServiceProviders(handle).SPTypes Or spType
 Select Case spType
@@ -231,7 +232,7 @@ End Sub
 Private Sub IContractInfoServiceConsumer_LoadComplete( _
                             ByVal handle As Long, _
                             ByVal pContracts As TradeBuildSP.IContracts)
-Dim lContracts As TradeBuild.Contracts
+Dim lContracts As TradeBuild.contracts
 
 Set lContracts = pContracts
 If lContracts.Count = 0 Then
@@ -450,15 +451,18 @@ mServiceProviders(handle).Name = ""
 End Sub
 
 Friend Function RequestContract( _
-                            ByRef contractSpecifier As TradeBuild.contractSpecifier _
-                            ) As TradeBuild.Contracts
-Dim lContracts As TradeBuild.Contracts
-Set lContracts = New TradeBuild.Contracts
-Set RequestContract = lContracts
+                            ByRef contractSpecifier As TradeBuild.contractSpecifier, _
+                            Optional ByVal contracts As TradeBuild.contracts) As TradeBuild.contracts
 
-lContracts.contractSpecifier = contractSpecifier
+If contracts Is Nothing Then
+    Set RequestContract = New TradeBuild.contracts
+Else
+    Set RequestContract = contracts
+End If
 
-If Not RequestContractFromNextSP(0, lContracts) Then lContracts.LoadComplete
+RequestContract.contractSpecifier = contractSpecifier
+
+If Not RequestContractFromNextSP(0, RequestContract) Then RequestContract.LoadComplete
 End Function
 
 '================================================================================
@@ -505,7 +509,7 @@ End Function
 
 Private Function RequestContractFromNextSP( _
                             ByVal startingIndex As Long, _
-                            ByVal pContracts As TradeBuild.Contracts _
+                            ByVal pContracts As TradeBuild.contracts _
                             ) As Boolean
 Dim i As Long
 Dim contractInfoSP As TradeBuildSP.IContractInfoServiceProvider
