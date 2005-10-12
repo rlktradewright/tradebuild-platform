@@ -2678,7 +2678,7 @@ End If
 With mContractDetailsRequest
     .Contracts.AddContract pContract
     If Not .InternalRequest Then
-        RaiseEvent contract(pContract.timestamp, pContract)
+        RaiseEvent contract(gCurrentTime, pContract)
     End If
 End With
 

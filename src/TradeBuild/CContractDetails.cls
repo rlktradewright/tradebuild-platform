@@ -30,7 +30,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements TradeBuildSP.IContract
+Implements TradeBuildsp.IContract
 
 '================================================================================
 ' Events
@@ -60,11 +60,14 @@ Private mMinimumTick As Double
 Private mMultiplier As Long
 Private mOrderTypes() As TradeBuild.OrderTypes
 Private mValidExchanges() As String
-Private mTimestamp As String
 Private mNumberOfDecimals As Long
 Private mDescription As String
 Private mSessionStartTime As Date
 Private mSessionEndTime As Date
+Private mExpiryDate As Date
+Private mDaysBeforeExpiryToSwitch As Long
+
+Private mProviderIDs() As TradeBuildsp.DictionaryEntry
 
 Private mReferenceTime As Date
 Private mCurrentSessionStartTime As Date
@@ -120,7 +123,13 @@ End Sub
 ' IContract Interface Members
 '================================================================================
 
-Private Function IContract_Clone() As TradeBuildSP.IContract
+Private Function IContract_BarStartTime( _
+                ByVal Timestamp As Date, _
+                ByVal barLength As Long) As Date
+IContract_BarStartTime = BarStartTime(Timestamp, barLength)
+End Function
+
+Private Function IContract_Clone() As TradeBuildsp.IContract
 Set IContract_Clone = clone
 End Function
 
@@ -132,6 +141,22 @@ Private Property Get IContract_ContractID() As Long
 IContract_ContractID = contractID
 End Property
 
+Private Property Get IContract_CurrentSessionEndTime() As Date
+IContract_CurrentSessionEndTime = currentSessionEndTime
+End Property
+
+Private Property Get IContract_CurrentSessionStartTime() As Date
+IContract_CurrentSessionStartTime = currentSessionStartTime
+End Property
+
+Private Property Let IContract_DaysBeforeExpiryToSwitch(ByVal RHS As Long)
+daysBeforeExpiryToSwitch = RHS
+End Property
+
+Private Property Get IContract_DaysBeforeExpiryToSwitch() As Long
+IContract_DaysBeforeExpiryToSwitch = daysBeforeExpiryToSwitch
+End Property
+
 Private Property Let IContract_Description(ByVal RHS As String)
 Description = RHS
 End Property
@@ -140,16 +165,24 @@ Private Property Get IContract_Description() As String
 IContract_Description = Description
 End Property
 
+Private Property Let IContract_ExpiryDate(ByVal RHS As Date)
+ExpiryDate = RHS
+End Property
+
+Private Property Get IContract_ExpiryDate() As Date
+IContract_ExpiryDate = ExpiryDate
+End Property
+
 Private Sub IContract_FromXML(ByVal contractXML As String)
 FromXML contractXML
 End Sub
 
-Private Sub IContract_GetSessionTimes(ByVal timestamp As Date, sessionStartTime As Date, sessionEndTime As Date)
-GetSessionTimes timestamp, sessionStartTime, sessionEndTime
+Private Sub IContract_GetSessionTimes(ByVal Timestamp As Date, sessionStartTime As Date, sessionEndTime As Date)
+GetSessionTimes Timestamp, sessionStartTime, sessionEndTime
 End Sub
 
-Private Function IContract_IsTimeInSession(ByVal timestamp As Date) As Boolean
-IContract_IsTimeInSession = isTimeInSession(timestamp)
+Private Function IContract_IsTimeInSession(ByVal Timestamp As Date) As Boolean
+IContract_IsTimeInSession = isTimeInSession(Timestamp)
 End Function
 
 Private Property Get IContract_Key() As String
@@ -184,82 +217,102 @@ Private Property Get IContract_NumberOfDecimals() As Long
 IContract_NumberOfDecimals = NumberOfDecimals
 End Property
 
-Private Property Let IContract_OrderTypes(RHS() As TradeBuildSP.OrderTypes)
+Private Property Let IContract_OrderTypes(RHS() As TradeBuildsp.OrderTypes)
 Dim lOrderTypes() As TradeBuild.OrderTypes
 Dim i As Long
 
 ReDim lOrderTypes(UBound(RHS)) As TradeBuild.OrderTypes
 For i = 0 To UBound(RHS)
     Select Case RHS(i)
-    Case TradeBuildSP.OrderTypes.OrderTypeNone
+    Case TradeBuildsp.OrderTypes.OrderTypeNone
         lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeNone
-    Case TradeBuildSP.OrderTypes.OrderTypeMarket
+    Case TradeBuildsp.OrderTypes.OrderTypeMarket
         lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeMarket
-    Case TradeBuildSP.OrderTypes.OrderTypeMarketClose
+    Case TradeBuildsp.OrderTypes.OrderTypeMarketClose
         lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeMarketClose
-    Case TradeBuildSP.OrderTypes.OrderTypeLimit
+    Case TradeBuildsp.OrderTypes.OrderTypeLimit
         lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeLimit
-    Case TradeBuildSP.OrderTypes.OrderTypeLimitClose
+    Case TradeBuildsp.OrderTypes.OrderTypeLimitClose
         lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeLimitClose
-    Case TradeBuildSP.OrderTypes.OrderTypePegMarket
+    Case TradeBuildsp.OrderTypes.OrderTypePegMarket
         lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypePegMarket
-    Case TradeBuildSP.OrderTypes.OrderTypeStop
+    Case TradeBuildsp.OrderTypes.OrderTypeStop
         lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeStop
-    Case TradeBuildSP.OrderTypes.OrderTypeStopLimit
+    Case TradeBuildsp.OrderTypes.OrderTypeStopLimit
         lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeStopLimit
-    Case TradeBuildSP.OrderTypes.OrderTypeTrail
+    Case TradeBuildsp.OrderTypes.OrderTypeTrail
         lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeTrail
-    Case TradeBuildSP.OrderTypes.OrderTypeRelative
+    Case TradeBuildsp.OrderTypes.OrderTypeRelative
         lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeRelative
-    Case TradeBuildSP.OrderTypes.OrderTypeVWAP
+    Case TradeBuildsp.OrderTypes.OrderTypeVWAP
         lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeVWAP
-    Case TradeBuildSP.OrderTypes.OrderTypeMarketToLimit
+    Case TradeBuildsp.OrderTypes.OrderTypeMarketToLimit
         lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeMarketToLimit
-    Case TradeBuildSP.OrderTypes.OrderTypeQuote
+    Case TradeBuildsp.OrderTypes.OrderTypeQuote
         lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeQuote
     End Select
 Next
 OrderTypes = lOrderTypes
 End Property
 
-Private Property Get IContract_OrderTypes() As TradeBuildSP.OrderTypes()
-Dim lOrderTypes() As TradeBuildSP.OrderTypes
+Private Property Get IContract_OrderTypes() As TradeBuildsp.OrderTypes()
+Dim lOrderTypes() As TradeBuildsp.OrderTypes
 Dim ot() As TradeBuild.OrderTypes
 Dim i As Long
 
 ot = OrderTypes
-ReDim lOrderTypes(UBound(ot)) As TradeBuildSP.OrderTypes
+ReDim lOrderTypes(UBound(ot)) As TradeBuildsp.OrderTypes
 For i = 0 To UBound(ot)
     Select Case ot(i)
     Case TradeBuild.OrderTypes.OrderTypeNone
-        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeNone
+        lOrderTypes(i) = TradeBuildsp.OrderTypes.OrderTypeNone
     Case TradeBuild.OrderTypes.OrderTypeMarket
-        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeMarket
+        lOrderTypes(i) = TradeBuildsp.OrderTypes.OrderTypeMarket
     Case TradeBuild.OrderTypes.OrderTypeMarketClose
-        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeMarketClose
+        lOrderTypes(i) = TradeBuildsp.OrderTypes.OrderTypeMarketClose
     Case TradeBuild.OrderTypes.OrderTypeLimit
-        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeLimit
+        lOrderTypes(i) = TradeBuildsp.OrderTypes.OrderTypeLimit
     Case TradeBuild.OrderTypes.OrderTypeLimitClose
-        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeLimitClose
+        lOrderTypes(i) = TradeBuildsp.OrderTypes.OrderTypeLimitClose
     Case TradeBuild.OrderTypes.OrderTypePegMarket
-        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypePegMarket
+        lOrderTypes(i) = TradeBuildsp.OrderTypes.OrderTypePegMarket
     Case TradeBuild.OrderTypes.OrderTypeStop
-        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeStop
+        lOrderTypes(i) = TradeBuildsp.OrderTypes.OrderTypeStop
     Case TradeBuild.OrderTypes.OrderTypeStopLimit
-        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeStopLimit
+        lOrderTypes(i) = TradeBuildsp.OrderTypes.OrderTypeStopLimit
     Case TradeBuild.OrderTypes.OrderTypeTrail
-        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeTrail
+        lOrderTypes(i) = TradeBuildsp.OrderTypes.OrderTypeTrail
     Case TradeBuild.OrderTypes.OrderTypeRelative
-        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeRelative
+        lOrderTypes(i) = TradeBuildsp.OrderTypes.OrderTypeRelative
     Case TradeBuild.OrderTypes.OrderTypeVWAP
-        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeVWAP
+        lOrderTypes(i) = TradeBuildsp.OrderTypes.OrderTypeVWAP
     Case TradeBuild.OrderTypes.OrderTypeMarketToLimit
-        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeMarketToLimit
+        lOrderTypes(i) = TradeBuildsp.OrderTypes.OrderTypeMarketToLimit
     Case TradeBuild.OrderTypes.OrderTypeQuote
-        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeQuote
+        lOrderTypes(i) = TradeBuildsp.OrderTypes.OrderTypeQuote
     End Select
 Next
 IContract_OrderTypes = lOrderTypes
+End Property
+
+Private Property Get IContract_ProviderID(ByVal providerKey As String) As String
+Dim i As Long
+On Error GoTo err
+For i = 0 To UBound(mProviderIDs)
+    If mProviderIDs(i).key = providerKey Then
+        IContract_ProviderID = mProviderIDs(i).value
+        Exit Property
+    End If
+Next
+IContract_ProviderID = mSpecifier.localSymbol
+Exit Property
+
+err:
+IContract_ProviderID = mSpecifier.localSymbol
+End Property
+
+Private Property Let IContract_ProviderIDs(RHS() As TradeBuildsp.DictionaryEntry)
+mProviderIDs = RHS
 End Property
 
 Private Property Let IContract_SessionEndTime(ByVal RHS As Date)
@@ -278,11 +331,15 @@ Private Property Get IContract_SessionStartTime() As Date
 IContract_SessionStartTime = sessionStartTime
 End Property
 
-Private Property Let IContract_Specifier(ByVal RHS As TradeBuildSP.IContractSpecifier)
+Private Sub IContract_SetSession(ByVal Timestamp As Date)
+setSession Timestamp
+End Sub
+
+Private Property Let IContract_Specifier(ByVal RHS As TradeBuildsp.IContractSpecifier)
 specifier = RHS
 End Property
 
-Private Property Get IContract_Specifier() As TradeBuildSP.IContractSpecifier
+Private Property Get IContract_Specifier() As TradeBuildsp.IContractSpecifier
 Set IContract_Specifier = specifier
 End Property
 
@@ -339,6 +396,14 @@ Public Property Get currentSessionStartTime() As Date
 currentSessionStartTime = mCurrentSessionStartTime
 End Property
 
+Public Property Get daysBeforeExpiryToSwitch() As Long
+daysBeforeExpiryToSwitch = mDaysBeforeExpiryToSwitch
+End Property
+
+Friend Property Let daysBeforeExpiryToSwitch(ByVal value As Long)
+mDaysBeforeExpiryToSwitch = value
+End Property
+
 Friend Property Let Description(ByVal value As String)
 mDescription = value
 End Property
@@ -347,8 +412,24 @@ Public Property Get Description() As String
 Description = mDescription
 End Property
 
+Public Property Get ExpiryDate() As Date
+ExpiryDate = mExpiryDate
+End Property
+
+Friend Property Let ExpiryDate(ByVal value As Date)
+mExpiryDate = value
+End Property
+
 Public Property Get key() As String
 key = specifier.key
+End Property
+
+Friend Property Get marketIndex() As Long
+marketIndex = mMarketIndex
+End Property
+
+Friend Property Let marketIndex(ByVal value As Long)
+mMarketIndex = value
 End Property
 
 Public Property Get marketName() As String
@@ -393,6 +474,10 @@ Friend Property Let OrderTypes(ByRef value() As TradeBuild.OrderTypes)
 mOrderTypes = value
 End Property
 
+Friend Property Let ProviderIDs(ByRef value() As TradeBuildsp.DictionaryEntry)
+mProviderIDs = value
+End Property
+
 Friend Property Let sessionStartTime(ByVal value As Date)
 mSessionStartTime = value
 End Property
@@ -409,28 +494,12 @@ Public Property Get sessionEndTime() As Date
 sessionEndTime = mSessionEndTime
 End Property
 
-Friend Property Get marketIndex() As Long
-marketIndex = mMarketIndex
-End Property
-
-Friend Property Let marketIndex(ByVal value As Long)
-mMarketIndex = value
-End Property
-
 Public Property Get specifier() As contractSpecifier
 Set specifier = mSpecifier
 End Property
 
 Friend Property Let specifier(ByVal value As contractSpecifier)
 Set mSpecifier = value
-End Property
-
-Friend Property Let timestamp(ByVal value As Date)
-mTimestamp = value
-End Property
-
-Friend Property Get timestamp() As Date
-timestamp = mTimestamp
 End Property
 
 Public Property Get tradingClass() As String
@@ -454,7 +523,7 @@ End Property
 '================================================================================
 
 Public Function BarStartTime( _
-                            ByVal timestamp As Date, _
+                            ByVal Timestamp As Date, _
                             ByVal barLength As Long) As Date
 Dim offset As Long
 Dim theDate As Long
@@ -462,10 +531,10 @@ Dim theTime As Double
 Dim theTimeMins As Long
 
 offset = DatePart("n", mSessionStartTime)
-theDate = Fix(CDbl(timestamp))
+theDate = Fix(CDbl(Timestamp))
 ' NB: don't use TimeValue to get the time, as VB rounds it to
 ' the nearest second
-theTime = CDbl(timestamp) - theDate
+theTime = CDbl(Timestamp) - theDate
 theTimeMins = Fix(theTime * 1440) ' minutes since midnight
 BarStartTime = theDate + _
             (barLength * Fix((theTimeMins - offset) / barLength) + _
@@ -473,29 +542,27 @@ BarStartTime = theDate + _
 
 End Function
 
-Public Sub GetSessionTimes( _
-                            ByVal timestamp As Date, _
-                            ByRef sessionStartTime As Date, _
-                            ByRef sessionEndTime As Date)
-CalcSessionTimes timestamp, sessionStartTime, sessionEndTime
-End Sub
-
 Friend Function clone() As contract
 
 Set clone = New contract
 
 With clone
     .contractID = mContractID
+    .daysBeforeExpiryToSwitch = mDaysBeforeExpiryToSwitch
+    .Description = mDescription
+    .ExpiryDate = mExpiryDate
+    .marketIndex = mMarketIndex
     .marketName = mMarketName
     .minimumTick = mMinimumTick
     .multiplier = mMultiplier
     .OrderTypes = mOrderTypes
+    .ProviderIDs = mProviderIDs
+    .sessionEndTime = mSessionEndTime
+    .sessionStartTime = sessionStartTime
     .specifier = mSpecifier.clone
     .tradingClass = mTradingClass
     .validExchanges = mValidExchanges
-    .Description = mDescription
-    .sessionEndTime = mSessionEndTime
-    .sessionStartTime = sessionStartTime
+    .setSession mReferenceTime
     '.NumberOfDecimals = mNumberOfDecimals  ' set automatically by minimumTick
 End With
 End Function
@@ -544,7 +611,7 @@ With specifierObj
     .expiry = specifier.getAttribute("expiry")
     .localSymbol = specifier.getAttribute("localsymbol")
     .right = specifier.getAttribute("right")
-    .secType = specifier.getAttribute("sectype")
+    .sectype = specifier.getAttribute("sectype")
     .strike = specifier.getAttribute("strike")
     .symbol = specifier.getAttribute("symbol")
     
@@ -582,10 +649,17 @@ Next
 
 End Sub
 
-Public Function isTimeInSession(ByVal timestamp As Date) As Boolean
+Public Sub GetSessionTimes( _
+                            ByVal Timestamp As Date, _
+                            ByRef sessionStartTime As Date, _
+                            ByRef sessionEndTime As Date)
+CalcSessionTimes Timestamp, sessionStartTime, sessionEndTime
+End Sub
 
-If timestamp >= mCurrentSessionStartTime And _
-    timestamp < mCurrentSessionEndTime _
+Public Function isTimeInSession(ByVal Timestamp As Date) As Boolean
+
+If Timestamp >= mCurrentSessionStartTime And _
+    Timestamp < mCurrentSessionEndTime _
 Then
     isTimeInSession = True
 End If
@@ -603,12 +677,12 @@ Set newOrder = lOrder.clone   ' return a copy of the order to the app
 End Function
 
 Friend Sub setSession( _
-                ByVal timestamp As Date)
-If timestamp >= mCurrentSessionEndTime Or _
-    timestamp < mReferenceTime _
+                ByVal Timestamp As Date)
+If Timestamp >= mCurrentSessionEndTime Or _
+    Timestamp < mReferenceTime _
 Then
-    mReferenceTime = timestamp
-    CalcSessionTimes timestamp, mCurrentSessionStartTime, mCurrentSessionEndTime
+    mReferenceTime = Timestamp
+    CalcSessionTimes Timestamp, mCurrentSessionStartTime, mCurrentSessionEndTime
 End If
 End Sub
 
@@ -684,7 +758,7 @@ contract.setAttribute "numberofdecimals", mNumberOfDecimals
 Set specifier = XMLdoc.createElement("specifier")
 contract.appendChild specifier
 specifier.setAttribute "symbol", mSpecifier.symbol
-specifier.setAttribute "sectype", mSpecifier.secType
+specifier.setAttribute "sectype", mSpecifier.sectype
 specifier.setAttribute "expiry", mSpecifier.expiry
 specifier.setAttribute "exchange", mSpecifier.exchange
 specifier.setAttribute "currencycode", mSpecifier.currencyCode
@@ -727,14 +801,14 @@ End Function
 ' Helper Functions
 '================================================================================
 
-Friend Sub CalcSessionTimes(ByVal timestamp As Date, _
+Friend Sub CalcSessionTimes(ByVal Timestamp As Date, _
                             ByRef sessionStartTime As Date, _
                             ByRef sessionEndTime As Date)
 Dim referenceDate As Date
 Dim referenceTime As Date
 
-referenceDate = DateValue(timestamp)
-referenceTime = TimeValue(timestamp)
+referenceDate = DateValue(Timestamp)
+referenceTime = TimeValue(Timestamp)
 
 If mSessionStartTime < mSessionEndTime Then
     ' session doesn't span midnight

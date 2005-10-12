@@ -169,7 +169,7 @@ If Not add Then
     Next
 End If
 
-mAPIProxy.RequestContract contractSpec, Me
+gServiceProviders.RequestContract contractSpec, Me
 
 Exit Sub
 err:
