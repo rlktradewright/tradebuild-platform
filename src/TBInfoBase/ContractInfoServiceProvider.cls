@@ -173,15 +173,13 @@ Private Sub mTimer_TimerExpired()
 Dim instrumentSummaries As TradingDO2.cInstrumentSummaries
 Dim instrumentSummary As TradingDO2.cInstrumentSummary
 Dim instrument As TradingDO2.cInstrument
-Dim Contract As IContract
-Dim OrderTypes() As TradeBuildSP.OrderTypes
-Dim validExchanges() As String
+Dim contract As IContract
 
 Set mInstrumentFactory = New cInstrumentFactory
 
 With mRequests(mFirstRequestID).ContractSpecifier
     Set instrumentSummaries = mInstrumentFactory.loadEx( _
-                                    .LocalSymbol, _
+                                    .localSymbol, _
                                     .Symbol, _
                                     secTypeToString(.SecType), _
                                     Left$(.Expiry, 6), _
@@ -190,40 +188,13 @@ With mRequests(mFirstRequestID).ContractSpecifier
 End With
 
 For Each instrumentSummary In instrumentSummaries
-    Set instrument = mInstrumentFactory.loadByID(instrumentSummary.id)
-    Set Contract = mCommonServiceConsumer.NewContract
-    Contract.Specifier = mCommonServiceConsumer.NewContractSpecifier
+    Set instrument = mInstrumentFactory.loadByID(instrumentSummary.ID)
+    Set contract = mCommonServiceConsumer.NewContract
+    contract.Specifier = mCommonServiceConsumer.NewContractSpecifier
     
-    With Contract.Specifier
-        .Symbol = instrument.Symbol
-        .SecType = secTypeFromString(instrument.category)
-        .Expiry = instrument.Month
-        .Exchange = instrument.Exchange
-        .CurrencyCode = instrument.CurrencyCode
-        .LocalSymbol = instrument.shortName
-    End With
+    gContractFromInstrument contract, instrument
     
-    With Contract
-        .Description = instrument.Name
-        .MarketName = instrument.Symbol
-        .MinimumTick = instrument.TickSize
-        .Multiplier = instrument.TickValue / instrument.TickSize
-        .SessionEndTime = instrument.SessionEndTime
-        .SessionStartTime = instrument.SessionStartTime
-        
-        ReDim OrderTypes(3) As TradeBuildSP.OrderTypes
-        OrderTypes(0) = TradeBuildSP.OrderTypes.OrderTypeMarket
-        OrderTypes(1) = TradeBuildSP.OrderTypes.OrderTypeLimit
-        OrderTypes(2) = TradeBuildSP.OrderTypes.OrderTypeStop
-        OrderTypes(3) = TradeBuildSP.OrderTypes.OrderTypeStopLimit
-        .OrderTypes = OrderTypes
-        
-        ReDim validExchanges(0) As String
-        validExchanges(0) = instrument.Exchange
-        .validExchanges = validExchanges
-    End With
-    
-    mRequests(mFirstRequestID).AddContract Contract
+    mRequests(mFirstRequestID).AddContract contract
 Next
 
 mContractInfoServiceConsumer.LoadComplete mHandle, mRequests(mFirstRequestID)

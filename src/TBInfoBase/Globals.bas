@@ -55,6 +55,69 @@ End Enum
 ' Procedures
 '================================================================================
 
+Public Sub gContractFromInstrument( _
+                ByVal contract As IContract, _
+                ByVal instrument As cInstrument)
+Dim OrderTypes() As TradeBuildSP.OrderTypes
+Dim validExchanges() As String
+Dim localSymbol As ContractLocalSymbol
+Dim providerIDs() As DictionaryEntry
+Dim i As Long
+
+With contract.Specifier
+    .Symbol = instrument.Symbol
+    .SecType = secTypeFromString(instrument.category)
+    .Expiry = instrument.Month
+    .Exchange = instrument.Exchange
+    .CurrencyCode = instrument.CurrencyCode
+    .localSymbol = instrument.shortName
+End With
+
+With contract
+    .ContractID = instrument.ContractID
+    .DaysBeforeExpiryToSwitch = instrument.DaysBeforeExpiryToSwitch
+    .Description = instrument.Name
+    .ExpiryDate = instrument.ExpiryDate
+    .MarketName = instrument.Symbol
+    .MinimumTick = instrument.TickSize
+    .Multiplier = instrument.TickValue / instrument.TickSize
+    
+    If instrument.localSymbols.Count > 0 Then
+        ReDim providerIDs(instrument.localSymbols.Count) As DictionaryEntry
+
+        For Each localSymbol In instrument.localSymbols
+            providerIDs(i).Key = localSymbol.ProviderKey
+            providerIDs(i).value = localSymbol.localSymbol
+            i = i + 1
+        Next
+        .providerIDs = providerIDs
+    End If
+    
+    .SessionEndTime = instrument.SessionEndTime
+    .SessionStartTime = instrument.SessionStartTime
+    
+    If instrument.OrderTypes <> "" Then
+        Dim orderTypesStr() As String
+        orderTypesStr = Split(instrument.OrderTypes)
+        ReDim OrderTypes(UBound(orderTypesStr)) As TradeBuildSP.OrderTypes
+        For i = 0 To UBound(orderTypesStr)
+            OrderTypes(i) = CLng(orderTypesStr(i))
+        Next
+    Else
+        ReDim OrderTypes(3) As TradeBuildSP.OrderTypes
+        OrderTypes(0) = TradeBuildSP.OrderTypes.OrderTypeMarket
+        OrderTypes(1) = TradeBuildSP.OrderTypes.OrderTypeLimit
+        OrderTypes(2) = TradeBuildSP.OrderTypes.OrderTypeStop
+        OrderTypes(3) = TradeBuildSP.OrderTypes.OrderTypeStopLimit
+    End If
+    .OrderTypes = OrderTypes
+    
+    ReDim validExchanges(0) As String
+    validExchanges(0) = instrument.Exchange
+    .validExchanges = validExchanges
+End With
+End Sub
+
 Public Function gHistDataCapabilities() As Long
 gHistDataCapabilities = _
             HistoricDataServiceProviderCapabilities.HistDataStore

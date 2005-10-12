@@ -121,6 +121,12 @@ End Property
 
 Private Sub ITickfileReader_FireNextTick()
 Dim percentComplete As Single
+Static noMoreData As Boolean
+
+If noMoreData Then
+    mServiceConsumer.TickfileReplayComplete
+    Exit Sub
+End If
 
 If mRecordsRead = 0 Then
 ElseIf mRecordsRead Mod mReplayProgressEventFrequency = 0 Then
@@ -131,7 +137,7 @@ End If
 
 processNextTickRecord mTypeByte
 If Not checkRecord(mTypeByte) Then
-    mServiceConsumer.TickfileReplayComplete
+    noMoreData = True
 End If
 
 End Sub
@@ -208,19 +214,14 @@ End Sub
 
 Private Sub mTickReader_Ready()
 Dim sessionStart As Date
-Dim sessionEnd As Date
 
 With mInputTickfileSpecifier
     If .EntireSession Then
-        mContract.GetSessionTimes .From, sessionStart, sessionEnd
-        mTickReader.FetchData TickfileFormatTradeBuildSQL, _
-                                sessionStart, _
-                                sessionEnd
-    Else
-        mTickReader.FetchData TickfileFormatTradeBuildSQL, _
-                                gTruncateTimeToMinute(.From), _
-                                gTruncateTimeToNextMinute(.To)
+        mContract.GetSessionTimes .From, sessionStart, .To
     End If
+    mTickReader.FetchData TickfileFormatTradeBuildSQL, _
+                            gTruncateTimeToMinute(.From), _
+                            gTruncateTimeToNextMinute(.To)
 End With
 
 End Sub
@@ -263,7 +264,7 @@ With mInputTickfileSpecifier.ContractSpecifier
                                 .CurrencyCode, _
                                 .Strike, _
                                 .Right, _
-                                .LocalSymbol)
+                                .localSymbol)
 End With
  
 If mInstrument Is Nothing Then
@@ -272,6 +273,9 @@ If mInstrument Is Nothing Then
     Exit Property
 End If
 
+Set mContract = mCommonServiceConsumer.NewContract
+mContract.Specifier = mCommonServiceConsumer.NewContractSpecifier
+gContractFromInstrument mContract, mInstrument
 Set mTickReader = mInstrument.CreateTickDataAccessor
 
 End Property
@@ -332,7 +336,7 @@ Do
     
     ReadRecord typeByte, tickType, price, size, position, operation, side, marketmaker
 Loop
-
+'If mCurrentTimestamp >= "7/10/5 17:28:59" Then Stop
 If mCurrentTimestamp >= mInputTickfileSpecifier.To Then
     checkRecord = False
     Exit Function
