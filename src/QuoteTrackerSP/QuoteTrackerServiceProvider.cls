@@ -59,6 +59,8 @@ Private mQTPort As Long
 Private mHandle As Long
 Private mCommonServiceConsumer As ICommonServiceConsumer
 
+Private mProviderKey As String
+
 Private mPassword As String
 
 Private mConnectionRetryIntervalSecs As Long
@@ -101,7 +103,8 @@ Private Sub ICommonServiceProvider_Link( _
 Set mCommonServiceConsumer = commonServiceConsumer
 mHandle = handle
 mCommonServiceConsumer.RegisterServiceProvider mHandle, _
-                            ServiceProviderTypes.Tickfile
+                            ServiceProviderTypes.Tickfile, _
+                            IIf(mProviderKey = "", "QTSP", mProviderKey)
 
 End Sub
 
@@ -191,6 +194,10 @@ End Property
 
 Public Property Let password(ByVal value As String)
 mPassword = value
+End Property
+
+Public Property Let providerKey(ByVal value As String)
+mProviderKey = value
 End Property
 
 Public Property Let QTPort(ByVal value As Long)
