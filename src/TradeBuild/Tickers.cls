@@ -526,7 +526,11 @@ End If
 End Sub
 
 Public Sub Remove(ByVal pTicker As Ticker)
-If pTicker.State <> TickerStateCodes.Closing Then pTicker.StopTicker
+If pTicker.State <> TickerStateCodes.Closing Then
+    pTicker.StopTicker
+    Exit Sub
+End If
+    
 Hide pTicker
 mTickers.Remove pTicker.key
 pTicker.key = ""
@@ -631,7 +635,7 @@ With pTicker.contract
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnSymbol)) = .specifier.symbol
     End If
     If (mColumnMask And TickerColumnIds.ColumnSecType) <> 0 Then
-        mRS(mColumnNames(TickerColumnNameIndexes.ColumnSecType)) = secTypeToString(.specifier.secType)
+        mRS(mColumnNames(TickerColumnNameIndexes.ColumnSecType)) = secTypeToString(.specifier.sectype)
     End If
     If (mColumnMask And TickerColumnIds.ColumnExpiry) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnExpiry)) = .specifier.expiry
