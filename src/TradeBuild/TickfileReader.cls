@@ -363,12 +363,6 @@ End Property
 ' Methods
 '================================================================================
 
-Friend Sub CloseInputFile()
-mReader.CloseInputFile
-Set mReader = Nothing
-mState = TickfileStateCodes.TickfileNotPlaying
-End Sub
-
 Friend Sub PauseReplay()
 If Not mTimer Is Nothing Then mTimer.StopTimer
 mState = TickfileStateCodes.TickfilePaused
@@ -416,6 +410,12 @@ AdjustTimestamp = timestamp + _
                 (mTimestampAdjustmentEnd - mTimestampAdjustmentStart) * (mPercentComplete / 100)
 
 End Function
+
+Private Sub CloseInputFile()
+mReader.CloseInputFile
+Set mReader = Nothing
+mState = TickfileStateCodes.TickfileNotPlaying
+End Sub
 
 Private Sub HandleTick()
 Dim delayMillisecs As Long

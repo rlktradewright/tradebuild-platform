@@ -188,7 +188,7 @@ Private mOpenInterest               As Long
 Private mChange                     As Double
 Private mChangePercent              As Double
 
-Private WithEvents mContracts       As TradeBuild.Contracts
+Private WithEvents mContracts       As TradeBuild.contracts
 Attribute mContracts.VB_VarHelpID = -1
 Private mContract                   As contract
 
@@ -1285,8 +1285,9 @@ Then
         Set mTickfileManager = Nothing
     Else
         gTradeBuildAPI.CancelMarketData mTickerID
-        gOrderSimulator.stopMarket mMarketIndex
+        'gOrderSimulator.stopMarket mMarketIndex
     End If
+    gOrderSimulator.stopMarket mMarketIndex
 Else
     mState = TickerStateCodes.Closing
 End If
@@ -1298,7 +1299,7 @@ Set mProxy = Nothing
 
 mState = TickerStateCodes.Dead
 
-mTimeframes.Finish
+'mTimeframes.Finish
 
 mBidPrice = 0
 mBidSize = 0
@@ -1313,9 +1314,9 @@ mVolume = 0
 
 End Sub
 
-Friend Sub tickfileReplayCompleted()
-gOrderSimulator.stopMarket mMarketIndex
-End Sub
+'Friend Sub tickfileReplayCompleted()
+'gOrderSimulator.stopMarket mMarketIndex
+'End Sub
 
 Friend Sub updateMarketDepth( _
                 ByVal timestamp As Date, _

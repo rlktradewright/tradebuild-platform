@@ -37,7 +37,7 @@ Implements TradeBuildSP.ITickfileInputServiceConsumer
 '================================================================================
 
 Event errorMessage( _
-                ByVal timestamp As Date, _
+                ByVal Timestamp As Date, _
                 ByVal tickfileIndex As Long, _
                 ByVal errorCode As ApiErrorCodes, _
                 ByVal errorMsg As String)
@@ -264,20 +264,19 @@ Set mContracts = gServiceProviders.RequestContract(contractSpec)
 End Sub
 
 Private Sub ITickfileInputServiceConsumer_TickfileReplayComplete()
-mReader.CloseInputFile
 FinishTickfile
 StartNextTickfile
 End Sub
 
 Private Sub ITickfileInputServiceConsumer_ReplayProgress( _
-                            ByVal timestamp As Date, _
+                            ByVal Timestamp As Date, _
                             ByVal eventsPlayed As Long, _
                             ByVal percentComplete As Single)
 mEventsPlayed = eventsPlayed
 mPercentComplete = percentComplete
 mReader.percentComplete = percentComplete
 If mReplaySpeed <> 0 And mReplayProgressEventFrequency > 0 Then
-    RaiseEvent ReplayProgress(timestamp, _
+    RaiseEvent ReplayProgress(Timestamp, _
                                 eventsPlayed, _
                                 percentComplete)
 End If
@@ -310,7 +309,7 @@ End Sub
 '================================================================================
 
 Private Sub mProgressTimer_TimerExpired()
-RaiseEvent ReplayProgress(mTicker.timestamp, _
+RaiseEvent ReplayProgress(mTicker.Timestamp, _
                         mEventsPlayed, _
                         mPercentComplete)
 End Sub
@@ -473,10 +472,6 @@ End Property
 ' Methods
 '================================================================================
 
-Friend Sub CloseFile()
-mReader.CloseInputFile
-End Sub
-
 Public Sub ClearTickfileSpecifiers()
 Erase mTickfileSpecifiers
 mCurrTickfileIndex = -1
@@ -485,12 +480,12 @@ End Sub
 Friend Function CreateOutputTickfile( _
                 ByVal pTicker As Ticker, _
                 ByVal outputTickfileFormat As String, _
-                ByVal outputTickfilePath As String) As TradeBuild.TickfileWriter
+                ByVal outputTickFilePath As String) As TradeBuild.TickfileWriter
             
 Set CreateOutputTickfile = gServiceProviders.CreateTickfileWriter( _
                             pTicker, _
                             outputTickfileFormat, _
-                            outputTickfilePath)
+                            outputTickFilePath)
 
 End Function
 
@@ -519,7 +514,7 @@ End Sub
 
 Friend Sub SkipThisTickfile(ByVal pTicker As Ticker)
 If pTicker Is Nothing Or (Not pTicker Is mTicker) Then Exit Sub
-If Not mReader Is Nothing Then mReader.stopReplay
+'If Not mReader Is Nothing Then mReader.stopReplay
 FinishTickfile
 End Sub
 
@@ -543,12 +538,9 @@ Public Sub stopReplay()
 If Not mReplayInProgress Then Exit Sub
 mReplayInProgress = False
 If Not mReader Is Nothing Then
-    stopProgressTimer
-    mReader.stopReplay
-    Set mReader = Nothing
+    FinishTickfile
 End If
 mCurrTickfileIndex = -1
-If Not mTicker Is Nothing Then mTickers.Remove mTicker
 RaiseEvent ReplayCompleted
 End Sub
 
@@ -558,8 +550,9 @@ End Sub
 
 Private Sub FinishTickfile()
 stopProgressTimer
+If Not mReader Is Nothing Then mReader.stopReplay
 Set mReader = Nothing
-mTicker.tickfileReplayCompleted
+mTicker.StopTicker
 Set mTicker = Nothing
 End Sub
 
@@ -583,8 +576,8 @@ Case ReplayContinueModes.ReplayCancelAllFiles
 Case ReplayContinueModes.ReplayCancelThisFile
     SkipTickfile
 Case ReplayContinueModes.ReplayContinue
-    mTicker.timestamp = mReader.firstTickFileTime
-    mContract.setSession mTicker.timestamp
+    mTicker.Timestamp = mReader.firstTickFileTime
+    mContract.setSession mTicker.Timestamp
     mTicker.contract = mContract
     startProgressTimer
     mReader.StartReplay
