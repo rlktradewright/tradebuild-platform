@@ -73,31 +73,31 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(2)   =   "&3. Orders"
       TabPicture(2)   =   "fTradeSkilDemo.frx":004D
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "OrderButton"
-      Tab(2).Control(1)=   "CancelOrderButton"
+      Tab(2).Control(0)=   "ExecutionsList"
+      Tab(2).Control(1)=   "OpenOrdersList"
       Tab(2).Control(2)=   "ModifyOrderButton"
-      Tab(2).Control(3)=   "OpenOrdersList"
-      Tab(2).Control(4)=   "ExecutionsList"
+      Tab(2).Control(3)=   "CancelOrderButton"
+      Tab(2).Control(4)=   "OrderButton"
       Tab(2).ControlCount=   5
       TabCaption(3)   =   "&4. Replay tickfiles"
       TabPicture(3)   =   "fTradeSkilDemo.frx":0069
       Tab(3).ControlEnabled=   0   'False
-      Tab(3).Control(0)=   "SkipReplayButton"
-      Tab(3).Control(1)=   "PlayTickFileButton"
-      Tab(3).Control(2)=   "SelectTickfilesButton"
-      Tab(3).Control(3)=   "ClearTickfileListButton"
-      Tab(3).Control(4)=   "PauseReplayButton"
-      Tab(3).Control(5)=   "StopReplayButton"
-      Tab(3).Control(6)=   "TickfileList"
-      Tab(3).Control(6).Enabled=   0   'False
+      Tab(3).Control(0)=   "Label20"
+      Tab(3).Control(1)=   "ReplayContractLabel"
+      Tab(3).Control(2)=   "Label19"
+      Tab(3).Control(3)=   "ReplayProgressLabel"
+      Tab(3).Control(4)=   "ReplayProgressBar"
+      Tab(3).Control(5)=   "ReplayMarketDepthCheck"
+      Tab(3).Control(6)=   "RewriteCheck"
       Tab(3).Control(7)=   "ReplaySpeedCombo"
-      Tab(3).Control(8)=   "RewriteCheck"
-      Tab(3).Control(9)=   "ReplayMarketDepthCheck"
-      Tab(3).Control(10)=   "ReplayProgressBar"
-      Tab(3).Control(11)=   "ReplayProgressLabel"
-      Tab(3).Control(12)=   "Label19"
-      Tab(3).Control(13)=   "ReplayContractLabel"
-      Tab(3).Control(14)=   "Label20"
+      Tab(3).Control(8)=   "TickfileList"
+      Tab(3).Control(8).Enabled=   0   'False
+      Tab(3).Control(9)=   "StopReplayButton"
+      Tab(3).Control(10)=   "PauseReplayButton"
+      Tab(3).Control(11)=   "ClearTickfileListButton"
+      Tab(3).Control(12)=   "SelectTickfilesButton"
+      Tab(3).Control(13)=   "PlayTickFileButton"
+      Tab(3).Control(14)=   "SkipReplayButton"
       Tab(3).ControlCount=   15
       Begin VB.CommandButton SkipReplayButton 
          Caption         =   "S&kip"
@@ -1192,7 +1192,7 @@ Private Enum TickerGridColumns
     closePrice
     Description
     symbol
-    secType
+    sectype
     expiry
     exchange
     OptionRight
@@ -2245,8 +2245,6 @@ End Sub
 Private Sub mTickfileManager_ReplayCompleted()
 On Error GoTo err
 
-clearTickerAppData mTicker
-
 If Not mOrderForm Is Nothing Then
     Unload mOrderForm
     Set mOrderForm = Nothing
@@ -2791,7 +2789,7 @@ Unload Me
 End Sub
 
 Private Sub initialiseTicker(ByVal pTicker As Ticker)
-pTicker.outputTickfilePath = App.Path
+pTicker.outputTickFilePath = App.Path
 pTicker.ApplicationData = New TickerApplicationData
 Set pTicker.ApplicationData.TickerProxy = pTicker.Proxy
 End Sub
@@ -2925,7 +2923,7 @@ col.Alignment = dbgRight
 Set col = TickerGrid.Columns(TickerGridColumns.symbol)
 col.width = TickerGridColumnWidths.SymbolWidth * TickerGrid.width / 100
 col.Alignment = dbgCenter
-Set col = TickerGrid.Columns(TickerGridColumns.secType)
+Set col = TickerGrid.Columns(TickerGridColumns.sectype)
 col.width = TickerGridColumnWidths.SecTypeWidth * TickerGrid.width / 100
 col.Alignment = dbgCenter
 Set col = TickerGrid.Columns(TickerGridColumns.expiry)
