@@ -272,6 +272,10 @@ If mState <> Running Then Exit Sub    ' ticker has been stopped
     
 mClock.SetTime timestamp
 checkInSession timestamp
+
+If price < (0.5 * mPrevAsk) Then Exit Sub   ' ignore invalid prices
+If size < 0 Then Exit Sub
+        
 mAskPrice = price
 mAskSize = size
 
@@ -318,6 +322,10 @@ If mState <> Running Then Exit Sub     ' ticker has been stopped
         
 mClock.SetTime timestamp
 checkInSession timestamp
+
+If price < (0.5 * mPrevBid) Then Exit Sub   ' ignore invalid prices
+If size < 0 Then Exit Sub
+        
 mBidPrice = price
 mBidSize = size
 
@@ -479,6 +487,9 @@ If mState <> Running Then Exit Sub    ' ticker has been stopped
 mClock.SetTime timestamp
 checkInSession timestamp
 
+If price < (0.5 * mPrevTrade) Then Exit Sub ' ignore invalid prices
+If size < 0 Then Exit Sub
+        
 notifyTrade timestamp, price, size
 
 If mWriteToTickFile Then mWriter.writeTrade timestamp, price, size
