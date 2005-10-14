@@ -123,7 +123,7 @@ With mContract.Specifier
                                 .CurrencyCode, _
                                 .Strike, _
                                 .Right, _
-                                .LocalSymbol)
+                                .localSymbol)
 End With
 Debug.Assert Not mInstrument Is Nothing
 
@@ -362,10 +362,19 @@ mTotalBytes = mTotalBytes + mDataIndex
 End Sub
 
 Private Sub WritePrice(ByVal price As Double)
+Dim numticks As Integer
 If price = mBasePrice Then
     WriteByte &H0
 Else
-    WriteByte CByte(Abs(price - mBasePrice) / mTickSize)
+    numticks = Abs(price - mBasePrice) / mTickSize
+    If numticks <= 127 Then
+        WriteByte CByte(Abs(price - mBasePrice) / mTickSize)
+    Else
+        ' won't fit in 7 bits. Write it out as an int value, with
+        ' the high-order byte written first and bit 7 set
+        WriteByte CByte(Int(numticks / &H100) And &H7F) Or &H80
+        WriteByte CByte(numticks And &HFF)
+    End If
 End If
 End Sub
 

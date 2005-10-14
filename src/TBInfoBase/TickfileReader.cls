@@ -440,10 +440,23 @@ End Sub
 
 Private Sub ReadPrice(ByVal typeByte As Byte, _
                             ByRef price As Double)
-If (typeByte And NegativeTicks) <> 0 Then
-    price = mBasePrice - mTickSize * ReadByte
+Dim mostSigByte As Byte
+Dim leastSigByte As Byte
+Dim numticks As Integer
+
+mostSigByte = ReadByte
+If (mostSigByte And &H80) = 0 Then
+    numticks = CInt(mostSigByte)
 Else
-    price = mBasePrice + mTickSize * ReadByte
+    mostSigByte = mostSigByte And &H7F
+    leastSigByte = ReadByte
+    numticks = CInt(mostSigByte) * &H100 + CInt(leastSigByte)
+End If
+    
+If (typeByte And NegativeTicks) <> 0 Then
+    price = mBasePrice - mTickSize * numticks
+Else
+    price = mBasePrice + mTickSize * numticks
 End If
 End Sub
 
