@@ -17,7 +17,7 @@ Begin VB.Form MainForm
       Locked          =   -1  'True
       MultiLine       =   -1  'True
       ScrollBars      =   2  'Vertical
-      TabIndex        =   25
+      TabIndex        =   22
       TabStop         =   0   'False
       ToolTipText     =   "Status messages"
       Top             =   5160
@@ -26,7 +26,7 @@ Begin VB.Form MainForm
    Begin TabDlg.SSTab SSTab1 
       Height          =   4815
       Left            =   120
-      TabIndex        =   26
+      TabIndex        =   23
       Top             =   240
       Width           =   10695
       _ExtentX        =   18865
@@ -76,66 +76,64 @@ Begin VB.Form MainForm
       TabCaption(1)   =   "Contract details"
       TabPicture(1)   =   "MainForm.frx":001C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "Label2"
+      Tab(1).Control(0)=   "Label6"
       Tab(1).Control(0).Enabled=   0   'False
-      Tab(1).Control(1)=   "Label3"
+      Tab(1).Control(1)=   "Label5"
       Tab(1).Control(1).Enabled=   0   'False
-      Tab(1).Control(2)=   "Label13"
+      Tab(1).Control(2)=   "Label4"
       Tab(1).Control(2).Enabled=   0   'False
-      Tab(1).Control(3)=   "Label6"
+      Tab(1).Control(3)=   "Label7"
       Tab(1).Control(3).Enabled=   0   'False
-      Tab(1).Control(4)=   "Label5"
+      Tab(1).Control(4)=   "Label17"
       Tab(1).Control(4).Enabled=   0   'False
-      Tab(1).Control(5)=   "Label4"
+      Tab(1).Control(5)=   "Label21"
       Tab(1).Control(5).Enabled=   0   'False
-      Tab(1).Control(6)=   "Label7"
+      Tab(1).Control(6)=   "Label11"
       Tab(1).Control(6).Enabled=   0   'False
-      Tab(1).Control(7)=   "Label17"
+      Tab(1).Control(7)=   "Label2"
       Tab(1).Control(7).Enabled=   0   'False
-      Tab(1).Control(8)=   "Label21"
+      Tab(1).Control(8)=   "Frame2"
       Tab(1).Control(8).Enabled=   0   'False
-      Tab(1).Control(9)=   "Label11"
+      Tab(1).Control(9)=   "StrikePriceText"
       Tab(1).Control(9).Enabled=   0   'False
-      Tab(1).Control(10)=   "ServerText"
+      Tab(1).Control(10)=   "ExchangeText"
       Tab(1).Control(10).Enabled=   0   'False
-      Tab(1).Control(11)=   "ClientIDText"
+      Tab(1).Control(11)=   "ExpiryText"
       Tab(1).Control(11).Enabled=   0   'False
-      Tab(1).Control(12)=   "PortText"
+      Tab(1).Control(12)=   "SymbolText"
       Tab(1).Control(12).Enabled=   0   'False
-      Tab(1).Control(13)=   "Frame2"
+      Tab(1).Control(13)=   "TypeCombo"
       Tab(1).Control(13).Enabled=   0   'False
-      Tab(1).Control(14)=   "StrikePriceText"
+      Tab(1).Control(14)=   "RightCombo"
       Tab(1).Control(14).Enabled=   0   'False
-      Tab(1).Control(15)=   "ExchangeText"
+      Tab(1).Control(15)=   "GetContractButton"
       Tab(1).Control(15).Enabled=   0   'False
-      Tab(1).Control(16)=   "ExpiryText"
+      Tab(1).Control(16)=   "ContractDetailsText"
       Tab(1).Control(16).Enabled=   0   'False
-      Tab(1).Control(17)=   "SymbolText"
+      Tab(1).Control(17)=   "ShortNameText"
       Tab(1).Control(17).Enabled=   0   'False
-      Tab(1).Control(18)=   "TypeCombo"
-      Tab(1).Control(18).Enabled=   0   'False
-      Tab(1).Control(19)=   "RightCombo"
-      Tab(1).Control(19).Enabled=   0   'False
-      Tab(1).Control(20)=   "GetContractButton"
-      Tab(1).Control(20).Enabled=   0   'False
-      Tab(1).Control(21)=   "DisconnectButton"
-      Tab(1).Control(21).Enabled=   0   'False
-      Tab(1).Control(22)=   "ContractDetailsText"
-      Tab(1).Control(22).Enabled=   0   'False
-      Tab(1).ControlCount=   23
+      Tab(1).ControlCount=   18
       TabCaption(2)   =   "Bar output"
       TabPicture(2)   =   "MainForm.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "Frame4"
-      Tab(2).Control(1)=   "Frame5"
-      Tab(2).Control(2)=   "Frame6"
-      Tab(2).Control(3)=   "Frame7"
+      Tab(2).Control(0)=   "Frame7"
+      Tab(2).Control(1)=   "Frame6"
+      Tab(2).Control(2)=   "Frame5"
+      Tab(2).Control(3)=   "Frame4"
       Tab(2).ControlCount=   4
+      Begin VB.TextBox ShortNameText 
+         Enabled         =   0   'False
+         Height          =   285
+         Left            =   -68880
+         TabIndex        =   14
+         Top             =   720
+         Width           =   1335
+      End
       Begin VB.Frame Frame7 
          Caption         =   "Period 4"
          Height          =   4095
          Left            =   -66960
-         TabIndex        =   92
+         TabIndex        =   86
          Top             =   480
          Width           =   2535
          Begin VB.PictureBox Picture7 
@@ -146,7 +144,7 @@ Begin VB.Form MainForm
             Left            =   120
             ScaleHeight     =   3735
             ScaleWidth      =   2295
-            TabIndex        =   93
+            TabIndex        =   87
             Top             =   240
             Width           =   2295
             Begin VB.CheckBox IncludeBidAndAskCheck 
@@ -154,7 +152,7 @@ Begin VB.Form MainForm
                Height          =   255
                Index           =   3
                Left            =   120
-               TabIndex        =   102
+               TabIndex        =   96
                Top             =   1920
                Width           =   2175
             End
@@ -163,7 +161,7 @@ Begin VB.Form MainForm
                Height          =   255
                Index           =   3
                Left            =   120
-               TabIndex        =   96
+               TabIndex        =   90
                Top             =   120
                Width           =   2175
             End
@@ -171,7 +169,7 @@ Begin VB.Form MainForm
                Height          =   285
                Index           =   3
                Left            =   1320
-               TabIndex        =   95
+               TabIndex        =   89
                Text            =   "60"
                Top             =   600
                Width           =   855
@@ -180,7 +178,7 @@ Begin VB.Form MainForm
                Height          =   285
                Index           =   3
                Left            =   1320
-               TabIndex        =   94
+               TabIndex        =   88
                Text            =   "60"
                Top             =   1080
                Width           =   855
@@ -189,7 +187,7 @@ Begin VB.Form MainForm
                Caption         =   "Bar length (minutes)"
                Height          =   375
                Left            =   240
-               TabIndex        =   98
+               TabIndex        =   92
                Top             =   600
                Width           =   735
             End
@@ -197,7 +195,7 @@ Begin VB.Form MainForm
                Caption         =   "Save interval (seconds)"
                Height          =   615
                Left            =   240
-               TabIndex        =   97
+               TabIndex        =   91
                Top             =   1080
                Width           =   735
             End
@@ -207,7 +205,7 @@ Begin VB.Form MainForm
          Caption         =   "Period 3"
          Height          =   4095
          Left            =   -69600
-         TabIndex        =   85
+         TabIndex        =   79
          Top             =   480
          Width           =   2535
          Begin VB.PictureBox Picture6 
@@ -218,7 +216,7 @@ Begin VB.Form MainForm
             Left            =   120
             ScaleHeight     =   3735
             ScaleWidth      =   2295
-            TabIndex        =   86
+            TabIndex        =   80
             Top             =   240
             Width           =   2295
             Begin VB.CheckBox IncludeBidAndAskCheck 
@@ -226,7 +224,7 @@ Begin VB.Form MainForm
                Height          =   255
                Index           =   2
                Left            =   120
-               TabIndex        =   101
+               TabIndex        =   95
                Top             =   1920
                Width           =   2175
             End
@@ -234,7 +232,7 @@ Begin VB.Form MainForm
                Height          =   285
                Index           =   2
                Left            =   1320
-               TabIndex        =   89
+               TabIndex        =   83
                Text            =   "60"
                Top             =   1080
                Width           =   855
@@ -243,7 +241,7 @@ Begin VB.Form MainForm
                Height          =   285
                Index           =   2
                Left            =   1320
-               TabIndex        =   88
+               TabIndex        =   82
                Text            =   "15"
                Top             =   600
                Width           =   855
@@ -253,7 +251,7 @@ Begin VB.Form MainForm
                Height          =   255
                Index           =   2
                Left            =   120
-               TabIndex        =   87
+               TabIndex        =   81
                Top             =   120
                Width           =   2175
             End
@@ -261,7 +259,7 @@ Begin VB.Form MainForm
                Caption         =   "Save interval (seconds)"
                Height          =   615
                Left            =   240
-               TabIndex        =   91
+               TabIndex        =   85
                Top             =   1080
                Width           =   735
             End
@@ -269,7 +267,7 @@ Begin VB.Form MainForm
                Caption         =   "Bar length (minutes)"
                Height          =   375
                Left            =   240
-               TabIndex        =   90
+               TabIndex        =   84
                Top             =   600
                Width           =   735
             End
@@ -279,7 +277,7 @@ Begin VB.Form MainForm
          Caption         =   "Period 2"
          Height          =   4095
          Left            =   -72240
-         TabIndex        =   78
+         TabIndex        =   72
          Top             =   480
          Width           =   2535
          Begin VB.PictureBox Picture5 
@@ -290,7 +288,7 @@ Begin VB.Form MainForm
             Left            =   120
             ScaleHeight     =   3735
             ScaleWidth      =   2295
-            TabIndex        =   79
+            TabIndex        =   73
             Top             =   240
             Width           =   2295
             Begin VB.CheckBox IncludeBidAndAskCheck 
@@ -298,7 +296,7 @@ Begin VB.Form MainForm
                Height          =   255
                Index           =   1
                Left            =   120
-               TabIndex        =   100
+               TabIndex        =   94
                Top             =   1920
                Width           =   2175
             End
@@ -307,7 +305,7 @@ Begin VB.Form MainForm
                Height          =   255
                Index           =   1
                Left            =   120
-               TabIndex        =   82
+               TabIndex        =   76
                Top             =   120
                Width           =   2175
             End
@@ -315,7 +313,7 @@ Begin VB.Form MainForm
                Height          =   285
                Index           =   1
                Left            =   1320
-               TabIndex        =   81
+               TabIndex        =   75
                Text            =   "5"
                Top             =   600
                Width           =   855
@@ -324,7 +322,7 @@ Begin VB.Form MainForm
                Height          =   285
                Index           =   1
                Left            =   1320
-               TabIndex        =   80
+               TabIndex        =   74
                Text            =   "30"
                Top             =   1080
                Width           =   855
@@ -333,7 +331,7 @@ Begin VB.Form MainForm
                Caption         =   "Bar length (minutes)"
                Height          =   375
                Left            =   240
-               TabIndex        =   84
+               TabIndex        =   78
                Top             =   600
                Width           =   735
             End
@@ -341,7 +339,7 @@ Begin VB.Form MainForm
                Caption         =   "Save interval (seconds)"
                Height          =   615
                Left            =   240
-               TabIndex        =   83
+               TabIndex        =   77
                Top             =   1080
                Width           =   735
             End
@@ -351,7 +349,7 @@ Begin VB.Form MainForm
          Caption         =   "Period 1"
          Height          =   4095
          Left            =   -74880
-         TabIndex        =   71
+         TabIndex        =   65
          Top             =   480
          Width           =   2535
          Begin VB.PictureBox Picture4 
@@ -362,7 +360,7 @@ Begin VB.Form MainForm
             Left            =   120
             ScaleHeight     =   3735
             ScaleWidth      =   2295
-            TabIndex        =   72
+            TabIndex        =   66
             Top             =   240
             Width           =   2295
             Begin VB.CheckBox IncludeBidAndAskCheck 
@@ -370,7 +368,7 @@ Begin VB.Form MainForm
                Height          =   255
                Index           =   0
                Left            =   120
-               TabIndex        =   99
+               TabIndex        =   93
                Top             =   1920
                Width           =   2175
             End
@@ -378,7 +376,7 @@ Begin VB.Form MainForm
                Height          =   285
                Index           =   0
                Left            =   1320
-               TabIndex        =   77
+               TabIndex        =   71
                Text            =   "15"
                Top             =   1080
                Width           =   855
@@ -387,7 +385,7 @@ Begin VB.Form MainForm
                Height          =   285
                Index           =   0
                Left            =   1320
-               TabIndex        =   75
+               TabIndex        =   69
                Text            =   "1"
                Top             =   600
                Width           =   855
@@ -397,7 +395,7 @@ Begin VB.Form MainForm
                Height          =   255
                Index           =   0
                Left            =   120
-               TabIndex        =   73
+               TabIndex        =   67
                Top             =   120
                Width           =   2175
             End
@@ -405,7 +403,7 @@ Begin VB.Form MainForm
                Caption         =   "Save interval (seconds)"
                Height          =   615
                Left            =   240
-               TabIndex        =   76
+               TabIndex        =   70
                Top             =   1080
                Width           =   735
             End
@@ -413,7 +411,7 @@ Begin VB.Form MainForm
                Caption         =   "Bar length (minutes)"
                Height          =   375
                Left            =   240
-               TabIndex        =   74
+               TabIndex        =   68
                Top             =   600
                Width           =   735
             End
@@ -456,7 +454,7 @@ Begin VB.Form MainForm
          Caption         =   "Timestamps"
          Height          =   1335
          Left            =   7800
-         TabIndex        =   63
+         TabIndex        =   57
          Top             =   3360
          Width           =   1455
          Begin VB.PictureBox Picture3 
@@ -467,7 +465,7 @@ Begin VB.Form MainForm
             Left            =   120
             ScaleHeight     =   975
             ScaleWidth      =   1215
-            TabIndex        =   64
+            TabIndex        =   58
             Top             =   240
             Width           =   1215
             Begin VB.TextBox AdjustSecondsEndText 
@@ -503,7 +501,7 @@ Begin VB.Form MainForm
                Caption         =   "End"
                Height          =   255
                Left            =   720
-               TabIndex        =   66
+               TabIndex        =   60
                Top             =   645
                Width           =   495
             End
@@ -511,7 +509,7 @@ Begin VB.Form MainForm
                Caption         =   "Start"
                Height          =   255
                Left            =   720
-               TabIndex        =   65
+               TabIndex        =   59
                Top             =   360
                Width           =   495
             End
@@ -523,36 +521,26 @@ Begin VB.Form MainForm
          Locked          =   -1  'True
          MultiLine       =   -1  'True
          ScrollBars      =   2  'Vertical
-         TabIndex        =   62
+         TabIndex        =   56
          TabStop         =   0   'False
          Top             =   2160
          Width           =   3855
-      End
-      Begin VB.CommandButton DisconnectButton 
-         Caption         =   "Disconnect"
-         Enabled         =   0   'False
-         Height          =   615
-         Left            =   -67440
-         TabIndex        =   24
-         ToolTipText     =   "Disconnect from service provider"
-         Top             =   3960
-         Width           =   1335
       End
       Begin VB.CommandButton GetContractButton 
          Caption         =   "Get contract details"
          Enabled         =   0   'False
          Height          =   615
          Left            =   -68880
-         TabIndex        =   23
+         TabIndex        =   21
          ToolTipText     =   "Get contract details from specified source"
-         Top             =   3960
+         Top             =   3600
          Width           =   1335
       End
       Begin VB.Frame Frame1 
          Caption         =   "Output format"
          Height          =   1095
          Left            =   7800
-         TabIndex        =   59
+         TabIndex        =   53
          Top             =   1440
          Width           =   2535
          Begin VB.PictureBox Picture1 
@@ -563,7 +551,7 @@ Begin VB.Form MainForm
             Left            =   120
             ScaleHeight     =   735
             ScaleWidth      =   2295
-            TabIndex        =   60
+            TabIndex        =   54
             Top             =   240
             Width           =   2295
             Begin VB.ListBox FormatList 
@@ -585,8 +573,8 @@ Begin VB.Form MainForm
          Left            =   -68880
          List            =   "MainForm.frx":005A
          Style           =   2  'Dropdown List
-         TabIndex        =   22
-         Top             =   3480
+         TabIndex        =   20
+         Top             =   2880
          Width           =   855
       End
       Begin VB.ComboBox TypeCombo 
@@ -596,47 +584,47 @@ Begin VB.Form MainForm
          Left            =   -68880
          List            =   "MainForm.frx":005E
          Style           =   2  'Dropdown List
-         TabIndex        =   18
-         Top             =   2040
+         TabIndex        =   16
+         Top             =   1440
          Width           =   1335
       End
       Begin VB.TextBox SymbolText 
          Enabled         =   0   'False
          Height          =   285
          Left            =   -68880
-         TabIndex        =   17
-         Top             =   1680
+         TabIndex        =   15
+         Top             =   1080
          Width           =   1335
       End
       Begin VB.TextBox ExpiryText 
          Enabled         =   0   'False
          Height          =   285
          Left            =   -68880
-         TabIndex        =   19
-         Top             =   2400
+         TabIndex        =   17
+         Top             =   1800
          Width           =   1335
       End
       Begin VB.TextBox ExchangeText 
          Enabled         =   0   'False
          Height          =   285
          Left            =   -68880
-         TabIndex        =   20
-         Top             =   2760
+         TabIndex        =   18
+         Top             =   2160
          Width           =   1335
       End
       Begin VB.TextBox StrikePriceText 
          Enabled         =   0   'False
          Height          =   285
          Left            =   -68880
-         TabIndex        =   21
-         Top             =   3120
+         TabIndex        =   19
+         Top             =   2520
          Width           =   1335
       End
       Begin VB.Frame Frame2 
          Caption         =   "Contract details source"
          Height          =   1095
          Left            =   -74640
-         TabIndex        =   51
+         TabIndex        =   45
          Top             =   600
          Width           =   2535
          Begin VB.PictureBox Picture2 
@@ -647,7 +635,7 @@ Begin VB.Form MainForm
             Left            =   120
             ScaleHeight     =   735
             ScaleWidth      =   2295
-            TabIndex        =   52
+            TabIndex        =   46
             Top             =   240
             Width           =   2295
             Begin VB.OptionButton ContractFromServiceProviderOption 
@@ -656,7 +644,7 @@ Begin VB.Form MainForm
                Left            =   120
                TabIndex        =   13
                ToolTipText     =   "Get contract details from service provider"
-               Top             =   480
+               Top             =   360
                Width           =   1455
             End
             Begin VB.OptionButton ContractInTickfileOption 
@@ -665,36 +653,11 @@ Begin VB.Form MainForm
                Left            =   120
                TabIndex        =   12
                ToolTipText     =   "Tickfile contains contract details"
-               Top             =   0
+               Top             =   120
                Value           =   -1  'True
                Width           =   1455
             End
          End
-      End
-      Begin VB.TextBox PortText 
-         Enabled         =   0   'False
-         Height          =   285
-         Left            =   -68880
-         TabIndex        =   15
-         Text            =   "7496"
-         Top             =   960
-         Width           =   1335
-      End
-      Begin VB.TextBox ClientIDText 
-         Enabled         =   0   'False
-         Height          =   285
-         Left            =   -68880
-         TabIndex        =   16
-         Top             =   1320
-         Width           =   1335
-      End
-      Begin VB.TextBox ServerText 
-         Enabled         =   0   'False
-         Height          =   285
-         Left            =   -68880
-         TabIndex        =   14
-         Top             =   600
-         Width           =   1335
       End
       Begin VB.CommandButton ConvertButton 
          Caption         =   "Convert"
@@ -721,7 +684,7 @@ Begin VB.Form MainForm
          ItemData        =   "MainForm.frx":0060
          Left            =   120
          List            =   "MainForm.frx":0062
-         TabIndex        =   44
+         TabIndex        =   41
          TabStop         =   0   'False
          Top             =   480
          Width           =   7575
@@ -750,7 +713,7 @@ Begin VB.Form MainForm
          Enabled         =   0   'False
          Height          =   495
          Left            =   -66720
-         TabIndex        =   36
+         TabIndex        =   33
          Top             =   420
          Width           =   975
       End
@@ -759,7 +722,7 @@ Begin VB.Form MainForm
          Enabled         =   0   'False
          Height          =   495
          Left            =   -66720
-         TabIndex        =   35
+         TabIndex        =   32
          Top             =   1620
          Width           =   975
       End
@@ -768,7 +731,7 @@ Begin VB.Form MainForm
          Enabled         =   0   'False
          Height          =   495
          Left            =   -66720
-         TabIndex        =   34
+         TabIndex        =   31
          Top             =   1020
          Width           =   975
       End
@@ -777,7 +740,7 @@ Begin VB.Form MainForm
          Enabled         =   0   'False
          Height          =   495
          Left            =   -69840
-         TabIndex        =   33
+         TabIndex        =   30
          ToolTipText     =   "Start or resume tickfile replay"
          Top             =   2340
          Width           =   615
@@ -786,7 +749,7 @@ Begin VB.Form MainForm
          Caption         =   "..."
          Height          =   375
          Left            =   -67680
-         TabIndex        =   32
+         TabIndex        =   29
          ToolTipText     =   "Select tickfile(s)"
          Top             =   1020
          Width           =   495
@@ -796,7 +759,7 @@ Begin VB.Form MainForm
          Enabled         =   0   'False
          Height          =   375
          Left            =   -67680
-         TabIndex        =   31
+         TabIndex        =   28
          ToolTipText     =   "Clear tickfile list"
          Top             =   1500
          Width           =   495
@@ -806,7 +769,7 @@ Begin VB.Form MainForm
          Enabled         =   0   'False
          Height          =   495
          Left            =   -69120
-         TabIndex        =   30
+         TabIndex        =   27
          ToolTipText     =   "Pause tickfile replay"
          Top             =   2340
          Width           =   615
@@ -816,7 +779,7 @@ Begin VB.Form MainForm
          Enabled         =   0   'False
          Height          =   495
          Left            =   -68400
-         TabIndex        =   29
+         TabIndex        =   26
          ToolTipText     =   "Stop tickfile replay"
          Top             =   2340
          Width           =   615
@@ -824,7 +787,7 @@ Begin VB.Form MainForm
       Begin VB.ListBox List1 
          Height          =   1230
          Left            =   -74640
-         TabIndex        =   28
+         TabIndex        =   25
          TabStop         =   0   'False
          Top             =   1020
          Width           =   6855
@@ -835,7 +798,7 @@ Begin VB.Form MainForm
          Left            =   -74040
          List            =   "MainForm.frx":0093
          Style           =   2  'Dropdown List
-         TabIndex        =   27
+         TabIndex        =   24
          ToolTipText     =   "Adjust tickfile replay speed"
          Top             =   2460
          Width           =   1575
@@ -843,7 +806,7 @@ Begin VB.Form MainForm
       Begin MSComctlLib.ListView OpenOrdersList 
          Height          =   2175
          Left            =   -74880
-         TabIndex        =   37
+         TabIndex        =   34
          ToolTipText     =   "Open orders"
          Top             =   420
          Width           =   8055
@@ -864,7 +827,7 @@ Begin VB.Form MainForm
       Begin MSComctlLib.ListView ExecutionsList 
          Height          =   1695
          Left            =   -74880
-         TabIndex        =   38
+         TabIndex        =   35
          ToolTipText     =   "Filled orders"
          Top             =   2580
          Width           =   8055
@@ -884,7 +847,7 @@ Begin VB.Form MainForm
       Begin MSComctlLib.ProgressBar ProgressBar1 
          Height          =   135
          Left            =   -74640
-         TabIndex        =   39
+         TabIndex        =   36
          Top             =   3180
          Visible         =   0   'False
          Width           =   6855
@@ -897,7 +860,7 @@ Begin VB.Form MainForm
       Begin MSComctlLib.ProgressBar ReplayProgressBar 
          Height          =   135
          Left            =   120
-         TabIndex        =   45
+         TabIndex        =   42
          Top             =   3360
          Visible         =   0   'False
          Width           =   7575
@@ -907,11 +870,19 @@ Begin VB.Form MainForm
          BorderStyle     =   1
          Appearance      =   0
       End
+      Begin VB.Label Label2 
+         Caption         =   "Short name"
+         Height          =   255
+         Left            =   -70320
+         TabIndex        =   97
+         Top             =   720
+         Width           =   855
+      End
       Begin VB.Label Label18 
          Caption         =   "Output path"
          Height          =   255
          Left            =   7800
-         TabIndex        =   70
+         TabIndex        =   64
          Top             =   2760
          Width           =   975
       End
@@ -919,7 +890,7 @@ Begin VB.Form MainForm
          Caption         =   "QT Port"
          Height          =   255
          Left            =   8400
-         TabIndex        =   68
+         TabIndex        =   62
          Top             =   960
          Width           =   975
       End
@@ -927,7 +898,7 @@ Begin VB.Form MainForm
          Caption         =   "QT Server"
          Height          =   255
          Left            =   8400
-         TabIndex        =   67
+         TabIndex        =   61
          Top             =   600
          Width           =   975
       End
@@ -935,7 +906,7 @@ Begin VB.Form MainForm
          Caption         =   "Current contract details"
          Height          =   255
          Left            =   -74640
-         TabIndex        =   61
+         TabIndex        =   55
          Top             =   1920
          Width           =   1815
       End
@@ -943,85 +914,61 @@ Begin VB.Form MainForm
          Caption         =   "Right"
          Height          =   255
          Left            =   -70320
-         TabIndex        =   58
-         Top             =   3480
+         TabIndex        =   52
+         Top             =   2880
          Width           =   855
       End
       Begin VB.Label Label17 
          Caption         =   "Strike price"
          Height          =   255
          Left            =   -70320
-         TabIndex        =   57
-         Top             =   3120
+         TabIndex        =   51
+         Top             =   2520
          Width           =   855
       End
       Begin VB.Label Label7 
          Caption         =   "Symbol"
          Height          =   255
          Left            =   -70320
-         TabIndex        =   56
-         Top             =   1680
+         TabIndex        =   50
+         Top             =   1080
          Width           =   855
       End
       Begin VB.Label Label4 
          Caption         =   "Type"
          Height          =   255
          Left            =   -70320
-         TabIndex        =   55
-         Top             =   2040
+         TabIndex        =   49
+         Top             =   1440
          Width           =   855
       End
       Begin VB.Label Label5 
          Caption         =   "Expiry"
          Height          =   255
          Left            =   -70320
-         TabIndex        =   54
-         Top             =   2400
+         TabIndex        =   48
+         Top             =   1800
          Width           =   855
       End
       Begin VB.Label Label6 
          Caption         =   "Exchange"
          Height          =   255
          Left            =   -70320
-         TabIndex        =   53
-         Top             =   2760
+         TabIndex        =   47
+         Top             =   2160
          Width           =   855
-      End
-      Begin VB.Label Label13 
-         Caption         =   "Port"
-         Height          =   255
-         Left            =   -70320
-         TabIndex        =   50
-         Top             =   960
-         Width           =   615
-      End
-      Begin VB.Label Label3 
-         Caption         =   "Client id"
-         Height          =   255
-         Left            =   -70320
-         TabIndex        =   49
-         Top             =   1320
-         Width           =   615
-      End
-      Begin VB.Label Label2 
-         Caption         =   "Server"
-         Height          =   255
-         Left            =   -70320
-         TabIndex        =   48
-         Top             =   600
-         Width           =   615
       End
       Begin VB.Label ReplayProgressLabel 
          Height          =   255
          Left            =   240
-         TabIndex        =   47
+         TabIndex        =   44
          Top             =   3000
          Width           =   5655
       End
       Begin VB.Label ReplayContractLabel 
          Height          =   855
          Left            =   120
-         TabIndex        =   46
+         TabIndex        =   43
          Top             =   3720
          Width           =   5655
       End
@@ -1029,7 +976,7 @@ Begin VB.Form MainForm
          Caption         =   "Select tickfile(s)"
          Height          =   255
          Left            =   -74520
-         TabIndex        =   43
+         TabIndex        =   40
          Top             =   780
          Width           =   1455
       End
@@ -1037,7 +984,7 @@ Begin VB.Form MainForm
          Caption         =   "Output path"
          Height          =   855
          Left            =   -74640
-         TabIndex        =   42
+         TabIndex        =   39
          Top             =   3420
          Width           =   5655
       End
@@ -1045,7 +992,7 @@ Begin VB.Form MainForm
          Caption         =   "qazqazqaz"
          Height          =   255
          Left            =   -74640
-         TabIndex        =   41
+         TabIndex        =   38
          Top             =   2940
          Width           =   5655
       End
@@ -1053,7 +1000,7 @@ Begin VB.Form MainForm
          Caption         =   "Replay speed"
          Height          =   375
          Left            =   -74640
-         TabIndex        =   40
+         TabIndex        =   37
          Top             =   2460
          Width           =   615
       End
@@ -1062,7 +1009,7 @@ Begin VB.Form MainForm
       Caption         =   "QT Port"
       Height          =   255
       Left            =   7920
-      TabIndex        =   69
+      TabIndex        =   63
       Top             =   2880
       Width           =   975
    End
@@ -1192,7 +1139,7 @@ If mTradeBuildAPI Is Nothing Then
     Exit Sub
 End If
 
-mTradeBuildAPI.addListener Me, TradeBuild.StandardListenValueTypes.LogInfo
+mTradeBuildAPI.AddListener Me, TradeBuild.StandardListenValueTypes.LogInfo
 
 On Error Resume Next
 Set SQLDBTickfileSP = New TBInfoBase.TickfileServiceProvider
@@ -1317,7 +1264,7 @@ End Sub
 
 Private Sub ContractFromServiceProviderOption_Click()
 enableContractFields
-SymbolText.SetFocus
+ShortNameText.SetFocus
 End Sub
 
 Private Sub ContractInTickfileOption_Click()
@@ -1355,13 +1302,6 @@ writeStatusMessage "Tickfile conversion started"
 mTickfileManager.StartReplay
 End Sub
 
-Private Sub DisconnectButton_Click()
-mTradeBuildAPI.disconnect
-GetContractButton.Enabled = True
-enableContractFields
-DisconnectButton.Enabled = False
-End Sub
-
 Private Sub ExchangeText_Change()
 checkOKToGetContract
 End Sub
@@ -1387,7 +1327,7 @@ Dim lContractSpecifier As ContractSpecifier
 On Error GoTo err
 
 Set lContractSpecifier = mTradeBuildAPI.newContractSpecifier( _
-                                    , _
+                                    ShortNameText, _
                                     SymbolText, _
                                     ExchangeText, _
                                     secTypeFromString(TypeCombo), _
@@ -1422,6 +1362,10 @@ mTickfileManager.ShowTickfileSelectionDialogue
 QTServerText.Enabled = True
 QTPortText.Enabled = True
 
+End Sub
+
+Private Sub ShortNameText_Change()
+checkOKToGetContract
 End Sub
 
 Private Sub StopButton_Click()
@@ -1556,9 +1500,9 @@ ReplayProgressBar.Max = 100
 ReplayProgressBar.value = 0
 TickfileList.ListIndex = tickfileIndex
 writeStatusMessage "Converting " & TickfileList.List(TickfileList.ListIndex)
-ReplayContractLabel.Caption = "Symbol:   " & pContract.specifier.Symbol & vbCrLf & _
-                            "Type:     " & secTypeToString(pContract.specifier.SecType) & vbCrLf & _
-                            IIf(pContract.specifier.SecType <> SecurityTypes.SecTypeStock, "Expiry:   " & pContract.specifier.Expiry & vbCrLf, "") & _
+ReplayContractLabel.Caption = "Symbol:   " & pContract.specifier.symbol & vbCrLf & _
+                            "Type:     " & secTypeToString(pContract.specifier.sectype) & vbCrLf & _
+                            IIf(pContract.specifier.sectype <> SecurityTypes.SecTypeStock, "Expiry:   " & pContract.specifier.expiry & vbCrLf, "") & _
                             "Exchange: " & pContract.specifier.exchange
 
 Exit Sub
@@ -1610,7 +1554,7 @@ Private Sub mTickfileManager_TickerAllocated(ByVal pTicker As TradeBuild.Ticker)
 Dim i As Long
 On Error GoTo err
 Set mTicker = pTicker
-mTicker.outputTickfilePath = mOutputPath
+mTicker.outputTickFilePath = mOutputPath
 mTicker.outputTickfileFormat = mOutputFormat
 If mOutputFormat <> "" Then
     mTicker.writeToTickfile = True
@@ -1676,7 +1620,7 @@ End Sub
 Private Sub mTradeBuildAPI_connecting(ByVal timestamp As Date)
 On Error GoTo err
 writeStatusMessage "Connecting"
-DisconnectButton.Enabled = True
+'DisconnectButton.Enabled = True
 
 Exit Sub
 err:
@@ -1688,7 +1632,7 @@ Private Sub mTradeBuildAPI_connectionToTWSClosed( _
                 ByVal reconnecting As Boolean)
 On Error GoTo err
 
-DisconnectButton.Enabled = False
+'DisconnectButton.Enabled = False
 enableContractFields
 
 writeStatusMessage "Connection closed"
@@ -1740,45 +1684,17 @@ End Sub
 
 
 Private Sub checkOKToGetContract()
-If ContractFromServiceProviderOption Then
-    If SymbolText <> "" Then
-'    If PortText <> "" And ClientIDText <> "" And _
-'        SymbolText <> "" And _
-'        TypeCombo.Text <> "" And _
-'        IIf(TypeCombo.Text = StrSecTypeFuture Or _
-'            TypeCombo.Text = StrSecTypeOption Or _
-'            TypeCombo.Text = StrSecTypeOptionFuture, _
-'            ExpiryText <> "", _
-'            True) And _
-'        IIf(TypeCombo.Text = StrSecTypeOption Or _
-'            TypeCombo.Text = StrSecTypeOptionFuture, _
-'            StrikePriceText <> "", _
-'            True) And _
-'        IIf(TypeCombo.Text = StrSecTypeOption Or _
-'            TypeCombo.Text = StrSecTypeOptionFuture, _
-'            RightCombo <> "", _
-'            True) And _
-'        ExchangeText <> "" _
-'    Then
-        GetContractButton.Enabled = True
-    Else
-        GetContractButton.Enabled = False
-    End If
+If SymbolText <> "" Or ShortNameText <> "" Then
+    GetContractButton.Enabled = True
 Else
-    If SymbolText <> "" Then
-        GetContractButton.Enabled = True
-    Else
-        GetContractButton.Enabled = False
-    End If
+    GetContractButton.Enabled = False
 End If
 End Sub
 
 Private Sub disableContractFields()
 GetContractButton.Enabled = False
 ConvertButton.Enabled = False
-ServerText.Enabled = False
-PortText.Enabled = False
-ClientIDText.Enabled = False
+ShortNameText.Enabled = False
 SymbolText.Enabled = False
 TypeCombo.Enabled = False
 ExpiryText.Enabled = False
@@ -1793,40 +1709,13 @@ Private Sub enableContractFields()
 '    PortText.Enabled = True
 '    ClientIDText.Enabled = True
 'End If
+ShortNameText.Enabled = True
 SymbolText.Enabled = True
 TypeCombo.Enabled = True
 ExchangeText.Enabled = True
-Select Case secTypeFromString(TypeCombo)
-Case SecurityTypes.SecTypeFuture
-    ExpiryText.Enabled = True
-    StrikePriceText.Enabled = False
-    RightCombo.Enabled = False
-Case SecurityTypes.SecTypeStock
-    ExpiryText.Enabled = False
-    StrikePriceText.Enabled = False
-    RightCombo.Enabled = False
-Case SecurityTypes.SecTypeOption
-    ExpiryText.Enabled = True
-    StrikePriceText.Enabled = True
-    RightCombo.Enabled = True
-Case SecurityTypes.SecTypeFuturesOption
-    ExpiryText.Enabled = True
-    StrikePriceText.Enabled = True
-    RightCombo.Enabled = True
-Case SecurityTypes.SecTypeCash
-    ExpiryText.Enabled = False
-    StrikePriceText.Enabled = False
-    RightCombo.Enabled = False
-Case SecurityTypes.SecTypeBag
-    writeStatusMessage "BAG type is not implemented"
-    ExpiryText.Enabled = False
-    StrikePriceText.Enabled = False
-    RightCombo.Enabled = False
-Case Else
-    ExpiryText.Enabled = True
-    StrikePriceText.Enabled = True
-    RightCombo.Enabled = True
-End Select
+ExpiryText.Enabled = True
+StrikePriceText.Enabled = True
+RightCombo.Enabled = True
 checkOKToGetContract
 End Sub
 
