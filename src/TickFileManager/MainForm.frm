@@ -76,42 +76,25 @@ Begin VB.Form MainForm
       TabCaption(1)   =   "Contract details"
       TabPicture(1)   =   "MainForm.frx":001C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "Label6"
-      Tab(1).Control(0).Enabled=   0   'False
-      Tab(1).Control(1)=   "Label5"
+      Tab(1).Control(0)=   "ShortNameText"
+      Tab(1).Control(1)=   "ContractDetailsText"
       Tab(1).Control(1).Enabled=   0   'False
-      Tab(1).Control(2)=   "Label4"
-      Tab(1).Control(2).Enabled=   0   'False
-      Tab(1).Control(3)=   "Label7"
-      Tab(1).Control(3).Enabled=   0   'False
-      Tab(1).Control(4)=   "Label17"
-      Tab(1).Control(4).Enabled=   0   'False
-      Tab(1).Control(5)=   "Label21"
-      Tab(1).Control(5).Enabled=   0   'False
-      Tab(1).Control(6)=   "Label11"
-      Tab(1).Control(6).Enabled=   0   'False
-      Tab(1).Control(7)=   "Label2"
-      Tab(1).Control(7).Enabled=   0   'False
-      Tab(1).Control(8)=   "Frame2"
-      Tab(1).Control(8).Enabled=   0   'False
-      Tab(1).Control(9)=   "StrikePriceText"
-      Tab(1).Control(9).Enabled=   0   'False
-      Tab(1).Control(10)=   "ExchangeText"
-      Tab(1).Control(10).Enabled=   0   'False
-      Tab(1).Control(11)=   "ExpiryText"
-      Tab(1).Control(11).Enabled=   0   'False
-      Tab(1).Control(12)=   "SymbolText"
-      Tab(1).Control(12).Enabled=   0   'False
-      Tab(1).Control(13)=   "TypeCombo"
-      Tab(1).Control(13).Enabled=   0   'False
-      Tab(1).Control(14)=   "RightCombo"
-      Tab(1).Control(14).Enabled=   0   'False
-      Tab(1).Control(15)=   "GetContractButton"
-      Tab(1).Control(15).Enabled=   0   'False
-      Tab(1).Control(16)=   "ContractDetailsText"
-      Tab(1).Control(16).Enabled=   0   'False
-      Tab(1).Control(17)=   "ShortNameText"
-      Tab(1).Control(17).Enabled=   0   'False
+      Tab(1).Control(2)=   "GetContractButton"
+      Tab(1).Control(3)=   "RightCombo"
+      Tab(1).Control(4)=   "TypeCombo"
+      Tab(1).Control(5)=   "SymbolText"
+      Tab(1).Control(6)=   "ExpiryText"
+      Tab(1).Control(7)=   "ExchangeText"
+      Tab(1).Control(8)=   "StrikePriceText"
+      Tab(1).Control(9)=   "Frame2"
+      Tab(1).Control(10)=   "Label2"
+      Tab(1).Control(11)=   "Label11"
+      Tab(1).Control(12)=   "Label21"
+      Tab(1).Control(13)=   "Label17"
+      Tab(1).Control(14)=   "Label7"
+      Tab(1).Control(15)=   "Label4"
+      Tab(1).Control(16)=   "Label5"
+      Tab(1).Control(17)=   "Label6"
       Tab(1).ControlCount=   18
       TabCaption(2)   =   "Bar output"
       TabPicture(2)   =   "MainForm.frx":0038
@@ -1064,10 +1047,12 @@ Private WithEvents mTradeBuildAPI As TradeBuildAPI
 Attribute mTradeBuildAPI.VB_VarHelpID = -1
 Private WithEvents mTickfileManager As TradeBuild.TickFileManager
 Attribute mTickfileManager.VB_VarHelpID = -1
-Private WithEvents mContracts As TradeBuild.Contracts
+Private WithEvents mContracts As TradeBuild.contractS
 Attribute mContracts.VB_VarHelpID = -1
 Private WithEvents mTicker As Ticker
 Attribute mTicker.VB_VarHelpID = -1
+
+Private mRunningFromComandLine As Boolean
 
 Private mOutputFormat As String
 Private mOutputPath As String
@@ -1091,6 +1076,15 @@ Private mTickfileSpecifiers() As TradeBuild.TickfileSpecifier
 
 Private WithEvents mTimer As TimerUtils.IntervalTimer
 Attribute mTimer.VB_VarHelpID = -1
+
+Private mNumberOfSessions As Long
+Private mStartingSession As Long
+Private mFromDate As Date
+Private mFromTime As Date
+Private mToDate As Date
+Private mToTime As Date
+Private mInFormatValue As String
+
 
 '================================================================================
 ' Form Event Handlers
@@ -1172,6 +1166,7 @@ If mQuoteTrackerSP Is Nothing Then
                     "Form_Load"
     Exit Sub
 End If
+mQuoteTrackerSP.providerKey = "IQFeed"
 mQuoteTrackerSP.ConnectionRetryIntervalSecs = 10
 mQuoteTrackerSP.password = ""
 mTradeBuildAPI.ServiceProviders.Add mQuoteTrackerSP
@@ -1423,17 +1418,71 @@ writeStatusMessage "Invalid contract specifier: " & _
 End Sub
 
 Private Sub mContracts_NoMoreContractDetails()
+Dim i As Long
+Dim j As Long
+Dim lSupportedInputTickfileFormats() As TradeBuild.TickfileFormatSpecifier
+
 On Error GoTo err
 
 If mContracts.Count > 1 Then
     writeStatusMessage "Unique contract not specified"
     Exit Sub
 End If
+
 Set mContract = mContracts(1)
 ContractDetailsText = mContract.ToString
 
 writeStatusMessage "Contract details received"
-enableContractFields
+If Not mRunningFromComandLine Then
+    enableContractFields
+    Exit Sub
+End If
+    
+If mArguments.Switch("from") Then mNumberOfSessions = 1
+If mNumberOfSessions > (mStartingSession + 1) Then mNumberOfSessions = mStartingSession + 1
+
+ReDim mTickfileSpecifiers(mNumberOfSessions - 1) As TradeBuild.TickfileSpecifier
+For i = 0 To UBound(mTickfileSpecifiers)
+    With mTickfileSpecifiers(i)
+        Set .Contract = mContract
+        If mArguments.Switch("from") Then
+            .From = mFromDate + mFromTime
+            If mArguments.Switch("to") Then
+                .To = mToDate + mToTime
+            Else
+                .To = DateAdd("n", 1, Now)
+            End If
+        Else
+            .EntireSession = True
+            .From = DateAdd("d", -mStartingSession + i, Now)
+        End If
+            
+        lSupportedInputTickfileFormats = mTradeBuildAPI.SupportedInputTickfileFormats
+        For j = 0 To UBound(lSupportedInputTickfileFormats)
+            If lSupportedInputTickfileFormats(j).Name = mInFormatValue Then
+                .TickfileFormatID = lSupportedInputTickfileFormats(j).FormalID
+                Exit For
+            End If
+        Next
+        
+        If .EntireSession Then
+            .filename = "Session (" & .From & ") " & _
+                            Replace(mContract.specifier.ToString, vbCrLf, "; ")
+        Else
+            .filename = .From & "-" & .To & " " & _
+                            Replace(mContract.specifier.ToString, vbCrLf, "; ")
+        End If
+    End With
+Next
+
+For i = 0 To UBound(mTickfileSpecifiers)
+    TickfileList.AddItem mTickfileSpecifiers(i).filename
+Next
+
+Set mTimer = New TimerUtils.IntervalTimer
+mTimer.RepeatNotifications = False
+mTimer.TimerIntervalMillisecs = 10
+mTimer.StartTimer
 
 Exit Sub
 err:
@@ -1751,22 +1800,14 @@ Dim currencyValue As String
 Dim strikevalue As String
 Dim rightValue As String
 Dim fromValue As String
-Dim fromDate As Date
-Dim fromTime As Date
 Dim toValue As String
-Dim toDate As Date
-Dim toTime As Date
 Dim sessionsValue As String
-Dim numberOfSessions As Long
-Dim startingSession As Long
-Dim inFormatValue As String
 Dim outFormatValue As String
 Dim QTServerValue As String
 Dim commaPosn As Long
 Dim contractSpec As TradeBuild.ContractSpecifier
 Dim i As Long
 Dim j As Long
-Dim lSupportedInputTickfileFormats() As TradeBuild.TickfileFormatSpecifier
 
 Set mArguments = New cCommandLineArgs
 mArguments.CommandLine = Command
@@ -1845,7 +1886,7 @@ If mArguments.Switch("from") Then
         Len(fromValue) = 14) _
     Then
         On Error Resume Next
-        unpackDateTimeString fromValue, fromDate, fromTime
+        unpackDateTimeString fromValue, mFromDate, mFromTime
         If err.Number <> 0 Then
             MsgBox fromValue & " is not a valid date and time (format yyyymmdd[hhmmss])"
             ProcessCommandLineArgs = False
@@ -1872,7 +1913,7 @@ If mArguments.Switch("from") And mArguments.Switch("to") Then
         Len(toValue) = 14) _
     Then
         On Error Resume Next
-        unpackDateTimeString toValue, toDate, toTime
+        unpackDateTimeString toValue, mToDate, mToTime
         If err.Number <> 0 Then
             MsgBox toValue & " is not a valid date and time (format yyyymmdd[hhmmss])"
             ProcessCommandLineArgs = False
@@ -1891,7 +1932,7 @@ If mArguments.Switch("from") And mArguments.Switch("to") Then
     End If
 End If
 
-startingSession = 1
+mStartingSession = 1
 If mArguments.Switch("sessions") Then
     sessionsValue = mArguments.SwitchValue("sessions")
     If Len(sessionsValue) = 0 Then
@@ -1902,21 +1943,21 @@ If mArguments.Switch("sessions") Then
     
     On Error Resume Next
     If InStr(1, sessionsValue, ",") Then
-        numberOfSessions = CLng(Left$(sessionsValue, InStr(1, sessionsValue, ",") - 1))
-        If err.Number <> 0 Or numberOfSessions < 1 Then
+        mNumberOfSessions = CLng(Left$(sessionsValue, InStr(1, sessionsValue, ",") - 1))
+        If err.Number <> 0 Or mNumberOfSessions < 1 Then
             MsgBox "Error - sessions should be /sessions:n[,m] where n and m are integers, n>=1 and m>=0"
             ProcessCommandLineArgs = False
             Exit Function
         End If
-        startingSession = CLng(Right$(sessionsValue, Len(sessionsValue) - InStr(1, sessionsValue, ",")))
-        If err.Number <> 0 Or startingSession < 0 Then
+        mStartingSession = CLng(Right$(sessionsValue, Len(sessionsValue) - InStr(1, sessionsValue, ",")))
+        If err.Number <> 0 Or mStartingSession < 0 Then
             MsgBox "Error - sessions should be /sessions:n[,m] where n and m are integers, n>=1 and m>=0"
             ProcessCommandLineArgs = False
             Exit Function
         End If
     Else
-        numberOfSessions = sessionsValue
-        If err.Number <> 0 Or numberOfSessions < 1 Then
+        mNumberOfSessions = sessionsValue
+        If err.Number <> 0 Or mNumberOfSessions < 1 Then
             MsgBox "Error - sessions should be /sessions:n[,m] where n and m are integers, n>=1 and m>=0"
             ProcessCommandLineArgs = False
             Exit Function
@@ -1957,7 +1998,7 @@ If mArguments.Switch("qtserver") Then
         
 End If
 
-If mArguments.Switch("informat") Then inFormatValue = mArguments.SwitchValue("informat")
+If mArguments.Switch("informat") Then mInFormatValue = mArguments.SwitchValue("informat")
 
 If mArguments.Switch("outformat") Then
     outFormatValue = mArguments.SwitchValue("outformat")
@@ -1977,6 +2018,8 @@ Then
 End If
 
 If symbolValue <> "" Then
+    mRunningFromComandLine = True
+    
     Set contractSpec = mTradeBuildAPI.newContractSpecifier( _
                                 localSymbolValue, _
                                 symbolValue, _
@@ -1986,53 +2029,9 @@ If symbolValue <> "" Then
                                 monthValue, _
                                 IIf(StrikePriceText.Text = "", 0, StrikePriceText.Text), _
                                 optionRightFromString(rightValue))
+    Set mContracts = mTradeBuildAPI.NewContracts
+    mContracts.Load contractSpec
 
-
-    If mArguments.Switch("from") Then numberOfSessions = 1
-    If numberOfSessions > (startingSession + 1) Then numberOfSessions = startingSession + 1
-    
-    ReDim mTickfileSpecifiers(numberOfSessions - 1) As TradeBuild.TickfileSpecifier
-    For i = 0 To UBound(mTickfileSpecifiers)
-        With mTickfileSpecifiers(i)
-            Set .ContractSpecifier = contractSpec
-            If mArguments.Switch("from") Then
-                .From = fromDate + fromTime
-                If mArguments.Switch("to") Then
-                    .To = toDate + toTime
-                Else
-                    .To = DateAdd("n", 1, Now)
-                End If
-            Else
-                .EntireSession = True
-                .From = DateAdd("d", -startingSession + i, Now)
-            End If
-                
-            lSupportedInputTickfileFormats = mTradeBuildAPI.SupportedInputTickfileFormats
-            For j = 0 To UBound(lSupportedInputTickfileFormats)
-                If lSupportedInputTickfileFormats(j).Name = inFormatValue Then
-                    .TickfileFormatID = lSupportedInputTickfileFormats(j).FormalID
-                    Exit For
-                End If
-            Next
-            
-            If .EntireSession Then
-                .filename = "Session (" & .From & ") " & _
-                                Replace(contractSpec.ToString, vbCrLf, "; ")
-            Else
-                .filename = .From & "-" & .To & " " & _
-                                Replace(contractSpec.ToString, vbCrLf, "; ")
-            End If
-        End With
-    Next
-    
-    For i = 0 To UBound(mTickfileSpecifiers)
-        TickfileList.AddItem mTickfileSpecifiers(i).filename
-    Next
-    
-    Set mTimer = New TimerUtils.IntervalTimer
-    mTimer.RepeatNotifications = False
-    mTimer.TimerIntervalMillisecs = 10
-    mTimer.StartTimer
 End If
 
 ProcessCommandLineArgs = True
