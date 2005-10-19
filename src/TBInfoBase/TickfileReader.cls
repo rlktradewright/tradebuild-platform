@@ -256,7 +256,7 @@ mInputTickfileSpecifier = RHS
 
 Set lInstrumentFactory = New TradingDO2.cInstrumentFactory
 
-With mInputTickfileSpecifier.ContractSpecifier
+With mInputTickfileSpecifier.Contract.Specifier
     Set mInstrument = lInstrumentFactory.loadBySpec(.Symbol, _
                                 secTypeToString(.SecType), _
                                 Left$(.Expiry, 6), _
@@ -273,9 +273,10 @@ If mInstrument Is Nothing Then
     Exit Property
 End If
 
-Set mContract = mCommonServiceConsumer.NewContract
-mContract.Specifier = mCommonServiceConsumer.NewContractSpecifier
-gContractFromInstrument mContract, mInstrument
+Set mContract = mInputTickfileSpecifier.Contract
+'Set mContract = mCommonServiceConsumer.NewContract
+'mContract.Specifier = mCommonServiceConsumer.NewContractSpecifier
+'gContractFromInstrument mContract, mInstrument
 Set mTickReader = mInstrument.CreateTickDataAccessor
 
 End Property
