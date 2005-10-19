@@ -135,8 +135,7 @@ End Sub
 
 Private Sub ICommonServiceConsumer_RegisterServiceProvider( _
                             ByVal handle As Long, _
-                            ByVal spType As TradeBuildSP.ServiceProviderTypes, _
-                            ByVal key As String)
+                            ByVal spType As TradeBuildSP.ServiceProviderTypes)
 Dim regOk As Boolean
 mServiceProviders(handle).SPTypes = mServiceProviders(handle).SPTypes Or spType
 Select Case spType

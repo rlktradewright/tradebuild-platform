@@ -375,7 +375,7 @@ If TickfileSpec.filename <> "" Then
     gTickfileSpecifierToString = TickfileSpec.filename
 Else
     gTickfileSpecifierToString = "Contract: " & _
-                                Replace(TickfileSpec.contractSpecifier.ToString, vbCrLf, "; ") & _
+                                Replace(TickfileSpec.contract.specifier.ToString, vbCrLf, "; ") & _
                             ": From: " & FormatDateTime(TickfileSpec.From, vbGeneralDate) & _
                             " To: " & FormatDateTime(TickfileSpec.To, vbGeneralDate)
 End If

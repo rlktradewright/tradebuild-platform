@@ -90,7 +90,7 @@ End Type
 Public Type TickfileSpecifier
     TickfileFormatID    As String
     filename            As String
-    contractSpecifier   As contractSpecifier
+    contract            As contract
     From                As Date
     To                  As Date
     EntireSession       As Boolean

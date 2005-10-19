@@ -296,7 +296,7 @@ End Property
 Friend Property Let InputTickfileSpecifier(RHS As TradeBuild.TickfileSpecifier)
 Dim tfSpec As TradeBuildSP.TickfileSpec
 With tfSpec
-    Set .contractSpecifier = RHS.contractSpecifier
+    Set .Contract = RHS.Contract
     .filename = RHS.filename
     .From = RHS.From
     .TickfileFormatID = RHS.TickfileFormatID
