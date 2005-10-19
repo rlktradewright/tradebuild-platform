@@ -103,8 +103,7 @@ Private Sub ICommonServiceProvider_Link( _
 Set mCommonServiceConsumer = commonServiceConsumer
 mHandle = handle
 mCommonServiceConsumer.RegisterServiceProvider mHandle, _
-                            ServiceProviderTypes.Tickfile, _
-                            IIf(mProviderKey = "", "QTSP", mProviderKey)
+                            ServiceProviderTypes.Tickfile
 
 End Sub
 
@@ -130,6 +129,7 @@ Set ITickfileServiceProvider_CreateTickfileReader = reader
 reader.commonServiceConsumer = mCommonServiceConsumer
 reader.TickfileInputServiceConsumer = serviceConsumer
 reader.StreamingDataConsumer = dataConsumer
+reader.providerKey = mProviderKey
 reader.ConnectionRetryIntervalSecs = mConnectionRetryIntervalSecs
 reader.Connect mQTServer, mQTPort, mPassword
 End Function
