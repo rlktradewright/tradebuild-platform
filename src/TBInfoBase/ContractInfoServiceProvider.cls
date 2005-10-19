@@ -111,8 +111,7 @@ Private Sub ICommonServiceProvider_Link( _
 Set mCommonServiceConsumer = CommonServiceConsumer
 mHandle = handle
 mCommonServiceConsumer.RegisterServiceProvider handle, _
-                                            ServiceProviderTypes.ContractInfo, _
-                                            ProviderKey
+                                            ServiceProviderTypes.ContractInfo
 End Sub
 
 Private Property Get ICommonServiceProvider_Name() As String
@@ -173,7 +172,7 @@ Private Sub mTimer_TimerExpired()
 Dim instrumentSummaries As TradingDO2.cInstrumentSummaries
 Dim instrumentSummary As TradingDO2.cInstrumentSummary
 Dim instrument As TradingDO2.cInstrument
-Dim contract As IContract
+Dim Contract As IContract
 
 Set mInstrumentFactory = New cInstrumentFactory
 
@@ -188,13 +187,13 @@ With mRequests(mFirstRequestID).ContractSpecifier
 End With
 
 For Each instrumentSummary In instrumentSummaries
-    Set instrument = mInstrumentFactory.loadByID(instrumentSummary.ID)
-    Set contract = mCommonServiceConsumer.NewContract
-    contract.Specifier = mCommonServiceConsumer.NewContractSpecifier
+    Set instrument = mInstrumentFactory.loadByID(instrumentSummary.id)
+    Set Contract = mCommonServiceConsumer.NewContract
+    Contract.Specifier = mCommonServiceConsumer.NewContractSpecifier
     
-    gContractFromInstrument contract, instrument
+    gContractFromInstrument Contract, instrument
     
-    mRequests(mFirstRequestID).AddContract contract
+    mRequests(mFirstRequestID).AddContract Contract
 Next
 
 mContractInfoServiceConsumer.LoadComplete mHandle, mRequests(mFirstRequestID)

@@ -83,7 +83,7 @@ With contract
     .Multiplier = instrument.TickValue / instrument.TickSize
     
     If instrument.localSymbols.Count > 0 Then
-        ReDim providerIDs(instrument.localSymbols.Count) As DictionaryEntry
+        ReDim providerIDs(instrument.localSymbols.Count - 1) As DictionaryEntry
 
         For Each localSymbol In instrument.localSymbols
             providerIDs(i).Key = localSymbol.ProviderKey
