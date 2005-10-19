@@ -474,6 +474,22 @@ Friend Property Let OrderTypes(ByRef value() As TradeBuild.OrderTypes)
 mOrderTypes = value
 End Property
 
+Friend Property Get providerID(ByVal providerKey As String) As String
+Dim i As Long
+On Error GoTo err
+For i = 0 To UBound(mProviderIDs)
+    If mProviderIDs(i).key = providerKey Then
+        providerID = mProviderIDs(i).value
+        Exit Property
+    End If
+Next
+providerID = mSpecifier.localSymbol
+Exit Property
+
+err:
+providerID = mSpecifier.localSymbol
+End Property
+
 Friend Property Let ProviderIDs(ByRef value() As TradeBuildsp.DictionaryEntry)
 mProviderIDs = value
 End Property

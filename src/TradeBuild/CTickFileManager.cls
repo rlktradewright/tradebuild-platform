@@ -79,7 +79,7 @@ Event TickfilesSelected()
 ' Member variables
 '================================================================================
 
-Private WithEvents mContracts       As contracts
+Private WithEvents mContracts       As Contracts
 Attribute mContracts.VB_VarHelpID = -1
 Private mContract                   As contract
 
@@ -218,7 +218,7 @@ Dim tfSpec As TradeBuild.TickfileSpecifier
 Dim contractSpec As TradeBuild.contractSpecifier
 
 With tfSpec
-    Set .contractSpecifier = TickfileSpec.contractSpecifier
+    Set .contract = TickfileSpec.contract
     .filename = TickfileSpec.filename
     .From = TickfileSpec.From
     .TickfileFormatID = TickfileSpec.TickfileFormatID
@@ -227,35 +227,21 @@ End With
 
 ' we now determine a contract specifier with which we'll query the
 ' contract info service providers to get the canonical contract definition
-If mReader.contract Is Nothing Then
-    If mReader.contractSpecifier Is Nothing And _
-        tfSpec.contractSpecifier Is Nothing _
-    Then
-        If mContract Is Nothing Then
-            ' we have no way to determine what the contract is
-            RaiseEvent errorMessage(Now, _
-                            mCurrTickfileIndex, _
-                            ApiErrorCodes.NoContractDetails, _
-                            "Contract details must be supplied for tickfile: " & _
-                            gTickfileSpecifierToString(tfSpec))
-            Set mReader = Nothing
-            Exit Sub
-        Else
-            ' we'll use the existing mContract - this one was supplied by
-            ' the application to the ticker object
-            ' we have everything we need to proceed
-            playOrNot tfSpec, TickfileSizeBytes
-            Exit Sub
-        End If
-    Else
-        If Not mReader.contractSpecifier Is Nothing Then
-            Set contractSpec = mReader.contractSpecifier
-        Else
-            Set contractSpec = tfSpec.contractSpecifier
-        End If
-    End If
-Else
+If Not mReader.contract Is Nothing Then
     Set contractSpec = mReader.contract.specifier
+ElseIf Not mReader.contractSpecifier Is Nothing Then
+    Set contractSpec = mReader.contractSpecifier
+ElseIf Not tfSpec.contract Is Nothing Then
+    Set contractSpec = tfSpec.contract.specifier
+Else
+    ' we have no way to determine what the contract is
+    RaiseEvent errorMessage(Now, _
+                    mCurrTickfileIndex, _
+                    ApiErrorCodes.NoContractDetails, _
+                    "Contract details must be supplied for tickfile: " & _
+                    gTickfileSpecifierToString(tfSpec))
+    Set mReader = Nothing
+    Exit Sub
 End If
 
 'now query the Contract Details service provider(s) to see if we can
