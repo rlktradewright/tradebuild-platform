@@ -79,7 +79,7 @@ Event TickfilesSelected()
 ' Member variables
 '================================================================================
 
-Private WithEvents mContracts       As Contracts
+Private WithEvents mContracts       As contracts
 Attribute mContracts.VB_VarHelpID = -1
 Private mContract                   As contract
 
@@ -233,6 +233,8 @@ ElseIf Not mReader.contractSpecifier Is Nothing Then
     Set contractSpec = mReader.contractSpecifier
 ElseIf Not tfSpec.contract Is Nothing Then
     Set contractSpec = tfSpec.contract.specifier
+ElseIf Not mContract Is Nothing Then
+    Set contractSpec = mContract.specifier
 Else
     ' we have no way to determine what the contract is
     RaiseEvent errorMessage(Now, _
