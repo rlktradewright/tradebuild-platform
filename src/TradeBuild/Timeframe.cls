@@ -233,14 +233,14 @@ End Sub
 Private Sub QuoteListener_ask(ev As QuoteEvent)
 If Not isQuoteToBeProcessed Then Exit Sub
 If mIncludeBidAndAsk Then
-    mAskBar.Tick ev.price
+    mAskBar.Tick ev.Price
 End If
 End Sub
 
 Private Sub QuoteListener_bid(ev As QuoteEvent)
 If Not isQuoteToBeProcessed Then Exit Sub
 If mIncludeBidAndAsk Then
-    mBidBar.Tick ev.price
+    mBidBar.Tick ev.Price
 End If
 End Sub
 
@@ -262,18 +262,18 @@ End Sub
 
 Private Sub QuoteListener_trade(ev As QuoteEvent)
 If Not isQuoteToBeProcessed Then Exit Sub
-mTradeBar.Tick ev.price
-mTradeBar.TickSize ev.size
-If mFirstTradeSize = 0 Then mFirstTradeSize = ev.size
+mTradeBar.Tick ev.Price
+mTradeBar.TickSize ev.Size
+If mFirstTradeSize = 0 Then mFirstTradeSize = ev.Size
 End Sub
 
 Private Sub QuoteListener_volume(ev As QuoteEvent)
 If Not isQuoteToBeProcessed Then Exit Sub
 If mPrevBarVolume = 0 Then
-    mPrevBarVolume = ev.size - mFirstTradeSize
+    mPrevBarVolume = ev.Size - mFirstTradeSize
 End If
-mTradeBar.volume = ev.size - mPrevBarVolume
-mLatestVolume = ev.size
+mTradeBar.volume = ev.Size - mPrevBarVolume
+mLatestVolume = ev.Size
 End Sub
 
 '================================================================================
@@ -594,6 +594,10 @@ End If
 If Not mTradeBar Is Nothing Then
     WriteBars
     mPrevBarVolume = mLatestVolume
+    
+    If mTradeBar.Blank Then
+        mTradeBars.Remove mTradeBar.datetime
+    End If
 End If
 
 ' check whether a bar already exists for this time. This can happen when

@@ -314,19 +314,19 @@ End Property
 ' Methods
 '================================================================================
 
-Friend Function add(ByVal timestamp As Date) As Bar
+Friend Function add(ByVal Timestamp As Date) As Bar
 Set add = New Bar
 add.barType = mBarType
 add.barLength = mBarLength
-add.datetime = timestamp
-mBars.add add, CalcBarKey(timestamp)
+add.datetime = Timestamp
+mBars.add add, CalcBarKey(Timestamp)
 mCurrentBarNumber = mCurrentBarNumber + 1
 If isFirstBarInSession Then mFirstSessionBarNumber = mCurrentBarNumber
 RaiseEvent BarAdded(add)
 End Function
 
 Friend Function addHistoric( _
-                            ByVal timestamp As Date, _
+                            ByVal Timestamp As Date, _
                             ByVal barType As TradeBuild.BarTypes, _
                             ByVal barLength As Long, _
                             ByVal openValue As Double, _
@@ -342,7 +342,7 @@ Set addHistoric = New Bar
 With addHistoric
     .barType = barType
     .barLength = barLength
-    .datetime = timestamp
+    .datetime = Timestamp
     .openValue = openValue
     .highValue = highValue
     .lowValue = lowValue
@@ -351,7 +351,7 @@ With addHistoric
     .TickVolume = TickVolume
     .openInterest = openInterest
 End With
-mBars.add addHistoric, CalcBarKey(timestamp)
+mBars.add addHistoric, CalcBarKey(Timestamp)
 mCurrentBarNumber = mCurrentBarNumber + 1
 If isFirstBarInSession Then mFirstSessionBarNumber = mCurrentBarNumber
 RaiseEvent HistoricBarAdded(addHistoric)
@@ -367,7 +367,12 @@ End If
 End Function
 
 Public Sub Remove(index As Variant)
-mBars.Remove index
+If VarType(index) = vbDate Then
+        mBars.Remove CalcBarKey(CDate(index))
+Else
+    mBars.Remove index
+End If
+mCurrentBarNumber = mCurrentBarNumber - 1
 End Sub
 
 Public Function NewEnum() As IUnknown
