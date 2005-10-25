@@ -512,7 +512,6 @@ If mTicker Is Nothing Or mReader Is Nothing Then
             "TradeBuild.TickfileManager::SkipTickfile", _
             "Tickfile is not replaying"
 End If
-mReader.stopReplay
 FinishTickfile
 StartNextTickfile
 End Sub
