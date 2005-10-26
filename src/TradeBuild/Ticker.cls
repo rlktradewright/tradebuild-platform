@@ -212,6 +212,7 @@ Private mClock                      As clock
 Private mPrevBid                    As Double
 Private mPrevAsk                    As Double
 Private mPrevTrade                  As Double
+Private mPrevTradeSize              As Long
 Private mAccumulatedVolume          As Long
 Private mVolumeCorrectionIncrement  As Long
 Private mNoVolumeAdjustments        As Boolean
@@ -495,6 +496,7 @@ notifyTrade timestamp, price, size
 If mWriteToTickFile Then mWriter.writeTrade timestamp, price, size
 
 mPrevTrade = price
+mPrevTradeSize = size
                             
 End Sub
 
@@ -620,7 +622,9 @@ ElseIf size + mVolumeCorrectionIncrement < mAccumulatedVolume Then
     End If
 
 ElseIf size + mVolumeCorrectionIncrement > mAccumulatedVolume Then
-    If mNoImpliedTrades Then
+    If mNoImpliedTrades Or _
+        (size + mVolumeCorrectionIncrement - mAccumulatedVolume) <> mPrevTradeSize _
+    Then
         mAccumulatedVolume = size + mVolumeCorrectionIncrement
         notifyVolume timestamp, mAccumulatedVolume
     Else
