@@ -296,9 +296,9 @@ End Property
 ' Methods
 '================================================================================
 
-Public Function addLine() As ChartSkil.Line
-Set addLine = New ChartSkil.Line
-With addLine
+Friend Function add(Optional ByVal key As String) As ChartSkil.Line
+Set add = New ChartSkil.Line
+With add
     .eventProxy = mEventProxy
     .canvas = mCanvas
     .arrowEndColor = mArrowEndColor
@@ -324,8 +324,16 @@ With addLine
     .includeInAutoscale = mIncludeInAutoscale
     .layer = mLayer
 End With
-mLines.Add addLine
-mEventProxy.addGraphicObject addLine
+If key <> "" Then
+    mLines.add add, key
+Else
+    mLines.add add
+End If
+mEventProxy.addGraphicObject add
+End Function
+
+Public Function addLine() As ChartSkil.Line
+Set addLine = add
 End Function
 
 Friend Sub finish()
@@ -335,6 +343,10 @@ End Sub
 Public Function Item(ByVal index As Long) As ChartSkil.Line
 Attribute Item.VB_UserMemId = 0
 Set Item = mLines(index)
+End Function
+
+Friend Function ItemByKey(ByVal key As String) As ChartSkil.Line
+Set ItemByKey = mLines(key)
 End Function
 
 Public Function NewEnum() As IUnknown

@@ -1221,7 +1221,7 @@ End Property
 
 Public Function addBarSeries(Optional ByVal layer As Long = -1) As BarSeries
 Set addBarSeries = New BarSeries
-mBarSeriesCol.Add addBarSeries
+mBarSeriesCol.add addBarSeries
 addBarSeries.canvas = mCanvas
 addBarSeries.candleWidth = barCandleWidth
 addBarSeries.displayAsCandlestick = barDisplayAsCandlestick
@@ -1238,7 +1238,7 @@ End Function
 
 Public Function addDataPointSeries(Optional ByVal layer As Long = -1) As DataPointSeries
 Set addDataPointSeries = New DataPointSeries
-mDataPointSeriesCol.Add addDataPointSeries
+mDataPointSeriesCol.add addDataPointSeries
 addDataPointSeries.canvas = mCanvas
 addDataPointSeries.eventProxy = mEventProxy
 addDataPointSeries.displayMode = dataPointDisplayMode
@@ -1260,7 +1260,7 @@ End Function
 
 Public Function addLineSeries(Optional ByVal layer As Long = -1) As LineSeries
 Set addLineSeries = New LineSeries
-mLineSeriesCol.Add addLineSeries
+mLineSeriesCol.add addLineSeries
 With addLineSeries
     .canvas = mCanvas
     .eventProxy = mEventProxy
@@ -1305,7 +1305,7 @@ End Function
 
 Public Function addTextSeries(Optional ByVal layer As Long = -1) As TextSeries
 Set addTextSeries = New TextSeries
-mTextSeriesCol.Add addTextSeries
+mTextSeriesCol.add addTextSeries
 addTextSeries.canvas = mCanvas
 addTextSeries.eventProxy = mEventProxy
 addTextSeries.align = textAlign
@@ -1759,31 +1759,41 @@ End With
 End Sub
 
 Private Sub addVerticalGridLine(ByVal periodNumber As Long, _
-                                ByVal timestamp As Date)
+                                ByVal key As String)
 Dim vGridLine As ChartSkil.Line
 Dim vGridText As text
 
 If mShowGrid Then
-    Set vGridLine = mXGridLines.addLine
-    vGridLine.point1 = newPoint(periodNumber, _
-                                0, _
-                                CoordsLogical, _
-                                CoordsRelative)
-    vGridLine.point2 = newPoint(periodNumber, _
-                                100, _
-                                CoordsLogical, _
-                                CoordsRelative)
+    On Error Resume Next
+    Set vGridLine = mXGridLines.ItemByKey(key)
+    On Error GoTo 0
+    If vGridLine Is Nothing Then
+        Set vGridLine = mXGridLines.add(key)
+        vGridLine.point1 = newPoint(periodNumber, _
+                                    0, _
+                                    CoordsLogical, _
+                                    CoordsRelative)
+        vGridLine.point2 = newPoint(periodNumber, _
+                                    100, _
+                                    CoordsLogical, _
+                                    CoordsRelative)
+    End If
 End If
 
 If mShowGridText Then
-    Set vGridText = mXGridTexts.addText
-    vGridText.fixedX = False
-    vGridText.fixedY = True
-    vGridText.position = newPoint(periodNumber, _
-                                0#, _
-                                CoordsLogical, _
-                                CoordsDistance)
-    vGridText.text = Format(timestamp, "hh:mm")
+    On Error Resume Next
+    Set vGridText = mXGridTexts.ItemByKey(key)
+    On Error GoTo 0
+    If vGridText Is Nothing Then
+        Set vGridText = mXGridTexts.add(key)
+        vGridText.fixedX = False
+        vGridText.fixedY = True
+        vGridText.position = newPoint(periodNumber, _
+                                    0#, _
+                                    CoordsLogical, _
+                                    CoordsDistance)
+        vGridText.text = key
+    End If
 End If
 
 End Sub
@@ -2511,19 +2521,21 @@ Case 30
     vertGridIntervalMins = 120
 Case 60
     vertGridIntervalMins = 360
+Case 1440   ' daily chart
+    addVerticalGridLine periodNumber, Format(timestamp, "Mmm yy")
+    Exit Sub
 Case Else
     ' in all other cases just draw a vertical gridline every 10 bars
     If periodNumber Mod 10 = 0 Then
-        addVerticalGridLine periodNumber, timestamp
+        addVerticalGridLine periodNumber, FormatDateTime(timestamp, vbShortTime)
     End If
     Exit Sub
 End Select
 
 sessionOffsetMins = calculateMinutesFromMidnight(mSessionStartTime) Mod 60
 mins = calculateMinutesFromMidnight(timestamp)
-If (mins - sessionOffsetMins) Mod vertGridIntervalMins = 0 Then
-    addVerticalGridLine periodNumber, timestamp
-End If
+addVerticalGridLine periodNumber, _
+    FormatDateTime(((Int((mins - sessionOffsetMins) / vertGridIntervalMins) * vertGridIntervalMins) + sessionOffsetMins) / 1440, vbShortTime)
 
 End Sub
 

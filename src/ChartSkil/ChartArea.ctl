@@ -755,7 +755,7 @@ mCurrentPeriodNumber = mCurrentPeriodNumber + 1
 addPeriod.periodNumber = mCurrentPeriodNumber
 addPeriod.timestamp = timestamp
 addPeriod.backColor = mBackColour
-mPeriods.Add addPeriod, CStr(addPeriod.periodNumber)
+mPeriods.add addPeriod, CStr(addPeriod.periodNumber)
 
 For i = 0 To mRegionsIndex
     Set region = mRegions(i).region
@@ -844,7 +844,13 @@ mXCursorText.position = mXAxisRegion.newPoint( _
                             0, _
                             CoordsLogical, _
                             CoordsCounterDistance)
-mXCursorText.text = Format(thisPeriod.timestamp, "dd/mm hh:nn")
+If mPeriodLengthMinutes < 1440 Then
+    mXCursorText.text = FormatDateTime(thisPeriod.timestamp, vbShortDate) & _
+                        " " & _
+                        FormatDateTime(thisPeriod.timestamp, vbShortTime)
+Else
+    mXCursorText.text = FormatDateTime(thisPeriod.timestamp, vbShortDate)
+End If
 mXAxisRegion.suppressDrawing = False
 
 End Sub

@@ -239,28 +239,36 @@ End Property
 ' Methods
 '================================================================================
 
+Friend Function add(Optional ByVal key As String) As text
+Set add = New text
+add.canvas = mCanvas
+add.align = mAlign
+add.box = mBox
+add.boxColor = mBoxColour
+add.boxFillColor = mBoxFillColour
+add.boxFillStyle = mBoxFillStyle
+add.boxStyle = mBoxStyle
+add.boxThickness = mBoxThickness
+add.color = mColour
+add.eventProxy = mEventProxy
+add.fixedX = mFixedX
+add.fixedY = mFixedY
+add.font = mFont
+add.includeInAutoscale = mIncludeInAutoscale
+add.keepInView = mKeepInView
+add.layer = mLayer
+add.paddingX = mPaddingX
+add.paddingY = mPaddingY
+If key <> "" Then
+    mTexts.add add, key
+Else
+    mTexts.add add
+End If
+mEventProxy.addGraphicObject add
+End Function
+
 Public Function addText() As text
-Set addText = New text
-addText.canvas = mCanvas
-addText.align = mAlign
-addText.box = mBox
-addText.boxColor = mBoxColour
-addText.boxFillColor = mBoxFillColour
-addText.boxFillStyle = mBoxFillStyle
-addText.boxStyle = mBoxStyle
-addText.boxThickness = mBoxThickness
-addText.color = mColour
-addText.eventProxy = mEventProxy
-addText.fixedX = mFixedX
-addText.fixedY = mFixedY
-addText.font = mFont
-addText.includeInAutoscale = mIncludeInAutoscale
-addText.keepInView = mKeepInView
-addText.layer = mLayer
-addText.paddingX = mPaddingX
-addText.paddingY = mPaddingY
-mTexts.Add addText
-mEventProxy.addGraphicObject addText
+Set addText = add
 End Function
 
 Friend Sub finish()
@@ -270,6 +278,10 @@ End Sub
 Public Function Item(ByVal index As Long) As text
 Attribute Item.VB_UserMemId = 0
 Set Item = mTexts(index)
+End Function
+
+Friend Function ItemByKey(ByVal key As String) As text
+Set ItemByKey = mTexts(key)
 End Function
 
 Public Function NewEnum() As IUnknown
