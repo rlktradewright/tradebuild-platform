@@ -124,9 +124,9 @@ End Sub
 '================================================================================
 
 Private Function IContract_BarStartTime( _
-                ByVal Timestamp As Date, _
+                ByVal timestamp As Date, _
                 ByVal barLength As Long) As Date
-IContract_BarStartTime = BarStartTime(Timestamp, barLength)
+IContract_BarStartTime = BarStartTime(timestamp, barLength)
 End Function
 
 Private Function IContract_Clone() As TradeBuildsp.IContract
@@ -177,12 +177,12 @@ Private Sub IContract_FromXML(ByVal contractXML As String)
 FromXML contractXML
 End Sub
 
-Private Sub IContract_GetSessionTimes(ByVal Timestamp As Date, sessionStartTime As Date, sessionEndTime As Date)
-GetSessionTimes Timestamp, sessionStartTime, sessionEndTime
+Private Sub IContract_GetSessionTimes(ByVal timestamp As Date, sessionStartTime As Date, sessionEndTime As Date)
+GetSessionTimes timestamp, sessionStartTime, sessionEndTime
 End Sub
 
-Private Function IContract_IsTimeInSession(ByVal Timestamp As Date) As Boolean
-IContract_IsTimeInSession = isTimeInSession(Timestamp)
+Private Function IContract_IsTimeInSession(ByVal timestamp As Date) As Boolean
+IContract_IsTimeInSession = isTimeInSession(timestamp)
 End Function
 
 Private Property Get IContract_Key() As String
@@ -331,8 +331,8 @@ Private Property Get IContract_SessionStartTime() As Date
 IContract_SessionStartTime = sessionStartTime
 End Property
 
-Private Sub IContract_SetSession(ByVal Timestamp As Date)
-setSession Timestamp
+Private Sub IContract_SetSession(ByVal timestamp As Date)
+setSession timestamp
 End Sub
 
 Private Property Let IContract_Specifier(ByVal RHS As TradeBuildsp.IContractSpecifier)
@@ -539,7 +539,7 @@ End Property
 '================================================================================
 
 Public Function BarStartTime( _
-                            ByVal Timestamp As Date, _
+                            ByVal timestamp As Date, _
                             ByVal barLength As Long) As Date
 Dim offset As Long
 Dim theDate As Long
@@ -547,10 +547,10 @@ Dim theTime As Double
 Dim theTimeMins As Long
 
 offset = DatePart("n", mSessionStartTime)
-theDate = Fix(CDbl(Timestamp))
+theDate = Fix(CDbl(timestamp))
 ' NB: don't use TimeValue to get the time, as VB rounds it to
 ' the nearest second
-theTime = CDbl(Timestamp) - theDate
+theTime = CDbl(timestamp + OneMicroSecond) - theDate
 theTimeMins = Fix(theTime * 1440) ' minutes since midnight
 BarStartTime = theDate + _
             (barLength * Fix((theTimeMins - offset) / barLength) + _
@@ -666,16 +666,16 @@ Next
 End Sub
 
 Public Sub GetSessionTimes( _
-                            ByVal Timestamp As Date, _
+                            ByVal timestamp As Date, _
                             ByRef sessionStartTime As Date, _
                             ByRef sessionEndTime As Date)
-CalcSessionTimes Timestamp, sessionStartTime, sessionEndTime
+CalcSessionTimes timestamp, sessionStartTime, sessionEndTime
 End Sub
 
-Public Function isTimeInSession(ByVal Timestamp As Date) As Boolean
+Public Function isTimeInSession(ByVal timestamp As Date) As Boolean
 
-If Timestamp >= mCurrentSessionStartTime And _
-    Timestamp < mCurrentSessionEndTime _
+If timestamp >= mCurrentSessionStartTime And _
+    timestamp < mCurrentSessionEndTime _
 Then
     isTimeInSession = True
 End If
@@ -693,12 +693,12 @@ Set newOrder = lOrder.clone   ' return a copy of the order to the app
 End Function
 
 Friend Sub setSession( _
-                ByVal Timestamp As Date)
-If Timestamp >= mCurrentSessionEndTime Or _
-    Timestamp < mReferenceTime _
+                ByVal timestamp As Date)
+If timestamp >= mCurrentSessionEndTime Or _
+    timestamp < mReferenceTime _
 Then
-    mReferenceTime = Timestamp
-    CalcSessionTimes Timestamp, mCurrentSessionStartTime, mCurrentSessionEndTime
+    mReferenceTime = timestamp
+    CalcSessionTimes timestamp, mCurrentSessionStartTime, mCurrentSessionEndTime
 End If
 End Sub
 
@@ -817,14 +817,14 @@ End Function
 ' Helper Functions
 '================================================================================
 
-Friend Sub CalcSessionTimes(ByVal Timestamp As Date, _
+Friend Sub CalcSessionTimes(ByVal timestamp As Date, _
                             ByRef sessionStartTime As Date, _
                             ByRef sessionEndTime As Date)
 Dim referenceDate As Date
 Dim referenceTime As Date
 
-referenceDate = DateValue(Timestamp)
-referenceTime = TimeValue(Timestamp)
+referenceDate = DateValue(timestamp)
+referenceTime = TimeValue(timestamp)
 
 If mSessionStartTime < mSessionEndTime Then
     ' session doesn't span midnight

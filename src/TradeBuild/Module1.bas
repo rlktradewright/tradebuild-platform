@@ -13,6 +13,7 @@ Public Const MinDouble As Double = 4.94065645841247E-324
 Public Const MaxDouble As Double = 1.79769313486231E+308
 
 Public Const OneSecond As Double = 1.15740740740741E-05
+Public Const OneMicroSecond As Double = 1.15740740740741E-11
 
 '================================================================================
 ' Enums
