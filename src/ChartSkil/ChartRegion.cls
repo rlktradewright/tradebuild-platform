@@ -134,8 +134,11 @@ Private mXGridTexts As TextSeries
 Private mXGridLines As LineSeries
 Private mShowGridText As Boolean
 
-Private mSessionStartTime As Date
+Private mSessionOffsetMinutes As Date
 Private mPeriodLengthMinutes As Long
+
+Private mVerticalGridSpacing As Long
+Private mVerticalGridUnits As TimeUnits
 
 Private mAutoscale As Boolean
 Private mMinimumHeight As Single
@@ -932,7 +935,7 @@ End Property
 'End Property
 
 Friend Property Let sessionStartTime(ByVal val As Date)
-mSessionStartTime = val
+mSessionOffsetMinutes = calculateMinutesFromMidnight(val) Mod 60
 End Property
 
 '/**
@@ -1172,6 +1175,14 @@ End Property
 
 Public Property Get scaleGridSpacingY() As Single
 scaleGridSpacingY = mScaleGridSpacingY
+End Property
+
+Friend Property Let verticalGridSpacing(ByVal value As Long)
+mVerticalGridSpacing = value
+End Property
+
+Friend Property Let verticalGridUnits(ByVal value As TimeUnits)
+mVerticalGridUnits = value
 End Property
 
 Public Property Get YAxisPosition() As Long
@@ -1769,11 +1780,11 @@ If mShowGrid Then
     On Error GoTo 0
     If vGridLine Is Nothing Then
         Set vGridLine = mXGridLines.add(key)
-        vGridLine.point1 = newPoint(periodNumber, _
+        vGridLine.point1 = newPoint(periodNumber - 0.5, _
                                     0, _
                                     CoordsLogical, _
                                     CoordsRelative)
-        vGridLine.point2 = newPoint(periodNumber, _
+        vGridLine.point2 = newPoint(periodNumber - 0.5, _
                                     100, _
                                     CoordsLogical, _
                                     CoordsRelative)
@@ -1788,7 +1799,7 @@ If mShowGridText Then
         Set vGridText = mXGridTexts.add(key)
         vGridText.fixedX = False
         vGridText.fixedY = True
-        vGridText.position = newPoint(periodNumber, _
+        vGridText.position = newPoint(periodNumber - 0.5, _
                                     0#, _
                                     CoordsLogical, _
                                     CoordsDistance)
@@ -2354,7 +2365,9 @@ With mGraphicObjects(index)
     If Not .boundingRect.isValid Or .noDraw Then Exit Function
     If .extendedObject And (.capabilities And capabilities.ComplexBounding) Then
         overlapXInterval = intIntersection(rectGetXInterval(mCanvas.boundary), rectGetXInterval(.boundingRect))
-        For i = Int(overlapXInterval.startValue + 0.99999) To _
+'        For i = Int(overlapXInterval.startValue + 0.99999) To _
+'                Int(overlapXInterval.endValue + 0.99999)
+        For i = Int(overlapXInterval.startValue) To _
                 Int(overlapXInterval.endValue)
             boundingRects = .graphObj.boundingRectanglesAt(i)
             numrects = -1
@@ -2502,41 +2515,63 @@ Private Sub setVerticalGridLine(ByVal timestamp As Date, _
                             ByVal periodNumber As Long)
 Dim vertGridIntervalMins As Long
 Dim mins As Long
-Dim sessionOffsetMins As Long
 
-Select Case mPeriodLengthMinutes
-Case 1
-    vertGridIntervalMins = 15
-Case 2
-    vertGridIntervalMins = 30
-Case 3
-    vertGridIntervalMins = 30
-Case 5
-    vertGridIntervalMins = 60
-Case 10
-    vertGridIntervalMins = 60
-Case 15
-    vertGridIntervalMins = 60
-Case 30
-    vertGridIntervalMins = 120
-Case 60
-    vertGridIntervalMins = 360
-Case 1440   ' daily chart
-    addVerticalGridLine periodNumber, Format(timestamp, "Mmm yy")
-    Exit Sub
-Case Else
-    ' in all other cases just draw a vertical gridline every 10 bars
-    If periodNumber Mod 10 = 0 Then
-        addVerticalGridLine periodNumber, FormatDateTime(timestamp, vbShortTime)
-    End If
-    Exit Sub
-End Select
+If mVerticalGridSpacing = 0 Then
+    Select Case mPeriodLengthMinutes
+    Case 1
+        vertGridIntervalMins = 15
+    Case 2
+        vertGridIntervalMins = 30
+    Case 3
+        vertGridIntervalMins = 30
+    Case 5
+        vertGridIntervalMins = 60
+    Case 10
+        vertGridIntervalMins = 60
+    Case 15
+        vertGridIntervalMins = 60
+    Case 30
+        vertGridIntervalMins = 120
+    Case 60
+        vertGridIntervalMins = 360
+    Case 1440   ' daily chart
+        addVerticalGridLine periodNumber, Format(timestamp, "Mmm yy")
+        Exit Sub
+    Case Else
+        ' in all other cases just draw a vertical gridline every 10 bars
+        If periodNumber Mod 10 = 0 Then
+            addVerticalGridLine periodNumber, FormatDateTime(timestamp, vbShortTime)
+        End If
+        Exit Sub
+    End Select
+    
+    mins = calculateMinutesFromMidnight(timestamp)
+    addVerticalGridLine periodNumber, _
+        FormatDateTime(((Int((mins - mSessionOffsetMinutes) / vertGridIntervalMins) * vertGridIntervalMins) + mSessionOffsetMinutes) / 1440, vbShortTime)
+Else
+    Select Case mVerticalGridUnits
+    Case TimeSecond
+        addVerticalGridLine periodNumber, _
+            FormatDateTime(((Int((timestamp - mSessionOffsetMinutes / 1440) / mVerticalGridSpacing) * mVerticalGridSpacing) + mSessionOffsetMinutes / 1440), vbLongTime)
+    Case TimeMinute
+        mins = calculateMinutesFromMidnight(timestamp)
+        addVerticalGridLine periodNumber, _
+            FormatDateTime(((Int((mins - mSessionOffsetMinutes) / mVerticalGridSpacing) * mVerticalGridSpacing) + mSessionOffsetMinutes) / 1440, vbShortTime)
+    Case TimeHour
+        mins = calculateMinutesFromMidnight(timestamp)
+        addVerticalGridLine periodNumber, _
+            FormatDateTime(((Int((mins - mSessionOffsetMinutes) / (mVerticalGridSpacing * 60)) * mVerticalGridSpacing * 60) + mSessionOffsetMinutes) / 1440, vbShortTime)
+    Case TimeDay
+        addVerticalGridLine periodNumber, Format(DateSerial(Year(timestamp), Month(timestamp), Int(DatePart("d", timestamp) / mVerticalGridSpacing) * mVerticalGridSpacing), "Mmm d")
+    Case TimeWeek
 
-sessionOffsetMins = calculateMinutesFromMidnight(mSessionStartTime) Mod 60
-mins = calculateMinutesFromMidnight(timestamp)
-addVerticalGridLine periodNumber, _
-    FormatDateTime(((Int((mins - sessionOffsetMins) / vertGridIntervalMins) * vertGridIntervalMins) + sessionOffsetMins) / 1440, vbShortTime)
+    Case TimeMonth
 
+    Case TimeYear
+
+    End Select
+    
+End If
 End Sub
 
 Private Sub undrawCrosshairs()

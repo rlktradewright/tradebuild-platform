@@ -127,6 +127,9 @@ Private mYAxisWidthCm As Single
 Private mSessionStartTime As Date
 Private mPeriodLengthMinutes As Long
 
+Private mVerticalGridSpacing As Long
+Private mVerticalGridUnits As TimeUnits
+
 Private mBackColour As Long
 Private mGridColour As Long
 Private mShowGrid As Boolean
@@ -236,6 +239,16 @@ Enum TextAlignModes
     AlignTopRight
     AlignCentreRight
     AlignBottomRight
+End Enum
+
+Enum TimeUnits
+    TimeSecond
+    TimeMinute
+    TimeHour
+    TimeDay
+    TimeWeek
+    TimeMonth
+    TimeYear
 End Enum
 
 Enum ToolTypes
@@ -584,6 +597,10 @@ sessionStartTime = mSessionStartTime
 End Property
 
 Public Property Let sessionStartTime(ByVal val As Date)
+If CDbl(val) >= 1 Then _
+    Err.Raise CommonErrorCodes.InvalidPropertyValue, _
+                "ChartSkil.Chart::(Let)sessionStartTime", _
+                "Value must be a time only"
 mSessionStartTime = val
 End Property
 
@@ -654,6 +671,43 @@ setHorizontalScrollBar
 paintAll
 End Property
 
+Public Property Let verticalGridSpacing(ByVal value As Long)
+If value < 0 Then _
+    Err.Raise CommonErrorCodes.InvalidPropertyValue, _
+                "ChartSkil.Chart::(Let)verticalGridSpacing", _
+                "Value must be >= 0"
+mVerticalGridSpacing = value
+If mXAxisRegion Is Nothing Then createXAxisRegion
+mXAxisRegion.verticalGridSpacing = mVerticalGridSpacing
+End Property
+
+Public Property Get verticalGridSpacing() As Long
+verticalGridSpacing = mVerticalGridSpacing
+End Property
+
+Public Property Let verticalGridUnits(ByVal value As TimeUnits)
+Select Case value
+Case TimeSecond
+Case TimeMinute
+Case TimeHour
+Case TimeDay
+Case TimeWeek
+Case TimeMonth
+Case TimeYear
+Case Else
+    Err.Raise CommonErrorCodes.InvalidPropertyValue, _
+                "ChartSkil.Chart::(Let)verticalGridUnits", _
+                "Value must be a member of the TimeUnits enum"
+End Select
+mVerticalGridUnits = value
+If mXAxisRegion Is Nothing Then createXAxisRegion
+mXAxisRegion.verticalGridUnits = mVerticalGridUnits
+End Property
+
+Public Property Get verticalGridUnits() As TimeUnits
+verticalGridUnits = mVerticalGridUnits
+End Property
+
 Public Property Get YAxisPosition() As Long
 YAxisPosition = mYAxisPosition
 End Property
@@ -709,6 +763,8 @@ addChartRegion.showGrid = mShowGrid
 addChartRegion.periodsInView mScaleLeft, mYAxisPosition - 1
 addChartRegion.autoscale = mAutoscale
 addChartRegion.periodLengthMinutes = mPeriodLengthMinutes
+addChartRegion.verticalGridUnits = mVerticalGridUnits
+addChartRegion.verticalGridSpacing = mVerticalGridSpacing
 addChartRegion.sessionStartTime = mSessionStartTime
 
 If mRegionsIndex = UBound(mRegions) Then
@@ -800,6 +856,8 @@ Dim aFont As StdFont
 Set mXAxisRegion = New ChartRegion
 mXAxisRegion.surface = XAxisPicture
 mXAxisRegion.periodLengthMinutes = mPeriodLengthMinutes
+mXAxisRegion.verticalGridSpacing = mVerticalGridSpacing
+mXAxisRegion.verticalGridUnits = mVerticalGridUnits
 mXAxisRegion.pointerStyle = PointerNone
 mXAxisRegion.regionBackColor = mBackColour
 mXAxisRegion.regionBottom = 0
@@ -828,6 +886,8 @@ Dim periodNumber As Long
 Dim prevPeriodNumber As Long
 Dim prevPeriod As Period
 
+If mXAxisRegion Is Nothing Then createXAxisRegion
+
 If Round(x) >= mYAxisPosition Then Exit Sub
 If mPeriods.count = 0 Then Exit Sub
 
@@ -835,15 +895,18 @@ On Error Resume Next
 periodNumber = Round(x)
 Set thisPeriod = mPeriods(periodNumber)
 On Error GoTo 0
-If thisPeriod Is Nothing Then Exit Sub
+If thisPeriod Is Nothing Then
+    mXCursorText.text = ""
+    Exit Sub
+End If
 
-If mXAxisRegion Is Nothing Then createXAxisRegion
 mXAxisRegion.suppressDrawing = True
 mXCursorText.position = mXAxisRegion.newPoint( _
                             periodNumber, _
                             0, _
                             CoordsLogical, _
                             CoordsCounterDistance)
+
 If mPeriodLengthMinutes < 1440 Then
     mXCursorText.text = FormatDateTime(thisPeriod.timestamp, vbShortDate) & _
                         " " & _
@@ -864,6 +927,7 @@ mRegionsIndex = -1
 
 Set mPeriods = New Collection
 mPeriodLengthMinutes = 5
+mVerticalGridUnits = TimeHour
 
 mBackColour = vbWhite
 mGridColour = &HC0C0C0
