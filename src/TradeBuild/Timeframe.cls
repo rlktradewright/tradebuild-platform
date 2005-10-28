@@ -51,7 +51,7 @@ Event CurrentTickVolumeChanged(ByVal currentBar As TradeBuild.Bar)
 Event CurrentVolumeChanged(ByVal currentBar As TradeBuild.Bar)
 
 Event errorMessage( _
-                ByVal Timestamp As Date, _
+                ByVal timestamp As Date, _
                 ByVal errorCode As ApiErrorCodes, _
                 ByVal errorMsg As String)
 
@@ -99,7 +99,7 @@ Attribute mAskBar.VB_VarHelpID = -1
 Private WithEvents mBidBar As Bar
 Attribute mBidBar.VB_VarHelpID = -1
 
-Private mContract As TradeBuild.Contract
+Private mContract As TradeBuild.contract
 
 Private mCurrentBarListeners As Collection
 
@@ -179,7 +179,7 @@ Private Sub IBarDataInputServiceConsumer_Error(ByVal errorCode As TradeBuildSP.S
 
 End Sub
 
-Private Sub IBarDataInputServiceConsumer_Progress(ByVal Timestamp As Date, ByVal eventsPlayed As Long, ByVal percentComplete As Single)
+Private Sub IBarDataInputServiceConsumer_Progress(ByVal timestamp As Date, ByVal eventsPlayed As Long, ByVal percentComplete As Single)
 
 End Sub
 
@@ -233,14 +233,14 @@ End Sub
 Private Sub QuoteListener_ask(ev As QuoteEvent)
 If Not isQuoteToBeProcessed Then Exit Sub
 If mIncludeBidAndAsk Then
-    mAskBar.Tick ev.Price
+    mAskBar.Tick ev.price
 End If
 End Sub
 
 Private Sub QuoteListener_bid(ev As QuoteEvent)
 If Not isQuoteToBeProcessed Then Exit Sub
 If mIncludeBidAndAsk Then
-    mBidBar.Tick ev.Price
+    mBidBar.Tick ev.price
 End If
 End Sub
 
@@ -262,7 +262,7 @@ End Sub
 
 Private Sub QuoteListener_trade(ev As QuoteEvent)
 If Not isQuoteToBeProcessed Then Exit Sub
-mTradeBar.Tick ev.Price
+mTradeBar.Tick ev.price
 mTradeBar.TickSize ev.Size
 If mFirstTradeSize = 0 Then mFirstTradeSize = ev.Size
 End Sub
@@ -405,13 +405,9 @@ Public Property Get BidBars() As Bars
 Set BidBars = mBidBars
 End Property
 
-Friend Property Let Contract(ByVal value As Contract)
+Friend Property Let contract(ByVal value As contract)
 Dim barSpecifier As TradeBuildSP.BarDataSpecifier
 Set mContract = value
-
-If Not mTradeBars Is Nothing Then mTradeBars.Contract = value
-If Not mAskBars Is Nothing Then mAskBars.Contract = value
-If Not mBidBars Is Nothing Then mBidBars.Contract = value
 
 If mSaveIntervalSeconds >= 0 Then
     Set mBarWriter = gServiceProviders.CreateHistoricalDataWriter(Me, _
@@ -433,10 +429,10 @@ If mNumberOfBarsToFetch <> 0 Then
     Set barSpecifier.contractSpecifier = mContract.specifier
     barSpecifier.From = CDate("1 Jan 1970")
     If mExcludeCurrentBar Then
-        barSpecifier.To = mTicker.Timestamp
+        barSpecifier.To = mTicker.timestamp
     Else
         ' ensure we get the latest bar
-        barSpecifier.To = mTicker.Timestamp + mBarLengthMinutes / 1440
+        barSpecifier.To = mTicker.timestamp + mBarLengthMinutes / 1440
     End If
     barSpecifier.NumberOfBars = mNumberOfBarsToFetch
     mBarReader.FetchBars barSpecifier
@@ -555,6 +551,10 @@ End Sub
 ' Helper Functions
 '================================================================================
 
+Private Function CalcBarKey(ByVal barTime As Date) As String
+CalcBarKey = Format(barTime, "yyyymmddhhnn")
+End Function
+
 Private Sub CalcTimePeriod()
 Select Case mTimePeriodUnit
 Case Minute
@@ -579,10 +579,10 @@ If mIncludeBidAndAsk Then
 End If
 End Sub
 
-Private Sub CheckNewBar(ByVal Timestamp As Date)
+Private Sub CheckNewBar(ByVal timestamp As Date)
 Dim barTime As Date
 
-barTime = mContract.BarStartTime(Timestamp, mBarLengthMinutes)
+barTime = mContract.BarStartTime(timestamp, mBarLengthMinutes)
 If mTradeBar Is Nothing Then
     'drop through
 ElseIf barTime > mTradeBar.datetime Then
@@ -596,7 +596,7 @@ If Not mTradeBar Is Nothing Then
     mPrevBarVolume = mLatestVolume
     
     If mTradeBar.Blank Then
-        mTradeBars.Remove mTradeBar.datetime
+        mTradeBars.Remove CalcBarKey(mTradeBar.datetime)
     End If
 End If
 
@@ -604,15 +604,15 @@ End If
 ' historical bars have been loaded before the first tick is notified
 Set mTradeBar = Nothing
 On Error Resume Next
-Set mTradeBar = mTradeBars.Item(barTime)
+Set mTradeBar = mTradeBars.Item(CalcBarKey(barTime))
 On Error GoTo 0
 If mTradeBar Is Nothing Then
-    Set mTradeBar = mTradeBars.add(barTime)
+    Set mTradeBar = mTradeBars.add(barTime, CalcBarKey(barTime))
 End If
 If mIncludeBidAndAsk Then
-    Set mAskBar = mAskBars.add(barTime)
+    Set mAskBar = mAskBars.add(barTime, CalcBarKey(barTime))
     mAskBar.datetime = barTime
-    Set mBidBar = mBidBars.add(barTime)
+    Set mBidBar = mBidBars.add(barTime, CalcBarKey(barTime))
     mBidBar.datetime = barTime
 End If
 End Sub
@@ -698,11 +698,11 @@ Next
 End Sub
     
 Private Function isQuoteToBeProcessed() As Boolean
-Dim Timestamp As Date
+Dim timestamp As Date
 If Not mHistoricDataLoaded Then Exit Function
-Timestamp = mTicker.Timestamp
-If Not mContract.isTimeInSession(Timestamp) Then Exit Function
-CheckNewBar Timestamp
+timestamp = mTicker.timestamp
+If Not mContract.isTimeInSession(timestamp) Then Exit Function
+CheckNewBar timestamp
 isQuoteToBeProcessed = True
 End Function
 
@@ -718,7 +718,7 @@ mHistoricBarPending = False
 With mHistoricBar
     ' check whether this bar already exists
     On Error Resume Next
-    Set lBar = mTradeBars.Item(.Timestamp)
+    Set lBar = mTradeBars.Item(CalcBarKey(.timestamp))
     On Error GoTo 0
     
     If Not lBar Is Nothing Then
@@ -728,20 +728,19 @@ With mHistoricBar
         lBar.lowValue = .lowPrice
         lBar.closeValue = .closePrice
         lBar.volume = .volume
-        lBar.TickVolume = .TickVolume
+        lBar.tickVolume = .tickVolume
         lBar.openInterest = .openInterest
     Else
         Set lBar = mTradeBars.addHistoric( _
-                                .Timestamp, _
-                                .barType, _
-                                .PeriodMinutes, _
+                                .timestamp, _
                                 .OpenPrice, _
                                 .highPrice, _
                                 .lowPrice, _
                                 .closePrice, _
                                 .volume, _
-                                .TickVolume, _
-                                .openInterest)
+                                .tickVolume, _
+                                .openInterest, _
+                                CalcBarKey(.timestamp))
     End If
 End With
 End Sub

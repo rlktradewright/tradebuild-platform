@@ -57,7 +57,7 @@ Event VolumeChanged()
 ' Member variables
 '================================================================================
 
-Private mBarType As TradeBuild.BarTypes
+Private mBarType As Long
 Private mBarLength As Long
 Private mOpen As Double
 Private mHigh As Double
@@ -103,11 +103,11 @@ Public Property Let barLength(ByVal value As Long)
 mBarLength = value
 End Property
 
-Public Property Get barType() As TradeBuild.BarTypes
+Public Property Get barType() As Long
 barType = mBarType
 End Property
 
-Public Property Let barType(ByVal value As TradeBuild.BarTypes)
+Public Property Let barType(ByVal value As Long)
 mBarType = value
 End Property
 
@@ -247,8 +247,8 @@ RaiseEvent CloseChanged
 RaiseEvent TickVolumeChanged
 End Sub
 
-Public Sub TickSize(ByVal size As Long)
-volume = volume + size
+Public Sub TickSize(ByVal Size As Long)
+volume = volume + Size
 RaiseEvent VolumeChanged
 End Sub
 
