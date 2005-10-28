@@ -1,4 +1,4 @@
-Attribute VB_Name = "CommonErrorCodes"
+Attribute VB_Name = "mCommonErrorCodes"
 Option Explicit
 
 Public Enum CommonErrorCodes
