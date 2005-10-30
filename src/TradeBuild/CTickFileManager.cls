@@ -274,13 +274,23 @@ End Sub
 ' mContracts Event Handlers
 '================================================================================
 
+Private Sub mContracts_ContractSpecifierInvalid( _
+                ByVal contractSpecifier As contractSpecifier)
+' we have no way to determine uniquely what the contract is
+RaiseEvent errorMessage(Now, _
+                mCurrTickfileIndex, _
+                ApiErrorCodes.ContractSpecifierInvalid, _
+                "Invalid contract details in tickfile: " & _
+                gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex)))
+End Sub
+
 Private Sub mContracts_NoMoreContractDetails()
 If mContracts.Count <> 1 Then
     ' we have no way to determine uniquely what the contract is
     RaiseEvent errorMessage(Now, _
                     mCurrTickfileIndex, _
                     ApiErrorCodes.ContractDetailsInvalid, _
-                    "Invalid contract details in tickfile: " & _
+                    "Contract details not unique in tickfile: " & _
                     gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex)))
 Else
     Set mContract = mContracts(1)
