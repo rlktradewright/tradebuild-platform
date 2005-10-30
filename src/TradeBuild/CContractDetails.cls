@@ -612,10 +612,26 @@ mMarketName = contract.getAttribute("marketname")
 minimumTick = contract.getAttribute("minimumtick")
 mMultiplier = contract.getAttribute("multiplier")
 mTradingClass = contract.getAttribute("tradingclass")
-mSessionStartTime = contract.getAttribute("sessionstarttime")
-mSessionEndTime = contract.getAttribute("sessionendtime")
-mDescription = contract.getAttribute("description")
-mNumberOfDecimals = contract.getAttribute("numberofdecimals")
+If IsNull(contract.getAttribute("sessionstarttime")) Then
+    mSessionStartTime = "00:00:00"
+Else
+    mSessionStartTime = contract.getAttribute("sessionstarttime")
+End If
+If IsNull(contract.getAttribute("sessionendtime")) Then
+    mSessionEndTime = "00:00:00"
+Else
+    mSessionEndTime = contract.getAttribute("sessionendtime")
+End If
+If IsNull(contract.getAttribute("description")) Then
+    mDescription = ""
+Else
+    mDescription = contract.getAttribute("description")
+End If
+If IsNull(contract.getAttribute("numberofdecimals")) Then
+    mNumberOfDecimals = 4
+Else
+    mNumberOfDecimals = contract.getAttribute("numberofdecimals")
+End If
 
 Set specifier = contract.selectSingleNode("specifier")
 Set specifierObj = New contractSpecifier
@@ -627,7 +643,7 @@ With specifierObj
     .expiry = specifier.getAttribute("expiry")
     .localSymbol = specifier.getAttribute("localsymbol")
     .right = specifier.getAttribute("right")
-    .sectype = specifier.getAttribute("sectype")
+    .secType = specifier.getAttribute("sectype")
     .strike = specifier.getAttribute("strike")
     .symbol = specifier.getAttribute("symbol")
     
@@ -774,7 +790,7 @@ contract.setAttribute "numberofdecimals", mNumberOfDecimals
 Set specifier = XMLdoc.createElement("specifier")
 contract.appendChild specifier
 specifier.setAttribute "symbol", mSpecifier.symbol
-specifier.setAttribute "sectype", mSpecifier.sectype
+specifier.setAttribute "sectype", mSpecifier.secType
 specifier.setAttribute "expiry", mSpecifier.expiry
 specifier.setAttribute "exchange", mSpecifier.exchange
 specifier.setAttribute "currencycode", mSpecifier.currencyCode
