@@ -752,7 +752,7 @@ Mid(execId, 18, 6) = ".01.01"
 exec.execId = execId
 exec.orderId = pOrder.id
 exec.permId = pOrder.permId
-exec.Price = fillPrice
+exec.price = fillPrice
 exec.quantity = pOrder.quantity
 exec.side = IIf(pOrder.action = OrderActions.ActionBuy, ExecSides.SideBuy, ExecSides.SideSell)
 exec.time = Format(mMarketTable(pOrder.marketIndex).clock.timestamp, "yyyymmdd hh:nn:ss")
@@ -768,6 +768,7 @@ If lFillSize < 1 Then lFillSize = 1
 If lFillPrice = 0 Then lFillPrice = fillPrice
 
 pOrder.fill lFillSize, lFillPrice
+If pOrder.quantity = 0 Then pOrder.status = OrderStatuses.OrderStatusFilled
 
 RaiseEvent ExecutionDetails(mMarketTable(pOrder.marketIndex).clock.timestamp, _
                         pOrder.id, _
@@ -780,7 +781,7 @@ RaiseEvent openOrder(mMarketTable(pOrder.marketIndex).clock.timestamp, _
                     
 RaiseEvent orderStatus(mMarketTable(pOrder.marketIndex).clock.timestamp, _
                         pOrder.id, _
-                        OrderStatuses.OrderStatusFilled, _
+                        pOrder.status, _
                         pOrder.quantityFilled, _
                         pOrder.quantity, _
                         pOrder.averagePrice, _
