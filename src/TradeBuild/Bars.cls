@@ -74,6 +74,10 @@ Set mBars = New Collection
 mBarLength = 1
 End Sub
 
+Private Sub Class_Terminate()
+Debug.Print "Bars terminated"
+End Sub
+
 '================================================================================
 ' XXXX Interface Members
 '================================================================================

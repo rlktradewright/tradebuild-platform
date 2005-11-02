@@ -63,6 +63,11 @@ Private mContract As TradeBuild.Contract
 Private Sub Class_Initialize()
 Set mTimeframes = New Collection
 End Sub
+
+Private Sub Class_Terminate()
+Debug.Print "Timeframes terminated"
+End Sub
+
 '================================================================================
 ' XXXX Interface Members
 '================================================================================
