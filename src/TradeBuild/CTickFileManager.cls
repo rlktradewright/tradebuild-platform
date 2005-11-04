@@ -61,6 +61,10 @@ Event ReplayProgress( _
 Event TickerAllocated( _
                 ByVal pTicker As Ticker)
 
+Event TickfileCompleted( _
+                ByVal tickfileIndex As Long, _
+                ByVal tickfileName As String)
+
 Event TickfilesSelected()
 
 '================================================================================
@@ -252,6 +256,8 @@ Set mContracts = gServiceProviders.RequestContract(contractSpec)
 End Sub
 
 Private Sub ITickfileInputServiceConsumer_TickfileReplayComplete()
+RaiseEvent TickfileCompleted(mCurrTickfileIndex, _
+                            mTickfileSpecifiers(mCurrTickfileIndex).filename)
 FinishTickfile
 StartNextTickfile
 End Sub
