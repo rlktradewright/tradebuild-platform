@@ -212,7 +212,7 @@ highValue = getTargetBar(ref).highValue
 End Property
 
 Public Property Get inside(Optional ByVal ref As Integer) As Variant
-inside = (highValue(ref - 1) <= highValue(ref)) And (lowValue(ref - 1) >= lowValue(ref))
+inside = (highValue(ref) <= highValue(ref - 1)) And (lowValue(ref) >= lowValue(ref - 1))
 End Property
 
 'Public Property Get isFirstBarInSession(Optional ByVal ref As Integer) As Variant
@@ -305,7 +305,7 @@ openValue = getTargetBar(ref).openValue
 End Property
 
 Public Property Get outside(Optional ByVal ref As Integer) As Boolean
-inside = (highValue(ref - 1) > highValue(ref)) And (lowValue(ref - 1) < lowValue(ref))
+inside = (highValue(ref) > highValue(ref - 1)) And (lowValue(ref) < lowValue(ref - 1))
 End Property
 
 Public Property Get tickVolume(Optional ByVal ref As Integer) As Long
