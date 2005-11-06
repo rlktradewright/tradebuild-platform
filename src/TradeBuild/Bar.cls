@@ -77,7 +77,7 @@ Private mDirty As Boolean
 
 Private Sub Class_Initialize()
 mBlank = True
-mOpen = 0
+mOpen = MinDouble
 mLow = MaxDouble
 mHigh = MinDouble
 mClose = 0
@@ -224,8 +224,8 @@ Dim OpenChanged As Boolean
 Dim HighChanged As Boolean
 Dim LowChanged As Boolean
 
-mBlank = False
-If mOpen = 0 Then
+If mBlank Then
+    mBlank = False
     mOpen = value
     OpenChanged = True
 End If
