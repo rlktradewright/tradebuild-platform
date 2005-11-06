@@ -73,10 +73,10 @@ Private mCandleWidth As Single
 '================================================================================
 
 Private Sub Class_Initialize()
-mOpen = 0
+mOpen = MinusInfinityDouble
 mLow = PlusInfinityDouble
 mHigh = MinusInfinityDouble
-mClose = 0
+mClose = MinusInfinityDouble
 mBlank = True
 
 mBoundingRect.isValid = False
@@ -656,7 +656,10 @@ If Not mBlank Then
     End With
 End If
 
-If mOpen = 0 Then mOpen = Price
+If mBlank Then
+    mBlank = False
+    mOpen = Price
+End If
 If Price > mHigh Then
     mHigh = Price
     mBoundingRect.top = Price
@@ -667,7 +670,6 @@ If Price < mLow Then
 End If
 mBoundingRect.isValid = True
 mClose = Price
-mBlank = False
 
 mEventProxy.objectChanged mHandle, mBoundingRect
 
