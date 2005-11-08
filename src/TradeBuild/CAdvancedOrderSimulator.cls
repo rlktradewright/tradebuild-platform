@@ -721,7 +721,7 @@ Dim execId As String
 Dim dayHex As String
 Dim millisecsHex As String
 Dim millisecs As Long
-Static lastMillisecs As Single
+Static lastMillisecs As Long
 Dim lFillPrice As Double
 Dim lFillSize As Long
 
