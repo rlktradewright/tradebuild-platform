@@ -742,8 +742,8 @@ millisecs = Int(1000 * Timer)
 If millisecs <= lastMillisecs Then
     ' this can happen if more than one order is filled in the same tick
     millisecs = lastMillisecs + 1
-    lastMillisecs = millisecs
 End If
+lastMillisecs = millisecs
 millisecsHex = Hex(millisecs)
 Mid(execId, 9 - Len(dayHex), Len(dayHex)) = dayHex
 Mid(execId, 18 - Len(millisecsHex), Len(millisecsHex)) = millisecsHex
