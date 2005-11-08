@@ -263,17 +263,17 @@ End Sub
 Private Sub QuoteListener_trade(ev As QuoteEvent)
 If Not isQuoteToBeProcessed Then Exit Sub
 mTradeBar.Tick ev.price
-mTradeBar.TickSize ev.Size
-If mFirstTradeSize = 0 Then mFirstTradeSize = ev.Size
+mTradeBar.TickSize ev.size
+If mFirstTradeSize = 0 Then mFirstTradeSize = ev.size
 End Sub
 
 Private Sub QuoteListener_volume(ev As QuoteEvent)
 If Not isQuoteToBeProcessed Then Exit Sub
 If mPrevBarVolume = 0 Then
-    mPrevBarVolume = ev.Size - mFirstTradeSize
+    mPrevBarVolume = ev.size - mFirstTradeSize
 End If
-mTradeBar.volume = ev.Size - mPrevBarVolume
-mLatestVolume = ev.Size
+mTradeBar.volume = ev.size - mPrevBarVolume
+mLatestVolume = ev.size
 End Sub
 
 '================================================================================
@@ -542,7 +542,7 @@ End Sub
 
 Public Sub removeCurrentBarListener(ByVal value As CurrentBarListener)
 Dim i As Long
-For i = 1 To mCurrentBarListeners.Count
+For i = mCurrentBarListeners.Count To 1 Step -1
     If mCurrentBarListeners.Item(i) Is value Then mCurrentBarListeners.Remove i
 Next
 End Sub

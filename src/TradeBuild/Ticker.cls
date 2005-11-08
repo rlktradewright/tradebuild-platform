@@ -1191,28 +1191,28 @@ End Sub
 
 Public Sub removePriceChangeListener(ByVal value As PriceChangeListener)
 Dim i As Long
-For i = 1 To mPriceChangeListeners.Count
+For i = mPriceChangeListeners.Count To 1 Step -1
     If mPriceChangeListeners.Item(i) Is value Then mPriceChangeListeners.Remove i
 Next
 End Sub
 
 Public Sub removeProcessedMarketDepthListener(ByVal value As ProcessedMarketDepthListener)
 Dim i As Long
-For i = 1 To mProcessedMarketDepthListeners.Count
+For i = mProcessedMarketDepthListeners.Count To 1 Step -1
     If mProcessedMarketDepthListeners.Item(i) Is value Then mProcessedMarketDepthListeners.Remove i
 Next
 End Sub
 
 Public Sub removeQuoteListener(ByVal value As QuoteListener)
 Dim i As Long
-For i = 1 To mQuoteListeners.Count
+For i = mQuoteListeners.Count To 1 Step -1
     If mQuoteListeners.Item(i) Is value Then mQuoteListeners.Remove i
 Next
 End Sub
 
 Public Sub removeRawMarketDepthListener(ByVal value As RawMarketDepthListener)
 Dim i As Long
-For i = 1 To mRawMarketDepthListeners.Count
+For i = mRawMarketDepthListeners.Count To 1 Step -1
     If mRawMarketDepthListeners.Item(i) Is value Then mRawMarketDepthListeners.Remove i
 Next
 End Sub
