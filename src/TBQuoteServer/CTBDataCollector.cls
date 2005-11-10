@@ -1,0 +1,314 @@
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+  Persistable = 0  'NotPersistable
+  DataBindingBehavior = 0  'vbNone
+  DataSourceBehavior  = 0  'vbNone
+  MTSTransactionMode  = 0  'NotAnMTSObject
+END
+Attribute VB_Name = "CTBDataCollector"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = True
+Attribute VB_PredeclaredId = False
+Attribute VB_Exposed = True
+Option Explicit
+
+'================================================================================
+' Interfaces
+'================================================================================
+
+'================================================================================
+' Events
+'================================================================================
+
+Event Connected(ByVal timestamp As Date)
+Event connectFailed(ByVal timestamp As Date, _
+                ByVal description As String, _
+                ByVal retrying As Boolean)
+Event ConnectionToIBClosed(ByVal timestamp As Date)
+Event ConnectionToIBRecovered(ByVal timestamp As Date)
+Event connectionToTWSClosed( _
+                ByVal timestamp As Date, _
+                ByVal reconnecting As Boolean)
+Event ErrorMessage( _
+                ByVal timestamp As Date, _
+                ByVal id As Long, _
+                ByVal errorCode As TradeBuild.ApiErrorCodes, _
+                ByVal errorMsg As String)
+Event OutputTickfileCreated( _
+                ByVal timestamp As Date, _
+                ByVal filename As String)
+Event ServiceProviderError( _
+                ByVal timestamp As Date, _
+                ByVal errorCode As Long, _
+                ByVal serviceProviderName As String, _
+                ByVal message As String)
+Event TickerListenerAdded( _
+                ByVal listener As TickerListener)
+                
+'================================================================================
+' Constants
+'================================================================================
+
+'================================================================================
+' Enums
+'================================================================================
+
+'================================================================================
+' Types
+'================================================================================
+
+'================================================================================
+' Member variables
+'================================================================================
+
+Private WithEvents mTradeBuildAPI As TradeBuild.TradeBuildAPI
+Attribute mTradeBuildAPI.VB_VarHelpID = -1
+
+Private mShortNames() As String
+Private mShortnameIndex As Long
+Private mMonth As String
+Private mServer As String
+Private mPort As Long
+Private mClientID As Long
+Private mWriteBars As Boolean
+Private mWriteTicks As Boolean
+
+Private WithEvents mTicker As TradeBuild.Ticker
+Attribute mTicker.VB_VarHelpID = -1
+Private mTickerListener As TickerListener
+
+Private mSupportedOutputFormats() As TradeBuild.TickfileFormatSpecifier
+Private mOutputFormat As String
+Private mOutputPath As String
+
+Private WithEvents mTimer As TimerUtils.IntervalTimer
+Attribute mTimer.VB_VarHelpID = -1
+
+'================================================================================
+' Class Event Handlers
+'================================================================================
+
+Private Sub Class_Initialize()
+
+Set mTradeBuildAPI = New TradeBuild.TradeBuildAPI
+mTradeBuildAPI.ServiceProviders.Add New TBInfoBase.TickfileServiceProvider
+mTradeBuildAPI.ServiceProviders.Add New TBInfoBase.ContractInfoServiceProvider
+mTradeBuildAPI.ServiceProviders.Add New TBInfoBase.HistDataServiceProvider
+mTradeBuildAPI.ServiceProviders.Add New TickfileSP.TickfileServiceProvider
+
+mOutputPath = App.Path
+
+mSupportedOutputFormats = mTradeBuildAPI.SupportedOutputTickfileFormats
+
+End Sub
+
+'================================================================================
+' xxxx Interface Members
+'================================================================================
+
+'================================================================================
+' mTicker Event Handlers
+'================================================================================
+
+Private Sub mTicker_ContractInvalid(ByVal ContractSpecifier As TradeBuild.ContractSpecifier)
+startNextTicker
+End Sub
+
+Private Sub mTicker_Ready(ByVal timestamp As Date, ByVal contract As TradeBuild.contract)
+mTickerListener.contract = mTicker.contract
+RaiseEvent TickerListenerAdded(mTickerListener)
+startNextTicker
+End Sub
+
+Private Sub mTicker_OutputTickfileCreated(ByVal timestamp As Date, ByVal filename As String)
+RaiseEvent OutputTickfileCreated(timestamp, filename)
+End Sub
+
+'================================================================================
+' mTimer Event Handlers
+'================================================================================
+
+Private Sub mTimer_TimerExpired()
+Dim contractSpec As TradeBuild.ContractSpecifier
+Dim failpoint As Integer
+
+On Error GoTo err
+
+failpoint = 100 '=====================================================
+Set contractSpec = mTradeBuildAPI.newContractSpecifier(mShortNames(mShortnameIndex))
+mShortnameIndex = mShortnameIndex + 1
+
+Set mTicker = mTradeBuildAPI.Tickers.Add(GenerateGUIDString)
+
+If mWriteTicks Then
+    mTicker.outputTickfileFormat = mOutputFormat
+    mTicker.outputTickFilePath = mOutputPath
+    mTicker.DOMEventsRequired = DOMNoEvents
+    mTicker.writeToTickfile = True
+End If
+
+If mWriteBars Then
+    mTicker.Timeframes.Add 1, TimePeriodUnits.Minute, "1min", 0, 15
+    mTicker.Timeframes.Add 5, TimePeriodUnits.Minute, "5min", 0, 30
+    mTicker.Timeframes.Add 15, TimePeriodUnits.Minute, "15min", 0, 60
+    mTicker.Timeframes.Add 60, TimePeriodUnits.Minute, "60min", 0, 60
+End If
+
+Set mTickerListener = New TickerListener
+mTicker.addQuoteListener mTickerListener
+
+mTicker.StartTicker contractSpec
+
+Exit Sub
+
+err:
+MsgBox "Error " & err.Number & ":" & vbCrLf & _
+        "Failpoint: " & failpoint & vbCrLf & _
+        err.description & vbCrLf & _
+        err.Source, , "An error has occurred"
+End Sub
+
+'================================================================================
+' mTradeBuildAPI Event Handlers
+'================================================================================
+
+Private Sub mTradeBuildAPI_connected(ByVal timestamp As Date)
+
+RaiseEvent Connected(timestamp)
+
+' setup the tickers using a short timer
+Set mTimer = New TimerUtils.IntervalTimer
+mTimer.RepeatNotifications = False
+mTimer.TimerIntervalMillisecs = 1
+mTimer.StartTimer
+
+End Sub
+
+Private Sub mTradeBuildAPI_connectFailed( _
+                ByVal timestamp As Date, _
+                ByVal description As String, _
+                ByVal retrying As Boolean)
+RaiseEvent connectFailed(timestamp, description, retrying)
+End Sub
+
+Private Sub mTradeBuildAPI_connectionToIBClosed(ByVal timestamp As Date)
+RaiseEvent ConnectionToIBClosed(timestamp)
+End Sub
+
+Private Sub mTradeBuildAPI_connectionToIBRecovered(ByVal timestamp As Date)
+RaiseEvent ConnectionToIBRecovered(timestamp)
+End Sub
+
+Private Sub mTradeBuildAPI_connectionToTWSClosed( _
+                ByVal timestamp As Date, _
+                ByVal reconnecting As Boolean)
+RaiseEvent connectionToTWSClosed(timestamp, reconnecting)
+End Sub
+
+Private Sub mTradeBuildAPI_errorMessage(ByVal timestamp As Date, _
+                                ByVal id As Long, _
+                                ByVal errorCode As TradeBuild.ApiErrorCodes, _
+                                ByVal errorMsg As String)
+Dim spError As ServiceProviderError
+
+If errorCode = ServiceProviderErrorNotification Then
+    Set spError = mTradeBuildAPI.getServiceProviderError
+    With spError
+        RaiseEvent ServiceProviderError(.timestamp, _
+                                        .errorCode, _
+                                        .serviceProviderName, _
+                                        .message)
+    End With
+Else
+    RaiseEvent ErrorMessage(timestamp, _
+                        id, _
+                        errorCode, _
+                        errorMsg)
+End If
+End Sub
+
+'================================================================================
+' Properties
+'================================================================================
+
+Public Property Let ClientID(ByVal val As String)
+mClientID = val
+End Property
+
+Public Property Let OutputFormat(ByVal val As String)
+Dim i As Long
+mOutputFormat = ""
+For i = 0 To UBound(mSupportedOutputFormats)
+    If val = mSupportedOutputFormats(i).Name Then
+        mOutputFormat = mSupportedOutputFormats(i).FormalID
+        Exit Property
+    End If
+Next
+End Property
+
+Public Property Get OutputFormat() As String
+Dim i As Long
+For i = 0 To UBound(mSupportedOutputFormats)
+    If mSupportedOutputFormats(i).FormalID = mOutputFormat Then
+        OutputFormat = mSupportedOutputFormats(i).Name
+        Exit Property
+    End If
+Next
+End Property
+
+Public Property Let OutputPath(ByVal val As String)
+mOutputPath = val
+End Property
+
+Public Property Let Port(ByVal val As Long)
+mPort = val
+End Property
+
+Public Property Let Server(ByVal val As String)
+mServer = val
+End Property
+
+Public Property Let ShortNames(ByRef val() As String)
+mShortNames = val
+End Property
+
+Public Property Let WriteBars(ByVal val As Boolean)
+mWriteBars = val
+End Property
+
+Public Property Let WriteTicks(ByVal val As Boolean)
+mWriteTicks = val
+End Property
+
+
+'================================================================================
+' Methods
+'================================================================================
+
+Public Sub startCollection()
+mTradeBuildAPI.ConnectionRetryIntervalSecs = 10
+mTradeBuildAPI.Connect IIf(mServer = "", "127.0.0.1", mServer), mPort, mClientID
+End Sub
+
+Public Sub stopCollection()
+Dim lTicker As Ticker
+For Each lTicker In mTradeBuildAPI.Tickers
+    lTicker.StopTicker
+Next
+mTradeBuildAPI.disconnect
+End Sub
+
+'================================================================================
+' Helper Functions
+'================================================================================
+
+Private Sub startNextTicker()
+If mShortnameIndex <= UBound(mShortNames) Then
+    mTimer.StartTimer
+Else
+    Set mTimer = Nothing
+End If
+End Sub
+
+
