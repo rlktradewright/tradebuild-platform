@@ -234,6 +234,10 @@ Private mRawMarketDepthListeners  As Collection
 
 Private mTickNumber                 As Long
 
+Private WithEvents mWriterReleaseTimer As TimerUtils.IntervalTimer
+Attribute mWriterReleaseTimer.VB_VarHelpID = -1
+Private mSelfRef As Ticker
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -673,6 +677,15 @@ End Sub
 
 Private Sub ITickfileOutputServiceConsumer_Ready()
 mWriter.ServiceProviderWriterReady = True
+If mState = TickerStateCodes.Dead Then
+    mWriter.closeOutputFile
+    Set mWriter = Nothing
+    Set mSelfRef = Nothing
+    If Not mWriterReleaseTimer Is Nothing Then
+        mWriterReleaseTimer.StopTimer
+        Set mWriterReleaseTimer = Nothing
+    End If
+End If
 End Sub
 
 '================================================================================
@@ -861,6 +874,17 @@ End Sub
 
 Private Sub mProxy_StopTicker()
 StopTicker
+End Sub
+
+'================================================================================
+' mWriterReleaseTimer Event Handlers
+'================================================================================
+
+Private Sub mWriterReleaseTimer_TimerExpired()
+mWriter.closeOutputFile
+Set mWriter = Nothing
+Set mSelfRef = Nothing
+Set mWriterReleaseTimer = Nothing
 End Sub
 
 '================================================================================
@@ -1192,28 +1216,28 @@ End Sub
 Public Sub removePriceChangeListener(ByVal value As PriceChangeListener)
 Dim i As Long
 For i = mPriceChangeListeners.Count To 1 Step -1
-    If mPriceChangeListeners.Item(i) Is value Then mPriceChangeListeners.Remove i
+    If mPriceChangeListeners.item(i) Is value Then mPriceChangeListeners.Remove i
 Next
 End Sub
 
 Public Sub removeProcessedMarketDepthListener(ByVal value As ProcessedMarketDepthListener)
 Dim i As Long
 For i = mProcessedMarketDepthListeners.Count To 1 Step -1
-    If mProcessedMarketDepthListeners.Item(i) Is value Then mProcessedMarketDepthListeners.Remove i
+    If mProcessedMarketDepthListeners.item(i) Is value Then mProcessedMarketDepthListeners.Remove i
 Next
 End Sub
 
 Public Sub removeQuoteListener(ByVal value As QuoteListener)
 Dim i As Long
 For i = mQuoteListeners.Count To 1 Step -1
-    If mQuoteListeners.Item(i) Is value Then mQuoteListeners.Remove i
+    If mQuoteListeners.item(i) Is value Then mQuoteListeners.Remove i
 Next
 End Sub
 
 Public Sub removeRawMarketDepthListener(ByVal value As RawMarketDepthListener)
 Dim i As Long
 For i = mRawMarketDepthListeners.Count To 1 Step -1
-    If mRawMarketDepthListeners.Item(i) Is value Then mRawMarketDepthListeners.Remove i
+    If mRawMarketDepthListeners.item(i) Is value Then mRawMarketDepthListeners.Remove i
 Next
 End Sub
 
@@ -1287,8 +1311,21 @@ If mState = TickerStateCodes.Dead Or mState = TickerStateCodes.Closing Then Exit
 Set mContract = Nothing
 
 If Not mWriter Is Nothing Then
-    mWriter.closeOutputFile
-    Set mWriter = Nothing
+    If mWriter.numberOfPendingWrites = 0 Or _
+        mWriter.ServiceProviderWriterReady _
+    Then
+        mWriter.closeOutputFile
+        Set mWriter = Nothing
+    Else
+        ' we've finished processing the input data before the service provider
+        ' writer is ready - so delay releasing the writer until the
+        ' service provider writer has had a chance to finish initialising
+        Set mWriterReleaseTimer = New TimerUtils.IntervalTimer
+        mWriterReleaseTimer.TimerIntervalSecs = 60
+        mWriterReleaseTimer.RepeatNotifications = False
+        mWriterReleaseTimer.StartTimer
+        Set mSelfRef = Me   ' ensure this ticker isn't released
+    End If
 End If
 
 If mState = TickerStateCodes.Running Or _

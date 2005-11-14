@@ -93,6 +93,10 @@ Friend Property Let Contract(ByVal value As Contract)
 mWriter.Contract = value
 End Property
 
+Friend Property Get numberOfPendingWrites() As Long
+numberOfPendingWrites = mPendingWrites.Count
+End Property
+
 Friend Property Let ServiceProviderWriter(ByVal value As TradeBuildSP.ITickfileWriter)
 Set mWriter = value
 End Property
@@ -141,6 +145,10 @@ End If
 
 Set mPendingWrites = Nothing
 Set mPendingWrites = New Collection
+End Property
+
+Friend Property Get ServiceProviderWriterReady() As Boolean
+ServiceProviderWriterReady = mServiceProviderWriterReady
 End Property
 
 '================================================================================
