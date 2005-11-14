@@ -263,7 +263,7 @@ With mInputTickfileSpecifier.Contract.Specifier
                                 .Exchange, _
                                 .CurrencyCode, _
                                 .Strike, _
-                                .Right, _
+                                optRightToString(.Right), _
                                 .localSymbol)
 End With
  

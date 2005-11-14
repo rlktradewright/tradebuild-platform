@@ -122,7 +122,7 @@ With mContract.Specifier
                                 .Exchange, _
                                 .CurrencyCode, _
                                 .Strike, _
-                                .Right, _
+                                optRightToString(.Right), _
                                 .localSymbol)
 End With
 Debug.Assert Not mInstrument Is Nothing

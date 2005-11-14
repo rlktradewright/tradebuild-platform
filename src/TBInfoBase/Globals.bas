@@ -142,6 +142,28 @@ gSQLDBSupports = (gSQLDBCapabilities And capabilities)
 End Function
 
 
+Public Function optRightFromString(ByVal value As String) As OptionRights
+Select Case UCase$(value)
+Case ""
+    optRightFromString = OptNone
+Case "CALL"
+    optRightFromString = OptCall
+Case "PUT"
+    optRightFromString = OptPut
+End Select
+End Function
+
+Public Function optRightToString(ByVal value As OptionRights) As String
+Select Case value
+Case OptNone
+    optRightToString = ""
+Case OptCall
+    optRightToString = "CALL"
+Case OptPut
+    optRightToString = "PUT"
+End Select
+End Function
+
 Public Function secTypeFromString(ByVal value As String) As SecurityTypes
 Select Case UCase$(value)
 Case "STK"

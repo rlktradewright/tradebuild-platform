@@ -95,8 +95,8 @@ With mBarDataSpecifier.ContractSpecifier
                                 .Exchange, _
                                 .CurrencyCode, _
                                 .Strike, _
-                                .Right, _
-                                .LocalSymbol)
+                                optRightToString(.Right), _
+                                .localSymbol)
 End With
 Debug.Assert Not mInstrument Is Nothing
 
