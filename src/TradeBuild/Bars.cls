@@ -135,6 +135,27 @@ Public Property Get down(Optional ByVal ref As Integer) As Boolean
 down = (closeValue(ref) < closeValue(ref - 1))
 End Property
 
+Public Property Get higherHighValue( _
+                ByVal rank As Long, _
+                Optional ByVal ref As Integer) As Double
+Dim valueToCompare As Double
+Dim currentHigh As Double
+Dim i As Long
+Dim numHighsFound As Long
+
+valueToCompare = highValue(ref)
+i = 1
+Do
+    currentHigh = highValue(ref - i)
+    i = i + 1
+    If currentHigh > valueToCompare Then
+        numHighsFound = numHighsFound + 1
+        valueToCompare = currentHigh
+    End If
+Loop While numHighsFound < rank
+higherHighValue = currentHigh
+End Property
+
 Public Property Get highestCloseValue(ByVal periods As Integer, _
                                     Optional ByVal ref As Integer) As Double
 Dim i                   As Integer
@@ -222,6 +243,27 @@ End Property
 'Public Property Get isLastBarInSession() As Boolean
 'isLastBarInSession = (Abs(barTime(0) - mLastBarStartTime) < OneSecond)
 'End Property
+
+Public Property Get lowerLowValue( _
+                ByVal rank As Long, _
+                Optional ByVal ref As Integer) As Double
+Dim valueToCompare As Double
+Dim currentLow As Double
+Dim i As Long
+Dim numLowsFound As Long
+
+valueToCompare = lowValue(ref)
+i = 1
+Do
+    currentLow = lowValue(ref - i)
+    i = i + 1
+    If currentLow < valueToCompare Then
+        numLowsFound = numLowsFound + 1
+        valueToCompare = currentLow
+    End If
+Loop While numLowsFound < rank
+lowerLowValue = currentLow
+End Property
 
 Public Property Get lowestCloseValue(ByVal periods As Integer, _
                                     Optional ByVal ref As Integer) As Double
