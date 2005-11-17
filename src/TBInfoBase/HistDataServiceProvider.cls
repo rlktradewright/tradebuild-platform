@@ -83,7 +83,7 @@ Set IBarDataServiceProvider_CreateBarDataReader = reader
 reader.CommonServiceConsumer = mCommonServiceConsumer
 reader.BarDataInputServiceConsumer = serviceConsumer
 reader.DataConsumer = DataConsumer
-reader.ServiceProviderName = mName
+reader.ServiceProviderName = mName & " (reader)"
 
 End Function
 
@@ -101,7 +101,7 @@ Set IBarDataServiceProvider_CreateBarDataWriter = writer
 writer.Path = location
 writer.CommonServiceConsumer = mCommonServiceConsumer
 writer.BarDataOutputServiceConsumer = serviceConsumer
-writer.ServiceProviderName = mName
+writer.ServiceProviderName = mName & " (writer)"
 writer.ContractSpecifier = contractSpec
 End Function
 

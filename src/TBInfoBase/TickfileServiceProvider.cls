@@ -123,6 +123,7 @@ Set ITickfileServiceProvider_CreateTickfileReader = reader
 reader.CommonServiceConsumer = mCommonServiceConsumer
 reader.TickfileInputServiceConsumer = serviceConsumer
 reader.StreamingDataConsumer = DataConsumer
+reader.ServiceProviderName = mName & " (reader)"
 End Function
 
 Private Function ITickfileServiceProvider_CreateTickfileWriter( _
@@ -137,7 +138,7 @@ Set ITickfileServiceProvider_CreateTickfileWriter = writer
 writer.Path = location
 writer.CommonServiceConsumer = mCommonServiceConsumer
 writer.TickfileOutputServiceConsumer = serviceConsumer
-writer.ServiceProviderName = mName
+writer.ServiceProviderName = mName & " (writer)"
 End Function
 
 Private Sub ITickfileServiceProvider_StopAll()
