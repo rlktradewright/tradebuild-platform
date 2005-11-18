@@ -222,9 +222,9 @@ Private Sub IBarDataOutputServiceConsumer_OutputBarfileCreated( _
 RaiseEvent OutputBarfileCreated(filename)
 End Sub
 
-Private Sub IBarDataOutputServiceConsumer_Ready()
-mBarWriter.ServiceProviderWriterReady = True
-End Sub
+Private Property Let IBarDataOutputServiceConsumer_Ready(ByVal RHS As Boolean)
+mBarWriter.ServiceProviderWriterReady = RHS
+End Property
 
 '================================================================================
 ' QuoteListener Interface Members
@@ -263,17 +263,17 @@ End Sub
 Private Sub QuoteListener_trade(ev As QuoteEvent)
 If Not isQuoteToBeProcessed Then Exit Sub
 mTradeBar.Tick ev.price
-mTradeBar.TickSize ev.size
-If mFirstTradeSize = 0 Then mFirstTradeSize = ev.size
+mTradeBar.TickSize ev.Size
+If mFirstTradeSize = 0 Then mFirstTradeSize = ev.Size
 End Sub
 
 Private Sub QuoteListener_volume(ev As QuoteEvent)
 If Not isQuoteToBeProcessed Then Exit Sub
 If mPrevBarVolume = 0 Then
-    mPrevBarVolume = ev.size - mFirstTradeSize
+    mPrevBarVolume = ev.Size - mFirstTradeSize
 End If
-mTradeBar.volume = ev.size - mPrevBarVolume
-mLatestVolume = ev.size
+mTradeBar.volume = ev.Size - mPrevBarVolume
+mLatestVolume = ev.Size
 End Sub
 
 '================================================================================

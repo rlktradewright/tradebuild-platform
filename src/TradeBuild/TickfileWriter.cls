@@ -107,6 +107,8 @@ Dim pendingWrite As Tick
 
 mServiceProviderWriterReady = value
 
+If Not mServiceProviderWriterReady Then Exit Property
+
 If mPendingWrites.Count <> 0 Then
     For Each item In mPendingWrites
         pendingWrite = item

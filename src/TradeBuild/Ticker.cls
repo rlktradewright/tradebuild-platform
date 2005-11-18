@@ -675,9 +675,11 @@ RaiseEvent OutputTickfileCreated(gCurrentTime, _
                             filename)
 End Sub
 
-Private Sub ITickfileOutputServiceConsumer_Ready()
+Private Property Let ITickfileOutputServiceConsumer_Ready(ByVal RHS As Boolean)
 mWriter.ServiceProviderWriterReady = True
 If mState = TickerStateCodes.Dead Then
+    ' the ticker is being closed before the tickfile writer has notified that it
+    ' is ready
     mWriter.closeOutputFile
     Set mWriter = Nothing
     Set mSelfRef = Nothing
@@ -686,7 +688,7 @@ If mState = TickerStateCodes.Dead Then
         Set mWriterReleaseTimer = Nothing
     End If
 End If
-End Sub
+End Property
 
 '================================================================================
 ' mContracts Event Handlers
@@ -1216,28 +1218,28 @@ End Sub
 Public Sub removePriceChangeListener(ByVal value As PriceChangeListener)
 Dim i As Long
 For i = mPriceChangeListeners.Count To 1 Step -1
-    If mPriceChangeListeners.item(i) Is value Then mPriceChangeListeners.Remove i
+    If mPriceChangeListeners.Item(i) Is value Then mPriceChangeListeners.Remove i
 Next
 End Sub
 
 Public Sub removeProcessedMarketDepthListener(ByVal value As ProcessedMarketDepthListener)
 Dim i As Long
 For i = mProcessedMarketDepthListeners.Count To 1 Step -1
-    If mProcessedMarketDepthListeners.item(i) Is value Then mProcessedMarketDepthListeners.Remove i
+    If mProcessedMarketDepthListeners.Item(i) Is value Then mProcessedMarketDepthListeners.Remove i
 Next
 End Sub
 
 Public Sub removeQuoteListener(ByVal value As QuoteListener)
 Dim i As Long
 For i = mQuoteListeners.Count To 1 Step -1
-    If mQuoteListeners.item(i) Is value Then mQuoteListeners.Remove i
+    If mQuoteListeners.Item(i) Is value Then mQuoteListeners.Remove i
 Next
 End Sub
 
 Public Sub removeRawMarketDepthListener(ByVal value As RawMarketDepthListener)
 Dim i As Long
 For i = mRawMarketDepthListeners.Count To 1 Step -1
-    If mRawMarketDepthListeners.item(i) Is value Then mRawMarketDepthListeners.Remove i
+    If mRawMarketDepthListeners.Item(i) Is value Then mRawMarketDepthListeners.Remove i
 Next
 End Sub
 

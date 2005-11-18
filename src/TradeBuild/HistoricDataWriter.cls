@@ -93,6 +93,8 @@ Dim pendingWrite As Bar
 
 mServiceProviderWriterReady = value
 
+If Not mServiceProviderWriterReady Then Exit Property
+    
 If mPendingWrites.Count <> 0 Then
     For Each pendingWrite In mPendingWrites
         WriteBar pendingWrite
@@ -101,6 +103,7 @@ End If
 
 Set mPendingWrites = Nothing
 Set mPendingWrites = New Collection
+
 End Property
 
 '================================================================================
@@ -128,10 +131,10 @@ Else
         .closePrice = theBar.closeValue
         .highPrice = theBar.highValue
         .lowPrice = theBar.lowValue
-        .openPrice = theBar.openValue
+        .OpenPrice = theBar.openValue
         .PeriodMinutes = theBar.barLength
         .tickVolume = theBar.tickVolume
-        .Timestamp = theBar.datetime
+        .timestamp = theBar.datetime
         .volume = theBar.volume
     End With
     mWriter.WriteBar spBar
