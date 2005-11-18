@@ -269,8 +269,13 @@ mCommonServiceConsumer.ServiceProviderError errorCode, _
                                     mServiceProviderName
 End Sub
 
+Private Sub mTickWriter_NotReady()
+mServiceConsumer.Ready = False
+End Sub
+
 Private Sub mTickWriter_Ready()
-mServiceConsumer.Ready
+mServiceConsumer.Ready = True
+mServiceConsumer.OutputTickfileCreated mTickWriter.connectionString
 End Sub
 
 '================================================================================

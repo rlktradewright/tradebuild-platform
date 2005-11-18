@@ -116,8 +116,13 @@ mCommonServiceConsumer.ServiceProviderError errorCode, _
                                     mServiceProviderName
 End Sub
 
+Private Sub mBarWriter_NotReady()
+mServiceConsumer.Ready = False
+End Sub
+
 Private Sub mBarWriter_Ready()
-mServiceConsumer.Ready
+mServiceConsumer.Ready = True
+mServiceConsumer.OutputBarfileCreated mBarWriter.connectionString
 End Sub
 '================================================================================
 ' Properties
