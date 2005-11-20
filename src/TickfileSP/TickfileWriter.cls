@@ -101,7 +101,7 @@ Private Property Let ITickfileWriter_Contract(ByVal RHS As IContract)
 If Not RHS Is Nothing Then
     Set mContract = RHS.Clone
 End If
-mServiceConsumer.Ready
+mServiceConsumer.Ready = True
 End Property
 
 Private Sub ITickfileWriter_WriteAsk(ByVal timestamp As Date, ByVal price As Double, ByVal size As Long)
@@ -235,7 +235,7 @@ With mContract.Specifier
     
     mTsOut.WriteLine "tickfile," & _
                 TICKFILE_CURR_VERSION & "," & _
-                .exchange & "," & _
+                .Exchange & "," & _
                 .Symbol & "," & _
                 .Expiry & "," & _
                 CDbl(timestamp) & "," & _
@@ -268,7 +268,7 @@ Set mTsOut = mFileSys.CreateTextFile(tfPath & tfName)
 mServiceConsumer.OutputTickfileCreated tfPath & tfName
 mTsOut.WriteLine TICKFILE_DECLARER & "," & _
             TICKFILE_CURR_VERSION & "," & _
-            UCase$(mContract.Specifier.exchange) & "," & _
+            UCase$(mContract.Specifier.Exchange) & "," & _
             UCase$(mContract.Specifier.Symbol) & "," & _
             mContract.Specifier.Expiry & "," & _
             CDbl(timestamp) & "," & _
