@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "BarWriterListener"
+Attribute VB_Name = "WriterListener"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -63,7 +63,7 @@ Option Explicit
 ' Methods
 '================================================================================
 
-Public Sub statusChanged(ByVal ev As BarWriterEvent)
+Public Sub notify(ByRef ev As WriterEvent)
 End Sub
 
 '================================================================================

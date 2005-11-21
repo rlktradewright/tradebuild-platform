@@ -299,6 +299,12 @@ Public Type TWSSocketMsgReceiveFa
     XMLData         As String
 End Type
 
+Public Type WriterEvent
+    Source          As Object
+    action          As WriterNotifications
+    filename        As String
+End Type
+
 
 '================================================================================
 ' Member variables and constants
@@ -740,6 +746,13 @@ Public Enum TWSSocketTickTypes
     TICK_LOW        ' 7
     TICK_VOLUME     ' 8
     TICK_CLOSE      ' 9
+End Enum
+
+Public Enum WriterNotifications
+    WriterReady
+    WriterNotReady
+    WriterFileCreated
+    WriteWriteOperationCompleted
 End Enum
 
 '================================================================================

@@ -41,6 +41,8 @@ Implements TradeBuildSP.IBarDataConsumer
 
 Event BarsLoaded()
 
+Event BarWriterNotification(ByRef value As WriterEvent)
+
 Event CantCreateHistoricDataWriter()
 
 Event CurrentCloseChanged(ByVal currentBar As TradeBuild.Bar)
@@ -51,7 +53,7 @@ Event CurrentTickVolumeChanged(ByVal currentBar As TradeBuild.Bar)
 Event CurrentVolumeChanged(ByVal currentBar As TradeBuild.Bar)
 
 Event errorMessage( _
-                ByVal timestamp As Date, _
+                ByVal Timestamp As Date, _
                 ByVal errorCode As ApiErrorCodes, _
                 ByVal errorMsg As String)
 
@@ -102,6 +104,7 @@ Attribute mBidBar.VB_VarHelpID = -1
 Private mContract As TradeBuild.contract
 
 Private mCurrentBarListeners As Collection
+Private mBarWriterListeners As Collection
 
 Private mTimePeriodUnit As TradeBuild.TimePeriodUnits
 Private mTimePeriod As Long
@@ -141,6 +144,7 @@ Private Sub Class_Initialize()
 Set mTradeBars = New Bars
 mTradeBars.barType = TradeBuild.BarTypes.BarTypeTrade
 Set mCurrentBarListeners = New Collection
+Set mBarWriterListeners = New Collection
 End Sub
 
 Private Sub Class_Terminate()
@@ -179,7 +183,7 @@ Private Sub IBarDataInputServiceConsumer_Error(ByVal errorCode As TradeBuildSP.S
 
 End Sub
 
-Private Sub IBarDataInputServiceConsumer_Progress(ByVal timestamp As Date, ByVal eventsPlayed As Long, ByVal percentComplete As Single)
+Private Sub IBarDataInputServiceConsumer_Progress(ByVal Timestamp As Date, ByVal eventsPlayed As Long, ByVal percentComplete As Single)
 
 End Sub
 
@@ -219,11 +223,24 @@ End Sub
 
 Private Sub IBarDataOutputServiceConsumer_OutputBarfileCreated( _
                             ByVal filename As String)
+fireBarWriterNotify WriterNotifications.WriterFileCreated, _
+                                filename
 RaiseEvent OutputBarfileCreated(filename)
 End Sub
 
 Private Property Let IBarDataOutputServiceConsumer_Ready(ByVal RHS As Boolean)
+Dim ev As WriterEvent
 mBarWriter.ServiceProviderWriterReady = RHS
+
+fireBarWriterNotify IIf(RHS, _
+                    WriterNotifications.WriterReady, _
+                    WriterNotifications.WriterNotReady), _
+                ""
+
+ev.action = IIf(RHS, _
+                    WriterNotifications.WriterReady, _
+                    WriterNotifications.WriterNotReady)
+RaiseEvent BarWriterNotification(ev)
 End Property
 
 '================================================================================
@@ -233,14 +250,14 @@ End Property
 Private Sub QuoteListener_ask(ev As QuoteEvent)
 If Not isQuoteToBeProcessed Then Exit Sub
 If mIncludeBidAndAsk Then
-    mAskBar.Tick ev.price
+    mAskBar.Tick ev.Price
 End If
 End Sub
 
 Private Sub QuoteListener_bid(ev As QuoteEvent)
 If Not isQuoteToBeProcessed Then Exit Sub
 If mIncludeBidAndAsk Then
-    mBidBar.Tick ev.price
+    mBidBar.Tick ev.Price
 End If
 End Sub
 
@@ -262,7 +279,7 @@ End Sub
 
 Private Sub QuoteListener_trade(ev As QuoteEvent)
 If Not isQuoteToBeProcessed Then Exit Sub
-mTradeBar.Tick ev.price
+mTradeBar.Tick ev.Price
 mTradeBar.TickSize ev.Size
 If mFirstTradeSize = 0 Then mFirstTradeSize = ev.Size
 End Sub
@@ -401,8 +418,16 @@ Public Property Get AskBars() As Bars
 Set AskBars = mAskBars
 End Property
 
+Public Property Get barLengthMinutes() As Long
+barLengthMinutes = mBarLengthMinutes
+End Property
+
 Public Property Get BidBars() As Bars
 Set BidBars = mBidBars
+End Property
+
+Public Property Get contract() As contract
+Set contract = mContract
 End Property
 
 Friend Property Let contract(ByVal value As contract)
@@ -424,15 +449,15 @@ If mNumberOfBarsToFetch <> 0 Then
     Set mBarReader = gServiceProviders.CreateHistoricalDataReader( _
                                 Me, _
                                 Me)
-    barSpecifier.BarLengthMinutes = mBarLengthMinutes
+    barSpecifier.barLengthMinutes = mBarLengthMinutes
     barSpecifier.barType = BarTypes.BarTypeTrade
     Set barSpecifier.contractSpecifier = mContract.specifier
     barSpecifier.From = CDate("1 Jan 1970")
     If mExcludeCurrentBar Then
-        barSpecifier.To = mTicker.timestamp
+        barSpecifier.To = mTicker.Timestamp
     Else
         ' ensure we get the latest bar
-        barSpecifier.To = mTicker.timestamp + mBarLengthMinutes / 1440
+        barSpecifier.To = mTicker.Timestamp + mBarLengthMinutes / 1440
     End If
     barSpecifier.NumberOfBars = mNumberOfBarsToFetch
     mBarReader.FetchBars barSpecifier
@@ -512,6 +537,10 @@ End Property
 ' Methods
 '================================================================================
 
+Public Sub addBarWriterListener(ByVal value As WriterListener)
+mBarWriterListeners.add value
+End Sub
+
 Public Sub addCurrentBarListener(ByVal value As CurrentBarListener)
 mCurrentBarListeners.add value
 End Sub
@@ -538,6 +567,13 @@ If mIncludeBidAndAsk Then
     mBidBars.barLength = mBarLengthMinutes
 End If
 
+End Sub
+
+Public Sub removeBarWriterListener(ByVal value As WriterListener)
+Dim i As Long
+For i = mBarWriterListeners.Count To 1 Step -1
+    If mBarWriterListeners.Item(i) Is value Then mBarWriterListeners.Remove i
+Next
 End Sub
 
 Public Sub removeCurrentBarListener(ByVal value As CurrentBarListener)
@@ -579,10 +615,10 @@ If mIncludeBidAndAsk Then
 End If
 End Sub
 
-Private Sub CheckNewBar(ByVal timestamp As Date)
+Private Sub CheckNewBar(ByVal Timestamp As Date)
 Dim barTime As Date
 
-barTime = mContract.BarStartTime(timestamp, mBarLengthMinutes)
+barTime = mContract.BarStartTime(Timestamp, mBarLengthMinutes)
 If mTradeBar Is Nothing Then
     'drop through
 ElseIf barTime > mTradeBar.datetime Then
@@ -672,6 +708,19 @@ Loop
 
 End Sub
 
+Private Sub fireBarWriterNotify( _
+                ByVal action As WriterNotifications, _
+                ByVal filename As String)
+Dim listener As WriterListener
+Dim ev As WriterEvent
+Set ev.Source = Me
+ev.action = action
+ev.filename = filename
+For Each listener In mBarWriterListeners
+    listener.notify ev
+Next
+End Sub
+                                
 Private Sub fireCurrentBarEvent( _
                 ByVal theBar As Bar, _
                 ByVal eventType As BarEventType)
@@ -698,11 +747,11 @@ Next
 End Sub
     
 Private Function isQuoteToBeProcessed() As Boolean
-Dim timestamp As Date
+Dim Timestamp As Date
 If Not mHistoricDataLoaded Then Exit Function
-timestamp = mTicker.timestamp
-If Not mContract.isTimeInSession(timestamp) Then Exit Function
-CheckNewBar timestamp
+Timestamp = mTicker.Timestamp
+If Not mContract.isTimeInSession(Timestamp) Then Exit Function
+CheckNewBar Timestamp
 isQuoteToBeProcessed = True
 End Function
 
@@ -718,7 +767,7 @@ mHistoricBarPending = False
 With mHistoricBar
     ' check whether this bar already exists
     On Error Resume Next
-    Set lBar = mTradeBars.Item(CalcBarKey(.timestamp))
+    Set lBar = mTradeBars.Item(CalcBarKey(.Timestamp))
     On Error GoTo 0
     
     If Not lBar Is Nothing Then
@@ -732,7 +781,7 @@ With mHistoricBar
         lBar.openInterest = .openInterest
     Else
         Set lBar = mTradeBars.addHistoric( _
-                                .timestamp, _
+                                .Timestamp, _
                                 .OpenPrice, _
                                 .highPrice, _
                                 .lowPrice, _
@@ -740,7 +789,7 @@ With mHistoricBar
                                 .volume, _
                                 .tickVolume, _
                                 .openInterest, _
-                                CalcBarKey(.timestamp))
+                                CalcBarKey(.Timestamp))
     End If
 End With
 End Sub
