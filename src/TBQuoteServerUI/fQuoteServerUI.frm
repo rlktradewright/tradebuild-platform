@@ -438,7 +438,7 @@ Option Explicit
 '================================================================================
 
 Implements DataSignalListener
-Implements QuoteListener
+Implements WriterListener
 
 '================================================================================
 ' Events
@@ -477,7 +477,7 @@ InitCommonControls
 End Sub
 
 '================================================================================
-' QuoteListener DataSignalListener Members
+' DataSignalListener Members
 '================================================================================
 
 Private Sub DataSignalListener_signalOff(ev As TBQuoteServer.DataSignalEvent)
@@ -496,39 +496,49 @@ ConnectionStatusText.BackColor = vbGreen
 End Sub
 
 '================================================================================
-' QuoteListener Interface Members
+' WriterListener Interface Members
 '================================================================================
 
-Private Sub QuoteListener_ask(ev As TradeBuild.QuoteEvent)
+Private Sub WriterListener_notify(ev As TradeBuild.WriterEvent)
+Dim tf As TradeBuild.Timeframe
+Dim tk As TradeBuild.ticker
 
-End Sub
-
-Private Sub QuoteListener_bid(ev As TradeBuild.QuoteEvent)
-
-End Sub
-
-Private Sub QuoteListener_high(ev As TradeBuild.QuoteEvent)
-
-End Sub
-
-Private Sub QuoteListener_Low(ev As TradeBuild.QuoteEvent)
-
-End Sub
-
-Private Sub QuoteListener_openInterest(ev As TradeBuild.QuoteEvent)
-
-End Sub
-
-Private Sub QuoteListener_previousClose(ev As TradeBuild.QuoteEvent)
-
-End Sub
-
-Private Sub QuoteListener_trade(ev As TradeBuild.QuoteEvent)
-
-End Sub
-
-Private Sub QuoteListener_volume(ev As TradeBuild.QuoteEvent)
-
+Select Case ev.Action
+Case WriterNotifications.WriterNotReady
+    If TypeOf ev.Source Is TradeBuild.Timeframe Then
+        Set tf = ev.Source
+        logMessage tf.barLengthMinutes & _
+                        "-min bar writer not ready for " & _
+                        tf.Contract.specifier.localSymbol
+    Else
+        Set tk = ev.Source
+        logMessage "Tickfile writer not ready for " & _
+                        tk.Contract.specifier.localSymbol
+    End If
+Case WriterNotifications.WriterReady
+    If TypeOf ev.Source Is TradeBuild.Timeframe Then
+        Set tf = ev.Source
+        logMessage tf.barLengthMinutes & _
+                        "-min bar writer ready for " & _
+                        tf.Contract.specifier.localSymbol
+    Else
+        Set tk = ev.Source
+        logMessage "Tickfile writer ready for " & _
+                        tk.Contract.specifier.localSymbol
+    End If
+Case WriterNotifications.WriterFileCreated
+    If TypeOf ev.Source Is TradeBuild.Timeframe Then
+        Set tf = ev.Source
+        logMessage "Writing " & tf.barLengthMinutes & "-min bars for " & _
+                    tf.Contract.specifier.localSymbol & _
+                    " to " & ev.FileName
+    Else
+        Set tk = ev.Source
+        logMessage "Writing tickdata for " & _
+                    tk.Contract.specifier.localSymbol & _
+                    " to " & ev.FileName
+    End If
+End Select
 End Sub
 
 '================================================================================
@@ -586,38 +596,44 @@ Else
 End If
 End Sub
 
-Private Sub mDataCollector_errorMessage(ByVal timestamp As Date, _
-                                    ByVal id As Long, _
-                                    ByVal errorCode As TradeBuild.ApiErrorCodes, _
-                                    ByVal errorMsg As String)
+Private Sub mDataCollector_errorMessage( _
+                ByVal timestamp As Date, _
+                ByVal id As Long, _
+                ByVal errorCode As TradeBuild.ApiErrorCodes, _
+                ByVal errorMsg As String)
 
 logMessage "Error " & errorCode & IIf(id >= 0, " (" & id & ")", "") & ": " & errorMsg
 End Sub
 
-Private Sub mDataCollector_OutputTickfileCreated(ByVal timestamp As Date, ByVal filename As String)
-logMessage "Tickfile created: " & filename
-Debug.Print "Tickfile created: " & filename
-End Sub
-
-Private Sub mDataCollector_ServiceProviderError(ByVal timestamp As Date, _
-                                    ByVal errorCode As Long, _
-                                    ByVal serviceProviderName As String, _
-                                    ByVal message As String)
+Private Sub mDataCollector_ServiceProviderError( _
+                ByVal timestamp As Date, _
+                ByVal errorCode As Long, _
+                ByVal serviceProviderName As String, _
+                ByVal message As String)
 logMessage "Service provider error (" & serviceProviderName & "): " & errorCode & ": " & message
 End Sub
 
-Private Sub mDataCollector_TickerListenerAdded(ByVal listener As TBQuoteServer.TickerListener)
+Private Sub mDataCollector_TickerAdded(ByVal ticker As TradeBuild.ticker)
+ticker.addTickfileWriterListener Me
+End Sub
+
+Private Sub mDataCollector_TickerListenerAdded( _
+                ByVal listener As TBQuoteServer.TickerListener)
 If mTickerListenerIndex > UBound(mTickerListeners) Then
     listener.Index = -1
-    logMessage "Can't display ticker for " & listener.contract.specifier.localSymbol
+    logMessage "Can't display ticker for " & listener.Contract.specifier.localSymbol
     Exit Sub
 End If
 
 listener.Index = mTickerListenerIndex
 mTickerListenerIndex = mTickerListenerIndex + 1
 listener.addDataSignalListener Me
-ShortNameText(listener.Index) = listener.contract.specifier.localSymbol
+ShortNameText(listener.Index) = listener.Contract.specifier.localSymbol
 
+End Sub
+
+Private Sub mDataCollector_TimeframeAdded(ByVal tf As TradeBuild.Timeframe)
+tf.addBarWriterListener Me
 End Sub
 
 '================================================================================
@@ -637,7 +653,11 @@ End Property
 '================================================================================
 
 Private Sub logMessage(ByVal text As String)
-LogText.text = LogText.text & vbCrLf & Format(Now, "hh:mm:ss") & "  " & text
+If Len(LogText.text) > (32000 - Len(text)) Then
+    LogText.text = Right$(LogText.text, 32000 - Len(text)) & vbCrLf & Format(Now, "hh:mm:ss") & "  " & text
+Else
+    LogText.text = LogText.text & vbCrLf & Format(Now, "hh:mm:ss") & "  " & text
+End If
 LogText.SelStart = Len(LogText.text)
 End Sub
 
