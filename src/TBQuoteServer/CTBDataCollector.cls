@@ -35,16 +35,20 @@ Event ErrorMessage( _
                 ByVal id As Long, _
                 ByVal errorCode As TradeBuild.ApiErrorCodes, _
                 ByVal errorMsg As String)
-Event OutputTickfileCreated( _
-                ByVal timestamp As Date, _
-                ByVal filename As String)
+'Event OutputTickfileCreated( _
+'                ByVal timestamp As Date, _
+'                ByVal filename As String)
 Event ServiceProviderError( _
                 ByVal timestamp As Date, _
                 ByVal errorCode As Long, _
                 ByVal serviceProviderName As String, _
                 ByVal message As String)
+Event TickerAdded( _
+                ByVal ticker As TradeBuild.ticker)
 Event TickerListenerAdded( _
                 ByVal listener As TickerListener)
+Event TimeframeAdded( _
+                ByVal tf As TradeBuild.Timeframe)
                 
 '================================================================================
 ' Constants
@@ -74,9 +78,14 @@ Private mClientID As Long
 Private mWriteBars As Boolean
 Private mWriteTicks As Boolean
 
-Private WithEvents mTicker As TradeBuild.Ticker
+Private WithEvents mTicker As TradeBuild.ticker
 Attribute mTicker.VB_VarHelpID = -1
 Private mTickerListener As TickerListener
+
+Private mTimeframe1 As TradeBuild.Timeframe
+Private mTimeframe5 As TradeBuild.Timeframe
+Private mTimeframe15 As TradeBuild.Timeframe
+Private mTimeframe60 As TradeBuild.Timeframe
 
 Private mSupportedOutputFormats() As TradeBuild.TickfileFormatSpecifier
 Private mOutputFormat As String
@@ -117,12 +126,19 @@ End Sub
 
 Private Sub mTicker_Ready(ByVal timestamp As Date, ByVal contract As TradeBuild.contract)
 mTickerListener.contract = mTicker.contract
-RaiseEvent TickerListenerAdded(mTickerListener)
-startNextTicker
-End Sub
 
-Private Sub mTicker_OutputTickfileCreated(ByVal timestamp As Date, ByVal filename As String)
-RaiseEvent OutputTickfileCreated(timestamp, filename)
+RaiseEvent TickerAdded(mTicker)
+
+RaiseEvent TickerListenerAdded(mTickerListener)
+
+If mWriteBars Then
+    RaiseEvent TimeframeAdded(mTimeframe1)
+    RaiseEvent TimeframeAdded(mTimeframe5)
+    RaiseEvent TimeframeAdded(mTimeframe15)
+    RaiseEvent TimeframeAdded(mTimeframe60)
+End If
+
+startNextTicker
 End Sub
 
 '================================================================================
@@ -149,10 +165,10 @@ If mWriteTicks Then
 End If
 
 If mWriteBars Then
-    mTicker.Timeframes.Add 1, TimePeriodUnits.Minute, "1min", 0, 15
-    mTicker.Timeframes.Add 5, TimePeriodUnits.Minute, "5min", 0, 30
-    mTicker.Timeframes.Add 15, TimePeriodUnits.Minute, "15min", 0, 60
-    mTicker.Timeframes.Add 60, TimePeriodUnits.Minute, "60min", 0, 60
+    Set mTimeframe1 = mTicker.Timeframes.Add(1, TimePeriodUnits.Minute, "1min", 0, 15)
+    Set mTimeframe5 = mTicker.Timeframes.Add(5, TimePeriodUnits.Minute, "5min", 0, 30)
+    Set mTimeframe15 = mTicker.Timeframes.Add(15, TimePeriodUnits.Minute, "15min", 0, 60)
+    Set mTimeframe60 = mTicker.Timeframes.Add(60, TimePeriodUnits.Minute, "60min", 0, 60)
 End If
 
 Set mTickerListener = New TickerListener
@@ -292,7 +308,7 @@ mTradeBuildAPI.Connect IIf(mServer = "", "127.0.0.1", mServer), mPort, mClientID
 End Sub
 
 Public Sub stopCollection()
-Dim lTicker As Ticker
+Dim lTicker As ticker
 For Each lTicker In mTradeBuildAPI.Tickers
     lTicker.StopTicker
 Next
