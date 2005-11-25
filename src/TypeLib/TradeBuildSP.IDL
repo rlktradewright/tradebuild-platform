@@ -272,6 +272,12 @@ library TradeBuildSP
 
     } BarDataSpecifier;
 
+    typedef [uuid(eb2da908-cd7f-43a5-aa44-9e22e131ae9a), version(1.0)]
+    struct tagDictionaryEntry {
+        BSTR Key;
+	BSTR Value;
+    } DictionaryEntry;
+
     typedef [uuid(31907931-F3EF-4650-901D-65A71AB098BC), version(1.0)]
     struct tagGUID {
         [helpstring("data")]
@@ -329,8 +335,8 @@ library TradeBuildSP
         [helpstring("For file-based tickfile formats, contains the full path and filename of the tickfile")]
 	BSTR Filename;
 
-        [helpstring("For stream-based tickfile formats, contains the contract specifier for the tickstream")]
-        IContractSpecifier ContractSpecifier;
+        [helpstring("For stream-based tickfile formats, contains the contract for the tickstream")]
+        IContract Contract;
 
         [helpstring("For stream-based tickfile formats, specifies the start date and time for the tickstream")]
         DATE From;
@@ -394,6 +400,12 @@ library TradeBuildSP
     ]
     interface IBarDataOutputServiceConsumer : IUnknown {
 
+	// Properties ==================================================
+
+        [propput]
+        HRESULT Ready([in] VARIANT_BOOL );
+
+
 	// Methods =====================================================
 
 	HRESULT Error(
@@ -403,8 +415,6 @@ library TradeBuildSP
 
         HRESULT OutputBarfileCreated(
                         [in] BSTR filename);
-
-        HRESULT Ready();
 
     };
 
@@ -683,10 +693,28 @@ library TradeBuildSP
         HRESULT ContractID([in] long );
 
         [propget]
+        HRESULT CurrentSessionEndTime([out, retval] DATE* );
+
+        [propget]
+        HRESULT CurrentSessionStartTime([out, retval] DATE* );
+
+        [propget]
+        HRESULT DaysBeforeExpiryToSwitch([out, retval] long* );
+
+        [propput]
+        HRESULT DaysBeforeExpiryToSwitch([in] long );
+
+        [propget]
         HRESULT Description([out, retval] BSTR* );
 
         [propput]
         HRESULT Description([in] BSTR );
+
+        [propget]
+        HRESULT ExpiryDate([out, retval] DATE* );
+
+        [propput]
+        HRESULT ExpiryDate([in] DATE );
 
         [propget]
         HRESULT Key([out, retval] BSTR* );
@@ -717,6 +745,14 @@ library TradeBuildSP
 
         [propput]
         HRESULT OrderTypes([in, out] SAFEARRAY(OrderTypes)* );
+
+        [propget]
+        HRESULT ProviderID(
+			[in] BSTR providerKey,
+			[out, retval] BSTR* );
+
+        [propput]
+        HRESULT ProviderIDs([in] SAFEARRAY(DictionaryEntry)* );
 
         [propget]
         HRESULT SessionEndTime([out, retval] DATE* );
@@ -750,6 +786,11 @@ library TradeBuildSP
 
 	// Methods =====================================================
 
+	HRESULT BarStartTime(
+			[in] DATE Timestamp, 
+			[in] long BarLength,
+			[out,retval] Date*);
+
         HRESULT Clone([out, retval] IContract** );
 
         HRESULT FromXML([in] BSTR contractXML);
@@ -762,6 +803,9 @@ library TradeBuildSP
 	HRESULT IsTimeInSession(
 			[in] DATE Timestamp, 
 			[out,retval] VARIANT_BOOL*);
+
+	HRESULT SetSession(
+			[in] DATE Timestamp);
 
         HRESULT ToString([out, retval] BSTR* );
 
@@ -1061,6 +1105,13 @@ library TradeBuildSP
     ]
     interface ITickfileOutputServiceConsumer : IUnknown {
 
+	// Properties ==================================================
+
+        [propput]
+        HRESULT Ready([in] VARIANT_BOOL );
+
+
+
 	// Methods =====================================================
 
 	HRESULT Error(
@@ -1070,8 +1121,6 @@ library TradeBuildSP
 
         HRESULT OutputTickfileCreated(
                         [in] BSTR filename);
-
-        HRESULT Ready();
 
     };
 
