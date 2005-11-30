@@ -104,9 +104,8 @@ Private Const DefaultTwipsPerBar As Long = 150
 Private mRegions() As RegionTableEntry
 Private mRegionsIndex As Long
 
-Private mCurrentPeriodNumber As Long
-
-Private mPeriods As Collection
+Private WithEvents mPeriods As periods
+Attribute mPeriods.VB_VarHelpID = -1
 
 Private mAutoscale As Boolean
 Private mScaleWidth As Single
@@ -461,6 +460,25 @@ mUserResizingRegions = False
 End Sub
 
 '================================================================================
+' mPeriods Event Handlers
+'================================================================================
+
+Private Sub mPeriods_PeriodAdded(ByVal period As period)
+Dim i As Long
+Dim region As ChartRegion
+
+period.backColor = mBackColour
+
+For i = 0 To mRegionsIndex
+    Set region = mRegions(i).region
+    region.addperiod period.periodNumber, period.timestamp
+Next
+If mXAxisRegion Is Nothing Then createXAxisRegion
+mXAxisRegion.addperiod period.periodNumber, period.timestamp
+setHorizontalScrollBar
+End Sub
+
+'================================================================================
 ' Properties
 '================================================================================
 
@@ -526,7 +544,7 @@ chartWidth = YAxisPosition - mScaleLeft
 End Property
 
 Public Property Get currentPeriodNumber() As Long
-currentPeriodNumber = mCurrentPeriodNumber
+currentPeriodNumber = mPeriods.currentPeriodNumber
 End Property
 
 Public Property Get currentTool() As ToolTypes
@@ -590,6 +608,10 @@ Public Property Let periodLengthMinutes(ByVal val As Long)
 mPeriodLengthMinutes = val
 If mXAxisRegion Is Nothing Then createXAxisRegion
 mXAxisRegion.periodLengthMinutes = val
+End Property
+
+Public Property Get periods() As periods
+Set periods = mPeriods
 End Property
 
 Public Property Get sessionStartTime() As Date
@@ -802,30 +824,13 @@ End If
 
 End Function
 
-Public Function addPeriod(ByVal timestamp As Date) As Period
-Dim i As Long
-Dim region As ChartRegion
-
-Set addPeriod = New Period
-mCurrentPeriodNumber = mCurrentPeriodNumber + 1
-addPeriod.periodNumber = mCurrentPeriodNumber
-addPeriod.timestamp = timestamp
-addPeriod.backColor = mBackColour
-mPeriods.add addPeriod, CStr(addPeriod.periodNumber)
-
-For i = 0 To mRegionsIndex
-    Set region = mRegions(i).region
-    region.addPeriod mCurrentPeriodNumber, timestamp
-Next
-If mXAxisRegion Is Nothing Then createXAxisRegion
-mXAxisRegion.addPeriod mCurrentPeriodNumber, timestamp
-setHorizontalScrollBar
+Public Function addperiod(ByVal timestamp As Date) As period
+Set addperiod = mPeriods.addperiod(timestamp)
 End Function
 
 Public Function clearChart()
 Dim i As Long
 
-mCurrentPeriodNumber = 0
 For i = 0 To mRegionsIndex
     mRegions(i).region.clearRegion
     Unload ChartRegionPicture(i + 1)
@@ -834,6 +839,7 @@ For i = 0 To mRegionsIndex
 Next
 If Not mXAxisRegion Is Nothing Then mXAxisRegion.clearRegion
 Set mXAxisRegion = Nothing
+Set mPeriods = Nothing
 
 initialise
 End Function
@@ -881,10 +887,10 @@ mXCursorText.font = aFont
 End Sub
 
 Private Sub displayXAxisLabel(x As Single, y As Single)
-Dim thisPeriod As Period
+Dim thisPeriod As period
 Dim periodNumber As Long
 Dim prevPeriodNumber As Long
-Dim prevPeriod As Period
+Dim prevPeriod As period
 
 If mXAxisRegion Is Nothing Then createXAxisRegion
 
@@ -925,7 +931,7 @@ mPrevHeight = UserControl.height
 ReDim mRegions(100) As RegionTableEntry
 mRegionsIndex = -1
 
-Set mPeriods = New Collection
+Set mPeriods = New periods
 mPeriodLengthMinutes = 5
 mVerticalGridUnits = TimeHour
 
@@ -939,6 +945,7 @@ mScaleHeight = -100
 mScaleTop = 100
 mYAxisWidthCm = 1.5
 
+mYAxisPosition = 1
 resizeX
 
 mAllowHorizontalMouseScrolling = True
@@ -1028,7 +1035,7 @@ paintAll
 End Sub
 
 Private Sub setHorizontalScrollBar()
-HScroll.Max = IIf(lastVisiblePeriod > mCurrentPeriodNumber, lastVisiblePeriod, mCurrentPeriodNumber)
+HScroll.Max = IIf(lastVisiblePeriod > mPeriods.currentPeriodNumber, lastVisiblePeriod, mPeriods.currentPeriodNumber)
 HScroll.Min = IIf(lastVisiblePeriod < (chartWidth - 1), lastVisiblePeriod, chartWidth - 1)
 If HScroll.Max = HScroll.Min Then HScroll.Min = HScroll.Min - 1
 HScroll.value = lastVisiblePeriod
