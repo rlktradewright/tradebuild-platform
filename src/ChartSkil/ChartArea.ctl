@@ -584,6 +584,14 @@ Case ToolPitchfork
 End Select
 End Property
 
+Public Property Get firstVisiblePeriod() As Long
+firstVisiblePeriod = mScaleLeft
+End Property
+
+Public Property Let firstVisiblePeriod(ByVal value As Long)
+scrollX value - mScaleLeft + 1
+End Property
+
 Public Property Get gridColor() As Long
 gridColor = mGridColour
 End Property
