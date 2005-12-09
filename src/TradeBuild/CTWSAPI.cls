@@ -471,6 +471,7 @@ Case sckAddressNotAvailable, _
     sckConnectionRefused, _
     sckHostNotFound, _
     sckHostNotFoundTryAgain
+    
     If mConnectionState = ConnectionStates.ConnNotConnected Then
         ReleaseSocket
         RaiseEvent connectFailed(timestamp, _
@@ -479,6 +480,12 @@ Case sckAddressNotAvailable, _
         retryConnection
     Else
         SetServiceProviderError errorNum, Description, "IB TWS"
+        mConnectionState = ConnectionStates.ConnNotConnected
+        ReleaseSocket
+        retryConnection
+        RaiseEvent connectionToTWSClosed( _
+                                gCurrentTime, _
+                                IIf(mConnectionRetryIntervalSecs = 0, False, True))
     End If
 'Case sckConnectionReset
 
