@@ -220,6 +220,7 @@ Private Sub mTradeBuildAPI_connectionToTWSClosed( _
                 ByVal timestamp As Date, _
                 ByVal reconnecting As Boolean)
 RaiseEvent connectionToTWSClosed(timestamp, reconnecting)
+mShortnameIndex = 0
 End Sub
 
 Private Sub mTradeBuildAPI_errorMessage(ByVal timestamp As Date, _
