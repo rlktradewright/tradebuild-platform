@@ -448,6 +448,8 @@ Implements WriterListener
 ' Constants
 '================================================================================
 
+Private Const MaxTickerListenerIndex As Long = 15
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -465,7 +467,6 @@ Attribute mDataCollector.VB_VarHelpID = -1
 Private mStop As Boolean
 Private mFailpoint As Long
 
-Private mTickerListeners(15) As TickerListener
 Private mTickerListenerIndex As Long
 
 '================================================================================
@@ -594,6 +595,7 @@ If reconnecting Then
 Else
     StopButton.Enabled = False
 End If
+clearTickers
 End Sub
 
 Private Sub mDataCollector_errorMessage( _
@@ -619,7 +621,7 @@ End Sub
 
 Private Sub mDataCollector_TickerListenerAdded( _
                 ByVal listener As TBQuoteServer.TickerListener)
-If mTickerListenerIndex > UBound(mTickerListeners) Then
+If mTickerListenerIndex > MaxTickerListenerIndex Then
     listener.Index = -1
     logMessage "Can't display ticker for " & listener.Contract.specifier.localSymbol
     Exit Sub
@@ -651,6 +653,18 @@ End Property
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub clearTickers()
+Dim i As Long
+
+If mTickerListenerIndex = 0 Then Exit Sub
+    
+For i = 0 To mTickerListenerIndex - 1
+    ShortNameText(i).text = ""
+    DataLightText(i).BackColor = vbButtonFace
+Next
+mTickerListenerIndex = 0
+End Sub
 
 Private Sub logMessage(ByVal text As String)
 If Len(LogText.text) > (32000 - Len(text)) Then
