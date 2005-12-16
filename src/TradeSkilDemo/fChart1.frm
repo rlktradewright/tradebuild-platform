@@ -364,7 +364,10 @@ If mTimeframe Is Nothing Then
     Set mTimeframe = mTimeframes.Add(mBarLength, _
                                 TimePeriodUnits.Minute, _
                                 GenerateTimeframeKey, _
-                                mInitialNumberOfBars)
+                                mInitialNumberOfBars, _
+                                , _
+                                , _
+                                IIf(mTicker.replayingTickfile, True, False))
 End If
 
 Set mBars = mTimeframe.TradeBars
