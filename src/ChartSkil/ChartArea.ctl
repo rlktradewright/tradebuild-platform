@@ -10,35 +10,36 @@ Begin VB.UserControl Chart
    ClientWidth     =   9390
    ScaleHeight     =   7575
    ScaleWidth      =   9390
-   Begin VB.PictureBox YAxisPicture 
-      Appearance      =   0  'Flat
-      AutoRedraw      =   -1  'True
-      BackColor       =   &H80000005&
-      ForeColor       =   &H80000008&
-      Height          =   615
-      Index           =   0
-      Left            =   8400
-      ScaleHeight     =   585
-      ScaleWidth      =   945
-      TabIndex        =   4
-      Top             =   6360
-      Visible         =   0   'False
-      Width           =   975
-   End
    Begin VB.PictureBox RegionDividerPicture 
       Appearance      =   0  'Flat
-      BackColor       =   &H80000005&
+      BorderStyle     =   0  'None
       ForeColor       =   &H80000008&
-      Height          =   40
+      Height          =   70
       Index           =   0
       Left            =   0
       MousePointer    =   7  'Size N S
-      ScaleHeight     =   15
-      ScaleWidth      =   9345
+      ScaleHeight     =   75
+      ScaleWidth      =   9375
       TabIndex        =   3
       Top             =   6240
       Visible         =   0   'False
       Width           =   9375
+   End
+   Begin VB.PictureBox YAxisPicture 
+      Appearance      =   0  'Flat
+      AutoRedraw      =   -1  'True
+      BackColor       =   &H80000005&
+      BorderStyle     =   0  'None
+      ForeColor       =   &H80000008&
+      Height          =   615
+      Index           =   0
+      Left            =   8400
+      ScaleHeight     =   615
+      ScaleWidth      =   975
+      TabIndex        =   4
+      Top             =   6360
+      Visible         =   0   'False
+      Width           =   975
    End
    Begin MSComCtl2.FlatScrollBar HScroll 
       Height          =   255
@@ -57,11 +58,12 @@ Begin VB.UserControl Chart
       Appearance      =   0  'Flat
       AutoRedraw      =   -1  'True
       BackColor       =   &H80000005&
+      BorderStyle     =   0  'None
       ForeColor       =   &H80000008&
       Height          =   375
       Left            =   0
-      ScaleHeight     =   345
-      ScaleWidth      =   9360
+      ScaleHeight     =   375
+      ScaleWidth      =   9390
       TabIndex        =   1
       Top             =   6960
       Width           =   9390
@@ -70,12 +72,13 @@ Begin VB.UserControl Chart
       Appearance      =   0  'Flat
       AutoRedraw      =   -1  'True
       BackColor       =   &H80000005&
+      BorderStyle     =   0  'None
       ForeColor       =   &H80000008&
       Height          =   615
       Index           =   0
       Left            =   0
-      ScaleHeight     =   585
-      ScaleWidth      =   8385
+      ScaleHeight     =   615
+      ScaleWidth      =   8415
       TabIndex        =   0
       Top             =   6360
       Visible         =   0   'False
@@ -434,7 +437,7 @@ Dim prevPercentHeight As Double
 
 If Not mLeftDragging = True Then Exit Sub
 
-currRegion = index + 1  ' we resize the region below the divider
+currRegion = index  ' we resize the region below the divider
 vertChange = mLeftDragStartPosnY - y
 newHeight = mRegions(currRegion).actualHeight + vertChange
 
@@ -1204,8 +1207,8 @@ For i = 0 To mRegionsIndex
     top = top + ChartRegionPicture(aRegion.regionNumber).height
     aRegion.resizedY
     If i <> mRegionsIndex Then
-        RegionDividerPicture(i).top = top
-        top = top + RegionDividerPicture(i).height
+        RegionDividerPicture(i + 1).top = top
+        top = top + RegionDividerPicture(i + 1).height
     End If
 Next
 
