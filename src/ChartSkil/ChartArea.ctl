@@ -1,5 +1,6 @@
 VERSION 5.00
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.UserControl Chart 
    Alignable       =   -1  'True
    AutoRedraw      =   -1  'True
@@ -7,9 +8,9 @@ Begin VB.UserControl Chart
    ClientHeight    =   7575
    ClientLeft      =   0
    ClientTop       =   0
-   ClientWidth     =   9390
+   ClientWidth     =   10665
    ScaleHeight     =   7575
-   ScaleWidth      =   9390
+   ScaleWidth      =   10665
    Begin VB.PictureBox RegionDividerPicture 
       Appearance      =   0  'Flat
       BorderStyle     =   0  'None
@@ -83,6 +84,310 @@ Begin VB.UserControl Chart
       Top             =   6360
       Visible         =   0   'False
       Width           =   8415
+   End
+   Begin MSComctlLib.ImageList ImageList1 
+      Left            =   0
+      Top             =   0
+      _ExtentX        =   1005
+      _ExtentY        =   1005
+      BackColor       =   -2147483643
+      ImageWidth      =   32
+      ImageHeight     =   32
+      MaskColor       =   12632256
+      _Version        =   393216
+      BeginProperty Images {2C247F25-8591-11D1-B16A-00C0F0283628} 
+         NumListImages   =   17
+         BeginProperty ListImage1 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":0000
+            Key             =   "showbars"
+         EndProperty
+         BeginProperty ListImage2 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":031A
+            Key             =   "showcandlesticks"
+         EndProperty
+         BeginProperty ListImage3 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":0634
+            Key             =   "showline"
+         EndProperty
+         BeginProperty ListImage4 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":094E
+            Key             =   ""
+         EndProperty
+         BeginProperty ListImage5 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":0C68
+            Key             =   ""
+         EndProperty
+         BeginProperty ListImage6 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":0F82
+            Key             =   "thinnerbars"
+         EndProperty
+         BeginProperty ListImage7 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":129C
+            Key             =   "thickerbars"
+         EndProperty
+         BeginProperty ListImage8 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":15B6
+            Key             =   "narrower"
+         EndProperty
+         BeginProperty ListImage9 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":1A08
+            Key             =   "wider"
+         EndProperty
+         BeginProperty ListImage10 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":1D22
+            Key             =   "scaledown"
+         EndProperty
+         BeginProperty ListImage11 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":203C
+            Key             =   "scaleup"
+         EndProperty
+         BeginProperty ListImage12 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":2356
+            Key             =   "scrolldown"
+         EndProperty
+         BeginProperty ListImage13 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":2670
+            Key             =   "scrollup"
+         EndProperty
+         BeginProperty ListImage14 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":298A
+            Key             =   "scrollleft"
+         EndProperty
+         BeginProperty ListImage15 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":2CA4
+            Key             =   "scrollright"
+         EndProperty
+         BeginProperty ListImage16 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":2FBE
+            Key             =   "scrollend"
+         EndProperty
+         BeginProperty ListImage17 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":32D8
+            Key             =   ""
+         EndProperty
+      EndProperty
+   End
+   Begin MSComctlLib.ImageList ImageList2 
+      Left            =   600
+      Top             =   0
+      _ExtentX        =   1005
+      _ExtentY        =   1005
+      BackColor       =   -2147483643
+      ImageWidth      =   32
+      ImageHeight     =   32
+      MaskColor       =   12632256
+      _Version        =   393216
+      BeginProperty Images {2C247F25-8591-11D1-B16A-00C0F0283628} 
+         NumListImages   =   17
+         BeginProperty ListImage1 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":35F2
+            Key             =   ""
+         EndProperty
+         BeginProperty ListImage2 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":390C
+            Key             =   ""
+         EndProperty
+         BeginProperty ListImage3 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":3C26
+            Key             =   ""
+         EndProperty
+         BeginProperty ListImage4 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":3F40
+            Key             =   ""
+         EndProperty
+         BeginProperty ListImage5 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":425A
+            Key             =   ""
+         EndProperty
+         BeginProperty ListImage6 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":4574
+            Key             =   ""
+         EndProperty
+         BeginProperty ListImage7 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":488E
+            Key             =   ""
+         EndProperty
+         BeginProperty ListImage8 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":4BA8
+            Key             =   ""
+         EndProperty
+         BeginProperty ListImage9 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":4FFA
+            Key             =   ""
+         EndProperty
+         BeginProperty ListImage10 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":5314
+            Key             =   ""
+         EndProperty
+         BeginProperty ListImage11 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":562E
+            Key             =   ""
+         EndProperty
+         BeginProperty ListImage12 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":5948
+            Key             =   ""
+         EndProperty
+         BeginProperty ListImage13 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":5C62
+            Key             =   ""
+         EndProperty
+         BeginProperty ListImage14 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":5F7C
+            Key             =   ""
+         EndProperty
+         BeginProperty ListImage15 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":6296
+            Key             =   ""
+         EndProperty
+         BeginProperty ListImage16 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":65B0
+            Key             =   ""
+         EndProperty
+         BeginProperty ListImage17 {2C247F27-8591-11D1-B16A-00C0F0283628} 
+            Picture         =   "ChartArea.ctx":68CA
+            Key             =   ""
+         EndProperty
+      EndProperty
+   End
+   Begin MSComctlLib.Toolbar Toolbar1 
+      Height          =   570
+      Left            =   0
+      TabIndex        =   5
+      Top             =   0
+      Width           =   10575
+      _ExtentX        =   18653
+      _ExtentY        =   1005
+      ButtonWidth     =   1032
+      ButtonHeight    =   1005
+      Style           =   1
+      ImageList       =   "ImageList1"
+      DisabledImageList=   "ImageList2"
+      _Version        =   393216
+      BeginProperty Buttons {66833FE8-8583-11D1-B16A-00C0F0283628} 
+         NumButtons      =   22
+         BeginProperty Button1 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Enabled         =   0   'False
+            Key             =   "showbars"
+            Object.ToolTipText     =   "Bar chart"
+            ImageIndex      =   1
+            Style           =   2
+         EndProperty
+         BeginProperty Button2 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Enabled         =   0   'False
+            Key             =   "showcandlesticks"
+            Object.ToolTipText     =   "Candlestick chart"
+            ImageIndex      =   2
+            Style           =   2
+         EndProperty
+         BeginProperty Button3 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Enabled         =   0   'False
+            Key             =   "showline"
+            Object.ToolTipText     =   "Line chart"
+            ImageIndex      =   3
+            Style           =   2
+         EndProperty
+         BeginProperty Button4 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Style           =   3
+         EndProperty
+         BeginProperty Button5 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Enabled         =   0   'False
+            Key             =   "showcrosshair"
+            Object.ToolTipText     =   "Show crosshair"
+            ImageIndex      =   4
+            Style           =   2
+         EndProperty
+         BeginProperty Button6 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Enabled         =   0   'False
+            Key             =   "showcursor"
+            Object.ToolTipText     =   "Show cursor"
+            ImageIndex      =   5
+            Style           =   2
+         EndProperty
+         BeginProperty Button7 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Style           =   3
+         EndProperty
+         BeginProperty Button8 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Enabled         =   0   'False
+            Key             =   "thinnerbars"
+            Object.ToolTipText     =   "Thinner bars"
+            ImageIndex      =   6
+         EndProperty
+         BeginProperty Button9 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Enabled         =   0   'False
+            Key             =   "thickerbars"
+            Object.ToolTipText     =   "Thicker bars"
+            ImageIndex      =   7
+         EndProperty
+         BeginProperty Button10 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Style           =   3
+         EndProperty
+         BeginProperty Button11 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Enabled         =   0   'False
+            Key             =   "reducespacing"
+            Object.ToolTipText     =   "Reduce bar spacing"
+            ImageIndex      =   8
+         EndProperty
+         BeginProperty Button12 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Enabled         =   0   'False
+            Key             =   "increasespacing"
+            Object.ToolTipText     =   "Increase bar spacing"
+            ImageIndex      =   9
+         EndProperty
+         BeginProperty Button13 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Enabled         =   0   'False
+            Key             =   "scaledown"
+            Object.ToolTipText     =   "Compress vertical scale"
+            ImageIndex      =   10
+         EndProperty
+         BeginProperty Button14 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Enabled         =   0   'False
+            Key             =   "scaleup"
+            Object.ToolTipText     =   "Expand vertical scale"
+            ImageIndex      =   11
+         EndProperty
+         BeginProperty Button15 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Style           =   3
+         EndProperty
+         BeginProperty Button16 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Enabled         =   0   'False
+            Key             =   "scrolldown"
+            Object.ToolTipText     =   "Scroll down"
+            ImageIndex      =   12
+         EndProperty
+         BeginProperty Button17 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Enabled         =   0   'False
+            Key             =   "scrollup"
+            Object.ToolTipText     =   "Scroll up"
+            ImageIndex      =   13
+         EndProperty
+         BeginProperty Button18 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Enabled         =   0   'False
+            Key             =   "scrollleft"
+            Object.ToolTipText     =   "Scroll left"
+            ImageIndex      =   14
+         EndProperty
+         BeginProperty Button19 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Enabled         =   0   'False
+            Key             =   "scrollright"
+            Object.ToolTipText     =   "Scroll right"
+            ImageIndex      =   15
+         EndProperty
+         BeginProperty Button20 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Enabled         =   0   'False
+            Key             =   "scrollend"
+            Object.ToolTipText     =   "Scroll to end"
+            ImageIndex      =   16
+         EndProperty
+         BeginProperty Button21 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Style           =   3
+         EndProperty
+         BeginProperty Button22 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Enabled         =   0   'False
+            Key             =   "autoscale"
+            Object.ToolTipText     =   "Autoscale"
+            ImageIndex      =   17
+         EndProperty
+      EndProperty
    End
 End
 Attribute VB_Name = "Chart"
@@ -321,6 +626,7 @@ HScroll.top = UserControl.height - HScroll.height
 HScroll.width = UserControl.width
 XAxisPicture.top = HScroll.top - XAxisPicture.height
 XAxisPicture.width = UserControl.width
+Toolbar1.width = UserControl.width
 resizeX
 resizeY
 paintAll
@@ -470,6 +776,37 @@ Private Sub RegionDividerPicture_MouseUp( _
                             y As Single)
 If Button = vbLeftButton Then mLeftDragging = False
 mUserResizingRegions = False
+End Sub
+
+'================================================================================
+' Toolbar1 Event Handlers
+'================================================================================
+
+Private Sub Toolbar1_ButtonClick(ByVal Button As MSComctlLib.Button)
+
+Select Case Button.key
+Case "showcrosshair"
+    showCrosshairs = True
+Case "showcursor"
+    showCrosshairs = False
+Case "reducespacing"
+    If twipsPerBar >= 50 Then
+        twipsPerBar = twipsPerBar - 25
+    End If
+    If twipsPerBar < 50 Then
+        Button.Enabled = False
+    End If
+Case "increasespacing"
+    twipsPerBar = twipsPerBar + 25
+    Toolbar1.Buttons("reducespacing").Enabled = True
+Case "scrollleft"
+    scrollX -(chartWidth * 0.2)
+Case "scrollright"
+    scrollX chartWidth * 0.2
+Case "scrollend"
+    lastVisiblePeriod = currentPeriodNumber
+End Select
+
 End Sub
 
 '================================================================================
@@ -783,8 +1120,17 @@ Public Function addChartRegion(ByVal percentheight As Double, _
 '
 
 Dim YAxisRegion As ChartRegion
+Dim btn As Button
 
 Set addChartRegion = New ChartRegion
+
+If mRegionsIndex = -1 Then
+    addChartRegion.toolbar = Toolbar1
+    For Each btn In Toolbar1.Buttons
+        btn.Enabled = True
+        If btn.key = "showcrosshair" Then btn.value = tbrPressed
+    Next
+End If
 
 Load ChartRegionPicture(ChartRegionPicture.UBound + 1)
 ChartRegionPicture(ChartRegionPicture.UBound).align = vbAlignNone
@@ -884,7 +1230,8 @@ End Function
 
 Private Function calcAvailableHeight() As Long
 calcAvailableHeight = XAxisPicture.top - _
-                    mRegionsIndex * RegionDividerPicture(0).height
+                    mRegionsIndex * RegionDividerPicture(0).height - _
+                    Toolbar1.height
 End Function
 
 Private Sub createXAxisRegion()
@@ -1196,7 +1543,7 @@ For i = 0 To mRegionsIndex
 Next
 
 ' Now actually set the heights and positions for the picture boxes
-top = 0
+top = Toolbar1.height
     
 For i = 0 To mRegionsIndex
     Set aRegion = mRegions(i).region

@@ -104,12 +104,17 @@ Private mDataPointSeriesCol As Collection
 Private mLineSeriesCol As Collection
 Private mTextSeriesCol As Collection
 
+Private mFirstBarSeries As BarSeries
+
 Private mDefaultTextSeries As TextSeries
 Private mDefaultLineSeries As LineSeries
 
 'Private mSurface As PictureBox
 Private mCanvas As canvas
 Private mSuppressDrawing As Boolean
+
+Private WithEvents mToolbar As toolbar
+Attribute mToolbar.VB_VarHelpID = -1
 
 'Private mGaugeX As Double
 'Private mGaugeY As Double
@@ -475,6 +480,56 @@ paintRegion
 End Sub
 
 '================================================================================
+' mToolbar Event Handlers
+'================================================================================
+
+Private Sub mToolbar_ButtonClick(ByVal Button As MSComctlLib.Button)
+
+Select Case Button.key
+Case "showbars"
+    mFirstBarSeries.displayAsCandlestick = False
+Case "showcandlesticks"
+    mFirstBarSeries.displayAsCandlestick = True
+Case "showline"
+    ' not yet implemented in ChartSkil
+Case "thinnerbars"
+    If mFirstBarSeries.displayAsCandlestick Then
+        If mFirstBarSeries.candleWidth > 0.1 Then
+            mFirstBarSeries.candleWidth = mFirstBarSeries.candleWidth - 0.1
+        End If
+        If mFirstBarSeries.candleWidth <= 0.1 Then
+            Button.Enabled = False
+        End If
+    Else
+        If mFirstBarSeries.barThickness > 1 Then
+            mFirstBarSeries.barThickness = mFirstBarSeries.barThickness - 1
+        End If
+        If mFirstBarSeries.barThickness = 1 Then
+            Button.Enabled = False
+        End If
+    End If
+Case "thickerbars"
+    If mFirstBarSeries.displayAsCandlestick Then
+        mFirstBarSeries.candleWidth = mFirstBarSeries.candleWidth + 0.1
+    Else
+        mFirstBarSeries.barThickness = mFirstBarSeries.barThickness + 1
+    End If
+    mToolbar.Buttons("thinnerbars").Enabled = True
+Case "scaledown"
+    scaleUp -0.09091
+Case "scaleup"
+    scaleUp 0.1
+Case "scrolldown"
+    scrollVerticalProportion -0.2
+Case "scrollup"
+    scrollVerticalProportion 0.2
+Case "autoscale"
+    autoscale = True
+End Select
+
+End Sub
+
+'================================================================================
 ' Properties
 '================================================================================
 
@@ -488,6 +543,9 @@ If mAutoscale Then
     calculateVerticalBounds
     determineVisibleObjects
     paintRegion
+End If
+If Not mToolbar Is Nothing Then
+    mToolbar.Buttons("autoscale").Enabled = IIf(mAutoscale, False, True)
 End If
 End Property
 
@@ -943,6 +1001,10 @@ End Property
 'mCanvas.width = value
 'End Property
 
+Public Property Get scaleGridSpacingY() As Single
+scaleGridSpacingY = mScaleGridSpacingY
+End Property
+
 Friend Property Let sessionStartTime(ByVal val As Date)
 mSessionOffsetMinutes = calculateMinutesFromMidnight(val) Mod 60
 End Property
@@ -1182,8 +1244,18 @@ Public Property Let textPaddingY(ByVal newValue As Double)
 mTextPaddingY = newValue
 End Property
 
-Public Property Get scaleGridSpacingY() As Single
-scaleGridSpacingY = mScaleGridSpacingY
+Friend Property Let toolbar(ByVal newValue As toolbar)
+Dim btn As Button
+
+Set mToolbar = newValue
+
+For Each btn In mToolbar.Buttons
+    If btn.key = "autoscale" Then btn.Enabled = IIf(mAutoscale, False, True)
+    If btn.key = "showbars" Then btn.value = tbrPressed
+    If btn.key = "showline" Then btn.Enabled = False
+                                        ' because line charts are not implemented yet
+Next
+
 End Property
 
 Friend Property Let verticalGridSpacing(ByVal value As Long)
@@ -1241,6 +1313,7 @@ End Property
 
 Public Function addBarSeries(Optional ByVal layer As Long = -1) As BarSeries
 Set addBarSeries = New BarSeries
+If mFirstBarSeries Is Nothing Then Set mFirstBarSeries = addBarSeries
 mBarSeriesCol.add addBarSeries
 addBarSeries.canvas = mCanvas
 addBarSeries.candleWidth = barCandleWidth
@@ -1595,7 +1668,7 @@ If Not mYAxisRegion Is Nothing Then mYAxisRegion.resizedY
 End Sub
 
 Public Sub scaleUp(ByVal factor As Single)
-mAutoscale = False
+autoscale = False
 With mCanvas
     setVerticalScale .bottom + factor * .height / 2, _
                                 .top - factor * .height / 2
@@ -1647,12 +1720,12 @@ End If
 End Sub
 
 Public Sub scrollVertical(ByVal amount As Single)
-mAutoscale = False
+autoscale = False
 setVerticalScale mCanvas.bottom + amount, mCanvas.top + amount
 End Sub
 
 Public Sub scrollVerticalProportion(ByVal proportion As Single)
-mAutoscale = False
+autoscale = False
 setVerticalScale mCanvas.bottom + proportion * mCanvas.height, _
                 mCanvas.top + proportion * mCanvas.height
 End Sub
