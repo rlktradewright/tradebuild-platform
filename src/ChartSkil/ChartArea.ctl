@@ -1010,13 +1010,13 @@ Dim i As Long
 Dim region As ChartRegion
 
 newScaleWidth = CSng(XAxisPicture.width) / CSng(mTwipsPerBar) - 0.5!
+mScaleLeft = mYAxisPosition + _
+            (mYAxisWidthCm * TwipsPerCm / XAxisPicture.width * newScaleWidth) - _
+            newScaleWidth
+
 If newScaleWidth = mScaleWidth Then Exit Sub
 
 mScaleWidth = newScaleWidth
-
-mScaleLeft = mYAxisPosition + _
-            (mYAxisWidthCm * TwipsPerCm / XAxisPicture.width * mScaleWidth) - _
-            mScaleWidth
 
 For i = 0 To ChartRegionPicture.UBound
     YAxisPicture(i).left = UserControl.width - YAxisPicture(i).width
