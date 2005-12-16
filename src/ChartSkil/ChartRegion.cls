@@ -1300,7 +1300,7 @@ With addLineSeries
 End With
 End Function
 
-Friend Sub addPeriod(ByVal periodNumber As Long, _
+Friend Sub addperiod(ByVal periodNumber As Long, _
                     ByVal timestamp As Date)
 addNewPeriod periodNumber
 setVerticalGridLine timestamp, periodNumber
@@ -1350,7 +1350,7 @@ For i = mBarSeriesCol.count To 1 Step -1
     Set aBarSeries = mBarSeriesCol(i)
     aBarSeries.removeAll
     aBarSeries.finish
-    mBarSeriesCol.Remove i
+    mBarSeriesCol.remove i
 Next
 
 For i = mDataPointSeriesCol.count To 1 Step -1
@@ -1358,7 +1358,7 @@ For i = mDataPointSeriesCol.count To 1 Step -1
     Set aDataPointSeries = mDataPointSeriesCol(i)
     aDataPointSeries.removeAll
     aDataPointSeries.finish
-    mDataPointSeriesCol.Remove i
+    mDataPointSeriesCol.remove i
 Next
 
 For i = mLineSeriesCol.count To 1 Step -1
@@ -1366,7 +1366,7 @@ For i = mLineSeriesCol.count To 1 Step -1
     Set aLineSeries = mLineSeriesCol(i)
     aLineSeries.removeAll
     aLineSeries.finish
-    mLineSeriesCol.Remove i
+    mLineSeriesCol.remove i
 Next
 
 For i = mTextSeriesCol.count To 1 Step -1
@@ -1374,7 +1374,7 @@ For i = mTextSeriesCol.count To 1 Step -1
     Set aTextSeries = mTextSeriesCol(i)
     aTextSeries.removeAll
     aTextSeries.finish
-    mTextSeriesCol.Remove i
+    mTextSeriesCol.remove i
 Next
 
 ' now notify each object in the graphic object table that it's finished with
@@ -1770,7 +1770,8 @@ End With
 End Sub
 
 Private Sub addVerticalGridLine(ByVal periodNumber As Long, _
-                                ByVal key As String)
+                                ByVal key As String, _
+                                ByVal label As String)
 Dim vGridLine As ChartSkil.Line
 Dim vGridText As text
 
@@ -1803,7 +1804,7 @@ If mShowGridText Then
                                     0#, _
                                     CoordsLogical, _
                                     CoordsDistance)
-        vGridText.text = key
+        vGridText.text = label
     End If
 End If
 
@@ -1891,6 +1892,11 @@ With mGraphicObjects(index)
     End If
 End With
 End Sub
+
+Private Function calculateSecondsFromMidnight( _
+                            ByVal timestamp As Date) As Long
+calculateSecondsFromMidnight = Int((timestamp - Int(timestamp) + 1 / 86400000) * 86400)
+End Function
 
 Private Sub calculateVerticalBounds()
 Dim objMax As Double
@@ -2467,7 +2473,7 @@ Do While z < mCanvas.top
     If i > mYGridLines.count Then
         Set aLine = mYGridLines.addLine
     Else
-        Set aLine = mYGridLines.Item(i)
+        Set aLine = mYGridLines.item(i)
     End If
     aLine.point1 = Me.newPoint(0, z, CoordsRelative, CoordsLogical)
     aLine.point2 = Me.newPoint(100, z, CoordsRelative, CoordsLogical)
@@ -2475,7 +2481,7 @@ Do While z < mCanvas.top
     z = z + mScaleGridSpacingY
 Loop
 For i = i + 1 To mYGridLines.count
-    Set aLine = mYGridLines.Item(i)
+    Set aLine = mYGridLines.item(i)
     aLine.point1 = Me.newPoint(-1000, 0, CoordsLogical, CoordsLogical)
     aLine.point2 = Me.newPoint(-1000, 0, CoordsLogical, CoordsLogical)
 Next
@@ -2498,14 +2504,14 @@ Do While z < mCanvas.top
     If i > mYGridTexts.count Then
         Set aText = mYGridTexts.addText
     Else
-        Set aText = mYGridTexts.Item(i)
+        Set aText = mYGridTexts.item(i)
     End If
     aText.text = Format(z, mYScaleFormatStr)
     aText.position = mYAxisRegion.newPoint(1, z, CoordsLogical, CoordsLogical)
     z = z + mScaleGridSpacingY
 Loop
 For i = i + 1 To mYGridTexts.count
-    Set aText = mYGridTexts.Item(i)
+    Set aText = mYGridTexts.item(i)
     aText.text = ""
 Next
 mSuppressDrawing = currSuppress
@@ -2514,7 +2520,9 @@ End Sub
 Private Sub setVerticalGridLine(ByVal timestamp As Date, _
                             ByVal periodNumber As Long)
 Dim vertGridIntervalMins As Long
+Dim gridLineTime As Date
 Dim mins As Long
+Dim secs As Long
 
 If mVerticalGridSpacing = 0 Then
     Select Case mPeriodLengthMinutes
@@ -2535,40 +2543,64 @@ If mVerticalGridSpacing = 0 Then
     Case 60
         vertGridIntervalMins = 360
     Case 1440   ' daily chart
-        addVerticalGridLine periodNumber, Format(timestamp, "Mmm yy")
+        addVerticalGridLine periodNumber, _
+                        Format(CDate(Int(timestamp) - DatePart("d", timestamp) + 1), "yyyymmdd"), _
+                        Format(timestamp, "Mmm yy")
         Exit Sub
     Case Else
         ' in all other cases just draw a vertical gridline every 10 bars
         If periodNumber Mod 10 = 0 Then
-            addVerticalGridLine periodNumber, FormatDateTime(timestamp, vbShortTime)
+            addVerticalGridLine periodNumber, Format(timestamp, "yyyymmddhhnnss"), FormatDateTime(timestamp, vbShortTime)
         End If
         Exit Sub
     End Select
     
     mins = calculateMinutesFromMidnight(timestamp)
+    gridLineTime = Int(timestamp) + ((Int((mins - mSessionOffsetMinutes) / vertGridIntervalMins) * vertGridIntervalMins) + mSessionOffsetMinutes) / 1440
     addVerticalGridLine periodNumber, _
-        FormatDateTime(((Int((mins - mSessionOffsetMinutes) / vertGridIntervalMins) * vertGridIntervalMins) + mSessionOffsetMinutes) / 1440, vbShortTime)
+                    Format(gridLineTime, "yyyymmddhhnnss"), _
+                    FormatDateTime(gridLineTime, vbShortTime)
 Else
     Select Case mVerticalGridUnits
     Case TimeSecond
+        secs = calculateSecondsFromMidnight(timestamp)
+        gridLineTime = Int(timestamp) + ((Int((secs - 60 * mSessionOffsetMinutes) / mVerticalGridSpacing) * mVerticalGridSpacing) + 60 * mSessionOffsetMinutes) / 86400
         addVerticalGridLine periodNumber, _
-            FormatDateTime(((Int((timestamp - mSessionOffsetMinutes / 1440) / mVerticalGridSpacing) * mVerticalGridSpacing) + mSessionOffsetMinutes / 1440), vbLongTime)
+                        Format(gridLineTime, "yyyymmddhhnnss"), _
+                        FormatDateTime(gridLineTime, vbLongTime)
     Case TimeMinute
         mins = calculateMinutesFromMidnight(timestamp)
+        gridLineTime = Int(timestamp) + ((Int((mins - mSessionOffsetMinutes) / mVerticalGridSpacing) * mVerticalGridSpacing) + mSessionOffsetMinutes) / 1440
         addVerticalGridLine periodNumber, _
-            FormatDateTime(((Int((mins - mSessionOffsetMinutes) / mVerticalGridSpacing) * mVerticalGridSpacing) + mSessionOffsetMinutes) / 1440, vbShortTime)
+                        Format(gridLineTime, "yyyymmddhhnnss"), _
+                        FormatDateTime(gridLineTime, vbShortTime)
     Case TimeHour
         mins = calculateMinutesFromMidnight(timestamp)
+        gridLineTime = Int(timestamp) + ((Int((mins - mSessionOffsetMinutes) / (60 * mVerticalGridSpacing)) * 60 * mVerticalGridSpacing) + mSessionOffsetMinutes) / 1440
         addVerticalGridLine periodNumber, _
-            FormatDateTime(((Int((mins - mSessionOffsetMinutes) / (mVerticalGridSpacing * 60)) * mVerticalGridSpacing * 60) + mSessionOffsetMinutes) / 1440, vbShortTime)
+                        Format(gridLineTime, "yyyymmddhhnnss"), _
+                        FormatDateTime(gridLineTime, vbShortTime)
     Case TimeDay
-        addVerticalGridLine periodNumber, Format(DateSerial(Year(timestamp), Month(timestamp), Int(DatePart("d", timestamp) / mVerticalGridSpacing) * mVerticalGridSpacing), "Mmm d")
+        gridLineTime = Int(timestamp) - (DatePart("d", timestamp) - 1) Mod mVerticalGridSpacing
+        addVerticalGridLine periodNumber, _
+                        Format(gridLineTime, "yyyymmddhhnnss"), _
+                        Format(gridLineTime, "Mmm d")
     Case TimeWeek
-
+        gridLineTime = Int(timestamp) - 7 * ((DatePart("ww", timestamp) - 1) Mod mVerticalGridSpacing) - Weekday(timestamp) + 1
+        addVerticalGridLine periodNumber, _
+                        Format(gridLineTime, "yyyymmddhhnnss"), _
+                        Format(gridLineTime, "Mmm d")
     Case TimeMonth
-
+        gridLineTime = DateSerial(Year(timestamp), Int((Month(timestamp) - 1) / mVerticalGridSpacing) * mVerticalGridSpacing + 1, 1)
+        addVerticalGridLine periodNumber, _
+                        Format(gridLineTime, "yyyymmddhhnnss"), _
+                        Format(gridLineTime, "Mmm d")
     Case TimeYear
-
+        gridLineTime = DateSerial(Int(Year(timestamp) / mVerticalGridSpacing) * mVerticalGridSpacing, 1, 1)
+        addVerticalGridLine periodNumber, _
+                        Format(gridLineTime, "yyyymmddhhnnss"), _
+                        Format(gridLineTime, "YYYY")
+        
     End Select
     
 End If
