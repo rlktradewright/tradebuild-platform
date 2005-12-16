@@ -11,28 +11,33 @@ Begin VB.UserControl Chart
    ScaleHeight     =   7575
    ScaleWidth      =   9390
    Begin VB.PictureBox YAxisPicture 
+      Appearance      =   0  'Flat
       AutoRedraw      =   -1  'True
       BackColor       =   &H80000005&
+      ForeColor       =   &H80000008&
       Height          =   615
       Index           =   0
       Left            =   8400
-      ScaleHeight     =   555
-      ScaleWidth      =   915
+      ScaleHeight     =   585
+      ScaleWidth      =   945
       TabIndex        =   4
       Top             =   6360
       Visible         =   0   'False
       Width           =   975
    End
    Begin VB.PictureBox RegionDividerPicture 
-      BorderStyle     =   0  'None
-      Height          =   25
+      Appearance      =   0  'Flat
+      BackColor       =   &H80000005&
+      ForeColor       =   &H80000008&
+      Height          =   40
       Index           =   0
       Left            =   0
       MousePointer    =   7  'Size N S
-      ScaleHeight     =   30
-      ScaleWidth      =   9375
+      ScaleHeight     =   15
+      ScaleWidth      =   9345
       TabIndex        =   3
       Top             =   6240
+      Visible         =   0   'False
       Width           =   9375
    End
    Begin MSComCtl2.FlatScrollBar HScroll 
@@ -49,24 +54,28 @@ Begin VB.UserControl Chart
       Orientation     =   1245185
    End
    Begin VB.PictureBox XAxisPicture 
+      Appearance      =   0  'Flat
       AutoRedraw      =   -1  'True
-      BackColor       =   &H00FFFFFF&
+      BackColor       =   &H80000005&
+      ForeColor       =   &H80000008&
       Height          =   375
       Left            =   0
-      ScaleHeight     =   315
-      ScaleWidth      =   9330
+      ScaleHeight     =   345
+      ScaleWidth      =   9360
       TabIndex        =   1
       Top             =   6960
       Width           =   9390
    End
    Begin VB.PictureBox ChartRegionPicture 
+      Appearance      =   0  'Flat
       AutoRedraw      =   -1  'True
-      BackColor       =   &H00FFFFFF&
+      BackColor       =   &H80000005&
+      ForeColor       =   &H80000008&
       Height          =   615
       Index           =   0
       Left            =   0
-      ScaleHeight     =   555
-      ScaleWidth      =   8355
+      ScaleHeight     =   585
+      ScaleWidth      =   8385
       TabIndex        =   0
       Top             =   6360
       Visible         =   0   'False
@@ -131,6 +140,7 @@ Private mVerticalGridUnits As TimeUnits
 
 Private mBackColour As Long
 Private mGridColour As Long
+Private mGridTextColor As Long
 Private mShowGrid As Boolean
 Private mShowCrosshairs As Boolean
 
@@ -600,6 +610,14 @@ Public Property Let gridColor(ByVal val As Long)
 mGridColour = val
 End Property
 
+Public Property Get gridTextColor() As Long
+gridTextColor = mGridTextColor
+End Property
+
+Public Property Let gridTextColor(ByVal val As Long)
+mGridTextColor = val
+End Property
+
 Public Property Get lastVisiblePeriod() As Long
 lastVisiblePeriod = mYAxisPosition - 1
 End Property
@@ -781,6 +799,7 @@ addChartRegion.surface = ChartRegionPicture(ChartRegionPicture.UBound)
 addChartRegion.suppressDrawing = mSuppressDrawing
 addChartRegion.currentTool = mCurrentTool
 addChartRegion.gridColor = mGridColour
+addChartRegion.gridTextColor = mGridTextColor
 addChartRegion.minimumPercentHeight = minimumPercentHeight
 addChartRegion.percentheight = percentheight
 addChartRegion.regionBackColor = mBackColour
@@ -877,6 +896,8 @@ mXAxisRegion.regionBackColor = mBackColour
 mXAxisRegion.regionBottom = 0
 mXAxisRegion.regionTop = 1
 mXAxisRegion.sessionStartTime = mSessionStartTime
+mXAxisRegion.gridColor = mGridColour
+mXAxisRegion.gridTextColor = mGridTextColor
 mXAxisRegion.showGrid = False
 mXAxisRegion.showGridText = True
 

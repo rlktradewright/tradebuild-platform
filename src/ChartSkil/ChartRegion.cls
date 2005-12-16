@@ -158,6 +158,7 @@ Private mGridTextHeight As Double
 
 Private mBackColour As Long
 Private mGridColour As Long
+Private mGridTextColor As Long
 Private mShowGrid As Boolean
 Private mShowPerformanceText As Boolean
 
@@ -626,6 +627,14 @@ Public Property Let gridlineSpacingY(ByVal value As Double)
 mGridlineSpacingY = value
 End Property
 
+Public Property Get gridTextColor() As Long
+gridTextColor = mGridTextColor
+End Property
+
+Public Property Let gridTextColor(ByVal val As Long)
+mGridTextColor = val
+End Property
+
 Public Property Let integerYScale(ByVal value As Boolean)
 mIntegerYScale = value
 End Property
@@ -1005,7 +1014,7 @@ If mShowGridText Then
     mXGridTexts.boxFillColor = mBackColour
     mXGridTexts.boxStyle = LineInvisible
     mXGridTexts.extended = True
-    mXGridTexts.color = mGridColour
+    mXGridTexts.color = mGridTextColor
     Set aFont = New StdFont
     aFont.name = "Arial"
     aFont.Size = 9
@@ -1215,7 +1224,7 @@ mYPositionText.font = aFont
 Set mYGridTexts = mYAxisRegion.addTextSeries(LayerNumbers.LayerGrid)
 mYGridTexts.includeInAutoscale = False
 mYGridTexts.align = AlignCentreLeft
-mYGridTexts.color = mGridColour
+mYGridTexts.color = mGridTextColor
 mYGridTexts.box = False
 Set aFont = New StdFont
 aFont.name = "Arial"
