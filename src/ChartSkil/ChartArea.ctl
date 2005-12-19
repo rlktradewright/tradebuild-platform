@@ -1454,7 +1454,7 @@ mXCursorText.boxFillColor = mBackColour
 mXCursorText.boxStyle = LineInvisible
 Set aFont = New StdFont
 aFont.name = "Arial"
-aFont.Size = 10
+aFont.Size = 9
 aFont.Underline = False
 aFont.Bold = True
 mXCursorText.font = aFont
@@ -1517,7 +1517,7 @@ mShowCrosshairs = True
 mTwipsPerBar = DefaultTwipsPerBar
 mScaleHeight = -100
 mScaleTop = 100
-mYAxisWidthCm = 1.5
+mYAxisWidthCm = 1.05
 
 mYAxisPosition = 1
 resizeX
