@@ -12,21 +12,21 @@ Begin VB.UserControl Chart
    ScaleHeight     =   7575
    ScaleWidth      =   10665
    Begin MSComCtl2.FlatScrollBar HScroll 
-      Height          =   255
+      Height          =   375
       Left            =   0
-      TabIndex        =   2
-      Top             =   7320
-      Width           =   9375
-      _ExtentX        =   16536
-      _ExtentY        =   450
+      TabIndex        =   5
+      Top             =   3840
+      Width           =   7455
+      _ExtentX        =   13150
+      _ExtentY        =   661
       _Version        =   393216
       Appearance      =   2
       Arrows          =   65536
       Orientation     =   1245185
    End
    Begin MSComctlLib.ImageList ImageList4 
-      Left            =   1800
-      Top             =   2040
+      Left            =   600
+      Top             =   1440
       _ExtentX        =   1005
       _ExtentY        =   1005
       BackColor       =   -2147483643
@@ -107,8 +107,8 @@ Begin VB.UserControl Chart
       EndProperty
    End
    Begin MSComctlLib.ImageList ImageList3 
-      Left            =   480
-      Top             =   2040
+      Left            =   0
+      Top             =   1440
       _ExtentX        =   1005
       _ExtentY        =   1005
       BackColor       =   -2147483643
@@ -198,7 +198,7 @@ Begin VB.UserControl Chart
       MousePointer    =   7  'Size N S
       ScaleHeight     =   75
       ScaleWidth      =   9375
-      TabIndex        =   3
+      TabIndex        =   2
       Top             =   6240
       Visible         =   0   'False
       Width           =   9375
@@ -214,7 +214,7 @@ Begin VB.UserControl Chart
       Left            =   8400
       ScaleHeight     =   615
       ScaleWidth      =   975
-      TabIndex        =   4
+      TabIndex        =   3
       Top             =   6360
       Visible         =   0   'False
       Width           =   975
@@ -333,7 +333,7 @@ Begin VB.UserControl Chart
    End
    Begin MSComctlLib.ImageList ImageList2 
       Left            =   600
-      Top             =   960
+      Top             =   840
       _ExtentX        =   1005
       _ExtentY        =   1005
       BackColor       =   -2147483643
@@ -416,7 +416,7 @@ Begin VB.UserControl Chart
    Begin MSComctlLib.Toolbar Toolbar1 
       Height          =   330
       Left            =   0
-      TabIndex        =   5
+      TabIndex        =   4
       Top             =   0
       Width           =   10575
       _ExtentX        =   18653
@@ -785,15 +785,12 @@ Private Sub UserControl_Resize()
 Static resizeCount As Long
 resizeCount = resizeCount + 1
 'debug.print "Control_resize: count = " & resizeCount
-mNotFirstMouseMove = False
-HScroll.top = UserControl.height - HScroll.height
-HScroll.width = UserControl.width
-XAxisPicture.top = HScroll.top - XAxisPicture.height
-XAxisPicture.width = UserControl.width
-Toolbar1.width = UserControl.width
-resizeX
-resizeY
-paintAll
+If UserControl.height <> mPrevHeight Then
+    Resize True
+    mPrevHeight = UserControl.height
+Else
+    Resize False
+End If
 'debug.print "Exit Control_resize"
 End Sub
 
@@ -1195,10 +1192,12 @@ Public Property Let showHorizontalScrollBar(ByVal val As Boolean)
 mShowHorizontalScrollBar = val
 If mShowHorizontalScrollBar Then
     HScroll.height = 255
+    HScroll.visible = True
 Else
     HScroll.height = 0
+    HScroll.visible = False
 End If
-resizeY
+Resize True
 End Property
 
 Public Property Get suppressDrawing() As Boolean
@@ -1547,6 +1546,18 @@ mXAxisRegion.paintRegion
 
 End Sub
 
+Private Sub Resize(ByVal resizeRegions As Boolean)
+mNotFirstMouseMove = False
+HScroll.top = UserControl.height - HScroll.height
+HScroll.width = UserControl.width
+XAxisPicture.top = HScroll.top - XAxisPicture.height
+XAxisPicture.width = UserControl.width
+Toolbar1.width = UserControl.width
+resizeX
+If resizeRegions Then sizeRegions
+paintAll
+End Sub
+
 Private Sub resizeX()
 Dim newScaleWidth As Single
 Dim i As Long
@@ -1581,15 +1592,6 @@ End If
 setHorizontalScrollBar
 End Sub
 
-Private Sub resizeY()
-If UserControl.height = mPrevHeight Then Exit Sub
-
-'debug.print "resizeY"
-
-mPrevHeight = UserControl.height
-sizeRegions
-End Sub
-
 Private Sub setHorizontalScrollBar()
 If mPeriods.currentPeriodNumber + chartWidth - 1 > 32767 Then
     HScroll.Max = 32767
@@ -1600,7 +1602,7 @@ HScroll.Min = 0
 'If HScroll.Max = HScroll.Min Then HScroll.Min = HScroll.Min - 1
 HScroll.value = HScroll.Min + Round((CLng(HScroll.Max) - CLng(HScroll.Min)) * lastVisiblePeriod / (mPeriods.currentPeriodNumber + chartWidth - 1))
 HScroll.SmallChange = 1
-HScroll.LargeChange = chartWidth
+HScroll.LargeChange = chartWidth - 1
 End Sub
 
 Private Function sizeRegions() As Boolean
