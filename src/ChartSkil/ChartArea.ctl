@@ -1447,16 +1447,17 @@ mXAxisRegion.showGrid = False
 mXAxisRegion.showGridText = True
 
 Set mXCursorText = mXAxisRegion.addText(LayerNumbers.LayerPointer)
-mXCursorText.align = AlignTopLeft
-mXCursorText.color = vbRed
+mXCursorText.align = AlignTopCentre
+mXCursorText.color = vbWhite Xor mBackColour
 mXCursorText.box = True
 mXCursorText.boxFillColor = mBackColour
-mXCursorText.boxStyle = LineInvisible
+mXCursorText.boxStyle = LineSolid
+mXCursorText.boxColor = vbWhite Xor mBackColour
 Set aFont = New StdFont
 aFont.name = "Arial"
-aFont.Size = 9
+aFont.Size = 8
 aFont.Underline = False
-aFont.Bold = True
+aFont.Bold = False
 mXCursorText.font = aFont
 End Sub
 

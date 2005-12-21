@@ -1282,15 +1282,16 @@ mYAxisRegion.suppressDrawing = mSuppressDrawing
 
 Set mYPositionText = mYAxisRegion.addText(LayerNumbers.LayerPointer)
 mYPositionText.align = AlignCentreLeft
-mYPositionText.color = vbRed
+mYPositionText.color = vbWhite Xor mBackColour
 mYPositionText.box = True
 mYPositionText.boxFillColor = mBackColour
-mYPositionText.boxStyle = LineInvisible
+mYPositionText.boxStyle = LineSolid
+mYPositionText.boxColor = vbWhite Xor mBackColour
 Set aFont = New StdFont
 aFont.name = "Arial"
-aFont.Size = 9
+aFont.Size = 8
 aFont.Underline = False
-aFont.Bold = True
+aFont.Bold = False
 mYPositionText.font = aFont
 
 Set mYGridTexts = mYAxisRegion.addTextSeries(LayerNumbers.LayerGrid)
@@ -2227,7 +2228,7 @@ With mCanvas
 End With
 
 If Not mYAxisRegion Is Nothing Then
-    mYPositionText.position = mYAxisRegion.newPoint(10, y, CoordsLogical, CoordsLogical)
+    mYPositionText.position = mYAxisRegion.newPoint(3, y, CoordsLogical, CoordsLogical)
     mYPositionText.text = Format(y, mYScaleSubFormatStr)
 End If
 End Sub
@@ -2252,7 +2253,7 @@ With mCanvas
 End With
 
 If Not mYAxisRegion Is Nothing Then
-    mYPositionText.position = mYAxisRegion.newPoint(10, y, CoordsLogical, CoordsLogical)
+    mYPositionText.position = mYAxisRegion.newPoint(3, y, CoordsLogical, CoordsLogical)
     mYPositionText.text = Format(y, mYScaleSubFormatStr)
 End If
 End Sub
