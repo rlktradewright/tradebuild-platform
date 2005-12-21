@@ -1599,8 +1599,10 @@ Else
     HScroll.Max = mPeriods.currentPeriodNumber + chartWidth - 1
 End If
 HScroll.Min = 0
-'If HScroll.Max = HScroll.Min Then HScroll.Min = HScroll.Min - 1
-HScroll.value = HScroll.Min + Round((CLng(HScroll.Max) - CLng(HScroll.Min)) * lastVisiblePeriod / (mPeriods.currentPeriodNumber + chartWidth - 1))
+
+' NB the following calculation has to be done using doubles as for very large charts it can cause an overflow using longs
+HScroll.value = Round(CDbl(HScroll.Max) * CDbl(lastVisiblePeriod) / CDbl((mPeriods.currentPeriodNumber + chartWidth - 1)))
+
 HScroll.SmallChange = 1
 HScroll.LargeChange = chartWidth - 1
 End Sub
