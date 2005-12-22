@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{DBED8E43-5960-49DE-B9A7-BBC22DB93A26}#7.0#0"; "ChartSkil.ocx"
+Object = "{DBED8E43-5960-49DE-B9A7-BBC22DB93A26}#7.5#0"; "ChartSkil.ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo"
@@ -671,7 +671,7 @@ mClockText.position = mPriceRegion.newPoint(90, 98, CoordsRelative, CoordsRelati
                                         ' position the box 90 percent across the region
                                         ' and 98 percent up the region (this will be
                                         ' the position of the top right corner as
-                                        ' specified by the Align property
+                                        ' specified by the Align property)
 mClockText.fixedX = True                ' the text's X position is to be fixed (ie it
                                         ' won't drift left as time passes)
 mClockText.fixedY = True                ' the text's Y position is to be fixed (ie it
@@ -681,7 +681,8 @@ mClockText.fixedY = True                ' the text's Y position is to be fixed (
 Set mBarLabelSeries = mPriceRegion.addTextSeries(LayerNumbers.LayerHIghestUser)
                                         ' Display them on a high layer but below the
                                         ' title layer
-mBarLabelSeries.Align = AlignTopCentre  ' Use the top centre of the text for aligning it
+mBarLabelSeries.Align = AlignBoxTopCentre  ' Use the top centre of the text's box for
+                                        ' aligning it
 mBarLabelSeries.box = True              ' Draw a box around each text...
 mBarLabelSeries.boxThickness = 1        ' ...with a thickness of 1 pixel...
 mBarLabelSeries.boxStyle = LineSolid    ' ...and a solid line that is centred on the
@@ -752,6 +753,10 @@ mSwingLineSeries.arrowEndFillStyle = FillSolid
 mSwingLineSeries.arrowEndColor = vbBlue
 mSwingLineSeries.arrowStartStyle = ArrowNone
 mSwingLineSeries.arrowStartColor = vbBlack
+mSwingLineSeries.extended = True        ' if this were not set to true, lines
+                                        ' would only be drawn while their
+                                        ' start point was in the visible area of
+                                        ' the chart
 
 Set mSwingLine = mSwingLineSeries.addLine ' create the first swing line
 mSwingLine.point1 = mPriceRegion.newPoint(0, 0)
@@ -830,8 +835,8 @@ startText.position = mPriceRegion.newPoint(mbar.periodNumber, mbar.highPrice)
                                         ' bar...
 startText.offset = mPriceRegion.newDimension(0, 0.4)
                                         ' ...and offset it 4 millimetres above this
-startText.Align = TextAlignModes.AlignBottomRight
-                                        ' use the bottom right corner of the text
+startText.Align = TextAlignModes.AlignBoxBottomRight
+                                        ' use the bottom right corner of the text's box
                                         ' for determining the position
 startText.extended = True               ' the text is an extended object, ie, any part
                                         ' of it that falls within the visible part of
@@ -978,7 +983,7 @@ Private Sub mTickSimulator_HistoricalBar( _
                 ByVal volume As Long)
 Dim barText As Text
 
-Set mPeriod = Chart1.addPeriod(timestamp)
+Set mPeriod = Chart1.addperiod(timestamp)
 Chart1.lastVisiblePeriod = mPeriod.periodNumber
 
 Set mbar = mBarSeries.addBar(mPeriod.periodNumber)
@@ -1026,7 +1031,7 @@ Dim bartime As Date
 
 bartime = calcBarTime(timestamp)
 If bartime > mPeriod.timestamp Then
-    Set mPeriod = Chart1.addPeriod(bartime)
+    Set mPeriod = Chart1.addperiod(bartime)
     Chart1.scrollX 1
     
     Set mbar = mBarSeries.addBar(mPeriod.periodNumber)
