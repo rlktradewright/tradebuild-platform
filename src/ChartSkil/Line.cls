@@ -319,7 +319,7 @@ IGraphicObject_periodNumber = -1
 If isExtended Then Exit Sub
 If mPoint1 Is Nothing Then Exit Sub
 If Not mPoint1.isAssigned Then Exit Sub
-IGraphicObject_periodNumber = mPoint1.XLogical
+IGraphicObject_periodNumber = Int(mPoint1.XLogical + 0.5)
 End Property
 
 Private Property Get IGraphicObject_scaleDependent() As Boolean
@@ -1425,7 +1425,7 @@ End Select
 End Sub
 
 Private Function isExtended() As Boolean
-isExtended = mExtended Or mFixedX Or mFixedY
+isExtended = mExtended Or mFixedX
 End Function
 
 Private Sub setDirection()

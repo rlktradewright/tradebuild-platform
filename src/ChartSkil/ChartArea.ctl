@@ -720,6 +720,15 @@ Enum TextAlignModes
     AlignTopRight
     AlignCentreRight
     AlignBottomRight
+    AlignBoxTopLeft
+    AlignBoxCentreLeft
+    AlignBoxBottomLeft
+    AlignBoxTopCentre
+    AlignBoxCentreCentre
+    AlignBoxBottomCentre
+    AlignBoxTopRight
+    AlignBoxCentreRight
+    AlignBoxBottomRight
 End Enum
 
 Enum TimeUnits
@@ -1386,6 +1395,8 @@ Set mXAxisRegion = Nothing
 Set mPeriods = Nothing
 
 initialise
+createXAxisRegion
+Resize False
 End Function
 
 Public Function refresh()
@@ -1520,8 +1531,10 @@ mScaleHeight = -100
 mScaleTop = 100
 mYAxisWidthCm = 1.05
 
+mScaleLeft = 0
+mScaleWidth = 0
 mYAxisPosition = 1
-resizeX
+'resizeX
 
 mAllowHorizontalMouseScrolling = True
 mAllowVerticalMouseScrolling = True

@@ -26,8 +26,8 @@ Option Explicit
 '================================================================================
 
 Private Type PeriodTableEntry
-    firstIndex          As Long
-    lastindex           As Long
+    firstIndex                  As Long
+    lastindex                   As Long
 End Type
 
 Private Type GraphicObjectTableEntry
@@ -135,6 +135,7 @@ Private mYPositionText As text      ' used to indicate the position of the point
 Private mYGridTexts As TextSeries
 Private mYGridLines As LineSeries
 
+Private mXGridTextsCoarse As TextSeries
 Private mXGridTexts As TextSeries
 Private mXGridLines As LineSeries
 Private mShowGridText As Boolean
@@ -1041,7 +1042,6 @@ mShowGrid = val
 If mShowGrid Then
     Set mXGridLines = Me.addLineSeries(LayerNumbers.LayerGrid)
     mXGridLines.color = mGridColour
-    mXGridLines.fixedY = True
     mXGridLines.extendAfter = True
     mXGridLines.extendBefore = True
     mXGridLines.includeInAutoscale = False
@@ -1083,6 +1083,20 @@ If mShowGridText Then
     aFont.Underline = False
     aFont.Bold = False
     mXGridTexts.font = aFont
+
+    Set mXGridTextsCoarse = Me.addTextSeries(LayerNumbers.LayerGrid)
+    mXGridTextsCoarse.align = AlignTopCentre
+    mXGridTextsCoarse.box = True
+    mXGridTextsCoarse.boxFillColor = mBackColour
+    mXGridTextsCoarse.boxStyle = LineInvisible
+    mXGridTextsCoarse.extended = True
+    mXGridTextsCoarse.color = mGridTextColor
+    Set aFont = New StdFont
+    aFont.name = "Arial"
+    aFont.Size = 8
+    aFont.Underline = False
+    aFont.Bold = False
+    mXGridTextsCoarse.font = aFont
 Else
     Set mXGridTexts = Nothing
 End If
@@ -1854,9 +1868,12 @@ End Sub
 
 Private Sub addVerticalGridLine(ByVal periodNumber As Long, _
                                 ByVal key As String, _
-                                ByVal label As String)
+                                ByVal label As String, _
+                                ByVal coarseKey As String, _
+                                ByVal coarseLabel As String)
 Dim vGridLine As ChartSkil.Line
 Dim vGridText As text
+Dim vGridTextCoarse As text
 
 If mShowGrid Then
     On Error Resume Next
@@ -1888,6 +1905,20 @@ If mShowGridText Then
                                     CoordsLogical, _
                                     CoordsDistance)
         vGridText.text = label
+    End If
+
+    On Error Resume Next
+    Set vGridTextCoarse = mXGridTextsCoarse.ItemByKey(coarseKey)
+    On Error GoTo 0
+    If vGridTextCoarse Is Nothing Then
+        Set vGridTextCoarse = mXGridTextsCoarse.add(coarseKey)
+        vGridTextCoarse.fixedX = False
+        vGridTextCoarse.fixedY = True
+        vGridTextCoarse.position = newPoint(periodNumber - 0.5, _
+                                    0#, _
+                                    CoordsLogical, _
+                                    CoordsCounterDistance)
+        vGridTextCoarse.text = coarseLabel
     End If
 End If
 
@@ -2145,6 +2176,7 @@ maxPeriod = IIf(mMaxPeriodNumber < mMaxInViewPeriod, mMaxPeriodNumber, mMaxInVie
 For i = minPeriod To IIf(UBound(mPeriodTable) < mMaxInViewPeriod, UBound(mPeriodTable), mMaxInViewPeriod)
     index = mGraphicObjects(mPeriodTable(i).firstIndex).nextPeriodIndex
     Do While index <> 0
+        'If index = 520 Then Stop
         numberExamined = numberExamined + 1
         With mGraphicObjects(index)
             If .boundingRect.isValid Then
@@ -2228,7 +2260,7 @@ With mCanvas
 End With
 
 If Not mYAxisRegion Is Nothing Then
-    mYPositionText.position = mYAxisRegion.newPoint(3, y, CoordsLogical, CoordsLogical)
+    mYPositionText.position = mYAxisRegion.newPoint(5, y, CoordsLogical, CoordsLogical)
     mYPositionText.text = Format(y, mYScaleSubFormatStr)
 End If
 End Sub
@@ -2253,7 +2285,7 @@ With mCanvas
 End With
 
 If Not mYAxisRegion Is Nothing Then
-    mYPositionText.position = mYAxisRegion.newPoint(3, y, CoordsLogical, CoordsLogical)
+    mYPositionText.position = mYAxisRegion.newPoint(5, y, CoordsLogical, CoordsLogical)
     mYPositionText.text = Format(y, mYScaleSubFormatStr)
 End If
 End Sub
@@ -2615,25 +2647,33 @@ If mVerticalGridSpacing = 0 Then
         vertGridIntervalMins = 30
     Case 3
         vertGridIntervalMins = 30
+    Case 4
+        vertGridIntervalMins = 60
     Case 5
         vertGridIntervalMins = 60
-    Case 10
+    Case 6
         vertGridIntervalMins = 60
-    Case 15
+    Case 10, 12, 15
         vertGridIntervalMins = 60
-    Case 30
+    Case 20, 30
         vertGridIntervalMins = 120
-    Case 60
-        vertGridIntervalMins = 360
-    Case 1440   ' daily chart
+    Case 60, 90
+        vertGridIntervalMins = 240
+    Case 120, 180, 240, 300, 360, 420, 480, 540, 600, 1440
         addVerticalGridLine periodNumber, _
-                        Format(CDate(Int(timestamp) - DatePart("d", timestamp) + 1), "yyyymmdd"), _
-                        Format(timestamp, "Mmm yy")
+                        Format(timestamp, "yyyymm01"), _
+                        Format(timestamp, "Mmm"), _
+                        Format(timestamp, "yyyy0101"), _
+                        Format(timestamp, "yyyy")
         Exit Sub
     Case Else
         ' in all other cases just draw a vertical gridline every 10 bars
-        If periodNumber Mod 10 = 0 Then
-            addVerticalGridLine periodNumber, Format(timestamp, "yyyymmddhhnnss"), FormatDateTime(timestamp, vbShortTime)
+        If periodNumber Mod 10 = 1 Then
+            addVerticalGridLine periodNumber, _
+                        Format(timestamp, "yyyymmddhhnnss"), _
+                        FormatDateTime(timestamp, vbShortTime), _
+                        Format(timestamp, "yyyymmdd"), _
+                        Format(timestamp, "d Mmm yy")
         End If
         Exit Sub
     End Select
@@ -2642,7 +2682,9 @@ If mVerticalGridSpacing = 0 Then
     gridLineTime = Int(timestamp) + ((Int((mins - mSessionOffsetMinutes) / vertGridIntervalMins) * vertGridIntervalMins) + mSessionOffsetMinutes) / 1440
     addVerticalGridLine periodNumber, _
                     Format(gridLineTime, "yyyymmddhhnnss"), _
-                    FormatDateTime(gridLineTime, vbShortTime)
+                    FormatDateTime(gridLineTime, vbShortTime), _
+                    Format(gridLineTime, "yyyymmdd"), _
+                    Format(gridLineTime, "d Mmm yy")
 Else
     Select Case mVerticalGridUnits
     Case TimeSecond
@@ -2650,39 +2692,53 @@ Else
         gridLineTime = Int(timestamp) + ((Int((secs - 60 * mSessionOffsetMinutes) / mVerticalGridSpacing) * mVerticalGridSpacing) + 60 * mSessionOffsetMinutes) / 86400
         addVerticalGridLine periodNumber, _
                         Format(gridLineTime, "yyyymmddhhnnss"), _
-                        FormatDateTime(gridLineTime, vbLongTime)
+                        FormatDateTime(gridLineTime, vbLongTime), _
+                        Format(gridLineTime, "yyyymmdd"), _
+                        Format(gridLineTime, "d Mmm yy")
     Case TimeMinute
         mins = calculateMinutesFromMidnight(timestamp)
         gridLineTime = Int(timestamp) + ((Int((mins - mSessionOffsetMinutes) / mVerticalGridSpacing) * mVerticalGridSpacing) + mSessionOffsetMinutes) / 1440
         addVerticalGridLine periodNumber, _
-                        Format(gridLineTime, "yyyymmddhhnnss"), _
-                        FormatDateTime(gridLineTime, vbShortTime)
+                        Format(gridLineTime, "yyyymmddhhnn"), _
+                        FormatDateTime(gridLineTime, vbShortTime), _
+                        Format(gridLineTime, "yyyymmdd"), _
+                        Format(gridLineTime, "d Mmm yy")
     Case TimeHour
         mins = calculateMinutesFromMidnight(timestamp)
         gridLineTime = Int(timestamp) + ((Int((mins - mSessionOffsetMinutes) / (60 * mVerticalGridSpacing)) * 60 * mVerticalGridSpacing) + mSessionOffsetMinutes) / 1440
         addVerticalGridLine periodNumber, _
-                        Format(gridLineTime, "yyyymmddhhnnss"), _
-                        FormatDateTime(gridLineTime, vbShortTime)
+                        Format(gridLineTime, "yyyymmddhh"), _
+                        FormatDateTime(gridLineTime, vbShortTime), _
+                        Format(gridLineTime, "yyyymmdd"), _
+                        Format(gridLineTime, "d Mmm yy")
     Case TimeDay
         gridLineTime = Int(timestamp) - (DatePart("d", timestamp) - 1) Mod mVerticalGridSpacing
         addVerticalGridLine periodNumber, _
-                        Format(gridLineTime, "yyyymmddhhnnss"), _
-                        Format(gridLineTime, "Mmm d")
+                        Format(gridLineTime, "yyyymmdd"), _
+                        Format(gridLineTime, "d"), _
+                        Format(gridLineTime, "yyyymm"), _
+                        Format(gridLineTime, "Mmm yy")
     Case TimeWeek
         gridLineTime = Int(timestamp) - 7 * ((DatePart("ww", timestamp) - 1) Mod mVerticalGridSpacing) - Weekday(timestamp) + 1
         addVerticalGridLine periodNumber, _
-                        Format(gridLineTime, "yyyymmddhhnnss"), _
-                        Format(gridLineTime, "Mmm d")
+                        Format(gridLineTime, "yyyymmdd"), _
+                        Format(gridLineTime, "d Mmm"), _
+                        Format(gridLineTime, "yyyy"), _
+                        Format(gridLineTime, "yyyy")
     Case TimeMonth
         gridLineTime = DateSerial(Year(timestamp), Int((Month(timestamp) - 1) / mVerticalGridSpacing) * mVerticalGridSpacing + 1, 1)
         addVerticalGridLine periodNumber, _
-                        Format(gridLineTime, "yyyymmddhhnnss"), _
-                        Format(gridLineTime, "Mmm d")
+                        Format(gridLineTime, "yyyymm"), _
+                        Format(gridLineTime, "Mmm"), _
+                        Format(gridLineTime, "yyyy"), _
+                        Format(gridLineTime, "yyyy")
     Case TimeYear
         gridLineTime = DateSerial(Int(Year(timestamp) / mVerticalGridSpacing) * mVerticalGridSpacing, 1, 1)
         addVerticalGridLine periodNumber, _
-                        Format(gridLineTime, "yyyymmddhhnnss"), _
-                        Format(gridLineTime, "YYYY")
+                        Format(gridLineTime, "yyyy"), _
+                        Format(gridLineTime, "YYYY"), _
+                        "$", _
+                        ""
         
     End Select
     

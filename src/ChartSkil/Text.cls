@@ -177,11 +177,14 @@ If mExtended Or Not mBoundingRect.isValid Then
     IGraphicObject_periodNumber = -1
 Else
     Select Case mAlign
-    Case AlignTopLeft, AlignCentreLeft, AlignBottomLeft
+    Case AlignTopLeft, AlignCentreLeft, AlignBottomLeft, _
+            AlignBoxTopLeft, AlignBoxCentreLeft, AlignBoxBottomLeft
         IGraphicObject_periodNumber = Int(mBoundingRect.left + 0.5)
-    Case AlignTopCentre, AlignCentreCentre, AlignBottomCentre
+    Case AlignTopCentre, AlignCentreCentre, AlignBottomCentre, _
+            AlignBoxTopCentre, AlignBoxCentreCentre, AlignBoxBottomCentre
         IGraphicObject_periodNumber = Int((mBoundingRect.left + mBoundingRect.right) / 2 + 0.5)
-    Case AlignTopRight, AlignCentreRight, AlignBottomRight
+    Case AlignTopRight, AlignCentreRight, AlignBottomRight, _
+            AlignBoxTopRight, AlignBoxCentreRight, AlignBoxBottomRight
         IGraphicObject_periodNumber = Int(mBoundingRect.right + 0.5)
     End Select
 End If
@@ -507,6 +510,7 @@ Dim XLineThickness As Double
 Dim YLineThickness As Double
 
 'If mText = "Volume" Then Stop
+'If mHandle = 520 Then Stop
 
 If Not mPosition.isAssigned Then
     mBoundingRect.isValid = False
@@ -528,46 +532,6 @@ With mTextRect
         .right = .right + xOffset
         .bottom = .bottom + yOffset
         .top = .top + yOffset
-    End If
-    
-    ' now adjust the rectangle to take account of alignment
-    
-    Select Case mAlign
-    Case AlignTopLeft
-        xshift = 0
-        yshift = 0
-    Case AlignCentreLeft
-        xshift = 0
-        yshift = (.top - .bottom) / 2
-    Case AlignBottomLeft
-        xshift = 0
-        yshift = .top - .bottom
-    Case AlignTopCentre
-        xshift = (.left - .right) / 2
-        yshift = 0
-    Case AlignCentreCentre
-        xshift = (.left - .right) / 2
-        yshift = (.top - .bottom) / 2
-    Case AlignBottomCentre
-        xshift = (.left - .right) / 2
-        yshift = .top - .bottom
-    Case AlignTopRight
-        xshift = .left - .right
-        yshift = 0
-    Case AlignCentreRight
-        xshift = .left - .right
-        yshift = (.top - .bottom) / 2
-    Case AlignBottomRight
-        xshift = .left - .right
-        yshift = .top - .bottom
-    End Select
-    .left = .left + xshift
-    .right = .right + xshift
-    .bottom = .bottom + yshift
-    .top = .top + yshift
-
-    If mKeepInView Then
-        ' now adjust the rectangle to take account of keepInView
     End If
 End With
 
@@ -596,24 +560,144 @@ If mBox Then
         .top = mTextRect.top + YIncrement
     End With
     
-    If mBoxThickness > 1 Then
-        If mBoxStyle = LineInsideSolid Then
-            mBoundingRect = mBoxRect
-        Else
-            With mBoundingRect
-                .left = mBoxRect.left - XLineThickness / 2
-                .right = mBoxRect.right + XLineThickness / 2
-                .bottom = mBoxRect.bottom - YLineThickness / 2
-                .top = mBoxRect.top + YLineThickness / 2
-            End With
-        End If
+    If mBoxThickness > 1 And mBoxStyle <> LineInsideSolid Then
+        With mBoundingRect
+            .left = mBoxRect.left - XLineThickness / 2
+            .right = mBoxRect.right + XLineThickness / 2
+            .bottom = mBoxRect.bottom - YLineThickness / 2
+            .top = mBoxRect.top + YLineThickness / 2
+        End With
     Else
         mBoundingRect = mBoxRect
     End If
+    ' now adjust the rectangle to take account of alignment
+
+    Select Case mAlign
+    Case AlignTopLeft
+        xshift = 0
+        yshift = 0
+    Case AlignCentreLeft
+        xshift = 0
+        yshift = (mTextRect.top - mTextRect.bottom) / 2
+    Case AlignBottomLeft
+        xshift = 0
+        yshift = mTextRect.top - mTextRect.bottom
+    Case AlignTopCentre
+        xshift = (mTextRect.left - mTextRect.right) / 2
+        yshift = 0
+    Case AlignCentreCentre
+        xshift = (mTextRect.left - mTextRect.right) / 2
+        yshift = (mTextRect.top - mTextRect.bottom) / 2
+    Case AlignBottomCentre
+        xshift = (mTextRect.left - mTextRect.right) / 2
+        yshift = mTextRect.top - mTextRect.bottom
+    Case AlignTopRight
+        xshift = mTextRect.left - mTextRect.right
+        yshift = 0
+    Case AlignCentreRight
+        xshift = mTextRect.left - mTextRect.right
+        yshift = (mTextRect.top - mTextRect.bottom) / 2
+    Case AlignBottomRight
+        xshift = mTextRect.left - mTextRect.right
+        yshift = mTextRect.top - mTextRect.bottom
+    Case AlignBoxTopLeft
+        xshift = mTextRect.left - mBoundingRect.left
+        yshift = mTextRect.top - mBoundingRect.top
+    Case AlignBoxCentreLeft
+        xshift = mTextRect.left - mBoundingRect.left
+        yshift = (mTextRect.top - mTextRect.bottom) / 2
+    Case AlignBoxBottomLeft
+        xshift = mTextRect.left - mBoundingRect.left
+        yshift = mTextRect.top - mTextRect.bottom + mTextRect.top - mBoundingRect.top
+    Case AlignBoxTopCentre
+        xshift = (mTextRect.left - mTextRect.right) / 2
+        yshift = mTextRect.top - mBoundingRect.top
+    Case AlignBoxCentreCentre
+        xshift = (mTextRect.left - mTextRect.right) / 2
+        yshift = (mTextRect.top - mTextRect.bottom) / 2
+    Case AlignBoxBottomCentre
+        xshift = (mTextRect.left - mTextRect.right) / 2
+        yshift = mTextRect.top - mTextRect.bottom + mTextRect.top - mBoundingRect.top
+    Case AlignBoxTopRight
+        xshift = mTextRect.left - mTextRect.right - (mBoundingRect.right - mTextRect.right)
+        yshift = mTextRect.top - mBoundingRect.top
+    Case AlignBoxCentreRight
+        xshift = mTextRect.left - mTextRect.right - (mBoundingRect.right - mTextRect.right)
+        yshift = (mTextRect.top - mTextRect.bottom) / 2
+    Case AlignBoxBottomRight
+        xshift = mTextRect.left - mTextRect.right - (mBoundingRect.right - mTextRect.right)
+        yshift = mTextRect.top - mTextRect.bottom + mTextRect.top - mBoundingRect.top
+    End Select
+
+    With mTextRect
+        .left = .left + xshift
+        .right = .right + xshift
+        .bottom = .bottom + yshift
+        .top = .top + yshift
+    End With
+
+    With mBoxRect
+        .left = .left + xshift
+        .right = .right + xshift
+        .bottom = .bottom + yshift
+        .top = .top + yshift
+    End With
+
+    With mBoundingRect
+        .left = .left + xshift
+        .right = .right + xshift
+        .bottom = .bottom + yshift
+        .top = .top + yshift
+    End With
+
 Else
+    ' now adjust the rectangle to take account of alignment
+    
+    With mTextRect
+        Select Case mAlign
+        Case AlignTopLeft, AlignBoxTopLeft
+            xshift = 0
+            yshift = 0
+        Case AlignCentreLeft, AlignBoxCentreLeft
+            xshift = 0
+            yshift = (.top - .bottom) / 2
+        Case AlignBottomLeft, AlignBoxBottomLeft
+            xshift = 0
+            yshift = .top - .bottom
+        Case AlignTopCentre, AlignBoxTopCentre
+            xshift = (.left - .right) / 2
+            yshift = 0
+        Case AlignCentreCentre, AlignBoxCentreCentre
+            xshift = (.left - .right) / 2
+            yshift = (.top - .bottom) / 2
+        Case AlignBottomCentre, AlignBoxBottomCentre
+            xshift = (.left - .right) / 2
+            yshift = .top - .bottom
+        Case AlignTopRight, AlignBoxTopRight
+            xshift = .left - .right
+            yshift = 0
+        Case AlignCentreRight, AlignBoxCentreRight
+            xshift = .left - .right
+            yshift = (.top - .bottom) / 2
+        Case AlignBottomRight, AlignBoxBottomRight
+            xshift = .left - .right
+            yshift = .top - .bottom
+        End Select
+    
+        .left = .left + xshift
+        .right = .right + xshift
+        .bottom = .bottom + yshift
+        .top = .top + yshift
+    End With
+    
     mBoxRect = mTextRect
     mBoundingRect = mTextRect
 End If
+
+If mKeepInView Then
+    ' now adjust the rectangles to take account of keepInView
+End If
+
 mTextRect.isValid = True
 mBoxRect.isValid = True
 mBoundingRect.isValid = True
