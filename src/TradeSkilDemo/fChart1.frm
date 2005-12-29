@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{DBED8E43-5960-49DE-B9A7-BBC22DB93A26}#7.4#0"; "ChartSkil.ocx"
+Object = "{DBED8E43-5960-49DE-B9A7-BBC22DB93A26}#7.5#0"; "ChartSkil.ocx"
 Begin VB.Form fChart1 
    Caption         =   "Chart"
    ClientHeight    =   8550
@@ -234,14 +234,17 @@ Else
     Set mPrevDataPoint = mCurrentDataPoint
     Set mCurrentDataPoint = mPointSeries.addDataPoint(mCurrentPeriod.periodNumber)
     If Not mPrevDataPoint Is Nothing Then mCurrentDataPoint.prevDataPoint = mPrevDataPoint
+    mCurrentDataPoint.dataValue = mMA
     
     Set mPrevDataPoint1 = mCurrentDataPoint1
     Set mCurrentDataPoint1 = mPointSeries1.addDataPoint(mCurrentPeriod.periodNumber)
     If Not mPrevDataPoint1 Is Nothing Then mCurrentDataPoint1.prevDataPoint = mPrevDataPoint1
+    mCurrentDataPoint.dataValue = mMA1
     
     Set mPrevDataPoint2 = mCurrentDataPoint2
     Set mCurrentDataPoint2 = mPointSeries2.addDataPoint(mCurrentPeriod.periodNumber)
     If Not mPrevDataPoint2 Is Nothing Then mCurrentDataPoint2.prevDataPoint = mPrevDataPoint2
+    mCurrentDataPoint.dataValue = mMA2
 End If
 
 End Sub
