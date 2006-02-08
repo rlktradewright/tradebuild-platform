@@ -351,6 +351,8 @@ End Sub
 Private Function drawAsPoint() As Boolean
 If mPrevDataPoint Is Nothing Then
     drawAsPoint = True
+ElseIf mPrevDataPoint.blank Then
+    drawAsPoint = True
 ElseIf mDisplayMode = DisplayModes.displayAsPoints Then
 'ElseIf mDisplayMode = DisplayModes.displayAsPoints Or _
 '    (mDisplayMode = DisplayModes.DisplayAsLines And Not mPrevDataPoint.inScope) Or _
