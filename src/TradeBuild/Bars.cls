@@ -268,7 +268,7 @@ End Property
 Public Property Get lowestCloseValue(ByVal periods As Integer, _
                                     Optional ByVal ref As Integer) As Double
 Dim i As Integer
-Dim Low As Currency
+Dim Low As Double
 Static lastPeriods      As Integer
 Static lastBarNumber    As Long
 Static lastValue        As Variant
@@ -304,7 +304,7 @@ End Property
 Public Property Get lowestLowValue(ByVal periods As Integer, _
                                     Optional ByVal ref As Integer) As Variant
 Dim i As Integer
-Dim Low As Currency
+Dim Low As Double
 Static lastPeriods      As Integer
 Static lastBarNumber    As Long
 Static lastValue        As Variant

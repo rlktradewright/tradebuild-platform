@@ -257,7 +257,7 @@ Friend Sub writeMarketDepthData( _
                         ByVal marketMaker As String, _
                         ByVal operation As Long, _
                         ByVal side As Long, _
-                        ByVal price As Currency, _
+                        ByVal price As Double, _
                         ByVal Size As Long)
 
 Dim pendingTick As Tick
