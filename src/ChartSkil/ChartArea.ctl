@@ -1146,9 +1146,16 @@ periodLengthMinutes = mPeriodLengthMinutes
 End Property
 
 Public Property Let periodLengthMinutes(ByVal val As Long)
+Dim i As Long
+Dim region As ChartRegion
+
 mPeriodLengthMinutes = val
 If mXAxisRegion Is Nothing Then createXAxisRegion
-mXAxisRegion.periodLengthMinutes = val
+mXAxisRegion.periodLengthMinutes = periodLengthMinutes
+For i = 0 To mRegionsIndex
+    Set region = mRegions(i).region
+    region.periodLengthMinutes = mPeriodLengthMinutes
+Next
 End Property
 
 Public Property Get periods() As periods
