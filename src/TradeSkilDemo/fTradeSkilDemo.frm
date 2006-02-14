@@ -1106,7 +1106,7 @@ Private Enum TickerGridColumns
     closePrice
     Description
     symbol
-    sectype
+    secType
     expiry
     exchange
     OptionRight
@@ -1217,6 +1217,7 @@ Me.Left = 0
 Me.Height = StandardFormHeight
 
 Set mTradeBuildAPI = New TradeBuildAPI
+mTradeBuildAPI.ConnectionRetryIntervalSecs = 10
 
 Set TBContractInfoSP = New TBInfoBase.ContractInfoServiceProvider
 mTradeBuildAPI.ServiceProviders.Add TBContractInfoSP
@@ -1380,6 +1381,11 @@ checkOKToConnect
 End Sub
 
 Private Sub ConnectButton_Click()
+Set mContractCol = New Collection
+Set mOrdersCol = New Collection
+OpenOrdersList.ListItems.Clear
+ExecutionsList.ListItems.Clear
+
 mTradeBuildAPI.simulateOrders = (SimulateOrdersCheck = vbChecked)
 SimulateOrdersCheck.Enabled = False
 mTradeBuildAPI.Connect IIf(ServerText = "", "127.0.0.1", ServerText), PortText, ClientIDText
@@ -2265,11 +2271,6 @@ Dim execFilter As ExecutionFilter
 
 On Error GoTo err
 
-Set mContractCol = New Collection
-Set mOrdersCol = New Collection
-OpenOrdersList.ListItems.Clear
-ExecutionsList.ListItems.Clear
-
 writeStatusMessage "Connected to " & _
                     IIf(ServerText = "", "local server", ServerText) & _
                     "; port=" & PortText & _
@@ -2352,6 +2353,12 @@ Private Sub mTradeBuildAPI_connectionToTWSClosed( _
 On Error GoTo err
 
 mTimestamp = timestamp
+
+If reconnecting Then
+    writeStatusMessage "Connection closed - attempting to reconnect"
+    Exit Sub
+End If
+
 checkOKToConnect
 DisconnectButton.Enabled = False
 SimulateOrdersCheck.Enabled = True
@@ -2387,13 +2394,13 @@ ExecutionsList.ListItems.Clear
 If Not mOrderForm Is Nothing Then Unload mOrderForm
 Set mOrderForm = Nothing
 
-writeStatusMessage "Connection closed" & IIf(reconnecting, " - attmepting to reconnect", "")
+writeStatusMessage "Connection closed"
 
 checkOkToStartReplay
 
 Exit Sub
 err:
-handleFatalError err.Number, err.Description, "mTradeBuildAPI_connectionClosed"
+handleFatalError err.Number, err.Description, "mTradeBuildAPI_connectionToTWSClosed"
 End Sub
 
 Private Sub mTradeBuildAPI_dataReceived(ByVal timestamp As Date)
@@ -2839,7 +2846,7 @@ col.Alignment = dbgRight
 Set col = TickerGrid.Columns(TickerGridColumns.symbol)
 col.width = TickerGridColumnWidths.SymbolWidth * TickerGrid.width / 100
 col.Alignment = dbgCenter
-Set col = TickerGrid.Columns(TickerGridColumns.sectype)
+Set col = TickerGrid.Columns(TickerGridColumns.secType)
 col.width = TickerGridColumnWidths.SecTypeWidth * TickerGrid.width / 100
 col.Alignment = dbgCenter
 Set col = TickerGrid.Columns(TickerGridColumns.expiry)
