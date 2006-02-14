@@ -140,7 +140,8 @@ library TradeBuildSP
 	LiveOrderSubmission = 8,
 	HistoricalData = 16,
 	OrderPersistence = 32,
-	ContractInfo = 64
+	ContractInfo = 64,
+	Indicators = 128
     } ServiceProviderTypes;
 
     typedef [uuid(bb4fb494-5c9c-4ed3-8791-7b35795a77d7), 
@@ -1276,7 +1277,7 @@ library TradeBuildSP
                         [in] BSTR marketMaker, 
                         [in] long operation, 
                         [in] long side, 
-                        [in] CURRENCY price, 
+                        [in] double price, 
                         [in] long size);
 
         HRESULT WriteMarketDepthReset([in] DATE timestamp);
