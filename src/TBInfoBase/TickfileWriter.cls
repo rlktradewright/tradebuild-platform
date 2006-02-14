@@ -188,7 +188,7 @@ Private Sub ITickfileWriter_writeMarketDepthData( _
                             ByVal marketmaker As String, _
                             ByVal operation As Long, _
                             ByVal side As Long, _
-                            ByVal price As Currency, _
+                            ByVal price As Double, _
                             ByVal size As Long)
 Dim typeByte As Byte
 Dim sizeType As SizeTypes

@@ -124,7 +124,7 @@ Private Sub ITickfileWriter_writeLow(ByVal timestamp As Date, ByVal price As Dou
 writeTickData timestamp, TICK_LOW, price
 End Sub
 
-Private Sub ITickfileWriter_writeMarketDepthData(ByVal timestamp As Date, ByVal Position As Long, ByVal marketMaker As String, ByVal operation As Long, ByVal side As Long, ByVal price As Currency, ByVal size As Long)
+Private Sub ITickfileWriter_writeMarketDepthData(ByVal timestamp As Date, ByVal Position As Long, ByVal marketMaker As String, ByVal operation As Long, ByVal side As Long, ByVal price As Double, ByVal size As Long)
 Select Case mTickfileFormat
 Case TickfileFormats.TickfileTradeBuild
     If mTsOut Is Nothing Then createTradeBuildTickFile timestamp
