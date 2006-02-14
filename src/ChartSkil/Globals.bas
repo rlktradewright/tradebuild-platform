@@ -1,6 +1,11 @@
 Attribute VB_Name = "Globals"
 Option Explicit
 
+Public Type Int64
+    lowpart As Long
+    highpart As Long
+End Type
+
 Public Type TInterval
     isValid         As Boolean
     startValue      As Double
@@ -18,6 +23,9 @@ Public Const PlusInfinitySingle As Single = 3.402823E+38
 Public Const GridlineSpacingCm As Double = 2.5
 
 Public Const TwipsPerCm As Long = 1440 / 2.54
+
+Public Declare Function QueryPerformanceFrequency Lib "kernel32" (lpFrequency As Int64) As Long
+Public Declare Function QueryPerformanceCounter Lib "kernel32" (lpPerformanceCount As Int64) As Long
 
 '================================================================================
 ' Rectangle functions
@@ -223,5 +231,60 @@ With rect
     End If
 End With
 End Sub
+
+'================================================================================
+' Int64 functions
+'================================================================================
+
+Public Function Int64AddInt64( _
+        ByRef num1 As Int64, _
+        ByRef num2 As Int64) As Int64
+Dim result As Int64
+result = Int64SubtractInt64(num1, Int64ReverseSign(num2))
+Int64AddInt64 = result
+End Function
+
+Public Function Int64SubtractInt64( _
+        ByRef num1 As Int64, _
+        ByRef num2 As Int64) As Int64
+        
+Dim result As Int64
+Dim sign1 As Long
+Dim sign2 As Long
+Dim carry As Long
+Dim sign As Long
+
+sign1 = IIf((num1.lowpart And &H80000000), 1, 0)
+sign2 = IIf((num2.lowpart And &H80000000), 1, 0)
+result.lowpart = (num1.lowpart And &H7FFFFFFF) - (num2.lowpart And &H7FFFFFFF)
+carry = IIf(result.lowpart And &H80000000, 1, 0)
+sign = sign1 - (sign2 + carry)
+If (sign And 1) Then
+    result.lowpart = (result.lowpart Or &H80000000)
+Else
+    result.lowpart = (result.lowpart And &H7FFFFFFF)
+End If
+If (sign And 2) Then
+    result.highpart = num1.highpart - (num2.highpart) - 1
+Else
+    result.highpart = num1.highpart - num2.highpart
+End If
+Int64SubtractInt64 = result
+End Function
+
+Public Function Int64ToDouble(ByRef num As Int64) As Double
+Dim result As Double
+result = CDbl(num.highpart) * 4294967296# + _
+                IIf((num.lowpart And &H80000000) = &H80000000, 2147483648#, 0) + _
+                CDbl(num.lowpart And &H7FFFFFFF)
+Int64ToDouble = result
+End Function
+
+Public Function Int64ReverseSign(ByRef num As Int64) As Int64
+Dim result As Int64
+result.highpart = Not num.highpart
+result.lowpart = (Not num.lowpart) + 1
+Int64ReverseSign = result
+End Function
 
 

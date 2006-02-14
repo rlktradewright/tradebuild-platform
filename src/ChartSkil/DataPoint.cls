@@ -151,7 +151,7 @@ IGraphicObject_layer = layer
 End Property
 
 Private Property Get IGraphicObject_noDraw() As Boolean
-IGraphicObject_noDraw = mBlank
+IGraphicObject_noDraw = mBlank Or (mDisplayMode = 0)
 End Property
 
 Private Property Get IGraphicObject_periodNumber() As Long
@@ -367,6 +367,8 @@ End Function
 Private Sub drawPoint(ByVal colour As Long)
 If blank Then Exit Sub
 If Not mVisible Then Exit Sub
+
+If mDisplayMode = 0 Then Exit Sub
 
 mCanvas.setPenAttributes colour, _
                         mLineThickness, _
