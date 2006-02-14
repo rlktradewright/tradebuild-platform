@@ -151,6 +151,8 @@ Dim failpoint As Integer
 
 On Error GoTo err
 
+If mShortnameIndex > UBound(mShortNames) Then Exit Sub
+
 failpoint = 100 '=====================================================
 Set contractSpec = mTradeBuildAPI.newContractSpecifier(mShortNames(mShortnameIndex))
 mShortnameIndex = mShortnameIndex + 1
@@ -220,7 +222,6 @@ Private Sub mTradeBuildAPI_connectionToTWSClosed( _
                 ByVal timestamp As Date, _
                 ByVal reconnecting As Boolean)
 RaiseEvent connectionToTWSClosed(timestamp, reconnecting)
-mShortnameIndex = 0
 End Sub
 
 Private Sub mTradeBuildAPI_errorMessage(ByVal timestamp As Date, _

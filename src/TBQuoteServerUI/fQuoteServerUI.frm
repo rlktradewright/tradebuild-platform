@@ -510,33 +510,33 @@ Case WriterNotifications.WriterNotReady
         Set tf = ev.Source
         logMessage tf.barLengthMinutes & _
                         "-min bar writer not ready for " & _
-                        tf.Contract.specifier.localSymbol
+                        tf.contract.specifier.localSymbol
     Else
         Set tk = ev.Source
         logMessage "Tickfile writer not ready for " & _
-                        tk.Contract.specifier.localSymbol
+                        tk.contract.specifier.localSymbol
     End If
 Case WriterNotifications.WriterReady
     If TypeOf ev.Source Is TradeBuild.Timeframe Then
         Set tf = ev.Source
         logMessage tf.barLengthMinutes & _
                         "-min bar writer ready for " & _
-                        tf.Contract.specifier.localSymbol
+                        tf.contract.specifier.localSymbol
     Else
         Set tk = ev.Source
         logMessage "Tickfile writer ready for " & _
-                        tk.Contract.specifier.localSymbol
+                        tk.contract.specifier.localSymbol
     End If
 Case WriterNotifications.WriterFileCreated
     If TypeOf ev.Source Is TradeBuild.Timeframe Then
         Set tf = ev.Source
         logMessage "Writing " & tf.barLengthMinutes & "-min bars for " & _
-                    tf.Contract.specifier.localSymbol & _
+                    tf.contract.specifier.localSymbol & _
                     " to " & ev.FileName
     Else
         Set tk = ev.Source
         logMessage "Writing tickdata for " & _
-                    tk.Contract.specifier.localSymbol & _
+                    tk.contract.specifier.localSymbol & _
                     " to " & ev.FileName
     End If
 End Select
@@ -593,9 +593,9 @@ logMessage "Connection to TWS closed"
 If reconnecting Then
     logMessage "Attempting to reconnect"
 Else
+    clearTickers
     StopButton.Enabled = False
 End If
-clearTickers
 End Sub
 
 Private Sub mDataCollector_errorMessage( _
@@ -623,14 +623,14 @@ Private Sub mDataCollector_TickerListenerAdded( _
                 ByVal listener As TBQuoteServer.TickerListener)
 If mTickerListenerIndex > MaxTickerListenerIndex Then
     listener.Index = -1
-    logMessage "Can't display ticker for " & listener.Contract.specifier.localSymbol
+    logMessage "Can't display ticker for " & listener.contract.specifier.localSymbol
     Exit Sub
 End If
 
 listener.Index = mTickerListenerIndex
 mTickerListenerIndex = mTickerListenerIndex + 1
 listener.addDataSignalListener Me
-ShortNameText(listener.Index) = listener.Contract.specifier.localSymbol
+ShortNameText(listener.Index) = listener.contract.specifier.localSymbol
 
 End Sub
 
