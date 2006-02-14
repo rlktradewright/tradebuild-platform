@@ -44,9 +44,9 @@ Event connectionToIBClosed(ByVal timestamp As Date)
 
 Event connectionToIBRecovered(ByVal timestamp As Date)
 
-Event contract( _
+Event Contract( _
                 ByVal timestamp As Date, _
-                ByVal pContract As contract)
+                ByVal pContract As Contract)
     ' Raised when details for a security are received from TWS.
 
 Event ContractInvalid( _
@@ -835,8 +835,8 @@ Loop Until bottom = middle
 If code = mExchangeCodes(middle) Then IsValidExchangeCode = True
 End Function
 
-Public Function NewContracts() As Contracts
-Set NewContracts = New Contracts
+Public Function NewContracts() As contracts
+Set NewContracts = New contracts
 End Function
 
 Public Function newContractSpecifier( _
@@ -944,7 +944,7 @@ If mSimulateOrders Or pOrder.simulated Then
     Exit Sub
 End If
 
-Set specifier = pOrder.contract.specifier
+Set specifier = pOrder.Contract.specifier
 
 Const Version = 11
 addData PLACE_ORDER
@@ -1124,7 +1124,7 @@ addBoolean autoBind
 send
 End Sub
 
-Public Function RequestContract(ByVal pContractSpecifier As contractSpecifier) As Contracts
+Public Function RequestContract(ByVal pContractSpecifier As contractSpecifier) As contracts
 
 On Error GoTo err
 
@@ -1143,7 +1143,7 @@ Exit Function
 
 ' the following code will be used when the TWS Contract Info Service Provider
 ' is developed
-Set RequestContract = New Contracts
+Set RequestContract = New contracts
 RequestContract.contractSpecifier = pContractSpecifier
 
 reqContract -1, RequestContract, pContractSpecifier, False
@@ -1156,8 +1156,8 @@ err.Raise err.Number, _
 End Function
 
 Friend Function RequestContractEx( _
-                            ByVal pContracts As Contracts, _
-                            ByVal pContractSpecifier As contractSpecifier) As Contracts
+                            ByVal pContracts As contracts, _
+                            ByVal pContractSpecifier As contractSpecifier) As contracts
 
 On Error GoTo err
 
@@ -1296,11 +1296,11 @@ Then
 End If
 
 With mTickerTable(pTicker.id)
-    If pTicker.contract Is Nothing Then err.Raise ErrorCodes.InvalidTickerID, "TradeBuild.TradeBuildAPI::requestMarketDepth", "Invalid ticker: key=" & pTicker.key
+    If pTicker.Contract Is Nothing Then err.Raise ErrorCodes.InvalidTickerID, "TradeBuild.TradeBuildAPI::requestMarketDepth", "Invalid ticker: key=" & pTicker.key
     .receivingMarketDepth = True
 End With
 
-reqMarketDepth pTicker.id, pTicker.contract.specifier
+reqMarketDepth pTicker.id, pTicker.Contract.specifier
 
 End Sub
 
@@ -1458,6 +1458,13 @@ If mConnectionState <> ConnectionStates.ConnConnected Then
     End If
     mConnectionState = ConnectionStates.ConnConnected
     Set gAllOrders = New Collection
+    
+    ' now restart any tickers that were previously in operation
+    reEstablishMarketData
+    
+    ' and re-request any market depth
+    resetMarketDepth gCurrentTime, True
+    
     RaiseEvent connected(gCurrentTime)
 End If
 
@@ -1703,7 +1710,7 @@ End Sub
 Private Sub getContractData(ByVal Version As Long)
 Dim listendata As TWSSocketMsgContractData
 Dim timestamp As Date
-Dim lContract As contract
+Dim lContract As Contract
 Dim minimumTick As Double
 Dim multiplier As Long
 Dim OrderTypes As String
@@ -1716,7 +1723,7 @@ Dim j As Long
 
 timestamp = gCurrentTime
 
-Set lContract = New contract
+Set lContract = New Contract
 With lContract
     .specifier = New contractSpecifier
     .specifier.locked = True
@@ -2657,7 +2664,7 @@ With mTickerTable(tickerid)
 End With
 End Sub
 
-Private Sub processContract(ByVal pContract As contract)
+Private Sub processContract(ByVal pContract As Contract)
 
 If Not mFirstContractDetailsReceived Then
     mFirstContractDetailsReceived = True
@@ -2683,9 +2690,9 @@ If Not mFirstContractDetailsReceived Then
 End If
 
 With mContractDetailsRequest
-    .Contracts.AddContract pContract
+    .contracts.AddContract pContract
     If Not .InternalRequest Then
-        RaiseEvent contract(gCurrentTime, pContract)
+        RaiseEvent Contract(gCurrentTime, pContract)
     End If
 End With
 
@@ -2693,10 +2700,10 @@ End Sub
 
 Private Sub processContractError()
 Dim tickerid As Long
-Dim lContract As contract
+Dim lContract As Contract
 
 With mContractDetailsRequest
-    If .Contracts.Count > 0 Then
+    If .contracts.Count > 0 Then
         ' we are processing the forced invalid contract details request
         ' for a request for which we have received one or more contract details
         If .InternalRequest Then
@@ -2738,7 +2745,7 @@ With mContractDetailsRequest
 '                releaseTickerTableEntry TickerID
 '            End If
         Else
-            .Contracts.LoadComplete
+            .contracts.LoadComplete
         End If
     Else
         ' this is a genuine error response to a contract details request
@@ -2751,8 +2758,8 @@ With mContractDetailsRequest
 '            End With
 '            releaseTickerTableEntry TickerID
         Else
-            .Contracts.ContractSpecifierInvalid
-            .Contracts.LoadComplete
+            .contracts.ContractSpecifierInvalid
+            .contracts.LoadComplete
         End If
     End If
 End With
@@ -3000,7 +3007,7 @@ End With
 End Sub
 
 Private Sub reqContract(ByVal tickerid As Long, _
-                        ByVal Contracts As Contracts, _
+                        ByVal contracts As contracts, _
                         ByVal contractSpecifier As contractSpecifier, _
                         ByVal internal As Boolean)
 
@@ -3015,7 +3022,7 @@ contractSpecifier.locked = True
 
 Set mContractDetailsRequest = New ContractDtlsReq
 mContractDetailsRequest.tickerid = tickerid
-mContractDetailsRequest.Contracts = Contracts
+mContractDetailsRequest.contracts = contracts
 mContractDetailsRequest.contractSpecifier = contractSpecifier
 mContractDetailsRequest.InternalRequest = internal
 
