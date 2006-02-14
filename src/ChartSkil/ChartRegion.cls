@@ -28,6 +28,7 @@ Option Explicit
 Private Type PeriodTableEntry
     firstIndex                  As Long
     lastindex                   As Long
+    backColor                   As Long
 End Type
 
 Private Type GraphicObjectTableEntry
@@ -237,6 +238,8 @@ Private mLineFixedX As Boolean
 Private mLineFixedY As Boolean
 Private mLineIncludeInAutoscale As Boolean
 Private mLineExtended As Boolean
+
+Private mElapsedTimer As ElapsedTimer
 
 '================================================================================
 ' Enums
@@ -1108,6 +1111,11 @@ End Property
 
 Public Property Let showPerformanceText(ByVal val As Boolean)
 mShowPerformanceText = val
+If mShowPerformanceText Then
+    If mElapsedTimer Is Nothing Then Set mElapsedTimer = New ElapsedTimer
+Else
+    Set mElapsedTimer = Nothing
+End If
 End Property
 
 Friend Property Let suppressDrawing(ByVal val As Boolean)
@@ -1524,7 +1532,6 @@ Set newPoint = mCanvas.newPoint(x, y, coordSystemX, coordSystemY)
 End Function
 
 Friend Sub paintRegion()
-Dim startTimer As Single
 Dim numGridDivisions As Double
 Dim gridSpacing As Double
 Dim i As Long
@@ -1540,10 +1547,19 @@ repaintCount = repaintCount + 1
 'debug.print "repaint count = " & repaintCount
 
 With mCanvas
-startTimer = Timer
+
+If mShowPerformanceText Then mElapsedTimer.StartTiming
 
 .clear
 .backColor = regionBackColor
+
+For i = IIf(mMinInViewPeriod < 0, 0, mMinInViewPeriod) To IIf(mMaxPeriodNumber < mMaxInViewPeriod, mMaxPeriodNumber, mMaxInViewPeriod)
+    If mPeriodTable(i).backColor <> 0 Then
+        .setPenAttributes mPeriodTable(i).backColor, 1, LineInsideSolid, DrawModeCopyPen
+        .setBrushAttributes mPeriodTable(i).backColor, FillSolid
+        .drawRectangle i - 0.5, .bottom, i + 0.5, .top
+    End If
+Next
 
 numGridDivisions = .heightCm / mGridlineSpacingY
 gridSpacing = .height / numGridDivisions
@@ -1643,7 +1659,7 @@ If mShowPerformanceText Then
         mPerfText.layer = LayerTitle
         
     End If
-    mPerfText.text = Format(1000 * (Timer - startTimer), "0.0") & "ms" & vbCrLf & _
+    mPerfText.text = Format(mElapsedTimer.ElapsedTimeMicroseconds / 1000, "0.0") & "ms" & vbCrLf & _
                     counter & " visible objects" & vbCrLf & _
                     mNextGraphicObjectIndex & " total objects"
     ' need to force the text to draw now
@@ -1687,6 +1703,48 @@ autoscale = False
 With mCanvas
     setVerticalScale .bottom + factor * .height / 2, _
                                 .top - factor * .height / 2
+End With
+End Sub
+
+Public Sub setPeriodBackgroundColor( _
+                ByVal periodNumber As Long, _
+                ByVal color As Long)
+Dim layer As Long
+Dim index As Long
+Dim periodrect As TRectangle
+Dim redrawAreas(0) As TRectangle
+
+mPeriodTable(periodNumber).backColor = color
+
+If mSuppressDrawing Then Exit Sub
+
+
+If color = 0 Then Exit Sub
+
+With mCanvas
+    .setPenAttributes color, 1, LineInsideSolid, DrawModeCopyPen
+    .setBrushAttributes color, FillSolid
+    .drawRectangle periodNumber - 0.5, .bottom, periodNumber + 0.5, .top
+
+    
+    periodrect.left = periodNumber - 0.5
+    periodrect.right = periodNumber + 0.5
+    periodrect.bottom = .bottom
+    periodrect.top = .top
+    periodrect.isValid = True
+    
+    For layer = MinLayer To MaxLayer
+        index = mGraphicObjects(mVisibleTable(layer).firstIndex).nextVisibleIndex
+        Do While index <> mVisibleTable(layer).lastindex
+            With mGraphicObjects(index)
+                redrawAreas(0) = rectIntersection(periodrect, .boundingRect)
+                If redrawAreas(0).isValid Then
+                    .graphObj.draw redrawAreas, mCanvas.hdc
+                End If
+                index = .nextVisibleIndex
+            End With
+        Loop
+    Next
 End With
 End Sub
 
@@ -2176,7 +2234,6 @@ maxPeriod = IIf(mMaxPeriodNumber < mMaxInViewPeriod, mMaxPeriodNumber, mMaxInVie
 For i = minPeriod To IIf(UBound(mPeriodTable) < mMaxInViewPeriod, UBound(mPeriodTable), mMaxInViewPeriod)
     index = mGraphicObjects(mPeriodTable(i).firstIndex).nextPeriodIndex
     Do While index <> 0
-        'If index = 520 Then Stop
         numberExamined = numberExamined + 1
         With mGraphicObjects(index)
             If .boundingRect.isValid Then
@@ -2486,8 +2543,6 @@ With mGraphicObjects(index)
     If Not .boundingRect.isValid Or .noDraw Then Exit Function
     If .extendedObject And (.capabilities And capabilities.ComplexBounding) Then
         overlapXInterval = intIntersection(rectGetXInterval(mCanvas.boundary), rectGetXInterval(.boundingRect))
-'        For i = Int(overlapXInterval.startValue + 0.99999) To _
-'                Int(overlapXInterval.endValue + 0.99999)
         For i = Int(overlapXInterval.startValue) To _
                 Int(overlapXInterval.endValue)
             boundingRects = .graphObj.boundingRectanglesAt(i)
