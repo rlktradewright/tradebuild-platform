@@ -1460,7 +1460,7 @@ If mConnectionState <> ConnectionStates.ConnConnected Then
     Set gAllOrders = New Collection
     
     ' now restart any tickers that were previously in operation
-    reEstablishMarketData
+    reEstablishMarketData True
     
     ' and re-request any market depth
     resetMarketDepth gCurrentTime, True
@@ -1876,7 +1876,7 @@ Case 1101
     ' connectivity between TWS and IB has been restored, but data has been
     ' lost, so need to reestablish market data requests
     
-    reEstablishMarketData
+    reEstablishMarketData False
     
     ' Now need to reassociate order ids with tws
     RequestOpenOrders
@@ -2962,11 +2962,12 @@ With mTickerTable(tickerid)
 End With
 End Sub
 
-Private Sub reEstablishMarketData()
+Private Sub reEstablishMarketData(ByVal newConnection As Boolean)
 Dim i As Long
 For i = 0 To UBound(mTickerTable)
     With mTickerTable(i)
         If Not .contractSpecifier Is Nothing Then
+            If Not newConnection Then CancelMarketData i
             .incarnation = .incarnation + INCARNATION_INCREMENT
             reqMarketData i
         End If
