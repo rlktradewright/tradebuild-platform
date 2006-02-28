@@ -154,6 +154,7 @@ Private mPercentHeight As Double
 Private mMinimumPercentHeight As Double
 Private mYAxisPosition As Long
 Private mIntegerYScale As Boolean
+Private mYScaleQuantum As Double
 
 'Private mRegionRect As TRectangle
 
@@ -1330,6 +1331,10 @@ mYGridTexts.font = aFont
 
 End Property
 
+Public Property Let YScaleQuantum(ByVal value As Double)
+mYScaleQuantum = value
+End Property
+
 '================================================================================
 ' Methods
 '================================================================================
@@ -1582,16 +1587,36 @@ If logSpacing < 0 Then
     mantissa = 1 - mantissa
 End If
 
-If mantissa >= Log(5) / log10 Then
-    mScaleGridSpacingY = 5 * 10 ^ exp
-ElseIf mantissa >= Log(2.5) / log10 Then
-    mScaleGridSpacingY = 2.5 * 10 ^ exp
-ElseIf mantissa >= Log(2#) / log10 Then
-    mScaleGridSpacingY = 2# * 10 ^ exp
+If mYScaleQuantum = 0.03125 And _
+    exp < 0 _
+Then
+    ' tick size is 1/32, which influences where we put the horizontal grid lines
+    If exp >= -1 Then
+        If mantissa >= Log(5) / log10 Then
+            mScaleGridSpacingY = 16 * 0.03125
+        ElseIf mantissa >= Log(2.5) / log10 Then
+            mScaleGridSpacingY = 8 * 0.03125
+        ElseIf mantissa >= Log(1.25) / log10 Then
+            mScaleGridSpacingY = 4 * 0.03125
+        ElseIf mantissa >= Log(0.625) / log10 Then
+            mScaleGridSpacingY = 2 * 0.03125
+        Else
+            mScaleGridSpacingY = 0.03125
+        End If
+    Else
+        mScaleGridSpacingY = 0.03125
+    End If
 Else
-    mScaleGridSpacingY = 10 ^ exp
+    If mantissa >= Log(5) / log10 Then
+        mScaleGridSpacingY = 5 * 10 ^ exp
+    ElseIf mantissa >= Log(2.5) / log10 Then
+        mScaleGridSpacingY = 2.5 * 10 ^ exp
+    ElseIf mantissa >= Log(2#) / log10 Then
+        mScaleGridSpacingY = 2# * 10 ^ exp
+    Else
+        mScaleGridSpacingY = 10 ^ exp
+    End If
 End If
-
 If mIntegerYScale Then
         mYScaleFormatStr = "0"
         mYScaleSubFormatStr = "0"
@@ -2318,7 +2343,7 @@ End With
 
 If Not mYAxisRegion Is Nothing Then
     mYPositionText.position = mYAxisRegion.newPoint(5, y, CoordsLogical, CoordsLogical)
-    mYPositionText.text = Format(y, mYScaleSubFormatStr)
+    mYPositionText.text = generateYAxisCursorPositionText(y)
 End If
 End Sub
 
@@ -2343,9 +2368,26 @@ End With
 
 If Not mYAxisRegion Is Nothing Then
     mYPositionText.position = mYAxisRegion.newPoint(5, y, CoordsLogical, CoordsLogical)
-    mYPositionText.text = Format(y, mYScaleSubFormatStr)
+    mYPositionText.text = generateYAxisCursorPositionText(y)
 End If
 End Sub
+
+Private Function generateYAxisCursorPositionText(ByVal y As Single) As String
+Dim fract As Single
+Dim num32nds As Long
+
+If mYScaleQuantum = 0.03125 Then
+    fract = y - Int(y)
+    num32nds = Int(fract / 0.03125)
+    If mScaleGridSpacingY > 4 * 0.03125 Then
+        generateYAxisCursorPositionText = Int(y) & " ' " & Format(num32nds, "00")
+    Else
+        generateYAxisCursorPositionText = Int(y) & " ' " & Format(num32nds, "00") & "." & Format(100 * (fract - num32nds * 0.03125) / 0.03125, "00")
+    End If
+Else
+    generateYAxisCursorPositionText = Format(y, mYScaleSubFormatStr)
+End If
+End Function
 
 Private Function getLayer(Optional ByVal layer As Long = -1) As Long
 If layer = -1 Then
@@ -2628,7 +2670,7 @@ End With
 End Sub
 
 Private Sub setHorizontalGridLines()
-Dim z As Double
+Dim y As Double
 Dim i As Long
 Dim aLine As ChartSkil.Line
 Dim currSuppress As Boolean
@@ -2637,18 +2679,18 @@ If mYGridLines Is Nothing Then Exit Sub
 
 currSuppress = mSuppressDrawing
 mSuppressDrawing = True
-z = Int(mCanvas.bottom / mScaleGridSpacingY) * mScaleGridSpacingY
-Do While z < mCanvas.top
+y = Int(mCanvas.bottom / mScaleGridSpacingY) * mScaleGridSpacingY
+Do While y < mCanvas.top
     i = i + 1
     If i > mYGridLines.count Then
         Set aLine = mYGridLines.addLine
     Else
         Set aLine = mYGridLines.item(i)
     End If
-    aLine.point1 = Me.newPoint(0, z, CoordsRelative, CoordsLogical)
-    aLine.point2 = Me.newPoint(100, z, CoordsRelative, CoordsLogical)
+    aLine.point1 = Me.newPoint(0, y, CoordsRelative, CoordsLogical)
+    aLine.point2 = Me.newPoint(100, y, CoordsRelative, CoordsLogical)
     addEntryToVisibleList aLine.handle
-    z = z + mScaleGridSpacingY
+    y = y + mScaleGridSpacingY
 Loop
 For i = i + 1 To mYGridLines.count
     Set aLine = mYGridLines.item(i)
@@ -2659,32 +2701,37 @@ mSuppressDrawing = currSuppress
 End Sub
 
 Private Sub setHorizontalGridTexts()
-Dim z As Double
+Dim y As Double
 Dim i As Long
 Dim aText As text
-Dim currSuppress As Boolean
+'Dim currSuppress As Boolean
 
 If mYGridTexts Is Nothing Then Exit Sub
 
-currSuppress = mSuppressDrawing
-mSuppressDrawing = True
-z = Int(mCanvas.bottom / mScaleGridSpacingY) * mScaleGridSpacingY
-Do While z < mCanvas.top
+'currSuppress = mSuppressDrawing
+'mSuppressDrawing = True
+y = Int(mCanvas.bottom / mScaleGridSpacingY) * mScaleGridSpacingY
+Do While y < mCanvas.top
     i = i + 1
     If i > mYGridTexts.count Then
         Set aText = mYGridTexts.addText
     Else
         Set aText = mYGridTexts.item(i)
     End If
-    aText.text = Format(z, mYScaleFormatStr)
-    aText.position = mYAxisRegion.newPoint(1, z, CoordsLogical, CoordsLogical)
-    z = z + mScaleGridSpacingY
+    If mYScaleQuantum = 0.03125 Then
+        ' tick size is 1/32 - label accordingly
+        aText.text = Int(y) & " ' " & Format((y - Int(y)) / 0.03125, "00")
+    Else
+        aText.text = Format(y, mYScaleFormatStr)
+    End If
+    aText.position = mYAxisRegion.newPoint(1, y, CoordsLogical, CoordsLogical)
+    y = y + mScaleGridSpacingY
 Loop
 For i = i + 1 To mYGridTexts.count
     Set aText = mYGridTexts.item(i)
     aText.text = ""
 Next
-mSuppressDrawing = currSuppress
+'mSuppressDrawing = currSuppress
 End Sub
 
 Private Sub setVerticalGridLine(ByVal timestamp As Date, _

@@ -1499,7 +1499,7 @@ If thisPeriod Is Nothing Then
     Exit Sub
 End If
 
-mXAxisRegion.suppressDrawing = True
+'mXAxisRegion.suppressDrawing = True
 mXCursorText.position = mXAxisRegion.newPoint( _
                             periodNumber, _
                             0, _
@@ -1513,7 +1513,7 @@ If mPeriodLengthMinutes < 1440 Then
 Else
     mXCursorText.text = FormatDateTime(thisPeriod.timestamp, vbShortDate)
 End If
-mXAxisRegion.suppressDrawing = False
+'mXAxisRegion.suppressDrawing = False
 
 End Sub
 
@@ -1536,7 +1536,7 @@ mShowCrosshairs = True
 mTwipsPerBar = DefaultTwipsPerBar
 mScaleHeight = -100
 mScaleTop = 100
-mYAxisWidthCm = 1.05
+mYAxisWidthCm = 1.3
 
 mScaleLeft = 0
 mScaleWidth = 0
