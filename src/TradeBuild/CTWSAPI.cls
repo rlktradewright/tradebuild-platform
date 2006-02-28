@@ -651,31 +651,7 @@ mListeners.add newListener, valueType
 End Function
 
 Public Sub CancelMarketData(ByVal tickerid As Long)
-If mConnectionState <> ConnectionStates.ConnConnected Then
-    RaiseEvent errorMessage(gCurrentTime, _
-                            tickerid, _
-                            ApiErrorCodes.NotConnected, _
-                            LoadResString(ApiErrorCodes.NotConnected))
-    Exit Sub
-End If
-Dim id As Long
-Const Version = 2
-
-If Not mTickerTable(tickerid).inUse Then
-    err.Raise InvalidTickerID, _
-    "TradeBuild.TradeBuildAPI::CancelMarketData", _
-    "Invalid ticker id " & tickerid
-End If
-
-id = tickerid + mTickerTable(tickerid).incarnation
-
-If mTickerTable(tickerid).receivingMarketDepth Then CancelMarketDepth tickerid
-releaseTickerTableEntry tickerid
-addData CANCEL_MKT_DATA
-addData Version
-addData id
-send
-
+cancelMarketDataEx tickerid, True
 End Sub
 
 Public Sub CancelMarketDepth(ByVal tickerid As Long)
@@ -1279,7 +1255,10 @@ RequestMarketDataEx = lTickerID
 Set mTickerTable(lTickerID).contractSpecifier = pContractSpecifier
 reqMarketData lTickerID
 
-If includeMarketDepth Then reqMarketDepth lTickerID, pContractSpecifier
+If includeMarketDepth Then
+    mTickerTable(lTickerID).receivingMarketDepth = True
+    reqMarketDepth lTickerID, pContractSpecifier
+End If
 
 End Function
 
@@ -1426,6 +1405,35 @@ mTickerTable(AllocateTickerTableEntry).inUse = True
 Set mTickerTable(AllocateTickerTableEntry).dataConsumer = pDataConsumer
 
 End Function
+
+Private Sub cancelMarketDataEx(ByVal tickerid As Long, _
+                ByVal releaseEntry As Boolean)
+If mConnectionState <> ConnectionStates.ConnConnected Then
+    RaiseEvent errorMessage(gCurrentTime, _
+                            tickerid, _
+                            ApiErrorCodes.NotConnected, _
+                            LoadResString(ApiErrorCodes.NotConnected))
+    Exit Sub
+End If
+Dim id As Long
+Const Version = 2
+
+If Not mTickerTable(tickerid).inUse Then
+    err.Raise InvalidTickerID, _
+    "TradeBuild.TradeBuildAPI::CancelMarketDataEx", _
+    "Invalid ticker id " & tickerid
+End If
+
+id = tickerid + mTickerTable(tickerid).incarnation
+
+If mTickerTable(tickerid).receivingMarketDepth Then CancelMarketDepth tickerid
+If releaseEntry Then releaseTickerTableEntry tickerid
+addData CANCEL_MKT_DATA
+addData Version
+addData id
+send
+
+End Sub
 
 Private Sub checkmessages()
 Static alreadyInvoked As Boolean
@@ -2967,9 +2975,10 @@ Dim i As Long
 For i = 0 To UBound(mTickerTable)
     With mTickerTable(i)
         If Not .contractSpecifier Is Nothing Then
-            If Not newConnection Then CancelMarketData i
+            If Not newConnection Then cancelMarketDataEx i, False
             .incarnation = .incarnation + INCARNATION_INCREMENT
             reqMarketData i
+            If .receivingMarketDepth Then reqMarketDepth i, .contractSpecifier
         End If
     End With
 Next
