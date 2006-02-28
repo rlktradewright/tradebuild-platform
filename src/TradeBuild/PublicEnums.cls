@@ -37,6 +37,7 @@ End Type
 Public Type PriceChangeEvent
     Source          As Object
     Change          As Double
+    ChangeString    As String
     ChangePercent   As Double
 End Type
 
@@ -50,6 +51,7 @@ End Type
 Public Type QuoteEvent
     Source          As Object
     price           As Double
+    priceString     As String
     Size            As Long
 End Type
 
@@ -88,9 +90,9 @@ Public Type TickfileFormatSpecifier
 End Type
 
 Public Type TickfileSpecifier
-    TickfileFormatID    As String
+    tickfileFormatID    As String
     filename            As String
-    contract            As contract
+    Contract            As Contract
     From                As Date
     To                  As Date
     EntireSession       As Boolean
@@ -140,7 +142,7 @@ Public Type TWSSocketMsgOpenOrder
     Version         As Long
     orderId         As Long
     symbol          As String
-    secType         As String
+    sectype         As String
     expiry          As String
     strike          As Double
     right           As String
@@ -184,7 +186,7 @@ Public Type TWSSocketMsgPortfolioValue
     msgType         As TWSSocketInMsgTypes
     Version         As Long
     symbol          As String
-    secType         As String
+    sectype         As String
     expiry          As String
     strike          As Double
     right           As String
@@ -215,7 +217,7 @@ Public Type TWSSocketMsgContractData
     msgType         As TWSSocketInMsgTypes
     Version         As Long
     symbol          As String
-    secType         As String
+    sectype         As String
     expiry          As String
     strike          As Double
     right           As String
@@ -236,7 +238,7 @@ Public Type TWSSocketMsgExecutionData
     Version         As Long
     orderId         As Long
     symbol          As String
-    secType         As String
+    sectype         As String
     expiry          As String
     strike          As Double
     right           As String
@@ -336,9 +338,8 @@ Public Enum ApiErrorCodes
     InvalidMessageCode = 900 ' Invalid message code received via socket
     TickfileEmpty           ' Tickfile is empty
     TickfileInvalid         ' Not a valid tickfile format
-    TickfleVersionNotSupported
+    TickfileVersionNotSupported
                             ' The version of tickfile is not supported
-    TickfileVersionNotSupported = TickfleVersionNotSupported    ' correct spelling!
     TimedReplayNotAllowed   ' Can't do timed replay for this version
     DisconnectInvalid       ' Can't disconnect during tickfile replay
     ContractDetailsInvalid  ' The tickfile contains contract details from
