@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{DBED8E43-5960-49DE-B9A7-BBC22DB93A26}#7.5#0"; "ChartSkil.ocx"
+Object = "{DBED8E43-5960-49DE-B9A7-BBC22DB93A26}#7.7#0"; "ChartSkil.ocx"
 Begin VB.Form fChart1 
    Caption         =   "Chart"
    ClientHeight    =   8550
@@ -118,6 +118,7 @@ Chart1.showHorizontalScrollBar = True
 
 Set mRegion = Chart1.addChartRegion(100)
 mRegion.gridlineSpacingY = 2
+mRegion.YScaleQuantum = mContract.minimumTick
 
 Set mBarSeries = mRegion.addBarSeries
 mBarSeries.outlineThickness = 1
@@ -231,17 +232,17 @@ Else
     mPrevBarVolume = mVolume.dataValue
     Set mVolume = mVolumeSeries.addDataPoint(mCurrentPeriod.periodNumber)
     
-    Set mPrevDataPoint = mCurrentDataPoint
+    If Not mCurrentDataPoint.Blank Then mPrevDataPoint = mCurrentDataPoint
     Set mCurrentDataPoint = mPointSeries.addDataPoint(mCurrentPeriod.periodNumber)
     If Not mPrevDataPoint Is Nothing Then mCurrentDataPoint.prevDataPoint = mPrevDataPoint
     mCurrentDataPoint.dataValue = mMA
     
-    Set mPrevDataPoint1 = mCurrentDataPoint1
+    If Not mCurrentDataPoint1.Blank Then Set mPrevDataPoint1 = mCurrentDataPoint1
     Set mCurrentDataPoint1 = mPointSeries1.addDataPoint(mCurrentPeriod.periodNumber)
     If Not mPrevDataPoint1 Is Nothing Then mCurrentDataPoint1.prevDataPoint = mPrevDataPoint1
     mCurrentDataPoint.dataValue = mMA1
     
-    Set mPrevDataPoint2 = mCurrentDataPoint2
+    If Not mCurrentDataPoint2.Blank Then Set mPrevDataPoint2 = mCurrentDataPoint2
     Set mCurrentDataPoint2 = mPointSeries2.addDataPoint(mCurrentPeriod.periodNumber)
     If Not mPrevDataPoint2 Is Nothing Then mCurrentDataPoint2.prevDataPoint = mPrevDataPoint2
     mCurrentDataPoint.dataValue = mMA2

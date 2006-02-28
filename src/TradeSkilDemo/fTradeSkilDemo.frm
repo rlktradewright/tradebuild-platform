@@ -1021,6 +1021,8 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
+Implements TradeBuild.QuoteListener
+
 '================================================================================
 ' Events
 '================================================================================
@@ -1106,7 +1108,7 @@ Private Enum TickerGridColumns
     closePrice
     Description
     symbol
-    secType
+    sectype
     expiry
     exchange
     OptionRight
@@ -1184,7 +1186,6 @@ Private WithEvents mTickers As Tickers
 Attribute mTickers.VB_VarHelpID = -1
 Private WithEvents mTicker As Ticker
 Attribute mTicker.VB_VarHelpID = -1
-Private mTickerFormatString As String
 
 Private WithEvents mTickfileManager As TickFileManager
 Attribute mTickfileManager.VB_VarHelpID = -1
@@ -1346,8 +1347,85 @@ Next
 End Sub
 
 '================================================================================
-' XXXX Interface Members
+' QuoteListener Interface Members
 '================================================================================
+
+Private Sub QuoteListener_ask(ev As TradeBuild.QuoteEvent)
+On Error GoTo err
+mTimestamp = mTicker.timestamp
+AskText = ev.priceString
+AskSizeText = ev.size
+
+Exit Sub
+err:
+handleFatalError err.Number, err.Description, "QuoteListener_ask"
+End Sub
+
+Private Sub QuoteListener_bid(ev As TradeBuild.QuoteEvent)
+On Error GoTo err
+mTimestamp = mTicker.timestamp
+BidText = ev.priceString
+BidSizeText = ev.size
+
+Exit Sub
+err:
+handleFatalError err.Number, err.Description, "QuoteListener_bid"
+End Sub
+
+Private Sub QuoteListener_high(ev As TradeBuild.QuoteEvent)
+On Error GoTo err
+mTimestamp = mTicker.timestamp
+HighText = ev.priceString
+
+Exit Sub
+err:
+handleFatalError err.Number, err.Description, "QuoteListener_high"
+End Sub
+
+Private Sub QuoteListener_Low(ev As TradeBuild.QuoteEvent)
+On Error GoTo err
+mTimestamp = mTicker.timestamp
+LowText = ev.priceString
+
+Exit Sub
+err:
+handleFatalError err.Number, err.Description, "QuoteListener_low"
+End Sub
+
+Private Sub QuoteListener_openInterest(ev As TradeBuild.QuoteEvent)
+
+End Sub
+
+Private Sub QuoteListener_previousClose(ev As TradeBuild.QuoteEvent)
+On Error GoTo err
+mTimestamp = mTicker.timestamp
+CloseText = ev.priceString
+
+Exit Sub
+err:
+handleFatalError err.Number, err.Description, "QuoteListener_previousClose"
+End Sub
+
+Private Sub QuoteListener_trade(ev As TradeBuild.QuoteEvent)
+On Error GoTo err
+mTimestamp = mTicker.timestamp
+LastText = ev.priceString
+LastSizeText = ev.size
+
+Exit Sub
+err:
+handleFatalError err.Number, err.Description, "QuoteListener_trade"
+End Sub
+
+Private Sub QuoteListener_volume(ev As TradeBuild.QuoteEvent)
+On Error GoTo err
+mTimestamp = mTicker.timestamp
+VolumeText = ev.size
+
+Exit Sub
+err:
+handleFatalError err.Number, err.Description, "QuoteListener_volume"
+End Sub
 
 '================================================================================
 ' Form Control Event Handlers
@@ -1435,7 +1513,10 @@ RightCombo.Enabled = False
 RecordCheck.Enabled = False
 MarketDepthCheck.Enabled = False
 
-Set mTicker = Nothing
+If Not mTicker Is Nothing Then
+    mTicker.removeQuoteListener Me
+    Set mTicker = Nothing
+End If
 
 OpenOrdersList.ListItems.Clear
 ExecutionsList.ListItems.Clear
@@ -1726,7 +1807,9 @@ Else
         
         TickerGrid.col = 0                       ' make the cell containing the key current
         
+        If Not mTicker Is Nothing Then mTicker.removeQuoteListener Me
         Set mTicker = mTickers(TickerGrid.Text)
+        mTicker.addQuoteListener Me
         Set tickerAppData = mTicker.ApplicationData
         
         If tickerAppData.MarketDepthForm Is Nothing Then
@@ -1745,19 +1828,18 @@ Else
         End If
         
         Set mCurrentContract = mTicker.Contract
-        mTickerFormatString = mTicker.priceFormatString
         
         NameText = mCurrentContract.specifier.localSymbol
         BidSizeText = mTicker.bidSize
-        BidText = Format(mTicker.BidPrice, mTickerFormatString)
+        BidText = mTicker.BidPriceString
         AskSizeText = mTicker.AskSize
-        AskText = Format(mTicker.AskPrice, mTickerFormatString)
+        AskText = mTicker.AskPriceString
         LastSizeText = mTicker.TradeSize
-        LastText = Format(mTicker.TradePrice, mTickerFormatString)
+        LastText = mTicker.TradePriceString
         VolumeText = mTicker.Volume
-        HighText = Format(mTicker.highPrice, mTickerFormatString)
-        LowText = Format(mTicker.lowPrice, mTickerFormatString)
-        CloseText = Format(mTicker.closePrice, mTickerFormatString)
+        HighText = mTicker.highPriceString
+        LowText = mTicker.lowPriceString
+        CloseText = mTicker.closePriceString
     Else
         MarketDepthButton.Enabled = False
         GridMarketDepthButton.Enabled = False
@@ -1877,32 +1959,6 @@ End If
 
 End Sub
 
-Private Sub mTicker_ask(ByVal timestamp As Date, _
-                        ByVal price As Double, _
-                        ByVal size As Long)
-On Error GoTo err
-mTimestamp = timestamp
-AskText = Format(price, mTickerFormatString)
-AskSizeText = size
-
-Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTicker_ask"
-End Sub
-
-Private Sub mTicker_bid(ByVal timestamp As Date, _
-                        ByVal price As Double, _
-                        ByVal size As Long)
-On Error GoTo err
-mTimestamp = timestamp
-BidText = Format(price, mTickerFormatString)
-BidSizeText = size
-
-Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTicker_bid"
-End Sub
-
 Private Sub mTicker_ContractInvalid(ByVal contractSpecifier As TradeBuild.contractSpecifier)
 On Error GoTo err
 writeStatusMessage "Invalid contract details:" & vbCrLf & _
@@ -1927,55 +1983,9 @@ err:
 handleFatalError err.Number, err.Description, "mTicker_errorMessage"
 End Sub
 
-Private Sub mTicker_high(ByVal timestamp As Date, _
-                        ByVal price As Double)
-On Error GoTo err
-mTimestamp = timestamp
-HighText = Format(price, mTickerFormatString)
-
-Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTicker_high"
-End Sub
-
-Private Sub mTicker_low(ByVal timestamp As Date, _
-                        ByVal price As Double)
-On Error GoTo err
-mTimestamp = timestamp
-LowText = Format(price, mTickerFormatString)
-
-Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTicker_low"
-End Sub
-
 Private Sub mTicker_OutputTickfileCreated(ByVal timestamp As Date, _
                             ByVal Filename As String)
 writeStatusMessage "Created output tickfile: " & Filename
-End Sub
-
-Private Sub mTicker_previousClose(ByVal timestamp As Date, _
-                                ByVal price As Double)
-On Error GoTo err
-mTimestamp = timestamp
-CloseText = Format(price, mTickerFormatString)
-
-Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTicker_previousClose"
-End Sub
-
-Private Sub mTicker_trade(ByVal timestamp As Date, _
-                            ByVal price As Double, _
-                            ByVal size As Long)
-On Error GoTo err
-mTimestamp = timestamp
-LastText = Format(price, mTickerFormatString)
-LastSizeText = size
-
-Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTicker_trade"
 End Sub
 
 Private Sub mTicker_volume(ByVal timestamp As Date, _
@@ -2068,7 +2078,6 @@ If pTicker Is mTicker Then
 
     NameText = mCurrentContract.specifier.localSymbol
     
-    mTickerFormatString = mTicker.priceFormatString
 End If
 
 On Error Resume Next
@@ -2103,6 +2112,7 @@ GridMarketDepthButton.Enabled = False
 
 If pTicker Is mTicker Then
     clearTickerFields
+    mTicker.removeQuoteListener Me
     Set mTicker = Nothing
 End If
 
@@ -2221,6 +2231,7 @@ End Sub
 Private Sub mTickfileManager_TickerAllocated(ByVal pTicker As TradeBuild.Ticker)
 On Error GoTo err
 Set mTicker = pTicker
+mTicker.addQuoteListener Me
 initialiseTicker mTicker
 mTicker.DOMEventsRequired = DOMProcessedEvents
 mTicker.writeToTickfile = (RewriteCheck = vbChecked)
@@ -2846,7 +2857,7 @@ col.Alignment = dbgRight
 Set col = TickerGrid.Columns(TickerGridColumns.symbol)
 col.width = TickerGridColumnWidths.SymbolWidth * TickerGrid.width / 100
 col.Alignment = dbgCenter
-Set col = TickerGrid.Columns(TickerGridColumns.secType)
+Set col = TickerGrid.Columns(TickerGridColumns.sectype)
 col.width = TickerGridColumnWidths.SecTypeWidth * TickerGrid.width / 100
 col.Alignment = dbgCenter
 Set col = TickerGrid.Columns(TickerGridColumns.expiry)

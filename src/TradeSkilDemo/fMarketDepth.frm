@@ -106,8 +106,6 @@ Private mCurrentLast As Double
 
 Private mHalted As Boolean
 
-Private mFormatString As String
-
 '================================================================================
 ' Form Event Handlers
 '================================================================================
@@ -246,7 +244,6 @@ Me.Caption = "Market depth for " & _
             " on " & _
             mContract.specifier.exchange
 mPriceIncrement = mContract.minimumTick
-mFormatString = mTicker.priceFormatString
 
 If mTicker.TradePrice <> 0 Then
     initialPrice = mTicker.TradePrice
@@ -333,8 +330,8 @@ If (price - mBasePrice) / mPriceIncrement <= 5 Then
         For i = 1 To Int(mNumberOfVisibleRows / 2)
             rowprice = mBasePrice - (i * mPriceIncrement)
             DOMGrid.AddItem ""
-            setCellContents DOMGrid.Rows - 1, DOMColumns.PriceLeft, Format(rowprice, mFormatString)
-            setCellContents DOMGrid.Rows - 1, DOMColumns.PriceRight, Format(rowprice, mFormatString)
+            setCellContents DOMGrid.Rows - 1, DOMColumns.PriceLeft, mTicker.formatPrice(rowprice)
+            setCellContents DOMGrid.Rows - 1, DOMColumns.PriceRight, mTicker.formatPrice(rowprice)
         Next
         mBasePrice = rowprice
     Loop Until (price - mBasePrice) / mPriceIncrement > 5
@@ -351,8 +348,8 @@ If (mCeilingPrice - price) / mPriceIncrement <= 5 Then
         For i = 1 To Int(mNumberOfVisibleRows / 2)
             rowprice = mCeilingPrice + (i * mPriceIncrement)
             DOMGrid.AddItem ""
-            setCellContents DOMGrid.Rows - 1, DOMColumns.PriceLeft, Format(rowprice, mFormatString)
-            setCellContents DOMGrid.Rows - 1, DOMColumns.PriceRight, Format(rowprice, mFormatString)
+            setCellContents DOMGrid.Rows - 1, DOMColumns.PriceLeft, mTicker.formatPrice(rowprice)
+            setCellContents DOMGrid.Rows - 1, DOMColumns.PriceRight, mTicker.formatPrice(rowprice)
         Next
         mCeilingPrice = rowprice
     Loop Until (mCeilingPrice - price) / mPriceIncrement > 5
@@ -438,17 +435,14 @@ mBasePrice = mInitialPrice - (mPriceIncrement * Int(mNumberOfRows / 2))
 
 For i = 0 To mNumberOfRows - 1
     price = mBasePrice + (i * mPriceIncrement)
-    DOMGrid.AddItem ""
-    setCellContents i + 1, DOMColumns.PriceLeft, Format(price, mFormatString)
-    setCellContents i + 1, DOMColumns.PriceRight, Format(price, mFormatString)
+    DOMGrid.AddItem "", 1
+    setCellContents 1, DOMColumns.PriceLeft, mTicker.formatPrice(price)
+    setCellContents 1, DOMColumns.PriceRight, mTicker.formatPrice(price)
     
 Next
 mCeilingPrice = price
 
 DOMGrid.FixedRows = 1
-
-DOMGrid.col = DOMColumns.PriceLeft
-DOMGrid.Sort = flexSortNumericDescending
 
 currentGridHeight = DOMGrid.Height
 DOMGrid.Height = (mNumberOfVisibleRows + 1) * DOMGrid.RowHeight(0)
