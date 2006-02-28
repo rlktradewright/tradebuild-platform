@@ -273,13 +273,12 @@ mColumnMask = mColumnMask Or columnId
 End Sub
 
 Friend Sub ask(ByVal bookmark As Variant, _
-                ByVal priceFormatString As String, _
-                ByVal price As Double, _
+                ByVal price As String, _
                 ByVal size As Long)
 If mRS.State <> adStateClosed Then
     mRS.bookmark = bookmark
     If (mColumnMask And TickerColumnIds.ColumnAsk) <> 0 Then
-        mRS(mColumnNames(TickerColumnNameIndexes.ColumnAsk)) = Format(price, priceFormatString)
+        mRS(mColumnNames(TickerColumnNameIndexes.ColumnAsk)) = price
     End If
     If (mColumnMask And TickerColumnIds.ColumnAskSize) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnAskSize)) = size
@@ -289,13 +288,12 @@ End If
 End Sub
 
 Friend Sub bid(ByVal bookmark As Variant, _
-                ByVal priceFormatString As String, _
-                ByVal price As Double, _
+                ByVal price As String, _
                 ByVal size As Long)
 If mRS.State <> adStateClosed Then
     mRS.bookmark = bookmark
     If (mColumnMask And TickerColumnIds.ColumnBid) <> 0 Then
-        mRS(mColumnNames(TickerColumnNameIndexes.ColumnBid)) = Format(price, priceFormatString)
+        mRS(mColumnNames(TickerColumnNameIndexes.ColumnBid)) = price
     End If
     If (mColumnMask And TickerColumnIds.ColumnBidSize <> 0) Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnBidSize)) = size
@@ -426,33 +424,31 @@ mRS.Update
 End Sub
 
 Friend Sub high(ByVal bookmark As Variant, _
-                ByVal priceFormatString As String, _
-                ByVal price As Double)
+                ByVal price As String)
 If mRS.State <> adStateClosed Then
     mRS.bookmark = bookmark
     If (mColumnMask And TickerColumnIds.ColumnHigh) <> 0 Then
-        mRS(mColumnNames(TickerColumnNameIndexes.ColumnHigh)) = Format(price, priceFormatString)
+        mRS(mColumnNames(TickerColumnNameIndexes.ColumnHigh)) = price
     End If
     mRS.Update
 End If
 End Sub
 
 Friend Sub Last(ByVal bookmark As Variant, _
-                ByVal priceFormatString As String, _
-                ByVal price As Double, _
+                ByVal price As String, _
                 ByVal size As Long, _
-                ByVal Change As Double, _
+                ByVal Change As String, _
                 ByVal ChangePercent As Double)
 If mRS.State <> adStateClosed Then
     mRS.bookmark = bookmark
     If (mColumnMask And TickerColumnIds.ColumnTrade) <> 0 Then
-        mRS(mColumnNames(TickerColumnNameIndexes.ColumnTrade)) = Format(price, priceFormatString)
+        mRS(mColumnNames(TickerColumnNameIndexes.ColumnTrade)) = price
     End If
     If (mColumnMask And TickerColumnIds.ColumnTradeSize) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnTradeSize)) = size
     End If
     If (mColumnMask And TickerColumnIds.ColumnChange) <> 0 Then
-        mRS(mColumnNames(TickerColumnNameIndexes.ColumnChange)) = Format(Change, IIf(Change >= 0, "+", "-") & priceFormatString)
+        mRS(mColumnNames(TickerColumnNameIndexes.ColumnChange)) = Change
     End If
     If (mColumnMask And TickerColumnIds.ColumnChangePercent) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnChangePercent)) = Format(ChangePercent, IIf(ChangePercent >= 0, "+", "-") & "0.00\%")
@@ -462,12 +458,11 @@ End If
 End Sub
 
 Friend Sub Low(ByVal bookmark As Variant, _
-                ByVal priceFormatString As String, _
-                ByVal price As Double)
+                ByVal price As String)
 If mRS.State <> adStateClosed Then
     mRS.bookmark = bookmark
     If (mColumnMask And TickerColumnIds.ColumnLow) <> 0 Then
-        mRS(mColumnNames(TickerColumnNameIndexes.ColumnLow)) = Format(price, priceFormatString)
+        mRS(mColumnNames(TickerColumnNameIndexes.ColumnLow)) = price
     End If
     mRS.Update
 End If
@@ -506,17 +501,16 @@ End If
 End Sub
 
 Friend Sub PrevClose(ByVal bookmark As Variant, _
-                ByVal priceFormatString As String, _
-                ByVal price As Double, _
-                ByVal Change As Double, _
+                ByVal price As String, _
+                ByVal Change As String, _
                 ByVal ChangePercent As Double)
 If mRS.State <> adStateClosed Then
     mRS.bookmark = bookmark
     If (mColumnMask And TickerColumnIds.ColumnClose) <> 0 Then
-        mRS(mColumnNames(TickerColumnNameIndexes.ColumnClose)) = Format(price, priceFormatString)
+        mRS(mColumnNames(TickerColumnNameIndexes.ColumnClose)) = price
     End If
     If (mColumnMask And TickerColumnIds.ColumnChange) <> 0 Then
-        mRS(mColumnNames(TickerColumnNameIndexes.ColumnChange)) = Format(Change, IIf(Change >= 0, "+", "-") & priceFormatString)
+        mRS(mColumnNames(TickerColumnNameIndexes.ColumnChange)) = Change
     End If
     If (mColumnMask And TickerColumnIds.ColumnChangePercent) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnChangePercent)) = Format(ChangePercent, IIf(ChangePercent >= 0, "+", "-") & "0.00\%")
@@ -635,7 +629,7 @@ With pTicker.contract
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnSymbol)) = .specifier.symbol
     End If
     If (mColumnMask And TickerColumnIds.ColumnSecType) <> 0 Then
-        mRS(mColumnNames(TickerColumnNameIndexes.ColumnSecType)) = secTypeToString(.specifier.sectype)
+        mRS(mColumnNames(TickerColumnNameIndexes.ColumnSecType)) = secTypeToString(.specifier.secType)
     End If
     If (mColumnMask And TickerColumnIds.ColumnExpiry) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnExpiry)) = .specifier.expiry
