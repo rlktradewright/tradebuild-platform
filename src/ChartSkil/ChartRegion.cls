@@ -405,6 +405,24 @@ With mGraphicObjects(handle)
         addEntryToPeriodList handle
     End If
     
+    If graphicObjectIsInScope(handle) Then
+        addEntryToInScopeList handle
+        If graphicObjectIsVisible(handle) Then
+            addEntryToVisibleList handle
+        End If
+    End If
+    
+    ' check if the vertical bounds have changed, and redraw if so
+    If mAutoscale And Not mSuppressDrawing Then
+        If .includeInAutoscale Then
+            If .boundingRect.top >= mCanvas.boundary.top Or .boundingRect.bottom <= (mCanvas.boundary.bottom) Then
+                calculateVerticalBounds
+                paintRegion
+                Exit Sub
+            End If
+        End If
+    End If
+    
     ' now redraw the changed object
     If Not mSuppressDrawing And Not .noDraw Then
         If graphicObjectIsInScope(handle) Then
@@ -438,16 +456,6 @@ With mGraphicObjects(handle)
                 End With
             Loop
         Next
-    End If
-
-
-    If mAutoscale And Not mSuppressDrawing Then
-        If .includeInAutoscale Then
-            If .boundingRect.top >= mCanvas.boundary.top Or .boundingRect.bottom <= (mCanvas.boundary.bottom) Then
-                calculateVerticalBounds
-                paintRegion
-            End If
-        End If
     End If
 End With
 
