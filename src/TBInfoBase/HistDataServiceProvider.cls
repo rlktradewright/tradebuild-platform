@@ -105,10 +105,6 @@ writer.ServiceProviderName = mName & " (writer)"
 writer.ContractSpecifier = contractSpec
 End Function
 
-Private Sub IBarDataServiceProvider_StopAll()
-
-End Sub
-
 Private Function IBarDataServiceProvider_Supports( _
                             ByVal capabilities As Long _
                             ) As Boolean

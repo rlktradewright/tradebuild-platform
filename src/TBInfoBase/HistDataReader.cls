@@ -57,6 +57,8 @@ Private mServiceConsumer As TradeBuildSP.IBarDataInputServiceConsumer
 Private mDataConsumer As TradeBuildSP.IBarDataConsumer
 Private mServiceProviderName As String
 
+Private mRequestInProgress As Boolean
+
 Private mBarDataSpecifier  As TradeBuildSP.BarDataSpecifier
 Private mContractSpecifier As IContractSpecifier
 Private WithEvents mInstrument As TradingDO2.cInstrument
@@ -80,10 +82,20 @@ Private Property Get IBarDataReader_BarDataSpecifier( _
 IBarDataReader_BarDataSpecifier = mBarDataSpecifier
 End Property
 
+Private Sub IBarDataReader_CancelFetch()
+mRequestInProgress = False
+Set mBarReader = Nothing
+End Sub
+
 Private Sub IBarDataReader_FetchBars( _
                             barSpecifier As TradeBuildSP.BarDataSpecifier)
 Dim lInstrumentFactory As TradingDO2.cInstrumentFactory
 
+If mRequestInProgress Then Err.Raise ErrorCodes.IllegalStateException, _
+                                    "TBInfoBase.HistDataReader::FetchBars", _
+                                    "Request already in progress"
+
+mRequestInProgress = True
 mBarDataSpecifier = barSpecifier
 
 Set lInstrumentFactory = New TradingDO2.cInstrumentFactory
@@ -132,6 +144,7 @@ End Function
 Private Sub mBarReader_BarsFetched()
 Dim lBar As TradeBuildSP.Bar
 
+If Not mRequestInProgress Then Exit Sub
 mWaitingForBarData = False
 If mBarRequested Then
     mBarRequested = False
@@ -143,7 +156,7 @@ End Sub
 Private Sub mBarReader_ConnectFailed( _
                             ByVal errorCode As Long, _
                             ByVal errorDesc As String)
-mServiceConsumer.Error StandardSPErrorCodes.TFCantConnectDataSource, _
+mServiceConsumer.Error StandardSPErrorCodes.HDCantConnectDataSource, _
                         "error " & errorCode & ": " & errorDesc
 
 End Sub
@@ -208,6 +221,7 @@ With lBar
                             .OpenInterest) _
     Then
         mServiceConsumer.BarDataComplete
+        mRequestInProgress = False
         Exit Sub
     End If
 End With
