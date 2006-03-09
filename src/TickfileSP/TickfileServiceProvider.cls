@@ -149,10 +149,6 @@ writer.commonServiceConsumer = mCommonServiceConsumer
 writer.TickfileOutputServiceConsumer = serviceConsumer
 End Function
 
-Private Sub ITickfileServiceProvider_StopAll()
-
-End Sub
-
 Private Property Get ITickfileServiceProvider_SupportedFormats() As TickfileFormatSpecifier()
 Dim formats(4) As TickfileFormatSpecifier
 
