@@ -123,8 +123,8 @@ Private Function ITickfileServiceProvider_CreateTickfileReader( _
                             ByVal dataConsumer As TradeBuildSP.IStreamingDataConsumer, _
                             ByVal serviceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
                             ByVal FormatIdentifier As String) As TradeBuildSP.ITickfileReader
-Dim reader As QTTidkfileReader
-Set reader = New QTTidkfileReader
+Dim reader As QTTickfileReader
+Set reader = New QTTickfileReader
 Set ITickfileServiceProvider_CreateTickfileReader = reader
 reader.commonServiceConsumer = mCommonServiceConsumer
 reader.TickfileInputServiceConsumer = serviceConsumer
