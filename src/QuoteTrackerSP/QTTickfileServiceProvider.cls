@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "QTServiceProvider"
+Attribute VB_Name = "QTTickfileServiceProvider"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -123,8 +123,8 @@ Private Function ITickfileServiceProvider_CreateTickfileReader( _
                             ByVal dataConsumer As TradeBuildSP.IStreamingDataConsumer, _
                             ByVal serviceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
                             ByVal FormatIdentifier As String) As TradeBuildSP.ITickfileReader
-Dim reader As QTReader
-Set reader = New QTReader
+Dim reader As QTTidkfileReader
+Set reader = New QTTidkfileReader
 Set ITickfileServiceProvider_CreateTickfileReader = reader
 reader.commonServiceConsumer = mCommonServiceConsumer
 reader.TickfileInputServiceConsumer = serviceConsumer
@@ -140,10 +140,6 @@ Private Function ITickfileServiceProvider_CreateTickfileWriter( _
                             Optional ByVal location As String = "") As TradeBuildSP.ITickfileWriter
 ' writing not supported
 End Function
-
-Private Sub ITickfileServiceProvider_StopAll()
-
-End Sub
 
 Private Property Get ITickfileServiceProvider_SupportedFormats() As TickfileFormatSpecifier()
 Dim formats(0) As TickfileFormatSpecifier
