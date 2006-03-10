@@ -171,10 +171,6 @@ Private Property Get ITickfileReader_FirstTickFileTime() As Date
 ITickfileReader_FirstTickFileTime = FirstTickFileTime
 End Property
 
-Private Property Let ITickfileReader_InputTickfileSpecifier(RHS As TradeBuildSP.TickfileSpec)
-InputTickfileSpecifier = RHS
-End Property
-
 Private Property Get ITickfileReader_InputTickfileSpecifier() As TradeBuildSP.TickfileSpec
 ITickfileReader_InputTickfileSpecifier = InputTickfileSpecifier
 End Property
@@ -190,6 +186,17 @@ End Property
 Private Property Get ITickfileReader_ReplayProgressEventFrequency() As Long
 ITickfileReader_ReplayProgressEventFrequency = mReplayProgressEventFrequency
 End Property
+
+Private Sub ITickfileReader_ReplayTickfile(tickfileSpecifier As TradeBuildSP.TickfileSpec)
+mInputTickfileSpecifier = tickfileSpecifier
+getFile mInputTickfileSpecifier.filename, _
+            mInputTickfileFormat, _
+            mTickFileVersion, _
+            mTsIn, _
+            mTickdataSizeBytes, _
+            mContract, _
+            mFirstTickFileTime
+End Sub
 
 Private Function ITickfileReader_Supports( _
                             ByVal Capabilities As Long, _
@@ -225,17 +232,6 @@ End Property
 
 Friend Property Get FirstTickFileTime() As Date
 FirstTickFileTime = mFirstTickFileTime
-End Property
-
-Friend Property Let InputTickfileSpecifier(RHS As TradeBuildSP.TickfileSpec)
-mInputTickfileSpecifier = RHS
-getFile mInputTickfileSpecifier.filename, _
-            mInputTickfileFormat, _
-            mTickFileVersion, _
-            mTsIn, _
-            mTickdataSizeBytes, _
-            mContract, _
-            mFirstTickFileTime
 End Property
 
 Friend Property Get InputTickfileSpecifier() As TradeBuildSP.TickfileSpec
@@ -331,7 +327,7 @@ Select Case version
 Case TickFileVersions.CrescendoV1
     
     Set mContractSpecifier = mCommonServiceConsumer.NewContractSpecifier
-    mContractSpecifier.exchange = dataFields(TickfileFieldsV1.exchange)
+    mContractSpecifier.Exchange = dataFields(TickfileFieldsV1.Exchange)
     mContractSpecifier.Symbol = dataFields(TickfileFieldsV1.Symbol)
     mContractSpecifier.Expiry = dataFields(TickfileFieldsV1.Expiry)
     mContractSpecifier.SecType = SecTypeFuture
@@ -349,7 +345,7 @@ Case TickFileVersions.CrescendoV1
 Case TickFileVersions.CrescendoV2
     
     Set mContractSpecifier = mCommonServiceConsumer.NewContractSpecifier
-    mContractSpecifier.exchange = dataFields(TickfileHeaderFieldsV2.exchange)
+    mContractSpecifier.Exchange = dataFields(TickfileHeaderFieldsV2.Exchange)
     mContractSpecifier.Symbol = dataFields(TickfileHeaderFieldsV2.Symbol)
     mContractSpecifier.Expiry = dataFields(TickfileHeaderFieldsV2.Expiry)
     mContractSpecifier.SecType = SecTypeFuture
@@ -362,7 +358,7 @@ Case TickFileVersions.CrescendoV2
 Case TickFileVersions.TradeBuildV3, TickFileVersions.TradeBuildV4
     
     Set mContractSpecifier = mCommonServiceConsumer.NewContractSpecifier
-    mContractSpecifier.exchange = dataFields(TickfileHeaderFieldsV3.exchange)
+    mContractSpecifier.Exchange = dataFields(TickfileHeaderFieldsV3.Exchange)
     mContractSpecifier.Symbol = dataFields(TickfileHeaderFieldsV3.Symbol)
     mContractSpecifier.Expiry = dataFields(TickfileHeaderFieldsV3.Expiry)
     mContractSpecifier.SecType = SecTypeFuture
@@ -746,7 +742,7 @@ With mRecordTable(mCurrentRecordTableEntry)
     Case TickfileSP.TickTypes.LastSizeCorrection
     Case TickfileSP.TickTypes.marketDepth
         If .MDMarketMaker = "" Then
-            mDataConsumer.updateMktDepth .timestamp, _
+            mDataConsumer.UpdateMktDepth .timestamp, _
                                         .MDposition, _
                                         .MDOperation, _
                                         .MDSide, _
