@@ -146,10 +146,6 @@ Private Property Get ITickfileReader_FirstTickFileTime() As Date
 ITickfileReader_FirstTickFileTime = FirstTickFileTime
 End Property
 
-Private Property Let ITickfileReader_InputTickfileSpecifier(RHS As TradeBuildSP.TickfileSpec)
-InputTickfileSpecifier = RHS
-End Property
-
 Private Property Get ITickfileReader_InputTickfileSpecifier() As TradeBuildSP.TickfileSpec
 ITickfileReader_InputTickfileSpecifier = InputTickfileSpecifier
 End Property
@@ -165,6 +161,38 @@ End Property
 Private Property Get ITickfileReader_ReplayProgressEventFrequency() As Long
 ITickfileReader_ReplayProgressEventFrequency = mReplayProgressEventFrequency
 End Property
+
+Private Sub ITickfileReader_ReplayTickfile(tickfileSpecifier As TradeBuildSP.TickfileSpec)
+Dim lInstrumentFactory As TradingDO2.cInstrumentFactory
+
+mInputTickfileSpecifier = tickfileSpecifier
+
+Set lInstrumentFactory = New TradingDO2.cInstrumentFactory
+
+With mInputTickfileSpecifier.Contract.Specifier
+    Set mInstrument = lInstrumentFactory.loadBySpec(.Symbol, _
+                                secTypeToString(.SecType), _
+                                Left$(.Expiry, 6), _
+                                .Exchange, _
+                                .CurrencyCode, _
+                                .Strike, _
+                                optRightToString(.Right), _
+                                .localSymbol)
+End With
+ 
+If mInstrument Is Nothing Then
+    mServiceConsumer.Error StandardSPErrorCodes.TFContractSpecifierInvalid, _
+                            "The specified contract does not exist"
+    Exit Sub
+End If
+
+Set mContract = mInputTickfileSpecifier.Contract
+'Set mContract = mCommonServiceConsumer.NewContract
+'mContract.Specifier = mCommonServiceConsumer.NewContractSpecifier
+'gContractFromInstrument mContract, mInstrument
+Set mTickReader = mInstrument.CreateTickDataAccessor
+
+End Sub
 
 Private Function ITickfileReader_Supports( _
                             ByVal capabilities As Long, _
@@ -247,38 +275,6 @@ End Property
 
 Friend Property Get FirstTickFileTime() As Date
 FirstTickFileTime = mFirstTickFileTime
-End Property
-
-Friend Property Let InputTickfileSpecifier(RHS As TradeBuildSP.TickfileSpec)
-Dim lInstrumentFactory As TradingDO2.cInstrumentFactory
-
-mInputTickfileSpecifier = RHS
-
-Set lInstrumentFactory = New TradingDO2.cInstrumentFactory
-
-With mInputTickfileSpecifier.Contract.Specifier
-    Set mInstrument = lInstrumentFactory.loadBySpec(.Symbol, _
-                                secTypeToString(.SecType), _
-                                Left$(.Expiry, 6), _
-                                .Exchange, _
-                                .CurrencyCode, _
-                                .Strike, _
-                                optRightToString(.Right), _
-                                .localSymbol)
-End With
- 
-If mInstrument Is Nothing Then
-    mServiceConsumer.Error StandardSPErrorCodes.TFContractSpecifierInvalid, _
-                            "The specified contract does not exist"
-    Exit Property
-End If
-
-Set mContract = mInputTickfileSpecifier.Contract
-'Set mContract = mCommonServiceConsumer.NewContract
-'mContract.Specifier = mCommonServiceConsumer.NewContractSpecifier
-'gContractFromInstrument mContract, mInstrument
-Set mTickReader = mInstrument.CreateTickDataAccessor
-
 End Property
 
 Friend Property Get InputTickfileSpecifier() As TradeBuildSP.TickfileSpec
