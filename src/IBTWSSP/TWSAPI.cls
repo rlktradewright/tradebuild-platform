@@ -246,8 +246,6 @@ Private Declare Sub MoveMemory Lib "Kernel32" Alias "RtlMoveMemory" ( _
 
 Private Sub Class_Initialize()
 
-Set gTWSAPI = Me
-
 ReDim mTickerTable(InitialMaxTickers) As TickerTableEntry
 ReDim mBufferIn(1023) As Byte
 ReDim mBufferOut(1023) As Byte
