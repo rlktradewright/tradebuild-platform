@@ -45,14 +45,14 @@ Public Type ProcessedMarketDepthEvent
     Source          As Object
     side            As DOMSides
     price           As Double
-    Size            As Long
+    size            As Long
 End Type
 
 Public Type QuoteEvent
     Source          As Object
     price           As Double
     priceString     As String
-    Size            As Long
+    size            As Long
 End Type
 
 Public Type RawMarketDepthEvent
@@ -62,7 +62,7 @@ Public Type RawMarketDepthEvent
     operation       As DOMOperations
     side            As DOMSides
     price           As Double
-    Size            As Long
+    size            As Long
 End Type
 
 Public Type SortEntry
@@ -104,7 +104,7 @@ Public Type TWSSocketMsgTickPrice
     tickerid        As Long
     TickType        As TWSSocketTickTypes
     price           As Double
-    Size            As Long
+    size            As Long
 End Type
 
 Public Type TWSSocketMsgTickSize
@@ -112,7 +112,7 @@ Public Type TWSSocketMsgTickSize
     Version         As Long
     tickerid        As Long
     TickType        As TWSSocketTickTypes
-    Size            As Long
+    size            As Long
 End Type
 
 Public Type TWSSocketMsgOrderStatus
@@ -264,7 +264,7 @@ Public Type TWSSocketMsgMarketDepth
     operation       As Long
     side            As Long
     price           As Double
-    Size            As Long
+    size            As Long
 End Type
 
 Public Type TWSSocketMsgMarketDepthL2
@@ -276,7 +276,7 @@ Public Type TWSSocketMsgMarketDepthL2
     operation       As Long
     side            As Long
     price           As Double
-    Size            As Long
+    size            As Long
 End Type
 
 Public Type TWSSocketMsgNewsBulletins
@@ -362,6 +362,7 @@ Public Enum ApiErrorCodes
     CantConnectHistoricDataSource
     RetryingConnectionToHistoricDataSource
     ContractSpecifierInvalid
+    CantConnectRealtimeDataSource
                             
 End Enum
 
@@ -528,16 +529,16 @@ Public Enum OrderTifs
     TIFDay = 1
     TIFGoodTillCancelled
     TIFImmediateOrCancel
+    TIFGoodTillDate
 End Enum
 
 Public Enum OrderTypes
-    MinOrderType = 0
-    OrderTypeNone = MinOrderType
+    OrderTypeNone
     OrderTypeMarket
-    OrderTypeMarketClose
+    OrderTypeMarketOnClose
     OrderTypeLimit
-    OrderTypeLimitClose
-    OrderTypePegMarket
+    OrderTypeLimitOnClose
+    OrderTypePeggedToMarket
     OrderTypeStop
     OrderTypeStopLimit
     OrderTypeTrail
@@ -547,7 +548,15 @@ Public Enum OrderTypes
     OrderTypeQuote
     OrderTypeAutoStop
     OrderTypeAutoLimit
-    MaxOrderType = OrderTypeAutoLimit
+    OrderTypeAdjust
+    OrderTypeAlert
+    OrderTypeLimitIfTouched
+    OrderTypeMarketIfTouched
+    OrderTypeTrailLimit
+    OrderTypeMarketWithProtection
+    OrderTypeMarketOnOpen
+    OrderTypeLimitOnOpen
+    OrderTypePeggedToPrimary
 End Enum
 
 'Public Enum QuoteTypes

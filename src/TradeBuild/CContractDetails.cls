@@ -30,7 +30,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements TradeBuildsp.IContract
+Implements TradeBuildSP.IContract
 
 '================================================================================
 ' Events
@@ -66,8 +66,8 @@ Private mSessionStartTime As Date
 Private mSessionEndTime As Date
 Private mExpiryDate As Date
 Private mDaysBeforeExpiryToSwitch As Long
-
-Private mProviderIDs() As TradeBuildsp.DictionaryEntry
+Private mPriceMagnifier As Long
+Private mProviderIDs() As TradeBuildSP.DictionaryEntry
 
 Private mReferenceTime As Date
 Private mCurrentSessionStartTime As Date
@@ -129,7 +129,7 @@ Private Function IContract_BarStartTime( _
 IContract_BarStartTime = BarStartTime(timestamp, barLength)
 End Function
 
-Private Function IContract_Clone() As TradeBuildsp.IContract
+Private Function IContract_Clone() As TradeBuildSP.IContract
 Set IContract_Clone = clone
 End Function
 
@@ -217,82 +217,134 @@ Private Property Get IContract_NumberOfDecimals() As Long
 IContract_NumberOfDecimals = NumberOfDecimals
 End Property
 
-Private Property Let IContract_OrderTypes(RHS() As TradeBuildsp.OrderTypes)
+Private Property Let IContract_OrderTypes(RHS() As TradeBuildSP.OrderTypes)
 Dim lOrderTypes() As TradeBuild.OrderTypes
 Dim i As Long
 
 ReDim lOrderTypes(UBound(RHS)) As TradeBuild.OrderTypes
 For i = 0 To UBound(RHS)
     Select Case RHS(i)
-    Case TradeBuildsp.OrderTypes.OrderTypeNone
+    Case TradeBuildSP.OrderTypes.OrderTypeNone
         lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeNone
-    Case TradeBuildsp.OrderTypes.OrderTypeMarket
+    Case TradeBuildSP.OrderTypes.OrderTypeMarket
         lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeMarket
-    Case TradeBuildsp.OrderTypes.OrderTypeMarketClose
-        lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeMarketClose
-    Case TradeBuildsp.OrderTypes.OrderTypeLimit
+    Case TradeBuildSP.OrderTypes.OrderTypeMarketOnClose
+        lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeMarketOnClose
+    Case TradeBuildSP.OrderTypes.OrderTypeLimit
         lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeLimit
-    Case TradeBuildsp.OrderTypes.OrderTypeLimitClose
-        lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeLimitClose
-    Case TradeBuildsp.OrderTypes.OrderTypePegMarket
-        lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypePegMarket
-    Case TradeBuildsp.OrderTypes.OrderTypeStop
+    Case TradeBuildSP.OrderTypes.OrderTypeLimitOnClose
+        lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeLimitOnClose
+    Case TradeBuildSP.OrderTypes.OrderTypePeggedToMarket
+        lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypePeggedToMarket
+    Case TradeBuildSP.OrderTypes.OrderTypeStop
         lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeStop
-    Case TradeBuildsp.OrderTypes.OrderTypeStopLimit
+    Case TradeBuildSP.OrderTypes.OrderTypeStopLimit
         lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeStopLimit
-    Case TradeBuildsp.OrderTypes.OrderTypeTrail
+    Case TradeBuildSP.OrderTypes.OrderTypeTrail
         lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeTrail
-    Case TradeBuildsp.OrderTypes.OrderTypeRelative
+    Case TradeBuildSP.OrderTypes.OrderTypeRelative
         lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeRelative
-    Case TradeBuildsp.OrderTypes.OrderTypeVWAP
+    Case TradeBuildSP.OrderTypes.OrderTypeVWAP
         lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeVWAP
-    Case TradeBuildsp.OrderTypes.OrderTypeMarketToLimit
+    Case TradeBuildSP.OrderTypes.OrderTypeMarketToLimit
         lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeMarketToLimit
-    Case TradeBuildsp.OrderTypes.OrderTypeQuote
+    Case TradeBuildSP.OrderTypes.OrderTypeQuote
         lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeQuote
+    Case TradeBuildSP.OrderTypes.OrderTypeAutoStop
+        lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeAutoStop
+    Case TradeBuildSP.OrderTypes.OrderTypeAutoLimit
+        lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeAutoLimit
+    Case TradeBuildSP.OrderTypes.OrderTypeAdjust
+        lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeAdjust
+    Case TradeBuildSP.OrderTypes.OrderTypeAlert
+        lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeAlert
+    Case TradeBuildSP.OrderTypes.OrderTypeLimitIfTouched
+        lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeLimitIfTouched
+    Case TradeBuildSP.OrderTypes.OrderTypeMarketIfTouched
+        lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeMarketIfTouched
+    Case TradeBuildSP.OrderTypes.OrderTypeTrailLimit
+        lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeTrailLimit
+    Case TradeBuildSP.OrderTypes.OrderTypeMarketWithProtection
+        lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeMarketWithProtection
+    Case TradeBuildSP.OrderTypes.OrderTypeMarketOnOpen
+        lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeMarketOnOpen
+    Case TradeBuildSP.OrderTypes.OrderTypeLimitOnOpen
+        lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypeLimitOnOpen
+    Case TradeBuildSP.OrderTypes.OrderTypePeggedToPrimary
+        lOrderTypes(i) = TradeBuild.OrderTypes.OrderTypePeggedToPrimary
     End Select
 Next
 OrderTypes = lOrderTypes
 End Property
 
-Private Property Get IContract_OrderTypes() As TradeBuildsp.OrderTypes()
-Dim lOrderTypes() As TradeBuildsp.OrderTypes
+Private Property Get IContract_OrderTypes() As TradeBuildSP.OrderTypes()
+Dim lOrderTypes() As TradeBuildSP.OrderTypes
 Dim ot() As TradeBuild.OrderTypes
 Dim i As Long
 
 ot = OrderTypes
-ReDim lOrderTypes(UBound(ot)) As TradeBuildsp.OrderTypes
+ReDim lOrderTypes(UBound(ot)) As TradeBuildSP.OrderTypes
 For i = 0 To UBound(ot)
     Select Case ot(i)
     Case TradeBuild.OrderTypes.OrderTypeNone
-        lOrderTypes(i) = TradeBuildsp.OrderTypes.OrderTypeNone
+        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeNone
     Case TradeBuild.OrderTypes.OrderTypeMarket
-        lOrderTypes(i) = TradeBuildsp.OrderTypes.OrderTypeMarket
-    Case TradeBuild.OrderTypes.OrderTypeMarketClose
-        lOrderTypes(i) = TradeBuildsp.OrderTypes.OrderTypeMarketClose
+        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeMarket
+    Case TradeBuild.OrderTypes.OrderTypeMarketOnClose
+        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeMarketOnClose
     Case TradeBuild.OrderTypes.OrderTypeLimit
-        lOrderTypes(i) = TradeBuildsp.OrderTypes.OrderTypeLimit
-    Case TradeBuild.OrderTypes.OrderTypeLimitClose
-        lOrderTypes(i) = TradeBuildsp.OrderTypes.OrderTypeLimitClose
-    Case TradeBuild.OrderTypes.OrderTypePegMarket
-        lOrderTypes(i) = TradeBuildsp.OrderTypes.OrderTypePegMarket
+        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeLimit
+    Case TradeBuild.OrderTypes.OrderTypeLimitOnClose
+        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeLimitOnClose
+    Case TradeBuild.OrderTypes.OrderTypePeggedToMarket
+        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypePeggedToMarket
     Case TradeBuild.OrderTypes.OrderTypeStop
-        lOrderTypes(i) = TradeBuildsp.OrderTypes.OrderTypeStop
+        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeStop
     Case TradeBuild.OrderTypes.OrderTypeStopLimit
-        lOrderTypes(i) = TradeBuildsp.OrderTypes.OrderTypeStopLimit
+        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeStopLimit
     Case TradeBuild.OrderTypes.OrderTypeTrail
-        lOrderTypes(i) = TradeBuildsp.OrderTypes.OrderTypeTrail
+        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeTrail
     Case TradeBuild.OrderTypes.OrderTypeRelative
-        lOrderTypes(i) = TradeBuildsp.OrderTypes.OrderTypeRelative
+        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeRelative
     Case TradeBuild.OrderTypes.OrderTypeVWAP
-        lOrderTypes(i) = TradeBuildsp.OrderTypes.OrderTypeVWAP
+        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeVWAP
     Case TradeBuild.OrderTypes.OrderTypeMarketToLimit
-        lOrderTypes(i) = TradeBuildsp.OrderTypes.OrderTypeMarketToLimit
+        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeMarketToLimit
     Case TradeBuild.OrderTypes.OrderTypeQuote
-        lOrderTypes(i) = TradeBuildsp.OrderTypes.OrderTypeQuote
+        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeQuote
+    Case TradeBuild.OrderTypes.OrderTypeAutoStop
+        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeAutoStop
+    Case TradeBuild.OrderTypes.OrderTypeAutoLimit
+        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeAutoLimit
+    Case TradeBuild.OrderTypes.OrderTypeAdjust
+        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeAdjust
+    Case TradeBuild.OrderTypes.OrderTypeAlert
+        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeAlert
+    Case TradeBuild.OrderTypes.OrderTypeLimitIfTouched
+        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeLimitIfTouched
+    Case TradeBuild.OrderTypes.OrderTypeMarketIfTouched
+        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeMarketIfTouched
+    Case TradeBuild.OrderTypes.OrderTypeTrailLimit
+        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeTrailLimit
+    Case TradeBuild.OrderTypes.OrderTypeMarketWithProtection
+        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeMarketWithProtection
+    Case TradeBuild.OrderTypes.OrderTypeMarketOnOpen
+        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeMarketOnOpen
+    Case TradeBuild.OrderTypes.OrderTypeLimitOnOpen
+        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypeLimitOnOpen
+    Case TradeBuild.OrderTypes.OrderTypePeggedToPrimary
+        lOrderTypes(i) = TradeBuildSP.OrderTypes.OrderTypePeggedToPrimary
     End Select
 Next
 IContract_OrderTypes = lOrderTypes
+End Property
+
+Private Property Let IContract_PriceMagnifier(ByVal RHS As Long)
+priceMagnifier = RHS
+End Property
+
+Private Property Get IContract_PriceMagnifier() As Long
+IContract_PriceMagnifier = priceMagnifier
 End Property
 
 Private Property Get IContract_ProviderID(ByVal providerKey As String) As String
@@ -311,7 +363,7 @@ err:
 IContract_ProviderID = mSpecifier.localSymbol
 End Property
 
-Private Property Let IContract_ProviderIDs(RHS() As TradeBuildsp.DictionaryEntry)
+Private Property Let IContract_ProviderIDs(RHS() As TradeBuildSP.DictionaryEntry)
 mProviderIDs = RHS
 End Property
 
@@ -335,11 +387,11 @@ Private Sub IContract_SetSession(ByVal timestamp As Date)
 setSession timestamp
 End Sub
 
-Private Property Let IContract_Specifier(ByVal RHS As TradeBuildsp.IContractSpecifier)
+Private Property Let IContract_Specifier(ByVal RHS As TradeBuildSP.IContractSpecifier)
 specifier = RHS
 End Property
 
-Private Property Get IContract_Specifier() As TradeBuildsp.IContractSpecifier
+Private Property Get IContract_Specifier() As TradeBuildSP.IContractSpecifier
 Set IContract_Specifier = specifier
 End Property
 
@@ -474,6 +526,14 @@ Friend Property Let OrderTypes(ByRef value() As TradeBuild.OrderTypes)
 mOrderTypes = value
 End Property
 
+Friend Property Let priceMagnifier(ByVal RHS As Long)
+mPriceMagnifier = RHS
+End Property
+
+Friend Property Get priceMagnifier() As Long
+priceMagnifier = mPriceMagnifier
+End Property
+
 Friend Property Get providerID(ByVal providerKey As String) As String
 Dim i As Long
 On Error GoTo err
@@ -490,7 +550,7 @@ err:
 providerID = mSpecifier.localSymbol
 End Property
 
-Friend Property Let ProviderIDs(ByRef value() As TradeBuildsp.DictionaryEntry)
+Friend Property Let ProviderIDs(ByRef value() As TradeBuildSP.DictionaryEntry)
 mProviderIDs = value
 End Property
 
@@ -558,9 +618,9 @@ BarStartTime = theDate + _
 
 End Function
 
-Friend Function clone() As contract
+Friend Function clone() As Contract
 
-Set clone = New contract
+Set clone = New Contract
 
 With clone
     .contractID = mContractID
@@ -585,7 +645,7 @@ End Function
 
 Friend Sub FromXML(ByVal contractXML As String)
 Dim XMLdoc As DOMDocument30
-Dim contract As IXMLDOMElement
+Dim Contract As IXMLDOMElement
 Dim specifier As IXMLDOMElement
 Dim specifierObj As contractSpecifier
 Dim OrderTypes As IXMLDOMElement
@@ -606,34 +666,34 @@ If XMLdoc.parseError.errorCode <> 0 Then
             "Contract XML cannot be parsed"
 End If
 
-Set contract = XMLdoc.selectSingleNode("contract")
-mContractID = contract.getAttribute("contractid")
-mMarketName = contract.getAttribute("marketname")
-minimumTick = contract.getAttribute("minimumtick")
-mMultiplier = contract.getAttribute("multiplier")
-mTradingClass = contract.getAttribute("tradingclass")
-If IsNull(contract.getAttribute("sessionstarttime")) Then
+Set Contract = XMLdoc.selectSingleNode("contract")
+mContractID = Contract.getAttribute("contractid")
+mMarketName = Contract.getAttribute("marketname")
+minimumTick = Contract.getAttribute("minimumtick")
+mMultiplier = Contract.getAttribute("multiplier")
+mTradingClass = Contract.getAttribute("tradingclass")
+If IsNull(Contract.getAttribute("sessionstarttime")) Then
     mSessionStartTime = "00:00:00"
 Else
-    mSessionStartTime = contract.getAttribute("sessionstarttime")
+    mSessionStartTime = Contract.getAttribute("sessionstarttime")
 End If
-If IsNull(contract.getAttribute("sessionendtime")) Then
+If IsNull(Contract.getAttribute("sessionendtime")) Then
     mSessionEndTime = "00:00:00"
 Else
-    mSessionEndTime = contract.getAttribute("sessionendtime")
+    mSessionEndTime = Contract.getAttribute("sessionendtime")
 End If
-If IsNull(contract.getAttribute("description")) Then
+If IsNull(Contract.getAttribute("description")) Then
     mDescription = ""
 Else
-    mDescription = contract.getAttribute("description")
+    mDescription = Contract.getAttribute("description")
 End If
-If IsNull(contract.getAttribute("numberofdecimals")) Then
+If IsNull(Contract.getAttribute("numberofdecimals")) Then
     mNumberOfDecimals = 4
 Else
-    mNumberOfDecimals = contract.getAttribute("numberofdecimals")
+    mNumberOfDecimals = Contract.getAttribute("numberofdecimals")
 End If
 
-Set specifier = contract.selectSingleNode("specifier")
+Set specifier = Contract.selectSingleNode("specifier")
 Set specifierObj = New contractSpecifier
 Me.specifier = specifierObj
 With specifierObj
@@ -643,7 +703,7 @@ With specifierObj
     .expiry = specifier.getAttribute("expiry")
     .localSymbol = specifier.getAttribute("localsymbol")
     .right = specifier.getAttribute("right")
-    .secType = specifier.getAttribute("sectype")
+    .sectype = specifier.getAttribute("sectype")
     .strike = specifier.getAttribute("strike")
     .symbol = specifier.getAttribute("symbol")
     
@@ -661,7 +721,7 @@ With specifierObj
     
 End With
 
-Set OrderTypes = contract.selectSingleNode("ordertypes")
+Set OrderTypes = Contract.selectSingleNode("ordertypes")
 Set nodeList = OrderTypes.selectNodes("ordertype")
 ReDim mOrderTypes(nodeList.length) As TradeBuild.OrderTypes
 i = 0
@@ -670,7 +730,7 @@ For Each orderType In nodeList
     i = i + 1
 Next
 
-Set exchanges = contract.selectSingleNode("exchanges")
+Set exchanges = Contract.selectSingleNode("exchanges")
 Set nodeList = exchanges.selectNodes("exchange")
 ReDim mValidExchanges(nodeList.length) As String
 i = 0
@@ -703,7 +763,7 @@ Set lOrder = New Order
 lOrder.id = gNextOrderID
 gAllOrders.add lOrder, CStr(gNextOrderID)
 gNextOrderID = gNextOrderID + 1
-lOrder.contract = Me
+lOrder.Contract = Me
 lOrder.marketIndex = mMarketIndex
 Set newOrder = lOrder.clone   ' return a copy of the order to the app
 End Function
@@ -728,13 +788,13 @@ For i = 0 To UBound(mOrderTypes)
     Select Case mOrderTypes(i)
     Case OrderTypeMarket
         ToString = ToString & vbTab & "OrderTypeMarket" & vbCrLf
-    Case OrderTypeMarketClose
+    Case OrderTypeMarketOnClose
         ToString = ToString & vbTab & "OrderTypeMarketClose" & vbCrLf
     Case OrderTypeLimit
         ToString = ToString & vbTab & "OrderTypeLimit" & vbCrLf
-    Case OrderTypeLimitClose
+    Case OrderTypeLimitOnClose
         ToString = ToString & vbTab & "OrderTypeLimitClose" & vbCrLf
-    Case OrderTypePegMarket
+    Case OrderTypePeggedToMarket
         ToString = ToString & vbTab & "OrderTypePegMarket" & vbCrLf
     Case OrderTypeStop
         ToString = ToString & vbTab & "OrderTypeStop" & vbCrLf
@@ -750,6 +810,28 @@ For i = 0 To UBound(mOrderTypes)
         ToString = ToString & vbTab & "OrderTypeMarketToLimit" & vbCrLf
     Case OrderTypeQuote
         ToString = ToString & vbTab & "OrderTypeQuote" & vbCrLf
+    Case OrderTypeAutoStop
+        ToString = ToString & vbTab & "OrderTypeAutoStop" & vbCrLf
+    Case OrderTypeAutoLimit
+        ToString = ToString & vbTab & "OrderTypeAutoLimit" & vbCrLf
+    Case OrderTypeAdjust
+        ToString = ToString & vbTab & "OrderTypeAdjust" & vbCrLf
+    Case OrderTypeAlert
+        ToString = ToString & vbTab & "OrderTypeAlert" & vbCrLf
+    Case OrderTypeLimitIfTouched
+        ToString = ToString & vbTab & "OrderTypeLimitIfTouched" & vbCrLf
+    Case OrderTypeMarketIfTouched
+        ToString = ToString & vbTab & "OrderTypeMarketIfTouched" & vbCrLf
+    Case OrderTypeTrailLimit
+        ToString = ToString & vbTab & "OrderTypeTrailLimit" & vbCrLf
+    Case OrderTypeMarketWithProtection
+        ToString = ToString & vbTab & "OrderTypeMarketWithProtection" & vbCrLf
+    Case OrderTypeMarketOnOpen
+        ToString = ToString & vbTab & "OrderTypeMarketOnOpen" & vbCrLf
+    Case OrderTypeLimitOnOpen
+        ToString = ToString & vbTab & "OrderTypeLimitOnOpen" & vbCrLf
+    Case OrderTypePeggedToPrimary
+        ToString = ToString & vbTab & "OrderTypePeggedToPrimary" & vbCrLf
     End Select
 Next
 
@@ -762,7 +844,7 @@ End Function
 
 Public Function ToXML() As String
 Dim XMLdoc As DOMDocument30
-Dim contract As IXMLDOMElement
+Dim Contract As IXMLDOMElement
 Dim specifier As IXMLDOMElement
 Dim OrderTypes As IXMLDOMElement
 Dim orderType As IXMLDOMElement
@@ -774,23 +856,23 @@ Dim comboLegObj As ComboLeg
 Dim i As Long
 
 Set XMLdoc = New DOMDocument30
-Set contract = XMLdoc.createElement("contract")
-Set XMLdoc.documentElement = contract
-contract.setAttribute "xmlns", "urn:tradewright.com:tradebuild"
-contract.setAttribute "contractid", mContractID
-contract.setAttribute "marketname", mMarketName
-contract.setAttribute "minimumtick", mMinimumTick
-contract.setAttribute "multiplier", mMultiplier
-contract.setAttribute "tradingclass", mTradingClass
-contract.setAttribute "sessionstarttime", Format(mSessionStartTime, "hh:mm:ss")
-contract.setAttribute "sessionendtime", Format(mSessionEndTime, "hh:mm:ss")
-contract.setAttribute "description", mDescription
-contract.setAttribute "numberofdecimals", mNumberOfDecimals
+Set Contract = XMLdoc.createElement("contract")
+Set XMLdoc.documentElement = Contract
+Contract.setAttribute "xmlns", "urn:tradewright.com:tradebuild"
+Contract.setAttribute "contractid", mContractID
+Contract.setAttribute "marketname", mMarketName
+Contract.setAttribute "minimumtick", mMinimumTick
+Contract.setAttribute "multiplier", mMultiplier
+Contract.setAttribute "tradingclass", mTradingClass
+Contract.setAttribute "sessionstarttime", Format(mSessionStartTime, "hh:mm:ss")
+Contract.setAttribute "sessionendtime", Format(mSessionEndTime, "hh:mm:ss")
+Contract.setAttribute "description", mDescription
+Contract.setAttribute "numberofdecimals", mNumberOfDecimals
 
 Set specifier = XMLdoc.createElement("specifier")
-contract.appendChild specifier
+Contract.appendChild specifier
 specifier.setAttribute "symbol", mSpecifier.symbol
-specifier.setAttribute "sectype", mSpecifier.secType
+specifier.setAttribute "sectype", mSpecifier.sectype
 specifier.setAttribute "expiry", mSpecifier.expiry
 specifier.setAttribute "exchange", mSpecifier.exchange
 specifier.setAttribute "currencycode", mSpecifier.currencyCode
@@ -811,7 +893,7 @@ For Each comboLegObj In mSpecifier.ComboLegs
 Next
 
 Set OrderTypes = XMLdoc.createElement("ordertypes")
-contract.appendChild OrderTypes
+Contract.appendChild OrderTypes
 For i = 0 To UBound(mOrderTypes)
     Set orderType = XMLdoc.createElement("ordertype")
     OrderTypes.appendChild orderType
@@ -819,7 +901,7 @@ For i = 0 To UBound(mOrderTypes)
 Next
 
 Set exchanges = XMLdoc.createElement("exchanges")
-contract.appendChild exchanges
+Contract.appendChild exchanges
 For i = 0 To UBound(mValidExchanges)
     Set exchange = XMLdoc.createElement("exchange")
     exchanges.appendChild exchange

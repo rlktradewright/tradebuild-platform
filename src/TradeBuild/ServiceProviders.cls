@@ -75,11 +75,11 @@ End Sub
 '================================================================================
 
 Private Function ICommonServiceConsumer_FormatTimestamp( _
-                            ByVal Timestamp As Date, _
+                            ByVal timestamp As Date, _
                             Optional ByVal formatOption As TradeBuildSP.TimestampFormats = 2&, _
                             Optional ByVal formatString As String = "yyyymmddhhnnss" _
                             ) As String
-ICommonServiceConsumer_FormatTimestamp = gFormatTimestamp(Timestamp, _
+ICommonServiceConsumer_FormatTimestamp = gFormatTimestamp(timestamp, _
                                                     formatOption, _
                                                     formatString)
 End Function
@@ -119,7 +119,7 @@ ICommonServiceConsumer_GUIDToString = gGUIDToString(lGuid)
 End Function
 
 Private Function ICommonServiceConsumer_NewContract() As TradeBuildSP.IContract
-Set ICommonServiceConsumer_NewContract = New contract
+Set ICommonServiceConsumer_NewContract = New Contract
 End Function
 
 Private Function ICommonServiceConsumer_NewContractSpecifier() As TradeBuildSP.IContractSpecifier
@@ -129,8 +129,8 @@ End Function
 Private Sub ICommonServiceConsumer_NotifyListeners( _
                             ByVal value As Variant, _
                             ByVal valueType As Long, _
-                            ByVal Timestamp As Date)
-gListeners.notify value, valueType, Timestamp
+                            ByVal timestamp As Date)
+gListeners.notify value, valueType, timestamp
 End Sub
 
 Private Sub ICommonServiceConsumer_RegisterServiceProvider( _
@@ -162,6 +162,14 @@ Case TradeBuildSP.ServiceProviderTypes.HistoricalData
 Case TradeBuildSP.ServiceProviderTypes.LiveOrderSubmission
 Case TradeBuildSP.ServiceProviderTypes.OrderPersistence
 Case TradeBuildSP.ServiceProviderTypes.RealtimeData
+    Dim realtimeDataSp As TradeBuildSP.IRealtimeDataServiceProvider
+    
+    On Error Resume Next
+    Set realtimeDataSp = mServiceProviders(handle).SPObject
+    On Error GoTo 0
+    If Not realtimeDataSp Is Nothing Then
+        regOk = True
+    End If
 Case TradeBuildSP.ServiceProviderTypes.Tickfile
     Dim tickfileSp As TradeBuildSP.ITickfileServiceProvider
     
@@ -219,8 +227,14 @@ End Function
 Private Sub IContractInfoServiceConsumer_Error( _
                             ByVal errorCode As TradeBuildSP.StandardSPErrorCodes, _
                             ByVal errorMessage As String, _
-                            Optional ByVal id As Long = -1&)
+                            ByVal pContracts As TradeBuildSP.IContracts)
+Dim lContracts As TradeBuild.Contracts
+
+Set lContracts = pContracts
+
 Select Case errorCode
+Case TradeBuildSP.StandardSPErrorCodes.CIContractSpecifierInvalid
+    lContracts.ContractSpecifierInvalid errorMessage
 Case Else
     gTradeBuildAPI.SetServiceProviderError errorCode, _
                         errorMessage, _
@@ -231,13 +245,13 @@ End Sub
 Private Sub IContractInfoServiceConsumer_LoadComplete( _
                             ByVal handle As Long, _
                             ByVal pContracts As TradeBuildSP.IContracts)
-Dim lContracts As TradeBuild.contracts
+Dim lContracts As TradeBuild.Contracts
 
 Set lContracts = pContracts
 If lContracts.Count = 0 Then
     ' try another service provider if any
     If Not RequestContractFromNextSP(handle + 1, pContracts) Then
-        lContracts.ContractSpecifierInvalid
+        lContracts.LoadComplete
     End If
 Else
     lContracts.LoadComplete
@@ -266,34 +280,36 @@ End Property
 
 Public Function add( _
                             ByVal serviceProvider As TradeBuildSP.ICommonServiceProvider _
-                            ) As Long
+                            ) As TradeBuildSP.ICommonServiceProvider
 Dim i As Long
 
-add = -1
+' we don't reuse remove entries to ensure that service providers added later are
+' always later in the table than those added earlier
 For i = 0 To mMaxSPIndex
-    If mServiceProviders(i).SPObject Is Nothing Then
-        add = 1
-    Else
+    If Not mServiceProviders(i).SPObject Is Nothing Then
         If mServiceProviders(i).Name = serviceProvider.Name Then
             err.Raise ErrorCodes.NotUniqueServiceProviderName, _
                     "TradeBuild.ServiceProviders::Add", _
                     "A Service Provider with this name has already been added"
         End If
+        If mServiceProviders(i).SPObject Is serviceProvider Then
+            err.Raise ErrorCodes.IllegalArgumentException, _
+                    "TradeBuild.ServiceProviders::Add", _
+                    "This Service Provider object has already been added"
+        End If
     End If
 Next
 
-If add = -1 Then
-    If mMaxSPIndex = UBound(mServiceProviders) Then
-        ReDim Preserve mServiceProviders(UBound(mServiceProviders) + 10) As ServiceProviderTableEntry
-    End If
-    mMaxSPIndex = mMaxSPIndex + 1
-    add = mMaxSPIndex
+If mMaxSPIndex = UBound(mServiceProviders) Then
+    ReDim Preserve mServiceProviders(UBound(mServiceProviders) + 10) As ServiceProviderTableEntry
 End If
+mMaxSPIndex = mMaxSPIndex + 1
+Set add = serviceProvider
 
-mServiceProviders(add).Name = serviceProvider.Name
-Set mServiceProviders(add).SPObject = serviceProvider
+mServiceProviders(mMaxSPIndex).Name = serviceProvider.Name
+Set mServiceProviders(mMaxSPIndex).SPObject = serviceProvider
 
-serviceProvider.Link Me, add
+serviceProvider.Link Me, mMaxSPIndex
 End Function
 
 Friend Function CreateHistoricalDataReader( _
@@ -360,6 +376,29 @@ Set CreateHistoricalDataWriter = histDataWriter
 
 End Function
 
+Friend Function CreateRealtimeDataReader( _
+                                    ByVal pTicker As Ticker, _
+                                    ByVal serviceConsumer As TradeBuildSP.IRealtimeDataInputServiceConsumer) As TradeBuildSP.IRealtimeDataReader
+Dim realtimeSp As TradeBuildSP.IRealtimeDataServiceProvider
+Dim realtimeSPReader As TradeBuildSP.IRealtimeDataReader
+Dim i As Long
+
+For i = 0 To mMaxSPIndex
+    If Not mServiceProviders(i).SPObject Is Nothing Then
+        If (mServiceProviders(i).SPTypes And TradeBuildSP.ServiceProviderTypes.RealtimeData) <> 0 Then
+            Set realtimeSp = mServiceProviders(i).SPObject
+        End If
+    End If
+Next
+
+If realtimeSp Is Nothing Then Exit Function
+
+Set realtimeSPReader = realtimeSp.CreateRealtimeDataReader(pTicker, _
+                                                    serviceConsumer)
+
+Set CreateRealtimeDataReader = realtimeSPReader
+End Function
+
 Friend Function CreateTickfileReader( _
                                     ByVal pTicker As Ticker, _
                                     ByVal serviceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
@@ -401,7 +440,7 @@ End Function
 Friend Function CreateTickfileWriter( _
                             ByVal serviceConsumer As TradeBuildSP.ITickfileOutputServiceConsumer, _
                             ByVal outputTickfileFormatID As String, _
-                            ByVal outputTickFilePath As String _
+                            ByVal outputTickfilePath As String _
                             ) As TradeBuild.TickfileWriter
                             
 Dim tickfileSp As TradeBuildSP.ITickfileServiceProvider
@@ -429,7 +468,7 @@ If tickfileSp Is Nothing Then Exit Function
 Set tfWriter = New TradeBuild.TickfileWriter
 Set tickfileSPWriter = tickfileSp.CreateTickfileWriter(serviceConsumer, _
                                                     outputTickfileFormatID, _
-                                                    outputTickFilePath)
+                                                    outputTickfilePath)
 
 tfWriter.ServiceProviderWriter = tickfileSPWriter
 
@@ -437,26 +476,30 @@ Set CreateTickfileWriter = tfWriter
 
 End Function
 
-Public Sub Remove(ByVal handle As Long)
-If handle > mMaxSPIndex Or mServiceProviders(handle).SPObject Is Nothing Then
-    err.Raise InvalidServiceProviderHandle, _
-                "TradeBuild.ServiceProviders::Remove", _
-                "Invalid argument: " & handle & " is not a valid handle value"
-End If
-mServiceProviders(handle).SPObject.Terminate
-Set mServiceProviders(handle).SPObject = Nothing
-mServiceProviders(handle).SPTypes = 0
-mServiceProviders(handle).Name = ""
+Public Sub Remove(ByVal sp As TradeBuildSP.ICommonServiceProvider)
+Dim i As Long
+
+If sp Is Nothing Then Exit Sub
+
+For i = 0 To mMaxSPIndex
+    If mServiceProviders(i).SPObject Is sp Then
+        mServiceProviders(i).SPObject.Terminate
+        Set mServiceProviders(i).SPObject = Nothing
+        mServiceProviders(i).SPTypes = 0
+        mServiceProviders(i).Name = ""
+        Exit For
+    End If
+Next
 End Sub
 
 Friend Function RequestContract( _
                             ByRef contractSpecifier As TradeBuild.contractSpecifier, _
-                            Optional ByVal contracts As TradeBuild.contracts) As TradeBuild.contracts
+                            Optional ByVal Contracts As TradeBuild.Contracts) As TradeBuild.Contracts
 
-If contracts Is Nothing Then
-    Set RequestContract = New TradeBuild.contracts
+If Contracts Is Nothing Then
+    Set RequestContract = New TradeBuild.Contracts
 Else
-    Set RequestContract = contracts
+    Set RequestContract = Contracts
 End If
 
 RequestContract.contractSpecifier = contractSpecifier
@@ -508,7 +551,7 @@ End Function
 
 Private Function RequestContractFromNextSP( _
                             ByVal startingIndex As Long, _
-                            ByVal pContracts As TradeBuild.contracts _
+                            ByVal pContracts As TradeBuild.Contracts _
                             ) As Boolean
 Dim i As Long
 Dim contractInfoSP As TradeBuildSP.IContractInfoServiceProvider

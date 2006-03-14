@@ -118,7 +118,7 @@ Event updateMarketDepth( _
                 ByVal operation As DOMOperations, _
                 ByVal side As DOMSides, _
                 ByVal price As Double, _
-                ByVal Size As Long)
+                ByVal size As Long)
                 
 Event UpdateMarketDepthL2( _
                 ByVal timestamp As Date, _
@@ -128,7 +128,7 @@ Event UpdateMarketDepthL2( _
                 ByVal operation As DOMOperations, _
                 ByVal side As DOMSides, _
                 ByVal price As Double, _
-                ByVal Size As Long)
+                ByVal size As Long)
 
 Event updateNewsBulletin( _
                 ByVal timestamp As Date, _
@@ -811,15 +811,15 @@ Loop Until bottom = middle
 If code = mExchangeCodes(middle) Then IsValidExchangeCode = True
 End Function
 
-Public Function NewContracts() As contracts
-Set NewContracts = New contracts
+Public Function NewContracts() As Contracts
+Set NewContracts = New Contracts
 End Function
 
 Public Function newContractSpecifier( _
                 Optional ByVal localSymbol As String, _
                 Optional ByVal symbol As String, _
                 Optional ByVal exchange As String, _
-                Optional ByVal secType As SecurityTypes = SecTypeNone, _
+                Optional ByVal sectype As SecurityTypes = SecTypeNone, _
                 Optional ByVal currencyCode As String, _
                 Optional ByVal expiry As String, _
                 Optional ByVal strike As Double, _
@@ -841,7 +841,7 @@ Then
                 "'" & exchange & "' is not a valid exchange code"
 End If
 
-Select Case secType
+Select Case sectype
 Case 0  ' ie not supplied
 Case SecTypeStock
 Case SecTypeFuture
@@ -878,7 +878,7 @@ Case SecTypeIndex
 Case Else
     err.Raise ErrorCodes.IllegalArgumentException, _
                 Source, _
-                "'" & secType & "' is not a valid secType"
+                "'" & sectype & "' is not a valid secType"
 End Select
 
 Set newContractSpecifier = New TradeBuild.contractSpecifier
@@ -886,7 +886,7 @@ With newContractSpecifier
     .localSymbol = localSymbol
     .symbol = symbol
     .exchange = exchange
-    .secType = secType
+    .sectype = sectype
     .currencyCode = currencyCode
     .expiry = expiry
     .strike = strike
@@ -930,7 +930,7 @@ addData pOrder.id
 ' send contract fields
 With specifier
     addData .symbol
-    addData secTypeToString(.secType)
+    addData secTypeToString(.sectype)
     addData Left$(.expiry, 6)
     addData .strike
     addData optionRightToString(.right)
@@ -974,7 +974,7 @@ With pOrder
 End With
 
 ' Send combo legs for BAG requests
-If mServerVersion >= 8 And specifier.secType = SecurityTypes.SecTypeBag Then
+If mServerVersion >= 8 And specifier.sectype = SecurityTypes.SecTypeBag Then
     With specifier
         If .ComboLegs.Count = 0 Then
             addData 0
@@ -1100,7 +1100,7 @@ addBoolean autoBind
 send
 End Sub
 
-Public Function RequestContract(ByVal pContractSpecifier As contractSpecifier) As contracts
+Public Function RequestContract(ByVal pContractSpecifier As contractSpecifier) As Contracts
 
 On Error GoTo err
 
@@ -1119,7 +1119,7 @@ Exit Function
 
 ' the following code will be used when the TWS Contract Info Service Provider
 ' is developed
-Set RequestContract = New contracts
+Set RequestContract = New Contracts
 RequestContract.contractSpecifier = pContractSpecifier
 
 reqContract -1, RequestContract, pContractSpecifier, False
@@ -1132,8 +1132,8 @@ err.Raise err.Number, _
 End Function
 
 Friend Function RequestContractEx( _
-                            ByVal pContracts As contracts, _
-                            ByVal pContractSpecifier As contractSpecifier) As contracts
+                            ByVal pContracts As Contracts, _
+                            ByVal pContractSpecifier As contractSpecifier) As Contracts
 
 On Error GoTo err
 
@@ -1182,7 +1182,7 @@ If mServerVersion >= 9 Then
         addData .accountCode
         addData IIf(CLng(.time) <> 0, Format(.time, "yyyymmdd-hh:nn:ss"), "")
         addData .symbol
-        addData secTypeToString(.secType)
+        addData secTypeToString(.sectype)
         addData .exchange
         addData orderActionToString(.action)
     End With
@@ -1736,7 +1736,7 @@ With lContract
     .specifier = New contractSpecifier
     .specifier.locked = True
     .specifier.symbol = getString
-    .specifier.secType = secTypeFromString(getString)
+    .specifier.sectype = secTypeFromString(getString)
     .specifier.expiry = getString
     .specifier.strike = getDouble
     .specifier.right = optionRightFromString(getString)
@@ -1820,7 +1820,7 @@ If mEnableListeners Then
         listendata.multiplier = multiplier
         listendata.OrderTypes = OrderTypes
         listendata.right = .specifier.right
-        listendata.secType = .specifier.secType
+        listendata.sectype = .specifier.sectype
         listendata.strike = .specifier.strike
         listendata.symbol = .specifier.symbol
         listendata.tradingClass = .tradingClass
@@ -1886,6 +1886,8 @@ Case 1101
     
     reEstablishMarketData False
     
+    resetMarketDepth timestamp, True
+    
     ' Now need to reassociate order ids with tws
     RequestOpenOrders
     
@@ -1928,7 +1930,7 @@ End Sub
 Private Sub getExecutionData(ByVal Version As Long)
 Dim listendata As TWSSocketMsgExecutionData
 Dim timestamp As Date: timestamp = gCurrentTime
-Dim secType As String
+Dim sectype As String
 Dim right As String
 Dim side As String
 Dim price As Double
@@ -1940,8 +1942,8 @@ Set lContractSpecifier = New contractSpecifier
 With lContractSpecifier
     .locked = True
     .symbol = getString
-    secType = getString
-    .secType = secTypeFromString(secType)
+    sectype = getString
+    .sectype = secTypeFromString(sectype)
     .expiry = getString
     .strike = getDouble
     right = getString
@@ -1984,7 +1986,7 @@ If mEnableListeners Then
         listendata.expiry = .expiry
         listendata.localSymbol = .localSymbol
         listendata.right = right
-        listendata.secType = secType
+        listendata.sectype = sectype
         listendata.strike = .strike
         listendata.symbol = .symbol
     End With
@@ -2057,7 +2059,7 @@ Dim position As Long: position = getLong
 Dim operation As Long: operation = getLong
 Dim side As Long: side = getLong
 Dim price As Double: price = getDouble
-Dim Size As Long: Size = getLong
+Dim size As Long: size = getLong
 
 timestamp = gCurrentTime
 
@@ -2067,7 +2069,7 @@ processMarketDepth timestamp, _
                 operation, _
                 side, _
                 price, _
-                Size
+                size
 
 If mEnableListeners Then
     listendata.msgType = TWSSocketInMsgTypes.MARKET_DEPTH
@@ -2075,7 +2077,7 @@ If mEnableListeners Then
     listendata.position = position
     listendata.price = price
     listendata.side = side
-    listendata.Size = Size
+    listendata.size = size
     listendata.tickerid = id
     listendata.Version = Version
     
@@ -2095,7 +2097,7 @@ Dim marketMaker As String: marketMaker = getString
 Dim operation As Long: operation = getLong
 Dim side As Long: side = getLong
 Dim price As Double: price = getDouble
-Dim Size As Long: Size = getLong
+Dim size As Long: size = getLong
 
 With mTickerTable(id - MARKET_DEPTH_TICKER_BASE)
     If .inUse Then
@@ -2106,7 +2108,7 @@ With mTickerTable(id - MARKET_DEPTH_TICKER_BASE)
                         operation, _
                         side, _
                         price, _
-                        Size
+                        size
                         
     End If
 End With
@@ -2118,7 +2120,7 @@ If mEnableListeners Then
     listendata.position = position
     listendata.price = price
     listendata.side = side
-    listendata.Size = Size
+    listendata.size = size
     listendata.tickerid = id
     listendata.Version = Version
     
@@ -2177,7 +2179,7 @@ Dim listendata As TWSSocketMsgOpenOrder
 Dim timestamp As Date: timestamp = gCurrentTime
 Dim lOrder As Order
 Dim id As Long
-Dim secType As String
+Dim sectype As String
 Dim right As String
 Dim action As String
 Dim orderType As String
@@ -2203,8 +2205,8 @@ Set lContractSpecifier = New contractSpecifier
 With lContractSpecifier
     .locked = True
     .symbol = getString
-    secType = getString
-    .secType = secTypeFromString(secType)
+    sectype = getString
+    .sectype = secTypeFromString(sectype)
     .expiry = getString
     .strike = getDouble
     right = getString
@@ -2263,7 +2265,7 @@ If mEnableListeners Then
         listendata.expiry = .expiry
         listendata.localSymbol = .localSymbol
         listendata.right = .right
-        listendata.secType = .secType
+        listendata.sectype = .sectype
         listendata.strike = .strike
         listendata.symbol = .symbol
     End With
@@ -2382,7 +2384,7 @@ End Sub
 Private Sub getPortfolioValue(ByVal Version As Long)
 Dim listendata As TWSSocketMsgPortfolioValue
 Dim timestamp As Date: timestamp = gCurrentTime
-Dim secType As String
+Dim sectype As String
 Dim right As String
 Dim lContractSpecifier As contractSpecifier
 
@@ -2390,8 +2392,8 @@ Set lContractSpecifier = New contractSpecifier
 With lContractSpecifier
     .locked = True
     .symbol = getString
-    secType = getString
-    .secType = secTypeFromString(secType)
+    sectype = getString
+    .sectype = secTypeFromString(sectype)
     .expiry = getString
     .strike = getDouble
     right = getString
@@ -2422,7 +2424,7 @@ If mEnableListeners Then
         listendata.expiry = .expiry
         listendata.localSymbol = .localSymbol
         listendata.right = right
-        listendata.secType = secType
+        listendata.sectype = sectype
         listendata.strike = .strike
         listendata.symbol = .symbol
     End With
@@ -2446,25 +2448,25 @@ Private Sub getTickPrice(ByVal Version As Long)
 Dim listendata As TWSSocketMsgTickPrice
 Dim timestamp As Date
 Dim price As Double
-Dim Size As Long
+Dim size As Long
 Dim TickType As Long
 Dim tickerid As Long
 tickerid = getLong
 TickType = getLong
 price = getDouble
-If Version >= 2 Then Size = getLong
+If Version >= 2 Then size = getLong
 timestamp = gCurrentTime
 
 processTickPrice timestamp, _
                 tickerid Mod INCARNATION_INCREMENT, _
                 TickType, _
                 price, _
-                Size
+                size
 
 If mEnableListeners Then
     listendata.msgType = TWSSocketInMsgTypes.TICK_PRICE
     listendata.price = price
-    listendata.Size = Size
+    listendata.size = size
     listendata.tickerid = tickerid
     listendata.TickType = TickType
     listendata.Version = Version
@@ -2479,22 +2481,22 @@ End Sub
 Private Sub getTickSize(ByVal Version As Long)
 Dim listendata As TWSSocketMsgTickSize
 Dim timestamp As Date
-Dim Size As Long
+Dim size As Long
 Dim TickType As Long
 Dim tickerid As Long
 tickerid = getLong
 TickType = getLong
-Size = getLong
+size = getLong
 timestamp = gCurrentTime
 
 processTickSize timestamp, _
                 tickerid Mod INCARNATION_INCREMENT, _
                 TickType, _
-                Size
+                size
 
 If mEnableListeners Then
     listendata.msgType = TWSSocketInMsgTypes.TICK_PRICE
-    listendata.Size = Size
+    listendata.size = size
     listendata.tickerid = tickerid
     listendata.TickType = TickType
     listendata.Version = Version
@@ -2574,13 +2576,13 @@ Select Case UCase$(value)
 Case "MKT"
     orderTypeFromString = TradeBuild.OrderTypes.OrderTypeMarket
 Case "MKTCLS"
-    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeMarketClose
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeMarketOnClose
 Case "LMT"
     orderTypeFromString = TradeBuild.OrderTypes.OrderTypeLimit
 Case "LMTCLS"
-    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeLimitClose
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeLimitOnClose
 Case "PEGMKT"
-    orderTypeFromString = TradeBuild.OrderTypes.OrderTypePegMarket
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypePeggedToMarket
 Case "STP"
     orderTypeFromString = TradeBuild.OrderTypes.OrderTypeStop
 Case "STPLMT"
@@ -2595,6 +2597,24 @@ Case "MTL"
     orderTypeFromString = TradeBuild.OrderTypes.OrderTypeMarketToLimit
 Case "QUOTE"
     orderTypeFromString = TradeBuild.OrderTypes.OrderTypeQuote
+Case "ADJUST"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeAdjust
+Case "ALERT"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeAlert
+Case "LIT"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeLimitIfTouched
+Case "MIT"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeMarketIfTouched
+Case "TRAILLMT"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeTrailLimit
+Case "MKTPROT"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeMarketWithProtection
+Case "MOO"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeMarketOnOpen
+Case "LOO"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeLimitOnOpen
+Case "PEGPRI"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypePeggedToPrimary
 Case Else
     orderTypeFromString = TradeBuild.OrderTypes.OrderTypeNone
 End Select
@@ -2604,13 +2624,13 @@ Private Function orderTypeToString(ByVal value As OrderTypes) As String
 Select Case value
 Case TradeBuild.OrderTypes.OrderTypeMarket
     orderTypeToString = "MKT"
-Case TradeBuild.OrderTypes.OrderTypeMarketClose
+Case TradeBuild.OrderTypes.OrderTypeMarketOnClose
     orderTypeToString = "MKTCLS"
 Case TradeBuild.OrderTypes.OrderTypeLimit
     orderTypeToString = "LMT"
-Case TradeBuild.OrderTypes.OrderTypeLimitClose
+Case TradeBuild.OrderTypes.OrderTypeLimitOnClose
     orderTypeToString = "LMTCLS"
-Case TradeBuild.OrderTypes.OrderTypePegMarket
+Case TradeBuild.OrderTypes.OrderTypePeggedToMarket
     orderTypeToString = "PEGMKT"
 Case TradeBuild.OrderTypes.OrderTypeStop
     orderTypeToString = "STP"
@@ -2626,6 +2646,24 @@ Case TradeBuild.OrderTypes.OrderTypeMarketToLimit
     orderTypeToString = "MTL"
 Case TradeBuild.OrderTypes.OrderTypeQuote
     orderTypeToString = "QUOTE"
+Case TradeBuild.OrderTypes.OrderTypeAdjust
+    orderTypeToString = "ADJUST"
+Case TradeBuild.OrderTypes.OrderTypeAlert
+    orderTypeToString = "ALERT"
+Case TradeBuild.OrderTypes.OrderTypeLimitIfTouched
+    orderTypeToString = "LIT"
+Case TradeBuild.OrderTypes.OrderTypeMarketIfTouched
+    orderTypeToString = "MIT"
+Case TradeBuild.OrderTypes.OrderTypeTrailLimit
+    orderTypeToString = "TRAILLMT"
+Case TradeBuild.OrderTypes.OrderTypeMarketWithProtection
+    orderTypeToString = "MKTPROT"
+Case TradeBuild.OrderTypes.OrderTypeMarketOnOpen
+    orderTypeToString = "MOO"
+Case TradeBuild.OrderTypes.OrderTypeLimitOnOpen
+    orderTypeToString = "LOO"
+Case TradeBuild.OrderTypes.OrderTypePeggedToPrimary
+    orderTypeToString = "PEGPRI"
 Case Else
     err.Raise ErrorCodes.InvalidOrderType
 End Select
@@ -2634,7 +2672,7 @@ End Function
 Private Sub ProcessAsk(ByVal timestamp As Date, _
                             ByVal tickerid As Long, _
                             ByVal price As Double, _
-                            ByVal Size As Long)
+                            ByVal size As Long)
 
 With mTickerTable(tickerid)
 
@@ -2642,21 +2680,21 @@ With mTickerTable(tickerid)
         
     .dataConsumer.ask timestamp, _
                 price, _
-                Size
+                size
 End With
 End Sub
 
 Private Sub ProcessBid(ByVal timestamp As Date, _
                             ByVal tickerid As Long, _
                             ByVal price As Double, _
-                            ByVal Size As Long)
+                            ByVal size As Long)
 With mTickerTable(tickerid)
 
     If Not .inUse Then Exit Sub     ' ticker has been stopped
         
     .dataConsumer.bid timestamp, _
                 price, _
-                Size
+                size
 End With
 End Sub
 
@@ -2698,7 +2736,7 @@ If Not mFirstContractDetailsReceived Then
 End If
 
 With mContractDetailsRequest
-    .contracts.AddContract pContract
+    .Contracts.AddContract pContract
     If Not .InternalRequest Then
         RaiseEvent Contract(gCurrentTime, pContract)
     End If
@@ -2711,7 +2749,7 @@ Dim tickerid As Long
 Dim lContract As Contract
 
 With mContractDetailsRequest
-    If .contracts.Count > 0 Then
+    If .Contracts.Count > 0 Then
         ' we are processing the forced invalid contract details request
         ' for a request for which we have received one or more contract details
         If .InternalRequest Then
@@ -2753,7 +2791,7 @@ With mContractDetailsRequest
 '                releaseTickerTableEntry TickerID
 '            End If
         Else
-            .contracts.LoadComplete
+            .Contracts.LoadComplete
         End If
     Else
         ' this is a genuine error response to a contract details request
@@ -2766,8 +2804,8 @@ With mContractDetailsRequest
 '            End With
 '            releaseTickerTableEntry TickerID
         Else
-            .contracts.ContractSpecifierInvalid
-            .contracts.LoadComplete
+            .Contracts.ContractSpecifierInvalid ""
+            .Contracts.LoadComplete
         End If
     End If
 End With
@@ -2793,7 +2831,7 @@ End Sub
 Private Sub ProcessLast(ByVal timestamp As Date, _
                             ByVal tickerid As Long, _
                             ByVal price As Double, _
-                            ByVal Size As Long)
+                            ByVal size As Long)
 
 With mTickerTable(tickerid)
 
@@ -2801,7 +2839,7 @@ With mTickerTable(tickerid)
         
     .dataConsumer.trade timestamp, _
             price, _
-            Size
+            size
 End With
 End Sub
 
@@ -2824,7 +2862,7 @@ Private Sub processMarketDepth(ByVal timestamp As Date, _
                                 ByVal operation As DOMOperations, _
                                 ByVal side As DOMSides, _
                                 ByVal price As Double, _
-                                ByVal Size As Long)
+                                ByVal size As Long)
 
 With mTickerTable(id)
 
@@ -2835,7 +2873,7 @@ With mTickerTable(id)
                 operation, _
                 side, _
                 price, _
-                Size
+                size
     
 End With
 End Sub
@@ -2844,7 +2882,7 @@ Private Sub processTickPrice(ByVal timestamp As Date, _
                             ByVal tickerid As Long, _
                             ByVal TickType As TWSSocketTickTypes, _
                             ByVal price As Double, _
-                            ByVal Size As Long)
+                            ByVal size As Long)
 
 With mTickerTable(tickerid)
 
@@ -2856,32 +2894,32 @@ With mTickerTable(tickerid)
     
     Select Case TickType
     Case TICK_BID
-        Size = IIf(Size <> 0, Size, .prevBidSize)
+        size = IIf(size <> 0, size, .prevBidSize)
         ProcessBid timestamp, _
                     tickerid, _
                     price, _
-                    Size
+                    size
         .prevBid = price
-        If Size <> 0 Then .prevBidSize = Size
+        If size <> 0 Then .prevBidSize = size
     
     Case TICK_ASK
-        Size = IIf(Size <> 0, Size, .prevAskSize)
+        size = IIf(size <> 0, size, .prevAskSize)
         ProcessAsk timestamp, _
                     tickerid, _
                     price, _
-                    Size
+                    size
         
         .prevAsk = price
-        If Size <> 0 Then .prevAskSize = Size
+        If size <> 0 Then .prevAskSize = size
     
     Case TICK_LAST
-        Size = IIf(Size <> 0, Size, .prevTradeSize)
+        size = IIf(size <> 0, size, .prevTradeSize)
         ProcessLast timestamp, _
                     tickerid, _
                     price, _
-                    Size
+                    size
         .prevTrade = price
-        If Size <> 0 Then .prevTradeSize = Size
+        If size <> 0 Then .prevTradeSize = size
     
     Case TICK_HIGH
         ProcessHigh timestamp, _
@@ -2903,7 +2941,7 @@ End Sub
 Private Sub processTickSize(ByVal timestamp As Date, _
                             ByVal tickerid As Long, _
                             ByVal TickType As TWSSocketTickTypes, _
-                            ByVal Size As Long)
+                            ByVal size As Long)
 
 With mTickerTable(tickerid)
     
@@ -2911,19 +2949,19 @@ With mTickerTable(tickerid)
     
     Select Case TickType
     Case TICK_BID_SIZE
-        If Size = .prevBidSize Then
+        If size = .prevBidSize Then
             ' this happens when TWS has sent a tick price including the
             ' size. It then sends the size again as a ticksize
             Exit Sub
         End If
         
-        .prevBidSize = Size
+        .prevBidSize = size
         ProcessBid timestamp, _
                     tickerid, _
                     .prevBid, _
-                    Size
+                    size
     Case TICK_ASK_SIZE
-        If Size = .prevAskSize Then
+        If size = .prevAskSize Then
             ' this happens when TWS has sent a tick price including the
             ' size. It then sends the size again as a ticksize
             Exit Sub
@@ -2932,23 +2970,23 @@ With mTickerTable(tickerid)
         ProcessAsk timestamp, _
                     tickerid, _
                     .prevAsk, _
-                    Size
+                    size
     Case TICK_LAST_SIZE
-        If Size = .prevTradeSize Then
+        If size = .prevTradeSize Then
             ' this happens when TWS has sent a tick price including the
             ' size. It then sends the size again as a ticksize
             Exit Sub
         End If
         
-        .prevTradeSize = Size
+        .prevTradeSize = size
         ProcessLast timestamp, _
                     tickerid, _
                     .prevTrade, _
-                    Size
+                    size
     Case TICK_VOLUME
         processVolume timestamp, _
                     tickerid, _
-                    Size
+                    size
         
     End Select
 End With
@@ -2957,16 +2995,16 @@ End Sub
 
 Private Sub processVolume(ByVal timestamp As Date, _
                             ByVal tickerid As Long, _
-                            ByVal Size As Long)
+                            ByVal size As Long)
 
 With mTickerTable(tickerid)
 
     If Not .inUse Then Exit Sub     ' ticker has been stopped
 
-    If Size = 0 Then Exit Sub
+    If size = 0 Then Exit Sub
     
     .dataConsumer.volume timestamp, _
-                Size
+                size
 End With
 End Sub
 
@@ -2978,7 +3016,6 @@ For i = 0 To UBound(mTickerTable)
             If Not newConnection Then cancelMarketDataEx i, False
             .incarnation = .incarnation + INCARNATION_INCREMENT
             reqMarketData i
-            If .receivingMarketDepth Then reqMarketDepth i, .contractSpecifier
         End If
     End With
 Next
@@ -3017,7 +3054,7 @@ End With
 End Sub
 
 Private Sub reqContract(ByVal tickerid As Long, _
-                        ByVal contracts As contracts, _
+                        ByVal Contracts As Contracts, _
                         ByVal contractSpecifier As contractSpecifier, _
                         ByVal internal As Boolean)
 
@@ -3032,7 +3069,7 @@ contractSpecifier.locked = True
 
 Set mContractDetailsRequest = New ContractDtlsReq
 mContractDetailsRequest.tickerid = tickerid
-mContractDetailsRequest.contracts = contracts
+mContractDetailsRequest.Contracts = Contracts
 mContractDetailsRequest.contractSpecifier = contractSpecifier
 mContractDetailsRequest.InternalRequest = internal
 
@@ -3047,7 +3084,7 @@ addData REQ_CONTRACT_DATA
 addData Version
 With contractSpecifier
     addData .symbol
-    addData secTypeToString(.secType)
+    addData secTypeToString(.sectype)
     addData Left$(.expiry, 6)
     addData .strike
     addData optionRightToString(.right)
@@ -3068,7 +3105,7 @@ addData Version
 addData tickerTableIndex + mTickerTable(tickerTableIndex).incarnation
 With mTickerTable(tickerTableIndex).contractSpecifier
     addData .symbol
-    addData secTypeToString(.secType)
+    addData secTypeToString(.sectype)
     addData Left$(.expiry, 6)
     addData .strike
     addData optionRightToString(.right)
@@ -3076,7 +3113,7 @@ With mTickerTable(tickerTableIndex).contractSpecifier
     addData .currencyCode
     If mServerVersion >= 2 Then addData .localSymbol
     ' Add combo legs for BAG requests
-    If mServerVersion >= 8 And .secType = SecurityTypes.SecTypeBag Then
+    If mServerVersion >= 8 And .sectype = SecurityTypes.SecTypeBag Then
         addData .ComboLegs.Count
         Dim ComboLeg As ComboLeg
         For Each ComboLeg In .ComboLegs
@@ -3104,7 +3141,7 @@ addData Version
 addData tickerid + MARKET_DEPTH_TICKER_BASE
 With contractSpec
     addData .symbol
-    addData secTypeToString(.secType)
+    addData secTypeToString(.sectype)
     addData Left$(.expiry, 6)
     addData .strike
     addData optionRightToString(.right)

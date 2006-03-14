@@ -37,9 +37,8 @@ Implements TradeBuildSP.IContracts
 '================================================================================
 
 Event ContractDetailsReceived( _
-                ByVal pContract As contract)
-Event ContractSpecifierInvalid( _
-                ByVal contractSpecifier As contractSpecifier)
+                ByVal pContract As Contract)
+Event ContractSpecifierInvalid(ByVal reason As String)
 Event NoMoreContractDetails()
 Event TryLater( _
                 ByVal reason As String, _
@@ -90,16 +89,12 @@ Private Property Let IContracts_ContractSpecifier(ByVal RHS As TradeBuildSP.ICon
 contractSpecifier = RHS
 End Property
 
-Private Sub IContracts_ContractSpecifierInvalid()
-ContractSpecifierInvalid
-End Sub
-
 Private Property Get IContracts_Count() As Long
 IContracts_Count = Count
 End Property
 
 Private Function IContracts_Item(ByVal index As Variant) As TradeBuildSP.IContract
-Set IContracts_Item = Item(index)
+Set IContracts_Item = item(index)
 End Function
 
 Private Sub IContracts_Remove(ByVal index As Variant)
@@ -140,18 +135,18 @@ End Property
 ' Methods
 '================================================================================
 
-Friend Sub AddContract(ByVal pContract As contract)
+Friend Sub AddContract(ByVal pContract As Contract)
 mContracts.add pContract, pContract.specifier.key
 RaiseEvent ContractDetailsReceived(pContract)
 End Sub
 
-Friend Sub ContractSpecifierInvalid()
-RaiseEvent ContractSpecifierInvalid(mContractSpecifier)
+Friend Sub ContractSpecifierInvalid(ByVal reason As String)
+RaiseEvent ContractSpecifierInvalid(reason)
 End Sub
 
-Public Function Item(ByVal index As Variant) As contract
-Attribute Item.VB_UserMemId = 0
-Set Item = mContracts(index)
+Public Function item(ByVal index As Variant) As Contract
+Attribute item.VB_UserMemId = 0
+Set item = mContracts(index)
 End Function
 
 Public Sub Load( _
