@@ -460,7 +460,7 @@ If mNumberOfBarsToFetch <> 0 Then
                                 Me)
     barSpecifier.barLengthMinutes = mBarLengthMinutes
     barSpecifier.barType = BarTypes.BarTypeTrade
-    Set barSpecifier.contractSpecifier = mContract.specifier
+    Set barSpecifier.Contract = mContract
     barSpecifier.From = CDate("1 Jan 1970")
     If mExcludeCurrentBar Then
         barSpecifier.To = mTicker.timestamp
