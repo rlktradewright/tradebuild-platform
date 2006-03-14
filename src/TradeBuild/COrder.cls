@@ -13,9 +13,9 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-Private mContract       As TradeBuild.contract
+Private mContract       As TradeBuild.Contract
 
-Private mMarketIndex     As Long
+Private mMarketIndex    As Long
 Private mAtExchange     As Boolean
 Private mSimulated      As Boolean
 Private mStatus         As OrderStatuses
@@ -123,12 +123,12 @@ Public Property Get clientID() As Long
 clientID = mClientID
 End Property
 
-Friend Property Let contract(ByVal value As TradeBuild.contract)
+Friend Property Let Contract(ByVal value As TradeBuild.Contract)
 Set mContract = value
 End Property
 
-Public Property Get contract() As TradeBuild.contract
-Set contract = mContract
+Public Property Get Contract() As TradeBuild.Contract
+Set Contract = mContract
 End Property
 
 Public Property Let displaySize(ByVal value As Long)
@@ -268,11 +268,36 @@ orderRef = mOrderRef
 End Property
 
 Public Property Let orderType(ByVal value As TradeBuild.OrderTypes)
-If value < MinOrderType Or value > MaxOrderType Then
+Select Case value
+Case OrderTypeNone
+Case OrderTypeMarket
+Case OrderTypeMarketOnClose
+Case OrderTypeLimit
+Case OrderTypeLimitOnClose
+Case OrderTypePeggedToMarket
+Case OrderTypeStop
+Case OrderTypeStopLimit
+Case OrderTypeTrail
+Case OrderTypeRelative
+Case OrderTypeVWAP
+Case OrderTypeMarketToLimit
+Case OrderTypeQuote
+Case OrderTypeAutoStop
+Case OrderTypeAutoLimit
+Case OrderTypeAdjust
+Case OrderTypeAlert
+Case OrderTypeLimitIfTouched
+Case OrderTypeMarketIfTouched
+Case OrderTypeTrailLimit
+Case OrderTypeMarketWithProtection
+Case OrderTypeMarketOnOpen
+Case OrderTypeLimitOnOpen
+Case OrderTypePeggedToPrimary
+Case Else
     err.Raise ErrorCodes.InvalidOrderType, _
             "TradeBuild.Order::(let)orderType", _
             "Invalid order type " & value
-End If
+End Select
 mOrderType = value
 End Property
 
@@ -379,7 +404,7 @@ End Property
 Public Function clone() As Order
 Set clone = New Order
 With clone
-    .contract = mContract
+    .Contract = mContract
     .marketIndex = mMarketIndex
     .simulated = mSimulated
     .status = mStatus
@@ -418,9 +443,9 @@ With clone
 End With
 End Function
 
-Friend Sub fill(ByVal quantity As Long, ByVal Price As Double)
-mLastFillPrice = Price
-mAveragePrice = (mQuantityFilled * mAveragePrice + quantity * Price) / (mQuantityFilled + quantity)
+Friend Sub fill(ByVal quantity As Long, ByVal price As Double)
+mLastFillPrice = price
+mAveragePrice = (mQuantityFilled * mAveragePrice + quantity * price) / (mQuantityFilled + quantity)
 mQuantityFilled = mQuantityFilled + quantity
 mQuantity = mQuantity - quantity
 End Sub
