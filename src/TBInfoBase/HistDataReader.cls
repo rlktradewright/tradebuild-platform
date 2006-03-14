@@ -100,7 +100,7 @@ mBarDataSpecifier = barSpecifier
 
 Set lInstrumentFactory = New TradingDO2.cInstrumentFactory
 
-With mBarDataSpecifier.ContractSpecifier
+With mBarDataSpecifier.Contract.Specifier
     Set mInstrument = lInstrumentFactory.loadBySpec(.Symbol, _
                                 secTypeToString(.SecType), _
                                 Left$(.Expiry, 6), _
