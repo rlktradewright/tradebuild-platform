@@ -108,13 +108,13 @@ End Sub
 Private Sub IStreamingDataConsumer_Ask( _
                             ByVal timestamp As Date, _
                             ByVal price As Double, _
-                            ByVal Size As Long)
+                            ByVal size As Long)
 With mCurrentTick
     .UnProcessed = True
     .TickType = TradeBuild.TickTypes.ask
     .timestamp = AdjustTimestamp(timestamp)
     .TickPrice = price
-    .TickSize = Size
+    .TickSize = size
 End With
 HandleTick
 End Sub
@@ -122,13 +122,13 @@ End Sub
 Private Sub IStreamingDataConsumer_Bid( _
                             ByVal timestamp As Date, _
                             ByVal price As Double, _
-                            ByVal Size As Long)
+                            ByVal size As Long)
 With mCurrentTick
     .UnProcessed = True
     .TickType = TradeBuild.TickTypes.bid
     .timestamp = AdjustTimestamp(timestamp)
     .TickPrice = price
-    .TickSize = Size
+    .TickSize = size
 End With
 HandleTick
 End Sub
@@ -159,12 +159,12 @@ End Sub
 
 Private Sub IStreamingDataConsumer_OpenInterest( _
                             ByVal timestamp As Date, _
-                            ByVal Size As Long)
+                            ByVal size As Long)
 With mCurrentTick
     .UnProcessed = True
     .TickType = TradeBuild.TickTypes.openInterest
     .timestamp = AdjustTimestamp(timestamp)
-    .TickSize = Size
+    .TickSize = size
 End With
 HandleTick
 End Sub
@@ -196,13 +196,13 @@ End Sub
 Private Sub IStreamingDataConsumer_Trade( _
                             ByVal timestamp As Date, _
                             ByVal price As Double, _
-                            ByVal Size As Long)
+                            ByVal size As Long)
 With mCurrentTick
     .UnProcessed = True
     .TickType = TradeBuild.TickTypes.Last
     .timestamp = AdjustTimestamp(timestamp)
     .TickPrice = price
-    .TickSize = Size
+    .TickSize = size
 End With
 HandleTick
 End Sub
@@ -213,7 +213,7 @@ Private Sub IStreamingDataConsumer_UpdateMktDepth( _
                             ByVal operation As TradeBuildSP.DOMOperations, _
                             ByVal side As TradeBuildSP.DOMSides, _
                             ByVal price As Double, _
-                            ByVal Size As Long)
+                            ByVal size As Long)
 With mCurrentTick
     .UnProcessed = True
     .TickType = TradeBuild.TickTypes.marketDepth
@@ -222,7 +222,7 @@ With mCurrentTick
     .MDOperation = operation
     .MDSide = side
     .TickPrice = price
-    .TickSize = Size
+    .TickSize = size
 End With
 HandleTick
 End Sub
@@ -234,7 +234,7 @@ Private Sub IStreamingDataConsumer_UpdateMktDepthL2( _
                             ByVal operation As TradeBuildSP.DOMOperations, _
                             ByVal side As TradeBuildSP.DOMSides, _
                             ByVal price As Double, _
-                            ByVal Size As Long)
+                            ByVal size As Long)
 With mCurrentTick
     .UnProcessed = True
     .TickType = TradeBuild.TickTypes.MarketDepthL2
@@ -244,19 +244,19 @@ With mCurrentTick
     .MDOperation = operation
     .MDSide = side
     .TickPrice = price
-    .TickSize = Size
+    .TickSize = size
 End With
 HandleTick
 End Sub
 
 Private Sub IStreamingDataConsumer_Volume( _
                             ByVal timestamp As Date, _
-                            ByVal Size As Long)
+                            ByVal size As Long)
 With mCurrentTick
     .UnProcessed = True
     .TickType = TradeBuild.TickTypes.volume
     .timestamp = AdjustTimestamp(timestamp)
-    .TickSize = Size
+    .TickSize = size
 End With
 HandleTick
 End Sub
@@ -291,20 +291,6 @@ End Property
 
 Friend Property Get firstTickFileTime() As Date
 firstTickFileTime = mReader.firstTickFileTime
-End Property
-
-Friend Property Let InputTickfileSpecifier(RHS As TradeBuild.TickfileSpecifier)
-Dim tfSpec As TradeBuildSP.TickfileSpec
-With tfSpec
-    Set .Contract = RHS.Contract
-    .filename = RHS.filename
-    .From = RHS.From
-    .TickfileFormatID = RHS.TickfileFormatID
-    .To = RHS.To
-    .EntireSession = RHS.EntireSession
-End With
-
-mReader.InputTickfileSpecifier = tfSpec
 End Property
 
 Friend Property Let percentComplete(ByVal value As Single)
@@ -367,6 +353,20 @@ Friend Sub PauseReplay()
 If Not mTimer Is Nothing Then mTimer.StopTimer
 mState = TickfileStateCodes.TickfilePaused
 'gPauseTime
+End Sub
+
+Friend Sub ReplayTickfile(TickfileSpecifier As TradeBuild.TickfileSpecifier)
+Dim tfSpec As TradeBuildSP.TickfileSpec
+With tfSpec
+    Set .Contract = TickfileSpecifier.Contract
+    .filename = TickfileSpecifier.filename
+    .From = TickfileSpecifier.From
+    .tickfileFormatID = TickfileSpecifier.tickfileFormatID
+    .To = TickfileSpecifier.To
+    .EntireSession = TickfileSpecifier.EntireSession
+End With
+
+mReader.ReplayTickfile tfSpec
 End Sub
 
 Public Sub SkipFile()
