@@ -1656,7 +1656,7 @@ TwsRequest.id = index + HistoricalDataTickerBase + (mHistoricalDataTable(index).
 
 ReDim mHistoricalDataTable(index).requestKeys(reqNum - 1) As String
 
-Set TwsRequest.contractSpec = mHistoricalDataTable(index).barSpecifier.contractSpecifier
+Set TwsRequest.contractSpec = mHistoricalDataTable(index).barSpecifier.Contract.specifier
 
 If mServerVersion >= 20 Then
     TwsRequest.endDateTime = Format(mHistoricalDataTable(index).barSpecifier.To, "yyyymmdd hh:nn:ss")
