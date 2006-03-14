@@ -24,11 +24,12 @@ Option Explicit
 
 Event ContractAmbiguous( _
                 ByVal pTicker As Ticker, _
-                ByVal contractSpec As contractSpecifier)
+                ByVal Contracts As Contracts)
                 
 Event ContractInvalid( _
                 ByVal pTicker As Ticker, _
-                ByVal contractSpec As contractSpecifier)
+                ByVal contractSpec As contractSpecifier, _
+                ByVal reason As String)
                 
 
 Event MarketDepthNotAvailable( _
@@ -216,9 +217,9 @@ Public Property Get Count() As Long
 Count = mTickers.Count
 End Property
 
-Public Property Get Item(ByVal index As Variant) As Ticker
-Attribute Item.VB_UserMemId = 0
-Set Item = mTickers.Item(index)
+Public Property Get item(ByVal index As Variant) As Ticker
+Attribute item.VB_UserMemId = 0
+Set item = mTickers.item(index)
 End Property
 
 'Friend Property Let MaxTickers(ByVal value As Long)
@@ -314,14 +315,15 @@ Next
 End Sub
 
 Friend Sub ContractAmbiguous(ByVal Ticker As Ticker, _
-                            ByVal contractSpec As contractSpecifier)
-RaiseEvent ContractAmbiguous(Ticker, contractSpec)
+                            ByVal Contracts As Contracts)
+RaiseEvent ContractAmbiguous(Ticker, Contracts)
 Hide Ticker
 End Sub
 
 Friend Sub ContractInvalid(ByVal Ticker As Ticker, _
-                            ByVal contractSpec As contractSpecifier)
-RaiseEvent ContractInvalid(Ticker, contractSpec)
+                            ByVal contractSpec As contractSpecifier, _
+                            ByVal reason As String)
+RaiseEvent ContractInvalid(Ticker, contractSpec, reason)
 Hide Ticker
 End Sub
 
@@ -417,6 +419,7 @@ If mDeleting Then Exit Sub
 
 On Error Resume Next            ' in case this ticker has already been hidden
 
+If IsEmpty(pTicker.bookmark) Then Exit Sub
 mRS.bookmark = pTicker.bookmark
 mRS.Delete
 mRS.Update
@@ -617,7 +620,7 @@ Else
 End If
 mRS("Key") = pTicker.key
 mRS("Position") = pTicker.position
-With pTicker.contract
+With pTicker.Contract
     
     If (mColumnMask And TickerColumnIds.columnName) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.columnName)) = .specifier.localSymbol
@@ -629,7 +632,7 @@ With pTicker.contract
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnSymbol)) = .specifier.symbol
     End If
     If (mColumnMask And TickerColumnIds.ColumnSecType) <> 0 Then
-        mRS(mColumnNames(TickerColumnNameIndexes.ColumnSecType)) = secTypeToString(.specifier.secType)
+        mRS(mColumnNames(TickerColumnNameIndexes.ColumnSecType)) = secTypeToString(.specifier.sectype)
     End If
     If (mColumnMask And TickerColumnIds.ColumnExpiry) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnExpiry)) = .specifier.expiry
