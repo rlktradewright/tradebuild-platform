@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "QTTickfileReader"
+Attribute VB_Name = "QTRealtimeDataReader"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -30,7 +30,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements ITickfileReader
+Implements IRealtimeDataReader
 
 '================================================================================
 ' Events
@@ -42,6 +42,7 @@ Implements ITickfileReader
 
 Private Const InitialTickQueueCapacity As Long = 1000
 Private Const MaxTickTableIndex As Long = 9999
+Private Const TimeoutSecs As Long = 10
 
 '================================================================================
 ' Enums
@@ -62,12 +63,13 @@ End Type
 '================================================================================
 
 Private mCommonServiceConsumer As ICommonServiceConsumer
-Private mServiceConsumer As ITickfileInputServiceConsumer
+Private mServiceConsumer As IRealtimeDataInputServiceConsumer
 Private mDataConsumer As IStreamingDataConsumer
 
-Private mName As String
+Private mContract As TradeBuildSP.IContract
+Private mL1QuoteRequestId As Long
 
-Private mElapsedTimer As TimerUtils.ElapsedTimer
+Private mName As String
 
 Private WithEvents mQTAPI As QTAPI
 Attribute mQTAPI.VB_VarHelpID = -1
@@ -79,17 +81,6 @@ Private mConnectionRetryIntervalSecs As Long
 Private mkeepConnection As Boolean
 Private mProviderKey As String
 
-Private mTickQueue As Queue
-Private mNumPlayedTicks As Long
-
-Private mAllTicksReceived As Boolean
-Private mTickRequestPending As Boolean
-
-Private mReplayProgressEventFrequency As Long
-
-Private mInputTickfileSpecifier As TradeBuildSP.TickfileSpec
-Private mTickRequestId As Long
-
 Private mLogLevel As LogLevels
 
 '================================================================================
@@ -98,63 +89,20 @@ Private mLogLevel As LogLevels
 
 Private Sub Class_Initialize()
 
-Set mTickQueue = New Queue
-mTickQueue.initialCapacity = InitialTickQueueCapacity
-
-Set mElapsedTimer = New TimerUtils.ElapsedTimer
-
 End Sub
 
 Private Sub Class_Terminate()
-Debug.Print "QTSP.QTTickFileReader terminated"
+Debug.Print "QTSP.QTRealtimeDataReader terminated"
 End Sub
 
 '================================================================================
 ' ITickfileReader Interface Members
 '================================================================================
 
-Private Sub ITickfileReader_CloseInputFile()
-releaseQTAPI
-End Sub
+Private Sub IRealtimeDataReader_StartData( _
+                ByVal contract As TradeBuildSP.IContract)
 
-Private Property Let ITickfileReader_Contract(ByVal RHS As TradeBuildSP.IContract)
-End Property
-
-Private Property Get ITickfileReader_Contract() As TradeBuildSP.IContract
-Set ITickfileReader_Contract = mInputTickfileSpecifier.contract
-End Property
-
-Private Property Get ITickfileReader_ContractSpecifier() As TradeBuildSP.IContractSpecifier
-Set ITickfileReader_ContractSpecifier = mInputTickfileSpecifier.contract.Specifier
-End Property
-
-Private Sub ITickfileReader_FireNextTick()
-FireNextTick
-End Sub
-
-Private Property Get ITickfileReader_FirstTickFileTime() As Date
-ITickfileReader_FirstTickFileTime = FirstTickFileTime
-End Property
-
-Private Property Get ITickfileReader_InputTickfileSpecifier() As TradeBuildSP.TickfileSpec
-ITickfileReader_InputTickfileSpecifier = InputTickfileSpecifier
-End Property
-
-Private Property Let ITickfileReader_ReplayProgressEventFrequency(ByVal RHS As Long)
-If RHS = 0 Then
-    mReplayProgressEventFrequency = 1
-Else
-    mReplayProgressEventFrequency = RHS
-End If
-End Property
-
-Private Property Get ITickfileReader_ReplayProgressEventFrequency() As Long
-ITickfileReader_ReplayProgressEventFrequency = mReplayProgressEventFrequency
-End Property
-
-Private Sub ITickfileReader_ReplayTickfile(tickfileSpecifier As TradeBuildSP.TickfileSpec)
-mInputTickfileSpecifier = tickfileSpecifier
-
+Set mContract = contract
 If mQTAPI Is Nothing Then
     Set mQTAPI = gGetQTAPIInstance(mServer, mPort, mPassword, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection)
     mQTAPI.CommonServiceConsumer = mCommonServiceConsumer
@@ -162,21 +110,19 @@ If mQTAPI Is Nothing Then
 End If
 
 If mQTAPI.connectionState = ConnConnected Then
-    mServiceConsumer.Ready mInputTickfileSpecifier, 0
-    mTickRequestId = mQTAPI.RequestHistoricTickData(mInputTickfileSpecifier, Me)
+    mL1QuoteRequestId = mQTAPI.subscribeToL1Quotes(mContract, Me)
 End If
 
 End Sub
 
-Private Function ITickfileReader_Supports( _
-                            ByVal capabilities As Long, _
-                            Optional ByVal FormatIdentifier As String) As Boolean
-ITickfileReader_Supports = gSupports(capabilities, FormatIdentifier)
-End Function
+Private Sub IRealtimeDataReader_StopData()
+mQTAPI.unsubscribeFromL1Quotes mL1QuoteRequestId
+releaseQTAPI
+End Sub
 
-Private Property Get ITickfileReader_tickfileSizeBytes() As Long
-ITickfileReader_tickfileSizeBytes = 0
-End Property
+Private Function IRealtimeDataReader_Supports(ByVal capabilities As Long) As Boolean
+IRealtimeDataReader_Supports = False
+End Function
 
 '================================================================================
 ' xxxx Interface Members
@@ -187,8 +133,7 @@ End Property
 '================================================================================
 
 Private Sub mQTAPI_Connected()
-mServiceConsumer.Ready mInputTickfileSpecifier, 0
-mTickRequestId = mQTAPI.RequestHistoricTickData(mInputTickfileSpecifier, Me)
+mL1QuoteRequestId = mQTAPI.subscribeToL1Quotes(mContract, Me)
 End Sub
 
 Private Sub mQTAPI_ConnectFailed(ByVal Description As String, ByVal retrying As Boolean)
@@ -225,14 +170,6 @@ Friend Property Get ConnectionRetryIntervalSecs() As Long
 ConnectionRetryIntervalSecs = mConnectionRetryIntervalSecs
 End Property
 
-Friend Property Get FirstTickFileTime() As Date
-' not supported
-End Property
-
-Friend Property Get InputTickfileSpecifier() As TradeBuildSP.TickfileSpec
-InputTickfileSpecifier = mInputTickfileSpecifier
-End Property
-
 Public Property Let keepConnection(ByVal value As Boolean)
 mkeepConnection = value
 End Property
@@ -265,7 +202,7 @@ Friend Property Let StreamingDataConsumer(ByVal RHS As IStreamingDataConsumer)
 Set mDataConsumer = RHS
 End Property
 
-Friend Property Let TickfileInputServiceConsumer(ByVal RHS As ITickfileInputServiceConsumer)
+Friend Property Let realtimeDataInputServiceConsumer(ByVal RHS As IRealtimeDataInputServiceConsumer)
 Set mServiceConsumer = RHS
 End Property
 
@@ -273,71 +210,33 @@ End Property
 ' Methods
 '================================================================================
 
-Friend Sub historicalTick( _
+Friend Sub fireTick( _
                 ByRef pTick As Tick)
-mTickQueue.addToEnd pTick
-'If mTickQueue.size Mod 10 = 0 Then
-'    Debug.Print "QTSP.QTTickfileReader: queue length: " & mTickQueue.size
-'End If
-If mTickRequestPending Then FireNextTick
-End Sub
-
-Friend Sub historicalTickDataComplete()
-mAllTicksReceived = True
-If mTickRequestPending Then FireNextTick
+With pTick
+    Select Case .TickType
+    Case TickTypes.bid
+        mDataConsumer.bid .timestamp, .Price, .size
+    Case TickTypes.ask
+        mDataConsumer.ask .timestamp, .Price, .size
+    Case TickTypes.last
+        mDataConsumer.Trade .timestamp, .Price, .size
+    Case TickTypes.volume
+        mDataConsumer.volume .timestamp, .size
+    Case TickTypes.prevClose
+        mDataConsumer.PreviousClose .timestamp, .Price
+    Case TickTypes.high
+        mDataConsumer.high .timestamp, .Price
+    Case TickTypes.low
+        mDataConsumer.low .timestamp, .Price
+    Case TickTypes.openInterest
+        mDataConsumer.openInterest .timestamp, .size
+    End Select
+End With
 End Sub
 
 '================================================================================
 ' Helper Functions
 '================================================================================
-
-Private Sub FireNextTick()
-Dim lTick As Tick
-
-If mTickQueue.size = 0 Then
-    If mAllTicksReceived Then
-        mServiceConsumer.TickfileReplayComplete
-        Exit Sub
-    Else
-        mTickRequestPending = True
-        Exit Sub
-    End If
-End If
-
-mTickRequestPending = False
-
-lTick = mTickQueue.removeFromFront
-
-With lTick
-    mNumPlayedTicks = mNumPlayedTicks + 1
-    
-    If mNumPlayedTicks Mod mReplayProgressEventFrequency = 0 Then
-        mServiceConsumer.ReplayProgress .timestamp, _
-                                mNumPlayedTicks, _
-                                0#
-    End If
-
-    Select Case .TickType
-    Case TickTypes.Bid
-        mDataConsumer.Bid .timestamp, .Price, .size
-    Case TickTypes.Ask
-        mDataConsumer.Ask .timestamp, .Price, .size
-    Case TickTypes.Last
-        mDataConsumer.Trade .timestamp, .Price, .size
-    Case TickTypes.Volume
-        mDataConsumer.Volume .timestamp, .size
-    Case TickTypes.PrevClose
-        mDataConsumer.PreviousClose .timestamp, .Price
-    Case TickTypes.High
-        mDataConsumer.High .timestamp, .Price
-    Case TickTypes.Low
-        mDataConsumer.Low .timestamp, .Price
-    Case TickTypes.OpenInterest
-        mDataConsumer.OpenInterest .timestamp, .size
-    End Select
-End With
-
-End Sub
 
 Private Sub logMessage( _
                 ByVal message As String, _
@@ -351,9 +250,10 @@ End Sub
 
 Private Sub releaseQTAPI()
 If Not mQTAPI Is Nothing Then
-    mQTAPI.cancelHistoricTickData mTickRequestId
     gReleaseQTAPIInstance mQTAPI
     Set mQTAPI = Nothing
 End If
 End Sub
+
+
 

@@ -80,6 +80,8 @@ Private Declare Function StringFromGUID2 Lib "OLE32.dll" ( _
 ' Member variables
 '================================================================================
 
+Private mInitialised As Boolean
+
 Private mEntries() As QueueEntry
 Private mSize As Long
 Private mFirstEntry As Long
@@ -126,6 +128,7 @@ End Property
 Friend Property Let initialCapacity(ByVal value As Long)
 ReDim mEntries(value - 1) As QueueEntry
 If mCapacityIncrement = 0 Then mCapacityIncrement = value
+mInitialised = True
 End Property
 
 Friend Property Get size() As Long
@@ -137,6 +140,9 @@ End Property
 '================================================================================
 
 Friend Function addToEnd(ByVal Entry As Variant) As String
+If Not mInitialised Then err.Raise ErrorCodes.IllegalStateException, _
+                                "Queue::addToEnd", _
+                                "Queue not initialised"
 If mNextEntry = mFirstEntry And mSize <> 0 Then resize
 addToEnd = generateGUIDString
 mEntries(mNextEntry).item = Entry
@@ -201,7 +207,7 @@ Dim lReturn As Long
 lReturn = CoCreateGuid(generateGUID)
 
 If (lReturn <> S_OK) Then
-    err.Raise ErrorCodes.CantCreateGUID, _
+    err.Raise ErrorCodes.RuntimeException, _
                 "Queue::generateGUID", _
                 "Can't create GUID"
 End If

@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "QTTickfileServiceProvider"
+Attribute VB_Name = "QTRealtimeDataServiceProvider"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -31,7 +31,7 @@ Option Explicit
 '================================================================================
 
 Implements ICommonServiceProvider
-Implements ITickfileServiceProvider
+Implements IRealtimeDataServiceProvider
 
 '================================================================================
 ' Events
@@ -71,9 +71,7 @@ Private mLogLevel As LogLevels
 '================================================================================
 
 Private Sub Class_Initialize()
-mName = App.ProductName & "(TF)"
-mQTServer = "127.0.0.1"
-mQTPort = 16240
+mName = App.ProductName & "(RT)"
 End Sub
 
 '================================================================================
@@ -104,7 +102,7 @@ Private Sub ICommonServiceProvider_Link( _
 Set mCommonServiceConsumer = CommonServiceConsumer
 mHandle = handle
 mCommonServiceConsumer.RegisterServiceProvider mHandle, _
-                            ServiceProviderTypes.Tickfile
+                            ServiceProviderTypes.RealtimeData
 
 End Sub
 
@@ -117,58 +115,34 @@ Private Sub ICommonServiceProvider_Terminate()
 End Sub
 
 '================================================================================
-' ITickfileServiceProvider Interface Members
+' IRealtimeDataServiceProvider Interface Members
 '================================================================================
 
-Private Function ITickfileServiceProvider_CreateTickfileReader( _
-                            ByVal dataConsumer As TradeBuildSP.IStreamingDataConsumer, _
-                            ByVal serviceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
-                            ByVal FormatIdentifier As String) As TradeBuildSP.ITickfileReader
-Dim reader As QTTickfileReader
-Set reader = New QTTickfileReader
-Set ITickfileServiceProvider_CreateTickfileReader = reader
+Private Function IRealtimeDataServiceProvider_CreateRealtimeDataReader( _
+                ByVal dataConsumer As TradeBuildSP.IStreamingDataConsumer, _
+                ByVal serviceConsumer As TradeBuildSP.IRealtimeDataInputServiceConsumer) As TradeBuildSP.IRealtimeDataReader
+
+Dim reader As QTRealtimeDataReader
+
+Set reader = New QTRealtimeDataReader
+Set IRealtimeDataServiceProvider_CreateRealtimeDataReader = reader
 reader.CommonServiceConsumer = mCommonServiceConsumer
-reader.TickfileInputServiceConsumer = serviceConsumer
+reader.realtimeDataInputServiceConsumer = serviceConsumer
 reader.StreamingDataConsumer = dataConsumer
 reader.server = mQTServer
 reader.port = mQTPort
 reader.password = mPassword
+reader.ConnectionRetryIntervalSecs = mConnectionRetryIntervalSecs
 reader.keepConnection = mkeepConnection
 reader.providerKey = mProviderKey
 reader.logLevel = mLogLevel
 reader.Name = mName & " (reader)"
-reader.ConnectionRetryIntervalSecs = mConnectionRetryIntervalSecs
 End Function
 
-Private Function ITickfileServiceProvider_CreateTickfileWriter( _
-                            ByVal serviceConsumer As TradeBuildSP.ITickfileOutputServiceConsumer, _
-                            Optional ByVal FormatIdentifier As String = "", _
-                            Optional ByVal location As String = "") As TradeBuildSP.ITickfileWriter
-' writing not supported
+Private Function IRealtimeDataServiceProvider_Supports( _
+                ByVal capabilities As Long) As Boolean
+IRealtimeDataServiceProvider_Supports = 0
 End Function
-
-Private Property Get ITickfileServiceProvider_SupportedFormats() As TickfileFormatSpecifier()
-Dim formats(0) As TickfileFormatSpecifier
-
-formats(0).Name = "QuoteTracker Streaming"
-formats(0).FormalID = TickfileFormatQuoteTracker
-formats(0).FileExtension = "tck"
-formats(0).FormatType = StreamBased
-formats(0).capabilities = gCapabilities
-
-ITickfileServiceProvider_SupportedFormats = formats
-
-End Property
-
-Private Function ITickfileServiceProvider_Supports( _
-                            ByVal capabilities As Long, _
-                            Optional ByVal FormatIdentifier As String) As Boolean
-ITickfileServiceProvider_Supports = gSupports(capabilities, FormatIdentifier)
-End Function
-
-'================================================================================
-' xxxx Interface Members
-'================================================================================
 
 '================================================================================
 ' xxxx Event Handlers
@@ -236,5 +210,8 @@ End Property
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+
+
 
 
