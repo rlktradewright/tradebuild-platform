@@ -217,6 +217,13 @@ Private Property Get IContract_NumberOfDecimals() As Long
 IContract_NumberOfDecimals = NumberOfDecimals
 End Property
 
+Private Function IContract_OffsetBarStartTime( _
+                ByVal timestamp As Date, _
+                ByVal barLength As Long, _
+                ByVal offset As Long) As Date
+IContract_OffsetBarStartTime = offsetBarStartTime(timestamp, barLength, offset)
+End Function
+
 Private Property Let IContract_OrderTypes(RHS() As TradeBuildSP.OrderTypes)
 Dim lOrderTypes() As TradeBuild.OrderTypes
 Dim i As Long
@@ -618,6 +625,17 @@ BarStartTime = theDate + _
 
 End Function
 
+Friend Sub CalcSessionTimes(ByVal timestamp As Date, _
+                            ByRef sessionStartTime As Date, _
+                            ByRef sessionEndTime As Date)
+Dim i As Long
+
+i = -1
+Do
+    i = i + 1
+Loop Until calcSessionTimesHelper(timestamp + i, sessionStartTime, sessionEndTime)
+End Sub
+
 Friend Function clone() As Contract
 
 Set clone = New Contract
@@ -768,6 +786,53 @@ lOrder.marketIndex = mMarketIndex
 Set newOrder = lOrder.clone   ' return a copy of the order to the app
 End Function
 
+Public Function offsetBarStartTime( _
+                ByVal timestamp As Date, _
+                ByVal barLength As Long, _
+                ByVal offset As Long) As Date
+Dim sessStart As Date
+Dim sessEnd As Date
+Dim datumBarStart As Date
+Dim proposedStart As Date
+Dim remainingOffset As Long
+Dim barsFromSessStart As Long
+Dim i As Long
+
+datumBarStart = BarStartTime(timestamp, barLength)
+CalcSessionTimes datumBarStart, sessStart, sessEnd  ' !!!!!!!!!!!!!!!!!!!!!!!!!!!
+                                                    ' calcSessionTimes needs to be amended
+                                                    ' to take account of holidays
+If datumBarStart < sessStart Then
+    ' specified timestamp was between sessions
+    datumBarStart = sessStart
+End If
+    
+'proposedStart = datumBarStart - (offset * barLength) / 1440
+'
+'If proposedStart >= sessStart Then
+'    offsetBarStartTime = proposedStart
+'    Exit Function
+'End If
+
+remainingOffset = offset
+proposedStart = datumBarStart
+Do While remainingOffset > 0
+    barsFromSessStart = (proposedStart - sessStart) / (barLength / 1440)
+    If barsFromSessStart >= remainingOffset Then
+        proposedStart = proposedStart - (remainingOffset * barLength) / 1440
+        remainingOffset = 0
+    Else
+        remainingOffset = remainingOffset - barsFromSessStart
+        Do
+            i = i + 1
+            CalcSessionTimes proposedStart - i, sessStart, sessEnd
+        Loop Until sessStart <= proposedStart
+        proposedStart = sessEnd
+    End If
+Loop
+offsetBarStartTime = proposedStart
+End Function
+
 Friend Sub setSession( _
                 ByVal timestamp As Date)
 If timestamp >= mCurrentSessionEndTime Or _
@@ -915,11 +980,12 @@ End Function
 ' Helper Functions
 '================================================================================
 
-Friend Sub CalcSessionTimes(ByVal timestamp As Date, _
+Friend Function calcSessionTimesHelper(ByVal timestamp As Date, _
                             ByRef sessionStartTime As Date, _
-                            ByRef sessionEndTime As Date)
+                            ByRef sessionEndTime As Date) As Boolean
 Dim referenceDate As Date
 Dim referenceTime As Date
+Dim weekday As Long
 
 referenceDate = DateValue(timestamp)
 referenceTime = TimeValue(timestamp)
@@ -948,7 +1014,14 @@ Else
     sessionEndTime = "31/12/2099"
 End If
 
-End Sub
+weekday = DatePart("w", sessionStartTime)
+If mSessionStartTime < mSessionEndTime Then
+    ' session doesn't span midnight
+    If weekday <> vbSaturday And weekday <> vbSunday Then calcSessionTimesHelper = True
+Else
+    If weekday <> vbFriday And weekday <> vbSaturday Then calcSessionTimesHelper = True
+End If
+End Function
 
 
 

@@ -1446,6 +1446,7 @@ Then
         Set mTickfileManager = Nothing
     ElseIf Not mRealtimeDataReader Is Nothing Then
         mRealtimeDataReader.StopData
+        Set mRealtimeDataReader = Nothing
     Else
         gTradeBuildAPI.CancelMarketData mTickerID
         'gOrderSimulator.stopMarket mMarketIndex

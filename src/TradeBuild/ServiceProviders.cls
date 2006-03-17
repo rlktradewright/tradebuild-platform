@@ -287,15 +287,15 @@ Dim i As Long
 ' always later in the table than those added earlier
 For i = 0 To mMaxSPIndex
     If Not mServiceProviders(i).SPObject Is Nothing Then
-        If mServiceProviders(i).Name = serviceProvider.Name Then
-            err.Raise ErrorCodes.NotUniqueServiceProviderName, _
-                    "TradeBuild.ServiceProviders::Add", _
-                    "A Service Provider with this name has already been added"
-        End If
         If mServiceProviders(i).SPObject Is serviceProvider Then
             err.Raise ErrorCodes.IllegalArgumentException, _
                     "TradeBuild.ServiceProviders::Add", _
                     "This Service Provider object has already been added"
+        End If
+        If mServiceProviders(i).Name = serviceProvider.Name Then
+            err.Raise ErrorCodes.NotUniqueServiceProviderName, _
+                    "TradeBuild.ServiceProviders::Add", _
+                    "A Service Provider with this name has already been added"
         End If
     End If
 Next
