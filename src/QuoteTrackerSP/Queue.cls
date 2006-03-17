@@ -151,7 +151,7 @@ mNextEntry = (mNextEntry + 1) Mod UBound(mEntries)
 mSize = mSize + 1
 End Function
 
-Friend Sub remove(ByVal itemKey As String)
+Friend Sub remove(ByVal itemRef As Variant)
 Dim i As Long
 Dim maxIndex As Long
 
@@ -165,18 +165,33 @@ Else
     maxIndex = UBound(mEntries) + mNextEntry
 End If
 
-For i = mFirstEntry To maxIndex
-    If mEntries(i Mod (UBound(mEntries) - 1)).itemKey = itemKey Then
-        mEntries(i Mod (UBound(mEntries) - 1)).itemRemoved = True
-        mEntries(i Mod (UBound(mEntries) - 1)).itemKey = ""
-        mEntries(i Mod (UBound(mEntries) - 1)).item = Empty
-        Exit For
-    End If
-Next
+If VarType(itemRef) = vbString Then
+    For i = mFirstEntry To maxIndex
+        If mEntries(i Mod (UBound(mEntries) - 1)).itemKey = itemRef Then
+            mEntries(i Mod (UBound(mEntries) - 1)).itemRemoved = True
+            mEntries(i Mod (UBound(mEntries) - 1)).itemKey = ""
+            mEntries(i Mod (UBound(mEntries) - 1)).item = Empty
+            Exit For
+        End If
+    Next
+ElseIf VarType(itemRef) = vbObject Then
+    For i = mFirstEntry To maxIndex
+        If mEntries(i Mod (UBound(mEntries) - 1)).item Is itemRef Then
+            mEntries(i Mod (UBound(mEntries) - 1)).itemRemoved = True
+            mEntries(i Mod (UBound(mEntries) - 1)).itemKey = ""
+            mEntries(i Mod (UBound(mEntries) - 1)).item = Empty
+            Exit For
+        End If
+    Next
+Else
+    err.Raise ErrorCodes.IllegalArgumentException, _
+                "QTSP.Queue::remove", _
+                "Argument type must be string or object"
+End If
 
 If i > maxIndex Then err.Raise ErrorCodes.IllegalArgumentException, _
                                 "Queue::remove", _
-                                "Key invalid"
+                                "Specified item not in queue"
 
 mSize = mSize - 1
 End Sub
