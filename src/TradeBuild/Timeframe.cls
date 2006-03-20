@@ -134,6 +134,7 @@ Private mLatestVolume As Long
 
 Private WithEvents mHistoricBarTimer As TimerUtils.IntervalTimer
 Attribute mHistoricBarTimer.VB_VarHelpID = -1
+Private mElapsedTimer As TimerUtils.ElapsedTimer
 Private mHistReceivingSynchronously As Boolean
 Private mHistoricBar As TradeBuildSP.Bar
 Private mHistoricBarPending As Boolean
@@ -453,6 +454,7 @@ If mSaveIntervalSeconds >= 0 Then
 End If
 If mNumberOfBarsToFetch <> 0 Then
     Set mHistoricBarTimer = New TimerUtils.IntervalTimer
+    Set mElapsedTimer = New TimerUtils.ElapsedTimer
     mHistoricBarTimer.RepeatNotifications = False
 
     Set mBarReader = gServiceProviders.CreateHistoricalDataReader( _
@@ -666,6 +668,7 @@ Private Sub Clear()
 If Not mHistoricBarTimer Is Nothing Then
     mHistoricBarTimer.StopTimer
     Set mHistoricBarTimer = Nothing
+    Set mElapsedTimer = Nothing
 End If
 
 If Not mWriteTimer Is Nothing Then
@@ -705,15 +708,28 @@ If Not mHistoricBarPending Then
     mHistReceivingSynchronously = False
 End If
 
-Do While mHistoricBarPending And (Not mBarReader Is Nothing)
+mElapsedTimer.StartTiming
+
+Do While mHistoricBarPending And _
+    (Not mBarReader Is Nothing) And _
+    (Not mHistoricDataLoaded) And _
+    mElapsedTimer.ElapsedTimeMicroseconds / 1000 <= MultiTaskingTimeQuantumMillisecs
+    
     ProcessHistoricBar
 
     mHistReceivingSynchronously = True
     mBarReader.FireNextBar
     mHistReceivingSynchronously = False
 
-    DoEvents
+    'DoEvents
 Loop
+
+If Not mHistoricDataLoaded And _
+    Not mBarReader Is Nothing _
+Then
+    ' schedule the next processing quantum
+    mHistoricBarTimer.StartTimer
+End If
 
 End Sub
 

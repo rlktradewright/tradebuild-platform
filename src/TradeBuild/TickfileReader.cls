@@ -86,8 +86,9 @@ Private mPercentComplete As Single
 
 Private mTickReceivedSynchronously As Boolean
 
-Private WithEvents mTimer As IntervalTimer
+Private WithEvents mTimer As TimerUtils.IntervalTimer
 Attribute mTimer.VB_VarHelpID = -1
+Private mElapsedTimer As TimerUtils.ElapsedTimer
 
 '================================================================================
 ' Class Event Handlers
@@ -382,6 +383,7 @@ mState = TickfileStateCodes.TickfilePlaying
 If mTimer Is Nothing Then
     Set mTimer = New IntervalTimer
     mTimer.RepeatNotifications = False
+    Set mElapsedTimer = New TimerUtils.ElapsedTimer
 End If
 
 ' start replay using the timer to unwind the current stack
@@ -459,7 +461,12 @@ mTickReceivedSynchronously = True
 mReader.FireNextTick
 mTickReceivedSynchronously = False
 
-Do While mCurrentTick.UnProcessed And Not mCurrentTick.Timed
+mElapsedTimer.StartTiming
+
+Do While mCurrentTick.UnProcessed And _
+    Not mCurrentTick.Timed And _
+    (mElapsedTimer.ElapsedTimeMicroseconds / 1000) <= MultiTaskingTimeQuantumMillisecs
+    
     ProcessTickData
 
     If mState = TickfileStateCodes.TickfileNotPlaying Or _
@@ -472,8 +479,14 @@ Do While mCurrentTick.UnProcessed And Not mCurrentTick.Timed
     mReader.FireNextTick
     mTickReceivedSynchronously = False
 
-    DoEvents
+    'DoEvents
 Loop
+
+If mCurrentTick.UnProcessed And _
+    Not mCurrentTick.Timed _
+Then
+    mTimer.StartTimer
+End If
 
 End Sub
 

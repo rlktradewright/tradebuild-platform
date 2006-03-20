@@ -15,6 +15,8 @@ Public Const MaxDouble As Double = 1.79769313486231E+308
 Public Const OneSecond As Double = 1.15740740740741E-05
 Public Const OneMicroSecond As Double = 1.15740740740741E-11
 
+Public Const MultiTaskingTimeQuantumMillisecs As Long = 20
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -376,7 +378,7 @@ If TickfileSpec.filename <> "" Then
     gTickfileSpecifierToString = TickfileSpec.filename
 Else
     gTickfileSpecifierToString = "Contract: " & _
-                                Replace(TickfileSpec.contract.specifier.ToString, vbCrLf, "; ") & _
+                                Replace(TickfileSpec.Contract.specifier.ToString, vbCrLf, "; ") & _
                             ": From: " & FormatDateTime(TickfileSpec.From, vbGeneralDate) & _
                             " To: " & FormatDateTime(TickfileSpec.To, vbGeneralDate)
 End If
