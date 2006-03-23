@@ -295,6 +295,11 @@ Case TradeBuildSP.StandardSPErrorCodes.RTCantConnectDataSource
                     "Can't connect to realtime data source: " & _
                     errorMessage)
     Set mWriter = Nothing
+Case TradeBuildSP.StandardSPErrorCodes.RTRequestFailed
+    RaiseEvent ContractInvalid(mContracts.contractSpecifier, errorMessage)
+    mTickers.ContractInvalid Me, mContracts.contractSpecifier, errorMessage
+Case TradeBuildSP.StandardSPErrorCodes.RTMarketDepthRequestFailed
+    MarketDepthNotAvailable errorMessage
 Case Else
     gTradeBuildAPI.SetServiceProviderError errorCode, _
                         errorMessage, _
@@ -788,7 +793,7 @@ mContract.marketIndex = mMarketIndex
 Set mRealtimeDataReader = gServiceProviders.CreateRealtimeDataReader(Me, Me)
 
 If Not mRealtimeDataReader Is Nothing Then
-    mRealtimeDataReader.StartData mContract
+    mRealtimeDataReader.StartData mContract, calculateSpDomRequirement
 Else
     mTickerID = gTradeBuildAPI.RequestMarketDataEx(mContract.specifier, _
                             Me, _
@@ -1287,7 +1292,11 @@ If mState = TickerStateCodes.Dead Or _
 mDOMEventsRequired = DOMEvents.DOMNoEvents
 If mTickfileManager Is Nothing Then
     If (Not (mWriteToTickFile And mIncludeMarketDepthInTickfile)) Or forceCancel Then
-        gTradeBuildAPI.CancelMarketDepth mTickerID
+        If mRealtimeDataReader Is Nothing Then
+            gTradeBuildAPI.CancelMarketDepth mTickerID
+        Else
+            mRealtimeDataReader.StopMarketDepth
+        End If
         mReceivingMarketDepth = False
     End If
 End If
@@ -1305,11 +1314,6 @@ Public Function isTimeInSession(ByVal timestamp As Date) As Boolean
 If mContract Is Nothing Then Exit Function
 isTimeInSession = mContract.isTimeInSession(timestamp)
 End Function
-
-Friend Sub MarketDepthNotAvailable( _
-                ByVal reason As String)
-RaiseEvent MarketDepthNotAvailable(timestamp, reason)
-End Sub
 
 Friend Sub PauseTicker()
 mState = TickerStateCodes.Paused
@@ -1373,16 +1377,27 @@ If writeToTickfile And mWriter Is Nothing Then
                 "Can't write market depth to tickfile: no output tickfile for this ticker"
 End If
 
+If mReplayingTickfile Then
+    RaiseEvent MarketDepthNotAvailable(timestamp, _
+                                        "Can't start market depth replay during tickfile replay")
+    Exit Sub
+End If
 
 mIncludeMarketDepthInTickfile = writeToTickfile
 
 If Not mReceivingMarketDepth Then
     mDOMEventsRequired = DOMEventsRequired
-    mReceivingMarketDepth = True
-    initialisePriceTables
-    If Not mReplayingTickfile Then
+    
+    If Not mRealtimeDataReader Is Nothing Then
+        Dim DOMEventsReqd As TradeBuildSP.DOMEventTypes
+        DOMEventsReqd = calculateSpDomRequirement
+        If DOMEventsReqd = TradeBuildSP.DOMEventTypes.DOMNone Then Exit Sub
+        mRealtimeDataReader.StartMarketDepth DOMEventsReqd
+    Else
         gTradeBuildAPI.RequestMarketDepth Me
     End If
+    mReceivingMarketDepth = True
+    initialisePriceTables
 Else
     
     ' we are already receiving market depth.
@@ -1536,6 +1551,49 @@ End Sub
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Function calculateSpDomRequirement() As TradeBuildSP.DOMEventTypes
+Dim DOMEventsReqd As TradeBuildSP.DOMEventTypes
+Dim supportsDomByPosition As Boolean
+Dim supportsDomByPrice As Boolean
+
+If mRealtimeDataReader.Supports(TradeBuildSP.RealtimeDataServiceProviderCapabilities.RtCapMarketDepthByPosition) Then
+    supportsDomByPosition = True
+End If
+    
+If mRealtimeDataReader.Supports(TradeBuildSP.RealtimeDataServiceProviderCapabilities.RtCapMarketDepthByPrice) Then
+    supportsDomByPrice = True
+End If
+
+If Not (supportsDomByPosition Or supportsDomByPrice) Then
+        MarketDepthNotAvailable "Market depth not supported by service provider"
+        Exit Function
+End If
+
+Select Case mDOMEventsRequired
+Case DOMNoEvents
+    DOMEventsReqd = TradeBuildSP.DOMEventTypes.DOMNone
+Case DOMRawEvents
+    If supportsDomByPosition Then
+        DOMEventsReqd = TradeBuildSP.DOMEventTypes.DOMByPosition
+    Else
+        DOMEventsReqd = TradeBuildSP.DOMEventTypes.DOMByPrice
+    End If
+Case DOMProcessedEvents
+    If supportsDomByPrice Then
+        DOMEventsReqd = TradeBuildSP.DOMEventTypes.DOMByPrice
+    Else
+        DOMEventsReqd = TradeBuildSP.DOMEventTypes.DOMByPosition
+    End If
+Case DOMBothEvents
+    If supportsDomByPrice Then
+        DOMEventsReqd = TradeBuildSP.DOMEventTypes.DOMByPrice
+    Else
+        DOMEventsReqd = TradeBuildSP.DOMEventTypes.DOMByPosition
+    End If
+End Select
+calculateSpDomRequirement = DOMEventsReqd
+End Function
 
 Private Sub checkInSession(ByVal timestamp As Date)
 Static sessionStartNotified As Boolean
@@ -1862,6 +1920,12 @@ ReDim mAskPrices(20) As PriceTableEntry
 ReDim mBidPrices(20) As PriceTableEntry
 mMaxAskPricesIndex = 0
 mMaxBidPricesIndex = 0
+End Sub
+
+Private Sub MarketDepthNotAvailable( _
+                ByVal reason As String)
+RaiseEvent MarketDepthNotAvailable(timestamp, reason)
+mTickers.MarketDepthNotAvailable Me, reason
 End Sub
 
 Private Sub notifyDOMPrices( _

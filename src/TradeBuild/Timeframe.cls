@@ -441,7 +441,6 @@ Set Contract = mContract
 End Property
 
 Friend Property Let Contract(ByVal value As Contract)
-Dim barSpecifier As TradeBuildSP.BarDataSpecifier
 Set mContract = value
 
 If mSaveIntervalSeconds >= 0 Then
@@ -456,23 +455,8 @@ If mNumberOfBarsToFetch <> 0 Then
     Set mHistoricBarTimer = New TimerUtils.IntervalTimer
     Set mElapsedTimer = New TimerUtils.ElapsedTimer
     mHistoricBarTimer.RepeatNotifications = False
-
-    Set mBarReader = gServiceProviders.CreateHistoricalDataReader( _
-                                Me, _
-                                Me)
-    barSpecifier.barLengthMinutes = mBarLengthMinutes
-    barSpecifier.barType = BarTypes.BarTypeTrade
-    Set barSpecifier.Contract = mContract
-    barSpecifier.From = CDate("1 Jan 1970")
-    If mExcludeCurrentBar Then
-        barSpecifier.To = mTicker.timestamp
-    Else
-        ' ensure we get the latest bar
-        barSpecifier.To = mTicker.timestamp + mBarLengthMinutes / 1440
-    End If
-    barSpecifier.NumberOfBars = mNumberOfBarsToFetch
-    mBarReader.FetchBars barSpecifier
-    ' other bar types ????????????????????????????????????????
+    mHistoricBarTimer.TimerIntervalMillisecs = 1
+    mHistoricBarTimer.StartTimer
 Else
     ListenToTicker
 End If
@@ -701,6 +685,34 @@ Set mContract = Nothing
 End Sub
 
 Private Sub FetchHistoricBars()
+Dim barSpecifier As TradeBuildSP.BarDataSpecifier
+
+If mBarReader Is Nothing Then
+    Set mBarReader = gServiceProviders.CreateHistoricalDataReader( _
+                                Me, _
+                                Me)
+                                
+    If mBarReader Is Nothing Then
+        RaiseEvent HistoricalDataRequestFailed("no Historic Data Service Provider is configured")
+    Else
+        barSpecifier.barLengthMinutes = mBarLengthMinutes
+        barSpecifier.barType = BarTypes.BarTypeTrade
+        Set barSpecifier.Contract = mContract
+        barSpecifier.From = CDate("1 Jan 1970")
+        If mExcludeCurrentBar Then
+            barSpecifier.To = mTicker.timestamp
+        Else
+            ' ensure we get the latest bar
+            barSpecifier.To = mTicker.timestamp + mBarLengthMinutes / 1440
+        End If
+        barSpecifier.NumberOfBars = mNumberOfBarsToFetch
+        mBarReader.FetchBars barSpecifier
+    End If
+    
+    ' other bar types ????????????????????????????????????????
+
+    Exit Sub
+End If
 
 If Not mHistoricBarPending Then
     mHistReceivingSynchronously = True
