@@ -125,8 +125,8 @@ Me.Top = Screen.Height - Me.Height
 DOMGrid.AllowUserResizing = flexResizeColumns
 DOMGrid.BackColorFixed = vbButtonFace
 DOMGrid.BackColorSel = GridColours.BGDefault
-DOMGrid.BackColor = GridColours.BGDefault
-DOMGrid.ForeColorSel = DOMGrid.ForeColor
+DOMGrid.backColor = GridColours.BGDefault
+DOMGrid.ForeColorSel = DOMGrid.foreColor
 DOMGrid.Rows = 1
 DOMGrid.Cols = 5
 DOMGrid.FixedCols = 0
@@ -243,7 +243,7 @@ Me.Caption = "Market depth for " & _
             mContract.specifier.localSymbol & _
             " on " & _
             mContract.specifier.exchange
-mPriceIncrement = mContract.minimumTick
+mPriceIncrement = mContract.tickSize
 
 If mTicker.TradePrice <> 0 Then
     initialPrice = mTicker.TradePrice

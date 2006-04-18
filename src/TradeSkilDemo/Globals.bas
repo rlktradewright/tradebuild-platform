@@ -1,10 +1,9 @@
 Attribute VB_Name = "Globals"
 Option Explicit
 
-Public Declare Function SendMessageByNum Lib "user32" _
-    Alias "SendMessageA" (ByVal hwnd As Long, ByVal wMsg As Long, _
-    ByVal wParam As Long, ByVal lParam As Long) As Long
-Public Declare Sub InitCommonControls Lib "comctl32" ()
+'================================================================================
+' Constants
+'================================================================================
 
 Public Const LB_SETHORZEXTENT = &H194
 
@@ -16,11 +15,22 @@ Public Const StrOrderTypeLimitClose As String = "Limit on Close"
 Public Const StrOrderTypePegMarket As String = "Peg to Market"
 Public Const StrOrderTypeStop As String = "Stop"
 Public Const StrOrderTypeStopLimit As String = "Stop Limit"
-Public Const StrOrderTypeTrail As String = "Trail"
+Public Const StrOrderTypeTrail As String = "Trailing Stop"
 Public Const StrOrderTypeRelative As String = "Relative"
 Public Const StrOrderTypeVWAP As String = "VWAP"
 Public Const StrOrderTypeMarketToLimit As String = "Market to Limit"
 Public Const StrOrderTypeQuote As String = "Quote"
+Public Const StrOrderTypeAutoStop As String = "Auto Stop"
+Public Const StrOrderTypeAutoLimit As String = "Auto Limit"
+Public Const StrOrderTypeAdjust As String = "Adjust"
+Public Const StrOrderTypeAlert As String = "Alert"
+Public Const StrOrderTypeLimitIfTouched As String = "Limit if Touched"
+Public Const StrOrderTypeMarketIfTouched As String = "Market if Touched"
+Public Const StrOrderTypeTrailLimit As String = "Trail Limit"
+Public Const StrOrderTypeMarketWithProtection As String = "Market with Protection"
+Public Const StrOrderTypeMarketOnOpen As String = "Market on Open"
+Public Const StrOrderTypeLimitOnOpen As String = "Limit on Open"
+Public Const StrOrderTypePeggedToPrimary As String = "Pegged to Primary"
 
 Public Const StrOrderActionBuy As String = "BUY"
 Public Const StrOrderActionSell As String = "SELL"
@@ -32,6 +42,72 @@ Public Const StrSecTypeOptionFuture As String = "Option on futures"
 Public Const StrSecTypeCash As String = "Cash"
 Public Const StrSecTypeBag As String = "Bag"
 
+'================================================================================
+' Enums
+'================================================================================
+
+'================================================================================
+' Types
+'================================================================================
+
+'================================================================================
+' Global object references
+'================================================================================
+
+Public gMainForm As fTradeSkilDemo
+
+Public gTradeBuildAPI As TradeBuildAPI
+
+'================================================================================
+' External function declarations
+'================================================================================
+
+Public Declare Function SendMessageByNum Lib "user32" _
+    Alias "SendMessageA" (ByVal hwnd As Long, ByVal wMsg As Long, _
+    ByVal wParam As Long, ByVal lParam As Long) As Long
+
+Public Declare Sub InitCommonControls Lib "comctl32" ()
+
+'================================================================================
+' Variables
+'================================================================================
+
+'================================================================================
+' Procedures
+'================================================================================
+
+Public Function entryTypeToString(ByVal value As EntryTypes) As String
+Select Case value
+Case EntryTypeMarket
+    entryTypeToString = "Market"
+Case EntryTypeMarketOnOpen
+    entryTypeToString = "Market on open"
+Case EntryTypeMarketOnClose
+    entryTypeToString = "Market on close"
+Case EntryTypeMarketIfTouched
+    entryTypeToString = "Market if touched"
+Case EntryTypeMarketToLimit
+    entryTypeToString = "Market to limit"
+Case EntryTypeBid
+    entryTypeToString = "Bid price"
+Case EntryTypeAsk
+    entryTypeToString = "Ask price"
+Case EntryTypeLast
+    entryTypeToString = "Last trade price"
+Case EntryTypeLimit
+    entryTypeToString = "Limit"
+Case EntryTypeLimitOnOpen
+    entryTypeToString = "Limit on open"
+Case EntryTypeLimitOnClose
+    entryTypeToString = "Limit on close"
+Case EntryTypeLimitIfTouched
+    entryTypeToString = "Limit if touched"
+Case EntryTypeStop
+    entryTypeToString = "Stop"
+Case EntryTypeStopLimit
+    entryTypeToString = "Stop limit"
+End Select
+End Function
 
 Public Function optionRightFromString(ByVal value As String) As OptionRights
 Select Case UCase$(value)
@@ -74,21 +150,21 @@ End Select
 End Function
 
 Public Function orderStatusToString(ByVal value As OrderStatuses) As String
-Select Case UCase$(value)
+Select Case value
 Case OrderStatusCreated
-    orderStatusToString = "CREATED"
+    orderStatusToString = "Created"
 Case OrderStatusPendingSubmit
-    orderStatusToString = "PENDINGSUBMIT"
-Case OrderStatusPreSubmitted
-    orderStatusToString = "PRESUBMITTED"
-Case OrderStatusSubmitted
-    orderStatusToString = "SUBMITTED"
-Case OrderStatusCancelling
-    orderStatusToString = "CANCELLING"
-Case OrderStatusCancelled
-    orderStatusToString = "CANCELLED"
-Case OrderStatusFilled
-    orderStatusToString = "FILLED"
+    orderStatusToString = "Pendingsubmit"
+Case orderstatuspresubmitted
+    orderStatusToString = "Presubmitted"
+Case orderstatussubmitted
+    orderStatusToString = "Submitted"
+Case orderstatuscancelling
+    orderStatusToString = "Cancelling"
+Case orderstatuscancelled
+    orderStatusToString = "Cancelled"
+Case orderstatusfilled
+    orderStatusToString = "Filled"
 End Select
 End Function
 
@@ -115,7 +191,7 @@ End Select
 End Function
 
 Public Function orderTriggerMethodFromString(ByVal value As String) As TriggerMethods
-Select Case value
+Select Case UCase$(value)
 Case "Default"
     orderTriggerMethodFromString = TriggerMethods.TriggerDefault
 Case "Double bid/ask"
@@ -141,19 +217,19 @@ End Select
 End Function
 
 Public Function orderTypeFromString(ByVal value As String) As OrderTypes
-Select Case value
+Select Case UCase$(value)
 Case StrOrderTypeNone
     orderTypeFromString = OrderTypeNone
 Case StrOrderTypeMarket
     orderTypeFromString = OrderTypeMarket
 Case StrOrderTypeMarketClose
-    orderTypeFromString = OrderTypeMarketClose
+    orderTypeFromString = OrderTypeMarketOnClose
 Case StrOrderTypeLimit
     orderTypeFromString = OrderTypeLimit
 Case StrOrderTypeLimitClose
-    orderTypeFromString = OrderTypeLimitClose
+    orderTypeFromString = OrderTypeLimitOnClose
 Case StrOrderTypePegMarket
-    orderTypeFromString = OrderTypePegMarket
+    orderTypeFromString = OrderTypePeggedToMarket
 Case StrOrderTypeStop
     orderTypeFromString = OrderTypeStop
 Case StrOrderTypeStopLimit
@@ -168,6 +244,24 @@ Case StrOrderTypeMarketToLimit
     orderTypeFromString = OrderTypeMarketToLimit
 Case StrOrderTypeQuote
     orderTypeFromString = OrderTypeQuote
+Case StrOrderTypeAdjust
+    orderTypeFromString = OrderTypeAdjust
+Case StrOrderTypeAlert
+    orderTypeFromString = OrderTypeAlert
+Case StrOrderTypeLimitIfTouched
+    orderTypeFromString = OrderTypeLimitIfTouched
+Case StrOrderTypeMarketIfTouched
+    orderTypeFromString = OrderTypeMarketIfTouched
+Case StrOrderTypeTrailLimit
+    orderTypeFromString = OrderTypeTrailLimit
+Case StrOrderTypeMarketWithProtection
+    orderTypeFromString = OrderTypeMarketWithProtection
+Case StrOrderTypeMarketOnOpen
+    orderTypeFromString = OrderTypeMarketOnOpen
+Case StrOrderTypeLimitOnOpen
+    orderTypeFromString = OrderTypeLimitOnOpen
+Case StrOrderTypePeggedToPrimary
+    orderTypeFromString = OrderTypePeggedToPrimary
 End Select
 
 End Function
@@ -177,13 +271,13 @@ Case OrderTypeNone
     orderTypeToString = StrOrderTypeNone
 Case OrderTypeMarket
     orderTypeToString = StrOrderTypeMarket
-Case OrderTypeMarketClose
+Case OrderTypeMarketOnClose
     orderTypeToString = StrOrderTypeMarketClose
 Case OrderTypeLimit
     orderTypeToString = StrOrderTypeLimit
-Case OrderTypeLimitClose
+Case OrderTypeLimitOnClose
     orderTypeToString = StrOrderTypeLimitClose
-Case OrderTypePegMarket
+Case OrderTypePeggedToMarket
     orderTypeToString = StrOrderTypePegMarket
 Case OrderTypeStop
     orderTypeToString = StrOrderTypeStop
@@ -199,6 +293,24 @@ Case OrderTypeMarketToLimit
     orderTypeToString = StrOrderTypeMarketToLimit
 Case OrderTypeQuote
     orderTypeToString = StrOrderTypeQuote
+Case OrderTypeAdjust
+    orderTypeToString = StrOrderTypeAdjust
+Case OrderTypeAlert
+    orderTypeToString = StrOrderTypeAlert
+Case OrderTypeLimitIfTouched
+    orderTypeToString = StrOrderTypeLimitIfTouched
+Case OrderTypeMarketIfTouched
+    orderTypeToString = StrOrderTypeMarketIfTouched
+Case OrderTypeTrailLimit
+    orderTypeToString = StrOrderTypeTrailLimit
+Case OrderTypeMarketWithProtection
+    orderTypeToString = StrOrderTypeMarketWithProtection
+Case OrderTypeMarketOnOpen
+    orderTypeToString = StrOrderTypeMarketOnOpen
+Case OrderTypeLimitOnOpen
+    orderTypeToString = StrOrderTypeLimitOnOpen
+Case OrderTypePeggedToPrimary
+    orderTypeToString = StrOrderTypePeggedToPrimary
 End Select
 
 End Function
@@ -241,4 +353,40 @@ Case SecTypeIndex
 End Select
 End Function
 
+Public Function stopTypeToString(ByVal value As StopTypes)
+Select Case value
+Case StopTypeNone
+    stopTypeToString = "None"
+Case StopTypeStop
+    stopTypeToString = "Stop"
+Case StopTypeStopLimit
+    stopTypeToString = "Stop limit"
+Case StopTypeBid
+    stopTypeToString = "Bid price"
+Case StopTypeAsk
+    stopTypeToString = "Ask price"
+Case StopTypeLast
+    stopTypeToString = "Last trade price"
+Case StopTypeAuto
+    stopTypeToString = "Auto"
+End Select
+End Function
 
+Public Function targetTypeToString(ByVal value As TargetTypes)
+Select Case value
+Case TargetTypeNone
+    targetTypeToString = "None"
+Case TargetTypeLimit
+    targetTypeToString = "Limit"
+Case TargetTypeMarketIfTouched
+    targetTypeToString = "Market if touched"
+Case TargetTypeBid
+    targetTypeToString = "Bid price"
+Case TargetTypeAsk
+    targetTypeToString = "Ask price"
+Case TargetTypeLast
+    targetTypeToString = "Last trade price"
+Case TargetTypeAuto
+    targetTypeToString = "Auto"
+End Select
+End Function

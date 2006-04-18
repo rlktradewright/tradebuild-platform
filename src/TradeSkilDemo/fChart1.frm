@@ -118,7 +118,7 @@ Chart1.showHorizontalScrollBar = True
 
 Set mRegion = Chart1.addChartRegion(100)
 mRegion.gridlineSpacingY = 2
-mRegion.YScaleQuantum = mContract.minimumTick
+mRegion.YScaleQuantum = mContract.tickSize
 
 Set mBarSeries = mRegion.addBarSeries
 mBarSeries.outlineThickness = 1
@@ -232,7 +232,7 @@ Else
     mPrevBarVolume = mVolume.dataValue
     Set mVolume = mVolumeSeries.addDataPoint(mCurrentPeriod.periodNumber)
     
-    If Not mCurrentDataPoint.Blank Then mPrevDataPoint = mCurrentDataPoint
+    If Not mCurrentDataPoint.Blank Then Set mPrevDataPoint = mCurrentDataPoint
     Set mCurrentDataPoint = mPointSeries.addDataPoint(mCurrentPeriod.periodNumber)
     If Not mPrevDataPoint Is Nothing Then mCurrentDataPoint.prevDataPoint = mPrevDataPoint
     mCurrentDataPoint.dataValue = mMA
@@ -240,12 +240,12 @@ Else
     If Not mCurrentDataPoint1.Blank Then Set mPrevDataPoint1 = mCurrentDataPoint1
     Set mCurrentDataPoint1 = mPointSeries1.addDataPoint(mCurrentPeriod.periodNumber)
     If Not mPrevDataPoint1 Is Nothing Then mCurrentDataPoint1.prevDataPoint = mPrevDataPoint1
-    mCurrentDataPoint.dataValue = mMA1
+    mCurrentDataPoint1.dataValue = mMA1
     
     If Not mCurrentDataPoint2.Blank Then Set mPrevDataPoint2 = mCurrentDataPoint2
     Set mCurrentDataPoint2 = mPointSeries2.addDataPoint(mCurrentPeriod.periodNumber)
     If Not mPrevDataPoint2 Is Nothing Then mCurrentDataPoint2.prevDataPoint = mPrevDataPoint2
-    mCurrentDataPoint.dataValue = mMA2
+    mCurrentDataPoint2.dataValue = mMA2
 End If
 
 End Sub
@@ -308,11 +308,23 @@ End Sub
 Private Sub mTimeframe_BarsLoaded()
 Chart1.suppressDrawing = False
 mTicker.addQuoteListener Me
+gMainForm.logMessage "Backfill completed for " & mContract.specifier.localSymbol & ": " & mBars.Count & " bars retrieved"
 End Sub
 
-Private Sub mTimeframe_errorMessage(ByVal timestamp As Date, ByVal errorCode As TradeBuild.ApiErrorCodes, ByVal errorMsg As String)
+Private Sub mTimeframe_errorMessage( _
+                ByVal timestamp As Date, _
+                ByVal errorCode As TradeBuild.ApiErrorCodes, _
+                ByVal errorMsg As String)
 Chart1.suppressDrawing = False
+gMainForm.logMessage "Timeframe error(" & errorCode & "): " & errorMsg
 ' ??????????????????
+End Sub
+
+Private Sub mTimeframe_HistoricalDataRequestFailed( _
+                ByVal reason As String)
+Chart1.suppressDrawing = False
+gMainForm.logMessage "Backfill failed: " & reason
+mTicker.addQuoteListener Me
 End Sub
 
 '================================================================================
@@ -348,10 +360,12 @@ Set mTicker = value
 Set mContract = mTicker.Contract
 Set mTimeframes = mTicker.Timeframes
 
+Chart1.periodLengthMinutes = mBarLength
+
 Me.Caption = mContract.specifier.localSymbol & " on " & mContract.specifier.exchange
 
-If mMinimumTicksHeight * mContract.minimumTick <> 0 Then
-    mRegion.minimumHeight = mMinimumTicksHeight * mContract.minimumTick
+If mMinimumTicksHeight * mContract.tickSize <> 0 Then
+    mRegion.minimumHeight = mMinimumTicksHeight * mContract.tickSize
 End If
 
 mRegion.setTitle mContract.specifier.localSymbol & " on " & mContract.specifier.exchange, _
@@ -363,8 +377,11 @@ mBarSeries.Name = mContract.specifier.localSymbol & " " & mBarLength & "min"
 If mInitialNumberOfBars <> 0 Then Chart1.suppressDrawing = True
 On Error Resume Next
 Set mTimeframe = mTimeframes.Item(GenerateTimeframeKey)
-On Error Resume Next
+On Error GoTo 0
+
 If mTimeframe Is Nothing Then
+    If mInitialNumberOfBars <> 0 Then gMainForm.logMessage "Requesting backfill (" & mInitialNumberOfBars & " bars) for " & mContract.specifier.localSymbol
+
     Set mTimeframe = mTimeframes.Add(mBarLength, _
                                 TimePeriodUnits.Minute, _
                                 GenerateTimeframeKey, _
