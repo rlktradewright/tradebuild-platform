@@ -25,10 +25,6 @@ Option Explicit
 ' Types
 '================================================================================
 
-Public Enum ListenerValueTypes
-    ValueTypesAll = &H7FFFFFFF
-End Enum
-
 Public mLastKeyAdded As String  ' for debugging only
 
 '================================================================================
@@ -68,11 +64,11 @@ End Sub
 '================================================================================
 
 Public Function add(ByVal newListener As IListener, _
-                Optional ByVal valueType As Long = ListenerValueTypes.ValueTypesAll) As String
+                Optional ByVal valueType As Long = TradeBuildListenValueTypes.VTAll) As String
 Dim key As String
 Dim listeners As Collection
 
-If valueType <> ListenerValueTypes.ValueTypesAll Then
+If valueType <> TradeBuildListenValueTypes.VTAll Then
     On Error Resume Next
     Set listeners = mListenerCols("V" & valueType)
     If listeners Is Nothing Then

@@ -126,6 +126,10 @@ Private Function ICommonServiceConsumer_NewContractSpecifier() As TradeBuildSP.I
 Set ICommonServiceConsumer_NewContractSpecifier = New contractSpecifier
 End Function
 
+Private Function ICommonServiceConsumer_NewParameters() As TradeBuildSP.IParameters
+Set ICommonServiceConsumer_NewParameters = New Parameters2.parameters
+End Function
+
 Private Sub ICommonServiceConsumer_NotifyListeners( _
                             ByVal value As Variant, _
                             ByVal valueType As Long, _
@@ -377,7 +381,7 @@ Set CreateHistoricalDataWriter = histDataWriter
 End Function
 
 Friend Function CreateRealtimeDataReader( _
-                                    ByVal pTicker As Ticker, _
+                                    ByVal pTicker As ticker, _
                                     ByVal serviceConsumer As TradeBuildSP.IRealtimeDataInputServiceConsumer) As TradeBuildSP.IRealtimeDataReader
 Dim realtimeSp As TradeBuildSP.IRealtimeDataServiceProvider
 Dim realtimeSPReader As TradeBuildSP.IRealtimeDataReader
@@ -400,7 +404,7 @@ Set CreateRealtimeDataReader = realtimeSPReader
 End Function
 
 Friend Function CreateTickfileReader( _
-                                    ByVal pTicker As Ticker, _
+                                    ByVal pTicker As ticker, _
                                     ByVal serviceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
                                     ByVal inputTickfileFormatID As String _
                                     ) As TradeBuild.TickfileReader
@@ -483,7 +487,7 @@ If sp Is Nothing Then Exit Sub
 
 For i = 0 To mMaxSPIndex
     If mServiceProviders(i).SPObject Is sp Then
-        mServiceProviders(i).SPObject.Terminate
+        mServiceProviders(i).SPObject.terminate
         Set mServiceProviders(i).SPObject = Nothing
         mServiceProviders(i).SPTypes = 0
         mServiceProviders(i).Name = ""

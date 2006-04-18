@@ -21,6 +21,11 @@ Option Explicit
 ' Types
 '================================================================================
 
+Public Type ChangeEvent
+    Source          As Object
+    ChangeType      As Long
+End Type
+
 Public Type CurrentBarEvent
     Source          As Object
     currentBar      As TradeBuild.Bar
@@ -39,6 +44,13 @@ Public Type PriceChangeEvent
     Change          As Double
     ChangeString    As String
     ChangePercent   As Double
+End Type
+
+Public Type ProfitEvent
+    Source          As Object
+    profitType    As Long
+    profitAmount    As Currency
+    currencyCode    As String
 End Type
 
 Public Type ProcessedMarketDepthEvent
@@ -74,7 +86,7 @@ Public Type Tick
     timestamp       As Date
     TickType        As TradeBuild.TickTypes
     TickPrice       As Double
-    TickSize        As Long
+    tickSize        As Long
     MDPosition      As Long
     MDMarketMaker   As String
     MDOperation     As Long
@@ -85,14 +97,14 @@ Public Type TickfileFormatSpecifier
     FormatType      As TradeBuild.TickfileFormatType
     capabilities    As Long
     FormalID        As String
-    Name            As String
+    name            As String
     FileExtension   As String
 End Type
 
 Public Type TickfileSpecifier
     tickfileFormatID    As String
     filename            As String
-    Contract            As Contract
+    contract            As contract
     From                As Date
     To                  As Date
     EntireSession       As Boolean
@@ -150,7 +162,7 @@ Public Type TWSSocketMsgOpenOrder
     currencyCode    As String
     localSymbol     As String
     action          As String
-    quantity        As Long
+    Quantity        As Long
     orderType       As String
     limitPrice      As Double
     auxPrice        As Double
@@ -250,7 +262,7 @@ Public Type TWSSocketMsgExecutionData
     accountNumber   As String
     execExchange    As String
     side            As String
-    quantity        As Long
+    Quantity        As Long
     price           As Double
     permId          As Long
     clientID        As Long
@@ -405,6 +417,23 @@ Public Enum DOMSides
     DOMLast
 End Enum
 
+Public Enum EntryTypes
+    EntryTypeMarket
+    EntryTypeMarketOnOpen
+    EntryTypeMarketOnClose
+    EntryTypeMarketIfTouched
+    EntryTypeMarketToLimit
+    EntryTypeBid
+    EntryTypeAsk
+    EntryTypeLast
+    EntryTypeLimit
+    EntryTypeLimitOnOpen
+    EntryTypeLimitOnClose
+    EntryTypeLimitIfTouched
+    EntryTypeStop
+    EntryTypeStopLimit
+End Enum
+
 Public Enum ErrorCodes
     ' generic run-time error codes defined by VB
     InvalidProcedureCall = 5
@@ -508,10 +537,49 @@ Public Enum OrderActions
     ActionSell
 End Enum
 
+Public Enum OrderAttributeIds
+    action = 1
+    blockOrder
+    displaySize
+    discretionaryAmount
+    goodAfterTime
+    goodTillDate
+    hidden
+    ignoreRegularTradingHours
+    limitPrice
+    orderType
+    Quantity
+    sweepToFill
+    timeInForce
+    triggerPrice
+End Enum
+
 Public Enum OrderOrigins
     OriginCustomer
     OriginFirm
     OriginUnknown
+End Enum
+
+Public Enum OrderPlexChangeTypes
+    Created = 1
+    Completed
+    SelfCancelled
+    EntryOrderChanged
+    StopOrderChanged
+    TargetOrderChanged
+    CloseoutOrderCreated
+    CloseoutOrderChanged
+    ProfitThresholdExceeded
+    LossThresholdExceeded
+    DrawdownThresholdExceeded
+    SizeChanged
+    StateChanged
+End Enum
+
+Public Enum OrderPlexProfitTypes
+    profit
+    MaxProfit
+    drawdown
 End Enum
 
 Public Enum OrderStatuses
@@ -526,7 +594,8 @@ Public Enum OrderStatuses
 End Enum
 
 Public Enum OrderTifs
-    TIFDay = 1
+    TIFNone
+    TIFDay
     TIFGoodTillCancelled
     TIFImmediateOrCancel
     TIFGoodTillDate
@@ -559,17 +628,18 @@ Public Enum OrderTypes
     OrderTypePeggedToPrimary
 End Enum
 
-'Public Enum QuoteTypes
-'    QuoteTypeAsk = 1
-'    QuoteTypeBid
-'    QuoteTypePrevClose
-'    QuoteTypeHigh
-'    QuoteTypeLow
-'    QuoteTypeTrade
-'    QuoteTypeVolume
-'    QuoteTypeChange
-'    QuoteTypeChangePercent
-'End Enum
+Public Enum PositionManagerChangeTypes
+    PositionSizeChanged
+End Enum
+
+Public Enum PositionProfitTypes
+    SessionProfit
+    SessionMaxProfit
+    SessionDrawdown
+    tradeProfit
+    TradeMaxProfit
+    tradeDrawdown
+End Enum
 
 Public Enum ReplayContinueModes
     ReplayContinue
@@ -588,10 +658,25 @@ Public Enum SecurityTypes
     SecTypeIndex
 End Enum
 
-Public Enum StandardListenValueTypes
-    DebugInfo = TradeBuildSP.StandardListenValueTypes.Debug
-    LogInfo = TradeBuildSP.StandardListenValueTypes.Log
-    TraceInfo = TradeBuildSP.StandardListenValueTypes.Trace
+Public Enum StopTypes
+    StopTypeNone
+    StopTypeStop
+    StopTypeStopLimit
+    StopTypeBid
+    StopTypeAsk
+    StopTypeLast
+    StopTypeAuto
+End Enum
+
+Public Enum TargetTypes
+    TargetTypeNone
+    TargetTypeLimit
+    TargetTypeLimitIfTouched
+    TargetTypeMarketIfTouched
+    TargetTypeBid
+    TargetTypeAsk
+    TargetTypeLast
+    TargetTypeAuto
 End Enum
 
 Public Enum TickerColumnIds
@@ -668,33 +753,58 @@ End Enum
 
 Public Enum TradeBuildListenValueTypes
 
-    ValueTypeTickerQuote = 100
-    ValueTypeTickerMarketDepth
-    ValueTypeBarEvent
+    VTAll = -1  ' used by listenenrs to specify that they want to receive all
+                ' types of listen data
+    
+    VTLog = 1
+    VTTrace
+    VTDebug
 
-    
-    
+    VTProfitProfile
+    VTDummyProfitProfile
+    VTMoneyManagement
+    VTOrderPlexProfileStruct
+    VTDummyOrderPlexProfileStruct
+    VTOrderPlexProfileString
+    VTDummyOrderPlexProfileString
+    VTOrder
+    VTDummyOrder
+    VTPosition
+    VTDummyPosition
+    VTTradeProfile
+    VTDummyTradeProfile
+    VTProfit
+    VTDummyProfit
+    VTDrawdown
+    VTDummyDrawdown
+    VTMaxProfit
+    VTDummyMaxProfit
+    VTOrderDetail
+    VTOrderDetailDummy
         
-    ' Listen valueType identifiers for the IB TWS Service provider (these
+    ' Listen value type identifiers for the IB TWS Service provider (these
     ' should be moved to the IB TWS Service Provider's type library when
     ' it is constructed)
         
-    ValueTypeTWSSocketMsgTickPrice = 1000
-    ValueTypeTWSSocketMsgTickSize
-    ValueTypeTWSSocketMsgOrderStatus
-    ValueTypeTWSSocketMsgErrMsg
-    ValueTypeTWSSocketMsgOpenOrder
-    ValueTypeTWSSocketMsgAcctValue
-    ValueTypeTWSSocketMsgPortfolioValue
-    ValueTypeTWSSocketMsgAcctUpdateTime
-    ValueTypeTWSSocketMsgNextValidId
-    ValueTypeTWSSocketMsgContractData
-    ValueTypeTWSSocketMsgExecutionData
-    ValueTypeTWSSocketMsgMarketDepth
-    ValueTypeTWSSocketMsgMarketDepthL2
-    ValueTypeTWSSocketMsgNewsBulletins
-    ValueTypeTWSSocketMsgManagedAccts
-    ValueTypeTWSSocketMsgReceiveFa
+    VTTWSSocketMsgTickPrice = 1000
+    VTTWSSocketMsgTickSize
+    VTTWSSocketMsgOrderStatus
+    VTTWSSocketMsgErrMsg
+    VTTWSSocketMsgOpenOrder
+    VTTWSSocketMsgAcctValue
+    VTTWSSocketMsgPortfolioValue
+    VTTWSSocketMsgAcctUpdateTime
+    VTTWSSocketMsgNextValidId
+    VTTWSSocketMsgContractData
+    VTTWSSocketMsgExecutionData
+    VTTWSSocketMsgMarketDepth
+    VTTWSSocketMsgMarketDepthL2
+    VTTWSSocketMsgNewsBulletins
+    VTTWSSocketMsgManagedAccts
+    VTTWSSocketMsgReceiveFa
+    
+    VTTWS
+    
 End Enum
 
 Public Enum TriggerMethods

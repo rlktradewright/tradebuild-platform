@@ -43,7 +43,6 @@ Public gListeners As listeners
 Public gOrderSimulator As AdvancedOrderSimulator
 
 Public gNextOrderID As Long
-Public gAllOrders As Collection
 
 
 '================================================================================
@@ -323,6 +322,134 @@ Case OrderActions.ActionBuy
     orderActionToString = "BUY"
 Case OrderActions.ActionSell
     orderActionToString = "SELL"
+End Select
+End Function
+
+Public Function orderStatusToString(ByVal value As OrderStatuses) As String
+Select Case UCase$(value)
+Case OrderStatusCreated
+    orderStatusToString = "Created"
+Case OrderStatusPendingSubmit
+    orderStatusToString = "Pending Submit"
+Case OrderStatusPreSubmitted
+    orderStatusToString = "Presubmitted"
+Case OrderStatusSubmitted
+    orderStatusToString = "Submitted"
+Case OrderStatusCancelling
+    orderStatusToString = "Cancelling"
+Case OrderStatusCancelled
+    orderStatusToString = "Cancelled"
+Case OrderStatusFilled
+    orderStatusToString = "Filled"
+End Select
+End Function
+
+Public Function orderTIFToString(ByVal value As OrderTifs) As String
+Select Case value
+Case TIFDay
+    orderTIFToString = "DAY"
+Case TIFGoodTillCancelled
+    orderTIFToString = "GTC"
+Case TIFImmediateOrCancel
+    orderTIFToString = "IOC"
+End Select
+End Function
+
+Public Function orderTypeFromString(ByVal value As String) As TradeBuild.OrderTypes
+Select Case UCase$(value)
+Case "MKT"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeMarket
+Case "MKTCLS"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeMarketOnClose
+Case "LMT"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeLimit
+Case "LMTCLS"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeLimitOnClose
+Case "PEGMKT"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypePeggedToMarket
+Case "STP"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeStop
+Case "STPLMT"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeStopLimit
+Case "TRAIL"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeTrail
+Case "REL"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeRelative
+Case "VWAP"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeVWAP
+Case "MTL"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeMarketToLimit
+Case "QUOTE"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeQuote
+Case "ADJUST"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeAdjust
+Case "ALERT"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeAlert
+Case "LIT"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeLimitIfTouched
+Case "MIT"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeMarketIfTouched
+Case "TRAILLMT"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeTrailLimit
+Case "MKTPROT"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeMarketWithProtection
+Case "MOO"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeMarketOnOpen
+Case "LOO"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeLimitOnOpen
+Case "PEGPRI"
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypePeggedToPrimary
+Case Else
+    orderTypeFromString = TradeBuild.OrderTypes.OrderTypeNone
+End Select
+End Function
+
+Public Function orderTypeToString(ByVal value As OrderTypes) As String
+Select Case value
+Case TradeBuild.OrderTypes.OrderTypeMarket
+    orderTypeToString = "MKT"
+Case TradeBuild.OrderTypes.OrderTypeMarketOnClose
+    orderTypeToString = "MKTCLS"
+Case TradeBuild.OrderTypes.OrderTypeLimit
+    orderTypeToString = "LMT"
+Case TradeBuild.OrderTypes.OrderTypeLimitOnClose
+    orderTypeToString = "LMTCLS"
+Case TradeBuild.OrderTypes.OrderTypePeggedToMarket
+    orderTypeToString = "PEGMKT"
+Case TradeBuild.OrderTypes.OrderTypeStop
+    orderTypeToString = "STP"
+Case TradeBuild.OrderTypes.OrderTypeStopLimit
+    orderTypeToString = "STPLMT"
+Case TradeBuild.OrderTypes.OrderTypeTrail
+    orderTypeToString = "TRAIL"
+Case TradeBuild.OrderTypes.OrderTypeRelative
+    orderTypeToString = "REL"
+Case TradeBuild.OrderTypes.OrderTypeVWAP
+    orderTypeToString = "VWAP"
+Case TradeBuild.OrderTypes.OrderTypeMarketToLimit
+    orderTypeToString = "MTL"
+Case TradeBuild.OrderTypes.OrderTypeQuote
+    orderTypeToString = "QUOTE"
+Case TradeBuild.OrderTypes.OrderTypeAdjust
+    orderTypeToString = "ADJUST"
+Case TradeBuild.OrderTypes.OrderTypeAlert
+    orderTypeToString = "ALERT"
+Case TradeBuild.OrderTypes.OrderTypeLimitIfTouched
+    orderTypeToString = "LIT"
+Case TradeBuild.OrderTypes.OrderTypeMarketIfTouched
+    orderTypeToString = "MIT"
+Case TradeBuild.OrderTypes.OrderTypeTrailLimit
+    orderTypeToString = "TRAILLMT"
+Case TradeBuild.OrderTypes.OrderTypeMarketWithProtection
+    orderTypeToString = "MKTPROT"
+Case TradeBuild.OrderTypes.OrderTypeMarketOnOpen
+    orderTypeToString = "MOO"
+Case TradeBuild.OrderTypes.OrderTypeLimitOnOpen
+    orderTypeToString = "LOO"
+Case TradeBuild.OrderTypes.OrderTypePeggedToPrimary
+    orderTypeToString = "PEGPRI"
+Case Else
+    err.Raise ErrorCodes.InvalidOrderType
 End Select
 End Function
 
