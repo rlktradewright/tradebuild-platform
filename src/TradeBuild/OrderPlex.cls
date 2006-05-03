@@ -301,14 +301,18 @@ Private mNewEntryTriggerPrice As Double
 Private mNewStopPrice As Double
 Private mNewStopOffset As Long
 Private mNewStopTriggerPrice As Double
+Private mNewStopQuantity As Long
 Private mNewTargetPrice As Double
 Private mNewTargetOffset As Long
 Private mNewTargetTriggerPrice As Double
+Private mNewTargetQuantity As Long
 
 Private mDummy As Boolean
     ' if set, this is a dummy orderplex, which means that it will be handled by
     ' the simulator like any other order, but its size will be considered 0. It
     ' will not be submitted as a real order
+
+Private mSimulated As Boolean
 
 Private mValueFactor As Double
 Private mProfit As Currency
@@ -331,6 +335,8 @@ Private mDirty As Boolean
 
 Private mOrders As Collection
 
+Private mOrderSubmitter As TradeBuild.IOrderSubmitter
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
@@ -343,9 +349,11 @@ mNewEntryTriggerPrice = -1
 mNewStopPrice = -1
 mNewStopOffset = DummyOffset
 mNewStopTriggerPrice = -1
+mNewStopQuantity = -1
 mNewTargetPrice = -1
 mNewTargetOffset = DummyOffset
 mNewTargetTriggerPrice = -1
+mNewTargetQuantity = -1
 
 mIndexApplication = OrderPlexGlobals.gNextApplicationIndex
 
@@ -863,7 +871,7 @@ End Sub
 '================================================================================
 
 Private Sub mCloseoutOrder_StatusChanged()
-fireChange CloseoutOrderChanged
+fireChange closeoutOrderChanged
 Select Case mCloseoutOrder.status
     Case TradeBuild.OrderStatuses.OrderStatusFilled
         mTicker.notifyListeners _
@@ -903,7 +911,7 @@ Dim thisSize As Long
 
 calcProfitLoss fillPrice
 
-fireChange CloseoutOrderChanged
+fireChange closeoutOrderChanged
 thisSize = IIf(mCloseoutOrder.action = ActionBuy, quantityFilled, -quantityFilled)
 setSize size + thisSize
 mTicker.notifyListeners _
@@ -923,7 +931,7 @@ End Sub
 '================================================================================
 
 Private Sub mEntryOrder_StatusChanged()
-fireChange EntryOrderChanged
+fireChange entryOrderChanged
 Select Case mEntryOrder.status
     Case TradeBuild.OrderStatuses.OrderStatusFilled
         mCancelPrice = 0
@@ -955,22 +963,22 @@ Select Case mEntryOrder.status
         If mEntryOrder.quantityFilled > 0 Then
             placePeggedOrders
         
-            If Not mStopOrder Is Nothing Then
-                If mEntryOrder.quantityFilled <> mStopOrder.Quantity And _
-                    mStopOrder.parentId = 0 Then
-                    mStopOrder.Quantity = mEntryOrder.quantityFilled
-                    mStopOrder.transmit = True
-                    gTradeBuildAPI.placeOrder mStopOrder
-                End If
-            End If
-            If Not mTargetOrder Is Nothing Then
-                If mEntryOrder.quantityFilled <> mTargetOrder.Quantity And _
-                    mTargetOrder.parentId = 0 Then
-                    mTargetOrder.Quantity = mEntryOrder.quantityFilled
-                    mTargetOrder.transmit = True
-                    gTradeBuildAPI.placeOrder mTargetOrder
-                End If
-            End If
+'            If Not mStopOrder Is Nothing Then
+'                If mEntryOrder.quantityFilled <> mStopOrder.quantity And _
+'                    mStopOrder.parentId = 0 Then
+'                    mStopOrder.quantity = mEntryOrder.quantityFilled
+'                    mStopOrder.transmit = True
+'                    gTradeBuildAPI.placeOrder mStopOrder
+'                End If
+'            End If
+'            If Not mTargetOrder Is Nothing Then
+'                If mEntryOrder.quantityFilled <> mTargetOrder.quantity And _
+'                    mTargetOrder.parentId = 0 Then
+'                    mTargetOrder.quantity = mEntryOrder.quantityFilled
+'                    mTargetOrder.transmit = True
+'                    gTradeBuildAPI.placeOrder mTargetOrder
+'                End If
+'            End If
         End If
     Case TradeBuild.OrderStatuses.OrderStatusCancelled
         mEntryOrderFinished = True
@@ -988,7 +996,7 @@ Private Sub mEntryOrder_Fill(ByVal quantityFilled As Long, _
 Dim thisSize As Long
 Dim risk As Currency
 
-fireChange EntryOrderChanged
+fireChange entryOrderChanged
 
 cancelAfter = 0
 
@@ -1008,15 +1016,15 @@ mTicker.notifyListeners _
 If mHandle < 0 And Not mStopOrder Is Nothing Then
     If longPosition Then
         If mStopOrder.orderType = TradeBuild.OrderTypes.OrderTypeAutoStop Then
-            risk = (mEntryOrder.Quantity + mEntryOrder.quantityFilled) * mStopOrder.offset * mTickValue
+            risk = (mEntryOrder.quantity + mEntryOrder.quantityFilled) * mStopOrder.offset * mTickValue
         Else
-            risk = (mEntryOrder.Quantity + mEntryOrder.quantityFilled) * (fillPrice - mStopOrder.triggerPrice) * mValueFactor
+            risk = (mEntryOrder.quantity + mEntryOrder.quantityFilled) * (fillPrice - mStopOrder.triggerPrice) * mValueFactor
         End If
     Else
         If mStopOrder.orderType = TradeBuild.OrderTypes.OrderTypeAutoStop Then
-            risk = -(mEntryOrder.Quantity + mEntryOrder.quantityFilled) * mStopOrder.offset * mTickValue
+            risk = -(mEntryOrder.quantity + mEntryOrder.quantityFilled) * mStopOrder.offset * mTickValue
         Else
-            risk = (mEntryOrder.Quantity + mEntryOrder.quantityFilled) * (mStopOrder.triggerPrice - fillPrice) * mValueFactor
+            risk = (mEntryOrder.quantity + mEntryOrder.quantityFilled) * (mStopOrder.triggerPrice - fillPrice) * mValueFactor
         End If
     End If
 End If
@@ -1032,7 +1040,7 @@ mPositionManager.notifyExecution thisSize, fillPrice, mHandle, False
 placePeggedOrders
         
 If Not mStopOrder Is Nothing Then
-    If mStopOrder.Quantity <> Abs(size) And _
+    If mStopOrder.quantity <> Abs(size) And _
         Abs(size) <> 0 _
     Then
         adjustStop mStopOrder.triggerPrice, Abs(size)
@@ -1040,7 +1048,7 @@ If Not mStopOrder Is Nothing Then
 End If
 
 If Not mTargetOrder Is Nothing Then
-    If mTargetOrder.Quantity <> Abs(size) And _
+    If mTargetOrder.quantity <> Abs(size) And _
         Abs(size) <> 0 _
     Then
         adjustTarget mTargetOrder.limitPrice, Abs(size)
@@ -1057,7 +1065,7 @@ End Sub
 '================================================================================
 
 Private Sub mStopOrder_StatusChanged()
-fireChange StopOrderChanged
+fireChange stopOrderChanged
 Select Case mStopOrder.status
     Case TradeBuild.OrderStatuses.OrderStatusFilled
         mTicker.notifyListeners _
@@ -1084,15 +1092,15 @@ Select Case mStopOrder.status
     Case TradeBuild.OrderStatuses.OrderStatusCancelling
     Case TradeBuild.OrderStatuses.OrderStatusPreSubmitted
     Case TradeBuild.OrderStatuses.OrderStatusSubmitted
-        If Not mTargetOrder Is Nothing Then
-            If mStopOrder.Quantity <> mTargetOrder.Quantity And _
-                mTargetOrder.parentId = 0 _
-            Then
-                mTargetOrder.Quantity = mStopOrder.Quantity
-                mStopOrder.transmit = True
-                gTradeBuildAPI.placeOrder mTargetOrder
-            End If
-        End If
+'        If Not mTargetOrder Is Nothing Then
+'            If mStopOrder.quantity <> mTargetOrder.quantity And _
+'                mTargetOrder.parentId = 0 _
+'            Then
+'                mTargetOrder.quantity = mStopOrder.quantity
+'                mStopOrder.transmit = True
+'                gTradeBuildAPI.placeOrder mTargetOrder
+'            End If
+'        End If
     Case TradeBuild.OrderStatuses.OrderStatusCancelled
         mStopOrderFinished = True
         mTicker.notifyListeners _
@@ -1111,7 +1119,7 @@ Dim thisSize As Long
 
 calcProfitLoss fillPrice
 
-fireChange StopOrderChanged
+fireChange stopOrderChanged
 
 thisSize = IIf(mStopOrder.action = ActionBuy, quantityFilled, -quantityFilled)
 setSize size + thisSize
@@ -1125,7 +1133,7 @@ mTicker.notifyListeners _
 mPositionManager.notifyExecution thisSize, fillPrice, mHandle, False
 
 If Not mTargetOrder Is Nothing Then
-    If mTargetOrder.Quantity <> Abs(size) And _
+    If mTargetOrder.quantity <> Abs(size) And _
         Abs(size) <> 0 _
     Then
         adjustTarget mTargetOrder.limitPrice, Abs(size)
@@ -1140,7 +1148,7 @@ End Sub
 '================================================================================
 
 Private Sub mTargetOrder_StatusChanged()
-fireChange TargetOrderChanged
+fireChange targetOrderChanged
 Select Case mTargetOrder.status
     Case TradeBuild.OrderStatuses.OrderStatusFilled
         mTicker.notifyListeners _
@@ -1167,14 +1175,14 @@ Select Case mTargetOrder.status
     Case TradeBuild.OrderStatuses.OrderStatusCancelling
     Case TradeBuild.OrderStatuses.OrderStatusPendingSubmit
     Case TradeBuild.OrderStatuses.OrderStatusSubmitted
-        If Not mStopOrder Is Nothing Then
-            If mStopOrder.Quantity <> mTargetOrder.Quantity And _
-                mStopOrder.parentId = 0 Then
-                mStopOrder.Quantity = mTargetOrder.Quantity
-                mStopOrder.transmit = True
-                gTradeBuildAPI.placeOrder mStopOrder
-            End If
-        End If
+'        If Not mStopOrder Is Nothing Then
+'            If mStopOrder.quantity <> mTargetOrder.quantity And _
+'                mStopOrder.parentId = 0 Then
+'                mStopOrder.quantity = mTargetOrder.quantity
+'                mStopOrder.transmit = True
+'                gTradeBuildAPI.placeOrder mStopOrder
+'            End If
+'        End If
     Case TradeBuild.OrderStatuses.OrderStatusCancelled
         mTargetOrderFinished = True
         mTicker.notifyListeners _
@@ -1194,7 +1202,7 @@ Dim thisSize As Long
 
 calcProfitLoss fillPrice
 
-fireChange TargetOrderChanged
+fireChange targetOrderChanged
 thisSize = IIf(mTargetOrder.action = ActionBuy, quantityFilled, -quantityFilled)
 setSize size + thisSize
 mTicker.notifyListeners _
@@ -1207,7 +1215,7 @@ mTicker.notifyListeners _
 mPositionManager.notifyExecution thisSize, fillPrice, mHandle, False
 
 If Not mStopOrder Is Nothing Then
-    If mStopOrder.Quantity <> Abs(size) And _
+    If mStopOrder.quantity <> Abs(size) And _
         Abs(size) <> 0 _
     Then
         adjustStop mStopOrder.triggerPrice, Abs(size)
@@ -1245,15 +1253,15 @@ End If
 End Property
 
 Public Property Get closedOut() As Boolean
-closedOut = (mStateEngine.state = OrderPlexStateCodes.Closed)
+closedOut = (mStateEngine.State = OrderPlexStateCodes.Closed)
 End Property
 
 Public Property Get closeoutOrder() As order
 Set closeoutOrder = mCloseoutOrder
 End Property
 
-Public Property Get contract() As contract
-Set contract = mTicker.contract
+Public Property Get Contract() As Contract
+Set Contract = mTicker.Contract
 End Property
 
 Public Property Get creationTime() As Date
@@ -1320,14 +1328,14 @@ mLossNotificationThreshold = value
 End Property
 
 Public Property Let newEntryPrice(ByVal value As Double)
-Select Case mStateEngine.state
+Select Case mStateEngine.State
 Case OrderPlexStateCodes.Cancelling
     Exit Property
 Case OrderPlexStateCodes.Submitted
 Case Else
     err.Raise errActionNotAllowedInThisState, _
                 "TradeBuild.OrderPlex::(let)newEntryPrice", _
-                "Action not allowed in state " & mStateEngine.state
+                "Action not allowed in state " & mStateEngine.State
 End Select
 
 If mEntryOrder.status = TradeBuild.OrderStatuses.OrderStatusFilled Then err.Raise errCantChangeFilledOrder, _
@@ -1348,19 +1356,20 @@ End Select
 If value <> mEntryOrder.limitPrice Then
     mNewEntryPrice = value
     mDirty = True
+    fireChange OrderPlexChangeTypes.ChangesPending
     RaiseEvent Dirty
 End If
 End Property
 
 Public Property Let newEntryTriggerPrice(ByVal value As Double)
-Select Case mStateEngine.state
+Select Case mStateEngine.State
 Case OrderPlexStateCodes.Cancelling
     Exit Property
 Case OrderPlexStateCodes.Submitted
 Case Else
     err.Raise errActionNotAllowedInThisState, _
                 "TradeBuild.OrderPlex::(let)newEntryTriggerPrice", _
-                "Action not allowed in state " & mStateEngine.state
+                "Action not allowed in state " & mStateEngine.State
 End Select
 
 If mEntryOrder.status = TradeBuild.OrderStatuses.OrderStatusFilled Then err.Raise errCantChangeFilledOrder, _
@@ -1380,6 +1389,7 @@ End Select
 If value <> mEntryOrder.triggerPrice Then
     mNewEntryTriggerPrice = value
     mDirty = True
+    fireChange OrderPlexChangeTypes.ChangesPending
     RaiseEvent Dirty
 End If
 End Property
@@ -1443,34 +1453,35 @@ End If
 End Property
 
 Public Property Let newQuantity(ByVal value As Long)
-Select Case mStateEngine.state
+Select Case mStateEngine.State
 Case OrderPlexStateCodes.Cancelling
     Exit Property
 Case OrderPlexStateCodes.Submitted
 Case Else
     err.Raise errActionNotAllowedInThisState, _
                 "TradeBuild.OrderPlex::(let)newQuantity", _
-                "Action not allowed in state " & mStateEngine.state
+                "Action not allowed in state " & mStateEngine.State
 End Select
 
 If mEntryOrder.status = TradeBuild.OrderStatuses.OrderStatusFilled Then err.Raise errCantChangeFilledOrder, _
                                                 "TradeBuild.OrderPlex::(let)newQuantity", _
                                                 "Can't change quantity - order " & entryOrder.id & " already filled"
 
-If value <> mEntryOrder.Quantity Then
+If value <> mEntryOrder.quantity Then
     mNewQuantity = value
     mDirty = True
+    fireChange OrderPlexChangeTypes.ChangesPending
     RaiseEvent Dirty
 End If
 End Property
 
 Public Property Let newStopOffset(ByVal value As Long)
-Select Case mStateEngine.state
+Select Case mStateEngine.State
 Case OrderPlexStateCodes.Submitted
 Case Else
     err.Raise errActionNotAllowedInThisState, _
                 "TradeBuild.OrderPlex::(let)newStopOffset", _
-                "Action not allowed in state " & mStateEngine.state
+                "Action not allowed in state " & mStateEngine.State
 End Select
 
 If mStopOrder Is Nothing Then err.Raise errNoStopOrder, _
@@ -1490,19 +1501,20 @@ If mStopOrder.status <> TradeBuild.OrderStatuses.OrderStatusCreated Then err.Rai
 If value <> mStopOrder.offset Then
     mNewStopOffset = value
     mDirty = True
+    fireChange OrderPlexChangeTypes.ChangesPending
     RaiseEvent Dirty
 End If
 End Property
 
 Public Property Let newStopPrice(ByVal value As Double)
-Select Case mStateEngine.state
+Select Case mStateEngine.State
 Case OrderPlexStateCodes.Cancelling
     Exit Property
 Case OrderPlexStateCodes.Submitted
 Case Else
     err.Raise errActionNotAllowedInThisState, _
                 "TradeBuild.OrderPlex::(let)newStopPrice", _
-                "Action not allowed in state " & mStateEngine.state
+                "Action not allowed in state " & mStateEngine.State
 End Select
 
 If mStopOrder Is Nothing Then err.Raise errNoStopOrder, _
@@ -1520,19 +1532,43 @@ End Select
 If value <> mStopOrder.limitPrice Then
     mNewStopPrice = value
     mDirty = True
+    fireChange OrderPlexChangeTypes.ChangesPending
+    RaiseEvent Dirty
+End If
+End Property
+
+Public Property Let newStopQuantity(ByVal value As Long)
+Select Case mStateEngine.State
+Case OrderPlexStateCodes.Cancelling
+    Exit Property
+Case OrderPlexStateCodes.Submitted
+Case Else
+    err.Raise errActionNotAllowedInThisState, _
+                "TradeBuild.OrderPlex::(let)newStopQuantity", _
+                "Action not allowed in state " & mStateEngine.State
+End Select
+
+If mStopOrder Is Nothing Then err.Raise errNoStopOrder, _
+                                        "TradeBuild.OrderPlex::(let)newStopQuantity", _
+                                        "No stop order exists"
+
+If value <> mStopOrder.quantity Then
+    mNewStopQuantity = value
+    mDirty = True
+    fireChange OrderPlexChangeTypes.ChangesPending
     RaiseEvent Dirty
 End If
 End Property
 
 Public Property Let newStopTriggerPrice(ByVal value As Double)
-Select Case mStateEngine.state
+Select Case mStateEngine.State
 Case OrderPlexStateCodes.Cancelling
     Exit Property
 Case OrderPlexStateCodes.Submitted
 Case Else
     err.Raise errActionNotAllowedInThisState, _
                 "TradeBuild.OrderPlex::(let)newStopTriggerPrice", _
-                "Action not allowed in state " & mStateEngine.state
+                "Action not allowed in state " & mStateEngine.State
 End Select
 
 If mStopOrder Is Nothing Then err.Raise errNoStopOrder, _
@@ -1551,19 +1587,20 @@ End Select
 If value <> mStopOrder.triggerPrice Then
     mNewStopTriggerPrice = value
     mDirty = True
+    fireChange OrderPlexChangeTypes.ChangesPending
     RaiseEvent Dirty
 End If
 End Property
 
 Public Property Let newTargetPrice(ByVal value As Double)
-Select Case mStateEngine.state
+Select Case mStateEngine.State
 Case OrderPlexStateCodes.Submitted
 Case OrderPlexStateCodes.Cancelling
     Exit Property
 Case Else
     err.Raise errActionNotAllowedInThisState, _
                 "TradeBuild.OrderPlex::(let)newTargetPrice", _
-                "Action not allowed in state " & mStateEngine.state
+                "Action not allowed in state " & mStateEngine.State
 End Select
 
 If mTargetOrder Is Nothing Then err.Raise errNoTargetOrder, _
@@ -1582,17 +1619,18 @@ End Select
 If value <> mTargetOrder.limitPrice Then
     mNewTargetPrice = value
     mDirty = True
+    fireChange OrderPlexChangeTypes.ChangesPending
     RaiseEvent Dirty
 End If
 End Property
 
 Public Property Let newTargetOffset(ByVal value As Long)
-Select Case mStateEngine.state
+Select Case mStateEngine.State
 Case OrderPlexStateCodes.Submitted
 Case Else
     err.Raise errActionNotAllowedInThisState, _
                 "TradeBuild.OrderPlex::(let)newTargetOffset", _
-                "Action not allowed in state " & mStateEngine.state
+                "Action not allowed in state " & mStateEngine.State
 End Select
 
 If mTargetOrder Is Nothing Then err.Raise errNoTargetOrder, _
@@ -1612,19 +1650,43 @@ If mTargetOrder.status <> TradeBuild.OrderStatuses.OrderStatusCreated Then err.R
 If value <> mTargetOrder.offset Then
     mNewTargetOffset = value
     mDirty = True
+    fireChange OrderPlexChangeTypes.ChangesPending
+    RaiseEvent Dirty
+End If
+End Property
+
+Public Property Let newTargetQuantity(ByVal value As Long)
+Select Case mStateEngine.State
+Case OrderPlexStateCodes.Cancelling
+    Exit Property
+Case OrderPlexStateCodes.Submitted
+Case Else
+    err.Raise errActionNotAllowedInThisState, _
+                "TradeBuild.OrderPlex::(let)newTargetQuantity", _
+                "Action not allowed in state " & mStateEngine.State
+End Select
+
+If mStopOrder Is Nothing Then err.Raise errNoTargetOrder, _
+                                        "TradeBuild.OrderPlex::(let)newTargetQuantity", _
+                                        "No target order exists"
+
+If value <> mTargetOrder.quantity Then
+    mNewTargetQuantity = value
+    mDirty = True
+    fireChange OrderPlexChangeTypes.ChangesPending
     RaiseEvent Dirty
 End If
 End Property
 
 Public Property Let newTargetTriggerPrice(ByVal value As Double)
-Select Case mStateEngine.state
+Select Case mStateEngine.State
 Case OrderPlexStateCodes.Cancelling
     Exit Property
 Case OrderPlexStateCodes.Submitted
 Case Else
     err.Raise errActionNotAllowedInThisState, _
                 "TradeBuild.OrderPlex::(let)newTargetTriggerPrice", _
-                "Action not allowed in state " & mStateEngine.state
+                "Action not allowed in state " & mStateEngine.State
 End Select
 
 If mTargetOrder Is Nothing Then err.Raise errNoStopOrder, _
@@ -1643,14 +1705,15 @@ End Select
 If value <> mTargetOrder.triggerPrice Then
     mNewTargetTriggerPrice = value
     mDirty = True
+    fireChange OrderPlexChangeTypes.ChangesPending
     RaiseEvent Dirty
 End If
 End Property
 
 Public Property Get pendingSize() As Long
 If mEntryOrder Is Nothing Then pendingSize = 0: Exit Property
-If mStateEngine.state = OrderPlexStateCodes.Closed Then pendingSize = 0: Exit Property
-pendingSize = IIf(longPosition, mEntryOrder.Quantity, -mEntryOrder.Quantity)
+If mStateEngine.State = OrderPlexStateCodes.Closed Then pendingSize = 0: Exit Property
+pendingSize = IIf(longPosition, mEntryOrder.quantity, -mEntryOrder.quantity)
 End Property
 
 Public Property Get order(ByVal index As Long) As order
@@ -1659,6 +1722,11 @@ End Property
 
 Friend Property Let OrderContext(ByVal value As OrderContext)
 Set mOrderContext = value
+End Property
+
+Friend Property Let orderSubmitter( _
+                ByVal value As TradeBuild.IOrderSubmitter)
+Set mOrderSubmitter = value
 End Property
 
 Public Property Get numberOfOrders() As Long
@@ -1680,7 +1748,7 @@ Dim filledTotalPrice As Double
 
 If mStopOrder Is Nothing Then Exit Property
 
-If mStateEngine.state = OrderPlexStateCodes.Closed Then Exit Property
+If mStateEngine.State = OrderPlexStateCodes.Closed Then Exit Property
 
 If mStopOrder.status = TradeBuild.OrderStatuses.OrderStatusFilled Then Exit Property
 
@@ -1690,15 +1758,15 @@ If mStopOrder.status = TradeBuild.OrderStatuses.OrderStatusFilled Then Exit Prop
 filledTotalPrice = mEntryOrder.quantityFilled * mEntryOrder.averagePrice
 Select Case entryOrder.orderType
     Case TradeBuild.OrderTypes.OrderTypeMarket
-        pendingTotalPrice = mEntryOrder.Quantity * _
+        pendingTotalPrice = mEntryOrder.quantity * _
                 IIf(longPosition, mTicker.AskPrice, mTicker.BidPrice)
     Case TradeBuild.OrderTypes.OrderTypeLimit, TradeBuild.OrderTypes.OrderTypeStopLimit
-        pendingTotalPrice = mEntryOrder.Quantity * mEntryOrder.limitPrice
+        pendingTotalPrice = mEntryOrder.quantity * mEntryOrder.limitPrice
     Case TradeBuild.OrderTypes.OrderTypeStop
-        pendingTotalPrice = mEntryOrder.Quantity * mEntryOrder.triggerPrice
+        pendingTotalPrice = mEntryOrder.quantity * mEntryOrder.triggerPrice
 End Select
 stopTotalPrice = mStopOrder.triggerPrice * _
-                        (mEntryOrder.Quantity + mEntryOrder.quantityFilled)
+                        (mEntryOrder.quantity + mEntryOrder.quantityFilled)
 If longPosition Then
     risk = mTickSize * mTickValue * (filledTotalPrice + pendingTotalPrice - stopTotalPrice) / mTickSize
 Else
@@ -1712,16 +1780,24 @@ Friend Property Let scalingStrategy( _
 Set mScalingStrategy = value
 End Property
 
+Friend Property Let simulated(ByVal value As Boolean)
+mSimulated = value
+End Property
+
+Public Property Get simulated() As Boolean
+simulated = mSimulated
+End Property
+
 Public Property Get size() As Long
 size = mSize
 End Property
 
-Public Property Get state() As OrderPlexStateCodes
-state = mStateEngine.state
+Public Property Get State() As OrderPlexStateCodes
+State = mStateEngine.State
 End Property
 
-Public Property Get stopOrder() As order
-Set stopOrder = mStopOrder
+Public Property Get stoporder() As order
+Set stoporder = mStopOrder
 End Property
 
 Public Property Let stopReason(ByVal value As String)
@@ -1756,9 +1832,9 @@ targetReason = mTargetReason
 End Property
 
 Friend Property Let ticker(ByVal value As ticker)
-Dim lContract As contract
+Dim lContract As Contract
 Set mTicker = value
-Set lContract = mTicker.contract
+Set lContract = mTicker.Contract
 mTickSize = lContract.tickSize
 mTickValue = lContract.tickValue
 mValueFactor = lContract.multiplier
@@ -1788,86 +1864,31 @@ mProfitListeners.add value
 End Sub
 
 Public Sub adjustStop(ByVal stopPrice As Double, _
-                    Optional ByVal size As Long = -1, _
-                    Optional ByVal allowWider As Boolean = False)
-Select Case mStateEngine.state
-Case OrderPlexStateCodes.Cancelling
-    Exit Sub
-Case OrderPlexStateCodes.Submitted
-Case Else
-    err.Raise errActionNotAllowedInThisState, _
-                "TradeBuild.OrderPlex::adjustStop", _
-                "Action not allowed in state " & mStateEngine.state
-End Select
-
-If mStopOrder Is Nothing Then err.Raise errNoStopOrder, _
-                                        "TradeBuild.OrderPlex::adjustStop", _
-                                        "No stop order exists"
-
-If mStopOrder.orderType = TradeBuild.OrderTypes.OrderTypeAutoStop Then err.Raise errCantChangeStopForOrderType, _
-                                        "TradeBuild.OrderPlex::adjustStop", _
-                                        "Can't change the stop for an AUTOSTOP order"""
-
-If Not allowWider Then
-    If (longPosition And _
-        stopPrice < mStopOrder.triggerPrice) Or _
-        ((Not longPosition) And _
-        stopPrice > mStopOrder.triggerPrice) _
-    Then
-        Exit Sub
-'        err.Raise errWidenStopNotAllowed, _
-'                    "TradeBuild.OrderPlex::adjustStop", _
-'                    "Attempt to widen the stop"
-    End If
-End If
-
-
-mStopOrder.triggerPrice = stopPrice
-If size <> -1 Then mStopOrder.Quantity = size
+                    Optional ByVal quantity As Long = -1)
 mTicker.notifyListeners _
                             "Adjust stop: (" & mTicker.TradePrice & ") " & _
                             " stop " & stopPrice & _
-                            ", size " & mStopOrder.Quantity, _
+                            ", quantity " & quantity, _
                             IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder)
-mStopOrder.transmit = True
-gTradeBuildAPI.placeOrder mStopOrder
 
-fireChange StopOrderChanged
-RaiseEvent StopAdjusted
+newStopTriggerPrice = stopPrice
+If quantity <> -1 Then newStopQuantity = quantity
+update
+
 End Sub
 
 Public Sub adjustTarget(ByVal targetPrice As Double, _
-                    Optional ByVal size As Long = -1)
-Select Case mStateEngine.state
-Case OrderPlexStateCodes.Cancelling
-    Exit Sub
-Case OrderPlexStateCodes.Submitted
-Case Else
-    err.Raise errActionNotAllowedInThisState, _
-                "TradeBuild.OrderPlex::adjustTarget", _
-                "Action not allowed in state " & mStateEngine.state
-End Select
-
-If mTargetOrder Is Nothing Then err.Raise errNoTargetOrder, _
-                                        "TradeBuild.OrderPlex::adjustTarget", _
-                                        "No target order exists"
-
-If mTargetOrder.orderType = TradeBuild.OrderTypes.OrderTypeAutoLimit Then err.Raise errCantChangeTargetForOrderType, _
-                                        "TradeBuild.OrderPlex::adjustTarget", _
-                                        "Can't change the target for an AUTOLMT order"""
-
-mTargetOrder.limitPrice = targetPrice
-If size <> -1 Then mTargetOrder.Quantity = size
+                    Optional ByVal quantity As Long = -1)
 mTicker.notifyListeners _
                             "Adjust target: (" & mTicker.TradePrice & ") " & _
                             " target " & targetPrice & _
-                            ", size " & mTargetOrder.Quantity, _
+                            ", quantity " & quantity, _
                             IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder)
-mTargetOrder.transmit = True
-gTradeBuildAPI.placeOrder mTargetOrder
 
-fireChange TargetOrderChanged
-RaiseEvent TargetAdjusted
+newTargetPrice = targetPrice
+If quantity <> -1 Then newTargetQuantity = quantity
+update
+
 End Sub
 
 Public Function Cancel(Optional ByVal evenIfFilled As Boolean = False) As Boolean
@@ -1892,6 +1913,7 @@ mNewTargetPrice = -1
 mNewTargetOffset = DummyOffset
 mNewTargetTriggerPrice = -1
 mDirty = False
+fireChange OrderPlexChangeTypes.ChangesCancelled
 RaiseEvent ChangesCancelled
 End Sub
 
@@ -1918,7 +1940,9 @@ If Not mEntryOrder Is Nothing Then _
                 "Entry order already exists"
 
 Set mEntryOrder = mTicker.newOrder
-If mDummy Then mEntryOrder.dummy = True
+mEntryOrder.dummy = mDummy
+mEntryOrder.simulated = mSimulated
+
 Set createEntryOrder = mEntryOrder
 
 If mOrders.Count >= 1 Then
@@ -1935,7 +1959,9 @@ If Not mStopOrder Is Nothing Then _
                 "Stop order already exists"
 
 Set mStopOrder = mTicker.newOrder
-If dummy Then mStopOrder.dummy = True
+mStopOrder.dummy = mDummy
+mStopOrder.simulated = mSimulated
+
 Set createStopOrder = mStopOrder
 mStateEngine.setCondition COND_STOP_ORDER_EXISTS
 mStateEngine.clearCondition COND_STOP_ORDER_CANCELLED
@@ -1956,7 +1982,9 @@ If Not mTargetOrder Is Nothing Then _
                 "Target order already exists"
 
 Set mTargetOrder = mTicker.newOrder
-If mDummy Then mTargetOrder.dummy = True
+mTargetOrder.dummy = mDummy
+mTargetOrder.simulated = mSimulated
+
 Set createTargetOrder = mTargetOrder
 mStateEngine.setCondition COND_TARGET_ORDER_EXISTS
 mStateEngine.clearCondition COND_TARGET_ORDER_CANCELLED
@@ -2014,24 +2042,24 @@ Dim updateEntry As Boolean
 Dim updateStop As Boolean
 Dim updateTarget As Boolean
 
-Select Case mStateEngine.state
+Select Case mStateEngine.State
 Case OrderPlexStateCodes.Submitted
 Case OrderPlexStateCodes.Cancelling
     Exit Sub
 Case Else
     err.Raise errActionNotAllowedInThisState, _
                 "TradeBuild.OrderPlex::update", _
-                "Action not allowed in state " & mStateEngine.state
+                "Action not allowed in state " & mStateEngine.State
 End Select
 
 If Not mEntryOrder Is Nothing Then
     If mNewQuantity >= 0 And _
-        mNewQuantity <> mEntryOrder.Quantity _
+        mNewQuantity <> mEntryOrder.quantity _
     Then
         If mEntryOrder.status = TradeBuild.OrderStatuses.OrderStatusFilled Then err.Raise errCantChangeFilledOrder, _
                                                         "TradeBuild.OrderPlex::update", _
                                                         "Can't change size - order " & entryOrder.id & " already filled"
-        mEntryOrder.Quantity = mNewQuantity
+        mEntryOrder.quantity = mNewQuantity
 '       I don't think the following are necessary, because should update them
 '       appropriately. Besides the code is too simplistic - if the order has
 '       already been partially filled, it wouldn't work
@@ -2095,6 +2123,16 @@ If Not mStopOrder Is Nothing Then
     End If
     mNewStopOffset = DummyOffset
 
+    If mNewStopQuantity >= 0 And _
+        mNewStopQuantity <> mStopOrder.quantity _
+    Then
+        If mStopOrder.status = TradeBuild.OrderStatuses.OrderStatusFilled Then err.Raise errCantChangeUnplacedOrder, _
+                                                            "TradeBuild.OrderPlex::update", _
+                                                            "Can't change stop quantity - order " & mStopOrder.id & " already placed"
+        mStopOrder.quantity = mNewStopQuantity
+    End If
+    mNewStopQuantity = -1
+
     If mNewStopTriggerPrice >= 0 And _
         mNewStopTriggerPrice <> mStopOrder.triggerPrice _
     Then
@@ -2129,6 +2167,16 @@ If Not mTargetOrder Is Nothing Then
     End If
     mNewTargetOffset = DummyOffset
 
+    If mNewTargetQuantity >= 0 And _
+        mNewTargetQuantity <> mTargetOrder.quantity _
+    Then
+        If mTargetOrder.status = TradeBuild.OrderStatuses.OrderStatusFilled Then err.Raise errCantChangeUnplacedOrder, _
+                                                            "TradeBuild.OrderPlex::update", _
+                                                            "Can't change target quantity - order " & mTargetOrder.id & " already placed"
+        mTargetOrder.quantity = mNewTargetQuantity
+    End If
+    mNewTargetQuantity = -1
+
     If mNewTargetTriggerPrice >= 0 And _
         mNewTargetTriggerPrice <> mTargetOrder.triggerPrice _
     Then
@@ -2141,23 +2189,20 @@ If Not mTargetOrder Is Nothing Then
     mNewTargetTriggerPrice = -1
 End If
 
+mOrderSubmitter.modifyOrderPlex Me, updateEntry, updateStop, updateTarget, False
+
 If updateEntry Then
-    mEntryOrder.transmit = True
-    gTradeBuildAPI.placeOrder mEntryOrder
-    fireChange EntryOrderChanged
+    fireChange entryOrderChanged
 End If
 If updateStop Then
-    mStopOrder.transmit = True
-    gTradeBuildAPI.placeOrder mStopOrder
-    fireChange StopOrderChanged
+    fireChange stopOrderChanged
     RaiseEvent StopAdjusted
 End If
 If updateTarget Then
-    mTargetOrder.transmit = True
-    gTradeBuildAPI.placeOrder mTargetOrder
-    fireChange TargetOrderChanged
+    fireChange targetOrderChanged
     RaiseEvent TargetAdjusted
 End If
+fireChange OrderPlexChangeTypes.ChangesApplied
 RaiseEvent Clean
 End Sub
 
@@ -2223,39 +2268,24 @@ End If
 End Function
 
 Private Function cancelOrders() As Boolean
-
-Dim entryOrderID As Long
-Dim stopOrderID As Long
-Dim targetOrderID As Long
+Dim stopOrderID As String
+Dim targetOrderID As String
 
 cancelAfter = 0
-
 mCancelPrice = 0
 
-If Not mEntryOrder Is Nothing Then
-    Select Case mEntryOrder.status
-    Case TradeBuild.OrderStatuses.OrderStatusCreated
-        mEntryOrder.updateStatus TradeBuild.OrderStatuses.OrderStatusCancelled, _
-                                0, _
-                                0, _
-                                0, _
-                                0, _
-                                0, _
-                                0, _
-                                mTicker.timestamp
-                                
-        cancelOrders = True
-                                
-    Case TradeBuild.OrderStatuses.OrderStatusFilled, _
-        TradeBuild.OrderStatuses.OrderStatusCancelling, _
-        TradeBuild.OrderStatuses.OrderStatusCancelled
-    Case Else
-        entryOrderID = mEntryOrder.id
-        gTradeBuildAPI.cancelOrder entryOrderID  ' should automatically cancel the other orders
-                                                        ' if they have parentid set
-        cancelOrders = True
-    End Select
-End If
+Select Case mEntryOrder.status
+Case TradeBuild.OrderStatuses.OrderStatusCreated
+    mEntryOrder.updateStatus TradeBuild.OrderStatuses.OrderStatusCancelled, _
+                            0, _
+                            0, _
+                            0, _
+                            0, _
+                            mTicker.timestamp
+
+    cancelOrders = True
+End Select
+
 If Not mStopOrder Is Nothing Then
     Select Case mStopOrder.status
     Case TradeBuild.OrderStatuses.OrderStatusCreated
@@ -2264,31 +2294,12 @@ If Not mStopOrder Is Nothing Then
                                 0, _
                                 0, _
                                 0, _
-                                0, _
-                                0, _
                                 mTicker.timestamp
-                                
+
         cancelOrders = True
-                                
-    Case TradeBuild.OrderStatuses.OrderStatusFilled, _
-        TradeBuild.OrderStatuses.OrderStatusCancelling, _
-        TradeBuild.OrderStatuses.OrderStatusCancelled
-    Case Else
-        stopOrderID = mStopOrder.id
-        If mStopOrder.parentId = 0 Then
-            gTradeBuildAPI.cancelOrder stopOrderID
-            cancelOrders = True
-        Else
-            Select Case mEntryOrder.status
-            Case TradeBuild.OrderStatuses.OrderStatusFilled, _
-                TradeBuild.OrderStatuses.OrderStatusCancelling, _
-                TradeBuild.OrderStatuses.OrderStatusCancelled
-                gTradeBuildAPI.cancelOrder stopOrderID
-                cancelOrders = True
-            End Select
-        End If
     End Select
 End If
+
 If Not mTargetOrder Is Nothing Then
     Select Case mTargetOrder.status
     Case TradeBuild.OrderStatuses.OrderStatusCreated
@@ -2297,42 +2308,133 @@ If Not mTargetOrder Is Nothing Then
                                 0, _
                                 0, _
                                 0, _
-                                0, _
-                                0, _
                                 mTicker.timestamp
-                                
+
         cancelOrders = True
-                                
-    Case TradeBuild.OrderStatuses.OrderStatusFilled, _
-        TradeBuild.OrderStatuses.OrderStatusCancelling, _
-        TradeBuild.OrderStatuses.OrderStatusCancelled
-    Case Else
-        targetOrderID = mTargetOrder.id
-        If mTargetOrder.parentId = 0 Then
-            gTradeBuildAPI.cancelOrder targetOrderID
-            cancelOrders = True
-        Else
-            Select Case mEntryOrder.status
-            Case TradeBuild.OrderStatuses.OrderStatusFilled, _
-                TradeBuild.OrderStatuses.OrderStatusCancelling, _
-                TradeBuild.OrderStatuses.OrderStatusCancelled
-                gTradeBuildAPI.cancelOrder targetOrderID
-                cancelOrders = True
-            End Select
-        End If
     End Select
 End If
-    
-' need some stuff here to cancel if it's an oca group
 
-If cancelOrders Then
+If mOrderSubmitter.cancelOrderPlex(Me) Then
+    cancelOrders = True
+    
+    If Not mStopOrder Is Nothing Then stopOrderID = mStopOrder.id
+    If Not mTargetOrder Is Nothing Then targetOrderID = mTargetOrder.id
     mTicker.notifyListeners _
                     "Cancel orders: (" & mTicker.TradePrice & ") " & _
-                    IIf(entryOrderID <> 0, entryOrderID, "") & _
+                    entryOrder.id & _
                     IIf(stopOrderID <> 0, ", " & stopOrderID, ", ") & _
                     IIf(targetOrderID <> 0, ", " & targetOrderID, ", "), _
                     IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder)
 End If
+
+'Dim entryOrderID As Long
+'Dim stopOrderID As Long
+'Dim targetOrderID As Long
+'
+'cancelAfter = 0
+'mCancelPrice = 0
+'
+'If Not mEntryOrder Is Nothing Then
+'    Select Case mEntryOrder.status
+'    Case TradeBuild.OrderStatuses.OrderStatusCreated
+'        mEntryOrder.updateStatus TradeBuild.OrderStatuses.OrderStatusCancelled, _
+'                                0, _
+'                                0, _
+'                                0, _
+'                                0, _
+'                                0, _
+'                                0, _
+'                                mTicker.timestamp
+'
+'        cancelOrders = True
+'
+'    Case TradeBuild.OrderStatuses.OrderStatusFilled, _
+'        TradeBuild.OrderStatuses.OrderStatusCancelling, _
+'        TradeBuild.OrderStatuses.OrderStatusCancelled
+'    Case Else
+'        entryOrderID = mEntryOrder.id
+'        gTradeBuildAPI.cancelOrder entryOrderID  ' should automatically cancel the other orders
+'                                                        ' if they have parentid set
+'        cancelOrders = True
+'    End Select
+'End If
+'If Not mStopOrder Is Nothing Then
+'    Select Case mStopOrder.status
+'    Case TradeBuild.OrderStatuses.OrderStatusCreated
+'        mStopOrder.updateStatus TradeBuild.OrderStatuses.OrderStatusCancelled, _
+'                                0, _
+'                                0, _
+'                                0, _
+'                                0, _
+'                                0, _
+'                                0, _
+'                                mTicker.timestamp
+'
+'        cancelOrders = True
+'
+'    Case TradeBuild.OrderStatuses.OrderStatusFilled, _
+'        TradeBuild.OrderStatuses.OrderStatusCancelling, _
+'        TradeBuild.OrderStatuses.OrderStatusCancelled
+'    Case Else
+'        stopOrderID = mStopOrder.id
+'        If mStopOrder.parentId = 0 Then
+'            gTradeBuildAPI.cancelOrder stopOrderID
+'            cancelOrders = True
+'        Else
+'            Select Case mEntryOrder.status
+'            Case TradeBuild.OrderStatuses.OrderStatusFilled, _
+'                TradeBuild.OrderStatuses.OrderStatusCancelling, _
+'                TradeBuild.OrderStatuses.OrderStatusCancelled
+'                gTradeBuildAPI.cancelOrder stopOrderID
+'                cancelOrders = True
+'            End Select
+'        End If
+'    End Select
+'End If
+'If Not mTargetOrder Is Nothing Then
+'    Select Case mTargetOrder.status
+'    Case TradeBuild.OrderStatuses.OrderStatusCreated
+'        mTargetOrder.updateStatus TradeBuild.OrderStatuses.OrderStatusCancelled, _
+'                                0, _
+'                                0, _
+'                                0, _
+'                                0, _
+'                                0, _
+'                                0, _
+'                                mTicker.timestamp
+'
+'        cancelOrders = True
+'
+'    Case TradeBuild.OrderStatuses.OrderStatusFilled, _
+'        TradeBuild.OrderStatuses.OrderStatusCancelling, _
+'        TradeBuild.OrderStatuses.OrderStatusCancelled
+'    Case Else
+'        targetOrderID = mTargetOrder.id
+'        If mTargetOrder.parentId = 0 Then
+'            gTradeBuildAPI.cancelOrder targetOrderID
+'            cancelOrders = True
+'        Else
+'            Select Case mEntryOrder.status
+'            Case TradeBuild.OrderStatuses.OrderStatusFilled, _
+'                TradeBuild.OrderStatuses.OrderStatusCancelling, _
+'                TradeBuild.OrderStatuses.OrderStatusCancelled
+'                gTradeBuildAPI.cancelOrder targetOrderID
+'                cancelOrders = True
+'            End Select
+'        End If
+'    End Select
+'End If
+'
+'' need some stuff here to cancel if it's an oca group
+'
+'If cancelOrders Then
+'    mTicker.notifyListeners _
+'                    "Cancel orders: (" & mTicker.TradePrice & ") " & _
+'                    IIf(entryOrderID <> 0, entryOrderID, "") & _
+'                    IIf(stopOrderID <> 0, ", " & stopOrderID, ", ") & _
+'                    IIf(targetOrderID <> 0, ", " & targetOrderID, ", "), _
+'                    IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder)
+'End If
 End Function
 
 Private Function cancelStopOrder()
@@ -2340,8 +2442,6 @@ If mStopOrder Is Nothing Then Exit Function
 Select Case mStopOrder.status
 Case TradeBuild.OrderStatuses.OrderStatusCreated
     mStopOrder.updateStatus TradeBuild.OrderStatuses.OrderStatusCancelled, _
-                            0, _
-                            0, _
                             0, _
                             0, _
                             0, _
@@ -2357,7 +2457,7 @@ Case Else
                 "Cancel order: (" & mTicker.TradePrice & ") " & _
                 mStopOrder.id, _
                 IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder)
-    gTradeBuildAPI.cancelOrder mStopOrder.id
+    mOrderSubmitter.cancelStopOrder Me
 End Select
 End Function
 
@@ -2366,8 +2466,6 @@ If mTargetOrder Is Nothing Then Exit Function
 Select Case mTargetOrder.status
 Case TradeBuild.OrderStatuses.OrderStatusCreated
     mTargetOrder.updateStatus TradeBuild.OrderStatuses.OrderStatusCancelled, _
-                            0, _
-                            0, _
                             0, _
                             0, _
                             0, _
@@ -2383,12 +2481,12 @@ Case Else
                 "Cancel order: (" & mTicker.TradePrice & ") " & _
                 mTargetOrder.id, _
                 IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder)
-    gTradeBuildAPI.cancelOrder mTargetOrder.id
+    mOrderSubmitter.cancelTargetOrder Me
 End Select
 End Function
 
 Private Sub checkAllOrdersComplete()
-If mStateEngine.state = OrderPlexStateCodes.Closed Then Exit Sub
+If mStateEngine.State = OrderPlexStateCodes.Closed Then Exit Sub
 If mEntryOrderFinished And _
     mStopOrderFinished And _
     mTargetOrderFinished _
@@ -2469,28 +2567,28 @@ End Sub
 Private Sub handleStimulus(ByVal stimulus As StateTransitionStimuli)
 Dim currState As OrderPlexStateCodes
 
-currState = mStateEngine.state
+currState = mStateEngine.State
 doActions mStateEngine.stimulus(stimulus)
-If mStateEngine.state <> currState Then fireChange OrderPlexChangeTypes.StateChanged
+If mStateEngine.State <> currState Then fireChange OrderPlexChangeTypes.StateChanged
 End Sub
 
 Private Function placeCloseoutOrder()
 ' place an order to closeout the filled part
 Set mCloseoutOrder = mTicker.newOrder
+mCloseoutOrder.dummy = mDummy
+mCloseoutOrder.simulated = mSimulated
 mCloseoutOrder.action = IIf(longPosition, TradeBuild.OrderActions.ActionSell, TradeBuild.OrderActions.ActionBuy)
-mCloseoutOrder.Quantity = Abs(size)
+mCloseoutOrder.quantity = Abs(size)
 mCloseoutOrder.orderType = TradeBuild.OrderTypes.OrderTypeMarket
 mCloseoutOrder.timeInForce = TradeBuild.OrderTifs.TIFGoodTillCancelled
 mCloseoutOrder.transmit = True
 fireChange CloseoutOrderCreated
-gTradeBuildAPI.placeOrder mCloseoutOrder
+mOrderSubmitter.modifyOrderPlex Me, False, False, False, True
                                 
 
 End Function
 
 Private Function placeOrders(Optional ByVal simulatorOnly As Boolean = False)
-
-Dim transmit As Boolean
 
 mCreationTime = mTicker.timestamp
 
@@ -2498,46 +2596,48 @@ If mEntryOrder Is Nothing Then mEntryOrderFinished = True
 If mStopOrder Is Nothing Then mStopOrderFinished = True
 If mTargetOrder Is Nothing Then mTargetOrderFinished = True
 
-If Not mEntryOrder Is Nothing Then
-    transmit = True
-    If Not mStopOrder Is Nothing Then
-        If mStopOrder.orderType <> TradeBuild.OrderTypes.OrderTypeAutoStop Then transmit = False
-    End If
-    If Not mTargetOrder Is Nothing Then
-        If mTargetOrder.orderType <> TradeBuild.OrderTypes.OrderTypeAutoLimit Then transmit = False
-    End If
-        
-    mEntryOrder.transmit = transmit
-    gTradeBuildAPI.placeOrder mEntryOrder
-    
-    If Not mStopOrder Is Nothing Then
-        transmit = True
-        If Not mTargetOrder Is Nothing Then
-            If mTargetOrder.orderType <> TradeBuild.OrderTypes.OrderTypeAutoLimit Then transmit = False
-        End If
-        
-        If mStopOrder.orderType <> TradeBuild.OrderTypes.OrderTypeAutoStop Then
-            ' note that AUTOSTP orders will be sent when the entry order is filled
-            ' and that they don't have parentID set since the would-be parent has
-            ' already been transmitted
-            mStopOrder.parentId = mEntryOrder.id
-            mStopOrder.transmit = transmit
-            gTradeBuildAPI.placeOrder mStopOrder
-        End If
-    End If
-    
-    If Not mTargetOrder Is Nothing Then
-        If mTargetOrder.orderType <> TradeBuild.OrderTypes.OrderTypeAutoLimit Then
-            mTargetOrder.parentId = mEntryOrder.id
-            mTargetOrder.transmit = True
-            gTradeBuildAPI.placeOrder mTargetOrder
-        End If
-    End If
-    
-    mTicker.addQuoteListener Me
-Else
-    ' treat the other orders as an OCA group - still to be implemented
-End If
+mOrderSubmitter.executeOrderPlex Me
+mTicker.addQuoteListener Me
+
+'If Not mEntryOrder Is Nothing Then
+'    transmit = True
+'    If Not mStopOrder Is Nothing Then
+'        If mStopOrder.orderType <> TradeBuild.OrderTypes.OrderTypeAutoStop Then transmit = False
+'    End If
+'    If Not mTargetOrder Is Nothing Then
+'        If mTargetOrder.orderType <> TradeBuild.OrderTypes.OrderTypeAutoLimit Then transmit = False
+'    End If
+'
+'    mEntryOrder.transmit = transmit
+'    gTradeBuildAPI.placeOrder mEntryOrder
+'
+'    If Not mStopOrder Is Nothing Then
+'        transmit = True
+'        If Not mTargetOrder Is Nothing Then
+'            If mTargetOrder.orderType <> TradeBuild.OrderTypes.OrderTypeAutoLimit Then transmit = False
+'        End If
+'
+'        If mStopOrder.orderType <> TradeBuild.OrderTypes.OrderTypeAutoStop Then
+'            ' note that AUTOSTP orders will be sent when the entry order is filled
+'            ' and that they don't have parentID set since the would-be parent has
+'            ' already been transmitted
+'            mStopOrder.parentId = mEntryOrder.id
+'            mStopOrder.transmit = transmit
+'            gTradeBuildAPI.placeOrder mStopOrder
+'        End If
+'    End If
+'
+'    If Not mTargetOrder Is Nothing Then
+'        If mTargetOrder.orderType <> TradeBuild.OrderTypes.OrderTypeAutoLimit Then
+'            mTargetOrder.parentId = mEntryOrder.id
+'            mTargetOrder.transmit = True
+'            gTradeBuildAPI.placeOrder mTargetOrder
+'        End If
+'    End If
+'
+'Else
+'    ' treat the other orders as an OCA group - still to be implemented
+'End If
 End Function
 
 Private Sub placePeggedOrders()
@@ -2547,11 +2647,9 @@ If Not mStopOrder Is Nothing Then
             ' the stop price is to be pegged to the entry price - the
             ' order's offset property will already contain any required
             ' offset from that price
-            mStopOrder.triggerPrice = (mStopOrder.offset * mTickSize) + entryOrder.lastFillPrice
-            mStopOrder.Quantity = mEntryOrder.quantityFilled
             mStopOrder.orderType = TradeBuild.OrderTypes.OrderTypeStop
-            mStopOrder.transmit = True
-            gTradeBuildAPI.placeOrder mStopOrder
+            newStopTriggerPrice = (mStopOrder.offset * mTickSize) + entryOrder.lastFillPrice
+            newStopQuantity = mEntryOrder.quantityFilled
         End If
     End If
 End If
@@ -2561,74 +2659,48 @@ If Not mTargetOrder Is Nothing Then
             ' the limit price is to be pegged to the entry price - the
             ' order's offset property will already contain any required
             ' offset from that price
-            mTargetOrder.limitPrice = (mTargetOrder.offset * mTickSize) + entryOrder.lastFillPrice
-            mTargetOrder.Quantity = mEntryOrder.quantityFilled
             mTargetOrder.orderType = TradeBuild.OrderTypes.OrderTypeLimit
-            mTargetOrder.transmit = True
-            gTradeBuildAPI.placeOrder mTargetOrder
+            newTargetPrice = (mTargetOrder.offset * mTickSize) + entryOrder.lastFillPrice
+            newTargetQuantity = mEntryOrder.quantityFilled
         End If
     End If
 End If
+update
 End Sub
 
 Private Function resubmitStopOrder()
-mStopOrder.id = 0 ' force a new id to be allocated
-mStopOrder.parentId = 0
-If Not mTargetOrder Is Nothing Then
-    mStopOrder.ocaGroup = mTargetOrder.ocaGroup
-End If
+mOrderSubmitter.resubmitStopOrder Me
 mTicker.notifyListeners _
-            "Resubmit stop order: (" & mTicker.TradePrice & ") new id " & _
-            mStopOrder.id, _
+            "Resubmit stop order: (" & mTicker.TradePrice & ") id " & mStopOrder.id & _
+            "new broker id " & mStopOrder.brokerId, _
             IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder)
-mStopOrder.transmit = True
-gTradeBuildAPI.placeOrder mStopOrder
 mStateEngine.clearCondition COND_STOP_ORDER_CANCELLED
 mStopOrderFinished = False
 End Function
 
 Private Function resubmitStopAndTargetOrders()
-Dim ocaGroup As String
-ocaGroup = GenerateTextID
-
-mStopOrder.ocaGroup = ocaGroup
-mStopOrder.id = 0 ' force a new id to be allocated
-mStopOrder.parentId = 0
+mOrderSubmitter.resubmitStopAndTargetOrders Me
 mTicker.notifyListeners _
-            "Resubmit stop order: (" & mTicker.TradePrice & ") new id " & _
-            mStopOrder.id, _
+            "Resubmit stop order: (" & mTicker.TradePrice & ") id " & mStopOrder.id & _
+            " new broker id " & mStopOrder.brokerId, _
             IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder)
-mStopOrder.transmit = False
-gTradeBuildAPI.placeOrder mStopOrder
+mTicker.notifyListeners _
+            "Resubmit target order: (" & mTicker.TradePrice & ") id " & mTargetOrder.id & _
+            " new broker id " & mTargetOrder.brokerId, _
+            IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder)
 mStateEngine.clearCondition COND_STOP_ORDER_CANCELLED
 mStopOrderFinished = False
-
-mTargetOrder.ocaGroup = ocaGroup
-mTargetOrder.id = 0 ' force a new id to be allocated
-mTargetOrder.parentId = 0
-mTicker.notifyListeners _
-            "Resubmit target order: (" & mTicker.TradePrice & ") new id " & _
-            mStopOrder.id, _
-            IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder)
-mTargetOrder.transmit = True
-gTradeBuildAPI.placeOrder mTargetOrder
 mStateEngine.clearCondition COND_TARGET_ORDER_CANCELLED
 mTargetOrderFinished = False
 
 End Function
 
 Private Function resubmitTargetOrder()
-mTargetOrder.id = 0 ' force a new id to be allocated
-mTargetOrder.parentId = 0
-If Not mStopOrder Is Nothing Then
-    mTargetOrder.ocaGroup = mStopOrder.ocaGroup
-End If
+mOrderSubmitter.resubmitTargetOrder Me
 mTicker.notifyListeners _
-            "Resubmit target order: (" & mTicker.TradePrice & ") new id " & _
-            mStopOrder.id, _
+            "Resubmit target order: (" & mTicker.TradePrice & ") id " & mTargetOrder.id & _
+            " new broker id " & mTargetOrder.brokerId, _
             IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder)
-mTargetOrder.transmit = True
-gTradeBuildAPI.placeOrder mTargetOrder
 mStateEngine.clearCondition COND_TARGET_ORDER_CANCELLED
 mTargetOrderFinished = False
 End Function

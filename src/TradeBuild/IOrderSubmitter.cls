@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "OrderContexts"
+Attribute VB_Name = "IOrderSubmitter"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -50,26 +50,9 @@ Option Explicit
 ' Member variables
 '================================================================================
 
-Private mOrderContexts As Collection
-
-Private mEnabled As Boolean
-
-Private mDummy As Boolean
-Private mSimulated As Boolean
-
-Private mTicker As Ticker
-Private mPositionManager As positionManager
-
-Private mOrderSubmitter As TradeBuild.IOrderSubmitter
-
 '================================================================================
 ' Class Event Handlers
 '================================================================================
-
-Private Sub Class_Initialize()
-Set mOrderContexts = New Collection
-mEnabled = True
-End Sub
 
 '================================================================================
 ' XXXX Interface Members
@@ -83,84 +66,40 @@ End Sub
 ' Properties
 '================================================================================
 
-Public Property Get Count() As Long
-Count = mOrderContexts.Count
-End Property
-
-Friend Property Let dummy(ByVal value As Boolean)
-mDummy = value
-End Property
-
-Friend Property Let enabled(ByVal value As Boolean)
-mEnabled = value
-End Property
-
-Public Property Get enabled() As Boolean
-enabled = mEnabled
-End Property
-
-Friend Property Let orderSubmitter( _
-                ByVal value As TradeBuild.IOrderSubmitter)
-Set mOrderSubmitter = value
-End Property
-
-Friend Property Let positionManager(ByVal value As positionManager)
-Set mPositionManager = value
-End Property
-
-Friend Property Let simulated(ByVal value As Boolean)
-mSimulated = value
-End Property
-
-Friend Property Let Ticker(ByVal value As Ticker)
-Set mTicker = value
-End Property
-
 '================================================================================
 ' Methods
 '================================================================================
 
-Public Function add(ByVal name As String) As OrderContext
-If Not mEnabled Then
-    err.Raise ErrorCodes.IllegalStateException, _
-                "TradeBuild.OrderContexts::add", _
-                "Order context addition is disabled"
-End If
-
-Set add = New OrderContext
-add.Ticker = mTicker
-add.positionManager = mPositionManager
-add.orderSubmitter = mOrderSubmitter
-add.dummy = mDummy
-add.simulated = mSimulated
-add.name = name
-mOrderContexts.add add, name
+Public Function cancelOrderPlex(ByVal pOrderPlex As orderPlex) As Boolean
 End Function
 
-Friend Sub Finish()
-Dim OrderContext As OrderContext
-
-Set mTicker = Nothing
-Set mPositionManager = Nothing
-
-For Each OrderContext In mOrderContexts
-    OrderContext.Finish
-Next
+Public Sub cancelStopOrder(ByVal pOrderPlex As orderPlex)
 End Sub
 
-Public Function item(index As Variant) As OrderContext
-Attribute item.VB_UserMemId = 0
-Set item = mOrderContexts(index)
-End Function
+Public Sub cancelTargetOrder(ByVal pOrderPlex As orderPlex)
+End Sub
 
-Public Function NewEnum() As IUnknown
-Attribute NewEnum.VB_UserMemId = -4
-Attribute NewEnum.VB_MemberFlags = "40"
-Set NewEnum = mOrderContexts.[_NewEnum]
-End Function
+Public Sub executeOrderPlex(ByVal pOrderPlex As orderPlex)
+End Sub
+
+Public Sub modifyOrderPlex( _
+                ByVal pOrderPlex As orderPlex, _
+                ByVal entryOrderChanged As Boolean, _
+                ByVal stopOrderChanged As Boolean, _
+                ByVal targetOrderChanged As Boolean, _
+                ByVal closeoutOrderChanged As Boolean)
+End Sub
+
+Public Sub resubmitStopAndTargetOrders(ByVal pOrderPlex As orderPlex)
+End Sub
+
+Public Sub resubmitStopOrder(ByVal pOrderPlex As orderPlex)
+End Sub
+
+Public Sub resubmitTargetOrder(ByVal pOrderPlex As orderPlex)
+End Sub
 
 '================================================================================
 ' Helper Functions
 '================================================================================
-
 

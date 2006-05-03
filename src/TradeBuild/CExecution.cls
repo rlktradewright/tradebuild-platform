@@ -20,7 +20,6 @@ Private mExchange       As String
 Private mSide           As ExecSides
 Private mQuantity       As Long
 Private mPrice          As Double
-Private mPermId         As Long
 Private mClientID       As Long
 Private mOrderId        As Long
 
@@ -78,14 +77,6 @@ End Property
 
 Public Property Get price() As Double
 price = mPrice
-End Property
-
-Friend Property Let permId(ByVal value As Long)
-mPermId = value
-End Property
-
-Public Property Get permId() As Long
-permId = mPermId
 End Property
 
 Friend Property Let clientID(ByVal value As Long)

@@ -6,11 +6,11 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "Clock"
+Attribute VB_Name = "OrderSimulatorSP"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = False
+Attribute VB_Exposed = True
 Option Explicit
 
 '================================================================================
@@ -29,6 +29,9 @@ Option Explicit
 '================================================================================
 ' Interfaces
 '================================================================================
+
+Implements TradeBuildSP.ICommonServiceProvider
+Implements TradeBuild.IOrderSubmissionSrvcProvider
 
 '================================================================================
 ' Events
@@ -50,74 +53,98 @@ Option Explicit
 ' Member variables
 '================================================================================
 
-Private mSimulatedTime As Boolean
-Private mTimePaused As Boolean
-Private mTimestamp As Date
-Private mReferenceTime As Date
-Private mRate As Single
+Private mName As String
+Private mHandle As Long
+Private mCommonServiceConsumer As ICommonServiceConsumer
+
+Private mSimulator As TradeBuild.AdvancedOrderSimulator
 
 '================================================================================
 ' Class Event Handlers
 '================================================================================
 
-'================================================================================
-' xxxx Interface Members
-'================================================================================
+Private Sub Class_Initialize()
+mName = "TradeBuild Default Order Simulator"
+
+Set mSimulator = New TradeBuild.AdvancedOrderSimulator
+End Sub
 
 '================================================================================
-' xxxx Event Handlers
+' ICommonServiceProvider Interface Members
+'================================================================================
+
+Private Property Get ICommonServiceProvider_Details() As TradeBuildSP.ServiceProviderDetails
+Dim details As TradeBuildSP.ServiceProviderDetails
+With details
+    .Comments = App.Comments
+    .EXEName = App.EXEName
+    .FileDescription = App.FileDescription
+    .LegalCopyright = App.LegalCopyright
+    .LegalTrademarks = App.LegalTrademarks
+    .path = App.path
+    .ProductName = App.ProductName
+    .Vendor = App.CompanyName
+    .VersionMajor = App.Major
+    .VersionMinor = App.Minor
+    .VersionRevision = App.Revision
+End With
+ICommonServiceProvider_Details = details
+End Property
+
+Private Sub ICommonServiceProvider_Link( _
+                            ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
+                            ByVal handle As Long)
+Set mCommonServiceConsumer = commonServiceConsumer
+mHandle = handle
+mCommonServiceConsumer.RegisterServiceProvider mHandle, _
+                            ServiceProviderTypes.ExchangeSimulator
+
+End Sub
+
+Private Property Get ICommonServiceProvider_Name() As String
+ICommonServiceProvider_Name = name
+End Property
+
+Private Sub ICommonServiceProvider_Terminate()
+' nothing to do
+End Sub
+
+'================================================================================
+' IOrderSubmissionSrvcProvider Interface Members
+'================================================================================
+
+Private Function IOrderSubmissionSrvcProvider_CreateOrderSubmitter( _
+                ByVal serviceConsumer As IOrderSubmissionSrvcConsumer) As IOrderSubmitter
+Dim orderSubmitter As TradeBuild.SimulatedOrderSubmitter
+
+Set orderSubmitter = New TradeBuild.SimulatedOrderSubmitter
+orderSubmitter.serviceConsumer = serviceConsumer
+orderSubmitter.simulator = mSimulator
+
+Set IOrderSubmissionSrvcProvider_CreateOrderSubmitter = orderSubmitter
+End Function
+
+'================================================================================
+' XXXX Event Handlers
 '================================================================================
 
 '================================================================================
 ' Properties
 '================================================================================
 
-Public Property Let Rate(ByVal value As Single)
-mRate = value
+Public Property Let name(ByVal value As String)
+mName = value
 End Property
 
-Public Property Get Rate() As Single
-Rate = mRate
-End Property
-
-Public Property Get Timestamp() As Date
-If mSimulatedTime Then
-    If mTimePaused Then
-        Timestamp = mTimestamp
-    Else
-        Timestamp = mTimestamp + mRate * (gCurrentTime - mReferenceTime)
-    End If
-Else
-    Timestamp = gCurrentTime
-End If
+Public Property Get name() As String
+name = mName
 End Property
 
 '================================================================================
 ' Methods
 '================================================================================
 
-Friend Sub PauseTime()
-mTimestamp = mTimestamp
-mTimePaused = True
-End Sub
-
-Friend Sub ResumeTime()
-mTimestamp = Timestamp
-mReferenceTime = gCurrentTime
-mTimePaused = False
-End Sub
-
-Friend Sub SetTime(ByVal Timestamp As Date)
-mTimestamp = Timestamp
-mReferenceTime = gCurrentTime
-End Sub
-
-Friend Sub SimulateTime(ByVal value As Boolean)
-mSimulatedTime = value
-End Sub
-
 '================================================================================
 ' Helper Functions
 '================================================================================
-
 

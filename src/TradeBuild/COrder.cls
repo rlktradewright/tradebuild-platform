@@ -49,7 +49,7 @@ Event Fill( _
 '================================================================================
 
 Private mTicker         As ticker
-Private mContract       As TradeBuild.contract
+Private mContract       As TradeBuild.Contract
 
 Private mDummy          As Boolean
 
@@ -69,9 +69,12 @@ Private mMarketIndex    As Long
 Private mAtExchange     As Boolean
 Private mSimulated      As Boolean
 Private mStatus         As OrderStatuses
-Private mIdentifier     As Long
+Private mIdentifier     As String
+Private mParentId       As String
+
+Private mBrokerId       As String
 Private mClientID       As Long
-Private mPermId         As Long
+'Private mPermId         As Long
     
 Private mAction         As OrderActions
 Private mQuantity       As Long
@@ -91,7 +94,6 @@ Private mOpenClose      As String
 Private mOrigin         As OrderOrigins
 Private mOrderRef       As String
 Private mTransmit       As Boolean
-Private mParentId       As Long
 Private mBlockOrder     As Boolean
 Private mSweepToFill    As Boolean
 Private mDisplaySize    As Long
@@ -175,6 +177,14 @@ Public Property Get blockOrder() As Boolean
 blockOrder = mBlockOrder
 End Property
 
+Friend Property Let brokerId(ByVal value As String)
+mBrokerId = value
+End Property
+
+Public Property Get brokerId() As String
+brokerId = mBrokerId
+End Property
+
 Friend Property Let clientID(ByVal value As Long)
 mClientID = value
 End Property
@@ -183,8 +193,8 @@ Public Property Get clientID() As Long
 clientID = mClientID
 End Property
 
-Public Property Get contract() As TradeBuild.contract
-Set contract = mContract
+Public Property Get Contract() As TradeBuild.Contract
+Set Contract = mContract
 End Property
 
 Public Property Let displaySize(ByVal value As Long)
@@ -275,11 +285,11 @@ Public Property Get hidden() As Boolean
 hidden = mHidden
 End Property
 
-Friend Property Let id(ByVal value As Long)
+Friend Property Let id(ByVal value As String)
 mIdentifier = value
 End Property
 
-Public Property Get id() As Long
+Public Property Get id() As String
 id = mIdentifier
 End Property
 
@@ -393,28 +403,28 @@ Public Property Get origin() As OrderOrigins
 origin = mOrigin
 End Property
 
-Public Property Let parentId(ByVal value As Long)
+Friend Property Let parentId(ByVal value As String)
 mParentId = value
 End Property
 
-Public Property Get parentId() As Long
+Friend Property Get parentId() As String
 parentId = mParentId
 End Property
 
-Public Property Let permId(value As Long)
-mPermId = value
-End Property
+'Public Property Let permId(value As Long)
+'mPermId = value
+'End Property
+'
+'Public Property Get permId() As Long
+'permId = mPermId
+'End Property
 
-Public Property Get permId() As Long
-permId = mPermId
-End Property
-
-Public Property Let Quantity(ByVal value As Long)
+Public Property Let quantity(ByVal value As Long)
 mQuantity = value
 End Property
 
-Public Property Get Quantity() As Long
-Quantity = mQuantity
+Public Property Get quantity() As Long
+quantity = mQuantity
 End Property
 
 Public Property Let quantityFilled(ByVal value As Long)
@@ -459,7 +469,7 @@ End Property
 
 Friend Property Let ticker(ByVal value As ticker)
 Set mTicker = value
-Set mContract = mTicker.contract
+Set mContract = mTicker.Contract
 End Property
 
 Public Property Get ticker() As ticker
@@ -511,9 +521,9 @@ With clone
     .status = mStatus
     .id = mIdentifier
     .clientID = mClientID
-    .permId = mPermId
+    .brokerId = mBrokerId
     .action = mAction
-    .Quantity = mQuantity
+    .quantity = mQuantity
     .quantityFilled = mQuantityFilled
     .averagePrice = mAveragePrice
     .lastFillPrice = mLastFillPrice
@@ -544,13 +554,13 @@ With clone
 End With
 End Function
 
-Friend Sub Fill(ByVal Quantity As Long, ByVal price As Double)
+Friend Sub Fill(ByVal quantity As Long, ByVal price As Double)
 ' only used by the Order Simulator - when the Order Simulator is changed to be a
 ' service provider, this should be removed
 mLastFillPrice = price
-mAveragePrice = (mQuantityFilled * mAveragePrice + Quantity * price) / (mQuantityFilled + Quantity)
-mQuantityFilled = mQuantityFilled + Quantity
-mQuantity = mQuantity - Quantity
+mAveragePrice = (mQuantityFilled * mAveragePrice + quantity * price) / (mQuantityFilled + quantity)
+mQuantityFilled = mQuantityFilled + quantity
+mQuantity = mQuantity - quantity
 End Sub
 
 Friend Sub finish()
@@ -662,7 +672,7 @@ Case OrderAttributeIds.orderType
         isAttributeModifiable = True
     Case Else
     End Select
-Case OrderAttributeIds.Quantity
+Case OrderAttributeIds.quantity
     Select Case mStatus
     Case OrderStatusCreated, _
         OrderStatusRejected, _
@@ -723,7 +733,7 @@ Then isModifiable = True
 End Function
 
 Friend Sub openOrder(ByVal action As TradeBuild.OrderActions, _
-                        ByVal Quantity As Long, _
+                        ByVal quantity As Long, _
                         ByVal orderType As TradeBuild.OrderTypes, _
                         ByVal lmtPrice As Double, _
                         ByVal auxPrice As Double, _
@@ -735,8 +745,8 @@ If action <> mAction Then
     mDifferent = True
 End If
 
-mTWSQuantity = Quantity
-If Quantity <> mQuantity Then
+mTWSQuantity = quantity
+If quantity <> mQuantity Then
     mDifferent = True
 End If
 
@@ -773,13 +783,9 @@ Friend Sub updateStatus(ByVal pStatus As TradeBuild.OrderStatuses, _
                 ByVal filled As Long, _
                 ByVal remaining As Long, _
                 ByVal avgFillPrice As Double, _
-                ByVal permId As Long, _
-                ByVal parentId As Long, _
                 ByVal lastFillPrice As Double, _
                 ByVal timestamp As Date)
 Dim filledThisTime As Long
-
-mPermId = permId
 
 If pStatus = TradeBuild.OrderStatuses.OrderStatusPendingSubmit Then
     mStatus = pStatus
@@ -798,7 +804,7 @@ If filled > mQuantityFilled Then
                             orderActionToString(mAction) & "," & _
                             timestamp & "," & _
                             id & "," & _
-                            permId, _
+                            brokerId, _
                             IIf(mDummy, TradeBuildListenValueTypes.VTOrderDetailDummy, TradeBuildListenValueTypes.VTOrderDetail)
 End If
 
@@ -840,7 +846,8 @@ If mStatus = TradeBuild.OrderStatuses.OrderStatusCancelling Then
                     TradeBuildListenValueTypes.VTTWS
         ' before doing the cancel we need to put the order back into
         ' the simulator
-        gTradeBuildAPI.cancelOrder mIdentifier
+        Stop
+        'gTradeBuildAPI.cancelOrder mIdentifier
         Exit Sub
     End If
 End If
@@ -872,7 +879,8 @@ If mDifferent Then
                     IIf(mTWSTriggerPrice <> 0, "         trigger price: " & mTWSTriggerPrice & vbCrLf, ""), _
                     TradeBuildListenValueTypes.VTTWS
         mTransmit = True
-        gTradeBuildAPI.placeOrder Me
+        Stop
+        'gTradeBuildAPI.placeOrder Me
     End If
     mDifferent = False
 End If

@@ -114,7 +114,7 @@ Private mDeleting As Boolean    ' indicates that a recordset entry is being dele
 '================================================================================
 
 Private Sub Class_GetDataMember(DataMember As String, data As Object)
-If mRS.State = adStateClosed Then
+If mRS.state = adStateClosed Then
     err.Raise ErrorCodes.DatasourceHasNotBeenGenerated, _
             "TradeBuild.Tickers::GetDataMember", _
             "Datasource has not been generated"
@@ -178,7 +178,7 @@ Case adRsnAddNew
 Case adRsnDelete
     mDeleting = True
     Set Ticker = mTickers(mRS("Key"))
-    If Ticker.State <> TickerStateCodes.Closing Then Ticker.StopTicker
+    If Ticker.state <> TickerStateCodes.Closing Then Ticker.StopTicker
     mDeleting = False
 Case adRsnUpdate
     adStatus = adStatusUnwantedEvent 'prevent subsequent notifications
@@ -230,10 +230,13 @@ End Property
 ' Methods
 '================================================================================
 
-Public Function add(Optional ByVal key As String, _
-                    Optional ByVal position As Long = -1) As Ticker
+Public Function add( _
+                ByVal ordersAreLive As Boolean, _
+                Optional ByVal key As String, _
+                Optional ByVal position As Long = -1) As Ticker
 Set add = New Ticker
-add.Tickers = Me
+add.tickers = Me
+add.simulatedOrders = Not ordersAreLive
 If key = "" Then key = gGenerateGUIDString
 add.key = key
 add.position = position
@@ -247,7 +250,7 @@ End Function
 Public Sub AddColumn(ByVal columnId As TickerColumnIds, columnName As String)
 Dim columnNameIndex As Long
 
-If mRS.State <> adStateClosed Then
+If mRS.state <> adStateClosed Then
     err.Raise ErrorCodes.CantAddColumn, _
             "TradeBuild.Tickers::AddColumn", _
             "Can't add column in this context - call ClearColumns first"
@@ -276,7 +279,7 @@ End Sub
 Friend Sub ask(ByVal bookmark As Variant, _
                 ByVal price As String, _
                 ByVal size As Long)
-If mRS.State <> adStateClosed Then
+If mRS.state <> adStateClosed Then
     mRS.bookmark = bookmark
     If (mColumnMask And TickerColumnIds.ColumnAsk) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnAsk)) = price
@@ -284,14 +287,14 @@ If mRS.State <> adStateClosed Then
     If (mColumnMask And TickerColumnIds.ColumnAskSize) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnAskSize)) = size
     End If
-    mRS.Update
+    mRS.update
 End If
 End Sub
 
 Friend Sub bid(ByVal bookmark As Variant, _
                 ByVal price As String, _
                 ByVal size As Long)
-If mRS.State <> adStateClosed Then
+If mRS.state <> adStateClosed Then
     mRS.bookmark = bookmark
     If (mColumnMask And TickerColumnIds.ColumnBid) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnBid)) = price
@@ -299,7 +302,7 @@ If mRS.State <> adStateClosed Then
     If (mColumnMask And TickerColumnIds.ColumnBidSize <> 0) Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnBidSize)) = size
     End If
-    mRS.Update
+    mRS.update
 End If
 End Sub
 
@@ -329,7 +332,7 @@ End Sub
 
 Public Function createTickFileManager() As TickFileManager
 Set createTickFileManager = New TickFileManager
-createTickFileManager.Tickers = Me
+createTickFileManager.tickers = Me
 End Function
 
 Public Sub Generate()
@@ -337,7 +340,7 @@ Dim i As Long
 Dim columnNameIndex As TickerColumnNameIndexes
 Dim Ticker As Ticker
 
-If mRS.State <> adStateClosed Then
+If mRS.state <> adStateClosed Then
     err.Raise ErrorCodes.CantGenerateColumns, _
             "TradeBuild.Tickers::Generate", _
             "Can't generate columns - already generated"
@@ -422,18 +425,18 @@ On Error Resume Next            ' in case this ticker has already been hidden
 If IsEmpty(pTicker.bookmark) Then Exit Sub
 mRS.bookmark = pTicker.bookmark
 mRS.Delete
-mRS.Update
+mRS.update
 
 End Sub
 
 Friend Sub high(ByVal bookmark As Variant, _
                 ByVal price As String)
-If mRS.State <> adStateClosed Then
+If mRS.state <> adStateClosed Then
     mRS.bookmark = bookmark
     If (mColumnMask And TickerColumnIds.ColumnHigh) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnHigh)) = price
     End If
-    mRS.Update
+    mRS.update
 End If
 End Sub
 
@@ -442,7 +445,7 @@ Friend Sub Last(ByVal bookmark As Variant, _
                 ByVal size As Long, _
                 ByVal Change As String, _
                 ByVal ChangePercent As Double)
-If mRS.State <> adStateClosed Then
+If mRS.state <> adStateClosed Then
     mRS.bookmark = bookmark
     If (mColumnMask And TickerColumnIds.ColumnTrade) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnTrade)) = price
@@ -456,18 +459,18 @@ If mRS.State <> adStateClosed Then
     If (mColumnMask And TickerColumnIds.ColumnChangePercent) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnChangePercent)) = Format(ChangePercent, IIf(ChangePercent >= 0, "+", "-") & "0.00\%")
     End If
-    mRS.Update
+    mRS.update
 End If
 End Sub
 
 Friend Sub Low(ByVal bookmark As Variant, _
                 ByVal price As String)
-If mRS.State <> adStateClosed Then
+If mRS.state <> adStateClosed Then
     mRS.bookmark = bookmark
     If (mColumnMask And TickerColumnIds.ColumnLow) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnLow)) = price
     End If
-    mRS.Update
+    mRS.update
 End If
 End Sub
 
@@ -494,12 +497,12 @@ End Function
 
 Friend Sub openInterest(ByVal bookmark As Variant, _
                 ByVal size As Long)
-If mRS.State <> adStateClosed Then
+If mRS.state <> adStateClosed Then
     mRS.bookmark = bookmark
     If (mColumnMask And TickerColumnIds.ColumnOpenInterest) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnOpenInterest)) = size
     End If
-    mRS.Update
+    mRS.update
 End If
 End Sub
 
@@ -507,7 +510,7 @@ Friend Sub PrevClose(ByVal bookmark As Variant, _
                 ByVal price As String, _
                 ByVal Change As String, _
                 ByVal ChangePercent As Double)
-If mRS.State <> adStateClosed Then
+If mRS.state <> adStateClosed Then
     mRS.bookmark = bookmark
     If (mColumnMask And TickerColumnIds.ColumnClose) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnClose)) = price
@@ -518,12 +521,12 @@ If mRS.State <> adStateClosed Then
     If (mColumnMask And TickerColumnIds.ColumnChangePercent) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnChangePercent)) = Format(ChangePercent, IIf(ChangePercent >= 0, "+", "-") & "0.00\%")
     End If
-    mRS.Update
+    mRS.update
 End If
 End Sub
 
 Public Sub Remove(ByVal pTicker As Ticker)
-If pTicker.State <> TickerStateCodes.Closing Then
+If pTicker.state <> TickerStateCodes.Closing Then
     pTicker.StopTicker
     Exit Sub
 End If
@@ -543,12 +546,12 @@ End Sub
 
 Friend Sub volume(ByVal bookmark As Variant, _
                 ByVal size As Long)
-If mRS.State <> adStateClosed Then
+If mRS.state <> adStateClosed Then
     mRS.bookmark = bookmark
     If (mColumnMask And TickerColumnIds.ColumnVolume) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.ColumnVolume)) = size
     End If
-    mRS.Update
+    mRS.update
 End If
 End Sub
 
@@ -620,7 +623,7 @@ Else
 End If
 mRS("Key") = pTicker.key
 mRS("Position") = pTicker.position
-With pTicker.Contract
+With pTicker.contract
     
     If (mColumnMask And TickerColumnIds.columnName) <> 0 Then
         mRS(mColumnNames(TickerColumnNameIndexes.columnName)) = .specifier.localSymbol
@@ -691,7 +694,7 @@ With pTicker
     
 End With
 
-mRS.Update
+mRS.update
 
 End Sub
 

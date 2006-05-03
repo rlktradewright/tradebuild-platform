@@ -52,6 +52,8 @@ Private mTickSize As Double
 
 Private mDummy As Boolean
 
+Private mSimulated As Boolean
+
 Private mActiveOrderPlexes As Collection
     ' this contains all order plexes for which one or more orders are
     ' not yet complete (or not yet cancelled)
@@ -64,6 +66,8 @@ Private mCompletedSize As Long
     ' the total size for all completed order plexes (may be non-zero if one
     ' or more completed order plexes has no target or stop orders)
     
+Private mOrderSubmitter As TradeBuild.IOrderSubmitter
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
@@ -89,15 +93,15 @@ End Sub
 '================================================================================
 
 Public Property Get ActiveSize() As Long
-Dim orderPlex As orderPlex
+Dim OrderPlex As OrderPlex
 
-For Each orderPlex In mActiveOrderPlexes
-    ActiveSize = ActiveSize + orderPlex.size
+For Each OrderPlex In mActiveOrderPlexes
+    ActiveSize = ActiveSize + OrderPlex.size
 Next
 End Property
 
 Public Property Get Complete() As Boolean
-Dim op As orderPlex
+Dim op As OrderPlex
 For Each op In mActiveOrderPlexes
     If Not op.dummy Then Complete = False: Exit Property
 Next
@@ -126,10 +130,15 @@ Friend Property Get name() As String
 name = mName
 End Property
 
+Friend Property Let orderSubmitter( _
+                ByVal value As TradeBuild.IOrderSubmitter)
+Set mOrderSubmitter = value
+End Property
+
 Public Property Get pendingSize() As Long
-Dim orderPlex As orderPlex
-For Each orderPlex In mActiveOrderPlexes
-    pendingSize = pendingSize + orderPlex.pendingSize
+Dim OrderPlex As OrderPlex
+For Each OrderPlex In mActiveOrderPlexes
+    pendingSize = pendingSize + OrderPlex.pendingSize
 Next
 End Property
 
@@ -138,25 +147,33 @@ Set mPositionManager = value
 End Property
 
 Public Property Get risk() As Currency
-Dim orderPlex As orderPlex
-For Each orderPlex In mActiveOrderPlexes
-    risk = risk + orderPlex.risk
+Dim OrderPlex As OrderPlex
+For Each OrderPlex In mActiveOrderPlexes
+    risk = risk + OrderPlex.risk
 Next
 End Property
 
+Friend Property Let simulated(ByVal value As Boolean)
+mSimulated = value
+End Property
+
+Public Property Get simulated() As Boolean
+simulated = mSimulated
+End Property
+
 Public Property Get size() As Long
-Dim orderPlex As orderPlex
+Dim OrderPlex As OrderPlex
 
 size = mCompletedSize
 
-For Each orderPlex In mActiveOrderPlexes
-    size = size + orderPlex.size
+For Each OrderPlex In mActiveOrderPlexes
+    size = size + OrderPlex.size
 Next
 End Property
 
 Friend Property Let ticker(ByVal value As ticker)
 Set mTicker = value
-mTickSize = mTicker.contract.TickSize
+mTickSize = mTicker.Contract.tickSize
 End Property
 
 Public Property Get ticker() As ticker
@@ -186,7 +203,7 @@ Public Function Buy(ByRef number As Long, _
                     Optional scalingStrategy As PositionManagementStrategy, _
                     Optional ByVal entryTIF As OrderTifs = TIFDay, _
                     Optional ByVal stopTIF As OrderTifs = TIFGoodTillCancelled, _
-                    Optional ByVal targetTIF As OrderTifs = TIFGoodTillCancelled) As orderPlex
+                    Optional ByVal targetTIF As OrderTifs = TIFGoodTillCancelled) As OrderPlex
 
 Select Case entryType
 Case EntryTypeMarket
@@ -296,34 +313,34 @@ Set Buy = placeOrder(OrderActions.ActionBuy, _
 End Function
 
 Public Function Cancel() As Boolean
-Dim orderPlex As orderPlex
+Dim OrderPlex As OrderPlex
 
-For Each orderPlex In mActiveOrderPlexes
-    If orderPlex.Cancel(evenIfFilled:=True) Then Cancel = True
+For Each OrderPlex In mActiveOrderPlexes
+    If OrderPlex.Cancel(evenIfFilled:=True) Then Cancel = True
 Next
 
 End Function
 
 Public Function CancelPending() As Boolean
-Dim orderPlex As orderPlex
+Dim OrderPlex As OrderPlex
 
-For Each orderPlex In mActiveOrderPlexes
-    If orderPlex.Cancel(evenIfFilled:=False) Then CancelPending = True
+For Each OrderPlex In mActiveOrderPlexes
+    If OrderPlex.Cancel(evenIfFilled:=False) Then CancelPending = True
 Next
 
 End Function
 
 Public Sub CloseOut(ByVal method As String)
-Dim orderPlex As orderPlex
+Dim OrderPlex As OrderPlex
 
-For Each orderPlex In mActiveOrderPlexes
-    orderPlex.CloseOut method
+For Each OrderPlex In mActiveOrderPlexes
+    OrderPlex.CloseOut method
 Next
 
 End Sub
 
 Friend Function finish()
-Dim op As orderPlex
+Dim op As OrderPlex
 
 Set mTicker = Nothing
 Set mPositionManager = Nothing
@@ -340,13 +357,13 @@ getAccountBalance = 10000                       '!!!!!!!!!!!!!!!!!!!!!!!!! need 
 End Function
 
 Friend Function orderPlexClosed( _
-                ByVal orderPlex As orderPlex)
+                ByVal OrderPlex As OrderPlex)
 Dim key As String
 
-key = orderPlex.key
-mClosedOrderPlexes.add orderPlex, key
+key = OrderPlex.key
+mClosedOrderPlexes.add OrderPlex, key
 mActiveOrderPlexes.Remove key
-mCompletedSize = mCompletedSize + orderPlex.size
+mCompletedSize = mCompletedSize + OrderPlex.size
 ' now check if there are any active order plexes left -
 ' if not, need to tell the Position Manager
 If mActiveOrderPlexes.Count = 0 Then
@@ -375,11 +392,11 @@ Friend Function placeOrder(ByVal action As OrderActions, _
                     ByVal cancelPrice As Double, _
                     ByVal stopStrategy As StopManagementStrategy, _
                     ByVal exitStrategy As PositionManagementStrategy, _
-                    ByVal scalingStrategy As PositionManagementStrategy) As orderPlex
+                    ByVal scalingStrategy As PositionManagementStrategy) As OrderPlex
                     
-Dim orderPlex As orderPlex
+Dim OrderPlex As OrderPlex
 Dim entryOrder As order
-Dim stopOrder As order
+Dim stoporder As order
 Dim targetOrder As order
 Dim lEntryPrice As Double
 Dim lTriggerPrice As Double
@@ -394,15 +411,17 @@ If number <= 0 Then err.Raise ErrorCodes.IllegalArgumentException, _
 
 ocaGroup = GenerateTextID
 
-Set orderPlex = New orderPlex
-orderPlex.key = nextPlexKey
-orderPlex.positionManager = mPositionManager
-orderPlex.ticker = mTicker
-orderPlex.dummy = mDummy
+Set OrderPlex = New OrderPlex
+OrderPlex.key = nextPlexKey
+OrderPlex.positionManager = mPositionManager
+OrderPlex.ticker = mTicker
+OrderPlex.orderSubmitter = mOrderSubmitter
+OrderPlex.dummy = mDummy
+OrderPlex.simulated = mSimulated
 
-Set entryOrder = orderPlex.createEntryOrder
+Set entryOrder = OrderPlex.createEntryOrder
 entryOrder.action = action
-entryOrder.Quantity = number
+entryOrder.quantity = number
 entryOrder.timeInForce = entryTIF
 Select Case entryType
 Case EntryTypeMarket
@@ -537,10 +556,10 @@ lEntryPrice = entryOrder.limitPrice
 lTriggerPrice = entryOrder.triggerPrice
 
 If stopType <> StopTypeNone Then
-    Set stopOrder = orderPlex.createStopOrder
-    stopOrder.action = IIf(action = ActionBuy, TradeBuild.OrderActions.ActionSell, TradeBuild.OrderActions.ActionBuy)
-    stopOrder.Quantity = number
-    stopOrder.timeInForce = stopTIF
+    Set stoporder = OrderPlex.createStopOrder
+    stoporder.action = IIf(action = ActionBuy, TradeBuild.OrderActions.ActionSell, TradeBuild.OrderActions.ActionBuy)
+    stoporder.quantity = number
+    stoporder.timeInForce = stopTIF
     
     Select Case stopType
     Case StopTypeStop
@@ -548,9 +567,9 @@ If stopType <> StopTypeNone Then
                                     "TradeBuild.OrderContext::placeOrder", _
                                     "The stopTrigger price must not be zero for this order type"
         
-        stopOrder.ocaGroup = ocaGroup
-        stopOrder.orderType = TradeBuild.OrderTypes.OrderTypeStop
-        stopOrder.triggerPrice = stopTriggerPrice + stopOffset * mTickSize
+        stoporder.ocaGroup = ocaGroup
+        stoporder.orderType = TradeBuild.OrderTypes.OrderTypeStop
+        stoporder.triggerPrice = stopTriggerPrice + stopOffset * mTickSize
     
     Case StopTypeStopLimit
         If stopTriggerPrice = 0 Then err.Raise ErrorCodes.IllegalArgumentException, _
@@ -560,55 +579,55 @@ If stopType <> StopTypeNone Then
                                     "TradeBuild.OrderContext::placeOrder", _
                                     "The stopLimit price must not be zero for this order type"
         
-        stopOrder.ocaGroup = ocaGroup
-        stopOrder.orderType = TradeBuild.OrderTypes.OrderTypeStopLimit
-        stopOrder.triggerPrice = stopTriggerPrice + stopOffset * mTickSize
-        stopOrder.limitPrice = stopLimitPrice
+        stoporder.ocaGroup = ocaGroup
+        stoporder.orderType = TradeBuild.OrderTypes.OrderTypeStopLimit
+        stoporder.triggerPrice = stopTriggerPrice + stopOffset * mTickSize
+        stoporder.limitPrice = stopLimitPrice
     
     Case StopTypeBid
 '        If stopTriggerPrice <> 0 Then err.Raise ErrorCodes.IllegalArgumentException, _
 '                                    "TradeBuild.OrderContext::placeOrder", _
 '                                    "The stopTrigger price must be zero for this order type"
         
-        stopOrder.ocaGroup = ocaGroup
-        stopOrder.orderType = TradeBuild.OrderTypes.OrderTypeStop
-        stopOrder.triggerPrice = mTicker.BidPrice + stopOffset * mTickSize
+        stoporder.ocaGroup = ocaGroup
+        stoporder.orderType = TradeBuild.OrderTypes.OrderTypeStop
+        stoporder.triggerPrice = mTicker.BidPrice + stopOffset * mTickSize
         
     Case StopTypeAsk
 '        If stopTriggerPrice <> 0 Then err.Raise ErrorCodes.IllegalArgumentException, _
 '                                    "TradeBuild.OrderContext::placeOrder", _
 '                                    "The stopTrigger price must be zero for this order type"
         
-        stopOrder.ocaGroup = ocaGroup
-        stopOrder.orderType = TradeBuild.OrderTypes.OrderTypeStop
-        stopOrder.triggerPrice = mTicker.AskPrice + stopOffset * mTickSize
+        stoporder.ocaGroup = ocaGroup
+        stoporder.orderType = TradeBuild.OrderTypes.OrderTypeStop
+        stoporder.triggerPrice = mTicker.AskPrice + stopOffset * mTickSize
     
     Case StopTypeLast
 '        If stopTriggerPrice <> 0 Then err.Raise ErrorCodes.IllegalArgumentException, _
 '                                    "TradeBuild.OrderContext::placeOrder", _
 '                                    "The stopTrigger price must be zero for this order type"
         
-        stopOrder.ocaGroup = ocaGroup
-        stopOrder.orderType = TradeBuild.OrderTypes.OrderTypeStop
-        stopOrder.triggerPrice = mTicker.TradePrice + stopOffset * mTickSize
+        stoporder.ocaGroup = ocaGroup
+        stoporder.orderType = TradeBuild.OrderTypes.OrderTypeStop
+        stoporder.triggerPrice = mTicker.TradePrice + stopOffset * mTickSize
 
     Case StopTypeAuto
 '        If stopTriggerPrice <> 0 Then err.Raise ErrorCodes.IllegalArgumentException, _
 '                                    "TradeBuild.OrderContext::placeOrder", _
 '                                    "The stopTrigger price must be zero for this order type"
         
-        stopOrder.orderType = TradeBuild.OrderTypes.OrderTypeAutoStop
-        stopOrder.offset = stopOffset
+        stoporder.orderType = TradeBuild.OrderTypes.OrderTypeAutoStop
+        stoporder.offset = stopOffset
     
     End Select
-    lStopPrice = stopOrder.triggerPrice
-    stopOrder.offset = stopOffset
+    lStopPrice = stoporder.triggerPrice
+    stoporder.offset = stopOffset
 End If
 
 If targetType <> TargetTypeNone Then
-    Set targetOrder = orderPlex.createTargetOrder
+    Set targetOrder = OrderPlex.createTargetOrder
     targetOrder.action = IIf(action = ActionBuy, TradeBuild.OrderActions.ActionSell, TradeBuild.OrderActions.ActionBuy)
-    targetOrder.Quantity = number
+    targetOrder.quantity = number
     targetOrder.timeInForce = targetTIF
     
     Select Case targetType
@@ -683,29 +702,29 @@ If check And Not mDummy Then
     If Not mPositionManager.allowOrder( _
                             IIf(action = ActionBuy, True, False), _
                             number, _
-                            orderPlex.risk, _
+                            OrderPlex.risk, _
                             msg) _
     Then
         mTicker.notifyListeners "Rejected: " & msg, _
                             TradeBuildListenValueTypes.VTOrder
-        Set orderPlex = Nothing
+        Set OrderPlex = Nothing
         Exit Function
     End If
 End If
 
 If Not stopStrategy Is Nothing Then
     stopStrategy.ticker = mTicker
-    stopStrategy.orderPlex = orderPlex
-    orderPlex.stopStrategy = stopStrategy
+    stopStrategy.OrderPlex = OrderPlex
+    OrderPlex.stopStrategy = stopStrategy
 End If
 
-If Not exitStrategy Is Nothing Then exitStrategy.orderPlex = orderPlex
+If Not exitStrategy Is Nothing Then exitStrategy.OrderPlex = OrderPlex
 
 If Not scalingStrategy Is Nothing Then
     scalingStrategy.ticker = mTicker
-    scalingStrategy.orderPlex = orderPlex
+    scalingStrategy.OrderPlex = OrderPlex
     scalingStrategy.OrderContext = Me
-    orderPlex.scalingStrategy = scalingStrategy
+    OrderPlex.scalingStrategy = scalingStrategy
 End If
 
 mTicker.notifyListeners _
@@ -717,10 +736,10 @@ mTicker.notifyListeners _
             ", target " & IIf(targetType = TargetTypeAuto, "AUTO(" & targetOffset * mTickSize & ")", lTargetPrice), _
             IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder)
 
-mActiveOrderPlexes.add orderPlex, orderPlex.key
-orderPlex.OrderContext = Me
-orderPlex.execute cancelPrice
-Set placeOrder = orderPlex
+mActiveOrderPlexes.add OrderPlex, OrderPlex.key
+OrderPlex.OrderContext = Me
+OrderPlex.execute cancelPrice
+Set placeOrder = OrderPlex
 
 End Function
 
@@ -743,7 +762,7 @@ Public Function Sell(ByRef number As Long, _
                     Optional scalingStrategy As PositionManagementStrategy, _
                     Optional ByVal entryTIF As OrderTifs = TIFDay, _
                     Optional ByVal stopTIF As OrderTifs = TIFGoodTillCancelled, _
-                    Optional ByVal targetTIF As OrderTifs = TIFGoodTillCancelled) As orderPlex
+                    Optional ByVal targetTIF As OrderTifs = TIFGoodTillCancelled) As OrderPlex
 
 Select Case entryType
 Case EntryTypeMarket
@@ -853,7 +872,7 @@ Set Sell = placeOrder(OrderActions.ActionSell, _
 End Function
 
 Friend Sub terminate()
-Dim op As orderPlex
+Dim op As OrderPlex
 For Each op In mActiveOrderPlexes
     op.terminate
 Next

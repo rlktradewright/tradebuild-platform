@@ -574,6 +574,9 @@ Public Enum OrderPlexChangeTypes
     DrawdownThresholdExceeded
     SizeChanged
     StateChanged
+    ChangesPending
+    ChangesApplied
+    ChangesCancelled
 End Enum
 
 Public Enum OrderPlexProfitTypes

@@ -50,7 +50,7 @@ Implements TradeBuildSP.IContractInfoServiceConsumer
 '================================================================================
 
 Private Type ServiceProviderTableEntry
-    Name        As String
+    name        As String
     SPTypes     As Long
     SPObject    As TradeBuildSP.ICommonServiceProvider
 End Type
@@ -61,6 +61,8 @@ End Type
 Private mServiceProviders() As ServiceProviderTableEntry
 Private mMaxSPIndex As Long
 
+Private mOrderSubmissionSP As OrderSubmissionSP
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
@@ -68,6 +70,9 @@ Private mMaxSPIndex As Long
 Private Sub Class_Initialize()
 ReDim mServiceProviders(9) As ServiceProviderTableEntry
 mMaxSPIndex = -1
+
+Set mOrderSubmissionSP = New OrderSubmissionSP
+
 End Sub
 
 '================================================================================
@@ -75,11 +80,11 @@ End Sub
 '================================================================================
 
 Private Function ICommonServiceConsumer_FormatTimestamp( _
-                            ByVal timestamp As Date, _
+                            ByVal Timestamp As Date, _
                             Optional ByVal formatOption As TradeBuildSP.TimestampFormats = 2&, _
                             Optional ByVal formatString As String = "yyyymmddhhnnss" _
                             ) As String
-ICommonServiceConsumer_FormatTimestamp = gFormatTimestamp(timestamp, _
+ICommonServiceConsumer_FormatTimestamp = gFormatTimestamp(Timestamp, _
                                                     formatOption, _
                                                     formatString)
 End Function
@@ -133,8 +138,8 @@ End Function
 Private Sub ICommonServiceConsumer_NotifyListeners( _
                             ByVal value As Variant, _
                             ByVal valueType As Long, _
-                            ByVal timestamp As Date)
-gListeners.notify value, valueType, timestamp
+                            ByVal Timestamp As Date)
+gListeners.notify value, valueType, Timestamp
 End Sub
 
 Private Sub ICommonServiceConsumer_RegisterServiceProvider( _
@@ -154,6 +159,14 @@ Case TradeBuildSP.ServiceProviderTypes.ContractInfo
         regOk = True
     End If
 Case TradeBuildSP.ServiceProviderTypes.ExchangeSimulator
+    Dim exchangeSimulatorSp As TradeBuild.IOrderSubmissionSrvcProvider
+    
+    On Error Resume Next
+    Set exchangeSimulatorSp = mServiceProviders(handle).SPObject
+    On Error GoTo 0
+    If Not exchangeSimulatorSp Is Nothing Then
+        regOk = True
+    End If
 Case TradeBuildSP.ServiceProviderTypes.HistoricalData
     Dim histDataSp As TradeBuildSP.IBarDataServiceProvider
     
@@ -296,7 +309,7 @@ For i = 0 To mMaxSPIndex
                     "TradeBuild.ServiceProviders::Add", _
                     "This Service Provider object has already been added"
         End If
-        If mServiceProviders(i).Name = serviceProvider.Name Then
+        If mServiceProviders(i).name = serviceProvider.name Then
             err.Raise ErrorCodes.NotUniqueServiceProviderName, _
                     "TradeBuild.ServiceProviders::Add", _
                     "A Service Provider with this name has already been added"
@@ -310,7 +323,7 @@ End If
 mMaxSPIndex = mMaxSPIndex + 1
 Set add = serviceProvider
 
-mServiceProviders(mMaxSPIndex).Name = serviceProvider.Name
+mServiceProviders(mMaxSPIndex).name = serviceProvider.name
 Set mServiceProviders(mMaxSPIndex).SPObject = serviceProvider
 
 serviceProvider.Link Me, mMaxSPIndex
@@ -380,8 +393,60 @@ Set CreateHistoricalDataWriter = histDataWriter
 
 End Function
 
+Friend Function CreateOrderSimulator( _
+                            ByVal serviceConsumer As TradeBuild.IOrderSubmissionSrvcConsumer _
+                            ) As TradeBuild.IOrderSubmitter
+                            
+Dim lOrderSimulatorSp As TradeBuild.IOrderSubmissionSrvcProvider
+Dim orderSubmitter As TradeBuild.IOrderSubmitter
+Dim i As Long
+
+For i = 0 To mMaxSPIndex
+    If Not mServiceProviders(i).SPObject Is Nothing Then
+        If (mServiceProviders(i).SPTypes And TradeBuildSP.ServiceProviderTypes.ExchangeSimulator) <> 0 Then
+            Set lOrderSimulatorSp = mServiceProviders(i).SPObject
+            Exit For
+        End If
+    End If
+Next
+
+If lOrderSimulatorSp Is Nothing Then Exit Function
+
+Set orderSubmitter = lOrderSimulatorSp.CreateOrderSubmitter(serviceConsumer)
+
+Set CreateOrderSimulator = orderSubmitter
+
+                            
+End Function
+
+Friend Function CreateLiveOrderSubmitter( _
+                            ByVal serviceConsumer As TradeBuild.IOrderSubmissionSrvcConsumer _
+                            ) As TradeBuild.IOrderSubmitter
+                            
+Dim lOrderSimulatorSp As TradeBuild.IOrderSubmissionSrvcProvider
+Dim orderSubmitter As TradeBuild.IOrderSubmitter
+Dim i As Long
+
+For i = 0 To mMaxSPIndex
+    If Not mServiceProviders(i).SPObject Is Nothing Then
+        If (mServiceProviders(i).SPTypes And TradeBuildSP.ServiceProviderTypes.LiveOrderSubmission) <> 0 Then
+            Set lOrderSimulatorSp = mServiceProviders(i).SPObject
+            Exit For
+        End If
+    End If
+Next
+
+If lOrderSimulatorSp Is Nothing Then Exit Function
+
+Set orderSubmitter = lOrderSimulatorSp.CreateOrderSubmitter(serviceConsumer)
+
+Set CreateLiveOrderSubmitter = orderSubmitter
+
+                            
+End Function
+
 Friend Function CreateRealtimeDataReader( _
-                                    ByVal pTicker As ticker, _
+                                    ByVal pTicker As Ticker, _
                                     ByVal serviceConsumer As TradeBuildSP.IRealtimeDataInputServiceConsumer) As TradeBuildSP.IRealtimeDataReader
 Dim realtimeSp As TradeBuildSP.IRealtimeDataServiceProvider
 Dim realtimeSPReader As TradeBuildSP.IRealtimeDataReader
@@ -404,7 +469,7 @@ Set CreateRealtimeDataReader = realtimeSPReader
 End Function
 
 Friend Function CreateTickfileReader( _
-                                    ByVal pTicker As ticker, _
+                                    ByVal pTicker As Ticker, _
                                     ByVal serviceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
                                     ByVal inputTickfileFormatID As String _
                                     ) As TradeBuild.TickfileReader
@@ -490,7 +555,7 @@ For i = 0 To mMaxSPIndex
         mServiceProviders(i).SPObject.terminate
         Set mServiceProviders(i).SPObject = Nothing
         mServiceProviders(i).SPTypes = 0
-        mServiceProviders(i).Name = ""
+        mServiceProviders(i).name = ""
         Exit For
     End If
 Next

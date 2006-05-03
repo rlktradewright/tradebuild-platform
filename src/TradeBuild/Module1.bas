@@ -40,7 +40,6 @@ Public gServiceProviders As ServiceProviders
 Public gTradeBuildAPI As TradeBuildAPI
 Public gTickers As Tickers
 Public gListeners As listeners
-Public gOrderSimulator As AdvancedOrderSimulator
 
 Public gNextOrderID As Long
 
@@ -495,7 +494,7 @@ Public Sub showRecord(rs As Recordset)
 Dim fld As Field
 Dim s As String
 For Each fld In rs.fields
-    s = s & fld.Name & "=" & fld.value & vbCrLf
+    s = s & fld.name & "=" & fld.value & vbCrLf
 Next
 MsgBox s
 End Sub

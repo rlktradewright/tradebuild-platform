@@ -55,7 +55,7 @@ Public Type OrderPlexProfile
     PrevActiveIndex     As Long
     key                 As String
     action              As OrderActions
-    Quantity            As Long
+    quantity            As Long
     EntryPrice          As Double
     ExitPrice           As Double
     QuantityOutstanding As Long
@@ -82,6 +82,8 @@ Private mIndexApplication
 Private mTicker As ticker
 
 Private mDummy As Boolean
+Private mSimulated As Boolean
+
 Private mOrderContexts As OrderContexts
 Private mMoneyManager As MoneyManager
 Private mStudies As Studies
@@ -92,7 +94,7 @@ Private mFirstActivePlexTableIndex As Long
 Private mLastActivePlexTableIndex As Long
 
 Private mSettlingOrderContext As OrderContext
-Private mSettlingOrderPlex As orderPlex
+Private mSettlingOrderPlex As OrderPlex
 Private mSettlingHandle As Long
 
 Private mClosing As Boolean
@@ -142,6 +144,8 @@ Private mLastAsk As Double
 Private mProfitListeners As Collection
 Private mChangeListeners As Collection
 
+Private mOrderSubmitter As TradeBuild.IOrderSubmitter
+
 
 '================================================================================
 ' Class Event Handlers
@@ -165,7 +169,7 @@ mPlexTable(mLastActivePlexTableIndex).PrevActiveIndex = mFirstActivePlexTableInd
 Set mProfitListeners = New Collection
 Set mChangeListeners = New Collection
 
-
+mSimulated = True
 End Sub
 
 Private Sub Class_Terminate()
@@ -305,6 +309,12 @@ Public Property Get OrderContexts() As OrderContexts
 Set OrderContexts = mOrderContexts
 End Property
 
+Friend Property Let orderSubmitter( _
+                ByVal value As TradeBuild.IOrderSubmitter)
+Set mOrderSubmitter = value
+mOrderContexts.orderSubmitter = value
+End Property
+
 Public Property Get pendingPositionSize() As Integer
 Dim OrderContext As OrderContext
 Dim size As Long
@@ -348,11 +358,20 @@ Next
 risk = totRisk
 End Property
 
+Friend Property Let simulated(ByVal value As Boolean)
+mSimulated = value
+mOrderContexts.simulated = value
+End Property
+
+Public Property Get simulated() As Boolean
+simulated = mSimulated
+End Property
+
 Friend Property Let ticker(ByVal value As ticker)
-Dim lContract As contract
+Dim lContract As Contract
 
 Set mTicker = value
-Set lContract = mTicker.contract
+Set lContract = mTicker.Contract
 
 mOrderContexts.ticker = value
 
@@ -496,15 +515,15 @@ mOrderContexts.finish
 
 End Sub
 
-Friend Sub notifyExecution(ByVal Quantity As Long, _
+Friend Sub notifyExecution(ByVal quantity As Long, _
                             ByVal price As Double, _
                             ByVal handle As Long, _
                             ByVal closedOut As Boolean)
 
 If mQuantityOutstanding = 0 Then mTradeStartTime = mTicker.timestamp
 
-mTotalEntryPrice = mTotalEntryPrice + (price * Quantity)
-mQuantityOutstanding = mQuantityOutstanding + Quantity
+mTotalEntryPrice = mTotalEntryPrice + (price * quantity)
+mQuantityOutstanding = mQuantityOutstanding + quantity
 
 fireChange PositionManagerChangeTypes.PositionSizeChanged
 
@@ -551,18 +570,18 @@ With mPlexTable(handle)
     .closedOut = closedOut
     If .QuantityOutstanding = 0 Then .StartTime = mTicker.timestamp
     
-    .TotalEntryPrice = .TotalEntryPrice + (price * Quantity)
+    .TotalEntryPrice = .TotalEntryPrice + (price * quantity)
     
-    .QuantityOutstanding = .QuantityOutstanding + Quantity
+    .QuantityOutstanding = .QuantityOutstanding + quantity
     
-    If Abs(.QuantityOutstanding) > Abs(.Quantity) Then
-        .Quantity = .QuantityOutstanding
+    If Abs(.QuantityOutstanding) > Abs(.quantity) Then
+        .quantity = .QuantityOutstanding
     End If
     
-    If (.action = ActionBuy And Quantity > 0) Or _
-        (.action = ActionSell And Quantity < 0) _
+    If (.action = ActionBuy And quantity > 0) Or _
+        (.action = ActionSell And quantity < 0) _
     Then
-        .EntryPrice = .TotalEntryPrice / .Quantity
+        .EntryPrice = .TotalEntryPrice / .quantity
     End If
         
     If .QuantityOutstanding < 0 Then
@@ -820,7 +839,7 @@ With mPlexTable(handle)
         .ExitPrice = price
     Else
         .profit = -1 * mTickValue * .TotalEntryPrice / mTickSize
-        .ExitPrice = -(.TotalEntryPrice - .Quantity * .EntryPrice) / .Quantity
+        .ExitPrice = -(.TotalEntryPrice - .quantity * .EntryPrice) / .quantity
     End If
     
     If .profit > .MaxProfit Then .MaxProfit = .profit
@@ -974,7 +993,7 @@ With mPlexTable(index)
                 .Description & "," & _
                 .key & "," & _
                 orderActionToString(.action) & "," & _
-                .Quantity & "," & _
+                .quantity & "," & _
                 .EntryPrice & "," & _
                 .ExitPrice & "," & _
                 .entryReason & "," & _
