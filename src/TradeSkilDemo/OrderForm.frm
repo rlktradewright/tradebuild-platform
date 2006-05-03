@@ -687,6 +687,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
+Implements TradeBuild.ChangeListener
 Implements TradeBuild.QuoteListener
 
 '================================================================================
@@ -781,6 +782,45 @@ End Sub
 Private Sub Form_Unload(cancel As Integer)
 mTicker.removeQuoteListener Me
 reset
+End Sub
+
+'================================================================================
+' ChangeListener Interface Members
+'================================================================================
+
+Private Sub ChangeListener_Change(ev As TradeBuild.ChangeEvent)
+Dim op As TradeBuild.OrderPlex
+
+Set op = ev.source
+
+Select Case ev.ChangeType
+Case OrderPlexChangeTypes.ChangesApplied
+    ModifyButton.Enabled = False
+    UndoButton.Enabled = False
+Case OrderPlexChangeTypes.ChangesCancelled
+    ModifyButton.Enabled = False
+    UndoButton.Enabled = False
+Case OrderPlexChangeTypes.ChangesPending
+    ModifyButton.Enabled = True
+    UndoButton.Enabled = True
+Case OrderPlexChangeTypes.Completed
+    reset
+Case OrderPlexChangeTypes.SelfCancelled
+    reset
+Case OrderPlexChangeTypes.EntryOrderChanged
+    setOrderFields op.entryOrder, BracketIndices.BracketEntryOrder
+Case OrderPlexChangeTypes.StopOrderChanged
+    setOrderFields op.stopOrder, BracketIndices.BracketStopOrder
+Case OrderPlexChangeTypes.TargetOrderChanged
+    setOrderFields op.targetOrder, BracketIndices.BracketTargetOrder
+Case OrderPlexChangeTypes.CloseoutOrderCreated
+Case OrderPlexChangeTypes.CloseoutOrderChanged
+Case OrderPlexChangeTypes.ProfitThresholdExceeded
+Case OrderPlexChangeTypes.LossThresholdExceeded
+Case OrderPlexChangeTypes.DrawdownThresholdExceeded
+Case OrderPlexChangeTypes.SizeChanged
+Case OrderPlexChangeTypes.StateChanged
+End Select
 End Sub
 
 '================================================================================
@@ -1085,25 +1125,6 @@ End Sub
 ' mOrderPlex Event Handlers
 '================================================================================
 
-Private Sub mOrderPlex_ChangesCancelled()
-ModifyButton.Enabled = False
-UndoButton.Enabled = False
-End Sub
-
-Private Sub mOrderPlex_Clean()
-ModifyButton.Enabled = False
-UndoButton.Enabled = False
-End Sub
-
-Private Sub mOrderPlex_Completed()
-reset
-End Sub
-
-Private Sub mOrderPlex_dirty()
-ModifyButton.Enabled = True
-UndoButton.Enabled = True
-End Sub
-
 Private Sub mOrderPlex_EntryOrderFilled()
 disableOrderFields BracketIndices.BracketEntryOrder
 End Sub
@@ -1139,15 +1160,7 @@ SymbolLabel.Caption = mTicker.Contract.specifier.localSymbol & _
                         mTicker.Contract.specifier.exchange
                         
 mTicker.addQuoteListener Me
-AskText.Text = mTicker.AskPriceString
-AskSizeText.Text = mTicker.AskSize
-BidText.Text = mTicker.BidPriceString
-BidSizeText.Text = mTicker.bidSize
-LastText.Text = mTicker.TradePriceString
-LastSizeText.Text = mTicker.TradeSize
-VolumeText.Text = mTicker.Volume
-HighText.Text = mTicker.highPriceString
-LowText.Text = mTicker.lowPriceString
+showTickerValues
 End Property
 
 '================================================================================
@@ -1163,11 +1176,12 @@ Dim stopOrder As TradeBuild.Order
 Dim targetOrder As TradeBuild.Order
 
 Set mOrderPlex = value
+Ticker = mOrderPlex.Ticker
 Set entryOrder = mOrderPlex.entryOrder
 Set stopOrder = mOrderPlex.stopOrder
 Set targetOrder = mOrderPlex.targetOrder
 
-If stopOrder Is Nothing And entryOrder Is Nothing Then
+If stopOrder Is Nothing And targetOrder Is Nothing Then
     Me.Caption = "Change a single order"
 Else
     Me.Caption = "Change a bracket order"
@@ -1205,17 +1219,19 @@ setOrderFields targetOrder, BracketIndices.BracketTargetOrder
 ModifyButton.Move PlaceOrdersButton.Left, PlaceOrdersButton.Top
 ModifyButton.Visible = True
 ModifyButton.Enabled = False
+
 PlaceOrdersButton.Visible = False
 
 CancelButton.Move CompleteOrdersButton.Left, CompleteOrdersButton.Top
 CancelButton.Visible = True
-ResetButton.Visible = False
 
 UndoButton.Move ResetButton.Left, ResetButton.Top
 UndoButton.Enabled = False
 UndoButton.Visible = True
+
 ResetButton.Visible = False
 
+mOrderPlex.addChangeListener Me
 End Sub
 
 '================================================================================
@@ -1454,8 +1470,10 @@ configureOrderFields BracketIndices.BracketTargetOrder
 
 BracketTabStrip.Tabs(BracketTabs.TabEntryOrder).Selected = True
 
-Set mOrderPlex = Nothing
-Set mTicker = Nothing
+If Not mOrderPlex Is Nothing Then
+    mOrderPlex.removeChangeListener Me
+    Set mOrderPlex = Nothing
+End If
 End Sub
 
 Private Sub selectComboEntry( _
@@ -1788,3 +1806,14 @@ For i = 0 To ActionCombo.Count - 1
 Next
 End Sub
 
+Private Sub showTickerValues()
+AskText.Text = mTicker.AskPriceString
+AskSizeText.Text = mTicker.AskSize
+BidText.Text = mTicker.BidPriceString
+BidSizeText.Text = mTicker.bidSize
+LastText.Text = mTicker.TradePriceString
+LastSizeText.Text = mTicker.TradeSize
+VolumeText.Text = mTicker.Volume
+HighText.Text = mTicker.highPriceString
+LowText.Text = mTicker.lowPriceString
+End Sub

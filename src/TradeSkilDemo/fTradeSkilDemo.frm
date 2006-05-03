@@ -202,37 +202,37 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(2)   =   "&3. Orders"
       TabPicture(2)   =   "fTradeSkilDemo.frx":004D
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "EditText"
-      Tab(2).Control(1)=   "OrderPlexImageList"
-      Tab(2).Control(2)=   "OrderPlexGrid"
-      Tab(2).Control(3)=   "OrderButton"
-      Tab(2).Control(4)=   "CancelOrderButton"
-      Tab(2).Control(5)=   "ModifyOrderButton"
+      Tab(2).Control(0)=   "ModifyOrderButton"
+      Tab(2).Control(1)=   "CancelOrderButton"
+      Tab(2).Control(2)=   "OrderButton"
+      Tab(2).Control(3)=   "OrderPlexGrid"
+      Tab(2).Control(4)=   "OrderPlexImageList"
+      Tab(2).Control(5)=   "EditText"
       Tab(2).ControlCount=   6
       TabCaption(3)   =   "&4. Executions"
       TabPicture(3)   =   "fTradeSkilDemo.frx":0069
       Tab(3).ControlEnabled=   0   'False
-      Tab(3).Control(0)=   "ReplayContractLabel"
+      Tab(3).Control(0)=   "ExecutionsList"
       Tab(3).Control(1)=   "ReplayProgressLabel"
-      Tab(3).Control(2)=   "ExecutionsList"
+      Tab(3).Control(2)=   "ReplayContractLabel"
       Tab(3).ControlCount=   3
       TabCaption(4)   =   "&4. Replay tickfiles"
       TabPicture(4)   =   "fTradeSkilDemo.frx":0085
       Tab(4).ControlEnabled=   0   'False
-      Tab(4).Control(0)=   "Label19"
-      Tab(4).Control(1)=   "Label20"
-      Tab(4).Control(2)=   "ReplayProgressBar"
-      Tab(4).Control(3)=   "SkipReplayButton"
-      Tab(4).Control(4)=   "PlayTickFileButton"
-      Tab(4).Control(5)=   "SelectTickfilesButton"
+      Tab(4).Control(0)=   "ReplayMarketDepthCheck"
+      Tab(4).Control(1)=   "RewriteCheck"
+      Tab(4).Control(2)=   "ReplaySpeedCombo"
+      Tab(4).Control(3)=   "TickfileList"
+      Tab(4).Control(3).Enabled=   0   'False
+      Tab(4).Control(4)=   "StopReplayButton"
+      Tab(4).Control(5)=   "PauseReplayButton"
       Tab(4).Control(6)=   "ClearTickfileListButton"
-      Tab(4).Control(7)=   "PauseReplayButton"
-      Tab(4).Control(8)=   "StopReplayButton"
-      Tab(4).Control(9)=   "TickfileList"
-      Tab(4).Control(9).Enabled=   0   'False
-      Tab(4).Control(10)=   "ReplaySpeedCombo"
-      Tab(4).Control(11)=   "RewriteCheck"
-      Tab(4).Control(12)=   "ReplayMarketDepthCheck"
+      Tab(4).Control(7)=   "SelectTickfilesButton"
+      Tab(4).Control(8)=   "PlayTickFileButton"
+      Tab(4).Control(9)=   "SkipReplayButton"
+      Tab(4).Control(10)=   "ReplayProgressBar"
+      Tab(4).Control(11)=   "Label20"
+      Tab(4).Control(12)=   "Label19"
       Tab(4).ControlCount=   13
       Begin VB.TextBox EditText 
          BorderStyle     =   0  'None
@@ -1498,7 +1498,7 @@ End Enum
 '================================================================================
 
 Private Type OrderPlexGridMappingEntry
-    op                  As TradeBuild.OrderPlex
+    op                  As TradeBuild.orderPlex
     
     ' indicates whether this entry in the grid is expanded
     isExpanded          As Boolean
@@ -1552,7 +1552,7 @@ Private mOrderForm As OrderForm
 Attribute mOrderForm.VB_VarHelpID = -1
 
 Private mSelectedOrderPlexGridRow As Long
-Private mSelectedOrderPlex As TradeBuild.OrderPlex
+Private mSelectedOrderPlex As TradeBuild.orderPlex
 Private mSelectedOrder As TradeBuild.Order
 
 Private mContractCol As Collection
@@ -1698,9 +1698,9 @@ End Sub
 '================================================================================
 
 Private Sub ChangeListener_Change(ev As TradeBuild.ChangeEvent)
-If TypeOf ev.source Is TradeBuild.OrderPlex Then
+If TypeOf ev.source Is TradeBuild.orderPlex Then
     Dim opChangeType As TradeBuild.OrderPlexChangeTypes
-    Dim op As TradeBuild.OrderPlex
+    Dim op As TradeBuild.orderPlex
     Dim opIndex As Long
     
     Set op = ev.source
@@ -1792,9 +1792,9 @@ End Sub
 '================================================================================
 
 Private Sub ProfitListener_profitAmount(ev As TradeBuild.ProfitEvent)
-If TypeOf ev.source Is TradeBuild.OrderPlex Then
+If TypeOf ev.source Is TradeBuild.orderPlex Then
     Dim opProfitType As TradeBuild.OrderPlexProfitTypes
-    Dim op As TradeBuild.OrderPlex
+    Dim op As TradeBuild.orderPlex
     Dim opIndex As Long
     
     Set op = ev.source
@@ -1972,7 +1972,6 @@ Set mOrdersCol = New Collection
 setupOrderPlexGrid
 ExecutionsList.ListItems.Clear
 
-mTradeBuildAPI.simulateOrders = (SimulateOrdersCheck = vbChecked)
 SimulateOrdersCheck.Enabled = False
 mTradeBuildAPI.Connect IIf(ServerText = "", "127.0.0.1", ServerText), PortText, ClientIDText
 writeStatusMessage "Attempting connection to " & _
@@ -2056,6 +2055,24 @@ mTradeBuildAPI.disconnect
 ConnectButton.SetFocus
 End Sub
 
+Private Sub EditText_KeyDown(KeyCode As Integer, Shift As Integer)
+Select Case KeyCode
+Case KeyCodeConstants.vbKeyEscape   ' ESC: hide, return focus to MSHFlexGrid.
+   EditText.Text = ""
+   EditText.Visible = False
+   OrderPlexGrid.SetFocus
+Case KeyCodeConstants.vbKeyReturn   ' ENTER return focus to MSHFlexGrid.
+   OrderPlexGrid.SetFocus
+   updateOrderPlex
+End Select
+
+End Sub
+
+Private Sub EditText_KeyPress(KeyAscii As Integer)
+' Delete returns to get rid of beep.
+If KeyAscii = Asc(vbCr) Then KeyAscii = 0
+End Sub
+
 Private Sub ExchangeText_Change()
 checkOkToStartTicker
 End Sub
@@ -2133,10 +2150,9 @@ rowdata = OrderPlexGrid.rowdata(mSelectedOrderPlexGridRow)
 index = rowdata - RowDataOrderPlexBase
 
 If mOrderForm Is Nothing Then Set mOrderForm = New OrderForm
-
+mOrderForm.Show vbModeless
 mOrderForm.showOrderPlex mOrderPlexGridMappingTable(index).op, _
                         mSelectedOrderPlexGridRow - mOrderPlexGridMappingTable(index).gridIndex
-mOrderForm.Show vbModeless
 
 End Sub
 
@@ -2146,15 +2162,15 @@ If mTicker Is Nothing Then
     Exit Sub
 End If
 If mOrderForm Is Nothing Then Set mOrderForm = New OrderForm
-mOrderForm.ordersAreSimulated = mTradeBuildAPI.simulateOrders
 mOrderForm.Show vbModeless
+mOrderForm.ordersAreSimulated = (SimulateOrdersCheck = vbChecked)
 mOrderForm.Ticker = mTicker
 End Sub
 
 Private Sub OrderPlexGrid_Click()
 Dim row As Long
 Dim rowdata As Long
-Dim op As TradeBuild.OrderPlex
+Dim op As TradeBuild.orderPlex
 Dim index As Long
 Dim orderIndex As Long
 
@@ -2220,29 +2236,7 @@ End If
 End Sub
 
 Private Sub OrderPlexGrid_LeaveCell()
-Dim orderNumber As Long
-Dim price As Double
-
-If Not EditText.Visible Then Exit Sub
-
-orderNumber = mSelectedOrderPlexGridRow - mOrderPlexGridMappingTable(OrderPlexGrid.rowdata(OrderPlexGrid.row) - RowDataOrderPlexBase).gridIndex
-If OrderPlexGrid.col = OPGridOrderColumns.price Then
-    If mSelectedOrderPlex.Contract.parsePrice(EditText.Text, price) Then
-        mSelectedOrderPlex.newOrderPrice(orderNumber) = price
-    End If
-ElseIf OrderPlexGrid.col = OPGridOrderColumns.auxPrice Then
-    If mSelectedOrderPlex.Contract.parsePrice(EditText.Text, price) Then
-        mSelectedOrderPlex.newOrderTriggerPrice(orderNumber) = price
-    End If
-ElseIf OrderPlexGrid.col = OPGridOrderColumns.quantity Then
-    If IsNumeric(EditText.Text) Then
-        mSelectedOrderPlex.newQuantity = EditText.Text
-    End If
-End If
-    
-If mSelectedOrderPlex.dirty Then mSelectedOrderPlex.Update
-
-EditText.Visible = False
+updateOrderPlex
 End Sub
 
 Private Sub OrderPlexGrid_Scroll()
@@ -2282,8 +2276,6 @@ ConnectButton.Enabled = False
 OrderButton.Enabled = True
 
 setupTWSContractServiceProvider
-
-mTradeBuildAPI.simulateOrders = True
 
 If Not mTicker Is Nothing Then
     writeStatusMessage "Tickfile replay resumed"
@@ -3505,7 +3497,7 @@ Set pTicker.ApplicationData.chartform = chartform
 End Sub
 
 Private Function createTicker() As Ticker
-Set createTicker = mTickers.Add(Format(CLng(1000000000 * Rnd)), "0")
+Set createTicker = mTickers.Add((SimulateOrdersCheck = vbUnchecked), Format(CLng(1000000000 * Rnd)), "0")
 initialiseTicker createTicker
 End Function
 
@@ -3617,7 +3609,7 @@ Do While OrderPlexGrid.TextMatrix(i, OPGridColumns.symbol) = symbol
 Loop
 End Sub
 
-Private Function findOrderPlexTableIndex(ByVal op As TradeBuild.OrderPlex) As Long
+Private Function findOrderPlexTableIndex(ByVal op As TradeBuild.orderPlex) As Long
 Dim opIndex As Long
 Dim lOrder As TradeBuild.Order
 Dim symbol As String
@@ -4121,6 +4113,31 @@ pTicker.RequestMarketDepth DOMEvents.DOMProcessedEvents, _
 mktDepthForm.Show vbModeless
 End Sub
 
+Private Sub updateOrderPlex()
+Dim orderNumber As Long
+Dim price As Double
+
+If Not EditText.Visible Then Exit Sub
+
+orderNumber = mSelectedOrderPlexGridRow - mOrderPlexGridMappingTable(OrderPlexGrid.rowdata(OrderPlexGrid.row) - RowDataOrderPlexBase).gridIndex
+If OrderPlexGrid.col = OPGridOrderColumns.price Then
+    If mSelectedOrderPlex.Contract.parsePrice(EditText.Text, price) Then
+        mSelectedOrderPlex.newOrderPrice(orderNumber) = price
+    End If
+ElseIf OrderPlexGrid.col = OPGridOrderColumns.auxPrice Then
+    If mSelectedOrderPlex.Contract.parsePrice(EditText.Text, price) Then
+        mSelectedOrderPlex.newOrderTriggerPrice(orderNumber) = price
+    End If
+ElseIf OrderPlexGrid.col = OPGridOrderColumns.quantity Then
+    If IsNumeric(EditText.Text) Then
+        mSelectedOrderPlex.newQuantity = EditText.Text
+    End If
+End If
+    
+If mSelectedOrderPlex.dirty Then mSelectedOrderPlex.Update
+
+EditText.Visible = False
+End Sub
 Private Sub writeStatusMessage(message As String)
 Dim timeString As String
 timeString = FormatDateTime(Now, vbLongTime) & "  "
