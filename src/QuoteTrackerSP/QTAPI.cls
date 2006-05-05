@@ -53,6 +53,10 @@ Event ConnectionClosed( _
 ' Constants
 '================================================================================
 
+Private Const LockActionReqHistoricData As String = "GHD"
+
+Private Const MaxConcurrentHistDataRequests As Long = 20    ' arbitrary limit
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -67,9 +71,31 @@ Private Type FieldDescriptor
     size        As Long
 End Type
 
+Private Type HistoricalBarDataRequestEntry
+    inUse                   As Boolean
+    cancelling              As Boolean
+    lockId                  As Long
+    useOffset               As Boolean
+    QtRequestKey            As String
+    symbol                  As String
+    barSpecifier            As TradeBuildSP.BarDataSpecifier
+    barLength               As Long
+    barsReceivedThisRequest As Long
+    timestampOffset         As Date ' used to convert timestamps received from QT
+                                    ' (which are in Eastern Standard Time) to
+                                    ' local time
+    historicalDataReader    As QTHistDataReader
+    nextBarIndex            As Long
+    bars                    As LinkedList
+    hint                    As Long     ' index of latest bar added to bars, to
+                                        ' improve the performance of adding the
+                                        ' next bar
+End Type
+
 Private Type HistoricalTickDataRequestEntry
     inUse               As Boolean
     cancelling          As Boolean
+    lockId              As Long
     symbol              As String
     requester           As QTTickfileReader
     firstInScopeTickProcessed As Boolean
@@ -138,7 +164,13 @@ Private mFieldTable() As FieldDescriptor
 
 Private mHistoricalTickDataRequestTable() As HistoricalTickDataRequestEntry
 
+Private mQTHistDataRequestQueue As Queue
+Private mHistoricalBarDataRequestTable() As HistoricalBarDataRequestEntry
+Private mConcurrentHistBarDataRequests As Long
+
 Private mL1QuotesRequestTable() As L1QuotesRequestEntry
+
+Private mLockManager As LockManager
 
 '================================================================================
 ' Class Event Handlers
@@ -158,6 +190,13 @@ mMonths(9) = "Sep"
 mMonths(10) = "Oct"
 mMonths(11) = "Nov"
 mMonths(12) = "Dec"
+
+Set mLockManager = New LockManager
+
+Set mQTHistDataRequestQueue = New Queue
+mQTHistDataRequestQueue.initialCapacity = 20
+
+ReDim mHistoricalBarDataRequestTable(MaxConcurrentHistDataRequests) As HistoricalBarDataRequestEntry
 
 ReDim mHistoricalTickDataRequestTable(5) As HistoricalTickDataRequestEntry
 
@@ -179,16 +218,6 @@ End Sub
 
 Private Sub mConnectionTimer_TimerExpired()
 connectToQT
-End Sub
-
-'================================================================================
-' mTimeoutTimer Event Handlers
-'================================================================================
-
-Private Sub mTimeoutTimer_TimerExpired()
-ReleaseSocket
-'mServiceConsumer.error StandardSPErrorCodes.TFDataSourceNotResponding, _
-'                        "QuoteTracker Server is not responding"
 End Sub
 
 '================================================================================
@@ -344,14 +373,55 @@ End Property
 ' Methods
 '================================================================================
 
-Friend Sub cancelHistoricTickData( _
-                ByVal requestId As Long)
-If mHistoricalTickDataRequestTable(requestId).inUse Then
-    mHistoricalTickDataRequestTable(requestId).cancelling = True
+Friend Sub cancelHistoricalBarData( _
+                ByVal requestHandle As Long, _
+                ByVal lockId As Long)
+
+If requestHandle < 0 Or _
+    Not mHistoricalBarDataRequestTable(requestHandle).inUse _
+Then
+    If lockId <> 0 Then mLockManager.releaseLock lockId
+    Exit Sub
+End If
+
+' lock will be released when mHistoricalBarDataRequestTable entry is released
+If mHistoricalBarDataRequestTable(requestHandle).QtRequestKey <> "" Then
+    
+    On Error Resume Next
+    mQTHistDataRequestQueue.remove mHistoricalBarDataRequestTable(requestHandle).QtRequestKey
+    On Error GoTo 0
+    If err.Number = 0 Then
+        ' request was still in queue, so just release this entry
+        releaseHistoricalBarDataRequestEntry requestHandle
+    ElseIf err.Number <> ErrorCodes.IllegalArgumentException Then
+        err.Raise err.Number
+    Else
+        ' request is with QT - can't cancel to QT so just ignore
+        ' any data that arrives.
+        mHistoricalBarDataRequestTable(requestHandle).cancelling = True
+    End If
+Else
+    ' data has been retrieved from QT and is being processed - just release this entry
+    releaseHistoricalBarDataRequestEntry requestHandle
 End If
 End Sub
 
-Friend Sub Connect()
+Friend Sub cancelHistoricalTickData( _
+                ByVal requestID As Long, _
+                ByVal lockId As Long)
+If requestID < 0 Or _
+    Not mHistoricalTickDataRequestTable(requestID).inUse _
+Then
+    If lockId <> 0 Then mLockManager.releaseLock lockId
+    Exit Sub
+End If
+
+If mHistoricalTickDataRequestTable(requestID).inUse Then
+    mHistoricalTickDataRequestTable(requestID).cancelling = True
+End If
+End Sub
+
+Friend Sub connect()
 connectToQT
 End Sub
 
@@ -359,18 +429,117 @@ Friend Sub disconnect()
 mDisconnectedByApplication = True
 If Not mConnectionTimer Is Nothing Then mConnectionTimer.StopTimer
 mConnectionState = ConnectionStates.ConnNotConnected
+logMessage "Disconnecting from QuoteTracker: " & calcConnectionString, LogLevelLow
 ReleaseSocket
 RaiseEvent ConnectionClosed(False)
 End Sub
 
-Friend Function RequestHistoricTickData( _
+Public Function readHistoricalBar( _
+                ByVal requestHandle As Long, _
+                ByRef timestamp As Date, _
+                ByRef barType As Long, _
+                ByRef barLength As Long, _
+                ByRef openPrice As Double, _
+                ByRef highPrice As Double, _
+                ByRef lowPrice As Double, _
+                ByRef closePrice As Double, _
+                ByRef volume As Long, _
+                ByRef tickVolume As Long, _
+                ByRef openInterest As Long) As Boolean
+
+Dim Bar As HistoricBar
+
+With mHistoricalBarDataRequestTable(requestHandle)
+    If .nextBarIndex = -1 Then
+        releaseHistoricalBarDataRequestEntry requestHandle
+    Else
+        readHistoricalBar = True
+        barType = TradeBuildSP.BarTypes.Trade
+        barLength = .barLength
+        Bar = .bars.itemAt(.nextBarIndex)
+        With Bar
+            timestamp = .timestamp
+            openPrice = .openValue
+            highPrice = .highValue
+            lowPrice = .lowValue
+            closePrice = .closeValue
+            volume = .volume
+            tickVolume = 0
+            openInterest = 0
+        End With
+        .nextBarIndex = .bars.nextIndex(.nextBarIndex)
+    End If
+End With
+                        
+End Function
+
+Friend Function requestHistoricalBarData( _
+                barSpecifier As TradeBuildSP.BarDataSpecifier, _
+                ByVal historicalDataReader As QTHistDataReader, _
+                ByRef lockId As Long) As Long
+
+Dim requestID As Long
+Dim i As Long
+
+requestID = -1
+
+If mConnectionState <> ConnectionStates.ConnConnected Then
+    err.Raise ErrorCodes.IllegalStateException, _
+                "QTSP.QTAPI::RequestHistoricalBarData", _
+                "Not connected"
+End If
+
+If Not mLockManager.acquireOrVerifyLock(lockId, barSpecifier.contract.ProviderID(mProviderKey), LockActionReqHistoricData, historicalDataReader) Then
+    ' we haven't acquired the lock yet, so exit
+    Exit Function
+End If
+    
+For i = 0 To UBound(mHistoricalBarDataRequestTable)
+    If Not mHistoricalBarDataRequestTable(i).inUse And _
+        Not mHistoricalBarDataRequestTable(i).cancelling _
+    Then
+        requestID = i
+        Exit For
+    End If
+Next
+
+If requestID = -1 Then
+    requestID = UBound(mHistoricalBarDataRequestTable) + 1
+    ReDim Preserve mHistoricalBarDataRequestTable(UBound(mHistoricalBarDataRequestTable) + 10) As HistoricalBarDataRequestEntry
+End If
+
+mHistoricalBarDataRequestTable(i).inUse = True
+mHistoricalBarDataRequestTable(i).cancelling = False
+mHistoricalBarDataRequestTable(i).lockId = lockId
+mHistoricalBarDataRequestTable(i).barSpecifier = barSpecifier
+mHistoricalBarDataRequestTable(i).symbol = barSpecifier.contract.ProviderID(mProviderKey)
+mHistoricalBarDataRequestTable(i).nextBarIndex = 0
+mHistoricalBarDataRequestTable(i).barLength = barSpecifier.barLengthMinutes
+mHistoricalBarDataRequestTable(i).nextBarIndex = -1
+Set mHistoricalBarDataRequestTable(i).historicalDataReader = historicalDataReader
+Set mHistoricalBarDataRequestTable(i).bars = New LinkedList
+mHistoricalBarDataRequestTable(i).bars.initialCapacity = IIf(barSpecifier.NumberOfBars <> 0, barSpecifier.NumberOfBars, 50)
+
+generateQTHistoricalDataRequest requestID
+requestHistoricalBarData = requestID
+End Function
+
+Friend Function requestHistoricalTickData( _
                 ByRef tickfileSpecifier As TradeBuildSP.TickfileSpec, _
-                ByVal requester As QTTickfileReader) As Long
+                ByVal requester As QTTickfileReader, _
+                ByRef lockId As Long) As Long
 Dim qtHist As String
 Dim starttimeEST As Date
 Dim endtimeEST As Date
 Dim i As Long
 
+requestHistoricalTickData = -1
+
+If Not mLockManager.acquireOrVerifyLock(lockId, tickfileSpecifier.contract.ProviderID(mProviderKey), LockActionReqHistoricData, requester) Then
+    ' we haven't acquired the lock yet, so exit
+    Exit Function
+End If
+    
 For i = 0 To UBound(mHistoricalTickDataRequestTable)
     If Not mHistoricalTickDataRequestTable(i).inUse Then Exit For
 Next
@@ -380,6 +549,7 @@ If i > UBound(mHistoricalTickDataRequestTable) Then
 End If
 
 mHistoricalTickDataRequestTable(i).inUse = True
+mHistoricalTickDataRequestTable(i).lockId = lockId
 Set mHistoricalTickDataRequestTable(i).requester = requester
 mHistoricalTickDataRequestTable(i).symbol = UCase$(tickfileSpecifier.contract.ProviderID(mProviderKey))
 
@@ -411,6 +581,7 @@ qtHist = "<GetHistory>" & _
         "</GetHistory>" & _
         Chr(255)
 
+Debug.Print "Request hist tick data: " & qtHist
 mSocket.SendData qtHist
 
 End Function
@@ -453,6 +624,18 @@ End Function
 
 Friend Sub unsubscribeFromL1Quotes( _
                 ByVal L1QuoteRequestId As Long)
+Dim qtUnQuote  As String
+
+qtUnQuote = "<L1Quotes>" & _
+        "<ReqType>UNSUB</ReqType>" & _
+        "<Symbols>" & _
+        """" & mL1QuotesRequestTable(L1QuoteRequestId).symbol & """" & _
+        "</Symbols>" & _
+        "</L1Quotes>" & _
+        Chr(255)
+Debug.Print "Cancel L1 quotes: " & qtUnQuote
+mSocket.SendData qtUnQuote
+
 mL1QuotesRequestTable(L1QuoteRequestId).cancelling = True
 mL1QuotesRequestTable(L1QuoteRequestId).reuseTime = Now + OneMinute
 Set mL1QuotesRequestTable(L1QuoteRequestId).requester = Nothing
@@ -470,8 +653,20 @@ End Function
 
 Private Sub connectToQT()
 Set mSocket = New Winsock
-mSocket.Connect mServer, mPort
+mSocket.connect mServer, mPort
+logMessage "Connecting to QuoteTracker: " & calcConnectionString, LogLevelLow
 End Sub
+
+Private Function findHistoricalBarDataRequestEntryIndex(ByVal symbol As String) As Long
+Dim i As Long
+findHistoricalBarDataRequestEntryIndex = -1
+For i = 0 To UBound(mHistoricalBarDataRequestTable)
+    If mHistoricalBarDataRequestTable(i).symbol = symbol Then
+        findHistoricalBarDataRequestEntryIndex = i
+        Exit Function
+    End If
+Next
+End Function
 
 Private Function findHistoricalTickDataRequestEntry(ByVal symbol As String) As HistoricalTickDataRequestEntry
 findHistoricalTickDataRequestEntry = mHistoricalTickDataRequestTable(findHistoricalTickDataRequestEntryIndex(symbol))
@@ -486,9 +681,6 @@ For i = 0 To UBound(mHistoricalTickDataRequestTable)
         Exit Function
     End If
 Next
-err.Raise ErrorCodes.IllegalArgumentException, _
-            "QTSP.QTAPI::findHistoricalTickDataRequestEntryIndex", _
-            "No entry for symbol " & symbol & " exists"
 End Function
 
 Private Function findL1QuoteRequestEntryIndex(ByVal symbol As String) As Long
@@ -504,6 +696,54 @@ err.Raise ErrorCodes.IllegalArgumentException, _
             "QTSP.QTAPI::findL1QuoteRequestEntryIndex", _
             "No entry for symbol " & symbol & " exists"
 End Function
+
+Private Sub generateQTHistoricalDataRequest(ByVal index As Long)
+Dim qtRequest As QTHistoricalDataRequestQueueEntry
+Dim reqNum As Long
+Dim totalMinsReqd As Long
+
+Dim endDateTimeEST As Date
+Dim endOffset As Date
+
+Dim startDateTime As Date
+Dim startDateTimeEST As Date
+Dim startOffset As Date
+
+qtRequest.symbol = mHistoricalBarDataRequestTable(index).symbol
+
+If mHistoricalBarDataRequestTable(index).barSpecifier.NumberOfBars <> 0 Then
+    startDateTime = mHistoricalBarDataRequestTable(index).barSpecifier.contract.OffsetBarStartTime(mHistoricalBarDataRequestTable(index).barSpecifier.To, mHistoricalBarDataRequestTable(index).barLength, mHistoricalBarDataRequestTable(index).barSpecifier.NumberOfBars)
+'    startDateTime = mHistoricalBarDataRequestTable(index).barSpecifier.To - _
+'                    CDbl((mHistoricalBarDataRequestTable(index).barSpecifier.NumberOfBars * _
+'                        mHistoricalBarDataRequestTable(index).barLength)) / 1440
+    If startDateTime < mHistoricalBarDataRequestTable(index).barSpecifier.From Then
+        startDateTime = mHistoricalBarDataRequestTable(index).barSpecifier.From
+    End If
+Else
+    startDateTime = mHistoricalBarDataRequestTable(index).barSpecifier.From
+End If
+
+startDateTimeEST = gConvertLocalTimeToEST(startDateTime)
+startOffset = startDateTime - startDateTimeEST
+
+endDateTimeEST = gConvertLocalTimeToEST(mHistoricalBarDataRequestTable(index).barSpecifier.To)
+endOffset = mHistoricalBarDataRequestTable(index).barSpecifier.To - endDateTimeEST
+
+If startOffset = endOffset Then
+    mHistoricalBarDataRequestTable(index).timestampOffset = startOffset
+    mHistoricalBarDataRequestTable(index).useOffset = True
+End If
+
+qtRequest.startDateTime = startDateTimeEST
+qtRequest.endDateTime = endDateTimeEST
+
+qtRequest.barLengthMinutes = mHistoricalBarDataRequestTable(index).barLength
+qtRequest.rth = True
+
+mHistoricalBarDataRequestTable(index).barsReceivedThisRequest = 0
+mHistoricalBarDataRequestTable(index).QtRequestKey = queueQtHistoricalDataRequest(qtRequest)
+
+End Sub
 
 Private Function GetFieldValue( _
                             ByVal fieldID As Long, _
@@ -552,6 +792,20 @@ End With
 GetFieldValue = value
 End Function
 
+Private Function checkForRecord( _
+                            ByRef recordID As String, _
+                            ByRef recordLength As Integer, _
+                            ByRef bytesProcessed As Long _
+                            ) As Boolean
+If mSocket.BytesReceived >= 4 Then
+    mSocket.GetData recordID, vbString, 2
+    mSocket.GetData recordLength, vbInteger, 2
+    bytesProcessed = 4
+    If mSocket.BytesReceived >= recordLength - bytesProcessed Then
+        checkForRecord = True
+    End If
+End If
+End Function
 Private Function GotDataForRecord( _
                             ByRef recordID As String, _
                             ByRef recordLength As Integer, _
@@ -560,28 +814,28 @@ Private Function GotDataForRecord( _
 Static expectingMoreData As Boolean
 If Not expectingMoreData Then
     bytesProcessed = 0
-    If mSocket.BytesReceived >= 4 Then
-        mSocket.GetData recordID, vbString, 2
-        mSocket.GetData recordLength, vbInteger, 2
-        bytesProcessed = 4
-        If mSocket.BytesReceived < recordLength - bytesProcessed Then
-            expectingMoreData = True
-            GotDataForRecord = False
-            Exit Function
-        End If
+    If checkForRecord(recordID, recordLength, bytesProcessed) Then
+        expectingMoreData = False
+        GotDataForRecord = True
     Else
         expectingMoreData = True
-        GotDataForRecord = False
-        Exit Function
     End If
 Else
     ' see if we've now got enough data for the record
-    If (mSocket.BytesReceived + bytesProcessed) < recordLength Then
-        Exit Function
+    If bytesProcessed = 0 Then
+        ' wasn't even enough for the header last time round
+        If checkForRecord(recordID, recordLength, bytesProcessed) Then
+            expectingMoreData = False
+            GotDataForRecord = True
+        Else
+            expectingMoreData = True
+        End If
+    ElseIf (mSocket.BytesReceived + bytesProcessed) >= recordLength Then
+        expectingMoreData = False
+        GotDataForRecord = True
     End If
-    expectingMoreData = False
 End If
-GotDataForRecord = True
+
 End Function
 
 Private Sub logMessage( _
@@ -589,6 +843,7 @@ Private Sub logMessage( _
                 ByVal logLevel As LogLevels)
 If mLogLevel < logLevel Or _
     mLogLevel = LogLevelNone Then Exit Sub
+Debug.Print message
 mCommonServiceConsumer.NotifyListeners message, _
                                         TradeBuildSP.StandardListenValueTypes.Log, _
                                         Now
@@ -619,7 +874,8 @@ Set errorCode = error.selectSingleNode("ERRORCODE")
 Set errorDesc = error.selectSingleNode("ERRORDESC")
 
 logMessage "QT API Error (" & errorCode.Text & "): " & errorDesc.Text, LogLevelLow
-err.Raise LocalErrorCodes.LongJump
+Debug.Print "QT API Error (" & errorCode.Text & "): " & errorDesc.Text
+'err.Raise LocalErrorCodes.LongJump
 End Sub
 
 Private Sub ProcessFieldDescriptions( _
@@ -699,10 +955,114 @@ Do
 Loop While bytesProcessed < recordLength
 
 index = findHistoricalTickDataRequestEntryIndex(symbol)
-If Not mHistoricalTickDataRequestTable(index).cancelling Then
-    mHistoricalTickDataRequestTable(index).requester.historicalTickDataComplete
+
+If index <> -1 Then
+    ' this HE refers to a historical tick request
+    If Not mHistoricalTickDataRequestTable(index).cancelling Then
+        mHistoricalTickDataRequestTable(index).requester.historicalTickDataComplete
+    End If
+    releaseHistoricalTickDataRequestEntry index
+Else
+    index = findHistoricalBarDataRequestEntryIndex(symbol)
+    
+    If index = -1 Then err.Raise ErrorCodes.IllegalStateException, _
+                    "QTSP.QTAPI::processHistoricalDataEnd", _
+                    "no entry for symbol: " & symbol
+
+    ' this HE refers to a hostorical bar request
+    
+    mConcurrentHistBarDataRequests = mConcurrentHistBarDataRequests - 1
+    processNextHistDataRequest
+    
+    mHistoricalBarDataRequestTable(index).QtRequestKey = ""
+    
+    If mHistoricalBarDataRequestTable(index).barSpecifier.NumberOfBars <= 0 Or _
+        mHistoricalBarDataRequestTable(index).barsReceivedThisRequest = 0 _
+    Then
+        Debug.Print "Historical data retrieved: bars in list: " & mHistoricalBarDataRequestTable(index).bars.size
+        If mHistoricalBarDataRequestTable(index).bars.size <> 0 Then
+            mHistoricalBarDataRequestTable(index).nextBarIndex = mHistoricalBarDataRequestTable(index).bars.firstIndex
+            mHistoricalBarDataRequestTable(index).historicalDataReader.historicalDataAvailable
+        Else
+            mHistoricalBarDataRequestTable(index).historicalDataReader.historicalDataRequestFailed "No data available"
+            releaseHistoricalBarDataRequestEntry index
+        End If
+    Else
+        ' request the next lot of bars
+        generateQTHistoricalDataRequest index
+    End If
+
 End If
-releaseHistoricalTickDataRequestEntry symbol
+
+End Sub
+
+Private Sub ProcessHistoricalBar( _
+                            ByVal recordLength As Integer, _
+                            ByRef bytesProcessed As Long)
+Dim fieldIdRaw As Integer
+Dim fieldID As FieldTypes
+
+Dim timestamp As Date
+
+Dim Bar As HistoricBar
+
+Dim symbol As String
+
+Dim index As Long
+
+index = -1 ' to force an error in case no symbol is received
+
+Do
+    mSocket.GetData fieldIdRaw, vbInteger, 2
+    fieldID = CLng(fieldIdRaw)
+    bytesProcessed = bytesProcessed + 2
+    
+    Select Case fieldID
+    Case FieldTypes.symbol
+        symbol = UCase$(GetFieldValue(fieldID, bytesProcessed))
+        index = findHistoricalBarDataRequestEntryIndex(symbol)
+    Case FieldTypes.openPrice
+        Bar.openValue = GetFieldValue(fieldID, bytesProcessed)
+    Case FieldTypes.high
+        Bar.highValue = GetFieldValue(fieldID, bytesProcessed)
+    Case FieldTypes.low
+        Bar.lowValue = GetFieldValue(fieldID, bytesProcessed)
+    Case FieldTypes.closePrice
+        Bar.closeValue = GetFieldValue(fieldID, bytesProcessed)
+    Case FieldTypes.volume
+        Bar.volume = GetFieldValue(fieldID, bytesProcessed)
+        'If Bar.volume < 0 Then Stop
+    Case FieldTypes.timestamp
+        Dim timestampString As String
+        timestampString = GetFieldValue(fieldID, bytesProcessed)
+        timestamp = CDate(mMonths(Mid$(timestampString, 3, 2)) & " " & _
+                            Left$(timestampString, 2) & " " & _
+                            Mid$(timestampString, 5, 4) & " " & _
+                            Mid$(timestampString, 9, 2) & ":" & _
+                            Mid$(timestampString, 11, 2) & ":" & _
+                            Mid(timestampString, 13, 2))
+        If mHistoricalBarDataRequestTable(index).useOffset Then
+            Bar.timestamp = timestamp + mHistoricalBarDataRequestTable(index).timestampOffset
+        Else
+            Bar.timestamp = gConvertESTToLocalTime(timestamp)
+        End If
+        'we assume that QT always sends the bars in increasing time order
+        If Bar.timestamp < mHistoricalBarDataRequestTable(index).barSpecifier.To Then
+            mHistoricalBarDataRequestTable(index).barSpecifier.To = Bar.timestamp
+        End If
+    Case Else
+        GetFieldValue fieldID, bytesProcessed
+    End Select
+
+Loop While bytesProcessed < recordLength
+
+If mHistoricalBarDataRequestTable(index).cancelling Then Exit Sub
+
+mHistoricalBarDataRequestTable(index).hint = mHistoricalBarDataRequestTable(index).bars.add(Bar, Bar.timestamp, mHistoricalBarDataRequestTable(index).hint)
+
+mHistoricalBarDataRequestTable(index).barSpecifier.NumberOfBars = mHistoricalBarDataRequestTable(index).barSpecifier.NumberOfBars - 1
+
+mHistoricalBarDataRequestTable(index).barsReceivedThisRequest = mHistoricalBarDataRequestTable(index).barsReceivedThisRequest + 1
 End Sub
 
 Private Sub ProcessHistoricalTick( _
@@ -1016,6 +1376,15 @@ Case Else
 End Select
 End Sub
 
+Private Sub processNextHistDataRequest()
+If mQTHistDataRequestQueue.size <> 0 Then
+    Dim request As QTHistoricalDataRequestQueueEntry
+    Dim requestKey As String
+    request = mQTHistDataRequestQueue.removeFromFront
+    reqHistoricalBarData request
+End If
+End Sub
+
 Private Function ProcessRecord() As Boolean
 Static recordID As String
 Static recordLength As Integer
@@ -1036,6 +1405,9 @@ Case "ER"       ' error
 Case "HT"       ' historical tick
     ProcessHistoricalTick recordLength, bytesProcessed
     Debug.Print "Processed HT record"
+Case "HO"       ' historical OHLC
+    ProcessHistoricalBar recordLength, bytesProcessed
+    Debug.Print "Processed HO record"
 Case "HE"       ' end of historical data
     ProcessHistoricalDataEnd recordLength, bytesProcessed
     Debug.Print "Processed HE record"
@@ -1051,8 +1423,10 @@ Case "S1"       ' level 1 quote
 Case Else
     Dim data As String
     Debug.Print "Processed " & recordID & " record"
+    'If recordID = "" Then Stop
     ' get the rest of the message off the socket
     mSocket.GetData data, vbString, recordLength - bytesProcessed
+    Debug.Print data
     bytesProcessed = bytesProcessed + Len(data)
 End Select
 
@@ -1075,10 +1449,43 @@ Loop
 
 End Sub
 
-Private Sub releaseHistoricalTickDataRequestEntry(ByVal symbol As String)
-Dim index As Long
+Private Function queueQtHistoricalDataRequest(ByRef qtRequest As QTHistoricalDataRequestQueueEntry) As String
 
-index = findHistoricalTickDataRequestEntryIndex(symbol)
+queueQtHistoricalDataRequest = mQTHistDataRequestQueue.addToEnd(qtRequest)
+
+If mConcurrentHistBarDataRequests < MaxConcurrentHistDataRequests Then
+    mQTHistDataRequestQueue.removeFromFront
+    reqHistoricalBarData qtRequest
+End If
+End Function
+
+Private Sub releaseHistoricalBarDataRequestEntry(ByVal index As Long)
+Dim lockId As Long
+
+lockId = mHistoricalBarDataRequestTable(index).lockId
+
+mHistoricalBarDataRequestTable(index).barLength = 0
+Set mHistoricalBarDataRequestTable(index).bars = Nothing
+mHistoricalBarDataRequestTable(index).barsReceivedThisRequest = 0
+mHistoricalBarDataRequestTable(index).cancelling = False
+mHistoricalBarDataRequestTable(index).hint = 0
+Set mHistoricalBarDataRequestTable(index).historicalDataReader = Nothing
+mHistoricalBarDataRequestTable(index).inUse = False
+mHistoricalBarDataRequestTable(index).nextBarIndex = 0
+mHistoricalBarDataRequestTable(index).QtRequestKey = ""
+mHistoricalBarDataRequestTable(index).symbol = ""
+mHistoricalBarDataRequestTable(index).timestampOffset = 0
+mHistoricalBarDataRequestTable(index).useOffset = False
+
+If lockId <> 0 Then mLockManager.releaseLock lockId
+
+End Sub
+
+Private Sub releaseHistoricalTickDataRequestEntry(ByVal index As Long)
+Dim lockId As Long
+
+lockId = mHistoricalTickDataRequestTable(index).lockId
+
 mHistoricalTickDataRequestTable(index).endTimeLocal = 0
 mHistoricalTickDataRequestTable(index).firstInScopeTickProcessed = False
 mHistoricalTickDataRequestTable(index).inUse = False
@@ -1089,6 +1496,9 @@ Set mHistoricalTickDataRequestTable(index).requester = Nothing
 mHistoricalTickDataRequestTable(index).startTimeLocal = 0
 mHistoricalTickDataRequestTable(index).symbol = ""
 mHistoricalTickDataRequestTable(index).timestampOffset = 0
+
+If lockId <> 0 Then mLockManager.releaseLock lockId
+
 End Sub
 
 Private Sub ReleaseSocket()
@@ -1096,6 +1506,43 @@ If Not mSocket Is Nothing Then
     mSocket.Close
     Set mSocket = Nothing
 End If
+End Sub
+
+Private Sub reqHistoricalBarData( _
+                request As QTHistoricalDataRequestQueueEntry)
+Dim qtHistReq As String
+
+If mConnectionState <> ConnectionStates.ConnConnected Then
+    err.Raise ErrorCodes.IllegalStateException, _
+                "QTSP.QTAPI::reqHistoricalBarData", _
+                "Not connected"
+End If
+
+qtHistReq = "<GetHistory>" & _
+        "<ReqType>OHLC</ReqType>" & _
+        "<Symbol>" & _
+        request.symbol & _
+        "</Symbol>" & _
+        "<FREQ>" & _
+        request.barLengthMinutes & _
+        "</FREQ>" & _
+        "<FROM>" & _
+        Format(request.startDateTime, "yyyy/mm/dd hh:mm:ss") & _
+        "</FROM>" & _
+        "<TO>" & _
+        Format(request.endDateTime, "yyyy/mm/dd hh:mm:ss") & _
+        "</TO>" & _
+        "<RTH>" & _
+        IIf(request.rth, "YES", "NO") & _
+        "</RTH>" & _
+        "</GetHistory>" & _
+        Chr(255)
+
+Debug.Print "Request hist bar data: " & qtHistReq
+mSocket.SendData qtHistReq
+
+mConcurrentHistBarDataRequests = mConcurrentHistBarDataRequests + 1
+      
 End Sub
 
 Private Sub RequestFieldDescription()
@@ -1106,17 +1553,19 @@ qtRecDesc = "<RECDESC>" & _
             "</RECDESC>" & _
             Chr(255)
 
+Debug.Print "Request field descs: " & qtRecDesc
 mSocket.SendData qtRecDesc
 End Sub
 
 Private Sub RequestLogin()
 Dim qtLogin As String
-qtLogin = "<LOGIN><PASSWORD>mPassword</PASSWORD>" & _
+qtLogin = "<LOGIN><PASSWORD>" & mPassword & "</PASSWORD>" & _
             "<AppName>TBQTSP</AppName>" & _
             "<AppVer>1</AppVer>" & _
             "</LOGIN>" + _
             Chr(255)
 
+Debug.Print "Request login: " & qtLogin
 mSocket.SendData qtLogin
 End Sub
 

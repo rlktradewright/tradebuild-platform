@@ -71,7 +71,18 @@ Private mLogLevel As LogLevels
 '================================================================================
 
 Private Sub Class_Initialize()
+
 mName = App.ProductName & "(RT)"
+
+mQTServer = "127.0.0.1"
+mQTPort = 16240
+mConnectionRetryIntervalSecs = 10
+
+mLogLevel = LogLevelLow
+End Sub
+
+Private Sub Class_Terminate()
+Debug.Print "QTSP.QTRealtimeDataServiceProvider terminated"
 End Sub
 
 '================================================================================

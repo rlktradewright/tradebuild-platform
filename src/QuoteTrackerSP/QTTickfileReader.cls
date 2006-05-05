@@ -31,6 +31,7 @@ Option Explicit
 '================================================================================
 
 Implements ITickfileReader
+Implements LockConsumer
 
 '================================================================================
 ' Events
@@ -78,6 +79,8 @@ Private mPassword As String
 Private mConnectionRetryIntervalSecs As Long
 Private mkeepConnection As Boolean
 Private mProviderKey As String
+
+Private mLockId As Long
 
 Private mTickQueue As Queue
 Private mNumPlayedTicks As Long
@@ -163,7 +166,7 @@ End If
 
 If mQTAPI.connectionState = ConnConnected Then
     mServiceConsumer.Ready mInputTickfileSpecifier, 0
-    mTickRequestId = mQTAPI.RequestHistoricTickData(mInputTickfileSpecifier, Me)
+    mTickRequestId = mQTAPI.requestHistoricalTickData(mInputTickfileSpecifier, Me, mLockId)
 End If
 
 End Sub
@@ -179,8 +182,20 @@ ITickfileReader_tickfileSizeBytes = 0
 End Property
 
 '================================================================================
-' xxxx Interface Members
+' LockConsumer Interface Members
 '================================================================================
+
+Private Sub LockConsumer_lockAcquired(ByVal lockId As Long)
+If mLockId <> lockId Then err.Raise ErrorCodes.IllegalStateException, _
+                                    "QTSP.QTTickfileReader::lockAcquired", _
+                                    "Lock id acquired is " & lockId & ": expected " & mLockId
+    
+    mTickRequestId = mQTAPI.requestHistoricalTickData(mInputTickfileSpecifier, Me, mLockId)
+End Sub
+
+Private Sub LockConsumer_waitingForLock(ByVal lockId As Long)
+mLockId = lockId
+End Sub
 
 '================================================================================
 ' mQTAPI Event Handlers
@@ -188,7 +203,7 @@ End Property
 
 Private Sub mQTAPI_Connected()
 mServiceConsumer.Ready mInputTickfileSpecifier, 0
-mTickRequestId = mQTAPI.RequestHistoricTickData(mInputTickfileSpecifier, Me)
+mTickRequestId = mQTAPI.requestHistoricalTickData(mInputTickfileSpecifier, Me, mLockId)
 End Sub
 
 Private Sub mQTAPI_ConnectFailed(ByVal Description As String, ByVal retrying As Boolean)
@@ -196,16 +211,6 @@ If Not retrying Then
     mServiceConsumer.error StandardSPErrorCodes.TFCantConnectDataSource, _
                             Description
 End If
-End Sub
-
-'================================================================================
-' mTimeoutTimer Event Handlers
-'================================================================================
-
-Private Sub mTimeoutTimer_TimerExpired()
-releaseQTAPI
-mServiceConsumer.error StandardSPErrorCodes.TFDataSourceNotResponding, _
-                        "QuoteTracker Server is not responding"
 End Sub
 
 '================================================================================
@@ -318,22 +323,22 @@ With lTick
     End If
 
     Select Case .TickType
-    Case TickTypes.Bid
-        mDataConsumer.Bid .timestamp, .Price, .size
-    Case TickTypes.Ask
-        mDataConsumer.Ask .timestamp, .Price, .size
-    Case TickTypes.Last
+    Case TickTypes.bid
+        mDataConsumer.bid .timestamp, .Price, .size
+    Case TickTypes.ask
+        mDataConsumer.ask .timestamp, .Price, .size
+    Case TickTypes.last
         mDataConsumer.Trade .timestamp, .Price, .size
-    Case TickTypes.Volume
-        mDataConsumer.Volume .timestamp, .size
-    Case TickTypes.PrevClose
+    Case TickTypes.volume
+        mDataConsumer.volume .timestamp, .size
+    Case TickTypes.prevClose
         mDataConsumer.PreviousClose .timestamp, .Price
-    Case TickTypes.High
-        mDataConsumer.High .timestamp, .Price
-    Case TickTypes.Low
-        mDataConsumer.Low .timestamp, .Price
-    Case TickTypes.OpenInterest
-        mDataConsumer.OpenInterest .timestamp, .size
+    Case TickTypes.high
+        mDataConsumer.high .timestamp, .Price
+    Case TickTypes.low
+        mDataConsumer.low .timestamp, .Price
+    Case TickTypes.openInterest
+        mDataConsumer.openInterest .timestamp, .size
     End Select
 End With
 
@@ -351,7 +356,7 @@ End Sub
 
 Private Sub releaseQTAPI()
 If Not mQTAPI Is Nothing Then
-    mQTAPI.cancelHistoricTickData mTickRequestId
+    mQTAPI.cancelHistoricalTickData mTickRequestId, mLockId
     gReleaseQTAPIInstance mQTAPI
     Set mQTAPI = Nothing
 End If

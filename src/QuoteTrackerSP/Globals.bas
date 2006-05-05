@@ -28,14 +28,14 @@ Public Enum FieldTypes
     AskPrice = 3
     LastPrice = 4
     Change
-    Volume = 6
-    OpenPrice
-    PrevClose = 8
-    BidSize = 9
-    AskSize = 10
-    LastSize = 11
-    High = 12
-    Low = 13
+    volume = 6
+    openPrice
+    prevClose = 8
+    bidSize = 9
+    askSize = 10
+    lastSize = 11
+    high = 12
+    low = 13
     Tick
     timestamp = 15
     HighPrice52
@@ -50,9 +50,10 @@ Public Enum FieldTypes
     Exchange
     MarketCap
     PE
-    OpenInterest
+    openInterest
     UPC
     Yield
+    closePrice
 End Enum
 
 '================================================================================
@@ -136,12 +137,11 @@ gCapabilities = _
             TickfileServiceProviderCapabilities.PositionExact
 End Function
 
-Public Function gConvertLocalTimeToEST(ByVal timestamp As Date) As Date
+Public Function gConvertESTToLocalTime(ByVal timestamp As Date) As Date
 Dim currTZ As TIME_ZONE_INFORMATION
 Dim estTZ As TIME_ZONE_INFORMATION
-Dim inLocalTime As SYSTEMTIME
-Dim inSystime As SYSTEMTIME
-Dim inESTTime As SYSTEMTIME
+Dim localTime As SYSTEMTIME
+Dim systime As SYSTEMTIME
 
 estTZ.Bias = 300
 estTZ.DaylightBias = -60
@@ -155,25 +155,64 @@ estTZ.StandardDate.wDay = 5         ' last
 estTZ.StandardDate.wMonth = 10
 estTZ.StandardDate.wHour = 2
 
-inLocalTime.wYear = Year(timestamp)
-inLocalTime.wMonth = Month(timestamp)
-inLocalTime.wDay = Day(timestamp)
-inLocalTime.wHour = Hour(timestamp)
-inLocalTime.wMinute = Minute(timestamp)
-inLocalTime.wSecond = Second(timestamp)
+localTime.wYear = Year(timestamp)
+localTime.wMonth = Month(timestamp)
+localTime.wDay = Day(timestamp)
+localTime.wHour = Hour(timestamp)
+localTime.wMinute = Minute(timestamp)
+localTime.wSecond = Second(timestamp)
 
 GetTimeZoneInformation currTZ
 
-TzSpecificLocalTimeToSystemTime currTZ, inLocalTime, inSystime
+TzSpecificLocalTimeToSystemTime estTZ, localTime, systime
 
-SystemTimeToTzSpecificLocalTime estTZ, inSystime, inESTTime
+SystemTimeToTzSpecificLocalTime currTZ, systime, localTime
 
-gConvertLocalTimeToEST = DateSerial(inESTTime.wYear, _
-                                inESTTime.wMonth, _
-                                inESTTime.wDay) + _
-                        TimeSerial(inESTTime.wHour, _
-                                inESTTime.wMinute, _
-                                inESTTime.wSecond)
+gConvertESTToLocalTime = DateSerial(localTime.wYear, _
+                                localTime.wMonth, _
+                                localTime.wDay) + _
+                        TimeSerial(localTime.wHour, _
+                                localTime.wMinute, _
+                                localTime.wSecond)
+End Function
+
+Public Function gConvertLocalTimeToEST(ByVal timestamp As Date) As Date
+Dim currTZ As TIME_ZONE_INFORMATION
+Dim estTZ As TIME_ZONE_INFORMATION
+Dim localTime As SYSTEMTIME
+Dim systime As SYSTEMTIME
+
+estTZ.Bias = 300
+estTZ.DaylightBias = -60
+estTZ.DaylightDate.wDayOfWeek = 0   ' Sunday
+estTZ.DaylightDate.wDay = 1         ' first
+estTZ.DaylightDate.wMonth = 4
+estTZ.DaylightDate.wHour = 2
+estTZ.StandardBias = 0
+estTZ.StandardDate.wDayOfWeek = 0
+estTZ.StandardDate.wDay = 5         ' last
+estTZ.StandardDate.wMonth = 10
+estTZ.StandardDate.wHour = 2
+
+localTime.wYear = Year(timestamp)
+localTime.wMonth = Month(timestamp)
+localTime.wDay = Day(timestamp)
+localTime.wHour = Hour(timestamp)
+localTime.wMinute = Minute(timestamp)
+localTime.wSecond = Second(timestamp)
+
+GetTimeZoneInformation currTZ
+
+TzSpecificLocalTimeToSystemTime currTZ, localTime, systime
+
+SystemTimeToTzSpecificLocalTime estTZ, systime, localTime
+
+gConvertLocalTimeToEST = DateSerial(localTime.wYear, _
+                                localTime.wMonth, _
+                                localTime.wDay) + _
+                        TimeSerial(localTime.wHour, _
+                                localTime.wMinute, _
+                                localTime.wSecond)
 End Function
 
 Public Function gGetQTAPIInstance( _
@@ -211,6 +250,7 @@ mQTAPITable(mQTAPITableNextIndex).port = port
 mQTAPITable(mQTAPITableNextIndex).providerKey = providerKey
 mQTAPITable(mQTAPITableNextIndex).ConnectionRetryIntervalSecs = ConnectionRetryIntervalSecs
 mQTAPITable(mQTAPITableNextIndex).usageCount = 1
+mQTAPITable(mQTAPITableNextIndex).keepConnection = keepConnection
 Set mQTAPITable(mQTAPITableNextIndex).QTAPI = New QTAPI
 Set gGetQTAPIInstance = mQTAPITable(mQTAPITableNextIndex).QTAPI
 
@@ -221,7 +261,7 @@ gGetQTAPIInstance.port = port
 gGetQTAPIInstance.password = password
 gGetQTAPIInstance.providerKey = providerKey
 gGetQTAPIInstance.ConnectionRetryIntervalSecs = ConnectionRetryIntervalSecs
-gGetQTAPIInstance.Connect
+gGetQTAPIInstance.connect
 
 End Function
 

@@ -100,9 +100,10 @@ End Sub
 '================================================================================
 
 Private Sub IRealtimeDataReader_StartData( _
-                ByVal contract As TradeBuildSP.IContract)
+                ByVal Contract As TradeBuildSP.IContract, _
+                ByVal DomEventsRequired As TradeBuildSP.DOMEventTypes)
 
-Set mContract = contract
+Set mContract = Contract
 If mQTAPI Is Nothing Then
     Set mQTAPI = gGetQTAPIInstance(mServer, mPort, mPassword, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection)
     mQTAPI.CommonServiceConsumer = mCommonServiceConsumer
@@ -115,9 +116,18 @@ End If
 
 End Sub
 
+Private Sub IRealtimeDataReader_StartMarketDepth( _
+    ByVal DomEventsRequired As TradeBuildSP.DOMEventTypes)
+
+End Sub
+
 Private Sub IRealtimeDataReader_StopData()
 mQTAPI.unsubscribeFromL1Quotes mL1QuoteRequestId
 releaseQTAPI
+End Sub
+
+Private Sub IRealtimeDataReader_StopMarketDepth()
+
 End Sub
 
 Private Function IRealtimeDataReader_Supports(ByVal capabilities As Long) As Boolean

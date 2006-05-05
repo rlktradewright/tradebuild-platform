@@ -101,25 +101,42 @@ End Enum
 
 Public Enum TickTypes
     None
-    Bid
-    Ask
-    Last
+    bid
+    ask
+    last
     volume
-    PrevClose
-    High
-    Low
-    OpenInterest
+    prevClose
+    high
+    low
+    openInterest
 End Enum
 
 '================================================================================
 ' Types
 '================================================================================
 
+Public Type HistoricBar
+    timestamp       As Date
+    openValue       As Double
+    highValue       As Double
+    lowValue        As Double
+    closeValue      As Double
+    volume          As Long
+End Type
+
+Public Type QTHistoricalDataRequestQueueEntry
+    symbol                  As String
+    startDateTime           As Date
+    endDateTime             As Date
+    barLengthMinutes        As Long
+    rth                     As Boolean
+End Type
+
 Public Type Tick
     TickType    As TickTypes
     timestamp   As Date
     Price       As Double
-    Size        As Long
+    size        As Long
 End Type
 
 '================================================================================
