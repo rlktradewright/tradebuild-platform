@@ -162,21 +162,21 @@ With contract
     .SessionEndTime = instrument.SessionEndTime
     .SessionStartTime = instrument.SessionStartTime
     
-    If instrument.OrderTypes <> "" Then
-        Dim orderTypesStr() As String
-        orderTypesStr = Split(instrument.OrderTypes)
-        ReDim OrderTypes(UBound(orderTypesStr)) As TradeBuildSP.OrderTypes
-        For i = 0 To UBound(orderTypesStr)
-            OrderTypes(i) = CLng(orderTypesStr(i))
-        Next
-    Else
-        ReDim OrderTypes(3) As TradeBuildSP.OrderTypes
-        OrderTypes(0) = TradeBuildSP.OrderTypes.OrderTypeMarket
-        OrderTypes(1) = TradeBuildSP.OrderTypes.OrderTypeLimit
-        OrderTypes(2) = TradeBuildSP.OrderTypes.OrderTypeStop
-        OrderTypes(3) = TradeBuildSP.OrderTypes.OrderTypeStopLimit
-    End If
-    .OrderTypes = OrderTypes
+'    If instrument.OrderTypes <> "" Then
+'        Dim orderTypesStr() As String
+'        orderTypesStr = Split(instrument.OrderTypes)
+'        ReDim OrderTypes(UBound(orderTypesStr)) As TradeBuildSP.OrderTypes
+'        For i = 0 To UBound(orderTypesStr)
+'            OrderTypes(i) = CLng(orderTypesStr(i))
+'        Next
+'    Else
+'        ReDim OrderTypes(3) As TradeBuildSP.OrderTypes
+'        OrderTypes(0) = TradeBuildSP.OrderTypes.OrderTypeMarket
+'        OrderTypes(1) = TradeBuildSP.OrderTypes.OrderTypeLimit
+'        OrderTypes(2) = TradeBuildSP.OrderTypes.OrderTypeStop
+'        OrderTypes(3) = TradeBuildSP.OrderTypes.OrderTypeStopLimit
+'    End If
+'    .OrderTypes = OrderTypes
     
     ReDim validExchanges(0) As String
     validExchanges(0) = instrument.Exchange
