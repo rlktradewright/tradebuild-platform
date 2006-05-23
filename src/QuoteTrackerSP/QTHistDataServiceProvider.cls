@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "QTTickfileServiceProvider"
+Attribute VB_Name = "QTHistDataServiceProvider"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -31,7 +31,7 @@ Option Explicit
 '================================================================================
 
 Implements ICommonServiceProvider
-Implements ITickfileServiceProvider
+Implements IBarDataServiceProvider
 
 '================================================================================
 ' Events
@@ -53,16 +53,17 @@ Implements ITickfileServiceProvider
 ' Member variables
 '================================================================================
 
+Private mName As String
+
+Private mHandle As Long
+Private mCommonServiceConsumer As ICommonServiceConsumer
+
 Private mQTServer As String
 Private mQTPort As Long
 Private mPassword As String
 Private mConnectionRetryIntervalSecs As Long
 Private mkeepConnection As Boolean
 Private mProviderKey As String
-
-Private mName As String
-Private mHandle As Long
-Private mCommonServiceConsumer As ICommonServiceConsumer
 
 Private mLogLevel As LogLevels
 
@@ -72,7 +73,7 @@ Private mLogLevel As LogLevels
 
 Private Sub Class_Initialize()
 
-mName = App.ProductName & "(TF)"
+mName = App.ProductName & "(HD)"
 
 mQTServer = "127.0.0.1"
 mQTPort = 16240
@@ -82,8 +83,51 @@ mLogLevel = LogLevelLow
 End Sub
 
 Private Sub Class_Terminate()
-Debug.Print "QTSP.QTTickfileServiceProvider terminated"
+Debug.Print "QTSP.QTHistdataServiceProvider terminated"
 End Sub
+
+'================================================================================
+' IBarDataServiceProvider Interface Members
+'================================================================================
+
+Private Function IBarDataServiceProvider_CreateBarDataReader( _
+                            ByVal dataConsumer As TradeBuildSP.IBarDataConsumer, _
+                            ByVal serviceConsumer As TradeBuildSP.IBarDataInputServiceConsumer _
+                            ) As TradeBuildSP.IBarDataReader
+
+Dim reader As QTHistDataReader
+
+Set reader = New QTHistDataReader
+Set IBarDataServiceProvider_CreateBarDataReader = reader
+
+reader.CommonServiceConsumer = mCommonServiceConsumer
+reader.barDataInputServiceConsumer = serviceConsumer
+reader.dataConsumer = dataConsumer
+reader.port = mQTPort
+reader.server = mQTServer
+reader.password = mPassword
+reader.providerKey = mProviderKey
+reader.keepConnection = mkeepConnection
+reader.logLevel = mLogLevel
+reader.ConnectionRetryIntervalSecs = mConnectionRetryIntervalSecs
+reader.ServiceProviderName = mName & " (reader)"
+
+End Function
+
+Private Function IBarDataServiceProvider_CreateBarDataWriter( _
+                            ByVal serviceConsumer As TradeBuildSP.IBarDataOutputServiceConsumer, _
+                            ByVal contractSpec As TradeBuildSP.IContractSpecifier, _
+                            Optional ByVal location As String = "" _
+                            ) As TradeBuildSP.IBarDataWriter
+
+
+End Function
+
+Private Function IBarDataServiceProvider_Supports( _
+                            ByVal capabilities As Long _
+                            ) As Boolean
+IBarDataServiceProvider_Supports = False
+End Function
 
 '================================================================================
 ' ICommonServiceProvider Interface Members
@@ -113,7 +157,7 @@ Private Sub ICommonServiceProvider_Link( _
 Set mCommonServiceConsumer = CommonServiceConsumer
 mHandle = handle
 mCommonServiceConsumer.RegisterServiceProvider mHandle, _
-                            ServiceProviderTypes.Tickfile
+                            ServiceProviderTypes.HistoricalData
 
 End Sub
 
@@ -131,61 +175,7 @@ Private Sub ICommonServiceProvider_Terminate()
 End Sub
 
 '================================================================================
-' ITickfileServiceProvider Interface Members
-'================================================================================
-
-Private Function ITickfileServiceProvider_CreateTickfileReader( _
-                            ByVal dataConsumer As TradeBuildSP.IStreamingDataConsumer, _
-                            ByVal serviceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
-                            ByVal FormatIdentifier As String) As TradeBuildSP.ITickfileReader
-Dim reader As QTTickfileReader
-Set reader = New QTTickfileReader
-Set ITickfileServiceProvider_CreateTickfileReader = reader
-reader.CommonServiceConsumer = mCommonServiceConsumer
-reader.TickfileInputServiceConsumer = serviceConsumer
-reader.StreamingDataConsumer = dataConsumer
-reader.server = mQTServer
-reader.port = mQTPort
-reader.password = mPassword
-reader.keepConnection = mkeepConnection
-reader.providerKey = mProviderKey
-reader.logLevel = mLogLevel
-reader.Name = mName & " (reader)"
-reader.ConnectionRetryIntervalSecs = mConnectionRetryIntervalSecs
-End Function
-
-Private Function ITickfileServiceProvider_CreateTickfileWriter( _
-                            ByVal serviceConsumer As TradeBuildSP.ITickfileOutputServiceConsumer, _
-                            Optional ByVal FormatIdentifier As String = "", _
-                            Optional ByVal location As String = "") As TradeBuildSP.ITickfileWriter
-' writing not supported
-End Function
-
-Private Property Get ITickfileServiceProvider_SupportedFormats() As TickfileFormatSpecifier()
-Dim formats(0) As TickfileFormatSpecifier
-
-formats(0).Name = "QuoteTracker Streaming"
-formats(0).FormalID = TickfileFormatQuoteTracker
-formats(0).FileExtension = "tck"
-formats(0).FormatType = StreamBased
-formats(0).capabilities = gCapabilities
-
-ITickfileServiceProvider_SupportedFormats = formats
-
-End Property
-
-Private Function ITickfileServiceProvider_Supports( _
-                            ByVal capabilities As Long, _
-                            Optional ByVal FormatIdentifier As String) As Boolean
-ITickfileServiceProvider_Supports = gSupports(capabilities, FormatIdentifier)
-End Function
-
-'================================================================================
-' xxxx Interface Members
-'================================================================================
-
-'================================================================================
-' xxxx Event Handlers
+' XXXX Event Handlers
 '================================================================================
 
 '================================================================================
@@ -194,10 +184,6 @@ End Function
 
 Public Property Let ConnectionRetryIntervalSecs(ByVal value As Long)
 mConnectionRetryIntervalSecs = value
-End Property
-
-Public Property Get ConnectionRetryIntervalSecs() As Long
-ConnectionRetryIntervalSecs = mConnectionRetryIntervalSecs
 End Property
 
 Public Property Let keepConnection(ByVal value As Boolean)
@@ -250,5 +236,8 @@ End Property
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+
+
 
 
