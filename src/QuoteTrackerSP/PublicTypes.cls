@@ -81,14 +81,6 @@ Public Enum ErrorCodes
 
 End Enum
 
-Public Enum LogLevels
-    LogLevelNone
-    LogLevelLow
-    LogLevelMedium
-    LogLevelHigh
-    LogLevelAll
-End Enum
-
 Public Enum SPErrorCodes
     CantConnectToQuoteTracker = 700
     LogonResponseCannotBeParsed
