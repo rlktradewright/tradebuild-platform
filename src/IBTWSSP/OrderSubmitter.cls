@@ -1,0 +1,511 @@
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+  Persistable = 0  'NotPersistable
+  DataBindingBehavior = 0  'vbNone
+  DataSourceBehavior  = 0  'vbNone
+  MTSTransactionMode  = 0  'NotAnMTSObject
+END
+Attribute VB_Name = "OrderSubmitter"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = False
+Attribute VB_Exposed = True
+Option Explicit
+
+'================================================================================
+' Description
+'================================================================================
+'
+'
+'================================================================================
+' Amendment history
+'================================================================================
+'
+'
+'
+'
+
+'================================================================================
+' Interfaces
+'================================================================================
+
+Implements ContractDetailsRequester
+Implements TradeBuildSP.IOrderSubmitter
+
+'================================================================================
+' Events
+'================================================================================
+
+'================================================================================
+' Constants
+'================================================================================
+
+'================================================================================
+' Enums
+'================================================================================
+
+'================================================================================
+' Types
+'================================================================================
+
+'================================================================================
+' Member variables
+'================================================================================
+
+Private mCommonServiceConsumer As ICommonServiceConsumer
+Private mServiceConsumer As TradeBuildSP.IOrderSubmissionSrvcConsumer
+
+Private mTradeBuildContract As TradeBuildSP.IContract
+Private mContract As contract
+
+Private mName As String
+
+Private WithEvents mTWSAPI As TWSAPI
+Attribute mTWSAPI.VB_VarHelpID = -1
+Private mPort As Long
+Private mServer As String
+Private mClientID As Long
+
+Private mConnectionRetryIntervalSecs As Long
+Private mkeepConnection As Boolean
+Private mProviderKey As String
+
+Private mLogLevel As LogLevels
+Private mTWSLogLevel As TWSLogLevels
+
+'================================================================================
+' Class Event Handlers
+'================================================================================
+
+Private Sub Class_Terminate()
+If Not mTWSAPI Is Nothing Then gReleaseTWSAPIInstance mTWSAPI
+Set mTWSAPI = Nothing
+Debug.Print "IBTWSSP.OrderSubmitter terminated"
+End Sub
+
+'================================================================================
+' ContractDetailsRequester Interface Members
+'================================================================================
+
+Private Sub ContractDetailsRequester_cancelRequest( _
+                ByRef request As TWSContractDetailsRequestQueueEntry, _
+                ByVal reason As String)
+
+End Sub
+
+Private Sub ContractDetailsRequester_contractsLoaded( _
+                ByRef request As TWSContractDetailsRequestQueueEntry)
+If request.localContracts.Count = 1 Then
+    Set mContract = request.localContracts(1)
+    mServiceConsumer.Ready
+Else
+    mServiceConsumer.Error StandardSPErrorCodes.LONotUniqueContract, _
+                            "Contract is not uniquely specified"
+End If
+End Sub
+
+Private Sub ContractDetailsRequester_contractSpecifierInvalid( _
+                ByRef request As TWSContractDetailsRequestQueueEntry, _
+                ByVal reason As String)
+mServiceConsumer.Error StandardSPErrorCodes.LOUnknownContract, _
+                        "Contract not known"
+End Sub
+
+'================================================================================
+' IOrderSubmitter Interface Members
+'================================================================================
+
+Private Function IOrderSubmitter_cancelOrderPlex(ByVal pOrderPlex As TradeBuildSP.IOrderPlex) As Boolean
+Dim entryOrder As TradeBuildSP.IOrder
+Dim stopOrder As TradeBuildSP.IOrder
+Dim targetOrder As TradeBuildSP.IOrder
+
+Set entryOrder = pOrderPlex.entryOrder
+Select Case entryOrder.status
+Case TradeBuildSP.OrderStatuses.OrderStatusCreated, _
+    TradeBuildSP.OrderStatuses.OrderStatusFilled, _
+    TradeBuildSP.OrderStatuses.OrderStatusCancelling, _
+    TradeBuildSP.OrderStatuses.OrderStatusCancelled
+Case Else
+    mTWSAPI.cancelOrder entryOrder.brokerId    ' should automatically cancel the other orders
+                                                    ' if they have parentid set
+    IOrderSubmitter_cancelOrderPlex = True
+End Select
+
+Set stopOrder = pOrderPlex.stopOrder
+If Not stopOrder Is Nothing Then
+    Select Case stopOrder.status
+    Case TradeBuildSP.OrderStatuses.OrderStatusCreated, _
+        TradeBuildSP.OrderStatuses.OrderStatusFilled, _
+        TradeBuildSP.OrderStatuses.OrderStatusCancelling, _
+        TradeBuildSP.OrderStatuses.OrderStatusCancelled
+    Case Else
+        Select Case entryOrder.status
+        Case TradeBuildSP.OrderStatuses.OrderStatusFilled, _
+            TradeBuildSP.OrderStatuses.OrderStatusCancelling, _
+            TradeBuildSP.OrderStatuses.OrderStatusCancelled
+            mTWSAPI.cancelOrder stopOrder.brokerId
+            IOrderSubmitter_cancelOrderPlex = True
+        End Select
+    End Select
+End If
+
+Set targetOrder = pOrderPlex.targetOrder
+If Not targetOrder Is Nothing Then
+    Select Case targetOrder.status
+    Case TradeBuildSP.OrderStatuses.OrderStatusCreated, _
+        TradeBuildSP.OrderStatuses.OrderStatusFilled, _
+        TradeBuildSP.OrderStatuses.OrderStatusCancelling, _
+        TradeBuildSP.OrderStatuses.OrderStatusCancelled
+    Case Else
+        Select Case entryOrder.status
+        Case TradeBuildSP.OrderStatuses.OrderStatusFilled, _
+            TradeBuildSP.OrderStatuses.OrderStatusCancelling, _
+            TradeBuildSP.OrderStatuses.OrderStatusCancelled
+            mTWSAPI.cancelOrder targetOrder.brokerId
+            IOrderSubmitter_cancelOrderPlex = True
+        End Select
+    End Select
+End If
+    
+' need some stuff here to cancel if it's an oca group
+
+End Function
+
+Private Sub IOrderSubmitter_cancelStopOrder(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
+Dim stopOrder As TradeBuildSP.IOrder
+
+Set stopOrder = pOrderPlex.stopOrder
+If stopOrder Is Nothing Then err.Raise ErrorCodes.IllegalStateException, _
+                                    "IBTWSSP.OrderSubmitter::cancelStopOrder", _
+                                    "Order plex " & pOrderPlex.key & " has no stop order"
+
+Select Case stopOrder.status
+Case TradeBuildSP.OrderStatuses.OrderStatusCreated, _
+    TradeBuildSP.OrderStatuses.OrderStatusFilled, _
+    TradeBuildSP.OrderStatuses.OrderStatusCancelling, _
+    TradeBuildSP.OrderStatuses.OrderStatusCancelled
+    err.Raise ErrorCodes.IllegalStateException, _
+                                    "IBTWSSP.OrderSubmitter::cancelStopOrder", _
+                                    "Stop order state invalid for cancellation"
+Case Else
+    mTWSAPI.cancelOrder stopOrder.brokerId
+End Select
+End Sub
+
+Private Sub IOrderSubmitter_cancelTargetOrder(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
+Dim targetOrder As TradeBuildSP.IOrder
+
+Set targetOrder = pOrderPlex.targetOrder
+If targetOrder Is Nothing Then err.Raise ErrorCodes.IllegalStateException, _
+                                    "IBTWSSP.OrderSubmitter::cancelTargetOrder", _
+                                    "Order plex " & pOrderPlex.key & " has no target order"
+
+
+Select Case targetOrder.status
+Case TradeBuildSP.OrderStatuses.OrderStatusCreated, _
+    TradeBuildSP.OrderStatuses.OrderStatusCancelling, _
+    TradeBuildSP.OrderStatuses.OrderStatusCancelled
+    err.Raise ErrorCodes.IllegalStateException, _
+                                    "IBTWSSP.OrderSubmitter::cancelTargetOrder", _
+                                    "Target order state invalid for cancellation"
+Case Else
+    mTWSAPI.cancelOrder targetOrder.brokerId
+End Select
+End Sub
+
+Private Property Let IOrderSubmitter_clockRate(ByVal RHS As Single)
+
+End Property
+
+Private Sub IOrderSubmitter_executeOrderPlex(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
+Dim entryOrder As TradeBuildSP.IOrder
+Dim stopOrder As TradeBuildSP.IOrder
+Dim targetOrder As TradeBuildSP.IOrder
+Dim transmit As Boolean
+
+Set entryOrder = pOrderPlex.entryOrder
+Set stopOrder = pOrderPlex.stopOrder
+Set targetOrder = pOrderPlex.targetOrder
+
+If Not entryOrder Is Nothing Then
+    transmit = True
+    If Not stopOrder Is Nothing Then
+        If stopOrder.orderType <> TradeBuildSP.OrderTypes.OrderTypeAutoStop Then transmit = False
+    End If
+    If Not targetOrder Is Nothing Then
+        If targetOrder.orderType <> TradeBuildSP.OrderTypes.OrderTypeAutoLimit Then transmit = False
+    End If
+        
+    placeOrder entryOrder, transmit, "0", ""
+    
+    If Not stopOrder Is Nothing Then
+        transmit = True
+        If Not targetOrder Is Nothing Then
+            If targetOrder.orderType <> TradeBuildSP.OrderTypes.OrderTypeAutoLimit Then transmit = False
+        End If
+        
+        If stopOrder.orderType <> TradeBuildSP.OrderTypes.OrderTypeAutoStop Then
+            ' note that AUTOSTP orders will be sent when the entry order is filled
+            placeOrder stopOrder, transmit, entryOrder.brokerId, ""
+        End If
+    End If
+    
+    If Not targetOrder Is Nothing Then
+        If targetOrder.orderType <> TradeBuildSP.OrderTypes.OrderTypeAutoLimit Then
+            placeOrder targetOrder, True, entryOrder.brokerId, ""
+        End If
+    End If
+    
+Else
+    ' treat the other orders as an OCA group - still to be implemented
+End If
+End Sub
+
+Private Sub IOrderSubmitter_modifyOrderPlex( _
+                ByVal pOrderPlex As TradeBuildSP.IOrderPlex, _
+                ByVal entryOrderChanged As Boolean, _
+                ByVal stopOrderChanged As Boolean, _
+                ByVal targetOrderChanged As Boolean, _
+                ByVal closeoutOrderChanged As Boolean)
+
+If entryOrderChanged Then
+    placeOrder pOrderPlex.entryOrder, True, "0", ""
+End If
+If stopOrderChanged Then
+    placeOrder pOrderPlex.stopOrder, True, pOrderPlex.entryOrder.brokerId, ""
+End If
+If targetOrderChanged Then
+    placeOrder pOrderPlex.stopOrder, True, pOrderPlex.entryOrder.brokerId, ""
+End If
+If closeoutOrderChanged Then
+    placeOrder pOrderPlex.closeoutOrder, True, "0", ""
+End If
+    
+End Sub
+
+Private Property Get IOrderSubmitter_permittedOrderAttributes() As Long
+IOrderSubmitter_permittedOrderAttributes = mContract.permittedOrderAttributes
+End Property
+
+Private Property Get IOrderSubmitter_permittedOrderTifs() As Long
+IOrderSubmitter_permittedOrderTifs = mContract.permittedOrderTifs
+End Property
+
+Private Property Get IOrderSubmitter_permittedOrderTypes() As Long
+IOrderSubmitter_permittedOrderTypes = mContract.permittedOrderTypes
+End Property
+
+Private Property Get IOrderSubmitter_permittedStopTriggerMethods() As Long
+IOrderSubmitter_permittedStopTriggerMethods = mContract.permittedStopTriggerMethods
+End Property
+
+Private Sub IOrderSubmitter_resubmitStopAndTargetOrders(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
+Dim stopOrder As TradeBuildSP.IOrder
+Dim targetOrder As TradeBuildSP.IOrder
+Dim ocaGroup As String
+
+ocaGroup = mCommonServiceConsumer.generateGUIDString
+
+Set stopOrder = pOrderPlex.stopOrder
+stopOrder.brokerId = ""   ' force a new id to be allocated
+placeOrder stopOrder, False, "0", ocaGroup
+
+Set targetOrder = pOrderPlex.targetOrder
+targetOrder.brokerId = "" ' force a new id to be allocated
+placeOrder targetOrder, True, "0", ocaGroup
+End Sub
+
+Private Sub IOrderSubmitter_resubmitStopOrder(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
+Dim stopOrder As TradeBuildSP.IOrder
+Dim targetOrder As TradeBuildSP.IOrder
+Dim ocaGroup As String
+
+Set stopOrder = pOrderPlex.stopOrder
+Set targetOrder = pOrderPlex.targetOrder
+stopOrder.brokerId = ""     ' force a new id to be allocated
+If targetOrder Is Nothing Then
+    placeOrder stopOrder, True, "0", ""
+Else
+    ocaGroup = mCommonServiceConsumer.generateGUIDString
+    placeOrder stopOrder, False, "0", ocaGroup
+    placeOrder targetOrder, True, "0", ocaGroup
+End If
+End Sub
+
+Private Sub IOrderSubmitter_resubmitTargetOrder(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
+Dim stopOrder As TradeBuildSP.IOrder
+Dim targetOrder As TradeBuildSP.IOrder
+Dim ocaGroup As String
+
+Set stopOrder = pOrderPlex.stopOrder
+Set targetOrder = pOrderPlex.targetOrder
+targetOrder.brokerId = ""   ' force a new id to be allocated
+If pOrderPlex.stopOrder Is Nothing Then
+    placeOrder targetOrder, True, "0", ""
+Else
+    ocaGroup = mCommonServiceConsumer.generateGUIDString
+    placeOrder stopOrder, False, "0", ocaGroup
+    placeOrder targetOrder, True, "0", ocaGroup
+End If
+End Sub
+
+'================================================================================
+' mTWSAPI Event Handlers
+'================================================================================
+
+Private Sub mTWSAPI_Connected()
+If Not mContract Is Nothing Then mServiceConsumer.Ready
+End Sub
+
+Private Sub mTWSAPI_ConnectFailed(ByVal Description As String, ByVal retrying As Boolean)
+If Not retrying Then
+    mServiceConsumer.Error StandardSPErrorCodes.LOCantConnectToBroker, _
+                            Description
+Else
+    mServiceConsumer.Error StandardSPErrorCodes.LORetryConnectToBroker, _
+                            Description
+End If
+mServiceConsumer.notReady
+End Sub
+
+Private Sub mTWSAPI_ConnectionToIBClosed()
+mServiceConsumer.Error StandardSPErrorCodes.LOReConnectingToBroker, _
+                        "Lost connection from TWS to IB servers"
+mServiceConsumer.notReady
+End Sub
+
+Private Sub mTWSAPI_ConnectionToIBRecovered()
+If Not mContract Is Nothing Then mServiceConsumer.Ready
+End Sub
+
+Private Sub mTWSAPI_ConnectionToTWSClosed(ByVal reconnecting As Boolean)
+If Not reconnecting Then
+    mServiceConsumer.Error StandardSPErrorCodes.LOLostConnectionToBroker, _
+                            "Lost connection to TWS"
+Else
+    mServiceConsumer.Error StandardSPErrorCodes.LOReConnectingToBroker, _
+                            "Lost connection to TWS - reconnecting"
+End If
+mServiceConsumer.notReady
+End Sub
+'================================================================================
+' Properties
+'================================================================================
+
+Friend Property Let clientID(ByVal value As Long)
+mClientID = value
+End Property
+
+Friend Property Let commonServiceConsumer(ByVal RHS As TradeBuildSP.ICommonServiceConsumer)
+Set mCommonServiceConsumer = RHS
+End Property
+
+Friend Property Let connectionRetryIntervalSecs(ByVal value As Long)
+mConnectionRetryIntervalSecs = value
+End Property
+
+Friend Property Get connectionRetryIntervalSecs() As Long
+connectionRetryIntervalSecs = mConnectionRetryIntervalSecs
+End Property
+
+Friend Property Let contract(ByVal value As TradeBuildSP.IContract)
+Set mTradeBuildContract = value
+End Property
+
+Public Property Let keepConnection(ByVal value As Boolean)
+mkeepConnection = value
+End Property
+
+Friend Property Let logLevel(ByVal value As LogLevels)
+mLogLevel = value
+End Property
+
+Friend Property Let name(ByVal value As String)
+mName = value
+End Property
+
+Friend Property Let port(ByVal value As Long)
+mPort = value
+End Property
+
+Friend Property Let providerKey(ByVal value As String)
+mProviderKey = value
+End Property
+
+Friend Property Let server(ByVal value As String)
+mServer = IIf(value = "", "127.0.0.1", value)
+End Property
+
+Friend Property Let serviceConsumer(ByVal value As TradeBuildSP.IOrderSubmissionSrvcConsumer)
+Set mServiceConsumer = value
+End Property
+
+Friend Property Let TWSLogLevel(ByVal value As TWSLogLevels)
+mTWSLogLevel = value
+End Property
+
+'================================================================================
+' Methods
+'================================================================================
+
+Friend Sub executionDetails( _
+                ByVal orderId As String, _
+                ByVal pContractSpecifier As TradeBuildSP.IContractSpecifier, _
+                ByVal exec As TradeBuildSP.IExecution)
+mServiceConsumer.executionDetails orderId, pContractSpecifier, exec
+End Sub
+
+Friend Sub invalidOrder( _
+                ByVal orderId As String, _
+                ByVal message As String)
+                
+mServiceConsumer.Error StandardSPErrorCodes.LOInvalidOrder, _
+                        message
+End Sub
+
+Friend Sub start()
+Dim contracts As TradeBuildSP.IContracts
+
+If mTWSAPI Is Nothing Then
+    Set mTWSAPI = gGetTWSAPIInstance(mServer, mPort, mClientID, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection)
+    mTWSAPI.commonServiceConsumer = mCommonServiceConsumer
+    mTWSAPI.logLevel = mLogLevel
+End If
+
+
+Set contracts = mCommonServiceConsumer.NewContracts
+contracts.contractSpecifier = mTradeBuildContract.specifier
+mTWSAPI.RequestContract contracts, Me
+End Sub
+
+Friend Sub updateStatus( _
+                ByVal orderId As String, _
+                ByVal status As TradeBuildSP.OrderStatuses, _
+                ByVal filledThisTime As Long, _
+                ByVal totalFilled As Long, _
+                ByVal remaining As Long, _
+                ByVal fillPrice As Double)
+
+mServiceConsumer.orderStatus orderId, _
+                            status, _
+                            filledThisTime, _
+                            totalFilled, _
+                            remaining, _
+                            fillPrice * mContract.priceMagnifier
+End Sub
+'================================================================================
+' Helper Functions
+'================================================================================
+
+Private Sub placeOrder( _
+                ByVal pOrder As TradeBuildSP.IOrder, _
+                ByVal transmit As Boolean, _
+                ByVal parentId As String, _
+                ByVal ocaGroup As String)
+mTWSAPI.placeOrder Me, pOrder, transmit, parentId, ocaGroup, ""
+End Sub
+
+
+
