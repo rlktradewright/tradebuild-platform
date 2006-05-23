@@ -134,14 +134,19 @@ ICommonServiceProvider_Details = details
 End Property
 
 Private Sub ICommonServiceProvider_Link( _
-                            ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
-                            ByVal handle As Long)
+            ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
+            ByVal handle As Long)
 Set mCommonServiceConsumer = CommonServiceConsumer
 mHandle = handle
 mCommonServiceConsumer.RegisterServiceProvider mHandle, _
                             ServiceProviderTypes.HistoricalData
 
 End Sub
+
+Private Property Let ICommonServiceProvider_LogLevel( _
+                ByVal RHS As TradeBuildSP.LogLevels)
+
+End Property
 
 Private Property Get ICommonServiceProvider_Name() As String
 ICommonServiceProvider_Name = Name
