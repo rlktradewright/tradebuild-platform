@@ -100,6 +100,10 @@ mCommonServiceConsumer.RegisterServiceProvider mHandle, _
 
 End Sub
 
+Private Property Let ICommonServiceProvider_LogLevel(ByVal RHS As TradeBuildSP.LogLevels)
+
+End Property
+
 Private Property Get ICommonServiceProvider_Name() As String
 ICommonServiceProvider_Name = Name
 End Property
