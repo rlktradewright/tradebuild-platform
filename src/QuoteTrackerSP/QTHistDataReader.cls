@@ -74,9 +74,6 @@ Private mLockId As Long
 
 Private mRequestId As Long
 
-Private WithEvents mTimer As IntervalTimer
-Attribute mTimer.VB_VarHelpID = -1
-
 Private mBarDataSpecifier  As TradeBuildSP.BarDataSpecifier
 Private mContractSpecifier As IContractSpecifier
 
@@ -90,9 +87,6 @@ Private mLogLevel As LogLevels
 '================================================================================
 
 Private Sub Class_Initialize()
-Set mTimer = New IntervalTimer
-mTimer.RepeatNotifications = False
-mTimer.TimerIntervalMillisecs = 1
 
 mPort = 7496
 mConnectionRetryIntervalSecs = 10
