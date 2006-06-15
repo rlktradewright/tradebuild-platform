@@ -166,6 +166,10 @@ Private Property Let ICommonServiceProvider_LogLevel( _
 mLogLevel = RHS
 End Property
 
+Private Property Let ICommonServiceProvider_Name(ByVal RHS As String)
+Name = RHS
+End Property
+
 Private Property Get ICommonServiceProvider_Name() As String
 ICommonServiceProvider_Name = Name
 End Property
