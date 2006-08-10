@@ -65,7 +65,7 @@ Private mExtended As Boolean
 Private mBlank As Boolean
 Private mHidden As Boolean
 
-Private mColour As Long
+Private mColor As Long
 Private mThickness As Long
 Private mStyle As LineStyles
 Private mExtendBefore As Boolean
@@ -477,14 +477,14 @@ Friend Property Let canvas(ByVal value As canvas)
 Set mCanvas = value
 End Property
 
-Public Property Get color() As Long
-color = mColour
+Public Property Get Color() As Long
+Color = mColor
 End Property
 
-Public Property Let color(ByVal newValue As Long)
-If mColour = newValue Then Exit Property
+Public Property Let Color(ByVal newValue As Long)
+If mColor = newValue Then Exit Property
 undraw
-mColour = newValue
+mColor = newValue
 update
 End Property
 
@@ -1082,7 +1082,7 @@ If Not mVisible Then
     Exit Sub
 End If
 
-mCanvas.setPenAttributes IIf(undraw, mCanvas.backColor, mColour), _
+mCanvas.setPenAttributes IIf(undraw, mCanvas.backColor, mColor), _
                         mThickness, _
                         mStyle, _
                         DrawModes.DrawModeCopyPen
@@ -1231,7 +1231,7 @@ Else
                 End If
                 .drawLine left, mA * left + mB, right, mA * right + mB
             Else
-                .setPenAttributes mColour, _
+                .setPenAttributes mColor, _
                                 mThickness, _
                                 LineStyles.LineSolid, _
                                 DrawModes.DrawModeCopyPen
@@ -1290,16 +1290,16 @@ Else
                                             CoordsLogical, _
                                             CoordsLogical)
                 End If
-                .setPenAttributes mColour, _
+                .setPenAttributes mColor, _
                                 1, _
                                 LineStyles.LineSolid, _
                                 DrawModes.DrawModeCopyPen
-                .setBrushAttributes mColour, _
+                .setBrushAttributes mColor, _
                                 FillStyles.FillSolid
                 
                 .drawPolygon vertices
                 
-                .setPenAttributes mColour, _
+                .setPenAttributes mColor, _
                                 mThickness, _
                                 LineStyles.LineSolid, _
                                 DrawModes.DrawModeCopyPen
@@ -1336,7 +1336,7 @@ End With
 
 If Not rectOverlaps(mEndArrowRect, area) Then Exit Sub
 
-mCanvas.setPenAttributes IIf(undraw, mCanvas.backColor, mColour), _
+mCanvas.setPenAttributes IIf(undraw, mCanvas.backColor, mColor), _
                         mThickness, _
                         mStyle, _
                         DrawModes.DrawModeCopyPen
@@ -1386,7 +1386,7 @@ End With
 
 If Not rectOverlaps(mStartArrowRect, area) Then Exit Sub
 
-mCanvas.setPenAttributes IIf(undraw, mCanvas.backColor, mColour), _
+mCanvas.setPenAttributes IIf(undraw, mCanvas.backColor, mColor), _
                         mThickness, _
                         mStyle, _
                         DrawModes.DrawModeCopyPen

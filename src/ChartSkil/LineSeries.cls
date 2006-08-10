@@ -42,7 +42,7 @@ Private mFixedY As Boolean
 Private mIncludeInAutoscale As Boolean
 Private mExtended As Boolean
 
-Private mColour As Long
+Private mColor As Long
 Private mThickness As Long
 Private mStyle As LineStyles
 Private mExtendBefore As Boolean
@@ -185,13 +185,13 @@ Friend Property Let canvas(ByVal value As canvas)
 Set mCanvas = value
 End Property
 
-Public Property Get color() As Long
-color = mColour
+Public Property Get Color() As Long
+Color = mColor
 End Property
 
-Public Property Let color(ByVal newValue As Long)
-If mColour = newValue Then Exit Property
-mColour = newValue
+Public Property Let Color(ByVal newValue As Long)
+If mColor = newValue Then Exit Property
+mColor = newValue
 End Property
 
 Public Property Get count() As Long
@@ -313,7 +313,7 @@ With add
     .arrowStartLength = mArrowStartLength
     .arrowStartStyle = mArrowStartStyle
     .arrowStartWidth = mArrowStartWidth
-    .color = mColour
+    .Color = mColor
     .extendAfter = mExtendAfter
     .extendBefore = mExtendBefore
     .extended = mExtended
@@ -340,9 +340,9 @@ Friend Sub finish()
 Set mCanvas = Nothing
 End Sub
 
-Public Function Item(ByVal index As Long) As ChartSkil.Line
-Attribute Item.VB_UserMemId = 0
-Set Item = mLines(index)
+Public Function item(ByVal index As Long) As ChartSkil.Line
+Attribute item.VB_UserMemId = 0
+Set item = mLines(index)
 End Function
 
 Friend Function ItemByKey(ByVal key As String) As ChartSkil.Line
@@ -357,7 +357,7 @@ End Function
 Friend Sub removeAll()
 Dim i As Long
 For i = mLines.count To 1 Step -1
-    mLines.Remove (i)
+    mLines.remove (i)
 Next
 End Sub
 

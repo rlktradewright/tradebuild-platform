@@ -53,12 +53,12 @@ Private mDrawn As Boolean
 
 Private mText As String
 Private mFont As StdFont
-Private mColour As Long
+Private mColor As Long
 Private mBox As Boolean
-Private mBoxColour As Long
+Private mBoxColor As Long
 Private mBoxStyle As LineStyles
 Private mBoxThickness As Long
-Private mBoxFillColour As Long
+Private mBoxFillColor As Long
 Private mBoxFillStyle As FillStyles
 Private mPaddingX  As Double
 Private mPaddingY  As Double
@@ -232,24 +232,24 @@ update
 End Property
 
 Public Property Get boxColor() As Long
-boxColor = mBoxColour
+boxColor = mBoxColor
 End Property
 
 Public Property Let boxColor(ByVal newValue As Long)
-If mBoxColour = newValue Then Exit Property
+If mBoxColor = newValue Then Exit Property
 undraw
-mBoxColour = newValue
+mBoxColor = newValue
 update
 End Property
 
 Friend Property Get boxFillColor() As Long
-boxFillColor = mBoxFillColour
+boxFillColor = mBoxFillColor
 End Property
 
 Public Property Let boxFillColor(ByVal newValue As Long)
-If mBoxFillColour = newValue Then Exit Property
+If mBoxFillColor = newValue Then Exit Property
 undraw
-mBoxFillColour = newValue
+mBoxFillColor = newValue
 update
 End Property
 
@@ -290,14 +290,14 @@ Friend Property Let canvas(ByVal value As canvas)
 Set mCanvas = value
 End Property
 
-Public Property Get color() As Long
-color = mColour
+Public Property Get Color() As Long
+Color = mColor
 End Property
 
-Public Property Let color(ByVal newValue As Long)
-If mColour = newValue Then Exit Property
+Public Property Let Color(ByVal newValue As Long)
+If mColor = newValue Then Exit Property
 undraw
-mColour = newValue
+mColor = newValue
 update
 End Property
 
@@ -462,15 +462,15 @@ mDrawn = True
 
 With mCanvas
     If mBox Then
-        .setPenAttributes mBoxColour, _
+        .setPenAttributes mBoxColor, _
                         mBoxThickness, _
                         mBoxStyle, _
                         DrawModes.DrawModeCopyPen
-        .setBrushAttributes mBoxFillColour, mBoxFillStyle
+        .setBrushAttributes mBoxFillColor, mBoxFillStyle
         .drawRectangle mBoxRect.left, mBoxRect.bottom, mBoxRect.right, mBoxRect.top
     End If
     
-    .setTextAttributes mColour, mFont, True
+    .setTextAttributes mColor, mFont, True
 '    If mText = "Volume" Then Stop
     .drawText mText, mTextRect.left, mTextRect.top
 End With
@@ -488,7 +488,7 @@ Private Sub calcRawBoundingRect()
 ' subject to change
 If mText = "" Then Exit Sub
 
-mCanvas.setTextAttributes mColour, mFont, True
+mCanvas.setTextAttributes mColor, mFont, True
 With mRawBoundingRect
     .left = 0
     .right = mCanvas.TextWidth(mText)

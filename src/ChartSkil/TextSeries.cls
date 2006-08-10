@@ -46,12 +46,12 @@ Private mIncludeInAutoscale As Boolean
 Private mExtended As Boolean
 
 Private mFont As StdFont
-Private mColour As Long
+Private mColor As Long
 Private mBox As Boolean
-Private mBoxColour As Long
+Private mBoxColor As Long
 Private mBoxStyle As LineStyles
 Private mBoxThickness As Long
-Private mBoxFillColour As Long
+Private mBoxFillColor As Long
 Private mBoxFillStyle As FillStyles
 Private mPaddingX As Double
 Private mPaddingY As Double
@@ -96,19 +96,19 @@ mBox = newValue
 End Property
 
 Public Property Get boxColor() As Long
-boxColor = mBoxColour
+boxColor = mBoxColor
 End Property
 
 Public Property Let boxColor(ByVal newValue As Long)
-mBoxColour = newValue
+mBoxColor = newValue
 End Property
 
 Friend Property Get boxFillColor() As Long
-boxFillColor = mBoxFillColour
+boxFillColor = mBoxFillColor
 End Property
 
 Public Property Let boxFillColor(ByVal newValue As Long)
-mBoxFillColour = newValue
+mBoxFillColor = newValue
 End Property
 
 Public Property Get boxFillStyle() As FillStyles
@@ -139,12 +139,12 @@ Friend Property Let canvas(ByVal value As canvas)
 Set mCanvas = value
 End Property
 
-Public Property Get color() As Long
-color = mColour
+Public Property Get Color() As Long
+Color = mColor
 End Property
 
-Public Property Let color(ByVal newValue As Long)
-mColour = newValue
+Public Property Let Color(ByVal newValue As Long)
+mColor = newValue
 End Property
 
 Public Property Get count() As Long
@@ -244,12 +244,12 @@ Set add = New text
 add.canvas = mCanvas
 add.align = mAlign
 add.box = mBox
-add.boxColor = mBoxColour
-add.boxFillColor = mBoxFillColour
+add.boxColor = mBoxColor
+add.boxFillColor = mBoxFillColor
 add.boxFillStyle = mBoxFillStyle
 add.boxStyle = mBoxStyle
 add.boxThickness = mBoxThickness
-add.color = mColour
+add.Color = mColor
 add.eventProxy = mEventProxy
 add.fixedX = mFixedX
 add.fixedY = mFixedY
@@ -275,9 +275,9 @@ Friend Sub finish()
 Set mCanvas = Nothing
 End Sub
 
-Public Function Item(ByVal index As Long) As text
-Attribute Item.VB_UserMemId = 0
-Set Item = mTexts(index)
+Public Function item(ByVal index As Long) As text
+Attribute item.VB_UserMemId = 0
+Set item = mTexts(index)
 End Function
 
 Friend Function ItemByKey(ByVal key As String) As text
@@ -293,7 +293,7 @@ End Function
 Friend Sub removeAll()
 Dim i As Long
 For i = mTexts.count To 1 Step -1
-    mTexts.Remove (i)
+    mTexts.remove (i)
 Next
 End Sub
 

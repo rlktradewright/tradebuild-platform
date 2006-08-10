@@ -77,6 +77,7 @@ End Enum
 ' Member variables
 '================================================================================
 
+Private mName As String
 Private mRegionNumber As Long
 
 Private mPeriodTable() As PeriodTableEntry
@@ -164,8 +165,8 @@ Private mYScaleFormatStr As String
 Private mYScaleSubFormatStr As String
 Private mGridTextHeight As Double
 
-Private mBackColour As Long
-Private mGridColour As Long
+Private mBackColor As Long
+Private mGridColor As Long
 Private mGridTextColor As Long
 Private mShowGrid As Boolean
 Private mShowPerformanceText As Boolean
@@ -184,8 +185,8 @@ Private mCurrentTool As ToolTypes
 ' defaults for bar series
 Private mBarTailThickness As Long
 Private mBarOutlineThickness As Long
-Private mBarUpColour As Long
-Private mBarDownColour As Long
+Private mBarUpColor As Long
+Private mBarDownColor As Long
 Private mBarDisplayAsCandlestick As Boolean
 Private mBarSolidUpBody As Boolean
 Private mBarThickness As Long
@@ -193,7 +194,7 @@ Private mBarCandleWidth As Single
 
 ' defaults for datapoint series
 Private mDataPointLineThickness As Long
-Private mDataPointLineColour As Long
+Private mDataPointLineColor As Long
 Private mDataPointLineStyle As LineStyles
 Private mDataPointDisplayMode As DisplayModes
 Private mDataPointHistBarWidth As Single
@@ -201,12 +202,12 @@ Private mDataPointIncludeInAutoscale As Boolean
 
 ' defaults for text and text series
 Private mTextFont As StdFont
-Private mTextColour As Long
+Private mTextColor As Long
 Private mTextBox As Boolean
-Private mTextBoxColour As Long
+Private mTextBoxColor As Long
 Private mTextBoxStyle As LineStyles
 Private mTextBoxThickness As Long
-Private mTextBoxFillColour As Long
+Private mTextBoxFillColor As Long
 Private mTextBoxFillStyle As FillStyles
 Private mTextAlign As TextAlignModes
 Private mTextKeepInView As Boolean
@@ -218,7 +219,7 @@ Private mTextPaddingX As Double
 Private mTextPaddingY As Double
 
 ' defaults for lines and line series
-Private mLineColour As Long
+Private mLineColor As Long
 Private mLineThickness As Long
 Private mLineStyle As LineStyles
 Private mLineExtendBefore As Boolean
@@ -283,8 +284,8 @@ mGridlineSpacingY = GridlineSpacingCm
 ' defaults for bar series
 mBarTailThickness = 1
 mBarOutlineThickness = 1
-mBarUpColour = &H1D9311
-mBarDownColour = &H43FC2
+mBarUpColor = &H1D9311
+mBarDownColor = &H43FC2
 mBarDisplayAsCandlestick = True
 mBarSolidUpBody = True
 mBarThickness = 2
@@ -292,7 +293,7 @@ mBarCandleWidth = 0.5
 
 ' defaults for datapoint series
 mDataPointLineThickness = 1
-mDataPointLineColour = vbBlack
+mDataPointLineColor = vbBlack
 mDataPointLineStyle = LineStyles.LineSolid
 mDataPointDisplayMode = DisplayModes.DisplayAsLines
 mDataPointHistBarWidth = 0.5
@@ -307,12 +308,12 @@ aFont.Size = 10
 aFont.Strikethrough = False
 aFont.Underline = False
 Set mTextFont = aFont
-mTextColour = vbBlack
+mTextColor = vbBlack
 mTextBox = False
-mTextBoxColour = vbBlack
+mTextBoxColor = vbBlack
 mTextBoxStyle = LineStyles.LineSolid
 mTextBoxThickness = 1
-mTextBoxFillColour = vbWhite
+mTextBoxFillColor = vbWhite
 mTextBoxFillStyle = FillStyles.FillSolid
 mTextAlign = TextAlignModes.AlignBottomLeft
 mTextKeepInView = False
@@ -323,7 +324,7 @@ mTextPaddingY = 0.5
 
 ' defaults for lines and line series
 
-mLineColour = vbBlack
+mLineColor = vbBlack
 mLineThickness = 1
 mLineStyle = LineStyles.LineSolid
 mLineExtendBefore = False
@@ -396,22 +397,28 @@ With mGraphicObjects(handle)
     .includeInAutoscale = .graphObj.includeInAutoscale
     .scaleDependent = .graphObj.scaleDependent
     .capabilities = .graphObj.capabilities
+End With
+
+If mGraphicObjects(handle).extendedObject Then
+    removeEntryFromPeriodList handle
+    addEntryToExtendedList handle
+Else
+    removeEntryFromExtendedList handle
     
-    If .extendedObject Then
-        removeEntryFromPeriodList handle
-        addEntryToExtendedList handle
-    Else
-        removeEntryFromExtendedList handle
-        addEntryToPeriodList handle
+    ' The following call to addEntryToPeriodList must not be in a With block
+    ' involving mGraphicObjects because in rare circumstances it can result
+    ' in mGraphicObjects being ReDim'd which leads to an error 10
+    addEntryToPeriodList handle
+End If
+
+If graphicObjectIsInScope(handle) Then
+    addEntryToInScopeList handle
+    If graphicObjectIsVisible(handle) Then
+        addEntryToVisibleList handle
     End If
+End If
     
-    If graphicObjectIsInScope(handle) Then
-        addEntryToInScopeList handle
-        If graphicObjectIsVisible(handle) Then
-            addEntryToVisibleList handle
-        End If
-    End If
-    
+With mGraphicObjects(handle)
     ' check if the vertical bounds have changed, and redraw if so
     If mAutoscale And Not mSuppressDrawing Then
         If .includeInAutoscale Then
@@ -578,12 +585,12 @@ Public Property Let barDisplayAsCandlestick(ByVal value As Boolean)
 mBarDisplayAsCandlestick = value
 End Property
 
-Public Property Get barDownColour() As Long
-barDownColour = mBarDownColour
+Public Property Get barDownColor() As Long
+barDownColor = mBarDownColor
 End Property
 
-Public Property Let barDownColour(ByVal value As Long)
-mBarDownColour = value
+Public Property Let barDownColor(ByVal value As Long)
+mBarDownColor = value
 End Property
 
 Public Property Get barOutlineThickness() As Long
@@ -618,12 +625,12 @@ Public Property Let barThickness(ByVal value As Long)
 mBarThickness = value
 End Property
 
-Public Property Get barUpColour() As Long
-barUpColour = mBarUpColour
+Public Property Get barUpColor() As Long
+barUpColor = mBarUpColor
 End Property
 
-Public Property Let barUpColour(ByVal value As Long)
-mBarUpColour = value
+Public Property Let barUpColor(ByVal value As Long)
+mBarUpColor = value
 End Property
 
 Public Property Get currentTool() As ToolTypes
@@ -658,12 +665,12 @@ Public Property Let dataPointIncludeInAutoscale(ByVal newValue As Boolean)
 mDataPointIncludeInAutoscale = newValue
 End Property
 
-Public Property Get dataPointLineColour() As Long
-dataPointLineColour = mDataPointLineColour
+Public Property Get dataPointLineColor() As Long
+dataPointLineColor = mDataPointLineColor
 End Property
 
-Public Property Let dataPointLineColour(ByVal value As Long)
-mDataPointLineColour = value
+Public Property Let dataPointLineColor(ByVal value As Long)
+mDataPointLineColor = value
 End Property
 
 Public Property Get dataPointLineStyle() As LineStyles
@@ -683,11 +690,11 @@ mDataPointLineThickness = value
 End Property
 
 Public Property Get gridColor() As Long
-gridColor = mGridColour
+gridColor = mGridColor
 End Property
 
 Public Property Let gridColor(ByVal val As Long)
-mGridColour = val
+mGridColor = val
 End Property
 
 Public Property Get gridlineSpacingY() As Double
@@ -807,11 +814,11 @@ mLineArrowStartWidth = newValue
 End Property
 
 Public Property Get lineColor() As Long
-lineColor = mLineColour
+lineColor = mLineColor
 End Property
 
 Public Property Let lineColor(ByVal val As Long)
-mLineColour = val
+mLineColor = val
 End Property
 
 Public Property Get lineExtendAfter() As Boolean
@@ -894,6 +901,14 @@ Public Property Let minimumPercentHeight(ByVal value As Double)
 mMinimumPercentHeight = value
 End Property
 
+Public Property Get name() As String
+name = mName
+End Property
+
+Friend Property Let name(ByVal value As String)
+mName = value
+End Property
+
 Public Property Get percentheight() As Double
 percentheight = mPercentHeight
 End Property
@@ -946,11 +961,11 @@ End Select
 End Property
 
 Public Property Get regionBackColor() As Long
-regionBackColor = mBackColour
+regionBackColor = mBackColor
 End Property
 
 Public Property Let regionBackColor(ByVal val As Long)
-mBackColour = val
+mBackColor = val
 If Not mYAxisRegion Is Nothing Then
     mYAxisRegion.regionBackColor = val
 End If
@@ -1053,7 +1068,7 @@ Public Property Let showGrid(ByVal val As Boolean)
 mShowGrid = val
 If mShowGrid Then
     Set mXGridLines = Me.addLineSeries(LayerNumbers.LayerGrid)
-    mXGridLines.color = mGridColour
+    mXGridLines.Color = mGridColor
     mXGridLines.extendAfter = True
     mXGridLines.extendBefore = True
     mXGridLines.includeInAutoscale = False
@@ -1061,7 +1076,7 @@ If mShowGrid Then
     mXGridLines.thickness = 1
     
     Set mYGridLines = Me.addLineSeries(LayerNumbers.LayerGrid)
-    mYGridLines.color = mGridColour
+    mYGridLines.Color = mGridColor
     mYGridLines.extendAfter = True
     mYGridLines.extendBefore = True
     mYGridLines.includeInAutoscale = False
@@ -1085,10 +1100,10 @@ If mShowGridText Then
     Set mXGridTexts = Me.addTextSeries(LayerNumbers.LayerGrid)
     mXGridTexts.align = AlignBottomCentre
     mXGridTexts.box = True
-    mXGridTexts.boxFillColor = mBackColour
+    mXGridTexts.boxFillColor = mBackColor
     mXGridTexts.boxStyle = LineInvisible
     mXGridTexts.extended = True
-    mXGridTexts.color = mGridTextColor
+    mXGridTexts.Color = mGridTextColor
     Set aFont = New StdFont
     aFont.name = "Arial"
     aFont.Size = 8
@@ -1099,10 +1114,10 @@ If mShowGridText Then
     Set mXGridTextsCoarse = Me.addTextSeries(LayerNumbers.LayerGrid)
     mXGridTextsCoarse.align = AlignTopCentre
     mXGridTextsCoarse.box = True
-    mXGridTextsCoarse.boxFillColor = mBackColour
+    mXGridTextsCoarse.boxFillColor = mBackColor
     mXGridTextsCoarse.boxStyle = LineInvisible
     mXGridTextsCoarse.extended = True
-    mXGridTextsCoarse.color = mGridTextColor
+    mXGridTextsCoarse.Color = mGridTextColor
     Set aFont = New StdFont
     aFont.name = "Arial"
     aFont.Size = 8
@@ -1164,19 +1179,19 @@ mTextBox = newValue
 End Property
 
 Public Property Get textBoxColor() As Long
-textBoxColor = mTextBoxColour
+textBoxColor = mTextBoxColor
 End Property
 
 Public Property Let textBoxColor(ByVal newValue As Long)
-mTextBoxColour = newValue
+mTextBoxColor = newValue
 End Property
 
 Friend Property Get textBoxFillColor() As Long
-textBoxFillColor = mTextBoxFillColour
+textBoxFillColor = mTextBoxFillColor
 End Property
 
 Public Property Let textBoxFillColor(ByVal newValue As Long)
-mTextBoxFillColour = newValue
+mTextBoxFillColor = newValue
 End Property
 
 Public Property Get textBoxFillStyle() As FillStyles
@@ -1204,11 +1219,11 @@ mTextBoxThickness = newValue
 End Property
 
 Public Property Get textColor() As Long
-textColor = mTextColour
+textColor = mTextColor
 End Property
 
 Public Property Let textColor(ByVal newValue As Long)
-mTextColour = newValue
+mTextColor = newValue
 End Property
 
 Friend Property Get textExtended() As Boolean
@@ -1313,11 +1328,11 @@ mYAxisRegion.suppressDrawing = mSuppressDrawing
 
 Set mYPositionText = mYAxisRegion.addText(LayerNumbers.LayerPointer)
 mYPositionText.align = AlignCentreLeft
-mYPositionText.color = vbWhite Xor mBackColour
+mYPositionText.Color = vbWhite Xor mBackColor
 mYPositionText.box = True
-mYPositionText.boxFillColor = mBackColour
+mYPositionText.boxFillColor = mBackColor
 mYPositionText.boxStyle = LineSolid
-mYPositionText.boxColor = vbWhite Xor mBackColour
+mYPositionText.boxColor = vbWhite Xor mBackColor
 Set aFont = New StdFont
 aFont.name = "Arial"
 aFont.Size = 8
@@ -1328,7 +1343,7 @@ mYPositionText.font = aFont
 Set mYGridTexts = mYAxisRegion.addTextSeries(LayerNumbers.LayerGrid)
 mYGridTexts.includeInAutoscale = False
 mYGridTexts.align = AlignCentreLeft
-mYGridTexts.color = mGridTextColor
+mYGridTexts.Color = mGridTextColor
 mYGridTexts.box = False
 Set aFont = New StdFont
 aFont.name = "Arial"
@@ -1354,14 +1369,14 @@ mBarSeriesCol.add addBarSeries
 addBarSeries.canvas = mCanvas
 addBarSeries.candleWidth = barCandleWidth
 addBarSeries.displayAsCandlestick = barDisplayAsCandlestick
-addBarSeries.downColour = barDownColour
+addBarSeries.downColor = barDownColor
 addBarSeries.eventProxy = mEventProxy
 addBarSeries.layer = getLayer(layer)
 addBarSeries.outlineThickness = barOutlineThickness
 addBarSeries.solidUpBody = barSolidUpBody
 addBarSeries.tailThickness = barTailThickness
 addBarSeries.barThickness = barThickness
-addBarSeries.upColour = barUpColour
+addBarSeries.upColor = barUpColor
 addBarSeries.eventProxy = mEventProxy
 End Function
 
@@ -1374,7 +1389,7 @@ addDataPointSeries.displayMode = dataPointDisplayMode
 addDataPointSeries.histBarWidth = dataPointHistBarWidth
 addDataPointSeries.includeInAutoscale = dataPointIncludeInAutoscale
 addDataPointSeries.layer = getLayer(layer)
-addDataPointSeries.lineColour = dataPointLineColour
+addDataPointSeries.lineColor = dataPointLineColor
 addDataPointSeries.lineStyle = dataPointLineStyle
 addDataPointSeries.lineThickness = dataPointLineThickness
 End Function
@@ -1405,7 +1420,7 @@ With addLineSeries
     .arrowStartLength = lineArrowStartLength
     .arrowStartStyle = lineArrowStartStyle
     .arrowStartWidth = lineArrowStartWidth
-    .color = lineColor
+    .Color = lineColor
     .extendAfter = lineExtendAfter
     .extendBefore = lineExtendBefore
     .extended = lineExtended
@@ -1444,7 +1459,7 @@ addTextSeries.boxFillColor = textBoxFillColor
 addTextSeries.boxFillStyle = textBoxFillStyle
 addTextSeries.boxStyle = textBoxStyle
 addTextSeries.boxThickness = textBoxThickness
-addTextSeries.color = textColor
+addTextSeries.Color = textColor
 addTextSeries.extended = textExtended
 addTextSeries.fixedX = textFixedX
 addTextSeries.fixedY = textFixedY
@@ -1674,7 +1689,7 @@ If mShowPerformanceText Then
         perfFont.Underline = False
         perfFont.Bold = False
         Set mPerfText = addText()
-        mPerfText.color = vbActiveTitleBarText
+        mPerfText.Color = vbActiveTitleBarText
         mPerfText.font = perfFont
         mPerfText.box = True
         mPerfText.boxColor = vbBlack
@@ -1741,22 +1756,22 @@ End Sub
 
 Public Sub setPeriodBackgroundColor( _
                 ByVal periodNumber As Long, _
-                ByVal color As Long)
+                ByVal Color As Long)
 Dim layer As Long
 Dim index As Long
 Dim periodrect As TRectangle
 Dim redrawAreas(0) As TRectangle
 
-mPeriodTable(periodNumber).backColor = color
+mPeriodTable(periodNumber).backColor = Color
 
 If mSuppressDrawing Then Exit Sub
 
 
-If color = 0 Then Exit Sub
+If Color = 0 Then Exit Sub
 
 With mCanvas
-    .setPenAttributes color, 1, LineInsideSolid, DrawModeCopyPen
-    .setBrushAttributes color, FillSolid
+    .setPenAttributes Color, 1, LineInsideSolid, DrawModeCopyPen
+    .setBrushAttributes Color, FillSolid
     .drawRectangle periodNumber - 0.5, .bottom, periodNumber + 0.5, .top
 
     
@@ -1782,12 +1797,12 @@ End With
 End Sub
 
 Public Sub setTitle(ByVal val As String, _
-                        ByVal color As Long, _
+                        ByVal Color As Long, _
                         ByVal font As StdFont)
 Dim title As text
 mTitle = val
 Set title = addText(LayerTitle)
-title.color = color
+title.Color = Color
 title.font = font
 title.box = True
 title.boxColor = vbBlack
@@ -1867,22 +1882,27 @@ Private Sub addEntryToPeriodList(ByVal index As Long)
 Dim lastindex As Long
 Dim newPeriodNumber As Long
 
-With mGraphicObjects(index)
-    newPeriodNumber = .graphObj.periodNumber
-    If newPeriodNumber <> .periodNumber Then
-        If .periodNumber >= 1 Then
-            removeEntryFromPeriodList index
-        End If
-        If newPeriodNumber < 1 Then Exit Sub
-        addNewPeriod newPeriodNumber  ' in case the period hasn't been added yet
-        lastindex = mPeriodTable(newPeriodNumber).lastindex
+newPeriodNumber = mGraphicObjects(index).graphObj.periodNumber
+If newPeriodNumber <> mGraphicObjects(index).periodNumber Then
+    If mGraphicObjects(index).periodNumber >= 1 Then
+        removeEntryFromPeriodList index
+    End If
+    If newPeriodNumber < 1 Then Exit Sub
+    
+    ' NB: the following call to addNewPeriod must not be within a With block
+    ' that refers to mGraphicObjects, because is rare circumstances it can
+    ' cause mGraphicObjects to be ReDim'd which causes an error 10
+    addNewPeriod newPeriodNumber  ' in case the period hasn't been added yet
+    
+    lastindex = mPeriodTable(newPeriodNumber).lastindex
+    With mGraphicObjects(index)
         .periodNumber = newPeriodNumber
         .nextPeriodIndex = lastindex
         .prevPeriodIndex = mGraphicObjects(lastindex).prevPeriodIndex
         mGraphicObjects(.prevPeriodIndex).nextPeriodIndex = index
         mGraphicObjects(lastindex).prevPeriodIndex = index
-    End If
-End With
+    End With
+End If
 
 End Sub
 
@@ -1922,13 +1942,16 @@ With mGraphicObjects(handle)
     .capabilities = graphObj.capabilities
     .noDraw = graphObj.noDraw
     
-    If Not .extendedObject Then
-        addEntryToPeriodList handle
-    Else
-        addEntryToExtendedList handle
-    End If
-
 End With
+
+If Not mGraphicObjects(handle).extendedObject Then
+    ' NB: the following call to addEntryToPeriodList must not be within a With block
+    ' that refers to mGraphicObjects, because in rare circumstances it can
+    ' cause mGraphicObjects to be ReDim'd which causes an error 10
+    addEntryToPeriodList handle
+Else
+    addEntryToExtendedList handle
+End If
 
 If graphicObjectIsInScope(handle) Then
     addEntryToInScopeList handle

@@ -471,29 +471,29 @@ newPoint.CoordinateSystemY = coordSystemY
 End Function
 
 Public Sub setPenAttributes( _
-                ByVal color As Long, _
+                ByVal Color As Long, _
                 ByVal width As Long, _
                 ByVal style As LineStyles, _
                 ByVal mode As DrawModes)
-mPenColor = color
+mPenColor = Color
 mPenWidth = width
 mPenStyle = style
 mPenMode = mode
 End Sub
 
 Public Sub setTextAttributes( _
-                ByVal color As Long, _
+                ByVal Color As Long, _
                 ByVal font As StdFont, _
                 ByVal transparent As Boolean)
-mTextColor = color
+mTextColor = Color
 Set mTextFont = font
 mTextTransparent = transparent
 End Sub
                 
 Public Sub setBrushAttributes( _
-                ByVal color As Long, _
+                ByVal Color As Long, _
                 ByVal style As FillStyles)
-mBrushColor = color
+mBrushColor = Color
 mBrushStyle = style
 End Sub
                 

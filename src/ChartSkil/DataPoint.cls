@@ -50,7 +50,7 @@ Private mPeriodNumber  As Long
 Private mDataValue As Double
 Private mBlank As Boolean   ' indicates that no value has been assigned
 Private mLineThickness As Long
-Private mLineColour As Long
+Private mLineColor As Long
 Private mLineStyle As LineStyles
 Private mDisplayMode As DisplayModes
 
@@ -233,8 +233,8 @@ Public Property Get layer() As Long
 layer = mLayer
 End Property
 
-Public Property Let lineColour(ByVal value As Long)
-mLineColour = value
+Public Property Let lineColor(ByVal value As Long)
+mLineColor = value
 End Property
 
 Friend Property Let lineStyle(ByVal value As LineStyles)
@@ -345,7 +345,7 @@ calcBoundingRect = boundingRect
 End Function
 
 Private Sub draw()
-drawPoint mLineColour
+drawPoint mLineColor
 End Sub
 
 Private Function drawAsPoint() As Boolean
@@ -364,19 +364,19 @@ Else
 End If
 End Function
 
-Private Sub drawPoint(ByVal colour As Long)
+Private Sub drawPoint(ByVal Color As Long)
 If blank Then Exit Sub
 If Not mVisible Then Exit Sub
 
 If mDisplayMode = 0 Then Exit Sub
 
-mCanvas.setPenAttributes colour, _
+mCanvas.setPenAttributes Color, _
                         mLineThickness, _
                         mLineStyle, _
                         DrawModes.DrawModeCopyPen
 
 If mDisplayMode = DisplayModes.displayAsHistogram Then
-    mCanvas.setBrushAttributes colour, FillStyles.FillSolid
+    mCanvas.setBrushAttributes Color, FillStyles.FillSolid
     mCanvas.drawRectangle mPeriodNumber - mHistBarWidth / 2, 0, mPeriodNumber + mHistBarWidth / 2, mDataValue
 ElseIf drawAsPoint Then
     mCanvas.drawPoint mPeriodNumber, mDataValue

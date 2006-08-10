@@ -57,8 +57,8 @@ Private mBlank As Boolean   ' indicates that there were no ticks during the bar
 
 Private mTailThickness As Long
 Private mOutlineThickness As Long
-Private mUpColour As Long
-Private mDownColour As Long
+Private mUpColor As Long
+Private mDownColor As Long
 Private mDisplayAsCandlestick As Boolean
 Private mSolidUpBody As Boolean
 Private mBarThickness As Long
@@ -199,8 +199,8 @@ Public Property Get downBar() As Boolean
 downBar = (mClose <= mOpen)
 End Property
 
-Friend Property Let downColour(ByVal value As Long)
-mDownColour = value
+Friend Property Let downColor(ByVal value As Long)
+mDownColor = value
 End Property
 
 Friend Property Let eventProxy(ByVal value As ChartRegionEventProxy)
@@ -261,8 +261,8 @@ Public Property Get upBar() As Boolean
 upBar = (mClose >= mOpen)
 End Property
 
-Friend Property Let upColour(ByVal value As Long)
-mUpColour = value
+Friend Property Let upColor(ByVal value As Long)
+mUpColor = value
 End Property
 
 Public Property Get visible() As Boolean
@@ -279,14 +279,14 @@ End Property
 
 Private Sub draw(ByRef area As TRectangle)
 If Not area.isValid Then
-    drawBar IIf(upBar, mUpColour, mDownColour)
+    drawBar IIf(upBar, mUpColor, mDownColor)
 Else
-    drawPartialBar area, IIf(upBar, mUpColour, mDownColour)
+    drawPartialBar area, IIf(upBar, mUpColor, mDownColor)
 End If
 End Sub
 
 
-Private Sub drawBar(ByVal colour As Long)
+Private Sub drawBar(ByVal Color As Long)
 Dim barThicknessScaleX As Double
 Dim barThicknessScaleY As Double
 
@@ -295,32 +295,32 @@ If blank Then Exit Sub
 
 If mDisplayAsCandlestick Then
     If upBar Then
-        drawBody mOpen, mClose, colour
+        drawBody mOpen, mClose, Color
     Else
-        drawBody mClose, mOpen, colour
+        drawBody mClose, mOpen, Color
     End If
     
     If upBar Then
         If mLow < mOpen Then
-            drawTail mLow, mOpen, colour
+            drawTail mLow, mOpen, Color
         End If
         If mHigh > mClose Then
-            drawTail mClose, mHigh, colour
+            drawTail mClose, mHigh, Color
         End If
     Else
         If mHigh > mOpen Then
-            drawTail mOpen, mHigh, colour
+            drawTail mOpen, mHigh, Color
         End If
         If mLow < mClose Then
-            drawTail mLow, mClose, colour
+            drawTail mLow, mClose, Color
         End If
     End If
 Else
-    mCanvas.setBrushAttributes colour, FillStyles.FillSolid
+    mCanvas.setBrushAttributes Color, FillStyles.FillSolid
     If mBarThickness = 1 Then
         Dim onePixel As Double
         onePixel = mCanvas.convertPixelsToLogicalX(1)
-        mCanvas.setPenAttributes colour, _
+        mCanvas.setPenAttributes Color, _
                                 1, _
                                 LineStyles.LineSolid, _
                                 DrawModes.DrawModeCopyPen
@@ -337,7 +337,7 @@ Else
                         mPeriodNumber + BarSemiWidth + onePixel, _
                         mClose
     Else
-        mCanvas.setPenAttributes colour, _
+        mCanvas.setPenAttributes Color, _
                                 1, _
                                 LineStyles.LineInsideSolid, _
                                 DrawModes.DrawModeCopyPen
@@ -387,10 +387,10 @@ End If
 
 End Sub
 
-Private Sub drawBody(ByVal bottom As Double, ByVal top As Double, ByVal colour As Long)
+Private Sub drawBody(ByVal bottom As Double, ByVal top As Double, ByVal Color As Long)
 Dim barOutlineScaleX As Double
 Dim barOutlineScaleY As Double
-mCanvas.setPenAttributes colour, _
+mCanvas.setPenAttributes Color, _
                         mOutlineThickness, _
                         LineStyles.LineInsideSolid, _
                         DrawModes.DrawModeCopyPen
@@ -455,7 +455,7 @@ If upBar And Not mSolidUpBody Then
         End If
     End If
 Else
-    mCanvas.setBrushAttributes colour, FillStyles.FillSolid
+    mCanvas.setBrushAttributes Color, FillStyles.FillSolid
     mCanvas.drawRectangle mPeriodNumber - (mCandleWidth / 2), _
                         bottom, _
                         mPeriodNumber + (mCandleWidth / 2), _
@@ -463,7 +463,7 @@ Else
 End If
 End Sub
 
-Friend Sub drawPartialBar(ByRef area As TRectangle, ByVal colour As Long)
+Friend Sub drawPartialBar(ByRef area As TRectangle, ByVal Color As Long)
 Dim barThicknessScaleX As Double
 Dim barThicknessScaleY As Double
 If Not mVisible Then Exit Sub
@@ -472,43 +472,43 @@ If blank Then Exit Sub
 If mDisplayAsCandlestick Then
     If downBar Then
         If area.top < mClose Then
-            drawTail IIf(mLow < area.bottom, area.bottom, mLow), area.top, colour
+            drawTail IIf(mLow < area.bottom, area.bottom, mLow), area.top, Color
         ElseIf area.top >= mClose And area.top <= mOpen And area.bottom < mClose Then
-            drawTail IIf(mLow < area.bottom, area.bottom, mLow), mClose, colour
-            drawBody mClose, area.top, colour
+            drawTail IIf(mLow < area.bottom, area.bottom, mLow), mClose, Color
+            drawBody mClose, area.top, Color
         ElseIf area.top > mOpen And area.bottom < mClose Then
-            drawTail IIf(mLow < area.bottom, area.bottom, mLow), mClose, colour
-            drawBody mClose, mOpen, colour
-            drawTail mOpen, IIf(mHigh > area.top, area.top, mHigh), colour
+            drawTail IIf(mLow < area.bottom, area.bottom, mLow), mClose, Color
+            drawBody mClose, mOpen, Color
+            drawTail mOpen, IIf(mHigh > area.top, area.top, mHigh), Color
         ElseIf area.top <= mOpen And area.bottom >= mClose Then
-            drawBody area.bottom, area.top, colour
+            drawBody area.bottom, area.top, Color
         ElseIf area.top > mOpen And area.bottom <= mOpen And area.bottom >= mClose Then
-            drawTail mOpen, IIf(mHigh > area.top, area.top, mHigh), colour
-            drawBody area.bottom, mOpen, colour
+            drawTail mOpen, IIf(mHigh > area.top, area.top, mHigh), Color
+            drawBody area.bottom, mOpen, Color
         Else
-            drawTail area.bottom, IIf(mHigh > area.top, area.top, mHigh), colour
+            drawTail area.bottom, IIf(mHigh > area.top, area.top, mHigh), Color
         End If
     Else
         If area.top < mOpen Then
-            drawTail IIf(mLow < area.bottom, area.bottom, mLow), area.top, colour
+            drawTail IIf(mLow < area.bottom, area.bottom, mLow), area.top, Color
         ElseIf area.top >= mOpen And area.top <= mClose And area.bottom < mOpen Then
-            drawTail IIf(mLow < area.bottom, area.bottom, mLow), mOpen, colour
-            drawBody mOpen, area.top, colour
+            drawTail IIf(mLow < area.bottom, area.bottom, mLow), mOpen, Color
+            drawBody mOpen, area.top, Color
         ElseIf area.top > mClose And area.bottom < mOpen Then
-            drawTail IIf(mLow < area.bottom, area.bottom, mLow), mOpen, colour
-            drawBody mOpen, mClose, colour
-            drawTail mClose, IIf(mHigh > area.top, area.top, mHigh), colour
+            drawTail IIf(mLow < area.bottom, area.bottom, mLow), mOpen, Color
+            drawBody mOpen, mClose, Color
+            drawTail mClose, IIf(mHigh > area.top, area.top, mHigh), Color
         ElseIf area.top <= mClose And area.bottom >= mOpen Then
-            drawBody area.bottom, area.top, colour
+            drawBody area.bottom, area.top, Color
         ElseIf area.top > mClose And area.bottom <= mClose And area.bottom >= mOpen Then
-            drawTail mClose, IIf(mHigh > area.top, area.top, mHigh), colour
-            drawBody area.bottom, mClose, colour
+            drawTail mClose, IIf(mHigh > area.top, area.top, mHigh), Color
+            drawBody area.bottom, mClose, Color
         Else
-            drawTail area.bottom, IIf(mHigh > area.top, area.top, mHigh), colour
+            drawTail area.bottom, IIf(mHigh > area.top, area.top, mHigh), Color
         End If
     End If
 Else
-    mCanvas.setPenAttributes colour, _
+    mCanvas.setPenAttributes Color, _
                             1, _
                             LineStyles.LineInsideSolid, _
                             DrawModes.DrawModeCopyPen
@@ -532,7 +532,7 @@ Else
                         mPeriodNumber, _
                         IIf(area.top < mHigh, area.top, mHigh)
     Else
-        mCanvas.setBrushAttributes colour, FillStyles.FillSolid
+        mCanvas.setBrushAttributes Color, FillStyles.FillSolid
         barThicknessScaleX = mCanvas.convertPixelsToLogicalX(mBarThickness - 1)
         barThicknessScaleY = mCanvas.convertPixelsToLogicalY(mBarThickness - 1)
         
@@ -583,14 +583,14 @@ End If
 
 End Sub
 
-Private Sub drawTail(ByVal bottom As Double, ByVal top As Double, ByVal colour As Long)
+Private Sub drawTail(ByVal bottom As Double, ByVal top As Double, ByVal Color As Long)
 Dim tailThicknessScaleX As Double
-mCanvas.setPenAttributes colour, _
+mCanvas.setPenAttributes Color, _
                         1, _
                         LineStyles.LineInsideSolid, _
                         DrawModes.DrawModeCopyPen
 If mTailThickness > 1 Then
-    mCanvas.setBrushAttributes colour, FillStyles.FillSolid
+    mCanvas.setBrushAttributes Color, FillStyles.FillSolid
     tailThicknessScaleX = mCanvas.convertPixelsToLogicalX(mTailThickness - 1)
     mCanvas.drawRectangle mPeriodNumber - tailThicknessScaleX / 2, _
                     bottom, _

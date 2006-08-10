@@ -585,7 +585,7 @@ Private Const DefaultTwipsPerBar As Long = 150
 Private mRegions() As RegionTableEntry
 Private mRegionsIndex As Long
 
-Private WithEvents mPeriods As periods
+Private WithEvents mPeriods As Periods
 Attribute mPeriods.VB_VarHelpID = -1
 
 Private mAutoscale As Boolean
@@ -610,8 +610,8 @@ Private mPeriodLengthMinutes As Long
 Private mVerticalGridSpacing As Long
 Private mVerticalGridUnits As TimeUnits
 
-Private mBackColour As Long
-Private mGridColour As Long
+Private mBackColor As Long
+Private mGridColor As Long
 Private mGridTextColor As Long
 Private mShowGrid As Boolean
 Private mShowCrosshairs As Boolean
@@ -992,7 +992,7 @@ Private Sub mPeriods_PeriodAdded(ByVal period As period)
 Dim i As Long
 Dim region As ChartRegion
 
-period.backColor = mBackColour
+period.backColor = mBackColor
 
 For i = 0 To mRegionsIndex
     Set region = mRegions(i).region
@@ -1044,14 +1044,14 @@ End Property
 'PropertyChanged "barspacingpercent"
 'End Property
 
-Public Property Get chartBackColor() As Long
-chartBackColor = mBackColour
+Public Property Get chartBackColor() As OLE_COLOR
+chartBackColor = mBackColor
 End Property
 
-Public Property Let chartBackColor(ByVal val As Long)
+Public Property Let chartBackColor(ByVal val As OLE_COLOR)
 Dim i As Long
 
-mBackColour = val
+mBackColor = val
 XAxisPicture.backColor = val
 
 For i = 0 To mRegionsIndex
@@ -1117,19 +1117,19 @@ Public Property Let firstVisiblePeriod(ByVal value As Long)
 scrollX value - mScaleLeft + 1
 End Property
 
-Public Property Get gridColor() As Long
-gridColor = mGridColour
+Public Property Get gridColor() As OLE_COLOR
+gridColor = mGridColor
 End Property
 
-Public Property Let gridColor(ByVal val As Long)
-mGridColour = val
+Public Property Let gridColor(ByVal val As OLE_COLOR)
+mGridColor = val
 End Property
 
-Public Property Get gridTextColor() As Long
+Public Property Get gridTextColor() As OLE_COLOR
 gridTextColor = mGridTextColor
 End Property
 
-Public Property Let gridTextColor(ByVal val As Long)
+Public Property Let gridTextColor(ByVal val As OLE_COLOR)
 mGridTextColor = val
 End Property
 
@@ -1158,8 +1158,8 @@ For i = 0 To mRegionsIndex
 Next
 End Property
 
-Public Property Get periods() As periods
-Set periods = mPeriods
+Public Property Get Periods() As Periods
+Set Periods = mPeriods
 End Property
 
 Public Property Get sessionStartTime() As Date
@@ -1297,7 +1297,8 @@ End Property
 '================================================================================
 
 Public Function addChartRegion(ByVal percentheight As Double, _
-                    Optional ByVal minimumPercentHeight As Double) As ChartRegion
+                    Optional ByVal minimumPercentHeight As Double, _
+                    Optional ByVal name As String) As ChartRegion
 '
 ' NB: percentHeight=100 means the region will use whatever space
 ' is available
@@ -1307,6 +1308,7 @@ Dim YAxisRegion As ChartRegion
 Dim btn As Button
 
 Set addChartRegion = New ChartRegion
+addChartRegion.name = name
 
 If mRegionsIndex = -1 Then
     addChartRegion.toolbar = Toolbar1
@@ -1331,11 +1333,11 @@ YAxisPicture(YAxisPicture.UBound).visible = True
 addChartRegion.surface = ChartRegionPicture(ChartRegionPicture.UBound)
 addChartRegion.suppressDrawing = mSuppressDrawing
 addChartRegion.currentTool = mCurrentTool
-addChartRegion.gridColor = mGridColour
+addChartRegion.gridColor = mGridColor
 addChartRegion.gridTextColor = mGridTextColor
 addChartRegion.minimumPercentHeight = minimumPercentHeight
 addChartRegion.percentheight = percentheight
-addChartRegion.regionBackColor = mBackColour
+addChartRegion.regionBackColor = mBackColor
 addChartRegion.regionLeft = mScaleLeft
 addChartRegion.regionNumber = mRegionsIndex + 2
 addChartRegion.regionBottom = 0
@@ -1455,22 +1457,22 @@ mXAxisRegion.periodLengthMinutes = mPeriodLengthMinutes
 mXAxisRegion.verticalGridSpacing = mVerticalGridSpacing
 mXAxisRegion.verticalGridUnits = mVerticalGridUnits
 mXAxisRegion.pointerStyle = PointerNone
-mXAxisRegion.regionBackColor = mBackColour
+mXAxisRegion.regionBackColor = mBackColor
 mXAxisRegion.regionBottom = 0
 mXAxisRegion.regionTop = 1
 mXAxisRegion.sessionStartTime = mSessionStartTime
-mXAxisRegion.gridColor = mGridColour
+mXAxisRegion.gridColor = mGridColor
 mXAxisRegion.gridTextColor = mGridTextColor
 mXAxisRegion.showGrid = False
 mXAxisRegion.showGridText = True
 
 Set mXCursorText = mXAxisRegion.addText(LayerNumbers.LayerPointer)
 mXCursorText.align = AlignTopCentre
-mXCursorText.color = vbWhite Xor mBackColour
+mXCursorText.Color = vbWhite Xor mBackColor
 mXCursorText.box = True
-mXCursorText.boxFillColor = mBackColour
+mXCursorText.boxFillColor = mBackColor
 mXCursorText.boxStyle = LineSolid
-mXCursorText.boxColor = vbWhite Xor mBackColour
+mXCursorText.boxColor = vbWhite Xor mBackColor
 Set aFont = New StdFont
 aFont.name = "Arial"
 aFont.Size = 8
@@ -1524,12 +1526,12 @@ mPrevHeight = UserControl.height
 ReDim mRegions(100) As RegionTableEntry
 mRegionsIndex = -1
 
-Set mPeriods = New periods
+Set mPeriods = New Periods
 mPeriodLengthMinutes = 5
 mVerticalGridUnits = TimeHour
 
-mBackColour = vbWhite
-mGridColour = &HC0C0C0
+mBackColor = vbWhite
+mGridColor = &HC0C0C0
 mShowGrid = True
 mShowCrosshairs = True
 

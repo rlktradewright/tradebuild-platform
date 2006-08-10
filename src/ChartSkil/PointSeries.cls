@@ -36,7 +36,7 @@ Private mEventProxy As ChartRegionEventProxy
 
 Private mName As String
 Private mLineThickness As Long
-Private mLineColour As Long
+Private mLineColor As Long
 Private mLineStyle As LineStyles
 Private mDisplayMode As DisplayModes
 Private mIncludeInAutoscale As Boolean
@@ -125,16 +125,16 @@ Public Property Get layer() As Long
 layer = mLayer
 End Property
 
-Public Property Get lineColour() As Long
-lineColour = mLineColour
+Public Property Get lineColor() As Long
+lineColor = mLineColor
 End Property
 
-Public Property Let lineColour(ByVal value As Long)
+Public Property Let lineColor(ByVal value As Long)
 Dim dp As DataPoint
 For Each dp In mDataPoints
-    dp.lineColour = value
+    dp.lineColor = value
 Next
-mLineColour = value
+mLineColor = value
 End Property
 
 Public Property Get lineStyle() As LineStyles
@@ -190,11 +190,11 @@ addDataPoint.displayMode = mDisplayMode
 addDataPoint.eventProxy = mEventProxy
 addDataPoint.includeInAutoscale = mIncludeInAutoscale
 addDataPoint.layer = mLayer
-addDataPoint.lineColour = mLineColour
+addDataPoint.lineColor = mLineColor
 addDataPoint.lineStyle = mLineStyle
 addDataPoint.lineThickness = mLineThickness
 addDataPoint.prevDataPoint = mPrevDataPoint
-mDataPoints.Add addDataPoint, CStr(periodNumber)
+mDataPoints.add addDataPoint, CStr(periodNumber)
 Set mPrevDataPoint = addDataPoint
 mEventProxy.addGraphicObject addDataPoint
 End Function
@@ -203,14 +203,14 @@ Friend Sub finish()
 Set mCanvas = Nothing
 End Sub
 
-Public Function Item(ByVal periodNumber As Long) As DataPoint
-Set Item = mDataPoints(CStr(periodNumber))
+Public Function item(ByVal periodNumber As Long) As DataPoint
+Set item = mDataPoints(CStr(periodNumber))
 End Function
 
 Friend Sub removeAll()
 Dim i As Long
 For i = mDataPoints.count To 1 Step -1
-    mDataPoints.Remove (i)
+    mDataPoints.remove (i)
 Next
 End Sub
 

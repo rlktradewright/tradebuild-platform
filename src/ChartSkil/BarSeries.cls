@@ -36,8 +36,8 @@ Private mEventProxy As ChartRegionEventProxy
 Private mName As String
 Private mTailThickness As Long
 Private mOutlineThickness As Long
-Private mUpColour As Long
-Private mDownColour As Long
+Private mUpColor As Long
+Private mDownColor As Long
 Private mDisplayAsCandlestick As Boolean
 Private mSolidUpBody As Boolean
 Private mBarThickness As Long
@@ -116,16 +116,16 @@ Next
 If mBars.count <> 0 Then mEventProxy.paintRegion
 End Property
 
-Public Property Get downColour() As Long
-downColour = mDownColour
+Public Property Get downColor() As Long
+downColor = mDownColor
 End Property
 
-Public Property Let downColour(ByVal value As Long)
+Public Property Let downColor(ByVal value As Long)
 Dim bar As bar
-If mDownColour = value Then Exit Property
-mDownColour = value
+If mDownColor = value Then Exit Property
+mDownColor = value
 For Each bar In mBars
-    bar.downColour = mDownColour
+    bar.downColor = mDownColor
 Next
 If mBars.count <> 0 Then mEventProxy.paintRegion
 End Property
@@ -200,16 +200,16 @@ Next
 If mBars.count <> 0 Then mEventProxy.paintRegion
 End Property
 
-Public Property Get upColour() As Long
-upColour = mUpColour
+Public Property Get upColor() As Long
+upColor = mUpColor
 End Property
 
-Public Property Let upColour(ByVal value As Long)
+Public Property Let upColor(ByVal value As Long)
 Dim bar As bar
-If mUpColour = value Then Exit Property
-mUpColour = value
+If mUpColor = value Then Exit Property
+mUpColor = value
 For Each bar In mBars
-    bar.upColour = mUpColour
+    bar.upColor = mUpColor
 Next
 If mBars.count <> 0 Then mEventProxy.paintRegion
 End Property
@@ -224,16 +224,16 @@ addBar.periodNumber = periodNumber
 addBar.barThickness = mBarThickness
 addBar.candleWidth = mCandleWidth
 addBar.displayAsCandlestick = mDisplayAsCandlestick
-addBar.downColour = mDownColour
+addBar.downColor = mDownColor
 addBar.eventProxy = mEventProxy
 addBar.layer = mLayer
 addBar.outlineThickness = mOutlineThickness
 addBar.solidUpBody = mSolidUpBody
 addBar.canvas = mCanvas
 addBar.tailThickness = mTailThickness
-addBar.upColour = mUpColour
+addBar.upColor = mUpColor
 
-mBars.Add addBar, CStr(periodNumber)
+mBars.add addBar, CStr(periodNumber)
 mEventProxy.addGraphicObject addBar
 End Function
 
@@ -241,14 +241,14 @@ Friend Sub finish()
 Set mCanvas = Nothing
 End Sub
 
-Public Function Item(ByVal periodNumber As Long) As bar
-Set Item = mBars(CStr(periodNumber))
+Public Function item(ByVal periodNumber As Long) As bar
+Set item = mBars(CStr(periodNumber))
 End Function
 
 Friend Sub removeAll()
 Dim i As Long
 For i = mBars.count To 1 Step -1
-    mBars.Remove (i)
+    mBars.remove (i)
 Next
 End Sub
 
