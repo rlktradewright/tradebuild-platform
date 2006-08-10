@@ -21,7 +21,7 @@ Begin VB.Form fTradeSkilDemo
       Left            =   12240
       Locked          =   -1  'True
       MultiLine       =   -1  'True
-      TabIndex        =   88
+      TabIndex        =   78
       TabStop         =   0   'False
       Top             =   120
       Width           =   855
@@ -31,7 +31,7 @@ Begin VB.Form fTradeSkilDemo
       Height          =   255
       Left            =   10560
       Locked          =   -1  'True
-      TabIndex        =   87
+      TabIndex        =   77
       TabStop         =   0   'False
       Top             =   360
       Width           =   975
@@ -41,7 +41,7 @@ Begin VB.Form fTradeSkilDemo
       Height          =   255
       Left            =   9600
       Locked          =   -1  'True
-      TabIndex        =   86
+      TabIndex        =   76
       TabStop         =   0   'False
       Top             =   360
       Width           =   975
@@ -51,7 +51,7 @@ Begin VB.Form fTradeSkilDemo
       Height          =   255
       Left            =   8640
       Locked          =   -1  'True
-      TabIndex        =   85
+      TabIndex        =   75
       TabStop         =   0   'False
       Top             =   360
       Width           =   975
@@ -61,7 +61,7 @@ Begin VB.Form fTradeSkilDemo
       Height          =   255
       Left            =   7680
       Locked          =   -1  'True
-      TabIndex        =   84
+      TabIndex        =   74
       TabStop         =   0   'False
       Top             =   360
       Width           =   975
@@ -71,7 +71,7 @@ Begin VB.Form fTradeSkilDemo
       Height          =   255
       Left            =   6720
       Locked          =   -1  'True
-      TabIndex        =   83
+      TabIndex        =   73
       TabStop         =   0   'False
       Top             =   360
       Width           =   975
@@ -81,7 +81,7 @@ Begin VB.Form fTradeSkilDemo
       Height          =   255
       Left            =   4800
       Locked          =   -1  'True
-      TabIndex        =   82
+      TabIndex        =   72
       TabStop         =   0   'False
       Top             =   600
       Width           =   975
@@ -91,7 +91,7 @@ Begin VB.Form fTradeSkilDemo
       Height          =   255
       Left            =   5760
       Locked          =   -1  'True
-      TabIndex        =   81
+      TabIndex        =   71
       TabStop         =   0   'False
       Top             =   360
       Width           =   975
@@ -101,7 +101,7 @@ Begin VB.Form fTradeSkilDemo
       Height          =   255
       Left            =   4800
       Locked          =   -1  'True
-      TabIndex        =   80
+      TabIndex        =   70
       TabStop         =   0   'False
       Top             =   360
       Width           =   975
@@ -111,7 +111,7 @@ Begin VB.Form fTradeSkilDemo
       Height          =   255
       Left            =   3840
       Locked          =   -1  'True
-      TabIndex        =   79
+      TabIndex        =   69
       TabStop         =   0   'False
       Top             =   360
       Width           =   975
@@ -121,7 +121,7 @@ Begin VB.Form fTradeSkilDemo
       Height          =   255
       Left            =   2880
       Locked          =   -1  'True
-      TabIndex        =   78
+      TabIndex        =   68
       TabStop         =   0   'False
       Top             =   360
       Width           =   975
@@ -129,7 +129,7 @@ Begin VB.Form fTradeSkilDemo
    Begin VB.TextBox NameText 
       Height          =   255
       Left            =   360
-      TabIndex        =   77
+      TabIndex        =   67
       TabStop         =   0   'False
       Top             =   360
       Width           =   2280
@@ -139,7 +139,7 @@ Begin VB.Form fTradeSkilDemo
       Enabled         =   0   'False
       Height          =   495
       Left            =   13320
-      TabIndex        =   38
+      TabIndex        =   37
       ToolTipText     =   "Display a chart"
       Top             =   480
       Width           =   975
@@ -149,7 +149,7 @@ Begin VB.Form fTradeSkilDemo
       Enabled         =   0   'False
       Height          =   495
       Left            =   13320
-      TabIndex        =   37
+      TabIndex        =   36
       ToolTipText     =   "Display the market depth"
       Top             =   0
       Width           =   975
@@ -159,7 +159,7 @@ Begin VB.Form fTradeSkilDemo
       ItemData        =   "fTradeSkilDemo.frx":0000
       Left            =   120
       List            =   "fTradeSkilDemo.frx":0007
-      TabIndex        =   50
+      TabIndex        =   49
       TabStop         =   0   'False
       ToolTipText     =   "Raw socket data"
       Top             =   6840
@@ -168,7 +168,7 @@ Begin VB.Form fTradeSkilDemo
    Begin TabDlg.SSTab MainSSTAB 
       Height          =   4335
       Left            =   120
-      TabIndex        =   49
+      TabIndex        =   48
       Top             =   960
       Width           =   14175
       _ExtentX        =   25003
@@ -181,17 +181,17 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(0)   =   "&1. Connection"
       TabPicture(0)   =   "fTradeSkilDemo.frx":0015
       Tab(0).ControlEnabled=   -1  'True
-      Tab(0).Control(0)=   "Frame1"
+      Tab(0).Control(0)=   "Frame4"
       Tab(0).Control(0).Enabled=   0   'False
-      Tab(0).Control(1)=   "Frame3"
+      Tab(0).Control(1)=   "ConnectButton"
       Tab(0).Control(1).Enabled=   0   'False
-      Tab(0).Control(2)=   "Frame4"
+      Tab(0).Control(2)=   "DisconnectButton"
       Tab(0).Control(2).Enabled=   0   'False
-      Tab(0).Control(3)=   "ConnectButton"
+      Tab(0).Control(3)=   "Frame5"
       Tab(0).Control(3).Enabled=   0   'False
-      Tab(0).Control(4)=   "DisconnectButton"
+      Tab(0).Control(4)=   "Frame6"
       Tab(0).Control(4).Enabled=   0   'False
-      Tab(0).Control(5)=   "Frame5"
+      Tab(0).Control(5)=   "Frame3"
       Tab(0).Control(5).Enabled=   0   'False
       Tab(0).ControlCount=   6
       TabCaption(1)   =   "&2. Tickers"
@@ -202,12 +202,12 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(2)   =   "&3. Orders"
       TabPicture(2)   =   "fTradeSkilDemo.frx":004D
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "ModifyOrderButton"
-      Tab(2).Control(1)=   "CancelOrderButton"
-      Tab(2).Control(2)=   "OrderButton"
-      Tab(2).Control(3)=   "OrderPlexGrid"
-      Tab(2).Control(4)=   "OrderPlexImageList"
-      Tab(2).Control(5)=   "EditText"
+      Tab(2).Control(0)=   "EditText"
+      Tab(2).Control(1)=   "OrderPlexImageList"
+      Tab(2).Control(2)=   "OrderPlexGrid"
+      Tab(2).Control(3)=   "OrderButton"
+      Tab(2).Control(4)=   "CancelOrderButton"
+      Tab(2).Control(5)=   "ModifyOrderButton"
       Tab(2).ControlCount=   6
       TabCaption(3)   =   "&4. Executions"
       TabPicture(3)   =   "fTradeSkilDemo.frx":0069
@@ -216,7 +216,7 @@ Begin VB.Form fTradeSkilDemo
       Tab(3).Control(1)=   "ReplayProgressLabel"
       Tab(3).Control(2)=   "ReplayContractLabel"
       Tab(3).ControlCount=   3
-      TabCaption(4)   =   "&4. Replay tickfiles"
+      TabCaption(4)   =   "&5. Replay tickfiles"
       TabPicture(4)   =   "fTradeSkilDemo.frx":0085
       Tab(4).ControlEnabled=   0   'False
       Tab(4).Control(0)=   "ReplayMarketDepthCheck"
@@ -234,11 +234,146 @@ Begin VB.Form fTradeSkilDemo
       Tab(4).Control(11)=   "Label20"
       Tab(4).Control(12)=   "Label19"
       Tab(4).ControlCount=   13
+      Begin VB.Frame Frame3 
+         Caption         =   "TWS socket data"
+         Height          =   975
+         Left            =   10560
+         TabIndex        =   116
+         Top             =   480
+         Width           =   2895
+         Begin VB.PictureBox Picture4 
+            BorderStyle     =   0  'None
+            Height          =   615
+            Left            =   120
+            ScaleHeight     =   615
+            ScaleWidth      =   1545
+            TabIndex        =   117
+            Top             =   240
+            Width           =   1545
+            Begin VB.CheckBox SocketDataCheck 
+               Caption         =   "Display"
+               Height          =   255
+               Left            =   0
+               TabIndex        =   119
+               ToolTipText     =   "Write the ticker data to a tickfile for playback later"
+               Top             =   0
+               Width           =   975
+            End
+            Begin VB.CheckBox LogDataCheck 
+               Caption         =   " Log to file"
+               Height          =   255
+               Left            =   0
+               TabIndex        =   118
+               ToolTipText     =   "Write the ticker data to a tickfile for playback later"
+               Top             =   240
+               Width           =   1335
+            End
+         End
+      End
+      Begin VB.Frame Frame6 
+         Caption         =   "Broker Connection details"
+         Height          =   2175
+         Left            =   7080
+         TabIndex        =   109
+         Top             =   480
+         Width           =   3375
+         Begin VB.PictureBox Picture7 
+            BorderStyle     =   0  'None
+            Height          =   1815
+            Left            =   90
+            ScaleHeight     =   1815
+            ScaleWidth      =   3255
+            TabIndex        =   110
+            Top             =   225
+            Width           =   3255
+            Begin VB.TextBox BrokerClientIdText 
+               Height          =   285
+               Left            =   1800
+               TabIndex        =   13
+               Top             =   810
+               Width           =   1335
+            End
+            Begin VB.TextBox BrokerServerText 
+               Height          =   285
+               Left            =   1800
+               TabIndex        =   11
+               Top             =   330
+               Width           =   1335
+            End
+            Begin VB.TextBox BrokerPasswordText 
+               Height          =   285
+               Left            =   1800
+               TabIndex        =   14
+               Top             =   1080
+               Width           =   1335
+            End
+            Begin VB.ComboBox BrokerCombo 
+               Height          =   315
+               ItemData        =   "fTradeSkilDemo.frx":00A1
+               Left            =   1800
+               List            =   "fTradeSkilDemo.frx":00AB
+               Style           =   2  'Dropdown List
+               TabIndex        =   10
+               Top             =   0
+               Width           =   1365
+            End
+            Begin VB.TextBox BrokerPortText 
+               Height          =   285
+               Left            =   1800
+               TabIndex        =   12
+               Text            =   "7496"
+               Top             =   570
+               Width           =   1335
+            End
+            Begin VB.Label Label38 
+               Caption         =   "Port"
+               Height          =   255
+               Left            =   315
+               TabIndex        =   115
+               Top             =   615
+               Width           =   615
+            End
+            Begin VB.Label Label37 
+               Caption         =   "Client id"
+               Height          =   255
+               Left            =   315
+               TabIndex        =   114
+               Top             =   870
+               Width           =   615
+            End
+            Begin VB.Label Label1 
+               Caption         =   "Service"
+               Height          =   255
+               Index           =   6
+               Left            =   315
+               TabIndex        =   113
+               Top             =   15
+               Width           =   1095
+            End
+            Begin VB.Label Label1 
+               Caption         =   "Server"
+               Height          =   255
+               Index           =   5
+               Left            =   315
+               TabIndex        =   112
+               Top             =   360
+               Width           =   615
+            End
+            Begin VB.Label Label36 
+               Caption         =   "Password"
+               Height          =   255
+               Left            =   315
+               TabIndex        =   111
+               Top             =   1125
+               Width           =   690
+            End
+         End
+      End
       Begin VB.TextBox EditText 
          BorderStyle     =   0  'None
          Height          =   285
          Left            =   -62280
-         TabIndex        =   119
+         TabIndex        =   108
          Text            =   "Text1"
          Top             =   2640
          Visible         =   0   'False
@@ -257,11 +392,11 @@ Begin VB.Form fTradeSkilDemo
          BeginProperty Images {2C247F25-8591-11D1-B16A-00C0F0283628} 
             NumListImages   =   2
             BeginProperty ListImage1 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "fTradeSkilDemo.frx":00A1
+               Picture         =   "fTradeSkilDemo.frx":00C3
                Key             =   "Expand"
             EndProperty
             BeginProperty ListImage2 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "fTradeSkilDemo.frx":04F3
+               Picture         =   "fTradeSkilDemo.frx":0515
                Key             =   "Contract"
             EndProperty
          EndProperty
@@ -270,7 +405,7 @@ Begin VB.Form fTradeSkilDemo
          Caption         =   "Show market depth"
          Height          =   255
          Left            =   -72000
-         TabIndex        =   114
+         TabIndex        =   103
          Top             =   2220
          Width           =   1695
       End
@@ -278,17 +413,17 @@ Begin VB.Form fTradeSkilDemo
          Caption         =   "Rewrite"
          Height          =   255
          Left            =   -72000
-         TabIndex        =   113
+         TabIndex        =   102
          Top             =   1980
          Width           =   1095
       End
       Begin VB.ComboBox ReplaySpeedCombo 
          Height          =   315
-         ItemData        =   "fTradeSkilDemo.frx":0945
+         ItemData        =   "fTradeSkilDemo.frx":0967
          Left            =   -73800
-         List            =   "fTradeSkilDemo.frx":0974
+         List            =   "fTradeSkilDemo.frx":0996
          Style           =   2  'Dropdown List
-         TabIndex        =   112
+         TabIndex        =   101
          ToolTipText     =   "Adjust tickfile replay speed"
          Top             =   2040
          Width           =   1575
@@ -296,7 +431,7 @@ Begin VB.Form fTradeSkilDemo
       Begin VB.ListBox TickfileList 
          Height          =   1230
          Left            =   -74400
-         TabIndex        =   111
+         TabIndex        =   100
          TabStop         =   0   'False
          Top             =   600
          Width           =   6855
@@ -306,7 +441,7 @@ Begin VB.Form fTradeSkilDemo
          Enabled         =   0   'False
          Height          =   495
          Left            =   -68160
-         TabIndex        =   110
+         TabIndex        =   99
          ToolTipText     =   "Stop tickfile replay"
          Top             =   1920
          Width           =   615
@@ -316,7 +451,7 @@ Begin VB.Form fTradeSkilDemo
          Enabled         =   0   'False
          Height          =   495
          Left            =   -69600
-         TabIndex        =   109
+         TabIndex        =   98
          ToolTipText     =   "Pause tickfile replay"
          Top             =   1920
          Width           =   615
@@ -326,7 +461,7 @@ Begin VB.Form fTradeSkilDemo
          Enabled         =   0   'False
          Height          =   375
          Left            =   -67440
-         TabIndex        =   108
+         TabIndex        =   97
          ToolTipText     =   "Clear tickfile list"
          Top             =   1080
          Width           =   495
@@ -335,7 +470,7 @@ Begin VB.Form fTradeSkilDemo
          Caption         =   "..."
          Height          =   375
          Left            =   -67440
-         TabIndex        =   107
+         TabIndex        =   96
          ToolTipText     =   "Select tickfile(s)"
          Top             =   600
          Width           =   495
@@ -345,7 +480,7 @@ Begin VB.Form fTradeSkilDemo
          Enabled         =   0   'False
          Height          =   495
          Left            =   -70320
-         TabIndex        =   106
+         TabIndex        =   95
          ToolTipText     =   "Start or resume tickfile replay"
          Top             =   1920
          Width           =   615
@@ -355,7 +490,7 @@ Begin VB.Form fTradeSkilDemo
          Enabled         =   0   'False
          Height          =   495
          Left            =   -68880
-         TabIndex        =   105
+         TabIndex        =   94
          ToolTipText     =   "Pause tickfile replay"
          Top             =   1920
          Width           =   615
@@ -363,7 +498,7 @@ Begin VB.Form fTradeSkilDemo
       Begin MSFlexGridLib.MSFlexGrid OrderPlexGrid 
          Height          =   3900
          Left            =   -74880
-         TabIndex        =   104
+         TabIndex        =   93
          Top             =   360
          Width           =   12495
          _ExtentX        =   22040
@@ -391,63 +526,63 @@ Begin VB.Form fTradeSkilDemo
       Begin VB.Frame Frame5 
          Caption         =   "Historical Data Source Connection details"
          Height          =   2175
-         Left            =   7320
-         TabIndex        =   97
+         Left            =   3600
+         TabIndex        =   86
          Top             =   480
-         Width           =   3495
+         Width           =   3375
          Begin VB.PictureBox Picture6 
             BorderStyle     =   0  'None
             Height          =   1815
             Left            =   90
             ScaleHeight     =   1815
-            ScaleWidth      =   3375
-            TabIndex        =   98
+            ScaleWidth      =   3255
+            TabIndex        =   87
             Top             =   225
-            Width           =   3375
+            Width           =   3255
+            Begin VB.TextBox HistPortText 
+               Height          =   285
+               Left            =   1800
+               TabIndex        =   7
+               Text            =   "7496"
+               Top             =   570
+               Width           =   1335
+            End
             Begin VB.ComboBox HistDataSourceCombo 
                Height          =   315
-               ItemData        =   "fTradeSkilDemo.frx":0A18
+               ItemData        =   "fTradeSkilDemo.frx":0A3A
                Left            =   1800
-               List            =   "fTradeSkilDemo.frx":0A25
+               List            =   "fTradeSkilDemo.frx":0A4A
                Style           =   2  'Dropdown List
-               TabIndex        =   9
+               TabIndex        =   5
                Top             =   0
                Width           =   1365
             End
             Begin VB.TextBox HistPasswordText 
                Height          =   285
                Left            =   1800
-               TabIndex        =   13
+               TabIndex        =   9
                Top             =   1080
                Width           =   1335
             End
             Begin VB.TextBox HistServerText 
                Height          =   285
                Left            =   1800
-               TabIndex        =   10
+               TabIndex        =   6
                Top             =   330
                Width           =   1335
             End
             Begin VB.TextBox HistClientIdText 
                Height          =   285
                Left            =   1800
-               TabIndex        =   12
+               TabIndex        =   8
                Top             =   810
-               Width           =   1335
-            End
-            Begin VB.TextBox HistPortText 
-               Height          =   285
-               Left            =   1800
-               TabIndex        =   11
-               Text            =   "7496"
-               Top             =   570
                Width           =   1335
             End
             Begin VB.Label Label35 
                Caption         =   "Password"
                Height          =   255
                Left            =   315
-               TabIndex        =   103
+               TabIndex        =   92
                Top             =   1125
                Width           =   690
             End
@@ -456,7 +591,7 @@ Begin VB.Form fTradeSkilDemo
                Height          =   255
                Index           =   4
                Left            =   315
-               TabIndex        =   102
+               TabIndex        =   91
                Top             =   360
                Width           =   615
             End
@@ -465,7 +600,7 @@ Begin VB.Form fTradeSkilDemo
                Height          =   255
                Index           =   1
                Left            =   315
-               TabIndex        =   101
+               TabIndex        =   90
                Top             =   15
                Width           =   1095
             End
@@ -473,7 +608,7 @@ Begin VB.Form fTradeSkilDemo
                Caption         =   "Client id"
                Height          =   255
                Left            =   315
-               TabIndex        =   100
+               TabIndex        =   89
                Top             =   870
                Width           =   615
             End
@@ -481,7 +616,7 @@ Begin VB.Form fTradeSkilDemo
                Caption         =   "Port"
                Height          =   255
                Left            =   315
-               TabIndex        =   99
+               TabIndex        =   88
                Top             =   615
                Width           =   615
             End
@@ -491,40 +626,39 @@ Begin VB.Form fTradeSkilDemo
          Caption         =   "&Disconnect"
          Enabled         =   0   'False
          Height          =   375
-         Left            =   6240
-         TabIndex        =   15
-         Top             =   3240
+         Left            =   12480
+         TabIndex        =   16
+         Top             =   2280
          Width           =   975
       End
       Begin VB.CommandButton ConnectButton 
          Caption         =   "&Connect"
-         Enabled         =   0   'False
          Height          =   375
-         Left            =   6240
-         TabIndex        =   14
-         Top             =   2880
+         Left            =   12480
+         TabIndex        =   15
+         Top             =   1800
          Width           =   975
       End
       Begin VB.Frame Frame4 
          Caption         =   "Realtime Data Source Connection details"
          Height          =   2175
-         Left            =   3720
-         TabIndex        =   90
+         Left            =   120
+         TabIndex        =   79
          Top             =   480
-         Width           =   3495
+         Width           =   3375
          Begin VB.PictureBox Picture5 
             BorderStyle     =   0  'None
-            Height          =   1815
+            Height          =   1800
             Left            =   90
-            ScaleHeight     =   1815
-            ScaleWidth      =   3375
-            TabIndex        =   91
+            ScaleHeight     =   1800
+            ScaleWidth      =   3255
+            TabIndex        =   80
             Top             =   225
-            Width           =   3375
+            Width           =   3255
             Begin VB.TextBox DataSourcePortText 
                Height          =   285
                Left            =   1800
-               TabIndex        =   6
+               TabIndex        =   2
                Text            =   "7496"
                Top             =   570
                Width           =   1335
@@ -532,31 +666,31 @@ Begin VB.Form fTradeSkilDemo
             Begin VB.TextBox DataSourceClientIdText 
                Height          =   285
                Left            =   1800
-               TabIndex        =   7
+               TabIndex        =   3
                Top             =   810
                Width           =   1335
             End
             Begin VB.TextBox DataSourceServerText 
                Height          =   285
                Left            =   1800
-               TabIndex        =   5
+               TabIndex        =   1
                Top             =   330
                Width           =   1335
             End
             Begin VB.TextBox DataSourcePasswordText 
                Height          =   285
                Left            =   1800
-               TabIndex        =   8
+               TabIndex        =   4
                Top             =   1080
                Width           =   1335
             End
             Begin VB.ComboBox RealtimeDataSourceCombo 
                Height          =   315
-               ItemData        =   "fTradeSkilDemo.frx":0A48
+               ItemData        =   "fTradeSkilDemo.frx":0A75
                Left            =   1800
-               List            =   "fTradeSkilDemo.frx":0A52
+               List            =   "fTradeSkilDemo.frx":0A7F
                Style           =   2  'Dropdown List
-               TabIndex        =   4
+               TabIndex        =   0
                Top             =   0
                Width           =   1365
             End
@@ -564,7 +698,7 @@ Begin VB.Form fTradeSkilDemo
                Caption         =   "Port"
                Height          =   255
                Left            =   315
-               TabIndex        =   96
+               TabIndex        =   85
                Top             =   615
                Width           =   615
             End
@@ -572,7 +706,7 @@ Begin VB.Form fTradeSkilDemo
                Caption         =   "Client id"
                Height          =   255
                Left            =   315
-               TabIndex        =   95
+               TabIndex        =   84
                Top             =   870
                Width           =   615
             End
@@ -581,7 +715,7 @@ Begin VB.Form fTradeSkilDemo
                Height          =   255
                Index           =   3
                Left            =   315
-               TabIndex        =   94
+               TabIndex        =   83
                Top             =   15
                Width           =   1095
             End
@@ -590,7 +724,7 @@ Begin VB.Form fTradeSkilDemo
                Height          =   255
                Index           =   2
                Left            =   315
-               TabIndex        =   93
+               TabIndex        =   82
                Top             =   360
                Width           =   615
             End
@@ -598,7 +732,7 @@ Begin VB.Form fTradeSkilDemo
                Caption         =   "Password"
                Height          =   255
                Left            =   315
-               TabIndex        =   92
+               TabIndex        =   81
                Top             =   1125
                Width           =   690
             End
@@ -610,13 +744,13 @@ Begin VB.Form fTradeSkilDemo
          Left            =   -74940
          ScaleHeight     =   3855
          ScaleWidth      =   13935
-         TabIndex        =   61
+         TabIndex        =   51
          Top             =   360
          Width           =   13935
          Begin MSDataGridLib.DataGrid TickerGrid 
             Height          =   3735
             Left            =   3960
-            TabIndex        =   36
+            TabIndex        =   35
             Top             =   120
             Width           =   9855
             _ExtentX        =   17383
@@ -687,7 +821,7 @@ Begin VB.Form fTradeSkilDemo
             Caption         =   "Check1"
             Height          =   195
             Left            =   3720
-            TabIndex        =   31
+            TabIndex        =   30
             Top             =   1320
             Width           =   255
          End
@@ -696,7 +830,7 @@ Begin VB.Form fTradeSkilDemo
             Enabled         =   0   'False
             Height          =   495
             Left            =   2880
-            TabIndex        =   30
+            TabIndex        =   29
             Top             =   720
             Width           =   975
          End
@@ -705,7 +839,7 @@ Begin VB.Form fTradeSkilDemo
             Enabled         =   0   'False
             Height          =   495
             Left            =   2880
-            TabIndex        =   29
+            TabIndex        =   28
             Top             =   120
             Width           =   975
          End
@@ -714,7 +848,7 @@ Begin VB.Form fTradeSkilDemo
             Enabled         =   0   'False
             Height          =   375
             Left            =   2880
-            TabIndex        =   32
+            TabIndex        =   31
             Top             =   2760
             Width           =   975
          End
@@ -722,7 +856,7 @@ Begin VB.Form fTradeSkilDemo
             Caption         =   "Ticker management"
             Height          =   3855
             Left            =   0
-            TabIndex        =   62
+            TabIndex        =   52
             Top             =   0
             Width           =   2775
             Begin VB.PictureBox Picture1 
@@ -733,14 +867,14 @@ Begin VB.Form fTradeSkilDemo
                Left            =   120
                ScaleHeight     =   3495
                ScaleWidth      =   2535
-               TabIndex        =   63
+               TabIndex        =   53
                Top             =   240
                Width           =   2535
                Begin VB.TextBox LocalSymbolText 
                   Enabled         =   0   'False
                   Height          =   285
                   Left            =   1200
-                  TabIndex        =   18
+                  TabIndex        =   17
                   Top             =   0
                   Width           =   1335
                End
@@ -748,7 +882,7 @@ Begin VB.Form fTradeSkilDemo
                   Enabled         =   0   'False
                   Height          =   285
                   Left            =   1200
-                  TabIndex        =   23
+                  TabIndex        =   22
                   Top             =   1800
                   Width           =   1335
                End
@@ -756,7 +890,7 @@ Begin VB.Form fTradeSkilDemo
                   Enabled         =   0   'False
                   Height          =   285
                   Left            =   1200
-                  TabIndex        =   24
+                  TabIndex        =   23
                   Top             =   2160
                   Width           =   1335
                End
@@ -764,7 +898,7 @@ Begin VB.Form fTradeSkilDemo
                   Enabled         =   0   'False
                   Height          =   285
                   Left            =   1200
-                  TabIndex        =   22
+                  TabIndex        =   21
                   Top             =   1440
                   Width           =   1335
                End
@@ -772,7 +906,7 @@ Begin VB.Form fTradeSkilDemo
                   Enabled         =   0   'False
                   Height          =   285
                   Left            =   1200
-                  TabIndex        =   21
+                  TabIndex        =   20
                   Top             =   1080
                   Width           =   1335
                End
@@ -780,18 +914,18 @@ Begin VB.Form fTradeSkilDemo
                   Enabled         =   0   'False
                   Height          =   285
                   Left            =   1200
-                  TabIndex        =   19
+                  TabIndex        =   18
                   Top             =   360
                   Width           =   1335
                End
                Begin VB.ComboBox TypeCombo 
                   Enabled         =   0   'False
                   Height          =   315
-                  ItemData        =   "fTradeSkilDemo.frx":0A69
+                  ItemData        =   "fTradeSkilDemo.frx":0A96
                   Left            =   1200
-                  List            =   "fTradeSkilDemo.frx":0A6B
+                  List            =   "fTradeSkilDemo.frx":0A98
                   Style           =   2  'Dropdown List
-                  TabIndex        =   20
+                  TabIndex        =   19
                   Top             =   705
                   Width           =   1335
                End
@@ -799,7 +933,7 @@ Begin VB.Form fTradeSkilDemo
                   Enabled         =   0   'False
                   Height          =   255
                   Left            =   1200
-                  TabIndex        =   26
+                  TabIndex        =   25
                   ToolTipText     =   "Write the ticker data to a tickfile for playback later"
                   Top             =   2880
                   Width           =   255
@@ -807,11 +941,11 @@ Begin VB.Form fTradeSkilDemo
                Begin VB.ComboBox RightCombo 
                   Enabled         =   0   'False
                   Height          =   315
-                  ItemData        =   "fTradeSkilDemo.frx":0A6D
+                  ItemData        =   "fTradeSkilDemo.frx":0A9A
                   Left            =   1200
-                  List            =   "fTradeSkilDemo.frx":0A6F
+                  List            =   "fTradeSkilDemo.frx":0A9C
                   Style           =   2  'Dropdown List
-                  TabIndex        =   25
+                  TabIndex        =   24
                   Top             =   2520
                   Width           =   855
                End
@@ -819,7 +953,7 @@ Begin VB.Form fTradeSkilDemo
                   Enabled         =   0   'False
                   Height          =   255
                   Left            =   1200
-                  TabIndex        =   27
+                  TabIndex        =   26
                   ToolTipText     =   "Write the ticker data to a tickfile for playback later"
                   Top             =   3120
                   Width           =   255
@@ -829,7 +963,7 @@ Begin VB.Form fTradeSkilDemo
                   Enabled         =   0   'False
                   Height          =   375
                   Left            =   1560
-                  TabIndex        =   28
+                  TabIndex        =   27
                   Top             =   3120
                   Width           =   975
                End
@@ -837,7 +971,7 @@ Begin VB.Form fTradeSkilDemo
                   Caption         =   "Short name"
                   Height          =   255
                   Left            =   120
-                  TabIndex        =   76
+                  TabIndex        =   66
                   Top             =   0
                   Width           =   855
                End
@@ -845,7 +979,7 @@ Begin VB.Form fTradeSkilDemo
                   Caption         =   "Currency"
                   Height          =   255
                   Left            =   120
-                  TabIndex        =   72
+                  TabIndex        =   62
                   Top             =   1800
                   Width           =   855
                End
@@ -853,7 +987,7 @@ Begin VB.Form fTradeSkilDemo
                   Caption         =   "Exchange"
                   Height          =   255
                   Left            =   120
-                  TabIndex        =   71
+                  TabIndex        =   61
                   Top             =   1440
                   Width           =   855
                End
@@ -861,7 +995,7 @@ Begin VB.Form fTradeSkilDemo
                   Caption         =   "Expiry"
                   Height          =   255
                   Left            =   120
-                  TabIndex        =   70
+                  TabIndex        =   60
                   Top             =   1080
                   Width           =   855
                End
@@ -869,7 +1003,7 @@ Begin VB.Form fTradeSkilDemo
                   Caption         =   "Type"
                   Height          =   255
                   Left            =   120
-                  TabIndex        =   69
+                  TabIndex        =   59
                   Top             =   720
                   Width           =   855
                End
@@ -877,7 +1011,7 @@ Begin VB.Form fTradeSkilDemo
                   Caption         =   "Symbol"
                   Height          =   255
                   Left            =   120
-                  TabIndex        =   68
+                  TabIndex        =   58
                   Top             =   360
                   Width           =   855
                End
@@ -885,7 +1019,7 @@ Begin VB.Form fTradeSkilDemo
                   Caption         =   "Record tickfile"
                   Height          =   255
                   Left            =   120
-                  TabIndex        =   67
+                  TabIndex        =   57
                   Top             =   2880
                   Width           =   1455
                End
@@ -893,7 +1027,7 @@ Begin VB.Form fTradeSkilDemo
                   Caption         =   "Strike price"
                   Height          =   255
                   Left            =   120
-                  TabIndex        =   66
+                  TabIndex        =   56
                   Top             =   2160
                   Width           =   855
                End
@@ -901,7 +1035,7 @@ Begin VB.Form fTradeSkilDemo
                   Caption         =   "Right"
                   Height          =   255
                   Left            =   120
-                  TabIndex        =   65
+                  TabIndex        =   55
                   Top             =   2520
                   Width           =   855
                End
@@ -909,7 +1043,7 @@ Begin VB.Form fTradeSkilDemo
                   Caption         =   "Include market depth"
                   Height          =   375
                   Left            =   120
-                  TabIndex        =   64
+                  TabIndex        =   54
                   Top             =   3120
                   Width           =   1455
                End
@@ -920,7 +1054,7 @@ Begin VB.Form fTradeSkilDemo
             Caption         =   "Summary"
             Height          =   255
             Left            =   2880
-            TabIndex        =   74
+            TabIndex        =   64
             Top             =   1320
             Width           =   735
          End
@@ -930,7 +1064,7 @@ Begin VB.Form fTradeSkilDemo
          Enabled         =   0   'False
          Height          =   495
          Left            =   -62280
-         TabIndex        =   33
+         TabIndex        =   32
          Top             =   360
          Width           =   975
       End
@@ -939,7 +1073,7 @@ Begin VB.Form fTradeSkilDemo
          Enabled         =   0   'False
          Height          =   495
          Left            =   -62280
-         TabIndex        =   35
+         TabIndex        =   34
          Top             =   1560
          Width           =   975
       End
@@ -948,146 +1082,14 @@ Begin VB.Form fTradeSkilDemo
          Enabled         =   0   'False
          Height          =   495
          Left            =   -62280
-         TabIndex        =   34
+         TabIndex        =   33
          Top             =   960
          Width           =   975
-      End
-      Begin VB.Frame Frame3 
-         Caption         =   "Socket data"
-         Height          =   975
-         Left            =   120
-         TabIndex        =   52
-         Top             =   2760
-         Width           =   3495
-         Begin VB.PictureBox Picture4 
-            BorderStyle     =   0  'None
-            Height          =   615
-            Left            =   120
-            ScaleHeight     =   615
-            ScaleWidth      =   3300
-            TabIndex        =   56
-            Top             =   240
-            Width           =   3300
-            Begin VB.CheckBox SocketDataCheck 
-               Height          =   255
-               Left            =   1800
-               TabIndex        =   16
-               ToolTipText     =   "Write the ticker data to a tickfile for playback later"
-               Top             =   0
-               Width           =   255
-            End
-            Begin VB.CheckBox LogDataCheck 
-               Height          =   255
-               Left            =   1800
-               TabIndex        =   17
-               ToolTipText     =   "Write the ticker data to a tickfile for playback later"
-               Top             =   360
-               Width           =   255
-            End
-            Begin VB.Label Label23 
-               Caption         =   "Display"
-               Height          =   375
-               Left            =   360
-               TabIndex        =   58
-               Top             =   0
-               Width           =   1455
-            End
-            Begin VB.Label Label24 
-               Caption         =   "Log to file"
-               Height          =   255
-               Left            =   360
-               TabIndex        =   57
-               Top             =   360
-               Width           =   1455
-            End
-         End
-      End
-      Begin VB.Frame Frame1 
-         Caption         =   "TWS Connection details"
-         Height          =   2175
-         Left            =   120
-         TabIndex        =   51
-         Top             =   480
-         Width           =   3495
-         Begin VB.PictureBox Picture2 
-            BorderStyle     =   0  'None
-            Height          =   1815
-            Left            =   90
-            ScaleHeight     =   1815
-            ScaleWidth      =   3375
-            TabIndex        =   53
-            Top             =   225
-            Width           =   3375
-            Begin VB.TextBox ServerText 
-               Height          =   285
-               Left            =   1800
-               TabIndex        =   0
-               Top             =   330
-               Width           =   1335
-            End
-            Begin VB.CheckBox SimulateOrdersCheck 
-               Height          =   255
-               Left            =   1800
-               TabIndex        =   3
-               ToolTipText     =   "Write the ticker data to a tickfile for playback later"
-               Top             =   1425
-               Value           =   1  'Checked
-               Width           =   255
-            End
-            Begin VB.TextBox ClientIDText 
-               Height          =   285
-               Left            =   1800
-               TabIndex        =   2
-               Top             =   810
-               Width           =   1335
-            End
-            Begin VB.TextBox PortText 
-               Height          =   285
-               Left            =   1800
-               TabIndex        =   1
-               Text            =   "7496"
-               Top             =   570
-               Width           =   1335
-            End
-            Begin VB.Label Label1 
-               Caption         =   "Server"
-               Height          =   255
-               Index           =   0
-               Left            =   315
-               TabIndex        =   89
-               Top             =   360
-               Width           =   615
-            End
-            Begin VB.Label Label25 
-               Caption         =   "Simulate orders"
-               Height          =   375
-               Left            =   315
-               TabIndex        =   59
-               Top             =   1425
-               Width           =   1455
-            End
-            Begin VB.Label Label2 
-               Caption         =   "Client id"
-               Height          =   255
-               Left            =   315
-               TabIndex        =   55
-               Top             =   870
-               Width           =   615
-            End
-            Begin VB.Label Label13 
-               Caption         =   "Port"
-               Height          =   255
-               Left            =   315
-               TabIndex        =   54
-               Top             =   615
-               Width           =   615
-            End
-         End
       End
       Begin MSComctlLib.ProgressBar ReplayProgressBar 
          Height          =   135
          Left            =   -74400
-         TabIndex        =   115
+         TabIndex        =   104
          Top             =   2760
          Visible         =   0   'False
          Width           =   6855
@@ -1100,7 +1102,7 @@ Begin VB.Form fTradeSkilDemo
       Begin MSComctlLib.ListView ExecutionsList 
          Height          =   3855
          Left            =   -74880
-         TabIndex        =   118
+         TabIndex        =   107
          ToolTipText     =   "Filled orders"
          Top             =   360
          Width           =   12495
@@ -1121,7 +1123,7 @@ Begin VB.Form fTradeSkilDemo
          Caption         =   "Replay speed"
          Height          =   375
          Left            =   -74400
-         TabIndex        =   117
+         TabIndex        =   106
          Top             =   2040
          Width           =   615
       End
@@ -1129,21 +1131,21 @@ Begin VB.Form fTradeSkilDemo
          Caption         =   "Select tickfile(s)"
          Height          =   255
          Left            =   -74280
-         TabIndex        =   116
+         TabIndex        =   105
          Top             =   360
          Width           =   1455
       End
       Begin VB.Label ReplayProgressLabel 
          Height          =   255
          Left            =   -74400
-         TabIndex        =   75
+         TabIndex        =   65
          Top             =   2640
          Width           =   5655
       End
       Begin VB.Label ReplayContractLabel 
          Height          =   855
          Left            =   -74400
-         TabIndex        =   73
+         TabIndex        =   63
          Top             =   3120
          Width           =   5655
       End
@@ -1154,7 +1156,7 @@ Begin VB.Form fTradeSkilDemo
       Locked          =   -1  'True
       MultiLine       =   -1  'True
       ScrollBars      =   2  'Vertical
-      TabIndex        =   48
+      TabIndex        =   47
       TabStop         =   0   'False
       ToolTipText     =   "Status messages"
       Top             =   5400
@@ -1164,7 +1166,7 @@ Begin VB.Form fTradeSkilDemo
       Caption         =   "Symbol"
       Height          =   255
       Left            =   360
-      TabIndex        =   60
+      TabIndex        =   50
       Top             =   120
       Width           =   855
    End
@@ -1173,7 +1175,7 @@ Begin VB.Form fTradeSkilDemo
       Caption         =   "Close"
       Height          =   255
       Left            =   10560
-      TabIndex        =   47
+      TabIndex        =   46
       Top             =   120
       Width           =   855
    End
@@ -1182,7 +1184,7 @@ Begin VB.Form fTradeSkilDemo
       Caption         =   "Low"
       Height          =   255
       Left            =   9600
-      TabIndex        =   46
+      TabIndex        =   45
       Top             =   120
       Width           =   855
    End
@@ -1191,7 +1193,7 @@ Begin VB.Form fTradeSkilDemo
       Caption         =   "High"
       Height          =   255
       Left            =   8760
-      TabIndex        =   45
+      TabIndex        =   44
       Top             =   120
       Width           =   855
    End
@@ -1200,7 +1202,7 @@ Begin VB.Form fTradeSkilDemo
       Caption         =   "Volume"
       Height          =   255
       Left            =   7800
-      TabIndex        =   44
+      TabIndex        =   43
       Top             =   120
       Width           =   855
    End
@@ -1209,7 +1211,7 @@ Begin VB.Form fTradeSkilDemo
       Caption         =   "Last/Size"
       Height          =   255
       Left            =   4920
-      TabIndex        =   43
+      TabIndex        =   42
       Top             =   120
       Width           =   855
    End
@@ -1218,7 +1220,7 @@ Begin VB.Form fTradeSkilDemo
       Caption         =   "Ask size"
       Height          =   255
       Left            =   6840
-      TabIndex        =   42
+      TabIndex        =   41
       Top             =   120
       Width           =   855
    End
@@ -1227,7 +1229,7 @@ Begin VB.Form fTradeSkilDemo
       Caption         =   "Ask"
       Height          =   255
       Left            =   5760
-      TabIndex        =   41
+      TabIndex        =   40
       Top             =   120
       Width           =   855
    End
@@ -1236,7 +1238,7 @@ Begin VB.Form fTradeSkilDemo
       Caption         =   "Bid"
       Height          =   255
       Left            =   3960
-      TabIndex        =   40
+      TabIndex        =   39
       Top             =   120
       Width           =   855
    End
@@ -1245,7 +1247,7 @@ Begin VB.Form fTradeSkilDemo
       Caption         =   "Bid size"
       Height          =   255
       Left            =   3000
-      TabIndex        =   39
+      TabIndex        =   38
       Top             =   120
       Width           =   855
    End
@@ -1318,7 +1320,7 @@ Private Const RowDataPositionManagerBase As Long = &H1000000
 '================================================================================
 
 Private Enum ExecutionsColumns
-    execId = 1
+    ExecId = 1
     orderId
     Action
     quantity
@@ -1498,7 +1500,7 @@ End Enum
 '================================================================================
 
 Private Type OrderPlexGridMappingEntry
-    op                  As TradeBuild.orderPlex
+    op                  As TradeBuild.OrderPlex
     
     ' indicates whether this entry in the grid is expanded
     isExpanded          As Boolean
@@ -1538,21 +1540,23 @@ Attribute mTimer.VB_VarHelpID = -1
 Private mTWSContractServiceProvider As Object
 Private mRealtimeServiceProvider As Object
 Private mHistDataServiceProvider As Object
+Private mLiveOrderServiceProvider As Object
+
+Private mSimulateOrders As Boolean
 
 Private WithEvents mTickers As Tickers
 Attribute mTickers.VB_VarHelpID = -1
-Private WithEvents mTicker As Ticker
+Private WithEvents mTicker As ticker
 Attribute mTicker.VB_VarHelpID = -1
 
 Private WithEvents mTickfileManager As TickFileManager
 Attribute mTickfileManager.VB_VarHelpID = -1
-Private mTimestamp As Date
 
 Private mOrderForm As OrderForm
 Attribute mOrderForm.VB_VarHelpID = -1
 
 Private mSelectedOrderPlexGridRow As Long
-Private mSelectedOrderPlex As TradeBuild.orderPlex
+Private mSelectedOrderPlex As TradeBuild.OrderPlex
 Private mSelectedOrder As TradeBuild.Order
 
 Private mContractCol As Collection
@@ -1597,8 +1601,6 @@ Me.Height = StandardFormHeight
 
 Set mTradeBuildAPI = New TradeBuildAPI
 Set gTradeBuildAPI = mTradeBuildAPI
-mTradeBuildAPI.ConnectionRetryIntervalSecs = 10
-
 mTradeBuildAPI.ServiceProviders.Add CreateObject("TBInfoBase.ContractInfoServiceProvider")
 
 mTradeBuildAPI.ServiceProviders.Add CreateObject("TBInfoBase.TickfileServiceProvider")
@@ -1606,6 +1608,8 @@ mTradeBuildAPI.ServiceProviders.Add CreateObject("TBInfoBase.TickfileServiceProv
 mTradeBuildAPI.ServiceProviders.Add CreateObject("TickfileSP.TickfileServiceProvider")
 
 mTradeBuildAPI.ServiceProviders.Add CreateObject("QTSP.QTTickfileServiceProvider")
+
+mTradeBuildAPI.ServiceProviders.Add CreateObject("BuiltInStudiesSP.StudyServiceProvider"), , "Built in"
 
 Set mTickers = mTradeBuildAPI.Tickers
 
@@ -1634,33 +1638,33 @@ TypeCombo.AddItem secTypeToString(SecurityTypes.SecTypeIndex)
 RightCombo.AddItem optionRightToString(OptionRights.OptCall)
 RightCombo.AddItem optionRightToString(OptionRights.OptPut)
 
-ExecutionsList.columnHeaders.Add ExecutionsColumns.execId, , "Exec id"
-ExecutionsList.columnHeaders(ExecutionsColumns.execId).width = _
-    ExecutionsExecIdWidth * ExecutionsList.width / 100
+ExecutionsList.columnHeaders.Add ExecutionsColumns.ExecId, , "Exec id"
+ExecutionsList.columnHeaders(ExecutionsColumns.ExecId).Width = _
+    ExecutionsExecIdWidth * ExecutionsList.Width / 100
 
 ExecutionsList.columnHeaders.Add ExecutionsColumns.orderId, , "ID"
-ExecutionsList.columnHeaders(ExecutionsColumns.orderId).width = _
-    ExecutionsOrderIDWidth * ExecutionsList.width / 100
+ExecutionsList.columnHeaders(ExecutionsColumns.orderId).Width = _
+    ExecutionsOrderIDWidth * ExecutionsList.Width / 100
 
 ExecutionsList.columnHeaders.Add ExecutionsColumns.Action, , "Action"
-ExecutionsList.columnHeaders(ExecutionsColumns.Action).width = _
-    ExecutionsActionWidth * ExecutionsList.width / 100
+ExecutionsList.columnHeaders(ExecutionsColumns.Action).Width = _
+    ExecutionsActionWidth * ExecutionsList.Width / 100
 
 ExecutionsList.columnHeaders.Add ExecutionsColumns.quantity, , "Quant"
-ExecutionsList.columnHeaders(ExecutionsColumns.quantity).width = _
-    ExecutionsQuantityWidth * ExecutionsList.width / 100
+ExecutionsList.columnHeaders(ExecutionsColumns.quantity).Width = _
+    ExecutionsQuantityWidth * ExecutionsList.Width / 100
 
 ExecutionsList.columnHeaders.Add ExecutionsColumns.symbol, , "Symb"
-ExecutionsList.columnHeaders(ExecutionsColumns.symbol).width = _
-    ExecutionsSymbolWidth * ExecutionsList.width / 100
+ExecutionsList.columnHeaders(ExecutionsColumns.symbol).Width = _
+    ExecutionsSymbolWidth * ExecutionsList.Width / 100
 
 ExecutionsList.columnHeaders.Add ExecutionsColumns.price, , "Price"
-ExecutionsList.columnHeaders(ExecutionsColumns.price).width = _
-    ExecutionsPriceWidth * ExecutionsList.width / 100
+ExecutionsList.columnHeaders(ExecutionsColumns.price).Width = _
+    ExecutionsPriceWidth * ExecutionsList.Width / 100
 
 ExecutionsList.columnHeaders.Add ExecutionsColumns.Time, , "Time"
-ExecutionsList.columnHeaders(ExecutionsColumns.Time).width = _
-    ExecutionsTimeWidth * ExecutionsList.width / 100
+ExecutionsList.columnHeaders(ExecutionsColumns.Time).Width = _
+    ExecutionsTimeWidth * ExecutionsList.Width / 100
 
 
 ExecutionsList.SortKey = ExecutionsColumns.Time - 1
@@ -1668,24 +1672,19 @@ ExecutionsList.SortOrder = lvwDescending
 
 RealtimeDataSourceCombo.Text = "TWS"
 HistDataSourceCombo.Text = "TradeBuild"
+BrokerCombo.Text = "IB via TWS"
 
 ReplaySpeedCombo.Text = "Actual speed"
 End Sub
 
 Private Sub Form_Unload(cancel As Integer)
 Dim i As Integer
-Dim lTicker As Ticker
+Dim lTicker As ticker
 
 If Not mTradeBuildAPI Is Nothing Then
     For Each lTicker In mTickers
         lTicker.StopTicker
     Next
-    If mTradeBuildAPI.connectionState = ConnConnected Or _
-        mTradeBuildAPI.connectionState = ConnConnecting _
-    Then
-        removeServiceProviders
-        mTradeBuildAPI.disconnect
-    End If
     Set mTradeBuildAPI = Nothing
 End If
 For i = Forms.Count - 1 To 0 Step -1
@@ -1698,9 +1697,9 @@ End Sub
 '================================================================================
 
 Private Sub ChangeListener_Change(ev As TradeBuild.ChangeEvent)
-If TypeOf ev.source Is TradeBuild.orderPlex Then
+If TypeOf ev.source Is TradeBuild.OrderPlex Then
     Dim opChangeType As TradeBuild.OrderPlexChangeTypes
-    Dim op As TradeBuild.orderPlex
+    Dim op As TradeBuild.OrderPlex
     Dim opIndex As Long
     
     Set op = ev.source
@@ -1718,11 +1717,11 @@ If TypeOf ev.source Is TradeBuild.orderPlex Then
     
         Case OrderPlexChangeTypes.SelfCancelled
     
-        Case OrderPlexChangeTypes.EntryOrderChanged
+        Case OrderPlexChangeTypes.entryOrderChanged
             displayOrderValuesInOrderPlexGrid .gridIndex + .entryGridOffset, op.entryOrder
-        Case OrderPlexChangeTypes.StopOrderChanged
+        Case OrderPlexChangeTypes.stopOrderChanged
             displayOrderValuesInOrderPlexGrid .gridIndex + .stopGridOffset, op.stopOrder
-        Case OrderPlexChangeTypes.TargetOrderChanged
+        Case OrderPlexChangeTypes.targetOrderChanged
             displayOrderValuesInOrderPlexGrid .gridIndex + .targetGridOffset, op.targetOrder
         Case OrderPlexChangeTypes.CloseoutOrderCreated
             If .targetGridOffset >= 0 Then
@@ -1740,7 +1739,7 @@ If TypeOf ev.source Is TradeBuild.orderPlex Then
                                     op.closeoutOrder, _
                                     opIndex, _
                                     "Closeout"
-        Case OrderPlexChangeTypes.CloseoutOrderChanged
+        Case OrderPlexChangeTypes.closeoutOrderChanged
             displayOrderValuesInOrderPlexGrid .gridIndex + .targetGridOffset, _
                                                 op.closeoutOrder
         Case OrderPlexChangeTypes.ProfitThresholdExceeded
@@ -1792,9 +1791,9 @@ End Sub
 '================================================================================
 
 Private Sub ProfitListener_profitAmount(ev As TradeBuild.ProfitEvent)
-If TypeOf ev.source Is TradeBuild.orderPlex Then
+If TypeOf ev.source Is TradeBuild.OrderPlex Then
     Dim opProfitType As TradeBuild.OrderPlexProfitTypes
-    Dim op As TradeBuild.orderPlex
+    Dim op As TradeBuild.OrderPlex
     Dim opIndex As Long
     
     Set op = ev.source
@@ -1849,7 +1848,6 @@ End Sub
 
 Private Sub QuoteListener_ask(ev As TradeBuild.QuoteEvent)
 On Error GoTo err
-mTimestamp = mTicker.timestamp
 AskText = ev.priceString
 AskSizeText = ev.size
 
@@ -1860,7 +1858,6 @@ End Sub
 
 Private Sub QuoteListener_bid(ev As TradeBuild.QuoteEvent)
 On Error GoTo err
-mTimestamp = mTicker.timestamp
 BidText = ev.priceString
 BidSizeText = ev.size
 
@@ -1871,7 +1868,6 @@ End Sub
 
 Private Sub QuoteListener_high(ev As TradeBuild.QuoteEvent)
 On Error GoTo err
-mTimestamp = mTicker.timestamp
 HighText = ev.priceString
 
 Exit Sub
@@ -1881,7 +1877,6 @@ End Sub
 
 Private Sub QuoteListener_Low(ev As TradeBuild.QuoteEvent)
 On Error GoTo err
-mTimestamp = mTicker.timestamp
 LowText = ev.priceString
 
 Exit Sub
@@ -1895,7 +1890,6 @@ End Sub
 
 Private Sub QuoteListener_previousClose(ev As TradeBuild.QuoteEvent)
 On Error GoTo err
-mTimestamp = mTicker.timestamp
 CloseText = ev.priceString
 
 Exit Sub
@@ -1905,7 +1899,6 @@ End Sub
 
 Private Sub QuoteListener_trade(ev As TradeBuild.QuoteEvent)
 On Error GoTo err
-mTimestamp = mTicker.timestamp
 LastText = ev.priceString
 LastSizeText = ev.size
 
@@ -1916,7 +1909,6 @@ End Sub
 
 Private Sub QuoteListener_volume(ev As TradeBuild.QuoteEvent)
 On Error GoTo err
-mTimestamp = mTicker.timestamp
 VolumeText = ev.size
 
 Exit Sub
@@ -1928,14 +1920,31 @@ End Sub
 ' Form Control Event Handlers
 '================================================================================
 
+Private Sub BrokerCombo_Change()
+If BrokerCombo.Text = "IB via TWS" Then
+    BrokerPortText = 7496
+    BrokerClientIdText.Enabled = True
+    BrokerPasswordText.Enabled = False
+End If
+End Sub
+
+Private Sub BrokerClientIdText_Validate(cancel As Boolean)
+If Not isValidLong(BrokerClientIdText.Text) Then cancel = True
+End Sub
+
+Private Sub BrokerPortText_Validate(cancel As Boolean)
+If Not isValidLong(BrokerPortText.Text) Then cancel = True
+If BrokerPortText.Text = "" Then cancel = True
+End Sub
+
 Private Sub CancelOrderButton_Click()
 Dim rowdata As Long
-Dim index As Long
+Dim Index As Long
 
 rowdata = OrderPlexGrid.rowdata(mSelectedOrderPlexGridRow)
-index = rowdata - RowDataOrderPlexBase
+Index = rowdata - RowDataOrderPlexBase
 
-mOrderPlexGridMappingTable(index).op.cancel True
+mOrderPlexGridMappingTable(Index).op.cancel True
 
 invertEntryColors mSelectedOrderPlexGridRow
 
@@ -1960,41 +1969,77 @@ StopReplayButton.Enabled = False
 ChartButton.Enabled = False
 End Sub
 
-Private Sub ClientIDText_Change()
-checkOKToConnect
-End Sub
-
 Private Sub ConnectButton_Click()
-Dim sp As Object
 
 Set mContractCol = New Collection
 Set mOrdersCol = New Collection
 setupOrderPlexGrid
 ExecutionsList.ListItems.Clear
 
-SimulateOrdersCheck.Enabled = False
-mTradeBuildAPI.Connect IIf(ServerText = "", "127.0.0.1", ServerText), PortText, ClientIDText
-writeStatusMessage "Attempting connection to " & _
-                    IIf(ServerText = "", "local server", ServerText) & _
-                    "; port=" & PortText & _
-                    "; client id=" & ClientIDText
-
 If RealtimeDataSourceCombo.Text = "TWS" Then
     ' set up TWS realtime data service provider
-    Set mRealtimeServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject("IBTWSSP.RealtimeDataServiceProvider"))
+    If SocketDataCheck = vbChecked Or LogDataCheck = vbChecked Then
+        Set mRealtimeServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject("IBTWSSP.RealtimeDataServiceProvider"), LogLevelHigh)
+    Else
+        Set mRealtimeServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject("IBTWSSP.RealtimeDataServiceProvider"), LogLevelLow)
+    End If
     mRealtimeServiceProvider.Server = DataSourceServerText
     mRealtimeServiceProvider.Port = DataSourcePortText
     mRealtimeServiceProvider.clientID = DataSourceClientIdText
     mRealtimeServiceProvider.providerKey = "IB"
     mRealtimeServiceProvider.keepConnection = True
+
+    ' use this as a backup contract details service provider
+    If SocketDataCheck = vbChecked Or LogDataCheck = vbChecked Then
+        Set mTWSContractServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject("IBTWSSP.ContractInfoServiceProvider"), LogLevelHigh)
+    Else
+        Set mTWSContractServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject("IBTWSSP.ContractInfoServiceProvider"), LogLevelLow)
+    End If
+    mTWSContractServiceProvider.Server = DataSourceServerText
+    mTWSContractServiceProvider.Port = DataSourcePortText
+    mTWSContractServiceProvider.clientID = DataSourceClientIdText
+    mTWSContractServiceProvider.providerKey = "IB"
+    mTWSContractServiceProvider.keepConnection = True
+
 ElseIf RealtimeDataSourceCombo.Text = "QuoteTracker" Then
     ' set up QT realtime data service provider
-    Set mRealtimeServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject("QTSP.QTRealtimeDataServiceProvider"))
+    Set mRealtimeServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject("QTSP.QTRealtimeDataServiceProvider"), LogLevelLow)
     mRealtimeServiceProvider.QTServer = DataSourceServerText
     mRealtimeServiceProvider.QTPort = DataSourcePortText
     mRealtimeServiceProvider.password = DataSourcePasswordText
     mRealtimeServiceProvider.providerKey = "QTIB"
     mRealtimeServiceProvider.keepConnection = True
+End If
+
+If BrokerCombo.Text = "IB via TWS" Then
+    ' set up TWS live order submission service provider
+    If SocketDataCheck = vbChecked Or LogDataCheck = vbChecked Then
+        Set mLiveOrderServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject("IBTWSSP.OrderSubmissionServiceProvider"), LogLevelHigh)
+    Else
+        Set mLiveOrderServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject("IBTWSSP.OrderSubmissionServiceProvider"), LogLevelLow)
+    End If
+    mLiveOrderServiceProvider.Server = BrokerServerText
+    mLiveOrderServiceProvider.Port = BrokerPortText
+    mLiveOrderServiceProvider.clientID = BrokerClientIdText
+    mLiveOrderServiceProvider.providerKey = "IB"
+    mLiveOrderServiceProvider.keepConnection = True
+
+    If mTWSContractServiceProvider Is Nothing Then
+        ' use this as a backup contract details service provider
+        If SocketDataCheck = vbChecked Or LogDataCheck = vbChecked Then
+            Set mTWSContractServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject("IBTWSSP.ContractInfoServiceProvider"), LogLevelHigh)
+        Else
+            Set mTWSContractServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject("IBTWSSP.ContractInfoServiceProvider"), LogLevelLow)
+        End If
+        mTWSContractServiceProvider.Server = BrokerServerText
+        mTWSContractServiceProvider.Port = BrokerPortText
+        mTWSContractServiceProvider.clientID = BrokerClientIdText
+        mTWSContractServiceProvider.providerKey = "IB"
+        mTWSContractServiceProvider.keepConnection = True
+    End If
+
+Else
+    mSimulateOrders = True
 End If
 
 ConnectButton.Enabled = False
@@ -2006,10 +2051,48 @@ StopReplayButton.Enabled = False
 SelectTickfilesButton.Enabled = False
 ClearTickfileListButton.Enabled = False
 TickfileList.Clear
+
+MainSSTAB.Tab = MainSSTABTabNumbers.Tickers
+LocalSymbolText.Enabled = True
+LocalSymbolText.SetFocus
+SymbolText.Enabled = True
+TypeCombo.Enabled = True
+ExpiryText.Enabled = IIf(TypeCombo.Text = "" Or _
+                        TypeCombo.Text = StrSecTypeFuture Or _
+                        TypeCombo.Text = StrSecTypeOption Or _
+                        TypeCombo.Text = StrSecTypeOptionFuture, _
+                        True, _
+                        False)
+ExchangeText.Enabled = True
+CurrencyText.Enabled = True
+StrikePriceText.Enabled = IIf(TypeCombo.Text = "" Or _
+                        TypeCombo.Text = StrSecTypeOption Or _
+                        TypeCombo.Text = StrSecTypeOptionFuture, _
+                        True, _
+                        False)
+RightCombo.Enabled = IIf(TypeCombo.Text = "" Or _
+                        TypeCombo.Text = StrSecTypeOption Or _
+                        TypeCombo.Text = StrSecTypeOptionFuture, _
+                        True, _
+                        False)
+RecordCheck.Enabled = True
+If RecordCheck = vbChecked Then MarketDepthCheck.Enabled = True
+
+checkOkToStartTicker
+
 End Sub
 
 Private Sub CurrencyText_Change()
 checkOkToStartTicker
+End Sub
+
+Private Sub DataSourceClientIdText_Validate(cancel As Boolean)
+If Not isValidLong(DataSourceClientIdText.Text) Then cancel = True
+End Sub
+
+Private Sub DataSourcePortText_Validate(cancel As Boolean)
+If Not isValidLong(DataSourcePortText.Text) Then cancel = True
+If DataSourcePortText.Text = "" Then cancel = True
 End Sub
 
 Private Sub DisconnectButton_Click()
@@ -2018,7 +2101,6 @@ clearTickerFields
 
 ConnectButton.Enabled = True
 DisconnectButton.Enabled = False
-SimulateOrdersCheck.Enabled = True
 OrderButton.Enabled = False
 
 StartTickerButton.Enabled = False
@@ -2050,8 +2132,8 @@ ExecutionsList.ListItems.Clear
 If Not mOrderForm Is Nothing Then Unload mOrderForm
 Set mOrderForm = Nothing
 
-removeServiceProviders
-mTradeBuildAPI.disconnect
+mTradeBuildAPI.ServiceProviders.RemoveAll
+
 ConnectButton.SetFocus
 End Sub
 
@@ -2078,10 +2160,10 @@ checkOkToStartTicker
 End Sub
 
 Private Sub ExecutionsList_ColumnClick(ByVal columnHeader As columnHeader)
-If ExecutionsList.SortKey = columnHeader.index - 1 Then
+If ExecutionsList.SortKey = columnHeader.Index - 1 Then
     ExecutionsList.SortOrder = 1 - ExecutionsList.SortOrder
 Else
-    ExecutionsList.SortKey = columnHeader.index - 1
+    ExecutionsList.SortKey = columnHeader.Index - 1
     ExecutionsList.SortOrder = lvwAscending
 End If
 End Sub
@@ -2091,7 +2173,7 @@ checkOkToStartTicker
 End Sub
 
 Private Sub GridChartButton_Click()
-Dim lTicker As Ticker
+Dim lTicker As ticker
 Dim bookmark As Variant
 
 For Each bookmark In TickerGrid.SelBookmarks
@@ -2106,7 +2188,7 @@ ChartButton.Enabled = False
 End Sub
 
 Private Sub GridMarketDepthButton_Click()
-Dim Ticker As Ticker
+Dim ticker As ticker
 Dim bookmark As Variant
 
 GridMarketDepthButton.Enabled = False
@@ -2114,9 +2196,9 @@ GridMarketDepthButton.Enabled = False
 For Each bookmark In TickerGrid.SelBookmarks
     TickerGrid.bookmark = bookmark           ' select the row
     TickerGrid.col = 0                       ' make the cell containing the key current
-    Set Ticker = mTickers(TickerGrid.Text)
-    showMarketDepthForm Ticker
-    If Ticker Is mTicker Then MarketDepthButton.Enabled = False
+    Set ticker = mTickers(TickerGrid.Text)
+    showMarketDepthForm ticker
+    If ticker Is mTicker Then MarketDepthButton.Enabled = False
 Next
 End Sub
 
@@ -2132,6 +2214,15 @@ ElseIf HistDataSourceCombo.Text = "QuoteTracker" Then
 End If
 End Sub
 
+Private Sub HistPortText_Validate(cancel As Boolean)
+If Not isValidLong(HistPortText.Text) Then cancel = True
+If HistPortText.Text = "" Then cancel = True
+End Sub
+
+Private Sub HistClientIdText_Validate(cancel As Boolean)
+If Not isValidLong(HistClientIdText.Text) Then cancel = True
+End Sub
+
 Private Sub LocalSymbolText_Change()
 checkOkToStartTicker
 End Sub
@@ -2144,15 +2235,15 @@ End Sub
 
 Private Sub ModifyOrderButton_Click()
 Dim rowdata As Long
-Dim index As Long
+Dim Index As Long
 
 rowdata = OrderPlexGrid.rowdata(mSelectedOrderPlexGridRow)
-index = rowdata - RowDataOrderPlexBase
+Index = rowdata - RowDataOrderPlexBase
 
 If mOrderForm Is Nothing Then Set mOrderForm = New OrderForm
 mOrderForm.Show vbModeless
-mOrderForm.showOrderPlex mOrderPlexGridMappingTable(index).op, _
-                        mSelectedOrderPlexGridRow - mOrderPlexGridMappingTable(index).gridIndex
+mOrderForm.showOrderPlex mOrderPlexGridMappingTable(Index).op, _
+                        mSelectedOrderPlexGridRow - mOrderPlexGridMappingTable(Index).gridIndex
 
 End Sub
 
@@ -2163,15 +2254,15 @@ If mTicker Is Nothing Then
 End If
 If mOrderForm Is Nothing Then Set mOrderForm = New OrderForm
 mOrderForm.Show vbModeless
-mOrderForm.ordersAreSimulated = (SimulateOrdersCheck = vbChecked)
-mOrderForm.Ticker = mTicker
+mOrderForm.ordersAreSimulated = mSimulateOrders
+mOrderForm.ticker = mTicker
 End Sub
 
 Private Sub OrderPlexGrid_Click()
 Dim row As Long
 Dim rowdata As Long
-Dim op As TradeBuild.orderPlex
-Dim index As Long
+Dim op As TradeBuild.OrderPlex
+Dim Index As Long
 Dim orderIndex As Long
 
 row = OrderPlexGrid.row
@@ -2193,8 +2284,8 @@ Else
     If rowdata < RowDataPositionManagerBase And _
         rowdata >= RowDataOrderPlexBase _
     Then
-        index = rowdata - RowDataOrderPlexBase
-        Set op = mOrderPlexGridMappingTable(index).op
+        Index = rowdata - RowDataOrderPlexBase
+        Set op = mOrderPlexGridMappingTable(Index).op
         If op.State = OrderPlexStateCodes.Created Or _
             op.State = OrderPlexStateCodes.Submitted _
         Then
@@ -2206,7 +2297,7 @@ Else
             CancelOrderButton.Enabled = True
             ModifyOrderButton.Enabled = True
             
-            orderIndex = mSelectedOrderPlexGridRow - mOrderPlexGridMappingTable(index).gridIndex
+            orderIndex = mSelectedOrderPlexGridRow - mOrderPlexGridMappingTable(Index).gridIndex
             If orderIndex = 0 Then Exit Sub
             
             Set mSelectedOrder = op.Order(orderIndex)
@@ -2256,12 +2347,10 @@ mTickfileManager.PauseReplay
 End Sub
 
 Private Sub PlayTickFileButton_Click()
-ServerText.Enabled = False
-PortText.Enabled = False
-ClientIDText.Enabled = False
+mSimulateOrders = True
+
 SocketDataCheck.Enabled = False
 LogDataCheck.Enabled = False
-SimulateOrdersCheck.Enabled = False
 
 PlayTickFileButton.Enabled = False
 SelectTickfilesButton.Enabled = False
@@ -2273,9 +2362,6 @@ SkipReplayButton.Enabled = True
 StopReplayButton.Enabled = True
 ReplayProgressBar.Visible = True
 ConnectButton.Enabled = False
-OrderButton.Enabled = True
-
-setupTWSContractServiceProvider
 
 If Not mTicker Is Nothing Then
     writeStatusMessage "Tickfile replay resumed"
@@ -2286,10 +2372,6 @@ End If
 mTickfileManager.replaySpeed = ReplaySpeedCombo.itemData(ReplaySpeedCombo.ListIndex)
 
 mTickfileManager.StartReplay
-End Sub
-
-Private Sub PortText_Change()
-checkOKToConnect
 End Sub
 
 Private Sub RealtimeDataSourceCombo_Click()
@@ -2345,7 +2427,7 @@ End If
 End Sub
 
 Private Sub StartTickerButton_Click()
-Dim lTicker As Ticker
+Dim lTicker As ticker
 Dim lContractSpecifier As ContractSpecifier
 
 Set lContractSpecifier = mTradeBuildAPI.newContractSpecifier( _
@@ -2359,8 +2441,6 @@ Set lContractSpecifier = mTradeBuildAPI.newContractSpecifier( _
                                 optionRightFromString(RightCombo))
 
 StartTickerButton.Enabled = False
-
-setupTWSContractServiceProvider
 
 Set lTicker = createTicker
 lTicker.DOMEventsRequired = DOMEvents.DOMNoEvents
@@ -2386,20 +2466,22 @@ RewriteCheck.Enabled = True
 ReplayMarketDepthCheck.Enabled = False
 ChartButton.Enabled = False
 mTicker.StopTicker
-checkOKToConnect
+'checkOKToConnect
 End Sub
 
 Private Sub StopTickerButton_Click()
-Dim Ticker As Ticker
+Dim ticker As ticker
 Dim bookmark As Variant
 
 For Each bookmark In TickerGrid.SelBookmarks
     TickerGrid.bookmark = bookmark           ' select the row
     TickerGrid.col = 0                       ' make the cell containing the key current
-    Set Ticker = mTickers(TickerGrid.Text)
-    Ticker.StopTicker
-    Ticker.PositionManager.removeProfitListener Me
-    Ticker.PositionManager.removeChangeListener Me
+    Set ticker = mTickers(TickerGrid.Text)
+    ticker.StopTicker
+    If Not ticker.PositionManager Is Nothing Then
+        ticker.PositionManager.removeProfitListener Me
+        ticker.PositionManager.removeChangeListener Me
+    End If
 Next
 
 End Sub
@@ -2456,6 +2538,12 @@ Else
         Else
             ChartButton.Enabled = False
             GridChartButton.Enabled = False
+        End If
+        
+        If Not mTicker.PositionManager Is Nothing And _
+            mTicker.defaultOrderContext.IsReady _
+        Then
+            OrderButton.Enabled = True
         End If
         
         Set mCurrentContract = mTicker.Contract
@@ -2530,8 +2618,8 @@ End Sub
 ' mTicker Event Handlers
 '================================================================================
 
-Private Sub mTicker_Application(ByVal timestamp As Date, ByVal data As Variant)
-Dim Ticker As Ticker
+Private Sub mTicker_Application(ByVal data As Variant)
+Dim ticker As ticker
 Dim eventCode As ApplicationEventCodes
 
 ' this fires when the market depth form or the chart from for this ticker are
@@ -2554,8 +2642,8 @@ End Select
 If TickerGrid.SelBookmarks.Count = 1 Then
     TickerGrid.bookmark = TickerGrid.SelBookmarks(0)    ' select the row
     TickerGrid.col = 0                       ' make the cell containing the key current
-    Set Ticker = mTickers(TickerGrid.Text)
-    If Ticker Is mTicker Then
+    Set ticker = mTickers(TickerGrid.Text)
+    If ticker Is mTicker Then
         Select Case eventCode
         Case MarketDepthFormClosed
             MarketDepthButton.Enabled = True
@@ -2581,28 +2669,24 @@ err:
 handleFatalError err.Number, err.Description, "mTicker_ContractInvalid"
 End Sub
 
-Private Sub mTicker_errorMessage(ByVal timestamp As Date, _
-                                ByVal id As Long, _
-                                ByVal errorCode As TradeBuild.ApiErrorCodes, _
+Private Sub mTicker_errorMessage(ByVal errorCode As TradeBuild.ApiErrorCodes, _
                                 ByVal errorMsg As String)
 On Error GoTo err
-mTimestamp = timestamp
-writeStatusMessage "Error " & errorCode & ": " & id & ": " & errorMsg
+writeStatusMessage "Error " & errorCode & ": " & errorMsg
 
 Exit Sub
 err:
 handleFatalError err.Number, err.Description, "mTicker_errorMessage"
 End Sub
 
-Private Sub mTicker_OutputTickfileCreated(ByVal timestamp As Date, _
+Private Sub mTicker_OutputTickfileCreated( _
                             ByVal Filename As String)
 writeStatusMessage "Created output tickfile: " & Filename
 End Sub
 
-Private Sub mTicker_volume(ByVal timestamp As Date, _
+Private Sub mTicker_volume( _
                             ByVal size As Long)
 On Error GoTo err
-mTimestamp = timestamp
 VolumeText = size
 
 Exit Sub
@@ -2615,14 +2699,14 @@ End Sub
 '================================================================================
 
 Private Sub mTickers_ContractAmbiguous( _
-                ByVal pTicker As TradeBuild.Ticker, _
+                ByVal pTicker As TradeBuild.ticker, _
                 ByVal contracts As TradeBuild.contracts)
 writeStatusMessage "Ambiguous contract details:" & vbCrLf & _
                     Replace(contracts.ContractSpecifier.ToString, vbCrLf, "; ")
 StartTickerButton.Enabled = True
 End Sub
 
-Private Sub mTickers_contractInvalid(ByVal pTicker As Ticker, _
+Private Sub mTickers_contractInvalid(ByVal pTicker As ticker, _
                 ByVal contractSpec As ContractSpecifier, _
                 ByVal reason As String)
 writeStatusMessage "Invalid contract details (" & reason & "):" & vbCrLf & _
@@ -2630,44 +2714,8 @@ writeStatusMessage "Invalid contract details (" & reason & "):" & vbCrLf & _
 StartTickerButton.Enabled = True
 End Sub
 
-Private Sub mTickers_DOMReset(ByVal Key As String, _
-                            ByVal timestamp As Date, _
-                            ByVal marketDepthReRequested As Boolean)
-
-Dim tickerAppData As TickerApplicationData
-Dim Ticker As Ticker
-
-On Error GoTo err
-mTimestamp = timestamp
-
-Set Ticker = mTickers(Key)
-Set tickerAppData = Ticker.ApplicationData
-
-tickerAppData.MarketDepthForm.setDOMCell mTimestamp, DOMSides.DOMLast, CDbl(LastText), LastSizeText
-tickerAppData.MarketDepthForm.setDOMCell mTimestamp, DOMSides.DOMAsk, CDbl(AskText), AskSizeText
-tickerAppData.MarketDepthForm.setDOMCell mTimestamp, DOMSides.DOMBid, CDbl(BidText), BidSizeText
-
-If marketDepthReRequested Then
-    writeStatusMessage Ticker.Contract.specifier.localSymbol & ": market depth reset and data re-requested"
-Else
-    writeStatusMessage Ticker.Contract.specifier.localSymbol & ": market depth reset and continuing"
-End If
-
-
-Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTickers_DOMReset"
-End Sub
-
-Private Sub mTickers_DuplicateTickerRequest(ByVal pTicker As TradeBuild.Ticker, _
-                                           ByVal contractSpec As ContractSpecifier)
-writeStatusMessage "A ticker is already running for contract: " & _
-                    Replace(contractSpec.ToString, vbCrLf, "; ")
-StartTickerButton.Enabled = True
-End Sub
-
 Private Sub mTickers_MarketDepthNotAvailable( _
-                            ByVal pTicker As TradeBuild.Ticker, _
+                            ByVal pTicker As TradeBuild.ticker, _
                             ByVal reason As String)
 Dim tickerAppData As TickerApplicationData
 
@@ -2687,7 +2735,7 @@ handleFatalError err.Number, err.Description, "mTickers_MarketDepthNotAvailable"
 End Sub
 
 Private Sub mTickers_TickerReady( _
-                ByVal pTicker As Ticker)
+                ByVal pTicker As ticker)
 
 On Error GoTo err
 
@@ -2695,13 +2743,20 @@ If pTicker Is mTicker Then
     Set mCurrentContract = mTicker.Contract
     MarketDepthButton.Enabled = True
     ChartButton.Enabled = True
+    If Not pTicker.PositionManager Is Nothing And _
+        pTicker.defaultOrderContext.IsReady _
+    Then
+        OrderButton.Enabled = True
+    End If
 
     NameText = mCurrentContract.specifier.localSymbol
     
 End If
 
-pTicker.PositionManager.addProfitListener Me
-pTicker.PositionManager.addChangeListener Me
+If Not pTicker.PositionManager Is Nothing Then
+    pTicker.PositionManager.addProfitListener Me
+    pTicker.PositionManager.addChangeListener Me
+End If
 
 On Error Resume Next
 If mContractCol.Item(pTicker.Contract.specifier.localSymbol) Is Nothing Then
@@ -2717,7 +2772,7 @@ err:
 handleFatalError err.Number, err.Description, "mTicker_Ready"
 End Sub
 
-Private Sub mTickers_TickerRemoved(ByVal pTicker As Ticker)
+Private Sub mTickers_TickerRemoved(ByVal pTicker As ticker)
 
 ' The following seems to be needed to prevent the TickerGrid_Error
 ' event being fired. Otherwise, disabling StopTickerButton causes the focus
@@ -2735,9 +2790,6 @@ GridMarketDepthButton.Enabled = False
 
 If pTicker Is mTicker Then
     clearTickerFields
-    mTicker.removeQuoteListener Me
-    mTicker.PositionManager.removeProfitListener Me
-    mTicker.PositionManager.removeChangeListener Me
     Set mTicker = Nothing
 End If
 
@@ -2755,7 +2807,6 @@ Private Sub mTickfileManager_errorMessage( _
                 ByVal errorCode As TradeBuild.ApiErrorCodes, _
                 ByVal errorMsg As String)
 On Error GoTo err
-mTimestamp = timestamp
 writeStatusMessage "Error " & errorCode & ": " & id & ": " & errorMsg
 
 Exit Sub
@@ -2821,13 +2872,9 @@ ReplayProgressBar.Visible = False
 ReplayContractLabel.Caption = ""
 ReplayProgressLabel.Caption = ""
 
-ServerText.Enabled = True
-PortText.Enabled = True
-ClientIDText.Enabled = True
 SocketDataCheck.Enabled = True
 LogDataCheck.Enabled = True
-SimulateOrdersCheck.Enabled = True
-checkOKToConnect
+'checkOKToConnect
 
 writeStatusMessage "Tickfile replay completed"
 
@@ -2841,7 +2888,6 @@ Private Sub mTickfileManager_ReplayProgress( _
                 ByVal eventsPlayed As Long, _
                 ByVal percentComplete As Single)
 On Error GoTo err
-mTimestamp = tickfileTimestamp
 ReplayProgressBar.value = percentComplete
 ReplayProgressLabel.Caption = tickfileTimestamp & _
                                 "  Processed " & _
@@ -2853,7 +2899,7 @@ err:
 handleFatalError err.Number, err.Description, "mTickfileManager_ReplayProgress"
 End Sub
 
-Private Sub mTickfileManager_TickerAllocated(ByVal pTicker As TradeBuild.Ticker)
+Private Sub mTickfileManager_TickerAllocated(ByVal pTicker As TradeBuild.ticker)
 On Error GoTo err
 Set mTicker = pTicker
 mTicker.addQuoteListener Me
@@ -2902,190 +2948,52 @@ End Sub
 ' mTradeBuildAPI Event Handlers
 '================================================================================
 
-Private Sub mTradeBuildAPI_connected(ByVal timestamp As Date)
-Dim execFilter As ExecutionFilter
-
-On Error GoTo err
-
-writeStatusMessage "Connected to " & _
-                    IIf(ServerText = "", "local server", ServerText) & _
-                    "; port=" & PortText & _
-                    "; client id=" & ClientIDText
-ConnectButton.Enabled = False
-DisconnectButton.Enabled = True
-OrderButton.Enabled = True
-
-ServerText.Enabled = False
-PortText.Enabled = False
-ClientIDText.Enabled = False
-
-MainSSTAB.Tab = MainSSTABTabNumbers.Tickers
-LocalSymbolText.Enabled = True
-LocalSymbolText.SetFocus
-SymbolText.Enabled = True
-TypeCombo.Enabled = True
-ExpiryText.Enabled = IIf(TypeCombo.Text = "" Or _
-                        TypeCombo.Text = StrSecTypeFuture Or _
-                        TypeCombo.Text = StrSecTypeOption Or _
-                        TypeCombo.Text = StrSecTypeOptionFuture, _
-                        True, _
-                        False)
-ExchangeText.Enabled = True
-CurrencyText.Enabled = True
-StrikePriceText.Enabled = IIf(TypeCombo.Text = "" Or _
-                        TypeCombo.Text = StrSecTypeOption Or _
-                        TypeCombo.Text = StrSecTypeOptionFuture, _
-                        True, _
-                        False)
-RightCombo.Enabled = IIf(TypeCombo.Text = "" Or _
-                        TypeCombo.Text = StrSecTypeOption Or _
-                        TypeCombo.Text = StrSecTypeOptionFuture, _
-                        True, _
-                        False)
-RecordCheck.Enabled = True
-If RecordCheck = vbChecked Then MarketDepthCheck.Enabled = True
-
-checkOkToStartTicker
-
-Set execFilter = New ExecutionFilter
-execFilter.clientID = ClientIDText
-mTradeBuildAPI.RequestExecutions execFilter
-
-Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTradeBuildAPI_connected"
-End Sub
-
-Private Sub mTradeBuildAPI_connectFailed( _
-                ByVal timestamp As Date, _
-                ByVal Description As String, _
-                ByVal retrying As Boolean)
-ConnectButton.Enabled = True
-DisconnectButton.Enabled = False
-writeStatusMessage "Connection attempt failed"
-End Sub
-
-Private Sub mTradeBuildAPI_connecting(ByVal timestamp As Date)
-On Error GoTo err
-DataList.Clear
-writeStatusMessage "Connecting"
-
-Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTradeBuildAPI_connecting"
-End Sub
-
-Private Sub mTradeBuildAPI_connectionToIBClosed(ByVal timestamp As Date)
-writeStatusMessage "Connection from TWS to IB has been lost"
-End Sub
-
-Private Sub mTradeBuildAPI_connectionToIBRecovered(ByVal timestamp As Date)
-writeStatusMessage "Connection from TWS to IB has been restored successfully"
-End Sub
-
-Private Sub mTradeBuildAPI_connectionToTWSClosed( _
-                ByVal timestamp As Date, _
-                ByVal reconnecting As Boolean)
-On Error GoTo err
-
-mTimestamp = timestamp
-
-If reconnecting Then
-    writeStatusMessage "Connection closed - attempting to reconnect"
-    Exit Sub
-End If
-
-checkOKToConnect
-DisconnectButton.Enabled = False
-SimulateOrdersCheck.Enabled = True
-OrderButton.Enabled = False
-StartTickerButton.Enabled = False
-StopTickerButton.Enabled = False
-GridChartButton.Enabled = False
-GridMarketDepthButton.Enabled = False
-MarketDepthButton.Enabled = False
-ChartButton.Enabled = False
-Set mTicker = Nothing
-
-ServerText.Enabled = True
-PortText.Enabled = True
-ClientIDText.Enabled = True
-
-LocalSymbolText.Enabled = False
-SymbolText.Enabled = False
-TypeCombo.Enabled = False
-ExpiryText.Enabled = False
-ExchangeText.Enabled = False
-CurrencyText.Enabled = False
-StrikePriceText.Enabled = False
-RightCombo.Enabled = False
-RecordCheck.Enabled = False
-MarketDepthCheck.Enabled = False
-
-SelectTickfilesButton.Enabled = True
-
-setupOrderPlexGrid
-ExecutionsList.ListItems.Clear
-
-If Not mOrderForm Is Nothing Then Unload mOrderForm
-Set mOrderForm = Nothing
-
-writeStatusMessage "Connection closed"
-
-checkOkToStartReplay
-
-Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTradeBuildAPI_connectionToTWSClosed"
-End Sub
-
-Private Sub mTradeBuildAPI_dataReceived(ByVal timestamp As Date)
-Dim data As String
-Static widthPx As Long
-Dim width As Long
-Dim fs As New FileSystemObject
-Static log As TextStream
-Dim logFileName As String
-
-On Error GoTo err
-mTimestamp = timestamp
-If SocketDataCheck = vbChecked Or LogDataCheck = vbChecked Then
-    data = mTradeBuildAPI.socketData
-End If
-
-If SocketDataCheck = vbChecked Then
-    
-    ' set the scrolling width of the list box if need be
-    width = Me.TextWidth(data & "  ")
-    If Me.ScaleMode = vbTwips Then
-        ' If using Twips then change to pixels
-        width = width / Screen.TwipsPerPixelX
-    End If
-    If width > widthPx Then
-        widthPx = width
-        SendMessageByNum DataList.hwnd, LB_SETHORZEXTENT, widthPx, 0
-    End If
-    
-    
-    DataList.AddItem data
-    If DataList.ListCount > 10 Then DataList.TopIndex = DataList.ListCount - 10
-End If
-
-If LogDataCheck = vbChecked Then
-    
-    If log Is Nothing Then
-        logFileName = App.Path & "\datalog" & Format(Now, "yyyymmddhhnnss") & ".txt"
-        Set log = fs.CreateTextFile(logFileName, True)
-        writeStatusMessage "Socket data logged to " & logFileName
-    End If
-    
-    log.WriteLine FormatTimestamp(timestamp, TimestampFormats.TimestampDateAndTime) & "  " & data
-
-End If
-Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTradeBuildAPI_dataReceived"
-End Sub
+'Private Sub mTradeBuildAPI_dataReceived(ByVal timestamp As Date)
+'Dim data As String
+'Static widthPx As Long
+'Dim width As Long
+'Dim fs As New FileSystemObject
+'Static log As TextStream
+'Dim logFileName As String
+'
+'On Error GoTo err
+'If SocketDataCheck = vbChecked Or LogDataCheck = vbChecked Then
+'    data = mTradeBuildAPI.socketData
+'End If
+'
+'If SocketDataCheck = vbChecked Then
+'
+'    ' set the scrolling width of the list box if need be
+'    width = Me.TextWidth(data & "  ")
+'    If Me.ScaleMode = vbTwips Then
+'        ' If using Twips then change to pixels
+'        width = width / Screen.TwipsPerPixelX
+'    End If
+'    If width > widthPx Then
+'        widthPx = width
+'        SendMessageByNum DataList.hwnd, LB_SETHORZEXTENT, widthPx, 0
+'    End If
+'
+'
+'    DataList.AddItem data
+'    If DataList.ListCount > 10 Then DataList.TopIndex = DataList.ListCount - 10
+'End If
+'
+'If LogDataCheck = vbChecked Then
+'
+'    If log Is Nothing Then
+'        logFileName = CurDir & "\datalog" & Format(Now, "yyyymmddhhnnss") & ".txt"
+'        Set log = fs.CreateTextFile(logFileName, True)
+'        writeStatusMessage "TWS Socket data logged to " & logFileName
+'    End If
+'
+'    log.WriteLine FormatTimestamp(timestamp, TimestampFormats.TimestampDateAndTime) & "  " & data
+'
+'End If
+'Exit Sub
+'err:
+'handleFatalError err.Number, err.Description, "mTradeBuildAPI_dataReceived"
+'End Sub
 
 Private Sub mTradeBuildAPI_errorMessage(ByVal timestamp As Date, _
                         ByVal id As Long, _
@@ -3094,8 +3002,6 @@ Private Sub mTradeBuildAPI_errorMessage(ByVal timestamp As Date, _
 Dim spError As ServiceProviderError
 
 On Error GoTo err
-
-mTimestamp = timestamp
 
 Select Case errorCode
 Case ApiErrorCodes.ServiceProviderErrorNotification
@@ -3116,35 +3022,33 @@ err:
 handleFatalError err.Number, err.Description, "mTradeBuildAPI_errorMessage"
 End Sub
 
-Private Sub mTradeBuildAPI_executionDetails(ByVal timestamp As Date, _
-                        ByVal id As Long, _
-                        ByVal pContractSpecifier As ContractSpecifier, _
-                        ByVal exec As Execution)
-Dim listItem As listItem
-On Error GoTo err
-
-mTimestamp = timestamp
-
-On Error Resume Next
-Set listItem = ExecutionsList.ListItems(CStr(exec.execId))
-On Error GoTo err
-
-If listItem Is Nothing Then
-    Set listItem = ExecutionsList.ListItems.Add(, CStr(exec.execId), CStr(exec.execId))
-End If
-
-listItem.SubItems(ExecutionsColumns.Action - 1) = IIf(exec.side = ExecSides.SideBuy, "BUY", "SELL")
-listItem.SubItems(ExecutionsColumns.orderId - 1) = exec.orderId
-listItem.SubItems(ExecutionsColumns.price - 1) = exec.price
-listItem.SubItems(ExecutionsColumns.quantity - 1) = exec.quantity
-listItem.SubItems(ExecutionsColumns.symbol - 1) = pContractSpecifier.localSymbol
-listItem.SubItems(ExecutionsColumns.Time - 1) = exec.Time
-
-
-Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTradeBuildAPI_executionDetails"
-End Sub
+'Private Sub mTradeBuildAPI_executionDetails(ByVal timestamp As Date, _
+'                        ByVal id As Long, _
+'                        ByVal pContractSpecifier As ContractSpecifier, _
+'                        ByVal exec As Execution)
+'Dim listItem As listItem
+'On Error GoTo err
+'
+'On Error Resume Next
+'Set listItem = ExecutionsList.ListItems(CStr(exec.execId))
+'On Error GoTo err
+'
+'If listItem Is Nothing Then
+'    Set listItem = ExecutionsList.ListItems.Add(, CStr(exec.execId), CStr(exec.execId))
+'End If
+'
+'listItem.SubItems(ExecutionsColumns.Action - 1) = IIf(exec.side = ExecSides.SideBuy, "BUY", "SELL")
+'listItem.SubItems(ExecutionsColumns.orderId - 1) = exec.orderBrokerId
+'listItem.SubItems(ExecutionsColumns.price - 1) = exec.price
+'listItem.SubItems(ExecutionsColumns.quantity - 1) = exec.quantity
+'listItem.SubItems(ExecutionsColumns.symbol - 1) = pContractSpecifier.localSymbol
+'listItem.SubItems(ExecutionsColumns.Time - 1) = exec.Time
+'
+'
+'Exit Sub
+'err:
+'handleFatalError err.Number, err.Description, "mTradeBuildAPI_executionDetails"
+'End Sub
 
 'Private Sub mTradeBuildAPI_openOrder(ByVal timestamp As Date, _
 '                            ByVal pContractSpecifier As ContractSpecifier, _
@@ -3159,51 +3063,6 @@ End Sub
 'Exit Sub
 'err:
 'handleFatalError err.Number, err.Description, "mTradeBuildAPI_openOrder"
-'End Sub
-
-'Private Sub mTradeBuildAPI_orderStatus(ByVal timestamp As Date, _
-'                                ByVal id As Long, _
-'                                ByVal status As OrderStatuses, _
-'                                ByVal filled As Long, _
-'                                ByVal remaining As Long, _
-'                                ByVal avgFillPrice As Double, _
-'                                ByVal permId As Long, _
-'                                ByVal parentId As Long, _
-'                                ByVal lastFillPrice As Double, _
-'                                ByVal clientId As Long)
-'Dim listItem As listItem
-'Dim lOrder As Order
-'Dim orderKey As String
-'
-'On Error GoTo err
-'
-'mTimestamp = timestamp
-'
-'orderKey = "A" & CStr(id)
-'
-'On Error Resume Next
-'Set listItem = OpenOrdersList.ListItems(orderKey)
-'On Error GoTo err
-'
-'If listItem Is Nothing Then
-'    Set listItem = OpenOrdersList.ListItems.Add(, orderKey, CStr(id))
-'End If
-'
-'listItem.SubItems(OpenOrdersColumns.status - 1) = orderStatusToString(status)
-'listItem.SubItems(OpenOrdersColumns.Quantity - 1) = remaining
-'
-'Set lOrder = mOrdersCol(orderKey)
-'
-'lOrder.status = status
-'lOrder.quantityFilled = filled
-'lOrder.Quantity = remaining
-'lOrder.averagePrice = avgFillPrice
-'lOrder.permId = permId
-'lOrder.lastFillPrice = lastFillPrice
-'
-'Exit Sub
-'err:
-'handleFatalError err.Number, err.Description, "mTradeBuildAPI_orderStatus"
 'End Sub
 
 '================================================================================
@@ -3225,68 +3084,68 @@ End Sub
 Private Function addEntryToOrderPlexGrid( _
                 ByVal symbol As String, _
                 Optional ByVal before As Boolean, _
-                Optional ByVal index As Long = -1) As Long
+                Optional ByVal Index As Long = -1) As Long
 Dim i As Long
 
-If index < 0 Then
+If Index < 0 Then
     For i = mFirstOrderPlexGridRowIndex To OrderPlexGrid.Rows - 1
         If (before And _
             OrderPlexGrid.TextMatrix(i, OPGridColumns.symbol) >= symbol) Or _
             OrderPlexGrid.TextMatrix(i, OPGridColumns.symbol) = "" _
         Then
-            index = i
+            Index = i
             Exit For
         ElseIf (Not before And _
             OrderPlexGrid.TextMatrix(i, OPGridColumns.symbol) > symbol) Or _
             OrderPlexGrid.TextMatrix(i, OPGridColumns.symbol) = "" _
         Then
-            index = i
+            Index = i
             Exit For
         End If
     Next
     
-    If index < 0 Then
+    If Index < 0 Then
         OrderPlexGrid.AddItem ""
-        index = OrderPlexGrid.Rows - 1
-    ElseIf OrderPlexGrid.TextMatrix(index, OPGridColumns.symbol) = "" Then
-        OrderPlexGrid.TextMatrix(index, OPGridColumns.symbol) = symbol
+        Index = OrderPlexGrid.Rows - 1
+    ElseIf OrderPlexGrid.TextMatrix(Index, OPGridColumns.symbol) = "" Then
+        OrderPlexGrid.TextMatrix(Index, OPGridColumns.symbol) = symbol
     Else
-        OrderPlexGrid.AddItem "", index
+        OrderPlexGrid.AddItem "", Index
     End If
 Else
-    OrderPlexGrid.AddItem "", index
+    OrderPlexGrid.AddItem "", Index
 End If
 
-OrderPlexGrid.TextMatrix(index, OPGridColumns.symbol) = symbol
-If index < OrderPlexGrid.Rows - 1 Then
+OrderPlexGrid.TextMatrix(Index, OPGridColumns.symbol) = symbol
+If Index < OrderPlexGrid.Rows - 1 Then
     ' this new entry has displaced one or more existing entries so
     ' the OrderPlexGridMappingTable and PositionManageGridMappingTable indexes
     ' need to be adjusted
     For i = 0 To mMaxOrderPlexGridMappingTableIndex
-        If mOrderPlexGridMappingTable(i).gridIndex >= index Then
+        If mOrderPlexGridMappingTable(i).gridIndex >= Index Then
             mOrderPlexGridMappingTable(i).gridIndex = mOrderPlexGridMappingTable(i).gridIndex + 1
         End If
     Next
     For i = 0 To mMaxPositionManagerGridMappingTableIndex
-        If mPositionManagerGridMappingTable(i).gridIndex >= index Then
+        If mPositionManagerGridMappingTable(i).gridIndex >= Index Then
             mPositionManagerGridMappingTable(i).gridIndex = mPositionManagerGridMappingTable(i).gridIndex + 1
         End If
     Next
 End If
 
-addEntryToOrderPlexGrid = index
+addEntryToOrderPlexGrid = Index
 End Function
 
 Private Function addOrderPlexEntryToOrderPlexGrid( _
                 ByVal symbol As String, _
                 ByVal orderPlexTableIndex As Long) As Long
-Dim index As Long
+Dim Index As Long
 
-index = addEntryToOrderPlexGrid(symbol, False)
+Index = addEntryToOrderPlexGrid(symbol, False)
 
-OrderPlexGrid.rowdata(index) = orderPlexTableIndex + RowDataOrderPlexBase
+OrderPlexGrid.rowdata(Index) = orderPlexTableIndex + RowDataOrderPlexBase
 
-OrderPlexGrid.row = index
+OrderPlexGrid.row = Index
 OrderPlexGrid.col = OPGridColumns.ExpandIndicator
 OrderPlexGrid.CellPictureAlignment = AlignmentSettings.flexAlignCenterCenter
 Set OrderPlexGrid.CellPicture = OrderPlexImageList.ListImages("Contract").Picture
@@ -3303,42 +3162,39 @@ OrderPlexGrid.col = OPGridOrderPlexColumns.drawdown
 OrderPlexGrid.CellBackColor = &HC0C0C0
 OrderPlexGrid.CellForeColor = vbWhite
 
-addOrderPlexEntryToOrderPlexGrid = index
+addOrderPlexEntryToOrderPlexGrid = Index
 End Function
                 
 Private Sub addOrderEntryToOrderPlexGrid( _
-                ByVal index As Long, _
+                ByVal Index As Long, _
                 ByVal symbol As String, _
                 ByVal pOrder As TradeBuild.Order, _
                 ByVal orderPlexTableIndex As Long, _
                 ByVal typeInPlex As String)
 
 
-index = addEntryToOrderPlexGrid(symbol, False, index)
+Index = addEntryToOrderPlexGrid(symbol, False, Index)
 
-OrderPlexGrid.rowdata(index) = orderPlexTableIndex + RowDataOrderPlexBase
+OrderPlexGrid.rowdata(Index) = orderPlexTableIndex + RowDataOrderPlexBase
 
-OrderPlexGrid.TextMatrix(index, OPGridOrderColumns.typeInPlex) = typeInPlex
+OrderPlexGrid.TextMatrix(Index, OPGridOrderColumns.typeInPlex) = typeInPlex
 
-displayOrderValuesInOrderPlexGrid index, pOrder
+displayOrderValuesInOrderPlexGrid Index, pOrder
 
 End Sub
 
-Private Sub checkOKToConnect()
-If PortText <> "" And ClientIDText <> "" And _
-    mTradeBuildAPI.connectionState <> ConnReplaying _
-Then
-    ConnectButton.Enabled = True
-Else
-    ConnectButton.Enabled = False
-End If
-End Sub
+'Private Sub checkOKToConnect()
+'If PortText <> "" And ClientIDText <> "" And _
+'    mTradeBuildAPI.connectionState <> ConnReplaying _
+'Then
+'    ConnectButton.Enabled = True
+'Else
+'    ConnectButton.Enabled = False
+'End If
+'End Sub
 
 Private Sub checkOkToStartReplay()
-If TickfileList.ListCount <> 0 And _
-    mTradeBuildAPI.connectionState <> ConnConnected And _
-    mTradeBuildAPI.connectionState <> ConnConnecting _
-Then
+If TickfileList.ListCount <> 0 Then
     PlayTickFileButton.Enabled = True
 Else
     PlayTickFileButton.Enabled = False
@@ -3372,7 +3228,7 @@ Else
 End If
 End Sub
 
-Private Sub clearTickerAppData(ByVal pTicker As Ticker)
+Private Sub clearTickerAppData(ByVal pTicker As ticker)
 Dim tickerAppData As TickerApplicationData
 
 If pTicker Is Nothing Then Exit Sub
@@ -3408,11 +3264,11 @@ ChartButton.Enabled = False
 End Sub
 
 Private Function contractOrderPlexEntry( _
-                ByVal index As Long, _
+                ByVal Index As Long, _
                 Optional ByVal preserveCurrentExpandedState As Boolean) As Long
 Dim lIndex As Long
 
-With mOrderPlexGridMappingTable(index)
+With mOrderPlexGridMappingTable(Index)
     If .entryGridOffset >= 0 Then
         lIndex = .gridIndex + .entryGridOffset
         OrderPlexGrid.RowHeight(lIndex) = 0
@@ -3442,19 +3298,19 @@ End With
 contractOrderPlexEntry = lIndex
 End Function
 
-Private Sub contractPositionManagerEntry(ByVal index As Long)
+Private Sub contractPositionManagerEntry(ByVal Index As Long)
 Dim i As Long
 Dim symbol As String
 Dim lOpEntryIndex As Long
 
-mPositionManagerGridMappingTable(index).isExpanded = False
-OrderPlexGrid.row = mPositionManagerGridMappingTable(index).gridIndex
+mPositionManagerGridMappingTable(Index).isExpanded = False
+OrderPlexGrid.row = mPositionManagerGridMappingTable(Index).gridIndex
 OrderPlexGrid.col = OPGridColumns.ExpandIndicator
 OrderPlexGrid.CellPictureAlignment = AlignmentSettings.flexAlignCenterCenter
 Set OrderPlexGrid.CellPicture = OrderPlexImageList.ListImages("Expand").Picture
 
-symbol = OrderPlexGrid.TextMatrix(mPositionManagerGridMappingTable(index).gridIndex, OPGridColumns.symbol)
-i = mPositionManagerGridMappingTable(index).gridIndex + 1
+symbol = OrderPlexGrid.TextMatrix(mPositionManagerGridMappingTable(Index).gridIndex, OPGridColumns.symbol)
+i = mPositionManagerGridMappingTable(Index).gridIndex + 1
 Do While OrderPlexGrid.TextMatrix(i, OPGridColumns.symbol) = symbol
     OrderPlexGrid.RowHeight(i) = 0
     lOpEntryIndex = OrderPlexGrid.rowdata(i) - RowDataOrderPlexBase
@@ -3462,8 +3318,8 @@ Do While OrderPlexGrid.TextMatrix(i, OPGridColumns.symbol) = symbol
 Loop
 End Sub
 
-Private Sub createChart(ByVal pTicker As Ticker)
-Dim chartform As fChart1
+Private Sub createChart(ByVal pTicker As ticker)
+Dim chartform As fChart2
 
 If Not pTicker.ApplicationData.chartform Is Nothing Then Exit Sub
 
@@ -3476,6 +3332,7 @@ If mHistDataServiceProvider Is Nothing Then
         mHistDataServiceProvider.Server = HistServerText
         mHistDataServiceProvider.Port = HistPortText
         mHistDataServiceProvider.clientID = HistClientIdText
+        mHistDataServiceProvider.providerKey = "IB"
         mHistDataServiceProvider.keepConnection = True
     ElseIf HistDataSourceCombo.Text = "QuoteTracker" Then
         Set mHistDataServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject("QTSP.QTHistDataServiceProvider"))
@@ -3487,26 +3344,26 @@ If mHistDataServiceProvider Is Nothing Then
     End If
 End If
 
-Set chartform = New fChart1
-chartform.minimumTicksHeight = 40
-chartform.InitialNumberOfBars = 500
-chartform.barLength = 1
-chartform.Ticker = pTicker
+Set chartform = New fChart2
+'chartform.minimumTicksHeight = 40
+'chartform.InitialNumberOfBars = 500
+'chartform.barLength = 1
+chartform.ticker = pTicker
 chartform.Visible = True
 Set pTicker.ApplicationData.chartform = chartform
 End Sub
 
-Private Function createTicker() As Ticker
-Set createTicker = mTickers.Add((SimulateOrdersCheck = vbUnchecked), Format(CLng(1000000000 * Rnd)), "0")
+Private Function createTicker() As ticker
+Set createTicker = mTickers.Add(Not mSimulateOrders, Format(CLng(1000000000 * Rnd)), "0")
 initialiseTicker createTicker
 End Function
 
 Private Sub displayOrderValuesInOrderPlexGrid( _
                 ByVal gridIndex As Long, _
                 ByVal pOrder As Order)
-Dim lTicker As TradeBuild.Ticker
+Dim lTicker As TradeBuild.ticker
 
-Set lTicker = pOrder.Ticker
+Set lTicker = pOrder.ticker
 
 OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.Action) = orderActionToString(pOrder.Action)
 OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.auxPrice) = lTicker.formatPrice(pOrder.triggerPrice, True)
@@ -3523,29 +3380,29 @@ End Sub
 
 Private Sub expandOrContract()
 Dim rowdata As Long
-Dim index As Long
+Dim Index As Long
 Dim expanded As Boolean
 
 rowdata = OrderPlexGrid.rowdata(OrderPlexGrid.MouseRow)
 If rowdata >= RowDataPositionManagerBase Then
-    index = rowdata - RowDataPositionManagerBase
-    expanded = mPositionManagerGridMappingTable(index).isExpanded
+    Index = rowdata - RowDataPositionManagerBase
+    expanded = mPositionManagerGridMappingTable(Index).isExpanded
     If expanded Then
-        contractPositionManagerEntry index
+        contractPositionManagerEntry Index
     Else
-        expandPositionManagerEntry index
+        expandPositionManagerEntry Index
     End If
 ElseIf rowdata >= RowDataOrderPlexBase Then
-    index = rowdata - RowDataOrderPlexBase
-    expanded = mOrderPlexGridMappingTable(index).isExpanded
-    If OrderPlexGrid.row <> mOrderPlexGridMappingTable(index).gridIndex Then
+    Index = rowdata - RowDataOrderPlexBase
+    expanded = mOrderPlexGridMappingTable(Index).isExpanded
+    If OrderPlexGrid.row <> mOrderPlexGridMappingTable(Index).gridIndex Then
         ' clicked on an order entry
         Exit Sub
     End If
     If expanded Then
-        contractOrderPlexEntry index
+        contractOrderPlexEntry Index
     Else
-        expandOrderPlexEntry index
+        expandOrderPlexEntry Index
     End If
 Else
     Exit Sub
@@ -3553,12 +3410,12 @@ End If
 End Sub
 
 Private Function expandOrderPlexEntry( _
-                ByVal index As Long, _
+                ByVal Index As Long, _
                 Optional ByVal preserveCurrentExpandedState As Boolean) As Long
 Dim lIndex As Long
 
 
-With mOrderPlexGridMappingTable(index)
+With mOrderPlexGridMappingTable(Index)
     
     If .entryGridOffset >= 0 Then
         lIndex = .gridIndex + .entryGridOffset
@@ -3589,19 +3446,19 @@ End With
 expandOrderPlexEntry = lIndex
 End Function
 
-Private Sub expandPositionManagerEntry(ByVal index As Long)
+Private Sub expandPositionManagerEntry(ByVal Index As Long)
 Dim i As Long
 Dim symbol As String
 Dim lOpEntryIndex As Long
 
-mPositionManagerGridMappingTable(index).isExpanded = True
-OrderPlexGrid.row = mPositionManagerGridMappingTable(index).gridIndex
+mPositionManagerGridMappingTable(Index).isExpanded = True
+OrderPlexGrid.row = mPositionManagerGridMappingTable(Index).gridIndex
 OrderPlexGrid.col = OPGridColumns.ExpandIndicator
 OrderPlexGrid.CellPictureAlignment = AlignmentSettings.flexAlignCenterCenter
 Set OrderPlexGrid.CellPicture = OrderPlexImageList.ListImages("Contract").Picture
 
-symbol = OrderPlexGrid.TextMatrix(mPositionManagerGridMappingTable(index).gridIndex, OPGridColumns.symbol)
-i = mPositionManagerGridMappingTable(index).gridIndex + 1
+symbol = OrderPlexGrid.TextMatrix(mPositionManagerGridMappingTable(Index).gridIndex, OPGridColumns.symbol)
+i = mPositionManagerGridMappingTable(Index).gridIndex + 1
 Do While OrderPlexGrid.TextMatrix(i, OPGridColumns.symbol) = symbol
     OrderPlexGrid.RowHeight(i) = -1
     lOpEntryIndex = OrderPlexGrid.rowdata(i) - RowDataOrderPlexBase
@@ -3609,13 +3466,13 @@ Do While OrderPlexGrid.TextMatrix(i, OPGridColumns.symbol) = symbol
 Loop
 End Sub
 
-Private Function findOrderPlexTableIndex(ByVal op As TradeBuild.orderPlex) As Long
+Private Function findOrderPlexTableIndex(ByVal op As TradeBuild.OrderPlex) As Long
 Dim opIndex As Long
 Dim lOrder As TradeBuild.Order
 Dim symbol As String
 
 ' first make sure the relevant PositionManager entry is set up
-findPositionManagerTableIndex op.Ticker.PositionManager
+findPositionManagerTableIndex op.ticker.PositionManager
 
 symbol = op.Contract.specifier.localSymbol
 opIndex = op.indexApplication
@@ -3686,7 +3543,7 @@ Private Function findPositionManagerTableIndex(ByVal pm As TradeBuild.PositionMa
 Dim pmIndex As Long
 Dim symbol As String
 
-symbol = pm.Ticker.Contract.specifier.localSymbol
+symbol = pm.ticker.Contract.specifier.localSymbol
 pmIndex = pm.indexApplication
 If pmIndex > UBound(mPositionManagerGridMappingTable) Then
     ReDim Preserve mPositionManagerGridMappingTable(UBound(mPositionManagerGridMappingTable) + 20) As PositionManagerGridMappingEntry
@@ -3696,7 +3553,7 @@ If pmIndex > mMaxPositionManagerGridMappingTableIndex Then mMaxPositionManagerGr
 With mPositionManagerGridMappingTable(pmIndex)
     If .pm Is Nothing Then
         Set .pm = pm
-        .gridIndex = addEntryToOrderPlexGrid(pm.Ticker.Contract.specifier.localSymbol, True)
+        .gridIndex = addEntryToOrderPlexGrid(pm.ticker.Contract.specifier.localSymbol, True)
         OrderPlexGrid.rowdata(.gridIndex) = pmIndex + RowDataPositionManagerBase
         OrderPlexGrid.row = .gridIndex
         OrderPlexGrid.col = 1
@@ -3705,8 +3562,8 @@ With mPositionManagerGridMappingTable(pmIndex)
         OrderPlexGrid.CellBackColor = &HC0C0C0
         OrderPlexGrid.CellForeColor = vbWhite
         OrderPlexGrid.CellFontBold = True
-        OrderPlexGrid.TextMatrix(.gridIndex, OPGridPositionColumns.exchange) = pm.Ticker.Contract.specifier.exchange
-        OrderPlexGrid.TextMatrix(.gridIndex, OPGridPositionColumns.currencyCode) = pm.Ticker.Contract.specifier.currencyCode
+        OrderPlexGrid.TextMatrix(.gridIndex, OPGridPositionColumns.exchange) = pm.ticker.Contract.specifier.exchange
+        OrderPlexGrid.TextMatrix(.gridIndex, OPGridPositionColumns.currencyCode) = pm.ticker.Contract.specifier.currencyCode
         OrderPlexGrid.TextMatrix(.gridIndex, OPGridPositionColumns.size) = pm.positionSize
         OrderPlexGrid.col = OPGridColumns.ExpandIndicator
         OrderPlexGrid.CellPictureAlignment = AlignmentSettings.flexAlignCenterCenter
@@ -3724,7 +3581,6 @@ If Not mTicker Is Nothing Then
     Set mTicker = Nothing
 Else
     removeServiceProviders
-    mTradeBuildAPI.disconnect
 End If
 Set mTradeBuildAPI = Nothing
 
@@ -3737,7 +3593,7 @@ MsgBox "A fatal error has occurred. The program will close" & vbCrLf & _
 Unload Me
 End Sub
 
-Private Sub initialiseTicker(ByVal pTicker As Ticker)
+Private Sub initialiseTicker(ByVal pTicker As ticker)
 pTicker.outputTickfilePath = App.Path
 pTicker.ApplicationData = New TickerApplicationData
 Set pTicker.ApplicationData.TickerProxy = pTicker.Proxy
@@ -3824,19 +3680,27 @@ Next
 
 End Sub
 
+Private Function isValidLong(value As String) As Boolean
+Dim longValue As Long
+Dim floatValue As Double
+
+If value = "" Then
+    isValidLong = True
+ElseIf IsNumeric(value) Then
+    floatValue = CDbl(value)
+    If floatValue < 0 Or floatValue > &H7FFFFFFF Then Exit Function
+    longValue = CLng(floatValue)
+    If longValue <> floatValue Then Exit Function
+    isValidLong = True
+End If
+End Function
+
 Private Sub removeServiceProviders()
-If Not mTWSContractServiceProvider Is Nothing Then
-    mTradeBuildAPI.ServiceProviders.Remove mTWSContractServiceProvider
-    Set mTWSContractServiceProvider = Nothing
-End If
-If Not mHistDataServiceProvider Is Nothing Then
-    mTradeBuildAPI.ServiceProviders.Remove mHistDataServiceProvider
-    Set mHistDataServiceProvider = Nothing
-End If
-If Not mRealtimeServiceProvider Is Nothing Then
-    mTradeBuildAPI.ServiceProviders.Remove mRealtimeServiceProvider
-    Set mRealtimeServiceProvider = Nothing
-End If
+mTradeBuildAPI.ServiceProviders.RemoveAll
+Set mTWSContractServiceProvider = Nothing
+Set mHistDataServiceProvider = Nothing
+Set mRealtimeServiceProvider = Nothing
+Set mLiveOrderServiceProvider = Nothing
 End Sub
 
 Private Sub setupDefaultTickerGrid()
@@ -3875,64 +3739,64 @@ col.Visible = False
 Set col = TickerGrid.Columns(TickerGridColumns.Order)
 col.Visible = False
 Set col = TickerGrid.Columns(TickerGridColumns.TickerName)
-col.width = TickerGridColumnWidths.NameWidth * TickerGrid.width / 100
+col.Width = TickerGridColumnWidths.NameWidth * TickerGrid.Width / 100
 col.Alignment = dbgLeft
 Set col = TickerGrid.Columns(TickerGridColumns.currencyCode)
-col.width = TickerGridColumnWidths.CurrencyWidth * TickerGrid.width / 100
+col.Width = TickerGridColumnWidths.CurrencyWidth * TickerGrid.Width / 100
 col.Alignment = dbgLeft
 Set col = TickerGrid.Columns(TickerGridColumns.bidSize)
-col.width = TickerGridColumnWidths.BidSizeWidth * TickerGrid.width / 100
+col.Width = TickerGridColumnWidths.BidSizeWidth * TickerGrid.Width / 100
 col.Alignment = dbgRight
 Set col = TickerGrid.Columns(TickerGridColumns.bid)
-col.width = TickerGridColumnWidths.bidWidth * TickerGrid.width / 100
+col.Width = TickerGridColumnWidths.bidWidth * TickerGrid.Width / 100
 col.Alignment = dbgRight
 Set col = TickerGrid.Columns(TickerGridColumns.ask)
-col.width = TickerGridColumnWidths.askWidth * TickerGrid.width / 100
+col.Width = TickerGridColumnWidths.askWidth * TickerGrid.Width / 100
 col.Alignment = dbgRight
 Set col = TickerGrid.Columns(TickerGridColumns.AskSize)
-col.width = TickerGridColumnWidths.AskSizeWidth * TickerGrid.width / 100
+col.Width = TickerGridColumnWidths.AskSizeWidth * TickerGrid.Width / 100
 col.Alignment = dbgRight
 Set col = TickerGrid.Columns(TickerGridColumns.trade)
-col.width = TickerGridColumnWidths.tradeWidth * TickerGrid.width / 100
+col.Width = TickerGridColumnWidths.tradeWidth * TickerGrid.Width / 100
 col.Alignment = dbgRight
 Set col = TickerGrid.Columns(TickerGridColumns.TradeSize)
-col.width = TickerGridColumnWidths.TradeSizeWidth * TickerGrid.width / 100
+col.Width = TickerGridColumnWidths.TradeSizeWidth * TickerGrid.Width / 100
 col.Alignment = dbgRight
 Set col = TickerGrid.Columns(TickerGridColumns.Volume)
-col.width = TickerGridColumnWidths.VolumeWidth * TickerGrid.width / 100
+col.Width = TickerGridColumnWidths.VolumeWidth * TickerGrid.Width / 100
 col.Alignment = dbgRight
 Set col = TickerGrid.Columns(TickerGridColumns.Change)
-col.width = TickerGridColumnWidths.ChangeWidth * TickerGrid.width / 100
+col.Width = TickerGridColumnWidths.ChangeWidth * TickerGrid.Width / 100
 col.Alignment = dbgRight
 Set col = TickerGrid.Columns(TickerGridColumns.ChangePercent)
-col.width = TickerGridColumnWidths.ChangePercentWidth * TickerGrid.width / 100
+col.Width = TickerGridColumnWidths.ChangePercentWidth * TickerGrid.Width / 100
 col.Alignment = dbgRight
 Set col = TickerGrid.Columns(TickerGridColumns.highPrice)
-col.width = TickerGridColumnWidths.highWidth * TickerGrid.width / 100
+col.Width = TickerGridColumnWidths.highWidth * TickerGrid.Width / 100
 col.Alignment = dbgRight
 Set col = TickerGrid.Columns(TickerGridColumns.lowPrice)
-col.width = TickerGridColumnWidths.lowWidth * TickerGrid.width / 100
+col.Width = TickerGridColumnWidths.lowWidth * TickerGrid.Width / 100
 col.Alignment = dbgRight
 Set col = TickerGrid.Columns(TickerGridColumns.closePrice)
-col.width = TickerGridColumnWidths.closeWidth * TickerGrid.width / 100
+col.Width = TickerGridColumnWidths.closeWidth * TickerGrid.Width / 100
 col.Alignment = dbgRight
 Set col = TickerGrid.Columns(TickerGridColumns.symbol)
-col.width = TickerGridColumnWidths.SymbolWidth * TickerGrid.width / 100
+col.Width = TickerGridColumnWidths.SymbolWidth * TickerGrid.Width / 100
 col.Alignment = dbgCenter
 Set col = TickerGrid.Columns(TickerGridColumns.sectype)
-col.width = TickerGridColumnWidths.SecTypeWidth * TickerGrid.width / 100
+col.Width = TickerGridColumnWidths.SecTypeWidth * TickerGrid.Width / 100
 col.Alignment = dbgCenter
 Set col = TickerGrid.Columns(TickerGridColumns.expiry)
-col.width = TickerGridColumnWidths.ExpiryWidth * TickerGrid.width / 100
+col.Width = TickerGridColumnWidths.ExpiryWidth * TickerGrid.Width / 100
 col.Alignment = dbgCenter
 Set col = TickerGrid.Columns(TickerGridColumns.exchange)
-col.width = TickerGridColumnWidths.ExchangeWidth * TickerGrid.width / 100
+col.Width = TickerGridColumnWidths.ExchangeWidth * TickerGrid.Width / 100
 col.Alignment = dbgLeft
 Set col = TickerGrid.Columns(TickerGridColumns.OptionRight)
-col.width = TickerGridColumnWidths.OptionRightWidth * TickerGrid.width / 100
+col.Width = TickerGridColumnWidths.OptionRightWidth * TickerGrid.Width / 100
 col.Alignment = dbgCenter
 Set col = TickerGrid.Columns(TickerGridColumns.strike)
-col.width = TickerGridColumnWidths.StrikeWidth * TickerGrid.width / 100
+col.Width = TickerGridColumnWidths.StrikeWidth * TickerGrid.Width / 100
 col.Alignment = dbgRight
 
 End Sub
@@ -3967,7 +3831,7 @@ With OrderPlexGrid
     setupOrderPlexGridColumn 2, OPGridOrderColumns.Action, OPGridOrderColumnWidths.ActionWidth, "Action", True, AlignmentSettings.flexAlignLeftCenter
     setupOrderPlexGridColumn 2, OPGridOrderColumns.auxPrice, OPGridOrderColumnWidths.AuxPriceWidth, "Trigger", False, AlignmentSettings.flexAlignRightCenter
     setupOrderPlexGridColumn 2, OPGridOrderColumns.averagePrice, OPGridOrderColumnWidths.AveragePriceWidth, "Avg", False, AlignmentSettings.flexAlignRightCenter
-    setupOrderPlexGridColumn 2, OPGridOrderColumns.id, OPGridOrderColumnWidths.IdWidth, "Id", True, AlignmentSettings.flexAlignCenterCenter
+    setupOrderPlexGridColumn 2, OPGridOrderColumns.id, OPGridOrderColumnWidths.IdWidth, "Id", True, AlignmentSettings.flexAlignLeftCenter
     setupOrderPlexGridColumn 2, OPGridOrderColumns.lastFillPrice, OPGridOrderColumnWidths.LastFillPriceWidth, "Fill", False, AlignmentSettings.flexAlignRightCenter
     setupOrderPlexGridColumn 2, OPGridOrderColumns.LastFillTime, OPGridOrderColumnWidths.LastFillTimeWidth, "Last fill time", False, AlignmentSettings.flexAlignRightCenter
     setupOrderPlexGridColumn 2, OPGridOrderColumns.orderType, OPGridOrderColumnWidths.OrderTypeWidth, "Order type", True, AlignmentSettings.flexAlignLeftCenter
@@ -3976,7 +3840,7 @@ With OrderPlexGrid
     setupOrderPlexGridColumn 2, OPGridOrderColumns.size, OPGridOrderColumnWidths.SizeWidth, "Size", False, AlignmentSettings.flexAlignRightCenter
     setupOrderPlexGridColumn 2, OPGridOrderColumns.Status, OPGridOrderColumnWidths.StatusWidth, "Status", True, AlignmentSettings.flexAlignLeftCenter
     setupOrderPlexGridColumn 2, OPGridOrderColumns.typeInPlex, OPGridOrderColumnWidths.TypeInPlexWidth, "Mode", True, AlignmentSettings.flexAlignLeftCenter
-    setupOrderPlexGridColumn 2, OPGridOrderColumns.VendorId, OPGridOrderColumnWidths.VendorIdWidth, "Vendor id", True, AlignmentSettings.flexAlignCenterCenter
+    setupOrderPlexGridColumn 2, OPGridOrderColumns.VendorId, OPGridOrderColumnWidths.VendorIdWidth, "Vendor id", True, AlignmentSettings.flexAlignLeftCenter
     
     .MergeCells = flexMergeFree
     .MergeCol(OPGridColumns.symbol) = True
@@ -4047,52 +3911,39 @@ col.Visible = False
 Set col = TickerGrid.Columns(TickerGridSummaryColumns.Order)
 col.Visible = False
 Set col = TickerGrid.Columns(TickerGridSummaryColumns.TickerName)
-col.width = TickerGridSummaryColumnWidths.NameWidth * TickerGrid.width / 100
+col.Width = TickerGridSummaryColumnWidths.NameWidth * TickerGrid.Width / 100
 col.Alignment = dbgLeft
 Set col = TickerGrid.Columns(TickerGridSummaryColumns.bidSize)
-col.width = TickerGridSummaryColumnWidths.BidSizeWidth * TickerGrid.width / 100
+col.Width = TickerGridSummaryColumnWidths.BidSizeWidth * TickerGrid.Width / 100
 col.Alignment = dbgRight
 Set col = TickerGrid.Columns(TickerGridSummaryColumns.bid)
-col.width = TickerGridSummaryColumnWidths.bidWidth * TickerGrid.width / 100
+col.Width = TickerGridSummaryColumnWidths.bidWidth * TickerGrid.Width / 100
 col.Alignment = dbgRight
 Set col = TickerGrid.Columns(TickerGridSummaryColumns.ask)
-col.width = TickerGridSummaryColumnWidths.askWidth * TickerGrid.width / 100
+col.Width = TickerGridSummaryColumnWidths.askWidth * TickerGrid.Width / 100
 col.Alignment = dbgRight
 Set col = TickerGrid.Columns(TickerGridSummaryColumns.AskSize)
-col.width = TickerGridSummaryColumnWidths.AskSizeWidth * TickerGrid.width / 100
+col.Width = TickerGridSummaryColumnWidths.AskSizeWidth * TickerGrid.Width / 100
 col.Alignment = dbgRight
 Set col = TickerGrid.Columns(TickerGridSummaryColumns.trade)
-col.width = TickerGridSummaryColumnWidths.tradeWidth * TickerGrid.width / 100
+col.Width = TickerGridSummaryColumnWidths.tradeWidth * TickerGrid.Width / 100
 col.Alignment = dbgRight
 Set col = TickerGrid.Columns(TickerGridSummaryColumns.TradeSize)
-col.width = TickerGridSummaryColumnWidths.TradeSizeWidth * TickerGrid.width / 100
+col.Width = TickerGridSummaryColumnWidths.TradeSizeWidth * TickerGrid.Width / 100
 col.Alignment = dbgRight
 Set col = TickerGrid.Columns(TickerGridSummaryColumns.Volume)
-col.width = TickerGridSummaryColumnWidths.VolumeWidth * TickerGrid.width / 100
+col.Width = TickerGridSummaryColumnWidths.VolumeWidth * TickerGrid.Width / 100
 col.Alignment = dbgRight
 Set col = TickerGrid.Columns(TickerGridSummaryColumns.Change)
-col.width = TickerGridSummaryColumnWidths.ChangeWidth * TickerGrid.width / 100
+col.Width = TickerGridSummaryColumnWidths.ChangeWidth * TickerGrid.Width / 100
 col.Alignment = dbgRight
 Set col = TickerGrid.Columns(TickerGridSummaryColumns.ChangePercent)
-col.width = TickerGridSummaryColumnWidths.ChangePercentWidth * TickerGrid.width / 100
+col.Width = TickerGridSummaryColumnWidths.ChangePercentWidth * TickerGrid.Width / 100
 col.Alignment = dbgRight
 
 End Sub
 
-Private Sub setupTWSContractServiceProvider()
-If mTWSContractServiceProvider Is Nothing Then
-    Set mTWSContractServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject("IBTWSSP.ContractInfoServiceProvider"))
-    mTWSContractServiceProvider.Server = ServerText
-    mTWSContractServiceProvider.Port = PortText
-    If IsNumeric(ClientIDText.Text) Then
-        mTWSContractServiceProvider.clientID = CLng(ClientIDText) + 1
-    Else
-        mTWSContractServiceProvider.clientID = Int(&H7FFFFFFF * Rnd) + 1
-    End If
-End If
-End Sub
-
-Private Sub showMarketDepthForm(ByVal pTicker As Ticker)
+Private Sub showMarketDepthForm(ByVal pTicker As ticker)
 Dim tickerAppData As TickerApplicationData
 Dim mktDepthForm As fMarketDepth
 
@@ -4105,7 +3956,7 @@ Set tickerAppData.MarketDepthForm = mktDepthForm
 
 mktDepthForm.numberOfRows = 100
 mktDepthForm.numberOfVisibleRows = 20
-mktDepthForm.Ticker = pTicker
+mktDepthForm.ticker = pTicker
 
 pTicker.RequestMarketDepth DOMEvents.DOMProcessedEvents, _
                         IIf(RecordCheck = vbChecked, True, False)

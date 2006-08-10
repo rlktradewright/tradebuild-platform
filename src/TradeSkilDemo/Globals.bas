@@ -155,15 +155,15 @@ Case OrderStatusCreated
     orderStatusToString = "Created"
 Case OrderStatusPendingSubmit
     orderStatusToString = "Pendingsubmit"
-Case orderstatuspresubmitted
+Case OrderStatusPreSubmitted
     orderStatusToString = "Presubmitted"
-Case orderstatussubmitted
+Case OrderStatusSubmitted
     orderStatusToString = "Submitted"
-Case orderstatuscancelling
+Case OrderStatusCancelling
     orderStatusToString = "Cancelling"
-Case orderstatuscancelled
+Case OrderStatusCancelled
     orderStatusToString = "Cancelled"
-Case orderstatusfilled
+Case OrderStatusFilled
     orderStatusToString = "Filled"
 End Select
 End Function
@@ -190,29 +190,29 @@ Case TIFImmediateOrCancel
 End Select
 End Function
 
-Public Function orderTriggerMethodFromString(ByVal value As String) As TriggerMethods
+Public Function orderStopTriggerMethodFromString(ByVal value As String) As StopTriggerMethods
 Select Case UCase$(value)
 Case "Default"
-    orderTriggerMethodFromString = TriggerMethods.TriggerDefault
+    orderStopTriggerMethodFromString = StopTriggerMethods.StopTriggerDefault
 Case "Double bid/ask"
-    orderTriggerMethodFromString = TriggerMethods.TriggerDoubleBidAsk
+    orderStopTriggerMethodFromString = StopTriggerMethods.StopTriggerDoubleBidAsk
 Case "Double last"
-    orderTriggerMethodFromString = TriggerMethods.TriggerDoubleLast
+    orderStopTriggerMethodFromString = StopTriggerMethods.StopTriggerDoubleLast
 Case "Last"
-    orderTriggerMethodFromString = TriggerMethods.TriggerLast
+    orderStopTriggerMethodFromString = StopTriggerMethods.StopTriggerLast
 End Select
 End Function
 
-Public Function orderTriggerMethodToString(ByVal value As TriggerMethods) As String
+Public Function orderStopTriggerMethodToString(ByVal value As StopTriggerMethods) As String
 Select Case value
-Case TriggerMethods.TriggerDefault
-    orderTriggerMethodToString = "Default"
-Case TriggerMethods.TriggerDoubleBidAsk
-    orderTriggerMethodToString = "Double bid/ask"
-Case TriggerMethods.TriggerDoubleLast
-    orderTriggerMethodToString = "Double last"
-Case TriggerMethods.TriggerLast
-    orderTriggerMethodToString = "Last"
+Case StopTriggerMethods.StopTriggerDefault
+    orderStopTriggerMethodToString = "Default"
+Case StopTriggerMethods.StopTriggerDoubleBidAsk
+    orderStopTriggerMethodToString = "Double bid/ask"
+Case StopTriggerMethods.StopTriggerDoubleLast
+    orderStopTriggerMethodToString = "Double last"
+Case StopTriggerMethods.StopTriggerLast
+    orderStopTriggerMethodToString = "Last"
 End Select
 End Function
 
