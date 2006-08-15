@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{DBED8E43-5960-49DE-B9A7-BBC22DB93A26}#7.5#0"; "ChartSkil.ocx"
+Object = "{DBED8E43-5960-49DE-B9A7-BBC22DB93A26}#9.0#0"; "ChartSkil.ocx"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo"
@@ -14,12 +14,12 @@ Begin VB.Form ChartForm
       Appearance      =   0  'Flat
       BorderStyle     =   0  'None
       ForeColor       =   &H80000008&
-      Height          =   1470
+      Height          =   1350
       Left            =   0
-      ScaleHeight     =   1470
+      ScaleHeight     =   1350
       ScaleWidth      =   12015
       TabIndex        =   7
-      Top             =   6885
+      Top             =   6960
       Width           =   12015
       Begin VB.CommandButton ClearButton 
          Caption         =   "Clear"
@@ -34,7 +34,7 @@ Begin VB.Form ChartForm
          Left            =   9720
          TabIndex        =   4
          Text            =   "20"
-         Top             =   840
+         Top             =   120
          Width           =   735
       End
       Begin VB.TextBox BarLengthText 
@@ -42,7 +42,7 @@ Begin VB.Form ChartForm
          Left            =   5400
          TabIndex        =   1
          Text            =   "1"
-         Top             =   1080
+         Top             =   360
          Width           =   735
       End
       Begin VB.TextBox InitialNumBarsText 
@@ -50,7 +50,7 @@ Begin VB.Form ChartForm
          Left            =   5400
          TabIndex        =   0
          Text            =   "150"
-         Top             =   840
+         Top             =   120
          Width           =   735
       End
       Begin VB.TextBox TickSizeText 
@@ -58,7 +58,7 @@ Begin VB.Form ChartForm
          Left            =   7200
          TabIndex        =   3
          Text            =   "0.25"
-         Top             =   1080
+         Top             =   360
          Width           =   735
       End
       Begin VB.TextBox StartPriceText 
@@ -66,12 +66,12 @@ Begin VB.Form ChartForm
          Left            =   7200
          TabIndex        =   2
          Text            =   "1145"
-         Top             =   840
+         Top             =   120
          Width           =   735
       End
       Begin MSComctlLib.ImageList ImageList2 
          Left            =   120
-         Top             =   720
+         Top             =   120
          _ExtentX        =   1005
          _ExtentY        =   1005
          BackColor       =   -2147483643
@@ -153,7 +153,7 @@ Begin VB.Form ChartForm
       End
       Begin MSComctlLib.ImageList ImageList1 
          Left            =   720
-         Top             =   720
+         Top             =   120
          _ExtentX        =   1005
          _ExtentY        =   1005
          BackColor       =   -2147483643
@@ -233,146 +233,6 @@ Begin VB.Form ChartForm
             EndProperty
          EndProperty
       End
-      Begin MSComctlLib.Toolbar Toolbar1 
-         Height          =   570
-         Left            =   120
-         TabIndex        =   8
-         Top             =   120
-         Width           =   10575
-         _ExtentX        =   18653
-         _ExtentY        =   1005
-         ButtonWidth     =   1032
-         ButtonHeight    =   1005
-         Style           =   1
-         ImageList       =   "ImageList1"
-         DisabledImageList=   "ImageList2"
-         _Version        =   393216
-         BeginProperty Buttons {66833FE8-8583-11D1-B16A-00C0F0283628} 
-            NumButtons      =   22
-            BeginProperty Button1 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Enabled         =   0   'False
-               Key             =   "showbars"
-               Object.ToolTipText     =   "Bar chart"
-               ImageIndex      =   1
-               Style           =   2
-            EndProperty
-            BeginProperty Button2 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Enabled         =   0   'False
-               Key             =   "showcandlesticks"
-               Object.ToolTipText     =   "Candlestick chart"
-               ImageIndex      =   2
-               Style           =   2
-            EndProperty
-            BeginProperty Button3 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Enabled         =   0   'False
-               Key             =   "showline"
-               Object.ToolTipText     =   "Line chart"
-               ImageIndex      =   3
-               Style           =   2
-            EndProperty
-            BeginProperty Button4 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Style           =   3
-            EndProperty
-            BeginProperty Button5 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Enabled         =   0   'False
-               Key             =   "showcrosshair"
-               Object.ToolTipText     =   "Show crosshair"
-               ImageIndex      =   4
-               Style           =   2
-            EndProperty
-            BeginProperty Button6 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Enabled         =   0   'False
-               Key             =   "showcursor"
-               Object.ToolTipText     =   "Show cursor"
-               ImageIndex      =   5
-               Style           =   2
-            EndProperty
-            BeginProperty Button7 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Style           =   3
-            EndProperty
-            BeginProperty Button8 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Enabled         =   0   'False
-               Key             =   "thinnerbars"
-               Object.ToolTipText     =   "Thinner bars"
-               ImageIndex      =   6
-            EndProperty
-            BeginProperty Button9 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Enabled         =   0   'False
-               Key             =   "thickerbars"
-               Object.ToolTipText     =   "Thicker bars"
-               ImageIndex      =   7
-            EndProperty
-            BeginProperty Button10 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Style           =   3
-            EndProperty
-            BeginProperty Button11 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Enabled         =   0   'False
-               Key             =   "reducespacing"
-               Object.ToolTipText     =   "Reduce bar spacing"
-               ImageIndex      =   8
-            EndProperty
-            BeginProperty Button12 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Enabled         =   0   'False
-               Key             =   "increasespacing"
-               Object.ToolTipText     =   "Increase bar spacing"
-               ImageIndex      =   9
-            EndProperty
-            BeginProperty Button13 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Enabled         =   0   'False
-               Key             =   "scaledown"
-               Object.ToolTipText     =   "Compress vertical scale"
-               ImageIndex      =   10
-            EndProperty
-            BeginProperty Button14 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Enabled         =   0   'False
-               Key             =   "scaleup"
-               Object.ToolTipText     =   "Expand vertical scale"
-               ImageIndex      =   11
-            EndProperty
-            BeginProperty Button15 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Style           =   3
-            EndProperty
-            BeginProperty Button16 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Enabled         =   0   'False
-               Key             =   "scrolldown"
-               Object.ToolTipText     =   "Scroll down"
-               ImageIndex      =   12
-            EndProperty
-            BeginProperty Button17 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Enabled         =   0   'False
-               Key             =   "scrollup"
-               Object.ToolTipText     =   "Scroll up"
-               ImageIndex      =   13
-            EndProperty
-            BeginProperty Button18 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Enabled         =   0   'False
-               Key             =   "scrollleft"
-               Object.ToolTipText     =   "Scroll left"
-               ImageIndex      =   14
-            EndProperty
-            BeginProperty Button19 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Enabled         =   0   'False
-               Key             =   "scrollright"
-               Object.ToolTipText     =   "Scroll right"
-               ImageIndex      =   15
-            EndProperty
-            BeginProperty Button20 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Enabled         =   0   'False
-               Key             =   "scrollend"
-               Object.ToolTipText     =   "Scroll to end"
-               ImageIndex      =   16
-            EndProperty
-            BeginProperty Button21 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Style           =   3
-            EndProperty
-            BeginProperty Button22 {66833FEA-8583-11D1-B16A-00C0F0283628} 
-               Enabled         =   0   'False
-               Key             =   "autoscale"
-               Object.ToolTipText     =   "Autoscale"
-               ImageIndex      =   17
-            EndProperty
-         EndProperty
-      End
       Begin VB.CommandButton LoadButton 
          Caption         =   "Load"
          Height          =   495
@@ -386,8 +246,8 @@ Begin VB.Form ChartForm
          Caption         =   "Min swing size (ticks)"
          Height          =   375
          Left            =   8160
-         TabIndex        =   13
-         Top             =   840
+         TabIndex        =   12
+         Top             =   120
          Width           =   1455
       End
       Begin VB.Label Label4 
@@ -395,8 +255,8 @@ Begin VB.Form ChartForm
          Caption         =   "Bar length (minutes)"
          Height          =   255
          Left            =   3840
-         TabIndex        =   12
-         Top             =   1080
+         TabIndex        =   11
+         Top             =   360
          Width           =   1455
       End
       Begin VB.Label Label3 
@@ -404,8 +264,8 @@ Begin VB.Form ChartForm
          Caption         =   "Initial number of bars"
          Height          =   255
          Left            =   3840
-         TabIndex        =   11
-         Top             =   840
+         TabIndex        =   10
+         Top             =   120
          Width           =   1455
       End
       Begin VB.Label Label2 
@@ -413,7 +273,7 @@ Begin VB.Form ChartForm
          Caption         =   "Tick size"
          Height          =   255
          Left            =   5640
-         TabIndex        =   10
+         TabIndex        =   9
          Top             =   1080
          Width           =   1455
       End
@@ -422,7 +282,7 @@ Begin VB.Form ChartForm
          Caption         =   "Start price"
          Height          =   255
          Left            =   5640
-         TabIndex        =   9
+         TabIndex        =   8
          Top             =   840
          Width           =   1455
       End
@@ -431,7 +291,7 @@ Begin VB.Form ChartForm
       Align           =   1  'Align Top
       Height          =   6015
       Left            =   0
-      TabIndex        =   14
+      TabIndex        =   13
       Top             =   0
       Width           =   12015
       _ExtentX        =   21193
@@ -721,14 +581,14 @@ Set mMovAvg1Series = mPriceRegion.addDataPointSeries
 mMovAvg1Series.displayMode = DisplayModes.displayAsPoints
                                         ' display this series as discrete points...
 mMovAvg1Series.lineThickness = 5        ' ...with a diameter of 5 pixels...
-mMovAvg1Series.lineColour = vbRed       ' ...in red
+mMovAvg1Series.lineColor = vbRed       ' ...in red
 
 ' Set up a datapoint series for the second moving average
 Set mMovAvg2Series = mPriceRegion.addDataPointSeries
 mMovAvg2Series.displayMode = DisplayModes.DisplayAsLines
                                         ' display this series as a line connecting
                                         ' individual points...
-mMovAvg2Series.lineColour = vbBlue      ' ...in blue
+mMovAvg2Series.lineColor = vbBlue      ' ...in blue
 mMovAvg2Series.lineThickness = 1        ' ...with a thickness of 1 pixel...
 mMovAvg2Series.lineStyle = LineStyles.LineDot
                                         ' ...and a dotted style
@@ -738,7 +598,7 @@ Set mMovAvg3Series = mPriceRegion.addDataPointSeries
 mMovAvg3Series.displayMode = DisplayModes.DisplayAsSteppedLines
                                         ' display this series as a stepped line
                                         ' connecting the individual points...
-mMovAvg3Series.lineColour = vbGreen     ' ...in green...
+mMovAvg3Series.lineColor = vbGreen     ' ...in green...
 mMovAvg3Series.lineThickness = 3        ' ...3 pixels thick
 
 ' Set up a line series for the swing lines (which connect each high or low
@@ -777,17 +637,17 @@ mMACDRegion.setTitle "MACD (12, 24, 5)", vbBlue, Nothing
 ' Set up a datapoint series for the MACD histogram values on lowest user layer
 Set mMACDHistSeries = mMACDRegion.addDataPointSeries(LayerNumbers.LayerLowestUser)
 mMACDHistSeries.displayMode = DisplayModes.displayAsHistogram
-mMACDHistSeries.lineColour = vbGreen
+mMACDHistSeries.lineColor = vbGreen
 
 ' Set up a datapoint series for the MACD values on next layer
 Set mMACDSeries = mMACDRegion.addDataPointSeries(LayerNumbers.LayerLowestUser + 1)
 mMACDSeries.displayMode = DisplayModes.DisplayAsLines
-mMACDSeries.lineColour = vbBlue
+mMACDSeries.lineColor = vbBlue
 
 ' Set up a datapoint series for the MACD signal values on next layer
 Set mMACDSignalSeries = mMACDRegion.addDataPointSeries(LayerNumbers.LayerLowestUser + 2)
 mMACDSignalSeries.displayMode = DisplayModes.DisplayAsLines
-mMACDSignalSeries.lineColour = vbRed
+mMACDSignalSeries.lineColor = vbRed
 
 ' Create a region to display the volume bars
 Set mVolumeRegion = Chart1.addChartRegion(15)
@@ -847,9 +707,11 @@ startText.includeInAutoscale = True     ' vertical autoscaling will keep the tex
 startText.Text = "Started here"
 
 Set extendedLine = mPriceRegion.addLine ' create a line object
-extendedLine.Color = vbMagenta          ' colour it magenta (yuk)
+extendedLine.Color = vbMagenta          ' color it magenta (yuk)
 extendedLine.extendAfter = True         ' make it extend forever beyond its second point
 extendedLine.extendBefore = True        ' make it extend forever before its first point
+extendedLine.extended = True            ' make sure it's visible even if its first point isn't
+                                        ' in view
 extendedLine.point1 = mPriceRegion.newPoint(mPeriod.periodNumber - 40, mBarSeries.Item(mPeriod.periodNumber - 40).highPrice + 20 * mTickSize)
                                         ' let its 1st point be 20 ticks above the high 40 bars ago
 extendedLine.point2 = mPriceRegion.newPoint(mPeriod.periodNumber - 5, mBarSeries.Item(mPeriod.periodNumber - 5).highPrice)
@@ -860,15 +722,6 @@ Chart1.lastVisiblePeriod = mPeriod.periodNumber
 
 ' Now tell the chart to draw itself. Note that this makes it draw every visible object.
 Chart1.suppressDrawing = False
-
-For Each btn In Toolbar1.Buttons
-    btn.Enabled = True
-    If btn.Key = "autoscale" Then btn.Enabled = IIf(mPriceRegion.autoscale, False, True)
-    If btn.Key = "showbars" Then btn.value = tbrPressed
-    If btn.Key = "showline" Then btn.Enabled = False
-                                        ' because line charts are not implemented yet
-    If btn.Key = "showcrosshair" Then btn.value = tbrPressed
-Next
 
 ' create a text object to display the number of ticks generated by the tick simulator
 Set mTickCountText = mPriceRegion.addText()
@@ -893,73 +746,6 @@ mClockTimer.RepeatNotifications = True
 mClockTimer.TimerIntervalMillisecs = 250
 mClockTimer.StartTimer
 
-End Sub
-
-Private Sub Toolbar1_ButtonClick(ByVal Button As MSComctlLib.Button)
-
-Select Case Button.Key
-Case "showbars"
-    mBarSeries.displayAsCandlestick = False
-Case "showcandlesticks"
-    mBarSeries.displayAsCandlestick = True
-Case "showline"
-    ' not yet implemented in ChartSkil
-Case "showcrosshair"
-    Chart1.showCrosshairs = True
-Case "showcursor"
-    Chart1.showCrosshairs = False
-Case "thinnerbars"
-    If mBarSeries.displayAsCandlestick Then
-        If mBarSeries.candleWidth > 0.1 Then
-            mBarSeries.candleWidth = mBarSeries.candleWidth - 0.1
-        End If
-        If mBarSeries.candleWidth <= 0.1 Then
-            Button.Enabled = False
-        End If
-    Else
-        If mBarSeries.barThickness > 1 Then
-            mBarSeries.barThickness = mBarSeries.barThickness - 1
-        End If
-        If mBarSeries.barThickness = 1 Then
-            Button.Enabled = False
-        End If
-    End If
-Case "thickerbars"
-    If mBarSeries.displayAsCandlestick Then
-        mBarSeries.candleWidth = mBarSeries.candleWidth + 0.1
-    Else
-        mBarSeries.barThickness = mBarSeries.barThickness + 1
-    End If
-    Toolbar1.Buttons("thinnerbars").Enabled = True
-Case "reducespacing"
-    If Chart1.twipsPerBar >= 50 Then
-        Chart1.twipsPerBar = Chart1.twipsPerBar - 25
-    End If
-    If Chart1.twipsPerBar < 50 Then
-        Button.Enabled = False
-    End If
-Case "increasespacing"
-    Chart1.twipsPerBar = Chart1.twipsPerBar + 25
-    Toolbar1.Buttons("reducespacing").Enabled = True
-Case "scaledown"
-    mPriceRegion.scaleUp -0.09091
-Case "scaleup"
-    mPriceRegion.scaleUp 0.1
-Case "scrolldown"
-    mPriceRegion.scrollVerticalProportion -0.2
-Case "scrollup"
-    mPriceRegion.scrollVerticalProportion 0.2
-Case "scrollleft"
-    Chart1.scrollX -(Chart1.chartWidth * 0.2)
-Case "scrollright"
-    Chart1.scrollX Chart1.chartWidth * 0.2
-Case "scrollend"
-    Chart1.lastVisiblePeriod = Chart1.currentPeriodNumber
-Case "autoscale"
-    mPriceRegion.autoscale = True
-End Select
-
-Toolbar1.Buttons("autoscale").Enabled = IIf(mPriceRegion.autoscale, False, True)
 End Sub
 
 '================================================================================
@@ -1014,9 +800,9 @@ Set mVolume = mVolumeSeries.addDataPoint(mPeriod.periodNumber)
 mCumVolume = mCumVolume + volume
 mVolume.datavalue = volume
 If mVolume.datavalue >= mPrevBarVolume Then
-    mVolume.lineColour = vbGreen
+    mVolume.lineColor = vbGreen
 Else
-    mVolume.lineColour = vbRed
+    mVolume.lineColor = vbRed
 End If
 mPrevBarVolume = volume
 
@@ -1073,9 +859,9 @@ mVolume.datavalue = mVolume.datavalue + volume - mCumVolume
 mCumVolume = volume
 
 If mVolume.datavalue >= mPrevBarVolume Then
-    mVolume.lineColour = vbGreen
+    mVolume.lineColor = vbGreen
 Else
-    mVolume.lineColour = vbRed
+    mVolume.lineColor = vbRed
 End If
 End Sub
 
@@ -1114,9 +900,9 @@ End Sub
 
 Private Sub initialise()
 ' set some basic properties of the chart
-Chart1.chartBackColor = vbWhite     ' sets the default background colour for all regions
+Chart1.chartBackColor = vbWhite     ' sets the default background color for all regions
                                     ' of the chart - but each separate region can
-                                    ' have its own background colour
+                                    ' have its own background color
 Chart1.autoscale = True             ' indicates that by default, each chart region will
                                     ' automatically adjust its vertical scaling to ensure
                                     ' that all relevant data is visible

@@ -194,7 +194,6 @@ Do While barcount < numberOfBars
         volume = 0
         
         If barcount Mod 50 = 0 Then
-            Debug.Print "DoEvents" & barcount
             DoEvents
         End If
     End If
