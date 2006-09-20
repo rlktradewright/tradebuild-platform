@@ -110,11 +110,14 @@ capacity = UBound(mEntries) + 1
 End Property
 
 Friend Property Let capacityIncrement(ByVal value As Long)
+If value < 1 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                            "IBTWSSP.Queue::capacityIncrement", _
+                            "Capaciy increment must be >0"
 mCapacityIncrement = value
 End Property
 
 Friend Property Get frontKey() As String
-If mSize = 0 Then err.Raise ErrorCodes.IllegalStateException, _
+If mSize = 0 Then err.Raise ErrorCodes.ErrIllegalStateException, _
                                 "Queue::frontKey", _
                                 "Queue empty"
 
@@ -126,6 +129,9 @@ frontKey = mEntries(mFirstEntry).itemKey
 End Property
 
 Friend Property Let initialCapacity(ByVal value As Long)
+If value < 1 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                            "IBTWSSP.Queue::initialCapacity", _
+                            "Initial capaciy must be >0"
 ReDim mEntries(value - 1) As QueueEntry
 If mCapacityIncrement = 0 Then mCapacityIncrement = value
 mInitialised = True
@@ -140,7 +146,7 @@ End Property
 '================================================================================
 
 Friend Function addToEnd(ByVal Entry As Variant) As String
-If Not mInitialised Then err.Raise ErrorCodes.IllegalStateException, _
+If Not mInitialised Then err.Raise ErrorCodes.ErrIllegalStateException, _
                                 "Queue::addToEnd", _
                                 "Queue not initialised"
 If mNextEntry = mFirstEntry And mSize <> 0 Then resize
@@ -155,7 +161,7 @@ Friend Sub remove(ByVal itemRef As Variant)
 Dim i As Long
 Dim maxIndex As Long
 
-If mSize = 0 Then err.Raise ErrorCodes.IllegalStateException, _
+If mSize = 0 Then err.Raise ErrorCodes.ErrIllegalStateException, _
                                 "Queue::remove", _
                                 "Queue empty"
 
@@ -184,12 +190,12 @@ ElseIf VarType(itemRef) = vbObject Then
         End If
     Next
 Else
-    err.Raise ErrorCodes.IllegalArgumentException, _
-                "QTSP.Queue::remove", _
+    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                "Queue::remove", _
                 "Argument type must be string or object"
 End If
 
-If i > maxIndex Then err.Raise ErrorCodes.IllegalArgumentException, _
+If i > maxIndex Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                 "Queue::remove", _
                                 "Specified item not in queue"
 
@@ -197,7 +203,11 @@ mSize = mSize - 1
 End Sub
 
 Friend Function removeFromFront() As Variant
-If mSize = 0 Then err.Raise ErrorCodes.IllegalStateException, _
+Dim failpoint As Long
+
+On Error GoTo err
+
+If mSize = 0 Then err.Raise ErrorCodes.ErrIllegalStateException, _
                                 "Queue::removeFromFront", _
                                 "Queue empty"
 
@@ -205,11 +215,19 @@ Do While mEntries(mFirstEntry).itemRemoved
     mFirstEntry = (mFirstEntry + 1) Mod UBound(mEntries)
 Loop
 
+failpoint = 100
 removeFromFront = mEntries(mFirstEntry).item
+
+failpoint = 200
 mEntries(mFirstEntry).item = Empty
 mEntries(mFirstEntry).itemKey = ""
 mFirstEntry = (mFirstEntry + 1) Mod UBound(mEntries)
 mSize = mSize - 1
+
+Exit Function
+
+err:
+err.Raise err.Number, , "Queue::removeFromFront(failpoint=" & failpoint & "): " & err.Description
 End Function
 
 '================================================================================
@@ -222,7 +240,7 @@ Dim lReturn As Long
 lReturn = CoCreateGuid(generateGUID)
 
 If (lReturn <> S_OK) Then
-    err.Raise ErrorCodes.RuntimeException, _
+    err.Raise ErrorCodes.ErrRuntimeException, _
                 "Queue::generateGUID", _
                 "Can't create GUID"
 End If
@@ -251,14 +269,14 @@ currUbound = UBound(mEntries)
 
 ReDim Preserve mEntries(currUbound + mCapacityIncrement) As QueueEntry
 
-If mNextEntry < mFirstEntry Then
+If mNextEntry <= mFirstEntry And mNextEntry <> 0 Then
     For i = 0 To mNextEntry - 1
         mEntries(currUbound + i + 1) = mEntries(i)
         mEntries(i).item = Empty
         mEntries(i).itemKey = ""
         mEntries(i).itemRemoved = False
     Next
-    mNextEntry = mNextEntry + i + 2
+    mNextEntry = mNextEntry + currUbound + 1
 End If
 End Sub
 
