@@ -122,7 +122,7 @@ If mSize = 0 Then err.Raise ErrorCodes.ErrIllegalStateException, _
                                 "Queue empty"
 
 Do While mEntries(mFirstEntry).itemRemoved
-    mFirstEntry = (mFirstEntry + 1) Mod UBound(mEntries)
+    mFirstEntry = (mFirstEntry + 1) Mod (UBound(mEntries) + 1)
 Loop
 
 frontKey = mEntries(mFirstEntry).itemKey
@@ -153,7 +153,7 @@ If mNextEntry = mFirstEntry And mSize <> 0 Then resize
 addToEnd = generateGUIDString
 mEntries(mNextEntry).item = Entry
 mEntries(mNextEntry).itemKey = addToEnd
-mNextEntry = (mNextEntry + 1) Mod UBound(mEntries)
+mNextEntry = (mNextEntry + 1) Mod (UBound(mEntries) + 1)
 mSize = mSize + 1
 End Function
 
@@ -212,7 +212,7 @@ If mSize = 0 Then err.Raise ErrorCodes.ErrIllegalStateException, _
                                 "Queue empty"
 
 Do While mEntries(mFirstEntry).itemRemoved
-    mFirstEntry = (mFirstEntry + 1) Mod UBound(mEntries)
+    mFirstEntry = (mFirstEntry + 1) Mod (UBound(mEntries) + 1)
 Loop
 
 failpoint = 100
@@ -221,7 +221,7 @@ removeFromFront = mEntries(mFirstEntry).item
 failpoint = 200
 mEntries(mFirstEntry).item = Empty
 mEntries(mFirstEntry).itemKey = ""
-mFirstEntry = (mFirstEntry + 1) Mod UBound(mEntries)
+mFirstEntry = (mFirstEntry + 1) Mod (UBound(mEntries) + 1)
 mSize = mSize - 1
 
 Exit Function
@@ -269,14 +269,14 @@ currUbound = UBound(mEntries)
 
 ReDim Preserve mEntries(currUbound + mCapacityIncrement) As QueueEntry
 
-If mNextEntry <= mFirstEntry And mNextEntry <> 0 Then
+If mNextEntry <= mFirstEntry Then
     For i = 0 To mNextEntry - 1
-        mEntries(currUbound + i + 1) = mEntries(i)
+        mEntries((currUbound + i + 1) Mod (UBound(mEntries) + 1)) = mEntries(i)
         mEntries(i).item = Empty
         mEntries(i).itemKey = ""
         mEntries(i).itemRemoved = False
     Next
-    mNextEntry = mNextEntry + currUbound + 1
+    mNextEntry = (mNextEntry + currUbound + 1) Mod (UBound(mEntries) + 1)
 End If
 End Sub
 
