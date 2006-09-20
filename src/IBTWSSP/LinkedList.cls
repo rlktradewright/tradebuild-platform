@@ -159,28 +159,28 @@ mSize = mSize + 1
 End Function
 
 Friend Function firstIndex() As Long
-If mSize = 0 Then err.Raise ErrorCodes.IllegalStateException, _
+If mSize = 0 Then err.Raise ErrorCodes.ErrIllegalStateException, _
                         "IBTWSSP.LinkedList::firstIndex", _
                         "List is empty"
 firstIndex = mEntries(mFirst).next
 End Function
 
 Friend Function itemAt(ByVal index As Long) As Variant
-If mSize = 0 Then err.Raise ErrorCodes.IllegalStateException, _
+If mSize = 0 Then err.Raise ErrorCodes.ErrIllegalStateException, _
                         "IBTWSSP.LinkedList::itemAt", _
                         "List is empty"
 itemAt = mEntries(index).item
 End Function
 
 Friend Function lastIndex() As Long
-If mSize = 0 Then err.Raise ErrorCodes.IllegalStateException, _
+If mSize = 0 Then err.Raise ErrorCodes.ErrIllegalStateException, _
                         "IBTWSSP.LinkedList::lastIndex", _
                         "List is empty"
 lastIndex = mEntries(mLast).prev
 End Function
 
 Friend Function nextIndex(ByVal index As Long) As Long
-If mSize = 0 Then err.Raise ErrorCodes.IllegalStateException, _
+If mSize = 0 Then err.Raise ErrorCodes.ErrIllegalStateException, _
                         "IBTWSSP.LinkedList::nextIndex", _
                         "List is empty"
 If mEntries(index).next <> mLast Then
@@ -191,7 +191,7 @@ End If
 End Function
 
 Friend Function prevIndex(ByVal index As Long) As Long
-If mSize = 0 Then err.Raise ErrorCodes.IllegalStateException, _
+If mSize = 0 Then err.Raise ErrorCodes.ErrIllegalStateException, _
                         "IBTWSSP.LinkedList::prevIndex", _
                         "List is empty"
 If mEntries(index).prev <> mFirst Then
@@ -202,10 +202,10 @@ End If
 End Function
 
 Friend Function remove(ByVal index As Long) As Variant
-If index = 0 Or index = 1 Then err.Raise ErrorCodes.IllegalArgumentException, _
+If index = 0 Or index = 1 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
                         "IBTWSSP.LinkedList::remove", _
                         "Can't remove head or tail entries"
-If mSize = 0 Then err.Raise ErrorCodes.IllegalStateException, _
+If mSize = 0 Then err.Raise ErrorCodes.ErrIllegalStateException, _
                         "IBTWSSP.LinkedList::remove", _
                         "List is empty"
 remove = mEntries(index).item
