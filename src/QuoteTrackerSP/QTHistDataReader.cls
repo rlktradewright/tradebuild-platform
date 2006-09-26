@@ -117,7 +117,7 @@ End Sub
 Private Sub IBarDataReader_FetchBars( _
                             barSpecifier As TradeBuildSP.BarDataSpecifier)
 
-If mRequestInProgress Then err.Raise ErrorCodes.IllegalStateException, _
+If mRequestInProgress Then err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "IBTWSSP.HistDataReader::FetchBars", _
                                     "Request already in progress"
 
@@ -165,7 +165,7 @@ End Function
 '================================================================================
 
 Private Sub LockConsumer_lockAcquired(ByVal lockId As Long)
-If mLockId <> lockId Then err.Raise ErrorCodes.IllegalStateException, _
+If mLockId <> lockId Then err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "QTSP.QTHistDataReader::lockAcquired", _
                                     "Lock id acquired is " & lockId & ": expected " & mLockId
     

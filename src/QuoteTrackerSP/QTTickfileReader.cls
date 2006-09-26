@@ -124,11 +124,11 @@ Private Property Let ITickfileReader_Contract(ByVal RHS As TradeBuildSP.IContrac
 End Property
 
 Private Property Get ITickfileReader_Contract() As TradeBuildSP.IContract
-Set ITickfileReader_Contract = mInputTickfileSpecifier.contract
+Set ITickfileReader_Contract = mInputTickfileSpecifier.Contract
 End Property
 
 Private Property Get ITickfileReader_ContractSpecifier() As TradeBuildSP.IContractSpecifier
-Set ITickfileReader_ContractSpecifier = mInputTickfileSpecifier.contract.Specifier
+Set ITickfileReader_ContractSpecifier = mInputTickfileSpecifier.Contract.Specifier
 End Property
 
 Private Sub ITickfileReader_FireNextTick()
@@ -186,7 +186,7 @@ End Property
 '================================================================================
 
 Private Sub LockConsumer_lockAcquired(ByVal lockId As Long)
-If mLockId <> lockId Then err.Raise ErrorCodes.IllegalStateException, _
+If mLockId <> lockId Then err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "QTSP.QTTickfileReader::lockAcquired", _
                                     "Lock id acquired is " & lockId & ": expected " & mLockId
     

@@ -136,7 +136,7 @@ If lockId = 0 Then
     acquireOrVerifyLock = acquireLock(key, action, locker, lockId)
 Else
     If Not verifyLock(lockId, locker) Then
-        err.Raise ErrorCodes.IllegalArgumentException, _
+        err.Raise ErrorCodes.ErrIllegalArgumentException, _
                     "QTSP.LockManager::acquireOrVerifyLock", _
                     "Lock id " & lockId & " is not held by this object"
     End If
@@ -162,7 +162,7 @@ For i = 0 To UBound(mLockTable)
         End If
 
         If mLockTable(i).waiters Is Nothing Then
-            err.Raise ErrorCodes.IllegalArgumentException, _
+            err.Raise ErrorCodes.ErrIllegalArgumentException, _
                         "QTSP.LockManager::cancelAcquireLock", _
                         "Locker is not acquiring this lock"
         End If

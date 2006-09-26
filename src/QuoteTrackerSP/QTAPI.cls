@@ -318,7 +318,7 @@ Case Else
                 "Description: " & Description & vbCrLf & _
                 "Scode: " & Scode, _
                 LogLevelLow
-    err.Raise ErrorCodes.RuntimeException, _
+    err.Raise ErrorCodes.ErrRuntimeException, _
                 "QTSP.QTAPI::mSocket_error", _
                 "Socket error:" & vbCrLf & _
                 "Number: " & Number & vbCrLf & _
@@ -393,7 +393,7 @@ If mHistoricalBarDataRequestTable(requestHandle).QtRequestKey <> "" Then
     If err.Number = 0 Then
         ' request was still in queue, so just release this entry
         releaseHistoricalBarDataRequestEntry requestHandle
-    ElseIf err.Number <> ErrorCodes.IllegalArgumentException Then
+    ElseIf err.Number <> ErrorCodes.ErrIllegalArgumentException Then
         err.Raise err.Number
     Else
         ' request is with QT - can't cancel to QT so just ignore
@@ -484,12 +484,12 @@ Dim i As Long
 requestID = -1
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.IllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "QTSP.QTAPI::RequestHistoricalBarData", _
                 "Not connected"
 End If
 
-If Not mLockManager.acquireOrVerifyLock(lockId, barSpecifier.contract.ProviderID(mProviderKey), LockActionReqHistoricData, historicalDataReader) Then
+If Not mLockManager.acquireOrVerifyLock(lockId, barSpecifier.Contract.ProviderID(mProviderKey), LockActionReqHistoricData, historicalDataReader) Then
     ' we haven't acquired the lock yet, so exit
     Exit Function
 End If
@@ -512,7 +512,7 @@ mHistoricalBarDataRequestTable(i).inUse = True
 mHistoricalBarDataRequestTable(i).cancelling = False
 mHistoricalBarDataRequestTable(i).lockId = lockId
 mHistoricalBarDataRequestTable(i).barSpecifier = barSpecifier
-mHistoricalBarDataRequestTable(i).symbol = barSpecifier.contract.ProviderID(mProviderKey)
+mHistoricalBarDataRequestTable(i).symbol = barSpecifier.Contract.ProviderID(mProviderKey)
 mHistoricalBarDataRequestTable(i).nextBarIndex = 0
 mHistoricalBarDataRequestTable(i).barLength = barSpecifier.barLengthMinutes
 mHistoricalBarDataRequestTable(i).nextBarIndex = -1
@@ -535,7 +535,7 @@ Dim i As Long
 
 requestHistoricalTickData = -1
 
-If Not mLockManager.acquireOrVerifyLock(lockId, tickfileSpecifier.contract.ProviderID(mProviderKey), LockActionReqHistoricData, requester) Then
+If Not mLockManager.acquireOrVerifyLock(lockId, tickfileSpecifier.Contract.ProviderID(mProviderKey), LockActionReqHistoricData, requester) Then
     ' we haven't acquired the lock yet, so exit
     Exit Function
 End If
@@ -551,10 +551,10 @@ End If
 mHistoricalTickDataRequestTable(i).inUse = True
 mHistoricalTickDataRequestTable(i).lockId = lockId
 Set mHistoricalTickDataRequestTable(i).requester = requester
-mHistoricalTickDataRequestTable(i).symbol = UCase$(tickfileSpecifier.contract.ProviderID(mProviderKey))
+mHistoricalTickDataRequestTable(i).symbol = UCase$(tickfileSpecifier.Contract.ProviderID(mProviderKey))
 
 If tickfileSpecifier.EntireSession Then
-    tickfileSpecifier.contract.GetSessionTimes tickfileSpecifier.From, mHistoricalTickDataRequestTable(i).startTimeLocal, mHistoricalTickDataRequestTable(i).endTimeLocal
+    tickfileSpecifier.Contract.GetSessionTimes tickfileSpecifier.From, mHistoricalTickDataRequestTable(i).startTimeLocal, mHistoricalTickDataRequestTable(i).endTimeLocal
 Else
     mHistoricalTickDataRequestTable(i).startTimeLocal = tickfileSpecifier.From
     mHistoricalTickDataRequestTable(i).endTimeLocal = tickfileSpecifier.To
@@ -570,7 +570,7 @@ mHistoricalTickDataRequestTable(i).timestampOffset = mHistoricalTickDataRequestT
 qtHist = "<GetHistory>" & _
         "<ReqType>TICK</ReqType>" & _
         "<Symbol>" & _
-        UCase$(tickfileSpecifier.contract.ProviderID(mProviderKey)) & _
+        UCase$(tickfileSpecifier.Contract.ProviderID(mProviderKey)) & _
         "</Symbol>" & _
         "<FROM>" & _
         Format(starttimeEST - OneMinute, "yyyy/mm/dd hh:mm:ss") & _
@@ -692,7 +692,7 @@ For i = 0 To UBound(mL1QuotesRequestTable)
         Exit Function
     End If
 Next
-err.Raise ErrorCodes.IllegalArgumentException, _
+err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "QTSP.QTAPI::findL1QuoteRequestEntryIndex", _
             "No entry for symbol " & symbol & " exists"
 End Function
@@ -712,7 +712,7 @@ Dim startOffset As Date
 qtRequest.symbol = mHistoricalBarDataRequestTable(index).symbol
 
 If mHistoricalBarDataRequestTable(index).barSpecifier.NumberOfBars <> 0 Then
-    startDateTime = mHistoricalBarDataRequestTable(index).barSpecifier.contract.OffsetBarStartTime(mHistoricalBarDataRequestTable(index).barSpecifier.To, mHistoricalBarDataRequestTable(index).barLength, mHistoricalBarDataRequestTable(index).barSpecifier.NumberOfBars)
+    startDateTime = mHistoricalBarDataRequestTable(index).barSpecifier.Contract.OffsetBarStartTime(mHistoricalBarDataRequestTable(index).barSpecifier.To, mHistoricalBarDataRequestTable(index).barLength, mHistoricalBarDataRequestTable(index).barSpecifier.NumberOfBars)
 '    startDateTime = mHistoricalBarDataRequestTable(index).barSpecifier.To - _
 '                    CDbl((mHistoricalBarDataRequestTable(index).barSpecifier.NumberOfBars * _
 '                        mHistoricalBarDataRequestTable(index).barLength)) / 1440
@@ -965,7 +965,7 @@ If index <> -1 Then
 Else
     index = findHistoricalBarDataRequestEntryIndex(symbol)
     
-    If index = -1 Then err.Raise ErrorCodes.IllegalStateException, _
+    If index = -1 Then err.Raise ErrorCodes.ErrIllegalStateException, _
                     "QTSP.QTAPI::processHistoricalDataEnd", _
                     "no entry for symbol: " & symbol
 
@@ -1097,9 +1097,9 @@ Do
     Case FieldTypes.symbol
         symbol = UCase$(GetFieldValue(fieldID, bytesProcessed))
         index = findHistoricalTickDataRequestEntryIndex(symbol)
-    Case FieldTypes.BidPrice
+    Case FieldTypes.bidPrice
         thisBid = GetFieldValue(fieldID, bytesProcessed)
-    Case FieldTypes.AskPrice
+    Case FieldTypes.askPrice
         thisAsk = GetFieldValue(fieldID, bytesProcessed)
     Case FieldTypes.LastPrice
         thisLast = GetFieldValue(fieldID, bytesProcessed)
@@ -1228,13 +1228,13 @@ Do
     Case FieldTypes.symbol
         symbol = UCase$(GetFieldValue(fieldID, bytesProcessed))
         index = findL1QuoteRequestEntryIndex(symbol)
-    Case FieldTypes.BidPrice
+    Case FieldTypes.bidPrice
         mL1QuotesRequestTable(index).bid = GetFieldValue(fieldID, bytesProcessed)
         bidTick.TickType = TickTypes.bid
     Case FieldTypes.bidSize
         mL1QuotesRequestTable(index).bidSize = GetFieldValue(fieldID, bytesProcessed)
         bidTick.TickType = TickTypes.bid
-    Case FieldTypes.AskPrice
+    Case FieldTypes.askPrice
         mL1QuotesRequestTable(index).ask = GetFieldValue(fieldID, bytesProcessed)
         askTick.TickType = TickTypes.ask
     Case FieldTypes.askSize
@@ -1513,7 +1513,7 @@ Private Sub reqHistoricalBarData( _
 Dim qtHistReq As String
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.IllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "QTSP.QTAPI::reqHistoricalBarData", _
                 "Not connected"
 End If
