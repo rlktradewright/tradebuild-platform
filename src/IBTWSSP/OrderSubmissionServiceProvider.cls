@@ -112,6 +112,7 @@ End Property
 Private Sub ICommonServiceProvider_Link( _
                 ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
                 ByVal handle As Long)
+gCommonServiceConsumer = commonServiceConsumer
 Set mCommonServiceConsumer = commonServiceConsumer
 mHandle = handle
 mCommonServiceConsumer.RegisterServiceProvider mHandle, _
@@ -124,12 +125,16 @@ Private Property Let ICommonServiceProvider_LogLevel( _
 mLogLevel = RHS
 End Property
 
+Private Property Let ICommonServiceProvider_Name(ByVal RHS As String)
+name = RHS
+End Property
+
 Private Property Get ICommonServiceProvider_Name() As String
 ICommonServiceProvider_Name = name
 End Property
 
 Private Sub ICommonServiceProvider_Terminate()
-' nothing to do
+gReleaseAllTWSAPIInstances
 End Sub
 
 '================================================================================

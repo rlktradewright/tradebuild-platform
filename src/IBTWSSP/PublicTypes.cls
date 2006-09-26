@@ -50,12 +50,16 @@ Public Enum ListenValueTypes
     ValueTypeRawSocketData
 End Enum
 
-Public Enum LogLevels
-    LogLevelNone
-    LogLevelLow
-    LogLevelMedium
-    LogLevelHigh
-    LogLevelAll
+Public Enum TickTypes
+    None
+    Bid
+    Ask
+    Last
+    volume
+    prevClose
+    High
+    Low
+    openInterest
 End Enum
 
 Public Enum TWSLogLevels
@@ -143,6 +147,17 @@ Public Type HistoricBar
     volume          As Long
     WAP             As Double
     hasGaps         As Boolean
+End Type
+
+Public Type OrderIdMapEntry
+    order                   As IOrder
+    orderSubmitter          As orderSubmitter
+End Type
+
+Public Type TWSContractDetailsRequestQueueEntry
+    tradeBuildContracts         As TradeBuildSP.IContracts
+    localContracts              As Collection
+    requester                   As ContractDetailsRequester
 End Type
 
 Public Type TWSHistoricalDataRequestQueueEntry

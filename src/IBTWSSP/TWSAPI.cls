@@ -21,38 +21,27 @@ Option Explicit
 ' Events
 '================================================================================
 
+' Raised when a successful connection to TWS has been achieved.
 Event Connected()
-    ' Raised when a successful connection to TWS has been achieved.
 
+' Raised when connection to TWS has failed and the connection
+' retry interval is zero.
 Event ConnectFailed(ByVal Description As String, _
                 ByVal retrying As Boolean)
-    ' Raised when connection to TWS has failed and the connection
-    ' retry interval is zero.
 
+' Raised when an attempt to connect to TWS is initiated.
 Event Connecting()
-    ' Raised when an attempt to connect to TWS is initiated.
 
+' Raised when the connection to TWS is disconnected.
 Event ConnectionToTWSClosed( _
                 ByVal reconnecting As Boolean)
-    ' Raised when the connection to TWS is disconnected.
 
 Event ConnectionToIBClosed()
 
 Event ConnectionToIBRecovered()
 
-Event ContractSpecifierInvalid( _
-                ByVal reason As String, _
-                ByVal pContracts As TradeBuildSP.IContracts)
-
-Event ContractsLoaded()
-
-Event dataReceived()
-    ' Raised when a new block of data is received from the socket connecting to TWS.
-    
-Event ExecutionDetails( _
-                ByVal id As Long, _
-                ByVal pContractSpecifier As TradeBuildSP.IContractSpecifier, _
-                ByVal exec As Execution)
+Event Disonnected(ByVal reason As String)
+    ' Raised when we disconnect from TWS
 
 Event FAData( _
                 ByVal DataType As FADataTypes, _
@@ -61,21 +50,6 @@ Event FAData( _
 Event managedAccounts( _
                 ByVal timestamp As Date, _
                 ByVal accountsList As String)
-
-Event openOrder( _
-                ByVal pContractSpecifier As TradeBuildSP.IContractSpecifier, _
-                ByVal pOrder As Order)
-
-Event orderStatus( _
-                ByVal id As Long, _
-                ByVal status As OrderStatuses, _
-                ByVal filled As Long, _
-                ByVal remaining As Long, _
-                ByVal avgFillPrice As Double, _
-                ByVal permId As Long, _
-                ByVal parentId As Long, _
-                ByVal lastFillPrice As Double, _
-                ByVal clientID As Long)
 
 Event updateAccountTime( _
                 ByVal accountTime As String)
@@ -120,8 +94,6 @@ Private Const HistoricalDataTickerIncrement As Long = &H100
 Private Const OrderIdBase As Long = &H800000
 
 Private Const MaxConcurrentHistDataRequests As Long = 50    ' Limit imposed by IB
-
-Private Const SERVER_VERSION As Long = 1
 
 Private Const SpName As String = "TradeWright IB TWS Service Provider"
 
@@ -175,6 +147,7 @@ Private Type TickerTableEntry
     inUse                   As Boolean
     receivingMarketDepth    As Boolean
     dataConsumer            As IStreamingDataConsumer
+    dataReader              As RealtimeDataReader
 End Type
 
 '================================================================================
@@ -189,6 +162,7 @@ Attribute mConnectionTimer.VB_VarHelpID = -1
 Private mClientID As Long
 Private mServer As String
 Private mPort As Long
+Private mProviderKey As String
 Private mConnectionRetryIntervalSecs As Long
 Private mDisconnectedByApplication As Boolean
 
@@ -198,7 +172,6 @@ Private mIndexOut As Long
 Private mBufferIn() As Byte
 Private mIndexIn As Long
 Private mInputIndex As Long
-Private mIndexInChk As Long
 Private mInputIndexChk As Long
 
 Private mServerVersion As Long
@@ -208,7 +181,7 @@ Private mConnectionState As ConnectionStates
 
 Private mTickerTable() As TickerTableEntry
 
-Private mRequestedContracts As TradeBuildSP.IContracts
+Private mContractDetailsRequest As TWSContractDetailsRequestQueueEntry
 Private mFirstContractDetailsReceived As Boolean
 
 Private mExchangeCodes() As String
@@ -219,12 +192,16 @@ Private mNextOrderID  As Long
 Private mLogLevel As LogLevels
 Private mTWSLogLevel As TWSLogLevels
 
-Private mAllOrders As New Collection
-
 Private mTwsHistDataRequestQueue As Queue
 Private mConcurrentHistDataRequests As Long
 
 Private mHistoricalDataTable() As HistoricalDataRequestTableEntry
+
+Private mOrderIDMap As Collection
+
+Private mTwsContractDetailsRequestQueue As Queue
+
+Private mExecutions As Collection
 
 '================================================================================
 ' External function declarations
@@ -251,7 +228,8 @@ ReDim mBufferIn(1023) As Byte
 ReDim mBufferOut(1023) As Byte
 mConnectionState = ConnectionStates.ConnNotConnected
 
-Set mAllOrders = New Collection
+Set mOrderIDMap = New Collection
+Set mExecutions = New Collection
 
 mNextOrderID = 1
 
@@ -262,6 +240,9 @@ Set mTwsHistDataRequestQueue = New Queue
 mTwsHistDataRequestQueue.initialCapacity = 20
 
 ReDim mHistoricalDataTable(MaxConcurrentHistDataRequests) As HistoricalDataRequestTableEntry
+
+Set mTwsContractDetailsRequestQueue = New Queue
+mTwsContractDetailsRequestQueue.initialCapacity = 20
 
 ReDim mExchangeCodes(100) As String
 mMaxExchangeCodesIndex = -1
@@ -325,6 +306,7 @@ addExchangeCode "ONE"
 addExchangeCode "OSE.JPN"
 
 addExchangeCode "PHLX"
+addExchangeCode "PINK"
 addExchangeCode "PSE"
 
 addExchangeCode "RDBK"
@@ -335,6 +317,7 @@ addExchangeCode "SGX"
 addExchangeCode "SMART"
 addExchangeCode "SNFE"
 addExchangeCode "SOFFEX"
+addExchangeCode "SUPERSOES"
 addExchangeCode "SWB"
 addExchangeCode "SWX"
 
@@ -362,26 +345,13 @@ End Sub
 '================================================================================
 
 Private Sub mSocket_Close()
-mConnectionState = ConnectionStates.ConnNotConnected
-ReleaseSocket
-If mDisconnectedByApplication Then
-    RaiseEvent ConnectionToTWSClosed(False)
-    logMessage "Connection to TWS closed: " & calcConnectionString, LogLevelLow
-Else
-    retryConnection
-    RaiseEvent ConnectionToTWSClosed( _
-                            IIf(mConnectionRetryIntervalSecs = 0, False, True))
-    logMessage "Connection to TWS closed" & _
-                IIf(mConnectionRetryIntervalSecs = 0, "", " (retrying)") & ": " & _
-                calcConnectionString, _
-                LogLevelLow
-End If
+handleTwsDisconnection
 End Sub
 
 Private Sub mSocket_Connect()
 mConnectionState = ConnectionStates.ConnConnecting
 RaiseEvent Connecting
-logMessage "Connecting to TWS: " & calcConnectionString, LogLevelLow
+logMessage "Connecting to TWS: negotiating versions and client id"
 addData CLIENT_VERSION
 send
 addData mClientID
@@ -397,7 +367,11 @@ End If
 
 ReDim mSocketInputData(bytesTotal - 1) As Byte
 mSocket.GetData mSocketInputData, vbArray + vbByte
-RaiseEvent dataReceived
+If mLogLevel >= LogLevelHigh Then
+    mCommonServiceConsumer.NotifyListeners showBuffer(mSocketInputData), _
+                                        ListenValueTypes.ValueTypeRawSocketData, _
+                                        Me
+End If
 
 'Debug.Print "Socket: " & showBuffer(mSocketInputData)
 
@@ -485,24 +459,25 @@ Case sckAddressNotAvailable, _
     
     If mConnectionState = ConnectionStates.ConnNotConnected Then
         ReleaseSocket
-        logMessage "Failed to connect to TWS" & _
-                    IIf(mConnectionRetryIntervalSecs = 0, "", " (retrying)") & ": " & _
-                    Description & ": " & _
-                    calcConnectionString, _
-                    LogLevelLow
-        RaiseEvent ConnectFailed(Description, _
-                                IIf(mConnectionRetryIntervalSecs = 0, False, True))
-        retryConnection
+        If mConnectionRetryIntervalSecs = 0 Then
+            logMessage "Failed to connect to TWS: " & _
+                        Description & ": " & _
+                        calcConnectionString, _
+                        LogLevelLow
+            
+            cancelContractRequests "Failed to connect to TWS"
+            RaiseEvent ConnectFailed(Description, False)
+        Else
+            logMessage "Failed to connect to TWS - retrying: " & _
+                        Description & ": " & _
+                        calcConnectionString, _
+                        LogLevelLow
+            
+            RaiseEvent ConnectFailed(Description, True)
+            retryConnection
+        End If
     Else
-        mConnectionState = ConnectionStates.ConnNotConnected
-        ReleaseSocket
-        retryConnection
-        logMessage "Connection to TWS closed: " & _
-                    IIf(mConnectionRetryIntervalSecs = 0, "", " (retrying)") & ": " & _
-                    Description & ": " & _
-                    calcConnectionString, _
-                    LogLevelLow
-        RaiseEvent ConnectionToTWSClosed(IIf(mConnectionRetryIntervalSecs = 0, False, True))
+        handleTwsDisconnection
     End If
 'Case sckConnectionReset
 
@@ -528,7 +503,7 @@ Case Else
                 "Description: " & Description & vbCrLf & _
                 "Scode: " & Scode, _
                 LogLevelLow
-    err.Raise ErrorCodes.RuntimeException, _
+    err.Raise ErrorCodes.ErrRuntimeException, _
                 "IBTWSSP.TWSAPI::mSocket_error", _
                 "Socket error:" & vbCrLf & _
                 "Number: " & Number & vbCrLf & _
@@ -575,16 +550,16 @@ Friend Property Let port(ByVal value As Long)
 mPort = value
 End Property
 
+Friend Property Let providerKey(ByVal value As String)
+mProviderKey = value
+End Property
+
 Friend Property Let server(ByVal value As String)
 mServer = IIf(value = "", "127.0.0.1", value)
 End Property
 
 Friend Property Get serverVersion() As Long
 serverVersion = mServerVersion
-End Property
-
-Friend Property Get socketData() As String
-socketData = showBuffer(mSocketInputData)
 End Property
 
 Friend Property Let TWSLogLevel(ByVal value As TWSLogLevels)
@@ -624,7 +599,7 @@ Else
                 On Error GoTo 0
                 If err.Number = 0 Then
                     ' request was still in queue - no further action required
-                ElseIf err.Number <> ErrorCodes.IllegalArgumentException Then
+                ElseIf err.Number <> ErrorCodes.ErrIllegalArgumentException Then
                     err.Raise err.Number
                 Else
                     ' request is with TWS so cancel it
@@ -668,7 +643,7 @@ End Sub
 
 Friend Sub CancelMarketDepth(ByVal tickerid As Long)
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.IllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::CancelMarketDepth", _
                 "Not connected"
 End If
@@ -676,11 +651,11 @@ End If
 Const version = 1
 
 With mTickerTable(tickerid)
-    If Not .inUse Then err.Raise ErrorCodes.InvalidTickerID, _
+    If Not .inUse Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                     "IBTWSSP.TWSAPI::cancelMarketDepth", _
                                     "Invalid ticker id " & tickerid
     If Not .receivingMarketDepth Then
-        err.Raise ErrorCodes.NotReceivingMarketDepth, _
+        err.Raise ErrorCodes.ErrIllegalStateException, _
                     "IBTWSSP.TWSAPI::cancelMarketDepth", _
                     "Ticker id " & tickerid & " not currently receiving market depth"
     End If
@@ -697,7 +672,7 @@ End Sub
 Friend Sub cancelNewsBulletins()
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.IllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::cancelNewsBulletins", _
                 "Not connected"
 End If
@@ -710,10 +685,9 @@ send
 End Sub
 
 Friend Sub cancelOrder(ByVal orderId As Long)
-Dim lOrder As Order
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.IllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::cancelOrder", _
                 "Not connected"
 End If
@@ -733,28 +707,31 @@ mDisconnectedByApplication = False
 createsocket
 
 If mConnectionState <> ConnectionStates.ConnNotConnected Then
-    err.Raise ErrorCodes.IllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::connect", _
                 "Already connected"
 End If
 
 On Error GoTo errNoConnect
+
+logMessage "Connecting to TWS: " & calcConnectionString
 mSocket.Connect mServer, mPort
 Exit Sub
 
 errNoSocket:
-    err.Raise ErrorCodes.RuntimeException, _
+    err.Raise ErrorCodes.ErrRuntimeException, _
                 "IBTWSSP.TWSAPI::connect", _
                 "Can't create socket"
 Exit Sub
 
 errNoConnect:
-    err.Raise ErrorCodes.RuntimeException, _
+    err.Raise ErrorCodes.ErrRuntimeException, _
                 "IBTWSSP.TWSAPI::connect", _
                 "Can't connect"
 End Sub
 
-Friend Sub disconnect()
+Friend Sub disconnect( _
+                ByVal reason As String)
 mDisconnectedByApplication = True
 If Not mConnectionTimer Is Nothing Then mConnectionTimer.StopTimer
 mConnectionState = ConnectionStates.ConnNotConnected
@@ -763,7 +740,8 @@ ReleaseSocket
 mIndexIn = 0
 mIndexOut = 0
 mInputIndex = 0
-RaiseEvent ConnectionToTWSClosed(False)
+RaiseEvent Disonnected(reason)
+logMessage "Disconnected from: " & calcConnectionString, LogLevelLow
 End Sub
 
 Friend Function IsValidExchangeCode(ByVal code As String) As Boolean
@@ -791,185 +769,32 @@ Loop Until bottom = middle
 If code = mExchangeCodes(middle) Then IsValidExchangeCode = True
 End Function
 
-'Friend Function newContractSpecifier( _
-'                Optional ByVal localSymbol As String, _
-'                Optional ByVal symbol As String, _
-'                Optional ByVal exchange As String, _
-'                Optional ByVal sectype As SecurityTypes, _
-'                Optional ByVal currencyCode As String, _
-'                Optional ByVal expiry As String, _
-'                Optional ByVal strike As Double, _
-'                Optional ByVal right As OptionRights = OptNone) As TradeBuildSP.IContractSpecifier
-'
-'Dim Source As String: Source = "IBTWSSP.TWSAPI::newContractSpecifier"
-'
-'If localSymbol = "" And symbol = "" Then
-'    err.Raise ErrorCodes.IllegalArgumentException, _
-'                Source, _
-'                "Symbol must be supplied if localSymbol is not supplied"
-'End If
-'
-'If exchange <> "" And _
-'    Not IsValidExchangeCode(exchange) _
-'Then
-'    err.Raise ErrorCodes.IllegalArgumentException, _
-'                Source, _
-'                "'" & exchange & "' is not a valid exchange code"
-'End If
-'
-'Select Case sectype
-'Case 0  ' ie not supplied
-'Case SecTypeStock
-'Case SecTypeFuture
-'    If expiry <> "" Then
-'' need to write a function to validate the expiry format
-''        err.Raise ErrorCodes.IllegalArgumentException, _
-''                    source, _
-''                    "expiry must be supplied"
-'    End If
-'Case SecTypeOption, SecTypeFuturesOption
-'    If expiry <> "" Then
-'' need to write a function to validate the expiry format
-''        err.Raise ErrorCodes.IllegalArgumentException, _
-''                    source, _
-''                    "expiry must be supplied"
-'    End If
-'    If strike < 0 Then
-'        err.Raise ErrorCodes.IllegalArgumentException, _
-'                    Source, _
-'                    "strike must be > 0"
-'    End If
-'    Select Case right
-'    Case OptCall
-'    Case OptPut
-'    Case OptNone
-'    Case Else
-'        err.Raise ErrorCodes.IllegalArgumentException, _
-'                    Source, _
-'                    "'" & right & "' is not a valid option right"
-'    End Select
-'Case SecTypeCash
-'Case SecTypeBag
-'Case SecTypeIndex
-'Case Else
-'    err.Raise ErrorCodes.IllegalArgumentException, _
-'                Source, _
-'                "'" & sectype & "' is not a valid secType"
-'End Select
-'
-'Set newContractSpecifier = New TradeBuildSP.IContractSpecifier
-'With newContractSpecifier
-'    .localSymbol = localSymbol
-'    .symbol = symbol
-'    .exchange = exchange
-'    .sectype = sectype
-'    .currencyCode = currencyCode
-'    .expiry = expiry
-'    .strike = strike
-'    .right = right
-'End With
-'End Function
+Friend Sub placeOrder( _
+                ByVal orderSubmitter As orderSubmitter, _
+                ByVal pOrder As TradeBuildSP.IOrder, _
+                ByVal transmit As Boolean, _
+                ByVal parentId As String, _
+                ByVal ocaGroup As String, _
+                ByVal routingHint As String)
 
-Friend Sub placeOrder(ByVal pOrder As Order)
-Dim specifier As TradeBuildSP.IContractSpecifier
+Dim mapEntry As OrderIdMapEntry
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.IllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::placeOrder", _
                 "Already connected"
 End If
 
-pOrder.clientID = mClientID
-
-Set specifier = pOrder.Contract.specifier
-
-Const version = 11
-addData PLACE_ORDER
-addData version
-addData pOrder.id
-
-' send contract fields
-With specifier
-    addData .symbol
-    addData secTypeToString(.sectype)
-    addData Left$(.expiry, 6)
-    addData .strike
-    addData optionRightToString(.right)
-    addData .exchange
-    addData .currencyCode
-    If mServerVersion >= 2 Then addData .localSymbol
-End With
-
-With pOrder
-    ' send main order fields
-    addData orderActionToString(.action)
-    addData .quantity
-    addData orderTypeToString(.orderType)
-    If mServerVersion <= 10 And _
-        (UCase$(specifier.exchange) = "LIFFE" Or _
-        UCase$(specifier.exchange) = "LSE") _
-    Then
-        addData .limitPrice / 100
-        addData .auxPrice / 100
-    Else
-        addData .limitPrice
-        addData .auxPrice
-    End If
-    ' send extended order fields
-    addData orderTIFToString(.timeInForce)
-    addData .ocaGroup
-    addData .account
-    addData .openClose
-    addData .origin
-    addData .orderRef
-    addBoolean .transmit
-    If mServerVersion >= 4 Then addData .parentId
-    If mServerVersion >= 5 Then
-        addBoolean .blockOrder
-        addBoolean .sweepToFill
-        addData .displaySize
-        addData .triggerMethod
-        addBoolean .ignoreRTH
-    End If
-    If mServerVersion >= 7 Then addBoolean .hidden
-End With
-
-' Send combo legs for BAG requests
-If mServerVersion >= 8 And specifier.sectype = SecurityTypes.SecTypeBag Then
-    With specifier
-        If .ComboLegs.Count = 0 Then
-            addData 0
-        Else
-            addData .ComboLegs.Count
-            Dim comboLeg As TradeBuildSP.IComboLeg
-            For Each comboLeg In .ComboLegs
-                With comboLeg
-                    addData .contractID
-                    addData .Ratio
-                    addData orderActionToString(.action)
-                    addData .exchange
-                    addData LegOpenCloseToString(.openClose)
-                End With
-            Next
-        End If
-    End With
+If pOrder.brokerId = "" Then
+    pOrder.brokerId = CStr(mNextOrderID)
+    mNextOrderID = mNextOrderID + 1
+    Set mapEntry.order = pOrder
+    Set mapEntry.orderSubmitter = orderSubmitter
+    mOrderIDMap.add mapEntry, generateTwsOrderKey(pOrder.brokerId, mClientID)
 End If
 
-If mServerVersion >= 9 Then addData pOrder.sharesAllocation
+sendOrder pOrder, transmit, parentId, ocaGroup, routingHint
 
-If mServerVersion >= 10 Then addData pOrder.discretionaryAmt
-
-If mServerVersion >= 11 Then addData pOrder.goodAfterTime
-
-If mServerVersion >= 12 Then addData pOrder.goodTillDate
-
-If mServerVersion >= 13 Then
-    addData pOrder.FAGroup
-    addData pOrder.FAMethod
-    addData pOrder.FAPercentage
-    addData pOrder.FAProfile
-End If
-send
 End Sub
                     
 Public Function ReadHistoricalBar( _
@@ -1015,7 +840,7 @@ Friend Sub ReplaceFA(ByVal DataType As FADataTypes, ByVal xml As String)
 
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.IllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::ReplaceFA", _
                 "Already connected"
 End If
@@ -1023,7 +848,7 @@ End If
 Const version = 1
 
 If mServerVersion < 13 Then
-    err.Raise ErrorCodes.UnsupportedOperationException, _
+    err.Raise ErrorCodes.ErrUnsupportedOperationException, _
                 "IBTWSSP.TWSAPI::ReplaceFA", _
                 "Server version does not support ReplaceFA"
 End If
@@ -1039,7 +864,7 @@ End Sub
 Friend Sub requestAccountUpdates(ByVal subscribe As Boolean, ByVal acctCode As String)
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.IllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::requestAccountUpdates", _
                 "Already connected"
 End If
@@ -1058,7 +883,7 @@ End Sub
 Friend Sub requestAllOpenOrders()
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.IllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::requestAllOpenOrders", _
                 "Not connected"
 End If
@@ -1074,7 +899,7 @@ End Sub
 Friend Sub requestAutoOpenOrders(ByVal autoBind As Boolean)
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.IllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::requestAutoOpenOrders", _
                 "Not connected"
 End If
@@ -1087,26 +912,17 @@ addBoolean autoBind
 send
 End Sub
 
-Friend Sub RequestContract(ByVal pContracts As TradeBuildSP.IContracts)
+Friend Sub RequestContract( _
+                ByVal pContracts As TradeBuildSP.IContracts, _
+                ByVal requester As ContractDetailsRequester)
 
 Dim contractSpecifier As TradeBuildSP.IContractSpecifier
+Dim requestQueueEntry As TWSContractDetailsRequestQueueEntry
 
-If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.IllegalStateException, _
-                "IBTWSSP.TWSAPI::RequestContract", _
-                "Not connected"
-End If
-
-' don't send another request if there's already one outstanding
-If Not mRequestedContracts Is Nothing Then
-    err.Raise ContractDetailsReqNotAllowed, _
-                "TradeBuildAPI::RequestContract", _
-                "An existing request has not yet completed"
-End If
+Set requestQueueEntry.tradeBuildContracts = pContracts
+Set requestQueueEntry.requester = requester
 
 Set contractSpecifier = pContracts.contractSpecifier
-contractSpecifier.Locked = True
-
 Select Case contractSpecifier.sectype
 Case SecurityTypes.SecTypeBag
 Case SecurityTypes.SecTypeCash
@@ -1116,48 +932,27 @@ Case SecurityTypes.SecTypeIndex
 Case SecurityTypes.SecTypeOption
 Case SecurityTypes.SecTypeStock
 Case Else
-    RaiseEvent ContractSpecifierInvalid("security type must be supplied", pContracts)
+    requester.contractSpecifierInvalid requestQueueEntry, "security type must be supplied"
     Exit Sub
 End Select
 
 If contractSpecifier.localSymbol = "" And _
     contractSpecifier.symbol = "" _
 Then
-    RaiseEvent ContractSpecifierInvalid("either symbol or local symbol must be supplied", pContracts)
+    requester.contractSpecifierInvalid requestQueueEntry, "either symbol or local symbol must be supplied"
     Exit Sub
 End If
     
+mTwsContractDetailsRequestQueue.addToEnd requestQueueEntry
 
-Set mRequestedContracts = pContracts
-
-If contractSpecifier.exchange <> "" And Not IsValidExchangeCode(contractSpecifier.exchange) Then
-    processContractError "invalid exchange"
-    Exit Sub
-End If
-
-Const version = 1
-
-addData REQ_CONTRACT_DATA
-addData version
-With contractSpecifier
-    addData .symbol
-    addData secTypeToString(.sectype)
-    addData Left$(.expiry, 6)
-    addData .strike
-    addData optionRightToString(.right)
-    addData .exchange
-    addData .currencyCode
-    addData .localSymbol
-End With
-send
-
+submitNextContractDetailsRequest
 End Sub
 
 Friend Sub RequestExecutions(ByVal filter As ExecutionFilter)
 Dim theFilter As ExecutionFilter
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.IllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::RequestExecutions", _
                 "Not connected"
 End If
@@ -1191,7 +986,7 @@ End Sub
 Friend Sub requestFA(ByVal DataType As FADataTypes)
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.IllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::requestFA", _
                 "Not connected"
 End If
@@ -1199,7 +994,7 @@ End If
 Const version = 1
 
 If mServerVersion < 13 Then
-    err.Raise ErrorCodes.UnsupportedOperationException, _
+    err.Raise ErrorCodes.ErrUnsupportedOperationException, _
                 "IBTWSSP.TWSAPI::requestFA", _
                 "Server version does not support requestFA"
 End If
@@ -1214,7 +1009,7 @@ End Sub
 Friend Sub requestManagedAccounts()
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.IllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::requestManagedAccounts", _
                 "Not connected"
 End If
@@ -1226,14 +1021,15 @@ addData version
 send
 End Sub
 
-Friend Function RequestMarketDataEx(ByVal pContractSpecifier As TradeBuildSP.IContractSpecifier, _
+Friend Function RequestMarketData(ByVal pContractSpecifier As TradeBuildSP.IContractSpecifier, _
+                            ByVal dataReader As RealtimeDataReader, _
                             ByVal dataConsumer As IStreamingDataConsumer, _
                             Optional ByVal includeMarketDepth As Boolean = False) As Long
 
 Dim lTickerID As Long
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.IllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::RequestMarketDataEx", _
                 "Not connected"
 End If
@@ -1241,8 +1037,9 @@ End If
 pContractSpecifier.Locked = True
 
 lTickerID = AllocateTickerTableEntry(dataConsumer)
-RequestMarketDataEx = lTickerID
+RequestMarketData = lTickerID
 Set mTickerTable(lTickerID).contractSpecifier = pContractSpecifier
+Set mTickerTable(lTickerID).dataReader = dataReader
 reqMarketData lTickerID
 
 If includeMarketDepth Then
@@ -1255,13 +1052,13 @@ End Function
 Friend Sub RequestMarketDepth(ByVal pTickerID As Long)
                             
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.IllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::RequestMarketDepth", _
                 "Not connected"
 End If
 
 With mTickerTable(pTickerID)
-    If .contractSpecifier Is Nothing Then err.Raise ErrorCodes.InvalidTickerID, "IBTWSSP.TWSAPI::requestMarketDepth", "Invalid ticker id: " & pTickerID
+    If .contractSpecifier Is Nothing Then err.Raise ErrorCodes.ErrIllegalArgumentException, "IBTWSSP.TWSAPI::requestMarketDepth", "Invalid ticker id: " & pTickerID
     .receivingMarketDepth = True
     reqMarketDepth pTickerID, .contractSpecifier
 End With
@@ -1278,13 +1075,13 @@ Dim i As Long
 requestID = -1
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.IllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::RequestHistoricalData", _
                 "Not connected"
 End If
 
 If mServerVersion < 16 Then
-    err.Raise ErrorCodes.UnsupportedOperationException, _
+    err.Raise ErrorCodes.ErrUnsupportedOperationException, _
                 "IBTWSSP.TWSAPI::RequestHistoricalData", _
                 "Server version does not support historical data retrieval"
 End If
@@ -1334,7 +1131,7 @@ End Function
 Friend Sub RequestNewsBulletins(allMsgs As Boolean)
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.IllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::RequestNewsBulletins", _
                 "Not connected"
 End If
@@ -1350,7 +1147,7 @@ End Sub
 Friend Sub RequestOpenOrders()
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.IllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::RequestOpenOrders", _
                 "Not connected"
 End If
@@ -1393,6 +1190,18 @@ End If
 mExchangeCodes(mMaxExchangeCodesIndex) = UCase$(code)
 End Sub
 
+Private Function adjustPrice( _
+                ByVal price As Double, _
+                ByVal pContractSpecifier As IContractSpecifier) As Double
+If pContractSpecifier.currencyCode = "GBP" And _
+    mServerVersion < 23 _
+Then
+    adjustPrice = price * 100
+Else
+    adjustPrice = price
+End If
+End Function
+
 Private Function AllocateTickerTableEntry(ByVal pDataConsumer As IStreamingDataConsumer) As Long
 Dim i As Long
 
@@ -1426,7 +1235,7 @@ End Function
 Private Sub cancelMarketDataEx(ByVal tickerid As Long, _
                 ByVal releaseEntry As Boolean)
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.IllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::cancelMarketDataEx", _
                 "Not connected"
 End If
@@ -1434,7 +1243,7 @@ Dim id As Long
 Const version = 2
 
 If Not mTickerTable(tickerid).inUse Then
-    err.Raise InvalidTickerID, _
+    err.Raise ErrorCodes.ErrIllegalArgumentException, _
     "IBTWSSP.TWSAPI::CancelMarketDataEx", _
     "Invalid ticker id " & tickerid
 End If
@@ -1442,7 +1251,9 @@ End If
 id = tickerid + mTickerTable(tickerid).incarnation
 
 If mTickerTable(tickerid).receivingMarketDepth Then CancelMarketDepth tickerid
+
 If releaseEntry Then releaseTickerTableEntry tickerid
+
 addData CANCEL_MKT_DATA
 addData version
 addData id
@@ -1450,16 +1261,25 @@ send
 
 End Sub
 
+Private Sub cancelContractRequests(ByVal reason As String)
+Dim requestEntry As TWSContractDetailsRequestQueueEntry
+Do While mTwsContractDetailsRequestQueue.size <> 0
+    requestEntry = mTwsContractDetailsRequestQueue.removeFromFront
+    requestEntry.requester.cancelRequest requestEntry, reason
+Loop
+End Sub
 Private Sub checkmessages()
 Static checkPointNumber As Long
-Static alreadyInvoked As Boolean
 Static msgID As TWSSocketInMsgTypes
 Static version As Long
-Dim timeStampStr As String
 Static retryCount As Long
+Static eventCount As Long
+Static mElapsedTimer As TimerUtils.ElapsedTimer
 
-If alreadyInvoked Then Exit Sub
-alreadyInvoked = True
+If mElapsedTimer Is Nothing Then
+    Set mElapsedTimer = New TimerUtils.ElapsedTimer
+    mElapsedTimer.StartTiming
+End If
 
 On Error GoTo err
 
@@ -1480,6 +1300,7 @@ If mConnectionState <> ConnectionStates.ConnConnected Then
     End If
     
     mConnectionState = ConnectionStates.ConnConnected
+    logMessage "Connection to TWS successful"
     
     ' set the log level in TWS
     setTWSLogLevel mTWSLogLevel
@@ -1489,6 +1310,10 @@ If mConnectionState <> ConnectionStates.ConnConnected Then
     
     ' and re-request any market depth
     resetMarketDepth True
+    
+    ' check for pending contract details requests
+    submitNextContractDetailsRequest
+        
     
     RaiseEvent Connected
     
@@ -1587,36 +1412,41 @@ Do While True
             i = i + 50
             If j < mInputIndex Then s = s & vbCrLf
         Loop
-        disconnect
+        disconnect s
         Debug.Print s
-        err.Raise ErrorCodes.RuntimeException, _
-                    "IBTWSSP.TWSAPI::checkmessages", _
-                    s
+        Exit Sub
     End Select
     retryCount = 0
+    
+    eventCount = eventCount + 1
+    
+    If mElapsedTimer.ElapsedTimeMicroseconds >= 10000000 Then
+        logMessage "Event rate per second = " & Format(eventCount / 10, "0.0"), LogLevelMedium
+        Debug.Print "Event rate per second = " & Format(eventCount / 10, "0.0")
+        eventCount = 0
+        mElapsedTimer.StartTiming
+    End If
+    
     checkpointBuffer
     checkPointNumber = 1000
     Debug.Print "Set checkpoint number=" & 1000
 Loop
-
-alreadyInvoked = False
 
 Exit Sub
 
 err:
 If err.Number = DataIncomplete Then
     rollbackBuffer
-    alreadyInvoked = False
     retryCount = retryCount + 1
     Debug.Print "Data incomplete count: " & retryCount & "; CheckPointNumber: " & checkPointNumber
     Exit Sub
 End If
-alreadyInvoked = False
-err.Raise err.Number
+
+mCommonServiceConsumer.ServiceProviderError err.Number, err.Description, "IBTWSSP"
+disconnect "Error " & err.Number & ": " & err.Description
 End Sub
 
 Private Sub checkpointBuffer()
-'mIndexInChk = mIndexIn
 mInputIndexChk = mInputIndex
 End Sub
 
@@ -1625,24 +1455,6 @@ If mSocket Is Nothing Then
     Set mSocket = New MSWinsockLib.Winsock
 End If
 End Sub
-
-Private Function execSideFromString(ByVal value As String) As ExecSides
-Select Case UCase$(value)
-Case "BOT"
-    execSideFromString = SideBuy
-Case "SLD"
-    execSideFromString = SideSell
-End Select
-End Function
-
-Private Function execSideToString(ByVal value As ExecSides) As String
-Select Case value
-Case SideBuy
-    execSideToString = "BOT"
-Case SideSell
-    execSideToString = "SLD"
-End Select
-End Function
 
 Private Sub generateTwsHistoricalDataRequest(ByVal index As Long)
 Dim TwsRequest As TWSHistoricalDataRequestQueueEntry
@@ -1656,7 +1468,7 @@ TwsRequest.id = index + HistoricalDataTickerBase + (mHistoricalDataTable(index).
 
 ReDim mHistoricalDataTable(index).requestKeys(reqNum - 1) As String
 
-Set TwsRequest.contractSpec = mHistoricalDataTable(index).barSpecifier.Contract.specifier
+Set TwsRequest.contractSpec = mHistoricalDataTable(index).barSpecifier.contract.specifier
 
 If mServerVersion >= 20 Then
     TwsRequest.endDateTime = Format(mHistoricalDataTable(index).barSpecifier.To, "yyyymmdd hh:nn:ss")
@@ -1708,6 +1520,12 @@ End Select
 mHistoricalDataTable(index).requestKeys(reqNum - 1) = queueTWSHistoricalDataRequest(TwsRequest)
 
 End Sub
+
+Private Function generateTwsOrderKey( _
+                ByVal twsOrderId As Long, _
+                ByVal clientID As Long) As String
+generateTwsOrderKey = clientID & "/" & twsOrderId
+End Function
 
 Private Function getBoolean() As Boolean
 Dim s As String
@@ -1794,7 +1612,7 @@ If mLogLevel >= LogLevelHigh Then
     
     mCommonServiceConsumer.NotifyListeners listendata, _
                     ListenValueTypes.ValueTypeTWSSocketMsgAcctUpdateTime, _
-                    timestamp
+                    Me
 End If
 
 End Sub
@@ -1817,7 +1635,7 @@ If mLogLevel >= LogLevelHigh Then
     
     mCommonServiceConsumer.NotifyListeners listendata, _
                     ListenValueTypes.ValueTypeTWSSocketMsgAcctValue, _
-                    timestamp
+                    Me
 End If
 
 End Sub
@@ -1846,98 +1664,151 @@ getDouble 'minTick
 getString 'OrderTypes
 getString 'validExchanges
 
-RaiseEvent ContractSpecifierInvalid("bonds not yet supported", mRequestedContracts)
+mContractDetailsRequest.requester.contractSpecifierInvalid mContractDetailsRequest, _
+                                                    "bonds not yet supported"
+                                                    
 
 End Sub
 
 Private Sub getContractData(ByVal version As Long)
 Dim listendata As TWSSocketMsgContractData
 Dim timestamp As Date
-Dim lContract As TradeBuildSP.IContract
+Dim lContract As contract
 Dim minimumTick As Double
 Dim multiplier As Long
+Dim lOrderType As TradeBuildSP.OrderTypes
 Dim OrderTypes As String
 Dim orderTypesStr() As String
-Dim lOrderTypes() As TradeBuildSP.OrderTypes
+Dim permittedOrderTypes As Long
 Dim validExchanges As String
 Dim lValidExchanges() As String
+Dim permittedOrderTifs As Long
+Dim permittedOrderAttributes As Long
+Dim expiryString As String
 Dim i As Long
-Dim j As Long
 
 timestamp = gCurrentTime
 
-Set lContract = mCommonServiceConsumer.NewContract
-With lContract
+Set lContract = New contract
+lContract.tradeBuildContract = mCommonServiceConsumer.NewContract
+With lContract.tradeBuildContract
     .specifier = mCommonServiceConsumer.NewContractSpecifier
     .specifier.symbol = getString
     .specifier.sectype = secTypeFromString(getString)
-    .specifier.expiry = getString
+    expiryString = getString
+    .specifier.expiry = expiryString
     .specifier.strike = getDouble
     .specifier.right = optionRightFromString(getString)
     .specifier.exchange = getString
     .specifier.currencyCode = getString
     .specifier.localSymbol = getString
+    If expiryString <> "" Then
+        .ExpiryDate = CDate(Left$(expiryString, 4) & "/" & Mid$(expiryString, 5, 2) & "/" & right$(expiryString, 2))
+    End If
     .marketName = getString
     .tradingClass = getString
     .contractID = getLong
     minimumTick = getDouble
     multiplier = getLong
-    If .specifier.currencyCode = "GBP" Then
-        .multiplier = multiplier / 100
-        .minimumTick = minimumTick * 100
-    Else
-        .minimumTick = minimumTick
-        .multiplier = multiplier
-    End If
     
     OrderTypes = getString
     orderTypesStr = Split(OrderTypes, ",")
     
-    ReDim lOrderTypes(UBound(orderTypesStr)) As TradeBuildSP.OrderTypes
+    permittedOrderAttributes = OrderAttributes.OrderAttBlockOrder
+    permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttMinimumQuantity
+    permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttNBBOPriceCap
+    permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttOriginatorRef
+    permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttOverrideConstraints
+    permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttPercentOffset
+    permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttRule80A
+    permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttAction
+    permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttLimitPrice
+    permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttOrderType
+    permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttQuantity
+    permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttTimeInForce
+    permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttTriggerPrice
+    permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttStopTriggerMethod
     
     For i = 0 To UBound(orderTypesStr)
-        lOrderTypes(j) = orderTypeFromString(orderTypesStr(i))
+        lOrderType = orderTypeFromString(orderTypesStr(i))
         
-        If Not lOrderTypes(j) = TradeBuildSP.OrderTypes.OrderTypeNone Then
-            j = j + 1
+        If Not lOrderType = TradeBuildSP.OrderTypes.OrderTypeNone Then
+            permittedOrderTypes = permittedOrderTypes Or lOrderType
         Else
             Select Case orderTypesStr(i)
+            Case "AON"  ' all or none
+                permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttAllOrNone
             Case "DAY"  ' today only
+                permittedOrderTifs = permittedOrderTifs Or OrderTifs.TIFDay
+            Case "DIS"  ' discretionary amount
+                permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttDiscretionaryAmount
+            Case "ELECONLY"  ' electronic trade only
+                permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttETradeOnly
+            Case "FIRMONLY"  ' firm quote only
+                permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttFirmQuoteOnly
             Case "GAT"  ' good after time
-            Case "GTC"  'good till cancelled
+                permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttGoodAfterTime
+                permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttGoodAfterTimeTZ
+            Case "GTC"  ' good till cancelled
+                permittedOrderTifs = permittedOrderTifs Or OrderTifs.TIFGoodTillCancelled
             Case "GTD"  ' good till date
+                permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttGoodTillDate
+                permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttGoodTillDateTZ
             Case "GTT"  ' good till time
+                permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttGoodTillDate
+                permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttGoodTillDateTZ
+            Case "HID"  ' hidden?
+                permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttHidden
             Case "ICE"  ' iceberg
+                permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttDisplaySize
             Case "IOC"  ' immediate or cancel
-            Case "RFQ"  ' request for quote
+                permittedOrderTifs = permittedOrderTifs Or OrderTifs.TIFImmediateOrCancel
+            Case "RTH"
+                permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttIgnoreRTH
+                permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttRTHOnly
+            Case "SWEEP"
+                permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttSweepToFill
+            Case "BASKET", "COND", "OCA", "OPG", "OPGREROUT", "TIMEPRIO"
+                ' not sure what these signify
             Case Else
                 If orderTypesStr(i) <> "" Then
-                    mCommonServiceConsumer.ServiceProviderError ErrorCodes.UnknownOrderTypeFromTWS, _
-                                            "Unknown order type " & orderTypesStr(i) & " received from TWS", _
-                                            SpName
+                    logMessage "Unknown order type " & orderTypesStr(i) & " received from TWS", LogLevelLow
                 End If
             End Select
         End If
     Next
     
-    If j <> (UBound(orderTypesStr) - 1) Then
-        ReDim Preserve lOrderTypes(j - 1) As TradeBuildSP.OrderTypes
-    End If
+    lContract.permittedOrderAttributes = permittedOrderAttributes
+    lContract.permittedOrderTypes = permittedOrderTypes
     
-    .OrderTypes = lOrderTypes
+    lContract.permittedOrderTifs = permittedOrderTifs
+    
+    lContract.permittedStopTriggerMethods = TradeBuildSP.StopTriggerMethods.StopTriggerDefault Or _
+                                            TradeBuildSP.StopTriggerMethods.StopTriggerDoubleBidAsk Or _
+                                            TradeBuildSP.StopTriggerMethods.StopTriggerDoubleLast Or _
+                                            TradeBuildSP.StopTriggerMethods.StopTriggerLast
+
     validExchanges = getString
     lValidExchanges = Split(validExchanges, ",")
     .validExchanges = lValidExchanges
     
     If version >= 2 Then
-        .PriceMagnifier = getLong
+        lContract.priceMagnifier = getLong
+    Else
+        If .specifier.currencyCode = "GBP" Then
+            lContract.priceMagnifier = 100
+        Else
+            lContract.priceMagnifier = 1
+        End If
     End If
+    .multiplier = multiplier / lContract.priceMagnifier
+    .minimumTick = minimumTick * lContract.priceMagnifier
 End With
 
 processContract lContract
 
 If mLogLevel >= LogLevelHigh Then
-    With lContract
+    With lContract.tradeBuildContract
         listendata.msgType = TWSSocketInMsgTypes.CONTRACT_DATA
         listendata.contractID = .contractID
         listendata.currencyCode = .specifier.currencyCode
@@ -1958,7 +1829,7 @@ If mLogLevel >= LogLevelHigh Then
     End With
     mCommonServiceConsumer.NotifyListeners listendata, _
                     ListenValueTypes.ValueTypeTWSSocketMsgContractData, _
-                    timestamp
+                    Me
 End If
 
 End Sub
@@ -1971,52 +1842,95 @@ Dim errorCode As Long
 Dim errorMsg As String
 Dim execFilter As ExecutionFilter
 Dim index As Long
+Dim mapEntry As OrderIdMapEntry
+Dim failpoint As Long
+
+On Error GoTo err
+
+failpoint = 100
 
 id = getLong
 Debug.Print "Error id: " & id
+
+failpoint = 200
+
 errorCode = getLong
 Debug.Print "Error code: " & errorCode
+
+failpoint = 300
+
 errorMsg = getString
 Debug.Print "Error msg: " & errorMsg
 timestamp = gCurrentTime
 
 
 Select Case errorCode
-Case 162    ' historical data request problem
+Case 101
+    ' max tickers reached
+    failpoint = 350
+    mTickerTable(id - MARKET_DEPTH_TICKER_BASE).dataReader.marketDataRequestFailed "Maximum number of tickers reached"
+Case 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, _
+    121, 125, 126, 127, 128, 129, 130, 132, 137, 140, 141, 144, _
+    152, 153, 154, 157, 160, 201, 312, 313, 314, 315, 325, 328, _
+    334, 337, 339, 343
     
+    failpoint = 400
+
+    mapEntry = mOrderIDMap(generateTwsOrderKey(id, mClientID))
+    mapEntry.orderSubmitter.updateStatus mapEntry.order.tradeBuildId, _
+                                        OrderStatuses.OrderStatusRejected
+    mapEntry.orderSubmitter.invalidOrder mapEntry.order.tradeBuildId, errorMsg
+Case 162    ' historical data request problem
+    failpoint = 500
+
     index = (id - HistoricalDataTickerBase) Mod HistoricalDataTickerIncrement
 
     mHistoricalDataTable(index).historicalDataReader.historicalDataRequestFailed errorMsg
     releaseHistoricalDataTableEntry index
     processNextHistDataRequest
+Case 165
+    failpoint = 600
+
+    logMessage "Connected to IB Historical Market Data Service"
 Case 200    ' security definition not known
     If id >= 0 Then
-        ' this must relate to a reqMktData - this should never occur as
-        ' we make sure the contract is valid before starting the ticker
+        ' this must relate to a reqMktData - this can occur even though
+        ' we make sure the contract is valid before starting the ticker because
+        ' for example the contract may have expired
         
-        '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        ' the following line is commented out because we need to do something here
-        ' that will be picked up by the realtime data provider, not the contract
-        ' info provider
-        'RaiseEvent ContractInvalid
+        failpoint = 700
+
+        mTickerTable(id Mod INCARNATION_INCREMENT).dataReader.marketDataRequestFailed errorMsg
         releaseTickerTableEntry (id Mod INCARNATION_INCREMENT)
     Else
         ' this must relate to a RequestContract
+        failpoint = 750
+
         processContractError errorMsg
     End If
 Case 202
-    RaiseEvent orderStatus(id, OrderStatuses.OrderStatusCancelled, 0, 0, 0, 0, 0, 0, mClientID)
+    failpoint = 800
+
+    mapEntry = mOrderIDMap(generateTwsOrderKey(id, mClientID))
+    mapEntry.orderSubmitter.updateStatus mapEntry.order.tradeBuildId, _
+                                        OrderStatuses.OrderStatusCancelled
+    mOrderIDMap.remove generateTwsOrderKey(id, mClientID)
 Case 309
     ' max market depth requests exceeded
-    
-    ' need to do something about the following !!!!!!!!!!!!!!!!!!!!!!!!!
-    'mTickerTable(id - MARKET_DEPTH_TICKER_BASE).tickerObj.MarketDepthNotAvailable errorMsg
-    'mTickers.MarketDepthNotAvailable gCurrentTime, id - MARKET_DEPTH_TICKER_BASE, errorMsg
+    failpoint = 900
+
+    mTickerTable(id - MARKET_DEPTH_TICKER_BASE).dataReader.marketDepthRequestFailed "Max market depth requests exceeded"
 Case 316
+    failpoint = 1000
+
     resetMarketDepth reEstablish:=True
 Case 317
+    failpoint = 1100
+
     resetMarketDepth reEstablish:=False
 Case 321    ' invalid request
+    failpoint = 1200
+
     If id >= HistoricalDataTickerBase And id < OrderIdBase Then
         index = (id - HistoricalDataTickerBase) Mod HistoricalDataTickerIncrement
     
@@ -2027,11 +1941,17 @@ Case 321    ' invalid request
         End If
     End If
 Case 1100
+    failpoint = 1300
+
     ' connectivity between TWS and IB has been lost
     RaiseEvent ConnectionToIBClosed
+    logMessage "Connection to IB has been lost"
+    
 Case 1101
     ' connectivity between TWS and IB has been restored, but data has been
     ' lost, so need to reestablish market data and market depth requests
+    failpoint = 1400
+
     
     reEstablishMarketData False
     resetMarketDepth True
@@ -2044,9 +1964,16 @@ Case 1101
     Set execFilter = New ExecutionFilter
     execFilter.clientID = mClientID
     RequestExecutions execFilter
+
+    RaiseEvent ConnectionToIBRecovered
+    
+    logMessage "Connection to IB recovered: market data re-established"
+    
 Case 1102
     ' connectivity between TWS and IB has been restored without loss of data
     ' Now need to reassociate order ids with tws
+    failpoint = 1500
+
     RequestOpenOrders
     
     ' Now make sure we're aware of any executions that occurred during
@@ -2057,7 +1984,15 @@ Case 1102
 
     RaiseEvent ConnectionToIBRecovered
     
+    logMessage "Connection to IB recovered: no loss of data"
+    
+Case 2103, 2104, 2105, 2106, 2107, 2108
+    failpoint = 1600
+
+    logMessage errorMsg
 Case Else
+    failpoint = 1700
+
     mCommonServiceConsumer.ServiceProviderError errorCode, errorMsg, SpName
 End Select
 
@@ -2070,22 +2005,29 @@ If mLogLevel >= LogLevelHigh Then
     
     mCommonServiceConsumer.NotifyListeners listendata, _
                     ListenValueTypes.ValueTypeTWSSocketMsgErrMsg, _
-                    timestamp
+                    Me
 End If
 
+Exit Sub
+
+err:
+err.Raise err.Number, , "TWSAPI::getErrorMsg(failpoint=" & failpoint & "): " & err.Description
 End Sub
 
 Private Sub getExecutionData(ByVal version As Long)
 Dim listendata As TWSSocketMsgExecutionData
 Dim timestamp As Date: timestamp = gCurrentTime
+Dim timeString  As String
 Dim sectype As String
-Dim right As String
+Dim rightString As String
 Dim side As String
 Dim price As Double
-
+Dim mapEntry As OrderIdMapEntry
 Dim id As Long: id = getLong
-
+Dim permId As Long
+Dim clientID As Long
 Dim lContractSpecifier As TradeBuildSP.IContractSpecifier
+
 Set lContractSpecifier = mCommonServiceConsumer.NewContractSpecifier
 With lContractSpecifier
     .Locked = True
@@ -2094,37 +2036,67 @@ With lContractSpecifier
     .sectype = secTypeFromString(sectype)
     .expiry = getString
     .strike = getDouble
-    right = getString
-    .right = optionRightFromString(right)
+    rightString = getString
+    .right = optionRightFromString(rightString)
     .exchange = getString
     .currencyCode = getString
     .localSymbol = getString
 End With
 
-Dim exec As Execution
-Set exec = New Execution
+On Error Resume Next
+mapEntry = mOrderIDMap(generateTwsOrderKey(id, mClientID))
+On Error GoTo 0
+
+Dim exec As TradeBuildSP.IExecution
+Set exec = mCommonServiceConsumer.NewExecution
+exec.contractSpecifier = lContractSpecifier
 With exec
-    .orderId = id
+    .orderBrokerId = id
+    If Not mapEntry.order Is Nothing Then .orderTradeBuildId = mapEntry.order.tradeBuildId
     .execId = getString
-    .time = getString
-    .accountNumber = getString
-    .exchange = getString
+    timeString = getString
+    .time = CDate(Left$(timeString, 4) & "/" & _
+                    Mid$(timeString, 5, 2) & "/" & _
+                    Mid$(timeString, 7, 2) & " " & _
+                    right$(timeString, 8))
+    .accountIdentifier = getString
+    .fillingExchange = getString
     side = getString
-    .side = execSideFromString(side)
+    .action = IIf(side = "BUY", OrderActions.ActionBuy, OrderActions.ActionSell)
     .quantity = getLong
     price = getDouble
-    If lContractSpecifier.currencyCode = "GBP" Then
-        .price = price * 100
-    Else
-        .price = price
-    End If
+    .price = adjustPrice(price, lContractSpecifier)
 End With
 
-If version >= 2 Then exec.permId = getLong
+If version >= 2 Then permId = getLong  ' permId
 
-If version >= 3 Then exec.clientID = getLong
+If version >= 3 Then clientID = getLong  ' clientID
    
-RaiseEvent ExecutionDetails(id, lContractSpecifier, exec)
+If version >= 4 Then exec.isLiquidation = getBoolean
+
+Dim existingExec As TradeBuildSP.IExecution
+On Error Resume Next
+Set existingExec = mExecutions(exec.execId)
+On Error GoTo 0
+If Not existingExec Is Nothing Then
+    ' we've had this execution before so nothing to do
+Else
+    If Not mapEntry.orderSubmitter Is Nothing Then
+        mapEntry.orderSubmitter.executionDetails lContractSpecifier, _
+                                                    exec
+        ' notify a status update - this is in case this execution occurred during a period when
+        ' TWS had lost its connection to the IB servers and this exec details is being notified
+        ' in response to the reqExecutions call made when the connection is recovered. In these
+        ' circumstances TWS will not itself issue an orderStatus.
+        If exec.quantity >= mapEntry.order.quantityRemaining Then
+            mapEntry.orderSubmitter.updateStatus mapEntry.order.tradeBuildId, _
+                                                OrderStatuses.OrderStatusFilled
+        Else
+            mapEntry.orderSubmitter.updateStatus mapEntry.order.tradeBuildId, _
+                                                OrderStatuses.OrderStatusSubmitted
+        End If
+    End If
+End If
 
 If mLogLevel >= LogLevelHigh Then
     listendata.msgType = TWSSocketInMsgTypes.EXECUTION_DATA
@@ -2133,28 +2105,28 @@ If mLogLevel >= LogLevelHigh Then
         listendata.exchange = .exchange
         listendata.expiry = .expiry
         listendata.localSymbol = .localSymbol
-        listendata.right = right
+        listendata.right = rightString
         listendata.sectype = sectype
         listendata.strike = .strike
         listendata.symbol = .symbol
     End With
     With exec
-        listendata.accountNumber = .accountNumber
-        listendata.clientID = .clientID
-        listendata.execExchange = .exchange
+        listendata.accountNumber = .accountIdentifier
+        listendata.clientID = clientID
+        listendata.execExchange = .fillingExchange
         listendata.execId = .execId
         listendata.orderId = id
-        listendata.permId = .permId
+        listendata.permId = permId
         listendata.price = price
         listendata.quantity = .quantity
         listendata.side = side
-        listendata.time = .time
+        listendata.time = timeString
     End With
     listendata.version = version
     
     mCommonServiceConsumer.NotifyListeners listendata, _
                     ListenValueTypes.ValueTypeTWSSocketMsgExecutionData, _
-                    timestamp
+                    Me
 End If
 
 End Sub
@@ -2175,7 +2147,7 @@ If mLogLevel >= LogLevelHigh Then
     
     mCommonServiceConsumer.NotifyListeners listendata, _
                     ListenValueTypes.ValueTypeTWSSocketMsgManagedAccts, _
-                    timestamp
+                    Me
 End If
 
 End Sub
@@ -2309,7 +2281,7 @@ If mLogLevel >= LogLevelHigh Then
     
     mCommonServiceConsumer.NotifyListeners listendata, _
                     ListenValueTypes.ValueTypeTWSSocketMsgManagedAccts, _
-                    timestamp
+                    Me
 End If
 
 End Sub
@@ -2346,7 +2318,7 @@ If mLogLevel >= LogLevelHigh Then
     
     mCommonServiceConsumer.NotifyListeners listendata, _
                     ListenValueTypes.ValueTypeTWSSocketMsgMarketDepth, _
-                    timestamp
+                    Me
 End If
 
 End Sub
@@ -2389,7 +2361,7 @@ If mLogLevel >= LogLevelHigh Then
     
     mCommonServiceConsumer.NotifyListeners listendata, _
                     ListenValueTypes.ValueTypeTWSSocketMsgMarketDepthL2, _
-                    timestamp
+                    Me
 End If
 
 End Sub
@@ -2414,7 +2386,7 @@ If mLogLevel >= LogLevelHigh Then
     
     mCommonServiceConsumer.NotifyListeners listendata, _
                     ListenValueTypes.ValueTypeTWSSocketMsgNewsBulletins, _
-                    timestamp
+                    Me
 End If
 
 End Sub
@@ -2432,7 +2404,7 @@ If mLogLevel >= LogLevelHigh Then
     
     mCommonServiceConsumer.NotifyListeners listendata, _
                     ListenValueTypes.ValueTypeTWSSocketMsgNextValidId, _
-                    timestamp
+                    Me
 End If
 
 If mNextOrderID < OrderIdBase Then mNextOrderID = OrderIdBase
@@ -2442,7 +2414,7 @@ End Sub
 Private Sub getOpenOrder(ByVal version As Long)
 Dim listendata As TWSSocketMsgOpenOrder
 Dim timestamp As Date: timestamp = gCurrentTime
-Dim lOrder As Order
+'Dim lOrder As Order
 Dim id As Long
 Dim sectype As String
 Dim right As String
@@ -2452,17 +2424,17 @@ Dim timeInForce As String
 
 id = getLong
 
-On Error Resume Next
-Set lOrder = mAllOrders(CStr(id))
-On Error GoTo 0
-
-If lOrder Is Nothing Then
-    ' this must be an open order from the previous API session, but
-    ' for which we haven't yet had the openOrder notification
-    Set lOrder = New Order
-    lOrder.id = id
-    mAllOrders.add lOrder, CStr(id)
-End If
+'On Error Resume Next
+'Set lOrder = mAllOrders(CStr(id))
+'On Error GoTo 0
+'
+'If lOrder Is Nothing Then
+'    ' this must be an open order from the previous API session, but
+'    ' for which we haven't yet had the openOrder notification
+    'Set lOrder = New Order
+    'lOrder.id = id
+'    mAllOrders.add lOrder, CStr(id)
+'End If
 
 ' read contract fields
 Dim lContractSpecifier As TradeBuildSP.IContractSpecifier
@@ -2483,96 +2455,142 @@ End With
 If version >= 2 Then lContractSpecifier.localSymbol = getString
 
 ' read order fields
-With lOrder
+'With lOrder
     action = getString
-    .action = orderActionFromString(action)
-    .quantity = getLong
+    '.action = orderActionFromString(action)
+     getLong    ' .quantity
     orderType = getString
-    .orderType = orderTypeFromString(orderType)
-    .limitPrice = getDouble
-    .auxPrice = getDouble
+    '.orderType = orderTypeFromString(orderType)
+    getDouble   ' .limitPrice
+    getDouble   ' .auxPrice
     timeInForce = getString
-    .timeInForce = orderTIFFromString(timeInForce)
-    .ocaGroup = getString
-    .account = getString
-    .openClose = getString
-    .origin = getLong
-    .orderRef = getString
-    If version >= 3 Then .clientID = getLong
+    '.timeInForce = orderTIFFromString(timeInForce)
+    getString   ' .ocaGroup
+    getString   ' .account
+    getString   ' .openClose
+    getLong     ' .origin
+    getString   ' .orderRef
+    If version >= 3 Then getLong    ' .clientID
     
     If version >= 4 Then
-        .permId = getLong
-        .ignoreRTH = getBoolean
-        .hidden = getBoolean
-        .discretionaryAmt = getDouble
+        getLong     ' .permId =
+        getBoolean  ' .ignoreRTH
+        getBoolean  ' .hidden
+        getDouble   ' .discretionaryAmt
     End If
 
-    If version >= 5 Then .goodAfterTime = getString
+    If version >= 5 Then getString  ' .goodAfterTime
     
-    If version >= 6 Then .sharesAllocation = getString
+    If version >= 6 Then getString  ' .sharesAllocation
     
     If version >= 7 Then
-        .FAGroup = getString
-        .FAMethod = getString
-        .FAPercentage = getString
-        .FAProfile = getString
+        getString   ' .FAGroup
+        getString   ' .FAMethod
+        getString   ' .FAPercentage
+        getString   ' .FAProfile
     End If
     
-End With
+    If version >= 8 Then getString  ' goodTillDate
 
-RaiseEvent openOrder(lContractSpecifier, lOrder.clone)
+    If version >= 9 Then
+        getString           ' rule80A
+        getDouble           ' percentOffset
+        getString           ' settlingFirm
+        getLong             ' shortSaleSlot
+        getString           ' designatedLocation
+        getLong             ' auctionStrategy
+        getDouble           ' startingPrice
+        getDouble           ' stockRefPrice
+        getDouble           ' delta
+        getDouble           ' stockRangeLower
+        getDouble           ' stockRangeUpper
+        getLong             ' displaySize
+        getBoolean          ' rthOnly
+        getBoolean          ' blockOrder
+        getBoolean          ' sweepToFill
+        getBoolean          ' allOrNone
+        getLong             ' minQty
+        getLong             ' ocaType
+        getBoolean          ' eTradeOnly
+        getBoolean          ' firmQuoteOnly
+        getDouble           ' nbboPriceCap
+    End If
 
-If mLogLevel >= LogLevelHigh Then
-    listendata.msgType = TWSSocketInMsgTypes.OPEN_ORDER
-    With lContractSpecifier
-        listendata.currencyCode = .currencyCode
-        listendata.exchange = .exchange
-        listendata.expiry = .expiry
-        listendata.localSymbol = .localSymbol
-        listendata.right = .right
-        listendata.sectype = .sectype
-        listendata.strike = .strike
-        listendata.symbol = .symbol
-    End With
-    With lOrder
-        listendata.account = .account
-        listendata.action = action
-        listendata.auxPrice = .auxPrice
-        listendata.clientID = .clientID
-        listendata.discretionaryAmt = .discretionaryAmt
-        listendata.FAGroup = .FAGroup
-        listendata.FAMethod = .FAMethod
-        listendata.FAPercentage = .FAPercentage
-        listendata.FAProfile = .FAProfile
-        listendata.goodAfterTime = .goodAfterTime
-        listendata.hidden = .hidden
-        listendata.ignoreRTH = .ignoreRTH
-        listendata.limitPrice = .limitPrice
-        listendata.ocaGroup = .ocaGroup
-        listendata.openClose = .openClose
-        listendata.orderId = id
-        listendata.orderRef = .orderRef
-        listendata.orderType = orderType
-        listendata.origin = .origin
-        listendata.permId = .permId
-        listendata.quantity = .quantity
-        listendata.sharesAllocation = .sharesAllocation
-        listendata.timeInForce = timeInForce
-    End With
-    listendata.version = version
-    
-    mCommonServiceConsumer.NotifyListeners listendata, _
-                    ListenValueTypes.ValueTypeTWSSocketMsgOpenOrder, _
-                    timestamp
-End If
+    If version >= 10 Then
+        getLong             ' parentId
+        getLong             ' triggerMethod
+    End If
+'End With
+
+'If mLogLevel >= LogLevelLow Then
+'    mCommonServiceConsumer.NotifyListeners _
+'            "Open order:" & _
+'            " ID: " & lOrder.id & _
+'            "; Act: " & orderActionToString(lOrder.action) & _
+'            "; Qty: " & lOrder.quantity & _
+'            "; Type: " & orderTypeToString(lOrder.orderType) & _
+'            "; Lmt: " & lOrder.limitPrice & _
+'            "; Trig: " & lOrder.auxPrice & _
+'            "; TIF: " & orderTIFToString(lOrder.timeInForce) & _
+'            "; OCA: " & lOrder.ocaGroup, _
+'            TradeBuildSP.StandardListenValueTypes.Log, _
+'            timestamp
+'End If
+
+'If mLogLevel >= LogLevelHigh Then
+'    listendata.msgType = TWSSocketInMsgTypes.OPEN_ORDER
+'    With lContractSpecifier
+'        listendata.currencyCode = .currencyCode
+'        listendata.exchange = .exchange
+'        listendata.expiry = .expiry
+'        listendata.localSymbol = .localSymbol
+'        listendata.right = .right
+'        listendata.sectype = .sectype
+'        listendata.strike = .strike
+'        listendata.symbol = .symbol
+'    End With
+'    With lOrder
+'        listendata.account = .account
+'        listendata.action = action
+'        listendata.auxPrice = .auxPrice
+'        listendata.clientID = .clientID
+'        listendata.discretionaryAmt = .discretionaryAmt
+'        listendata.FAGroup = .FAGroup
+'        listendata.FAMethod = .FAMethod
+'        listendata.FAPercentage = .FAPercentage
+'        listendata.FAProfile = .FAProfile
+'        listendata.goodAfterTime = .goodAfterTime
+'        listendata.hidden = .hidden
+'        listendata.ignoreRTH = .ignoreRTH
+'        listendata.limitPrice = .limitPrice
+'        listendata.ocaGroup = .ocaGroup
+'        listendata.openClose = .openClose
+'        listendata.orderId = id
+'        listendata.orderRef = .orderRef
+'        listendata.orderType = orderType
+'        listendata.origin = .origin
+'        listendata.permId = .permId
+'        listendata.quantity = .quantity
+'        listendata.sharesAllocation = .sharesAllocation
+'        listendata.timeInForce = timeInForce
+'    End With
+'    listendata.version = version
+'
+'    mCommonServiceConsumer.NotifyListeners listendata, _
+'                    ListenValueTypes.ValueTypeTWSSocketMsgOpenOrder, _
+'                    timestamp
+'End If
 
 End Sub
 
 Private Sub getOrderStatus(ByVal version As Long)
+Dim mapEntry As OrderIdMapEntry
 Dim listendata As TWSSocketMsgOrderStatus
+
 Dim timestamp As Date: timestamp = gCurrentTime
 Dim id As Long: id = getLong
-Dim status As String: status = getString
+Dim statusString As String: statusString = getString
+Dim status As TradeBuildSP.OrderStatuses: status = orderStatusFromString(statusString)
 Dim filled As Long: filled = getLong
 Dim remaining As Long: remaining = getLong
 Dim avgFillPrice As Double:  avgFillPrice = getDouble
@@ -2580,8 +2598,6 @@ Dim lastFillPrice As Double
 Dim clientID As Long
 Dim permId As Long
 Dim parentId As Long
-Dim lOrder As Order
-Dim dontNotify As Boolean
 
 If version >= 2 Then permId = getLong
 
@@ -2592,37 +2608,27 @@ If version >= 4 Then lastFillPrice = getDouble
 If version >= 5 Then clientID = getLong
 
 On Error Resume Next
-Set lOrder = mAllOrders(CStr(id))
+mapEntry = mOrderIDMap(generateTwsOrderKey(id, clientID))
 On Error GoTo 0
-If lOrder Is Nothing Then
+If Not mapEntry.order Is Nothing Then
+    avgFillPrice = adjustPrice(avgFillPrice, mapEntry.order.contract.specifier)
+    lastFillPrice = adjustPrice(lastFillPrice, mapEntry.order.contract.specifier)
+    
+    mapEntry.orderSubmitter.updateStatus mapEntry.order.tradeBuildId, _
+                            status
+    If status = OrderStatusCancelled Or status = OrderStatusFilled Then
+        mOrderIDMap.remove generateTwsOrderKey(id, clientID)
+    End If
+Else
     ' this must be an open order from the previous API session, but
     ' for which we haven't yet had the openOrder notification
-    Set lOrder = New Order
-    lOrder.id = id
-    mAllOrders.add lOrder, CStr(id)
-    ' don't notify the user program because it won't know about this
+    ' don't notify the service consumer because it won't know about this
     ' order yet
-    dontNotify = False
-End If
-
-lOrder.status = orderStatusFromString(status)
-lOrder.quantityFilled = filled
-lOrder.quantity = remaining
-lOrder.averagePrice = avgFillPrice
-lOrder.permId = permId
-lOrder.lastFillPrice = lastFillPrice
-lOrder.clientID = clientID
-
-If Not dontNotify Then
-    RaiseEvent orderStatus(id, _
-                            orderStatusFromString(status), _
-                            filled, _
-                            remaining, _
-                            avgFillPrice, _
-                            permId, _
-                            parentId, _
-                            lastFillPrice, _
-                            clientID)
+    '
+    ' or it's a cancelled status for an order which has already been
+    ' notified as cancelled because of an error 202
+    '
+    ' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! need to improve this!!!!!!!!!!!!!!!
 End If
 
 If mLogLevel >= LogLevelHigh Then
@@ -2635,12 +2641,12 @@ If mLogLevel >= LogLevelHigh Then
     listendata.parentId = parentId
     listendata.permId = permId
     listendata.remaining = remaining
-    listendata.status = status
+    listendata.status = statusString
     listendata.version = version
     
     mCommonServiceConsumer.NotifyListeners listendata, _
                     ListenValueTypes.ValueTypeTWSSocketMsgOrderStatus, _
-                    timestamp
+                    Me
 End If
 
 End Sub
@@ -2703,13 +2709,13 @@ If mLogLevel >= LogLevelHigh Then
     
     mCommonServiceConsumer.NotifyListeners listendata, _
                     ListenValueTypes.ValueTypeTWSSocketMsgPortfolioValue, _
-                    timestamp
+                    Me
 End If
 
 End Sub
 
 Private Sub getScannerData(ByVal version As Long)
-Dim Contract As TradeBuildSP.IContract
+Dim contract As TradeBuildSP.IContract
 Dim tickerid As Long: tickerid = getLong
 Dim numberOfElements As Long: numberOfElements = getLong
 Dim rank As Long
@@ -2719,9 +2725,9 @@ Dim projection As String
 Dim i As Long
 
 For i = 0 To numberOfElements - 1
-    Set Contract = mCommonServiceConsumer.NewContract
+    Set contract = mCommonServiceConsumer.NewContract
     rank = getLong
-    With Contract.specifier
+    With contract.specifier
         .symbol = getString
         .sectype = secTypeFromString(getString)
         .expiry = getString
@@ -2731,8 +2737,8 @@ For i = 0 To numberOfElements - 1
         .currencyCode = getString
         .localSymbol = getString
     End With
-    Contract.marketName = getString
-    Contract.tradingClass = getString
+    contract.marketName = getString
+    contract.tradingClass = getString
     distance = getString
     benchmark = getString
     projection = getString
@@ -2751,11 +2757,31 @@ Dim price As Double
 Dim size As Long
 Dim tickType As Long
 Dim tickerid As Long
+Dim canAutoExecute As Boolean
+Dim failpoint As Long
+
+On Error GoTo err
+
+failpoint = 100
+
 tickerid = getLong
+
+failpoint = 200
+
 tickType = getLong
+
+failpoint = 300
+
 price = getDouble
+
+failpoint = 400
+
 If version >= 2 Then size = getLong
+If version >= 3 Then canAutoExecute = getBoolean
+
 timestamp = gCurrentTime
+
+failpoint = 500
 
 processTickPrice timestamp, _
                 tickerid Mod INCARNATION_INCREMENT, _
@@ -2773,9 +2799,13 @@ If mLogLevel >= LogLevelHigh Then
     
     mCommonServiceConsumer.NotifyListeners listendata, _
                     ListenValueTypes.ValueTypeTWSSocketMsgTickPrice, _
-                    timestamp
+                    Me
 End If
 
+Exit Sub
+
+err:
+err.Raise err.Number, , "TWSAPI::getTickPrice(failpoint=" & failpoint & "): " & err.Description
 End Sub
 
 Private Sub getTickSize(ByVal version As Long)
@@ -2784,10 +2814,24 @@ Dim timestamp As Date
 Dim size As Long
 Dim tickType As Long
 Dim tickerid As Long
+Dim failpoint As Long
+
+On Error GoTo err
+
+failpoint = 100
+
 tickerid = getLong
+
+failpoint = 200
+
 tickType = getLong
+
+failpoint = 300
+
 size = getLong
 timestamp = gCurrentTime
+
+failpoint = 400
 
 processTickSize timestamp, _
                 tickerid Mod INCARNATION_INCREMENT, _
@@ -2803,19 +2847,46 @@ If mLogLevel >= LogLevelHigh Then
     
     mCommonServiceConsumer.NotifyListeners listendata, _
                     ListenValueTypes.ValueTypeTWSSocketMsgTickSize, _
-                    timestamp
+                    Me
 End If
 
+Exit Sub
+
+err:
+err.Raise err.Number, , "TWSAPI::getTickSize(failpoint=" & failpoint & "): " & err.Description
+End Sub
+
+Private Sub handleTwsDisconnection()
+mConnectionState = ConnectionStates.ConnNotConnected
+ReleaseSocket
+If mDisconnectedByApplication Then
+    RaiseEvent ConnectionToTWSClosed(False)
+    logMessage "Connection to TWS closed: " & calcConnectionString, LogLevelLow
+Else
+    If mConnectionRetryIntervalSecs = 0 Then
+        cancelContractRequests "Lost connection to TWS"
+        RaiseEvent ConnectionToTWSClosed(False)
+        logMessage "Connection to TWS closed" & _
+                    calcConnectionString, _
+                    LogLevelLow
+    Else
+        retryConnection
+        RaiseEvent ConnectionToTWSClosed(True)
+        logMessage "Connection to TWS closed - reconnecting: " & _
+                    calcConnectionString, _
+                    LogLevelLow
+    End If
+End If
 End Sub
 
 Private Sub logMessage( _
                 ByVal message As String, _
-                ByVal logLevel As LogLevels)
+                Optional ByVal logLevel As LogLevels = LogLevelLow)
 If mLogLevel < logLevel Or _
     mLogLevel = LogLevelNone Then Exit Sub
-mCommonServiceConsumer.NotifyListeners message, _
+mCommonServiceConsumer.NotifyListeners "IBTWSSP: " & message, _
                                         TradeBuildSP.StandardListenValueTypes.Log, _
-                                        gCurrentTime
+                                        Me
 End Sub
 
 Private Function optionRightFromString(ByVal value As String) As OptionRights
@@ -2856,6 +2927,19 @@ Case "CANCELLED"
     orderStatusFromString = OrderStatusCancelled
 Case "FILLED"
     orderStatusFromString = OrderStatusFilled
+End Select
+End Function
+
+Private Function orderStopTriggerMethodToString(ByVal value As StopTriggerMethods) As String
+Select Case value
+Case StopTriggerMethods.StopTriggerDefault
+    orderStopTriggerMethodToString = "0"
+Case StopTriggerMethods.StopTriggerDoubleBidAsk
+    orderStopTriggerMethodToString = "1"
+Case StopTriggerMethods.StopTriggerDoubleLast
+    orderStopTriggerMethodToString = "3"
+Case StopTriggerMethods.StopTriggerLast
+    orderStopTriggerMethodToString = "2"
 End Select
 End Function
 
@@ -2905,7 +2989,7 @@ Case "VWAP"
     orderTypeFromString = TradeBuildSP.OrderTypes.OrderTypeVWAP
 Case "MTL"
     orderTypeFromString = TradeBuildSP.OrderTypes.OrderTypeMarketToLimit
-Case "QUOTE"
+Case "RFQ"
     orderTypeFromString = TradeBuildSP.OrderTypes.OrderTypeQuote
 Case "ADJUST"
     orderTypeFromString = TradeBuildSP.OrderTypes.OrderTypeAdjust
@@ -2921,8 +3005,12 @@ Case "MKTPROT"
     orderTypeFromString = TradeBuildSP.OrderTypes.OrderTypeMarketWithProtection
 Case "MOO"
     orderTypeFromString = TradeBuildSP.OrderTypes.OrderTypeMarketOnOpen
+Case "MOC"
+    orderTypeFromString = TradeBuildSP.OrderTypes.OrderTypeMarketOnClose
 Case "LOO"
     orderTypeFromString = TradeBuildSP.OrderTypes.OrderTypeLimitOnOpen
+Case "LOC"
+    orderTypeFromString = TradeBuildSP.OrderTypes.OrderTypeLimitOnClose
 Case "PEGPRI"
     orderTypeFromString = TradeBuildSP.OrderTypes.OrderTypePeggedToPrimary
 Case Else
@@ -2975,7 +3063,7 @@ Case TradeBuildSP.OrderTypes.OrderTypeLimitOnOpen
 Case TradeBuildSP.OrderTypes.OrderTypePeggedToPrimary
     orderTypeToString = "PEGPRI"
 Case Else
-    err.Raise ErrorCodes.InvalidOrderType
+    err.Raise ErrorCodes.ErrIllegalArgumentException
 End Select
 End Function
 
@@ -3020,7 +3108,7 @@ With mTickerTable(tickerid)
 End With
 End Sub
 
-Private Sub processContract(ByVal pContract As TradeBuildSP.IContract)
+Private Sub processContract(ByVal pContract As contract)
 
 If Not mFirstContractDetailsReceived Then
     mFirstContractDetailsReceived = True
@@ -3045,26 +3133,37 @@ If Not mFirstContractDetailsReceived Then
     send
 End If
 
-mRequestedContracts.AddContract pContract
+mContractDetailsRequest.localContracts.add pContract
 
 End Sub
 
 Private Sub processContractError(ByVal reason As String)
-Dim tickerid As Long
-Dim lContract As TradeBuildSP.IContract
+Dim failpoint As Long
 
-If mRequestedContracts.Count > 0 Then
+On Error GoTo err
+
+If mContractDetailsRequest.localContracts.Count > 0 Then
     ' we are processing the forced invalid contract details request
     ' for a request for which we have received one or more contract details
-    RaiseEvent ContractsLoaded
+    failpoint = 100
+    mContractDetailsRequest.requester.contractsLoaded mContractDetailsRequest
 Else
     ' this is a genuine error response to a contract details request
-    RaiseEvent ContractSpecifierInvalid(reason, mRequestedContracts)
+    failpoint = 200
+    mContractDetailsRequest.requester.contractSpecifierInvalid mContractDetailsRequest, reason
 End If
-Set mRequestedContracts = Nothing
-        
+Set mContractDetailsRequest.localContracts = Nothing
+Set mContractDetailsRequest.tradeBuildContracts = Nothing
+Set mContractDetailsRequest.requester = Nothing
 mFirstContractDetailsReceived = False
 
+failpoint = 300
+submitNextContractDetailsRequest
+
+Exit Sub
+
+err:
+err.Raise err.Number, , "TWSAPI::processContractError(failpoint=" & failpoint & "): " & err.Description
 End Sub
 
 Private Sub ProcessHigh(ByVal timestamp As Date, _
@@ -3338,14 +3437,40 @@ With mTickerTable(tickerid)
 End With
 End Sub
 
+Private Sub reqContract()
+Dim contractSpecifier As TradeBuildSP.IContractSpecifier
+Set contractSpecifier = mContractDetailsRequest.tradeBuildContracts.contractSpecifier
+contractSpecifier.Locked = True
+
+If contractSpecifier.exchange <> "" And Not IsValidExchangeCode(contractSpecifier.exchange) Then
+    processContractError "invalid exchange"
+    Exit Sub
+End If
+
+Const version = 1
+
+addData REQ_CONTRACT_DATA
+addData version
+With contractSpecifier
+    addData .symbol
+    addData secTypeToString(.sectype)
+    addData Left$(.expiry, 6)
+    addData .strike
+    addData optionRightToString(.right)
+    addData .exchange
+    addData .currencyCode
+    addData .localSymbol
+End With
+send
+End Sub
+
 Private Sub reqHistoricalData( _
                 request As TWSHistoricalDataRequestQueueEntry)
-Dim i As Long
 
 Const version = 3
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.IllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::RequestHistoricalData", _
                 "Not connected"
 End If
@@ -3493,10 +3618,178 @@ mSocket.SendData mBufferOut
 mIndexOut = 0
 End Sub
 
+Private Sub sendOrder( _
+                ByVal pOrder As TradeBuildSP.IOrder, _
+                ByVal transmit As Boolean, _
+                ByVal parentId As String, _
+                ByVal ocaGroup As String, _
+                ByVal routingHint As String)
+
+Dim specifier As TradeBuildSP.IContractSpecifier
+
+Set specifier = pOrder.contract.specifier
+
+Const version = 18
+addData PLACE_ORDER
+addData version
+addData pOrder.brokerId
+
+' send contract fields
+With specifier
+    addData .symbol
+    addData secTypeToString(.sectype)
+    addData Left$(.expiry, 6)
+    addData .strike
+    addData optionRightToString(.right)
+    If mServerVersion >= 15 Then addData ""         ' multiplier - this is the number of units of the underlying
+                                                  ' delivered per contract - see http://www.interactivebrokers.com/discus/messages/2/27413.html
+    addData .exchange
+    If mServerVersion >= 14 Then addData routingHint     ' aka primaryExchange in TWS - only relevant when
+                                                        ' exchange is SMART and there are SMART routers in more
+                                                        ' than one country (eg try IBM in TWS)
+    addData .currencyCode
+    If mServerVersion >= 2 Then addData .localSymbol
+End With
+
+With pOrder
+    ' send main order fields
+    addData orderActionToString(.action)
+    addData .quantity
+    addData orderTypeToString(.orderType)
+    If mServerVersion <= 10 And _
+        (UCase$(specifier.exchange) = "LIFFE" Or _
+        UCase$(specifier.exchange) = "LSE") _
+    Then
+        addData .limitPrice / 100
+        addData .triggerPrice / 100
+    Else
+        addData .limitPrice
+        addData .triggerPrice
+    End If
+    ' send extended order fields
+    addData orderTIFToString(.timeInForce)
+    addData ocaGroup              ' ocaGroup
+    addData ""              ' account
+    addData ""              ' openClose
+    addData .origin     ' origin
+    addData .originatorRef
+    addBoolean transmit
+    If mServerVersion >= 4 Then addData parentId
+    If mServerVersion >= 5 Then
+        addBoolean .blockOrder
+        addBoolean .sweepToFill
+        addData .displaySize
+        addData orderStopTriggerMethodToString(.stopTriggerMethod)
+        addBoolean .ignoreRegularTradingHours
+    End If
+    If mServerVersion >= 7 Then addBoolean .hidden
+End With
+
+' Send combo legs for BAG requests
+If mServerVersion >= 8 And specifier.sectype = SecurityTypes.SecTypeBag Then
+    With specifier
+        If .ComboLegs.Count = 0 Then
+            addData 0
+        Else
+            addData .ComboLegs.Count
+            Dim comboLeg As TradeBuildSP.IComboLeg
+            For Each comboLeg In .ComboLegs
+                With comboLeg
+                    addData .contractID
+                    addData .Ratio
+                    addData orderActionToString(.action)
+                    addData .exchange
+                    addData LegOpenCloseToString(.openClose)
+                End With
+            Next
+        End If
+    End With
+End If
+
+With pOrder
+    If mServerVersion >= 9 Then addData ""          ' sharesAllocation (deprecated)
+    
+    If mServerVersion >= 10 Then addData .discretionaryAmount
+    
+    If mServerVersion >= 11 Then
+        If .goodAfterTime = 0 Then
+            addData ""
+        Else
+            addData Format(.goodAfterTime, "yyyymmdd hh:nn:ss ") & .goodAfterTimeTZ
+        End If
+    End If
+    
+    If mServerVersion >= 12 Then
+        If .goodTillDate = 0 Then
+            addData ""
+        Else
+            addData Format(.goodTillDate, "yyyymmdd hh:nn:ss ") & .goodTillDateTZ
+        End If
+    End If
+    
+    If mServerVersion >= 13 Then
+        addData ""      ' FAGroup
+        addData ""      ' FAMethod
+        addData ""      ' FAPercentage
+        addData ""      ' FAProfile
+    End If
+    
+    If mServerVersion >= 18 Then 'institutional short sale slot fields.
+        addData 0       ' shortSaleSlot - 0 only for retail, 1 or 2 only for institution.
+        addData ""      ' designatedLocation - only populate when shortSaleSlot = 2.
+    End If
+    
+    If mServerVersion >= 19 Then
+        addData 0           ' ocaType
+        addBoolean .regularTradingHoursOnly
+        addBoolean False    ' rule80A
+        addData .settlingFirm
+        addBoolean .allOrNone
+        addData .minimumQuantity
+        addData ""          ' percentOffset
+        addBoolean .eTradeOnly
+        addBoolean .firmQuoteOnly
+        addData .NbboPriceCap
+        addData ""          ' auctionStrategy
+        addData ""          ' startingPrice
+        addData ""          ' stockRefPrice
+        addData ""          ' delta
+        addData ""          ' stockRangeLower
+        addData ""          ' stockRangeUpper
+    End If
+    
+    If mServerVersion >= 22 Then addBoolean .overrideConstraints
+
+    If mServerVersion >= 26 Then ' Volatility orders
+        addData ""          ' volatility
+        addData ""          ' volatilityType);
+        If mServerVersion < 28 Then
+            addData "0"     ' send( order.m_deltaNeutralOrderType.equalsIgnoreCase("MKT"));
+        Else
+            addData ""          ' deltaNeutralOrderType);
+            addData ""          ' deltaNeutralAuxPrice
+        End If
+        
+        addData 0          ' continuousUpdate
+        
+        If mServerVersion = 26 Then
+            ' Volatility orders had specific watermark price attribs in server version 26
+            addData ""          ' stockRangeLower
+            addData ""          ' stockRangeUpper
+        End If
+        
+        addData ""          ' referencePriceType
+    End If
+    
+End With
+
+send
+End Sub
+                    
 Private Sub setTWSLogLevel(logLevel As TWSLogLevels)
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.IllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::SetServerLogLevel", _
                 "Not connected"
 End If
@@ -3521,6 +3814,29 @@ For i = 0 To UBound(buffer)
 Next
 End Function
 
+Private Sub submitNextContractDetailsRequest()
+Dim failpoint As Long
 
+On Error GoTo err
+
+If Not mConnectionState = ConnConnected Then Exit Sub
+If Not mContractDetailsRequest.tradeBuildContracts Is Nothing Then Exit Sub
+If mTwsContractDetailsRequestQueue.size = 0 Then Exit Sub
+    
+failpoint = 100
+On Error Resume Next
+mContractDetailsRequest = mTwsContractDetailsRequestQueue.removeFromFront
+If err.Number <> 0 Then Stop
+On Error GoTo err
+
+failpoint = 200
+Set mContractDetailsRequest.localContracts = New Collection
+reqContract
+
+Exit Sub
+
+err:
+err.Raise err.Number, , "TWSAPI::submitNextContractDetailsRequest(failpoint=" & failpoint & "): " & err.Description
+End Sub
 
 

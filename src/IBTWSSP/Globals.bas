@@ -10,8 +10,10 @@ Public Const OneMinute As Double = 1# / 1440#
 
 Public Const ContractInfoSPName As String = "IB TWS Contract Info Service Provider"
 Public Const HistoricDataSPName As String = "IB TWS Historic Data Service Provider"
+Public Const RealtimeDataSPName As String = "IB TWS Realtime Data Service Provider"
+Public Const OrderSubmissionSPName As String = "IB TWS Order Submission Service Provider"
 
-Public Const ProviderKey As String = "TWS"
+Public Const providerKey As String = "TWS"
 
 '================================================================================
 ' Enums
@@ -19,81 +21,34 @@ Public Const ProviderKey As String = "TWS"
 
 Public Enum ErrorCodes
     ' generic run-time error codes defined by VB
-    InvalidProcedureCall = 5
-    Overflow = 6
-    SubscriptOutOfRange = 9
-    DivisionByZero = 11
-    TypeMismatch = 13
-    FileNotFound = 53
-    FileAlreadyOpen = 55
-    FileAlreadyExists = 58
-    DiskFull = 61
-    PermissionDenied = 70
-    PathNotFound = 76
-    InvalidObjectReference = 91
+    ErrInvalidProcedureCall = 5
+    ErrOverflow = 6
+    ErrSubscriptOutOfRange = 9
+    ErrDivisionByZero = 11
+    ErrTypeMismatch = 13
+    ErrFileNotFound = 53
+    ErrFileAlreadyOpen = 55
+    ErrFileAlreadyExists = 58
+    ErrDiskFull = 61
+    ErrPermissionDenied = 70
+    ErrPathNotFound = 76
+    ErrInvalidObjectReference = 91
     
-    InvalidPropertyValue = 380
-    InvalidPropertyArrayIndex = 381
+    ErrInvalidPropertyValue = 380
+    ErrInvalidPropertyArrayIndex = 381
     
-    ' non-generic error codes
-    InvalidTickerID = vbObjectError + 512
-    NotReceivingMarketDepth
-    TickfileReplayProhibitsLiveOrders
-    UnexpectedContract
-    UnknownOrderID
-    ContractDetailsReqNotAllowed
-    InvalidOrderType
-    InvalidOrderTypeInThisContext
-    ContractCannotBeParsed
-    NoInputTickFile
-    CantCreateCrescendoTickfile
-    ErrorOpeningTickfile
-    CantAccessCrescendoDB
-    NotImplemented
-    AttemptToUseDeadTickerObject
-    CantAddColumn
-    CantGenerateColumns
-    ColumnAlreadyAdded
-    ColumnNameNotUnique
-    TickerAlreadyInUse
-    AlreadyConnected
-    NoContractOrTickfile
-    DatasourceHasNotBeenGenerated
-    CantCreateGUID
-    NotCorrectServiceProviderType
-    NotUniqueServiceProviderName
-    ServiceProviderNameInvalid
-    InvalidServiceProviderHandle
-    UnknownOrderTypeFromTWS
-
     ' generic error codes
-    ArithmeticException = vbObjectError + 1024  ' an exceptional arithmetic condition has occurred
-    ArrayIndexOutOfBoundsException  ' an array has been accessed with an illegal index
-    ClassCastException              ' attempt to cast an object to class of which it is not an instance
-    IllegalArgumentException        ' method has been passed an illegal or inappropriate argument
-    IllegalStateException           ' a method has been invoked at an illegal or inappropriate time
-    IndexOutOfBoundsException       ' an index of some sort (such as to an array, to a string, or to a vector) is out of range
-    NullPointerException            ' attempt to use Nothing in a case where an object is required
-    NumberFormatException           ' attempt to convert a string to one of the numeric types, but the string does not have the appropriate format
-    RuntimeException                ' an unspecified runtime error has occurred
-    SecurityException               ' a security violation has occurred
-    UnsupportedOperationException   ' the requested operation is not supported
-
-
-
-End Enum
-
-Public Enum TickTypes
-    Bid
-    Ask
-    closePrice
-    highPrice
-    lowPrice
-    marketDepth
-    MarketDepthReset
-    Trade
-    volume
-    openInterest
+    ErrArithmeticException = vbObjectError + 1024  ' an exceptional arithmetic condition has occurred
+    ErrArrayIndexOutOfBoundsException  ' an array has been accessed with an illegal index
+    ErrClassCastException              ' attempt to cast an object to class of which it is not an instance
+    ErrIllegalArgumentException        ' method has been passed an illegal or inappropriate argument
+    ErrIllegalStateException           ' a method has been invoked at an illegal or inappropriate time
+    ErrIndexOutOfBoundsException       ' an index of some sort (such as to an array, to a string, or to a vector) is out of range
+    ErrNullPointerException            ' attempt to use Nothing in a case where an object is required
+    ErrNumberFormatException           ' attempt to convert a string to one of the numeric types, but the string does not have the appropriate format
+    ErrRuntimeException                ' an unspecified runtime error has occurred
+    ErrSecurityException               ' a security violation has occurred
+    ErrUnsupportedOperationException   ' the requested operation is not supported
 End Enum
 
 '================================================================================
@@ -104,6 +59,7 @@ Private Type TWSAPITableEntry
     server          As String
     port            As Long
     clientID        As Long
+    providerKey     As String
     connectionRetryIntervalSecs As Long
     keepConnection  As Boolean  ' once this flag is set, the TWSAPI instance
                                 ' will only be disconnected by a call to
@@ -122,12 +78,18 @@ End Type
 ' Private variables
 '================================================================================
 
+Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mTWSAPITable() As TWSAPITableEntry
 Private mTWSAPITableNextIndex As Long
 
 '================================================================================
 ' Procedures
 '================================================================================
+
+Public Property Let gCommonServiceConsumer( _
+                ByVal RHS As TradeBuildSP.ICommonServiceConsumer)
+Set mCommonServiceConsumer = RHS
+End Property
 
 Public Function gCurrentTime() As Date
 gCurrentTime = CDbl(Int(Now)) + (CDbl(Timer) / 86400#)
@@ -137,6 +99,7 @@ Public Function gGetTWSAPIInstance( _
                 ByVal server As String, _
                 ByVal port As Long, _
                 ByVal clientID As Long, _
+                ByVal providerKey As String, _
                 ByVal connectionRetryIntervalSecs As Long, _
                 ByVal keepConnection As Boolean) As TWSAPI
 Dim i As Long
@@ -149,6 +112,7 @@ For i = 0 To mTWSAPITableNextIndex - 1
     If mTWSAPITable(i).server = server And _
         mTWSAPITable(i).port = port And _
         mTWSAPITable(i).clientID = clientID And _
+        mTWSAPITable(i).providerKey = providerKey And _
         mTWSAPITable(i).connectionRetryIntervalSecs = connectionRetryIntervalSecs _
     Then
         Set gGetTWSAPIInstance = mTWSAPITable(i).TWSAPI
@@ -165,6 +129,7 @@ End If
 mTWSAPITable(mTWSAPITableNextIndex).server = server
 mTWSAPITable(mTWSAPITableNextIndex).port = port
 mTWSAPITable(mTWSAPITableNextIndex).clientID = clientID
+mTWSAPITable(mTWSAPITableNextIndex).providerKey = providerKey
 mTWSAPITable(mTWSAPITableNextIndex).connectionRetryIntervalSecs = connectionRetryIntervalSecs
 mTWSAPITable(mTWSAPITableNextIndex).usageCount = 1
 Set mTWSAPITable(mTWSAPITableNextIndex).TWSAPI = New TWSAPI
@@ -172,9 +137,11 @@ Set gGetTWSAPIInstance = mTWSAPITable(mTWSAPITableNextIndex).TWSAPI
 
 mTWSAPITableNextIndex = mTWSAPITableNextIndex + 1
 
+gGetTWSAPIInstance.commonServiceConsumer = mCommonServiceConsumer
 gGetTWSAPIInstance.server = server
 gGetTWSAPIInstance.port = port
 gGetTWSAPIInstance.clientID = clientID
+gGetTWSAPIInstance.providerKey = providerKey
 gGetTWSAPIInstance.connectionRetryIntervalSecs = connectionRetryIntervalSecs
 gGetTWSAPIInstance.Connect
 
@@ -188,6 +155,14 @@ Public Function gHistDataSupports(ByVal capabilities As Long) As Boolean
 gHistDataSupports = (gHistDataCapabilities And capabilities)
 End Function
 
+Public Function gRealtimeDataCapabilities() As Long
+gRealtimeDataCapabilities = TradeBuildSP.RealtimeDataServiceProviderCapabilities.RtCapMarketDepthByPosition
+End Function
+
+Public Function gRealtimeDataSupports(ByVal capabilities As Long) As Boolean
+gRealtimeDataSupports = (gRealtimeDataCapabilities And capabilities)
+End Function
+
 Public Sub gReleaseAllTWSAPIInstances()
 
 Dim i As Long
@@ -195,7 +170,7 @@ Dim i As Long
 For i = 0 To mTWSAPITableNextIndex - 1
     mTWSAPITable(i).usageCount = 0
     If Not mTWSAPITable(i).TWSAPI Is Nothing Then
-        mTWSAPITable(i).TWSAPI.disconnect
+        mTWSAPITable(i).TWSAPI.disconnect "release all"
         Set mTWSAPITable(i).TWSAPI = Nothing
     End If
     mTWSAPITable(i).clientID = 0
@@ -219,7 +194,7 @@ For i = 0 To mTWSAPITableNextIndex - 1
             ((Not mTWSAPITable(i).keepConnection) Or _
                 forceDisconnect) _
         Then
-            mTWSAPITable(i).TWSAPI.disconnect
+            mTWSAPITable(i).TWSAPI.disconnect "release"
             Set mTWSAPITable(i).TWSAPI = Nothing
             mTWSAPITable(i).clientID = 0
             mTWSAPITable(i).connectionRetryIntervalSecs = 0

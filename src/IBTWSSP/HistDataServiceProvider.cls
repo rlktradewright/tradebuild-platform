@@ -61,6 +61,7 @@ Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mClientID As Long
 Private mServer As String
 Private mPort As Long
+Private mProviderKey As String
 Private mConnectionRetryIntervalSecs As Long
 Private mkeepConnection As Boolean
 
@@ -75,6 +76,7 @@ Private Sub Class_Initialize()
 mName = HistoricDataSPName
 
 mClientID = -1
+mServer = "127.0.0.1"
 mPort = 7496
 mConnectionRetryIntervalSecs = 10
 
@@ -103,6 +105,7 @@ reader.clientID = mClientID
 reader.port = mPort
 reader.server = mServer
 reader.keepConnection = mkeepConnection
+reader.providerKey = mProviderKey
 reader.logLevel = mLogLevel
 reader.TWSLogLevel = mTWSLogLevel
 reader.connectionRetryIntervalSecs = mConnectionRetryIntervalSecs
@@ -148,14 +151,24 @@ ICommonServiceProvider_Details = details
 End Property
 
 Private Sub ICommonServiceProvider_Link( _
-                            ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
-                            ByVal handle As Long)
+                ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
+                ByVal handle As Long)
+gCommonServiceConsumer = commonServiceConsumer
 Set mCommonServiceConsumer = commonServiceConsumer
 mHandle = handle
 mCommonServiceConsumer.RegisterServiceProvider mHandle, _
                             ServiceProviderTypes.HistoricalData
 
 End Sub
+
+Private Property Let ICommonServiceProvider_LogLevel( _
+                ByVal RHS As TradeBuildSP.LogLevels)
+mLogLevel = RHS
+End Property
+
+Private Property Let ICommonServiceProvider_Name(ByVal RHS As String)
+name = RHS
+End Property
 
 Private Property Get ICommonServiceProvider_Name() As String
 ICommonServiceProvider_Name = name
@@ -181,7 +194,7 @@ Public Property Let connectionRetryIntervalSecs(ByVal value As Long)
 mConnectionRetryIntervalSecs = value
 End Property
 
-Public Property Let keepConnected(ByVal value As Boolean)
+Public Property Let keepConnection(ByVal value As Boolean)
 mkeepConnection = value
 End Property
 
@@ -201,6 +214,10 @@ Public Property Let port(ByVal value As Long)
 mPort = value
 End Property
 
+Public Property Let providerKey(ByVal value As String)
+mProviderKey = value
+End Property
+
 Public Property Let server(ByVal value As String)
 mServer = IIf(value = "", "127.0.0.1", value)
 End Property
@@ -213,8 +230,8 @@ Case TWSLogLevelWarning
 Case TWSLogLevelInformation
 Case TWSLogLevelDetail
 Case Else
-    err.Raise ErrorCodes.IllegalArgumentException, _
-                "IBTWSSP.ContractInfoServiceProvider::(let)TWSLogLevel", _
+    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                "IBTWSSP.HistDataServiceProvider::(let)TWSLogLevel", _
                 "Value must be one of the TWSLogLevels enum"
 End Select
 mTWSLogLevel = value

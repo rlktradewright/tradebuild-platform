@@ -40,8 +40,6 @@ Implements TradeBuildSP.IBarDataReader
 ' Constants
 '================================================================================
 
-Private Const InitialRequestQueueCapacity As Long = 100
-
 '================================================================================
 ' Enums
 '================================================================================
@@ -64,6 +62,7 @@ Attribute mTWSAPI.VB_VarHelpID = -1
 Private mClientID As Long
 Private mServer As String
 Private mPort As Long
+Private mProviderKey As String
 Private mConnectionRetryIntervalSecs As Long
 Private mkeepConnection As Boolean
 
@@ -75,7 +74,6 @@ Private WithEvents mTimer As IntervalTimer
 Attribute mTimer.VB_VarHelpID = -1
 
 Private mBarDataSpecifier  As TradeBuildSP.BarDataSpecifier
-Private mContractSpecifier As IContractSpecifier
 
 Private mWaitingForBarData As Boolean
 Private mBarRequested As Boolean
@@ -123,7 +121,7 @@ End Sub
 Private Sub IBarDataReader_FetchBars( _
                             barSpecifier As TradeBuildSP.BarDataSpecifier)
 
-If mRequestInProgress Then err.Raise ErrorCodes.IllegalStateException, _
+If mRequestInProgress Then err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "IBTWSSP.HistDataReader::FetchBars", _
                                     "Request already in progress"
 
@@ -133,8 +131,7 @@ mBarDataSpecifier = barSpecifier
 
 If mTWSAPI Is Nothing Then
     If mClientID = -1 Then mClientID = Int(&H7FFFFFFF * Rnd) + 1
-    Set mTWSAPI = gGetTWSAPIInstance(mServer, mPort, mClientID, mConnectionRetryIntervalSecs, mkeepConnection)
-    mTWSAPI.commonServiceConsumer = mCommonServiceConsumer
+    Set mTWSAPI = gGetTWSAPIInstance(mServer, mPort, mClientID, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection)
     mTWSAPI.logLevel = mLogLevel
     mTWSAPI.TWSLogLevel = mTWSLogLevel
 End If
@@ -222,6 +219,10 @@ Friend Property Let port(ByVal value As Long)
 mPort = value
 End Property
 
+Friend Property Let providerKey(ByVal value As String)
+mProviderKey = value
+End Property
+
 Friend Property Let server(ByVal value As String)
 mServer = IIf(value = "", "127.0.0.1", value)
 End Property
@@ -231,17 +232,6 @@ mServiceProviderName = value
 End Property
 
 Friend Property Let TWSLogLevel(ByVal value As TWSLogLevels)
-Select Case value
-Case TWSLogLevelSystem
-Case TWSLogLevelError
-Case TWSLogLevelWarning
-Case TWSLogLevelInformation
-Case TWSLogLevelDetail
-Case Else
-    err.Raise ErrorCodes.IllegalArgumentException, _
-                "IBTWSSP.ContractInfoServiceProvider::(let)TWSLogLevel", _
-                "Value must be one of the TWSLogLevels enum"
-End Select
 mTWSLogLevel = value
 End Property
 

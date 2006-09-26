@@ -177,7 +177,7 @@ Private Sub IOrderSubmitter_cancelStopOrder(ByVal pOrderPlex As TradeBuildSP.IOr
 Dim stopOrder As TradeBuildSP.IOrder
 
 Set stopOrder = pOrderPlex.stopOrder
-If stopOrder Is Nothing Then err.Raise ErrorCodes.IllegalStateException, _
+If stopOrder Is Nothing Then err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "IBTWSSP.OrderSubmitter::cancelStopOrder", _
                                     "Order plex " & pOrderPlex.key & " has no stop order"
 
@@ -186,7 +186,7 @@ Case TradeBuildSP.OrderStatuses.OrderStatusCreated, _
     TradeBuildSP.OrderStatuses.OrderStatusFilled, _
     TradeBuildSP.OrderStatuses.OrderStatusCancelling, _
     TradeBuildSP.OrderStatuses.OrderStatusCancelled
-    err.Raise ErrorCodes.IllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "IBTWSSP.OrderSubmitter::cancelStopOrder", _
                                     "Stop order state invalid for cancellation"
 Case Else
@@ -198,7 +198,7 @@ Private Sub IOrderSubmitter_cancelTargetOrder(ByVal pOrderPlex As TradeBuildSP.I
 Dim targetOrder As TradeBuildSP.IOrder
 
 Set targetOrder = pOrderPlex.targetOrder
-If targetOrder Is Nothing Then err.Raise ErrorCodes.IllegalStateException, _
+If targetOrder Is Nothing Then err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "IBTWSSP.OrderSubmitter::cancelTargetOrder", _
                                     "Order plex " & pOrderPlex.key & " has no target order"
 
@@ -207,7 +207,7 @@ Select Case targetOrder.status
 Case TradeBuildSP.OrderStatuses.OrderStatusCreated, _
     TradeBuildSP.OrderStatuses.OrderStatusCancelling, _
     TradeBuildSP.OrderStatuses.OrderStatusCancelled
-    err.Raise ErrorCodes.IllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "IBTWSSP.OrderSubmitter::cancelTargetOrder", _
                                     "Target order state invalid for cancellation"
 Case Else
@@ -277,7 +277,7 @@ If stopOrderChanged Then
     placeOrder pOrderPlex.stopOrder, True, pOrderPlex.entryOrder.brokerId, ""
 End If
 If targetOrderChanged Then
-    placeOrder pOrderPlex.stopOrder, True, pOrderPlex.entryOrder.brokerId, ""
+    placeOrder pOrderPlex.targetOrder, True, pOrderPlex.entryOrder.brokerId, ""
 End If
 If closeoutOrderChanged Then
     placeOrder pOrderPlex.closeoutOrder, True, "0", ""
@@ -380,13 +380,14 @@ Private Sub mTWSAPI_ConnectionToIBRecovered()
 If Not mContract Is Nothing Then mServiceConsumer.Ready
 End Sub
 
-Private Sub mTWSAPI_ConnectionToTWSClosed(ByVal reconnecting As Boolean)
+Private Sub mTWSAPI_ConnectionToTWSClosed( _
+                ByVal reconnecting As Boolean)
 If Not reconnecting Then
     mServiceConsumer.Error StandardSPErrorCodes.LOLostConnectionToBroker, _
                             "Lost connection to TWS"
 Else
     mServiceConsumer.Error StandardSPErrorCodes.LOReConnectingToBroker, _
-                            "Lost connection to TWS - reconnecting"
+                            "Lost connection to TWS (reconnecting)"
 End If
 mServiceConsumer.notReady
 End Sub
@@ -451,10 +452,9 @@ End Property
 '================================================================================
 
 Friend Sub executionDetails( _
-                ByVal orderId As String, _
                 ByVal pContractSpecifier As TradeBuildSP.IContractSpecifier, _
                 ByVal exec As TradeBuildSP.IExecution)
-mServiceConsumer.executionDetails orderId, pContractSpecifier, exec
+mServiceConsumer.executionDetails pContractSpecifier, exec
 End Sub
 
 Friend Sub invalidOrder( _
@@ -470,7 +470,6 @@ Dim contracts As TradeBuildSP.IContracts
 
 If mTWSAPI Is Nothing Then
     Set mTWSAPI = gGetTWSAPIInstance(mServer, mPort, mClientID, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection)
-    mTWSAPI.commonServiceConsumer = mCommonServiceConsumer
     mTWSAPI.logLevel = mLogLevel
 End If
 
@@ -482,18 +481,9 @@ End Sub
 
 Friend Sub updateStatus( _
                 ByVal orderId As String, _
-                ByVal status As TradeBuildSP.OrderStatuses, _
-                ByVal filledThisTime As Long, _
-                ByVal totalFilled As Long, _
-                ByVal remaining As Long, _
-                ByVal fillPrice As Double)
+                ByVal status As TradeBuildSP.OrderStatuses)
 
-mServiceConsumer.orderStatus orderId, _
-                            status, _
-                            filledThisTime, _
-                            totalFilled, _
-                            remaining, _
-                            fillPrice * mContract.priceMagnifier
+mServiceConsumer.orderStatus orderId, status
 End Sub
 '================================================================================
 ' Helper Functions

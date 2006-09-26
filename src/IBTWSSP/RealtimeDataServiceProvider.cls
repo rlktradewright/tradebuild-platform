@@ -114,6 +114,7 @@ End Property
 Private Sub ICommonServiceProvider_Link( _
                             ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
                             ByVal handle As Long)
+gCommonServiceConsumer = commonServiceConsumer
 Set mCommonServiceConsumer = commonServiceConsumer
 mHandle = handle
 mCommonServiceConsumer.RegisterServiceProvider mHandle, _
@@ -125,12 +126,16 @@ Private Property Let ICommonServiceProvider_LogLevel(ByVal RHS As TradeBuildSP.L
 mLogLevel = RHS
 End Property
 
+Private Property Let ICommonServiceProvider_Name(ByVal RHS As String)
+name = RHS
+End Property
+
 Private Property Get ICommonServiceProvider_Name() As String
 ICommonServiceProvider_Name = name
 End Property
 
 Private Sub ICommonServiceProvider_Terminate()
-' nothing to do
+gReleaseAllTWSAPIInstances
 End Sub
 
 '================================================================================
@@ -235,7 +240,7 @@ Case TWSLogLevelWarning
 Case TWSLogLevelInformation
 Case TWSLogLevelDetail
 Case Else
-    err.Raise ErrorCodes.IllegalArgumentException, _
+    err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "IBTWSSP.RealtimeDataServiceProvider::(let)TWSLogLevel", _
                 "Value must be one of the TWSLogLevels enum"
 End Select

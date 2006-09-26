@@ -101,7 +101,7 @@ If DomEventsRequired = DOMNone Then
 ElseIf DomEventsRequired = DOMByPosition Then
     mIncludeMarketDepth = True
 Else
-    err.Raise ErrorCodes.IllegalArgumentException, _
+    err.Raise ErrorCodes.ErrIllegalArgumentException, _
     "IBTWSSP.RealtimeDataReader::StartData", _
     "Only market depth by position is supported"
 End If
@@ -109,7 +109,6 @@ End If
 Set mContract = contract
 If mTWSAPI Is Nothing Then
     Set mTWSAPI = gGetTWSAPIInstance(mServer, mPort, mClientID, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection)
-    mTWSAPI.commonServiceConsumer = mCommonServiceConsumer
     mTWSAPI.logLevel = mLogLevel
 End If
 
@@ -122,7 +121,7 @@ End Sub
 Private Sub IRealtimeDataReader_StartMarketDepth( _
                 ByVal DomEventsRequired As TradeBuildSP.DOMEventTypes)
 If DomEventsRequired <> DOMByPosition Then _
-    err.Raise ErrorCodes.IllegalArgumentException, _
+    err.Raise ErrorCodes.ErrIllegalArgumentException, _
     "IBTWSSP.RealtimeDataReader::StartMarketDepth", _
     "Only market depth by position is supported"
 
@@ -157,11 +156,30 @@ Private Sub mTWSAPI_Connected()
 mTickerId = mTWSAPI.RequestMarketData(mContract.specifier, Me, mDataConsumer, mIncludeMarketDepth)
 End Sub
 
-Private Sub mTWSAPI_ConnectFailed(ByVal Description As String, ByVal retrying As Boolean)
+Private Sub mTWSAPI_ConnectFailed( _
+                ByVal Description As String, _
+                ByVal retrying As Boolean)
 If Not retrying Then
-    mServiceConsumer.Error StandardSPErrorCodes.TFCantConnectDataSource, _
+    mServiceConsumer.Error StandardSPErrorCodes.RTCantConnectDataSource, _
                             Description
 End If
+End Sub
+
+Private Sub mTWSAPI_ConnectionToTWSClosed( _
+                ByVal reconnecting As Boolean)
+If reconnecting Then
+    mServiceConsumer.Error StandardSPErrorCodes.RTLostConnectionToDataSource, _
+                        "Lost connection to TWS (reconnecting)"
+Else
+    mServiceConsumer.Error StandardSPErrorCodes.RTLostConnectionToDataSource, _
+                        "Lost connection to TWS"
+End If
+End Sub
+
+Private Sub mTWSAPI_Disonnected( _
+                ByVal reason As String)
+mServiceConsumer.Error StandardSPErrorCodes.RTDisconnectedFromDataSource, _
+                        reason
 End Sub
 
 '================================================================================
@@ -245,7 +263,7 @@ If mLogLevel < logLevel Or _
     mLogLevel = LogLevelNone Then Exit Sub
 mCommonServiceConsumer.NotifyListeners message, _
                                         TradeBuildSP.StandardListenValueTypes.Log, _
-                                        Now
+                                        Me
 End Sub
 
 Private Sub releaseTWSAPI()
@@ -254,8 +272,4 @@ If Not mTWSAPI Is Nothing Then
     Set mTWSAPI = Nothing
 End If
 End Sub
-
-
-
-
 
