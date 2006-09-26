@@ -114,23 +114,23 @@ If mPendingWrites.Count <> 0 Then
         pendingWrite = item
         With pendingWrite
             Select Case .TickType
-            Case bid
+            Case TradeBuild.TickTypes.TickTypeBid
                 mWriter.writeBid .timestamp, .TickPrice, .TickSize
-            Case ask
+            Case TradeBuild.TickTypes.TickTypeAsk
                 mWriter.writeAsk .timestamp, .TickPrice, .TickSize
-            Case Last
+            Case TradeBuild.TickTypes.TickTypeLast
                 mWriter.writeTrade .timestamp, .TickPrice, .TickSize
-            Case high
+            Case TradeBuild.TickTypes.TickTypeHigh
                 mWriter.writeHigh .timestamp, .TickPrice
-            Case Low
+            Case TradeBuild.TickTypes.TickTypeLow
                 mWriter.writeLow .timestamp, .TickPrice
-            Case PrevClose
+            Case TradeBuild.TickTypes.TickTypePrevClose
                 mWriter.writeClose .timestamp, .TickPrice
-            Case volume
+            Case TradeBuild.TickTypes.TickTypeVolume
                 mWriter.writeVolume .timestamp, .TickSize
-            Case openInterest
+            Case TradeBuild.TickTypes.TickTypeOpenInterest
                 mWriter.writeOpenInterest .timestamp, .TickSize
-            Case marketDepth
+            Case TradeBuild.TickTypes.TickTypeMarketDepth
                 mWriter.writeMarketDepthData .timestamp, _
                             .MDPosition, _
                             .MDMarketMaker, _
@@ -138,7 +138,7 @@ If mPendingWrites.Count <> 0 Then
                             .MDSide, _
                             .TickPrice, _
                             .TickSize
-            Case MarketDepthReset
+            Case TradeBuild.TickTypes.TickTypeMarketDepthReset
                 mWriter.writeMarketDepthReset .timestamp
             End Select
         End With
@@ -177,7 +177,7 @@ Friend Sub writeAsk(ByVal timestamp As Date, _
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild.TickTypes.ask
+        .TickType = TradeBuild.TickTypes.TickTypeAsk
         .timestamp = timestamp
         .TickPrice = price
         .TickSize = Size
@@ -195,7 +195,7 @@ Friend Sub writeBid(ByVal timestamp As Date, _
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild.TickTypes.bid
+        .TickType = TradeBuild.TickTypes.TickTypeBid
         .timestamp = timestamp
         .TickPrice = price
         .TickSize = Size
@@ -211,7 +211,7 @@ Friend Sub writeClose(ByVal timestamp As Date, _
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild.TickTypes.PrevClose
+        .TickType = TradeBuild.TickTypes.TickTypePrevClose
         .timestamp = timestamp
         .TickPrice = price
     End With
@@ -226,7 +226,7 @@ Friend Sub writeHigh(ByVal timestamp As Date, _
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild.TickTypes.high
+        .TickType = TradeBuild.TickTypes.TickTypeHigh
         .timestamp = timestamp
         .TickPrice = price
     End With
@@ -241,7 +241,7 @@ Friend Sub writeLow(ByVal timestamp As Date, _
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild.TickTypes.Low
+        .TickType = TradeBuild.TickTypes.TickTypeLow
         .timestamp = timestamp
         .TickPrice = price
     End With
@@ -263,7 +263,7 @@ Friend Sub writeMarketDepthData( _
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild.TickTypes.marketDepth
+        .TickType = TradeBuild.TickTypes.TickTypeMarketDepth
         .MDPosition = position
         .MDMarketMaker = marketMaker
         .MDOperation = operation
@@ -290,7 +290,7 @@ Friend Sub writeMarketDepthReset( _
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild.TickTypes.MarketDepthReset
+        .TickType = TradeBuild.TickTypes.TickTypeMarketDepthReset
         .timestamp = timestamp
     End With
     mPendingWrites.add pendingTick
@@ -304,7 +304,7 @@ Friend Sub writeOpenInterest(ByVal timestamp As Date, _
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild.TickTypes.openInterest
+        .TickType = TradeBuild.TickTypes.TickTypeOpenInterest
         .timestamp = timestamp
         .TickSize = Size
     End With
@@ -320,7 +320,7 @@ Friend Sub writeTrade(ByVal timestamp As Date, _
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild.TickTypes.Last
+        .TickType = TradeBuild.TickTypes.TickTypeLast
         .timestamp = timestamp
         .TickPrice = price
         .TickSize = Size
@@ -336,7 +336,7 @@ Friend Sub writeVolume(ByVal timestamp As Date, _
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild.TickTypes.volume
+        .TickType = TradeBuild.TickTypes.TickTypeVolume
         .timestamp = timestamp
         .TickSize = Size
     End With

@@ -52,12 +52,15 @@ Option Explicit
 
 Private mOrders As Collection
 
+Private mChangeListeners As Collection
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
 
 Private Sub Class_Initialize()
 Set mOrders = New Collection
+Set mChangeListeners = New Collection
 End Sub
 
 '================================================================================
@@ -83,21 +86,48 @@ End Property
 Friend Function add(ByVal pOrder As TradeBuild.order) As TradeBuild.order
 Set add = pOrder
 mOrders.add pOrder, pOrder.id
+fireChange CollItemAdded, pOrder
 End Function
 
-Public Function item(index As Variant) As TradeBuild.order
-Attribute item.VB_UserMemId = 0
-Set item = mOrders(index)
+Public Sub addCollectionChangeListener( _
+                ByVal value As CollectionChangeListener)
+mChangeListeners.add value
+End Sub
+
+Public Function Item(index As Variant) As TradeBuild.order
+Attribute Item.VB_UserMemId = 0
+Set Item = mOrders(index)
 End Function
 
 Public Function NewEnum() As IUnknown
+Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
 Set NewEnum = mOrders.[_NewEnum]
 End Function
 
+Public Sub removeCollectionChangeListener(ByVal value As CollectionChangeListener)
+Dim i As Long
+For i = mChangeListeners.Count To 1 Step -1
+    If mChangeListeners.Item(i) Is value Then mChangeListeners.remove i
+Next
+End Sub
+
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub fireChange( _
+                ByVal changeType As CollectionChangeTypes, _
+                ByVal affectedObject As order)
+Dim listener As CollectionChangeListener
+Dim Change As CollectionChangeEvent
+Set Change.source = Me
+Change.changeType = changeType
+Set Change.affectedObject = affectedObject
+For Each listener In mChangeListeners
+    listener.Change Change
+Next
+End Sub
 
 
 

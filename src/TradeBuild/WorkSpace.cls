@@ -30,6 +30,8 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
+Implements CollectionChangeListener
+
 '================================================================================
 ' Events
 '================================================================================
@@ -53,6 +55,8 @@ Option Explicit
 Private mName As String
 
 Private mTickers As tickers
+Private mOrderPlexes As orderPlexes
+Private mExecutions As executions
 
 '================================================================================
 ' Class Event Handlers
@@ -60,11 +64,64 @@ Private mTickers As tickers
 
 Private Sub Class_Initialize()
 Set mTickers = New tickers
+mTickers.addCollectionChangeListener Me
+
+Set mOrderPlexes = New orderPlexes
+Set mExecutions = New executions
+End Sub
+
+Private Sub Class_Terminate()
+Debug.Print "Workspace " & mName & " terminated"
 End Sub
 
 '================================================================================
-' XXXX Interface Members
+' CollectionChangeListener Interface Members
 '================================================================================
+
+Private Sub CollectionChangeListener_Change(ev As CollectionChangeEvent)
+If TypeOf ev.affectedObject Is Ticker Then
+    Dim lTicker As Ticker
+    Set lTicker = ev.affectedObject
+    Select Case ev.changeType
+    Case CollectionChangeTypes.CollItemAdded
+        lTicker.PositionManager.OrderContexts.addCollectionChangeListener Me
+        lTicker.executions.addCollectionChangeListener Me
+    Case CollectionChangeTypes.CollItemRemoved
+        lTicker.PositionManager.OrderContexts.removeCollectionChangeListener Me
+    End Select
+ElseIf TypeOf ev.affectedObject Is OrderContext Then
+    Dim lOrderContext As OrderContext
+    Set lOrderContext = ev.affectedObject
+    Select Case ev.changeType
+    Case CollectionChangeTypes.CollItemAdded
+        lOrderContext.activeOrderPlexes.addCollectionChangeListener Me
+    Case CollectionChangeTypes.CollItemRemoved
+        lOrderContext.activeOrderPlexes.removeCollectionChangeListener Me
+    End Select
+ElseIf TypeOf ev.affectedObject Is orderPlex Then
+    Dim lOrderPlex As orderPlex
+    Set lOrderPlex = ev.affectedObject
+    Select Case ev.changeType
+    Case CollectionChangeTypes.CollItemAdded
+        mOrderPlexes.add lOrderPlex
+    Case CollectionChangeTypes.CollItemRemoved
+        ' do nothing here because we don't care whether the order plex
+        ' is active or not
+    End Select
+ElseIf TypeOf ev.affectedObject Is Execution Then
+    Dim lExec As Execution
+    Set lExec = ev.affectedObject
+    Select Case ev.changeType
+    Case CollectionChangeTypes.CollItemAdded
+        mExecutions.add lExec
+    Case CollectionChangeTypes.CollItemRemoved
+        ' should never happen
+        gTradeBuildAPI.notifyFatalError ErrorCodes.ErrUnsupportedOperationException, _
+                                        "Unexpected execution deletion", _
+                                        "TradeBuild.Workspace::CollectionChangeListener_Change"
+    End Select
+End If
+End Sub
 
 '================================================================================
 ' XXXX Event Handlers
@@ -74,12 +131,20 @@ End Sub
 ' Properties
 '================================================================================
 
+Public Property Get executions() As executions
+Set executions = mExecutions
+End Property
+
 Public Property Let name(ByVal value As String)
-mName = name
+mName = value
 End Property
 
 Public Property Get name() As String
 name = mName
+End Property
+
+Public Property Get orderPlexes() As orderPlexes
+Set orderPlexes = mOrderPlexes
 End Property
 
 Public Property Get tickers() As tickers

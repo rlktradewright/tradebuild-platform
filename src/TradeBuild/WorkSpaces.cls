@@ -51,6 +51,7 @@ Option Explicit
 '================================================================================
 
 Private mWorkSpaces As Collection
+Private mChangeListeners As Collection
 
 '================================================================================
 ' Class Event Handlers
@@ -58,6 +59,7 @@ Private mWorkSpaces As Collection
 
 Private Sub Class_Initialize()
 Set mWorkSpaces = New Collection
+Set mChangeListeners = New Collection
 End Sub
 
 '================================================================================
@@ -85,7 +87,13 @@ Attribute add.VB_UserMemId = 0
 Set add = New WorkSpace
 add.name = name
 mWorkSpaces.add add, name
+fireChange CollItemAdded, add
 End Function
+
+Public Sub addCollectionChangeListener( _
+                ByVal value As CollectionChangeListener)
+mChangeListeners.add value
+End Sub
 
 Public Function Item(index As Variant) As WorkSpace
 Set Item = mWorkSpaces(index)
@@ -97,7 +105,35 @@ Attribute NewEnum.VB_MemberFlags = "40"
 Set NewEnum = mWorkSpaces.[_NewEnum]
 End Function
 
+Public Sub remove(ByVal pWorkspace As WorkSpace)
+mWorkSpaces.remove pWorkspace.name
+fireChange CollItemRemoved, pWorkspace
+End Sub
+
+Public Sub removeCollectionChangeListener(ByVal value As CollectionChangeListener)
+Dim i As Long
+For i = mChangeListeners.Count To 1 Step -1
+    If mChangeListeners.Item(i) Is value Then mChangeListeners.remove i
+Next
+End Sub
+
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub fireChange( _
+                ByVal changeType As CollectionChangeTypes, _
+                ByVal affectedObject As WorkSpace)
+Dim listener As CollectionChangeListener
+Dim Change As CollectionChangeEvent
+Set Change.source = Me
+Change.changeType = changeType
+Set Change.affectedObject = affectedObject
+For Each listener In mChangeListeners
+    listener.Change Change
+Next
+End Sub
+
+
+
 

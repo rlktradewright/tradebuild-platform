@@ -70,7 +70,7 @@ Option Explicit
 ' Methods
 '================================================================================
 
-Public Sub resetMarketDepth(ByRef ev As GenericEvent)
+Public Sub resetMarketDepth(ByRef ev As RawMarketDepthEvent)
                 
 End Sub
 

@@ -13,85 +13,204 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
+'================================================================================
+' Description
+'================================================================================
+'
+'
+
+'================================================================================
+' Interfaces
+'================================================================================
+
+Implements TradeBuildSP.IExecution
+
+'================================================================================
+' Events
+'================================================================================
+
+'================================================================================
+' Constants
+'================================================================================
+
+'================================================================================
+' Enums
+'================================================================================
+
+'================================================================================
+' Types
+'================================================================================
+
+'================================================================================
+' Member variables
+'================================================================================
+
 Private mExecId         As String
-Private mTime           As String
-Private mAcctNumber     As String
-Private mExchange       As String
-Private mSide           As ExecSides
+Private mTime           As Date
+Private mAccountIdentifier As String
+Private mContractSpecifier As contractSpecifier
+Private mFillingExchange As String
+Private mAction         As OrderActions
 Private mQuantity       As Long
 Private mPrice          As Double
-Private mClientID       As Long
-Private mOrderId        As Long
+Private mOrderBrokerId  As String
+Private mOrderTradeBuildId  As String
+Private mIsLiquidation  As Boolean
 
-Friend Property Let execId(ByVal value As String)
-mExecId = value
+'================================================================================
+' Class Event Handlers
+'================================================================================
+
+'================================================================================
+' IExecution Interface Members
+'================================================================================
+
+Private Property Get IExecution_accountIdentifier() As String
+IExecution_accountIdentifier = mAccountIdentifier
 End Property
 
-Public Property Get execId() As String
-execId = mExecId
+Private Property Let IExecution_accountIdentifier(ByVal RHS As String)
+mAccountIdentifier = RHS
 End Property
 
-Friend Property Let time(ByVal value As String)
-mTime = value
+Private Property Let IExecution_action(ByVal RHS As TradeBuildSP.OrderActions)
+mAction = RHS
 End Property
 
-Public Property Get time() As String
-time = mTime
+Private Property Get IExecution_action() As TradeBuildSP.OrderActions
+IExecution_action = mAction
 End Property
 
-Friend Property Let accountNumber(ByVal value As String)
-mAcctNumber = value
+Private Property Get IExecution_ContractSpecifier() As TradeBuildSP.IContractSpecifier
+Set IExecution_ContractSpecifier = mContractSpecifier
 End Property
 
-Public Property Get accountNumber() As String
-accountNumber = mAcctNumber
+Private Property Let IExecution_ContractSpecifier(ByVal RHS As TradeBuildSP.IContractSpecifier)
+Set mContractSpecifier = RHS
 End Property
 
-Friend Property Let exchange(ByVal value As String)
-mExchange = value
+Private Property Get IExecution_execId() As String
+IExecution_execId = mExecId
 End Property
 
-Public Property Get exchange() As String
-exchange = mExchange
+Private Property Let IExecution_execId(ByVal RHS As String)
+mExecId = RHS
 End Property
 
-Friend Property Let side(ByVal value As ExecSides)
-mSide = value
+Private Property Let IExecution_fillingExchange(ByVal RHS As String)
+mFillingExchange = RHS
 End Property
 
-Public Property Get side() As ExecSides
-side = mSide
+Private Property Get IExecution_fillingExchange() As String
+IExecution_fillingExchange = mFillingExchange
 End Property
 
-Friend Property Let quantity(ByVal value As Long)
-mQuantity = value
+Private Property Get IExecution_isLiquidation() As Boolean
+IExecution_isLiquidation = mIsLiquidation
 End Property
 
-Public Property Get quantity() As Long
-quantity = mQuantity
+Private Property Let IExecution_isLiquidation(ByVal RHS As Boolean)
+mIsLiquidation = RHS
 End Property
 
-Friend Property Let price(ByVal value As Double)
-mPrice = value
+Private Property Get IExecution_orderBrokerId() As String
+IExecution_orderBrokerId = mOrderBrokerId
+End Property
+
+Private Property Let IExecution_orderBrokerId(ByVal RHS As String)
+mOrderBrokerId = RHS
+End Property
+
+Private Property Get IExecution_orderTradeBuildId() As String
+IExecution_orderTradeBuildId = mOrderTradeBuildId
+End Property
+
+Private Property Let IExecution_orderTradeBuildId(ByVal RHS As String)
+mOrderTradeBuildId = RHS
+End Property
+
+Private Property Get IExecution_price() As Double
+IExecution_price = mPrice
+End Property
+
+Private Property Let IExecution_price(ByVal RHS As Double)
+mPrice = RHS
+End Property
+
+Private Property Get IExecution_quantity() As Long
+IExecution_quantity = mQuantity
+End Property
+
+Private Property Let IExecution_quantity(ByVal RHS As Long)
+mQuantity = RHS
+End Property
+
+Private Property Get IExecution_time() As Date
+IExecution_time = mTime
+End Property
+
+Private Property Let IExecution_time(ByVal RHS As Date)
+mTime = RHS
+End Property
+
+'================================================================================
+' XXXX Event Handlers
+'================================================================================
+
+'================================================================================
+' Properties
+'================================================================================
+
+Public Property Get accountIdentifier() As String
+accountIdentifier = mAccountIdentifier
+End Property
+
+Public Property Get action() As OrderActions
+action = mAction
+End Property
+
+Public Property Get contractSpecifier() As contractSpecifier
+Set contractSpecifier = mContractSpecifier
+End Property
+
+Public Property Get ExecId() As String
+ExecId = mExecId
+End Property
+
+Public Property Get fillingExchange() As String
+fillingExchange = mFillingExchange
+End Property
+
+Public Property Get isLiquidation() As Boolean
+isLiquidation = mIsLiquidation
+End Property
+
+Public Property Get orderBrokerId() As String
+orderBrokerId = mOrderBrokerId
+End Property
+
+Public Property Get orderTradeBuildId() As String
+orderTradeBuildId = mOrderTradeBuildId
 End Property
 
 Public Property Get price() As Double
 price = mPrice
 End Property
 
-Friend Property Let clientID(ByVal value As Long)
-mClientID = value
+Public Property Get quantity() As Long
+quantity = mQuantity
 End Property
 
-Public Property Get clientID() As Long
-clientID = mClientID
+Public Property Get time() As Date
+time = mTime
 End Property
 
-Friend Property Let orderId(ByVal value As Long)
-mOrderId = value
-End Property
+'================================================================================
+' Methods
+'================================================================================
 
-Public Property Get orderId() As Long
-orderId = mOrderId
-End Property
+'================================================================================
+' Helper Functions
+'================================================================================
+
 

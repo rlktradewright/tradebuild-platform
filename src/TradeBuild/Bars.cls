@@ -8,7 +8,7 @@ BEGIN
 END
 Attribute VB_Name = "Bars"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = True
+Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -30,11 +30,21 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
+Implements TradeBuildSP.IStudy
+
 '================================================================================
 ' Events
 '================================================================================
 
 Event BarAdded(ByVal theBar As TradeBuild.Bar)
+
+Event CurrentCloseChanged(ByVal currentBar As TradeBuild.Bar)
+Event CurrentHighChanged(ByVal currentBar As TradeBuild.Bar)
+Event CurrentLowChanged(ByVal currentBar As TradeBuild.Bar)
+Event CurrentOpenChanged(ByVal currentBar As TradeBuild.Bar)
+Event CurrentTickVolumeChanged(ByVal currentBar As TradeBuild.Bar)
+Event CurrentVolumeChanged(ByVal currentBar As TradeBuild.Bar)
+
 Event HistoricBarAdded(ByVal theBar As TradeBuild.Bar)
 
 '================================================================================
@@ -45,6 +55,15 @@ Event HistoricBarAdded(ByVal theBar As TradeBuild.Bar)
 ' Enums
 '================================================================================
 
+Private Enum BarEventType
+    CloseChanged
+    HighChanged
+    LowChanged
+    OpenChanged
+    TickVolumeChanged
+    VolumeChanged
+End Enum
+ 
 '================================================================================
 ' Types
 '================================================================================
@@ -53,17 +72,27 @@ Event HistoricBarAdded(ByVal theBar As TradeBuild.Bar)
 ' Member variables
 '================================================================================
 
+Private mIdent As String
+
+Private mInputValueName As String
+
 Private mBars As Collection
 Private mBarType As Long
 Private mBarLength As Long
 
-Private mCurrentSessionStartTime As Date
-Private mCurrentSessionEndTime As Date
+Private mName As String
 
+Private WithEvents mCurrentBar As Bar
+Attribute mCurrentBar.VB_VarHelpID = -1
 Private mCurrentBarNumber As Long
-Private mFirstSessionBarNumber As Long
 
-Private mLastBarStartTime As Date
+Private mStudies As studies
+
+'Private mValueTypes() As String
+
+Private mCurrentBarListeners As Collection
+Private mChangeListeners As Collection
+
 
 '================================================================================
 ' Class Event Handlers
@@ -71,7 +100,15 @@ Private mLastBarStartTime As Date
 
 Private Sub Class_Initialize()
 Set mBars = New Collection
+
+Set mStudies = New studies
+mStudies.defaultValueName = "value"
+
+Set mCurrentBarListeners = New Collection
+Set mChangeListeners = New Collection
+
 mBarLength = 1
+
 End Sub
 
 Private Sub Class_Terminate()
@@ -79,34 +116,186 @@ Debug.Print "Bars terminated"
 End Sub
 
 '================================================================================
-' XXXX Interface Members
+' IStudy Interface Members
 '================================================================================
+
+Private Function IStudy_addStudy( _
+                ByVal study As IStudy, _
+                ByVal ValueName As String, _
+                ByVal useAllUnderlyingValues As Boolean, _
+                Optional ByVal taskName As String, _
+                Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
+
+Dim lTask As AddStudyTask
+
+Set lTask = New AddStudyTask
+lTask.initialise Me, study, ValueName, useAllUnderlyingValues
+Set IStudy_addStudy = gTaskManager.startTask(lTask, IIf(taskName = "", gGenerateGUIDString, taskName), taskData)
+End Function
+
+Private Sub IStudy_addStudyValueListener( _
+                ByVal listener As TradeBuildSP.IStudyValueListener, _
+                valueNames() As String)
+
+End Sub
+
+Private Property Get IStudy_baseStudy() As TradeBuildSP.IStudy
+
+End Property
+
+Private Property Let IStudy_defaultParameters(ByVal RHS As TradeBuildSP.IParameters)
+
+End Property
+
+Private Property Get IStudy_defaultParameters() As TradeBuildSP.IParameters
+
+End Property
+
+Private Function IStudy_getStudyValue( _
+                ByVal valueType As String, _
+                ByVal ref As Long, _
+                params() As Variant) As TradeBuildSP.StudyValue
+
+End Function
+
+Private Property Get IStudy_id() As String
+IStudy_id = mIdent
+End Property
+
+Private Sub IStudy_initialise( _
+                ByVal id As String, _
+                ByVal parameters As TradeBuildSP.IParameters, _
+                ByVal numberOfValuesToCache As Long, _
+                ByVal inputValueName As String, _
+                ByVal underlyingStudy As TradeBuildSP.IStudy)
+mIdent = id
+mInputValueName = inputValueName
+
+End Sub
+
+Private Property Get IStudy_instanceName() As String
+IStudy_instanceName = mName
+End Property
+
+Private Property Get IStudy_instancePath() As String
+IStudy_instancePath = mName
+End Property
+
+Private Sub IStudy_Notify(ev As TradeBuildSP.StudyValueEvent)
+Dim iStudies As TradeBuildSP.iStudies
+
+ev.barNumber = mCurrentBarNumber
+Set ev.source = Me
+
+Set iStudies = mStudies
+
+Select Case ev.ValueName
+Case "value"
+    mCurrentBar.Tick ev.value
+    ev.ValueName = "close"
+    iStudies.notify ev
+    
+    ev.ValueName = "Tick volume"
+    ev.value = mCurrentBar.tickVolume
+    iStudies.notify ev
+Case "size"
+    mCurrentBar.TickSize ev.value
+    iStudies.notify ev
+Case "volume"
+    mCurrentBar.volume = ev.value
+    iStudies.notify ev
+End Select
+
+End Sub
+
+Private Property Get IStudy_numberOfBarsRequired() As Long
+
+End Property
+
+Private Function IStudy_numberOfCachedValues( _
+                Optional ByVal ValueName As String = "") As Long
+IStudy_numberOfCachedValues = mBars.Count
+End Function
+
+Private Property Get IStudy_parameters() As TradeBuildSP.IParameters
+
+End Property
+
+Private Property Get IStudy_studyDefinition() As TradeBuildSP.IStudyDefinition
+Set IStudy_studyDefinition = studyDefinition
+End Property
 
 '================================================================================
 ' XXXX Event Handlers
 '================================================================================
 
 '================================================================================
+' mCurrentBar Event Handlers
+'================================================================================
+
+Private Sub mCurrentBar_CloseChanged()
+fireCurrentBarEvent mCurrentBar, CloseChanged
+RaiseEvent CurrentCloseChanged(mCurrentBar)
+End Sub
+
+Private Sub mCurrentBar_HighChanged()
+fireCurrentBarEvent mCurrentBar, HighChanged
+RaiseEvent CurrentHighChanged(mCurrentBar)
+End Sub
+
+Private Sub mCurrentBar_LowChanged()
+fireCurrentBarEvent mCurrentBar, LowChanged
+RaiseEvent CurrentLowChanged(mCurrentBar)
+End Sub
+
+Private Sub mCurrentBar_OpenChanged()
+fireCurrentBarEvent mCurrentBar, OpenChanged
+RaiseEvent CurrentOpenChanged(mCurrentBar)
+End Sub
+
+Private Sub mCurrentBar_TickVolumeChanged()
+fireCurrentBarEvent mCurrentBar, TickVolumeChanged
+RaiseEvent CurrentTickVolumeChanged(mCurrentBar)
+End Sub
+
+Private Sub mCurrentBar_VolumeChanged()
+fireCurrentBarEvent mCurrentBar, VolumeChanged
+RaiseEvent CurrentVolumeChanged(mCurrentBar)
+End Sub
+
+'================================================================================
 ' Properties
 '================================================================================
+
+Public Property Get Bar(Optional ByVal ref As Long) As TradeBuild.Bar
+If ref = 0 Then
+    Set Bar = mCurrentBar
+Else
+    Set Bar = getTargetBar(ref)
+End If
+End Property
 
 Public Property Get barLength() As Long
 barLength = mBarLength
 End Property
 
-Public Property Let barLength(ByVal value As Long)
+Friend Property Let barLength(ByVal value As Long)
 mBarLength = value
 End Property
 
-Public Property Get barTime(Optional ByVal ref As Integer) As Variant
-barTime = getTargetBar(ref).datetime
+Public Property Get barTime(Optional ByVal ref As Long) As Variant
+If ref = 0 Then
+    If Not mCurrentBar Is Nothing Then barTime = mCurrentBar.datetime
+Else
+    barTime = getTargetBar(ref).datetime
+End If
 End Property
 
-Public Property Let barType(ByVal value As Long)
+Friend Property Let barType(ByVal value As Long)
 mBarType = value
 End Property
 
-Public Property Get closeValue(Optional ByVal ref As Integer) As Variant
+Public Property Get closeValue(Optional ByVal ref As Long) As Variant
 closeValue = getTargetBar(ref).closeValue
 End Property
 
@@ -118,26 +307,13 @@ Public Property Get currentBarNumber() As Long
 currentBarNumber = mCurrentBarNumber
 End Property
 
-'Public Property Get currentBarNumberInSession() As Long
-'currentBarNumberInSession = mCurrentBarNumber - mFirstSessionBarNumber + 1
-'End Property
-'
-'Public Property Let currentSessionEndTime(ByVal value As Date)
-'Set mCurrentSessionEndTime = value
-'mLastBarStartTime = mCurrentSessionEndTime - mBarLength / 1440
-'End Property
-'
-'Public Property Let currentSessionStartTime(ByVal value As Date)
-'Set mCurrentSessionStartTime = value
-'End Property
-
-Public Property Get down(Optional ByVal ref As Integer) As Boolean
+Public Property Get down(Optional ByVal ref As Long) As Boolean
 down = (closeValue(ref) < closeValue(ref - 1))
 End Property
 
 Public Property Get higherHighValue( _
                 ByVal rank As Long, _
-                Optional ByVal ref As Integer) As Double
+                Optional ByVal ref As Long) As Double
 Dim valueToCompare As Double
 Dim currentHigh As Double
 Dim i As Long
@@ -156,14 +332,14 @@ Loop While numHighsFound < rank
 higherHighValue = currentHigh
 End Property
 
-Public Property Get highestCloseValue(ByVal periods As Integer, _
-                                    Optional ByVal ref As Integer) As Double
-Dim i                   As Integer
+Public Property Get highestCloseValue(ByVal periods As Long, _
+                                    Optional ByVal ref As Long) As Double
+Dim i                   As Long
 Dim high                As Double
-Static lastPeriods      As Integer
+Static lastPeriods      As Long
 Static lastBarNumber    As Long
 Static lastValue        As Variant
-Static lastRef          As Integer
+Static lastRef          As Long
 
 If mCurrentBarNumber = lastBarNumber And _
     periods = lastPeriods And _
@@ -192,14 +368,14 @@ lastRef = ref
 lastValue = highestCloseValue
 End Property
 
-Public Property Get highestHighValue(ByVal periods As Integer, _
-                                    Optional ByVal ref As Integer) As Variant
-Dim i                   As Integer
+Public Property Get highestHighValue(ByVal periods As Long, _
+                                    Optional ByVal ref As Long) As Variant
+Dim i                   As Long
 Dim high                As Double
-Static lastPeriods      As Integer
+Static lastPeriods      As Long
 Static lastBarNumber    As Long
 Static lastValue        As Variant
-Static lastRef          As Integer
+Static lastRef          As Long
 
 If mCurrentBarNumber = lastBarNumber And _
     periods = lastPeriods And _
@@ -228,15 +404,19 @@ lastRef = ref
 lastValue = highestHighValue
 End Property
 
-Public Property Get highValue(Optional ByVal ref As Integer) As Double
+Public Property Get highValue(Optional ByVal ref As Long) As Double
 highValue = getTargetBar(ref).highValue
 End Property
 
-Public Property Get inside(Optional ByVal ref As Integer) As Variant
+Public Property Get id() As String
+id = mIdent
+End Property
+
+Public Property Get inside(Optional ByVal ref As Long) As Variant
 inside = (highValue(ref) <= highValue(ref - 1)) And (lowValue(ref) >= lowValue(ref - 1))
 End Property
 
-'Public Property Get isFirstBarInSession(Optional ByVal ref As Integer) As Variant
+'Public Property Get isFirstBarInSession(Optional ByVal ref As long) As Variant
 'isFirstBarInSession = Abs(getTargetBar(ref).datetime - mCurrentSessionStartTime) < OneSecond
 'End Property
 '
@@ -246,7 +426,7 @@ End Property
 
 Public Property Get lowerLowValue( _
                 ByVal rank As Long, _
-                Optional ByVal ref As Integer) As Double
+                Optional ByVal ref As Long) As Double
 Dim valueToCompare As Double
 Dim currentLow As Double
 Dim i As Long
@@ -265,14 +445,14 @@ Loop While numLowsFound < rank
 lowerLowValue = currentLow
 End Property
 
-Public Property Get lowestCloseValue(ByVal periods As Integer, _
-                                    Optional ByVal ref As Integer) As Double
-Dim i As Integer
+Public Property Get lowestCloseValue(ByVal periods As Long, _
+                                    Optional ByVal ref As Long) As Double
+Dim i As Long
 Dim Low As Double
-Static lastPeriods      As Integer
+Static lastPeriods      As Long
 Static lastBarNumber    As Long
 Static lastValue        As Variant
-Static lastRef          As Integer
+Static lastRef          As Long
 
 If mCurrentBarNumber = lastBarNumber And _
     periods = lastPeriods And _
@@ -301,14 +481,14 @@ lastRef = ref
 lastValue = lowestCloseValue
 End Property
 
-Public Property Get lowestLowValue(ByVal periods As Integer, _
-                                    Optional ByVal ref As Integer) As Variant
-Dim i As Integer
+Public Property Get lowestLowValue(ByVal periods As Long, _
+                                    Optional ByVal ref As Long) As Variant
+Dim i As Long
 Dim Low As Double
-Static lastPeriods      As Integer
+Static lastPeriods      As Long
 Static lastBarNumber    As Long
 Static lastValue        As Variant
-Static lastRef          As Integer
+Static lastRef          As Long
 
 If mCurrentBarNumber = lastBarNumber And _
     periods = lastPeriods And _
@@ -338,27 +518,88 @@ lastRef = ref
 lastValue = lowestLowValue
 End Property
 
-Public Property Get lowValue(Optional ByVal ref As Integer) As Double
+Public Property Get lowValue(Optional ByVal ref As Long) As Double
 lowValue = getTargetBar(ref).lowValue
 End Property
 
-Public Property Get openValue(Optional ByVal ref As Integer) As Variant
+Friend Property Let name(ByVal value As String)
+mName = value
+End Property
+
+Public Property Get name() As String
+name = mName
+End Property
+
+Public Property Get openValue(Optional ByVal ref As Long) As Variant
 openValue = getTargetBar(ref).openValue
 End Property
 
-Public Property Get outside(Optional ByVal ref As Integer) As Boolean
-inside = (highValue(ref) > highValue(ref - 1)) And (lowValue(ref) < lowValue(ref - 1))
+Public Property Get outside(Optional ByVal ref As Long) As Boolean
+outside = (highValue(ref) > highValue(ref - 1)) And (lowValue(ref) < lowValue(ref - 1))
 End Property
 
-Public Property Get tickVolume(Optional ByVal ref As Integer) As Long
+Public Property Get studyDefinition() As studyDefinition
+Dim paramDef As StudyParameterDefinition
+Dim valueDef As StudyValueDefinition
+
+Set studyDefinition = New studyDefinition
+
+studyDefinition.Description = "Formats the price stream into Open/High/Low/Close bars of an appropriate length."
+studyDefinition.name = "Bars"
+studyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionPrice
+
+Set paramDef = New StudyParameterDefinition
+paramDef.name = "Period length"
+paramDef.Description = "Length of one bar"
+paramDef.parameterType = StudyParameterTypes.ParameterTypeInteger
+studyDefinition.studyParameterDefinitions.add paramDef
+
+Set paramDef = New StudyParameterDefinition
+paramDef.name = "Period units"
+paramDef.Description = "The units in which Period length is measured."
+paramDef.parameterType = StudyParameterTypes.ParameterTypeString
+studyDefinition.studyParameterDefinitions.add paramDef
+
+Set valueDef = New StudyValueDefinition
+valueDef.name = "Close"
+valueDef.Description = "The latest underlying value"
+valueDef.isDefault = True
+valueDef.valueType = StudyValueTypes.ValueTypeDouble
+studyDefinition.studyValueDefinitions.add valueDef
+
+Set valueDef = New StudyValueDefinition
+valueDef.name = "Size"
+valueDef.Description = "The size associated with the latest underlying value (where relevant)"
+valueDef.valueType = StudyValueTypes.ValueTypeInteger
+studyDefinition.studyValueDefinitions.add valueDef
+
+Set valueDef = New StudyValueDefinition
+valueDef.name = "Tick volume"
+valueDef.Description = "The number of ticks in the current bar for the underlying value"
+valueDef.valueType = StudyValueTypes.ValueTypeInteger
+studyDefinition.studyValueDefinitions.add valueDef
+
+Set valueDef = New StudyValueDefinition
+valueDef.name = "Volume"
+valueDef.Description = "The cumulative size associated with the latest underlying value (where relevant)"
+valueDef.valueType = StudyValueTypes.ValueTypeInteger
+studyDefinition.studyValueDefinitions.add valueDef
+
+End Sub
+
+Friend Property Get studies() As TradeBuildSP.iStudies
+Set studies = mStudies
+End Property
+
+Public Property Get tickVolume(Optional ByVal ref As Long) As Long
 tickVolume = getTargetBar(ref).tickVolume
 End Property
 
-Public Property Get up(Optional ByVal ref As Integer) As Boolean
+Public Property Get up(Optional ByVal ref As Long) As Boolean
 up = (closeValue(ref) > closeValue(ref - 1))
 End Property
 
-Public Property Get volume(Optional ByVal ref As Integer) As Long
+Public Property Get volume(Optional ByVal ref As Long) As Long
 volume = getTargetBar(ref).volume
 End Property
 
@@ -368,19 +609,58 @@ End Property
 
 Public Function add(ByVal timestamp As Date, _
                 Optional ByVal key As String) As Bar
+Dim ev As TradeBuild.StudyValueEvent
+
+If Not mCurrentBar Is Nothing Then
+    If timestamp <= mCurrentBar.datetime Then
+        err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                    "TradeBuild.Bars::add", _
+                    "Bar added is earlier than current bar"
+    End If
+End If
+
 Set add = New Bar
 add.barType = mBarType
 add.barLength = mBarLength
 add.datetime = timestamp
+
+If Not mCurrentBar Is Nothing Then
+    If mCurrentBar.Blank Then
+        mBars.remove mBars.Count
+    Else
+        mCurrentBarNumber = mCurrentBarNumber + 1
+    End If
+Else
+    mCurrentBarNumber = mCurrentBarNumber + 1
+End If
+
 If key <> "" Then
     mBars.add add, key
 Else
-    mBars.add add
+    mBars.add add, Format(timestamp, "yyyymmddhhnnss")
 End If
-mCurrentBarNumber = mCurrentBarNumber + 1
-'If isFirstBarInSession Then mFirstSessionBarNumber = mCurrentBarNumber
+
+Set mCurrentBar = add
+
+ev.barNumber = mCurrentBarNumber
+Set ev.source = Me
+ev.timestamp = timestamp
+' use the bar number as the value
+ev.value = mCurrentBarNumber
+ev.ValueName = "newbar"
+mStudies.notify ev
+fireChange CollItemAdded, add
 RaiseEvent BarAdded(add)
 End Function
+
+Public Sub addCollectionChangeListener( _
+                ByVal value As CollectionChangeListener)
+mChangeListeners.add value
+End Sub
+
+Public Sub addCurrentBarListener(ByVal value As CurrentBarListener)
+mCurrentBarListeners.add value
+End Sub
 
 Public Function addHistoric( _
                 ByVal timestamp As Date, _
@@ -392,6 +672,11 @@ Public Function addHistoric( _
                 ByVal tickVolume As Long, _
                 ByVal openInterest As Long, _
                 Optional ByVal key As String) As Bar
+Dim ev As TradeBuildSP.StudyValueEvent
+Dim iStudies As TradeBuildSP.iStudies
+
+Set iStudies = mStudies
+
 Set addHistoric = New Bar
 With addHistoric
     .barType = mBarType
@@ -405,13 +690,69 @@ With addHistoric
     .tickVolume = tickVolume
     .openInterest = openInterest
 End With
+
+If Not mCurrentBar Is Nothing Then
+    If mCurrentBar.Blank Then
+        mBars.remove mBars.Count
+    Else
+        mCurrentBarNumber = mCurrentBarNumber + 1
+    End If
+Else
+    mCurrentBarNumber = mCurrentBarNumber + 1
+End If
+
 If key <> "" Then
     mBars.add addHistoric, key
 Else
-    mBars.add addHistoric
+    mBars.add addHistoric, Format(timestamp, "yyyymmddhhnnss")
 End If
-mCurrentBarNumber = mCurrentBarNumber + 1
-'If isFirstBarInSession Then mFirstSessionBarNumber = mCurrentBarNumber
+Set mCurrentBar = addHistoric
+
+ev.barNumber = mCurrentBarNumber
+Set ev.source = Me
+ev.timestamp = timestamp
+
+ev.value = mCurrentBarNumber
+ev.ValueName = "newbar"
+iStudies.notify ev
+
+ev.value = openValue
+ev.ValueName = "open"
+iStudies.notify ev
+ev.ValueName = "value"
+iStudies.notify ev
+
+ev.value = highValue
+ev.ValueName = "high"
+iStudies.notify ev
+ev.ValueName = "value"
+iStudies.notify ev
+
+ev.value = lowValue
+ev.ValueName = "low"
+iStudies.notify ev
+ev.ValueName = "value"
+iStudies.notify ev
+
+ev.value = closeValue
+ev.ValueName = "close"
+iStudies.notify ev
+ev.ValueName = "value"
+iStudies.notify ev
+
+ev.value = volume
+ev.ValueName = "cumulativesize"
+iStudies.notify ev
+
+ev.value = openInterest
+ev.ValueName = "openinterest"
+iStudies.notify ev
+
+ev.value = tickVolume
+ev.ValueName = "tickvolume"
+iStudies.notify ev
+
+fireChange CollItemAdded, addHistoric
 RaiseEvent HistoricBarAdded(addHistoric)
 End Function
 
@@ -420,25 +761,83 @@ Attribute Item.VB_UserMemId = 0
 Set Item = mBars(index)
 End Function
 
-Public Sub Remove(index As Variant)
-mBars.Remove index
-mCurrentBarNumber = mCurrentBarNumber - 1
-End Sub
+' doesn't make sense to remove a bar ?
+'Public Sub Remove(index As Variant)
+'mBars.Remove index
+'mCurrentBarNumber = mCurrentBarNumber - 1
+'End Sub
 
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
+Attribute NewEnum.VB_MemberFlags = "40"
 Set NewEnum = mBars.[_NewEnum]
 End Function
+
+Public Sub removeCollectionChangeListener(ByVal value As CollectionChangeListener)
+Dim i As Long
+For i = mChangeListeners.Count To 1 Step -1
+    If mChangeListeners.Item(i) Is value Then mChangeListeners.remove i
+Next
+End Sub
+
+Public Sub removeCurrentBarListener(ByVal value As CurrentBarListener)
+Dim i As Long
+For i = mCurrentBarListeners.Count To 1 Step -1
+    If mCurrentBarListeners.Item(i) Is value Then mCurrentBarListeners.remove i
+Next
+End Sub
+
+'Public Function ToString() As String
+'ToString = mStudyID
+'End Function
 
 '================================================================================
 ' Helper Functions
 '================================================================================
 
+Private Sub fireChange( _
+                ByVal changeType As CollectionChangeTypes, _
+                ByVal affectedObject As Bar)
+Dim listener As CollectionChangeListener
+Dim Change As CollectionChangeEvent
+Set Change.source = Me
+Change.changeType = changeType
+Set Change.affectedObject = affectedObject
+For Each listener In mChangeListeners
+    listener.Change Change
+Next
+End Sub
+
+Private Sub fireCurrentBarEvent( _
+                ByVal theBar As Bar, _
+                ByVal eventType As BarEventType)
+Dim listener As CurrentBarListener
+Dim ev As CurrentBarEvent
+Set ev.source = Me
+Set ev.currentBar = theBar
+For Each listener In mCurrentBarListeners
+    Select Case eventType
+    Case CloseChanged
+        listener.CloseChanged ev
+    Case HighChanged
+        listener.HighChanged ev
+    Case LowChanged
+        listener.LowChanged ev
+    Case OpenChanged
+        listener.OpenChanged ev
+    Case TickVolumeChanged
+        listener.VolumeChanged ev
+    Case VolumeChanged
+        listener.TickVolumeChanged ev
+    End Select
+Next
+End Sub
+    
 Private Function getTargetBar(ByVal ref As Long) As TradeBuild.Bar
 If ref > mCurrentBarNumber Or _
     ref < -(mCurrentBarNumber - 1) _
 Then
-    err.Raise ErrorCodes.IllegalArgumentException, _
+    err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "TradeBuild.Bars::getTargetBar", _
             "<ref> out of bounds"
 End If

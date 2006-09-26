@@ -179,11 +179,11 @@ End Function
 
 Public Function ToString() As String
 
-ToString = "action=" & orderActionToString(mAction) & vbCrLf & _
-            vbTab & "contractid=" & mContractID & vbCrLf & _
-            vbTab & "exchange=" & mExchange & vbCrLf & _
-            vbTab & "openclose=" & mOpenClose & vbCrLf & _
-            vbTab & "ratio=" & mRatio & vbCrLf
+ToString = "action=" & gOrderActionToString(mAction) & "; " & _
+            "contractid=" & mContractID & "; " & _
+            "exchange=" & mExchange & "; " & _
+            "openclose=" & mOpenClose & "; " & _
+            "ratio=" & mRatio & "; "
 
 End Function
 

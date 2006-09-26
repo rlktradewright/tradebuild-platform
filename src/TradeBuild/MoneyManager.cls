@@ -40,15 +40,15 @@ Public Sub flat()
 
 End Sub
 
-Public Property Let parameters(ByVal value As Parameters2.parameters)
+Public Property Let parameters(ByVal value As TradeBuild.parameters)
 
 End Property
 
-Public Property Get parameters() As Parameters2.parameters
+Public Property Get parameters() As TradeBuild.parameters
 
 End Property
 
-Public Property Get defaultParameters() As Parameters2.parameters
+Public Property Get defaultParameters() As TradeBuild.parameters
 
 End Property
 

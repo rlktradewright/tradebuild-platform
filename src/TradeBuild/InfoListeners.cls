@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "Listeners"
+Attribute VB_Name = "InfoListeners"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -63,7 +63,7 @@ End Sub
 ' Methods
 '================================================================================
 
-Public Function add(ByVal newListener As IListener, _
+Public Function add(ByVal newListener As InfoListener, _
                 Optional ByVal valueType As Long = TradeBuildListenValueTypes.VTAll) As String
 Dim key As String
 Dim listeners As Collection
@@ -88,7 +88,7 @@ add = key
 mLastKeyAdded = key
 End Function
 
-Public Function Item(ByRef key As String) As IListener
+Public Function Item(ByRef key As String) As InfoListener
 Dim listeners As Collection
 
 If InStr(1, key, Chr(0)) <> 0 Then
@@ -108,22 +108,27 @@ Next
 Count = Count + mAllListeners.Count
 End Function
 
-Public Sub Remove(ByVal key As String)
+Public Sub remove(ByVal key As String)
 Dim listeners As Collection
-Dim listener As IListener
+Dim listener As InfoListener
 
 If InStr(1, key, Chr(0)) <> 0 Then
     Set listeners = mListenerCols("V" & Left(key, InStr(1, key, Chr(0)) - 1))
     Set listener = listeners(key)
-    listeners.Remove key
+    listeners.remove key
 Else
-    mAllListeners.Remove key
+    mAllListeners.remove key
 End If
 End Sub
 
-Public Sub notify(value As Variant, valueType As Long, timestamp As Date)
+Public Sub notify(value As Variant, valueType As Long, source As Object)
 Dim listeners As Collection
-Dim listener As IListener
+Dim listener As InfoListener
+Dim ev As InfoEvent
+
+Set ev.source = source
+ev.data = value
+ev.valueType = valueType
 
 On Error Resume Next
 Set listeners = mListenerCols("V" & valueType)
@@ -131,10 +136,10 @@ If listeners Is Nothing Then Exit Sub
 
 On Error GoTo 0
 For Each listener In listeners
-    listener.notify valueType, value, timestamp
+    listener.notify ev
 Next
 For Each listener In mAllListeners
-    listener.notify valueType, value, timestamp
+    listener.notify ev
 Next
 End Sub
 

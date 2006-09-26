@@ -47,6 +47,8 @@ Implements TradeBuildSP.IComboLegs
 Private mComboLegs As Collection
 Private mLocked As Boolean
 
+Private mChangeListeners As Collection
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -57,48 +59,49 @@ Private mLocked As Boolean
 
 Private Sub Class_Initialize()
 Set mComboLegs = New Collection
+Set mChangeListeners = New Collection
 End Sub
 
-Private Sub Class_ReadProperties(PropBag As PropertyBag)
-Dim lComboLeg As ComboLeg
-Dim pb As PropertyBag
-Dim ComboLegs() As Byte
-Dim i As Long
+'Private Sub Class_ReadProperties(PropBag As PropertyBag)
+'Dim lComboLeg As ComboLeg
+'Dim pb As PropertyBag
+'Dim ComboLegs() As Byte
+'Dim i As Long
+'
+'ComboLegs = PropBag.ReadProperty("combolegs")
+'Set pb = New PropertyBag
+'pb.Contents = ComboLegs
+'
+'On Error GoTo err
+'
+'Do While True
+'    i = i + 1
+'    Set lComboLeg = pb.ReadProperty("comboLeg" & i)
+'    mComboLegs.add lComboLeg
+'Loop
+'
+'Exit Sub
+'
+'err:
+'End Sub
 
-ComboLegs = PropBag.ReadProperty("combolegs")
-Set pb = New PropertyBag
-pb.Contents = ComboLegs
-
-On Error GoTo err
-
-Do While True
-    i = i + 1
-    Set lComboLeg = pb.ReadProperty("comboLeg" & i)
-    mComboLegs.add lComboLeg
-Loop
-
-Exit Sub
-
-err:
-End Sub
-
-Private Sub Class_WriteProperties(PropBag As PropertyBag)
-Dim lComboLeg As ComboLeg
-Dim pb As PropertyBag
-Dim ComboLegs() As Byte
-Dim i As Long
-
-Set pb = New PropertyBag
-
-For Each lComboLeg In mComboLegs
-    i = i + 1
-    pb.WriteProperty "comboleg" & i, lComboLeg
-Next
-
-ComboLegs = pb.Contents
-PropBag.WriteProperty "combolegs", ComboLegs
-
-End Sub
+'Private Sub Class_WriteProperties(PropBag As PropertyBag)
+'Dim lComboLeg As ComboLeg
+'Dim pb As PropertyBag
+'Dim ComboLegs() As Byte
+'Dim i As Long
+'
+'Set pb = New PropertyBag
+'
+'For Each lComboLeg In mComboLegs
+'    i = i + 1
+'    pb.WriteProperty "comboleg" & i, lComboLeg
+'Next
+'
+'ComboLegs = pb.Contents
+'PropBag.WriteProperty "combolegs", ComboLegs
+'
+'End Sub
 
 '================================================================================
 ' IComboLegs Interface Members
@@ -126,7 +129,7 @@ Set IComboLegs_NewComboLeg = New ComboLeg
 End Function
 
 Private Sub IComboLegs_Remove(ByVal index As Variant)
-Remove (index)
+remove index
 End Sub
 
 '================================================================================
@@ -161,6 +164,12 @@ If key <> "" Then
 Else
     mComboLegs.add pComboLeg
 End If
+fireChange CollItemAdded, pComboLeg
+End Sub
+
+Public Sub addCollectionChangeListener( _
+                ByVal value As CollectionChangeListener)
+mChangeListeners.add value
 End Sub
 
 Public Function addLeg( _
@@ -172,7 +181,7 @@ Public Function addLeg( _
                 ByVal openClose As LegOpenClose) As ComboLeg
 
 If mLocked Then
-    err.Raise ErrorCodes.IllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "TradeBuild.ComboLegs::addLeg", _
                 "Can't add leg: the object is locked"
 End If
@@ -206,13 +215,36 @@ Attribute NewEnum.VB_MemberFlags = "40"
 Set NewEnum = mComboLegs.[_NewEnum]
 End Function
 
-Public Sub Remove(ByVal index As Variant)
-mComboLegs.Remove index
+Public Sub remove(ByVal index As Variant)
+Dim lComboLeg As ComboLeg
+Set lComboLeg = mComboLegs(index)
+mComboLegs.remove index
+fireChange CollItemRemoved, lComboLeg
+End Sub
+
+Public Sub removeCollectionChangeListener(ByVal value As CollectionChangeListener)
+Dim i As Long
+For i = mChangeListeners.Count To 1 Step -1
+    If mChangeListeners.item(i) Is value Then mChangeListeners.remove i
+Next
 End Sub
 
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub fireChange( _
+                ByVal changeType As CollectionChangeTypes, _
+                ByVal affectedObject As ComboLeg)
+Dim listener As CollectionChangeListener
+Dim Change As CollectionChangeEvent
+Set Change.source = Me
+Change.changeType = changeType
+Set Change.affectedObject = affectedObject
+For Each listener In mChangeListeners
+    listener.Change Change
+Next
+End Sub
 
 
 

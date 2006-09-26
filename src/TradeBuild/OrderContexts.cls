@@ -51,6 +51,7 @@ Option Explicit
 '================================================================================
 
 Private mOrderContexts As Collection
+Private mChangeListeners As Collection
 
 Private mEnabled As Boolean
 
@@ -58,9 +59,11 @@ Private mDummy As Boolean
 Private mSimulated As Boolean
 
 Private mTicker As Ticker
-Private mPositionManager As positionManager
+Private mPositionManager As PositionManager
 
-Private mOrderSubmitter As TradeBuild.IOrderSubmitter
+Private mOrderSubmitter As TradeBuildSP.IOrderSubmitter
+
+Private mProviderReady As Boolean
 
 '================================================================================
 ' Class Event Handlers
@@ -68,6 +71,7 @@ Private mOrderSubmitter As TradeBuild.IOrderSubmitter
 
 Private Sub Class_Initialize()
 Set mOrderContexts = New Collection
+Set mChangeListeners = New Collection
 mEnabled = True
 End Sub
 
@@ -100,11 +104,19 @@ enabled = mEnabled
 End Property
 
 Friend Property Let orderSubmitter( _
-                ByVal value As TradeBuild.IOrderSubmitter)
+                ByVal value As TradeBuildSP.IOrderSubmitter)
 Set mOrderSubmitter = value
 End Property
 
-Friend Property Let positionManager(ByVal value As positionManager)
+Friend Property Let ProviderReady(ByVal value As Boolean)
+Dim lOrderContext As OrderContext
+mProviderReady = value
+For Each lOrderContext In mOrderContexts
+    lOrderContext.isReady = value
+Next
+End Property
+
+Friend Property Let PositionManager(ByVal value As PositionManager)
 Set mPositionManager = value
 End Property
 
@@ -122,35 +134,42 @@ End Property
 
 Public Function add(ByVal name As String) As OrderContext
 If Not mEnabled Then
-    err.Raise ErrorCodes.IllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "TradeBuild.OrderContexts::add", _
                 "Order context addition is disabled"
 End If
 
 Set add = New OrderContext
 add.Ticker = mTicker
-add.positionManager = mPositionManager
+add.PositionManager = mPositionManager
 add.orderSubmitter = mOrderSubmitter
 add.dummy = mDummy
 add.simulated = mSimulated
 add.name = name
 mOrderContexts.add add, name
+fireChange CollItemAdded, add
+add.isReady = mProviderReady
 End Function
 
-Friend Sub Finish()
+Public Sub addCollectionChangeListener( _
+                ByVal value As CollectionChangeListener)
+mChangeListeners.add value
+End Sub
+
+Friend Sub finish()
 Dim OrderContext As OrderContext
 
 Set mTicker = Nothing
 Set mPositionManager = Nothing
 
 For Each OrderContext In mOrderContexts
-    OrderContext.Finish
+    OrderContext.finish
 Next
 End Sub
 
-Public Function item(index As Variant) As OrderContext
-Attribute item.VB_UserMemId = 0
-Set item = mOrderContexts(index)
+Public Function Item(index As Variant) As OrderContext
+Attribute Item.VB_UserMemId = 0
+Set Item = mOrderContexts(index)
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -159,8 +178,34 @@ Attribute NewEnum.VB_MemberFlags = "40"
 Set NewEnum = mOrderContexts.[_NewEnum]
 End Function
 
+Public Sub remove( _
+                ByVal pOrderContext As OrderContext)
+mOrderContexts.remove pOrderContext.name
+fireChange CollItemRemoved, pOrderContext
+End Sub
+
+Public Sub removeCollectionChangeListener(ByVal value As CollectionChangeListener)
+Dim i As Long
+For i = mChangeListeners.Count To 1 Step -1
+    If mChangeListeners.Item(i) Is value Then mChangeListeners.remove i
+Next
+End Sub
+
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub fireChange( _
+                ByVal changeType As CollectionChangeTypes, _
+                ByVal affectedObject As OrderContext)
+Dim listener As CollectionChangeListener
+Dim Change As CollectionChangeEvent
+Set Change.source = Me
+Change.changeType = changeType
+Set Change.affectedObject = affectedObject
+For Each listener In mChangeListeners
+    listener.Change Change
+Next
+End Sub
 
 

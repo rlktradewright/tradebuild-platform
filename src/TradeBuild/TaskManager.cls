@@ -42,9 +42,6 @@ Option Explicit
 ' Enums
 '================================================================================
 
-Public Enum ErrorCodes
-    CantCreateGUID = vbObjectError + 512
-End Enum
 '================================================================================
 ' Types
 '================================================================================
@@ -92,8 +89,9 @@ mTasks.Remove tc.name
 End Sub
 
 Public Function startTask( _
-                ByVal target As Runnable, _
-                Optional ByVal name As String) As TaskCompletion
+                ByVal target As Task, _
+                Optional ByVal name As String, _
+                Optional ByVal data As Variant) As TaskCompletion
 Dim tc As TaskContext
 
 If name = "" Then name = gGenerateGUIDString
@@ -101,6 +99,7 @@ If name = "" Then name = gGenerateGUIDString
 Set tc = New TaskContext
 tc.taskManager = Me
 tc.name = name
+tc.data = data
 tc.target = target
 tc.quantumMillisecs = mQuantumMillisecs
 tc.run

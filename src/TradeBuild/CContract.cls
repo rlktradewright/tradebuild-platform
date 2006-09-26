@@ -203,6 +203,10 @@ End Function
 ' Properties
 '================================================================================
 
+Friend Property Let ComboLegs(ByVal value As ComboLegs)
+Set mComboLegs = value
+End Property
+
 Public Property Get ComboLegs() As ComboLegs
 If mComboLegs Is Nothing Then
     Set mComboLegs = New ComboLegs
@@ -331,23 +335,23 @@ Public Function ToString() As String
 Dim comboLegObj As ComboLeg
 Dim i As Long
 
-ToString = IIf(mLocalSymbol <> "", "localsymbol=" & mLocalSymbol & vbCrLf, "")
-ToString = ToString & IIf(mSymbol <> "", "symbol=" & mSymbol & vbCrLf, "")
-ToString = ToString & IIf(mSecType <> 0, "sectype=" & secTypeToString(mSecType) & vbCrLf, "")
-ToString = ToString & IIf(mExpiry <> "", "expiry=" & mExpiry & vbCrLf, "")
-ToString = ToString & IIf(mExchange <> "", "exchange=" & mExchange & vbCrLf, "")
-ToString = ToString & IIf(mCurrency <> "", "currencycode=" & mCurrency & vbCrLf, "")
+ToString = IIf(mLocalSymbol <> "", "localsymbol=" & mLocalSymbol & "; ", "")
+ToString = ToString & IIf(mSymbol <> "", "symbol=" & mSymbol & "; ", "")
+ToString = ToString & IIf(mSecType <> 0, "sectype=" & gSecTypeToString(mSecType) & "; ", "")
+ToString = ToString & IIf(mExpiry <> "", "expiry=" & mExpiry & "; ", "")
+ToString = ToString & IIf(mExchange <> "", "exchange=" & mExchange & "; ", "")
+ToString = ToString & IIf(mCurrency <> "", "currencycode=" & mCurrency & "; ", "")
 Select Case mRight
 Case OptCall, OptPut
-    ToString = ToString & "right=" & OptRightToString(mRight) & vbCrLf
-    ToString = ToString & "strike=" & mStrike & vbCrLf
+    ToString = ToString & "right=" & gOptionRightToString(mRight) & "; "
+    ToString = ToString & "strike=" & mStrike & "; "
 End Select
 
 i = 0
 If Not mComboLegs Is Nothing Then
     For Each comboLegObj In mComboLegs
         i = i + 1
-        ToString = ToString & "Combo leg" & i & ":" & vbCrLf & _
+        ToString = ToString & "Combo leg" & i & ":" & "; " & _
                     comboLegObj.ToString
     Next
 End If

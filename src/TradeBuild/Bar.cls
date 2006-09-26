@@ -99,7 +99,7 @@ Public Property Get barLength() As Long
 barLength = mBarLength
 End Property
 
-Public Property Let barLength(ByVal value As Long)
+Friend Property Let barLength(ByVal value As Long)
 mBarLength = value
 End Property
 
@@ -107,7 +107,7 @@ Public Property Get barType() As Long
 barType = mBarType
 End Property
 
-Public Property Let barType(ByVal value As Long)
+Friend Property Let barType(ByVal value As Long)
 mBarType = value
 End Property
 
@@ -115,7 +115,7 @@ Public Property Get Blank() As Boolean
 Blank = mBlank
 End Property
 
-Public Property Let Blank(ByVal newValue As Boolean)
+Friend Property Let Blank(ByVal newValue As Boolean)
 mBlank = newValue
 End Property
 
@@ -123,7 +123,7 @@ Public Property Get closeValue() As Double
 closeValue = mClose
 End Property
 
-Public Property Let closeValue(newValue As Double)
+Friend Property Let closeValue(newValue As Double)
 mBlank = False
 mDirty = True
 mClose = newValue
@@ -133,7 +133,7 @@ Public Property Get datetime() As Date
 datetime = mDateTime
 End Property
 
-Public Property Let datetime(ByVal newValue As Date)
+Friend Property Let datetime(ByVal newValue As Date)
 mDateTime = newValue
 End Property
 
@@ -149,7 +149,7 @@ Public Property Get highValue() As Double
 highValue = mHigh
 End Property
 
-Public Property Let highValue(newValue As Double)
+Friend Property Let highValue(newValue As Double)
 mBlank = False
 mDirty = True
 mHigh = newValue
@@ -167,7 +167,7 @@ Public Property Get lowValue() As Double
 lowValue = mLow
 End Property
 
-Public Property Let lowValue(newValue As Double)
+Friend Property Let lowValue(newValue As Double)
 mBlank = False
 mDirty = True
 mLow = newValue
@@ -177,7 +177,7 @@ Public Property Get openInterest() As Long
 openInterest = mOpenInterest
 End Property
 
-Public Property Let openInterest(newValue As Long)
+Friend Property Let openInterest(newValue As Long)
 mBlank = False
 mDirty = True
 mOpenInterest = newValue
@@ -187,7 +187,7 @@ Public Property Get openValue() As Double
 openValue = mOpen
 End Property
 
-Public Property Let openValue(newValue As Double)
+Friend Property Let openValue(newValue As Double)
 mBlank = False
 mDirty = True
 mOpen = newValue
@@ -197,7 +197,7 @@ Public Property Get tickVolume() As Long
 tickVolume = mTickVolume
 End Property
 
-Public Property Let tickVolume(newValue As Long)
+Friend Property Let tickVolume(newValue As Long)
 mBlank = False
 mDirty = True
 mTickVolume = newValue
@@ -207,12 +207,13 @@ Public Property Get volume() As Long
 volume = mVolume
 End Property
 
-Public Property Let volume(newValue As Long)
+Friend Property Let volume(newValue As Long)
 If newValue = 0 Then Exit Property
 ' NB: don't set mBlank to false, because a bar with only volume
 ' should be considered blank
 mDirty = True
 mVolume = newValue
+RaiseEvent VolumeChanged
 End Property
 
 '================================================================================
@@ -247,9 +248,9 @@ RaiseEvent CloseChanged
 RaiseEvent TickVolumeChanged
 End Sub
 
-Public Sub TickSize(ByVal Size As Long)
-volume = volume + Size
-RaiseEvent VolumeChanged
+Public Sub TickSize(ByVal size As Long)
+volume = volume + size
+'RaiseEvent VolumeChanged
 End Sub
 
 '================================================================================

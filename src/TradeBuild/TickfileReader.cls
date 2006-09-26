@@ -51,7 +51,7 @@ Implements TradeBuildSP.IStreamingDataConsumer
 Private Type TickStruct
     UnProcessed     As Boolean
     Timed           As Boolean
-    timestamp       As Date
+    Timestamp       As Date
     TickType        As TradeBuild.TickTypes
     TickPrice       As Double
     TickSize        As Long
@@ -107,13 +107,13 @@ End Sub
 '================================================================================
 
 Private Sub IStreamingDataConsumer_Ask( _
-                            ByVal timestamp As Date, _
+                            ByVal Timestamp As Date, _
                             ByVal price As Double, _
                             ByVal size As Long)
 With mCurrentTick
     .UnProcessed = True
-    .TickType = TradeBuild.TickTypes.ask
-    .timestamp = AdjustTimestamp(timestamp)
+    .TickType = TradeBuild.TickTypes.TickTypeask
+    .Timestamp = AdjustTimestamp(Timestamp)
     .TickPrice = price
     .TickSize = size
 End With
@@ -121,13 +121,13 @@ HandleTick
 End Sub
 
 Private Sub IStreamingDataConsumer_Bid( _
-                            ByVal timestamp As Date, _
+                            ByVal Timestamp As Date, _
                             ByVal price As Double, _
                             ByVal size As Long)
 With mCurrentTick
     .UnProcessed = True
-    .TickType = TradeBuild.TickTypes.bid
-    .timestamp = AdjustTimestamp(timestamp)
+    .TickType = TradeBuild.TickTypes.TickTypebid
+    .Timestamp = AdjustTimestamp(Timestamp)
     .TickPrice = price
     .TickSize = size
 End With
@@ -135,73 +135,73 @@ HandleTick
 End Sub
 
 Private Sub IStreamingDataConsumer_High( _
-                            ByVal timestamp As Date, _
+                            ByVal Timestamp As Date, _
                             ByVal price As Double)
 With mCurrentTick
     .UnProcessed = True
-    .TickType = TradeBuild.TickTypes.high
-    .timestamp = AdjustTimestamp(timestamp)
+    .TickType = TradeBuild.TickTypes.TickTypehigh
+    .Timestamp = AdjustTimestamp(Timestamp)
     .TickPrice = price
 End With
 HandleTick
 End Sub
 
 Private Sub IStreamingDataConsumer_Low( _
-                            ByVal timestamp As Date, _
+                            ByVal Timestamp As Date, _
                             ByVal price As Double)
 With mCurrentTick
     .UnProcessed = True
-    .TickType = TradeBuild.TickTypes.Low
-    .timestamp = AdjustTimestamp(timestamp)
+    .TickType = TradeBuild.TickTypes.TickTypeLow
+    .Timestamp = AdjustTimestamp(Timestamp)
     .TickPrice = price
 End With
 HandleTick
 End Sub
 
 Private Sub IStreamingDataConsumer_OpenInterest( _
-                            ByVal timestamp As Date, _
+                            ByVal Timestamp As Date, _
                             ByVal size As Long)
 With mCurrentTick
     .UnProcessed = True
-    .TickType = TradeBuild.TickTypes.openInterest
-    .timestamp = AdjustTimestamp(timestamp)
+    .TickType = TradeBuild.TickTypes.TickTypeopenInterest
+    .Timestamp = AdjustTimestamp(Timestamp)
     .TickSize = size
 End With
 HandleTick
 End Sub
 
 Private Sub IStreamingDataConsumer_PreviousClose( _
-                            ByVal timestamp As Date, _
+                            ByVal Timestamp As Date, _
                             ByVal price As Double)
 With mCurrentTick
     .UnProcessed = True
-    .TickType = TradeBuild.TickTypes.PrevClose
-    .timestamp = AdjustTimestamp(timestamp)
+    .TickType = TradeBuild.TickTypes.TickTypePrevClose
+    .Timestamp = AdjustTimestamp(Timestamp)
     .TickPrice = price
 End With
 HandleTick
 End Sub
 
 Private Sub IStreamingDataConsumer_ResetMarketDepth( _
-                            ByVal timestamp As Date, _
+                            ByVal Timestamp As Date, _
                             ByVal marketDepthReRequested As Boolean)
 With mCurrentTick
     .UnProcessed = True
-    .TickType = TradeBuild.TickTypes.MarketDepthReset
-    .timestamp = AdjustTimestamp(timestamp)
+    .TickType = TradeBuild.TickTypes.TickTypeMarketDepthReset
+    .Timestamp = AdjustTimestamp(Timestamp)
     .marketDepthReRequested = marketDepthReRequested
 End With
 HandleTick
 End Sub
 
 Private Sub IStreamingDataConsumer_Trade( _
-                            ByVal timestamp As Date, _
+                            ByVal Timestamp As Date, _
                             ByVal price As Double, _
                             ByVal size As Long)
 With mCurrentTick
     .UnProcessed = True
-    .TickType = TradeBuild.TickTypes.Last
-    .timestamp = AdjustTimestamp(timestamp)
+    .TickType = TradeBuild.TickTypes.TickTypeLast
+    .Timestamp = AdjustTimestamp(Timestamp)
     .TickPrice = price
     .TickSize = size
 End With
@@ -209,19 +209,19 @@ HandleTick
 End Sub
 
 Private Sub IStreamingDataConsumer_UpdateMktDepth( _
-                            ByVal timestamp As Date, _
+                            ByVal Timestamp As Date, _
                             ByVal position As Long, _
                             ByVal operation As TradeBuildSP.DOMOperations, _
-                            ByVal side As TradeBuildSP.DOMSides, _
+                            ByVal Side As TradeBuildSP.DOMSides, _
                             ByVal price As Double, _
                             ByVal size As Long)
 With mCurrentTick
     .UnProcessed = True
-    .TickType = TradeBuild.TickTypes.marketDepth
-    .timestamp = AdjustTimestamp(timestamp)
+    .TickType = TradeBuild.TickTypes.TickTypemarketDepth
+    .Timestamp = AdjustTimestamp(Timestamp)
     .MDPosition = position
     .MDOperation = operation
-    .MDSide = side
+    .MDSide = Side
     .TickPrice = price
     .TickSize = size
 End With
@@ -229,21 +229,21 @@ HandleTick
 End Sub
 
 Private Sub IStreamingDataConsumer_UpdateMktDepthL2( _
-                            ByVal timestamp As Date, _
+                            ByVal Timestamp As Date, _
                             ByVal position As Long, _
                             ByVal marketMaker As String, _
                             ByVal operation As TradeBuildSP.DOMOperations, _
-                            ByVal side As TradeBuildSP.DOMSides, _
+                            ByVal Side As TradeBuildSP.DOMSides, _
                             ByVal price As Double, _
                             ByVal size As Long)
 With mCurrentTick
     .UnProcessed = True
-    .TickType = TradeBuild.TickTypes.MarketDepthL2
-    .timestamp = AdjustTimestamp(timestamp)
+    .TickType = TradeBuild.TickTypes.TickTypeMarketDepthL2
+    .Timestamp = AdjustTimestamp(Timestamp)
     .MDMarketMaker = marketMaker
     .MDPosition = position
     .MDOperation = operation
-    .MDSide = side
+    .MDSide = Side
     .TickPrice = price
     .TickSize = size
 End With
@@ -251,12 +251,12 @@ HandleTick
 End Sub
 
 Private Sub IStreamingDataConsumer_Volume( _
-                            ByVal timestamp As Date, _
+                            ByVal Timestamp As Date, _
                             ByVal size As Long)
 With mCurrentTick
     .UnProcessed = True
-    .TickType = TradeBuild.TickTypes.volume
-    .timestamp = AdjustTimestamp(timestamp)
+    .TickType = TradeBuild.TickTypes.TickTypevolume
+    .Timestamp = AdjustTimestamp(Timestamp)
     .TickSize = size
 End With
 HandleTick
@@ -406,8 +406,8 @@ End Sub
 ' Helper Functions
 '================================================================================
 
-Private Function AdjustTimestamp(ByVal timestamp As Date) As Date
-AdjustTimestamp = timestamp + _
+Private Function AdjustTimestamp(ByVal Timestamp As Date) As Date
+AdjustTimestamp = Timestamp + _
                 mTimestampAdjustmentStart + _
                 (mTimestampAdjustmentEnd - mTimestampAdjustmentStart) * (mPercentComplete / 100)
 
@@ -424,10 +424,10 @@ Dim delayMillisecs As Long
 
 mCurrentTick.Timed = False
 
-If mCurrentTimestamp = 0 Then mCurrentTimestamp = mCurrentTick.timestamp
+If mCurrentTimestamp = 0 Then mCurrentTimestamp = mCurrentTick.Timestamp
 
 If mReplaySpeed > 0 Then
-    delayMillisecs = CLng((mCurrentTick.timestamp - mCurrentTimestamp) * 86400# * 1000# / CDbl(mReplaySpeed))
+    delayMillisecs = CLng((mCurrentTick.Timestamp - mCurrentTimestamp) * 86400# * 1000# / CDbl(mReplaySpeed))
 Else
     delayMillisecs = -mReplaySpeed
 End If
@@ -494,50 +494,50 @@ Private Sub ProcessTickData()
 
 With mCurrentTick
     Select Case .TickType
-    Case TradeBuild.TickTypes.bid
-        mDataConsumer.bid .timestamp, _
+    Case TradeBuild.TickTypes.TickTypebid
+        mDataConsumer.bid .Timestamp, _
                             .TickPrice, _
                             .TickSize
-    Case TradeBuild.TickTypes.ask
-        mDataConsumer.ask .timestamp, _
+    Case TradeBuild.TickTypes.TickTypeask
+        mDataConsumer.ask .Timestamp, _
                             .TickPrice, _
                             .TickSize
-    Case TradeBuild.TickTypes.Last
-        mDataConsumer.trade .timestamp, _
+    Case TradeBuild.TickTypes.TickTypeLast
+        mDataConsumer.trade .Timestamp, _
                             .TickPrice, _
                             .TickSize
-    Case TradeBuild.TickTypes.high
-        mDataConsumer.high .timestamp, _
+    Case TradeBuild.TickTypes.TickTypehigh
+        mDataConsumer.high .Timestamp, _
                             .TickPrice
-    Case TradeBuild.TickTypes.Low
-        mDataConsumer.Low .timestamp, _
+    Case TradeBuild.TickTypes.TickTypeLow
+        mDataConsumer.Low .Timestamp, _
                             .TickPrice
-    Case TradeBuild.TickTypes.PrevClose
-        mDataConsumer.previousClose .timestamp, _
+    Case TradeBuild.TickTypes.TickTypePrevClose
+        mDataConsumer.previousClose .Timestamp, _
                                     .TickPrice
-    Case TradeBuild.TickTypes.volume
-        mDataConsumer.volume .timestamp, _
+    Case TradeBuild.TickTypes.TickTypevolume
+        mDataConsumer.volume .Timestamp, _
                                 .TickSize
-    Case TradeBuild.TickTypes.marketDepth
-        mDataConsumer.UpdateMktDepth .timestamp, _
+    Case TradeBuild.TickTypes.TickTypemarketDepth
+        mDataConsumer.UpdateMktDepth .Timestamp, _
                                             .MDPosition, _
                                             .MDOperation, _
                                             .MDSide, _
                                             .TickPrice, _
                                             .TickSize
-    Case TradeBuild.TickTypes.MarketDepthL2
-        mDataConsumer.UpdateMktDepthL2 .timestamp, _
+    Case TradeBuild.TickTypes.TickTypeMarketDepthL2
+        mDataConsumer.UpdateMktDepthL2 .Timestamp, _
                                             .MDPosition, _
                                             .MDMarketMaker, _
                                             .MDOperation, _
                                             .MDSide, _
                                             .TickPrice, _
                                             .TickSize
-    Case TradeBuild.TickTypes.MarketDepthReset
-        mDataConsumer.resetMarketDepth .timestamp, .marketDepthReRequested
+    Case TradeBuild.TickTypes.TickTypeMarketDepthReset
+        mDataConsumer.resetMarketDepth .Timestamp, .marketDepthReRequested
     End Select
     .UnProcessed = False
-    mCurrentTimestamp = .timestamp
+    mCurrentTimestamp = .Timestamp
 End With
     
 End Sub

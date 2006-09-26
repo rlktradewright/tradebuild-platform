@@ -34,6 +34,8 @@ Option Explicit
 ' Events
 '================================================================================
 
+Event TimeFrameAdded(ByVal pTimeframe As Timeframe)
+
 '================================================================================
 ' Constants
 '================================================================================
@@ -46,22 +48,35 @@ Option Explicit
 ' Types
 '================================================================================
 
+Private Type TimeframeTableEntry
+    timeperiod              As Long
+    timeperiodUnit          As TradeBuild.TimePeriodUnits
+    key                     As String
+    theTimeFrame            As Timeframe
+    numberOfBarsToFetch     As Long
+    historicalDataLoaded    As Boolean
+End Type
+
 '================================================================================
 ' Member variables
 '================================================================================
 
-Private mTimeframes As Collection
+Private mTimeframeTable() As TimeframeTableEntry
+Private mNextTimeframeTableIndex As Long
 
 Private mTicker As TradeBuild.Ticker
 
 Private mContract As TradeBuild.Contract
+
+Private mChangeListeners As Collection
 
 '================================================================================
 ' Class Event Handlers
 '================================================================================
 
 Private Sub Class_Initialize()
-Set mTimeframes = New Collection
+ReDim mTimeframeTable(10) As TimeframeTableEntry
+Set mChangeListeners = New Collection
 End Sub
 
 Private Sub Class_Terminate()
@@ -81,15 +96,18 @@ End Sub
 '================================================================================
 
 Friend Property Let Contract(ByVal value As Contract)
-Dim lTimeframe As Timeframe
+Dim tte As TimeframeTableEntry
+Dim i As Long
+
 Set mContract = value
-For Each lTimeframe In mTimeframes
-    lTimeframe.Contract = mContract
+For i = 0 To mNextTimeframeTableIndex - 1
+    tte = mTimeframeTable(i)
+    tte.theTimeFrame.Contract = mContract
 Next
 End Property
 
 Public Property Get Count() As Long
-Count = mTimeframes.Count
+Count = mNextTimeframeTableIndex
 End Property
 
 Friend Property Let Ticker(ByVal value As Ticker)
@@ -103,69 +121,170 @@ End Property
 Public Function add( _
                             ByVal timeperiod As Long, _
                             ByVal timeperiodUnit As TradeBuild.TimePeriodUnits, _
-                            ByVal key As String, _
-                            ByVal NumberOfBarsToFetch As Long, _
+                            ByRef key As String, _
+                            ByVal numberOfBarsToFetch As Long, _
                             Optional ByVal SaveIntervalSeconds As Long = -1&, _
                             Optional ByVal IncludeBidAndAsk As Boolean, _
                             Optional ByVal excludeCurrentBar As Boolean = False) As Timeframe
-Set add = New Timeframe
-mTimeframes.add add, key
-add.key = key
-add.Ticker = mTicker
-add.timeperiod = timeperiod
-add.timeperiodUnit = timeperiodUnit
-add.SaveIntervalSeconds = SaveIntervalSeconds
-add.IncludeBidAndAsk = IncludeBidAndAsk
-add.NumberOfBarsToFetch = NumberOfBarsToFetch
-add.excludeCurrentBar = excludeCurrentBar
-If Not mContract Is Nothing Then add.Contract = mContract
+
+Dim tte As TimeframeTableEntry
+Dim timeframeIndex As Long
+
+timeframeIndex = getTimeframeIndex(timeperiod, timeperiodUnit, key)
+If timeframeIndex >= 0 Then
+    Set add = mTimeframeTable(timeframeIndex).theTimeFrame
+    If key = "" Then key = mTimeframeTable(timeframeIndex).key
+Else
+    Set add = New Timeframe
+    Set tte.theTimeFrame = add
+    tte.timeperiod = timeperiod
+    tte.timeperiodUnit = timeperiodUnit
+    tte.numberOfBarsToFetch = numberOfBarsToFetch
+    If key <> "" Then
+        tte.key = key
+    Else
+        tte.key = generateKey(timeperiod, timeperiodUnit)
+    End If
+    tte.theTimeFrame.initialise tte.key, _
+                                mTicker, _
+                                timeperiod, _
+                                timeperiodUnit, _
+                                numberOfBarsToFetch, _
+                                SaveIntervalSeconds, _
+                                IncludeBidAndAsk, _
+                                excludeCurrentBar
+    
+    If Not mContract Is Nothing Then tte.theTimeFrame.Contract = mContract
+    If mNextTimeframeTableIndex > UBound(mTimeframeTable) Then
+        ReDim Preserve mTimeframeTable(UBound(mTimeframeTable) + 10) As TimeframeTableEntry
+    End If
+    mTimeframeTable(mNextTimeframeTableIndex) = tte
+    mNextTimeframeTableIndex = mNextTimeframeTableIndex + 1
+    fireChange CollItemAdded, tte.theTimeFrame
+    RaiseEvent TimeFrameAdded(add)
+End If
+
 End Function
 
-Friend Sub Finish()
-Dim lTimeframe As TradeBuild.Timeframe
-For Each lTimeframe In mTimeframes
-    lTimeframe.Finish
+Public Sub addCollectionChangeListener( _
+                ByVal value As CollectionChangeListener)
+mChangeListeners.add value
+End Sub
+
+Friend Sub finish()
+Dim i As Long
+
+For i = 0 To mNextTimeframeTableIndex - 1
+    mTimeframeTable(i).theTimeFrame.finish
 Next
 Set mTicker = Nothing
 End Sub
 
-Public Function Item(index As Variant) As Timeframe
-Set Item = mTimeframes(index)
+Public Function Item(key As String) As Timeframe
+Dim i As Long
+
+For i = 0 To mNextTimeframeTableIndex - 1
+    If mTimeframeTable(i).key = key Then
+        Set Item = mTimeframeTable(i).theTimeFrame
+        Exit For
+    End If
+Next
 End Function
 
-Friend Sub Reinitialise()
-Dim lTimeframe As TradeBuild.Timeframe
-For Each lTimeframe In mTimeframes
-    lTimeframe.Reinitialise
-Next
-End Sub
+Public Sub remove(key As String)
+Dim i As Long
 
-Public Sub Remove(index As Variant)
-Dim lTimeframe As TradeBuild.Timeframe
-On Error Resume Next
-Set lTimeframe = mTimeframes(index)
-On Error GoTo 0
-If Not lTimeframe Is Nothing Then
-    lTimeframe.Finish
-    mTimeframes.Remove index
-End If
+For i = 0 To mNextTimeframeTableIndex - 1
+    If mTimeframeTable(i).key = key Then
+        mTimeframeTable(i).theTimeFrame.finish
+        clearTimeframeTableEntry i
+        fireChange CollItemRemoved, mTimeframeTable(i).theTimeFrame
+        Exit For
+    End If
+Next
 End Sub
 
 Public Sub RemoveAll()
 Dim i As Long
-Dim lTimeframe As TradeBuild.Timeframe
-For i = mTimeframes.Count To 1 Step -1
-    Set lTimeframe = mTimeframes(i)
-    lTimeframe.Finish
-    mTimeframes.Remove i
+
+For i = 0 To mNextTimeframeTableIndex - 1
+    mTimeframeTable(i).theTimeFrame.finish
+    clearTimeframeTableEntry i
+    fireChange CollItemRemoved, mTimeframeTable(i).theTimeFrame
 Next
 End Sub
 
-Public Function NewEnum() As IUnknown
-Set NewEnum = mTimeframes.[_NewEnum]
-End Function
+Public Sub removeCollectionChangeListener(ByVal value As CollectionChangeListener)
+Dim i As Long
+For i = mChangeListeners.Count To 1 Step -1
+    If mChangeListeners.Item(i) Is value Then mChangeListeners.remove i
+Next
+End Sub
 
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub clearTimeframeTableEntry(ByVal index As Long)
+mTimeframeTable(index).historicalDataLoaded = False
+mTimeframeTable(index).key = ""
+mTimeframeTable(index).numberOfBarsToFetch = 0
+Set mTimeframeTable(index).theTimeFrame = Nothing
+mTimeframeTable(index).timeperiod = 0
+mTimeframeTable(index).timeperiodUnit = 0
+End Sub
+
+Private Sub fireChange( _
+                ByVal changeType As CollectionChangeTypes, _
+                ByVal affectedObject As Timeframe)
+Dim listener As CollectionChangeListener
+Dim Change As CollectionChangeEvent
+Set Change.source = Me
+Change.changeType = changeType
+Set Change.affectedObject = affectedObject
+For Each listener In mChangeListeners
+    listener.Change Change
+Next
+End Sub
+
+Private Function generateKey( _
+                ByVal timeperiod As Long, _
+                ByVal timeperiodUnit As TradeBuild.TimePeriodUnits) As String
+generateKey = timeperiod
+Select Case timeperiodUnit
+Case TimePeriodMinute
+    generateKey = generateKey & "Mins"
+Case TimePeriodHour
+    generateKey = generateKey & "Hours"
+Case TimePeriodDay
+    generateKey = generateKey & "Days"
+Case TimePeriodWeek
+    generateKey = generateKey & "Weeks"
+Case TimePeriodMonth
+    generateKey = generateKey & "Months"
+Case TimePeriodLunarMonth
+    generateKey = generateKey & "LunarMonths"
+Case TimePeriodYear
+    generateKey = generateKey & "Years"
+End Select
+End Function
+
+Private Function getTimeframeIndex( _
+                ByVal timeperiod As Long, _
+                ByVal timeperiodUnit As TradeBuild.TimePeriodUnits, _
+                ByRef key As String) As Long
+Dim i As Long
+
+getTimeframeIndex = -1
+For i = 0 To mNextTimeframeTableIndex - 1
+    If mTimeframeTable(i).timeperiod = timeperiod And _
+        mTimeframeTable(i).timeperiodUnit = timeperiodUnit And _
+        (mTimeframeTable(i).key = key Or key = "") _
+    Then
+        getTimeframeIndex = i
+        Exit Function
+    End If
+Next
+End Function
+
 

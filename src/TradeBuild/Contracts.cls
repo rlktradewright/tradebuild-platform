@@ -61,9 +61,10 @@ Event TryLater( _
 '================================================================================
 
 Private mContracts As Collection
-Private mAPIProxy As APIProxy
 
 Private mContractSpecifier As contractSpecifier
+
+Private mChangeListeners As Collection
 
 '================================================================================
 ' Class Event Handlers
@@ -71,6 +72,7 @@ Private mContractSpecifier As contractSpecifier
 
 Private Sub Class_Initialize()
 Set mContracts = New Collection
+Set mChangeListeners = New Collection
 End Sub
 
 '================================================================================
@@ -94,11 +96,11 @@ IContracts_Count = Count
 End Property
 
 Private Function IContracts_Item(ByVal index As Variant) As TradeBuildSP.IContract
-Set IContracts_Item = item(index)
+Set IContracts_Item = Item(index)
 End Function
 
 Private Sub IContracts_Remove(ByVal index As Variant)
-Remove index
+remove index
 End Sub
 
 Private Sub IContracts_ServiceProviderCantHandle( _
@@ -114,10 +116,6 @@ End Sub
 '================================================================================
 ' Properties
 '================================================================================
-
-Friend Property Let APIProxy(ByVal pApiProxy As APIProxy)
-Set mAPIProxy = pApiProxy
-End Property
 
 Friend Property Let contractSpecifier(ByVal value As contractSpecifier)
 Set mContractSpecifier = value
@@ -137,38 +135,41 @@ End Property
 
 Friend Sub AddContract(ByVal pContract As Contract)
 mContracts.add pContract, pContract.specifier.key
+fireChange CollItemAdded, pContract
 RaiseEvent ContractDetailsReceived(pContract)
+End Sub
+
+Public Sub addCollectionChangeListener( _
+                ByVal value As CollectionChangeListener)
+mChangeListeners.add value
 End Sub
 
 Friend Sub ContractSpecifierInvalid(ByVal reason As String)
 RaiseEvent ContractSpecifierInvalid(reason)
 End Sub
 
-Public Function item(ByVal index As Variant) As Contract
-Attribute item.VB_UserMemId = 0
-Set item = mContracts(index)
+Public Function Item(ByVal index As Variant) As Contract
+Attribute Item.VB_UserMemId = 0
+Set Item = mContracts(index)
 End Function
 
-Public Sub Load( _
-                ByVal contractSpec As contractSpecifier, _
-                Optional ByVal add As Boolean = False)
+Public Sub Load()
 Dim i As Long
 
 On Error GoTo err
 
-contractSpec.locked = True
+mContractSpecifier.locked = True
 
-If Not add Then
-    For i = mContracts.Count To 1 Step -1
-        mContracts.Remove (i)
-    Next
-End If
+' remove any current contents
+For i = mContracts.Count To 1 Step -1
+    mContracts.remove i
+Next
 
-gServiceProviders.RequestContract contractSpec, Me
+gServiceProviders.LoadContracts Me
 
 Exit Sub
 err:
-err.Raise err.Number, _
+err.Raise err.number, _
             "TradeBuild.Contracts::Load", _
             err.Description
 End Sub
@@ -183,12 +184,35 @@ Attribute NewEnum.VB_MemberFlags = "40"
 Set NewEnum = mContracts.[_NewEnum]
 End Function
 
-Public Sub Remove(ByVal index As Variant)
-mContracts.Remove index
+Public Sub remove(ByVal index As Variant)
+Dim lContract As Contract
+Set lContract = mContracts(index)
+mContracts.remove index
+fireChange CollItemRemoved, lContract
+End Sub
+
+Public Sub removeCollectionChangeListener(ByVal value As CollectionChangeListener)
+Dim i As Long
+For i = mChangeListeners.Count To 1 Step -1
+    If mChangeListeners.Item(i) Is value Then mChangeListeners.remove i
+Next
 End Sub
 
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub fireChange( _
+                ByVal changeType As CollectionChangeTypes, _
+                ByVal affectedObject As Contract)
+Dim listener As CollectionChangeListener
+Dim Change As CollectionChangeEvent
+Set Change.source = Me
+Change.changeType = changeType
+Set Change.affectedObject = affectedObject
+For Each listener In mChangeListeners
+    listener.Change Change
+Next
+End Sub
 
 

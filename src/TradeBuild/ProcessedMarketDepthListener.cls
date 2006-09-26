@@ -70,13 +70,8 @@ Option Explicit
 ' Methods
 '================================================================================
 
-Public Sub clearMarketDepthCell( _
-                ByRef ev As ProcessedMarketDepthEvent)
-                
-End Sub
-
 Public Sub resetMarketDepth( _
-                ByRef ev As GenericEvent)
+                ByRef ev As ProcessedMarketDepthEvent)
                 
 End Sub
 
