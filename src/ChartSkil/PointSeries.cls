@@ -181,7 +181,9 @@ End Property
 ' Methods
 '================================================================================
 
-Public Function addDataPoint(ByVal periodNumber As Long) As DataPoint
+Public Function addDataPoint( _
+                ByVal periodNumber As Long, _
+                Optional ByVal key As Variant) As DataPoint
 Set addDataPoint = New DataPoint
 addDataPoint.canvas = mCanvas
 addDataPoint.periodNumber = periodNumber
@@ -194,7 +196,11 @@ addDataPoint.lineColor = mLineColor
 addDataPoint.lineStyle = mLineStyle
 addDataPoint.lineThickness = mLineThickness
 addDataPoint.prevDataPoint = mPrevDataPoint
-mDataPoints.add addDataPoint, CStr(periodNumber)
+If IsMissing(key) Then
+    mDataPoints.add addDataPoint
+Else
+    mDataPoints.add addDataPoint, key
+End If
 Set mPrevDataPoint = addDataPoint
 mEventProxy.addGraphicObject addDataPoint
 End Function
@@ -203,8 +209,9 @@ Friend Sub finish()
 Set mCanvas = Nothing
 End Sub
 
-Public Function item(ByVal periodNumber As Long) As DataPoint
-Set item = mDataPoints(CStr(periodNumber))
+Public Function item(ByVal key As Variant) As DataPoint
+Attribute item.VB_UserMemId = 0
+Set item = mDataPoints(CStr(key))
 End Function
 
 Friend Sub removeAll()
