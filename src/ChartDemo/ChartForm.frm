@@ -1,6 +1,5 @@
 VERSION 5.00
-Object = "{DBED8E43-5960-49DE-B9A7-BBC22DB93A26}#9.0#0"; "ChartSkil.ocx"
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{DBED8E43-5960-49DE-B9A7-BBC22DB93A26}#10.0#0"; "ChartSkil.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo"
    ClientHeight    =   8355
@@ -10,6 +9,17 @@ Begin VB.Form ChartForm
    LinkTopic       =   "Form1"
    ScaleHeight     =   8355
    ScaleWidth      =   12015
+   Begin ChartSkil.Chart Chart1 
+      Align           =   1  'Align Top
+      Height          =   4815
+      Left            =   0
+      TabIndex        =   13
+      Top             =   0
+      Width           =   12015
+      _ExtentX        =   21193
+      _ExtentY        =   8493
+      autoscale       =   0   'False
+   End
    Begin VB.PictureBox BasePicture 
       Appearance      =   0  'Flat
       BorderStyle     =   0  'None
@@ -69,170 +79,6 @@ Begin VB.Form ChartForm
          Top             =   120
          Width           =   735
       End
-      Begin MSComctlLib.ImageList ImageList2 
-         Left            =   120
-         Top             =   120
-         _ExtentX        =   1005
-         _ExtentY        =   1005
-         BackColor       =   -2147483643
-         ImageWidth      =   32
-         ImageHeight     =   32
-         MaskColor       =   12632256
-         _Version        =   393216
-         BeginProperty Images {2C247F25-8591-11D1-B16A-00C0F0283628} 
-            NumListImages   =   17
-            BeginProperty ListImage1 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":0000
-               Key             =   ""
-            EndProperty
-            BeginProperty ListImage2 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":031A
-               Key             =   ""
-            EndProperty
-            BeginProperty ListImage3 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":0634
-               Key             =   ""
-            EndProperty
-            BeginProperty ListImage4 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":094E
-               Key             =   ""
-            EndProperty
-            BeginProperty ListImage5 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":0C68
-               Key             =   ""
-            EndProperty
-            BeginProperty ListImage6 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":0F82
-               Key             =   ""
-            EndProperty
-            BeginProperty ListImage7 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":129C
-               Key             =   ""
-            EndProperty
-            BeginProperty ListImage8 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":15B6
-               Key             =   ""
-            EndProperty
-            BeginProperty ListImage9 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":1A08
-               Key             =   ""
-            EndProperty
-            BeginProperty ListImage10 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":1D22
-               Key             =   ""
-            EndProperty
-            BeginProperty ListImage11 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":203C
-               Key             =   ""
-            EndProperty
-            BeginProperty ListImage12 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":2356
-               Key             =   ""
-            EndProperty
-            BeginProperty ListImage13 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":2670
-               Key             =   ""
-            EndProperty
-            BeginProperty ListImage14 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":298A
-               Key             =   ""
-            EndProperty
-            BeginProperty ListImage15 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":2CA4
-               Key             =   ""
-            EndProperty
-            BeginProperty ListImage16 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":2FBE
-               Key             =   ""
-            EndProperty
-            BeginProperty ListImage17 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":32D8
-               Key             =   ""
-            EndProperty
-         EndProperty
-      End
-      Begin MSComctlLib.ImageList ImageList1 
-         Left            =   720
-         Top             =   120
-         _ExtentX        =   1005
-         _ExtentY        =   1005
-         BackColor       =   -2147483643
-         ImageWidth      =   32
-         ImageHeight     =   32
-         MaskColor       =   12632256
-         _Version        =   393216
-         BeginProperty Images {2C247F25-8591-11D1-B16A-00C0F0283628} 
-            NumListImages   =   17
-            BeginProperty ListImage1 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":35F2
-               Key             =   "showbars"
-            EndProperty
-            BeginProperty ListImage2 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":390C
-               Key             =   "showcandlesticks"
-            EndProperty
-            BeginProperty ListImage3 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":3C26
-               Key             =   "showline"
-            EndProperty
-            BeginProperty ListImage4 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":3F40
-               Key             =   ""
-            EndProperty
-            BeginProperty ListImage5 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":425A
-               Key             =   ""
-            EndProperty
-            BeginProperty ListImage6 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":4574
-               Key             =   "thinnerbars"
-            EndProperty
-            BeginProperty ListImage7 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":488E
-               Key             =   "thickerbars"
-            EndProperty
-            BeginProperty ListImage8 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":4BA8
-               Key             =   "narrower"
-            EndProperty
-            BeginProperty ListImage9 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":4FFA
-               Key             =   "wider"
-            EndProperty
-            BeginProperty ListImage10 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":5314
-               Key             =   "scaledown"
-            EndProperty
-            BeginProperty ListImage11 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":562E
-               Key             =   "scaleup"
-            EndProperty
-            BeginProperty ListImage12 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":5948
-               Key             =   "scrolldown"
-            EndProperty
-            BeginProperty ListImage13 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":5C62
-               Key             =   "scrollup"
-            EndProperty
-            BeginProperty ListImage14 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":5F7C
-               Key             =   "scrollleft"
-            EndProperty
-            BeginProperty ListImage15 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":6296
-               Key             =   "scrollright"
-            EndProperty
-            BeginProperty ListImage16 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":65B0
-               Key             =   "scrollend"
-            EndProperty
-            BeginProperty ListImage17 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-               Picture         =   "ChartForm.frx":68CA
-               Key             =   ""
-            EndProperty
-         EndProperty
-      End
       Begin VB.CommandButton LoadButton 
          Caption         =   "Load"
          Height          =   495
@@ -286,17 +132,6 @@ Begin VB.Form ChartForm
          Top             =   840
          Width           =   1455
       End
-   End
-   Begin ChartSkil.Chart Chart1 
-      Align           =   1  'Align Top
-      Height          =   6015
-      Left            =   0
-      TabIndex        =   13
-      Top             =   0
-      Width           =   12015
-      _ExtentX        =   21193
-      _ExtentY        =   10610
-      autoscale       =   0   'False
    End
 End
 Attribute VB_Name = "ChartForm"
@@ -527,7 +362,7 @@ mClockText.boxThickness = 1             ' ...and is 1 pixel thick...
 mClockText.boxColor = vbBlack           ' ...draw the outline black...
 mClockText.boxFillColor = vbWhite       ' ...and fill it white
 mClockText.paddingX = 1                 ' leave 1 mm padding between the text and the box
-mClockText.position = mPriceRegion.newPoint(90, 98, CoordsRelative, CoordsRelative)
+mClockText.Position = mPriceRegion.newPoint(90, 98, CoordsRelative, CoordsRelative)
                                         ' position the box 90 percent across the region
                                         ' and 98 percent up the region (this will be
                                         ' the position of the top right corner as
@@ -590,7 +425,7 @@ mMovAvg2Series.displayMode = DisplayModes.DisplayAsLines
                                         ' individual points...
 mMovAvg2Series.lineColor = vbBlue      ' ...in blue
 mMovAvg2Series.lineThickness = 1        ' ...with a thickness of 1 pixel...
-mMovAvg2Series.lineStyle = LineStyles.LineDot
+mMovAvg2Series.LineStyle = LineStyles.LineDot
                                         ' ...and a dotted style
 
 ' Set up a datapoint series for the third moving average
@@ -690,7 +525,7 @@ startText.boxThickness = 1              ' ...1 pixel thick...
 startText.boxFillColor = vbGreen        ' ...and a green fill
 startText.boxFillStyle = FillStyles.FillSolid
                                         ' the fill should be solid (this is the default)
-startText.position = mPriceRegion.newPoint(mbar.periodNumber, mbar.highPrice)
+startText.Position = mPriceRegion.newPoint(mbar.periodNumber, mbar.highPrice)
                                         ' position the text at the high of the current
                                         ' bar...
 startText.offset = mPriceRegion.newDimension(0, 0.4)
@@ -733,7 +568,7 @@ mTickCountText.boxStyle = LineStyles.LineSolid
 mTickCountText.boxThickness = 1
 mTickCountText.boxFillColor = vbBlack
 mTickCountText.boxFillStyle = FillStyles.FillSolid
-mTickCountText.position = mPriceRegion.newPoint(5, 90, CoordsRelative, CoordsRelative)
+mTickCountText.Position = mPriceRegion.newPoint(5, 90, CoordsRelative, CoordsRelative)
 mTickCountText.fixedX = True
 mTickCountText.fixedY = True
 mTickCountText.Align = TextAlignModes.AlignTopLeft
@@ -782,7 +617,7 @@ mbar.tick closePrice
 If mPeriod.periodNumber Mod BarLabelFrequency = 0 Then
     Set barText = mBarLabelSeries.addText()
     barText.Text = mPeriod.periodNumber
-    barText.position = mPriceRegion.newPoint(mPeriod.periodNumber, mbar.lowPrice)
+    barText.Position = mPriceRegion.newPoint(mPeriod.periodNumber, mbar.lowPrice)
     barText.offset = mPriceRegion.newDimension(0, -0.3)
 End If
 
@@ -841,7 +676,7 @@ If mPeriod.periodNumber Mod BarLabelFrequency = 0 Then
         Set mBarText = mBarLabelSeries.addText()
         mBarText.Text = mPeriod.periodNumber
     End If
-    mBarText.position = mPriceRegion.newPoint(mbar.periodNumber, mbar.lowPrice)
+    mBarText.Position = mPriceRegion.newPoint(mbar.periodNumber, mbar.lowPrice)
     mBarText.offset = mPriceRegion.newDimension(0, -0.3)
 Else
     Set mBarText = Nothing
