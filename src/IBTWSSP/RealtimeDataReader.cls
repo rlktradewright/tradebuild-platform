@@ -176,7 +176,7 @@ Else
 End If
 End Sub
 
-Private Sub mTWSAPI_Disonnected( _
+Private Sub mTWSAPI_Disconnected( _
                 ByVal reason As String)
 mServiceConsumer.Error StandardSPErrorCodes.RTDisconnectedFromDataSource, _
                         reason

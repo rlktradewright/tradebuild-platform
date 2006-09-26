@@ -40,7 +40,7 @@ Event ConnectionToIBClosed()
 
 Event ConnectionToIBRecovered()
 
-Event Disonnected(ByVal reason As String)
+Event Disconnected(ByVal reason As String)
     ' Raised when we disconnect from TWS
 
 Event FAData( _
@@ -740,7 +740,7 @@ ReleaseSocket
 mIndexIn = 0
 mIndexOut = 0
 mInputIndex = 0
-RaiseEvent Disonnected(reason)
+RaiseEvent Disconnected(reason)
 logMessage "Disconnected from: " & calcConnectionString, LogLevelLow
 End Sub
 
