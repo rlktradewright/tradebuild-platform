@@ -825,7 +825,8 @@ ElseIf mSessionStartTime > mSessionEndTime Then
         sessionEndTime = referenceDate + mSessionEndTime
     End If
 Else
-    ' this instrument trades 24hrs
+    ' this instrument trades 24hrs, or the contract service provider doesn't know
+    ' the session start and end times
     sessionStartTime = referenceDate
     sessionEndTime = referenceDate + 1
 End If
@@ -834,8 +835,12 @@ weekday = DatePart("w", sessionStartTime)
 If mSessionStartTime < mSessionEndTime Then
     ' session doesn't span midnight
     If weekday <> vbSaturday And weekday <> vbSunday Then calcSessionTimesHelper = True
-Else
+ElseIf mSessionStartTime > mSessionEndTime Then
+    ' session DOES span midnight
     If weekday <> vbFriday And weekday <> vbSaturday Then calcSessionTimesHelper = True
+Else
+    ' 24-hour session or no session times known
+    If weekday <> vbSaturday And weekday <> vbSunday Then calcSessionTimesHelper = True
 End If
 End Function
 
