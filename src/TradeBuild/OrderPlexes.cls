@@ -51,7 +51,7 @@ Option Explicit
 '================================================================================
 
 Private mOrderPlexes As Collection
-Private mChangeListeners As Collection
+Private mChangeListeners As WeakCollection
 
 '================================================================================
 ' Class Event Handlers
@@ -59,7 +59,7 @@ Private mChangeListeners As Collection
 
 Private Sub Class_Initialize()
 Set mOrderPlexes = New Collection
-Set mChangeListeners = New Collection
+Set mChangeListeners = New WeakCollection
 End Sub
 
 '================================================================================
@@ -83,7 +83,7 @@ End Property
 '================================================================================
 
 Friend Function add( _
-                ByVal pOrderPlex As TradeBuild.orderPlex) As TradeBuild.orderPlex
+                ByVal pOrderPlex As TradeBuild.OrderPlex) As TradeBuild.OrderPlex
 Set add = pOrderPlex
 mOrderPlexes.add pOrderPlex, pOrderPlex.key
 fireChange CollItemAdded, pOrderPlex
@@ -95,7 +95,7 @@ mChangeListeners.add value
 End Sub
 
 Public Function Item( _
-                index As Variant) As TradeBuild.orderPlex
+                index As Variant) As TradeBuild.OrderPlex
 Set Item = mOrderPlexes(index)
 End Function
 
@@ -106,7 +106,7 @@ Set NewEnum = mOrderPlexes.[_NewEnum]
 End Function
 
 Public Sub remove( _
-                ByVal pOrderPlex As orderPlex)
+                ByVal pOrderPlex As OrderPlex)
 mOrderPlexes.remove pOrderPlex.key
 fireChange CollItemRemoved, pOrderPlex
 End Sub
@@ -124,13 +124,15 @@ End Sub
 
 Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
-                ByVal affectedObject As orderPlex)
+                ByVal affectedObject As OrderPlex)
 Dim listener As CollectionChangeListener
+Dim i As Long
 Dim Change As CollectionChangeEvent
 Set Change.source = Me
 Change.changeType = changeType
 Set Change.affectedObject = affectedObject
-For Each listener In mChangeListeners
+For i = 1 To mChangeListeners.Count
+    Set listener = mChangeListeners(i)
     listener.Change Change
 Next
 End Sub

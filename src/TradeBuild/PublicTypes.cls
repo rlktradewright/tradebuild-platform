@@ -204,10 +204,17 @@ Public Enum ApiErrorCodes
     ApiErrCantStartTicker
     ApiErrInvalidRequest
     ApiErrFatalError           ' a fatal error has occurred within TradeBuild
-    ApiErrorStartTickerFailed
+    ApiErrStartTickerFailed
     ApiErrMarketDepthNotAvailable
     ApiErrReonnectingToRealtimeDataSource
     ApiErrDisconnectedFromRealtimeDataSource
+    ApiErrCantConnectToBroker
+    ApiErrRetryConnectToBroker
+    ApiErrLostConnectionToBroker
+    ApiErrReConnectingToBroker
+    ApiErrInvalidOrder
+    ApiErrInsufficientFunds
+    ApiErrDisconnectedFromBroker
                             
 End Enum
 

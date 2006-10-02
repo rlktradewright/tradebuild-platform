@@ -50,8 +50,10 @@ Option Explicit
 ' Member variables
 '================================================================================
 
+Private mTradeBuildAPIRef           As WeakReference
+
 Private mWorkSpaces As Collection
-Private mChangeListeners As Collection
+Private mChangeListeners As WeakCollection
 
 '================================================================================
 ' Class Event Handlers
@@ -59,7 +61,7 @@ Private mChangeListeners As Collection
 
 Private Sub Class_Initialize()
 Set mWorkSpaces = New Collection
-Set mChangeListeners = New Collection
+Set mChangeListeners = New WeakCollection
 End Sub
 
 '================================================================================
@@ -78,6 +80,12 @@ Public Property Get Count() As Long
 Count = mWorkSpaces.Count
 End Property
 
+Friend Property Let tradeBuildAPI( _
+                ByVal value As tradeBuildAPI)
+Set mTradeBuildAPIRef = New WeakReference
+mTradeBuildAPIRef.Initialise value
+End Property
+
 '================================================================================
 ' Methods
 '================================================================================
@@ -86,6 +94,7 @@ Public Function add(ByVal name As String) As WorkSpace
 Attribute add.VB_UserMemId = 0
 Set add = New WorkSpace
 add.name = name
+add.tradeBuildAPI = mTradeBuildAPIRef.target
 mWorkSpaces.add add, name
 fireChange CollItemAdded, add
 End Function
@@ -125,11 +134,13 @@ Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
                 ByVal affectedObject As WorkSpace)
 Dim listener As CollectionChangeListener
+Dim i As Long
 Dim Change As CollectionChangeEvent
 Set Change.source = Me
 Change.changeType = changeType
 Set Change.affectedObject = affectedObject
-For Each listener In mChangeListeners
+For i = 1 To mChangeListeners.Count
+    Set listener = mChangeListeners(i)
     listener.Change Change
 Next
 End Sub

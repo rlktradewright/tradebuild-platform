@@ -52,6 +52,8 @@ Implements TradeBuildSP.IStudyValueCache
 ' Member variables
 '================================================================================
 
+Private mTradeBuildAPIRef           As WeakReference
+
 Private mValueName As String
 Private mValues() As TradeBuildSP.StudyValue
 Private mNewest As Long
@@ -171,6 +173,12 @@ Friend Property Get Count() As Long
 Count = mNumValues
 End Property
 
+Friend Property Let tradeBuildAPI( _
+                ByVal value As tradeBuildAPI)
+Set mTradeBuildAPIRef = New WeakReference
+mTradeBuildAPIRef.Initialise value
+End Property
+
 Friend Property Let ValueName(value As String)
 mValueName = value
 End Property
@@ -233,13 +241,15 @@ Friend Function replayValues( _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskCompletion
 Dim replayTask As New CacheReplayTask
-replayTask.initialise Me, _
+Dim tb As tradeBuildAPI
+replayTask.Initialise Me, _
                     targetStudy, _
                     sourceStudy, _
                     IIf(requiredValueName = "", mValueName, requiredValueName), _
                     resolver, _
                     useAllUnderlyingValues
-Set replayValues = gTaskManager.startTask(replayTask, IIf(taskName <> "", taskName, gGenerateGUIDString), taskData)
+Set tb = mTradeBuildAPIRef.target
+Set replayValues = tb.taskManager.startTask(replayTask, IIf(taskName <> "", taskName, gGenerateGUIDString), taskData)
 End Function
 
 Friend Sub updateValue( _

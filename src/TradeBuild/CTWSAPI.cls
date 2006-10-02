@@ -43,6 +43,8 @@ Event Error(ByRef ev As ErrorEvent)
 
 Private mServiceProviderError As ServiceProviderError
 
+Private mServiceProviders As ServiceProviders
+
 Private mListeners As InfoListeners
 
 Private mWorkSpaces As workspaces
@@ -53,31 +55,28 @@ Private mExecutions As executions
 Private mExchangeCodes() As String
 Private mMaxExchangeCodesIndex As Long
 
+Private mTaskManager As taskManager
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
 
 Private Sub Class_Initialize()
 
-If Not gTradeBuildAPI Is Nothing Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
-                "TradeBuild.TradeBuildAPI::Class_Initialize", _
-                "An instance of TradeBuildAPI already exists"
-End If
-
-Set gTradeBuildAPI = Me
-Set gServiceProviders = New ServiceProviders
+Set mServiceProviders = New ServiceProviders
+mServiceProviders.tradeBuildAPI = Me
 
 Set mListeners = New InfoListeners
-Set gListeners = mListeners
 
 Set mWorkSpaces = New workspaces
+mWorkSpaces.tradeBuildAPI = Me
+
 Set mDefaultWorkSpace = mWorkSpaces.add("$default")
 Set mTickers = defaultWorkSpace.tickers
 Set mExecutions = defaultWorkSpace.executions
 
-Set gTaskManager = New taskManager
-gTaskManager.quantumMillisecs = 20
+Set mTaskManager = New taskManager
+mTaskManager.quantumMillisecs = 20
 
 ReDim mExchangeCodes(100) As String
 mMaxExchangeCodesIndex = -1
@@ -174,7 +173,7 @@ End Sub
 '================================================================================
 
 Public Property Get availableStudies() As StudyListEntry()
-availableStudies = gServiceProviders.availableStudies
+availableStudies = mServiceProviders.availableStudies
 End Property
 
 Public Property Get defaultWorkSpace() As WorkSpace
@@ -186,13 +185,13 @@ Set executions = mExecutions
 End Property
 
 Public Property Get ServiceProviders() As ServiceProviders
-Set ServiceProviders = gServiceProviders
+Set ServiceProviders = mServiceProviders
 End Property
 
 Public Property Get StudyDefaultParameters( _
                 ByVal studyName As String, _
                 ByVal serviceProviderName As String) As TradeBuild.parameters
-Set StudyDefaultParameters = gServiceProviders.FetchStudyDefaultParameters( _
+Set StudyDefaultParameters = mServiceProviders.FetchStudyDefaultParameters( _
                 studyName, _
                 serviceProviderName)
 End Property
@@ -200,16 +199,20 @@ End Property
 Public Property Get studyDefinition( _
                 ByVal name As String, _
                 ByVal serviceProviderName As String) As studyDefinition
-Set studyDefinition = gServiceProviders.studyDefinition(name, _
+Set studyDefinition = mServiceProviders.studyDefinition(name, _
                                                     serviceProviderName)
 End Property
 
 Public Property Get SupportedInputTickfileFormats() As TradeBuild.TickfileFormatSpecifier()
-SupportedInputTickfileFormats = gServiceProviders.SupportedInputTickfileFormats
+SupportedInputTickfileFormats = mServiceProviders.SupportedInputTickfileFormats
 End Property
 
 Public Property Get SupportedOutputTickfileFormats() As TradeBuild.TickfileFormatSpecifier()
-SupportedOutputTickfileFormats = gServiceProviders.SupportedOutputTickfileFormats
+SupportedOutputTickfileFormats = mServiceProviders.SupportedOutputTickfileFormats
+End Property
+
+Public Property Get taskManager() As taskManager
+Set taskManager = mTaskManager
 End Property
 
 Public Property Get tickers() As tickers
@@ -267,6 +270,7 @@ Public Function NewBars( _
                 ByVal barLength As Long, _
                 ByVal barType As Long) As bars
 Set NewBars = New bars
+NewBars.tradeBuildAPI = Me
 NewBars.barLength = barLength
 NewBars.barType = barType
 End Function
@@ -274,6 +278,7 @@ End Function
 Public Function NewContracts( _
                 ByVal contractSpec As contractSpecifier) As Contracts
 Set NewContracts = New Contracts
+NewContracts.ServiceProviders = mServiceProviders
 NewContracts.contractSpecifier = contractSpec
 End Function
 
@@ -372,9 +377,16 @@ ev.errorMsg = "Error " & errorCode & " (" & errorMessage & ") occurred in " & so
 RaiseEvent Error(ev)
 
 ' kill all the service providers if the app hasn't already done so
-gServiceProviders.RemoveAll
+mServiceProviders.RemoveAll
 End Sub
 
+Friend Sub notifyListeners( _
+                            ByVal value As Variant, _
+                            ByVal valueType As Long, _
+                            ByVal source As Object)
+mListeners.notify value, valueType, source
+End Sub
+                            
 Public Sub RemoveListener(ByVal key As String)
 mListeners.remove key
 End Sub
@@ -402,7 +414,7 @@ Public Function SetStudyDefaultParameters( _
                 ByVal studyName As String, _
                 ByVal serviceProviderName As String, _
                 ByVal params As IParameters) As Boolean
-SetStudyDefaultParameters = gServiceProviders.SetStudyDefaultParameters( _
+SetStudyDefaultParameters = mServiceProviders.SetStudyDefaultParameters( _
                 studyName, _
                 serviceProviderName, _
                 params)

@@ -60,14 +60,14 @@ Public Type GUIDString
     ZeroByte    As String * 1
 End Type
 
-'================================================================================
-' Global object references
-'================================================================================
-
-Public gServiceProviders As ServiceProviders
-Public gTradeBuildAPI As TradeBuildAPI
-Public gListeners As InfoListeners
-Public gTaskManager As taskManager
+''================================================================================
+'' Global object references
+''================================================================================
+'
+'Public gServiceProviders As ServiceProviders
+'Public gTradeBuildAPI As TradeBuildAPI
+'Public gListeners As InfoListeners
+'Public gTaskManager As taskManager
 
 '================================================================================
 ' External function declarations
@@ -315,6 +315,11 @@ Case LegOpenPos
 Case LegClosePos
     gLegOpenCloseToString = "CLOSE"
 End Select
+End Function
+
+Public Function gNewWeakReference(ByVal target As Object) As WeakReference
+Set gNewWeakReference = New WeakReference
+gNewWeakReference.Initialise target
 End Function
 
 Public Function gOptionRightFromString(ByVal value As String) As OptionRights

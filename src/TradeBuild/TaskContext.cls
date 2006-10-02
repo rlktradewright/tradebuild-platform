@@ -69,7 +69,7 @@ Private mElapsedTimer As TimerUtils.ElapsedTimer
 
 Private mFinished As Boolean
 
-Private mTaskCompletionListeners As Collection
+Private mTaskCompletionListeners As WeakCollection
 
 Private mYieldCount As Long
 
@@ -239,10 +239,10 @@ End Sub
 
 Private Sub addTaskCompletionListener(ByVal listener As Object)
 If mTaskCompletionListeners Is Nothing Then
-    Set mTaskCompletionListeners = New Collection
+    Set mTaskCompletionListeners = New WeakCollection
 End If
 
-mTaskCompletionListeners.Add listener
+mTaskCompletionListeners.add listener
 End Sub
 
 Private Sub fireCompletion( _
@@ -252,11 +252,13 @@ Dim ev As TaskCompletionEvent
 Dim spEv As TradeBuildSP.TaskCompletionEvent
 Dim obj As Object
 Dim listener As TaskCompletionListener
+Dim i As Long
 Dim spListener As TradeBuildSP.ITaskCompletionListener
 
 If mTaskCompletionListeners Is Nothing Then Exit Sub
 
-For Each obj In mTaskCompletionListeners
+For i = 1 To mTaskCompletionListeners.Count
+    Set obj = mTaskCompletionListeners(i)
     If TypeOf obj Is TaskCompletionListener Then
         Set listener = obj
         ev.resultCode = resultCode
@@ -281,7 +283,7 @@ Dim i As Long
 If mTaskCompletionListeners Is Nothing Then Exit Sub
 
 For i = mTaskCompletionListeners.Count To 1 Step -1
-    If mTaskCompletionListeners(i) Is listener Then mTaskCompletionListeners.Remove i
+    If mTaskCompletionListeners(i) Is listener Then mTaskCompletionListeners.remove i
 Next
 End Sub
 

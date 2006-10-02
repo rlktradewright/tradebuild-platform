@@ -64,8 +64,8 @@ Private Type TWSAPITableEntry
     keepConnection  As Boolean  ' once this flag is set, the TWSAPI instance
                                 ' will only be disconnected by a call to
                                 ' gReleaseTWSAPIInstance with <forceDisconnect>
-                                ' set to true or by a call to
-                                ' gReleaseAllTWSAPIInstances
+                                ' set to true (and the usageCount is zero),
+                                ' or by a call to gReleaseAllTWSAPIInstances
     TWSAPI          As TWSAPI
     usageCount      As Long
 End Type

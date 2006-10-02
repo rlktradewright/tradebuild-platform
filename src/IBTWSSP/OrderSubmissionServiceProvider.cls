@@ -67,11 +67,15 @@ Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mTWSLogLevel As TWSLogLevels
 Private mLogLevel As LogLevels
 
+Private mOrderSubmitters As Collection
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
 
 Private Sub Class_Initialize()
+Set mOrderSubmitters = New Collection
+
 mName = OrderSubmissionSPName
 
 mClientID = -1
@@ -112,11 +116,17 @@ End Property
 Private Sub ICommonServiceProvider_Link( _
                 ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
                 ByVal handle As Long)
+On Error GoTo err
 gCommonServiceConsumer = commonServiceConsumer
 Set mCommonServiceConsumer = commonServiceConsumer
 mHandle = handle
 mCommonServiceConsumer.RegisterServiceProvider mHandle, _
                             ServiceProviderTypes.LiveOrderSubmission
+Exit Sub
+err:
+handleFatalError err.number, _
+                "IBTWSSP" & "." & "OrderSubmissionServiceProvider" & "::" & "ICommonServiceProvider_Link", _
+                err.Description
 
 End Sub
 
@@ -134,7 +144,14 @@ ICommonServiceProvider_Name = name
 End Property
 
 Private Sub ICommonServiceProvider_Terminate()
-gReleaseAllTWSAPIInstances
+On Error GoTo err
+finishSubmitters
+Set mCommonServiceConsumer = Nothing
+Exit Sub
+err:
+handleFatalError err.number, _
+                "IBTWSSP" & "." & "OrderSubmissionServiceProvider" & "::" & "ICommonServiceProvider_Terminate", _
+                err.Description
 End Sub
 
 '================================================================================
@@ -146,7 +163,9 @@ Private Function IOrderSubmissionSrvcProvider_CreateOrderSubmitter( _
                 ByVal contract As TradeBuildSP.IContract) As TradeBuildSP.IOrderSubmitter
 Dim orderSubmitter As orderSubmitter
 
+On Error GoTo err
 Set orderSubmitter = New orderSubmitter
+orderSubmitter.orderSubmissionServiceProvider = Me
 orderSubmitter.commonServiceConsumer = mCommonServiceConsumer
 orderSubmitter.serviceConsumer = serviceConsumer
 orderSubmitter.contract = contract
@@ -158,10 +177,16 @@ orderSubmitter.keepConnection = mkeepConnection
 orderSubmitter.providerKey = mProviderKey
 orderSubmitter.logLevel = mLogLevel
 orderSubmitter.TWSLogLevel = mTWSLogLevel
+mOrderSubmitters.add orderSubmitter
 
 orderSubmitter.start
 
 Set IOrderSubmissionSrvcProvider_CreateOrderSubmitter = orderSubmitter
+Exit Function
+err:
+handleFatalError err.number, _
+                "IBTWSSP" & "." & "OrderSubmissionServiceProvider" & "::" & "IOrderSubmissionSrvcProvider_CreateOrderSubmitter", _
+                err.Description
 End Function
 
 '================================================================================
@@ -182,6 +207,10 @@ End Property
 
 Public Property Get connectionRetryIntervalSecs() As Long
 connectionRetryIntervalSecs = mConnectionRetryIntervalSecs
+End Property
+
+Friend Property Get handle() As Long
+handle = mHandle
 End Property
 
 Public Property Let keepConnection(ByVal value As Boolean)
@@ -220,9 +249,41 @@ End Property
 ' Methods
 '================================================================================
 
-'================================================================================
+Friend Sub orderSubmitterFinished( _
+                ByVal pOrderSubmitter As orderSubmitter)
+Dim i As Long
+Dim submitter As orderSubmitter
+i = 1
+For Each submitter In mOrderSubmitters
+    If submitter Is pOrderSubmitter Then
+        mOrderSubmitters.remove i
+        Exit For
+    End If
+    i = i + 1
+Next
+End Sub
+
+'===============================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub finishSubmitters()
+Dim submitter As orderSubmitter
+For Each submitter In mOrderSubmitters
+    submitter.finish
+Next
+End Sub
+
+Private Sub handleFatalError( _
+                ByVal number As Long, _
+                ByVal source As String, _
+                ByVal Description As String)
+mCommonServiceConsumer.FatalServiceProviderError number, source, Description, mHandle
+
+finishSubmitters
+
+Set mCommonServiceConsumer = Nothing
+End Sub
 
 
 

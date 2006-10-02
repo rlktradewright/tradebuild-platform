@@ -79,7 +79,7 @@ Event TickfilesSelected()
 ' Member variables
 '================================================================================
 
-'Private WithEvents mContracts       As Contracts
+Private mTradeBuildAPIRef           As WeakReference
 Private mContract                   As Contract
 
 Private mReader                     As TickfileReader
@@ -125,7 +125,8 @@ End Sub
 
 Private Sub ITickfileInputServiceConsumer_Error( _
                             ByVal errorCode As TradeBuildSP.StandardSPErrorCodes, _
-                            ByVal errorMessage As String)
+                            ByVal errorMessage As String, _
+                            ByVal spHandle As Long)
 Dim ev As ErrorEvent
 
 Set ev.source = Me
@@ -193,9 +194,9 @@ Case TradeBuildSP.StandardSPErrorCodes.TFContractSpecifierInvalid
     RaiseEvent Error(ev)
     Set mReader = Nothing
 Case Else
-    gTradeBuildAPI.SetServiceProviderError errorCode, _
+    tb.SetServiceProviderError errorCode, _
                         errorMessage, _
-                        "Unknown input Tickfile Service Provider"
+                        tb.ServiceProviders.nameFromHandle(spHandle)
 End Select
 
 End Sub
@@ -240,8 +241,7 @@ End If
 
 'now query the Contract Details service provider(s) to see if we can
 ' determine the canonical contract for this contract spec
-Set lContracts = New Contracts
-lContracts.contractSpecifier = contractSpec
+Set lContracts = tb.NewContracts(contractSpec)
 lContracts.Load
 mTicker.Contracts = lContracts
 End Sub
@@ -471,6 +471,12 @@ Public Property Get TimestampAdjustmentEnd() As Double
 TimestampAdjustmentEnd = mTimestampAdjustmentEnd
 End Property
 
+Friend Property Let tradeBuildAPI( _
+                ByVal value As tradeBuildAPI)
+Set mTradeBuildAPIRef = New WeakReference
+mTradeBuildAPIRef.Initialise value
+End Property
+
 '================================================================================
 ' Methods
 '================================================================================
@@ -485,7 +491,7 @@ Friend Function CreateOutputTickfile( _
                 ByVal outputTickfileFormat As String, _
                 ByVal outputTickfilePath As String) As TradeBuild.TickfileWriter
             
-Set CreateOutputTickfile = gServiceProviders.CreateTickfileWriter( _
+Set CreateOutputTickfile = tb.ServiceProviders.CreateTickfileWriter( _
                             pTicker, _
                             outputTickfileFormat, _
                             outputTickfilePath)
@@ -510,8 +516,9 @@ If Not mTicker Is Nothing Then
 End If
 If mTickfileSelector Is Nothing Then
     Set mTickfileSelector = New fTickfileSelector
+    mTickfileSelector.tradeBuildAPI = tb
 End If
-mTickfileSelector.SupportedTickfileFormats = gServiceProviders.SupportedInputTickfileFormats
+mTickfileSelector.SupportedTickfileFormats = tb.ServiceProviders.SupportedInputTickfileFormats
 mTickfileSelector.Show vbModeless
 End Sub
 
@@ -608,7 +615,7 @@ Do
     RaiseEvent TickerAllocated(mTicker)
     
     lTickfileSpecifier = mTickfileSpecifiers(mCurrTickfileIndex)
-    Set mReader = gServiceProviders.CreateTickfileReader( _
+    Set mReader = tb.ServiceProviders.CreateTickfileReader( _
                                     mTicker, _
                                     Me, _
                                     lTickfileSpecifier.tickfileFormatID)
@@ -666,3 +673,9 @@ If mProgressTimer Is Nothing Then Exit Sub
 mProgressTimer.StopTimer
 Set mProgressTimer = Nothing
 End Sub
+
+Private Function tb() As tradeBuildAPI
+Set tb = mTradeBuildAPIRef.target
+End Function
+
+

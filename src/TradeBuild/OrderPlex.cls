@@ -335,11 +335,11 @@ Private mProfitNotificationThreshold As Currency
 Private mLossNotificationThreshold As Currency
 Private mDrawdownNotificationThreshold As Currency
 
-Private mChangeListeners As Collection
+Private mChangeListeners As WeakCollection
 
 Private mCreationTime As Date
 
-Private mProfitListeners As Collection
+Private mProfitListeners As WeakCollection
 
 Private mIndexApplication As Long
 
@@ -371,9 +371,9 @@ mIndexApplication = OrderPlexGlobals.gNextApplicationIndex
 
 Set mOrders = New Collection
 
-Set mChangeListeners = New Collection
+Set mChangeListeners = New WeakCollection
 
-Set mProfitListeners = New Collection
+Set mProfitListeners = New WeakCollection
 
 Set mStateEngine = New cStateEngine
 mStateEngine.initialState = OrderPlexStateCodes.Created
@@ -2458,10 +2458,12 @@ End Function
 Private Sub fireChange( _
                 ByVal changeType As OrderPlexChangeTypes)
 Dim listener As ChangeListener
+Dim i As Long
 Dim Change As ChangeEvent
 Set Change.source = Me
 Change.changeType = changeType
-For Each listener In mChangeListeners
+For i = 1 To mChangeListeners.Count
+    Set listener = mChangeListeners(i)
     listener.Change Change
 Next
 End Sub
@@ -2470,12 +2472,14 @@ Private Sub fireProfit( _
                 ByVal profitAmount As Double, _
                 ByVal profitType As ProfitTypes)
 Dim listener As ProfitListener
+Dim i As Long
 Dim profit As ProfitEvent
 Set profit.source = Me
 profit.profitAmount = profitAmount
 profit.profitType = profitType
 profit.currencyCode = mcurrencyCode
-For Each listener In mProfitListeners
+For i = 1 To mProfitListeners.Count
+    Set listener = mProfitListeners(i)
     listener.profitAmount profit
 Next
 End Sub

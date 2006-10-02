@@ -66,11 +66,15 @@ Private mCommonServiceConsumer As ICommonServiceConsumer
 
 Private mLogLevel As LogLevels
 
+Private mTickfileDataReaders As Collection
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
 
 Private Sub Class_Initialize()
+
+Set mTickfileDataReaders = New Collection
 
 mName = App.ProductName & "(TF)"
 
@@ -131,7 +135,14 @@ ICommonServiceProvider_Name = Name
 End Property
 
 Private Sub ICommonServiceProvider_Terminate()
-' nothing to do
+On Error GoTo err
+finishReaders
+Set mCommonServiceConsumer = Nothing
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTTickfileServiceProvider" & "::" & "ICommonServiceProvider_Terminate", _
+                err.Description
 End Sub
 
 '================================================================================
@@ -143,8 +154,10 @@ Private Function ITickfileServiceProvider_CreateTickfileReader( _
                             ByVal serviceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
                             ByVal FormatIdentifier As String) As TradeBuildSP.ITickfileReader
 Dim reader As QTTickfileReader
+On Error GoTo err
 Set reader = New QTTickfileReader
 Set ITickfileServiceProvider_CreateTickfileReader = reader
+reader.tickfileServiceProvider = Me
 reader.CommonServiceConsumer = mCommonServiceConsumer
 reader.TickfileInputServiceConsumer = serviceConsumer
 reader.StreamingDataConsumer = dataConsumer
@@ -156,6 +169,12 @@ reader.providerKey = mProviderKey
 reader.logLevel = mLogLevel
 reader.Name = mName & " (reader)"
 reader.ConnectionRetryIntervalSecs = mConnectionRetryIntervalSecs
+mTickfileDataReaders.add reader
+Exit Function
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTTickfileServiceProvider" & "::" & "ITickfileServiceProvider_CreateTickfileReader", _
+                err.Description
 End Function
 
 Private Function ITickfileServiceProvider_CreateTickfileWriter( _
@@ -202,6 +221,10 @@ End Property
 
 Public Property Get ConnectionRetryIntervalSecs() As Long
 ConnectionRetryIntervalSecs = mConnectionRetryIntervalSecs
+End Property
+
+Friend Property Get handle() As Long
+handle = mHandle
 End Property
 
 Public Property Let keepConnection(ByVal value As Boolean)
@@ -251,8 +274,40 @@ End Property
 ' Methods
 '================================================================================
 
+Friend Sub dataReaderFinished( _
+                ByVal dataReader As QTTickfileReader)
+Dim i As Long
+Dim reader As QTTickfileReader
+i = 1
+For Each reader In mTickfileDataReaders
+    If reader Is dataReader Then
+        mTickfileDataReaders.remove i
+        Exit For
+    End If
+    i = i + 1
+Next
+End Sub
+
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub finishReaders()
+Dim reader As QTTickfileReader
+For Each reader In mTickfileDataReaders
+    reader.finish
+Next
+End Sub
+
+Private Sub handleFatalError( _
+                ByVal Number As Long, _
+                ByVal Source As String, _
+                ByVal Description As String)
+mCommonServiceConsumer.FatalServiceProviderError Number, Source, Description, mHandle
+
+finishReaders
+
+Set mCommonServiceConsumer = Nothing
+End Sub
 
 

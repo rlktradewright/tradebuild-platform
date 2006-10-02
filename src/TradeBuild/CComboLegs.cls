@@ -47,7 +47,7 @@ Implements TradeBuildSP.IComboLegs
 Private mComboLegs As Collection
 Private mLocked As Boolean
 
-Private mChangeListeners As Collection
+Private mChangeListeners As WeakCollection
 
 '================================================================================
 ' Enums
@@ -59,7 +59,7 @@ Private mChangeListeners As Collection
 
 Private Sub Class_Initialize()
 Set mComboLegs = New Collection
-Set mChangeListeners = New Collection
+Set mChangeListeners = New WeakCollection
 End Sub
 
 'Private Sub Class_ReadProperties(PropBag As PropertyBag)
@@ -121,7 +121,7 @@ IComboLegs_Count = Count
 End Property
 
 Private Function IComboLegs_Item(ByVal index As Variant) As TradeBuildSP.IComboLeg
-Set IComboLegs_Item = item(index)
+Set IComboLegs_Item = Item(index)
 End Function
 
 Private Function IComboLegs_NewComboLeg() As TradeBuildSP.IComboLeg
@@ -203,10 +203,10 @@ For Each cl In mComboLegs
 Next
 End Function
 
-Public Function item(ByVal index As Variant) As ComboLeg
+Public Function Item(ByVal index As Variant) As ComboLeg
 Dim theItem As ComboLeg
 Set theItem = mComboLegs(index)
-item = theItem
+Item = theItem
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -225,7 +225,7 @@ End Sub
 Public Sub removeCollectionChangeListener(ByVal value As CollectionChangeListener)
 Dim i As Long
 For i = mChangeListeners.Count To 1 Step -1
-    If mChangeListeners.item(i) Is value Then mChangeListeners.remove i
+    If mChangeListeners.Item(i) Is value Then mChangeListeners.remove i
 Next
 End Sub
 
@@ -237,11 +237,13 @@ Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
                 ByVal affectedObject As ComboLeg)
 Dim listener As CollectionChangeListener
+Dim i As Long
 Dim Change As CollectionChangeEvent
 Set Change.source = Me
 Change.changeType = changeType
 Set Change.affectedObject = affectedObject
-For Each listener In mChangeListeners
+For i = 1 To mChangeListeners.Count
+    Set listener = mChangeListeners(i)
     listener.Change Change
 Next
 End Sub

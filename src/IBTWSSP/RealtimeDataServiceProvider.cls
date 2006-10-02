@@ -68,11 +68,15 @@ Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mTWSLogLevel As TWSLogLevels
 Private mLogLevel As LogLevels
 
+Private mRealtimeDataReaders As Collection
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
 
 Private Sub Class_Initialize()
+
+Set mRealtimeDataReaders = New Collection
 
 mName = RealtimeDataSPName
 
@@ -135,7 +139,14 @@ ICommonServiceProvider_Name = name
 End Property
 
 Private Sub ICommonServiceProvider_Terminate()
-gReleaseAllTWSAPIInstances
+On Error GoTo err
+finishReaders
+Set mCommonServiceConsumer = Nothing
+Exit Sub
+err:
+handleFatalError err.number, _
+                "IBTWSSP" & "." & "RealtimeDataServiceProvider" & "::" & "ICommonServiceProvider_Terminate", _
+                err.Description
 End Sub
 
 '================================================================================
@@ -148,11 +159,13 @@ Private Function IRealtimeDataServiceProvider_CreateRealtimeDataReader( _
 
 Dim reader As RealtimeDataReader
 
+On Error GoTo err
 Set reader = New RealtimeDataReader
 Set IRealtimeDataServiceProvider_CreateRealtimeDataReader = reader
+reader.realtimeDataServiceProvider = Me
 reader.commonServiceConsumer = mCommonServiceConsumer
 reader.realtimeDataInputServiceConsumer = serviceConsumer
-reader.StreamingDataConsumer = dataConsumer
+reader.streamingDataConsumer = dataConsumer
 reader.server = mServer
 reader.port = mPort
 reader.clientID = mClientID
@@ -162,6 +175,12 @@ reader.providerKey = mProviderKey
 reader.logLevel = mLogLevel
 reader.TWSLogLevel = mTWSLogLevel
 reader.name = mName & " (reader)"
+mRealtimeDataReaders.add reader
+Exit Function
+err:
+handleFatalError err.number, _
+                "IBTWSSP" & "." & "RealtimeDataServiceProvider" & "::" & "IRealtimeDataServiceProvider_CreateRealtimeDataReader", _
+                err.Description
 End Function
 
 Private Function IRealtimeDataServiceProvider_Supports( _
@@ -187,6 +206,10 @@ End Property
 
 Public Property Get connectionRetryIntervalSecs() As Long
 connectionRetryIntervalSecs = mConnectionRetryIntervalSecs
+End Property
+
+Friend Property Get handle() As Long
+handle = mHandle
 End Property
 
 Public Property Let keepConnection(ByVal value As Boolean)
@@ -251,9 +274,41 @@ End Property
 ' Methods
 '================================================================================
 
+Friend Sub dataReaderFinished( _
+                ByVal dataReader As RealtimeDataReader)
+Dim i As Long
+Dim reader As RealtimeDataReader
+i = 1
+For Each reader In mRealtimeDataReaders
+    If reader Is dataReader Then
+        mRealtimeDataReaders.remove i
+        Exit For
+    End If
+    i = i + 1
+Next
+End Sub
+
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub finishReaders()
+Dim reader As RealtimeDataReader
+For Each reader In mRealtimeDataReaders
+    reader.finish
+Next
+End Sub
+
+Private Sub handleFatalError( _
+                ByVal number As Long, _
+                ByVal source As String, _
+                ByVal Description As String)
+mCommonServiceConsumer.FatalServiceProviderError number, source, Description, mHandle
+
+finishReaders
+
+Set mCommonServiceConsumer = Nothing
+End Sub
 
 
 

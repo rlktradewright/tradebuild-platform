@@ -69,6 +69,10 @@ mName = "TradeBuild Default Order Simulator"
 Set mSimulator = New TradeBuild.AdvancedOrderSimulator
 End Sub
 
+Private Sub Class_Terminate()
+Debug.Print "OrderSimulatorSP terminated"
+End Sub
+
 '================================================================================
 ' ICommonServiceProvider Interface Members
 '================================================================================
@@ -81,7 +85,7 @@ With details
     .FileDescription = App.FileDescription
     .LegalCopyright = App.LegalCopyright
     .LegalTrademarks = App.LegalTrademarks
-    .path = App.path
+    .Path = App.Path
     .ProductName = App.ProductName
     .Vendor = App.CompanyName
     .VersionMajor = App.Major

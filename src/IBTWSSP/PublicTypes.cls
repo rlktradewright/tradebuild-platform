@@ -62,6 +62,20 @@ Public Enum TickTypes
     openInterest
 End Enum
 
+Public Enum TWSBarSizes
+    BarSize1Second = 1
+    BarSize5Second = 2
+    BarSize15Second = 3
+    BarSize30Second = 4
+    BarSize1Minute = 5
+    BarSize2Minutes = 6
+    BarSize5Minutes = 7
+    BarSize15Minutes = 8
+    BarSize30Minutes = 9
+    BarSize1Hour = 10
+    BarSize1Day = 11
+End Enum
+
 Public Enum TWSLogLevels
     TWSLogLevelSystem
     TWSLogLevelError
@@ -168,20 +182,6 @@ Public Type TWSHistoricalDataRequestQueueEntry
     duration                As String
     whatToShow              As String
 End Type
-
-Public Enum TWSBarSizes
-    BarSize1Second = 1
-    BarSize5Second = 2
-    BarSize15Second = 3
-    BarSize30Second = 4
-    BarSize1Minute = 5
-    BarSize2Minutes = 6
-    BarSize5Minutes = 7
-    BarSize15Minutes = 8
-    BarSize30Minutes = 9
-    BarSize1Hour = 10
-    BarSize1Day = 11
-End Enum
 
 Public Type TWSSocketMsgTickPrice
     msgType         As TWSSocketInMsgTypes

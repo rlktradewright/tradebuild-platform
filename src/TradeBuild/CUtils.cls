@@ -122,6 +122,10 @@ Public Function LegOpenCloseToString(ByVal value As TradeBuild.LegOpenClose) As 
 LegOpenCloseToString = gLegOpenCloseToString(value)
 End Function
 
+Public Function newWeakReference(ByVal target As Object) As WeakReference
+Set newWeakReference = gNewWeakReference(target)
+End Function
+
 Public Function OptionRightFromString(ByVal value As String) As OptionRights
 OptionRightFromString = gOptionRightFromString(value)
 End Function

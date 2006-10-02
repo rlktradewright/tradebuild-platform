@@ -52,6 +52,8 @@ Implements TradeBuildSP.IBarDataReader
 ' Member variables
 '================================================================================
 
+Private mHistDataServiceProvider As histDataServiceProvider
+
 Private mCommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer
 Private mServiceConsumer As TradeBuildSP.IBarDataInputServiceConsumer
 Private mDataConsumer As TradeBuildSP.IBarDataConsumer
@@ -61,8 +63,6 @@ Private mRequestInProgress As Boolean
 
 Private mBarDataSpecifier  As TradeBuildSP.BarDataSpecifier
 Private mContractSpecifier As IContractSpecifier
-Private WithEvents mInstrument As TradingDO2.cInstrument
-Attribute mInstrument.VB_VarHelpID = -1
 Private WithEvents mBarReader As TradingDO2.BarDataAccessor
 Attribute mBarReader.VB_VarHelpID = -1
 
@@ -83,14 +83,22 @@ IBarDataReader_BarDataSpecifier = mBarDataSpecifier
 End Property
 
 Private Sub IBarDataReader_CancelFetch()
+On Error GoTo Err
 mRequestInProgress = False
-Set mBarReader = Nothing
+finish
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "HistDataReader" & "::" & "IBarDataReader_CancelFetch", _
+                Err.Description
 End Sub
 
 Private Sub IBarDataReader_FetchBars( _
                             barSpecifier As TradeBuildSP.BarDataSpecifier)
 Dim lInstrumentFactory As TradingDO2.cInstrumentFactory
+Dim lInstrument As TradingDO2.cInstrument
 
+On Error GoTo Err
 If mRequestInProgress Then Err.Raise ErrorCodes.IllegalStateException, _
                                     "TBInfoBase.HistDataReader::FetchBars", _
                                     "Request already in progress"
@@ -101,7 +109,7 @@ mBarDataSpecifier = barSpecifier
 Set lInstrumentFactory = New TradingDO2.cInstrumentFactory
 
 With mBarDataSpecifier.Contract.Specifier
-    Set mInstrument = lInstrumentFactory.loadBySpec(.Symbol, _
+    Set lInstrument = lInstrumentFactory.loadBySpec(.Symbol, _
                                 secTypeToString(.SecType), _
                                 Left$(.Expiry, 6), _
                                 .Exchange, _
@@ -110,18 +118,29 @@ With mBarDataSpecifier.Contract.Specifier
                                 optRightToString(.Right), _
                                 .localSymbol)
 End With
-Debug.Assert Not mInstrument Is Nothing
+Debug.Assert Not lInstrument Is Nothing
 
-Set mBarReader = mInstrument.CreateBarDataAccessor
+Set mBarReader = lInstrument.CreateBarDataAccessor
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "HistDataReader" & "::" & "IBarDataReader_FetchBars", _
+                Err.Description
 
 End Sub
 
 Private Sub IBarDataReader_FireNextBar()
+On Error GoTo Err
 If mWaitingForBarData Then
     mBarRequested = True
 Else
     ProcessBar
 End If
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "HistDataReader" & "::" & "IBarDataReader_FireNextBar", _
+                Err.Description
 End Sub
 
 Private Property Get IBarDataReader_NumberOfBars() As Long
@@ -129,7 +148,14 @@ Private Property Get IBarDataReader_NumberOfBars() As Long
 End Property
 
 Private Sub IBarDataReader_ReleaseDataStore()
-Set mBarReader = Nothing
+On Error GoTo Err
+finish
+mHistDataServiceProvider.dataReaderFinished Me
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "HistDataReader" & "::" & "IBarDataReader_ReleaseDataStore", _
+                Err.Description
 End Sub
 
 Private Function IBarDataReader_Supports( _
@@ -157,7 +183,8 @@ Private Sub mBarReader_ConnectFailed( _
                             ByVal errorCode As Long, _
                             ByVal errorDesc As String)
 mServiceConsumer.Error StandardSPErrorCodes.HDCantConnectDataSource, _
-                        "error " & errorCode & ": " & errorDesc
+                        "error " & errorCode & ": " & errorDesc, _
+                        mHistDataServiceProvider.handle
 
 End Sub
 
@@ -193,6 +220,11 @@ Friend Property Let CommonServiceConsumer(ByVal value As ICommonServiceConsumer)
 Set mCommonServiceConsumer = value
 End Property
 
+Friend Property Let histDataServiceProvider( _
+                ByVal value As histDataServiceProvider)
+Set mHistDataServiceProvider = value
+End Property
+
 Friend Property Let ServiceProviderName(ByVal value As String)
 mServiceProviderName = value
 End Property
@@ -201,9 +233,28 @@ End Property
 ' Methods
 '================================================================================
 
+Friend Sub finish()
+Set mBarReader = Nothing
+Set mServiceConsumer = Nothing
+Set mDataConsumer = Nothing
+End Sub
+
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub handleFatalError( _
+                ByVal Number As Long, _
+                ByVal Source As String, _
+                ByVal Description As String)
+mCommonServiceConsumer.FatalServiceProviderError Number, _
+                            Source, _
+                            Description, _
+                            mHistDataServiceProvider.handle
+
+finish
+mHistDataServiceProvider.dataReaderFinished Me
+End Sub
 
 Private Sub ProcessBar()
 Dim lBar As TradeBuildSP.Bar
@@ -227,3 +278,4 @@ With lBar
 End With
 mDataConsumer.Bar lBar
 End Sub
+

@@ -68,11 +68,15 @@ Private mkeepConnection As Boolean
 Private mLogLevel As LogLevels
 Private mTWSLogLevel As TWSLogLevels
 
+Private mHistDataReaders As Collection
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
 
 Private Sub Class_Initialize()
+Set mHistDataReaders = New Collection
+
 mName = HistoricDataSPName
 
 mClientID = -1
@@ -95,9 +99,10 @@ Private Function IBarDataServiceProvider_CreateBarDataReader( _
 
 Dim reader As HistDataReader
 
+On Error GoTo err
 Set reader = New HistDataReader
 Set IBarDataServiceProvider_CreateBarDataReader = reader
-
+reader.histDataServiceProvider = Me
 reader.commonServiceConsumer = mCommonServiceConsumer
 reader.barDataInputServiceConsumer = serviceConsumer
 reader.dataConsumer = dataConsumer
@@ -110,7 +115,12 @@ reader.logLevel = mLogLevel
 reader.TWSLogLevel = mTWSLogLevel
 reader.connectionRetryIntervalSecs = mConnectionRetryIntervalSecs
 reader.ServiceProviderName = mName & " (reader)"
-
+mHistDataReaders.add reader
+Exit Function
+err:
+handleFatalError err.number, _
+                "IBTWSSP" & "." & "HistDataServiceProvider" & "::" & "IBarDataServiceProvider_CreateBarDataReader", _
+                err.Description
 End Function
 
 Private Function IBarDataServiceProvider_CreateBarDataWriter( _
@@ -153,11 +163,17 @@ End Property
 Private Sub ICommonServiceProvider_Link( _
                 ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
                 ByVal handle As Long)
+On Error GoTo err
 gCommonServiceConsumer = commonServiceConsumer
 Set mCommonServiceConsumer = commonServiceConsumer
 mHandle = handle
 mCommonServiceConsumer.RegisterServiceProvider mHandle, _
                             ServiceProviderTypes.HistoricalData
+Exit Sub
+err:
+handleFatalError err.number, _
+                "IBTWSSP" & "." & "HistDataServiceProvider" & "::" & "ICommonServiceProvider_Link", _
+                err.Description
 
 End Sub
 
@@ -175,7 +191,17 @@ ICommonServiceProvider_Name = name
 End Property
 
 Private Sub ICommonServiceProvider_Terminate()
-gReleaseAllTWSAPIInstances
+
+On Error GoTo err
+
+finishReaders
+Set mCommonServiceConsumer = Nothing
+
+Exit Sub
+err:
+handleFatalError err.number, _
+                "IBTWSSP" & "." & "HistDataServiceProvider" & "::" & "ICommonServiceProvider_Terminate", _
+                err.Description
 End Sub
 
 '================================================================================
@@ -192,6 +218,10 @@ End Property
 
 Public Property Let connectionRetryIntervalSecs(ByVal value As Long)
 mConnectionRetryIntervalSecs = value
+End Property
+
+Friend Property Get handle() As Long
+handle = mHandle
 End Property
 
 Public Property Let keepConnection(ByVal value As Boolean)
@@ -241,9 +271,42 @@ End Property
 ' Methods
 '================================================================================
 
+Friend Sub dataReaderFinished( _
+                ByVal dataReader As HistDataReader)
+Dim i As Long
+Dim reader As HistDataReader
+i = 1
+For Each reader In mHistDataReaders
+    If reader Is dataReader Then
+        mHistDataReaders.remove i
+        Exit For
+    End If
+    i = i + 1
+Next
+End Sub
+
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub finishReaders()
+Dim reader As HistDataReader
+For Each reader In mHistDataReaders
+    reader.finish
+Next
+End Sub
+
+Private Sub handleFatalError( _
+                ByVal number As Long, _
+                ByVal source As String, _
+                ByVal Description As String)
+mCommonServiceConsumer.FatalServiceProviderError number, source, Description, mHandle
+
+finishReaders
+
+Set mCommonServiceConsumer = Nothing
+End Sub
+
 
 
 

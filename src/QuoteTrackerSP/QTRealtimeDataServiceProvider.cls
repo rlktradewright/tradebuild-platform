@@ -66,11 +66,15 @@ Private mCommonServiceConsumer As ICommonServiceConsumer
 
 Private mLogLevel As LogLevels
 
+Private mRealtimeDataReaders As Collection
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
 
 Private Sub Class_Initialize()
+
+Set mRealtimeDataReaders = New Collection
 
 mName = App.ProductName & "(RT)"
 
@@ -131,7 +135,8 @@ ICommonServiceProvider_Name = Name
 End Property
 
 Private Sub ICommonServiceProvider_Terminate()
-' nothing to do
+finishReaders
+Set mCommonServiceConsumer = Nothing
 End Sub
 
 '================================================================================
@@ -144,8 +149,10 @@ Private Function IRealtimeDataServiceProvider_CreateRealtimeDataReader( _
 
 Dim reader As QTRealtimeDataReader
 
+On Error GoTo err
 Set reader = New QTRealtimeDataReader
 Set IRealtimeDataServiceProvider_CreateRealtimeDataReader = reader
+reader.realtimeDataServiceProvider = Me
 reader.CommonServiceConsumer = mCommonServiceConsumer
 reader.realtimeDataInputServiceConsumer = serviceConsumer
 reader.StreamingDataConsumer = dataConsumer
@@ -157,6 +164,12 @@ reader.keepConnection = mkeepConnection
 reader.providerKey = mProviderKey
 reader.logLevel = mLogLevel
 reader.Name = mName & " (reader)"
+mRealtimeDataReaders.add reader
+Exit Function
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTRealtimeDataServiceProvider" & "::" & "IRealtimeDataServiceProvider_CreateRealtimeDataReader", _
+                err.Description
 End Function
 
 Private Function IRealtimeDataServiceProvider_Supports( _
@@ -178,6 +191,10 @@ End Property
 
 Public Property Get ConnectionRetryIntervalSecs() As Long
 ConnectionRetryIntervalSecs = mConnectionRetryIntervalSecs
+End Property
+
+Friend Property Get handle() As Long
+handle = mHandle
 End Property
 
 Public Property Let keepConnection(ByVal value As Boolean)
@@ -227,9 +244,43 @@ End Property
 ' Methods
 '================================================================================
 
+Friend Sub dataReaderFinished( _
+                ByVal dataReader As QTRealtimeDataReader)
+Dim i As Long
+Dim reader As QTRealtimeDataReader
+i = 1
+For Each reader In mRealtimeDataReaders
+    If reader Is dataReader Then
+        mRealtimeDataReaders.remove i
+        Exit For
+    End If
+    i = i + 1
+Next
+End Sub
+
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub finishReaders()
+Dim reader As QTRealtimeDataReader
+For Each reader In mRealtimeDataReaders
+    reader.finish
+Next
+End Sub
+
+Private Sub handleFatalError( _
+                ByVal Number As Long, _
+                ByVal Source As String, _
+                ByVal Description As String)
+mCommonServiceConsumer.FatalServiceProviderError Number, Source, Description, mHandle
+
+finishReaders
+
+Set mCommonServiceConsumer = Nothing
+End Sub
+
+
 
 
 

@@ -51,14 +51,14 @@ Option Explicit
 '================================================================================
 
 Private mOrderContexts As Collection
-Private mChangeListeners As Collection
+Private mChangeListeners As WeakCollection
 
 Private mEnabled As Boolean
 
 Private mDummy As Boolean
 Private mSimulated As Boolean
 
-Private mTicker As Ticker
+Private mTicker As ticker
 Private mPositionManager As PositionManager
 
 Private mOrderSubmitter As TradeBuildSP.IOrderSubmitter
@@ -71,8 +71,12 @@ Private mProviderReady As Boolean
 
 Private Sub Class_Initialize()
 Set mOrderContexts = New Collection
-Set mChangeListeners = New Collection
+Set mChangeListeners = New WeakCollection
 mEnabled = True
+End Sub
+
+Private Sub Class_Terminate()
+Debug.Print "OrderContexts terminated"
 End Sub
 
 '================================================================================
@@ -124,7 +128,7 @@ Friend Property Let simulated(ByVal value As Boolean)
 mSimulated = value
 End Property
 
-Friend Property Let Ticker(ByVal value As Ticker)
+Friend Property Let ticker(ByVal value As ticker)
 Set mTicker = value
 End Property
 
@@ -140,7 +144,7 @@ If Not mEnabled Then
 End If
 
 Set add = New OrderContext
-add.Ticker = mTicker
+add.ticker = mTicker
 add.PositionManager = mPositionManager
 add.orderSubmitter = mOrderSubmitter
 add.dummy = mDummy
@@ -161,6 +165,7 @@ Dim OrderContext As OrderContext
 
 Set mTicker = Nothing
 Set mPositionManager = Nothing
+Set mOrderSubmitter = Nothing
 
 For Each OrderContext In mOrderContexts
     OrderContext.finish
@@ -199,11 +204,13 @@ Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
                 ByVal affectedObject As OrderContext)
 Dim listener As CollectionChangeListener
+Dim i As Long
 Dim Change As CollectionChangeEvent
 Set Change.source = Me
 Change.changeType = changeType
 Set Change.affectedObject = affectedObject
-For Each listener In mChangeListeners
+For i = 1 To mChangeListeners.Count
+    Set listener = mChangeListeners(i)
     listener.Change Change
 Next
 End Sub

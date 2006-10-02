@@ -1,7 +1,6 @@
 VERSION 5.00
-Object = "{0AA335E1-8A4A-48F4-ADFF-D2FBF7CBB54B}#2.0#0"; "TradeBuildUI.ocx"
+Object = "{E3092883-F27E-496D-B10B-D59C0AD496C0}#2.0#0"; "TradeBuildUI.ocx"
 Begin VB.Form OrderForm 
-   Caption         =   "Form1"
    ClientHeight    =   6165
    ClientLeft      =   60
    ClientTop       =   450
@@ -15,8 +14,8 @@ Begin VB.Form OrderForm
       Left            =   0
       TabIndex        =   0
       Top             =   0
-      Width           =   8775
-      _ExtentX        =   15478
+      Width           =   8895
+      _ExtentX        =   15690
       _ExtentY        =   10821
    End
 End

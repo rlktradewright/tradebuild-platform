@@ -242,10 +242,16 @@ End If
 End Sub
 
 Private Sub mSocket_Connect()
+On Error GoTo err
 mConnectionState = ConnectionStates.ConnConnecting
 RaiseEvent Connecting
 logMessage "Connecting to QT: " & calcConnectionString, LogLevelLow
 RequestFieldDescription
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTAPI" & "::" & "mSocket_Connect", _
+                err.Description
 End Sub
 
 Private Sub mSocket_DataArrival(ByVal bytesTotal As Long)
@@ -262,12 +268,9 @@ Exit Sub
 
 err:
 ReleaseSocket
-If err.Number <> LocalErrorCodes.LongJump Then
-    mCommonServiceConsumer.ServiceProviderError SPErrorCodes.UnexpectedError, _
-        "Unexpected error: " & _
-        err.Number & ": " & err.Description, _
-        App.ProductName
-End If
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTAPI" & "::" & "mSocket_DataArrival", _
+                err.Description
 End Sub
 
 Private Sub mSocket_Error(ByVal Number As Integer, _
@@ -280,6 +283,7 @@ Private Sub mSocket_Error(ByVal Number As Integer, _
 Dim errorNum As MSWinsockLib.ErrorConstants
 Dim timestamp As Date: timestamp = mCommonServiceConsumer.GetTimestamp
 
+On Error GoTo err
 errorNum = Number
 Select Case errorNum
 Case sckAddressNotAvailable, _
@@ -325,6 +329,11 @@ Case Else
                 "Description: " & Description & vbCrLf & _
                 "Scode: " & Scode
 End Select
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTAPI" & "::" & "mSocket_Error", _
+                err.Description
 
 End Sub
 
@@ -377,6 +386,7 @@ Friend Sub cancelHistoricalBarData( _
                 ByVal requestHandle As Long, _
                 ByVal lockId As Long)
 
+On Error GoTo err
 If requestHandle < 0 Or _
     Not mHistoricalBarDataRequestTable(requestHandle).inUse _
 Then
@@ -404,11 +414,17 @@ Else
     ' data has been retrieved from QT and is being processed - just release this entry
     releaseHistoricalBarDataRequestEntry requestHandle
 End If
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTAPI" & "::" & "cancelHistoricalBarData", _
+                err.Description
 End Sub
 
 Friend Sub cancelHistoricalTickData( _
                 ByVal requestID As Long, _
                 ByVal lockId As Long)
+On Error GoTo err
 If requestID < 0 Or _
     Not mHistoricalTickDataRequestTable(requestID).inUse _
 Then
@@ -419,19 +435,35 @@ End If
 If mHistoricalTickDataRequestTable(requestID).inUse Then
     mHistoricalTickDataRequestTable(requestID).cancelling = True
 End If
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTAPI" & "::" & "cancelHistoricalTickData", _
+                err.Description
 End Sub
 
 Friend Sub connect()
+On Error GoTo err
 connectToQT
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTAPI" & "::" & "connect", _
+                err.Description
 End Sub
 
 Friend Sub disconnect()
+On Error GoTo err
 mDisconnectedByApplication = True
 If Not mConnectionTimer Is Nothing Then mConnectionTimer.StopTimer
 mConnectionState = ConnectionStates.ConnNotConnected
-logMessage "Disconnecting from QuoteTracker: " & calcConnectionString, LogLevelLow
 ReleaseSocket
 RaiseEvent ConnectionClosed(False)
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTAPI" & "::" & "disconnect", _
+                err.Description
 End Sub
 
 Public Function readHistoricalBar( _
@@ -449,6 +481,7 @@ Public Function readHistoricalBar( _
 
 Dim Bar As HistoricBar
 
+On Error GoTo err
 With mHistoricalBarDataRequestTable(requestHandle)
     If .nextBarIndex = -1 Then
         releaseHistoricalBarDataRequestEntry requestHandle
@@ -470,6 +503,11 @@ With mHistoricalBarDataRequestTable(requestHandle)
         .nextBarIndex = .bars.nextIndex(.nextBarIndex)
     End If
 End With
+Exit Function
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTAPI" & "::" & "readHistoricalBar", _
+                err.Description
                         
 End Function
 
@@ -481,6 +519,7 @@ Friend Function requestHistoricalBarData( _
 Dim requestID As Long
 Dim i As Long
 
+On Error GoTo err
 requestID = -1
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
@@ -522,6 +561,11 @@ mHistoricalBarDataRequestTable(i).bars.initialCapacity = IIf(barSpecifier.Number
 
 generateQTHistoricalDataRequest requestID
 requestHistoricalBarData = requestID
+Exit Function
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTAPI" & "::" & "requestHistoricalBarData", _
+                err.Description
 End Function
 
 Friend Function requestHistoricalTickData( _
@@ -533,6 +577,7 @@ Dim starttimeEST As Date
 Dim endtimeEST As Date
 Dim i As Long
 
+On Error GoTo err
 requestHistoricalTickData = -1
 
 If Not mLockManager.acquireOrVerifyLock(lockId, tickfileSpecifier.Contract.ProviderID(mProviderKey), LockActionReqHistoricData, requester) Then
@@ -583,6 +628,11 @@ qtHist = "<GetHistory>" & _
 
 Debug.Print "Request hist tick data: " & qtHist
 mSocket.SendData qtHist
+Exit Function
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTAPI" & "::" & "requestHistoricalTickData", _
+                err.Description
 
 End Function
 
@@ -592,6 +642,7 @@ Friend Function subscribeToL1Quotes( _
 Dim qtQuote As String
 Dim i As Long
 
+On Error GoTo err
 For i = 0 To UBound(mL1QuotesRequestTable)
     If Not mL1QuotesRequestTable(i).inUse Or _
         (mL1QuotesRequestTable(i).cancelling And mL1QuotesRequestTable(i).reuseTime <= Now) _
@@ -619,6 +670,11 @@ qtQuote = "<L1Quotes>" & _
         Chr(255)
 Debug.Print "Request L1 quotes: " & qtQuote
 mSocket.SendData qtQuote
+Exit Function
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTAPI" & "::" & "subscribeToL1Quotes", _
+                err.Description
 
 End Function
 
@@ -626,6 +682,7 @@ Friend Sub unsubscribeFromL1Quotes( _
                 ByVal L1QuoteRequestId As Long)
 Dim qtUnQuote  As String
 
+On Error GoTo err
 qtUnQuote = "<L1Quotes>" & _
         "<ReqType>UNSUB</ReqType>" & _
         "<Symbols>" & _
@@ -639,6 +696,11 @@ mSocket.SendData qtUnQuote
 mL1QuotesRequestTable(L1QuoteRequestId).cancelling = True
 mL1QuotesRequestTable(L1QuoteRequestId).reuseTime = Now + OneMinute
 Set mL1QuotesRequestTable(L1QuoteRequestId).requester = Nothing
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTAPI" & "::" & "unsubscribeFromL1Quotes", _
+                err.Description
 End Sub
 
 '================================================================================
@@ -837,6 +899,15 @@ Else
 End If
 
 End Function
+
+Private Sub handleFatalError( _
+                ByVal Number As Long, _
+                ByVal Source As String, _
+                ByVal Description As String)
+mCommonServiceConsumer.FatalServiceProviderError Number, Source, Description, -1
+
+If mConnectionState = ConnConnected Then disconnect
+End Sub
 
 Private Sub logMessage( _
                 ByVal message As String, _
@@ -1502,6 +1573,7 @@ If lockId <> 0 Then mLockManager.releaseLock lockId
 End Sub
 
 Private Sub ReleaseSocket()
+logMessage "Disconnecting from QuoteTracker: " & calcConnectionString, LogLevelLow
 If Not mSocket Is Nothing Then
     mSocket.Close
     Set mSocket = Nothing

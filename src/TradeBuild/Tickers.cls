@@ -52,10 +52,12 @@ Event TickerStateEvent(ByRef ev As TickerStateEvent)
 '  not set to true is allocated for the new ticker, and its index becomes the
 '  ticker's handle.
 '*/
-Private mTickerHandleTable() As Boolean
+Private mTickerHandleTable()        As Boolean
 
-Private mTickers As Collection
-Private mChangeListeners As Collection
+Private mTickers                    As Collection
+Private mChangeListeners            As WeakCollection
+
+Private mTradeBuildAPIRef           As WeakReference
 
 '================================================================================
 ' Class Event Handlers
@@ -64,7 +66,7 @@ Private mChangeListeners As Collection
 Private Sub Class_Initialize()
 ReDim mTickerHandleTable(99) As Boolean
 Set mTickers = New Collection
-Set mChangeListeners = New Collection
+Set mChangeListeners = New WeakCollection
 
 End Sub
 
@@ -80,7 +82,7 @@ Public Property Get Count() As Long
 Count = mTickers.Count
 End Property
 
-Public Property Get Item(ByVal index As Variant) As Ticker
+Public Property Get Item(ByVal index As Variant) As ticker
 Attribute Item.VB_UserMemId = 0
 Set Item = mTickers.Item(index)
 End Property
@@ -91,8 +93,9 @@ End Property
 
 Public Function add( _
                 ByVal ordersAreLive As Boolean, _
-                Optional ByVal key As String) As Ticker
-Set add = New Ticker
+                Optional ByVal key As String) As ticker
+Set add = New ticker
+add.tradeBuildAPI = mTradeBuildAPIRef.target
 add.handle = AllocateTickerHandle
 add.tickers = Me
 add.simulatedOrders = Not ordersAreLive
@@ -110,6 +113,7 @@ End Sub
 Public Function createTickFileManager() As TickFileManager
 Set createTickFileManager = New TickFileManager
 createTickFileManager.tickers = Me
+createTickFileManager.tradeBuildAPI = mTradeBuildAPIRef.target
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -118,7 +122,7 @@ Attribute NewEnum.VB_MemberFlags = "40"
 Set NewEnum = mTickers.[_NewEnum]
 End Function
 
-Public Sub remove(ByVal pTicker As Ticker)
+Public Sub remove(ByVal pTicker As ticker)
 If pTicker.State <> TickerStateCodes.TickerStateClosing Then
     pTicker.StopTicker
     Exit Sub
@@ -144,6 +148,12 @@ End Sub
 Friend Sub tickerError(ByRef ev As ErrorEvent)
 RaiseEvent tickerError(ev)
 End Sub
+
+Friend Property Let tradeBuildAPI( _
+                ByVal value As tradeBuildAPI)
+Set mTradeBuildAPIRef = New WeakReference
+mTradeBuildAPIRef.Initialise value
+End Property
 
 '================================================================================
 ' Helper Functions
@@ -172,13 +182,15 @@ End Function
 
 Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
-                ByVal affectedObject As Ticker)
+                ByVal affectedObject As ticker)
 Dim listener As CollectionChangeListener
+Dim i As Long
 Dim Change As CollectionChangeEvent
 Set Change.source = Me
 Change.changeType = changeType
 Set Change.affectedObject = affectedObject
-For Each listener In mChangeListeners
+For i = 1 To mChangeListeners.Count
+    Set listener = mChangeListeners(i)
     listener.Change Change
 Next
 End Sub

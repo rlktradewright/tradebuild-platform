@@ -52,11 +52,13 @@ Implements CollectionChangeListener
 ' Member variables
 '================================================================================
 
-Private mName As String
+Private mTradeBuildAPIRef           As WeakReference
 
-Private mTickers As tickers
-Private mOrderPlexes As orderPlexes
-Private mExecutions As executions
+Private mName                       As String
+
+Private mTickers                    As tickers
+Private mOrderPlexes                As orderPlexes
+Private mExecutions                 As executions
 
 '================================================================================
 ' Class Event Handlers
@@ -65,7 +67,6 @@ Private mExecutions As executions
 Private Sub Class_Initialize()
 Set mTickers = New tickers
 mTickers.addCollectionChangeListener Me
-
 Set mOrderPlexes = New orderPlexes
 Set mExecutions = New executions
 End Sub
@@ -79,8 +80,8 @@ End Sub
 '================================================================================
 
 Private Sub CollectionChangeListener_Change(ev As CollectionChangeEvent)
-If TypeOf ev.affectedObject Is Ticker Then
-    Dim lTicker As Ticker
+If TypeOf ev.affectedObject Is ticker Then
+    Dim lTicker As ticker
     Set lTicker = ev.affectedObject
     Select Case ev.changeType
     Case CollectionChangeTypes.CollItemAdded
@@ -116,7 +117,7 @@ ElseIf TypeOf ev.affectedObject Is Execution Then
         mExecutions.add lExec
     Case CollectionChangeTypes.CollItemRemoved
         ' should never happen
-        gTradeBuildAPI.notifyFatalError ErrorCodes.ErrUnsupportedOperationException, _
+        tb.notifyFatalError ErrorCodes.ErrUnsupportedOperationException, _
                                         "Unexpected execution deletion", _
                                         "TradeBuild.Workspace::CollectionChangeListener_Change"
     End Select
@@ -151,6 +152,13 @@ Public Property Get tickers() As tickers
 Set tickers = mTickers
 End Property
 
+Friend Property Let tradeBuildAPI( _
+                ByVal value As tradeBuildAPI)
+Set mTradeBuildAPIRef = New WeakReference
+mTradeBuildAPIRef.Initialise value
+mTickers.tradeBuildAPI = value
+End Property
+
 '================================================================================
 ' Methods
 '================================================================================
@@ -158,4 +166,8 @@ End Property
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Function tb() As tradeBuildAPI
+Set tb = mTradeBuildAPIRef.target
+End Function
 

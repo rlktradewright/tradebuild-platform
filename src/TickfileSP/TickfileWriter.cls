@@ -52,6 +52,8 @@ Implements ITickfileWriter
 ' Member variables
 '================================================================================
 
+Private mTickfileServiceProvider As tickfileServiceProvider
+
 Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mServiceConsumer As ITickfileOutputServiceConsumer
 
@@ -85,12 +87,14 @@ End Sub
 '================================================================================
 
 Private Sub ITickfileWriter_CloseOutputFile()
-If Not mTsOut Is Nothing Then
-    mTsOut.Close
-    Set mTsOut = Nothing
-End If
-Set mCommonServiceConsumer = Nothing
-Set mServiceConsumer = Nothing
+On Error GoTo Err
+finish
+mTickfileServiceProvider.dataWriterFinished Me
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TickfileSP" & "." & "TickfileWriter" & "::" & "ITickfileWriter_CloseOutputFile", _
+                Err.Description
 End Sub
 
 Private Property Get ITickfileWriter_Contract() As IContract
@@ -105,19 +109,43 @@ mServiceConsumer.Ready = True
 End Property
 
 Private Sub ITickfileWriter_WriteAsk(ByVal timestamp As Date, ByVal price As Double, ByVal size As Long)
+On Error GoTo Err
 writeTickData timestamp, TICK_ASK, price, size
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TickfileSP" & "." & "TickfileWriter" & "::" & "ITickfileWriter_WriteAsk", _
+                Err.Description
 End Sub
 
 Private Sub ITickfileWriter_writeBid(ByVal timestamp As Date, ByVal price As Double, ByVal size As Long)
+On Error GoTo Err
 writeTickData timestamp, TICK_BID, price, size
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TickfileSP" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeBid", _
+                Err.Description
 End Sub
 
 Private Sub ITickfileWriter_writeClose(ByVal timestamp As Date, ByVal price As Double)
+On Error GoTo Err
 writeTickData timestamp, TICK_CLOSE, price
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TickfileSP" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeClose", _
+                Err.Description
 End Sub
 
 Private Sub ITickfileWriter_writeHigh(ByVal timestamp As Date, ByVal price As Double)
+On Error GoTo Err
 writeTickData timestamp, TICK_HIGH, price
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TickfileSP" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeHigh", _
+                Err.Description
 End Sub
 
 Private Sub ITickfileWriter_writeLow(ByVal timestamp As Date, ByVal price As Double)
@@ -125,6 +153,7 @@ writeTickData timestamp, TICK_LOW, price
 End Sub
 
 Private Sub ITickfileWriter_writeMarketDepthData(ByVal timestamp As Date, ByVal Position As Long, ByVal marketMaker As String, ByVal operation As Long, ByVal side As Long, ByVal price As Double, ByVal size As Long)
+On Error GoTo Err
 Select Case mTickfileFormat
 Case TickfileFormats.TickfileTradeBuild
     If mTsOut Is Nothing Then createTradeBuildTickFile timestamp
@@ -141,9 +170,15 @@ Case TickfileFormats.TickfileTradeBuild
 Case TickfileFormats.TickfileCrescendo
     ' Crescendo can't handle market depth in tickfiles
 End Select
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TickfileSP" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeMarketDepthData", _
+                Err.Description
 End Sub
 
 Private Sub ITickfileWriter_writeMarketDepthReset(ByVal timestamp As Date)
+On Error GoTo Err
 Select Case mTickfileFormat
 Case TickfileFormats.TickfileTradeBuild
     If mTsOut Is Nothing Then createTradeBuildTickFile timestamp
@@ -155,18 +190,41 @@ Case TickfileFormats.TickfileTradeBuild
 Case TickfileFormats.TickfileCrescendo
     ' Crescendo can't handle market depth in tickfiles
 End Select
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TickfileSP" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeMarketDepthReset", _
+                Err.Description
 End Sub
 
 Private Sub ITickfileWriter_WriteOpenInterest(ByVal timestamp As Date, ByVal size As Long)
+On Error GoTo Err
 writeTickData timestamp, TICK_OPEN_INTEREST, , size
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TickfileSP" & "." & "TickfileWriter" & "::" & "ITickfileWriter_WriteOpenInterest", _
+                Err.Description
 End Sub
 
 Private Sub ITickfileWriter_writeTrade(ByVal timestamp As Date, ByVal price As Double, ByVal size As Long)
+On Error GoTo Err
 writeTickData timestamp, TICK_TRADE, price, size
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TickfileSP" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeTrade", _
+                Err.Description
 End Sub
 
 Private Sub ITickfileWriter_writeVolume(ByVal timestamp As Date, ByVal size As Long)
+On Error GoTo Err
 writeTickData timestamp, TICK_VOLUME, , size
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TickfileSP" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeVolume", _
+                Err.Description
 End Sub
 
 '================================================================================
@@ -199,6 +257,11 @@ Friend Property Let TickfileOutputServiceConsumer(ByVal RHS As ITickfileOutputSe
 Set mServiceConsumer = RHS
 End Property
 
+Friend Property Let tickfileServiceProvider( _
+                ByVal value As tickfileServiceProvider)
+Set mTickfileServiceProvider = value
+End Property
+
 Friend Property Get TickFileVersion() As TickFileVersions
 TickFileVersion = mTickFileVersion
 End Property
@@ -210,6 +273,14 @@ End Property
 '================================================================================
 ' Methods
 '================================================================================
+
+Friend Sub finish()
+If Not mTsOut Is Nothing Then
+    mTsOut.Close
+    Set mTsOut = Nothing
+End If
+Set mServiceConsumer = Nothing
+End Sub
 
 '================================================================================
 ' Helper Functions
@@ -284,6 +355,19 @@ If Err.Number = 76 Then
 Else
     Err.Raise Err.Number, , Err.Description
 End If
+End Sub
+
+Private Sub handleFatalError( _
+                ByVal Number As Long, _
+                ByVal Source As String, _
+                ByVal Description As String)
+mCommonServiceConsumer.FatalServiceProviderError Number, _
+                            Source, _
+                            Description, _
+                            mTickfileServiceProvider.handle
+
+finish
+mTickfileServiceProvider.dataWriterFinished Me
 End Sub
 
 Private Sub writeTickData( _

@@ -52,6 +52,8 @@ Implements ITickfileReader
 ' Member variables
 '================================================================================
 
+Private mTickfileServiceProvider As tickfileServiceProvider
+
 Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mServiceConsumer As ITickfileInputServiceConsumer
 Private mDataConsumer As IStreamingDataConsumer
@@ -63,7 +65,7 @@ Private mReplayProgressEventFrequency As Long
 
 Private mContract As IContract
 Private mContractSpecifier As IContractSpecifier
-Private WithEvents mInstrument As TradingDO2.cInstrument
+Private mInstrument As TradingDO2.cInstrument
 Attribute mInstrument.VB_VarHelpID = -1
 Private WithEvents mTickReader As TradingDO2.TickDataAccessor
 Attribute mTickReader.VB_VarHelpID = -1
@@ -98,13 +100,23 @@ mDataIndex = 1
 mReplayProgressEventFrequency = 10
 End Sub
 
+Private Sub Class_Terminate()
+Debug.Print "TBInfoBase.TickfileReader terminated"
+End Sub
+
 '================================================================================
 ' ITickfileReader Interface Members
 '================================================================================
 
 Private Sub ITickfileReader_CloseInputFile()
-Set mInstrument = Nothing
-Set mTickReader = Nothing
+On Error GoTo Err
+finish
+mTickfileServiceProvider.dataReaderFinished Me
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "TickfileReader" & "::" & "ITickfileReader_CloseInputFile", _
+                Err.Description
 End Sub
 
 Private Property Let ITickfileReader_Contract(ByVal RHS As TradeBuildSP.IContract)
@@ -123,6 +135,7 @@ Private Sub ITickfileReader_FireNextTick()
 Dim percentComplete As Single
 Static noMoreData As Boolean
 
+On Error GoTo Err
 If noMoreData Then
     mServiceConsumer.TickfileReplayComplete
     Exit Sub
@@ -139,6 +152,11 @@ processNextTickRecord mTypeByte
 If Not checkRecord(mTypeByte) Then
     noMoreData = True
 End If
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "TickfileReader" & "::" & "ITickfileReader_FireNextTick", _
+                Err.Description
 
 End Sub
 
@@ -165,6 +183,7 @@ End Property
 Private Sub ITickfileReader_ReplayTickfile(tickfileSpecifier As TradeBuildSP.TickfileSpec)
 Dim lInstrumentFactory As TradingDO2.cInstrumentFactory
 
+On Error GoTo Err
 mInputTickfileSpecifier = tickfileSpecifier
 
 Set lInstrumentFactory = New TradingDO2.cInstrumentFactory
@@ -182,7 +201,8 @@ End With
  
 If mInstrument Is Nothing Then
     mServiceConsumer.Error StandardSPErrorCodes.TFContractSpecifierInvalid, _
-                            "The specified contract does not exist"
+                            "The specified contract does not exist", _
+                            mTickfileServiceProvider.handle
     Exit Sub
 End If
 
@@ -191,6 +211,11 @@ Set mContract = mInputTickfileSpecifier.Contract
 'mContract.Specifier = mCommonServiceConsumer.NewContractSpecifier
 'gContractFromInstrument mContract, mInstrument
 Set mTickReader = mInstrument.CreateTickDataAccessor
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "TickfileReader" & "::" & "ITickfileReader_ReplayTickfile", _
+                Err.Description
 
 End Sub
 
@@ -211,17 +236,26 @@ End Property
 Private Sub mTickReader_ConnectFailed( _
                             ByVal errorCode As Long, _
                             ByVal errorDesc As String)
+On Error GoTo Err
 mServiceConsumer.Error StandardSPErrorCodes.TFCantConnectDataSource, _
-                        "error " & errorCode & ": " & errorDesc
+                        "error " & errorCode & ": " & errorDesc, _
+                        mTickfileServiceProvider.handle
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "TickfileReader" & "::" & "mTickReader_ConnectFailed", _
+                Err.Description
 End Sub
 
 Private Sub mTickReader_DataFetched()
+On Error GoTo Err
 If Not checkRecord(mTypeByte) Then
     If mReadyNotified Then
         mServiceConsumer.TickfileReplayComplete
     Else
         mServiceConsumer.Error StandardSPErrorCodes.TFTickfileEmpty, _
-                                "No data for this specifier"
+                                "No data for this specifier", _
+                                mTickfileServiceProvider.handle
     End If
     Exit Sub
 End If
@@ -230,19 +264,31 @@ If Not mReadyNotified Then
     mReadyNotified = True
     mServiceConsumer.Ready mInputTickfileSpecifier, 0
 End If
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "TickfileReader" & "::" & "mTickReader_DataFetched", _
+                Err.Description
 End Sub
 
 Private Sub mTickReader_Error( _
                             ByVal errorCode As Long, _
                             ByVal errorDesc As String)
+On Error GoTo Err
 mCommonServiceConsumer.ServiceProviderError errorCode, _
                                     errorDesc, _
                                     mServiceProviderName
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "TickfileReader" & "::" & "mTickReader_Error", _
+                Err.Description
 End Sub
 
 Private Sub mTickReader_Ready()
 Dim sessionStart As Date
 
+On Error GoTo Err
 With mInputTickfileSpecifier
     If .EntireSession Then
         mContract.GetSessionTimes .From, sessionStart, .To
@@ -251,6 +297,11 @@ With mInputTickfileSpecifier
                             gTruncateTimeToMinute(.From), _
                             gTruncateTimeToNextMinute(.To)
 End With
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "TickfileReader" & "::" & "mTickReader_Ready", _
+                Err.Description
 
 End Sub
 
@@ -293,9 +344,20 @@ Friend Property Let TickfileInputServiceConsumer(ByVal RHS As ITickfileInputServ
 Set mServiceConsumer = RHS
 End Property
 
+Friend Property Let tickfileServiceProvider( _
+                ByVal value As tickfileServiceProvider)
+Set mTickfileServiceProvider = value
+End Property
+
 '================================================================================
 ' Methods
 '================================================================================
+
+Friend Sub finish()
+Set mTickReader = Nothing
+Set mServiceConsumer = Nothing
+Set mDataConsumer = Nothing
+End Sub
 
 '================================================================================
 ' Helper Functions
@@ -342,6 +404,19 @@ End If
 mRecordsRead = mRecordsRead + 1
 checkRecord = True
 End Function
+
+Private Sub handleFatalError( _
+                ByVal Number As Long, _
+                ByVal Source As String, _
+                ByVal Description As String)
+mCommonServiceConsumer.FatalServiceProviderError Number, _
+                                Source, _
+                                Description, _
+                                mTickfileServiceProvider.handle
+
+finish
+mTickfileServiceProvider.dataReaderFinished Me
+End Sub
 
 Private Sub processNextTickRecord(ByVal typeByte As Byte)
 Dim tickType As TickTypes

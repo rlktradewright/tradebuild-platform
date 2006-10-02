@@ -58,12 +58,22 @@ Private mName As String
 Private mHandle As Long
 Private mCommonServiceConsumer As ICommonServiceConsumer
 
+Private mHistDataReaders As Collection
+Private mHistDataWriters As Collection
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
 
 Private Sub Class_Initialize()
+Set mHistDataReaders = New Collection
+Set mHistDataWriters = New Collection
+
 mName = HistoricDataSPName
+End Sub
+
+Private Sub Class_Terminate()
+Debug.Print "TBInfoBase.HistDataServiceProvider terminated"
 End Sub
 
 '================================================================================
@@ -77,14 +87,20 @@ Private Function IBarDataServiceProvider_CreateBarDataReader( _
 
 Dim reader As HistDataReader
 
+On Error GoTo Err
 Set reader = New HistDataReader
 Set IBarDataServiceProvider_CreateBarDataReader = reader
-
+reader.histDataServiceProvider = Me
 reader.CommonServiceConsumer = mCommonServiceConsumer
 reader.BarDataInputServiceConsumer = serviceConsumer
 reader.DataConsumer = DataConsumer
 reader.ServiceProviderName = mName & " (reader)"
-
+mHistDataReaders.Add reader
+Exit Function
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "HistDataServiceProvider" & "::" & "IBarDataServiceProvider_CreateBarDataReader", _
+                Err.Description
 End Function
 
 Private Function IBarDataServiceProvider_CreateBarDataWriter( _
@@ -95,6 +111,7 @@ Private Function IBarDataServiceProvider_CreateBarDataWriter( _
 
 Dim writer As HistDataWriter
 
+On Error GoTo Err
 Set writer = New HistDataWriter
 Set IBarDataServiceProvider_CreateBarDataWriter = writer
 
@@ -103,6 +120,12 @@ writer.CommonServiceConsumer = mCommonServiceConsumer
 writer.BarDataOutputServiceConsumer = serviceConsumer
 writer.ServiceProviderName = mName & " (writer)"
 writer.ContractSpecifier = contractSpec
+mHistDataWriters.Add writer
+Exit Function
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "HistDataServiceProvider" & "::" & "IBarDataServiceProvider_CreateBarDataWriter", _
+                Err.Description
 End Function
 
 Private Function IBarDataServiceProvider_Supports( _
@@ -157,7 +180,15 @@ ICommonServiceProvider_Name = Name
 End Property
 
 Private Sub ICommonServiceProvider_Terminate()
-' nothing to do
+On Error GoTo Err
+finishReaders
+finishWriters
+Set mCommonServiceConsumer = Nothing
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "HistDataServiceProvider" & "::" & "ICommonServiceProvider_Terminate", _
+                Err.Description
 End Sub
 
 '================================================================================
@@ -167,6 +198,10 @@ End Sub
 '================================================================================
 ' Properties
 '================================================================================
+
+Friend Property Get handle() As Long
+handle = mHandle
+End Property
 
 Public Property Let Name(ByVal value As String)
 mName = value
@@ -180,7 +215,63 @@ End Property
 ' Methods
 '================================================================================
 
+Friend Sub dataReaderFinished( _
+                ByVal dataReader As HistDataReader)
+Dim i As Long
+Dim reader As HistDataReader
+i = 1
+For Each reader In mHistDataReaders
+    If reader Is dataReader Then
+        mHistDataReaders.Remove i
+        Exit For
+    End If
+    i = i + 1
+Next
+End Sub
+
+Friend Sub dataWriterFinished( _
+                ByVal dataWriter As HistDataWriter)
+Dim i As Long
+Dim writer As HistDataWriter
+i = 1
+For Each writer In mHistDataWriters
+    If writer Is dataWriter Then
+        mHistDataWriters.Remove i
+        Exit For
+    End If
+    i = i + 1
+Next
+End Sub
+
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub finishReaders()
+Dim reader As HistDataReader
+For Each reader In mHistDataReaders
+    reader.finish
+Next
+End Sub
+
+Private Sub finishWriters()
+Dim writer As HistDataWriter
+For Each writer In mHistDataWriters
+    writer.finish
+Next
+End Sub
+
+Private Sub handleFatalError( _
+                ByVal Number As Long, _
+                ByVal Source As String, _
+                ByVal Description As String)
+mCommonServiceConsumer.FatalServiceProviderError Number, Source, Description, mHandle
+
+finishReaders
+finishWriters
+
+Set mCommonServiceConsumer = Nothing
+End Sub
+
+
 

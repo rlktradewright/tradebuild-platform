@@ -58,14 +58,14 @@ Implements ITickfileWriter
 ' Member variables
 '================================================================================
 
+Private mTickfileServiceProvider As tickfileServiceProvider
+
 Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mServiceConsumer As ITickfileOutputServiceConsumer
 Private mServiceProviderName As String
 
 Private mTickerID As Long
 Private mContract As IContract
-Private WithEvents mInstrument As TradingDO2.cInstrument
-Attribute mInstrument.VB_VarHelpID = -1
 Private WithEvents mTickWriter As TradingDO2.TickDataAccessor
 Attribute mTickWriter.VB_VarHelpID = -1
 
@@ -89,18 +89,23 @@ Private Sub Class_Initialize()
 ReDim mData(8191) As Byte
 End Sub
 
+Private Sub Class_Terminate()
+Debug.Print "TBInfoBase.TickfileWriter terminated"
+End Sub
+
 '================================================================================
 ' ITickfileWriter Interface Members
 '================================================================================
 
 Private Sub ITickfileWriter_CloseOutputFile()
-WritePeriodData
-Set mInstrument = Nothing
-mCommonServiceConsumer.NotifyListeners "Total data written: " & mTotalBytes & " bytes", _
-                            TradeBuildSP.StandardListenValueTypes.Log, _
-                            Now
-' we really ought to get rid of mWriter after a suitable delay, or after we
-' know that all writes hve been completed
+On Error GoTo Err
+finish
+mTickfileServiceProvider.dataWriterFinished Me
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "TickfileWriter" & "::" & "ITickfileWriter_CloseOutputFile", _
+                Err.Description
 End Sub
 
 Private Property Get ITickfileWriter_Contract() As IContract
@@ -109,14 +114,16 @@ End Property
 
 Private Property Let ITickfileWriter_Contract(ByVal RHS As IContract)
 Dim lInstrumentFactory As TradingDO2.cInstrumentFactory
+Dim lInstrument As TradingDO2.cInstrument
 
+On Error GoTo Err
 If Not RHS Is Nothing Then
     Set mContract = RHS.Clone
 End If
 
 Set lInstrumentFactory = New TradingDO2.cInstrumentFactory
 With mContract.Specifier
-    Set mInstrument = lInstrumentFactory.loadBySpec(.Symbol, _
+    Set lInstrument = lInstrumentFactory.loadBySpec(.Symbol, _
                                 secTypeToString(.SecType), _
                                 Left$(.Expiry, 6), _
                                 .Exchange, _
@@ -125,11 +132,16 @@ With mContract.Specifier
                                 optRightToString(.Right), _
                                 .localSymbol)
 End With
-Debug.Assert Not mInstrument Is Nothing
+Debug.Assert Not lInstrument Is Nothing
 
-Set mTickWriter = mInstrument.CreateTickDataAccessor
+Set mTickWriter = lInstrument.CreateTickDataAccessor
 
 mTickSize = mContract.MinimumTick
+Exit Property
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "TickfileWriter" & "::" & "ITickfileWriter_Contract", _
+                Err.Description
 
 End Property
 
@@ -149,37 +161,67 @@ Private Sub ITickfileWriter_WriteAsk( _
                             ByVal timestamp As Date, _
                             ByVal price As Double, _
                             ByVal size As Long)
+On Error GoTo Err
 If price = 0# Then Exit Sub
 WriteQuoteRecord TickTypes.Ask, timestamp, price, size
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "TickfileWriter" & "::" & "ITickfileWriter_WriteAsk", _
+                Err.Description
 End Sub
 
 Private Sub ITickfileWriter_writeBid( _
                             ByVal timestamp As Date, _
                             ByVal price As Double, _
                             ByVal size As Long)
+On Error GoTo Err
 If price = 0# Then Exit Sub
 WriteQuoteRecord TickTypes.Bid, timestamp, price, size
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeBid", _
+                Err.Description
 End Sub
 
 Private Sub ITickfileWriter_writeClose( _
                             ByVal timestamp As Date, _
                             ByVal price As Double)
+On Error GoTo Err
 If price = 0# Then Exit Sub
 WritePriceRecord TickTypes.ClosePrice, timestamp, price
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeClose", _
+                Err.Description
 End Sub
 
 Private Sub ITickfileWriter_writeHigh( _
                             ByVal timestamp As Date, _
                             ByVal price As Double)
+On Error GoTo Err
 If price = 0# Then Exit Sub
 WritePriceRecord TickTypes.HighPrice, timestamp, price
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeHigh", _
+                Err.Description
 End Sub
 
 Private Sub ITickfileWriter_writeLow( _
                             ByVal timestamp As Date, _
                             ByVal price As Double)
+On Error GoTo Err
 If price = 0# Then Exit Sub
 WritePriceRecord TickTypes.LowPrice, timestamp, price
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeLow", _
+                Err.Description
 End Sub
 
 Private Sub ITickfileWriter_writeMarketDepthData( _
@@ -194,6 +236,7 @@ Dim typeByte As Byte
 Dim sizeType As SizeTypes
 Dim sideOperationPositionByte As Byte
 
+On Error GoTo Err
 If price = 0# Then Exit Sub
 
 CheckIfNewPeriod timestamp
@@ -218,22 +261,39 @@ WriteByte sideOperationPositionByte
 WritePrice price
 WriteSize size, sizeType
 WriteString marketmaker
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeMarketDepthData", _
+                Err.Description
 End Sub
 
 Private Sub ITickfileWriter_writeMarketDepthReset( _
                             ByVal timestamp As Date)
 Dim typeByte As Byte
 
+On Error GoTo Err
 typeByte = TickTypes.MarketDepthReset
 
 If timestamp = mTimestamp Then typeByte = typeByte Or NoTimestamp
 
 WriteByte typeByte
 WriteTimestamp timestamp
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeMarketDepthReset", _
+                Err.Description
 End Sub
 
 Private Sub ITickfileWriter_WriteOpenInterest(ByVal timestamp As Date, ByVal size As Long)
+On Error GoTo Err
 WriteSizeRecord TickTypes.OpenInterest, timestamp, size
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "TickfileWriter" & "::" & "ITickfileWriter_WriteOpenInterest", _
+                Err.Description
 End Sub
 
 Private Sub ITickfileWriter_writeTrade( _
@@ -247,7 +307,13 @@ End Sub
 Private Sub ITickfileWriter_writeVolume( _
                             ByVal timestamp As Date, _
                             ByVal size As Long)
+On Error GoTo Err
 WriteSizeRecord TickTypes.Volume, timestamp, size
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeVolume", _
+                Err.Description
 End Sub
 
 '================================================================================
@@ -257,25 +323,50 @@ End Sub
 Private Sub mTickWriter_ConnectFailed( _
                             ByVal errorCode As Long, _
                             ByVal errorDesc As String)
+On Error GoTo Err
 mServiceConsumer.Error StandardSPErrorCodes.TFCantConnectDataSource, _
-                        "error " & errorCode & ": " & errorDesc
+                        "error " & errorCode & ": " & errorDesc, _
+                        mTickfileServiceProvider.handle
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "TickfileWriter" & "::" & "mTickWriter_ConnectFailed", _
+                Err.Description
 End Sub
 
 Private Sub mTickWriter_Error( _
                             ByVal errorCode As Long, _
                             ByVal errorDesc As String)
+On Error GoTo Err
 mCommonServiceConsumer.ServiceProviderError errorCode, _
                                     errorDesc, _
                                     mServiceProviderName
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "TickfileWriter" & "::" & "mTickWriter_Error", _
+                Err.Description
 End Sub
 
 Private Sub mTickWriter_NotReady()
+On Error GoTo Err
 mServiceConsumer.Ready = False
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "TickfileWriter" & "::" & "mTickWriter_NotReady", _
+                Err.Description
 End Sub
 
 Private Sub mTickWriter_Ready()
+On Error GoTo Err
 mServiceConsumer.Ready = True
 mServiceConsumer.OutputTickfileCreated mTickWriter.connectionString
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TBInfoBase" & "." & "TickfileWriter" & "::" & "mTickWriter_Ready", _
+                Err.Description
 End Sub
 
 '================================================================================
@@ -302,9 +393,24 @@ Friend Property Let TickfileOutputServiceConsumer(ByVal RHS As ITickfileOutputSe
 Set mServiceConsumer = RHS
 End Property
 
+Friend Property Let tickfileServiceProvider( _
+                ByVal value As tickfileServiceProvider)
+Set mTickfileServiceProvider = value
+End Property
+
 '================================================================================
 ' Methods
 '================================================================================
+
+Friend Sub finish()
+WritePeriodData
+mCommonServiceConsumer.NotifyListeners "Total data written: " & mTotalBytes & " bytes", _
+                            TradeBuildSP.StandardListenValueTypes.Log, _
+                            Me
+' we really ought to get rid of mWriter after a suitable delay, or after we
+' know that all writes hve been completed
+
+End Sub
 
 '================================================================================
 ' Helper Functions
@@ -333,6 +439,19 @@ Else
     GetSizeType = SizeTypes.LongSize
 End If
 End Function
+
+Private Sub handleFatalError( _
+                ByVal Number As Long, _
+                ByVal Source As String, _
+                ByVal Description As String)
+mCommonServiceConsumer.FatalServiceProviderError Number, _
+                            Source, _
+                            Description, _
+                            mTickfileServiceProvider.handle
+
+finish
+mTickfileServiceProvider.dataWriterFinished Me
+End Sub
 
 Private Sub WriteByte(ByVal theByte As Byte)
 If mDataIndex > UBound(mData) Then

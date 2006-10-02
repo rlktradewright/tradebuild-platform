@@ -362,6 +362,12 @@ library TradeBuildSP
 		[helpstring("The contract specifier in the tickfile specifier does not refer to a valid contract")]
     	TFContractSpecifierInvalid = 2009,
 
+		[helpstring("Trying to reconnect to the tickfile's data source")]
+    	TFReConnectingDataSource = 2010,
+
+		[helpstring("Lost connection to the realtime data source")]
+    	TFLostConnectionToDataSource = 2011,
+
 		[helpstring("Unable to connect to the contract data source")]
     	CICantConnectDataSource = 2100,
 
@@ -370,6 +376,15 @@ library TradeBuildSP
 
 		[helpstring("The contract specifier does not refer to a valid contract")]
     	CIContractSpecifierInvalid = 2102,
+
+		[helpstring("Trying to reconnect to the contract data source")]
+		CIReConnectingDataSource = 2103,
+		
+		[helpstring("Lost connection to the contract data source")]
+    	CILostConnectionToDataSource = 2104,
+
+		[helpstring("Disconnected from the contract data source")]
+    	CIDisconnectedFromDataSource = 2105,
 
 		[helpstring("Unable to connect to the historical data source")]
     	HDCantConnectDataSource = 2200,
@@ -385,6 +400,9 @@ library TradeBuildSP
 
 		[helpstring("Historical data request is invalid")]
     	HDRequestInvalid = 2204,
+
+		[helpstring("Disconnected from the historical data source")]
+    	HDDisconnectedFromDataSource = 2205,
 
 		[helpstring("Historical data request was not successful")]
     	HDRequestFailed = 2205,
@@ -413,6 +431,9 @@ library TradeBuildSP
 		[helpstring("Disconnected from the realtime data source")]
     	RTDisconnectedFromDataSource = 2307,
 
+		[helpstring("The realtime data source is no longer responding or sending data")]
+    	RTDataSourceNotResponding = 2308,
+
 		[helpstring("Unable to connect to the broker")]
     	LOCantConnectToBroker = 2400,
 
@@ -435,7 +456,10 @@ library TradeBuildSP
     	LONotUniqueContract = 2406,
 
 		[helpstring("Insufficient funds")]
-    	LOInsufficientFunds = 2407
+    	LOInsufficientFunds = 2407,
+
+		[helpstring("Disconnected from the broker")]
+    	LODisconnectedFromBroker = 2408
 
    } StandardSPErrorCodes;
 
@@ -727,8 +751,9 @@ library TradeBuildSP
 		// Methods =====================================================
 
 		HRESULT Error(
-				[in] StandardSPErrorCodes errorCode,
-				[in] BSTR errorMessage);
+			[in] StandardSPErrorCodes errorCode,
+			[in] BSTR errorMessage,
+			[in] long serviceProviderHandle);
 
 		HRESULT Ready();
 
@@ -759,7 +784,8 @@ library TradeBuildSP
 
 		HRESULT Error(
 			[in] StandardSPErrorCodes errorCode,
-			[in] BSTR errorMessage);
+			[in] BSTR errorMessage,
+			[in] long serviceProviderHandle);
 
         HRESULT OutputBarfileCreated(
                         [in] BSTR filename);
@@ -1118,6 +1144,12 @@ library TradeBuildSP
 
 	// Methods =====================================================
 
+		HRESULT FatalServiceProviderError(
+			[in] long errorCode,
+			[in] BSTR source,
+			[in] BSTR errorMessage,
+			[in] long serviceProviderHandle);
+
         HRESULT FormatTimestamp(
             [in] DATE timestamp, 
             [in, optional, defaultvalue(TimestampDateAndTime)] TimestampFormats formatOption, 
@@ -1185,7 +1217,7 @@ library TradeBuildSP
 		HRESULT ServiceProviderError(
 			[in] long errorCode,
 			[in] BSTR errorMessage,
-			[in] BSTR serviceProviderName);
+			[in] long serviceProviderHandle);
 
         HRESULT SortObjects(
             [in, out] SAFEARRAY(SortEntry)* data);
@@ -1390,7 +1422,8 @@ library TradeBuildSP
 		HRESULT Error(
 			[in] StandardSPErrorCodes errorCode,
 			[in] BSTR errorMessage,
-                        [in] IContracts* pContracts);
+            [in] IContracts* pContracts,
+			[in] long serviceProviderHandle);
 
 		HRESULT LoadComplete(
 			[in] long handle,
@@ -1800,7 +1833,8 @@ interface IOrderPlex : IDispatch {
 
 	HRESULT error(
 			[in] StandardSPErrorCodes errorCode,
-			[in] BSTR errorMessage);
+			[in] BSTR errorMessage,
+			[in] long serviceProviderHandle);
 
 	HRESULT executionDetails(
 		[in] IContractSpecifier* pContractSpecifier, 
@@ -1891,6 +1925,8 @@ interface IOrderPlex : IDispatch {
 		[in] VARIANT_BOOL stopOrderChanged, 
 		[in] VARIANT_BOOL targetOrderChanged, 
 		[in] VARIANT_BOOL closeoutOrderChanged);
+
+	HRESULT finish();
 
 	HRESULT resubmitStopAndTargetOrders([in] IOrderPlex* pOrderPlex);
 
@@ -1986,7 +2022,8 @@ interface IOrderPlex : IDispatch {
 
 	HRESULT Error(
 			[in] StandardSPErrorCodes errorCode,
-			[in] BSTR errorMessage);
+			[in] BSTR errorMessage,
+			[in] long serviceProviderHandle);
 
     };
 
@@ -2829,7 +2866,8 @@ interface IOrderPlex : IDispatch {
 
 		HRESULT Error(
 			[in] StandardSPErrorCodes errorCode,
-			[in] BSTR errorMessage);
+			[in] BSTR errorMessage,
+			[in] long serviceProviderHandle);
 
 		HRESULT Ready(                            
 			[in] TickfileSpec* tickfileSpec,
@@ -2863,7 +2901,8 @@ interface IOrderPlex : IDispatch {
 
 		HRESULT Error(
 			[in] StandardSPErrorCodes errorCode,
-			[in] BSTR errorMessage);
+			[in] BSTR errorMessage,
+			[in] long serviceProviderHandle);
 
         HRESULT OutputTickfileCreated(
                         [in] BSTR filename);

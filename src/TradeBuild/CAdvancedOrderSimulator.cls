@@ -92,6 +92,10 @@ mTimerList.StartTiming
 mNextBrokerOrderId = 1
 End Sub
 
+Private Sub Class_Terminate()
+Debug.Print "AdvancedOrderSimulator terminated"
+End Sub
+
 '================================================================================
 ' XXXX Interface Members
 '================================================================================
@@ -437,8 +441,8 @@ If startMarket = -1 Then
     ReDim Preserve mMarketTable(UBound(mMarketTable) + 20) As MarketTableEntry
 End If
 
-mMarketTable(startMarket).inUse = True
 With mMarketTable(startMarket)
+    .inUse = True
     Set .contractSpecifier = contractSpec
     Set .serviceConsumer = serviceConsumer
     Set .activeOrders = New Collection
@@ -456,6 +460,12 @@ With mMarketTable(handle)
     Set .activeOrders = Nothing
     Set .pendingOrders = Nothing
     Set .Clock = Nothing
+    Set .serviceConsumer = Nothing
+    .simulateExchangeDelays = False
+    .ask = 0
+    .AskSize = 0
+    .bid = 0
+    .bidSize = 0
 End With
 End Sub
 

@@ -52,7 +52,7 @@ Option Explicit
 
 Private mOrders As Collection
 
-Private mChangeListeners As Collection
+Private mChangeListeners As WeakCollection
 
 '================================================================================
 ' Class Event Handlers
@@ -60,7 +60,7 @@ Private mChangeListeners As Collection
 
 Private Sub Class_Initialize()
 Set mOrders = New Collection
-Set mChangeListeners = New Collection
+Set mChangeListeners = New WeakCollection
 End Sub
 
 '================================================================================
@@ -120,11 +120,13 @@ Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
                 ByVal affectedObject As order)
 Dim listener As CollectionChangeListener
+Dim i As Long
 Dim Change As CollectionChangeEvent
 Set Change.source = Me
 Change.changeType = changeType
 Set Change.affectedObject = affectedObject
-For Each listener In mChangeListeners
+For i = 1 To mChangeListeners.Count
+    Set listener = mChangeListeners(i)
     listener.Change Change
 Next
 End Sub

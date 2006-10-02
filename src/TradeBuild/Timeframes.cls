@@ -61,14 +61,16 @@ End Type
 ' Member variables
 '================================================================================
 
+Private mTradeBuildAPIRef           As WeakReference
+
 Private mTimeframeTable() As TimeframeTableEntry
 Private mNextTimeframeTableIndex As Long
 
-Private mTicker As TradeBuild.Ticker
+Private mTicker As TradeBuild.ticker
 
 Private mContract As TradeBuild.Contract
 
-Private mChangeListeners As Collection
+Private mChangeListeners As WeakCollection
 
 '================================================================================
 ' Class Event Handlers
@@ -76,7 +78,7 @@ Private mChangeListeners As Collection
 
 Private Sub Class_Initialize()
 ReDim mTimeframeTable(10) As TimeframeTableEntry
-Set mChangeListeners = New Collection
+Set mChangeListeners = New WeakCollection
 End Sub
 
 Private Sub Class_Terminate()
@@ -110,8 +112,14 @@ Public Property Get Count() As Long
 Count = mNextTimeframeTableIndex
 End Property
 
-Friend Property Let Ticker(ByVal value As Ticker)
+Friend Property Let ticker(ByVal value As ticker)
 Set mTicker = value
+End Property
+
+Friend Property Let tradeBuildAPI( _
+                ByVal value As tradeBuildAPI)
+Set mTradeBuildAPIRef = New WeakReference
+mTradeBuildAPIRef.Initialise value
 End Property
 
 '================================================================================
@@ -136,6 +144,7 @@ If timeframeIndex >= 0 Then
     If key = "" Then key = mTimeframeTable(timeframeIndex).key
 Else
     Set add = New Timeframe
+    add.tradeBuildAPI = tb
     Set tte.theTimeFrame = add
     tte.timeperiod = timeperiod
     tte.timeperiodUnit = timeperiodUnit
@@ -145,7 +154,7 @@ Else
     Else
         tte.key = generateKey(timeperiod, timeperiodUnit)
     End If
-    tte.theTimeFrame.initialise tte.key, _
+    tte.theTimeFrame.Initialise tte.key, _
                                 mTicker, _
                                 timeperiod, _
                                 timeperiodUnit, _
@@ -172,11 +181,7 @@ mChangeListeners.add value
 End Sub
 
 Friend Sub finish()
-Dim i As Long
-
-For i = 0 To mNextTimeframeTableIndex - 1
-    mTimeframeTable(i).theTimeFrame.finish
-Next
+RemoveAll
 Set mTicker = Nothing
 End Sub
 
@@ -238,11 +243,13 @@ Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
                 ByVal affectedObject As Timeframe)
 Dim listener As CollectionChangeListener
+Dim i As Long
 Dim Change As CollectionChangeEvent
 Set Change.source = Me
 Change.changeType = changeType
 Set Change.affectedObject = affectedObject
-For Each listener In mChangeListeners
+For i = 1 To mChangeListeners.Count
+    Set listener = mChangeListeners(i)
     listener.Change Change
 Next
 End Sub
@@ -287,4 +294,7 @@ For i = 0 To mNextTimeframeTableIndex - 1
 Next
 End Function
 
+Private Function tb() As tradeBuildAPI
+Set tb = mTradeBuildAPIRef.target
+End Function
 

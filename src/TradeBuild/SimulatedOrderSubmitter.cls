@@ -65,6 +65,10 @@ Private mContract As TradeBuild.Contract
 ' Class Event Handlers
 '================================================================================
 
+Private Sub Class_Terminate()
+Debug.Print "SimulatedOrderSubmitter terminated"
+End Sub
+
 '================================================================================
 ' IOrderSubmitter Interface Members
 '================================================================================
@@ -217,6 +221,13 @@ If Not entryOrder Is Nothing Then
 Else
     ' treat the other orders as an OCA group - still to be implemented
 End If
+End Sub
+
+Private Sub IOrderSubmitter_finish()
+mSimulator.stopMarket mMarketIndex
+Set mServiceConsumer = Nothing
+Set mSimulator = Nothing
+Set mContract = Nothing
 End Sub
 
 Private Sub IOrderSubmitter_modifyOrderPlex( _

@@ -52,6 +52,8 @@ Implements IRealtimeDataReader
 ' Member variables
 '================================================================================
 
+Private mRealtimeDataServiceProvider As realtimeDataServiceProvider
+
 Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mServiceConsumer As IRealtimeDataInputServiceConsumer
 Private mDataConsumer As IStreamingDataConsumer
@@ -96,7 +98,7 @@ Private Sub IRealtimeDataReader_StartData( _
                 ByVal contract As TradeBuildSP.IContract, _
                 ByVal DomEventsRequired As TradeBuildSP.DOMEventTypes)
 
-
+On Error GoTo err
 If DomEventsRequired = DOMNone Then
 ElseIf DomEventsRequired = DOMByPosition Then
     mIncludeMarketDepth = True
@@ -115,11 +117,17 @@ End If
 If mTWSAPI.connectionState = ConnConnected Then
     mTickerId = mTWSAPI.RequestMarketData(mContract.specifier, Me, mDataConsumer, mIncludeMarketDepth)
 End If
+Exit Sub
+err:
+handleFatalError err.number, _
+                "IBTWSSP" & "." & "RealtimeDataReader" & "::" & "IRealtimeDataReader_StartData", _
+                err.Description
 
 End Sub
 
 Private Sub IRealtimeDataReader_StartMarketDepth( _
                 ByVal DomEventsRequired As TradeBuildSP.DOMEventTypes)
+On Error GoTo err
 If DomEventsRequired <> DOMByPosition Then _
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
     "IBTWSSP.RealtimeDataReader::StartMarketDepth", _
@@ -127,16 +135,33 @@ If DomEventsRequired <> DOMByPosition Then _
 
 mIncludeMarketDepth = True
 mTWSAPI.RequestMarketDepth mTickerId
+Exit Sub
+err:
+handleFatalError err.number, _
+                "IBTWSSP" & "." & "RealtimeDataReader" & "::" & "IRealtimeDataReader_StartMarketDepth", _
+                err.Description
 End Sub
 
 Private Sub IRealtimeDataReader_StopData()
-mTWSAPI.CancelMarketData mTickerId
-releaseTWSAPI
+On Error GoTo err
+finish
+mRealtimeDataServiceProvider.dataReaderFinished Me
+Exit Sub
+err:
+handleFatalError err.number, _
+                "IBTWSSP" & "." & "RealtimeDataReader" & "::" & "IRealtimeDataReader_StopData", _
+                err.Description
 End Sub
 
 Private Sub IRealtimeDataReader_StopMarketDepth()
+On Error GoTo err
 mIncludeMarketDepth = False
 mTWSAPI.CancelMarketDepth mTickerId
+Exit Sub
+err:
+handleFatalError err.number, _
+                "IBTWSSP" & "." & "RealtimeDataReader" & "::" & "IRealtimeDataReader_StopMarketDepth", _
+                err.Description
 End Sub
 
 Private Function IRealtimeDataReader_Supports( _
@@ -153,33 +178,66 @@ End Function
 '================================================================================
 
 Private Sub mTWSAPI_Connected()
+On Error GoTo err
 mTickerId = mTWSAPI.RequestMarketData(mContract.specifier, Me, mDataConsumer, mIncludeMarketDepth)
+Exit Sub
+err:
+handleFatalError err.number, _
+                "IBTWSSP" & "." & "RealtimeDataReader" & "::" & "mTWSAPI_Connected", _
+                err.Description
+                
 End Sub
 
 Private Sub mTWSAPI_ConnectFailed( _
                 ByVal Description As String, _
                 ByVal retrying As Boolean)
-If Not retrying Then
+On Error GoTo err
+If retrying Then
+    mServiceConsumer.Error StandardSPErrorCodes.RTRetryConnectDataSource, _
+                            Description, _
+                            mRealtimeDataServiceProvider.handle
+Else
     mServiceConsumer.Error StandardSPErrorCodes.RTCantConnectDataSource, _
-                            Description
+                            Description, _
+                            mRealtimeDataServiceProvider.handle
 End If
+Exit Sub
+err:
+handleFatalError err.number, _
+                "IBTWSSP" & "." & "RealtimeDataReader" & "::" & "mTWSAPI_ConnectFailed", _
+                err.Description
 End Sub
 
 Private Sub mTWSAPI_ConnectionToTWSClosed( _
                 ByVal reconnecting As Boolean)
+On Error GoTo err
 If reconnecting Then
-    mServiceConsumer.Error StandardSPErrorCodes.RTLostConnectionToDataSource, _
-                        "Lost connection to TWS (reconnecting)"
+    mServiceConsumer.Error StandardSPErrorCodes.RTReConnectingDataSource, _
+                        "Lost connection to TWS (reconnecting)", _
+                        mRealtimeDataServiceProvider.handle
 Else
     mServiceConsumer.Error StandardSPErrorCodes.RTLostConnectionToDataSource, _
-                        "Lost connection to TWS"
+                        "Lost connection to TWS", _
+                        mRealtimeDataServiceProvider.handle
 End If
+Exit Sub
+err:
+handleFatalError err.number, _
+                "IBTWSSP" & "." & "RealtimeDataReader" & "::" & "mTWSAPI_ConnectionToTWSClosed", _
+                err.Description
 End Sub
 
 Private Sub mTWSAPI_Disconnected( _
                 ByVal reason As String)
+On Error GoTo err
 mServiceConsumer.Error StandardSPErrorCodes.RTDisconnectedFromDataSource, _
-                        reason
+                        reason, _
+                        mRealtimeDataServiceProvider.handle
+Exit Sub
+err:
+handleFatalError err.number, _
+                "IBTWSSP" & "." & "RealtimeDataReader" & "::" & "mTWSAPI_Disconnected", _
+                err.Description
 End Sub
 
 '================================================================================
@@ -223,16 +281,22 @@ Friend Property Let providerKey(ByVal value As String)
 mProviderKey = value
 End Property
 
+Friend Property Let realtimeDataInputServiceConsumer( _
+                ByVal RHS As IRealtimeDataInputServiceConsumer)
+Set mServiceConsumer = RHS
+End Property
+
+Friend Property Let realtimeDataServiceProvider( _
+                ByVal value As realtimeDataServiceProvider)
+Set mRealtimeDataServiceProvider = value
+End Property
+
 Friend Property Let server(ByVal value As String)
 mServer = IIf(value = "", "127.0.0.1", value)
 End Property
 
-Friend Property Let StreamingDataConsumer(ByVal RHS As IStreamingDataConsumer)
+Friend Property Let streamingDataConsumer(ByVal RHS As IStreamingDataConsumer)
 Set mDataConsumer = RHS
-End Property
-
-Friend Property Let realtimeDataInputServiceConsumer(ByVal RHS As IRealtimeDataInputServiceConsumer)
-Set mServiceConsumer = RHS
 End Property
 
 Friend Property Let TWSLogLevel(ByVal value As TWSLogLevels)
@@ -243,18 +307,46 @@ End Property
 ' Methods
 '================================================================================
 
+Friend Sub finish()
+mTWSAPI.CancelMarketData mTickerId
+If Not mTWSAPI Is Nothing Then
+    gReleaseTWSAPIInstance mTWSAPI
+    Set mTWSAPI = Nothing
+End If
+Set mServiceConsumer = Nothing
+Set mDataConsumer = Nothing
+Set mContract = Nothing
+End Sub
+
 Friend Sub marketDataRequestFailed(ByVal reason As String)
-mServiceConsumer.Error StandardSPErrorCodes.RTRequestFailed, reason
+mServiceConsumer.Error StandardSPErrorCodes.RTRequestFailed, _
+                        reason, _
+                        mRealtimeDataServiceProvider.handle
 End Sub
 
 Friend Sub marketDepthRequestFailed(ByVal reason As String)
-mServiceConsumer.Error StandardSPErrorCodes.RTMarketDepthRequestFailed, reason
+mServiceConsumer.Error StandardSPErrorCodes.RTMarketDepthRequestFailed, _
+                        reason, _
+                        mRealtimeDataServiceProvider.handle
 End Sub
 
 
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub handleFatalError( _
+                ByVal number As Long, _
+                ByVal source As String, _
+                ByVal Description As String)
+mCommonServiceConsumer.FatalServiceProviderError number, _
+                            source, _
+                            Description, _
+                            mRealtimeDataServiceProvider.handle
+
+finish
+mRealtimeDataServiceProvider.dataReaderFinished Me
+End Sub
 
 Private Sub logMessage( _
                 ByVal message As String, _
@@ -264,12 +356,5 @@ If mLogLevel < logLevel Or _
 mCommonServiceConsumer.NotifyListeners message, _
                                         TradeBuildSP.StandardListenValueTypes.Log, _
                                         Me
-End Sub
-
-Private Sub releaseTWSAPI()
-If Not mTWSAPI Is Nothing Then
-    gReleaseTWSAPIInstance mTWSAPI
-    Set mTWSAPI = Nothing
-End If
 End Sub
 

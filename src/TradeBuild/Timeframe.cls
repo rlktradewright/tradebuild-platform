@@ -70,8 +70,10 @@ Event OutputBarfileCreated( _
 ' Member variables
 '================================================================================
 
+Private mTradeBuildAPIRef           As WeakReference
+
 Private mKey As String
-Private mTicker As TradeBuild.Ticker
+Private mTicker As TradeBuild.ticker
 
 Private mTradeBars As bars
 Private mTradeBarsStudy As TradeBuildSP.IStudy
@@ -84,7 +86,7 @@ Private mBidBarsStudy As TradeBuildSP.IStudy
 
 Private mContract As TradeBuild.Contract
 
-Private mBarWriterListeners As Collection
+Private mBarWriterListeners As WeakCollection
 
 Private mTimePeriodUnit As TradeBuild.TimePeriodUnits
 Private mTimePeriod As Long
@@ -122,7 +124,7 @@ Private mHistoricBarPending As Boolean
 '================================================================================
 
 Private Sub Class_Initialize()
-Set mBarWriterListeners = New Collection
+Set mBarWriterListeners = New WeakCollection
 End Sub
 
 Private Sub Class_Terminate()
@@ -151,6 +153,7 @@ End Sub
 
 Private Sub IBarDataInputServiceConsumer_BarDataComplete()
 mHistoricDataLoaded = True
+Set mBarReader = Nothing
 
 ListenToTicker
 
@@ -159,13 +162,18 @@ End Sub
 
 Private Sub IBarDataInputServiceConsumer_Error( _
                 ByVal errorCode As TradeBuildSP.StandardSPErrorCodes, _
-                ByVal errorMessage As String)
+                ByVal errorMessage As String, _
+                ByVal spHandle As Long)
 mHistoricDataLoaded = True
 Select Case errorCode
 Case StandardSPErrorCodes.HDRequestFailed
     ListenToTicker
     RaiseEvent HistoricalDataRequestFailed(errorMessage)
+    RaiseEvent BarsLoaded
 Case StandardSPErrorCodes.HDRequestInvalid
+    ListenToTicker
+    RaiseEvent HistoricalDataRequestFailed(errorMessage)
+    RaiseEvent BarsLoaded
 End Select
 End Sub
 
@@ -185,7 +193,8 @@ End Sub
 
 Private Sub IBarDataOutputServiceConsumer_Error( _
                             ByVal errorCode As TradeBuildSP.StandardSPErrorCodes, _
-                            ByVal errorMessage As String)
+                            ByVal errorMessage As String, _
+                            ByVal spHandle As Long)
 Dim ev As ErrorEvent
 
 Set ev.source = Me
@@ -204,9 +213,9 @@ Case HDRetryConnectDataSource
                         errorMessage
     RaiseEvent Error(ev)
 Case Else
-    gTradeBuildAPI.SetServiceProviderError errorCode, _
+    tb.SetServiceProviderError errorCode, _
                         errorMessage, _
-                        "Unknown Historic Data Service Provider (output)"
+                        tb.ServiceProviders.nameFromHandle(spHandle)
 End Select
 End Sub
 
@@ -435,6 +444,7 @@ Friend Property Let Contract(ByVal value As Contract)
 Set mContract = value
 
 Set mTradeBars = New bars
+mTradeBars.tradeBuildAPI = tb
 Set mTradeBarsStudy = mTradeBars
 mTradeBars.barType = TradeBuild.BarTypes.BarTypeTrade
 mTradeBars.barLength = mBarLengthMinutes
@@ -443,6 +453,7 @@ mTicker.addBaseStudy mTradeBars, mTradeBars.name
 
 If mIncludeBidAndAsk Then
     Set mAskBars = New bars
+    mAskBars.tradeBuildAPI = tb
     Set mAskBarsStudy = mAskBars
     mAskBars.barType = TradeBuild.BarTypes.BarTypeAsk
     mAskBars.barLength = mBarLengthMinutes
@@ -450,6 +461,7 @@ If mIncludeBidAndAsk Then
     mTicker.addBaseStudy mAskBars, mAskBars.name
     
     Set mBidBars = New bars
+    mBidBars.tradeBuildAPI = tb
     Set mBidBarsStudy = mBidBars
     mBidBars.barType = TradeBuild.BarTypes.BarTypeBid
     mBidBars.barLength = mBarLengthMinutes
@@ -458,7 +470,7 @@ If mIncludeBidAndAsk Then
 End If
 
 If mSaveIntervalSeconds > 0 Then
-    Set mBarWriter = gServiceProviders.CreateHistoricalDataWriter(Me, _
+    Set mBarWriter = tb.ServiceProviders.CreateHistoricalDataWriter(Me, _
                                 mContract.specifier, _
                                 "")
     If mBarWriter Is Nothing Then
@@ -493,6 +505,12 @@ Public Property Get TradeBars() As bars
 Set TradeBars = mTradeBars
 End Property
 
+Friend Property Let tradeBuildAPI( _
+                ByVal value As tradeBuildAPI)
+Set mTradeBuildAPIRef = New WeakReference
+mTradeBuildAPIRef.Initialise value
+End Property
+
 '================================================================================
 ' Methods
 '================================================================================
@@ -506,9 +524,9 @@ Clear
 Set mTicker = Nothing
 End Sub
 
-Friend Sub initialise( _
+Friend Sub Initialise( _
                 ByVal key As String, _
-                ByVal pTicker As Ticker, _
+                ByVal pTicker As ticker, _
                 ByVal timeperiod As Long, _
                 ByVal timeperiodUnit As TradeBuild.TimePeriodUnits, _
                 ByVal numberOfBarsToFetch As Long, _
@@ -559,30 +577,6 @@ mExcludeCurrentBar = excludeCurrentBar
 
 End Sub
 
-'Friend Sub Reinitialise()
-'
-'Clear
-'
-'Set mTradeBars = New bars
-'mTradeBars.barType = TradeBuild.BarTypes.BarTypeTrade
-'mTradeBars.barLength = mBarLengthMinutes
-''mTradeBars.valueTypes = barsStudyValueTypes
-'Set mTradeBarsStudy = mTradeBars
-'
-'If mIncludeBidAndAsk Then
-'    Set mAskBars = New bars
-'    mAskBars.barType = TradeBuild.BarTypes.BarTypeAsk
-'    mAskBars.barLength = mBarLengthMinutes
-'    mTicker.addBaseStudy mAskBars, mKey & " ask"
-'
-'    Set mBidBars = New bars
-'    mBidBars.barType = TradeBuild.BarTypes.BarTypeBid
-'    mBidBars.barLength = mBarLengthMinutes
-'    mTicker.addBaseStudy mBidBars, mKey & " bid"
-'End If
-'
-'End Sub
-
 Public Sub removeBarWriterListener(ByVal value As WriterListener)
 Dim i As Long
 For i = mBarWriterListeners.Count To 1 Step -1
@@ -593,18 +587,6 @@ End Sub
 '================================================================================
 ' Helper Functions
 '================================================================================
-
-'Private Function barsStudyValueTypes() As String()
-'Dim valueTypes(7) As String
-'valueTypes(0) = "bid"
-'valueTypes(1) = "ask"
-'valueTypes(2) = "bidsize"
-'valueTypes(3) = "asksize"
-'valueTypes(4) = "high"
-'valueTypes(5) = "low"
-'valueTypes(6) = "prevclose"
-'valueTypes(7) = "openinterest"
-'End Function
 
 Private Function CalcBarKey(ByVal barTime As Date) As String
 CalcBarKey = Format(barTime, "yyyymmddhhnn")
@@ -687,7 +669,7 @@ If mBarReader Is Nothing Then
         Exit Sub
     End If
     
-    Set mBarReader = gServiceProviders.CreateHistoricalDataReader( _
+    Set mBarReader = tb.ServiceProviders.CreateHistoricalDataReader( _
                                 Me, _
                                 Me)
                                 
@@ -750,11 +732,13 @@ Private Sub fireBarWriterNotify( _
                 ByVal action As WriterNotifications, _
                 ByVal filename As String)
 Dim listener As WriterListener
+Dim i As Long
 Dim ev As WriterEvent
 Set ev.source = Me
 ev.action = action
 ev.filename = filename
-For Each listener In mBarWriterListeners
+For i = 1 To mBarWriterListeners.Count
+    Set listener = mBarWriterListeners(i)
     listener.notify ev
 Next
 End Sub
@@ -826,6 +810,10 @@ With mHistoricBar
     End If
 End With
 End Sub
+
+Private Function tb() As tradeBuildAPI
+Set tb = mTradeBuildAPIRef.target
+End Function
 
 Private Sub WriteBars()
 Dim currBar As TradeBuild.Bar

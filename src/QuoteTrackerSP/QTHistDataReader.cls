@@ -55,6 +55,8 @@ Private Const InitialRequestQueueCapacity As Long = 100
 ' Member variables
 '================================================================================
 
+Private mHistDataServiceProvider As QTHistDataServiceProvider
+
 Private mCommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer
 Private mServiceConsumer As TradeBuildSP.IBarDataInputServiceConsumer
 Private mDataConsumer As TradeBuildSP.IBarDataConsumer
@@ -111,12 +113,19 @@ IBarDataReader_BarDataSpecifier = mBarDataSpecifier
 End Property
 
 Private Sub IBarDataReader_CancelFetch()
+On Error GoTo err
 mQTAPI.cancelHistoricalBarData mRequestId, mLockId
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTHistDataReader" & "::" & "IBarDataReader_CancelFetch", _
+                err.Description
 End Sub
 
 Private Sub IBarDataReader_FetchBars( _
                             barSpecifier As TradeBuildSP.BarDataSpecifier)
 
+On Error GoTo err
 If mRequestInProgress Then err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "IBTWSSP.HistDataReader::FetchBars", _
                                     "Request already in progress"
@@ -135,15 +144,26 @@ If mQTAPI.connectionState = ConnConnected Then
     mServiceConsumer.Ready
     mRequestId = mQTAPI.requestHistoricalBarData(mBarDataSpecifier, Me, mLockId)
 End If
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTHistDataReader" & "::" & "IBarDataReader_FetchBars", _
+                err.Description
 
 End Sub
 
 Private Sub IBarDataReader_FireNextBar()
+On Error GoTo err
 If mWaitingForBarData Then
     mBarRequested = True
 Else
     ProcessBar
 End If
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTHistDataReader" & "::" & "IBarDataReader_FireNextBar", _
+                err.Description
 End Sub
 
 Private Property Get IBarDataReader_NumberOfBars() As Long
@@ -151,8 +171,14 @@ Private Property Get IBarDataReader_NumberOfBars() As Long
 End Property
 
 Private Sub IBarDataReader_ReleaseDataStore()
-If Not mQTAPI Is Nothing Then gReleaseQTAPIInstance mQTAPI
-Set mQTAPI = Nothing
+On Error GoTo err
+finish
+mHistDataServiceProvider.dataReaderFinished Me
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTHistDataReader" & "::" & "IBarDataReader_ReleaseDataStore", _
+                err.Description
 End Sub
 
 Private Function IBarDataReader_Supports( _
@@ -165,11 +191,17 @@ End Function
 '================================================================================
 
 Private Sub LockConsumer_lockAcquired(ByVal lockId As Long)
+On Error GoTo err
 If mLockId <> lockId Then err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "QTSP.QTHistDataReader::lockAcquired", _
                                     "Lock id acquired is " & lockId & ": expected " & mLockId
     
 mRequestId = mQTAPI.requestHistoricalBarData(mBarDataSpecifier, Me, mLockId)
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTHistDataReader" & "::" & "LockConsumer_lockAcquired", _
+                err.Description
 End Sub
 
 Private Sub LockConsumer_waitingForLock(ByVal lockId As Long)
@@ -181,17 +213,56 @@ End Sub
 '================================================================================
 
 Private Sub mQTAPI_Connected()
+On Error GoTo err
 If mRequestInProgress Then
     mServiceConsumer.Ready
     mRequestId = mQTAPI.requestHistoricalBarData(mBarDataSpecifier, Me, mLockId)
 End If
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTHistDataReader" & "::" & "mQTAPI_Connected", _
+                err.Description
 End Sub
 
-Private Sub mQTAPI_ConnectFailed(ByVal Description As String, ByVal retrying As Boolean)
-If Not retrying Then
+Private Sub mQTAPI_ConnectFailed( _
+                ByVal Description As String, _
+                ByVal retrying As Boolean)
+On Error GoTo err
+If retrying Then
+    mServiceConsumer.error StandardSPErrorCodes.HDRetryConnectDataSource, _
+                            Description, _
+                            mHistDataServiceProvider.handle
+Else
     mServiceConsumer.error StandardSPErrorCodes.HDCantConnectDataSource, _
-                            Description
+                            Description, _
+                            mHistDataServiceProvider.handle
 End If
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTHistDataReader" & "::" & "mQTAPI_ConnectFailed", _
+                err.Description
+End Sub
+
+Private Sub mQTAPI_ConnectionClosed( _
+                ByVal reconnecting As Boolean)
+On Error GoTo err
+If reconnecting Then
+    mServiceConsumer.error StandardSPErrorCodes.HDReConnectingDataSource, _
+                        "Lost connection to QT (reconnecting)", _
+                        mHistDataServiceProvider.handle
+Else
+    mServiceConsumer.error StandardSPErrorCodes.HDLostConnectionToDataSource, _
+                        "Lost connection to QT", _
+                        mHistDataServiceProvider.handle
+End If
+Exit Sub
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTHistDataReader" & "::" & "mQTAPI_ConnectionClosed", _
+                err.Description
 End Sub
 
 '================================================================================
@@ -212,6 +283,11 @@ End Property
 
 Friend Property Let dataConsumer(ByVal value As IBarDataConsumer)
 Set mDataConsumer = value
+End Property
+
+Friend Property Let histDataServiceProvider( _
+                ByVal value As QTHistDataServiceProvider)
+Set mHistDataServiceProvider = value
 End Property
 
 Public Property Let keepConnection(ByVal value As Boolean)
@@ -246,6 +322,13 @@ End Property
 ' Methods
 '================================================================================
 
+Friend Sub finish()
+If Not mQTAPI Is Nothing Then gReleaseQTAPIInstance mQTAPI
+Set mQTAPI = Nothing
+Set mServiceConsumer = Nothing
+Set mDataConsumer = Nothing
+End Sub
+
 Friend Sub historicalDataAvailable()
 mWaitingForBarData = False
 If mBarRequested Then
@@ -255,16 +338,33 @@ End If
 End Sub
 
 Friend Sub historicalDataRequestFailed(ByVal reason As String)
-mServiceConsumer.error StandardSPErrorCodes.HDRequestFailed, reason
+mServiceConsumer.error StandardSPErrorCodes.HDRequestFailed, _
+                        reason, _
+                        mHistDataServiceProvider.handle
 End Sub
 
 Friend Sub historicalDataRequestInvalid(ByVal reason As String)
-mServiceConsumer.error StandardSPErrorCodes.HDRequestInvalid, reason
+mServiceConsumer.error StandardSPErrorCodes.HDRequestInvalid, _
+                        reason, _
+                        mHistDataServiceProvider.handle
 End Sub
 
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub handleFatalError( _
+                ByVal Number As Long, _
+                ByVal Source As String, _
+                ByVal Description As String)
+mCommonServiceConsumer.FatalServiceProviderError Number, _
+                                Source, _
+                                Description, _
+                                mHistDataServiceProvider.handle
+
+finish
+mHistDataServiceProvider.dataReaderFinished Me
+End Sub
 
 Private Sub ProcessBar()
 Dim lBar As TradeBuildSP.Bar

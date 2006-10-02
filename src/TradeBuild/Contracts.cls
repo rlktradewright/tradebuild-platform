@@ -64,7 +64,9 @@ Private mContracts As Collection
 
 Private mContractSpecifier As contractSpecifier
 
-Private mChangeListeners As Collection
+Private mChangeListeners As WeakCollection
+
+Private mServiceProviders As serviceProviders
 
 '================================================================================
 ' Class Event Handlers
@@ -72,7 +74,7 @@ Private mChangeListeners As Collection
 
 Private Sub Class_Initialize()
 Set mContracts = New Collection
-Set mChangeListeners = New Collection
+Set mChangeListeners = New WeakCollection
 End Sub
 
 '================================================================================
@@ -129,6 +131,10 @@ Public Property Get Count() As Long
 Count = mContracts.Count
 End Property
 
+Friend Property Let serviceProviders(ByVal value As serviceProviders)
+Set mServiceProviders = value
+End Property
+
 '================================================================================
 ' Methods
 '================================================================================
@@ -165,7 +171,7 @@ For i = mContracts.Count To 1 Step -1
     mContracts.remove i
 Next
 
-gServiceProviders.LoadContracts Me
+mServiceProviders.LoadContracts Me
 
 Exit Sub
 err:
@@ -206,11 +212,13 @@ Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
                 ByVal affectedObject As Contract)
 Dim listener As CollectionChangeListener
+Dim i As Long
 Dim Change As CollectionChangeEvent
 Set Change.source = Me
 Change.changeType = changeType
 Set Change.affectedObject = affectedObject
-For Each listener In mChangeListeners
+For i = 1 To mChangeListeners.Count
+    Set listener = mChangeListeners(i)
     listener.Change Change
 Next
 End Sub

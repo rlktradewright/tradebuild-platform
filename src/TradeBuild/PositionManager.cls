@@ -30,10 +30,13 @@ Implements QuoteListener
 ' Events
 '================================================================================
 
-Event PositionFlat()
-Event ProviderReady()
-Event ProviderNotReady()
+Event Error(ByRef ev As ErrorEvent)
 
+Event PositionFlat()
+
+Event ProviderReady()
+
+Event ProviderNotReady()
 
 '================================================================================
 ' Constants
@@ -83,7 +86,7 @@ End Type
 
 Private mIndexApplication
 
-Private mTicker As Ticker
+Private mTicker As ticker
 
 Private mOrders As Orders
 
@@ -147,8 +150,8 @@ Private mcurrencyCode As String
 Private mLastBid As Double
 Private mLastAsk As Double
 
-Private mProfitListeners As Collection
-Private mChangeListeners As Collection
+Private mProfitListeners As WeakCollection
+Private mChangeListeners As WeakCollection
 
 Private mOrderSubmitter As TradeBuildSP.IOrderSubmitter
 
@@ -174,8 +177,8 @@ mNextPlexTableIndex = 2
 mPlexTable(mFirstActivePlexTableIndex).NextActiveIndex = mLastActivePlexTableIndex
 mPlexTable(mLastActivePlexTableIndex).PrevActiveIndex = mFirstActivePlexTableIndex
 
-Set mProfitListeners = New Collection
-Set mChangeListeners = New Collection
+Set mProfitListeners = New WeakCollection
+Set mChangeListeners = New WeakCollection
 
 mSimulated = True
 End Sub
@@ -195,8 +198,65 @@ End Sub
 
 Private Sub IOrderSubmissionSrvcConsumer_Error( _
                 ByVal errorCode As TradeBuildSP.StandardSPErrorCodes, _
-                ByVal errorMessage As String)
-
+                ByVal errorMessage As String, _
+                ByVal spHandle As Long)
+Dim ev As ErrorEvent
+Select Case errorCode
+Case LOCantConnectToBroker
+    Set ev.source = Me
+    ev.errorCode = ApiErrorCodes.ApiErrCantConnectToBroker
+    ev.errorMsg = "Can't connect to broker: " & _
+                    errorMessage
+    RaiseEvent Error(ev)
+Case LORetryConnectToBroker
+    Set ev.source = Me
+    ev.errorCode = ApiErrorCodes.ApiErrRetryConnectToBroker
+    ev.errorMsg = "Trying again to connect to broker: " & _
+                    errorMessage
+    RaiseEvent Error(ev)
+Case LOLostConnectionToBroker
+    Set ev.source = Me
+    ev.errorCode = ApiErrorCodes.ApiErrLostConnectionToBroker
+    ev.errorMsg = "Lost connection to broker: " & _
+                    errorMessage
+    RaiseEvent Error(ev)
+Case LOReConnectingToBroker
+    Set ev.source = Me
+    ev.errorCode = ApiErrorCodes.ApiErrReConnectingToBroker
+    ev.errorMsg = "Reconnecting to broker: " & _
+                    errorMessage
+    RaiseEvent Error(ev)
+Case LOUnknownContract
+    Set ev.source = Me
+    ev.errorCode = ApiErrorCodes.ApiErrContractSpecifierInvalid
+    ev.errorMsg = "Unknown contract: " & _
+                    errorMessage
+    RaiseEvent Error(ev)
+Case LOInvalidOrder
+    Set ev.source = Me
+    ev.errorCode = ApiErrorCodes.ApiErrInvalidOrder
+    ev.errorMsg = "Invalid order: " & _
+                    errorMessage
+    RaiseEvent Error(ev)
+Case LONotUniqueContract
+    Set ev.source = Me
+    ev.errorCode = ApiErrorCodes.ApiErrContractSpecifierAmbiguous
+    ev.errorMsg = "Not unique contract: " & _
+                    errorMessage
+    RaiseEvent Error(ev)
+Case LOInsufficientFunds
+    Set ev.source = Me
+    ev.errorCode = ApiErrorCodes.ApiErrInsufficientFunds
+    ev.errorMsg = "Insufficient funds for this order: " & _
+                    errorMessage
+    RaiseEvent Error(ev)
+Case LODisconnectedFromBroker
+    Set ev.source = Me
+    ev.errorCode = ApiErrorCodes.ApiErrDisconnectedFromBroker
+    ev.errorMsg = "Disconnected from broker: " & _
+                    errorMessage
+    RaiseEvent Error(ev)
+End Select
 End Sub
 
 Private Sub IOrderSubmissionSrvcConsumer_executionDetails( _
@@ -462,13 +522,13 @@ Public Property Get simulated() As Boolean
 simulated = mSimulated
 End Property
 
-Friend Property Let Ticker(ByVal value As Ticker)
+Friend Property Let ticker(ByVal value As ticker)
 Dim lContract As Contract
 
 Set mTicker = value
 Set lContract = mTicker.Contract
 
-mOrderContexts.Ticker = value
+mOrderContexts.ticker = value
 
 mTicker.addQuoteListener Me
 
@@ -479,8 +539,8 @@ mcurrencyCode = lContract.specifier.currencyCode
 
 End Property
 
-Public Property Get Ticker() As Ticker
-Set Ticker = mTicker
+Public Property Get ticker() As ticker
+Set ticker = mTicker
 End Property
 
 '================================================================================
@@ -609,6 +669,9 @@ Set mOrderContexts = Nothing
 Set mMoneyManager = Nothing
 Set mSettlingOrderContext = Nothing
 Set mSettlingOrderPlex = Nothing
+
+If Not mOrderSubmitter Is Nothing Then mOrderSubmitter.finish
+Set mOrderSubmitter = Nothing
 End Sub
 
 Friend Sub notifyExecution(ByVal quantity As Long, _
@@ -721,7 +784,6 @@ If Not mClosing Then
         mTicker.notifyListeners "Ending session", _
                         TradeBuildListenValueTypes.VTMoneyManagement, _
                         Me
-        gServiceProviders.RemoveAll
     End If
     Exit Sub
 End If
@@ -773,7 +835,6 @@ If Not mSettlingOrderContext Is Nothing Then
             mTicker.notifyListeners "Ending session", _
                                 TradeBuildListenValueTypes.VTMoneyManagement, _
                                 Me
-            gServiceProviders.RemoveAll
         End If
         Exit Sub
     End If
@@ -795,7 +856,6 @@ If Size = 0 Then
         mTicker.notifyListeners "Ending session", _
                             TradeBuildListenValueTypes.VTMoneyManagement, _
                             Me
-        gServiceProviders.RemoveAll
     End If
 Else
     
@@ -1054,10 +1114,12 @@ End Sub
 Private Sub fireChange( _
                 ByVal changeType As PositionManagerChangeTypes)
 Dim listener As ChangeListener
+Dim i As Long
 Dim Change As ChangeEvent
 Set Change.source = Me
 Change.changeType = changeType
-For Each listener In mChangeListeners
+For i = 1 To mChangeListeners.Count
+    Set listener = mChangeListeners(i)
     listener.Change Change
 Next
 End Sub
@@ -1066,12 +1128,14 @@ Private Sub fireProfit( _
                 ByVal profitAmount As Double, _
                 ByVal profitType As ProfitTypes)
 Dim listener As ProfitListener
+Dim i As Long
 Dim profit As ProfitEvent
 Set profit.source = Me
 profit.profitAmount = profitAmount
 profit.profitType = profitType
 profit.currencyCode = mcurrencyCode
-For Each listener In mProfitListeners
+For i = 1 To mProfitListeners.Count
+    Set listener = mProfitListeners(i)
     listener.profitAmount profit
 Next
 End Sub

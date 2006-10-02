@@ -46,7 +46,7 @@ Event ExecutionAdded(ByVal pExecution As Execution)
 '================================================================================
 
 Private mExecutions As Collection
-Private mChangeListeners As Collection
+Private mChangeListeners As WeakCollection
 
 '================================================================================
 ' Class Event Handlers
@@ -54,7 +54,7 @@ Private mChangeListeners As Collection
 
 Private Sub Class_Initialize()
 Set mExecutions = New Collection
-Set mChangeListeners = New Collection
+Set mChangeListeners = New WeakCollection
 End Sub
 
 '================================================================================
@@ -73,8 +73,8 @@ Public Property Get Count() As Long
 Count = mExecutions.Count
 End Property
 
-Public Property Get item(ByVal key As String) As Execution
-Set item = mExecutions.item(key)
+Public Property Get Item(ByVal key As String) As Execution
+Set Item = mExecutions.Item(key)
 End Property
 
 '================================================================================
@@ -101,7 +101,7 @@ End Function
 Public Sub removeCollectionChangeListener(ByVal value As CollectionChangeListener)
 Dim i As Long
 For i = mChangeListeners.Count To 1 Step -1
-    If mChangeListeners.item(i) Is value Then mChangeListeners.remove i
+    If mChangeListeners.Item(i) Is value Then mChangeListeners.remove i
 Next
 End Sub
 
@@ -113,11 +113,13 @@ Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
                 ByVal affectedObject As Execution)
 Dim listener As CollectionChangeListener
+Dim i As Long
 Dim Change As CollectionChangeEvent
 Set Change.source = Me
 Change.changeType = changeType
 Set Change.affectedObject = affectedObject
-For Each listener In mChangeListeners
+For i = 1 To mChangeListeners.Count
+    Set listener = mChangeListeners(i)
     listener.Change Change
 Next
 End Sub

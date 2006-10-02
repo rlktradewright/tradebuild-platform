@@ -240,7 +240,7 @@ Private Type OrderPlexGridMappingEntry
 End Type
 
 Private Type PositionManagerGridMappingEntry
-    pm                  As TradeBuild.PositionManager
+    'pm                  As TradeBuild.PositionManager
     
     ' indicates whether this entry in the grid is expanded
     isExpanded          As Boolean
@@ -512,7 +512,7 @@ Private Sub OrderPlexGrid_Click()
 Dim row As Long
 Dim rowdata As Long
 Dim op As TradeBuild.orderPlex
-Dim Index As Long
+Dim index As Long
 Dim selectedOrder As TradeBuild.Order
 
 row = OrderPlexGrid.row
@@ -535,8 +535,8 @@ Else
     If rowdata < RowDataPositionManagerBase And _
         rowdata >= RowDataOrderPlexBase _
     Then
-        Index = rowdata - RowDataOrderPlexBase
-        Set op = mOrderPlexGridMappingTable(Index).op
+        index = rowdata - RowDataOrderPlexBase
+        Set op = mOrderPlexGridMappingTable(index).op
         If op.State = OrderPlexStateCodes.Created Or _
             op.State = OrderPlexStateCodes.Submitted _
         Then
@@ -545,7 +545,7 @@ Else
             Set mSelectedOrderPlex = op
             invertEntryColors mSelectedOrderPlexGridRow
             
-            mSelectedOrderIndex = mSelectedOrderPlexGridRow - mOrderPlexGridMappingTable(Index).gridIndex
+            mSelectedOrderIndex = mSelectedOrderPlexGridRow - mOrderPlexGridMappingTable(index).gridIndex
             If mSelectedOrderIndex = 0 Then Exit Sub
             
             Set selectedOrder = op.Order(mSelectedOrderIndex)
@@ -557,7 +557,7 @@ Else
                     (OrderPlexGrid.MouseCol = OPGridOrderColumns.quantityRemaining And _
                     selectedOrder.isAttributeModifiable(OrderAttributeIds.OrderAttQuantity)) _
                 Then
-                    OrderPlexGrid.Col = OrderPlexGrid.MouseCol
+                    OrderPlexGrid.col = OrderPlexGrid.MouseCol
                     EditText.Move OrderPlexGrid.Left + OrderPlexGrid.CellLeft + 8, _
                                 OrderPlexGrid.Top + OrderPlexGrid.CellTop + 8, _
                                 OrderPlexGrid.CellWidth - 16, _
@@ -618,13 +618,26 @@ End Property
 Public Sub finish()
 Dim i As Long
 Dim lWorkspace As TradeBuild.WorkSpace
+Dim lTicker As TradeBuild.ticker
+
+For i = 0 To mMaxOrderPlexGridMappingTableIndex
+    mOrderPlexGridMappingTable(i).op.removeChangeListener Me
+    mOrderPlexGridMappingTable(i).op.removeProfitListener Me
+    Set mOrderPlexGridMappingTable(i).op = Nothing
+Next
 
 For i = mMonitoredWorkspaces.count To 1 Step -1
     Set lWorkspace = mMonitoredWorkspaces(i)
     lWorkspace.Tickers.removeCollectionChangeListener Me
+    For Each lTicker In lWorkspace.Tickers
+        lTicker.PositionManager.removeChangeListener Me
+        lTicker.PositionManager.removeProfitListener Me
+    Next
     lWorkspace.OrderPlexes.removeCollectionChangeListener Me
     mMonitoredWorkspaces.remove i
 Next
+
+
 End Sub
 
 Public Sub monitorWorkspace( _
@@ -641,111 +654,111 @@ End Sub
 Private Function addEntryToOrderPlexGrid( _
                 ByVal symbol As String, _
                 Optional ByVal before As Boolean, _
-                Optional ByVal Index As Long = -1) As Long
+                Optional ByVal index As Long = -1) As Long
 Dim i As Long
 
-If Index < 0 Then
+If index < 0 Then
     For i = mFirstOrderPlexGridRowIndex To OrderPlexGrid.Rows - 1
         If (before And _
             OrderPlexGrid.TextMatrix(i, OPGridColumns.symbol) >= symbol) Or _
             OrderPlexGrid.TextMatrix(i, OPGridColumns.symbol) = "" _
         Then
-            Index = i
+            index = i
             Exit For
         ElseIf (Not before And _
             OrderPlexGrid.TextMatrix(i, OPGridColumns.symbol) > symbol) Or _
             OrderPlexGrid.TextMatrix(i, OPGridColumns.symbol) = "" _
         Then
-            Index = i
+            index = i
             Exit For
         End If
     Next
     
-    If Index < 0 Then
+    If index < 0 Then
         OrderPlexGrid.AddItem ""
-        Index = OrderPlexGrid.Rows - 1
-    ElseIf OrderPlexGrid.TextMatrix(Index, OPGridColumns.symbol) = "" Then
-        OrderPlexGrid.TextMatrix(Index, OPGridColumns.symbol) = symbol
+        index = OrderPlexGrid.Rows - 1
+    ElseIf OrderPlexGrid.TextMatrix(index, OPGridColumns.symbol) = "" Then
+        OrderPlexGrid.TextMatrix(index, OPGridColumns.symbol) = symbol
     Else
-        OrderPlexGrid.AddItem "", Index
+        OrderPlexGrid.AddItem "", index
     End If
 Else
-    OrderPlexGrid.AddItem "", Index
+    OrderPlexGrid.AddItem "", index
 End If
 
-OrderPlexGrid.TextMatrix(Index, OPGridColumns.symbol) = symbol
-If Index < OrderPlexGrid.Rows - 1 Then
+OrderPlexGrid.TextMatrix(index, OPGridColumns.symbol) = symbol
+If index < OrderPlexGrid.Rows - 1 Then
     ' this new entry has displaced one or more existing entries so
     ' the OrderPlexGridMappingTable and PositionManageGridMappingTable indexes
     ' need to be adjusted
     For i = 0 To mMaxOrderPlexGridMappingTableIndex
-        If mOrderPlexGridMappingTable(i).gridIndex >= Index Then
+        If mOrderPlexGridMappingTable(i).gridIndex >= index Then
             mOrderPlexGridMappingTable(i).gridIndex = mOrderPlexGridMappingTable(i).gridIndex + 1
         End If
     Next
     For i = 0 To mMaxPositionManagerGridMappingTableIndex
-        If mPositionManagerGridMappingTable(i).gridIndex >= Index Then
+        If mPositionManagerGridMappingTable(i).gridIndex >= index Then
             mPositionManagerGridMappingTable(i).gridIndex = mPositionManagerGridMappingTable(i).gridIndex + 1
         End If
     Next
 End If
 
-addEntryToOrderPlexGrid = Index
+addEntryToOrderPlexGrid = index
 End Function
 
 Private Function addOrderPlexEntryToOrderPlexGrid( _
                 ByVal symbol As String, _
                 ByVal orderPlexTableIndex As Long) As Long
-Dim Index As Long
+Dim index As Long
 
-Index = addEntryToOrderPlexGrid(symbol, False)
+index = addEntryToOrderPlexGrid(symbol, False)
 
-OrderPlexGrid.rowdata(Index) = orderPlexTableIndex + RowDataOrderPlexBase
+OrderPlexGrid.rowdata(index) = orderPlexTableIndex + RowDataOrderPlexBase
 
-OrderPlexGrid.row = Index
-OrderPlexGrid.Col = OPGridColumns.ExpandIndicator
+OrderPlexGrid.row = index
+OrderPlexGrid.col = OPGridColumns.ExpandIndicator
 OrderPlexGrid.CellPictureAlignment = AlignmentSettings.flexAlignCenterCenter
 Set OrderPlexGrid.CellPicture = OrderPlexImageList.ListImages("Contract").Picture
 
-OrderPlexGrid.Col = OPGridOrderPlexColumns.profit
+OrderPlexGrid.col = OPGridOrderPlexColumns.profit
 OrderPlexGrid.CellBackColor = &HC0C0C0
 OrderPlexGrid.CellForeColor = vbWhite
 
-OrderPlexGrid.Col = OPGridOrderPlexColumns.MaxProfit
+OrderPlexGrid.col = OPGridOrderPlexColumns.MaxProfit
 OrderPlexGrid.CellBackColor = &HC0C0C0
 OrderPlexGrid.CellForeColor = vbWhite
 
-OrderPlexGrid.Col = OPGridOrderPlexColumns.drawdown
+OrderPlexGrid.col = OPGridOrderPlexColumns.drawdown
 OrderPlexGrid.CellBackColor = &HC0C0C0
 OrderPlexGrid.CellForeColor = vbWhite
 
-addOrderPlexEntryToOrderPlexGrid = Index
+addOrderPlexEntryToOrderPlexGrid = index
 End Function
                 
 Private Sub addOrderEntryToOrderPlexGrid( _
-                ByVal Index As Long, _
+                ByVal index As Long, _
                 ByVal symbol As String, _
                 ByVal pOrder As TradeBuild.Order, _
                 ByVal orderPlexTableIndex As Long, _
                 ByVal typeInPlex As String)
 
 
-Index = addEntryToOrderPlexGrid(symbol, False, Index)
+index = addEntryToOrderPlexGrid(symbol, False, index)
 
-OrderPlexGrid.rowdata(Index) = orderPlexTableIndex + RowDataOrderPlexBase
+OrderPlexGrid.rowdata(index) = orderPlexTableIndex + RowDataOrderPlexBase
 
-OrderPlexGrid.TextMatrix(Index, OPGridOrderColumns.typeInPlex) = typeInPlex
+OrderPlexGrid.TextMatrix(index, OPGridOrderColumns.typeInPlex) = typeInPlex
 
-displayOrderValuesInOrderPlexGrid Index, pOrder
+displayOrderValuesInOrderPlexGrid index, pOrder
 
 End Sub
 
 Private Function contractOrderPlexEntry( _
-                ByVal Index As Long, _
+                ByVal index As Long, _
                 Optional ByVal preserveCurrentExpandedState As Boolean) As Long
 Dim lIndex As Long
 
-With mOrderPlexGridMappingTable(Index)
+With mOrderPlexGridMappingTable(index)
     If .entryGridOffset >= 0 Then
         lIndex = .gridIndex + .entryGridOffset
         OrderPlexGrid.RowHeight(lIndex) = 0
@@ -766,7 +779,7 @@ With mOrderPlexGridMappingTable(Index)
     If Not preserveCurrentExpandedState Then
         .isExpanded = False
         OrderPlexGrid.row = .gridIndex
-        OrderPlexGrid.Col = OPGridColumns.ExpandIndicator
+        OrderPlexGrid.col = OPGridColumns.ExpandIndicator
         OrderPlexGrid.CellPictureAlignment = AlignmentSettings.flexAlignCenterCenter
         Set OrderPlexGrid.CellPicture = OrderPlexImageList.ListImages("Expand").Picture
     End If
@@ -775,19 +788,19 @@ End With
 contractOrderPlexEntry = lIndex
 End Function
 
-Private Sub contractPositionManagerEntry(ByVal Index As Long)
+Private Sub contractPositionManagerEntry(ByVal index As Long)
 Dim i As Long
 Dim symbol As String
 Dim lOpEntryIndex As Long
 
-mPositionManagerGridMappingTable(Index).isExpanded = False
-OrderPlexGrid.row = mPositionManagerGridMappingTable(Index).gridIndex
-OrderPlexGrid.Col = OPGridColumns.ExpandIndicator
+mPositionManagerGridMappingTable(index).isExpanded = False
+OrderPlexGrid.row = mPositionManagerGridMappingTable(index).gridIndex
+OrderPlexGrid.col = OPGridColumns.ExpandIndicator
 OrderPlexGrid.CellPictureAlignment = AlignmentSettings.flexAlignCenterCenter
 Set OrderPlexGrid.CellPicture = OrderPlexImageList.ListImages("Expand").Picture
 
-symbol = OrderPlexGrid.TextMatrix(mPositionManagerGridMappingTable(Index).gridIndex, OPGridColumns.symbol)
-i = mPositionManagerGridMappingTable(Index).gridIndex + 1
+symbol = OrderPlexGrid.TextMatrix(mPositionManagerGridMappingTable(index).gridIndex, OPGridColumns.symbol)
+i = mPositionManagerGridMappingTable(index).gridIndex + 1
 Do While OrderPlexGrid.TextMatrix(i, OPGridColumns.symbol) = symbol
     OrderPlexGrid.RowHeight(i) = 0
     lOpEntryIndex = OrderPlexGrid.rowdata(i) - RowDataOrderPlexBase
@@ -820,7 +833,7 @@ Private Sub displayProfitValue( _
                 ByVal rowIndex As Long, _
                 ByVal colIndex As Long)
 OrderPlexGrid.row = rowIndex
-OrderPlexGrid.Col = colIndex
+OrderPlexGrid.col = colIndex
 OrderPlexGrid.text = Format(profit, "0.00")
 If profit >= 0 Then
     OrderPlexGrid.CellForeColor = PositiveProfitColor
@@ -830,29 +843,29 @@ End If
 End Sub
 Private Sub expandOrContract()
 Dim rowdata As Long
-Dim Index As Long
+Dim index As Long
 Dim expanded As Boolean
 
 rowdata = OrderPlexGrid.rowdata(OrderPlexGrid.MouseRow)
 If rowdata >= RowDataPositionManagerBase Then
-    Index = rowdata - RowDataPositionManagerBase
-    expanded = mPositionManagerGridMappingTable(Index).isExpanded
+    index = rowdata - RowDataPositionManagerBase
+    expanded = mPositionManagerGridMappingTable(index).isExpanded
     If expanded Then
-        contractPositionManagerEntry Index
+        contractPositionManagerEntry index
     Else
-        expandPositionManagerEntry Index
+        expandPositionManagerEntry index
     End If
 ElseIf rowdata >= RowDataOrderPlexBase Then
-    Index = rowdata - RowDataOrderPlexBase
-    expanded = mOrderPlexGridMappingTable(Index).isExpanded
-    If OrderPlexGrid.row <> mOrderPlexGridMappingTable(Index).gridIndex Then
+    index = rowdata - RowDataOrderPlexBase
+    expanded = mOrderPlexGridMappingTable(index).isExpanded
+    If OrderPlexGrid.row <> mOrderPlexGridMappingTable(index).gridIndex Then
         ' clicked on an order entry
         Exit Sub
     End If
     If expanded Then
-        contractOrderPlexEntry Index
+        contractOrderPlexEntry index
     Else
-        expandOrderPlexEntry Index
+        expandOrderPlexEntry index
     End If
 Else
     Exit Sub
@@ -860,12 +873,12 @@ End If
 End Sub
 
 Private Function expandOrderPlexEntry( _
-                ByVal Index As Long, _
+                ByVal index As Long, _
                 Optional ByVal preserveCurrentExpandedState As Boolean) As Long
 Dim lIndex As Long
 
 
-With mOrderPlexGridMappingTable(Index)
+With mOrderPlexGridMappingTable(index)
     
     If .entryGridOffset >= 0 Then
         lIndex = .gridIndex + .entryGridOffset
@@ -887,7 +900,7 @@ With mOrderPlexGridMappingTable(Index)
     If Not preserveCurrentExpandedState Then
         .isExpanded = True
         OrderPlexGrid.row = .gridIndex
-        OrderPlexGrid.Col = OPGridColumns.ExpandIndicator
+        OrderPlexGrid.col = OPGridColumns.ExpandIndicator
         OrderPlexGrid.CellPictureAlignment = AlignmentSettings.flexAlignCenterCenter
         Set OrderPlexGrid.CellPicture = OrderPlexImageList.ListImages("Contract").Picture
     End If
@@ -896,19 +909,19 @@ End With
 expandOrderPlexEntry = lIndex
 End Function
 
-Private Sub expandPositionManagerEntry(ByVal Index As Long)
+Private Sub expandPositionManagerEntry(ByVal index As Long)
 Dim i As Long
 Dim symbol As String
 Dim lOpEntryIndex As Long
 
-mPositionManagerGridMappingTable(Index).isExpanded = True
-OrderPlexGrid.row = mPositionManagerGridMappingTable(Index).gridIndex
-OrderPlexGrid.Col = OPGridColumns.ExpandIndicator
+mPositionManagerGridMappingTable(index).isExpanded = True
+OrderPlexGrid.row = mPositionManagerGridMappingTable(index).gridIndex
+OrderPlexGrid.col = OPGridColumns.ExpandIndicator
 OrderPlexGrid.CellPictureAlignment = AlignmentSettings.flexAlignCenterCenter
 Set OrderPlexGrid.CellPicture = OrderPlexImageList.ListImages("Contract").Picture
 
-symbol = OrderPlexGrid.TextMatrix(mPositionManagerGridMappingTable(Index).gridIndex, OPGridColumns.symbol)
-i = mPositionManagerGridMappingTable(Index).gridIndex + 1
+symbol = OrderPlexGrid.TextMatrix(mPositionManagerGridMappingTable(index).gridIndex, OPGridColumns.symbol)
+i = mPositionManagerGridMappingTable(index).gridIndex + 1
 Do While OrderPlexGrid.TextMatrix(i, OPGridColumns.symbol) = symbol
     OrderPlexGrid.RowHeight(i) = -1
     lOpEntryIndex = OrderPlexGrid.rowdata(i) - RowDataOrderPlexBase
@@ -1001,13 +1014,12 @@ End If
 If pmIndex > mMaxPositionManagerGridMappingTableIndex Then mMaxPositionManagerGridMappingTableIndex = pmIndex
 
 With mPositionManagerGridMappingTable(pmIndex)
-    If .pm Is Nothing Then
-        Set .pm = pm
+    If .gridIndex = 0 Then
         .gridIndex = addEntryToOrderPlexGrid(pm.ticker.Contract.specifier.localSymbol, True)
         OrderPlexGrid.rowdata(.gridIndex) = pmIndex + RowDataPositionManagerBase
         OrderPlexGrid.row = .gridIndex
-        OrderPlexGrid.Col = 1
-        OrderPlexGrid.ColSel = OrderPlexGrid.Cols - 1
+        OrderPlexGrid.col = 1
+        OrderPlexGrid.colSel = OrderPlexGrid.Cols - 1
         OrderPlexGrid.FillStyle = FillStyleSettings.flexFillRepeat
         OrderPlexGrid.CellBackColor = &HC0C0C0
         OrderPlexGrid.CellForeColor = vbWhite
@@ -1015,7 +1027,7 @@ With mPositionManagerGridMappingTable(pmIndex)
         OrderPlexGrid.TextMatrix(.gridIndex, OPGridPositionColumns.exchange) = pm.ticker.Contract.specifier.exchange
         OrderPlexGrid.TextMatrix(.gridIndex, OPGridPositionColumns.currencyCode) = pm.ticker.Contract.specifier.currencyCode
         OrderPlexGrid.TextMatrix(.gridIndex, OPGridPositionColumns.size) = pm.positionSize
-        OrderPlexGrid.Col = OPGridColumns.ExpandIndicator
+        OrderPlexGrid.col = OPGridColumns.ExpandIndicator
         OrderPlexGrid.CellPictureAlignment = AlignmentSettings.flexAlignCenterCenter
         Set OrderPlexGrid.CellPicture = OrderPlexImageList.ListImages("Contract").Picture
         .isExpanded = True
@@ -1034,7 +1046,7 @@ If rowNumber < 0 Then Exit Sub
 OrderPlexGrid.row = rowNumber
 
 For i = OPGridColumns.OtherColumns To OrderPlexGrid.Cols - 1
-    OrderPlexGrid.Col = i
+    OrderPlexGrid.col = i
     foreColor = IIf(OrderPlexGrid.CellForeColor = 0, OrderPlexGrid.foreColor, OrderPlexGrid.CellForeColor)
     If foreColor = SystemColorConstants.vbWindowText Then
         OrderPlexGrid.CellForeColor = SystemColorConstants.vbHighlightText
@@ -1138,7 +1150,7 @@ With OrderPlexGrid
     .row = rowNumber
     If (columnNumber + 1) > .Cols Then
         .Cols = columnNumber + 1
-        .ColWidth(columnNumber) = 0
+        .colWidth(columnNumber) = 0
     End If
     
     If isLetters Then
@@ -1147,8 +1159,8 @@ With OrderPlexGrid
         lColumnWidth = mDigitWidth * columnWidth
     End If
     
-    If .ColWidth(columnNumber) < lColumnWidth Then
-        .ColWidth(columnNumber) = lColumnWidth
+    If .colWidth(columnNumber) < lColumnWidth Then
+        .colWidth(columnNumber) = lColumnWidth
     End If
     
     .ColAlignment(columnNumber) = align
@@ -1163,15 +1175,15 @@ Dim price As Double
 If Not EditText.Visible Then Exit Sub
 
 orderNumber = mSelectedOrderPlexGridRow - mOrderPlexGridMappingTable(OrderPlexGrid.rowdata(OrderPlexGrid.row) - RowDataOrderPlexBase).gridIndex
-If OrderPlexGrid.Col = OPGridOrderColumns.price Then
+If OrderPlexGrid.col = OPGridOrderColumns.price Then
     If mSelectedOrderPlex.Contract.parsePrice(EditText.text, price) Then
         mSelectedOrderPlex.newOrderPrice(orderNumber) = price
     End If
-ElseIf OrderPlexGrid.Col = OPGridOrderColumns.auxPrice Then
+ElseIf OrderPlexGrid.col = OPGridOrderColumns.auxPrice Then
     If mSelectedOrderPlex.Contract.parsePrice(EditText.text, price) Then
         mSelectedOrderPlex.newOrderTriggerPrice(orderNumber) = price
     End If
-ElseIf OrderPlexGrid.Col = OPGridOrderColumns.quantityRemaining Then
+ElseIf OrderPlexGrid.col = OPGridOrderColumns.quantityRemaining Then
     If IsNumeric(EditText.text) Then
         mSelectedOrderPlex.newQuantity = EditText.text
     End If

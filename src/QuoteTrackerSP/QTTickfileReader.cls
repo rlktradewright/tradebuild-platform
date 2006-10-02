@@ -62,6 +62,8 @@ End Type
 ' Member variables
 '================================================================================
 
+Private mTickfileServiceProvider As QTTickfileServiceProvider
+
 Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mServiceConsumer As ITickfileInputServiceConsumer
 Private mDataConsumer As IStreamingDataConsumer
@@ -117,7 +119,14 @@ End Sub
 '================================================================================
 
 Private Sub ITickfileReader_CloseInputFile()
-releaseQTAPI
+On Error GoTo err
+finish
+mTickfileServiceProvider.dataReaderFinished Me
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTTickfileReader" & "::" & "ITickfileReader_CloseInputFile", _
+                err.Description
 End Sub
 
 Private Property Let ITickfileReader_Contract(ByVal RHS As TradeBuildSP.IContract)
@@ -132,7 +141,13 @@ Set ITickfileReader_ContractSpecifier = mInputTickfileSpecifier.Contract.Specifi
 End Property
 
 Private Sub ITickfileReader_FireNextTick()
+On Error GoTo err
 FireNextTick
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTTickfileReader" & "::" & "ITickfileReader_FireNextTick", _
+                err.Description
 End Sub
 
 Private Property Get ITickfileReader_FirstTickFileTime() As Date
@@ -156,6 +171,7 @@ ITickfileReader_ReplayProgressEventFrequency = mReplayProgressEventFrequency
 End Property
 
 Private Sub ITickfileReader_ReplayTickfile(tickfileSpecifier As TradeBuildSP.TickfileSpec)
+On Error GoTo err
 mInputTickfileSpecifier = tickfileSpecifier
 
 If mQTAPI Is Nothing Then
@@ -168,6 +184,11 @@ If mQTAPI.connectionState = ConnConnected Then
     mServiceConsumer.Ready mInputTickfileSpecifier, 0
     mTickRequestId = mQTAPI.requestHistoricalTickData(mInputTickfileSpecifier, Me, mLockId)
 End If
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTTickfileReader" & "::" & "ITickfileReader_ReplayTickfile", _
+                err.Description
 
 End Sub
 
@@ -186,11 +207,17 @@ End Property
 '================================================================================
 
 Private Sub LockConsumer_lockAcquired(ByVal lockId As Long)
+On Error GoTo err
 If mLockId <> lockId Then err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "QTSP.QTTickfileReader::lockAcquired", _
                                     "Lock id acquired is " & lockId & ": expected " & mLockId
     
     mTickRequestId = mQTAPI.requestHistoricalTickData(mInputTickfileSpecifier, Me, mLockId)
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTTickfileReader" & "::" & "LockConsumer_lockAcquired", _
+                err.Description
 End Sub
 
 Private Sub LockConsumer_waitingForLock(ByVal lockId As Long)
@@ -202,15 +229,50 @@ End Sub
 '================================================================================
 
 Private Sub mQTAPI_Connected()
+On Error GoTo err
 mServiceConsumer.Ready mInputTickfileSpecifier, 0
 mTickRequestId = mQTAPI.requestHistoricalTickData(mInputTickfileSpecifier, Me, mLockId)
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTTickfileReader" & "::" & "mQTAPI_Connected", _
+                err.Description
 End Sub
 
 Private Sub mQTAPI_ConnectFailed(ByVal Description As String, ByVal retrying As Boolean)
-If Not retrying Then
+On Error GoTo err
+If retrying Then
+    mServiceConsumer.error StandardSPErrorCodes.TFRetryConnectDataSource, _
+                            Description, _
+                            mTickfileServiceProvider.handle
+Else
     mServiceConsumer.error StandardSPErrorCodes.TFCantConnectDataSource, _
-                            Description
+                            Description, _
+                            mTickfileServiceProvider.handle
 End If
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTTickfileReader" & "::" & "mQTAPI_ConnectFailed", _
+                err.Description
+End Sub
+
+Private Sub mQTAPI_ConnectionClosed(ByVal reconnecting As Boolean)
+On Error GoTo err
+If reconnecting Then
+    mServiceConsumer.error StandardSPErrorCodes.TFReConnectingDataSource, _
+                        "Lost connection to TWS (reconnecting)", _
+                        mTickfileServiceProvider.handle
+Else
+    mServiceConsumer.error StandardSPErrorCodes.TFLostConnectionToDataSource, _
+                        "Lost connection to TWS", _
+                        mTickfileServiceProvider.handle
+End If
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTTickfileReader" & "::" & "mQTAPI_ConnectionClosed", _
+                err.Description
 End Sub
 
 '================================================================================
@@ -274,9 +336,22 @@ Friend Property Let TickfileInputServiceConsumer(ByVal RHS As ITickfileInputServ
 Set mServiceConsumer = RHS
 End Property
 
+Friend Property Let tickfileServiceProvider( _
+                ByVal value As QTTickfileServiceProvider)
+Set mTickfileServiceProvider = value
+End Property
+
 '================================================================================
 ' Methods
 '================================================================================
+
+Friend Sub finish()
+If Not mQTAPI Is Nothing Then
+    mQTAPI.cancelHistoricalTickData mTickRequestId, mLockId
+    gReleaseQTAPIInstance mQTAPI
+    Set mQTAPI = Nothing
+End If
+End Sub
 
 Friend Sub historicalTick( _
                 ByRef pTick As Tick)
@@ -344,6 +419,19 @@ End With
 
 End Sub
 
+Private Sub handleFatalError( _
+                ByVal Number As Long, _
+                ByVal Source As String, _
+                ByVal Description As String)
+mCommonServiceConsumer.FatalServiceProviderError Number, _
+                                Source, _
+                                Description, _
+                                mTickfileServiceProvider.handle
+
+finish
+mTickfileServiceProvider.dataReaderFinished Me
+End Sub
+
 Private Sub logMessage( _
                 ByVal message As String, _
                 ByVal logLevel As LogLevels)
@@ -354,11 +442,4 @@ mCommonServiceConsumer.NotifyListeners message, _
                                         Now
 End Sub
 
-Private Sub releaseQTAPI()
-If Not mQTAPI Is Nothing Then
-    mQTAPI.cancelHistoricalTickData mTickRequestId, mLockId
-    gReleaseQTAPIInstance mQTAPI
-    Set mQTAPI = Nothing
-End If
-End Sub
 

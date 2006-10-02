@@ -66,6 +66,8 @@ End Type
 ' Member variables
 '================================================================================
 
+Private mTickfileServiceProvider As tickfileServiceProvider
+
 Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mServiceConsumer As ITickfileInputServiceConsumer
 Private mDataConsumer As IStreamingDataConsumer
@@ -127,11 +129,14 @@ End Sub
 '================================================================================
 
 Private Sub ITickfileReader_CloseInputFile()
-If Not mTsIn Is Nothing Then mTsIn.Close
-Set mTsIn = Nothing
-Set mCommonServiceConsumer = Nothing
-Set mServiceConsumer = Nothing
-Set mDataConsumer = Nothing
+On Error GoTo Err
+finish
+mTickfileServiceProvider.dataReaderFinished Me
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TickfileSP" & "." & "TickfileReader" & "::" & "ITickfileReader_CloseInputFile", _
+                Err.Description
 End Sub
 
 Private Property Let ITickfileReader_Contract(ByVal RHS As TradeBuildSP.IContract)
@@ -148,6 +153,7 @@ End Property
 
 Private Sub ITickfileReader_FireNextTick()
 Dim percentComplete As Single
+On Error GoTo Err
 If mRecordsRead = 0 Then
 ElseIf mRecordsRead Mod mReplayProgressEventFrequency = 0 Then
     percentComplete = 100 * (mTickdataReadBytes / mTickdataSizeBytes)
@@ -165,6 +171,11 @@ Else
         If processTickData Then Exit Do
     Loop
 End If
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TickfileSP" & "." & "TickfileReader" & "::" & "ITickfileReader_FireNextTick", _
+                Err.Description
 End Sub
 
 Private Property Get ITickfileReader_FirstTickFileTime() As Date
@@ -188,6 +199,7 @@ ITickfileReader_ReplayProgressEventFrequency = mReplayProgressEventFrequency
 End Property
 
 Private Sub ITickfileReader_ReplayTickfile(tickfileSpecifier As TradeBuildSP.TickfileSpec)
+On Error GoTo Err
 mInputTickfileSpecifier = tickfileSpecifier
 getFile mInputTickfileSpecifier.filename, _
             mInputTickfileFormat, _
@@ -196,6 +208,11 @@ getFile mInputTickfileSpecifier.filename, _
             mTickdataSizeBytes, _
             mContract, _
             mFirstTickFileTime
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TickfileSP" & "." & "TickfileReader" & "::" & "ITickfileReader_ReplayTickfile", _
+                Err.Description
 End Sub
 
 Private Function ITickfileReader_Supports( _
@@ -246,9 +263,21 @@ Friend Property Let TickfileInputServiceConsumer(ByVal RHS As ITickfileInputServ
 Set mServiceConsumer = RHS
 End Property
 
+Friend Property Let tickfileServiceProvider( _
+                ByVal value As tickfileServiceProvider)
+Set mTickfileServiceProvider = value
+End Property
+
 '================================================================================
 ' Methods
 '================================================================================
+
+Friend Sub finish()
+If Not mTsIn Is Nothing Then mTsIn.Close
+Set mTsIn = Nothing
+Set mServiceConsumer = Nothing
+Set mDataConsumer = Nothing
+End Sub
 
 '================================================================================
 ' Helper Functions
@@ -272,7 +301,8 @@ On Error Resume Next
 Set ts = mFileSys.OpenTextFile(filename, ForReading, False)
 If Err.Number <> 0 Then
     mServiceConsumer.Error StandardSPErrorCodes.TFTickfileDoesntExist, _
-                        "Tickfile does not exist: " & filename
+                        "Tickfile does not exist: " & filename, _
+                        mTickfileServiceProvider.handle
     Exit Sub
 End If
 On Error GoTo 0
@@ -285,7 +315,8 @@ If ts.AtEndOfStream Then
     version = TickFileVersions.UnknownVersion
     format = TickfileFormats.TickfileUnknown
     mServiceConsumer.Error StandardSPErrorCodes.TFTickfileInvalid, _
-                        "Tickfile format cannot be determined: " & filename
+                        "Tickfile format cannot be determined: " & filename, _
+                        mTickfileServiceProvider.handle
     Exit Sub
 End If
 
@@ -376,7 +407,8 @@ Case TickFileVersions.TradeBuildV3, TickFileVersions.TradeBuildV4
     If ts.AtEndOfStream Then
         ts.Close
         mServiceConsumer.Error StandardSPErrorCodes.TFTickfileEmpty, _
-                            "Empty tickfile: " & filename
+                            "Empty tickfile: " & filename, _
+                            mTickfileServiceProvider.handle
         Exit Sub
     Else
         If Left$(inRec, Len(CONTRACT_DETAILS_MARKER)) = CONTRACT_DETAILS_MARKER Then
@@ -393,13 +425,27 @@ Case Else
     ' something wrong
     ts.Close
     mServiceConsumer.Error StandardSPErrorCodes.TFTickfileInvalid, _
-                            "Tickfile format/version not determined: " & filename
+                            "Tickfile format/version not determined: " & filename, _
+                            mTickfileServiceProvider.handle
 End Select
 
 Set f = mFileSys.getFile(filename)
 filesize = f.size - bytesRead
 
 mServiceConsumer.Ready mInputTickfileSpecifier, filesize
+End Sub
+
+Private Sub handleFatalError( _
+                ByVal Number As Long, _
+                ByVal Source As String, _
+                ByVal Description As String)
+mCommonServiceConsumer.FatalServiceProviderError Number, _
+                                Source, _
+                                Description, _
+                                mTickfileServiceProvider.handle
+
+finish
+mTickfileServiceProvider.dataReaderFinished Me
 End Sub
 
 Private Sub initialiseRecordTableEntry(ByVal index As Long)
@@ -452,7 +498,7 @@ lookAheadRecord = recordIndex
 
 If lookAhead(lookAheadRecord) Then
     Select Case mRecordTable(lookAheadRecord).tickType
-    Case TickfileSP.TickTypes.AskSize
+    Case TickfileSP.TickTypes.askSize
         If mRecordTable(recordIndex).tickPrice = prevTrade And _
             mRecordTable(recordIndex).TickSize = prevTradeSize _
         Then
@@ -507,7 +553,7 @@ lookAheadRecord = -1
 
 Do While lookAhead(lookAheadRecord)
     If mRecordTable(lookAheadRecord).tickType = _
-        TickfileSP.TickTypes.AskSize _
+        TickfileSP.TickTypes.askSize _
     Then
         If mRecordTable(lookAheadRecord).timestamp - mRecordTable(mCurrentRecordTableEntry).timestamp < 1.01 / 86400# _
         Then
@@ -690,7 +736,7 @@ With mRecordTable(mCurrentRecordTableEntry)
             processTickData = True
         End If
         mPrevAsk = .tickPrice
-    Case TickfileSP.TickTypes.AskSize
+    Case TickfileSP.TickTypes.askSize
             If mPrevAsk <> 0 Then
             mDataConsumer.Ask .timestamp, _
                             mPrevAsk, _
@@ -942,7 +988,7 @@ With mRecordTable(index)
             If dataFields(TickfileFieldsV2.TickSize) <> &H7FFFFFFF Then
                 .TickSize = dataFields(TickfileFieldsV2.TickSize)
             End If
-        Case TickfileSP.TickTypes.AskSize
+        Case TickfileSP.TickTypes.askSize
             .TickSize = dataFields(TickfileFieldsV2.TickSize)
         Case TickfileSP.TickTypes.Last
             .tickPrice = dataFields(TickfileFieldsV2.tickPrice)
@@ -971,7 +1017,7 @@ With mRecordTable(index)
             .TickSize = dataFields(TickfileFieldsV1.TickSize)
         Case TickfileSP.TickTypes.Ask
             .tickPrice = dataFields(TickfileFieldsV1.tickPrice)
-        Case TickfileSP.TickTypes.AskSize
+        Case TickfileSP.TickTypes.askSize
             .TickSize = dataFields(TickfileFieldsV1.TickSize)
         Case TickfileSP.TickTypes.Last
             .tickPrice = dataFields(TickfileFieldsV1.tickPrice)
@@ -1015,8 +1061,8 @@ With mRecordTable(index)
                 .tickType = TickfileSP.TickTypes.Bid
                 .tickPrice = dataFields(ESignalTickFileFields.bidPrice)
                 .TickSize = dataFields(ESignalTickFileFields.bidSize)
-                If dataFields(ESignalTickFileFields.AskPrice) <> esPrevAsk Or _
-                        dataFields(ESignalTickFileFields.AskSize) <> esPrevAskSize _
+                If dataFields(ESignalTickFileFields.askPrice) <> esPrevAsk Or _
+                        dataFields(ESignalTickFileFields.askSize) <> esPrevAskSize _
                 Then
                     anotherRecord = mNextFreeRecordTableEntry
                     initialiseRecordTableEntry anotherRecord
@@ -1024,23 +1070,23 @@ With mRecordTable(index)
                     With mRecordTable(anotherRecord)
                         .timestamp = mRecordTable(index).timestamp
                         .tickType = TickfileSP.TickTypes.Ask
-                        .tickPrice = dataFields(ESignalTickFileFields.AskPrice)
-                        .TickSize = dataFields(ESignalTickFileFields.AskSize)
+                        .tickPrice = dataFields(ESignalTickFileFields.askPrice)
+                        .TickSize = dataFields(ESignalTickFileFields.askSize)
                     End With
                 End If
             Else
-                If dataFields(ESignalTickFileFields.AskPrice) <> esPrevAsk Or _
-                        dataFields(ESignalTickFileFields.AskSize) <> esPrevAskSize _
+                If dataFields(ESignalTickFileFields.askPrice) <> esPrevAsk Or _
+                        dataFields(ESignalTickFileFields.askSize) <> esPrevAskSize _
                 Then
                     .tickType = TickfileSP.TickTypes.Ask
-                    .tickPrice = dataFields(ESignalTickFileFields.AskPrice)
-                    .TickSize = dataFields(ESignalTickFileFields.AskSize)
+                    .tickPrice = dataFields(ESignalTickFileFields.askPrice)
+                    .TickSize = dataFields(ESignalTickFileFields.askSize)
                 End If
             End If
             esPrevBid = dataFields(ESignalTickFileFields.bidPrice)
             esPrevBidSize = dataFields(ESignalTickFileFields.bidSize)
-            esPrevAsk = dataFields(ESignalTickFileFields.AskPrice)
-            esPrevAskSize = dataFields(ESignalTickFileFields.AskSize)
+            esPrevAsk = dataFields(ESignalTickFileFields.askPrice)
+            esPrevAskSize = dataFields(ESignalTickFileFields.askSize)
         End Select
     End Select
 End With

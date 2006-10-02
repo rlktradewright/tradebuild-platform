@@ -60,11 +60,17 @@ Private mCommonServiceConsumer As ICommonServiceConsumer
 
 Private mNextReaderID As Long
 
+Private mTickfileDataReaders As Collection
+Private mTickfileDataWriters As Collection
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
 
 Private Sub Class_Initialize()
+Set mTickfileDataReaders = New Collection
+Set mTickfileDataWriters = New Collection
+
 mName = App.ProductName
 End Sub
 
@@ -113,7 +119,15 @@ ICommonServiceProvider_Name = Name
 End Property
 
 Private Sub ICommonServiceProvider_Terminate()
-' nothing to do
+On Error GoTo Err
+finishReaders
+finishWriters
+Set mCommonServiceConsumer = Nothing
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                "TickfileSP" & "." & "TickfileServiceProvider" & "::" & "ICommonServiceProvider_Terminate", _
+                Err.Description
 End Sub
 
 '================================================================================
@@ -125,12 +139,20 @@ Private Function ITickfileServiceProvider_CreateTickfileReader( _
                             ByVal serviceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
                             ByVal FormatIdentifier As String) As TradeBuildSP.ITickfileReader
 Dim reader As TickfileReader
+On Error GoTo Err
 mNextReaderID = mNextReaderID + 1
 Set reader = New TickfileReader
 Set ITickfileServiceProvider_CreateTickfileReader = reader
+reader.tickfileServiceProvider = Me
 reader.commonServiceConsumer = mCommonServiceConsumer
 reader.TickfileInputServiceConsumer = serviceConsumer
 reader.StreamingDataConsumer = dataConsumer
+mTickfileDataReaders.Add reader
+Exit Function
+Err:
+handleFatalError Err.Number, _
+                "TickfileSP" & "." & "TickfileServiceProvider" & "::" & "ITickfileServiceProvider_CreateTickfileReader", _
+                Err.Description
 End Function
 
 Private Function ITickfileServiceProvider_CreateTickfileWriter( _
@@ -141,6 +163,7 @@ Dim formatId As TickfileFormats
 Dim formatVersion As TickFileVersions
 Dim writer As TickfileWriter
 
+On Error GoTo Err
 gFormatSpecifiersFromString FormatIdentifier, formatId, formatVersion
 If formatId = TickfileFormats.TickfileUnknown Then
     formatId = TickfileFormats.TickfileTradeBuild
@@ -149,12 +172,18 @@ End If
 
 Set writer = New TickfileWriter
 Set ITickfileServiceProvider_CreateTickfileWriter = writer
-
+writer.tickfileServiceProvider = Me
 writer.TickfileFormat = formatId
 writer.TickFileVersion = formatVersion
 writer.path = location
 writer.commonServiceConsumer = mCommonServiceConsumer
 writer.TickfileOutputServiceConsumer = serviceConsumer
+mTickfileDataWriters.Add writer
+Exit Function
+Err:
+handleFatalError Err.Number, _
+                "TickfileSP" & "." & "TickfileServiceProvider" & "::" & "ITickfileServiceProvider_CreateTickfileWriter", _
+                Err.Description
 End Function
 
 Private Property Get ITickfileServiceProvider_SupportedFormats() As TickfileFormatSpecifier()
@@ -208,6 +237,10 @@ End Function
 ' Properties
 '================================================================================
 
+Friend Property Get handle() As Long
+handle = mHandle
+End Property
+
 Public Property Let Name(ByVal value As String)
 mName = value
 End Property
@@ -220,9 +253,63 @@ End Property
 ' Methods
 '================================================================================
 
+Friend Sub dataReaderFinished( _
+                ByVal dataReader As TickfileReader)
+Dim i As Long
+Dim reader As TickfileReader
+i = 1
+For Each reader In mTickfileDataReaders
+    If reader Is dataReader Then
+        mTickfileDataReaders.Remove i
+        Exit For
+    End If
+    i = i + 1
+Next
+End Sub
+
+Friend Sub dataWriterFinished( _
+                ByVal dataWriter As TickfileWriter)
+Dim i As Long
+Dim writer As TickfileWriter
+i = 1
+For Each writer In mTickfileDataWriters
+    If writer Is dataWriter Then
+        mTickfileDataWriters.Remove i
+        Exit For
+    End If
+    i = i + 1
+Next
+End Sub
+
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub finishReaders()
+Dim reader As TickfileReader
+For Each reader In mTickfileDataReaders
+    reader.finish
+Next
+End Sub
+
+Private Sub finishWriters()
+Dim writer As TickfileWriter
+For Each writer In mTickfileDataWriters
+    writer.finish
+Next
+End Sub
+
+Private Sub handleFatalError( _
+                ByVal Number As Long, _
+                ByVal Source As String, _
+                ByVal Description As String)
+mCommonServiceConsumer.FatalServiceProviderError Number, Source, Description, mHandle
+
+finishReaders
+finishWriters
+
+Set mCommonServiceConsumer = Nothing
+End Sub
 
 
 

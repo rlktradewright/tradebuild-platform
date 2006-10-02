@@ -976,6 +976,7 @@ Next
 For Each op In mClosedOrderPlexes
     op.finish
 Next
+Set mOrderSubmitter = Nothing
 End Function
 
 Public Function getAccountBalance() As Double

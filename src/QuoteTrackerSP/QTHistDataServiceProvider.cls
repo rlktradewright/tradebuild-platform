@@ -67,11 +67,15 @@ Private mProviderKey As String
 
 Private mLogLevel As LogLevels
 
+Private mHistDataReaders As Collection
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
 
 Private Sub Class_Initialize()
+
+Set mHistDataReaders = New Collection
 
 mName = App.ProductName & "(HD)"
 
@@ -97,9 +101,10 @@ Private Function IBarDataServiceProvider_CreateBarDataReader( _
 
 Dim reader As QTHistDataReader
 
+On Error GoTo err
 Set reader = New QTHistDataReader
 Set IBarDataServiceProvider_CreateBarDataReader = reader
-
+reader.histDataServiceProvider = Me
 reader.CommonServiceConsumer = mCommonServiceConsumer
 reader.barDataInputServiceConsumer = serviceConsumer
 reader.dataConsumer = dataConsumer
@@ -111,7 +116,12 @@ reader.keepConnection = mkeepConnection
 reader.logLevel = mLogLevel
 reader.ConnectionRetryIntervalSecs = mConnectionRetryIntervalSecs
 reader.ServiceProviderName = mName & " (reader)"
-
+mHistDataReaders.add reader
+Exit Function
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTHistDataServiceProvider" & "::" & "IBarDataServiceProvider_CreateBarDataReader", _
+                err.Description
 End Function
 
 Private Function IBarDataServiceProvider_CreateBarDataWriter( _
@@ -175,7 +185,14 @@ ICommonServiceProvider_Name = Name
 End Property
 
 Private Sub ICommonServiceProvider_Terminate()
-' nothing to do
+On Error GoTo err
+finishReaders
+Set mCommonServiceConsumer = Nothing
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTHistDataServiceProvider" & "::" & "ICommonServiceProvider_Terminate", _
+                err.Description
 End Sub
 
 '================================================================================
@@ -188,6 +205,10 @@ End Sub
 
 Public Property Let ConnectionRetryIntervalSecs(ByVal value As Long)
 mConnectionRetryIntervalSecs = value
+End Property
+
+Friend Property Get handle() As Long
+handle = mHandle
 End Property
 
 Public Property Let keepConnection(ByVal value As Boolean)
@@ -237,9 +258,41 @@ End Property
 ' Methods
 '================================================================================
 
+Friend Sub dataReaderFinished( _
+                ByVal dataReader As QTHistDataReader)
+Dim i As Long
+Dim reader As QTHistDataReader
+i = 1
+For Each reader In mHistDataReaders
+    If reader Is dataReader Then
+        mHistDataReaders.remove i
+        Exit For
+    End If
+    i = i + 1
+Next
+End Sub
+
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub finishReaders()
+Dim reader As QTHistDataReader
+For Each reader In mHistDataReaders
+    reader.finish
+Next
+End Sub
+
+Private Sub handleFatalError( _
+                ByVal Number As Long, _
+                ByVal Source As String, _
+                ByVal Description As String)
+mCommonServiceConsumer.FatalServiceProviderError Number, Source, Description, mHandle
+
+finishReaders
+
+Set mCommonServiceConsumer = Nothing
+End Sub
 
 
 

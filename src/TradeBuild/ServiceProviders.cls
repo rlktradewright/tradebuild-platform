@@ -58,10 +58,12 @@ End Type
 ' Member variables
 '================================================================================
 
+Private mTradeBuildAPIRef           As WeakReference
+
 Private mServiceProviders() As ServiceProviderTableEntry
 Private mMaxSPIndex As Long
 
-Private mChangeListeners As Collection
+Private mChangeListeners As WeakCollection
 
 '================================================================================
 ' Class Event Handlers
@@ -71,7 +73,7 @@ Private Sub Class_Initialize()
 ReDim mServiceProviders(9) As ServiceProviderTableEntry
 mMaxSPIndex = -1
 
-Set mChangeListeners = New Collection
+Set mChangeListeners = New WeakCollection
 
 End Sub
 
@@ -79,11 +81,21 @@ End Sub
 ' ICommonServiceConsumer Interface Members
 '================================================================================
 
+Private Sub ICommonServiceConsumer_FatalServiceProviderError( _
+                ByVal errorCode As Long, _
+                ByVal source As String, _
+                ByVal errorMessage As String, _
+                ByVal spHandle As Long)
+tb.notifyFatalError errorCode, _
+                    errorMessage, _
+                    nameFromHandle(spHandle) & ":" & source
+End Sub
+
 Private Function ICommonServiceConsumer_FormatTimestamp( _
-                            ByVal timestamp As Date, _
-                            Optional ByVal formatOption As TradeBuildSP.TimestampFormats = 2&, _
-                            Optional ByVal formatString As String = "yyyymmddhhnnss" _
-                            ) As String
+                ByVal timestamp As Date, _
+                Optional ByVal formatOption As TradeBuildSP.TimestampFormats = 2&, _
+                Optional ByVal formatString As String = "yyyymmddhhnnss" _
+                ) As String
 ICommonServiceConsumer_FormatTimestamp = gFormatTimestamp(timestamp, _
                                                     formatOption, _
                                                     formatString)
@@ -128,7 +140,7 @@ Set ICommonServiceConsumer_NewContract = New Contract
 End Function
 
 Private Function ICommonServiceConsumer_NewContracts() As TradeBuildSP.IContracts
-Set ICommonServiceConsumer_NewContracts = New Contracts
+Set ICommonServiceConsumer_NewContracts = tb.NewContracts(Nothing)
 End Function
 
 Private Function ICommonServiceConsumer_NewContractSpecifier() As TradeBuildSP.IContractSpecifier
@@ -173,10 +185,10 @@ Set ICommonServiceConsumer_NewStudyValueListeners = New StudyValueListeners
 End Function
 
 Private Sub ICommonServiceConsumer_NotifyListeners( _
-                            ByVal value As Variant, _
-                            ByVal valueType As Long, _
-                            ByVal source As Object)
-gListeners.notify value, valueType, source
+                ByVal value As Variant, _
+                ByVal valueType As Long, _
+                ByVal source As Object)
+tb.notifyListeners value, valueType, source
 End Sub
 
 Private Sub ICommonServiceConsumer_RegisterServiceProvider( _
@@ -260,8 +272,10 @@ End Sub
 Private Sub ICommonServiceConsumer_ServiceProviderError( _
                             ByVal errorCode As Long, _
                             ByVal errorMessage As String, _
-                            ByVal serviceProviderName As String)
-gTradeBuildAPI.SetServiceProviderError errorCode, errorMessage, serviceProviderName
+                            ByVal spHandle As Long)
+tb.SetServiceProviderError errorCode, _
+                errorMessage, _
+                nameFromHandle(spHandle)
 End Sub
 
 Private Sub ICommonServiceConsumer_SortObjects(data() As TradeBuildSP.SortEntry)
@@ -288,7 +302,7 @@ Private Function ICommonServiceConsumer_StartTask( _
 Dim Tasktarget As SpTask
 Set Tasktarget = New SpTask
 Tasktarget.SpTaskObject = target
-Set ICommonServiceConsumer_StartTask = gTaskManager.startTask(Tasktarget, name, data)
+Set ICommonServiceConsumer_StartTask = tb.taskManager.startTask(Tasktarget, name, data)
 End Function
 
 Private Function ICommonServiceConsumer_ToBytes(inString As String) As Byte()
@@ -306,7 +320,8 @@ End Function
 Private Sub IContractInfoServiceConsumer_Error( _
                             ByVal errorCode As TradeBuildSP.StandardSPErrorCodes, _
                             ByVal errorMessage As String, _
-                            ByVal pContracts As TradeBuildSP.IContracts)
+                            ByVal pContracts As TradeBuildSP.IContracts, _
+                            ByVal spHandle As Long)
 Dim lContracts As TradeBuild.Contracts
 
 Set lContracts = pContracts
@@ -315,13 +330,29 @@ Select Case errorCode
 Case TradeBuildSP.StandardSPErrorCodes.CIContractSpecifierInvalid
     lContracts.ContractSpecifierInvalid errorMessage
 Case TradeBuildSP.StandardSPErrorCodes.CICantConnectDataSource
-    gTradeBuildAPI.SetServiceProviderError errorCode, _
-                        errorMessage, _
-                        "Csn't connect to Contract database"
+    tb.SetServiceProviderError errorCode, _
+                        "Can't connect to Contract database: " & errorMessage, _
+                        tb.serviceProviders.nameFromHandle(spHandle)
+Case TradeBuildSP.StandardSPErrorCodes.CIDisconnectedFromDataSource
+    tb.SetServiceProviderError errorCode, _
+                        "Disconnected from Contract database: " & errorMessage, _
+                        tb.serviceProviders.nameFromHandle(spHandle)
+Case TradeBuildSP.StandardSPErrorCodes.CILostConnectionToDataSource
+    tb.SetServiceProviderError errorCode, _
+                        "Lost connection to Contract database: " & errorMessage, _
+                        tb.serviceProviders.nameFromHandle(spHandle)
+Case TradeBuildSP.StandardSPErrorCodes.CIReConnectingDataSource
+    tb.SetServiceProviderError errorCode, _
+                        "Reconnecting to Contract database: " & errorMessage, _
+                        tb.serviceProviders.nameFromHandle(spHandle)
+Case TradeBuildSP.StandardSPErrorCodes.CIRetryConnectDataSource
+    tb.SetServiceProviderError errorCode, _
+                        "Attempting again to connect to Contract database: " & errorMessage, _
+                        tb.serviceProviders.nameFromHandle(spHandle)
 Case Else
-    gTradeBuildAPI.SetServiceProviderError errorCode, _
+    tb.SetServiceProviderError errorCode, _
                         errorMessage, _
-                        "Unknown ContractInfo Service Provider"
+                        nameFromHandle(spHandle)
 End Select
 End Sub
 
@@ -406,6 +437,12 @@ End Property
 
 Friend Property Get SupportedOutputTickfileFormats() As TradeBuild.TickfileFormatSpecifier()
 SupportedOutputTickfileFormats = GetSupportedTickfileFormats(TradeBuildSP.TickfileServiceProviderCapabilities.Record)
+End Property
+
+Friend Property Let tradeBuildAPI( _
+                ByVal value As tradeBuildAPI)
+Set mTradeBuildAPIRef = New WeakReference
+mTradeBuildAPIRef.Initialise value
 End Property
 
 '================================================================================
@@ -550,7 +587,7 @@ Set CreateLiveOrderSubmitter = orderSubmitter
 End Function
 
 Friend Function CreateRealtimeDataReader( _
-                                    ByVal pTicker As Ticker, _
+                                    ByVal pTicker As ticker, _
                                     ByVal serviceConsumer As TradeBuildSP.IRealtimeDataInputServiceConsumer) As TradeBuildSP.IRealtimeDataReader
 Dim realtimeSp As TradeBuildSP.IRealtimeDataServiceProvider
 Dim realtimeSPReader As TradeBuildSP.IRealtimeDataReader
@@ -627,7 +664,7 @@ Next
 End Function
 
 Friend Function CreateTickfileReader( _
-                                    ByVal pTicker As Ticker, _
+                                    ByVal pTicker As ticker, _
                                     ByVal serviceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
                                     ByVal inputTickfileFormatID As String _
                                     ) As TradeBuild.TickfileReader
@@ -731,6 +768,12 @@ Friend Sub LoadContracts( _
 If Not LoadContractsFromNextSP(0, Contracts) Then Contracts.LoadComplete
 End Sub
 
+Friend Function nameFromHandle( _
+                ByVal handle As Long) As String
+If handle < 0 Then Exit Function
+nameFromHandle = mServiceProviders(handle).name
+End Function
+
 Public Sub remove(ByVal sp As TradeBuildSP.ICommonServiceProvider)
 Dim i As Long
 
@@ -802,11 +845,13 @@ Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
                 ByVal affectedObject As TradeBuildSP.ICommonServiceProvider)
 Dim listener As CollectionChangeListener
+Dim i As Long
 Dim Change As CollectionChangeEvent
 Set Change.source = Me
 Change.changeType = changeType
 Set Change.affectedObject = affectedObject
-For Each listener In mChangeListeners
+For i = 1 To mChangeListeners.Count
+    Set listener = mChangeListeners(i)
     listener.Change Change
 Next
 End Sub
@@ -869,4 +914,8 @@ If contractInfoSP Is Nothing Then Exit Function
 
 contractInfoSP.RequestContractDetails pContracts
 LoadContractsFromNextSP = True
+End Function
+
+Private Function tb() As tradeBuildAPI
+Set tb = mTradeBuildAPIRef.target
 End Function

@@ -52,6 +52,8 @@ Implements TradeBuildSP.IBarDataReader
 ' Member variables
 '================================================================================
 
+Private mHistDataServiceProvider As histDataServiceProvider
+
 Private mCommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer
 Private mServiceConsumer As TradeBuildSP.IBarDataInputServiceConsumer
 Private mDataConsumer As TradeBuildSP.IBarDataConsumer
@@ -100,8 +102,7 @@ mRequestId = -1
 End Sub
 
 Private Sub Class_Terminate()
-If Not mTWSAPI Is Nothing Then gReleaseTWSAPIInstance mTWSAPI
-Set mTWSAPI = Nothing
+finish
 Debug.Print "IBTWSSP.HistDataReader terminated"
 End Sub
 
@@ -115,12 +116,19 @@ IBarDataReader_BarDataSpecifier = mBarDataSpecifier
 End Property
 
 Private Sub IBarDataReader_CancelFetch()
+On Error GoTo err
 If mRequestId <> -1 Then mTWSAPI.CancelHistoricalData mRequestId
+Exit Sub
+err:
+handleFatalError err.number, _
+                "IBTWSSP" & "." & "HistDataReader" & "::" & "IBarDataReader_CancelFetch", _
+                err.Description
 End Sub
 
 Private Sub IBarDataReader_FetchBars( _
                             barSpecifier As TradeBuildSP.BarDataSpecifier)
 
+On Error GoTo err
 If mRequestInProgress Then err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "IBTWSSP.HistDataReader::FetchBars", _
                                     "Request already in progress"
@@ -140,15 +148,26 @@ If mTWSAPI.connectionState = ConnConnected Then
     mServiceConsumer.Ready
     mRequestId = mTWSAPI.RequestHistoricalData(mBarDataSpecifier, Me)
 End If
+Exit Sub
+err:
+handleFatalError err.number, _
+                "IBTWSSP" & "." & "HistDataReader" & "::" & "IBarDataReader_FetchBars", _
+                err.Description
 
 End Sub
 
 Private Sub IBarDataReader_FireNextBar()
+On Error GoTo err
 If mWaitingForBarData Then
     mBarRequested = True
 Else
     ProcessBar
 End If
+Exit Sub
+err:
+handleFatalError err.number, _
+                "IBTWSSP" & "." & "HistDataReader" & "::" & "IBarDataReader_FireNextBar", _
+                err.Description
 End Sub
 
 Private Property Get IBarDataReader_NumberOfBars() As Long
@@ -156,8 +175,16 @@ Private Property Get IBarDataReader_NumberOfBars() As Long
 End Property
 
 Private Sub IBarDataReader_ReleaseDataStore()
-If Not mTWSAPI Is Nothing Then gReleaseTWSAPIInstance mTWSAPI
-Set mTWSAPI = Nothing
+On Error GoTo err
+
+finish
+mHistDataServiceProvider.dataReaderFinished Me
+
+Exit Sub
+err:
+handleFatalError err.number, _
+                "IBTWSSP" & "." & "HistDataReader" & "::" & "IBarDataReader_ReleaseDataStore", _
+                err.Description
 End Sub
 
 Private Function IBarDataReader_Supports( _
@@ -170,17 +197,66 @@ End Function
 '================================================================================
 
 Private Sub mTWSAPI_Connected()
+On Error GoTo err
 If mRequestInProgress Then
     mServiceConsumer.Ready
     mRequestId = mTWSAPI.RequestHistoricalData(mBarDataSpecifier, Me)
 End If
+Exit Sub
+err:
+handleFatalError err.number, _
+                "IBTWSSP" & "." & "HistDataReader" & "::" & "mTWSAPI_Connected", _
+                err.Description
 End Sub
 
 Private Sub mTWSAPI_ConnectFailed(ByVal Description As String, ByVal retrying As Boolean)
-If Not retrying Then
+On Error GoTo err
+If retrying Then
+    mServiceConsumer.Error StandardSPErrorCodes.HDRetryConnectDataSource, _
+                            Description, _
+                            mHistDataServiceProvider.handle
+Else
     mServiceConsumer.Error StandardSPErrorCodes.HDCantConnectDataSource, _
-                            Description
+                            Description, _
+                            mHistDataServiceProvider.handle
 End If
+Exit Sub
+err:
+handleFatalError err.number, _
+                "IBTWSSP" & "." & "HistDataReader" & "::" & "mTWSAPI_ConnectFailed", _
+                err.Description
+End Sub
+
+Private Sub mTWSAPI_ConnectionToTWSClosed( _
+                ByVal reconnecting As Boolean)
+On Error GoTo err
+If reconnecting Then
+    mServiceConsumer.Error StandardSPErrorCodes.HDReConnectingDataSource, _
+                        "Lost connection to TWS (reconnecting)", _
+                        mHistDataServiceProvider.handle
+Else
+    mServiceConsumer.Error StandardSPErrorCodes.HDLostConnectionToDataSource, _
+                        "Lost connection to TWS", _
+                        mHistDataServiceProvider.handle
+End If
+Exit Sub
+err:
+handleFatalError err.number, _
+                "IBTWSSP" & "." & "HistDataReader" & "::" & "mTWSAPI_ConnectionToTWSClosed", _
+                err.Description
+End Sub
+
+Private Sub mTWSAPI_Disconnected( _
+                ByVal reason As String)
+On Error GoTo err
+mServiceConsumer.Error StandardSPErrorCodes.HDDisconnectedFromDataSource, _
+                        reason, _
+                        mHistDataServiceProvider.handle
+Exit Sub
+err:
+handleFatalError err.number, _
+                "IBTWSSP" & "." & "HistDataReader" & "::" & "mTWSAPI_Disconnected", _
+                err.Description
 End Sub
 
 '================================================================================
@@ -205,6 +281,11 @@ End Property
 
 Friend Property Let dataConsumer(ByVal value As IBarDataConsumer)
 Set mDataConsumer = value
+End Property
+
+Friend Property Let histDataServiceProvider( _
+                ByVal value As histDataServiceProvider)
+Set mHistDataServiceProvider = value
 End Property
 
 Public Property Let keepConnection(ByVal value As Boolean)
@@ -239,6 +320,13 @@ End Property
 ' Methods
 '================================================================================
 
+Friend Sub finish()
+If Not mTWSAPI Is Nothing Then gReleaseTWSAPIInstance mTWSAPI
+Set mTWSAPI = Nothing
+Set mServiceConsumer = Nothing
+Set mDataConsumer = Nothing
+End Sub
+
 Friend Sub historicalDataAvailable()
 mWaitingForBarData = False
 If mBarRequested Then
@@ -247,17 +335,36 @@ If mBarRequested Then
 End If
 End Sub
 
-Friend Sub historicalDataRequestFailed(ByVal reason As String)
-mServiceConsumer.Error StandardSPErrorCodes.HDRequestFailed, reason
+Friend Sub historicalDataRequestFailed( _
+                ByVal reason As String)
+mServiceConsumer.Error StandardSPErrorCodes.HDRequestFailed, _
+                        reason, _
+                        mHistDataServiceProvider.handle
 End Sub
 
-Friend Sub historicalDataRequestInvalid(ByVal reason As String)
-mServiceConsumer.Error StandardSPErrorCodes.HDRequestInvalid, reason
+Friend Sub historicalDataRequestInvalid( _
+                ByVal reason As String)
+mServiceConsumer.Error StandardSPErrorCodes.HDRequestInvalid, _
+                        reason, _
+                        mHistDataServiceProvider.handle
 End Sub
 
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub handleFatalError( _
+                ByVal number As Long, _
+                ByVal source As String, _
+                ByVal Description As String)
+mCommonServiceConsumer.FatalServiceProviderError number, _
+                            source, _
+                            Description, _
+                            mHistDataServiceProvider.handle
+
+finish
+mHistDataServiceProvider.dataReaderFinished Me
+End Sub
 
 Private Sub ProcessBar()
 Dim lBar As TradeBuildSP.Bar

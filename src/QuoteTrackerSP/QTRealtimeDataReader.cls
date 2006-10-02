@@ -62,6 +62,8 @@ End Type
 ' Member variables
 '================================================================================
 
+Private mRealtimeDataServiceProvider As QTRealtimeDataServiceProvider
+
 Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mServiceConsumer As IRealtimeDataInputServiceConsumer
 Private mDataConsumer As IStreamingDataConsumer
@@ -103,6 +105,7 @@ Private Sub IRealtimeDataReader_StartData( _
                 ByVal Contract As TradeBuildSP.IContract, _
                 ByVal DomEventsRequired As TradeBuildSP.DOMEventTypes)
 
+On Error GoTo err
 Set mContract = Contract
 If mQTAPI Is Nothing Then
     Set mQTAPI = gGetQTAPIInstance(mServer, mPort, mPassword, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection)
@@ -113,6 +116,11 @@ End If
 If mQTAPI.connectionState = ConnConnected Then
     mL1QuoteRequestId = mQTAPI.subscribeToL1Quotes(mContract, Me)
 End If
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTRealtimeDataReader" & "::" & "IRealtimeDataReader_StartData", _
+                err.Description
 
 End Sub
 
@@ -122,8 +130,14 @@ Private Sub IRealtimeDataReader_StartMarketDepth( _
 End Sub
 
 Private Sub IRealtimeDataReader_StopData()
-mQTAPI.unsubscribeFromL1Quotes mL1QuoteRequestId
-releaseQTAPI
+On Error GoTo err
+finish
+mRealtimeDataServiceProvider.dataReaderFinished Me
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTRealtimeDataReader" & "::" & "IRealtimeDataReader_StopData", _
+                err.Description
 End Sub
 
 Private Sub IRealtimeDataReader_StopMarketDepth()
@@ -143,24 +157,43 @@ End Function
 '================================================================================
 
 Private Sub mQTAPI_Connected()
+On Error GoTo err
 mL1QuoteRequestId = mQTAPI.subscribeToL1Quotes(mContract, Me)
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTRealtimeDataReader" & "::" & "mQTAPI_Connected", _
+                err.Description
 End Sub
 
 Private Sub mQTAPI_ConnectFailed(ByVal Description As String, ByVal retrying As Boolean)
-If Not retrying Then
-    mServiceConsumer.error StandardSPErrorCodes.TFCantConnectDataSource, _
-                            Description
+On Error GoTo err
+If retrying Then
+    mServiceConsumer.error StandardSPErrorCodes.RTRetryConnectDataSource, _
+                            Description, _
+                            mRealtimeDataServiceProvider.handle
+Else
+    mServiceConsumer.error StandardSPErrorCodes.RTCantConnectDataSource, _
+                            Description, _
+                            mRealtimeDataServiceProvider.handle
 End If
+Exit Sub
+err:
+handleFatalError err.Number, _
+                "QTSP" & "." & "QTRealtimeDataReader" & "::" & "mQTAPI_ConnectFailed", _
+                err.Description
 End Sub
 
-'================================================================================
-' mTimeoutTimer Event Handlers
-'================================================================================
-
-Private Sub mTimeoutTimer_TimerExpired()
-releaseQTAPI
-mServiceConsumer.error StandardSPErrorCodes.TFDataSourceNotResponding, _
-                        "QuoteTracker Server is not responding"
+Private Sub mQTAPI_ConnectionClosed(ByVal reconnecting As Boolean)
+If reconnecting Then
+    mServiceConsumer.error StandardSPErrorCodes.RTReConnectingDataSource, _
+                        "Lost connection to QT (reconnecting)", _
+                        mRealtimeDataServiceProvider.handle
+Else
+    mServiceConsumer.error StandardSPErrorCodes.RTLostConnectionToDataSource, _
+                        "Lost connection to QT", _
+                        mRealtimeDataServiceProvider.handle
+End If
 End Sub
 
 '================================================================================
@@ -204,6 +237,11 @@ Friend Property Let providerKey(ByVal value As String)
 mProviderKey = value
 End Property
 
+Friend Property Let realtimeDataServiceProvider( _
+                ByVal value As QTRealtimeDataServiceProvider)
+Set mRealtimeDataServiceProvider = value
+End Property
+
 Friend Property Let server(ByVal value As String)
 mServer = IIf(value = "", "127.0.0.1", value)
 End Property
@@ -219,6 +257,17 @@ End Property
 '================================================================================
 ' Methods
 '================================================================================
+
+Friend Sub finish()
+If Not mQTAPI Is Nothing Then
+    mQTAPI.unsubscribeFromL1Quotes mL1QuoteRequestId
+    gReleaseQTAPIInstance mQTAPI
+    Set mQTAPI = Nothing
+End If
+Set mServiceConsumer = Nothing
+Set mDataConsumer = Nothing
+Set mContract = Nothing
+End Sub
 
 Friend Sub fireTick( _
                 ByRef pTick As Tick)
@@ -248,6 +297,19 @@ End Sub
 ' Helper Functions
 '================================================================================
 
+Private Sub handleFatalError( _
+                ByVal Number As Long, _
+                ByVal Source As String, _
+                ByVal Description As String)
+mCommonServiceConsumer.FatalServiceProviderError Number, _
+                Source, _
+                Description, _
+                mRealtimeDataServiceProvider.handle
+
+finish
+mRealtimeDataServiceProvider.dataReaderFinished Me
+End Sub
+
 Private Sub logMessage( _
                 ByVal message As String, _
                 ByVal logLevel As LogLevels)
@@ -256,13 +318,6 @@ If mLogLevel < logLevel Or _
 mCommonServiceConsumer.NotifyListeners message, _
                                         TradeBuildSP.StandardListenValueTypes.Log, _
                                         Now
-End Sub
-
-Private Sub releaseQTAPI()
-If Not mQTAPI Is Nothing Then
-    gReleaseQTAPIInstance mQTAPI
-    Set mQTAPI = Nothing
-End If
 End Sub
 
 

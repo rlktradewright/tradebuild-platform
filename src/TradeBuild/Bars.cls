@@ -72,26 +72,26 @@ End Enum
 ' Member variables
 '================================================================================
 
-Private mIdent As String
+Private mTradeBuildAPIRef           As WeakReference
 
-Private mInputValueName As String
+Private mIdent                      As String
 
-Private mBars As Collection
-Private mBarType As Long
-Private mBarLength As Long
+Private mInputValueName             As String
 
-Private mName As String
+Private mBars                       As Collection
+Private mBarType                    As Long
+Private mBarLength                  As Long
 
-Private WithEvents mCurrentBar As Bar
+Private mName                       As String
+
+Private WithEvents mCurrentBar      As Bar
 Attribute mCurrentBar.VB_VarHelpID = -1
-Private mCurrentBarNumber As Long
+Private mCurrentBarNumber           As Long
 
-Private mStudies As studies
+Private mStudies                    As studies
 
-'Private mValueTypes() As String
-
-Private mCurrentBarListeners As Collection
-Private mChangeListeners As Collection
+Private mCurrentBarListeners        As WeakCollection
+Private mChangeListeners            As WeakCollection
 
 
 '================================================================================
@@ -104,8 +104,8 @@ Set mBars = New Collection
 Set mStudies = New studies
 mStudies.defaultValueName = "value"
 
-Set mCurrentBarListeners = New Collection
-Set mChangeListeners = New Collection
+Set mCurrentBarListeners = New WeakCollection
+Set mChangeListeners = New WeakCollection
 
 mBarLength = 1
 
@@ -129,8 +129,8 @@ Private Function IStudy_addStudy( _
 Dim lTask As AddStudyTask
 
 Set lTask = New AddStudyTask
-lTask.initialise Me, study, ValueName, useAllUnderlyingValues
-Set IStudy_addStudy = gTaskManager.startTask(lTask, IIf(taskName = "", gGenerateGUIDString, taskName), taskData)
+lTask.Initialise Me, study, ValueName, useAllUnderlyingValues
+Set IStudy_addStudy = tb.taskManager.startTask(lTask, IIf(taskName = "", gGenerateGUIDString, taskName), taskData)
 End Function
 
 Private Sub IStudy_addStudyValueListener( _
@@ -595,6 +595,12 @@ Public Property Get tickVolume(Optional ByVal ref As Long) As Long
 tickVolume = getTargetBar(ref).tickVolume
 End Property
 
+Friend Property Let tradeBuildAPI( _
+                ByVal value As tradeBuildAPI)
+Set mTradeBuildAPIRef = New WeakReference
+mTradeBuildAPIRef.Initialise value
+End Property
+
 Public Property Get up(Optional ByVal ref As Long) As Boolean
 up = (closeValue(ref) > closeValue(ref - 1))
 End Property
@@ -799,11 +805,13 @@ Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
                 ByVal affectedObject As Bar)
 Dim listener As CollectionChangeListener
+Dim i As Long
 Dim Change As CollectionChangeEvent
 Set Change.source = Me
 Change.changeType = changeType
 Set Change.affectedObject = affectedObject
-For Each listener In mChangeListeners
+For i = 1 To mChangeListeners.Count
+    Set listener = mChangeListeners(i)
     listener.Change Change
 Next
 End Sub
@@ -812,10 +820,12 @@ Private Sub fireCurrentBarEvent( _
                 ByVal theBar As Bar, _
                 ByVal eventType As BarEventType)
 Dim listener As CurrentBarListener
+Dim i As Long
 Dim ev As CurrentBarEvent
 Set ev.source = Me
 Set ev.currentBar = theBar
-For Each listener In mCurrentBarListeners
+For i = 1 To mCurrentBarListeners.Count
+    Set listener = mCurrentBarListeners(i)
     Select Case eventType
     Case CloseChanged
         listener.CloseChanged ev
@@ -852,6 +862,10 @@ Else
     refToBarNumber = mCurrentBarNumber + ref
 End If
 
+End Function
+
+Private Function tb() As tradeBuildAPI
+Set tb = mTradeBuildAPIRef.target
 End Function
 
 
