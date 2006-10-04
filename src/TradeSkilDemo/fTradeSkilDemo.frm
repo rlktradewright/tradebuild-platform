@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{E3092883-F27E-496D-B10B-D59C0AD496C0}#2.0#0"; "TradeBuildUI.ocx"
+Object = "{41BEA792-C104-45F5-96C2-0BF81D749359}#1.0#0"; "TradeBuildUI.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeSkil Demo Edition"
@@ -270,8 +270,10 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(0)   =   "&1. Configuration"
       TabPicture(0)   =   "fTradeSkilDemo.frx":0000
       Tab(0).ControlEnabled=   0   'False
-      Tab(0).Control(0)=   "Frame1"
-      Tab(0).Control(1)=   "ConfigureButton"
+      Tab(0).Control(0)=   "ConfigureButton"
+      Tab(0).Control(0).Enabled=   0   'False
+      Tab(0).Control(1)=   "Frame1"
+      Tab(0).Control(1).Enabled=   0   'False
       Tab(0).ControlCount=   2
       TabCaption(1)   =   "&2. Tickers"
       TabPicture(1)   =   "fTradeSkilDemo.frx":001C
@@ -300,20 +302,32 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(4)   =   "&5. Replay tickfiles"
       TabPicture(4)   =   "fTradeSkilDemo.frx":0070
       Tab(4).ControlEnabled=   0   'False
-      Tab(4).Control(0)=   "ReplaySpeedCombo"
-      Tab(4).Control(1)=   "TickfileList"
+      Tab(4).Control(0)=   "Label19"
+      Tab(4).Control(0).Enabled=   0   'False
+      Tab(4).Control(1)=   "Label20"
       Tab(4).Control(1).Enabled=   0   'False
-      Tab(4).Control(2)=   "StopReplayButton"
-      Tab(4).Control(3)=   "PauseReplayButton"
-      Tab(4).Control(4)=   "ClearTickfileListButton"
-      Tab(4).Control(5)=   "SelectTickfilesButton"
+      Tab(4).Control(2)=   "ReplayProgressLabel"
+      Tab(4).Control(2).Enabled=   0   'False
+      Tab(4).Control(3)=   "ReplayContractLabel"
+      Tab(4).Control(3).Enabled=   0   'False
+      Tab(4).Control(4)=   "ReplayProgressBar"
+      Tab(4).Control(4).Enabled=   0   'False
+      Tab(4).Control(5)=   "SkipReplayButton"
+      Tab(4).Control(5).Enabled=   0   'False
       Tab(4).Control(6)=   "PlayTickFileButton"
-      Tab(4).Control(7)=   "SkipReplayButton"
-      Tab(4).Control(8)=   "ReplayProgressBar"
-      Tab(4).Control(9)=   "ReplayContractLabel"
-      Tab(4).Control(10)=   "ReplayProgressLabel"
-      Tab(4).Control(11)=   "Label20"
-      Tab(4).Control(12)=   "Label19"
+      Tab(4).Control(6).Enabled=   0   'False
+      Tab(4).Control(7)=   "SelectTickfilesButton"
+      Tab(4).Control(7).Enabled=   0   'False
+      Tab(4).Control(8)=   "ClearTickfileListButton"
+      Tab(4).Control(8).Enabled=   0   'False
+      Tab(4).Control(9)=   "PauseReplayButton"
+      Tab(4).Control(9).Enabled=   0   'False
+      Tab(4).Control(10)=   "StopReplayButton"
+      Tab(4).Control(10).Enabled=   0   'False
+      Tab(4).Control(11)=   "TickfileList"
+      Tab(4).Control(11).Enabled=   0   'False
+      Tab(4).Control(12)=   "ReplaySpeedCombo"
+      Tab(4).Control(12).Enabled=   0   'False
       Tab(4).ControlCount=   13
       Begin TradeBuildUI.ExecutionsSummary ExecutionsSummary1 
          Height          =   3855
@@ -1143,6 +1157,13 @@ Implements InfoListener
 ' Constants
 '================================================================================
 
+Private Const TabIndexConfiguration As Long = 0
+Private Const TabIndexTickers As Long = 1
+Private Const TabIndexOrders As Long = 2
+Private Const TabIndexExecutions As Long = 3
+Private Const TabIndexReplayTickfiles As Long = 0
+
+
 Private Const Timeframe1min As String = "1 min"
 Private Const Timeframe2min As String = "2 min"
 Private Const Timeframe5min As String = "5 min"
@@ -1284,7 +1305,7 @@ If Not mTradeBuildAPI Is Nothing Then
     For Each lTicker In mTickers
         lTicker.StopTicker
     Next
-    mTradeBuildAPI.RemoveListener mListenerKey
+    If mListenerKey <> "" Then mTradeBuildAPI.RemoveListener mListenerKey
     Set mTradeBuildAPI = Nothing
 End If
 
@@ -1465,6 +1486,30 @@ End Sub
 
 Private Sub LocalSymbolText_Change()
 checkOkToStartTicker
+End Sub
+
+Private Sub MainSSTAB_Click(PreviousTab As Integer)
+If MainSSTAB.Tab = TabIndexTickers Then
+    LocalSymbolText.SetFocus
+ElseIf MainSSTAB.Tab = TabIndexConfiguration Then
+    RealtimeDataCombo.SetFocus
+ElseIf MainSSTAB.Tab = TabIndexOrders Then
+    If OrderButton.Enabled Then
+        OrderButton.SetFocus
+    ElseIf ModifyOrderButton.Enabled Then
+        ModifyOrderButton.SetFocus
+    ElseIf CancelOrderButton.Enabled Then
+        CancelOrderButton.SetFocus
+    End If
+ElseIf MainSSTAB.Tab = TabIndexReplayTickfiles Then
+    If mTickfileManager Is Nothing Then
+        SelectTickfilesButton.SetFocus
+    ElseIf PlayTickFileButton.Enabled Then
+        PlayTickFileButton.SetFocus
+    ElseIf StopReplayButton.Enabled Then
+        StopReplayButton.SetFocus
+    End If
+End If
 End Sub
 
 Private Sub MarketDepthButton_Click()
@@ -2000,7 +2045,7 @@ Case ApiErrorCodes.ApiErrServiceProviderError
                         ": " & spError.message
 
 Case ApiErrorCodes.ApiErrFatalError
-    handleFatalError ev.errorCode, ev.errorMsg, "TradeBuild"
+    handleFatalError ev.errorCode, ev.errorMsg, "mTradeBuildAPI_errorMessage"
 Case Else
     logMessage "Error " & ev.errorCode & ": " & ev.errorMsg
 End Select
@@ -2092,11 +2137,12 @@ Private Sub handleFatalError(ByVal errNum As Long, _
 Set mTicker = Nothing
 removeServiceProviders
 
-If mListenerKey <> "" Then mTradeBuildAPI.RemoveListener mTradeBuildAPI
+If mListenerKey <> "" Then mTradeBuildAPI.RemoveListener mListenerKey
 
 Set mTradeBuildAPI = Nothing
 
-MsgBox "A fatal error has occurred. The program will close" & vbCrLf & _
+MsgBox "A fatal error has occurred. The program will close when you click the OK button." & vbCrLf & _
+        "Please note the error message below and email it to support@tradewright.com" & vbCrLf & _
         "Error number: " & errNum & vbCrLf & _
         "Description: " & Description & vbCrLf & _
         "Source: fTradeSkilDemo::" & source, _

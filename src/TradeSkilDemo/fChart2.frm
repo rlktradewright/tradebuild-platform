@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{E3092883-F27E-496D-B10B-D59C0AD496C0}#2.0#0"; "TradeBuildUI.ocx"
+Object = "{41BEA792-C104-45F5-96C2-0BF81D749359}#1.0#0"; "TradeBuildUI.ocx"
 Begin VB.Form fChart2 
    ClientHeight    =   6780
    ClientLeft      =   60
@@ -11,13 +11,13 @@ Begin VB.Form fChart2
    ScaleWidth      =   10530
    StartUpPosition =   3  'Windows Default
    Begin TradeBuildUI.TradeBuildChart TradeBuildChart1 
-      Height          =   5775
-      Left            =   120
+      Height          =   5175
+      Left            =   360
       TabIndex        =   1
-      Top             =   720
-      Width           =   9855
-      _ExtentX        =   17383
-      _ExtentY        =   10186
+      Top             =   840
+      Width           =   9375
+      _ExtentX        =   16536
+      _ExtentY        =   9128
    End
    Begin MSComctlLib.Toolbar Toolbar1 
       Align           =   1  'Align Top
@@ -48,6 +48,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 Option Explicit
 
 '================================================================================
