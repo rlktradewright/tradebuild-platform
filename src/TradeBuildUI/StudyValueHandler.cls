@@ -53,6 +53,7 @@ Implements TradeBuild.StudyValueListener
 '================================================================================
 
 Private mChart              As TradeBuildUI.TradeBuildChart
+Private mStudy              As TradeBuild.study
 
 Private mCurrentBarTime     As Date
 Private mCurrentDataPoint   As ChartSkil.DataPoint
@@ -126,6 +127,10 @@ Friend Property Let region(ByVal value As ChartSkil.ChartRegion)
 Set mRegion = value
 End Property
 
+Friend Property Let study(ByVal value As TradeBuild.study)
+Set mStudy = value
+End Property
+
 Friend Property Let updatePerTick(ByVal value As Boolean)
 mUpdatePerTick = value
 End Property
@@ -155,6 +160,8 @@ If Not IsEmpty(mLatestValue) Then mCurrentDataPoint.dataValue = mLatestValue
 End Sub
 
 Friend Sub finish()
+mStudy.removeStudyValueListener Me
+Set mStudy = Nothing
 Set mChart = Nothing
 End Sub
 

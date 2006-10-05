@@ -650,7 +650,10 @@ Set mStudyPickerForm = New fStudyPicker
 mStudyPickerForm.ticker = mTicker
 mStudyPickerForm.chart = Me
 mStudyPickerForm.studyConfigurations = mStudyConfigurations
-mStudyPickerForm.Show vbModeless, UserControl.Parent
+' unfortunately the following line prevents the form being shown
+' when running in the IDE
+'mStudyPickerForm.Show vbModeless, UserControl.Parent
+mStudyPickerForm.Show vbModeless
 End Sub
 
 Friend Sub updatePreviousBar()
@@ -804,6 +807,7 @@ Dim regionName As String
 
 Set lStudyValueHandler = New StudyValueHandler
 lStudyValueHandler.chart = Me
+lStudyValueHandler.study = study
 lStudyValueHandler.updatePerTick = mUpdatePerTick
 
 lStudyValueHandler.multipleValuesPerBar = studyValueConfig.multipleValuesPerBar
