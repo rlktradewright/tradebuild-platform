@@ -67,6 +67,7 @@ library TradeBuildSP
     interface ITickfileReader;
     interface ITickfileServiceProvider;
     interface ITickfileWriter;
+	interface IValueReplayTask;
 
 // Enums *************************************************************************
 
@@ -2375,7 +2376,7 @@ interface IOrderPlex : IDispatch {
         HRESULT addStudy(
 			[in] IStudy* study, 
 			[in] BSTR valueName,
-			[in] VARIANT_BOOL useAllUnderlyingValues,
+			[in] long numUnderlyingValuesToUse,
 			[in, optional] BSTR taskName, 
 			[in, optional] VARIANT taskData,
 			[out, retval] ITaskCompletion**);
@@ -2527,7 +2528,7 @@ interface IOrderPlex : IDispatch {
 			[in] IStudy* targetStudy, 			
 			[in] IStudy* sourceStudy, 
 			[in] BSTR valueName,
-			[in] VARIANT_BOOL useAllUnderlyingValues, 
+			[in] long numUnderlyingValuesToUse, 
 			[in, optional] BSTR taskName,
 			[in, optional] VARIANT taskData,
 			[out, retval] ITaskCompletion** );
@@ -2606,7 +2607,7 @@ interface IOrderPlex : IDispatch {
 		HRESULT replayValues(
 			[in] IStudy* targetStudy, 			
 			[in] IStudy* sourceStudy, 
-			[in] VARIANT_BOOL useAllUnderlyingValues, 
+			[in] long numUnderlyingValuesToUse, 
 			[in, optional] BSTR taskName,
 			[in, optional] VARIANT taskData,
 			[out, retval] ITaskCompletion** );
@@ -2616,15 +2617,15 @@ interface IOrderPlex : IDispatch {
 			[in] IStudy* sourceStudy, 
 			[in] BSTR requiredValueName,
 			[in] IStudyValueResolver* resolver,
-			[in] VARIANT_BOOL useAllUnderlyingValues, 
+			[in] long numUnderlyingValuesToUse, 
 			[in, optional] BSTR taskName,
 			[in, optional] VARIANT data,
 			[out, retval] ITaskCompletion** );
 
 		HRESULT updateValue(
 			[in] VARIANT value, 
-			[in] long barNumber, 
-			[in] DATE Timestamp,
+			[in, optional] long barNumber, 
+			[in, optional] DATE Timestamp,
 			[in, optional] long ref);
 
     };
@@ -3068,5 +3069,26 @@ interface IOrderPlex : IDispatch {
                         [in] long size);
 
     };
+
+    [
+      uuid(681d0fed-64cd-476c-b11d-7bd21c950de2),
+      version(1.0),
+      nonextensible,
+      helpstring("TradeBuild's task objects for replaying study and cache values implement this interface")
+    ]
+    interface IValueReplayTask : IUnknown {
+
+		// Properties ==================================================
+
+        [propget]
+        HRESULT SourceStudy([out, retval] IStudy** );
+
+        [propget]
+        HRESULT TargetStudy([out, retval] IStudy** );
+
+        [propget]
+        HRESULT ValueName([out, retval] BSTR* );
+
+	};
 
 };
