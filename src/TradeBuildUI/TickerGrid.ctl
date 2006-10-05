@@ -524,14 +524,18 @@ End Property
 '================================================================================
 
 Public Sub finish()
+On Error GoTo Err
 StopAllTickers
 Set mTickers = Nothing
 ReDim mTickerTable(TickerTableEntriesInitial - 1) As TickerTableEntry
+Exit Sub
+Err:
+'ignore any errors
 End Sub
 
 Public Sub monitorWorkspace( _
                 ByVal pWorkspace As TradeBuild.WorkSpace)
-If Not mTickers Is Nothing Then err.Raise ErrorCodes.ErrIllegalStateException, _
+If Not mTickers Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                             "TradeBuildUI.TickerGrid::monitorWorkspace", _
                                             "A workspace is already being monitored"
 Set mTickers = pWorkspace.Tickers

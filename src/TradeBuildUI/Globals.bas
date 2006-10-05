@@ -148,6 +148,10 @@ Else
 End If
 End Function
 
+Public Sub notImplemented()
+MsgBox "This facility has not yet been implemented", , "Sorry"
+End Sub
+
 Public Function startTask( _
                 ByVal target As Task, _
                 Optional ByVal name As String, _

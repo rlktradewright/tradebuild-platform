@@ -232,7 +232,7 @@ End Property
 Public Property Let numberOfRows(ByVal value As Long)
 
 If value < 5 Then
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "TradeBuildUI.DOMDisplay::numberOfRows()", _
                 "Value must be >= 5"
 End If
@@ -282,9 +282,13 @@ End Property
 '================================================================================
 
 Public Sub finish()
+On Error GoTo Err
 mTicker.removeProcessedMarketDepthListener Me
 mTicker.CancelMarketDepth
 Set mTicker = Nothing
+Exit Sub
+Err:
+'ignore any errors
 End Sub
 
 '================================================================================

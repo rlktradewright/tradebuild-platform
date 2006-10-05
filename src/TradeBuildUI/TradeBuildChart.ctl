@@ -235,6 +235,10 @@ Private Sub mBars_HistoricBarAdded(ByVal theBar As TradeBuild.Bar)
 processHistoricBar theBar
 End Sub
 
+Private Sub mBars_BarReplayed(ByVal theBar As TradeBuild.Bar)
+processHistoricBar theBar
+End Sub
+
 '================================================================================
 ' mTimeframe Event Handlers
 '================================================================================
@@ -512,6 +516,8 @@ End Sub
 Public Sub finish()
 Dim lStudyValueHandler As StudyValueHandler
 
+On Error GoTo Err
+
 mChartControl.clearChart
 
 For Each lStudyValueHandler In mStudyValueHandlers
@@ -523,7 +529,10 @@ Set mTimeframes = Nothing
 Set mTimeframe = Nothing
 Set mTicker = Nothing
 Set mBars = Nothing
+Exit Sub
 
+Err:
+'ignore any errors
 End Sub
 
 Friend Function getPeriod(ByVal pTimestamp As Date) As ChartSkil.Period
@@ -569,11 +578,6 @@ Case SpecialValues.SVPreviousClosePrice
 End Select
 End Function
 
-Friend Sub replaybar( _
-                ByVal Index As Long)
-processHistoricBar mBars(Index)
-End Sub
-
 Public Sub scrollToTime(ByVal pTime As Date)
 Dim periodNumber As Long
 periodNumber = mPeriods(mContract.BarStartTime(pTime, mPeriodLengthMinutes)).periodNumber
@@ -590,10 +594,10 @@ If Not mContract Is Nothing Then
     If Not mContract.specifier.Equals(mTicker.Contract.specifier) Then mInitialised = False
 End If
 Set mContract = mTicker.Contract
-mPriceRegion.YScaleQuantum = mContract.TickSize
+mPriceRegion.YScaleQuantum = mContract.ticksize
 
-If mMinimumTicksHeight * mContract.TickSize <> 0 Then
-    mPriceRegion.minimumHeight = mMinimumTicksHeight * mContract.TickSize
+If mMinimumTicksHeight * mContract.ticksize <> 0 Then
+    mPriceRegion.minimumHeight = mMinimumTicksHeight * mContract.ticksize
 End If
 
 mPriceRegion.setTitle mContract.specifier.localSymbol & _
@@ -624,18 +628,10 @@ If mTimeframe Is Nothing Then
     Set mBars = mTimeframe.TradeBars
 Else
     ' replay the relevant number of bars
-    Dim replayTask As New TimeframeBarReplayTask
-    Dim minIndex As Long
     Dim lTaskCompletion As TradeBuild.TaskCompletion
     
+    Set lTaskCompletion = mTimeframe.replayBars(BarTypeTrade, mInitialNumberOfBars, , TaskTypeReplayBars)
     Set mBars = mTimeframe.TradeBars
-    If mBars.count >= mInitialNumberOfBars Then
-        minIndex = mBars.count - mInitialNumberOfBars + 1
-    Else
-        minIndex = 1
-    End If
-    replayTask.initialise Me, minIndex, mBars.count
-    Set lTaskCompletion = startTask(replayTask, "", TaskTypeReplayBars)
     lTaskCompletion.addTaskCompletionListener Me
     mOutstandingTasks = mOutstandingTasks + 1
 End If
@@ -654,7 +650,7 @@ Set mStudyPickerForm = New fStudyPicker
 mStudyPickerForm.ticker = mTicker
 mStudyPickerForm.chart = Me
 mStudyPickerForm.studyConfigurations = mStudyConfigurations
-mStudyPickerForm.Show vbModeless
+mStudyPickerForm.Show vbModeless, UserControl.Parent
 End Sub
 
 Friend Sub updatePreviousBar()
@@ -918,7 +914,7 @@ Private Function startStudy( _
                 ByVal studyId As String, _
                 ByRef valueName As String) As Boolean
 Dim lTaskCompletion As TradeBuild.TaskCompletion
-Set lTaskCompletion = mTicker.startStudy(studyId, True, , TaskTypeStartStudy)
+Set lTaskCompletion = mTicker.startStudy(studyId, mBarSeries.count, , TaskTypeStartStudy)
 
 If lTaskCompletion Is Nothing Then Exit Function
 

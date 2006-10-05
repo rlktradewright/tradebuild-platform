@@ -807,13 +807,8 @@ setupActionCombo BracketIndices.BracketTargetOrder
 
 End Sub
 
-Private Sub Form_Unload(Cancel As Integer)
-If Not mTicker Is Nothing Then
-    mTicker.removeQuoteListener Me
-    Set mTicker = Nothing
-End If
-clearOrderPlex
-reset
+Private Sub UserControl_Terminate()
+finish
 End Sub
 
 '================================================================================
@@ -1258,6 +1253,18 @@ End Property
 '================================================================================
 ' Methods
 '================================================================================
+
+Public Sub finish()
+On Error GoTo Err
+If Not mTicker Is Nothing Then
+    mTicker.removeQuoteListener Me
+    Set mTicker = Nothing
+End If
+clearOrderPlex
+Exit Sub
+Err:
+'ignore any errors
+End Sub
 
 Public Sub showOrderPlex( _
                 ByVal value As orderPlex, _

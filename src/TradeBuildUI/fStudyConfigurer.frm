@@ -570,6 +570,10 @@ RaiseEvent AddStudyConfiguration(createStudyConfig)
 Unload Me
 End Sub
 
+Private Sub AdvancedButton_Click(index As Integer)
+notImplemented
+End Sub
+
 Private Sub BaseStudiesCombo_Click()
 initialiseInputValueCombo ""
 End Sub
@@ -579,7 +583,7 @@ Unload Me
 End Sub
 
 Private Sub ColorLabel_Click( _
-                Index As Integer)
+                index As Integer)
 Dim simpleColorPicker As New fSimpleColorPicker
 Dim formFrameThickness As Long
 Dim formTitleBarThickness As Long
@@ -591,26 +595,26 @@ simpleColorPicker.Top = Me.Top + _
                         formTitleBarThickness + _
                         ValuesFrame.Top + _
                         ValuesPicture.Top + _
-                        ColorLabel(Index).Top + ColorLabel(Index).Height / 2
+                        ColorLabel(index).Top + ColorLabel(index).Height / 2
 simpleColorPicker.Left = Me.Left + _
                         formFrameThickness + _
                         ValuesFrame.Left + _
                         ValuesPicture.Left + _
-                        ColorLabel(Index).Left + - _
-                        (simpleColorPicker.Width - ColorLabel(Index).Width) / 2
-simpleColorPicker.initialColor = ColorLabel(Index).BackColor
+                        ColorLabel(index).Left + - _
+                        (simpleColorPicker.Width - ColorLabel(index).Width) / 2
+simpleColorPicker.initialColor = ColorLabel(index).backColor
 simpleColorPicker.Show vbModal, Me
-ColorLabel(Index).BackColor = simpleColorPicker.selectedColor
+ColorLabel(index).backColor = simpleColorPicker.selectedColor
 Unload simpleColorPicker
 End Sub
 
 Private Sub DisplayAsCombo_Validate( _
-                Index As Integer, _
+                index As Integer, _
                 Cancel As Boolean)
-If DisplayAsCombo(Index).SelectedItem Is Nothing Then Cancel = True
+If DisplayAsCombo(index).selectedItem Is Nothing Then Cancel = True
 End Sub
 
-Private Sub LineColorLabel_Click(Index As Integer)
+Private Sub LineColorLabel_Click(index As Integer)
 Dim simpleColorPicker As New fSimpleColorPicker
 Dim formFrameThickness As Long
 Dim formTitleBarThickness As Long
@@ -622,30 +626,33 @@ simpleColorPicker.Top = Me.Top + _
                         formTitleBarThickness + _
                         LinesFrame.Top + _
                         LinesPicture.Top + _
-                        LineColorLabel(Index).Top + LineColorLabel(Index).Height / 2
+                        LineColorLabel(index).Top + LineColorLabel(index).Height / 2
 simpleColorPicker.Left = Me.Left + _
                         formFrameThickness + _
                         LinesFrame.Left + _
                         LinesPicture.Left + _
-                        LineColorLabel(Index).Left + - _
-                        (simpleColorPicker.Width - LineColorLabel(Index).Width) / 2
-simpleColorPicker.initialColor = LineColorLabel(Index).BackColor
+                        LineColorLabel(index).Left + - _
+                        (simpleColorPicker.Width - LineColorLabel(index).Width) / 2
+simpleColorPicker.initialColor = LineColorLabel(index).backColor
 simpleColorPicker.Show vbModal, Me
-LineColorLabel(Index).BackColor = simpleColorPicker.selectedColor
+LineColorLabel(index).backColor = simpleColorPicker.selectedColor
 Unload simpleColorPicker
 End Sub
 
 Private Sub SetDefaultButton_Click()
+notImplemented
+Exit Sub
+
 RaiseEvent SetDefault(createStudyConfig)
 End Sub
 
 Private Sub StyleCombo_Validate( _
-                Index As Integer, _
+                index As Integer, _
                 Cancel As Boolean)
-If StyleCombo(Index).SelectedItem Is Nothing Then Cancel = True
+If StyleCombo(index).selectedItem Is Nothing Then Cancel = True
 End Sub
 
-Private Sub ThicknessText_KeyPress(Index As Integer, KeyAscii As Integer)
+Private Sub ThicknessText_KeyPress(index As Integer, KeyAscii As Integer)
 filterNonNumericKeyPress KeyAscii
 End Sub
 
@@ -712,10 +719,10 @@ Set studyConfig = New StudyConfiguration
 studyConfig.studyDefinition = mStudyDefinition
 studyConfig.name = mStudyname
 studyConfig.serviceProviderName = mServiceProviderName
-studyConfig.underlyingStudyId = BaseStudiesCombo.SelectedItem.Tag
-studyConfig.inputValueName = InputValueCombo.SelectedItem.text
+studyConfig.underlyingStudyId = BaseStudiesCombo.selectedItem.Tag
+studyConfig.inputValueName = InputValueCombo.selectedItem.text
 
-If ChartRegionCombo.SelectedItem.text = RegionDefault Then
+If ChartRegionCombo.selectedItem.text = RegionDefault Then
     Select Case mStudyDefinition.defaultRegion
     Case DefaultRegionNone
         regionName = PriceRegionName
@@ -727,14 +734,14 @@ If ChartRegionCombo.SelectedItem.text = RegionDefault Then
         regionName = CustomRegionName
     End Select
 Else
-    regionName = ChartRegionCombo.SelectedItem.text
+    regionName = ChartRegionCombo.selectedItem.text
 End If
 studyConfig.chartRegionName = regionName
 
 Set params = New TradeBuild.parameters
 
 For i = 0 To ParameterNameLabel.UBound
-    params.setParameterValue ParameterNameLabel(i).Caption, ParameterValueText(i).text
+    params.setParameterValue ParameterNameLabel(i).caption, ParameterValueText(i).text
 Next
 
 studyConfig.parameters = params
@@ -742,10 +749,10 @@ studyConfig.parameters = params
 Set studyValueDefs = mStudyDefinition.studyValueDefinitions
 
 For i = 0 To ValueNameLabel.UBound
-    Set studyValueConfig = studyConfig.studyValueConfigurations.add(ValueNameLabel(i).Caption)
+    Set studyValueConfig = studyConfig.studyValueConfigurations.add(ValueNameLabel(i).caption)
     studyValueConfig.includeInChart = (IncludeCheck(i).value = vbChecked)
     studyValueConfig.includeInAutoscale = (AutoscaleCheck(i).value = vbChecked)
-    studyValueConfig.color = ColorLabel(i).BackColor
+    studyValueConfig.color = ColorLabel(i).backColor
     
     Set studyValueDef = studyValueDefs.item(i + 1)
     
@@ -762,7 +769,7 @@ For i = 0 To ValueNameLabel.UBound
         studyValueConfig.chartRegionName = CustomRegionName
     End Select
     
-    Select Case DisplayAsCombo(i).SelectedItem.text
+    Select Case DisplayAsCombo(i).selectedItem.text
     Case DisplayModeLine
         studyValueConfig.displayMode = DisplayAsLines
     Case DisplayModePoint
@@ -775,7 +782,7 @@ For i = 0 To ValueNameLabel.UBound
     
     studyValueConfig.lineThickness = ThicknessText(i).text
     
-    Select Case StyleCombo(i).SelectedItem.text
+    Select Case StyleCombo(i).selectedItem.text
     Case LineStyleSolid
         studyValueConfig.lineStyle = LineSolid
     Case LineStyleDash
@@ -793,7 +800,7 @@ For i = 0 To 4
     If LineText(i).text <> "" Then
         Set studyHorizRule = studyConfig.studyHorizontalRules.add
         studyHorizRule.y = LineText(i).text
-        studyHorizRule.color = LineColorLabel(i).BackColor
+        studyHorizRule.color = LineColorLabel(i).backColor
     End If
 Next
 
@@ -815,10 +822,10 @@ Dim valueDef As TradeBuild.StudyValueDefinition
 Dim item As ComboItem
 Dim i As Long
 
-Set item = BaseStudiesCombo.SelectedItem
+Set item = BaseStudiesCombo.selectedItem
 Set studyValueDefs = mConfiguredStudies.item(item.key).studyDefinition.studyValueDefinitions
 
-InputValueCombo.ComboItems.Clear
+InputValueCombo.ComboItems.clear
 
 ' There seems to be a bug in VB6: this doesn't work when the study definition has
 ' been created by a service provider
@@ -855,8 +862,8 @@ nextTabIndex = mNextTabIndex
 mNextTabIndex = mNextTabIndex + 1
 End Function
 
-Private Sub ParameterValueUpDown_Change(Index As Integer)
-Debug.Print ParameterValueUpDown(Index).value
+Private Sub ParameterValueUpDown_Change(index As Integer)
+Debug.Print ParameterValueUpDown(index).value
 End Sub
 
 Private Sub processConfiguredStudies( _
@@ -923,7 +930,7 @@ Else
                                             mServiceProviderName)
 End If
 
-Me.Caption = mStudyDefinition.name
+Me.caption = mStudyDefinition.name
 StudyDescriptionText.text = mStudyDefinition.Description
 
 Set studyParameterDefinitions = mStudyDefinition.studyParameterDefinitions
@@ -949,7 +956,7 @@ For i = 1 To studyParameterDefinitions.count
         ParameterValueUpDown(i - 1).TabIndex = nextTabIndex
     End If
     
-    ParameterNameLabel(i - 1).Caption = studyParam.name
+    ParameterNameLabel(i - 1).caption = studyParam.name
     ParameterValueText(i - 1).text = defaultParams.getParameterValue(studyParam.name)
     ParameterValueText(i - 1).ToolTipText = studyParam.Description
     
@@ -1039,15 +1046,21 @@ For i = 1 To studyValueDefinitions.count
         StyleCombo(i - 1).TabIndex = nextTabIndex
         initialiseStyleCombo StyleCombo(i - 1)
     
+        Load AdvancedButton(i - 1)
+        AdvancedButton(i - 1).Top = AdvancedButton(i - 2).Top + 360
+        AdvancedButton(i - 1).Left = AdvancedButton(i - 2).Left
+        AdvancedButton(i - 1).Visible = True
+        AdvancedButton(i - 1).TabIndex = nextTabIndex
+        
     End If
     
-    ValueNameLabel(i - 1).Caption = studyValue.name
+    ValueNameLabel(i - 1).caption = studyValue.name
     ValueNameLabel(i - 1).ToolTipText = studyValue.Description
 
     If Not studyValueConfig Is Nothing Then
         IncludeCheck(i - 1) = vbChecked
         AutoscaleCheck(i - 1) = IIf(studyValueConfig.includeInAutoscale, vbChecked, vbUnchecked)
-        ColorLabel(i - 1).BackColor = studyValueConfig.color
+        ColorLabel(i - 1).backColor = studyValueConfig.color
         
         Select Case studyValueConfig.displayMode
         Case DisplayAsLines

@@ -191,20 +191,26 @@ End If
 
 End Sub
 
+Private Sub ChangeButton_Click()
+notImplemented
+End Sub
+
 Private Sub ChartStudiesList_Click()
 Dim studyDef As studyDefinition
 Dim studyConfig As StudyConfiguration
 
 If ChartStudiesList.ListIndex <> -1 Then
-    RemoveButton.Enabled = True
-    ChangeButton.Enabled = True
-    AddButton.Enabled = False
-    ConfigureButton.Enabled = False
     Set studyConfig = mStudyConfigurations.item(ChartStudiesList.List(ChartStudiesList.ListIndex))
     Set studyDef = mTicker.studyDefinition( _
                             studyConfig.name, _
                             studyConfig.serviceProviderName)
-    DescriptionText.text = studyDef.Description
+    If Not studyDef Is Nothing Then
+        DescriptionText.text = studyDef.Description
+        RemoveButton.Enabled = True
+        ChangeButton.Enabled = True
+        AddButton.Enabled = False
+        ConfigureButton.Enabled = False
+    End If
 Else
     AddButton.Enabled = False
     ConfigureButton.Enabled = False
@@ -218,6 +224,10 @@ End Sub
 
 Private Sub ConfigureButton_Click()
 showConfigForm
+End Sub
+
+Private Sub RemoveButton_Click()
+notImplemented
 End Sub
 
 Private Sub StudyList_Click()
@@ -292,7 +302,7 @@ Dim studyConfig As StudyConfiguration
 
 Set mStudyConfigurations = value
 For Each studyConfig In mStudyConfigurations
-    ChartStudiesList.AddItem studyConfig.instanceName
+    ChartStudiesList.AddItem studyConfig.instanceFullyQualifiedName
 Next
 End Property
 

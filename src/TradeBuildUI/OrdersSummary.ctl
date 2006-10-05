@@ -620,6 +620,7 @@ Dim i As Long
 Dim lWorkspace As TradeBuild.WorkSpace
 Dim lTicker As TradeBuild.ticker
 
+On Error GoTo Err
 For i = 0 To mMaxOrderPlexGridMappingTableIndex
     mOrderPlexGridMappingTable(i).op.removeChangeListener Me
     mOrderPlexGridMappingTable(i).op.removeProfitListener Me
@@ -637,7 +638,9 @@ For i = mMonitoredWorkspaces.count To 1 Step -1
     mMonitoredWorkspaces.remove i
 Next
 
-
+Exit Sub
+Err:
+'ignore any errors
 End Sub
 
 Public Sub monitorWorkspace( _

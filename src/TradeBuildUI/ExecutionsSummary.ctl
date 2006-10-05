@@ -177,10 +177,10 @@ End Sub
 '================================================================================
 
 Private Sub ExecutionsList_ColumnClick(ByVal columnHeader As columnHeader)
-If ExecutionsList.SortKey = columnHeader.Index - 1 Then
+If ExecutionsList.SortKey = columnHeader.index - 1 Then
     ExecutionsList.SortOrder = 1 - ExecutionsList.SortOrder
 Else
-    ExecutionsList.SortKey = columnHeader.Index - 1
+    ExecutionsList.SortKey = columnHeader.index - 1
     ExecutionsList.SortOrder = lvwAscending
 End If
 End Sub
@@ -205,11 +205,15 @@ Public Sub finish()
 Dim i As Long
 Dim lWorkspace As TradeBuild.WorkSpace
 
+On Error GoTo Err
 For i = mMonitoredWorkspaces.count To 1 Step -1
     Set lWorkspace = mMonitoredWorkspaces(i)
     lWorkspace.Executions.removeCollectionChangeListener Me
     mMonitoredWorkspaces.remove i
 Next
+Exit Sub
+Err:
+'ignore any errors
 End Sub
 
 Public Sub monitorWorkspace( _
