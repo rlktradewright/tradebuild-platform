@@ -52,9 +52,15 @@ Option Explicit
 
 Private mStudy As TradeBuildSP.IStudy
 
+Private mStudyValueListeners As Collection
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
+
+Private Sub Class_Initialize()
+Set mStudyValueListeners = New Collection
+End Sub
 
 '================================================================================
 ' XXXX Interface Members
@@ -110,6 +116,7 @@ Public Sub addStudyValueListener( _
 Dim listenerProxy As StudyValueListenerProxy
 Set listenerProxy = New StudyValueListenerProxy
 listenerProxy.studyValueListener = listener
+mStudyValueListeners.add listenerProxy
 mStudy.addStudyValueListener listenerProxy, valueNames
 End Sub
 
@@ -121,9 +128,22 @@ Public Function getStudyValue( _
 Dim sv As TradeBuildSP.StudyValue
 sv = mStudy.getStudyValue(ValueName, ref, parameters)
 getStudyValue.barNumber = sv.barNumber
-getStudyValue.Timestamp = sv.Timestamp
+getStudyValue.timestamp = sv.timestamp
 getStudyValue.value = sv.value
 End Function
+
+Public Sub removeStudyValueListener( _
+                ByVal listener As TradeBuild.studyValueListener)
+Dim i As Long
+Dim lListener As StudyValueListenerProxy
+For i = mStudyValueListeners.Count To 1 Step -1
+    Set lListener = mStudyValueListeners(i)
+    If lListener.studyValueListener Is listener Then
+        mStudyValueListeners.remove i
+    End If
+Next
+mStudy.removeStudyValueListener lListener
+End Sub
 
 '================================================================================
 ' Helper Functions

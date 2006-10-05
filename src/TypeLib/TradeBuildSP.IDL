@@ -2402,6 +2402,9 @@ interface IOrderPlex : IDispatch {
 			[in, optional, defaultvalue("")] BSTR valueName,
 			[out, retval] long* );
 
+		HRESULT removeStudyValueListener(
+			[in] IStudyValueListener* listener);
+			 
     };
 
     [

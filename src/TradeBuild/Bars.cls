@@ -222,6 +222,11 @@ Private Property Get IStudy_parameters() As TradeBuildSP.IParameters
 
 End Property
 
+Private Sub IStudy_removeStudyValueListener( _
+    ByVal listener As TradeBuildSP.IStudyValueListener)
+
+End Sub
+
 Private Property Get IStudy_studyDefinition() As TradeBuildSP.IStudyDefinition
 Set IStudy_studyDefinition = studyDefinition
 End Property

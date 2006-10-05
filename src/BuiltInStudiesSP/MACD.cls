@@ -238,7 +238,7 @@ End If
 
 evOut.barnumber = ev.barnumber
 Set evOut.Source = Me
-evOut.timestamp = ev.timestamp
+evOut.Timestamp = ev.Timestamp
 evOut.value = ev.value
 evOut.ValueName = ""
 
@@ -248,11 +248,11 @@ If isNewBar Then
     
     ' on the first tick of each bar, determine the two balance points, using
     ' the previous values as starting point where they are non-empty
-    If determineLowerBalancePoint(IIf(IsEmpty(mLowerBalance), ev.value, mLowerBalance), ev.barnumber, ev.timestamp) Then
-        mLowerBalanceCache.addValue mLowerBalance, ev.barnumber, ev.timestamp
+    If determineLowerBalancePoint(IIf(IsEmpty(mLowerBalance), ev.value, mLowerBalance), ev.barnumber, ev.Timestamp) Then
+        mLowerBalanceCache.addValue mLowerBalance, ev.barnumber, ev.Timestamp
     End If
-    If determineUpperBalancePoint(IIf(IsEmpty(mUpperBalance), ev.value, mUpperBalance), ev.barnumber, ev.timestamp) Then
-        mUpperBalanceCache.addValue mUpperBalance, ev.barnumber, ev.timestamp
+    If determineUpperBalancePoint(IIf(IsEmpty(mUpperBalance), ev.value, mUpperBalance), ev.barnumber, ev.Timestamp) Then
+        mUpperBalanceCache.addValue mUpperBalance, ev.barnumber, ev.Timestamp
     End If
 End If
 
@@ -277,10 +277,10 @@ Else
 End If
 
 If isNewBar Then
-    mMACDCache.addValue mMACD, ev.barnumber, ev.timestamp
-    mMACDHistCache.addValue mMACDHist, ev.barnumber, ev.timestamp
-    mMACDSignalCache.addValue mMACDSignal, ev.barnumber, ev.timestamp
-    mStrengthCache.addValue mStrength, ev.barnumber, ev.timestamp
+    mMACDCache.addValue mMACD, ev.barnumber, ev.Timestamp
+    mMACDHistCache.addValue mMACDHist, ev.barnumber, ev.Timestamp
+    mMACDSignalCache.addValue mMACDSignal, ev.barnumber, ev.Timestamp
+    mStrengthCache.addValue mStrength, ev.barnumber, ev.Timestamp
             
     If mMACDCache.Count < 3 Then
     ElseIf IsEmpty(strength(-1)) Or IsEmpty(strength(-2)) Then
@@ -292,13 +292,13 @@ If isNewBar Then
             mStrengthCount = 1
         End If
     End If
-    mStrengthCountCache.updateValue mStrengthCount, , , -1
-    mStrengthCountCache.addValue Empty, ev.barnumber, ev.timestamp
+    If mStrengthCountCache.Count > 1 Then mStrengthCountCache.updateValue mStrengthCount, , , -1
+    mStrengthCountCache.addValue Empty, ev.barnumber, ev.Timestamp
 Else
-    mMACDCache.updateValue mMACD, ev.barnumber, ev.timestamp
-    mMACDHistCache.updateValue mMACDHist, ev.barnumber, ev.timestamp
-    mMACDSignalCache.updateValue mMACDSignal, ev.barnumber, ev.timestamp
-    mStrengthCache.updateValue mStrength, ev.barnumber, ev.timestamp
+    mMACDCache.updateValue mMACD, ev.barnumber, ev.Timestamp
+    mMACDHistCache.updateValue mMACDHist, ev.barnumber, ev.Timestamp
+    mMACDSignalCache.updateValue mMACDSignal, ev.barnumber, ev.Timestamp
+    mStrengthCache.updateValue mStrength, ev.barnumber, ev.Timestamp
 End If
 
 notifyValue mMACD, MACDValueMACD, evOut
@@ -351,6 +351,11 @@ End Function
 Private Property Get IStudy_parameters() As IParameters
 Set IStudy_parameters = mParams.Clone
 End Property
+
+Private Sub IStudy_removeStudyValueListener( _
+                ByVal listener As TradeBuildSP.IStudyValueListener)
+mListeners.Remove listener
+End Sub
 
 Private Property Get IStudy_studyDefinition() As TradeBuildSP.IStudyDefinition
 Set IStudy_studyDefinition = GMACD.studyDefinition
@@ -497,7 +502,7 @@ End Sub
 Private Function determineBalancePoints( _
                 ByVal startingPrice As Double, _
                 ByVal barnumber As Long, _
-                ByVal timestamp As Date) As Boolean
+                ByVal Timestamp As Date) As Boolean
 Dim trialPrice As Double
 Dim upperBalanceFound As Boolean
 Dim lowerBalanceFound As Boolean
@@ -511,7 +516,7 @@ If IsEmpty(MACD.value) Or _
 
 ev.barnumber = barnumber
 Set ev.Source = Me
-ev.timestamp = timestamp
+ev.Timestamp = Timestamp
 
 determineBalancePoints = True
 
@@ -583,14 +588,14 @@ End Function
 Private Function determineLowerBalancePoint( _
                 ByVal startingPrice As Double, _
                 ByVal barnumber As Long, _
-                ByVal timestamp As Date) As Boolean
+                ByVal Timestamp As Date) As Boolean
 Dim trialPrice As Double
 Dim ev As TradeBuildSP.StudyValueEvent
 
 If mMACDCache.Count = 0 Then Exit Function
 ev.barnumber = barnumber
 Set ev.Source = Me
-ev.timestamp = timestamp
+ev.Timestamp = Timestamp
 
 trialPrice = startingPrice
 ev.value = trialPrice
@@ -629,7 +634,7 @@ End Function
 Private Function determineUpperBalancePoint( _
                 ByVal startingPrice As Double, _
                 ByVal barnumber As Long, _
-                ByVal timestamp As Date) As Boolean
+                ByVal Timestamp As Date) As Boolean
 Dim trialPrice As Double
 Dim ev As TradeBuildSP.StudyValueEvent
 
@@ -637,7 +642,7 @@ If mMACDCache.Count = 0 Then Exit Function
 
 ev.barnumber = barnumber
 Set ev.Source = Me
-ev.timestamp = timestamp
+ev.Timestamp = Timestamp
 
 trialPrice = startingPrice
 ev.value = trialPrice

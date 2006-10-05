@@ -267,6 +267,11 @@ Private Property Get IStudy_parameters() As IParameters
 Set IStudy_parameters = mParams.Clone
 End Property
 
+Private Sub IStudy_removeStudyValueListener( _
+                ByVal listener As TradeBuildSP.IStudyValueListener)
+mListeners.Remove listener
+End Sub
+
 Private Property Get IStudy_studyDefinition() As TradeBuildSP.IStudyDefinition
 Set IStudy_studyDefinition = GDonchianChannels.studyDefinition
 End Property

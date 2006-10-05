@@ -64,9 +64,9 @@ Private mStudyValueListener As TradeBuild.studyValueListener
 
 Private Sub IStudyValueListener_Notify(ev As TradeBuildSP.StudyValueEvent)
 Dim tradeBuildEv As TradeBuild.StudyValueEvent
-Set tradeBuildEv.Source = ev.Source
+Set tradeBuildEv.source = ev.source
 tradeBuildEv.value = ev.value
-tradeBuildEv.valueName = ev.valueName
+tradeBuildEv.ValueName = ev.ValueName
 tradeBuildEv.Timestamp = ev.Timestamp
 tradeBuildEv.barNumber = ev.barNumber
 mStudyValueListener.notify tradeBuildEv
@@ -83,6 +83,10 @@ End Sub
 Friend Property Let studyValueListener( _
                 ByVal value As TradeBuild.studyValueListener)
 Set mStudyValueListener = value
+End Property
+
+Friend Property Get studyValueListener() As TradeBuild.studyValueListener
+Set studyValueListener = mStudyValueListener
 End Property
 
 '================================================================================
