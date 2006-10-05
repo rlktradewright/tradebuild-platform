@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{E3092883-F27E-496D-B10B-D59C0AD496C0}#2.0#0"; "TradeBuildUI.ocx"
+Object = "{1942F60B-EC12-45BB-8FBB-89AA1BB15BA4}#1.0#0"; "TradeBuildUI.ocx"
 Begin VB.Form OrderForm 
    ClientHeight    =   6165
    ClientLeft      =   60
@@ -24,6 +24,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 Option Explicit
 
 
@@ -84,6 +85,7 @@ Debug.Print "OrderForm terminated"
 End Sub
 
 Private Sub Form_Unload(cancel As Integer)
+OrderTicket1.finish
 Debug.Print "OrderForm unloaded"
 End Sub
 
