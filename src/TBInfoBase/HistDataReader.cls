@@ -193,7 +193,7 @@ Private Sub mBarReader_Error( _
                             ByVal errorDesc As String)
 mCommonServiceConsumer.ServiceProviderError errorCode, _
                                     errorDesc, _
-                                    mServiceProviderName
+                                    mHistDataServiceProvider.handle
 End Sub
 
 Private Sub mBarReader_Ready()

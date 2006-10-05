@@ -87,17 +87,13 @@ End Sub
 Private Function IStudy_addStudy( _
                 ByVal study As IStudy, _
                 ByVal ValueName As String, _
-                ByVal useAllUnderlyingValues As Boolean, _
+                ByVal numUnderlyingValuesToUse As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
 
-Dim request As AddStudyRequest
-
-Set request.study = study
-request.ValueName = ValueName
 
 If ValueName = SDValueStandardDeviation Then
-    Set IStudy_addStudy = mSDCache.replayValues(study, Me, useAllUnderlyingValues, "", request)
+    Set IStudy_addStudy = mSDCache.replayValues(study, Me, numUnderlyingValuesToUse, taskName, taskData)
     IStudy_addStudy.addTaskCompletionListener Me
 End If
 

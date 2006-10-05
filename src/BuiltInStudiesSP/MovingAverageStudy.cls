@@ -97,7 +97,7 @@ End Property
 Public Function addStudy( _
                 study As IStudy, _
                 ByVal ValueName As String, _
-                ByVal useAllUnderlyingValues As Boolean) As TradeBuildSP.ITaskCompletion
+                ByVal numUnderlyingValuesToUse As Long) As TradeBuildSP.ITaskCompletion
 
 End Function
 

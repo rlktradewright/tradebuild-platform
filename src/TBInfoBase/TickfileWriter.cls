@@ -340,7 +340,7 @@ Private Sub mTickWriter_Error( _
 On Error GoTo Err
 mCommonServiceConsumer.ServiceProviderError errorCode, _
                                     errorDesc, _
-                                    mServiceProviderName
+                                    mTickfileServiceProvider.handle
 Exit Sub
 Err:
 handleFatalError Err.Number, _

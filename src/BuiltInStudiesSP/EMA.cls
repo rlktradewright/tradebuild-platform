@@ -94,17 +94,13 @@ End Sub
 Private Function IStudy_addStudy( _
                 ByVal study As IStudy, _
                 ByVal ValueName As String, _
-                ByVal useAllUnderlyingValues As Boolean, _
+                ByVal numUnderlyingValuesToUse As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
 
-Dim request As AddStudyRequest
-
-Set request.study = study
-request.ValueName = ValueName
 
 If ValueName = EMAValueEMA Then
-    Set IStudy_addStudy = mMaCache.replayValues(study, Me, useAllUnderlyingValues, "", request)
+    Set IStudy_addStudy = mMaCache.replayValues(study, Me, numUnderlyingValuesToUse, taskName, taskData)
     IStudy_addStudy.addTaskCompletionListener Me
 End If
 
@@ -267,11 +263,9 @@ End Property
 
 Private Sub ITaskCompletionListener_taskCompleted( _
                 ev As TradeBuildSP.TaskCompletionEvent)
-Dim request As AddStudyRequest
-
-request = ev.Data
-mStudies.Add request.study, request.ValueName
-
+Dim task As IValueReplayTask
+Set task = ev.Source
+mStudies.Add task.targetStudy, task.ValueName
 End Sub
 
 '================================================================================
@@ -281,15 +275,11 @@ End Sub
 Public Function MovingAverageStudy_addStudy( _
                 study As IStudy, _
                 ByVal ValueName As String, _
-                ByVal useAllUnderlyingValues As Boolean) As TradeBuildSP.ITaskCompletion
-Dim request As AddStudyRequest
-
-Set request.study = study
-request.ValueName = ValueName
+                ByVal numUnderlyingValuesToUse As Long) As TradeBuildSP.ITaskCompletion
 
 Select Case UCase$(ValueName)
 Case UCase$(EMAValueEMA)
-    Set MovingAverageStudy_addStudy = mMaCache.replayValues(study, Me, useAllUnderlyingValues, "", request)
+    Set MovingAverageStudy_addStudy = mMaCache.replayValues(study, Me, numUnderlyingValuesToUse)
     MovingAverageStudy_addStudy.addTaskCompletionListener Me
 End Select
 

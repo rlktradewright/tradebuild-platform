@@ -31,6 +31,7 @@ Option Explicit
 '================================================================================
 
 Implements Task
+Implements TradeBuildSP.IValueReplayTask
 
 '================================================================================
 ' Events
@@ -57,7 +58,7 @@ Private mTaskContext As TaskContext
 Private mTargetStudy As TradeBuildSP.IStudy
 Private mSourceStudy As TradeBuildSP.IStudy
 
-Private mValuesToNotify As Long
+Private mStartValueNumber As Long
 Private mValuesNotified As Long
 
 Private mValueName As String
@@ -65,6 +66,22 @@ Private mValueName As String
 '================================================================================
 ' Class Event Handlers
 '================================================================================
+
+'================================================================================
+' IValueReplayTask Interface Members
+'================================================================================
+
+Private Property Get IValueReplayTask_sourceStudy() As TradeBuildSP.IStudy
+Set IValueReplayTask_sourceStudy = mSourceStudy
+End Property
+
+Private Property Get IValueReplayTask_targetStudy() As TradeBuildSP.IStudy
+Set IValueReplayTask_targetStudy = mTargetStudy
+End Property
+
+Private Property Get IValueReplayTask_ValueName() As String
+IValueReplayTask_ValueName = mValueName
+End Property
 
 '================================================================================
 ' Task Interface Members
@@ -76,18 +93,14 @@ Dim ev As TradeBuildSP.StudyValueEvent
 Dim valueEntry As TradeBuildSP.StudyValue
 Dim studyParams() As Variant
 
-For i = (mSourceStudy.numberOfCachedValues - mValuesToNotify + mValuesNotified + 1) To _
-        (mSourceStudy.numberOfCachedValues - mValuesToNotify + mValuesNotified + 20)
-    
-    If mValuesNotified = mSourceStudy.numberOfCachedValues Then Exit For
-    
-    mValuesNotified = mValuesNotified + 1
+For i = (mStartValueNumber + mValuesNotified) To _
+        (mStartValueNumber + mValuesNotified + 19)
     
     valueEntry = mSourceStudy.getStudyValue(mValueName, i, studyParams)
     
     If Not IsEmpty(valueEntry.value) Then
         Set ev.source = mSourceStudy
-        ev.Timestamp = valueEntry.Timestamp
+        ev.timestamp = valueEntry.timestamp
         ev.barNumber = valueEntry.barNumber
         ev.ValueName = mValueName
         ev.value = valueEntry.value
@@ -95,12 +108,14 @@ For i = (mSourceStudy.numberOfCachedValues - mValuesToNotify + mValuesNotified +
         mTargetStudy.notify ev
         
     End If
+    
+    mValuesNotified = mValuesNotified + 1
+    If i = mSourceStudy.numberOfCachedValues Then
+        mTaskContext.finish
+        Set mTaskContext = Nothing
+        Exit For
+   End If
 Next
-
-If mValuesNotified = mSourceStudy.numberOfCachedValues Then
-    mTaskContext.finish
-    Set mTaskContext = Nothing
-End If
 
 End Sub
 
@@ -116,8 +131,16 @@ End Property
 ' Properties
 '================================================================================
 
+Public Property Get sourceStudy() As TradeBuildSP.IStudy
+Set sourceStudy = mSourceStudy
+End Property
+
 Public Property Get targetStudy() As TradeBuildSP.IStudy
 Set targetStudy = mTargetStudy
+End Property
+
+Public Property Get ValueName() As String
+ValueName = mValueName
 End Property
 
 '================================================================================
@@ -128,14 +151,19 @@ Friend Sub initialise( _
                 ByVal targetStudy As TradeBuildSP.IStudy, _
                 ByVal sourceStudy As TradeBuildSP.IStudy, _
                 ByVal ValueName As String, _
-                ByVal useAllUnderlyingValues As Boolean)
+                ByVal numUnderlyingValuesToUse As Long)
+Dim numValuesToNotify As Long
+
 Set mTargetStudy = targetStudy
 Set mSourceStudy = sourceStudy
 mValueName = ValueName
 
-mValuesToNotify = targetStudy.numberOfBarsRequired
-If mValuesToNotify = 0 Or useAllUnderlyingValues Then mValuesToNotify = mSourceStudy.numberOfCachedValues
-If mValuesToNotify > mSourceStudy.numberOfCachedValues Then mValuesToNotify = mSourceStudy.numberOfCachedValues
+numValuesToNotify = targetStudy.numberOfBarsRequired
+If numUnderlyingValuesToUse = 0 Then numUnderlyingValuesToUse = mSourceStudy.numberOfCachedValues
+If numUnderlyingValuesToUse > numValuesToNotify Then numValuesToNotify = numUnderlyingValuesToUse
+If numValuesToNotify > mSourceStudy.numberOfCachedValues Then numValuesToNotify = mSourceStudy.numberOfCachedValues
+
+mStartValueNumber = mSourceStudy.numberOfCachedValues - numValuesToNotify + 1
 
 End Sub
 

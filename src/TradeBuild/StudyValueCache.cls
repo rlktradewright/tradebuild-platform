@@ -69,10 +69,10 @@ Private mCyclicSize As Long
 '================================================================================
 
 Private Sub IStudyValueCache_addValue( _
-                ByVal value As Variant, _
+                ByVal Value As Variant, _
                 ByVal barNumber As Long, _
-                ByVal timestamp As Date)
-addValue value, barNumber, timestamp
+                ByVal Timestamp As Date)
+addValue Value, barNumber, Timestamp
 End Sub
 
 Private Property Get IStudyValueCache_Count() As Long
@@ -96,14 +96,14 @@ End Function
 Private Function IStudyValueCache_replayValues( _
                 ByVal targetStudy As TradeBuildSP.IStudy, _
                 ByVal sourceStudy As TradeBuildSP.IStudy, _
-                ByVal useAllUnderlyingValues As Boolean, _
+                ByVal numUnderlyingValuesToUse As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
 Set IStudyValueCache_replayValues = replayValues(targetStudy, _
                                                 sourceStudy, _
                                                 "", _
                                                 Nothing, _
-                                                useAllUnderlyingValues, _
+                                                numUnderlyingValuesToUse, _
                                                 taskName, _
                                                 taskData)
 End Function
@@ -113,7 +113,7 @@ Private Function IStudyValueCache_replayValuesWithResolver( _
                 ByVal sourceStudy As TradeBuildSP.IStudy, _
                 ByVal requiredValueName As String, _
                 ByVal resolver As TradeBuildSP.IStudyValueResolver, _
-                ByVal useAllUnderlyingValues As Boolean, _
+                ByVal numUnderlyingValuesToUse As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
 
@@ -127,17 +127,17 @@ Set IStudyValueCache_replayValuesWithResolver = replayValues(targetStudy, _
                                                 sourceStudy, _
                                                 requiredValueName, _
                                                 resolver, _
-                                                useAllUnderlyingValues, _
+                                                numUnderlyingValuesToUse, _
                                                 taskName, _
                                                 taskData)
 End Function
 
 Private Sub IStudyValueCache_updateValue( _
-                ByVal value As Variant, _
-                ByVal barNumber As Long, _
-                ByVal timestamp As Date, _
+                ByVal Value As Variant, _
+                Optional ByVal barNumber As Long, _
+                Optional ByVal Timestamp As Date, _
                 Optional ByVal ref As Long)
-updateValue value, barNumber, timestamp, ref
+updateValue Value, barNumber, Timestamp, ref
 End Sub
 
 Private Property Get IStudyValueCache_ValueName() As String
@@ -152,10 +152,10 @@ End Property
 ' Properties
 '================================================================================
 
-Friend Property Let cyclicSize(value As Long)
-If value > 0 Then
-    If value > mCyclicSize Then
-        mCyclicSize = value
+Friend Property Let cyclicSize(Value As Long)
+If Value > 0 Then
+    If Value > mCyclicSize Then
+        mCyclicSize = Value
         ReDim mValues(mCyclicSize - 1) As TradeBuildSP.StudyValue
     End If
 Else
@@ -174,13 +174,13 @@ Count = mNumValues
 End Property
 
 Friend Property Let tradeBuildAPI( _
-                ByVal value As tradeBuildAPI)
+                ByVal Value As tradeBuildAPI)
 Set mTradeBuildAPIRef = New WeakReference
-mTradeBuildAPIRef.Initialise value
+mTradeBuildAPIRef.initialise Value
 End Property
 
-Friend Property Let ValueName(value As String)
-mValueName = value
+Friend Property Let ValueName(Value As String)
+mValueName = Value
 End Property
 
 Friend Property Get ValueName() As String
@@ -192,9 +192,9 @@ End Property
 '================================================================================
 
 Friend Sub addValue( _
-                ByVal value As Variant, _
+                ByVal Value As Variant, _
                 ByVal barNumber As Long, _
-                ByVal timestamp As Date)
+                ByVal Timestamp As Date)
 
 If mNumValues > 0 Then
 '    If Timestamp < getStudyValue(0).Timestamp Then Stop
@@ -215,21 +215,21 @@ Else
     mNumValues = mNumValues + 1
 End If
 
-mValues(mNewest).value = value
+mValues(mNewest).Value = Value
 mValues(mNewest).barNumber = barNumber
-mValues(mNewest).timestamp = timestamp
+mValues(mNewest).Timestamp = Timestamp
 End Sub
 
 Friend Function getValue(Optional ByVal ref As Long) As Variant
-getValue = mValues(refToIndex(ref)).value
+getValue = mValues(refToIndex(ref)).Value
 End Function
 
 Friend Function getStudyValue(Optional ByVal ref As Long) As StudyValueStruct
 Dim valueEntry As TradeBuildSP.StudyValue
 valueEntry = mValues(refToIndex(ref))
 getStudyValue.barNumber = valueEntry.barNumber
-getStudyValue.timestamp = valueEntry.timestamp
-getStudyValue.value = valueEntry.value
+getStudyValue.Timestamp = valueEntry.Timestamp
+getStudyValue.Value = valueEntry.Value
 End Function
 
 Friend Function replayValues( _
@@ -237,31 +237,31 @@ Friend Function replayValues( _
                 ByVal sourceStudy As TradeBuildSP.IStudy, _
                 ByVal requiredValueName As String, _
                 ByVal resolver As TradeBuildSP.IStudyValueResolver, _
-                ByVal useAllUnderlyingValues As Boolean, _
+                ByVal numUnderlyingValuesToUse As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskCompletion
 Dim replayTask As New CacheReplayTask
-Dim tb As tradeBuildAPI
-replayTask.Initialise Me, _
+
+replayTask.initialise Me, _
                     targetStudy, _
                     sourceStudy, _
                     IIf(requiredValueName = "", mValueName, requiredValueName), _
                     resolver, _
-                    useAllUnderlyingValues
-Set tb = mTradeBuildAPIRef.target
+                    numUnderlyingValuesToUse
+
 Set replayValues = tb.taskManager.startTask(replayTask, IIf(taskName <> "", taskName, gGenerateGUIDString), taskData)
 End Function
 
 Friend Sub updateValue( _
-                ByVal value As Variant, _
+                ByVal Value As Variant, _
                 ByVal barNumber As Long, _
-                ByVal timestamp As Date, _
+                ByVal Timestamp As Date, _
                 Optional ByVal ref As Long)
 Dim i As Long
 i = refToIndex(ref)
-mValues(i).value = value
-mValues(i).barNumber = barNumber
-mValues(i).timestamp = timestamp
+mValues(i).Value = Value
+If barNumber > 0 Then mValues(i).barNumber = barNumber
+If CDbl(Timestamp) > 0 Then mValues(i).Timestamp = Timestamp
 End Sub
 
 '================================================================================
@@ -295,6 +295,10 @@ Else
     End If
 End If
 
+End Function
+
+Private Function tb() As tradeBuildAPI
+Set tb = mTradeBuildAPIRef.target
 End Function
 
 

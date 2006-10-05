@@ -101,14 +101,9 @@ End Sub
 Private Function IStudy_addStudy( _
                 ByVal study As IStudy, _
                 ByVal ValueName As String, _
-                ByVal useAllUnderlyingValues As Boolean, _
+                ByVal numUnderlyingValuesToUse As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
-
-Dim request As AddStudyRequest
-
-Set request.study = study
-request.ValueName = ValueName
 
 Select Case UCase$(ValueName)
 Case UCase$(BBValueBottom)
@@ -123,9 +118,9 @@ Set IStudy_addStudy = mStudyServiceConsumer.replayStudyValues( _
                             study, _
                             Me, _
                             ValueName, _
-                            useAllUnderlyingValues, _
-                            "", _
-                            request)
+                            numUnderlyingValuesToUse, _
+                            taskName, _
+                            taskData)
 IStudy_addStudy.addTaskCompletionListener Me
 
 End Function
@@ -252,11 +247,9 @@ End Property
 
 Private Sub ITaskCompletionListener_taskCompleted( _
                 ev As TradeBuildSP.TaskCompletionEvent)
-Dim request As AddStudyRequest
-
-request = ev.Data
-mStudies.Add request.study, request.ValueName
-
+Dim task As IValueReplayTask
+Set task = ev.Source
+mStudies.Add task.targetStudy, task.ValueName
 End Sub
 
 '================================================================================

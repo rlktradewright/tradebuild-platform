@@ -30,7 +30,6 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements TradeBuildSP.ITaskCompletion
 
 '================================================================================
 ' Events
@@ -84,10 +83,3 @@ End Sub
 ' Helper Functions
 '================================================================================
 
-Private Sub ITaskCompletion_addTaskCompletionListener(ByVal listener As TradeBuildSP.ITaskCompletionListener)
-
-End Sub
-
-Private Sub ITaskCompletion_removeTaskCompletionListener(ByVal listener As TradeBuildSP.ITaskCompletionListener)
-
-End Sub

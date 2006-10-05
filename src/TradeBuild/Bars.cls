@@ -37,6 +37,7 @@ Implements TradeBuildSP.IStudy
 '================================================================================
 
 Event BarAdded(ByVal theBar As TradeBuild.Bar)
+Event BarReplayed(ByVal theBar As TradeBuild.Bar)
 
 Event CurrentCloseChanged(ByVal currentBar As TradeBuild.Bar)
 Event CurrentHighChanged(ByVal currentBar As TradeBuild.Bar)
@@ -122,14 +123,14 @@ End Sub
 Private Function IStudy_addStudy( _
                 ByVal study As IStudy, _
                 ByVal ValueName As String, _
-                ByVal useAllUnderlyingValues As Boolean, _
+                ByVal numUnderlyingValuesToUse As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
 
 Dim lTask As AddStudyTask
 
 Set lTask = New AddStudyTask
-lTask.Initialise Me, study, ValueName, useAllUnderlyingValues
+lTask.initialise Me, study, ValueName, numUnderlyingValuesToUse
 Set IStudy_addStudy = tb.taskManager.startTask(lTask, IIf(taskName = "", gGenerateGUIDString, taskName), taskData)
 End Function
 
@@ -598,7 +599,7 @@ End Property
 Friend Property Let tradeBuildAPI( _
                 ByVal value As tradeBuildAPI)
 Set mTradeBuildAPIRef = New WeakReference
-mTradeBuildAPIRef.Initialise value
+mTradeBuildAPIRef.initialise value
 End Property
 
 Public Property Get up(Optional ByVal ref As Long) As Boolean
@@ -791,6 +792,11 @@ Dim i As Long
 For i = mCurrentBarListeners.Count To 1 Step -1
     If mCurrentBarListeners.Item(i) Is value Then mCurrentBarListeners.remove i
 Next
+End Sub
+
+Friend Sub replayBar( _
+                ByVal index As Long)
+RaiseEvent BarReplayed(mBars(index))
 End Sub
 
 'Public Function ToString() As String

@@ -153,6 +153,7 @@ End Sub
 
 Private Sub IBarDataInputServiceConsumer_BarDataComplete()
 mHistoricDataLoaded = True
+mBarReader.ReleaseDataStore
 Set mBarReader = Nothing
 
 ListenToTicker
@@ -165,6 +166,9 @@ Private Sub IBarDataInputServiceConsumer_Error( _
                 ByVal errorMessage As String, _
                 ByVal spHandle As Long)
 mHistoricDataLoaded = True
+mBarReader.ReleaseDataStore
+Set mBarReader = Nothing
+
 Select Case errorCode
 Case StandardSPErrorCodes.HDRequestFailed
     ListenToTicker
@@ -256,11 +260,11 @@ If mIncludeBidAndAsk Then
     outEv.timestamp = timestamp
     
     outEv.value = ev.price
-    outEv.ValueName = "value"
+    outEv.valueName = "value"
     mAskBarsStudy.notify outEv
     
     outEv.value = ev.Size
-    outEv.ValueName = "size"
+    outEv.valueName = "size"
     mAskBarsStudy.notify outEv
 '    mAskBarsStudy.notifyValue ev.Price, "ask", 0, Timestamp
 '    mAskBarsStudy.notifyValue ev.size, "asksize", 0, Timestamp
@@ -284,11 +288,11 @@ If mIncludeBidAndAsk Then
     outEv.timestamp = timestamp
     
     outEv.value = ev.price
-    outEv.ValueName = "value"
+    outEv.valueName = "value"
     mBidBarsStudy.notify outEv
     
     outEv.value = ev.Size
-    outEv.ValueName = "size"
+    outEv.valueName = "size"
     mBidBarsStudy.notify outEv
 '    mBidBarsStudy.notifyValue ev.Price, "bid", 0, Timestamp
 '    mBidBarsStudy.notifyValue ev.size, "bidsize", 0, Timestamp
@@ -365,11 +369,11 @@ timestamp = mTicker.timestamp
 outEv.timestamp = timestamp
 
 outEv.value = ev.price
-outEv.ValueName = "value"
+outEv.valueName = "value"
 mTradeBarsStudy.notify outEv
 
 outEv.value = ev.Size
-outEv.ValueName = "size"
+outEv.valueName = "size"
 mTradeBarsStudy.notify outEv
 'mTradeBarsStudy.notifyValue ev.Price, "last", 0, Timestamp
 'mTradeBarsStudy.notifyValue ev.size, "lastsize", 0, Timestamp
@@ -399,7 +403,7 @@ mLatestVolume = ev.Size
 outEv.timestamp = timestamp
 
 outEv.value = volume
-outEv.ValueName = "volume"
+outEv.valueName = "volume"
 mTradeBarsStudy.notify outEv
 'mTradeBarsStudy.notifyValue ev.size, "volume", 0, Timestamp
 
@@ -583,6 +587,18 @@ For i = mBarWriterListeners.Count To 1 Step -1
     If mBarWriterListeners.Item(i) Is value Then mBarWriterListeners.remove i
 Next
 End Sub
+
+Public Function replayBars( _
+                ByVal barType As TradeBuild.BarTypes, _
+                ByVal barsToReplay As Long, _
+                Optional ByVal taskName As String, _
+                Optional ByVal taskData As Variant) As TaskCompletion
+Dim replayTask As New TimeframeBarReplayTask
+
+replayTask.Initialise Me, barType, barsToReplay
+
+Set replayBars = tb.taskManager.startTask(replayTask, IIf(taskName <> "", taskName, gGenerateGUIDString), taskData)
+End Function
 
 '================================================================================
 ' Helper Functions

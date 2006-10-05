@@ -171,6 +171,7 @@ Private Function ICommonServiceConsumer_NewStudyValueCache( _
                 ByVal cyclicSize As Long, _
                 ByVal ValueName As String) As TradeBuildSP.IStudyValueCache
 Dim valueCache As New StudyValueCache
+valueCache.tradeBuildAPI = tb
 valueCache.cyclicSize = cyclicSize
 valueCache.ValueName = ValueName
 Set ICommonServiceConsumer_NewStudyValueCache = valueCache
@@ -332,23 +333,23 @@ Case TradeBuildSP.StandardSPErrorCodes.CIContractSpecifierInvalid
 Case TradeBuildSP.StandardSPErrorCodes.CICantConnectDataSource
     tb.SetServiceProviderError errorCode, _
                         "Can't connect to Contract database: " & errorMessage, _
-                        tb.serviceProviders.nameFromHandle(spHandle)
+                        tb.ServiceProviders.nameFromHandle(spHandle)
 Case TradeBuildSP.StandardSPErrorCodes.CIDisconnectedFromDataSource
     tb.SetServiceProviderError errorCode, _
                         "Disconnected from Contract database: " & errorMessage, _
-                        tb.serviceProviders.nameFromHandle(spHandle)
+                        tb.ServiceProviders.nameFromHandle(spHandle)
 Case TradeBuildSP.StandardSPErrorCodes.CILostConnectionToDataSource
     tb.SetServiceProviderError errorCode, _
                         "Lost connection to Contract database: " & errorMessage, _
-                        tb.serviceProviders.nameFromHandle(spHandle)
+                        tb.ServiceProviders.nameFromHandle(spHandle)
 Case TradeBuildSP.StandardSPErrorCodes.CIReConnectingDataSource
     tb.SetServiceProviderError errorCode, _
                         "Reconnecting to Contract database: " & errorMessage, _
-                        tb.serviceProviders.nameFromHandle(spHandle)
+                        tb.ServiceProviders.nameFromHandle(spHandle)
 Case TradeBuildSP.StandardSPErrorCodes.CIRetryConnectDataSource
     tb.SetServiceProviderError errorCode, _
                         "Attempting again to connect to Contract database: " & errorMessage, _
-                        tb.serviceProviders.nameFromHandle(spHandle)
+                        tb.ServiceProviders.nameFromHandle(spHandle)
 Case Else
     tb.SetServiceProviderError errorCode, _
                         errorMessage, _

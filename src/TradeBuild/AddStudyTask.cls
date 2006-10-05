@@ -59,7 +59,7 @@ Private mBars As bars
 Private mStudy As TradeBuildSP.IStudy
 Private mValueName As String
 
-Private mBarsToNotify As Long
+Private mStartBarNumber As Long
 Private mBarsNotified As Long
 
 'Private mNotifyNewbar As Boolean
@@ -80,12 +80,8 @@ Dim lBar As Bar
 Dim i As Long
 Dim ev As TradeBuildSP.StudyValueEvent
 
-For i = (mBars.Count - mBarsToNotify + mBarsNotified + 1) To _
-        (mBars.Count - mBarsToNotify + mBarsNotified + 20)
-    
-    If mBarsNotified = mBars.Count Then Exit For
-    
-    mBarsNotified = mBarsNotified + 1
+For i = (mStartBarNumber + mBarsNotified) To _
+        (mStartBarNumber + mBarsNotified + 19)
     
     Set lBar = mBars(i)
     
@@ -156,13 +152,15 @@ For i = (mBars.Count - mBarsToNotify + mBarsNotified + 1) To _
             mStudy.notify ev
         End If
     End If
+    
+    mBarsNotified = mBarsNotified + 1
+    If i = mBars.Count Then
+        mBars.studies.add mStudy, mValueName
+        mTaskContext.finish
+        Set mTaskContext = Nothing
+        Exit For
+    End If
 Next
-
-If mBarsNotified = mBars.Count Then
-    mBars.studies.add mStudy, mValueName
-    mTaskContext.finish
-    Set mTaskContext = Nothing
-End If
 
 End Sub
 
@@ -186,15 +184,19 @@ Friend Sub initialise( _
                 ByVal bars As bars, _
                 ByVal study As TradeBuildSP.IStudy, _
                 ByRef ValueName As String, _
-                ByVal useAllUnderlyingValues As Boolean)
+                ByVal numUnderlyingValuesToUse As Long)
+Dim numBarsToNotify As Long
 
 Set mBars = bars
 Set mStudy = study
 mValueName = LCase$(ValueName)
 
-mBarsToNotify = study.numberOfBarsRequired
-If mBarsToNotify = 0 Or useAllUnderlyingValues Then mBarsToNotify = mBars.Count
-If mBarsToNotify > mBars.Count Then mBarsToNotify = mBars.Count
+numBarsToNotify = study.numberOfBarsRequired
+If numUnderlyingValuesToUse = 0 Then numUnderlyingValuesToUse = mBars.Count
+If numUnderlyingValuesToUse > numBarsToNotify Then numBarsToNotify = numUnderlyingValuesToUse
+If numBarsToNotify > mBars.Count Then numBarsToNotify = mBars.Count
+
+mStartBarNumber = mBars.Count - numBarsToNotify + 1
 
 Select Case mValueName
 Case "$default"

@@ -8,7 +8,7 @@ BEGIN
 END
 Attribute VB_Name = "TimeframeBarReplayTask"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = True
+Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -47,10 +47,8 @@ Implements Task
 
 Private mTaskContext As TaskContext
 
-Private mTimeframe As Timeframe
-Private mBarType As TradeBuild.BarTypes
+Private mBars As TradeBuild.bars
 Private mMinIndex As Long
-Private mMaxIndex As Long
 
 Private mItemsProcessed As Long
 
@@ -65,15 +63,21 @@ Private mItemsProcessed As Long
 Private Sub Task_run()
 Dim i As Long
 
+If mBars Is Nothing Then
+    mTaskContext.finish
+    Set mTaskContext = Nothing
+    Exit Sub
+End If
+
 For i = (mMinIndex + mItemsProcessed) To _
         (mMinIndex + mItemsProcessed + 19)
     
-    mTimeframe.replaybar mBarType, i
+    mBars.replayBar i
     
-    If i = mMaxIndex Then
+    If i = mBars.Count Then
         mTaskContext.finish
         Set mTaskContext = Nothing
-        Set mTimeframe = Nothing
+        Set mBars = Nothing
         Exit Sub
     End If
     
@@ -99,15 +103,34 @@ End Property
 ' Methods
 '================================================================================
 
-Friend Sub initialise( _
+Friend Sub Initialise( _
                 ByVal pTimeframe As Timeframe, _
                 ByVal barType As TradeBuild.BarTypes, _
-                ByVal minIndex As Long, _
-                ByVal maxIndex As Long)
-Set mTimeframe = pTimeframe
-mBarType = barType
-mMinIndex = minIndex
-mMaxIndex = maxIndex
+                ByVal barsToReplay As Long)
+Dim lTimeframe As Timeframe
+Dim numBars As Long
+
+Set lTimeframe = pTimeframe
+
+Select Case barType
+Case BarTypeTrade
+    Set mBars = lTimeframe.TradeBars
+Case BarTypeBid
+    Set mBars = lTimeframe.BidBars
+Case BarTypeAsk
+    Set mBars = lTimeframe.AskBars
+End Select
+    
+If Not mBars Is Nothing Then numBars = mBars.Count
+
+If barsToReplay <= 0 Then
+    mMinIndex = 1
+ElseIf numBars >= barsToReplay Then
+    mMinIndex = mBars.Count - barsToReplay + 1
+Else
+    mMinIndex = 1
+End If
+
 End Sub
 
 '================================================================================

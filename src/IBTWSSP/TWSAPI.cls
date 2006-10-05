@@ -368,6 +368,11 @@ Private Sub mSocket_Connect()
 On Error GoTo err
 mConnectionState = ConnectionStates.ConnConnecting
 RaiseEvent Connecting
+
+mIndexIn = 0
+mIndexOut = 0
+mInputIndex = 0
+
 logMessage "Connecting to TWS: negotiating versions and client id"
 addData CLIENT_VERSION
 send
@@ -380,47 +385,51 @@ handleFatalError err.number, _
                 err.Description
 End Sub
 
-Private Sub mSocket_DataArrival(ByVal bytesTotal As Long)
-
+Private Sub mSocket_DataArrival( _
+                ByVal bytesTotal As Long)
+Dim bytesReceived As Long
 On Error GoTo err
 
-If bytesTotal = 0 Then
-    checkmessages
-    Exit Sub
-End If
-
-ReDim mSocketInputData(bytesTotal - 1) As Byte
 mSocket.GetData mSocketInputData, vbArray + vbByte
+bytesReceived = UBound(mSocketInputData) + 1
+'Debug.Print "Received " & bytesReceived & " from socket: " & showBuffer(mSocketInputData, bytesReceived)
+
 If mLogLevel >= LogLevelHigh Then
-    mCommonServiceConsumer.NotifyListeners showBuffer(mSocketInputData), _
+    mCommonServiceConsumer.NotifyListeners showBuffer(mSocketInputData, bytesReceived), _
                                         ListenValueTypes.ValueTypeRawSocketData, _
                                         Me
 End If
 
-'Debug.Print "Socket: " & showBuffer(mSocketInputData)
+If mIndexIn = mInputIndex Then
+    ' no unprocessed data so start at the beginning of the buffer again
+    'Debug.Print "Reverting to start of buffer (no unprocessed data)"
+    mIndexIn = 0
+    mInputIndex = 0
+    mInputIndexChk = 0
+End If
 
 'if spaceUsed + newSpaceRequired > lengthOfBuffer then
-If mIndexIn + bytesTotal > UBound(mBufferIn) + 1 Then
+If mIndexIn + bytesReceived > UBound(mBufferIn) + 1 Then
     'if newSpaceRequired <= lengthOfBuffer - unprocessedLength then
-    If bytesTotal <= (UBound(mBufferIn) + 1 - mIndexIn + mInputIndex) Then
-        'if unprocessedLength <> 0 then
-        If mInputIndex < mIndexIn Then
-            ' copy the existing contents down to the start of the buffer
-            MoveMemory mBufferIn(0), mBufferIn(mInputIndex), mIndexIn - mInputIndex
-            mIndexIn = mIndexIn - mInputIndex
-            mInputIndex = 0
-        Else
-            mIndexIn = 0
-            mInputIndex = 0
-        End If
+    If bytesReceived <= (UBound(mBufferIn) + 1 - mIndexIn + mInputIndex) Then
+        ' copy the existing contents down to the start of the buffer
+        'Debug.Print "Moving unprocessed data (" & mIndexIn - mInputIndex & " bytes) from " & mInputIndex & " to start of buffer"
+        MoveMemory mBufferIn(0), mBufferIn(mInputIndex), mIndexIn - mInputIndex
+        mIndexIn = mIndexIn - mInputIndex
+        mInputIndex = 0
+        mInputIndexChk = 0
     Else
-        ReDim Preserve mBufferIn(UBound(mBufferIn) + IIf(bytesTotal > 1024, bytesTotal, 1024)) As Byte
+        'Debug.Print "Extending buffer by " & IIf(bytesReceived > 1024, bytesReceived, 1024) & " bytes"
+        ReDim Preserve mBufferIn(UBound(mBufferIn) + IIf(bytesReceived > 1024, bytesReceived, 1024)) As Byte
     End If
 End If
-CopyMemory mBufferIn(mIndexIn), mSocketInputData(0), bytesTotal
-mIndexIn = mIndexIn + bytesTotal
+'Debug.Print "Appending socket message to buffer at " & mIndexIn
+CopyMemory mBufferIn(mIndexIn), mSocketInputData(0), bytesReceived
+mIndexIn = mIndexIn + bytesReceived
 
-checkmessages
+If mIndexIn <> mInputIndex Then
+    checkmessages
+End If
 
 Exit Sub
 err:
@@ -572,7 +581,7 @@ connectionState = mConnectionState
 End Property
 
 Friend Property Get InBuffer() As String
-InBuffer = showBuffer(mBufferIn)
+InBuffer = showBuffer(mBufferIn, mIndexIn - 1)
 End Property
 
 Friend Property Get initialOrderId() As Long
@@ -793,9 +802,6 @@ If Not mConnectionTimer Is Nothing Then mConnectionTimer.StopTimer
 mConnectionState = ConnectionStates.ConnNotConnected
 releaseAllTickerTableEntries
 ReleaseSocket
-mIndexIn = 0
-mIndexOut = 0
-mInputIndex = 0
 RaiseEvent Disconnected(reason)
 logMessage "Disconnected from: " & calcConnectionString, LogLevelLow
 Exit Sub
@@ -1438,14 +1444,14 @@ If mConnectionState <> ConnectionStates.ConnConnected Then
         mServerVersion = getLong
         checkpointBuffer
         checkPointNumber = 100
-        Debug.Print "Set checkpoint number=" & 100
+        'Debug.Print "Set checkpoint number=" & 100
     End If
     
     If checkPointNumber = 100 Then
         If mServerVersion >= 20 Then getString  ' TWS time
         checkpointBuffer
         checkPointNumber = 200
-        Debug.Print "Set checkpoint number=" & 200
+        'Debug.Print "Set checkpoint number=" & 200
     End If
     
     mConnectionState = ConnectionStates.ConnConnected
@@ -1467,102 +1473,103 @@ If mConnectionState <> ConnectionStates.ConnConnected Then
     RaiseEvent Connected
     
     checkPointNumber = 1000
-    Debug.Print "Set checkpoint number=" & 1000
+    'Debug.Print "Set checkpoint number=" & 1000
 End If
 
-Do While True
+Do While mInputIndex < mIndexIn
     
     If checkPointNumber = 1000 Then
         msgID = getLong
         checkpointBuffer
         checkPointNumber = 1100
-        Debug.Print "Set checkpoint number=" & 1100
+        'Debug.Print "Set checkpoint number=" & 1100 & ": msgID=" & msgID
     End If
     If checkPointNumber = 1100 Then
         version = getLong
         checkpointBuffer
         checkPointNumber = 1200
-        Debug.Print "Set checkpoint number=" & 1200
+        'Debug.Print "Set checkpoint number=" & 1200 & ": version=" & version
     End If
     
     Select Case msgID
     Case TWSSocketInMsgTypes.TICK_PRICE
-        Debug.Print "getTickPrice"
+        'Debug.Print "getTickPrice"
         getTickPrice version
     Case TWSSocketInMsgTypes.TICK_SIZE
-        Debug.Print "getTickSize "
+        'Debug.Print "getTickSize "
         getTickSize version
     Case TWSSocketInMsgTypes.ORDER_STATUS
-        Debug.Print "getOrderStatus"
+        'Debug.Print "getOrderStatus"
         getOrderStatus version
     Case TWSSocketInMsgTypes.ERR_MSG
-        Debug.Print "getErrorMsg "
+        'Debug.Print "getErrorMsg "
         getErrorMsg version
     Case TWSSocketInMsgTypes.OPEN_ORDER
-        Debug.Print "getOpenOrder "
+        'Debug.Print "getOpenOrder "
         getOpenOrder version
     Case TWSSocketInMsgTypes.ACCT_VALUE
-        Debug.Print "getAccountValue "
+        'Debug.Print "getAccountValue "
         getAccountValue version
     Case TWSSocketInMsgTypes.PORTFOLIO_VALUE
-        Debug.Print "getPortfolioValue "
+        'Debug.Print "getPortfolioValue "
         getPortfolioValue version
     Case TWSSocketInMsgTypes.ACCT_UPDATE_TIME
-        Debug.Print "getAccountTime "
+        'Debug.Print "getAccountTime "
         getAccountTime version
     Case TWSSocketInMsgTypes.NEXT_VALID_ID
-        Debug.Print "getNextValidId"
+        'Debug.Print "getNextValidId"
         getNextValidId version
     Case TWSSocketInMsgTypes.CONTRACT_DATA
-        Debug.Print "getContractData"
+        'Debug.Print "getContractData"
         getContractData version
     Case TWSSocketInMsgTypes.EXECUTION_DATA
-        Debug.Print "getExecutionData "
+        'Debug.Print "getExecutionData "
         getExecutionData version
     Case TWSSocketInMsgTypes.MARKET_DEPTH
-        Debug.Print "getMarketDepth"
+        'Debug.Print "getMarketDepth"
         getMarketDepth version
     Case TWSSocketInMsgTypes.MARKET_DEPTH_L2
-        Debug.Print "getMarketDepthL2 "
+        'Debug.Print "getMarketDepthL2 "
         getMarketDepthL2 version
     Case TWSSocketInMsgTypes.NEWS_BULLETINS
-        Debug.Print "getNewsBulletins "
+        'Debug.Print "getNewsBulletins "
         getNewsBulletins version
     Case TWSSocketInMsgTypes.MANAGED_ACCTS
-        Debug.Print "getManagedAccounts "
+        'Debug.Print "getManagedAccounts "
         getManagedAccounts version
     Case TWSSocketInMsgTypes.RECEIVE_FA
-        Debug.Print "getFAData "
+        'Debug.Print "getFAData "
         getFAData version
     Case TWSSocketInMsgTypes.HISTORICAL_DATA
-        Debug.Print "getHistoricalData "
+        'Debug.Print "getHistoricalData "
         getHistoricalData version
     Case TWSSocketInMsgTypes.BOND_CONTRACT_DATA
-        Debug.Print "getBondContractData "
+        'Debug.Print "getBondContractData "
         getBondContractData version
     Case TWSSocketInMsgTypes.SCANNER_PARAMETERS
-        Debug.Print "getScannerParameters "
+        'Debug.Print "getScannerParameters "
         getScannerParameters version
     Case TWSSocketInMsgTypes.SCANNER_DATA
-        Debug.Print "getScannerData "
+        'Debug.Print "getScannerData "
         getScannerData version
     Case Else
         Dim s As String
         Dim i As Long
         Dim j As Long
-        s = "Invalid message code from TWS: " & msgID & vbCrLf & _
-            "Buffer contents to failure point: " & vbCrLf
-        Do While i < mInputIndex
+        s = "Invalid message code from TWS: msgID=" & msgID & " version=" & version & vbCrLf & _
+            "mIndexIn=" & mIndexIn & " mInputIndex=" & mInputIndex & vbCrLf & _
+            "Buffer contents: " & vbCrLf
+        Do While i < mIndexIn
             s = s & Format(i, "0000") & "  "
             For j = i To i + 50
-                If j = mInputIndex Then Exit For
+                If j = mIndexIn Then Exit For
                 s = s & IIf(mBufferIn(j) <> 0, Chr$(mBufferIn(j)), "_")
             Next
             i = i + 50
-            If j < mInputIndex Then s = s & vbCrLf
+            If j < mIndexIn Then s = s & vbCrLf
         Loop
-        disconnect s
         Debug.Print s
+        disconnect s
         Exit Sub
     End Select
     retryCount = 0
@@ -1578,7 +1585,7 @@ Do While True
     
     checkpointBuffer
     checkPointNumber = 1000
-    Debug.Print "Set checkpoint number=" & 1000
+    'Debug.Print "Set checkpoint number=" & 1000 & "; minputindex=" & mInputIndex
 Loop
 
 Exit Sub
@@ -1591,7 +1598,7 @@ If err.number = DataIncomplete Then
     Exit Sub
 End If
 
-mCommonServiceConsumer.ServiceProviderError err.number, err.Description, "IBTWSSP"
+mCommonServiceConsumer.ServiceProviderError err.number, err.Description, -1
 disconnect "Error " & err.number & ": " & err.Description
 End Sub
 
@@ -1733,10 +1740,9 @@ Dim i As Long
 For i = mInputIndex To mIndexIn - 1
     If mBufferIn(i) = 0 Then
         ' we've found our next string
+        'Debug.Print "Got string: mInputIndex=" & mInputIndex & " value=" & s
         mInputIndex = i + 1
         getString = s
-        'debug.Print "Got data: " & s
-        'debug.Print "mIndexIn=" & mIndexIn & "  mInputIndex=" & mInputIndex
         Exit Function
     End If
     s = s & Chr$(mBufferIn(i))
@@ -1744,6 +1750,7 @@ Next
 
 ' we've got to the end of the current data, so raise an error to abort
 ' this attempt to assemble a message
+'Debug.Print "Failed to get string"
 err.Raise DataIncomplete
 End Function
 
@@ -2140,7 +2147,7 @@ Case 2103, 2104, 2105, 2106, 2107, 2108
 Case Else
     failpoint = 1700
 
-    mCommonServiceConsumer.ServiceProviderError errorCode, errorMsg, SpName
+    mCommonServiceConsumer.ServiceProviderError errorCode, errorMsg, -1
 End Select
 
 If mLogLevel >= LogLevelHigh Then
@@ -3483,6 +3490,7 @@ With mTickerTable(tickerid)
             Exit Sub
         End If
         
+        .prevAskSize = size
         ProcessAsk timestamp, _
                     tickerid, _
                     .prevAsk, _
@@ -3761,7 +3769,7 @@ End If
 End Sub
 
 Private Sub rollbackBuffer()
-'mIndexIn = mIndexInChk
+'Debug.Print "Rollback: mInputIndex=" & mInputIndexChk
 mInputIndex = mInputIndexChk
 End Sub
 
@@ -3955,13 +3963,15 @@ addData logLevel
 send
 End Sub
 
-Private Function showBuffer(buffer() As Byte) As String
+Private Function showBuffer( _
+                ByRef buffer() As Byte, _
+                ByVal length As Long) As String
 Dim i As Long
 Dim char As Byte
 
 showBuffer = String(UBound(buffer) + 1, "_")
 
-For i = 0 To UBound(buffer)
+For i = 0 To length - 1
     char = buffer(i)
     If char <> 0 Then Mid$(showBuffer, i + 1, 1) = Chr$(char)
 Next

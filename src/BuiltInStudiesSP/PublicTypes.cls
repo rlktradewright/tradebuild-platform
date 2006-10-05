@@ -62,10 +62,10 @@ End Enum
 ' Types
 '================================================================================
 
-Public Type AddStudyRequest
-    study                   As IStudy
-    ValueName               As String
-End Type
+'Public Type AddStudyRequest
+'    study                   As IStudy
+'    ValueName               As String
+'End Type
 
 Public Type SwingPoint
     value           As Variant

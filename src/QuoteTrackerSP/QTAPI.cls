@@ -968,7 +968,7 @@ XMLdoc.loadXML XMLData
 If XMLdoc.parseError.errorCode <> 0 Then
     mCommonServiceConsumer.ServiceProviderError SPErrorCodes.FieldDescriptionCannotBeParsed, _
             "Field descriptions XML cannot be parsed", _
-            App.ProductName
+            -1
     err.Raise LocalErrorCodes.LongJump
 End If
 
@@ -1416,7 +1416,7 @@ XMLdoc.loadXML XMLData
 If XMLdoc.parseError.errorCode <> 0 Then
     mCommonServiceConsumer.ServiceProviderError SPErrorCodes.LogonResponseCannotBeParsed, _
             "Logon response XML cannot be parsed", _
-            App.ProductName
+            -1
     err.Raise LocalErrorCodes.LongJump
 End If
 
@@ -1431,7 +1431,7 @@ Case "1"
     ' login failed - bad password
     mCommonServiceConsumer.ServiceProviderError SPErrorCodes.PasswordInvalid, _
             "Logon password invalid", _
-            App.ProductName
+            -1
     logMessage "Failed to connect to QuoteTracker: logon password invalid: " & _
                 calcConnectionString, _
                 LogLevelLow
@@ -1441,7 +1441,7 @@ Case Else
     Set statusDesc = XMLdoc.selectSingleNode("STATUSDESC")
     mCommonServiceConsumer.ServiceProviderError SPErrorCodes.UnexpectedError, _
             statusCode.Text & ": " & statusDesc.Text, _
-            App.ProductName
+            -1
     RaiseEvent ConnectFailed("Logon error " & statusCode.Text & ": " & statusDesc.Text, False)
     err.Raise LocalErrorCodes.LongJump
 End Select

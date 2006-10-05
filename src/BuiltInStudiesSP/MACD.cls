@@ -46,11 +46,11 @@ Implements TradeBuildSP.ITaskCompletionListener
 '================================================================================
 
 Public Enum MACDStrengths
-    MACDNoStrength
-    MACDPotentialStrength
-    MACDConfirmedStrength
-    MACDPotentialWeakness
-    MACDConfirmedWeakness
+    MACDConfirmedWeakness = -2
+    MACDPotentialWeakness = -1
+    MACDNoStrength = 0
+    MACDPotentialStrength = 1
+    MACDConfirmedStrength = 2
 End Enum
 
 '================================================================================
@@ -128,36 +128,32 @@ End Sub
 Private Function IStudy_addStudy( _
                 ByVal study As IStudy, _
                 ByVal ValueName As String, _
-                ByVal useAllUnderlyingValues As Boolean, _
+                ByVal numUnderlyingValuesToUse As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
 
-Dim request As AddStudyRequest
-
-Set request.study = study
-request.ValueName = ValueName
 
 Select Case ValueName
 Case MACDValueMACD
-    Set IStudy_addStudy = mMACDCache.replayValues(study, Me, useAllUnderlyingValues, "", request)
+    Set IStudy_addStudy = mMACDCache.replayValues(study, Me, numUnderlyingValuesToUse, taskName, taskData)
     IStudy_addStudy.addTaskCompletionListener Me
 Case MACDValueMACDHist
-    Set IStudy_addStudy = mMACDHistCache.replayValues(study, Me, useAllUnderlyingValues, "", request)
+    Set IStudy_addStudy = mMACDHistCache.replayValues(study, Me, numUnderlyingValuesToUse, taskName, taskData)
     IStudy_addStudy.addTaskCompletionListener Me
 Case MACDValueMACDSignal
-    Set IStudy_addStudy = mMACDSignalCache.replayValues(study, Me, useAllUnderlyingValues, "", request)
+    Set IStudy_addStudy = mMACDSignalCache.replayValues(study, Me, numUnderlyingValuesToUse, taskName, taskData)
     IStudy_addStudy.addTaskCompletionListener Me
 Case MACDValueMACDUpperBalance
-    Set IStudy_addStudy = mUpperBalanceCache.replayValues(study, Me, useAllUnderlyingValues, "", request)
+    Set IStudy_addStudy = mUpperBalanceCache.replayValues(study, Me, numUnderlyingValuesToUse, taskName, taskData)
     IStudy_addStudy.addTaskCompletionListener Me
 Case MACDValueMACDLowerBalance
-    Set IStudy_addStudy = mLowerBalanceCache.replayValues(study, Me, useAllUnderlyingValues, "", request)
+    Set IStudy_addStudy = mLowerBalanceCache.replayValues(study, Me, numUnderlyingValuesToUse, taskName, taskData)
     IStudy_addStudy.addTaskCompletionListener Me
 Case MACDValueStrength
-    Set IStudy_addStudy = mStrengthCache.replayValues(study, Me, useAllUnderlyingValues, "", request)
+    Set IStudy_addStudy = mStrengthCache.replayValues(study, Me, numUnderlyingValuesToUse, taskName, taskData)
     IStudy_addStudy.addTaskCompletionListener Me
 Case MACDValueStrengthCount
-    Set IStudy_addStudy = mStrengthCountCache.replayValues(study, Me, useAllUnderlyingValues, "", request)
+    Set IStudy_addStudy = mStrengthCountCache.replayValues(study, Me, numUnderlyingValuesToUse, taskName, taskData)
     IStudy_addStudy.addTaskCompletionListener Me
 Case Else
     ' just return Nothing
@@ -247,6 +243,9 @@ evOut.value = ev.value
 evOut.ValueName = ""
 
 If isNewBar Then
+    mMACDPrev = mMACD
+    mMACDHistPrev = mMACDHist
+    
     ' on the first tick of each bar, determine the two balance points, using
     ' the previous values as starting point where they are non-empty
     If determineLowerBalancePoint(IIf(IsEmpty(mLowerBalance), ev.value, mLowerBalance), ev.barnumber, ev.timestamp) Then
@@ -293,7 +292,8 @@ If isNewBar Then
             mStrengthCount = 1
         End If
     End If
-    mStrengthCountCache.addValue mStrengthCount, ev.barnumber, ev.timestamp
+    mStrengthCountCache.updateValue mStrengthCount, , , -1
+    mStrengthCountCache.addValue Empty, ev.barnumber, ev.timestamp
 Else
     mMACDCache.updateValue mMACD, ev.barnumber, ev.timestamp
     mMACDHistCache.updateValue mMACDHist, ev.barnumber, ev.timestamp
@@ -362,11 +362,9 @@ End Property
 
 Private Sub ITaskCompletionListener_taskCompleted( _
                 ev As TradeBuildSP.TaskCompletionEvent)
-Dim request As AddStudyRequest
-
-request = ev.Data
-mStudies.Add request.study, request.ValueName
-
+Dim task As IValueReplayTask
+Set task = ev.Source
+mStudies.Add task.targetStudy, task.ValueName
 End Sub
 
 '================================================================================
