@@ -45,6 +45,10 @@ Public Const ParamPeriods As String = "Periods"
 ' Enums
 '================================================================================
 
+Public Enum TaskDiscriminators
+    TaskAddStudy
+    TaskAddStudyValueListener
+End Enum
 '================================================================================
 ' Types
 '================================================================================

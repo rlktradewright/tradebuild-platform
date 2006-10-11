@@ -69,17 +69,18 @@ Private mSDStudy As TradeBuildSP.IStudy
 Private mMAStudy As TradeBuildSP.IStudy
 Private mMA As MovingAverageStudy
 
-Private mCentre As Variant
-Private mTop As Variant
-Private mBottom As Variant
+'Private mCentre As Variant
+'Private mTop As Variant
+'Private mBottom As Variant
 
 Private mDevs As Double
 
 Private mNumberOfValuesToCache As Long
 
-Private mBottomCache As TradeBuildSP.IStudyValueCache
-Private mCentreCache As TradeBuildSP.IStudyValueCache
-Private mTopCache As TradeBuildSP.IStudyValueCache
+'Private mBottomCache As TradeBuildSP.IStudyValueCache
+'Private mCentreCache As TradeBuildSP.IStudyValueCache
+'Private mTopCache As TradeBuildSP.IStudyValueCache
+'Private mSpreadCache As TradeBuildSP.IStudyValueCache
 
 '================================================================================
 ' Class Event Handlers
@@ -119,17 +120,38 @@ Set IStudy_addStudy = mStudyServiceConsumer.replayStudyValues( _
                             Me, _
                             ValueName, _
                             numUnderlyingValuesToUse, _
+                            TaskDiscriminators.TaskAddStudy, _
                             taskName, _
                             taskData)
 IStudy_addStudy.addTaskCompletionListener Me
 
 End Function
 
-Private Sub IStudy_addStudyValueListener( _
+Private Function IStudy_addStudyValueListener( _
                 ByVal listener As TradeBuildSP.IStudyValueListener, _
-                ByRef valueNames() As String)
-mListeners.Add listener, valueNames
-End Sub
+                ByVal ValueName As String, _
+                ByVal numberOfValuesToReplay As Long, _
+                Optional ByVal taskName As String, _
+                Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
+Select Case UCase$(ValueName)
+Case UCase$(BBValueBottom)
+Case UCase$(BBValueCentre)
+Case UCase$(BBValueSpread)
+Case UCase$(BBValueTop)
+Case Else
+    Exit Function
+End Select
+
+Set IStudy_addStudyValueListener = mStudyServiceConsumer.replayStudyValues( _
+                            listener, _
+                            Me, _
+                            ValueName, _
+                            numberOfValuesToReplay, _
+                            TaskDiscriminators.TaskAddStudyValueListener, _
+                            taskName, _
+                            taskData)
+IStudy_addStudyValueListener.addTaskCompletionListener Me
+End Function
 
 Private Property Get IStudy_baseStudy() As IStudy
 Set IStudy_baseStudy = Me
@@ -254,7 +276,16 @@ Private Sub ITaskCompletionListener_taskCompleted( _
                 ev As TradeBuildSP.TaskCompletionEvent)
 Dim task As IValueReplayTask
 Set task = ev.Source
-mStudies.Add task.targetStudy, task.ValueName
+Select Case task.discriminator
+Case TaskDiscriminators.TaskAddStudy
+    Dim targetStudy As IStudy
+    Set targetStudy = task.Target
+    mStudies.Add targetStudy, task.ValueName
+Case TaskDiscriminators.TaskAddStudyValueListener
+    Dim targetListener As IStudyValueListener
+    Set targetListener = task.Target
+    mListeners.Add targetListener, task.ValueName
+End Select
 End Sub
 
 '================================================================================

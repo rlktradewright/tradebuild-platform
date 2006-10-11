@@ -117,6 +117,7 @@ Case UCase$(SwingValueSwingPoint)
                                                 SwingValueSwingPoint, _
                                                 Me, _
                                                 numUnderlyingValuesToUse, _
+                                                TaskDiscriminators.TaskAddStudy, _
                                                 taskName, _
                                                 taskData)
     IStudy_addStudy.addTaskCompletionListener Me
@@ -124,11 +125,23 @@ End Select
 
 End Function
 
-Private Sub IStudy_addStudyValueListener( _
+Private Function IStudy_addStudyValueListener( _
                 ByVal listener As TradeBuildSP.IStudyValueListener, _
-                valueNames() As String)
-mListeners.Add listener, valueNames
-End Sub
+                ByVal ValueName As String, _
+                ByVal numberOfValuesToReplay As Long, _
+                Optional ByVal taskName As String, _
+                Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
+Select Case UCase$(ValueName)
+Case UCase$(SwingValueSwingPoint)
+    Set IStudy_addStudyValueListener = mSwingCache.replayValues(listener, _
+                                Me, _
+                                numberOfValuesToReplay, _
+                                TaskDiscriminators.TaskAddStudyValueListener, _
+                                taskName, _
+                                taskData)
+    IStudy_addStudyValueListener.addTaskCompletionListener Me
+End Select
+End Function
 
 Private Property Get IStudy_baseStudy() As IStudy
 Set IStudy_baseStudy = Me
@@ -146,7 +159,7 @@ Private Function IStudy_getStudyValue( _
                 ByVal ValueName As String, _
                 ByVal ref As Long, _
                 ByRef params() As Variant) As StudyValue
-Select Case LCase$(ValueName)
+Select Case UCase$(ValueName)
 Case UCase$(DefaultStudyValueName), UCase$(SwingValueSwingPoint)
     IStudy_getStudyValue = Swing(ref)
 End Select
@@ -444,7 +457,7 @@ Set IStudy_studyDefinition = GSwing.studyDefinition
 End Property
 
 '================================================================================
-' ITaskCompletionListener Interface Members
+' IStudyValueResolver Interface Members
 '================================================================================
 
 Private Function IStudyValueResolver_resolveValue( _
@@ -468,7 +481,16 @@ Private Sub ITaskCompletionListener_taskCompleted( _
                 ev As TradeBuildSP.TaskCompletionEvent)
 Dim task As IValueReplayTask
 Set task = ev.Source
-mStudies.Add task.targetStudy, task.ValueName
+Select Case task.discriminator
+Case TaskDiscriminators.TaskAddStudy
+    Dim targetStudy As IStudy
+    Set targetStudy = task.Target
+    mStudies.Add targetStudy, task.ValueName
+Case TaskDiscriminators.TaskAddStudyValueListener
+    Dim targetListener As IStudyValueListener
+    Set targetListener = task.Target
+    mListeners.Add targetListener, task.ValueName
+End Select
 End Sub
 
 '================================================================================

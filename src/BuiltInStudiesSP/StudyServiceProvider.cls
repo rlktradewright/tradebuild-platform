@@ -145,35 +145,35 @@ Private Function IStudyServiceProvider_createStudy( _
                 ByVal name As String, _
                 ByVal serviceConsumer As TradeBuildSP.IStudyServiceConsumer) As TradeBuildSP.IStudy
 Select Case UCase$(name)
-Case UCase$(AtrName)
+Case UCase$(AtrName), UCase$(AtrShortName)
     Dim lAtr As New ATR
     lAtr.initialise mCommonServiceConsumer, serviceConsumer
     Set IStudyServiceProvider_createStudy = lAtr
-Case UCase$(BbName)
+Case UCase$(BbName), UCase$(BbShortName)
     Dim lBb As New BollingerBands
     lBb.initialise mCommonServiceConsumer, serviceConsumer
     Set IStudyServiceProvider_createStudy = lBb
-Case UCase$(DoncName)
+Case UCase$(DoncName), UCase$(DoncName)
     Dim lDonc As New DonchianChannels
     lDonc.initialise mCommonServiceConsumer, serviceConsumer
     Set IStudyServiceProvider_createStudy = lDonc
-Case UCase$(EmaName)
+Case UCase$(EmaName), UCase$(EmaShortName)
     Dim lEMA As New EMA
     lEMA.initialise mCommonServiceConsumer, serviceConsumer
     Set IStudyServiceProvider_createStudy = lEMA
-Case UCase$(SmaName)
+Case UCase$(SmaName), UCase$(SmaShortName)
     Dim lSMA As New SMA
     lSMA.initialise mCommonServiceConsumer, serviceConsumer
     Set IStudyServiceProvider_createStudy = lSMA
-Case UCase$(MacdName)
+Case UCase$(MacdName), UCase$(MacdShortName)
     Dim lMACD As New MACD
     lMACD.initialise mCommonServiceConsumer, serviceConsumer
     Set IStudyServiceProvider_createStudy = lMACD
-Case UCase$(SdName)
+Case UCase$(SdName), UCase$(SdShortName)
     Dim lSD As New StandardDeviation
     lSD.initialise mCommonServiceConsumer, serviceConsumer
     Set IStudyServiceProvider_createStudy = lSD
-Case UCase$(SwingName)
+Case UCase$(SwingName), UCase$(SwingShortName)
     Dim lSwing As New Swing
     lSwing.initialise mCommonServiceConsumer, serviceConsumer
     Set IStudyServiceProvider_createStudy = lSwing
@@ -184,21 +184,21 @@ End Function
 Private Function IStudyServiceProvider_getStudyDefaultParameters( _
                 ByVal name As String) As TradeBuildSP.IParameters
 Select Case UCase$(name)
-Case UCase$(AtrName)
+Case UCase$(AtrName), UCase$(AtrShortName)
     Set IStudyServiceProvider_getStudyDefaultParameters = GATR.defaultParameters
-Case UCase$(BbName)
+Case UCase$(BbName), UCase$(BbShortName)
     Set IStudyServiceProvider_getStudyDefaultParameters = GBollingerBands.defaultParameters
-Case UCase$(DoncName)
+Case UCase$(DoncName), UCase$(DoncName)
     Set IStudyServiceProvider_getStudyDefaultParameters = GDonchianChannels.defaultParameters
-Case UCase$(EmaName)
+Case UCase$(EmaName), UCase$(EmaShortName)
     Set IStudyServiceProvider_getStudyDefaultParameters = GEMA.defaultParameters
-Case UCase$(SmaName)
+Case UCase$(SmaName), UCase$(SmaShortName)
     Set IStudyServiceProvider_getStudyDefaultParameters = GSMA.defaultParameters
-Case UCase$(MacdName)
+Case UCase$(MacdName), UCase$(MacdShortName)
     Set IStudyServiceProvider_getStudyDefaultParameters = GMACD.defaultParameters
-Case UCase$(SdName)
+Case UCase$(SdName), UCase$(SdShortName)
     Set IStudyServiceProvider_getStudyDefaultParameters = GStandardDeviation.defaultParameters
-Case UCase$(SwingName)
+Case UCase$(SwingName), UCase$(SwingShortName)
     Set IStudyServiceProvider_getStudyDefaultParameters = GSwing.defaultParameters
 End Select
 
@@ -215,21 +215,21 @@ Private Function IStudyServiceProvider_setStudyDefaultParameters( _
 IStudyServiceProvider_setStudyDefaultParameters = True
 
 Select Case UCase$(name)
-Case UCase$(AtrName)
+Case UCase$(AtrName), UCase$(AtrShortName)
     GATR.defaultParameters = parameters
-Case UCase$(BbName)
+Case UCase$(BbName), UCase$(BbShortName)
     GBollingerBands.defaultParameters = parameters
-Case UCase$(DoncName)
+Case UCase$(DoncName), UCase$(DoncName)
     GDonchianChannels.defaultParameters = parameters
-Case UCase$(EmaName)
+Case UCase$(EmaName), UCase$(EmaShortName)
     GEMA.defaultParameters = parameters
-Case UCase$(SmaName)
+Case UCase$(SmaName), UCase$(SmaShortName)
     GSMA.defaultParameters = parameters
-Case UCase$(MacdName)
+Case UCase$(MacdName), UCase$(MacdShortName)
     GMACD.defaultParameters = parameters
-Case UCase$(SdName)
+Case UCase$(SdName), UCase$(SdShortName)
     GStandardDeviation.defaultParameters = parameters
-Case UCase$(SwingName)
+Case UCase$(SwingName), UCase$(SwingShortName)
     GSwing.defaultParameters = parameters
 Case Else
     IStudyServiceProvider_setStudyDefaultParameters = False
@@ -240,21 +240,21 @@ End Function
 Private Function IStudyServiceProvider_studyDefinition( _
                 ByVal name As String) As TradeBuildSP.IStudyDefinition
 Select Case UCase$(name)
-Case UCase$(AtrName)
+Case UCase$(AtrName), UCase$(AtrShortName)
     Set IStudyServiceProvider_studyDefinition = GATR.studyDefinition
-Case UCase$(BbName)
+Case UCase$(BbName), UCase$(BbShortName)
     Set IStudyServiceProvider_studyDefinition = GBollingerBands.studyDefinition
-Case UCase$(DoncName)
+Case UCase$(DoncName), UCase$(DoncName)
     Set IStudyServiceProvider_studyDefinition = GDonchianChannels.studyDefinition
-Case UCase$(EmaName)
+Case UCase$(EmaName), UCase$(EmaShortName)
     Set IStudyServiceProvider_studyDefinition = GEMA.studyDefinition
-Case UCase$(SmaName)
+Case UCase$(SmaName), UCase$(SmaShortName)
     Set IStudyServiceProvider_studyDefinition = GSMA.studyDefinition
-Case UCase$(MacdName)
+Case UCase$(MacdName), UCase$(MacdShortName)
     Set IStudyServiceProvider_studyDefinition = GMACD.studyDefinition
-Case UCase$(SdName)
+Case UCase$(SdName), UCase$(SdShortName)
     Set IStudyServiceProvider_studyDefinition = GStandardDeviation.studyDefinition
-Case UCase$(SwingName)
+Case UCase$(SwingName), UCase$(SwingShortName)
     Set IStudyServiceProvider_studyDefinition = GSwing.studyDefinition
 End Select
 

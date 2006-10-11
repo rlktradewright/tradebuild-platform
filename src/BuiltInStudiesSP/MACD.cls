@@ -133,27 +133,69 @@ Private Function IStudy_addStudy( _
                 Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
 
 
-Select Case ValueName
-Case MACDValueMACD
-    Set IStudy_addStudy = mMACDCache.replayValues(study, Me, numUnderlyingValuesToUse, taskName, taskData)
+Select Case UCase$(ValueName)
+Case UCase$(MACDValueMACD)
+    Set IStudy_addStudy = mMACDCache.replayValues( _
+                                study, _
+                                Me, _
+                                numUnderlyingValuesToUse, _
+                                TaskDiscriminators.TaskAddStudy, _
+                                taskName, _
+                                taskData)
     IStudy_addStudy.addTaskCompletionListener Me
-Case MACDValueMACDHist
-    Set IStudy_addStudy = mMACDHistCache.replayValues(study, Me, numUnderlyingValuesToUse, taskName, taskData)
+Case UCase$(MACDValueMACDHist)
+    Set IStudy_addStudy = mMACDHistCache.replayValues( _
+                                study, _
+                                Me, _
+                                numUnderlyingValuesToUse, _
+                                TaskDiscriminators.TaskAddStudy, _
+                                taskName, _
+                                taskData)
     IStudy_addStudy.addTaskCompletionListener Me
-Case MACDValueMACDSignal
-    Set IStudy_addStudy = mMACDSignalCache.replayValues(study, Me, numUnderlyingValuesToUse, taskName, taskData)
+Case UCase$(MACDValueMACDSignal)
+    Set IStudy_addStudy = mMACDSignalCache.replayValues( _
+                                study, _
+                                Me, _
+                                numUnderlyingValuesToUse, _
+                                TaskDiscriminators.TaskAddStudy, _
+                                taskName, _
+                                taskData)
     IStudy_addStudy.addTaskCompletionListener Me
-Case MACDValueMACDUpperBalance
-    Set IStudy_addStudy = mUpperBalanceCache.replayValues(study, Me, numUnderlyingValuesToUse, taskName, taskData)
+Case UCase$(MACDValueMACDUpperBalance)
+    Set IStudy_addStudy = mUpperBalanceCache.replayValues( _
+                                study, _
+                                Me, _
+                                numUnderlyingValuesToUse, _
+                                TaskDiscriminators.TaskAddStudy, _
+                                taskName, _
+                                taskData)
     IStudy_addStudy.addTaskCompletionListener Me
-Case MACDValueMACDLowerBalance
-    Set IStudy_addStudy = mLowerBalanceCache.replayValues(study, Me, numUnderlyingValuesToUse, taskName, taskData)
+Case UCase$(MACDValueMACDLowerBalance)
+    Set IStudy_addStudy = mLowerBalanceCache.replayValues( _
+                                study, _
+                                Me, _
+                                numUnderlyingValuesToUse, _
+                                TaskDiscriminators.TaskAddStudy, _
+                                taskName, _
+                                taskData)
     IStudy_addStudy.addTaskCompletionListener Me
-Case MACDValueStrength
-    Set IStudy_addStudy = mStrengthCache.replayValues(study, Me, numUnderlyingValuesToUse, taskName, taskData)
+Case UCase$(MACDValueStrength)
+    Set IStudy_addStudy = mStrengthCache.replayValues( _
+                                study, _
+                                Me, _
+                                numUnderlyingValuesToUse, _
+                                TaskDiscriminators.TaskAddStudy, _
+                                taskName, _
+                                taskData)
     IStudy_addStudy.addTaskCompletionListener Me
-Case MACDValueStrengthCount
-    Set IStudy_addStudy = mStrengthCountCache.replayValues(study, Me, numUnderlyingValuesToUse, taskName, taskData)
+Case UCase$(MACDValueStrengthCount)
+    Set IStudy_addStudy = mStrengthCountCache.replayValues( _
+                                study, _
+                                Me, _
+                                numUnderlyingValuesToUse, _
+                                TaskDiscriminators.TaskAddStudy, _
+                                taskName, _
+                                taskData)
     IStudy_addStudy.addTaskCompletionListener Me
 Case Else
     ' just return Nothing
@@ -161,11 +203,71 @@ End Select
 
 End Function
 
-Private Sub IStudy_addStudyValueListener( _
+Private Function IStudy_addStudyValueListener( _
                 ByVal listener As TradeBuildSP.IStudyValueListener, _
-                valueNames() As String)
-mListeners.Add listener, valueNames
-End Sub
+                ByVal ValueName As String, _
+                ByVal numberOfValuesToReplay As Long, _
+                Optional ByVal taskName As String, _
+                Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
+Select Case UCase$(ValueName)
+Case UCase$(MACDValueMACD)
+    Set IStudy_addStudyValueListener = mMACDCache.replayValues(listener, _
+                                Me, _
+                                numberOfValuesToReplay, _
+                                TaskDiscriminators.TaskAddStudyValueListener, _
+                                taskName, _
+                                taskData)
+    IStudy_addStudyValueListener.addTaskCompletionListener Me
+Case UCase$(MACDValueMACDHist)
+    Set IStudy_addStudyValueListener = mMACDHistCache.replayValues(listener, _
+                                Me, _
+                                numberOfValuesToReplay, _
+                                TaskDiscriminators.TaskAddStudyValueListener, _
+                                taskName, _
+                                taskData)
+    IStudy_addStudyValueListener.addTaskCompletionListener Me
+Case UCase$(MACDValueMACDSignal)
+    Set IStudy_addStudyValueListener = mMACDSignalCache.replayValues(listener, _
+                                Me, _
+                                numberOfValuesToReplay, _
+                                TaskDiscriminators.TaskAddStudyValueListener, _
+                                taskName, _
+                                taskData)
+    IStudy_addStudyValueListener.addTaskCompletionListener Me
+Case UCase$(MACDValueMACDUpperBalance)
+    Set IStudy_addStudyValueListener = mUpperBalanceCache.replayValues(listener, _
+                                Me, _
+                                numberOfValuesToReplay, _
+                                TaskDiscriminators.TaskAddStudyValueListener, _
+                                taskName, _
+                                taskData)
+    IStudy_addStudyValueListener.addTaskCompletionListener Me
+Case UCase$(MACDValueMACDLowerBalance)
+    Set IStudy_addStudyValueListener = mLowerBalanceCache.replayValues(listener, _
+                                Me, _
+                                numberOfValuesToReplay, _
+                                TaskDiscriminators.TaskAddStudyValueListener, _
+                                taskName, _
+                                taskData)
+    IStudy_addStudyValueListener.addTaskCompletionListener Me
+Case UCase$(MACDValueStrength)
+    Set IStudy_addStudyValueListener = mStrengthCache.replayValues(listener, _
+                                Me, _
+                                numberOfValuesToReplay, _
+                                TaskDiscriminators.TaskAddStudyValueListener, _
+                                taskName, _
+                                taskData)
+    IStudy_addStudyValueListener.addTaskCompletionListener Me
+Case UCase$(MACDValueStrengthCount)
+    Set IStudy_addStudyValueListener = mStrengthCountCache.replayValues(listener, _
+                                Me, _
+                                numberOfValuesToReplay, _
+                                TaskDiscriminators.TaskAddStudyValueListener, _
+                                taskName, _
+                                taskData)
+    IStudy_addStudyValueListener.addTaskCompletionListener Me
+End Select
+End Function
 
 Private Property Get IStudy_baseStudy() As IStudy
 Set IStudy_baseStudy = Me
@@ -238,7 +340,7 @@ End If
 
 evOut.barnumber = ev.barnumber
 Set evOut.Source = Me
-evOut.Timestamp = ev.Timestamp
+evOut.timestamp = ev.timestamp
 evOut.value = ev.value
 evOut.ValueName = ""
 
@@ -248,11 +350,11 @@ If isNewBar Then
     
     ' on the first tick of each bar, determine the two balance points, using
     ' the previous values as starting point where they are non-empty
-    If determineLowerBalancePoint(IIf(IsEmpty(mLowerBalance), ev.value, mLowerBalance), ev.barnumber, ev.Timestamp) Then
-        mLowerBalanceCache.addValue mLowerBalance, ev.barnumber, ev.Timestamp
+    If determineLowerBalancePoint(IIf(IsEmpty(mLowerBalance), ev.value, mLowerBalance), ev.barnumber, ev.timestamp) Then
+        mLowerBalanceCache.addValue mLowerBalance, ev.barnumber, ev.timestamp
     End If
-    If determineUpperBalancePoint(IIf(IsEmpty(mUpperBalance), ev.value, mUpperBalance), ev.barnumber, ev.Timestamp) Then
-        mUpperBalanceCache.addValue mUpperBalance, ev.barnumber, ev.Timestamp
+    If determineUpperBalancePoint(IIf(IsEmpty(mUpperBalance), ev.value, mUpperBalance), ev.barnumber, ev.timestamp) Then
+        mUpperBalanceCache.addValue mUpperBalance, ev.barnumber, ev.timestamp
     End If
 End If
 
@@ -277,10 +379,10 @@ Else
 End If
 
 If isNewBar Then
-    mMACDCache.addValue mMACD, ev.barnumber, ev.Timestamp
-    mMACDHistCache.addValue mMACDHist, ev.barnumber, ev.Timestamp
-    mMACDSignalCache.addValue mMACDSignal, ev.barnumber, ev.Timestamp
-    mStrengthCache.addValue mStrength, ev.barnumber, ev.Timestamp
+    mMACDCache.addValue mMACD, ev.barnumber, ev.timestamp
+    mMACDHistCache.addValue mMACDHist, ev.barnumber, ev.timestamp
+    mMACDSignalCache.addValue mMACDSignal, ev.barnumber, ev.timestamp
+    mStrengthCache.addValue mStrength, ev.barnumber, ev.timestamp
             
     If mMACDCache.Count < 3 Then
     ElseIf IsEmpty(strength(-1)) Or IsEmpty(strength(-2)) Then
@@ -293,12 +395,12 @@ If isNewBar Then
         End If
     End If
     If mStrengthCountCache.Count > 1 Then mStrengthCountCache.updateValue mStrengthCount, , , -1
-    mStrengthCountCache.addValue Empty, ev.barnumber, ev.Timestamp
+    mStrengthCountCache.addValue Empty, ev.barnumber, ev.timestamp
 Else
-    mMACDCache.updateValue mMACD, ev.barnumber, ev.Timestamp
-    mMACDHistCache.updateValue mMACDHist, ev.barnumber, ev.Timestamp
-    mMACDSignalCache.updateValue mMACDSignal, ev.barnumber, ev.Timestamp
-    mStrengthCache.updateValue mStrength, ev.barnumber, ev.Timestamp
+    mMACDCache.updateValue mMACD, ev.barnumber, ev.timestamp
+    mMACDHistCache.updateValue mMACDHist, ev.barnumber, ev.timestamp
+    mMACDSignalCache.updateValue mMACDSignal, ev.barnumber, ev.timestamp
+    mStrengthCache.updateValue mStrength, ev.barnumber, ev.timestamp
 End If
 
 notifyValue mMACD, MACDValueMACD, evOut
@@ -369,7 +471,16 @@ Private Sub ITaskCompletionListener_taskCompleted( _
                 ev As TradeBuildSP.TaskCompletionEvent)
 Dim task As IValueReplayTask
 Set task = ev.Source
-mStudies.Add task.targetStudy, task.ValueName
+Select Case task.discriminator
+Case TaskDiscriminators.TaskAddStudy
+    Dim targetStudy As IStudy
+    Set targetStudy = task.Target
+    mStudies.Add targetStudy, task.ValueName
+Case TaskDiscriminators.TaskAddStudyValueListener
+    Dim targetListener As IStudyValueListener
+    Set targetListener = task.Target
+    mListeners.Add targetListener, task.ValueName
+End Select
 End Sub
 
 '================================================================================
@@ -502,7 +613,7 @@ End Sub
 Private Function determineBalancePoints( _
                 ByVal startingPrice As Double, _
                 ByVal barnumber As Long, _
-                ByVal Timestamp As Date) As Boolean
+                ByVal timestamp As Date) As Boolean
 Dim trialPrice As Double
 Dim upperBalanceFound As Boolean
 Dim lowerBalanceFound As Boolean
@@ -516,7 +627,7 @@ If IsEmpty(MACD.value) Or _
 
 ev.barnumber = barnumber
 Set ev.Source = Me
-ev.Timestamp = Timestamp
+ev.timestamp = timestamp
 
 determineBalancePoints = True
 
@@ -588,14 +699,14 @@ End Function
 Private Function determineLowerBalancePoint( _
                 ByVal startingPrice As Double, _
                 ByVal barnumber As Long, _
-                ByVal Timestamp As Date) As Boolean
+                ByVal timestamp As Date) As Boolean
 Dim trialPrice As Double
 Dim ev As TradeBuildSP.StudyValueEvent
 
 If mMACDCache.Count = 0 Then Exit Function
 ev.barnumber = barnumber
 Set ev.Source = Me
-ev.Timestamp = Timestamp
+ev.timestamp = timestamp
 
 trialPrice = startingPrice
 ev.value = trialPrice
@@ -634,7 +745,7 @@ End Function
 Private Function determineUpperBalancePoint( _
                 ByVal startingPrice As Double, _
                 ByVal barnumber As Long, _
-                ByVal Timestamp As Date) As Boolean
+                ByVal timestamp As Date) As Boolean
 Dim trialPrice As Double
 Dim ev As TradeBuildSP.StudyValueEvent
 
@@ -642,7 +753,7 @@ If mMACDCache.Count = 0 Then Exit Function
 
 ev.barnumber = barnumber
 Set ev.Source = Me
-ev.Timestamp = Timestamp
+ev.timestamp = timestamp
 
 trialPrice = startingPrice
 ev.value = trialPrice
