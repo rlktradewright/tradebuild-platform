@@ -2369,14 +2369,18 @@ interface IOrderPlex : IDispatch {
 
 		// Methods =====================================================
 
-		HRESULT addStudyValueListener(
-			[in] IStudyValueListener* listener, 
-			[in, out] SAFEARRAY(BSTR)* valueNames);
-
         HRESULT addStudy(
 			[in] IStudy* study, 
 			[in] BSTR valueName,
 			[in] long numUnderlyingValuesToUse,
+			[in, optional] BSTR taskName, 
+			[in, optional] VARIANT taskData,
+			[out, retval] ITaskCompletion**);
+
+		HRESULT addStudyValueListener(
+			[in] IStudyValueListener* listener, 
+			[in] BSTR valueName,
+			[in] long numberOfValuesToReplay,
 			[in, optional] BSTR taskName, 
 			[in, optional] VARIANT taskData,
 			[out, retval] ITaskCompletion**);
@@ -2528,10 +2532,11 @@ interface IOrderPlex : IDispatch {
 		// Methods =====================================================
 
 		HRESULT replayStudyValues(
-			[in] IStudy* targetStudy, 			
+			[in] IDispatch* target, 			
 			[in] IStudy* sourceStudy, 
 			[in] BSTR valueName,
 			[in] long numUnderlyingValuesToUse, 
+			[in, optional] long discriminator,
 			[in, optional] BSTR taskName,
 			[in, optional] VARIANT taskData,
 			[out, retval] ITaskCompletion** );
@@ -2608,19 +2613,21 @@ interface IOrderPlex : IDispatch {
 			[out, retval] StudyValue* );
 
 		HRESULT replayValues(
-			[in] IStudy* targetStudy, 			
+			[in] IDispatch* target, 			
 			[in] IStudy* sourceStudy, 
 			[in] long numUnderlyingValuesToUse, 
+			[in, optional] long discriminator,
 			[in, optional] BSTR taskName,
 			[in, optional] VARIANT taskData,
 			[out, retval] ITaskCompletion** );
 
 		HRESULT replayValuesWithResolver(
-			[in] IStudy* targetStudy, 			
+			[in] IDispatch* target, 			
 			[in] IStudy* sourceStudy, 
 			[in] BSTR requiredValueName,
 			[in] IStudyValueResolver* resolver,
 			[in] long numUnderlyingValuesToUse, 
+			[in, optional] long discriminator,
 			[in, optional] BSTR taskName,
 			[in, optional] VARIANT data,
 			[out, retval] ITaskCompletion** );
@@ -2744,7 +2751,7 @@ interface IOrderPlex : IDispatch {
 
 		HRESULT Add(
 			[in] IStudyValueListener* listener, 
-			[in, out] SAFEARRAY(BSTR)* valueNames);
+			[in] BSTR valueName);
 
 		HRESULT Count(
 			[out, retval] long* );
@@ -3084,10 +3091,13 @@ interface IOrderPlex : IDispatch {
 		// Properties ==================================================
 
         [propget]
+        HRESULT Discriminator([out, retval] long* );
+
+        [propget]
         HRESULT SourceStudy([out, retval] IStudy** );
 
         [propget]
-        HRESULT TargetStudy([out, retval] IStudy** );
+        HRESULT Target([out, retval] IDispatch** );
 
         [propget]
         HRESULT ValueName([out, retval] BSTR* );

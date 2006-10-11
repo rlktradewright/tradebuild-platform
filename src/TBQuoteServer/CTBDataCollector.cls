@@ -21,7 +21,7 @@ Option Explicit
 ' Events
 '================================================================================
 
-Event Connected(ByVal timestamp As Date)
+'Event Connected(ByVal timestamp As Date)
 Event connectFailed(ByVal timestamp As Date, _
                 ByVal description As String, _
                 ByVal retrying As Boolean)
@@ -120,11 +120,14 @@ End Sub
 ' mTicker Event Handlers
 '================================================================================
 
-Private Sub mTicker_ContractInvalid(ByVal ContractSpecifier As TradeBuild.ContractSpecifier)
+Private Sub mTicker_ContractInvalid( _
+                ByVal ContractSpecifier As TradeBuild.ContractSpecifier, _
+                ByVal reason As String)
 startNextTicker
 End Sub
 
-Private Sub mTicker_Ready(ByVal timestamp As Date, ByVal contract As TradeBuild.contract)
+Private Sub mTicker_Ready( _
+                ByVal contract As TradeBuild.contract)
 mTickerListener.contract = mTicker.contract
 
 RaiseEvent TickerAdded(mTicker)
@@ -161,16 +164,16 @@ Set mTicker = mTradeBuildAPI.Tickers.Add(GenerateGUIDString)
 
 If mWriteTicks Then
     mTicker.outputTickfileFormat = mOutputFormat
-    mTicker.outputTickFilePath = mOutputPath
+    mTicker.outputTickfilePath = mOutputPath
     mTicker.DOMEventsRequired = DOMNoEvents
-    mTicker.writeToTickfile = True
+    mTicker.writeToTickFile = True
 End If
 
 If mWriteBars Then
-    Set mTimeframe1 = mTicker.Timeframes.Add(1, TimePeriodUnits.Minute, "1min", 0, 15)
-    Set mTimeframe5 = mTicker.Timeframes.Add(5, TimePeriodUnits.Minute, "5min", 0, 30)
-    Set mTimeframe15 = mTicker.Timeframes.Add(15, TimePeriodUnits.Minute, "15min", 0, 60)
-    Set mTimeframe60 = mTicker.Timeframes.Add(60, TimePeriodUnits.Minute, "60min", 0, 60)
+    Set mTimeframe1 = mTicker.Timeframes.Add(1, TimePeriodUnits.TimePeriodMinute, "1min", 0, 15)
+    Set mTimeframe5 = mTicker.Timeframes.Add(5, TimePeriodUnits.TimePeriodMinute, "5min", 0, 30)
+    Set mTimeframe15 = mTicker.Timeframes.Add(15, TimePeriodUnits.TimePeriodMinute, "15min", 0, 60)
+    Set mTimeframe60 = mTicker.Timeframes.Add(60, TimePeriodUnits.TimePeriodMinute, "60min", 0, 60)
 End If
 
 Set mTickerListener = New TickerListener
@@ -191,17 +194,17 @@ End Sub
 ' mTradeBuildAPI Event Handlers
 '================================================================================
 
-Private Sub mTradeBuildAPI_connected(ByVal timestamp As Date)
-
-RaiseEvent Connected(timestamp)
-
-' setup the tickers using a short timer
-Set mTimer = New TimerUtils.IntervalTimer
-mTimer.RepeatNotifications = False
-mTimer.TimerIntervalMillisecs = 1
-mTimer.StartTimer
-
-End Sub
+'Private Sub mTradeBuildAPI_connected(ByVal timestamp As Date)
+'
+'RaiseEvent Connected(timestamp)
+'
+'' setup the tickers using a short timer
+'Set mTimer = New TimerUtils.IntervalTimer
+'mTimer.RepeatNotifications = False
+'mTimer.TimerIntervalMillisecs = 1
+'mTimer.StartTimer
+'
+'End Sub
 
 Private Sub mTradeBuildAPI_connectFailed( _
                 ByVal timestamp As Date, _
@@ -230,7 +233,7 @@ Private Sub mTradeBuildAPI_errorMessage(ByVal timestamp As Date, _
                                 ByVal errorMsg As String)
 Dim spError As ServiceProviderError
 
-If errorCode = ServiceProviderErrorNotification Then
+If errorCode = ApiErrorCodes.ApiErrServiceProviderError Then
     Set spError = mTradeBuildAPI.getServiceProviderError
     With spError
         RaiseEvent ServiceProviderError(.timestamp, _
@@ -305,8 +308,20 @@ End Property
 '================================================================================
 
 Public Sub startCollection()
-mTradeBuildAPI.ConnectionRetryIntervalSecs = 10
-mTradeBuildAPI.Connect IIf(mServer = "", "127.0.0.1", mServer), mPort, mClientID
+Dim realtimeServiceProvider As Object
+Set realtimeServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject("IBTWSSP.RealtimeDataServiceProvider"))
+realtimeServiceProvider.Server = mServer
+realtimeServiceProvider.Port = mPort
+realtimeServiceProvider.ClientID = mClientID
+realtimeServiceProvider.providerKey = "IB"
+realtimeServiceProvider.keepConnection = True
+
+' setup the tickers using a short timer
+Set mTimer = New TimerUtils.IntervalTimer
+mTimer.RepeatNotifications = False
+mTimer.TimerIntervalMillisecs = 1
+mTimer.StartTimer
+
 End Sub
 
 Public Sub stopCollection()
@@ -314,7 +329,6 @@ Dim lTicker As ticker
 For Each lTicker In mTradeBuildAPI.Tickers
     lTicker.StopTicker
 Next
-mTradeBuildAPI.disconnect
 End Sub
 
 '================================================================================

@@ -1,6 +1,6 @@
 Type=OleDll
 Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#E:\WINNT\system32\stdole2.tlb#OLE Automation
-Reference=*\G{4CD8AC11-78BE-4101-B5BC-F7505F278F8F}#1.2#0#..\..\TradeWright Common\TimerUtils\timerutils.dll#TradeWright Interval Timer Utilities
+Reference=*\G{4CD8AC11-78BE-4101-B5BC-F7505F278F8F}#1.2#0#..\..\TradeWright Common\TimerUtils\TimerUtils.dll#TradeWright Interval Timer Utilities
 Reference=*\G{1B78E244-45D7-423A-AEA1-E5BBAC807BDE}#43.0#0#..\..\TradeWright Common\AppFramework\AppFramework.dll#AppFramework
 Reference=*\G{B99E6CD6-8F65-4C7A-8FCA-70C97379752F}#1.1#0#..\TBInfoBase\TBInfoBase.dll#TradeWright TradeBuild Information Base
 Reference=*\G{348A850C-24BB-47B4-A812-81245C4379D5}#1.0#0#..\TickfileSP\TickfileSP.dll#TradeWright Tickfile Service Provider for TradeBuild

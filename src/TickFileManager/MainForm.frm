@@ -1047,7 +1047,7 @@ Private WithEvents mTradeBuildAPI As TradeBuildAPI
 Attribute mTradeBuildAPI.VB_VarHelpID = -1
 Private WithEvents mTickfileManager As TradeBuild.TickFileManager
 Attribute mTickfileManager.VB_VarHelpID = -1
-Private WithEvents mContracts As TradeBuild.contractS
+Private WithEvents mContracts As TradeBuild.Contracts
 Attribute mContracts.VB_VarHelpID = -1
 Private WithEvents mTicker As Ticker
 Attribute mTicker.VB_VarHelpID = -1
@@ -1057,7 +1057,7 @@ Private mRunningFromComandLine As Boolean
 Private mOutputFormat As String
 Private mOutputPath As String
 
-Private mQuoteTrackerSP As QuoteTrackerSP.QTServiceProvider
+Private mQuoteTrackerSP As QTSP.QTTickfileServiceProvider
 
 Private mContract As Contract
 
@@ -1158,7 +1158,7 @@ End If
 mTradeBuildAPI.ServiceProviders.Add TickfileSP
 
 On Error Resume Next
-Set mQuoteTrackerSP = New QuoteTrackerSP.QTServiceProvider
+Set mQuoteTrackerSP = New QTSP.QTTickfileServiceProvider
 On Error GoTo 0
 If mQuoteTrackerSP Is Nothing Then
     handleFatalError 997, _
@@ -1166,9 +1166,11 @@ If mQuoteTrackerSP Is Nothing Then
                     "Form_Load"
     Exit Sub
 End If
-mQuoteTrackerSP.providerKey = "IQFeed"
+mQuoteTrackerSP.providerKey = "QTIB"
 mQuoteTrackerSP.ConnectionRetryIntervalSecs = 10
 mQuoteTrackerSP.password = ""
+mQuoteTrackerSP.keepConnection = True
+mQuoteTrackerSP.logLevel = LogLevelLow
 mTradeBuildAPI.ServiceProviders.Add mQuoteTrackerSP
 
 On Error Resume Next
@@ -1412,9 +1414,9 @@ End Sub
 ' mContracts Event Handlers
 '================================================================================
 
-Private Sub mContracts_ContractSpecifierInvalid(ByVal ContractSpecifier As TradeBuild.ContractSpecifier)
+Private Sub mContracts_ContractSpecifierInvalid(ByVal reason As String)
 writeStatusMessage "Invalid contract specifier: " & _
-                    Replace(ContractSpecifier.ToString, vbCrLf, "; ")
+                    Replace(mContracts.ContractSpecifier.ToString, vbCrLf, "; ")
 End Sub
 
 Private Sub mContracts_NoMoreContractDetails()
@@ -1460,7 +1462,7 @@ For i = 0 To UBound(mTickfileSpecifiers)
         lSupportedInputTickfileFormats = mTradeBuildAPI.SupportedInputTickfileFormats
         For j = 0 To UBound(lSupportedInputTickfileFormats)
             If lSupportedInputTickfileFormats(j).Name = mInFormatValue Then
-                .TickfileFormatID = lSupportedInputTickfileFormats(j).FormalID
+                .tickfileFormatID = lSupportedInputTickfileFormats(j).FormalID
                 Exit For
             End If
         Next
@@ -1603,7 +1605,7 @@ Private Sub mTickfileManager_TickerAllocated(ByVal pTicker As TradeBuild.Ticker)
 Dim i As Long
 On Error GoTo err
 Set mTicker = pTicker
-mTicker.outputTickFilePath = mOutputPath
+mTicker.outputTickfilePath = mOutputPath
 mTicker.outputTickfileFormat = mOutputFormat
 If mOutputFormat <> "" Then
     mTicker.writeToTickfile = True

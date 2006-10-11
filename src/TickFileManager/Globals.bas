@@ -128,13 +128,13 @@ Case StrOrderTypeNone
 Case StrOrderTypeMarket
     orderTypeFromString = OrderTypeMarket
 Case StrOrderTypeMarketClose
-    orderTypeFromString = OrderTypeMarketClose
+    orderTypeFromString = OrderTypeMarketOnClose
 Case StrOrderTypeLimit
     orderTypeFromString = OrderTypeLimit
 Case StrOrderTypeLimitClose
-    orderTypeFromString = OrderTypeLimitClose
+    orderTypeFromString = OrderTypeLimitOnClose
 Case StrOrderTypePegMarket
-    orderTypeFromString = OrderTypePegMarket
+    orderTypeFromString = OrderTypePeggedToMarket
 Case StrOrderTypeStop
     orderTypeFromString = OrderTypeStop
 Case StrOrderTypeStopLimit
@@ -158,13 +158,13 @@ Case OrderTypeNone
     orderTypeToString = StrOrderTypeNone
 Case OrderTypeMarket
     orderTypeToString = StrOrderTypeMarket
-Case OrderTypeMarketClose
+Case OrderTypeMarketOnClose
     orderTypeToString = StrOrderTypeMarketClose
 Case OrderTypeLimit
     orderTypeToString = StrOrderTypeLimit
-Case OrderTypeLimitClose
+Case OrderTypeLimitOnClose
     orderTypeToString = StrOrderTypeLimitClose
-Case OrderTypePegMarket
+Case OrderTypePeggedToMarket
     orderTypeToString = StrOrderTypePegMarket
 Case OrderTypeStop
     orderTypeToString = StrOrderTypeStop
