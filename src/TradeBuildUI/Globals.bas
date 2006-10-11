@@ -27,6 +27,7 @@ Public Const LB_SETHORZEXTENT = &H194
 
 Public Const TaskTypeStartStudy As Long = 1
 Public Const TaskTypeReplayBars As Long = 2
+Public Const TaskTypeAddValueListener As Long = 3
 
 Public Const ErroredFieldColor As Long = &HD0CAFA
 

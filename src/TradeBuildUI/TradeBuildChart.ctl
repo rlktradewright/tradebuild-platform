@@ -461,7 +461,7 @@ Dim studyHorizRule As StudyHorizontalRule
 Dim line As ChartSkil.line
 Dim i As Long
 
-If mTicker Is Nothing Then Err.Raise TradeBuild.ErrorCodes.ErrIllegalStateException, _
+If mTicker Is Nothing Then err.Raise TradeBuild.ErrorCodes.ErrIllegalStateException, _
                                     "TradeBuildUI.TradeBuildChart::AddStudy", _
                                     "Chart not attached to ticker"
                                     
@@ -516,7 +516,7 @@ End Sub
 Public Sub finish()
 Dim lStudyValueHandler As StudyValueHandler
 
-On Error GoTo Err
+On Error GoTo err
 
 mChartControl.clearChart
 
@@ -531,7 +531,7 @@ Set mTicker = Nothing
 Set mBars = Nothing
 Exit Sub
 
-Err:
+err:
 'ignore any errors
 End Sub
 
@@ -799,11 +799,11 @@ Private Function includeStudyValueInChart( _
                 ByVal studyValueConfig As StudyValueConfiguration) As StudyValueHandler
                 
 Dim lStudyValueHandler As StudyValueHandler
-Dim valueNames(0) As String
 Dim region As ChartSkil.ChartRegion
 Dim dataSeries As ChartSkil.DataPointSeries
 Dim conditionalActions() As ConditionalAction
 Dim regionName As String
+Dim lTaskCompletion As TradeBuild.TaskCompletion
 
 Set lStudyValueHandler = New StudyValueHandler
 lStudyValueHandler.chart = Me
@@ -831,10 +831,21 @@ dataSeries.lineStyle = studyValueConfig.lineStyle
 dataSeries.lineThickness = studyValueConfig.lineThickness
 lStudyValueHandler.dataSeries = dataSeries
 
-valueNames(0) = studyValueConfig.valueName
-study.addStudyValueListener lStudyValueHandler, valueNames
-
 mStudyValueHandlers.add lStudyValueHandler
+
+Set lTaskCompletion = study.addStudyValueListener( _
+                            lStudyValueHandler, _
+                            studyValueConfig.valueName, _
+                            mBarSeries.count, _
+                            , _
+                            TaskTypeAddValueListener)
+
+If lTaskCompletion Is Nothing Then Exit Function
+
+mOutstandingTasks = mOutstandingTasks + 1
+lTaskCompletion.addTaskCompletionListener Me
+mChartControl.suppressDrawing = True
+
 Set includeStudyValueInChart = lStudyValueHandler
 End Function
 

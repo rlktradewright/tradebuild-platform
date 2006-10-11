@@ -1201,8 +1201,8 @@ End Sub
 ' mTicker Event Handlers
 '================================================================================
 
-Private Sub mTicker_stateEvent(ev As TradeBuild.TickerStateEvent)
-Dim fred As TickerStateCodes
+Private Sub mTicker_StateChange(ev As TradeBuild.StateChangeEvent)
+Dim fred As TickerStates
 Select Case ev.State
 Case TickerStateCreated
 

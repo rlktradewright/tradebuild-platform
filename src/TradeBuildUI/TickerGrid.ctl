@@ -420,7 +420,7 @@ End Sub
 ' mTickers Event Handlers
 '================================================================================
 
-Private Sub mTickers_TickerStateEvent(ByRef ev As TradeBuild.TickerStateEvent)
+Private Sub mTickers_StateChange(ev As TradeBuild.StateChangeEvent)
 Dim lTicker As TradeBuild.ticker
 Dim handle As Long
 Dim lContract As TradeBuild.Contract
