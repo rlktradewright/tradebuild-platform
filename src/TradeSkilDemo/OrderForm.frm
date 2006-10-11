@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{1942F60B-EC12-45BB-8FBB-89AA1BB15BA4}#1.0#0"; "TradeBuildUI.ocx"
+Object = "{1942F60B-EC12-45BB-8FBB-89AA1BB15BA4}#7.0#0"; "TradeBuildUI.ocx"
 Begin VB.Form OrderForm 
    ClientHeight    =   6165
    ClientLeft      =   60
