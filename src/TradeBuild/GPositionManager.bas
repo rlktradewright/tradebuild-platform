@@ -1,4 +1,4 @@
-Attribute VB_Name = "PositionManagerGlobals"
+Attribute VB_Name = "GPositionManager"
 Option Explicit
 
 '================================================================================

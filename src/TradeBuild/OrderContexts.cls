@@ -58,7 +58,7 @@ Private mEnabled As Boolean
 Private mDummy As Boolean
 Private mSimulated As Boolean
 
-Private mTicker As ticker
+Private mTicker As Ticker
 Private mPositionManager As PositionManager
 
 Private mOrderSubmitter As TradeBuildSP.IOrderSubmitter
@@ -109,7 +109,11 @@ End Property
 
 Friend Property Let orderSubmitter( _
                 ByVal value As TradeBuildSP.IOrderSubmitter)
+Dim lOrderContext As OrderContext
 Set mOrderSubmitter = value
+For Each lOrderContext In mOrderContexts
+    lOrderContext.orderSubmitter = value
+Next
 End Property
 
 Friend Property Let ProviderReady(ByVal value As Boolean)
@@ -128,8 +132,12 @@ Friend Property Let simulated(ByVal value As Boolean)
 mSimulated = value
 End Property
 
-Friend Property Let ticker(ByVal value As ticker)
+Friend Property Let Ticker(ByVal value As Ticker)
+Dim lOrderContext As OrderContext
 Set mTicker = value
+For Each lOrderContext In mOrderContexts
+    lOrderContext.Ticker = value
+Next
 End Property
 
 '================================================================================
@@ -144,7 +152,7 @@ If Not mEnabled Then
 End If
 
 Set add = New OrderContext
-add.ticker = mTicker
+add.Ticker = mTicker
 add.PositionManager = mPositionManager
 add.orderSubmitter = mOrderSubmitter
 add.dummy = mDummy

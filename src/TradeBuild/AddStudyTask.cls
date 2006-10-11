@@ -80,6 +80,13 @@ Dim lBar As Bar
 Dim i As Long
 Dim ev As TradeBuildSP.StudyValueEvent
 
+If mBars.Count = 0 Then
+    mBars.studies.add mStudy, mValueName
+    mTaskContext.finish
+    Set mTaskContext = Nothing
+    Exit Sub
+End If
+
 For i = (mStartBarNumber + mBarsNotified) To _
         (mStartBarNumber + mBarsNotified + 19)
     
@@ -89,17 +96,10 @@ For i = (mStartBarNumber + mBarsNotified) To _
         Set ev.source = mBars
         ev.barNumber = i
         
-'        If mNotifyNewbar Then
-'            ' use the bar number as the value
-'            ev.value = i
-'            ev.valueName = "newbar"
-'            mStudy.notify ev
-'        End If
-        
         If mNotifyClose Then
             ev.timestamp = lBar.datetime
             ev.value = lBar.openValue
-            ev.ValueName = "Close"
+            ev.ValueName = GBars.BarsValueClose
             mStudy.notify ev
         End If
         
@@ -107,48 +107,48 @@ For i = (mStartBarNumber + mBarsNotified) To _
             If mNotifyClose Then
                 ev.timestamp = lBar.datetime + (lBar.barLength / 3) / 1440
                 ev.value = lBar.highValue
-                ev.ValueName = "Close"
+                ev.ValueName = GBars.BarsValueClose
                 mStudy.notify ev
             End If
             
             If mNotifyClose Then
                 ev.timestamp = lBar.datetime + (2 * lBar.barLength / 3) / 1440
                 ev.value = lBar.lowValue
-                ev.ValueName = "Close"
+                ev.ValueName = GBars.BarsValueClose
                 mStudy.notify ev
             End If
         Else
             If mNotifyClose Then
                 ev.timestamp = lBar.datetime + (lBar.barLength / 3) / 1440
                 ev.value = lBar.lowValue
-                ev.ValueName = "Close"
+                ev.ValueName = GBars.BarsValueClose
                 mStudy.notify ev
             End If
             
             If mNotifyClose Then
                 ev.timestamp = lBar.datetime + (2 * lBar.barLength / 3) / 1440
                 ev.value = lBar.highValue
-                ev.ValueName = "Close"
+                ev.ValueName = GBars.BarsValueClose
                 mStudy.notify ev
             End If
         End If
         
         If mNotifyClose Then
-            ev.timestamp = lBar.datetime + lBar.barLength - OneSecond
+            ev.timestamp = lBar.datetime + lBar.barLength / 1440 - OneSecond
             ev.value = lBar.closeValue
-            ev.ValueName = "Close"
+            ev.ValueName = GBars.BarsValueClose
             mStudy.notify ev
         End If
         
         If mNotifyVolume Then
             ev.value = lBar.volume
-            ev.ValueName = "Volume"
+            ev.ValueName = GBars.BarsValueVolume
             mStudy.notify ev
         End If
         
         If mNotifyTickvolume Then
             ev.value = lBar.tickVolume
-            ev.ValueName = "Tick volume"
+            ev.ValueName = GBars.BarsValueTickVolume
             mStudy.notify ev
         End If
     End If
@@ -189,25 +189,26 @@ Dim numBarsToNotify As Long
 
 Set mBars = bars
 Set mStudy = study
-mValueName = LCase$(ValueName)
+mValueName = ValueName
 
-numBarsToNotify = study.numberOfBarsRequired
-If numUnderlyingValuesToUse = 0 Then numUnderlyingValuesToUse = mBars.Count
-If numUnderlyingValuesToUse > numBarsToNotify Then numBarsToNotify = numUnderlyingValuesToUse
+If numUnderlyingValuesToUse < 0 Then
+    ' just replay the number of values needed by the study
+    numBarsToNotify = study.numberOfBarsRequired
+Else
+    numBarsToNotify = numUnderlyingValuesToUse
+End If
 If numBarsToNotify > mBars.Count Then numBarsToNotify = mBars.Count
 
 mStartBarNumber = mBars.Count - numBarsToNotify + 1
 
-Select Case mValueName
-Case "$default"
+Select Case UCase$(mValueName)
+Case UCase$(DefaultStudyValue)
     mNotifyClose = True
-'Case "newbar"
-'    mNotifyNewbar = True
-Case "close"
+Case UCase$(BarsValueClose)
     mNotifyClose = True
-Case "volume"
+Case UCase$(BarsValueVolume)
     mNotifyVolume = True
-Case "tick volume"
+Case UCase$(BarsValueTickVolume)
     mNotifyTickvolume = True
 End Select
 End Sub

@@ -1,4 +1,4 @@
-Attribute VB_Name = "Module1"
+Attribute VB_Name = "Globals"
 Option Explicit
 
 '================================================================================
@@ -8,6 +8,8 @@ Option Explicit
 Public Const S_OK = 0
 Public Const NoValidID As Long = -1
 Public Const InitialMaxTickers As Long = 100&
+
+Public Const DefaultStudyValue As String = "$default"
 
 Public Const MinDouble As Double = -(2 - 2 ^ -52) * 2 ^ 1023
 Public Const MaxDouble As Double = (2 - 2 ^ -52) * 2 ^ 1023
@@ -319,7 +321,7 @@ End Function
 
 Public Function gNewWeakReference(ByVal target As Object) As WeakReference
 Set gNewWeakReference = New WeakReference
-gNewWeakReference.Initialise target
+gNewWeakReference.initialise target
 End Function
 
 Public Function gOptionRightFromString(ByVal value As String) As OptionRights

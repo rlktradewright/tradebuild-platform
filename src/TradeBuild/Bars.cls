@@ -122,23 +122,31 @@ End Sub
 
 Private Function IStudy_addStudy( _
                 ByVal study As IStudy, _
-                ByVal ValueName As String, _
+                ByVal valueName As String, _
                 ByVal numUnderlyingValuesToUse As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
 
 Dim lTask As AddStudyTask
 
+If numUnderlyingValuesToUse = 0 Or mBars.Count = 0 Then
+    mStudies.AddStudy study, valueName
+    Exit Function
+End If
+
 Set lTask = New AddStudyTask
-lTask.initialise Me, study, ValueName, numUnderlyingValuesToUse
+lTask.initialise Me, study, valueName, numUnderlyingValuesToUse
 Set IStudy_addStudy = tb.taskManager.startTask(lTask, IIf(taskName = "", gGenerateGUIDString, taskName), taskData)
 End Function
 
-Private Sub IStudy_addStudyValueListener( _
+Private Function IStudy_addStudyValueListener( _
                 ByVal listener As TradeBuildSP.IStudyValueListener, _
-                valueNames() As String)
+                ByVal valueName As String, _
+                ByVal numberOfValuesToReplay As Long, _
+                Optional ByVal taskName As String, _
+                Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
 
-End Sub
+End Function
 
 Private Property Get IStudy_baseStudy() As TradeBuildSP.IStudy
 
@@ -182,7 +190,8 @@ Private Property Get IStudy_instancePath() As String
 IStudy_instancePath = mName
 End Property
 
-Private Sub IStudy_Notify(ev As TradeBuildSP.StudyValueEvent)
+Private Sub IStudy_Notify( _
+                ev As TradeBuildSP.StudyValueEvent)
 Dim iStudies As TradeBuildSP.iStudies
 
 ev.barNumber = mCurrentBarNumber
@@ -190,20 +199,22 @@ Set ev.source = Me
 
 Set iStudies = mStudies
 
-Select Case ev.ValueName
+Select Case ev.valueName
 Case "value"
     mCurrentBar.Tick ev.value
-    ev.ValueName = "close"
+    ev.valueName = GBars.BarsValueClose
     iStudies.notify ev
     
-    ev.ValueName = "Tick volume"
+    ev.valueName = GBars.BarsValueTickVolume
     ev.value = mCurrentBar.tickVolume
     iStudies.notify ev
 Case "size"
     mCurrentBar.TickSize ev.value
+    ev.valueName = GBars.BarsValueSize
     iStudies.notify ev
 Case "volume"
     mCurrentBar.volume = ev.value
+    ev.valueName = GBars.BarsValueVolume
     iStudies.notify ev
 End Select
 
@@ -214,7 +225,7 @@ Private Property Get IStudy_numberOfBarsRequired() As Long
 End Property
 
 Private Function IStudy_numberOfCachedValues( _
-                Optional ByVal ValueName As String = "") As Long
+                Optional ByVal valueName As String = "") As Long
 IStudy_numberOfCachedValues = mBars.Count
 End Function
 
@@ -545,52 +556,7 @@ outside = (highValue(ref) > highValue(ref - 1)) And (lowValue(ref) < lowValue(re
 End Property
 
 Public Property Get studyDefinition() As studyDefinition
-Dim paramDef As StudyParameterDefinition
-Dim valueDef As StudyValueDefinition
-
-Set studyDefinition = New studyDefinition
-
-studyDefinition.Description = "Formats the price stream into Open/High/Low/Close bars of an appropriate length."
-studyDefinition.name = "Bars"
-studyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionPrice
-
-Set paramDef = New StudyParameterDefinition
-paramDef.name = "Period length"
-paramDef.Description = "Length of one bar"
-paramDef.parameterType = StudyParameterTypes.ParameterTypeInteger
-studyDefinition.studyParameterDefinitions.add paramDef
-
-Set paramDef = New StudyParameterDefinition
-paramDef.name = "Period units"
-paramDef.Description = "The units in which Period length is measured."
-paramDef.parameterType = StudyParameterTypes.ParameterTypeString
-studyDefinition.studyParameterDefinitions.add paramDef
-
-Set valueDef = New StudyValueDefinition
-valueDef.name = "Close"
-valueDef.Description = "The latest underlying value"
-valueDef.isDefault = True
-valueDef.valueType = StudyValueTypes.ValueTypeDouble
-studyDefinition.studyValueDefinitions.add valueDef
-
-Set valueDef = New StudyValueDefinition
-valueDef.name = "Size"
-valueDef.Description = "The size associated with the latest underlying value (where relevant)"
-valueDef.valueType = StudyValueTypes.ValueTypeInteger
-studyDefinition.studyValueDefinitions.add valueDef
-
-Set valueDef = New StudyValueDefinition
-valueDef.name = "Tick volume"
-valueDef.Description = "The number of ticks in the current bar for the underlying value"
-valueDef.valueType = StudyValueTypes.ValueTypeInteger
-studyDefinition.studyValueDefinitions.add valueDef
-
-Set valueDef = New StudyValueDefinition
-valueDef.name = "Volume"
-valueDef.Description = "The cumulative size associated with the latest underlying value (where relevant)"
-valueDef.valueType = StudyValueTypes.ValueTypeInteger
-studyDefinition.studyValueDefinitions.add valueDef
-
+Set studyDefinition = GBars.studyDefinition
 End Sub
 
 Friend Property Get studies() As TradeBuildSP.iStudies
@@ -659,7 +625,7 @@ Set ev.source = Me
 ev.timestamp = timestamp
 ' use the bar number as the value
 ev.value = mCurrentBarNumber
-ev.ValueName = "newbar"
+ev.valueName = "newbar"
 mStudies.notify ev
 fireChange CollItemAdded, add
 RaiseEvent BarAdded(add)
@@ -684,10 +650,7 @@ Public Function addHistoric( _
                 ByVal tickVolume As Long, _
                 ByVal openInterest As Long, _
                 Optional ByVal key As String) As Bar
-Dim ev As TradeBuildSP.StudyValueEvent
-Dim iStudies As TradeBuildSP.iStudies
-
-Set iStudies = mStudies
+Dim ev As TradeBuild.StudyValueEvent
 
 Set addHistoric = New Bar
 With addHistoric
@@ -722,47 +685,46 @@ Set mCurrentBar = addHistoric
 
 ev.barNumber = mCurrentBarNumber
 Set ev.source = Me
-ev.timestamp = timestamp
 
-ev.value = mCurrentBarNumber
-ev.ValueName = "newbar"
-iStudies.notify ev
+ev.timestamp = mCurrentBar.datetime
+ev.value = mCurrentBar.openValue
+ev.valueName = GBars.BarsValueClose
+mStudies.notify ev
 
-ev.value = openValue
-ev.ValueName = "open"
-iStudies.notify ev
-ev.ValueName = "value"
-iStudies.notify ev
+If mCurrentBar.IsDownBar Then
+    ev.timestamp = mCurrentBar.datetime + (mCurrentBar.barLength / 3) / 1440
+    ev.value = mCurrentBar.highValue
+    ev.valueName = GBars.BarsValueClose
+    mStudies.notify ev
+    
+    ev.timestamp = mCurrentBar.datetime + (2 * mCurrentBar.barLength / 3) / 1440
+    ev.value = mCurrentBar.lowValue
+    ev.valueName = GBars.BarsValueClose
+    mStudies.notify ev
+Else
+    ev.timestamp = mCurrentBar.datetime + (mCurrentBar.barLength / 3) / 1440
+    ev.value = mCurrentBar.lowValue
+    ev.valueName = GBars.BarsValueClose
+    mStudies.notify ev
+    
+    ev.timestamp = mCurrentBar.datetime + (2 * mCurrentBar.barLength / 3) / 1440
+    ev.value = mCurrentBar.highValue
+    ev.valueName = GBars.BarsValueClose
+    mStudies.notify ev
+End If
 
-ev.value = highValue
-ev.ValueName = "high"
-iStudies.notify ev
-ev.ValueName = "value"
-iStudies.notify ev
+ev.timestamp = mCurrentBar.datetime + mCurrentBar.barLength / 1440 - OneSecond
+ev.value = mCurrentBar.closeValue
+ev.valueName = GBars.BarsValueClose
+mStudies.notify ev
 
-ev.value = lowValue
-ev.ValueName = "low"
-iStudies.notify ev
-ev.ValueName = "value"
-iStudies.notify ev
+ev.value = mCurrentBar.volume
+ev.valueName = GBars.BarsValueVolume
+mStudies.notify ev
 
-ev.value = closeValue
-ev.ValueName = "close"
-iStudies.notify ev
-ev.ValueName = "value"
-iStudies.notify ev
-
-ev.value = volume
-ev.ValueName = "cumulativesize"
-iStudies.notify ev
-
-ev.value = openInterest
-ev.ValueName = "openinterest"
-iStudies.notify ev
-
-ev.value = tickVolume
-ev.ValueName = "tickvolume"
-iStudies.notify ev
+ev.value = mCurrentBar.tickVolume
+ev.valueName = GBars.BarsValueTickVolume
+mStudies.notify ev
 
 fireChange CollItemAdded, addHistoric
 RaiseEvent HistoricBarAdded(addHistoric)

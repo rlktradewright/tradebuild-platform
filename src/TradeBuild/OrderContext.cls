@@ -454,6 +454,7 @@ SweepToFill = mSweepToFill
 End Property
 
 Friend Property Let Ticker(ByVal value As Ticker)
+If value Is Nothing Then Exit Property
 Set mTicker = value
 mTickSize = mTicker.Contract.TickSize
 End Property
@@ -634,6 +635,10 @@ Dim lEntryPrice As Double
 Dim lTriggerPrice As Double
 Dim lStopPrice As Double
 Dim lTargetPrice As Double
+
+If Not mIsReady Then err.Raise ErrorCodes.ErrIllegalStateException, _
+                            "TradeBuild.OrderContext::CreateOrderPlex", _
+                            "The service provider is not ready"
 
 If number <= 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
                             "TradeBuild.OrderContext::CreateOrderPlex", _

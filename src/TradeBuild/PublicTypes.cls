@@ -102,6 +102,11 @@ Public Type SortEntryStruct
     ObjectRef As Object
 End Type
 
+Public Type StateChangeEvent
+    source              As Object
+    State               As Long
+End Type
+
 Public Type StudyListEntry
     name            As String
     serviceProvider As String
@@ -137,11 +142,6 @@ Public Type Tick
     MDMarketMaker   As String
     MDOperation     As Long
     MDSide          As Long
-End Type
-
-Public Type TickerStateEvent
-    source              As Object
-    State               As TickerStateCodes
 End Type
 
 Public Type TickfileFormatSpecifier
@@ -544,7 +544,7 @@ Public Enum TargetOrderTypes
     TargetOrderTypeAuto
 End Enum
 
-Public Enum TickerStateCodes
+Public Enum TickerStates
     TickerStateCreated
     TickerStateStarting
     TickerStateRunning

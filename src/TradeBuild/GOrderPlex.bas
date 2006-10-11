@@ -1,4 +1,4 @@
-Attribute VB_Name = "OrderPlexGlobals"
+Attribute VB_Name = "GOrderPlex"
 Option Explicit
 
 '================================================================================

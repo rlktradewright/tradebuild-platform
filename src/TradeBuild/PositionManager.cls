@@ -32,7 +32,7 @@ Implements QuoteListener
 
 Event Error(ByRef ev As ErrorEvent)
 
-Event PositionFlat()
+Event PositionChanged()
 
 Event ProviderReady()
 
@@ -86,7 +86,7 @@ End Type
 
 Private mIndexApplication
 
-Private mTicker As ticker
+Private mTicker As Ticker
 
 Private mOrders As Orders
 
@@ -103,7 +103,7 @@ Private mFirstActivePlexTableIndex As Long
 Private mLastActivePlexTableIndex As Long
 
 Private mSettlingOrderContext As OrderContext
-Private mSettlingOrderPlex As orderPlex
+Private mSettlingOrderPlex As OrderPlex
 Private mSettlingHandle As Long
 
 Private mClosing As Boolean
@@ -161,7 +161,7 @@ Private mOrderSubmitter As TradeBuildSP.IOrderSubmitter
 '================================================================================
 
 Private Sub Class_Initialize()
-mIndexApplication = PositionManagerGlobals.gNextApplicationIndex
+mIndexApplication = GPositionManager.gNextApplicationIndex
 
 Set mOrders = New Orders
 
@@ -522,13 +522,13 @@ Public Property Get simulated() As Boolean
 simulated = mSimulated
 End Property
 
-Friend Property Let ticker(ByVal value As ticker)
+Friend Property Let Ticker(ByVal value As Ticker)
 Dim lContract As Contract
 
 Set mTicker = value
 Set lContract = mTicker.Contract
 
-mOrderContexts.ticker = value
+mOrderContexts.Ticker = value
 
 mTicker.addQuoteListener Me
 
@@ -539,8 +539,8 @@ mcurrencyCode = lContract.specifier.currencyCode
 
 End Property
 
-Public Property Get ticker() As ticker
-Set ticker = mTicker
+Public Property Get Ticker() As Ticker
+Set Ticker = mTicker
 End Property
 
 '================================================================================
@@ -724,8 +724,6 @@ Else
     mMaxProfitThisTrade = 0
     mMinProfitThisTrade = 0
     mProfitLastFlat = mProfit
-    If Not mMoneyManager Is Nothing Then mMoneyManager.flat
-    RaiseEvent PositionFlat
 End If
 
 With mPlexTable(handle)
@@ -766,6 +764,11 @@ With mPlexTable(handle)
     End If
 End With
 
+If mQuantityOutstanding = 0 Then
+    If Not mMoneyManager Is Nothing Then mMoneyManager.flat
+End If
+
+RaiseEvent PositionChanged
 End Sub
 
 Friend Sub OrderContextInactive(ByVal pOrderContext As OrderContext)

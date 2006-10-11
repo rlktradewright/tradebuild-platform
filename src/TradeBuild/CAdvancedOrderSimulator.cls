@@ -56,6 +56,7 @@ Private Type MarketTableEntry
     Clock                   As Clock
     serviceConsumer         As TradeBuildSP.IOrderSubmissionSrvcConsumer
     simulateExchangeDelays  As Boolean
+    readyNotified           As Boolean
 End Type
 
 '================================================================================
@@ -147,11 +148,16 @@ Dim lOrder As SimulatorOrder
 
 With mMarketTable(marketIndex)
     .Clock.SetTime timestamp
+    .bid = bid
+    
+    If .ask <> 0 And .bid <> 0 And Not .readyNotified Then
+        .readyNotified = True
+        .serviceConsumer.Ready
+    End If
     
     handleCreatedOrders marketIndex
     If Not .simulateExchangeDelays Then handlePendingSubmitOrders marketIndex
 
-    .bid = bid
     For Each lOrder In .activeOrders
         If lOrder.order.status = OrderStatuses.OrderStatusSubmitted Then
             If lOrder.atExchange Then
@@ -180,11 +186,16 @@ Dim lOrder As SimulatorOrder
 
 With mMarketTable(marketIndex)
     .Clock.SetTime timestamp
+    .ask = ask
+    
+    If .ask <> 0 And .bid <> 0 And Not .readyNotified Then
+        .readyNotified = True
+        .serviceConsumer.Ready
+    End If
     
     handleCreatedOrders marketIndex
     If Not .simulateExchangeDelays Then handlePendingSubmitOrders marketIndex
 
-    .ask = ask
     For Each lOrder In .activeOrders
         If lOrder.order.status = OrderStatuses.OrderStatusSubmitted Then
             If lOrder.atExchange Then

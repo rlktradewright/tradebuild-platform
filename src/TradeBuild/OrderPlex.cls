@@ -367,7 +367,7 @@ mNewTargetOffset = DummyOffset
 mNewTargetTriggerPrice = -1
 mNewTargetQuantity = -1
 
-mIndexApplication = OrderPlexGlobals.gNextApplicationIndex
+mIndexApplication = GOrderPlex.gNextApplicationIndex
 
 Set mOrders = New Collection
 

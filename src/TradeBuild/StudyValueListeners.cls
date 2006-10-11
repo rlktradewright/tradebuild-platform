@@ -29,7 +29,7 @@ Implements TradeBuildSP.IStudyValueListeners
 
 Private Type ListenerTableEntry
     theListener         As TradeBuildSP.IStudyValueListener
-    valueNames()        As String
+    valueName           As String
 End Type
 
 '================================================================================
@@ -56,15 +56,15 @@ End Sub
 '================================================================================
 
 Private Sub IStudyValueListeners_Add( _
-                ByVal Listener As TradeBuildSP.IStudyValueListener, _
-                valueNames() As String)
+                ByVal listener As TradeBuildSP.IStudyValueListener, _
+                ByVal valueName As String)
 Dim tableEntry As ListenerTableEntry
 
 If mNextListenerTableIndex > UBound(mListenerTable) Then
     ReDim Preserve mListenerTable(UBound(mListenerTable) + 10) As ListenerTableEntry
 End If
-Set tableEntry.theListener = Listener
-tableEntry.valueNames = valueNames
+Set tableEntry.theListener = listener
+tableEntry.valueName = valueName
 mListenerTable(mNextListenerTableIndex) = tableEntry
 mNextListenerTableIndex = mNextListenerTableIndex + 1
 End Sub
@@ -81,28 +81,28 @@ End Function
 Private Sub IStudyValueListeners_Notify( _
                 ev As TradeBuildSP.StudyValueEvent)
 Dim i As Long
-Dim Listener As TradeBuildSP.IStudyValueListener
+Dim listener As TradeBuildSP.IStudyValueListener
 
-For i = 0 To UBound(mListenerTable)
-    Set Listener = mListenerTable(i).theListener
-    If Not Listener Is Nothing Then
-        If requiresValueName(ev.valueName, mListenerTable(i).valueNames) Then
-            Listener.notify ev
+For i = 0 To mNextListenerTableIndex - 1
+    Set listener = mListenerTable(i).theListener
+    If Not listener Is Nothing Then
+        If ev.valueName = mListenerTable(i).valueName Then
+            listener.notify ev
         End If
     End If
 Next
 End Sub
 
 Private Sub IStudyValueListeners_Remove( _
-                ByVal Listener As TradeBuildSP.IStudyValueListener)
+                ByVal listener As TradeBuildSP.IStudyValueListener)
 Dim i As Long
 Dim lListener As TradeBuildSP.IStudyValueListener
 
 For i = 0 To UBound(mListenerTable)
     Set lListener = mListenerTable(i).theListener
-    If lListener Is Listener Then
+    If lListener Is listener Then
         Set mListenerTable(i).theListener = Nothing
-        Erase mListenerTable(i).valueNames
+        mListenerTable(i).valueName = ""
     End If
 Next
 End Sub
@@ -123,17 +123,6 @@ End Sub
 ' Helper Functions
 '================================================================================
 
-Private Function requiresValueName( _
-                ByVal valueName As String, _
-                ByRef valueNames() As String) As Boolean
-Dim i As Long
-For i = 0 To UBound(valueNames)
-    If valueName = valueNames(i) Then
-        requiresValueName = True
-        Exit Function
-    End If
-Next
-End Function
 
 
 

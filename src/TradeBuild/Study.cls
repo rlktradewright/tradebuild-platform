@@ -94,6 +94,10 @@ Public Property Get instancePath() As String
 instancePath = mStudy.instancePath
 End Property
 
+Public Property Get numberOfCachedValues() As Long
+numberOfCachedValues = mStudy.numberOfCachedValues
+End Property
+
 Public Property Get parameters() As TradeBuild.parameters
 Set parameters = mStudy.parameters
 End Property
@@ -106,29 +110,45 @@ Friend Property Let study(ByVal value As TradeBuildSP.IStudy)
 Set mStudy = value
 End Property
 
+Public Property Get studyDefinition() As TradeBuild.studyDefinition
+Set studyDefinition = mStudy.studyDefinition
+End Property
+
 '================================================================================
 ' Methods
 '================================================================================
 
-Public Sub addStudyValueListener( _
+Public Function addStudyValueListener( _
                 ByVal listener As TradeBuild.studyValueListener, _
-                valueNames() As String)
+                ByVal valueName As String, _
+                ByVal numberOfValuesToReplay As Long, _
+                Optional ByVal taskName As String, _
+                Optional ByVal taskData As Variant) As TaskCompletion
 Dim listenerProxy As StudyValueListenerProxy
 Set listenerProxy = New StudyValueListenerProxy
 listenerProxy.studyValueListener = listener
 mStudyValueListeners.add listenerProxy
-mStudy.addStudyValueListener listenerProxy, valueNames
-End Sub
+Set addStudyValueListener = mStudy.addStudyValueListener( _
+                                listenerProxy, _
+                                valueName, _
+                                numberOfValuesToReplay, _
+                                taskName, _
+                                taskData)
+End Function
 
 Public Function getStudyValue( _
-        ByVal ValueName As String, _
+        ByVal valueName As String, _
         ByVal ref As Long, _
-        ByRef parameters() As Variant _
-        ) As TradeBuild.StudyValueStruct
+        ParamArray parameters() As Variant) As TradeBuild.StudyValueStruct
 Dim sv As TradeBuildSP.StudyValue
-sv = mStudy.getStudyValue(ValueName, ref, parameters)
+Dim parms() As Variant
+
+If valueName = "" Then valueName = "$default"
+
+parms = parameters
+sv = mStudy.getStudyValue(valueName, ref, parms)
 getStudyValue.barNumber = sv.barNumber
-getStudyValue.timestamp = sv.timestamp
+getStudyValue.Timestamp = sv.Timestamp
 getStudyValue.value = sv.value
 End Function
 

@@ -136,7 +136,6 @@ orderSubmitter.serviceConsumer = serviceConsumer
 orderSubmitter.Contract = Contract
 orderSubmitter.simulator = mSimulator
 
-serviceConsumer.Ready
 Set IOrderSubmissionSrvcProvider_CreateOrderSubmitter = orderSubmitter
 End Function
 

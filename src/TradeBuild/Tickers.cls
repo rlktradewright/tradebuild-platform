@@ -22,9 +22,9 @@ Option Explicit
 '================================================================================
 
 
-Event tickerError(ByRef ev As ErrorEvent)
+Event error(ByRef ev As ErrorEvent)
 
-Event TickerStateEvent(ByRef ev As TickerStateEvent)
+Event stateChange(ByRef ev As StateChangeEvent)
 
 
 
@@ -97,7 +97,7 @@ Public Function add( _
 Set add = New ticker
 add.tradeBuildAPI = mTradeBuildAPIRef.target
 add.handle = AllocateTickerHandle
-add.tickers = Me
+add.Tickers = Me
 add.simulatedOrders = Not ordersAreLive
 If key = "" Then key = gGenerateGUIDString
 add.key = key
@@ -112,7 +112,7 @@ End Sub
 
 Public Function createTickFileManager() As TickFileManager
 Set createTickFileManager = New TickFileManager
-createTickFileManager.tickers = Me
+createTickFileManager.Tickers = Me
 createTickFileManager.tradeBuildAPI = mTradeBuildAPIRef.target
 End Function
 
@@ -123,7 +123,7 @@ Set NewEnum = mTickers.[_NewEnum]
 End Function
 
 Public Sub remove(ByVal pTicker As ticker)
-If pTicker.State <> TickerStateCodes.TickerStateClosing Then
+If pTicker.State <> TickerStates.TickerStateClosing Then
     pTicker.StopTicker
     Exit Sub
 End If
@@ -140,19 +140,19 @@ For i = mChangeListeners.Count To 1 Step -1
 Next
 End Sub
 
-Friend Sub stateEvent( _
-                ByRef ev As TickerStateEvent)
-RaiseEvent TickerStateEvent(ev)
+Friend Sub stateChange( _
+                ByRef ev As StateChangeEvent)
+RaiseEvent stateChange(ev)
 End Sub
 
-Friend Sub tickerError(ByRef ev As ErrorEvent)
-RaiseEvent tickerError(ev)
+Friend Sub error(ByRef ev As ErrorEvent)
+RaiseEvent error(ev)
 End Sub
 
 Friend Property Let tradeBuildAPI( _
                 ByVal value As tradeBuildAPI)
 Set mTradeBuildAPIRef = New WeakReference
-mTradeBuildAPIRef.Initialise value
+mTradeBuildAPIRef.initialise value
 End Property
 
 '================================================================================
