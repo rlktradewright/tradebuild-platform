@@ -73,15 +73,15 @@ Event OutputBarfileCreated( _
 Private mTradeBuildAPIRef           As WeakReference
 
 Private mKey As String
-Private mTicker As TradeBuild.ticker
+Private mTicker As TradeBuild.Ticker
 
-Private mTradeBars As bars
+Private mTradeBars As Bars
 Private mTradeBarsStudy As TradeBuildSP.IStudy
 
-Private mAskBars As bars
+Private mAskBars As Bars
 Private mAskBarsStudy As TradeBuildSP.IStudy
 
-Private mBidBars As bars
+Private mBidBars As Bars
 Private mBidBarsStudy As TradeBuildSP.IStudy
 
 Private mContract As TradeBuild.Contract
@@ -428,7 +428,7 @@ End Sub
 ' Properties
 '================================================================================
 
-Public Property Get AskBars() As bars
+Public Property Get AskBars() As Bars
 Set AskBars = mAskBars
 End Property
 
@@ -436,7 +436,7 @@ Public Property Get barLengthMinutes() As Long
 barLengthMinutes = mBarLengthMinutes
 End Property
 
-Public Property Get BidBars() As bars
+Public Property Get BidBars() As Bars
 Set BidBars = mBidBars
 End Property
 
@@ -447,30 +447,10 @@ End Property
 Friend Property Let Contract(ByVal value As Contract)
 Set mContract = value
 
-Set mTradeBars = New bars
-mTradeBars.tradeBuildAPI = tb
-Set mTradeBarsStudy = mTradeBars
-mTradeBars.barType = TradeBuild.BarTypes.BarTypeTrade
-mTradeBars.barLength = mBarLengthMinutes
 mTradeBars.name = generateName & " price"
-mTicker.addBaseStudy mTradeBars, mTradeBars.name
-
 If mIncludeBidAndAsk Then
-    Set mAskBars = New bars
-    mAskBars.tradeBuildAPI = tb
-    Set mAskBarsStudy = mAskBars
-    mAskBars.barType = TradeBuild.BarTypes.BarTypeAsk
-    mAskBars.barLength = mBarLengthMinutes
     mAskBars.name = generateName & " ask"
-    mTicker.addBaseStudy mAskBars, mAskBars.name
-    
-    Set mBidBars = New bars
-    mBidBars.tradeBuildAPI = tb
-    Set mBidBarsStudy = mBidBars
-    mBidBars.barType = TradeBuild.BarTypes.BarTypeBid
-    mBidBars.barLength = mBarLengthMinutes
     mBidBars.name = generateName & " bid"
-    mTicker.addBaseStudy mBidBars, mBidBars.name
 End If
 
 If mSaveIntervalSeconds > 0 Then
@@ -505,14 +485,14 @@ Public Property Get key() As String
 key = mKey
 End Property
 
-Public Property Get TradeBars() As bars
+Public Property Get TradeBars() As Bars
 Set TradeBars = mTradeBars
 End Property
 
 Friend Property Let tradeBuildAPI( _
                 ByVal value As tradeBuildAPI)
 Set mTradeBuildAPIRef = New WeakReference
-mTradeBuildAPIRef.Initialise value
+mTradeBuildAPIRef.initialise value
 End Property
 
 '================================================================================
@@ -528,9 +508,9 @@ Clear
 Set mTicker = Nothing
 End Sub
 
-Friend Sub Initialise( _
+Friend Sub initialise( _
                 ByVal key As String, _
-                ByVal pTicker As ticker, _
+                ByVal pTicker As Ticker, _
                 ByVal timeperiod As Long, _
                 ByVal timeperiodUnit As TradeBuild.TimePeriodUnits, _
                 ByVal numberOfBarsToFetch As Long, _
@@ -579,6 +559,31 @@ If mSaveIntervalSeconds > 0 And mSaveIntervalSeconds < 5 Then _
 
 mExcludeCurrentBar = excludeCurrentBar
 
+Set mTradeBars = New Bars
+mTradeBars.tradeBuildAPI = tb
+Set mTradeBarsStudy = mTradeBars
+mTradeBars.barType = TradeBuild.BarTypes.BarTypeTrade
+mTradeBars.barLength = mBarLengthMinutes
+mTicker.addBaseStudy mTradeBars, mTradeBars.name
+
+If mIncludeBidAndAsk Then
+    Set mAskBars = New Bars
+    mAskBars.tradeBuildAPI = tb
+    Set mAskBarsStudy = mAskBars
+    mAskBars.barType = TradeBuild.BarTypes.BarTypeAsk
+    mAskBars.barLength = mBarLengthMinutes
+    mAskBars.name = generateName & " ask"
+    mTicker.addBaseStudy mAskBars, mAskBars.name
+    
+    Set mBidBars = New Bars
+    mBidBars.tradeBuildAPI = tb
+    Set mBidBarsStudy = mBidBars
+    mBidBars.barType = TradeBuild.BarTypes.BarTypeBid
+    mBidBars.barLength = mBarLengthMinutes
+    mBidBars.name = generateName & " bid"
+    mTicker.addBaseStudy mBidBars, mBidBars.name
+End If
+
 End Sub
 
 Public Sub removeBarWriterListener(ByVal value As WriterListener)
@@ -595,7 +600,7 @@ Public Function replayBars( _
                 Optional ByVal taskData As Variant) As TaskCompletion
 Dim replayTask As New TimeframeBarReplayTask
 
-replayTask.Initialise Me, barType, barsToReplay
+replayTask.initialise Me, barType, barsToReplay
 
 Set replayBars = tb.taskManager.startTask(replayTask, IIf(taskName <> "", taskName, gGenerateGUIDString), taskData)
 End Function
@@ -666,9 +671,18 @@ End If
 
 mTicker.removeQuoteListener Me
 
-Set mTradeBars = Nothing
-Set mAskBars = Nothing
-Set mBidBars = Nothing
+If Not mTradeBars Is Nothing Then
+    mTradeBars.finish
+    Set mTradeBars = Nothing
+End If
+If Not mAskBars Is Nothing Then
+    mAskBars.finish
+    Set mAskBars = Nothing
+End If
+If Not mBidBars Is Nothing Then
+    mBidBars.finish
+    Set mBidBars = Nothing
+End If
 
 Set mContract = Nothing
 

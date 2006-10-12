@@ -978,9 +978,13 @@ Set mPositionManager = Nothing
 For Each op In mActiveOrderPlexes
     op.finish
 Next
+Set mActiveOrderPlexes = Nothing
+
 For Each op In mClosedOrderPlexes
     op.finish
 Next
+Set mClosedOrderPlexes = Nothing
+
 Set mOrderSubmitter = Nothing
 End Function
 

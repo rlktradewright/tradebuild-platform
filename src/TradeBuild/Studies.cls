@@ -71,6 +71,10 @@ Private Sub Class_Initialize()
 ReDim mStudyTable(10) As StudyTableEntry
 End Sub
 
+Private Sub Class_Terminate()
+Debug.Print "Studies terminated"
+End Sub
+
 '================================================================================
 ' IStudies Interface Members
 '================================================================================

@@ -52,7 +52,7 @@ Implements TradeBuildSP.IStudyValueListener
 ' Member variables
 '================================================================================
 
-Private mStudy As TradeBuild.study
+Private mStudyRef As TradeBuild.WeakReference
 Private mStudyValueListener As TradeBuild.studyValueListener
 
 '================================================================================
@@ -65,10 +65,10 @@ Private mStudyValueListener As TradeBuild.studyValueListener
 
 Private Sub IStudyValueListener_Notify(ev As TradeBuildSP.StudyValueEvent)
 Dim tradeBuildEv As TradeBuild.StudyValueEvent
-Set tradeBuildEv.source = mStudy
+Set tradeBuildEv.source = mStudyRef.target
 tradeBuildEv.value = ev.value
 tradeBuildEv.valueName = ev.valueName
-tradeBuildEv.Timestamp = ev.Timestamp
+tradeBuildEv.timestamp = ev.timestamp
 tradeBuildEv.barNumber = ev.barNumber
 mStudyValueListener.notify tradeBuildEv
 End Sub
@@ -83,7 +83,9 @@ End Sub
 
 Friend Property Let study( _
                 ByVal value As TradeBuild.study)
-Set mStudy = value
+Dim ref As New WeakReference
+ref.initialise value
+Set mStudyRef = ref
 End Property
 
 Friend Property Let studyValueListener( _

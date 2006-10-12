@@ -308,8 +308,8 @@ End Property
 '================================================================================
 
 Friend Sub finish()
-mTWSAPI.CancelMarketData mTickerId
 If Not mTWSAPI Is Nothing Then
+    mTWSAPI.CancelMarketData mTickerId
     gReleaseTWSAPIInstance mTWSAPI
     Set mTWSAPI = Nothing
 End If

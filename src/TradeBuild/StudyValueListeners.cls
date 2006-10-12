@@ -98,7 +98,7 @@ Private Sub IStudyValueListeners_Remove( _
 Dim i As Long
 Dim lListener As TradeBuildSP.IStudyValueListener
 
-For i = 0 To UBound(mListenerTable)
+For i = 0 To mNextListenerTableIndex - 1
     Set lListener = mListenerTable(i).theListener
     If lListener Is listener Then
         Set mListenerTable(i).theListener = Nothing

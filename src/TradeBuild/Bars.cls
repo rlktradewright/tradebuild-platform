@@ -730,6 +730,10 @@ fireChange CollItemAdded, addHistoric
 RaiseEvent HistoricBarAdded(addHistoric)
 End Function
 
+Friend Sub finish()
+Set mStudies = Nothing
+End Sub
+
 Public Function Item(index As Variant) As Bar
 Attribute Item.VB_UserMemId = 0
 Set Item = mBars(index)

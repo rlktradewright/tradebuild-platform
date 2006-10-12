@@ -103,7 +103,7 @@ Private mFirstActivePlexTableIndex As Long
 Private mLastActivePlexTableIndex As Long
 
 Private mSettlingOrderContext As OrderContext
-Private mSettlingOrderPlex As OrderPlex
+Private mSettlingOrderPlex As orderPlex
 Private mSettlingHandle As Long
 
 Private mClosing As Boolean
@@ -684,8 +684,6 @@ If mQuantityOutstanding = 0 Then mTradeStartTime = mTicker.timestamp
 mTotalEntryPrice = mTotalEntryPrice + (price * quantity)
 mQuantityOutstanding = mQuantityOutstanding + quantity
 
-fireChange PositionManagerChangeTypes.PositionSizeChanged
-
 If mQuantityOutstanding <> 0 Then
     'we need to notify the position change before the profit
     mTicker.notifyListeners _
@@ -768,6 +766,7 @@ If mQuantityOutstanding = 0 Then
     If Not mMoneyManager Is Nothing Then mMoneyManager.flat
 End If
 
+fireChange PositionManagerChangeTypes.PositionSizeChanged
 RaiseEvent PositionChanged
 End Sub
 

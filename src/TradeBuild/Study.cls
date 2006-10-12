@@ -126,6 +126,7 @@ Public Function addStudyValueListener( _
                 Optional ByVal taskData As Variant) As TaskCompletion
 Dim listenerProxy As StudyValueListenerProxy
 Set listenerProxy = New StudyValueListenerProxy
+listenerProxy.study = Me
 listenerProxy.studyValueListener = listener
 mStudyValueListeners.add listenerProxy
 Set addStudyValueListener = mStudy.addStudyValueListener( _
@@ -148,7 +149,7 @@ If valueName = "" Then valueName = "$default"
 parms = parameters
 sv = mStudy.getStudyValue(valueName, ref, parms)
 getStudyValue.barNumber = sv.barNumber
-getStudyValue.Timestamp = sv.Timestamp
+getStudyValue.timestamp = sv.timestamp
 getStudyValue.value = sv.value
 End Function
 
