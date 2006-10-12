@@ -153,7 +153,7 @@ If mStudyDefinition Is Nothing Then
     paramDef.name = MACDParamSmoothingPeriods
     paramDef.Description = "The number of periods for smoothing the MACD to " & _
                             "produce the MACD signal value"
-    paramDef.parameterType = ParameterTypeDouble
+    paramDef.parameterType = ParameterTypeInteger
     mStudyDefinition.StudyParameterDefinitions.Add paramDef
     
     Set paramDef = mCommonServiceConsumer.NewStudyParameterDefinition
