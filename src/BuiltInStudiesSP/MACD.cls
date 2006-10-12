@@ -419,15 +419,11 @@ Dim thisNeeds As Long
 Dim superiorStudiesNeeds
 Dim study As IStudy
 Set study = mMALong
-If mMACDCache.cyclicSize = 0 Then
-    IStudy_numberOfBarsRequired = 0
-Else
-    thisNeeds = study.numberOfBarsRequired + mSmoothingPeriods + mMACDCache.cyclicSize
-    superiorStudiesNeeds = mStudies.numberOfBarsRequired
-    IStudy_numberOfBarsRequired = IIf(thisNeeds > superiorStudiesNeeds, _
-                                    thisNeeds, _
-                                    superiorStudiesNeeds)
-End If
+thisNeeds = study.numberOfBarsRequired + mSmoothingPeriods + mMACDCache.cyclicSize
+superiorStudiesNeeds = mStudies.numberOfBarsRequired
+IStudy_numberOfBarsRequired = IIf(thisNeeds > superiorStudiesNeeds, _
+                                thisNeeds, _
+                                superiorStudiesNeeds)
 End Property
 
 Private Function IStudy_numberOfCachedValues( _

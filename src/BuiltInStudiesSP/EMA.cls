@@ -251,15 +251,11 @@ End Sub
 Private Property Get IStudy_numberOfBarsRequired() As Long
 Dim thisNeeds As Long
 Dim superiorStudiesNeeds
-If mMaCache.cyclicSize = 0 Then
-    IStudy_numberOfBarsRequired = 0
-Else
-    thisNeeds = 2 * mPeriods + mMaCache.cyclicSize
-    superiorStudiesNeeds = mStudies.numberOfBarsRequired
-    IStudy_numberOfBarsRequired = IIf(thisNeeds > superiorStudiesNeeds, _
-                                thisNeeds, _
-                                superiorStudiesNeeds)
-End If
+thisNeeds = 2 * mPeriods + mMaCache.cyclicSize
+superiorStudiesNeeds = mStudies.numberOfBarsRequired
+IStudy_numberOfBarsRequired = IIf(thisNeeds > superiorStudiesNeeds, _
+                            thisNeeds, _
+                            superiorStudiesNeeds)
 End Property
 
 Private Function IStudy_numberOfCachedValues( _
