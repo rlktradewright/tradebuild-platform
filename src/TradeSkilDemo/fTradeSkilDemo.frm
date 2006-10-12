@@ -13,16 +13,16 @@ Begin VB.Form fTradeSkilDemo
    ScaleHeight     =   6855
    ScaleWidth      =   14385
    Begin VB.TextBox DateTimeText 
-      Alignment       =   1  'Right Justify
+      Alignment       =   2  'Center
       BackColor       =   &H8000000F&
       Height          =   495
-      Left            =   12240
+      Left            =   11880
       Locked          =   -1  'True
       MultiLine       =   -1  'True
       TabIndex        =   79
       TabStop         =   0   'False
       Top             =   120
-      Width           =   855
+      Width           =   1335
    End
    Begin VB.TextBox CloseText 
       Alignment       =   2  'Center
@@ -268,9 +268,9 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(0)   =   "&1. Configuration"
       TabPicture(0)   =   "fTradeSkilDemo.frx":0000
       Tab(0).ControlEnabled=   0   'False
-      Tab(0).Control(0)=   "ConfigureButton"
+      Tab(0).Control(0)=   "Frame1"
       Tab(0).Control(0).Enabled=   0   'False
-      Tab(0).Control(1)=   "Frame1"
+      Tab(0).Control(1)=   "ConfigureButton"
       Tab(0).Control(1).Enabled=   0   'False
       Tab(0).ControlCount=   2
       TabCaption(1)   =   "&2. Tickers"
@@ -282,13 +282,13 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(2)   =   "&3. Orders"
       TabPicture(2)   =   "fTradeSkilDemo.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "ModifyOrderButton"
+      Tab(2).Control(0)=   "OrdersSummary1"
       Tab(2).Control(0).Enabled=   0   'False
-      Tab(2).Control(1)=   "CancelOrderButton"
+      Tab(2).Control(1)=   "OrderButton"
       Tab(2).Control(1).Enabled=   0   'False
-      Tab(2).Control(2)=   "OrderButton"
+      Tab(2).Control(2)=   "CancelOrderButton"
       Tab(2).Control(2).Enabled=   0   'False
-      Tab(2).Control(3)=   "OrdersSummary1"
+      Tab(2).Control(3)=   "ModifyOrderButton"
       Tab(2).Control(3).Enabled=   0   'False
       Tab(2).ControlCount=   4
       TabCaption(3)   =   "&4. Executions"
@@ -300,20 +300,20 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(4)   =   "&5. Replay tickfiles"
       TabPicture(4)   =   "fTradeSkilDemo.frx":0070
       Tab(4).ControlEnabled=   0   'False
-      Tab(4).Control(0)=   "Label19"
-      Tab(4).Control(1)=   "Label20"
-      Tab(4).Control(2)=   "ReplayProgressLabel"
-      Tab(4).Control(3)=   "ReplayContractLabel"
-      Tab(4).Control(4)=   "ReplayProgressBar"
-      Tab(4).Control(5)=   "SkipReplayButton"
+      Tab(4).Control(0)=   "ReplaySpeedCombo"
+      Tab(4).Control(1)=   "TickfileList"
+      Tab(4).Control(1).Enabled=   0   'False
+      Tab(4).Control(2)=   "StopReplayButton"
+      Tab(4).Control(3)=   "PauseReplayButton"
+      Tab(4).Control(4)=   "ClearTickfileListButton"
+      Tab(4).Control(5)=   "SelectTickfilesButton"
       Tab(4).Control(6)=   "PlayTickFileButton"
-      Tab(4).Control(7)=   "SelectTickfilesButton"
-      Tab(4).Control(8)=   "ClearTickfileListButton"
-      Tab(4).Control(9)=   "PauseReplayButton"
-      Tab(4).Control(10)=   "StopReplayButton"
-      Tab(4).Control(11)=   "TickfileList"
-      Tab(4).Control(11).Enabled=   0   'False
-      Tab(4).Control(12)=   "ReplaySpeedCombo"
+      Tab(4).Control(7)=   "SkipReplayButton"
+      Tab(4).Control(8)=   "ReplayProgressBar"
+      Tab(4).Control(9)=   "ReplayContractLabel"
+      Tab(4).Control(10)=   "ReplayProgressLabel"
+      Tab(4).Control(11)=   "Label20"
+      Tab(4).Control(12)=   "Label19"
       Tab(4).ControlCount=   13
       Begin TradeBuildUI.ExecutionsSummary ExecutionsSummary1 
          Height          =   3855
