@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{1942F60B-EC12-45BB-8FBB-89AA1BB15BA4}#7.0#0"; "TradeBuildUI.ocx"
+Object = "{1942F60B-EC12-45BB-8FBB-89AA1BB15BA4}#16.0#0"; "TradeBuildUI.ocx"
 Begin VB.Form fMarketDepth 
    Caption         =   "Market Depth"
    ClientHeight    =   3270
@@ -77,6 +77,8 @@ Me.Top = Screen.Height - Me.Height
 End Sub
 
 Private Sub Form_Resize()
+If Me.ScaleWidth = 0 And _
+    Me.ScaleHeight = 0 Then Exit Sub
 DOMDisplay1.Left = 0
 DOMDisplay1.Top = 0
 DOMDisplay1.Width = Me.ScaleWidth

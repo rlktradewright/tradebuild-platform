@@ -1,9 +1,10 @@
 VERSION 5.00
-Object = "{1942F60B-EC12-45BB-8FBB-89AA1BB15BA4}#7.0#0"; "TradeBuildUI.ocx"
+Object = "{1942F60B-EC12-45BB-8FBB-89AA1BB15BA4}#16.0#0"; "TradeBuildUI.ocx"
 Begin VB.Form OrderForm 
+   BorderStyle     =   1  'Fixed Single
    ClientHeight    =   6165
-   ClientLeft      =   60
-   ClientTop       =   450
+   ClientLeft      =   45
+   ClientTop       =   435
    ClientWidth     =   8865
    LinkTopic       =   "Form1"
    ScaleHeight     =   6165

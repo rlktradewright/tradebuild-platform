@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{1942F60B-EC12-45BB-8FBB-89AA1BB15BA4}#7.0#0"; "TradeBuildUI.ocx"
+Object = "{1942F60B-EC12-45BB-8FBB-89AA1BB15BA4}#16.0#0"; "TradeBuildUI.ocx"
 Begin VB.Form fChart2 
    ClientHeight    =   6780
    ClientLeft      =   60
@@ -108,6 +108,8 @@ TradeBuildChart1.updatePerTick = True
 End Sub
 
 Private Sub Form_Resize()
+If Me.ScaleWidth = 0 And _
+    Me.ScaleHeight = 0 Then Exit Sub
 TradeBuildChart1.Width = Me.ScaleWidth
 TradeBuildChart1.Height = Me.ScaleHeight - Toolbar1.Height
 End Sub

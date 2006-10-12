@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{1942F60B-EC12-45BB-8FBB-89AA1BB15BA4}#10.0#0"; "TradeBuildUI.ocx"
+Object = "{1942F60B-EC12-45BB-8FBB-89AA1BB15BA4}#16.0#0"; "TradeBuildUI.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeSkil Demo Edition"
@@ -10,8 +10,6 @@ Begin VB.Form fTradeSkilDemo
    ClientTop       =   330
    ClientWidth     =   14385
    LinkTopic       =   "Form1"
-   MaxButton       =   0   'False
-   MinButton       =   0   'False
    ScaleHeight     =   6855
    ScaleWidth      =   14385
    Begin VB.TextBox DateTimeText 
@@ -270,8 +268,10 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(0)   =   "&1. Configuration"
       TabPicture(0)   =   "fTradeSkilDemo.frx":0000
       Tab(0).ControlEnabled=   0   'False
-      Tab(0).Control(0)=   "Frame1"
-      Tab(0).Control(1)=   "ConfigureButton"
+      Tab(0).Control(0)=   "ConfigureButton"
+      Tab(0).Control(0).Enabled=   0   'False
+      Tab(0).Control(1)=   "Frame1"
+      Tab(0).Control(1).Enabled=   0   'False
       Tab(0).ControlCount=   2
       TabCaption(1)   =   "&2. Tickers"
       TabPicture(1)   =   "fTradeSkilDemo.frx":001C
@@ -283,32 +283,37 @@ Begin VB.Form fTradeSkilDemo
       TabPicture(2)   =   "fTradeSkilDemo.frx":0038
       Tab(2).ControlEnabled=   0   'False
       Tab(2).Control(0)=   "ModifyOrderButton"
+      Tab(2).Control(0).Enabled=   0   'False
       Tab(2).Control(1)=   "CancelOrderButton"
+      Tab(2).Control(1).Enabled=   0   'False
       Tab(2).Control(2)=   "OrderButton"
+      Tab(2).Control(2).Enabled=   0   'False
       Tab(2).Control(3)=   "OrdersSummary1"
+      Tab(2).Control(3).Enabled=   0   'False
       Tab(2).ControlCount=   4
       TabCaption(3)   =   "&4. Executions"
       TabPicture(3)   =   "fTradeSkilDemo.frx":0054
       Tab(3).ControlEnabled=   0   'False
       Tab(3).Control(0)=   "ExecutionsSummary1"
+      Tab(3).Control(0).Enabled=   0   'False
       Tab(3).ControlCount=   1
       TabCaption(4)   =   "&5. Replay tickfiles"
       TabPicture(4)   =   "fTradeSkilDemo.frx":0070
       Tab(4).ControlEnabled=   0   'False
-      Tab(4).Control(0)=   "ReplaySpeedCombo"
-      Tab(4).Control(1)=   "TickfileList"
-      Tab(4).Control(1).Enabled=   0   'False
-      Tab(4).Control(2)=   "StopReplayButton"
-      Tab(4).Control(3)=   "PauseReplayButton"
-      Tab(4).Control(4)=   "ClearTickfileListButton"
-      Tab(4).Control(5)=   "SelectTickfilesButton"
+      Tab(4).Control(0)=   "Label19"
+      Tab(4).Control(1)=   "Label20"
+      Tab(4).Control(2)=   "ReplayProgressLabel"
+      Tab(4).Control(3)=   "ReplayContractLabel"
+      Tab(4).Control(4)=   "ReplayProgressBar"
+      Tab(4).Control(5)=   "SkipReplayButton"
       Tab(4).Control(6)=   "PlayTickFileButton"
-      Tab(4).Control(7)=   "SkipReplayButton"
-      Tab(4).Control(8)=   "ReplayProgressBar"
-      Tab(4).Control(9)=   "ReplayContractLabel"
-      Tab(4).Control(10)=   "ReplayProgressLabel"
-      Tab(4).Control(11)=   "Label20"
-      Tab(4).Control(12)=   "Label19"
+      Tab(4).Control(7)=   "SelectTickfilesButton"
+      Tab(4).Control(8)=   "ClearTickfileListButton"
+      Tab(4).Control(9)=   "PauseReplayButton"
+      Tab(4).Control(10)=   "StopReplayButton"
+      Tab(4).Control(11)=   "TickfileList"
+      Tab(4).Control(11).Enabled=   0   'False
+      Tab(4).Control(12)=   "ReplaySpeedCombo"
       Tab(4).ControlCount=   13
       Begin TradeBuildUI.ExecutionsSummary ExecutionsSummary1 
          Height          =   3855
@@ -1282,6 +1287,10 @@ Dim lTicker As Ticker
 
 If Not mTimer Is Nothing Then mTimer.StopTimer
 
+For i = Forms.Count - 1 To 0 Step -1
+   Unload Forms(i)
+Next
+
 If Not mTradeBuildAPI Is Nothing Then
     For Each lTicker In mTickers
         lTicker.StopTicker
@@ -1294,9 +1303,6 @@ OrdersSummary1.finish
 ExecutionsSummary1.finish
 TickerGrid1.finish
 
-For i = Forms.Count - 1 To 0 Step -1
-   Unload Forms(i)
-Next
 End Sub
 
 '================================================================================
