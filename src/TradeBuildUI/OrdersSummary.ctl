@@ -367,11 +367,14 @@ If TypeOf ev.Source Is TradeBuild.orderPlex Then
         Case OrderPlexChangeTypes.OrderPlexSizeChanged
             OrderPlexGrid.TextMatrix(.gridIndex, OPGridOrderPlexColumns.size) = op.size
         Case OrderPlexChangeTypes.OrderPlexStateChanged
+            If op.State = OrderPlexStateCodes.Submitted Then
+                OrderPlexGrid.TextMatrix(.gridIndex, OPGridOrderPlexColumns.creationTime) = op.creationTime
+            End If
             If op.State <> OrderPlexStateCodes.Created And _
                 op.State <> OrderPlexStateCodes.Submitted _
             Then
-                ' the order plex is now in a state where it can't be modified. If it's
-                ' the currently selected order plex, make it not so.
+                ' the order plex is now in a state where it can't be modified.
+                ' If it's the currently selected order plex, make it not so.
                 If op Is mSelectedOrderPlex Then
                     invertEntryColors mSelectedOrderPlexGridRow
                     mSelectedOrderPlexGridRow = -1
@@ -829,6 +832,7 @@ OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.price) = lTicker.formatPr
 OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.quantityRemaining) = pOrder.quantityRemaining
 OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.size) = IIf(pOrder.quantityFilled <> 0, pOrder.quantityFilled, 0)
 OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.Status) = OrderStatusToString(pOrder.Status)
+OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.VendorId) = pOrder.brokerId
 End Sub
 
 Private Sub displayProfitValue( _

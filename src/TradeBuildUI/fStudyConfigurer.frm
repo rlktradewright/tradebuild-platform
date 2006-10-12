@@ -349,7 +349,7 @@ Begin VB.Form fStudyConfigurer
             Height          =   330
             Left            =   0
             TabIndex        =   3
-            Top             =   960
+            Top             =   1080
             Width           =   2175
             _ExtentX        =   3836
             _ExtentY        =   582
@@ -362,7 +362,7 @@ Begin VB.Form fStudyConfigurer
             Height          =   330
             Left            =   0
             TabIndex        =   2
-            Top             =   240
+            Top             =   480
             Width           =   2175
             _ExtentX        =   3836
             _ExtentY        =   582
@@ -384,7 +384,7 @@ Begin VB.Form fStudyConfigurer
             Height          =   255
             Left            =   0
             TabIndex        =   36
-            Top             =   720
+            Top             =   840
             Width           =   1215
          End
          Begin VB.Label Label7 
@@ -392,7 +392,7 @@ Begin VB.Form fStudyConfigurer
             Height          =   255
             Left            =   0
             TabIndex        =   35
-            Top             =   0
+            Top             =   240
             Width           =   1335
          End
       End
@@ -400,13 +400,22 @@ Begin VB.Form fStudyConfigurer
          Appearance      =   0  'Flat
          BorderStyle     =   0  'None
          ForeColor       =   &H80000008&
-         Height          =   2535
+         Height          =   2775
          Left            =   120
-         ScaleHeight     =   2535
+         ScaleHeight     =   2775
          ScaleWidth      =   2175
          TabIndex        =   23
          Top             =   240
          Width           =   2175
+         Begin VB.TextBox ParameterValueTemplateText 
+            Height          =   285
+            Left            =   1320
+            TabIndex        =   46
+            TabStop         =   0   'False
+            Top             =   960
+            Visible         =   0   'False
+            Width           =   855
+         End
          Begin MSComCtl2.UpDown ParameterValueUpDown 
             Height          =   285
             Index           =   0
@@ -419,7 +428,7 @@ Begin VB.Form fStudyConfigurer
             _Version        =   393216
             AutoBuddy       =   -1  'True
             BuddyControl    =   "ParameterValueText(0)"
-            BuddyDispid     =   196635
+            BuddyDispid     =   196636
             BuddyIndex      =   0
             OrigLeft        =   1920
             OrigRight       =   2175
@@ -862,10 +871,6 @@ nextTabIndex = mNextTabIndex
 mNextTabIndex = mNextTabIndex + 1
 End Function
 
-Private Sub ParameterValueUpDown_Change(index As Integer)
-Debug.Print ParameterValueUpDown(index).value
-End Sub
-
 Private Sub processConfiguredStudies( _
                 ByVal studyConfigs As studyConfigurations, _
                 ByRef selectedValue As String)
@@ -915,7 +920,7 @@ Dim defaultParams As TradeBuild.parameters
 Dim studyValue As TradeBuild.StudyValueDefinition
 Dim studyValueConfigs As studyValueConfigurations
 Dim studyValueConfig As StudyValueConfiguration
-
+Dim firstParamIsInteger As Boolean
 
 Set mStudyDefinition = value
 
@@ -945,15 +950,16 @@ For i = 1 To studyParameterDefinitions.count
         ParameterNameLabel(i - 1).Visible = True
 
         Load ParameterValueText(i - 1)
+        ParameterValueText(i - 1).TabIndex = nextTabIndex
+        ParameterValueText(i - 1).Width = ParameterValueTemplateText.Width
         ParameterValueText(i - 1).Top = ParameterValueText(i - 2).Top + 360
         ParameterValueText(i - 1).Left = ParameterValueText(i - 2).Left
         ParameterValueText(i - 1).Visible = True
-        ParameterValueText(i - 1).TabIndex = nextTabIndex
     
         Load ParameterValueUpDown(i - 1)
-        ParameterValueUpDown(i - 1).Top = ParameterValueUpDown(i - 2).Top + 360
-'        ParameterValueUpDown(i - 1).Left = ParameterValueUpDown(i - 2).Left
         ParameterValueUpDown(i - 1).TabIndex = nextTabIndex
+        ParameterValueUpDown(i - 1).Top = ParameterValueUpDown(i - 2).Top + 360
+        'ParameterValueUpDown(i - 1).Left = ParameterValueUpDown(i - 2).Left
     End If
     
     ParameterNameLabel(i - 1).caption = studyParam.name
@@ -961,12 +967,27 @@ For i = 1 To studyParameterDefinitions.count
     ParameterValueText(i - 1).ToolTipText = studyParam.Description
     
     If studyParam.parameterType = StudyParameterTypes.ParameterTypeInteger Then
-'        ParameterValueUpDown(i - 1).BuddyControl = ParameterValueText(i - 1)
-'        ParameterValueUpDown(i - 1).BuddyProperty = "Text"
-'        ParameterValueUpDown(i - 1).SyncBuddy = True
-        ParameterValueUpDown(i - 1).Visible = True
         ParameterValueUpDown(i - 1).Min = 0
         ParameterValueUpDown(i - 1).Max = 255
+        ParameterValueUpDown(i - 1).Visible = True
+        If i <> 1 Then
+            ParameterValueUpDown(i - 1).BuddyControl = ParameterValueText(i - 1)
+            ' the following line is necessary because for some reason VB resizes
+            ' the first parametervaluetext whenever BuddyControl is set to true
+            ' on a later UpDown control  !!!
+            If firstParamIsInteger Then
+                ParameterValueText(0).Width = ParameterValueTemplateText.Width - ParameterValueUpDown(0).Width
+            Else
+                ParameterValueText(0).Width = ParameterValueTemplateText.Width
+            End If
+        Else
+            firstParamIsInteger = True
+        End If
+    Else
+        If i = 1 Then
+            ParameterValueUpDown(0).Visible = False
+            ParameterValueText(0).Width = ParameterValueTemplateText.Width
+        End If
     End If
     
     If studyParam.parameterType = StudyParameterTypes.ParameterTypeInteger Or _
@@ -1028,16 +1049,23 @@ For i = 1 To studyValueDefinitions.count
         initialiseDisplayAsCombo DisplayAsCombo(i - 1)
     
         Load ThicknessText(i - 1)
+        ThicknessText(i - 1).TabIndex = nextTabIndex
+        ThicknessText(i - 1).Width = ThicknessUpDown(i - 2).Left + _
+                                    ThicknessUpDown(i - 2).Width - _
+                                    ThicknessText(i - 2).Left
         ThicknessText(i - 1).Top = ThicknessText(i - 2).Top + 360
         ThicknessText(i - 1).Left = ThicknessText(i - 2).Left
         ThicknessText(i - 1).Visible = True
-        ThicknessText(i - 1).TabIndex = nextTabIndex
     
         Load ThicknessUpDown(i - 1)
-        ThicknessUpDown(i - 1).Top = ThicknessUpDown(i - 2).Top + 360
-'        ThicknessUpDown(i - 1).Left = ThicknessUpDown(i - 2).Left
         ThicknessUpDown(i - 1).TabIndex = nextTabIndex
+        ThicknessUpDown(i - 1).Top = ThicknessUpDown(i - 2).Top + 360
+        ThicknessUpDown(i - 1).BuddyControl = ThicknessText(i - 1)
         ThicknessUpDown(i - 1).Visible = True
+        ' need the following line otherwise VB increases the length
+        ' of the first thicknessText !!!
+        If i <> 1 Then ThicknessText(0).Width = ThicknessText(i - 1).Width
+
     
         Load StyleCombo(i - 1)
         StyleCombo(i - 1).Top = StyleCombo(i - 2).Top + 360

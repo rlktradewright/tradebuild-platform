@@ -165,7 +165,18 @@ End Function
 
 Public Sub addCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
+Dim lOrderContext As OrderContext
+Dim Change As CollectionChangeEvent
+
 mChangeListeners.add value
+
+' notify any existing items
+Set Change.source = Me
+Change.changeType = CollItemAdded
+For Each lOrderContext In mOrderContexts
+    Set Change.affectedObject = lOrderContext
+    value.Change Change
+Next
 End Sub
 
 Friend Sub finish()

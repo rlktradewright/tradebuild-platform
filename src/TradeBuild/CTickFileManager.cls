@@ -55,7 +55,7 @@ Event ReplayProgress( _
                 ByVal percentComplete As Single)
 
 Event TickerAllocated( _
-                ByVal pTicker As ticker)
+                ByVal pTicker As Ticker)
 
 Event TickfileCompleted( _
                 ByVal tickfileIndex As Long, _
@@ -86,8 +86,8 @@ Private mReader                     As TickfileReader
 Private mTickfileSpecifiers()       As TradeBuild.TickfileSpecifier
 Private mCurrTickfileIndex          As Long
 
-Private mTickers                    As tickers
-Private mTicker                     As ticker
+Private mTickers                    As Tickers
+Private mTicker                     As Ticker
 
 Private WithEvents mTickfileSelector As fTickfileSelector
 Attribute mTickfileSelector.VB_VarHelpID = -1
@@ -412,12 +412,12 @@ Else
 End If
 End Property
 
-Friend Property Let tickers(ByVal value As tickers)
+Friend Property Let Tickers(ByVal value As Tickers)
 Set mTickers = value
 End Property
 
-Public Property Get ticker() As ticker
-Set ticker = mTicker
+Public Property Get Ticker() As Ticker
+Set Ticker = mTicker
 End Property
 
 Public Property Let TickfileSpecifier(value As TradeBuild.TickfileSpecifier)
@@ -474,7 +474,7 @@ End Property
 Friend Property Let tradeBuildAPI( _
                 ByVal value As tradeBuildAPI)
 Set mTradeBuildAPIRef = New WeakReference
-mTradeBuildAPIRef.Initialise value
+mTradeBuildAPIRef.initialise value
 End Property
 
 '================================================================================
@@ -487,7 +487,7 @@ mCurrTickfileIndex = -1
 End Sub
 
 Friend Function CreateOutputTickfile( _
-                ByVal pTicker As ticker, _
+                ByVal pTicker As Ticker, _
                 ByVal outputTickfileFormat As String, _
                 ByVal outputTickfilePath As String) As TradeBuild.TickfileWriter
             
