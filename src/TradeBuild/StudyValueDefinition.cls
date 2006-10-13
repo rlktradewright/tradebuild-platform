@@ -63,6 +63,9 @@ Private mValueType As StudyValueTypes
 
 Private mMultipleValuesPerBar As Boolean
 
+Private mMinimumValue As Variant
+Private mMaximumValue As Variant
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
@@ -96,6 +99,22 @@ End Property
 
 Private Property Get IStudyValueDefinition_isDefault() As Boolean
 IStudyValueDefinition_isDefault = mIsDefault
+End Property
+
+Friend Property Let IStudyValueDefinition_maximumValue(ByVal value As Variant)
+mMaximumValue = value
+End Property
+
+Public Property Get IStudyValueDefinition_maximumValue() As Variant
+IStudyValueDefinition_maximumValue = mMaximumValue
+End Property
+
+Friend Property Let IStudyValueDefinition_minimumValue(ByVal value As Variant)
+mMinimumValue = value
+End Property
+
+Public Property Get IStudyValueDefinition_minimumValue() As Variant
+IStudyValueDefinition_minimumValue = mMinimumValue
 End Property
 
 Private Property Let IStudyValueDefinition_multipleValuesPerBar(ByVal value As Boolean)
@@ -155,6 +174,22 @@ End Property
 
 Public Property Get isDefault() As Boolean
 isDefault = mIsDefault
+End Property
+
+Friend Property Let maximumValue(ByVal value As Variant)
+mMaximumValue = value
+End Property
+
+Public Property Get maximumValue() As Variant
+maximumValue = mMaximumValue
+End Property
+
+Friend Property Let minimumValue(ByVal value As Variant)
+mMinimumValue = value
+End Property
+
+Public Property Get minimumValue() As Variant
+minimumValue = mMinimumValue
 End Property
 
 Friend Property Let multipleValuesPerBar(ByVal value As Boolean)
