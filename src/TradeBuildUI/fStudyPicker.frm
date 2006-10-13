@@ -191,7 +191,7 @@ spName = mStudies(StudyList.ListIndex).serviceProvider
 Set defaultStudyConfig = loadDefaultStudyConfiguration(mStudies(StudyList.ListIndex).name, spName)
 
 If Not defaultStudyConfig Is Nothing Then
-    mChart.addStudy defaultStudyConfig
+    addStudyToChart defaultStudyConfig
 Else
     showConfigForm
 End If
@@ -271,7 +271,7 @@ Private Sub mConfigForm_AddStudyConfiguration( _
                 ByVal studyConfig As StudyConfiguration)
 If studyConfig.studyValueConfigurations.count = 0 Then Exit Sub
 
-mChart.addStudy studyConfig
+addStudyToChart studyConfig
 
 End Sub
 
@@ -299,40 +299,63 @@ End Sub
 ' Properties
 '================================================================================
 
-Friend Property Let chart(ByVal value As TradeBuildChart)
-Dim studyConfig As StudyConfiguration
-Set mChart = value
-
-ChartStudiesList.clear
-Set mStudyConfigurations = mChart.studyConfigurations
-For Each studyConfig In mStudyConfigurations
-    ChartStudiesList.AddItem studyConfig.instanceFullyQualifiedName
-Next
-End Property
-
-Friend Property Let ticker(ByVal value As TradeBuild.ticker)
-Dim i As Long
-Dim itemText As String
-
-Set mTicker = value
-mStudies = mTicker.availableStudies
-
-StudyList.clear
-For i = 0 To UBound(mStudies)
-    itemText = mStudies(i).name & "  (" & mStudies(i).serviceProvider & ")"
-    StudyList.AddItem itemText
-Next
-
-StudyList.ListIndex = -1
-End Property
-
 '================================================================================
 ' Methods
 '================================================================================
 
+Friend Sub initialise( _
+                ByVal pChart As TradeBuildChart, _
+                ByVal pTicker As TradeBuild.ticker)
+Dim studyConfig As StudyConfiguration
+Dim i As Long
+Dim itemText As String
+
+Set mChart = pChart
+Set mTicker = pTicker
+
+DescriptionText = ""
+ChartStudiesList.clear
+If Not mChart Is Nothing Then
+    Set mStudyConfigurations = mChart.studyConfigurations
+    For Each studyConfig In mStudyConfigurations
+        ChartStudiesList.AddItem studyConfig.instanceFullyQualifiedName
+    Next
+End If
+
+StudyList.clear
+If Not mTicker Is Nothing Then
+    mStudies = mTicker.availableStudies
+    
+    For i = 0 To UBound(mStudies)
+        itemText = mStudies(i).name & "  (" & mStudies(i).serviceProvider & ")"
+        StudyList.AddItem itemText
+    Next
+End If
+
+AddButton.Enabled = False
+ConfigureButton.Enabled = False
+RemoveButton.Enabled = False
+ChangeButton.Enabled = False
+
+If mTicker Is Nothing Or mChart Is Nothing Then
+    Me.caption = "(No chart selected)"
+Else
+    Me.caption = "Select a study for " & mTicker.Contract.specifier.localSymbol & _
+                " (" & mTicker.Contract.specifier.exchange & ") " & _
+                mChart.timeframeCaption
+End If
+End Sub
+
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub addStudyToChart(ByVal studyConfig As StudyConfiguration)
+On Error Resume Next
+mChart.addStudy studyConfig
+If err.Number <> 0 Then initialise Nothing, Nothing
+On Error GoTo 0
+End Sub
 
 Private Sub showConfigForm()
 Dim spName As String

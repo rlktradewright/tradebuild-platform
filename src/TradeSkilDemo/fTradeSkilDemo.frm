@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{1942F60B-EC12-45BB-8FBB-89AA1BB15BA4}#16.0#0"; "TradeBuildUI.ocx"
+Object = "{2400CBAB-A41E-4FEF-B808-A6AB2BF2A5C1}#4.0#0"; "TradeBuildUI.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeSkil Demo Edition"
@@ -269,9 +269,7 @@ Begin VB.Form fTradeSkilDemo
       TabPicture(0)   =   "fTradeSkilDemo.frx":0000
       Tab(0).ControlEnabled=   0   'False
       Tab(0).Control(0)=   "Frame1"
-      Tab(0).Control(0).Enabled=   0   'False
       Tab(0).Control(1)=   "ConfigureButton"
-      Tab(0).Control(1).Enabled=   0   'False
       Tab(0).ControlCount=   2
       TabCaption(1)   =   "&2. Tickers"
       TabPicture(1)   =   "fTradeSkilDemo.frx":001C
@@ -283,19 +281,14 @@ Begin VB.Form fTradeSkilDemo
       TabPicture(2)   =   "fTradeSkilDemo.frx":0038
       Tab(2).ControlEnabled=   0   'False
       Tab(2).Control(0)=   "OrdersSummary1"
-      Tab(2).Control(0).Enabled=   0   'False
       Tab(2).Control(1)=   "OrderButton"
-      Tab(2).Control(1).Enabled=   0   'False
       Tab(2).Control(2)=   "CancelOrderButton"
-      Tab(2).Control(2).Enabled=   0   'False
       Tab(2).Control(3)=   "ModifyOrderButton"
-      Tab(2).Control(3).Enabled=   0   'False
       Tab(2).ControlCount=   4
       TabCaption(3)   =   "&4. Executions"
       TabPicture(3)   =   "fTradeSkilDemo.frx":0054
       Tab(3).ControlEnabled=   0   'False
       Tab(3).Control(0)=   "ExecutionsSummary1"
-      Tab(3).Control(0).Enabled=   0   'False
       Tab(3).ControlCount=   1
       TabCaption(4)   =   "&5. Replay tickfiles"
       TabPicture(4)   =   "fTradeSkilDemo.frx":0070

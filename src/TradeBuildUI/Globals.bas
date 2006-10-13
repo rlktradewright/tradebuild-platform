@@ -163,9 +163,15 @@ Public Sub showStudyPicker( _
 If mStudyPickerForm Is Nothing Then
     Set mStudyPickerForm = New fStudyPicker
 End If
-mStudyPickerForm.ticker = pTicker
-mStudyPickerForm.chart = chart
+mStudyPickerForm.initialise chart, pTicker
 mStudyPickerForm.Show vbModeless
+End Sub
+
+Public Sub syncStudyPicker( _
+                ByVal pTicker As TradeBuild.ticker, _
+                ByVal chart As TradeBuildChart)
+If mStudyPickerForm Is Nothing Then Exit Sub
+mStudyPickerForm.initialise chart, pTicker
 End Sub
 
 Public Function startTask( _
@@ -177,6 +183,11 @@ If mTaskManager Is Nothing Then
 End If
 Set startTask = mTaskManager.startTask(target, name, data)
 End Function
+
+Public Sub unsyncStudyPicker()
+If mStudyPickerForm Is Nothing Then Exit Sub
+mStudyPickerForm.initialise Nothing, Nothing
+End Sub
 
 Public Sub updateDefaultStudyConfiguration( _
                 ByVal value As StudyConfiguration)

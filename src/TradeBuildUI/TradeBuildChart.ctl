@@ -658,6 +658,14 @@ Public Sub showStudyPickerForm()
 showStudyPicker mTicker, Me
 End Sub
 
+Public Sub syncStudyPickerForm()
+syncStudyPicker mTicker, Me
+End Sub
+
+Public Sub unsyncStudyPickerForm()
+unsyncStudyPicker
+End Sub
+
 Friend Sub updatePreviousBar()
 Dim lStudyValueHandler As StudyValueHandler
 

@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{1942F60B-EC12-45BB-8FBB-89AA1BB15BA4}#16.0#0"; "TradeBuildUI.ocx"
+Object = "{2400CBAB-A41E-4FEF-B808-A6AB2BF2A5C1}#4.0#0"; "TradeBuildUI.ocx"
 Begin VB.Form fMarketDepth 
    Caption         =   "Market Depth"
    ClientHeight    =   3270

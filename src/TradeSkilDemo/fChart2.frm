@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{1942F60B-EC12-45BB-8FBB-89AA1BB15BA4}#16.0#0"; "TradeBuildUI.ocx"
+Object = "{2400CBAB-A41E-4FEF-B808-A6AB2BF2A5C1}#8.0#0"; "TradeBuildUI.ocx"
 Begin VB.Form fChart2 
    ClientHeight    =   6780
    ClientLeft      =   60
@@ -97,6 +97,14 @@ Private mPreviousClose As String
 ' Class Event Handlers
 '================================================================================
 
+Private Sub Form_Activate()
+TradeBuildChart1.syncStudyPickerForm
+End Sub
+
+Private Sub Form_Deactivate()
+TradeBuildChart1.unsyncStudyPickerForm
+End Sub
+
 Private Sub Form_Load()
 TradeBuildChart1.Top = Toolbar1.Height
 TradeBuildChart1.Left = 0
@@ -116,6 +124,7 @@ End Sub
 
 Private Sub Form_Unload(cancel As Integer)
 Set mTicker = Nothing
+TradeBuildChart1.unsyncStudyPickerForm
 TradeBuildChart1.finish
 End Sub
 
