@@ -2675,6 +2675,22 @@ interface IOrderPlex : IDispatch {
 			[out, retval] VARIANT_BOOL* );
 
 		[propput]
+		HRESULT maximumValue(
+			[in] VARIANT );
+
+		[propget]
+		HRESULT maximumValue(
+			[out, retval] VARIANT* );
+
+		[propput]
+		HRESULT minimumValue(
+			[in] VARIANT );
+
+		[propget]
+		HRESULT minimumValue(
+			[out, retval] VARIANT* );
+
+		[propput]
 		HRESULT multipleValuesPerBar(
 			[in] VARIANT_BOOL );
 
