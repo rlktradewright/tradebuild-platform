@@ -2,14 +2,18 @@ VERSION 5.00
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.Form fStudyConfigurer 
+   BorderStyle     =   3  'Fixed Dialog
    Caption         =   "Configure a study"
    ClientHeight    =   5745
-   ClientLeft      =   1005
-   ClientTop       =   1230
+   ClientLeft      =   990
+   ClientTop       =   1215
    ClientWidth     =   10725
    LinkTopic       =   "Form1"
+   MaxButton       =   0   'False
+   MinButton       =   0   'False
    ScaleHeight     =   5745
    ScaleWidth      =   10725
+   ShowInTaskbar   =   0   'False
    Begin VB.Frame LinesFrame 
       Caption         =   "Lines"
       Height          =   735
@@ -187,7 +191,7 @@ Begin VB.Form fStudyConfigurer
             Value           =   1
             AutoBuddy       =   -1  'True
             BuddyControl    =   "ThicknessText(0)"
-            BuddyDispid     =   196618
+            BuddyDispid     =   196620
             BuddyIndex      =   0
             OrigLeft        =   4080
             OrigTop         =   240
@@ -428,7 +432,7 @@ Begin VB.Form fStudyConfigurer
             _Version        =   393216
             AutoBuddy       =   -1  'True
             BuddyControl    =   "ParameterValueText(0)"
-            BuddyDispid     =   196636
+            BuddyDispid     =   196643
             BuddyIndex      =   0
             OrigLeft        =   1920
             OrigRight       =   2175
@@ -755,7 +759,7 @@ studyConfig.parameters = params
 Set studyValueDefs = mStudyDefinition.studyValueDefinitions
 
 For i = 0 To ValueNameLabel.UBound
-    Set studyValueConfig = studyConfig.StudyValueConfigurations.add(ValueNameLabel(i).caption)
+    Set studyValueConfig = studyConfig.studyValueConfigurations.add(ValueNameLabel(i).caption)
     studyValueConfig.includeInChart = (IncludeCheck(i).value = vbChecked)
     studyValueConfig.includeInAutoscale = (AutoscaleCheck(i).value = vbChecked)
     studyValueConfig.color = ColorLabel(i).backColor
@@ -804,7 +808,7 @@ Next
 
 For i = 0 To 4
     If LineText(i).text <> "" Then
-        Set studyHorizRule = studyConfig.StudyHorizontalRules.add
+        Set studyHorizRule = studyConfig.studyHorizontalRules.add
         studyHorizRule.y = LineText(i).text
         studyHorizRule.color = LineColorLabel(i).backColor
     End If
@@ -915,7 +919,7 @@ Dim studyValueDefinitions As TradeBuild.studyValueDefinitions
 Dim studyParam As TradeBuild.StudyParameterDefinition
 Dim defaultParams As TradeBuild.parameters
 Dim studyValue As TradeBuild.StudyValueDefinition
-Dim studyValueConfigs As StudyValueConfigurations
+Dim studyValueConfigs As studyValueConfigurations
 Dim studyValueConfig As StudyValueConfiguration
 Dim firstParamIsInteger As Boolean
 
@@ -925,7 +929,7 @@ mStudyname = mStudyDefinition.name
 
 If Not defaultConfig Is Nothing Then
     Set defaultParams = defaultConfig.parameters
-    Set studyValueConfigs = defaultConfig.StudyValueConfigurations
+    Set studyValueConfigs = defaultConfig.studyValueConfigurations
 Else
     Set defaultParams = mTicker.StudyDefaultParameters( _
                                             mStudyDefinition.name, _

@@ -1,9 +1,10 @@
 VERSION 5.00
 Begin VB.Form fStudyPicker 
+   BorderStyle     =   1  'Fixed Single
    Caption         =   "Select a study"
    ClientHeight    =   4365
-   ClientLeft      =   60
-   ClientTop       =   450
+   ClientLeft      =   45
+   ClientTop       =   435
    ClientWidth     =   8685
    LinkTopic       =   "Form1"
    ScaleHeight     =   4365
@@ -15,6 +16,7 @@ Begin VB.Form fStudyPicker
       Height          =   375
       Left            =   7440
       TabIndex        =   10
+      ToolTipText     =   "Change selected study's configuration"
       Top             =   3000
       Width           =   1095
    End
@@ -24,6 +26,7 @@ Begin VB.Form fStudyPicker
       Height          =   375
       Left            =   3360
       TabIndex        =   9
+      ToolTipText     =   "Remove study from chart"
       Top             =   1560
       Width           =   375
    End
@@ -42,6 +45,7 @@ Begin VB.Form fStudyPicker
       Height          =   375
       Left            =   7440
       TabIndex        =   3
+      ToolTipText     =   "Close this dialog"
       Top             =   3840
       Width           =   1095
    End
@@ -51,15 +55,18 @@ Begin VB.Form fStudyPicker
       Height          =   375
       Left            =   2160
       TabIndex        =   2
+      ToolTipText     =   "Configure selected study"
       Top             =   3000
       Width           =   1095
    End
    Begin VB.CommandButton AddButton 
       Caption         =   ">"
+      Default         =   -1  'True
       Enabled         =   0   'False
       Height          =   375
       Left            =   3360
       TabIndex        =   1
+      ToolTipText     =   "Add study to chart"
       Top             =   1080
       Width           =   375
    End
@@ -293,14 +300,11 @@ End Sub
 '================================================================================
 
 Friend Property Let chart(ByVal value As TradeBuildChart)
-Set mChart = value
-End Property
-
-Friend Property Let studyConfigurations( _
-                ByVal value As studyConfigurations)
 Dim studyConfig As StudyConfiguration
+Set mChart = value
 
-Set mStudyConfigurations = value
+ChartStudiesList.clear
+Set mStudyConfigurations = mChart.studyConfigurations
 For Each studyConfig In mStudyConfigurations
     ChartStudiesList.AddItem studyConfig.instanceFullyQualifiedName
 Next
@@ -313,6 +317,7 @@ Dim itemText As String
 Set mTicker = value
 mStudies = mTicker.availableStudies
 
+StudyList.clear
 For i = 0 To UBound(mStudies)
     itemText = mStudies(i).name & "  (" & mStudies(i).serviceProvider & ")"
     StudyList.AddItem itemText

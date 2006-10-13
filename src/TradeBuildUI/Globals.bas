@@ -66,6 +66,8 @@ Private mDefaultStudyConfigurations As Collection
 
 Private mTaskManager As TradeBuild.TaskManager
 
+Private mStudyPickerForm As fStudyPicker
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
@@ -153,6 +155,17 @@ End Function
 
 Public Sub notImplemented()
 MsgBox "This facility has not yet been implemented", , "Sorry"
+End Sub
+
+Public Sub showStudyPicker( _
+                ByVal pTicker As TradeBuild.ticker, _
+                ByVal chart As TradeBuildChart)
+If mStudyPickerForm Is Nothing Then
+    Set mStudyPickerForm = New fStudyPicker
+End If
+mStudyPickerForm.ticker = pTicker
+mStudyPickerForm.chart = chart
+mStudyPickerForm.Show vbModeless
 End Sub
 
 Public Function startTask( _

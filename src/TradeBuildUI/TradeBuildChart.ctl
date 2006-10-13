@@ -83,8 +83,6 @@ Private mOutstandingTasks As Long
 
 Private mStudyConfigurations As studyConfigurations
 
-Private mStudyPickerForm As fStudyPicker
-
 Private mTimeframeKey As String
 
 Private mBackfilling As Boolean
@@ -301,6 +299,11 @@ Next
 regionNames = names
 End Property
 
+Friend Property Get studyConfigurations() As studyConfigurations
+If Not Ambient.UserMode Then err.Raise 394, , "Get not supported at design time"
+Set studyConfigurations = mStudyConfigurations
+End Property
+
 Public Property Get timeframeCaption() As String
 Dim units As String
 Select Case mPeriodUnits
@@ -482,13 +485,13 @@ studyConfig.instanceName = study.instanceName
 studyConfig.instanceFullyQualifiedName = study.instancePath
 studyConfig.studyId = study.id
 
-For Each studyValueConfig In studyConfig.StudyValueConfigurations
+For Each studyValueConfig In studyConfig.studyValueConfigurations
     If studyValueConfig.includeInChart Then
         includeStudyValueInChart study, studyValueConfig
     End If
 Next
 
-If studyConfig.StudyHorizontalRules.count > 0 Then
+If studyConfig.studyHorizontalRules.count > 0 Then
     If studyConfig.chartRegionName = CustomRegionName Then
         regionName = study.instancePath
     Else
@@ -496,7 +499,7 @@ If studyConfig.StudyHorizontalRules.count > 0 Then
     End If
     Set region = findRegion(regionName, study.instanceName)
     
-    For Each studyHorizRule In studyConfig.StudyHorizontalRules
+    For Each studyHorizRule In studyConfig.studyHorizontalRules
         Set line = region.addLine(LayerNumbers.LayerGrid + 1)
         line.color = studyHorizRule.color
         line.style = studyHorizRule.style
@@ -652,14 +655,7 @@ mStudyConfigurations.add studyConfig
 End Sub
 
 Public Sub showStudyPickerForm()
-Set mStudyPickerForm = New fStudyPicker
-mStudyPickerForm.ticker = mTicker
-mStudyPickerForm.chart = Me
-mStudyPickerForm.studyConfigurations = mStudyConfigurations
-' unfortunately the following line prevents the form being shown
-' when running in the IDE
-'mStudyPickerForm.Show vbModeless, UserControl.Parent
-mStudyPickerForm.Show vbModeless
+showStudyPicker mTicker, Me
 End Sub
 
 Friend Sub updatePreviousBar()
