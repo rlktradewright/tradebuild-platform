@@ -178,6 +178,54 @@ End Property
 ' Methods
 '================================================================================
 
+Friend Function clone() As StudyConfiguration
+Set clone = New StudyConfiguration
+clone.chartRegionName = mChartRegionName
+clone.inputValueName = mInputValueName
+clone.instanceFullyQualifiedName = mInstanceFullyQualifiedName
+clone.instanceName = mInstanceName
+clone.name = mName
+clone.parameters = mParameters.clone
+clone.serviceProviderName = mServiceProviderName
+clone.studyDefinition = mStudyDefinition
+
+Dim hr As StudyHorizontalRule
+Dim newHr As StudyHorizontalRule
+Dim newHrs As studyHorizontalRules
+Set newHrs = clone.studyHorizontalRules
+For Each hr In mStudyHorizontalRules
+    Set newHr = newHrs.add
+    newHr.color = hr.color
+    newHr.style = hr.style
+    newHr.thickness = hr.thickness
+    newHr.y = hr.y
+Next
+
+clone.studyId = mStudyId
+
+Dim svc As StudyValueConfiguration
+Dim newSvc As StudyValueConfiguration
+Dim newSvcs As studyValueConfigurations
+
+Set newSvcs = clone.studyValueConfigurations
+
+For Each svc In mStudyValueConfigurations
+    Set newSvc = newSvcs.add(svc.valueName)
+    newSvc.chartRegionName = svc.chartRegionName
+    newSvc.color = svc.color
+    newSvc.displayMode = svc.displayMode
+    newSvc.histogramBarWidth = svc.histogramBarWidth
+    newSvc.includeInAutoscale = svc.includeInAutoscale
+    newSvc.includeInChart = svc.includeInChart
+    newSvc.layer = svc.layer
+    newSvc.lineStyle = svc.lineStyle
+    newSvc.lineThickness = svc.lineThickness
+    newSvc.multipleValuesPerBar = svc.multipleValuesPerBar
+Next
+
+clone.underlyingStudyId = mUnderlyingStudyId
+End Function
+
 '================================================================================
 ' Helper Functions
 '================================================================================

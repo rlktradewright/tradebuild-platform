@@ -649,9 +649,6 @@ Unload simpleColorPicker
 End Sub
 
 Private Sub SetDefaultButton_Click()
-notImplemented
-Exit Sub
-
 RaiseEvent SetDefault(createStudyConfig)
 End Sub
 
@@ -758,7 +755,7 @@ studyConfig.parameters = params
 Set studyValueDefs = mStudyDefinition.studyValueDefinitions
 
 For i = 0 To ValueNameLabel.UBound
-    Set studyValueConfig = studyConfig.studyValueConfigurations.add(ValueNameLabel(i).caption)
+    Set studyValueConfig = studyConfig.StudyValueConfigurations.add(ValueNameLabel(i).caption)
     studyValueConfig.includeInChart = (IncludeCheck(i).value = vbChecked)
     studyValueConfig.includeInAutoscale = (AutoscaleCheck(i).value = vbChecked)
     studyValueConfig.color = ColorLabel(i).backColor
@@ -807,7 +804,7 @@ Next
 
 For i = 0 To 4
     If LineText(i).text <> "" Then
-        Set studyHorizRule = studyConfig.studyHorizontalRules.add
+        Set studyHorizRule = studyConfig.StudyHorizontalRules.add
         studyHorizRule.y = LineText(i).text
         studyHorizRule.color = LineColorLabel(i).backColor
     End If
@@ -918,7 +915,7 @@ Dim studyValueDefinitions As TradeBuild.studyValueDefinitions
 Dim studyParam As TradeBuild.StudyParameterDefinition
 Dim defaultParams As TradeBuild.parameters
 Dim studyValue As TradeBuild.StudyValueDefinition
-Dim studyValueConfigs As studyValueConfigurations
+Dim studyValueConfigs As StudyValueConfigurations
 Dim studyValueConfig As StudyValueConfiguration
 Dim firstParamIsInteger As Boolean
 
@@ -928,7 +925,7 @@ mStudyname = mStudyDefinition.name
 
 If Not defaultConfig Is Nothing Then
     Set defaultParams = defaultConfig.parameters
-    Set studyValueConfigs = defaultConfig.studyValueConfigurations
+    Set studyValueConfigs = defaultConfig.StudyValueConfigurations
 Else
     Set defaultParams = mTicker.StudyDefaultParameters( _
                                             mStudyDefinition.name, _

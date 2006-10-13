@@ -140,12 +140,14 @@ End Function
 Public Function loadDefaultStudyConfiguration( _
                 ByVal name As String, _
                 ByVal spName As String) As StudyConfiguration
+Dim sc As StudyConfiguration
 If mDefaultStudyConfigurations Is Nothing Then
     Set loadDefaultStudyConfiguration = Nothing
 Else
     On Error Resume Next
-    Set loadDefaultStudyConfiguration = mDefaultStudyConfigurations.item(calcDefaultStudyKey(name, spName))
+    Set sc = mDefaultStudyConfigurations.item(calcDefaultStudyKey(name, spName))
     On Error GoTo 0
+    If Not sc Is Nothing Then Set loadDefaultStudyConfiguration = sc.clone
 End If
 End Function
 
@@ -165,6 +167,8 @@ End Function
 
 Public Sub updateDefaultStudyConfiguration( _
                 ByVal value As StudyConfiguration)
+Dim sc As StudyConfiguration
+
 If mDefaultStudyConfigurations Is Nothing Then
     Set mDefaultStudyConfigurations = New Collection
 End If
@@ -172,7 +176,9 @@ On Error Resume Next
 mDefaultStudyConfigurations.remove calcDefaultStudyKey(value.name, value.serviceProviderName)
 On Error GoTo 0
 
-mDefaultStudyConfigurations.add value, calcDefaultStudyKey(value.name, value.serviceProviderName)
+Set sc = value.clone
+sc.underlyingStudyId = ""
+mDefaultStudyConfigurations.add sc, calcDefaultStudyKey(value.name, value.serviceProviderName)
 End Sub
 
 '================================================================================

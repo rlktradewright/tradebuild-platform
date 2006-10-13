@@ -85,6 +85,19 @@ Set add = New StudyHorizontalRule
 mStudyHorizRules.add add
 End Function
 
+Friend Function clone() As StudyHorizontalRules
+Dim hr As StudyHorizontalRule
+Dim newHr As StudyHorizontalRule
+Set clone = New StudyHorizontalRules
+For Each hr In mStudyHorizRules
+    newHr = clone.add
+    newHr.color = hr.color
+    newHr.style = hr.style
+    newHr.thickness = hr.thickness
+    newHr.y = hr.y
+Next
+End Function
+
 Public Function item( _
                 ByVal Index As Long) As StudyHorizontalRule
 Set item = mStudyHorizRules.item(Index)

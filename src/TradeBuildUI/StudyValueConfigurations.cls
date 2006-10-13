@@ -87,6 +87,27 @@ add.valueName = valueName
 mStudyValueConfigurations.add add, valueName
 End Function
 
+Friend Function clone() As StudyValueConfigurations
+Dim svc As StudyValueConfiguration
+Dim newSvc As StudyValueConfiguration
+
+Set clone = New StudyValueConfigurations
+
+For Each svc In mStudyValueConfigurations
+    newSvc = clone.add(svc.valueName)
+    newSvc.chartRegionName = svc.chartRegionName
+    newSvc.color = svc.color
+    newSvc.displayMode = svc.displayMode
+    newSvc.histogramBarWidth = svc.histogramBarWidth
+    newSvc.includeInAutoscale = svc.includeInAutoscale
+    newSvc.includeInChart = svc.includeInChart
+    newSvc.layer = svc.layer
+    newSvc.lineStyle = svc.lineStyle
+    newSvc.lineThickness = svc.lineThickness
+    newSvc.multipleValuesPerBar = svc.multipleValuesPerBar
+Next
+End Function
+
 Public Function item( _
                 ByVal Index As Long) As StudyValueConfiguration
 Set item = mStudyValueConfigurations.item(Index)

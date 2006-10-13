@@ -465,6 +465,12 @@ If mTicker Is Nothing Then err.Raise TradeBuild.ErrorCodes.ErrIllegalStateExcept
                                     "TradeBuildUI.TradeBuildChart::AddStudy", _
                                     "Chart not attached to ticker"
                                     
+If studyConfig.underlyingStudyId = "" Then
+    ' this is a default study configuration
+    studyConfig.underlyingStudyId = mBars.id
+    studyConfig.inputValueName = "Close"
+End If
+
 Set study = mTicker.addStudy(studyConfig.name, _
                             studyId, _
                             studyConfig.underlyingStudyId, _
@@ -476,13 +482,13 @@ studyConfig.instanceName = study.instanceName
 studyConfig.instanceFullyQualifiedName = study.instancePath
 studyConfig.studyId = study.id
 
-For Each studyValueConfig In studyConfig.studyValueConfigurations
+For Each studyValueConfig In studyConfig.StudyValueConfigurations
     If studyValueConfig.includeInChart Then
         includeStudyValueInChart study, studyValueConfig
     End If
 Next
 
-If studyConfig.studyHorizontalRules.count > 0 Then
+If studyConfig.StudyHorizontalRules.count > 0 Then
     If studyConfig.chartRegionName = CustomRegionName Then
         regionName = study.instancePath
     Else
@@ -490,7 +496,7 @@ If studyConfig.studyHorizontalRules.count > 0 Then
     End If
     Set region = findRegion(regionName, study.instanceName)
     
-    For Each studyHorizRule In studyConfig.studyHorizontalRules
+    For Each studyHorizRule In studyConfig.StudyHorizontalRules
         Set line = region.addLine(LayerNumbers.LayerGrid + 1)
         line.color = studyHorizRule.color
         line.style = studyHorizRule.style
