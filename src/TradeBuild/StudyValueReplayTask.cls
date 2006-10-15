@@ -59,6 +59,7 @@ Private mTarget As Object
 Private mTargetIsStudy As Boolean
 
 Private mTargetStudy As TradeBuildSP.IStudy
+Private mStudyToNotify As TradeBuildSP.IStudy
 Private mTargetListener As TradeBuildSP.IStudyValueListener
 Private mSourceStudy As TradeBuildSP.IStudy
 Private mDiscriminator As Long
@@ -121,7 +122,7 @@ For i = (mStartValueNumber + mValuesNotified) To _
         ev.value = valueEntry.value
         
         If mTargetIsStudy Then
-            mTargetStudy.notify ev
+            mStudyToNotify.notify ev
         Else
             mTargetListener.notify ev
         End If
@@ -186,6 +187,7 @@ mDiscriminator = discriminator
 If TypeOf target Is TradeBuildSP.IStudy Then
     mTargetIsStudy = True
     Set mTargetStudy = target
+    Set mStudyToNotify = mTargetStudy.baseStudy
     If numUnderlyingValuesToUse < 0 Then
         ' just replay the number of values needed by the study
         numValuesToNotify = mTargetStudy.numberOfBarsRequired

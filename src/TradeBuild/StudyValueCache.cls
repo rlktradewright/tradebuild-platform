@@ -71,8 +71,8 @@ Private mCyclicSize As Long
 Private Sub IStudyValueCache_addValue( _
                 ByVal value As Variant, _
                 ByVal barNumber As Long, _
-                ByVal Timestamp As Date)
-addValue value, barNumber, Timestamp
+                ByVal timestamp As Date)
+addValue value, barNumber, timestamp
 End Sub
 
 Private Property Get IStudyValueCache_Count() As Long
@@ -90,7 +90,11 @@ End Function
 
 Private Function IStudyValueCache_getValue( _
                 Optional ByVal ref As Long) As Variant
-IStudyValueCache_getValue = getValue(ref)
+If TypeOf getValue(ref) Is Object  Then
+    Set IStudyValueCache_getValue = getValue(ref)
+Else
+    IStudyValueCache_getValue = getValue(ref)
+End If
 End Function
 
 Private Function IStudyValueCache_replayValues( _
@@ -139,9 +143,9 @@ End Function
 Private Sub IStudyValueCache_updateValue( _
                 ByVal value As Variant, _
                 Optional ByVal barNumber As Long, _
-                Optional ByVal Timestamp As Date, _
+                Optional ByVal timestamp As Date, _
                 Optional ByVal ref As Long)
-updateValue value, barNumber, Timestamp, ref
+updateValue value, barNumber, timestamp, ref
 End Sub
 
 Private Property Get IStudyValueCache_ValueName() As String
@@ -198,7 +202,7 @@ End Property
 Friend Sub addValue( _
                 ByVal value As Variant, _
                 ByVal barNumber As Long, _
-                ByVal Timestamp As Date)
+                ByVal timestamp As Date)
 
 If mNumValues > 0 Then
 '    If Timestamp < getStudyValue(0).Timestamp Then Stop
@@ -219,21 +223,33 @@ Else
     mNumValues = mNumValues + 1
 End If
 
-mValues(mNewest).value = value
+If TypeOf value Is Object  Then
+    Set mValues(mNewest).value = value
+Else
+    mValues(mNewest).value = value
+End If
 mValues(mNewest).barNumber = barNumber
-mValues(mNewest).Timestamp = Timestamp
+mValues(mNewest).timestamp = timestamp
 End Sub
 
 Friend Function getValue(Optional ByVal ref As Long) As Variant
-getValue = mValues(refToIndex(ref)).value
+If TypeOf mValues(refToIndex(ref)).value Is Object  Then
+    Set getValue = mValues(refToIndex(ref)).value
+Else
+    getValue = mValues(refToIndex(ref)).value
+End If
 End Function
 
 Friend Function getStudyValue(Optional ByVal ref As Long) As StudyValueStruct
 Dim valueEntry As TradeBuildSP.StudyValue
 valueEntry = mValues(refToIndex(ref))
 getStudyValue.barNumber = valueEntry.barNumber
-getStudyValue.Timestamp = valueEntry.Timestamp
-getStudyValue.value = valueEntry.value
+getStudyValue.timestamp = valueEntry.timestamp
+If TypeOf valueEntry.value Is Object  Then
+    Set getStudyValue.value = valueEntry.value
+Else
+    getStudyValue.value = valueEntry.value
+End If
 End Function
 
 Friend Function replayValues( _
@@ -261,13 +277,17 @@ End Function
 Friend Sub updateValue( _
                 ByVal value As Variant, _
                 ByVal barNumber As Long, _
-                ByVal Timestamp As Date, _
+                ByVal timestamp As Date, _
                 Optional ByVal ref As Long)
 Dim i As Long
 i = refToIndex(ref)
-mValues(i).value = value
+If TypeOf value Is Object  Then
+    Set mValues(i).value = value
+Else
+    mValues(i).value = value
+End If
 If barNumber > 0 Then mValues(i).barNumber = barNumber
-If CDbl(Timestamp) > 0 Then mValues(i).Timestamp = Timestamp
+If CDbl(timestamp) > 0 Then mValues(i).timestamp = timestamp
 End Sub
 
 '================================================================================

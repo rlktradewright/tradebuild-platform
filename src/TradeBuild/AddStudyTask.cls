@@ -57,6 +57,7 @@ Private mTaskContext As TaskContext
 Private mBars As bars
 
 Private mStudy As TradeBuildSP.IStudy
+Private mStudyToNotify As TradeBuildSP.IStudy
 Private mValueName As String
 
 Private mStartBarNumber As Long
@@ -100,7 +101,7 @@ For i = (mStartBarNumber + mBarsNotified) To _
             ev.timestamp = lBar.datetime
             ev.value = lBar.openValue
             ev.ValueName = GBars.BarsValueClose
-            mStudy.notify ev
+            mStudyToNotify.notify ev
         End If
         
         If lBar.IsDownBar Then
@@ -108,28 +109,28 @@ For i = (mStartBarNumber + mBarsNotified) To _
                 ev.timestamp = lBar.datetime + (lBar.barLength / 3) / 1440
                 ev.value = lBar.highValue
                 ev.ValueName = GBars.BarsValueClose
-                mStudy.notify ev
+                mStudyToNotify.notify ev
             End If
             
             If mNotifyClose Then
                 ev.timestamp = lBar.datetime + (2 * lBar.barLength / 3) / 1440
                 ev.value = lBar.lowValue
                 ev.ValueName = GBars.BarsValueClose
-                mStudy.notify ev
+                mStudyToNotify.notify ev
             End If
         Else
             If mNotifyClose Then
                 ev.timestamp = lBar.datetime + (lBar.barLength / 3) / 1440
                 ev.value = lBar.lowValue
                 ev.ValueName = GBars.BarsValueClose
-                mStudy.notify ev
+                mStudyToNotify.notify ev
             End If
             
             If mNotifyClose Then
                 ev.timestamp = lBar.datetime + (2 * lBar.barLength / 3) / 1440
                 ev.value = lBar.highValue
                 ev.ValueName = GBars.BarsValueClose
-                mStudy.notify ev
+                mStudyToNotify.notify ev
             End If
         End If
         
@@ -137,25 +138,25 @@ For i = (mStartBarNumber + mBarsNotified) To _
             ev.timestamp = lBar.datetime + lBar.barLength / 1440 - OneSecond
             ev.value = lBar.closeValue
             ev.ValueName = GBars.BarsValueClose
-            mStudy.notify ev
+            mStudyToNotify.notify ev
         End If
         
         If mNotifyVolume Then
             ev.value = lBar.volume
             ev.ValueName = GBars.BarsValueVolume
-            mStudy.notify ev
+            mStudyToNotify.notify ev
         End If
         
         If mNotifyTickvolume Then
             ev.value = lBar.tickVolume
             ev.ValueName = GBars.BarsValueTickVolume
-            mStudy.notify ev
+            mStudyToNotify.notify ev
         End If
     End If
     
     mBarsNotified = mBarsNotified + 1
     If i = mBars.Count Then
-        mBars.studies.add mStudy, mValueName
+        mBars.studies.add mStudyToNotify, mValueName
         mTaskContext.finish
         Set mTaskContext = Nothing
         Exit For
@@ -189,6 +190,7 @@ Dim numBarsToNotify As Long
 
 Set mBars = bars
 Set mStudy = study
+Set mStudyToNotify = mStudy.baseStudy
 mValueName = ValueName
 
 If numUnderlyingValuesToUse < 0 Then
