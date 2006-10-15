@@ -692,23 +692,11 @@ processStudyDefinition studyDef, defaultConfiguration
 
 mServiceProviderName = serviceProviderName
 
-If defaultConfiguration Is Nothing Then
-    processRegionNames regionNames, ""
-Else
-    processRegionNames regionNames, defaultConfiguration.chartRegionName
-End If
+processRegionNames regionNames, ""
 
-If defaultConfiguration Is Nothing Then
-    processConfiguredStudies configuredStudies, ""
-Else
-    processConfiguredStudies configuredStudies, defaultConfiguration.underlyingStudyId
-End If
+processConfiguredStudies configuredStudies, ""
 
-If defaultConfiguration Is Nothing Then
-    initialiseInputValueCombo ""
-Else
-    initialiseInputValueCombo defaultConfiguration.inputValueName
-End If
+initialiseInputValueCombo ""
 End Sub
 
 '================================================================================
@@ -765,6 +753,9 @@ For i = 0 To ValueNameLabel.UBound
     studyValueConfig.color = ColorLabel(i).backColor
     
     Set studyValueDef = studyValueDefs.item(i + 1)
+    
+    studyValueConfig.maximumValue = studyValueDef.maximumValue
+    studyValueConfig.minimumValue = studyValueDef.minimumValue
     
     studyValueConfig.multipleValuesPerBar = studyValueDef.multipleValuesPerBar
     

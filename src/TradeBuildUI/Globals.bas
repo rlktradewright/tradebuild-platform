@@ -19,6 +19,9 @@ Option Explicit
 ' Constants
 '================================================================================
 
+Public Const MinDouble As Double = -(2 - 2 ^ -52) * 2 ^ 1023
+Public Const MaxDouble As Double = (2 - 2 ^ -52) * 2 ^ 1023
+
 Public Const CustomRegionName As String = "$custom"
 Public Const PriceRegionName As String = "$price"
 Public Const VolumeRegionName As String = "$volume"

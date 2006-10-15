@@ -533,7 +533,9 @@ For Each lStudyValueHandler In mStudyValueHandlers
     lStudyValueHandler.finish
 Next
 
-If Not mTicker Is Nothing Then mTicker.removeQuoteListener Me
+If Not mTicker Is Nothing Then
+    If mTicker.State = TickerStateRunning Then mTicker.removeQuoteListener Me
+End If
 Set mTimeframes = Nothing
 Set mTimeframe = Nothing
 Set mTicker = Nothing
@@ -655,11 +657,11 @@ mStudyConfigurations.add studyConfig
 End Sub
 
 Public Sub showStudyPickerForm()
-showStudyPicker mTicker, Me
+If mTicker.State = TickerStateRunning Then showStudyPicker mTicker, Me
 End Sub
 
 Public Sub syncStudyPickerForm()
-syncStudyPicker mTicker, Me
+If mTicker.State = TickerStateRunning Then syncStudyPicker mTicker, Me
 End Sub
 
 Public Sub unsyncStudyPickerForm()
@@ -831,6 +833,14 @@ End If
 Set region = findRegion(regionName, study.instanceName)
 
 lStudyValueHandler.region = region
+
+If Not IsEmpty(studyValueConfig.maximumValue) Or _
+    Not IsEmpty(studyValueConfig.minimumValue) _
+Then
+    region.setVerticalScale CSng(studyValueConfig.minimumValue), _
+                            CSng(studyValueConfig.maximumValue)
+    region.autoscale = False
+End If
 
 Set dataSeries = region.addDataPointSeries(studyValueConfig.layer)
 dataSeries.displayMode = studyValueConfig.displayMode

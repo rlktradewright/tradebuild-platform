@@ -61,6 +61,9 @@ Private mChartRegionName As String
 Private mLayer As Long
 Private mHistogramBarWidth As Single
 Private mMultipleValuesPerBar As Boolean
+Private mMinimumValue As Variant
+Private mMaximumValue As Variant
+
 
 '================================================================================
 ' Class Event Handlers
@@ -160,6 +163,22 @@ End Property
 
 Public Property Get lineThickness() As Long
 lineThickness = mLineThickness
+End Property
+
+Friend Property Let maximumValue(ByVal value As Variant)
+mMaximumValue = value
+End Property
+
+Public Property Get maximumValue() As Variant
+maximumValue = mMaximumValue
+End Property
+
+Friend Property Let minimumValue(ByVal value As Variant)
+mMinimumValue = value
+End Property
+
+Public Property Get minimumValue() As Variant
+minimumValue = mMinimumValue
 End Property
 
 Friend Property Let multipleValuesPerBar(ByVal value As Boolean)
