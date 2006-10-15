@@ -167,13 +167,13 @@ End Sub
 Private Property Get IStudy_instanceName() As String
 IStudy_instanceName = AtrShortName & "(" & _
                 mInputValueName & "," & _
-                gParamsToString(mParams) & ")"
+                gParamsToString(mParams, GATR.studyDefinition) & ")"
 End Property
 
 Private Property Get IStudy_instancePath() As String
 IStudy_instancePath = AtrShortName & "(" & _
                 mInputValueName & "," & _
-                gParamsToString(mParams) & ")." & _
+                gParamsToString(mParams, GATR.studyDefinition) & ")." & _
                 mUnderlyingStudy.instancePath
 End Property
 
@@ -205,7 +205,7 @@ If isNewBar Then
     mTR = trueRange(newval)
     
     evMa.value = mTR
-    mMAStudy.Notify evMa
+    mMAStudy.notify evMa
     mATR = mMA.ma.value
     mATRCache.addValue mATR, ev.barnumber, ev.timestamp
 Else
@@ -220,7 +220,7 @@ Else
     mTR = trueRange(newval)
     
     evMa.value = mTR
-    mMAStudy.Notify evMa
+    mMAStudy.notify evMa
     mATR = mMA.ma.value
     mATRCache.updateValue mATR, ev.barnumber, ev.timestamp
 End If
@@ -230,8 +230,8 @@ evOut.barnumber = ev.barnumber
 evOut.timestamp = ev.timestamp
 evOut.value = mATR
 evOut.ValueName = AtrValueATR
-mStudies.Notify evOut
-mListeners.Notify evOut
+mStudies.notify evOut
+mListeners.notify evOut
 End Sub
 
 Private Property Get IStudy_numberOfBarsRequired() As Long

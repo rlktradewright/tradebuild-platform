@@ -74,8 +74,10 @@ addStudyName BbName
 addStudyName DoncName
 addStudyName EmaName
 addStudyName MacdName
+addStudyName SStochName
 addStudyName SmaName
 addStudyName SdName
+addStudyName StochName
 addStudyName SwingName
 End Sub
 
@@ -113,6 +115,8 @@ GMACD.commonServiceConsumer = commonServiceConsumer
 GStandardDeviation.commonServiceConsumer = commonServiceConsumer
 GBollingerBands.commonServiceConsumer = commonServiceConsumer
 GSwing.commonServiceConsumer = commonServiceConsumer
+GStochastic.commonServiceConsumer = commonServiceConsumer
+GSlowStochastic.commonServiceConsumer = commonServiceConsumer
 
 mHandle = handle
 mCommonServiceConsumer.RegisterServiceProvider mHandle, _
@@ -169,10 +173,14 @@ Case UCase$(MacdName), UCase$(MacdShortName)
     Dim lMACD As New MACD
     lMACD.initialise mCommonServiceConsumer, serviceConsumer
     Set IStudyServiceProvider_createStudy = lMACD
-Case UCase$(SdName), UCase$(SdShortName)
-    Dim lSD As New StandardDeviation
-    lSD.initialise mCommonServiceConsumer, serviceConsumer
-    Set IStudyServiceProvider_createStudy = lSD
+Case UCase$(SStochName), UCase$(SStochShortName)
+    Dim lSStoch As New SlowStochastic
+    lSStoch.initialise mCommonServiceConsumer, serviceConsumer
+    Set IStudyServiceProvider_createStudy = lSStoch
+Case UCase$(StochName), UCase$(StochShortName)
+    Dim lStoch As New Stochastic
+    lStoch.initialise mCommonServiceConsumer, serviceConsumer
+    Set IStudyServiceProvider_createStudy = lStoch
 Case UCase$(SwingName), UCase$(SwingShortName)
     Dim lSwing As New Swing
     lSwing.initialise mCommonServiceConsumer, serviceConsumer
@@ -198,6 +206,10 @@ Case UCase$(MacdName), UCase$(MacdShortName)
     Set IStudyServiceProvider_getStudyDefaultParameters = GMACD.defaultParameters
 Case UCase$(SdName), UCase$(SdShortName)
     Set IStudyServiceProvider_getStudyDefaultParameters = GStandardDeviation.defaultParameters
+Case UCase$(SStochName), UCase$(SStochShortName)
+    Set IStudyServiceProvider_getStudyDefaultParameters = GSlowStochastic.defaultParameters
+Case UCase$(StochName), UCase$(StochShortName)
+    Set IStudyServiceProvider_getStudyDefaultParameters = GStochastic.defaultParameters
 Case UCase$(SwingName), UCase$(SwingShortName)
     Set IStudyServiceProvider_getStudyDefaultParameters = GSwing.defaultParameters
 End Select
@@ -229,6 +241,10 @@ Case UCase$(MacdName), UCase$(MacdShortName)
     GMACD.defaultParameters = parameters
 Case UCase$(SdName), UCase$(SdShortName)
     GStandardDeviation.defaultParameters = parameters
+Case UCase$(SStochName), UCase$(SStochShortName)
+    GSlowStochastic.defaultParameters = parameters
+Case UCase$(StochName), UCase$(StochShortName)
+    GStochastic.defaultParameters = parameters
 Case UCase$(SwingName), UCase$(SwingShortName)
     GSwing.defaultParameters = parameters
 Case Else
@@ -254,6 +270,10 @@ Case UCase$(MacdName), UCase$(MacdShortName)
     Set IStudyServiceProvider_studyDefinition = GMACD.studyDefinition
 Case UCase$(SdName), UCase$(SdShortName)
     Set IStudyServiceProvider_studyDefinition = GStandardDeviation.studyDefinition
+Case UCase$(SStochName), UCase$(SStochShortName)
+    Set IStudyServiceProvider_studyDefinition = GSlowStochastic.studyDefinition
+Case UCase$(StochName), UCase$(StochShortName)
+    Set IStudyServiceProvider_studyDefinition = GStochastic.studyDefinition
 Case UCase$(SwingName), UCase$(SwingShortName)
     Set IStudyServiceProvider_studyDefinition = GSwing.studyDefinition
 End Select

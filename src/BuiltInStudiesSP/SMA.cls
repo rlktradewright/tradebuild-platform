@@ -202,13 +202,13 @@ End Sub
 Private Property Get IStudy_instanceName() As String
 IStudy_instanceName = SmaShortName & "(" & _
                 mInputValueName & "," & _
-                gParamsToString(mParams) & ")"
+                gParamsToString(mParams, GSMA.studyDefinition) & ")"
 End Property
 
 Private Property Get IStudy_instancePath() As String
 IStudy_instancePath = SmaShortName & "(" & _
                 mInputValueName & "," & _
-                gParamsToString(mParams) & ")." & _
+                gParamsToString(mParams, GSMA.studyDefinition) & ")." & _
                 mUnderlyingStudy.instancePath
 End Property
 
@@ -270,8 +270,8 @@ evOut.barnumber = ev.barnumber
 evOut.timestamp = ev.timestamp
 evOut.value = mMA
 evOut.ValueName = SMAValueSMA
-mStudies.Notify evOut
-mListeners.Notify evOut
+mStudies.notify evOut
+mListeners.notify evOut
 End Sub
 
 Private Property Get IStudy_numberOfBarsRequired() As Long

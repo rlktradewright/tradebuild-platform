@@ -30,8 +30,14 @@ Public Const MacdShortName As String = "MACD"
 Public Const SdName As String = "Standard Deviation"
 Public Const SdShortName As String = "SD"
 
+Public Const SStochName As String = "Slow Stochastic"
+Public Const SStochShortName As String = "SStoch"
+
 Public Const SmaName As String = "Simple Moving Average"
 Public Const SmaShortName As String = "SMA"
+
+Public Const StochName As String = "Stochastic"
+Public Const StochShortName As String = "Stoch"
 
 Public Const SwingName As String = "Swing"
 Public Const SwingShortName As String = "Swing"
@@ -80,23 +86,22 @@ End Select
 End Function
 
 Public Function gParamsToString( _
-                ByVal params As IParameters) As String
+                ByVal params As IParameters, _
+                ByVal studyDef As TradeBuildSP.IStudyDefinition) As String
+Dim paramDefs As TradeBuildSP.IStudyParameterDefinitions
+Dim paramDef As TradeBuildSP.IStudyParameterDefinition
 Dim i As Long
-Dim param As IParameter
 
-Set param = params.getFirstParameter
-If Not param Is Nothing Then gParamsToString = param.value
-
-Set param = params.getNextParameter
-Do
-    If Not param Is Nothing Then
-        gParamsToString = gParamsToString & "," & param.value
+On Error Resume Next
+Set paramDefs = studyDef.StudyParameterDefinitions
+For i = 1 To paramDefs.Count
+    Set paramDef = paramDefs.Item(i)
+    If Len(gParamsToString) = 0 Then
+        gParamsToString = params.getParameterValue(paramDef.name)
     Else
-        Exit Do
+        gParamsToString = gParamsToString & "," & params.getParameterValue(paramDef.name)
     End If
-    Set param = params.getNextParameter
-Loop
-
+Next
 End Function
 
 '================================================================================

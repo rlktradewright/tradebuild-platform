@@ -23,6 +23,9 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
+Implements TradeBuildSP.IStudy
+Implements TradeBuildSP.ITaskCompletionListener
+
 '================================================================================
 ' Events
 '================================================================================
@@ -43,13 +46,262 @@ Option Explicit
 ' Member variables
 '================================================================================
 
+Private mStudyServiceConsumer As IStudyServiceConsumer
+Private mCommonServiceConsumer As ICommonServiceConsumer
+
+Private mIdent As String
+
+Private mInputValueName As String
+Private mUnderlyingStudy As TradeBuildSP.IStudy
+
+Private mParams As IParameters
+Private mStudies As IStudies
+Private mListeners As IStudyValueListeners
+
+Private mKPeriods As Long
+Private mDPeriods As Long
+
+Private mKCache As IStudyValueCache
+Private mDCache As IStudyValueCache
+
+Private mBars As Bars
+Private mMASmoothing As SMA
+Private mMASmoothingStudy As IStudy
+
+Private mK As Variant
+Private mD As Variant
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
 
+Private Sub Class_Initialize()
+Set mParams = GStochastic.defaultParameters
+End Sub
+
+Private Sub Class_Terminate()
+Debug.Print "Stochastic terminated"
+End Sub
+
 '================================================================================
-' XXXX Interface Members
+' IStudy Interface Members
 '================================================================================
+
+Private Function IStudy_addStudy( _
+                ByVal study As IStudy, _
+                ByVal ValueName As String, _
+                ByVal numUnderlyingValuesToUse As Long, _
+                Optional ByVal taskName As String, _
+                Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
+
+Select Case UCase$(ValueName)
+Case UCase$(StochValueK)
+    Set IStudy_addStudy = mKCache.replayValues(study, _
+                                Me, _
+                                numUnderlyingValuesToUse, _
+                                TaskDiscriminators.TaskAddStudy, _
+                                taskName, _
+                                taskData)
+    IStudy_addStudy.addTaskCompletionListener Me
+Case UCase$(StochValueD)
+    Set IStudy_addStudy = mDCache.replayValues(study, _
+                                Me, _
+                                numUnderlyingValuesToUse, _
+                                TaskDiscriminators.TaskAddStudy, _
+                                taskName, _
+                                taskData)
+    IStudy_addStudy.addTaskCompletionListener Me
+End Select
+
+End Function
+
+Private Function IStudy_addStudyValueListener( _
+                ByVal listener As TradeBuildSP.IStudyValueListener, _
+                ByVal ValueName As String, _
+                ByVal numberOfValuesToReplay As Long, _
+                Optional ByVal taskName As String, _
+                Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
+Select Case UCase$(ValueName)
+Case UCase$(StochValueK)
+    If mKCache.Count = 0 Then
+        mListeners.Add listener, ValueName
+    Else
+        Set IStudy_addStudyValueListener = mKCache.replayValues(listener, _
+                                    Me, _
+                                    numberOfValuesToReplay, _
+                                    TaskDiscriminators.TaskAddStudyValueListener, _
+                                    taskName, _
+                                    taskData)
+        IStudy_addStudyValueListener.addTaskCompletionListener Me
+    End If
+Case UCase$(StochValueD)
+    If mDCache.Count = 0 Then
+        mListeners.Add listener, ValueName
+    Else
+        Set IStudy_addStudyValueListener = mDCache.replayValues(listener, _
+                                    Me, _
+                                    numberOfValuesToReplay, _
+                                    TaskDiscriminators.TaskAddStudyValueListener, _
+                                    taskName, _
+                                    taskData)
+        IStudy_addStudyValueListener.addTaskCompletionListener Me
+    End If
+End Select
+End Function
+
+Private Property Get IStudy_baseStudy() As IStudy
+Set IStudy_baseStudy = Me
+End Property
+
+Private Property Let IStudy_defaultParameters(ByVal RHS As TradeBuildSP.IParameters)
+GStochastic.defaultParameters = RHS
+End Property
+
+Private Property Get IStudy_defaultParameters() As TradeBuildSP.IParameters
+Set IStudy_defaultParameters = GStochastic.defaultParameters
+End Property
+
+Private Function IStudy_getStudyValue( _
+                ByVal ValueName As String, _
+                ByVal ref As Long, _
+                ByRef params() As Variant) As StudyValue
+Select Case UCase$(ValueName)
+Case UCase$(DefaultStudyValueName), UCase$(StochValueK)
+    IStudy_getStudyValue = percentK(ref)
+Case UCase$(StochValueD)
+    IStudy_getStudyValue = percentD(ref)
+End Select
+End Function
+
+Private Property Get IStudy_id() As String
+IStudy_id = mIdent
+End Property
+
+Private Sub IStudy_initialise( _
+                ByVal id As String, _
+                ByVal parameters As TradeBuildSP.IParameters, _
+                ByVal numberOfValuesToCache As Long, _
+                ByVal inputValueName As String, _
+                ByVal underlyingStudy As TradeBuildSP.IStudy)
+mIdent = id
+mInputValueName = inputValueName
+Set mUnderlyingStudy = underlyingStudy
+processParameters parameters
+Set mKCache = mCommonServiceConsumer.NewStudyValueCache(numberOfValuesToCache, StochValueK)
+Set mDCache = mCommonServiceConsumer.NewStudyValueCache(numberOfValuesToCache, StochValueD)
+
+End Sub
+
+Private Property Get IStudy_instanceName() As String
+IStudy_instanceName = StochShortName & "(" & _
+                mInputValueName & "," & _
+                gParamsToString(mParams, GStochastic.studyDefinition) & ")"
+End Property
+
+Private Property Get IStudy_instancePath() As String
+IStudy_instancePath = StochShortName & "(" & _
+                mInputValueName & "," & _
+                gParamsToString(mParams, GStochastic.studyDefinition) & ")." & _
+                mUnderlyingStudy.instancePath
+End Property
+
+Private Sub IStudy_Notify( _
+                ev As TradeBuildSP.StudyValueEvent)
+Dim isNewBar As Boolean
+Dim hh As Variant
+Dim ll As Variant
+Static sPrevVal As Variant
+Dim newEv As TradeBuildSP.StudyValueEvent
+
+isNewBar = newBar(ev.barnumber)
+
+If Not isNewBar Then
+    If ev.value = sPrevVal Then Exit Sub
+    sPrevVal = ev.value
+End If
+
+mBars.notify ev
+'If ev.barNumber = 500 Then Stop
+If mBars.Count > mKPeriods Then
+    hh = mBars.highestHighValue(mKPeriods)
+    ll = mBars.lowestLowValue(mKPeriods)
+End If
+If IsEmpty(hh) Or IsEmpty(ll) Then Exit Sub
+
+mK = 100 * (mBars.closeValue - ll) / (hh - ll)
+
+newEv.barnumber = ev.barnumber
+newEv.timestamp = ev.timestamp
+newEv.value = mK
+mMASmoothingStudy.notify newEv
+mD = mMASmoothing.ma.value
+
+If isNewBar Then
+    mKCache.addValue mK, ev.barnumber, ev.timestamp
+    mDCache.addValue mD, ev.barnumber, ev.timestamp
+Else
+    mKCache.updateValue mK, ev.barnumber, ev.timestamp
+    mDCache.updateValue mD, ev.barnumber, ev.timestamp
+End If
+            
+Set newEv.Source = Me
+newEv.value = mK
+newEv.ValueName = StochValueK
+mStudies.notify newEv
+mListeners.notify newEv
+newEv.value = mD
+newEv.ValueName = StochValueD
+mStudies.notify newEv
+mListeners.notify newEv
+End Sub
+
+Private Property Get IStudy_numberOfBarsRequired() As Long
+Dim thisNeeds As Long
+Dim superiorStudiesNeeds
+thisNeeds = mKPeriods + mDPeriods + mKCache.cyclicSize
+superiorStudiesNeeds = mStudies.numberOfBarsRequired
+IStudy_numberOfBarsRequired = IIf(thisNeeds > superiorStudiesNeeds, _
+                            thisNeeds, _
+                            superiorStudiesNeeds)
+End Property
+
+Private Function IStudy_numberOfCachedValues( _
+                Optional ByVal ValueName As String = "") As Long
+IStudy_numberOfCachedValues = mKCache.Count
+End Function
+
+Private Property Get IStudy_parameters() As IParameters
+Set IStudy_parameters = mParams.Clone
+End Property
+
+Private Sub IStudy_removeStudyValueListener( _
+                ByVal listener As TradeBuildSP.IStudyValueListener)
+mListeners.Remove listener
+End Sub
+
+Private Property Get IStudy_studyDefinition() As TradeBuildSP.IStudyDefinition
+Set IStudy_studyDefinition = GStochastic.studyDefinition
+End Property
+
+'================================================================================
+' ITaskCompletionListener Interface Members
+'================================================================================
+
+Private Sub ITaskCompletionListener_taskCompleted( _
+                ev As TradeBuildSP.TaskCompletionEvent)
+Dim task As IValueReplayTask
+Set task = ev.Source
+Select Case task.discriminator
+Case TaskDiscriminators.TaskAddStudy
+    Dim targetStudy As IStudy
+    Set targetStudy = task.Target
+    mStudies.Add targetStudy, task.ValueName
+Case TaskDiscriminators.TaskAddStudyValueListener
+    Dim targetListener As IStudyValueListener
+    Set targetListener = task.Target
+    mListeners.Add targetListener, task.ValueName
+End Select
+End Sub
 
 '================================================================================
 ' XXXX Event Handlers
@@ -59,222 +311,73 @@ Option Explicit
 ' Properties
 '================================================================================
 
+Public Property Get percentD(Optional ByVal ref As Integer) As Variant
+percentD = mDCache.getStudyValue(ref)
+End Property
+
+Public Property Get percentK(Optional ByVal ref As Integer) As Variant
+percentK = mKCache.getStudyValue(ref)
+End Property
+
 '================================================================================
 ' Methods
 '================================================================================
+
+Friend Sub initialise( _
+                ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
+                ByVal studyServiceConsumer As TradeBuildSP.IStudyServiceConsumer, _
+                Optional ByVal numberOfValuesToCache As Long, _
+                Optional ByVal params As IParameters)
+
+Set mCommonServiceConsumer = commonServiceConsumer
+Set mStudyServiceConsumer = studyServiceConsumer
+Set mStudies = mCommonServiceConsumer.NewStudies
+Set mListeners = mCommonServiceConsumer.NewStudyValueListeners
+
+Set mKCache = mCommonServiceConsumer.NewStudyValueCache(numberOfValuesToCache, StochValueK)
+Set mDCache = mCommonServiceConsumer.NewStudyValueCache(numberOfValuesToCache, StochValueD)
+
+If Not params Is Nothing Then processParameters params
+End Sub
 
 '================================================================================
 ' Helper Functions
 '================================================================================
 
-
-Option Explicit
-
-Implements IListener
-Implements IStudy
-Implements IStudy2
-
-Private mParams As cParameters
-Private mListeners As cListeners
-Private mStudies As cStudies
-
-Private mInstrumentInfo As cInstrumentInfo
-Private mKPeriods As Integer
-Private mDPeriods As Integer
-
-Private mBars As cBarStudy
-Private mMASmoothing As cSimpleMovingAverageStudy
-
-Private mK As Variant
-Private mD As Variant
-
-Private mBarNumber As Long
-
-Private mHistoricValues() As Variant
-        ' this array is used to hold previous values of %K
-
-Private mNewestHist As Integer
-        ' index of newest historical value (which is
-        ' actually the current value)
-
-Private mNumHistValues As Integer
-Private mHistValuesSize As Integer
-
-Private Sub Class_Initialize()
-Set mListeners = New cListeners
-Set mStudies = New cStudies
-mStudies.underlyingStudy = Me
-Set mParams = New cParameters
-Set mMASmoothing = New cSimpleMovingAverageStudy
-End Sub
-
-Public Property Get IStudy_parameters() As cParameters
-Set IStudy_parameters = mParams
-End Property
-
-Public Property Let IStudy_parameters(ByVal value As cParameters)
-Set mParams = value
-mKPeriods = mParams.getParam("%Kperiods").value
-mDPeriods = mParams.getParam("%Dperiods").value
-mMASmoothing.periods = mDPeriods
-End Property
-
-Public Function IStudy_isValuetype(ByVal value As String) As Boolean
-If value = "lastprice" Then IStudy_isValuetype = True
-End Function
-
-'Public Property Get IStudy_valueType() As String
-'IStudy_valueType = "lastprice"
-'End Property
-
-Public Property Get IStudy_numberOfBarsRequired() As Integer
-Dim thisNeeds As Integer
-Dim superiorStudiesNeeds
-Dim study As IStudy
-Set study = mMASmoothing
-thisNeeds = study.numberOfBarsRequired + mKPeriods + mNumHistValues
-superiorStudiesNeeds = mStudies.numberOfBarsRequired
-IStudy_numberOfBarsRequired = IIf(thisNeeds > superiorStudiesNeeds, _
-                                thisNeeds, _
-                                superiorStudiesNeeds)
-End Property
-
-Public Property Let IStudy_underlyingStudy(ByVal value As IStudy)
-Set mBars = value
-End Property
-
-Public Property Get IStudy_baseStudy() As IStudy
-Set IStudy_baseStudy = Me
-End Property
-
-Public Sub IStudy_addStudy(ByVal study As IStudy, Optional ByVal notBase As Boolean)
-addStudy study, notBase
-End Sub
-
-Public Sub IStudy_addListener(ByVal listener As IListener, ByVal valuetype As String)
-addListener listener, valuetype
-End Sub
-
-'================================================================================
-' IStudy2 Interface Members
-'================================================================================
-
-Public Function IStudy2_addListener( _
-                ByVal listener As IListener, _
-                ByVal valuetype As String) As String
-IStudy2_addListener = mListeners.Add(listener, valuetype)
-End Function
-
-Public Property Let numberOfHistoricValues(ByVal value As Integer)
-If (value + 1) > mHistValuesSize Then
-    mHistValuesSize = value + 1         ' includes current value
-    ReDim mHistoricValues(mHistValuesSize - 1)
-    mNewestHist = -1
-End If
-mMASmoothing.numberOfHistoricValues = value
-End Property
-
-Public Property Get percentK(Optional ByVal ref As Integer) As Variant
-If ref = 0 Then
-    percentK = mK
-Else
-    If mNumHistValues < ref + 1 Then
-        percentK = Empty
-    Else
-        percentK = mHistoricValues((mHistValuesSize + mNewestHist - ref) Mod mHistValuesSize)
-    End If
-End If
-End Property
-
-Public Property Get percentD(Optional ByVal ref As Integer) As Variant
-If ref = 0 Then
-    percentD = mD
-Else
-    If mNumHistValues < ref + 1 Then
-        percentD = Empty
-    Else
-        percentD = mMASmoothing.ma(ref)
-    End If
-End If
-End Property
-
-Public Sub IListener_notify(ByVal listenerKey As String, _
-                            ByVal newval As Variant, _
-                            ByVal valuetype As String, _
-                            ByVal barNumber As Long, _
-                            ByVal Timestamp As Date)
-Dim listener As IListener
-Dim isNewBar As Boolean
-Dim hh As Variant
-Dim ll As Variant
-Static sPrevVal As Variant
-
-isNewBar = newBar(barNumber)
-
-If Not isNewBar Then
-    If newval = sPrevVal Then Exit Sub
-    sPrevVal = newval
-End If
-
-hh = mBars.highestHighPrice(mKPeriods)
-ll = mBars.lowestLowPrice(mKPeriods)
-
-If IsEmpty(hh) Or IsEmpty(ll) Then Exit Sub
-
-mK = 100 * (mBars.ClosePrice - ll) / (hh - ll)
-Set listener = mMASmoothing
-listener.Notify "", mK, "", barNumber, Timestamp
-mD = mMASmoothing.ma
-
-If mHistValuesSize > 0 Then
-    If isNewBar Then
-        If mNumHistValues < mHistValuesSize Then
-            mNewestHist = mNewestHist + 1
-            mNumHistValues = mNumHistValues + 1
-        Else
-            mNewestHist = (mNewestHist + 1) Mod mHistValuesSize
-        End If
-    End If
-    mHistoricValues(mNewestHist) = mK
-End If
-            
-mStudies.Notify mK, "percentk", barNumber, Timestamp
-mStudies.Notify mD, "percentd", barNumber, Timestamp
-mListeners.Notify mK, "percentk", barNumber, Timestamp
-mListeners.Notify mD, "percentd", barNumber, Timestamp
-End Sub
-
-Private Sub IListener_instrumentInfo(ByVal listenerKey As String, value As cInstrumentInfo)
-Set mInstrumentInfo = value
-mStudies.instrumentInfo = value
-mListeners.instrumentInfo = value
-End Sub
-
-Private Sub IListener_endSession(ByVal listenerKey As String, ByVal Timestamp As Date)
-End Sub
-
-Private Sub IListener_startSession(ByVal listenerKey As String, ByVal Timestamp As Date)
-End Sub
-
-Private Function newBar(barNumber As Long) As Boolean
+Private Function newBar(barnumber As Long) As Boolean
 Static previousBarNumber As Long
-If barNumber <> previousBarNumber Then
-    previousBarNumber = barNumber
+If barnumber <> previousBarNumber Then
+    previousBarNumber = barnumber
     newBar = True
 Else
     newBar = False
 End If
 End Function
 
-Public Sub addStudy(study As IStudy, Optional ByVal notBase As Boolean)
-mStudies.Add study, notBase
+Private Sub processParameters(ByVal params As IParameters)
+Dim param As TradeBuildSP.IParameter
+Dim lParams As IParameters
+
+Set mParams = params.Clone
+
+Set param = mParams.getFirstParameter
+
+Do While Not param Is Nothing
+    Select Case UCase$(param.name)
+    Case UCase$(StochParamKPeriods)
+        mKPeriods = param.value
+        Set mBars = New Bars
+        mBars.initialise mCommonServiceConsumer, mKPeriods + 1
+    Case UCase$(StochParamDPeriods)
+        mDPeriods = param.value
+        Set mMASmoothing = New SMA
+        Set mMASmoothingStudy = mMASmoothing
+        Set lParams = mMASmoothingStudy.defaultParameters
+        lParams.setParameterValue ParamPeriods, mDPeriods
+        mMASmoothing.initialise mCommonServiceConsumer, mStudyServiceConsumer, 1, lParams
+    End Select
+    Set param = mParams.getNextParameter
+Loop
+
 End Sub
-
-Public Sub addListener(listener As IListener, ByVal requiredData As String)
-mListeners.Add listener, requiredData
-' listener.instrumentInfo = mInstrumentInfo
-End Sub
-
-
-
 

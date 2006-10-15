@@ -200,13 +200,13 @@ End Sub
 Private Property Get IStudy_instanceName() As String
 IStudy_instanceName = SwingShortName & "(" & _
                 mInputValueName & "," & _
-                gParamsToString(mParams) & ")"
+                gParamsToString(mParams, GSwing.studyDefinition) & ")"
 End Property
 
 Private Property Get IStudy_instancePath() As String
 IStudy_instancePath = SwingShortName & "(" & _
                 mInputValueName & "," & _
-                gParamsToString(mParams) & ")." & _
+                gParamsToString(mParams, GSwing.studyDefinition) & ")." & _
                 mUnderlyingStudy.instancePath
 End Property
 
@@ -278,8 +278,8 @@ If isNewBar Then
             evOut.timestamp = mSwingHigh.timestamp
             evOut.value = mSwingHigh.value
             evOut.ValueName = SwingValueSwingPoint
-            mStudies.Notify evOut
-            mListeners.Notify evOut
+            mStudies.notify evOut
+            mListeners.notify evOut
             
             prevSwingHigh = mSwingHigh
             mSwingHigh.value = DummyHigh
@@ -338,8 +338,8 @@ If isNewBar Then
             evOut.timestamp = mSwingLow.timestamp
             evOut.value = mSwingLow.value
             evOut.ValueName = SwingValueSwingPoint
-            mStudies.Notify evOut
-            mListeners.Notify evOut
+            mStudies.notify evOut
+            mListeners.notify evOut
             
             prevSwingLow = mSwingLow
             mSwingLow.value = DummyLow
@@ -675,8 +675,8 @@ evOut.barnumber = tempSwingHigh.barnumber
 evOut.timestamp = tempSwingHigh.timestamp
 evOut.value = tempSwingHigh.value
 evOut.ValueName = SwingValueSwingPoint
-mStudies.Notify evOut
-mListeners.Notify evOut
+mStudies.notify evOut
+mListeners.notify evOut
 End Sub
 
 Private Sub createImpliedSwingLow(ByRef prevSwingLow As SwingPoint)
@@ -710,8 +710,8 @@ evOut.barnumber = tempSwingLow.barnumber
 evOut.timestamp = tempSwingLow.timestamp
 evOut.value = tempSwingLow.value
 evOut.ValueName = SwingValueSwingPoint
-mStudies.Notify evOut
-mListeners.Notify evOut
+mStudies.notify evOut
+mListeners.notify evOut
 End Sub
 
 Private Function newBar(barnumber As Long) As Boolean

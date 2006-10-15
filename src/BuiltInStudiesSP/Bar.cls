@@ -57,7 +57,6 @@ Private mClose As Double
 Private mTickVolume As Long
 Private mDateTime As Date
 Private mBlank As Boolean   ' indicates that there were no ticks during the bar
-Private mDirty As Boolean
 
 '================================================================================
 ' Class Event Handlers
@@ -101,10 +100,6 @@ End Property
 
 Friend Property Let datetime(ByVal newValue As Date)
 mDateTime = newValue
-End Property
-
-Friend Property Get Dirty() As Boolean
-Dirty = mDirty
 End Property
 
 Friend Property Get highValue() As Double

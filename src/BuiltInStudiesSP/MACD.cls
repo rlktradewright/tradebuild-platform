@@ -310,13 +310,13 @@ End Sub
 Private Property Get IStudy_instanceName() As String
 IStudy_instanceName = MacdShortName & "(" & _
                 mInputValueName & "," & _
-                gParamsToString(mParams) & ")"
+                gParamsToString(mParams, GMACD.studyDefinition) & ")"
 End Property
 
 Private Property Get IStudy_instancePath() As String
 IStudy_instancePath = MacdShortName & "(" & _
                 mInputValueName & "," & _
-                gParamsToString(mParams) & ")." & _
+                gParamsToString(mParams, GMACD.studyDefinition) & ")." & _
                 mUnderlyingStudy.instancePath
 End Property
 
@@ -574,8 +574,8 @@ Private Sub calcMACDValues( _
                 ByRef ev As TradeBuildSP.StudyValueEvent)
 Dim newEv As TradeBuildSP.StudyValueEvent
 
-mMAShortStudy.Notify ev
-mMALongStudy.Notify ev
+mMAShortStudy.notify ev
+mMALongStudy.notify ev
 
 If IsEmpty(mMAShort.ma.value) Or IsEmpty(mMALong.ma.value) Then
     mMACD = Empty
@@ -586,7 +586,7 @@ mMACD = mMAShort.ma.value - mMALong.ma.value
 
 newEv = ev
 newEv.value = mMACD
-mMASignalStudy.Notify newEv
+mMASignalStudy.notify newEv
 mMACDSignal = mMASignal.ma.value
 If IsEmpty(mMACDSignal) Then
     mMACDHist = Empty
@@ -801,8 +801,8 @@ Private Sub notifyValue( _
 If Not IsEmpty(value) Then
     ev.value = value
     ev.ValueName = ValueName
-    mStudies.Notify ev
-    mListeners.Notify ev
+    mStudies.notify ev
+    mListeners.notify ev
 End If
 End Sub
 

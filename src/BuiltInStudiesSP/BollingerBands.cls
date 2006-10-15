@@ -208,13 +208,13 @@ End Sub
 Private Property Get IStudy_instanceName() As String
 IStudy_instanceName = BbShortName & "(" & _
                 mInputValueName & "," & _
-                gParamsToString(mParams) & ")"
+                gParamsToString(mParams, GBollingerBands.studyDefinition) & ")"
 End Property
 
 Private Property Get IStudy_instancePath() As String
 IStudy_instancePath = BbShortName & "(" & _
                 mInputValueName & "," & _
-                gParamsToString(mParams) & ")." & _
+                gParamsToString(mParams, GBollingerBands.studyDefinition) & ")." & _
                 mUnderlyingStudy.instancePath
 End Property
 
@@ -233,8 +233,8 @@ End If
 evOut.barnumber = ev.barnumber
 Set evOut.Source = Me
 evOut.timestamp = ev.timestamp
-mSDStudy.Notify ev
-mMAStudy.Notify ev
+mSDStudy.notify ev
+mMAStudy.notify ev
 
 If IsEmpty(mMA.ma.value) Or IsEmpty(mSD.SD.value) Then Exit Sub
 
@@ -522,8 +522,8 @@ If Not IsEmpty(value) Then
     Set ev.Source = Me
     ev.barnumber = barnumber
     ev.timestamp = timestamp
-    mStudies.Notify ev
-    mListeners.Notify ev
+    mStudies.notify ev
+    mListeners.notify ev
 End If
 End Sub
 

@@ -198,13 +198,13 @@ End Sub
 Private Property Get IStudy_instanceName() As String
 IStudy_instanceName = DoncShortName & "(" & _
                 mInputValueName & "," & _
-                gParamsToString(mParams) & ")"
+                gParamsToString(mParams, GDonchianChannels.studyDefinition) & ")"
 End Property
 
 Private Property Get IStudy_instancePath() As String
 IStudy_instancePath = DoncShortName & "(" & _
                 mInputValueName & "," & _
-                gParamsToString(mParams) & ")." & _
+                gParamsToString(mParams, GDonchianChannels.studyDefinition) & ")." & _
                 mUnderlyingStudy.instancePath
 End Property
 
@@ -395,8 +395,8 @@ If Not IsEmpty(value) Then
     Set ev.Source = Me
     ev.barnumber = barnumber
     ev.timestamp = timestamp
-    mStudies.Notify ev
-    mListeners.Notify ev
+    mStudies.notify ev
+    mListeners.notify ev
 End If
 End Sub
 
