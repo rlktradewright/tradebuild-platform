@@ -84,7 +84,7 @@ End Sub
 
 Private Sub StudyValueListener_notify( _
                 ByRef ev As TradeBuild.StudyValueEvent)
-Dim Index As Long
+Dim index As Long
 Static prevBarNumber As Long
 
 If IsEmpty(ev.value) Then Exit Sub
@@ -127,6 +127,10 @@ Friend Property Let region(ByVal value As ChartSkil.ChartRegion)
 Set mRegion = value
 End Property
 
+Friend Property Get region() As ChartSkil.ChartRegion
+Set region = mRegion
+End Property
+
 Friend Property Let study(ByVal value As TradeBuild.study)
 Set mStudy = value
 End Property
@@ -159,10 +163,13 @@ Set mCurrentDataPoint = addStudyDataPoint(mCurrentBarTime)
 If Not IsEmpty(mLatestValue) Then mCurrentDataPoint.dataValue = mLatestValue
 End Sub
 
-Friend Sub finish()
+Friend Sub finish( _
+                ByVal removeDataSeries As Boolean)
 mStudy.removeStudyValueListener Me
+If removeDataSeries Then mRegion.removeDataPointSeries mDataSeries
 Set mStudy = Nothing
 Set mChart = Nothing
+Set mDataSeries = Nothing
 End Sub
 
 Friend Sub updatePreviousBar(ByVal timestamp As Date)

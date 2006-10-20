@@ -50,14 +50,14 @@ Option Explicit
 ' Member variables
 '================================================================================
 
-Private mStudyHorizRules As Collection
+Private mStudyValueHandlers As Collection
 
 '================================================================================
 ' Class Event Handlers
 '================================================================================
 
 Private Sub Class_Initialize()
-Set mStudyHorizRules = New Collection
+Set mStudyValueHandlers = New Collection
 End Sub
 
 '================================================================================
@@ -73,38 +73,26 @@ End Sub
 '================================================================================
 
 Public Property Get count() As Long
-count = mStudyHorizRules.count
+count = mStudyValueHandlers.count
 End Property
 
 '================================================================================
 ' Methods
 '================================================================================
 
-Public Function add() As StudyHorizontalRule
-Set add = New StudyHorizontalRule
-mStudyHorizRules.add add
-End Function
-
-Friend Function clone() As studyHorizontalRules
-Dim hr As StudyHorizontalRule
-Dim newHr As StudyHorizontalRule
-Set clone = New studyHorizontalRules
-For Each hr In mStudyHorizRules
-    newHr = clone.add
-    newHr.color = hr.color
-    newHr.style = hr.style
-    newHr.thickness = hr.thickness
-    newHr.y = hr.y
-Next
-End Function
+Public Sub add(ByVal pStudyValueHandler As StudyValueHandler)
+Attribute add.VB_MemberFlags = "40"
+mStudyValueHandlers.add pStudyValueHandler
+End Sub
 
 Public Function item( _
-                ByVal index As Long) As StudyHorizontalRule
-Set item = mStudyHorizRules.item(index)
+                ByVal index As Long) As StudyValueHandler
+Set item = mStudyValueHandlers.item(index)
 End Function
 
 Public Function NewEnum() As IUnknown
-Set NewEnum = mStudyHorizRules.[_NewEnum]
+Attribute NewEnum.VB_UserMemId = -4
+Set NewEnum = mStudyValueHandlers.[_NewEnum]
 End Function
 
 '================================================================================

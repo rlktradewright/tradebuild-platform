@@ -158,13 +158,16 @@ Private mChart As TradeBuildChart
 
 Private mStudies() As TradeBuild.StudyListEntry
 
-Private WithEvents mStudyConfigurations As studyConfigurations
+Private WithEvents mStudyConfigurations As StudyConfigurations
 Attribute mStudyConfigurations.VB_VarHelpID = -1
-
-'Private mStudyConfiguration As StudyConfiguration
 
 Private WithEvents mConfigForm As fStudyConfigurer
 Attribute mConfigForm.VB_VarHelpID = -1
+
+'/**
+'   Set in the Study Configuration Form's AddStudyConfiguration event
+'*/
+Private mNewStudyConfiguration As StudyConfiguration
 
 '================================================================================
 ' Class Event Handlers
@@ -193,13 +196,38 @@ Set defaultStudyConfig = loadDefaultStudyConfiguration(mStudies(StudyList.ListIn
 If Not defaultStudyConfig Is Nothing Then
     addStudyToChart defaultStudyConfig
 Else
-    showConfigForm
+    showConfigForm mStudies(StudyList.ListIndex).name, _
+                mStudies(StudyList.ListIndex).serviceProvider, _
+                defaultStudyConfig
 End If
 
+mChart.suppressDrawing = False
 End Sub
 
 Private Sub ChangeButton_Click()
-notImplemented
+Dim studyConfig As StudyConfiguration
+Dim newStudyConfig As StudyConfiguration
+
+Set studyConfig = mStudyConfigurations.item(ChartStudiesList.List(ChartStudiesList.ListIndex))
+
+' NB: the following line displays a modal form, so we can remove the existing
+' study and deal with any related studies after it
+Set newStudyConfig = showConfigForm(studyConfig.name, _
+                studyConfig.serviceProviderName, _
+                studyConfig)
+If Not newStudyConfig Is Nothing Then
+    
+    mChart.removeStudy studyConfig
+    
+    ' now amend any studies that are based on the changed study
+    reconfigureDependingStudies studyConfig, newStudyConfig
+    RemoveButton.Enabled = False
+    ChangeButton.Enabled = False
+    ChartStudiesList.ListIndex = -1
+    DescriptionText = ""
+End If
+mChart.suppressDrawing = False
+
 End Sub
 
 Private Sub ChartStudiesList_Click()
@@ -212,16 +240,17 @@ If ChartStudiesList.ListIndex <> -1 Then
                             studyConfig.name, _
                             studyConfig.serviceProviderName)
     If Not studyDef Is Nothing Then
+        StudyList.ListIndex = -1
+        AddButton.Enabled = False
+        ConfigureButton.Enabled = False
+        
         DescriptionText.text = studyDef.Description
         RemoveButton.Enabled = True
         ChangeButton.Enabled = True
-        AddButton.Enabled = False
-        ConfigureButton.Enabled = False
     End If
 Else
-    AddButton.Enabled = False
-    ConfigureButton.Enabled = False
-    DescriptionText.text = ""
+    RemoveButton.Enabled = False
+    ChangeButton.Enabled = False
 End If
 End Sub
 
@@ -230,11 +259,20 @@ Unload Me
 End Sub
 
 Private Sub ConfigureButton_Click()
-showConfigForm
+showConfigForm mStudies(StudyList.ListIndex).name, _
+                mStudies(StudyList.ListIndex).serviceProvider, _
+                Nothing
+mChart.suppressDrawing = False
 End Sub
 
 Private Sub RemoveButton_Click()
-notImplemented
+Dim studyConfig As StudyConfiguration
+Set studyConfig = mStudyConfigurations.item(ChartStudiesList.List(ChartStudiesList.ListIndex))
+mChart.removeStudy studyConfig
+removeDependingStudies studyConfig
+RemoveButton.Enabled = False
+ChangeButton.Enabled = False
+ChartStudiesList.ListIndex = -1
 End Sub
 
 Private Sub StudyList_Click()
@@ -242,10 +280,12 @@ Dim studyDef As studyDefinition
 Dim spName As String
 
 If StudyList.ListIndex <> -1 Then
-    AddButton.Enabled = True
-    ConfigureButton.Enabled = True
+    ChartStudiesList.ListIndex = -1
     RemoveButton.Enabled = False
     ChangeButton.Enabled = False
+    
+    AddButton.Enabled = True
+    ConfigureButton.Enabled = True
     spName = mStudies(StudyList.ListIndex).serviceProvider
     Set studyDef = mTicker.studyDefinition( _
                             mStudies(StudyList.ListIndex).name, _
@@ -254,13 +294,15 @@ If StudyList.ListIndex <> -1 Then
 Else
     AddButton.Enabled = False
     ConfigureButton.Enabled = False
-    DescriptionText.text = ""
 End If
 End Sub
 
 '================================================================================
 ' mConfigForm Event Handlers
 '================================================================================
+
+Private Sub mConfigForm_Cancelled()
+End Sub
 
 Private Sub mConfigForm_SetDefault( _
                 ByVal studyConfig As StudyConfiguration)
@@ -269,10 +311,10 @@ End Sub
 
 Private Sub mConfigForm_AddStudyConfiguration( _
                 ByVal studyConfig As StudyConfiguration)
+Set mNewStudyConfiguration = studyConfig
 If studyConfig.studyValueConfigurations.count = 0 Then Exit Sub
 
 addStudyToChart studyConfig
-
 End Sub
 
 '================================================================================
@@ -288,7 +330,7 @@ Private Sub mStudyConfigurations_ItemRemoved( _
                 ByVal studyConfig As StudyConfiguration)
 Dim i As Long
 For i = 0 To ChartStudiesList.ListCount - 1
-    If ChartStudiesList.List(i) = studyConfig.instanceName Then
+    If ChartStudiesList.List(i) = studyConfig.instanceFullyQualifiedName Then
         ChartStudiesList.RemoveItem i
         Exit For
     End If
@@ -316,7 +358,7 @@ Set mTicker = pTicker
 DescriptionText = ""
 ChartStudiesList.clear
 If Not mChart Is Nothing Then
-    Set mStudyConfigurations = mChart.studyConfigurations
+    Set mStudyConfigurations = mChart.StudyConfigurations
     For Each studyConfig In mStudyConfigurations
         ChartStudiesList.AddItem studyConfig.instanceFullyQualifiedName
     Next
@@ -352,28 +394,86 @@ End Sub
 
 Private Sub addStudyToChart(ByVal studyConfig As StudyConfiguration)
 On Error Resume Next
+mChart.suppressDrawing = True
 mChart.addStudy studyConfig
 If err.Number <> 0 Then initialise Nothing, Nothing
 On Error GoTo 0
+' don't unsuppress drawinghere because there may be a removeStudy to do first
 End Sub
 
-Private Sub showConfigForm()
-Dim spName As String
+'/**
+'   Reconfigures any studies that are dependant on the
+'   oldStudyConfig to use the NewStudyConfig.
+'
+' @param oldStudyConfig     a <code>StudyConfiguration</code> object
+'                           whose id is used to find other
+'                           <code>StudyConfiguration</code> object that
+'                           depend on it
+'
+' @param newStudyConfig     a <code>StudyConfiguration</code> object that
+'                           the dependant <code>StudyConfiguration</code>s
+'                           must be reconfigured to depend on
+'
+'*/
+Private Sub reconfigureDependingStudies( _
+                ByVal oldStudyConfig As StudyConfiguration, _
+                ByVal newStudyConfig As StudyConfiguration)
+Dim sc As StudyConfiguration
+Dim newSc As StudyConfiguration
+
+For Each sc In mStudyConfigurations
+    If sc.underlyingStudyId = oldStudyConfig.studyId Then
+        Set newSc = sc.clone
+        newSc.underlyingStudyId = newStudyConfig.studyId
+        mChart.addStudy newSc
+        mChart.removeStudy sc
+        reconfigureDependingStudies sc, newSc
+    End If
+Next
+
+End Sub
+
+'/**
+'   Removes any studies that are dependant on the
+'   specified <code>StudyConfiguration</code>
+'
+' @param studyConfig    the <code>StudyConfiguration</code> object
+'                       whose depending studies are to be removed
+'
+'*/
+Private Sub removeDependingStudies( _
+                ByVal studyConfig As StudyConfiguration)
+Dim sc As StudyConfiguration
+                
+For Each sc In mStudyConfigurations
+    If sc.underlyingStudyId = studyConfig.studyId Then
+        mChart.removeStudy sc
+        removeDependingStudies sc
+    End If
+Next
+
+End Sub
+'/**
+'   Returns true if the config form is not cancelled by the user
+'*/
+Private Function showConfigForm( _
+                ByVal studyName As String, _
+                ByVal spName As String, _
+                ByVal defaultConfiguration As StudyConfiguration) As StudyConfiguration
 
 Set mConfigForm = New fStudyConfigurer
 
-spName = mStudies(StudyList.ListIndex).serviceProvider
-
 mConfigForm.initialise mTicker, _
-                        mTicker.studyDefinition( _
-                            mStudies(StudyList.ListIndex).name, _
-                            spName), _
+                        mTicker.studyDefinition(studyName, spName), _
                         spName, _
                         mChart.regionNames, _
                         mStudyConfigurations, _
-                        loadDefaultStudyConfiguration(mStudies(StudyList.ListIndex).name, spName)
+                        defaultConfiguration
 mConfigForm.Show vbModal, Me
-End Sub
+
+Set showConfigForm = mNewStudyConfiguration
+Set mNewStudyConfiguration = Nothing
+End Function
 
 
 

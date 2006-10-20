@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{DBED8E43-5960-49DE-B9A7-BBC22DB93A26}#10.0#0"; "ChartSkil.ocx"
+Object = "{DBED8E43-5960-49DE-B9A7-BBC22DB93A26}#12.1#0"; "ChartSkil.ocx"
 Begin VB.UserControl TradeBuildChart 
    ClientHeight    =   5745
    ClientLeft      =   0
@@ -63,6 +63,11 @@ Implements TradeBuild.TaskCompletionListener
 ' Types
 '================================================================================
 
+Public Type RegionEntry
+    region              As ChartSkil.ChartRegion
+    usageCount          As Long
+End Type
+
 '================================================================================
 ' Member variables
 '================================================================================
@@ -79,9 +84,9 @@ Attribute mTimeframe.VB_VarHelpID = -1
 Private WithEvents mBars As TradeBuild.Bars
 Attribute mBars.VB_VarHelpID = -1
 
-Private mOutstandingTasks As Long
+'Private mOutstandingTasks As Long
 
-Private mStudyConfigurations As studyConfigurations
+Private mStudyConfigurations As StudyConfigurations
 
 Private mTimeframeKey As String
 
@@ -118,8 +123,6 @@ Private mPeriods As ChartSkil.Periods
 
 Private mInitialised As Boolean
 
-Private mStudyValueHandlers As Collection
-
 Private mHorizontalLineKeys As Collection
 
 Private mHighPrice As Double
@@ -139,13 +142,11 @@ Set mChartControl = Chart1
 mObjectID = GenerateGUIDString
 Set mRegions = New Collection
 
-Set mStudyConfigurations = New studyConfigurations
+Set mStudyConfigurations = New StudyConfigurations
 
 initialiseChart
 
 Set mHorizontalLineKeys = New Collection
-
-Set mStudyValueHandlers = New Collection
 
 mFirstBackfill = True
 
@@ -206,8 +207,9 @@ End Sub
 '================================================================================
 
 Private Sub TaskCompletionListener_taskCompleted(ev As TradeBuild.TaskCompletionEvent)
-mOutstandingTasks = mOutstandingTasks - 1
-If mOutstandingTasks = 0 Then mChartControl.suppressDrawing = False
+'mOutstandingTasks = mOutstandingTasks - 1
+'If mOutstandingTasks = 0 Then mChartControl.suppressDrawing = False
+mChartControl.suppressDrawing = False
 
 If ev.data = TaskTypeReplayBars Then
     mTicker.addQuoteListener Me
@@ -288,20 +290,26 @@ End Property
 Public Property Get regionNames() As String()
 Dim names() As String
 Dim region As ChartSkil.ChartRegion
+Dim re As RegionEntry
 Dim i As Long
 
 ReDim names(mRegions.count) As String
 
 For i = 1 To mRegions.count
-    Set region = mRegions(i)
-    names(i - 1) = region.name
+    re = mRegions(i)
+    names(i - 1) = re.region.name
 Next
 regionNames = names
 End Property
 
-Friend Property Get studyConfigurations() As studyConfigurations
+Friend Property Get StudyConfigurations() As StudyConfigurations
 If Not Ambient.UserMode Then err.Raise 394, , "Get not supported at design time"
-Set studyConfigurations = mStudyConfigurations
+Set StudyConfigurations = mStudyConfigurations
+End Property
+
+Friend Property Let suppressDrawing( _
+                ByVal value As Boolean)
+mChartControl.suppressDrawing = value
 End Property
 
 Public Property Get timeframeCaption() As String
@@ -339,6 +347,7 @@ Public Sub addHorizontalLine( _
                 ByVal lineThickness As Long, _
                 ByVal lineColor As Long, _
                 ByVal layer As Long)
+Dim re As RegionEntry
 Dim region As ChartSkil.ChartRegion
 Dim line As ChartSkil.line
 Dim key As String
@@ -354,7 +363,8 @@ If Not line Is Nothing Then
     Exit Sub
 End If
 
-Set region = mRegions(chartRegionName)
+re = mRegions(chartRegionName)
+Set region = re.region
 
 Set line = region.addLine(layer)
 
@@ -430,10 +440,12 @@ Public Sub addRegion( _
                 ByVal showGrid As Boolean, _
                 ByVal showGridText As Boolean)
 
+Dim re As RegionEntry
 Dim region As ChartSkil.ChartRegion
 
 On Error Resume Next
-Set region = mRegions(name)
+re = mRegions(name)
+Set region = re.region
 On Error GoTo 0
 
 If Not region Is Nothing Then
@@ -450,7 +462,8 @@ region.integerYScale = integerYScale
 region.setTitle title, vbBlue, Nothing
 region.showGrid = showGrid
 region.showGridText = showGridText
-mRegions.add region, name
+Set re.region = region
+mRegions.add re, name
 End Sub
                 
 Public Function addStudy( _
@@ -461,6 +474,7 @@ Dim studyValueConfig As StudyValueConfiguration
 Dim regionName As String
 Dim region As ChartSkil.ChartRegion
 Dim studyHorizRule As StudyHorizontalRule
+Dim horizRulesLineSeries As ChartSkil.LineSeries
 Dim line As ChartSkil.line
 Dim i As Long
 
@@ -487,29 +501,34 @@ studyConfig.studyId = study.id
 
 For Each studyValueConfig In studyConfig.studyValueConfigurations
     If studyValueConfig.includeInChart Then
-        includeStudyValueInChart study, studyValueConfig
+        studyConfig.studyValueHandlers.add includeStudyValueInChart( _
+                                                    study, _
+                                                    studyValueConfig)
     End If
 Next
 
 If studyConfig.studyHorizontalRules.count > 0 Then
     If studyConfig.chartRegionName = CustomRegionName Then
         regionName = study.instancePath
+        studyConfig.chartRegionName = regionName
     Else
         regionName = studyConfig.chartRegionName
     End If
-    Set region = findRegion(regionName, study.instanceName)
+    Set region = findRegion(regionName, study.instanceName, False)
     
+    Set horizRulesLineSeries = region.addLineSeries(LayerNumbers.LayerGrid + 1)
+    horizRulesLineSeries.extended = True
+    horizRulesLineSeries.extendAfter = True
+    horizRulesLineSeries.extendBefore = True
     For Each studyHorizRule In studyConfig.studyHorizontalRules
-        Set line = region.addLine(LayerNumbers.LayerGrid + 1)
-        line.color = studyHorizRule.color
-        line.style = studyHorizRule.style
-        line.thickness = studyHorizRule.thickness
-        line.extended = True
-        line.extendAfter = True
-        line.extendBefore = True
+        horizRulesLineSeries.color = studyHorizRule.color
+        horizRulesLineSeries.style = studyHorizRule.style
+        horizRulesLineSeries.thickness = studyHorizRule.thickness
+        Set line = horizRulesLineSeries.addLine
         line.point1 = region.newPoint(0, studyHorizRule.y, CoordsRelative, CoordsLogical)
         line.point2 = region.newPoint(100, studyHorizRule.y, CoordsRelative, CoordsLogical)
     Next
+    studyConfig.horizontalRulesLineSeries = horizRulesLineSeries
 End If
 
 mStudyConfigurations.add studyConfig
@@ -523,15 +542,17 @@ mChartControl.clearChart
 End Sub
 
 Public Sub finish()
-Dim lStudyValueHandler As StudyValueHandler
+Dim studyConfig As StudyConfiguration
 
 On Error GoTo err
 
 mChartControl.clearChart
 
-For Each lStudyValueHandler In mStudyValueHandlers
-    lStudyValueHandler.finish
+For Each studyConfig In mStudyConfigurations
+    studyConfig.finish
 Next
+
+Set mStudyConfigurations = Nothing
 
 If Not mTicker Is Nothing Then
     If mTicker.State = TickerStateRunning Then mTicker.removeQuoteListener Me
@@ -589,6 +610,47 @@ Case SpecialValues.SVPreviousClosePrice
 End Select
 End Function
 
+Public Function removeStudy( _
+                ByVal studyConfig As StudyConfiguration)
+Dim studyValueConfig  As StudyValueConfiguration
+Dim svh As StudyValueHandler
+Dim horizRulesLineSeries As ChartSkil.LineSeries
+Dim regionName As String
+Dim re As RegionEntry
+Dim region As ChartSkil.ChartRegion
+
+mChartControl.suppressDrawing = True
+For Each svh In studyConfig.studyValueHandlers
+    regionName = svh.region.name
+    re = mRegions(regionName)
+    If re.usageCount = 1 Then
+        svh.finish False
+        mChartControl.removeChartRegion re.region
+        mRegions.remove regionName
+    Else
+        svh.finish True
+        mRegions.remove regionName
+        re.usageCount = re.usageCount - 1
+        mRegions.add re, regionName
+    End If
+Next
+
+Set horizRulesLineSeries = studyConfig.horizontalRulesLineSeries
+If Not horizRulesLineSeries Is Nothing Then
+    Set re.region = Nothing
+    On Error Resume Next
+    re = mRegions(studyConfig.chartRegionName)
+    On Error GoTo 0
+    If Not re.region Is Nothing Then
+        Set region = re.region
+        region.removeLineSeries horizRulesLineSeries
+    End If
+End If
+'If mOutstandingTasks = 0 Then mChartControl.suppressDrawing = False
+mChartControl.suppressDrawing = False
+mStudyConfigurations.remove studyConfig
+End Function
+
 Public Sub scrollToTime(ByVal pTime As Date)
 Dim periodNumber As Long
 periodNumber = mPeriods(mContract.BarStartTime(pTime, mPeriodLengthMinutes)).periodNumber
@@ -644,7 +706,7 @@ Else
     Set lTaskCompletion = mTimeframe.replayBars(BarTypeTrade, mInitialNumberOfBars, , TaskTypeReplayBars)
     Set mBars = mTimeframe.TradeBars
     lTaskCompletion.addTaskCompletionListener Me
-    mOutstandingTasks = mOutstandingTasks + 1
+    'mOutstandingTasks = mOutstandingTasks + 1
 End If
 
 Set studyConfig = New StudyConfiguration
@@ -670,6 +732,7 @@ End Sub
 
 Friend Sub updatePreviousBar()
 Dim lStudyValueHandler As StudyValueHandler
+Dim studyConfig As StudyConfiguration
 
 If Not mChartBar Is Nothing And _
     Not mPriceBar Is Nothing _
@@ -685,8 +748,10 @@ Then
 End If
 
 If Not mPriceBar Is Nothing Then
-    For Each lStudyValueHandler In mStudyValueHandlers
-        lStudyValueHandler.updatePreviousBar mPriceBar.datetime
+    For Each studyConfig In mStudyConfigurations
+        For Each lStudyValueHandler In studyConfig.studyValueHandlers
+            lStudyValueHandler.updatePreviousBar mPriceBar.datetime
+        Next
     Next
 End If
 End Sub
@@ -721,9 +786,12 @@ End Function
 
 Private Sub addStudyDataPointsToChart( _
                 ByVal timestamp As Date)
+Dim studyConfig As StudyConfiguration
 Dim lStudyValueHandler As StudyValueHandler
-For Each lStudyValueHandler In mStudyValueHandlers
-    lStudyValueHandler.addStudyDataPointToChart mContract.BarStartTime(timestamp, mPeriodLengthMinutes)
+For Each studyConfig In mStudyConfigurations
+    For Each lStudyValueHandler In studyConfig.studyValueHandlers
+        lStudyValueHandler.addStudyDataPointToChart mContract.BarStartTime(timestamp, mPeriodLengthMinutes)
+    Next
 Next
 End Sub
 
@@ -789,17 +857,28 @@ End Function
 
 Private Function findRegion( _
                 ByVal regionName As String, _
-                ByVal title As String) As ChartSkil.ChartRegion
+                ByVal title As String, _
+                ByVal incrementUsageCount As Boolean) As ChartSkil.ChartRegion
+Dim re As RegionEntry
+
 On Error Resume Next
-Set findRegion = mRegions(regionName)
+re = mRegions(regionName)
 On Error GoTo 0
+
+Set findRegion = re.region
 
 If findRegion Is Nothing Then
     Set findRegion = mChartControl.addChartRegion(20, , regionName)
-    mRegions.add findRegion, regionName
+    Set re.region = findRegion
+    If incrementUsageCount Then re.usageCount = 1
+    mRegions.add re, regionName
     findRegion.gridlineSpacingY = 0.8
     findRegion.showGrid = True
     findRegion.setTitle title, vbBlue, Nothing
+ElseIf incrementUsageCount Then
+    re.usageCount = re.usageCount + 1
+    mRegions.remove regionName
+    mRegions.add re, regionName
 End If
 End Function
 Private Function GenerateTimeframeKey() As String
@@ -826,11 +905,12 @@ lStudyValueHandler.multipleValuesPerBar = studyValueConfig.multipleValuesPerBar
 
 If studyValueConfig.chartRegionName = CustomRegionName Then
     regionName = study.instancePath
+    studyValueConfig.chartRegionName = regionName
 Else
     regionName = studyValueConfig.chartRegionName
 End If
 
-Set region = findRegion(regionName, study.instanceName)
+Set region = findRegion(regionName, study.instanceName, True)
 
 lStudyValueHandler.region = region
 
@@ -851,8 +931,6 @@ dataSeries.lineStyle = studyValueConfig.lineStyle
 dataSeries.lineThickness = studyValueConfig.lineThickness
 lStudyValueHandler.dataSeries = dataSeries
 
-mStudyValueHandlers.add lStudyValueHandler
-
 Set lTaskCompletion = study.addStudyValueListener( _
                             lStudyValueHandler, _
                             studyValueConfig.valueName, _
@@ -860,18 +938,20 @@ Set lTaskCompletion = study.addStudyValueListener( _
                             , _
                             TaskTypeAddValueListener)
 
-If lTaskCompletion Is Nothing Then Exit Function
-
-mOutstandingTasks = mOutstandingTasks + 1
-lTaskCompletion.addTaskCompletionListener Me
-mChartControl.suppressDrawing = True
-
+If Not lTaskCompletion Is Nothing Then
+    'mOutstandingTasks = mOutstandingTasks + 1
+    lTaskCompletion.addTaskCompletionListener Me
+    mChartControl.suppressDrawing = True
+End If
 Set includeStudyValueInChart = lStudyValueHandler
 End Function
 
 Private Sub initialiseChart()
+Dim re As RegionEntry
 
 If mInitialised Then Exit Sub
+
+mChartControl.suppressDrawing = True
 
 mChartControl.clearChart
 mChartControl.chartBackColor = vbWhite
@@ -881,7 +961,9 @@ mChartControl.twipsPerBar = 67
 mChartControl.showHorizontalScrollBar = True
 
 Set mPriceRegion = mChartControl.addChartRegion(100, 25, PriceRegionName)
-mRegions.add mPriceRegion, PriceRegionName
+Set re.region = mPriceRegion
+re.usageCount = 1
+mRegions.add re, PriceRegionName
 mPriceRegion.gridlineSpacingY = 2
 mPriceRegion.showGrid = True
 
@@ -899,7 +981,9 @@ mPlexLineSeries.style = LineSolid
 mPlexLineSeries.thickness = 2
 
 Set mVolumeRegion = mChartControl.addChartRegion(20, , VolumeRegionName)
-mRegions.add mVolumeRegion, VolumeRegionName
+Set re.region = mVolumeRegion
+re.usageCount = 1
+mRegions.add re, VolumeRegionName
 mVolumeRegion.gridlineSpacingY = 0.8
 mVolumeRegion.minimumHeight = 10
 mVolumeRegion.integerYScale = True
@@ -912,7 +996,7 @@ mVolumeSeries.includeInAutoscale = True
 
 Set mPeriods = mChartControl.Periods
 
-mChartControl.suppressDrawing = True
+mChartControl.suppressDrawing = False
 
 mInitialised = True
 
@@ -922,7 +1006,7 @@ Private Sub processHistoricBar(ByVal theBar As TradeBuild.Bar)
 mBackfilling = True
 If Not mFirstBackfill Then Exit Sub
 
-mChartControl.suppressDrawing = True
+'mChartControl.suppressDrawing = True
 
 updatePreviousBar ' update the previous bar
 
@@ -954,7 +1038,7 @@ Set lTaskCompletion = mTicker.startStudy(studyId, mBarSeries.count, , TaskTypeSt
 If lTaskCompletion Is Nothing Then Exit Function
 
 startStudy = True
-mOutstandingTasks = mOutstandingTasks + 1
+'mOutstandingTasks = mOutstandingTasks + 1
 lTaskCompletion.addTaskCompletionListener Me
 mChartControl.suppressDrawing = True
 End Function

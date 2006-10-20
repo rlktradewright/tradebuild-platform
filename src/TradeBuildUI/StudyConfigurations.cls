@@ -128,7 +128,7 @@ End Function
 
 Friend Sub remove( _
                 ByVal studyConfig As StudyConfiguration)
-mStudyConfigurations.remove studyConfig.instanceName
+mStudyConfigurations.remove studyConfig.instanceFullyQualifiedName
 RaiseEvent ItemRemoved(studyConfig)
 End Sub
 

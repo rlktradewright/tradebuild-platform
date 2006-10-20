@@ -53,7 +53,9 @@ Option Explicit
 Private mStudyDefinition As TradeBuild.studyDefinition
 Private mParameters As TradeBuild.parameters
 Private mStudyValueConfigurations As studyValueConfigurations
+Private mStudyValueHandlers As studyValueHandlers
 Private mStudyHorizontalRules As studyHorizontalRules
+Private mHorizontalRulesLineSeries As ChartSkil.LineSeries
 Private mName As String
 Private mServiceProviderName As String
 Private mInstanceName As String
@@ -71,6 +73,7 @@ Private Sub Class_Initialize()
 ReDim mInputValueNames(0) As String
 mInputValueNames(0) = "$default"
 Set mStudyValueConfigurations = New studyValueConfigurations
+Set mStudyValueHandlers = New studyValueHandlers
 Set mStudyHorizontalRules = New studyHorizontalRules
 End Sub
 
@@ -92,6 +95,15 @@ End Property
 
 Public Property Get chartRegionName() As String
 chartRegionName = mChartRegionName
+End Property
+
+Friend Property Let horizontalRulesLineSeries( _
+                ByVal value As ChartSkil.LineSeries)
+Set mHorizontalRulesLineSeries = value
+End Property
+
+Friend Property Get horizontalRulesLineSeries() As ChartSkil.LineSeries
+Set horizontalRulesLineSeries = mHorizontalRulesLineSeries
 End Property
 
 Friend Property Let inputValueName(ByRef value As String)
@@ -166,6 +178,10 @@ Public Property Get studyValueConfigurations() As studyValueConfigurations
 Set studyValueConfigurations = mStudyValueConfigurations
 End Property
 
+Public Property Get studyValueHandlers() As studyValueHandlers
+Set studyValueHandlers = mStudyValueHandlers
+End Property
+
 Friend Property Let underlyingStudyId(ByVal value As String)
 mUnderlyingStudyId = value
 End Property
@@ -225,6 +241,15 @@ Next
 
 clone.underlyingStudyId = mUnderlyingStudyId
 End Function
+
+Friend Sub finish()
+Dim svh As StudyValueHandler
+For Each svh In mStudyValueHandlers
+    svh.finish False
+Next
+Set mStudyValueHandlers = Nothing
+Set mHorizontalRulesLineSeries = Nothing
+End Sub
 
 '================================================================================
 ' Helper Functions

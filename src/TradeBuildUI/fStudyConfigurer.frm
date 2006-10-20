@@ -191,7 +191,7 @@ Begin VB.Form fStudyConfigurer
             Value           =   1
             AutoBuddy       =   -1  'True
             BuddyControl    =   "ThicknessText(0)"
-            BuddyDispid     =   196620
+            BuddyDispid     =   196618
             BuddyIndex      =   0
             OrigLeft        =   4080
             OrigTop         =   240
@@ -432,7 +432,7 @@ Begin VB.Form fStudyConfigurer
             _Version        =   393216
             AutoBuddy       =   -1  'True
             BuddyControl    =   "ParameterValueText(0)"
-            BuddyDispid     =   196643
+            BuddyDispid     =   196636
             BuddyIndex      =   0
             OrigLeft        =   1920
             OrigRight       =   2175
@@ -511,6 +511,7 @@ Option Explicit
 ' Events
 '================================================================================
 
+Event Cancelled()
 Event SetDefault(ByVal studyConfig As StudyConfiguration)
 Event AddStudyConfiguration(ByVal studyConfig As StudyConfiguration)
 
@@ -552,7 +553,7 @@ Private mServiceProviderName As String
 
 Private mStudyDefinition As TradeBuild.studyDefinition
 
-Private mConfiguredStudies As studyConfigurations
+Private mConfiguredStudies As StudyConfigurations
 
 Private mNextTabIndex As Long
 
@@ -583,7 +584,7 @@ RaiseEvent AddStudyConfiguration(createStudyConfig)
 Unload Me
 End Sub
 
-Private Sub AdvancedButton_Click(index As Integer)
+Private Sub AdvancedButton_Click(Index As Integer)
 notImplemented
 End Sub
 
@@ -592,11 +593,12 @@ initialiseInputValueCombo ""
 End Sub
 
 Private Sub CancelButton_Click()
+RaiseEvent Cancelled
 Unload Me
 End Sub
 
 Private Sub ColorLabel_Click( _
-                index As Integer)
+                Index As Integer)
 Dim simpleColorPicker As New fSimpleColorPicker
 Dim formFrameThickness As Long
 Dim formTitleBarThickness As Long
@@ -608,26 +610,26 @@ simpleColorPicker.Top = Me.Top + _
                         formTitleBarThickness + _
                         ValuesFrame.Top + _
                         ValuesPicture.Top + _
-                        ColorLabel(index).Top + ColorLabel(index).Height / 2
+                        ColorLabel(Index).Top + ColorLabel(Index).Height / 2
 simpleColorPicker.Left = Me.Left + _
                         formFrameThickness + _
                         ValuesFrame.Left + _
                         ValuesPicture.Left + _
-                        ColorLabel(index).Left + - _
-                        (simpleColorPicker.Width - ColorLabel(index).Width) / 2
-simpleColorPicker.initialColor = ColorLabel(index).backColor
+                        ColorLabel(Index).Left + - _
+                        (simpleColorPicker.Width - ColorLabel(Index).Width) / 2
+simpleColorPicker.initialColor = ColorLabel(Index).backColor
 simpleColorPicker.Show vbModal, Me
-ColorLabel(index).backColor = simpleColorPicker.selectedColor
+ColorLabel(Index).backColor = simpleColorPicker.selectedColor
 Unload simpleColorPicker
 End Sub
 
 Private Sub DisplayAsCombo_Validate( _
-                index As Integer, _
+                Index As Integer, _
                 Cancel As Boolean)
-If DisplayAsCombo(index).selectedItem Is Nothing Then Cancel = True
+If DisplayAsCombo(Index).selectedItem Is Nothing Then Cancel = True
 End Sub
 
-Private Sub LineColorLabel_Click(index As Integer)
+Private Sub LineColorLabel_Click(Index As Integer)
 Dim simpleColorPicker As New fSimpleColorPicker
 Dim formFrameThickness As Long
 Dim formTitleBarThickness As Long
@@ -639,16 +641,16 @@ simpleColorPicker.Top = Me.Top + _
                         formTitleBarThickness + _
                         LinesFrame.Top + _
                         LinesPicture.Top + _
-                        LineColorLabel(index).Top + LineColorLabel(index).Height / 2
+                        LineColorLabel(Index).Top + LineColorLabel(Index).Height / 2
 simpleColorPicker.Left = Me.Left + _
                         formFrameThickness + _
                         LinesFrame.Left + _
                         LinesPicture.Left + _
-                        LineColorLabel(index).Left + - _
-                        (simpleColorPicker.Width - LineColorLabel(index).Width) / 2
-simpleColorPicker.initialColor = LineColorLabel(index).backColor
+                        LineColorLabel(Index).Left + - _
+                        (simpleColorPicker.Width - LineColorLabel(Index).Width) / 2
+simpleColorPicker.initialColor = LineColorLabel(Index).backColor
 simpleColorPicker.Show vbModal, Me
-LineColorLabel(index).backColor = simpleColorPicker.selectedColor
+LineColorLabel(Index).backColor = simpleColorPicker.selectedColor
 Unload simpleColorPicker
 End Sub
 
@@ -657,12 +659,12 @@ RaiseEvent SetDefault(createStudyConfig)
 End Sub
 
 Private Sub StyleCombo_Validate( _
-                index As Integer, _
+                Index As Integer, _
                 Cancel As Boolean)
-If StyleCombo(index).selectedItem Is Nothing Then Cancel = True
+If StyleCombo(Index).selectedItem Is Nothing Then Cancel = True
 End Sub
 
-Private Sub ThicknessText_KeyPress(index As Integer, KeyAscii As Integer)
+Private Sub ThicknessText_KeyPress(Index As Integer, KeyAscii As Integer)
 filterNonNumericKeyPress KeyAscii
 End Sub
 
@@ -683,13 +685,11 @@ Friend Sub initialise( _
                 ByVal studyDef As TradeBuild.studyDefinition, _
                 ByVal serviceProviderName As String, _
                 ByRef regionNames() As String, _
-                ByVal configuredStudies As studyConfigurations, _
+                ByVal configuredStudies As StudyConfigurations, _
                 ByVal defaultConfiguration As StudyConfiguration)
                 
 Set mTicker = ticker
                 
-processStudyDefinition studyDef, defaultConfiguration
-
 mServiceProviderName = serviceProviderName
 
 processRegionNames regionNames, ""
@@ -697,6 +697,8 @@ processRegionNames regionNames, ""
 processConfiguredStudies configuredStudies, ""
 
 initialiseInputValueCombo ""
+
+processStudyDefinition studyDef, defaultConfiguration
 End Sub
 
 '================================================================================
@@ -864,7 +866,7 @@ mNextTabIndex = mNextTabIndex + 1
 End Function
 
 Private Sub processConfiguredStudies( _
-                ByVal studyConfigs As studyConfigurations, _
+                ByVal studyConfigs As StudyConfigurations, _
                 ByRef selectedValue As String)
 Dim studyConfig As StudyConfiguration
 Dim item As ComboItem
@@ -912,6 +914,8 @@ Dim defaultParams As TradeBuild.parameters
 Dim studyValue As TradeBuild.StudyValueDefinition
 Dim studyValueConfigs As studyValueConfigurations
 Dim studyValueConfig As StudyValueConfiguration
+Dim studyHorizRules As studyHorizontalRules
+Dim studyHorizRule As StudyHorizontalRule
 Dim firstParamIsInteger As Boolean
 
 Set mStudyDefinition = value
@@ -921,6 +925,7 @@ mStudyname = mStudyDefinition.name
 If Not defaultConfig Is Nothing Then
     Set defaultParams = defaultConfig.parameters
     Set studyValueConfigs = defaultConfig.studyValueConfigurations
+    Set studyHorizRules = defaultConfig.studyHorizontalRules
 Else
     Set defaultParams = mTicker.StudyDefaultParameters( _
                                             mStudyDefinition.name, _
@@ -995,6 +1000,21 @@ Next
 ChartRegionCombo.TabIndex = nextTabIndex
 BaseStudiesCombo.TabIndex = nextTabIndex
 InputValueCombo.TabIndex = nextTabIndex
+
+If Not defaultConfig Is Nothing Then
+    If defaultConfig.underlyingStudyId <> "" Then
+        setComboSelection ChartRegionCombo, defaultConfig.chartRegionName
+        
+        For i = 1 To BaseStudiesCombo.ComboItems.count
+            If BaseStudiesCombo.ComboItems(i).Tag = defaultConfig.underlyingStudyId Then
+                BaseStudiesCombo.ComboItems(i).Selected = True
+                Exit For
+            End If
+        Next
+        
+        initialiseInputValueCombo defaultConfig.inputValueName
+    End If
+End If
 
 IncludeCheck(0).TabIndex = nextTabIndex
 AutoscaleCheck(0).TabIndex = nextTabIndex
@@ -1078,7 +1098,7 @@ For i = 1 To studyValueDefinitions.count
     ValueNameLabel(i - 1).ToolTipText = studyValue.Description
 
     If Not studyValueConfig Is Nothing Then
-        IncludeCheck(i - 1) = vbChecked
+        IncludeCheck(i - 1) = IIf(studyValueConfig.includeInChart, vbChecked, vbUnchecked)
         AutoscaleCheck(i - 1) = IIf(studyValueConfig.includeInAutoscale, vbChecked, vbUnchecked)
         ColorLabel(i - 1).backColor = studyValueConfig.color
         
@@ -1111,6 +1131,14 @@ For i = 1 To studyValueDefinitions.count
     End If
 
 Next
+
+If Not studyHorizRules Is Nothing Then
+    For i = 1 To studyHorizRules.count
+        Set studyHorizRule = studyHorizRules.item(i)
+        LineText(i - 1) = studyHorizRule.y
+        LineColorLabel(i - 1).backColor = studyHorizRule.color
+    Next
+End If
 End Sub
 
 Private Sub setComboSelection( _

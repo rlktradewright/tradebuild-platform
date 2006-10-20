@@ -214,7 +214,12 @@ End Sub
 '================================================================================
 
 Private Sub ColorLabel_Click(Index As Integer)
-mSelectedColor = ColorLabel(Index).BackColor
+mSelectedColor = ColorLabel(Index).backColor
+Me.Hide
+End Sub
+
+Private Sub InitialColorLabel_Click()
+mSelectedColor = InitialColorLabel.backColor
 Me.Hide
 End Sub
 
@@ -223,7 +228,7 @@ End Sub
 '================================================================================
 
 Friend Property Let initialColor(ByVal value As Long)
-InitialColorLabel.BackColor = value
+InitialColorLabel.backColor = value
 mSelectedColor = value
 End Property
 
