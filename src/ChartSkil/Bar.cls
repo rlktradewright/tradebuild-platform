@@ -125,6 +125,10 @@ Private Property Get IGraphicObject_gaugeDependent() As Boolean
 IGraphicObject_gaugeDependent = False
 End Property
 
+Private Property Get IGraphicObject_handle() As Long
+IGraphicObject_handle = mHandle
+End Property
+
 Private Property Let IGraphicObject_handle(ByVal value As Long)
 mHandle = value
 End Property

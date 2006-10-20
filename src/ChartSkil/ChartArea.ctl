@@ -584,6 +584,7 @@ Private Const DefaultTwipsPerBar As Long = 150
 
 Private mRegions() As RegionTableEntry
 Private mRegionsIndex As Long
+Private mNumRegionsInUse As Long
 
 Private WithEvents mPeriods As Periods
 Attribute mPeriods.VB_VarHelpID = -1
@@ -620,7 +621,7 @@ Private mNotFirstMouseMove As Boolean
 Private mPrevCursorX As Single
 Private mPrevCursorY As Single
 
-Private mSuppressDrawing As Boolean
+Private mSuppressDrawingCount As Long
 Private mPainted As Boolean
 
 Private mCurrentTool As ToolTypes
@@ -677,10 +678,6 @@ Enum DrawModes
     DrawModeNotXorPen = vbNotXorPen
     DrawModeWhiteness = vbWhiteness
     DrawModeXorPen = vbXorPen
-End Enum
-
-Enum ErrorCodes
-    InvalidPropertyValue = 380
 End Enum
 
 Enum FillStyles
@@ -859,13 +856,15 @@ If mLeftDragging = True Then
     End If
 Else
     For i = 0 To mRegionsIndex
-        Set region = mRegions(i).region
-        If i = index - 1 Then
-            'debug.print "Mousemove: index=" & index & " region=" & i & " x=" & x & " y=" & y
-            region.MouseMove Button, Shift, x, y
-        Else
-            'debug.print "Mousemove: index=" & index & " region=" & i & " x=" & x & " y=" & MinusInfinitySingle
-            region.MouseMove Button, Shift, x, MinusInfinitySingle
+        If Not mRegions(i).region Is Nothing Then
+            Set region = mRegions(i).region
+            If i = index - 1 Then
+                'debug.print "Mousemove: index=" & index & " region=" & i & " x=" & x & " y=" & y
+                region.MouseMove Button, Shift, x, y
+            Else
+                'debug.print "Mousemove: index=" & index & " region=" & i & " x=" & x & " y=" & MinusInfinitySingle
+                region.MouseMove Button, Shift, x, MinusInfinitySingle
+            End If
         End If
     Next
     displayXAxisLabel x, 100
@@ -899,6 +898,7 @@ Private Sub RegionDividerPicture_MouseDown( _
                             Shift As Integer, _
                             x As Single, _
                             y As Single)
+If index = mNumRegionsInUse Then Exit Sub
 If Button = vbLeftButton Then mLeftDragging = True
 mLeftDragStartPosnX = Int(x)
 mLeftDragStartPosnY = y
@@ -916,6 +916,7 @@ Dim currRegion As Long
 Dim newHeight As Long
 Dim prevPercentHeight As Double
 
+If index = mNumRegionsInUse Then Exit Sub
 If Not mLeftDragging = True Then Exit Sub
 
 currRegion = index  ' we resize the region below the divider
@@ -949,6 +950,7 @@ Private Sub RegionDividerPicture_MouseUp( _
                             Shift As Integer, _
                             x As Single, _
                             y As Single)
+If index = mNumRegionsInUse Then Exit Sub
 If Button = vbLeftButton Then mLeftDragging = False
 mUserResizingRegions = False
 End Sub
@@ -995,8 +997,10 @@ Dim region As ChartRegion
 period.backColor = mBackColor
 
 For i = 0 To mRegionsIndex
-    Set region = mRegions(i).region
-    region.addperiod period.periodNumber, period.timestamp
+    If Not mRegions(i).region Is Nothing Then
+        Set region = mRegions(i).region
+        region.addperiod period.periodNumber, period.timestamp
+    End If
 Next
 If mXAxisRegion Is Nothing Then createXAxisRegion
 mXAxisRegion.addperiod period.periodNumber, period.timestamp
@@ -1055,7 +1059,9 @@ mBackColor = val
 XAxisPicture.backColor = val
 
 For i = 0 To mRegionsIndex
-    mRegions(i).region.regionBackColor = val
+    If Not mRegions(i).region Is Nothing Then
+        mRegions(i).region.regionBackColor = val
+    End If
 Next
 paintAll
 End Property
@@ -1153,8 +1159,10 @@ mPeriodLengthMinutes = val
 If mXAxisRegion Is Nothing Then createXAxisRegion
 mXAxisRegion.periodLengthMinutes = periodLengthMinutes
 For i = 0 To mRegionsIndex
-    Set region = mRegions(i).region
-    region.periodLengthMinutes = mPeriodLengthMinutes
+    If Not mRegions(i).region Is Nothing Then
+        Set region = mRegions(i).region
+        region.periodLengthMinutes = mPeriodLengthMinutes
+    End If
 Next
 End Property
 
@@ -1168,7 +1176,7 @@ End Property
 
 Public Property Let sessionStartTime(ByVal val As Date)
 If CDbl(val) >= 1 Then _
-    Err.Raise CommonErrorCodes.InvalidPropertyValue, _
+    err.Raise CommonErrorCodes.ErrInvalidPropertyValue, _
                 "ChartSkil.Chart::(Let)sessionStartTime", _
                 "Value must be a time only"
 mSessionStartTime = val
@@ -1183,11 +1191,13 @@ Dim i As Long
 Dim region As ChartRegion
 mShowCrosshairs = val
 For i = 0 To mRegionsIndex
-    Set region = mRegions(i).region
-    If val Then
-        region.pointerStyle = PointerCrosshairs
-    Else
-        region.pointerStyle = PointerDisc
+    If Not mRegions(i).region Is Nothing Then
+        Set region = mRegions(i).region
+        If val Then
+            region.pointerStyle = PointerCrosshairs
+        Else
+            region.pointerStyle = PointerDisc
+        End If
     End If
 Next
 End Property
@@ -1217,19 +1227,32 @@ Resize True
 End Property
 
 Public Property Get suppressDrawing() As Boolean
-suppressDrawing = mSuppressDrawing
+suppressDrawing = (mSuppressDrawingCount > 0)
 End Property
 
 Public Property Let suppressDrawing(ByVal val As Boolean)
 Dim i As Long
 Dim region As ChartRegion
-mSuppressDrawing = val
+If val Then
+    mSuppressDrawingCount = mSuppressDrawingCount + 1
+Else
+    If mSuppressDrawingCount > 0 Then
+        mSuppressDrawingCount = mSuppressDrawingCount - 1
+    End If
+End If
+
+If mSuppressDrawingCount = 0 Then
+    Resize True
+End If
+
 For i = 0 To mRegionsIndex
-    Set region = mRegions(i).region
-    region.suppressDrawing = val
+    If Not mRegions(i).region Is Nothing Then
+        Set region = mRegions(i).region
+        region.suppressDrawing = (mSuppressDrawingCount > 0)
+    End If
 Next
 If mXAxisRegion Is Nothing Then createXAxisRegion
-mXAxisRegion.suppressDrawing = val
+mXAxisRegion.suppressDrawing = (mSuppressDrawingCount > 0)
 End Property
 
 Public Property Get twipsPerBar() As Long
@@ -1245,7 +1268,7 @@ End Property
 
 Public Property Let verticalGridSpacing(ByVal value As Long)
 If value < 0 Then _
-    Err.Raise CommonErrorCodes.InvalidPropertyValue, _
+    err.Raise CommonErrorCodes.ErrInvalidPropertyValue, _
                 "ChartSkil.Chart::(Let)verticalGridSpacing", _
                 "Value must be >= 0"
 mVerticalGridSpacing = value
@@ -1267,7 +1290,7 @@ Case TimeWeek
 Case TimeMonth
 Case TimeYear
 Case Else
-    Err.Raise CommonErrorCodes.InvalidPropertyValue, _
+    err.Raise CommonErrorCodes.ErrInvalidPropertyValue, _
                 "ChartSkil.Chart::(Let)verticalGridUnits", _
                 "Value must be a member of the TimeUnits enum"
 End Select
@@ -1306,6 +1329,7 @@ Public Function addChartRegion(ByVal percentheight As Double, _
 
 Dim YAxisRegion As ChartRegion
 Dim btn As Button
+Dim regionNumber As Long
 
 Set addChartRegion = New ChartRegion
 addChartRegion.name = name
@@ -1318,20 +1342,22 @@ If mRegionsIndex = -1 Then
     Next
 End If
 
-Load ChartRegionPicture(ChartRegionPicture.UBound + 1)
-ChartRegionPicture(ChartRegionPicture.UBound).align = vbAlignNone
-ChartRegionPicture(ChartRegionPicture.UBound).width = _
+regionNumber = mRegionsIndex + 2
+
+Load ChartRegionPicture(regionNumber)
+ChartRegionPicture(regionNumber).align = vbAlignNone
+ChartRegionPicture(regionNumber).width = _
     UserControl.ScaleWidth * (mYAxisPosition - chartLeft) / XAxisPicture.ScaleWidth
-ChartRegionPicture(ChartRegionPicture.UBound).visible = True
+ChartRegionPicture(regionNumber).visible = True
 
-Load YAxisPicture(YAxisPicture.UBound + 1)
-YAxisPicture(YAxisPicture.UBound).align = vbAlignNone
-YAxisPicture(YAxisPicture.UBound).left = ChartRegionPicture(ChartRegionPicture.UBound).width
-YAxisPicture(YAxisPicture.UBound).width = UserControl.ScaleWidth - YAxisPicture(YAxisPicture.UBound).left
-YAxisPicture(YAxisPicture.UBound).visible = True
+Load YAxisPicture(regionNumber)
+YAxisPicture(regionNumber).align = vbAlignNone
+YAxisPicture(regionNumber).left = ChartRegionPicture(regionNumber).width
+YAxisPicture(regionNumber).width = UserControl.ScaleWidth - YAxisPicture(YAxisPicture.ubound).left
+YAxisPicture(regionNumber).visible = True
 
-addChartRegion.surface = ChartRegionPicture(ChartRegionPicture.UBound)
-addChartRegion.suppressDrawing = mSuppressDrawing
+addChartRegion.surface = ChartRegionPicture(regionNumber)
+addChartRegion.suppressDrawing = (mSuppressDrawingCount > 0)
 addChartRegion.currentTool = mCurrentTool
 addChartRegion.gridColor = mGridColor
 addChartRegion.gridTextColor = mGridTextColor
@@ -1339,7 +1365,7 @@ addChartRegion.minimumPercentHeight = minimumPercentHeight
 addChartRegion.percentheight = percentheight
 addChartRegion.regionBackColor = mBackColor
 addChartRegion.regionLeft = mScaleLeft
-addChartRegion.regionNumber = mRegionsIndex + 2
+addChartRegion.regionNumber = regionNumber
 addChartRegion.regionBottom = 0
 addChartRegion.regionTop = 1
 addChartRegion.showCrosshairs = mShowCrosshairs
@@ -1360,16 +1386,16 @@ Set mRegions(mRegionsIndex).region = addChartRegion
 mRegions(mRegionsIndex).percentheight = percentheight
 mRegions(mRegionsIndex).useAvailableSpace = (percentheight = 100#)
 
-If mRegionsIndex <> 0 Then
-    Load RegionDividerPicture(mRegionsIndex)
-    RegionDividerPicture(mRegionsIndex).visible = True
-End If
+Load RegionDividerPicture(regionNumber)
+RegionDividerPicture(regionNumber).visible = True
 
 Set YAxisRegion = New ChartRegion
-YAxisRegion.surface = YAxisPicture(YAxisPicture.UBound)
+YAxisRegion.surface = YAxisPicture(regionNumber)
 YAxisRegion.regionBottom = 0
 YAxisRegion.regionTop = 1
 addChartRegion.YAxisRegion = YAxisRegion
+
+mNumRegionsInUse = mNumRegionsInUse + 1
 
 If Not sizeRegions Then
     ' can't fit this all in! So remove the added region,
@@ -1378,10 +1404,11 @@ If Not sizeRegions Then
     mRegions(mRegionsIndex).percentheight = 0
     mRegions(mRegionsIndex).actualHeight = 0
     mRegions(mRegionsIndex).useAvailableSpace = False
+    Unload ChartRegionPicture(regionNumber)
+    Unload RegionDividerPicture(mRegionsIndex)
+    Unload YAxisPicture(regionNumber)
     mRegionsIndex = mRegionsIndex - 1
-    Unload ChartRegionPicture(ChartRegionPicture.UBound)
-    Unload RegionDividerPicture(RegionDividerPicture.UBound)
-    Unload YAxisPicture(YAxisPicture.UBound)
+    mNumRegionsInUse = mNumRegionsInUse - 1
 End If
 
 End Function
@@ -1394,11 +1421,20 @@ Public Function clearChart()
 Dim i As Long
 
 For i = 0 To mRegionsIndex
-    mRegions(i).region.clearRegion
-    Unload ChartRegionPicture(i + 1)
-    Unload YAxisPicture(i + 1)
-    If i <> mRegionsIndex Then Unload RegionDividerPicture(i + 1)
+    If Not mRegions(i).region Is Nothing Then
+        mRegions(i).region.clearRegion
+        ChartRegionPicture(mRegions(i).region.regionNumber).Cls
+        ChartRegionPicture(mRegions(i).region.regionNumber).visible = False
+        YAxisPicture(mRegions(i).region.regionNumber).Cls
+        YAxisPicture(mRegions(i).region.regionNumber).visible = False
+        If i <> mRegionsIndex Then _
+                RegionDividerPicture(mRegions(i).region.regionNumber).visible = False
+    End If
 Next
+
+mRegionsIndex = -1
+Erase mRegions
+
 If Not mXAxisRegion Is Nothing Then mXAxisRegion.clearRegion
 Set mXAxisRegion = Nothing
 Set mPeriods = Nothing
@@ -1411,6 +1447,24 @@ End Function
 Public Function refresh()
 UserControl.refresh
 End Function
+
+Public Sub removeChartRegion( _
+                    ByVal region As ChartRegion)
+Dim i As Long
+
+For i = 0 To mRegionsIndex
+    If region Is mRegions(i).region Then
+        region.clearRegion
+        Set mRegions(i).region = Nothing
+        Exit For
+    End If
+Next
+
+mNumRegionsInUse = mNumRegionsInUse - 1
+
+sizeRegions
+paintAll
+End Sub
 
 Public Sub scrollX(ByVal value As Long)
 Dim region As ChartRegion
@@ -1430,8 +1484,12 @@ mScaleLeft = mYAxisPosition + _
             mScaleWidth
 XAxisPicture.ScaleLeft = mScaleLeft
 For i = 0 To mRegionsIndex
-    Set region = mRegions(i).region
-    region.periodsInView mScaleLeft, mYAxisPosition - 1
+    If Not mRegions(i).region Is Nothing Then
+        If Not mRegions(i).region Is Nothing Then
+            Set region = mRegions(i).region
+            region.periodsInView mScaleLeft, mYAxisPosition - 1
+        End If
+    End If
 Next
 If mXAxisRegion Is Nothing Then createXAxisRegion
 mXAxisRegion.periodsInView mScaleLeft, mScaleLeft + mScaleWidth
@@ -1445,7 +1503,7 @@ End Sub
 
 Private Function calcAvailableHeight() As Long
 calcAvailableHeight = XAxisPicture.top - _
-                    mRegionsIndex * RegionDividerPicture(0).height - _
+                    mNumRegionsInUse * RegionDividerPicture(0).height - _
                     Toolbar1.height
 End Function
 
@@ -1520,11 +1578,23 @@ End If
 End Sub
 
 Private Sub initialise()
-
+Dim i As Long
 mPrevHeight = UserControl.height
 
 ReDim mRegions(100) As RegionTableEntry
 mRegionsIndex = -1
+
+For i = 1 To ChartRegionPicture.ubound
+    Unload ChartRegionPicture(i)
+Next
+
+For i = 1 To YAxisPicture.ubound
+    Unload YAxisPicture(i)
+Next
+
+For i = 1 To RegionDividerPicture.ubound
+    Unload RegionDividerPicture(i)
+Next
 
 Set mPeriods = New Periods
 mPeriodLengthMinutes = 5
@@ -1556,13 +1626,17 @@ Private Sub paintAll()
 Dim region As ChartRegion
 Dim i As Long
 
-If mSuppressDrawing Then Exit Sub
+If mSuppressDrawingCount > 0 Then Exit Sub
 
 mNotFirstMouseMove = False
 
 For i = 0 To mRegionsIndex
-    Set region = mRegions(i).region
-    region.paintRegion
+    If Not mRegions(i).region Is Nothing Then
+        If Not mRegions(i).region Is Nothing Then
+            Set region = mRegions(i).region
+            region.paintRegion
+        End If
+    End If
 Next
 If mXAxisRegion Is Nothing Then createXAxisRegion
 mXAxisRegion.paintRegion
@@ -1595,18 +1669,20 @@ If newScaleWidth = mScaleWidth Then Exit Sub
 
 mScaleWidth = newScaleWidth
 
-For i = 0 To ChartRegionPicture.UBound
+For i = 0 To ChartRegionPicture.ubound
     YAxisPicture(i).left = UserControl.width - YAxisPicture(i).width
     ChartRegionPicture(i).width = YAxisPicture(i).left
 Next
 
-For i = 0 To RegionDividerPicture.UBound
+For i = 0 To RegionDividerPicture.ubound
     RegionDividerPicture(i).width = UserControl.width
 Next
 
 For i = 0 To mRegionsIndex
-    Set region = mRegions(i).region
-    region.periodsInView mScaleLeft, mYAxisPosition - 1
+    If Not mRegions(i).region Is Nothing Then
+        Set region = mRegions(i).region
+        region.periodsInView mScaleLeft, mYAxisPosition - 1
+    End If
 Next
 If Not mXAxisRegion Is Nothing Then
     mXAxisRegion.periodsInView mScaleLeft, mScaleLeft + mScaleWidth
@@ -1645,20 +1721,23 @@ Dim nonFixedAvailableSpacePercent As Double
 Dim availableSpacePercent As Double
 Dim availableHeight As Long     ' the space available for the region picture boxes
                                 ' excluding the divider pictures
+Dim numRegionsSized As Long
 
 availableSpacePercent = 100
 nonFixedAvailableSpacePercent = 100
 For i = 0 To mRegionsIndex
-    Set aRegion = mRegions(i).region
-    mRegions(i).percentheight = aRegion.percentheight
-    If Not mRegions(i).useAvailableSpace Then
-        availableSpacePercent = availableSpacePercent - mRegions(i).percentheight
-        nonFixedAvailableSpacePercent = nonFixedAvailableSpacePercent - mRegions(i).percentheight
-    Else
-        If aRegion.minimumPercentHeight <> 0 Then
-            availableSpacePercent = availableSpacePercent - aRegion.minimumPercentHeight
+    If Not mRegions(i).region Is Nothing Then
+        Set aRegion = mRegions(i).region
+        mRegions(i).percentheight = aRegion.percentheight
+        If Not mRegions(i).useAvailableSpace Then
+            availableSpacePercent = availableSpacePercent - mRegions(i).percentheight
+            nonFixedAvailableSpacePercent = nonFixedAvailableSpacePercent - mRegions(i).percentheight
+        Else
+            If aRegion.minimumPercentHeight <> 0 Then
+                availableSpacePercent = availableSpacePercent - aRegion.minimumPercentHeight
+            End If
+            numAvailableSpaceRegions = numAvailableSpaceRegions + 1
         End If
-        numAvailableSpaceRegions = numAvailableSpaceRegions + 1
     End If
 Next
 
@@ -1673,26 +1752,28 @@ Do While availableSpacePercent < 0
     nonFixedAvailableSpacePercent = 100
     heightReductionFactor = heightReductionFactor * 0.66666667
     For i = 0 To mRegionsIndex
-        Set aRegion = mRegions(i).region
-        If Not mRegions(i).useAvailableSpace Then
-            If aRegion.minimumPercentHeight <> 0 Then
-                If aRegion.percentheight * heightReductionFactor >= _
-                    aRegion.minimumPercentHeight _
-                Then
-                    mRegions(i).percentheight = aRegion.percentheight * heightReductionFactor
+        If Not mRegions(i).region Is Nothing Then
+            Set aRegion = mRegions(i).region
+            If Not mRegions(i).useAvailableSpace Then
+                If aRegion.minimumPercentHeight <> 0 Then
+                    If aRegion.percentheight * heightReductionFactor >= _
+                        aRegion.minimumPercentHeight _
+                    Then
+                        mRegions(i).percentheight = aRegion.percentheight * heightReductionFactor
+                    Else
+                        mRegions(i).percentheight = aRegion.minimumPercentHeight
+                        totalMinimumPercents = totalMinimumPercents + aRegion.minimumPercentHeight
+                    End If
                 Else
-                    mRegions(i).percentheight = aRegion.minimumPercentHeight
+                    mRegions(i).percentheight = aRegion.percentheight * heightReductionFactor
+                End If
+                availableSpacePercent = availableSpacePercent - mRegions(i).percentheight
+                nonFixedAvailableSpacePercent = nonFixedAvailableSpacePercent - mRegions(i).percentheight
+            Else
+                If aRegion.minimumPercentHeight <> 0 Then
+                    availableSpacePercent = availableSpacePercent - aRegion.minimumPercentHeight
                     totalMinimumPercents = totalMinimumPercents + aRegion.minimumPercentHeight
                 End If
-            Else
-                mRegions(i).percentheight = aRegion.percentheight * heightReductionFactor
-            End If
-            availableSpacePercent = availableSpacePercent - mRegions(i).percentheight
-            nonFixedAvailableSpacePercent = nonFixedAvailableSpacePercent - mRegions(i).percentheight
-        Else
-            If aRegion.minimumPercentHeight <> 0 Then
-                availableSpacePercent = availableSpacePercent - aRegion.minimumPercentHeight
-                totalMinimumPercents = totalMinimumPercents + aRegion.minimumPercentHeight
             End If
         End If
     Next
@@ -1724,14 +1805,16 @@ Next
 ' now set heights for 'available space' regions with a minimum height
 ' that needs to be respected
 For i = 0 To mRegionsIndex
-    Set aRegion = mRegions(i).region
-    If mRegions(i).useAvailableSpace Then
-        mRegions(i).actualHeight = 0
-        If aRegion.minimumPercentHeight <> 0 Then
-            If (nonFixedAvailableSpacePercent / numAvailableSpaceRegions) < aRegion.minimumPercentHeight Then
-                mRegions(i).actualHeight = aRegion.minimumPercentHeight * availableHeight / 100
-                nonFixedAvailableSpacePercent = nonFixedAvailableSpacePercent - aRegion.minimumPercentHeight
-                numAvailableSpaceRegions = numAvailableSpaceRegions - 1
+    If Not mRegions(i).region Is Nothing Then
+        Set aRegion = mRegions(i).region
+        If mRegions(i).useAvailableSpace Then
+            mRegions(i).actualHeight = 0
+            If aRegion.minimumPercentHeight <> 0 Then
+                If (nonFixedAvailableSpacePercent / numAvailableSpaceRegions) < aRegion.minimumPercentHeight Then
+                    mRegions(i).actualHeight = aRegion.minimumPercentHeight * availableHeight / 100
+                    nonFixedAvailableSpacePercent = nonFixedAvailableSpacePercent - aRegion.minimumPercentHeight
+                    numAvailableSpaceRegions = numAvailableSpaceRegions - 1
+                End If
             End If
         End If
     End If
@@ -1747,19 +1830,36 @@ For i = 0 To mRegionsIndex
 Next
 
 ' Now actually set the heights and positions for the picture boxes
+
 top = Toolbar1.height
     
 For i = 0 To mRegionsIndex
-    Set aRegion = mRegions(i).region
-    ChartRegionPicture(aRegion.regionNumber).height = mRegions(i).actualHeight
-    YAxisPicture(aRegion.regionNumber).height = mRegions(i).actualHeight
-    ChartRegionPicture(aRegion.regionNumber).top = top
-    YAxisPicture(aRegion.regionNumber).top = top
-    top = top + ChartRegionPicture(aRegion.regionNumber).height
-    aRegion.resizedY
-    If i <> mRegionsIndex Then
-        RegionDividerPicture(i + 1).top = top
-        top = top + RegionDividerPicture(i + 1).height
+    If Not mRegions(i).region Is Nothing Then
+        Set aRegion = mRegions(i).region
+        If Not suppressDrawing Then
+            ChartRegionPicture(aRegion.regionNumber).height = mRegions(i).actualHeight
+            YAxisPicture(aRegion.regionNumber).height = mRegions(i).actualHeight
+            ChartRegionPicture(aRegion.regionNumber).top = top
+            YAxisPicture(aRegion.regionNumber).top = top
+        End If
+        top = top + mRegions(i).actualHeight
+        aRegion.resizedY
+        numRegionsSized = numRegionsSized + 1
+        If Not suppressDrawing Then
+            RegionDividerPicture(aRegion.regionNumber).top = top
+        End If
+        If numRegionsSized <> mNumRegionsInUse Then
+            RegionDividerPicture(aRegion.regionNumber).MousePointer = MousePointerConstants.vbSizeNS
+        Else
+            RegionDividerPicture(aRegion.regionNumber).MousePointer = MousePointerConstants.vbDefault
+        End If
+        top = top + RegionDividerPicture(aRegion.regionNumber).height
+    Else
+        If Not suppressDrawing Then
+            ChartRegionPicture(i + 1).visible = False
+            YAxisPicture(i + 1).visible = False
+            RegionDividerPicture(i + 1).visible = False
+        End If
     End If
 Next
 

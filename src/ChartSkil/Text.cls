@@ -156,6 +156,10 @@ Private Property Let IGraphicObject_handle(ByVal value As Long)
 mHandle = value
 End Property
 
+Private Property Get IGraphicObject_handle() As Long
+IGraphicObject_handle = mHandle
+End Property
+
 Private Property Get IGraphicObject_includeInAutoscale() As Boolean
 IGraphicObject_includeInAutoscale = mIncludeInAutoscale
 End Property

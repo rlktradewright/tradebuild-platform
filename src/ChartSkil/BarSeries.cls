@@ -14,6 +14,12 @@ Attribute VB_Exposed = True
 Option Explicit
 
 '================================================================================
+' Interfaces
+'================================================================================
+
+Implements ChartSkilTypes.IGraphicObjectSeries
+
+'================================================================================
 ' Events
 '================================================================================
 
@@ -24,6 +30,8 @@ Option Explicit
 '================================================================================
 ' Member variables and constants
 '================================================================================
+
+Private mFinished As Boolean
 
 Private mBars As Collection
 
@@ -56,6 +64,30 @@ Private mMaxPeriodInView As Long
 
 Private Sub Class_Initialize()
 Set mBars = New Collection
+End Sub
+
+'================================================================================
+' IGraphicObjectSeries Interface Members
+'================================================================================
+
+Private Property Get IGraphicObjectSeries_count() As Long
+IGraphicObjectSeries_count = mBars.count
+End Property
+
+Private Sub IGraphicObjectSeries_finish()
+mFinished = True
+End Sub
+
+Private Function IGraphicObjectSeries_item(ByVal index As Long) As ChartSkilTypes.IGraphicObject
+Set IGraphicObjectSeries_item = mBars.item(index)
+End Function
+
+Private Function IGraphicObjectSeries_NewEnum() As Object
+Set IGraphicObjectSeries_NewEnum = NewEnum
+End Function
+
+Private Sub IGraphicObjectSeries_remove(ByVal index As Long)
+mBars.remove index
 End Sub
 
 '================================================================================
@@ -219,6 +251,9 @@ End Property
 '================================================================================
 
 Public Function addBar(ByVal periodNumber As Long) As bar
+If mFinished Then err.Raise CommonErrorCodes.ErrIllegalStateException, _
+                            "ChartSkil.BarSeries::add", _
+                            "Bar series is finished"
 Set addBar = New bar
 addBar.periodNumber = periodNumber
 addBar.barThickness = mBarThickness
@@ -238,6 +273,7 @@ mEventProxy.addGraphicObject addBar
 End Function
 
 Friend Sub finish()
+mFinished = True
 Set mCanvas = Nothing
 End Sub
 
@@ -247,9 +283,7 @@ End Function
 
 Friend Sub removeAll()
 Dim i As Long
-For i = mBars.count To 1 Step -1
-    mBars.remove (i)
-Next
+Set mBars = New Collection
 End Sub
 
 Public Function NewEnum() As IUnknown

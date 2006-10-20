@@ -32,7 +32,7 @@ Private Type PeriodTableEntry
 End Type
 
 Private Type GraphicObjectTableEntry
-    graphObj            As IGraphicObject
+    graphobj            As IGraphicObject
     boundingRect        As TRectangle
     periodNumber        As Long
     extendedObject      As Boolean
@@ -361,8 +361,8 @@ End Sub
 ' mEventProxy Event Handlers
 '================================================================================
 
-Private Sub mEventProxy_addGraphicObject(ByVal graphObj As IGraphicObject)
-addGraphicObject graphObj
+Private Sub mEventProxy_addGraphicObject(ByVal graphobj As IGraphicObject)
+addGraphicObject graphobj
 End Sub
 
 Private Sub mEventProxy_objectChanged( _
@@ -378,7 +378,7 @@ redrawArea = rectIntersection(areaToRedraw, mCanvas.boundary)
 With mGraphicObjects(handle)
     
     ' get the new properties for the changed object
-    .boundingRect = .graphObj.boundingRectangle(False, _
+    .boundingRect = .graphobj.boundingRectangle(False, _
                                         False, _
                                         False, _
                                         mCanvas.gaugeX, _
@@ -391,12 +391,12 @@ With mGraphicObjects(handle)
         Exit Sub
     End If
     
-    .extendedObject = .graphObj.extendedObject
-    .noDraw = .graphObj.noDraw
-    .layer = .graphObj.layer
-    .includeInAutoscale = .graphObj.includeInAutoscale
-    .scaleDependent = .graphObj.scaleDependent
-    .capabilities = .graphObj.capabilities
+    .extendedObject = .graphobj.extendedObject
+    .noDraw = .graphobj.noDraw
+    .layer = .graphobj.layer
+    .includeInAutoscale = .graphobj.includeInAutoscale
+    .scaleDependent = .graphobj.scaleDependent
+    .capabilities = .graphobj.capabilities
 End With
 
 If mGraphicObjects(handle).extendedObject Then
@@ -424,6 +424,7 @@ With mGraphicObjects(handle)
         If .includeInAutoscale Then
             If .boundingRect.top >= mCanvas.boundary.top Or .boundingRect.bottom <= (mCanvas.boundary.bottom) Then
                 calculateVerticalBounds
+                determineVisibleObjects
                 paintRegion
                 Exit Sub
             End If
@@ -444,7 +445,7 @@ With mGraphicObjects(handle)
         If redrawArea.isValid Then
             Dim drawAreas(0) As TRectangle
             drawAreas(0) = redrawArea
-            .graphObj.draw drawAreas, mCanvas.hdc
+            .graphobj.draw drawAreas, mCanvas.hdc
         End If
     End If
     
@@ -456,7 +457,7 @@ With mGraphicObjects(handle)
                 With mGraphicObjects(index)
                     If index <> handle Then
                         If getObjectOverlaps(handle, index, redrawArea, True, True, overlaps) <> 0 Then
-                            .graphObj.draw overlaps, mCanvas.hdc
+                            .graphobj.draw overlaps, mCanvas.hdc
                         End If
                     End If
                     index = .nextVisibleIndex
@@ -484,7 +485,7 @@ With mGraphicObjects(handle)
                 With mGraphicObjects(index)
                     If index <> handle Then
                         If getObjectOverlaps(handle, index, undrawnArea, Not blockUndraw, True, overlaps) <> 0 Then
-                            .graphObj.draw overlaps, mCanvas.hdc
+                            .graphobj.draw overlaps, mCanvas.hdc
                         End If
                     End If
                     index = .nextVisibleIndex
@@ -559,13 +560,15 @@ End Property
 
 Public Property Let autoscale(ByVal value As Boolean)
 mAutoscale = value
-If mAutoscale Then
-    calculateVerticalBounds
-    determineVisibleObjects
-    paintRegion
-End If
 If Not mToolbar Is Nothing Then
     mToolbar.Buttons("autoscale").Enabled = IIf(mAutoscale, False, True)
+End If
+If Not mSuppressDrawing Then
+    If mAutoscale Then
+        calculateVerticalBounds
+        determineVisibleObjects
+        paintRegion
+    End If
 End If
 End Property
 
@@ -953,7 +956,7 @@ Case PointerCrosshairs
 Case PointerDisc
     mCanvas.MousePointer = vbCrosshair
 Case Else
-    Err.Raise ErrorCodes.InvalidPropertyValue, _
+    err.Raise ErrorCodes.InvalidPropertyValue, _
             "ChartSkil.ChartRegion::(let)pointerStyle", _
             "Value must be a member of the PointerStyles enum"
 End Select
@@ -1474,7 +1477,7 @@ End Function
 Friend Sub clearRegion()
 Dim i As Long
 
-mCanvas.clear
+If Not mSuppressDrawing Then mCanvas.clear
 mCanvas.surface = Nothing
 
 ' now remove all graphic object references from the various collections
@@ -1510,13 +1513,14 @@ For i = mTextSeriesCol.count To 1 Step -1
     mTextSeriesCol.remove i
 Next
 
+Erase mGraphicObjects
 ' now notify each object in the graphic object table that it's finished with
-For i = mFirstGraphicObjectIndex To mNextGraphicObjectIndex - 1
-    If Not mGraphicObjects(i).graphObj Is Nothing Then
-        mGraphicObjects(i).graphObj.finish
-    End If
-    Set mGraphicObjects(i).graphObj = Nothing
-Next
+'For i = mFirstGraphicObjectIndex To mNextGraphicObjectIndex - 1
+'    If Not mGraphicObjects(i).graphobj Is Nothing Then
+'        mGraphicObjects(i).graphobj.finish
+'    End If
+'    Set mGraphicObjects(i).graphobj = Nothing
+'Next
 
 ' now clear the YAxis region (if there is one)
 If Not mYAxisRegion Is Nothing Then
@@ -1665,7 +1669,7 @@ For i = MinLayer To MaxLayer
         With mGraphicObjects(index)
             Dim drawAreas(0) As TRectangle
             drawAreas(0) = rectIntersection(.boundingRect, mCanvas.boundary)
-            .graphObj.draw drawAreas, mCanvas.hdc
+            .graphobj.draw drawAreas, mCanvas.hdc
             index = .nextVisibleIndex
             counter = counter + 1
         End With
@@ -1721,7 +1725,9 @@ mDrawn = True
 If Not mYAxisRegion Is Nothing Then mYAxisRegion.paintRegion
 End Sub
 
-Friend Sub periodsInView(ByVal minValue As Single, ByVal maxValue As Single)
+Friend Sub periodsInView( _
+                ByVal minValue As Single, _
+                ByVal maxValue As Single)
 mMinInViewPeriod = minValue
 mMaxInViewPeriod = maxValue
 mYAxisPosition = maxValue + 1
@@ -1735,6 +1741,26 @@ If Not mSuppressDrawing Then
     End If
     determineVisibleObjects
 End If
+End Sub
+
+Public Sub removeBarSeries( _
+                ByVal pBarSeries As BarSeries)
+removeGraphicObjectSeries pBarSeries
+End Sub
+
+Public Sub removeDataPointSeries( _
+                ByVal pDataPointSeries As DataPointSeries)
+removeGraphicObjectSeries pDataPointSeries
+End Sub
+
+Public Sub removeLineSeries( _
+                ByVal pLineSeries As LineSeries)
+removeGraphicObjectSeries pLineSeries
+End Sub
+
+Public Sub removeTextSeries( _
+                ByVal pTextSeries As TextSeries)
+removeGraphicObjectSeries pTextSeries
 End Sub
 
 Friend Sub resizedY()
@@ -1787,7 +1813,7 @@ With mCanvas
             With mGraphicObjects(index)
                 redrawAreas(0) = rectIntersection(periodrect, .boundingRect)
                 If redrawAreas(0).isValid Then
-                    .graphObj.draw redrawAreas, mCanvas.hdc
+                    .graphobj.draw redrawAreas, mCanvas.hdc
                 End If
                 index = .nextVisibleIndex
             End With
@@ -1868,7 +1894,7 @@ End Sub
 Private Sub addEntryToInScopeList(ByVal index As Long)
 With mGraphicObjects(index)
     If .inScopeCycle <> mInScopeCycle Then
-        .graphObj.inScope = True
+        .graphobj.inScope = True
         .inScopeCycle = mInScopeCycle
         .nextInScopeIndex = mLastInScopeIndex
         .prevInScopeIndex = mGraphicObjects(mLastInScopeIndex).prevInScopeIndex
@@ -1882,7 +1908,7 @@ Private Sub addEntryToPeriodList(ByVal index As Long)
 Dim lastindex As Long
 Dim newPeriodNumber As Long
 
-newPeriodNumber = mGraphicObjects(index).graphObj.periodNumber
+newPeriodNumber = mGraphicObjects(index).graphobj.periodNumber
 If newPeriodNumber <> mGraphicObjects(index).periodNumber Then
     If mGraphicObjects(index).periodNumber >= 1 Then
         removeEntryFromPeriodList index
@@ -1910,7 +1936,7 @@ Private Sub addEntryToVisibleList(ByVal index As Long)
 Dim lastindex As Long
 With mGraphicObjects(index)
     If .visibleCycle <> mVisibleCycle Then
-        .graphObj.visible = True
+        .graphobj.visible = True
         .visibleCycle = mVisibleCycle
         lastindex = mVisibleTable(.layer).lastindex
         .nextVisibleIndex = lastindex
@@ -1921,7 +1947,7 @@ With mGraphicObjects(index)
 End With
 End Sub
 
-Private Function addGraphicObject(ByVal graphObj As IGraphicObject) As Long
+Private Function addGraphicObject(ByVal graphobj As IGraphicObject) As Long
 Dim handle As Long
 
 handle = allocateGraphicObjectTableEntry
@@ -1929,18 +1955,18 @@ If mFirstGraphicObjectIndex = 0 Then
     mFirstGraphicObjectIndex = handle
 End If
 
-graphObj.handle = handle
+graphobj.handle = handle
 
 With mGraphicObjects(handle)
-    Set .graphObj = graphObj
-    .boundingRect = graphObj.boundingRectangle(True, True, True, 0, 0, mCanvas.boundary)
-    .extendedObject = graphObj.extendedObject
-    .gaugeDependent = graphObj.gaugeDependent
-    .includeInAutoscale = graphObj.includeInAutoscale
-    .layer = graphObj.layer
-    .scaleDependent = graphObj.scaleDependent
-    .capabilities = graphObj.capabilities
-    .noDraw = graphObj.noDraw
+    Set .graphobj = graphobj
+    .boundingRect = graphobj.boundingRectangle(True, True, True, 0, 0, mCanvas.boundary)
+    .extendedObject = graphobj.extendedObject
+    .gaugeDependent = graphobj.gaugeDependent
+    .includeInAutoscale = graphobj.includeInAutoscale
+    .layer = graphobj.layer
+    .scaleDependent = graphobj.scaleDependent
+    .capabilities = graphobj.capabilities
+    .noDraw = graphobj.noDraw
     
 End With
 
@@ -2062,7 +2088,7 @@ index = mGraphicObjects(mFirstInScopeIndex).nextInScopeIndex
 Do While index <> mLastInScopeIndex
      With mGraphicObjects(index)
         If .gaugeDependent Then
-            .boundingRect = .graphObj.boundingRectangle(False, False, True, 0, 0, mCanvas.boundary)
+            .boundingRect = .graphobj.boundingRectangle(False, False, True, 0, 0, mCanvas.boundary)
             If graphicObjectIsVisible(index) Then
                 addEntryToVisibleList index
             End If
@@ -2098,7 +2124,7 @@ With mGraphicObjects(index)
         overlapXInterval = intIntersection(interval, rectGetXInterval(.boundingRect))
         For j = Int(overlapXInterval.startValue + 0.9) To _
                 Int(overlapXInterval.endValue)
-            rects = .graphObj.boundingRectanglesAt(j)
+            rects = .graphobj.boundingRectanglesAt(j)
             numrects = -1
             On Error Resume Next
             numrects = UBound(rects)
@@ -2142,7 +2168,7 @@ scaleMin = PlusInfinityDouble
 index = mGraphicObjects(mFirstInScopeIndex).nextInScopeIndex
 Do While index <> mLastInScopeIndex
     With mGraphicObjects(index)
-        If Not .graphObj.noDraw And _
+        If Not .graphobj.noDraw And _
             .includeInAutoscale And _
             Not .scaleDependent _
         Then
@@ -2202,12 +2228,12 @@ End If
 index = mGraphicObjects(mFirstInScopeIndex).nextInScopeIndex
 Do While index <> mLastInScopeIndex
     With mGraphicObjects(index)
-        If Not .graphObj.noDraw And _
+        If Not .graphobj.noDraw And _
             .includeInAutoscale And _
             Not .scaleDependent And _
             .gaugeDependent _
         Then
-            .boundingRect = .graphObj.boundingRectangle( _
+            .boundingRect = .graphobj.boundingRectangle( _
                                         False, _
                                         True, _
                                         True, _
@@ -2246,7 +2272,7 @@ Dim index As Long
 index = mGraphicObjects(mFirstInScopeIndex).nextInScopeIndex
 Do While index <> mLastInScopeIndex
     With mGraphicObjects(index)
-        .graphObj.inScope = False
+        .graphobj.inScope = False
         index = .nextInScopeIndex
     End With
 Loop
@@ -2262,7 +2288,7 @@ For i = MinLayer To MaxLayer
     index = mGraphicObjects(mVisibleTable(i).firstIndex).nextVisibleIndex
     Do While index <> mVisibleTable(i).lastindex
         With mGraphicObjects(index)
-            .graphObj.visible = False
+            .graphobj.visible = False
             index = .nextVisibleIndex
         End With
     Loop
@@ -2309,7 +2335,7 @@ Do While index <> mLastExtendedIndex
     numberExamined = numberExamined + 1
     numberExtended = numberExtended + 1
     With mGraphicObjects(index)
-        .boundingRect = .graphObj.boundingRectangle(True, False, False, 0, 0, mCanvas.boundary)
+        .boundingRect = .graphobj.boundingRectangle(True, False, False, 0, 0, mCanvas.boundary)
         If graphicObjectIsInScope(index) Then
             addEntryToInScopeList index
             numberInScope = numberInScope + 1
@@ -2336,7 +2362,7 @@ index = mGraphicObjects(mFirstInScopeIndex).nextInScopeIndex
 Do While index <> mLastInScopeIndex
     numberExamined = numberExamined + 1
     With mGraphicObjects(index)
-        .boundingRect = .graphObj.boundingRectangle( _
+        .boundingRect = .graphobj.boundingRectangle( _
                                     False, _
                                     True, _
                                     False, _
@@ -2458,13 +2484,13 @@ Dim j As Long
 Dim k As Long
 
 With mGraphicObjects(index1)
-    Set graphobj1 = .graphObj
+    Set graphobj1 = .graphobj
     obj1Rect = rectIntersection(.boundingRect, clippingRect)
     complexBounding1 = (.capabilities And capabilities.ComplexBounding)
 End With
 
 With mGraphicObjects(index2)
-    Set graphobj2 = .graphObj
+    Set graphobj2 = .graphobj
     obj2Rect = rectIntersection(.boundingRect, clippingRect)
     complexBounding2 = (.capabilities And capabilities.ComplexBounding)
 End With
@@ -2618,7 +2644,7 @@ With mGraphicObjects(index)
         overlapXInterval = intIntersection(rectGetXInterval(mCanvas.boundary), rectGetXInterval(.boundingRect))
         For i = Int(overlapXInterval.startValue) To _
                 Int(overlapXInterval.endValue)
-            boundingRects = .graphObj.boundingRectanglesAt(i)
+            boundingRects = .graphobj.boundingRectanglesAt(i)
             numrects = -1
             On Error Resume Next
             numrects = UBound(boundingRects)
@@ -2655,6 +2681,21 @@ For i = MinLayer To MaxLayer
 Next
 
 End Sub
+
+Private Sub removeGraphicObjectSeries( _
+                ByVal pSeries As IGraphicObjectSeries)
+Dim graphobj As IGraphicObject
+Dim i As Long
+
+For i = pSeries.count To 1 Step -1
+    Set graphobj = pSeries.item(i)
+    removeGraphicObject graphobj
+    graphobj.finish
+    pSeries.remove i
+Next
+pSeries.finish
+End Sub
+
 
 Private Sub removeEntryFromExtendedList(ByVal index As Long)
 With mGraphicObjects(index)
@@ -2698,6 +2739,30 @@ With mGraphicObjects(index)
         .prevVisibleIndex = 0
     End If
 End With
+End Sub
+
+Private Sub removeGraphicObject( _
+                ByVal graphobj As IGraphicObject)
+Dim handle As Long
+
+handle = graphobj.handle
+
+If Not mGraphicObjects(handle).extendedObject Then
+    removeEntryFromPeriodList handle
+Else
+    removeEntryFromExtendedList handle
+End If
+
+If graphicObjectIsInScope(handle) Then
+    removeEntryFromInScopeList handle
+    If graphicObjectIsVisible(handle) Then
+        removeEntryFromVisibleList handle
+    End If
+End If
+
+Set mGraphicObjects(handle).graphobj = Nothing
+graphobj.handle = -1
+
 End Sub
 
 Private Sub setHorizontalGridLines()

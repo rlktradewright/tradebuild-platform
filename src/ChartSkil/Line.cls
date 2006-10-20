@@ -298,6 +298,10 @@ Private Property Let IGraphicObject_handle(ByVal value As Long)
 mHandle = value
 End Property
 
+Private Property Get IGraphicObject_handle() As Long
+IGraphicObject_handle = mHandle
+End Property
+
 Private Property Get IGraphicObject_includeInAutoscale() As Boolean
 IGraphicObject_includeInAutoscale = mIncludeInAutoscale
 End Property
@@ -1088,8 +1092,8 @@ mCanvas.setPenAttributes IIf(undraw, mCanvas.backColor, mColor), _
                         DrawModes.DrawModeCopyPen
     
 With mPoint1
-    x1 = .x
-    y1 = .y
+    x1 = .XLogical
+    y1 = .YLogical
 End With
 
 With mPoint2

@@ -17,6 +17,8 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
+Implements ChartSkilTypes.IGraphicObjectSeries
+
 '================================================================================
 ' Events
 '================================================================================
@@ -28,6 +30,8 @@ Option Explicit
 '================================================================================
 ' Member variables and constants
 '================================================================================
+
+Private mFinished As Boolean
 
 Private mLines As Collection
 
@@ -74,8 +78,28 @@ Set mLines = New Collection
 End Sub
 
 '================================================================================
-' Interface Members
+' IGraphicObjectSeries Interface Members
 '================================================================================
+
+Private Property Get IGraphicObjectSeries_count() As Long
+IGraphicObjectSeries_count = mLines.count
+End Property
+
+Private Sub IGraphicObjectSeries_finish()
+mFinished = True
+End Sub
+
+Private Function IGraphicObjectSeries_item(ByVal index As Long) As ChartSkilTypes.IGraphicObject
+Set IGraphicObjectSeries_item = mLines.item(index)
+End Function
+
+Private Function IGraphicObjectSeries_NewEnum() As Object
+Set IGraphicObjectSeries_NewEnum = NewEnum
+End Function
+
+Private Sub IGraphicObjectSeries_remove(ByVal index As Long)
+mLines.remove index
+End Sub
 
 '================================================================================
 ' xxxx Event Handlers
@@ -297,6 +321,9 @@ End Property
 '================================================================================
 
 Friend Function add(Optional ByVal key As String) As ChartSkil.Line
+If mFinished Then err.Raise CommonErrorCodes.ErrIllegalStateException, _
+                            "ChartSkil.LineSeries::add", _
+                            "Line series is finished"
 Set add = New ChartSkil.Line
 With add
     .eventProxy = mEventProxy
@@ -337,6 +364,7 @@ Set addLine = add
 End Function
 
 Friend Sub finish()
+mFinished = True
 Set mCanvas = Nothing
 End Sub
 
@@ -355,10 +383,7 @@ Attribute NewEnum.VB_UserMemId = -4
 End Function
 
 Friend Sub removeAll()
-Dim i As Long
-For i = mLines.count To 1 Step -1
-    mLines.remove (i)
-Next
+Set mLines = New Collection
 End Sub
 
 '================================================================================

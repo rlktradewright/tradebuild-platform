@@ -14,6 +14,12 @@ Attribute VB_Exposed = True
 Option Explicit
 
 '================================================================================
+' Interfaces
+'================================================================================
+
+Implements ChartSkilTypes.IGraphicObjectSeries
+
+'================================================================================
 ' Events
 '================================================================================
 
@@ -24,6 +30,8 @@ Option Explicit
 '================================================================================
 ' Member variables and constants
 '================================================================================
+
+Private mFinished As Boolean
 
 Private Const DefaultHistBarWidth As Single = 0.5
 Private mDataPoints As Collection
@@ -67,6 +75,30 @@ Private Sub Class_Initialize()
 Set mDataPoints = New Collection
 mLineStyle = LineStyles.LineSolid
 mHistBarWidth = DefaultHistBarWidth
+End Sub
+
+'================================================================================
+' IGraphicObjectSeries Interface Members
+'================================================================================
+
+Private Property Get IGraphicObjectSeries_count() As Long
+IGraphicObjectSeries_count = mDataPoints.count
+End Property
+
+Private Sub IGraphicObjectSeries_finish()
+mFinished = True
+End Sub
+
+Private Function IGraphicObjectSeries_item(ByVal index As Long) As ChartSkilTypes.IGraphicObject
+Set IGraphicObjectSeries_item = mDataPoints.item(index)
+End Function
+
+Private Function IGraphicObjectSeries_NewEnum() As Object
+Set IGraphicObjectSeries_NewEnum = NewEnum
+End Function
+
+Private Sub IGraphicObjectSeries_remove(ByVal index As Long)
+mDataPoints.remove index
 End Sub
 
 '================================================================================
@@ -184,6 +216,9 @@ End Property
 Public Function addDataPoint( _
                 ByVal periodNumber As Long, _
                 Optional ByVal key As Variant) As DataPoint
+If mFinished Then err.Raise CommonErrorCodes.ErrIllegalStateException, _
+                            "ChartSkil.DatPointSeries::add", _
+                            "DataPoint series is finished"
 Set addDataPoint = New DataPoint
 addDataPoint.canvas = mCanvas
 addDataPoint.periodNumber = periodNumber
@@ -206,6 +241,7 @@ mEventProxy.addGraphicObject addDataPoint
 End Function
 
 Friend Sub finish()
+mFinished = True
 Set mCanvas = Nothing
 End Sub
 
@@ -215,10 +251,7 @@ Set item = mDataPoints(CStr(key))
 End Function
 
 Friend Sub removeAll()
-Dim i As Long
-For i = mDataPoints.count To 1 Step -1
-    mDataPoints.remove (i)
-Next
+Set mDataPoints = New Collection
 End Sub
 
 Public Function NewEnum() As IUnknown

@@ -14,8 +14,10 @@ Attribute VB_Exposed = True
 Option Explicit
 
 '================================================================================
-' Implemented Interfaces
+' Interfaces
 '================================================================================
+
+Implements ChartSkilTypes.IGraphicObjectSeries
 
 '================================================================================
 ' Events
@@ -28,6 +30,8 @@ Option Explicit
 '================================================================================
 ' Member variables and constants
 '================================================================================
+
+Private mFinished As Boolean
 
 Private mTexts As Collection
 
@@ -69,6 +73,30 @@ Private mKeepInView As Boolean
 
 Private Sub Class_Initialize()
 Set mTexts = New Collection
+End Sub
+
+'================================================================================
+' IGraphicObjectSeries Interface Members
+'================================================================================
+
+Private Property Get IGraphicObjectSeries_count() As Long
+IGraphicObjectSeries_count = mTexts.count
+End Property
+
+Private Sub IGraphicObjectSeries_finish()
+mFinished = True
+End Sub
+
+Private Function IGraphicObjectSeries_item(ByVal index As Long) As ChartSkilTypes.IGraphicObject
+Set IGraphicObjectSeries_item = mTexts.item(index)
+End Function
+
+Private Function IGraphicObjectSeries_NewEnum() As Object
+Set IGraphicObjectSeries_NewEnum = NewEnum
+End Function
+
+Private Sub IGraphicObjectSeries_remove(ByVal index As Long)
+mTexts.remove index
 End Sub
 
 '================================================================================
@@ -240,6 +268,9 @@ End Property
 '================================================================================
 
 Friend Function add(Optional ByVal key As String) As text
+If mFinished Then err.Raise CommonErrorCodes.ErrIllegalStateException, _
+                            "ChartSkil.TextSeries::add", _
+                            "Text series is finished"
 Set add = New text
 add.canvas = mCanvas
 add.align = mAlign
@@ -272,6 +303,7 @@ Set addText = add
 End Function
 
 Friend Sub finish()
+mFinished = True
 Set mCanvas = Nothing
 End Sub
 
@@ -291,10 +323,7 @@ Attribute NewEnum.VB_MemberFlags = "40"
 End Function
 
 Friend Sub removeAll()
-Dim i As Long
-For i = mTexts.count To 1 Step -1
-    mTexts.remove (i)
-Next
+Set mTexts = New Collection
 End Sub
 
 '================================================================================
