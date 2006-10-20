@@ -224,6 +224,14 @@ mK = ev.value
 mMASmoothingStudy.notify ev
 mD = mMASmoothing.ma.value
 
+If isNewBar Then
+    mKCache.addValue mK, ev.barnumber, ev.timestamp
+    mDCache.addValue mD, ev.barnumber, ev.timestamp
+Else
+    mKCache.updateValue mK, ev.barnumber, ev.timestamp
+    mDCache.updateValue mD, ev.barnumber, ev.timestamp
+End If
+
 newEv.barnumber = ev.barnumber
 newEv.timestamp = ev.timestamp
 Set newEv.Source = Me

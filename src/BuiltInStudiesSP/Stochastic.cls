@@ -228,7 +228,11 @@ If mBars.Count > mKPeriods Then
 End If
 If IsEmpty(hh) Or IsEmpty(ll) Then Exit Sub
 
-mK = 100 * (mBars.closeValue - ll) / (hh - ll)
+If hh = ll Then
+    ' leave the previous value for mK
+Else
+    mK = 100 * (mBars.closeValue - ll) / (hh - ll)
+End If
 
 newEv.barnumber = ev.barnumber
 newEv.timestamp = ev.timestamp

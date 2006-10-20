@@ -117,7 +117,7 @@ Case UCase$(DoncValueUpper)
                                 study, _
                                 Me, _
                                 numUnderlyingValuesToUse, _
-                                TaskDiscriminators.TaskAddStudyValueListener, _
+                                TaskDiscriminators.TaskAddStudy, _
                                 taskName, _
                                 taskData)
     IStudy_addStudy.addTaskCompletionListener Me
