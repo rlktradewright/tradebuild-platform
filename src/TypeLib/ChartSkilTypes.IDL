@@ -113,8 +113,12 @@ library ChartSkilTypes
         HRESULT gaugeDependent([out, retval] VARIANT_BOOL* );
 
         [propput, 
-         helpstring("Supplies the graphic object handle")]
+         helpstring("Gets or sets the graphic object handle")]
         HRESULT handle([in] long periodNumber );
+
+        [propget, 
+         helpstring("Gets or sets the graphic object handle")]
+        HRESULT handle([out, retval] long* );
 
         [propget, 
          helpstring("Indicates that the object is to be visible in the chart region when it autoscales (provided it is within the horizontal bounds of the chart region's visible area)")]
@@ -159,6 +163,38 @@ library ChartSkilTypes
         HRESULT undraw(
 		[in, out] struct TRectangle* area,
 		[in] long hDC);
+
+    };
+
+    [
+      uuid(8c28a7ce-ae60-4e47-8963-00b719f8f363),
+      version(1.0),
+      nonextensible,
+      helpstring("Implemented by collections of graphic objects")
+    ]
+    interface IGraphicObjectSeries : IUnknown {
+
+	// Properties=================================================
+        
+		[propget, 
+         helpstring("The number of graphic objects in the collection")
+        ]
+        HRESULT count([out, retval] long* );
+
+	// Methods =====================================================
+
+        [helpstring("Tells the collection that it is no longer in use")]
+		HRESULT finish();
+
+        [helpstring("Returns the graphic object at the specified position in the collection")]
+        HRESULT item([in] long index, 
+			[out, retval] IGraphicObject** );
+
+		[id(0xfffffffc), hidden]
+		HRESULT NewEnum([out, retval] IDispatch** );
+
+		[helpstring("Removes the graphic object at the specified position in the collection")]
+        HRESULT remove([in] long index);
 
     };
 
