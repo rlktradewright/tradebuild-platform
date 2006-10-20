@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{2400CBAB-A41E-4FEF-B808-A6AB2BF2A5C1}#4.0#0"; "TradeBuildUI.ocx"
+Object = "{B97B38E5-0B2E-4A30-92FE-E53BABBD104F}#1.0#0"; "TradeBuildUI.ocx"
 Begin VB.Form fMarketDepth 
    Caption         =   "Market Depth"
    ClientHeight    =   3270
@@ -10,13 +10,13 @@ Begin VB.Form fMarketDepth
    ScaleHeight     =   3270
    ScaleWidth      =   4335
    Begin TradeBuildUI.DOMDisplay DOMDisplay1 
-      Height          =   2055
-      Left            =   240
+      Height          =   2415
+      Left            =   360
       TabIndex        =   0
       Top             =   240
-      Width           =   3135
-      _ExtentX        =   5530
-      _ExtentY        =   3625
+      Width           =   3615
+      _ExtentX        =   6376
+      _ExtentY        =   4260
    End
 End
 Attribute VB_Name = "fMarketDepth"

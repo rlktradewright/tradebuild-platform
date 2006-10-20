@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{2400CBAB-A41E-4FEF-B808-A6AB2BF2A5C1}#4.0#0"; "TradeBuildUI.ocx"
+Object = "{B97B38E5-0B2E-4A30-92FE-E53BABBD104F}#1.0#0"; "TradeBuildUI.ocx"
 Begin VB.Form OrderForm 
    BorderStyle     =   1  'Fixed Single
    ClientHeight    =   6165
