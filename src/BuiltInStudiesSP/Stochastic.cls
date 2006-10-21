@@ -235,17 +235,17 @@ Else
 End If
 
 newEv.barnumber = ev.barnumber
-newEv.timestamp = ev.timestamp
+newEv.Timestamp = ev.Timestamp
 newEv.value = mK
 mMASmoothingStudy.notify newEv
 mD = mMASmoothing.ma.value
 
 If isNewBar Then
-    mKCache.addValue mK, ev.barnumber, ev.timestamp
-    mDCache.addValue mD, ev.barnumber, ev.timestamp
+    mKCache.addValue mK, ev.barnumber, ev.Timestamp
+    mDCache.addValue mD, ev.barnumber, ev.Timestamp
 Else
-    mKCache.updateValue mK, ev.barnumber, ev.timestamp
-    mDCache.updateValue mD, ev.barnumber, ev.timestamp
+    mKCache.updateValue mK, ev.barnumber, ev.Timestamp
+    mDCache.updateValue mD, ev.barnumber, ev.Timestamp
 End If
             
 Set newEv.Source = Me
@@ -315,11 +315,11 @@ End Sub
 ' Properties
 '================================================================================
 
-Public Property Get percentD(Optional ByVal ref As Integer) As Variant
+Public Property Get percentD(Optional ByVal ref As Integer) As StudyValue
 percentD = mDCache.getStudyValue(ref)
 End Property
 
-Public Property Get percentK(Optional ByVal ref As Integer) As Variant
+Public Property Get percentK(Optional ByVal ref As Integer) As StudyValue
 percentK = mKCache.getStudyValue(ref)
 End Property
 

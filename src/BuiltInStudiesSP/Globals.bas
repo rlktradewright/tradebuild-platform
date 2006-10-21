@@ -5,8 +5,11 @@ Option Explicit
 ' Constants
 '================================================================================
 
-Public Const DummyHigh As Double = -(2 - 2 ^ -52) * 2 ^ 1023
-Public Const DummyLow As Double = (2 - 2 ^ -52) * 2 ^ 1023
+Public Const MaxDouble As Double = (2 - 2 ^ -52) * 2 ^ 1023
+Public Const MinDouble As Double = -(2 - 2 ^ -52) * 2 ^ 1023
+
+Public Const DummyHigh As Double = MinDouble
+Public Const DummyLow As Double = MaxDouble
 
 Public Const DefaultStudyValueName As String = "$default"
 
@@ -26,6 +29,9 @@ Public Const EmaShortName As String = "EMA"
 
 Public Const MacdName As String = "MACD"
 Public Const MacdShortName As String = "MACD"
+
+Public Const PsName As String = "Parabolic Stop"
+Public Const PsShortName As String = "PS"
 
 Public Const SdName As String = "Standard Deviation"
 Public Const SdShortName As String = "SD"

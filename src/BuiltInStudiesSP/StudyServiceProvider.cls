@@ -74,6 +74,7 @@ addStudyName BbName
 addStudyName DoncName
 addStudyName EmaName
 addStudyName MacdName
+addStudyName PsName
 addStudyName SStochName
 addStudyName SmaName
 addStudyName SdName
@@ -112,6 +113,7 @@ GEMA.commonServiceConsumer = commonServiceConsumer
 GDonchianChannels.commonServiceConsumer = commonServiceConsumer
 GSMA.commonServiceConsumer = commonServiceConsumer
 GMACD.commonServiceConsumer = commonServiceConsumer
+GParabolicStop.commonServiceConsumer = commonServiceConsumer
 GStandardDeviation.commonServiceConsumer = commonServiceConsumer
 GBollingerBands.commonServiceConsumer = commonServiceConsumer
 GSwing.commonServiceConsumer = commonServiceConsumer
@@ -173,6 +175,10 @@ Case UCase$(MacdName), UCase$(MacdShortName)
     Dim lMACD As New MACD
     lMACD.initialise mCommonServiceConsumer, serviceConsumer
     Set IStudyServiceProvider_createStudy = lMACD
+Case UCase$(PsName), UCase$(PsShortName)
+    Dim lPs As New ParabolicStop
+    lPs.initialise mCommonServiceConsumer, serviceConsumer
+    Set IStudyServiceProvider_createStudy = lPs
 Case UCase$(SStochName), UCase$(SStochShortName)
     Dim lSStoch As New SlowStochastic
     lSStoch.initialise mCommonServiceConsumer, serviceConsumer
@@ -204,6 +210,8 @@ Case UCase$(SmaName), UCase$(SmaShortName)
     Set IStudyServiceProvider_getStudyDefaultParameters = GSMA.defaultParameters
 Case UCase$(MacdName), UCase$(MacdShortName)
     Set IStudyServiceProvider_getStudyDefaultParameters = GMACD.defaultParameters
+Case UCase$(PsName), UCase$(PsShortName)
+    Set IStudyServiceProvider_getStudyDefaultParameters = GParabolicStop.defaultParameters
 Case UCase$(SdName), UCase$(SdShortName)
     Set IStudyServiceProvider_getStudyDefaultParameters = GStandardDeviation.defaultParameters
 Case UCase$(SStochName), UCase$(SStochShortName)
@@ -239,6 +247,8 @@ Case UCase$(SmaName), UCase$(SmaShortName)
     GSMA.defaultParameters = parameters
 Case UCase$(MacdName), UCase$(MacdShortName)
     GMACD.defaultParameters = parameters
+Case UCase$(PsName), UCase$(PsShortName)
+    GParabolicStop.defaultParameters = parameters
 Case UCase$(SdName), UCase$(SdShortName)
     GStandardDeviation.defaultParameters = parameters
 Case UCase$(SStochName), UCase$(SStochShortName)
@@ -268,6 +278,8 @@ Case UCase$(SmaName), UCase$(SmaShortName)
     Set IStudyServiceProvider_studyDefinition = GSMA.studyDefinition
 Case UCase$(MacdName), UCase$(MacdShortName)
     Set IStudyServiceProvider_studyDefinition = GMACD.studyDefinition
+Case UCase$(PsName), UCase$(PsShortName)
+    Set IStudyServiceProvider_studyDefinition = GParabolicStop.studyDefinition
 Case UCase$(SdName), UCase$(SdShortName)
     Set IStudyServiceProvider_studyDefinition = GStandardDeviation.studyDefinition
 Case UCase$(SStochName), UCase$(SStochShortName)
