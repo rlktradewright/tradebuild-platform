@@ -8,9 +8,9 @@ BEGIN
 END
 Attribute VB_Name = "Bars"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = False
+Attribute VB_Exposed = True
 Option Explicit
 
 '================================================================================
@@ -55,7 +55,6 @@ Private mCommonServiceConsumer      As ICommonServiceConsumer
 Private mBarsCache                  As IStudyValueCache
 
 Private mCurrentBar                 As Bar
-Attribute mCurrentBar.VB_VarHelpID = -1
 Private mCurrentBarNumber           As Long
 
 '================================================================================
@@ -332,17 +331,17 @@ Friend Sub notify( _
                 ev As TradeBuildSP.StudyValueEvent)
 Dim isNewBar As Boolean
 
-isNewBar = newBar(ev.barNumber)
+isNewBar = newBar(ev.barnumber)
 If isNewBar Then
     Set mCurrentBar = New Bar
-    mCurrentBar.datetime = ev.timestamp
+    mCurrentBar.datetime = ev.TimeStamp
 End If
 
 mCurrentBar.Tick ev.value
 If isNewBar Then
-    mBarsCache.addValue mCurrentBar, ev.barNumber, ev.timestamp
+    mBarsCache.addValue mCurrentBar, ev.barnumber, ev.TimeStamp
 Else
-    mBarsCache.updateValue mCurrentBar, ev.barNumber, ev.timestamp
+    mBarsCache.updateValue mCurrentBar, ev.barnumber, ev.TimeStamp
 End If
 End Sub
 
@@ -350,16 +349,18 @@ End Sub
 ' Helper Functions
 '================================================================================
 
-Private Function newBar(barNumber As Long) As Boolean
+Private Function newBar(barnumber As Long) As Boolean
 Static previousBarNumber As Long
-If barNumber <> previousBarNumber Then
-    previousBarNumber = barNumber
-    mCurrentBarNumber = barNumber
+If barnumber <> previousBarNumber Then
+    previousBarNumber = barnumber
+    mCurrentBarNumber = barnumber
     newBar = True
 Else
     newBar = False
 End If
 End Function
+
+
 
 
 
