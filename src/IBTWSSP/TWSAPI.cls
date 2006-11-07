@@ -156,6 +156,8 @@ End Type
 
 Private WithEvents mSocket As Winsock
 Attribute mSocket.VB_VarHelpID = -1
+Private mWinsockForm As WinsockForm
+
 Private WithEvents mConnectionTimer As IntervalTimer
 Attribute mConnectionTimer.VB_VarHelpID = -1
 
@@ -1608,7 +1610,8 @@ End Sub
 
 Private Sub createsocket()
 If mSocket Is Nothing Then
-    Set mSocket = New MSWinsockLib.Winsock
+    Set mWinsockForm = New WinsockForm
+    Set mSocket = mWinsockForm.Winsock1
 End If
 End Sub
 
