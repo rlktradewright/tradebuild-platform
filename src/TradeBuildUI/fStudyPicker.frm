@@ -86,7 +86,6 @@ Begin VB.Form fStudyPicker
       ItemData        =   "fStudyPicker.frx":0004
       Left            =   120
       List            =   "fStudyPicker.frx":0006
-      Sorted          =   -1  'True
       TabIndex        =   0
       Top             =   360
       Width           =   3135
