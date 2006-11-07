@@ -86,6 +86,7 @@ Begin VB.Form fStudyPicker
       ItemData        =   "fStudyPicker.frx":0004
       Left            =   120
       List            =   "fStudyPicker.frx":0006
+      Sorted          =   -1  'True
       TabIndex        =   0
       Top             =   360
       Width           =   3135
@@ -167,7 +168,7 @@ Attribute mConfigForm.VB_VarHelpID = -1
 '/**
 '   Set in the Study Configuration Form's AddStudyConfiguration event
 '*/
-Private mNewStudyConfiguration As StudyConfiguration
+Private mNewStudyConfiguration As studyConfiguration
 
 '================================================================================
 ' Class Event Handlers
@@ -188,7 +189,7 @@ End Sub
 
 Private Sub AddButton_Click()
 Dim spName As String
-Dim defaultStudyConfig As StudyConfiguration
+Dim defaultStudyConfig As studyConfiguration
 
 spName = mStudies(StudyList.ListIndex).serviceProvider
 Set defaultStudyConfig = loadDefaultStudyConfiguration(mStudies(StudyList.ListIndex).name, spName)
@@ -205,8 +206,8 @@ mChart.suppressDrawing = False
 End Sub
 
 Private Sub ChangeButton_Click()
-Dim studyConfig As StudyConfiguration
-Dim newStudyConfig As StudyConfiguration
+Dim studyConfig As studyConfiguration
+Dim newStudyConfig As studyConfiguration
 
 Set studyConfig = mStudyConfigurations.item(ChartStudiesList.List(ChartStudiesList.ListIndex))
 
@@ -232,7 +233,7 @@ End Sub
 
 Private Sub ChartStudiesList_Click()
 Dim studyDef As studyDefinition
-Dim studyConfig As StudyConfiguration
+Dim studyConfig As studyConfiguration
 
 If ChartStudiesList.ListIndex <> -1 Then
     Set studyConfig = mStudyConfigurations.item(ChartStudiesList.List(ChartStudiesList.ListIndex))
@@ -266,7 +267,7 @@ mChart.suppressDrawing = False
 End Sub
 
 Private Sub RemoveButton_Click()
-Dim studyConfig As StudyConfiguration
+Dim studyConfig As studyConfiguration
 Set studyConfig = mStudyConfigurations.item(ChartStudiesList.List(ChartStudiesList.ListIndex))
 mChart.removeStudy studyConfig
 removeDependingStudies studyConfig
@@ -305,12 +306,12 @@ Private Sub mConfigForm_Cancelled()
 End Sub
 
 Private Sub mConfigForm_SetDefault( _
-                ByVal studyConfig As StudyConfiguration)
+                ByVal studyConfig As studyConfiguration)
 updateDefaultStudyConfiguration studyConfig
 End Sub
 
 Private Sub mConfigForm_AddStudyConfiguration( _
-                ByVal studyConfig As StudyConfiguration)
+                ByVal studyConfig As studyConfiguration)
 Set mNewStudyConfiguration = studyConfig
 If studyConfig.studyValueConfigurations.count = 0 Then Exit Sub
 
@@ -322,12 +323,12 @@ End Sub
 '================================================================================
 
 Private Sub mStudyConfigurations_ItemAdded( _
-                ByVal studyConfig As StudyConfiguration)
+                ByVal studyConfig As studyConfiguration)
 ChartStudiesList.AddItem studyConfig.instanceFullyQualifiedName
 End Sub
 
 Private Sub mStudyConfigurations_ItemRemoved( _
-                ByVal studyConfig As StudyConfiguration)
+                ByVal studyConfig As studyConfiguration)
 Dim i As Long
 For i = 0 To ChartStudiesList.ListCount - 1
     If ChartStudiesList.List(i) = studyConfig.instanceFullyQualifiedName Then
@@ -348,7 +349,7 @@ End Sub
 Friend Sub initialise( _
                 ByVal pChart As TradeBuildChart, _
                 ByVal pTicker As TradeBuild.ticker)
-Dim studyConfig As StudyConfiguration
+Dim studyConfig As studyConfiguration
 Dim i As Long
 Dim itemText As String
 
@@ -392,7 +393,7 @@ End Sub
 ' Helper Functions
 '================================================================================
 
-Private Sub addStudyToChart(ByVal studyConfig As StudyConfiguration)
+Private Sub addStudyToChart(ByVal studyConfig As studyConfiguration)
 On Error Resume Next
 mChart.suppressDrawing = True
 mChart.addStudy studyConfig
@@ -416,10 +417,10 @@ End Sub
 '
 '*/
 Private Sub reconfigureDependingStudies( _
-                ByVal oldStudyConfig As StudyConfiguration, _
-                ByVal newStudyConfig As StudyConfiguration)
-Dim sc As StudyConfiguration
-Dim newSc As StudyConfiguration
+                ByVal oldStudyConfig As studyConfiguration, _
+                ByVal newStudyConfig As studyConfiguration)
+Dim sc As studyConfiguration
+Dim newSc As studyConfiguration
 
 For Each sc In mStudyConfigurations
     If sc.underlyingStudyId = oldStudyConfig.studyId Then
@@ -442,8 +443,8 @@ End Sub
 '
 '*/
 Private Sub removeDependingStudies( _
-                ByVal studyConfig As StudyConfiguration)
-Dim sc As StudyConfiguration
+                ByVal studyConfig As studyConfiguration)
+Dim sc As studyConfiguration
                 
 For Each sc In mStudyConfigurations
     If sc.underlyingStudyId = studyConfig.studyId Then
@@ -459,7 +460,7 @@ End Sub
 Private Function showConfigForm( _
                 ByVal studyName As String, _
                 ByVal spName As String, _
-                ByVal defaultConfiguration As StudyConfiguration) As StudyConfiguration
+                ByVal defaultConfiguration As studyConfiguration) As studyConfiguration
 
 Set mConfigForm = New fStudyConfigurer
 

@@ -1362,10 +1362,10 @@ Case ValueTypeInteger
     Select Case sinkInputType
     Case InputTypeInteger
         typesCompatible = True
-'    Case InputTypeSingle
-'        typesCompatible = True
-'    Case InputTypeDouble
-'        typesCompatible = True
+    Case InputTypeSingle
+        typesCompatible = True
+    Case InputTypeDouble
+        typesCompatible = True
     End Select
 Case ValueTypeSingle
     Select Case sinkInputType
