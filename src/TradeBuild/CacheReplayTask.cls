@@ -69,7 +69,7 @@ Private mNextValueNumber As Long
 Private mValuesNotified As Long
 
 Private mValueName As String
-Private mValueNames() As String
+Private mValueNames(0) As String
 Private mNotifyName As String
 
 '================================================================================
@@ -184,6 +184,7 @@ Set mValueCache = valueCache
 Set mTarget = target
 Set mSourceStudy = sourceStudy
 mValueName = valueCache.valueName
+mValueNames(0) = mValueName
 mDiscriminator = discriminator
 
 If TypeOf target Is TradeBuildSP.IStudy Then
