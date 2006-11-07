@@ -146,8 +146,8 @@ prevMACDHist = mMACDHist
 
 If Not mStudyFoundation.isNewBar Then
     If ev.value = sPrevVal Then Exit Sub
-    sPrevVal = ev.value
 End If
+sPrevVal = ev.value
 
 evOut.barnumber = ev.barnumber
 Set evOut.Source = Me

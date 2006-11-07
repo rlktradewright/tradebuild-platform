@@ -93,12 +93,12 @@ Private Sub customNotify( _
 Dim newval As Double
 Dim evMa As StudyValueEvent
 Dim evOut As StudyValueEvent
-Static prevVal As Variant
+Static sPrevVal As Variant
 
 If Not mStudyFoundation.isNewBar Then
-    If ev.value = prevVal Then Exit Sub
-    prevVal = ev.value
+    If ev.value = sPrevVal Then Exit Sub
 End If
+sPrevVal = ev.value
 
 newval = CDbl(ev.value)
 

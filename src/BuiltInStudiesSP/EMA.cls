@@ -97,8 +97,8 @@ Dim evOut As StudyValueEvent
 
 If Not mStudyFoundation.isNewBar Then
     If ev.value = sPrevVal Then Exit Sub
-    sPrevVal = ev.value
 End If
+sPrevVal = ev.value
 
 If mStudyFoundation.isNewBar Then
     If IsEmpty(mPrevMA) Then

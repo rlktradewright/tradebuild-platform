@@ -111,6 +111,7 @@ Else
     If Not mStudyFoundation.isNewBar Then
         If ev.value = sPrevVal Then Exit Sub
     End If
+    sPrevVal = ev.value
     
     mBars.Notify ev
     

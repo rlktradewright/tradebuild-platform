@@ -101,8 +101,8 @@ Dim newEv As TradeBuildSP.StudyValueEvent
 
 If Not mStudyFoundation.isNewBar Then
     If ev.value = sPrevVal Then Exit Sub
-    sPrevVal = ev.value
 End If
+sPrevVal = ev.value
 
 mBars.Notify ev
 

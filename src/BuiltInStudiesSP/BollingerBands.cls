@@ -110,8 +110,8 @@ Static sPrevVal As Variant
 
 If Not mStudyFoundation.isNewBar Then
     If ev.value = sPrevVal Then Exit Sub
-    sPrevVal = ev.value
 End If
+sPrevVal = ev.value
 
 mSDStudy.Notify ev
 mMAStudy.Notify ev

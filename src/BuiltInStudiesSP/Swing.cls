@@ -134,8 +134,8 @@ If IsEmpty(ev.value) Then Exit Sub
 
 If Not mStudyFoundation.isNewBar Then
     If ev.value = sPrevVal Then Exit Sub
-    sPrevVal = ev.value
 End If
+sPrevVal = ev.value
 
 If mSwingHighCache.Count >= 1 Then prevSwingHigh = mSwingHighCache.getValue(0)
 If mSwingLowCache.Count >= 1 Then prevSwingLow = mSwingLowCache.getValue(0)

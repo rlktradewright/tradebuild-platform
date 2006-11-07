@@ -102,8 +102,8 @@ If IsEmpty(ev.value) Then Exit Sub
 
 If Not mStudyFoundation.isNewBar Then
     If ev.value = sPrevVal Then Exit Sub
-    sPrevVal = ev.value
 End If
+sPrevVal = ev.value
 
 newValue = CDbl(ev.value)
 

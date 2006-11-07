@@ -139,8 +139,8 @@ If Not mStudyFoundation.isNewBar Then
     ' if this input value is the same as the previous one in this bar, no
     ' need to do anything as it won't change the study value
     If ev.value = sPrevVal Then Exit Sub
-    sPrevVal = ev.value
 End If
+sPrevVal = ev.value
 
 ' update the bars
 mBars.Notify ev
