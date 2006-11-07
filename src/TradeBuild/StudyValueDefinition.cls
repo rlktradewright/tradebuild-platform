@@ -151,7 +151,7 @@ End Property
 ' Properties
 '================================================================================
 
-Friend Property Let defaultRegion( _
+Public Property Let defaultRegion( _
                 ByVal RHS As TradeBuild.StudyDefaultRegions)
 mDefaultRegion = RHS
 End Property
@@ -160,7 +160,7 @@ Public Property Get defaultRegion() As TradeBuild.StudyDefaultRegions
 defaultRegion = mDefaultRegion
 End Property
 
-Friend Property Let Description(ByVal value As String)
+Public Property Let Description(ByVal value As String)
 mDescription = value
 End Property
 
@@ -168,7 +168,7 @@ Public Property Get Description() As String
 Description = mDescription
 End Property
 
-Friend Property Let isDefault(ByVal value As Boolean)
+Public Property Let isDefault(ByVal value As Boolean)
 mIsDefault = value
 End Property
 
@@ -176,7 +176,7 @@ Public Property Get isDefault() As Boolean
 isDefault = mIsDefault
 End Property
 
-Friend Property Let maximumValue(ByVal value As Variant)
+Public Property Let maximumValue(ByVal value As Variant)
 mMaximumValue = value
 End Property
 
@@ -184,7 +184,7 @@ Public Property Get maximumValue() As Variant
 maximumValue = mMaximumValue
 End Property
 
-Friend Property Let minimumValue(ByVal value As Variant)
+Public Property Let minimumValue(ByVal value As Variant)
 mMinimumValue = value
 End Property
 
@@ -192,7 +192,7 @@ Public Property Get minimumValue() As Variant
 minimumValue = mMinimumValue
 End Property
 
-Friend Property Let multipleValuesPerBar(ByVal value As Boolean)
+Public Property Let multipleValuesPerBar(ByVal value As Boolean)
 mMultipleValuesPerBar = value
 End Property
 
@@ -200,7 +200,7 @@ Public Property Get multipleValuesPerBar() As Boolean
 multipleValuesPerBar = mMultipleValuesPerBar
 End Property
 
-Friend Property Let name(ByVal value As String)
+Public Property Let name(ByVal value As String)
 mName = value
 End Property
 
@@ -208,7 +208,7 @@ Public Property Get name() As String
 name = mName
 End Property
 
-Friend Property Let valueType(ByVal value As StudyValueTypes)
+Public Property Let valueType(ByVal value As StudyValueTypes)
 mValueType = value
 End Property
 

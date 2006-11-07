@@ -58,15 +58,11 @@ Private mBars As bars
 
 Private mStudy As TradeBuildSP.IStudy
 Private mStudyToNotify As TradeBuildSP.IStudy
-Private mValueName As String
+Private mValueNames() As String
+Private mNotifyNames() As String
 
-Private mStartBarNumber As Long
+Private mNextBarNumber As Long
 Private mBarsNotified As Long
-
-'Private mNotifyNewbar As Boolean
-Private mNotifyClose As Boolean
-Private mNotifyVolume As Boolean
-Private mNotifyTickvolume As Boolean
 
 '================================================================================
 ' Class Event Handlers
@@ -80,88 +76,71 @@ Private Sub Task_run()
 Dim lBar As Bar
 Dim i As Long
 Dim ev As TradeBuildSP.StudyValueEvent
+Dim valueName As String
 
 If mBars.Count = 0 Then
-    mBars.studies.add mStudy, mValueName
+    mBars.studies.add mStudy, mValueNames
     mTaskContext.finish
     Set mTaskContext = Nothing
     Exit Sub
 End If
 
-For i = (mStartBarNumber + mBarsNotified) To _
-        (mStartBarNumber + mBarsNotified + 19)
-    
-    Set lBar = mBars(i)
-    
-    If Not lBar.Blank Then
-        Set ev.source = mBars
-        ev.barNumber = i
+Set ev.source = mBars
+
+Set lBar = mBars(mNextBarNumber)
+
+If Not lBar.Blank Then
+    For i = 0 To UBound(mValueNames)
+        valueName = mValueNames(i)
+        ev.barNumber = mNextBarNumber
+        ev.valueName = mNotifyNames(i)
         
-        If mNotifyClose Then
+        If valueName = BarsValueClose Then
             ev.timestamp = lBar.datetime
             ev.value = lBar.openValue
-            ev.ValueName = GBars.BarsValueClose
             mStudyToNotify.notify ev
-        End If
         
-        If lBar.IsDownBar Then
-            If mNotifyClose Then
+            If lBar.IsDownBar Then
                 ev.timestamp = lBar.datetime + (lBar.barLength / 3) / 1440
                 ev.value = lBar.highValue
-                ev.ValueName = GBars.BarsValueClose
+                mStudyToNotify.notify ev
+                
+                ev.timestamp = lBar.datetime + (2 * lBar.barLength / 3) / 1440
+                ev.value = lBar.lowValue
+                mStudyToNotify.notify ev
+            Else
+                ev.timestamp = lBar.datetime + (lBar.barLength / 3) / 1440
+                ev.value = lBar.lowValue
+                mStudyToNotify.notify ev
+
+                ev.timestamp = lBar.datetime + (2 * lBar.barLength / 3) / 1440
+                ev.value = lBar.highValue
                 mStudyToNotify.notify ev
             End If
             
-            If mNotifyClose Then
-                ev.timestamp = lBar.datetime + (2 * lBar.barLength / 3) / 1440
-                ev.value = lBar.lowValue
-                ev.ValueName = GBars.BarsValueClose
-                mStudyToNotify.notify ev
-            End If
-        Else
-            If mNotifyClose Then
-                ev.timestamp = lBar.datetime + (lBar.barLength / 3) / 1440
-                ev.value = lBar.lowValue
-                ev.ValueName = GBars.BarsValueClose
-                mStudyToNotify.notify ev
-            End If
-            
-            If mNotifyClose Then
-                ev.timestamp = lBar.datetime + (2 * lBar.barLength / 3) / 1440
-                ev.value = lBar.highValue
-                ev.ValueName = GBars.BarsValueClose
-                mStudyToNotify.notify ev
-            End If
-        End If
-        
-        If mNotifyClose Then
             ev.timestamp = lBar.datetime + lBar.barLength / 1440 - OneSecond
             ev.value = lBar.closeValue
-            ev.ValueName = GBars.BarsValueClose
             mStudyToNotify.notify ev
-        End If
-        
-        If mNotifyVolume Then
+        ElseIf valueName = BarsValueVolume Then
+            ev.timestamp = lBar.datetime
             ev.value = lBar.volume
-            ev.ValueName = GBars.BarsValueVolume
             mStudyToNotify.notify ev
-        End If
-        
-        If mNotifyTickvolume Then
+        ElseIf valueName = BarsValueTickVolume Then
+            ev.timestamp = lBar.datetime
             ev.value = lBar.tickVolume
-            ev.ValueName = GBars.BarsValueTickVolume
             mStudyToNotify.notify ev
         End If
-    End If
-    
-    mBarsNotified = mBarsNotified + 1
-    If i = mBars.Count Then
-        mBars.studies.add mStudyToNotify, mValueName
-        mTaskContext.finish
-        Set mTaskContext = Nothing
-        Exit For
-    End If
-Next
+    Next
+End If
+
+mNextBarNumber = mNextBarNumber + 1
+mBarsNotified = mBarsNotified + 1
+
+If mNextBarNumber = mBars.Count Then
+    mBars.studies.add mStudyToNotify, mValueNames
+    mTaskContext.finish
+    Set mTaskContext = Nothing
+End If
 
 End Sub
 
@@ -181,17 +160,25 @@ End Property
 ' Methods
 '================================================================================
 
-Friend Sub initialise( _
+Friend Sub Initialise( _
                 ByVal bars As bars, _
                 ByVal study As TradeBuildSP.IStudy, _
-                ByRef ValueName As String, _
+                ByRef valueNames() As String, _
                 ByVal numUnderlyingValuesToUse As Long)
 Dim numBarsToNotify As Long
+Dim inputDefs As TradeBuildSP.IStudyInputDefinitions
+Dim i As Long
 
 Set mBars = bars
 Set mStudy = study
 Set mStudyToNotify = mStudy.baseStudy
-mValueName = ValueName
+mValueNames = valueNames
+
+Set inputDefs = study.studyDefinition.studyInputDefinitions
+ReDim mNotifyNames(inputDefs.Count - 1) As String
+For i = 0 To inputDefs.Count - 1
+    mNotifyNames(i) = inputDefs.Item(i + 1).name
+Next
 
 If numUnderlyingValuesToUse < 0 Then
     ' just replay the number of values needed by the study
@@ -201,18 +188,8 @@ Else
 End If
 If numBarsToNotify > mBars.Count Then numBarsToNotify = mBars.Count
 
-mStartBarNumber = mBars.Count - numBarsToNotify + 1
+mNextBarNumber = mBars.Count - numBarsToNotify + 1
 
-Select Case UCase$(mValueName)
-Case UCase$(DefaultStudyValue)
-    mNotifyClose = True
-Case UCase$(BarsValueClose)
-    mNotifyClose = True
-Case UCase$(BarsValueVolume)
-    mNotifyVolume = True
-Case UCase$(BarsValueTickVolume)
-    mNotifyTickvolume = True
-End Select
 End Sub
 
 '================================================================================

@@ -515,6 +515,15 @@ Public Enum StudyDefaultRegions
     DefaultRegionCustom
 End Enum
 
+Public Enum StudyInputTypes
+    InputTypeNone = 0
+    InputTypeInteger
+    InputTypeSingle
+    InputTypeDouble
+    InputTypeString
+    InputTypeDate
+End Enum
+
 Public Enum StudyParameterTypes
     ParameterTypeNone = 0
     ParameterTypeInteger

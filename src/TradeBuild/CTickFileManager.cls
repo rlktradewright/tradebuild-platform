@@ -519,7 +519,7 @@ If mTickfileSelector Is Nothing Then
     mTickfileSelector.tradeBuildAPI = tb
 End If
 mTickfileSelector.SupportedTickfileFormats = tb.ServiceProviders.SupportedInputTickfileFormats
-mTickfileSelector.Show vbModeless
+mTickfileSelector.Show vbModal
 End Sub
 
 Public Sub SkipTickfile()

@@ -66,10 +66,10 @@ End Sub
 ' IStudyParameterDefinitions Interface Members
 '================================================================================
 
-Private Sub IStudyParameterDefinitions_Add( _
-                ByVal studyParamDef As TradeBuildSP.IStudyParameterDefinition)
-mStudyParameterDefinitions.Add studyParamDef, studyParamDef.name
-End Sub
+Private Function IStudyParameterDefinitions_Add( _
+                ByVal paramName As String) As TradeBuildSP.IStudyParameterDefinition
+Set IStudyParameterDefinitions_Add = add(paramName)
+End Function
 
 Private Property Get IStudyParameterDefinitions_Count() As Long
 IStudyParameterDefinitions_Count = Count
@@ -79,6 +79,11 @@ Private Function IStudyParameterDefinitions_Item( _
                 ByVal index As Variant) As TradeBuildSP.IStudyParameterDefinition
 Set IStudyParameterDefinitions_Item = Item(index)
 End Function
+
+Private Function IStudyParameterDefinitions_NewEnum() As Object
+Set IStudyParameterDefinitions_NewEnum = NewEnum
+End Function
+
 '================================================================================
 ' XXXX Event Handlers
 '================================================================================
@@ -95,10 +100,11 @@ End Property
 ' Methods
 '================================================================================
 
-Friend Sub Add( _
-                ByVal studyParamDef As StudyParameterDefinition)
-mStudyParameterDefinitions.Add studyParamDef, studyParamDef.name
-End Sub
+Public Function add( _
+                ByVal paramName As String) As StudyParameterDefinition
+Set add = New StudyParameterDefinition
+mStudyParameterDefinitions.add add, paramName
+End Function
 
 Public Function Item(ByVal index As Variant) As StudyParameterDefinition
 Set Item = mStudyParameterDefinitions(index)

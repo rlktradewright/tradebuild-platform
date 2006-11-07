@@ -81,6 +81,12 @@ End Sub
 ' ICommonServiceConsumer Interface Members
 '================================================================================
 
+Private Function ICommonServiceConsumer_createStudy( _
+                ByVal name As String, _
+                ByVal spName As String) As TradeBuildSP.IStudy
+Set ICommonServiceConsumer_createStudy = CreateStudy(name, spName)
+End Function
+
 Private Sub ICommonServiceConsumer_FatalServiceProviderError( _
                 ByVal errorCode As Long, _
                 ByVal source As String, _
@@ -163,26 +169,29 @@ Private Function ICommonServiceConsumer_NewStudyDefinition() As TradeBuildSP.ISt
 Set ICommonServiceConsumer_NewStudyDefinition = New studyDefinition
 End Function
 
-Private Function ICommonServiceConsumer_NewStudyParameterDefinition() As TradeBuildSP.IStudyParameterDefinition
-Set ICommonServiceConsumer_NewStudyParameterDefinition = New StudyParameterDefinition
-End Function
-
 Private Function ICommonServiceConsumer_NewStudyValueCache( _
                 ByVal cyclicSize As Long, _
-                ByVal ValueName As String) As TradeBuildSP.IStudyValueCache
+                ByVal valueName As String) As TradeBuildSP.IStudyValueCache
 Dim valueCache As New StudyValueCache
 valueCache.tradeBuildAPI = tb
 valueCache.cyclicSize = cyclicSize
-valueCache.ValueName = ValueName
+valueCache.valueName = valueName
 Set ICommonServiceConsumer_NewStudyValueCache = valueCache
-End Function
-
-Private Function ICommonServiceConsumer_NewStudyValueDefinition() As TradeBuildSP.IStudyValueDefinition
-Set ICommonServiceConsumer_NewStudyValueDefinition = New StudyValueDefinition
 End Function
 
 Private Function ICommonServiceConsumer_NewStudyValueListeners() As TradeBuildSP.IStudyValueListeners
 Set ICommonServiceConsumer_NewStudyValueListeners = New StudyValueListeners
+End Function
+
+Private Function ICommonServiceConsumer_NewWeakCollection() As TradeBuildSP.IWeakCollection
+Set ICommonServiceConsumer_NewWeakCollection = New WeakCollection
+End Function
+
+Private Function ICommonServiceConsumer_NewWeakReference(ByVal targetObject As Object) As TradeBuildSP.IWeakReference
+Dim wr As WeakReference
+Set wr = New WeakReference
+wr.Initialise targetObject
+Set ICommonServiceConsumer_NewWeakReference = wr
 End Function
 
 Private Sub ICommonServiceConsumer_NotifyListeners( _
@@ -284,14 +293,14 @@ Dim i As Long
 ReDim ldata(LBound(data) To UBound(data)) As TradeBuild.SortEntryStruct
 
 For i = LBound(data) To UBound(data)
-    ldata(i).key = data(i).key
+    ldata(i).Key = data(i).Key
     ldata(i).ObjectRef = data(i).ObjectRef
 Next
 
 gSortObjects ldata, LBound(ldata), UBound(ldata)
 
 For i = LBound(data) To UBound(data)
-    data(i).key = ldata(i).key
+    data(i).Key = ldata(i).Key
     data(i).ObjectRef = ldata(i).ObjectRef
 Next
 End Sub
@@ -588,7 +597,7 @@ Set CreateLiveOrderSubmitter = orderSubmitter
 End Function
 
 Friend Function CreateRealtimeDataReader( _
-                                    ByVal pTicker As ticker, _
+                                    ByVal pTicker As Ticker, _
                                     ByVal serviceConsumer As TradeBuildSP.IRealtimeDataInputServiceConsumer) As TradeBuildSP.IRealtimeDataReader
 Dim realtimeSp As TradeBuildSP.IRealtimeDataServiceProvider
 Dim realtimeSPReader As TradeBuildSP.IRealtimeDataReader
@@ -643,8 +652,7 @@ End Function
 
 Friend Function CreateStudy( _
                 ByVal studyName As String, _
-                ByVal spName As String, _
-                ByVal serviceConsumer As TradeBuildSP.IStudyServiceConsumer) As IStudy
+                ByVal spName As String) As IStudy
 Dim studySP As TradeBuildSP.IStudyServiceProvider
 Dim i As Long
 
@@ -655,7 +663,7 @@ For i = 0 To mMaxSPIndex
             spName = "") _
         Then
             Set studySP = mServiceProviders(i).SPObject
-            Set CreateStudy = studySP.CreateStudy(studyName, serviceConsumer)
+            Set CreateStudy = studySP.CreateStudy(studyName)
             If Not CreateStudy Is Nothing Or _
                 spName <> "" _
                 Then Exit For
@@ -665,7 +673,7 @@ Next
 End Function
 
 Friend Function CreateTickfileReader( _
-                                    ByVal pTicker As ticker, _
+                                    ByVal pTicker As Ticker, _
                                     ByVal serviceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
                                     ByVal inputTickfileFormatID As String _
                                     ) As TradeBuild.TickfileReader

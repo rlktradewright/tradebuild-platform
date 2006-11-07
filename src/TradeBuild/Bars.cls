@@ -77,7 +77,7 @@ Private mTradeBuildAPIRef           As WeakReference
 
 Private mIdent                      As String
 
-Private mInputValueName             As String
+Private mInputValueNames()          As String
 
 Private mBars                       As Collection
 Private mBarType                    As Long
@@ -122,7 +122,7 @@ End Sub
 
 Private Function IStudy_addStudy( _
                 ByVal study As IStudy, _
-                ByVal valueName As String, _
+                ByRef valueNames() As String, _
                 ByVal numUnderlyingValuesToUse As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
@@ -130,12 +130,12 @@ Private Function IStudy_addStudy( _
 Dim lTask As AddStudyTask
 
 If numUnderlyingValuesToUse = 0 Or mBars.Count = 0 Then
-    mStudies.AddStudy study, valueName
+    mStudies.AddStudy study, valueNames
     Exit Function
 End If
 
 Set lTask = New AddStudyTask
-lTask.initialise Me, study, valueName, numUnderlyingValuesToUse
+lTask.Initialise Me, study, valueNames, numUnderlyingValuesToUse
 Set IStudy_addStudy = tb.taskManager.startTask(lTask, IIf(taskName = "", gGenerateGUIDString, taskName), taskData)
 End Function
 
@@ -152,18 +152,9 @@ Private Property Get IStudy_baseStudy() As TradeBuildSP.IStudy
 
 End Property
 
-Private Property Let IStudy_defaultParameters(ByVal RHS As TradeBuildSP.IParameters)
-
-End Property
-
-Private Property Get IStudy_defaultParameters() As TradeBuildSP.IParameters
-
-End Property
-
 Private Function IStudy_getStudyValue( _
-                ByVal valueType As String, _
-                ByVal ref As Long, _
-                params() As Variant) As TradeBuildSP.StudyValue
+                ByVal valueName As String, _
+                ByVal ref As Long) As TradeBuildSP.StudyValue
 
 End Function
 
@@ -172,14 +163,15 @@ IStudy_id = mIdent
 End Property
 
 Private Sub IStudy_initialise( _
+                ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
+                ByVal studyServiceConsumer As TradeBuildSP.IStudyServiceConsumer, _
                 ByVal id As String, _
                 ByVal parameters As TradeBuildSP.IParameters, _
                 ByVal numberOfValuesToCache As Long, _
-                ByVal inputValueName As String, _
+                valueNames() As String, _
                 ByVal underlyingStudy As TradeBuildSP.IStudy)
 mIdent = id
-mInputValueName = inputValueName
-
+mInputValueNames = valueNames
 End Sub
 
 Private Property Get IStudy_instanceName() As String
@@ -210,8 +202,8 @@ Case "value"
     iStudies.notify ev
 Case "size"
     mCurrentBar.TickSize ev.value
-    ev.valueName = GBars.BarsValueSize
-    iStudies.notify ev
+    'ev.valueName = GBars.BarsValueSize
+    'iStudies.notify ev
 Case "volume"
     mCurrentBar.volume = ev.value
     ev.valueName = GBars.BarsValueVolume
@@ -570,7 +562,7 @@ End Property
 Friend Property Let tradeBuildAPI( _
                 ByVal value As tradeBuildAPI)
 Set mTradeBuildAPIRef = New WeakReference
-mTradeBuildAPIRef.initialise value
+mTradeBuildAPIRef.Initialise value
 End Property
 
 Public Property Get up(Optional ByVal ref As Long) As Boolean
@@ -586,7 +578,7 @@ End Property
 '================================================================================
 
 Public Function add(ByVal timestamp As Date, _
-                Optional ByVal key As String) As Bar
+                Optional ByVal Key As String) As Bar
 Dim ev As TradeBuild.StudyValueEvent
 
 If Not mCurrentBar Is Nothing Then
@@ -612,10 +604,10 @@ Else
     mCurrentBarNumber = mCurrentBarNumber + 1
 End If
 
-If key <> "" Then
-    mBars.add add, key
+If Key <> "" Then
+    mBars.add add, Key
 Else
-    mBars.add add, Format(timestamp, "yyyymmddhhnnss")
+    mBars.add add, format(timestamp, "yyyymmddhhnnss")
 End If
 
 Set mCurrentBar = add
@@ -649,7 +641,7 @@ Public Function addHistoric( _
                 ByVal volume As Long, _
                 ByVal tickVolume As Long, _
                 ByVal openInterest As Long, _
-                Optional ByVal key As String) As Bar
+                Optional ByVal Key As String) As Bar
 Dim ev As TradeBuild.StudyValueEvent
 
 Set addHistoric = New Bar
@@ -676,10 +668,10 @@ Else
     mCurrentBarNumber = mCurrentBarNumber + 1
 End If
 
-If key <> "" Then
-    mBars.add addHistoric, key
+If Key <> "" Then
+    mBars.add addHistoric, Key
 Else
-    mBars.add addHistoric, Format(timestamp, "yyyymmddhhnnss")
+    mBars.add addHistoric, format(timestamp, "yyyymmddhhnnss")
 End If
 Set mCurrentBar = addHistoric
 

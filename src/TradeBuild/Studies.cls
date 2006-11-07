@@ -50,7 +50,9 @@ Implements TradeBuildSP.iStudies
 
 Private Type StudyTableEntry
     theStudy            As TradeBuildSP.IStudy
-    ValueName           As String
+    studyToNotify       As TradeBuildSP.IStudy
+    valueName           As String
+    notifyName          As String
 End Type
 
 '================================================================================
@@ -81,8 +83,8 @@ End Sub
 
 Private Sub IStudies_Add( _
                 ByVal study As TradeBuildSP.IStudy, _
-                ByVal ValueName As String)
-AddStudy study, ValueName
+                ByRef valueNames() As String)
+AddStudy study, valueNames
 End Sub
 
 Private Property Let iStudies_defaultValueName( _
@@ -125,24 +127,31 @@ End Property
 '================================================================================
 
 Public Sub add( _
-                study As TradeBuild.study, _
-                ValueName As String)
-AddStudy study.study, ValueName
+                ByVal study As TradeBuild.study, _
+                ByRef valueNames() As String)
+AddStudy study.study, valueNames
 End Sub
 
 Friend Sub AddStudy( _
-                study As TradeBuildSP.IStudy, _
-                ValueName As String)
+                ByVal study As TradeBuildSP.IStudy, _
+                ByRef valueNames() As String)
 Dim tableEntry As StudyTableEntry
+Dim inputDefs As studyInputDefinitions
+Dim i As Long
 
-If mNextStudyTableIndex > UBound(mStudyTable) Then
-    ReDim Preserve mStudyTable(UBound(mStudyTable) + 10) As StudyTableEntry
-End If
-Set tableEntry.theStudy = study
-tableEntry.ValueName = ValueName
-mStudyTable(mNextStudyTableIndex) = tableEntry
-mNextStudyTableIndex = mNextStudyTableIndex + 1
+Set inputDefs = study.studyDefinition.studyInputDefinitions
 
+For i = 0 To UBound(valueNames)
+    If mNextStudyTableIndex > UBound(mStudyTable) Then
+        ReDim Preserve mStudyTable(UBound(mStudyTable) + 10) As StudyTableEntry
+    End If
+    Set tableEntry.theStudy = study
+    Set tableEntry.studyToNotify = study.baseStudy
+    tableEntry.valueName = valueNames(i)
+    tableEntry.notifyName = inputDefs.Item(i + 1).name
+    mStudyTable(mNextStudyTableIndex) = tableEntry
+    mNextStudyTableIndex = mNextStudyTableIndex + 1
+Next
 End Sub
 
 Public Sub notify( _
@@ -153,7 +162,7 @@ spEv.barNumber = ev.barNumber
 Set spEv.source = ev.source
 spEv.timestamp = ev.timestamp
 spEv.value = ev.value
-spEv.ValueName = ev.ValueName
+spEv.valueName = ev.valueName
 
 notifyValue spEv
 End Sub
@@ -180,16 +189,21 @@ Private Sub notifyValue( _
                 ev As TradeBuildSP.StudyValueEvent)
 Dim i As Long
 Dim study As TradeBuildSP.IStudy
+Dim evOut As TradeBuildSP.StudyValueEvent
 
 For i = 0 To mNextStudyTableIndex - 1
-    Set study = mStudyTable(i).theStudy
-    If ev.ValueName = mDefaultValuename Then
-        If mStudyTable(i).ValueName = "$default" Then
-            study.notify ev
+    Set study = mStudyTable(i).studyToNotify
+    If ev.valueName = mDefaultValuename Then
+        If mStudyTable(i).valueName = "$default" Then
+            evOut = ev
+            evOut.valueName = mStudyTable(i).notifyName
+            study.notify evOut
         End If
     End If
-    If mStudyTable(i).ValueName = ev.ValueName Then
-        study.notify ev
+    If mStudyTable(i).valueName = ev.valueName Then
+        evOut = ev
+        evOut.valueName = mStudyTable(i).notifyName
+        study.notify evOut
     End If
 Next
 End Sub

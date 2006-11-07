@@ -74,13 +74,13 @@ End Sub
 ' Properties
 '================================================================================
 
-Public Property Let defaultParameters(ByVal value As TradeBuild.parameters)
-mStudy.defaultParameters = value
-End Property
-
-Public Property Get defaultParameters() As TradeBuild.parameters
-Set defaultParameters = mStudy.defaultParameters
-End Property
+'Public Property Let defaultParameters(ByVal value As TradeBuild.parameters)
+'mStudy.defaultParameters = value
+'End Property
+'
+'Public Property Get defaultParameters() As TradeBuild.parameters
+'Set defaultParameters = mStudy.defaultParameters
+'End Property
 
 Public Property Get id() As String
 id = mStudy.id
@@ -139,15 +139,14 @@ End Function
 
 Public Function getStudyValue( _
         ByVal valueName As String, _
-        ByVal ref As Long, _
-        ParamArray parameters() As Variant) As TradeBuild.StudyValueStruct
+        ByVal ref As Long) As TradeBuild.StudyValueStruct
 Dim sv As TradeBuildSP.StudyValue
 Dim parms() As Variant
 
 If valueName = "" Then valueName = "$default"
 
 parms = parameters
-sv = mStudy.getStudyValue(valueName, ref, parms)
+sv = mStudy.getStudyValue(valueName, ref)
 getStudyValue.barNumber = sv.barNumber
 getStudyValue.timestamp = sv.timestamp
 getStudyValue.value = sv.value

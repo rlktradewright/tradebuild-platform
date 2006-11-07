@@ -106,34 +106,6 @@ Private Function IStudyValueCache_replayValues( _
                 Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
 Set IStudyValueCache_replayValues = replayValues(target, _
                                                 sourceStudy, _
-                                                "", _
-                                                Nothing, _
-                                                numUnderlyingValuesToUse, _
-                                                discriminator, _
-                                                taskName, _
-                                                taskData)
-End Function
-
-Private Function IStudyValueCache_replayValuesWithResolver( _
-                ByVal target As Object, _
-                ByVal sourceStudy As TradeBuildSP.IStudy, _
-                ByVal requiredValueName As String, _
-                ByVal resolver As TradeBuildSP.IStudyValueResolver, _
-                ByVal numUnderlyingValuesToUse As Long, _
-                Optional ByVal discriminator As Long, _
-                Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
-
-If requiredValueName = "" Or resolver Is Nothing Then
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "TradeBuild.StudyValueCache::IStudyValueCache_replayValuesWithResolver", _
-                "requiredValueName is empty or resolver is nothing"
-End If
-
-Set IStudyValueCache_replayValuesWithResolver = replayValues(target, _
-                                                sourceStudy, _
-                                                requiredValueName, _
-                                                resolver, _
                                                 numUnderlyingValuesToUse, _
                                                 discriminator, _
                                                 taskName, _
@@ -184,7 +156,7 @@ End Property
 Friend Property Let tradeBuildAPI( _
                 ByVal value As tradeBuildAPI)
 Set mTradeBuildAPIRef = New WeakReference
-mTradeBuildAPIRef.initialise value
+mTradeBuildAPIRef.Initialise value
 End Property
 
 Friend Property Let valueName(value As String)
@@ -255,19 +227,15 @@ End Function
 Friend Function replayValues( _
                 ByVal target As Object, _
                 ByVal sourceStudy As TradeBuildSP.IStudy, _
-                ByVal requiredValueName As String, _
-                ByVal resolver As TradeBuildSP.IStudyValueResolver, _
                 ByVal numUnderlyingValuesToUse As Long, _
                 Optional ByVal discriminator As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskCompletion
 Dim replayTask As New CacheReplayTask
 
-replayTask.initialise Me, _
+replayTask.Initialise Me, _
                     target, _
                     sourceStudy, _
-                    IIf(requiredValueName = "", mValueName, requiredValueName), _
-                    resolver, _
                     numUnderlyingValuesToUse, _
                     discriminator
 

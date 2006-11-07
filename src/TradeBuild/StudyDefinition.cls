@@ -8,7 +8,7 @@ BEGIN
 END
 Attribute VB_Name = "StudyDefinition"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -53,10 +53,12 @@ Implements TradeBuildSP.IStudyDefinition
 '================================================================================
 
 Private mName As String
+Private mShortName As String
 Private mDescription As String
 
 Private mDefaultRegion As StudyDefaultRegions
 
+Private mStudyInputDefinitions As studyInputDefinitions
 Private mStudyValueDefinitions As studyValueDefinitions
 Private mStudyParameterDefinitions As studyParameterDefinitions
 
@@ -65,6 +67,7 @@ Private mStudyParameterDefinitions As studyParameterDefinitions
 '================================================================================
 
 Private Sub Class_Initialize()
+Set mStudyInputDefinitions = New studyInputDefinitions
 Set mStudyValueDefinitions = New studyValueDefinitions
 Set mStudyParameterDefinitions = New studyParameterDefinitions
 End Sub
@@ -72,6 +75,10 @@ End Sub
 '================================================================================
 ' IStudyDefinition Interface Members
 '================================================================================
+
+Private Function IStudyDefinition_Clone() As TradeBuildSP.IStudyDefinition
+Set IStudyDefinition_Clone = clone
+End Function
 
 Private Property Let IStudyDefinition_defaultRegion( _
                 ByVal RHS As TradeBuildSP.StudyDefaultRegions)
@@ -98,6 +105,18 @@ Private Property Get IStudyDefinition_name() As String
 IStudyDefinition_name = mName
 End Property
 
+Private Property Let IStudyDefinition_shortName(ByVal RHS As String)
+mShortName = RHS
+End Property
+
+Private Property Get IStudyDefinition_shortName() As String
+IStudyDefinition_shortName = mShortName
+End Property
+
+Private Property Get IStudyDefinition_StudyInputDefinitions() As TradeBuildSP.IStudyInputDefinitions
+Set IStudyDefinition_StudyInputDefinitions = mStudyInputDefinitions
+End Property
+
 Private Property Get IStudyDefinition_StudyParameterDefinitions() As TradeBuildSP.IStudyParameterDefinitions
 Set IStudyDefinition_StudyParameterDefinitions = mStudyParameterDefinitions
 End Property
@@ -114,7 +133,7 @@ End Property
 ' Properties
 '================================================================================
 
-Friend Property Let defaultRegion(ByVal value As StudyDefaultRegions)
+Public Property Let defaultRegion(ByVal value As StudyDefaultRegions)
 mDefaultRegion = value
 End Property
 
@@ -122,7 +141,7 @@ Public Property Get defaultRegion() As StudyDefaultRegions
 defaultRegion = mDefaultRegion
 End Property
 
-Friend Property Let Description(ByVal value As String)
+Public Property Let Description(ByVal value As String)
 mDescription = value
 End Property
 
@@ -130,12 +149,24 @@ Public Property Get Description() As String
 Description = mDescription
 End Property
 
-Friend Property Let name(ByVal value As String)
+Public Property Let name(ByVal value As String)
 mName = value
 End Property
 
 Public Property Get name() As String
 name = mName
+End Property
+
+Public Property Let shortName(ByVal value As String)
+mShortName = value
+End Property
+
+Public Property Get shortName() As String
+shortName = mShortName
+End Property
+
+Public Property Get studyInputDefinitions() As studyInputDefinitions
+Set studyInputDefinitions = mStudyInputDefinitions
 End Property
 
 Public Property Get studyParameterDefinitions() As studyParameterDefinitions
@@ -149,6 +180,53 @@ End Property
 '================================================================================
 ' Methods
 '================================================================================
+
+Public Function clone() As studyDefinition
+Dim newSIDs As studyInputDefinitions
+Dim newSID As StudyInputDefinition
+Dim sid As StudyInputDefinition
+Dim newSPDs As studyParameterDefinitions
+Dim newSPD As StudyParameterDefinition
+Dim spd As StudyParameterDefinition
+Dim newSVDs As studyValueDefinitions
+Dim newSVD As StudyValueDefinition
+Dim svd As StudyValueDefinition
+
+Set clone = New studyDefinition
+clone.defaultRegion = mDefaultRegion
+clone.Description = mDescription
+clone.name = mName
+clone.shortName = mShortName
+
+Set newSIDs = clone.studyInputDefinitions
+For Each sid In mStudyInputDefinitions
+    Set newSID = newSIDs.add(sid.name)
+    newSID.name = sid.name
+    newSID.Description = sid.Description
+    newSID.inputType = sid.inputType
+Next
+
+Set newSPDs = clone.studyParameterDefinitions
+For Each spd In mStudyParameterDefinitions
+    Set newSPD = newSPDs.add(spd.name)
+    newSPD.name = spd.name
+    newSPD.Description = spd.Description
+    newSPD.parameterType = spd.parameterType
+Next
+
+Set newSVDs = clone.studyValueDefinitions
+For Each svd In mStudyValueDefinitions
+    Set newSVD = newSVDs.add(svd.name)
+    newSVD.name = svd.name
+    newSVD.Description = svd.Description
+    newSVD.isDefault = svd.isDefault
+    newSVD.maximumValue = svd.maximumValue
+    newSVD.minimumValue = svd.minimumValue
+    newSVD.multipleValuesPerBar = svd.multipleValuesPerBar
+    newSVD.valueType = svd.valueType
+Next
+
+End Function
 
 '================================================================================
 ' Helper Functions

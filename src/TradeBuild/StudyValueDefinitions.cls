@@ -66,10 +66,10 @@ End Sub
 ' IStudyValueDefinitions Interface Members
 '================================================================================
 
-Private Sub IStudyValueDefinitions_Add( _
-                ByVal studyValueDef As TradeBuildSP.IStudyValueDefinition)
-mStudyValueDefinitions.Add studyValueDef, studyValueDef.name
-End Sub
+Private Function IStudyValueDefinitions_Add( _
+                ByVal valueName As String) As TradeBuildSP.IStudyValueDefinition
+Set IStudyValueDefinitions_Add = add(valueName)
+End Function
 
 Private Property Get IStudyValueDefinitions_Count() As Long
 IStudyValueDefinitions_Count = Count
@@ -78,6 +78,10 @@ End Property
 Private Function IStudyValueDefinitions_Item( _
                 ByVal index As Variant) As TradeBuildSP.IStudyValueDefinition
 Set IStudyValueDefinitions_Item = Item(index)
+End Function
+
+Private Function IStudyValueDefinitions_NewEnum() As Object
+Set IStudyValueDefinitions_NewEnum = NewEnum
 End Function
 
 '================================================================================
@@ -96,10 +100,11 @@ End Property
 ' Methods
 '================================================================================
 
-Friend Sub Add( _
-                ByVal studyValueDef As StudyValueDefinition)
-mStudyValueDefinitions.Add studyValueDef, studyValueDef.name
-End Sub
+Public Function add( _
+                ByVal valueName As String) As StudyValueDefinition
+Set add = New StudyValueDefinition
+mStudyValueDefinitions.add add, valueName
+End Function
 
 Public Function Item(ByVal index As Variant) As StudyValueDefinition
 Set Item = mStudyValueDefinitions(index)

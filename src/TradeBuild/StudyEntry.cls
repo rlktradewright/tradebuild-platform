@@ -56,10 +56,11 @@ Private mSpName As String               ' sevice provider name
 Private mStudyID As String              ' id of this study
 Private mUnderlyingStudyID As String    ' id of entry for study this study is to be
                                         ' added to
-Private mInputValueName As String       ' name of value from the underlying study used
-                                        ' as input to this study
-Private mNumberOfCachedValues As Long   ' the number of study output values that should be
-                                        ' for access by higher level studies
+Private mInputValueNames() As String    ' names of values from the underlying study
+                                        ' used as input to this study
+Private mNumberOfCachedValues As Long   ' the number of study output values that
+                                        ' should be available for access by higher
+                                        ' level studies
 Private mStudyStarted As Boolean        ' set when this study has been added to the
                                         ' underlying study
 
@@ -79,12 +80,12 @@ Private mStudyStarted As Boolean        ' set when this study has been added to 
 ' Properties
 '================================================================================
 
-Public Property Get inputValueName() As String
-inputValueName = mInputValueName
+Public Property Get inputValueNames() As String()
+inputValueNames = mInputValueNames
 End Property
 
-Public Property Let inputValueName(ByRef newValue As String)
-mInputValueName = newValue
+Public Property Let inputValueNames(ByRef newValue() As String)
+mInputValueNames = newValue
 End Property
 
 Public Property Get numberOfCachedValues() As Long

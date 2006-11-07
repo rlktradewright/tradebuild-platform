@@ -60,7 +60,7 @@ End Enum
 Public Type OrderPlexProfile
     NextActiveIndex     As Long
     PrevActiveIndex     As Long
-    key                 As String
+    Key                 As String
     action              As OrderActions
     quantity            As Long
     EntryPrice          As Double
@@ -324,7 +324,7 @@ End Sub
 Private Sub IOrderSubmissionSrvcConsumer_requestTickData( _
                 ByVal consumer As TradeBuildSP.IStreamingDataConsumer, _
                 ByVal includeMarketDepth As Boolean)
-mTicker.addDataConsumer consumer
+mTicker.addDataConsumer consumer, includeMarketDepth
 End Sub
 
 '================================================================================
@@ -557,8 +557,8 @@ End Sub
 
 Public Sub AddStudy( _
                 ByVal study As TradeBuild.study, _
-                ByVal ValueName As String)
-mStudies.add study, ValueName
+                ByRef valueNames() As String)
+mStudies.add study, valueNames
 End Sub
 
 Friend Function allowOrder(ByVal orderLong As Boolean, _
@@ -888,7 +888,7 @@ End If
 
 End Sub
 
-Friend Function registerPlex(ByVal key As String, _
+Friend Function registerPlex(ByVal Key As String, _
                             ByVal Description As String, _
                             ByVal action As OrderActions, _
                             ByVal risk As Currency) As Long
@@ -898,7 +898,7 @@ End If
 registerPlex = mNextPlexTableIndex
 mNextPlexTableIndex = mNextPlexTableIndex + 1
 With mPlexTable(registerPlex)
-    .key = key
+    .Key = Key
     .Description = Description
     .action = action
     .risk = risk
@@ -908,7 +908,7 @@ With mPlexTable(registerPlex)
     mPlexTable(mLastActivePlexTableIndex).PrevActiveIndex = registerPlex
 End With
 If Not mSettlingOrderPlex Is Nothing Then
-    If key = mSettlingOrderPlex.key Then
+    If Key = mSettlingOrderPlex.Key Then
         mSettlingHandle = registerPlex
     End If
 End If
@@ -1014,7 +1014,7 @@ If profit <> mProfit Then
     Set ev.source = Me
     ev.timestamp = mTicker.timestamp
     ev.value = mProfit
-    ev.ValueName = "profit"
+    ev.valueName = "profit"
     mStudies.notify ev
     
     mTicker.notifyListeners mProfit, _
@@ -1157,7 +1157,7 @@ With mPlexTable(index)
                 FormatDateTime(.StartTime) & "," & _
                 FormatDateTime(.endTime) & "," & _
                 .Description & "," & _
-                .key & "," & _
+                .Key & "," & _
                 gOrderActionToString(.action) & "," & _
                 .quantity & "," & _
                 .EntryPrice & "," & _

@@ -956,7 +956,7 @@ End Property
 Private Function IStudyServiceConsumer_replayStudyValues( _
                 ByVal target As Object, _
                 ByVal sourceStudy As TradeBuildSP.IStudy, _
-                ByVal valueName As String, _
+                ByRef valueNames() As String, _
                 ByVal numUnderlyingValuesToUse As Long, _
                 Optional ByVal discriminator As Long, _
                 Optional ByVal taskName As String, _
@@ -967,7 +967,11 @@ mInEventHandler = True
 
 On Error GoTo err
 
-replayTask.initialise target, sourceStudy, valueName, numUnderlyingValuesToUse, discriminator
+replayTask.Initialise target, _
+                    sourceStudy, _
+                    valueNames, _
+                    numUnderlyingValuesToUse, _
+                    discriminator
 Set IStudyServiceConsumer_replayStudyValues = mTradeBuildAPI.taskManager.startTask(replayTask, IIf(taskName <> "", taskName, gGenerateGUIDString), taskData)
 
 mInEventHandler = False
@@ -1022,7 +1026,6 @@ End Sub
 
 Private Sub ITickfileOutputServiceConsumer_OutputTickfileCreated( _
                             ByVal filename As String)
-Dim ev As WriterEvent
 
 mInEventHandler = True
 
@@ -1041,7 +1044,6 @@ mInEventHandler = False
 End Sub
 
 Private Property Let ITickfileOutputServiceConsumer_Ready(ByVal RHS As Boolean)
-Dim ev As WriterEvent
 
 mInEventHandler = True
 
@@ -1309,12 +1311,12 @@ Public Property Get includeMarketDepthInTickfile() As Boolean
 includeMarketDepthInTickfile = mIncludeMarketDepthInTickfile
 End Property
 
-Friend Property Let key(ByVal value As String)
+Friend Property Let Key(ByVal value As String)
 mKey = value
 End Property
 
-Public Property Get key() As String
-key = mKey
+Public Property Get Key() As String
+Key = mKey
 End Property
 
 Public Property Get lowPrice() As Double
@@ -1500,24 +1502,35 @@ End Property
 '================================================================================
 
 Friend Sub addBaseStudy( _
-                ByVal pBars As Bars, _
+                ByVal pBars As bars, _
                 ByVal name As String)
 
 Dim StudyEntry As StudyEntry
 Dim studyID As String
+Dim valueNames(0) As String
 
 Set StudyEntry = New StudyEntry
 StudyEntry.studyName = name
 StudyEntry.study = pBars
 
 studyID = gGenerateGUIDString
-StudyEntry.study.initialise studyID, Nothing, 0, "value", Nothing
+valueNames(0) = "value"
+StudyEntry.study.Initialise mTradeBuildAPI.ServiceProviders, _
+                            Me, _
+                            studyID, _
+                            Nothing, _
+                            0, _
+                            valueNames, _
+                            Nothing
 StudyEntry.studyID = studyID
 mStudies.add StudyEntry, studyID
 End Sub
 
-Friend Sub addDataConsumer(ByVal consumer As TradeBuildSP.IStreamingDataConsumer)
+Friend Sub addDataConsumer( _
+                ByVal consumer As TradeBuildSP.IStreamingDataConsumer, _
+                ByVal includeMarketDepth As Boolean)
 mDataConsumers.add consumer
+If includeMarketDepth Then RequestMarketDepth DOMBothEvents, False
 End Sub
 
 Public Function addInfoListener( _
@@ -1526,11 +1539,13 @@ Public Function addInfoListener( _
 addInfoListener = mInfoListeners.add(newListener, valueType)
 End Function
 
-Public Sub addPriceChangeListener(ByVal value As PriceChangeListener)
+Public Sub addPriceChangeListener( _
+                ByVal value As PriceChangeListener)
 mPriceChangeListeners.add value
 End Sub
 
-Public Sub addProcessedMarketDepthListener(ByVal value As ProcessedMarketDepthListener)
+Public Sub addProcessedMarketDepthListener( _
+                ByVal value As ProcessedMarketDepthListener)
 mProcessedMarketDepthListeners.add value
 
 ' send all the current DOM values to the new listener
@@ -1615,7 +1630,7 @@ End Sub
 Public Function AddStudy(ByVal name As String, _
                 ByRef studyID As String, _
                 ByVal underlyingStudyID As String, _
-                ByRef inputValueName As String, _
+                ByRef inputValueNames() As String, _
                 Optional ByVal parameters As TradeBuild.parameters, _
                 Optional ByVal serviceProviderName As String, _
                 Optional ByVal numberOfValuesToCache As Long) As study
@@ -1623,6 +1638,8 @@ Public Function AddStudy(ByVal name As String, _
 Dim StudyEntry As StudyEntry
 Dim underlyingStudyEntry As StudyEntry
 Dim lStudy As TradeBuildSP.IStudy
+Dim inValueNames() As String
+Dim i As Long
 
 If underlyingStudyID = "" Then
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
@@ -1648,7 +1665,7 @@ Set lStudy = findStudy(name, _
                         serviceProviderName, _
                         studyID, _
                         underlyingStudyID, _
-                        inputValueName, _
+                        inputValueNames, _
                         numberOfValuesToCache, _
                         parameters)
 If Not lStudy Is Nothing Then
@@ -1661,23 +1678,30 @@ End If
 Set StudyEntry = New StudyEntry
 StudyEntry.studyName = name
 StudyEntry.spName = serviceProviderName
-StudyEntry.study = mTradeBuildAPI.ServiceProviders.CreateStudy(name, serviceProviderName, Me)
+StudyEntry.study = mTradeBuildAPI.ServiceProviders.CreateStudy(name, serviceProviderName)
 
 If StudyEntry.study Is Nothing Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                                 "TradeBuild.Ticker::AddStudy", _
                                                 "Can't create study " & name
                                                 
 StudyEntry.numberOfCachedValues = numberOfValuesToCache
-StudyEntry.inputValueName = inputValueName
+
+ReDim inValueNames(UBound(inputValueNames)) As String
+For i = 0 To UBound(inputValueNames)
+    inValueNames(i) = inputValueNames(i)
+Next
+StudyEntry.inputValueNames = inValueNames
 StudyEntry.underlyingStudyID = underlyingStudyID
 
 studyID = gGenerateGUIDString
 StudyEntry.studyID = studyID
 
-StudyEntry.study.initialise studyID, _
+StudyEntry.study.Initialise mTradeBuildAPI.ServiceProviders, _
+                            Me, _
+                            studyID, _
                             parameters, _
                             numberOfValuesToCache, _
-                            inputValueName, _
+                            inputValueNames, _
                             underlyingStudyEntry.study
 
 mStudies.add StudyEntry, studyID
@@ -1726,9 +1750,9 @@ Public Function formatPrice( _
                 Optional ByVal blankIfZero As Boolean) As String
 If blankIfZero And price = 0# Then Exit Function
 If mDisplayThirtySeconds Then
-    formatPrice = Int(price) & " ' " & Format(Int((price - Int(price)) / 0.03125), "00")
+    formatPrice = Int(price) & " ' " & format(Int((price - Int(price)) / 0.03125), "00")
 Else
-    formatPrice = Format(price, mPriceFormatString)
+    formatPrice = format(price, mPriceFormatString)
 End If
 End Function
 
@@ -1918,7 +1942,7 @@ StudyEntry.studyStarted = True
 Set underlyingStudyEntry = mStudies(StudyEntry.underlyingStudyID)
 
 Set startStudy = underlyingStudyEntry.study.AddStudy(StudyEntry.study, _
-                                                    StudyEntry.inputValueName, _
+                                                    StudyEntry.inputValueNames, _
                                                     numUnderlyingValuesToUse, _
                                                     taskName, _
                                                     taskData)
@@ -2217,7 +2241,7 @@ Private Function findStudy(ByVal studyName As String, _
                 ByVal spName As String, _
                 ByRef studyID As String, _
                 ByVal underlyingStudyID As String, _
-                ByRef inputValueName As String, _
+                ByRef inputValueNames() As String, _
                 ByVal numberOfValuesToCache As Long, _
                 ByVal parameters As TradeBuild.parameters) As IStudy
 Dim StudyEntry As StudyEntry
@@ -2228,8 +2252,9 @@ For Each StudyEntry In mStudies
         UCase$(spName) = UCase$(StudyEntry.spName) And _
         underlyingStudyID = StudyEntry.underlyingStudyID And _
         numberOfValuesToCache = StudyEntry.numberOfCachedValues And _
-        inputValueName = StudyEntry.inputValueName And _
-        parameters.Equals(StudyEntry.study.parameters) Then
+        gStringArraysEqual(inputValueNames, StudyEntry.inputValueNames) And _
+        parameters.Equals(StudyEntry.study.parameters) _
+    Then
         ' this study has already been added
         Set findStudy = StudyEntry.study
         studyID = StudyEntry.studyID

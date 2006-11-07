@@ -100,7 +100,7 @@ End Property
 ' Properties
 '================================================================================
 
-Friend Property Let Description(ByVal value As String)
+Public Property Let Description(ByVal value As String)
 mDescription = value
 End Property
 
@@ -108,7 +108,7 @@ Public Property Get Description() As String
 Description = mDescription
 End Property
 
-Friend Property Let name(ByVal value As String)
+Public Property Let name(ByVal value As String)
 mName = value
 End Property
 
@@ -116,7 +116,7 @@ Public Property Get name() As String
 name = mName
 End Property
 
-Friend Property Let parameterType(ByVal value As StudyParameterTypes)
+Public Property Let parameterType(ByVal value As StudyParameterTypes)
 mParameterType = value
 End Property
 

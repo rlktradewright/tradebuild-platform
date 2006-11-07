@@ -246,16 +246,16 @@ End If
 
 Select Case formatOption
 Case TimestampFormats.TimestampTimeOnly
-    gFormatTimestamp = Format(timestampAsDate, "hhnnss") & "." & _
-                        Format(milliseconds, "000")
+    gFormatTimestamp = format(timestampAsDate, "hhnnss") & "." & _
+                        format(milliseconds, "000")
 Case TimestampFormats.TimestampDateOnly
-    gFormatTimestamp = Format(timestampAsDate, "yyyymmdd")
+    gFormatTimestamp = format(timestampAsDate, "yyyymmdd")
 Case TimestampFormats.TimestampDateAndTime
-    gFormatTimestamp = Format(timestampAsDate, "yyyymmddhhnnss") & "." & _
-                        Format(milliseconds, "000")
+    gFormatTimestamp = format(timestampAsDate, "yyyymmddhhnnss") & "." & _
+                        format(milliseconds, "000")
 Case TimestampFormats.TimestampCustom
-    gFormatTimestamp = Format(timestampAsDate, formatString) & "." & _
-                        Format(milliseconds, "000")
+    gFormatTimestamp = format(timestampAsDate, formatString) & "." & _
+                        format(milliseconds, "000")
 End Select
 End Function
 
@@ -321,7 +321,7 @@ End Function
 
 Public Function gNewWeakReference(ByVal target As Object) As WeakReference
 Set gNewWeakReference = New WeakReference
-gNewWeakReference.initialise target
+gNewWeakReference.Initialise target
 End Function
 
 Public Function gOptionRightFromString(ByVal value As String) As OptionRights
@@ -555,7 +555,7 @@ Public Sub gSortObjects(data() As SortEntryStruct, _
      ' the temporary holding area and the temporary low
      ' value is less than the maximum number of array
      ' elements.
-     Do While (data(lTmpLow).key < vTempVal.key And lTmpLow < Hi)
+     Do While (data(lTmpLow).Key < vTempVal.Key And lTmpLow < Hi)
            lTmpLow = lTmpLow + 1
      Loop
       
@@ -564,7 +564,7 @@ Public Sub gSortObjects(data() As SortEntryStruct, _
      ' than the array data element and the temporary high
      ' value is greater than the minimum number of array
      ' elements.
-     Do While (vTempVal.key < data(lTmpHi).key And lTmpHi > Low)
+     Do While (vTempVal.Key < data(lTmpHi).Key And lTmpHi > Low)
            lTmpHi = lTmpHi - 1
      Loop
             
@@ -617,7 +617,7 @@ Case StopOrderTypeNone
 Case StopOrderTypeStop
     gStopOrderTypeToOrderType = OrderTypeStop
 Case StopOrderTypeStopLimit
-    gStopOrderTypeToOrderType = OrderTypeLimit
+    gStopOrderTypeToOrderType = OrderTypeStopLimit
 Case StopOrderTypeBid
     gStopOrderTypeToOrderType = OrderTypeLimit
 Case StopOrderTypeAsk
@@ -650,6 +650,21 @@ Case StopOrderTypeLast
 Case StopOrderTypeAuto
     gStopOrderTypeToString = "Auto"
 End Select
+End Function
+
+Public Function gStringArraysEqual( _
+                ar1() As String, _
+                ar2() As String) As Boolean
+Dim i As Long
+
+On Error Resume Next    ' in case one array has no members
+If UBound(ar1) <> UBound(ar2) Then Exit Function
+On Error GoTo 0
+
+For i = 0 To UBound(ar1)
+    If ar1(i) <> ar2(i) Then Exit Function
+Next
+gStringArraysEqual = True
 End Function
 
 '/**

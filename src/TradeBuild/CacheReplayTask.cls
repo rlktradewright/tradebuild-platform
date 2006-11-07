@@ -65,12 +65,12 @@ Private mSourceStudy As TradeBuildSP.IStudy
 Private mDiscriminator As Long
 Private mValueCache As TradeBuild.StudyValueCache
 
-Private mResolver As TradeBuildSP.IStudyValueResolver
-
-Private mStartValueNumber As Long
+Private mNextValueNumber As Long
 Private mValuesNotified As Long
 
 Private mValueName As String
+Private mValueNames() As String
+Private mNotifyName As String
 
 '================================================================================
 ' Class Event Handlers
@@ -82,6 +82,10 @@ Private mValueName As String
 
 Private Property Get IValueReplayTask_discriminator() As Long
 IValueReplayTask_discriminator = mDiscriminator
+End Property
+
+Private Property Get IValueReplayTask_notifyName() As String
+IValueReplayTask_notifyName = mNotifyName
 End Property
 
 Private Property Get IValueReplayTask_sourceStudy() As TradeBuildSP.IStudy
@@ -96,12 +100,15 @@ Private Property Get IValueReplayTask_ValueName() As String
 IValueReplayTask_ValueName = mValueName
 End Property
 
+Private Property Get IValueReplayTask_valueNames() As String()
+IValueReplayTask_valueNames = mValueNames
+End Property
+
 '================================================================================
 ' Task Interface Members
 '================================================================================
 
 Private Sub Task_run()
-Dim i As Long
 Dim ev As TradeBuildSP.StudyValueEvent
 Dim valueEntry As StudyValueStruct
 
@@ -111,38 +118,29 @@ If mValueCache.Count = 0 Then
     Exit Sub
 End If
 
-For i = (mStartValueNumber + mValuesNotified) To _
-        (mStartValueNumber + mValuesNotified + 19)
+valueEntry = mValueCache.getStudyValue(mNextValueNumber)
+If Not IsEmpty(valueEntry.value) Then
+    Set ev.source = mSourceStudy
+    ev.timestamp = valueEntry.timestamp
+    ev.barNumber = valueEntry.barNumber
+    ev.value = valueEntry.value
     
-    valueEntry = mValueCache.getStudyValue(i)
-    If Not IsEmpty(valueEntry.value) Then
-        Set ev.source = mSourceStudy
-        ev.timestamp = valueEntry.timestamp
-        ev.barNumber = valueEntry.barNumber
-        ev.ValueName = mValueName
-        If mResolver Is Nothing Then
-            ev.value = valueEntry.value
-        Else
-            Dim sv As TradeBuildSP.StudyValue
-            sv = valueEntry.value
-            ev.value = mResolver.resolveValue(sv, mValueName)
-        End If
-        
-        If mTargetIsStudy Then
-            mStudyToNotify.notify ev
-        Else
-            mTargetListener.notify ev
-        End If
-        
+    If mTargetIsStudy Then
+        ev.valueName = mNotifyName
+        mStudyToNotify.notify ev
+    Else
+        ev.valueName = mValueName
+        mTargetListener.notify ev
     End If
     
-    mValuesNotified = mValuesNotified + 1
-    If i = mValueCache.Count Then
-        mTaskContext.finish
-        Set mTaskContext = Nothing
-        Exit For
-    End If
-Next
+End If
+
+mNextValueNumber = mNextValueNumber + 1
+mValuesNotified = mValuesNotified + 1
+If mNextValueNumber = mValueCache.Count Then
+    mTaskContext.finish
+    Set mTaskContext = Nothing
+End If
 
 End Sub
 
@@ -166,20 +164,18 @@ Public Property Get target() As Object
 Set target = mTarget
 End Property
 
-Public Property Get ValueName() As String
-ValueName = mValueName
+Public Property Get valueName() As String
+valueName = mValueName
 End Property
 
 '================================================================================
 ' Methods
 '================================================================================
 
-Friend Sub initialise( _
+Friend Sub Initialise( _
                 ByVal valueCache As StudyValueCache, _
                 ByVal target As Object, _
                 ByVal sourceStudy As TradeBuildSP.IStudy, _
-                ByVal ValueName As String, _
-                ByVal resolver As TradeBuildSP.IStudyValueResolver, _
                 ByVal numUnderlyingValuesToUse As Long, _
                 ByVal discriminator As Long)
 Dim numValuesToNotify As Long
@@ -187,14 +183,14 @@ Dim numValuesToNotify As Long
 Set mValueCache = valueCache
 Set mTarget = target
 Set mSourceStudy = sourceStudy
-Set mResolver = resolver
-mValueName = ValueName
+mValueName = valueCache.valueName
 mDiscriminator = discriminator
 
 If TypeOf target Is TradeBuildSP.IStudy Then
     mTargetIsStudy = True
     Set mTargetStudy = target
     Set mStudyToNotify = mTargetStudy.baseStudy
+    mNotifyName = mTargetStudy.studyDefinition.studyInputDefinitions.Item(1).name
     If numUnderlyingValuesToUse < 0 Then
         ' just replay the number of values needed by the study
         numValuesToNotify = mTargetStudy.numberOfBarsRequired
@@ -209,7 +205,7 @@ Else
 End If
 If numValuesToNotify > mValueCache.Count Then numValuesToNotify = mValueCache.Count
 
-mStartValueNumber = mValueCache.Count - numValuesToNotify + 1
+mNextValueNumber = mValueCache.Count - numValuesToNotify + 1
 
 End Sub
 

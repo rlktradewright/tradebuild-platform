@@ -3,7 +3,7 @@ BEGIN
   MultiUse = -1  'True
   Persistable = 0  'NotPersistable
   DataBindingBehavior = 0  'vbNone
-  DataSourceBehavior  = 0  'vbNone
+  DataSourceBehavior  = 1  'vbDataSource
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
 Attribute VB_Name = "Parameters"
@@ -24,6 +24,7 @@ Option Explicit
 '================================================================================
 
 Implements TradeBuildSP.IParameters
+Implements OLEDBSimpleProvider
 
 '================================================================================
 ' Events
@@ -49,13 +50,21 @@ Event Dirty()
 
 Private WithEvents mParameters As Parameters2.parameters
 Attribute mParameters.VB_VarHelpID = -1
+Private mOLEDB As OLEDBSimpleProvider
 
 '================================================================================
 ' Class Event Handlers
 '================================================================================
 
+Private Sub Class_GetDataMember(DataMember As String, Data As Object)
+Dim da As New DataAdapter
+Set da.Object = mParameters
+Set Data = da
+End Sub
+
 Private Sub Class_Initialize()
 Set mParameters = New Parameters2.parameters
+Set mOLEDB = mParameters
 End Sub
 
 '================================================================================
@@ -108,6 +117,86 @@ Private Sub IParameters_sortByName()
 sortByName
 End Sub
 
+'================================================================================
+' OLEDBSimpleProvider Interface Members
+'================================================================================
+
+Private Sub OLEDBSimpleProvider_addOLEDBSimpleProviderListener( _
+                ByVal pospIListener As MSDAOSP.OLEDBSimpleProviderListener)
+mOLEDB.addOLEDBSimpleProviderListener pospIListener
+End Sub
+
+Private Function OLEDBSimpleProvider_deleteRows( _
+                ByVal iRow As Long, _
+                ByVal cRows As Long) As Long
+OLEDBSimpleProvider_deleteRows = mOLEDB.deleteRows(iRow, cRows)
+End Function
+
+Private Function OLEDBSimpleProvider_find( _
+                ByVal iRowStart As Long, _
+                ByVal iColumn As Long, _
+                ByVal val As Variant, _
+                ByVal findFlags As MSDAOSP.OSPFIND, _
+                ByVal compType As MSDAOSP.OSPCOMP) As Long
+OLEDBSimpleProvider_find = mOLEDB.find(iRowStart, iColumn, val, findFlags, compType)
+End Function
+
+Private Function OLEDBSimpleProvider_getColumnCount() As Long
+OLEDBSimpleProvider_getColumnCount = mOLEDB.getColumnCount
+End Function
+
+Private Function OLEDBSimpleProvider_getEstimatedRows() As Long
+OLEDBSimpleProvider_getEstimatedRows = mOLEDB.getEstimatedRows
+End Function
+
+Private Function OLEDBSimpleProvider_getLocale() As String
+OLEDBSimpleProvider_getLocale = mOLEDB.getLocale
+End Function
+
+Private Function OLEDBSimpleProvider_getRowCount() As Long
+OLEDBSimpleProvider_getRowCount = mOLEDB.getRowCount
+End Function
+
+Private Function OLEDBSimpleProvider_getRWStatus( _
+                ByVal iRow As Long, _
+                ByVal iColumn As Long) As MSDAOSP.OSPRW
+OLEDBSimpleProvider_getRWStatus = mOLEDB.getRWStatus(iRow, iColumn)
+End Function
+
+Private Function OLEDBSimpleProvider_getVariant( _
+                ByVal iRow As Long, _
+                ByVal iColumn As Long, _
+                ByVal format As MSDAOSP.OSPFORMAT) As Variant
+OLEDBSimpleProvider_getVariant = mOLEDB.getVariant(iRow, iColumn, format)
+End Function
+
+Private Function OLEDBSimpleProvider_insertRows( _
+                ByVal iRow As Long, _
+                ByVal cRows As Long) As Long
+OLEDBSimpleProvider_insertRows = mOLEDB.insertRows(iRow, cRows)
+End Function
+
+Private Function OLEDBSimpleProvider_isAsync() As Long
+OLEDBSimpleProvider_isAsync = mOLEDB.isAsync
+End Function
+
+Private Sub OLEDBSimpleProvider_removeOLEDBSimpleProviderListener( _
+                ByVal pospIListener As MSDAOSP.OLEDBSimpleProviderListener)
+mOLEDB.removeOLEDBSimpleProviderListener pospIListener
+End Sub
+
+Private Sub OLEDBSimpleProvider_setVariant( _
+                ByVal iRow As Long, _
+                ByVal iColumn As Long, _
+                ByVal format As MSDAOSP.OSPFORMAT, _
+                ByVal Var As Variant)
+mOLEDB.setVariant iRow, iColumn, format, Var
+End Sub
+
+
+Private Sub OLEDBSimpleProvider_stopTransfer()
+mOLEDB.stopTransfer
+End Sub
 '================================================================================
 ' mParameters Event Handlers
 '================================================================================
