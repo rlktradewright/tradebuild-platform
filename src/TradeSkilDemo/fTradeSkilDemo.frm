@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{D1E1CD3C-084A-4A4F-B2D9-56CE3669B04D}#4.0#0"; "TradeBuildUI.ocx"
+Object = "{D1E1CD3C-084A-4A4F-B2D9-56CE3669B04D}#12.0#0"; "TradeBuildUI.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeSkil Demo Edition"
@@ -2210,38 +2210,46 @@ End If
 End Sub
 
 Private Sub setupServiceProviders()
+Dim progId As String
 Dim realtimeServiceProvider As Object
 Dim histDataServiceProvider As Object
 Dim liveOrderServiceProvider As Object
 Dim TWSContractServiceProvider As Object
 
+On Error GoTo err
 
 If UseTickDBSPCheck = vbChecked Then
     ' enable historical tick data storage/retrieval to/from TradeBuild's database
-    mTradeBuildAPI.ServiceProviders.Add CreateObject("TBInfoBase.TickfileServiceProvider"), LogLevelLow
+    progId = "TBInfoBase.TickfileServiceProvider"
+    mTradeBuildAPI.ServiceProviders.Add CreateObject(progId), LogLevelLow
 End If
 
 If UseTickfileSPCheck = vbChecked Then
     ' enable historical tick data storage and retrieval to/from various file formats
-    mTradeBuildAPI.ServiceProviders.Add CreateObject("TickfileSP.TickfileServiceProvider"), LogLevelLow
+    progId = "TickfileSP.TickfileServiceProvider"
+    mTradeBuildAPI.ServiceProviders.Add CreateObject(progId), LogLevelLow
 End If
 
 If UseQTTickfileSPCheck = vbChecked Then
     ' enable historical tick data retrieval from QuoteTracker
-    mTradeBuildAPI.ServiceProviders.Add CreateObject("QTSP.QTTickfileServiceProvider"), LogLevelLow
+    progId = "QTSP.QTTickfileServiceProvider"
+    mTradeBuildAPI.ServiceProviders.Add CreateObject(progId), LogLevelLow
 End If
 
 If CustomStudiesSpText <> "" Then
     ' enable the use of custom technical indicators
+    progId = CustomStudiesSpText
     mTradeBuildAPI.ServiceProviders.Add CreateObject(CustomStudiesSpText), LogLevelLow, "Custom"
 End If
 
 ' enable the use of TradeBuild's built-in technical indicators
-mTradeBuildAPI.ServiceProviders.Add CreateObject("BuiltInStudiesSP.StudyServiceProvider"), LogLevelLow, "Built in"
+progId = "BuiltInStudiesSP.StudyServiceProvider"
+mTradeBuildAPI.ServiceProviders.Add CreateObject(progId), LogLevelLow, "Built in"
 
 If RealtimeDataCombo.Text = "TWS" Then
     ' set up TWS realtime data service provider
-    Set realtimeServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject("IBTWSSP.RealtimeDataServiceProvider"), LogLevelLow)
+    progId = "IBTWSSP.RealtimeDataServiceProvider"
+    Set realtimeServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
     realtimeServiceProvider.Server = DataServerText
     realtimeServiceProvider.Port = DataPortText
     realtimeServiceProvider.clientID = DataClientIdText
@@ -2250,7 +2258,8 @@ If RealtimeDataCombo.Text = "TWS" Then
 
 ElseIf RealtimeDataCombo.Text = "QuoteTracker" Then
     ' set up QuoteTrackerT realtime data service provider
-    Set realtimeServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject("QTSP.QTRealtimeDataServiceProvider"), LogLevelLow)
+    progId = "QTSP.QTRealtimeDataServiceProvider"
+    Set realtimeServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
     realtimeServiceProvider.QTServer = DataServerText
     realtimeServiceProvider.QTPort = DataPortText
     realtimeServiceProvider.password = DataPasswordText
@@ -2259,9 +2268,11 @@ ElseIf RealtimeDataCombo.Text = "QuoteTracker" Then
 End If
 
 If ContractDataCombo.Text = "TradeBuild" Then
-    mTradeBuildAPI.ServiceProviders.Add CreateObject("TBInfoBase.ContractInfoServiceProvider"), LogLevelLow
+    progId = "TBInfoBase.ContractInfoServiceProvider"
+    mTradeBuildAPI.ServiceProviders.Add CreateObject(progId), LogLevelLow
 ElseIf ContractDataCombo.Text = "TWS" Then
-    Set TWSContractServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject("IBTWSSP.ContractInfoServiceProvider"), LogLevelLow)
+    progId = "IBTWSSP.ContractInfoServiceProvider"
+    Set TWSContractServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
     TWSContractServiceProvider.Server = ContractDataServerText
     TWSContractServiceProvider.Port = ContractDataPortText
     TWSContractServiceProvider.clientID = ContractDataClientIdText
@@ -2273,9 +2284,11 @@ End If
 ' able to start tickers for instruments that aren't defined in the primary contracts
 ' data source
 If SecContractDataCombo.Text = "TradeBuild" Then
-    mTradeBuildAPI.ServiceProviders.Add CreateObject("TBInfoBase.ContractInfoServiceProvider"), LogLevelLow
+    progId = "TBInfoBase.ContractInfoServiceProvider"
+    mTradeBuildAPI.ServiceProviders.Add CreateObject(progId), LogLevelLow
 ElseIf SecContractDataCombo.Text = "TWS" Then
-    Set TWSContractServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject("IBTWSSP.ContractInfoServiceProvider"), LogLevelLow)
+    progId = "IBTWSSP.ContractInfoServiceProvider"
+    Set TWSContractServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
     TWSContractServiceProvider.Server = SecContractDataServerText
     TWSContractServiceProvider.Port = SecContractDataPortText
     TWSContractServiceProvider.clientID = SecContractDataClientIdText
@@ -2284,16 +2297,19 @@ ElseIf SecContractDataCombo.Text = "TWS" Then
 End If
 
 If HistDataCombo.Text = "TradeBuild" Then
-    Set histDataServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject("TBInfoBase.HistDataServiceProvider"), LogLevelLow)
+    progId = "TBInfoBase.HistDataServiceProvider"
+    Set histDataServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
 ElseIf HistDataCombo.Text = "TWS" Then
-    Set histDataServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject("IBTWSSP.HistDataServiceProvider"), LogLevelLow)
+    progId = "IBTWSSP.HistDataServiceProvider"
+    Set histDataServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
     histDataServiceProvider.Server = HistDataServerText
     histDataServiceProvider.Port = HistDataPortText
     histDataServiceProvider.clientID = HistDataClientIdText
     histDataServiceProvider.providerKey = "IB"
     histDataServiceProvider.keepConnection = True
 ElseIf HistDataCombo.Text = "QuoteTracker" Then
-    Set histDataServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject("QTSP.QTHistDataServiceProvider"), LogLevelLow)
+    progId = "QTSP.QTHistDataServiceProvider"
+    Set histDataServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
     histDataServiceProvider.QTServer = HistDataServerText
     histDataServiceProvider.QTPort = HistDataPortText
     histDataServiceProvider.password = HistDataPasswordText
@@ -2303,7 +2319,8 @@ End If
 
 If BrokerCombo.Text = "IB via TWS" Then
     ' set up TWS live order submission service provider
-    Set liveOrderServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject("IBTWSSP.OrderSubmissionServiceProvider"), LogLevelLow)
+    progId = "IBTWSSP.OrderSubmissionServiceProvider"
+    Set liveOrderServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
     liveOrderServiceProvider.Server = BrokerServerText
     liveOrderServiceProvider.Port = BrokerPortText
     liveOrderServiceProvider.clientID = BrokerClientIdText
@@ -2314,6 +2331,10 @@ Else
     mSimulateOrders = True
 End If
 
+Exit Sub
+
+err:
+MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
 End Sub
 
 Private Sub showMarketDepthForm(ByVal pTicker As Ticker)
