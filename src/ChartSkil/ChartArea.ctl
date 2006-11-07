@@ -638,6 +638,9 @@ Private mAllowVerticalMouseScrolling As Boolean
 
 Private mShowHorizontalScrollBar As Boolean
 
+Private mRegionHeightReductionFactor As Double
+
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -898,7 +901,7 @@ Private Sub RegionDividerPicture_MouseDown( _
                             Shift As Integer, _
                             x As Single, _
                             y As Single)
-If index = mNumRegionsInUse Then Exit Sub
+If index = mRegionsIndex + 1 Then Exit Sub
 If Button = vbLeftButton Then mLeftDragging = True
 mLeftDragStartPosnX = Int(x)
 mLeftDragStartPosnY = y
@@ -915,32 +918,48 @@ Dim vertChange As Long
 Dim currRegion As Long
 Dim newHeight As Long
 Dim prevPercentHeight As Double
+Dim i As Long
 
-If index = mNumRegionsInUse Then Exit Sub
-If Not mLeftDragging = True Then Exit Sub
+If index = mRegionsIndex + 1 Then Exit Sub
+If Not mLeftDragging Then Exit Sub
+If y = mLeftDragStartPosnY Then Exit Sub
 
-currRegion = index  ' we resize the region below the divider
+' we resize the next region below the divider that has not
+' been removed
+For i = index To mRegionsIndex
+    If Not mRegions(i).region Is Nothing Then
+        currRegion = i
+        Exit For
+    End If
+Next
+
 vertChange = mLeftDragStartPosnY - y
 newHeight = mRegions(currRegion).actualHeight + vertChange
+If newHeight < 0 Then newHeight = 0
 
 ' the region table indicates the requested percentage used by each region
 ' and the actual height allocation. We need to work out the new percentage
 ' for the region to be resized.
 
-prevPercentHeight = mRegions(currRegion).region.percentheight
+'prevPercentHeight = mRegions(currRegion).region.percentheight
+
+prevPercentHeight = mRegions(currRegion).percentheight
 If Not mRegions(currRegion).useAvailableSpace Then
-    mRegions(currRegion).region.percentheight = mRegions(currRegion).percentheight * newHeight / mRegions(currRegion).actualHeight
+    'mRegions(currRegion).region.percentheight = prevPercentHeight * newHeight / mRegions(currRegion).actualHeight
+    mRegions(currRegion).percentheight = 100 * newHeight / calcAvailableHeight
+    'mRegions(currRegion).percentheight = prevPercentHeight * newHeight / mRegions(currRegion).actualHeight
 Else
     ' this is a 'use available space' region that's being resized. Now change
     ' it to use a specific percentage
     mRegions(currRegion).region.percentheight = 100 * newHeight / calcAvailableHeight
+    mRegions(currRegion).percentheight = mRegions(currRegion).region.percentheight
 End If
 
 If sizeRegions Then
     paintAll
 Else
     ' the regions couldn't be resized so reset the region's percent height
-    mRegions(currRegion).region.percentheight = prevPercentHeight
+    mRegions(currRegion).percentheight = prevPercentHeight
 End If
 End Sub
 
@@ -950,7 +969,7 @@ Private Sub RegionDividerPicture_MouseUp( _
                             Shift As Integer, _
                             x As Single, _
                             y As Single)
-If index = mNumRegionsInUse Then Exit Sub
+If index = mRegionsIndex + 1 Then Exit Sub
 If Button = vbLeftButton Then mLeftDragging = False
 mUserResizingRegions = False
 End Sub
@@ -1353,7 +1372,7 @@ ChartRegionPicture(regionNumber).visible = True
 Load YAxisPicture(regionNumber)
 YAxisPicture(regionNumber).align = vbAlignNone
 YAxisPicture(regionNumber).left = ChartRegionPicture(regionNumber).width
-YAxisPicture(regionNumber).width = UserControl.ScaleWidth - YAxisPicture(YAxisPicture.ubound).left
+YAxisPicture(regionNumber).width = UserControl.ScaleWidth - YAxisPicture(YAxisPicture.UBound).left
 YAxisPicture(regionNumber).visible = True
 
 addChartRegion.surface = ChartRegionPicture(regionNumber)
@@ -1383,8 +1402,11 @@ End If
 
 mRegionsIndex = mRegionsIndex + 1
 Set mRegions(mRegionsIndex).region = addChartRegion
-mRegions(mRegionsIndex).percentheight = percentheight
-mRegions(mRegionsIndex).useAvailableSpace = (percentheight = 100#)
+If percentheight <> 100 Then
+    mRegions(mRegionsIndex).percentheight = mRegionHeightReductionFactor * percentheight
+Else
+    mRegions(mRegionsIndex).useAvailableSpace = True
+End If
 
 Load RegionDividerPicture(regionNumber)
 RegionDividerPicture(regionNumber).visible = True
@@ -1456,6 +1478,7 @@ For i = 0 To mRegionsIndex
     If region Is mRegions(i).region Then
         region.clearRegion
         Set mRegions(i).region = Nothing
+        RegionDividerPicture(i + 1).visible = False
         Exit For
     End If
 Next
@@ -1583,16 +1606,17 @@ mPrevHeight = UserControl.height
 
 ReDim mRegions(100) As RegionTableEntry
 mRegionsIndex = -1
+mRegionHeightReductionFactor = 1
 
-For i = 1 To ChartRegionPicture.ubound
+For i = 1 To ChartRegionPicture.UBound
     Unload ChartRegionPicture(i)
 Next
 
-For i = 1 To YAxisPicture.ubound
+For i = 1 To YAxisPicture.UBound
     Unload YAxisPicture(i)
 Next
 
-For i = 1 To RegionDividerPicture.ubound
+For i = 1 To RegionDividerPicture.UBound
     Unload RegionDividerPicture(i)
 Next
 
@@ -1669,12 +1693,12 @@ If newScaleWidth = mScaleWidth Then Exit Sub
 
 mScaleWidth = newScaleWidth
 
-For i = 0 To ChartRegionPicture.ubound
+For i = 0 To ChartRegionPicture.UBound
     YAxisPicture(i).left = UserControl.width - YAxisPicture(i).width
     ChartRegionPicture(i).width = YAxisPicture(i).left
 Next
 
-For i = 0 To RegionDividerPicture.ubound
+For i = 0 To RegionDividerPicture.UBound
     RegionDividerPicture(i).width = UserControl.width
 Next
 
@@ -1715,7 +1739,6 @@ Dim i As Long
 Dim top As Long
 Dim aRegion As ChartRegion
 Dim numAvailableSpaceRegions As Long
-Dim heightReductionFactor As Double
 Dim totalMinimumPercents As Double
 Dim nonFixedAvailableSpacePercent As Double
 Dim availableSpacePercent As Double
@@ -1728,7 +1751,7 @@ nonFixedAvailableSpacePercent = 100
 For i = 0 To mRegionsIndex
     If Not mRegions(i).region Is Nothing Then
         Set aRegion = mRegions(i).region
-        mRegions(i).percentheight = aRegion.percentheight
+'        mRegions(i).percentheight = aRegion.percentheight
         If Not mRegions(i).useAvailableSpace Then
             availableSpacePercent = availableSpacePercent - mRegions(i).percentheight
             nonFixedAvailableSpacePercent = nonFixedAvailableSpacePercent - mRegions(i).percentheight
@@ -1746,26 +1769,26 @@ If availableSpacePercent < 0 And mUserResizingRegions Then
     Exit Function
 End If
 
-heightReductionFactor = 1
+mRegionHeightReductionFactor = 1
 Do While availableSpacePercent < 0
     availableSpacePercent = 100
     nonFixedAvailableSpacePercent = 100
-    heightReductionFactor = heightReductionFactor * 0.66666667
+    mRegionHeightReductionFactor = mRegionHeightReductionFactor * 0.66666667
     For i = 0 To mRegionsIndex
         If Not mRegions(i).region Is Nothing Then
             Set aRegion = mRegions(i).region
             If Not mRegions(i).useAvailableSpace Then
                 If aRegion.minimumPercentHeight <> 0 Then
-                    If aRegion.percentheight * heightReductionFactor >= _
+                    If mRegions(i).percentheight * mRegionHeightReductionFactor >= _
                         aRegion.minimumPercentHeight _
                     Then
-                        mRegions(i).percentheight = aRegion.percentheight * heightReductionFactor
+                        mRegions(i).percentheight = mRegions(i).percentheight * mRegionHeightReductionFactor
                     Else
                         mRegions(i).percentheight = aRegion.minimumPercentHeight
-                        totalMinimumPercents = totalMinimumPercents + aRegion.minimumPercentHeight
                     End If
+                    totalMinimumPercents = totalMinimumPercents + aRegion.minimumPercentHeight
                 Else
-                    mRegions(i).percentheight = aRegion.percentheight * heightReductionFactor
+                    mRegions(i).percentheight = mRegions(i).percentheight * mRegionHeightReductionFactor
                 End If
                 availableSpacePercent = availableSpacePercent - mRegions(i).percentheight
                 nonFixedAvailableSpacePercent = nonFixedAvailableSpacePercent - mRegions(i).percentheight
@@ -1841,9 +1864,10 @@ For i = 0 To mRegionsIndex
             YAxisPicture(aRegion.regionNumber).height = mRegions(i).actualHeight
             ChartRegionPicture(aRegion.regionNumber).top = top
             YAxisPicture(aRegion.regionNumber).top = top
+            aRegion.resizedY
         End If
         top = top + mRegions(i).actualHeight
-        aRegion.resizedY
+        'aRegion.resizedY
         numRegionsSized = numRegionsSized + 1
         If Not suppressDrawing Then
             RegionDividerPicture(aRegion.regionNumber).top = top
