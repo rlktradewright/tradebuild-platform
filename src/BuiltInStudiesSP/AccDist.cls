@@ -60,6 +60,7 @@ Private mStudyServiceConsumer As IStudyServiceConsumer
 Private mCommonServiceConsumer As ICommonServiceConsumer
 
 Private mAccDist As Double
+Private mAccDistAtBarStart As Double
 Private mAccDistCache As TradeBuildSP.IStudyValueCache
 
 Private mBars As StudiesSupport.Bars
@@ -101,6 +102,7 @@ Dim evOut As StudyValueEvent
 
 If mStudyFoundation.isNewBar Then
     mCurrentBarVolume = 0
+    mAccDistAtBarStart = mAccDist
 End If
 
 If ev.valueName = AccDistInputVolume Then
@@ -177,7 +179,7 @@ End Property
 
 Private Sub calcAccDist()
 If mCurrentBar.highValue <> mCurrentBar.lowValue Then
-    mAccDist = mAccDist + _
+    mAccDist = mAccDistAtBarStart + _
             mCurrentBarVolume * _
             (mCurrentBar.closeValue - mCurrentBar.openValue) / _
             (mCurrentBar.highValue - mCurrentBar.lowValue)

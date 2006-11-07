@@ -3,7 +3,7 @@ Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{DBED8E43-5960-49DE-B9A7-BBC22DB93A26}#12.1#0"; "ChartSkil.ocx"
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
-Object = "{D1E1CD3C-084A-4A4F-B2D9-56CE3669B04D}#10.0#0"; "TradeBuildUI.ocx"
+Object = "{D1E1CD3C-084A-4A4F-B2D9-56CE3669B04D}#12.0#0"; "TradeBuildUI.ocx"
 Begin VB.Form StudyTestForm 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeBuild Study Test Harness"
@@ -729,27 +729,27 @@ mTB.ServiceProviders.Add Me
 Set mBaseStudyDefinition = New TradeBuild.StudyDefinition
 
 mBaseStudyDefinition.Description = "Formats the price stream into Open/High/Low/Close bars of an appropriate length."
-mBaseStudyDefinition.name = "Bars"
+mBaseStudyDefinition.Name = "Bars"
 mBaseStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionPrice
 
 Set paramDef = mBaseStudyDefinition.StudyParameterDefinitions.Add("Period Length")
-paramDef.name = "Period Length"
+paramDef.Name = "Period Length"
 paramDef.Description = "Length of one bar"
 paramDef.parameterType = StudyParameterTypes.ParameterTypeInteger
 
 Set paramDef = mBaseStudyDefinition.StudyParameterDefinitions.Add("Period Units")
-paramDef.name = "Period Units"
+paramDef.Name = "Period Units"
 paramDef.Description = "The units in which Period length is measured."
 paramDef.parameterType = StudyParameterTypes.ParameterTypeString
 
 Set valueDef = mBaseStudyDefinition.StudyValueDefinitions.Add(BarsValueClose)
-valueDef.name = BarsValueClose
+valueDef.Name = BarsValueClose
 valueDef.Description = "The latest underlying value"
 valueDef.isDefault = True
 valueDef.valueType = StudyValueTypes.ValueTypeDouble
 
 Set valueDef = mBaseStudyDefinition.StudyValueDefinitions.Add(BarsValueVolume)
-valueDef.name = BarsValueVolume
+valueDef.Name = BarsValueVolume
 valueDef.Description = "The cumulative size associated with the latest underlying value (where relevant)"
 valueDef.valueType = StudyValueTypes.ValueTypeInteger
 
@@ -803,7 +803,7 @@ Private Property Let ICommonServiceProvider_LogLevel(ByVal RHS As TradeBuildSP.L
 End Property
 
 Private Property Get ICommonServiceProvider_name() As String
-ICommonServiceProvider_name = name
+ICommonServiceProvider_name = Name
 End Property
 
 Private Property Let ICommonServiceProvider_name(ByVal RHS As String)
@@ -1400,6 +1400,7 @@ Dim ev As TradeBuildSP.StudyValueEvent
 Dim inputDefs As TradeBuildSP.IStudyInputDefinitions
 Dim inputValueNames() As String
 Dim valueName As String
+Dim volumeThisBar As Long
 
 On Error GoTo err
 Screen.MousePointer = MousePointerConstants.vbArrowHourglass
@@ -1448,32 +1449,76 @@ For i = 1 To TestDataGrid.Rows
     If TestDataGrid.Text = "" Then Exit For
     ev.Timestamp = CDate(TestDataGrid.Text)
     ev.barNumber = i
-
+    
+    If TestDataGrid.TextMatrix(i, TestDataGridColumns.volume) <> "" Then
+        volumeThisBar = CLng(TestDataGrid.TextMatrix(i, TestDataGridColumns.volume))
+    Else
+        volumeThisBar = 0
+    End If
+    
     For j = 0 To inputDefs.Count - 1
         valueName = inputValueNames(j)
-        
-        ev.valueName = inputDefs.Item(j + 1).name
+        ev.valueName = inputDefs.Item(j + 1).Name
         
         If valueName = BarsValueClose Then
             when = "notifying open value for bar " & i
             ev.Value = CDbl(TestDataGrid.TextMatrix(i, TestDataGridColumns.openValue))
             mStudy.baseStudy.notify ev
+        ElseIf valueName = BarsValueVolume Then
+            If volumeThisBar <> 0 Then
+                when = "notifying volume at open for bar " & i
+                ev.Value = Int(volumeThisBar / 4)
+                mStudy.baseStudy.notify ev
+            End If
+        End If
+    Next
             
+    For j = 0 To inputDefs.Count - 1
+        valueName = inputValueNames(j)
+        ev.valueName = inputDefs.Item(j + 1).Name
+        
+        If valueName = BarsValueClose Then
             when = "notifying high value for bar " & i
             ev.Value = CDbl(TestDataGrid.TextMatrix(i, TestDataGridColumns.highValue))
             mStudy.baseStudy.notify ev
+        ElseIf valueName = BarsValueVolume Then
+            If volumeThisBar <> 0 Then
+                when = "notifying volume at high for bar " & i
+                ev.Value = 2 * Int(volumeThisBar / 4)
+                mStudy.baseStudy.notify ev
+            End If
+        End If
+    Next
             
+    For j = 0 To inputDefs.Count - 1
+        valueName = inputValueNames(j)
+        ev.valueName = inputDefs.Item(j + 1).Name
+        
+        If valueName = BarsValueClose Then
             when = "notifying low value for bar " & i
             ev.Value = CDbl(TestDataGrid.TextMatrix(i, TestDataGridColumns.lowValue))
             mStudy.baseStudy.notify ev
+        ElseIf valueName = BarsValueVolume Then
+            If volumeThisBar <> 0 Then
+                when = "notifying volume at low for bar " & i
+                ev.Value = 3 * Int(volumeThisBar / 4)
+                mStudy.baseStudy.notify ev
+            End If
+        End If
+    Next
             
+    For j = 0 To inputDefs.Count - 1
+        valueName = inputValueNames(j)
+        ev.valueName = inputDefs.Item(j + 1).Name
+        
+        If valueName = BarsValueClose Then
             when = "notifying close value for bar " & i
             ev.Value = CDbl(TestDataGrid.TextMatrix(i, TestDataGridColumns.closeValue))
             mStudy.baseStudy.notify ev
         ElseIf valueName = BarsValueVolume Then
-            If TestDataGrid.TextMatrix(i, TestDataGridColumns.volume) <> "" Then
-                when = "notifying volume for bar " & i
-                ev.Value = CLng(TestDataGrid.TextMatrix(i, TestDataGridColumns.volume))
+            If volumeThisBar <> 0 Then
+                when = "notifying volume at low for bar " & i
+                ev.Value = volumeThisBar
                 mStudy.baseStudy.notify ev
             End If
         End If
@@ -1519,30 +1564,30 @@ Dim valueDef As StudyValueDefinition
 Set getBaseStudyDefinition = New StudyDefinition
 
 getBaseStudyDefinition.Description = "Formats the price stream into Open/High/Low/Close bars of an appropriate length."
-getBaseStudyDefinition.name = "Bars"
+getBaseStudyDefinition.Name = "Bars"
 getBaseStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionPrice
 
 Set paramDef = getBaseStudyDefinition.StudyParameterDefinitions.Add(ParamNameBarLength)
-paramDef.name = ParamNameBarLength
+paramDef.Name = ParamNameBarLength
 paramDef.Description = "Length of one bar"
 paramDef.parameterType = StudyParameterTypes.ParameterTypeInteger
 getBaseStudyDefinition.StudyParameterDefinitions.Add paramDef
 
 Set paramDef = getBaseStudyDefinition.StudyParameterDefinitions.Add(ParamNameBarUnits)
-paramDef.name = ParamNameBarUnits
+paramDef.Name = ParamNameBarUnits
 paramDef.Description = "The units in which Period length is measured."
 paramDef.parameterType = StudyParameterTypes.ParameterTypeString
 getBaseStudyDefinition.StudyParameterDefinitions.Add paramDef
 
 Set valueDef = getBaseStudyDefinition.StudyValueDefinitions.Add(BarsValueClose)
-valueDef.name = BarsValueClose
+valueDef.Name = BarsValueClose
 valueDef.Description = "The latest underlying value"
 valueDef.isDefault = True
 valueDef.valueType = StudyValueTypes.ValueTypeDouble
 getBaseStudyDefinition.StudyValueDefinitions.Add valueDef
 
 Set valueDef = getBaseStudyDefinition.StudyValueDefinitions.Add(BarsValueVolume)
-valueDef.name = BarsValueVolume
+valueDef.Name = BarsValueVolume
 valueDef.Description = "The cumulative size associated with the latest underlying value (where relevant)"
 valueDef.valueType = StudyValueTypes.ValueTypeInteger
 getBaseStudyDefinition.StudyValueDefinitions.Add valueDef
@@ -1612,7 +1657,7 @@ TestDataGrid.Redraw = False
 
 Set mBaseStudyConfiguration = New TradeBuildUI.StudyConfiguration
 mBaseStudyConfiguration.chartRegionName = PriceRegionName
-mBaseStudyConfiguration.name = "Bars"
+mBaseStudyConfiguration.Name = "Bars"
 mBaseStudyConfiguration.StudyDefinition = mBaseStudyDefinition
 mBaseStudyConfiguration.studyId = mMyStudyId
 mBaseStudyConfiguration.instanceName = "Bars"
@@ -1772,7 +1817,7 @@ For i = 1 To mStudyConfiguration.StudyValueConfigurations.Count
         Set svd = mStudyDefinition.StudyValueDefinitions.Item(svc.valueName)
         setupTestDataGridColumn TestDataGridColumns.StudyValue1 + j, _
                                 TestDataGridColumnWidths.StudyValue1Width, _
-                                svd.name, _
+                                svd.Name, _
                                 IIf(svd.valueType = ValueTypeString, True, False), _
                                 IIf(svd.valueType = ValueTypeString, AlignmentSettings.flexAlignLeftCenter, AlignmentSettings.flexAlignRightCenter)
         j = j + 1
