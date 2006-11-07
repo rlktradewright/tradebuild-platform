@@ -86,6 +86,8 @@ If mStudyDefinition Is Nothing Then
     valueDef.Description = "The Relative Strength Index value"
     valueDef.isDefault = True
     valueDef.defaultRegion = DefaultRegionNone
+    valueDef.maximumValue = 100
+    valueDef.minimumValue = 0
     valueDef.valueType = ValueTypeDouble
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(RsiParamPeriods)
@@ -96,7 +98,7 @@ If mStudyDefinition Is Nothing Then
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(RsiParamMovingAverageType)
     paramDef.name = RsiParamMovingAverageType
     paramDef.Description = "The type of moving average used to smooth the RSI"
-    paramDef.parameterType = ParameterTypeInteger
+    paramDef.parameterType = ParameterTypeString
 
 End If
 

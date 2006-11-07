@@ -24,8 +24,6 @@ Option Explicit
 '================================================================================
 
 Implements TradeBuildSP.IStudy
-Implements TradeBuildSP.IStudyValueResolver
-Implements TradeBuildSP.ITaskCompletionListener
 
 '================================================================================
 ' Events
@@ -47,20 +45,12 @@ Implements TradeBuildSP.ITaskCompletionListener
 ' Member variables
 '================================================================================
 
+'-------this variable is required in all studies---------
+Private mStudyFoundation As StudyFoundation
+'--------------------------------------------------------
+
 Private mStudyServiceConsumer As IStudyServiceConsumer
 Private mCommonServiceConsumer As ICommonServiceConsumer
-
-Private mIdent As String
-
-Private mInputValueName As String
-Private mUnderlyingStudy As TradeBuildSP.IStudy
-
-Private mParams As IParameters
-Private mStudies As IStudies
-Private mListeners As IStudyValueListeners
-
-Private mBarnumber As Long
-Private mNewBar As Boolean
 
 Private mHigh As Double
 Private mPrevHigh As Double
@@ -98,92 +88,28 @@ Debug.Print "Swing study terminated"
 End Sub
 
 '================================================================================
-' XXXX Interface Members
+' Custom methods that must be implemented
 '================================================================================
 
-Private Function IStudy_addStudy( _
-                ByVal study As IStudy, _
-                ByVal ValueName As String, _
-                ByVal numUnderlyingValuesToUse As Long, _
-                Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
-
-
-Select Case UCase$(ValueName)
-Case UCase$(SwingValueSwingPoint)
-    Set IStudy_addStudy = mSwingCache.replayValuesWithResolver( _
-                                                study, _
-                                                Me, _
-                                                SwingValueSwingPoint, _
-                                                Me, _
-                                                numUnderlyingValuesToUse, _
-                                                TaskDiscriminators.TaskAddStudy, _
-                                                taskName, _
-                                                taskData)
-    IStudy_addStudy.addTaskCompletionListener Me
-End Select
-
-End Function
-
-Private Function IStudy_addStudyValueListener( _
-                ByVal listener As TradeBuildSP.IStudyValueListener, _
-                ByVal ValueName As String, _
-                ByVal numberOfValuesToReplay As Long, _
-                Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
-Select Case UCase$(ValueName)
-Case UCase$(SwingValueSwingPoint)
-    Set IStudy_addStudyValueListener = mSwingCache.replayValues(listener, _
-                                Me, _
-                                numberOfValuesToReplay, _
-                                TaskDiscriminators.TaskAddStudyValueListener, _
-                                taskName, _
-                                taskData)
-    IStudy_addStudyValueListener.addTaskCompletionListener Me
-End Select
-End Function
-
-Private Property Get IStudy_baseStudy() As IStudy
-Set IStudy_baseStudy = Me
-End Property
-
-Private Property Let IStudy_defaultParameters(ByVal RHS As TradeBuildSP.IParameters)
-GSwing.defaultParameters = RHS
-End Property
-
-Private Property Get IStudy_defaultParameters() As TradeBuildSP.IParameters
-Set IStudy_defaultParameters = GSwing.defaultParameters
-End Property
-
-Private Function IStudy_getStudyValue( _
-                ByVal ValueName As String, _
-                ByVal ref As Long, _
-                ByRef params() As Variant) As StudyValue
-Select Case UCase$(ValueName)
-Case UCase$(DefaultStudyValueName), UCase$(SwingValueSwingPoint)
-    IStudy_getStudyValue = Swing(ref)
-End Select
-
-End Function
-
-Private Property Get IStudy_id() As String
-IStudy_id = mIdent
-End Property
-
-Private Sub IStudy_initialise( _
+Private Sub customInitialise( _
+                ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
+                ByVal studyServiceConsumer As TradeBuildSP.IStudyServiceConsumer, _
                 ByVal id As String, _
                 ByVal parameters As TradeBuildSP.IParameters, _
                 ByVal numberOfValuesToCache As Long, _
-                ByVal inputValueName As String, _
+                ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As TradeBuildSP.IStudy)
-mIdent = id
-mInputValueName = inputValueName
-Set mUnderlyingStudy = underlyingStudy
-processParameters parameters
 
-Set mSwingCache = mCommonServiceConsumer.NewStudyValueCache(numberOfValuesToCache, SwingValueSwingPoint)
-Set mSwingHighCache = mCommonServiceConsumer.NewStudyValueCache(numberOfValuesToCache, SwingValueSwingHighPoint)
-Set mSwingLowCache = mCommonServiceConsumer.NewStudyValueCache(numberOfValuesToCache, SwingValueSwingLowPoint)
+mStudyFoundation.ReplayUsingStudyValues = True
+
+Set mCommonServiceConsumer = commonServiceConsumer
+Set mStudyServiceConsumer = studyServiceConsumer
+
+customProcessParameters parameters
+
+Set mSwingCache = mStudyFoundation.FindValueCache(SwingValueSwingPoint)
+Set mSwingHighCache = mStudyFoundation.FindValueCache(SwingValueSwingHighPoint)
+Set mSwingLowCache = mStudyFoundation.FindValueCache(SwingValueSwingLowPoint)
 
 mSwingHigh.value = DummyHigh
 mSwingLow.value = DummyLow
@@ -197,22 +123,8 @@ mTrend = TrendDirections.TrendUnknown
 
 End Sub
 
-Private Property Get IStudy_instanceName() As String
-IStudy_instanceName = SwingShortName & "(" & _
-                mInputValueName & "," & _
-                gParamsToString(mParams, GSwing.studyDefinition) & ")"
-End Property
-
-Private Property Get IStudy_instancePath() As String
-IStudy_instancePath = SwingShortName & "(" & _
-                mInputValueName & "," & _
-                gParamsToString(mParams, GSwing.studyDefinition) & ")." & _
-                mUnderlyingStudy.instancePath
-End Property
-
-Private Sub IStudy_Notify( _
+Private Sub customNotify( _
                 ev As TradeBuildSP.StudyValueEvent)
-Dim isNewBar As Boolean
 Static sPrevVal As Variant
 Dim prevSwingHigh As SwingPoint
 Dim prevSwingLow As SwingPoint
@@ -220,11 +132,7 @@ Dim evOut As StudyValueEvent
 
 If IsEmpty(ev.value) Then Exit Sub
 
-If ev.timestamp = "6/7/6 13:30" Then Stop
-
-isNewBar = newBar(ev.barnumber)
-
-If Not isNewBar Then
+If Not mStudyFoundation.isNewBar Then
     If ev.value = sPrevVal Then Exit Sub
     sPrevVal = ev.value
 End If
@@ -232,7 +140,7 @@ End If
 If mSwingHighCache.Count >= 1 Then prevSwingHigh = mSwingHighCache.getValue(0)
 If mSwingLowCache.Count >= 1 Then prevSwingLow = mSwingLowCache.getValue(0)
 
-If isNewBar Then
+If mStudyFoundation.isNewBar Then
     mPrevPrevLow = mPrevLow
     mPrevLow = mLow
     mLow = ev.value
@@ -242,9 +150,24 @@ If isNewBar Then
 
     mHighAfterLowPointExcl = mHighAfterLowPoint
     mLowAfterHighPointExcl = mLowAfterHighPoint
-
+    
+    If mStudyFoundation.localBarNumber = 1 Then
+        mSwingHigh.barnumber = ev.barnumber
+        mSwingHigh.timestamp = ev.timestamp
+        mSwingHigh.value = Empty
+        mSwingCache.addValue mSwingHigh, 1, ev.timestamp
+        mSwingHighCache.addValue mSwingHigh, 1, ev.timestamp
+        mSwingHigh.value = DummyHigh
+        
+        mSwingLow.barnumber = ev.barnumber
+        mSwingLow.timestamp = ev.timestamp
+        mSwingLow.value = Empty
+        mSwingLowCache.addValue mSwingLow, 1, ev.timestamp
+        mSwingLow.value = DummyLow
+    End If
+    
     If mSwingHigh.value <> DummyHigh Then
-        If mBarnumber - mSwingHigh.barnumber >= 3 And _
+        If mStudyFoundation.barnumber - mSwingHigh.barnumber >= 3 And _
             (mSwingHigh.value - mPrevHigh) >= mMinimumSwing _
         Then
             If Not IsEmpty(prevSwingHigh.value) Then
@@ -267,7 +190,6 @@ If isNewBar Then
                 End If
             End If
 
-            'mLowBeforeHighPoint.value = DummyLow
             mLowBeforeHighPoint = mLowAfterHighPoint
 
             mSwingHighCache.addValue mSwingHigh, mSwingHigh.barnumber, mSwingHigh.timestamp
@@ -277,9 +199,10 @@ If isNewBar Then
             evOut.barnumber = mSwingHigh.barnumber
             evOut.timestamp = mSwingHigh.timestamp
             evOut.value = mSwingHigh.value
-            evOut.ValueName = SwingValueSwingPoint
-            mStudies.notify evOut
-            mListeners.notify evOut
+            evOut.valueName = SwingValueSwingPoint
+            mStudyFoundation.notifyValue evOut
+            evOut.valueName = SwingValueSwingHighPoint
+            mStudyFoundation.notifyValue evOut
             
             prevSwingHigh = mSwingHigh
             mSwingHigh.value = DummyHigh
@@ -301,10 +224,10 @@ If isNewBar Then
                 mSwingLow.swingType = SwingUnknownLow
                 mSwingLow.implied = False
             End If
-    End If
+        End If
     End If
     If mSwingLow.value <> DummyLow Then
-        If mBarnumber - mSwingLow.barnumber >= 3 And _
+        If mStudyFoundation.barnumber - mSwingLow.barnumber >= 3 And _
             (mPrevLow - mSwingLow.value) >= mMinimumSwing _
         Then
             If Not IsEmpty(prevSwingLow.value) Then
@@ -327,7 +250,6 @@ If isNewBar Then
                 End If
             End If
 
-            'mHighBeforeLowPoint.value = DummyHigh
             mHighBeforeLowPoint = mHighAfterLowPoint
 
             mSwingLowCache.addValue mSwingLow, mSwingLow.barnumber, mSwingLow.timestamp
@@ -337,9 +259,10 @@ If isNewBar Then
             evOut.barnumber = mSwingLow.barnumber
             evOut.timestamp = mSwingLow.timestamp
             evOut.value = mSwingLow.value
-            evOut.ValueName = SwingValueSwingPoint
-            mStudies.notify evOut
-            mListeners.notify evOut
+            evOut.valueName = SwingValueSwingPoint
+            mStudyFoundation.notifyValue evOut
+            evOut.valueName = SwingValueSwingLowPoint
+            mStudyFoundation.notifyValue evOut
             
             prevSwingLow = mSwingLow
             mSwingLow.value = DummyLow
@@ -394,7 +317,7 @@ If (mSwingHigh.value = DummyHigh And _
     (mSwingHigh.value <> DummyHigh And ev.value >= mSwingHigh.value) _
 Then
     mSwingHigh.value = ev.value
-    mSwingHigh.barnumber = mBarnumber
+    mSwingHigh.barnumber = ev.barnumber
     mSwingHigh.timestamp = ev.timestamp
     
     If mLowBeforeHighPoint.value >= mLowAfterHighPoint.value Then
@@ -402,7 +325,7 @@ Then
     End If
     mLowAfterHighPoint.value = ev.value
     mLowAfterHighPoint.timestamp = ev.timestamp
-    mLowAfterHighPoint.barnumber = mBarnumber
+    mLowAfterHighPoint.barnumber = ev.barnumber
 End If
 
 If (mSwingLow.value = DummyLow And _
@@ -411,7 +334,7 @@ If (mSwingLow.value = DummyLow And _
     (mSwingLow.value <> DummyLow And ev.value <= mSwingLow.value) _
 Then
     mSwingLow.value = ev.value
-    mSwingLow.barnumber = mBarnumber
+    mSwingLow.barnumber = ev.barnumber
     mSwingLow.timestamp = ev.timestamp
     
     If mHighBeforeLowPoint.value <= mHighAfterLowPoint.value Then
@@ -419,79 +342,45 @@ Then
     End If
     mHighAfterLowPoint.value = ev.value
     mHighAfterLowPoint.timestamp = ev.timestamp
-    mHighAfterLowPoint.barnumber = mBarnumber
+    mHighAfterLowPoint.barnumber = ev.barnumber
 End If
 
 If ev.value >= mHighAfterLowPoint.value Then
     mHighAfterLowPoint.value = ev.value
     mHighAfterLowPoint.timestamp = ev.timestamp
-    mHighAfterLowPoint.barnumber = mBarnumber
+    mHighAfterLowPoint.barnumber = ev.barnumber
 End If
 If ev.value <= mLowAfterHighPoint.value Then
     mLowAfterHighPoint.value = ev.value
     mLowAfterHighPoint.timestamp = ev.timestamp
-    mLowAfterHighPoint.barnumber = mBarnumber
+    mLowAfterHighPoint.barnumber = ev.barnumber
 End If
 End Sub
 
-Public Property Get IStudy_numberOfBarsRequired() As Long
-IStudy_numberOfBarsRequired = 0
-End Property
-
-Private Function IStudy_numberOfCachedValues( _
-                Optional ByVal ValueName As String = "") As Long
-IStudy_numberOfCachedValues = mSwingCache.Count
+Private Function customNumberOfBarsRequired() As Long
+customNumberOfBarsRequired = 0
 End Function
 
-Private Property Get IStudy_parameters() As IParameters
-Set IStudy_parameters = mParams.Clone
-End Property
+Private Sub customProcessParameters(ByVal params As IParameters)
+Dim param As TradeBuildSP.IParameter
 
-Private Sub IStudy_removeStudyValueListener( _
-                ByVal listener As TradeBuildSP.IStudyValueListener)
-mListeners.Remove listener
+Set param = params.getFirstParameter
+
+Do While Not param Is Nothing
+    Select Case UCase$(param.name)
+    Case UCase$(SwingParamMinimumSwingTicks)
+        mMinimumSwing = param.value * mStudyServiceConsumer.Contract.MinimumTick
+    Case UCase$(SwingParamIncludeImplicitSwingPoints)
+        mIncludeImplicitSwingPoints = IIf((UCase$(param.value) = "Y") Or (UCase$(param.value) = "YES"), True, False)
+    End Select
+    Set param = params.getNextParameter
+Loop
+
 End Sub
 
-Private Property Get IStudy_studyDefinition() As TradeBuildSP.IStudyDefinition
-Set IStudy_studyDefinition = GSwing.studyDefinition
-End Property
-
-'================================================================================
-' IStudyValueResolver Interface Members
-'================================================================================
-
-Private Function IStudyValueResolver_resolveValue( _
-                pStudyValue As TradeBuildSP.StudyValue, _
-                ByVal requiredValueName As String) As Variant
-Dim lSwingPoint As SwingPoint
-
-lSwingPoint = pStudyValue.value
-
-Select Case UCase$(requiredValueName)
-Case UCase$(SwingValueSwingPoint)
-    IStudyValueResolver_resolveValue = lSwingPoint.value
-End Select
+Private Function customStudyDefinition() As IStudyDefinition
+Set customStudyDefinition = GSwing.studyDefinition
 End Function
-
-'================================================================================
-' ITaskCompletionListener Interface Members
-'================================================================================
-
-Private Sub ITaskCompletionListener_taskCompleted( _
-                ev As TradeBuildSP.TaskCompletionEvent)
-Dim task As IValueReplayTask
-Set task = ev.Source
-Select Case task.discriminator
-Case TaskDiscriminators.TaskAddStudy
-    Dim targetStudy As IStudy
-    Set targetStudy = task.Target
-    mStudies.Add targetStudy, task.ValueName
-Case TaskDiscriminators.TaskAddStudyValueListener
-    Dim targetListener As IStudyValueListener
-    Set targetListener = task.Target
-    mListeners.Add targetListener, task.ValueName
-End Select
-End Sub
 
 '================================================================================
 ' XXXX Event Handlers
@@ -501,48 +390,76 @@ End Sub
 ' Properties
 '================================================================================
 
-Public Property Get HighAfterLowPoint(Optional ByVal excludingCurrentBar As Boolean) As SwingPoint
+Public Property Get HighAfterLow( _
+                Optional ByVal excludingCurrentBar As Boolean) As StudyValue
+Dim thePoint As SwingPoint
+thePoint = HighAfterLowPoint(excludingCurrentBar).value
+HighAfterLow.barnumber = thePoint.barnumber
+HighAfterLow.timestamp = thePoint.timestamp
+HighAfterLow.value = thePoint.value
+End Property
+
+Public Property Get HighAfterLowPoint( _
+                Optional ByVal excludingCurrentBar As Boolean) As StudyValue
+Dim thePoint As SwingPoint
 If excludingCurrentBar Then
     If mSwingLow.value = DummyLow Then
-        HighAfterLowPoint = mHighAfterLowPointExcl
+        thePoint = mHighAfterLowPointExcl
     Else
         If mHighBeforeLowPoint.value > mHighAfterLowPointExcl.value Then
-            HighAfterLowPoint = mHighBeforeLowPoint
+           thePoint = mHighBeforeLowPoint
         Else
-            HighAfterLowPoint = mHighAfterLowPointExcl
+            thePoint = mHighAfterLowPointExcl
         End If
     End If
 ElseIf mSwingLow.value = DummyLow Then
-    HighAfterLowPoint = mHighAfterLowPoint
+    thePoint = mHighAfterLowPoint
 Else
     If mHighBeforeLowPoint.value > mHighAfterLowPoint.value Then
-        HighAfterLowPoint = mHighBeforeLowPoint
+        thePoint = mHighBeforeLowPoint
     Else
-        HighAfterLowPoint = mHighAfterLowPoint
+        thePoint = mHighAfterLowPoint
     End If
 End If
+HighAfterLowPoint.barnumber = thePoint.barnumber
+HighAfterLowPoint.timestamp = thePoint.timestamp
+HighAfterLowPoint.value = thePoint
 End Property
 
-Public Property Get LowAfterHighPoint(Optional ByVal excludingCurrentBar As Boolean) As SwingPoint
+Public Property Get LowAfterHigh( _
+                Optional ByVal excludingCurrentBar As Boolean) As StudyValue
+Dim thePoint As SwingPoint
+thePoint = LowAfterHighPoint(excludingCurrentBar).value
+LowAfterHigh.barnumber = thePoint.barnumber
+LowAfterHigh.timestamp = thePoint.timestamp
+LowAfterHigh.value = thePoint.value
+End Property
+
+Public Property Get LowAfterHighPoint( _
+                Optional ByVal excludingCurrentBar As Boolean) As StudyValue
+Dim thePoint As SwingPoint
 If excludingCurrentBar Then
     If mSwingHigh.value = DummyHigh Then
-        LowAfterHighPoint = mLowAfterHighPointExcl
+        thePoint = mLowAfterHighPointExcl
     Else
         If mLowBeforeHighPoint.value < mLowAfterHighPoint.value Then
-            LowAfterHighPoint = mLowBeforeHighPoint
+            thePoint = mLowBeforeHighPoint
         Else
-            LowAfterHighPoint = mLowAfterHighPointExcl
+            thePoint = mLowAfterHighPointExcl
         End If
     End If
 ElseIf mSwingHigh.value = DummyHigh Then
-    LowAfterHighPoint = mLowAfterHighPoint
+    thePoint = mLowAfterHighPoint
 Else
     If mLowBeforeHighPoint.value < mLowAfterHighPoint.value Then
-        LowAfterHighPoint = mLowBeforeHighPoint
+        thePoint = mLowBeforeHighPoint
     Else
-        LowAfterHighPoint = mLowAfterHighPoint
+        thePoint = mLowAfterHighPoint
     End If
 End If
+LowAfterHighPoint.barnumber = thePoint.barnumber
+LowAfterHighPoint.timestamp = thePoint.timestamp
+LowAfterHighPoint.value = thePoint
 End Property
 
 Public Property Get swingHighPoint(Optional ByVal ref As Long) As StudyValue
@@ -577,6 +494,14 @@ Swing.timestamp = sh.timestamp
 Swing.value = sh.value
 End Property
 
+Public Property Get SwingPoint(Optional ByVal ref As Long) As StudyValue
+Dim sh As SwingPoint
+sh = mSwingCache.getValue(ref)
+Swing.barnumber = sh.barnumber
+Swing.timestamp = sh.timestamp
+Swing.value = sh
+End Property
+
 Public Property Get trend() As TrendDirections
 trend = mTrend
 End Property
@@ -584,34 +509,6 @@ End Property
 '================================================================================
 ' Methods
 '================================================================================
-
-Friend Sub initialise( _
-                ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
-                ByVal studyServiceConsumer As TradeBuildSP.IStudyServiceConsumer, _
-                Optional ByVal numberOfValuesToCache As Long, _
-                Optional ByVal params As IParameters)
-
-Set mCommonServiceConsumer = commonServiceConsumer
-Set mStudyServiceConsumer = studyServiceConsumer
-Set mStudies = mCommonServiceConsumer.NewStudies
-Set mListeners = mCommonServiceConsumer.NewStudyValueListeners
-
-Set mSwingCache = mCommonServiceConsumer.NewStudyValueCache(numberOfValuesToCache, SwingValueSwingPoint)
-Set mSwingHighCache = mCommonServiceConsumer.NewStudyValueCache(numberOfValuesToCache, SwingValueSwingHighPoint)
-Set mSwingLowCache = mCommonServiceConsumer.NewStudyValueCache(numberOfValuesToCache, SwingValueSwingLowPoint)
-
-If Not params Is Nothing Then processParameters params
-
-mSwingHigh.value = DummyHigh
-mSwingLow.value = DummyLow
-mHighBeforeLowPoint.value = DummyHigh
-mHighAfterLowPoint.value = DummyHigh
-mLowBeforeHighPoint.value = DummyLow
-mLowAfterHighPoint.value = DummyLow
-
-mTrend = TrendDirections.TrendUnknown
-
-End Sub
 
 '================================================================================
 ' Helper Functions
@@ -674,9 +571,10 @@ Set evOut.Source = Me
 evOut.barnumber = tempSwingHigh.barnumber
 evOut.timestamp = tempSwingHigh.timestamp
 evOut.value = tempSwingHigh.value
-evOut.ValueName = SwingValueSwingPoint
-mStudies.notify evOut
-mListeners.notify evOut
+evOut.valueName = SwingValueSwingPoint
+mStudyFoundation.notifyValue evOut
+evOut.valueName = SwingValueSwingHighPoint
+mStudyFoundation.notifyValue evOut
 End Sub
 
 Private Sub createImpliedSwingLow(ByRef prevSwingLow As SwingPoint)
@@ -709,39 +607,142 @@ Set evOut.Source = Me
 evOut.barnumber = tempSwingLow.barnumber
 evOut.timestamp = tempSwingLow.timestamp
 evOut.value = tempSwingLow.value
-evOut.ValueName = SwingValueSwingPoint
-mStudies.notify evOut
-mListeners.notify evOut
+evOut.valueName = SwingValueSwingPoint
+mStudyFoundation.notifyValue evOut
+evOut.valueName = SwingValueSwingLowPoint
+mStudyFoundation.notifyValue evOut
 End Sub
 
-Private Function newBar(barnumber As Long) As Boolean
-Static previousBarNumber As Long
-If barnumber <> previousBarNumber Then
-    mBarnumber = barnumber
-    previousBarNumber = barnumber
-    newBar = True
-Else
-    newBar = False
-End If
+Private Function getStudyValue( _
+                ByVal valueName As String, _
+                ByVal ref As Long) As StudyValue
+Select Case UCase$(valueName)
+Case UCase$(SwingValueSwingPoint)
+    getStudyValue = Swing(ref)
+Case UCase$(SwingValueSwingHighPoint)
+    getStudyValue = swingHigh(ref)
+Case UCase$(SwingValueSwingLowPoint)
+    getStudyValue = swingLow(ref)
+End Select
 End Function
 
-Private Sub processParameters(ByVal params As IParameters)
-Dim param As TradeBuildSP.IParameter
 
-Set mParams = params.Clone
+'================================================================================
+' From this point on the code is identical for all studies - do not change!!!!
+'================================================================================
 
-Set param = mParams.getFirstParameter
 
-Do While Not param Is Nothing
-    Select Case UCase$(param.name)
-    Case UCase$(SwingParamMinimumSwingTicks)
-        mMinimumSwing = param.value * mStudyServiceConsumer.Contract.MinimumTick
-    Case UCase$(SwingParamIncludeImplicitSwingPoints)
-        mIncludeImplicitSwingPoints = IIf((UCase$(param.value) = "Y") Or (UCase$(param.value) = "YES"), True, False)
-    End Select
-    Set param = mParams.getNextParameter
-Loop
+'================================================================================
+' IStudy Interface Members
+'================================================================================
 
+Private Function IStudy_addStudy( _
+                ByVal study As IStudy, _
+                ByRef valueNames() As String, _
+                ByVal numUnderlyingValuesToUse As Long, _
+                Optional ByVal taskName As String, _
+                Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
+
+Set IStudy_addStudy = mStudyFoundation.addStudy( _
+                            study, _
+                            valueNames, _
+                            numUnderlyingValuesToUse, _
+                            taskName, _
+                            taskData)
+End Function
+
+Private Function IStudy_addStudyValueListener( _
+                ByVal listener As TradeBuildSP.IStudyValueListener, _
+                ByVal valueName As String, _
+                ByVal numberOfValuesToReplay As Long, _
+                Optional ByVal taskName As String, _
+                Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
+Set IStudy_addStudyValueListener = mStudyFoundation.addStudyValueListener( _
+                            listener, _
+                            valueName, _
+                            numberOfValuesToReplay, _
+                            taskName, _
+                            taskData)
+End Function
+
+Private Property Get IStudy_baseStudy() As IStudy
+Set IStudy_baseStudy = Me
+End Property
+
+Private Function IStudy_getStudyValue( _
+                ByVal valueName As String, _
+                ByVal ref As Long) As StudyValue
+'IStudy_getStudyValue = mStudyFoundation.getStudyValue(valueName, ref)
+IStudy_getStudyValue = getStudyValue(valueName, ref)
+End Function
+
+Private Property Get IStudy_id() As String
+IStudy_id = mStudyFoundation.id
+End Property
+
+Private Sub IStudy_initialise( _
+                ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
+                ByVal studyServiceConsumer As TradeBuildSP.IStudyServiceConsumer, _
+                ByVal id As String, _
+                ByVal parameters As TradeBuildSP.IParameters, _
+                ByVal numberOfValuesToCache As Long, _
+                ByRef inputValueNames() As String, _
+                ByVal underlyingStudy As TradeBuildSP.IStudy)
+Set mStudyFoundation = New StudyFoundation
+mStudyFoundation.initialise Me, _
+                            id, _
+                            parameters, _
+                            numberOfValuesToCache, _
+                            inputValueNames, _
+                            underlyingStudy, _
+                            commonServiceConsumer, _
+                            studyServiceConsumer
+                            
+
+customInitialise commonServiceConsumer, _
+                studyServiceConsumer, _
+                id, _
+                parameters, _
+                numberOfValuesToCache, _
+                inputValueNames, _
+                underlyingStudy
 End Sub
+
+Private Property Get IStudy_instanceName() As String
+IStudy_instanceName = mStudyFoundation.instanceName
+End Property
+
+Private Property Get IStudy_instancePath() As String
+IStudy_instancePath = mStudyFoundation.instancePath
+End Property
+
+Private Sub IStudy_Notify( _
+                ev As TradeBuildSP.StudyValueEvent)
+mStudyFoundation.NotifyInput ev
+customNotify ev
+End Sub
+
+Private Property Get IStudy_numberOfBarsRequired() As Long
+IStudy_numberOfBarsRequired = mStudyFoundation.numberOfBarsRequired(customNumberOfBarsRequired)
+End Property
+
+Private Function IStudy_numberOfCachedValues( _
+                Optional ByVal valueName As String = "") As Long
+IStudy_numberOfCachedValues = mStudyFoundation.numberOfCachedValues(valueName)
+End Function
+
+Private Property Get IStudy_parameters() As IParameters
+Set IStudy_parameters = mStudyFoundation.parameters
+End Property
+
+Private Sub IStudy_removeStudyValueListener( _
+                ByVal listener As TradeBuildSP.IStudyValueListener)
+mStudyFoundation.removeStudyValueListener listener
+End Sub
+
+Private Property Get IStudy_studyDefinition() As TradeBuildSP.IStudyDefinition
+Set IStudy_studyDefinition = customStudyDefinition
+End Property
+
 
 

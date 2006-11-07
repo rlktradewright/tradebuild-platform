@@ -31,7 +31,6 @@ Option Explicit
 '================================================================================
 
 Implements TradeBuildSP.IStudy
-Implements TradeBuildSP.ITaskCompletionListener
 
 '================================================================================
 ' Events
@@ -61,31 +60,26 @@ End Enum
 ' Member variables
 '================================================================================
 
+'-------this variable is required in all studies---------
+Private mStudyFoundation As StudyFoundation
+'--------------------------------------------------------
+
 Private mStudyServiceConsumer As IStudyServiceConsumer
 Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mContract As IContract
-
-Private mIdent As String
-
-Private mInputValueName As String
-Private mUnderlyingStudy As TradeBuildSP.IStudy
-
-Private mParams As IParameters
-Private mStudies As IStudies
-Private mListeners As IStudyValueListeners
 
 Private mShortPeriods As Long
 Private mLongPeriods As Long
 Private mSmoothingPeriods As Long
 
 Private mMAShortStudy As TradeBuildSP.IStudy
-Private mMAShort As MovingAverageStudy
+Private mMAShort As IMovingAverageStudy
 
 Private mMALongStudy As TradeBuildSP.IStudy
-Private mMALong As MovingAverageStudy
+Private mMALong As IMovingAverageStudy
 
 Private mMASignalStudy As TradeBuildSP.IStudy
-Private mMASignal As MovingAverageStudy
+Private mMASignal As IMovingAverageStudy
 
 Private mMAType As String
 
@@ -107,222 +101,41 @@ Private mLowerBalanceCache As IStudyValueCache
 Private mStrengthCache As IStudyValueCache
 Private mStrengthCountCache As IStudyValueCache
 
-Private mBarnumber As Long
-
 '================================================================================
 ' Class Event Handlers
 '================================================================================
-
-Private Sub Class_Initialize()
-Set mParams = GMACD.defaultParameters
-End Sub
 
 Private Sub Class_Terminate()
 Debug.Print "MACD study terminated"
 End Sub
 
 '================================================================================
-' IStudy Interface Members
+' Custom methods that must be impleemented
 '================================================================================
 
-Private Function IStudy_addStudy( _
-                ByVal study As IStudy, _
-                ByVal ValueName As String, _
-                ByVal numUnderlyingValuesToUse As Long, _
-                Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
-
-
-Select Case UCase$(ValueName)
-Case UCase$(MACDValueMACD)
-    Set IStudy_addStudy = mMACDCache.replayValues( _
-                                study, _
-                                Me, _
-                                numUnderlyingValuesToUse, _
-                                TaskDiscriminators.TaskAddStudy, _
-                                taskName, _
-                                taskData)
-    IStudy_addStudy.addTaskCompletionListener Me
-Case UCase$(MACDValueMACDHist)
-    Set IStudy_addStudy = mMACDHistCache.replayValues( _
-                                study, _
-                                Me, _
-                                numUnderlyingValuesToUse, _
-                                TaskDiscriminators.TaskAddStudy, _
-                                taskName, _
-                                taskData)
-    IStudy_addStudy.addTaskCompletionListener Me
-Case UCase$(MACDValueMACDSignal)
-    Set IStudy_addStudy = mMACDSignalCache.replayValues( _
-                                study, _
-                                Me, _
-                                numUnderlyingValuesToUse, _
-                                TaskDiscriminators.TaskAddStudy, _
-                                taskName, _
-                                taskData)
-    IStudy_addStudy.addTaskCompletionListener Me
-Case UCase$(MACDValueMACDUpperBalance)
-    Set IStudy_addStudy = mUpperBalanceCache.replayValues( _
-                                study, _
-                                Me, _
-                                numUnderlyingValuesToUse, _
-                                TaskDiscriminators.TaskAddStudy, _
-                                taskName, _
-                                taskData)
-    IStudy_addStudy.addTaskCompletionListener Me
-Case UCase$(MACDValueMACDLowerBalance)
-    Set IStudy_addStudy = mLowerBalanceCache.replayValues( _
-                                study, _
-                                Me, _
-                                numUnderlyingValuesToUse, _
-                                TaskDiscriminators.TaskAddStudy, _
-                                taskName, _
-                                taskData)
-    IStudy_addStudy.addTaskCompletionListener Me
-Case UCase$(MACDValueStrength)
-    Set IStudy_addStudy = mStrengthCache.replayValues( _
-                                study, _
-                                Me, _
-                                numUnderlyingValuesToUse, _
-                                TaskDiscriminators.TaskAddStudy, _
-                                taskName, _
-                                taskData)
-    IStudy_addStudy.addTaskCompletionListener Me
-Case UCase$(MACDValueStrengthCount)
-    Set IStudy_addStudy = mStrengthCountCache.replayValues( _
-                                study, _
-                                Me, _
-                                numUnderlyingValuesToUse, _
-                                TaskDiscriminators.TaskAddStudy, _
-                                taskName, _
-                                taskData)
-    IStudy_addStudy.addTaskCompletionListener Me
-Case Else
-    ' just return Nothing
-End Select
-
-End Function
-
-Private Function IStudy_addStudyValueListener( _
-                ByVal listener As TradeBuildSP.IStudyValueListener, _
-                ByVal ValueName As String, _
-                ByVal numberOfValuesToReplay As Long, _
-                Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
-Select Case UCase$(ValueName)
-Case UCase$(MACDValueMACD)
-    Set IStudy_addStudyValueListener = mMACDCache.replayValues(listener, _
-                                Me, _
-                                numberOfValuesToReplay, _
-                                TaskDiscriminators.TaskAddStudyValueListener, _
-                                taskName, _
-                                taskData)
-    IStudy_addStudyValueListener.addTaskCompletionListener Me
-Case UCase$(MACDValueMACDHist)
-    Set IStudy_addStudyValueListener = mMACDHistCache.replayValues(listener, _
-                                Me, _
-                                numberOfValuesToReplay, _
-                                TaskDiscriminators.TaskAddStudyValueListener, _
-                                taskName, _
-                                taskData)
-    IStudy_addStudyValueListener.addTaskCompletionListener Me
-Case UCase$(MACDValueMACDSignal)
-    Set IStudy_addStudyValueListener = mMACDSignalCache.replayValues(listener, _
-                                Me, _
-                                numberOfValuesToReplay, _
-                                TaskDiscriminators.TaskAddStudyValueListener, _
-                                taskName, _
-                                taskData)
-    IStudy_addStudyValueListener.addTaskCompletionListener Me
-Case UCase$(MACDValueMACDUpperBalance)
-    Set IStudy_addStudyValueListener = mUpperBalanceCache.replayValues(listener, _
-                                Me, _
-                                numberOfValuesToReplay, _
-                                TaskDiscriminators.TaskAddStudyValueListener, _
-                                taskName, _
-                                taskData)
-    IStudy_addStudyValueListener.addTaskCompletionListener Me
-Case UCase$(MACDValueMACDLowerBalance)
-    Set IStudy_addStudyValueListener = mLowerBalanceCache.replayValues(listener, _
-                                Me, _
-                                numberOfValuesToReplay, _
-                                TaskDiscriminators.TaskAddStudyValueListener, _
-                                taskName, _
-                                taskData)
-    IStudy_addStudyValueListener.addTaskCompletionListener Me
-Case UCase$(MACDValueStrength)
-    Set IStudy_addStudyValueListener = mStrengthCache.replayValues(listener, _
-                                Me, _
-                                numberOfValuesToReplay, _
-                                TaskDiscriminators.TaskAddStudyValueListener, _
-                                taskName, _
-                                taskData)
-    IStudy_addStudyValueListener.addTaskCompletionListener Me
-Case UCase$(MACDValueStrengthCount)
-    Set IStudy_addStudyValueListener = mStrengthCountCache.replayValues(listener, _
-                                Me, _
-                                numberOfValuesToReplay, _
-                                TaskDiscriminators.TaskAddStudyValueListener, _
-                                taskName, _
-                                taskData)
-    IStudy_addStudyValueListener.addTaskCompletionListener Me
-End Select
-End Function
-
-Private Property Get IStudy_baseStudy() As IStudy
-Set IStudy_baseStudy = Me
-End Property
-
-Private Property Let IStudy_defaultParameters( _
-                ByVal RHS As TradeBuildSP.IParameters)
-GMACD.defaultParameters = RHS
-End Property
-
-Private Property Get IStudy_defaultParameters() As TradeBuildSP.IParameters
-Set IStudy_defaultParameters = GMACD.defaultParameters
-End Property
-
-Private Function IStudy_getStudyValue( _
-                ByVal valuetype As String, _
-                ByVal ref As Long, _
-                params() As Variant) As StudyValue
-
-End Function
-
-Private Property Get IStudy_id() As String
-IStudy_id = mIdent
-End Property
-
-Private Sub IStudy_initialise( _
+Private Sub customInitialise( _
+                ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
+                ByVal studyServiceConsumer As TradeBuildSP.IStudyServiceConsumer, _
                 ByVal id As String, _
                 ByVal parameters As TradeBuildSP.IParameters, _
                 ByVal numberOfValuesToCache As Long, _
-                ByVal inputValueName As String, _
+                ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As TradeBuildSP.IStudy)
-mIdent = id
-mInputValueName = inputValueName
-Set mUnderlyingStudy = underlyingStudy
-processParameters parameters
-createValueCaches numberOfValuesToCache
-
+Set mCommonServiceConsumer = commonServiceConsumer
+Set mStudyServiceConsumer = studyServiceConsumer
+Set mContract = mStudyServiceConsumer.Contract
+customProcessParameters parameters
+Set mMACDCache = mStudyFoundation.FindValueCache(MACDValueMACD)
+Set mMACDSignalCache = mStudyFoundation.FindValueCache(MACDValueMACDSignal)
+Set mMACDHistCache = mStudyFoundation.FindValueCache(MACDValueMACDHist)
+Set mUpperBalanceCache = mStudyFoundation.FindValueCache(MACDValueMACDUpperBalance)
+Set mLowerBalanceCache = mStudyFoundation.FindValueCache(MACDValueMACDLowerBalance)
+Set mStrengthCache = mStudyFoundation.FindValueCache(MACDValueStrength)
+Set mStrengthCountCache = mStudyFoundation.FindValueCache(MACDValueStrengthCount)
 End Sub
 
-Private Property Get IStudy_instanceName() As String
-IStudy_instanceName = MacdShortName & "(" & _
-                mInputValueName & "," & _
-                gParamsToString(mParams, GMACD.studyDefinition) & ")"
-End Property
-
-Private Property Get IStudy_instancePath() As String
-IStudy_instancePath = MacdShortName & "(" & _
-                mInputValueName & "," & _
-                gParamsToString(mParams, GMACD.studyDefinition) & ")." & _
-                mUnderlyingStudy.instancePath
-End Property
-
-Private Sub IStudy_Notify( _
+Private Sub customNotify( _
                 ev As TradeBuildSP.StudyValueEvent)
-Dim isNewBar As Boolean
 Static sPrevVal As Variant
 Dim prevMACD As Variant
 Dim prevMACDHist As Variant
@@ -331,9 +144,7 @@ Dim evOut As TradeBuildSP.StudyValueEvent
 prevMACD = mMACD
 prevMACDHist = mMACDHist
 
-isNewBar = newBar(ev.barnumber)
-
-If Not isNewBar Then
+If Not mStudyFoundation.isNewBar Then
     If ev.value = sPrevVal Then Exit Sub
     sPrevVal = ev.value
 End If
@@ -342,20 +153,19 @@ evOut.barnumber = ev.barnumber
 Set evOut.Source = Me
 evOut.timestamp = ev.timestamp
 evOut.value = ev.value
-evOut.ValueName = ""
+evOut.valueName = ""
 
-If isNewBar Then
+If mStudyFoundation.isNewBar Then
     mMACDPrev = mMACD
     mMACDHistPrev = mMACDHist
     
     ' on the first tick of each bar, determine the two balance points, using
     ' the previous values as starting point where they are non-empty
-    If determineLowerBalancePoint(IIf(IsEmpty(mLowerBalance), ev.value, mLowerBalance), ev.barnumber, ev.timestamp) Then
-        mLowerBalanceCache.addValue mLowerBalance, ev.barnumber, ev.timestamp
-    End If
-    If determineUpperBalancePoint(IIf(IsEmpty(mUpperBalance), ev.value, mUpperBalance), ev.barnumber, ev.timestamp) Then
-        mUpperBalanceCache.addValue mUpperBalance, ev.barnumber, ev.timestamp
-    End If
+    determineLowerBalancePoint IIf(IsEmpty(mLowerBalance), ev.value, mLowerBalance), ev.barnumber, ev.timestamp
+    mLowerBalanceCache.addValue mLowerBalance, ev.barnumber, ev.timestamp
+    
+    determineUpperBalancePoint IIf(IsEmpty(mUpperBalance), ev.value, mUpperBalance), ev.barnumber, ev.timestamp
+    mUpperBalanceCache.addValue mUpperBalance, ev.barnumber, ev.timestamp
 End If
 
 calcMACDValues ev
@@ -378,35 +188,36 @@ Else
     mStrength = MACDStrengths.MACDNoStrength
 End If
 
-If isNewBar Then
-    mMACDCache.addValue mMACD, ev.barnumber, ev.timestamp
-    mMACDHistCache.addValue mMACDHist, ev.barnumber, ev.timestamp
-    mMACDSignalCache.addValue mMACDSignal, ev.barnumber, ev.timestamp
-    mStrengthCache.addValue mStrength, ev.barnumber, ev.timestamp
-            
-    If mMACDCache.Count < 3 Then
-    ElseIf IsEmpty(strength(-1)) Or IsEmpty(strength(-2)) Then
+If mStrengthCache.Count > 1 Then
+    If IsEmpty(mStrength) Then
         mStrengthCount = Empty
     Else
-        If strength(-1).value = strength(-2).value Then
-            mStrengthCount = mStrengthCount + 1
+        If mStrength = strength(-1).value Then
+            mStrengthCount = strengthCount(-1).value + 1
         Else
             mStrengthCount = 1
         End If
     End If
-    If mStrengthCountCache.Count > 1 Then mStrengthCountCache.updateValue mStrengthCount, , , -1
-    mStrengthCountCache.addValue Empty, ev.barnumber, ev.timestamp
+End If
+
+If mStudyFoundation.isNewBar Then
+    mMACDCache.addValue mMACD, ev.barnumber, ev.timestamp
+    mMACDHistCache.addValue mMACDHist, ev.barnumber, ev.timestamp
+    mMACDSignalCache.addValue mMACDSignal, ev.barnumber, ev.timestamp
+    mStrengthCache.addValue mStrength, ev.barnumber, ev.timestamp
+    mStrengthCountCache.addValue mStrengthCount, ev.barnumber, ev.timestamp
 Else
     mMACDCache.updateValue mMACD, ev.barnumber, ev.timestamp
     mMACDHistCache.updateValue mMACDHist, ev.barnumber, ev.timestamp
     mMACDSignalCache.updateValue mMACDSignal, ev.barnumber, ev.timestamp
     mStrengthCache.updateValue mStrength, ev.barnumber, ev.timestamp
+    mStrengthCountCache.updateValue mStrengthCount, ev.barnumber, ev.timestamp
 End If
 
 notifyValue mMACD, MACDValueMACD, evOut
 notifyValue mMACDSignal, MACDValueMACDSignal, evOut
 notifyValue mMACDHist, MACDValueMACDHist, evOut
-If isNewBar Then
+If mStudyFoundation.isNewBar Then
     notifyValue mUpperBalance, MACDValueMACDUpperBalance, evOut
     notifyValue mLowerBalance, MACDValueMACDLowerBalance, evOut
     notifyValue mStrength, MACDValueStrength, evOut
@@ -414,70 +225,59 @@ If isNewBar Then
 End If
 End Sub
 
-Private Property Get IStudy_numberOfBarsRequired() As Long
-Dim thisNeeds As Long
-Dim superiorStudiesNeeds
+Private Function customNumberOfBarsRequired() As Long
 Dim study As IStudy
 Set study = mMALong
-thisNeeds = study.numberOfBarsRequired + mSmoothingPeriods + mMACDCache.cyclicSize
-superiorStudiesNeeds = mStudies.numberOfBarsRequired
-IStudy_numberOfBarsRequired = IIf(thisNeeds > superiorStudiesNeeds, _
-                                thisNeeds, _
-                                superiorStudiesNeeds)
-End Property
-
-Private Function IStudy_numberOfCachedValues( _
-                Optional ByVal ValueName As String = "") As Long
-Select Case UCase$(ValueName)
-Case UCase$(MACDValueMACD), ""
-    IStudy_numberOfCachedValues = mMACDCache.Count
-Case UCase$(MACDValueMACDSignal)
-    IStudy_numberOfCachedValues = mMACDSignalCache.Count
-Case UCase$(MACDValueMACDHist)
-    IStudy_numberOfCachedValues = mMACDHistCache.Count
-Case UCase$(MACDValueMACDUpperBalance)
-    IStudy_numberOfCachedValues = mUpperBalanceCache.Count
-Case UCase$(MACDValueMACDLowerBalance)
-    IStudy_numberOfCachedValues = mLowerBalanceCache.Count
-Case UCase$(MACDValueStrength)
-    IStudy_numberOfCachedValues = mStrengthCache.Count
-Case UCase$(MACDValueStrengthCount)
-    IStudy_numberOfCachedValues = mStrengthCountCache.Count
-End Select
+customNumberOfBarsRequired = study.numberOfBarsRequired + _
+                            mSmoothingPeriods + _
+                            mMACDCache.cyclicSize
 End Function
 
-Private Property Get IStudy_parameters() As IParameters
-Set IStudy_parameters = mParams.Clone
-End Property
+Private Sub customProcessParameters(ByVal params As IParameters)
+Dim param As TradeBuildSP.IParameter
 
-Private Sub IStudy_removeStudyValueListener( _
-                ByVal listener As TradeBuildSP.IStudyValueListener)
-mListeners.Remove listener
+Set param = params.getFirstParameter
+
+Do While Not param Is Nothing
+    Select Case UCase$(param.name)
+    Case UCase$(MACDParamShortPeriods)
+        mShortPeriods = param.value
+    Case UCase$(MACDParamLongPeriods)
+        mLongPeriods = param.value
+    Case UCase$(MACDParamSmoothingPeriods)
+        mSmoothingPeriods = param.value
+    Case UCase$(MACDParamMAType)
+        mMAType = param.value
+    End Select
+    Set param = params.getNextParameter
+Loop
+
+Set mMAShort = gCreateMA(mMAType, _
+                    mCommonServiceConsumer, _
+                    mStudyServiceConsumer, _
+                    mShortPeriods, _
+                    1)
+Set mMAShortStudy = mMAShort
+
+Set mMALong = gCreateMA(mMAType, _
+                    mCommonServiceConsumer, _
+                    mStudyServiceConsumer, _
+                    mLongPeriods, _
+                    1)
+Set mMALongStudy = mMALong
+
+Set mMASignal = gCreateMA(mMAType, _
+                    mCommonServiceConsumer, _
+                    mStudyServiceConsumer, _
+                    mSmoothingPeriods, _
+                    1)
+Set mMASignalStudy = mMASignal
+
 End Sub
 
-Private Property Get IStudy_studyDefinition() As TradeBuildSP.IStudyDefinition
-Set IStudy_studyDefinition = GMACD.studyDefinition
-End Property
-
-'================================================================================
-' ITaskCompletionListener Interface Members
-'================================================================================
-
-Private Sub ITaskCompletionListener_taskCompleted( _
-                ev As TradeBuildSP.TaskCompletionEvent)
-Dim task As IValueReplayTask
-Set task = ev.Source
-Select Case task.discriminator
-Case TaskDiscriminators.TaskAddStudy
-    Dim targetStudy As IStudy
-    Set targetStudy = task.Target
-    mStudies.Add targetStudy, task.ValueName
-Case TaskDiscriminators.TaskAddStudyValueListener
-    Dim targetListener As IStudyValueListener
-    Set targetListener = task.Target
-    mListeners.Add targetListener, task.ValueName
-End Select
-End Sub
+Private Function customStudyDefinition() As IStudyDefinition
+Set customStudyDefinition = GMACD.studyDefinition
+End Function
 
 '================================================================================
 ' XXXX Event Handlers
@@ -547,25 +347,6 @@ End Property
 ' Methods
 '================================================================================
 
-Friend Sub initialise( _
-                ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
-                ByVal studyServiceConsumer As TradeBuildSP.IStudyServiceConsumer, _
-                Optional ByVal numberOfValuesToCache As Long, _
-                Optional ByVal params As IParameters)
-
-Set mCommonServiceConsumer = commonServiceConsumer
-Set mStudyServiceConsumer = studyServiceConsumer
-Set mStudies = mCommonServiceConsumer.NewStudies
-Set mListeners = mCommonServiceConsumer.NewStudyValueListeners
-
-Set mStudyServiceConsumer = studyServiceConsumer
-Set mContract = mStudyServiceConsumer.Contract
-
-createValueCaches numberOfValuesToCache
-
-If Not params Is Nothing Then processParameters params
-End Sub
-
 '================================================================================
 ' Helper Functions
 '================================================================================
@@ -574,8 +355,8 @@ Private Sub calcMACDValues( _
                 ByRef ev As TradeBuildSP.StudyValueEvent)
 Dim newEv As TradeBuildSP.StudyValueEvent
 
-mMAShortStudy.notify ev
-mMALongStudy.notify ev
+mMAShortStudy.Notify ev
+mMALongStudy.Notify ev
 
 If IsEmpty(mMAShort.ma.value) Or IsEmpty(mMALong.ma.value) Then
     mMACD = Empty
@@ -586,7 +367,7 @@ mMACD = mMAShort.ma.value - mMALong.ma.value
 
 newEv = ev
 newEv.value = mMACD
-mMASignalStudy.notify newEv
+mMASignalStudy.Notify newEv
 mMACDSignal = mMASignal.ma.value
 If IsEmpty(mMACDSignal) Then
     mMACDHist = Empty
@@ -595,102 +376,6 @@ Else
 End If
 
 End Sub
-
-Private Sub createValueCaches(ByVal numberOfValuesToCache As Long)
-Set mMACDCache = mCommonServiceConsumer.NewStudyValueCache(numberOfValuesToCache, MACDValueMACD)
-Set mMACDSignalCache = mCommonServiceConsumer.NewStudyValueCache(numberOfValuesToCache, MACDValueMACDSignal)
-Set mMACDHistCache = mCommonServiceConsumer.NewStudyValueCache(numberOfValuesToCache, MACDValueMACDHist)
-Set mUpperBalanceCache = mCommonServiceConsumer.NewStudyValueCache(numberOfValuesToCache, MACDValueMACDUpperBalance)
-Set mLowerBalanceCache = mCommonServiceConsumer.NewStudyValueCache(numberOfValuesToCache, MACDValueMACDLowerBalance)
-Set mStrengthCache = mCommonServiceConsumer.NewStudyValueCache(numberOfValuesToCache, MACDValueStrength)
-Set mStrengthCountCache = mCommonServiceConsumer.NewStudyValueCache(numberOfValuesToCache, MACDValueStrengthCount)
-End Sub
-
-Private Function determineBalancePoints( _
-                ByVal startingPrice As Double, _
-                ByVal barnumber As Long, _
-                ByVal timestamp As Date) As Boolean
-Dim trialPrice As Double
-Dim upperBalanceFound As Boolean
-Dim lowerBalanceFound As Boolean
-Dim ev As TradeBuildSP.StudyValueEvent
-
-If mMACDCache.Count < 2 Then Exit Function
-If IsEmpty(MACD.value) Or _
-    IsEmpty(MACDHist.value) Or _
-    IsEmpty(MACD(-1).value) Or _
-    IsEmpty(MACDHist(-1).value) Then Exit Function
-
-ev.barnumber = barnumber
-Set ev.Source = Me
-ev.timestamp = timestamp
-
-determineBalancePoints = True
-
-trialPrice = startingPrice
-If MACDUp.value And MACDHistUp.value Then
-    Do
-        trialPrice = trialPrice - mContract.MinimumTick / 2
-        ev.value = trialPrice
-        
-        calcMACDValues ev
-        
-        If Not upperBalanceFound Then
-            If MACDDown.value Or MACDHistDown.value Then
-                mUpperBalance = trialPrice
-                upperBalanceFound = True
-            End If
-        End If
-    Loop Until mMACD < MACD(-1).value And mMACDHist < MACDHist(-1).value
-    mLowerBalance = trialPrice
-ElseIf MACDDown.value And MACDHistDown.value Then
-    Do
-        trialPrice = trialPrice + mContract.MinimumTick / 2
-        ev.value = trialPrice
-        
-        calcMACDValues ev
-        
-        If Not lowerBalanceFound Then
-            If MACDUp.value Or MACDHistUp.value Then
-                mLowerBalance = trialPrice
-                lowerBalanceFound = True
-            End If
-        End If
-    Loop Until mMACD > MACD(-1).value And mMACDHist > MACDHist(-1).value
-    mUpperBalance = trialPrice
-Else
-    Do
-        trialPrice = trialPrice + mContract.MinimumTick / 2
-        ev.value = trialPrice
-    
-        calcMACDValues ev
-        
-    Loop Until mMACD > MACD(-1).value And mMACDHist > MACDHist(-1).value
-    mUpperBalance = trialPrice
-    
-    trialPrice = startingPrice
-    ' reset to starting conditions
-    ev.value = trialPrice
-    
-    calcMACDValues ev
-    
-    Do
-        trialPrice = trialPrice - mContract.MinimumTick / 2
-        ev.value = trialPrice
-    
-        calcMACDValues ev
-        
-    Loop Until mMACD < MACD(-1).value And mMACDHist < MACDHist(-1).value
-    mLowerBalance = trialPrice
-End If
-
-'If mUpperBalance < mLowerBalance Then Err.Raise errLogicError, "MACD::determineBalancePoints", "Lower balance exceeds upper balance"
-
-ev.value = startingPrice
-
-calcMACDValues ev
-        
-End Function
 
 Private Function determineLowerBalancePoint( _
                 ByVal startingPrice As Double, _
@@ -785,66 +470,134 @@ End If
 
 End Function
 
-Private Function newBar(barnumber As Long) As Boolean
-If barnumber <> mBarnumber Then
-    mBarnumber = barnumber
-    newBar = True
-Else
-    newBar = False
-End If
-End Function
-
 Private Sub notifyValue( _
                 ByVal value As Variant, _
-                ByVal ValueName As String, _
+                ByVal valueName As String, _
                 ByRef ev As StudyValueEvent)
 If Not IsEmpty(value) Then
     ev.value = value
-    ev.ValueName = ValueName
-    mStudies.notify ev
-    mListeners.notify ev
+    ev.valueName = valueName
+    mStudyFoundation.notifyValue ev
 End If
 End Sub
 
-Private Sub processParameters(ByVal params As IParameters)
-Dim param As TradeBuildSP.IParameter
-Dim lParams As IParameters
 
-Set mParams = params.Clone
+'================================================================================
+' From this point on the code is identical for all studies - do not change!!!!
+'================================================================================
 
-Set param = mParams.getFirstParameter
 
-Do While Not param Is Nothing
-    Select Case UCase$(param.name)
-    Case UCase$(MACDParamShortPeriods)
-        mShortPeriods = param.value
-    Case UCase$(MACDParamLongPeriods)
-        mLongPeriods = param.value
-    Case UCase$(MACDParamSmoothingPeriods)
-        mSmoothingPeriods = param.value
-    Case UCase$(MACDParamMAType)
-        mMAType = param.value
-    End Select
-    Set param = mParams.getNextParameter
-Loop
+'================================================================================
+' IStudy Interface Members
+'================================================================================
 
-Set mMAShort = gCreateMA(mMAType)
-Set mMAShortStudy = mMAShort
-Set lParams = mMAShortStudy.defaultParameters
-lParams.setParameterValue ParamPeriods, mShortPeriods
-mMAShort.initialise mCommonServiceConsumer, mStudyServiceConsumer, 1, lParams
+Private Function IStudy_addStudy( _
+                ByVal study As IStudy, _
+                ByRef valueNames() As String, _
+                ByVal numUnderlyingValuesToUse As Long, _
+                Optional ByVal taskName As String, _
+                Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
 
-Set mMALong = gCreateMA(mMAType)
-Set mMALongStudy = mMALong
-Set lParams = mMALongStudy.defaultParameters
-lParams.setParameterValue ParamPeriods, mLongPeriods
-mMALong.initialise mCommonServiceConsumer, mStudyServiceConsumer, 1, lParams
+Set IStudy_addStudy = mStudyFoundation.addStudy( _
+                            study, _
+                            valueNames, _
+                            numUnderlyingValuesToUse, _
+                            taskName, _
+                            taskData)
+End Function
 
-Set mMASignal = gCreateMA(mMAType)
-Set mMASignalStudy = mMASignal
-Set lParams = mMASignalStudy.defaultParameters
-lParams.setParameterValue ParamPeriods, mSmoothingPeriods
-mMASignal.initialise mCommonServiceConsumer, mStudyServiceConsumer, 1, lParams
+Private Function IStudy_addStudyValueListener( _
+                ByVal listener As TradeBuildSP.IStudyValueListener, _
+                ByVal valueName As String, _
+                ByVal numberOfValuesToReplay As Long, _
+                Optional ByVal taskName As String, _
+                Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
+Set IStudy_addStudyValueListener = mStudyFoundation.addStudyValueListener( _
+                            listener, _
+                            valueName, _
+                            numberOfValuesToReplay, _
+                            taskName, _
+                            taskData)
+End Function
 
+Private Property Get IStudy_baseStudy() As IStudy
+Set IStudy_baseStudy = Me
+End Property
+
+Private Function IStudy_getStudyValue( _
+                ByVal valueName As String, _
+                ByVal ref As Long) As StudyValue
+IStudy_getStudyValue = mStudyFoundation.getStudyValue(valueName, ref)
+End Function
+
+Private Property Get IStudy_id() As String
+IStudy_id = mStudyFoundation.id
+End Property
+
+Private Sub IStudy_initialise( _
+                ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
+                ByVal studyServiceConsumer As TradeBuildSP.IStudyServiceConsumer, _
+                ByVal id As String, _
+                ByVal parameters As TradeBuildSP.IParameters, _
+                ByVal numberOfValuesToCache As Long, _
+                ByRef inputValueNames() As String, _
+                ByVal underlyingStudy As TradeBuildSP.IStudy)
+Set mStudyFoundation = New StudyFoundation
+mStudyFoundation.initialise Me, _
+                            id, _
+                            parameters, _
+                            numberOfValuesToCache, _
+                            inputValueNames, _
+                            underlyingStudy, _
+                            commonServiceConsumer, _
+                            studyServiceConsumer
+                            
+
+customInitialise commonServiceConsumer, _
+                studyServiceConsumer, _
+                id, _
+                parameters, _
+                numberOfValuesToCache, _
+                inputValueNames, _
+                underlyingStudy
 End Sub
+
+Private Property Get IStudy_instanceName() As String
+IStudy_instanceName = mStudyFoundation.instanceName
+End Property
+
+Private Property Get IStudy_instancePath() As String
+IStudy_instancePath = mStudyFoundation.instancePath
+End Property
+
+Private Sub IStudy_Notify( _
+                ev As TradeBuildSP.StudyValueEvent)
+mStudyFoundation.NotifyInput ev
+customNotify ev
+End Sub
+
+Private Property Get IStudy_numberOfBarsRequired() As Long
+IStudy_numberOfBarsRequired = mStudyFoundation.numberOfBarsRequired(customNumberOfBarsRequired)
+End Property
+
+Private Function IStudy_numberOfCachedValues( _
+                Optional ByVal valueName As String = "") As Long
+IStudy_numberOfCachedValues = mStudyFoundation.numberOfCachedValues(valueName)
+End Function
+
+Private Property Get IStudy_parameters() As IParameters
+Set IStudy_parameters = mStudyFoundation.parameters
+End Property
+
+Private Sub IStudy_removeStudyValueListener( _
+                ByVal listener As TradeBuildSP.IStudyValueListener)
+mStudyFoundation.removeStudyValueListener listener
+End Sub
+
+Private Property Get IStudy_studyDefinition() As TradeBuildSP.IStudyDefinition
+Set IStudy_studyDefinition = customStudyDefinition
+End Property
+
+
+
 

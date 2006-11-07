@@ -5,6 +5,8 @@ Option Explicit
 ' Constants
 '================================================================================
 
+Public Const PsInputPrice As String = "Price"
+
 Public Const PsParamStartFactor As String = "Start factor"
 Public Const PsParamIncrement As String = "Increment"
 Public Const PsParamMaxFactor As String = "Max factor"
@@ -67,12 +69,14 @@ Set defaultParameters = mDefaultParameters.Clone
 End Property
 
 Public Property Get studyDefinition() As TradeBuildSP.IStudyDefinition
+Dim inputDef As IStudyInputDefinition
 Dim valueDef As IStudyValueDefinition
 Dim paramDef As IStudyParameterDefinition
 
 If mStudyDefinition Is Nothing Then
     Set mStudyDefinition = mCommonServiceConsumer.NewStudyDefinition
     mStudyDefinition.name = PsName
+    mStudyDefinition.shortName = PsShortName
     mStudyDefinition.Description = "Parabolic Stop calculates a value that can be used " & _
                                     "as a stop loss for trades. When the market is " & _
                                     "rising, the value increases with each period. When " & _
@@ -81,39 +85,41 @@ If mStudyDefinition Is Nothing Then
                                     
     mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionPrice
     
-    Set valueDef = mCommonServiceConsumer.NewStudyValueDefinition
+    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(PsInputPrice)
+    inputDef.name = PsInputPrice
+    inputDef.inputType = InputTypeDouble
+    inputDef.Description = "Price"
+    
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(PsValuePs)
     valueDef.name = PsValuePs
     valueDef.Description = "The parabolic stop value"
     valueDef.isDefault = True
     valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valuetype = ValueTypeDouble
-    mStudyDefinition.StudyValueDefinitions.Add valueDef
+    valueDef.valueType = ValueTypeDouble
     
-    Set paramDef = mCommonServiceConsumer.NewStudyParameterDefinition
+    Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(PsParamStartFactor)
+    paramDef.name = PsParamStartFactor
     paramDef.name = PsParamStartFactor
     paramDef.Description = "The initial value of the acceleration factor that governs " & _
                             "the increase in the speed with which the parabolic stop " & _
                             "rises or falls"
     paramDef.parameterType = ParameterTypeDouble
-    mStudyDefinition.StudyParameterDefinitions.Add paramDef
 
-    Set paramDef = mCommonServiceConsumer.NewStudyParameterDefinition
+    Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(PsParamIncrement)
     paramDef.name = PsParamIncrement
     paramDef.Description = "The amount by which the acceleration factor is increased " & _
                             "at each period"
     paramDef.parameterType = ParameterTypeDouble
-    mStudyDefinition.StudyParameterDefinitions.Add paramDef
 
-    Set paramDef = mCommonServiceConsumer.NewStudyParameterDefinition
+    Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(PsParamMaxFactor)
     paramDef.name = PsParamMaxFactor
     paramDef.Description = "The maximum value of the acceleration factor that governs " & _
                             " how fast the parabolic stop rises or falls"
     paramDef.parameterType = ParameterTypeDouble
-    mStudyDefinition.StudyParameterDefinitions.Add paramDef
 
 End If
 
-Set studyDefinition = mStudyDefinition
+Set studyDefinition = mStudyDefinition.Clone
 End Property
 
 '================================================================================

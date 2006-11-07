@@ -5,10 +5,12 @@ Option Explicit
 ' Constants
 '================================================================================
 
+Public Const EmaInputValue As String = "Input"
+
 Public Const EMAParamPeriods As String = ParamPeriods
 Public Const EMAParamSlopeThreshold As String = "Slope threshold"
 
-Public Const EMAValueEMA As String = "EMA"
+Public Const EMAValueEMA As String = "MA"
 
 '================================================================================
 ' Enums
@@ -61,38 +63,42 @@ Set defaultParameters = mDefaultParameters.Clone
 End Property
 
 Public Property Get studyDefinition() As TradeBuildSP.IStudyDefinition
+Dim inputDef As IStudyInputDefinition
 Dim valueDef As IStudyValueDefinition
 Dim paramDef As IStudyParameterDefinition
 
 If mStudyDefinition Is Nothing Then
     Set mStudyDefinition = mCommonServiceConsumer.NewStudyDefinition
     mStudyDefinition.name = EmaName
+    mStudyDefinition.shortName = EmaShortName
     mStudyDefinition.Description = "An exponential moving average"
     mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionPrice
     
-    Set valueDef = mCommonServiceConsumer.NewStudyValueDefinition
+    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(EmaInputValue)
+    inputDef.name = EmaInputValue
+    inputDef.inputType = InputTypeDouble
+    inputDef.Description = "Input value"
+    
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(EMAValueEMA)
     valueDef.name = EMAValueEMA
     valueDef.Description = "The moving average value"
     valueDef.isDefault = True
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueType = ValueTypeDouble
-    mStudyDefinition.StudyValueDefinitions.Add valueDef
     
-    Set paramDef = mCommonServiceConsumer.NewStudyParameterDefinition
+    Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(EMAParamPeriods)
     paramDef.name = EMAParamPeriods
     paramDef.Description = "The number of periods used to calculate the moving average"
     paramDef.parameterType = ParameterTypeInteger
-    mStudyDefinition.StudyParameterDefinitions.Add paramDef
 
-    Set paramDef = mCommonServiceConsumer.NewStudyParameterDefinition
+    Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(EMAParamSlopeThreshold)
     paramDef.name = EMAParamSlopeThreshold
     paramDef.Description = "The smallest slope value that is not to be considered flat"
     paramDef.parameterType = ParameterTypeDouble
-    mStudyDefinition.StudyParameterDefinitions.Add paramDef
     
 End If
 
-Set studyDefinition = mStudyDefinition
+Set studyDefinition = mStudyDefinition.Clone
 End Property
 
 '================================================================================

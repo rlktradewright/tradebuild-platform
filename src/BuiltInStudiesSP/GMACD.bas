@@ -5,6 +5,8 @@ Option Explicit
 ' Constants
 '================================================================================
 
+Public Const MACDInputValue As String = "Input"
+
 Public Const MACDParamLongPeriods As String = "Long periods"
 Public Const MACDParamMAType As String = ParamMovingAverageType
 Public Const MACDParamShortPeriods As String = "Short periods"
@@ -71,12 +73,14 @@ Set defaultParameters = mDefaultParameters.Clone
 End Property
 
 Public Property Get studyDefinition() As TradeBuildSP.IStudyDefinition
+Dim inputDef As IStudyInputDefinition
 Dim valueDef As IStudyValueDefinition
 Dim paramDef As IStudyParameterDefinition
 
 If mStudyDefinition Is Nothing Then
     Set mStudyDefinition = mCommonServiceConsumer.NewStudyDefinition
     mStudyDefinition.name = MacdName
+    mStudyDefinition.shortName = MacdShortName
     mStudyDefinition.Description = "MACD (Moving Average Convergence/Divergence) " & _
                         "calculates the difference between two moving averages of " & _
                         "different periods. A further moving average is applied " & _
@@ -86,85 +90,79 @@ If mStudyDefinition Is Nothing Then
                         "histogram."
     mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionCustom
     
-    Set valueDef = mCommonServiceConsumer.NewStudyValueDefinition
+    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(MACDInputValue)
+    inputDef.name = MACDInputValue
+    inputDef.inputType = InputTypeDouble
+    inputDef.Description = "Input value"
+    
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueMACD)
     valueDef.name = MACDValueMACD
     valueDef.Description = "The MACD value"
     valueDef.isDefault = True
     valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valuetype = ValueTypeDouble
-    mStudyDefinition.StudyValueDefinitions.Add valueDef
+    valueDef.valueType = ValueTypeDouble
     
-    Set valueDef = mCommonServiceConsumer.NewStudyValueDefinition
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueMACDSignal)
     valueDef.name = MACDValueMACDSignal
     valueDef.Description = "The MACD signal value"
     valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valuetype = ValueTypeDouble
-    mStudyDefinition.StudyValueDefinitions.Add valueDef
+    valueDef.valueType = ValueTypeDouble
     
-    Set valueDef = mCommonServiceConsumer.NewStudyValueDefinition
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueMACDHist)
     valueDef.name = MACDValueMACDHist
     valueDef.Description = "The MACD histogram value"
     valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valuetype = ValueTypeDouble
-    mStudyDefinition.StudyValueDefinitions.Add valueDef
+    valueDef.valueType = ValueTypeDouble
     
-    Set valueDef = mCommonServiceConsumer.NewStudyValueDefinition
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueStrengthCount)
     valueDef.name = MACDValueStrengthCount
     valueDef.Description = "The number of consecutive bars for which the current " & _
                             "strength value has not changed"
     valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valuetype = ValueTypeInteger
-    mStudyDefinition.StudyValueDefinitions.Add valueDef
+    valueDef.valueType = ValueTypeInteger
     
-    Set valueDef = mCommonServiceConsumer.NewStudyValueDefinition
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueStrength)
     valueDef.name = MACDValueStrength
     valueDef.Description = "An indication of the strength of the current move"
     valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valuetype = ValueTypeInteger
-    mStudyDefinition.StudyValueDefinitions.Add valueDef
+    valueDef.valueType = ValueTypeInteger
     
-    Set valueDef = mCommonServiceConsumer.NewStudyValueDefinition
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueMACDUpperBalance)
     valueDef.name = MACDValueMACDUpperBalance
     valueDef.Description = "The price above which is confirmed strength"
     valueDef.defaultRegion = DefaultRegionPrice
-    valueDef.valuetype = ValueTypeDouble
-    mStudyDefinition.StudyValueDefinitions.Add valueDef
+    valueDef.valueType = ValueTypeDouble
     
-    Set valueDef = mCommonServiceConsumer.NewStudyValueDefinition
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(MACDValueMACDLowerBalance)
     valueDef.name = MACDValueMACDLowerBalance
     valueDef.Description = "The price below which is confirmed weakness"
     valueDef.defaultRegion = DefaultRegionPrice
-    valueDef.valuetype = ValueTypeDouble
-    mStudyDefinition.StudyValueDefinitions.Add valueDef
+    valueDef.valueType = ValueTypeDouble
     
-    Set paramDef = mCommonServiceConsumer.NewStudyParameterDefinition
+    Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(MACDParamShortPeriods)
     paramDef.name = MACDParamShortPeriods
     paramDef.Description = "The number of periods in the shorter moving average"
     paramDef.parameterType = ParameterTypeInteger
-    mStudyDefinition.StudyParameterDefinitions.Add paramDef
 
-    Set paramDef = mCommonServiceConsumer.NewStudyParameterDefinition
+    Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(MACDParamLongPeriods)
     paramDef.name = MACDParamLongPeriods
     paramDef.Description = "The number of periods in the longer moving average"
     paramDef.parameterType = ParameterTypeInteger
-    mStudyDefinition.StudyParameterDefinitions.Add paramDef
 
-    Set paramDef = mCommonServiceConsumer.NewStudyParameterDefinition
+    Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(MACDParamSmoothingPeriods)
     paramDef.name = MACDParamSmoothingPeriods
     paramDef.Description = "The number of periods for smoothing the MACD to " & _
                             "produce the MACD signal value"
     paramDef.parameterType = ParameterTypeInteger
-    mStudyDefinition.StudyParameterDefinitions.Add paramDef
     
-    Set paramDef = mCommonServiceConsumer.NewStudyParameterDefinition
+    Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(MACDParamMAType)
     paramDef.name = MACDParamMAType
     paramDef.Description = "The type of moving averages to be used"
     paramDef.parameterType = ParameterTypeString
-    mStudyDefinition.StudyParameterDefinitions.Add paramDef
     
 End If
 
-Set studyDefinition = mStudyDefinition
+Set studyDefinition = mStudyDefinition.Clone
 End Property
 
 '================================================================================

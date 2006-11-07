@@ -5,6 +5,8 @@ Option Explicit
 ' Constants
 '================================================================================
 
+Public Const SStochInputValue As String = "Input"
+
 Public Const SStochParamKPeriods As String = "%K periods"
 Public Const SStochParamKDPeriods As String = "%KD periods"
 Public Const SStochParamDPeriods As String = "%D periods"
@@ -64,12 +66,14 @@ Set defaultParameters = mDefaultParameters.Clone
 End Property
 
 Public Property Get studyDefinition() As TradeBuildSP.IStudyDefinition
+Dim inputDef As IStudyInputDefinition
 Dim valueDef As IStudyValueDefinition
 Dim paramDef As IStudyParameterDefinition
 
 If mStudyDefinition Is Nothing Then
     Set mStudyDefinition = mCommonServiceConsumer.NewStudyDefinition
     mStudyDefinition.name = SStochName
+    mStudyDefinition.shortName = SStochShortName
     mStudyDefinition.Description = "Slow stochastic compares the latest price to the " & _
                                 "recent trading range, and smoothes the result, " & _
                                 "giving a value called %K. " & _
@@ -78,50 +82,52 @@ If mStudyDefinition Is Nothing Then
                                 
     mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionCustom
     
-    Set valueDef = mCommonServiceConsumer.NewStudyValueDefinition
+    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(SStochInputValue)
+    inputDef.name = SStochInputValue
+    inputDef.inputType = InputTypeDouble
+    inputDef.Description = "Input value"
+    
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SStochValueK)
     valueDef.name = SStochValueK
     valueDef.Description = "The slow stochastic value (%K)"
     valueDef.isDefault = True
     valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valuetype = ValueTypeDouble
+    valueDef.valueType = ValueTypeDouble
     valueDef.minimumValue = 0#
     valueDef.maximumValue = 100#
-    mStudyDefinition.StudyValueDefinitions.Add valueDef
     
-    Set valueDef = mCommonServiceConsumer.NewStudyValueDefinition
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SStochValueD)
     valueDef.name = SStochValueD
     valueDef.Description = "The result of smoothing %K, also known as the signal line"
     valueDef.isDefault = False
     valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valuetype = ValueTypeDouble
+    valueDef.valueType = ValueTypeDouble
     valueDef.minimumValue = 0#
     valueDef.maximumValue = 100#
-    mStudyDefinition.StudyValueDefinitions.Add valueDef
     
-    Set paramDef = mCommonServiceConsumer.NewStudyParameterDefinition
+    Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(SStochParamKPeriods)
     paramDef.name = SStochParamKPeriods
     paramDef.Description = "The number of periods used to determine the recent " & _
                             "trading range"
     paramDef.parameterType = ParameterTypeInteger
-    mStudyDefinition.StudyParameterDefinitions.Add paramDef
 
-    Set paramDef = mCommonServiceConsumer.NewStudyParameterDefinition
+    Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(SStochParamKDPeriods)
+    paramDef.name = SStochParamKDPeriods
     paramDef.name = SStochParamKDPeriods
     paramDef.Description = "The number of periods of smoothing used in " & _
                             "calculating %K"
     paramDef.parameterType = ParameterTypeInteger
-    mStudyDefinition.StudyParameterDefinitions.Add paramDef
 
-    Set paramDef = mCommonServiceConsumer.NewStudyParameterDefinition
+    Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(SStochParamDPeriods)
+    paramDef.name = SStochParamDPeriods
     paramDef.name = SStochParamDPeriods
     paramDef.Description = "The number of periods used to smooth the %K value " & _
                             "to obtain %D"
     paramDef.parameterType = ParameterTypeInteger
-    mStudyDefinition.StudyParameterDefinitions.Add paramDef
 
 End If
 
-Set studyDefinition = mStudyDefinition
+Set studyDefinition = mStudyDefinition.Clone
 End Property
 
 '================================================================================

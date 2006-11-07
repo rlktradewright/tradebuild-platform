@@ -24,7 +24,6 @@ Option Explicit
 '================================================================================
 
 Implements TradeBuildSP.IStudy
-Implements TradeBuildSP.ITaskCompletionListener
 
 '================================================================================
 ' Events
@@ -46,17 +45,12 @@ Implements TradeBuildSP.ITaskCompletionListener
 ' Member variables
 '================================================================================
 
+'-------this variable is required in all studies---------
+Private mStudyFoundation As StudyFoundation
+'--------------------------------------------------------
+
 Private mStudyServiceConsumer As IStudyServiceConsumer
 Private mCommonServiceConsumer As ICommonServiceConsumer
-
-Private mIdent As String
-
-Private mParams As IParameters
-Private mStudies As IStudies
-Private mListeners As IStudyValueListeners
-
-Private mInputValueName As String
-Private mUnderlyingStudy As TradeBuildSP.IStudy
 
 Private mPeriods As Long
 Private mCentreBandWidth As Double
@@ -67,11 +61,7 @@ Private mSD As StandardDeviation
 Private mSDStudy As TradeBuildSP.IStudy
 
 Private mMAStudy As TradeBuildSP.IStudy
-Private mMA As MovingAverageStudy
-
-'Private mCentre As Variant
-'Private mTop As Variant
-'Private mBottom As Variant
+Private mMA As IMovingAverageStudy
 
 Private mDevs As Double
 
@@ -96,145 +86,35 @@ Debug.Print "BollingerBands study terminated"
 End Sub
 
 '================================================================================
-' IStudy Interface Members
+' Custom methods that must be impleemented
 '================================================================================
 
-Private Function IStudy_addStudy( _
-                ByVal study As IStudy, _
-                ByVal ValueName As String, _
-                ByVal numUnderlyingValuesToUse As Long, _
-                Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
-
-Select Case UCase$(ValueName)
-Case UCase$(BBValueBottom)
-Case UCase$(BBValueCentre)
-Case UCase$(BBValueSpread)
-Case UCase$(BBValueTop)
-Case Else
-    Exit Function
-End Select
-
-Set IStudy_addStudy = mStudyServiceConsumer.replayStudyValues( _
-                            study, _
-                            Me, _
-                            ValueName, _
-                            numUnderlyingValuesToUse, _
-                            TaskDiscriminators.TaskAddStudy, _
-                            taskName, _
-                            taskData)
-IStudy_addStudy.addTaskCompletionListener Me
-
-End Function
-
-Private Function IStudy_addStudyValueListener( _
-                ByVal listener As TradeBuildSP.IStudyValueListener, _
-                ByVal ValueName As String, _
-                ByVal numberOfValuesToReplay As Long, _
-                Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
-Select Case UCase$(ValueName)
-Case UCase$(BBValueBottom)
-Case UCase$(BBValueCentre)
-Case UCase$(BBValueSpread)
-Case UCase$(BBValueTop)
-Case Else
-    Exit Function
-End Select
-
-Set IStudy_addStudyValueListener = mStudyServiceConsumer.replayStudyValues( _
-                            listener, _
-                            Me, _
-                            ValueName, _
-                            numberOfValuesToReplay, _
-                            TaskDiscriminators.TaskAddStudyValueListener, _
-                            taskName, _
-                            taskData)
-IStudy_addStudyValueListener.addTaskCompletionListener Me
-End Function
-
-Private Property Get IStudy_baseStudy() As IStudy
-Set IStudy_baseStudy = Me
-End Property
-
-Private Property Let IStudy_defaultParameters(ByVal RHS As TradeBuildSP.IParameters)
-GBollingerBands.defaultParameters = RHS
-End Property
-
-Private Property Get IStudy_defaultParameters() As TradeBuildSP.IParameters
-Set IStudy_defaultParameters = GBollingerBands.defaultParameters
-End Property
-
-Private Function IStudy_getStudyValue( _
-                ByVal ValueName As String, _
-                ByVal ref As Long, _
-                params() As Variant) As StudyValue
-Select Case UCase$(ValueName)
-Case UCase$(BBValueBottom)
-    IStudy_getStudyValue = Me.bottom(ref)
-Case UCase$(BBValueCentre)
-    IStudy_getStudyValue = Me.centre(ref)
-Case UCase$(BBValueSpread)
-    IStudy_getStudyValue = Me.spread(ref)
-Case UCase$(BBValueTop)
-    IStudy_getStudyValue = Me.top(ref)
-Case "bottomfalling"
-    If UBound(params) < 0 Then
-        IStudy_getStudyValue = Me.bottomFalling(ref)
-    Else
-        IStudy_getStudyValue = Me.bottomFalling(ref, params(0))
-    End If
-End Select
-End Function
-
-Private Property Get IStudy_id() As String
-IStudy_id = mIdent
-End Property
-
-Private Sub IStudy_initialise( _
+Private Sub customInitialise( _
+                ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
+                ByVal studyServiceConsumer As TradeBuildSP.IStudyServiceConsumer, _
                 ByVal id As String, _
                 ByVal parameters As TradeBuildSP.IParameters, _
                 ByVal numberOfValuesToCache As Long, _
-                ByVal inputValueName As String, _
+                ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As TradeBuildSP.IStudy)
-mIdent = id
-mInputValueName = inputValueName
-Set mUnderlyingStudy = underlyingStudy
-processParameters parameters
+Set mCommonServiceConsumer = commonServiceConsumer
+Set mStudyServiceConsumer = studyServiceConsumer
+mStudyFoundation.ReplayUsingStudyValues = True
 mNumberOfValuesToCache = numberOfValuesToCache
-
+customProcessParameters parameters
 End Sub
 
-Private Property Get IStudy_instanceName() As String
-IStudy_instanceName = BbShortName & "(" & _
-                mInputValueName & "," & _
-                gParamsToString(mParams, GBollingerBands.studyDefinition) & ")"
-End Property
-
-Private Property Get IStudy_instancePath() As String
-IStudy_instancePath = BbShortName & "(" & _
-                mInputValueName & "," & _
-                gParamsToString(mParams, GBollingerBands.studyDefinition) & ")." & _
-                mUnderlyingStudy.instancePath
-End Property
-
-Private Sub IStudy_Notify(ev As TradeBuildSP.StudyValueEvent)
-Dim isNewBar As Boolean
+Private Sub customNotify( _
+                ev As TradeBuildSP.StudyValueEvent)
 Static sPrevVal As Variant
-Dim evOut As TradeBuildSP.StudyValueEvent
 
-isNewBar = newBar(ev.barnumber)
-
-If Not isNewBar Then
+If Not mStudyFoundation.isNewBar Then
     If ev.value = sPrevVal Then Exit Sub
     sPrevVal = ev.value
 End If
 
-evOut.barnumber = ev.barnumber
-Set evOut.Source = Me
-evOut.timestamp = ev.timestamp
-mSDStudy.notify ev
-mMAStudy.notify ev
+mSDStudy.Notify ev
+mMAStudy.Notify ev
 
 If IsEmpty(mMA.ma.value) Or IsEmpty(mSD.SD.value) Then Exit Sub
 
@@ -244,49 +124,63 @@ notifyValue mMA.ma.value - mDevs * mSD.SD.value, BBValueBottom, ev.barnumber, ev
 notifyValue 2 * mDevs * mSD.SD.value, BBValueSpread, ev.barnumber, ev.timestamp
 End Sub
 
-Private Property Get IStudy_numberOfBarsRequired() As Long
+Private Function customNumberOfBarsRequired() As Long
 Dim lStudy As IStudy
 Set lStudy = mSD
-IStudy_numberOfBarsRequired = lStudy.numberOfBarsRequired
-End Property
-
-Private Function IStudy_numberOfCachedValues( _
-                Optional ByVal ValueName As String = "") As Long
-IStudy_numberOfCachedValues = mMAStudy.numberOfCachedValues
+customNumberOfBarsRequired = lStudy.numberOfBarsRequired
 End Function
 
-Private Property Get IStudy_parameters() As IParameters
-Set IStudy_parameters = mParams.Clone
-End Property
+Private Sub customProcessParameters(ByVal params As IParameters)
+Dim param As TradeBuildSP.IParameter
+Dim lparams As IParameters
+Dim maType As String
+Dim lStudy As IStudy
+Dim valueNames(0) As String
 
-Private Sub IStudy_removeStudyValueListener( _
-                ByVal listener As TradeBuildSP.IStudyValueListener)
-mListeners.Remove listener
+valueNames(0) = "in"
+
+Set param = params.getFirstParameter
+
+Do While Not param Is Nothing
+    Select Case UCase$(param.name)
+    Case UCase$(BBParamCentreBandWidth)
+        mCentreBandWidth = param.value
+    Case UCase$(BBParamDeviations)
+        mDevs = param.value
+    Case UCase$(BBParamEdgeBandWidth)
+        mEdgeBandWidth = param.value
+    Case UCase$(BBParamPeriods)
+        mPeriods = param.value
+    Case UCase$(BBParamSlopeThreshold)
+        mSlopeThreshold = param.value
+    Case UCase$(BBParamMAType)
+        maType = param.value
+    End Select
+    Set param = params.getNextParameter
+Loop
+
+Set mMA = gCreateMA(maType, _
+                    mCommonServiceConsumer, _
+                    mStudyServiceConsumer, _
+                    mPeriods, _
+                    1)
+Set mMAStudy = mMA
+
+Set lparams = GStandardDeviation.defaultParameters
+lparams.setParameterValue ParamPeriods, mPeriods
+Set lStudy = mSD
+lStudy.initialise mCommonServiceConsumer, _
+                    mStudyServiceConsumer, _
+                    mCommonServiceConsumer.GenerateGUIDString, _
+                    lparams, _
+                    mNumberOfValuesToCache, _
+                    valueNames, _
+                    Nothing
 End Sub
 
-Private Property Get IStudy_studyDefinition() As TradeBuildSP.IStudyDefinition
-Set IStudy_studyDefinition = GBollingerBands.studyDefinition
-End Property
-
-'================================================================================
-' ITaskCompletionListener Interface Members
-'================================================================================
-
-Private Sub ITaskCompletionListener_taskCompleted( _
-                ev As TradeBuildSP.TaskCompletionEvent)
-Dim task As IValueReplayTask
-Set task = ev.Source
-Select Case task.discriminator
-Case TaskDiscriminators.TaskAddStudy
-    Dim targetStudy As IStudy
-    Set targetStudy = task.Target
-    mStudies.Add targetStudy, task.ValueName
-Case TaskDiscriminators.TaskAddStudyValueListener
-    Dim targetListener As IStudyValueListener
-    Set targetListener = task.Target
-    mListeners.Add targetListener, task.ValueName
-End Select
-End Sub
+Private Function customStudyDefinition() As IStudyDefinition
+Set customStudyDefinition = GBollingerBands.studyDefinition
+End Function
 
 '================================================================================
 ' XXXX Event Handlers
@@ -474,95 +368,158 @@ End Property
 ' Methods
 '================================================================================
 
-Friend Sub initialise( _
-                ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
-                ByVal studyServiceConsumer As TradeBuildSP.IStudyServiceConsumer, _
-                Optional ByVal numberOfValuesToCache As Long, _
-                Optional ByVal params As IParameters)
-
-Set mCommonServiceConsumer = commonServiceConsumer
-Set mStudyServiceConsumer = studyServiceConsumer
-Set mStudies = mCommonServiceConsumer.NewStudies
-Set mListeners = mCommonServiceConsumer.NewStudyValueListeners
-
-Set mStudyServiceConsumer = studyServiceConsumer
-
-mNumberOfValuesToCache = numberOfValuesToCache
-
-If Not params Is Nothing Then
-    mNumberOfValuesToCache = numberOfValuesToCache
-    processParameters params
-End If
-
-End Sub
-
 '================================================================================
 ' Helper Functions
 '================================================================================
 
-Private Function newBar(barnumber As Long) As Boolean
-Static previousBarNumber As Long
-If barnumber <> previousBarNumber Then
-    previousBarNumber = barnumber
-    newBar = True
-Else
-    newBar = False
-End If
+Private Function getStudyValue( _
+                ByVal valueName As String, _
+                ByVal ref As Long) As StudyValue
+Select Case UCase$(valueName)
+Case UCase$(BBValueBottom)
+    getStudyValue = Me.bottom(ref)
+Case UCase$(BBValueCentre)
+    getStudyValue = Me.centre(ref)
+Case UCase$(BBValueSpread)
+    getStudyValue = Me.spread(ref)
+Case UCase$(BBValueTop)
+    getStudyValue = Me.top(ref)
+End Select
 End Function
 
 Private Sub notifyValue( _
                 ByVal value As Variant, _
-                ByVal ValueName As String, _
+                ByVal valueName As String, _
                 ByVal barnumber As Long, _
                 ByVal timestamp As Date)
 Dim ev As StudyValueEvent
 If Not IsEmpty(value) Then
     ev.value = value
-    ev.ValueName = ValueName
+    ev.valueName = valueName
     Set ev.Source = Me
     ev.barnumber = barnumber
     ev.timestamp = timestamp
-    mStudies.notify ev
-    mListeners.notify ev
+    mStudyFoundation.notifyValue ev
 End If
 End Sub
 
-Private Sub processParameters(ByVal params As IParameters)
-Dim param As TradeBuildSP.IParameter
-Dim lParams As IParameters
-Dim maType As String
 
-Set mParams = params.Clone
+'================================================================================
+' From this point on the code is identical for all studies - do not change!!!!
+'================================================================================
 
-Set param = mParams.getFirstParameter
 
-Do While Not param Is Nothing
-    Select Case UCase$(param.name)
-    Case UCase$(BBParamCentreBandWidth)
-        mCentreBandWidth = param.value
-    Case UCase$(BBParamDeviations)
-        mDevs = param.value
-    Case UCase$(BBParamEdgeBandWidth)
-        mEdgeBandWidth = param.value
-    Case UCase$(BBParamPeriods)
-        mPeriods = param.value
-    Case UCase$(BBParamSlopeThreshold)
-        mSlopeThreshold = param.value
-    Case UCase$(BBParamMAType)
-        maType = param.value
-    End Select
-    Set param = mParams.getNextParameter
-Loop
+'================================================================================
+' IStudy Interface Members
+'================================================================================
 
-Set mMA = gCreateMA(maType)
-Set mMAStudy = mMA
-Set lParams = mMAStudy.parameters
-lParams.setParameterValue ParamPeriods, mPeriods
-mMA.initialise mCommonServiceConsumer, mStudyServiceConsumer, mNumberOfValuesToCache, lParams
+Private Function IStudy_addStudy( _
+                ByVal study As IStudy, _
+                ByRef valueNames() As String, _
+                ByVal numUnderlyingValuesToUse As Long, _
+                Optional ByVal taskName As String, _
+                Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
 
-Set lParams = mSDStudy.parameters
-lParams.setParameterValue ParamPeriods, mPeriods
-mSD.initialise mCommonServiceConsumer, mStudyServiceConsumer, mNumberOfValuesToCache, lParams
+Set IStudy_addStudy = mStudyFoundation.addStudy( _
+                            study, _
+                            valueNames, _
+                            numUnderlyingValuesToUse, _
+                            taskName, _
+                            taskData)
+End Function
+
+Private Function IStudy_addStudyValueListener( _
+                ByVal listener As TradeBuildSP.IStudyValueListener, _
+                ByVal valueName As String, _
+                ByVal numberOfValuesToReplay As Long, _
+                Optional ByVal taskName As String, _
+                Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
+Set IStudy_addStudyValueListener = mStudyFoundation.addStudyValueListener( _
+                            listener, _
+                            valueName, _
+                            numberOfValuesToReplay, _
+                            taskName, _
+                            taskData)
+End Function
+
+Private Property Get IStudy_baseStudy() As IStudy
+Set IStudy_baseStudy = Me
+End Property
+
+Private Function IStudy_getStudyValue( _
+                ByVal valueName As String, _
+                ByVal ref As Long) As StudyValue
+'Study_getStudyValue = mStudyFoundation.getStudyValue(ValueName, ref)
+IStudy_getStudyValue = getStudyValue(valueName, ref)
+End Function
+
+Private Property Get IStudy_id() As String
+IStudy_id = mStudyFoundation.id
+End Property
+
+Private Sub IStudy_initialise( _
+                ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
+                ByVal studyServiceConsumer As TradeBuildSP.IStudyServiceConsumer, _
+                ByVal id As String, _
+                ByVal parameters As TradeBuildSP.IParameters, _
+                ByVal numberOfValuesToCache As Long, _
+                ByRef inputValueNames() As String, _
+                ByVal underlyingStudy As TradeBuildSP.IStudy)
+Set mStudyFoundation = New StudyFoundation
+mStudyFoundation.initialise Me, _
+                            id, _
+                            parameters, _
+                            numberOfValuesToCache, _
+                            inputValueNames, _
+                            underlyingStudy, _
+                            commonServiceConsumer, _
+                            studyServiceConsumer
+                            
+
+customInitialise commonServiceConsumer, _
+                studyServiceConsumer, _
+                id, _
+                parameters, _
+                numberOfValuesToCache, _
+                inputValueNames, _
+                underlyingStudy
 End Sub
+
+Private Property Get IStudy_instanceName() As String
+IStudy_instanceName = mStudyFoundation.instanceName
+End Property
+
+Private Property Get IStudy_instancePath() As String
+IStudy_instancePath = mStudyFoundation.instancePath
+End Property
+
+Private Sub IStudy_Notify( _
+                ev As TradeBuildSP.StudyValueEvent)
+mStudyFoundation.NotifyInput ev
+customNotify ev
+End Sub
+
+Private Property Get IStudy_numberOfBarsRequired() As Long
+IStudy_numberOfBarsRequired = mStudyFoundation.numberOfBarsRequired(customNumberOfBarsRequired)
+End Property
+
+Private Function IStudy_numberOfCachedValues( _
+                Optional ByVal valueName As String = "") As Long
+IStudy_numberOfCachedValues = mStudyFoundation.numberOfCachedValues(valueName)
+End Function
+
+Private Property Get IStudy_parameters() As IParameters
+Set IStudy_parameters = mStudyFoundation.parameters
+End Property
+
+Private Sub IStudy_removeStudyValueListener( _
+                ByVal listener As TradeBuildSP.IStudyValueListener)
+mStudyFoundation.removeStudyValueListener listener
+End Sub
+
+Private Property Get IStudy_studyDefinition() As TradeBuildSP.IStudyDefinition
+Set IStudy_studyDefinition = customStudyDefinition
+End Property
+
 
 

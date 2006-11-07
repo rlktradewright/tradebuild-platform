@@ -69,12 +69,14 @@ Private Sub Class_Initialize()
 mName = "TradeWright TradeBuild Built-in Studies Service Provider"
 
 ReDim mStudyNames(0) As String
+addStudyName AccDistName
 addStudyName AtrName
 addStudyName BbName
 addStudyName DoncName
 addStudyName EmaName
 addStudyName MacdName
 addStudyName PsName
+addStudyName RsiName
 addStudyName SStochName
 addStudyName SmaName
 addStudyName SdName
@@ -108,6 +110,7 @@ Private Sub ICommonServiceProvider_Link( _
                 ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
                 ByVal handle As Long)
 Set mCommonServiceConsumer = commonServiceConsumer
+GAccDist.commonServiceConsumer = commonServiceConsumer
 GATR.commonServiceConsumer = commonServiceConsumer
 GEMA.commonServiceConsumer = commonServiceConsumer
 GDonchianChannels.commonServiceConsumer = commonServiceConsumer
@@ -116,6 +119,7 @@ GMACD.commonServiceConsumer = commonServiceConsumer
 GParabolicStop.commonServiceConsumer = commonServiceConsumer
 GStandardDeviation.commonServiceConsumer = commonServiceConsumer
 GBollingerBands.commonServiceConsumer = commonServiceConsumer
+GRSI.commonServiceConsumer = commonServiceConsumer
 GSwing.commonServiceConsumer = commonServiceConsumer
 GStochastic.commonServiceConsumer = commonServiceConsumer
 GSlowStochastic.commonServiceConsumer = commonServiceConsumer
@@ -148,49 +152,34 @@ End Sub
 '================================================================================
 
 Private Function IStudyServiceProvider_createStudy( _
-                ByVal name As String, _
-                ByVal serviceConsumer As TradeBuildSP.IStudyServiceConsumer) As TradeBuildSP.IStudy
+                ByVal name As String) As TradeBuildSP.IStudy
 Select Case UCase$(name)
+Case UCase$(AccDistName), UCase$(AccDistShortName)
+    Set IStudyServiceProvider_createStudy = New accDist
 Case UCase$(AtrName), UCase$(AtrShortName)
-    Dim lAtr As New ATR
-    lAtr.initialise mCommonServiceConsumer, serviceConsumer
-    Set IStudyServiceProvider_createStudy = lAtr
+    Set IStudyServiceProvider_createStudy = New ATR
 Case UCase$(BbName), UCase$(BbShortName)
-    Dim lBb As New BollingerBands
-    lBb.initialise mCommonServiceConsumer, serviceConsumer
-    Set IStudyServiceProvider_createStudy = lBb
+    Set IStudyServiceProvider_createStudy = New BollingerBands
 Case UCase$(DoncName), UCase$(DoncName)
-    Dim lDonc As New DonchianChannels
-    lDonc.initialise mCommonServiceConsumer, serviceConsumer
-    Set IStudyServiceProvider_createStudy = lDonc
+    Set IStudyServiceProvider_createStudy = New DonchianChannels
 Case UCase$(EmaName), UCase$(EmaShortName)
-    Dim lEMA As New EMA
-    lEMA.initialise mCommonServiceConsumer, serviceConsumer
-    Set IStudyServiceProvider_createStudy = lEMA
-Case UCase$(SmaName), UCase$(SmaShortName)
-    Dim lSMA As New SMA
-    lSMA.initialise mCommonServiceConsumer, serviceConsumer
-    Set IStudyServiceProvider_createStudy = lSMA
+    Set IStudyServiceProvider_createStudy = New EMA
 Case UCase$(MacdName), UCase$(MacdShortName)
-    Dim lMACD As New MACD
-    lMACD.initialise mCommonServiceConsumer, serviceConsumer
-    Set IStudyServiceProvider_createStudy = lMACD
+    Set IStudyServiceProvider_createStudy = New MACD
 Case UCase$(PsName), UCase$(PsShortName)
-    Dim lPs As New ParabolicStop
-    lPs.initialise mCommonServiceConsumer, serviceConsumer
-    Set IStudyServiceProvider_createStudy = lPs
+    Set IStudyServiceProvider_createStudy = New ParabolicStop
+Case UCase$(RsiName), UCase$(RsiShortName)
+    Set IStudyServiceProvider_createStudy = New RSI
+Case UCase$(SmaName), UCase$(SmaShortName)
+    Set IStudyServiceProvider_createStudy = New SMA
 Case UCase$(SStochName), UCase$(SStochShortName)
-    Dim lSStoch As New SlowStochastic
-    lSStoch.initialise mCommonServiceConsumer, serviceConsumer
-    Set IStudyServiceProvider_createStudy = lSStoch
+    Set IStudyServiceProvider_createStudy = New SlowStochastic
+Case UCase$(SdName), UCase$(SdShortName)
+    Set IStudyServiceProvider_createStudy = New StandardDeviation
 Case UCase$(StochName), UCase$(StochShortName)
-    Dim lStoch As New Stochastic
-    lStoch.initialise mCommonServiceConsumer, serviceConsumer
-    Set IStudyServiceProvider_createStudy = lStoch
+    Set IStudyServiceProvider_createStudy = New Stochastic
 Case UCase$(SwingName), UCase$(SwingShortName)
-    Dim lSwing As New Swing
-    lSwing.initialise mCommonServiceConsumer, serviceConsumer
-    Set IStudyServiceProvider_createStudy = lSwing
+    Set IStudyServiceProvider_createStudy = New Swing
 End Select
 
 End Function
@@ -198,6 +187,8 @@ End Function
 Private Function IStudyServiceProvider_getStudyDefaultParameters( _
                 ByVal name As String) As TradeBuildSP.IParameters
 Select Case UCase$(name)
+Case UCase$(AccDistName), UCase$(AccDistShortName)
+    Set IStudyServiceProvider_getStudyDefaultParameters = GAccDist.defaultParameters
 Case UCase$(AtrName), UCase$(AtrShortName)
     Set IStudyServiceProvider_getStudyDefaultParameters = GATR.defaultParameters
 Case UCase$(BbName), UCase$(BbShortName)
@@ -206,6 +197,8 @@ Case UCase$(DoncName), UCase$(DoncName)
     Set IStudyServiceProvider_getStudyDefaultParameters = GDonchianChannels.defaultParameters
 Case UCase$(EmaName), UCase$(EmaShortName)
     Set IStudyServiceProvider_getStudyDefaultParameters = GEMA.defaultParameters
+Case UCase$(RsiName), UCase$(RsiShortName)
+    Set IStudyServiceProvider_getStudyDefaultParameters = GRSI.defaultParameters
 Case UCase$(SmaName), UCase$(SmaShortName)
     Set IStudyServiceProvider_getStudyDefaultParameters = GSMA.defaultParameters
 Case UCase$(MacdName), UCase$(MacdShortName)
@@ -235,6 +228,8 @@ Private Function IStudyServiceProvider_setStudyDefaultParameters( _
 IStudyServiceProvider_setStudyDefaultParameters = True
 
 Select Case UCase$(name)
+Case UCase$(AccDistName), UCase$(AccDistShortName)
+    GAccDist.defaultParameters = parameters
 Case UCase$(AtrName), UCase$(AtrShortName)
     GATR.defaultParameters = parameters
 Case UCase$(BbName), UCase$(BbShortName)
@@ -243,6 +238,8 @@ Case UCase$(DoncName), UCase$(DoncName)
     GDonchianChannels.defaultParameters = parameters
 Case UCase$(EmaName), UCase$(EmaShortName)
     GEMA.defaultParameters = parameters
+Case UCase$(RsiName), UCase$(RsiShortName)
+    GRSI.defaultParameters = parameters
 Case UCase$(SmaName), UCase$(SmaShortName)
     GSMA.defaultParameters = parameters
 Case UCase$(MacdName), UCase$(MacdShortName)
@@ -266,6 +263,8 @@ End Function
 Private Function IStudyServiceProvider_studyDefinition( _
                 ByVal name As String) As TradeBuildSP.IStudyDefinition
 Select Case UCase$(name)
+Case UCase$(AccDistName), UCase$(AccDistShortName)
+    Set IStudyServiceProvider_studyDefinition = GAccDist.studyDefinition
 Case UCase$(AtrName), UCase$(AtrShortName)
     Set IStudyServiceProvider_studyDefinition = GATR.studyDefinition
 Case UCase$(BbName), UCase$(BbShortName)
@@ -274,6 +273,8 @@ Case UCase$(DoncName), UCase$(DoncName)
     Set IStudyServiceProvider_studyDefinition = GDonchianChannels.studyDefinition
 Case UCase$(EmaName), UCase$(EmaShortName)
     Set IStudyServiceProvider_studyDefinition = GEMA.studyDefinition
+Case UCase$(RsiName), UCase$(RsiShortName)
+    Set IStudyServiceProvider_studyDefinition = GRSI.studyDefinition
 Case UCase$(SmaName), UCase$(SmaShortName)
     Set IStudyServiceProvider_studyDefinition = GSMA.studyDefinition
 Case UCase$(MacdName), UCase$(MacdShortName)

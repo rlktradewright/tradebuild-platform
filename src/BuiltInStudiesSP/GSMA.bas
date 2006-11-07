@@ -5,10 +5,12 @@ Option Explicit
 ' Constants
 '================================================================================
 
+Public Const SMAInputValue As String = "Input"
+
 Public Const SMAParamPeriods As String = ParamPeriods
 Public Const SMAParamSlopeThreshold As String = "Slope threshold"
 
-Public Const SMAValueSMA As String = "SMA"
+Public Const SMAValueSMA As String = "MA"
 
 '================================================================================
 ' Enums
@@ -61,38 +63,42 @@ Set defaultParameters = mDefaultParameters.Clone
 End Property
 
 Public Property Get studyDefinition() As TradeBuildSP.IStudyDefinition
+Dim inputDef As IStudyInputDefinition
 Dim valueDef As IStudyValueDefinition
 Dim paramDef As IStudyParameterDefinition
 
 If mStudyDefinition Is Nothing Then
     Set mStudyDefinition = mCommonServiceConsumer.NewStudyDefinition
     mStudyDefinition.name = SmaName
+    mStudyDefinition.shortName = SmaShortName
     mStudyDefinition.Description = "A simple moving average"
     mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionPrice
     
-    Set valueDef = mCommonServiceConsumer.NewStudyValueDefinition
+    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(SMAInputValue)
+    inputDef.name = SMAInputValue
+    inputDef.inputType = InputTypeDouble
+    inputDef.Description = "Input value"
+    
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SMAValueSMA)
     valueDef.name = SMAValueSMA
     valueDef.Description = "The moving average value"
     valueDef.isDefault = True
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueType = ValueTypeDouble
-    mStudyDefinition.StudyValueDefinitions.Add valueDef
     
-    Set paramDef = mCommonServiceConsumer.NewStudyParameterDefinition
+    Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(SMAParamPeriods)
     paramDef.name = SMAParamPeriods
     paramDef.Description = "The number of periods used to calculate the moving average"
     paramDef.parameterType = ParameterTypeInteger
-    mStudyDefinition.StudyParameterDefinitions.Add paramDef
 
-    Set paramDef = mCommonServiceConsumer.NewStudyParameterDefinition
+    Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(SMAParamSlopeThreshold)
     paramDef.name = SMAParamSlopeThreshold
     paramDef.Description = "The smallest slope value that is not to be considered flat"
     paramDef.parameterType = ParameterTypeDouble
-    mStudyDefinition.StudyParameterDefinitions.Add paramDef
     
 End If
 
-Set studyDefinition = mStudyDefinition
+Set studyDefinition = mStudyDefinition.Clone
 End Property
 
 '================================================================================

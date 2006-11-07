@@ -15,6 +15,9 @@ Public Const DefaultStudyValueName As String = "$default"
 
 ' study name constants
 
+Public Const AccDistName As String = "Accumulation/Distribution"
+Public Const AccDistShortName As String = "AccDist"
+
 Public Const AtrName As String = "Average True Range"
 Public Const AtrShortName As String = "ATR"
 
@@ -32,6 +35,9 @@ Public Const MacdShortName As String = "MACD"
 
 Public Const PsName As String = "Parabolic Stop"
 Public Const PsShortName As String = "PS"
+
+Public Const RsiName As String = "Relative Strength Index"
+Public Const RsiShortName As String = "RSI"
 
 Public Const SdName As String = "Standard Deviation"
 Public Const SdShortName As String = "SD"
@@ -57,10 +63,6 @@ Public Const ParamPeriods As String = "Periods"
 ' Enums
 '================================================================================
 
-Public Enum TaskDiscriminators
-    TaskAddStudy
-    TaskAddStudyValueListener
-End Enum
 '================================================================================
 ' Types
 '================================================================================
@@ -77,37 +79,63 @@ End Enum
 ' Variables
 '================================================================================
 
+'Private mCommonServiceConsumer As ICommonServiceConsumer
+
 '================================================================================
-' Procedures
+' Properties
+'================================================================================
+
+'Public Property Let commonServiceConsumer( _
+'                ByVal value As ICommonServiceConsumer)
+'Set mCommonServiceConsumer = value
+'End Property
+
+'================================================================================
+' Methods
 '================================================================================
 
 Public Function gCreateMA( _
-                ByVal maType As String) As MovingAverageStudy
+                ByVal maType As String, _
+                ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
+                ByVal studyServiceConsumer As TradeBuildSP.IStudyServiceConsumer, _
+                ByVal periods As Long, _
+                ByVal numberOfValuesToCache As Long) As IMovingAverageStudy
+Dim lparams As IParameters
+Dim lStudy As IStudy
+Dim valueNames(0) As String
+
+valueNames(0) = "in"
+
 Select Case UCase$(maType)
-Case UCase$(SmaShortName)
-    Set gCreateMA = New SMA
 Case UCase$(EmaShortName)
-    Set gCreateMA = New EMA
+    Dim lEMA As EMA
+    Set lEMA = New EMA
+    Set lStudy = lEMA
+    Set lparams = GEMA.defaultParameters
+    lparams.setParameterValue ParamPeriods, periods
+    lStudy.initialise commonServiceConsumer, _
+                    studyServiceConsumer, _
+                    commonServiceConsumer.GenerateGUIDString, _
+                    lparams, _
+                    numberOfValuesToCache, _
+                    valueNames, _
+                    Nothing
+    Set gCreateMA = lEMA
+Case Else
+    Dim lSMA As SMA
+    Set lSMA = New SMA
+    Set lStudy = lSMA
+    Set lparams = GSMA.defaultParameters
+    lparams.setParameterValue ParamPeriods, periods
+    lStudy.initialise commonServiceConsumer, _
+                    studyServiceConsumer, _
+                    commonServiceConsumer.GenerateGUIDString, _
+                    lparams, _
+                    numberOfValuesToCache, _
+                    valueNames, _
+                    Nothing
+    Set gCreateMA = lSMA
 End Select
-End Function
-
-Public Function gParamsToString( _
-                ByVal params As IParameters, _
-                ByVal studyDef As TradeBuildSP.IStudyDefinition) As String
-Dim paramDefs As TradeBuildSP.IStudyParameterDefinitions
-Dim paramDef As TradeBuildSP.IStudyParameterDefinition
-Dim i As Long
-
-On Error Resume Next
-Set paramDefs = studyDef.StudyParameterDefinitions
-For i = 1 To paramDefs.Count
-    Set paramDef = paramDefs.Item(i)
-    If Len(gParamsToString) = 0 Then
-        gParamsToString = params.getParameterValue(paramDef.name)
-    Else
-        gParamsToString = gParamsToString & "," & params.getParameterValue(paramDef.name)
-    End If
-Next
 End Function
 
 '================================================================================

@@ -5,6 +5,8 @@ Option Explicit
 ' Constants
 '================================================================================
 
+Public Const SwingInputValue As String = "Input"
+
 Public Const SwingParamIncludeImplicitSwingPoints As String = "Include implicit swing points"
 Public Const SwingParamMinimumSwingTicks As String = "Minimum swing (ticks)"
 
@@ -65,43 +67,61 @@ Set defaultParameters = mDefaultParameters.Clone
 End Property
 
 Public Property Get studyDefinition() As TradeBuildSP.IStudyDefinition
+Dim inputDef As IStudyInputDefinition
 Dim valueDef As IStudyValueDefinition
 Dim paramDef As IStudyParameterDefinition
 
 If mStudyDefinition Is Nothing Then
     Set mStudyDefinition = mCommonServiceConsumer.NewStudyDefinition
     mStudyDefinition.name = SwingName
+    mStudyDefinition.shortName = SwingShortName
     mStudyDefinition.Description = "Determines the significant swing points of " & _
                                     "the underlying. For a move to be considered a swing, " & _
                                     "it must move at least the distance specified in the " & _
                                     "Minimum swing (ticks) parameter."
     mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionPrice
     
-    Set valueDef = mCommonServiceConsumer.NewStudyValueDefinition
+    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(SwingInputValue)
+    inputDef.name = SwingInputValue
+    inputDef.inputType = InputTypeDouble
+    inputDef.Description = "Input value"
+    
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingPoint)
     valueDef.name = SwingValueSwingPoint
     valueDef.Description = "Swing point values"
     valueDef.isDefault = True
     valueDef.multipleValuesPerBar = True    ' a bar can be both a swing point high and low
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueType = ValueTypeDouble
-    mStudyDefinition.StudyValueDefinitions.Add valueDef
     
-    Set paramDef = mCommonServiceConsumer.NewStudyParameterDefinition
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingHighPoint)
+    valueDef.name = SwingValueSwingHighPoint
+    valueDef.Description = "Swing high point values"
+    valueDef.isDefault = False
+    valueDef.defaultRegion = DefaultRegionNone
+    valueDef.valueType = ValueTypeDouble
+    
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingLowPoint)
+    valueDef.name = SwingValueSwingLowPoint
+    valueDef.Description = "Swing low point values"
+    valueDef.isDefault = False
+    valueDef.defaultRegion = DefaultRegionNone
+    valueDef.valueType = ValueTypeDouble
+    
+    Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(SwingParamMinimumSwingTicks)
     paramDef.name = SwingParamMinimumSwingTicks
     paramDef.Description = "The minimum number of ticks bar clearance from a high/low to " & _
                             "establish a new swing"
     paramDef.parameterType = ParameterTypeInteger
-    mStudyDefinition.StudyParameterDefinitions.Add paramDef
 
-    Set paramDef = mCommonServiceConsumer.NewStudyParameterDefinition
+    Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(SwingParamIncludeImplicitSwingPoints)
     paramDef.name = SwingParamIncludeImplicitSwingPoints
     paramDef.Description = "Indicates whether to include implied swing points"
     paramDef.parameterType = ParameterTypeDouble
-    mStudyDefinition.StudyParameterDefinitions.Add paramDef
     
 End If
 
-Set studyDefinition = mStudyDefinition
+Set studyDefinition = mStudyDefinition.Clone
 End Property
 
 '================================================================================

@@ -5,6 +5,8 @@ Option Explicit
 ' Constants
 '================================================================================
 
+Public Const SDInputValue As String = "Input"
+
 Public Const SDParamPeriods As String = ParamPeriods
 
 Public Const SDValueStandardDeviation As String = "Standard Deviation"
@@ -59,35 +61,40 @@ Set defaultParameters = mDefaultParameters.Clone
 End Property
 
 Public Property Get studyDefinition() As TradeBuildSP.IStudyDefinition
+Dim inputDef As IStudyInputDefinition
 Dim valueDef As IStudyValueDefinition
 Dim paramDef As IStudyParameterDefinition
 
 If mStudyDefinition Is Nothing Then
     Set mStudyDefinition = mCommonServiceConsumer.NewStudyDefinition
     mStudyDefinition.name = SdName
+    mStudyDefinition.shortName = SdShortName
     mStudyDefinition.Description = "Standard Deviation " & _
                         "calculates the standard deviation of the n most " & _
                         "recent values, where n is given by the Periods parameter."
     mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionCustom
     
-    Set valueDef = mCommonServiceConsumer.NewStudyValueDefinition
+    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(SDInputValue)
+    inputDef.name = SDInputValue
+    inputDef.inputType = InputTypeDouble
+    inputDef.Description = "Input value"
+    
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SDValueStandardDeviation)
     valueDef.name = SDValueStandardDeviation
     valueDef.Description = "The standard deviation value"
     valueDef.isDefault = True
     valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valuetype = ValueTypeDouble
-    mStudyDefinition.StudyValueDefinitions.Add valueDef
+    valueDef.valueType = ValueTypeDouble
     
-    Set paramDef = mCommonServiceConsumer.NewStudyParameterDefinition
+    Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(SDParamPeriods)
     paramDef.name = SDParamPeriods
     paramDef.Description = "The number of standard deviations used to calculate the " & _
                             "standard deviation"
-    paramDef.parameterType = ParameterTypeDouble
-    mStudyDefinition.StudyParameterDefinitions.Add paramDef
+    paramDef.parameterType = ParameterTypeInteger
 
 End If
 
-Set studyDefinition = mStudyDefinition
+Set studyDefinition = mStudyDefinition.Clone
 End Property
 
 '================================================================================
