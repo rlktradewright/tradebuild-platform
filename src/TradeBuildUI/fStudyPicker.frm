@@ -463,12 +463,12 @@ Private Function showConfigForm( _
 
 Set mConfigForm = New fStudyConfigurer
 
-mConfigForm.initialise mTicker, _
-                        mTicker.studyDefinition(studyName, spName), _
+mConfigForm.initialise mTicker.studyDefinition(studyName, spName), _
                         spName, _
                         mChart.regionNames, _
                         mStudyConfigurations, _
-                        defaultConfiguration
+                        defaultConfiguration, _
+                        mTicker.StudyDefaultParameters(studyName, spName)
 mConfigForm.Show vbModal, Me
 
 Set showConfigForm = mNewStudyConfiguration

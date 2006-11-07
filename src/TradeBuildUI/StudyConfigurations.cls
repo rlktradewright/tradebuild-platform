@@ -8,7 +8,7 @@ BEGIN
 END
 Attribute VB_Name = "StudyConfigurations"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -34,8 +34,8 @@ Option Explicit
 ' Events
 '================================================================================
 
-Event ItemAdded(ByVal studyConfig As StudyConfiguration)
-Event ItemRemoved(ByVal studyConfig As StudyConfiguration)
+Event ItemAdded(ByVal studyConfig As studyConfiguration)
+Event ItemRemoved(ByVal studyConfig As studyConfiguration)
 
 '================================================================================
 ' Constants
@@ -83,12 +83,12 @@ End Property
 ' Methods
 '================================================================================
 
-Friend Sub add( _
-                ByVal studyConfig As StudyConfiguration)
+Public Sub add( _
+                ByVal studyConfig As studyConfiguration)
 Dim key As String
 Dim keyInc As String
 Dim i As Long
-Dim lStudyConfig As StudyConfiguration
+Dim lStudyConfig As studyConfiguration
 
 key = studyConfig.instanceFullyQualifiedName
 
@@ -116,7 +116,7 @@ RaiseEvent ItemAdded(studyConfig)
 End Sub
 
 Public Function item( _
-                ByVal Index As Variant) As StudyConfiguration
+                ByVal Index As Variant) As studyConfiguration
 Set item = mStudyConfigurations.item(Index)
 End Function
 
@@ -127,7 +127,7 @@ Set NewEnum = mStudyConfigurations.[_NewEnum]
 End Function
 
 Friend Sub remove( _
-                ByVal studyConfig As StudyConfiguration)
+                ByVal studyConfig As studyConfiguration)
 mStudyConfigurations.remove studyConfig.instanceFullyQualifiedName
 RaiseEvent ItemRemoved(studyConfig)
 End Sub

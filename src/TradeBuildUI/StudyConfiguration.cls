@@ -8,7 +8,7 @@ BEGIN
 END
 Attribute VB_Name = "StudyConfiguration"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -62,7 +62,8 @@ Private mInstanceName As String
 Private mInstanceFullyQualifiedName As String
 Private mStudyId As String
 Private mUnderlyingStudyId As String
-Private mInputValueName As String
+Private mInputValueNames() As String
+Private mNotifyNames() As String
 Private mChartRegionName As String
 
 '================================================================================
@@ -89,7 +90,7 @@ End Sub
 ' Properties
 '================================================================================
 
-Friend Property Let chartRegionName(ByVal value As String)
+Public Property Let chartRegionName(ByVal value As String)
 mChartRegionName = value
 End Property
 
@@ -97,24 +98,24 @@ Public Property Get chartRegionName() As String
 chartRegionName = mChartRegionName
 End Property
 
-Friend Property Let horizontalRulesLineSeries( _
+Public Property Let horizontalRulesLineSeries( _
                 ByVal value As ChartSkil.LineSeries)
 Set mHorizontalRulesLineSeries = value
 End Property
 
-Friend Property Get horizontalRulesLineSeries() As ChartSkil.LineSeries
+Public Property Get horizontalRulesLineSeries() As ChartSkil.LineSeries
 Set horizontalRulesLineSeries = mHorizontalRulesLineSeries
 End Property
 
-Friend Property Let inputValueName(ByRef value As String)
-mInputValueName = value
+Public Property Let inputValueNames(ByRef value() As String)
+mInputValueNames = value
 End Property
 
-Public Property Get inputValueName() As String
-inputValueName = mInputValueName
+Public Property Get inputValueNames() As String()
+inputValueNames = mInputValueNames
 End Property
 
-Friend Property Let instanceName(ByVal value As String)
+Public Property Let instanceName(ByVal value As String)
 mInstanceName = value
 End Property
 
@@ -122,7 +123,7 @@ Public Property Get instanceName() As String
 instanceName = mInstanceName
 End Property
 
-Friend Property Let instanceFullyQualifiedName(ByVal value As String)
+Public Property Let instanceFullyQualifiedName(ByVal value As String)
 mInstanceFullyQualifiedName = value
 End Property
 
@@ -130,7 +131,7 @@ Public Property Get instanceFullyQualifiedName() As String
 instanceFullyQualifiedName = mInstanceFullyQualifiedName
 End Property
 
-Friend Property Let name(ByVal value As String)
+Public Property Let name(ByVal value As String)
 mName = value
 End Property
 
@@ -138,7 +139,15 @@ Public Property Get name() As String
 name = mName
 End Property
 
-Friend Property Let parameters(ByVal value As TradeBuild.parameters)
+Public Property Let notifyNames(ByRef value() As String)
+mNotifyNames = value
+End Property
+
+Public Property Get notifyNames() As String()
+notifyNames = mNotifyNames
+End Property
+
+Public Property Let parameters(ByVal value As TradeBuild.parameters)
 Set mParameters = value
 End Property
 
@@ -146,7 +155,7 @@ Public Property Get parameters() As TradeBuild.parameters
 Set parameters = mParameters
 End Property
 
-Friend Property Let serviceProviderName(ByVal value As String)
+Public Property Let serviceProviderName(ByVal value As String)
 mServiceProviderName = value
 End Property
 
@@ -154,7 +163,7 @@ Public Property Get serviceProviderName() As String
 serviceProviderName = mServiceProviderName
 End Property
 
-Friend Property Let studyDefinition(ByVal value As TradeBuild.studyDefinition)
+Public Property Let studyDefinition(ByVal value As TradeBuild.studyDefinition)
 Set mStudyDefinition = value
 End Property
 
@@ -166,7 +175,7 @@ Public Property Get studyHorizontalRules() As studyHorizontalRules
 Set studyHorizontalRules = mStudyHorizontalRules
 End Property
 
-Friend Property Let studyId(ByVal value As String)
+Public Property Let studyId(ByVal value As String)
 mStudyId = value
 End Property
 
@@ -182,7 +191,7 @@ Public Property Get studyValueHandlers() As studyValueHandlers
 Set studyValueHandlers = mStudyValueHandlers
 End Property
 
-Friend Property Let underlyingStudyId(ByVal value As String)
+Public Property Let underlyingStudyId(ByVal value As String)
 mUnderlyingStudyId = value
 End Property
 
@@ -194,13 +203,14 @@ End Property
 ' Methods
 '================================================================================
 
-Friend Function clone() As StudyConfiguration
-Set clone = New StudyConfiguration
+Friend Function clone() As studyConfiguration
+Set clone = New studyConfiguration
 clone.chartRegionName = mChartRegionName
-clone.inputValueName = mInputValueName
+clone.inputValueNames = mInputValueNames
 clone.instanceFullyQualifiedName = mInstanceFullyQualifiedName
 clone.instanceName = mInstanceName
 clone.name = mName
+clone.notifyNames = mNotifyNames
 clone.parameters = mParameters.clone
 clone.serviceProviderName = mServiceProviderName
 clone.studyDefinition = mStudyDefinition

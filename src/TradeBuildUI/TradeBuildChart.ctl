@@ -195,7 +195,7 @@ mPrevClosePrice = ev.price
 End Sub
 
 Private Sub QuoteListener_trade(ev As TradeBuild.QuoteEvent)
-If mUpdatePerTick Then mChartBar.Tick ev.price
+If mUpdatePerTick Then mChartBar.tick ev.price
 End Sub
 
 Private Sub QuoteListener_volume(ev As TradeBuild.QuoteEvent)
@@ -467,7 +467,7 @@ mRegions.add re, name
 End Sub
                 
 Public Function addStudy( _
-                ByVal studyConfig As StudyConfiguration) As TradeBuild.study
+                ByVal studyConfig As studyConfiguration) As TradeBuild.study
 Dim study As TradeBuild.study
 Dim studyId As String
 Dim studyValueConfig As StudyValueConfiguration
@@ -485,13 +485,13 @@ If mTicker Is Nothing Then err.Raise TradeBuild.ErrorCodes.ErrIllegalStateExcept
 If studyConfig.underlyingStudyId = "" Then
     ' this is a default study configuration
     studyConfig.underlyingStudyId = mBars.id
-    studyConfig.inputValueName = "Close"
+    'studyConfig.inputValueNames = "Close"
 End If
 
 Set study = mTicker.addStudy(studyConfig.name, _
                             studyId, _
                             studyConfig.underlyingStudyId, _
-                            studyConfig.inputValueName, _
+                            studyConfig.inputValueNames, _
                             studyConfig.parameters, _
                             studyConfig.serviceProviderName)
 
@@ -532,7 +532,7 @@ If studyConfig.studyHorizontalRules.count > 0 Then
 End If
 
 mStudyConfigurations.add studyConfig
-startStudy studyId, studyConfig.inputValueName
+startStudy studyId
 
 Set addStudy = study
 End Function
@@ -542,7 +542,7 @@ mChartControl.clearChart
 End Sub
 
 Public Sub finish()
-Dim studyConfig As StudyConfiguration
+Dim studyConfig As studyConfiguration
 
 On Error GoTo err
 
@@ -611,7 +611,7 @@ End Select
 End Function
 
 Public Function removeStudy( _
-                ByVal studyConfig As StudyConfiguration)
+                ByVal studyConfig As studyConfiguration)
 Dim studyValueConfig  As StudyValueConfiguration
 Dim svh As StudyValueHandler
 Dim horizRulesLineSeries As ChartSkil.LineSeries
@@ -658,13 +658,13 @@ mChartControl.lastVisiblePeriod = periodNumber + Int((mChartControl.lastVisibleP
 End Sub
 
 Public Sub showChart(ByVal value As TradeBuild.ticker)
-Dim studyConfig As StudyConfiguration
+Dim studyConfig As studyConfiguration
 Dim i As Long
 
 Set mTicker = value
 
 If Not mContract Is Nothing Then
-    If Not mContract.specifier.Equals(mTicker.Contract.specifier) Then mInitialised = False
+    If Not mContract.specifier.equals(mTicker.Contract.specifier) Then mInitialised = False
 End If
 Set mContract = mTicker.Contract
 mPriceRegion.YScaleQuantum = mContract.ticksize
@@ -709,7 +709,7 @@ Else
     'mOutstandingTasks = mOutstandingTasks + 1
 End If
 
-Set studyConfig = New StudyConfiguration
+Set studyConfig = New studyConfiguration
 studyConfig.instanceName = mBars.name
 studyConfig.instanceFullyQualifiedName = mBars.name
 studyConfig.studyId = mBars.id
@@ -732,16 +732,16 @@ End Sub
 
 Friend Sub updatePreviousBar()
 Dim lStudyValueHandler As StudyValueHandler
-Dim studyConfig As StudyConfiguration
+Dim studyConfig As studyConfiguration
 
 If Not mChartBar Is Nothing And _
     Not mPriceBar Is Nothing _
 Then
-    If Not mPriceBar.Blank Then
-        mChartBar.Tick mPriceBar.openValue
-        mChartBar.Tick mPriceBar.highValue
-        mChartBar.Tick mPriceBar.lowValue
-        mChartBar.Tick mPriceBar.closeValue
+    If Not mPriceBar.blank Then
+        mChartBar.tick mPriceBar.openValue
+        mChartBar.tick mPriceBar.highValue
+        mChartBar.tick mPriceBar.lowValue
+        mChartBar.tick mPriceBar.closeValue
         
         setVolume mPriceBar.volume
     End If
@@ -786,7 +786,7 @@ End Function
 
 Private Sub addStudyDataPointsToChart( _
                 ByVal timestamp As Date)
-Dim studyConfig As StudyConfiguration
+Dim studyConfig As studyConfiguration
 Dim lStudyValueHandler As StudyValueHandler
 For Each studyConfig In mStudyConfigurations
     For Each lStudyValueHandler In studyConfig.studyValueHandlers
@@ -917,9 +917,9 @@ lStudyValueHandler.region = region
 If Not IsEmpty(studyValueConfig.maximumValue) Or _
     Not IsEmpty(studyValueConfig.minimumValue) _
 Then
+    region.autoscale = False
     region.setVerticalScale CSng(studyValueConfig.minimumValue), _
                             CSng(studyValueConfig.maximumValue)
-    region.autoscale = False
 End If
 
 Set dataSeries = region.addDataPointSeries(studyValueConfig.layer)
@@ -1030,8 +1030,7 @@ End If
 End Sub
 
 Private Function startStudy( _
-                ByVal studyId As String, _
-                ByRef valueName As String) As Boolean
+                ByVal studyId As String) As Boolean
 Dim lTaskCompletion As TradeBuild.TaskCompletion
 Set lTaskCompletion = mTicker.startStudy(studyId, mBarSeries.count, , TaskTypeStartStudy)
 

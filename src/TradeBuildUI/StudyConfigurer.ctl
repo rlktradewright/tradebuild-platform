@@ -2,102 +2,34 @@ VERSION 5.00
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.UserControl StudyConfigurer 
-   ClientHeight    =   5805
+   ClientHeight    =   5595
    ClientLeft      =   0
    ClientTop       =   0
-   ClientWidth     =   9480
-   ScaleHeight     =   5805
-   ScaleWidth      =   9480
-   Begin VB.TextBox StudyDescriptionText 
-      BackColor       =   &H8000000F&
-      Height          =   525
-      Left            =   120
-      Locked          =   -1  'True
-      MultiLine       =   -1  'True
-      ScrollBars      =   2  'Vertical
-      TabIndex        =   43
-      TabStop         =   0   'False
-      Top             =   5160
-      Width           =   9255
-   End
-   Begin VB.Frame Frame1 
-      Caption         =   "Parameters"
+   ClientWidth     =   11820
+   ScaleHeight     =   5595
+   ScaleWidth      =   11820
+   Begin VB.Frame Frame2 
+      Caption         =   "Inputs"
       Height          =   4935
-      Left            =   120
-      TabIndex        =   32
-      Top             =   120
+      Left            =   0
+      TabIndex        =   40
+      Top             =   0
       Width           =   2415
-      Begin VB.PictureBox Picture1 
-         Appearance      =   0  'Flat
-         BorderStyle     =   0  'None
-         ForeColor       =   &H80000008&
-         Height          =   2775
-         Left            =   120
-         ScaleHeight     =   2775
-         ScaleWidth      =   2175
-         TabIndex        =   40
-         Top             =   240
-         Width           =   2175
-         Begin VB.TextBox ParameterValueText 
-            Height          =   285
-            Index           =   0
-            Left            =   1320
-            TabIndex        =   0
-            Top             =   0
-            Width           =   345
-         End
-         Begin VB.TextBox ParameterValueTemplateText 
-            Height          =   285
-            Left            =   1320
-            TabIndex        =   41
-            TabStop         =   0   'False
-            Top             =   960
-            Visible         =   0   'False
-            Width           =   855
-         End
-         Begin MSComCtl2.UpDown ParameterValueUpDown 
-            Height          =   285
-            Index           =   0
-            Left            =   1666
-            TabIndex        =   1
-            Top             =   0
-            Width           =   255
-            _ExtentX        =   450
-            _ExtentY        =   503
-            _Version        =   393216
-            AutoBuddy       =   -1  'True
-            BuddyControl    =   "ParameterValueText(0)"
-            BuddyDispid     =   196614
-            BuddyIndex      =   0
-            OrigLeft        =   1920
-            OrigRight       =   2175
-            OrigBottom      =   285
-            Enabled         =   -1  'True
-         End
-         Begin VB.Label ParameterNameLabel 
-            Caption         =   "Param name"
-            Height          =   375
-            Index           =   0
-            Left            =   0
-            TabIndex        =   42
-            Top             =   0
-            Width           =   1335
-         End
-      End
       Begin VB.PictureBox Picture2 
          BorderStyle     =   0  'None
-         Height          =   2055
+         Height          =   4575
          Left            =   120
-         ScaleHeight     =   2055
+         ScaleHeight     =   4575
          ScaleWidth      =   2175
-         TabIndex        =   33
-         Top             =   2760
+         TabIndex        =   41
+         Top             =   240
          Width           =   2175
          Begin MSComctlLib.ImageCombo InputValueCombo 
             Height          =   330
+            Index           =   0
             Left            =   0
-            TabIndex        =   34
-            Top             =   1680
+            TabIndex        =   2
+            Top             =   1440
             Width           =   2175
             _ExtentX        =   3836
             _ExtentY        =   582
@@ -109,8 +41,8 @@ Begin VB.UserControl StudyConfigurer
          Begin MSComctlLib.ImageCombo BaseStudiesCombo 
             Height          =   330
             Left            =   0
-            TabIndex        =   35
-            Top             =   1080
+            TabIndex        =   1
+            Top             =   840
             Width           =   2175
             _ExtentX        =   3836
             _ExtentY        =   582
@@ -122,8 +54,8 @@ Begin VB.UserControl StudyConfigurer
          Begin MSComctlLib.ImageCombo ChartRegionCombo 
             Height          =   330
             Left            =   0
-            TabIndex        =   36
-            Top             =   480
+            TabIndex        =   0
+            Top             =   240
             Width           =   2175
             _ExtentX        =   3836
             _ExtentY        =   582
@@ -132,38 +64,120 @@ Begin VB.UserControl StudyConfigurer
             BackColor       =   -2147483643
             Locked          =   -1  'True
          End
-         Begin VB.Label Label7 
-            Caption         =   "Chart region"
+         Begin VB.Label InputValueNameLabel 
+            Caption         =   "Input value"
             Height          =   255
+            Index           =   0
             Left            =   0
-            TabIndex        =   39
-            Top             =   240
-            Width           =   1335
+            TabIndex        =   44
+            Top             =   1200
+            Width           =   1455
          End
          Begin VB.Label Label8 
             Caption         =   "Base study"
             Height          =   255
             Left            =   0
-            TabIndex        =   38
-            Top             =   840
+            TabIndex        =   43
+            Top             =   600
             Width           =   1215
          End
-         Begin VB.Label Label9 
-            Caption         =   "Input value"
+         Begin VB.Label Label7 
+            Caption         =   "Chart region"
             Height          =   255
             Left            =   0
+            TabIndex        =   42
+            Top             =   0
+            Width           =   1335
+         End
+      End
+   End
+   Begin VB.TextBox StudyDescriptionText 
+      BackColor       =   &H8000000F&
+      Height          =   525
+      Left            =   0
+      Locked          =   -1  'True
+      MultiLine       =   -1  'True
+      ScrollBars      =   2  'Vertical
+      TabIndex        =   39
+      TabStop         =   0   'False
+      Top             =   5040
+      Width           =   11775
+   End
+   Begin VB.Frame Frame1 
+      Caption         =   "Parameters"
+      Height          =   4935
+      Left            =   2520
+      TabIndex        =   35
+      Top             =   0
+      Width           =   2415
+      Begin VB.PictureBox Picture1 
+         Appearance      =   0  'Flat
+         BorderStyle     =   0  'None
+         ForeColor       =   &H80000008&
+         Height          =   4575
+         Left            =   120
+         ScaleHeight     =   4575
+         ScaleWidth      =   2175
+         TabIndex        =   36
+         Top             =   240
+         Width           =   2175
+         Begin VB.TextBox ParameterValueText 
+            Height          =   285
+            Index           =   0
+            Left            =   1320
+            TabIndex        =   3
+            Top             =   0
+            Visible         =   0   'False
+            Width           =   585
+         End
+         Begin VB.TextBox ParameterValueTemplateText 
+            Height          =   285
+            Left            =   1320
             TabIndex        =   37
-            Top             =   1440
-            Width           =   1455
+            TabStop         =   0   'False
+            Top             =   960
+            Visible         =   0   'False
+            Width           =   855
+         End
+         Begin MSComCtl2.UpDown ParameterValueUpDown 
+            Height          =   285
+            Index           =   0
+            Left            =   1920
+            TabIndex        =   4
+            Top             =   0
+            Visible         =   0   'False
+            Width           =   255
+            _ExtentX        =   450
+            _ExtentY        =   503
+            _Version        =   393216
+            AutoBuddy       =   -1  'True
+            BuddyControl    =   "ParameterValueText(0)"
+            BuddyDispid     =   196617
+            BuddyIndex      =   0
+            OrigLeft        =   1920
+            OrigRight       =   2175
+            OrigBottom      =   285
+            SyncBuddy       =   -1  'True
+            BuddyProperty   =   0
+            Enabled         =   -1  'True
+         End
+         Begin VB.Label ParameterNameLabel 
+            Caption         =   "Param name"
+            Height          =   375
+            Index           =   0
+            Left            =   0
+            TabIndex        =   38
+            Top             =   0
+            Width           =   1335
          End
       End
    End
    Begin VB.Frame ValuesFrame 
       Caption         =   "Output values"
       Height          =   4095
-      Left            =   2640
-      TabIndex        =   14
-      Top             =   120
+      Left            =   5040
+      TabIndex        =   17
+      Top             =   0
       Width           =   6735
       Begin VB.PictureBox ValuesPicture 
          Appearance      =   0  'Flat
@@ -173,14 +187,14 @@ Begin VB.UserControl StudyConfigurer
          Left            =   120
          ScaleHeight     =   3735
          ScaleWidth      =   6495
-         TabIndex        =   15
+         TabIndex        =   18
          Top             =   240
          Width           =   6495
          Begin VB.CheckBox IncludeCheck 
             Height          =   195
             Index           =   0
             Left            =   0
-            TabIndex        =   22
+            TabIndex        =   25
             ToolTipText     =   "Set to include this study value in the chart"
             Top             =   240
             Width           =   195
@@ -190,7 +204,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   330
             Index           =   0
             Left            =   3600
-            TabIndex        =   20
+            TabIndex        =   23
             Text            =   "1"
             ToolTipText     =   "Choose the thickness of lines or points"
             Top             =   240
@@ -200,7 +214,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   195
             Index           =   0
             Left            =   1800
-            TabIndex        =   18
+            TabIndex        =   21
             ToolTipText     =   "Set this to ensure that all values are visible when the chart is auto-scaling"
             Top             =   240
             Width           =   210
@@ -210,7 +224,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   375
             Index           =   0
             Left            =   5640
-            TabIndex        =   16
+            TabIndex        =   19
             Top             =   240
             Width           =   495
          End
@@ -218,7 +232,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   330
             Index           =   0
             Left            =   4440
-            TabIndex        =   17
+            TabIndex        =   20
             ToolTipText     =   "Choose the line style (ignored if thickness is grater than 1)"
             Top             =   240
             Width           =   1095
@@ -233,7 +247,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   330
             Index           =   0
             Left            =   2520
-            TabIndex        =   19
+            TabIndex        =   22
             ToolTipText     =   "Select how to display this value"
             Top             =   240
             Width           =   975
@@ -248,7 +262,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   330
             Index           =   0
             Left            =   3946
-            TabIndex        =   21
+            TabIndex        =   24
             Top             =   240
             Width           =   255
             _ExtentX        =   450
@@ -257,7 +271,7 @@ Begin VB.UserControl StudyConfigurer
             Value           =   1
             AutoBuddy       =   -1  'True
             BuddyControl    =   "ThicknessText(0)"
-            BuddyDispid     =   196624
+            BuddyDispid     =   196623
             BuddyIndex      =   0
             OrigLeft        =   4080
             OrigTop         =   240
@@ -265,6 +279,8 @@ Begin VB.UserControl StudyConfigurer
             OrigBottom      =   570
             Max             =   5
             Min             =   1
+            SyncBuddy       =   -1  'True
+            BuddyProperty   =   0
             Enabled         =   -1  'True
          End
          Begin VB.Label ColorLabel 
@@ -274,7 +290,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   330
             Index           =   0
             Left            =   2160
-            TabIndex        =   31
+            TabIndex        =   34
             ToolTipText     =   "Click to change the colour for this value"
             Top             =   240
             Width           =   255
@@ -284,7 +300,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   375
             Index           =   0
             Left            =   360
-            TabIndex        =   30
+            TabIndex        =   33
             Top             =   240
             Width           =   1335
          End
@@ -292,7 +308,7 @@ Begin VB.UserControl StudyConfigurer
             Caption         =   "Value name"
             Height          =   255
             Left            =   360
-            TabIndex        =   29
+            TabIndex        =   32
             Top             =   0
             Width           =   975
          End
@@ -300,7 +316,7 @@ Begin VB.UserControl StudyConfigurer
             Caption         =   "Color"
             Height          =   255
             Left            =   2160
-            TabIndex        =   28
+            TabIndex        =   31
             Top             =   0
             Width           =   495
          End
@@ -309,7 +325,7 @@ Begin VB.UserControl StudyConfigurer
             Caption         =   "Display as"
             Height          =   255
             Left            =   2520
-            TabIndex        =   27
+            TabIndex        =   30
             Top             =   0
             Width           =   975
          End
@@ -317,7 +333,7 @@ Begin VB.UserControl StudyConfigurer
             Caption         =   "Thickness"
             Height          =   255
             Left            =   3600
-            TabIndex        =   26
+            TabIndex        =   29
             Top             =   0
             Width           =   975
          End
@@ -326,7 +342,7 @@ Begin VB.UserControl StudyConfigurer
             Caption         =   "Scale"
             Height          =   255
             Left            =   1560
-            TabIndex        =   25
+            TabIndex        =   28
             Top             =   0
             Width           =   495
          End
@@ -335,7 +351,7 @@ Begin VB.UserControl StudyConfigurer
             Caption         =   "Style"
             Height          =   255
             Left            =   4440
-            TabIndex        =   24
+            TabIndex        =   27
             Top             =   0
             Width           =   1095
          End
@@ -343,18 +359,18 @@ Begin VB.UserControl StudyConfigurer
             Caption         =   "Advanced"
             Height          =   255
             Left            =   5640
-            TabIndex        =   23
+            TabIndex        =   26
             Top             =   0
             Width           =   1095
          End
       End
    End
    Begin VB.Frame LinesFrame 
-      Caption         =   "Lines"
+      Caption         =   "Horizontal lines"
       Height          =   735
-      Left            =   2640
-      TabIndex        =   2
-      Top             =   4320
+      Left            =   5040
+      TabIndex        =   5
+      Top             =   4200
       Width           =   6735
       Begin VB.PictureBox LinesPicture 
          Appearance      =   0  'Flat
@@ -364,14 +380,14 @@ Begin VB.UserControl StudyConfigurer
          Left            =   120
          ScaleHeight     =   375
          ScaleWidth      =   6540
-         TabIndex        =   3
+         TabIndex        =   6
          Top             =   240
          Width           =   6540
          Begin VB.TextBox LineText 
             Height          =   285
             Index           =   0
             Left            =   0
-            TabIndex        =   8
+            TabIndex        =   11
             Top             =   0
             Width           =   615
          End
@@ -379,7 +395,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   285
             Index           =   1
             Left            =   1320
-            TabIndex        =   7
+            TabIndex        =   10
             Top             =   0
             Width           =   615
          End
@@ -387,7 +403,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   285
             Index           =   2
             Left            =   2640
-            TabIndex        =   6
+            TabIndex        =   9
             Top             =   0
             Width           =   615
          End
@@ -395,7 +411,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   285
             Index           =   3
             Left            =   3960
-            TabIndex        =   5
+            TabIndex        =   8
             Top             =   0
             Width           =   615
          End
@@ -403,7 +419,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   285
             Index           =   4
             Left            =   5280
-            TabIndex        =   4
+            TabIndex        =   7
             Top             =   0
             Width           =   615
          End
@@ -412,7 +428,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   285
             Index           =   0
             Left            =   720
-            TabIndex        =   13
+            TabIndex        =   16
             Top             =   0
             Width           =   255
          End
@@ -421,7 +437,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   285
             Index           =   1
             Left            =   2040
-            TabIndex        =   12
+            TabIndex        =   15
             Top             =   0
             Width           =   255
          End
@@ -430,7 +446,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   285
             Index           =   2
             Left            =   3360
-            TabIndex        =   11
+            TabIndex        =   14
             Top             =   0
             Width           =   255
          End
@@ -439,7 +455,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   285
             Index           =   3
             Left            =   4680
-            TabIndex        =   10
+            TabIndex        =   13
             Top             =   0
             Width           =   255
          End
@@ -448,7 +464,7 @@ Begin VB.UserControl StudyConfigurer
             Height          =   285
             Index           =   4
             Left            =   6000
-            TabIndex        =   9
+            TabIndex        =   12
             Top             =   0
             Width           =   255
          End
@@ -539,7 +555,10 @@ notImplemented
 End Sub
 
 Private Sub BaseStudiesCombo_Click()
-initialiseInputValueCombo ""
+Dim i As Long
+For i = 0 To mStudyDefinition.studyInputDefinitions.count - 1
+    initialiseInputValueCombo i
+Next
 End Sub
 
 Private Sub ColorLabel_Click( _
@@ -625,6 +644,7 @@ Dim studyValueDef As TradeBuild.StudyValueDefinition
 Dim studyValueConfig As StudyValueConfiguration
 Dim studyHorizRule As StudyHorizontalRule
 Dim regionName As String
+Dim inputValueNames() As String
 Dim i As Long
 
 Set studyConfig = New studyConfiguration
@@ -634,9 +654,14 @@ studyConfig.serviceProviderName = mServiceProviderName
 If Not BaseStudiesCombo.selectedItem Is Nothing Then
     studyConfig.underlyingStudyId = BaseStudiesCombo.selectedItem.Tag
 End If
-If Not InputValueCombo.selectedItem Is Nothing Then
-    studyConfig.inputValueName = InputValueCombo.selectedItem.text
-End If
+
+ReDim inputValueNames(mStudyDefinition.studyInputDefinitions.count - 1) As String
+For i = 0 To UBound(inputValueNames)
+    If Not InputValueCombo(i).selectedItem Is Nothing Then
+        inputValueNames(i) = InputValueCombo(i).selectedItem.text
+    End If
+Next
+studyConfig.inputValueNames = inputValueNames
 
 If ChartRegionCombo.selectedItem.text = RegionDefault Then
     Select Case mStudyDefinition.defaultRegion
@@ -730,6 +755,10 @@ End Property
 ' methods
 '================================================================================
 
+Public Sub clear()
+initialiseControls
+End Sub
+
 Public Sub initialise( _
                 ByVal studyDef As TradeBuild.studyDefinition, _
                 ByVal serviceProviderName As String, _
@@ -746,169 +775,191 @@ End If
 
 initialiseControls
 
+Set mStudyDefinition = studyDef
 mServiceProviderName = serviceProviderName
+Set mConfiguredStudies = configuredStudies
 
-processRegionNames regionNames, ""
+processRegionNames regionNames
 
-If Not configuredStudies Is Nothing Then processConfiguredStudies configuredStudies, ""
+setupBaseStudiesCombo
 
-initialiseInputValueCombo ""
-
-processStudyDefinition studyDef, defaultConfiguration, defaultParameters
+processStudyDefinition defaultConfiguration, defaultParameters
 End Sub
 
 '================================================================================
 ' Helper Functions
 '================================================================================
 
-Private Function createStudyConfig() As studyConfiguration
-Dim studyConfig As studyConfiguration
-Dim params As TradeBuild.parameters
-Dim studyValueDefs As TradeBuild.studyValueDefinitions
-Dim studyValueDef As TradeBuild.StudyValueDefinition
-Dim studyValueConfig As StudyValueConfiguration
-Dim studyHorizRule As StudyHorizontalRule
-Dim regionName As String
-Dim i As Long
-
-Set studyConfig = New studyConfiguration
-studyConfig.studyDefinition = mStudyDefinition
-studyConfig.name = mStudyname
-studyConfig.serviceProviderName = mServiceProviderName
-If Not BaseStudiesCombo.selectedItem Is Nothing Then
-    studyConfig.underlyingStudyId = BaseStudiesCombo.selectedItem.Tag
-End If
-If Not InputValueCombo.selectedItem Is Nothing Then
-    studyConfig.inputValueName = InputValueCombo.selectedItem.text
-End If
-
-If ChartRegionCombo.selectedItem.text = RegionDefault Then
-    Select Case mStudyDefinition.defaultRegion
-    Case DefaultRegionNone
-        regionName = PriceRegionName
-    Case DefaultRegionPrice
-        regionName = PriceRegionName
-    Case DefaultRegionVolume
-        regionName = VolumeRegionName
-    Case DefaultRegionCustom
-        regionName = CustomRegionName
-    End Select
-Else
-    regionName = ChartRegionCombo.selectedItem.text
-End If
-studyConfig.chartRegionName = regionName
-
-Set params = New TradeBuild.parameters
-
-For i = 0 To ParameterNameLabel.UBound
-    params.setParameterValue ParameterNameLabel(i).caption, ParameterValueText(i).text
-Next
-
-studyConfig.parameters = params
-
-Set studyValueDefs = mStudyDefinition.studyValueDefinitions
-
-For i = 0 To ValueNameLabel.UBound
-    Set studyValueConfig = studyConfig.studyValueConfigurations.add(ValueNameLabel(i).caption)
-    studyValueConfig.includeInChart = (IncludeCheck(i).value = vbChecked)
-    studyValueConfig.includeInAutoscale = (AutoscaleCheck(i).value = vbChecked)
-    studyValueConfig.color = ColorLabel(i).backColor
-    
-    Set studyValueDef = studyValueDefs.item(i + 1)
-    
-    studyValueConfig.maximumValue = studyValueDef.maximumValue
-    studyValueConfig.minimumValue = studyValueDef.minimumValue
-    
-    studyValueConfig.multipleValuesPerBar = studyValueDef.multipleValuesPerBar
-    
-    Select Case studyValueDef.defaultRegion
-    Case DefaultRegionNone
-        studyValueConfig.chartRegionName = regionName
-    Case DefaultRegionPrice
-        studyValueConfig.chartRegionName = PriceRegionName
-    Case DefaultRegionVolume
-        studyValueConfig.chartRegionName = VolumeRegionName
-    Case DefaultRegionCustom
-        studyValueConfig.chartRegionName = CustomRegionName
-    End Select
-    
-    Select Case DisplayAsCombo(i).selectedItem.text
-    Case DisplayModeLine
-        studyValueConfig.displayMode = DisplayAsLines
-    Case DisplayModePoint
-        studyValueConfig.displayMode = displayAsPoints
-    Case DisplayModeSteppedLine
-        studyValueConfig.displayMode = DisplayAsSteppedLines
-    Case DisplayModeHistogram
-        studyValueConfig.displayMode = displayAsHistogram
-    End Select
-    
-    studyValueConfig.lineThickness = ThicknessText(i).text
-    
-    Select Case StyleCombo(i).selectedItem.text
-    Case LineStyleSolid
-        studyValueConfig.lineStyle = LineSolid
-    Case LineStyleDash
-        studyValueConfig.lineStyle = LineDash
-    Case LineStyleDot
-        studyValueConfig.lineStyle = LineDot
-    Case LineStyleDashDot
-        studyValueConfig.lineStyle = LineDashDot
-    Case LineStyleDashDotDot
-        studyValueConfig.lineStyle = LineDashDotDot
-    End Select
-Next
-
-For i = 0 To 4
-    If LineText(i).text <> "" Then
-        Set studyHorizRule = studyConfig.studyHorizontalRules.add
-        studyHorizRule.y = LineText(i).text
-        studyHorizRule.color = LineColorLabel(i).backColor
-    End If
-Next
-
-Set createStudyConfig = studyConfig
-End Function
+'Private Function createStudyConfig() As studyConfiguration
+'Dim studyConfig As studyConfiguration
+'Dim params As TradeBuild.parameters
+'Dim studyValueDefs As TradeBuild.studyValueDefinitions
+'Dim studyValueDef As TradeBuild.StudyValueDefinition
+'Dim studyValueConfig As StudyValueConfiguration
+'Dim studyHorizRule As StudyHorizontalRule
+'Dim regionName As String
+'Dim i As Long
+'
+'Set studyConfig = New studyConfiguration
+'studyConfig.studyDefinition = mStudyDefinition
+'studyConfig.name = mStudyname
+'studyConfig.serviceProviderName = mServiceProviderName
+'If Not BaseStudiesCombo.selectedItem Is Nothing Then
+'    studyConfig.underlyingStudyId = BaseStudiesCombo.selectedItem.Tag
+'End If
+'If Not InputValueCombo.selectedItem Is Nothing Then
+'    studyConfig.inputValueName = InputValueCombo.selectedItem.text
+'End If
+'
+'If ChartRegionCombo.selectedItem.text = RegionDefault Then
+'    Select Case mStudyDefinition.defaultRegion
+'    Case DefaultRegionNone
+'        regionName = PriceRegionName
+'    Case DefaultRegionPrice
+'        regionName = PriceRegionName
+'    Case DefaultRegionVolume
+'        regionName = VolumeRegionName
+'    Case DefaultRegionCustom
+'        regionName = CustomRegionName
+'    End Select
+'Else
+'    regionName = ChartRegionCombo.selectedItem.text
+'End If
+'studyConfig.chartRegionName = regionName
+'
+'Set params = New TradeBuild.parameters
+'
+'For i = 0 To mStudyDefinition.studyParameterDefinitions.count - 1
+'    params.setParameterValue ParameterNameLabel(i).caption, ParameterValueText(i).text
+'Next
+'
+'studyConfig.parameters = params
+'
+'Set studyValueDefs = mStudyDefinition.studyValueDefinitions
+'
+'For i = 0 To mStudyDefinition.studyValueDefinitions.count - 1
+'    Set studyValueConfig = studyConfig.studyValueConfigurations.add(ValueNameLabel(i).caption)
+'    studyValueConfig.includeInChart = (IncludeCheck(i).value = vbChecked)
+'    studyValueConfig.includeInAutoscale = (AutoscaleCheck(i).value = vbChecked)
+'    studyValueConfig.color = ColorLabel(i).backColor
+'
+'    Set studyValueDef = studyValueDefs.item(i + 1)
+'
+'    studyValueConfig.maximumValue = studyValueDef.maximumValue
+'    studyValueConfig.minimumValue = studyValueDef.minimumValue
+'
+'    studyValueConfig.multipleValuesPerBar = studyValueDef.multipleValuesPerBar
+'
+'    Select Case studyValueDef.defaultRegion
+'    Case DefaultRegionNone
+'        studyValueConfig.chartRegionName = regionName
+'    Case DefaultRegionPrice
+'        studyValueConfig.chartRegionName = PriceRegionName
+'    Case DefaultRegionVolume
+'        studyValueConfig.chartRegionName = VolumeRegionName
+'    Case DefaultRegionCustom
+'        studyValueConfig.chartRegionName = CustomRegionName
+'    End Select
+'
+'    Select Case DisplayAsCombo(i).selectedItem.text
+'    Case DisplayModeLine
+'        studyValueConfig.displayMode = DisplayAsLines
+'    Case DisplayModePoint
+'        studyValueConfig.displayMode = displayAsPoints
+'    Case DisplayModeSteppedLine
+'        studyValueConfig.displayMode = DisplayAsSteppedLines
+'    Case DisplayModeHistogram
+'        studyValueConfig.displayMode = displayAsHistogram
+'    End Select
+'
+'    studyValueConfig.lineThickness = ThicknessText(i).text
+'
+'    Select Case StyleCombo(i).selectedItem.text
+'    Case LineStyleSolid
+'        studyValueConfig.lineStyle = LineSolid
+'    Case LineStyleDash
+'        studyValueConfig.lineStyle = LineDash
+'    Case LineStyleDot
+'        studyValueConfig.lineStyle = LineDot
+'    Case LineStyleDashDot
+'        studyValueConfig.lineStyle = LineDashDot
+'    Case LineStyleDashDotDot
+'        studyValueConfig.lineStyle = LineDashDotDot
+'    End Select
+'Next
+'
+'For i = 0 To 4
+'    If LineText(i).text <> "" Then
+'        Set studyHorizRule = studyConfig.studyHorizontalRules.add
+'        studyHorizRule.y = LineText(i).text
+'        studyHorizRule.color = LineColorLabel(i).backColor
+'    End If
+'Next
+'
+'Set createStudyConfig = studyConfig
+'End Function
 
 Private Sub initialiseControls()
 Dim i As Long
 
 On Error Resume Next
+
+For i = InputValueNameLabel.UBound To 1 Step -1
+    Unload InputValueNameLabel(i)
+Next
+InputValueNameLabel(0).caption = ""
+InputValueNameLabel(0).Visible = False
+
+For i = InputValueCombo.UBound To 1 Step -1
+    Unload InputValueCombo(i)
+Next
+
 For i = ParameterNameLabel.UBound To 1 Step -1
     Unload ParameterNameLabel(i)
 Next
+ParameterNameLabel(0).caption = ""
+ParameterNameLabel(0).Visible = False
 
 For i = ParameterValueText.UBound To 1 Step -1
     Unload ParameterValueText(i)
 Next
+ParameterValueText(0).text = ""
+ParameterValueText(0).Visible = False
 
 For i = ParameterValueUpDown.UBound To 1 Step -1
     Unload ParameterValueUpDown(i)
 Next
+ParameterValueUpDown(0).Visible = False
 
 For i = IncludeCheck.UBound To 1 Step -1
     Unload IncludeCheck(i)
 Next
+IncludeCheck(0).value = vbUnchecked
 
 For i = ValueNameLabel.UBound To 1 Step -1
     Unload ValueNameLabel(i)
 Next
+ValueNameLabel(0).caption = ""
 
 For i = AutoscaleCheck.UBound To 1 Step -1
     Unload AutoscaleCheck(i)
 Next
+AutoscaleCheck(0).value = vbUnchecked
 
 For i = ColorLabel.UBound To 1 Step -1
     Unload ColorLabel(i)
 Next
+ColorLabel(0).backColor = vbRed
 
 For i = DisplayAsCombo.UBound To 1 Step -1
     Unload DisplayAsCombo(i)
 Next
+DisplayAsCombo(0).ComboItems(0).Selected = True
 
 For i = ThicknessText.UBound To 1 Step -1
     Unload ThicknessText(i)
 Next
+ThicknessText(0).text = "1"
 
 For i = ThicknessUpDown.UBound To 1 Step -1
     Unload ThicknessUpDown(i)
@@ -917,6 +968,7 @@ Next
 For i = StyleCombo.UBound To 1 Step -1
     Unload StyleCombo(i)
 Next
+StyleCombo(0).ComboItems(0).Selected = True
 
 For i = AdvancedButton.UBound To 1 Step -1
     Unload AdvancedButton(i)
@@ -934,37 +986,39 @@ combo.ComboItems.add , , DisplayModeHistogram
 End Sub
 
 Private Sub initialiseInputValueCombo( _
-                ByRef selectedValue As String)
+                ByVal Index As Long)
 Dim studyValueDefs As TradeBuild.studyValueDefinitions
 Dim valueDef As TradeBuild.StudyValueDefinition
+Dim inputDef As TradeBuild.StudyInputDefinition
 Dim item As ComboItem
 Dim i As Long
+Dim selIndex As Long
 
 If mConfiguredStudies Is Nothing Then Exit Sub
 
 Set item = BaseStudiesCombo.selectedItem
 Set studyValueDefs = mConfiguredStudies.item(item.key).studyDefinition.studyValueDefinitions
+Set inputDef = mStudyDefinition.studyInputDefinitions.item(Index + 1)
 
-InputValueCombo.ComboItems.clear
+InputValueCombo(Index).ComboItems.clear
 
 ' There seems to be a bug in VB6: this doesn't work when the study definition has
 ' been created by a service provider
 'For Each valueDef In studyValueDefs
-'    InputValueCombo.ComboItems.add , , valueDef.name
+'    theCombo.ComboItems.add , , valueDef.name
 'Next
 
 For i = 1 To studyValueDefs.count
-    Set valueDef = studyValueDefs.item(i)
-    InputValueCombo.ComboItems.add , , valueDef.name
+    If typesCompatible(studyValueDefs.item(i).valueType, inputDef.inputType) Then
+        Set valueDef = studyValueDefs.item(i)
+        InputValueCombo(Index).ComboItems.add , , valueDef.name
+        If inputDef.name = valueDef.name Then selIndex = InputValueCombo(Index).ComboItems.count
+    End If
 Next
 
-If selectedValue = "" Then
-    InputValueCombo.ComboItems(1).Selected = True
-Else
-    setComboSelection InputValueCombo, selectedValue
-End If
+InputValueCombo(Index).ComboItems(IIf(selIndex <> 0, selIndex, 1)).Selected = True
 
-InputValueCombo.Refresh
+InputValueCombo(Index).Refresh
 End Sub
 
 Private Sub initialiseStyleCombo(ByVal combo As ImageCombo)
@@ -982,30 +1036,8 @@ nextTabIndex = mNextTabIndex
 mNextTabIndex = mNextTabIndex + 1
 End Function
 
-Private Sub processConfiguredStudies( _
-                ByVal studyConfigs As StudyConfigurations, _
-                ByRef selectedValue As String)
-Dim studyConfig As studyConfiguration
-Dim item As ComboItem
-
-Set mConfiguredStudies = studyConfigs
-
-For Each studyConfig In mConfiguredStudies
-    Set item = BaseStudiesCombo.ComboItems.add(, studyConfig.instanceFullyQualifiedName, studyConfig.instanceName)
-    item.Tag = studyConfig.studyId
-Next
-If selectedValue = "" Then
-    BaseStudiesCombo.ComboItems(1).Selected = True
-Else
-    setComboSelection BaseStudiesCombo, selectedValue
-End If
-BaseStudiesCombo.Refresh
-
-End Sub
-
 Private Sub processRegionNames( _
-                ByRef regionNames() As String, _
-                ByRef selectedValue As String)
+                ByRef regionNames() As String)
 Dim i As Long
 
 ChartRegionCombo.ComboItems.add , , RegionDefault
@@ -1013,20 +1045,18 @@ ChartRegionCombo.ComboItems.add , , RegionDefault
 For i = 0 To UBound(regionNames)
     ChartRegionCombo.ComboItems.add , , regionNames(i)
 Next
-If selectedValue = "" Then
-    ChartRegionCombo.ComboItems.item(1).Selected = True
-Else
-    setComboSelection ChartRegionCombo, selectedValue
-End If
+ChartRegionCombo.ComboItems.item(1).Selected = True
+ChartRegionCombo.Refresh
 End Sub
 
 Private Sub processStudyDefinition( _
-                ByVal value As TradeBuild.studyDefinition, _
                 ByVal defaultConfig As studyConfiguration, _
                 ByVal defaultParams As TradeBuild.parameters)
 Dim i As Long
+Dim studyInputDefinitions As TradeBuild.studyInputDefinitions
 Dim studyParameterDefinitions As TradeBuild.studyParameterDefinitions
 Dim studyValueDefinitions As TradeBuild.studyValueDefinitions
+Dim studyinput As TradeBuild.StudyInputDefinition
 Dim studyParam As TradeBuild.StudyParameterDefinition
 Dim studyValue As TradeBuild.StudyValueDefinition
 Dim studyValueConfigs As studyValueConfigurations
@@ -1034,8 +1064,6 @@ Dim studyValueConfig As StudyValueConfiguration
 Dim studyHorizRules As studyHorizontalRules
 Dim studyHorizRule As StudyHorizontalRule
 Dim firstParamIsInteger As Boolean
-
-Set mStudyDefinition = value
 
 mStudyname = mStudyDefinition.name
 
@@ -1047,12 +1075,53 @@ End If
 
 StudyDescriptionText.text = mStudyDefinition.Description
 
+If Not defaultConfig Is Nothing Then
+    setComboSelection ChartRegionCombo, defaultConfig.chartRegionName
+    
+    For i = 1 To BaseStudiesCombo.ComboItems.count
+        If BaseStudiesCombo.ComboItems(i).Tag = defaultConfig.underlyingStudyId Then
+            BaseStudiesCombo.ComboItems(i).Selected = True
+            Exit For
+        End If
+    Next
+    
+End If
+
+Set studyInputDefinitions = mStudyDefinition.studyInputDefinitions
+For i = 1 To studyInputDefinitions.count
+    Set studyinput = studyInputDefinitions.item(i)
+    If i = 1 Then
+        InputValueNameLabel(0).Visible = True
+    Else
+        Load InputValueNameLabel(i - 1)
+        InputValueNameLabel(i - 1).Top = InputValueNameLabel(i - 2).Top + 600
+        InputValueNameLabel(i - 1).Visible = True
+        Load InputValueCombo(i - 1)
+        InputValueCombo(i - 1).Top = InputValueCombo(i - 2).Top + 600
+        InputValueCombo(i - 1).Visible = True
+        InputValueCombo(i - 1).TabIndex = nextTabIndex
+    End If
+    InputValueNameLabel(i - 1).caption = studyinput.name
+    InputValueCombo(i - 1).ToolTipText = studyinput.Description
+
+    initialiseInputValueCombo i - 1
+    If Not defaultConfig Is Nothing Then
+        Dim inputValueNames() As String
+        inputValueNames = defaultConfig.inputValueNames
+        setComboSelection InputValueCombo(i - 1), inputValueNames(i - 1)
+    End If
+    
+Next
+
 Set studyParameterDefinitions = mStudyDefinition.studyParameterDefinitions
-Set studyValueDefinitions = mStudyDefinition.studyValueDefinitions
 
 For i = 1 To studyParameterDefinitions.count
     Set studyParam = studyParameterDefinitions.item(i)
-    If i <> 1 Then
+    If i = 1 Then
+        ParameterNameLabel(0).Visible = True
+        ParameterValueText(0).Visible = True
+        ParameterValueText(0).TabIndex = nextTabIndex
+    Else
         Load ParameterNameLabel(i - 1)
         ParameterNameLabel(i - 1).Top = ParameterNameLabel(i - 2).Top + 360
         ParameterNameLabel(i - 1).Left = ParameterNameLabel(i - 2).Left
@@ -1068,15 +1137,10 @@ For i = 1 To studyParameterDefinitions.count
         Load ParameterValueUpDown(i - 1)
         ParameterValueUpDown(i - 1).TabIndex = nextTabIndex
         ParameterValueUpDown(i - 1).Top = ParameterValueUpDown(i - 2).Top + 360
-        'ParameterValueUpDown(i - 1).Left = ParameterValueUpDown(i - 2).Left
     End If
     
-    ParameterNameLabel(i - 1).caption = studyParam.name
-    ParameterValueText(i - 1).text = defaultParams.getParameterValue(studyParam.name)
-    ParameterValueText(i - 1).ToolTipText = studyParam.Description
-    
     If studyParam.parameterType = StudyParameterTypes.ParameterTypeInteger Then
-        ParameterValueUpDown(i - 1).Min = 0
+        ParameterValueUpDown(i - 1).Min = 1
         ParameterValueUpDown(i - 1).Max = 255
         ParameterValueUpDown(i - 1).Visible = True
         If i <> 1 Then
@@ -1090,6 +1154,7 @@ For i = 1 To studyParameterDefinitions.count
                 ParameterValueText(0).Width = ParameterValueTemplateText.Width
             End If
         Else
+            ParameterValueText(0).Width = ParameterValueTemplateText.Width - ParameterValueUpDown(0).Width
             firstParamIsInteger = True
         End If
     Else
@@ -1098,6 +1163,10 @@ For i = 1 To studyParameterDefinitions.count
             ParameterValueText(0).Width = ParameterValueTemplateText.Width
         End If
     End If
+    
+    ParameterNameLabel(i - 1).caption = studyParam.name
+    ParameterValueText(i - 1).text = defaultParams.getParameterValue(studyParam.name)
+    ParameterValueText(i - 1).ToolTipText = studyParam.Description
     
     If studyParam.parameterType = StudyParameterTypes.ParameterTypeInteger Or _
         studyParam.parameterType = StudyParameterTypes.ParameterTypeSingle Or _
@@ -1109,25 +1178,6 @@ For i = 1 To studyParameterDefinitions.count
     End If
 Next
 
-ChartRegionCombo.TabIndex = nextTabIndex
-BaseStudiesCombo.TabIndex = nextTabIndex
-InputValueCombo.TabIndex = nextTabIndex
-
-If Not defaultConfig Is Nothing Then
-    If defaultConfig.underlyingStudyId <> "" Then
-        setComboSelection ChartRegionCombo, defaultConfig.chartRegionName
-        
-        For i = 1 To BaseStudiesCombo.ComboItems.count
-            If BaseStudiesCombo.ComboItems(i).Tag = defaultConfig.underlyingStudyId Then
-                BaseStudiesCombo.ComboItems(i).Selected = True
-                Exit For
-            End If
-        Next
-        
-        initialiseInputValueCombo defaultConfig.inputValueName
-    End If
-End If
-
 IncludeCheck(0).TabIndex = nextTabIndex
 AutoscaleCheck(0).TabIndex = nextTabIndex
 ColorLabel(0).TabIndex = nextTabIndex
@@ -1135,6 +1185,7 @@ DisplayAsCombo(0).TabIndex = nextTabIndex
 ThicknessText(0).TabIndex = nextTabIndex
 ThicknessUpDown(0).TabIndex = nextTabIndex
 
+Set studyValueDefinitions = mStudyDefinition.studyValueDefinitions
 For i = 1 To studyValueDefinitions.count
     Set studyValue = studyValueDefinitions.item(i)
     If Not studyValueConfigs Is Nothing Then
@@ -1206,6 +1257,8 @@ For i = 1 To studyValueDefinitions.count
         
     End If
     
+    AutoscaleCheck(i - 1) = vbChecked
+    
     ValueNameLabel(i - 1).caption = studyValue.name
     ValueNameLabel(i - 1).ToolTipText = studyValue.Description
 
@@ -1265,5 +1318,77 @@ For Each item In combo.ComboItems
 Next
 End Sub
 
+Private Sub setupBaseStudiesCombo()
+Dim studyConfig As studyConfiguration
+Dim item As ComboItem
 
+BaseStudiesCombo.ComboItems.clear
+If mConfiguredStudies Is Nothing Then Exit Sub
+For Each studyConfig In mConfiguredStudies
+    If studiesCompatible(studyConfig.studyDefinition, mStudyDefinition) Then
+        Set item = BaseStudiesCombo.ComboItems.add(, studyConfig.instanceFullyQualifiedName, studyConfig.instanceName)
+        item.Tag = studyConfig.studyId
+    End If
+Next
+BaseStudiesCombo.ComboItems(1).Selected = True
+BaseStudiesCombo.Refresh
+
+End Sub
+
+Private Function studiesCompatible( _
+                ByVal sourceStudyDefinition As TradeBuild.studyDefinition, _
+                ByVal sinkStudyDefinition As TradeBuild.studyDefinition) As Boolean
+Dim sourceValueDef As TradeBuild.StudyValueDefinition
+Dim sinkInputDef As TradeBuild.StudyInputDefinition
+Dim i As Long
+
+For i = 1 To sinkStudyDefinition.studyInputDefinitions.count
+    Set sinkInputDef = sinkStudyDefinition.studyInputDefinitions.item(i)
+    For Each sourceValueDef In sourceStudyDefinition.studyValueDefinitions
+        If typesCompatible(sourceValueDef.valueType, sinkInputDef.inputType) Then
+            studiesCompatible = True
+            Exit For
+        End If
+    Next
+    If Not studiesCompatible Then Exit Function
+Next
+End Function
+
+Private Function typesCompatible( _
+                ByVal sourceValueType As TradeBuild.StudyValueTypes, _
+                ByVal sinkInputType As TradeBuild.StudyInputTypes) As Boolean
+Select Case sourceValueType
+Case ValueTypeInteger
+    Select Case sinkInputType
+    Case InputTypeInteger
+        typesCompatible = True
+'    Case InputTypeSingle
+'        typesCompatible = True
+'    Case InputTypeDouble
+'        typesCompatible = True
+    End Select
+Case ValueTypeSingle
+    Select Case sinkInputType
+    Case InputTypeSingle
+        typesCompatible = True
+    Case InputTypeDouble
+        typesCompatible = True
+    End Select
+Case ValueTypeDouble
+    Select Case sinkInputType
+    Case InputTypeDouble
+        typesCompatible = True
+    End Select
+Case ValueTypeString
+    Select Case sinkInputType
+    Case InputTypeString
+        typesCompatible = True
+    End Select
+Case ValueTypeDate
+    Select Case sinkInputType
+    Case InputTypeDate
+        typesCompatible = True
+    End Select
+End Select
+End Function
 

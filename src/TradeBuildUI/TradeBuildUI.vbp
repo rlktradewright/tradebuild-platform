@@ -25,9 +25,10 @@ Class=StudyHorizontalRules; StudyHorizontalRules.cls
 Class=StudyValueConfigurations; StudyValueConfigurations.cls
 Module=Globals; Globals.bas
 Form=fStudyPicker.frm
-UserControl=TradeBuildChart.ctl
 Form=fStudyConfigurer.frm
 Form=fSimpleColorPicker.frm
+UserControl=StudyConfigurer.ctl
+UserControl=TradeBuildChart.ctl
 Startup="(None)"
 HelpFile=""
 Title="TradeBuildUI"
@@ -36,12 +37,11 @@ Command32=""
 Name="TradeBuildUI"
 HelpContextID="0"
 Description="TradeWright TradeBuild UI Components"
-CompatibleMode="2"
+CompatibleMode="1"
 CompatibleEXE32="TradeBuildUI.ocx"
-VersionCompatible32="1"
 MajorVer=2
-MinorVer=3
-RevisionVer=96
+MinorVer=4
+RevisionVer=134
 AutoIncrementVer=1
 ServerSupportFiles=0
 DllBaseAddress=&H7e4b0000
@@ -69,3 +69,6 @@ UseExistingBrowser=0
 
 [MS Transaction Server]
 AutoRefresh=1
+
+[RVB]
+DeleteClass1=ChartController
