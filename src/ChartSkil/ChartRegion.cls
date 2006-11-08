@@ -80,6 +80,8 @@ End Enum
 Private mName As String
 Private mRegionNumber As Long
 
+Private mTitle As text
+
 Private mPeriodTable() As PeriodTableEntry
 
 Private mGraphicObjects() As GraphicObjectTableEntry
@@ -175,8 +177,6 @@ Private mPointerStyle As PointerStyles
 
 Private mPrevCursorX As Single
 Private mPrevCursorY As Single
-
-Private mTitle As String
 
 Private mPerfText As text
 
@@ -1825,25 +1825,25 @@ End Sub
 Public Sub setTitle(ByVal val As String, _
                         ByVal Color As Long, _
                         ByVal font As StdFont)
-Dim title As text
-mTitle = val
-Set title = addText(LayerTitle)
-title.Color = Color
-title.font = font
-title.box = True
-title.boxColor = vbBlack
-title.boxStyle = LineStyles.LineInvisible
-title.boxThickness = 1
-title.boxFillColor = vbWhite
-title.boxFillStyle = FillStyles.FillSolid
-title.position = newPoint(0.2, 0.2, CoordsDistance, CoordsCounterDistance)
-title.fixedX = True
-title.fixedY = True
-title.align = TextAlignModes.AlignTopLeft
-title.includeInAutoscale = False
-title.keepInView = True
-title.paddingX = 0.5
-title.text = mTitle
+If mTitle Is Nothing Then
+    Set mTitle = addText(LayerTitle)
+End If
+mTitle.Color = Color
+mTitle.font = font
+mTitle.box = True
+mTitle.boxColor = vbBlack
+mTitle.boxStyle = LineStyles.LineInvisible
+mTitle.boxThickness = 1
+mTitle.boxFillColor = vbWhite
+mTitle.boxFillStyle = FillStyles.FillSolid
+mTitle.position = newPoint(0.2, 0.2, CoordsDistance, CoordsCounterDistance)
+mTitle.fixedX = True
+mTitle.fixedY = True
+mTitle.align = TextAlignModes.AlignTopLeft
+mTitle.includeInAutoscale = False
+mTitle.keepInView = True
+mTitle.paddingX = 0.5
+mTitle.text = val
 End Sub
 
 Public Sub setVerticalScale(ByVal lowValue As Single, _
