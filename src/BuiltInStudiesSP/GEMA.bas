@@ -72,7 +72,7 @@ If mStudyDefinition Is Nothing Then
     mStudyDefinition.name = EmaName
     mStudyDefinition.shortName = EmaShortName
     mStudyDefinition.Description = "An exponential moving average"
-    mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionPrice
+    mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionNone
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(EmaInputValue)
     inputDef.name = EmaInputValue

@@ -72,7 +72,7 @@ If mStudyDefinition Is Nothing Then
     mStudyDefinition.name = SmaName
     mStudyDefinition.shortName = SmaShortName
     mStudyDefinition.Description = "A simple moving average"
-    mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionPrice
+    mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionNone
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(SMAInputValue)
     inputDef.name = SMAInputValue
