@@ -195,7 +195,7 @@ mPrevClosePrice = ev.price
 End Sub
 
 Private Sub QuoteListener_trade(ev As TradeBuild.QuoteEvent)
-If mUpdatePerTick Then mChartBar.tick ev.price
+If mUpdatePerTick Then mChartBar.Tick ev.price
 End Sub
 
 Private Sub QuoteListener_volume(ev As TradeBuild.QuoteEvent)
@@ -471,6 +471,7 @@ Public Function addStudy( _
 Dim study As TradeBuild.study
 Dim studyId As String
 Dim studyValueConfig As StudyValueConfiguration
+Dim underlyingStudyConfig As studyConfiguration
 Dim regionName As String
 Dim region As ChartSkil.ChartRegion
 Dim studyHorizRule As StudyHorizontalRule
@@ -499,23 +500,31 @@ studyConfig.instanceName = study.instanceName
 studyConfig.instanceFullyQualifiedName = study.instancePath
 studyConfig.studyId = study.id
 
+If studyConfig.chartRegionName = RegionNameDefault Then
+    ' we will use the region for the underlying study
+    For Each underlyingStudyConfig In mStudyConfigurations
+        If underlyingStudyConfig.studyId = studyConfig.underlyingStudyId Then Exit For
+    Next
+    regionName = underlyingStudyConfig.chartRegionName
+    studyConfig.chartRegionName = regionName
+ElseIf studyConfig.chartRegionName = RegionNameCustom Then
+    regionName = study.instancePath
+    studyConfig.chartRegionName = regionName
+Else
+    regionName = studyConfig.chartRegionName
+End If
+Set region = findRegion(regionName, study.instanceName, False)
+    
 For Each studyValueConfig In studyConfig.studyValueConfigurations
     If studyValueConfig.includeInChart Then
         studyConfig.studyValueHandlers.add includeStudyValueInChart( _
                                                     study, _
+                                                    regionName, _
                                                     studyValueConfig)
     End If
 Next
 
 If studyConfig.studyHorizontalRules.count > 0 Then
-    If studyConfig.chartRegionName = CustomRegionName Then
-        regionName = study.instancePath
-        studyConfig.chartRegionName = regionName
-    Else
-        regionName = studyConfig.chartRegionName
-    End If
-    Set region = findRegion(regionName, study.instanceName, False)
-    
     Set horizRulesLineSeries = region.addLineSeries(LayerNumbers.LayerGrid + 1)
     horizRulesLineSeries.extended = True
     horizRulesLineSeries.extendAfter = True
@@ -664,7 +673,7 @@ Dim i As Long
 Set mTicker = value
 
 If Not mContract Is Nothing Then
-    If Not mContract.specifier.equals(mTicker.Contract.specifier) Then mInitialised = False
+    If Not mContract.specifier.Equals(mTicker.Contract.specifier) Then mInitialised = False
 End If
 Set mContract = mTicker.Contract
 mPriceRegion.YScaleQuantum = mContract.ticksize
@@ -714,6 +723,7 @@ studyConfig.instanceName = mBars.name
 studyConfig.instanceFullyQualifiedName = mBars.name
 studyConfig.studyId = mBars.id
 studyConfig.name = "Bars"
+studyConfig.chartRegionName = RegionNamePrice
 studyConfig.studyDefinition = mBars.studyDefinition
 mStudyConfigurations.add studyConfig
 End Sub
@@ -737,11 +747,11 @@ Dim studyConfig As studyConfiguration
 If Not mChartBar Is Nothing And _
     Not mPriceBar Is Nothing _
 Then
-    If Not mPriceBar.blank Then
-        mChartBar.tick mPriceBar.openValue
-        mChartBar.tick mPriceBar.highValue
-        mChartBar.tick mPriceBar.lowValue
-        mChartBar.tick mPriceBar.closeValue
+    If Not mPriceBar.Blank Then
+        mChartBar.Tick mPriceBar.openValue
+        mChartBar.Tick mPriceBar.highValue
+        mChartBar.Tick mPriceBar.lowValue
+        mChartBar.Tick mPriceBar.closeValue
         
         setVolume mPriceBar.volume
     End If
@@ -887,6 +897,7 @@ End Function
 
 Private Function includeStudyValueInChart( _
                 ByVal study As TradeBuild.study, _
+                ByVal defaultRegionName As String, _
                 ByVal studyValueConfig As StudyValueConfiguration) As StudyValueHandler
                 
 Dim lStudyValueHandler As StudyValueHandler
@@ -903,9 +914,12 @@ lStudyValueHandler.updatePerTick = mUpdatePerTick
 
 lStudyValueHandler.multipleValuesPerBar = studyValueConfig.multipleValuesPerBar
 
-If studyValueConfig.chartRegionName = CustomRegionName Then
+If studyValueConfig.chartRegionName = RegionNameDefault Then
+    ' then use the study's default region
+    regionName = defaultRegionName
+ElseIf studyValueConfig.chartRegionName = RegionNameCustom Then
     regionName = study.instancePath
-    studyValueConfig.chartRegionName = regionName
+    'studyValueConfig.chartRegionName = regionName
 Else
     regionName = studyValueConfig.chartRegionName
 End If
@@ -960,10 +974,10 @@ mChartControl.showCrosshairs = True
 mChartControl.twipsPerBar = 67
 mChartControl.showHorizontalScrollBar = True
 
-Set mPriceRegion = mChartControl.addChartRegion(100, 25, PriceRegionName)
+Set mPriceRegion = mChartControl.addChartRegion(100, 25, RegionNamePrice)
 Set re.region = mPriceRegion
 re.usageCount = 1
-mRegions.add re, PriceRegionName
+mRegions.add re, RegionNamePrice
 mPriceRegion.gridlineSpacingY = 2
 mPriceRegion.showGrid = True
 
@@ -980,10 +994,10 @@ mPlexLineSeries.layer = LayerNumbers.LayerHIghestUser
 mPlexLineSeries.style = LineSolid
 mPlexLineSeries.thickness = 2
 
-Set mVolumeRegion = mChartControl.addChartRegion(20, , VolumeRegionName)
+Set mVolumeRegion = mChartControl.addChartRegion(20, , RegionNameVolume)
 Set re.region = mVolumeRegion
 re.usageCount = 1
-mRegions.add re, VolumeRegionName
+mRegions.add re, RegionNameVolume
 mVolumeRegion.gridlineSpacingY = 0.8
 mVolumeRegion.minimumHeight = 10
 mVolumeRegion.integerYScale = True

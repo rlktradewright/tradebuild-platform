@@ -510,6 +510,7 @@ Private Const LineStyleInsideSolid As String = "Inside solid"
 Private Const LineStyleInvisible As String = "Invisible"
 
 Private Const RegionDefault As String = "Use default"
+Private Const RegionCustom As String = "Use own region"
 
 '================================================================================
 ' Enums
@@ -666,14 +667,16 @@ studyConfig.inputValueNames = inputValueNames
 If ChartRegionCombo.selectedItem.text = RegionDefault Then
     Select Case mStudyDefinition.defaultRegion
     Case DefaultRegionNone
-        regionName = PriceRegionName
+        regionName = RegionNameDefault
     Case DefaultRegionPrice
-        regionName = PriceRegionName
+        regionName = RegionNamePrice
     Case DefaultRegionVolume
-        regionName = VolumeRegionName
+        regionName = RegionNameVolume
     Case DefaultRegionCustom
-        regionName = CustomRegionName
+        regionName = RegionNameCustom
     End Select
+ElseIf ChartRegionCombo.selectedItem.text = RegionCustom Then
+    regionName = RegionNameCustom
 Else
     regionName = ChartRegionCombo.selectedItem.text
 End If
@@ -706,11 +709,11 @@ For i = 0 To ValueNameLabel.UBound
     Case DefaultRegionNone
         studyValueConfig.chartRegionName = regionName
     Case DefaultRegionPrice
-        studyValueConfig.chartRegionName = PriceRegionName
+        studyValueConfig.chartRegionName = RegionNamePrice
     Case DefaultRegionVolume
-        studyValueConfig.chartRegionName = VolumeRegionName
+        studyValueConfig.chartRegionName = RegionNameVolume
     Case DefaultRegionCustom
-        studyValueConfig.chartRegionName = CustomRegionName
+        studyValueConfig.chartRegionName = RegionNameCustom
     End Select
     
     Select Case DisplayAsCombo(i).selectedItem.text
@@ -789,115 +792,6 @@ End Sub
 '================================================================================
 ' Helper Functions
 '================================================================================
-
-'Private Function createStudyConfig() As studyConfiguration
-'Dim studyConfig As studyConfiguration
-'Dim params As TradeBuild.parameters
-'Dim studyValueDefs As TradeBuild.studyValueDefinitions
-'Dim studyValueDef As TradeBuild.StudyValueDefinition
-'Dim studyValueConfig As StudyValueConfiguration
-'Dim studyHorizRule As StudyHorizontalRule
-'Dim regionName As String
-'Dim i As Long
-'
-'Set studyConfig = New studyConfiguration
-'studyConfig.studyDefinition = mStudyDefinition
-'studyConfig.name = mStudyname
-'studyConfig.serviceProviderName = mServiceProviderName
-'If Not BaseStudiesCombo.selectedItem Is Nothing Then
-'    studyConfig.underlyingStudyId = BaseStudiesCombo.selectedItem.Tag
-'End If
-'If Not InputValueCombo.selectedItem Is Nothing Then
-'    studyConfig.inputValueName = InputValueCombo.selectedItem.text
-'End If
-'
-'If ChartRegionCombo.selectedItem.text = RegionDefault Then
-'    Select Case mStudyDefinition.defaultRegion
-'    Case DefaultRegionNone
-'        regionName = PriceRegionName
-'    Case DefaultRegionPrice
-'        regionName = PriceRegionName
-'    Case DefaultRegionVolume
-'        regionName = VolumeRegionName
-'    Case DefaultRegionCustom
-'        regionName = CustomRegionName
-'    End Select
-'Else
-'    regionName = ChartRegionCombo.selectedItem.text
-'End If
-'studyConfig.chartRegionName = regionName
-'
-'Set params = New TradeBuild.parameters
-'
-'For i = 0 To mStudyDefinition.studyParameterDefinitions.count - 1
-'    params.setParameterValue ParameterNameLabel(i).caption, ParameterValueText(i).text
-'Next
-'
-'studyConfig.parameters = params
-'
-'Set studyValueDefs = mStudyDefinition.studyValueDefinitions
-'
-'For i = 0 To mStudyDefinition.studyValueDefinitions.count - 1
-'    Set studyValueConfig = studyConfig.studyValueConfigurations.add(ValueNameLabel(i).caption)
-'    studyValueConfig.includeInChart = (IncludeCheck(i).value = vbChecked)
-'    studyValueConfig.includeInAutoscale = (AutoscaleCheck(i).value = vbChecked)
-'    studyValueConfig.color = ColorLabel(i).backColor
-'
-'    Set studyValueDef = studyValueDefs.item(i + 1)
-'
-'    studyValueConfig.maximumValue = studyValueDef.maximumValue
-'    studyValueConfig.minimumValue = studyValueDef.minimumValue
-'
-'    studyValueConfig.multipleValuesPerBar = studyValueDef.multipleValuesPerBar
-'
-'    Select Case studyValueDef.defaultRegion
-'    Case DefaultRegionNone
-'        studyValueConfig.chartRegionName = regionName
-'    Case DefaultRegionPrice
-'        studyValueConfig.chartRegionName = PriceRegionName
-'    Case DefaultRegionVolume
-'        studyValueConfig.chartRegionName = VolumeRegionName
-'    Case DefaultRegionCustom
-'        studyValueConfig.chartRegionName = CustomRegionName
-'    End Select
-'
-'    Select Case DisplayAsCombo(i).selectedItem.text
-'    Case DisplayModeLine
-'        studyValueConfig.displayMode = DisplayAsLines
-'    Case DisplayModePoint
-'        studyValueConfig.displayMode = displayAsPoints
-'    Case DisplayModeSteppedLine
-'        studyValueConfig.displayMode = DisplayAsSteppedLines
-'    Case DisplayModeHistogram
-'        studyValueConfig.displayMode = displayAsHistogram
-'    End Select
-'
-'    studyValueConfig.lineThickness = ThicknessText(i).text
-'
-'    Select Case StyleCombo(i).selectedItem.text
-'    Case LineStyleSolid
-'        studyValueConfig.lineStyle = LineSolid
-'    Case LineStyleDash
-'        studyValueConfig.lineStyle = LineDash
-'    Case LineStyleDot
-'        studyValueConfig.lineStyle = LineDot
-'    Case LineStyleDashDot
-'        studyValueConfig.lineStyle = LineDashDot
-'    Case LineStyleDashDotDot
-'        studyValueConfig.lineStyle = LineDashDotDot
-'    End Select
-'Next
-'
-'For i = 0 To 4
-'    If LineText(i).text <> "" Then
-'        Set studyHorizRule = studyConfig.studyHorizontalRules.add
-'        studyHorizRule.y = LineText(i).text
-'        studyHorizRule.color = LineColorLabel(i).backColor
-'    End If
-'Next
-'
-'Set createStudyConfig = studyConfig
-'End Function
 
 Private Sub initialiseControls()
 Dim i As Long
@@ -1041,6 +935,7 @@ Private Sub processRegionNames( _
 Dim i As Long
 
 ChartRegionCombo.ComboItems.add , , RegionDefault
+ChartRegionCombo.ComboItems.add , , RegionCustom
 
 For i = 0 To UBound(regionNames)
     ChartRegionCombo.ComboItems.add , , regionNames(i)
@@ -1076,7 +971,12 @@ End If
 StudyDescriptionText.text = mStudyDefinition.Description
 
 If Not defaultConfig Is Nothing Then
-    setComboSelection ChartRegionCombo, defaultConfig.chartRegionName
+    If defaultConfig.chartRegionName = defaultConfig.instanceFullyQualifiedName Then
+        '
+        setComboSelection ChartRegionCombo, RegionCustom
+    Else
+        setComboSelection ChartRegionCombo, defaultConfig.chartRegionName
+    End If
     
     For i = 1 To BaseStudiesCombo.ComboItems.count
         If BaseStudiesCombo.ComboItems(i).Tag = defaultConfig.underlyingStudyId Then

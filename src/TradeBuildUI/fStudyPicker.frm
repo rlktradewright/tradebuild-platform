@@ -425,6 +425,9 @@ For Each sc In mStudyConfigurations
     If sc.underlyingStudyId = oldStudyConfig.studyId Then
         Set newSc = sc.clone
         newSc.underlyingStudyId = newStudyConfig.studyId
+        If sc.chartRegionName = oldStudyConfig.chartRegionName Then
+            newSc.chartRegionName = newStudyConfig.chartRegionName
+        End If
         mChart.addStudy newSc
         mChart.removeStudy sc
         reconfigureDependingStudies sc, newSc

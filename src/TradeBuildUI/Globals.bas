@@ -22,9 +22,10 @@ Option Explicit
 Public Const MinDouble As Double = -(2 - 2 ^ -52) * 2 ^ 1023
 Public Const MaxDouble As Double = (2 - 2 ^ -52) * 2 ^ 1023
 
-Public Const CustomRegionName As String = "$custom"
-Public Const PriceRegionName As String = "$price"
-Public Const VolumeRegionName As String = "$volume"
+Public Const RegionNameCustom As String = "$custom"
+Public Const RegionNameDefault As String = "$default"
+Public Const RegionNamePrice As String = "Price"
+Public Const RegionNameVolume As String = "Volume"
 
 Public Const LB_SETHORZEXTENT = &H194
 
@@ -144,8 +145,8 @@ End Function
 
 Public Function loadDefaultStudyConfiguration( _
                 ByVal name As String, _
-                ByVal spName As String) As StudyConfiguration
-Dim sc As StudyConfiguration
+                ByVal spName As String) As studyConfiguration
+Dim sc As studyConfiguration
 If mDefaultStudyConfigurations Is Nothing Then
     Set loadDefaultStudyConfiguration = Nothing
 Else
@@ -193,8 +194,8 @@ mStudyPickerForm.initialise Nothing, Nothing
 End Sub
 
 Public Sub updateDefaultStudyConfiguration( _
-                ByVal value As StudyConfiguration)
-Dim sc As StudyConfiguration
+                ByVal value As studyConfiguration)
+Dim sc As studyConfiguration
 
 If mDefaultStudyConfigurations Is Nothing Then
     Set mDefaultStudyConfigurations = New Collection

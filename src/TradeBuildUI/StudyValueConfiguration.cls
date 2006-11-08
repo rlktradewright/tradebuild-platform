@@ -76,7 +76,7 @@ mDisplayMode = ChartSkil.DisplayModes.DisplayAsLines
 mLineThickness = 1
 mIncludeInAutoscale = True
 mLineStyle = ChartSkil.LineStyles.LineSolid
-mChartRegionName = PriceRegionName
+mChartRegionName = RegionNamePrice
 mLayer = ChartSkil.LayerNumbers.LayerHIghestUser
 mHistogramBarWidth = 0.5
 End Sub
