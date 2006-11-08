@@ -31,6 +31,7 @@ library TradeBuildSP
     interface IContractInfoServiceProvider;
     interface IContractInfoServiceConsumer;
     interface IExecution;
+	interface IMovingAverageStudy;
     interface IOrder;
     interface IOrderPlex;
     interface IOrderSubmissionSrvcConsumer;
@@ -49,16 +50,17 @@ library TradeBuildSP
     interface IStudies;
     interface IStudy;
     interface IStudyDefinition;
+    interface IStudyInputDefinition;
+    interface IStudyInputDefinitions;
     interface IStudyParameterDefinition;
     interface IStudyParameterDefinitions;
+    interface IStudyServiceConsumer;
+    interface IStudyServiceProvider;
     interface IStudyValueCache;
     interface IStudyValueDefinition;
     interface IStudyValueDefinitions;
-    interface IStudyServiceConsumer;
-    interface IStudyServiceProvider;
     interface IStudyValueListener;
     interface IStudyValueListeners;
-	interface IStudyValueResolver;
     interface ITaskCompletion;
     interface ITaskCompletionListener;
     interface ITaskContext;
@@ -68,6 +70,8 @@ library TradeBuildSP
     interface ITickfileServiceProvider;
     interface ITickfileWriter;
 	interface IValueReplayTask;
+	interface IWeakCollection;
+	interface IWeakReference;
 
 // Enums *************************************************************************
 
@@ -494,6 +498,18 @@ library TradeBuildSP
 		DefaultRegionVolume = 2,
 		DefaultRegionCustom = 3
     } StudyDefaultRegions;
+
+    typedef [uuid(03aec9bd-609d-4598-a62f-8b7deafe4f63), 
+	version(1.0)]
+    enum {
+		InputTypeNone = 0,
+		InputTypeInteger = 1,
+		InputTypeSingle = 2,
+		InputTypeDouble = 3,
+		InputTypeString = 4,
+		InputTypeDate = 5,
+		InputTypeBoolean
+    }StudyInputTypes;
 
     typedef [uuid(705bb586-e895-4bad-91d9-f6bae65c1ad1), 
 	version(1.0)]
@@ -1145,6 +1161,11 @@ library TradeBuildSP
 
 	// Methods =====================================================
 
+		HRESULT createStudy(
+			[in] BSTR name,
+			[in] BSTR spName,
+			[out, retval] IStudy** );
+
 		HRESULT FatalServiceProviderError(
 			[in] long errorCode,
 			[in] BSTR source,
@@ -1192,19 +1213,20 @@ library TradeBuildSP
 		HRESULT NewStudyDefinition(
 			[out, retval] IStudyDefinition**);
 
-		HRESULT NewStudyParameterDefinition(
-			[out, retval] IStudyParameterDefinition**);
-
 		HRESULT NewStudyValueCache(
 			[in] long cyclicSize,
 			[in] BSTR valueName,
 			[out, retval] IStudyValueCache**);
 
-		HRESULT NewStudyValueDefinition(
-			[out, retval] IStudyValueDefinition**);
-
 		HRESULT NewStudyValueListeners(
 			[out, retval] IStudyValueListeners**);
+
+		HRESULT NewWeakCollection(
+			[out, retval] IWeakCollection**);
+
+		HRESULT NewWeakReference(
+			[in] IDispatch* targetObject,
+			[out, retval] IWeakReference**);
 
 		HRESULT NotifyListeners(
 			[in] VARIANT value,
@@ -1660,9 +1682,26 @@ library TradeBuildSP
 	[propget]
 	HRESULT time([out, retval] DATE* );
 
-};
+	};
 
     [
+      uuid(fe0d8f75-ea24-49ac-928c-453da5bdfc07),
+      version(1.0),
+      nonextensible,
+      helpstring("Defines the interface to be implemented by moving average study classes")
+    ]
+    interface IMovingAverageStudy : IUnknown {
+
+	// Properties ==================================================
+
+	[propget]
+	HRESULT ma(
+			[optional, in] long ref,
+			[out, retval] StudyValue* );
+
+	};
+	
+	[
       uuid(a0f1ab28-facb-4c2c-ad04-0cc504cbcca2),
       version(1.0),
       nonextensible,
@@ -1865,7 +1904,8 @@ interface IOrderPlex : IDispatch {
 	HRESULT requestTickData(
 		[in] IStreamingDataConsumer* consumer, 
 		[in] VARIANT_BOOL includeMarketDepth);
-    };
+
+	};
 
     [
       uuid(5dc8a1fd-a579-40b8-ae1c-8203bc9d75c8),
@@ -2007,7 +2047,7 @@ interface IOrderPlex : IDispatch {
 	HRESULT sortByName();
 
 //	[id(0xfffffffc), hidden]
-//	HRESULT NewEnum([out, retval] IUnknown** );
+//	HRESULT NewEnum([out, retval] IDispatch** );
 
     };
 
@@ -2320,7 +2360,7 @@ interface IOrderPlex : IDispatch {
 
 		HRESULT add(
 				[in] IStudy* study, 
-				[in] BSTR valueName);
+				[in] SAFEARRAY(BSTR)* valueNames);
 
 		HRESULT notify(
 				[in] StudyValueEvent* ev);
@@ -2340,12 +2380,6 @@ interface IOrderPlex : IDispatch {
 
         [propget]
         HRESULT baseStudy([out, retval] IStudy**);
-
-        [propput]
-        HRESULT defaultParameters([in] IParameters* );
-
-        [propget]
-        HRESULT defaultParameters([out, retval] IParameters** );
 
         [propget]
         HRESULT id([out, retval] BSTR* );
@@ -2371,7 +2405,7 @@ interface IOrderPlex : IDispatch {
 
         HRESULT addStudy(
 			[in] IStudy* study, 
-			[in] BSTR valueName,
+			[in] SAFEARRAY(BSTR)* valueNames,
 			[in] long numUnderlyingValuesToUse,
 			[in, optional] BSTR taskName, 
 			[in, optional] VARIANT taskData,
@@ -2388,14 +2422,15 @@ interface IOrderPlex : IDispatch {
 		HRESULT getStudyValue(	
 			[in] BSTR valueName, 
 			[in] long ref, 
-			[in, out] SAFEARRAY(VARIANT)* params, 
 			[out, retval] StudyValue* );
 
 		HRESULT initialise(
+			[in] ICommonServiceConsumer* commonServiceConsumer,
+			[in] IStudyServiceConsumer* studyServiceConsumer,
 			[in] BSTR id,
 			[in] IParameters* parameters,
 			[in] long numberOfValuesToCache,
-			[in] BSTR inputValueName,
+			[in] SAFEARRAY(BSTR)* valueNames,
 			[in] IStudy* underlyingStudy);
 		
 
@@ -2445,6 +2480,18 @@ interface IOrderPlex : IDispatch {
 		HRESULT name(
 				[out, retval] BSTR* );
 
+		[propput]
+		HRESULT shortName(
+				[in] BSTR );
+
+		[propget]
+		HRESULT shortName(
+				[out, retval] BSTR* );
+
+		[propget]
+		HRESULT StudyInputDefinitions(
+				[out, retval] IStudyInputDefinitions** );
+
 		[propget]
 		HRESULT StudyParameterDefinitions(
 				[out, retval] IStudyParameterDefinitions** );
@@ -2453,7 +2500,77 @@ interface IOrderPlex : IDispatch {
 		HRESULT StudyValueDefinitions(
 				[out, retval] IStudyValueDefinitions** );
 
+		// Methods =====================================================
+
+		HRESULT Clone(
+				[out, retval] IStudyDefinition** );
+
     };
+
+    [
+      uuid(677e99d0-e276-41f5-ab13-2398c1b221cd),
+      version(1.0),
+      nonextensible,
+      helpstring("Defines the interface implemented by Study Input Definition objects")
+    ]
+    interface IStudyInputDefinition : IUnknown {
+
+		// Properties ==================================================
+
+		[propput]
+		HRESULT description(
+				[in] BSTR );
+
+		[propget]
+		HRESULT description(
+				[out, retval] BSTR* );
+
+		[propput]
+		HRESULT name(
+				[in] BSTR );
+
+		[propget]
+		HRESULT name(
+				[out, retval] BSTR* );
+
+		[propput]
+		HRESULT inputType(
+				[in] StudyInputTypes );
+
+		[propget]
+		HRESULT inputType(
+				[out, retval] StudyInputTypes* );
+
+    };
+
+    [
+      uuid(a2a638cb-7b0a-4a2b-a4eb-9aae0d9480f2),
+      version(1.0),
+      nonextensible,
+      helpstring("Defines the interface implemented by Study Input Definition objects")
+    ]
+    interface IStudyInputDefinitions : IUnknown {
+
+		// Properties ==================================================
+
+		[propget]
+		HRESULT Count(
+			[out, retval] long* );
+
+	// Methods =====================================================
+
+		HRESULT add(
+			[in] BSTR paramName, 
+			[out, retval] IStudyInputDefinition** );
+
+		HRESULT Item(
+			[in] VARIANT index, 
+			[out, retval] IStudyInputDefinition** );
+
+		[id(0xfffffffc), hidden]
+		HRESULT NewEnum([out, retval] IDispatch** );
+
+	};
 
     [
       uuid(284b6e7e-6185-441f-917e-6db53aa0713a),
@@ -2464,7 +2581,6 @@ interface IOrderPlex : IDispatch {
     interface IStudyParameterDefinition : IUnknown {
 
 		// Properties ==================================================
-
 
 		[propput]
 		HRESULT description(
@@ -2509,12 +2625,17 @@ interface IOrderPlex : IDispatch {
 	// Methods =====================================================
 
 		HRESULT add(
-			[in] IStudyParameterDefinition* studyParamDef);
+			[in] BSTR paramName, 
+			[out, retval] IStudyParameterDefinition** );
 
 		HRESULT Item(
 			[in] VARIANT index, 
 			[out, retval] IStudyParameterDefinition** );
-    };
+
+		[id(0xfffffffc), hidden]
+		HRESULT NewEnum([out, retval] IDispatch** );
+
+	};
 
     [
       uuid(3e6d9f5e-830b-47f2-baab-a0911feff43c),
@@ -2534,7 +2655,7 @@ interface IOrderPlex : IDispatch {
 		HRESULT replayStudyValues(
 			[in] IDispatch* target, 			
 			[in] IStudy* sourceStudy, 
-			[in] BSTR valueName,
+			[in] SAFEARRAY(BSTR)* valueNames,
 			[in] long numUnderlyingValuesToUse, 
 			[in, optional] long discriminator,
 			[in, optional] BSTR taskName,
@@ -2560,7 +2681,6 @@ interface IOrderPlex : IDispatch {
 
 		HRESULT createStudy(
 			[in] BSTR name,
-			[in] IStudyServiceConsumer* serviceConsumer,
 			[out, retval] IStudy** );
 
         HRESULT getStudyDefaultParameters(
@@ -2619,17 +2739,6 @@ interface IOrderPlex : IDispatch {
 			[in, optional] long discriminator,
 			[in, optional] BSTR taskName,
 			[in, optional] VARIANT taskData,
-			[out, retval] ITaskCompletion** );
-
-		HRESULT replayValuesWithResolver(
-			[in] IDispatch* target, 			
-			[in] IStudy* sourceStudy, 
-			[in] BSTR requiredValueName,
-			[in] IStudyValueResolver* resolver,
-			[in] long numUnderlyingValuesToUse, 
-			[in, optional] long discriminator,
-			[in, optional] BSTR taskName,
-			[in, optional] VARIANT data,
 			[out, retval] ITaskCompletion** );
 
 		HRESULT updateValue(
@@ -2733,12 +2842,17 @@ interface IOrderPlex : IDispatch {
 		// Methods =====================================================
 
 		HRESULT add(
-			[in] IStudyValueDefinition* studyValueDef);
+			[in] BSTR valueName, 
+			[out, retval] IStudyValueDefinition** );
 
 		HRESULT Item(
 			[in] VARIANT index, 
 			[out, retval] IStudyValueDefinition** );
-    };
+    
+		[id(0xfffffffc), hidden]
+		HRESULT NewEnum([out, retval] IDispatch** );
+
+	};
 
     [
       uuid(6cc420df-e6f0-4221-9437-8d924477ea7b),
@@ -2776,6 +2890,11 @@ interface IOrderPlex : IDispatch {
 			[in] long index,
 			[out, retval] IStudyValueListener** );
 
+//		Can't do the following as the class is not implemented
+//		using a collection
+//		[id(0xfffffffc), hidden]
+//		HRESULT NewEnum([out, retval] IDispatch** );
+
 		HRESULT Notify(
 			[in] StudyValueEvent* ev);
 
@@ -2783,24 +2902,6 @@ interface IOrderPlex : IDispatch {
 			[in] IStudyValueListener* listener);
 
     };
-
-
-    [
-      uuid(883aabe8-5e25-4ed0-a959-25e7abcaaa15),
-      version(1.0),
-      nonextensible,
-      helpstring("Defines the interface implemented by Study Value Resolver objects")
-    ]
-    interface IStudyValueResolver : IUnknown{
-
-		// Methods =====================================================
-
-		HRESULT resolveValue(
-			[in] StudyValue* pStudyValue,
-			[in] BSTR requiredValueName,
-			[out, retval] VARIANT*);
-
-	};
 
     [
       uuid(49cce2c3-49a9-412e-9ce3-8226b7cc914b),
@@ -3116,8 +3217,51 @@ interface IOrderPlex : IDispatch {
         HRESULT Target([out, retval] IDispatch** );
 
         [propget]
+		// the same as ValueNames(0) for user convenience
         HRESULT ValueName([out, retval] BSTR* );
 
+        [propget]
+        HRESULT ValueNames([out, retval] SAFEARRAY(BSTR)* );
+
+	};
+
+	[
+		uuid(7b076878-6ab7-44a4-b699-916fdac5a942),
+		version(1.0),
+		nonextensible,
+		helpstring("The interface implemented by WeakReference Collection objects")
+	]
+	interface IWeakCollection : IUnknown {
+
+		// Methods =====================================================
+
+		HRESULT add(
+						[in] IDispatch* Item, 
+						[in, optional] VARIANT key, 
+						[in, optional] VARIANT before, 
+						[in, optional] VARIANT after);
+
+		HRESULT Count([out, retval] long* );
+
+		HRESULT Item(
+						[in] VARIANT index, 
+						[out, retval] IDispatch** );
+
+		HRESULT remove([in] VARIANT index);
+	};
+
+	[
+		uuid(e88d60f7-450f-4b42-813d-2ea2fcb50586),
+		version(1.0),
+		nonextensible,
+		helpstring("The interface implemented by WeakReference objects")
+	]
+	interface IWeakReference : IUnknown {
+
+		// Properties ==================================================
+
+		[propget]
+		HRESULT target([out, retval] IDispatch** );
 	};
 
 };
