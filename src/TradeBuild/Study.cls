@@ -141,11 +141,9 @@ Public Function getStudyValue( _
         ByVal valueName As String, _
         ByVal ref As Long) As TradeBuild.StudyValueStruct
 Dim sv As TradeBuildSP.StudyValue
-Dim parms() As Variant
 
 If valueName = "" Then valueName = "$default"
 
-parms = parameters
 sv = mStudy.getStudyValue(valueName, ref)
 getStudyValue.barNumber = sv.barNumber
 getStudyValue.timestamp = sv.timestamp
