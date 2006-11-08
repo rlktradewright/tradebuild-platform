@@ -82,7 +82,7 @@ End Sub
 ' Properties
 '================================================================================
 
-Friend Property Get Blank() As Boolean
+Public Property Get Blank() As Boolean
 Blank = mBlank
 End Property
 
@@ -90,11 +90,11 @@ Friend Property Let Blank(ByVal newValue As Boolean)
 mBlank = newValue
 End Property
 
-Friend Property Get closeValue() As Double
+Public Property Get closeValue() As Double
 closeValue = mClose
 End Property
 
-Friend Property Get datetime() As Date
+Public Property Get datetime() As Date
 datetime = mDateTime
 End Property
 
@@ -102,27 +102,37 @@ Friend Property Let datetime(ByVal newValue As Date)
 mDateTime = newValue
 End Property
 
-Friend Property Get highValue() As Double
+Public Property Get gain() As Double
+gain = mClose - mOpen
+If gain < 0 Then gain = 0
+End Property
+
+Public Property Get highValue() As Double
 highValue = mHigh
 End Property
 
-Friend Property Get IsUpBar() As Boolean
+Public Property Get IsDownBar() As Boolean
+IsDownBar = (mClose < mOpen)
+End Property
+
+Public Property Get IsUpBar() As Boolean
 IsUpBar = (mClose > mOpen)
 End Property
 
-Friend Property Get IsDownBar() As Boolean
-IsDownBar = (mClose <= mOpen)
+Public Property Get loss() As Double
+loss = mOpen - mClose
+If loss < 0 Then loss = 0
 End Property
 
-Friend Property Get lowValue() As Double
+Public Property Get lowValue() As Double
 lowValue = mLow
 End Property
 
-Friend Property Get openValue() As Double
+Public Property Get openValue() As Double
 openValue = mOpen
 End Property
 
-Friend Property Get tickVolume() As Long
+Public Property Get tickVolume() As Long
 tickVolume = mTickVolume
 End Property
 
@@ -130,7 +140,7 @@ End Property
 ' Methods
 '================================================================================
 
-Public Sub Tick(ByVal value As Double)
+Friend Sub Tick(ByVal value As Double)
 If mBlank Then
     mBlank = False
     mOpen = value

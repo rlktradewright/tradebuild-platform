@@ -25,6 +25,8 @@ Public Const MinDouble As Double = -(2 - 2 ^ -52) * 2 ^ 1023
 Public Const DummyHigh As Double = MinDouble
 Public Const DummyLow As Double = MaxDouble
 
+Public Const DefaultStudyValueName As String = "$DEFAULT"
+
 '================================================================================
 ' Enums
 '================================================================================

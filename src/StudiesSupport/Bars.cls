@@ -77,27 +77,31 @@ End Sub
 ' Properties
 '================================================================================
 
-Friend Property Get Bar(Optional ByVal ref As Long) As Bar
+Public Property Get Bar(Optional ByVal ref As Long) As Bar
 Set Bar = mBarsCache.getValue(ref)
 End Property
 
-Friend Property Get closeValue(Optional ByVal ref As Long) As Variant
+Public Property Get closeValue(Optional ByVal ref As Long) As Variant
 closeValue = Bar(ref).closeValue
 End Property
 
-Friend Property Get Count() As Long
+Public Property Get Count() As Long
 Count = mBarsCache.Count
 End Property
 
-Friend Property Get currentBarNumber() As Long
+Public Property Get currentBarNumber() As Long
 currentBarNumber = mCurrentBarNumber
 End Property
 
-Friend Property Get down(Optional ByVal ref As Long) As Boolean
+Public Property Get down(Optional ByVal ref As Long) As Boolean
 down = Bar(ref).IsDownBar
 End Property
 
-Friend Property Get higherHighValue( _
+Public Property Get gain(Optional ByVal ref As Long) As Double
+gain = Bar(ref).gain
+End Property
+
+Public Property Get higherHighValue( _
                 ByVal rank As Long, _
                 Optional ByVal ref As Long) As Double
 Dim valueToCompare As Double
@@ -118,7 +122,7 @@ Loop While numHighsFound < rank
 higherHighValue = currentHigh
 End Property
 
-Friend Property Get highestCloseValue(ByVal periods As Long, _
+Public Property Get highestCloseValue(ByVal periods As Long, _
                                     Optional ByVal ref As Long) As Double
 Dim i                   As Long
 Dim high                As Double
@@ -154,7 +158,7 @@ lastRef = ref
 lastValue = highestCloseValue
 End Property
 
-Friend Property Get highestHighValue(ByVal periods As Long, _
+Public Property Get highestHighValue(ByVal periods As Long, _
                                     Optional ByVal ref As Long) As Variant
 Dim i                   As Long
 Dim high                As Double
@@ -190,15 +194,19 @@ lastRef = ref
 lastValue = highestHighValue
 End Property
 
-Friend Property Get highValue(Optional ByVal ref As Long) As Double
+Public Property Get highValue(Optional ByVal ref As Long) As Double
 highValue = Bar(ref).highValue
 End Property
 
-Friend Property Get inside(Optional ByVal ref As Long) As Variant
+Public Property Get inside(Optional ByVal ref As Long) As Variant
 inside = (highValue(ref) <= highValue(ref - 1)) And (lowValue(ref) >= lowValue(ref - 1))
 End Property
 
-Friend Property Get lowerLowValue( _
+Public Property Get loss(Optional ByVal ref As Long) As Double
+loss = Bar(ref).loss
+End Property
+
+Public Property Get lowerLowValue( _
                 ByVal rank As Long, _
                 Optional ByVal ref As Long) As Double
 Dim valueToCompare As Double
@@ -219,7 +227,7 @@ Loop While numLowsFound < rank
 lowerLowValue = currentLow
 End Property
 
-Friend Property Get lowestCloseValue(ByVal periods As Long, _
+Public Property Get lowestCloseValue(ByVal periods As Long, _
                                     Optional ByVal ref As Long) As Double
 Dim i As Long
 Dim Low As Double
@@ -255,7 +263,7 @@ lastRef = ref
 lastValue = lowestCloseValue
 End Property
 
-Friend Property Get lowestLowValue(ByVal periods As Long, _
+Public Property Get lowestLowValue(ByVal periods As Long, _
                                     Optional ByVal ref As Long) As Variant
 Dim i As Long
 Dim Low As Double
@@ -293,23 +301,23 @@ lastRef = ref
 lastValue = lowestLowValue
 End Property
 
-Friend Property Get lowValue(Optional ByVal ref As Long) As Double
+Public Property Get lowValue(Optional ByVal ref As Long) As Double
 lowValue = Bar(ref).lowValue
 End Property
 
-Friend Property Get openValue(Optional ByVal ref As Long) As Variant
+Public Property Get openValue(Optional ByVal ref As Long) As Variant
 openValue = Bar(ref).openValue
 End Property
 
-Friend Property Get outside(Optional ByVal ref As Long) As Boolean
+Public Property Get outside(Optional ByVal ref As Long) As Boolean
 outside = (highValue(ref) > highValue(ref - 1)) And (lowValue(ref) < lowValue(ref - 1))
 End Property
 
-Friend Property Get tickVolume(Optional ByVal ref As Long) As Long
+Public Property Get tickVolume(Optional ByVal ref As Long) As Long
 tickVolume = Bar(ref).tickVolume
 End Property
 
-Friend Property Get up(Optional ByVal ref As Long) As Boolean
+Public Property Get up(Optional ByVal ref As Long) As Boolean
 up = Bar(ref).IsUpBar
 End Property
 
@@ -317,17 +325,17 @@ End Property
 ' Methods
 '================================================================================
 
-Friend Sub initialise( _
+Public Sub initialise( _
                 ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
-                Optional ByVal numberOfValuesToCache As Long)
+                Optional ByVal numberOfBarsToCache As Long)
 
 Set mCommonServiceConsumer = commonServiceConsumer
 
-Set mBarsCache = mCommonServiceConsumer.NewStudyValueCache(numberOfValuesToCache, "Bar")
+Set mBarsCache = mCommonServiceConsumer.NewStudyValueCache(numberOfBarsToCache, "Bar")
 
 End Sub
 
-Friend Sub notify( _
+Public Sub notify( _
                 ev As TradeBuildSP.StudyValueEvent)
 Dim isNewBar As Boolean
 
@@ -340,8 +348,6 @@ End If
 mCurrentBar.Tick ev.value
 If isNewBar Then
     mBarsCache.addValue mCurrentBar, ev.barnumber, ev.TimeStamp
-Else
-    mBarsCache.updateValue mCurrentBar, ev.barnumber, ev.TimeStamp
 End If
 End Sub
 
