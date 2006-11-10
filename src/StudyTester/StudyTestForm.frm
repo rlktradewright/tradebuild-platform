@@ -63,39 +63,39 @@ Begin VB.Form StudyTestForm
       TabCaption(1)   =   "Study setup"
       TabPicture(1)   =   "StudyTestForm.frx":001C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "Label2"
+      Tab(1).Control(0)=   "SetSpButton"
       Tab(1).Control(0).Enabled=   0   'False
-      Tab(1).Control(1)=   "Label3"
+      Tab(1).Control(1)=   "RemoveSPButton"
       Tab(1).Control(1).Enabled=   0   'False
-      Tab(1).Control(2)=   "Label1"
+      Tab(1).Control(2)=   "SpList"
       Tab(1).Control(2).Enabled=   0   'False
-      Tab(1).Control(3)=   "Label19"
+      Tab(1).Control(3)=   "AddSPButton"
       Tab(1).Control(3).Enabled=   0   'False
-      Tab(1).Control(4)=   "StudyConfigurer1"
+      Tab(1).Control(4)=   "SPToAddText"
       Tab(1).Control(4).Enabled=   0   'False
-      Tab(1).Control(5)=   "StudiesCombo"
+      Tab(1).Control(5)=   "BuiltInStudiesCheck"
       Tab(1).Control(5).Enabled=   0   'False
       Tab(1).Control(6)=   "ServiceProviderClassNameText"
       Tab(1).Control(6).Enabled=   0   'False
-      Tab(1).Control(7)=   "BuiltInStudiesCheck"
+      Tab(1).Control(7)=   "StudiesCombo"
       Tab(1).Control(7).Enabled=   0   'False
-      Tab(1).Control(8)=   "SPToAddText"
+      Tab(1).Control(8)=   "StudyConfigurer1"
       Tab(1).Control(8).Enabled=   0   'False
-      Tab(1).Control(9)=   "AddSPButton"
+      Tab(1).Control(9)=   "Label19"
       Tab(1).Control(9).Enabled=   0   'False
-      Tab(1).Control(10)=   "SpList"
+      Tab(1).Control(10)=   "Label1"
       Tab(1).Control(10).Enabled=   0   'False
-      Tab(1).Control(11)=   "RemoveSPButton"
+      Tab(1).Control(11)=   "Label3"
       Tab(1).Control(11).Enabled=   0   'False
-      Tab(1).Control(12)=   "SetSpButton"
+      Tab(1).Control(12)=   "Label2"
       Tab(1).Control(12).Enabled=   0   'False
       Tab(1).ControlCount=   13
       TabCaption(2)   =   "&Contract setup"
       TabPicture(2)   =   "StudyTestForm.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "SetContractButton"
+      Tab(2).Control(0)=   "Frame2"
       Tab(2).Control(1)=   "Frame1"
-      Tab(2).Control(2)=   "Frame2"
+      Tab(2).Control(2)=   "SetContractButton"
       Tab(2).ControlCount=   3
       TabCaption(3)   =   "C&hart"
       TabPicture(3)   =   "StudyTestForm.frx":0054
@@ -677,6 +677,12 @@ End Enum
 '================================================================================
 
 '================================================================================
+' External function declarations
+'================================================================================
+
+Private Declare Sub InitCommonControls Lib "comctl32" ()
+
+'================================================================================
 ' Member variables
 '================================================================================
 
@@ -721,6 +727,10 @@ Private mBaseStudyConfigurations As TradeBuildUI.StudyConfigurations
 '================================================================================
 ' Form Event Handlers
 '================================================================================
+
+Private Sub Form_Initialize()
+InitCommonControls  ' enables WinXP look and feel
+End Sub
 
 Private Sub Form_Load()
 Dim widthString As String
