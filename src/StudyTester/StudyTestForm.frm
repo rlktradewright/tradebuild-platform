@@ -3,7 +3,7 @@ Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{DBED8E43-5960-49DE-B9A7-BBC22DB93A26}#12.1#0"; "ChartSkil.ocx"
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
-Object = "{D1E1CD3C-084A-4A4F-B2D9-56CE3669B04D}#12.0#0"; "TradeBuildUI.ocx"
+Object = "{D1E1CD3C-084A-4A4F-B2D9-56CE3669B04D}#17.0#0"; "TradeBuildUI.ocx"
 Begin VB.Form StudyTestForm 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeBuild Study Test Harness"
@@ -64,25 +64,38 @@ Begin VB.Form StudyTestForm
       TabPicture(1)   =   "StudyTestForm.frx":001C
       Tab(1).ControlEnabled=   0   'False
       Tab(1).Control(0)=   "Label2"
+      Tab(1).Control(0).Enabled=   0   'False
       Tab(1).Control(1)=   "Label3"
+      Tab(1).Control(1).Enabled=   0   'False
       Tab(1).Control(2)=   "Label1"
+      Tab(1).Control(2).Enabled=   0   'False
       Tab(1).Control(3)=   "Label19"
+      Tab(1).Control(3).Enabled=   0   'False
       Tab(1).Control(4)=   "StudyConfigurer1"
+      Tab(1).Control(4).Enabled=   0   'False
       Tab(1).Control(5)=   "StudiesCombo"
+      Tab(1).Control(5).Enabled=   0   'False
       Tab(1).Control(6)=   "ServiceProviderClassNameText"
+      Tab(1).Control(6).Enabled=   0   'False
       Tab(1).Control(7)=   "BuiltInStudiesCheck"
+      Tab(1).Control(7).Enabled=   0   'False
       Tab(1).Control(8)=   "SPToAddText"
+      Tab(1).Control(8).Enabled=   0   'False
       Tab(1).Control(9)=   "AddSPButton"
+      Tab(1).Control(9).Enabled=   0   'False
       Tab(1).Control(10)=   "SpList"
+      Tab(1).Control(10).Enabled=   0   'False
       Tab(1).Control(11)=   "RemoveSPButton"
+      Tab(1).Control(11).Enabled=   0   'False
       Tab(1).Control(12)=   "SetSpButton"
+      Tab(1).Control(12).Enabled=   0   'False
       Tab(1).ControlCount=   13
       TabCaption(2)   =   "&Contract setup"
       TabPicture(2)   =   "StudyTestForm.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "Frame2"
+      Tab(2).Control(0)=   "SetContractButton"
       Tab(2).Control(1)=   "Frame1"
-      Tab(2).Control(2)=   "SetContractButton"
+      Tab(2).Control(2)=   "Frame2"
       Tab(2).ControlCount=   3
       TabCaption(3)   =   "C&hart"
       TabPicture(3)   =   "StudyTestForm.frx":0054
@@ -459,6 +472,7 @@ Begin VB.Form StudyTestForm
          TabIndex        =   5
          ToolTipText     =   "Set if your service provider uses any built-in studies"
          Top             =   1500
+         Value           =   1  'Checked
          Width           =   3015
       End
       Begin VB.TextBox ServiceProviderClassNameText 
