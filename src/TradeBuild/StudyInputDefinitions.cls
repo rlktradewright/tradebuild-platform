@@ -103,6 +103,8 @@ End Property
 Public Function add( _
                 ByVal inputName As String) As StudyInputDefinition
 Set add = New StudyInputDefinition
+add.name = inputName
+add.inputType = InputTypeDouble
 mStudyInputDefinitions.add add, inputName
 End Function
 

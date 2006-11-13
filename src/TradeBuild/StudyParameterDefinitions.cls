@@ -103,6 +103,8 @@ End Property
 Public Function add( _
                 ByVal paramName As String) As StudyParameterDefinition
 Set add = New StudyParameterDefinition
+add.name = paramName
+add.parameterType = ParameterTypeInteger
 mStudyParameterDefinitions.add add, paramName
 End Function
 

@@ -103,6 +103,8 @@ End Property
 Public Function add( _
                 ByVal valueName As String) As StudyValueDefinition
 Set add = New StudyValueDefinition
+add.name = valueName
+add.valueType = ValueTypeDouble
 mStudyValueDefinitions.add add, valueName
 End Function
 
