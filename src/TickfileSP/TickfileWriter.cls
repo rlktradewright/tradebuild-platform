@@ -57,6 +57,8 @@ Private mTickfileServiceProvider As tickfileServiceProvider
 Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mServiceConsumer As ITickfileOutputServiceConsumer
 
+Private mLogLevel As TradeBuildSP.LogLevels
+
 Private mFileSys As Scripting.FileSystemObject
 Private mTsOut As Scripting.TextStream
 
@@ -67,6 +69,8 @@ Private mPath As String
 
 Private mTickFileVersion As TickFileVersions
 Private mTickfileFormat As TickfileFormats
+
+Private mBytesWritten As Long
 
 '================================================================================
 ' Class Event Handlers
@@ -158,7 +162,7 @@ Select Case mTickfileFormat
 Case TickfileFormats.TickfileTradeBuild
     If mTsOut Is Nothing Then createTradeBuildTickFile timestamp
     
-    mTsOut.WriteLine CDbl(timestamp) & "," & _
+    writeTickfileLine CDbl(timestamp) & "," & _
                 mCommonServiceConsumer.FormatTimestamp(timestamp, TimestampFormats.TimestampTimeOnly) & "," & _
                 TICK_MARKET_DEPTH & "," & _
                 Position & "," & _
@@ -183,7 +187,7 @@ Select Case mTickfileFormat
 Case TickfileFormats.TickfileTradeBuild
     If mTsOut Is Nothing Then createTradeBuildTickFile timestamp
     
-    mTsOut.WriteLine CDbl(timestamp) & "," & _
+    writeTickfileLine CDbl(timestamp) & "," & _
                 mCommonServiceConsumer.FormatTimestamp(timestamp, TimestampFormats.TimestampTimeOnly) & "," & _
                 TICK_MARKET_DEPTH_RESET
 
@@ -235,6 +239,10 @@ Friend Property Let commonServiceConsumer(ByVal RHS As TradeBuildSP.ICommonServi
 Set mCommonServiceConsumer = RHS
 End Property
 
+Friend Property Let logLevel(ByVal RHS As TradeBuildSP.LogLevels)
+mLogLevel = RHS
+End Property
+
 Friend Property Let path(ByVal value As String)
 If value = "" Then Exit Property
 mPath = value
@@ -278,6 +286,7 @@ Friend Sub finish()
 If Not mTsOut Is Nothing Then
     mTsOut.Close
     Set mTsOut = Nothing
+    logMessage "Closed tickfile: " & mBytesWritten & "bytes written"
 End If
 Set mServiceConsumer = Nothing
 End Sub
@@ -303,8 +312,9 @@ With mContract.Specifier
     Set mTsOut = mFileSys.CreateTextFile(tfPath & tfName)
     
     mServiceConsumer.OutputTickfileCreated tfPath & tfName
+    logMessage "Created output tickfile " & tfPath & tfName
     
-    mTsOut.WriteLine "tickfile," & _
+    writeTickfileLine "tickfile," & _
                 TICKFILE_CURR_VERSION & "," & _
                 .Exchange & "," & _
                 .Symbol & "," & _
@@ -337,14 +347,15 @@ tfName = UCase$(mContract.Specifier.LocalSymbol) & "-" & _
         format(timestamp, "yyyymmdd-hhmmss") & ".tck"
 Set mTsOut = mFileSys.CreateTextFile(tfPath & tfName)
 mServiceConsumer.OutputTickfileCreated tfPath & tfName
-mTsOut.WriteLine TICKFILE_DECLARER & "," & _
+logMessage "Created output tickfile " & tfPath & tfName
+writeTickfileLine TICKFILE_DECLARER & "," & _
             TICKFILE_CURR_VERSION & "," & _
             UCase$(mContract.Specifier.Exchange) & "," & _
             UCase$(mContract.Specifier.Symbol) & "," & _
             mContract.Specifier.Expiry & "," & _
             CDbl(timestamp) & "," & _
             FormatDateTime(timestamp, vbGeneralDate)
-mTsOut.WriteLine CONTRACT_DETAILS_MARKER & mContract.ToXML
+writeTickfileLine CONTRACT_DETAILS_MARKER & mContract.ToXML
 
 Exit Sub
 
@@ -370,6 +381,16 @@ finish
 mTickfileServiceProvider.dataWriterFinished Me
 End Sub
 
+Private Sub logMessage( _
+                ByVal message As String, _
+                Optional ByVal logLevel As LogLevels = LogLevelLow)
+If mLogLevel < logLevel Or _
+    mLogLevel = LogLevelNone Then Exit Sub
+mCommonServiceConsumer.NotifyListeners "TickfileSP: " & message, _
+                                        TradeBuildSP.StandardListenValueTypes.Log, _
+                                        Me
+End Sub
+
 Private Sub writeTickData( _
                         ByVal timestamp As Date, _
                         ByVal tickType As String, _
@@ -390,7 +411,7 @@ End If
 Select Case mTickfileFormat
 Case TickfileFormats.TickfileTradeBuild
     If mTsOut Is Nothing Then createTradeBuildTickFile timestamp
-    mTsOut.WriteLine CDbl(timestamp) & "," & _
+    writeTickfileLine CDbl(timestamp) & "," & _
                 mCommonServiceConsumer.FormatTimestamp(timestamp, TimestampFormats.TimestampTimeOnly) & "," & _
                 tickType & "," & _
                 IIf(price <> -1#, format(price, priceFormatString), "") & _
@@ -413,7 +434,7 @@ Case TickfileFormats.TickfileCrescendo
     Case TICK_VOLUME
         crescendoTickType = TickTypes.Volume
     End Select
-    mTsOut.WriteLine CDbl(timestamp) & "," & _
+    writeTickfileLine CDbl(timestamp) & "," & _
                 FormatDateTime(timestamp, vbGeneralDate) & "," & _
                 crescendoTickType & "," & _
                 price & "," & _
@@ -421,7 +442,11 @@ Case TickfileFormats.TickfileCrescendo
 End Select
 End Sub
 
-
+Private Sub writeTickfileLine( _
+                ByVal text As String)
+mTsOut.WriteLine text
+mBytesWritten = mBytesWritten + Len(text)
+End Sub
 
 
 

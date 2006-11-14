@@ -72,6 +72,8 @@ Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mServiceConsumer As ITickfileInputServiceConsumer
 Private mDataConsumer As IStreamingDataConsumer
 
+Private mLogLevel As TradeBuildSP.LogLevels
+
 Private mReplayProgressEventFrequency As Long
 
 Private mFileSys As Scripting.FileSystemObject
@@ -255,6 +257,10 @@ Friend Property Get InputTickfileSpecifier() As TradeBuildSP.TickfileSpec
 InputTickfileSpecifier = mInputTickfileSpecifier
 End Property
 
+Friend Property Let logLevel(ByVal RHS As TradeBuildSP.LogLevels)
+mLogLevel = RHS
+End Property
+
 Friend Property Let StreamingDataConsumer(ByVal RHS As IStreamingDataConsumer)
 Set mDataConsumer = RHS
 End Property
@@ -274,6 +280,7 @@ End Property
 
 Friend Sub finish()
 If Not mTsIn Is Nothing Then mTsIn.Close
+logMessage "Closed input tickfile: " & mTickdataReadBytes & " bytes read"
 Set mTsIn = Nothing
 Set mServiceConsumer = Nothing
 Set mDataConsumer = Nothing
@@ -296,6 +303,7 @@ Dim bytesRead As Long
 Dim f As File
 Dim dataFields() As String
 
+logMessage "Opening file " & filename
     
 On Error Resume Next
 Set ts = mFileSys.OpenTextFile(filename, ForReading, False)
@@ -523,6 +531,16 @@ If lookAhead(lookAheadRecord) Then
     End Select
 End If
 End Function
+
+Private Sub logMessage( _
+                ByVal message As String, _
+                Optional ByVal logLevel As LogLevels = LogLevelLow)
+If mLogLevel < logLevel Or _
+    mLogLevel = LogLevelNone Then Exit Sub
+mCommonServiceConsumer.NotifyListeners "TickfileSP: " & message, _
+                                        TradeBuildSP.StandardListenValueTypes.Log, _
+                                        Me
+End Sub
 
 Private Function lookAhead(lookAheadRecord As Long) As Boolean
 lookAhead = True

@@ -63,6 +63,8 @@ Private mNextReaderID As Long
 Private mTickfileDataReaders As Collection
 Private mTickfileDataWriters As Collection
 
+Private mLogLevel As TradeBuildSP.LogLevels
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
@@ -107,7 +109,7 @@ mCommonServiceConsumer.RegisterServiceProvider mHandle, _
 End Sub
 
 Private Property Let ICommonServiceProvider_LogLevel(ByVal RHS As TradeBuildSP.LogLevels)
-
+mLogLevel = RHS
 End Property
 
 Private Property Let ICommonServiceProvider_Name(ByVal RHS As String)
@@ -147,6 +149,7 @@ reader.tickfileServiceProvider = Me
 reader.commonServiceConsumer = mCommonServiceConsumer
 reader.TickfileInputServiceConsumer = serviceConsumer
 reader.StreamingDataConsumer = dataConsumer
+reader.logLevel = mLogLevel
 mTickfileDataReaders.Add reader
 Exit Function
 Err:
@@ -178,6 +181,7 @@ writer.TickFileVersion = formatVersion
 writer.path = location
 writer.commonServiceConsumer = mCommonServiceConsumer
 writer.TickfileOutputServiceConsumer = serviceConsumer
+writer.logLevel = mLogLevel
 mTickfileDataWriters.Add writer
 Exit Function
 Err:
