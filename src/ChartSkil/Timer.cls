@@ -70,6 +70,7 @@ Private mTimerNumber As Long
 Private mRandomIntervals As Boolean
 Private mState As TimerStates
 Private mFirstInterval As Boolean
+Private mFirstExpiryNotified As Boolean
 
 '================================================================================
 ' Class Event Handlers
@@ -80,6 +81,7 @@ mState = Stopped
 End Sub
 
 Private Sub Class_Terminate()
+Debug.Print "IntervalTimer terminated"
 If mTimerNumber <> 0 Then EndTimer mTimerNumber
 End Sub
 
@@ -141,12 +143,20 @@ Attribute RandomIntervals.VB_Description = "If set to True, indicates that Timer
 mRandomIntervals = value
 End Property
 
+Public Property Get RandomIntervals() As Boolean
+RandomIntervals = mRandomIntervals
+End Property
+
 ' If set to True, indicates that TimerExpired events are to be fired regularly at intervals
 ' specified in TimerIntervalMillsecs or TimerIntervalSecs. Otherwise only a single
 ' TimerExpired event will occur.
 Public Property Let RepeatNotifications(ByVal value As Boolean)
 Attribute RepeatNotifications.VB_Description = "If set to True, indicates that TimerExpired events are to be fired regularly at intervals specified in TimerIntervalMillsecs or TimerIntervalSecs. Otherwise only a single TimerExpired event will occur."
 mRepeat = value
+End Property
+
+Public Property Get RepeatNotifications() As Boolean
+RepeatNotifications = mRepeat
 End Property
 
 ' Indicates whether the IntervalTimer object is Running or Stopped.
@@ -165,7 +175,7 @@ If newValue <= 0 Then
                 "Value must be greater than zero"
 End If
 mTimerIntervalMillisecs = newValue
-If mTimerNumber <> 0 Then StartTimer
+If mTimerNumber <> 0 And Not mFirstInterval Then StartTimer
 End Property
 
 ' Specifies the interval in seconds at which the IntervalTimer object is to fire
@@ -178,7 +188,7 @@ If newValue <= 0 Then
                 "Value must be greater than zero"
 End If
 mTimerIntervalMillisecs = newValue * 1000
-If mTimerNumber <> 0 Then StartTimer
+If mTimerNumber <> 0 And Not mFirstInterval Then StartTimer
 End Property
 
 '================================================================================
@@ -187,17 +197,19 @@ End Property
 
 Friend Sub Notify()
 Dim interval As Long
+
 If Not mRepeat Then
     StopTimer
 ElseIf mRandomIntervals Then
     StopTimer
-    Randomize
-    interval = Rnd * mTimerIntervalMillisecs + 1
-    mTimerNumber = BeginTimer(interval, Me)
+    If mRepeat Then
+        Randomize
+        interval = Rnd * mTimerIntervalMillisecs + 1
+        mTimerNumber = BeginTimer(interval, False, Me)
+    End If
 ElseIf mTimerIntervalMillisecs <> 0 And mFirstInterval Then
-    StopTimer
-    interval = mTimerIntervalMillisecs
-    mTimerNumber = BeginTimer(interval, Me)
+    mFirstInterval = False
+    mTimerNumber = BeginTimer(mTimerIntervalMillisecs, True, Me)
 End If
 RaiseEvent TimerExpired
 End Sub
@@ -205,17 +217,38 @@ End Sub
 ' Tells the IntervalTimer object to start producing TimerExpired events.
 Public Sub StartTimer()
 Attribute StartTimer.VB_Description = "Tells the IntervalTimer object to start producing TimerExpired events."
+Dim interval As Long
 If mFirstTimerIntervalMillisecs = 0 And mTimerIntervalMillisecs = 0 Then
     err.Raise TimerIntervalNotSet, _
                 "IntervalTimer.Timer::StartTimer", _
                 "Timer interval has not been set"
 End If
+
 If mTimerNumber <> 0 Then StopTimer
+
 If mFirstTimerIntervalMillisecs <> 0 Then
     mFirstInterval = True
-    mTimerNumber = BeginTimer(mFirstTimerIntervalMillisecs, Me)
+    interval = mFirstTimerIntervalMillisecs
+    If mRandomIntervals Then
+        Randomize
+        interval = Rnd * mFirstTimerIntervalMillisecs + 1
+    End If
+    mTimerNumber = BeginTimer(mFirstTimerIntervalMillisecs, False, Me)
+ElseIf mRepeat Then
+    If mRandomIntervals Then
+        Randomize
+        interval = Rnd * mTimerIntervalMillisecs + 1
+        mTimerNumber = BeginTimer(interval, False, Me)
+    Else
+        mTimerNumber = BeginTimer(mTimerIntervalMillisecs, True, Me)
+    End If
 Else
-    mTimerNumber = BeginTimer(mTimerIntervalMillisecs, Me)
+    interval = mTimerIntervalMillisecs
+    If mRandomIntervals Then
+        Randomize
+        interval = Rnd * mTimerIntervalMillisecs + 1
+    End If
+    mTimerNumber = BeginTimer(interval, False, Me)
 End If
 mState = TimerStates.Running
 End Sub
@@ -223,6 +256,7 @@ End Sub
 ' Tells the IntervalTimer object to stop producing TimerExpired events.
 Public Sub StopTimer()
 Attribute StopTimer.VB_Description = "Tells the IntervalTimer object to stop producing TimerExpired events."
+mFirstInterval = False
 mState = TimerStates.Stopped
 If mTimerNumber = 0 Then Exit Sub
 EndTimer mTimerNumber
