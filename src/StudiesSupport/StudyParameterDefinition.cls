@@ -44,6 +44,15 @@ Implements TradeBuildSP.IStudyParameterDefinition
 ' Enums
 '================================================================================
 
+Public Enum StudyParameterTypes
+    ParameterTypeNone = 0
+    ParameterTypeInteger = 1
+    ParameterTypeReal = 2
+    ParameterTypeString = 3
+    ParameterTypeDate = 4
+    ParameterTypeBoolean = 5
+End Enum
+
 '================================================================================
 ' Types
 '================================================================================
@@ -56,6 +65,11 @@ Private mName As String
 Private mDescription As String
 
 Private mParameterType As StudyParameterTypes
+
+Private mMinimumValue As Variant
+Private mMaximumValue As Variant
+
+Private mPermittedValues() As Variant
 
 '================================================================================
 ' Class Event Handlers
@@ -74,9 +88,25 @@ Private Property Let IStudyParameterDefinition_Description( _
 mDescription = RHS
 End Property
 
-Private Property Let IStudyParameterDefinition_name( _
-                ByVal RHS As String)
-mName = RHS
+'Private Property Let IStudyParameterDefinition_name( _
+'                ByVal RHS As String)
+'mName = RHS
+'End Property
+
+Private Property Let IStudyParameterDefinition_maximumValue(ByVal RHS As Variant)
+mMaximumValue = RHS
+End Property
+
+Private Property Get IStudyParameterDefinition_maximumValue() As Variant
+IStudyParameterDefinition_maximumValue = mMaximumValue
+End Property
+
+Private Property Let IStudyParameterDefinition_minimumValue(ByVal RHS As Variant)
+mMinimumValue = RHS
+End Property
+
+Private Property Get IStudyParameterDefinition_minimumValue() As Variant
+IStudyParameterDefinition_minimumValue = mMinimumValue
 End Property
 
 Private Property Get IStudyParameterDefinition_name() As String
@@ -92,6 +122,13 @@ Private Property Get IStudyParameterDefinition_parameterType() As TradeBuildSP.S
 IStudyParameterDefinition_parameterType = mParameterType
 End Property
 
+Private Property Let IStudyParameterDefinition_permittedValues(RHS() As Variant)
+mPermittedValues = RHS
+End Property
+
+Private Property Get IStudyParameterDefinition_permittedValues() As Variant()
+IStudyParameterDefinition_permittedValues = mPermittedValues
+End Property
 '================================================================================
 ' XXXX Event Handlers
 '================================================================================
@@ -100,15 +137,31 @@ End Property
 ' Properties
 '================================================================================
 
-Public Property Let Description(ByVal value As String)
+Public Property Let description(ByVal value As String)
 mDescription = value
 End Property
 
-Public Property Get Description() As String
-Description = mDescription
+Public Property Get description() As String
+description = mDescription
 End Property
 
-Public Property Let name(ByVal value As String)
+Public Property Let maximumValue(ByVal value As Variant)
+mMaximumValue = value
+End Property
+
+Public Property Get maximumValue() As Variant
+maximumValue = mMaximumValue
+End Property
+
+Public Property Let minimumValue(ByVal value As Variant)
+mMinimumValue = value
+End Property
+
+Public Property Get minimumValue() As Variant
+minimumValue = mMinimumValue
+End Property
+
+Friend Property Let name(ByVal value As String)
 mName = value
 End Property
 
@@ -122,6 +175,14 @@ End Property
 
 Public Property Get parameterType() As StudyParameterTypes
 parameterType = mParameterType
+End Property
+
+Public Property Let permittedValues(ByRef value() As Variant)
+mPermittedValues = value
+End Property
+
+Public Property Get permittedValues() As Variant()
+permittedValues = mPermittedValues
 End Property
 
 '================================================================================

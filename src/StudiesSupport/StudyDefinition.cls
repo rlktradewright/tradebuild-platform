@@ -141,12 +141,12 @@ Public Property Get defaultRegion() As StudyDefaultRegions
 defaultRegion = mDefaultRegion
 End Property
 
-Public Property Let Description(ByVal value As String)
+Public Property Let description(ByVal value As String)
 mDescription = value
 End Property
 
-Public Property Get Description() As String
-Description = mDescription
+Public Property Get description() As String
+description = mDescription
 End Property
 
 Public Property Let name(ByVal value As String)
@@ -194,35 +194,35 @@ Dim svd As StudyValueDefinition
 
 Set clone = New studyDefinition
 clone.defaultRegion = mDefaultRegion
-clone.Description = mDescription
+clone.description = mDescription
 clone.name = mName
 clone.shortName = mShortName
 
 Set newSIDs = clone.studyInputDefinitions
 For Each sid In mStudyInputDefinitions
     Set newSID = newSIDs.add(sid.name)
-    newSID.name = sid.name
-    newSID.Description = sid.Description
+    newSID.description = sid.description
     newSID.inputType = sid.inputType
 Next
 
 Set newSPDs = clone.studyParameterDefinitions
 For Each spd In mStudyParameterDefinitions
     Set newSPD = newSPDs.add(spd.name)
-    newSPD.name = spd.name
-    newSPD.Description = spd.Description
+    newSPD.description = spd.description
+    newSPD.maximumValue = spd.maximumValue
+    newSPD.minimumValue = spd.minimumValue
     newSPD.parameterType = spd.parameterType
+    newSPD.permittedValues = spd.permittedValues
 Next
 
 Set newSVDs = clone.studyValueDefinitions
 For Each svd In mStudyValueDefinitions
     Set newSVD = newSVDs.add(svd.name)
-    newSVD.name = svd.name
-    newSVD.Description = svd.Description
+    newSVD.description = svd.description
     newSVD.isDefault = svd.isDefault
     newSVD.maximumValue = svd.maximumValue
     newSVD.minimumValue = svd.minimumValue
-    newSVD.multipleValuesPerBar = svd.multipleValuesPerBar
+    newSVD.valueMode = svd.valueMode
     newSVD.valueType = svd.valueType
 Next
 

@@ -72,7 +72,7 @@ Set IStudyValueDefinitions_Add = add(valueName)
 End Function
 
 Private Property Get IStudyValueDefinitions_Count() As Long
-IStudyValueDefinitions_Count = Count
+IStudyValueDefinitions_Count = count
 End Property
 
 Private Function IStudyValueDefinitions_Item( _
@@ -92,8 +92,8 @@ End Function
 ' Properties
 '================================================================================
 
-Public Property Get Count() As Long
-Count = mStudyValueDefinitions.Count
+Public Property Get count() As Long
+count = mStudyValueDefinitions.count
 End Property
 
 '================================================================================
@@ -104,7 +104,8 @@ Public Function add( _
                 ByVal valueName As String) As StudyValueDefinition
 Set add = New StudyValueDefinition
 add.name = valueName
-add.valueType = ValueTypeDouble
+add.valueMode = ValueModeNone
+add.valueType = ValueTypeReal
 mStudyValueDefinitions.add add, valueName
 End Function
 

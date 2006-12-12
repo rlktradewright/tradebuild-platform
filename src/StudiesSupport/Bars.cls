@@ -52,7 +52,7 @@ Option Explicit
 
 Private mCommonServiceConsumer      As ICommonServiceConsumer
 
-Private mBarsCache                  As IStudyValueCache
+Private mBarsCache                  As StudyValueCache
 
 Private mCurrentBar                 As Bar
 Private mCurrentBarNumber           As Long
@@ -85,8 +85,8 @@ Public Property Get closeValue(Optional ByVal ref As Long) As Variant
 closeValue = Bar(ref).closeValue
 End Property
 
-Public Property Get Count() As Long
-Count = mBarsCache.Count
+Public Property Get count() As Long
+count = mBarsCache.count
 End Property
 
 Public Property Get currentBarNumber() As Long
@@ -325,13 +325,14 @@ End Property
 ' Methods
 '================================================================================
 
-Public Sub initialise( _
+Public Sub Initialise( _
                 ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
                 Optional ByVal numberOfBarsToCache As Long)
 
 Set mCommonServiceConsumer = commonServiceConsumer
 
-Set mBarsCache = mCommonServiceConsumer.NewStudyValueCache(numberOfBarsToCache, "Bar")
+Set mBarsCache = New StudyValueCache
+mBarsCache.Initialise numberOfBarsToCache, "Bar"
 
 End Sub
 
@@ -339,15 +340,15 @@ Public Sub notify( _
                 ev As TradeBuildSP.StudyValueEvent)
 Dim isNewBar As Boolean
 
-isNewBar = newBar(ev.barnumber)
+isNewBar = newBar(ev.barNumber)
 If isNewBar Then
     Set mCurrentBar = New Bar
-    mCurrentBar.datetime = ev.TimeStamp
+    mCurrentBar.datetime = ev.timestamp
 End If
 
 mCurrentBar.Tick ev.value
 If isNewBar Then
-    mBarsCache.addValue mCurrentBar, ev.barnumber, ev.TimeStamp
+    mBarsCache.addValue mCurrentBar, ev.barNumber, ev.timestamp
 End If
 End Sub
 
@@ -355,11 +356,11 @@ End Sub
 ' Helper Functions
 '================================================================================
 
-Private Function newBar(barnumber As Long) As Boolean
+Private Function newBar(barNumber As Long) As Boolean
 Static previousBarNumber As Long
-If barnumber <> previousBarNumber Then
-    previousBarNumber = barnumber
-    mCurrentBarNumber = barnumber
+If barNumber <> previousBarNumber Then
+    previousBarNumber = barNumber
+    mCurrentBarNumber = barNumber
     newBar = True
 Else
     newBar = False

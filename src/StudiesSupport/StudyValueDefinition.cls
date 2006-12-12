@@ -44,9 +44,30 @@ Implements TradeBuildSP.IStudyValueDefinition
 ' Enums
 '================================================================================
 
+Public Enum StudyValueModes
+    ValueModeNone = 0
+    ValueModeLine = 1
+    ValueModeBar = 2
+    ValueModeText = 3
+End Enum
+
+Public Enum StudyValueTypes
+    ValueTypeNone = 0
+    ValueTypeInteger = 1
+    ValueTypeReal = 2
+    ValueTypeString = 3
+    ValueTypeDate = 4
+    ValueTypeBoolean = 5
+End Enum
+
 '================================================================================
 ' Types
 '================================================================================
+
+Public Enum StudyDefaultRegions
+    DefaultRegionNone = 0
+    DefaultRegionCustom
+End Enum
 
 '================================================================================
 ' Member variables
@@ -60,8 +81,7 @@ Private mIsDefault As Boolean
 Private mDefaultRegion As StudyDefaultRegions
 
 Private mValueType As StudyValueTypes
-
-Private mMultipleValuesPerBar As Boolean
+Private mValueMode As StudyValueModes
 
 Private mMinimumValue As Variant
 Private mMaximumValue As Variant
@@ -117,21 +137,16 @@ Public Property Get IStudyValueDefinition_minimumValue() As Variant
 IStudyValueDefinition_minimumValue = mMinimumValue
 End Property
 
-Private Property Let IStudyValueDefinition_multipleValuesPerBar(ByVal value As Boolean)
-mMultipleValuesPerBar = value
-End Property
-
-Private Property Get IStudyValueDefinition_multipleValuesPerBar() As Boolean
-IStudyValueDefinition_multipleValuesPerBar = mMultipleValuesPerBar
-End Property
-
-Private Property Let IStudyValueDefinition_name( _
-                ByVal RHS As String)
-mName = RHS
-End Property
-
 Private Property Get IStudyValueDefinition_name() As String
 IStudyValueDefinition_name = mName
+End Property
+
+Private Property Let IStudyValueDefinition_valueMode(ByVal RHS As TradeBuildSP.StudyValueModes)
+mValueMode = RHS
+End Property
+
+Private Property Get IStudyValueDefinition_valueMode() As TradeBuildSP.StudyValueModes
+IStudyValueDefinition_valueMode = mValueMode
 End Property
 
 Private Property Let IStudyValueDefinition_valuetype( _
@@ -152,20 +167,20 @@ End Property
 '================================================================================
 
 Public Property Let defaultRegion( _
-                ByVal RHS As TradeBuild.StudyDefaultRegions)
+                ByVal RHS As StudyDefaultRegions)
 mDefaultRegion = RHS
 End Property
 
-Public Property Get defaultRegion() As TradeBuild.StudyDefaultRegions
+Public Property Get defaultRegion() As StudyDefaultRegions
 defaultRegion = mDefaultRegion
 End Property
 
-Public Property Let Description(ByVal value As String)
+Public Property Let description(ByVal value As String)
 mDescription = value
 End Property
 
-Public Property Get Description() As String
-Description = mDescription
+Public Property Get description() As String
+description = mDescription
 End Property
 
 Public Property Let isDefault(ByVal value As Boolean)
@@ -192,20 +207,20 @@ Public Property Get minimumValue() As Variant
 minimumValue = mMinimumValue
 End Property
 
-Public Property Let multipleValuesPerBar(ByVal value As Boolean)
-mMultipleValuesPerBar = value
-End Property
-
-Public Property Get multipleValuesPerBar() As Boolean
-multipleValuesPerBar = mMultipleValuesPerBar
-End Property
-
-Public Property Let name(ByVal value As String)
+Friend Property Let name(ByVal value As String)
 mName = value
 End Property
 
 Public Property Get name() As String
 name = mName
+End Property
+
+Public Property Let valueMode(ByVal value As StudyValueModes)
+mValueMode = value
+End Property
+
+Public Property Get valueMode() As StudyValueModes
+valueMode = mValueMode
 End Property
 
 Public Property Let valueType(ByVal value As StudyValueTypes)

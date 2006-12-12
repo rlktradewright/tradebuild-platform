@@ -44,6 +44,15 @@ Implements TradeBuildSP.IStudyInputDefinition
 ' Enums
 '================================================================================
 
+Public Enum StudyInputTypes
+    InputTypeNone = 0
+    InputTypeInteger = 1
+    InputTypeReal = 2
+    InputTypeString = 3
+    InputTypeDate = 4
+    InputTypeBoolean = 5
+End Enum
+
 '================================================================================
 ' Types
 '================================================================================
@@ -73,10 +82,10 @@ Private Property Let IStudyInputDefinition_Description( _
 mDescription = RHS
 End Property
 
-Private Property Let IStudyInputDefinition_name( _
-                ByVal RHS As String)
-mName = RHS
-End Property
+'Private Property Let IStudyInputDefinition_name( _
+'                ByVal RHS As String)
+'mName = RHS
+'End Property
 
 Private Property Get IStudyInputDefinition_name() As String
 IStudyInputDefinition_name = mName
@@ -99,15 +108,15 @@ End Property
 ' Properties
 '================================================================================
 
-Public Property Let Description(ByVal value As String)
+Public Property Let description(ByVal value As String)
 mDescription = value
 End Property
 
-Public Property Get Description() As String
-Description = mDescription
+Public Property Get description() As String
+description = mDescription
 End Property
 
-Public Property Let name(ByVal value As String)
+Friend Property Let name(ByVal value As String)
 mName = value
 End Property
 
