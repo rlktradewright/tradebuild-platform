@@ -1,4 +1,4 @@
-// typelib filename: TradeBuildSP.dll
+// typelib filename: TradeBuildSP.tlb
 
 [
   uuid(3EEF49D2-D9E3-4FFD-ABC7-B7713807A951),
@@ -12,6 +12,9 @@ library TradeBuildSP
 
     // TradeWright Interval Timer Utilities
     importlib("C:\Projects\TradeWright Common\TimerUtils\timerutils.dll");
+
+	// TradeWright Tasks
+    importlib("C:\Projects\TradeWright Common\Tasks\Tasks.dll");
 
     // Forward declare all types defined in this typelib
     interface IBarDataConsumer;
@@ -42,7 +45,6 @@ library TradeBuildSP
     interface IRealtimeDataInputServiceConsumer;
     interface IRealtimeDataReader;
     interface IRealtimeDataServiceProvider;
-    interface ITask;
     interface ISimpleTicker;
     interface ISimpleStrategy;
     interface IStrategyServiceProvider;
@@ -54,24 +56,21 @@ library TradeBuildSP
     interface IStudyInputDefinitions;
     interface IStudyParameterDefinition;
     interface IStudyParameterDefinitions;
-    interface IStudyServiceConsumer;
+    //interface IStudyServiceConsumer;
     interface IStudyServiceProvider;
     interface IStudyValueCache;
     interface IStudyValueDefinition;
     interface IStudyValueDefinitions;
     interface IStudyValueListener;
     interface IStudyValueListeners;
-    interface ITaskCompletion;
-    interface ITaskCompletionListener;
-    interface ITaskContext;
     interface ITickfileInputServiceConsumer;
     interface ITickfileOutputServiceConsumer;
     interface ITickfileReader;
     interface ITickfileServiceProvider;
     interface ITickfileWriter;
 	interface IValueReplayTask;
-	interface IWeakCollection;
-	interface IWeakReference;
+//	interface IWeakCollection;
+//	interface IWeakReference;
 
 // Enums *************************************************************************
 
@@ -494,9 +493,7 @@ library TradeBuildSP
 	version(1.0)]
     enum {
 		DefaultRegionNone = 0,
-		DefaultRegionPrice = 1,
-		DefaultRegionVolume = 2,
-		DefaultRegionCustom = 3
+		DefaultRegionCustom = 1
     } StudyDefaultRegions;
 
     typedef [uuid(03aec9bd-609d-4598-a62f-8b7deafe4f63), 
@@ -504,11 +501,10 @@ library TradeBuildSP
     enum {
 		InputTypeNone = 0,
 		InputTypeInteger = 1,
-		InputTypeSingle = 2,
-		InputTypeDouble = 3,
-		InputTypeString = 4,
-		InputTypeDate = 5,
-		InputTypeBoolean
+		InputTypeReal = 2,
+		InputTypeString = 3,
+		InputTypeDate = 4,
+		InputTypeBoolean = 5
     }StudyInputTypes;
 
     typedef [uuid(705bb586-e895-4bad-91d9-f6bae65c1ad1), 
@@ -516,11 +512,10 @@ library TradeBuildSP
     enum {
 		ParameterTypeNone = 0,
 		ParameterTypeInteger = 1,
-		ParameterTypeSingle = 2,
-		ParameterTypeDouble = 3,
-		ParameterTypeString = 4,
-		ParameterTypeDate = 5,
-		ParameterTypeBoolean
+		ParameterTypeReal = 2,
+		ParameterTypeString = 3,
+		ParameterTypeDate = 4,
+		ParameterTypeBoolean = 5
     }StudyParameterTypes;
 
 	typedef [uuid(b7b711a0-6d0d-4eaf-a493-8317f2613e4e), version(1.0)]
@@ -529,16 +524,24 @@ library TradeBuildSP
 		SRActSetValueColour = 1
 	} StudyRenderingActions;
 
+    typedef [uuid(a13f777d-26a8-4120-bdc7-b61a543562f0), 
+	version(1.0)]
+    enum {
+		ValueModeNone = 0,
+		ValueModeLine = 1,
+		ValueModeBar = 2,
+		ValueModeText = 3
+    }StudyValueModes;
+
     typedef [uuid(76e54b53-1833-44b3-b746-4bfb2edf18ef), 
 	version(1.0)]
     enum {
 		ValueTypeNone = 0,
 		ValueTypeInteger = 1,
-		ValueTypeSingle = 2,
-		ValueTypeDouble = 3,
-		ValueTypeString = 4,
-		ValueTypeDate = 5,
-		ValueTypeBoolean
+		ValueTypeReal = 2,
+		ValueTypeString = 3,
+		ValueTypeDate = 6,
+		ValueTypeBoolean = 5
     }StudyValueTypes;
 
     typedef [uuid(8139f349-68b8-4e48-bf72-2dc4cdaeb8a8), 
@@ -562,6 +565,8 @@ library TradeBuildSP
     typedef [uuid(92043786-f314-4efc-8740-c31e0bf57dd8), 
 	version(1.0)]
     enum {
+		None = 0,
+		Second = 1,
 		Minute = 2,
 		Hour = 3,
 		Day = 4,
@@ -679,6 +684,7 @@ library TradeBuildSP
 		VARIANT value;
 		long barNumber;
 		DATE Timestamp;
+		DATE barStartTime;
 	} StudyValue;
 
     typedef [uuid(b9f9bfb7-75a7-40f9-b2de-b312e3a5b66d), version(1.0)]
@@ -688,15 +694,8 @@ library TradeBuildSP
 		BSTR ValueName;
 		DATE timestamp;
 		long barNumber;
+		DATE barStartTime;
     } StudyValueEvent;
-
-    typedef [uuid(b4a25a74-e95b-4546-ae90-b4410254a31d), version(1.0)]
-    struct tagTaskCompletionEvent {
-		IDispatch* source;
-		long resultCode;
-		BSTR message;
-		VARIANT data;
-    } TaskCompletionEvent;
 
     typedef [uuid(50e309ce-2461-45bd-b9be-8ae0312905b9), version(1.0)]
     struct tagTickfileFormatSpecifier {
@@ -1204,29 +1203,29 @@ library TradeBuildSP
 		HRESULT NewExecution(
 			[out, retval] IExecution**);
 
-		HRESULT NewParameters(
-			[out, retval] IParameters**);
+		//HRESULT NewParameters(
+		//	[out, retval] IParameters**);
 
-		HRESULT NewStudies(
-			[out, retval] IStudies**);
+		//HRESULT NewStudies(
+		//	[out, retval] IStudies**);
 
-		HRESULT NewStudyDefinition(
-			[out, retval] IStudyDefinition**);
+		//HRESULT NewStudyDefinition(
+		//	[out, retval] IStudyDefinition**);
 
-		HRESULT NewStudyValueCache(
-			[in] long cyclicSize,
-			[in] BSTR valueName,
-			[out, retval] IStudyValueCache**);
+		//HRESULT NewStudyValueCache(
+		//	[in] long cyclicSize,
+		//	[in] BSTR valueName,
+		//	[out, retval] IStudyValueCache**);
 
-		HRESULT NewStudyValueListeners(
-			[out, retval] IStudyValueListeners**);
+		//HRESULT NewStudyValueListeners(
+		//	[out, retval] IStudyValueListeners**);
 
-		HRESULT NewWeakCollection(
-			[out, retval] IWeakCollection**);
+		//HRESULT NewWeakCollection(
+		//	[out, retval] IWeakCollection**);
 
-		HRESULT NewWeakReference(
-			[in] IDispatch* targetObject,
-			[out, retval] IWeakReference**);
+		//HRESULT NewWeakReference(
+		//	[in] IDispatch* targetObject,
+		//	[out, retval] IWeakReference**);
 
 		HRESULT NotifyListeners(
 			[in] VARIANT value,
@@ -1244,12 +1243,6 @@ library TradeBuildSP
 
         HRESULT SortObjects(
             [in, out] SAFEARRAY(SortEntry)* data);
-
-		HRESULT StartTask(
-			[in] ITask* target, 
-			[in, optional] BSTR name, 
-			[in, optional] VARIANT data,
-			[out, retval] ITaskCompletion** );
 
         HRESULT ToBytes(
             [in, out] BSTR* inString, 
@@ -2409,7 +2402,7 @@ interface IOrderPlex : IDispatch {
 			[in] long numUnderlyingValuesToUse,
 			[in, optional] BSTR taskName, 
 			[in, optional] VARIANT taskData,
-			[out, retval] ITaskCompletion**);
+			[out, retval] TaskCompletion**);
 
 		HRESULT addStudyValueListener(
 			[in] IStudyValueListener* listener, 
@@ -2417,7 +2410,7 @@ interface IOrderPlex : IDispatch {
 			[in] long numberOfValuesToReplay,
 			[in, optional] BSTR taskName, 
 			[in, optional] VARIANT taskData,
-			[out, retval] ITaskCompletion**);
+			[out, retval] TaskCompletion**);
 
 		HRESULT getStudyValue(	
 			[in] BSTR valueName, 
@@ -2426,7 +2419,7 @@ interface IOrderPlex : IDispatch {
 
 		HRESULT initialise(
 			[in] ICommonServiceConsumer* commonServiceConsumer,
-			[in] IStudyServiceConsumer* studyServiceConsumer,
+			//[in] IStudyServiceConsumer* studyServiceConsumer,
 			[in] BSTR id,
 			[in] IParameters* parameters,
 			[in] long numberOfValuesToCache,
@@ -2525,10 +2518,6 @@ interface IOrderPlex : IDispatch {
 		HRESULT description(
 				[out, retval] BSTR* );
 
-		[propput]
-		HRESULT name(
-				[in] BSTR );
-
 		[propget]
 		HRESULT name(
 				[out, retval] BSTR* );
@@ -2584,27 +2573,47 @@ interface IOrderPlex : IDispatch {
 
 		[propput]
 		HRESULT description(
-				[in] BSTR );
+			[in] BSTR );
 
 		[propget]
 		HRESULT description(
-				[out, retval] BSTR* );
+			[out, retval] BSTR* );
 
 		[propput]
-		HRESULT name(
-				[in] BSTR );
+		HRESULT maximumValue(
+			[in] VARIANT );
+
+		[propget]
+		HRESULT maximumValue(
+			[out, retval] VARIANT* );
+
+		[propput]
+		HRESULT minimumValue(
+			[in] VARIANT );
+
+		[propget]
+		HRESULT minimumValue(
+			[out, retval] VARIANT* );
 
 		[propget]
 		HRESULT name(
-				[out, retval] BSTR* );
+			[out, retval] BSTR* );
 
 		[propput]
 		HRESULT parameterType(
-				[in] StudyParameterTypes );
+			[in] StudyParameterTypes );
 
 		[propget]
 		HRESULT parameterType(
-				[out, retval] StudyParameterTypes* );
+			[out, retval] StudyParameterTypes* );
+
+		[propput]
+		HRESULT permittedValues(
+			[in, out] SAFEARRAY(VARIANT)* );
+
+		[propget]
+		HRESULT permittedValues(
+			[out, retval] SAFEARRAY(VARIANT)* );
 
     };
 
@@ -2637,32 +2646,32 @@ interface IOrderPlex : IDispatch {
 
 	};
 
-    [
-      uuid(3e6d9f5e-830b-47f2-baab-a0911feff43c),
-      version(1.0),
-      nonextensible,
-      helpstring("Specifies the interface provided by the study service consumer")
-    ]
-    interface IStudyServiceConsumer : IUnknown {
+  //  [
+  //    uuid(3e6d9f5e-830b-47f2-baab-a0911feff43c),
+  //    version(1.0),
+  //    nonextensible,
+  //    helpstring("Specifies the interface provided by the study service consumer")
+  //  ]
+  //  interface IStudyServiceConsumer : IUnknown {
 
-		// Properties ==================================================
+		//// Properties ==================================================
 
-        [propget]
-        HRESULT Contract([out, retval] IContract**);
+  //      [propget]
+  //      HRESULT Contract([out, retval] IContract**);
 
-		// Methods =====================================================
+		//// Methods =====================================================
 
-		HRESULT replayStudyValues(
-			[in] IDispatch* target, 			
-			[in] IStudy* sourceStudy, 
-			[in] SAFEARRAY(BSTR)* valueNames,
-			[in] long numUnderlyingValuesToUse, 
-			[in, optional] long discriminator,
-			[in, optional] BSTR taskName,
-			[in, optional] VARIANT taskData,
-			[out, retval] ITaskCompletion** );
+		//HRESULT replayStudyValues(
+		//	[in] IDispatch* target, 			
+		//	[in] IStudy* sourceStudy, 
+		//	[in] SAFEARRAY(BSTR)* valueNames,
+		//	[in] long numUnderlyingValuesToUse, 
+		//	[in, optional] long discriminator,
+		//	[in, optional] BSTR taskName,
+		//	[in, optional] VARIANT taskData,
+		//	[out, retval] TaskCompletion** );
 
-    };
+  //  };
 
     [
       uuid(33659bc6-a503-4cec-9b91-2dee2f723f75),
@@ -2722,7 +2731,8 @@ interface IOrderPlex : IDispatch {
 		HRESULT addValue(
 			[in] VARIANT value, 
 			[in] long barNumber, 
-			[in] DATE Timestamp);
+			[in] DATE timestamp,
+			[in] DATE barStartTime);
 
 		HRESULT getValue(
 			[in, optional] long ref, 
@@ -2739,12 +2749,13 @@ interface IOrderPlex : IDispatch {
 			[in, optional] long discriminator,
 			[in, optional] BSTR taskName,
 			[in, optional] VARIANT taskData,
-			[out, retval] ITaskCompletion** );
+			[out, retval] TaskCompletion** );
 
 		HRESULT updateValue(
 			[in] VARIANT value, 
 			[in, optional] long barNumber, 
 			[in, optional] DATE Timestamp,
+			[in, optional] DATE barStartTime,
 			[in, optional] long ref);
 
     };
@@ -2799,21 +2810,17 @@ interface IOrderPlex : IDispatch {
 		HRESULT minimumValue(
 			[out, retval] VARIANT* );
 
-		[propput]
-		HRESULT multipleValuesPerBar(
-			[in] VARIANT_BOOL );
-
-		[propget]
-		HRESULT multipleValuesPerBar(
-			[out, retval] VARIANT_BOOL* );
-
-		[propput]
-		HRESULT name(
-			[in] BSTR );
-
 		[propget]
 		HRESULT name(
 			[out, retval] BSTR* );
+
+		[propput]
+		HRESULT valueMode(
+			[in] StudyValueModes );
+
+		[propget]
+		HRESULT valueMode(
+			[out, retval] StudyValueModes* );
 
 		[propput]
 		HRESULT valueType(
@@ -2901,85 +2908,6 @@ interface IOrderPlex : IDispatch {
 		HRESULT Remove(
 			[in] IStudyValueListener* listener);
 
-    };
-
-    [
-      uuid(49cce2c3-49a9-412e-9ce3-8226b7cc914b),
-      version(1.0),
-      nonextensible,
-      helpstring("Provides the interface to be supported by runnable tasks")
-    ]
-    interface ITask : IUnknown {
-
-		// Properties ==================================================
-
-		[propput]
-		HRESULT TaskContext([in] ITaskContext* rhs);
-
-
-		// Methods =====================================================
-
-		HRESULT run();
-
-    };
-
-    [
-      uuid(114213d1-7348-411c-aee7-633ea243a524),
-      version(1.0),
-      nonextensible,
-      helpstring("Provides the interface for Task Completion objects")
-    ]
-    interface ITaskCompletion : IUnknown {
-
-		// Methods =====================================================
-
-		HRESULT addTaskCompletionListener(
-			[in] ITaskCompletionListener* listener);
-
-		HRESULT removeTaskCompletionListener(
-			[in] ITaskCompletionListener* listener);
-
-    };
-
-    [
-      uuid(cafd0961-de76-4424-82a0-b8589a23c375),
-      version(1.0),
-      nonextensible,
-      helpstring("Provides the interface for Task Completion Listener objects")
-    ]
-    interface ITaskCompletionListener : IUnknown {
-
-		// Methods =====================================================
-
-		HRESULT taskCompleted(
-			[in, out] TaskCompletionEvent* ev);
-
-    };
-
-    [
-      uuid(6fd6cf59-fb8a-453b-a42c-39aa8359c9f5),
-      version(1.0),
-      nonextensible,
-      helpstring("Provides the interface for Task Context objects")
-    ]
-    interface ITaskContext : IUnknown {
-
-		// Properties ==================================================
-
-		[propget]
-		HRESULT isQuantumComplete([out, retval] VARIANT_BOOL* );
-
-		[propget]
-		HRESULT name([out, retval] BSTR* );
-
-		[propget]
-		HRESULT yieldCount([out, retval] long* );
-
-		// Methods =====================================================
-
-		HRESULT finish([in, optional] BSTR message);
-
-		HRESULT yield();
     };
 
     [
@@ -3225,43 +3153,48 @@ interface IOrderPlex : IDispatch {
 
 	};
 
-	[
-		uuid(7b076878-6ab7-44a4-b699-916fdac5a942),
-		version(1.0),
-		nonextensible,
-		helpstring("The interface implemented by WeakReference Collection objects")
-	]
-	interface IWeakCollection : IUnknown {
+	//[
+	//	uuid(7b076878-6ab7-44a4-b699-916fdac5a942),
+	//	version(1.0),
+	//	nonextensible,
+	//	helpstring("The interface implemented by WeakReference Collection objects")
+	//]
+	//interface IWeakCollection : IUnknown {
 
-		// Methods =====================================================
+	//	// Methods =====================================================
 
-		HRESULT add(
-						[in] IDispatch* Item, 
-						[in, optional] VARIANT key, 
-						[in, optional] VARIANT before, 
-						[in, optional] VARIANT after);
+	//	HRESULT add(
+	//					[in] IDispatch* Item, 
+	//					[in, optional] VARIANT key, 
+	//					[in, optional] VARIANT before, 
+	//					[in, optional] VARIANT after);
 
-		HRESULT Count([out, retval] long* );
+	//	HRESULT Count([out, retval] long* );
 
-		HRESULT Item(
-						[in] VARIANT index, 
-						[out, retval] IDispatch** );
+	//	HRESULT Item(
+	//					[in] VARIANT index, 
+	//					[out, retval] IDispatch** );
 
-		HRESULT remove([in] VARIANT index);
-	};
+	//	HRESULT remove([in] VARIANT index);
+	//};
 
-	[
-		uuid(e88d60f7-450f-4b42-813d-2ea2fcb50586),
-		version(1.0),
-		nonextensible,
-		helpstring("The interface implemented by WeakReference objects")
-	]
-	interface IWeakReference : IUnknown {
+	//[
+	//	uuid(e88d60f7-450f-4b42-813d-2ea2fcb50586),
+	//	version(1.0),
+	//	nonextensible,
+	//	helpstring("The interface implemented by WeakReference objects")
+	//]
+	//interface IWeakReference : IUnknown {
 
-		// Properties ==================================================
+	//	// Properties ==================================================
 
-		[propget]
-		HRESULT target([out, retval] IDispatch** );
-	};
+	//	[propget]
+	//	HRESULT target([out, retval] IDispatch** );
+
+	//	// Methods =====================================================
+
+	//	HRESULT initialise(
+	//					[in] IDispatch* target); 
+	//};
 
 };
