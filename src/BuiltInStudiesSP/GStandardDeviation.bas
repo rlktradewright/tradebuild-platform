@@ -23,9 +23,9 @@ Public Const SDValueStandardDeviation As String = "Standard Deviation"
 ' Global object references
 '================================================================================
 
-Private mCommonServiceConsumer As ICommonServiceConsumer
-Private mDefaultParameters As IParameters
-Private mStudyDefinition As IStudyDefinition
+
+Private mDefaultParameters As Parameters
+Private mStudyDefinition As StudyDefinition
 
 '================================================================================
 ' External function declarations
@@ -39,20 +39,15 @@ Private mStudyDefinition As IStudyDefinition
 ' Procedures
 '================================================================================
 
-Public Property Let commonServiceConsumer( _
-                ByVal value As TradeBuildSP.ICommonServiceConsumer)
-Set mCommonServiceConsumer = value
-End Property
 
-
-Public Property Let defaultParameters(ByVal value As IParameters)
+Public Property Let defaultParameters(ByVal value As Parameters)
 ' create a clone of the default parameters supplied by the caller
 Set mDefaultParameters = value.Clone
 End Property
 
-Public Property Get defaultParameters() As IParameters
+Public Property Get defaultParameters() As Parameters
 If mDefaultParameters Is Nothing Then
-    Set mDefaultParameters = mCommonServiceConsumer.NewParameters
+    Set mDefaultParameters = New Parameters
     mDefaultParameters.setParameterValue SDParamPeriods, 20
 End If
 
@@ -60,13 +55,13 @@ End If
 Set defaultParameters = mDefaultParameters.Clone
 End Property
 
-Public Property Get studyDefinition() As TradeBuildSP.IStudyDefinition
-Dim inputDef As IStudyInputDefinition
-Dim valueDef As IStudyValueDefinition
-Dim paramDef As IStudyParameterDefinition
+Public Property Get StudyDefinition() As StudyDefinition
+Dim inputDef As StudyInputDefinition
+Dim valueDef As StudyValueDefinition
+Dim paramDef As StudyParameterDefinition
 
 If mStudyDefinition Is Nothing Then
-    Set mStudyDefinition = mCommonServiceConsumer.NewStudyDefinition
+    Set mStudyDefinition = New StudyDefinition
     mStudyDefinition.name = SdName
     mStudyDefinition.shortName = SdShortName
     mStudyDefinition.Description = "Standard Deviation " & _
@@ -75,26 +70,24 @@ If mStudyDefinition Is Nothing Then
     mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionCustom
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(SDInputValue)
-    inputDef.name = SDInputValue
-    inputDef.inputType = InputTypeDouble
+    inputDef.inputType = InputTypeReal
     inputDef.Description = "Input value"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SDValueStandardDeviation)
-    valueDef.name = SDValueStandardDeviation
     valueDef.Description = "The standard deviation value"
     valueDef.isDefault = True
     valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valueType = ValueTypeDouble
+    valueDef.valueMode = ValueModeNone
+    valueDef.valueType = ValueTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(SDParamPeriods)
-    paramDef.name = SDParamPeriods
     paramDef.Description = "The number of standard deviations used to calculate the " & _
                             "standard deviation"
     paramDef.parameterType = ParameterTypeInteger
 
 End If
 
-Set studyDefinition = mStudyDefinition.Clone
+Set StudyDefinition = mStudyDefinition.Clone
 End Property
 
 '================================================================================

@@ -24,6 +24,9 @@ Public Const AtrShortName As String = "ATR"
 Public Const BbName As String = "Bollinger Bands"
 Public Const BbShortName As String = "BB"
 
+Public Const ConstTimeBarsName As String = "Constant time bars"
+Public Const ConstTimeBarsShortName As String = "Bars"
+
 Public Const DoncName As String = "Donchian Channels"
 Public Const DoncShortName As String = "Donc"
 
@@ -59,6 +62,17 @@ Public Const SwingShortName As String = "Swing"
 Public Const ParamMovingAverageType As String = "Mov avg type"
 Public Const ParamPeriods As String = "Periods"
 
+' sub-value names for study values in bar mode
+Public Const BarValueOpen As String = "Open"
+Public Const BarValueHigh As String = "High"
+Public Const BarValueLow As String = "Low"
+Public Const BarValueClose As String = "Close"
+Public Const BarValueVolume As String = "Volume"
+Public Const BarValueTickVolume As String = "Tick Volume"
+Public Const BarValueHL2 As String = "H+L/2"
+Public Const BarValueHLC3 As String = "H+L+C/3"
+Public Const BarValueOHLC4 As String = "O+H+L+C/4"
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -79,7 +93,7 @@ Public Const ParamPeriods As String = "Periods"
 ' Variables
 '================================================================================
 
-'Private mCommonServiceConsumer As ICommonServiceConsumer
+Public gLibraryManager As StudyLibraryManager
 
 '================================================================================
 ' Properties
@@ -96,12 +110,10 @@ Public Const ParamPeriods As String = "Periods"
 
 Public Function gCreateMA( _
                 ByVal maType As String, _
-                ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
-                ByVal studyServiceConsumer As TradeBuildSP.IStudyServiceConsumer, _
                 ByVal periods As Long, _
-                ByVal numberOfValuesToCache As Long) As IMovingAverageStudy
-Dim lparams As IParameters
-Dim lStudy As IStudy
+                ByVal numberOfValuesToCache As Long) As Study
+Dim lparams As Parameters
+Dim lStudy As Study
 Dim valueNames(0) As String
 
 valueNames(0) = "in"
@@ -113,9 +125,7 @@ Case UCase$(EmaShortName)
     Set lStudy = lEMA
     Set lparams = GEMA.defaultParameters
     lparams.setParameterValue ParamPeriods, periods
-    lStudy.initialise commonServiceConsumer, _
-                    studyServiceConsumer, _
-                    commonServiceConsumer.GenerateGUIDString, _
+    lStudy.initialise gLibraryManager.generateGUIDString, _
                     lparams, _
                     numberOfValuesToCache, _
                     valueNames, _
@@ -127,9 +137,7 @@ Case Else
     Set lStudy = lSMA
     Set lparams = GSMA.defaultParameters
     lparams.setParameterValue ParamPeriods, periods
-    lStudy.initialise commonServiceConsumer, _
-                    studyServiceConsumer, _
-                    commonServiceConsumer.GenerateGUIDString, _
+    lStudy.initialise gLibraryManager.generateGUIDString, _
                     lparams, _
                     numberOfValuesToCache, _
                     valueNames, _

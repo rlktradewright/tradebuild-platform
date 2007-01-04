@@ -31,9 +31,9 @@ Public Const BBValueTop As String = "Top"
 ' Global object references
 '================================================================================
 
-Private mCommonServiceConsumer As ICommonServiceConsumer
-Private mDefaultParameters As IParameters
-Private mStudyDefinition As IStudyDefinition
+
+Private mDefaultParameters As Parameters
+Private mStudyDefinition As StudyDefinition
 
 '================================================================================
 ' External function declarations
@@ -47,20 +47,15 @@ Private mStudyDefinition As IStudyDefinition
 ' Procedures
 '================================================================================
 
-Public Property Let commonServiceConsumer( _
-                ByVal value As TradeBuildSP.ICommonServiceConsumer)
-Set mCommonServiceConsumer = value
-End Property
 
-
-Public Property Let defaultParameters(ByVal value As IParameters)
+Public Property Let defaultParameters(ByVal value As Parameters)
 ' create a clone of the default parameters supplied by the caller
 Set mDefaultParameters = value.Clone
 End Property
 
-Public Property Get defaultParameters() As IParameters
+Public Property Get defaultParameters() As Parameters
 If mDefaultParameters Is Nothing Then
-    Set mDefaultParameters = mCommonServiceConsumer.NewParameters
+    Set mDefaultParameters = New Parameters
     mDefaultParameters.setParameterValue BBParamPeriods, 20
     mDefaultParameters.setParameterValue BBParamDeviations, 2
     mDefaultParameters.setParameterValue BBParamMAType, SmaShortName
@@ -73,13 +68,13 @@ End If
 Set defaultParameters = mDefaultParameters.Clone
 End Property
 
-Public Property Get studyDefinition() As TradeBuildSP.IStudyDefinition
-Dim inputDef As IStudyInputDefinition
-Dim valueDef As IStudyValueDefinition
-Dim paramDef As IStudyParameterDefinition
+Public Property Get StudyDefinition() As StudyDefinition
+Dim inputDef As StudyInputDefinition
+Dim valueDef As StudyValueDefinition
+Dim paramDef As StudyParameterDefinition
 
 If mStudyDefinition Is Nothing Then
-    Set mStudyDefinition = mCommonServiceConsumer.NewStudyDefinition
+    Set mStudyDefinition = New StudyDefinition
     mStudyDefinition.name = BbName
     mStudyDefinition.shortName = BbShortName
     mStudyDefinition.Description = "Bollinger Bands " & _
@@ -87,73 +82,66 @@ If mStudyDefinition Is Nothing Then
                         "number of standard deviations from a moving average. " & _
                         "When volatility increases, the bands widen, and they " & _
                         "narrow when volatility decreases."
-    mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionPrice
+    mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionNone
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(BBInputPrice)
-    inputDef.name = BBInputPrice
-    inputDef.inputType = InputTypeDouble
+    inputDef.inputType = InputTypeReal
     inputDef.Description = "Price"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BBValueTop)
-    valueDef.name = BBValueTop
     valueDef.Description = "The top Bollinger band value"
     valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valueType = ValueTypeDouble
+    valueDef.valueMode = ValueModeNone
+    valueDef.valueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BBValueBottom)
-    valueDef.name = BBValueBottom
     valueDef.Description = "The bottom Bollinger band value"
     valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valueType = ValueTypeDouble
+    valueDef.valueMode = ValueModeNone
+    valueDef.valueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BBValueCentre)
-    valueDef.name = BBValueCentre
     valueDef.Description = "The MA value between the top and bottom bands"
     valueDef.isDefault = True
     valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valueType = ValueTypeDouble
+    valueDef.valueMode = ValueModeNone
+    valueDef.valueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BBValueSpread)
-    valueDef.name = BBValueSpread
     valueDef.Description = "The difference between the top and bottom " & _
                             "band values"
     valueDef.defaultRegion = DefaultRegionCustom
-    valueDef.valueType = ValueTypeDouble
+    valueDef.valueMode = ValueModeNone
+    valueDef.valueType = ValueTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(BBParamPeriods)
-    paramDef.name = BBParamPeriods
     paramDef.Description = "The number of periods in the moving average"
     paramDef.parameterType = ParameterTypeInteger
 
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(BBParamDeviations)
-    paramDef.name = BBParamDeviations
     paramDef.Description = "The number of standard deviations used to calculate the " & _
                             "values of the top and bottom bands"
-    paramDef.parameterType = ParameterTypeDouble
+    paramDef.parameterType = ParameterTypeReal
 
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(BBParamMAType)
-    paramDef.name = BBParamMAType
     paramDef.Description = "The type of moving average to be used"
     paramDef.parameterType = ParameterTypeString
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(BBParamCentreBandWidth)
-    paramDef.name = BBParamCentreBandWidth
     paramDef.Description = "The width of the central region"
-    paramDef.parameterType = ParameterTypeDouble
+    paramDef.parameterType = ParameterTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(BBParamEdgeBandWidth)
-    paramDef.name = BBParamEdgeBandWidth
     paramDef.Description = "The width of the edge region"
-    paramDef.parameterType = ParameterTypeDouble
+    paramDef.parameterType = ParameterTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(BBParamSlopeThreshold)
-    paramDef.name = BBParamSlopeThreshold
     paramDef.Description = "The smallest slope value that is not to be considered flat"
-    paramDef.parameterType = ParameterTypeDouble
+    paramDef.parameterType = ParameterTypeReal
     
 End If
 
-Set studyDefinition = mStudyDefinition.Clone
+Set StudyDefinition = mStudyDefinition.Clone
 End Property
 
 '================================================================================

@@ -63,15 +63,16 @@ End Enum
 '================================================================================
 
 'Public Type AddStudyRequest
-'    study                   As IStudy
+'    study                   As Study
 '    ValueName               As String
 'End Type
 
 Public Type SwingPoint
     value           As Variant
-    barnumber       As Long
+    barNumber       As Long
+    barStartTime    As Date
     swingType       As SwingPointTypes
-    Timestamp       As Date
+    timestamp       As Date
     implied         As Boolean
 End Type
 

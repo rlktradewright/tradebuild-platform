@@ -23,7 +23,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements TradeBuildSP.IStudy
+Implements Study
 
 '================================================================================
 ' Events
@@ -49,8 +49,8 @@ Implements TradeBuildSP.IStudy
 Private mStudyFoundation As StudyFoundation
 '--------------------------------------------------------
 
-Private mStudyServiceConsumer As IStudyServiceConsumer
-Private mCommonServiceConsumer As ICommonServiceConsumer
+
+
 
 Private mPeriods As Long
 Private mCentreBandWidth As Double
@@ -58,19 +58,18 @@ Private mEdgeBandWidth As Double
 Private mSlopeThreshold As Double
 
 Private mSD As StandardDeviation
-Private mSDStudy As TradeBuildSP.IStudy
+Private mSDStudy As Study
 
-Private mMAStudy As TradeBuildSP.IStudy
-Private mMA As IMovingAverageStudy
+Private mMAStudy As Study
 
 Private mDevs As Double
 
 Private mNumberOfValuesToCache As Long
 
-'Private mBottomCache As TradeBuildSP.IStudyValueCache
-'Private mCentreCache As TradeBuildSP.IStudyValueCache
-'Private mTopCache As TradeBuildSP.IStudyValueCache
-'Private mSpreadCache As TradeBuildSP.IStudyValueCache
+'Private mBottomCache As StudyValueCache
+'Private mCentreCache As StudyValueCache
+'Private mTopCache As StudyValueCache
+'Private mSpreadCache As StudyValueCache
 
 '================================================================================
 ' Class Event Handlers
@@ -90,51 +89,50 @@ End Sub
 '================================================================================
 
 Private Sub customInitialise( _
-                ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
-                ByVal studyServiceConsumer As TradeBuildSP.IStudyServiceConsumer, _
                 ByVal id As String, _
-                ByVal parameters As TradeBuildSP.IParameters, _
+                ByVal Parameters As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
-                ByVal underlyingStudy As TradeBuildSP.IStudy)
-Set mCommonServiceConsumer = commonServiceConsumer
-Set mStudyServiceConsumer = studyServiceConsumer
+                ByVal underlyingStudy As Study)
+
 mStudyFoundation.ReplayUsingStudyValues = True
 mNumberOfValuesToCache = numberOfValuesToCache
-customProcessParameters parameters
+customProcessParameters Parameters
 End Sub
 
 Private Sub customNotify( _
-                ev As TradeBuildSP.StudyValueEvent)
+                ev As StudyValueEvent)
 Static sPrevVal As Variant
+Dim ma As Variant
 
 If Not mStudyFoundation.isNewBar Then
     If ev.value = sPrevVal Then Exit Sub
 End If
 sPrevVal = ev.value
 
-mSDStudy.Notify ev
-mMAStudy.Notify ev
+mSDStudy.notify ev
+mMAStudy.notify ev
 
-If IsEmpty(mMA.ma.value) Or IsEmpty(mSD.SD.value) Then Exit Sub
+ma = mMAStudy.getStudyValue(MovingAverageStudyValueName, 0).value
+If IsEmpty(ma) Or IsEmpty(mSD.SD.value) Then Exit Sub
 
-notifyValue mMA.ma.value, BBValueCentre, ev.barnumber, ev.timestamp
-notifyValue mMA.ma.value + mDevs * mSD.SD.value, BBValueTop, ev.barnumber, ev.timestamp
-notifyValue mMA.ma.value - mDevs * mSD.SD.value, BBValueBottom, ev.barnumber, ev.timestamp
-notifyValue 2 * mDevs * mSD.SD.value, BBValueSpread, ev.barnumber, ev.timestamp
+notifyValue ma, BBValueCentre, ev.barNumber, ev.timestamp, ev.barStartTime
+notifyValue ma + mDevs * mSD.SD.value, BBValueTop, ev.barNumber, ev.timestamp, ev.barStartTime
+notifyValue ma - mDevs * mSD.SD.value, BBValueBottom, ev.barNumber, ev.timestamp, ev.barStartTime
+notifyValue 2 * mDevs * mSD.SD.value, BBValueSpread, ev.barNumber, ev.timestamp, ev.barStartTime
 End Sub
 
 Private Function customNumberOfBarsRequired() As Long
-Dim lStudy As IStudy
+Dim lStudy As Study
 Set lStudy = mSD
 customNumberOfBarsRequired = lStudy.numberOfBarsRequired
 End Function
 
-Private Sub customProcessParameters(ByVal params As IParameters)
-Dim param As TradeBuildSP.IParameter
-Dim lparams As IParameters
+Private Sub customProcessParameters(ByVal params As Parameters)
+Dim param As Parameter
+Dim lparams As Parameters
 Dim maType As String
-Dim lStudy As IStudy
+Dim lStudy As Study
 Dim valueNames(0) As String
 
 valueNames(0) = "in"
@@ -159,27 +157,22 @@ Do While Not param Is Nothing
     Set param = params.getNextParameter
 Loop
 
-Set mMA = gCreateMA(maType, _
-                    mCommonServiceConsumer, _
-                    mStudyServiceConsumer, _
+Set mMAStudy = gCreateMA(maType, _
                     mPeriods, _
                     1)
-Set mMAStudy = mMA
 
 Set lparams = GStandardDeviation.defaultParameters
 lparams.setParameterValue ParamPeriods, mPeriods
 Set lStudy = mSD
-lStudy.initialise mCommonServiceConsumer, _
-                    mStudyServiceConsumer, _
-                    mCommonServiceConsumer.GenerateGUIDString, _
+lStudy.initialise gLibraryManager.generateGUIDString, _
                     lparams, _
                     mNumberOfValuesToCache, _
                     valueNames, _
                     Nothing
 End Sub
 
-Private Function customStudyDefinition() As IStudyDefinition
-Set customStudyDefinition = GBollingerBands.studyDefinition
+Private Function customStudyDefinition() As StudyDefinition
+Set customStudyDefinition = GBollingerBands.StudyDefinition
 End Function
 
 '================================================================================
@@ -192,7 +185,7 @@ End Function
 
 Public Property Get bottom(Optional ByVal ref As Long) As StudyValue
 Dim sv As StudyValue
-bottom = mMA.ma(ref)
+bottom = mMAStudy.getStudyValue(MovingAverageStudyValueName, ref)
 sv = mSD.SD(ref)
 If IsEmpty(bottom.value) Or IsEmpty(sv.value) Then Exit Property
 bottom.value = bottom.value - mDevs * sv.value
@@ -230,7 +223,7 @@ bottomSlope.value = (bottomSlope.value - sv.value) / periods
 End Property
 
 Public Property Get centre(Optional ByVal ref As Long) As StudyValue
-centre = mMA.ma(ref)
+centre = mMAStudy.getStudyValue(MovingAverageStudyValueName, ref)
 End Property
 
 Public Property Get centreFalling(Optional ByVal ref As Long, _
@@ -327,7 +320,7 @@ End Property
 
 Public Property Get top(Optional ByVal ref As Long) As StudyValue
 Dim sv As StudyValue
-top = mMA.ma(ref)
+top = mMAStudy.getStudyValue(MovingAverageStudyValueName, ref)
 sv = mSD.SD(ref)
 If IsEmpty(top.value) Or IsEmpty(sv.value) Then Exit Property
 top.value = top.value + mDevs * sv.value
@@ -390,14 +383,16 @@ End Function
 Private Sub notifyValue( _
                 ByVal value As Variant, _
                 ByVal valueName As String, _
-                ByVal barnumber As Long, _
+                ByVal barNumber As Long, _
+                ByVal barStartTime As Date, _
                 ByVal timestamp As Date)
 Dim ev As StudyValueEvent
 If Not IsEmpty(value) Then
     ev.value = value
     ev.valueName = valueName
     Set ev.Source = Me
-    ev.barnumber = barnumber
+    ev.barNumber = barNumber
+    ev.barStartTime = barStartTime
     ev.timestamp = timestamp
     mStudyFoundation.notifyValue ev
 End If
@@ -410,31 +405,31 @@ End Sub
 
 
 '================================================================================
-' IStudy Interface Members
+' Study Interface Members
 '================================================================================
 
-Private Function IStudy_addStudy( _
-                ByVal study As IStudy, _
+Private Function Study_addStudy( _
+                ByVal Study As Study, _
                 ByRef valueNames() As String, _
                 ByVal numUnderlyingValuesToUse As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
+                Optional ByVal taskData As Variant) As Tasks.TaskCompletion
 
-Set IStudy_addStudy = mStudyFoundation.addStudy( _
-                            study, _
+Set Study_addStudy = mStudyFoundation.addStudy( _
+                            Study, _
                             valueNames, _
                             numUnderlyingValuesToUse, _
                             taskName, _
                             taskData)
 End Function
 
-Private Function IStudy_addStudyValueListener( _
-                ByVal listener As TradeBuildSP.IStudyValueListener, _
+Private Function Study_addStudyValueListener( _
+                ByVal listener As StudyValueListener, _
                 ByVal valueName As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As TradeBuildSP.ITaskCompletion
-Set IStudy_addStudyValueListener = mStudyFoundation.addStudyValueListener( _
+                Optional ByVal taskData As Variant) As Tasks.TaskCompletion
+Set Study_addStudyValueListener = mStudyFoundation.addStudyValueListener( _
                             listener, _
                             valueName, _
                             numberOfValuesToReplay, _
@@ -442,83 +437,88 @@ Set IStudy_addStudyValueListener = mStudyFoundation.addStudyValueListener( _
                             taskData)
 End Function
 
-Private Property Get IStudy_baseStudy() As IStudy
-Set IStudy_baseStudy = Me
+Private Property Get Study_baseStudy() As Study
+Set Study_baseStudy = Me
 End Property
 
-Private Function IStudy_getStudyValue( _
+Private Function Study_getStudyValue( _
                 ByVal valueName As String, _
                 ByVal ref As Long) As StudyValue
 'Study_getStudyValue = mStudyFoundation.getStudyValue(ValueName, ref)
-IStudy_getStudyValue = getStudyValue(valueName, ref)
+Study_getStudyValue = getStudyValue(valueName, ref)
 End Function
 
-Private Property Get IStudy_id() As String
-IStudy_id = mStudyFoundation.id
+Private Function Study_getValueTicksize( _
+                ByVal valueName As String) As Double
+
+End Function
+
+Private Property Get Study_id() As String
+Study_id = mStudyFoundation.id
 End Property
 
-Private Sub IStudy_initialise( _
-                ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
-                ByVal studyServiceConsumer As TradeBuildSP.IStudyServiceConsumer, _
+Private Sub Study_initialise( _
                 ByVal id As String, _
-                ByVal parameters As TradeBuildSP.IParameters, _
+                ByVal Parameters As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
-                ByVal underlyingStudy As TradeBuildSP.IStudy)
+                ByVal underlyingStudy As Study)
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
                             id, _
-                            parameters, _
+                            Parameters, _
                             numberOfValuesToCache, _
                             inputValueNames, _
-                            underlyingStudy, _
-                            commonServiceConsumer, _
-                            studyServiceConsumer
+                            underlyingStudy
                             
 
-customInitialise commonServiceConsumer, _
-                studyServiceConsumer, _
-                id, _
-                parameters, _
+customInitialise id, _
+                Parameters, _
                 numberOfValuesToCache, _
                 inputValueNames, _
                 underlyingStudy
 End Sub
 
-Private Property Get IStudy_instanceName() As String
-IStudy_instanceName = mStudyFoundation.instanceName
+Private Property Get Study_instanceName() As String
+Study_instanceName = mStudyFoundation.instanceName
 End Property
 
-Private Property Get IStudy_instancePath() As String
-IStudy_instancePath = mStudyFoundation.instancePath
+Private Property Get Study_instancePath() As String
+Study_instancePath = mStudyFoundation.instancePath
 End Property
 
-Private Sub IStudy_Notify( _
-                ev As TradeBuildSP.StudyValueEvent)
+Private Sub Study_Notify( _
+                ev As StudyValueEvent)
 mStudyFoundation.NotifyInput ev
 customNotify ev
 End Sub
 
-Private Property Get IStudy_numberOfBarsRequired() As Long
-IStudy_numberOfBarsRequired = mStudyFoundation.numberOfBarsRequired(customNumberOfBarsRequired)
+Private Property Get Study_numberOfBarsRequired() As Long
+Study_numberOfBarsRequired = mStudyFoundation.numberOfBarsRequired(customNumberOfBarsRequired)
 End Property
 
-Private Function IStudy_numberOfCachedValues( _
-                Optional ByVal valueName As String = "") As Long
-IStudy_numberOfCachedValues = mStudyFoundation.numberOfCachedValues(valueName)
+Private Function Study_numberOfCachedValues( _
+                Optional ByVal valueName As String) As Long
+Study_numberOfCachedValues = mStudyFoundation.numberOfCachedValues(valueName)
 End Function
 
-Private Property Get IStudy_parameters() As IParameters
-Set IStudy_parameters = mStudyFoundation.parameters
+Private Property Get Study_parameters() As Parameters
+Set Study_parameters = mStudyFoundation.Parameters
 End Property
 
-Private Sub IStudy_removeStudyValueListener( _
-                ByVal listener As TradeBuildSP.IStudyValueListener)
+Private Sub Study_removeStudyValueListener( _
+                ByVal listener As StudyValueListener)
 mStudyFoundation.removeStudyValueListener listener
 End Sub
 
-Private Property Get IStudy_studyDefinition() As TradeBuildSP.IStudyDefinition
-Set IStudy_studyDefinition = customStudyDefinition
+Private Sub Study_setInputTicksize( _
+                ByVal inputName As String, _
+                ByVal tickSize As Double)
+
+End Sub
+
+Private Property Get Study_studyDefinition() As StudyDefinition
+Set Study_studyDefinition = customStudyDefinition
 End Property
 
 
