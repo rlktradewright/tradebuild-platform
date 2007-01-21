@@ -50,7 +50,7 @@ Private mStudyLine As studyLine
 '================================================================================
 
 Private Sub Class_Initialize()
-Set studyLine = New studyLine
+Set mStudyLine = New studyLine
 End Sub
 
 '================================================================================
@@ -65,11 +65,11 @@ End Sub
 ' Properties
 '================================================================================
 
-Public Property Let point1(ByVal value As studyPoint)
+Public Property Let point1(ByVal value As StudyPoint)
 mStudyLine.point1 = value
 End Property
 
-Public Property Let point2(ByVal value As studyPoint)
+Public Property Let point2(ByVal value As StudyPoint)
 mStudyLine.point2 = value
 End Property
 

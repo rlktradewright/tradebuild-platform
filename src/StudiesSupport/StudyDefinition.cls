@@ -30,7 +30,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements TradeBuildSP.IStudyDefinition
+'Implements StudyDefinition
 
 '================================================================================
 ' Events
@@ -56,6 +56,8 @@ Private mName As String
 Private mShortName As String
 Private mDescription As String
 
+Private mNeedsBars As Boolean
+
 Private mDefaultRegion As StudyDefaultRegions
 
 Private mStudyInputDefinitions As studyInputDefinitions
@@ -70,60 +72,61 @@ Private Sub Class_Initialize()
 Set mStudyInputDefinitions = New studyInputDefinitions
 Set mStudyValueDefinitions = New studyValueDefinitions
 Set mStudyParameterDefinitions = New studyParameterDefinitions
+mNeedsBars = True
 End Sub
 
 '================================================================================
 ' IStudyDefinition Interface Members
 '================================================================================
 
-Private Function IStudyDefinition_Clone() As TradeBuildSP.IStudyDefinition
-Set IStudyDefinition_Clone = clone
-End Function
-
-Private Property Let IStudyDefinition_defaultRegion( _
-                ByVal RHS As TradeBuildSP.StudyDefaultRegions)
-mDefaultRegion = RHS
-End Property
-
-Private Property Get IStudyDefinition_defaultRegion() As TradeBuildSP.StudyDefaultRegions
-IStudyDefinition_defaultRegion = mDefaultRegion
-End Property
-
-Private Property Let IStudyDefinition_Description(ByVal RHS As String)
-mDescription = RHS
-End Property
-
-Private Property Get IStudyDefinition_Description() As String
-IStudyDefinition_Description = mDescription
-End Property
-
-Private Property Let IStudyDefinition_name(ByVal RHS As String)
-mName = RHS
-End Property
-
-Private Property Get IStudyDefinition_name() As String
-IStudyDefinition_name = mName
-End Property
-
-Private Property Let IStudyDefinition_shortName(ByVal RHS As String)
-mShortName = RHS
-End Property
-
-Private Property Get IStudyDefinition_shortName() As String
-IStudyDefinition_shortName = mShortName
-End Property
-
-Private Property Get IStudyDefinition_StudyInputDefinitions() As TradeBuildSP.IStudyInputDefinitions
-Set IStudyDefinition_StudyInputDefinitions = mStudyInputDefinitions
-End Property
-
-Private Property Get IStudyDefinition_StudyParameterDefinitions() As TradeBuildSP.IStudyParameterDefinitions
-Set IStudyDefinition_StudyParameterDefinitions = mStudyParameterDefinitions
-End Property
-
-Private Property Get IStudyDefinition_StudyValueDefinitions() As TradeBuildSP.IStudyValueDefinitions
-Set IStudyDefinition_StudyValueDefinitions = mStudyValueDefinitions
-End Property
+'Private Function IStudyDefinition_Clone() As StudyDefinition
+'Set IStudyDefinition_Clone = clone
+'End Function
+'
+'Private Property Let IStudyDefinition_defaultRegion( _
+'                ByVal RHS As TradeBuildSP.StudyDefaultRegions)
+'mDefaultRegion = RHS
+'End Property
+'
+'Private Property Get IStudyDefinition_defaultRegion() As TradeBuildSP.StudyDefaultRegions
+'IStudyDefinition_defaultRegion = mDefaultRegion
+'End Property
+'
+'Private Property Let IStudyDefinition_Description(ByVal RHS As String)
+'mDescription = RHS
+'End Property
+'
+'Private Property Get IStudyDefinition_Description() As String
+'IStudyDefinition_Description = mDescription
+'End Property
+'
+'Private Property Let IStudyDefinition_name(ByVal RHS As String)
+'mName = RHS
+'End Property
+'
+'Private Property Get IStudyDefinition_name() As String
+'IStudyDefinition_name = mName
+'End Property
+'
+'Private Property Let IStudyDefinition_shortName(ByVal RHS As String)
+'mShortName = RHS
+'End Property
+'
+'Private Property Get IStudyDefinition_shortName() As String
+'IStudyDefinition_shortName = mShortName
+'End Property
+'
+'Private Property Get IStudyDefinition_StudyInputDefinitions() As StudyInputDefinitions
+'Set IStudyDefinition_StudyInputDefinitions = mStudyInputDefinitions
+'End Property
+'
+'Private Property Get IStudyDefinition_StudyParameterDefinitions() As StudyParameterDefinitions
+'Set IStudyDefinition_StudyParameterDefinitions = mStudyParameterDefinitions
+'End Property
+'
+'Private Property Get IStudyDefinition_StudyValueDefinitions() As StudyValueDefinitions
+'Set IStudyDefinition_StudyValueDefinitions = mStudyValueDefinitions
+'End Property
 
 '================================================================================
 ' XXXX Event Handlers
@@ -155,6 +158,14 @@ End Property
 
 Public Property Get name() As String
 name = mName
+End Property
+
+Public Property Let needsBars(ByVal value As Boolean)
+mNeedsBars = value
+End Property
+
+Public Property Get needsBars() As Boolean
+needsBars = mNeedsBars
 End Property
 
 Public Property Let shortName(ByVal value As String)
@@ -196,6 +207,7 @@ Set clone = New studyDefinition
 clone.defaultRegion = mDefaultRegion
 clone.description = mDescription
 clone.name = mName
+clone.needsBars = mNeedsBars
 clone.shortName = mShortName
 
 Set newSIDs = clone.studyInputDefinitions

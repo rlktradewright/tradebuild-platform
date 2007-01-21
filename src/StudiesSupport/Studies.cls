@@ -30,7 +30,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements TradeBuildSP.IStudies
+'Implements Studies
 
 '================================================================================
 ' Events
@@ -49,8 +49,8 @@ Implements TradeBuildSP.IStudies
 '================================================================================
 
 Private Type StudyTableEntry
-    theStudy            As TradeBuildSP.IStudy
-    studyToNotify       As TradeBuildSP.IStudy
+    theStudy            As study
+    studyToNotify       As study
     valueName           As String
     notifyName          As String
 End Type
@@ -59,7 +59,7 @@ End Type
 ' Member variables
 '================================================================================
 
-'Private mUnderlyingStudy As TradeBuildSP.IStudy
+'Private mUnderlyingStudy As Study
 Private mDefaultValuename As String
 
 Private mStudyTable() As StudyTableEntry
@@ -81,39 +81,39 @@ End Sub
 ' IStudies Interface Members
 '================================================================================
 
-Private Sub IStudies_Add( _
-                ByVal study As TradeBuildSP.IStudy, _
-                ByRef valueNames() As String)
-AddStudy study, valueNames
-End Sub
-
-Private Property Let iStudies_defaultValueName( _
-                ByVal RHS As String)
-defaultValueName = RHS
-End Property
-
-Private Sub IStudies_Notify(ev As TradeBuildSP.StudyValueEvent)
-Dim i As Long
-Dim evOut As StudyValueEvent
-
-evOut = ev
-For i = 0 To mNextStudyTableIndex - 1
-    If ev.valueName = mDefaultValuename Then
-        If mStudyTable(i).valueName = "$default" Then
-            evOut.valueName = mStudyTable(i).notifyName
-            mStudyTable(i).studyToNotify.notify evOut
-        End If
-    End If
-    If mStudyTable(i).valueName = ev.valueName Then
-        evOut.valueName = mStudyTable(i).notifyName
-        mStudyTable(i).studyToNotify.notify evOut
-    End If
-Next
-End Sub
-
-Private Function IStudies_numberOfBarsRequired() As Long
-IStudies_numberOfBarsRequired = numberOfBarsRequired
-End Function
+'Private Sub IStudies_Add( _
+'                ByVal Study As Study, _
+'                ByRef valueNames() As String)
+'addStudy Study, valueNames
+'End Sub
+'
+'Private Property Let iStudies_defaultValueName( _
+'                ByVal RHS As String)
+'defaultValueName = RHS
+'End Property
+'
+'Private Sub IStudies_Notify(ev As TradeBuildSP.StudyValueEvent)
+'Dim i As Long
+'Dim evOut As StudyValueEvent
+'
+'evOut = ev
+'For i = 0 To mNextStudyTableIndex - 1
+'    If ev.valueName = mDefaultValuename Then
+'        If mStudyTable(i).valueName = "$default" Then
+'            evOut.valueName = mStudyTable(i).notifyName
+'            mStudyTable(i).studyToNotify.notify evOut
+'        End If
+'    End If
+'    If mStudyTable(i).valueName = ev.valueName Then
+'        evOut.valueName = mStudyTable(i).notifyName
+'        mStudyTable(i).studyToNotify.notify evOut
+'    End If
+'Next
+'End Sub
+'
+'Private Function IStudies_numberOfBarsRequired() As Long
+'IStudies_numberOfBarsRequired = numberOfBarsRequired
+'End Function
 
 '================================================================================
 ' XXXX Event Handlers
@@ -131,12 +131,8 @@ End Property
 ' Methods
 '================================================================================
 
-'================================================================================
-' Helper Functions
-'================================================================================
-
-Private Sub AddStudy( _
-                ByVal study As TradeBuildSP.IStudy, _
+Public Sub add( _
+                ByVal study As study, _
                 ByRef valueNames() As String)
 Dim tableEntry As StudyTableEntry
 Dim inputDefs As studyInputDefinitions
@@ -157,10 +153,29 @@ For i = 0 To UBound(valueNames)
 Next
 End Sub
 
-Friend Function numberOfBarsRequired() As Long
+Public Sub notify(ev As StudyValueEvent)
+Dim i As Long
+Dim evOut As StudyValueEvent
+
+evOut = ev
+For i = 0 To mNextStudyTableIndex - 1
+    If ev.valueName = mDefaultValuename Then
+        If mStudyTable(i).valueName = "$default" Then
+            evOut.valueName = mStudyTable(i).notifyName
+            mStudyTable(i).studyToNotify.notify evOut
+        End If
+    End If
+    If mStudyTable(i).valueName = ev.valueName Then
+        evOut.valueName = mStudyTable(i).notifyName
+        mStudyTable(i).studyToNotify.notify evOut
+    End If
+Next
+End Sub
+
+Public Function numberOfBarsRequired() As Long
 Dim num As Long
 Dim numStudy As Long
-Dim study As TradeBuildSP.IStudy
+Dim study As study
 Dim i As Long
 
 For i = 0 To mNextStudyTableIndex - 1
@@ -170,6 +185,11 @@ For i = 0 To mNextStudyTableIndex - 1
 Next
 numberOfBarsRequired = num
 End Function
+
+'================================================================================
+' Helper Functions
+'================================================================================
+
 
 
 

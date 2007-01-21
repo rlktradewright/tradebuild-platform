@@ -30,7 +30,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements TradeBuildSP.IStudyInputDefinitions
+'Implements StudyInputDefinitions
 
 '================================================================================
 ' Events
@@ -66,23 +66,23 @@ End Sub
 ' IStudyInputDefinitions Interface Members
 '================================================================================
 
-Private Function IStudyInputDefinitions_Add( _
-                ByVal inputName As String) As TradeBuildSP.IStudyInputDefinition
-Set IStudyInputDefinitions_Add = add(inputName)
-End Function
-
-Private Property Get IStudyInputDefinitions_Count() As Long
-IStudyInputDefinitions_Count = count
-End Property
-
-Private Function IStudyInputDefinitions_Item( _
-                ByVal index As Variant) As TradeBuildSP.IStudyInputDefinition
-Set IStudyInputDefinitions_Item = Item(index)
-End Function
-
-Private Function IStudyInputDefinitions_NewEnum() As Object
-Set IStudyInputDefinitions_NewEnum = NewEnum
-End Function
+'Private Function IStudyInputDefinitions_Add( _
+'                ByVal inputName As String) As StudyInputDefinition
+'Set IStudyInputDefinitions_Add = add(inputName)
+'End Function
+'
+'Private Property Get IStudyInputDefinitions_Count() As Long
+'IStudyInputDefinitions_Count = count
+'End Property
+'
+'Private Function IStudyInputDefinitions_Item( _
+'                ByVal index As Variant) As StudyInputDefinition
+'Set IStudyInputDefinitions_Item = Item(index)
+'End Function
+'
+'Private Function IStudyInputDefinitions_NewEnum() As Object
+'Set IStudyInputDefinitions_NewEnum = NewEnum
+'End Function
 
 '================================================================================
 ' XXXX Event Handlers

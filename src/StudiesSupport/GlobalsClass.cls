@@ -39,6 +39,22 @@ Option Explicit
 ' Types
 '================================================================================
 
+Public Type StudyValueEvent
+    source              As Object
+    value               As Variant
+    valueName           As String
+    timestamp           As Date
+    barNumber           As Long
+    barStartTime        As Date
+End Type
+
+Public Type StudyValue
+    value           As Variant
+    barNumber       As Long
+    timestamp       As Date
+    barStartTime    As Date
+End Type
+
 '================================================================================
 ' Member variables
 '================================================================================
@@ -63,64 +79,127 @@ Option Explicit
 ' Methods
 '================================================================================
 
-Public Function addStudyLibrary( _
-                ByVal serviceProvider As TradeBuildSP.IStudyServiceProvider, _
-                Optional ByVal logLevel As TradeBuildSP.LogLevels, _
+Public Function AddStudyLibrary( _
+                ByVal library As StudyLibrary, _
                 Optional ByVal name As String _
-                ) As TradeBuildSP.IStudyServiceProvider
-Set addStudyLibrary = Globals.studyServiceProviders.add(serviceProvider, logLevel, name)
+                ) As StudyLibrary
+Set AddStudyLibrary = Globals.StudyLibraryManager.add(library, name)
 End Function
 
 Public Function availableStudies() As StudyListEntry()
-availableStudies = Globals.studyServiceProviders.availableStudies
+availableStudies = Globals.StudyLibraryManager.availableStudies
 End Function
 
-Public Function calculateBarStartTime( _
+Public Function CalculateBarEndTime( _
                 ByVal timestamp As Date, _
                 ByVal barLength As Long, _
-                ByVal timeUnits As TradeBuildSP.TimePeriodUnits, _
+                ByVal timeUnits As TimePeriodUnits, _
                 Optional ByVal sessionStartTime As Date) As Date
-calculateBarStartTime = gBarStartTime(timestamp, barLength, timeUnits, sessionStartTime)
+CalculateBarEndTime = gBarEndTime(timestamp, barLength, timeUnits, sessionStartTime)
 End Function
 
-Public Function createCacheReplayTask( _
-                ByVal valueCache As StudyValueCache, _
-                ByVal target As Object, _
-                ByVal sourceStudy As TradeBuildSP.IStudy, _
-                ByVal numUnderlyingValuesToUse As Long, _
-                ByVal discriminator As Long) As CacheReplayTask
-Set createCacheReplayTask = New CacheReplayTask
-createCacheReplayTask.initialise valueCache, _
-                            target, _
-                            sourceStudy, _
-                            numUnderlyingValuesToUse, _
-                            discriminator
+Public Function CalculateBarLength( _
+                ByVal length As Long, _
+                ByVal units As TWUtilities.TimePeriodUnits) As Date
+Select Case units
+Case TimePeriodSecond
+Case TimePeriodMinute
+Case TimePeriodHour
+Case TimePeriodDay
+Case Else
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            "StudiesSupp" & "." & "GlobalsClass" & ":" & "CalculateBarLength", _
+            "Can't calculate bar length for this time unit"
+End Select
+CalculateBarLength = gCalcBarLength(length, units)
 End Function
 
-Public Function createStudyBars( _
+Public Function CalculateBarStartTime( _
+                ByVal timestamp As Date, _
                 ByVal barLength As Long, _
-                ByVal timeUnits As TradeBuildSP.TimePeriodUnits, _
+                ByVal timeUnits As TimePeriodUnits, _
+                Optional ByVal sessionStartTime As Date) As Date
+CalculateBarStartTime = gBarStartTime(timestamp, barLength, timeUnits, sessionStartTime)
+End Function
+
+Public Function CalculateOffsetBarStartTime( _
+                ByVal timestamp As Date, _
+                ByVal barLength As Long, _
+                ByVal timeUnits As TimePeriodUnits, _
+                ByVal offset As Long, _
                 Optional ByVal sessionStartTime As Date, _
-                Optional ByVal numberOfBarsToCache As Long) As StudyBars
-Set createStudyBars = New StudyBars
-createStudyBars.initialise barLength, _
+                Optional ByVal sessionEndTime As Date) As Date
+CalculateOffsetBarStartTime = gOffsetBarStartTime( _
+                timestamp, _
+                barLength, _
+                timeUnits, _
+                offset, _
+                sessionStartTime, _
+                sessionEndTime)
+End Function
+
+Public Sub CalculateSessionTimes( _
+                ByVal timestamp As Date, _
+                ByRef sessionStartTime As Date, _
+                ByRef sessionEndTime As Date, _
+                Optional ByVal startTime As Date, _
+                Optional ByVal endTime As Date)
+gCalcSessionTimes timestamp, _
+                            startTime, _
+                            endTime, _
+                            sessionStartTime, _
+                            sessionEndTime
+End Sub
+
+Public Function CreateBars( _
+                ByVal barLength As Long, _
+                ByVal timeUnits As TimePeriodUnits, _
+                Optional ByVal sessionStartTime As Date, _
+                Optional ByVal numberOfBarsToCache As Long) As Bars
+Set CreateBars = New Bars
+CreateBars.initialise barLength, _
                             timeUnits, _
                             sessionStartTime, _
                             numberOfBarsToCache
 End Function
 
+Public Function CreateCacheReplayTask( _
+                ByVal valueCache As StudyValueCache, _
+                ByVal target As Object, _
+                ByVal sourceStudy As study, _
+                ByVal numberOfValuesToReplay As Long, _
+                ByVal discriminator As Long) As CacheReplayTask
+Set CreateCacheReplayTask = New CacheReplayTask
+CreateCacheReplayTask.initialise valueCache, _
+                            target, _
+                            sourceStudy, _
+                            numberOfValuesToReplay, _
+                            discriminator
+End Function
 
-Public Function createStudyValueCache( _
+Public Function CreateStudyPoint( _
+                ByVal x As Date, _
+                ByVal y As Double) As StudyPoint
+Set CreateStudyPoint = New StudyPoint
+CreateStudyPoint.x = x
+CreateStudyPoint.y = y
+End Function
+
+Public Function CreateStudyValueCache( _
                 ByVal cyclicSize As Long, _
                 ByVal valueName As String) As StudyValueCache
-Set createStudyValueCache = New StudyValueCache
-createStudyValueCache.initialise cyclicSize, valueName
+Set CreateStudyValueCache = New StudyValueCache
+CreateStudyValueCache.initialise cyclicSize, valueName
+End Function
+
+Public Function DefaultStudyValueName() As String
+DefaultStudyValueName = DefaultStudyValueNameStr
 End Function
 
 Public Function getStudyDefaultParameters( _
                 ByVal studyName As String, _
-                Optional ByVal libraryName As String) As IParameters
-Set getStudyDefaultParameters = Globals.studyServiceProviders.FetchStudyDefaultParameters( _
+                Optional ByVal libraryName As String) As Parameters2.parameters
+Set getStudyDefaultParameters = Globals.StudyLibraryManager.FetchStudyDefaultParameters( _
                                             studyName, _
                                             libraryName)
 End Function
@@ -128,23 +207,27 @@ End Function
 Public Function getStudyDefinition( _
                 ByVal name As String, _
                 Optional ByVal libraryName As String) As studyDefinition
-Set getStudyDefinition = Globals.studyServiceProviders.studyDefinition(name, libraryName)
+Set getStudyDefinition = Globals.StudyLibraryManager.studyDefinition(name, libraryName)
 End Function
 
-Public Sub removeStudyLibrary( _
-                ByVal serviceProvider As TradeBuildSP.IStudyServiceProvider)
-Globals.studyServiceProviders.remove serviceProvider
+Public Function MovingAverageStudyValueName() As String
+MovingAverageStudyValueName = MovingAverageStudyValueNameStr
+End Function
+
+Public Sub RemoveStudyLibrary( _
+                ByVal library As StudyLibrary)
+Globals.StudyLibraryManager.remove library
 End Sub
 
-Public Sub removeAllStudyLibraries()
-Globals.studyServiceProviders.RemoveAll
+Public Sub RemoveAllStudyLibraries()
+Globals.StudyLibraryManager.RemoveAll
 End Sub
 
 Public Function setStudyDefaultParameters( _
                 ByVal studyName As String, _
                 ByVal libraryName As String, _
-                ByVal params As IParameters) As Boolean
-setStudyDefaultParameters = Globals.studyServiceProviders.setStudyDefaultParameters( _
+                ByVal params As Parameters2.parameters) As Boolean
+setStudyDefaultParameters = Globals.StudyLibraryManager.setStudyDefaultParameters( _
                                             studyName, _
                                             libraryName, _
                                             params)

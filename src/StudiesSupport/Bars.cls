@@ -8,7 +8,7 @@ BEGIN
 END
 Attribute VB_Name = "Bars"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = True
+Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -50,12 +50,17 @@ Option Explicit
 ' Member variables
 '================================================================================
 
-Private mCommonServiceConsumer      As ICommonServiceConsumer
-
 Private mBarsCache                  As StudyValueCache
 
 Private mCurrentBar                 As Bar
 Private mCurrentBarNumber           As Long
+
+Private mSessionStartTime           As Date
+' minutes from midnight to start of sesssion
+Private mSessionOffset              As Long
+
+Private mBarLength                  As Long
+Private mTimePeriodUnits            As TimePeriodUnits
 
 '================================================================================
 ' Class Event Handlers
@@ -325,30 +330,58 @@ End Property
 ' Methods
 '================================================================================
 
-Public Sub Initialise( _
-                ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
+Friend Sub initialise( _
+                ByVal barLength As Long, _
+                ByVal timeUnits As TimePeriodUnits, _
+                Optional ByVal sessionStartTime As Date, _
                 Optional ByVal numberOfBarsToCache As Long)
 
-Set mCommonServiceConsumer = commonServiceConsumer
-
+mBarLength = barLength
+mTimePeriodUnits = timeUnits
+mSessionStartTime = sessionStartTime
+mSessionOffset = Int(1440 * (mSessionStartTime - Int(mSessionStartTime)))
 Set mBarsCache = New StudyValueCache
-mBarsCache.Initialise numberOfBarsToCache, "Bar"
+mBarsCache.initialise numberOfBarsToCache, "Bar"
 
 End Sub
 
 Public Sub notify( _
-                ev As TradeBuildSP.StudyValueEvent)
+                ev As StudyValueEvent)
 Dim isNewBar As Boolean
+Dim barTime As Date
 
-isNewBar = newBar(ev.barNumber)
+If mBarLength = 0 Then
+    ' the caller will supply bar numbers
+    isNewBar = newBar(ev.barNumber)
+Else
+    barTime = gBarStartTime(ev.timestamp, _
+                            mBarLength, _
+                            mTimePeriodUnits, _
+                            mSessionStartTime)
+    If mCurrentBar Is Nothing Then
+        isNewBar = True
+    Else
+        isNewBar = (barTime <> mCurrentBar.datetime)
+    End If
+End If
+    
 If isNewBar Then
     Set mCurrentBar = New Bar
-    mCurrentBar.datetime = ev.timestamp
+    If mBarLength = 0 Then
+        mCurrentBar.datetime = ev.barStartTime
+    Else
+        mCurrentBar.datetime = barTime
+        mCurrentBarNumber = mCurrentBarNumber + 1
+    End If
+    mCurrentBar.barNumber = mCurrentBarNumber
 End If
 
 mCurrentBar.Tick ev.value
 If isNewBar Then
-    mBarsCache.addValue mCurrentBar, ev.barNumber, ev.timestamp
+    mBarsCache.addValue mCurrentBar, _
+                    IIf(ev.barNumber <> 0, ev.barNumber, mCurrentBarNumber), _
+                    ev.timestamp, _
+                    mCurrentBar.datetime
 End If
 End Sub
 

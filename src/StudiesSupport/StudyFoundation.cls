@@ -61,11 +61,11 @@ Private mShortName As String
 Private mIdent As String
 
 Private mInputValueNames() As String
-Private mUnderlyingStudy As TradeBuildSP.IStudy
+Private mUnderlyingStudy As study
 
-Private mParams As IParameters
-Private mStudies As IStudies
-Private mListeners As IStudyValueListeners
+Private mParams As Parameters2.parameters
+Private mStudies As Studies
+Private mListeners As StudyValueListeners
 
 Private mValueCaches() As ValueCacheTableEntry
 
@@ -93,15 +93,15 @@ End Sub
 
 Private Sub TaskCompletionListener_taskCompleted( _
                 ev As Tasks.TaskCompletionEvent)
-Dim task As IValueReplayTask
+Dim task As ValueReplayTask
 Set task = ev.source
 Select Case task.discriminator
 Case TaskDiscriminators.TaskAddStudy
-    Dim targetStudy As IStudy
+    Dim targetStudy As study
     Set targetStudy = task.target
     mStudies.add targetStudy, task.valueNames
 Case TaskDiscriminators.TaskAddStudyValueListener
-    Dim targetListener As IStudyValueListener
+    Dim targetListener As StudyValueListener
     Set targetListener = task.target
     mListeners.add targetListener, task.valueName
 End Select
@@ -123,17 +123,17 @@ Public Property Get id() As String
 id = mIdent
 End Property
 
-Public Property Get InstanceName() As String
-InstanceName = mShortName & "(" & _
+Public Property Get instanceName() As String
+instanceName = mShortName & "(" & _
                 Join(mInputValueNames, ",") & "," & _
                 ParamsToString & ")"
 End Property
 
-Public Property Get InstancePath() As String
-InstancePath = mShortName & "(" & _
+Public Property Get instancePath() As String
+instancePath = mShortName & "(" & _
                 Join(mInputValueNames, ",") & "," & _
                 ParamsToString & ")." & _
-                mUnderlyingStudy.InstancePath
+                mUnderlyingStudy.instancePath
 End Property
 
 Public Property Get isNewBar() As Boolean
@@ -144,7 +144,7 @@ Public Property Get localBarNumber() As Long
 localBarNumber = mLocalBarNumber
 End Property
 
-Public Property Get parameters() As IParameters
+Public Property Get parameters() As Parameters2.parameters
 Set parameters = mParams.clone
 End Property
 
@@ -153,21 +153,41 @@ Public Property Let ReplayUsingStudyValues( _
 mReplayUsingStudyValues = value
 End Property
 
+Public Property Get sessionEndTime() As Date
+sessionEndTime = mUnderlyingStudy.sessionEndTime
+End Property
+
+Public Property Get sessionStartTime() As Date
+sessionStartTime = mUnderlyingStudy.sessionStartTime
+End Property
+
 '================================================================================
 ' Methods
 '================================================================================
 
-Public Function AddStudy( _
-                ByVal studyToAdd As IStudy, _
+Public Function addStudy( _
+                ByVal studyToAdd As study, _
                 ByRef valueNames() As String, _
-                ByVal numUnderlyingValuesToUse As Long, _
+                ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As Tasks.TaskCompletion
-Dim valueDefs As IStudyValueDefinitions
-Dim valueDef As IStudyValueDefinition
+Dim valueDefs As studyValueDefinitions
+Dim valueDef As StudyValueDefinition
 Dim i As Long
 
-If numUnderlyingValuesToUse = 0 Or study.numberOfCachedValues = 0 Then
+If numberOfValuesToReplay >= 0 Or _
+    numberOfValuesToReplay = ReplayNumbers.ReplayAsRequired Or _
+    numberOfValuesToReplay = ReplayNumbers.ReplayAll _
+Then
+    ' ok
+Else
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            "StudiesSupp" & "." & "StudyFoundation" & ":" & "addStudy", _
+            "numberOfValuesToReplay must be >=0 or set to ReplayNumbers.ReplayAll"
+    
+End If
+
+If numberOfValuesToReplay = 0 Or study.numberOfCachedValues = 0 Then
     mStudies.add studyToAdd, valueNames
     Exit Function
 End If
@@ -178,13 +198,13 @@ If UBound(valueNames) = 0 And (Not mReplayUsingStudyValues) Then
     valueName = UCase$(valueNames(0))
     For Each valueDef In valueDefs
         If UCase$(valueDef.name) = valueName Then
-            Set AddStudy = mValueCaches(i).valueCache.replayValues(studyToAdd, _
+            Set addStudy = mValueCaches(i).valueCache.replayValues(studyToAdd, _
                                         study, _
-                                        numUnderlyingValuesToUse, _
+                                        numberOfValuesToReplay, _
                                         TaskDiscriminators.TaskAddStudy, _
                                         taskName, _
                                         taskData)
-            AddStudy.addTaskCompletionListener Me
+            addStudy.addTaskCompletionListener Me
         End If
         i = i + 1
     Next
@@ -193,23 +213,33 @@ Else
     replayTask.initialise studyToAdd, _
                             study, _
                             valueNames, _
-                            numUnderlyingValuesToUse, _
+                            numberOfValuesToReplay, _
                             TaskDiscriminators.TaskAddStudy
-    Set AddStudy = Tasks.startTask(replayTask, PriorityNormal, taskName, taskData)
-    AddStudy.addTaskCompletionListener Me
+    Set addStudy = Tasks.startTask(replayTask, PriorityNormal, taskName, taskData)
+    addStudy.addTaskCompletionListener Me
     
 End If
 End Function
 
-Public Function AddStudyValueListener( _
-                ByVal listener As TradeBuildSP.IStudyValueListener, _
+Public Function addStudyValueListener( _
+                ByVal listener As StudyValueListener, _
                 ByVal valueName As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As Tasks.TaskCompletion
-Dim valueDefs As IStudyValueDefinitions
-Dim valueDef As IStudyValueDefinition
+Dim valueDefs As studyValueDefinitions
 Dim valNames(0) As String
+
+If numberOfValuesToReplay >= 0 Or _
+    numberOfValuesToReplay = ReplayNumbers.ReplayAll _
+Then
+    ' ok
+Else
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            "StudiesSupp" & "." & "StudyFoundation" & ":" & "addStudyValueListener", _
+            "numberOfValuesToReplay must be >=0 or set to ReplayNumbers.ReplayAll"
+    
+End If
 
 If numberOfValuesToReplay = 0 Or study.numberOfCachedValues = 0 Then
     mListeners.add listener, valueName
@@ -226,28 +256,28 @@ If mReplayUsingStudyValues Then
                             valNames, _
                             numberOfValuesToReplay, _
                             TaskDiscriminators.TaskAddStudyValueListener
-    Set AddStudyValueListener = Tasks.startTask(replayTask, PriorityNormal, taskName, taskData)
-    AddStudyValueListener.addTaskCompletionListener Me
+    Set addStudyValueListener = Tasks.startTask(replayTask, PriorityNormal, taskName, taskData)
+    addStudyValueListener.addTaskCompletionListener Me
 Else
-    Set AddStudyValueListener = FindValueCache(valueName).replayValues( _
+    Set addStudyValueListener = FindValueCache(valueName).replayValues( _
                                     listener, _
                                     study, _
                                     numberOfValuesToReplay, _
                                     TaskDiscriminators.TaskAddStudyValueListener, _
                                     taskName, _
                                     taskData)
-    AddStudyValueListener.addTaskCompletionListener Me
+    addStudyValueListener.addTaskCompletionListener Me
 End If
 End Function
 
 Public Function FindValueCache( _
-                ByVal valueName As String) As IStudyValueCache
+                ByVal valueName As String) As StudyValueCache
 Dim i As Long
 
 valueName = UCase$(valueName)
 For i = 0 To UBound(mValueCaches)
     If UCase$(mValueCaches(i).valueCache.valueName) = valueName Or _
-        (valueName = DefaultStudyValueName And _
+        (valueName = DefaultStudyValueNameStr And _
         mValueCaches(i).isDefault) _
     Then
         Set FindValueCache = mValueCaches(i).valueCache
@@ -266,12 +296,12 @@ getStudyValue = valueCache.getStudyValue(ref)
 End Function
 
 Public Sub initialise( _
-                ByVal study As IStudy, _
+                ByVal study As study, _
                 ByVal id As String, _
-                ByVal parameters As TradeBuildSP.IParameters, _
+                ByVal parameters As Parameters2.parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
-                ByVal underlyingStudy As TradeBuildSP.IStudy)
+                ByVal underlyingStudy As study)
 
 Set mStudyRef = WeakRefs.createWeakReference(study)
 mShortName = study.studyDefinition.shortName
@@ -288,7 +318,7 @@ createValueCaches mNumberOfValuesToCache
 End Sub
 
 Public Sub NotifyInput( _
-                ByRef ev As TradeBuildSP.StudyValueEvent)
+                ByRef ev As StudyValueEvent)
 If ev.barNumber <> mBarNumber Then
     mBarNumber = ev.barNumber
     mLocalBarNumber = mLocalBarNumber + 1
@@ -300,8 +330,8 @@ End If
 End Sub
                 
 Public Sub NotifyValue( _
-                ByRef ev As TradeBuildSP.StudyValueEvent)
-If mBarStartTime <> 0 Then ev.barStartTime = mBarStartTime
+                ByRef ev As StudyValueEvent)
+If ev.barStartTime = 0 Then ev.barStartTime = mBarStartTime
 mStudies.notify ev
 mListeners.notify ev
 End Sub
@@ -325,8 +355,8 @@ Else
 End If
 End Function
 
-Public Sub RemoveStudyValueListener( _
-                ByVal listener As TradeBuildSP.IStudyValueListener)
+Public Sub removeStudyValueListener( _
+                ByVal listener As StudyValueListener)
 mListeners.remove listener
 End Sub
 
@@ -337,8 +367,8 @@ End Sub
 
 Private Sub createValueCaches( _
                 ByVal numberOfValuesToCache As Long)
-Dim valueDefs As IStudyValueDefinitions
-Dim valueDef As IStudyValueDefinition
+Dim valueDefs As studyValueDefinitions
+Dim valueDef As StudyValueDefinition
 Dim i As Long
 
 Set valueDefs = study.studyDefinition.studyValueDefinitions
@@ -353,8 +383,8 @@ Next
 End Sub
 
 Private Function ParamsToString() As String
-Dim paramDefs As TradeBuildSP.IStudyParameterDefinitions
-Dim paramDef As TradeBuildSP.IStudyParameterDefinition
+Dim paramDefs As studyParameterDefinitions
+Dim paramDef As StudyParameterDefinition
 Dim i As Long
 
 On Error Resume Next
@@ -369,7 +399,7 @@ For i = 1 To paramDefs.count
 Next
 End Function
 
-Private Function study() As IStudy
+Private Function study() As study
 Set study = mStudyRef.target
 End Function
 

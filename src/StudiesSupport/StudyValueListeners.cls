@@ -17,8 +17,6 @@ Option Explicit
 ' Implemented Interfaces
 '================================================================================
 
-Implements TradeBuildSP.IStudyValueListeners
-
 '================================================================================
 ' Events
 '================================================================================
@@ -28,7 +26,7 @@ Implements TradeBuildSP.IStudyValueListeners
 '================================================================================
 
 Private Type ListenerTableEntry
-    theListener         As TradeBuildSP.IStudyValueListener
+    theListener         As StudyValueListener
     valueName           As String
 End Type
 
@@ -52,62 +50,6 @@ ReDim mListenerTable(10) As ListenerTableEntry
 End Sub
 
 '================================================================================
-' IStudyValueListeners Interface Members
-'================================================================================
-
-Private Sub IStudyValueListeners_Add( _
-                ByVal listener As TradeBuildSP.IStudyValueListener, _
-                ByVal valueName As String)
-Dim tableEntry As ListenerTableEntry
-
-If mNextListenerTableIndex > UBound(mListenerTable) Then
-    ReDim Preserve mListenerTable(UBound(mListenerTable) + 10) As ListenerTableEntry
-End If
-Set tableEntry.theListener = listener
-tableEntry.valueName = valueName
-mListenerTable(mNextListenerTableIndex) = tableEntry
-mNextListenerTableIndex = mNextListenerTableIndex + 1
-End Sub
-
-Private Function IStudyValueListeners_Count() As Long
-IStudyValueListeners_Count = mNextListenerTableIndex
-End Function
-
-Private Function IStudyValueListeners_Item( _
-                ByVal index As Long) As TradeBuildSP.IStudyValueListener
-Set IStudyValueListeners_Item = mListenerTable(index).theListener
-End Function
-
-Private Sub IStudyValueListeners_Notify( _
-                ev As TradeBuildSP.StudyValueEvent)
-Dim i As Long
-Dim listener As TradeBuildSP.IStudyValueListener
-
-For i = 0 To mNextListenerTableIndex - 1
-    Set listener = mListenerTable(i).theListener
-    If Not listener Is Nothing Then
-        If ev.valueName = mListenerTable(i).valueName Then
-            listener.notify ev
-        End If
-    End If
-Next
-End Sub
-
-Private Sub IStudyValueListeners_Remove( _
-                ByVal listener As TradeBuildSP.IStudyValueListener)
-Dim i As Long
-Dim lListener As TradeBuildSP.IStudyValueListener
-
-For i = 0 To mNextListenerTableIndex - 1
-    Set lListener = mListenerTable(i).theListener
-    If lListener Is listener Then
-        Set mListenerTable(i).theListener = Nothing
-        mListenerTable(i).valueName = ""
-    End If
-Next
-End Sub
-
-'================================================================================
 ' xxxx Event Handlers
 '================================================================================
 
@@ -118,6 +60,49 @@ End Sub
 '================================================================================
 ' Methods
 '================================================================================
+
+Public Sub add( _
+                ByVal listener As StudyValueListener, _
+                ByVal valueName As String)
+Dim tableEntry As ListenerTableEntry
+
+If mNextListenerTableIndex > UBound(mListenerTable) Then
+    ReDim Preserve mListenerTable(UBound(mListenerTable) + 10) As ListenerTableEntry
+End If
+Set tableEntry.theListener = listener
+tableEntry.valueName = UCase$(valueName)
+mListenerTable(mNextListenerTableIndex) = tableEntry
+mNextListenerTableIndex = mNextListenerTableIndex + 1
+End Sub
+
+Public Sub notify( _
+                ev As StudyValueEvent)
+Dim i As Long
+Dim listener As StudyValueListener
+
+For i = 0 To mNextListenerTableIndex - 1
+    Set listener = mListenerTable(i).theListener
+    If Not listener Is Nothing Then
+        If UCase$(ev.valueName) = mListenerTable(i).valueName Then
+            listener.notify ev
+        End If
+    End If
+Next
+End Sub
+
+Public Sub remove( _
+                ByVal listener As StudyValueListener)
+Dim i As Long
+Dim lListener As StudyValueListener
+
+For i = 0 To mNextListenerTableIndex - 1
+    Set lListener = mListenerTable(i).theListener
+    If lListener Is listener Then
+        Set mListenerTable(i).theListener = Nothing
+        mListenerTable(i).valueName = ""
+    End If
+Next
+End Sub
 
 '================================================================================
 ' Helper Functions

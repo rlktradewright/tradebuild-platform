@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "StudyBars"
+Attribute VB_Name = "Bars"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -60,7 +60,7 @@ Private mSessionStartTime           As Date
 Private mSessionOffset              As Long
 
 Private mBarLength                  As Long
-Private mTimePeriodUnits            As TradeBuildSP.TimePeriodUnits
+Private mTimePeriodUnits            As TimePeriodUnits
 
 '================================================================================
 ' Class Event Handlers
@@ -332,7 +332,7 @@ End Property
 
 Friend Sub initialise( _
                 ByVal barLength As Long, _
-                ByVal timeUnits As TradeBuildSP.TimePeriodUnits, _
+                ByVal timeUnits As TimePeriodUnits, _
                 Optional ByVal sessionStartTime As Date, _
                 Optional ByVal numberOfBarsToCache As Long)
 
@@ -346,7 +346,7 @@ mBarsCache.initialise numberOfBarsToCache, "Bar"
 End Sub
 
 Public Sub notify( _
-                ev As TradeBuildSP.StudyValueEvent)
+                ev As StudyValueEvent)
 Dim isNewBar As Boolean
 Dim barTime As Date
 

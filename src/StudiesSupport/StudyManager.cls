@@ -39,44 +39,53 @@ Option Explicit
 ' Types
 '================================================================================
 
-Private Type InputEntry
-    source              As IStudy
+Public Type InputDescriptor
+    source              As study
     inputName           As String
+    description         As String
+    inputType           As StudiesSupp.StudyInputTypes
+    isDefault           As Boolean
+    tickSize            As Double
 End Type
 
 Public Type StudyEntry
-    study As IStudy                ' reference to the study itself
-    studyName As String            ' name of the study
-    spName As String               ' service provider name
-    studyID As String              ' id of this study
-    underlyingStudyID As String    ' id of entry for study this study is to be
-                                        ' added to
-    inputValueNames() As String    ' names of values from the underlying study
-                                        ' used as input to this study
-    numberOfCachedValues As Long   ' the number of study output values that
-                                        ' should be available for access by higher
-                                        ' level studies
-    studyStarted As Boolean        ' set when this study has been added to the
-                                        ' underlying study
+    study As study                  ' reference to the study itself
+    studyName As String             ' name of the study
+    libName As String               ' study library name
+    studyID As String               ' id of this study
+    underlyingStudyID As String     ' id of entry for study this study is to be
+                                    ' added to
+    inputValueNames() As String     ' names of values from the underlying study
+                                    ' used as input to this study
+    numberOfCachedValues As Long    ' the number of study output values that
+                                    ' should be available for access by higher
+                                    ' level studies
+    studyStarted As Boolean         ' set when this study has been added to the
+                                    ' underlying study
 End Type
 
 '================================================================================
 ' Member variables
 '================================================================================
 
-Private mInputs() As InputEntry
-Private mNextInputIndex As Long
+Private mInputs() As InputDescriptor
+Private mNextInputIndex         As Long
 
-Private mStudies                    As Collection
-Private mStudyServiceProviders      As studyServiceProviders
+Private mStudies                As Collection
+Private mStudyLibraryManager    As StudyLibraryManager
+
+Private mSessionStartTime       As Date
+Private mSessionEndTime         As Date
+
+Private mSessionTimesSet        As Boolean
 
 '================================================================================
 ' Class Event Handlers
 '================================================================================
 
 Private Sub Class_Initialize()
-ReDim mInputs(10) As InputEntry
-Set mStudyServiceProviders = Globals.studyServiceProviders
+ReDim mInputs(10) As InputDescriptor
+Set mStudyLibraryManager = Globals.StudyLibraryManager
 Set mStudies = New Collection
 End Sub
 
@@ -97,19 +106,20 @@ End Sub
 '================================================================================
 
 Public Function addInput( _
-                ByVal source As TradeBuildSP.IStudy, _
+                ByVal source As study, _
                 ByVal inputName As String, _
                 ByVal description As String, _
                 ByVal inputType As StudiesSupp.StudyInputTypes, _
-                ByVal isDefault As Boolean) As Long
+                ByVal isDefault As Boolean, _
+                ByVal tickSize As Double) As Long
 Dim inpStudy As InputStudy
 
 Set inpStudy = source   ' check the right class
 
-inpStudy.addInput inputName, description, inputType, isDefault
+inpStudy.addInput inputName, description, inputType, isDefault, tickSize
 
 If mNextInputIndex = UBound(mInputs) Then
-    ReDim Preserve mInputs(UBound(mInputs) + 10) As InputEntry
+    ReDim Preserve mInputs(UBound(mInputs) + 10) As InputDescriptor
 End If
 Set mInputs(mNextInputIndex).source = source
 mInputs(mNextInputIndex).inputName = inputName
@@ -118,13 +128,13 @@ mNextInputIndex = mNextInputIndex + 1
 End Function
 
 Public Function addSource( _
-                ByVal name As String) As TradeBuildSP.IStudy
+                ByVal name As String) As study
 Dim inpStudy As InputStudy
-Dim lStudy As TradeBuildSP.IStudy
+Dim lStudy As study
 Dim StudyEntry As StudyEntry
 
 Set inpStudy = New InputStudy
-inpStudy.initialise name
+inpStudy.initialise name, mSessionStartTime, mSessionEndTime
 Set addSource = inpStudy
 
 Set lStudy = inpStudy
@@ -136,28 +146,28 @@ mStudies.add StudyEntry, lStudy.id
 
 End Function
 
-Public Function AddStudy(ByVal name As String, _
-                ByRef studyID As String, _
-                ByVal underlyingStudyID As String, _
+Public Function addStudy(ByVal name As String, _
+                ByVal underlyingStudy As study, _
                 ByRef inputValueNames() As String, _
-                Optional ByVal parameters As ParamsSupp.parameters, _
-                Optional ByVal serviceProviderName As String, _
-                Optional ByVal numberOfValuesToCache As Long) As TradeBuildSP.IStudy
+                Optional ByVal parameters As Parameters2.parameters, _
+                Optional ByVal libraryName As String, _
+                Optional ByVal numberOfValuesToCache As Long) As study
 
 Dim StudyEntry As StudyEntry
 Dim underlyingStudyEntry As StudyEntry
-Dim lStudy As TradeBuildSP.IStudy
+Dim lStudy As study
 Dim inValueNames() As String
 Dim i As Long
+Dim studyInputDefs As studyInputDefinitions
 
-If underlyingStudyID = "" Then
+If underlyingStudy Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "StudiesSupp.StudyManager::addStudy", _
-                "Underlying study id must be supplied"
+                "Underlying study must not be nothing"
 End If
 
 On Error Resume Next
-underlyingStudyEntry = mStudies(underlyingStudyID)
+underlyingStudyEntry = mStudies(underlyingStudy.id)
 If Err.Number <> 0 Then
     On Error GoTo 0
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
@@ -167,51 +177,58 @@ End If
 On Error GoTo 0
 
 If parameters Is Nothing Then
-    Set parameters = mStudyServiceProviders.FetchStudyDefaultParameters(name, serviceProviderName)
+    Set parameters = mStudyLibraryManager.FetchStudyDefaultParameters(name, libraryName)
 End If
     
 Set lStudy = findStudy(name, _
-                        serviceProviderName, _
-                        studyID, _
-                        underlyingStudyID, _
+                        libraryName, _
+                        underlyingStudy.id, _
                         inputValueNames, _
                         numberOfValuesToCache, _
                         parameters)
 If Not lStudy Is Nothing Then
     ' study already added
-    Set AddStudy = lStudy
+    Set addStudy = lStudy
     Exit Function
 End If
 
 StudyEntry.studyName = name
-StudyEntry.spName = serviceProviderName
-Set StudyEntry.study = mStudyServiceProviders.CreateStudy(name, serviceProviderName)
+StudyEntry.libName = libraryName
+Set lStudy = mStudyLibraryManager.createStudy(name, libraryName)
 
-If StudyEntry.study Is Nothing Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+If lStudy Is Nothing Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                                 "StudiesSupp.StudyManager::AddStudy", _
                                                 "Can't create study " & name
                                                 
+Set StudyEntry.study = lStudy
 StudyEntry.numberOfCachedValues = numberOfValuesToCache
+
+Set studyInputDefs = lStudy.studyDefinition.studyInputDefinitions
 
 ReDim inValueNames(UBound(inputValueNames)) As String
 For i = 0 To UBound(inputValueNames)
     inValueNames(i) = inputValueNames(i)
+    lStudy.setInputTicksize studyInputDefs.Item(i + 1).name, _
+                            underlyingStudy.getValueTicksize(inputValueNames(i))
 Next
 StudyEntry.inputValueNames = inValueNames
-StudyEntry.underlyingStudyID = underlyingStudyID
+StudyEntry.underlyingStudyID = underlyingStudy.id
 
-studyID = gGenerateGUIDString
-StudyEntry.studyID = studyID
+StudyEntry.studyID = GenerateGUIDString
 
-StudyEntry.study.initialise mStudyServiceProviders, _
-                            studyID, _
+StudyEntry.study.initialise StudyEntry.studyID, _
                             parameters, _
                             numberOfValuesToCache, _
                             inputValueNames, _
                             underlyingStudyEntry.study
+                            
+mStudies.add StudyEntry, StudyEntry.studyID
+Set addStudy = lStudy
+End Function
 
-mStudies.add StudyEntry, studyID
-Set AddStudy = StudyEntry.study
+Public Function getInputDescriptor( _
+                ByVal inputHandle As Long) As InputDescriptor
+getInputDescriptor = mInputs(inputHandle)
 End Function
 
 Public Sub NotifyInput( _
@@ -225,15 +242,47 @@ ev.valueName = mInputs(inputHandle).inputName
 mInputs(inputHandle).source.notify ev
 End Sub
 
+''
+'
+'   Sets the session start and end times. Note that this method can only be called once.
+'
+'   Any sources that have already been created have their session times set accordingly.
+'@/
+Public Sub setSessionTimes( _
+                ByVal sessionStartTime As Date, _
+                ByVal sessionEndTime As Date)
+Dim lStudy As study
+Dim lSource As InputStudy
+
+If mSessionTimesSet Then _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            "StudiesSupp" & "." & "StudyManager" & ":" & "setSessionTimes", _
+            "Session times have already been set"
+
+If CDbl(sessionStartTime) > 1 Then sessionStartTime = sessionStartTime - Int(sessionStartTime)
+mSessionStartTime = sessionStartTime
+If CDbl(sessionEndTime) > 1 Then sessionEndTime = sessionEndTime - Int(sessionEndTime)
+mSessionEndTime = sessionEndTime
+
+mSessionTimesSet = True
+
+For Each lStudy In mStudies
+    If TypeOf lStudy Is InputStudy Then
+        Set lSource = lStudy
+        lSource.setSessionTimes mSessionStartTime, mSessionEndTime
+    End If
+Next
+End Sub
+
 Public Function startStudy( _
-                ByVal studyID As String, _
-                ByVal numUnderlyingValuesToUse As Long, _
+                ByVal pStudy As study, _
+                ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskCompletion
 Dim StudyEntry As StudyEntry
 Dim underlyingStudyEntry As StudyEntry
 
-StudyEntry = mStudies(studyID)
+StudyEntry = mStudies(pStudy.id)
 If StudyEntry.studyStarted Then
     ' this study has already been added to the underlying study
     Exit Function
@@ -241,11 +290,14 @@ End If
 
 StudyEntry.studyStarted = True
 
+mStudies.remove pStudy.id
+mStudies.add StudyEntry, pStudy.id
+
 underlyingStudyEntry = mStudies(StudyEntry.underlyingStudyID)
 
-Set startStudy = underlyingStudyEntry.study.AddStudy(StudyEntry.study, _
+Set startStudy = underlyingStudyEntry.study.addStudy(StudyEntry.study, _
                                                     StudyEntry.inputValueNames, _
-                                                    numUnderlyingValuesToUse, _
+                                                    numberOfValuesToReplay, _
                                                     taskName, _
                                                     taskData)
 
@@ -256,12 +308,11 @@ End Function
 '================================================================================
 
 Private Function findStudy(ByVal studyName As String, _
-                ByVal spName As String, _
-                ByRef studyID As String, _
+                ByVal libName As String, _
                 ByVal underlyingStudyID As String, _
                 ByRef inputValueNames() As String, _
                 ByVal numberOfValuesToCache As Long, _
-                ByVal parameters As ParamsSupp.parameters) As IStudy
+                ByVal parameters As Parameters2.parameters) As study
 Dim StudyEntry As StudyEntry
 Dim var As Variant
 
@@ -269,15 +320,14 @@ Set findStudy = Nothing
 For Each var In mStudies
     StudyEntry = var
     If UCase$(studyName) = UCase$(StudyEntry.studyName) And _
-        UCase$(spName) = UCase$(StudyEntry.spName) And _
+        UCase$(libName) = UCase$(StudyEntry.libName) And _
         underlyingStudyID = StudyEntry.underlyingStudyID And _
         numberOfValuesToCache = StudyEntry.numberOfCachedValues And _
         stringArraysEqual(inputValueNames, StudyEntry.inputValueNames) And _
-        parameters.Equals(StudyEntry.study.parameters) _
+        parameters.equals(StudyEntry.study.parameters) _
     Then
         ' this study has already been added
         Set findStudy = StudyEntry.study
-        studyID = StudyEntry.studyID
         Exit For
     End If
 Next

@@ -25,9 +25,14 @@ Public Const MinDouble As Double = -(2 - 2 ^ -52) * 2 ^ 1023
 Public Const DummyHigh As Double = MinDouble
 Public Const DummyLow As Double = MaxDouble
 
-Public Const DefaultStudyValueName As String = "$DEFAULT"
+Public Const DefaultStudyValueNameStr As String = "$DEFAULT"
+Public Const MovingAverageStudyValueNameStr As String = "MA"
 
 Public Const OneMicroSecond As Double = 1.15740740740741E-11
+Public Const OneSecond As Double = 1 / 86400
+Public Const OneMinute As Double = 1 / 1440
+Public Const OneHour As Double = 1 / 24
+
 
 '================================================================================
 ' Enums
@@ -45,7 +50,7 @@ Public Const OneMicroSecond As Double = 1.15740740740741E-11
 ' Member variables
 '================================================================================
 
-Private mStudyServiceProviders      As New studyServiceProviders
+Private mStudyLibraryManager      As New StudyLibraryManager
 
 '================================================================================
 ' Class Event Handlers
@@ -63,23 +68,50 @@ Private mStudyServiceProviders      As New studyServiceProviders
 ' Properties
 '================================================================================
 
-Public Property Get studyServiceProviders() As studyServiceProviders
-Set studyServiceProviders = mStudyServiceProviders
+Public Property Get StudyLibraryManager() As StudyLibraryManager
+Set StudyLibraryManager = mStudyLibraryManager
 End Property
 
 '================================================================================
 ' Methods
 '================================================================================
 
-'================================================================================
-' Helper Functions
-'================================================================================
+Public Function gBarEndTime( _
+                ByVal timestamp As Date, _
+                ByVal barLength As Long, _
+                ByVal timeUnits As TimePeriodUnits, _
+                Optional ByVal sessionStartTime As Date) As Date
+Dim startTime As Date
+startTime = gBarStartTime( _
+                timestamp, _
+                barLength, _
+                timeUnits, _
+                sessionStartTime)
+Select Case timeUnits
+Case TimePeriodSecond
+    gBarEndTime = startTime + (barLength / 86400) + OneMicroSecond
+Case TimePeriodMinute
+    gBarEndTime = startTime + (barLength / 1440) + OneMicroSecond
+Case TimePeriodHour
+    gBarEndTime = startTime + (barLength / 24) + OneMicroSecond
+Case TimePeriodDay
+    gBarEndTime = startTime + barLength
+Case TimePeriodWeek
+    gBarEndTime = startTime + 7 * barLength
+Case TimePeriodMonth
+    gBarEndTime = DateAdd("m", barLength, startTime)
+'Case TimePeriodLunarMonth
+'
+Case TimePeriodYear
+    gBarEndTime = DateAdd("yyyy", barLength, startTime)
+End Select
+End Function
 
 Public Function gBarStartTime( _
                 ByVal timestamp As Date, _
                 ByVal barLength As Long, _
-                ByVal timeUnits As TradeBuildSP.TimePeriodUnits, _
-                Optional ByVal sessionStartTime As Date) As Date
+                ByVal timeUnits As TimePeriodUnits, _
+                ByVal sessionStartTime As Date) As Date
 ' minutes from midnight to start of sesssion
 Dim sessionOffset              As Long
 Dim theDate As Long
@@ -87,7 +119,7 @@ Dim theTime As Double
 Dim theTimeMins As Long
 Dim theTimeSecs As Long
 
-sessionOffset = Int(1440 * (sessionStartTime - Int(sessionStartTime)))
+sessionOffset = Int(1440 * (sessionStartTime + OneMicroSecond - Int(sessionStartTime)))
 
 theDate = Int(CDbl(timestamp))
 ' NB: don't use TimeValue to get the time, as VB rounds it to
@@ -95,232 +127,178 @@ theDate = Int(CDbl(timestamp))
 theTime = CDbl(timestamp + OneMicroSecond) - theDate
 
 Select Case timeUnits
-Case TimePeriodUnits.Second
+Case TimePeriodSecond
     theTimeSecs = Fix(theTime * 86400) ' seconds since midnight
     gBarStartTime = theDate + _
                 ((barLength) * Int((theTimeSecs - sessionOffset * 60) / barLength) + _
                     sessionOffset * 60) / 86400
-Case TimePeriodUnits.Minute
+Case TimePeriodMinute
     theTimeMins = Fix(theTime * 1440) ' minutes since midnight
     gBarStartTime = theDate + _
                 (barLength * Int((theTimeMins - sessionOffset) / barLength) + _
                     sessionOffset) / 1440
-Case TimePeriodUnits.Hour
+Case TimePeriodHour
     theTimeMins = Fix(theTime * 1440) ' minutes since midnight
     gBarStartTime = theDate + _
                 (60 * barLength * Int((theTimeMins - sessionOffset) / (60 * barLength)) + _
                     sessionOffset) / 1440
-Case TimePeriodUnits.Day
+Case TimePeriodDay
     If theTime >= sessionStartTime Then
         gBarStartTime = theDate
     Else
         gBarStartTime = theDate - 1
     End If
-Case TimePeriodUnits.Week
+Case TimePeriodWeek
     gBarStartTime = theDate - DatePart("w", theDate, vbSunday) + 1
-Case TimePeriodUnits.Month
+Case TimePeriodMonth
     gBarStartTime = DateSerial(Year(theDate), Month(theDate), 1)
-Case TimePeriodUnits.LunarMonth
-
-Case TimePeriodUnits.Year
+'Case TimePeriodLunarMonth
+'
+Case TimePeriodYear
     gBarStartTime = DateSerial(Year(theDate), 1, 1)
 End Select
 
 End Function
 
-Public Function gFormatTimestamp(ByVal timestamp As Date, _
-                                Optional ByVal formatOption As TimestampFormats = TimestampDateAndTime, _
-                                Optional ByVal formatString As String = "yyyymmddhhnnss") As String
-Dim timestampDays As Long
-Dim timestampSecs As Double
-Dim timestampAsDate As Date
-Dim milliseconds As Long
-
-timestampDays = Int(timestamp)
-timestampSecs = Int((timestamp - Int(timestamp)) * 86400) / 86400#
-timestampAsDate = CDate(CDbl(timestampDays) + timestampSecs)
-milliseconds = CLng((timestamp - timestampAsDate) * 86400# * 1000#)
-
-If milliseconds >= 1000& Then
-    milliseconds = milliseconds - 1000&
-    timestampSecs = timestampSecs + (1# / 86400#)
-    timestampAsDate = CDate(CDbl(timestampDays) + timestampSecs)
-End If
-
-Select Case formatOption
-Case TimestampFormats.TimestampTimeOnly
-    gFormatTimestamp = Format(timestampAsDate, "hhnnss") & "." & _
-                        Format(milliseconds, "000")
-Case TimestampFormats.TimestampDateOnly
-    gFormatTimestamp = Format(timestampAsDate, "yyyymmdd")
-Case TimestampFormats.TimestampDateAndTime
-    gFormatTimestamp = Format(timestampAsDate, "yyyymmddhhnnss") & "." & _
-                        Format(milliseconds, "000")
-Case TimestampFormats.TimestampCustom
-    gFormatTimestamp = Format(timestampAsDate, formatString) & "." & _
-                        Format(milliseconds, "000")
+Public Function gCalcBarLength( _
+                ByVal length As Long, _
+                ByVal units As TWUtilities.TimePeriodUnits) As Date
+Select Case units
+Case TimePeriodSecond
+    gCalcBarLength = length * OneSecond
+Case TimePeriodMinute
+    gCalcBarLength = length * OneMinute
+Case TimePeriodHour
+    gCalcBarLength = length * OneHour
+Case TimePeriodDay
+    gCalcBarLength = length
 End Select
 End Function
 
-Public Function gGenerateGUID() As TradeBuildSP.GUID
-Dim lReturn As Long
-Dim lGUID As GUIDStruct
+Public Sub gCalcSessionTimes( _
+                ByVal timestamp As Date, _
+                ByVal startTime As Date, _
+                ByVal endTime As Date, _
+                ByRef sessionStartTime As Date, _
+                ByRef sessionEndTime As Date)
+Dim i As Long
 
-lReturn = CoCreateGuid(lGUID)
-
-gGenerateGUID.data(0) = lGUID.data(0)
-gGenerateGUID.data(1) = lGUID.data(1)
-gGenerateGUID.data(2) = lGUID.data(2)
-gGenerateGUID.data(3) = lGUID.data(3)
-
-If (lReturn <> S_OK) Then
-    Err.Raise ErrorCodes.ErrRuntimeException, _
-                "TWUtilities.Utilities::gGenerateGUID", _
-                "Can't create GUID"
-End If
-
-End Function
-
-Public Function gGenerateGUIDString() As String
-gGenerateGUIDString = gGUIDToString(gGenerateGUID)
-End Function
-
-Public Function gGenerateID() As Long
-Randomize
-gGenerateID = Fix(Rnd() * 1999999999 + 1)
-End Function
-
-Public Function gGenerateIDString() As String
-gGenerateIDString = Hex(gGenerateID)
-End Function
-
-Public Function gGUIDToString(ByRef pGUID As TradeBuildSP.GUID) As String
-Dim lGUID As GUIDStruct
-Dim lGUIDString As GUIDString
-Dim iChars As Integer
-
-lGUID.data(0) = pGUID.data(0)
-lGUID.data(1) = pGUID.data(1)
-lGUID.data(2) = pGUID.data(2)
-lGUID.data(3) = pGUID.data(3)
-' convert binary GUID to string form
-iChars = StringFromGUID2(lGUID, lGUIDString, Len(lGUIDString))
-' convert string to ANSI
-gGUIDToString = StrConv(lGUIDString.GUIDProper, vbFromUnicode)
-End Function
-
-Public Sub gSortObjects(data() As SortEntry, _
-                            Low As Long, _
-                            Hi As Long)
-  
-  Dim lTmpLow As Long
-  Dim lTmpHi As Long
-  Dim lTmpMid As Long
-  Dim vTempVal As SortEntry
-  Dim vTmpHold As SortEntry
-  
-  lTmpLow = Low
-  lTmpHi = Hi
-  
-' ---------------------------------------------------------
-' Leave if there is nothing to sort
-' ---------------------------------------------------------
-  If Hi <= Low Then Exit Sub
-
-' ---------------------------------------------------------
-' Find the middle to start comparing values
-' ---------------------------------------------------------
-  lTmpMid = (Low + Hi) \ 2
-      
-' ---------------------------------------------------------
-' Move the item in the middle of the array to the
-' temporary holding area as a point of reference while
-' sorting.  This will change each time we make a recursive
-' call to this routine.
-' ---------------------------------------------------------
-  vTempVal = data(lTmpMid)
-      
-' ---------------------------------------------------------
-' Loop until we eventually meet in the middle
-' ---------------------------------------------------------
-  Do While (lTmpLow <= lTmpHi)
- 
-     ' Always process the low end first.  Loop as long as
-     ' the array data element is less than the data in
-     ' the temporary holding area and the temporary low
-     ' value is less than the maximum number of array
-     ' elements.
-     Do While (data(lTmpLow).Key < vTempVal.Key And lTmpLow < Hi)
-           lTmpLow = lTmpLow + 1
-     Loop
-      
-     ' Now, we will process the high end.  Loop as long as
-     ' the data in the temporary holding area is less
-     ' than the array data element and the temporary high
-     ' value is greater than the minimum number of array
-     ' elements.
-     Do While (vTempVal.Key < data(lTmpHi).Key And lTmpHi > Low)
-           lTmpHi = lTmpHi - 1
-     Loop
-            
-     ' if the temp low end is less than or equal
-     ' to the temp high end, then swap places
-     If (lTmpLow <= lTmpHi) Then
-         vTmpHold = data(lTmpLow)          ' Move the Low value to Temp Hold
-         data(lTmpLow) = data(lTmpHi)     ' Move the high value to the low
-         data(lTmpHi) = vTmpHold           ' move the Temp Hod to the High
-         lTmpLow = lTmpLow + 1              ' Increment the temp low counter
-         lTmpHi = lTmpHi - 1                ' Dcrement the temp high counter
-     End If
-     
-  Loop
-          
-' ---------------------------------------------------------
-' If the minimum number of elements in the array is
-' less than the temp high end, then make a recursive
-' call to this routine.  I always sort the low end
-' of the array first.
-' ---------------------------------------------------------
-  If (Low < lTmpHi) Then
-      gSortObjects data, Low, lTmpHi
-  End If
-          
-' ---------------------------------------------------------
-' If the temp low end is less than the maximum number
-' of elements in the array, then make a recursive call
-' to this routine.  The high end is always sorted last.
-' ---------------------------------------------------------
-  If (lTmpLow < Hi) Then
-       gSortObjects data, lTmpLow, Hi
-  End If
-  
+i = -1
+Do
+    i = i + 1
+Loop Until calcSessionTimesHelper(timestamp + i, _
+                            startTime, _
+                            endTime, _
+                            sessionStartTime, _
+                            sessionEndTime)
 End Sub
 
-Public Function gHexStringToBytes(inString As String) As Byte()
+Public Function gOffsetBarStartTime( _
+                ByVal timestamp As Date, _
+                ByVal barLength As Long, _
+                ByVal timeUnits As TimePeriodUnits, _
+                ByVal offset As Long, _
+                ByVal sessionStartTime As Date, _
+                ByVal sessionEndTime As Date) As Date
+Dim sessStart As Date
+Dim sessEnd As Date
+Dim datumBarStart As Date
+Dim proposedStart As Date
+Dim remainingOffset As Long
+Dim barsFromSessStart As Long
 Dim i As Long
-Dim outAr() As Byte
 
-ReDim outAr(Len(inString) / 2 - 1) As Byte
-For i = 0 To (Len(inString) / 2) - 1
-    outAr(i) = Val("&h" & Mid$(inString, 2 * i + 1, 2))
-Next
-gHexStringToBytes = outAr
+datumBarStart = gBarStartTime(timestamp, barLength, timeUnits, sessionStartTime)
+' !!!!!!!!!!!!!!!!!!!!!!!!!!!
+' calcSessionTimes needs to be amended
+' to take account of holidays
+gCalcSessionTimes datumBarStart, _
+                    sessionStartTime, _
+                    sessionEndTime, _
+                    sessStart, _
+                    sessEnd
+
+If datumBarStart < sessStart Then
+    ' specified timestamp was between sessions
+    datumBarStart = sessStart
+End If
+    
+remainingOffset = offset
+proposedStart = datumBarStart
+Do While remainingOffset > 0
+    barsFromSessStart = (proposedStart - sessStart) / (barLength / 1440)
+    If barsFromSessStart >= remainingOffset Then
+        proposedStart = proposedStart - (remainingOffset * barLength) / 1440
+        remainingOffset = 0
+    Else
+        remainingOffset = remainingOffset - barsFromSessStart
+        Do
+            i = i + 1
+            gCalcSessionTimes proposedStart - i, _
+                                sessionStartTime, _
+                                sessionEndTime, _
+                                sessStart, _
+                                sessEnd
+        Loop Until sessStart <= proposedStart
+        proposedStart = sessEnd
+    End If
+Loop
+gOffsetBarStartTime = proposedStart
+                
 End Function
 
-Public Function gBytesToHexString(inAr() As Byte) As String
-Dim i As Long
+'================================================================================
+' Helper Functions
+'================================================================================
 
-gBytesToHexString = String(2 * (UBound(inAr) + 1), " ")
+Private Function calcSessionTimesHelper(ByVal timestamp As Date, _
+                            ByVal startTime As Date, _
+                            ByVal endTime As Date, _
+                            ByRef sessionStartTime As Date, _
+                            ByRef sessionEndTime As Date) As Boolean
+Dim referenceDate As Date
+Dim referenceTime As Date
+Dim weekday As Long
 
-For i = 0 To UBound(inAr)
-    If inAr(i) < 16 Then
-        Mid(gBytesToHexString, 2 * i + 1, 1) = "0"
-        Mid(gBytesToHexString, 2 * i + 2, 1) = Hex$(inAr(i))
+referenceDate = DateValue(timestamp)
+referenceTime = TimeValue(timestamp)
+
+If startTime < endTime Then
+    ' session doesn't span midnight
+    If referenceTime < endTime Then
+        sessionStartTime = referenceDate + startTime
+        sessionEndTime = referenceDate + endTime
     Else
-        Mid(gBytesToHexString, 2 * i + 1, 2) = Hex$(inAr(i))
+        sessionStartTime = referenceDate + 1 + startTime
+        sessionEndTime = referenceDate + 1 + endTime
     End If
-Next
+ElseIf startTime > endTime Then
+    ' session spans midnight
+    If referenceTime >= endTime Then
+        sessionStartTime = referenceDate + startTime
+        sessionEndTime = referenceDate + 1 + endTime
+    Else
+        sessionStartTime = referenceDate - 1 + startTime
+        sessionEndTime = referenceDate + endTime
+    End If
+Else
+    ' this instrument trades 24hrs, or the contract service provider doesn't know
+    ' the session start and end times
+    sessionStartTime = referenceDate
+    sessionEndTime = referenceDate + 1
+End If
 
+weekday = DatePart("w", sessionStartTime)
+If startTime < endTime Then
+    ' session doesn't span midnight
+    If weekday <> vbSaturday And weekday <> vbSunday Then calcSessionTimesHelper = True
+ElseIf startTime > endTime Then
+    ' session DOES span midnight
+    If weekday <> vbFriday And weekday <> vbSaturday Then calcSessionTimesHelper = True
+Else
+    ' 24-hour session or no session times known
+    If weekday <> vbSaturday And weekday <> vbSunday Then calcSessionTimesHelper = True
+End If
 End Function
 
 

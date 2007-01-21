@@ -30,7 +30,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements TradeBuildSP.IStudyParameterDefinition
+'Implements StudyParameterDefinition
 
 '================================================================================
 ' Events
@@ -79,56 +79,57 @@ Private mPermittedValues() As Variant
 ' IStudyParameterDefinition Interface Members
 '================================================================================
 
-Private Property Get IStudyParameterDefinition_Description() As String
-IStudyParameterDefinition_Description = mDescription
-End Property
-
-Private Property Let IStudyParameterDefinition_Description( _
-                ByVal RHS As String)
-mDescription = RHS
-End Property
-
-'Private Property Let IStudyParameterDefinition_name( _
+'Private Property Get IStudyParameterDefinition_Description() As String
+'IStudyParameterDefinition_Description = mDescription
+'End Property
+'
+'Private Property Let IStudyParameterDefinition_Description( _
 '                ByVal RHS As String)
-'mName = RHS
+'mDescription = RHS
+'End Property
+'
+''Private Property Let IStudyParameterDefinition_name( _
+''                ByVal RHS As String)
+''mName = RHS
+''End Property
+'
+'Private Property Let IStudyParameterDefinition_maximumValue(ByVal RHS As Variant)
+'mMaximumValue = RHS
+'End Property
+'
+'Private Property Get IStudyParameterDefinition_maximumValue() As Variant
+'IStudyParameterDefinition_maximumValue = mMaximumValue
+'End Property
+'
+'Private Property Let IStudyParameterDefinition_minimumValue(ByVal RHS As Variant)
+'mMinimumValue = RHS
+'End Property
+'
+'Private Property Get IStudyParameterDefinition_minimumValue() As Variant
+'IStudyParameterDefinition_minimumValue = mMinimumValue
+'End Property
+'
+'Private Property Get IStudyParameterDefinition_name() As String
+'IStudyParameterDefinition_name = mName
+'End Property
+'
+'Private Property Let IStudyParameterDefinition_parameterType( _
+'                ByVal RHS As TradeBuildSP.StudyParameterTypes)
+'mParameterType = RHS
+'End Property
+'
+'Private Property Get IStudyParameterDefinition_parameterType() As TradeBuildSP.StudyParameterTypes
+'IStudyParameterDefinition_parameterType = mParameterType
+'End Property
+'
+'Private Property Let IStudyParameterDefinition_permittedValues(RHS() As Variant)
+'mPermittedValues = RHS
+'End Property
+'
+'Private Property Get IStudyParameterDefinition_permittedValues() As Variant()
+'IStudyParameterDefinition_permittedValues = mPermittedValues
 'End Property
 
-Private Property Let IStudyParameterDefinition_maximumValue(ByVal RHS As Variant)
-mMaximumValue = RHS
-End Property
-
-Private Property Get IStudyParameterDefinition_maximumValue() As Variant
-IStudyParameterDefinition_maximumValue = mMaximumValue
-End Property
-
-Private Property Let IStudyParameterDefinition_minimumValue(ByVal RHS As Variant)
-mMinimumValue = RHS
-End Property
-
-Private Property Get IStudyParameterDefinition_minimumValue() As Variant
-IStudyParameterDefinition_minimumValue = mMinimumValue
-End Property
-
-Private Property Get IStudyParameterDefinition_name() As String
-IStudyParameterDefinition_name = mName
-End Property
-
-Private Property Let IStudyParameterDefinition_parameterType( _
-                ByVal RHS As TradeBuildSP.StudyParameterTypes)
-mParameterType = RHS
-End Property
-
-Private Property Get IStudyParameterDefinition_parameterType() As TradeBuildSP.StudyParameterTypes
-IStudyParameterDefinition_parameterType = mParameterType
-End Property
-
-Private Property Let IStudyParameterDefinition_permittedValues(RHS() As Variant)
-mPermittedValues = RHS
-End Property
-
-Private Property Get IStudyParameterDefinition_permittedValues() As Variant()
-IStudyParameterDefinition_permittedValues = mPermittedValues
-End Property
 '================================================================================
 ' XXXX Event Handlers
 '================================================================================

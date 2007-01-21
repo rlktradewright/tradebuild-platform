@@ -43,8 +43,8 @@ Option Explicit
 ' Member variables
 '================================================================================
 
-Private mTimestamp As Date
-Private mValue As Double
+Private mX As Date
+Private mY As Double
 
 '================================================================================
 ' Class Event Handlers
@@ -62,20 +62,20 @@ Private mValue As Double
 ' Properties
 '================================================================================
 
-Friend Property Let timestamp(ByVal value As Date)
-mTimestamp = value
+Friend Property Let x(ByVal value As Date)
+mX = value
 End Property
 
-Public Property Get timestamp() As Date
-timestamp = mTimestamp
+Public Property Get x() As Date
+x = mX
 End Property
 
-Friend Property Let value(ByVal newvalue As Double)
-mValue = newvalue
+Friend Property Let y(ByVal newvalue As Double)
+mY = newvalue
 End Property
 
-Public Property Get value() As Double
-value = mValue
+Public Property Get y() As Double
+y = mY
 End Property
 
 '================================================================================

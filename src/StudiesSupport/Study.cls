@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "StudyInputDefinition"
+Attribute VB_Name = "Study"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -18,19 +18,10 @@ Option Explicit
 '================================================================================
 '
 '
-'================================================================================
-' Amendment history
-'================================================================================
-'
-'
-'
-'
 
 '================================================================================
 ' Interfaces
 '================================================================================
-
-'Implements StudyInputDefinition
 
 '================================================================================
 ' Events
@@ -44,13 +35,9 @@ Option Explicit
 ' Enums
 '================================================================================
 
-Public Enum StudyInputTypes
-    InputTypeNone = 0
-    InputTypeInteger = 1
-    InputTypeReal = 2
-    InputTypeString = 3
-    InputTypeDate = 4
-    InputTypeBoolean = 5
+Public Enum ReplayNumbers
+    ReplayAll = -1
+    ReplayAsRequired = -2
 End Enum
 
 '================================================================================
@@ -61,44 +48,13 @@ End Enum
 ' Member variables
 '================================================================================
 
-Private mName As String
-Private mDescription As String
-Private mInputType As StudyInputTypes
-
 '================================================================================
 ' Class Event Handlers
 '================================================================================
 
 '================================================================================
-' IStudyParameterDefinition Interface Members
+' XXXX Interface Members
 '================================================================================
-
-'Private Property Get IStudyInputDefinition_Description() As String
-'IStudyInputDefinition_Description = mDescription
-'End Property
-'
-'Private Property Let IStudyInputDefinition_Description( _
-'                ByVal RHS As String)
-'mDescription = RHS
-'End Property
-'
-''Private Property Let IStudyInputDefinition_name( _
-''                ByVal RHS As String)
-''mName = RHS
-''End Property
-'
-'Private Property Get IStudyInputDefinition_name() As String
-'IStudyInputDefinition_name = mName
-'End Property
-'
-'Private Property Let IStudyInputDefinition_inputType( _
-'                ByVal RHS As TradeBuildSP.StudyInputTypes)
-'mInputType = RHS
-'End Property
-'
-'Private Property Get IStudyInputDefinition_inputType() As TradeBuildSP.StudyInputTypes
-'IStudyInputDefinition_inputType = mInputType
-'End Property
 
 '================================================================================
 ' XXXX Event Handlers
@@ -108,38 +64,107 @@ Private mInputType As StudyInputTypes
 ' Properties
 '================================================================================
 
-Public Property Let description(ByVal value As String)
-mDescription = value
+Public Property Get baseStudy() As study
+
 End Property
 
-Public Property Get description() As String
-description = mDescription
+Public Property Get id() As String
+
 End Property
 
-Friend Property Let name(ByVal value As String)
-mName = value
+Public Property Get instanceName() As String
+
 End Property
 
-Public Property Get name() As String
-name = mName
+Public Property Get instancePath() As String
+
 End Property
 
-Public Property Let inputType(ByVal value As StudyInputTypes)
-mInputType = value
+Public Property Get numberOfBarsRequired() As Long
+
 End Property
 
-Public Property Get inputType() As StudyInputTypes
-inputType = mInputType
+Public Property Get parameters() As Parameters2.parameters
+
+End Property
+
+Public Property Get sessionEndTime() As Date
+
+End Property
+
+Public Property Get sessionStartTime() As Date
+
+End Property
+
+Public Property Get studyDefinition() As studyDefinition
+
 End Property
 
 '================================================================================
 ' Methods
 '================================================================================
 
+Public Function addStudy( _
+                ByVal pStudy As study, _
+                ByRef valueNames() As String, _
+                ByVal numberOfValuesToReplay As Long, _
+                Optional ByVal taskName As String, _
+                Optional ByVal taskData As Variant) As TaskCompletion
+                
+End Function
+                
+Public Function addStudyValueListener( _
+                ByVal listener As StudyValueListener, _
+                ByVal valueName As String, _
+                ByVal numberOfValuesToReplay As Long, _
+                Optional ByVal taskName As String, _
+                Optional ByVal taskData As Variant) As TaskCompletion
+                
+End Function
+
+Public Function getStudyValue( _
+                ByVal valueName As String, _
+                ByVal ref As Long) As StudyValue
+
+End Function
+
+Public Function getValueTicksize( _
+                ByVal valueName As String) As Double
+                
+End Function
+     
+Public Sub initialise( _
+                ByVal id As String, _
+                ByVal params As Parameters2.parameters, _
+                ByVal numberOfValuesToCache As Long, _
+                ByRef valueNames() As String, _
+                ByVal underlyingStudy As study)
+
+End Sub
+
+Public Sub notify( _
+                ByRef ev As StudyValueEvent)
+
+End Sub
+
+Public Function numberOfCachedValues( _
+                Optional ByVal valueName As String) As Long
+                
+End Function
+
+Public Sub removeStudyValueListener( _
+                ByVal listener As StudyValueListener)
+                
+End Sub
+
+Public Sub setInputTicksize( _
+                ByVal inputName As String, _
+                ByVal tickSize As Double)
+                
+End Sub
+     
 '================================================================================
 ' Helper Functions
 '================================================================================
-
-
 
 

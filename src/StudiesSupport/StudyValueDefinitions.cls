@@ -30,7 +30,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements TradeBuildSP.IStudyValueDefinitions
+'Implements StudyValueDefinitions
 
 '================================================================================
 ' Events
@@ -66,23 +66,23 @@ End Sub
 ' IStudyValueDefinitions Interface Members
 '================================================================================
 
-Private Function IStudyValueDefinitions_Add( _
-                ByVal valueName As String) As TradeBuildSP.IStudyValueDefinition
-Set IStudyValueDefinitions_Add = add(valueName)
-End Function
-
-Private Property Get IStudyValueDefinitions_Count() As Long
-IStudyValueDefinitions_Count = count
-End Property
-
-Private Function IStudyValueDefinitions_Item( _
-                ByVal index As Variant) As TradeBuildSP.IStudyValueDefinition
-Set IStudyValueDefinitions_Item = Item(index)
-End Function
-
-Private Function IStudyValueDefinitions_NewEnum() As Object
-Set IStudyValueDefinitions_NewEnum = NewEnum
-End Function
+'Private Function IStudyValueDefinitions_Add( _
+'                ByVal valueName As String) As StudyValueDefinition
+'Set IStudyValueDefinitions_Add = add(valueName)
+'End Function
+'
+'Private Property Get IStudyValueDefinitions_Count() As Long
+'IStudyValueDefinitions_Count = count
+'End Property
+'
+'Private Function IStudyValueDefinitions_Item( _
+'                ByVal index As Variant) As StudyValueDefinition
+'Set IStudyValueDefinitions_Item = Item(index)
+'End Function
+'
+'Private Function IStudyValueDefinitions_NewEnum() As Object
+'Set IStudyValueDefinitions_NewEnum = NewEnum
+'End Function
 
 '================================================================================
 ' XXXX Event Handlers

@@ -43,8 +43,8 @@ Option Explicit
 ' Member variables
 '================================================================================
 
-Private mPoint1 As studyPoint
-Private mPoint2 As studyPoint
+Private mPoint1 As StudyPoint
+Private mPoint2 As StudyPoint
 
 '================================================================================
 ' Class Event Handlers
@@ -62,20 +62,20 @@ Private mPoint2 As studyPoint
 ' Properties
 '================================================================================
 
-Friend Property Let point1(ByVal value As studyPoint)
-mPoint1 = value
+Friend Property Let point1(ByVal value As StudyPoint)
+Set mPoint1 = value
 End Property
 
-Public Property Get point1() As studyPoint
-point1 = mPoint1
+Public Property Get point1() As StudyPoint
+Set point1 = mPoint1
 End Property
 
-Friend Property Let point2(ByVal value As studyPoint)
-mPoint2 = value
+Friend Property Let point2(ByVal value As StudyPoint)
+Set mPoint2 = value
 End Property
 
-Public Property Get point2() As studyPoint
-point2 = mPoint2
+Public Property Get point2() As StudyPoint
+Set point2 = mPoint2
 End Property
 
 '================================================================================

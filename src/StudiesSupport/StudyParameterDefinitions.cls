@@ -30,7 +30,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements TradeBuildSP.IStudyParameterDefinitions
+'Implements StudyParameterDefinitions
 
 '================================================================================
 ' Events
@@ -66,23 +66,23 @@ End Sub
 ' IStudyParameterDefinitions Interface Members
 '================================================================================
 
-Private Function IStudyParameterDefinitions_Add( _
-                ByVal paramName As String) As TradeBuildSP.IStudyParameterDefinition
-Set IStudyParameterDefinitions_Add = add(paramName)
-End Function
-
-Private Property Get IStudyParameterDefinitions_Count() As Long
-IStudyParameterDefinitions_Count = Count
-End Property
-
-Private Function IStudyParameterDefinitions_Item( _
-                ByVal index As Variant) As TradeBuildSP.IStudyParameterDefinition
-Set IStudyParameterDefinitions_Item = Item(index)
-End Function
-
-Private Function IStudyParameterDefinitions_NewEnum() As Object
-Set IStudyParameterDefinitions_NewEnum = NewEnum
-End Function
+'Private Function IStudyParameterDefinitions_Add( _
+'                ByVal paramName As String) As StudyParameterDefinition
+'Set IStudyParameterDefinitions_Add = add(paramName)
+'End Function
+'
+'Private Property Get IStudyParameterDefinitions_Count() As Long
+'IStudyParameterDefinitions_Count = count
+'End Property
+'
+'Private Function IStudyParameterDefinitions_Item( _
+'                ByVal index As Variant) As StudyParameterDefinition
+'Set IStudyParameterDefinitions_Item = Item(index)
+'End Function
+'
+'Private Function IStudyParameterDefinitions_NewEnum() As Object
+'Set IStudyParameterDefinitions_NewEnum = NewEnum
+'End Function
 
 '================================================================================
 ' XXXX Event Handlers
@@ -92,8 +92,8 @@ End Function
 ' Properties
 '================================================================================
 
-Public Property Get Count() As Long
-Count = mStudyParameterDefinitions.Count
+Public Property Get count() As Long
+count = mStudyParameterDefinitions.count
 End Property
 
 '================================================================================

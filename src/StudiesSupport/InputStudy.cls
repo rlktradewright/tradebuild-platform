@@ -23,7 +23,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements TradeBuildSP.IStudy
+Implements study
 
 '================================================================================
 ' Events
@@ -50,8 +50,13 @@ Private mName As String
 
 Private mStudyDef As studyDefinition
 
-Private mStudies As IStudies
-Private mListeners As IStudyValueListeners
+Private mStudies As Studies
+Private mListeners As StudyValueListeners
+
+Private mTickSizes As Collection
+
+Private mSessionStartTime As Date
+Private mSessionEndTime As Date
 
 '================================================================================
 ' Class Event Handlers
@@ -65,23 +70,24 @@ Set mListeners = New StudyValueListeners
 Set mStudyDef = New studyDefinition
 mStudyDef.defaultRegion = StudyDefaultRegions.DefaultRegionNone
 
+Set mTickSizes = New Collection
 End Sub
 
 '================================================================================
-' IStudy Interface Members
+' Study Interface Members
 '================================================================================
 
-Private Function IStudy_addStudy( _
-                ByVal study As TradeBuildSP.IStudy, _
+Private Function Study_addStudy( _
+                ByVal pStudy As study, _
                 ByRef valueNames() As String, _
-                ByVal numUnderlyingValuesToUse As Long, _
+                ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As Tasks.TaskCompletion
-mStudies.add study, valueNames
+mStudies.add pStudy, valueNames
 End Function
 
-Private Function IStudy_addStudyValueListener( _
-                ByVal listener As TradeBuildSP.IStudyValueListener, _
+Private Function Study_addStudyValueListener( _
+                ByVal listener As StudyValueListener, _
                 ByVal valueName As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
@@ -89,40 +95,45 @@ Private Function IStudy_addStudyValueListener( _
 mListeners.add listener, valueName
 End Function
 
-Private Property Get IStudy_baseStudy() As TradeBuildSP.IStudy
-Set IStudy_baseStudy = Me
+Private Property Get Study_baseStudy() As study
+Set Study_baseStudy = Me
 End Property
 
-Private Function IStudy_getStudyValue( _
+Private Function Study_getStudyValue( _
                 ByVal valueName As String, _
-                ByVal ref As Long) As TradeBuildSP.StudyValue
+                ByVal ref As Long) As StudyValue
 
 End Function
 
-Private Property Get IStudy_id() As String
-IStudy_id = mIdent
+Private Function study_getValueTicksize( _
+                ByVal valueName As String) As Double
+On Error Resume Next
+study_getValueTicksize = mTickSizes(valueName)
+End Function
+
+Private Property Get Study_id() As String
+Study_id = mIdent
 End Property
 
-Private Sub IStudy_initialise( _
-                ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
+Private Sub Study_initialise( _
                 ByVal id As String, _
-                ByVal parameters As TradeBuildSP.IParameters, _
+                ByVal parameters As Parameters2.parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 valueNames() As String, _
-                ByVal underlyingStudy As TradeBuildSP.IStudy)
+                ByVal underlyingStudy As study)
 
 End Sub
 
-Private Property Get IStudy_instanceName() As String
-IStudy_instanceName = mName
+Private Property Get Study_instanceName() As String
+Study_instanceName = mName
 End Property
 
-Private Property Get IStudy_instancePath() As String
-IStudy_instancePath = mName
+Private Property Get Study_instancePath() As String
+Study_instancePath = mName
 End Property
 
-Private Sub IStudy_Notify( _
-                ByRef ev As TradeBuildSP.StudyValueEvent)
+Private Sub Study_Notify( _
+                ByRef ev As StudyValueEvent)
 Dim evOut As StudyValueEvent
 evOut = ev
 evOut.barStartTime = 0  ' a higher level study must generate this
@@ -130,27 +141,39 @@ mStudies.notify evOut
 mListeners.notify evOut
 End Sub
 
-Private Property Get IStudy_numberOfBarsRequired() As Long
+Private Property Get Study_numberOfBarsRequired() As Long
 
 End Property
 
-Private Function IStudy_numberOfCachedValues( _
-                Optional ByVal valueName As String = "") As Long
+Private Function Study_numberOfCachedValues( _
+                Optional ByVal valueName As String) As Long
 
 End Function
 
-Private Property Get IStudy_parameters() As TradeBuildSP.IParameters
+Private Property Get Study_parameters() As parameters
 
 End Property
 
-Private Sub IStudy_removeStudyValueListener( _
-                ByVal listener As TradeBuildSP.IStudyValueListener)
+Private Sub Study_removeStudyValueListener( _
+                ByVal listener As StudyValueListener)
 mListeners.remove listener
 End Sub
 
-Private Property Get IStudy_studyDefinition() As TradeBuildSP.IStudyDefinition
+Private Property Get study_sessionEndTime() As Date
+study_sessionEndTime = mSessionEndTime
+End Property
 
-Set IStudy_studyDefinition = mStudyDef.clone
+Private Property Get study_sessionStartTime() As Date
+study_sessionStartTime = mSessionStartTime
+End Property
+
+Private Sub study_setInputTicksize(ByVal inputName As String, ByVal tickSize As Double)
+
+End Sub
+
+Private Property Get Study_studyDefinition() As studyDefinition
+
+Set Study_studyDefinition = mStudyDef.clone
 
 End Property
 
@@ -162,6 +185,14 @@ End Property
 ' Properties
 '================================================================================
 
+Public Property Let name(ByVal value As String)
+mName = value
+End Property
+
+Public Property Get name() As String
+name = mName
+End Property
+
 '================================================================================
 ' Methods
 '================================================================================
@@ -170,7 +201,8 @@ Friend Sub addInput( _
                 ByVal name As String, _
                 ByVal description As String, _
                 ByVal valueType As StudiesSupp.StudyInputTypes, _
-                ByVal isDefault As Boolean)
+                ByVal isDefault As Boolean, _
+                ByVal tickSize As Double)
 Dim valueDef As StudyValueDefinition
 
     
@@ -193,14 +225,27 @@ Case InputTypeBoolean
     valueDef.valueType = ValueTypeBoolean
 End Select
     
+mTickSizes.add tickSize, UCase$(name)
 End Sub
 
 Friend Sub initialise( _
-                ByVal name As String)
+                ByVal name As String, _
+                ByVal sessionStartTime As Date, _
+                ByVal sessionEndTime As Date)
 mName = name
 mIdent = name
 mStudyDef.name = mName
+mSessionStartTime = sessionStartTime
+mSessionEndTime = sessionEndTime
 End Sub
+
+Friend Sub setSessionTimes( _
+                ByVal sessionStartTime As Date, _
+                ByVal sessionEndTime As Date)
+mSessionStartTime = sessionStartTime
+mSessionEndTime = sessionEndTime
+End Sub
+
 '================================================================================
 ' Helper Functions
 '================================================================================

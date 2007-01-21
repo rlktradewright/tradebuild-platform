@@ -30,7 +30,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements TradeBuildSP.IStudyValueDefinition
+'Implements StudyValueDefinition
 
 '================================================================================
 ' Events
@@ -94,69 +94,69 @@ Private mMaximumValue As Variant
 ' IStudyValueDefinition Interface Members
 '================================================================================
 
-Private Property Let IStudyValueDefinition_defaultRegion( _
-                ByVal RHS As TradeBuildSP.StudyDefaultRegions)
-mDefaultRegion = RHS
-End Property
-
-Private Property Get IStudyValueDefinition_defaultRegion() As TradeBuildSP.StudyDefaultRegions
-IStudyValueDefinition_defaultRegion = mDefaultRegion
-End Property
-
-Private Property Get IStudyValueDefinition_Description() As String
-IStudyValueDefinition_Description = mDescription
-End Property
-
-Private Property Let IStudyValueDefinition_Description( _
-                ByVal RHS As String)
-mDescription = RHS
-End Property
-
-Private Property Let IStudyValueDefinition_isDefault( _
-                ByVal RHS As Boolean)
-mIsDefault = RHS
-End Property
-
-Private Property Get IStudyValueDefinition_isDefault() As Boolean
-IStudyValueDefinition_isDefault = mIsDefault
-End Property
-
-Friend Property Let IStudyValueDefinition_maximumValue(ByVal value As Variant)
-mMaximumValue = value
-End Property
-
-Public Property Get IStudyValueDefinition_maximumValue() As Variant
-IStudyValueDefinition_maximumValue = mMaximumValue
-End Property
-
-Friend Property Let IStudyValueDefinition_minimumValue(ByVal value As Variant)
-mMinimumValue = value
-End Property
-
-Public Property Get IStudyValueDefinition_minimumValue() As Variant
-IStudyValueDefinition_minimumValue = mMinimumValue
-End Property
-
-Private Property Get IStudyValueDefinition_name() As String
-IStudyValueDefinition_name = mName
-End Property
-
-Private Property Let IStudyValueDefinition_valueMode(ByVal RHS As TradeBuildSP.StudyValueModes)
-mValueMode = RHS
-End Property
-
-Private Property Get IStudyValueDefinition_valueMode() As TradeBuildSP.StudyValueModes
-IStudyValueDefinition_valueMode = mValueMode
-End Property
-
-Private Property Let IStudyValueDefinition_valuetype( _
-                ByVal RHS As TradeBuildSP.StudyValueTypes)
-mValueType = RHS
-End Property
-
-Private Property Get IStudyValueDefinition_valuetype() As TradeBuildSP.StudyValueTypes
-IStudyValueDefinition_valuetype = mValueType
-End Property
+'Private Property Let IStudyValueDefinition_defaultRegion( _
+'                ByVal RHS As TradeBuildSP.StudyDefaultRegions)
+'mDefaultRegion = RHS
+'End Property
+'
+'Private Property Get IStudyValueDefinition_defaultRegion() As TradeBuildSP.StudyDefaultRegions
+'IStudyValueDefinition_defaultRegion = mDefaultRegion
+'End Property
+'
+'Private Property Get IStudyValueDefinition_Description() As String
+'IStudyValueDefinition_Description = mDescription
+'End Property
+'
+'Private Property Let IStudyValueDefinition_Description( _
+'                ByVal RHS As String)
+'mDescription = RHS
+'End Property
+'
+'Private Property Let IStudyValueDefinition_isDefault( _
+'                ByVal RHS As Boolean)
+'mIsDefault = RHS
+'End Property
+'
+'Private Property Get IStudyValueDefinition_isDefault() As Boolean
+'IStudyValueDefinition_isDefault = mIsDefault
+'End Property
+'
+'Friend Property Let IStudyValueDefinition_maximumValue(ByVal value As Variant)
+'mMaximumValue = value
+'End Property
+'
+'Public Property Get IStudyValueDefinition_maximumValue() As Variant
+'IStudyValueDefinition_maximumValue = mMaximumValue
+'End Property
+'
+'Friend Property Let IStudyValueDefinition_minimumValue(ByVal value As Variant)
+'mMinimumValue = value
+'End Property
+'
+'Public Property Get IStudyValueDefinition_minimumValue() As Variant
+'IStudyValueDefinition_minimumValue = mMinimumValue
+'End Property
+'
+'Private Property Get IStudyValueDefinition_name() As String
+'IStudyValueDefinition_name = mName
+'End Property
+'
+'Private Property Let IStudyValueDefinition_valueMode(ByVal RHS As TradeBuildSP.StudyValueModes)
+'mValueMode = RHS
+'End Property
+'
+'Private Property Get IStudyValueDefinition_valueMode() As TradeBuildSP.StudyValueModes
+'IStudyValueDefinition_valueMode = mValueMode
+'End Property
+'
+'Private Property Let IStudyValueDefinition_valuetype( _
+'                ByVal RHS As TradeBuildSP.StudyValueTypes)
+'mValueType = RHS
+'End Property
+'
+'Private Property Get IStudyValueDefinition_valuetype() As TradeBuildSP.StudyValueTypes
+'IStudyValueDefinition_valuetype = mValueType
+'End Property
 
 '================================================================================
 ' XXXX Event Handlers
