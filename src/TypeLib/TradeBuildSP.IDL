@@ -10,11 +10,20 @@ library TradeBuildSP
     // TLib : OLE Automation : {00020430-0000-0000-C000-000000000046}
     importlib("stdole2.tlb");
 
-    // TradeWright Interval Timer Utilities
+	// TradeWright Common Types
+	importlib("C:\Projects\TradeWright Common\TypeLib\TWCommonTypes.tlb");
+	
+	// TradeWright Utilities
+	importlib("C:\Projects\TradeWright Common\TWUtilities\TWUtilities.dll");
+	
+//	// TradeWright Bars Support
+//	importlib("C:\Projects\TradeBuild Platform\BarsSupport\BarsSupport.dll");
+	
+	// TradeWright Interval Timer Utilities
     importlib("C:\Projects\TradeWright Common\TimerUtils\timerutils.dll");
 
 	// TradeWright Tasks
-    importlib("C:\Projects\TradeWright Common\Tasks\Tasks.dll");
+//    importlib("C:\Projects\TradeWright Common\Tasks\Tasks.dll");
 
     // Forward declare all types defined in this typelib
     interface IBarDataConsumer;
@@ -23,7 +32,7 @@ library TradeBuildSP
     interface IBarDataReader;
     interface IBarDataServiceProvider;
     interface IBarDataWriter;
-    interface IBars;
+//    interface IBars;
     interface ICommonServiceConsumer;
     interface ICommonServiceProvider;
     interface IContract;
@@ -34,7 +43,7 @@ library TradeBuildSP
     interface IContractInfoServiceProvider;
     interface IContractInfoServiceConsumer;
     interface IExecution;
-	interface IMovingAverageStudy;
+//	interface IMovingAverageStudy;
     interface IOrder;
     interface IOrderPlex;
     interface IOrderSubmissionSrvcConsumer;
@@ -45,30 +54,30 @@ library TradeBuildSP
     interface IRealtimeDataInputServiceConsumer;
     interface IRealtimeDataReader;
     interface IRealtimeDataServiceProvider;
-    interface ISimpleTicker;
-    interface ISimpleStrategy;
-    interface IStrategyServiceProvider;
+//    interface ISimpleTicker;
+//    interface ISimpleStrategy;
+//    interface IStrategyServiceProvider;
     interface IStreamingDataConsumer;
-    interface IStudies;
-    interface IStudy;
-    interface IStudyDefinition;
-    interface IStudyInputDefinition;
-    interface IStudyInputDefinitions;
-    interface IStudyParameterDefinition;
-    interface IStudyParameterDefinitions;
+    //interface IStudies;
+    //interface IStudy;
+    //interface IStudyDefinition;
+    //interface IStudyInputDefinition;
+    //interface IStudyInputDefinitions;
+    //interface IStudyParameterDefinition;
+    //interface IStudyParameterDefinitions;
     //interface IStudyServiceConsumer;
-    interface IStudyServiceProvider;
-    interface IStudyValueCache;
-    interface IStudyValueDefinition;
-    interface IStudyValueDefinitions;
-    interface IStudyValueListener;
-    interface IStudyValueListeners;
+    //interface IStudyServiceProvider;
+    //interface IStudyValueCache;
+    //interface IStudyValueDefinition;
+    //interface IStudyValueDefinitions;
+    //interface IStudyValueListener;
+    //interface IStudyValueListeners;
     interface ITickfileInputServiceConsumer;
     interface ITickfileOutputServiceConsumer;
     interface ITickfileReader;
     interface ITickfileServiceProvider;
     interface ITickfileWriter;
-	interface IValueReplayTask;
+//	interface IValueReplayTask;
 //	interface IWeakCollection;
 //	interface IWeakReference;
 
@@ -76,9 +85,9 @@ library TradeBuildSP
 
     typedef [uuid(870e315f-032f-44ca-8b73-f754e09c4ba2), version(1.0)]
     enum {
-        Trade = 0,
-        Bid = 1,
-        Ask = 2
+        BarTypeTrade = 0,
+        BarTypeBid = 1,
+        BarTypeAsk = 2
     } BarTypes;
 
     typedef [uuid(85d2b0ef-7649-40bb-abb6-a0813d43597f), version(1.0)]
@@ -308,12 +317,10 @@ library TradeBuildSP
 		HistoricalData = 0x10,
 		OrderPersistence = 0x20,
 		ContractInfo = 0x40,
-		Indicators = 0x80,
-		Strategies = 0x100,
-		MarketScanner = 0x200,
-		News = 0x400,
-		Account = 0x800,
-		Studies = 0x1000
+		Strategies = 0x80,
+		MarketScanner = 0x100,
+		News = 0x200,
+		Account = 0x400
     } ServiceProviderTypes;
 
 	typedef [uuid(02e561db-66bd-4696-90a9-e2a04568cff8), version(1.0)]
@@ -369,8 +376,11 @@ library TradeBuildSP
 		[helpstring("Trying to reconnect to the tickfile's data source")]
     	TFReConnectingDataSource = 2010,
 
-		[helpstring("Lost connection to the realtime data source")]
+		[helpstring("Lost connection to the tickfile's data source")]
     	TFLostConnectionToDataSource = 2011,
+
+		[helpstring("Connected to the tickfile's data source")]
+    	TFConnectedToDataSource = 2012,
 
 		[helpstring("Unable to connect to the contract data source")]
     	CICantConnectDataSource = 2100,
@@ -389,6 +399,9 @@ library TradeBuildSP
 
 		[helpstring("Disconnected from the contract data source")]
     	CIDisconnectedFromDataSource = 2105,
+
+		[helpstring("Connected to the contract data source")]
+    	CIConnectedToDataSource = 2106,
 
 		[helpstring("Unable to connect to the historical data source")]
     	HDCantConnectDataSource = 2200,
@@ -410,6 +423,9 @@ library TradeBuildSP
 
 		[helpstring("Historical data request was not successful")]
     	HDRequestFailed = 2205,
+
+		[helpstring("Connected to the historical data source")]
+    	HDConnectedToDataSource = 2206,
 
 		[helpstring("Unable to connect to the realtime data source")]
     	RTCantConnectDataSource = 2300,
@@ -438,6 +454,9 @@ library TradeBuildSP
 		[helpstring("The realtime data source is no longer responding or sending data")]
     	RTDataSourceNotResponding = 2308,
 
+		[helpstring("Connected to the realtime data source")]
+    	RTConnectedToDataSource = 2309,
+
 		[helpstring("Unable to connect to the broker")]
     	LOCantConnectToBroker = 2400,
 
@@ -463,9 +482,12 @@ library TradeBuildSP
     	LOInsufficientFunds = 2407,
 
 		[helpstring("Disconnected from the broker")]
-    	LODisconnectedFromBroker = 2408
+    	LODisconnectedFromBroker = 2408,
 
-   } StandardSPErrorCodes;
+		[helpstring("Connected to the broker")]
+    	LOConnectedToBroker = 2409
+
+   } StandardSPEventCodes;
 
     typedef [uuid(777ae18f-8de7-40fd-95d4-003f88c7f381), 
 	version(1.0)]
@@ -489,60 +511,60 @@ library TradeBuildSP
 		ReasonSessionEnd = 11
     } StrategyInvokeReasons;
 
-    typedef [uuid(6cb98e4f-f948-4cc7-81e0-74b6c57fb812), 
-	version(1.0)]
-    enum {
-		DefaultRegionNone = 0,
-		DefaultRegionCustom = 1
-    } StudyDefaultRegions;
+ //   typedef [uuid(6cb98e4f-f948-4cc7-81e0-74b6c57fb812), 
+	//version(1.0)]
+ //   enum {
+	//	DefaultRegionNone = 0,
+	//	DefaultRegionCustom = 1
+ //   } StudyDefaultRegions;
 
-    typedef [uuid(03aec9bd-609d-4598-a62f-8b7deafe4f63), 
-	version(1.0)]
-    enum {
-		InputTypeNone = 0,
-		InputTypeInteger = 1,
-		InputTypeReal = 2,
-		InputTypeString = 3,
-		InputTypeDate = 4,
-		InputTypeBoolean = 5
-    }StudyInputTypes;
+ //   typedef [uuid(03aec9bd-609d-4598-a62f-8b7deafe4f63), 
+	//version(1.0)]
+ //   enum {
+	//	InputTypeNone = 0,
+	//	InputTypeInteger = 1,
+	//	InputTypeReal = 2,
+	//	InputTypeString = 3,
+	//	InputTypeDate = 4,
+	//	InputTypeBoolean = 5
+ //   }StudyInputTypes;
 
-    typedef [uuid(705bb586-e895-4bad-91d9-f6bae65c1ad1), 
-	version(1.0)]
-    enum {
-		ParameterTypeNone = 0,
-		ParameterTypeInteger = 1,
-		ParameterTypeReal = 2,
-		ParameterTypeString = 3,
-		ParameterTypeDate = 4,
-		ParameterTypeBoolean = 5
-    }StudyParameterTypes;
+ //   typedef [uuid(705bb586-e895-4bad-91d9-f6bae65c1ad1), 
+	//version(1.0)]
+ //   enum {
+	//	ParameterTypeNone = 0,
+	//	ParameterTypeInteger = 1,
+	//	ParameterTypeReal = 2,
+	//	ParameterTypeString = 3,
+	//	ParameterTypeDate = 4,
+	//	ParameterTypeBoolean = 5
+ //   }StudyParameterTypes;
 
-	typedef [uuid(b7b711a0-6d0d-4eaf-a493-8317f2613e4e), version(1.0)]
-	enum {
-		SRActSetPeriodBackgroundColor = 0,
-		SRActSetValueColour = 1
-	} StudyRenderingActions;
+	//typedef [uuid(b7b711a0-6d0d-4eaf-a493-8317f2613e4e), version(1.0)]
+	//enum {
+	//	SRActSetPeriodBackgroundColor = 0,
+	//	SRActSetValueColour = 1
+	//} StudyRenderingActions;
 
-    typedef [uuid(a13f777d-26a8-4120-bdc7-b61a543562f0), 
-	version(1.0)]
-    enum {
-		ValueModeNone = 0,
-		ValueModeLine = 1,
-		ValueModeBar = 2,
-		ValueModeText = 3
-    }StudyValueModes;
+ //   typedef [uuid(a13f777d-26a8-4120-bdc7-b61a543562f0), 
+	//version(1.0)]
+ //   enum {
+	//	ValueModeNone = 0,
+	//	ValueModeLine = 1,
+	//	ValueModeBar = 2,
+	//	ValueModeText = 3
+ //   }StudyValueModes;
 
-    typedef [uuid(76e54b53-1833-44b3-b746-4bfb2edf18ef), 
-	version(1.0)]
-    enum {
-		ValueTypeNone = 0,
-		ValueTypeInteger = 1,
-		ValueTypeReal = 2,
-		ValueTypeString = 3,
-		ValueTypeDate = 6,
-		ValueTypeBoolean = 5
-    }StudyValueTypes;
+ //   typedef [uuid(76e54b53-1833-44b3-b746-4bfb2edf18ef), 
+	//version(1.0)]
+ //   enum {
+	//	ValueTypeNone = 0,
+	//	ValueTypeInteger = 1,
+	//	ValueTypeReal = 2,
+	//	ValueTypeString = 3,
+	//	ValueTypeDate = 6,
+	//	ValueTypeBoolean = 5
+ //   }StudyValueTypes;
 
     typedef [uuid(8139f349-68b8-4e48-bf72-2dc4cdaeb8a8), 
 	version(1.0)]
@@ -562,19 +584,19 @@ library TradeBuildSP
 	SaveContractInformation = 64
     } TickfileServiceProviderCapabilities;
 
-    typedef [uuid(92043786-f314-4efc-8740-c31e0bf57dd8), 
-	version(1.0)]
-    enum {
-		None = 0,
-		Second = 1,
-		Minute = 2,
-		Hour = 3,
-		Day = 4,
-		Week = 5,
-		Month = 6,
-		LunarMonth = 7,
-		Year = 8
-    } TimePeriodUnits;
+ //   typedef [uuid(92043786-f314-4efc-8740-c31e0bf57dd8), 
+	//version(1.0)]
+ //   enum {
+	//	None = 0,
+	//	Second = 1,
+	//	Minute = 2,
+	//	Hour = 3,
+	//	Day = 4,
+	//	Week = 5,
+	//	Month = 6,
+	//	LunarMonth = 7,
+	//	Year = 8
+ //   } TimePeriodUnits;
 
     typedef [uuid(0EB43BAD-8A73-4B1E-B9A3-B87E89583CC9), 
 	version(1.0)]
@@ -584,21 +606,21 @@ library TradeBuildSP
         TickfilePaused = 2
     } TickfileStateCodes;
 
-    typedef [uuid(27E6B0E1-E7BE-4CD9-82C0-27A6BD7BA272), version(1.0)]
-    enum {
-        TimestampTimeOnly = 0,
-        TimestampDateOnly = 1,
-        TimestampDateAndTime = 2,
-        TimestampCustom = 3
-    } TimestampFormats;
+    //typedef [uuid(27E6B0E1-E7BE-4CD9-82C0-27A6BD7BA272), version(1.0)]
+    //enum {
+    //    TimestampTimeOnly = 0,
+    //    TimestampDateOnly = 1,
+    //    TimestampDateAndTime = 2,
+    //    TimestampCustom = 3
+    //} TimestampFormats;
 
 // Types*************************************************************   
 
     typedef [uuid(ea114a07-dc5f-481b-8e39-770bab48a507), version(1.0)]
     struct tagBar {
 		DATE Timestamp;
-		BarTypes BarType;
-		long PeriodMinutes;
+		//BarTypes BarType;
+		//long PeriodMinutes;
 		double OpenPrice;
 		double HighPrice;
 		double LowPrice;
@@ -608,18 +630,18 @@ library TradeBuildSP
 		long OpenInterest;
     } Bar;
 
-	typedef [uuid(6fc56493-4e91-4c8a-a4ae-5e9b84fd255f), version(1.0)]
-	struct tagConditionalAction {
-		Operators operator;
-		VARIANT_BOOL not;
-		VARIANT value1;
-		VARIANT_BOOL isSpecial1;
-		VARIANT_BOOL isSpecial2;
-		VARIANT value2;
-		StudyRenderingActions action;
-		VARIANT actionValue;
-		VARIANT_BOOL stopIfTrue;
-	} ConditionalAction;
+	//typedef [uuid(6fc56493-4e91-4c8a-a4ae-5e9b84fd255f), version(1.0)]
+	//struct tagConditionalAction {
+	//	Operators operator;
+	//	VARIANT_BOOL not;
+	//	VARIANT value1;
+	//	VARIANT_BOOL isSpecial1;
+	//	VARIANT_BOOL isSpecial2;
+	//	VARIANT value2;
+	//	StudyRenderingActions action;
+	//	VARIANT actionValue;
+	//	VARIANT_BOOL stopIfTrue;
+	//} ConditionalAction;
 
     typedef [uuid(8fe22277-b7a6-4cb7-acdc-cb0dcefe76ff), version(1.0)]
     struct tagBarDataSpecifier {
@@ -627,8 +649,11 @@ library TradeBuildSP
         [helpstring("Contains the contract for the required data")]
         IContract Contract;
 
-        [helpstring("Contains the period length in minutes for the required data")]
-		long BarLengthMinutes;
+        [helpstring("Contains the bar length for the required data")]
+		long BarLength;
+
+        [helpstring("Contains the time units for the bar length")]
+		TimePeriodUnits BarLengthUnits;
 
 		[helpstring("Specifies the type of bar data required")]
 		BarTypes Bartype;
@@ -642,6 +667,9 @@ library TradeBuildSP
 		[helpstring("Specifies the maximum number of bars to be returned")]
 		long NumberOfBars;
 
+		[helpstring("Indicates that bars starting outside the session times declared in the relevant contract object are to be included")]
+		VARIANT_BOOL includeBarsOutsideSession;
+
     } BarDataSpecifier;
 
     typedef [uuid(eb2da908-cd7f-43a5-aa44-9e22e131ae9a), version(1.0)]
@@ -650,11 +678,11 @@ library TradeBuildSP
 		BSTR Value;
     } DictionaryEntry;
 
-    typedef [uuid(31907931-F3EF-4650-901D-65A71AB098BC), version(1.0)]
-    struct tagGUID {
-        [helpstring("data")]
-        long Data[4];
-    } GUID;
+    //typedef [uuid(31907931-F3EF-4650-901D-65A71AB098BC), version(1.0)]
+    //struct tagGUID {
+    //    [helpstring("data")]
+    //    long Data[4];
+    //} GUID;
 
     typedef [uuid(c7fb9add-a3d6-48e4-b4e4-b5bf2b2168b2), version(1.0)]
     struct tagServiceProviderDetails {
@@ -671,31 +699,31 @@ library TradeBuildSP
 		long ProductName;
     } ServiceProviderDetails;
 
-    typedef [uuid(1B7D8EE5-88B5-40B3-AD3C-5DF2B1B644F8), version(1.0)]
-    struct tagSortEntry {
-        [helpstring("Key")]
-        BSTR Key;
-        [helpstring("ObjectRef")]
-        IDispatch* ObjectRef;
-    } SortEntry;
+    //typedef [uuid(1B7D8EE5-88B5-40B3-AD3C-5DF2B1B644F8), version(1.0)]
+    //struct tagSortEntry {
+    //    [helpstring("Key")]
+    //    BSTR Key;
+    //    [helpstring("ObjectRef")]
+    //    IDispatch* ObjectRef;
+    //} SortEntry;
 
-	typedef [uuid(02fc5783-accc-4a37-803d-a08a937b943e), version(1.0)]
-	struct tagStudyValue {
-		VARIANT value;
-		long barNumber;
-		DATE Timestamp;
-		DATE barStartTime;
-	} StudyValue;
+	//typedef [uuid(02fc5783-accc-4a37-803d-a08a937b943e), version(1.0)]
+	//struct tagStudyValue {
+	//	VARIANT value;
+	//	long barNumber;
+	//	DATE Timestamp;
+	//	DATE barStartTime;
+	//} StudyValue;
 
-    typedef [uuid(b9f9bfb7-75a7-40f9-b2de-b312e3a5b66d), version(1.0)]
-    struct tagStudyValueEvent {
-		IDispatch* Source;
-		Variant Value;
-		BSTR ValueName;
-		DATE timestamp;
-		long barNumber;
-		DATE barStartTime;
-    } StudyValueEvent;
+  //  typedef [uuid(b9f9bfb7-75a7-40f9-b2de-b312e3a5b66d), version(1.0)]
+  //  struct tagStudyValueEvent {
+		//IDispatch* Source;
+		//Variant Value;
+		//BSTR ValueName;
+		//DATE timestamp;
+		//long barNumber;
+		//DATE barStartTime;
+  //  } StudyValueEvent;
 
     typedef [uuid(50e309ce-2461-45bd-b9be-8ae0312905b9), version(1.0)]
     struct tagTickfileFormatSpecifier {
@@ -752,7 +780,9 @@ library TradeBuildSP
 		// Methods =====================================================
 
         HRESULT Bar(
-                        [in] Bar* data);
+            [in] Bar* data,
+			[in] long barLength,
+			[in] TimePeriodUnits barUnit);
 
     };
 
@@ -766,9 +796,9 @@ library TradeBuildSP
 
 		// Methods =====================================================
 
-		HRESULT Error(
-			[in] StandardSPErrorCodes errorCode,
-			[in] BSTR errorMessage,
+		HResult NotifyEvent(
+			[in] StandardSPEventCodes eventCode,
+			[in] BSTR eventMessage,
 			[in] long serviceProviderHandle);
 
 		HRESULT Ready();
@@ -776,8 +806,7 @@ library TradeBuildSP
         HRESULT BarDataComplete();
 
         HRESULT Progress(
-			[in] DATE timestamp,
-			[in] long eventsPlayed,
+			[in] long barsRetrieved,
 			[in] float percentComplete);
 
     };
@@ -798,9 +827,9 @@ library TradeBuildSP
 
 		// Methods =====================================================
 
-		HRESULT Error(
-			[in] StandardSPErrorCodes errorCode,
-			[in] BSTR errorMessage,
+		HResult NotifyEvent(
+			[in] StandardSPEventCodes eventCode,
+			[in] BSTR eventMessage,
 			[in] long serviceProviderHandle);
 
         HRESULT OutputBarfileCreated(
@@ -852,8 +881,11 @@ library TradeBuildSP
 
 		// Properties ==================================================
 
-		// Methods =====================================================
+        [propget]
+		HRESULT SupportedTimePeriods(
+            [out, retval] SAFEARRAY(TimePeriod)* );
 
+		// Methods =====================================================
 
         HRESULT CreateBarDataReader(
 			[in] IBarDataConsumer* dataConsumer,
@@ -863,12 +895,16 @@ library TradeBuildSP
         HRESULT CreateBarDataWriter(
 			[in] IBarDataOutputServiceConsumer* serviceConsumer,
 			[in] IContractSpecifier* contractSpec,
-                        [in, optional, defaultvalue("")] BSTR location, 
-                        [out, retval] IBarDataWriter** );
+            [in, optional, defaultvalue("")] BSTR location, 
+            [out, retval] IBarDataWriter** );
+
+		HRESULT IsSupportedTimePeriod(
+            [in] TimePeriod* period, 
+            [out, retval] VARIANT_BOOL* );
 
         HRESULT Supports(
-                        [in] long capabilities, 
-                        [out, retval] VARIANT_BOOL* );
+            [in] long capabilities, 
+            [out, retval] VARIANT_BOOL* );
 
     };
 
@@ -890,185 +926,189 @@ library TradeBuildSP
 		HRESULT ReleaseDataStore();
 
 
-        HRESULT WriteBar([in] Bar* data);
+        HRESULT WriteBar(
+			[in] Bar* data,
+			[in] BarTypes barType,
+			[in] long barLength,
+			[in] TimePeriodUnits barUnit);
 
     };
 
-	[
-	  uuid(f74eaed6-5c5f-4a4f-b9ea-2ae63c5fbe3f),
-	  version(1.0),
-	  nonextensible,
-	  helpstring("Provides access to information about the bars in the current timeframe")
-	]
-	interface IBars : IUnknown {
+	//[
+	//  uuid(f74eaed6-5c5f-4a4f-b9ea-2ae63c5fbe3f),
+	//  version(1.0),
+	//  nonextensible,
+	//  helpstring("Provides access to information about the bars in the current timeframe")
+	//]
+	//interface IBars : IUnknown {
 
-		// Properties ==================================================
+	//	// Properties ==================================================
 
-		[propget]
-		HRESULT barLength([out, retval] long* );
+	//	[propget]
+	//	HRESULT barLength([out, retval] long* );
 
-		[propget]
-		HRESULT barTime(
-						[in, optional] long ref, 
-						[out, retval] VARIANT* );
+	//	[propget]
+	//	HRESULT barTime(
+	//					[in, optional] long ref, 
+	//					[out, retval] VARIANT* );
 
-		[propget]
-		HRESULT closeValue(
-						[in, optional] long ref, 
-						[out, retval] VARIANT* );
+	//	[propget]
+	//	HRESULT closeValue(
+	//					[in, optional] long ref, 
+	//					[out, retval] VARIANT* );
 
-		[propget]
-		HRESULT Count([out, retval] long* );
+	//	[propget]
+	//	HRESULT Count([out, retval] long* );
 
-		[propget]
-		HRESULT currentBarNumber([out, retval] long* );
+	//	[propget]
+	//	HRESULT currentBarNumber([out, retval] long* );
 
-		[propget]
-		HRESULT down(
-						[in, optional] long ref, 
-						[out, retval] VARIANT_BOOL* );
+	//	[propget]
+	//	HRESULT down(
+	//					[in, optional] long ref, 
+	//					[out, retval] VARIANT_BOOL* );
 
-		[propget]
-		HRESULT higherHighValue(
-						[in] long rank, 
-						[in, optional] long ref, 
-						[out, retval] double* );
+	//	[propget]
+	//	HRESULT higherHighValue(
+	//					[in] long rank, 
+	//					[in, optional] long ref, 
+	//					[out, retval] double* );
 
-		[propget]
-		HRESULT highestCloseValue(
-						[in] long periods, 
-						[in, optional] long ref, 
-						[out, retval] double* );
+	//	[propget]
+	//	HRESULT highestCloseValue(
+	//					[in] long periods, 
+	//					[in, optional] long ref, 
+	//					[out, retval] double* );
 
-		[propget]
-		HRESULT highestHighValue(
-						[in] long periods, 
-						[in, optional] long ref, 
-						[out, retval] VARIANT* );
+	//	[propget]
+	//	HRESULT highestHighValue(
+	//					[in] long periods, 
+	//					[in, optional] long ref, 
+	//					[out, retval] VARIANT* );
 
-		[propget]
-		HRESULT highValue(
-						[in, optional] long ref, 
-						[out, retval] double* );
+	//	[propget]
+	//	HRESULT highValue(
+	//					[in, optional] long ref, 
+	//					[out, retval] double* );
 
-		[propget]
-		HRESULT inside(
-						[in, optional] long ref, 
-						[out, retval] VARIANT* );
+	//	[propget]
+	//	HRESULT inside(
+	//					[in, optional] long ref, 
+	//					[out, retval] VARIANT* );
 
-		[propget]
-		HRESULT lowerLowValue(
-						[in] long rank, 
-						[in, optional] long ref, 
-						[out, retval] double* );
+	//	[propget]
+	//	HRESULT lowerLowValue(
+	//					[in] long rank, 
+	//					[in, optional] long ref, 
+	//					[out, retval] double* );
 
-		[propget]
-		HRESULT lowestCloseValue(
-						[in] long periods, 
-						[in, optional] long ref, 
-						[out, retval] double* );
+	//	[propget]
+	//	HRESULT lowestCloseValue(
+	//					[in] long periods, 
+	//					[in, optional] long ref, 
+	//					[out, retval] double* );
 
-		[propget]
-		HRESULT lowestLowValue(
-						[in] long periods, 
-						[in, optional] long ref, 
-						[out, retval] VARIANT* );
+	//	[propget]
+	//	HRESULT lowestLowValue(
+	//					[in] long periods, 
+	//					[in, optional] long ref, 
+	//					[out, retval] VARIANT* );
 
-		[propget]
-		HRESULT lowValue(
-						[in, optional] long ref, 
-						[out, retval] double* );
+	//	[propget]
+	//	HRESULT lowValue(
+	//					[in, optional] long ref, 
+	//					[out, retval] double* );
 
-		[propget]
-		HRESULT openValue(
-						[in, optional] long ref, 
-						[out, retval] VARIANT* );
+	//	[propget]
+	//	HRESULT openValue(
+	//					[in, optional] long ref, 
+	//					[out, retval] VARIANT* );
 
-		[propget]
-		HRESULT outside(
-						[in, optional] long ref, 
-						[out, retval] VARIANT_BOOL* );
+	//	[propget]
+	//	HRESULT outside(
+	//					[in, optional] long ref, 
+	//					[out, retval] VARIANT_BOOL* );
 
-		[propget]
-		HRESULT tickVolume(
-						[in, optional] long ref, 
-						[out, retval] long* );
+	//	[propget]
+	//	HRESULT tickVolume(
+	//					[in, optional] long ref, 
+	//					[out, retval] long* );
 
-		[propget]
-		HRESULT up(
-						[in, optional] long ref, 
-						[out, retval] VARIANT_BOOL* );
+	//	[propget]
+	//	HRESULT up(
+	//					[in, optional] long ref, 
+	//					[out, retval] VARIANT_BOOL* );
 
-		[propget]
-		HRESULT volume(
-						[in, optional] long ref, 
-						[out, retval] long* );
+	//	[propget]
+	//	HRESULT volume(
+	//					[in, optional] long ref, 
+	//					[out, retval] long* );
 
-	};
+	//};
 
-	[
-	  uuid(7fc0644d-1436-4ae0-8815-77efda3124b6),
-	  version(1.0),
-	  nonextensible,
-	  helpstring("Defines the interface provided by the Chart Manager object")
-	]
-	interface IChartManager : IUnknown {
+	//[
+	//  uuid(7fc0644d-1436-4ae0-8815-77efda3124b6),
+	//  version(1.0),
+	//  nonextensible,
+	//  helpstring("Defines the interface provided by the Chart Manager object")
+	//]
+	//interface IChartManager : IUnknown {
 
-		// Methods =====================================================
+	//	// Methods =====================================================
 
-		HRESULT addChartRegion(
-						[in] BSTR chartGUID, 
-						[in] BSTR name, 
-						[in] BSTR title, 
-						[in, optional, defaultvalue(-1)] VARIANT_BOOL autoscale, 
-						[in, optional, defaultvalue(0.8)] double gridlineSpacingY, 
-						[in, optional, defaultvalue(0)] long gridTextColor, 
-						[in, optional, defaultvalue(20)] double initialPercentHeight, 
-						[in, optional, defaultvalue(0)] double minimumPercentHeight, 
-						[in, optional, defaultvalue(0)] VARIANT_BOOL integerYScale, 
-						[in, optional, defaultvalue(0)] float minYScale, 
-						[in, optional, defaultvalue(1)] float maxYScale, 
-						[in, optional, defaultvalue(-1)] VARIANT_BOOL showGrid, 
-						[in, optional, defaultvalue(0)] VARIANT_BOOL showGridText);
+	//	HRESULT addChartRegion(
+	//					[in] BSTR chartGUID, 
+	//					[in] BSTR name, 
+	//					[in] BSTR title, 
+	//					[in, optional, defaultvalue(-1)] VARIANT_BOOL autoscale, 
+	//					[in, optional, defaultvalue(0.8)] double gridlineSpacingY, 
+	//					[in, optional, defaultvalue(0)] long gridTextColor, 
+	//					[in, optional, defaultvalue(20)] double initialPercentHeight, 
+	//					[in, optional, defaultvalue(0)] double minimumPercentHeight, 
+	//					[in, optional, defaultvalue(0)] VARIANT_BOOL integerYScale, 
+	//					[in, optional, defaultvalue(0)] float minYScale, 
+	//					[in, optional, defaultvalue(1)] float maxYScale, 
+	//					[in, optional, defaultvalue(-1)] VARIANT_BOOL showGrid, 
+	//					[in, optional, defaultvalue(0)] VARIANT_BOOL showGridText);
 
-		HRESULT addConditionalAction(
-						[in] BSTR studyValueGuid, 
-						[in, out] ConditionalAction* pconditionalAction);
+	//	HRESULT addConditionalAction(
+	//					[in] BSTR studyValueGuid, 
+	//					[in, out] ConditionalAction* pconditionalAction);
 
-		HRESULT addHorizontalLine(
-						[in] BSTR chartGUID, 
-						[in] BSTR chartRegionName, 
-						[in] float y, 
-						[in, optional, defaultvalue(0)] LineStyles lineStyle, 
-						[in, optional, defaultvalue(1)] long lineThickness, 
-						[in, optional, defaultvalue(0)] long lineColour, 
-						[in, optional, defaultvalue(6)] long layer);
+	//	HRESULT addHorizontalLine(
+	//					[in] BSTR chartGUID, 
+	//					[in] BSTR chartRegionName, 
+	//					[in] float y, 
+	//					[in, optional, defaultvalue(0)] LineStyles lineStyle, 
+	//					[in, optional, defaultvalue(1)] long lineThickness, 
+	//					[in, optional, defaultvalue(0)] long lineColour, 
+	//					[in, optional, defaultvalue(6)] long layer);
 
-		HRESULT addTimeframe(
-						[in] long timeframeLength, 
-						[in] BSTR timeframeUnits, 
-						[out, retval] BSTR* );
+	//	HRESULT addTimeframe(
+	//					[in] long timeframeLength, 
+	//					[in] BSTR timeframeUnits, 
+	//					[out, retval] BSTR* );
 
-		HRESULT includeStudyValueInChart(
-						[in] BSTR chartGUID, 
-						[in] IStudy* study, 
-						[in] BSTR studyValueName, 
-						[in] BSTR chartRegionName, 
-						[in] VARIANT_BOOL includeInAutoscale, 
-						[in] long layer, 
-						[in] DisplayModes displayAs, 
-						[in] LineStyles lineStyle, 
-						[in] long lineThickness, 
-						[in] long lineColour, 
-						[in] float histogramBarWidth, 
-						[out, retval] BSTR* );
-		
-		HRESULT showChart(
-						[in] BSTR timeframeGUID, 
-						[in] VARIANT_BOOL isDefaultChart, 
-						[out, retval] BSTR* );
-		
-	};
+	//	HRESULT includeStudyValueInChart(
+	//					[in] BSTR chartGUID, 
+	//					[in] IStudy* study, 
+	//					[in] BSTR studyValueName, 
+	//					[in] BSTR chartRegionName, 
+	//					[in] VARIANT_BOOL includeInAutoscale, 
+	//					[in] long layer, 
+	//					[in] DisplayModes displayAs, 
+	//					[in] LineStyles lineStyle, 
+	//					[in] long lineThickness, 
+	//					[in] long lineColour, 
+	//					[in] float histogramBarWidth, 
+	//					[out, retval] BSTR* );
+	//	
+	//	HRESULT showChart(
+	//					[in] BSTR timeframeGUID, 
+	//					[in] VARIANT_BOOL isDefaultChart, 
+	//					[out, retval] BSTR* );
+	//	
+	//};
 
     [
       uuid(FCD8A452-31DD-4131-9E2B-1807F9522921),
@@ -1160,10 +1200,10 @@ library TradeBuildSP
 
 	// Methods =====================================================
 
-		HRESULT createStudy(
-			[in] BSTR name,
-			[in] BSTR spName,
-			[out, retval] IStudy** );
+		//HRESULT CalculateBarLength(
+		//	[in] long length,
+		//	[in] TimePeriodUnits units,
+		//	[out, retval] DATE* );
 
 		HRESULT FatalServiceProviderError(
 			[in] long errorCode,
@@ -1171,25 +1211,11 @@ library TradeBuildSP
 			[in] BSTR errorMessage,
 			[in] long serviceProviderHandle);
 
-        HRESULT FormatTimestamp(
-            [in] DATE timestamp, 
-            [in, optional, defaultvalue(TimestampDateAndTime)] TimestampFormats formatOption, 
-            [in, optional, defaultvalue("yyyymmddhhnnss")] BSTR formatString, 
-            [out, retval] BSTR* );
-
-        HRESULT GenerateGUID([out, retval] GUID* );
-
-        HRESULT GenerateGUIDString([out, retval] BSTR* );
-
-        HRESULT GenerateId([out, retval] long* );
-
-        HRESULT GenerateIdString([out, retval] BSTR* );
-
-        HRESULT GetTimestamp([out, retval] DATE* );
-
-        HRESULT GUIDToString(
-            [in, out] GUID* pGUID, 
-            [out, retval] BSTR* );
+        //HRESULT FormatTimestamp(
+        //    [in] DATE timestamp, 
+        //    [in, optional, defaultvalue(2)] TimestampFormats formatOption, 
+        //    [in, optional, defaultvalue("yyyymmddhhnnss")] BSTR formatString, 
+        //    [out, retval] BSTR* );
 
 		HRESULT NewContract(
 			[out, retval] IContract**);
@@ -1241,16 +1267,8 @@ library TradeBuildSP
 			[in] BSTR errorMessage,
 			[in] long serviceProviderHandle);
 
-        HRESULT SortObjects(
-            [in, out] SAFEARRAY(SortEntry)* data);
-
-        HRESULT ToBytes(
-            [in, out] BSTR* inString, 
-            [out, retval] SAFEARRAY(unsigned char)* );
-
-        HRESULT ToHex(
-            [in, out] SAFEARRAY(unsigned char)* inAr, 
-            [out, retval] BSTR* );
+        //HRESULT SortObjects(
+        //    [in, out] SAFEARRAY(SortEntry)* data);
 
     };
 
@@ -1302,11 +1320,11 @@ library TradeBuildSP
         [propput]
         HRESULT ContractID([in] long );
 
-        [propget]
-        HRESULT CurrentSessionEndTime([out, retval] DATE* );
+        //[propget]
+        //HRESULT CurrentSessionEndTime([out, retval] DATE* );
 
-        [propget]
-        HRESULT CurrentSessionStartTime([out, retval] DATE* );
+        //[propget]
+        //HRESULT CurrentSessionStartTime([out, retval] DATE* );
 
         [propget]
         HRESULT DaysBeforeExpiryToSwitch([out, retval] long* );
@@ -1390,32 +1408,40 @@ library TradeBuildSP
 
 	// Methods =====================================================
 
-		HRESULT BarStartTime(
-			[in] DATE Timestamp, 
-			[in] long BarLength,
-			[out,retval] Date*);
+		//HRESULT BarStartTime(
+		//	[in] DATE Timestamp, 
+		//	[in] long BarLength,
+		//	[in] TimePeriodUnits units,
+		//	[out,retval] Date*);
 
         HRESULT Clone([out, retval] IContract** );
 
         HRESULT FromXML([in] BSTR contractXML);
 
-		HRESULT GetSessionTimes( 	
-			[in] DATE Timestamp, 
-			[in, out] DATE* sessionStartTime,
-			[in, out] DATE* sessionEndTime);
+		//HRESULT GetSessionTimes( 	
+		//	[in] DATE Timestamp, 
+		//	[in, out] DATE* sessionStartTime,
+		//	[in, out] DATE* sessionEndTime);
 
-		HRESULT IsTimeInSession(
-			[in] DATE Timestamp, 
-			[out,retval] VARIANT_BOOL*);
+		//HRESULT IsTimeInSession(
+		//	[in] DATE Timestamp, 
+		//	[out,retval] VARIANT_BOOL*);
 
-		HRESULT OffsetBarStartTime(
-			[in] DATE Timestamp, 
-			[in] long BarLength,
-			[in] long Offset,
-			[out,retval] Date*);
+		//HRESULT NumberOfBarsInSession(
+		//	[in] long BarLength,
+		//	[in] TimePeriodUnits units,
+		//	[out,retval] Long*);
 
-		HRESULT SetSession(
-			[in] DATE Timestamp);
+		//HRESULT OffsetBarStartTime(
+		//	[in] DATE Timestamp, 
+		//	[in] long BarLength,
+		//	[in] TimePeriodUnits units,
+		//	[in] long Offset,
+		//	[in, optional] VARIANT_BOOL includeBarsOutsideSession,
+		//	[out,retval] Date*);
+
+		//HRESULT SetSession(
+		//	[in] DATE Timestamp);
 
         HRESULT ToString([out, retval] BSTR* );
 
@@ -1435,9 +1461,9 @@ library TradeBuildSP
 
 		// Methods =====================================================
 
-		HRESULT Error(
-			[in] StandardSPErrorCodes errorCode,
-			[in] BSTR errorMessage,
+		HResult NotifyEvent(
+			[in] StandardSPEventCodes eventCode,
+			[in] BSTR eventMessage,
             [in] IContracts* pContracts,
 			[in] long serviceProviderHandle);
 
@@ -1677,22 +1703,22 @@ library TradeBuildSP
 
 	};
 
-    [
-      uuid(fe0d8f75-ea24-49ac-928c-453da5bdfc07),
-      version(1.0),
-      nonextensible,
-      helpstring("Defines the interface to be implemented by moving average study classes")
-    ]
-    interface IMovingAverageStudy : IUnknown {
+ //   [
+ //     uuid(fe0d8f75-ea24-49ac-928c-453da5bdfc07),
+ //     version(1.0),
+ //     nonextensible,
+ //     helpstring("Defines the interface to be implemented by moving average study classes")
+ //   ]
+ //   interface IMovingAverageStudy : IUnknown {
 
-	// Properties ==================================================
+	//// Properties ==================================================
 
-	[propget]
-	HRESULT ma(
-			[optional, in] long ref,
-			[out, retval] StudyValue* );
+	//[propget]
+	//HRESULT ma(
+	//		[optional, in] long ref,
+	//		[out, retval] StudyValue* );
 
-	};
+	//};
 	
 	[
       uuid(a0f1ab28-facb-4c2c-ad04-0cc504cbcca2),
@@ -1864,9 +1890,9 @@ interface IOrderPlex : IDispatch {
 
 	HRESULT cancelTickData([in] IStreamingDataConsumer* consumer);
 
-	HRESULT error(
-			[in] StandardSPErrorCodes errorCode,
-			[in] BSTR errorMessage,
+	HResult NotifyEvent(
+			[in] StandardSPEventCodes eventCode,
+			[in] BSTR eventMessage,
 			[in] long serviceProviderHandle);
 
 	HRESULT executionDetails(
@@ -2054,9 +2080,9 @@ interface IOrderPlex : IDispatch {
 
 	// Methods =====================================================
 
-	HRESULT Error(
-			[in] StandardSPErrorCodes errorCode,
-			[in] BSTR errorMessage,
+	HResult NotifyEvent(
+			[in] StandardSPEventCodes eventCode,
+			[in] BSTR eventMessage,
 			[in] long serviceProviderHandle);
 
     };
@@ -2111,162 +2137,162 @@ interface IOrderPlex : IDispatch {
 
     };
 
-    [
-      uuid(a9673da8-0be1-4b39-8356-1848f74e3d66),
-      version(1.0),
-      nonextensible,
-      helpstring("Specifies the interface to be implemented by Strategy objects")
-    ]
-    interface ISimpleStrategy : IUnknown {
+  //  [
+  //    uuid(a9673da8-0be1-4b39-8356-1848f74e3d66),
+  //    version(1.0),
+  //    nonextensible,
+  //    helpstring("Specifies the interface to be implemented by Strategy objects")
+  //  ]
+  //  interface ISimpleStrategy : IUnknown {
 
-		// Properties ==================================================
+		//// Properties ==================================================
 
-		[propput]
-		HRESULT engine([in] ISimpleTicker* );
+		//[propput]
+		//HRESULT engine([in] ISimpleTicker* );
 
-		// Methods =====================================================
+		//// Methods =====================================================
 
-		HRESULT initialise();
+		//HRESULT initialise();
 
-		HRESULT invoke([in] StrategyInvokeReasons reason);
+		//HRESULT invoke([in] StrategyInvokeReasons reason);
 
-		[helpstring("Called after historic price data has been loaded, but before the first tick is notified")]
-		HRESULT start();
+		//[helpstring("Called after historic price data has been loaded, but before the first tick is notified")]
+		//HRESULT start();
 
-    };
+  //  };
 
-    [
-      uuid(3ea016ad-6bd8-45c5-b0fd-d32d84cb524f),
-      version(1.0),
-      nonextensible,
-      helpstring("Defines the interface provided by the simplified ticker object")
-    ]
-    interface ISimpleTicker : IUnknown {
+  //  [
+  //    uuid(3ea016ad-6bd8-45c5-b0fd-d32d84cb524f),
+  //    version(1.0),
+  //    nonextensible,
+  //    helpstring("Defines the interface provided by the simplified ticker object")
+  //  ]
+  //  interface ISimpleTicker : IUnknown {
 
-		// Properties ==================================================
+		//// Properties ==================================================
 
-		[propget]
-		HRESULT askPrice([out, retval] double*);
+		//[propget]
+		//HRESULT askPrice([out, retval] double*);
 
-		[propget]
-		HRESULT askSize([out, retval] long*);
+		//[propget]
+		//HRESULT askSize([out, retval] long*);
 
-		[propget]
-		HRESULT bidSize([out, retval] long*);
+		//[propget]
+		//HRESULT bidSize([out, retval] long*);
 
-		[propget]
-		HRESULT bidPrice([out, retval] double*);
+		//[propget]
+		//HRESULT bidPrice([out, retval] double*);
 
-		[propget]
-		HRESULT exchange([out, retval] BSTR* );
+		//[propget]
+		//HRESULT exchange([out, retval] BSTR* );
 
-		[propget]
-		HRESULT expiry([out, retval] BSTR* );
+		//[propget]
+		//HRESULT expiry([out, retval] BSTR* );
 
-		[propget]
-		HRESULT highPrice([out, retval] double*);
+		//[propget]
+		//HRESULT highPrice([out, retval] double*);
 
-		[propget]
-		HRESULT lastTradePrice([out, retval] double*);
+		//[propget]
+		//HRESULT lastTradePrice([out, retval] double*);
 
-		[propget]
-		HRESULT lastTradeSize([out, retval] long*);
+		//[propget]
+		//HRESULT lastTradeSize([out, retval] long*);
 
-		[propget]
-		HRESULT lowPrice([out, retval] double*);
+		//[propget]
+		//HRESULT lowPrice([out, retval] double*);
 
-		[propget]
-		HRESULT name([out, retval] BSTR* );
+		//[propget]
+		//HRESULT name([out, retval] BSTR* );
 
-		[propget]
-		HRESULT openInterest([out, retval] long*);
+		//[propget]
+		//HRESULT openInterest([out, retval] long*);
 
-		[propget]
-		HRESULT prevClosePrice([out, retval] double*);
+		//[propget]
+		//HRESULT prevClosePrice([out, retval] double*);
 
-		[propget]
-		HRESULT securityType([out, retval] SecurityTypes*);
+		//[propget]
+		//HRESULT securityType([out, retval] SecurityTypes*);
 
-		[propget]
-		HRESULT sessionEndTime([out, retval] DATE*);
+		//[propget]
+		//HRESULT sessionEndTime([out, retval] DATE*);
 
-		[propget]
-		HRESULT sessionStartTime([out, retval] DATE*);
+		//[propget]
+		//HRESULT sessionStartTime([out, retval] DATE*);
 
-		[propget]
-		HRESULT symbol([out, retval] BSTR* );
+		//[propget]
+		//HRESULT symbol([out, retval] BSTR* );
 
-		[propget]
-		HRESULT tickSize([out, retval] double* );
+		//[propget]
+		//HRESULT tickSize([out, retval] double* );
 
-		[propget]
-		HRESULT tickValue([out, retval] CURRENCY* );
+		//[propget]
+		//HRESULT tickValue([out, retval] CURRENCY* );
 
-		[propget]
-		HRESULT timestamp([out, retval] DATE*);
+		//[propget]
+		//HRESULT timestamp([out, retval] DATE*);
 
-		[propget]
-		HRESULT volume([out, retval] long*);
+		//[propget]
+		//HRESULT volume([out, retval] long*);
 
-		// Methods =====================================================
+		//// Methods =====================================================
 
-		HRESULT addTimeframe(
-			[in] long timePeriod,
-			[in] TimePeriodUnits timePeriodUnit,
-			[in, out] BSTR* studyID,
-			[out,retval] IBars**);
+		//HRESULT addTimeframe(
+		//	[in] long timePeriod,
+		//	[in] TimePeriodUnits timePeriodUnit,
+		//	[in, out] BSTR* studyID,
+		//	[out,retval] IBars**);
 
-		HRESULT addStudy(
-			[in] BSTR name, 
-					[in, out] BSTR studyID,
-					[in] BSTR underlyingStudyID,
-					[in] BSTR inputValueName,
-					[in, optional] IParameters* parameters, 
-					[in, optional, defaultvalue("")] BSTR serviceProviderName,
-					[in, optional, defaultvalue(0)] long numberOfValuesToCache,
-			[out, retval] IStudy**);
+		//HRESULT addStudy(
+		//	[in] BSTR name, 
+		//			[in, out] BSTR studyID,
+		//			[in] BSTR underlyingStudyID,
+		//			[in] BSTR inputValueName,
+		//			[in, optional] IParameters* parameters, 
+		//			[in, optional, defaultvalue("")] BSTR serviceProviderName,
+		//			[in, optional, defaultvalue(0)] long numberOfValuesToCache,
+		//	[out, retval] IStudy**);
 
-		HRESULT clearTimer(
-			[in] _TimerListEntry* theTimer);
+		//HRESULT clearTimer(
+		//	[in] _TimerListEntry* theTimer);
 
-		HRESULT setTimerInterval(
-			[in] long expirySeconds,
-			[out, retval] _TimerListEntry**);
+		//HRESULT setTimerInterval(
+		//	[in] long expirySeconds,
+		//	[out, retval] _TimerListEntry**);
 
-		HRESULT setTimerTime(
-			[in] DATE expiryTime,
-			[out, retval] _TimerListEntry**);
+		//HRESULT setTimerTime(
+		//	[in] DATE expiryTime,
+		//	[out, retval] _TimerListEntry**);
 
-    };
+  //  };
 
-    [
-      uuid(3aecb53e-e202-4adb-ae54-fb0e5e4ef84c),
-      version(1.0),
-      nonextensible,
-      helpstring("Specifies the interface to be implemented by Strategy Service Providers")
-    ]
-    interface IStrategyServiceProvider : IUnknown {
+  //  [
+  //    uuid(3aecb53e-e202-4adb-ae54-fb0e5e4ef84c),
+  //    version(1.0),
+  //    nonextensible,
+  //    helpstring("Specifies the interface to be implemented by Strategy Service Providers")
+  //  ]
+  //  interface IStrategyServiceProvider : IUnknown {
 
-		// Properties ==================================================
+		//// Properties ==================================================
 
-        [propget]
-        HRESULT simpleStrategyNames([out, retval] SAFEARRAY(BSTR)*);
+  //      [propget]
+  //      HRESULT simpleStrategyNames([out, retval] SAFEARRAY(BSTR)*);
 
-		// Methods =====================================================
+		//// Methods =====================================================
 
-		HRESULT createSimpleStrategy(
-			[in] BSTR name,
-			[out, retval] ISimpleStrategy** );
+		//HRESULT createSimpleStrategy(
+		//	[in] BSTR name,
+		//	[out, retval] ISimpleStrategy** );
 
-        HRESULT getStrategyDefaultParameters(
-			[in] BSTR name,
-			[out, retval] IParameters** );
+  //      HRESULT getStrategyDefaultParameters(
+		//	[in] BSTR name,
+		//	[out, retval] IParameters** );
 
-        HRESULT setStrategyDefaultParameters(
-			[in] BSTR name,
-			[in] IParameters* parameters);
+  //      HRESULT setStrategyDefaultParameters(
+		//	[in] BSTR name,
+		//	[in] IParameters* parameters);
 
-    };
+  //  };
 
     [
       uuid(b5346903-42bb-47f2-a512-e536dac2068a),
@@ -2336,315 +2362,315 @@ interface IOrderPlex : IDispatch {
                         [in] long size);
     };
 
-    [
-	uuid(00512fda-a6eb-41dd-ac51-e7d88f685bab),
-	version(1.0),
-	nonextensible,	
-	helpstring("Defines the interface implemented by TradeBuild's Studies class")
-    ]
-    interface IStudies : IUnknown {
-
-		// Properties ==================================================
-
-		[propput]
-		HRESULT defaultValueName([in] BSTR rhs);
-
-		// Methods =====================================================
-
-		HRESULT add(
-				[in] IStudy* study, 
-				[in] SAFEARRAY(BSTR)* valueNames);
-
-		HRESULT notify(
-				[in] StudyValueEvent* ev);
-
-		HRESULT numberOfBarsRequired([out, retval] long* );
-    };
-
-    [
-      uuid(ef2d106a-e86f-4c19-93da-9f1b0c6d7a72),
-      version(1.0),
-      nonextensible,
-      helpstring("Defines the interface to be implemented by Study objects")
-    ]
-    interface IStudy : IUnknown {
-
-		// Properties ==================================================
-
-        [propget]
-        HRESULT baseStudy([out, retval] IStudy**);
-
-        [propget]
-        HRESULT id([out, retval] BSTR* );
-
-        [propget]
-		HRESULT instanceName(
-			[out, retval] BSTR*);
-
-        [propget]
-		HRESULT instancePath(
-			[out, retval] BSTR*);
-
-        [propget]
-        HRESULT numberOfBarsRequired([out, retval] long* );
-
-        [propget]
-        HRESULT parameters([out, retval] IParameters** );
-
-        [propget]
-        HRESULT studyDefinition([out, retval] IStudyDefinition** );
-
-		// Methods =====================================================
-
-        HRESULT addStudy(
-			[in] IStudy* study, 
-			[in] SAFEARRAY(BSTR)* valueNames,
-			[in] long numUnderlyingValuesToUse,
-			[in, optional] BSTR taskName, 
-			[in, optional] VARIANT taskData,
-			[out, retval] TaskCompletion**);
-
-		HRESULT addStudyValueListener(
-			[in] IStudyValueListener* listener, 
-			[in] BSTR valueName,
-			[in] long numberOfValuesToReplay,
-			[in, optional] BSTR taskName, 
-			[in, optional] VARIANT taskData,
-			[out, retval] TaskCompletion**);
-
-		HRESULT getStudyValue(	
-			[in] BSTR valueName, 
-			[in] long ref, 
-			[out, retval] StudyValue* );
-
-		HRESULT initialise(
-			[in] ICommonServiceConsumer* commonServiceConsumer,
-			//[in] IStudyServiceConsumer* studyServiceConsumer,
-			[in] BSTR id,
-			[in] IParameters* parameters,
-			[in] long numberOfValuesToCache,
-			[in] SAFEARRAY(BSTR)* valueNames,
-			[in] IStudy* underlyingStudy);
-		
-
-		HRESULT Notify(
-			[in] StudyValueEvent* ev);
-
-        HRESULT numberOfCachedValues(
-			[in, optional, defaultvalue("")] BSTR valueName,
-			[out, retval] long* );
-
-		HRESULT removeStudyValueListener(
-			[in] IStudyValueListener* listener);
-			 
-    };
-
-    [
-      uuid(fcac53ca-8e57-4243-81bc-c82e2f794aff),
-      version(1.0),
-      nonextensible,
-      helpstring("Defines the interface implemented by Study Definition objects")
-    ]
-    interface IStudyDefinition : IUnknown {
+ //   [
+	//uuid(00512fda-a6eb-41dd-ac51-e7d88f685bab),
+	//version(1.0),
+	//nonextensible,	
+	//helpstring("Defines the interface implemented by TradeBuild's Studies class")
+ //   ]
+ //   interface IStudies : IUnknown {
+
+	//	// Properties ==================================================
+
+	//	[propput]
+	//	HRESULT defaultValueName([in] BSTR rhs);
+
+	//	// Methods =====================================================
+
+	//	HRESULT add(
+	//			[in] IStudy* study, 
+	//			[in] SAFEARRAY(BSTR)* valueNames);
+
+	//	HRESULT notify(
+	//			[in] StudyValueEvent* ev);
+
+	//	HRESULT numberOfBarsRequired([out, retval] long* );
+ //   };
+
+ //   [
+ //     uuid(ef2d106a-e86f-4c19-93da-9f1b0c6d7a72),
+ //     version(1.0),
+ //     nonextensible,
+ //     helpstring("Defines the interface to be implemented by Study objects")
+ //   ]
+ //   interface IStudy : IUnknown {
+
+	//	// Properties ==================================================
+
+ //       [propget]
+ //       HRESULT baseStudy([out, retval] IStudy**);
+
+ //       [propget]
+ //       HRESULT id([out, retval] BSTR* );
+
+ //       [propget]
+	//	HRESULT instanceName(
+	//		[out, retval] BSTR*);
+
+ //       [propget]
+	//	HRESULT instancePath(
+	//		[out, retval] BSTR*);
+
+ //       [propget]
+ //       HRESULT numberOfBarsRequired([out, retval] long* );
+
+ //       [propget]
+ //       HRESULT parameters([out, retval] IParameters** );
+
+ //       [propget]
+ //       HRESULT studyDefinition([out, retval] IStudyDefinition** );
+
+	//	// Methods =====================================================
+
+ //       HRESULT addStudy(
+	//		[in] IStudy* study, 
+	//		[in] SAFEARRAY(BSTR)* valueNames,
+	//		[in] long numUnderlyingValuesToUse,
+	//		[in, optional] BSTR taskName, 
+	//		[in, optional] VARIANT taskData,
+	//		[out, retval] TaskCompletion**);
+
+	//	HRESULT addStudyValueListener(
+	//		[in] IStudyValueListener* listener, 
+	//		[in] BSTR valueName,
+	//		[in] long numberOfValuesToReplay,
+	//		[in, optional] BSTR taskName, 
+	//		[in, optional] VARIANT taskData,
+	//		[out, retval] TaskCompletion**);
+
+	//	HRESULT getStudyValue(	
+	//		[in] BSTR valueName, 
+	//		[in] long ref, 
+	//		[out, retval] StudyValue* );
+
+	//	HRESULT initialise(
+	//		[in] ICommonServiceConsumer* commonServiceConsumer,
+	//		//[in] IStudyServiceConsumer* studyServiceConsumer,
+	//		[in] BSTR id,
+	//		[in] IParameters* parameters,
+	//		[in] long numberOfValuesToCache,
+	//		[in] SAFEARRAY(BSTR)* valueNames,
+	//		[in] IStudy* underlyingStudy);
+	//	
+
+	//	HRESULT Notify(
+	//		[in] StudyValueEvent* ev);
+
+ //       HRESULT numberOfCachedValues(
+	//		[in, optional, defaultvalue("")] BSTR valueName,
+	//		[out, retval] long* );
+
+	//	HRESULT removeStudyValueListener(
+	//		[in] IStudyValueListener* listener);
+	//		 
+ //   };
+
+ //   [
+ //     uuid(fcac53ca-8e57-4243-81bc-c82e2f794aff),
+ //     version(1.0),
+ //     nonextensible,
+ //     helpstring("Defines the interface implemented by Study Definition objects")
+ //   ]
+ //   interface IStudyDefinition : IUnknown {
 
-		// Properties ==================================================
+	//	// Properties ==================================================
 
-		[propput]
-		HRESULT defaultRegion(
-				[in] StudyDefaultRegions );
+	//	[propput]
+	//	HRESULT defaultRegion(
+	//			[in] StudyDefaultRegions );
 
-		[propget]
-		HRESULT defaultRegion(
-				[out, retval] StudyDefaultRegions* );
+	//	[propget]
+	//	HRESULT defaultRegion(
+	//			[out, retval] StudyDefaultRegions* );
 
-		[propput]
-		HRESULT description(
-				[in] BSTR );
+	//	[propput]
+	//	HRESULT description(
+	//			[in] BSTR );
 
-		[propget]
-		HRESULT description(
-				[out, retval] BSTR* );
+	//	[propget]
+	//	HRESULT description(
+	//			[out, retval] BSTR* );
 
-		[propput]
-		HRESULT name(
-				[in] BSTR );
+	//	[propput]
+	//	HRESULT name(
+	//			[in] BSTR );
 
-		[propget]
-		HRESULT name(
-				[out, retval] BSTR* );
+	//	[propget]
+	//	HRESULT name(
+	//			[out, retval] BSTR* );
 
-		[propput]
-		HRESULT shortName(
-				[in] BSTR );
+	//	[propput]
+	//	HRESULT shortName(
+	//			[in] BSTR );
 
-		[propget]
-		HRESULT shortName(
-				[out, retval] BSTR* );
+	//	[propget]
+	//	HRESULT shortName(
+	//			[out, retval] BSTR* );
 
-		[propget]
-		HRESULT StudyInputDefinitions(
-				[out, retval] IStudyInputDefinitions** );
+	//	[propget]
+	//	HRESULT StudyInputDefinitions(
+	//			[out, retval] IStudyInputDefinitions** );
 
-		[propget]
-		HRESULT StudyParameterDefinitions(
-				[out, retval] IStudyParameterDefinitions** );
+	//	[propget]
+	//	HRESULT StudyParameterDefinitions(
+	//			[out, retval] IStudyParameterDefinitions** );
 
-		[propget]
-		HRESULT StudyValueDefinitions(
-				[out, retval] IStudyValueDefinitions** );
+	//	[propget]
+	//	HRESULT StudyValueDefinitions(
+	//			[out, retval] IStudyValueDefinitions** );
 
-		// Methods =====================================================
+	//	// Methods =====================================================
 
-		HRESULT Clone(
-				[out, retval] IStudyDefinition** );
+	//	HRESULT Clone(
+	//			[out, retval] IStudyDefinition** );
 
-    };
+ //   };
 
-    [
-      uuid(677e99d0-e276-41f5-ab13-2398c1b221cd),
-      version(1.0),
-      nonextensible,
-      helpstring("Defines the interface implemented by Study Input Definition objects")
-    ]
-    interface IStudyInputDefinition : IUnknown {
+ //   [
+ //     uuid(677e99d0-e276-41f5-ab13-2398c1b221cd),
+ //     version(1.0),
+ //     nonextensible,
+ //     helpstring("Defines the interface implemented by Study Input Definition objects")
+ //   ]
+ //   interface IStudyInputDefinition : IUnknown {
 
-		// Properties ==================================================
+	//	// Properties ==================================================
 
-		[propput]
-		HRESULT description(
-				[in] BSTR );
+	//	[propput]
+	//	HRESULT description(
+	//			[in] BSTR );
 
-		[propget]
-		HRESULT description(
-				[out, retval] BSTR* );
+	//	[propget]
+	//	HRESULT description(
+	//			[out, retval] BSTR* );
 
-		[propget]
-		HRESULT name(
-				[out, retval] BSTR* );
+	//	[propget]
+	//	HRESULT name(
+	//			[out, retval] BSTR* );
 
-		[propput]
-		HRESULT inputType(
-				[in] StudyInputTypes );
+	//	[propput]
+	//	HRESULT inputType(
+	//			[in] StudyInputTypes );
 
-		[propget]
-		HRESULT inputType(
-				[out, retval] StudyInputTypes* );
+	//	[propget]
+	//	HRESULT inputType(
+	//			[out, retval] StudyInputTypes* );
 
-    };
+ //   };
 
-    [
-      uuid(a2a638cb-7b0a-4a2b-a4eb-9aae0d9480f2),
-      version(1.0),
-      nonextensible,
-      helpstring("Defines the interface implemented by Study Input Definition objects")
-    ]
-    interface IStudyInputDefinitions : IUnknown {
+ //   [
+ //     uuid(a2a638cb-7b0a-4a2b-a4eb-9aae0d9480f2),
+ //     version(1.0),
+ //     nonextensible,
+ //     helpstring("Defines the interface implemented by Study Input Definition objects")
+ //   ]
+ //   interface IStudyInputDefinitions : IUnknown {
 
-		// Properties ==================================================
+	//	// Properties ==================================================
 
-		[propget]
-		HRESULT Count(
-			[out, retval] long* );
+	//	[propget]
+	//	HRESULT Count(
+	//		[out, retval] long* );
 
-	// Methods =====================================================
+	//// Methods =====================================================
 
-		HRESULT add(
-			[in] BSTR paramName, 
-			[out, retval] IStudyInputDefinition** );
+	//	HRESULT add(
+	//		[in] BSTR paramName, 
+	//		[out, retval] IStudyInputDefinition** );
 
-		HRESULT Item(
-			[in] VARIANT index, 
-			[out, retval] IStudyInputDefinition** );
+	//	HRESULT Item(
+	//		[in] VARIANT index, 
+	//		[out, retval] IStudyInputDefinition** );
 
-		[id(0xfffffffc), hidden]
-		HRESULT NewEnum([out, retval] IDispatch** );
+	//	[id(0xfffffffc), hidden]
+	//	HRESULT NewEnum([out, retval] IDispatch** );
 
-	};
+	//};
 
-    [
-      uuid(284b6e7e-6185-441f-917e-6db53aa0713a),
-      version(1.0),
-      nonextensible,
-      helpstring("Defines the interface implemented by Study Parameter Definition objects")
-    ]
-    interface IStudyParameterDefinition : IUnknown {
+ //   [
+ //     uuid(284b6e7e-6185-441f-917e-6db53aa0713a),
+ //     version(1.0),
+ //     nonextensible,
+ //     helpstring("Defines the interface implemented by Study Parameter Definition objects")
+ //   ]
+ //   interface IStudyParameterDefinition : IUnknown {
 
-		// Properties ==================================================
+	//	// Properties ==================================================
 
-		[propput]
-		HRESULT description(
-			[in] BSTR );
+	//	[propput]
+	//	HRESULT description(
+	//		[in] BSTR );
 
-		[propget]
-		HRESULT description(
-			[out, retval] BSTR* );
+	//	[propget]
+	//	HRESULT description(
+	//		[out, retval] BSTR* );
 
-		[propput]
-		HRESULT maximumValue(
-			[in] VARIANT );
+	//	[propput]
+	//	HRESULT maximumValue(
+	//		[in] VARIANT );
 
-		[propget]
-		HRESULT maximumValue(
-			[out, retval] VARIANT* );
+	//	[propget]
+	//	HRESULT maximumValue(
+	//		[out, retval] VARIANT* );
 
-		[propput]
-		HRESULT minimumValue(
-			[in] VARIANT );
+	//	[propput]
+	//	HRESULT minimumValue(
+	//		[in] VARIANT );
 
-		[propget]
-		HRESULT minimumValue(
-			[out, retval] VARIANT* );
+	//	[propget]
+	//	HRESULT minimumValue(
+	//		[out, retval] VARIANT* );
 
-		[propget]
-		HRESULT name(
-			[out, retval] BSTR* );
+	//	[propget]
+	//	HRESULT name(
+	//		[out, retval] BSTR* );
 
-		[propput]
-		HRESULT parameterType(
-			[in] StudyParameterTypes );
+	//	[propput]
+	//	HRESULT parameterType(
+	//		[in] StudyParameterTypes );
 
-		[propget]
-		HRESULT parameterType(
-			[out, retval] StudyParameterTypes* );
+	//	[propget]
+	//	HRESULT parameterType(
+	//		[out, retval] StudyParameterTypes* );
 
-		[propput]
-		HRESULT permittedValues(
-			[in, out] SAFEARRAY(VARIANT)* );
+	//	[propput]
+	//	HRESULT permittedValues(
+	//		[in, out] SAFEARRAY(VARIANT)* );
 
-		[propget]
-		HRESULT permittedValues(
-			[out, retval] SAFEARRAY(VARIANT)* );
+	//	[propget]
+	//	HRESULT permittedValues(
+	//		[out, retval] SAFEARRAY(VARIANT)* );
 
-    };
+ //   };
 
-    [
-      uuid(0fb95bdb-5bdf-42a9-9499-d63bdac60909),
-      version(1.0),
-      nonextensible,
-      helpstring("Defines the interface implemented by Study Parameter Definition objects")
-    ]
-    interface IStudyParameterDefinitions : IUnknown {
+ //   [
+ //     uuid(0fb95bdb-5bdf-42a9-9499-d63bdac60909),
+ //     version(1.0),
+ //     nonextensible,
+ //     helpstring("Defines the interface implemented by Study Parameter Definition objects")
+ //   ]
+ //   interface IStudyParameterDefinitions : IUnknown {
 
-		// Properties ==================================================
+	//	// Properties ==================================================
 
-		[propget]
-		HRESULT Count(
-			[out, retval] long* );
+	//	[propget]
+	//	HRESULT Count(
+	//		[out, retval] long* );
 
-	// Methods =====================================================
+	//// Methods =====================================================
 
-		HRESULT add(
-			[in] BSTR paramName, 
-			[out, retval] IStudyParameterDefinition** );
+	//	HRESULT add(
+	//		[in] BSTR paramName, 
+	//		[out, retval] IStudyParameterDefinition** );
 
-		HRESULT Item(
-			[in] VARIANT index, 
-			[out, retval] IStudyParameterDefinition** );
+	//	HRESULT Item(
+	//		[in] VARIANT index, 
+	//		[out, retval] IStudyParameterDefinition** );
 
-		[id(0xfffffffc), hidden]
-		HRESULT NewEnum([out, retval] IDispatch** );
+	//	[id(0xfffffffc), hidden]
+	//	HRESULT NewEnum([out, retval] IDispatch** );
 
-	};
+	//};
 
   //  [
   //    uuid(3e6d9f5e-830b-47f2-baab-a0911feff43c),
@@ -2673,242 +2699,242 @@ interface IOrderPlex : IDispatch {
 
   //  };
 
-    [
-      uuid(33659bc6-a503-4cec-9b91-2dee2f723f75),
-      version(1.0),
-      nonextensible,
-      helpstring("Specifies the interface to be implemented by study service providers")
-    ]
-    interface IStudyServiceProvider : IUnknown {
+  //  [
+  //    uuid(33659bc6-a503-4cec-9b91-2dee2f723f75),
+  //    version(1.0),
+  //    nonextensible,
+  //    helpstring("Specifies the interface to be implemented by study service providers")
+  //  ]
+  //  interface IStudyServiceProvider : IUnknown {
 
-		// Properties ==================================================
+		//// Properties ==================================================
 
-        [propget]
-        HRESULT implementedStudyNames([out, retval] SAFEARRAY(BSTR)*);
+  //      [propget]
+  //      HRESULT implementedStudyNames([out, retval] SAFEARRAY(BSTR)*);
 
-		// Methods =====================================================
+		//// Methods =====================================================
 
-		HRESULT createStudy(
-			[in] BSTR name,
-			[out, retval] IStudy** );
+		//HRESULT createStudy(
+		//	[in] BSTR name,
+		//	[out, retval] IStudy** );
 
-        HRESULT getStudyDefaultParameters(
-			[in] BSTR name,
-			[out, retval] IParameters** );
+  //      HRESULT getStudyDefaultParameters(
+		//	[in] BSTR name,
+		//	[out, retval] IParameters** );
 
-        HRESULT setStudyDefaultParameters(
-			[in] BSTR name,
-			[in] IParameters* parameters,
-			[out,retval] VARIANT_BOOL* );
+  //      HRESULT setStudyDefaultParameters(
+		//	[in] BSTR name,
+		//	[in] IParameters* parameters,
+		//	[out,retval] VARIANT_BOOL* );
 
-        HRESULT studyDefinition(
-			[in] BSTR name,
-			[out, retval] IStudyDefinition** );
+  //      HRESULT studyDefinition(
+		//	[in] BSTR name,
+		//	[out, retval] IStudyDefinition** );
 
-    };
+  //  };
 
-    [
-      uuid(43ed2ebc-8553-4188-ab61-2e6107beecea),
-      version(1.0),
-      nonextensible,
-      helpstring("Defines the interface implemented by Study Value Cache objects")
-    ]
-    interface IStudyValueCache : IUnknown{
-
-		// Properties ==================================================
-
-    	[propget]	
-		HRESULT cyclicSize([out, retval] long* );
-
-    	[propget]
-		HRESULT Count([out, retval] long* );
-
-    	[propget]
-		HRESULT valueName([out, retval] BSTR* );
-
-		// Methods =====================================================
-
-		HRESULT addValue(
-			[in] VARIANT value, 
-			[in] long barNumber, 
-			[in] DATE timestamp,
-			[in] DATE barStartTime);
-
-		HRESULT getValue(
-			[in, optional] long ref, 
-			[out, retval] VARIANT* );
-
-		HRESULT getStudyValue(
-			[in, optional] long ref, 
-			[out, retval] StudyValue* );
-
-		HRESULT replayValues(
-			[in] IDispatch* target, 			
-			[in] IStudy* sourceStudy, 
-			[in] long numUnderlyingValuesToUse, 
-			[in, optional] long discriminator,
-			[in, optional] BSTR taskName,
-			[in, optional] VARIANT taskData,
-			[out, retval] TaskCompletion** );
-
-		HRESULT updateValue(
-			[in] VARIANT value, 
-			[in, optional] long barNumber, 
-			[in, optional] DATE Timestamp,
-			[in, optional] DATE barStartTime,
-			[in, optional] long ref);
-
-    };
-
-    [
-      uuid(36de4871-a8e4-479b-bc82-e2005bb83f51),
-      version(1.0),
-      nonextensible,
-      helpstring("Defines the interface implemented by Study Value Definition objects")
-    ]
-    interface IStudyValueDefinition : IUnknown{
-
-		// Properties ==================================================
-
-		[propput]
-		HRESULT defaultRegion(
-			[in] StudyDefaultRegions );
-
-		[propget]
-		HRESULT defaultRegion(
-			[out, retval] StudyDefaultRegions* );
-
-		[propput]
-		HRESULT description(
-			[in] BSTR );
-
-		[propget]
-		HRESULT description(
-			[out, retval] BSTR* );
-
-		[propput]
-		HRESULT isDefault(
-			[in] VARIANT_BOOL );
-
-		[propget]
-		HRESULT isDefault(
-			[out, retval] VARIANT_BOOL* );
-
-		[propput]
-		HRESULT maximumValue(
-			[in] VARIANT );
-
-		[propget]
-		HRESULT maximumValue(
-			[out, retval] VARIANT* );
-
-		[propput]
-		HRESULT minimumValue(
-			[in] VARIANT );
-
-		[propget]
-		HRESULT minimumValue(
-			[out, retval] VARIANT* );
-
-		[propget]
-		HRESULT name(
-			[out, retval] BSTR* );
-
-		[propput]
-		HRESULT valueMode(
-			[in] StudyValueModes );
-
-		[propget]
-		HRESULT valueMode(
-			[out, retval] StudyValueModes* );
-
-		[propput]
-		HRESULT valueType(
-			[in] StudyValueTypes );
-
-		[propget]
-		HRESULT valueType(
-			[out, retval] StudyValueTypes* );
-
-    };
-
-    [
-      uuid(e8aee46c-b432-49ef-b0c2-51133f5b6de9),
-      version(1.0),
-      nonextensible,
-      helpstring("Defines the interface implemented by Study Value Definition collection objects")
-    ]
-    interface IStudyValueDefinitions : IUnknown {
-
-		// Properties ==================================================
-
-		[propget]
-		HRESULT Count(
-			[out, retval] long* );
-
-		// Methods =====================================================
-
-		HRESULT add(
-			[in] BSTR valueName, 
-			[out, retval] IStudyValueDefinition** );
-
-		HRESULT Item(
-			[in] VARIANT index, 
-			[out, retval] IStudyValueDefinition** );
-    
-		[id(0xfffffffc), hidden]
-		HRESULT NewEnum([out, retval] IDispatch** );
-
-	};
-
-    [
-      uuid(6cc420df-e6f0-4221-9437-8d924477ea7b),
-      version(1.0),
-      nonextensible,
-      helpstring("Provides the interface to study value listener objects")
-    ]
-    interface IStudyValueListener : IUnknown {
-
-		// Methods =====================================================
-
-		HRESULT Notify(
-			[in] StudyValueEvent* ev);
-
-    };
-
-    [
-      uuid(38b25081-9cb1-4c88-b7d6-e707c830322c),
-      version(1.0),
-      nonextensible,
-      helpstring("Provides the interface to the study value listeners collection class")
-    ]
-		interface IStudyValueListeners : IUnknown {
-
-		// Methods =====================================================
-
-		HRESULT Add(
-			[in] IStudyValueListener* listener, 
-			[in] BSTR valueName);
-
-		HRESULT Count(
-			[out, retval] long* );
-
-		HRESULT Item(
-			[in] long index,
-			[out, retval] IStudyValueListener** );
-
-//		Can't do the following as the class is not implemented
-//		using a collection
+//    [
+//      uuid(43ed2ebc-8553-4188-ab61-2e6107beecea),
+//      version(1.0),
+//      nonextensible,
+//      helpstring("Defines the interface implemented by Study Value Cache objects")
+//    ]
+//    interface IStudyValueCache : IUnknown{
+//
+//		// Properties ==================================================
+//
+//    	[propget]	
+//		HRESULT cyclicSize([out, retval] long* );
+//
+//    	[propget]
+//		HRESULT Count([out, retval] long* );
+//
+//    	[propget]
+//		HRESULT valueName([out, retval] BSTR* );
+//
+//		// Methods =====================================================
+//
+//		HRESULT addValue(
+//			[in] VARIANT value, 
+//			[in] long barNumber, 
+//			[in] DATE timestamp,
+//			[in] DATE barStartTime);
+//
+//		HRESULT getValue(
+//			[in, optional] long ref, 
+//			[out, retval] VARIANT* );
+//
+//		HRESULT getStudyValue(
+//			[in, optional] long ref, 
+//			[out, retval] StudyValue* );
+//
+//		HRESULT replayValues(
+//			[in] IDispatch* target, 			
+//			[in] IStudy* sourceStudy, 
+//			[in] long numUnderlyingValuesToUse, 
+//			[in, optional] long discriminator,
+//			[in, optional] BSTR taskName,
+//			[in, optional] VARIANT taskData,
+//			[out, retval] TaskCompletion** );
+//
+//		HRESULT updateValue(
+//			[in] VARIANT value, 
+//			[in, optional] long barNumber, 
+//			[in, optional] DATE Timestamp,
+//			[in, optional] DATE barStartTime,
+//			[in, optional] long ref);
+//
+//    };
+//
+//    [
+//      uuid(36de4871-a8e4-479b-bc82-e2005bb83f51),
+//      version(1.0),
+//      nonextensible,
+//      helpstring("Defines the interface implemented by Study Value Definition objects")
+//    ]
+//    interface IStudyValueDefinition : IUnknown{
+//
+//		// Properties ==================================================
+//
+//		[propput]
+//		HRESULT defaultRegion(
+//			[in] StudyDefaultRegions );
+//
+//		[propget]
+//		HRESULT defaultRegion(
+//			[out, retval] StudyDefaultRegions* );
+//
+//		[propput]
+//		HRESULT description(
+//			[in] BSTR );
+//
+//		[propget]
+//		HRESULT description(
+//			[out, retval] BSTR* );
+//
+//		[propput]
+//		HRESULT isDefault(
+//			[in] VARIANT_BOOL );
+//
+//		[propget]
+//		HRESULT isDefault(
+//			[out, retval] VARIANT_BOOL* );
+//
+//		[propput]
+//		HRESULT maximumValue(
+//			[in] VARIANT );
+//
+//		[propget]
+//		HRESULT maximumValue(
+//			[out, retval] VARIANT* );
+//
+//		[propput]
+//		HRESULT minimumValue(
+//			[in] VARIANT );
+//
+//		[propget]
+//		HRESULT minimumValue(
+//			[out, retval] VARIANT* );
+//
+//		[propget]
+//		HRESULT name(
+//			[out, retval] BSTR* );
+//
+//		[propput]
+//		HRESULT valueMode(
+//			[in] StudyValueModes );
+//
+//		[propget]
+//		HRESULT valueMode(
+//			[out, retval] StudyValueModes* );
+//
+//		[propput]
+//		HRESULT valueType(
+//			[in] StudyValueTypes );
+//
+//		[propget]
+//		HRESULT valueType(
+//			[out, retval] StudyValueTypes* );
+//
+//    };
+//
+//    [
+//      uuid(e8aee46c-b432-49ef-b0c2-51133f5b6de9),
+//      version(1.0),
+//      nonextensible,
+//      helpstring("Defines the interface implemented by Study Value Definition collection objects")
+//    ]
+//    interface IStudyValueDefinitions : IUnknown {
+//
+//		// Properties ==================================================
+//
+//		[propget]
+//		HRESULT Count(
+//			[out, retval] long* );
+//
+//		// Methods =====================================================
+//
+//		HRESULT add(
+//			[in] BSTR valueName, 
+//			[out, retval] IStudyValueDefinition** );
+//
+//		HRESULT Item(
+//			[in] VARIANT index, 
+//			[out, retval] IStudyValueDefinition** );
+//    
 //		[id(0xfffffffc), hidden]
 //		HRESULT NewEnum([out, retval] IDispatch** );
-
-		HRESULT Notify(
-			[in] StudyValueEvent* ev);
-
-		HRESULT Remove(
-			[in] IStudyValueListener* listener);
-
-    };
+//
+//	};
+//
+//    [
+//      uuid(6cc420df-e6f0-4221-9437-8d924477ea7b),
+//      version(1.0),
+//      nonextensible,
+//      helpstring("Provides the interface to study value listener objects")
+//    ]
+//    interface IStudyValueListener : IUnknown {
+//
+//		// Methods =====================================================
+//
+//		HRESULT Notify(
+//			[in] StudyValueEvent* ev);
+//
+//    };
+//
+//    [
+//      uuid(38b25081-9cb1-4c88-b7d6-e707c830322c),
+//      version(1.0),
+//      nonextensible,
+//      helpstring("Provides the interface to the study value listeners collection class")
+//    ]
+//		interface IStudyValueListeners : IUnknown {
+//
+//		// Methods =====================================================
+//
+//		HRESULT Add(
+//			[in] IStudyValueListener* listener, 
+//			[in] BSTR valueName);
+//
+//		HRESULT Count(
+//			[out, retval] long* );
+//
+//		HRESULT Item(
+//			[in] long index,
+//			[out, retval] IStudyValueListener** );
+//
+////		Can't do the following as the class is not implemented
+////		using a collection
+////		[id(0xfffffffc), hidden]
+////		HRESULT NewEnum([out, retval] IDispatch** );
+//
+//		HRESULT Notify(
+//			[in] StudyValueEvent* ev);
+//
+//		HRESULT Remove(
+//			[in] IStudyValueListener* listener);
+//
+//    };
 
     [
       uuid(2B4451D8-74F8-4E90-98A7-CC219C8D44A1),
@@ -2920,9 +2946,9 @@ interface IOrderPlex : IDispatch {
 
 		// Methods =====================================================
 
-		HRESULT Error(
-			[in] StandardSPErrorCodes errorCode,
-			[in] BSTR errorMessage,
+		HResult NotifyEvent(
+			[in] StandardSPEventCodes eventCode,
+			[in] BSTR eventMessage,
 			[in] long serviceProviderHandle);
 
 		HRESULT Ready(                            
@@ -2955,9 +2981,9 @@ interface IOrderPlex : IDispatch {
 
 		// Methods =====================================================
 
-		HRESULT Error(
-			[in] StandardSPErrorCodes errorCode,
-			[in] BSTR errorMessage,
+		HResult NotifyEvent(
+			[in] StandardSPEventCodes eventCode,
+			[in] BSTR eventMessage,
 			[in] long serviceProviderHandle);
 
         HRESULT OutputTickfileCreated(
@@ -3125,33 +3151,33 @@ interface IOrderPlex : IDispatch {
 
     };
 
-    [
-      uuid(681d0fed-64cd-476c-b11d-7bd21c950de2),
-      version(1.0),
-      nonextensible,
-      helpstring("TradeBuild's task objects for replaying study and cache values implement this interface")
-    ]
-    interface IValueReplayTask : IUnknown {
+ //   [
+ //     uuid(681d0fed-64cd-476c-b11d-7bd21c950de2),
+ //     version(1.0),
+ //     nonextensible,
+ //     helpstring("TradeBuild's task objects for replaying study and cache values implement this interface")
+ //   ]
+ //   interface IValueReplayTask : IUnknown {
 
-		// Properties ==================================================
+	//	// Properties ==================================================
 
-        [propget]
-        HRESULT Discriminator([out, retval] long* );
+ //       [propget]
+ //       HRESULT Discriminator([out, retval] long* );
 
-        [propget]
-        HRESULT SourceStudy([out, retval] IStudy** );
+ //       [propget]
+ //       HRESULT SourceStudy([out, retval] IStudy** );
 
-        [propget]
-        HRESULT Target([out, retval] IDispatch** );
+ //       [propget]
+ //       HRESULT Target([out, retval] IDispatch** );
 
-        [propget]
-		// the same as ValueNames(0) for user convenience
-        HRESULT ValueName([out, retval] BSTR* );
+ //       [propget]
+	//	// the same as ValueNames(0) for user convenience
+ //       HRESULT ValueName([out, retval] BSTR* );
 
-        [propget]
-        HRESULT ValueNames([out, retval] SAFEARRAY(BSTR)* );
+ //       [propget]
+ //       HRESULT ValueNames([out, retval] SAFEARRAY(BSTR)* );
 
-	};
+	//};
 
 	//[
 	//	uuid(7b076878-6ab7-44a4-b699-916fdac5a942),
