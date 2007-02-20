@@ -20,3 +20,5 @@ vb6 /m StudiesUI\StudiesUI.vbp
 pause
 vb6 /m TradeBuildUI\TradeBuildUI.vbp
 pause
+vb6 /m TBDataCollector\TBDataCollector.vbp
+pause
