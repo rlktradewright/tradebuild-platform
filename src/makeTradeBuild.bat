@@ -14,7 +14,7 @@ vb6 /m TradeBuild\TradeBuild.vbp
 pause
 vb6 /m ChartSkil\ChartSkil.vbp
 pause
-vb6 /m ChartSupport\ChartSupport.vbp
+vb6 /m ChartUtils\ChartUtils.vbp
 pause
 vb6 /m StudiesUI\StudiesUI.vbp
 pause
