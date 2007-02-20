@@ -1021,7 +1021,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements TradeBuild.IListener
+Implements TradeBuild25.InfoListener
 
 '================================================================================
 ' Events
@@ -1045,9 +1045,9 @@ Implements TradeBuild.IListener
 
 Private WithEvents mTradeBuildAPI As TradeBuildAPI
 Attribute mTradeBuildAPI.VB_VarHelpID = -1
-Private WithEvents mTickfileManager As TradeBuild.TickFileManager
+Private WithEvents mTickfileManager As TradeBuild25.TickFileManager
 Attribute mTickfileManager.VB_VarHelpID = -1
-Private WithEvents mContracts As TradeBuild.Contracts
+Private WithEvents mContracts As TradeBuild25.Contracts
 Attribute mContracts.VB_VarHelpID = -1
 Private WithEvents mTicker As Ticker
 Attribute mTicker.VB_VarHelpID = -1
@@ -1057,11 +1057,11 @@ Private mRunningFromComandLine As Boolean
 Private mOutputFormat As String
 Private mOutputPath As String
 
-Private mQuoteTrackerSP As QTSP.QTTickfileServiceProvider
+Private mQuoteTrackerSP As QTSP25.QTTickfileServiceProvider
 
 Private mContract As Contract
 
-Private mSupportedOutputFormats() As TradeBuild.TickfileFormatSpecifier
+Private mSupportedOutputFormats() As TradeBuild25.TickfileFormatSpecifier
 
 Private mArguments As cCommandLineArgs
 Private mNoUI As Boolean
@@ -1072,9 +1072,9 @@ Private mMonths(12) As String
 Private mNoWriteBars As Boolean
 Private mNoWriteTicks As Boolean
 
-Private mTickfileSpecifiers() As TradeBuild.TickfileSpecifier
+Private mTickfileSpecifiers() As TradeBuild25.TickfileSpecifier
 
-Private WithEvents mTimer As TimerUtils.IntervalTimer
+Private WithEvents mTimer As TimerUtils2.IntervalTimer
 Attribute mTimer.VB_VarHelpID = -1
 
 Private mNumberOfSessions As Long
@@ -1117,10 +1117,10 @@ handleFatalError err.Number, _
 End Sub
 
 Private Sub Form_Load()
-Dim TickfileSP As TickfileSP.TickfileServiceProvider
-Dim SQLDBTickfileSP As TBInfoBase.TickfileServiceProvider
-Dim contractInfoSP As TBInfoBase.ContractInfoServiceProvider
-Dim histDataSP As TBInfoBase.HistDataServiceProvider
+Dim TickfileSP As TickfileSP25.TickfileServiceProvider
+Dim SQLDBTickfileSP As TBInfoBase25.TickfileServiceProvider
+Dim contractInfoSP As TBInfoBase25.ContractInfoSrvcProvider
+Dim histDataSP As TBInfoBase25.HistDataServiceProvider
 Dim i As Long
 
 On Error Resume Next
@@ -1133,10 +1133,10 @@ If mTradeBuildAPI Is Nothing Then
     Exit Sub
 End If
 
-mTradeBuildAPI.AddListener Me, TradeBuild.StandardListenValueTypes.LogInfo
+mTradeBuildAPI.addInfoListener Me, TradeBuild25.TradeBuildListenValueTypes.VTLog
 
 On Error Resume Next
-Set SQLDBTickfileSP = New TBInfoBase.TickfileServiceProvider
+Set SQLDBTickfileSP = New TBInfoBase25.TickfileServiceProvider
 On Error GoTo 0
 If SQLDBTickfileSP Is Nothing Then
     handleFatalError 998, _
@@ -1147,7 +1147,7 @@ End If
 mTradeBuildAPI.ServiceProviders.Add SQLDBTickfileSP
 
 On Error Resume Next
-Set TickfileSP = New TickfileSP.TickfileServiceProvider
+Set TickfileSP = New TickfileSP25.TickfileServiceProvider
 On Error GoTo 0
 If TickfileSP Is Nothing Then
     handleFatalError 998, _
@@ -1158,7 +1158,7 @@ End If
 mTradeBuildAPI.ServiceProviders.Add TickfileSP
 
 On Error Resume Next
-Set mQuoteTrackerSP = New QTSP.QTTickfileServiceProvider
+Set mQuoteTrackerSP = New QTSP25.QTTickfileServiceProvider
 On Error GoTo 0
 If mQuoteTrackerSP Is Nothing Then
     handleFatalError 997, _
@@ -1174,7 +1174,7 @@ mQuoteTrackerSP.logLevel = LogLevelLow
 mTradeBuildAPI.ServiceProviders.Add mQuoteTrackerSP
 
 On Error Resume Next
-Set contractInfoSP = New TBInfoBase.ContractInfoServiceProvider
+Set contractInfoSP = New TBInfoBase25.ContractInfoSrvcProvider
 On Error GoTo 0
 If contractInfoSP Is Nothing Then
     handleFatalError 998, _
@@ -1185,7 +1185,7 @@ End If
 mTradeBuildAPI.ServiceProviders.Add contractInfoSP
 
 On Error Resume Next
-Set histDataSP = New TBInfoBase.HistDataServiceProvider
+Set histDataSP = New TBInfoBase25.HistDataServiceProvider
 On Error GoTo 0
 If histDataSP Is Nothing Then
     handleFatalError 998, _
@@ -1224,16 +1224,13 @@ End If
 End Sub
 
 '================================================================================
-' IListener Interface Members
+' InfoListener Interface Members
 '================================================================================
 
-Private Sub IListener_notify( _
-                            ByVal valueType As Long, _
-                            ByVal data As Variant, _
-                            ByVal timestamp As Date)
-Select Case valueType
-Case TradeBuild.StandardListenValueTypes.LogInfo
-    writeStatusMessage "Log: " & data
+Private Sub InfoListener_notify(ev As TradeBuild25.InfoEvent)
+Select Case ev.valueType
+Case TradeBuild25.TradeBuildListenValueTypes.VTLog
+    writeStatusMessage "Log: " & ev.data
 End Select
 End Sub
 
@@ -1269,14 +1266,14 @@ disableContractFields
 End Sub
 
 Private Sub ConvertButton_Click()
-If ContractFromServiceProviderOption Then
-    If mContract Is Nothing Then
-        writeStatusMessage "Can't convert - no contract details are available"
-        Exit Sub
-    Else
-        mTickfileManager.Contract = mContract
-    End If
-End If
+'If ContractFromServiceProviderOption Then
+'    If mContract Is Nothing Then
+'        writeStatusMessage "Can't convert - no contract details are available"
+'        Exit Sub
+'    Else
+'        mTickfileManager.Contract = mContract
+'    End If
+'End If
 
 SelectTickfilesButton.Enabled = False
 ClearTickfileListButton.Enabled = False
@@ -1333,7 +1330,8 @@ Set lContractSpecifier = mTradeBuildAPI.newContractSpecifier( _
                                     IIf(StrikePriceText = "", 0, StrikePriceText), _
                                     optionRightFromString(RightCombo))
 
-Set mContracts = mTradeBuildAPI.RequestContract(lContractSpecifier)
+Set mContracts = mTradeBuildAPI.NewContracts(lContractSpecifier)
+mContracts.Load
 writeStatusMessage "Requesting contract details"
 Exit Sub
 
@@ -1422,7 +1420,7 @@ End Sub
 Private Sub mContracts_NoMoreContractDetails()
 Dim i As Long
 Dim j As Long
-Dim lSupportedInputTickfileFormats() As TradeBuild.TickfileFormatSpecifier
+Dim lSupportedInputTickfileFormats() As TradeBuild25.TickfileFormatSpecifier
 
 On Error GoTo err
 
@@ -1443,7 +1441,7 @@ End If
 If mArguments.Switch("from") Then mNumberOfSessions = 1
 If mNumberOfSessions > (mStartingSession + 1) Then mNumberOfSessions = mStartingSession + 1
 
-ReDim mTickfileSpecifiers(mNumberOfSessions - 1) As TradeBuild.TickfileSpecifier
+ReDim mTickfileSpecifiers(mNumberOfSessions - 1) As TradeBuild25.TickfileSpecifier
 For i = 0 To UBound(mTickfileSpecifiers)
     With mTickfileSpecifiers(i)
         Set .Contract = mContract
@@ -1481,9 +1479,7 @@ For i = 0 To UBound(mTickfileSpecifiers)
     TickfileList.AddItem mTickfileSpecifiers(i).filename
 Next
 
-Set mTimer = New TimerUtils.IntervalTimer
-mTimer.RepeatNotifications = False
-mTimer.TimerIntervalMillisecs = 10
+Set mTimer = createIntervalTimer(10)
 mTimer.StartTimer
 
 Exit Sub
@@ -1495,22 +1491,19 @@ End Sub
 ' mTicker Event Handlers
 '================================================================================
 
-Private Sub mTicker_errorMessage(ByVal timestamp As Date, _
-                                ByVal id As Long, _
-                                ByVal errorCode As TradeBuild.ApiErrorCodes, _
-                                ByVal errorMsg As String)
+Private Sub mTicker_Notification(ev As TradeBuild25.NotificationEvent)
 On Error GoTo err
-Select Case errorCode
-Case ApiErrorCodes.NoContractDetails
-    writeStatusMessage "Error " & errorCode & ": " & errorMsg
+Select Case ev.eventCode
+Case ApiNotifyCodes.ApiNotifyNoContractDetails
+    writeStatusMessage "Notify " & ev.eventCode & ": " & ev.eventMessage
     
 Case Else
-    writeStatusMessage "Error " & errorCode & ": " & id & ": " & errorMsg
+    writeStatusMessage "Notify " & ev.eventCode & ": " & ev.eventMessage
 End Select
 
 Exit Sub
 err:
-handleFatalError err.Number, err.description, "mTicker_errorMessage"
+handleFatalError err.Number, err.description, "mTicker_Notification"
 End Sub
 
 Private Sub mTicker_outputTickfileCreated( _
@@ -1523,27 +1516,28 @@ End Sub
 ' mTickfileManager Event Handlers
 '================================================================================
 
-Private Sub mTickfileManager_errorMessage(ByVal timestamp As Date, ByVal id As Long, ByVal errorCode As TradeBuild.ApiErrorCodes, ByVal errorMsg As String)
+Private Sub mTickfileManager_Notification( _
+                ev As TradeBuild25.NotificationEvent)
 On Error GoTo err
-Select Case errorCode
-Case ApiErrorCodes.NoContractDetails
-    writeStatusMessage "Error " & errorCode & ": " & errorMsg
+Select Case ev.eventCode
+Case ApiNotifyCodes.ApiNotifyNoContractDetails
+    writeStatusMessage "Error " & ev.eventCode & ": " & ev.eventMessage
     
 Case Else
-    writeStatusMessage "Error " & errorCode & ": " & id & ": " & errorMsg
+    writeStatusMessage "Notification " & ev.eventCode & ": " & ev.eventMessage
 End Select
 
 Exit Sub
 err:
-handleFatalError err.Number, err.description, "mTickfileManager_errorMessage"
+handleFatalError err.Number, err.description, "mTickfileManager_Notification"
 End Sub
 
 Private Sub mTickfileManager_QueryReplayNextTickfile( _
                 ByVal tickfileIndex As Long, _
                 ByVal tickfileName As String, _
                 ByVal tickfileSizeBytes As Long, _
-                ByVal pContract As TradeBuild.Contract, _
-                continueMode As TradeBuild.ReplayContinueModes)
+                ByVal pContract As TradeBuild25.Contract, _
+                continueMode As TradeBuild25.ReplayContinueModes)
 On Error GoTo err
 
 ReplayProgressBar.Min = 0
@@ -1601,7 +1595,7 @@ err:
 handleFatalError err.Number, err.description, "mTickfileManager_ReplayProgress"
 End Sub
 
-Private Sub mTickfileManager_TickerAllocated(ByVal pTicker As TradeBuild.Ticker)
+Private Sub mTickfileManager_TickerAllocated(ByVal pTicker As TradeBuild25.Ticker)
 Dim i As Long
 On Error GoTo err
 Set mTicker = pTicker
@@ -1615,7 +1609,7 @@ End If
 For i = 0 To EnableCheck.UBound
     If EnableCheck(i).value = vbChecked Then
         mTicker.Timeframes.Add BarLengthText(i).Text, _
-                                TradeBuild.TimePeriodUnits.Minute, _
+                                TimePeriodUnits.TimePeriodMinute, _
                                 BarLengthText(i).Text & "min", _
                                 0, _
                                 0, _
@@ -1630,7 +1624,7 @@ End Sub
 
 Private Sub mTickfileManager_TickfilesSelected()
 On Error GoTo err
-Dim tickfiles() As TradeBuild.TickfileSpecifier
+Dim tickfiles() As TradeBuild25.TickfileSpecifier
 Dim i As Long
 TickfileList.Clear
 tickfiles = mTickfileManager.TickfileSpecifiers
@@ -1668,56 +1662,32 @@ End Sub
 ' mTradeBuildAPI Event Handlers
 '================================================================================
 
-Private Sub mTradeBuildAPI_connecting(ByVal timestamp As Date)
-On Error GoTo err
-writeStatusMessage "Connecting"
-'DisconnectButton.Enabled = True
-
-Exit Sub
-err:
-handleFatalError err.Number, err.description, "mTradeBuildAPI_connecting"
-End Sub
-
-Private Sub mTradeBuildAPI_connectionToTWSClosed( _
-                ByVal timestamp As Date, _
-                ByVal reconnecting As Boolean)
-On Error GoTo err
-
-'DisconnectButton.Enabled = False
-enableContractFields
-
-writeStatusMessage "Connection closed"
-
-Exit Sub
-err:
-handleFatalError err.Number, err.description, "mTradeBuildAPI_connectionClosed"
-End Sub
-
-Private Sub mTradeBuildAPI_errorMessage(ByVal timestamp As Date, _
-                        ByVal id As Long, _
-                        ByVal errorCode As ApiErrorCodes, _
-                        ByVal errorMsg As String)
+Private Sub mTradeBuildAPI_Error( _
+                ev As TWUtilities.ErrorEvent)
 Dim spError As ServiceProviderError
 
 On Error GoTo err
 
-Select Case errorCode
-Case ApiErrorCodes.ServiceProviderErrorNotification
+Select Case ev.errorCode
+Case ApiNotifyCodes.ApiNotifyServiceProviderError
     Set spError = mTradeBuildAPI.getServiceProviderError
     writeStatusMessage "Error from " & _
                         spError.serviceProviderName & _
                         ": code " & spError.errorCode & _
-                        ": id " & id & ": " & _
-                        spError.message
+                        ": " & spError.message
 
 Case Else
-    writeStatusMessage "Error " & errorCode & ": " & id & ": " & errorMsg
+    writeStatusMessage "Error " & ev.errorCode & ": " & ev.errorMsg
 End Select
-
-
 Exit Sub
+
 err:
-handleFatalError err.Number, err.description, "mTradeBuildAPI_errorMessage"
+handleFatalError err.Number, err.description, "mTradeBuildAPI_Error"
+End Sub
+
+Private Sub mTradeBuildAPI_Notification( _
+                ev As TradeBuild25.NotificationEvent)
+writeStatusMessage "Notify " & ev.eventCode & ": " & ev.eventMessage
 End Sub
 
 '================================================================================
@@ -1731,8 +1701,6 @@ End Sub
 '================================================================================
 ' Helper Functions
 '================================================================================
-
-
 
 Private Sub checkOKToGetContract()
 If SymbolText <> "" Or ShortNameText <> "" Then
@@ -1807,7 +1775,7 @@ Dim sessionsValue As String
 Dim outFormatValue As String
 Dim QTServerValue As String
 Dim commaPosn As Long
-Dim contractSpec As TradeBuild.ContractSpecifier
+Dim contractSpec As TradeBuild25.ContractSpecifier
 Dim i As Long
 Dim j As Long
 
@@ -2031,8 +1999,8 @@ If symbolValue <> "" Then
                                 monthValue, _
                                 IIf(StrikePriceText.Text = "", 0, StrikePriceText.Text), _
                                 optionRightFromString(rightValue))
-    Set mContracts = mTradeBuildAPI.NewContracts
-    mContracts.Load contractSpec
+    Set mContracts = mTradeBuildAPI.NewContracts(contractSpec)
+    mContracts.Load
 
 End If
 
