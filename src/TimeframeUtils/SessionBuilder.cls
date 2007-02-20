@@ -6,9 +6,9 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "Session"
+Attribute VB_Name = "SessionBuilder"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -45,16 +45,15 @@ Option Explicit
 ' Member variables
 '@================================================================================
 
-Private mSessionStartTime As Date
-Private mSessionEndTime As Date
-
-Private mReferenceTime As Date
-Private mCurrentSessionStartTime As Date
-Private mCurrentSessionEndTime As Date
+Private mSession As session
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+Set mSession = New session
+End Sub
 
 '@================================================================================
 ' XXXX Interface Members
@@ -68,58 +67,33 @@ Private mCurrentSessionEndTime As Date
 ' Properties
 '@================================================================================
 
-Public Property Get sessionStartTime() As Date
-sessionStartTime = mSessionStartTime
+Public Property Get session() As session
+Set session = mSession
 End Property
-
-Public Property Get sessionEndTime() As Date
-sessionEndTime = mSessionEndTime
+                
+Public Property Let sessionStartTime( _
+                ByVal value As Date)
+mSession.sessionStartTime = value
+End Property
+                
+Public Property Let sessionEndTime( _
+                ByVal value As Date)
+mSession.sessionEndTime = value
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub GetSessionTimes( _
-                            ByVal timestamp As Date, _
-                            ByRef sessionStartTime As Date, _
-                            ByRef sessionEndTime As Date)
-gCalcSessionTimes timestamp, sessionStartTime, sessionEndTime, mSessionStartTime, mSessionEndTime
-End Sub
-
-Friend Sub initialise( _
-                ByVal sessionStartTime As Date, _
-                ByVal sessionEndTime As Date)
-mSessionStartTime = sessionStartTime
-mSessionEndTime = sessionEndTime
-
-End Sub
-
-Public Function isTimeInSession(ByVal timestamp As Date) As Boolean
-
-If timestamp >= mCurrentSessionStartTime And _
-    timestamp < mCurrentSessionEndTime _
-Then
-    isTimeInSession = True
-End If
-End Function
-
-Public Sub setSession( _
+Public Sub setSessionCurrentTime( _
                 ByVal timestamp As Date)
-If timestamp >= mCurrentSessionEndTime Or _
-    timestamp < mReferenceTime _
-Then
-    mReferenceTime = timestamp
-    gCalcSessionTimes timestamp, _
-                        mCurrentSessionStartTime, _
-                        mCurrentSessionEndTime, _
-                        mSessionStartTime, _
-                        mSessionEndTime
-End If
+mSession.setSessionCurrentTime timestamp
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+
 
 
