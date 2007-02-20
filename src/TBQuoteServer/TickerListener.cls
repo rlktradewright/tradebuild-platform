@@ -69,58 +69,56 @@ Attribute mTimer.VB_VarHelpID = -1
 Private Sub Class_Initialize()
 Set mQuoteListeners = New Collection
 Set mDataSignalListeners = New Collection
-Set mTimer = New IntervalTimer
-mTimer.RepeatNotifications = False
-mTimer.TimerIntervalMillisecs = 200
+Set mTimer = createIntervalTimer(200)
 End Sub
 
 '================================================================================
 ' QuoteListener Interface Members
 '================================================================================
 
-Private Sub QuoteListener_ask(ev As TradeBuild.QuoteEvent)
+Private Sub QuoteListener_ask(ev As QuoteEvent)
 fireSignalOn
 mTimer.StartTimer
 fireAsk ev.price, ev.Size
 End Sub
 
-Private Sub QuoteListener_bid(ev As TradeBuild.QuoteEvent)
+Private Sub QuoteListener_bid(ev As QuoteEvent)
 fireSignalOn
 mTimer.StartTimer
 fireBid ev.price, ev.Size
 End Sub
 
-Private Sub QuoteListener_high(ev As TradeBuild.QuoteEvent)
+Private Sub QuoteListener_high(ev As QuoteEvent)
 fireSignalOn
 mTimer.StartTimer
 fireHigh ev.price
 End Sub
 
-Private Sub QuoteListener_Low(ev As TradeBuild.QuoteEvent)
+Private Sub QuoteListener_Low(ev As QuoteEvent)
 fireSignalOn
 mTimer.StartTimer
 fireLow ev.price
 End Sub
 
-Private Sub QuoteListener_openInterest(ev As TradeBuild.QuoteEvent)
+Private Sub QuoteListener_openInterest(ev As QuoteEvent)
 fireSignalOn
 mTimer.StartTimer
 fireOpenInterest ev.Size
 End Sub
 
-Private Sub QuoteListener_previousClose(ev As TradeBuild.QuoteEvent)
+Private Sub QuoteListener_previousClose(ev As QuoteEvent)
 fireSignalOn
 mTimer.StartTimer
 firePreviousClose ev.price
 End Sub
 
-Private Sub QuoteListener_trade(ev As TradeBuild.QuoteEvent)
+Private Sub QuoteListener_trade(ev As QuoteEvent)
 fireSignalOn
 mTimer.StartTimer
 fireTrade ev.price, ev.Size
 End Sub
 
-Private Sub QuoteListener_volume(ev As TradeBuild.QuoteEvent)
+Private Sub QuoteListener_volume(ev As QuoteEvent)
 fireSignalOn
 mTimer.StartTimer
 fireVolume ev.Size

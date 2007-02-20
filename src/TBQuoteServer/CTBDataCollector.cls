@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "CTBDataCollector"
+Attribute VB_Name = "TBDataCollector"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -17,38 +17,36 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
+Implements InfoListener
+
 '================================================================================
 ' Events
 '================================================================================
 
-'Event Connected(ByVal timestamp As Date)
-Event connectFailed(ByVal timestamp As Date, _
-                ByVal description As String, _
-                ByVal retrying As Boolean)
-Event ConnectionToIBClosed(ByVal timestamp As Date)
-Event ConnectionToIBRecovered(ByVal timestamp As Date)
+Event Connected()
+Event connectFailed(ByVal description As String)
+Event ConnectionClosed()
+Event ConnectionRecovered()
 Event connectionToTWSClosed( _
-                ByVal timestamp As Date, _
-                ByVal reconnecting As Boolean)
-Event ErrorMessage( _
-                ByVal timestamp As Date, _
-                ByVal id As Long, _
-                ByVal errorCode As TradeBuild.ApiErrorCodes, _
-                ByVal errorMsg As String)
-'Event OutputTickfileCreated( _
-'                ByVal timestamp As Date, _
-'                ByVal filename As String)
+                ByVal Reconnecting As Boolean)
+Event errorMessage( _
+                ByVal errorCode As Long, _
+                ByVal errorMessage As String)
+Event Info(ev As InfoEvent)
+Event NotifyMessage( _
+                ByVal eventCode As ApiNotifyCodes, _
+                ByVal eventMsg As String)
+Event Reconnecting()
 Event ServiceProviderError( _
-                ByVal timestamp As Date, _
                 ByVal errorCode As Long, _
                 ByVal serviceProviderName As String, _
                 ByVal message As String)
 Event TickerAdded( _
-                ByVal ticker As TradeBuild.ticker)
+                ByVal ticker As ticker)
 Event TickerListenerAdded( _
                 ByVal listener As TickerListener)
 Event TimeframeAdded( _
-                ByVal tf As TradeBuild.Timeframe)
+                ByVal tf As Timeframe)
                 
 '================================================================================
 ' Constants
@@ -62,15 +60,31 @@ Event TimeframeAdded( _
 ' Types
 '================================================================================
 
+Public Type InstrumentSpecifier
+    shortName           As String
+    symbol              As String
+    secType             As String
+    expiry              As String
+    exchange            As String
+    currencyCode        As String
+    strikePrice         As Double
+    right               As String
+End Type
 '================================================================================
 ' Member variables
 '================================================================================
 
-Private WithEvents mTradeBuildAPI As TradeBuild.TradeBuildAPI
+Private WithEvents mTradeBuildAPI As TradeBuildAPI
 Attribute mTradeBuildAPI.VB_VarHelpID = -1
 
 Private mShortNames() As String
-Private mShortnameIndex As Long
+Private mShortnamesMaxIndex As Long
+Private mShortnamesIndex As Long
+
+Private mInstruments() As InstrumentSpecifier
+Private mInstrumentsIndex As Long
+Private mInstrumentsMaxIndex As Long
+
 Private mMonth As String
 Private mServer As String
 Private mPort As Long
@@ -78,20 +92,20 @@ Private mClientID As Long
 Private mWriteBars As Boolean
 Private mWriteTicks As Boolean
 
-Private WithEvents mTicker As TradeBuild.ticker
+Private WithEvents mTicker As ticker
 Attribute mTicker.VB_VarHelpID = -1
 Private mTickerListener As TickerListener
 
-Private mTimeframe1 As TradeBuild.Timeframe
-Private mTimeframe5 As TradeBuild.Timeframe
-Private mTimeframe15 As TradeBuild.Timeframe
-Private mTimeframe60 As TradeBuild.Timeframe
+Private mTimeframe1 As Timeframe
+Private mTimeframe5 As Timeframe
+Private mTimeframe15 As Timeframe
+Private mTimeframe60 As Timeframe
 
-Private mSupportedOutputFormats() As TradeBuild.TickfileFormatSpecifier
+Private mSupportedOutputFormats() As TickfileFormatSpecifier
 Private mOutputFormat As String
 Private mOutputPath As String
 
-Private WithEvents mTimer As TimerUtils.IntervalTimer
+Private WithEvents mTimer As TimerUtils2.IntervalTimer
 Attribute mTimer.VB_VarHelpID = -1
 
 '================================================================================
@@ -100,48 +114,74 @@ Attribute mTimer.VB_VarHelpID = -1
 
 Private Sub Class_Initialize()
 
-Set mTradeBuildAPI = New TradeBuild.TradeBuildAPI
-mTradeBuildAPI.ServiceProviders.Add New TBInfoBase.TickfileServiceProvider
-mTradeBuildAPI.ServiceProviders.Add New TBInfoBase.ContractInfoServiceProvider
-mTradeBuildAPI.ServiceProviders.Add New TBInfoBase.HistDataServiceProvider
-mTradeBuildAPI.ServiceProviders.Add New TickfileSP.TickfileServiceProvider
+Set mTradeBuildAPI = New TradeBuildAPI
+'mTradeBuildAPI.ServiceProviders.Add New TBInfoBase25.TickfileServiceProvider
+'mTradeBuildAPI.ServiceProviders.Add New TBInfoBase25.ContractInfoServiceProvider
+'mTradeBuildAPI.ServiceProviders.Add New TBInfoBase25.HistDataServiceProvider
+mTradeBuildAPI.ServiceProviders.Add New TickfileSP25.TickfileServiceProvider
+
+mTradeBuildAPI.addInfoListener Me, TradeBuildListenValueTypes.VTLog
 
 mOutputPath = App.Path
 
 mSupportedOutputFormats = mTradeBuildAPI.SupportedOutputTickfileFormats
 
+mShortnamesMaxIndex = -1
+mInstrumentsMaxIndex = -1
 End Sub
 
 '================================================================================
-' xxxx Interface Members
+' InfoListener Interface Members
 '================================================================================
+
+Private Sub InfoListener_notify(ev As InfoEvent)
+RaiseEvent Info(ev)
+End Sub
 
 '================================================================================
 ' mTicker Event Handlers
 '================================================================================
 
 Private Sub mTicker_ContractInvalid( _
-                ByVal ContractSpecifier As TradeBuild.ContractSpecifier, _
+                ByVal ContractSpecifier As ContractSpecifier, _
                 ByVal reason As String)
 startNextTicker
 End Sub
 
-Private Sub mTicker_Ready( _
-                ByVal contract As TradeBuild.contract)
-mTickerListener.contract = mTicker.contract
-
-RaiseEvent TickerAdded(mTicker)
-
-RaiseEvent TickerListenerAdded(mTickerListener)
-
-If mWriteBars Then
-    RaiseEvent TimeframeAdded(mTimeframe1)
-    RaiseEvent TimeframeAdded(mTimeframe5)
-    RaiseEvent TimeframeAdded(mTimeframe15)
-    RaiseEvent TimeframeAdded(mTimeframe60)
+Private Sub mTicker_Notification(ev As NotificationEvent)
+If ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToRealtimeDataSource Then
+    RaiseEvent Connected
+ElseIf ev.eventCode = ApiNotifyCodes.ApiNotifyCantConnectRealtimeDataSource Then
+    RaiseEvent connectFailed(ev.eventMessage)
+ElseIf ev.eventCode = ApiNotifyCodes.ApiNotifyDisconnectedFromRealtimeDataSource Or _
+        ev.eventCode = ApiNotifyCodes.ApiNotifyLostConnectionToRealtimeDataSource Then
+    RaiseEvent ConnectionClosed
+ElseIf ev.eventCode = ApiNotifyCodes.ApiNotifyReconnectingToRealtimeDataSource Then
+    RaiseEvent Reconnecting
+Else
+    RaiseEvent NotifyMessage(ev.eventCode, _
+                            ev.eventMessage)
 End If
-
 startNextTicker
+End Sub
+
+Private Sub mTicker_stateChange(ev As TWUtilities.StateChangeEvent)
+If ev.State = TickerStates.TickerStateRunning Then
+    mTickerListener.contract = mTicker.contract
+    
+    RaiseEvent TickerAdded(mTicker)
+    
+    RaiseEvent TickerListenerAdded(mTickerListener)
+    
+    If mWriteBars Then
+        RaiseEvent TimeframeAdded(mTimeframe1)
+        RaiseEvent TimeframeAdded(mTimeframe5)
+        RaiseEvent TimeframeAdded(mTimeframe15)
+        RaiseEvent TimeframeAdded(mTimeframe60)
+    End If
+    
+    startNextTicker
+End If
 End Sub
 
 '================================================================================
@@ -149,18 +189,31 @@ End Sub
 '================================================================================
 
 Private Sub mTimer_TimerExpired()
-Dim contractSpec As TradeBuild.ContractSpecifier
+Dim contractSpec As ContractSpecifier
 Dim failpoint As Integer
 
 On Error GoTo err
 
-If mShortnameIndex > UBound(mShortNames) Then Exit Sub
+If mShortnamesIndex > mShortnamesMaxIndex And _
+    mInstrumentsIndex > mInstrumentsMaxIndex Then Exit Sub
 
 failpoint = 100 '=====================================================
-Set contractSpec = mTradeBuildAPI.newContractSpecifier(mShortNames(mShortnameIndex))
-mShortnameIndex = mShortnameIndex + 1
+If mShortnamesIndex <= mShortnamesMaxIndex Then
+    Set contractSpec = mTradeBuildAPI.newContractSpecifier(mShortNames(mShortnamesIndex))
+    mShortnamesIndex = mShortnamesIndex + 1
+ElseIf mInstrumentsIndex <= mInstrumentsMaxIndex Then
+    Set contractSpec = mTradeBuildAPI.newContractSpecifier(mInstruments(mInstrumentsIndex).shortName, _
+                                            mInstruments(mInstrumentsIndex).symbol, _
+                                            mInstruments(mInstrumentsIndex).exchange, _
+                                            SecTypeFromString(mInstruments(mInstrumentsIndex).secType), _
+                                            mInstruments(mInstrumentsIndex).currencyCode, _
+                                            mInstruments(mInstrumentsIndex).expiry, _
+                                            mInstruments(mInstrumentsIndex).strikePrice, _
+                                            OptionRightFromString(mInstruments(mInstrumentsIndex).right))
+    mInstrumentsIndex = mInstrumentsIndex + 1
+End If
 
-Set mTicker = mTradeBuildAPI.Tickers.Add(GenerateGUIDString)
+Set mTicker = mTradeBuildAPI.Tickers.Add(False)
 
 If mWriteTicks Then
     mTicker.outputTickfileFormat = mOutputFormat
@@ -194,58 +247,24 @@ End Sub
 ' mTradeBuildAPI Event Handlers
 '================================================================================
 
-'Private Sub mTradeBuildAPI_connected(ByVal timestamp As Date)
-'
-'RaiseEvent Connected(timestamp)
-'
-'' setup the tickers using a short timer
-'Set mTimer = New TimerUtils.IntervalTimer
-'mTimer.RepeatNotifications = False
-'mTimer.TimerIntervalMillisecs = 1
-'mTimer.StartTimer
-'
-'End Sub
-
-Private Sub mTradeBuildAPI_connectFailed( _
-                ByVal timestamp As Date, _
-                ByVal description As String, _
-                ByVal retrying As Boolean)
-RaiseEvent connectFailed(timestamp, description, retrying)
+Private Sub mTradeBuildAPI_Error(ev As TWUtilities.ErrorEvent)
+RaiseEvent errorMessage(ev.errorCode, _
+                    ev.errorMsg)
 End Sub
 
-Private Sub mTradeBuildAPI_connectionToIBClosed(ByVal timestamp As Date)
-RaiseEvent ConnectionToIBClosed(timestamp)
-End Sub
-
-Private Sub mTradeBuildAPI_connectionToIBRecovered(ByVal timestamp As Date)
-RaiseEvent ConnectionToIBRecovered(timestamp)
-End Sub
-
-Private Sub mTradeBuildAPI_connectionToTWSClosed( _
-                ByVal timestamp As Date, _
-                ByVal reconnecting As Boolean)
-RaiseEvent connectionToTWSClosed(timestamp, reconnecting)
-End Sub
-
-Private Sub mTradeBuildAPI_errorMessage(ByVal timestamp As Date, _
-                                ByVal id As Long, _
-                                ByVal errorCode As TradeBuild.ApiErrorCodes, _
-                                ByVal errorMsg As String)
+Private Sub mTradeBuildAPI_Notification( _
+                ev As NotificationEvent)
 Dim spError As ServiceProviderError
-
-If errorCode = ApiErrorCodes.ApiErrServiceProviderError Then
+If ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
     Set spError = mTradeBuildAPI.getServiceProviderError
     With spError
-        RaiseEvent ServiceProviderError(.timestamp, _
-                                        .errorCode, _
+        RaiseEvent ServiceProviderError(.errorCode, _
                                         .serviceProviderName, _
                                         .message)
     End With
 Else
-    RaiseEvent ErrorMessage(timestamp, _
-                        id, _
-                        errorCode, _
-                        errorMsg)
+    RaiseEvent errorMessage(ev.eventCode, _
+                        ev.eventMessage)
 End If
 End Sub
 
@@ -255,6 +274,12 @@ End Sub
 
 Public Property Let ClientID(ByVal val As String)
 mClientID = val
+End Property
+
+Public Property Let Instruments(ByRef val() As InstrumentSpecifier)
+On Error Resume Next
+mInstruments = val
+mInstrumentsMaxIndex = UBound(mInstruments)
 End Property
 
 Public Property Let OutputFormat(ByVal val As String)
@@ -291,7 +316,9 @@ mServer = val
 End Property
 
 Public Property Let ShortNames(ByRef val() As String)
+On Error Resume Next
 mShortNames = val
+mShortnamesMaxIndex = UBound(mShortNames)
 End Property
 
 Public Property Let WriteBars(ByVal val As Boolean)
@@ -308,18 +335,23 @@ End Property
 '================================================================================
 
 Public Sub startCollection()
-Dim realtimeServiceProvider As Object
-Set realtimeServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject("IBTWSSP.RealtimeDataServiceProvider"))
-realtimeServiceProvider.Server = mServer
-realtimeServiceProvider.Port = mPort
-realtimeServiceProvider.ClientID = mClientID
-realtimeServiceProvider.providerKey = "IB"
-realtimeServiceProvider.keepConnection = True
+Dim sp As Object
+Set sp = mTradeBuildAPI.ServiceProviders.Add(CreateObject("IBTWSSP.RealtimeDataServiceProvider"))
+sp.Server = mServer
+sp.Port = mPort
+sp.ClientID = mClientID
+sp.providerKey = "IB"
+sp.keepConnection = True
+
+Set sp = mTradeBuildAPI.ServiceProviders.Add(CreateObject("IBTWSSP.ContractInfoServiceProvider"))
+sp.Server = mServer
+sp.Port = mPort
+sp.ClientID = mClientID
+sp.providerKey = "IB"
+sp.keepConnection = True
 
 ' setup the tickers using a short timer
-Set mTimer = New TimerUtils.IntervalTimer
-mTimer.RepeatNotifications = False
-mTimer.TimerIntervalMillisecs = 1
+Set mTimer = createIntervalTimer(1)
 mTimer.StartTimer
 
 End Sub
@@ -336,7 +368,9 @@ End Sub
 '================================================================================
 
 Private Sub startNextTicker()
-If mShortnameIndex <= UBound(mShortNames) Then
+If mShortnamesIndex <= mShortnamesMaxIndex Then
+    mTimer.StartTimer
+ElseIf mInstrumentsIndex <= mInstrumentsMaxIndex Then
     mTimer.StartTimer
 Else
     Set mTimer = Nothing
