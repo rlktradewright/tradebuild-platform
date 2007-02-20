@@ -35,8 +35,8 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements TradeBuild.QuoteListener
-Implements TradeBuild.PriceChangeListener
+Implements QuoteListener
+Implements PriceChangeListener
 
 '================================================================================
 ' Events
@@ -162,7 +162,7 @@ End Type
 ' Member variables
 '================================================================================
 
-Private WithEvents mTickers As TradeBuild.Tickers
+Private WithEvents mTickers As Tickers
 Attribute mTickers.VB_VarHelpID = -1
 Private mTickerTable() As TickerTableEntry
 
@@ -216,12 +216,12 @@ End Sub
 ' PriceChangeListener Interface Members
 '================================================================================
 
-Private Sub PriceChangeListener_Change(ev As TradeBuild.PriceChangeEvent)
+Private Sub PriceChangeListener_Change(ev As PriceChangeEvent)
 Dim lTicker As ticker
 Set lTicker = ev.Source
 TickerGrid.row = mTickerTable(lTicker.handle).tickerGridRow
 TickerGrid.col = TickerGridColumns.Change
-TickerGrid.text = ev.ChangeString
+TickerGrid.Text = ev.ChangeString
 If ev.Change >= 0 Then
     TickerGrid.CellBackColor = PositiveChangeBackColor
 Else
@@ -230,7 +230,7 @@ End If
 TickerGrid.CellForeColor = vbWhite
 
 TickerGrid.col = TickerGridColumns.ChangePercent
-TickerGrid.text = Format(ev.ChangePercent, "0.0")
+TickerGrid.Text = Format(ev.ChangePercent, "0.0")
 If ev.ChangePercent >= 0 Then
     TickerGrid.CellBackColor = PositiveChangeBackColor
 Else
@@ -243,12 +243,12 @@ End Sub
 ' QuoteListener Interface Members
 '================================================================================
 
-Private Sub QuoteListener_ask(ev As TradeBuild.QuoteEvent)
+Private Sub QuoteListener_ask(ev As QuoteEvent)
 Dim lTicker As ticker
 Set lTicker = ev.Source
 TickerGrid.row = mTickerTable(lTicker.handle).tickerGridRow
 TickerGrid.col = TickerGridColumns.ask
-TickerGrid.text = ev.priceString
+TickerGrid.Text = ev.priceString
 If ev.priceChange = ValueChangeUp Then
     TickerGrid.CellForeColor = IncreasedValueColor
 ElseIf ev.priceChange = ValueChangeDown Then
@@ -256,7 +256,7 @@ ElseIf ev.priceChange = ValueChangeDown Then
 End If
 
 TickerGrid.col = TickerGridColumns.AskSize
-TickerGrid.text = ev.size
+TickerGrid.Text = ev.size
 If ev.sizeChange = ValueChangeUp Then
     TickerGrid.CellForeColor = IncreasedValueColor
 ElseIf ev.sizeChange = ValueChangeDown Then
@@ -264,7 +264,7 @@ ElseIf ev.sizeChange = ValueChangeDown Then
 End If
 End Sub
 
-Private Sub QuoteListener_bid(ev As TradeBuild.QuoteEvent)
+Private Sub QuoteListener_bid(ev As QuoteEvent)
 Dim lTicker As ticker
 Set lTicker = ev.Source
 TickerGrid.row = mTickerTable(lTicker.handle).tickerGridRow
@@ -275,9 +275,9 @@ ElseIf ev.priceChange = ValueChangeDown Then
     TickerGrid.CellForeColor = DecreasedValueColor
 End If
 
-TickerGrid.text = ev.priceString
+TickerGrid.Text = ev.priceString
 TickerGrid.col = TickerGridColumns.bidSize
-TickerGrid.text = ev.size
+TickerGrid.Text = ev.size
 If ev.sizeChange = ValueChangeUp Then
     TickerGrid.CellForeColor = IncreasedValueColor
 ElseIf ev.sizeChange = ValueChangeDown Then
@@ -285,44 +285,44 @@ ElseIf ev.sizeChange = ValueChangeDown Then
 End If
 End Sub
 
-Private Sub QuoteListener_high(ev As TradeBuild.QuoteEvent)
+Private Sub QuoteListener_high(ev As QuoteEvent)
 Dim lTicker As ticker
 Set lTicker = ev.Source
 TickerGrid.row = mTickerTable(lTicker.handle).tickerGridRow
 TickerGrid.col = TickerGridColumns.highPrice
-TickerGrid.text = ev.priceString
+TickerGrid.Text = ev.priceString
 End Sub
 
-Private Sub QuoteListener_Low(ev As TradeBuild.QuoteEvent)
+Private Sub QuoteListener_Low(ev As QuoteEvent)
 Dim lTicker As ticker
 Set lTicker = ev.Source
 TickerGrid.row = mTickerTable(lTicker.handle).tickerGridRow
 TickerGrid.col = TickerGridColumns.lowPrice
-TickerGrid.text = ev.priceString
+TickerGrid.Text = ev.priceString
 End Sub
 
-Private Sub QuoteListener_openInterest(ev As TradeBuild.QuoteEvent)
+Private Sub QuoteListener_openInterest(ev As QuoteEvent)
 Dim lTicker As ticker
 Set lTicker = ev.Source
 TickerGrid.row = mTickerTable(lTicker.handle).tickerGridRow
 TickerGrid.col = TickerGridColumns.openInterest
-TickerGrid.text = ev.size
+TickerGrid.Text = ev.size
 End Sub
 
-Private Sub QuoteListener_previousClose(ev As TradeBuild.QuoteEvent)
+Private Sub QuoteListener_previousClose(ev As QuoteEvent)
 Dim lTicker As ticker
 Set lTicker = ev.Source
 TickerGrid.row = mTickerTable(lTicker.handle).tickerGridRow
 TickerGrid.col = TickerGridColumns.closePrice
-TickerGrid.text = ev.priceString
+TickerGrid.Text = ev.priceString
 End Sub
 
-Private Sub QuoteListener_trade(ev As TradeBuild.QuoteEvent)
+Private Sub QuoteListener_trade(ev As QuoteEvent)
 Dim lTicker As ticker
 Set lTicker = ev.Source
 TickerGrid.row = mTickerTable(lTicker.handle).tickerGridRow
 TickerGrid.col = TickerGridColumns.trade
-TickerGrid.text = ev.priceString
+TickerGrid.Text = ev.priceString
 If ev.priceChange = ValueChangeUp Then
     TickerGrid.CellForeColor = IncreasedValueColor
 ElseIf ev.priceChange = ValueChangeDown Then
@@ -330,7 +330,7 @@ ElseIf ev.priceChange = ValueChangeDown Then
 End If
 
 TickerGrid.col = TickerGridColumns.TradeSize
-TickerGrid.text = ev.size
+TickerGrid.Text = ev.size
 If ev.sizeChange = ValueChangeUp Then
     TickerGrid.CellForeColor = IncreasedValueColor
 ElseIf ev.sizeChange = ValueChangeDown Then
@@ -338,12 +338,12 @@ ElseIf ev.sizeChange = ValueChangeDown Then
 End If
 End Sub
 
-Private Sub QuoteListener_volume(ev As TradeBuild.QuoteEvent)
+Private Sub QuoteListener_volume(ev As QuoteEvent)
 Dim lTicker As ticker
 Set lTicker = ev.Source
 TickerGrid.row = mTickerTable(lTicker.handle).tickerGridRow
 TickerGrid.col = TickerGridColumns.volume
-TickerGrid.text = ev.size
+TickerGrid.Text = ev.size
 End Sub
 
 '================================================================================
@@ -420,10 +420,10 @@ End Sub
 ' mTickers Event Handlers
 '================================================================================
 
-Private Sub mTickers_StateChange(ev As TradeBuild.StateChangeEvent)
-Dim lTicker As TradeBuild.ticker
+Private Sub mTickers_StateChange(ev As TWUtilities.StateChangeEvent)
+Dim lTicker As ticker
 Dim handle As Long
-Dim lContract As TradeBuild.Contract
+Dim lContract As Contract
 Dim gridRowIndex As Long
     
 
@@ -460,31 +460,31 @@ Case TickerStateRunning
     TickerGrid.rowdata(mTickerTable(handle).tickerGridRow) = handle
     
     TickerGrid.col = TickerGridColumns.currencyCode
-    TickerGrid.text = lContract.specifier.currencyCode
+    TickerGrid.Text = lContract.specifier.currencyCode
     
     TickerGrid.col = TickerGridColumns.Description
-    TickerGrid.text = lContract.Description
+    TickerGrid.Text = lContract.Description
     
     TickerGrid.col = TickerGridColumns.exchange
-    TickerGrid.text = lContract.specifier.exchange
+    TickerGrid.Text = lContract.specifier.exchange
     
     TickerGrid.col = TickerGridColumns.expiry
-    TickerGrid.text = lContract.ExpiryDate
+    TickerGrid.Text = lContract.ExpiryDate
     
     TickerGrid.col = TickerGridColumns.OptionRight
-    TickerGrid.text = OptionRightToString(lContract.specifier.Right)
+    TickerGrid.Text = OptionRightToString(lContract.specifier.Right)
     
     TickerGrid.col = TickerGridColumns.sectype
-    TickerGrid.text = SecTypeToString(lContract.specifier.sectype)
+    TickerGrid.Text = SecTypeToString(lContract.specifier.sectype)
     
     TickerGrid.col = TickerGridColumns.strike
-    TickerGrid.text = lContract.specifier.strike
+    TickerGrid.Text = lContract.specifier.strike
     
     TickerGrid.col = TickerGridColumns.symbol
-    TickerGrid.text = lContract.specifier.symbol
+    TickerGrid.Text = lContract.specifier.symbol
     
     TickerGrid.col = TickerGridColumns.TickerName
-    TickerGrid.text = lContract.specifier.localSymbol
+    TickerGrid.Text = lContract.specifier.localSymbol
     
 Case TickerStatePaused
 
@@ -534,7 +534,7 @@ Err:
 End Sub
 
 Public Sub monitorWorkspace( _
-                ByVal pWorkspace As TradeBuild.WorkSpace)
+                ByVal pWorkspace As WorkSpace)
 If Not mTickers Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                             "TradeBuildUI.TickerGrid::monitorWorkspace", _
                                             "A workspace is already being monitored"
@@ -823,7 +823,7 @@ End Sub
                 
 Private Sub stopTicker( _
                 ByVal gridRowIndex As Long)
-Dim lTicker As TradeBuild.ticker
+Dim lTicker As ticker
 Dim handle As Long
 
 If mSelectedRowsTable(gridRowIndex) = 0 Then Exit Sub

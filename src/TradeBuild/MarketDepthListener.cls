@@ -71,12 +71,12 @@ Option Explicit
 '@================================================================================
 
 Public Sub resetMarketDepth( _
-                ByRef ev As ProcessedMarketDepthEvent)
+                ByRef ev As MarketDepthEvent)
                 
 End Sub
 
 Public Sub setMarketDepthCell( _
-                ByRef ev As ProcessedMarketDepthEvent)
+                ByRef ev As MarketDepthEvent)
                 
 End Sub
 

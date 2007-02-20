@@ -13,89 +13,92 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-'================================================================================
+'@================================================================================
 ' Description
-'================================================================================
+'@================================================================================
 '
 '
-'================================================================================
+'@================================================================================
 ' Amendment history
-'================================================================================
+'@================================================================================
 '
 '
 '
 '
 
-'================================================================================
+'@================================================================================
 ' Interfaces
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Events
-'================================================================================
+'@================================================================================
 
 Event TimeFrameAdded(ByVal pTimeframe As Timeframe)
 
-'================================================================================
+'@================================================================================
 ' Constants
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Enums
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Types
-'================================================================================
+'@================================================================================
 
 Private Type TimeframeTableEntry
-    timeperiod              As Long
-    timeperiodUnit          As TradeBuild.TimePeriodUnits
+    timePeriod              As Long
+    timePeriodUnit          As TimePeriodUnits
     key                     As String
     theTimeFrame            As Timeframe
     numberOfBarsToFetch     As Long
-    historicalDataLoaded    As Boolean
+    includeBarsOutsideSession   As Boolean
+    excludeCurrentbar       As Boolean
+    saveIntervalSeconds     As Long
+    writeBidAndAskBars      As Boolean
 End Type
 
-'================================================================================
+'@================================================================================
 ' Member variables
-'================================================================================
+'@================================================================================
 
 Private mTradeBuildAPIRef           As WeakReference
 
 Private mTimeframeTable() As TimeframeTableEntry
 Private mNextTimeframeTableIndex As Long
 
-Private mTicker As TradeBuild.ticker
+Private mTicker As TradeBuild25.Ticker
 
-Private mContract As TradeBuild.Contract
+Private mContract As TradeBuild25.Contract
 
-Private mChangeListeners As WeakCollection
+Private mChangeListeners As Collection
 
-'================================================================================
+'@================================================================================
 ' Class Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub Class_Initialize()
 ReDim mTimeframeTable(10) As TimeframeTableEntry
-Set mChangeListeners = New WeakCollection
+Set mChangeListeners = New Collection
 End Sub
 
 Private Sub Class_Terminate()
 Debug.Print "Timeframes terminated"
 End Sub
 
-'================================================================================
+'@================================================================================
 ' XXXX Interface Members
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' XXXX Event Handlers
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Properties
-'================================================================================
+'@================================================================================
 
 Friend Property Let Contract(ByVal value As Contract)
 Dim tte As TimeframeTableEntry
@@ -112,66 +115,87 @@ Public Property Get Count() As Long
 Count = mNextTimeframeTableIndex
 End Property
 
-Friend Property Let ticker(ByVal value As ticker)
+Friend Property Let Ticker(ByVal value As Ticker)
 Set mTicker = value
 End Property
 
 Friend Property Let tradeBuildAPI( _
                 ByVal value As tradeBuildAPI)
-Set mTradeBuildAPIRef = New WeakReference
-mTradeBuildAPIRef.Initialise value
+Set mTradeBuildAPIRef = weakrefs.createWeakReference(value)
 End Property
 
-'================================================================================
+'@================================================================================
 ' Methods
-'================================================================================
+'@================================================================================
 
 Public Function add( _
-                            ByVal timeperiod As Long, _
-                            ByVal timeperiodUnit As TradeBuild.TimePeriodUnits, _
-                            ByRef key As String, _
-                            ByVal numberOfBarsToFetch As Long, _
-                            Optional ByVal SaveIntervalSeconds As Long = -1&, _
-                            Optional ByVal IncludeBidAndAsk As Boolean, _
-                            Optional ByVal excludeCurrentBar As Boolean = False) As Timeframe
+                ByVal timePeriod As Long, _
+                ByVal timePeriodUnit As TimePeriodUnits, _
+                ByRef key As String, _
+                ByVal numberOfBarsToFetch As Long, _
+                Optional ByVal includeBarsOutsideSession As Boolean, _
+                Optional ByVal excludeCurrentbar As Boolean, _
+                Optional ByVal saveIntervalSeconds As Long = -1&, _
+                Optional ByVal writeBidAndAskBars As Boolean) As Timeframe
 
 Dim tte As TimeframeTableEntry
 Dim timeframeIndex As Long
 
-timeframeIndex = getTimeframeIndex(timeperiod, timeperiodUnit, key)
+If saveIntervalSeconds > 0 And saveIntervalSeconds < 5 Then _
+    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            "TradeBuild25.Timeframes::add", _
+            "Save interval cannot be less than 5 seconds"
+
+timeframeIndex = getTimeframeIndex(timePeriod, _
+                                timePeriodUnit, _
+                                numberOfBarsToFetch, _
+                                includeBarsOutsideSession, _
+                                saveIntervalSeconds, _
+                                writeBidAndAskBars)
 If timeframeIndex >= 0 Then
     Set add = mTimeframeTable(timeframeIndex).theTimeFrame
-    If key = "" Then key = mTimeframeTable(timeframeIndex).key
-Else
-    Set add = New Timeframe
-    add.tradeBuildAPI = tb
-    Set tte.theTimeFrame = add
-    tte.timeperiod = timeperiod
-    tte.timeperiodUnit = timeperiodUnit
-    tte.numberOfBarsToFetch = numberOfBarsToFetch
-    If key <> "" Then
-        tte.key = key
-    Else
-        tte.key = generateKey(timeperiod, timeperiodUnit)
-    End If
-    tte.theTimeFrame.Initialise tte.key, _
-                                mTicker, _
-                                timeperiod, _
-                                timeperiodUnit, _
-                                numberOfBarsToFetch, _
-                                SaveIntervalSeconds, _
-                                IncludeBidAndAsk, _
-                                excludeCurrentBar
-    
-    If Not mContract Is Nothing Then tte.theTimeFrame.Contract = mContract
-    If mNextTimeframeTableIndex > UBound(mTimeframeTable) Then
-        ReDim Preserve mTimeframeTable(UBound(mTimeframeTable) + 10) As TimeframeTableEntry
-    End If
-    mTimeframeTable(mNextTimeframeTableIndex) = tte
-    mNextTimeframeTableIndex = mNextTimeframeTableIndex + 1
-    fireChange CollItemAdded, tte.theTimeFrame
-    RaiseEvent TimeFrameAdded(add)
+    Exit Function
 End If
+
+Set add = New Timeframe
+add.tradeBuildAPI = tb
+Set tte.theTimeFrame = add
+tte.timePeriod = timePeriod
+tte.timePeriodUnit = timePeriodUnit
+tte.numberOfBarsToFetch = numberOfBarsToFetch
+tte.includeBarsOutsideSession = includeBarsOutsideSession
+tte.writeBidAndAskBars = writeBidAndAskBars
+tte.saveIntervalSeconds = saveIntervalSeconds
+
+If key <> "" Then
+    tte.key = key
+Else
+    tte.key = generateKey(timePeriod, _
+                        timePeriodUnit, _
+                        numberOfBarsToFetch, _
+                        includeBarsOutsideSession, _
+                        excludeCurrentbar, _
+                        saveIntervalSeconds, _
+                        writeBidAndAskBars)
+End If
+tte.theTimeFrame.Initialise tte.key, _
+                            mTicker, _
+                            timePeriod, _
+                            timePeriodUnit, _
+                            numberOfBarsToFetch, _
+                            includeBarsOutsideSession, _
+                            excludeCurrentbar, _
+                            saveIntervalSeconds, _
+                            writeBidAndAskBars
+
+If Not mContract Is Nothing Then tte.theTimeFrame.Contract = mContract
+If mNextTimeframeTableIndex > UBound(mTimeframeTable) Then
+    ReDim Preserve mTimeframeTable(UBound(mTimeframeTable) + 10) As TimeframeTableEntry
+End If
+mTimeframeTable(mNextTimeframeTableIndex) = tte
+mNextTimeframeTableIndex = mNextTimeframeTableIndex + 1
+fireChange CollItemAdded, tte.theTimeFrame
+RaiseEvent TimeFrameAdded(add)
 
 End Function
 
@@ -185,12 +209,12 @@ RemoveAll
 Set mTicker = Nothing
 End Sub
 
-Public Function Item(key As String) As Timeframe
+Public Function item(key As String) As Timeframe
 Dim i As Long
 
 For i = 0 To mNextTimeframeTableIndex - 1
     If mTimeframeTable(i).key = key Then
-        Set Item = mTimeframeTable(i).theTimeFrame
+        Set item = mTimeframeTable(i).theTimeFrame
         Exit For
     End If
 Next
@@ -222,21 +246,20 @@ End Sub
 Public Sub removeCollectionChangeListener(ByVal value As CollectionChangeListener)
 Dim i As Long
 For i = mChangeListeners.Count To 1 Step -1
-    If mChangeListeners.Item(i) Is value Then mChangeListeners.remove i
+    If mChangeListeners.item(i) Is value Then mChangeListeners.remove i
 Next
 End Sub
 
-'================================================================================
+'@================================================================================
 ' Helper Functions
-'================================================================================
+'@================================================================================
 
 Private Sub clearTimeframeTableEntry(ByVal index As Long)
-mTimeframeTable(index).historicalDataLoaded = False
 mTimeframeTable(index).key = ""
 mTimeframeTable(index).numberOfBarsToFetch = 0
 Set mTimeframeTable(index).theTimeFrame = Nothing
-mTimeframeTable(index).timeperiod = 0
-mTimeframeTable(index).timeperiodUnit = 0
+mTimeframeTable(index).timePeriod = 0
+mTimeframeTable(index).timePeriodUnit = 0
 End Sub
 
 Private Sub fireChange( _
@@ -255,38 +278,40 @@ Next
 End Sub
 
 Private Function generateKey( _
-                ByVal timeperiod As Long, _
-                ByVal timeperiodUnit As TradeBuild.TimePeriodUnits) As String
-generateKey = timeperiod
-Select Case timeperiodUnit
-Case TimePeriodMinute
-    generateKey = generateKey & "Mins"
-Case TimePeriodHour
-    generateKey = generateKey & "Hours"
-Case TimePeriodDay
-    generateKey = generateKey & "Days"
-Case TimePeriodWeek
-    generateKey = generateKey & "Weeks"
-Case TimePeriodMonth
-    generateKey = generateKey & "Months"
-Case TimePeriodLunarMonth
-    generateKey = generateKey & "LunarMonths"
-Case TimePeriodYear
-    generateKey = generateKey & "Years"
-End Select
+                ByVal timePeriod As Long, _
+                ByVal timePeriodUnit As TimePeriodUnits, _
+                ByVal numberOfBarsToFetch As Long, _
+                ByVal includeBarsOutsideSession As Boolean, _
+                ByVal excludeCurrentbar As Boolean, _
+                ByVal saveIntervalSeconds As Long, _
+                ByVal writeBidAndAskBars As Boolean) As String
+generateKey = timePeriod & _
+            TimePeriodUnitsToString(timePeriodUnit) & _
+            "(" & numberOfBarsToFetch & ")" & _
+            IIf(includeBarsOutsideSession, "I", "") & _
+            IIf(excludeCurrentbar, "X", "") & _
+            IIf(saveIntervalSeconds > 0, "S" & saveIntervalSeconds, "") & _
+            IIf(writeBidAndAskBars, "W", "")
+            
 End Function
 
 Private Function getTimeframeIndex( _
-                ByVal timeperiod As Long, _
-                ByVal timeperiodUnit As TradeBuild.TimePeriodUnits, _
-                ByRef key As String) As Long
+                ByVal timePeriod As Long, _
+                ByVal timePeriodUnit As TimePeriodUnits, _
+                ByVal numberOfBarsToFetch As Long, _
+                ByRef includeBarsOutsideSession As Boolean, _
+                ByVal saveIntervalSeconds As Long, _
+                ByVal writeBidAndAskBars As Boolean) As Long
 Dim i As Long
 
 getTimeframeIndex = -1
 For i = 0 To mNextTimeframeTableIndex - 1
-    If mTimeframeTable(i).timeperiod = timeperiod And _
-        mTimeframeTable(i).timeperiodUnit = timeperiodUnit And _
-        (mTimeframeTable(i).key = key Or key = "") _
+    If mTimeframeTable(i).timePeriod = timePeriod And _
+        mTimeframeTable(i).timePeriodUnit = timePeriodUnit And _
+        mTimeframeTable(i).includeBarsOutsideSession = includeBarsOutsideSession And _
+        mTimeframeTable(i).numberOfBarsToFetch = numberOfBarsToFetch And _
+        mTimeframeTable(i).saveIntervalSeconds = saveIntervalSeconds And _
+        mTimeframeTable(i).writeBidAndAskBars = writeBidAndAskBars _
     Then
         getTimeframeIndex = i
         Exit Function
@@ -295,6 +320,6 @@ Next
 End Function
 
 Private Function tb() As tradeBuildAPI
-Set tb = mTradeBuildAPIRef.target
+Set tb = mTradeBuildAPIRef.Target
 End Function
 

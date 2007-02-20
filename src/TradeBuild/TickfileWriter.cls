@@ -13,81 +13,81 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-'================================================================================
+'@================================================================================
 ' Description
-'================================================================================
+'@================================================================================
 '
 '
-'================================================================================
+'@================================================================================
 ' Amendment history
-'================================================================================
+'@================================================================================
 '
 '
 '
 '
 
-'================================================================================
+'@================================================================================
 ' Interfaces
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Events
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Constants
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Enums
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Types
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Member variables
-'================================================================================
+'@================================================================================
 
 Private mWriter As TradeBuildSP.ITickfileWriter
 Private mServiceProviderWriterReady As Boolean
 
 Private mPendingWrites As Collection
 
-Private WithEvents mTimer As TimerUtils.IntervalTimer
+Private WithEvents mTimer As TimerUtils2.IntervalTimer
 Attribute mTimer.VB_VarHelpID = -1
 
-Private mSelfRef As TradeBuild.TickfileWriter
+Private mSelfRef As TradeBuild25.TickfileWriter
 
-'================================================================================
+'@================================================================================
 ' Class Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub Class_Initialize()
 Set mPendingWrites = New Collection
 End Sub
 
 Private Sub Class_Terminate()
-Debug.Print "TradeBuild.TickfileWriter - object terminated"
+Debug.Print "TradeBuild25.TickfileWriter - object terminated"
 End Sub
 
-'================================================================================
+'@================================================================================
 ' xxxx Interface Members
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' mTimer Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub mTimer_TimerExpired()
 Set mWriter = Nothing
 Set mSelfRef = Nothing
 End Sub
 
-'================================================================================
+'@================================================================================
 ' Properties
-'================================================================================
+'@================================================================================
 
 Friend Property Let Contract(ByVal value As Contract)
 mWriter.Contract = value
@@ -114,23 +114,23 @@ If mPendingWrites.Count <> 0 Then
         pendingWrite = item
         With pendingWrite
             Select Case .TickType
-            Case TradeBuild.TickTypes.TickTypeBid
+            Case TradeBuild25.TickTypes.TickTypeBid
                 mWriter.writeBid .timestamp, .TickPrice, .TickSize
-            Case TradeBuild.TickTypes.TickTypeAsk
+            Case TradeBuild25.TickTypes.TickTypeAsk
                 mWriter.writeAsk .timestamp, .TickPrice, .TickSize
-            Case TradeBuild.TickTypes.TickTypeLast
+            Case TradeBuild25.TickTypes.TickTypeLast
                 mWriter.writeTrade .timestamp, .TickPrice, .TickSize
-            Case TradeBuild.TickTypes.TickTypeHigh
+            Case TradeBuild25.TickTypes.TickTypeHigh
                 mWriter.writeHigh .timestamp, .TickPrice
-            Case TradeBuild.TickTypes.TickTypeLow
+            Case TradeBuild25.TickTypes.TickTypeLow
                 mWriter.writeLow .timestamp, .TickPrice
-            Case TradeBuild.TickTypes.TickTypePrevClose
+            Case TradeBuild25.TickTypes.TickTypePrevClose
                 mWriter.writeClose .timestamp, .TickPrice
-            Case TradeBuild.TickTypes.TickTypeVolume
+            Case TradeBuild25.TickTypes.TickTypeVolume
                 mWriter.writeVolume .timestamp, .TickSize
-            Case TradeBuild.TickTypes.TickTypeOpenInterest
+            Case TradeBuild25.TickTypes.TickTypeOpenInterest
                 mWriter.writeOpenInterest .timestamp, .TickSize
-            Case TradeBuild.TickTypes.TickTypeMarketDepth
+            Case TradeBuild25.TickTypes.TickTypeMarketDepth
                 mWriter.writeMarketDepthData .timestamp, _
                             .MDPosition, _
                             .MDMarketMaker, _
@@ -138,7 +138,7 @@ If mPendingWrites.Count <> 0 Then
                             .MDSide, _
                             .TickPrice, _
                             .TickSize
-            Case TradeBuild.TickTypes.TickTypeMarketDepthReset
+            Case TradeBuild25.TickTypes.TickTypeMarketDepthReset
                 mWriter.writeMarketDepthReset .timestamp
             End Select
         End With
@@ -153,56 +153,54 @@ Friend Property Get ServiceProviderWriterReady() As Boolean
 ServiceProviderWriterReady = mServiceProviderWriterReady
 End Property
 
-'================================================================================
+'@================================================================================
 ' Methods
-'================================================================================
+'@================================================================================
 
 Public Sub closeOutputFile()
-Debug.Print "TradeBuild.TickfileWriter - closing output tickfile"
+Debug.Print "TradeBuild25.TickfileWriter - closing output tickfile"
 mWriter.closeOutputFile
 
 Set mSelfRef = Me   ' to ensure this object is kept alive while
                     ' the writer closes down (it may be doing
                     ' asynchronous writes)
 
-Set mTimer = New TimerUtils.IntervalTimer
-mTimer.RepeatNotifications = False
-mTimer.TimerIntervalSecs = 60
+Set mTimer = createIntervalTimer(60, ExpiryTimeUnitSeconds)
 mTimer.StartTimer
 End Sub
 
 Friend Sub writeAsk(ByVal timestamp As Date, _
                     ByVal price As Double, _
-                    ByVal Size As Long)
+                    ByVal size As Long)
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild.TickTypes.TickTypeAsk
+        .TickType = TradeBuild25.TickTypes.TickTypeAsk
         .timestamp = timestamp
         .TickPrice = price
-        .TickSize = Size
+        .TickSize = size
     End With
     mPendingWrites.add pendingTick
 Else
-    mWriter.writeAsk timestamp, price, Size
+    mWriter.writeAsk timestamp, price, size
 End If
 End Sub
 
 
 Friend Sub writeBid(ByVal timestamp As Date, _
                     ByVal price As Double, _
-                    ByVal Size As Long)
+                    ByVal size As Long)
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild.TickTypes.TickTypeBid
+        .TickType = TradeBuild25.TickTypes.TickTypeBid
         .timestamp = timestamp
         .TickPrice = price
-        .TickSize = Size
+        .TickSize = size
     End With
     mPendingWrites.add pendingTick
 Else
-    mWriter.writeBid timestamp, price, Size
+    mWriter.writeBid timestamp, price, size
 End If
 End Sub
 
@@ -211,7 +209,7 @@ Friend Sub writeClose(ByVal timestamp As Date, _
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild.TickTypes.TickTypePrevClose
+        .TickType = TradeBuild25.TickTypes.TickTypePrevClose
         .timestamp = timestamp
         .TickPrice = price
     End With
@@ -226,7 +224,7 @@ Friend Sub writeHigh(ByVal timestamp As Date, _
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild.TickTypes.TickTypeHigh
+        .TickType = TradeBuild25.TickTypes.TickTypeHigh
         .timestamp = timestamp
         .TickPrice = price
     End With
@@ -241,7 +239,7 @@ Friend Sub writeLow(ByVal timestamp As Date, _
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild.TickTypes.TickTypeLow
+        .TickType = TradeBuild25.TickTypes.TickTypeLow
         .timestamp = timestamp
         .TickPrice = price
     End With
@@ -258,19 +256,19 @@ Friend Sub writeMarketDepthData( _
                         ByVal operation As Long, _
                         ByVal side As Long, _
                         ByVal price As Double, _
-                        ByVal Size As Long)
+                        ByVal size As Long)
 
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild.TickTypes.TickTypeMarketDepth
+        .TickType = TradeBuild25.TickTypes.TickTypeMarketDepth
         .MDPosition = position
         .MDMarketMaker = marketMaker
         .MDOperation = operation
         .MDSide = side
         .timestamp = timestamp
         .TickPrice = price
-        .TickSize = Size
+        .TickSize = size
     End With
     mPendingWrites.add pendingTick
 Else
@@ -280,7 +278,7 @@ Else
             operation, _
             side, _
             price, _
-            Size
+            size
 End If
 End Sub
 
@@ -290,7 +288,7 @@ Friend Sub writeMarketDepthReset( _
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild.TickTypes.TickTypeMarketDepthReset
+        .TickType = TradeBuild25.TickTypes.TickTypeMarketDepthReset
         .timestamp = timestamp
     End With
     mPendingWrites.add pendingTick
@@ -300,54 +298,54 @@ End If
 End Sub
                         
 Friend Sub writeOpenInterest(ByVal timestamp As Date, _
-                    ByVal Size As Long)
+                    ByVal size As Long)
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild.TickTypes.TickTypeOpenInterest
+        .TickType = TradeBuild25.TickTypes.TickTypeOpenInterest
         .timestamp = timestamp
-        .TickSize = Size
+        .TickSize = size
     End With
     mPendingWrites.add pendingTick
 Else
-    mWriter.writeOpenInterest timestamp, Size
+    mWriter.writeOpenInterest timestamp, size
 End If
 End Sub
 
 Friend Sub writeTrade(ByVal timestamp As Date, _
                     ByVal price As Double, _
-                    ByVal Size As Long)
+                    ByVal size As Long)
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild.TickTypes.TickTypeLast
+        .TickType = TradeBuild25.TickTypes.TickTypeLast
         .timestamp = timestamp
         .TickPrice = price
-        .TickSize = Size
+        .TickSize = size
     End With
     mPendingWrites.add pendingTick
 Else
-    mWriter.writeTrade timestamp, price, Size
+    mWriter.writeTrade timestamp, price, size
 End If
 End Sub
 
 Friend Sub writeVolume(ByVal timestamp As Date, _
-                    ByVal Size As Long)
+                    ByVal size As Long)
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild.TickTypes.TickTypeVolume
+        .TickType = TradeBuild25.TickTypes.TickTypeVolume
         .timestamp = timestamp
-        .TickSize = Size
+        .TickSize = size
     End With
     mPendingWrites.add pendingTick
 Else
-    mWriter.writeVolume timestamp, Size
+    mWriter.writeVolume timestamp, size
 End If
 End Sub
 
-'================================================================================
+'@================================================================================
 ' Helper Functions
-'================================================================================
+'@================================================================================
 
 

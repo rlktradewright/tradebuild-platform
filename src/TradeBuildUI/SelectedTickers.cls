@@ -69,7 +69,7 @@ End Sub
 ' Methods
 '================================================================================
 
-Friend Sub add(ByVal pTicker As TradeBuild.ticker)
+Friend Sub add(ByVal pTicker As ticker)
 mTickers.add pTicker
 End Sub
 
@@ -77,7 +77,7 @@ Public Function count() As Long
 count = mTickers.count
 End Function
 
-Public Function item(ByVal index As Variant) As TradeBuild.ticker
+Public Function item(ByVal index As Variant) As ticker
 Attribute item.VB_UserMemId = 0
 Set item = mTickers.item(index)
 End Function
@@ -88,7 +88,7 @@ Attribute NewEnum.VB_MemberFlags = "40"
 Set NewEnum = mTickers.[_NewEnum]
 End Function
 
-Friend Sub remove(ByVal pTicker As TradeBuild.ticker)
+Friend Sub remove(ByVal pTicker As ticker)
 mTickers.remove pTicker
 End Sub
 

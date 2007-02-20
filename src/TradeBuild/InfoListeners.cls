@@ -13,74 +13,74 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-'================================================================================
+'@================================================================================
 ' Implemented Interfaces
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Events
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Types
-'================================================================================
+'@================================================================================
 
 Public mLastKeyAdded As String  ' for debugging only
 
-'================================================================================
+'@================================================================================
 ' Member variables and constants
-'================================================================================
+'@================================================================================
 
-Private mAllListeners As WeakCollection
+Private mAllListeners As Collection
     ' each entry in this collection is a listener that listens on all
     ' value types
 Private mListenerCols As Collection
     ' each entry in this collection is itself a collection of listeners,
     ' keyed by requiredData
     
-'================================================================================
+'@================================================================================
 ' Enums
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Class Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub Class_Initialize()
-Set mAllListeners = New WeakCollection
+Set mAllListeners = New Collection
 Set mListenerCols = New Collection
 End Sub
 
-'================================================================================
+'@================================================================================
 ' xxxx Event Handlers
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Properties
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Methods
-'================================================================================
+'@================================================================================
 
 Public Function add(ByVal newListener As InfoListener, _
                 Optional ByVal valueType As Long = TradeBuildListenValueTypes.VTAll) As String
 Dim key As String
-Dim listeners As WeakCollection
+Dim listeners As Collection
 
 If valueType <> TradeBuildListenValueTypes.VTAll Then
     On Error Resume Next
     Set listeners = mListenerCols("V" & valueType)
     If listeners Is Nothing Then
-        Set listeners = New WeakCollection
+        Set listeners = New Collection
         mListenerCols.add listeners, "V" & valueType
     End If
     On Error GoTo 0
 
-    key = valueType & Chr(0) & gGenerateGUIDString
+    key = valueType & Chr(0) & generateGUIDString
     listeners.add newListener, key
 Else
-    key = gGenerateGUIDString
+    key = generateGUIDString
     mAllListeners.add newListener, key
 End If
 
@@ -88,19 +88,19 @@ add = key
 mLastKeyAdded = key
 End Function
 
-Public Function Item(ByRef key As String) As InfoListener
-Dim listeners As WeakCollection
+Public Function item(ByRef key As String) As InfoListener
+Dim listeners As Collection
 
 If InStr(1, key, Chr(0)) <> 0 Then
     Set listeners = mListenerCols("V" & Left(key, InStr(1, key, Chr(0)) - 1))
-    Set Item = listeners(key)
+    Set item = listeners(key)
 Else
-    Set Item = mAllListeners(key)
+    Set item = mAllListeners(key)
 End If
 End Function
 
 Public Function Count() As Long
-Dim listeners As WeakCollection
+Dim listeners As Collection
 
 For Each listeners In mListenerCols
     Count = Count + listeners.Count
@@ -109,7 +109,7 @@ Count = Count + mAllListeners.Count
 End Function
 
 Public Sub remove(ByVal key As String)
-Dim listeners As WeakCollection
+Dim listeners As Collection
 Dim listener As InfoListener
 
 If InStr(1, key, Chr(0)) <> 0 Then
@@ -122,7 +122,7 @@ End If
 End Sub
 
 Public Sub notify(value As Variant, valueType As Long, source As Object)
-Dim listeners As WeakCollection
+Dim listeners As Collection
 Dim listener As InfoListener
 Dim i As Long
 Dim ev As InfoEvent
@@ -147,9 +147,9 @@ If Not listeners Is Nothing Then
 End If
 End Sub
 
-'================================================================================
+'@================================================================================
 ' Helper Functions
-'================================================================================
+'@================================================================================
 
 
 

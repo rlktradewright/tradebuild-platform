@@ -13,48 +13,24 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-'================================================================================
+'@================================================================================
 ' Events
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Types
-'================================================================================
-
-Public Type ChangeEvent
-    source          As Object
-    changeType      As Long
-End Type
-
-Public Type CollectionChangeEvent
-    source          As Object
-    changeType      As CollectionChangeTypes
-    affectedObject  As Object
-End Type
-
-Public Type CurrentBarEvent
-    source          As Object
-    currentBar      As TradeBuild.Bar
-End Type
-
-Public Type ErrorEvent
-    source          As Object
-    errorCode       As ApiErrorCodes
-    errorMsg        As String
-End Type
-
-Public Type GenericEvent
-    source          As Object
-End Type
-
-Public Type GUIDStruct
-    data(4) As Long
-End Type
+'@================================================================================
 
 Public Type InfoEvent
     source          As Object
     valueType       As Long
     data            As Variant
+End Type
+
+Public Type NotificationEvent
+    source          As Object
+    eventCode       As Long
+    eventMessage    As Variant
 End Type
 
 Public Type PriceChangeEvent
@@ -71,18 +47,18 @@ Public Type ProfitEvent
     currencyCode    As String
 End Type
 
-Public Type ProcessedMarketDepthEvent
+Public Type MarketDepthEvent
     source          As Object
     side            As DOMSides
     price           As Double
-    Size            As Long
+    size            As Long
 End Type
 
 Public Type QuoteEvent
     source          As Object
     price           As Double
     priceString     As String
-    Size            As Long
+    size            As Long
     priceChange     As ValueChanges
     sizeChange      As ValueChanges
 End Type
@@ -94,48 +70,12 @@ Public Type RawMarketDepthEvent
     operation       As DOMOperations
     side            As DOMSides
     price           As Double
-    Size            As Long
-End Type
-
-Public Type SortEntryStruct
-    key As String
-    ObjectRef As Object
-End Type
-
-Public Type StateChangeEvent
-    source              As Object
-    State               As Long
-End Type
-
-Public Type StudyListEntry
-    name            As String
-    serviceProvider As String
-End Type
-
-Public Type StudyValueStruct
-    value               As Variant
-    barNumber           As Long
-    timestamp           As Date
-End Type
-
-Public Type StudyValueEvent
-    source          As Object
-    value           As Variant
-    ValueName       As String
-    timestamp       As Date
-    barNumber       As Long
-End Type
-
-Public Type TaskCompletionEvent
-    source              As Object
-    resultCode          As Long
-    message             As String
-    data                As Variant
+    size            As Long
 End Type
 
 Public Type Tick
     timestamp       As Date
-    TickType        As TradeBuild.TickTypes
+    TickType        As TradeBuild25.TickTypes
     TickPrice       As Double
     TickSize        As Long
     MDPosition      As Long
@@ -145,7 +85,7 @@ Public Type Tick
 End Type
 
 Public Type TickfileFormatSpecifier
-    FormatType      As TradeBuild.TickfileFormatType
+    FormatType      As TradeBuild25.TickfileFormatType
     capabilities    As Long
     FormalID        As String
     name            As String
@@ -168,71 +108,72 @@ Public Type WriterEvent
 End Type
 
 
-'================================================================================
+'@================================================================================
 ' Member variables and constants
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Enums
-'================================================================================
+'@================================================================================
 
-Public Enum ApiErrorCodes
+Public Enum ApiNotifyCodes
     
     ' TradeBuild-specific
-    ApiErrServiceProviderError = 900
+    ApiNotifyServiceProviderError = 900
                             ' Error notified by service provider and not
                             ' handled by TradeBuild
-    ApiErrTickfileEmpty     ' Tickfile is empty
-    ApiErrTickfileInvalid   ' Not a valid tickfile format
-    ApiErrTickfileVersionNotSupported
+    ApiNotifyTickfileEmpty     ' Tickfile is empty
+    ApiNotifyTickfileInvalid   ' Not a valid tickfile format
+    ApiNotifyTickfileVersionNotSupported
                             ' The version of tickfile is not supported
-    ApiErrContractDetailsInvalid  ' The tickfile contains contract details from
+    ApiNotifyContractDetailsInvalid  ' The tickfile contains contract details from
                             ' an old version of Contract class
-    ApiErrNoContractDetails ' The tickfile contains no contract details
+    ApiNotifyNoContractDetails ' The tickfile contains no contract details
                             ' (eg an eSignal tickfile) and no contract
                             ' has been specified in the contract property
-    ApiErrTickfileDataSourceNotResponding
-    ApiErrCantWriteToTickfileDataStore
-    ApiErrRetryingConnectionToTickfileDataSource
-    ApiErrCantConnectHistoricDataSource
-    ApiErrRetryingConnectionToHistoricDataSource
-    ApiErrContractSpecifierAmbiguous
-    ApiErrContractSpecifierInvalid
-    ApiErrCantConnectRealtimeDataSource
-    ApiErrLostConnectionToRealtimeDataSource
-    ApiErrNoRealtimeDataSource
-    ApiErrCantStartTicker
-    ApiErrInvalidRequest
-    ApiErrFatalError           ' a fatal error has occurred within TradeBuild
-    ApiErrStartTickerFailed
-    ApiErrMarketDepthNotAvailable
-    ApiErrReonnectingToRealtimeDataSource
-    ApiErrDisconnectedFromRealtimeDataSource
-    ApiErrCantConnectToBroker
-    ApiErrRetryConnectToBroker
-    ApiErrLostConnectionToBroker
-    ApiErrReConnectingToBroker
-    ApiErrInvalidOrder
-    ApiErrInsufficientFunds
-    ApiErrDisconnectedFromBroker
+    ApiNotifyTickfileDataSourceNotResponding
+    ApiNotifyCantWriteToTickfileDataStore
+    ApiNotifyRetryingConnectionToTickfileDataSource
+    ApiNotifyConnectedToTickfileDataSource
+    
+    ApiNotifyNoHistoricDataSource
+    ApiNotifyCantConnectHistoricDataSource
+    ApiNotifyConnectedToHistoricDataSource
+    ApiNotifyRetryingConnectionToHistoricDataSource
+    
+    ApiNotifyContractSpecifierAmbiguous
+    ApiNotifyContractSpecifierInvalid
+    
+    ApiNotifyMarketDepthNotAvailable
+    
+    ApiNotifyInvalidRequest
+    ApiNotifyFatalError           ' a fatal error has occurred within TradeBuild
+    
+    ApiNotifyCantConnectRealtimeDataSource
+    ApiNotifyConnectedToRealtimeDataSource
+    ApiNotifyLostConnectionToRealtimeDataSource
+    ApiNotifyNoRealtimeDataSource
+    ApiNotifyReconnectingToRealtimeDataSource
+    ApiNotifyDisconnectedFromRealtimeDataSource
+    ApiNotifyRealtimeDataRequestFailed
+    
+    ApiNotifyCantConnectToBroker
+    ApiNotifyConnectedToBroker
+    ApiNotifyRetryConnectToBroker
+    ApiNotifyLostConnectionToBroker
+    ApiNotifyReConnectingToBroker
+    ApiNotifyInvalidOrder
+    ApiNotifyInsufficientFunds
+    ApiNotifyDisconnectedFromBroker
+    
+    ApiNotifyNonSpecificNotification
                             
-End Enum
-
-Public Enum BarTypes
-    BarTypeTrade = TradeBuildSP.BarTypes.trade
-    BarTypeBid = TradeBuildSP.BarTypes.bid
-    BarTypeAsk = TradeBuildSP.BarTypes.ask
 End Enum
 
 Public Enum BulletinTypes
     BulletinNews = 1
     BulletinExchangeUnavailable
     BulletinExchangeAvailable
-End Enum
-
-Public Enum CollectionChangeTypes
-    CollItemAdded = 1
-    CollItemRemoved
 End Enum
 
 Public Enum ConnectionStates
@@ -277,41 +218,6 @@ Public Enum EntryOrderTypes
     EntryOrderTypeLimitIfTouched
     EntryOrderTypeStop
     EntryOrderTypeStopLimit
-End Enum
-
-Public Enum ErrorCodes
-    ' generic run-time error codes defined by VB
-    ErrInvalidProcedureCall = 5
-    ErrOverflow = 6
-    ErrSubscriptOutOfRange = 9
-    ErrDivisionByZero = 11
-    ErrTypeMismatch = 13
-    ErrFileNotFound = 53
-    ErrFileAlreadyOpen = 55
-    ErrFileAlreadyExists = 58
-    ErrDiskFull = 61
-    ErrPermissionDenied = 70
-    ErrPathNotFound = 76
-    ErrInvalidObjectReference = 91
-    
-    ErrInvalidPropertyValue = 380
-    ErrInvalidPropertyArrayIndex = 381
-    
-    ' generic error codes
-    ErrArithmeticException = vbObjectError + 1024  ' an exceptional arithmetic condition has occurred
-    ErrArrayIndexOutOfBoundsException  ' an array has been accessed with an illegal index
-    ErrClassCastException              ' attempt to cast an object to class of which it is not an instance
-    ErrIllegalArgumentException        ' method has been passed an illegal or inappropriate argument
-    ErrIllegalStateException           ' a method has been invoked at an illegal or inappropriate time
-    ErrIndexOutOfBoundsException       ' an index of some sort (such as to an array, to a string, or to a vector) is out of range
-    ErrNullPointerException            ' attempt to use Nothing in a case where an object is required
-    ErrNumberFormatException           ' attempt to convert a string to one of the numeric types, but the string does not have the appropriate format
-    ErrRuntimeException                ' an unspecified runtime error has occurred
-    ErrSecurityException               ' a security violation has occurred
-    ErrUnsupportedOperationException   ' the requested operation is not supported
-
-
-
 End Enum
 
 Public Enum FADataTypes
@@ -508,40 +414,6 @@ Public Enum StopTriggerMethods
     StopTriggerDoubleLast = 8
 End Enum
 
-Public Enum StudyDefaultRegions
-    DefaultRegionNone = 0
-    DefaultRegionPrice
-    DefaultRegionVolume
-    DefaultRegionCustom
-End Enum
-
-Public Enum StudyInputTypes
-    InputTypeNone = 0
-    InputTypeInteger
-    InputTypeSingle
-    InputTypeDouble
-    InputTypeString
-    InputTypeDate
-End Enum
-
-Public Enum StudyParameterTypes
-    ParameterTypeNone = 0
-    ParameterTypeInteger
-    ParameterTypeSingle
-    ParameterTypeDouble
-    ParameterTypeString
-    ParameterTypeDate
-End Enum
-
-Public Enum StudyValueTypes
-    ValueTypeNone = 0
-    ValueTypeInteger
-    ValueTypeSingle
-    ValueTypeDouble
-    ValueTypeString
-    ValueTypeDate
-End Enum
-
 Public Enum TargetOrderTypes
     TargetOrderTypeNone = 3000
     TargetOrderTypeLimit
@@ -579,23 +451,6 @@ Public Enum TickTypes
     TickTypeMarketDepth = &H100&
     TickTypeMarketDepthL2 = &H200&
     TickTypeMarketDepthReset = &H400&
-End Enum
-
-Public Enum TimePeriodUnits
-    TimePeriodMinute = 2
-    TimePeriodHour
-    TimePeriodDay
-    TimePeriodWeek
-    TimePeriodMonth
-    TimePeriodLunarMonth
-    TimePeriodYear
-End Enum
-
-Public Enum TimestampFormats
-    TimestampTimeOnly
-    TimestampDateOnly
-    TimestampDateAndTime
-    TimestampCustom
 End Enum
 
 Public Enum TradeBuildListenValueTypes
@@ -644,24 +499,24 @@ Public Enum WriterNotifications
     WriterWriteOperationCompleted
 End Enum
 
-'================================================================================
+'@================================================================================
 ' Class Event Handlers
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' xxxx Event Handlers
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Properties
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Methods
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Helper Functions
-'================================================================================
+'@================================================================================
 
 

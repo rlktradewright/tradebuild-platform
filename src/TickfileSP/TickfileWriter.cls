@@ -163,7 +163,7 @@ Case TickfileFormats.TickfileTradeBuild
     If mTsOut Is Nothing Then createTradeBuildTickFile timestamp
     
     writeTickfileLine CDbl(timestamp) & "," & _
-                mCommonServiceConsumer.FormatTimestamp(timestamp, TimestampFormats.TimestampTimeOnly) & "," & _
+                FormatTimestamp(timestamp, TimestampFormats.TimestampTimeOnly) & "," & _
                 TICK_MARKET_DEPTH & "," & _
                 Position & "," & _
                 marketMaker & "," & _
@@ -188,7 +188,7 @@ Case TickfileFormats.TickfileTradeBuild
     If mTsOut Is Nothing Then createTradeBuildTickFile timestamp
     
     writeTickfileLine CDbl(timestamp) & "," & _
-                mCommonServiceConsumer.FormatTimestamp(timestamp, TimestampFormats.TimestampTimeOnly) & "," & _
+                FormatTimestamp(timestamp, TimestampFormats.TimestampTimeOnly) & "," & _
                 TICK_MARKET_DEPTH_RESET
 
 Case TickfileFormats.TickfileCrescendo
@@ -305,11 +305,19 @@ On Error GoTo Err
 tfPath = IIf(mPath <> "", mPath, App.path)
 If Right$(tfPath, 1) <> "\" Then tfPath = tfPath & "\"
 
+On Error Resume Next
+mFileSys.CreateFolder tfPath
+On Error GoTo Err
+
 With mContract.Specifier
     tfPath = tfPath & UCase$(.Symbol) & .Expiry & "\"
     tfName = UCase$(.Symbol) & .Expiry & "-" _
             & format(timestamp, "yyyymmdd-hhmmss") & ".csv"
     Set mTsOut = mFileSys.CreateTextFile(tfPath & tfName)
+    
+    mServiceConsumer.NotifyEvent StandardSPEventCodes.TFConnectedToDataSource, _
+                        "Connected to tickfile " & tfPath & tfName, _
+                        mTickfileServiceProvider.handle
     
     mServiceConsumer.OutputTickfileCreated tfPath & tfName
     logMessage "Created output tickfile " & tfPath & tfName
@@ -342,10 +350,20 @@ On Error GoTo Err
 
 tfPath = IIf(mPath <> "", mPath, App.path)
 If Right$(tfPath, 1) <> "\" Then tfPath = tfPath & "\"
+
+On Error Resume Next
+mFileSys.CreateFolder tfPath
+On Error GoTo Err
+
 tfPath = tfPath & UCase$(mContract.Specifier.LocalSymbol) & "\"
 tfName = UCase$(mContract.Specifier.LocalSymbol) & "-" & _
         format(timestamp, "yyyymmdd-hhmmss") & ".tck"
 Set mTsOut = mFileSys.CreateTextFile(tfPath & tfName)
+
+mServiceConsumer.NotifyEvent StandardSPEventCodes.TFConnectedToDataSource, _
+                    "Connected to tickfile " & tfPath & tfName, _
+                    mTickfileServiceProvider.handle
+
 mServiceConsumer.OutputTickfileCreated tfPath & tfName
 logMessage "Created output tickfile " & tfPath & tfName
 writeTickfileLine TICKFILE_DECLARER & "," & _
@@ -412,7 +430,7 @@ Select Case mTickfileFormat
 Case TickfileFormats.TickfileTradeBuild
     If mTsOut Is Nothing Then createTradeBuildTickFile timestamp
     writeTickfileLine CDbl(timestamp) & "," & _
-                mCommonServiceConsumer.FormatTimestamp(timestamp, TimestampFormats.TimestampTimeOnly) & "," & _
+                FormatTimestamp(timestamp, TimestampFormats.TimestampTimeOnly) & "," & _
                 tickType & "," & _
                 IIf(price <> -1#, format(price, priceFormatString), "") & _
                 IIf(size = -1&, "", IIf(price = -1#, size, "," & size))

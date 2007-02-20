@@ -22,7 +22,7 @@ Public Function allowOrder(ByVal currentSize As Long, _
                             ByVal dayDrawdown As Currency, _
                             ByVal tradeProfit As Currency, _
                             ByVal tradeDrawdown As Currency, _
-                            ByVal Timestamp As Date, _
+                            ByVal timestamp As Date, _
                             ByRef message As String, _
                             ByRef endSession As Boolean) As Boolean
 End Function
@@ -31,7 +31,7 @@ Public Function closeAll(ByVal dayProfit As Currency, _
                         ByVal dayDrawdown As Currency, _
                         ByVal tradeProfit As Currency, _
                         ByVal tradeDrawdown As Currency, _
-                        ByVal Timestamp As Date, _
+                        ByVal timestamp As Date, _
                         ByRef message As String, _
                         ByRef endSession As Boolean) As Boolean
 End Function
@@ -40,15 +40,15 @@ Public Sub flat()
 
 End Sub
 
-Public Property Let parameters(ByVal value As TradeBuild.parameters)
+Public Property Let parameters(ByVal value As parameters)
 
 End Property
 
-Public Property Get parameters() As TradeBuild.parameters
+Public Property Get parameters() As parameters
 
 End Property
 
-Public Property Get defaultParameters() As TradeBuild.parameters
+Public Property Get defaultParameters() As parameters
 
 End Property
 

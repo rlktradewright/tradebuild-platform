@@ -13,73 +13,75 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-'================================================================================
+'@================================================================================
 ' Description
-'================================================================================
+'@================================================================================
 '
 '
-'================================================================================
+'@================================================================================
 ' Amendment history
-'================================================================================
+'@================================================================================
 '
 '
 '
 '
 
-'================================================================================
+'@================================================================================
 ' Interfaces
-'================================================================================
+'@================================================================================
 
 Implements TradeBuildSP.IContracts
 
-'================================================================================
+'@================================================================================
 ' Events
-'================================================================================
+'@================================================================================
 
 Event ContractDetailsReceived( _
                 ByVal pContract As Contract)
 Event ContractSpecifierInvalid(ByVal reason As String)
 Event NoMoreContractDetails()
+Event Notification( _
+                ByRef ev As NotificationEvent)
 Event TryLater( _
                 ByVal reason As String, _
                 ByVal serviceProviderName As String)
 
-'================================================================================
+'@================================================================================
 ' Constants
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Enums
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Types
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Member variables
-'================================================================================
+'@================================================================================
 
 Private mContracts As Collection
 
 Private mContractSpecifier As contractSpecifier
 
-Private mChangeListeners As WeakCollection
+Private mChangeListeners As Collection
 
-Private mServiceProviders As serviceProviders
+Private mServiceProviders As ServiceProviders
 
-'================================================================================
+'@================================================================================
 ' Class Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub Class_Initialize()
 Set mContracts = New Collection
-Set mChangeListeners = New WeakCollection
+Set mChangeListeners = New Collection
 End Sub
 
-'================================================================================
+'@================================================================================
 ' IContracts Interface Members
-'================================================================================
+'@================================================================================
 
 Private Sub IContracts_AddContract(ByVal pContract As TradeBuildSP.IContract)
 AddContract pContract
@@ -98,7 +100,7 @@ IContracts_Count = Count
 End Property
 
 Private Function IContracts_Item(ByVal index As Variant) As TradeBuildSP.IContract
-Set IContracts_Item = Item(index)
+Set IContracts_Item = item(index)
 End Function
 
 Private Sub IContracts_Remove(ByVal index As Variant)
@@ -111,13 +113,13 @@ Private Sub IContracts_ServiceProviderCantHandle( _
 RaiseEvent TryLater(reason, serviceProviderName)
 End Sub
 
-'================================================================================
+'@================================================================================
 ' xxxx Event Handlers
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Properties
-'================================================================================
+'@================================================================================
 
 Friend Property Let contractSpecifier(ByVal value As contractSpecifier)
 Set mContractSpecifier = value
@@ -131,13 +133,13 @@ Public Property Get Count() As Long
 Count = mContracts.Count
 End Property
 
-Friend Property Let serviceProviders(ByVal value As serviceProviders)
+Friend Property Let ServiceProviders(ByVal value As ServiceProviders)
 Set mServiceProviders = value
 End Property
 
-'================================================================================
+'@================================================================================
 ' Methods
-'================================================================================
+'@================================================================================
 
 Friend Sub AddContract(ByVal pContract As Contract)
 mContracts.add pContract, pContract.specifier.key
@@ -154,9 +156,9 @@ Friend Sub ContractSpecifierInvalid(ByVal reason As String)
 RaiseEvent ContractSpecifierInvalid(reason)
 End Sub
 
-Public Function Item(ByVal index As Variant) As Contract
-Attribute Item.VB_UserMemId = 0
-Set Item = mContracts(index)
+Public Function item(ByVal index As Variant) As Contract
+Attribute item.VB_UserMemId = 0
+Set item = mContracts(index)
 End Function
 
 Public Sub Load()
@@ -176,7 +178,7 @@ mServiceProviders.LoadContracts Me
 Exit Sub
 err:
 err.Raise err.number, _
-            "TradeBuild.Contracts::Load", _
+            "TradeBuild25.Contracts::Load", _
             err.Description
 End Sub
 
@@ -190,6 +192,12 @@ Attribute NewEnum.VB_MemberFlags = "40"
 Set NewEnum = mContracts.[_NewEnum]
 End Function
 
+Friend Sub notify( _
+                ByRef ev As NotificationEvent)
+RaiseEvent Notification(ev)
+End Sub
+
+
 Public Sub remove(ByVal index As Variant)
 Dim lContract As Contract
 Set lContract = mContracts(index)
@@ -200,13 +208,13 @@ End Sub
 Public Sub removeCollectionChangeListener(ByVal value As CollectionChangeListener)
 Dim i As Long
 For i = mChangeListeners.Count To 1 Step -1
-    If mChangeListeners.Item(i) Is value Then mChangeListeners.remove i
+    If mChangeListeners.item(i) Is value Then mChangeListeners.remove i
 Next
 End Sub
 
-'================================================================================
+'@================================================================================
 ' Helper Functions
-'================================================================================
+'@================================================================================
 
 Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _

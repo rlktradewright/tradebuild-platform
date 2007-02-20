@@ -1,105 +1,78 @@
 Attribute VB_Name = "Globals"
 Option Explicit
 
-'================================================================================
+'@================================================================================
 ' Constants
-'================================================================================
+'@================================================================================
 
-Public Const S_OK = 0
-Public Const NoValidID As Long = -1
-Public Const InitialMaxTickers As Long = 100&
+Public Const S_OK                           As Long = 0
+Public Const NoValidID                      As Long = -1
+Public Const InitialMaxTickers              As Long = 100&
 
-Public Const DefaultStudyValue As String = "$default"
+Public Const DefaultStudyValue              As String = "$default"
 
-Public Const MinDouble As Double = -(2 - 2 ^ -52) * 2 ^ 1023
-Public Const MaxDouble As Double = (2 - 2 ^ -52) * 2 ^ 1023
+Public Const MinDouble                      As Double = -(2 - 2 ^ -52) * 2 ^ 1023
+Public Const MaxDouble                      As Double = (2 - 2 ^ -52) * 2 ^ 1023
 
-Public Const OneSecond As Double = 1.15740740740741E-05
-Public Const OneMicroSecond As Double = 1.15740740740741E-11
+Public Const OneSecond                      As Double = 1.15740740740741E-05
+Public Const OneMicroSecond                 As Double = 1.15740740740741E-11
 
 Public Const MultiTaskingTimeQuantumMillisecs As Long = 20
 
-Public Const StrOrderTypeNone As String = ""
-Public Const StrOrderTypeMarket As String = "Market"
-Public Const StrOrderTypeMarketClose As String = "Market on Close"
-Public Const StrOrderTypeLimit As String = "Limit"
-Public Const StrOrderTypeLimitClose As String = "Limit on Close"
-Public Const StrOrderTypePegMarket As String = "Peg to Market"
-Public Const StrOrderTypeStop As String = "Stop"
-Public Const StrOrderTypeStopLimit As String = "Stop Limit"
-Public Const StrOrderTypeTrail As String = "Trailing Stop"
-Public Const StrOrderTypeRelative As String = "Relative"
-Public Const StrOrderTypeVWAP As String = "VWAP"
-Public Const StrOrderTypeMarketToLimit As String = "Market to Limit"
-Public Const StrOrderTypeQuote As String = "Quote"
-Public Const StrOrderTypeAutoStop As String = "Auto Stop"
-Public Const StrOrderTypeAutoLimit As String = "Auto Limit"
-Public Const StrOrderTypeAdjust As String = "Adjust"
-Public Const StrOrderTypeAlert As String = "Alert"
-Public Const StrOrderTypeLimitIfTouched As String = "Limit if Touched"
-Public Const StrOrderTypeMarketIfTouched As String = "Market if Touched"
-Public Const StrOrderTypeTrailLimit As String = "Trail Limit"
+Public Const BidInputName                   As String = "Bid"
+Public Const AskInputName                   As String = "Ask"
+Public Const TradeInputName                 As String = "Trade"
+Public Const TickVolumeInputName            As String = "Tick volume"
+Public Const VolumeInputName                As String = "Volume"
+
+Public Const StrOrderTypeNone               As String = ""
+Public Const StrOrderTypeMarket             As String = "Market"
+Public Const StrOrderTypeMarketClose        As String = "Market on Close"
+Public Const StrOrderTypeLimit              As String = "Limit"
+Public Const StrOrderTypeLimitClose         As String = "Limit on Close"
+Public Const StrOrderTypePegMarket          As String = "Peg to Market"
+Public Const StrOrderTypeStop               As String = "Stop"
+Public Const StrOrderTypeStopLimit          As String = "Stop Limit"
+Public Const StrOrderTypeTrail              As String = "Trailing Stop"
+Public Const StrOrderTypeRelative           As String = "Relative"
+Public Const StrOrderTypeVWAP               As String = "VWAP"
+Public Const StrOrderTypeMarketToLimit      As String = "Market to Limit"
+Public Const StrOrderTypeQuote              As String = "Quote"
+Public Const StrOrderTypeAutoStop           As String = "Auto Stop"
+Public Const StrOrderTypeAutoLimit          As String = "Auto Limit"
+Public Const StrOrderTypeAdjust             As String = "Adjust"
+Public Const StrOrderTypeAlert              As String = "Alert"
+Public Const StrOrderTypeLimitIfTouched     As String = "Limit if Touched"
+Public Const StrOrderTypeMarketIfTouched    As String = "Market if Touched"
+Public Const StrOrderTypeTrailLimit         As String = "Trail Limit"
 Public Const StrOrderTypeMarketWithProtection As String = "Market with Protection"
-Public Const StrOrderTypeMarketOnOpen As String = "Market on Open"
-Public Const StrOrderTypeLimitOnOpen As String = "Limit on Open"
-Public Const StrOrderTypePeggedToPrimary As String = "Pegged to Primary"
+Public Const StrOrderTypeMarketOnOpen       As String = "Market on Open"
+Public Const StrOrderTypeLimitOnOpen        As String = "Limit on Open"
+Public Const StrOrderTypePeggedToPrimary    As String = "Pegged to Primary"
 
-Public Const StrOrderActionBuy As String = "Buy"
-Public Const StrOrderActionSell As String = "Sell"
+Public Const StrOrderActionBuy              As String = "Buy"
+Public Const StrOrderActionSell             As String = "Sell"
 
-'================================================================================
+'@================================================================================
 ' Enums
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Types
-'================================================================================
+'@================================================================================
 
-Public Type GUIDString
-    StartBrace  As String * 2
-    GUIDProper  As String * 72
-    EndBrace    As String * 2
-    ZeroByte    As String * 1
-End Type
-
-''================================================================================
-'' Global object references
-''================================================================================
-'
-'Public gServiceProviders As ServiceProviders
-'Public gTradeBuildAPI As TradeBuildAPI
-'Public gListeners As InfoListeners
-'Public gTaskManager As taskManager
-
-'================================================================================
+'@================================================================================
 ' External function declarations
-'================================================================================
+'@================================================================================
 
-Public Declare Function CoCreateGuid Lib "OLE32.dll" (pGUID As GUIDStruct) As Long
-
-Public Declare Sub CopyMemory Lib "Kernel32" Alias "RtlMoveMemory" ( _
-                            Destination As Any, _
-                            source As Any, _
-                            ByVal length As Long)
-                            
-Public Declare Sub MoveMemory Lib "Kernel32" Alias "RtlMoveMemory" ( _
-                            Destination As Any, _
-                            source As Any, _
-                            ByVal length As Long)
-
-Public Declare Function StringFromGUID2 Lib "OLE32.dll" ( _
-                            ByRef rguid As GUIDStruct, _
-                            ByRef lpsz As GUIDString, _
-                            ByVal cchMax As Long) As Integer
-
-'================================================================================
+'@================================================================================
 ' Variables
-'================================================================================
+'@================================================================================
 
 
-'================================================================================
+'@================================================================================
 ' Procedures
-'================================================================================
+'@================================================================================
 
 Public Sub gAddItemToCombo( _
                 ByVal combo As ComboBox, _
@@ -109,20 +82,16 @@ combo.AddItem itemText
 combo.itemData(combo.ListCount - 1) = itemData
 End Sub
 
-Public Function gCurrentTime() As Date
-gCurrentTime = CDbl(Int(Now)) + (CDbl(Timer) / 86400#)
-End Function
-
-'/**
+''
 ' Converts a member of the EntryOrderTypes enumeration to the equivalent OrderTypes value.
 '
 ' @return           the OrderTypes value corresponding to the parameter
 ' @param pEntryOrderType the EntryOrderTypes value to be converted
 ' @ see
 '
-'*/
+'@/
 Public Function gEntryOrderTypeToOrderType( _
-                ByVal pEntryOrderType As TradeBuild.EntryOrderTypes) As TradeBuild.OrderTypes
+                ByVal pEntryOrderType As TradeBuild25.EntryOrderTypes) As TradeBuild25.OrderTypes
 Select Case pEntryOrderType
 Case EntryOrderTypeMarket
     gEntryOrderTypeToOrderType = OrderTypeMarket
@@ -154,7 +123,7 @@ Case EntryOrderTypeStopLimit
     gEntryOrderTypeToOrderType = OrderTypeStopLimit
 Case Else
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "TradeBuild.Module1::gEntryOrderTypeToOrderType", _
+                "TradeBuild25.Module1::gEntryOrderTypeToOrderType", _
                 "Invalid entry type"
 End Select
 End Function
@@ -225,77 +194,7 @@ Case EntryOrderTypeStopLimit
 End Select
 End Function
 
-Public Function gFormatTimestamp(ByVal timestamp As Date, _
-                                Optional ByVal formatOption As TimestampFormats = TimestampDateAndTime, _
-                                Optional ByVal formatString As String = "yyyymmddhhnnss") As String
-Dim timestampDays As Long
-Dim timestampSecs As Double
-Dim timestampAsDate As Date
-Dim milliseconds As Long
-
-timestampDays = Int(timestamp)
-timestampSecs = Int((timestamp - Int(timestamp)) * 86400) / 86400#
-timestampAsDate = CDate(CDbl(timestampDays) + timestampSecs)
-milliseconds = CLng((timestamp - timestampAsDate) * 86400# * 1000#)
-
-If milliseconds >= 1000& Then
-    milliseconds = milliseconds - 1000&
-    timestampSecs = timestampSecs + (1# / 86400#)
-    timestampAsDate = CDate(CDbl(timestampDays) + timestampSecs)
-End If
-
-Select Case formatOption
-Case TimestampFormats.TimestampTimeOnly
-    gFormatTimestamp = format(timestampAsDate, "hhnnss") & "." & _
-                        format(milliseconds, "000")
-Case TimestampFormats.TimestampDateOnly
-    gFormatTimestamp = format(timestampAsDate, "yyyymmdd")
-Case TimestampFormats.TimestampDateAndTime
-    gFormatTimestamp = format(timestampAsDate, "yyyymmddhhnnss") & "." & _
-                        format(milliseconds, "000")
-Case TimestampFormats.TimestampCustom
-    gFormatTimestamp = format(timestampAsDate, formatString) & "." & _
-                        format(milliseconds, "000")
-End Select
-End Function
-
-Public Function gGenerateGUID() As GUIDStruct
-Dim lReturn As Long
-
-lReturn = CoCreateGuid(gGenerateGUID)
-
-If (lReturn <> S_OK) Then
-    err.Raise ErrorCodes.ErrRuntimeException, _
-                "TWUtilities.Utilities::GenerateGUID", _
-                "Can't create GUID"
-End If
-
-End Function
-
-Public Function gGenerateGUIDString() As String
-gGenerateGUIDString = gGUIDToString(gGenerateGUID)
-End Function
-
-Public Function gGenerateID() As Long
-Randomize
-gGenerateID = Fix(Rnd() * 1999999999 + 1)
-End Function
-
-Public Function gGenerateIDString() As String
-gGenerateIDString = Hex(gGenerateID)
-End Function
-
-Public Function gGUIDToString(ByRef pGUID As GUIDStruct) As String
-Dim GUIDString As GUIDString
-Dim iChars As Integer
-
-' convert binary GUID to string form
-iChars = StringFromGUID2(pGUID, GUIDString, Len(GUIDString))
-' convert string to ANSI
-gGUIDToString = StrConv(GUIDString.GUIDProper, vbFromUnicode)
-End Function
-
-Public Function gLegOpenCloseFromString(ByVal value As String) As TradeBuild.LegOpenClose
+Public Function gLegOpenCloseFromString(ByVal value As String) As TradeBuild25.LegOpenClose
 Select Case UCase$(value)
 Case ""
     gLegOpenCloseFromString = LegUnknownPos
@@ -308,7 +207,7 @@ Case "CLOSE"
 End Select
 End Function
 
-Public Function gLegOpenCloseToString(ByVal value As TradeBuild.LegOpenClose) As String
+Public Function gLegOpenCloseToString(ByVal value As TradeBuild25.LegOpenClose) As String
 Select Case value
 Case LegSamePos
     gLegOpenCloseToString = "SAME"
@@ -317,11 +216,6 @@ Case LegOpenPos
 Case LegClosePos
     gLegOpenCloseToString = "CLOSE"
 End Select
-End Function
-
-Public Function gNewWeakReference(ByVal target As Object) As WeakReference
-Set gNewWeakReference = New WeakReference
-gNewWeakReference.Initialise target
 End Function
 
 Public Function gOptionRightFromString(ByVal value As String) As OptionRights
@@ -514,103 +408,15 @@ Case SecTypeIndex
 End Select
 End Function
 
-Public Sub gSortObjects(data() As SortEntryStruct, _
-                            Low As Long, _
-                            Hi As Long)
-  
-  Dim lTmpLow As Long
-  Dim lTmpHi As Long
-  Dim lTmpMid As Long
-  Dim vTempVal As SortEntryStruct
-  Dim vTmpHold As SortEntryStruct
-  
-  lTmpLow = Low
-  lTmpHi = Hi
-  
-' ---------------------------------------------------------
-' Leave if there is nothing to sort
-' ---------------------------------------------------------
-  If Hi <= Low Then Exit Sub
-
-' ---------------------------------------------------------
-' Find the middle to start comparing values
-' ---------------------------------------------------------
-  lTmpMid = (Low + Hi) \ 2
-      
-' ---------------------------------------------------------
-' Move the item in the middle of the array to the
-' temporary holding area as a point of reference while
-' sorting.  This will change each time we make a recursive
-' call to this routine.
-' ---------------------------------------------------------
-  vTempVal = data(lTmpMid)
-      
-' ---------------------------------------------------------
-' Loop until we eventually meet in the middle
-' ---------------------------------------------------------
-  Do While (lTmpLow <= lTmpHi)
- 
-     ' Always process the low end first.  Loop as long as
-     ' the array data element is less than the data in
-     ' the temporary holding area and the temporary low
-     ' value is less than the maximum number of array
-     ' elements.
-     Do While (data(lTmpLow).Key < vTempVal.Key And lTmpLow < Hi)
-           lTmpLow = lTmpLow + 1
-     Loop
-      
-     ' Now, we will process the high end.  Loop as long as
-     ' the data in the temporary holding area is less
-     ' than the array data element and the temporary high
-     ' value is greater than the minimum number of array
-     ' elements.
-     Do While (vTempVal.Key < data(lTmpHi).Key And lTmpHi > Low)
-           lTmpHi = lTmpHi - 1
-     Loop
-            
-     ' if the temp low end is less than or equal
-     ' to the temp high end, then swap places
-     If (lTmpLow <= lTmpHi) Then
-         vTmpHold = data(lTmpLow)          ' Move the Low value to Temp Hold
-         data(lTmpLow) = data(lTmpHi)     ' Move the high value to the low
-         data(lTmpHi) = vTmpHold           ' move the Temp Hod to the High
-         lTmpLow = lTmpLow + 1              ' Increment the temp low counter
-         lTmpHi = lTmpHi - 1                ' Dcrement the temp high counter
-     End If
-     
-  Loop
-          
-' ---------------------------------------------------------
-' If the minimum number of elements in the array is
-' less than the temp high end, then make a recursive
-' call to this routine.  I always sort the low end
-' of the array first.
-' ---------------------------------------------------------
-  If (Low < lTmpHi) Then
-      gSortObjects data, Low, lTmpHi
-  End If
-          
-' ---------------------------------------------------------
-' If the temp low end is less than the maximum number
-' of elements in the array, then make a recursive call
-' to this routine.  The high end is always sorted last.
-' ---------------------------------------------------------
-  If (lTmpLow < Hi) Then
-       gSortObjects data, lTmpLow, Hi
-  End If
-  
-End Sub
-
-'/**
+''
 ' Converts a member of the StopOrderTypes enumeration to the equivalent OrderTypes value.
 '
 ' @return           the OrderTypes value corresponding to the parameter
 ' @param pStopOrderType the StopOrderTypes value to be converted
-' @ see
 '
-'*/
+'@/
 Public Function gStopOrderTypeToOrderType( _
-                ByVal pStopOrderType As TradeBuild.StopOrderTypes) As TradeBuild.OrderTypes
+                ByVal pStopOrderType As TradeBuild25.StopOrderTypes) As TradeBuild25.OrderTypes
 Select Case pStopOrderType
 Case StopOrderTypeNone
     gStopOrderTypeToOrderType = OrderTypeNone
@@ -628,7 +434,7 @@ Case StopOrderTypeAuto
     gStopOrderTypeToOrderType = OrderTypeAutoLimit
 Case Else
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "TradeBuild.Module1::gStopOrderTypeToOrderType", _
+                "TradeBuild25.Module1::gStopOrderTypeToOrderType", _
                 "Invalid entry type"
 End Select
 End Function
@@ -652,31 +458,16 @@ Case StopOrderTypeAuto
 End Select
 End Function
 
-Public Function gStringArraysEqual( _
-                ar1() As String, _
-                ar2() As String) As Boolean
-Dim i As Long
-
-On Error Resume Next    ' in case one array has no members
-If UBound(ar1) <> UBound(ar2) Then Exit Function
-On Error GoTo 0
-
-For i = 0 To UBound(ar1)
-    If ar1(i) <> ar2(i) Then Exit Function
-Next
-gStringArraysEqual = True
-End Function
-
-'/**
+''
 ' Converts a member of the TargetOrderTypes enumeration to the equivalent OrderTypes value.
 '
 ' @return           the OrderTypes value corresponding to the parameter
 ' @param pTargetOrderType the TargetOrderTypes value to be converted
 ' @ see
 '
-'*/
+'@/
 Public Function gTargetOrderTypeToOrderType( _
-                ByVal pTargetOrderType As TradeBuild.TargetOrderTypes) As TradeBuild.OrderTypes
+                ByVal pTargetOrderType As TradeBuild25.TargetOrderTypes) As TradeBuild25.OrderTypes
 Select Case pTargetOrderType
 Case TargetOrderTypeNone
     gTargetOrderTypeToOrderType = OrderTypeNone
@@ -696,7 +487,7 @@ Case TargetOrderTypeAuto
     gTargetOrderTypeToOrderType = OrderTypeAutoLimit
 Case Else
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "TradeBuild.Module1::gTargetOrderTypeToOrderType", _
+                "TradeBuild25.Module1::gTargetOrderTypeToOrderType", _
                 "Invalid entry type"
 End Select
 End Function
@@ -720,7 +511,7 @@ Case TargetOrderTypeAuto
 End Select
 End Function
 
-Public Function gTickfileSpecifierToString(TickfileSpec As TradeBuild.TickfileSpecifier) As String
+Public Function gTickfileSpecifierToString(TickfileSpec As TradeBuild25.TickfileSpecifier) As String
 If TickfileSpec.filename <> "" Then
     gTickfileSpecifierToString = TickfileSpec.filename
 Else
@@ -731,28 +522,4 @@ Else
 End If
 End Function
 
-Public Function gToBytes(inString As String) As Byte()
-Dim i As Long
-Dim outAr() As Byte
-
-ReDim outAr(Len(inString) / 2) As Byte
-For i = 0 To (Len(inString) / 2) - 1
-    outAr(i) = val("&h" & Mid$(inString, 2 * i + 1, 2))
-Next
-gToBytes = outAr
-End Function
-
-Public Function gToHex(inAr() As Byte) As String
-Dim s As String
-Dim i As Long
-
-For i = 0 To UBound(inAr)
-    If inAr(i) < 16 Then
-        s = s & "0" & Hex$(inAr(i))
-    Else
-        s = s & Hex$(inAr(i))
-    End If
-Next
-gToHex = s
-End Function
 

@@ -68,8 +68,6 @@ Public Declare Function SendMessageByNum Lib "user32" _
 
 Private mDefaultStudyConfigurations As Collection
 
-Private mTaskManager As TradeBuild.TaskManager
-
 Private mStudyPickerForm As fStudyPicker
 
 '================================================================================
@@ -104,7 +102,7 @@ Public Function isInteger( _
                 Optional ByVal maxValue As Long = &H7FFFFFFF) As Boolean
 Dim quantity As Long
 
-On Error GoTo err
+On Error GoTo Err
 
 If IsNumeric(value) Then
     quantity = CLng(value)
@@ -117,8 +115,8 @@ End If
                 
 Exit Function
 
-err:
-If err.Number <> TradeBuild.ErrorCodes.ErrOverflow Then err.Raise err.Number
+Err:
+If Err.Number <> VBErrorCodes.VbErrOverflow Then Err.Raise Err.Number
 End Function
 
 Public Function isPrice( _
@@ -126,7 +124,7 @@ Public Function isPrice( _
                 ByVal ticksize As Double) As Boolean
 Dim theVal As Double
 
-On Error GoTo err
+On Error GoTo Err
 
 If IsNumeric(value) Then
     theVal = value
@@ -139,21 +137,21 @@ End If
 
 Exit Function
 
-err:
-If err.Number <> TradeBuild.ErrorCodes.ErrOverflow Then err.Raise err.Number
+Err:
+If Err.Number <> VBErrorCodes.VbErrOverflow Then Err.Raise Err.Number
 End Function
 
 Public Function loadDefaultStudyConfiguration( _
                 ByVal name As String, _
-                ByVal spName As String) As studyConfiguration
-Dim sc As studyConfiguration
+                ByVal spName As String) As StudyConfiguration
+Dim sc As StudyConfiguration
 If mDefaultStudyConfigurations Is Nothing Then
     Set loadDefaultStudyConfiguration = Nothing
 Else
     On Error Resume Next
     Set sc = mDefaultStudyConfigurations.item(calcDefaultStudyKey(name, spName))
     On Error GoTo 0
-    If Not sc Is Nothing Then Set loadDefaultStudyConfiguration = sc.clone
+    If Not sc Is Nothing Then Set loadDefaultStudyConfiguration = sc.Clone
 End If
 End Function
 
@@ -162,51 +160,39 @@ MsgBox "This facility has not yet been implemented", , "Sorry"
 End Sub
 
 Public Sub showStudyPicker( _
-                ByVal pTicker As TradeBuild.ticker, _
-                ByVal chart As TradeBuildChart)
+                ByVal chartMgr As ChartManager)
 If mStudyPickerForm Is Nothing Then
     Set mStudyPickerForm = New fStudyPicker
 End If
-mStudyPickerForm.initialise chart, pTicker
+mStudyPickerForm.initialise chartMgr
 mStudyPickerForm.Show vbModeless
 End Sub
 
 Public Sub syncStudyPicker( _
-                ByVal pTicker As TradeBuild.ticker, _
-                ByVal chart As TradeBuildChart)
+                ByVal chartMgr As ChartManager)
 If mStudyPickerForm Is Nothing Then Exit Sub
-mStudyPickerForm.initialise chart, pTicker
+mStudyPickerForm.initialise chartMgr
 End Sub
-
-Public Function startTask( _
-                ByVal target As Task, _
-                Optional ByVal name As String, _
-                Optional ByVal data As Variant) As TaskCompletion
-If mTaskManager Is Nothing Then
-    Set mTaskManager = New TradeBuild.TaskManager
-End If
-Set startTask = mTaskManager.startTask(target, name, data)
-End Function
 
 Public Sub unsyncStudyPicker()
 If mStudyPickerForm Is Nothing Then Exit Sub
-mStudyPickerForm.initialise Nothing, Nothing
+mStudyPickerForm.initialise Nothing
 End Sub
 
 Public Sub updateDefaultStudyConfiguration( _
-                ByVal value As studyConfiguration)
-Dim sc As studyConfiguration
+                ByVal value As StudyConfiguration)
+Dim sc As StudyConfiguration
 
 If mDefaultStudyConfigurations Is Nothing Then
     Set mDefaultStudyConfigurations = New Collection
 End If
 On Error Resume Next
-mDefaultStudyConfigurations.remove calcDefaultStudyKey(value.name, value.serviceProviderName)
+mDefaultStudyConfigurations.remove calcDefaultStudyKey(value.name, value.StudyLibraryName)
 On Error GoTo 0
 
-Set sc = value.clone
-sc.underlyingStudyId = ""
-mDefaultStudyConfigurations.add sc, calcDefaultStudyKey(value.name, value.serviceProviderName)
+Set sc = value.Clone
+sc.underlyingStudy = Nothing
+mDefaultStudyConfigurations.add sc, calcDefaultStudyKey(value.name, value.StudyLibraryName)
 End Sub
 
 '================================================================================
@@ -215,7 +201,7 @@ End Sub
 
 Private Function calcDefaultStudyKey( _
                 ByVal studyName As String, _
-                ByVal serviceProviderName As String) As String
-calcDefaultStudyKey = "$$" & studyName & "$$" & serviceProviderName & "$$"
+                ByVal StudyLibraryName As String) As String
+calcDefaultStudyKey = "$$" & studyName & "$$" & StudyLibraryName & "$$"
 End Function
 

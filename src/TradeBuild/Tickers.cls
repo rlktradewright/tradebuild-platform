@@ -13,93 +13,93 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-'================================================================================
+'@================================================================================
 ' Interfaces
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Events
-'================================================================================
+'@================================================================================
 
 
-Event error(ByRef ev As ErrorEvent)
+Event Notification(ByRef ev As NotificationEvent)
 
 Event stateChange(ByRef ev As StateChangeEvent)
 
 
 
-'================================================================================
+'@================================================================================
 ' Constants
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Enums
-'================================================================================
+'@================================================================================
 
 
-'================================================================================
+'@================================================================================
 ' Types
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Member variables
-'================================================================================
+'@================================================================================
 
-'/**
+''
 '  Used to allocate handles for tickers. The handle is not used internally, but
 '  can be used by the application to index quickly into tables or collections
 '  of tickers. When a ticker is created, the first entry in this table that is
 '  not set to true is allocated for the new ticker, and its index becomes the
 '  ticker's handle.
-'*/
+'@/
 Private mTickerHandleTable()        As Boolean
 
 Private mTickers                    As Collection
-Private mChangeListeners            As WeakCollection
+Private mChangeListeners            As Collection
 
 Private mTradeBuildAPIRef           As WeakReference
 
-'================================================================================
+'@================================================================================
 ' Class Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub Class_Initialize()
 ReDim mTickerHandleTable(99) As Boolean
 Set mTickers = New Collection
-Set mChangeListeners = New WeakCollection
+Set mChangeListeners = New Collection
 
 End Sub
 
-'================================================================================
+'@================================================================================
 ' xxxx Interface Members
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Properties
-'================================================================================
+'@================================================================================
 
 Public Property Get Count() As Long
 Count = mTickers.Count
 End Property
 
-Public Property Get Item(ByVal index As Variant) As ticker
-Attribute Item.VB_UserMemId = 0
-Set Item = mTickers.Item(index)
+Public Property Get item(ByVal index As Variant) As Ticker
+Attribute item.VB_UserMemId = 0
+Set item = mTickers.item(index)
 End Property
 
-'================================================================================
+'@================================================================================
 ' Methods
-'================================================================================
+'@================================================================================
 
 Public Function add( _
                 ByVal ordersAreLive As Boolean, _
-                Optional ByVal key As String) As ticker
-Set add = New ticker
-add.tradeBuildAPI = mTradeBuildAPIRef.target
+                Optional ByVal key As String) As Ticker
+Set add = New Ticker
+add.tradeBuildAPI = mTradeBuildAPIRef.Target
 add.handle = AllocateTickerHandle
 add.Tickers = Me
 add.simulatedOrders = Not ordersAreLive
-If key = "" Then key = gGenerateGUIDString
+If key = "" Then key = GenerateGUIDString
 add.key = key
 mTickers.add add, key
 fireChange CollItemAdded, add
@@ -113,7 +113,7 @@ End Sub
 Public Function createTickFileManager() As TickFileManager
 Set createTickFileManager = New TickFileManager
 createTickFileManager.Tickers = Me
-createTickFileManager.tradeBuildAPI = mTradeBuildAPIRef.target
+createTickFileManager.tradeBuildAPI = mTradeBuildAPIRef.Target
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -122,7 +122,7 @@ Attribute NewEnum.VB_MemberFlags = "40"
 Set NewEnum = mTickers.[_NewEnum]
 End Function
 
-Public Sub remove(ByVal pTicker As ticker)
+Public Sub remove(ByVal pTicker As Ticker)
 If pTicker.State <> TickerStates.TickerStateClosing Then
     pTicker.StopTicker
     Exit Sub
@@ -136,7 +136,7 @@ End Sub
 Public Sub removeCollectionChangeListener(ByVal value As CollectionChangeListener)
 Dim i As Long
 For i = mChangeListeners.Count To 1 Step -1
-    If mChangeListeners.Item(i) Is value Then mChangeListeners.remove i
+    If mChangeListeners.item(i) Is value Then mChangeListeners.remove i
 Next
 End Sub
 
@@ -145,19 +145,18 @@ Friend Sub stateChange( _
 RaiseEvent stateChange(ev)
 End Sub
 
-Friend Sub error(ByRef ev As ErrorEvent)
-RaiseEvent error(ev)
+Friend Sub notify(ByRef ev As NotificationEvent)
+RaiseEvent Notification(ev)
 End Sub
 
 Friend Property Let tradeBuildAPI( _
                 ByVal value As tradeBuildAPI)
-Set mTradeBuildAPIRef = New WeakReference
-mTradeBuildAPIRef.initialise value
+Set mTradeBuildAPIRef = weakrefs.createWeakReference(value)
 End Property
 
-'================================================================================
+'@================================================================================
 ' Helper Functions
-'================================================================================
+'@================================================================================
 
 Private Function AllocateTickerHandle() As Long
 Dim i As Long
@@ -182,7 +181,7 @@ End Function
 
 Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
-                ByVal affectedObject As ticker)
+                ByVal affectedObject As Ticker)
 Dim listener As CollectionChangeListener
 Dim i As Long
 Dim Change As CollectionChangeEvent

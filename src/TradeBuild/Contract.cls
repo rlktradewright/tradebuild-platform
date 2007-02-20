@@ -13,46 +13,46 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-'================================================================================
+'@================================================================================
 ' Description
-'================================================================================
+'@================================================================================
 '
 '
-'================================================================================
+'@================================================================================
 ' Amendment history
-'================================================================================
+'@================================================================================
 '
 '
 '
 '
 
-'================================================================================
+'@================================================================================
 ' Interfaces
-'================================================================================
+'@================================================================================
 
 Implements TradeBuildSP.IContract
 
-'================================================================================
+'@================================================================================
 ' Events
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Constants
-'================================================================================
+'@================================================================================
 
 Private Const ThirtySecondsSeparator As String = "'"
 
-'================================================================================
+'@================================================================================
 ' Enums
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Types
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Member variables
-'================================================================================
+'@================================================================================
 
 Private mSpecifier As contractSpecifier
 Private mMarketName As String
@@ -70,14 +70,9 @@ Private mExpiryDate As Date
 Private mDaysBeforeExpiryToSwitch As Long
 Private mProviderIDs() As TradeBuildSP.DictionaryEntry
 
-Private mReferenceTime As Date
-Private mCurrentSessionStartTime As Date
-Private mCurrentSessionEndTime As Date
-
-
-'================================================================================
+'@================================================================================
 ' Class Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub Class_ReadProperties(PropBag As PropertyBag)
 Dim i As Long
@@ -87,7 +82,7 @@ mTradingClass = PropBag.ReadProperty("tradingclass")
 mContractID = PropBag.ReadProperty("conid")
 mTickSize = PropBag.ReadProperty("mintick")
 mMultiplier = PropBag.ReadProperty("multiplier")
-ReDim mOrderTypes(CLng(PropBag.ReadProperty("uboundordertypes"))) As TradeBuild.OrderTypes
+ReDim mOrderTypes(CLng(PropBag.ReadProperty("uboundordertypes"))) As TradeBuild25.OrderTypes
 For i = 0 To UBound(mOrderTypes)
     mOrderTypes(i) = PropBag.ReadProperty("ordertype" & i)
 Next
@@ -116,15 +111,9 @@ For i = 0 To UBound(mValidExchanges)
 Next
 End Sub
 
-'================================================================================
+'@================================================================================
 ' IContract Interface Members
-'================================================================================
-
-Private Function IContract_BarStartTime( _
-                ByVal timestamp As Date, _
-                ByVal barLength As Long) As Date
-IContract_BarStartTime = BarStartTime(timestamp, barLength)
-End Function
+'@================================================================================
 
 Private Function IContract_Clone() As TradeBuildSP.IContract
 Set IContract_Clone = clone
@@ -136,14 +125,6 @@ End Property
 
 Private Property Get IContract_ContractID() As Long
 IContract_ContractID = contractID
-End Property
-
-Private Property Get IContract_CurrentSessionEndTime() As Date
-IContract_CurrentSessionEndTime = currentSessionEndTime
-End Property
-
-Private Property Get IContract_CurrentSessionStartTime() As Date
-IContract_CurrentSessionStartTime = currentSessionStartTime
 End Property
 
 Private Property Let IContract_DaysBeforeExpiryToSwitch(ByVal RHS As Long)
@@ -170,23 +151,17 @@ Private Property Get IContract_ExpiryDate() As Date
 IContract_ExpiryDate = ExpiryDate
 End Property
 
-Private Sub IContract_FromXML(ByVal contractXML As String)
+Private Sub IContract_FromXML( _
+                ByVal contractXML As String)
 FromXML contractXML
 End Sub
-
-Private Sub IContract_GetSessionTimes(ByVal timestamp As Date, sessionStartTime As Date, sessionEndTime As Date)
-GetSessionTimes timestamp, sessionStartTime, sessionEndTime
-End Sub
-
-Private Function IContract_IsTimeInSession(ByVal timestamp As Date) As Boolean
-IContract_IsTimeInSession = isTimeInSession(timestamp)
-End Function
 
 Private Property Get IContract_Key() As String
 IContract_Key = key
 End Property
 
-Private Property Let IContract_MarketName(ByVal RHS As String)
+Private Property Let IContract_MarketName( _
+                ByVal RHS As String)
 marketName = RHS
 End Property
 
@@ -214,14 +189,8 @@ Private Property Get IContract_NumberOfDecimals() As Long
 IContract_NumberOfDecimals = NumberOfDecimals
 End Property
 
-Private Function IContract_OffsetBarStartTime( _
-                ByVal timestamp As Date, _
-                ByVal barLength As Long, _
-                ByVal offset As Long) As Date
-IContract_OffsetBarStartTime = offsetBarStartTime(timestamp, barLength, offset)
-End Function
-
-Private Property Get IContract_ProviderID(ByVal providerKey As String) As String
+Private Property Get IContract_ProviderID( _
+                ByVal providerKey As String) As String
 Dim i As Long
 On Error GoTo err
 For i = 0 To UBound(mProviderIDs)
@@ -237,31 +206,30 @@ err:
 IContract_ProviderID = mSpecifier.localSymbol
 End Property
 
-Private Property Let IContract_ProviderIDs(RHS() As TradeBuildSP.DictionaryEntry)
+Private Property Let IContract_ProviderIDs( _
+                ByRef RHS() As TradeBuildSP.DictionaryEntry)
 mProviderIDs = RHS
 End Property
 
 Private Property Let IContract_SessionEndTime(ByVal RHS As Date)
-sessionEndTime = RHS
+sessionEndTime = TimeValue(RHS)
 End Property
 
 Private Property Get IContract_SessionEndTime() As Date
 IContract_SessionEndTime = sessionEndTime
 End Property
 
-Private Property Let IContract_SessionStartTime(ByVal RHS As Date)
-sessionStartTime = RHS
+Private Property Let IContract_SessionStartTime( _
+                ByVal RHS As Date)
+sessionStartTime = TimeValue(RHS)
 End Property
 
 Private Property Get IContract_SessionStartTime() As Date
 IContract_SessionStartTime = sessionStartTime
 End Property
 
-Private Sub IContract_SetSession(ByVal timestamp As Date)
-setSession timestamp
-End Sub
-
-Private Property Let IContract_Specifier(ByVal RHS As TradeBuildSP.IContractSpecifier)
+Private Property Let IContract_Specifier( _
+                ByVal RHS As TradeBuildSP.IContractSpecifier)
 specifier = RHS
 End Property
 
@@ -277,7 +245,8 @@ Private Function IContract_ToXML() As String
 IContract_ToXML = ToXML
 End Function
 
-Private Property Let IContract_TradingClass(ByVal RHS As String)
+Private Property Let IContract_TradingClass( _
+                ByVal RHS As String)
 tradingClass = RHS
 End Property
 
@@ -285,7 +254,8 @@ Private Property Get IContract_TradingClass() As String
 IContract_TradingClass = tradingClass
 End Property
 
-Private Property Let IContract_ValidExchanges(RHS() As String)
+Private Property Let IContract_ValidExchanges( _
+                RHS() As String)
 Dim exchanges() As String
 Dim i As Long
 
@@ -302,9 +272,9 @@ Private Property Get IContract_ValidExchanges() As String()
 IContract_ValidExchanges = validExchanges
 End Property
 
-'================================================================================
+'@================================================================================
 ' Properties
-'================================================================================
+'@================================================================================
 
 Public Property Get contractID() As Long
 contractID = mContractID
@@ -312,14 +282,6 @@ End Property
 
 Friend Property Let contractID(ByVal value As Long)
 mContractID = value
-End Property
-
-Public Property Get currentSessionEndTime() As Date
-currentSessionEndTime = mCurrentSessionEndTime
-End Property
-
-Public Property Get currentSessionStartTime() As Date
-currentSessionStartTime = mCurrentSessionStartTime
 End Property
 
 Public Property Get daysBeforeExpiryToSwitch() As Long
@@ -395,7 +357,7 @@ mProviderIDs = value
 End Property
 
 Friend Property Let sessionStartTime(ByVal value As Date)
-mSessionStartTime = value
+mSessionStartTime = TimeValue(value)
 End Property
 
 Public Property Get sessionStartTime() As Date
@@ -403,7 +365,7 @@ sessionStartTime = mSessionStartTime
 End Property
 
 Friend Property Let sessionEndTime(ByVal value As Date)
-mSessionEndTime = value
+mSessionEndTime = TimeValue(value)
 End Property
 
 Public Property Get sessionEndTime() As Date
@@ -458,40 +420,9 @@ Friend Property Let validExchanges(ByRef value() As String)
 mValidExchanges = value
 End Property
 
-'================================================================================
+'@================================================================================
 ' Methods
-'================================================================================
-
-Public Function BarStartTime( _
-                            ByVal timestamp As Date, _
-                            ByVal barLength As Long) As Date
-Dim offset As Long
-Dim theDate As Long
-Dim theTime As Double
-Dim theTimeMins As Long
-
-offset = DatePart("n", mSessionStartTime)
-theDate = Fix(CDbl(timestamp))
-' NB: don't use TimeValue to get the time, as VB rounds it to
-' the nearest second
-theTime = CDbl(timestamp + OneMicroSecond) - theDate
-theTimeMins = Fix(theTime * 1440) ' minutes since midnight
-BarStartTime = theDate + _
-            (barLength * Fix((theTimeMins - offset) / barLength) + _
-                offset) / 1440
-
-End Function
-
-Friend Sub CalcSessionTimes(ByVal timestamp As Date, _
-                            ByRef sessionStartTime As Date, _
-                            ByRef sessionEndTime As Date)
-Dim i As Long
-
-i = -1
-Do
-    i = i + 1
-Loop Until calcSessionTimesHelper(timestamp + i, sessionStartTime, sessionEndTime)
-End Sub
+'@================================================================================
 
 Friend Function clone() As Contract
 
@@ -512,7 +443,8 @@ With clone
     .specifier = mSpecifier.clone
     .tradingClass = mTradingClass
     .validExchanges = mValidExchanges
-    .setSession mReferenceTime
+    .sessionEndTime = sessionEndTime
+    .sessionStartTime = sessionStartTime
     '.NumberOfDecimals = mNumberOfDecimals  ' set automatically by tickSize
 End With
 End Function
@@ -536,7 +468,7 @@ Set XMLdoc = New DOMDocument30
 XMLdoc.loadXML contractXML
 If XMLdoc.parseError.errorCode <> 0 Then
     err.Raise ErrorCodes.ErrRuntimeException, _
-            "TradeBuild.Contract::fromXML", _
+            "TradeBuild25.Contract::fromXML", _
             "Contract XML cannot be parsed"
 End If
 
@@ -597,7 +529,7 @@ End With
 
 Set OrderTypes = Contract.selectSingleNode("ordertypes")
 Set nodeList = OrderTypes.selectNodes("ordertype")
-ReDim mOrderTypes(nodeList.length) As TradeBuild.OrderTypes
+ReDim mOrderTypes(nodeList.length) As TradeBuild25.OrderTypes
 i = 0
 For Each orderType In nodeList
     mOrderTypes(i) = orderType.getAttribute("ordertype")
@@ -614,62 +546,6 @@ For Each exchange In nodeList
 Next
 
 End Sub
-
-Public Sub GetSessionTimes( _
-                            ByVal timestamp As Date, _
-                            ByRef sessionStartTime As Date, _
-                            ByRef sessionEndTime As Date)
-CalcSessionTimes timestamp, sessionStartTime, sessionEndTime
-End Sub
-
-Public Function isTimeInSession(ByVal timestamp As Date) As Boolean
-
-If timestamp >= mCurrentSessionStartTime And _
-    timestamp < mCurrentSessionEndTime _
-Then
-    isTimeInSession = True
-End If
-End Function
-
-Public Function offsetBarStartTime( _
-                ByVal timestamp As Date, _
-                ByVal barLength As Long, _
-                ByVal offset As Long) As Date
-Dim sessStart As Date
-Dim sessEnd As Date
-Dim datumBarStart As Date
-Dim proposedStart As Date
-Dim remainingOffset As Long
-Dim barsFromSessStart As Long
-Dim i As Long
-
-datumBarStart = BarStartTime(timestamp, barLength)
-CalcSessionTimes datumBarStart, sessStart, sessEnd  ' !!!!!!!!!!!!!!!!!!!!!!!!!!!
-                                                    ' calcSessionTimes needs to be amended
-                                                    ' to take account of holidays
-If datumBarStart < sessStart Then
-    ' specified timestamp was between sessions
-    datumBarStart = sessStart
-End If
-    
-remainingOffset = offset
-proposedStart = datumBarStart
-Do While remainingOffset > 0
-    barsFromSessStart = (proposedStart - sessStart) / (barLength / 1440)
-    If barsFromSessStart >= remainingOffset Then
-        proposedStart = proposedStart - (remainingOffset * barLength) / 1440
-        remainingOffset = 0
-    Else
-        remainingOffset = remainingOffset - barsFromSessStart
-        Do
-            i = i + 1
-            CalcSessionTimes proposedStart - i, sessStart, sessEnd
-        Loop Until sessStart <= proposedStart
-        proposedStart = sessEnd
-    End If
-Loop
-offsetBarStartTime = proposedStart
-End Function
 
 Public Function parsePrice( _
                 ByVal priceString As String, _
@@ -700,16 +576,6 @@ If (price - mTickSize * Int(price / mTickSize)) <> 0 Then Exit Function
     
 parsePrice = True
 End Function
-
-Friend Sub setSession( _
-                ByVal timestamp As Date)
-If timestamp >= mCurrentSessionEndTime Or _
-    timestamp < mReferenceTime _
-Then
-    mReferenceTime = timestamp
-    CalcSessionTimes timestamp, mCurrentSessionStartTime, mCurrentSessionEndTime
-End If
-End Sub
 
 Public Function ToString() As String
 Dim i As Long
@@ -792,57 +658,10 @@ Next
 ToXML = XMLdoc.xml
 End Function
 
-'================================================================================
+'@================================================================================
 ' Helper Functions
-'================================================================================
+'@================================================================================
 
-Friend Function calcSessionTimesHelper(ByVal timestamp As Date, _
-                            ByRef sessionStartTime As Date, _
-                            ByRef sessionEndTime As Date) As Boolean
-Dim referenceDate As Date
-Dim referenceTime As Date
-Dim weekday As Long
-
-referenceDate = DateValue(timestamp)
-referenceTime = TimeValue(timestamp)
-
-If mSessionStartTime < mSessionEndTime Then
-    ' session doesn't span midnight
-    If referenceTime < mSessionEndTime Then
-        sessionStartTime = referenceDate + mSessionStartTime
-        sessionEndTime = referenceDate + mSessionEndTime
-    Else
-        sessionStartTime = referenceDate + 1 + mSessionStartTime
-        sessionEndTime = referenceDate + 1 + mSessionEndTime
-    End If
-ElseIf mSessionStartTime > mSessionEndTime Then
-    ' session spans midnight
-    If referenceTime >= mSessionEndTime Then
-        sessionStartTime = referenceDate + mSessionStartTime
-        sessionEndTime = referenceDate + 1 + mSessionEndTime
-    Else
-        sessionStartTime = referenceDate - 1 + mSessionStartTime
-        sessionEndTime = referenceDate + mSessionEndTime
-    End If
-Else
-    ' this instrument trades 24hrs, or the contract service provider doesn't know
-    ' the session start and end times
-    sessionStartTime = referenceDate
-    sessionEndTime = referenceDate + 1
-End If
-
-weekday = DatePart("w", sessionStartTime)
-If mSessionStartTime < mSessionEndTime Then
-    ' session doesn't span midnight
-    If weekday <> vbSaturday And weekday <> vbSunday Then calcSessionTimesHelper = True
-ElseIf mSessionStartTime > mSessionEndTime Then
-    ' session DOES span midnight
-    If weekday <> vbFriday And weekday <> vbSaturday Then calcSessionTimesHelper = True
-Else
-    ' 24-hour session or no session times known
-    If weekday <> vbSaturday And weekday <> vbSunday Then calcSessionTimesHelper = True
-End If
-End Function
 
 
 

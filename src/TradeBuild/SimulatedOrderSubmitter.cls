@@ -13,65 +13,65 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-'================================================================================
+'@================================================================================
 ' Description
-'================================================================================
+'@================================================================================
 '
 '
-'================================================================================
+'@================================================================================
 ' Amendment history
-'================================================================================
+'@================================================================================
 '
 '
 '
 '
 
-'================================================================================
+'@================================================================================
 ' Interfaces
-'================================================================================
+'@================================================================================
 
 Implements TradeBuildSP.IOrderSubmitter
 Implements TradeBuildSP.IStreamingDataConsumer
 
-'================================================================================
+'@================================================================================
 ' Events
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Constants
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Enums
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Types
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Member variables
-'================================================================================
+'@================================================================================
 
 Private mServiceConsumer As TradeBuildSP.IOrderSubmissionSrvcConsumer
 
-Private mSimulator As TradeBuild.AdvancedOrderSimulator
+Private mSimulator As TradeBuild25.AdvancedOrderSimulator
 
 Private mMarketIndex As Long
 
-Private mContract As TradeBuild.Contract
+Private mContract As TradeBuild25.Contract
 
-'================================================================================
+'@================================================================================
 ' Class Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub Class_Terminate()
 Debug.Print "SimulatedOrderSubmitter terminated"
 End Sub
 
-'================================================================================
+'@================================================================================
 ' IOrderSubmitter Interface Members
-'================================================================================
+'@================================================================================
 
 Private Function IOrderSubmitter_cancelOrderPlex(ByVal pOrderPlex As TradeBuildSP.IOrderPlex) As Boolean
 Dim entryOrder As order
@@ -80,10 +80,10 @@ Dim targetOrder As order
 
 Set entryOrder = pOrderPlex.entryOrder
 Select Case entryOrder.status
-Case TradeBuild.OrderStatuses.OrderStatusCreated, _
-    TradeBuild.OrderStatuses.OrderStatusFilled, _
-    TradeBuild.OrderStatuses.OrderStatusCancelling, _
-    TradeBuild.OrderStatuses.OrderStatusCancelled
+Case TradeBuild25.OrderStatuses.OrderStatusCreated, _
+    TradeBuild25.OrderStatuses.OrderStatusFilled, _
+    TradeBuild25.OrderStatuses.OrderStatusCancelling, _
+    TradeBuild25.OrderStatuses.OrderStatusCancelled
 Case Else
     mSimulator.cancelOrder entryOrder.brokerId  ' should automatically cancel the other orders
                                                     ' if they have parentid set
@@ -93,15 +93,15 @@ End Select
 Set stoporder = pOrderPlex.stoporder
 If Not stoporder Is Nothing Then
     Select Case stoporder.status
-    Case TradeBuild.OrderStatuses.OrderStatusCreated, _
-        TradeBuild.OrderStatuses.OrderStatusFilled, _
-        TradeBuild.OrderStatuses.OrderStatusCancelling, _
-        TradeBuild.OrderStatuses.OrderStatusCancelled
+    Case TradeBuild25.OrderStatuses.OrderStatusCreated, _
+        TradeBuild25.OrderStatuses.OrderStatusFilled, _
+        TradeBuild25.OrderStatuses.OrderStatusCancelling, _
+        TradeBuild25.OrderStatuses.OrderStatusCancelled
     Case Else
         Select Case entryOrder.status
-        Case TradeBuild.OrderStatuses.OrderStatusFilled, _
-            TradeBuild.OrderStatuses.OrderStatusCancelling, _
-            TradeBuild.OrderStatuses.OrderStatusCancelled
+        Case TradeBuild25.OrderStatuses.OrderStatusFilled, _
+            TradeBuild25.OrderStatuses.OrderStatusCancelling, _
+            TradeBuild25.OrderStatuses.OrderStatusCancelled
             mSimulator.cancelOrder stoporder.brokerId
             IOrderSubmitter_cancelOrderPlex = True
         End Select
@@ -111,15 +111,15 @@ End If
 Set targetOrder = pOrderPlex.targetOrder
 If Not targetOrder Is Nothing Then
     Select Case targetOrder.status
-    Case TradeBuild.OrderStatuses.OrderStatusCreated, _
-        TradeBuild.OrderStatuses.OrderStatusFilled, _
-        TradeBuild.OrderStatuses.OrderStatusCancelling, _
-        TradeBuild.OrderStatuses.OrderStatusCancelled
+    Case TradeBuild25.OrderStatuses.OrderStatusCreated, _
+        TradeBuild25.OrderStatuses.OrderStatusFilled, _
+        TradeBuild25.OrderStatuses.OrderStatusCancelling, _
+        TradeBuild25.OrderStatuses.OrderStatusCancelled
     Case Else
         Select Case entryOrder.status
-        Case TradeBuild.OrderStatuses.OrderStatusFilled, _
-            TradeBuild.OrderStatuses.OrderStatusCancelling, _
-            TradeBuild.OrderStatuses.OrderStatusCancelled
+        Case TradeBuild25.OrderStatuses.OrderStatusFilled, _
+            TradeBuild25.OrderStatuses.OrderStatusCancelling, _
+            TradeBuild25.OrderStatuses.OrderStatusCancelled
             mSimulator.cancelOrder targetOrder.brokerId
             IOrderSubmitter_cancelOrderPlex = True
         End Select
@@ -139,10 +139,10 @@ If stoporder Is Nothing Then err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "Order plex has no stop order"
 
 Select Case stoporder.status
-Case TradeBuild.OrderStatuses.OrderStatusCreated, _
-    TradeBuild.OrderStatuses.OrderStatusFilled, _
-    TradeBuild.OrderStatuses.OrderStatusCancelling, _
-    TradeBuild.OrderStatuses.OrderStatusCancelled
+Case TradeBuild25.OrderStatuses.OrderStatusCreated, _
+    TradeBuild25.OrderStatuses.OrderStatusFilled, _
+    TradeBuild25.OrderStatuses.OrderStatusCancelling, _
+    TradeBuild25.OrderStatuses.OrderStatusCancelled
     err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "OrderSubmissionServiceProvider::cancelStopOrder", _
                                     "Stop order state invalid for cancellation"
@@ -161,9 +161,9 @@ If targetOrder Is Nothing Then err.Raise ErrorCodes.ErrIllegalStateException, _
 
 
 Select Case targetOrder.status
-Case TradeBuild.OrderStatuses.OrderStatusCreated, _
-    TradeBuild.OrderStatuses.OrderStatusCancelling, _
-    TradeBuild.OrderStatuses.OrderStatusCancelled
+Case TradeBuild25.OrderStatuses.OrderStatusCreated, _
+    TradeBuild25.OrderStatuses.OrderStatusCancelling, _
+    TradeBuild25.OrderStatuses.OrderStatusCancelled
     err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "OrderSubmissionServiceProvider::cancelTargetOrder", _
                                     "Target order state invalid for cancellation"
@@ -190,10 +190,10 @@ Set targetOrder = pOrderPlex.targetOrder
 If Not entryOrder Is Nothing Then
     transmit = True
     If Not stoporder Is Nothing Then
-        If stoporder.orderType <> TradeBuild.OrderTypes.OrderTypeAutoStop Then transmit = False
+        If stoporder.orderType <> TradeBuild25.OrderTypes.OrderTypeAutoStop Then transmit = False
     End If
     If Not targetOrder Is Nothing Then
-        If targetOrder.orderType <> TradeBuild.OrderTypes.OrderTypeAutoLimit Then transmit = False
+        If targetOrder.orderType <> TradeBuild25.OrderTypes.OrderTypeAutoLimit Then transmit = False
     End If
         
     placeOrder entryOrder, "", "", transmit
@@ -203,17 +203,17 @@ If Not entryOrder Is Nothing Then
     If Not stoporder Is Nothing Then
         transmit = True
         If Not targetOrder Is Nothing Then
-            If targetOrder.orderType <> TradeBuild.OrderTypes.OrderTypeAutoLimit Then transmit = False
+            If targetOrder.orderType <> TradeBuild25.OrderTypes.OrderTypeAutoLimit Then transmit = False
         End If
         
-        If stoporder.orderType <> TradeBuild.OrderTypes.OrderTypeAutoStop Then
+        If stoporder.orderType <> TradeBuild25.OrderTypes.OrderTypeAutoStop Then
             ' note that AUTOSTP orders will be sent when the entry order is filled
             placeOrder stoporder, entryOrder.id, ocaGroup, transmit
         End If
     End If
     
     If Not targetOrder Is Nothing Then
-        If targetOrder.orderType <> TradeBuild.OrderTypes.OrderTypeAutoLimit Then
+        If targetOrder.orderType <> TradeBuild25.OrderTypes.OrderTypeAutoLimit Then
             placeOrder targetOrder, entryOrder.id, ocaGroup, True
         End If
     End If
@@ -236,7 +236,7 @@ Private Sub IOrderSubmitter_modifyOrderPlex( _
                 ByVal stopOrderChanged As Boolean, _
                 ByVal targetOrderChanged As Boolean, _
                 ByVal closeoutOrderChanged As Boolean)
-Dim lOrder As TradeBuild.order
+Dim lOrder As TradeBuild25.order
 
 If entryOrderChanged Then
     placeOrder pOrderPlex.entryOrder, "", "", True
@@ -257,13 +257,13 @@ End Sub
 
 Private Property Get IOrderSubmitter_permittedOrderAttributes() As Long
 Dim attributes As Long
-attributes = TradeBuild.OrderAttributeIds.OrderAttAction
-attributes = attributes Or TradeBuild.OrderAttributeIds.OrderAttLimitPrice
-attributes = attributes Or TradeBuild.OrderAttributeIds.OrderAttOrderType
-attributes = attributes Or TradeBuild.OrderAttributeIds.OrderAttOriginatorRef
-attributes = attributes Or TradeBuild.OrderAttributeIds.OrderAttQuantity
-attributes = attributes Or TradeBuild.OrderAttributeIds.OrderAttTimeInForce
-attributes = attributes Or TradeBuild.OrderAttributeIds.OrderAttTriggerPrice
+attributes = TradeBuild25.OrderAttributeIds.OrderAttAction
+attributes = attributes Or TradeBuild25.OrderAttributeIds.OrderAttLimitPrice
+attributes = attributes Or TradeBuild25.OrderAttributeIds.OrderAttOrderType
+attributes = attributes Or TradeBuild25.OrderAttributeIds.OrderAttOriginatorRef
+attributes = attributes Or TradeBuild25.OrderAttributeIds.OrderAttQuantity
+attributes = attributes Or TradeBuild25.OrderAttributeIds.OrderAttTimeInForce
+attributes = attributes Or TradeBuild25.OrderAttributeIds.OrderAttTriggerPrice
 IOrderSubmitter_permittedOrderAttributes = attributes
 End Property
 
@@ -305,8 +305,8 @@ placeOrder targetOrder, "", ocaGroup, True
 End Sub
 
 Private Sub IOrderSubmitter_resubmitStopOrder(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
-Dim stoporder As TradeBuild.order
-Dim targetOrder As TradeBuild.order
+Dim stoporder As TradeBuild25.order
+Dim targetOrder As TradeBuild25.order
 
 Set stoporder = pOrderPlex.stoporder
 Set targetOrder = pOrderPlex.targetOrder
@@ -319,7 +319,7 @@ End If
 End Sub
 
 Private Sub IOrderSubmitter_resubmitTargetOrder(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
-Dim stoporder As TradeBuild.order
+Dim stoporder As TradeBuild25.order
 Dim targetOrder As order
 
 Set stoporder = pOrderPlex.stoporder
@@ -332,15 +332,15 @@ Else
 End If
 End Sub
 
-'================================================================================
+'@================================================================================
 ' IStreamingDataConsumer Interface Members
-'================================================================================
+'@================================================================================
 
-Private Sub IStreamingDataConsumer_Ask(ByVal timestamp As Date, ByVal price As Double, ByVal Size As Long)
+Private Sub IStreamingDataConsumer_Ask(ByVal timestamp As Date, ByVal price As Double, ByVal size As Long)
 mSimulator.ask timestamp, mMarketIndex, price
 End Sub
 
-Private Sub IStreamingDataConsumer_Bid(ByVal timestamp As Date, ByVal price As Double, ByVal Size As Long)
+Private Sub IStreamingDataConsumer_Bid(ByVal timestamp As Date, ByVal price As Double, ByVal size As Long)
 mSimulator.bid timestamp, mMarketIndex, price
 End Sub
 
@@ -352,7 +352,7 @@ Private Sub IStreamingDataConsumer_Low(ByVal timestamp As Date, ByVal price As D
 
 End Sub
 
-Private Sub IStreamingDataConsumer_OpenInterest(ByVal timestamp As Date, ByVal Size As Long)
+Private Sub IStreamingDataConsumer_OpenInterest(ByVal timestamp As Date, ByVal size As Long)
 
 End Sub
 
@@ -364,31 +364,31 @@ Private Sub IStreamingDataConsumer_ResetMarketDepth(ByVal timestamp As Date, ByV
 
 End Sub
 
-Private Sub IStreamingDataConsumer_Trade(ByVal timestamp As Date, ByVal price As Double, ByVal Size As Long)
+Private Sub IStreamingDataConsumer_Trade(ByVal timestamp As Date, ByVal price As Double, ByVal size As Long)
 mSimulator.trade timestamp, mMarketIndex, price
 End Sub
 
-Private Sub IStreamingDataConsumer_UpdateMktDepth(ByVal timestamp As Date, ByVal position As Long, ByVal operation As TradeBuildSP.DOMOperations, ByVal side As TradeBuildSP.DOMSides, ByVal price As Double, ByVal Size As Long)
+Private Sub IStreamingDataConsumer_UpdateMktDepth(ByVal timestamp As Date, ByVal position As Long, ByVal operation As TradeBuildSP.DOMOperations, ByVal side As TradeBuildSP.DOMSides, ByVal price As Double, ByVal size As Long)
 
 End Sub
 
-Private Sub IStreamingDataConsumer_UpdateMktDepthL2(ByVal timestamp As Date, ByVal position As Long, ByVal marketMaker As String, ByVal operation As TradeBuildSP.DOMOperations, ByVal side As TradeBuildSP.DOMSides, ByVal price As Double, ByVal Size As Long)
+Private Sub IStreamingDataConsumer_UpdateMktDepthL2(ByVal timestamp As Date, ByVal position As Long, ByVal marketMaker As String, ByVal operation As TradeBuildSP.DOMOperations, ByVal side As TradeBuildSP.DOMSides, ByVal price As Double, ByVal size As Long)
 
 End Sub
 
-Private Sub IStreamingDataConsumer_Volume(ByVal timestamp As Date, ByVal Size As Long)
+Private Sub IStreamingDataConsumer_Volume(ByVal timestamp As Date, ByVal size As Long)
 
 End Sub
 
-'================================================================================
+'@================================================================================
 ' XXXX Event Handlers
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Properties
-'================================================================================
+'@================================================================================
 
-Friend Property Let Contract(ByVal value As TradeBuild.Contract)
+Friend Property Let Contract(ByVal value As TradeBuild25.Contract)
 Set mContract = value
 End Property
 
@@ -397,19 +397,19 @@ Set mServiceConsumer = value
 mServiceConsumer.requestTickData Me, False
 End Property
 
-Friend Property Let simulator(ByVal value As TradeBuild.AdvancedOrderSimulator)
+Friend Property Let simulator(ByVal value As TradeBuild25.AdvancedOrderSimulator)
 Set mSimulator = value
 mMarketIndex = mSimulator.startMarket(mServiceConsumer, _
                                     mContract.specifier)
 End Property
 
-'================================================================================
+'@================================================================================
 ' Methods
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Helper Functions
-'================================================================================
+'@================================================================================
 
 Private Sub placeOrder( _
                 ByVal pOrder As order, _

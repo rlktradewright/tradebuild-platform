@@ -189,18 +189,18 @@ mInputTickfileSpecifier = tickfileSpecifier
 Set lInstrumentFactory = New TradingDO2.cInstrumentFactory
 
 With mInputTickfileSpecifier.Contract.Specifier
-    Set mInstrument = lInstrumentFactory.loadBySpec(.Symbol, _
+    Set mInstrument = lInstrumentFactory.loadBySpec(.symbol, _
                                 secTypeToString(.SecType), _
                                 Left$(.Expiry, 6), _
-                                .Exchange, _
-                                .CurrencyCode, _
+                                .exchange, _
+                                .currencyCode, _
                                 .Strike, _
                                 optRightToString(.Right), _
                                 .localSymbol)
 End With
  
 If mInstrument Is Nothing Then
-    mServiceConsumer.Error StandardSPErrorCodes.TFContractSpecifierInvalid, _
+    mServiceConsumer.NotifyEvent StandardSPEventCodes.TFContractSpecifierInvalid, _
                             "The specified contract does not exist", _
                             mTickfileServiceProvider.handle
     Exit Sub
@@ -237,7 +237,7 @@ Private Sub mTickReader_ConnectFailed( _
                             ByVal errorCode As Long, _
                             ByVal errorDesc As String)
 On Error GoTo Err
-mServiceConsumer.Error StandardSPErrorCodes.TFCantConnectDataSource, _
+mServiceConsumer.NotifyEvent StandardSPEventCodes.TFCantConnectDataSource, _
                         "error " & errorCode & ": " & errorDesc, _
                         mTickfileServiceProvider.handle
 Exit Sub
@@ -253,7 +253,7 @@ If Not checkRecord(mTypeByte) Then
     If mReadyNotified Then
         mServiceConsumer.TickfileReplayComplete
     Else
-        mServiceConsumer.Error StandardSPErrorCodes.TFTickfileEmpty, _
+        mServiceConsumer.NotifyEvent StandardSPEventCodes.TFTickfileEmpty, _
                                 "No data for this specifier", _
                                 mTickfileServiceProvider.handle
     End If
@@ -289,9 +289,18 @@ Private Sub mTickReader_Ready()
 Dim sessionStart As Date
 
 On Error GoTo Err
+
+mServiceConsumer.NotifyEvent StandardSPEventCodes.TFConnectedToDataSource, _
+                        "Connected to data source", _
+                        mTickfileServiceProvider.handle
+
 With mInputTickfileSpecifier
     If .EntireSession Then
-        mContract.GetSessionTimes .From, sessionStart, .To
+        SessionTimes .From, _
+                    sessionStart, _
+                    .To, _
+                    mContract.sessionStartTime, _
+                    mContract.sessionEndTime
     End If
     mTickReader.FetchData TickfileFormatTradeBuildSQL, _
                             gTruncateTimeToMinute(.From), _
@@ -434,11 +443,11 @@ Case Bid
     mDataConsumer.Bid mCurrentTimestamp, price, size
 Case Ask
     mDataConsumer.Ask mCurrentTimestamp, price, size
-Case ClosePrice
+Case closePrice
     mDataConsumer.PreviousClose mCurrentTimestamp, price
-Case HighPrice
+Case highPrice
     mDataConsumer.High mCurrentTimestamp, price
-Case LowPrice
+Case lowPrice
     mDataConsumer.Low mCurrentTimestamp, price
 Case marketDepth
     If marketmaker = "" Then
@@ -461,10 +470,10 @@ Case MarketDepthReset
     mDataConsumer.ResetMarketDepth mCurrentTimestamp, False
 Case Trade
     mDataConsumer.Trade mCurrentTimestamp, price, size
-Case Volume
-    mDataConsumer.Volume mCurrentTimestamp, size
-Case OpenInterest
-    mDataConsumer.OpenInterest mCurrentTimestamp, size
+Case volume
+    mDataConsumer.volume mCurrentTimestamp, size
+Case openInterest
+    mDataConsumer.openInterest mCurrentTimestamp, size
 End Select
 
 End Sub
@@ -565,11 +574,11 @@ Case Bid
     ReadQuoteRecord typeByte, price, size, sizeType
 Case Ask
     ReadQuoteRecord typeByte, price, size, sizeType
-Case ClosePrice
+Case closePrice
     ReadPriceRecord typeByte, price
-Case HighPrice
+Case highPrice
     ReadPriceRecord typeByte, price
-Case LowPrice
+Case lowPrice
     ReadPriceRecord typeByte, price
 Case marketDepth
     ReadMarketDepthRecord typeByte, position, marketmaker, operation, side, price, size, sizeType
@@ -577,7 +586,7 @@ Case MarketDepthReset
     ReadMarketDepthResetRecord typeByte
 Case Trade
     ReadQuoteRecord typeByte, price, size, sizeType
-Case Volume
+Case volume
     ReadSizeRecord typeByte, size, sizeType
 End Select
 

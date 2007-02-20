@@ -727,8 +727,8 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements TradeBuild.ChangeListener
-Implements TradeBuild.QuoteListener
+Implements TWUtilities.ChangeListener
+Implements QuoteListener
 
 '================================================================================
 ' Events
@@ -777,9 +777,9 @@ Attribute mOrderContext.VB_VarHelpID = -1
 
 Private mTickSize As Double
 
-Private mOrderAction As TradeBuild.OrderActions
+Private mOrderAction As OrderActions
 
-Private WithEvents mOrderPlex As TradeBuild.orderPlex
+Private WithEvents mOrderPlex As OrderPlex
 Attribute mOrderPlex.VB_VarHelpID = -1
 
 Private mCurrentBrackerOrderIndex As BracketIndices
@@ -815,8 +815,8 @@ End Sub
 ' ChangeListener Interface Members
 '================================================================================
 
-Private Sub ChangeListener_Change(ev As TradeBuild.ChangeEvent)
-Dim op As TradeBuild.orderPlex
+Private Sub ChangeListener_Change(ev As TWUtilities.ChangeEvent)
+Dim op As OrderPlex
 
 Set op = ev.Source
 
@@ -856,7 +856,7 @@ End Sub
 ' QuoteListener Interface Members
 '================================================================================
 
-Private Sub QuoteListener_ask(ev As TradeBuild.QuoteEvent)
+Private Sub QuoteListener_ask(ev As QuoteEvent)
 AskText = ev.priceString
 AskSizeText = ev.size
 setPriceField BracketIndices.BracketEntryOrder
@@ -864,7 +864,7 @@ setPriceField BracketIndices.BracketStopOrder
 setPriceField BracketIndices.BracketTargetOrder
 End Sub
 
-Private Sub QuoteListener_bid(ev As TradeBuild.QuoteEvent)
+Private Sub QuoteListener_bid(ev As QuoteEvent)
 BidText = ev.priceString
 BidSizeText = ev.size
 setPriceField BracketIndices.BracketEntryOrder
@@ -872,23 +872,23 @@ setPriceField BracketIndices.BracketStopOrder
 setPriceField BracketIndices.BracketTargetOrder
 End Sub
 
-Private Sub QuoteListener_high(ev As TradeBuild.QuoteEvent)
+Private Sub QuoteListener_high(ev As QuoteEvent)
 HighText = ev.priceString
 End Sub
 
-Private Sub QuoteListener_Low(ev As TradeBuild.QuoteEvent)
+Private Sub QuoteListener_Low(ev As QuoteEvent)
 LowText = ev.priceString
 End Sub
 
-Private Sub QuoteListener_openInterest(ev As TradeBuild.QuoteEvent)
+Private Sub QuoteListener_openInterest(ev As QuoteEvent)
 
 End Sub
 
-Private Sub QuoteListener_previousClose(ev As TradeBuild.QuoteEvent)
+Private Sub QuoteListener_previousClose(ev As QuoteEvent)
 
 End Sub
 
-Private Sub QuoteListener_trade(ev As TradeBuild.QuoteEvent)
+Private Sub QuoteListener_trade(ev As QuoteEvent)
 LastText = ev.priceString
 LastSizeText = ev.size
 setPriceField BracketIndices.BracketEntryOrder
@@ -896,7 +896,7 @@ setPriceField BracketIndices.BracketStopOrder
 setPriceField BracketIndices.BracketTargetOrder
 End Sub
 
-Private Sub QuoteListener_volume(ev As TradeBuild.QuoteEvent)
+Private Sub QuoteListener_volume(ev As QuoteEvent)
 VolumeText = ev.size
 End Sub
 
@@ -969,7 +969,7 @@ setOrderScheme comboItemData(OrderSchemeCombo)
 End Sub
 
 Private Sub PlaceOrdersButton_Click()
-Dim op As TradeBuild.orderPlex
+Dim op As OrderPlex
 
 Select Case comboItemData(OrderSchemeCombo)
 Case OrderSchemes.SimpleOrder
@@ -1201,7 +1201,7 @@ End Sub
 ' mTicker Event Handlers
 '================================================================================
 
-Private Sub mTicker_StateChange(ev As TradeBuild.StateChangeEvent)
+Private Sub mTicker_StateChange(ev As TWUtilities.StateChangeEvent)
 Dim fred As TickerStates
 Select Case ev.State
 Case TickerStateCreated
@@ -1267,12 +1267,12 @@ Err:
 End Sub
 
 Public Sub showOrderPlex( _
-                ByVal value As orderPlex, _
+                ByVal value As OrderPlex, _
                 ByVal selectedOrderNumber As Long)
 
-Dim entryOrder As TradeBuild.Order
-Dim stopOrder As TradeBuild.Order
-Dim targetOrder As TradeBuild.Order
+Dim entryOrder As Order
+Dim stopOrder As Order
+Dim targetOrder As Order
 
 clearOrderPlex
 
@@ -1618,7 +1618,7 @@ enableControl GoodTillDateText(index)
 enableControl GoodTillDateTZText(index)
 End Sub
 
-Private Function isOrderModifiable(ByVal pOrder As TradeBuild.Order) As Boolean
+Private Function isOrderModifiable(ByVal pOrder As Order) As Boolean
 If pOrder Is Nothing Then Exit Function
 isOrderModifiable = pOrder.isModifiable
 End Function
@@ -1820,7 +1820,7 @@ End Sub
 '
 '*/
 Private Sub setOrderAttributes( _
-                ByVal pOrder As TradeBuild.Order, _
+                ByVal pOrder As Order, _
                 ByVal orderIndex As Long)
 
 With pOrder
@@ -1851,7 +1851,7 @@ End With
 End Sub
 
 Private Sub setOrderFieldValues( _
-                ByVal pOrder As TradeBuild.Order, _
+                ByVal pOrder As Order, _
                 ByVal orderIndex As Long)
 If pOrder Is Nothing Then
     disableOrderFields orderIndex
@@ -1863,9 +1863,9 @@ clearOrderFields orderIndex
 With pOrder
     setOrderId orderIndex, .id
     
-    ActionCombo(orderIndex).text = OrderActionToString(.action)
+    ActionCombo(orderIndex).Text = OrderActionToString(.Action)
     QuantityText(orderIndex) = .quantity
-    TypeCombo(orderIndex).text = OrderTypeToString(.orderType)
+    TypeCombo(orderIndex).Text = OrderTypeToString(.orderType)
     PriceText(orderIndex) = IIf(.limitPrice <> 0, .limitPrice, "")
     StopPriceText(orderIndex) = IIf(.triggerPrice <> 0, .triggerPrice, "")
     IgnoreRthCheck(orderIndex) = IIf(.ignoreRegularTradingHours, vbChecked, vbUnchecked)
@@ -1889,7 +1889,7 @@ With pOrder
     GoodTillDateTZText(orderIndex) = .goodTillDateTZ
     
     ' do this last because it sets the various fields attributes
-    TypeCombo(orderIndex).text = OrderTypeToString(.orderType)
+    TypeCombo(orderIndex).Text = OrderTypeToString(.orderType)
 End With
 
 If Not isOrderModifiable(pOrder) Then
@@ -1901,8 +1901,8 @@ End Sub
 
 Private Sub setOrderFieldEnabling( _
                 ByVal pControl As Control, _
-                ByVal orderAtt As TradeBuild.OrderAttributeIds, _
-                ByVal pOrder As TradeBuild.Order)
+                ByVal orderAtt As OrderAttributeIds, _
+                ByVal pOrder As Order)
 If Not pOrder Is Nothing Then
     If pOrder.isAttributeModifiable(orderAtt) Then
         enableControl pControl
@@ -1918,7 +1918,7 @@ End Sub
 
 Private Sub setOrderFieldsEnabling( _
                 ByVal index As Long, _
-                ByVal pOrder As TradeBuild.Order)
+                ByVal pOrder As Order)
 setOrderFieldEnabling ActionCombo(index), OrderAttAction, pOrder
 setOrderFieldEnabling QuantityText(index), OrderAttQuantity, pOrder
 setOrderFieldEnabling TypeCombo(index), OrderAttOrderType, pOrder
@@ -2358,15 +2358,15 @@ Next
 End Sub
 
 Private Sub showTickerValues()
-AskText.text = mTicker.AskPriceString
-AskSizeText.text = mTicker.AskSize
-BidText.text = mTicker.BidPriceString
-BidSizeText.text = mTicker.bidSize
-LastText.text = mTicker.TradePriceString
-LastSizeText.text = mTicker.TradeSize
-VolumeText.text = mTicker.volume
-HighText.text = mTicker.highPriceString
-LowText.text = mTicker.lowPriceString
+AskText.Text = mTicker.AskPriceString
+AskSizeText.Text = mTicker.AskSize
+BidText.Text = mTicker.BidPriceString
+BidSizeText.Text = mTicker.bidSize
+LastText.Text = mTicker.TradePriceString
+LastSizeText.Text = mTicker.TradeSize
+VolumeText.Text = mTicker.volume
+HighText.Text = mTicker.highPriceString
+LowText.Text = mTicker.lowPriceString
 End Sub
 
 

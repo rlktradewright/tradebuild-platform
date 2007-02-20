@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{DBED8E43-5960-49DE-B9A7-BBC22DB93A26}#12.1#0"; "ChartSkil.ocx"
+Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#1.0#0"; "ChartSkil2-5.ocx"
 Begin VB.UserControl TradeBuildChart 
    ClientHeight    =   5745
    ClientLeft      =   0
@@ -8,15 +8,15 @@ Begin VB.UserControl TradeBuildChart
    ScaleHeight     =   5745
    ScaleWidth      =   7365
    ToolboxBitmap   =   "TradeBuildChart.ctx":0000
-   Begin ChartSkil.Chart Chart1 
+   Begin ChartSkil25.Chart Chart1 
       Align           =   1  'Align Top
-      Height          =   5295
+      Height          =   5175
       Left            =   0
       TabIndex        =   0
       Top             =   0
       Width           =   7365
       _ExtentX        =   12991
-      _ExtentY        =   9340
+      _ExtentY        =   9128
       autoscale       =   0   'False
    End
 End
@@ -44,9 +44,6 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements TradeBuild.QuoteListener
-Implements TradeBuild.TaskCompletionListener
-
 '================================================================================
 ' Events
 '================================================================================
@@ -63,67 +60,36 @@ Implements TradeBuild.TaskCompletionListener
 ' Types
 '================================================================================
 
-Public Type RegionEntry
-    region              As ChartSkil.ChartRegion
-    usageCount          As Long
-End Type
-
 '================================================================================
 ' Member variables
 '================================================================================
 
-Private mChartControl As ChartSkil.chart
-Private mObjectID As String
+Private mChartManager As ChartManager
 
-Private mRegions As Collection
-
-Private mTicker As TradeBuild.ticker
-Private mTimeframes As TradeBuild.Timeframes
-Private WithEvents mTimeframe As TradeBuild.Timeframe
+Private mTicker As ticker
+Private mTimeframes As Timeframes
+Private WithEvents mTimeframe As Timeframe
 Attribute mTimeframe.VB_VarHelpID = -1
-Private WithEvents mBars As TradeBuild.Bars
-Attribute mBars.VB_VarHelpID = -1
-
-'Private mOutstandingTasks As Long
 
 Private mStudyConfigurations As StudyConfigurations
 
-Private mTimeframeKey As String
+Private mBarsStudyConfig As StudyConfiguration
 
-Private mBackfilling As Boolean
-Private mFirstBackfill As Boolean   ' indicates if this is the first lot of
-                                    ' historic bars that has been played through
-                                    ' this chart
-                                            
 Private mUpdatePerTick As Boolean
 
 Private mInitialNumberOfBars As Long
+Private mIncludeBarsOutsideSession As Boolean
 Private mMinimumTicksHeight As Long
 
-Private mContract As TradeBuild.Contract
-Private mPriceBar As TradeBuild.Bar
+Private mContract As Contract
 
-Private mPeriodLengthMinutes As Long
 Private mPeriodLength As Long
-Private mPeriodUnits As TradeBuild.TimePeriodUnits
+Private mPeriodUnits As TimePeriodUnits
 
-Private mPriceRegion As ChartSkil.ChartRegion
-Private mVolumeRegion As ChartSkil.ChartRegion
-
-Private mBarSeries As ChartSkil.BarSeries
-Private mChartBar As ChartSkil.Bar
-
-Private mVolumeSeries As ChartSkil.DataPointSeries
-Private mVolumePoint As ChartSkil.DataPoint
-Private mPrevBarVolume As Long
-
-Private mPlexLineSeries As ChartSkil.LineSeries
-
-Private mPeriods As ChartSkil.Periods
+Private mPriceRegion As ChartRegion
+Private mVolumeRegion As ChartRegion
 
 Private mInitialised As Boolean
-
-Private mHorizontalLineKeys As Collection
 
 Private mHighPrice As Double
 Private mLowPrice As Double
@@ -137,18 +103,8 @@ Private mPrevHeight As Single
 '================================================================================
 
 Private Sub UserControl_Initialize()
-Set mChartControl = Chart1
-
-mObjectID = GenerateGUIDString
-Set mRegions = New Collection
 
 Set mStudyConfigurations = New StudyConfigurations
-
-initialiseChart
-
-Set mHorizontalLineKeys = New Collection
-
-mFirstBackfill = True
 
 mPrevWidth = UserControl.Width
 mPrevHeight = UserControl.Height
@@ -157,7 +113,6 @@ End Sub
 
 Private Sub UserControl_Resize()
 If UserControl.Width <> mPrevWidth Then
-    'Chart1.Width = UserControl.Width
     mPrevWidth = UserControl.Width
 End If
 If UserControl.Height <> mPrevHeight Then
@@ -166,155 +121,50 @@ If UserControl.Height <> mPrevHeight Then
 End If
 End Sub
 
-'================================================================================
-' QuoteListener Interface Members
-'================================================================================
-
-Private Sub QuoteListener_ask(ev As TradeBuild.QuoteEvent)
-
-End Sub
-
-Private Sub QuoteListener_bid(ev As TradeBuild.QuoteEvent)
-
-End Sub
-
-Private Sub QuoteListener_high(ev As TradeBuild.QuoteEvent)
-mHighPrice = ev.price
-End Sub
-
-Private Sub QuoteListener_Low(ev As TradeBuild.QuoteEvent)
-mLowPrice = ev.price
-End Sub
-
-Private Sub QuoteListener_openInterest(ev As TradeBuild.QuoteEvent)
-
-End Sub
-
-Private Sub QuoteListener_previousClose(ev As TradeBuild.QuoteEvent)
-mPrevClosePrice = ev.price
-End Sub
-
-Private Sub QuoteListener_trade(ev As TradeBuild.QuoteEvent)
-If mUpdatePerTick Then mChartBar.Tick ev.price
-End Sub
-
-Private Sub QuoteListener_volume(ev As TradeBuild.QuoteEvent)
-If mUpdatePerTick Then setVolume mPriceBar.volume
-End Sub
-
-'================================================================================
-' TaskCompletionListener Interface Members
-'================================================================================
-
-Private Sub TaskCompletionListener_taskCompleted(ev As TradeBuild.TaskCompletionEvent)
-'mOutstandingTasks = mOutstandingTasks - 1
-'If mOutstandingTasks = 0 Then mChartControl.suppressDrawing = False
-mChartControl.suppressDrawing = False
-
-If ev.data = TaskTypeReplayBars Then
-    mTicker.addQuoteListener Me
-    mBackfilling = False
-    mFirstBackfill = False
-    updatePreviousBar
-End If
-End Sub
-
-'================================================================================
-' mBars Event Handlers
-'================================================================================
-
-Private Sub mBars_BarAdded(ByVal theBar As TradeBuild.Bar)
-If Not mUpdatePerTick Then updatePreviousBar ' update the previous bar
-If Not mPriceBar Is Nothing Then mPrevBarVolume = mPriceBar.volume
-Set mPriceBar = theBar
-Set mChartBar = addBarToChart
-Set mVolumePoint = addVolumeDataPointToChart(theBar.datetime)
-End Sub
-
-Private Sub mBars_HistoricBarAdded(ByVal theBar As TradeBuild.Bar)
-processHistoricBar theBar
-End Sub
-
-Private Sub mBars_BarReplayed(ByVal theBar As TradeBuild.Bar)
-processHistoricBar theBar
-End Sub
 
 '================================================================================
 ' mTimeframe Event Handlers
 '================================================================================
 
 Private Sub mTimeframe_BarsLoaded()
-updatePreviousBar
-If mChartControl.Visible Then mChartControl.suppressDrawing = False
-mTicker.addQuoteListener Me
-mBackfilling = False
-mFirstBackfill = False
+showStudies
 End Sub
 
 '================================================================================
 ' Properties
 '================================================================================
 
-Public Property Let initialNumberOfBars(ByVal value As Long)
-mInitialNumberOfBars = value
+Public Property Get chartController() As chartController
+Set chartController = Chart1.controller
 End Property
 
 Public Property Get initialNumberOfBars() As Long
 initialNumberOfBars = mInitialNumberOfBars
 End Property
 
-Public Property Let minimumTicksHeight(ByVal value As Double)
-mMinimumTicksHeight = value
-End Property
-
 Public Property Get minimumTicksHeight() As Double
 minimumTicksHeight = mMinimumTicksHeight
 End Property
 
-Friend Property Get objectId() As String
-objectId = mObjectID
-End Property
-
-Public Property Let periodLength(ByVal value As Long)
-mPeriodLength = value
-mPeriodLengthMinutes = calcPeriodLengthMinutes
-mChartControl.periodLengthMinutes = mPeriodLengthMinutes
-End Property
-
-Public Property Let periodUnits(ByVal value As TradeBuild.TimePeriodUnits)
-mPeriodUnits = value
-mPeriodLengthMinutes = calcPeriodLengthMinutes
-mChartControl.periodLengthMinutes = mPeriodLengthMinutes
-End Property
-
 Public Property Get regionNames() As String()
-Dim names() As String
-Dim region As ChartSkil.ChartRegion
-Dim re As RegionEntry
-Dim i As Long
-
-ReDim names(mRegions.count) As String
-
-For i = 1 To mRegions.count
-    re = mRegions(i)
-    names(i - 1) = re.region.name
-Next
-regionNames = names
+regionNames = mChartManager.regionNames
 End Property
 
 Friend Property Get StudyConfigurations() As StudyConfigurations
-If Not Ambient.UserMode Then err.Raise 394, , "Get not supported at design time"
+If Not Ambient.UserMode Then Err.Raise 394, , "Get not supported at design time"
 Set StudyConfigurations = mStudyConfigurations
 End Property
 
 Friend Property Let suppressDrawing( _
                 ByVal value As Boolean)
-mChartControl.suppressDrawing = value
+Chart1.suppressDrawing = value
 End Property
 
 Public Property Get timeframeCaption() As String
 Dim units As String
 Select Case mPeriodUnits
+Case TimePeriodUnits.TimePeriodSecond
+    timeframeCaption = IIf(mPeriodLength = 1, "1 Sec", mPeriodLength & " Secs")
 Case TimePeriodUnits.TimePeriodMinute
     timeframeCaption = IIf(mPeriodLength = 1, "1 Min", mPeriodLength & " Mins")
 Case TimePeriodUnits.TimePeriodHour
@@ -325,8 +175,6 @@ Case TimePeriodUnits.TimePeriodWeek
     timeframeCaption = IIf(mPeriodLength = 1, "Weekly", mPeriodLength & " Wks")
 Case TimePeriodUnits.TimePeriodMonth
     timeframeCaption = IIf(mPeriodLength = 1, "Monthly", mPeriodLength & " Mths")
-Case TimePeriodUnits.TimePeriodLunarMonth
-
 Case TimePeriodUnits.TimePeriodYear
     timeframeCaption = IIf(mPeriodLength = 1, "Yearly", mPeriodLength & " Yrs")
 End Select
@@ -340,344 +188,152 @@ End Property
 ' Methods
 '================================================================================
 
-Public Sub addHorizontalLine( _
-                ByVal chartRegionName As String, _
-                ByVal y As Single, _
-                ByVal lineStyle As LineStyles, _
-                ByVal lineThickness As Long, _
-                ByVal lineColor As Long, _
-                ByVal layer As Long)
-Dim re As RegionEntry
-Dim region As ChartSkil.ChartRegion
-Dim line As ChartSkil.line
-Dim key As String
-
-
-key = chartRegionName & "|" & y & "|" & lineStyle & "|" & lineThickness & "|" & lineColor & "|" & layer
-On Error Resume Next
-Set line = mHorizontalLineKeys(key)
-On Error GoTo 0
-
-If Not line Is Nothing Then
-    ' line has already been created
-    Exit Sub
-End If
-
-re = mRegions(chartRegionName)
-Set region = re.region
-
-Set line = region.addLine(layer)
-
-Select Case lineStyle
-Case LineStyles.LineSolid
-    line.style = ChartSkil.LineStyles.LineSolid
-Case LineStyles.LineDash
-    line.style = ChartSkil.LineStyles.LineDash
-Case LineStyles.LineDot
-    line.style = ChartSkil.LineStyles.LineDot
-Case LineStyles.LineDashDot
-    line.style = ChartSkil.LineStyles.LineDashDot
-Case LineStyles.LineDashDotDot
-    line.style = ChartSkil.LineStyles.LineDashDotDot
-Case LineStyles.LineInvisible
-    line.style = ChartSkil.LineStyles.LineInvisible
-Case LineStyles.LineInsideSolid
-    line.style = ChartSkil.LineStyles.LineInsideSolid
-End Select
-
-line.thickness = lineThickness
-line.color = lineColor
-line.point1 = region.newPoint(0, y, CoordsRelative, CoordsLogical)
-line.point2 = region.newPoint(100, y, CoordsRelative, CoordsLogical)
-
-mHorizontalLineKeys.add line, key
-End Sub
-
-Public Sub addOrderPlexLine(ByRef orderPlex As OrderPlexProfile)
-Dim plexLine As ChartSkil.line
-Dim Period As ChartSkil.Period
-Static plexNumber As Long
-
-Set plexLine = mPlexLineSeries.addLine
-plexLine.point1 = mPriceRegion.newPoint(mPeriods(mContract.BarStartTime(orderPlex.StartTime, mPeriodLengthMinutes)).periodNumber, orderPlex.EntryPrice)
-
-On Error Resume Next
-Set Period = mPeriods(mContract.BarStartTime(orderPlex.endTime, mPeriodLengthMinutes))
-On Error GoTo 0
-If Period Is Nothing Then
-    ' this occurs when the execution that finished the order plex occurred
-    ' at the start of a new bar but before the first price for the bar
-    ' was reported. So add the bar now
-    addBarToChart mContract.BarStartTime(orderPlex.endTime, mPeriodLengthMinutes)
-End If
-plexLine.point2 = mPriceRegion.newPoint(mPeriods(mContract.BarStartTime(orderPlex.endTime, mPeriodLengthMinutes)).periodNumber, orderPlex.ExitPrice)
-
-If orderPlex.action = ActionBuy Then
-    plexLine.color = vbBlue
-Else
-    plexLine.color = vbRed
-End If
-If orderPlex.QuantityOutstanding <> 0 Then
-    plexLine.arrowEndStyle = ArrowClosed
-    plexLine.arrowEndWidth = 8
-    plexLine.arrowEndLength = 12
-End If
-    
-
-End Sub
-
-Public Sub addRegion( _
-                ByVal name As String, _
-                ByVal title As String, _
-                ByVal autoscale As Boolean, _
-                ByVal gridlineSpacingY As Double, _
-                ByVal gridTextColor As Long, _
-                ByVal initialPercentHeight As Double, _
-                ByVal minimumPercentHeight As Double, _
-                ByVal integerYScale As Boolean, _
-                ByVal minYScale As Single, _
-                ByVal maxYScale As Single, _
-                ByVal showGrid As Boolean, _
-                ByVal showGridText As Boolean)
-
-Dim re As RegionEntry
-Dim region As ChartSkil.ChartRegion
-
-On Error Resume Next
-re = mRegions(name)
-Set region = re.region
-On Error GoTo 0
-
-If Not region Is Nothing Then
-    ' region is already defined
-    Exit Sub
-End If
-
-Set region = mChartControl.addChartRegion(initialPercentHeight, minimumPercentHeight, name)
-region.autoscale = autoscale
-region.gridlineSpacingY = gridlineSpacingY
-region.gridTextColor = gridTextColor
-region.setVerticalScale minYScale, maxYScale
-region.integerYScale = integerYScale
-region.setTitle title, vbBlue, Nothing
-region.showGrid = showGrid
-region.showGridText = showGridText
-Set re.region = region
-mRegions.add re, name
-End Sub
-                
-Public Function addStudy( _
-                ByVal studyConfig As studyConfiguration) As TradeBuild.study
-Dim study As TradeBuild.study
-Dim studyId As String
-Dim studyValueConfig As StudyValueConfiguration
-Dim underlyingStudyConfig As studyConfiguration
-Dim regionName As String
-Dim region As ChartSkil.ChartRegion
-Dim studyHorizRule As StudyHorizontalRule
-Dim horizRulesLineSeries As ChartSkil.LineSeries
-Dim line As ChartSkil.line
-Dim i As Long
-
-If mTicker Is Nothing Then err.Raise TradeBuild.ErrorCodes.ErrIllegalStateException, _
-                                    "TradeBuildUI.TradeBuildChart::AddStudy", _
-                                    "Chart not attached to ticker"
-                                    
-If studyConfig.underlyingStudyId = "" Then
-    ' this is a default study configuration
-    studyConfig.underlyingStudyId = mBars.id
-    'studyConfig.inputValueNames = "Close"
-End If
-
-Set study = mTicker.addStudy(studyConfig.name, _
-                            studyId, _
-                            studyConfig.underlyingStudyId, _
-                            studyConfig.inputValueNames, _
-                            studyConfig.parameters, _
-                            studyConfig.serviceProviderName)
-
-studyConfig.instanceName = study.instanceName
-studyConfig.instanceFullyQualifiedName = study.instancePath
-studyConfig.studyId = study.id
-
-If studyConfig.chartRegionName = RegionNameDefault Then
-    ' we will use the region for the underlying study
-    For Each underlyingStudyConfig In mStudyConfigurations
-        If underlyingStudyConfig.studyId = studyConfig.underlyingStudyId Then Exit For
-    Next
-    regionName = underlyingStudyConfig.chartRegionName
-    studyConfig.chartRegionName = regionName
-ElseIf studyConfig.chartRegionName = RegionNameCustom Then
-    regionName = study.instancePath
-    studyConfig.chartRegionName = regionName
-Else
-    regionName = studyConfig.chartRegionName
-End If
-Set region = findRegion(regionName, study.instanceName, False)
-    
-For Each studyValueConfig In studyConfig.studyValueConfigurations
-    If studyValueConfig.includeInChart Then
-        studyConfig.studyValueHandlers.add includeStudyValueInChart( _
-                                                    study, _
-                                                    regionName, _
-                                                    studyValueConfig)
-    End If
-Next
-
-If studyConfig.studyHorizontalRules.count > 0 Then
-    Set horizRulesLineSeries = region.addLineSeries(LayerNumbers.LayerGrid + 1)
-    horizRulesLineSeries.extended = True
-    horizRulesLineSeries.extendAfter = True
-    horizRulesLineSeries.extendBefore = True
-    For Each studyHorizRule In studyConfig.studyHorizontalRules
-        horizRulesLineSeries.color = studyHorizRule.color
-        horizRulesLineSeries.style = studyHorizRule.style
-        horizRulesLineSeries.thickness = studyHorizRule.thickness
-        Set line = horizRulesLineSeries.addLine
-        line.point1 = region.newPoint(0, studyHorizRule.y, CoordsRelative, CoordsLogical)
-        line.point2 = region.newPoint(100, studyHorizRule.y, CoordsRelative, CoordsLogical)
-    Next
-    studyConfig.horizontalRulesLineSeries = horizRulesLineSeries
-End If
-
-mStudyConfigurations.add studyConfig
-startStudy studyId
-
-Set addStudy = study
-End Function
-
 Public Sub clearChart()
-mChartControl.clearChart
+Chart1.clearChart
 End Sub
 
 Public Sub finish()
-Dim studyConfig As studyConfiguration
+mChartManager.finish
 
-On Error GoTo err
-
-mChartControl.clearChart
-
-For Each studyConfig In mStudyConfigurations
-    studyConfig.finish
-Next
-
-Set mStudyConfigurations = Nothing
-
-If Not mTicker Is Nothing Then
-    If mTicker.State = TickerStateRunning Then mTicker.removeQuoteListener Me
-End If
 Set mTimeframes = Nothing
 Set mTimeframe = Nothing
 Set mTicker = Nothing
-Set mBars = Nothing
-Exit Sub
-
-err:
-'ignore any errors
 End Sub
-
-Friend Function getPeriod(ByVal pTimestamp As Date) As ChartSkil.Period
-Static sPeriod As ChartSkil.Period
-Static sTimestamp As Date
-
-Dim lTimestamp As Date
-
-lTimestamp = mContract.BarStartTime(pTimestamp, mPeriodLengthMinutes)
-
-If lTimestamp = sTimestamp Then
-    If Not sPeriod Is Nothing Then
-        Set getPeriod = sPeriod
-        Exit Function
-    End If
-End If
-
-On Error Resume Next
-Set getPeriod = mPeriods(lTimestamp)
-On Error GoTo 0
-
-If getPeriod Is Nothing Then
-    Set getPeriod = mChartControl.addperiod(lTimestamp)
-    mChartControl.scrollX 1
-End If
-Set sPeriod = getPeriod
-sTimestamp = lTimestamp
-End Function
-
-Friend Function getSpecialValue(ByVal valueType As SpecialValues) As Variant
-
-Select Case valueType
-Case SpecialValues.SVCurrentSessionEndTime
-    getSpecialValue = mContract.currentSessionEndTime
-Case SpecialValues.SVCurrentSessionStartTime
-    getSpecialValue = mContract.currentSessionStartTime
-Case SpecialValues.SVHighPrice
-    getSpecialValue = mHighPrice
-Case SpecialValues.SVLowPrice
-    getSpecialValue = mLowPrice
-Case SpecialValues.SVPreviousClosePrice
-    getSpecialValue = mPrevClosePrice
-End Select
-End Function
-
-Public Function removeStudy( _
-                ByVal studyConfig As studyConfiguration)
-Dim studyValueConfig  As StudyValueConfiguration
-Dim svh As StudyValueHandler
-Dim horizRulesLineSeries As ChartSkil.LineSeries
-Dim regionName As String
-Dim re As RegionEntry
-Dim region As ChartSkil.ChartRegion
-
-mChartControl.suppressDrawing = True
-For Each svh In studyConfig.studyValueHandlers
-    regionName = svh.region.name
-    re = mRegions(regionName)
-    If re.usageCount = 1 Then
-        svh.finish False
-        mChartControl.removeChartRegion re.region
-        mRegions.remove regionName
-    Else
-        svh.finish True
-        mRegions.remove regionName
-        re.usageCount = re.usageCount - 1
-        mRegions.add re, regionName
-    End If
-Next
-
-Set horizRulesLineSeries = studyConfig.horizontalRulesLineSeries
-If Not horizRulesLineSeries Is Nothing Then
-    Set re.region = Nothing
-    On Error Resume Next
-    re = mRegions(studyConfig.chartRegionName)
-    On Error GoTo 0
-    If Not re.region Is Nothing Then
-        Set region = re.region
-        region.removeLineSeries horizRulesLineSeries
-    End If
-End If
-'If mOutstandingTasks = 0 Then mChartControl.suppressDrawing = False
-mChartControl.suppressDrawing = False
-mStudyConfigurations.remove studyConfig
-End Function
 
 Public Sub scrollToTime(ByVal pTime As Date)
-Dim periodNumber As Long
-periodNumber = mPeriods(mContract.BarStartTime(pTime, mPeriodLengthMinutes)).periodNumber
-mChartControl.lastVisiblePeriod = periodNumber + Int((mChartControl.lastVisiblePeriod - mChartControl.firstVisiblePeriod) / 2) - 1
+mChartManager.scrollToTime pTime
 End Sub
 
-Public Sub showChart(ByVal value As TradeBuild.ticker)
-Dim studyConfig As studyConfiguration
+Public Sub showChart( _
+                ByVal pTicker As ticker, _
+                ByVal initialNumberOfBars As Long, _
+                ByVal includeBarsOutsideSession As Boolean, _
+                ByVal minimumTicksHeight As Long, _
+                ByVal periodlength As Long, _
+                ByVal periodUnits As TimePeriodUnits)
 Dim i As Long
 
-Set mTicker = value
+Set mTicker = pTicker
+Set mChartManager = createChartManager(mTicker.StudyManager, Chart1.controller)
+
+mInitialNumberOfBars = initialNumberOfBars
+mIncludeBarsOutsideSession = includeBarsOutsideSession
+mMinimumTicksHeight = minimumTicksHeight
+mPeriodLength = periodlength
+mPeriodUnits = periodUnits
 
 If Not mContract Is Nothing Then
-    If Not mContract.specifier.Equals(mTicker.Contract.specifier) Then mInitialised = False
+    If Not mContract.specifier.equals(mTicker.Contract.specifier) Then mInitialised = False
 End If
 Set mContract = mTicker.Contract
-mPriceRegion.YScaleQuantum = mContract.ticksize
 
+initialiseChart
+
+Set mTimeframes = mTicker.Timeframes
+
+Set mTimeframe = mTimeframes.add(mPeriodLength, _
+                            mPeriodUnits, _
+                            "", _
+                            mInitialNumberOfBars, _
+                            mIncludeBarsOutsideSession, _
+                            IIf(mTicker.replayingTickfile, True, False))
+                            
+If mTimeframe.historicDataLoaded Then
+    showStudies
+Else
+    If mInitialNumberOfBars <> 0 Then Chart1.suppressDrawing = True
+End If
+
+End Sub
+
+Public Sub showStudyPickerForm()
+If mTicker.State = TickerStateRunning Then showStudyPicker mChartManager
+End Sub
+
+Public Sub syncStudyPickerForm()
+If mTicker.State = TickerStateRunning Then syncStudyPicker mChartManager
+End Sub
+
+Public Sub unsyncStudyPickerForm()
+unsyncStudyPicker
+End Sub
+
+'================================================================================
+' Helper Functions
+'================================================================================
+
+Private Function createBarsStudyConfig() As StudyConfiguration
+Dim lStudy As study
+Dim studyDef As StudyDefinition
+ReDim inputValueNames(1) As String
+Dim params As New Parameters2.Parameters
+Dim studyValueConfig As StudyValueConfiguration
+
+Set createBarsStudyConfig = New StudyConfiguration
+
+createBarsStudyConfig.underlyingStudy = mTicker.InputStudy
+
+Set lStudy = mTimeframe.tradeStudy
+createBarsStudyConfig.study = mTimeframe.tradeStudy
+Set studyDef = lStudy.StudyDefinition
+
+createBarsStudyConfig.chartRegionName = RegionNamePrice
+inputValueNames(0) = mTicker.InputNameTrade
+inputValueNames(1) = mTicker.InputNameVolume
+createBarsStudyConfig.inputValueNames = inputValueNames
+createBarsStudyConfig.name = studyDef.name
+params.setParameterValue "Bar length", mPeriodLength
+params.setParameterValue "Time units", TimePeriodUnitsToString(mPeriodUnits)
+createBarsStudyConfig.Parameters = params
+'createBarsStudyConfig.studyDefinition = studyDef
+
+Set studyValueConfig = createBarsStudyConfig.StudyValueConfigurations.add("Bar")
+studyValueConfig.outlineThickness = 1
+studyValueConfig.barThickness = 2
+studyValueConfig.barWidth = 0.6
+studyValueConfig.chartRegionName = RegionNamePrice
+studyValueConfig.barDisplayMode = BarDisplayModeCandlestick
+studyValueConfig.downColor = &H43FC2
+studyValueConfig.includeInAutoscale = True
+studyValueConfig.includeInChart = True
+studyValueConfig.layer = 200
+studyValueConfig.solidUpBody = True
+studyValueConfig.tailThickness = 1
+studyValueConfig.upColor = &H1D9311
+
+Set studyValueConfig = createBarsStudyConfig.StudyValueConfigurations.add("Volume")
+studyValueConfig.chartRegionName = RegionNameVolume
+studyValueConfig.Color = vbBlack
+studyValueConfig.dataPointDisplayMode = DataPointDisplayModeHistogram
+studyValueConfig.histogramBarWidth = 0.5
+studyValueConfig.includeInAutoscale = True
+studyValueConfig.includeInChart = True
+studyValueConfig.lineThickness = 1
+End Function
+
+Private Sub initialiseChart()
+
+If mInitialised Then Exit Sub
+
+Chart1.suppressDrawing = True
+
+Chart1.clearChart
+Chart1.chartBackColor = vbWhite
+Chart1.autoscale = True
+Chart1.pointerStyle = PointerCrosshairs
+Chart1.twipsPerBar = 120
+Chart1.showHorizontalScrollBar = True
+
+Chart1.sessionStartTime = mContract.sessionStartTime
+Chart1.sessionEndTime = mContract.sessionEndTime
+
+Chart1.setPeriodParameters mPeriodLength, mPeriodUnits
+
+Set mPriceRegion = mChartManager.addChartRegion(RegionNamePrice, 100, 25)
+mPriceRegion.gridlineSpacingY = 2
+mPriceRegion.showGrid = True
+
+mPriceRegion.YScaleQuantum = mContract.ticksize
 If mMinimumTicksHeight * mContract.ticksize <> 0 Then
     mPriceRegion.minimumHeight = mMinimumTicksHeight * mContract.ticksize
 End If
@@ -688,372 +344,21 @@ mPriceRegion.setTitle mContract.specifier.localSymbol & _
                 vbBlue, _
                 Nothing
 
-mBarSeries.name = mContract.specifier.localSymbol & " " & mPeriodLength & "min"
-
-Set mTimeframes = mTicker.Timeframes
-
-mTimeframeKey = GenerateTimeframeKey
-
-If mInitialNumberOfBars <> 0 Then mChartControl.suppressDrawing = True
-On Error Resume Next
-Set mTimeframe = mTimeframes.item(mTimeframeKey)
-On Error GoTo 0
-
-If mTimeframe Is Nothing Then
-    Set mTimeframe = mTimeframes.add(mPeriodLength, _
-                                mPeriodUnits, _
-                                mTimeframeKey, _
-                                mInitialNumberOfBars, _
-                                , _
-                                , _
-                                IIf(mTicker.replayingTickfile, True, False))
-    Set mBars = mTimeframe.TradeBars
-Else
-    ' replay the relevant number of bars
-    Dim lTaskCompletion As TradeBuild.TaskCompletion
-    
-    Set lTaskCompletion = mTimeframe.replayBars(BarTypeTrade, mInitialNumberOfBars, , TaskTypeReplayBars)
-    Set mBars = mTimeframe.TradeBars
-    lTaskCompletion.addTaskCompletionListener Me
-    'mOutstandingTasks = mOutstandingTasks + 1
-End If
-
-Set studyConfig = New studyConfiguration
-studyConfig.instanceName = mBars.name
-studyConfig.instanceFullyQualifiedName = mBars.name
-studyConfig.studyId = mBars.id
-studyConfig.name = "Bars"
-studyConfig.chartRegionName = RegionNamePrice
-studyConfig.studyDefinition = mBars.studyDefinition
-mStudyConfigurations.add studyConfig
-End Sub
-
-Public Sub showStudyPickerForm()
-If mTicker.State = TickerStateRunning Then showStudyPicker mTicker, Me
-End Sub
-
-Public Sub syncStudyPickerForm()
-If mTicker.State = TickerStateRunning Then syncStudyPicker mTicker, Me
-End Sub
-
-Public Sub unsyncStudyPickerForm()
-unsyncStudyPicker
-End Sub
-
-Friend Sub updatePreviousBar()
-Dim lStudyValueHandler As StudyValueHandler
-Dim studyConfig As studyConfiguration
-
-If Not mChartBar Is Nothing And _
-    Not mPriceBar Is Nothing _
-Then
-    If Not mPriceBar.Blank Then
-        mChartBar.Tick mPriceBar.openValue
-        mChartBar.Tick mPriceBar.highValue
-        mChartBar.Tick mPriceBar.lowValue
-        mChartBar.Tick mPriceBar.closeValue
-        
-        setVolume mPriceBar.volume
-    End If
-End If
-
-If Not mPriceBar Is Nothing Then
-    For Each studyConfig In mStudyConfigurations
-        For Each lStudyValueHandler In studyConfig.studyValueHandlers
-            lStudyValueHandler.updatePreviousBar mPriceBar.datetime
-        Next
-    Next
-End If
-End Sub
-
-'================================================================================
-' Helper Functions
-'================================================================================
-
-Private Function addBarToChart(Optional ByVal timestamp As Date) As ChartSkil.Bar
-Dim Period As ChartSkil.Period
-Dim datetime As Date
-
-If mPriceBar Is Nothing Then Exit Function
-
-If CDbl(timestamp) <> 0 Then
-    datetime = timestamp
-Else
-    datetime = mPriceBar.datetime
-End If
-
-Set Period = getPeriod(datetime)
-
-On Error Resume Next
-Set addBarToChart = mBarSeries.item(Period.periodNumber)
-On Error GoTo 0
-
-If addBarToChart Is Nothing Then
-    Set addBarToChart = mBarSeries.addBar(Period.periodNumber)
-End If
-    
-End Function
-
-Private Sub addStudyDataPointsToChart( _
-                ByVal timestamp As Date)
-Dim studyConfig As studyConfiguration
-Dim lStudyValueHandler As StudyValueHandler
-For Each studyConfig In mStudyConfigurations
-    For Each lStudyValueHandler In studyConfig.studyValueHandlers
-        lStudyValueHandler.addStudyDataPointToChart mContract.BarStartTime(timestamp, mPeriodLengthMinutes)
-    Next
-Next
-End Sub
-
-Private Function addStudyDataPoint( _
-                ByVal dataSeries As ChartSkil.DataPointSeries, _
-                ByVal timestamp As Date) As ChartSkil.DataPoint
-Dim Period As ChartSkil.Period
-
-Set Period = getPeriod(timestamp)
-
-On Error Resume Next
-Set addStudyDataPoint = dataSeries.item(Period.periodNumber)
-On Error GoTo 0
-
-If addStudyDataPoint Is Nothing Then
-    Set addStudyDataPoint = dataSeries.addDataPoint(Period.periodNumber)
-End If
-
-End Function
-
-Private Function addVolumeDataPointToChart(Optional ByVal timestamp As Date) As ChartSkil.DataPoint
-Dim Period As ChartSkil.Period
-Dim datetime As Date
-
-If mPriceBar Is Nothing Then Exit Function
-
-If CDbl(timestamp) <> 0 Then
-    datetime = timestamp
-Else
-    datetime = mPriceBar.datetime
-End If
-
-Set Period = getPeriod(datetime)
-
-On Error Resume Next
-Set addVolumeDataPointToChart = mVolumeSeries.item(Period.periodNumber)
-On Error GoTo 0
-
-If addVolumeDataPointToChart Is Nothing Then
-    Set addVolumeDataPointToChart = mVolumeSeries.addDataPoint(Period.periodNumber)
-End If
-End Function
-
-Private Function calcPeriodLengthMinutes() As Long
-Dim units As String
-Select Case mPeriodUnits
-Case TimePeriodUnits.TimePeriodMinute
-    calcPeriodLengthMinutes = mPeriodLength
-Case TimePeriodUnits.TimePeriodHour
-    calcPeriodLengthMinutes = mPeriodLength * 60
-Case TimePeriodUnits.TimePeriodDay
-    calcPeriodLengthMinutes = mPeriodLength * 60 * 24
-Case TimePeriodUnits.TimePeriodWeek
-    calcPeriodLengthMinutes = mPeriodLength * 60 * 24 * 7
-Case TimePeriodUnits.TimePeriodMonth
-    calcPeriodLengthMinutes = mPeriodLength * 60 * 24 * 30
-Case TimePeriodUnits.TimePeriodLunarMonth
-    calcPeriodLengthMinutes = mPeriodLength * 60 * 24 * 28
-Case TimePeriodUnits.TimePeriodYear
-    calcPeriodLengthMinutes = mPeriodLength * 60 * 24 * 365
-End Select
-End Function
-
-Private Function findRegion( _
-                ByVal regionName As String, _
-                ByVal title As String, _
-                ByVal incrementUsageCount As Boolean) As ChartSkil.ChartRegion
-Dim re As RegionEntry
-
-On Error Resume Next
-re = mRegions(regionName)
-On Error GoTo 0
-
-Set findRegion = re.region
-
-If findRegion Is Nothing Then
-    Set findRegion = mChartControl.addChartRegion(20, , regionName)
-    Set re.region = findRegion
-    If incrementUsageCount Then re.usageCount = 1
-    mRegions.add re, regionName
-    findRegion.gridlineSpacingY = 0.8
-    findRegion.showGrid = True
-    findRegion.setTitle title, vbBlue, Nothing
-ElseIf incrementUsageCount Then
-    re.usageCount = re.usageCount + 1
-    mRegions.remove regionName
-    mRegions.add re, regionName
-End If
-End Function
-Private Function GenerateTimeframeKey() As String
-GenerateTimeframeKey = mPeriodLengthMinutes & "min"
-End Function
-
-Private Function includeStudyValueInChart( _
-                ByVal study As TradeBuild.study, _
-                ByVal defaultRegionName As String, _
-                ByVal studyValueConfig As StudyValueConfiguration) As StudyValueHandler
-                
-Dim lStudyValueHandler As StudyValueHandler
-Dim region As ChartSkil.ChartRegion
-Dim dataSeries As ChartSkil.DataPointSeries
-Dim conditionalActions() As ConditionalAction
-Dim regionName As String
-Dim lTaskCompletion As TradeBuild.TaskCompletion
-
-Set lStudyValueHandler = New StudyValueHandler
-lStudyValueHandler.chart = Me
-lStudyValueHandler.study = study
-lStudyValueHandler.updatePerTick = mUpdatePerTick
-
-lStudyValueHandler.multipleValuesPerBar = studyValueConfig.multipleValuesPerBar
-
-If studyValueConfig.chartRegionName = RegionNameDefault Then
-    ' then use the study's default region
-    regionName = defaultRegionName
-ElseIf studyValueConfig.chartRegionName = RegionNameCustom Then
-    regionName = study.instancePath
-    'studyValueConfig.chartRegionName = regionName
-Else
-    regionName = studyValueConfig.chartRegionName
-End If
-
-Set region = findRegion(regionName, study.instanceName, True)
-
-lStudyValueHandler.region = region
-
-If Not IsEmpty(studyValueConfig.maximumValue) Or _
-    Not IsEmpty(studyValueConfig.minimumValue) _
-Then
-    region.autoscale = False
-    region.setVerticalScale CSng(studyValueConfig.minimumValue), _
-                            CSng(studyValueConfig.maximumValue)
-End If
-
-Set dataSeries = region.addDataPointSeries(studyValueConfig.layer)
-dataSeries.displayMode = studyValueConfig.displayMode
-dataSeries.histBarWidth = studyValueConfig.histogramBarWidth
-dataSeries.includeInAutoscale = studyValueConfig.includeInAutoscale
-dataSeries.lineColor = studyValueConfig.color
-dataSeries.lineStyle = studyValueConfig.lineStyle
-dataSeries.lineThickness = studyValueConfig.lineThickness
-lStudyValueHandler.dataSeries = dataSeries
-
-Set lTaskCompletion = study.addStudyValueListener( _
-                            lStudyValueHandler, _
-                            studyValueConfig.valueName, _
-                            mBarSeries.count, _
-                            , _
-                            TaskTypeAddValueListener)
-
-If Not lTaskCompletion Is Nothing Then
-    'mOutstandingTasks = mOutstandingTasks + 1
-    lTaskCompletion.addTaskCompletionListener Me
-    mChartControl.suppressDrawing = True
-End If
-Set includeStudyValueInChart = lStudyValueHandler
-End Function
-
-Private Sub initialiseChart()
-Dim re As RegionEntry
-
-If mInitialised Then Exit Sub
-
-mChartControl.suppressDrawing = True
-
-mChartControl.clearChart
-mChartControl.chartBackColor = vbWhite
-mChartControl.autoscale = True
-mChartControl.showCrosshairs = True
-mChartControl.twipsPerBar = 67
-mChartControl.showHorizontalScrollBar = True
-
-Set mPriceRegion = mChartControl.addChartRegion(100, 25, RegionNamePrice)
-Set re.region = mPriceRegion
-re.usageCount = 1
-mRegions.add re, RegionNamePrice
-mPriceRegion.gridlineSpacingY = 2
-mPriceRegion.showGrid = True
-
-Set mBarSeries = mPriceRegion.addBarSeries
-mBarSeries.outlineThickness = 1
-mBarSeries.tailThickness = 1
-mBarSeries.barThickness = 1
-mBarSeries.displayAsCandlestick = False
-mBarSeries.solidUpBody = True
-
-Set mPlexLineSeries = mPriceRegion.addLineSeries
-mPlexLineSeries.extended = True
-mPlexLineSeries.layer = LayerNumbers.LayerHIghestUser
-mPlexLineSeries.style = LineSolid
-mPlexLineSeries.thickness = 2
-
-Set mVolumeRegion = mChartControl.addChartRegion(20, , RegionNameVolume)
-Set re.region = mVolumeRegion
-re.usageCount = 1
-mRegions.add re, RegionNameVolume
+Set mVolumeRegion = mChartManager.addChartRegion(RegionNameVolume, 20)
 mVolumeRegion.gridlineSpacingY = 0.8
 mVolumeRegion.minimumHeight = 10
 mVolumeRegion.integerYScale = True
 mVolumeRegion.showGrid = True
 mVolumeRegion.setTitle "Volume", vbBlue, Nothing
 
-Set mVolumeSeries = mVolumeRegion.addDataPointSeries
-mVolumeSeries.displayMode = ChartSkil.DisplayModes.displayAsHistogram
-mVolumeSeries.includeInAutoscale = True
-
-Set mPeriods = mChartControl.Periods
-
-mChartControl.suppressDrawing = False
+Chart1.suppressDrawing = False
 
 mInitialised = True
 
 End Sub
 
-Private Sub processHistoricBar(ByVal theBar As TradeBuild.Bar)
-mBackfilling = True
-If Not mFirstBackfill Then Exit Sub
-
-'mChartControl.suppressDrawing = True
-
-updatePreviousBar ' update the previous bar
-
-If Not mPriceBar Is Nothing Then mPrevBarVolume = mPriceBar.volume
-
-Set mPriceBar = theBar
-Set mChartBar = addBarToChart(theBar.datetime)
-
-Set mVolumePoint = addVolumeDataPointToChart(theBar.datetime)
-
-addStudyDataPointsToChart theBar.datetime
+Private Sub showStudies()
+Set mBarsStudyConfig = createBarsStudyConfig
+mChartManager.setupStudyValueListeners mBarsStudyConfig
+If Chart1.Visible Then Chart1.suppressDrawing = False
 End Sub
-
-Private Sub setVolume(ByVal size As Long)
-mVolumePoint.dataValue = size
-If mVolumePoint.dataValue >= mPrevBarVolume Then
-    mVolumePoint.lineColor = vbGreen
-Else
-    mVolumePoint.lineColor = vbRed
-End If
-End Sub
-
-Private Function startStudy( _
-                ByVal studyId As String) As Boolean
-Dim lTaskCompletion As TradeBuild.TaskCompletion
-Set lTaskCompletion = mTicker.startStudy(studyId, mBarSeries.count, , TaskTypeStartStudy)
-
-If lTaskCompletion Is Nothing Then Exit Function
-
-startStudy = True
-'mOutstandingTasks = mOutstandingTasks + 1
-lTaskCompletion.addTaskCompletionListener Me
-mChartControl.suppressDrawing = True
-End Function
-
-

@@ -13,33 +13,34 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-'================================================================================
+'@================================================================================
 ' Interfaces
-'================================================================================
+'@================================================================================
 
 'Implements TradeBuildSP.IStreamingDataConsumer
 
-'================================================================================
+'@================================================================================
 ' Events
-'================================================================================
+'@================================================================================
 
 Event Error(ByRef ev As ErrorEvent)
+Event Notification(ByRef ev As NotificationEvent)
 
-'================================================================================
+'@================================================================================
 ' Constants
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Enums
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Types
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Member variables
-'================================================================================
+'@================================================================================
 
 Private mServiceProviderError As ServiceProviderError
 
@@ -49,17 +50,15 @@ Private mListeners As InfoListeners
 
 Private mWorkSpaces As workspaces
 Private mDefaultWorkSpace As WorkSpace
-Private mTickers As tickers
+Private mTickers As Tickers
 Private mExecutions As executions
 
 Private mExchangeCodes() As String
 Private mMaxExchangeCodesIndex As Long
 
-Private mTaskManager As taskManager
-
-'================================================================================
+'@================================================================================
 ' Class Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub Class_Initialize()
 
@@ -72,11 +71,8 @@ Set mWorkSpaces = New workspaces
 mWorkSpaces.tradeBuildAPI = Me
 
 Set mDefaultWorkSpace = mWorkSpaces.add("$default")
-Set mTickers = defaultWorkSpace.tickers
+Set mTickers = defaultWorkSpace.Tickers
 Set mExecutions = defaultWorkSpace.executions
-
-Set mTaskManager = New taskManager
-mTaskManager.quantumMillisecs = 20
 
 ReDim mExchangeCodes(100) As String
 mMaxExchangeCodesIndex = -1
@@ -168,13 +164,9 @@ Private Sub Class_Terminate()
 Debug.Print "TradeBuildAPI terminated"
 End Sub
 
-'================================================================================
+'@================================================================================
 ' Properties
-'================================================================================
-
-Public Property Get availableStudies() As StudyListEntry()
-availableStudies = mServiceProviders.availableStudies
-End Property
+'@================================================================================
 
 Public Property Get defaultWorkSpace() As WorkSpace
 Set defaultWorkSpace = mDefaultWorkSpace
@@ -188,44 +180,29 @@ Public Property Get ServiceProviders() As ServiceProviders
 Set ServiceProviders = mServiceProviders
 End Property
 
-Public Property Get StudyDefaultParameters( _
-                ByVal studyName As String, _
-                ByVal serviceProviderName As String) As TradeBuild.parameters
-Set StudyDefaultParameters = mServiceProviders.FetchStudyDefaultParameters( _
-                studyName, _
-                serviceProviderName)
+Public Property Get SupportedHistoricalDataPeriods() As TimePeriod()
+SupportedHistoricalDataPeriods = mServiceProviders.SupportedHistoricalDataPeriods
 End Property
 
-Public Property Get studyDefinition( _
-                ByVal name As String, _
-                ByVal serviceProviderName As String) As studyDefinition
-Set studyDefinition = mServiceProviders.studyDefinition(name, _
-                                                    serviceProviderName)
-End Property
-
-Public Property Get SupportedInputTickfileFormats() As TradeBuild.TickfileFormatSpecifier()
+Public Property Get SupportedInputTickfileFormats() As TradeBuild25.TickfileFormatSpecifier()
 SupportedInputTickfileFormats = mServiceProviders.SupportedInputTickfileFormats
 End Property
 
-Public Property Get SupportedOutputTickfileFormats() As TradeBuild.TickfileFormatSpecifier()
+Public Property Get SupportedOutputTickfileFormats() As TradeBuild25.TickfileFormatSpecifier()
 SupportedOutputTickfileFormats = mServiceProviders.SupportedOutputTickfileFormats
 End Property
 
-Public Property Get taskManager() As taskManager
-Set taskManager = mTaskManager
-End Property
-
-Public Property Get tickers() As tickers
-Set tickers = mTickers
+Public Property Get Tickers() As Tickers
+Set Tickers = mTickers
 End Property
 
 Public Property Get workspaces() As workspaces
 Set workspaces = mWorkSpaces
 End Property
 
-'================================================================================
+'@================================================================================
 ' Methods
-'================================================================================
+'@================================================================================
 
 Public Function addInfoListener(ByVal newListener As InfoListener, _
                             Optional ByRef valueType As Long = TradeBuildListenValueTypes.VTAll) As String
@@ -239,6 +216,15 @@ End Function
 Public Function getServiceProviderError() As ServiceProviderError
 Set getServiceProviderError = mServiceProviderError
 Set mServiceProviderError = Nothing
+End Function
+
+Public Function IsSupportedHistoricalDataPeriod( _
+                ByVal periodLength As Long, _
+                ByVal periodUnits As TimePeriodUnits)
+Dim period As TimePeriod
+period.length = periodLength
+period.units = periodUnits
+IsSupportedHistoricalDataPeriod = mServiceProviders.IsSupportedHistoricalDataPeriod(period)
 End Function
 
 Public Function IsValidExchangeCode(ByVal code As String) As Boolean
@@ -266,14 +252,14 @@ Loop Until bottom = middle
 If code = mExchangeCodes(middle) Then IsValidExchangeCode = True
 End Function
 
-Public Function NewBars( _
-                ByVal barLength As Long, _
-                ByVal barType As Long) As bars
-Set NewBars = New bars
-NewBars.tradeBuildAPI = Me
-NewBars.barLength = barLength
-NewBars.barType = barType
-End Function
+'Public Function NewBars( _
+'                ByVal barLength As Long, _
+'                ByVal barType As Long) As bars
+'Set NewBars = createbars(
+'NewBars.tradeBuildAPI = Me
+'NewBars.barLength = barLength
+'NewBars.barType = barType
+'End Function
 
 Public Function NewContracts( _
                 ByVal contractSpec As contractSpecifier) As Contracts
@@ -290,9 +276,9 @@ Public Function newContractSpecifier( _
                 Optional ByVal currencyCode As String, _
                 Optional ByVal expiry As String, _
                 Optional ByVal strike As Double, _
-                Optional ByVal right As OptionRights = OptNone) As TradeBuild.contractSpecifier
+                Optional ByVal right As OptionRights = OptNone) As TradeBuild25.contractSpecifier
 
-Dim source As String: source = "TradeBuild.TradeBuildAPI::newContractSpecifier"
+Dim source As String: source = "TradeBuild25.TradeBuildAPI::newContractSpecifier"
 
 If localSymbol = "" And symbol = "" Then
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
@@ -348,7 +334,7 @@ Case Else
                 "'" & sectype & "' is not a valid secType"
 End Select
 
-Set newContractSpecifier = New TradeBuild.contractSpecifier
+Set newContractSpecifier = New TradeBuild25.contractSpecifier
 With newContractSpecifier
     .localSymbol = localSymbol
     .symbol = symbol
@@ -372,8 +358,8 @@ On Error Resume Next
 ' give the application a chance to handle this
 
 Set ev.source = Me
-ev.errorCode = ApiErrorCodes.ApiErrFatalError
-ev.errorMsg = "Error " & errorCode & " (" & errorMessage & ") occurred in " & source
+ev.errorCode = errorCode
+ev.errorMsg = errorMessage & "( occurred in " & source & ")"
 RaiseEvent Error(ev)
 
 ' kill all the service providers if the app hasn't already done so
@@ -395,34 +381,34 @@ Friend Sub SetServiceProviderError( _
                 ByVal errorCode As Long, _
                 ByVal errorMessage As String, _
                 ByVal serviceProviderName As String)
-Dim ev As ErrorEvent
+Dim ev As NotificationEvent
 
 Set mServiceProviderError = New ServiceProviderError
 mServiceProviderError.errorCode = errorCode
 mServiceProviderError.message = errorMessage
 mServiceProviderError.serviceProviderName = serviceProviderName
-mServiceProviderError.timestamp = gCurrentTime
+mServiceProviderError.timestamp = GetTimestamp
 
 Set ev.source = Me
-ev.errorCode = ApiErrorCodes.ApiErrServiceProviderError
-ev.errorMsg = "A Service Provider error has occurred"
-RaiseEvent Error(ev)
+ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError
+ev.eventMessage = "A Service Provider error has occurred"
+RaiseEvent Notification(ev)
                     
 End Sub
 
-Public Function SetStudyDefaultParameters( _
-                ByVal studyName As String, _
-                ByVal serviceProviderName As String, _
-                ByVal params As IParameters) As Boolean
-SetStudyDefaultParameters = mServiceProviders.SetStudyDefaultParameters( _
-                studyName, _
-                serviceProviderName, _
-                params)
-End Function
+'Public Function SetStudyDefaultParameters( _
+'                ByVal studyName As String, _
+'                ByVal serviceProviderName As String, _
+'                ByVal params As IParameters) As Boolean
+'SetStudyDefaultParameters = mServiceProviders.SetStudyDefaultParameters( _
+'                studyName, _
+'                serviceProviderName, _
+'                params)
+'End Function
 
-'================================================================================
+'@================================================================================
 ' Helper Functions
-'================================================================================
+'@================================================================================
 
 Private Sub addExchangeCode(ByVal code As String)
 mMaxExchangeCodesIndex = mMaxExchangeCodesIndex + 1

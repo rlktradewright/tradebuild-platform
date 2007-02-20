@@ -13,36 +13,36 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-'================================================================================
+'@================================================================================
 ' Description
-'================================================================================
+'@================================================================================
 '
 '
 
-'================================================================================
+'@================================================================================
 ' Interfaces
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Events
-'================================================================================
+'@================================================================================
 
 'Event openOrder( _
 '                ByVal Timestamp As Date, _
 '                ByVal pContractSpecifier As contractSpecifier, _
 '                ByVal pOrder as simulatororder)
 
-'================================================================================
+'@================================================================================
 ' Constants
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Enums
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Types
-'================================================================================
+'@================================================================================
 
 Private Type MarketTableEntry
     inUse                   As Boolean
@@ -59,9 +59,9 @@ Private Type MarketTableEntry
     readyNotified           As Boolean
 End Type
 
-'================================================================================
+'@================================================================================
 ' Member variables
-'================================================================================
+'@================================================================================
 
 Private mCommonServiceConsumer As ICommonServiceConsumer
 
@@ -78,16 +78,15 @@ Attribute mTimerList.VB_VarHelpID = -1
 
 Private mNextBrokerOrderId As Long
 
-'================================================================================
+'@================================================================================
 ' Class Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub Class_Initialize()
 ReDim mMarketTable(InitialMaxTickers) As MarketTableEntry
 Set mAllOrders = New Collection
 
-Set mTimerList = New TimerUtils.TimerList
-mTimerList.TimerIntervalMillisecs = 200
+Set mTimerList = createTimerList(200)
 mTimerList.StartTiming
 
 mNextBrokerOrderId = 1
@@ -97,13 +96,13 @@ Private Sub Class_Terminate()
 Debug.Print "AdvancedOrderSimulator terminated"
 End Sub
 
-'================================================================================
+'@================================================================================
 ' XXXX Interface Members
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' mTimerList Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub mTimerList_expired(ByVal data As Object)
 Dim lOrder As SimulatorOrder
@@ -119,9 +118,9 @@ Case OrderStatuses.OrderStatusCancelling
 End Select
 End Sub
 
-'================================================================================
+'@================================================================================
 ' Properties
-'================================================================================
+'@================================================================================
 
 Friend Property Let clockRate( _
                 ByVal marketIndex As Long, _
@@ -136,9 +135,9 @@ Friend Property Let commonServiceConsumer(ByVal value As TradeBuildSP.ICommonSer
 Set mCommonServiceConsumer = value
 End Property
 
-'================================================================================
+'@================================================================================
 ' Methods
-'================================================================================
+'@================================================================================
 
 Friend Sub bid(ByVal timestamp As Date, _
                 ByVal marketIndex As Long, _
@@ -227,7 +226,7 @@ On Error GoTo 0
 
 If lOrder Is Nothing Then
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "TradeBuild.AdvancedOrderSimulator::cancelOrder", _
+                "TradeBuild25.AdvancedOrderSimulator::cancelOrder", _
                 "Unknown order id " & id
 End If
 
@@ -299,7 +298,7 @@ With mMarketTable(lOrder.marketIndex)
 End With
 End Sub
 
-'/**
+''
 ' Returns the <code>simulatorOrder</code> with the specified id.
 '
 ' @return       rhe <code>simulatorOrder</code> whose encapsulated order has
@@ -308,7 +307,7 @@ End Sub
 ' @param pId    the id of the <code>order</code> who's corresponding
 '               <code>simulatedOrder</code> is required
 '
-'*/
+'@/
 Friend Function getOrder( _
                 ByVal pId As String) As SimulatorOrder
 Set getOrder = mAllOrders(pId)
@@ -322,14 +321,14 @@ Friend Sub placeOrder( _
                 ByVal transmit As Boolean)
 
 Dim lOrder As SimulatorOrder
-Dim specifier As TradeBuild.contractSpecifier
+Dim specifier As TradeBuild25.contractSpecifier
 Dim pendingOrder As SimulatorOrder
 
 Select Case pOrder.orderType
-Case TradeBuild.OrderTypes.OrderTypeMarket, _
-    TradeBuild.OrderTypes.OrderTypeLimit, _
-    TradeBuild.OrderTypes.OrderTypeStop, _
-    TradeBuild.OrderTypes.OrderTypeStopLimit
+Case TradeBuild25.OrderTypes.OrderTypeMarket, _
+    TradeBuild25.OrderTypes.OrderTypeLimit, _
+    TradeBuild25.OrderTypes.OrderTypeStop, _
+    TradeBuild25.OrderTypes.OrderTypeStopLimit
 Case Else
     setRejectOrder pOrder, "Order type " & pOrder.orderType & " not supported by simulator"
     Exit Sub
@@ -337,14 +336,14 @@ End Select
 
 If marketIndex < 0 Or marketIndex > UBound(mMarketTable) Then
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "TradeBuild.AdvancedOrderSimulator::placeOrder", _
+            "TradeBuild25.AdvancedOrderSimulator::placeOrder", _
             "Invalid marketIndex " & marketIndex & " in order " & pOrder.id
 End If
 
 Set specifier = pOrder.Contract.specifier
 If Not specifier.Equals(mMarketTable(marketIndex).contractSpecifier) Then
     err.Raise ErrorCodes.ErrIllegalStateException, _
-            "TradeBuild.AdvancedOrderSimulator::placeOrder", _
+            "TradeBuild25.AdvancedOrderSimulator::placeOrder", _
             "Incorrect contract in order " & pOrder.id & ": " & _
             specifier.ToString
 End If
@@ -502,7 +501,7 @@ With mMarketTable(marketIndex)
             lOrder.parentId = "" _
         Then
             Select Case lOrder.order.orderType
-                Case TradeBuild.OrderTypes.OrderTypeStop
+                Case TradeBuild25.OrderTypes.OrderTypeStop
                     If lOrder.order.action = OrderActions.ActionBuy And _
                         trade >= lOrder.order.triggerPrice Then
                         setSubmitOrder lOrder
@@ -510,7 +509,7 @@ With mMarketTable(marketIndex)
                         trade <= lOrder.order.triggerPrice Then
                         setSubmitOrder lOrder
                     End If
-                Case TradeBuild.OrderTypes.OrderTypeStopLimit
+                Case TradeBuild25.OrderTypes.OrderTypeStopLimit
                     If lOrder.order.action = OrderActions.ActionBuy And _
                         trade >= lOrder.order.triggerPrice Then
                         setSubmitOrder lOrder
@@ -534,9 +533,9 @@ End With
 
 End Sub
 
-'================================================================================
+'@================================================================================
 ' Helper Functions
-'================================================================================
+'@================================================================================
 
 Private Function delay() As Long
 delay = 200 + Fix(Rnd() * 300 + 1)
@@ -580,7 +579,7 @@ With mMarketTable(pOrder.marketIndex)
                     pOrder.order.status = OrderStatuses.OrderStatusSubmitted
                     mMarketTable(pOrder.marketIndex).serviceConsumer.orderStatus pOrder.order.id, _
                                             pOrder.order.status
-                    mTimerList.AddTimerListEntry delay, expiryTimeUnits.RelativeMilliseconds, pOrder
+                    mTimerList.add pOrder, delay, expiryTimeUnits.ExpiryTimeUnitMilliseconds
                 Else
                     pOrder.order.status = OrderStatuses.OrderStatusSubmitted
                     pOrder.atExchange = True
@@ -611,11 +610,11 @@ End Sub
 Private Sub matchOrder(ByVal pOrder As SimulatorOrder)
 With mMarketTable(pOrder.marketIndex)
     Select Case pOrder.order.orderType
-    Case TradeBuild.OrderTypes.OrderTypeMarket, _
-        TradeBuild.OrderTypes.OrderTypeStop
+    Case TradeBuild25.OrderTypes.OrderTypeMarket, _
+        TradeBuild25.OrderTypes.OrderTypeStop
         setFillOrder pOrder, IIf(pOrder.order.action = OrderActions.ActionBuy, .ask, .bid), pOrder.order.quantity
-    Case TradeBuild.OrderTypes.OrderTypeLimit, _
-        TradeBuild.OrderTypes.OrderTypeStopLimit
+    Case TradeBuild25.OrderTypes.OrderTypeLimit, _
+        TradeBuild25.OrderTypes.OrderTypeStopLimit
         If pOrder.order.action = OrderActions.ActionBuy And _
             pOrder.order.limitPrice >= .ask _
         Then
@@ -633,11 +632,11 @@ Private Sub matchOrderTrade(ByVal pOrder As SimulatorOrder, _
                             ByVal trade As Double)
 With mMarketTable(pOrder.marketIndex)
     Select Case pOrder.order.orderType
-    Case TradeBuild.OrderTypes.OrderTypeMarket, _
-        TradeBuild.OrderTypes.OrderTypeStop
+    Case TradeBuild25.OrderTypes.OrderTypeMarket, _
+        TradeBuild25.OrderTypes.OrderTypeStop
         setFillOrder pOrder, IIf(pOrder.order.action = OrderActions.ActionBuy, .ask, .bid), pOrder.order.quantity
-    Case TradeBuild.OrderTypes.OrderTypeLimit, _
-        TradeBuild.OrderTypes.OrderTypeStop
+    Case TradeBuild25.OrderTypes.OrderTypeLimit, _
+        TradeBuild25.OrderTypes.OrderTypeStop
         If pOrder.order.action = OrderActions.ActionBuy And _
             pOrder.order.limitPrice >= trade _
         Then
@@ -668,7 +667,7 @@ End Sub
 'On Error GoTo 0
 'If theOrder Is Nothing Then
 '    err.Raise ErrorCodes.UnknownOrderID, _
-'                "TradeBuild.AdvancedOrderSimulator::removeCancelledOrder", _
+'                "TradeBuild25.AdvancedOrderSimulator::removeCancelledOrder", _
 '                "Unknown order id " & id
 'End If
 '
@@ -719,7 +718,7 @@ End Sub
 'On Error GoTo 0
 'If theOrder Is Nothing Then
 '    err.Raise ErrorCodes.UnknownOrderID, _
-'                "TradeBuild.AdvancedOrderSimulator::removeFilledOrder", _
+'                "TradeBuild25.AdvancedOrderSimulator::removeFilledOrder", _
 '                "Unknown order id " & id
 'End If
 '
@@ -745,7 +744,7 @@ End Sub
 'On Error GoTo 0
 'If lOrder Is Nothing Then
 '    err.Raise ErrorCodes.UnknownOrderID, _
-'                "TradeBuild.AdvancedOrderSimulator::removeOrder", _
+'                "TradeBuild25.AdvancedOrderSimulator::removeOrder", _
 '                "Unknown order id " & id
 'End If
 '
@@ -764,9 +763,9 @@ Case OrderStatuses.OrderStatusSubmitted, OrderStatuses.OrderStatusPreSubmitted
     mMarketTable(pOrder.marketIndex).serviceConsumer.orderStatus pOrder.order.id, _
                             OrderStatuses.OrderStatusCancelling
     If mMarketTable(pOrder.marketIndex).simulateExchangeDelays Then
-        mTimerList.AddTimerListEntry delay, _
-                            expiryTimeUnits.RelativeMilliseconds, _
-                            pOrder
+        mTimerList.add pOrder, _
+                            delay, _
+                            expiryTimeUnits.ExpiryTimeUnitMilliseconds
     End If
 Case OrderStatuses.OrderStatusCreated, _
         OrderStatuses.OrderStatusCancelling, _
@@ -910,7 +909,7 @@ End Sub
 
 Private Sub setSubmitOrder(pOrder As SimulatorOrder)
 Select Case pOrder.order.orderType
-Case TradeBuild.OrderTypes.OrderTypeLimit, TradeBuild.OrderTypes.OrderTypeMarket
+Case TradeBuild25.OrderTypes.OrderTypeLimit, TradeBuild25.OrderTypes.OrderTypeMarket
     Select Case pOrder.order.status
     Case OrderStatuses.OrderStatusCreated
         If pOrder.parentId <> "" Then
@@ -927,7 +926,7 @@ Case TradeBuild.OrderTypes.OrderTypeLimit, TradeBuild.OrderTypes.OrderTypeMarket
                 pOrder.order.status = OrderStatuses.OrderStatusSubmitted
                 mMarketTable(pOrder.marketIndex).serviceConsumer.orderStatus pOrder.order.id, _
                                         pOrder.order.status
-                mTimerList.AddTimerListEntry delay, expiryTimeUnits.RelativeMilliseconds, pOrder
+                mTimerList.add pOrder, delay, expiryTimeUnits.ExpiryTimeUnitMilliseconds
             Else
                 pOrder.order.status = OrderStatuses.OrderStatusPendingSubmit
                 mMarketTable(pOrder.marketIndex).serviceConsumer.orderStatus pOrder.order.id, _
@@ -949,10 +948,10 @@ Case TradeBuild.OrderTypes.OrderTypeLimit, TradeBuild.OrderTypes.OrderTypeMarket
         End If
     Case Else
         err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                    "TradeBuild.AdvancedOrderSimulator::setSubmitOrder", _
+                    "TradeBuild25.AdvancedOrderSimulator::setSubmitOrder", _
                     "Order type " & pOrder.order.orderType & " invalid for submission"
     End Select
-Case TradeBuild.OrderTypes.OrderTypeStop, TradeBuild.OrderTypes.OrderTypeStopLimit
+Case TradeBuild25.OrderTypes.OrderTypeStop, TradeBuild25.OrderTypes.OrderTypeStopLimit
     Select Case pOrder.order.status
     Case OrderStatuses.OrderStatusCreated
         ' in all cases, we want the order to move to pending submit on this
@@ -971,7 +970,7 @@ Case TradeBuild.OrderTypes.OrderTypeStop, TradeBuild.OrderTypes.OrderTypeStopLim
             pOrder.order.status = OrderStatuses.OrderStatusSubmitted
             mMarketTable(pOrder.marketIndex).serviceConsumer.orderStatus pOrder.order.id, _
                                     pOrder.order.status
-            mTimerList.AddTimerListEntry delay, expiryTimeUnits.RelativeMilliseconds, pOrder
+            mTimerList.add pOrder, delay, expiryTimeUnits.ExpiryTimeUnitMilliseconds
         Else
             pOrder.order.status = OrderStatuses.OrderStatusSubmitted
             pOrder.atExchange = True
@@ -980,13 +979,13 @@ Case TradeBuild.OrderTypes.OrderTypeStop, TradeBuild.OrderTypes.OrderTypeStopLim
         End If
     Case Else
         err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                    "TradeBuild.AdvancedOrderSimulator::setSubmitOrder", _
+                    "TradeBuild25.AdvancedOrderSimulator::setSubmitOrder", _
                     "Order type " & pOrder.order.orderType & " invalid for submission"
     End Select
         
 Case Else
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "TradeBuild.AdvancedOrderSimulator::setSubmitOrder", _
+                "TradeBuild25.AdvancedOrderSimulator::setSubmitOrder", _
                 "Order type " & pOrder.order.orderType & " invalid for submission"
 End Select
 

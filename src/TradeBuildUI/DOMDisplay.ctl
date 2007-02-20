@@ -44,7 +44,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements TradeBuild.ProcessedMarketDepthListener
+Implements MarketDepthListener
 
 '================================================================================
 ' Events
@@ -106,7 +106,7 @@ Private mCurrentLast As Double
 
 Private mHalted As Boolean
 
-Private WithEvents mTimer As TimerUtils.IntervalTimer
+Private WithEvents mTimer As TimerUtils2.IntervalTimer
 Attribute mTimer.VB_VarHelpID = -1
 
 '================================================================================
@@ -187,16 +187,16 @@ DOMGrid.col = 0
 End Sub
 
 '================================================================================
-' ProcessedMarketDepthListener Interface Members
+' MarketDepthListener Interface Members
 '================================================================================
 
-Private Sub ProcessedMarketDepthListener_resetMarketDepth( _
-                ev As TradeBuild.ProcessedMarketDepthEvent)
+Private Sub MarketDepthListener_resetMarketDepth( _
+                ev As MarketDepthEvent)
 reset
 End Sub
 
-Private Sub ProcessedMarketDepthListener_setMarketDepthCell( _
-                ev As TradeBuild.ProcessedMarketDepthEvent)
+Private Sub MarketDepthListener_setMarketDepthCell( _
+                ev As MarketDepthEvent)
 setDOMCell ev.side, ev.price, ev.size
 End Sub
 
@@ -204,8 +204,8 @@ End Sub
 ' mTicker Event Handlers
 '================================================================================
 
-Private Sub mTicker_Error(ev As TradeBuild.ErrorEvent)
-If ev.errorCode = ApiErrorCodes.ApiErrMarketDepthNotAvailable Then
+Private Sub mTicker_Notification(ev As NotificationEvent)
+If ev.eventCode = ApiNotifyCodes.ApiNotifyMarketDepthNotAvailable Then
     If Not mTimer Is Nothing Then mTimer.StopTimer
     finish
 End If
@@ -265,15 +265,13 @@ If mTicker.BidPrice <> 0 Then
     setDOMCell DOMSides.DOMBid, mTicker.BidPrice, mTicker.bidSize
 End If
 
-mTicker.addProcessedMarketDepthListener Me
+mTicker.addMarketDepthListener Me
 
 mTicker.RequestMarketDepth DOMEvents.DOMProcessedEvents, False
 
 ' set off a timer before centring the display - otherwise it centres
 ' before the first resize
-Set mTimer = New TimerUtils.IntervalTimer
-mTimer.TimerIntervalMillisecs = 10
-mTimer.RepeatNotifications = False
+Set mTimer = createIntervalTimer(10)
 mTimer.StartTimer
 End Property
 
@@ -283,7 +281,8 @@ End Property
 
 Public Sub finish()
 On Error GoTo Err
-mTicker.removeProcessedMarketDepthListener Me
+If Not mTimer Is Nothing Then mTimer.StopTimer
+mTicker.removeMarketDepthListener Me
 mTicker.CancelMarketDepth
 Set mTicker = Nothing
 Exit Sub

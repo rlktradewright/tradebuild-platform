@@ -45,7 +45,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements TradeBuild.CollectionChangeListener
+Implements TWUtilities.CollectionChangeListener
 
 '================================================================================
 ' Events
@@ -71,7 +71,7 @@ Private Const ExecutionsTimeWidth = 23
 Private Enum ExecutionsColumns
     ExecId = 1
     orderId
-    action
+    Action
     quantity
     symbol
     price
@@ -100,7 +100,7 @@ ExecutionsList.Top = 0
 
 ExecutionsList.ColumnHeaders.add ExecutionsColumns.ExecId, , "Exec id"
 ExecutionsList.ColumnHeaders.add ExecutionsColumns.orderId, , "ID"
-ExecutionsList.ColumnHeaders.add ExecutionsColumns.action, , "Action"
+ExecutionsList.ColumnHeaders.add ExecutionsColumns.Action, , "Action"
 ExecutionsList.ColumnHeaders.add ExecutionsColumns.quantity, , "Quant"
 ExecutionsList.ColumnHeaders.add ExecutionsColumns.symbol, , "Symb"
 ExecutionsList.ColumnHeaders.add ExecutionsColumns.price, , "Price"
@@ -121,7 +121,7 @@ ExecutionsList.ColumnHeaders(ExecutionsColumns.ExecId).Width = _
 ExecutionsList.ColumnHeaders(ExecutionsColumns.orderId).Width = _
     ExecutionsOrderIDWidth * ExecutionsList.Width / 100
 
-ExecutionsList.ColumnHeaders(ExecutionsColumns.action).Width = _
+ExecutionsList.ColumnHeaders(ExecutionsColumns.Action).Width = _
     ExecutionsActionWidth * ExecutionsList.Width / 100
 
 ExecutionsList.ColumnHeaders(ExecutionsColumns.quantity).Width = _
@@ -147,8 +147,8 @@ End Sub
 '================================================================================
 
 Private Sub CollectionChangeListener_Change( _
-                ev As TradeBuild.CollectionChangeEvent)
-Dim exec As TradeBuild.Execution
+                ev As TWUtilities.CollectionChangeEvent)
+Dim exec As Execution
 Dim listItem As listItem
 
 If ev.changeType <> CollItemAdded Then Exit Sub
@@ -163,7 +163,7 @@ If listItem Is Nothing Then
     Set listItem = ExecutionsList.ListItems.add(, exec.ExecId, exec.ExecId)
 End If
 
-listItem.SubItems(ExecutionsColumns.action - 1) = IIf(exec.action = ActionBuy, "BUY", "SELL")
+listItem.SubItems(ExecutionsColumns.Action - 1) = IIf(exec.Action = ActionBuy, "BUY", "SELL")
 listItem.SubItems(ExecutionsColumns.orderId - 1) = exec.orderBrokerId
 listItem.SubItems(ExecutionsColumns.price - 1) = exec.price
 listItem.SubItems(ExecutionsColumns.quantity - 1) = exec.quantity
@@ -203,7 +203,7 @@ End Sub
 
 Public Sub finish()
 Dim i As Long
-Dim lWorkspace As TradeBuild.WorkSpace
+Dim lWorkspace As WorkSpace
 
 On Error GoTo Err
 For i = mMonitoredWorkspaces.count To 1 Step -1
@@ -217,7 +217,7 @@ Err:
 End Sub
 
 Public Sub monitorWorkspace( _
-                ByVal pWorkspace As TradeBuild.WorkSpace)
+                ByVal pWorkspace As WorkSpace)
 pWorkspace.Executions.addCollectionChangeListener Me
 mMonitoredWorkspaces.add pWorkspace
 End Sub

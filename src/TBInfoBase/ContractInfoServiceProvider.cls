@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "ContractInfoServiceProvider"
+Attribute VB_Name = "ContractInfoSrvcProvider"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -78,9 +78,7 @@ Private mInstrumentFactory As TradingDO2.cInstrumentFactory
 
 Private Sub Class_Initialize()
 mName = ContractInfoSPName
-Set mTimer = New IntervalTimer
-mTimer.RepeatNotifications = False
-mTimer.TimerIntervalMillisecs = 1
+Set mTimer = createIntervalTimer(1)
 End Sub
 
 '================================================================================
@@ -188,11 +186,11 @@ Set mInstrumentFactory = New cInstrumentFactory
 With mRequests(mFirstRequestID).ContractSpecifier
     Set instrumentSummaries = mInstrumentFactory.loadEx( _
                                     .localSymbol, _
-                                    .Symbol, _
+                                    .symbol, _
                                     secTypeToString(.SecType), _
                                     Left$(.Expiry, 6), _
-                                    .Exchange, _
-                                    .CurrencyCode)
+                                    .exchange, _
+                                    .currencyCode)
 End With
 
 For Each instrumentSummary In instrumentSummaries

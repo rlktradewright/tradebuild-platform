@@ -92,9 +92,9 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements TradeBuild.ChangeListener
-Implements TradeBuild.CollectionChangeListener
-Implements TradeBuild.ProfitListener
+Implements TWUtilities.ChangeListener
+Implements TWUtilities.CollectionChangeListener
+Implements ProfitListener
 
 '================================================================================
 ' Events
@@ -167,7 +167,7 @@ Private Enum OPGridOrderColumns
     size
     averagePrice
     Status
-    action
+    Action
     quantityRemaining
     orderType
     price
@@ -222,7 +222,7 @@ End Enum
 '================================================================================
 
 Private Type OrderPlexGridMappingEntry
-    op                  As TradeBuild.orderPlex
+    op                  As OrderPlex
     
     ' indicates whether this entry in the grid is expanded
     isExpanded          As Boolean
@@ -240,7 +240,7 @@ Private Type OrderPlexGridMappingEntry
 End Type
 
 Private Type PositionManagerGridMappingEntry
-    'pm                  As TradeBuild.PositionManager
+    'pm                  As PositionManager
     
     ' indicates whether this entry in the grid is expanded
     isExpanded          As Boolean
@@ -255,7 +255,7 @@ End Type
 '================================================================================
 
 Private mSelectedOrderPlexGridRow As Long
-Private mSelectedOrderPlex As TradeBuild.orderPlex
+Private mSelectedOrderPlex As OrderPlex
 Private mSelectedOrderIndex  As Long
 
 Private mOrdersCol As Collection
@@ -312,10 +312,10 @@ End Sub
 ' ChangeListener Interface Members
 '================================================================================
 
-Private Sub ChangeListener_Change(ev As TradeBuild.ChangeEvent)
-If TypeOf ev.Source Is TradeBuild.orderPlex Then
-    Dim opChangeType As TradeBuild.OrderPlexChangeTypes
-    Dim op As TradeBuild.orderPlex
+Private Sub ChangeListener_Change(ev As TWUtilities.ChangeEvent)
+If TypeOf ev.Source Is OrderPlex Then
+    Dim opChangeType As OrderPlexChangeTypes
+    Dim op As OrderPlex
     Dim opIndex As Long
     
     Set op = ev.Source
@@ -367,11 +367,11 @@ If TypeOf ev.Source Is TradeBuild.orderPlex Then
         Case OrderPlexChangeTypes.OrderPlexSizeChanged
             OrderPlexGrid.TextMatrix(.gridIndex, OPGridOrderPlexColumns.size) = op.size
         Case OrderPlexChangeTypes.OrderPlexStateChanged
-            If op.State = OrderPlexStateCodes.Submitted Then
+            If op.State = OrderPlexStateCodes.OrderPlexStateSubmitted Then
                 OrderPlexGrid.TextMatrix(.gridIndex, OPGridOrderPlexColumns.creationTime) = op.creationTime
             End If
-            If op.State <> OrderPlexStateCodes.Created And _
-                op.State <> OrderPlexStateCodes.Submitted _
+            If op.State <> OrderPlexStateCodes.OrderPlexStateCreated And _
+                op.State <> OrderPlexStateCodes.OrderPlexStateSubmitted _
             Then
                 ' the order plex is now in a state where it can't be modified.
                 ' If it's the currently selected order plex, make it not so.
@@ -384,9 +384,9 @@ If TypeOf ev.Source Is TradeBuild.orderPlex Then
             End If
         End Select
     End With
-ElseIf TypeOf ev.Source Is TradeBuild.PositionManager Then
-    Dim pmChangeType As TradeBuild.PositionManagerChangeTypes
-    Dim pm As TradeBuild.PositionManager
+ElseIf TypeOf ev.Source Is PositionManager Then
+    Dim pmChangeType As PositionManagerChangeTypes
+    Dim pm As PositionManager
     Dim pmIndex As Long
     
     Set pm = ev.Source
@@ -409,9 +409,9 @@ End Sub
 ' CollectionChangeListener Interface Members
 '================================================================================
 
-Private Sub CollectionChangeListener_Change(ev As TradeBuild.CollectionChangeEvent)
-If TypeOf ev.affectedObject Is TradeBuild.orderPlex Then
-    Dim op As TradeBuild.orderPlex
+Private Sub CollectionChangeListener_Change(ev As TWUtilities.CollectionChangeEvent)
+If TypeOf ev.affectedObject Is OrderPlex Then
+    Dim op As OrderPlex
     Set op = ev.affectedObject
     
     Select Case ev.changeType
@@ -422,8 +422,8 @@ If TypeOf ev.affectedObject Is TradeBuild.orderPlex Then
         op.removeChangeListener Me
         op.removeProfitListener Me
     End Select
-ElseIf TypeOf ev.affectedObject Is TradeBuild.ticker Then
-    Dim lTicker As TradeBuild.ticker
+ElseIf TypeOf ev.affectedObject Is ticker Then
+    Dim lTicker As ticker
     Set lTicker = ev.affectedObject
     
     Select Case ev.changeType
@@ -441,12 +441,12 @@ End Sub
 ' ProfitListener Interface Members
 '================================================================================
 
-Private Sub ProfitListener_profitAmount(ev As TradeBuild.ProfitEvent)
+Private Sub ProfitListener_profitAmount(ev As ProfitEvent)
 Dim rowIndex As Long
 
-If TypeOf ev.Source Is TradeBuild.orderPlex Then
-    Dim opProfitType As TradeBuild.ProfitTypes
-    Dim op As TradeBuild.orderPlex
+If TypeOf ev.Source Is OrderPlex Then
+    Dim opProfitType As ProfitTypes
+    Dim op As OrderPlex
     Dim opIndex As Long
     
     Set op = ev.Source
@@ -456,17 +456,17 @@ If TypeOf ev.Source Is TradeBuild.orderPlex Then
     opProfitType = ev.profitType
     
     Select Case opProfitType
-    Case TradeBuild.ProfitTypes.ProfitTypeProfit
+    Case ProfitTypes.ProfitTypeProfit
         displayProfitValue ev.profitAmount, rowIndex, OPGridOrderPlexColumns.profit
-    Case TradeBuild.ProfitTypes.ProfitTypeMaxProfit
+    Case ProfitTypes.ProfitTypeMaxProfit
         displayProfitValue ev.profitAmount, rowIndex, OPGridOrderPlexColumns.MaxProfit
-    Case TradeBuild.ProfitTypes.ProfitTypeDrawdown
+    Case ProfitTypes.ProfitTypeDrawdown
         displayProfitValue -ev.profitAmount, rowIndex, OPGridOrderPlexColumns.drawdown
     End Select
 
-ElseIf TypeOf ev.Source Is TradeBuild.PositionManager Then
-    Dim pmProfitType As TradeBuild.ProfitTypes
-    Dim pm As TradeBuild.PositionManager
+ElseIf TypeOf ev.Source Is PositionManager Then
+    Dim pmProfitType As ProfitTypes
+    Dim pm As PositionManager
     Dim pmIndex As Long
     
     Set pm = ev.Source
@@ -476,15 +476,15 @@ ElseIf TypeOf ev.Source Is TradeBuild.PositionManager Then
     pmProfitType = ev.profitType
     
     Select Case pmProfitType
-    Case TradeBuild.ProfitTypes.ProfitTypeSessionProfit
+    Case ProfitTypes.ProfitTypeSessionProfit
         displayProfitValue ev.profitAmount, rowIndex, OPGridPositionColumns.profit
-    Case TradeBuild.ProfitTypes.ProfitTypeSessionMaxProfit
+    Case ProfitTypes.ProfitTypeSessionMaxProfit
         displayProfitValue ev.profitAmount, rowIndex, OPGridPositionColumns.MaxProfit
-    Case TradeBuild.ProfitTypes.ProfitTypeSessionDrawdown
+    Case ProfitTypes.ProfitTypeSessionDrawdown
         displayProfitValue -ev.profitAmount, rowIndex, OPGridPositionColumns.drawdown
-    Case TradeBuild.ProfitTypes.ProfitTypetradeProfit
-    Case TradeBuild.ProfitTypes.ProfitTypeTradeMaxProfit
-    Case TradeBuild.ProfitTypes.ProfitTypetradeDrawdown
+    Case ProfitTypes.ProfitTypetradeProfit
+    Case ProfitTypes.ProfitTypeTradeMaxProfit
+    Case ProfitTypes.ProfitTypetradeDrawdown
     End Select
 End If
 End Sub
@@ -496,7 +496,7 @@ End Sub
 Private Sub EditText_KeyDown(KeyCode As Integer, Shift As Integer)
 Select Case KeyCode
 Case KeyCodeConstants.vbKeyEscape   ' ESC: hide, return focus to MSHFlexGrid.
-   EditText.text = ""
+   EditText.Text = ""
    EditText.Visible = False
    OrderPlexGrid.SetFocus
 Case KeyCodeConstants.vbKeyReturn   ' ENTER return focus to MSHFlexGrid.
@@ -514,9 +514,9 @@ End Sub
 Private Sub OrderPlexGrid_Click()
 Dim row As Long
 Dim rowdata As Long
-Dim op As TradeBuild.orderPlex
+Dim op As OrderPlex
 Dim index As Long
-Dim selectedOrder As TradeBuild.Order
+Dim selectedOrder As Order
 
 row = OrderPlexGrid.row
 
@@ -540,8 +540,8 @@ Else
     Then
         index = rowdata - RowDataOrderPlexBase
         Set op = mOrderPlexGridMappingTable(index).op
-        If op.State = OrderPlexStateCodes.Created Or _
-            op.State = OrderPlexStateCodes.Submitted _
+        If op.State = OrderPlexStateCodes.OrderPlexStateCreated Or _
+            op.State = OrderPlexStateCodes.OrderPlexStateSubmitted _
         Then
             
             mSelectedOrderPlexGridRow = row
@@ -565,9 +565,9 @@ Else
                                 OrderPlexGrid.Top + OrderPlexGrid.CellTop + 8, _
                                 OrderPlexGrid.CellWidth - 16, _
                                 OrderPlexGrid.CellHeight - 16
-                    EditText.text = OrderPlexGrid.text
+                    EditText.Text = OrderPlexGrid.Text
                     EditText.SelStart = 0
-                    EditText.SelLength = Len(EditText.text)
+                    EditText.SelLength = Len(EditText.Text)
                     EditText.Visible = True
                     EditText.SetFocus
                 End If
@@ -598,7 +598,7 @@ End Sub
 '================================================================================
 
 Public Property Get isSelectedItemModifiable() As Boolean
-Dim selectedOrder As TradeBuild.Order
+Dim selectedOrder As Order
 
 Set selectedOrder = mSelectedOrderPlex.Order(mSelectedOrderIndex)
 If Not selectedOrder Is Nothing Then
@@ -606,7 +606,7 @@ If Not selectedOrder Is Nothing Then
 End If
 End Property
 
-Public Property Get selectedItem() As orderPlex
+Public Property Get selectedItem() As OrderPlex
 Set selectedItem = mSelectedOrderPlex
 End Property
 
@@ -620,8 +620,8 @@ End Property
 
 Public Sub finish()
 Dim i As Long
-Dim lWorkspace As TradeBuild.WorkSpace
-Dim lTicker As TradeBuild.ticker
+Dim lWorkspace As WorkSpace
+Dim lTicker As ticker
 
 On Error GoTo Err
 For i = 0 To mMaxOrderPlexGridMappingTableIndex
@@ -647,7 +647,7 @@ Err:
 End Sub
 
 Public Sub monitorWorkspace( _
-                ByVal pWorkspace As TradeBuild.WorkSpace)
+                ByVal pWorkspace As WorkSpace)
 pWorkspace.Tickers.addCollectionChangeListener Me
 pWorkspace.OrderPlexes.addCollectionChangeListener Me
 mMonitoredWorkspaces.add pWorkspace
@@ -744,7 +744,7 @@ End Function
 Private Sub addOrderEntryToOrderPlexGrid( _
                 ByVal index As Long, _
                 ByVal symbol As String, _
-                ByVal pOrder As TradeBuild.Order, _
+                ByVal pOrder As Order, _
                 ByVal orderPlexTableIndex As Long, _
                 ByVal typeInPlex As String)
 
@@ -817,11 +817,11 @@ End Sub
 Private Sub displayOrderValuesInOrderPlexGrid( _
                 ByVal gridIndex As Long, _
                 ByVal pOrder As Order)
-Dim lTicker As TradeBuild.ticker
+Dim lTicker As ticker
 
 Set lTicker = pOrder.ticker
 
-OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.action) = OrderActionToString(pOrder.action)
+OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.Action) = OrderActionToString(pOrder.Action)
 OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.auxPrice) = lTicker.formatPrice(pOrder.triggerPrice, True)
 OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.averagePrice) = lTicker.formatPrice(pOrder.averagePrice, True)
 OrderPlexGrid.TextMatrix(gridIndex, OPGridOrderColumns.id) = pOrder.id
@@ -841,7 +841,7 @@ Private Sub displayProfitValue( _
                 ByVal colIndex As Long)
 OrderPlexGrid.row = rowIndex
 OrderPlexGrid.col = colIndex
-OrderPlexGrid.text = Format(profit, "0.00")
+OrderPlexGrid.Text = Format(profit, "0.00")
 If profit >= 0 Then
     OrderPlexGrid.CellForeColor = PositiveProfitColor
 Else
@@ -936,9 +936,9 @@ Do While OrderPlexGrid.TextMatrix(i, OPGridColumns.symbol) = symbol
 Loop
 End Sub
 
-Private Function findOrderPlexTableIndex(ByVal op As TradeBuild.orderPlex) As Long
+Private Function findOrderPlexTableIndex(ByVal op As OrderPlex) As Long
 Dim opIndex As Long
-Dim lOrder As TradeBuild.Order
+Dim lOrder As Order
 Dim symbol As String
 
 ' first make sure the relevant PositionManager entry is set up
@@ -1009,7 +1009,7 @@ End With
 findOrderPlexTableIndex = opIndex
 End Function
 
-Private Function findPositionManagerTableIndex(ByVal pm As TradeBuild.PositionManager) As Long
+Private Function findPositionManagerTableIndex(ByVal pm As PositionManager) As Long
 Dim pmIndex As Long
 Dim symbol As String
 
@@ -1117,7 +1117,7 @@ With OrderPlexGrid
     setupOrderPlexGridColumn 1, OPGridOrderPlexColumns.profit, OPGridOrderPlexColumnWidths.ProfitWidth, "Profit", False, AlignmentSettings.flexAlignRightCenter
     setupOrderPlexGridColumn 1, OPGridOrderPlexColumns.size, OPGridOrderPlexColumnWidths.SizeWidth, "Size", False, AlignmentSettings.flexAlignRightCenter
     
-    setupOrderPlexGridColumn 2, OPGridOrderColumns.action, OPGridOrderColumnWidths.ActionWidth, "Action", True, AlignmentSettings.flexAlignLeftCenter
+    setupOrderPlexGridColumn 2, OPGridOrderColumns.Action, OPGridOrderColumnWidths.ActionWidth, "Action", True, AlignmentSettings.flexAlignLeftCenter
     setupOrderPlexGridColumn 2, OPGridOrderColumns.auxPrice, OPGridOrderColumnWidths.AuxPriceWidth, "Trigger", False, AlignmentSettings.flexAlignRightCenter
     setupOrderPlexGridColumn 2, OPGridOrderColumns.averagePrice, OPGridOrderColumnWidths.AveragePriceWidth, "Avg", False, AlignmentSettings.flexAlignRightCenter
     setupOrderPlexGridColumn 2, OPGridOrderColumns.id, OPGridOrderColumnWidths.IdWidth, "Id", True, AlignmentSettings.flexAlignLeftCenter
@@ -1140,7 +1140,7 @@ With OrderPlexGrid
     mFirstOrderPlexGridRowIndex = 3
 End With
 
-EditText.text = ""
+EditText.Text = ""
 End Sub
 
 Private Sub setupOrderPlexGridColumn( _
@@ -1183,16 +1183,16 @@ If Not EditText.Visible Then Exit Sub
 
 orderNumber = mSelectedOrderPlexGridRow - mOrderPlexGridMappingTable(OrderPlexGrid.rowdata(OrderPlexGrid.row) - RowDataOrderPlexBase).gridIndex
 If OrderPlexGrid.col = OPGridOrderColumns.price Then
-    If mSelectedOrderPlex.Contract.parsePrice(EditText.text, price) Then
+    If mSelectedOrderPlex.Contract.parsePrice(EditText.Text, price) Then
         mSelectedOrderPlex.newOrderPrice(orderNumber) = price
     End If
 ElseIf OrderPlexGrid.col = OPGridOrderColumns.auxPrice Then
-    If mSelectedOrderPlex.Contract.parsePrice(EditText.text, price) Then
+    If mSelectedOrderPlex.Contract.parsePrice(EditText.Text, price) Then
         mSelectedOrderPlex.newOrderTriggerPrice(orderNumber) = price
     End If
 ElseIf OrderPlexGrid.col = OPGridOrderColumns.quantityRemaining Then
-    If IsNumeric(EditText.text) Then
-        mSelectedOrderPlex.newQuantity = EditText.text
+    If IsNumeric(EditText.Text) Then
+        mSelectedOrderPlex.newQuantity = EditText.Text
     End If
 End If
     

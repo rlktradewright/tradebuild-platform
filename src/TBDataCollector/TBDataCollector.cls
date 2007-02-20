@@ -336,14 +336,14 @@ End Property
 
 Public Sub startCollection()
 Dim sp As Object
-Set sp = mTradeBuildAPI.ServiceProviders.Add(CreateObject("IBTWSSP.RealtimeDataServiceProvider"))
+Set sp = mTradeBuildAPI.ServiceProviders.Add(CreateObject("IBTWSSP25.RealtimeDataServiceProvider"))
 sp.Server = mServer
 sp.Port = mPort
 sp.ClientID = mClientID
 sp.providerKey = "IB"
 sp.keepConnection = True
 
-Set sp = mTradeBuildAPI.ServiceProviders.Add(CreateObject("IBTWSSP.ContractInfoServiceProvider"))
+Set sp = mTradeBuildAPI.ServiceProviders.Add(CreateObject("IBTWSSP25.ContractInfoServiceProvider"))
 sp.Server = mServer
 sp.Port = mPort
 sp.ClientID = mClientID

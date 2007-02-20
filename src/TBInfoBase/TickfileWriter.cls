@@ -123,11 +123,11 @@ End If
 
 Set lInstrumentFactory = New TradingDO2.cInstrumentFactory
 With mContract.Specifier
-    Set lInstrument = lInstrumentFactory.loadBySpec(.Symbol, _
+    Set lInstrument = lInstrumentFactory.loadBySpec(.symbol, _
                                 secTypeToString(.SecType), _
                                 Left$(.Expiry, 6), _
-                                .Exchange, _
-                                .CurrencyCode, _
+                                .exchange, _
+                                .currencyCode, _
                                 .Strike, _
                                 optRightToString(.Right), _
                                 .localSymbol)
@@ -190,7 +190,7 @@ Private Sub ITickfileWriter_writeClose( _
                             ByVal price As Double)
 On Error GoTo Err
 If price = 0# Then Exit Sub
-WritePriceRecord TickTypes.ClosePrice, timestamp, price
+WritePriceRecord TickTypes.closePrice, timestamp, price
 Exit Sub
 Err:
 handleFatalError Err.Number, _
@@ -203,7 +203,7 @@ Private Sub ITickfileWriter_writeHigh( _
                             ByVal price As Double)
 On Error GoTo Err
 If price = 0# Then Exit Sub
-WritePriceRecord TickTypes.HighPrice, timestamp, price
+WritePriceRecord TickTypes.highPrice, timestamp, price
 Exit Sub
 Err:
 handleFatalError Err.Number, _
@@ -216,7 +216,7 @@ Private Sub ITickfileWriter_writeLow( _
                             ByVal price As Double)
 On Error GoTo Err
 If price = 0# Then Exit Sub
-WritePriceRecord TickTypes.LowPrice, timestamp, price
+WritePriceRecord TickTypes.lowPrice, timestamp, price
 Exit Sub
 Err:
 handleFatalError Err.Number, _
@@ -288,7 +288,7 @@ End Sub
 
 Private Sub ITickfileWriter_WriteOpenInterest(ByVal timestamp As Date, ByVal size As Long)
 On Error GoTo Err
-WriteSizeRecord TickTypes.OpenInterest, timestamp, size
+WriteSizeRecord TickTypes.openInterest, timestamp, size
 Exit Sub
 Err:
 handleFatalError Err.Number, _
@@ -308,7 +308,7 @@ Private Sub ITickfileWriter_writeVolume( _
                             ByVal timestamp As Date, _
                             ByVal size As Long)
 On Error GoTo Err
-WriteSizeRecord TickTypes.Volume, timestamp, size
+WriteSizeRecord TickTypes.volume, timestamp, size
 Exit Sub
 Err:
 handleFatalError Err.Number, _
@@ -324,7 +324,7 @@ Private Sub mTickWriter_ConnectFailed( _
                             ByVal errorCode As Long, _
                             ByVal errorDesc As String)
 On Error GoTo Err
-mServiceConsumer.Error StandardSPErrorCodes.TFCantConnectDataSource, _
+mServiceConsumer.NotifyEvent StandardSPEventCodes.TFCantConnectDataSource, _
                         "error " & errorCode & ": " & errorDesc, _
                         mTickfileServiceProvider.handle
 Exit Sub
@@ -360,6 +360,11 @@ End Sub
 
 Private Sub mTickWriter_Ready()
 On Error GoTo Err
+
+mServiceConsumer.NotifyEvent StandardSPEventCodes.TFConnectedToDataSource, _
+                        "Connected to data source", _
+                        mTickfileServiceProvider.handle
+
 mServiceConsumer.Ready = True
 mServiceConsumer.OutputTickfileCreated mTickWriter.connectionString
 Exit Sub

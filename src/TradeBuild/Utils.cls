@@ -13,215 +13,191 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-'================================================================================
+'' A GlobalMultiUse class that provides a variety of useful functions.
+
+'@================================================================================
 ' Description
-'================================================================================
+'@================================================================================
 '
 '
 
-'================================================================================
+'@================================================================================
 ' Interfaces
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Events
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Constants
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Enums
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Types
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Member variables
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Class Event Handlers
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' XXXX Interface Members
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' XXXX Event Handlers
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Properties
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Methods
-'================================================================================
+'@================================================================================
 
-'/**
+''
+'
 ' Converts a member of the EntryOrderTypes enumeration to the equivalent OrderTypes value.
 '
 ' @return           the OrderTypes value corresponding to the parameter
-' @param pEntryOrderType the EntryOrderTypes value to be converted
-' @ see
 '
-'*/
+' @param pEntryOrderType the EntryOrderTypes value to be converted
+'
+'@/
 Public Function EntryOrderTypeToOrderType( _
-                ByVal pEntryOrderType As TradeBuild.EntryOrderTypes) As TradeBuild.OrderTypes
+                ByVal pEntryOrderType As TradeBuild25.EntryOrderTypes) As TradeBuild25.OrderTypes
 EntryOrderTypeToOrderType = gEntryOrderTypeToOrderType(pEntryOrderType)
 End Function
 
-Public Function EntryOrderTypeToString(ByVal value As EntryOrderTypes) As String
+Public Function EntryOrderTypeToString( _
+                ByVal value As EntryOrderTypes) As String
 EntryOrderTypeToString = gEntryOrderTypeToString(value)
 End Function
 
-Public Function EntryOrderTypeToShortString(ByVal value As EntryOrderTypes) As String
+Public Function EntryOrderTypeToShortString( _
+                ByVal value As EntryOrderTypes) As String
 EntryOrderTypeToShortString = gEntryOrderTypeToShortString(value)
 End Function
 
-Public Function FormatTimestamp(ByVal timestamp As Date, _
-                                Optional ByVal formatOption As TimestampFormats = TimestampDateAndTime, _
-                                Optional ByVal formatString As String = "yyyymmddhhnnss") As String
-gFormatTimestamp timestamp, formatOption, formatString
-End Function
-
-Public Function GenerateGUID() As GUIDStruct
-GenerateGUID = gGenerateGUID
-End Function
-
-Public Function GenerateGUIDString() As String
-GenerateGUIDString = gGenerateGUIDString
-End Function
-
-Public Function GenerateID() As Long
-GenerateID = gGenerateID
-End Function
-
-Public Function GenerateTextID() As String
-GenerateTextID = gGenerateIDString
-End Function
-
-Public Function GetTimestamp() As Date
-GetTimestamp = gCurrentTime
-End Function
-
-Public Function GUIDToString(ByRef pGUID As GUIDStruct) As String
-GUIDToString = gGUIDToString(pGUID)
-End Function
-
-Public Function LegOpenCloseFromString(ByVal value As String) As TradeBuild.LegOpenClose
+Public Function LegOpenCloseFromString( _
+                ByVal value As String) As TradeBuild25.LegOpenClose
 LegOpenCloseFromString = gLegOpenCloseFromString(value)
 End Function
 
-Public Function LegOpenCloseToString(ByVal value As TradeBuild.LegOpenClose) As String
+Public Function LegOpenCloseToString( _
+                ByVal value As TradeBuild25.LegOpenClose) As String
 LegOpenCloseToString = gLegOpenCloseToString(value)
 End Function
 
-Public Function newWeakReference(ByVal target As Object) As WeakReference
-Set newWeakReference = gNewWeakReference(target)
-End Function
-
-Public Function OptionRightFromString(ByVal value As String) As OptionRights
+Public Function OptionRightFromString( _
+                ByVal value As String) As OptionRights
 OptionRightFromString = gOptionRightFromString(value)
 End Function
 
-Public Function OptionRightToString(ByVal value As OptionRights) As String
+Public Function OptionRightToString( _
+                ByVal value As OptionRights) As String
 OptionRightToString = gOptionRightToString(value)
 End Function
 
-Public Function OrderActionFromString(ByVal value As String) As OrderActions
+Public Function OrderActionFromString( _
+                ByVal value As String) As OrderActions
 OrderActionFromString = gOrderActionFromString(value)
 End Function
 
-Public Function OrderActionToString(ByVal value As OrderActions) As String
+Public Function OrderActionToString( _
+                ByVal value As OrderActions) As String
 OrderActionToString = gOrderActionToString(value)
 End Function
 
-Public Function OrderStatusToString(ByVal value As OrderStatuses) As String
+Public Function OrderStatusToString( _
+                ByVal value As OrderStatuses) As String
 OrderStatusToString = gOrderStatusToString(value)
 End Function
 
-Public Function OrderStopTriggerMethodToString(ByVal value As StopTriggerMethods) As String
+Public Function OrderStopTriggerMethodToString( _
+                ByVal value As StopTriggerMethods) As String
 OrderStopTriggerMethodToString = gOrderStopTriggerMethodToString(value)
 End Function
 
-Public Function OrderTIFToString(ByVal value As OrderTifs) As String
+Public Function OrderTIFToString( _
+                ByVal value As OrderTifs) As String
 OrderTIFToString = gOrderTIFToString(value)
 End Function
 
-Public Function OrderTypeToString(ByVal value As OrderTypes) As String
+Public Function OrderTypeToString( _
+                ByVal value As OrderTypes) As String
 OrderTypeToString = gOrderTypeToString(value)
 End Function
 
-Public Function SecTypeFromString(ByVal value As String) As SecurityTypes
+Public Function SecTypeFromString( _
+                ByVal value As String) As SecurityTypes
 SecTypeFromString = gSecTypeFromString(value)
 End Function
 
-Public Function SecTypeToShortString(ByVal value As SecurityTypes) As String
+Public Function SecTypeToShortString( _
+                ByVal value As SecurityTypes) As String
 SecTypeToShortString = gSecTypeToShortString(value)
 End Function
 
-Public Function SecTypeToString(ByVal value As SecurityTypes) As String
+Public Function SecTypeToString( _
+                ByVal value As SecurityTypes) As String
 SecTypeToString = gSecTypeToString(value)
 End Function
 
-Public Sub SortObjects(data() As SortEntryStruct)
-gSortObjects data, LBound(data), UBound(data)
-End Sub
-
-'/**
+''
 ' Converts a member of the StopOrderTypes enumeration to the equivalent OrderTypes value.
 '
 ' @return           the OrderTypes value corresponding to the parameter
 ' @param pStopOrderType the StopOrderTypes value to be converted
-' @ see
+' @see
 '
-'*/
+'@/
 Public Function StopOrderTypeToOrderType( _
-                ByVal pStopOrderType As TradeBuild.StopOrderTypes) As TradeBuild.OrderTypes
+                ByVal pStopOrderType As TradeBuild25.StopOrderTypes) As TradeBuild25.OrderTypes
 StopOrderTypeToOrderType = gStopOrderTypeToOrderType(pStopOrderType)
 End Function
 
-Public Function StopOrderTypeToString(ByVal value As StopOrderTypes)
+Public Function StopOrderTypeToString( _
+                ByVal value As StopOrderTypes)
 StopOrderTypeToString = gStopOrderTypeToString(value)
 End Function
 
-'/**
-' Converts a member of the TargetOrderTypes enumeration to the equivalent OrderTypes value.
+''
+' Converts a member of the <code>TargetOrderTypes</code> enumeration to the equivalent <code>OrderTypes</code> value.
 '
-' @return           the OrderTypes value corresponding to the parameter
-' @param pTargetOrderType the TargetOrderTypes value to be converted
-' @ see
+' @return           the <code>OrderTypes</code> value corresponding to the parameter
+' @param pTargetOrderType the <code>TargetOrderTypes</code> value to be converted
+' @see
 '
-'*/
+'@/
 Public Function TargetOrderTypeToOrderType( _
-                ByVal pTargetOrderType As TradeBuild.TargetOrderTypes) As TradeBuild.OrderTypes
+                ByVal pTargetOrderType As TradeBuild25.TargetOrderTypes) As TradeBuild25.OrderTypes
 TargetOrderTypeToOrderType = gTargetOrderTypeToOrderType(pTargetOrderType)
 End Function
 
-Public Function TargetOrderTypeToString(ByVal value As TargetOrderTypes) As String
+Public Function TargetOrderTypeToString( _
+                ByVal value As TargetOrderTypes) As String
 TargetOrderTypeToString = gTargetOrderTypeToString(value)
 End Function
 
-Public Function TickfileSpecifierToString(TickfileSpec As TradeBuild.TickfileSpecifier) As String
+Public Function TickfileSpecifierToString( _
+                TickfileSpec As TradeBuild25.TickfileSpecifier) As String
 TickfileSpecifierToString = gTickfileSpecifierToString(TickfileSpec)
 End Function
 
-Public Function ToBytes(inString As String) As Byte()
-ToBytes = gToBytes(inString)
-End Function
-
-Public Function ToHex(inAr() As Byte) As String
-ToHex = gToHex(inAr)
-End Function
-
-'================================================================================
+'@================================================================================
 ' Helper Functions
-'================================================================================
+'@================================================================================
+
 
 

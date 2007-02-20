@@ -13,24 +13,24 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-'================================================================================
+'@================================================================================
 ' Description
-'================================================================================
+'@================================================================================
 '
 '
 
-'================================================================================
+'@================================================================================
 ' Interfaces
-'================================================================================
+'@================================================================================
 
 Implements IOrderSubmissionSrvcConsumer
 Implements QuoteListener
 
-'================================================================================
+'@================================================================================
 ' Events
-'================================================================================
+'@================================================================================
 
-Event Error(ByRef ev As ErrorEvent)
+Event Notification(ByRef ev As NotificationEvent)
 
 Event PositionChanged()
 
@@ -38,13 +38,13 @@ Event ProviderReady()
 
 Event ProviderNotReady()
 
-'================================================================================
+'@================================================================================
 ' Constants
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Enums
-'================================================================================
+'@================================================================================
 
 Public Enum ReasonTypes
     ReasonNone = 0
@@ -53,14 +53,14 @@ Public Enum ReasonTypes
     ReasonStop
 End Enum
 
-'================================================================================
+'@================================================================================
 ' Types
-'================================================================================
+'@================================================================================
 
 Public Type OrderPlexProfile
     NextActiveIndex     As Long
     PrevActiveIndex     As Long
-    Key                 As String
+    key                 As String
     action              As OrderActions
     quantity            As Long
     EntryPrice          As Double
@@ -80,9 +80,9 @@ Public Type OrderPlexProfile
     closedOut           As Boolean
 End Type
 
-'================================================================================
+'@================================================================================
 ' Member variables
-'================================================================================
+'@================================================================================
 
 Private mIndexApplication
 
@@ -95,7 +95,7 @@ Private mSimulated As Boolean
 
 Private mOrderContexts As OrderContexts
 Private mMoneyManager As MoneyManager
-Private mStudies As studies
+Private mStudies As Studies
 
 Private mPlexTable() As OrderPlexProfile
 Private mNextPlexTableIndex As Long
@@ -150,15 +150,15 @@ Private mcurrencyCode As String
 Private mLastBid As Double
 Private mLastAsk As Double
 
-Private mProfitListeners As WeakCollection
-Private mChangeListeners As WeakCollection
+Private mProfitListeners As Collection
+Private mChangeListeners As Collection
 
 Private mOrderSubmitter As TradeBuildSP.IOrderSubmitter
 
 
-'================================================================================
+'@================================================================================
 ' Class Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub Class_Initialize()
 mIndexApplication = GPositionManager.gNextApplicationIndex
@@ -168,7 +168,7 @@ Set mOrders = New Orders
 Set mOrderContexts = New OrderContexts
 mOrderContexts.PositionManager = Me
 
-Set mStudies = New studies
+Set mStudies = New Studies
 
 ReDim mPlexTable(1023) As OrderPlexProfile
 mFirstActivePlexTableIndex = 0
@@ -177,8 +177,8 @@ mNextPlexTableIndex = 2
 mPlexTable(mFirstActivePlexTableIndex).NextActiveIndex = mLastActivePlexTableIndex
 mPlexTable(mLastActivePlexTableIndex).PrevActiveIndex = mFirstActivePlexTableIndex
 
-Set mProfitListeners = New WeakCollection
-Set mChangeListeners = New WeakCollection
+Set mProfitListeners = New Collection
+Set mChangeListeners = New Collection
 
 mSimulated = True
 End Sub
@@ -187,75 +187,71 @@ Private Sub Class_Terminate()
 Debug.Print "PositionManager terminated"
 End Sub
 
-'================================================================================
+'@================================================================================
 ' TradeBuildSP.IOrderSubmissionSrvcConsumer Interface Members
-'================================================================================
+'@================================================================================
 
 Private Sub IOrderSubmissionSrvcConsumer_cancelTickData( _
                 ByVal consumer As TradeBuildSP.IStreamingDataConsumer)
 mTicker.removeDataConsumer consumer
 End Sub
 
-Private Sub IOrderSubmissionSrvcConsumer_Error( _
-                ByVal errorCode As TradeBuildSP.StandardSPErrorCodes, _
-                ByVal errorMessage As String, _
+Private Sub IOrderSubmissionSrvcConsumer_NotifyEvent( _
+                ByVal eventCode As TradeBuildSP.StandardSPEventCodes, _
+                ByVal eventMessage As String, _
                 ByVal spHandle As Long)
-Dim ev As ErrorEvent
-Select Case errorCode
+Dim ev As NotificationEvent
+Select Case eventCode
+Case LOConnectedToBroker
+    Set ev.source = Me
+    ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToBroker
+    ev.eventMessage = eventMessage
+    RaiseEvent Notification(ev)
 Case LOCantConnectToBroker
     Set ev.source = Me
-    ev.errorCode = ApiErrorCodes.ApiErrCantConnectToBroker
-    ev.errorMsg = "Can't connect to broker: " & _
-                    errorMessage
-    RaiseEvent Error(ev)
+    ev.eventCode = ApiNotifyCodes.ApiNotifyCantConnectToBroker
+    ev.eventMessage = eventMessage
+    RaiseEvent Notification(ev)
 Case LORetryConnectToBroker
     Set ev.source = Me
-    ev.errorCode = ApiErrorCodes.ApiErrRetryConnectToBroker
-    ev.errorMsg = "Trying again to connect to broker: " & _
-                    errorMessage
-    RaiseEvent Error(ev)
+    ev.eventCode = ApiNotifyCodes.ApiNotifyRetryConnectToBroker
+    ev.eventMessage = eventMessage
+    RaiseEvent Notification(ev)
 Case LOLostConnectionToBroker
     Set ev.source = Me
-    ev.errorCode = ApiErrorCodes.ApiErrLostConnectionToBroker
-    ev.errorMsg = "Lost connection to broker: " & _
-                    errorMessage
-    RaiseEvent Error(ev)
+    ev.eventCode = ApiNotifyCodes.ApiNotifyLostConnectionToBroker
+    ev.eventMessage = eventMessage
+    RaiseEvent Notification(ev)
 Case LOReConnectingToBroker
     Set ev.source = Me
-    ev.errorCode = ApiErrorCodes.ApiErrReConnectingToBroker
-    ev.errorMsg = "Reconnecting to broker: " & _
-                    errorMessage
-    RaiseEvent Error(ev)
+    ev.eventCode = ApiNotifyCodes.ApiNotifyReConnectingToBroker
+    ev.eventMessage = eventMessage
+    RaiseEvent Notification(ev)
 Case LOUnknownContract
     Set ev.source = Me
-    ev.errorCode = ApiErrorCodes.ApiErrContractSpecifierInvalid
-    ev.errorMsg = "Unknown contract: " & _
-                    errorMessage
-    RaiseEvent Error(ev)
+    ev.eventCode = ApiNotifyCodes.ApiNotifyContractSpecifierInvalid
+    ev.eventMessage = eventMessage
+    RaiseEvent Notification(ev)
 Case LOInvalidOrder
     Set ev.source = Me
-    ev.errorCode = ApiErrorCodes.ApiErrInvalidOrder
-    ev.errorMsg = "Invalid order: " & _
-                    errorMessage
-    RaiseEvent Error(ev)
+    ev.eventCode = ApiNotifyCodes.ApiNotifyInvalidOrder
+    ev.eventMessage = eventMessage
+    RaiseEvent Notification(ev)
 Case LONotUniqueContract
     Set ev.source = Me
-    ev.errorCode = ApiErrorCodes.ApiErrContractSpecifierAmbiguous
-    ev.errorMsg = "Not unique contract: " & _
-                    errorMessage
-    RaiseEvent Error(ev)
+    ev.eventCode = ApiNotifyCodes.ApiNotifyContractSpecifierAmbiguous
+    ev.eventMessage = eventMessage
+    RaiseEvent Notification(ev)
 Case LOInsufficientFunds
     Set ev.source = Me
-    ev.errorCode = ApiErrorCodes.ApiErrInsufficientFunds
-    ev.errorMsg = "Insufficient funds for this order: " & _
-                    errorMessage
-    RaiseEvent Error(ev)
+    ev.eventCode = ApiNotifyCodes.ApiNotifyInsufficientFunds
+    ev.eventMessage = eventMessage
+    RaiseEvent Notification(ev)
 Case LODisconnectedFromBroker
     Set ev.source = Me
-    ev.errorCode = ApiErrorCodes.ApiErrDisconnectedFromBroker
-    ev.errorMsg = "Disconnected from broker: " & _
-                    errorMessage
-    RaiseEvent Error(ev)
+    ev.eventCode = ApiNotifyCodes.ApiNotifyDisconnectedFromBroker
+    ev.eventMessage = eventMessage
+    RaiseEvent Notification(ev)
 End Select
 End Sub
 
@@ -263,26 +259,26 @@ Private Sub IOrderSubmissionSrvcConsumer_executionDetails( _
                 ByVal pContractSpecifier As TradeBuildSP.IContractSpecifier, _
                 ByVal exec As TradeBuildSP.IExecution)
 Dim lExec As Execution
-Dim lOrder As TradeBuild.order
+Dim lOrder As TradeBuild25.order
 
 If mDummy Then
     On Error Resume Next
-    Set lExec = mTicker.dummyExecutions.Item(exec.ExecId)
+    Set lExec = mTicker.dummyExecutions.item(exec.ExecId)
     On Error GoTo 0
     
     If lExec Is Nothing Then
         mTicker.dummyExecutions.add exec
-        Set lOrder = mOrders.Item(exec.orderTradeBuildId)
+        Set lOrder = mOrders.item(exec.orderTradeBuildId)
         lOrder.notifyFill exec
     End If
 Else
     On Error Resume Next
-    Set lExec = mTicker.executions.Item(exec.ExecId)
+    Set lExec = mTicker.executions.item(exec.ExecId)
     On Error GoTo 0
     
     If lExec Is Nothing Then
         mTicker.executions.add exec
-        Set lOrder = mOrders.Item(exec.orderTradeBuildId)
+        Set lOrder = mOrders.item(exec.orderTradeBuildId)
         lOrder.notifyFill exec
     End If
 End If
@@ -296,8 +292,8 @@ End Sub
 Private Sub IOrderSubmissionSrvcConsumer_orderStatus( _
                 ByVal orderId As String, _
                 ByVal status As TradeBuildSP.OrderStatuses)
-Dim lOrder As TradeBuild.order
-Set lOrder = mOrders.Item(orderId)
+Dim lOrder As TradeBuild25.order
+Set lOrder = mOrders.item(orderId)
 lOrder.updateStatus status
 End Sub
 
@@ -316,8 +312,8 @@ End Sub
 Private Sub IOrderSubmissionSrvcConsumer_rejectOrder( _
                 ByVal orderId As String, _
                 ByVal reason As String)
-Dim lOrder As TradeBuild.order
-Set lOrder = mOrders.Item(orderId)
+Dim lOrder As TradeBuild25.order
+Set lOrder = mOrders.item(orderId)
 lOrder.updateStatus OrderStatuses.OrderStatusRejected
 End Sub
 
@@ -327,9 +323,9 @@ Private Sub IOrderSubmissionSrvcConsumer_requestTickData( _
 mTicker.addDataConsumer consumer, includeMarketDepth
 End Sub
 
-'================================================================================
+'@================================================================================
 ' QuoteListener Interface Members
-'================================================================================
+'@================================================================================
 
 Private Sub QuoteListener_ask(ev As QuoteEvent)
 Dim i As Long
@@ -426,9 +422,9 @@ End Sub
 Private Sub QuoteListener_volume(ev As QuoteEvent)
 
 End Sub
-'================================================================================
+'@================================================================================
 ' Properties
-'================================================================================
+'@================================================================================
 
 Public Property Get drawdown() As Currency
 drawdown = mMaxProfit - mProfit
@@ -472,13 +468,13 @@ End Property
 
 Public Property Get pendingPositionSize() As Integer
 Dim OrderContext As OrderContext
-Dim Size As Long
+Dim size As Long
 
 For Each OrderContext In mOrderContexts
-    Size = Size + OrderContext.pendingSize
+    size = size + OrderContext.pendingSize
 Next
 
-pendingPositionSize = Size
+pendingPositionSize = size
 End Property
 
 Public Property Get positionSize() As Integer
@@ -543,9 +539,9 @@ Public Property Get Ticker() As Ticker
 Set Ticker = mTicker
 End Property
 
-'================================================================================
+'@================================================================================
 ' Methods
-'================================================================================
+'@================================================================================
 
 Public Sub addChangeListener(ByVal value As ChangeListener)
 mChangeListeners.add value
@@ -556,7 +552,7 @@ mProfitListeners.add value
 End Sub
 
 Public Sub AddStudy( _
-                ByVal study As TradeBuild.study, _
+                ByVal study As study, _
                 ByRef valueNames() As String)
 mStudies.add study, valueNames
 End Sub
@@ -773,7 +769,7 @@ End Sub
 Friend Sub OrderContextInactive(ByVal pOrderContext As OrderContext)
 
 Dim OrderContext As OrderContext
-Dim Size As Long
+Dim size As Long
 
 
 If Not mClosing Then
@@ -844,14 +840,14 @@ End If
 
 For Each OrderContext In mOrderContexts
     If Not OrderContext.Complete Then Exit Sub
-    Size = Size + OrderContext.Size
+    size = size + OrderContext.size
 Next
 
 ' If we get here, all OrderContexts must be complete.
 
 ' Now, if there is a net position, need to close it out
 
-If Size = 0 Then
+If size = 0 Then
     mClosing = False
     mOrderContexts.enabled = True
     If mEndSession Then
@@ -888,7 +884,7 @@ End If
 
 End Sub
 
-Friend Function registerPlex(ByVal Key As String, _
+Friend Function registerPlex(ByVal key As String, _
                             ByVal Description As String, _
                             ByVal action As OrderActions, _
                             ByVal risk As Currency) As Long
@@ -898,7 +894,7 @@ End If
 registerPlex = mNextPlexTableIndex
 mNextPlexTableIndex = mNextPlexTableIndex + 1
 With mPlexTable(registerPlex)
-    .Key = Key
+    .key = key
     .Description = Description
     .action = action
     .risk = risk
@@ -908,7 +904,7 @@ With mPlexTable(registerPlex)
     mPlexTable(mLastActivePlexTableIndex).PrevActiveIndex = registerPlex
 End With
 If Not mSettlingOrderPlex Is Nothing Then
-    If Key = mSettlingOrderPlex.Key Then
+    If key = mSettlingOrderPlex.key Then
         mSettlingHandle = registerPlex
     End If
 End If
@@ -917,14 +913,14 @@ End Function
 Public Sub removeChangeListener(ByVal value As ChangeListener)
 Dim i As Long
 For i = mChangeListeners.Count To 1 Step -1
-    If mChangeListeners.Item(i) Is value Then mChangeListeners.remove i
+    If mChangeListeners.item(i) Is value Then mChangeListeners.remove i
 Next
 End Sub
 
 Public Sub removeProfitListener(ByVal value As ProfitListener)
 Dim i As Long
 For i = mProfitListeners.Count To 1 Step -1
-    If mProfitListeners.Item(i) Is value Then mProfitListeners.remove i
+    If mProfitListeners.item(i) Is value Then mProfitListeners.remove i
 Next
 End Sub
 
@@ -973,9 +969,9 @@ Loop
 
 End Sub
 
-'================================================================================
+'@================================================================================
 ' Helper Functions
-'================================================================================
+'@================================================================================
 
 Private Sub calcPlexProfit(ByVal handle As Long, _
                             Optional ByVal price As Double)
@@ -998,7 +994,7 @@ End Sub
 Private Sub calcTradeProfit(Optional ByVal price As Double)
 
 Dim profit As Currency
-Dim ev As TradeBuild.StudyValueEvent
+Dim ev As StudyValueEvent
 
 If mQuantityOutstanding <> 0 Then
     profit = mTickValue * mQuantityOutstanding * (price - mTotalEntryPrice / mQuantityOutstanding) / mTickSize
@@ -1157,7 +1153,7 @@ With mPlexTable(index)
                 FormatDateTime(.StartTime) & "," & _
                 FormatDateTime(.endTime) & "," & _
                 .Description & "," & _
-                .Key & "," & _
+                .key & "," & _
                 gOrderActionToString(.action) & "," & _
                 .quantity & "," & _
                 .EntryPrice & "," & _

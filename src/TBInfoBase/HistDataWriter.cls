@@ -89,18 +89,22 @@ handleFatalError Err.Number, _
                 Err.Description
 End Sub
 
-Private Sub IBarDataWriter_WriteBar(data As TradeBuildSP.Bar)
+Private Sub IBarDataWriter_WriteBar( _
+                ByRef data As TradeBuildSP.Bar, _
+                ByVal barType As BarTypes, _
+                ByVal barLength As Long, _
+                ByVal barUnit As TimePeriodUnits)
 On Error GoTo Err
 With data
     mBarWriter.WriteBar .timestamp, _
-                        .BarType, _
-                        .PeriodMinutes, _
-                        .OpenPrice, _
-                        .HighPrice, _
-                        .LowPrice, _
-                        .ClosePrice, _
-                        .Volume, _
-                        .TickVolume, _
+                        barType, _
+                        barLength, _
+                        .openPrice, _
+                        .highPrice, _
+                        .lowPrice, _
+                        .closePrice, _
+                        .volume, _
+                        .tickVolume, _
                         0
 End With
 mBarsWritten = mBarsWritten + 1
@@ -116,7 +120,7 @@ End Sub
 
 Private Sub mBarWriter_ConnectFailed(ByVal errorCode As Long, ByVal errorDesc As String)
 On Error GoTo Err
-mServiceConsumer.Error StandardSPErrorCodes.HDCantConnectDataSource, _
+mServiceConsumer.NotifyEvent StandardSPEventCodes.HDCantConnectDataSource, _
                         "error " & errorCode & ": " & errorDesc, _
                         mHistDataServiceProvider.handle
 Exit Sub
@@ -150,6 +154,11 @@ End Sub
 
 Private Sub mBarWriter_Ready()
 On Error GoTo Err
+
+mServiceConsumer.NotifyEvent StandardSPEventCodes.HDConnectedToDataSource, _
+                        "Connected to data source", _
+                        mHistDataServiceProvider.handle
+
 mServiceConsumer.Ready = True
 mServiceConsumer.OutputBarfileCreated mBarWriter.connectionString
 Exit Sub
@@ -176,11 +185,11 @@ End If
 
 Set lInstrumentFactory = New TradingDO2.cInstrumentFactory
 With mContractSpec
-    Set lInstrument = lInstrumentFactory.loadBySpec(.Symbol, _
+    Set lInstrument = lInstrumentFactory.loadBySpec(.symbol, _
                                 secTypeToString(.SecType), _
                                 Left$(.Expiry, 6), _
-                                .Exchange, _
-                                .CurrencyCode, _
+                                .exchange, _
+                                .currencyCode, _
                                 .Strike, _
                                 optRightToString(.Right), _
                                 .localSymbol)
