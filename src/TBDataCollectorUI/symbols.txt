@@ -7,3 +7,12 @@
 
 ZH7          ,       , FUT    ,       ,        ,         ,    0.0,	
              , ES    , FUT    , 200703, GLOBEX , USD     ,    0.0,
+NQH7         ,       , FUT    ,       ,        ,         ,    0.0,	
+             , YM    , FUT    , 200703, ECBOT  , USD     ,    0.0,
+FDAX MAR 07  ,       , FUT    ,       ,        ,         ,    0.0,	
+FESX MAR 07  ,       , FUT    , 200703,        , EUR     ,    0.0,
+FGBL MAR 07  ,       , FUT    ,       ,        ,         ,    0.0,	
+6EH7         ,       , FUT    ,       , GLOBEX , USD     ,    0.0,
+6BH7         ,       , FUT    ,       , GLOBEX , USD     ,    0.0,
+ZB   MAR 07  ,       , FUT    ,       ,        ,         ,    0.0,
+ER2H7        ,       , FUT    ,       ,        ,         ,    0.0,
