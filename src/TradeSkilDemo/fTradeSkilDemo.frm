@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{D1E1CD3C-084A-4A4F-B2D9-56CE3669B04D}#12.0#0"; "TradeBuildUI.ocx"
+Object = "{9D2C4B5E-2539-4900-8B70-B9B41CFF1CA8}#2.0#0"; "TradeBuildUI2-5.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeSkil Demo Edition"
@@ -268,10 +268,8 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(0)   =   "&1. Configuration"
       TabPicture(0)   =   "fTradeSkilDemo.frx":0000
       Tab(0).ControlEnabled=   0   'False
-      Tab(0).Control(0)=   "ConfigureButton"
-      Tab(0).Control(0).Enabled=   0   'False
-      Tab(0).Control(1)=   "Frame1"
-      Tab(0).Control(1).Enabled=   0   'False
+      Tab(0).Control(0)=   "Frame1"
+      Tab(0).Control(1)=   "ConfigureButton"
       Tab(0).ControlCount=   2
       TabCaption(1)   =   "&2. Tickers"
       TabPicture(1)   =   "fTradeSkilDemo.frx":001C
@@ -282,10 +280,10 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(2)   =   "&3. Orders"
       TabPicture(2)   =   "fTradeSkilDemo.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "ModifyOrderButton"
-      Tab(2).Control(1)=   "CancelOrderButton"
-      Tab(2).Control(2)=   "OrderButton"
-      Tab(2).Control(3)=   "OrdersSummary1"
+      Tab(2).Control(0)=   "OrdersSummary1"
+      Tab(2).Control(1)=   "OrderButton"
+      Tab(2).Control(2)=   "CancelOrderButton"
+      Tab(2).Control(3)=   "ModifyOrderButton"
       Tab(2).ControlCount=   4
       TabCaption(3)   =   "&4. Executions"
       TabPicture(3)   =   "fTradeSkilDemo.frx":0054
@@ -310,22 +308,22 @@ Begin VB.Form fTradeSkilDemo
       Tab(4).Control(11)=   "Label20"
       Tab(4).Control(12)=   "Label19"
       Tab(4).ControlCount=   13
-      Begin TradeBuildUI.ExecutionsSummary ExecutionsSummary1 
-         Height          =   3735
-         Left            =   -74880
-         TabIndex        =   108
-         Top             =   360
-         Width           =   13815
-         _ExtentX        =   24368
-         _ExtentY        =   6588
-      End
-      Begin TradeBuildUI.OrdersSummary OrdersSummary1 
+      Begin TradeBuildUI25.ExecutionsSummary ExecutionsSummary1 
          Height          =   3855
          Left            =   -74880
-         TabIndex        =   107
+         TabIndex        =   114
          Top             =   360
-         Width           =   12495
-         _ExtentX        =   22040
+         Width           =   13935
+         _ExtentX        =   24580
+         _ExtentY        =   6800
+      End
+      Begin TradeBuildUI25.OrdersSummary OrdersSummary1 
+         Height          =   3855
+         Left            =   -74880
+         TabIndex        =   113
+         Top             =   360
+         Width           =   12615
+         _ExtentX        =   22251
          _ExtentY        =   6800
       End
       Begin VB.ComboBox ReplaySpeedCombo 
@@ -570,7 +568,7 @@ Begin VB.Form fTradeSkilDemo
                Caption         =   "Custom studies service provider ProgId"
                Height          =   615
                Left            =   0
-               TabIndex        =   113
+               TabIndex        =   110
                Top             =   2040
                Width           =   2055
             End
@@ -735,6 +733,7 @@ Begin VB.Form fTradeSkilDemo
          Height          =   375
          Left            =   -63840
          TabIndex        =   26
+         ToolTipText     =   "Set this configuration"
          Top             =   600
          Width           =   975
       End
@@ -747,29 +746,47 @@ Begin VB.Form fTradeSkilDemo
          TabIndex        =   59
          Top             =   360
          Width           =   13935
+         Begin TradeBuildUI25.TickerGrid TickerGrid1 
+            Height          =   3855
+            Left            =   3960
+            TabIndex        =   112
+            Top             =   0
+            Width           =   9975
+            _ExtentX        =   17595
+            _ExtentY        =   6800
+         End
          Begin VB.Frame Frame3 
             Caption         =   "Charts"
-            Height          =   2175
+            Height          =   3015
             Left            =   2640
-            TabIndex        =   109
+            TabIndex        =   106
             Top             =   0
             Width           =   1215
             Begin VB.PictureBox Picture4 
                BorderStyle     =   0  'None
-               Height          =   1935
+               Height          =   2775
                Left            =   120
-               ScaleHeight     =   1935
+               ScaleHeight     =   2775
                ScaleWidth      =   1035
-               TabIndex        =   110
+               TabIndex        =   107
                Top             =   180
                Width           =   1035
-               Begin VB.CommandButton GridChartButton 
-                  Caption         =   "&Chart"
-                  Enabled         =   0   'False
+               Begin VB.CheckBox SessionOnlyCheck 
+                  Caption         =   "Session only"
                   Height          =   495
                   Left            =   0
-                  TabIndex        =   38
+                  TabIndex        =   111
                   Top             =   1320
+                  Value           =   1  'Checked
+                  Width           =   975
+               End
+               Begin VB.CommandButton GridChartButton 
+                  Caption         =   "Show &Chart"
+                  Enabled         =   0   'False
+                  Height          =   375
+                  Left            =   0
+                  TabIndex        =   38
+                  Top             =   2400
                   Width           =   975
                End
                Begin VB.TextBox NumHistoryBarsText 
@@ -795,7 +812,7 @@ Begin VB.Form fTradeSkilDemo
                   Caption         =   "# history bars"
                   Height          =   255
                   Left            =   0
-                  TabIndex        =   112
+                  TabIndex        =   109
                   Top             =   720
                   Width           =   975
                End
@@ -803,35 +820,26 @@ Begin VB.Form fTradeSkilDemo
                   Caption         =   "Timeframe"
                   Height          =   255
                   Left            =   0
-                  TabIndex        =   111
+                  TabIndex        =   108
                   Top             =   0
                   Width           =   735
                End
             End
          End
-         Begin TradeBuildUI.TickerGrid TickerGrid1 
-            Height          =   3855
-            Left            =   3960
-            TabIndex        =   106
-            Top             =   0
-            Width           =   9975
-            _ExtentX        =   17595
-            _ExtentY        =   6800
-         End
          Begin VB.CommandButton GridMarketDepthButton 
-            Caption         =   "&Market depth"
+            Caption         =   "&Mkt depth"
             Enabled         =   0   'False
-            Height          =   495
+            Height          =   375
             Left            =   2760
             TabIndex        =   39
-            Top             =   2520
+            Top             =   3240
             Width           =   975
          End
          Begin VB.CommandButton StopTickerButton 
             Caption         =   "Sto&p ticker"
             Enabled         =   0   'False
             Height          =   375
-            Left            =   2760
+            Left            =   1320
             TabIndex        =   40
             Top             =   3240
             Width           =   975
@@ -918,7 +926,7 @@ Begin VB.Form fTradeSkilDemo
                   Caption         =   "&Start ticker"
                   Enabled         =   0   'False
                   Height          =   375
-                  Left            =   840
+                  Left            =   0
                   TabIndex        =   35
                   Top             =   3000
                   Width           =   975
@@ -1197,30 +1205,38 @@ Implements InfoListener
 ' Constants
 '================================================================================
 
-Private Const TabIndexConfiguration As Long = 0
-Private Const TabIndexTickers As Long = 1
-Private Const TabIndexOrders As Long = 2
-Private Const TabIndexExecutions As Long = 3
-Private Const TabIndexReplayTickfiles As Long = 0
-
-
+Private Const TimeframeCustom As String = "Custom"
+Private Const Timeframe5sec As String = "5 secs"
+Private Const Timeframe15sec As String = "15 secs"
+Private Const Timeframe30sec As String = "30 secs"
 Private Const Timeframe1min As String = "1 min"
-Private Const Timeframe2min As String = "2 min"
-Private Const Timeframe5min As String = "5 min"
-Private Const Timeframe15min As String = "15 min"
-Private Const Timeframe30min As String = "30 min"
+Private Const Timeframe2min As String = "2 mins"
+Private Const Timeframe3min As String = "3 mins"
+Private Const Timeframe4min As String = "4 mins"
+Private Const Timeframe5min As String = "5 mins"
+Private Const Timeframe8min As String = "8 mins"
+Private Const Timeframe13min As String = "13 mins"
+Private Const Timeframe15min As String = "15 mins"
+Private Const Timeframe20min As String = "20 mins"
+Private Const Timeframe21min As String = "21 mins"
+Private Const Timeframe30min As String = "30 mins"
+Private Const Timeframe34min As String = "34 mins"
+Private Const Timeframe55min As String = "55 mins"
 Private Const Timeframe1hour As String = "1 hour"
 Private Const Timeframe1day As String = "Daily"
+Private Const Timeframe1week As String = "Weekly"
+Private Const Timeframe1month As String = "Monthly"
 
 '================================================================================
 ' Enums
 '================================================================================
 
-Private Enum MainSSTABTabNumbers
-    Configuration
-    Tickers
-    Orders
-    ReplayTickfiles
+Private Enum TabIndexNumbers
+    TabIndexConfiguration
+    TabIndexTickers
+    TabIndexOrders
+    TabIndexExecutions
+    TabIndexReplayTickfiles
 End Enum
 
 '================================================================================
@@ -1251,6 +1267,9 @@ Attribute mTickfileManager.VB_VarHelpID = -1
 Private mOrderForm As OrderForm
 Attribute mOrderForm.VB_VarHelpID = -1
 
+Private mChartPeriods As Long
+Private mChartUnits As TimePeriodUnits
+
 '================================================================================
 ' Form Event Handlers
 '================================================================================
@@ -1277,9 +1296,7 @@ OrdersSummary1.monitorWorkspace mTradeBuildAPI.defaultWorkSpace
 ExecutionsSummary1.monitorWorkspace mTradeBuildAPI.defaultWorkSpace
 TickerGrid1.monitorWorkspace mTradeBuildAPI.defaultWorkSpace
 
-Set mTimer = New IntervalTimer
-mTimer.RepeatNotifications = True
-mTimer.TimerIntervalMillisecs = 500
+Set mTimer = createIntervalTimer(0, , 500)
 mTimer.StartTimer
 
 TypeCombo.AddItem SecTypeToString(SecurityTypes.SecTypeStock)
@@ -1291,16 +1308,6 @@ TypeCombo.AddItem SecTypeToString(SecurityTypes.SecTypeIndex)
 
 RightCombo.AddItem OptionRightToString(OptionRights.OptCall)
 RightCombo.AddItem OptionRightToString(OptionRights.OptPut)
-
-TimeframeCombo.AddItem Timeframe1min
-TimeframeCombo.AddItem Timeframe2min
-TimeframeCombo.AddItem Timeframe5min
-TimeframeCombo.AddItem Timeframe15min
-TimeframeCombo.AddItem Timeframe30min
-TimeframeCombo.AddItem Timeframe1hour
-TimeframeCombo.AddItem Timeframe1day
-
-TimeframeCombo.Text = Timeframe5min
 
 RealtimeDataCombo.Text = "TWS"
 ContractDataCombo.Text = "TWS"
@@ -1777,7 +1784,74 @@ End If
 End Sub
 
 Private Sub TimeframeCombo_Click()
-ChartButton.caption = TimeframeCombo.Text & "Chart"
+Select Case TimeframeCombo.Text
+Case TimeframeCustom
+Case Timeframe5sec
+    mChartPeriods = 5
+    mChartUnits = TimePeriodSecond
+Case Timeframe15sec
+    mChartPeriods = 15
+    mChartUnits = TimePeriodSecond
+Case Timeframe30sec
+    mChartPeriods = 30
+    mChartUnits = TimePeriodSecond
+Case Timeframe1min
+    mChartPeriods = 1
+    mChartUnits = TimePeriodMinute
+Case Timeframe2min
+    mChartPeriods = 2
+    mChartUnits = TimePeriodMinute
+Case Timeframe3min
+    mChartPeriods = 3
+    mChartUnits = TimePeriodMinute
+Case Timeframe4min
+    mChartPeriods = 4
+    mChartUnits = TimePeriodMinute
+Case Timeframe5min
+    mChartPeriods = 5
+    mChartUnits = TimePeriodMinute
+Case Timeframe8min
+    mChartPeriods = 8
+    mChartUnits = TimePeriodMinute
+Case Timeframe13min
+    mChartPeriods = 13
+    mChartUnits = TimePeriodMinute
+Case Timeframe15min
+    mChartPeriods = 15
+    mChartUnits = TimePeriodMinute
+Case Timeframe20min
+    mChartPeriods = 20
+    mChartUnits = TimePeriodMinute
+Case Timeframe21min
+    mChartPeriods = 21
+    mChartUnits = TimePeriodMinute
+Case Timeframe30min
+    mChartPeriods = 30
+    mChartUnits = TimePeriodMinute
+Case Timeframe34min
+    mChartPeriods = 34
+    mChartUnits = TimePeriodMinute
+Case Timeframe55min
+    mChartPeriods = 55
+    mChartUnits = TimePeriodMinute
+Case Timeframe1hour
+    mChartPeriods = 1
+    mChartUnits = TimePeriodHour
+Case Timeframe1day
+    mChartPeriods = 1
+    mChartUnits = TimePeriodDay
+Case Timeframe1week
+    mChartPeriods = 1
+    mChartUnits = TimePeriodWeek
+Case Timeframe1month
+    mChartPeriods = 1
+    mChartUnits = TimePeriodMonth
+End Select
+
+ChartButton.ToolTipText = "Show " & _
+                        mChartPeriods & " " & _
+                        TimePeriodUnitsToString(mChartUnits) & _
+                        " chart"
 End Sub
 
 Private Sub TypeCombo_Click()
@@ -1825,40 +1899,40 @@ End Sub
 ' mTicker Event Handlers
 '================================================================================
 
-Private Sub mTicker_ask(ev As TradeBuild.QuoteEvent)
+Private Sub mTicker_ask(ev As QuoteEvent)
 AskText = ev.priceString
 AskSizeText = ev.Size
 setForeColor AskText, ev.priceChange
 setForeColor AskSizeText, ev.sizeChange
 End Sub
 
-Private Sub mTicker_bid(ev As TradeBuild.QuoteEvent)
+Private Sub mTicker_bid(ev As QuoteEvent)
 BidText = ev.priceString
 BidSizeText = ev.Size
 setForeColor BidText, ev.priceChange
 setForeColor BidSizeText, ev.sizeChange
 End Sub
 
-Private Sub mTicker_high(ev As TradeBuild.QuoteEvent)
+Private Sub mTicker_high(ev As QuoteEvent)
 HighText = ev.priceString
 End Sub
 
-Private Sub mTicker_Low(ev As TradeBuild.QuoteEvent)
+Private Sub mTicker_Low(ev As QuoteEvent)
 LowText = ev.priceString
 End Sub
 
-Private Sub mTicker_previousClose(ev As TradeBuild.QuoteEvent)
+Private Sub mTicker_previousClose(ev As QuoteEvent)
 CloseText = ev.priceString
 End Sub
 
-Private Sub mTicker_trade(ev As TradeBuild.QuoteEvent)
+Private Sub mTicker_trade(ev As QuoteEvent)
 LastText = ev.priceString
 LastSizeText = ev.Size
 setForeColor LastText, ev.priceChange
 setForeColor LastSizeText, ev.sizeChange
 End Sub
 
-Private Sub mTicker_volume(ev As TradeBuild.QuoteEvent)
+Private Sub mTicker_volume(ev As QuoteEvent)
 VolumeText = ev.Size
 End Sub
 
@@ -1866,29 +1940,29 @@ End Sub
 ' mTickers Event Handlers
 '================================================================================
 
-Private Sub mTickers_Error( _
-                ByRef ev As ErrorEvent)
+Private Sub mTickers_Notification( _
+                ByRef ev As NotificationEvent)
 Dim lTicker As Ticker
 
 On Error GoTo err
 
 Set lTicker = ev.source
 
-Select Case ev.errorCode
-Case ApiErrorCodes.ApiErrContractSpecifierAmbiguous
-    logMessage "Ambiguous contract details(" & ev.errorMsg & "):" & _
+Select Case ev.eventCode
+Case ApiNotifyCodes.ApiNotifyContractSpecifierAmbiguous
+    logMessage "Ambiguous contract details(" & ev.eventMessage & "):" & _
                         lTicker.Contracts.ContractSpecifier.ToString
     StartTickerButton.Enabled = True
-Case ApiErrorCodes.ApiErrContractSpecifierInvalid
-    logMessage "Invalid contract details (" & ev.errorMsg & "):" & _
+Case ApiNotifyCodes.ApiNotifyContractSpecifierInvalid
+    logMessage "Invalid contract details (" & ev.eventMessage & "):" & _
                         lTicker.Contracts.ContractSpecifier.ToString
     StartTickerButton.Enabled = True
-Case ApiErrorCodes.ApiErrMarketDepthNotAvailable
+Case ApiNotifyCodes.ApiNotifyMarketDepthNotAvailable
     logMessage "No market depth for " & _
                         lTicker.Contract.specifier.localSymbol & _
-                        ": " & ev.errorMsg
+                        ": " & ev.eventMessage
 Case Else
-    logMessage "Error " & ev.errorCode & ": " & ev.errorMsg
+    logMessage "Notification " & ev.eventCode & ": " & ev.eventMessage
 End Select
 
 Exit Sub
@@ -1897,7 +1971,7 @@ handleFatalError err.Number, err.Description, "mTickers_tickerError"
 End Sub
 
 Private Sub mTickers_StateChange( _
-                ev As TradeBuild.StateChangeEvent)
+                ev As StateChangeEvent)
 Dim lTicker As Ticker
 
 On Error GoTo err
@@ -1953,22 +2027,22 @@ End Sub
 ' mTickfileManager Event Handlers
 '================================================================================
 
-Private Sub mTickfileManager_Error( _
-                ByRef ev As ErrorEvent)
+Private Sub mTickfileManager_Notification( _
+                ev As TradeBuild25.NotificationEvent)
 On Error GoTo err
-logMessage "Error " & ev.errorCode & ": " & ev.errorMsg
+logMessage "Notification " & ev.eventCode & ": " & ev.eventMessage
 
 Exit Sub
 err:
-handleFatalError err.Number, err.Description, "mTickfileManager_Error"
+handleFatalError err.Number, err.Description, "mTickfileManager_Notification"
 End Sub
 
 Private Sub mTickfileManager_QueryReplayNextTickfile( _
                 ByVal tickfileIndex As Long, _
                 ByVal tickfileName As String, _
                 ByVal TickfileSizeBytes As Long, _
-                ByVal pContract As TradeBuild.Contract, _
-                continueMode As TradeBuild.ReplayContinueModes)
+                ByVal pContract As Contract, _
+                continueMode As ReplayContinueModes)
 On Error GoTo err
 
 If tickfileIndex <> 0 Then
@@ -2026,7 +2100,7 @@ err:
 handleFatalError err.Number, err.Description, "mTickfileManager_ReplayProgress"
 End Sub
 
-Private Sub mTickfileManager_TickerAllocated(ByVal pTicker As TradeBuild.Ticker)
+Private Sub mTickfileManager_TickerAllocated(ByVal pTicker As Ticker)
 On Error GoTo err
 
 Set mTicker = pTicker
@@ -2039,7 +2113,7 @@ handleFatalError err.Number, err.Description, "mTickfileManager_TickerAllocated"
 End Sub
 
 Private Sub mTickfileManager_TickfilesSelected()
-Dim tickfiles() As TradeBuild.TickfileSpecifier
+Dim tickfiles() As TickfileSpecifier
 Dim i As Long
 On Error GoTo err
 TickfileList.Clear
@@ -2080,14 +2154,14 @@ Dim spError As ServiceProviderError
 On Error GoTo err
 
 Select Case ev.errorCode
-Case ApiErrorCodes.ApiErrServiceProviderError
+Case ApiNotifyCodes.ApiNotifyServiceProviderError
     Set spError = mTradeBuildAPI.getServiceProviderError
     logMessage "Error from " & _
                         spError.serviceProviderName & _
                         ": code " & spError.errorCode & _
                         ": " & spError.message
 
-Case ApiErrorCodes.ApiErrFatalError
+Case ApiNotifyCodes.ApiNotifyFatalError
     handleFatalError ev.errorCode, ev.errorMsg, "mTradeBuildAPI_errorMessage"
 Case Else
     logMessage "Error " & ev.errorCode & ": " & ev.errorMsg
@@ -2097,6 +2171,17 @@ End Select
 Exit Sub
 err:
 handleFatalError err.Number, err.Description, "mTradeBuildAPI_errorMessage"
+End Sub
+
+Private Sub mTradeBuildAPI_Notification( _
+                ByRef ev As TradeBuild25.NotificationEvent)
+On Error GoTo err
+
+logMessage "Notification " & ev.eventCode & ": " & ev.eventMessage
+
+Exit Sub
+err:
+handleFatalError err.Number, err.Description, "mTradeBuildAPI_notification"
 End Sub
 
 '================================================================================
@@ -2146,27 +2231,13 @@ End Sub
 
 Private Sub createChart(ByVal pTicker As Ticker)
 Dim chartform As fChart2
-Dim mins As Long
-
-Select Case TimeframeCombo.Text
-Case Timeframe1min
-    mins = 1
-Case Timeframe2min
-    mins = 2
-Case Timeframe5min
-    mins = 5
-Case Timeframe15min
-    mins = 15
-Case Timeframe30min
-    mins = 30
-Case Timeframe1hour
-    mins = 60
-Case Timeframe1day
-    mins = 1440
-End Select
 
 Set chartform = New fChart2
-chartform.showChart pTicker, NumHistoryBarsText, 20, mins, TimePeriodUnits.TimePeriodMinute
+chartform.showChart pTicker, _
+                    NumHistoryBarsText, _
+                    IIf(SessionOnlyCheck = vbChecked, False, True), _
+                    20, _
+                    mChartPeriods, mChartUnits
 chartform.Visible = True
 End Sub
 
@@ -2194,14 +2265,25 @@ MsgBox "A fatal error has occurred. The program will close when you click the OK
 Unload Me
 End Sub
 
+Private Sub logMessage(message As String)
+Dim timeString As String
+timeString = FormatDateTime(Now, vbLongTime) & "  "
+StatusText.Text = IIf(StatusText.Text <> "", _
+                        StatusText.Text & vbCrLf & timeString & message, _
+                        timeString & message)
+StatusText.SelStart = Len(StatusText.Text)
+StatusText.SelLength = 0
+End Sub
+
 Private Sub removeServiceProviders()
 mTradeBuildAPI.ServiceProviders.RemoveAll
+RemoveAllStudyLibraries
 End Sub
 
 
 Private Sub setForeColor( _
                 ByVal pControl As Control, _
-                ByVal change As TradeBuild.ValueChanges)
+                ByVal change As ValueChanges)
 If change = ValueChangeUp Then
     pControl.ForeColor = IncreasedValueColor
 ElseIf change = ValueChangeDown Then
@@ -2211,130 +2293,207 @@ End Sub
 
 Private Sub setupServiceProviders()
 Dim progId As String
-Dim realtimeServiceProvider As Object
-Dim histDataServiceProvider As Object
-Dim liveOrderServiceProvider As Object
-Dim TWSContractServiceProvider As Object
+Dim serviceProvider As Object
+Dim studyLib As StudyLibrary
 
-On Error GoTo err
+On Error Resume Next
 
 If UseTickDBSPCheck = vbChecked Then
     ' enable historical tick data storage/retrieval to/from TradeBuild's database
-    progId = "TBInfoBase.TickfileServiceProvider"
-    mTradeBuildAPI.ServiceProviders.Add CreateObject(progId), LogLevelLow
+    progId = "TBInfoBase25.TickfileServiceProvider"
+    Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
+    If serviceProvider Is Nothing Then MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
+    Set serviceProvider = Nothing
 End If
 
 If UseTickfileSPCheck = vbChecked Then
     ' enable historical tick data storage and retrieval to/from various file formats
-    progId = "TickfileSP.TickfileServiceProvider"
-    mTradeBuildAPI.ServiceProviders.Add CreateObject(progId), LogLevelLow
+    progId = "TickfileSP25.TickfileServiceProvider"
+    Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
+    If serviceProvider Is Nothing Then MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
+    Set serviceProvider = Nothing
 End If
 
 If UseQTTickfileSPCheck = vbChecked Then
     ' enable historical tick data retrieval from QuoteTracker
-    progId = "QTSP.QTTickfileServiceProvider"
-    mTradeBuildAPI.ServiceProviders.Add CreateObject(progId), LogLevelLow
+    progId = "QTSP25.QTTickfileServiceProvider"
+    Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
+    If serviceProvider Is Nothing Then MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
+    Set serviceProvider = Nothing
 End If
 
 If CustomStudiesSpText <> "" Then
     ' enable the use of custom technical indicators
     progId = CustomStudiesSpText
-    mTradeBuildAPI.ServiceProviders.Add CreateObject(CustomStudiesSpText), LogLevelLow, "Custom"
+    Set studyLib = AddStudyLibrary(CreateObject(CustomStudiesSpText), "Custom")
+    If studyLib Is Nothing Then MsgBox "Study library with ProgId " & progId & " is not installed", vbExclamation, "Warning"
+    Set serviceProvider = Nothing
 End If
 
 ' enable the use of TradeBuild's built-in technical indicators
-progId = "BuiltInStudiesSP.StudyServiceProvider"
-mTradeBuildAPI.ServiceProviders.Add CreateObject(progId), LogLevelLow, "Built in"
+progId = "CmnStudiesLib25.StudyLib"
+Set studyLib = AddStudyLibrary(CreateObject(progId), "Built-in")
+If studyLib Is Nothing Then MsgBox "Study Llibrary with ProgId " & progId & " is not installed", vbExclamation, "Warning"
+Set serviceProvider = Nothing
 
 If RealtimeDataCombo.Text = "TWS" Then
     ' set up TWS realtime data service provider
-    progId = "IBTWSSP.RealtimeDataServiceProvider"
-    Set realtimeServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
-    realtimeServiceProvider.Server = DataServerText
-    realtimeServiceProvider.Port = DataPortText
-    realtimeServiceProvider.clientID = DataClientIdText
-    realtimeServiceProvider.providerKey = "IB"
-    realtimeServiceProvider.keepConnection = True
-
+    progId = "IBTWSSP25.RealtimeDataServiceProvider"
+    Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
+    If serviceProvider Is Nothing Then
+        MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
+    Else
+        serviceProvider.Server = DataServerText
+        serviceProvider.Port = DataPortText
+        serviceProvider.clientID = DataClientIdText
+        serviceProvider.providerKey = "IB"
+        serviceProvider.keepConnection = True
+        Set serviceProvider = Nothing
+    End If
+    
 ElseIf RealtimeDataCombo.Text = "QuoteTracker" Then
     ' set up QuoteTrackerT realtime data service provider
-    progId = "QTSP.QTRealtimeDataServiceProvider"
-    Set realtimeServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
-    realtimeServiceProvider.QTServer = DataServerText
-    realtimeServiceProvider.QTPort = DataPortText
-    realtimeServiceProvider.password = DataPasswordText
-    realtimeServiceProvider.providerKey = "QTIB"
-    realtimeServiceProvider.keepConnection = True
+    progId = "QTSP25.QTRealtimeDataServiceProvider"
+    Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
+    If serviceProvider Is Nothing Then
+        MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
+    Else
+        serviceProvider.QTServer = DataServerText
+        serviceProvider.QTPort = DataPortText
+        serviceProvider.password = DataPasswordText
+        serviceProvider.providerKey = "QTIB"
+        serviceProvider.keepConnection = True
+        Set serviceProvider = Nothing
+    End If
 End If
 
 If ContractDataCombo.Text = "TradeBuild" Then
-    progId = "TBInfoBase.ContractInfoServiceProvider"
-    mTradeBuildAPI.ServiceProviders.Add CreateObject(progId), LogLevelLow
+    progId = "TBInfoBase25.ContractInfoSrvcProvider"
+    Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
+    If serviceProvider Is Nothing Then MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
+    Set serviceProvider = Nothing
 ElseIf ContractDataCombo.Text = "TWS" Then
-    progId = "IBTWSSP.ContractInfoServiceProvider"
-    Set TWSContractServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
-    TWSContractServiceProvider.Server = ContractDataServerText
-    TWSContractServiceProvider.Port = ContractDataPortText
-    TWSContractServiceProvider.clientID = ContractDataClientIdText
-    TWSContractServiceProvider.providerKey = "IB"
-    TWSContractServiceProvider.keepConnection = True
+    progId = "IBTWSSP25.ContractInfoServiceProvider"
+    Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
+    If serviceProvider Is Nothing Then
+        MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
+    Else
+        serviceProvider.Server = ContractDataServerText
+        serviceProvider.Port = ContractDataPortText
+        serviceProvider.clientID = ContractDataClientIdText
+        serviceProvider.providerKey = "IB"
+        serviceProvider.keepConnection = True
+        Set serviceProvider = Nothing
+    End If
 End If
 
 ' if required, add a secondary contract info service provider - typically used to be
 ' able to start tickers for instruments that aren't defined in the primary contracts
 ' data source
 If SecContractDataCombo.Text = "TradeBuild" Then
-    progId = "TBInfoBase.ContractInfoServiceProvider"
-    mTradeBuildAPI.ServiceProviders.Add CreateObject(progId), LogLevelLow
+    progId = "TBInfoBase25.ContractInfoSrvcProvider"
+    Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
+    If serviceProvider Is Nothing Then MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
+    Set serviceProvider = Nothing
 ElseIf SecContractDataCombo.Text = "TWS" Then
-    progId = "IBTWSSP.ContractInfoServiceProvider"
-    Set TWSContractServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
-    TWSContractServiceProvider.Server = SecContractDataServerText
-    TWSContractServiceProvider.Port = SecContractDataPortText
-    TWSContractServiceProvider.clientID = SecContractDataClientIdText
-    TWSContractServiceProvider.providerKey = "IB"
-    TWSContractServiceProvider.keepConnection = True
+    progId = "IBTWSSP25.ContractInfoServiceProvider"
+    Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
+    If serviceProvider Is Nothing Then
+        MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
+    Else
+        serviceProvider.Server = SecContractDataServerText
+        serviceProvider.Port = SecContractDataPortText
+        serviceProvider.clientID = SecContractDataClientIdText
+        serviceProvider.providerKey = "IB"
+        serviceProvider.keepConnection = True
+        Set serviceProvider = Nothing
+    End If
 End If
 
 If HistDataCombo.Text = "TradeBuild" Then
-    progId = "TBInfoBase.HistDataServiceProvider"
-    Set histDataServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
+    progId = "TBInfoBase25.HistDataServiceProvider"
+    Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
+    If serviceProvider Is Nothing Then MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
+    Set serviceProvider = Nothing
 ElseIf HistDataCombo.Text = "TWS" Then
-    progId = "IBTWSSP.HistDataServiceProvider"
-    Set histDataServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
-    histDataServiceProvider.Server = HistDataServerText
-    histDataServiceProvider.Port = HistDataPortText
-    histDataServiceProvider.clientID = HistDataClientIdText
-    histDataServiceProvider.providerKey = "IB"
-    histDataServiceProvider.keepConnection = True
+    progId = "IBTWSSP25.HistDataServiceProvider"
+    Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
+    If serviceProvider Is Nothing Then
+        MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
+    Else
+        serviceProvider.Server = HistDataServerText
+        serviceProvider.Port = HistDataPortText
+        serviceProvider.clientID = HistDataClientIdText
+        serviceProvider.providerKey = "IB"
+        serviceProvider.keepConnection = True
+        Set serviceProvider = Nothing
+    End If
 ElseIf HistDataCombo.Text = "QuoteTracker" Then
-    progId = "QTSP.QTHistDataServiceProvider"
-    Set histDataServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
-    histDataServiceProvider.QTServer = HistDataServerText
-    histDataServiceProvider.QTPort = HistDataPortText
-    histDataServiceProvider.password = HistDataPasswordText
-    histDataServiceProvider.providerKey = "QTIB"
-    histDataServiceProvider.keepConnection = True
+    progId = "QTSP25.QTServiceProvider"
+    Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
+    If serviceProvider Is Nothing Then
+        MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
+    Else
+        serviceProvider.QTServer = HistDataServerText
+        serviceProvider.QTPort = HistDataPortText
+        serviceProvider.password = HistDataPasswordText
+        serviceProvider.providerKey = "QTIB"
+        serviceProvider.keepConnection = True
+        Set serviceProvider = Nothing
+    End If
 End If
+
+' now set up the timeframe combo, which depends on what timeframes the historical data service
+' provider supports
+setupTimeframeCombo
 
 If BrokerCombo.Text = "IB via TWS" Then
     ' set up TWS live order submission service provider
-    progId = "IBTWSSP.OrderSubmissionServiceProvider"
-    Set liveOrderServiceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
-    liveOrderServiceProvider.Server = BrokerServerText
-    liveOrderServiceProvider.Port = BrokerPortText
-    liveOrderServiceProvider.clientID = BrokerClientIdText
-    liveOrderServiceProvider.providerKey = "IB"
-    liveOrderServiceProvider.keepConnection = True
-    mSimulateOrders = False
+    progId = "IBTWSSP25.OrderSubmissionSrvcProvider"
+    Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
+    If serviceProvider Is Nothing Then
+        MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
+    Else
+        serviceProvider.Server = BrokerServerText
+        serviceProvider.Port = BrokerPortText
+        serviceProvider.clientID = BrokerClientIdText
+        serviceProvider.providerKey = "IB"
+        serviceProvider.keepConnection = True
+        mSimulateOrders = False
+        Set serviceProvider = Nothing
+    End If
 Else
     mSimulateOrders = True
 End If
 
-Exit Sub
+End Sub
 
-err:
-MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
+Private Sub setupTimeframeCombo()
+TimeframeCombo.Clear
+TimeframeCombo.AddItem TimeframeCustom
+If mTradeBuildAPI.IsSupportedHistoricalDataPeriod(5, TimePeriodSecond) Then TimeframeCombo.AddItem Timeframe5sec
+If mTradeBuildAPI.IsSupportedHistoricalDataPeriod(15, TimePeriodSecond) Then TimeframeCombo.AddItem Timeframe15sec
+If mTradeBuildAPI.IsSupportedHistoricalDataPeriod(30, TimePeriodSecond) Then TimeframeCombo.AddItem Timeframe30sec
+If mTradeBuildAPI.IsSupportedHistoricalDataPeriod(1, TimePeriodMinute) Then TimeframeCombo.AddItem Timeframe1min
+If mTradeBuildAPI.IsSupportedHistoricalDataPeriod(2, TimePeriodMinute) Then TimeframeCombo.AddItem Timeframe2min
+If mTradeBuildAPI.IsSupportedHistoricalDataPeriod(3, TimePeriodMinute) Then TimeframeCombo.AddItem Timeframe3min
+If mTradeBuildAPI.IsSupportedHistoricalDataPeriod(4, TimePeriodMinute) Then TimeframeCombo.AddItem Timeframe4min
+If mTradeBuildAPI.IsSupportedHistoricalDataPeriod(5, TimePeriodMinute) Then TimeframeCombo.AddItem Timeframe5min
+If mTradeBuildAPI.IsSupportedHistoricalDataPeriod(8, TimePeriodMinute) Then TimeframeCombo.AddItem Timeframe8min
+If mTradeBuildAPI.IsSupportedHistoricalDataPeriod(13, TimePeriodMinute) Then TimeframeCombo.AddItem Timeframe13min
+If mTradeBuildAPI.IsSupportedHistoricalDataPeriod(15, TimePeriodMinute) Then TimeframeCombo.AddItem Timeframe15min
+If mTradeBuildAPI.IsSupportedHistoricalDataPeriod(20, TimePeriodMinute) Then TimeframeCombo.AddItem Timeframe20min
+If mTradeBuildAPI.IsSupportedHistoricalDataPeriod(21, TimePeriodMinute) Then TimeframeCombo.AddItem Timeframe21min
+If mTradeBuildAPI.IsSupportedHistoricalDataPeriod(30, TimePeriodMinute) Then TimeframeCombo.AddItem Timeframe30min
+If mTradeBuildAPI.IsSupportedHistoricalDataPeriod(34, TimePeriodMinute) Then TimeframeCombo.AddItem Timeframe34min
+If mTradeBuildAPI.IsSupportedHistoricalDataPeriod(55, TimePeriodMinute) Then TimeframeCombo.AddItem Timeframe55min
+If mTradeBuildAPI.IsSupportedHistoricalDataPeriod(1, TimePeriodHour) Then TimeframeCombo.AddItem Timeframe1hour
+If mTradeBuildAPI.IsSupportedHistoricalDataPeriod(1, TimePeriodDay) Then TimeframeCombo.AddItem Timeframe1day
+If mTradeBuildAPI.IsSupportedHistoricalDataPeriod(1, TimePeriodWeek) Then TimeframeCombo.AddItem Timeframe1week
+If mTradeBuildAPI.IsSupportedHistoricalDataPeriod(1, TimePeriodMonth) Then TimeframeCombo.AddItem Timeframe1month
+
+TimeframeCombo = Timeframe5min
+
 End Sub
 
 Private Sub showMarketDepthForm(ByVal pTicker As Ticker)
@@ -2344,15 +2503,5 @@ Set mktDepthForm = New fMarketDepth
 mktDepthForm.numberOfRows = 100
 mktDepthForm.Ticker = pTicker
 mktDepthForm.Show vbModeless
-End Sub
-
-Private Sub logMessage(message As String)
-Dim timeString As String
-timeString = FormatDateTime(Now, vbLongTime) & "  "
-StatusText.Text = IIf(StatusText.Text <> "", _
-                        StatusText.Text & vbCrLf & timeString & message, _
-                        timeString & message)
-StatusText.SelStart = Len(StatusText.Text)
-StatusText.SelLength = 0
 End Sub
 

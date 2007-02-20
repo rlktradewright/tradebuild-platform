@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{B97B38E5-0B2E-4A30-92FE-E53BABBD104F}#1.0#0"; "TradeBuildUI.ocx"
+Object = "{9D2C4B5E-2539-4900-8B70-B9B41CFF1CA8}#1.0#0"; "TradeBuildUI2-5.ocx"
 Begin VB.Form OrderForm 
    BorderStyle     =   1  'Fixed Single
    ClientHeight    =   6165
@@ -10,7 +10,7 @@ Begin VB.Form OrderForm
    ScaleHeight     =   6165
    ScaleWidth      =   8865
    StartUpPosition =   3  'Windows Default
-   Begin TradeBuildUI.OrderTicket OrderTicket1 
+   Begin TradeBuildUI25.OrderTicket OrderTicket1 
       Height          =   6135
       Left            =   0
       TabIndex        =   0

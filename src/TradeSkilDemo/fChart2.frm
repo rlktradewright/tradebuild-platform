@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{D1E1CD3C-084A-4A4F-B2D9-56CE3669B04D}#1.0#0"; "TradeBuildUI.ocx"
+Object = "{9D2C4B5E-2539-4900-8B70-B9B41CFF1CA8}#1.0#0"; "TradeBuildUI2-5.ocx"
 Begin VB.Form fChart2 
    ClientHeight    =   6780
    ClientLeft      =   60
@@ -10,14 +10,14 @@ Begin VB.Form fChart2
    ScaleHeight     =   6780
    ScaleWidth      =   10530
    StartUpPosition =   3  'Windows Default
-   Begin TradeBuildUI.TradeBuildChart TradeBuildChart1 
-      Height          =   5415
-      Left            =   600
+   Begin TradeBuildUI25.TradeBuildChart TradeBuildChart1 
+      Height          =   6015
+      Left            =   120
       TabIndex        =   1
-      Top             =   1080
-      Width           =   9495
-      _ExtentX        =   16748
-      _ExtentY        =   9551
+      Top             =   720
+      Width           =   10335
+      _ExtentX        =   18230
+      _ExtentY        =   10610
    End
    Begin MSComctlLib.Toolbar Toolbar1 
       Align           =   1  'Align Top
@@ -82,10 +82,14 @@ Option Explicit
 ' Member variables
 '================================================================================
 
-Private WithEvents mTicker As TradeBuild.Ticker
+Private WithEvents mTicker As Ticker
 Attribute mTicker.VB_VarHelpID = -1
 
 Private mSymbol As String
+
+Private mPeriodlength As Long
+Private mPeriodUnits As TimePeriodUnits
+
 Private mCurrentBid As String
 Private mCurrentAsk As String
 Private mCurrentTrade As String
@@ -120,7 +124,9 @@ Private Sub Form_Resize()
 If Me.ScaleWidth = 0 And _
     Me.ScaleHeight = 0 Then Exit Sub
 TradeBuildChart1.Width = Me.ScaleWidth
-TradeBuildChart1.Height = Me.ScaleHeight - Toolbar1.Height
+If Me.ScaleHeight >= Toolbar1.Height Then
+    TradeBuildChart1.Height = Me.ScaleHeight - Toolbar1.Height
+End If
 End Sub
 
 Private Sub Form_Unload(cancel As Integer)
@@ -144,37 +150,37 @@ End Sub
 ' mTicker Interface Members
 '================================================================================
 
-Private Sub mTicker_ask(ev As TradeBuild.QuoteEvent)
+Private Sub mTicker_ask(ev As QuoteEvent)
 mCurrentAsk = ev.priceString
 setCaption
 End Sub
 
-Private Sub mTicker_bid(ev As TradeBuild.QuoteEvent)
+Private Sub mTicker_bid(ev As QuoteEvent)
 mCurrentBid = ev.priceString
 setCaption
 End Sub
 
-Private Sub mTicker_high(ev As TradeBuild.QuoteEvent)
+Private Sub mTicker_high(ev As QuoteEvent)
 mCurrentHigh = ev.priceString
 setCaption
 End Sub
 
-Private Sub mTicker_Low(ev As TradeBuild.QuoteEvent)
+Private Sub mTicker_Low(ev As QuoteEvent)
 mCurrentLow = ev.priceString
 setCaption
 End Sub
 
-Private Sub mTicker_previousClose(ev As TradeBuild.QuoteEvent)
+Private Sub mTicker_previousClose(ev As QuoteEvent)
 mPreviousClose = ev.priceString
 setCaption
 End Sub
 
-Private Sub mTicker_trade(ev As TradeBuild.QuoteEvent)
+Private Sub mTicker_trade(ev As QuoteEvent)
 mCurrentTrade = ev.priceString
 setCaption
 End Sub
 
-Private Sub mTicker_volume(ev As TradeBuild.QuoteEvent)
+Private Sub mTicker_volume(ev As QuoteEvent)
 mCurrentVolume = ev.Size
 setCaption
 End Sub
@@ -188,8 +194,9 @@ End Sub
 '================================================================================
 
 Friend Sub showChart( _
-                ByVal pTicker As TradeBuild.Ticker, _
+                ByVal pTicker As Ticker, _
                 ByVal initialNumberOfBars As Long, _
+                ByVal includeBarsOutsideSession As Boolean, _
                 ByVal minimumTicksHeight As Long, _
                 ByVal periodlength As Long, _
                 ByVal periodUnits As TimePeriodUnits)
@@ -204,14 +211,18 @@ mCurrentVolume = mTicker.Volume
 mCurrentHigh = mTicker.highPriceString
 mCurrentLow = mTicker.lowPriceString
 mPreviousClose = mTicker.closePriceString
+
+mPeriodlength = periodlength
+mPeriodUnits = periodUnits
+
+TradeBuildChart1.showChart mTicker, _
+                        initialNumberOfBars, _
+                        includeBarsOutsideSession, _
+                        minimumTicksHeight, _
+                        periodlength, _
+                        periodUnits
+
 setCaption
-
-TradeBuildChart1.initialNumberOfBars = initialNumberOfBars
-TradeBuildChart1.minimumTicksHeight = minimumTicksHeight
-TradeBuildChart1.periodlength = periodlength
-TradeBuildChart1.periodUnits = periodUnits
-
-TradeBuildChart1.showChart mTicker
 
 End Sub
 
@@ -221,6 +232,7 @@ End Sub
 
 Private Sub setCaption()
 Me.caption = mSymbol & _
+            " (" & mPeriodlength & " " & TimePeriodUnitsToString(mPeriodUnits) & ")" & _
             "    B=" & mCurrentBid & _
             "  T=" & mCurrentTrade & _
             "  A=" & mCurrentAsk & _

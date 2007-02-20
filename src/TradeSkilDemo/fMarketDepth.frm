@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{D1E1CD3C-084A-4A4F-B2D9-56CE3669B04D}#1.0#0"; "TradeBuildUI.ocx"
+Object = "{9D2C4B5E-2539-4900-8B70-B9B41CFF1CA8}#1.0#0"; "TradeBuildUI2-5.ocx"
 Begin VB.Form fMarketDepth 
    Caption         =   "Market Depth"
    ClientHeight    =   3270
@@ -9,14 +9,14 @@ Begin VB.Form fMarketDepth
    LinkTopic       =   "Form1"
    ScaleHeight     =   3270
    ScaleWidth      =   4335
-   Begin TradeBuildUI.DOMDisplay DOMDisplay1 
-      Height          =   2895
-      Left            =   240
+   Begin TradeBuildUI25.DOMDisplay DOMDisplay1 
+      Height          =   3015
+      Left            =   120
       TabIndex        =   0
       Top             =   120
-      Width           =   3855
-      _ExtentX        =   6800
-      _ExtentY        =   5106
+      Width           =   4095
+      _ExtentX        =   7223
+      _ExtentY        =   5318
    End
 End
 Attribute VB_Name = "fMarketDepth"
@@ -58,7 +58,7 @@ Option Explicit
 ' Member variables
 '================================================================================
 
-Private WithEvents mTicker As TradeBuild.Ticker
+Private WithEvents mTicker As Ticker
 Attribute mTicker.VB_VarHelpID = -1
 Private mCaption As String
 
@@ -111,8 +111,8 @@ End Sub
 ' mTicker Event Handlers
 '================================================================================
 
-Private Sub mTicker_Error(ev As TradeBuild.ErrorEvent)
-If ev.errorCode = ApiErrorCodes.ApiErrMarketDepthNotAvailable Then
+Private Sub mTicker_Notification(ev As NotificationEvent)
+If ev.eventCode = ApiNotifyCodes.ApiNotifyMarketDepthNotAvailable Then
     Unload Me
 End If
 End Sub

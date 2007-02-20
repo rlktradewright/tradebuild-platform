@@ -24,8 +24,6 @@ Public Const DecreasedValueColor As Long = &H4444EB
 ' External function declarations
 '================================================================================
 
-Public Declare Sub InitCommonControls Lib "comctl32" ()
-
 '================================================================================
 ' Variables
 '================================================================================
@@ -54,7 +52,7 @@ End If
 Exit Function
 
 err:
-If err.Number <> TradeBuild.ErrorCodes.ErrOverflow Then err.Raise err.Number
+If err.Number <> VBErrorCodes.VbErrOverflow Then err.Raise err.Number
 End Function
 
 
