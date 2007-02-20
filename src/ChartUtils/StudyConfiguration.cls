@@ -50,21 +50,21 @@ Option Explicit
 ' Member variables
 '================================================================================
 
-Private mStudyDefinition As StudiesSupp.studyDefinition
-Private mParameters As ParamsSupp.parameters
-Private mStudyValueConfigurations As studyValueConfigurations
-Private mStudyValueHandlers As studyValueHandlers
-Private mStudyHorizontalRules As studyHorizontalRules
-Private mHorizontalRulesLineSeries As ChartSkil.LineSeries
-Private mName As String
-Private mServiceProviderName As String
-Private mInstanceName As String
-Private mInstanceFullyQualifiedName As String
-Private mStudyId As String
-Private mUnderlyingStudyId As String
-Private mInputValueNames() As String
+'Private mStudyDefinition As studyDefinition
+Private mParameters                         As Parameters2.parameters
+Private mStudyValueConfigurations           As studyValueConfigurations
+Private mStudyValueHandlers                 As studyValueHandlers
+Private mStudyHorizontalRules               As studyHorizontalRules
+Private mHorizontalRulesLineSeries          As LineSeries
+Private mName                               As String
+Private mStudyLibraryName                   As String
+'Private mInstanceName As String
+Private mInstanceFullyQualifiedName         As String
+Private mStudy                              As study
+Private mUnderlyingStudy                    As study
+Private mInputValueNames()                  As String
 'Private mNotifyNames() As String
-Private mChartRegionName As String
+Private mChartRegionName                    As String
 
 '================================================================================
 ' Class Event Handlers
@@ -99,11 +99,11 @@ chartRegionName = mChartRegionName
 End Property
 
 Public Property Let horizontalRulesLineSeries( _
-                ByVal value As ChartSkil.LineSeries)
+                ByVal value As LineSeries)
 Set mHorizontalRulesLineSeries = value
 End Property
 
-Public Property Get horizontalRulesLineSeries() As ChartSkil.LineSeries
+Public Property Get horizontalRulesLineSeries() As LineSeries
 Set horizontalRulesLineSeries = mHorizontalRulesLineSeries
 End Property
 
@@ -115,15 +115,15 @@ Public Property Get inputValueNames() As String()
 inputValueNames = mInputValueNames
 End Property
 
-Public Property Let instanceName(ByVal value As String)
-mInstanceName = value
-End Property
+'Public Property Let instanceName(ByVal value As String)
+'mInstanceName = value
+'End Property
+'
+'Public Property Get instanceName() As String
+'instanceName = mInstanceName
+'End Property
 
-Public Property Get instanceName() As String
-instanceName = mInstanceName
-End Property
-
-Public Property Let instanceFullyQualifiedName(ByVal value As String)
+Friend Property Let instanceFullyQualifiedName(ByVal value As String)
 mInstanceFullyQualifiedName = value
 End Property
 
@@ -147,40 +147,40 @@ End Property
 'notifyNames = mNotifyNames
 'End Property
 
-Public Property Let parameters(ByVal value As ParamsSupp.parameters)
+Public Property Let parameters(ByVal value As Parameters2.parameters)
 Set mParameters = value
 End Property
 
-Public Property Get parameters() As ParamsSupp.parameters
+Public Property Get parameters() As Parameters2.parameters
 Set parameters = mParameters
 End Property
 
-Public Property Let serviceProviderName(ByVal value As String)
-mServiceProviderName = value
+Public Property Let StudyLibraryName(ByVal value As String)
+mStudyLibraryName = value
 End Property
 
-Public Property Get serviceProviderName() As String
-serviceProviderName = mServiceProviderName
+Public Property Get StudyLibraryName() As String
+StudyLibraryName = mStudyLibraryName
 End Property
 
-Public Property Let studyDefinition(ByVal value As StudiesSupp.studyDefinition)
-Set mStudyDefinition = value
-End Property
+'Public Property Let studyDefinition(ByVal value As studyDefinition)
+'Set mStudyDefinition = value
+'End Property
 
-Public Property Get studyDefinition() As StudiesSupp.studyDefinition
-Set studyDefinition = mStudyDefinition
-End Property
+'Public Property Get studyDefinition() As studyDefinition
+'Set studyDefinition = mStudy.studyDefinition
+'End Property
 
 Public Property Get studyHorizontalRules() As studyHorizontalRules
 Set studyHorizontalRules = mStudyHorizontalRules
 End Property
 
-Public Property Let studyId(ByVal value As String)
-mStudyId = value
+Public Property Let study(ByVal value As study)
+Set mStudy = value
 End Property
 
-Public Property Get studyId() As String
-studyId = mStudyId
+Public Property Get study() As study
+Set study = mStudy
 End Property
 
 Public Property Get studyValueConfigurations() As studyValueConfigurations
@@ -191,12 +191,12 @@ Public Property Get studyValueHandlers() As studyValueHandlers
 Set studyValueHandlers = mStudyValueHandlers
 End Property
 
-Public Property Let underlyingStudyId(ByVal value As String)
-mUnderlyingStudyId = value
+Public Property Let underlyingStudy(ByVal value As study)
+Set mUnderlyingStudy = value
 End Property
 
-Public Property Get underlyingStudyId() As String
-underlyingStudyId = mUnderlyingStudyId
+Public Property Get underlyingStudy() As study
+Set underlyingStudy = mUnderlyingStudy
 End Property
 
 '================================================================================
@@ -207,13 +207,13 @@ Public Function clone() As StudyConfiguration
 Set clone = New StudyConfiguration
 clone.chartRegionName = mChartRegionName
 clone.inputValueNames = mInputValueNames
-clone.instanceFullyQualifiedName = mInstanceFullyQualifiedName
-clone.instanceName = mInstanceName
+'clone.instanceFullyQualifiedName = mInstanceFullyQualifiedName
+'clone.instanceName = mInstanceName
 clone.name = mName
 'clone.notifyNames = mNotifyNames
 clone.parameters = mParameters.clone
-clone.serviceProviderName = mServiceProviderName
-clone.studyDefinition = mStudyDefinition
+clone.StudyLibraryName = mStudyLibraryName
+'clone.studyDefinition = mStudyDefinition
 
 Dim hr As StudyHorizontalRule
 Dim newHr As StudyHorizontalRule
@@ -221,13 +221,13 @@ Dim newHrs As studyHorizontalRules
 Set newHrs = clone.studyHorizontalRules
 For Each hr In mStudyHorizontalRules
     Set newHr = newHrs.add
-    newHr.Color = hr.Color
+    newHr.color = hr.color
     newHr.style = hr.style
     newHr.thickness = hr.thickness
     newHr.y = hr.y
 Next
 
-clone.studyId = mStudyId
+clone.study = mStudy
 
 Dim svc As StudyValueConfiguration
 Dim newSvc As StudyValueConfiguration
@@ -238,8 +238,8 @@ Set newSvcs = clone.studyValueConfigurations
 For Each svc In mStudyValueConfigurations
     Set newSvc = newSvcs.add(svc.valueName)
     newSvc.chartRegionName = svc.chartRegionName
-    newSvc.Color = svc.Color
-    newSvc.displayMode = svc.displayMode
+    newSvc.color = svc.color
+    newSvc.dataPointDisplayMode = svc.dataPointDisplayMode
     newSvc.histogramBarWidth = svc.histogramBarWidth
     newSvc.includeInAutoscale = svc.includeInAutoscale
     newSvc.includeInChart = svc.includeInChart
@@ -248,13 +248,14 @@ For Each svc In mStudyValueConfigurations
     newSvc.lineThickness = svc.lineThickness
 Next
 
-clone.underlyingStudyId = mUnderlyingStudyId
+clone.underlyingStudy = mUnderlyingStudy
 End Function
 
 Public Sub finish()
 Dim svh As StudyValueHandler
 For Each svh In mStudyValueHandlers
     svh.finish False
+    mStudy.removeStudyValueListener svh
 Next
 Set mStudyValueHandlers = Nothing
 Set mHorizontalRulesLineSeries = Nothing

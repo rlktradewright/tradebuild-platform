@@ -54,17 +54,17 @@ Private mIncludeInChart As Boolean
 Private mValueName As String
 
 Private mColor As Long
-Private mDisplayMode As ChartSkil.DisplayModes
+Private mDataPointDisplayMode As DataPointDisplayModes
 Private mLineThickness As Long
 Private mIncludeInAutoscale As Boolean
-Private mLineStyle As ChartSkil.LineStyles
+Private mLineStyle As LineStyles
 Private mChartRegionName As String
 Private mLayer As Long
 Private mHistogramBarWidth As Single
 
 Private mBarThickness As Long
-Private mCandleWidth As Single
-Private mDisplayAsCandlestick As Boolean
+Private mBarWidth As Single
+Private mBarDisplayMode As BarDisplayModes
 Private mDownColor As Long
 Private mOutlineThickness As Long
 Private mSolidUpBody As Boolean
@@ -77,30 +77,30 @@ Private mExtended As Boolean
 
 Private mExtendBefore As Boolean
 Private mExtendAfter As Boolean
-Private mArrowStartStyle As ChartSkil.ArrowStyles
+Private mArrowStartStyle As ArrowStyles
 Private mArrowStartLength As Long
 Private mArrowStartWidth As Long
 Private mArrowStartColor As Long
 Private mArrowStartFillColor As Long
-Private mArrowStartFillStyle As ChartSkil.FillStyles
-Private mArrowEndStyle As ChartSkil.ArrowStyles
+Private mArrowStartFillStyle As FillStyles
+Private mArrowEndStyle As ArrowStyles
 Private mArrowEndLength As Long
 Private mArrowEndWidth As Long
 Private mArrowEndColor As Long
 Private mArrowEndFillColor As Long
-Private mArrowEndFillStyle As ChartSkil.FillStyles
+Private mArrowEndFillStyle As FillStyles
 
 Private mFont As StdFont
 Private mBox As Boolean
 Private mBoxColor As Long
-Private mBoxStyle As ChartSkil.LineStyles
+Private mBoxStyle As LineStyles
 Private mBoxThickness As Long
 Private mBoxFillColor As Long
-Private mBoxFillStyle As ChartSkil.FillStyles
+Private mBoxFillStyle As FillStyles
 Private mPaddingX As Double
 Private mPaddingY As Double
-Private mAlign As ChartSkil.TextAlignModes
-Private mOffset As ChartSkil.Dimension
+Private mAlign As TextAlignModes
+Private mOffset As Dimension
 
 '================================================================================
 ' Class Event Handlers
@@ -109,12 +109,12 @@ Private mOffset As ChartSkil.Dimension
 Private Sub Class_Initialize()
 
 mColor = vbBlack
-mDisplayMode = ChartSkil.DisplayModes.DisplayAsLines
+mDataPointDisplayMode = DataPointDisplayModes.DataPointDisplayModeLine
 mLineThickness = 1
 mIncludeInAutoscale = True
-mLineStyle = ChartSkil.LineStyles.LineSolid
+mLineStyle = LineStyles.LineSolid
 'mChartRegionName = RegionNamePrice
-mLayer = ChartSkil.LayerNumbers.LayerHIghestUser
+mLayer = LayerNumbers.LayerHIghestUser
 mHistogramBarWidth = 0.5
 End Sub
 
@@ -130,11 +130,11 @@ End Sub
 ' Properties
 '================================================================================
 
-Public Property Get align() As ChartSkil.TextAlignModes
+Public Property Get align() As TextAlignModes
 align = mAlign
 End Property
 
-Public Property Let align(ByVal newValue As ChartSkil.TextAlignModes)
+Public Property Let align(ByVal newValue As TextAlignModes)
 mAlign = newValue
 End Property
 
@@ -154,11 +154,11 @@ Public Property Let arrowEndFillColor(ByVal newValue As Long)
 mArrowEndFillColor = newValue
 End Property
 
-Public Property Get arrowEndFillStyle() As ChartSkil.FillStyles
+Public Property Get arrowEndFillStyle() As FillStyles
 arrowEndFillStyle = mArrowEndFillStyle
 End Property
 
-Public Property Let arrowEndFillStyle(ByVal newValue As ChartSkil.FillStyles)
+Public Property Let arrowEndFillStyle(ByVal newValue As FillStyles)
 mArrowEndFillStyle = newValue
 End Property
 
@@ -170,11 +170,11 @@ Public Property Let arrowEndLength(ByVal newValue As Long)
 mArrowEndLength = newValue
 End Property
 
-Public Property Get arrowEndStyle() As ChartSkil.ArrowStyles
+Public Property Get arrowEndStyle() As ArrowStyles
 arrowEndStyle = mArrowEndStyle
 End Property
 
-Public Property Let arrowEndStyle(ByVal newValue As ChartSkil.ArrowStyles)
+Public Property Let arrowEndStyle(ByVal newValue As ArrowStyles)
 mArrowEndStyle = newValue
 End Property
 
@@ -202,11 +202,11 @@ Public Property Let arrowStartFillColor(ByVal newValue As Long)
 mArrowStartFillColor = newValue
 End Property
 
-Public Property Get arrowStartFillStyle() As ChartSkil.FillStyles
+Public Property Get arrowStartFillStyle() As FillStyles
 arrowStartFillStyle = arrowStartFillStyle
 End Property
 
-Public Property Let arrowStartFillStyle(ByVal newValue As ChartSkil.FillStyles)
+Public Property Let arrowStartFillStyle(ByVal newValue As FillStyles)
 mArrowStartFillStyle = newValue
 End Property
 
@@ -218,11 +218,11 @@ Public Property Let arrowStartLength(ByVal newValue As Long)
 mArrowStartLength = newValue
 End Property
 
-Public Property Get arrowStartStyle() As ChartSkil.ArrowStyles
+Public Property Get arrowStartStyle() As ArrowStyles
 arrowStartStyle = mArrowStartStyle
 End Property
 
-Public Property Let arrowStartStyle(ByVal newValue As ChartSkil.ArrowStyles)
+Public Property Let arrowStartStyle(ByVal newValue As ArrowStyles)
 mArrowStartStyle = newValue
 End Property
 
@@ -266,19 +266,19 @@ Public Property Let boxFillColor(ByVal newValue As Long)
 mBoxFillColor = newValue
 End Property
 
-Public Property Get boxFillStyle() As ChartSkil.FillStyles
+Public Property Get boxFillStyle() As FillStyles
 boxFillStyle = mBoxFillStyle
 End Property
 
-Public Property Let boxFillStyle(ByVal newValue As ChartSkil.FillStyles)
+Public Property Let boxFillStyle(ByVal newValue As FillStyles)
 mBoxFillStyle = newValue
 End Property
 
-Public Property Get boxStyle() As ChartSkil.LineStyles
+Public Property Get boxStyle() As LineStyles
 boxStyle = mBoxStyle
 End Property
 
-Public Property Let boxStyle(ByVal newValue As ChartSkil.LineStyles)
+Public Property Let boxStyle(ByVal newValue As LineStyles)
 mBoxStyle = newValue
 End Property
 
@@ -298,38 +298,38 @@ Public Property Get chartRegionName() As String
 chartRegionName = mChartRegionName
 End Property
 
-Public Property Let Color(ByVal value As Long)
+Public Property Let color(ByVal value As Long)
 mColor = value
 End Property
 
-Public Property Get Color() As Long
-Color = mColor
+Public Property Get color() As Long
+color = mColor
 End Property
 
-Public Property Get candleWidth() As Single
-candleWidth = mCandleWidth
+Public Property Get barWidth() As Single
+barWidth = mBarWidth
 End Property
 
-Public Property Let candleWidth( _
+Public Property Let barWidth( _
                 ByVal value As Single)
-mCandleWidth = value
+mBarWidth = value
 End Property
 
-Public Property Let displayMode(ByVal value As ChartSkil.DisplayModes)
-mDisplayMode = value
+Public Property Let dataPointDisplayMode(ByVal value As DataPointDisplayModes)
+mDataPointDisplayMode = value
 End Property
 
-Public Property Get displayMode() As ChartSkil.DisplayModes
-displayMode = mDisplayMode
+Public Property Get dataPointDisplayMode() As DataPointDisplayModes
+dataPointDisplayMode = mDataPointDisplayMode
 End Property
 
-Public Property Get displayAsCandlestick() As Boolean
-displayAsCandlestick = mDisplayAsCandlestick
+Public Property Get barDisplayMode() As BarDisplayModes
+barDisplayMode = mBarDisplayMode
 End Property
 
-Public Property Let displayAsCandlestick( _
-                ByVal value As Boolean)
-mDisplayAsCandlestick = value
+Public Property Let barDisplayMode( _
+                ByVal value As BarDisplayModes)
+mBarDisplayMode = value
 End Property
 
 Public Property Get downColor() As Long
@@ -422,11 +422,11 @@ Public Property Get layer() As Long
 layer = mLayer
 End Property
 
-Public Property Let lineStyle(ByVal value As ChartSkil.LineStyles)
+Public Property Let lineStyle(ByVal value As LineStyles)
 mLineStyle = value
 End Property
 
-Public Property Get lineStyle() As ChartSkil.LineStyles
+Public Property Get lineStyle() As LineStyles
 lineStyle = mLineStyle
 End Property
 
@@ -438,11 +438,11 @@ Public Property Get lineThickness() As Long
 lineThickness = mLineThickness
 End Property
 
-Public Property Let offset(ByVal value As ChartSkil.Dimension)
+Public Property Let offset(ByVal value As Dimension)
 mOffset = value
 End Property
 
-Public Property Get offset() As ChartSkil.Dimension
+Public Property Get offset() As Dimension
 offset = mOffset
 End Property
 

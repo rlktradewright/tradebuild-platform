@@ -90,13 +90,15 @@ Dim keyInc As String
 Dim i As Long
 Dim lStudyConfig As StudyConfiguration
 
-key = studyConfig.instanceFullyQualifiedName
+key = studyConfig.study.instancePath
 
 On Error Resume Next
 Set lStudyConfig = mStudyConfigurations(key)
 On Error GoTo 0
 
-If Not lStudyConfig Is Nothing Then
+If lStudyConfig Is Nothing Then
+    studyConfig.instanceFullyQualifiedName = key
+Else
     Do
         i = i + 1
         keyInc = key & "." & i
@@ -109,7 +111,7 @@ If Not lStudyConfig Is Nothing Then
     Loop Until lStudyConfig Is Nothing
     studyConfig.instanceFullyQualifiedName = keyInc
 End If
-On Error GoTo 0
+
 
 mStudyConfigurations.add studyConfig, studyConfig.instanceFullyQualifiedName
 RaiseEvent ItemAdded(studyConfig)

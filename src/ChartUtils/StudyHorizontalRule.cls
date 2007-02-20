@@ -46,7 +46,7 @@ Option Explicit
 Private mY As Double
 Private mColor As Long
 Private mThickness As Long
-Private mStyle As ChartSkil.LineStyles
+Private mStyle As LineStyles
 
 '================================================================================
 ' Class Event Handlers
@@ -78,11 +78,11 @@ Public Property Get color() As Long
 color = mColor
 End Property
 
-Public Property Let style(ByVal value As ChartSkil.LineStyles)
+Public Property Let style(ByVal value As LineStyles)
 mStyle = value
 End Property
 
-Public Property Get style() As ChartSkil.LineStyles
+Public Property Get style() As LineStyles
 style = mStyle
 End Property
 

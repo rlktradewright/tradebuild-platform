@@ -40,9 +40,9 @@ Implements Tasks.TaskCompletionListener
 ' Constants
 '================================================================================
 
-Private Const TaskTypeStartStudy As Long = 1
-Private Const TaskTypeReplayBars As Long = 2
-Private Const TaskTypeAddValueListener As Long = 3
+'Private Const TaskTypeStartStudy As Long = 1
+'Private Const TaskTypeReplayBars As Long = 2
+'Private Const TaskTypeAddValueListener As Long = 3
 
 '================================================================================
 ' Enums
@@ -53,7 +53,7 @@ Private Const TaskTypeAddValueListener As Long = 3
 '================================================================================
 
 Public Type RegionEntry
-    region              As ChartSkil.ChartRegion
+    region              As ChartRegion
     usageCount          As Long
 End Type
 
@@ -61,9 +61,9 @@ End Type
 ' Member variables
 '================================================================================
 
-Private mChartController As ChartSkil.chartController
+Private WithEvents mChartController As chartController
 Attribute mChartController.VB_VarHelpID = -1
-Private mStudyManager As StudiesSupp.studyManager
+Private mStudyManager As studyManager
 
 Private mSourceStudies As Collection
 
@@ -71,24 +71,16 @@ Private mRegions As Collection
 
 Private mStudyConfigurations As StudyConfigurations
 
-Private mBackfilling As Boolean
-Private mFirstBackfill As Boolean   ' indicates if this is the first lot of
-                                    ' historic bars that has been played through
-                                    ' this chart
-                                            
 Private mUpdatePerTick As Boolean
 
-Private mInitialNumberOfBars As Long
-
-Private mPeriods As ChartSkil.Periods
-
-Private mInitialised As Boolean
-
-Private mHorizontalLineKeys As Collection
+Private mPeriods As Periods
 
 Private mHighPrice As Double
 Private mLowPrice As Double
 Private mPrevClosePrice As Double
+
+' the study on which all others are built
+Private mBaseStudy As study
 
 '================================================================================
 ' Class Event Handlers
@@ -98,9 +90,7 @@ Private Sub Class_Initialize()
 Set mSourceStudies = New Collection
 Set mRegions = New Collection
 Set mStudyConfigurations = New StudyConfigurations
-Set mHorizontalLineKeys = New Collection
 mUpdatePerTick = True
-mFirstBackfill = True
 
 End Sub
 
@@ -109,36 +99,44 @@ End Sub
 '================================================================================
 
 Private Sub TaskCompletionListener_taskCompleted(ev As Tasks.TaskCompletionEvent)
-'mOutstandingTasks = mOutstandingTasks - 1
-'If mOutstandingTasks = 0 Then mChartController.suppressDrawing = False
+
+If ev.resultCode <> 0 Then
+    Debug.Print "Task: " & ev.TaskName; "; Error: " & ev.resultCode; "; Message: " & ev.message
+End If
+
 mChartController.suppressDrawing = False
 
-If ev.Data = TaskTypeReplayBars Then
-    mBackfilling = False
-    mFirstBackfill = False
-    'updatePreviousBar
-End If
 End Sub
 
 '================================================================================
 ' mChartController Event Handlers
 '================================================================================
 
+Private Sub mChartController_ChartCleared()
+Dim studyConfig As StudyConfiguration
+Set mPeriods = mChartController.Periods
+For Each studyConfig In mStudyConfigurations
+    studyConfig.finish
+Next
+Set mSourceStudies = New Collection
+Set mRegions = New Collection
+Set mStudyConfigurations = New StudyConfigurations
+End Sub
+
 '================================================================================
 ' Properties
 '================================================================================
 
-Public Property Get chartController() As ChartSkil.chartController
+Public Property Get chartController() As chartController
 Set chartController = mChartController
 End Property
 
 Public Property Get regionNames() As String()
 Dim names() As String
-Dim region As ChartSkil.ChartRegion
 Dim re As RegionEntry
 Dim i As Long
 
-ReDim names(mRegions.count) As String
+ReDim names(mRegions.count - 1) As String
 
 For i = 1 To mRegions.count
     re = mRegions(i)
@@ -156,26 +154,6 @@ Public Property Let suppressDrawing( _
 mChartController.suppressDrawing = value
 End Property
 
-'Public Property Get timeframeCaption() As String
-'Dim units As String
-'Select Case mPeriodUnits
-'Case TimePeriodUnits.TimePeriodMinute
-'    timeframeCaption = IIf(mPeriodLength = 1, "1 Min", mPeriodLength & " Mins")
-'Case TimePeriodUnits.TimePeriodHour
-'    timeframeCaption = IIf(mPeriodLength = 1, "1 Hour", mPeriodLength & " Hrs")
-'Case TimePeriodUnits.TimePeriodDay
-'    timeframeCaption = IIf(mPeriodLength = 1, "Daily", mPeriodLength & " Days")
-'Case TimePeriodUnits.TimePeriodWeek
-'    timeframeCaption = IIf(mPeriodLength = 1, "Weekly", mPeriodLength & " Wks")
-'Case TimePeriodUnits.TimePeriodMonth
-'    timeframeCaption = IIf(mPeriodLength = 1, "Monthly", mPeriodLength & " Mths")
-'Case TimePeriodUnits.TimePeriodLunarMonth
-'
-'Case TimePeriodUnits.TimePeriodYear
-'    timeframeCaption = IIf(mPeriodLength = 1, "Yearly", mPeriodLength & " Yrs")
-'End Select
-'End Property
-
 Public Property Let updatePerTick(ByVal value As Boolean)
 mUpdatePerTick = value
 End Property
@@ -187,110 +165,46 @@ End Property
 Public Function addChartRegion( _
                     ByVal name As String, _
                     ByVal percentheight As Double, _
-                    Optional ByVal minimumPercentHeight As Double) As ChartSkil.ChartRegion
+                    Optional ByVal minimumPercentHeight As Double) As ChartRegion
 Dim re As RegionEntry
 Set addChartRegion = mChartController.addChartRegion(percentheight, minimumPercentHeight, name)
 Set re.region = addChartRegion
 mRegions.add re, name
 End Function
 
-Public Function addInput( _
-                ByVal sourceName As String, _
-                ByVal inputName As String, _
-                ByVal description As String, _
-                ByVal valueType As StudiesSupp.StudyInputTypes, _
-                ByVal isDefault As Boolean, _
-                ByVal chartRegionName As String) As Long
-Dim sourceStudy As TradeBuildSP.IStudy
-Dim studyConfig As StudyConfiguration
-Dim studyValueConfig As StudyValueConfiguration
-
-On Error Resume Next
-Set sourceStudy = mSourceStudies(sourceName)
-On Error GoTo 0
-
-If sourceStudy Is Nothing Then
-    Set sourceStudy = mStudyManager.addSource(sourceName)
-    mSourceStudies.add sourceStudy, sourceName
-    
-    Set studyConfig = New StudyConfiguration
-    studyConfig.instanceName = sourceName
-    studyConfig.instanceFullyQualifiedName = sourceName
-    studyConfig.studyId = sourceName
-    studyConfig.name = sourceName
-    studyConfig.studyDefinition = sourceStudy.studyDefinition
-    mStudyConfigurations.add studyConfig
-Else
-    For Each studyConfig In mStudyConfigurations
-        If studyConfig.studyId = sourceStudy.id Then Exit For
-    Next
-End If
-
-addInput = mStudyManager.addInput(sourceStudy, inputName, description, valueType, isDefault)
-
-Set studyValueConfig = studyConfig.studyValueConfigurations.add(inputName)
-studyValueConfig.chartRegionName = chartRegionName
-
-End Function
-
 Public Function addStudy( _
-                ByVal studyConfig As StudyConfiguration) As TradeBuildSP.IStudy
-Dim study As TradeBuildSP.IStudy
-Dim studyId As String
-Dim studyValueConfig As StudyValueConfiguration
-Dim underlyingStudyConfig As StudyConfiguration
-Dim regionName As String
-Dim region As ChartSkil.ChartRegion
+                ByVal studyConfig As StudyConfiguration, _
+                Optional noStudyValueListeners As Boolean) As study
+Dim study As study
+Dim region As ChartRegion
 Dim studyHorizRule As StudyHorizontalRule
-Dim horizRulesLineSeries As ChartSkil.LineSeries
-Dim line As ChartSkil.line
-Dim studyValueDefs As StudiesSupp.StudyValueDefinitions
-Dim studyValueDef As StudiesSupp.StudyValueDefinition
-Dim i As Long
+Dim horizRulesLineSeries As LineSeries
+Dim line As ChartSkil25.line
 
-If studyConfig.underlyingStudyId = "" Then
-    ' this is a default study configuration
-    'studyConfig.underlyingStudyId = mBars.Id !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+If studyConfig.underlyingStudy Is Nothing Then
+    studyConfig.underlyingStudy = mBaseStudy
     'studyConfig.inputValueNames = "Close"
 End If
 
 Set study = mStudyManager.addStudy(studyConfig.name, _
-                            studyId, _
-                            studyConfig.underlyingStudyId, _
+                            studyConfig.underlyingStudy, _
                             studyConfig.inputValueNames, _
                             studyConfig.parameters, _
-                            studyConfig.serviceProviderName)
+                            studyConfig.StudyLibraryName)
 
-studyConfig.instanceName = study.instanceName
-studyConfig.instanceFullyQualifiedName = study.instancePath
-studyConfig.studyId = study.id
+If mBaseStudy Is Nothing Then Set mBaseStudy = study
 
-If studyConfig.chartRegionName = RegionNameDefault Then
-    ' we will use the region for the underlying study
-    For Each underlyingStudyConfig In mStudyConfigurations
-        If underlyingStudyConfig.studyId = studyConfig.underlyingStudyId Then Exit For
-    Next
-    regionName = underlyingStudyConfig.chartRegionName
-    studyConfig.chartRegionName = regionName
-ElseIf studyConfig.chartRegionName = RegionNameCustom Then
-    regionName = study.instancePath
-    studyConfig.chartRegionName = regionName
-Else
-    regionName = studyConfig.chartRegionName
-End If
-Set region = findRegion(regionName, study.instanceName, False)
+'studyConfig.instanceName = study.instanceName
+'studyConfig.instanceFullyQualifiedName = study.instancePath
+studyConfig.study = study
+
+determineDefaultRegionName studyConfig
+
+Set region = findRegion(studyConfig.chartRegionName, study.instanceName, False)
     
-Set studyValueDefs = studyConfig.studyDefinition.StudyValueDefinitions
-
-For Each studyValueConfig In studyConfig.studyValueConfigurations
-    If studyValueConfig.includeInChart Then
-        includeStudyValueInChart studyConfig, _
-                                study, _
-                                regionName, _
-                                studyValueConfig, _
-                                studyValueDefs.item(studyValueConfig.valueName)
-    End If
-Next
+If Not noStudyValueListeners Then
+    setupStudyValueListeners studyConfig
+End If
 
 If studyConfig.studyHorizontalRules.count > 0 Then
     Set horizRulesLineSeries = region.addLineSeries(LayerNumbers.LayerGrid + 1)
@@ -298,24 +212,22 @@ If studyConfig.studyHorizontalRules.count > 0 Then
     horizRulesLineSeries.extendAfter = True
     horizRulesLineSeries.extendBefore = True
     For Each studyHorizRule In studyConfig.studyHorizontalRules
-        horizRulesLineSeries.Color = studyHorizRule.Color
+        horizRulesLineSeries.color = studyHorizRule.color
         horizRulesLineSeries.style = studyHorizRule.style
         horizRulesLineSeries.thickness = studyHorizRule.thickness
-        Set line = horizRulesLineSeries.addLine
+        Set line = horizRulesLineSeries.add
         line.point1 = region.newPoint(0, studyHorizRule.y, CoordsRelative, CoordsLogical)
         line.point2 = region.newPoint(100, studyHorizRule.y, CoordsRelative, CoordsLogical)
     Next
     studyConfig.horizontalRulesLineSeries = horizRulesLineSeries
 End If
 
-mStudyConfigurations.add studyConfig
-startStudy studyId
-
 Set addStudy = study
 End Function
 
 Public Sub clearChart()
-mChartController.clearChart
+Set mRegions = New Collection
+initialiseChart
 End Sub
 
 Public Sub finish()
@@ -337,8 +249,8 @@ err:
 'ignore any errors
 End Sub
 
-Friend Function getPeriod(ByVal pTimestamp As Date) As ChartSkil.Period
-Static sPeriod As ChartSkil.Period
+Friend Function getPeriod(ByVal pTimestamp As Date) As Period
+Static sPeriod As Period
 Static sTimestamp As Date
 
 
@@ -354,7 +266,7 @@ Set getPeriod = mPeriods(pTimestamp)
 On Error GoTo 0
 
 If getPeriod Is Nothing Then
-    Set getPeriod = mChartController.addperiod(pTimestamp)
+    Set getPeriod = mPeriods.add(pTimestamp)
     mChartController.scrollX 1
 End If
 Set sPeriod = getPeriod
@@ -365,9 +277,9 @@ Friend Function getSpecialValue(ByVal valueType As SpecialValues) As Variant
 
 Select Case valueType
 Case SpecialValues.SVCurrentSessionEndTime
-    getSpecialValue = mChartController.CurrentSessionEndTime
+    getSpecialValue = mChartController.currentSessionEndTime
 Case SpecialValues.SVCurrentSessionStartTime
-    getSpecialValue = mChartController.CurrentSessionStartTime
+    getSpecialValue = mChartController.currentSessionStartTime
 Case SpecialValues.SVHighPrice
     getSpecialValue = mHighPrice
 Case SpecialValues.SVLowPrice
@@ -378,8 +290,8 @@ End Select
 End Function
 
 Friend Sub initialise( _
-                ByVal pStudyManager As StudiesSupp.studyManager, _
-                ByVal pChartController As ChartSkil.chartController)
+                ByVal pStudyManager As studyManager, _
+                ByVal pChartController As chartController)
 Set mStudyManager = pStudyManager
 Set mChartController = pChartController
 initialiseChart
@@ -392,37 +304,17 @@ Public Sub notifyInput( _
 mStudyManager.notifyInput inputHandle, inputValue, timestamp
 End Sub
 
-'Public Sub notifyHigh(ByVal value As Double)
-'mHighPrice = value
-'End Sub
-'
-'Public Sub notifyLow(ByVal value As Double)
-'mLowPrice = value
-'End Sub
-'
-'Public Sub notifyPreviousClose(ByVal value As Double)
-'mPrevClosePrice = value
-'End Sub
-'
-'Public Sub notifyTrade(ByVal value As Double)
-''If mUpdatePerTick Then mChartBar.tick value
-'End Sub
-'
-'Public Sub notifyVolume(ByVal value As Long)
-'If mUpdatePerTick Then setVolume value
-'End Sub
-
 Public Function removeStudy( _
                 ByVal studyConfig As StudyConfiguration)
-Dim studyValueConfig  As StudyValueConfiguration
 Dim svh As StudyValueHandler
-Dim horizRulesLineSeries As ChartSkil.LineSeries
+Dim horizRulesLineSeries As LineSeries
 Dim regionName As String
 Dim re As RegionEntry
-Dim region As ChartSkil.ChartRegion
+Dim region As ChartRegion
 
 mChartController.suppressDrawing = True
 For Each svh In studyConfig.studyValueHandlers
+    studyConfig.study.removeStudyValueListener svh
     regionName = svh.region.name
     re = mRegions(regionName)
     If re.usageCount = 1 Then
@@ -458,43 +350,102 @@ periodNumber = mPeriods(pTime).periodNumber
 mChartController.lastVisiblePeriod = periodNumber + Int((mChartController.lastVisiblePeriod - mChartController.firstVisiblePeriod) / 2) - 1
 End Sub
 
-'Public Sub showStudyPickerForm()
-'If mTicker.State = TickerStateRunning Then showStudyPicker mTicker, Me
-'End Sub
-'
-'Public Sub syncStudyPickerForm()
-'If mTicker.State = TickerStateRunning Then syncStudyPicker mTicker, Me
-'End Sub
-'
-'Public Sub unsyncStudyPickerForm()
-'unsyncStudyPicker
-'End Sub
+Public Sub setInputRegion( _
+                ByVal inputHandle As Long, _
+                ByVal chartRegionName As String)
+Dim inputDescr As InputDescriptor
+Dim studyConfig As StudyConfiguration
+Dim studyValueConfig As StudyValueConfiguration
+Dim source As InputStudy
+
+On Error GoTo err
+
+inputDescr = mStudyManager.getInputDescriptor(inputHandle)
+Set source = inputDescr.source
+
+On Error Resume Next
+Set studyConfig = mStudyConfigurations.item(source.name)
+On Error GoTo 0
+
+If studyConfig Is Nothing Then
+    Set studyConfig = New StudyConfiguration
+'    studyConfig.instanceName = source.name
+'    studyConfig.instanceFullyQualifiedName = source.name
+    studyConfig.study = source
+    studyConfig.name = source.name
+    mStudyConfigurations.add studyConfig
+End If
+
+' need to do this here to ensure we have the definition with all inputs
+'studyConfig.studyDefinition = inputDescr.source.studyDefinition
+
+Set studyValueConfig = studyConfig.studyValueConfigurations.add(inputDescr.inputName)
+studyValueConfig.chartRegionName = chartRegionName
+Exit Sub
+
+err:
+If err.Number = VBErrorCodes.VbErrSubscriptOutOfRange Then
+    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            "ChartSupport" & "." & "ChartManager" & ":" & "setInputRegion", _
+            "inputHandle argument invalid"
+End If
+err.Raise err.Number
+End Sub
+
+Public Sub setupStudyValueListeners( _
+                ByVal studyConfig As StudyConfiguration)
+Dim studyValueConfig As StudyValueConfiguration
+Dim studyValueDefs As StudyValueDefinitions
+
+Set studyValueDefs = studyConfig.study.StudyDefinition.StudyValueDefinitions
+
+For Each studyValueConfig In studyConfig.studyValueConfigurations
+    If studyValueConfig.includeInChart Then
+        includeStudyValueInChart studyConfig, _
+                                studyValueConfig, _
+                                studyValueDefs.item(studyValueConfig.valueName)
+    End If
+Next
+
+mStudyConfigurations.add studyConfig
+
+End Sub
+
+Public Function startStudy( _
+                ByVal pStudy As study) As TaskCompletion
+Dim lTaskCompletion As Tasks.TaskCompletion
+Set lTaskCompletion = mStudyManager.startStudy(pStudy, ReplayNumbers.ReplayAll)
+
+If lTaskCompletion Is Nothing Then Exit Function
+
+Set startStudy = lTaskCompletion
+lTaskCompletion.addTaskCompletionListener Me
+mChartController.suppressDrawing = True
+End Function
 
 '================================================================================
 ' Helper Functions
 '================================================================================
 
-Private Function addStudyDataPoint( _
-                ByVal dataSeries As ChartSkil.DataPointSeries, _
-                ByVal timestamp As Date) As ChartSkil.DataPoint
-Dim Period As ChartSkil.Period
+Private Sub determineDefaultRegionName( _
+                ByVal studyConfig As StudyConfiguration)
+Dim underlyingStudyConfig As StudyConfiguration
 
-Set Period = getPeriod(timestamp)
-
-On Error Resume Next
-Set addStudyDataPoint = dataSeries.item(Period.periodNumber)
-On Error GoTo 0
-
-If addStudyDataPoint Is Nothing Then
-    Set addStudyDataPoint = dataSeries.addDataPoint(Period.periodNumber)
+If studyConfig.chartRegionName = RegionNameDefault Then
+    ' we will use the region for the underlying study
+    For Each underlyingStudyConfig In mStudyConfigurations
+        If underlyingStudyConfig.study Is studyConfig.underlyingStudy Then Exit For
+    Next
+    studyConfig.chartRegionName = underlyingStudyConfig.chartRegionName
+ElseIf studyConfig.chartRegionName = RegionNameCustom Then
+    studyConfig.chartRegionName = studyConfig.study.instancePath
 End If
-
-End Function
+End Sub
 
 Private Function findRegion( _
                 ByVal regionName As String, _
                 ByVal title As String, _
-                ByVal incrementUsageCount As Boolean) As ChartSkil.ChartRegion
+                ByVal incrementUsageCount As Boolean) As ChartRegion
 Dim re As RegionEntry
 
 On Error Resume Next
@@ -521,25 +472,21 @@ ElseIf incrementUsageCount Then
 End If
 End Function
 
-'Private Function GenerateTimeframeKey() As String
-'GenerateTimeframeKey = mPeriodLengthMinutes & "min"
-'End Function
-
 Private Sub includeStudyValueInChart( _
                 ByVal studyConfig As StudyConfiguration, _
-                ByVal study As TradeBuildSP.IStudy, _
-                ByVal defaultRegionName As String, _
                 ByVal studyValueConfig As StudyValueConfiguration, _
-                ByVal studyValueDef As StudiesSupp.StudyValueDefinition)
+                ByVal studyValueDef As StudyValueDefinition)
 
 Dim lStudyValueHandler As StudyValueHandler
-Dim region As ChartSkil.ChartRegion
+Dim study As study
+Dim region As ChartRegion
 Dim regionName As String
 Dim lTaskCompletion As Tasks.TaskCompletion
 
+Set study = studyConfig.study
 If studyValueConfig.chartRegionName = RegionNameDefault Then
     ' then use the study's default region
-    regionName = defaultRegionName
+    regionName = studyConfig.chartRegionName
 ElseIf studyValueConfig.chartRegionName = RegionNameCustom Then
     regionName = study.instancePath
     'studyValueConfig.chartRegionName = regionName
@@ -559,9 +506,8 @@ Set lStudyValueHandler = studyConfig.studyValueHandlers.add(Me, _
 Set lTaskCompletion = study.addStudyValueListener( _
                             lStudyValueHandler, _
                             studyValueConfig.valueName, _
-                            0, _
-                            , _
-                            TaskTypeAddValueListener)
+                            ReplayNumbers.ReplayAll, _
+                            "AddStudyValueListener for value " & studyValueConfig.valueName & " to study " & study.instanceName)
 
 If Not lTaskCompletion Is Nothing Then
     'mOutstandingTasks = mOutstandingTasks + 1
@@ -571,16 +517,13 @@ End If
 End Sub
 
 Private Sub initialiseChart()
-Dim re As RegionEntry
-
-If mInitialised Then Exit Sub
 
 mChartController.suppressDrawing = True
 
 mChartController.clearChart
 mChartController.chartBackColor = vbWhite
 mChartController.autoscale = True
-mChartController.showCrosshairs = True
+mChartController.pointerStyle = PointerCrosshairs
 mChartController.twipsPerBar = 100
 mChartController.showHorizontalScrollBar = True
 
@@ -588,31 +531,7 @@ Set mPeriods = mChartController.Periods
 
 mChartController.suppressDrawing = False
 
-mInitialised = True
-
 End Sub
-
-Private Sub setVolume(ByVal size As Long)
-'mVolumePoint.dataValue = size
-'If mVolumePoint.dataValue >= mPrevBarVolume Then
-'    mVolumePoint.lineColor = vbGreen
-'Else
-'    mVolumePoint.lineColor = vbRed
-'End If
-End Sub
-
-Private Function startStudy( _
-                ByVal studyId As String) As Boolean
-Dim lTaskCompletion As Tasks.TaskCompletion
-Set lTaskCompletion = mStudyManager.startStudy(studyId, 0, , TaskTypeStartStudy)
-
-If lTaskCompletion Is Nothing Then Exit Function
-
-startStudy = True
-'mOutstandingTasks = mOutstandingTasks + 1
-lTaskCompletion.addTaskCompletionListener Me
-mChartController.suppressDrawing = True
-End Function
 
 
 

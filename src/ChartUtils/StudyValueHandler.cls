@@ -30,7 +30,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements TradeBuildSP.IStudyValueListener
+Implements StudyValueListener
 
 '================================================================================
 ' Events
@@ -98,34 +98,33 @@ End Enum
 
 Private mChartManagerRef    As WeakReference
 
-Private mValueMode As StudiesSupp.StudyValueModes
-Private mValueType As StudiesSupp.StudyValueTypes
+Private mValueMode As StudyValueModes
+Private mValueType As StudyValueTypes
 
-Private mCurrentDataPoint   As ChartSkil.DataPoint
-Private mPrevDataPoint      As ChartSkil.DataPoint
+Private mCurrentDataPoint   As DataPoint
+Private mPrevDataPoint      As DataPoint
 
-Private mCurrentBar         As ChartSkil.Bar
-Private mPrevBar            As ChartSkil.Bar
+Private mCurrentBar         As ChartSkil25.Bar
+Private mPrevBar            As ChartSkil25.Bar
 
-Private mCurrentLine        As ChartSkil.line
-Private mPrevLine           As ChartSkil.line
+Private mCurrentLine        As ChartSkil25.line
+Private mPrevLine           As ChartSkil25.line
 
-Private mCurrentText        As ChartSkil.Text
-Private mPrevText           As ChartSkil.Text
+Private mCurrentText        As ChartSkil25.Text
+Private mPrevText           As ChartSkil25.Text
 
 Private mLatestValue        As Variant
 
-Private mDataSeries         As ChartSkil.DataPointSeries
-Private mBarSeries          As ChartSkil.BarSeries
-Private mLineSeries         As ChartSkil.LineSeries
-Private mTextSeries         As ChartSkil.TextSeries
+Private mDataSeries         As DataPointSeries
+Private mBarSeries          As BarSeries
+Private mLineSeries         As LineSeries
+Private mTextSeries         As TextSeries
 
-Private mTextOffset         As ChartSkil.Dimension
+Private mTextOffset         As Dimension
 
-Private mGuid               As String
 Private mConditionalActions()   As ConditionalAction
 Private mConditionalActionsIndex As Long
-Private mRegion             As ChartSkil.ChartRegion
+Private mRegion             As ChartRegion
 
 Private mUpdatePerTick      As Boolean
 
@@ -142,8 +141,8 @@ End Sub
 ' StudyValueListener Interface Members
 '================================================================================
 
-Private Sub IStudyValueListener_notify( _
-                ByRef ev As TradeBuildSP.StudyValueEvent)
+Private Sub StudyValueListener_notify( _
+                ByRef ev As StudyValueEvent)
 
 If IsEmpty(ev.value) Then Exit Sub
 
@@ -181,7 +180,7 @@ End Sub
 ' Properties
 '================================================================================
 
-Public Property Get region() As ChartSkil.ChartRegion
+Public Property Get region() As ChartRegion
 Set region = mRegion
 End Property
 
@@ -227,12 +226,10 @@ End Sub
 
 Friend Sub initialise( _
                 ByVal chartMgr As ChartManager, _
-                ByVal region As ChartSkil.ChartRegion, _
+                ByVal region As ChartRegion, _
                 ByVal studyValueConfig As StudyValueConfiguration, _
-                ByVal studyValueDef As StudiesSupp.StudyValueDefinition, _
+                ByVal studyValueDef As StudyValueDefinition, _
                 ByVal updatePerTick As Boolean)
-Dim dataSeries As ChartSkil.DataPointSeries
-Dim conditionalActions() As ConditionalAction
 
 Set mChartManagerRef = WeakRefs.createWeakReference(chartMgr)
 Set mRegion = region
@@ -287,37 +284,37 @@ End Sub
 '================================================================================
 
 Private Function addBarToChart( _
-                ByVal timestamp As Date) As ChartSkil.DataPoint
-Dim Period As ChartSkil.Period
+                ByVal timestamp As Date) As DataPoint
+'Dim Period As Period
 
 Set mPrevBar = mCurrentBar
 
-Set Period = chartMgr.getPeriod(timestamp)
-Set mCurrentBar = mBarSeries.addBar(Period.periodNumber)
+'Set Period = chartMgr.getPeriod(timestamp)  ' add period and scroll chart if need be
+Set mCurrentBar = mBarSeries.add(timestamp)
 End Function
 
 Private Sub addDataPointToChart( _
                 ByVal timestamp As Date)
-Dim Period As ChartSkil.Period
+'Dim Period As Period
 
 Set mPrevDataPoint = mCurrentDataPoint
 
-Set Period = chartMgr.getPeriod(timestamp)
-Set mCurrentDataPoint = mDataSeries.addDataPoint(Period.periodNumber)
+'Set Period = chartMgr.getPeriod(timestamp)
+Set mCurrentDataPoint = mDataSeries.add(timestamp)
 If Not IsEmpty(mLatestValue) Then mCurrentDataPoint.dataValue = mLatestValue
 End Sub
 
-Private Function addLineToChart() As ChartSkil.DataPoint
+Private Function addLineToChart() As DataPoint
 
 Set mPrevLine = mCurrentLine
 
-Set mCurrentLine = mLineSeries.addLine
+Set mCurrentLine = mLineSeries.add
 End Function
 
-Private Function addTextToChart() As ChartSkil.DataPoint
+Private Function addTextToChart() As DataPoint
 Set mPrevText = mCurrentText
 
-Set mCurrentText = mTextSeries.addText
+Set mCurrentText = mTextSeries.add
 End Function
 
 Private Function chartMgr() As ChartManager
@@ -327,17 +324,26 @@ End Function
 Private Sub processBar( _
                 ByRef ev As StudyValueEvent)
 Static prevBarNumber As Long
-Dim studyBar As StudiesSupp.studyBar
+Dim lBar As StudyUtils25.Bar
 
-Set studyBar = ev.value
+If TypeName(ev.value) = "Nothing" Then Exit Sub
+
+Set lBar = ev.value
 
 If mCurrentBar Is Nothing Or _
     ev.barNumber <> prevBarNumber _
 Then
-    addBarToChart studyBar.DateTime
+    addBarToChart lBar.DateTime
+    ' we may be processing a historical bar here, so make sure open, high
+    ' low and close are all set
+    mCurrentBar.tick lBar.openValue
+    mCurrentBar.tick lBar.highValue
+    mCurrentBar.tick lBar.lowValue
+    mCurrentBar.tick lBar.closeValue
+Else
+    mCurrentBar.tick lBar.closeValue
 End If
 
-mCurrentBar.tick studyBar.closeValue
 If mConditionalActionsIndex >= 0 Then processConditionalActions ev.timestamp
 prevBarNumber = ev.barNumber
 End Sub
@@ -443,7 +449,9 @@ End Sub
 Private Sub processLine( _
                 ByRef ev As StudyValueEvent)
 Static prevBarNumber As Long
-Dim studyLine As StudiesSupp.studyLine
+Dim studyLine As studyLine
+
+If TypeName(ev.value) = "Nothing" Then Exit Sub
 
 If mCurrentLine Is Nothing Or _
     ev.barNumber <> prevBarNumber _
@@ -453,11 +461,11 @@ End If
 
 Set studyLine = ev.value
 mCurrentLine.point1 = mRegion.newPoint( _
-                                chartMgr.getPeriod(studyLine.point1.timestamp), _
-                                studyLine.point1.value)
+                                chartMgr.getPeriod(studyLine.point1.x).periodNumber, _
+                                studyLine.point1.y)
 mCurrentLine.point2 = mRegion.newPoint( _
-                                chartMgr.getPeriod(studyLine.point2.timestamp), _
-                                studyLine.point2.value)
+                                chartMgr.getPeriod(studyLine.point2.x).periodNumber, _
+                                studyLine.point2.y)
 If mConditionalActionsIndex >= 0 Then processConditionalActions ev.timestamp
 prevBarNumber = ev.barNumber
 End Sub
@@ -483,7 +491,7 @@ End Sub
 Private Sub processText( _
                 ByRef ev As StudyValueEvent)
 Static prevBarNumber As Long
-Dim studyText As StudiesSupp.studyText
+Dim studyText As studyText
 
 If mCurrentText Is Nothing Or _
     ev.barNumber <> prevBarNumber _
@@ -493,8 +501,8 @@ End If
 
 Set studyText = ev.value
 mCurrentText.position = mRegion.newPoint( _
-                                chartMgr.getPeriod(studyText.position.timestamp), _
-                                studyText.position.value)
+                                chartMgr.getPeriod(studyText.position.x), _
+                                studyText.position.y)
 mCurrentText.offset = mTextOffset
 mCurrentText.Text = studyText.Text
 If mConditionalActionsIndex >= 0 Then processConditionalActions ev.timestamp
@@ -505,8 +513,8 @@ Private Sub setupBarSeries( _
                 ByVal studyValueConfig As StudyValueConfiguration)
 Set mBarSeries = mRegion.addBarSeries(studyValueConfig.layer)
 mBarSeries.barThickness = studyValueConfig.barThickness
-mBarSeries.candleWidth = studyValueConfig.candleWidth
-mBarSeries.displayAsCandlestick = studyValueConfig.displayAsCandlestick
+mBarSeries.barWidth = studyValueConfig.barWidth
+mBarSeries.displayMode = studyValueConfig.barDisplayMode
 mBarSeries.downColor = studyValueConfig.downColor
 mBarSeries.outlineThickness = studyValueConfig.outlineThickness
 mBarSeries.solidUpBody = studyValueConfig.solidUpBody
@@ -517,10 +525,10 @@ End Sub
 Private Sub setupDataSeries( _
                 ByVal studyValueConfig As StudyValueConfiguration)
 Set mDataSeries = mRegion.addDataPointSeries(studyValueConfig.layer)
-mDataSeries.displayMode = studyValueConfig.displayMode
+mDataSeries.displayMode = studyValueConfig.dataPointDisplayMode
 mDataSeries.histBarWidth = studyValueConfig.histogramBarWidth
 mDataSeries.includeInAutoscale = studyValueConfig.includeInAutoscale
-mDataSeries.lineColor = studyValueConfig.Color
+mDataSeries.lineColor = studyValueConfig.color
 mDataSeries.lineStyle = studyValueConfig.lineStyle
 mDataSeries.lineThickness = studyValueConfig.lineThickness
 End Sub
@@ -540,7 +548,7 @@ mLineSeries.arrowStartFillStyle = studyValueConfig.arrowStartFillStyle
 mLineSeries.arrowStartLength = studyValueConfig.arrowStartLength
 mLineSeries.arrowStartStyle = studyValueConfig.arrowStartStyle
 mLineSeries.arrowStartWidth = studyValueConfig.arrowStartWidth
-mLineSeries.Color = studyValueConfig.Color
+mLineSeries.color = studyValueConfig.color
 mLineSeries.extendAfter = studyValueConfig.extendAfter
 mLineSeries.extendBefore = studyValueConfig.extendBefore
 mLineSeries.extended = studyValueConfig.extended
@@ -561,7 +569,7 @@ mTextSeries.boxFillColor = studyValueConfig.boxFillColor
 mTextSeries.boxFillStyle = studyValueConfig.boxFillStyle
 mTextSeries.boxStyle = studyValueConfig.boxStyle
 mTextSeries.boxThickness = studyValueConfig.boxThickness
-mTextSeries.Color = studyValueConfig.Color
+mTextSeries.color = studyValueConfig.color
 mTextSeries.extended = studyValueConfig.extended
 mTextSeries.fixedX = studyValueConfig.fixedX
 mTextSeries.fixedY = studyValueConfig.fixedY

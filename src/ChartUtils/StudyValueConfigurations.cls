@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "StudyValueHandlers"
+Attribute VB_Name = "StudyValueConfigurations"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -50,14 +50,14 @@ Option Explicit
 ' Member variables
 '================================================================================
 
-Private mStudyValueHandlers As Collection
+Private mStudyValueConfigurations As Collection
 
 '================================================================================
 ' Class Event Handlers
 '================================================================================
 
 Private Sub Class_Initialize()
-Set mStudyValueHandlers = New Collection
+Set mStudyValueConfigurations = New Collection
 End Sub
 
 '================================================================================
@@ -73,7 +73,7 @@ End Sub
 '================================================================================
 
 Public Property Get count() As Long
-count = mStudyValueHandlers.count
+count = mStudyValueConfigurations.count
 End Property
 
 '================================================================================
@@ -81,35 +81,44 @@ End Property
 '================================================================================
 
 Public Function add( _
-                ByVal chartMgr As ChartManager, _
-                ByVal region As ChartSkil.ChartRegion, _
-                ByVal studyValueConfig As StudyValueConfiguration, _
-                ByVal studyValueDef As StudiesSupp.StudyValueDefinition, _
-                ByVal updatePerTick As Boolean) As StudyValueHandler
-Set add = New StudyValueHandler
-add.initialise chartMgr, _
-                region, _
-                studyValueConfig, _
-                studyValueDef, _
-                updatePerTick
-mStudyValueHandlers.add add
+                ByVal valueName As String) As StudyValueConfiguration
+Set add = New StudyValueConfiguration
+add.valueName = valueName
+mStudyValueConfigurations.add add, valueName
+End Function
+
+Public Function clone() As studyValueConfigurations
+Dim svc As StudyValueConfiguration
+Dim newSvc As StudyValueConfiguration
+
+Set clone = New studyValueConfigurations
+
+For Each svc In mStudyValueConfigurations
+    newSvc = clone.add(svc.valueName)
+    newSvc.chartRegionName = svc.chartRegionName
+    newSvc.color = svc.color
+    newSvc.dataPointDisplayMode = svc.dataPointDisplayMode
+    newSvc.histogramBarWidth = svc.histogramBarWidth
+    newSvc.includeInAutoscale = svc.includeInAutoscale
+    newSvc.includeInChart = svc.includeInChart
+    newSvc.layer = svc.layer
+    newSvc.lineStyle = svc.lineStyle
+    newSvc.lineThickness = svc.lineThickness
+Next
 End Function
 
 Public Function item( _
-                ByVal index As Long) As StudyValueHandler
-Set item = mStudyValueHandlers.item(index)
+                ByVal index As Long) As StudyValueConfiguration
+Set item = mStudyValueConfigurations.item(index)
 End Function
 
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
-Set NewEnum = mStudyValueHandlers.[_NewEnum]
+Attribute NewEnum.VB_MemberFlags = "40"
+Set NewEnum = mStudyValueConfigurations.[_NewEnum]
 End Function
 
 '================================================================================
 ' Helper Functions
 '================================================================================
-
-
-
-
 
