@@ -81,7 +81,7 @@ mXAssigned = True
 End Property
 
 Friend Property Get XLogical() As Double
-XLogical = mCanvas.convertDistanceToLogicalX(mX)
+XLogical = mCanvas.convertDistanceToLogicalX(mX) - mCanvas.boundary.left
 End Property
 
 Public Property Get y() As Double
@@ -94,7 +94,7 @@ mYAssigned = True
 End Property
 
 Friend Property Get YLogical() As Double
-YLogical = mCanvas.convertDistanceToLogicalY(mY)
+YLogical = mCanvas.convertDistanceToLogicalY(mY) - mCanvas.boundary.bottom
 End Property
 
 '================================================================================

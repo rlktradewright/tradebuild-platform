@@ -320,14 +320,19 @@ End Property
 ' Methods
 '================================================================================
 
-Friend Function add(Optional ByVal key As String) As ChartSkil.Line
-If mFinished Then err.Raise CommonErrorCodes.ErrIllegalStateException, _
-                            "ChartSkil.LineSeries::add", _
+Public Function add(Optional ByVal key As String) As ChartSkil25.Line
+If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
+                            "ChartSkil25.LineSeries::add", _
                             "Line series is finished"
-Set add = New ChartSkil.Line
+Set add = New ChartSkil25.Line
 With add
     .eventProxy = mEventProxy
     .canvas = mCanvas
+    If key = "" Then
+        .key = GenerateGUIDString
+    Else
+        .key = key
+    End If
     .arrowEndColor = mArrowEndColor
     .arrowEndFillColor = mArrowEndFillColor
     .arrowEndFillStyle = mArrowEndFillStyle
@@ -351,16 +356,8 @@ With add
     .includeInAutoscale = mIncludeInAutoscale
     .layer = mLayer
 End With
-If key <> "" Then
-    mLines.add add, key
-Else
-    mLines.add add
-End If
+mLines.add add, add.key
 mEventProxy.addGraphicObject add
-End Function
-
-Public Function addLine() As ChartSkil.Line
-Set addLine = add
 End Function
 
 Friend Sub finish()
@@ -368,13 +365,9 @@ mFinished = True
 Set mCanvas = Nothing
 End Sub
 
-Public Function item(ByVal index As Long) As ChartSkil.Line
+Public Function item(ByVal index As Variant) As ChartSkil25.Line
 Attribute item.VB_UserMemId = 0
 Set item = mLines(index)
-End Function
-
-Friend Function ItemByKey(ByVal key As String) As ChartSkil.Line
-Set ItemByKey = mLines(key)
 End Function
 
 Public Function NewEnum() As IUnknown

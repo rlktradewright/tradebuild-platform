@@ -68,6 +68,8 @@ Private mOffset As Dimension
 Private mAlign As TextAlignModes
 Private mKeepInView As Boolean
 
+Private mKey As String
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -385,6 +387,14 @@ mKeepInView = newValue
 update
 End Property
 
+Friend Property Let key(ByVal value As String)
+mKey = value
+End Property
+
+Public Property Get key() As String
+key = mKey
+End Property
+
 Friend Property Let layer(ByVal value As Long)
 If mLayer = value Then Exit Property
 undraw
@@ -426,6 +436,8 @@ Public Property Let position(ByVal value As Point)
 If value Is Nothing Or Not value.isAssigned Then Exit Property
 undraw
 Set mPosition = value
+If mPosition.CoordinateSystemX <> CoordsLogical Then mFixedX = True
+If mPosition.CoordinateSystemY <> CoordsLogical Then mFixedY = True
 convertPosition
 update
 End Property
@@ -448,6 +460,10 @@ mText = value
 mBlank = (value = "")
 
 update
+End Property
+
+Public Property Get text() As String
+text = mText
 End Property
 
 Public Property Get visible() As Boolean
@@ -542,8 +558,10 @@ End With
 If mBox Then
     ' make the inside of the box 1mm wider and taller than the text, plus the thickness of the lines
     
-    XIncrement = mCanvas.convertDistanceToLogicalX(mPaddingX / 10)
-    YIncrement = mCanvas.convertDistanceToLogicalY((mPaddingY - 0.5) / 10)
+    Dim padding As Dimension
+    Set padding = mCanvas.newDimension(mPaddingX / 10, (mPaddingY - 0.5) / 10)
+    XIncrement = padding.XLogical
+    YIncrement = padding.YLogical
     
     If mBoxThickness > 1 Then
         XLineThickness = mCanvas.convertPixelsToLogicalX(mBoxThickness - 1)
@@ -717,7 +735,7 @@ Private Sub convertPositionX()
 If mPosition Is Nothing Then Exit Sub
 If mFixedX Then
     If mPosition.CoordinateSystemX = CoordsLogical Then
-        mPosition.CoordinateSystemX = CoordsRelative
+        mPosition.CoordinateSystemX = CoordsDistance
     End If
 Else
     If mPosition.CoordinateSystemX <> CoordsLogical Then
@@ -730,7 +748,7 @@ Private Sub convertPositionY()
 If mPosition Is Nothing Then Exit Sub
 If mFixedY Then
     If mPosition.CoordinateSystemY = CoordsLogical Then
-        mPosition.CoordinateSystemY = CoordsRelative
+        mPosition.CoordinateSystemY = CoordsDistance
     End If
 Else
     If mPosition.CoordinateSystemY <> CoordsLogical Then

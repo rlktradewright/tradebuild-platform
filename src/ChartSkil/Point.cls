@@ -41,7 +41,7 @@ Private mCoordSystemX As CoordinateSystems
 Private mCoordSystemXAssigned As Boolean
 Private mCoordSystemY As CoordinateSystems
 Private mCoordSystemYAssigned As Boolean
-Private mCanvas As canvas
+Private mCanvas As Canvas
 
 '================================================================================
 ' Class Event Handlers
@@ -55,11 +55,11 @@ Private mCanvas As canvas
 ' Properties
 '================================================================================
 
-Friend Property Get canvas() As canvas
-Set canvas = mCanvas
+Friend Property Get Canvas() As Canvas
+Set Canvas = mCanvas
 End Property
 
-Friend Property Let canvas(ByVal value As canvas)
+Friend Property Let Canvas(ByVal value As Canvas)
 Set mCanvas = value
 End Property
 
@@ -197,11 +197,11 @@ Select Case mCoordSystemX
 Case CoordsLogical
     XLogical = mX
 Case CoordsRelative
-    XLogical = mCanvas.convertRelativeToLogicalX(mX) + mCanvas.left
+    XLogical = mCanvas.convertRelativeToLogicalX(mX)
 Case CoordsDistance
-    XLogical = mCanvas.convertDistanceToLogicalX(mX) + mCanvas.left
+    XLogical = mCanvas.convertDistanceToLogicalX(mX)
 Case CoordsCounterDistance
-    XLogical = mCanvas.convertCounterDistanceToLogicalX(mX) + mCanvas.left
+    XLogical = mCanvas.convertCounterDistanceToLogicalY(mX)
 End Select
 End Property
 
@@ -219,11 +219,11 @@ Select Case mCoordSystemY
 Case CoordsLogical
     YLogical = mY
 Case CoordsRelative
-    YLogical = mCanvas.convertRelativeToLogicalY(mY) + mCanvas.bottom
+    YLogical = mCanvas.convertRelativeToLogicalY(mY)
 Case CoordsDistance
-    YLogical = mCanvas.convertDistanceToLogicalY(mY) + mCanvas.bottom
+    YLogical = mCanvas.convertDistanceToLogicalY(mY)
 Case CoordsCounterDistance
-    YLogical = mCanvas.convertCounterDistanceToLogicalY(mY) + mCanvas.bottom
+    YLogical = mCanvas.convertCounterDistanceToLogicalY(mY)
 End Select
 End Property
 
@@ -235,7 +235,7 @@ Public Function equals(ByVal aPoint As Point) As Boolean
 If aPoint Is Nothing Then Exit Function
 If aPoint Is Me Then Exit Function
 With aPoint
-    If Not .canvas Is mCanvas Then Exit Function
+    If Not .Canvas Is mCanvas Then Exit Function
     If .isCoordinateSystemAssignedX <> mCoordSystemXAssigned Then Exit Function
     If .isCoordinateSystemAssignedY <> mCoordSystemYAssigned Then Exit Function
     If .CoordinateSystemX <> mCoordSystemX Then Exit Function

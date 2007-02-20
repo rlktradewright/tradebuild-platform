@@ -1,11 +1,9 @@
 Attribute VB_Name = "Globals"
 Option Explicit
 
-Public Type TInterval
-    isValid         As Boolean
-    startValue      As Double
-    endValue        As Double
-End Type
+'================================================================================
+' Constants
+'================================================================================
 
 Public Const Pi As Double = 3.14159265358979
 
@@ -15,9 +13,91 @@ Public Const PlusInfinityDouble As Double = (2 - 2 ^ -52) * 2 ^ 1023
 Public Const MinusInfinitySingle As Single = -(2 - 2 ^ -23) * 2 ^ 127
 Public Const PlusInfinitySingle As Single = (2 - 2 ^ -23) * 2 ^ 127
 
+Public Const OneMicroSecond As Double = 1.15740740740741E-11
+
 Public Const GridlineSpacingCm As Double = 2.5
 
 Public Const TwipsPerCm As Long = 1440 / 2.54
+
+Public Const ToolbarCommandAutoScale As String = "autoscale"
+Public Const ToolbarCommandAutoScroll As String = "autoscroll"
+
+Public Const ToolbarCommandIncreaseSpacing As String = "increasespacing"
+Public Const ToolbarCommandReduceSpacing As String = "reducespacing"
+
+Public Const ToolbarCommandScaleDown As String = "scaledown"
+Public Const ToolbarCommandScaleUp As String = "scaleup"
+
+Public Const ToolbarCommandScrollDown As String = "scrolldown"
+Public Const ToolbarCommandScrollEnd As String = "scrollend"
+Public Const ToolbarCommandScrollLeft As String = "scrollleft"
+Public Const ToolbarCommandScrollRight As String = "scrollright"
+Public Const ToolbarCommandScrollUp As String = "scrollup"
+
+Public Const ToolbarCommandShowBars As String = "showbars"
+Public Const ToolbarCommandShowCandlesticks As String = "showcandlesticks"
+Public Const ToolbarCommandShowLine As String = "showline"
+Public Const ToolbarCommandShowCrosshair As String = "showcrosshair"
+Public Const ToolbarCommandShowPlainCursor As String = "showplaincursor"
+Public Const ToolbarCommandShowDiscCursor As String = "showdisccursor"
+
+Public Const ToolbarCommandThickerBars As String = "thickerbars"
+Public Const ToolbarCommandThinnerBars As String = "thinnerbars"
+
+'================================================================================
+' Enums
+'================================================================================
+
+'================================================================================
+' Types
+'================================================================================
+
+Public Type TInterval
+    isValid         As Boolean
+    startValue      As Double
+    endValue        As Double
+End Type
+
+'================================================================================
+' Member variables
+'================================================================================
+
+'================================================================================
+' Properties
+'================================================================================
+
+'================================================================================
+' Methods
+'================================================================================
+
+Public Function gCalculateX( _
+                ByVal timestamp As Date, _
+                ByVal pController As ChartController) As Double
+Dim lPeriod As period
+Dim periodEndtime As Date
+
+On Error Resume Next
+Set lPeriod = pController.Periods.item(timestamp)
+On Error GoTo 0
+
+If lPeriod Is Nothing Then
+    If pController.Periods.count = 0 Then
+        Set lPeriod = pController.Periods.addPeriod(timestamp)
+    ElseIf timestamp < pController.Periods.item(1).timestamp Then
+        Set lPeriod = pController.Periods.item(1)
+        timestamp = lPeriod.timestamp
+    Else
+        Set lPeriod = pController.Periods.addPeriod(timestamp)
+    End If
+End If
+
+periodEndtime = BarEndTime(lPeriod.timestamp, _
+                        pController.periodLength, _
+                        pController.periodUnits, _
+                        pController.sessionStartTime)
+gCalculateX = lPeriod.periodNumber + (timestamp - lPeriod.timestamp) / (periodEndtime - lPeriod.timestamp)
+
+End Function
 
 '================================================================================
 ' Rectangle functions

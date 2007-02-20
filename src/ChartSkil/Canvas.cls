@@ -297,20 +297,20 @@ Public Function convertLogicalToRelativeY(ByVal value As Single)
 convertLogicalToRelativeY = (value - mBoundary.bottom) / (mBoundary.top - mBoundary.bottom) * 100
 End Function
 
-Public Function convertCounterDistanceToLogicalX(ByVal value As Single)
-convertCounterDistanceToLogicalX = (mSurface.width - value * TwipsPerCm) / mSurface.width * (mBoundary.right - mBoundary.left)
-End Function
-
-Public Function convertCounterDistanceToLogicalY(ByVal value As Single)
-convertCounterDistanceToLogicalY = (mSurface.height - value * TwipsPerCm) / mSurface.height * (mBoundary.top - mBoundary.bottom)
-End Function
-
 Public Function convertCounterDistanceToDistanceX(ByVal value As Single)
-convertCounterDistanceToDistanceX = ((100 - 100 * value * TwipsPerCm / mSurface.width) * mSurface.width) / 100 / TwipsPerCm
+convertCounterDistanceToDistanceX = mSurface.width / TwipsPerCm - value     ' ((100 - 100 * value * TwipsPerCm / mSurface.width) * mSurface.width) / 100 / TwipsPerCm
 End Function
 
 Public Function convertCounterDistanceToDistanceY(ByVal value As Single)
-convertCounterDistanceToDistanceY = ((100 - 100 * value * TwipsPerCm / mSurface.height) * mSurface.height) * 100 / TwipsPerCm
+convertCounterDistanceToDistanceY = mSurface.height / TwipsPerCm - value    ' ((100 - 100 * value * TwipsPerCm / mSurface.height) * mSurface.height) * 100 / TwipsPerCm
+End Function
+
+Public Function convertCounterDistanceToLogicalX(ByVal value As Single)
+convertCounterDistanceToLogicalX = mBoundary.right - ((value * TwipsPerCm) / mSurface.width * (mBoundary.right - mBoundary.left))
+End Function
+
+Public Function convertCounterDistanceToLogicalY(ByVal value As Single)
+convertCounterDistanceToLogicalY = mBoundary.top - ((value * TwipsPerCm) / mSurface.height * (mBoundary.top - mBoundary.bottom))
 End Function
 
 Public Function convertCounterDistanceToRelativeX(ByVal value As Single)
@@ -322,19 +322,19 @@ convertCounterDistanceToRelativeY = 100 - 100 * value * TwipsPerCm / mSurface.he
 End Function
 
 Public Function convertDistanceToLogicalX(ByVal value As Single)
-convertDistanceToLogicalX = (value * TwipsPerCm) / mSurface.width * (mBoundary.right - mBoundary.left)
+convertDistanceToLogicalX = mBoundary.left + (value * TwipsPerCm) / mSurface.width * (mBoundary.right - mBoundary.left)
 End Function
 
 Public Function convertDistanceToLogicalY(ByVal value As Single)
-convertDistanceToLogicalY = (value * TwipsPerCm) / mSurface.height * (mBoundary.top - mBoundary.bottom)
+convertDistanceToLogicalY = mBoundary.bottom + (value * TwipsPerCm) / mSurface.height * (mBoundary.top - mBoundary.bottom)
 End Function
 
 Public Function convertDistanceToCounterDistanceX(ByVal value As Single)
-convertDistanceToCounterDistanceX = ((100 - (100 * value * TwipsPerCm / mSurface.width)) * mSurface.width) / 100 / TwipsPerCm
+convertDistanceToCounterDistanceX = mSurface.width / TwipsPerCm - value     '  ((100 - (100 * value * TwipsPerCm / mSurface.width)) * mSurface.width) / 100 / TwipsPerCm
 End Function
 
 Public Function convertDistanceToCounterDistanceY(ByVal value As Single)
-convertDistanceToCounterDistanceY = ((100 - (100 * value * TwipsPerCm / mSurface.height)) * mSurface.height) / 100 / TwipsPerCm
+convertDistanceToCounterDistanceY = mSurface.height / TwipsPerCm - value    ' ((100 - (100 * value * TwipsPerCm / mSurface.height)) * mSurface.height) / 100 / TwipsPerCm
 End Function
 
 Public Function convertDistanceToRelativeX(ByVal value As Single)
@@ -354,11 +354,11 @@ convertPixelsToLogicalY = value * mGaugeY
 End Function
 
 Public Function convertRelativeToLogicalX(ByVal value As Single)
-convertRelativeToLogicalX = (value * (mBoundary.right - mBoundary.left) / 100)
+convertRelativeToLogicalX = mBoundary.left + (value * (mBoundary.right - mBoundary.left) / 100)
 End Function
 
 Public Function convertRelativeToLogicalY(ByVal value As Single)
-convertRelativeToLogicalY = (value * (mBoundary.top - mBoundary.bottom) / 100)
+convertRelativeToLogicalY = mBoundary.bottom + (value * (mBoundary.top - mBoundary.bottom) / 100)
 End Function
 
 Public Function convertRelativeToCounterDistanceX(ByVal value As Single)

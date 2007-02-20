@@ -27,6 +27,10 @@ Option Explicit
 ' Events
 '================================================================================
 
+Event ChartCleared()
+Event RegionsChanged(ev As CollectionChangeEvent)
+Event PeriodsChanged(ev As CollectionChangeEvent)
+
 '================================================================================
 ' Constants
 '================================================================================
@@ -43,7 +47,8 @@ Option Explicit
 ' Member variables
 '================================================================================
 
-Private mChart As Chart
+Private mChartRef                   As WeakReference
+Attribute mChartRef.VB_VarHelpID = -1
 
 '================================================================================
 ' Class Event Handlers
@@ -54,180 +59,184 @@ Private mChart As Chart
 '================================================================================
 
 '================================================================================
-' XXXX Event Handlers
-'================================================================================
-
-'================================================================================
 ' Properties
 '================================================================================
 
-Friend Property Let Chart( _
-                ByVal value As Chart)
-Set mChart = value
-End Property
-
 Public Property Get allowHorizontalMouseScrolling() As Boolean
-allowHorizontalMouseScrolling = mChart.allowHorizontalMouseScrolling
+allowHorizontalMouseScrolling = chartObj.allowHorizontalMouseScrolling
 End Property
 
 Public Property Let allowHorizontalMouseScrolling(ByVal value As Boolean)
-mChart.allowHorizontalMouseScrolling = value
+chartObj.allowHorizontalMouseScrolling = value
 End Property
 
 Public Property Get allowVerticalMouseScrolling() As Boolean
-allowVerticalMouseScrolling = mChart.allowVerticalMouseScrolling
+allowVerticalMouseScrolling = chartObj.allowVerticalMouseScrolling
 End Property
 
 Public Property Let allowVerticalMouseScrolling(ByVal value As Boolean)
-mChart.allowVerticalMouseScrolling = value
+chartObj.allowVerticalMouseScrolling = value
 End Property
 
 Public Property Get autoscale() As Boolean
-autoscale = mChart.autoscale
+autoscale = chartObj.autoscale
 End Property
 
 Public Property Let autoscale(ByVal value As Boolean)
-mChart.autoscale = value
+chartObj.autoscale = value
+End Property
+
+Public Property Get autoscroll() As Boolean
+autoscroll = chartObj.autoscroll
+End Property
+
+Public Property Let autoscroll(ByVal value As Boolean)
+chartObj.autoscroll = value
+End Property
+
+Friend Property Let Chart( _
+                ByVal value As Chart)
+Set mChartRef = createWeakReference(value)
 End Property
 
 Public Property Get chartBackColor() As OLE_COLOR
-chartBackColor = mChart.backColor
+chartBackColor = chartObj.chartBackColor
 End Property
 
 Public Property Let chartBackColor(ByVal val As OLE_COLOR)
-mChart.chartBackColor = val
+chartObj.chartBackColor = val
 End Property
 
 Public Property Get chartLeft() As Single
-chartLeft = mChart.chartLeft
+chartLeft = chartObj.chartLeft
 End Property
 
 Public Property Get chartWidth() As Single
-chartWidth = mChart.chartWidth
+chartWidth = chartObj.chartWidth
 End Property
 
 Public Property Get currentPeriodNumber() As Long
-currentPeriodNumber = mChart.currentPeriodNumber
+currentPeriodNumber = chartObj.currentPeriodNumber
+End Property
+
+Public Property Get currentSessionEndTime() As Date
+currentSessionEndTime = chartObj.currentSessionEndTime
+End Property
+
+Public Property Get currentSessionStartTime() As Date
+currentSessionStartTime = chartObj.currentSessionStartTime
 End Property
 
 Public Property Get firstVisiblePeriod() As Long
-firstVisiblePeriod = mChart.firstVisiblePeriod
+firstVisiblePeriod = chartObj.firstVisiblePeriod
 End Property
 
 Public Property Let firstVisiblePeriod(ByVal value As Long)
-mChart.firstVisiblePeriod = value
+chartObj.firstVisiblePeriod = value
 End Property
 
 Public Property Get gridColor() As OLE_COLOR
-gridColor = mChart.gridColor
+gridColor = chartObj.gridColor
 End Property
 
 Public Property Let gridColor(ByVal val As OLE_COLOR)
-mChart.gridColor = val
+chartObj.gridColor = val
 End Property
 
 Public Property Get gridTextColor() As OLE_COLOR
-gridTextColor = mChart.gridTextColor
+gridTextColor = chartObj.gridTextColor
 End Property
 
 Public Property Let gridTextColor(ByVal val As OLE_COLOR)
-mChart.gridTextColor = val
+chartObj.gridTextColor = val
 End Property
 
 Public Property Get lastVisiblePeriod() As Long
-lastVisiblePeriod = mChart.lastVisiblePeriod
+lastVisiblePeriod = chartObj.lastVisiblePeriod
 End Property
 
 Public Property Let lastVisiblePeriod(ByVal value As Long)
-mChart.lastVisiblePeriod = value
+chartObj.lastVisiblePeriod = value
 End Property
 
-Public Property Get periodLengthMinutes() As Long
-periodLengthMinutes = mChart.periodLengthMinutes
-End Property
-
-Public Property Let periodLengthMinutes(ByVal val As Long)
-mChart.periodLengthMinutes = val
+Public Property Get periodLength() As Long
+periodLength = chartObj.periodLength
 End Property
 
 Public Property Get Periods() As Periods
-Set Periods = mPeriods
+Set Periods = chartObj.Periods
+End Property
+
+Public Property Get periodUnits() As TimePeriodUnits
+periodUnits = chartObj.periodUnits
+End Property
+
+Public Property Let pointerStyle(ByVal value As PointerStyles)
+chartObj.pointerStyle = value
+End Property
+
+Public Property Get pointerStyle() As PointerStyles
+pointerStyle = chartObj.pointerStyle
+End Property
+
+Public Property Get sessionEndTime() As Date
+sessionEndTime = chartObj.sessionEndTime
+End Property
+
+Public Property Let sessionEndTime(ByVal val As Date)
+chartObj.sessionEndTime = val
 End Property
 
 Public Property Get sessionStartTime() As Date
-sessionStartTime = mChart.sessionStartTime
+sessionStartTime = chartObj.sessionStartTime
 End Property
 
 Public Property Let sessionStartTime(ByVal val As Date)
-mChart.sessionStartTime = val
-End Property
-
-Public Property Get showCrosshairs() As Boolean
-showCrosshairs = mChart.showCrosshairs
-End Property
-
-Public Property Let showCrosshairs(ByVal val As Boolean)
-mChart.showCrosshairs = val
+chartObj.sessionStartTime = val
 End Property
 
 Public Property Get showGrid() As Boolean
-showGrid = mChart.showGrid
+showGrid = chartObj.showGrid
 End Property
 
 Public Property Let showGrid(ByVal val As Boolean)
-mChart.showGrid = val
+chartObj.showGrid = val
 End Property
 
 Public Property Get showHorizontalScrollBar() As Boolean
-showHorizontalScrollBar = mChart.showHorizontalScrollBar
+showHorizontalScrollBar = chartObj.showHorizontalScrollBar
 End Property
 
 Public Property Let showHorizontalScrollBar(ByVal val As Boolean)
-mChart.showHorizontalScrollBar = val
+chartObj.showHorizontalScrollBar = val
 End Property
 
 Public Property Get suppressDrawing() As Boolean
-suppressDrawing = mChart.suppressDrawing
+suppressDrawing = chartObj.suppressDrawing
 End Property
 
 Public Property Let suppressDrawing(ByVal val As Boolean)
-mChart.suppressDrawing = val
+chartObj.suppressDrawing = val
 End Property
 
 Public Property Get twipsPerBar() As Long
-twipsPerBar = mChart.twipsPerBar
+twipsPerBar = chartObj.twipsPerBar
 End Property
 
 Public Property Let twipsPerBar(ByVal val As Long)
-mChart.twipsPerBar = val
-End Property
-
-Public Property Let verticalGridSpacing(ByVal value As Long)
-mChart.verticalGridSpacing = value
-End Property
-
-Public Property Get verticalGridSpacing() As Long
-verticalGridSpacing = mChart.verticalGridSpacing
-End Property
-
-Public Property Let verticalGridUnits(ByVal value As TimeUnits)
-mChart.verticalGridUnits = value
-End Property
-
-Public Property Get verticalGridUnits() As TimeUnits
-verticalGridUnits = mChart.verticalGridUnits
+chartObj.twipsPerBar = val
 End Property
 
 Public Property Get YAxisPosition() As Long
-YAxisPosition = mChart.YAxisPosition
+YAxisPosition = chartObj.YAxisPosition
 End Property
 
 Public Property Get YAxisWidthCm() As Single
-YAxisWidthCm = mChart.YAxisWidthCm
+YAxisWidthCm = chartObj.YAxisWidthCm
 End Property
 
 Public Property Let YAxisWidthCm(ByVal value As Single)
-mChart.YAxisWidthCm = value
+chartObj.YAxisWidthCm = value
 End Property
 
 '================================================================================
@@ -237,33 +246,68 @@ End Property
 Public Function addChartRegion(ByVal percentheight As Double, _
                     Optional ByVal minimumPercentHeight As Double, _
                     Optional ByVal name As String) As ChartRegion
-Set addChartRegion = mChart.addChartRegion(percentheight, minimumPercentHeight, name)
+Set addChartRegion = chartObj.addChartRegion(percentheight, minimumPercentHeight, name)
 End Function
 
-Public Function addperiod(ByVal timestamp As Date) As period
-Set addperiod = mChart.addperiod(timestamp)
+Public Function addPeriod(ByVal timestamp As Date) As period
+Set addPeriod = chartObj.addPeriod(timestamp)
 End Function
 
 Public Sub clearChart()
-mChart.clearChart
+chartObj.clearChart
 End Sub
 
+Friend Sub fireChartCleared()
+RaiseEvent ChartCleared
+End Sub
+
+Friend Sub fireRegionsChanged(ev As CollectionChangeEvent)
+RaiseEvent RegionsChanged(ev)
+End Sub
+
+Friend Sub firePeriodsChanged(ev As CollectionChangeEvent)
+RaiseEvent PeriodsChanged(ev)
+End Sub
+
+Public Function getChartRegion( _
+                ByVal name As String) As ChartRegion
+Set getChartRegion = chartObj.getChartRegion(name)
+End Function
+
+Public Function isTimeInSession(ByVal timestamp As Date) As Boolean
+isTimeInSession = chartObj.isTimeInSession(timestamp)
+End Function
+
 Public Sub refresh()
-mChart.refresh
+chartObj.refresh
 End Sub
 
 Public Sub removeChartRegion( _
                     ByVal region As ChartRegion)
-mChart.removeChartRegion region
+chartObj.removeChartRegion region
 End Sub
 
 Public Sub scrollX(ByVal value As Long)
-mChart.scrollX value
+chartObj.scrollX value
+End Sub
+
+Public Sub setPeriodParameters( _
+                ByVal periodLength As Long, _
+                ByVal periodUnits As TimePeriodUnits)
+chartObj.setPeriodParameters periodLength, periodUnits
+End Sub
+
+Public Sub setVerticalGridParameters( _
+                ByVal verticalGridSpacing As Long, _
+                ByVal verticalGridUnits As TimePeriodUnits)
+chartObj.setVerticalGridParameters verticalGridSpacing, verticalGridUnits
 End Sub
 
 '================================================================================
 ' Helper Functions
 '================================================================================
 
-
+Private Function chartObj() As Chart
+Set chartObj = mChartRef.Target
+End Function
 

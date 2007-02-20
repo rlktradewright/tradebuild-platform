@@ -46,13 +46,15 @@ Private mHistBarWidth As Single
 
 Private mIncludeInAutoscale  As Boolean
 
-Private mPeriodNumber  As Long
+Private mX As Double
+Private mKey As String
+
 Private mDataValue As Double
 Private mBlank As Boolean   ' indicates that no value has been assigned
 Private mLineThickness As Long
 Private mLineColor As Long
 Private mLineStyle As LineStyles
-Private mDisplayMode As DisplayModes
+Private mDisplayMode As DataPointDisplayModes
 
 Private mPrevDataPoint As DataPoint
 
@@ -123,13 +125,13 @@ End Sub
 
 Private Property Get IGraphicObject_gaugeDependent() As Boolean
 Select Case mDisplayMode
-Case displayAsPoints
+Case DataPointDisplayModePoint
     IGraphicObject_gaugeDependent = True
-Case DisplayAsLines
+Case DataPointDisplayModeLine
     IGraphicObject_gaugeDependent = True
-Case DisplayAsSteppedLines
+Case DataPointDisplayModeStep
     IGraphicObject_gaugeDependent = True
-Case displayAsHistogram
+Case DataPointDisplayModeHistogram
     IGraphicObject_gaugeDependent = False
 End Select
 End Property
@@ -159,7 +161,7 @@ IGraphicObject_noDraw = mBlank Or (mDisplayMode = 0)
 End Property
 
 Private Property Get IGraphicObject_periodNumber() As Long
-IGraphicObject_periodNumber = mPeriodNumber
+IGraphicObject_periodNumber = Int(mX)
 End Property
 
 Private Property Get IGraphicObject_scaleDependent() As Boolean
@@ -205,7 +207,7 @@ mDataValue = newValue
 update
 End Property
 
-Friend Property Let displayMode(ByVal value As DisplayModes)
+Friend Property Let displayMode(ByVal value As DataPointDisplayModes)
 mDisplayMode = value
 End Property
 
@@ -227,6 +229,14 @@ End Property
 
 Public Property Let includeInAutoscale(ByVal newValue As Boolean)
 mIncludeInAutoscale = newValue
+End Property
+
+Friend Property Let key(ByVal value As String)
+mKey = value
+End Property
+
+Public Property Get key() As String
+key = mKey
 End Property
 
 Friend Property Let layer(ByVal value As Long)
@@ -254,13 +264,13 @@ Public Property Get inScope() As Boolean
 inScope = mInScope
 End Property
 
-Public Property Get periodNumber() As Long
-periodNumber = mPeriodNumber
-End Property
+'Public Property Get periodNumber() As Long
+'periodNumber = Int(mX)
+'End Property
 
-Public Property Let periodNumber(ByVal newValue As Long)
-mPeriodNumber = newValue
-End Property
+'Public Property Let periodNumber(ByVal newValue As Long)
+'mx = newValue
+'End Property
 
 Public Property Get prevDataPoint() As DataPoint
 Set prevDataPoint = mPrevDataPoint
@@ -272,6 +282,14 @@ End Property
 
 Public Property Get visible() As Boolean
 visible = mVisible
+End Property
+
+Friend Property Let x(ByVal value As Double)
+mX = value
+End Property
+
+Friend Property Get x() As Double
+x = mX
 End Property
 
 '================================================================================
@@ -286,16 +304,16 @@ Private Function calcBoundingRect() As TRectangle
 Dim boundingRect As TRectangle
 Dim thicknessScaleX As Double
 Dim thicknessScaleY As Double
-Dim prevPeriod As Long
+Dim prevX As Long
 Dim prevValue As Double
 
 thicknessScaleX = mCanvas.convertPixelsToLogicalX(mLineThickness + 2)
 thicknessScaleY = mCanvas.convertPixelsToLogicalY(mLineThickness + 2)
 
-If mDisplayMode = DisplayModes.displayAsHistogram Then
+If mDisplayMode = DataPointDisplayModes.DataPointDisplayModeHistogram Then
     With boundingRect
-        .left = mPeriodNumber - mHistBarWidth / 2
-        .right = mPeriodNumber + mHistBarWidth / 2
+        .left = mX - mHistBarWidth / 2
+        .right = mX + mHistBarWidth / 2
         If mDataValue >= 0 Then
             .bottom = 0
             .top = mDataValue
@@ -306,19 +324,24 @@ If mDisplayMode = DisplayModes.displayAsHistogram Then
     End With
 ElseIf drawAsPoint Then
     With boundingRect
-        .left = mPeriodNumber - thicknessScaleX / 2
-        .right = mPeriodNumber + thicknessScaleX / 2
+        .left = mX - thicknessScaleX / 2
+        .right = mX + thicknessScaleX / 2
         .bottom = mDataValue - thicknessScaleY / 2
         .top = mDataValue + thicknessScaleY / 2
     End With
-ElseIf mDisplayMode = DisplayModes.DisplayAsLines Then
+ElseIf mDisplayMode = DataPointDisplayModes.DataPointDisplayModeLine Then
     With mPrevDataPoint
-        prevPeriod = .periodNumber
+        prevX = .x
         prevValue = .dataValue
     End With
     With boundingRect
-        .left = prevPeriod - thicknessScaleX / 2
-        .right = mPeriodNumber + thicknessScaleX / 2
+        If prevX <= mX Then
+            .left = prevX - thicknessScaleX / 2
+            .right = mX + thicknessScaleX / 2
+        Else
+            .left = mX - thicknessScaleX / 2
+            .right = prevX + thicknessScaleX / 2
+        End If
         If mDataValue > prevValue Then
             .bottom = prevValue - thicknessScaleY / 2
             .top = mDataValue + thicknessScaleY / 2
@@ -327,14 +350,19 @@ ElseIf mDisplayMode = DisplayModes.DisplayAsLines Then
             .top = prevValue + thicknessScaleY / 2
         End If
     End With
-ElseIf mDisplayMode = DisplayModes.DisplayAsSteppedLines Then
+ElseIf mDisplayMode = DataPointDisplayModes.DataPointDisplayModeStep Then
     With mPrevDataPoint
-        prevPeriod = .periodNumber
+        prevX = .x
         prevValue = .dataValue
     End With
     With boundingRect
-        .left = prevPeriod - thicknessScaleX / 2
-        .right = mPeriodNumber + thicknessScaleX / 2
+        If prevX <= mX Then
+            .left = prevX - thicknessScaleX / 2
+            .right = mX + thicknessScaleX / 2
+        Else
+            .left = mX - thicknessScaleX / 2
+            .right = prevX + thicknessScaleX / 2
+        End If
         If mDataValue > prevValue Then
             .bottom = prevValue - thicknessScaleY / 2
             .top = mDataValue + thicknessScaleY / 2
@@ -357,10 +385,10 @@ If mPrevDataPoint Is Nothing Then
     drawAsPoint = True
 ElseIf mPrevDataPoint.blank Then
     drawAsPoint = True
-ElseIf mDisplayMode = DisplayModes.displayAsPoints Then
-'ElseIf mDisplayMode = DisplayModes.displayAsPoints Or _
-'    (mDisplayMode = DisplayModes.DisplayAsLines And Not mPrevDataPoint.inScope) Or _
-'    (mDisplayMode = DisplayModes.DisplayAsSteppedLines And Not mPrevDataPoint.inScope) _
+ElseIf mDisplayMode = DataPointDisplayModes.DataPointDisplayModePoint Then
+'ElseIf mDisplayMode = DataPointDisplayModes.DataPointDisplayModePoint Or _
+'    (mDisplayMode = DataPointDisplayModes.DataPointDisplayModeLine And Not mPrevDataPoint.inScope) Or _
+'    (mDisplayMode = DataPointDisplayModes.DataPointDisplayModeStep And Not mPrevDataPoint.inScope) _
 'Then
     drawAsPoint = True
 Else
@@ -379,17 +407,17 @@ mCanvas.setPenAttributes Color, _
                         mLineStyle, _
                         DrawModes.DrawModeCopyPen
 
-If mDisplayMode = DisplayModes.displayAsHistogram Then
+If mDisplayMode = DataPointDisplayModes.DataPointDisplayModeHistogram Then
     mCanvas.setBrushAttributes Color, FillStyles.FillSolid
-    mCanvas.drawRectangle mPeriodNumber - mHistBarWidth / 2, 0, mPeriodNumber + mHistBarWidth / 2, mDataValue
+    mCanvas.drawRectangle mX - mHistBarWidth / 2, 0, mX + mHistBarWidth / 2, mDataValue
 ElseIf drawAsPoint Then
-    mCanvas.drawPoint mPeriodNumber, mDataValue
-ElseIf mDisplayMode = DisplayModes.DisplayAsLines Then
-    mCanvas.drawLine mPrevDataPoint.periodNumber, mPrevDataPoint.dataValue, mPeriodNumber, mDataValue
-ElseIf mDisplayMode = DisplayModes.DisplayAsSteppedLines Then
-    mCanvas.drawLine mPrevDataPoint.periodNumber, mPrevDataPoint.dataValue, mPeriodNumber - 0.5, mPrevDataPoint.dataValue
-    mCanvas.drawLine periodNumber - 0.5, mPrevDataPoint.dataValue, mPeriodNumber - 0.5, mDataValue
-    mCanvas.drawLine periodNumber - 0.5, mDataValue, mPeriodNumber, mDataValue
+    mCanvas.drawPoint mX, mDataValue
+ElseIf mDisplayMode = DataPointDisplayModes.DataPointDisplayModeLine Then
+    mCanvas.drawLine mPrevDataPoint.x, mPrevDataPoint.dataValue, mX, mDataValue
+ElseIf mDisplayMode = DataPointDisplayModes.DataPointDisplayModeStep Then
+    mCanvas.drawLine mPrevDataPoint.x, mPrevDataPoint.dataValue, mX - 0.5, mPrevDataPoint.dataValue
+    mCanvas.drawLine mX - 0.5, mPrevDataPoint.dataValue, mX - 0.5, mDataValue
+    mCanvas.drawLine mX - 0.5, mDataValue, mX, mDataValue
 End If
 End Sub
 

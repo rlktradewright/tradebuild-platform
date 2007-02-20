@@ -31,6 +31,8 @@ Implements ChartSkilTypes.IGraphicObjectSeries
 ' Member variables and constants
 '================================================================================
 
+Private mController As ChartController
+
 Private mFinished As Boolean
 
 Private Const DefaultHistBarWidth As Single = 0.5
@@ -46,26 +48,16 @@ Private mName As String
 Private mLineThickness As Long
 Private mLineColor As Long
 Private mLineStyle As LineStyles
-Private mDisplayMode As DisplayModes
+Private mDisplayMode As DataPointDisplayModes
 Private mIncludeInAutoscale As Boolean
 
 Private mHistBarWidth As Single
-
-Private mMinPeriodInView As Long
-Private mMaxPeriodInView As Long
 
 Private mPrevDataPoint As DataPoint
 
 '================================================================================
 ' Enums
 '================================================================================
-
-Public Enum DisplayModes
-    displayAsPoints = 1
-    DisplayAsLines
-    DisplayAsSteppedLines
-    displayAsHistogram
-End Enum
 
 '================================================================================
 ' Class Event Handlers
@@ -113,15 +105,20 @@ Friend Property Let canvas(ByVal value As canvas)
 Set mCanvas = value
 End Property
 
+Friend Property Let controller( _
+                ByVal value As ChartController)
+Set mController = value
+End Property
+
 Public Property Get count() As Long
 count = mDataPoints.count
 End Property
 
-Public Property Get displayMode() As DisplayModes
+Public Property Get displayMode() As DataPointDisplayModes
 displayMode = mDisplayMode
 End Property
 
-Public Property Let displayMode(ByVal value As DisplayModes)
+Public Property Let displayMode(ByVal value As DataPointDisplayModes)
 Dim dp As DataPoint
 For Each dp In mDataPoints
     dp.displayMode = value
@@ -193,14 +190,6 @@ Next
 mLineThickness = value
 End Property
 
-Public Property Get maxPeriodInView() As Long
-maxPeriodInView = mMaxPeriodInView
-End Property
-
-Public Property Get minPeriodInView() As Long
-minPeriodInView = mMinPeriodInView
-End Property
-
 Public Property Get name() As String
 name = mName
 End Property
@@ -213,31 +202,32 @@ End Property
 ' Methods
 '================================================================================
 
-Public Function addDataPoint( _
-                ByVal periodNumber As Long, _
-                Optional ByVal key As Variant) As DataPoint
-If mFinished Then err.Raise CommonErrorCodes.ErrIllegalStateException, _
-                            "ChartSkil.DatPointSeries::add", _
+Public Function add( _
+                ByVal timestamp As Date, _
+                Optional ByVal key As String) As DataPoint
+If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
+                            "ChartSkil25.DatPointSeries::add", _
                             "DataPoint series is finished"
-Set addDataPoint = New DataPoint
-addDataPoint.canvas = mCanvas
-addDataPoint.periodNumber = periodNumber
-addDataPoint.histBarWidth = mHistBarWidth
-addDataPoint.displayMode = mDisplayMode
-addDataPoint.eventProxy = mEventProxy
-addDataPoint.includeInAutoscale = mIncludeInAutoscale
-addDataPoint.layer = mLayer
-addDataPoint.lineColor = mLineColor
-addDataPoint.lineStyle = mLineStyle
-addDataPoint.lineThickness = mLineThickness
-addDataPoint.prevDataPoint = mPrevDataPoint
-If IsMissing(key) Then
-    mDataPoints.add addDataPoint
+Set add = New DataPoint
+add.x = gCalculateX(timestamp, mController)
+If key = "" Then
+    add.key = GenerateGUIDString
 Else
-    mDataPoints.add addDataPoint, key
+    add.key = key
 End If
-Set mPrevDataPoint = addDataPoint
-mEventProxy.addGraphicObject addDataPoint
+add.canvas = mCanvas
+add.histBarWidth = mHistBarWidth
+add.displayMode = mDisplayMode
+add.eventProxy = mEventProxy
+add.includeInAutoscale = mIncludeInAutoscale
+add.layer = mLayer
+add.lineColor = mLineColor
+add.lineStyle = mLineStyle
+add.lineThickness = mLineThickness
+add.prevDataPoint = mPrevDataPoint
+mDataPoints.add add, add.key
+Set mPrevDataPoint = add
+mEventProxy.addGraphicObject add
 End Function
 
 Friend Sub finish()
@@ -245,9 +235,9 @@ mFinished = True
 Set mCanvas = Nothing
 End Sub
 
-Public Function item(ByVal key As Variant) As DataPoint
+Public Function item(ByVal index As Variant) As DataPoint
 Attribute item.VB_UserMemId = 0
-Set item = mDataPoints(CStr(key))
+Set item = mDataPoints(index)
 End Function
 
 Friend Sub removeAll()

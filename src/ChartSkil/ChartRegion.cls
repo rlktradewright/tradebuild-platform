@@ -32,7 +32,7 @@ Private Type PeriodTableEntry
 End Type
 
 Private Type GraphicObjectTableEntry
-    graphobj            As IGraphicObject
+    graphObj            As IGraphicObject
     boundingRect        As TRectangle
     periodNumber        As Long
     extendedObject      As Boolean
@@ -76,6 +76,8 @@ End Enum
 '================================================================================
 ' Member variables
 '================================================================================
+
+Private mController As ChartController
 
 Private mName As String
 Private mRegionNumber As Long
@@ -145,10 +147,8 @@ Private mXGridLines As LineSeries
 Private mShowGridText As Boolean
 
 Private mSessionOffsetMinutes As Date
-Private mPeriodLengthMinutes As Long
-
 Private mVerticalGridSpacing As Long
-Private mVerticalGridUnits As TimeUnits
+Private mVerticalGridUnits As TimePeriodUnits
 
 Private mAutoscale As Boolean
 Private mMinimumHeight As Single
@@ -187,16 +187,16 @@ Private mBarTailThickness As Long
 Private mBarOutlineThickness As Long
 Private mBarUpColor As Long
 Private mBarDownColor As Long
-Private mBarDisplayAsCandlestick As Boolean
+Private mDisplayMode As BarDisplayModes
 Private mBarSolidUpBody As Boolean
 Private mBarThickness As Long
-Private mBarCandleWidth As Single
+Private mBarWidth As Single
 
 ' defaults for datapoint series
 Private mDataPointLineThickness As Long
 Private mDataPointLineColor As Long
 Private mDataPointLineStyle As LineStyles
-Private mDataPointDisplayMode As DisplayModes
+Private mDataPointDisplayMode As DataPointDisplayModes
 Private mDataPointHistBarWidth As Single
 Private mDataPointIncludeInAutoscale As Boolean
 
@@ -286,16 +286,16 @@ mBarTailThickness = 1
 mBarOutlineThickness = 1
 mBarUpColor = &H1D9311
 mBarDownColor = &H43FC2
-mBarDisplayAsCandlestick = True
+mDisplayMode = BarDisplayModeCandlestick
 mBarSolidUpBody = True
 mBarThickness = 2
-mBarCandleWidth = 0.5
+mBarWidth = 0.5
 
 ' defaults for datapoint series
 mDataPointLineThickness = 1
 mDataPointLineColor = vbBlack
 mDataPointLineStyle = LineStyles.LineSolid
-mDataPointDisplayMode = DisplayModes.DisplayAsLines
+mDataPointDisplayMode = DataPointDisplayModes.DataPointDisplayModeLine
 mDataPointHistBarWidth = 0.5
 mDataPointIncludeInAutoscale = True
 
@@ -361,8 +361,8 @@ End Sub
 ' mEventProxy Event Handlers
 '================================================================================
 
-Private Sub mEventProxy_addGraphicObject(ByVal graphobj As IGraphicObject)
-addGraphicObject graphobj
+Private Sub mEventProxy_addGraphicObject(ByVal graphObj As IGraphicObject)
+addGraphicObject graphObj
 End Sub
 
 Private Sub mEventProxy_objectChanged( _
@@ -378,7 +378,8 @@ redrawArea = rectIntersection(areaToRedraw, mCanvas.boundary)
 With mGraphicObjects(handle)
     
     ' get the new properties for the changed object
-    .boundingRect = .graphobj.boundingRectangle(False, _
+    
+    .boundingRect = .graphObj.boundingRectangle(False, _
                                         False, _
                                         False, _
                                         mCanvas.gaugeX, _
@@ -388,15 +389,14 @@ With mGraphicObjects(handle)
     If Not .boundingRect.isValid Then
         removeEntryFromInScopeList handle
         removeEntryFromVisibleList handle
-        Exit Sub
     End If
     
-    .extendedObject = .graphobj.extendedObject
-    .noDraw = .graphobj.noDraw
-    .layer = .graphobj.layer
-    .includeInAutoscale = .graphobj.includeInAutoscale
-    .scaleDependent = .graphobj.scaleDependent
-    .capabilities = .graphobj.capabilities
+    .extendedObject = .graphObj.extendedObject
+    .noDraw = .graphObj.noDraw
+    .layer = .graphObj.layer
+    .includeInAutoscale = .graphObj.includeInAutoscale
+    .scaleDependent = .graphObj.scaleDependent
+    .capabilities = .graphObj.capabilities
 End With
 
 If mGraphicObjects(handle).extendedObject Then
@@ -418,6 +418,8 @@ If graphicObjectIsInScope(handle) Then
     End If
 End If
     
+If Not mGraphicObjects(handle).boundingRect.isValid Then Exit Sub
+
 With mGraphicObjects(handle)
     ' check if the vertical bounds have changed, and redraw if so
     If mAutoscale And Not mSuppressDrawing Then
@@ -445,7 +447,7 @@ With mGraphicObjects(handle)
         If redrawArea.isValid Then
             Dim drawAreas(0) As TRectangle
             drawAreas(0) = redrawArea
-            .graphobj.draw drawAreas, mCanvas.hdc
+            .graphObj.draw drawAreas, mCanvas.hdc
         End If
     End If
     
@@ -457,7 +459,7 @@ With mGraphicObjects(handle)
                 With mGraphicObjects(index)
                     If index <> handle Then
                         If getObjectOverlaps(handle, index, redrawArea, True, True, overlaps) <> 0 Then
-                            .graphobj.draw overlaps, mCanvas.hdc
+                            .graphObj.draw overlaps, mCanvas.hdc
                         End If
                     End If
                     index = .nextVisibleIndex
@@ -485,7 +487,7 @@ With mGraphicObjects(handle)
                 With mGraphicObjects(index)
                     If index <> handle Then
                         If getObjectOverlaps(handle, index, undrawnArea, Not blockUndraw, True, overlaps) <> 0 Then
-                            .graphobj.draw overlaps, mCanvas.hdc
+                            .graphObj.draw overlaps, mCanvas.hdc
                         End If
                     End If
                     index = .nextVisibleIndex
@@ -507,44 +509,44 @@ End Sub
 Private Sub mToolbar_ButtonClick(ByVal Button As MSComctlLib.Button)
 
 Select Case Button.key
-Case "showbars"
-    mFirstBarSeries.displayAsCandlestick = False
-Case "showcandlesticks"
-    mFirstBarSeries.displayAsCandlestick = True
-Case "showline"
+Case ToolbarCommandShowBars
+    mFirstBarSeries.displayMode = BarDisplayModeBar
+Case ToolbarCommandShowCandlesticks
+    mFirstBarSeries.displayMode = BarDisplayModeCandlestick
+Case ToolbarCommandShowLine
     ' not yet implemented in ChartSkil
-Case "thinnerbars"
-    If mFirstBarSeries.displayAsCandlestick Then
-        If mFirstBarSeries.candleWidth > 0.1 Then
-            mFirstBarSeries.candleWidth = mFirstBarSeries.candleWidth - 0.1
+Case ToolbarCommandThinnerBars
+'    If mFirstBarSeries.barDisplayMode = BarDisplayModeCandlestick Then
+        If mFirstBarSeries.barWidth > 0.1 Then
+            mFirstBarSeries.barWidth = mFirstBarSeries.barWidth - 0.1
         End If
-        If mFirstBarSeries.candleWidth <= 0.1 Then
+        If mFirstBarSeries.barWidth <= 0.1 Then
             Button.Enabled = False
         End If
-    Else
+    If mFirstBarSeries.displayMode = BarDisplayModeBar Then
         If mFirstBarSeries.barThickness > 1 Then
             mFirstBarSeries.barThickness = mFirstBarSeries.barThickness - 1
         End If
-        If mFirstBarSeries.barThickness = 1 Then
+        If mFirstBarSeries.barThickness = 1 And mFirstBarSeries.barWidth <= 0.1 Then
             Button.Enabled = False
         End If
     End If
-Case "thickerbars"
-    If mFirstBarSeries.displayAsCandlestick Then
-        mFirstBarSeries.candleWidth = mFirstBarSeries.candleWidth + 0.1
-    Else
+Case ToolbarCommandThickerBars
+'    If mFirstBarSeries.barDisplayMode = BarDisplayModeCandlestick Then
+        mFirstBarSeries.barWidth = mFirstBarSeries.barWidth + 0.1
+    If mFirstBarSeries.displayMode = BarDisplayModeBar Then
         mFirstBarSeries.barThickness = mFirstBarSeries.barThickness + 1
     End If
     mToolbar.Buttons("thinnerbars").Enabled = True
-Case "scaledown"
+Case ToolbarCommandScaleDown
     scaleUp -0.09091
-Case "scaleup"
+Case ToolbarCommandScaleUp
     scaleUp 0.1
-Case "scrolldown"
+Case ToolbarCommandScrollDown
     scrollVerticalProportion -0.2
-Case "scrollup"
+Case ToolbarCommandScrollUp
     scrollVerticalProportion 0.2
-Case "autoscale"
+Case ToolbarCommandAutoScale
     autoscale = True
 End Select
 
@@ -572,20 +574,20 @@ If Not mSuppressDrawing Then
 End If
 End Property
 
-Friend Property Get barCandleWidth() As Single
-barCandleWidth = mBarCandleWidth
+Friend Property Get barWidth() As Single
+barWidth = mBarWidth
 End Property
 
-Friend Property Let barCandleWidth(ByVal value As Single)
-mBarCandleWidth = value
+Friend Property Let barWidth(ByVal value As Single)
+mBarWidth = value
 End Property
 
-Public Property Get barDisplayAsCandlestick() As Boolean
-barDisplayAsCandlestick = mBarDisplayAsCandlestick
+Public Property Get barDisplayMode() As BarDisplayModes
+barDisplayMode = mDisplayMode
 End Property
 
-Public Property Let barDisplayAsCandlestick(ByVal value As Boolean)
-mBarDisplayAsCandlestick = value
+Public Property Let barDisplayMode(ByVal value As BarDisplayModes)
+mDisplayMode = value
 End Property
 
 Public Property Get barDownColor() As Long
@@ -636,6 +638,11 @@ Public Property Let barUpColor(ByVal value As Long)
 mBarUpColor = value
 End Property
 
+Friend Property Let controller( _
+                ByVal value As ChartController)
+Set mController = value
+End Property
+
 Public Property Get currentTool() As ToolTypes
 currentTool = mCurrentTool
 End Property
@@ -644,11 +651,11 @@ Friend Property Let currentTool(ByVal value As ToolTypes)
 mCurrentTool = value
 End Property
 
-Public Property Get dataPointDisplayMode() As DisplayModes
+Public Property Get dataPointDisplayMode() As DataPointDisplayModes
 dataPointDisplayMode = mDataPointDisplayMode
 End Property
 
-Public Property Let dataPointDisplayMode(ByVal value As DisplayModes)
+Public Property Let dataPointDisplayMode(ByVal value As DataPointDisplayModes)
 mDataPointDisplayMode = value
 End Property
 
@@ -920,10 +927,6 @@ Public Property Let percentheight(ByVal value As Double)
 mPercentHeight = value
 End Property
 
-Friend Property Let periodLengthMinutes(ByVal val As Long)
-mPeriodLengthMinutes = val
-End Property
-
 Public Property Get pointerStyle() As PointerStyles
 pointerStyle = mPointerStyle
 End Property
@@ -953,11 +956,13 @@ Case PointerNone
 
 Case PointerCrosshairs
     mCanvas.MousePointer = vbDefault
+    drawCrosshairs mPrevCursorX, mPrevCursorY
 Case PointerDisc
     mCanvas.MousePointer = vbCrosshair
+    drawPointer mPrevCursorX, mPrevCursorY
 Case Else
-    err.Raise ErrorCodes.InvalidPropertyValue, _
-            "ChartSkil.ChartRegion::(let)pointerStyle", _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            "ChartSkil25.ChartRegion::(let)pointerStyle", _
             "Value must be a member of the PointerStyles enum"
 End Select
 
@@ -1038,29 +1043,6 @@ End Property
 
 Friend Property Let sessionStartTime(ByVal val As Date)
 mSessionOffsetMinutes = calculateMinutesFromMidnight(val) Mod 60
-End Property
-
-'/**
-'*
-'* Deprecated - use pointerStyle instead
-'*
-'*/
-Friend Property Get showCrosshairs() As Boolean
-showCrosshairs = (mPointerStyle = PointerCrosshairs)
-End Property
-
-'/**
-'*
-'* Deprecated - use pointerStyle instead
-'*
-'*/
-Friend Property Let showCrosshairs(ByVal val As Boolean)
-Dim style As PointerStyles
-If val Then
-    pointerStyle = PointerCrosshairs
-Else
-    pointerStyle = PointerDisc
-End If
 End Property
 
 Public Property Get showGrid() As Boolean
@@ -1293,6 +1275,10 @@ Public Property Let textPaddingY(ByVal newValue As Double)
 mTextPaddingY = newValue
 End Property
 
+Public Property Get title() As String
+title = mTitle.text
+End Property
+
 Friend Property Let toolbar(ByVal newValue As toolbar)
 Dim btn As Button
 
@@ -1311,7 +1297,7 @@ Friend Property Let verticalGridSpacing(ByVal value As Long)
 mVerticalGridSpacing = value
 End Property
 
-Friend Property Let verticalGridUnits(ByVal value As TimeUnits)
+Friend Property Let verticalGridUnits(ByVal value As TimePeriodUnits)
 mVerticalGridUnits = value
 End Property
 
@@ -1370,8 +1356,9 @@ Set addBarSeries = New BarSeries
 If mFirstBarSeries Is Nothing Then Set mFirstBarSeries = addBarSeries
 mBarSeriesCol.add addBarSeries
 addBarSeries.canvas = mCanvas
-addBarSeries.candleWidth = barCandleWidth
-addBarSeries.displayAsCandlestick = barDisplayAsCandlestick
+addBarSeries.barWidth = barWidth
+addBarSeries.controller = mController
+addBarSeries.displayMode = barDisplayMode
 addBarSeries.downColor = barDownColor
 addBarSeries.eventProxy = mEventProxy
 addBarSeries.layer = getLayer(layer)
@@ -1387,6 +1374,7 @@ Public Function addDataPointSeries(Optional ByVal layer As Long = -1) As DataPoi
 Set addDataPointSeries = New DataPointSeries
 mDataPointSeriesCol.add addDataPointSeries
 addDataPointSeries.canvas = mCanvas
+addDataPointSeries.controller = mController
 addDataPointSeries.eventProxy = mEventProxy
 addDataPointSeries.displayMode = dataPointDisplayMode
 addDataPointSeries.histBarWidth = dataPointHistBarWidth
@@ -1397,11 +1385,11 @@ addDataPointSeries.lineStyle = dataPointLineStyle
 addDataPointSeries.lineThickness = dataPointLineThickness
 End Function
 
-Public Function addLine(Optional ByVal layer As Long = -1) As ChartSkil.Line
+Public Function addLine(Optional ByVal layer As Long = -1) As ChartSkil25.Line
 If mDefaultLineSeries Is Nothing Then
     Set mDefaultLineSeries = addLineSeries(LayerDefaultLines)
 End If
-Set addLine = mDefaultLineSeries.addLine
+Set addLine = mDefaultLineSeries.add
 If layer <> -1 Then addLine.layer = layer
 End Function
 
@@ -1446,7 +1434,7 @@ Public Function addText(Optional ByVal layer As Long = -1) As text
 If mDefaultTextSeries Is Nothing Then
     Set mDefaultTextSeries = addTextSeries(LayerDefaultTexts)
 End If
-Set addText = mDefaultTextSeries.addText
+Set addText = mDefaultTextSeries.add
 If layer <> -1 Then addText.layer = layer
 End Function
 
@@ -1479,6 +1467,8 @@ Dim i As Long
 
 If Not mSuppressDrawing Then mCanvas.clear
 mCanvas.surface = Nothing
+
+Set mToolbar = Nothing
 
 ' now remove all graphic object references from the various collections
 For i = mBarSeriesCol.count To 1 Step -1
@@ -1559,7 +1549,7 @@ End Function
 Public Function newPoint(ByVal x As Double, _
                         ByVal y As Double, _
                         Optional ByVal coordSystemX As CoordinateSystems = CoordsLogical, _
-                        Optional ByVal coordSystemY As CoordinateSystems = CoordsLogical) As Point
+                        Optional ByVal coordSystemY As CoordinateSystems = CoordinateSystems.CoordsLogical) As Point
 Set newPoint = mCanvas.newPoint(x, y, coordSystemX, coordSystemY)
 End Function
 
@@ -1669,7 +1659,7 @@ For i = MinLayer To MaxLayer
         With mGraphicObjects(index)
             Dim drawAreas(0) As TRectangle
             drawAreas(0) = rectIntersection(.boundingRect, mCanvas.boundary)
-            .graphobj.draw drawAreas, mCanvas.hdc
+            .graphObj.draw drawAreas, mCanvas.hdc
             index = .nextVisibleIndex
             counter = counter + 1
         End With
@@ -1813,7 +1803,7 @@ With mCanvas
             With mGraphicObjects(index)
                 redrawAreas(0) = rectIntersection(periodrect, .boundingRect)
                 If redrawAreas(0).isValid Then
-                    .graphobj.draw redrawAreas, mCanvas.hdc
+                    .graphObj.draw redrawAreas, mCanvas.hdc
                 End If
                 index = .nextVisibleIndex
             End With
@@ -1894,7 +1884,7 @@ End Sub
 Private Sub addEntryToInScopeList(ByVal index As Long)
 With mGraphicObjects(index)
     If .inScopeCycle <> mInScopeCycle Then
-        .graphobj.inScope = True
+        .graphObj.inScope = True
         .inScopeCycle = mInScopeCycle
         .nextInScopeIndex = mLastInScopeIndex
         .prevInScopeIndex = mGraphicObjects(mLastInScopeIndex).prevInScopeIndex
@@ -1908,7 +1898,7 @@ Private Sub addEntryToPeriodList(ByVal index As Long)
 Dim lastindex As Long
 Dim newPeriodNumber As Long
 
-newPeriodNumber = mGraphicObjects(index).graphobj.periodNumber
+newPeriodNumber = mGraphicObjects(index).graphObj.periodNumber
 If newPeriodNumber <> mGraphicObjects(index).periodNumber Then
     If mGraphicObjects(index).periodNumber >= 1 Then
         removeEntryFromPeriodList index
@@ -1936,7 +1926,7 @@ Private Sub addEntryToVisibleList(ByVal index As Long)
 Dim lastindex As Long
 With mGraphicObjects(index)
     If .visibleCycle <> mVisibleCycle Then
-        .graphobj.visible = True
+        .graphObj.visible = True
         .visibleCycle = mVisibleCycle
         lastindex = mVisibleTable(.layer).lastindex
         .nextVisibleIndex = lastindex
@@ -1947,7 +1937,7 @@ With mGraphicObjects(index)
 End With
 End Sub
 
-Private Function addGraphicObject(ByVal graphobj As IGraphicObject) As Long
+Private Function addGraphicObject(ByVal graphObj As IGraphicObject) As Long
 Dim handle As Long
 
 handle = allocateGraphicObjectTableEntry
@@ -1955,18 +1945,18 @@ If mFirstGraphicObjectIndex = 0 Then
     mFirstGraphicObjectIndex = handle
 End If
 
-graphobj.handle = handle
+graphObj.handle = handle
 
 With mGraphicObjects(handle)
-    Set .graphobj = graphobj
-    .boundingRect = graphobj.boundingRectangle(True, True, True, 0, 0, mCanvas.boundary)
-    .extendedObject = graphobj.extendedObject
-    .gaugeDependent = graphobj.gaugeDependent
-    .includeInAutoscale = graphobj.includeInAutoscale
-    .layer = graphobj.layer
-    .scaleDependent = graphobj.scaleDependent
-    .capabilities = graphobj.capabilities
-    .noDraw = graphobj.noDraw
+    Set .graphObj = graphObj
+    .boundingRect = graphObj.boundingRectangle(True, True, True, 0, 0, mCanvas.boundary)
+    .extendedObject = graphObj.extendedObject
+    .gaugeDependent = graphObj.gaugeDependent
+    .includeInAutoscale = graphObj.includeInAutoscale
+    .layer = graphObj.layer
+    .scaleDependent = graphObj.scaleDependent
+    .capabilities = graphObj.capabilities
+    .noDraw = graphObj.noDraw
     
 End With
 
@@ -2011,13 +2001,13 @@ Private Sub addVerticalGridLine(ByVal periodNumber As Long, _
                                 ByVal label As String, _
                                 ByVal coarseKey As String, _
                                 ByVal coarseLabel As String)
-Dim vGridLine As ChartSkil.Line
+Dim vGridLine As ChartSkil25.Line
 Dim vGridText As text
 Dim vGridTextCoarse As text
 
 If mShowGrid Then
     On Error Resume Next
-    Set vGridLine = mXGridLines.ItemByKey(key)
+    Set vGridLine = mXGridLines.item(key)
     On Error GoTo 0
     If vGridLine Is Nothing Then
         Set vGridLine = mXGridLines.add(key)
@@ -2034,7 +2024,7 @@ End If
 
 If mShowGridText Then
     On Error Resume Next
-    Set vGridText = mXGridTexts.ItemByKey(key)
+    Set vGridText = mXGridTexts.item(key)
     On Error GoTo 0
     If vGridText Is Nothing Then
         Set vGridText = mXGridTexts.add(key)
@@ -2048,7 +2038,7 @@ If mShowGridText Then
     End If
 
     On Error Resume Next
-    Set vGridTextCoarse = mXGridTextsCoarse.ItemByKey(coarseKey)
+    Set vGridTextCoarse = mXGridTextsCoarse.item(coarseKey)
     On Error GoTo 0
     If vGridTextCoarse Is Nothing Then
         Set vGridTextCoarse = mXGridTextsCoarse.add(coarseKey)
@@ -2088,7 +2078,7 @@ index = mGraphicObjects(mFirstInScopeIndex).nextInScopeIndex
 Do While index <> mLastInScopeIndex
      With mGraphicObjects(index)
         If .gaugeDependent Then
-            .boundingRect = .graphobj.boundingRectangle(False, False, True, 0, 0, mCanvas.boundary)
+            .boundingRect = .graphObj.boundingRectangle(False, False, True, 0, 0, mCanvas.boundary)
             If graphicObjectIsVisible(index) Then
                 addEntryToVisibleList index
             End If
@@ -2124,7 +2114,7 @@ With mGraphicObjects(index)
         overlapXInterval = intIntersection(interval, rectGetXInterval(.boundingRect))
         For j = Int(overlapXInterval.startValue + 0.9) To _
                 Int(overlapXInterval.endValue)
-            rects = .graphobj.boundingRectanglesAt(j)
+            rects = .graphObj.boundingRectanglesAt(j)
             numrects = -1
             On Error Resume Next
             numrects = UBound(rects)
@@ -2168,7 +2158,7 @@ scaleMin = PlusInfinityDouble
 index = mGraphicObjects(mFirstInScopeIndex).nextInScopeIndex
 Do While index <> mLastInScopeIndex
     With mGraphicObjects(index)
-        If Not .graphobj.noDraw And _
+        If Not .graphObj.noDraw And _
             .includeInAutoscale And _
             Not .scaleDependent _
         Then
@@ -2228,12 +2218,12 @@ End If
 index = mGraphicObjects(mFirstInScopeIndex).nextInScopeIndex
 Do While index <> mLastInScopeIndex
     With mGraphicObjects(index)
-        If Not .graphobj.noDraw And _
+        If Not .graphObj.noDraw And _
             .includeInAutoscale And _
             Not .scaleDependent And _
             .gaugeDependent _
         Then
-            .boundingRect = .graphobj.boundingRectangle( _
+            .boundingRect = .graphObj.boundingRectangle( _
                                         False, _
                                         True, _
                                         True, _
@@ -2272,7 +2262,7 @@ Dim index As Long
 index = mGraphicObjects(mFirstInScopeIndex).nextInScopeIndex
 Do While index <> mLastInScopeIndex
     With mGraphicObjects(index)
-        .graphobj.inScope = False
+        .graphObj.inScope = False
         index = .nextInScopeIndex
     End With
 Loop
@@ -2288,7 +2278,7 @@ For i = MinLayer To MaxLayer
     index = mGraphicObjects(mVisibleTable(i).firstIndex).nextVisibleIndex
     Do While index <> mVisibleTable(i).lastindex
         With mGraphicObjects(index)
-            .graphobj.visible = False
+            .graphObj.visible = False
             index = .nextVisibleIndex
         End With
     Loop
@@ -2335,7 +2325,7 @@ Do While index <> mLastExtendedIndex
     numberExamined = numberExamined + 1
     numberExtended = numberExtended + 1
     With mGraphicObjects(index)
-        .boundingRect = .graphobj.boundingRectangle(True, False, False, 0, 0, mCanvas.boundary)
+        .boundingRect = .graphObj.boundingRectangle(True, False, False, 0, 0, mCanvas.boundary)
         If graphicObjectIsInScope(index) Then
             addEntryToInScopeList index
             numberInScope = numberInScope + 1
@@ -2362,7 +2352,7 @@ index = mGraphicObjects(mFirstInScopeIndex).nextInScopeIndex
 Do While index <> mLastInScopeIndex
     numberExamined = numberExamined + 1
     With mGraphicObjects(index)
-        .boundingRect = .graphobj.boundingRectangle( _
+        .boundingRect = .graphObj.boundingRectangle( _
                                     False, _
                                     True, _
                                     False, _
@@ -2417,7 +2407,7 @@ With mCanvas
                         DrawModes.DrawModeXorPen
     .setBrushAttributes vbYellow Xor .backColor, FillStyles.FillSolid
     lineX = Round(x)
-    .drawCircle lineX, y, .convertDistanceToLogicalX(0.8)
+    .drawCircle lineX, y, .newDimension(0.8, 0.8).XLogical
     mPrevCursorX = x
     mPrevCursorY = y
     
@@ -2484,13 +2474,13 @@ Dim j As Long
 Dim k As Long
 
 With mGraphicObjects(index1)
-    Set graphobj1 = .graphobj
+    Set graphobj1 = .graphObj
     obj1Rect = rectIntersection(.boundingRect, clippingRect)
     complexBounding1 = (.capabilities And capabilities.ComplexBounding)
 End With
 
 With mGraphicObjects(index2)
-    Set graphobj2 = .graphobj
+    Set graphobj2 = .graphObj
     obj2Rect = rectIntersection(.boundingRect, clippingRect)
     complexBounding2 = (.capabilities And capabilities.ComplexBounding)
 End With
@@ -2644,7 +2634,7 @@ With mGraphicObjects(index)
         overlapXInterval = intIntersection(rectGetXInterval(mCanvas.boundary), rectGetXInterval(.boundingRect))
         For i = Int(overlapXInterval.startValue) To _
                 Int(overlapXInterval.endValue)
-            boundingRects = .graphobj.boundingRectanglesAt(i)
+            boundingRects = .graphObj.boundingRectanglesAt(i)
             numrects = -1
             On Error Resume Next
             numrects = UBound(boundingRects)
@@ -2684,13 +2674,13 @@ End Sub
 
 Private Sub removeGraphicObjectSeries( _
                 ByVal pSeries As IGraphicObjectSeries)
-Dim graphobj As IGraphicObject
+Dim graphObj As IGraphicObject
 Dim i As Long
 
 For i = pSeries.count To 1 Step -1
-    Set graphobj = pSeries.item(i)
-    removeGraphicObject graphobj
-    graphobj.finish
+    Set graphObj = pSeries.item(i)
+    removeGraphicObject graphObj
+    graphObj.finish
     pSeries.remove i
 Next
 pSeries.finish
@@ -2742,10 +2732,10 @@ End With
 End Sub
 
 Private Sub removeGraphicObject( _
-                ByVal graphobj As IGraphicObject)
+                ByVal graphObj As IGraphicObject)
 Dim handle As Long
 
-handle = graphobj.handle
+handle = graphObj.handle
 
 If Not mGraphicObjects(handle).extendedObject Then
     removeEntryFromPeriodList handle
@@ -2760,15 +2750,15 @@ If graphicObjectIsInScope(handle) Then
     End If
 End If
 
-Set mGraphicObjects(handle).graphobj = Nothing
-graphobj.handle = -1
+Set mGraphicObjects(handle).graphObj = Nothing
+graphObj.handle = -1
 
 End Sub
 
 Private Sub setHorizontalGridLines()
 Dim y As Double
 Dim i As Long
-Dim aLine As ChartSkil.Line
+Dim aLine As ChartSkil25.Line
 Dim currSuppress As Boolean
 
 If mYGridLines Is Nothing Then Exit Sub
@@ -2779,7 +2769,7 @@ y = Int(mCanvas.bottom / mScaleGridSpacingY) * mScaleGridSpacingY
 Do While y < mCanvas.top
     i = i + 1
     If i > mYGridLines.count Then
-        Set aLine = mYGridLines.addLine
+        Set aLine = mYGridLines.add
     Else
         Set aLine = mYGridLines.item(i)
     End If
@@ -2810,7 +2800,7 @@ y = Int(mCanvas.bottom / mScaleGridSpacingY) * mScaleGridSpacingY
 Do While y < mCanvas.top
     i = i + 1
     If i > mYGridTexts.count Then
-        Set aText = mYGridTexts.addText
+        Set aText = mYGridTexts.add
     Else
         Set aText = mYGridTexts.item(i)
     End If
@@ -2832,115 +2822,82 @@ End Sub
 
 Private Sub setVerticalGridLine(ByVal timestamp As Date, _
                             ByVal periodNumber As Long)
-Dim vertGridIntervalMins As Long
+Dim vertGridInterval As Long
 Dim gridLineTime As Date
 Dim mins As Long
 Dim secs As Long
 
-If mVerticalGridSpacing = 0 Then
-    Select Case mPeriodLengthMinutes
-    Case 1
-        vertGridIntervalMins = 15
-    Case 2
-        vertGridIntervalMins = 30
-    Case 3
-        vertGridIntervalMins = 30
-    Case 4
-        vertGridIntervalMins = 60
-    Case 5
-        vertGridIntervalMins = 60
-    Case 6
-        vertGridIntervalMins = 60
-    Case 10, 12, 15
-        vertGridIntervalMins = 60
-    Case 20, 30
-        vertGridIntervalMins = 120
-    Case 60, 90
-        vertGridIntervalMins = 240
-    Case 120, 180, 240, 300, 360, 420, 480, 540, 600, 1440
+Debug.Assert mVerticalGridSpacing <> 0
+
+If mVerticalGridUnits = TimePeriodNone Then
+    ' just draw a vertical gridline every mVerticalGridSpacing bars
+    If periodNumber Mod mVerticalGridSpacing = 1 Then
         addVerticalGridLine periodNumber, _
-                        Format(timestamp, "yyyymm01"), _
-                        Format(timestamp, "Mmm"), _
-                        Format(timestamp, "yyyy0101"), _
-                        Format(timestamp, "yyyy")
-        Exit Sub
-    Case Else
-        ' in all other cases just draw a vertical gridline every 10 bars
-        If periodNumber Mod 10 = 1 Then
-            addVerticalGridLine periodNumber, _
-                        Format(timestamp, "yyyymmddhhnnss"), _
-                        FormatDateTime(timestamp, vbShortTime), _
-                        Format(timestamp, "yyyymmdd"), _
-                        Format(timestamp, "d Mmm yy")
-        End If
-        Exit Sub
-    End Select
+                    Format(timestamp, "yyyymmddhhnnss"), _
+                    FormatDateTime(timestamp, vbShortTime), _
+                    Format(timestamp, "yyyymmdd"), _
+                    Format(timestamp, "d Mmm yy")
+    End If
+    Exit Sub
+End If
+
+gridLineTime = BarStartTime(timestamp, mVerticalGridSpacing, mVerticalGridUnits)
     
-    mins = calculateMinutesFromMidnight(timestamp)
-    gridLineTime = Int(timestamp) + ((Int((mins - mSessionOffsetMinutes) / vertGridIntervalMins) * vertGridIntervalMins) + mSessionOffsetMinutes) / 1440
+Select Case mVerticalGridUnits
+Case TimePeriodSecond
+'    secs = calculateSecondsFromMidnight(timestamp)
+'    gridLineTime = Int(timestamp) + ((Int((secs - 60 * mSessionOffsetMinutes) / mVerticalGridSpacing) * mVerticalGridSpacing) + 60 * mSessionOffsetMinutes) / 86400
     addVerticalGridLine periodNumber, _
                     Format(gridLineTime, "yyyymmddhhnnss"), _
+                    FormatDateTime(gridLineTime, vbLongTime), _
+                    Format(gridLineTime, "yyyymmdd"), _
+                    Format(gridLineTime, "d Mmm yy")
+Case TimePeriodMinute
+'    mins = calculateMinutesFromMidnight(timestamp)
+'    gridLineTime = Int(timestamp) + ((Int((mins - mSessionOffsetMinutes) / mVerticalGridSpacing) * mVerticalGridSpacing) + mSessionOffsetMinutes) / 1440
+    addVerticalGridLine periodNumber, _
+                    Format(gridLineTime, "yyyymmddhhnn"), _
                     FormatDateTime(gridLineTime, vbShortTime), _
                     Format(gridLineTime, "yyyymmdd"), _
                     Format(gridLineTime, "d Mmm yy")
-Else
-    Select Case mVerticalGridUnits
-    Case TimeSecond
-        secs = calculateSecondsFromMidnight(timestamp)
-        gridLineTime = Int(timestamp) + ((Int((secs - 60 * mSessionOffsetMinutes) / mVerticalGridSpacing) * mVerticalGridSpacing) + 60 * mSessionOffsetMinutes) / 86400
-        addVerticalGridLine periodNumber, _
-                        Format(gridLineTime, "yyyymmddhhnnss"), _
-                        FormatDateTime(gridLineTime, vbLongTime), _
-                        Format(gridLineTime, "yyyymmdd"), _
-                        Format(gridLineTime, "d Mmm yy")
-    Case TimeMinute
-        mins = calculateMinutesFromMidnight(timestamp)
-        gridLineTime = Int(timestamp) + ((Int((mins - mSessionOffsetMinutes) / mVerticalGridSpacing) * mVerticalGridSpacing) + mSessionOffsetMinutes) / 1440
-        addVerticalGridLine periodNumber, _
-                        Format(gridLineTime, "yyyymmddhhnn"), _
-                        FormatDateTime(gridLineTime, vbShortTime), _
-                        Format(gridLineTime, "yyyymmdd"), _
-                        Format(gridLineTime, "d Mmm yy")
-    Case TimeHour
-        mins = calculateMinutesFromMidnight(timestamp)
-        gridLineTime = Int(timestamp) + ((Int((mins - mSessionOffsetMinutes) / (60 * mVerticalGridSpacing)) * 60 * mVerticalGridSpacing) + mSessionOffsetMinutes) / 1440
-        addVerticalGridLine periodNumber, _
-                        Format(gridLineTime, "yyyymmddhh"), _
-                        FormatDateTime(gridLineTime, vbShortTime), _
-                        Format(gridLineTime, "yyyymmdd"), _
-                        Format(gridLineTime, "d Mmm yy")
-    Case TimeDay
-        gridLineTime = Int(timestamp) - (DatePart("d", timestamp) - 1) Mod mVerticalGridSpacing
-        addVerticalGridLine periodNumber, _
-                        Format(gridLineTime, "yyyymmdd"), _
-                        Format(gridLineTime, "d"), _
-                        Format(gridLineTime, "yyyymm"), _
-                        Format(gridLineTime, "Mmm yy")
-    Case TimeWeek
-        gridLineTime = Int(timestamp) - 7 * ((DatePart("ww", timestamp) - 1) Mod mVerticalGridSpacing) - Weekday(timestamp) + 1
-        addVerticalGridLine periodNumber, _
-                        Format(gridLineTime, "yyyymmdd"), _
-                        Format(gridLineTime, "d Mmm"), _
-                        Format(gridLineTime, "yyyy"), _
-                        Format(gridLineTime, "yyyy")
-    Case TimeMonth
-        gridLineTime = DateSerial(Year(timestamp), Int((Month(timestamp) - 1) / mVerticalGridSpacing) * mVerticalGridSpacing + 1, 1)
-        addVerticalGridLine periodNumber, _
-                        Format(gridLineTime, "yyyymm"), _
-                        Format(gridLineTime, "Mmm"), _
-                        Format(gridLineTime, "yyyy"), _
-                        Format(gridLineTime, "yyyy")
-    Case TimeYear
-        gridLineTime = DateSerial(Int(Year(timestamp) / mVerticalGridSpacing) * mVerticalGridSpacing, 1, 1)
-        addVerticalGridLine periodNumber, _
-                        Format(gridLineTime, "yyyy"), _
-                        Format(gridLineTime, "YYYY"), _
-                        "$", _
-                        ""
-        
-    End Select
+Case TimePeriodHour
+'    mins = calculateMinutesFromMidnight(timestamp)
+'    gridLineTime = Int(timestamp) + ((Int((mins - mSessionOffsetMinutes) / (60 * mVerticalGridSpacing)) * 60 * mVerticalGridSpacing) + mSessionOffsetMinutes) / 1440
+    addVerticalGridLine periodNumber, _
+                    Format(gridLineTime, "yyyymmddhh"), _
+                    FormatDateTime(gridLineTime, vbShortTime), _
+                    Format(gridLineTime, "yyyymmdd"), _
+                    Format(gridLineTime, "d Mmm yy")
+Case TimePeriodDay
+'    gridLineTime = Int(timestamp) - (DatePart("d", timestamp) - 1) Mod mVerticalGridSpacing
+    addVerticalGridLine periodNumber, _
+                    Format(gridLineTime, "yyyymmdd"), _
+                    Format(gridLineTime, "d"), _
+                    Format(gridLineTime, "yyyymm"), _
+                    Format(gridLineTime, "Mmm yy")
+Case TimePeriodWeek
+'    gridLineTime = Int(timestamp) - 7 * ((DatePart("ww", timestamp) - 1) Mod mVerticalGridSpacing) - weekday(timestamp) + 1
+    addVerticalGridLine periodNumber, _
+                    Format(gridLineTime, "yyyymmdd"), _
+                    Format(gridLineTime, "d Mmm"), _
+                    Format(gridLineTime, "yyyy"), _
+                    Format(gridLineTime, "yyyy")
+Case TimePeriodMonth
+'    gridLineTime = DateSerial(Year(timestamp), Int((Month(timestamp) - 1) / mVerticalGridSpacing) * mVerticalGridSpacing + 1, 1)
+    addVerticalGridLine periodNumber, _
+                    Format(gridLineTime, "yyyymm"), _
+                    Format(gridLineTime, "Mmm"), _
+                    Format(gridLineTime, "yyyy"), _
+                    Format(gridLineTime, "yyyy")
+Case TimePeriodYear
+'    gridLineTime = DateSerial(Int(Year(timestamp) / mVerticalGridSpacing) * mVerticalGridSpacing, 1, 1)
+    addVerticalGridLine periodNumber, _
+                    Format(gridLineTime, "yyyy"), _
+                    Format(gridLineTime, "YYYY"), _
+                    "$", _
+                    ""
     
-End If
+End Select
 End Sub
 
 Private Sub undrawCrosshairs()
@@ -2976,7 +2933,7 @@ With mCanvas
                         DrawModes.DrawModeXorPen
     .setBrushAttributes vbYellow Xor .backColor, FillStyles.FillSolid
     prevLineX = Round(mPrevCursorX)
-    .drawCircle prevLineX, mPrevCursorY, .convertDistanceToLogicalX(0.8)
+    .drawCircle prevLineX, mPrevCursorY, .newDimension(0.8, 0.8).XLogical
 End With
 
 End Sub

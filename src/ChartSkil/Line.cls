@@ -95,6 +95,8 @@ Private mLineAngle As Double    ' slope in radians
 Private mLineAngleSin As Double
 Private mLineAngleCos As Double
 
+Private mKey As String
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -598,6 +600,14 @@ End Property
 'update
 'End Property
 
+Friend Property Let key(ByVal value As String)
+mKey = value
+End Property
+
+Public Property Get key() As String
+key = mKey
+End Property
+
 Friend Property Let layer(ByVal value As Long)
 mLayer = value
 End Property
@@ -830,12 +840,18 @@ With mBoundingRect
         lineInt.isValid = True
         regionInt = rectGetXInterval(mRegionRect)
         rectSetXInterval mBoundingRect, intIntersection(regionInt, lineInt)
+        'rectSetXInterval mBoundingRect, lineInt
         
         If Not .isValid Then
+            .bottom = MinusInfinityDouble
+            .top = PlusInfinityDouble
+            .left = MinusInfinityDouble
+            .right = PlusInfinityDouble
+'            .isValid = True
             Exit Sub
         End If
             
-        If .right > Int(mRegionRect.right) Then .right = Int(mRegionRect.right)
+        'If .right > Int(mRegionRect.right) Then .right = Int(mRegionRect.right)
         
         Select Case mDirection
         Case NE
@@ -1483,7 +1499,7 @@ End Sub
 Private Sub undraw()
 
 If Not mVisible Then Exit Sub
-draw mBoundingRect, True
+draw rectIntersection(mBoundingRect, mRegionRect), True
 mEventProxy.objectUndrawn mHandle, mBoundingRect
 Exit Sub
 

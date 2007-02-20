@@ -40,9 +40,6 @@ Private mCanvas As canvas
 Private mLayer As Long
 
 Private mEventProxy As ChartRegionEventProxy
-Private mMinPeriodInView As Long
-Private mMaxPeriodInView As Long
-
 
 Private mFixedX As Boolean
 Private mFixedY As Boolean
@@ -239,14 +236,6 @@ Public Property Get layer() As Long
 layer = mLayer
 End Property
 
-Public Property Get maxPeriodInView() As Long
-maxPeriodInView = mMaxPeriodInView
-End Property
-
-Public Property Get minPeriodInView() As Long
-minPeriodInView = mMinPeriodInView
-End Property
-
 Public Property Get paddingX() As Double
 paddingX = mPaddingX
 End Property
@@ -267,12 +256,17 @@ End Property
 ' Methods
 '================================================================================
 
-Friend Function add(Optional ByVal key As String) As text
-If mFinished Then err.Raise CommonErrorCodes.ErrIllegalStateException, _
-                            "ChartSkil.TextSeries::add", _
+Public Function add(Optional ByVal key As String) As text
+If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
+                            "ChartSkil25.TextSeries::add", _
                             "Text series is finished"
 Set add = New text
 add.canvas = mCanvas
+If key = "" Then
+    add.key = GenerateGUIDString
+Else
+    add.key = key
+End If
 add.align = mAlign
 add.box = mBox
 add.boxColor = mBoxColor
@@ -290,16 +284,8 @@ add.keepInView = mKeepInView
 add.layer = mLayer
 add.paddingX = mPaddingX
 add.paddingY = mPaddingY
-If key <> "" Then
-    mTexts.add add, key
-Else
-    mTexts.add add
-End If
+mTexts.add add, add.key
 mEventProxy.addGraphicObject add
-End Function
-
-Public Function addText() As text
-Set addText = add
 End Function
 
 Friend Sub finish()
@@ -307,13 +293,9 @@ mFinished = True
 Set mCanvas = Nothing
 End Sub
 
-Public Function item(ByVal index As Long) As text
+Public Function item(ByVal index As Variant) As text
 Attribute item.VB_UserMemId = 0
 Set item = mTexts(index)
-End Function
-
-Friend Function ItemByKey(ByVal key As String) As text
-Set ItemByKey = mTexts(key)
 End Function
 
 Public Function NewEnum() As IUnknown
