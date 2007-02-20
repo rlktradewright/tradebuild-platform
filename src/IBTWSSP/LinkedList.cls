@@ -117,6 +117,12 @@ End Property
 Friend Function add(ByVal Entry As Variant, key As Variant, Optional ByVal hint As Long) As Long
 Dim currEntry As Long
 
+If hint < 0 Or hint >= mNextFreeIndex Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+             "LinkedList" & ":" & "add", _
+            "Invalid value for hint argument"
+End If
+
 If mNextFreeIndex > UBound(mEntries) Then
     ReDim Preserve mEntries(UBound(mEntries) + mCapacityIncrement) As ListEntry
 End If
@@ -126,61 +132,71 @@ mEntries(mNextFreeIndex).key = key
 
 add = mNextFreeIndex
 
-If hint = 0 Then
-    currEntry = mEntries(mFirst).next
+If mSize = 0 Then
+    ' no entries yet
+    mEntries(add).next = mLast
+    mEntries(add).prev = mFirst
+    mEntries(mFirst).next = add
+    mEntries(mLast).prev = add
 Else
-    currEntry = hint
-End If
-
-If currEntry = mLast Or _
-    mEntries(currEntry).key > key _
-Then
-    Do While currEntry <> mFirst And _
-        mEntries(currEntry).key > key
-        currEntry = mEntries(currEntry).prev
-    Loop
-    mEntries(mEntries(currEntry).next).prev = mNextFreeIndex
-    mEntries(mNextFreeIndex).next = mEntries(currEntry).next
-    mEntries(mNextFreeIndex).prev = currEntry
-    mEntries(currEntry).next = mNextFreeIndex
-Else
-    Do While currEntry <> mLast And _
-        mEntries(currEntry).key <= key
-        currEntry = mEntries(currEntry).next
-    Loop
-    mEntries(mEntries(currEntry).prev).next = mNextFreeIndex
-    mEntries(mNextFreeIndex).prev = mEntries(currEntry).prev
-    mEntries(mNextFreeIndex).next = currEntry
-    mEntries(currEntry).prev = mNextFreeIndex
+    If hint = mFirst Then
+        currEntry = mEntries(mFirst).next
+    ElseIf hint = mLast Then
+        currEntry = mEntries(mLast).prev
+    Else
+        currEntry = hint
+    End If
+    
+    If mEntries(currEntry).key > key Then
+        Do While currEntry <> mFirst And _
+            mEntries(currEntry).key > key
+            currEntry = mEntries(currEntry).prev
+        Loop
+        mEntries(mEntries(currEntry).next).prev = add
+        mEntries(add).next = mEntries(currEntry).next
+        mEntries(add).prev = currEntry
+        mEntries(currEntry).next = add
+    Else
+        Do While currEntry <> mLast And _
+            mEntries(currEntry).key <= key
+            currEntry = mEntries(currEntry).next
+        Loop
+        mEntries(mEntries(currEntry).prev).next = add
+        mEntries(add).prev = mEntries(currEntry).prev
+        mEntries(add).next = currEntry
+        mEntries(currEntry).prev = add
+    End If
 End If
 
 mNextFreeIndex = mNextFreeIndex + 1
 mSize = mSize + 1
+
+'If mEntries(mFirst).next = 1 Then Stop
 End Function
 
 Friend Function firstIndex() As Long
-If mSize = 0 Then err.Raise ErrorCodes.ErrIllegalStateException, _
+If mSize = 0 Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                         "IBTWSSP.LinkedList::firstIndex", _
                         "List is empty"
 firstIndex = mEntries(mFirst).next
 End Function
 
 Friend Function itemAt(ByVal index As Long) As Variant
-If mSize = 0 Then err.Raise ErrorCodes.ErrIllegalStateException, _
+If mSize = 0 Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                         "IBTWSSP.LinkedList::itemAt", _
                         "List is empty"
 itemAt = mEntries(index).item
 End Function
 
 Friend Function lastIndex() As Long
-If mSize = 0 Then err.Raise ErrorCodes.ErrIllegalStateException, _
+If mSize = 0 Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                         "IBTWSSP.LinkedList::lastIndex", _
                         "List is empty"
 lastIndex = mEntries(mLast).prev
 End Function
 
 Friend Function nextIndex(ByVal index As Long) As Long
-If mSize = 0 Then err.Raise ErrorCodes.ErrIllegalStateException, _
+If mSize = 0 Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                         "IBTWSSP.LinkedList::nextIndex", _
                         "List is empty"
 If mEntries(index).next <> mLast Then
@@ -191,7 +207,7 @@ End If
 End Function
 
 Friend Function prevIndex(ByVal index As Long) As Long
-If mSize = 0 Then err.Raise ErrorCodes.ErrIllegalStateException, _
+If mSize = 0 Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                         "IBTWSSP.LinkedList::prevIndex", _
                         "List is empty"
 If mEntries(index).prev <> mFirst Then
@@ -202,10 +218,10 @@ End If
 End Function
 
 Friend Function remove(ByVal index As Long) As Variant
-If index = 0 Or index = 1 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
+If index = 0 Or index = 1 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                         "IBTWSSP.LinkedList::remove", _
                         "Can't remove head or tail entries"
-If mSize = 0 Then err.Raise ErrorCodes.ErrIllegalStateException, _
+If mSize = 0 Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                         "IBTWSSP.LinkedList::remove", _
                         "List is empty"
 remove = mEntries(index).item

@@ -93,7 +93,8 @@ Private Sub customInitialise( _
                 ByVal Parameters As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
-                ByVal underlyingStudy As Study)
+                ByVal underlyingStudy As Study, _
+                ByVal pSession As session)
 
 mStudyFoundation.ReplayUsingStudyValues = True
 mNumberOfValuesToCache = numberOfValuesToCache
@@ -110,8 +111,8 @@ If Not mStudyFoundation.isNewBar Then
 End If
 sPrevVal = ev.value
 
-mSDStudy.notify ev
-mMAStudy.notify ev
+mSDStudy.Notify ev
+mMAStudy.Notify ev
 
 ma = mMAStudy.getStudyValue(MovingAverageStudyValueName, 0).value
 If IsEmpty(ma) Or IsEmpty(mSD.SD.value) Then Exit Sub
@@ -159,15 +160,16 @@ Loop
 
 Set mMAStudy = gCreateMA(maType, _
                     mPeriods, _
-                    1)
+                    0)
 
 Set lparams = GStandardDeviation.defaultParameters
 lparams.setParameterValue ParamPeriods, mPeriods
 Set lStudy = mSD
-lStudy.initialise gLibraryManager.generateGUIDString, _
+lStudy.initialise GenerateGUIDString, _
                     lparams, _
                     mNumberOfValuesToCache, _
                     valueNames, _
+                    Nothing, _
                     Nothing
 End Sub
 
@@ -399,6 +401,11 @@ End If
 End Sub
 
 
+Private Function numberOfCachedValues( _
+                Optional ByVal valueName As String) As Long
+numberOfCachedValues = mMAStudy.numberOfCachedValues("")
+End Function
+
 '================================================================================
 ' From this point on the code is identical for all studies - do not change!!!!
 '================================================================================
@@ -462,7 +469,8 @@ Private Sub Study_initialise( _
                 ByVal Parameters As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
-                ByVal underlyingStudy As Study)
+                ByVal underlyingStudy As Study, _
+                ByVal pSession As session)
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
                             id, _
@@ -476,7 +484,8 @@ customInitialise id, _
                 Parameters, _
                 numberOfValuesToCache, _
                 inputValueNames, _
-                underlyingStudy
+                underlyingStudy, _
+                pSession
 End Sub
 
 Private Property Get Study_instanceName() As String
@@ -499,7 +508,7 @@ End Property
 
 Private Function Study_numberOfCachedValues( _
                 Optional ByVal valueName As String) As Long
-Study_numberOfCachedValues = mStudyFoundation.numberOfCachedValues(valueName)
+Study_numberOfCachedValues = numberOfCachedValues(valueName)
 End Function
 
 Private Property Get Study_parameters() As Parameters

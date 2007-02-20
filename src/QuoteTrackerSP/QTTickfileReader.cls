@@ -42,7 +42,6 @@ Implements LockConsumer
 '================================================================================
 
 Private Const InitialTickQueueCapacity As Long = 1000
-Private Const MaxTickTableIndex As Long = 9999
 
 '================================================================================
 ' Enums
@@ -51,12 +50,6 @@ Private Const MaxTickTableIndex As Long = 9999
 '================================================================================
 ' Types
 '================================================================================
-
-Private Type FieldDescriptor
-    Name        As String
-    DataType    As Long
-    size        As Long
-End Type
 
 '================================================================================
 ' Member variables
@@ -70,7 +63,7 @@ Private mDataConsumer As IStreamingDataConsumer
 
 Private mName As String
 
-Private mElapsedTimer As TimerUtils.ElapsedTimer
+Private mElapsedTimer As TimerUtils2.ElapsedTimer
 
 Private WithEvents mQTAPI As QTAPI
 Attribute mQTAPI.VB_VarHelpID = -1
@@ -106,7 +99,7 @@ Private Sub Class_Initialize()
 Set mTickQueue = New Queue
 mTickQueue.initialCapacity = InitialTickQueueCapacity
 
-Set mElapsedTimer = New TimerUtils.ElapsedTimer
+Set mElapsedTimer = New TimerUtils2.ElapsedTimer
 
 End Sub
 
@@ -230,6 +223,10 @@ End Sub
 
 Private Sub mQTAPI_Connected()
 On Error GoTo err
+mServiceConsumer.NotifyEvent StandardSPEventCodes.TFConnectedToDataSource, _
+                        "Connected to data source", _
+                        mTickfileServiceProvider.handle
+
 mServiceConsumer.Ready mInputTickfileSpecifier, 0
 mTickRequestId = mQTAPI.requestHistoricalTickData(mInputTickfileSpecifier, Me, mLockId)
 Exit Sub
@@ -242,11 +239,11 @@ End Sub
 Private Sub mQTAPI_ConnectFailed(ByVal Description As String, ByVal retrying As Boolean)
 On Error GoTo err
 If retrying Then
-    mServiceConsumer.error StandardSPErrorCodes.TFRetryConnectDataSource, _
+    mServiceConsumer.NotifyEvent StandardSPEventCodes.TFRetryConnectDataSource, _
                             Description, _
                             mTickfileServiceProvider.handle
 Else
-    mServiceConsumer.error StandardSPErrorCodes.TFCantConnectDataSource, _
+    mServiceConsumer.NotifyEvent StandardSPEventCodes.TFCantConnectDataSource, _
                             Description, _
                             mTickfileServiceProvider.handle
 End If
@@ -260,11 +257,11 @@ End Sub
 Private Sub mQTAPI_ConnectionClosed(ByVal reconnecting As Boolean)
 On Error GoTo err
 If reconnecting Then
-    mServiceConsumer.error StandardSPErrorCodes.TFReConnectingDataSource, _
+    mServiceConsumer.NotifyEvent StandardSPEventCodes.TFReConnectingDataSource, _
                         "Lost connection to TWS (reconnecting)", _
                         mTickfileServiceProvider.handle
 Else
-    mServiceConsumer.error StandardSPErrorCodes.TFLostConnectionToDataSource, _
+    mServiceConsumer.NotifyEvent StandardSPEventCodes.TFLostConnectionToDataSource, _
                         "Lost connection to TWS", _
                         mTickfileServiceProvider.handle
 End If

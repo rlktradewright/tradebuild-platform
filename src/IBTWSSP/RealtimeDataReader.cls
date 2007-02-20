@@ -112,6 +112,11 @@ Set mContract = contract
 If mTWSAPI Is Nothing Then
     Set mTWSAPI = gGetTWSAPIInstance(mServer, mPort, mClientID, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection)
     mTWSAPI.logLevel = mLogLevel
+    If mTWSAPI.connectionState = ConnConnected Then
+        mServiceConsumer.NotifyEvent StandardSPEventCodes.RTConnectedToDataSource, _
+                                "Connected to " & mTWSAPI.connectionString, _
+                                mRealtimeDataServiceProvider.handle
+    End If
 End If
 
 If mTWSAPI.connectionState = ConnConnected Then
@@ -179,6 +184,9 @@ End Function
 
 Private Sub mTWSAPI_Connected()
 On Error GoTo err
+mServiceConsumer.NotifyEvent StandardSPEventCodes.RTConnectedToDataSource, _
+                        "Connected to " & mTWSAPI.connectionString, _
+                        mRealtimeDataServiceProvider.handle
 mTickerId = mTWSAPI.RequestMarketData(mContract.specifier, Me, mDataConsumer, mIncludeMarketDepth)
 Exit Sub
 err:
@@ -193,11 +201,11 @@ Private Sub mTWSAPI_ConnectFailed( _
                 ByVal retrying As Boolean)
 On Error GoTo err
 If retrying Then
-    mServiceConsumer.Error StandardSPErrorCodes.RTRetryConnectDataSource, _
+    mServiceConsumer.NotifyEvent StandardSPEventCodes.RTRetryConnectDataSource, _
                             Description, _
                             mRealtimeDataServiceProvider.handle
 Else
-    mServiceConsumer.Error StandardSPErrorCodes.RTCantConnectDataSource, _
+    mServiceConsumer.NotifyEvent StandardSPEventCodes.RTCantConnectDataSource, _
                             Description, _
                             mRealtimeDataServiceProvider.handle
 End If
@@ -212,11 +220,11 @@ Private Sub mTWSAPI_ConnectionToTWSClosed( _
                 ByVal reconnecting As Boolean)
 On Error GoTo err
 If reconnecting Then
-    mServiceConsumer.Error StandardSPErrorCodes.RTReConnectingDataSource, _
+    mServiceConsumer.NotifyEvent StandardSPEventCodes.RTReConnectingDataSource, _
                         "Lost connection to TWS (reconnecting)", _
                         mRealtimeDataServiceProvider.handle
 Else
-    mServiceConsumer.Error StandardSPErrorCodes.RTLostConnectionToDataSource, _
+    mServiceConsumer.NotifyEvent StandardSPEventCodes.RTLostConnectionToDataSource, _
                         "Lost connection to TWS", _
                         mRealtimeDataServiceProvider.handle
 End If
@@ -230,7 +238,7 @@ End Sub
 Private Sub mTWSAPI_Disconnected( _
                 ByVal reason As String)
 On Error GoTo err
-mServiceConsumer.Error StandardSPErrorCodes.RTDisconnectedFromDataSource, _
+mServiceConsumer.NotifyEvent StandardSPEventCodes.RTDisconnectedFromDataSource, _
                         reason, _
                         mRealtimeDataServiceProvider.handle
 Exit Sub
@@ -319,13 +327,13 @@ Set mContract = Nothing
 End Sub
 
 Friend Sub marketDataRequestFailed(ByVal reason As String)
-mServiceConsumer.Error StandardSPErrorCodes.RTRequestFailed, _
+mServiceConsumer.NotifyEvent StandardSPEventCodes.RTRequestFailed, _
                         reason, _
                         mRealtimeDataServiceProvider.handle
 End Sub
 
 Friend Sub marketDepthRequestFailed(ByVal reason As String)
-mServiceConsumer.Error StandardSPErrorCodes.RTMarketDepthRequestFailed, _
+mServiceConsumer.NotifyEvent StandardSPEventCodes.RTMarketDepthRequestFailed, _
                         reason, _
                         mRealtimeDataServiceProvider.handle
 End Sub

@@ -50,13 +50,15 @@ Private mStudyFoundation As StudyFoundation
 '--------------------------------------------------------
 
 
+Private mSession As session
+
 Private mKPeriods As Long
 Private mDPeriods As Long
 
 Private mKCache As StudyValueCache
 Private mDCache As StudyValueCache
 
-Private mBars As StudiesSupp.bars
+Private mBars As Bars
 Private mMASmoothing As SMA
 Private mMASmoothingStudy As Study
 
@@ -80,7 +82,10 @@ Private Sub customInitialise( _
                 ByVal Parameters As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
-                ByVal underlyingStudy As Study)
+                ByVal underlyingStudy As Study, _
+                ByVal pSession As session)
+
+Set mSession = pSession
 
 customProcessParameters Parameters
 Set mKCache = mStudyFoundation.FindValueCache(StochValueK)
@@ -99,7 +104,7 @@ If Not mStudyFoundation.isNewBar Then
 End If
 sPrevVal = ev.value
 
-mBars.notify ev
+mBars.Notify ev
 
 If mBars.Count > mKPeriods Then
     If mStudyFoundation.isNewBar Then
@@ -121,7 +126,7 @@ End If
 newEv.barNumber = ev.barNumber
 newEv.timestamp = ev.timestamp
 newEv.value = mK
-mMASmoothingStudy.notify newEv
+mMASmoothingStudy.Notify newEv
 mD = mMASmoothing.ma.value
 
 If mStudyFoundation.isNewBar Then
@@ -155,7 +160,10 @@ Do While Not param Is Nothing
     Select Case UCase$(param.name)
     Case UCase$(StochParamKPeriods)
         mKPeriods = param.value
-        Set mBars = StudiesSupp.createBars(0, TimePeriodNone, , mKPeriods + 1)
+        Set mBars = CreateBars(0, _
+                                    TimePeriodNone, _
+                                    mSession, _
+                                    mKPeriods + 1)
     Case UCase$(StochParamDPeriods)
         mDPeriods = param.value
         Set mMASmoothing = gCreateMA("SMA", _
@@ -259,7 +267,8 @@ Private Sub Study_initialise( _
                 ByVal Parameters As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
-                ByVal underlyingStudy As Study)
+                ByVal underlyingStudy As Study, _
+                ByVal pSession As session)
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
                             id, _
@@ -273,7 +282,8 @@ customInitialise id, _
                 Parameters, _
                 numberOfValuesToCache, _
                 inputValueNames, _
-                underlyingStudy
+                underlyingStudy, _
+                pSession
 End Sub
 
 Private Property Get Study_instanceName() As String

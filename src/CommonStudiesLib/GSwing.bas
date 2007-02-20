@@ -10,11 +10,12 @@ Public Const SwingInputValue As String = "Input"
 Public Const SwingParamIncludeImplicitSwingPoints As String = "Include implicit swing points"
 Public Const SwingParamMinimumSwingTicks As String = "Minimum swing (ticks)"
 
-Public Const SwingValueSwingHighPoint As String = "Swing high"
-'Public Const SwingValueSwingHighType As String = "Swing high type"
-Public Const SwingValueSwingLowPoint As String = "Swing low"
-'Public Const SwingValueSwingLowType As String = "Swing low type"
+Public Const SwingValueSwingHighLine As String = "Swing high line"
+Public Const SwingValueSwingLowLine As String = "Swing low line"
+Public Const SwingValueSwingLine As String = "Swing line"
 Public Const SwingValueSwingPoint As String = "Swing point"
+Public Const SwingValueSwingHighPoint As String = "Swing high point"
+Public Const SwingValueSwingLowPoint As String = "Swing low point"
 
 '================================================================================
 ' Enums
@@ -81,21 +82,42 @@ If mStudyDefinition Is Nothing Then
     inputDef.Description = "Input value"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingPoint)
-    valueDef.Description = "Swing point values"
+    valueDef.Description = "Swing points"
     valueDef.isDefault = True
     valueDef.defaultRegion = DefaultRegionNone
-    valueDef.valueMode = ValueModeLine
+    valueDef.valueMode = ValueModeNone
     valueDef.valueType = ValueTypeReal
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingHighPoint)
-    valueDef.Description = "Swing high point values"
+    valueDef.Description = "Swing high points"
+    valueDef.isDefault = False
+    valueDef.defaultRegion = DefaultRegionNone
+    valueDef.valueMode = ValueModeNone
+    valueDef.valueType = ValueTypeReal
+    
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingLowPoint)
+    valueDef.Description = "Swing low points"
+    valueDef.isDefault = False
+    valueDef.defaultRegion = DefaultRegionNone
+    valueDef.valueMode = ValueModeNone
+    valueDef.valueType = ValueTypeReal
+    
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingLine)
+    valueDef.Description = "Swing point lines"
     valueDef.isDefault = False
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueMode = ValueModeLine
     valueDef.valueType = ValueTypeReal
     
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingLowPoint)
-    valueDef.Description = "Swing low point values"
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingHighLine)
+    valueDef.Description = "Swing high point lines"
+    valueDef.isDefault = False
+    valueDef.defaultRegion = DefaultRegionNone
+    valueDef.valueMode = ValueModeLine
+    valueDef.valueType = ValueTypeReal
+    
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(SwingValueSwingLowLine)
+    valueDef.Description = "Swing low point lines"
     valueDef.isDefault = False
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueMode = ValueModeLine
@@ -108,7 +130,7 @@ If mStudyDefinition Is Nothing Then
 
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(SwingParamIncludeImplicitSwingPoints)
     paramDef.Description = "Indicates whether to include implied swing points"
-    paramDef.parameterType = ParameterTypeReal
+    paramDef.parameterType = ParameterTypeBoolean
     
 End If
 

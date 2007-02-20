@@ -7,6 +7,7 @@ Option Explicit
 
 Public Const ConstTimeBarsInputPrice As String = "Price"
 Public Const ConstTimeBarsInputVolume As String = "Volume"
+Public Const ConstTimeBarsInputTickVolume As String = "Tick volume"
 
 Public Const ConstTimeBarsParamBarLength As String = "Bar length"
 Public Const ConstTimeBarsParamTimeUnits As String = "Time units"
@@ -51,7 +52,8 @@ Public Property Get defaultParameters() As Parameters
 If mDefaultParameters Is Nothing Then
     Set mDefaultParameters = New Parameters
     mDefaultParameters.setParameterValue ConstTimeBarsParamBarLength, 5
-    mDefaultParameters.setParameterValue ConstTimeBarsParamTimeUnits, "minutes"
+    mDefaultParameters.setParameterValue ConstTimeBarsParamTimeUnits, _
+                                        TimePeriodUnitsToString(TimePeriodMinute)
 End If
 
 ' now create a clone of the default parameters for the caller
@@ -82,6 +84,10 @@ If mStudyDefinition Is Nothing Then
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstTimeBarsInputVolume)
     inputDef.inputType = InputTypeInteger
     inputDef.Description = "Volume"
+    
+    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstTimeBarsInputTickVolume)
+    inputDef.inputType = InputTypeInteger
+    inputDef.Description = "Tick volume"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(ConstTimeBarsValueBar)
     valueDef.Description = "The constant time bars"
@@ -151,13 +157,13 @@ If mStudyDefinition Is Nothing Then
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(ConstTimeBarsParamTimeUnits)
     paramDef.Description = "The time units that the constant time bars are measured in"
     paramDef.parameterType = ParameterTypeString
-    ar(0) = timePeriodUnitsToString(TimePeriodSecond)
-    ar(1) = timePeriodUnitsToString(TimePeriodMinute)
-    ar(2) = timePeriodUnitsToString(TimePeriodHour)
-    ar(3) = timePeriodUnitsToString(TimePeriodDay)
-    ar(4) = timePeriodUnitsToString(TimePeriodWeek)
-    ar(5) = timePeriodUnitsToString(TimePeriodMonth)
-    ar(6) = timePeriodUnitsToString(TimePeriodYear)
+    ar(0) = TimePeriodUnitsToString(TimePeriodSecond)
+    ar(1) = TimePeriodUnitsToString(TimePeriodMinute)
+    ar(2) = TimePeriodUnitsToString(TimePeriodHour)
+    ar(3) = TimePeriodUnitsToString(TimePeriodDay)
+    ar(4) = TimePeriodUnitsToString(TimePeriodWeek)
+    ar(5) = TimePeriodUnitsToString(TimePeriodMonth)
+    ar(6) = TimePeriodUnitsToString(TimePeriodYear)
     paramDef.permittedValues = ar
     
 End If

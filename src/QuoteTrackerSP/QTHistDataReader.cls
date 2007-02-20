@@ -41,8 +41,6 @@ Implements LockConsumer
 ' Constants
 '================================================================================
 
-Private Const InitialRequestQueueCapacity As Long = 100
-
 '================================================================================
 ' Enums
 '================================================================================
@@ -77,7 +75,6 @@ Private mLockId As Long
 Private mRequestId As Long
 
 Private mBarDataSpecifier  As TradeBuildSP.BarDataSpecifier
-Private mContractSpecifier As IContractSpecifier
 
 Private mWaitingForBarData As Boolean
 Private mBarRequested As Boolean
@@ -123,12 +120,26 @@ handleFatalError err.Number, _
 End Sub
 
 Private Sub IBarDataReader_FetchBars( _
-                            barSpecifier As TradeBuildSP.BarDataSpecifier)
+                barSpecifier As TradeBuildSP.BarDataSpecifier)
 
 On Error GoTo err
 If mRequestInProgress Then err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "IBTWSSP.HistDataReader::FetchBars", _
                                     "Request already in progress"
+
+Select Case barSpecifier.BarLengthUnits
+Case TimePeriodMinute, _
+    TimePeriodHour, _
+    TimePeriodDay, _
+    TimePeriodWeek, _
+    TimePeriodMonth, _
+    TimePeriodYear
+Case Else
+    mServiceConsumer.NotifyEvent StandardSPEventCodes.HDRequestInvalid, _
+                            "Bar time unit not supported", _
+                            mHistDataServiceProvider.handle
+    Exit Sub
+End Select
 
 mRequestInProgress = True
 mWaitingForBarData = True
@@ -142,7 +153,10 @@ End If
 
 If mQTAPI.connectionState = ConnConnected Then
     mServiceConsumer.Ready
-    mRequestId = mQTAPI.requestHistoricalBarData(mBarDataSpecifier, Me, mLockId)
+    mRequestId = mQTAPI.requestHistoricalBarData( _
+                                mBarDataSpecifier, _
+                                Me, _
+                                mLockId)
 End If
 Exit Sub
 err:
@@ -214,6 +228,11 @@ End Sub
 
 Private Sub mQTAPI_Connected()
 On Error GoTo err
+
+mServiceConsumer.NotifyEvent StandardSPEventCodes.HDConnectedToDataSource, _
+                        "Connected to data source", _
+                        mHistDataServiceProvider.handle
+
 If mRequestInProgress Then
     mServiceConsumer.Ready
     mRequestId = mQTAPI.requestHistoricalBarData(mBarDataSpecifier, Me, mLockId)
@@ -230,11 +249,11 @@ Private Sub mQTAPI_ConnectFailed( _
                 ByVal retrying As Boolean)
 On Error GoTo err
 If retrying Then
-    mServiceConsumer.error StandardSPErrorCodes.HDRetryConnectDataSource, _
+    mServiceConsumer.NotifyEvent StandardSPEventCodes.HDRetryConnectDataSource, _
                             Description, _
                             mHistDataServiceProvider.handle
 Else
-    mServiceConsumer.error StandardSPErrorCodes.HDCantConnectDataSource, _
+    mServiceConsumer.NotifyEvent StandardSPEventCodes.HDCantConnectDataSource, _
                             Description, _
                             mHistDataServiceProvider.handle
 End If
@@ -249,11 +268,11 @@ Private Sub mQTAPI_ConnectionClosed( _
                 ByVal reconnecting As Boolean)
 On Error GoTo err
 If reconnecting Then
-    mServiceConsumer.error StandardSPErrorCodes.HDReConnectingDataSource, _
+    mServiceConsumer.NotifyEvent StandardSPEventCodes.HDReConnectingDataSource, _
                         "Lost connection to QT (reconnecting)", _
                         mHistDataServiceProvider.handle
 Else
-    mServiceConsumer.error StandardSPErrorCodes.HDLostConnectionToDataSource, _
+    mServiceConsumer.NotifyEvent StandardSPEventCodes.HDLostConnectionToDataSource, _
                         "Lost connection to QT", _
                         mHistDataServiceProvider.handle
 End If
@@ -338,13 +357,13 @@ End If
 End Sub
 
 Friend Sub historicalDataRequestFailed(ByVal reason As String)
-mServiceConsumer.error StandardSPErrorCodes.HDRequestFailed, _
+mServiceConsumer.NotifyEvent StandardSPEventCodes.HDRequestFailed, _
                         reason, _
                         mHistDataServiceProvider.handle
 End Sub
 
 Friend Sub historicalDataRequestInvalid(ByVal reason As String)
-mServiceConsumer.error StandardSPErrorCodes.HDRequestInvalid, _
+mServiceConsumer.NotifyEvent StandardSPEventCodes.HDRequestInvalid, _
                         reason, _
                         mHistDataServiceProvider.handle
 End Sub
@@ -368,13 +387,15 @@ End Sub
 
 Private Sub ProcessBar()
 Dim lBar As TradeBuildSP.Bar
+Dim barLength As Long
+Dim barUnits As TimePeriodUnits
 
 With lBar
     If Not mQTAPI.readHistoricalBar( _
                             mRequestId, _
                             .timestamp, _
-                            .barType, _
-                            .PeriodMinutes, _
+                            barLength, _
+                            barUnits, _
                             .openPrice, _
                             .highPrice, _
                             .lowPrice, _
@@ -389,7 +410,7 @@ With lBar
         Exit Sub
     End If
 End With
-mDataConsumer.Bar lBar
+mDataConsumer.Bar lBar, barLength, barUnits
 End Sub
 
 

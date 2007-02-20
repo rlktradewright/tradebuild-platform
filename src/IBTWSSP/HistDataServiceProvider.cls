@@ -102,7 +102,7 @@ Dim reader As HistDataReader
 On Error GoTo err
 Set reader = New HistDataReader
 Set IBarDataServiceProvider_CreateBarDataReader = reader
-reader.histDataServiceProvider = Me
+reader.HistDataServiceProvider = Me
 reader.commonServiceConsumer = mCommonServiceConsumer
 reader.barDataInputServiceConsumer = serviceConsumer
 reader.dataConsumer = dataConsumer
@@ -131,6 +131,35 @@ Private Function IBarDataServiceProvider_CreateBarDataWriter( _
 
 
 End Function
+
+Private Function IBarDataServiceProvider_IsSupportedTimePeriod( _
+                period As TWUtilities.TimePeriod) As Boolean
+Select Case period.units
+Case TimePeriodSecond, _
+    TimePeriodMinute, _
+    TimePeriodHour, _
+    TimePeriodDay, _
+    TimePeriodWeek, _
+    TimePeriodMonth, _
+    TimePeriodYear
+    IBarDataServiceProvider_IsSupportedTimePeriod = True
+End Select
+End Function
+
+Private Property Get IBarDataServiceProvider_SupportedTimePeriods() As TimePeriod()
+Dim ar(6) As TimePeriod
+
+ar(0).units = TimePeriodSecond
+ar(1).units = TimePeriodMinute
+ar(2).units = TimePeriodHour
+ar(3).units = TimePeriodDay
+ar(4).units = TimePeriodWeek
+ar(5).units = TimePeriodMonth
+ar(6).units = TimePeriodYear
+'ar(7).units = TimePeriodTickMovement
+'ar(8).units = TimePeriodTickVolume
+'ar(9).units = TimePeriodVolume
+End Property
 
 Private Function IBarDataServiceProvider_Supports( _
                             ByVal capabilities As Long _

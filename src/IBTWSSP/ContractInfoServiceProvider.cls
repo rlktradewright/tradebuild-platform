@@ -127,7 +127,7 @@ Private Sub ContractDetailsRequester_contractSpecifierInvalid( _
                 ByRef request As TWSContractDetailsRequestQueueEntry, _
                 ByVal reason As String)
 On Error GoTo err
-mContractInfoServiceConsumer.Error StandardSPErrorCodes.CIContractSpecifierInvalid, _
+mContractInfoServiceConsumer.NotifyEvent StandardSPEventCodes.CIContractSpecifierInvalid, _
                                     reason, _
                                     request.tradeBuildContracts, _
                                     mHandle
@@ -223,7 +223,7 @@ If mTWSAPI Is Nothing Then
     mTWSAPI.TWSLogLevel = mTWSLogLevel
 End If
 
-mTWSAPI.RequestContract pContracts, Me
+mTWSAPI.RequestContract pContracts.contractSpecifier, pContracts, Me
 Exit Sub
 err:
 handleFatalError err.number, _
@@ -252,12 +252,12 @@ End Function
 Private Sub mTWSAPI_ConnectFailed(ByVal Description As String, ByVal retrying As Boolean)
 On Error GoTo err
 If retrying Then
-    mContractInfoServiceConsumer.Error StandardSPErrorCodes.CIRetryConnectDataSource, _
+    mContractInfoServiceConsumer.NotifyEvent StandardSPEventCodes.CIRetryConnectDataSource, _
                                         Description, _
                                         Nothing, _
                                         mHandle
 Else
-    mContractInfoServiceConsumer.Error StandardSPErrorCodes.CICantConnectDataSource, _
+    mContractInfoServiceConsumer.NotifyEvent StandardSPEventCodes.CICantConnectDataSource, _
                                         Description, _
                                         Nothing, _
                                         mHandle
@@ -272,12 +272,12 @@ End Sub
 Private Sub mTWSAPI_ConnectionToTWSClosed(ByVal reconnecting As Boolean)
 On Error GoTo err
 If reconnecting Then
-    mContractInfoServiceConsumer.Error StandardSPErrorCodes.CIReConnectingDataSource, _
+    mContractInfoServiceConsumer.NotifyEvent StandardSPEventCodes.CIReConnectingDataSource, _
                                     "Lost connection to TWS (reconnecting)", _
                                     Nothing, _
                                     mHandle
 Else
-    mContractInfoServiceConsumer.Error StandardSPErrorCodes.CILostConnectionToDataSource, _
+    mContractInfoServiceConsumer.NotifyEvent StandardSPEventCodes.CILostConnectionToDataSource, _
                                     "Lost connection to TWS", _
                                     Nothing, _
                                     mHandle
@@ -291,7 +291,7 @@ End Sub
 
 Private Sub mTWSAPI_Disconnected(ByVal reason As String)
 On Error GoTo err
-mContractInfoServiceConsumer.Error StandardSPErrorCodes.CIDisconnectedFromDataSource, _
+mContractInfoServiceConsumer.NotifyEvent StandardSPEventCodes.CIDisconnectedFromDataSource, _
                                     reason, _
                                     Nothing, _
                                     mHandle

@@ -90,6 +90,7 @@ If mStudyDefinition Is Nothing Then
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(AtrParamMAType)
     paramDef.Description = "The type of moving average to be used"
     paramDef.parameterType = ParameterTypeString
+    paramDef.permittedValues = gMaTypes
     
 End If
 

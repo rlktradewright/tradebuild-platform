@@ -40,9 +40,6 @@ Implements IRealtimeDataReader
 ' Constants
 '================================================================================
 
-Private Const InitialTickQueueCapacity As Long = 1000
-Private Const MaxTickTableIndex As Long = 9999
-Private Const TimeoutSecs As Long = 10
 
 '================================================================================
 ' Enums
@@ -51,12 +48,6 @@ Private Const TimeoutSecs As Long = 10
 '================================================================================
 ' Types
 '================================================================================
-
-Private Type FieldDescriptor
-    Name        As String
-    DataType    As Long
-    size        As Long
-End Type
 
 '================================================================================
 ' Member variables
@@ -158,6 +149,10 @@ End Function
 
 Private Sub mQTAPI_Connected()
 On Error GoTo err
+mServiceConsumer.NotifyEvent StandardSPEventCodes.RTConnectedToDataSource, _
+                        "Connected to data source", _
+                        mRealtimeDataServiceProvider.handle
+
 mL1QuoteRequestId = mQTAPI.subscribeToL1Quotes(mContract, Me)
 Exit Sub
 err:
@@ -169,11 +164,11 @@ End Sub
 Private Sub mQTAPI_ConnectFailed(ByVal Description As String, ByVal retrying As Boolean)
 On Error GoTo err
 If retrying Then
-    mServiceConsumer.error StandardSPErrorCodes.RTRetryConnectDataSource, _
+    mServiceConsumer.NotifyEvent StandardSPEventCodes.RTRetryConnectDataSource, _
                             Description, _
                             mRealtimeDataServiceProvider.handle
 Else
-    mServiceConsumer.error StandardSPErrorCodes.RTCantConnectDataSource, _
+    mServiceConsumer.NotifyEvent StandardSPEventCodes.RTCantConnectDataSource, _
                             Description, _
                             mRealtimeDataServiceProvider.handle
 End If
@@ -186,11 +181,11 @@ End Sub
 
 Private Sub mQTAPI_ConnectionClosed(ByVal reconnecting As Boolean)
 If reconnecting Then
-    mServiceConsumer.error StandardSPErrorCodes.RTReConnectingDataSource, _
+    mServiceConsumer.NotifyEvent StandardSPEventCodes.RTReConnectingDataSource, _
                         "Lost connection to QT (reconnecting)", _
                         mRealtimeDataServiceProvider.handle
 Else
-    mServiceConsumer.error StandardSPErrorCodes.RTLostConnectionToDataSource, _
+    mServiceConsumer.NotifyEvent StandardSPEventCodes.RTLostConnectionToDataSource, _
                         "Lost connection to QT", _
                         mRealtimeDataServiceProvider.handle
 End If

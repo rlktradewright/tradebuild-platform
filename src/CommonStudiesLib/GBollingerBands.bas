@@ -126,6 +126,7 @@ If mStudyDefinition Is Nothing Then
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(BBParamMAType)
     paramDef.Description = "The type of moving average to be used"
     paramDef.parameterType = ParameterTypeString
+    paramDef.permittedValues = gMaTypes
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(BBParamCentreBandWidth)
     paramDef.Description = "The width of the central region"

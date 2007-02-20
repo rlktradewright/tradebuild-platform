@@ -148,6 +148,7 @@ If mStudyDefinition Is Nothing Then
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(MACDParamMAType)
     paramDef.Description = "The type of moving averages to be used"
     paramDef.parameterType = ParameterTypeString
+    paramDef.permittedValues = gMaTypes
     
 End If
 

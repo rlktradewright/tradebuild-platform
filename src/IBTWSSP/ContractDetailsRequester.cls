@@ -84,7 +84,6 @@ Public Sub contractsLoaded( _
                 ByRef request As TWSContractDetailsRequestQueueEntry)
 End Sub
 
-
 '================================================================================
 ' Helper Functions
 '================================================================================

@@ -85,7 +85,8 @@ Private Sub customInitialise( _
                 ByVal Parameters As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
-                ByVal underlyingStudy As Study)
+                ByVal underlyingStudy As Study, _
+                ByVal pSession As Session)
 
 customProcessParameters Parameters
 Set mKCache = mStudyFoundation.FindValueCache(SStochValueK)
@@ -130,10 +131,11 @@ Set lparams = GStochastic.defaultParameters
 lparams.setParameterValue StochParamKPeriods, mKPeriods
 lparams.setParameterValue StochParamDPeriods, mKDPeriods
 valueNames(0) = "Input"
-mStochStudy.initialise gLibraryManager.generateGUIDString, _
+mStochStudy.initialise GenerateGUIDString, _
                         lparams, _
                         1, _
                         valueNames, _
+                        Nothing, _
                         Nothing
 
 mStochStudy.addStudyValueListener Me, StochValueD, 1
@@ -161,7 +163,7 @@ If Not mStudyFoundation.isNewBar Then
 End If
 
 mK = ev.value
-mMASmoothingStudy.notify ev
+mMASmoothingStudy.Notify ev
 mD = mMASmoothing.ma.value
 
 If mStudyFoundation.isNewBar Then
@@ -272,7 +274,9 @@ Private Sub Study_initialise( _
                 ByVal Parameters As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
-                ByVal underlyingStudy As Study)
+                ByVal underlyingStudy As Study, _
+                ByVal pSession As Session)
+Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
                             id, _
                             Parameters, _
@@ -285,7 +289,8 @@ customInitialise id, _
                 Parameters, _
                 numberOfValuesToCache, _
                 inputValueNames, _
-                underlyingStudy
+                underlyingStudy, _
+                pSession
 End Sub
 
 Private Property Get Study_instanceName() As String

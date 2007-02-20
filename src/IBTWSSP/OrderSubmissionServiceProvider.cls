@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "OrderSubmissionServiceProvider"
+Attribute VB_Name = "OrderSubmissionSrvcProvider"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -165,7 +165,7 @@ Dim orderSubmitter As orderSubmitter
 
 On Error GoTo err
 Set orderSubmitter = New orderSubmitter
-orderSubmitter.orderSubmissionServiceProvider = Me
+orderSubmitter.OrderSubmissionServiceProvider = Me
 orderSubmitter.commonServiceConsumer = mCommonServiceConsumer
 orderSubmitter.serviceConsumer = serviceConsumer
 orderSubmitter.contract = contract

@@ -53,7 +53,7 @@ Implements TradeBuildSP.IOrderSubmitter
 ' Member variables
 '================================================================================
 
-Private mOrderSubmissionServiceProvider As orderSubmissionServiceProvider
+Private mOrderSubmissionServiceProvider As OrderSubmissionSrvcProvider
 
 Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mServiceConsumer As TradeBuildSP.IOrderSubmissionSrvcConsumer
@@ -101,7 +101,7 @@ If request.localContracts.Count = 1 Then
     Set mContract = request.localContracts(1)
     mServiceConsumer.Ready
 Else
-    mServiceConsumer.Error StandardSPErrorCodes.LONotUniqueContract, _
+    mServiceConsumer.NotifyEvent StandardSPEventCodes.LONotUniqueContract, _
                             "Contract is not uniquely specified", _
                             mOrderSubmissionServiceProvider.handle
                             
@@ -111,7 +111,7 @@ End Sub
 Private Sub ContractDetailsRequester_contractSpecifierInvalid( _
                 ByRef request As TWSContractDetailsRequestQueueEntry, _
                 ByVal reason As String)
-mServiceConsumer.Error StandardSPErrorCodes.LOUnknownContract, _
+mServiceConsumer.NotifyEvent StandardSPEventCodes.LOUnknownContract, _
                         "Contract not known", _
                         mOrderSubmissionServiceProvider.handle
 End Sub
@@ -348,7 +348,7 @@ Dim targetOrder As TradeBuildSP.IOrder
 Dim ocaGroup As String
 
 On Error GoTo err
-ocaGroup = mCommonServiceConsumer.generateGUIDString
+ocaGroup = generateGUIDString
 
 Set stopOrder = pOrderPlex.stopOrder
 stopOrder.brokerId = ""   ' force a new id to be allocated
@@ -376,7 +376,7 @@ stopOrder.brokerId = ""     ' force a new id to be allocated
 If targetOrder Is Nothing Then
     placeOrder stopOrder, True, "0", ""
 Else
-    ocaGroup = mCommonServiceConsumer.generateGUIDString
+    ocaGroup = generateGUIDString
     placeOrder stopOrder, False, "0", ocaGroup
     placeOrder targetOrder, True, "0", ocaGroup
 End If
@@ -399,7 +399,7 @@ targetOrder.brokerId = ""   ' force a new id to be allocated
 If pOrderPlex.stopOrder Is Nothing Then
     placeOrder targetOrder, True, "0", ""
 Else
-    ocaGroup = mCommonServiceConsumer.generateGUIDString
+    ocaGroup = generateGUIDString
     placeOrder stopOrder, False, "0", ocaGroup
     placeOrder targetOrder, True, "0", ocaGroup
 End If
@@ -415,17 +415,20 @@ End Sub
 '================================================================================
 
 Private Sub mTWSAPI_Connected()
+mServiceConsumer.NotifyEvent StandardSPEventCodes.LOConnectedToBroker, _
+                        "Connected to " & mTWSAPI.connectionString, _
+                        mOrderSubmissionServiceProvider.handle
 If Not mContract Is Nothing Then mServiceConsumer.Ready
 End Sub
 
 Private Sub mTWSAPI_ConnectFailed(ByVal Description As String, ByVal retrying As Boolean)
 On Error GoTo err
 If Not retrying Then
-    mServiceConsumer.Error StandardSPErrorCodes.LOCantConnectToBroker, _
+    mServiceConsumer.NotifyEvent StandardSPEventCodes.LOCantConnectToBroker, _
                             Description, _
                             mOrderSubmissionServiceProvider.handle
 Else
-    mServiceConsumer.Error StandardSPErrorCodes.LORetryConnectToBroker, _
+    mServiceConsumer.NotifyEvent StandardSPEventCodes.LORetryConnectToBroker, _
                             Description, _
                             mOrderSubmissionServiceProvider.handle
 End If
@@ -439,7 +442,7 @@ End Sub
 
 Private Sub mTWSAPI_ConnectionToIBClosed()
 On Error GoTo err
-mServiceConsumer.Error StandardSPErrorCodes.LOReConnectingToBroker, _
+mServiceConsumer.NotifyEvent StandardSPEventCodes.LOReConnectingToBroker, _
                         "Lost connection from TWS to IB servers", _
                         mOrderSubmissionServiceProvider.handle
 mServiceConsumer.notReady
@@ -463,11 +466,11 @@ End Sub
 Private Sub mTWSAPI_ConnectionToTWSClosed( _
                 ByVal reconnecting As Boolean)
 If Not reconnecting Then
-    mServiceConsumer.Error StandardSPErrorCodes.LOLostConnectionToBroker, _
+    mServiceConsumer.NotifyEvent StandardSPEventCodes.LOLostConnectionToBroker, _
                             "Lost connection to TWS", _
                             mOrderSubmissionServiceProvider.handle
 Else
-    mServiceConsumer.Error StandardSPErrorCodes.LOReConnectingToBroker, _
+    mServiceConsumer.NotifyEvent StandardSPEventCodes.LOReConnectingToBroker, _
                             "Lost connection to TWS (reconnecting)", _
                             mOrderSubmissionServiceProvider.handle
 End If
@@ -476,7 +479,7 @@ End Sub
 
 Private Sub mTWSAPI_Disconnected(ByVal reason As String)
 On Error GoTo err
-mServiceConsumer.Error StandardSPErrorCodes.LODisconnectedFromBroker, _
+mServiceConsumer.NotifyEvent StandardSPEventCodes.LODisconnectedFromBroker, _
                         reason, _
                         mOrderSubmissionServiceProvider.handle
 Exit Sub
@@ -521,8 +524,8 @@ Friend Property Let name(ByVal value As String)
 mName = value
 End Property
 
-Friend Property Let orderSubmissionServiceProvider( _
-                ByVal value As orderSubmissionServiceProvider)
+Friend Property Let OrderSubmissionServiceProvider( _
+                ByVal value As OrderSubmissionSrvcProvider)
 Set mOrderSubmissionServiceProvider = value
 End Property
 
@@ -566,23 +569,24 @@ Friend Sub invalidOrder( _
                 ByVal orderId As String, _
                 ByVal message As String)
                 
-mServiceConsumer.Error StandardSPErrorCodes.LOInvalidOrder, _
+mServiceConsumer.NotifyEvent StandardSPEventCodes.LOInvalidOrder, _
                         message, _
                         mOrderSubmissionServiceProvider.handle
 End Sub
 
 Friend Sub start()
-Dim contracts As TradeBuildSP.IContracts
-
 If mTWSAPI Is Nothing Then
     Set mTWSAPI = gGetTWSAPIInstance(mServer, mPort, mClientID, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection)
     mTWSAPI.logLevel = mLogLevel
+    If mTWSAPI.connectionState = ConnConnected Then
+        mServiceConsumer.NotifyEvent StandardSPEventCodes.LOConnectedToBroker, _
+                                "Connected to " & mTWSAPI.connectionString, _
+                                mOrderSubmissionServiceProvider.handle
+    End If
 End If
 
 
-Set contracts = mCommonServiceConsumer.NewContracts
-contracts.contractSpecifier = mTradeBuildContract.specifier
-mTWSAPI.RequestContract contracts, Me
+mTWSAPI.RequestContract mTradeBuildContract.specifier, Nothing, Me
 End Sub
 
 Friend Sub updateStatus( _

@@ -53,6 +53,8 @@ Event ConnectionClosed( _
 ' Constants
 '================================================================================
 
+Private Const InitialRequestQueueCapacity As Long = 20
+
 Private Const LockActionReqHistoricData As String = "GHD"
 
 Private Const MaxConcurrentHistDataRequests As Long = 20    ' arbitrary limit
@@ -79,7 +81,7 @@ Private Type HistoricalBarDataRequestEntry
     QtRequestKey            As String
     symbol                  As String
     barSpecifier            As TradeBuildSP.BarDataSpecifier
-    barLength               As Long
+    session                 As session
     barsReceivedThisRequest As Long
     timestampOffset         As Date ' used to convert timestamps received from QT
                                     ' (which are in Eastern Standard Time) to
@@ -97,6 +99,7 @@ Private Type HistoricalTickDataRequestEntry
     cancelling          As Boolean
     lockId              As Long
     symbol              As String
+    session             As session
     requester           As QTTickfileReader
     firstInScopeTickProcessed As Boolean
     prevBid             As Double
@@ -138,7 +141,7 @@ End Type
 
 Private mCommonServiceConsumer As ICommonServiceConsumer
 
-Private WithEvents mConnectionTimer As TimerUtils.IntervalTimer
+Private WithEvents mConnectionTimer As TimerUtils2.IntervalTimer
 Attribute mConnectionTimer.VB_VarHelpID = -1
 
 Private WithEvents mSocket As Winsock
@@ -194,7 +197,7 @@ mMonths(12) = "Dec"
 Set mLockManager = New LockManager
 
 Set mQTHistDataRequestQueue = New Queue
-mQTHistDataRequestQueue.initialCapacity = 20
+mQTHistDataRequestQueue.initialCapacity = InitialRequestQueueCapacity
 
 ReDim mHistoricalBarDataRequestTable(MaxConcurrentHistDataRequests) As HistoricalBarDataRequestEntry
 
@@ -281,7 +284,7 @@ Private Sub mSocket_Error(ByVal Number As Integer, _
                         ByVal HelpContext As Long, _
                         CancelDisplay As Boolean)
 Dim errorNum As MSWinsockLib.ErrorConstants
-Dim timestamp As Date: timestamp = mCommonServiceConsumer.GetTimestamp
+Dim timestamp As Date: timestamp = GetTimestamp
 
 On Error GoTo err
 errorNum = Number
@@ -469,8 +472,8 @@ End Sub
 Public Function readHistoricalBar( _
                 ByVal requestHandle As Long, _
                 ByRef timestamp As Date, _
-                ByRef barType As Long, _
                 ByRef barLength As Long, _
+                ByRef barUnits As TimePeriodUnits, _
                 ByRef openPrice As Double, _
                 ByRef highPrice As Double, _
                 ByRef lowPrice As Double, _
@@ -487,8 +490,8 @@ With mHistoricalBarDataRequestTable(requestHandle)
         releaseHistoricalBarDataRequestEntry requestHandle
     Else
         readHistoricalBar = True
-        barType = TradeBuildSP.BarTypes.Trade
-        barLength = .barLength
+        barLength = .barSpecifier.barLength
+        barUnits = .barSpecifier.BarLengthUnits
         Bar = .bars.itemAt(.nextBarIndex)
         With Bar
             timestamp = .timestamp
@@ -553,7 +556,7 @@ mHistoricalBarDataRequestTable(i).lockId = lockId
 mHistoricalBarDataRequestTable(i).barSpecifier = barSpecifier
 mHistoricalBarDataRequestTable(i).symbol = barSpecifier.Contract.ProviderID(mProviderKey)
 mHistoricalBarDataRequestTable(i).nextBarIndex = 0
-mHistoricalBarDataRequestTable(i).barLength = barSpecifier.barLengthMinutes
+'mHistoricalBarDataRequestTable(i).barLength = barSpecifier.barLengthMinutes
 mHistoricalBarDataRequestTable(i).nextBarIndex = -1
 Set mHistoricalBarDataRequestTable(i).historicalDataReader = historicalDataReader
 Set mHistoricalBarDataRequestTable(i).bars = New LinkedList
@@ -576,6 +579,7 @@ Dim qtHist As String
 Dim starttimeEST As Date
 Dim endtimeEST As Date
 Dim i As Long
+Dim lSessionBuilder As SessionBuilder
 
 On Error GoTo err
 requestHistoricalTickData = -1
@@ -598,8 +602,16 @@ mHistoricalTickDataRequestTable(i).lockId = lockId
 Set mHistoricalTickDataRequestTable(i).requester = requester
 mHistoricalTickDataRequestTable(i).symbol = UCase$(tickfileSpecifier.Contract.ProviderID(mProviderKey))
 
+Set lSessionBuilder = New SessionBuilder
+lSessionBuilder.SessionStartTime = tickfileSpecifier.Contract.SessionStartTime
+lSessionBuilder.SessionEndTime = tickfileSpecifier.Contract.SessionEndTime
+Set mHistoricalTickDataRequestTable(i).session = lSessionBuilder.session
+
 If tickfileSpecifier.EntireSession Then
-    tickfileSpecifier.Contract.GetSessionTimes tickfileSpecifier.From, mHistoricalTickDataRequestTable(i).startTimeLocal, mHistoricalTickDataRequestTable(i).endTimeLocal
+    lSessionBuilder.session.SessionTimes _
+                                tickfileSpecifier.From, _
+                                mHistoricalTickDataRequestTable(i).startTimeLocal, _
+                                mHistoricalTickDataRequestTable(i).endTimeLocal
 Else
     mHistoricalTickDataRequestTable(i).startTimeLocal = tickfileSpecifier.From
     mHistoricalTickDataRequestTable(i).endTimeLocal = tickfileSpecifier.To
@@ -730,9 +742,9 @@ For i = 0 To UBound(mHistoricalBarDataRequestTable)
 Next
 End Function
 
-Private Function findHistoricalTickDataRequestEntry(ByVal symbol As String) As HistoricalTickDataRequestEntry
-findHistoricalTickDataRequestEntry = mHistoricalTickDataRequestTable(findHistoricalTickDataRequestEntryIndex(symbol))
-End Function
+'Private Function findHistoricalTickDataRequestEntry(ByVal symbol As String) As HistoricalTickDataRequestEntry
+'findHistoricalTickDataRequestEntry = mHistoricalTickDataRequestTable(findHistoricalTickDataRequestEntryIndex(symbol))
+'End Function
 
 Private Function findHistoricalTickDataRequestEntryIndex(ByVal symbol As String) As Long
 Dim i As Long
@@ -761,8 +773,6 @@ End Function
 
 Private Sub generateQTHistoricalDataRequest(ByVal index As Long)
 Dim qtRequest As QTHistoricalDataRequestQueueEntry
-Dim reqNum As Long
-Dim totalMinsReqd As Long
 
 Dim endDateTimeEST As Date
 Dim endOffset As Date
@@ -770,20 +780,25 @@ Dim endOffset As Date
 Dim startDateTime As Date
 Dim startDateTimeEST As Date
 Dim startOffset As Date
+Dim lSession As session
 
 qtRequest.symbol = mHistoricalBarDataRequestTable(index).symbol
 
-If mHistoricalBarDataRequestTable(index).barSpecifier.NumberOfBars <> 0 Then
-    startDateTime = mHistoricalBarDataRequestTable(index).barSpecifier.Contract.OffsetBarStartTime(mHistoricalBarDataRequestTable(index).barSpecifier.To, mHistoricalBarDataRequestTable(index).barLength, mHistoricalBarDataRequestTable(index).barSpecifier.NumberOfBars)
-'    startDateTime = mHistoricalBarDataRequestTable(index).barSpecifier.To - _
-'                    CDbl((mHistoricalBarDataRequestTable(index).barSpecifier.NumberOfBars * _
-'                        mHistoricalBarDataRequestTable(index).barLength)) / 1440
-    If startDateTime < mHistoricalBarDataRequestTable(index).barSpecifier.From Then
-        startDateTime = mHistoricalBarDataRequestTable(index).barSpecifier.From
+Set lSession = mHistoricalBarDataRequestTable(index).session
+With mHistoricalBarDataRequestTable(index).barSpecifier
+    If .NumberOfBars <> 0 Then
+        startDateTime = OffsetBarStartTime( _
+                                        .To, _
+                                        .barLength, _
+                                        .BarLengthUnits, _
+                                        .NumberOfBars)
+        If startDateTime < .From Then
+            startDateTime = .From
+        End If
+    Else
+        startDateTime = .From
     End If
-Else
-    startDateTime = mHistoricalBarDataRequestTable(index).barSpecifier.From
-End If
+End With
 
 startDateTimeEST = gConvertLocalTimeToEST(startDateTime)
 startOffset = startDateTime - startDateTimeEST
@@ -799,8 +814,9 @@ End If
 qtRequest.startDateTime = startDateTimeEST
 qtRequest.endDateTime = endDateTimeEST
 
-qtRequest.barLengthMinutes = mHistoricalBarDataRequestTable(index).barLength
-qtRequest.rth = True
+qtRequest.barLength = mHistoricalBarDataRequestTable(index).barSpecifier.barLength
+qtRequest.barUnits = mHistoricalBarDataRequestTable(index).barSpecifier.BarLengthUnits
+qtRequest.rth = False
 
 mHistoricalBarDataRequestTable(index).barsReceivedThisRequest = 0
 mHistoricalBarDataRequestTable(index).QtRequestKey = queueQtHistoricalDataRequest(qtRequest)
@@ -1168,9 +1184,9 @@ Do
     Case FieldTypes.symbol
         symbol = UCase$(GetFieldValue(fieldID, bytesProcessed))
         index = findHistoricalTickDataRequestEntryIndex(symbol)
-    Case FieldTypes.bidPrice
+    Case FieldTypes.BidPrice
         thisBid = GetFieldValue(fieldID, bytesProcessed)
-    Case FieldTypes.askPrice
+    Case FieldTypes.AskPrice
         thisAsk = GetFieldValue(fieldID, bytesProcessed)
     Case FieldTypes.LastPrice
         thisLast = GetFieldValue(fieldID, bytesProcessed)
@@ -1299,13 +1315,13 @@ Do
     Case FieldTypes.symbol
         symbol = UCase$(GetFieldValue(fieldID, bytesProcessed))
         index = findL1QuoteRequestEntryIndex(symbol)
-    Case FieldTypes.bidPrice
+    Case FieldTypes.BidPrice
         mL1QuotesRequestTable(index).bid = GetFieldValue(fieldID, bytesProcessed)
         bidTick.TickType = TickTypes.bid
     Case FieldTypes.bidSize
         mL1QuotesRequestTable(index).bidSize = GetFieldValue(fieldID, bytesProcessed)
         bidTick.TickType = TickTypes.bid
-    Case FieldTypes.askPrice
+    Case FieldTypes.AskPrice
         mL1QuotesRequestTable(index).ask = GetFieldValue(fieldID, bytesProcessed)
         askTick.TickType = TickTypes.ask
     Case FieldTypes.askSize
@@ -1403,7 +1419,6 @@ Private Sub ProcessLoginResponse( _
 Dim XMLdoc As DOMDocument30
 Dim XMLData As String
 Dim login As IXMLDOMElement
-Dim status As IXMLDOMElement
 Dim statusCode As IXMLDOMElement
 Dim statusDesc As IXMLDOMElement
 
@@ -1535,7 +1550,6 @@ Dim lockId As Long
 
 lockId = mHistoricalBarDataRequestTable(index).lockId
 
-mHistoricalBarDataRequestTable(index).barLength = 0
 Set mHistoricalBarDataRequestTable(index).bars = Nothing
 mHistoricalBarDataRequestTable(index).barsReceivedThisRequest = 0
 mHistoricalBarDataRequestTable(index).cancelling = False
@@ -1547,7 +1561,6 @@ mHistoricalBarDataRequestTable(index).QtRequestKey = ""
 mHistoricalBarDataRequestTable(index).symbol = ""
 mHistoricalBarDataRequestTable(index).timestampOffset = 0
 mHistoricalBarDataRequestTable(index).useOffset = False
-
 If lockId <> 0 Then mLockManager.releaseLock lockId
 
 End Sub
@@ -1583,6 +1596,7 @@ End Sub
 Private Sub reqHistoricalBarData( _
                 request As QTHistoricalDataRequestQueueEntry)
 Dim qtHistReq As String
+Dim barLengthSpecifier As String
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
     err.Raise ErrorCodes.ErrIllegalStateException, _
@@ -1590,13 +1604,30 @@ If mConnectionState <> ConnectionStates.ConnConnected Then
                 "Not connected"
 End If
 
+Select Case request.barUnits
+Case TimePeriodSecond
+    barLengthSpecifier = "1"
+Case TimePeriodMinute
+    barLengthSpecifier = "1"
+Case TimePeriodHour
+    barLengthSpecifier = "60"
+Case TimePeriodDay
+    barLengthSpecifier = request.barLength & "D"
+Case TimePeriodWeek
+    barLengthSpecifier = "1W"
+Case TimePeriodMonth
+    barLengthSpecifier = "1M"
+Case TimePeriodYear
+    barLengthSpecifier = "1Y"
+End Select
+
 qtHistReq = "<GetHistory>" & _
         "<ReqType>OHLC</ReqType>" & _
         "<Symbol>" & _
         request.symbol & _
         "</Symbol>" & _
         "<FREQ>" & _
-        request.barLengthMinutes & _
+        barLengthSpecifier & _
         "</FREQ>" & _
         "<FROM>" & _
         Format(request.startDateTime, "yyyy/mm/dd hh:mm:ss") & _
@@ -1644,9 +1675,7 @@ End Sub
 Private Sub retryConnection()
 If mConnectionRetryIntervalSecs <> 0 Then
     If mConnectionTimer Is Nothing Then
-        Set mConnectionTimer = New IntervalTimer
-        mConnectionTimer.RepeatNotifications = False
-        mConnectionTimer.TimerIntervalSecs = mConnectionRetryIntervalSecs
+        Set mConnectionTimer = createIntervalTimer(mConnectionRetryIntervalSecs, ExpiryTimeUnitSeconds)
     End If
     mConnectionTimer.StartTimer
 End If

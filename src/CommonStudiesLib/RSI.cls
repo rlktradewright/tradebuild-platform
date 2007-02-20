@@ -69,6 +69,7 @@ Private mStudyFoundation As StudyFoundation
 '--------------------------------------------------------
 
 
+Private mSession As session
 Private mRsiCache As StudyValueCache
 
 Private mPeriods As Long
@@ -85,7 +86,7 @@ Private mMaLosses As Study
 ' it's easy to calculate the open and close for each bar ourselves, but we'll
 ' illustrate the use of the Bars class provided by StudiesSupport which
 ' will do this for us.
-Private mBars As StudiesSupp.bars
+Private mBars As Bars
 
 '================================================================================
 ' Class Event Handlers
@@ -104,16 +105,20 @@ Private Sub customInitialise( _
                 ByVal Parameters As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
-                ByVal underlyingStudy As Study)
+                ByVal underlyingStudy As Study, _
+                ByVal pSession As session)
 
-
+Set mSession = pSession
 customProcessParameters Parameters
 
 Set mRsiCache = mStudyFoundation.FindValueCache(RsiValueRsi)
 
 ' create the Bars object. We only need it to cache the latest bar, so
 ' set the numberOfValuesToCache argument to 1
-Set mBars = StudiesSupp.createBars(0, TimePeriodNone, , 1)
+Set mBars = CreateBars(0, _
+                                TimePeriodNone, _
+                                mSession, _
+                                1)
 
 End Sub
 
@@ -133,7 +138,7 @@ End If
 sPrevVal = ev.value
 
 ' update the bars
-mBars.notify ev
+mBars.Notify ev
 
 ' pass the loss and gain values for the current bar to the relevant moving
 ' average object
@@ -141,10 +146,10 @@ mBars.notify ev
 evMa = ev
 evMa.value = mBars.gain(0)  ' NB: parameter value of 0 means current bar,
                             ' -1 is previous bar etc
-mMaGains.notify evMa        ' update the gains moving average
+mMaGains.Notify evMa        ' update the gains moving average
 
 evMa.value = mBars.loss(0)
-mMaLosses.notify evMa        ' update the losses moving average
+mMaLosses.Notify evMa        ' update the losses moving average
 
 ' now get the updated gain and loss moving averages. Note that we don't actually
 ' need to know the name of the moving average study values, because we can use
@@ -312,7 +317,8 @@ Private Sub Study_initialise( _
                 ByVal Parameters As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
-                ByVal underlyingStudy As Study)
+                ByVal underlyingStudy As Study, _
+                ByVal pSession As session)
 
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
@@ -327,7 +333,8 @@ customInitialise id, _
                 Parameters, _
                 numberOfValuesToCache, _
                 inputValueNames, _
-                underlyingStudy
+                underlyingStudy, _
+                pSession
 End Sub
 
 Private Property Get Study_instanceName() As String

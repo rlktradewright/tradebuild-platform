@@ -57,12 +57,14 @@ Private mStudyFoundation As StudyFoundation
 '--------------------------------------------------------
 
 
+Private mSession As session
+
 Private mAccDist As Double
 Private mAccDistAtBarStart As Double
 Private mAccDistCache As StudyValueCache
 
-Private mBars As StudiesSupp.bars
-Private mCurrentBar As StudiesSupp.bar
+Private mBars As Bars
+Private mCurrentBar As bar
 Private mCurrentBarVolume As Long
 
 '================================================================================
@@ -82,11 +84,17 @@ Private Sub customInitialise( _
                 ByVal Parameters As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
-                ByVal underlyingStudy As Study)
+                ByVal underlyingStudy As Study, _
+                ByVal pSession As session)
+
+Set mSession = pSession
 
 customProcessParameters Parameters
 Set mAccDistCache = mStudyFoundation.FindValueCache(AccDistValueAccDist)
-Set mBars = StudiesSupp.createBars(0, TimePeriodNone, , 1)
+Set mBars = CreateBars(0, _
+                                TimePeriodNone, _
+                                mSession, _
+                                1)
 End Sub
 
 Private Sub customNotify( _
@@ -109,7 +117,7 @@ Else
     End If
     sPrevVal = ev.value
     
-    mBars.notify ev
+    mBars.Notify ev
     
     If mStudyFoundation.isNewBar Then
         Set mCurrentBar = mBars.bar(0)
@@ -244,7 +252,8 @@ Private Sub Study_initialise( _
                 ByVal Parameters As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
-                ByVal underlyingStudy As Study)
+                ByVal underlyingStudy As Study, _
+                ByVal pSession As session)
 
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
@@ -259,7 +268,8 @@ customInitialise id, _
                 Parameters, _
                 numberOfValuesToCache, _
                 inputValueNames, _
-                underlyingStudy
+                underlyingStudy, _
+                pSession
 End Sub
 
 Private Property Get Study_instanceName() As String

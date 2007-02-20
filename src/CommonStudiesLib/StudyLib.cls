@@ -62,7 +62,7 @@ Private mStudyNames() As String
 '================================================================================
 
 Private Sub Class_Initialize()
-mName = "TradeWright TradeBuild Built-in Studies Service Provider"
+mName = "TradeWright Common Studies Library"
 
 ReDim mStudyNames(0) As String
 addStudyName AccDistName
@@ -86,7 +86,7 @@ End Sub
 '================================================================================
 
 Private Function StudyLibrary_createStudy( _
-                ByVal name As String) As StudiesSupp.Study
+                ByVal name As String) As Study
 Select Case UCase$(name)
 Case UCase$(AccDistName), UCase$(AccDistShortName)
     Set StudyLibrary_createStudy = New accDist
@@ -158,7 +158,7 @@ End Select
 End Function
 
 Private Function StudyLibrary_getStudyDefinition( _
-                ByVal name As String) As StudiesSupp.StudyDefinition
+                ByVal name As String) As StudyDefinition
 Select Case UCase$(name)
 Case UCase$(AccDistName), UCase$(AccDistShortName)
     Set StudyLibrary_getStudyDefinition = GAccDist.StudyDefinition
@@ -192,7 +192,7 @@ End Select
 End Function
 
 Private Sub StudyLibrary_initialise( _
-                ByVal libManager As StudiesSupp.StudyLibraryManager, _
+                ByVal libManager As StudyLibraryManager, _
                 ByVal handle As Long)
 Set gLibraryManager = libManager
 mHandle = handle

@@ -89,7 +89,8 @@ Private Sub customInitialise( _
                 ByVal Parameters As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
-                ByVal underlyingStudy As Study)
+                ByVal underlyingStudy As Study, _
+                ByVal pSession As session)
 
 customProcessParameters Parameters
 Set mLowerCache = mStudyFoundation.FindValueCache(DoncValueLower)
@@ -178,8 +179,8 @@ Do While Not param Is Nothing
     Select Case UCase$(param.name)
     Case UCase$(DoncParamPeriods)
         mPeriods = param.value
-        Set mHighCache = StudiesSupp.createStudyValueCache(mPeriods, "highs")
-        Set mLowcache = StudiesSupp.createStudyValueCache(mPeriods, "lows")
+        Set mHighCache = CreateStudyValueCache(mPeriods, "highs")
+        Set mLowcache = CreateStudyValueCache(mPeriods, "lows")
     End Select
     Set param = params.getNextParameter
 Loop
@@ -295,7 +296,8 @@ Private Sub Study_initialise( _
                 ByVal Parameters As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
-                ByVal underlyingStudy As Study)
+                ByVal underlyingStudy As Study, _
+                ByVal pSession As session)
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
                             id, _
@@ -309,7 +311,8 @@ customInitialise id, _
                 Parameters, _
                 numberOfValuesToCache, _
                 inputValueNames, _
-                underlyingStudy
+                underlyingStudy, _
+                pSession
 End Sub
 
 Private Property Get Study_instanceName() As String

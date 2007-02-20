@@ -69,9 +69,9 @@ Public Const BarValueLow As String = "Low"
 Public Const BarValueClose As String = "Close"
 Public Const BarValueVolume As String = "Volume"
 Public Const BarValueTickVolume As String = "Tick Volume"
-Public Const BarValueHL2 As String = "H+L/2"
-Public Const BarValueHLC3 As String = "H+L+C/3"
-Public Const BarValueOHLC4 As String = "O+H+L+C/4"
+Public Const BarValueHL2 As String = "(H+L)/2"
+Public Const BarValueHLC3 As String = "(H+L+C)/3"
+Public Const BarValueOHLC4 As String = "(O+H+L+C)/4"
 
 '================================================================================
 ' Enums
@@ -125,11 +125,13 @@ Case UCase$(EmaShortName)
     Set lStudy = lEMA
     Set lparams = GEMA.defaultParameters
     lparams.setParameterValue ParamPeriods, periods
-    lStudy.initialise gLibraryManager.generateGUIDString, _
+    lStudy.initialise GenerateGUIDString, _
                     lparams, _
                     numberOfValuesToCache, _
                     valueNames, _
+                    Nothing, _
                     Nothing
+                    
     Set gCreateMA = lEMA
 Case Else
     Dim lSMA As SMA
@@ -137,13 +139,21 @@ Case Else
     Set lStudy = lSMA
     Set lparams = GSMA.defaultParameters
     lparams.setParameterValue ParamPeriods, periods
-    lStudy.initialise gLibraryManager.generateGUIDString, _
+    lStudy.initialise GenerateGUIDString, _
                     lparams, _
                     numberOfValuesToCache, _
                     valueNames, _
+                    Nothing, _
                     Nothing
     Set gCreateMA = lSMA
 End Select
+End Function
+
+Public Function gMaTypes() As Variant()
+Dim ar(1) As Variant
+ar(0) = EmaShortName
+ar(1) = SmaShortName
+gMaTypes = ar
 End Function
 
 '================================================================================

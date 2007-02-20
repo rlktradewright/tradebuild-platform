@@ -64,9 +64,9 @@ End Enum
 
 Public Enum TWSBarSizes
     BarSize1Second = 1
-    BarSize5Second = 2
-    BarSize15Second = 3
-    BarSize30Second = 4
+    BarSize5Seconds = 2
+    BarSize15Seconds = 3
+    BarSize30Seconds = 4
     BarSize1Minute = 5
     BarSize2Minutes = 6
     BarSize5Minutes = 7
@@ -169,6 +169,7 @@ Public Type OrderIdMapEntry
 End Type
 
 Public Type TWSContractDetailsRequestQueueEntry
+    contractSpec                As TradeBuildSP.IContractSpecifier
     tradeBuildContracts         As TradeBuildSP.IContracts
     localContracts              As Collection
     requester                   As ContractDetailsRequester

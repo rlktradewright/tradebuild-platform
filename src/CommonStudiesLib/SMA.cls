@@ -85,7 +85,8 @@ Private Sub customInitialise( _
                 ByVal Parameters As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
-                ByVal underlyingStudy As Study)
+                ByVal underlyingStudy As Study, _
+                ByVal pSession As session)
 
 customProcessParameters Parameters
 Set mMaCache = mStudyFoundation.FindValueCache(MovingAverageStudyValueName)
@@ -163,7 +164,7 @@ Do While Not param Is Nothing
     Select Case UCase$(param.name)
     Case UCase$(SMAParamPeriods)
         mPeriods = param.value
-        Set mInputValueCache = StudiesSupp.createStudyValueCache(mPeriods, "")
+        Set mInputValueCache = CreateStudyValueCache(mPeriods, "")
     Case UCase$(SMAParamSlopeThreshold)
         mSlopeThreshold = param.value
     End Select
@@ -295,7 +296,8 @@ Private Sub Study_initialise( _
                 ByVal Parameters As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
-                ByVal underlyingStudy As Study)
+                ByVal underlyingStudy As Study, _
+                ByVal pSession As session)
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
                             id, _
@@ -309,7 +311,8 @@ customInitialise id, _
                 Parameters, _
                 numberOfValuesToCache, _
                 inputValueNames, _
-                underlyingStudy
+                underlyingStudy, _
+                pSession
 End Sub
 
 Private Property Get Study_instanceName() As String
