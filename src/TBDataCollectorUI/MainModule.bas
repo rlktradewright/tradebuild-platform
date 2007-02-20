@@ -249,8 +249,16 @@ mDataCollector.Port = mPort
 mDataCollector.ClientID = mClientID
 mDataCollector.WriteBars = Not mNoWriteBars
 mDataCollector.WriteTicks = Not mNoWriteTicks
-mDataCollector.OutputPath = mOutputTickfilePath
-mDataCollector.OutputFormat = mOutputTickfileFormat
+If mOutputTickfilePath = "" Then
+    mDataCollector.OutputPath = App.Path & "\Tickfiles"
+Else
+    mDataCollector.OutputPath = mOutputTickfilePath
+End If
+If mOutputTickfileFormat = "" Then
+    mDataCollector.OutputFormat = "TradeBuild V4"
+Else
+    mDataCollector.OutputFormat = mOutputTickfileFormat
+End If
 
 failpoint = 1200 '---------------------------------------------------------
 
