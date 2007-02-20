@@ -1,0 +1,9 @@
+// Note that when using IB TWS as the contract service provider, you must supply at least
+// Local symbol and Sectype
+//
+// In version 2.5 there is a limit of 16 symbols
+//
+// Local symb  Symbol  Sectype  Expiry  Exchnge  Currency  Strike  Right
+
+ZH7          ,       , FUT    ,       ,        ,         ,    0.0,	
+             , ES    , FUT    , 200703, GLOBEX , USD     ,    0.0,
