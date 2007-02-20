@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{DBED8E43-5960-49DE-B9A7-BBC22DB93A26}#10.0#0"; "ChartSkil.ocx"
+Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#2.0#0"; "ChartSkil2-5.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo"
    ClientHeight    =   8355
@@ -9,15 +9,15 @@ Begin VB.Form ChartForm
    LinkTopic       =   "Form1"
    ScaleHeight     =   8355
    ScaleWidth      =   12015
-   Begin ChartSkil.Chart Chart1 
+   Begin ChartSkil25.Chart Chart1 
       Align           =   1  'Align Top
-      Height          =   4815
+      Height          =   6375
       Left            =   0
-      TabIndex        =   13
+      TabIndex        =   17
       Top             =   0
       Width           =   12015
       _ExtentX        =   21193
-      _ExtentY        =   8493
+      _ExtentY        =   11245
       autoscale       =   0   'False
    End
    Begin VB.PictureBox BasePicture 
@@ -29,8 +29,24 @@ Begin VB.Form ChartForm
       ScaleHeight     =   1350
       ScaleWidth      =   12015
       TabIndex        =   7
-      Top             =   6960
+      Top             =   6840
       Width           =   12015
+      Begin VB.TextBox SessionEndTimeText 
+         Height          =   285
+         Left            =   5400
+         TabIndex        =   16
+         Text            =   "16:00"
+         Top             =   960
+         Width           =   735
+      End
+      Begin VB.TextBox SessionStartTimeText 
+         Height          =   285
+         Left            =   5400
+         TabIndex        =   14
+         Text            =   "09:30"
+         Top             =   720
+         Width           =   735
+      End
       Begin VB.CommandButton ClearButton 
          Caption         =   "Clear"
          Height          =   495
@@ -65,7 +81,7 @@ Begin VB.Form ChartForm
       End
       Begin VB.TextBox TickSizeText 
          Height          =   285
-         Left            =   7200
+         Left            =   7320
          TabIndex        =   3
          Text            =   "0.25"
          Top             =   360
@@ -73,7 +89,7 @@ Begin VB.Form ChartForm
       End
       Begin VB.TextBox StartPriceText 
          Height          =   285
-         Left            =   7200
+         Left            =   7320
          TabIndex        =   2
          Text            =   "1145"
          Top             =   120
@@ -86,6 +102,24 @@ Begin VB.Form ChartForm
          TabIndex        =   5
          Top             =   120
          Width           =   1095
+      End
+      Begin VB.Label Label7 
+         Alignment       =   1  'Right Justify
+         Caption         =   "Session end time"
+         Height          =   255
+         Left            =   3600
+         TabIndex        =   15
+         Top             =   960
+         Width           =   1695
+      End
+      Begin VB.Label Label6 
+         Alignment       =   1  'Right Justify
+         Caption         =   "Session start time"
+         Height          =   255
+         Left            =   3600
+         TabIndex        =   13
+         Top             =   720
+         Width           =   1695
       End
       Begin VB.Label Label5 
          Alignment       =   1  'Right Justify
@@ -118,18 +152,18 @@ Begin VB.Form ChartForm
          Alignment       =   1  'Right Justify
          Caption         =   "Tick size"
          Height          =   255
-         Left            =   5640
+         Left            =   5760
          TabIndex        =   9
-         Top             =   1080
+         Top             =   360
          Width           =   1455
       End
       Begin VB.Label Label1 
          Alignment       =   1  'Right Justify
          Caption         =   "Start price"
          Height          =   255
-         Left            =   5640
+         Left            =   5760
          TabIndex        =   8
-         Top             =   840
+         Top             =   120
          Width           =   1455
       End
    End
@@ -193,7 +227,8 @@ Private mMACDRegion As ChartRegion          ' the region of the chart that displ
 
 Private mBarSeries As BarSeries             ' used to define properties for all the
                                             ' bars
-Private mbar As Bar                         ' an individual bar
+Private mBar As Bar                         ' an individual bar
+Private mBarTime                            ' the bar start time for mBar
 Private mBarLabelSeries As TextSeries       ' used to define properties for text
                                             ' labels displaying to bar number
 Private mBarText As Text                    ' the most recent bar label
@@ -237,15 +272,15 @@ Private mCumVolume As Long                  ' the cumulative volume
 
 Private mSwingLineSeries As LineSeries      ' used to define properties for the swing
                                             ' lines
-Private mSwingLine As ChartSkil.Line        ' the current swing line
-Private mPrevSwingLine As ChartSkil.Line    ' the previous swing line
-Private mNewSwingLine As ChartSkil.Line     ' potential new swing line
+Private mSwingLine As ChartSkil25.Line        ' the current swing line
+Private mPrevSwingLine As ChartSkil25.Line    ' the previous swing line
+Private mNewSwingLine As ChartSkil25.Line     ' potential new swing line
 Private mSwingAmountTicks As Double         ' the minimum price movement in ticks to
                                             ' establish a new swing
 Private mSwingingUp As Boolean              ' indicates whether price is swinging up
                                             ' or down
 
-Private WithEvents mClockTimer As TimerUtils.IntervalTimer
+Private WithEvents mClockTimer As TimerUtils2.IntervalTimer
 Attribute mClockTimer.VB_VarHelpID = -1
 Private mClockText As Text                  ' displays the current time on the chart
 
@@ -256,6 +291,9 @@ Attribute mTickSimulator.VB_VarHelpID = -1
 Private mTickCountText As Text              ' a text obect that will display the number
                                             ' of price ticks generated by the tick
                                             ' simulator
+                                            
+Private mElapsedTimer As ElapsedTimer       ' used to measure how long it takes to
+                                            ' complete some chart operations
 
 '================================================================================
 ' Form Event Handlers
@@ -263,6 +301,7 @@ Private mTickCountText As Text              ' a text obect that will display the
 
 Private Sub Form_Load()
 initialise
+Set mElapsedTimer = New ElapsedTimer
 End Sub
 
 Private Sub Form_Resize()
@@ -272,9 +311,14 @@ Dim newChartHeight As Single
 BasePicture.Top = Me.ScaleHeight - BasePicture.Height
 BasePicture.Width = Me.ScaleWidth
 newChartHeight = BasePicture.Top - Chart1.Top
-If Chart1.Height <> newChartHeight Then
+If Chart1.Height <> newChartHeight And newChartHeight >= 0 Then
     Chart1.Height = newChartHeight
 End If
+End Sub
+
+Private Sub Form_Unload(Cancel As Integer)
+If Not mClockTimer Is Nothing Then mClockTimer.StopTimer
+If Not mTickSimulator Is Nothing Then mTickSimulator.StopSimulation
 End Sub
 
 '================================================================================
@@ -300,7 +344,7 @@ Private Sub LoadButton_Click()
 Dim aFont As StdFont
 Dim btn As Button
 Dim startText As Text
-Dim extendedLine As ChartSkil.Line
+Dim extendedLine As ChartSkil25.Line
 
 LoadButton.Enabled = False  ' prevent the user pressing load again. In a future
                             ' version we'll allow this, but at present there's no
@@ -308,7 +352,7 @@ LoadButton.Enabled = False  ' prevent the user pressing load again. In a future
 
 mTickSize = TickSizeText.Text
 mBarLength = BarLengthText.Text
-Chart1.periodLengthMinutes = mBarLength
+Chart1.setPeriodParameters mBarLength, TimePeriodMinute
 
 ' Set up the region of the chart that will display the price bars. You can have as
 ' many regions as you like on a chart. They are arranged vertically, and the parameter
@@ -337,13 +381,13 @@ mPriceRegion.showPerformanceText = True ' displays some information about the nu
 ' to stop you setting up multiple bar series in the same region should you want to,
 ' and you can of course have multiple regions each with its own bar series.
 Set mBarSeries = mPriceRegion.addBarSeries
-mBarSeries.outlineThickness = 1     ' the thickness in pixels of a candlestick outline
+mBarSeries.outlineThickness = 2     ' the thickness in pixels of a candlestick outline
                                     ' (ignored if displaying as bars)
 mBarSeries.tailThickness = 1        ' the thickness in pixels of candlestick tails
                                     ' (ignored if displaying as bars)
 mBarSeries.barThickness = 2         ' the thickness in pixels of a the lines used to
                                     ' draw bars (ignored if displaying as candlesticks)
-mBarSeries.displayAsCandlestick = False
+mBarSeries.displayMode = BarDisplayModeBar
                                     ' draw this bar series as bars not candlesticks
 mBarSeries.solidUpBody = True       ' draw up candlesticks with solid bodies
                                     ' (ignored if displaying as bars)
@@ -413,14 +457,14 @@ Set mBarText = Nothing
 
 ' Set up a datapoint series for the first moving average
 Set mMovAvg1Series = mPriceRegion.addDataPointSeries
-mMovAvg1Series.displayMode = DisplayModes.displayAsPoints
+mMovAvg1Series.displayMode = DataPointDisplayModes.DataPointDisplayModePoint
                                         ' display this series as discrete points...
 mMovAvg1Series.lineThickness = 5        ' ...with a diameter of 5 pixels...
 mMovAvg1Series.lineColor = vbRed       ' ...in red
 
 ' Set up a datapoint series for the second moving average
 Set mMovAvg2Series = mPriceRegion.addDataPointSeries
-mMovAvg2Series.displayMode = DisplayModes.DisplayAsLines
+mMovAvg2Series.displayMode = DataPointDisplayModes.DataPointDisplayModeLine
                                         ' display this series as a line connecting
                                         ' individual points...
 mMovAvg2Series.lineColor = vbBlue      ' ...in blue
@@ -430,7 +474,7 @@ mMovAvg2Series.LineStyle = LineStyles.LineDot
 
 ' Set up a datapoint series for the third moving average
 Set mMovAvg3Series = mPriceRegion.addDataPointSeries
-mMovAvg3Series.displayMode = DisplayModes.DisplayAsSteppedLines
+mMovAvg3Series.displayMode = DataPointDisplayModes.DataPointDisplayModeStep
                                         ' display this series as a stepped line
                                         ' connecting the individual points...
 mMovAvg3Series.lineColor = vbGreen     ' ...in green...
@@ -453,7 +497,7 @@ mSwingLineSeries.extended = True        ' if this were not set to true, lines
                                         ' start point was in the visible area of
                                         ' the chart
 
-Set mSwingLine = mSwingLineSeries.addLine ' create the first swing line
+Set mSwingLine = mSwingLineSeries.Add ' create the first swing line
 mSwingLine.point1 = mPriceRegion.newPoint(0, 0)
 mSwingLine.point2 = mPriceRegion.newPoint(0, mSwingAmountTicks * mTickSize)
 mSwingLine.Hidden = True                ' hide it because we don't want this one
@@ -471,17 +515,17 @@ mMACDRegion.setTitle "MACD (12, 24, 5)", vbBlue, Nothing
 
 ' Set up a datapoint series for the MACD histogram values on lowest user layer
 Set mMACDHistSeries = mMACDRegion.addDataPointSeries(LayerNumbers.LayerLowestUser)
-mMACDHistSeries.displayMode = DisplayModes.displayAsHistogram
+mMACDHistSeries.displayMode = DataPointDisplayModes.DataPointDisplayModeHistogram
 mMACDHistSeries.lineColor = vbGreen
 
 ' Set up a datapoint series for the MACD values on next layer
 Set mMACDSeries = mMACDRegion.addDataPointSeries(LayerNumbers.LayerLowestUser + 1)
-mMACDSeries.displayMode = DisplayModes.DisplayAsLines
+mMACDSeries.displayMode = DataPointDisplayModes.DataPointDisplayModeLine
 mMACDSeries.lineColor = vbBlue
 
 ' Set up a datapoint series for the MACD signal values on next layer
 Set mMACDSignalSeries = mMACDRegion.addDataPointSeries(LayerNumbers.LayerLowestUser + 2)
-mMACDSignalSeries.displayMode = DisplayModes.DisplayAsLines
+mMACDSignalSeries.displayMode = DataPointDisplayModes.DataPointDisplayModeLine
 mMACDSignalSeries.lineColor = vbRed
 
 ' Create a region to display the volume bars
@@ -498,7 +542,7 @@ mVolumeRegion.gridlineSpacingY = 0.8    ' the horizontal grid lines should be ab
 
 ' Set up a datapoint series for the volume bars
 Set mVolumeSeries = mVolumeRegion.addDataPointSeries
-mVolumeSeries.displayMode = DisplayModes.displayAsHistogram
+mVolumeSeries.displayMode = DataPointDisplayModes.DataPointDisplayModeHistogram
                                         ' display this series as a histogram
 mCumVolume = 0
 mPrevBarVolume = 0
@@ -525,7 +569,7 @@ startText.boxThickness = 1              ' ...1 pixel thick...
 startText.boxFillColor = vbGreen        ' ...and a green fill
 startText.boxFillStyle = FillStyles.FillSolid
                                         ' the fill should be solid (this is the default)
-startText.Position = mPriceRegion.newPoint(mbar.periodNumber, mbar.highPrice)
+startText.Position = mPriceRegion.newPoint(mBar.periodNumber, mBar.highPrice)
                                         ' position the text at the high of the current
                                         ' bar...
 startText.offset = mPriceRegion.newDimension(0, 0.4)
@@ -552,9 +596,6 @@ extendedLine.point1 = mPriceRegion.newPoint(mPeriod.periodNumber - 40, mBarSerie
 extendedLine.point2 = mPriceRegion.newPoint(mPeriod.periodNumber - 5, mBarSeries.Item(mPeriod.periodNumber - 5).highPrice)
                                         ' let its 2nd point be the high 5 bars ago
 
-' Position the chart so that the latest period is at the right hand end
-Chart1.lastVisiblePeriod = mPeriod.periodNumber
-
 ' Now tell the chart to draw itself. Note that this makes it draw every visible object.
 Chart1.suppressDrawing = False
 
@@ -576,9 +617,7 @@ mTickCountText.includeInAutoscale = False
 mTickCountText.keepInView = True
 
 ' set up the clock timer to fire an event every 250 milliseconds
-Set mClockTimer = New TimerUtils.IntervalTimer
-mClockTimer.RepeatNotifications = True
-mClockTimer.TimerIntervalMillisecs = 250
+Set mClockTimer = TimerUtils2.createIntervalTimer(250, ExpiryTimeUnitMilliseconds, 250)
 mClockTimer.StartTimer
 
 End Sub
@@ -603,21 +642,28 @@ Private Sub mTickSimulator_HistoricalBar( _
                 ByVal closePrice As Double, _
                 ByVal volume As Long)
 Dim barText As Text
+Dim bartime As Date
 
-Set mPeriod = Chart1.addperiod(timestamp)
-Chart1.lastVisiblePeriod = mPeriod.periodNumber
 
-Set mbar = mBarSeries.addBar(mPeriod.periodNumber)
+bartime = BarStartTime(timestamp, BarLengthText, TimePeriodMinute, SessionStartTimeText)
 
-mbar.tick openPrice
-mbar.tick highPrice
-mbar.tick lowPrice
-mbar.tick closePrice
+If bartime <> mBarTime Then
+    mBarTime = bartime
+    Set mBar = mBarSeries.Add(bartime)
+    
+    Set mPeriod = Chart1.periods.Item(bartime)
+End If
+
+mBar.tick openPrice
+mBar.tick highPrice
+mBar.tick lowPrice
+mBar.tick closePrice
 
 If mPeriod.periodNumber Mod BarLabelFrequency = 0 Then
-    Set barText = mBarLabelSeries.addText()
+    Set barText = mBarLabelSeries.Add()
     barText.Text = mPeriod.periodNumber
-    barText.Position = mPriceRegion.newPoint(mPeriod.periodNumber, mbar.lowPrice)
+    barText.Position = mPriceRegion.newPoint(mPeriod.periodNumber, mBar.lowPrice)
+    ' position the text 3mm below the bar's low
     barText.offset = mPriceRegion.newDimension(0, -0.3)
 End If
 
@@ -631,7 +677,7 @@ Else
 End If
 swing mPeriod.periodNumber, closePrice
 
-Set mVolume = mVolumeSeries.addDataPoint(mPeriod.periodNumber)
+Set mVolume = mVolumeSeries.Add(bartime)
 mCumVolume = mCumVolume + volume
 mVolume.datavalue = volume
 If mVolume.datavalue >= mPrevBarVolume Then
@@ -641,7 +687,7 @@ Else
 End If
 mPrevBarVolume = volume
 
-setNewStudyPeriod
+setNewStudyPeriod bartime
 calculateStudies closePrice
 End Sub
 
@@ -650,33 +696,36 @@ Private Sub mTickSimulator_TickPrice( _
                 ByVal price As Double)
 Dim bartime As Date
 
-bartime = calcBarTime(timestamp)
-If bartime > mPeriod.timestamp Then
-    Set mPeriod = Chart1.addperiod(bartime)
-    Chart1.scrollX 1
-    
-    Set mbar = mBarSeries.addBar(mPeriod.periodNumber)
-    mbar.periodNumber = mPeriod.periodNumber
+bartime = BarStartTime(timestamp, BarLengthText, TimePeriodMinute, SessionStartTimeText)
+
+If bartime <> mBarTime Then
+    mBarTime = bartime
+    mElapsedTimer.StartTiming
+    Set mBar = mBarSeries.Add(bartime)
+    Debug.Print "Time for add bar: " & mElapsedTimer.ElapsedTimeMicroseconds & " microsecs"
+    Set mPeriod = Chart1.periods.Item(bartime)
     
     mPrevBarVolume = mVolume.datavalue
-    Set mVolume = mVolumeSeries.addDataPoint(mPeriod.periodNumber)
+    Set mVolume = mVolumeSeries.Add(bartime)
     
-    setNewStudyPeriod
-    
+    setNewStudyPeriod bartime
 End If
 
-mbar.tick price
+mElapsedTimer.StartTiming
+mBar.tick price
+Debug.Print "Time for tick: " & mElapsedTimer.ElapsedTimeMicroseconds & " microsecs"
 
 calculateStudies price
 
-swing mbar.periodNumber, price
+swing mBar.periodNumber, price
 
 If mPeriod.periodNumber Mod BarLabelFrequency = 0 Then
     If mBarText Is Nothing Then
-        Set mBarText = mBarLabelSeries.addText()
+        Set mBarText = mBarLabelSeries.Add()
         mBarText.Text = mPeriod.periodNumber
     End If
-    mBarText.Position = mPriceRegion.newPoint(mbar.periodNumber, mbar.lowPrice)
+    mBarText.Position = mPriceRegion.newPoint(mBar.periodNumber, mBar.lowPrice)
+    ' position the text 3mm below the bar's low
     mBarText.offset = mPriceRegion.newDimension(0, -0.3)
 Else
     Set mBarText = Nothing
@@ -712,10 +761,6 @@ End Sub
 ' Helper Functions
 '================================================================================
 
-Private Function calcBarTime(ByVal timestamp As Date) As Date
-calcBarTime = Int(CDbl(timestamp) * 1440 / mBarLength) * mBarLength / 1440
-End Function
-
 Private Sub calculateStudies(ByVal value As Double)
 mMA1.datavalue value
 If Not IsEmpty(mMA1.maValue) Then mMovAvg1Point.datavalue = mMA1.maValue
@@ -741,7 +786,10 @@ Chart1.chartBackColor = vbWhite     ' sets the default background color for all 
 Chart1.autoscale = True             ' indicates that by default, each chart region will
                                     ' automatically adjust its vertical scaling to ensure
                                     ' that all relevant data is visible
-Chart1.showCrosshairs = True        ' request that crosshairs be displayed to track
+Chart1.autoscroll = True            ' requests that the chart should automatically scroll
+                                    ' forward one period each time a new period is added
+Chart1.pointerStyle = PointerCrosshairs
+                                    ' request that crosshairs be displayed to track
                                     ' cursor movement
 Chart1.twipsPerBar = 150            ' specifies the space between bars - there are
                                     ' 1440 twips per inch or 567 per centimetre
@@ -774,31 +822,31 @@ mMACD.LongPeriods = 24
 mMACD.SignalPeriods = 5
 End Sub
 
-Private Sub setNewStudyPeriod()
+Private Sub setNewStudyPeriod(ByVal timestamp As Date)
 mMA1.newPeriod
 If Not IsEmpty(mMA1.maValue) Then
-    Set mMovAvg1Point = mMovAvg1Series.addDataPoint(mPeriod.periodNumber)
+    Set mMovAvg1Point = mMovAvg1Series.Add(timestamp)
 End If
 
 mMA2.newPeriod
 If Not IsEmpty(mMA2.maValue) Then
-    Set mMovAvg2Point = mMovAvg2Series.addDataPoint(mPeriod.periodNumber)
+    Set mMovAvg2Point = mMovAvg2Series.Add(timestamp)
 End If
 
 mMa3.newPeriod
 If Not IsEmpty(mMa3.maValue) Then
-    Set mMovAvg3Point = mMovAvg3Series.addDataPoint(mPeriod.periodNumber)
+    Set mMovAvg3Point = mMovAvg3Series.Add(timestamp)
 End If
 
 mMACD.newPeriod
 If Not IsEmpty(mMACD.MACDValue) Then
-    Set mMACDPoint = mMACDSeries.addDataPoint(mPeriod.periodNumber)
+    Set mMACDPoint = mMACDSeries.Add(timestamp)
 End If
 If Not IsEmpty(mMACD.MACDSignalValue) Then
-    Set mMACDSignalPoint = mMACDSignalSeries.addDataPoint(mPeriod.periodNumber)
+    Set mMACDSignalPoint = mMACDSignalSeries.Add(timestamp)
 End If
 If Not IsEmpty(mMACD.MACDHistValue) Then
-    Set mMACDHistPoint = mMACDHistSeries.addDataPoint(mPeriod.periodNumber)
+    Set mMACDHistPoint = mMACDHistSeries.Add(timestamp)
 End If
 
 End Sub
@@ -813,7 +861,7 @@ If mSwingingUp Then
             
             Set mPrevSwingLine = mSwingLine
             If mNewSwingLine Is Nothing Then
-                Set mSwingLine = mSwingLineSeries.addLine
+                Set mSwingLine = mSwingLineSeries.Add
             Else
                 Set mSwingLine = mNewSwingLine
                 Set mNewSwingLine = Nothing
@@ -842,7 +890,7 @@ Else
             
             Set mPrevSwingLine = mSwingLine
             If mNewSwingLine Is Nothing Then
-                Set mSwingLine = mSwingLineSeries.addLine
+                Set mSwingLine = mSwingLineSeries.Add
             Else
                 Set mSwingLine = mNewSwingLine
                 Set mNewSwingLine = Nothing
