@@ -462,7 +462,7 @@ Private Const MaxTickerListenerIndex As Long = 15
 ' Member variables
 '================================================================================
 
-Private WithEvents mDataCollector As CTBDataCollector
+Private WithEvents mDataCollector As TBDataCollector
 Attribute mDataCollector.VB_VarHelpID = -1
 Private mStop As Boolean
 Private mFailpoint As Long
@@ -481,14 +481,14 @@ End Sub
 ' DataSignalListener Members
 '================================================================================
 
-Private Sub DataSignalListener_signalOff(ev As TBQuoteServer.DataSignalEvent)
+Private Sub DataSignalListener_signalOff(ev As DataSignalEvent)
 Dim listener As TickerListener
 Set listener = ev.Source
 If listener.Index = -1 Then Exit Sub
 DataLightText(listener.Index).BackColor = vbButtonFace
 End Sub
 
-Private Sub DataSignalListener_signalOn(ev As TBQuoteServer.DataSignalEvent)
+Private Sub DataSignalListener_signalOn(ev As DataSignalEvent)
 Dim listener As TickerListener
 Set listener = ev.Source
 If listener.Index = -1 Then Exit Sub
@@ -500,16 +500,17 @@ End Sub
 ' WriterListener Interface Members
 '================================================================================
 
-Private Sub WriterListener_notify(ev As TradeBuild.WriterEvent)
-Dim tf As TradeBuild.Timeframe
-Dim tk As TradeBuild.ticker
+Private Sub WriterListener_notify(ev As WriterEvent)
+Dim tf As Timeframe
+Dim tk As ticker
 
 Select Case ev.Action
 Case WriterNotifications.WriterNotReady
-    If TypeOf ev.Source Is TradeBuild.Timeframe Then
+    If TypeOf ev.Source Is Timeframe Then
         Set tf = ev.Source
-        logMessage tf.barLengthMinutes & _
-                        "-min bar writer not ready for " & _
+        logMessage tf.barLength & _
+                        "-" & TimePeriodUnitsToString(tf.barUnit) & _
+                        " bar writer not ready for " & _
                         tf.contract.specifier.localSymbol
     Else
         Set tk = ev.Source
@@ -517,10 +518,11 @@ Case WriterNotifications.WriterNotReady
                         tk.contract.specifier.localSymbol
     End If
 Case WriterNotifications.WriterReady
-    If TypeOf ev.Source Is TradeBuild.Timeframe Then
+    If TypeOf ev.Source Is Timeframe Then
         Set tf = ev.Source
-        logMessage tf.barLengthMinutes & _
-                        "-min bar writer ready for " & _
+        logMessage tf.barLength & _
+                        "-" & TimePeriodUnitsToString(tf.barUnit) & _
+                        " bar writer ready for " & _
                         tf.contract.specifier.localSymbol
     Else
         Set tk = ev.Source
@@ -528,9 +530,11 @@ Case WriterNotifications.WriterReady
                         tk.contract.specifier.localSymbol
     End If
 Case WriterNotifications.WriterFileCreated
-    If TypeOf ev.Source Is TradeBuild.Timeframe Then
+    If TypeOf ev.Source Is Timeframe Then
         Set tf = ev.Source
-        logMessage "Writing " & tf.barLengthMinutes & "-min bars for " & _
+        logMessage "Writing " & tf.barLength & _
+                    "-" & TimePeriodUnitsToString(tf.barUnit) & _
+                    " bars for " & _
                     tf.contract.specifier.localSymbol & _
                     " to " & ev.FileName
     Else
@@ -551,42 +555,37 @@ mStop = True
 mDataCollector.stopCollection
 StopButton.Enabled = False
 ConnectionStatusText.BackColor = vbButtonFace
+logMessage "Data collection stopped by user"
 End Sub
 
 '================================================================================
 ' mDataCollector Event Handlers
 '================================================================================
 
-Private Sub mDataCollector_connected(ByVal timestamp As Date)
+Private Sub mDataCollector_connected()
 ConnectionStatusText.BackColor = vbGreen
-logMessage "Connected ok"
+logMessage "Connected ok to realtime data source"
 StopButton.Enabled = True
 End Sub
 
-Private Sub mDataCollector_connectFailed(ByVal timestamp As Date, ByVal description As String, ByVal retrying As Boolean)
+Private Sub mDataCollector_connectFailed(ByVal description As String)
 ConnectionStatusText.BackColor = vbRed
 logMessage "Connect failed: " & description
-If retrying Then
-    logMessage "Retrying connection"
-Else
-    StopButton.Enabled = False
-End If
-End Sub
-
-Private Sub mDataCollector_connectionToIBClosed(ByVal timestamp As Date)
-ConnectionStatusText.BackColor = vbRed
-logMessage "Connection to IB closed"
 StopButton.Enabled = False
 End Sub
 
-Private Sub mDataCollector_connectionToIBRecovered(ByVal timestamp As Date)
-ConnectionStatusText.BackColor = vbGreen
-logMessage "Connection to IB recovered"
+Private Sub mDataCollector_ConnectionClosed()
+ConnectionStatusText.BackColor = vbRed
+logMessage "Connection to realtime data source closed"
+StopButton.Enabled = False
+End Sub
+
+Private Sub mDataCollector_Reconnecting()
+logMessage "Reconnecting to realtime data source"
 StopButton.Enabled = True
 End Sub
 
 Private Sub mDataCollector_connectionToTWSClosed( _
-                ByVal timestamp As Date, _
                 ByVal reconnecting As Boolean)
 ConnectionStatusText.BackColor = vbRed
 logMessage "Connection to TWS closed"
@@ -599,28 +598,35 @@ End If
 End Sub
 
 Private Sub mDataCollector_errorMessage( _
-                ByVal timestamp As Date, _
-                ByVal id As Long, _
-                ByVal errorCode As TradeBuild.ApiErrorCodes, _
+                ByVal errorCode As ApiNotifyCodes, _
                 ByVal errorMsg As String)
 
-logMessage "Error " & errorCode & IIf(id >= 0, " (" & id & ")", "") & ": " & errorMsg
+logMessage "Error " & errorCode & ": " & errorMsg
+End Sub
+
+Private Sub mDataCollector_Info(ev As InfoEvent)
+logMessage ev.Data
+End Sub
+
+Private Sub mDataCollector_NotifyMessage( _
+                ByVal eventCode As TradeBuild25.ApiNotifyCodes, _
+                ByVal eventMsg As String)
+logMessage "Notification " & eventCode & ": " & eventMsg
 End Sub
 
 Private Sub mDataCollector_ServiceProviderError( _
-                ByVal timestamp As Date, _
                 ByVal errorCode As Long, _
                 ByVal serviceProviderName As String, _
                 ByVal message As String)
 logMessage "Service provider error (" & serviceProviderName & "): " & errorCode & ": " & message
 End Sub
 
-Private Sub mDataCollector_TickerAdded(ByVal ticker As TradeBuild.ticker)
+Private Sub mDataCollector_TickerAdded(ByVal ticker As ticker)
 ticker.addTickfileWriterListener Me
 End Sub
 
 Private Sub mDataCollector_TickerListenerAdded( _
-                ByVal listener As TBQuoteServer.TickerListener)
+                ByVal listener As TickerListener)
 If mTickerListenerIndex > MaxTickerListenerIndex Then
     listener.Index = -1
     logMessage "Can't display ticker for " & listener.contract.specifier.localSymbol
@@ -634,7 +640,7 @@ ShortNameText(listener.Index) = listener.contract.specifier.localSymbol
 
 End Sub
 
-Private Sub mDataCollector_TimeframeAdded(ByVal tf As TradeBuild.Timeframe)
+Private Sub mDataCollector_TimeframeAdded(ByVal tf As Timeframe)
 tf.addBarWriterListener Me
 End Sub
 
@@ -642,7 +648,7 @@ End Sub
 ' Properties
 '================================================================================
 
-Public Property Let dataCollector(ByVal value As CTBDataCollector)
+Public Property Let dataCollector(ByVal value As TBDataCollector)
 Set mDataCollector = value
 End Property
 

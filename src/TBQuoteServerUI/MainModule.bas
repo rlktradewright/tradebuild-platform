@@ -1,13 +1,52 @@
 Attribute VB_Name = "MainModule"
 Option Explicit
 
-Public Declare Sub InitCommonControls Lib "comctl32" ()
+''
+' Description here
+'
+' @remarks
+' @see
+'
+'@/
 
-Private mArguments As cCommandLineArgs
+'@================================================================================
+' Interfaces
+'@================================================================================
+
+'@================================================================================
+' Events
+'@================================================================================
+
+'@================================================================================
+' Constants
+'@================================================================================
+
+'@================================================================================
+' Enums
+'@================================================================================
+
+'@================================================================================
+' Types
+'@================================================================================
+
+
+'@================================================================================
+' Member variables
+'@================================================================================
+
+Private mCLParser As CommandLineParser
 Private mForm As fDataCollectorUI
 
+Private mFso As FileSystemObject
+Private mSymbsTS As TextStream
+
 Private mClientID As Long
+Private mInstruments() As InstrumentSpecifier
+Private mNumInstruments As Long
+
 Private mShortNames() As String
+Private mNumShortNames As Long
+
 Private mServer As String
 Private mOutputTickfilePath As String
 Private mOutputTickfileFormat As String
@@ -20,62 +59,133 @@ Private mRightOffset As Long
 Private mPosX As Single
 Private mPosY As Single
 
-Private mDataCollector As CTBDataCollector
+Private mDataCollector As TBDataCollector
+
+'@================================================================================
+' Class Event Handlers
+'@================================================================================
+
+'@================================================================================
+' XXXX Interface Members
+'@================================================================================
+
+'@================================================================================
+' XXXX Event Handlers
+'@================================================================================
+
+'@================================================================================
+' Properties
+'@================================================================================
+
+'@================================================================================
+' Methods
+'@================================================================================
 
 Public Sub Main()
 Dim posnValue As String
 Dim i As Long
+Dim ar() As String
+Dim rec As String
+
+Dim failpoint As Long
+On Error GoTo Err
 
 mLeftOffset = -1
 mRightOffset = -1
 
-Set mArguments = New cCommandLineArgs
-mArguments.CommandLine = Command
-mArguments.Separator = " "
-mArguments.GetArgs
+Set mCLParser = CreateCommandLineParser(Command, " ")
 
-If mArguments.Switch("?") Then
+failpoint = 100 '----------------------------------------------------------
+
+If mCLParser.Switch("?") Or mCLParser.NumberOfSwitches = 0 Then
     MsgBox vbCrLf & _
-            "datacollector [/shortnames:symbolshortname[,symbolshortname]...]" & vbCrLf & _
+            "datacollector [/symbs:filename] " & vbCrLf & _
+            "              [/shortnames:symbolshortname[,symbolshortname]...]" & vbCrLf & _
             "              [/server:servername]" & vbCrLf & _
+            "              [/port:portnumber]" & vbCrLf & _
             "              [/clientid:clientidnumber]" & vbCrLf & _
             "              [/outformat:formatname]" & vbCrLf & _
             "              [/outpath:path]" & vbCrLf & _
             "              [/noWriteBars  |  /nwb]" & vbCrLf & _
             "              [/noWriteTicks  |  /nwt]" & vbCrLf & _
             "              [/posn:offsetfromleft,offsetfromtop]" & vbCrLf & _
-            "              [/port:portnumber]" & vbCrLf & _
             "              [/noUI]", , "Usage"
     Exit Sub
 End If
 
-If mArguments.Switch("noui") Then
+failpoint = 200 '----------------------------------------------------------
+
+If mCLParser.Switch("noui") Then
     mNoUI = True
 End If
 
-If mArguments.Switch("shortnames") Then
+failpoint = 300 '----------------------------------------------------------
+
+If mCLParser.Switch("symbs") Then
+    
+    ReDim mInstruments(15) As InstrumentSpecifier
+
+    Set mFso = New FileSystemObject
+    Set mSymbsTS = mFso.OpenTextFile(mCLParser.SwitchValue("symbs"))
+    Do While Not mSymbsTS.AtEndOfStream
+        If mNumInstruments = 16 Then
+            MsgBox "Attempting to collect data for more than 16 instruments"
+            Exit Sub
+        End If
+        rec = mSymbsTS.ReadLine
+        If rec <> "" And Left$(rec, 2) <> "//" Then
+            ar = Split(rec, ",")
+            mInstruments(mNumInstruments).ShortName = Trim$(ar(0))
+            mInstruments(mNumInstruments).symbol = Trim$(ar(1))
+            mInstruments(mNumInstruments).secType = Trim$(ar(2))
+            mInstruments(mNumInstruments).expiry = Trim$(ar(3))
+            mInstruments(mNumInstruments).exchange = Trim$(ar(4))
+            mInstruments(mNumInstruments).currencyCode = Trim$(ar(5))
+            mInstruments(mNumInstruments).strikePrice = Trim$(ar(6))
+            mInstruments(mNumInstruments).Right = Trim$(ar(7))
+            mNumInstruments = mNumInstruments + 1
+        End If
+    Loop
+    
+    If mNumInstruments <> 0 Then
+        ReDim Preserve mInstruments(mNumInstruments - 1) As InstrumentSpecifier
+    End If
+End If
+
+failpoint = 400 '----------------------------------------------------------
+
+If mCLParser.Switch("shortnames") Then
     Dim shortNamesStr As String
-    shortNamesStr = mArguments.SwitchValue("shortnames")
+    shortNamesStr = mCLParser.SwitchValue("shortnames")
     mShortNames = Split(shortNamesStr, ",")
     
     For i = 0 To UBound(mShortNames)
         mShortNames(i) = Trim$(Replace(mShortNames(i), """", ""))
     Next
+    
+    mNumShortNames = UBound(mShortNames) + 1
 End If
 
+If mNumInstruments + mNumShortNames > 16 Then
+    MsgBox "Attempting to collect data for more than 16 instruments"
+    Exit Sub
+End If
+    
 
-If mArguments.Switch("server") Then
-    mServer = mArguments.SwitchValue("server")
+failpoint = 500 '----------------------------------------------------------
+
+If mCLParser.Switch("server") Then
+    mServer = mCLParser.SwitchValue("server")
 End If
 
-If mArguments.Switch("clientid") Then
-    If IsNumeric(mArguments.SwitchValue("clientid")) Then
-        mClientID = mArguments.SwitchValue("clientid")
+If mCLParser.Switch("clientid") Then
+    If IsNumeric(mCLParser.SwitchValue("clientid")) Then
+        mClientID = mCLParser.SwitchValue("clientid")
     Else
         If mNoUI Then
             Exit Sub
         Else
-            MsgBox "Error - clientid  " & mArguments.SwitchValue("clientid") & " is not numeric"
+            MsgBox "Error - clientid  " & mCLParser.SwitchValue("clientid") & " is not numeric"
             Exit Sub
         End If
     End If
@@ -84,34 +194,44 @@ Else
     mClientID = CLng(&H7FFFFFFF * Rnd)
 End If
 
-If mArguments.Switch("nwb") Or _
-    mArguments.Switch("nowritebars") _
+failpoint = 600 '----------------------------------------------------------
+
+If mCLParser.Switch("nwb") Or _
+    mCLParser.Switch("nowritebars") _
 Then
     mNoWriteBars = True
 End If
 
-If mArguments.Switch("nwt") Or _
-    mArguments.Switch("nowriteticks") _
+failpoint = 700 '----------------------------------------------------------
+
+If mCLParser.Switch("nwt") Or _
+    mCLParser.Switch("nowriteticks") _
 Then
     mNoWriteTicks = True
 End If
 
-If mArguments.Switch("outpath") Then
-    mOutputTickfilePath = mArguments.SwitchValue("outpath")
+failpoint = 800 '----------------------------------------------------------
+
+If mCLParser.Switch("outpath") Then
+    mOutputTickfilePath = mCLParser.SwitchValue("outpath")
 End If
 
-If mArguments.Switch("outformat") Then
-    mOutputTickfileFormat = mArguments.SwitchValue("outformat")
+failpoint = 900 '----------------------------------------------------------
+
+If mCLParser.Switch("outformat") Then
+    mOutputTickfileFormat = mCLParser.SwitchValue("outformat")
 End If
 
-If mArguments.Switch("port") Then
-    If IsNumeric(mArguments.SwitchValue("port")) Then
-        mPort = mArguments.SwitchValue("port")
+failpoint = 1000 '---------------------------------------------------------
+
+If mCLParser.Switch("port") Then
+    If IsNumeric(mCLParser.SwitchValue("port")) Then
+        mPort = mCLParser.SwitchValue("port")
     Else
         If mNoUI Then
             Exit Sub
         Else
-            MsgBox "Error - port  " & mArguments.SwitchValue("port") & " is not numeric"
+            MsgBox "Error - port  " & mCLParser.SwitchValue("port") & " is not numeric"
             Exit Sub
         End If
     End If
@@ -119,8 +239,11 @@ Else
     mPort = 7496
 End If
 
-Set mDataCollector = New CTBDataCollector
+failpoint = 1100 '---------------------------------------------------------
+
+Set mDataCollector = New TBDataCollector
 mDataCollector.ShortNames = mShortNames
+mDataCollector.Instruments = mInstruments
 mDataCollector.Server = mServer
 mDataCollector.Port = mPort
 mDataCollector.ClientID = mClientID
@@ -129,13 +252,15 @@ mDataCollector.WriteTicks = Not mNoWriteTicks
 mDataCollector.OutputPath = mOutputTickfilePath
 mDataCollector.OutputFormat = mOutputTickfileFormat
 
+failpoint = 1200 '---------------------------------------------------------
+
 If Not mNoUI Then
     Set mForm = New fDataCollectorUI
     
     mForm.dataCollector = mDataCollector
     
-    If mArguments.Switch("posn") Then
-        posnValue = mArguments.SwitchValue("posn")
+    If mCLParser.Switch("posn") Then
+        posnValue = mCLParser.SwitchValue("posn")
         
         If InStr(1, posnValue, ",") = 0 Then
             MsgBox "Error - posn value must be 'n,m'"
@@ -168,9 +293,24 @@ If Not mNoUI Then
     
 End If
 
+failpoint = 1200 '---------------------------------------------------------
+
 mDataCollector.startCollection
+
+Exit Sub
+
+Err:
+MsgBox "Error " & Err.Number & ": " & Err.description & vbCrLf & _
+        "At " & "TBQuoteServerUI" & "." & "MainModule" & "::" & "Main" & "." & failpoint & _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
+        , _
+        "Error"
+
 
 End Sub
 
+'@================================================================================
+' Helper Functions
+'@================================================================================
 
 
