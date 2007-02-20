@@ -43,7 +43,7 @@ Public Type InputDescriptor
     source              As study
     inputName           As String
     description         As String
-    inputType           As StudiesSupp.StudyInputTypes
+    inputType           As StudyInputTypes
     isDefault           As Boolean
     tickSize            As Double
 End Type
@@ -109,7 +109,7 @@ Public Function addInput( _
                 ByVal source As study, _
                 ByVal inputName As String, _
                 ByVal description As String, _
-                ByVal inputType As StudiesSupp.StudyInputTypes, _
+                ByVal inputType As StudyInputTypes, _
                 ByVal isDefault As Boolean, _
                 ByVal tickSize As Double) As Long
 Dim inpStudy As InputStudy
@@ -159,10 +159,12 @@ Dim lStudy As study
 Dim inValueNames() As String
 Dim i As Long
 Dim studyInputDefs As studyInputDefinitions
+Dim se As StudyEntry
+Dim inStudy As InputStudy
 
 If underlyingStudy Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "StudiesSupp.StudyManager::addStudy", _
+                "StudyUtils25.StudyManager::addStudy", _
                 "Underlying study must not be nothing"
 End If
 
@@ -171,7 +173,7 @@ underlyingStudyEntry = mStudies(underlyingStudy.id)
 If Err.Number <> 0 Then
     On Error GoTo 0
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "StudiesSupp.StudyManager::addStudy", _
+                "StudyUtils25.StudyManager::addStudy", _
                 "Underlying study id is invalid"
 End If
 On Error GoTo 0
@@ -197,7 +199,7 @@ StudyEntry.libName = libraryName
 Set lStudy = mStudyLibraryManager.createStudy(name, libraryName)
 
 If lStudy Is Nothing Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                                "StudiesSupp.StudyManager::AddStudy", _
+                                                "StudyUtils25.StudyManager::AddStudy", _
                                                 "Can't create study " & name
                                                 
 Set StudyEntry.study = lStudy
@@ -216,11 +218,21 @@ StudyEntry.underlyingStudyID = underlyingStudy.id
 
 StudyEntry.studyID = GenerateGUIDString
 
+' find the relevant InputStudy object to get the session object
+se = underlyingStudyEntry
+Do While Not TypeOf se.study Is InputStudy
+    se = mStudies(se.underlyingStudyID)
+Loop
+Set inStudy = se.study
+
+underlyingStudyEntry = mStudies(underlyingStudy.id)
+
 StudyEntry.study.initialise StudyEntry.studyID, _
                             parameters, _
                             numberOfValuesToCache, _
                             inputValueNames, _
-                            underlyingStudyEntry.study
+                            underlyingStudyEntry.study, _
+                            inStudy.session
                             
 mStudies.add StudyEntry, StudyEntry.studyID
 Set addStudy = lStudy
@@ -231,7 +243,26 @@ Public Function getInputDescriptor( _
 getInputDescriptor = mInputs(inputHandle)
 End Function
 
-Public Sub NotifyInput( _
+Public Sub moveStudy(ByVal studyToMove As BarStudy, _
+                ByVal newInputStudy As InputStudy, _
+                ByRef inputValueNames() As String)
+Dim lStudy As study
+Dim lStudyEntry As StudyEntry
+Dim lInputStudy As study
+
+Set lStudy = studyToMove
+lStudyEntry = mStudies(lStudy.id)
+
+Set lInputStudy = newInputStudy
+
+lStudyEntry.underlyingStudyID = lInputStudy.id
+
+lInputStudy.addStudy studyToMove, inputValueNames, 0
+
+studyToMove.switchUnderlyingStudy lInputStudy
+End Sub
+
+Public Sub notifyInput( _
                 ByVal inputHandle As Long, _
                 ByVal inputValue As Variant, _
                 ByVal timestamp As Date)

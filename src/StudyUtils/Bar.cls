@@ -172,6 +172,10 @@ Public Property Get openChanged() As Boolean
 openChanged = mOpenChanged
 End Property
 
+Friend Property Let tickVolume(ByVal value As Long)
+mTickVolume = value
+End Property
+
 Public Property Get tickVolume() As Long
 tickVolume = mTickVolume
 End Property

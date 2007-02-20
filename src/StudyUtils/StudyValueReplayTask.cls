@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "CacheReplayTask"
+Attribute VB_Name = "StudyValueReplayTask"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -30,7 +30,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements Tasks.task
+Implements task
 Implements ValueReplayTask
 
 '================================================================================
@@ -63,14 +63,17 @@ Private mStudyToNotify As study
 Private mTargetListener As StudyValueListener
 Private mSourceStudy As study
 Private mDiscriminator As Long
-Private mValueCache As StudyValueCache
 
 Private mNextValueNumber As Long
 Private mValuesNotified As Long
 
 Private mValueName As String
-Private mValueNames(0) As String
+Private mValueNames() As String
 Private mNotifyName As String
+Private mNotifyNames() As String
+
+Private mReplayValueNames() As String
+Private mReplayNotifyNames() As String
 
 '================================================================================
 ' Class Event Handlers
@@ -86,6 +89,10 @@ End Property
 
 Private Property Get ValueReplayTask_notifyName() As String
 ValueReplayTask_notifyName = mNotifyName
+End Property
+
+Private Property Get ValueReplayTask_notifyNames() As String()
+ValueReplayTask_notifyNames = mNotifyNames
 End Property
 
 Private Property Get ValueReplayTask_sourceStudy() As study
@@ -117,44 +124,75 @@ task_TaskName = mTaskContext.name
 End Property
 
 Private Sub Task_run()
+Dim i As Long
 Dim ev As StudyValueEvent
 Dim valueEntry As StudyValue
 
-If mValueCache.count = 0 Then
+Dim failpoint As Long
+On Error GoTo Err
+
+failpoint = 100
+
+If mSourceStudy.numberOfCachedValues = 0 Then
     mTaskContext.finish
     Set mTaskContext = Nothing
     Exit Sub
 End If
 
-valueEntry = mValueCache.getStudyValue(mNextValueNumber)
-If Not IsEmpty(valueEntry.value) Then
-    Set ev.source = mSourceStudy
-    ev.timestamp = valueEntry.timestamp
-    ev.barNumber = valueEntry.barNumber
-    ev.barStartTime = valueEntry.barStartTime
-    If TypeOf valueEntry.value Is Object  Then
-        Set ev.value = valueEntry.value
-    Else
-        ev.value = valueEntry.value
-    End If
+For i = 0 To UBound(mReplayValueNames)
     
-    If mTargetIsStudy Then
-        ev.valueName = mNotifyName
-        mStudyToNotify.notify ev
-    Else
-        ev.valueName = mValueName
-        mTargetListener.notify ev
-    End If
+    failpoint = 200
     
-End If
+    valueEntry = mSourceStudy.getStudyValue(mReplayValueNames(i), mNextValueNumber)
+     
+    If Not IsEmpty(valueEntry.value) Then
+        Set ev.source = mSourceStudy
+        ev.timestamp = valueEntry.timestamp
+        ev.barNumber = valueEntry.barNumber
+        ev.barStartTime = valueEntry.barStartTime
+        If TypeName(valueEntry.value) = "Nothing" Then
+            Set ev.value = Nothing
+        ElseIf TypeOf valueEntry.value Is Object  Then
+            Set ev.value = valueEntry.value
+        Else
+            ev.value = valueEntry.value
+        End If
+        
+        If mTargetIsStudy Then
+            
+            failpoint = 300
+            
+            ev.valueName = mReplayNotifyNames(i)
+            mStudyToNotify.notify ev
+        Else
+        
+            failpoint = 400
+            
+            ev.valueName = mReplayValueNames(i)
+            mTargetListener.notify ev
+        End If
+    End If
+Next
 
 mNextValueNumber = mNextValueNumber + 1
 mValuesNotified = mValuesNotified + 1
-If mNextValueNumber = mValueCache.count Then
-    Debug.Print "Cache for " & mValueName & " replayed " & mValuesNotified & " values"
+If mNextValueNumber > mSourceStudy.numberOfCachedValues Then
+    Debug.Print "Study (" & mSourceStudy.id & ") " & _
+                mSourceStudy.instanceName & _
+                " replayed " & mValuesNotified & _
+                " values for " & Join(mReplayValueNames(), ",")
     mTaskContext.finish
     Set mTaskContext = Nothing
 End If
+
+Exit Sub
+
+Err:
+Err.Raise Err.Number, _
+        "StudiesSupp" & "." & "StudyValueReplayTask" & "::" & "Task_run" & "." & failpoint & _
+        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
+        Err.description
+
 
 End Sub
 
@@ -178,6 +216,10 @@ Public Property Get notifyName() As String
 notifyName = mNotifyName
 End Property
 
+Public Property Get notifyNames() As String()
+notifyNames = notifyNames
+End Property
+
 Public Property Get sourceStudy() As study
 Set sourceStudy = mSourceStudy
 End Property
@@ -199,25 +241,31 @@ End Property
 '================================================================================
 
 Friend Sub initialise( _
-                ByVal valueCache As StudyValueCache, _
                 ByVal target As Object, _
                 ByVal sourceStudy As study, _
+                ByRef replayValueNames() As String, _
+                ByRef replayNotifyNames() As String, _
                 ByVal numberOfValuesToReplay As Long, _
+                ByRef valueNames() As String, _
+                ByRef notifyNames() As String, _
                 ByVal discriminator As Long)
 Dim numValuesToNotify As Long
 
-Set mValueCache = valueCache
 Set mTarget = target
 Set mSourceStudy = sourceStudy
-mValueName = valueCache.valueName
-mValueNames(0) = mValueName
+mReplayValueNames = replayValueNames
+mReplayNotifyNames = replayNotifyNames
+mValueNames = valueNames
+mValueName = mValueNames(0)
+mNotifyNames = notifyNames
+mNotifyName = mNotifyNames(0)
 mDiscriminator = discriminator
 
 If TypeOf target Is study Then
     mTargetIsStudy = True
     Set mTargetStudy = target
     Set mStudyToNotify = mTargetStudy.baseStudy
-    mNotifyName = mTargetStudy.studyDefinition.studyInputDefinitions.Item(1).name
+    
     If numberOfValuesToReplay = ReplayNumbers.ReplayAsRequired Then
         ' just replay the number of values needed by the study
         numValuesToNotify = mTargetStudy.numberOfBarsRequired
@@ -228,19 +276,22 @@ Else
     Set mTargetListener = target
     numValuesToNotify = numberOfValuesToReplay
 End If
-If numValuesToNotify > mValueCache.count Or _
+
+If numValuesToNotify > mSourceStudy.numberOfCachedValues Or _
     numValuesToNotify = ReplayNumbers.ReplayAll _
 Then
-    numValuesToNotify = mValueCache.count
+    numValuesToNotify = mSourceStudy.numberOfCachedValues
 End If
 
-mNextValueNumber = mValueCache.count - numValuesToNotify + 1
+mNextValueNumber = mSourceStudy.numberOfCachedValues - numValuesToNotify + 1
 
 End Sub
 
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+
 
 
 

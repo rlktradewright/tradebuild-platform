@@ -141,15 +141,39 @@ Dim i As Long
 Set inputDefs = study.studyDefinition.studyInputDefinitions
 
 For i = 0 To UBound(valueNames)
-    If mNextStudyTableIndex > UBound(mStudyTable) Then
-        ReDim Preserve mStudyTable(UBound(mStudyTable) + 10) As StudyTableEntry
+    If valueNames(i) <> "" Then
+        If mNextStudyTableIndex > UBound(mStudyTable) Then
+            ReDim Preserve mStudyTable(UBound(mStudyTable) + 10) As StudyTableEntry
+        End If
+        Set tableEntry.theStudy = study
+        Set tableEntry.studyToNotify = study.baseStudy
+        tableEntry.valueName = valueNames(i)
+        tableEntry.notifyName = inputDefs.Item(i + 1).name
+        mStudyTable(mNextStudyTableIndex) = tableEntry
+        mNextStudyTableIndex = mNextStudyTableIndex + 1
     End If
-    Set tableEntry.theStudy = study
-    Set tableEntry.studyToNotify = study.baseStudy
-    tableEntry.valueName = valueNames(i)
-    tableEntry.notifyName = inputDefs.Item(i + 1).name
-    mStudyTable(mNextStudyTableIndex) = tableEntry
-    mNextStudyTableIndex = mNextStudyTableIndex + 1
+Next
+End Sub
+
+Public Sub addEx( _
+                ByVal study As study, _
+                ByRef valueNames() As String, _
+                ByRef notifyNames() As String)
+Dim tableEntry As StudyTableEntry
+Dim i As Long
+
+For i = 0 To UBound(valueNames)
+    If valueNames(i) <> "" Then
+        If mNextStudyTableIndex > UBound(mStudyTable) Then
+            ReDim Preserve mStudyTable(UBound(mStudyTable) + 10) As StudyTableEntry
+        End If
+        Set tableEntry.theStudy = study
+        Set tableEntry.studyToNotify = study.baseStudy
+        tableEntry.valueName = valueNames(i)
+        tableEntry.notifyName = notifyNames(i)
+        mStudyTable(mNextStudyTableIndex) = tableEntry
+        mNextStudyTableIndex = mNextStudyTableIndex + 1
+    End If
 Next
 End Sub
 

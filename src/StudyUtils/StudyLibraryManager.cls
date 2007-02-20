@@ -194,7 +194,7 @@ End Sub
 '    On Error GoTo 0
 '    If studyLib Is Nothing Then
 '        Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-'                    "StudiesSupp.StudyLibraryManager::ICommonServiceConsumer_RegisterServiceProvider", _
+'                    "StudyUtils25.StudyLibraryManager::ICommonServiceConsumer_RegisterServiceProvider", _
 '                    "Caller is not a type " & spType & " service provider object"
 '    End If
 'Case Else
@@ -308,12 +308,12 @@ For i = 0 To mMaxLibIndex
     If Not mStudyLibraries(i).libObject Is Nothing Then
         If mStudyLibraries(i).libObject Is studyLib Then
             Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                    "StudiesSupp.StudyLibraryManager::Add", _
+                    "StudyUtils25.StudyLibraryManager::Add", _
                     "This StudyLibrary object has already been added"
         End If
         If mStudyLibraries(i).name = studyLib.name Then
             Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                    "StudiesSupp.StudyLibraryManager::Add", _
+                    "StudyUtils25.StudyLibraryManager::Add", _
                     "A StudyLibrary with this name has already been added"
         End If
     End If

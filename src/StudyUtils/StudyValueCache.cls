@@ -186,6 +186,7 @@ Dim valueEntry As StudyValue
 valueEntry = mValues(refToIndex(ref))
 getStudyValue.barNumber = valueEntry.barNumber
 getStudyValue.timestamp = valueEntry.timestamp
+getStudyValue.barStartTime = valueEntry.barStartTime
 If TypeName(valueEntry.value) = "Nothing" Then
     Set getStudyValue.value = Nothing
 ElseIf TypeOf valueEntry.value Is Object  Then
@@ -278,7 +279,7 @@ If ref > mNumValues Or _
     ref < (1 - mNumValues) _
 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "StudiesSupp.StudyValueCache::refToIndex", _
+            "StudyUtils25.StudyValueCache::refToIndex", _
             "<ref> out of bounds"
 End If
     

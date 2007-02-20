@@ -90,76 +90,15 @@ Public Function availableStudies() As StudyListEntry()
 availableStudies = Globals.StudyLibraryManager.availableStudies
 End Function
 
-Public Function CalculateBarEndTime( _
-                ByVal timestamp As Date, _
-                ByVal barLength As Long, _
-                ByVal timeUnits As TimePeriodUnits, _
-                Optional ByVal sessionStartTime As Date) As Date
-CalculateBarEndTime = gBarEndTime(timestamp, barLength, timeUnits, sessionStartTime)
-End Function
-
-Public Function CalculateBarLength( _
-                ByVal length As Long, _
-                ByVal units As TWUtilities.TimePeriodUnits) As Date
-Select Case units
-Case TimePeriodSecond
-Case TimePeriodMinute
-Case TimePeriodHour
-Case TimePeriodDay
-Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "StudiesSupp" & "." & "GlobalsClass" & ":" & "CalculateBarLength", _
-            "Can't calculate bar length for this time unit"
-End Select
-CalculateBarLength = gCalcBarLength(length, units)
-End Function
-
-Public Function CalculateBarStartTime( _
-                ByVal timestamp As Date, _
-                ByVal barLength As Long, _
-                ByVal timeUnits As TimePeriodUnits, _
-                Optional ByVal sessionStartTime As Date) As Date
-CalculateBarStartTime = gBarStartTime(timestamp, barLength, timeUnits, sessionStartTime)
-End Function
-
-Public Function CalculateOffsetBarStartTime( _
-                ByVal timestamp As Date, _
-                ByVal barLength As Long, _
-                ByVal timeUnits As TimePeriodUnits, _
-                ByVal offset As Long, _
-                Optional ByVal sessionStartTime As Date, _
-                Optional ByVal sessionEndTime As Date) As Date
-CalculateOffsetBarStartTime = gOffsetBarStartTime( _
-                timestamp, _
-                barLength, _
-                timeUnits, _
-                offset, _
-                sessionStartTime, _
-                sessionEndTime)
-End Function
-
-Public Sub CalculateSessionTimes( _
-                ByVal timestamp As Date, _
-                ByRef sessionStartTime As Date, _
-                ByRef sessionEndTime As Date, _
-                Optional ByVal startTime As Date, _
-                Optional ByVal endTime As Date)
-gCalcSessionTimes timestamp, _
-                            startTime, _
-                            endTime, _
-                            sessionStartTime, _
-                            sessionEndTime
-End Sub
-
 Public Function CreateBars( _
                 ByVal barLength As Long, _
                 ByVal timeUnits As TimePeriodUnits, _
-                Optional ByVal sessionStartTime As Date, _
+                ByVal pSession As session, _
                 Optional ByVal numberOfBarsToCache As Long) As Bars
 Set CreateBars = New Bars
 CreateBars.initialise barLength, _
                             timeUnits, _
-                            sessionStartTime, _
+                            pSession, _
                             numberOfBarsToCache
 End Function
 

@@ -55,12 +55,12 @@ Private mBarsCache                  As StudyValueCache
 Private mCurrentBar                 As Bar
 Private mCurrentBarNumber           As Long
 
-Private mSessionStartTime           As Date
-' minutes from midnight to start of sesssion
-Private mSessionOffset              As Long
+Private mSession                    As session
 
 Private mBarLength                  As Long
 Private mTimePeriodUnits            As TimePeriodUnits
+
+Private mTickVolume                 As Long
 
 '================================================================================
 ' Class Event Handlers
@@ -318,6 +318,11 @@ Public Property Get outside(Optional ByVal ref As Long) As Boolean
 outside = (highValue(ref) > highValue(ref - 1)) And (lowValue(ref) < lowValue(ref - 1))
 End Property
 
+Public Property Let session( _
+                ByVal value As session)
+Set mSession = value
+End Property
+                
 Public Property Get tickVolume(Optional ByVal ref As Long) As Long
 tickVolume = Bar(ref).tickVolume
 End Property
@@ -330,16 +335,32 @@ End Property
 ' Methods
 '================================================================================
 
+''
+' <p>Increments the tick volume for the current bar.</p>
+'
+' <p>This should only be used to set the tickvolume for historical bars, where
+' the ticks cannot be counted in the normal way.</p>
+'
+' <p>Successive calls to this procedure during a sinlge bar cause the tick volume
+' to be accumulated.</p>
+'
+' @param tickVol The amount by which the tick volume is to be incremented.
+'
+'@/
+Public Sub incrementTickVolume( _
+                ByVal tickVol As Long)
+mTickVolume = mTickVolume + tickVol
+End Sub
+
 Friend Sub initialise( _
                 ByVal barLength As Long, _
                 ByVal timeUnits As TimePeriodUnits, _
-                Optional ByVal sessionStartTime As Date, _
+                ByVal pSession As session, _
                 Optional ByVal numberOfBarsToCache As Long)
 
 mBarLength = barLength
 mTimePeriodUnits = timeUnits
-mSessionStartTime = sessionStartTime
-mSessionOffset = Int(1440 * (mSessionStartTime - Int(mSessionStartTime)))
+Set mSession = pSession
 Set mBarsCache = New StudyValueCache
 mBarsCache.initialise numberOfBarsToCache, "Bar"
 
@@ -354,10 +375,10 @@ If mBarLength = 0 Then
     ' the caller will supply bar numbers
     isNewBar = newBar(ev.barNumber)
 Else
-    barTime = gBarStartTime(ev.timestamp, _
+    barTime = barStartTime(ev.timestamp, _
                             mBarLength, _
                             mTimePeriodUnits, _
-                            mSessionStartTime)
+                            mSession.sessionStartTime)
     If mCurrentBar Is Nothing Then
         isNewBar = True
     Else
@@ -366,6 +387,11 @@ Else
 End If
     
 If isNewBar Then
+    If mTickVolume <> 0 Then
+        mCurrentBar.tickVolume = mTickVolume
+        mTickVolume = 0
+    End If
+    
     Set mCurrentBar = New Bar
     If mBarLength = 0 Then
         mCurrentBar.datetime = ev.barStartTime

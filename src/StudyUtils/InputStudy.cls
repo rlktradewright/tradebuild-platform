@@ -55,8 +55,9 @@ Private mListeners As StudyValueListeners
 
 Private mTickSizes As Collection
 
-Private mSessionStartTime As Date
-Private mSessionEndTime As Date
+Private mSessionBuilder As SessionBuilder
+
+Private mTimestamp As Date
 
 '================================================================================
 ' Class Event Handlers
@@ -71,6 +72,9 @@ Set mStudyDef = New studyDefinition
 mStudyDef.defaultRegion = StudyDefaultRegions.DefaultRegionNone
 
 Set mTickSizes = New Collection
+
+Set mSessionBuilder = New SessionBuilder
+
 End Sub
 
 '================================================================================
@@ -120,7 +124,8 @@ Private Sub Study_initialise( _
                 ByVal parameters As Parameters2.parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 valueNames() As String, _
-                ByVal underlyingStudy As study)
+                ByVal underlyingStudy As study, _
+                ByVal pSession As session)
 
 End Sub
 
@@ -135,6 +140,10 @@ End Property
 Private Sub Study_Notify( _
                 ByRef ev As StudyValueEvent)
 Dim evOut As StudyValueEvent
+
+mTimestamp = ev.timestamp
+mSessionBuilder.setSessionCurrentTime ev.timestamp
+
 evOut = ev
 evOut.barStartTime = 0  ' a higher level study must generate this
 mStudies.notify evOut
@@ -158,14 +167,6 @@ Private Sub Study_removeStudyValueListener( _
                 ByVal listener As StudyValueListener)
 mListeners.remove listener
 End Sub
-
-Private Property Get study_sessionEndTime() As Date
-study_sessionEndTime = mSessionEndTime
-End Property
-
-Private Property Get study_sessionStartTime() As Date
-study_sessionStartTime = mSessionStartTime
-End Property
 
 Private Sub study_setInputTicksize(ByVal inputName As String, ByVal tickSize As Double)
 
@@ -193,6 +194,14 @@ Public Property Get name() As String
 name = mName
 End Property
 
+Public Property Get session() As session
+Set session = mSessionBuilder.session
+End Property
+
+Public Property Get timestamp() As Date
+timestamp = mTimestamp
+End Property
+
 '================================================================================
 ' Methods
 '================================================================================
@@ -200,7 +209,7 @@ End Property
 Friend Sub addInput( _
                 ByVal name As String, _
                 ByVal description As String, _
-                ByVal valueType As StudiesSupp.StudyInputTypes, _
+                ByVal valueType As StudyUtils25.StudyInputTypes, _
                 ByVal isDefault As Boolean, _
                 ByVal tickSize As Double)
 Dim valueDef As StudyValueDefinition
@@ -235,15 +244,21 @@ Friend Sub initialise( _
 mName = name
 mIdent = name
 mStudyDef.name = mName
-mSessionStartTime = sessionStartTime
-mSessionEndTime = sessionEndTime
+mSessionBuilder.sessionStartTime = sessionStartTime
+mSessionBuilder.sessionEndTime = sessionEndTime
 End Sub
 
+Public Sub setSessionCurrentTime( _
+                ByVal currentTime As Date)
+mTimestamp = currentTime
+mSessionBuilder.setSessionCurrentTime currentTime
+End Sub
+                
 Friend Sub setSessionTimes( _
                 ByVal sessionStartTime As Date, _
                 ByVal sessionEndTime As Date)
-mSessionStartTime = sessionStartTime
-mSessionEndTime = sessionEndTime
+mSessionBuilder.sessionStartTime = sessionStartTime
+mSessionBuilder.sessionEndTime = sessionEndTime
 End Sub
 
 '================================================================================

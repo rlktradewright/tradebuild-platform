@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "StudyValueReplayTask"
+Attribute VB_Name = "CacheReplayTask"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -30,7 +30,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements task
+Implements Tasks.task
 Implements ValueReplayTask
 
 '================================================================================
@@ -63,13 +63,15 @@ Private mStudyToNotify As study
 Private mTargetListener As StudyValueListener
 Private mSourceStudy As study
 Private mDiscriminator As Long
+Private mValueCache As StudyValueCache
 
 Private mNextValueNumber As Long
 Private mValuesNotified As Long
 
 Private mValueName As String
-Private mValueNames() As String
-Private mNotifyNames() As String
+Private mValueNames(0) As String
+Private mNotifyName As String
+Private mNotifyNames(0) As String
 
 '================================================================================
 ' Class Event Handlers
@@ -81,6 +83,14 @@ Private mNotifyNames() As String
 
 Private Property Get ValueReplayTask_discriminator() As Long
 ValueReplayTask_discriminator = mDiscriminator
+End Property
+
+Private Property Get ValueReplayTask_notifyName() As String
+ValueReplayTask_notifyName = mNotifyName
+End Property
+
+Private Property Get ValueReplayTask_notifyNames() As String()
+ValueReplayTask_notifyNames = mNotifyNames
 End Property
 
 Private Property Get ValueReplayTask_sourceStudy() As study
@@ -112,44 +122,41 @@ task_TaskName = mTaskContext.name
 End Property
 
 Private Sub Task_run()
-Dim i As Long
 Dim ev As StudyValueEvent
 Dim valueEntry As StudyValue
 
-If mSourceStudy.numberOfCachedValues = 0 Then
+If mValueCache.count = 0 Then
     mTaskContext.finish
     Set mTaskContext = Nothing
     Exit Sub
 End If
 
-For i = 0 To UBound(mValueNames)
-    valueEntry = mSourceStudy.getStudyValue(mValueNames(i), mNextValueNumber)
-     
-    If Not IsEmpty(valueEntry.value) Then
-        Set ev.source = mSourceStudy
-        ev.timestamp = valueEntry.timestamp
-        ev.barNumber = valueEntry.barNumber
-        ev.barStartTime = valueEntry.barStartTime
-        If TypeOf valueEntry.value Is Object  Then
-            Set ev.value = valueEntry.value
-        Else
-            ev.value = valueEntry.value
-        End If
-        
-        If mTargetIsStudy Then
-            ev.valueName = mNotifyNames(i)
-            mStudyToNotify.notify ev
-        Else
-            ev.valueName = mValueNames(i)
-            mTargetListener.notify ev
-        End If
+valueEntry = mValueCache.getStudyValue(mNextValueNumber)
+If Not IsEmpty(valueEntry.value) Then
+    Set ev.source = mSourceStudy
+    ev.timestamp = valueEntry.timestamp
+    ev.barNumber = valueEntry.barNumber
+    ev.barStartTime = valueEntry.barStartTime
+    If TypeOf valueEntry.value Is Object  Then
+        Set ev.value = valueEntry.value
+    Else
+        ev.value = valueEntry.value
     End If
-Next
+    
+    If mTargetIsStudy Then
+        ev.valueName = mNotifyName
+        mStudyToNotify.notify ev
+    Else
+        ev.valueName = mValueName
+        mTargetListener.notify ev
+    End If
+    
+End If
 
 mNextValueNumber = mNextValueNumber + 1
 mValuesNotified = mValuesNotified + 1
-If mNextValueNumber = mSourceStudy.numberOfCachedValues Then
-    Debug.Print "Study " & mSourceStudy.instanceName & " replayed " & mValuesNotified & " values"
+If mNextValueNumber > mValueCache.count Then
+    Debug.Print "Cache for " & mValueName & " replayed " & mValuesNotified & " values"
     mTaskContext.finish
     Set mTaskContext = Nothing
 End If
@@ -170,6 +177,14 @@ End Property
 
 Public Property Get discriminator() As Long
 discriminator = mDiscriminator
+End Property
+
+Public Property Get notifyName() As String
+notifyName = mNotifyName
+End Property
+
+Public Property Get notifyNames() As String()
+notifyNames = mNotifyNames
 End Property
 
 Public Property Get sourceStudy() As study
@@ -193,33 +208,26 @@ End Property
 '================================================================================
 
 Friend Sub initialise( _
+                ByVal valueCache As StudyValueCache, _
                 ByVal target As Object, _
                 ByVal sourceStudy As study, _
-                ByRef valueNames() As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 ByVal discriminator As Long)
 Dim numValuesToNotify As Long
-Dim inputDefs As studyInputDefinitions
-Dim i As Long
 
+Set mValueCache = valueCache
 Set mTarget = target
 Set mSourceStudy = sourceStudy
-mValueNames = valueNames
-mValueName = mValueNames(0)
-
+mValueName = valueCache.valueName
+mValueNames(0) = mValueName
 mDiscriminator = discriminator
 
 If TypeOf target Is study Then
     mTargetIsStudy = True
     Set mTargetStudy = target
     Set mStudyToNotify = mTargetStudy.baseStudy
-    
-    Set inputDefs = mTargetStudy.studyDefinition.studyInputDefinitions
-    ReDim mNotifyNames(inputDefs.count - 1) As String
-    For i = 0 To inputDefs.count - 1
-        mNotifyNames(i) = inputDefs.Item(i + 1).name
-    Next
-    
+    mNotifyName = mTargetStudy.studyDefinition.studyInputDefinitions.Item(1).name
+    mNotifyNames(0) = mNotifyName
     If numberOfValuesToReplay = ReplayNumbers.ReplayAsRequired Then
         ' just replay the number of values needed by the study
         numValuesToNotify = mTargetStudy.numberOfBarsRequired
@@ -230,21 +238,19 @@ Else
     Set mTargetListener = target
     numValuesToNotify = numberOfValuesToReplay
 End If
-If numValuesToNotify > mSourceStudy.numberOfCachedValues Or _
+If numValuesToNotify > mValueCache.count Or _
     numValuesToNotify = ReplayNumbers.ReplayAll _
 Then
-    numValuesToNotify = mSourceStudy.numberOfCachedValues
+    numValuesToNotify = mValueCache.count
 End If
 
-mNextValueNumber = mSourceStudy.numberOfCachedValues - numValuesToNotify + 1
+mNextValueNumber = mValueCache.count - numValuesToNotify + 1
 
 End Sub
 
 '================================================================================
 ' Helper Functions
 '================================================================================
-
-
 
 
 

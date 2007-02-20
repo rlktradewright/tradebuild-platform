@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "ValueReplayTask"
+Attribute VB_Name = "Study"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -35,6 +35,11 @@ Option Explicit
 ' Enums
 '================================================================================
 
+Public Enum ReplayNumbers
+    ReplayAll = -1
+    ReplayAsRequired = -2
+End Enum
+
 '================================================================================
 ' Types
 '================================================================================
@@ -59,28 +64,31 @@ Option Explicit
 ' Properties
 '================================================================================
 
-Public Property Get discriminator() As Long
+Public Property Get baseStudy() As Study
 
 End Property
 
-Public Property Get sourceStudy() As study
+Public Property Get id() As String
 
 End Property
 
-Public Property Get target() As Object
+Public Property Get instanceName() As String
 
 End Property
 
-Public Property Get taskName() As String
+Public Property Get instancePath() As String
 
 End Property
 
-' the same as ValueNames(0) for user convenience
-Public Property Get valueName() As String
+Public Property Get numberOfBarsRequired() As Long
 
 End Property
 
-Public Property Get valueNames() As String()
+Public Property Get parameters() As Parameters2.parameters
+
+End Property
+
+Public Property Get studyDefinition() As studyDefinition
 
 End Property
 
@@ -88,6 +96,66 @@ End Property
 ' Methods
 '================================================================================
 
+Public Function addStudy( _
+                ByVal pStudy As Study, _
+                ByRef valueNames() As String, _
+                ByVal numberOfValuesToReplay As Long, _
+                Optional ByVal taskName As String, _
+                Optional ByVal taskData As Variant) As TaskCompletion
+                
+End Function
+                
+Public Function addStudyValueListener( _
+                ByVal listener As StudyValueListener, _
+                ByVal valueName As String, _
+                ByVal numberOfValuesToReplay As Long, _
+                Optional ByVal taskName As String, _
+                Optional ByVal taskData As Variant) As TaskCompletion
+                
+End Function
+
+Public Function getStudyValue( _
+                ByVal valueName As String, _
+                ByVal ref As Long) As StudyValue
+
+End Function
+
+Public Function getValueTicksize( _
+                ByVal valueName As String) As Double
+                
+End Function
+     
+Public Sub initialise( _
+                ByVal id As String, _
+                ByVal params As Parameters2.parameters, _
+                ByVal numberOfValuesToCache As Long, _
+                ByRef valueNames() As String, _
+                ByVal underlyingStudy As Study, _
+                ByVal pSession As Session)
+
+End Sub
+
+Public Sub notify( _
+                ByRef ev As StudyValueEvent)
+
+End Sub
+
+Public Function numberOfCachedValues( _
+                Optional ByVal valueName As String) As Long
+                
+End Function
+
+Public Sub removeStudyValueListener( _
+                ByVal listener As StudyValueListener)
+                
+End Sub
+
+Public Sub setInputTicksize( _
+                ByVal inputName As String, _
+                ByVal tickSize As Double)
+                
+End Sub
+     
 '================================================================================
 ' Helper Functions
 '================================================================================

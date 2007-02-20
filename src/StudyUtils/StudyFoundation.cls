@@ -153,14 +153,6 @@ Public Property Let ReplayUsingStudyValues( _
 mReplayUsingStudyValues = value
 End Property
 
-Public Property Get sessionEndTime() As Date
-sessionEndTime = mUnderlyingStudy.sessionEndTime
-End Property
-
-Public Property Get sessionStartTime() As Date
-sessionStartTime = mUnderlyingStudy.sessionStartTime
-End Property
-
 '================================================================================
 ' Methods
 '================================================================================
@@ -171,54 +163,77 @@ Public Function addStudy( _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As Tasks.TaskCompletion
-Dim valueDefs As studyValueDefinitions
-Dim valueDef As StudyValueDefinition
+Dim notifyNames() As String
+Dim replayValueNames() As String
+Dim replayNotifyNames() As String
+Dim inputDefs As studyInputDefinitions
+Dim lBarStudy As BarStudy
 Dim i As Long
+Dim j As Long
 
-If numberOfValuesToReplay >= 0 Or _
-    numberOfValuesToReplay = ReplayNumbers.ReplayAsRequired Or _
-    numberOfValuesToReplay = ReplayNumbers.ReplayAll _
-Then
-    ' ok
-Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "StudiesSupp" & "." & "StudyFoundation" & ":" & "addStudy", _
-            "numberOfValuesToReplay must be >=0 or set to ReplayNumbers.ReplayAll"
+Set inputDefs = studyToAdd.studyDefinition.studyInputDefinitions
+
+ReDim notifyNames(inputDefs.count - 1) As String
+
+For i = 0 To inputDefs.count - 1
+    notifyNames(i) = inputDefs.Item(i + 1).name
+Next
+
+If TypeOf study Is BarStudy Then
+    Set lBarStudy = study
     
-End If
-
-If numberOfValuesToReplay = 0 Or study.numberOfCachedValues = 0 Then
-    mStudies.add studyToAdd, valueNames
-    Exit Function
-End If
-
-Set valueDefs = study.studyDefinition.studyValueDefinitions
-If UBound(valueNames) = 0 And (Not mReplayUsingStudyValues) Then
-    Dim valueName As String
-    valueName = UCase$(valueNames(0))
-    For Each valueDef In valueDefs
-        If UCase$(valueDef.name) = valueName Then
-            Set addStudy = mValueCaches(i).valueCache.replayValues(studyToAdd, _
-                                        study, _
-                                        numberOfValuesToReplay, _
-                                        TaskDiscriminators.TaskAddStudy, _
-                                        taskName, _
-                                        taskData)
-            addStudy.addTaskCompletionListener Me
+    ' if the study being added needs close values, we must make sure that
+    ' open, high and low are also replayed
+    
+    ReDim replayValueNames(UBound(valueNames)) As String
+    ReDim replayNotifyNames(UBound(valueNames)) As String
+    Set inputDefs = study.studyDefinition.studyInputDefinitions
+    
+    For i = 0 To UBound(valueNames)
+        If UCase$(valueNames(i)) = UCase$(lBarStudy.closeValueName) Then
+            ReDim Preserve replayValueNames(UBound(replayValueNames) + 3) As String
+            ReDim Preserve replayNotifyNames(UBound(replayValueNames)) As String
+            
+            replayValueNames(j) = lBarStudy.openValueName
+            replayNotifyNames(j) = inputDefs.Item(i + 1).name
+            
+            replayValueNames(j + 1) = lBarStudy.highValueName
+            replayNotifyNames(j + 1) = inputDefs.Item(i + 1).name
+            
+            replayValueNames(j + 2) = lBarStudy.lowValueName
+            replayNotifyNames(j + 2) = inputDefs.Item(i + 1).name
+            
+            replayValueNames(j + 3) = lBarStudy.closeValueName
+            replayNotifyNames(j + 3) = inputDefs.Item(i + 1).name
+            
+            j = j + 4
+        Else
+            replayValueNames(j) = valueNames(i)
+            replayNotifyNames(j) = inputDefs.Item(i + 1).name
+            j = j + 1
         End If
-        i = i + 1
     Next
-Else
-    Dim replayTask As New StudyValueReplayTask
-    replayTask.initialise studyToAdd, _
-                            study, _
-                            valueNames, _
-                            numberOfValuesToReplay, _
-                            TaskDiscriminators.TaskAddStudy
-    Set addStudy = Tasks.startTask(replayTask, PriorityNormal, taskName, taskData)
-    addStudy.addTaskCompletionListener Me
     
+    Set addStudy = addStudyHelper(studyToAdd, _
+                            valueNames, _
+                            notifyNames, _
+                            replayValueNames, _
+                            replayNotifyNames, _
+                            numberOfValuesToReplay, _
+                            taskName, _
+                            taskData)
+Else
+    Set addStudy = addStudyHelper(studyToAdd, _
+                            valueNames, _
+                            notifyNames, _
+                            valueNames, _
+                            notifyNames, _
+                            numberOfValuesToReplay, _
+                            taskName, _
+                            taskData)
 End If
+    
+
 End Function
 
 Public Function addStudyValueListener( _
@@ -229,6 +244,7 @@ Public Function addStudyValueListener( _
                 Optional ByVal taskData As Variant) As Tasks.TaskCompletion
 Dim valueDefs As studyValueDefinitions
 Dim valNames(0) As String
+Dim notifyNames(0) As String 'dummy
 
 If numberOfValuesToReplay >= 0 Or _
     numberOfValuesToReplay = ReplayNumbers.ReplayAll _
@@ -254,7 +270,10 @@ If mReplayUsingStudyValues Then
     replayTask.initialise listener, _
                             study, _
                             valNames, _
+                            notifyNames, _
                             numberOfValuesToReplay, _
+                            valNames, _
+                            notifyNames, _
                             TaskDiscriminators.TaskAddStudyValueListener
     Set addStudyValueListener = Tasks.startTask(replayTask, PriorityNormal, taskName, taskData)
     addStudyValueListener.addTaskCompletionListener Me
@@ -317,7 +336,7 @@ createValueCaches mNumberOfValuesToCache
 
 End Sub
 
-Public Sub NotifyInput( _
+Public Sub notifyInput( _
                 ByRef ev As StudyValueEvent)
 If ev.barNumber <> mBarNumber Then
     mBarNumber = ev.barNumber
@@ -364,6 +383,70 @@ End Sub
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Function addStudyHelper( _
+                ByVal studyToAdd As study, _
+                ByRef valueNames() As String, _
+                ByRef notifyNames() As String, _
+                ByRef replayValueNames() As String, _
+                ByRef replayNotifyNames() As String, _
+                ByVal numberOfValuesToReplay As Long, _
+                Optional ByVal taskName As String, _
+                Optional ByVal taskData As Variant) As Tasks.TaskCompletion
+Dim valueDefs As studyValueDefinitions
+Dim valueDef As StudyValueDefinition
+Dim i As Long
+
+If numberOfValuesToReplay >= 0 Or _
+    numberOfValuesToReplay = ReplayNumbers.ReplayAsRequired Or _
+    numberOfValuesToReplay = ReplayNumbers.ReplayAll _
+Then
+    ' ok
+Else
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            "StudiesSupp" & "." & "StudyFoundation" & ":" & "addStudy", _
+            "numberOfValuesToReplay must be >=0 or set to ReplayNumbers.ReplayAll"
+    
+End If
+
+If numberOfValuesToReplay = 0 Or study.numberOfCachedValues = 0 Then
+    mStudies.addEx studyToAdd, valueNames, notifyNames
+    Exit Function
+End If
+
+Set valueDefs = study.studyDefinition.studyValueDefinitions
+If UBound(valueNames) = 0 And (Not mReplayUsingStudyValues) Then
+    Dim valueName As String
+    valueName = UCase$(valueNames(0))
+    For Each valueDef In valueDefs
+        If UCase$(valueDef.name) = valueName Then
+            Set addStudyHelper = mValueCaches(i).valueCache.replayValues(studyToAdd, _
+                                        study, _
+                                        numberOfValuesToReplay, _
+                                        TaskDiscriminators.TaskAddStudy, _
+                                        taskName, _
+                                        taskData)
+            addStudyHelper.addTaskCompletionListener Me
+            Exit For
+        End If
+        i = i + 1
+    Next
+Else
+    Dim replayTask As New StudyValueReplayTask
+    replayTask.initialise studyToAdd, _
+                            study, _
+                            replayValueNames, _
+                            replayNotifyNames, _
+                            numberOfValuesToReplay, _
+                            valueNames, _
+                            notifyNames, _
+                            TaskDiscriminators.TaskAddStudy
+    Set addStudyHelper = Tasks.startTask(replayTask, PriorityNormal, taskName, taskData)
+    addStudyHelper.addTaskCompletionListener Me
+    
+End If
+                
+End Function
 
 Private Sub createValueCaches( _
                 ByVal numberOfValuesToCache As Long)
