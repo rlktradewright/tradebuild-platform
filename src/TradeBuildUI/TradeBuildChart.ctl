@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#1.0#0"; "ChartSkil2-5.ocx"
+Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#2.0#0"; "ChartSkil2-5.ocx"
 Begin VB.UserControl TradeBuildChart 
    ClientHeight    =   5745
    ClientLeft      =   0
@@ -44,9 +44,18 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
+Implements TaskCompletionListener
+
 '================================================================================
 ' Events
 '================================================================================
+
+''
+'
+' Raised when the initial bar study listeners have completed loading historical
+' data to the chart,
+'@/
+Event Ready()
 
 '================================================================================
 ' Constants
@@ -98,6 +107,8 @@ Private mPrevClosePrice As Double
 Private mPrevWidth As Single
 Private mPrevHeight As Single
 
+Private mNumberOfOutstandingTasks As Long
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
@@ -121,6 +132,15 @@ If UserControl.Height <> mPrevHeight Then
 End If
 End Sub
 
+
+'================================================================================
+' TaskCompletionListener Interface Members
+'================================================================================
+
+Private Sub TaskCompletionListener_taskCompleted(ev As Tasks.TaskCompletionEvent)
+mNumberOfOutstandingTasks = mNumberOfOutstandingTasks - 1
+If mNumberOfOutstandingTasks = 0 Then RaiseEvent Ready
+End Sub
 
 '================================================================================
 ' mTimeframe Event Handlers
@@ -214,7 +234,7 @@ Public Sub showChart( _
 Dim i As Long
 
 Set mTicker = pTicker
-Set mChartManager = createChartManager(mTicker.StudyManager, Chart1.controller)
+Set mChartManager = createChartManager(mTicker.studyManager, Chart1.controller)
 
 mInitialNumberOfBars = initialNumberOfBars
 mIncludeBarsOutsideSession = includeBarsOutsideSession
@@ -271,7 +291,7 @@ Dim studyValueConfig As StudyValueConfiguration
 
 Set createBarsStudyConfig = New StudyConfiguration
 
-createBarsStudyConfig.underlyingStudy = mTicker.InputStudy
+createBarsStudyConfig.underlyingStudy = mTicker.inputStudy
 
 Set lStudy = mTimeframe.tradeStudy
 createBarsStudyConfig.study = mTimeframe.tradeStudy
@@ -358,7 +378,27 @@ mInitialised = True
 End Sub
 
 Private Sub showStudies()
+Dim tcs() As TaskCompletion
+Dim tc As TaskCompletion
+Dim tcMaxIndex As Long
+Dim i As Long
+
 Set mBarsStudyConfig = createBarsStudyConfig
-mChartManager.setupStudyValueListeners mBarsStudyConfig
+
+tcs = mChartManager.setupStudyValueListeners(mBarsStudyConfig)
+
+tcMaxIndex = -1
+On Error Resume Next
+tcMaxIndex = UBound(tcs)
+On Error GoTo 0
+
+If tcMaxIndex <> -1 Then
+    For i = 0 To tcMaxIndex
+        Set tc = tcs(i)
+        tc.addTaskCompletionListener Me
+        mNumberOfOutstandingTasks = mNumberOfOutstandingTasks + 1
+    Next
+End If
+
 If Chart1.Visible Then Chart1.suppressDrawing = False
 End Sub
