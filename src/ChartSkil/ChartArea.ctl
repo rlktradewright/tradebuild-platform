@@ -1938,6 +1938,7 @@ mVerticalGridParametersSet = False
 
 mBackColor = vbWhite
 mGridColor = &HC0C0C0
+mGridTextColor = &HC0C0C0
 mShowGrid = True
 mPointerStyle = PointerCrosshairs
 
