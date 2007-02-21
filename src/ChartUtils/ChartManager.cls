@@ -392,24 +392,33 @@ End If
 err.Raise err.Number
 End Sub
 
-Public Sub setupStudyValueListeners( _
-                ByVal studyConfig As StudyConfiguration)
+Public Function setupStudyValueListeners( _
+                ByVal studyConfig As StudyConfiguration) As TaskCompletion()
 Dim studyValueConfig As StudyValueConfiguration
 Dim studyValueDefs As StudyValueDefinitions
+Dim taskCompletions() As TaskCompletion
+Dim taskCompletionsIndex As Long
+Dim tc As TaskCompletion
 
 Set studyValueDefs = studyConfig.study.StudyDefinition.StudyValueDefinitions
 
 For Each studyValueConfig In studyConfig.studyValueConfigurations
     If studyValueConfig.includeInChart Then
-        includeStudyValueInChart studyConfig, _
+        Set tc = includeStudyValueInChart(studyConfig, _
                                 studyValueConfig, _
-                                studyValueDefs.item(studyValueConfig.valueName)
+                                studyValueDefs.item(studyValueConfig.valueName))
+        If Not tc Is Nothing Then
+            ReDim Preserve taskCompletions(taskCompletionsIndex) As TaskCompletion
+            Set taskCompletions(taskCompletionsIndex) = tc
+            taskCompletionsIndex = taskCompletionsIndex + 1
+        End If
     End If
 Next
 
 mStudyConfigurations.add studyConfig
 
-End Sub
+If taskCompletionsIndex > 0 Then setupStudyValueListeners = taskCompletions
+End Function
 
 Public Function startStudy( _
                 ByVal pStudy As study) As TaskCompletion
@@ -472,10 +481,10 @@ ElseIf incrementUsageCount Then
 End If
 End Function
 
-Private Sub includeStudyValueInChart( _
+Private Function includeStudyValueInChart( _
                 ByVal studyConfig As StudyConfiguration, _
                 ByVal studyValueConfig As StudyValueConfiguration, _
-                ByVal studyValueDef As StudyValueDefinition)
+                ByVal studyValueDef As StudyValueDefinition) As TaskCompletion
 
 Dim lStudyValueHandler As StudyValueHandler
 Dim study As study
@@ -514,7 +523,8 @@ If Not lTaskCompletion Is Nothing Then
     lTaskCompletion.addTaskCompletionListener Me
     mChartController.suppressDrawing = True
 End If
-End Sub
+Set includeStudyValueInChart = lTaskCompletion
+End Function
 
 Private Sub initialiseChart()
 
