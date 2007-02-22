@@ -221,13 +221,13 @@ End Property
 '================================================================================
 
 Public Function addChartRegion(ByVal percentheight As Double, _
-                    Optional ByVal style As ChartRegionStyle, _
                     Optional ByVal minimumPercentHeight As Double, _
+                    Optional ByVal style As ChartRegionStyle, _
                     Optional ByVal name As String) As ChartRegion
-Set addChartRegion = chartObj.addChartRegion(percentheight, style, minimumPercentHeight, name)
+Set addChartRegion = chartObj.addChartRegion(percentheight, minimumPercentHeight, style, name)
 End Function
 
-Public Function addPeriod(ByVal timestamp As Date) As Period
+Public Function addPeriod(ByVal timestamp As Date) As period
 Set addPeriod = chartObj.addPeriod(timestamp)
 End Function
 

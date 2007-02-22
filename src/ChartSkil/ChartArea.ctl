@@ -1342,8 +1342,8 @@ End Property
 '================================================================================
 
 Public Function addChartRegion(ByVal percentheight As Double, _
-                    Optional ByVal style As ChartRegionStyle, _
                     Optional ByVal minimumPercentHeight As Double, _
+                    Optional ByVal style As ChartRegionStyle, _
                     Optional ByVal name As String) As ChartRegion
 Dim ev As CollectionChangeEvent
 Dim var As Variant
