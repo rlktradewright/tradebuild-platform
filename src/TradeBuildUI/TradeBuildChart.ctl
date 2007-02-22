@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#2.0#0"; "ChartSkil2-5.ocx"
+Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#5.0#0"; "ChartSkil2-5.ocx"
 Begin VB.UserControl TradeBuildChart 
    ClientHeight    =   5745
    ClientLeft      =   0
@@ -17,7 +17,6 @@ Begin VB.UserControl TradeBuildChart
       Width           =   7365
       _ExtentX        =   12991
       _ExtentY        =   9128
-      autoscale       =   0   'False
    End
 End
 Attribute VB_Name = "TradeBuildChart"
@@ -74,6 +73,7 @@ Event Ready()
 '================================================================================
 
 Private mChartManager As ChartManager
+Private mChartController As chartController
 
 Private mTicker As ticker
 Private mTimeframes As Timeframes
@@ -235,6 +235,7 @@ Dim i As Long
 
 Set mTicker = pTicker
 Set mChartManager = createChartManager(mTicker.studyManager, Chart1.controller)
+Set mChartController = mChartManager.chartController
 
 mInitialNumberOfBars = initialNumberOfBars
 mIncludeBarsOutsideSession = includeBarsOutsideSession
@@ -332,15 +333,13 @@ studyValueConfig.lineThickness = 1
 End Function
 
 Private Sub initialiseChart()
+Dim regionStyle As ChartRegionStyle
 
 If mInitialised Then Exit Sub
 
 Chart1.suppressDrawing = True
 
 Chart1.clearChart
-Chart1.chartBackColor = vbWhite
-Chart1.autoscale = True
-Chart1.pointerStyle = PointerCrosshairs
 Chart1.twipsPerBar = 120
 Chart1.showHorizontalScrollBar = True
 
@@ -349,9 +348,15 @@ Chart1.sessionEndTime = mContract.sessionEndTime
 
 Chart1.setPeriodParameters mPeriodLength, mPeriodUnits
 
-Set mPriceRegion = mChartManager.addChartRegion(RegionNamePrice, 100, 25)
+Set regionStyle = Chart1.defaultRegionStyle
+regionStyle.backColor = vbWhite
+regionStyle.autoscale = True
+regionStyle.hasGrid = True
+regionStyle.pointerStyle = PointerCrosshairs
+Chart1.defaultRegionStyle = regionStyle
+
+Set mPriceRegion = mChartController.addChartRegion(100, 25, , RegionNamePrice)
 mPriceRegion.gridlineSpacingY = 2
-mPriceRegion.showGrid = True
 
 mPriceRegion.YScaleQuantum = mContract.ticksize
 If mMinimumTicksHeight * mContract.ticksize <> 0 Then
@@ -364,11 +369,10 @@ mPriceRegion.setTitle mContract.specifier.localSymbol & _
                 vbBlue, _
                 Nothing
 
-Set mVolumeRegion = mChartManager.addChartRegion(RegionNameVolume, 20)
+Set mVolumeRegion = mChartController.addChartRegion(20, , , RegionNameVolume)
 mVolumeRegion.gridlineSpacingY = 0.8
 mVolumeRegion.minimumHeight = 10
 mVolumeRegion.integerYScale = True
-mVolumeRegion.showGrid = True
 mVolumeRegion.setTitle "Volume", vbBlue, Nothing
 
 Chart1.suppressDrawing = False
