@@ -149,10 +149,10 @@ Public Property Get StudyConfigurations() As StudyConfigurations
 Set StudyConfigurations = mStudyConfigurations
 End Property
 
-Public Property Let suppressDrawing( _
-                ByVal value As Boolean)
-mChartController.suppressDrawing = value
-End Property
+'Public Property Let suppressDrawing( _
+'                ByVal value As Boolean)
+'mChartController.suppressDrawing = value
+'End Property
 
 Public Property Let updatePerTick(ByVal value As Boolean)
 mUpdatePerTick = value
@@ -162,15 +162,15 @@ End Property
 ' Methods
 '================================================================================
 
-Public Function addChartRegion( _
-                    ByVal name As String, _
-                    ByVal percentheight As Double, _
-                    Optional ByVal minimumPercentHeight As Double) As ChartRegion
-Dim re As RegionEntry
-Set addChartRegion = mChartController.addChartRegion(percentheight, minimumPercentHeight, name)
-Set re.region = addChartRegion
-mRegions.add re, name
-End Function
+'Public Function addChartRegion( _
+'                    ByVal name As String, _
+'                    ByVal percentheight As Double, _
+'                    Optional ByVal minimumPercentHeight As Double) As ChartRegion
+'Dim re As RegionEntry
+'Set addChartRegion = mChartController.addChartRegion(percentheight, minimumPercentHeight, name)
+'Set re.region = addChartRegion
+'mRegions.add re, name
+'End Function
 
 Public Function addStudy( _
                 ByVal studyConfig As StudyConfiguration, _
@@ -466,13 +466,13 @@ Set findRegion = re.region
 If findRegion Is Nothing Then
     Set findRegion = mChartController.getChartRegion(regionName)
     If findRegion Is Nothing Then
-        Set findRegion = mChartController.addChartRegion(20, , regionName)
+        Set findRegion = mChartController.addChartRegion(20, , , regionName)
     End If
     Set re.region = findRegion
     If incrementUsageCount Then re.usageCount = 1
     mRegions.add re, regionName
     findRegion.gridlineSpacingY = 0.8
-    findRegion.showGrid = True
+    findRegion.hasGrid = True
     findRegion.setTitle title, vbBlue, Nothing
 ElseIf incrementUsageCount Then
     re.usageCount = re.usageCount + 1
@@ -527,15 +527,20 @@ Set includeStudyValueInChart = lTaskCompletion
 End Function
 
 Private Sub initialiseChart()
+Dim regionStyle As ChartRegionStyle
+
 
 mChartController.suppressDrawing = True
 
 mChartController.clearChart
-mChartController.chartBackColor = vbWhite
-mChartController.autoscale = True
-mChartController.pointerStyle = PointerCrosshairs
 mChartController.twipsPerBar = 100
 mChartController.showHorizontalScrollBar = True
+
+Set regionStyle = mChartController.defaultRegionStyle
+regionStyle.BackColor = vbWhite
+regionStyle.autoscale = True
+regionStyle.pointerStyle = PointerCrosshairs
+mChartController.defaultRegionStyle = regionStyle
 
 Set mPeriods = mChartController.Periods
 

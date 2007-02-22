@@ -139,6 +139,7 @@ Option Explicit
 '================================================================================
 
 Private mChartManager As ChartManager
+Private mChartController As chartController
 
 Private mAvailableStudies() As StudyListEntry
 
@@ -182,7 +183,7 @@ Else
                 defaultStudyConfig
 End If
 
-mChartManager.suppressDrawing = False
+mChartController.suppressDrawing = False
 End Sub
 
 Private Sub ChangeButton_Click()
@@ -207,7 +208,7 @@ If Not newStudyConfig Is Nothing Then
     ChartStudiesList.ListIndex = -1
     DescriptionText = ""
 End If
-mChartManager.suppressDrawing = False
+mChartController.suppressDrawing = False
 
 End Sub
 
@@ -239,7 +240,7 @@ Private Sub ConfigureButton_Click()
 showConfigForm mAvailableStudies(StudyList.ListIndex).name, _
                 mAvailableStudies(StudyList.ListIndex).StudyLibrary, _
                 Nothing
-mChartManager.suppressDrawing = False
+mChartController.suppressDrawing = False
 End Sub
 
 Private Sub RemoveButton_Click()
@@ -329,6 +330,7 @@ Dim i As Long
 Dim itemText As String
 
 Set mChartManager = pChartManager
+Set mChartController = mChartManager.chartController
 
 DescriptionText = ""
 ChartStudiesList.clear
@@ -368,9 +370,9 @@ End Sub
 
 Private Sub addStudyToChart(ByVal studyConfig As studyConfiguration)
 On Error Resume Next
-mChartManager.suppressDrawing = True
+mChartController.suppressDrawing = True
 mChartManager.addStudy studyConfig
-mChartManager.startStudy studyConfig.Study
+mChartManager.startStudy studyConfig.study
 If err.Number <> 0 Then initialise Nothing
 On Error GoTo 0
 ' don't unsuppress drawing here because there may be a removeStudy to do first
@@ -397,9 +399,9 @@ Dim sc As studyConfiguration
 Dim newSc As studyConfiguration
 
 For Each sc In mStudyConfigurations
-    If sc.underlyingStudy Is oldStudyConfig.Study Then
+    If sc.underlyingStudy Is oldStudyConfig.study Then
         Set newSc = sc.Clone
-        newSc.underlyingStudy = newStudyConfig.Study
+        newSc.underlyingStudy = newStudyConfig.study
         If sc.chartRegionName = oldStudyConfig.chartRegionName Then
             newSc.chartRegionName = newStudyConfig.chartRegionName
         End If
@@ -424,7 +426,7 @@ Private Sub removeDependingStudies( _
 Dim sc As studyConfiguration
                 
 For Each sc In mStudyConfigurations
-    If sc.underlyingStudy Is studyConfig.Study Then
+    If sc.underlyingStudy Is studyConfig.study Then
         mChartManager.removeStudy sc
         removeDependingStudies sc
     End If
