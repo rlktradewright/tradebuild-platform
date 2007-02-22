@@ -27,7 +27,6 @@ Option Explicit
 
 Private mPeriodNumber As Long
 Private mTimestamp As Date
-Private mBackColor As Long
 
 '================================================================================
 ' Enums
@@ -44,14 +43,6 @@ Private mBackColor As Long
 '================================================================================
 ' Properties
 '================================================================================
-
-Public Property Get backColor() As Long
-backColor = mBackColor
-End Property
-
-Public Property Let backColor(ByVal value As Long)
-mBackColor = value
-End Property
 
 Public Property Get periodNumber() As Long
 periodNumber = mPeriodNumber

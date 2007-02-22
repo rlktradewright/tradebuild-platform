@@ -727,10 +727,12 @@ Private mRegions() As RegionTableEntry
 Private mRegionsIndex As Long
 Private mNumRegionsInUse As Long
 
+Private mDefaultRegionStyle As ChartRegionStyle
+
 Private WithEvents mPeriods As Periods
 Attribute mPeriods.VB_VarHelpID = -1
 
-Private mAutoscale As Boolean
+'Private mAutoscale As Boolean
 Private mScaleWidth As Single
 Private mScaleHeight As Single
 Private mScaleLeft As Single
@@ -761,10 +763,15 @@ Private mVerticalGridSpacing As Long
 Private mVerticalGridUnits As TimePeriodUnits
 Private mVerticalGridParametersSet As Boolean
 
-Private mBackColor As Long
-Private mGridColor As Long
-Private mGridTextColor As Long
-Private mShowGrid As Boolean
+'Private mBackColor As Long
+'Private mGridColor As Long
+'Private mGridTextColor As Long
+
+' indicates whether grids in regions are currently
+' hidden. Note that a region's hasGrid property
+' indicates whether it has a grid, not whether it
+' is currently visible
+Private mHideGrid As Boolean
 
 Private mPointerStyle As PointerStyles
 
@@ -828,9 +835,9 @@ Private Sub UserControl_Terminate()
 Debug.Print "ChartSkil Usercontrol terminated"
 End Sub
 
-Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
-PropBag.WriteProperty "autoscale", mAutoscale, True
-End Sub
+'Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
+'PropBag.WriteProperty "autoscale", mAutoscale, True
+'End Sub
 
 '================================================================================
 ' ChartRegionPicture Event Handlers
@@ -1037,16 +1044,14 @@ Dim i As Long
 Dim region As ChartRegion
 Dim ev As CollectionChangeEvent
 
-period.backColor = mBackColor
-
 For i = 0 To mRegionsIndex
     If Not mRegions(i).region Is Nothing Then
         Set region = mRegions(i).region
-        region.addperiod period.periodNumber, period.timestamp
+        region.addPeriod period.periodNumber, period.timestamp
     End If
 Next
 If mXAxisRegion Is Nothing Then createXAxisRegion
-mXAxisRegion.addperiod period.periodNumber, period.timestamp
+mXAxisRegion.addPeriod period.periodNumber, period.timestamp
 If mSuppressDrawingCount = 0 Then setHorizontalScrollBar
 setSession period.timestamp
 If mAutoscroll Then scrollX 1
@@ -1079,14 +1084,14 @@ mAllowVerticalMouseScrolling = value
 PropertyChanged "allowVerticalMouseScrolling"
 End Property
 
-Public Property Get autoscale() As Boolean
-autoscale = mAutoscale
-End Property
-
-Public Property Let autoscale(ByVal value As Boolean)
-mAutoscale = value
-PropertyChanged "autoscale"
-End Property
+'Public Property Get autoscale() As Boolean
+'autoscale = mDefaultRegionStyle.autoscale
+'End Property
+'
+'Public Property Let autoscale(ByVal value As Boolean)
+'mDefaultRegionStyle.autoscale = value
+''PropertyChanged "autoscale"
+'End Property
 
 Public Property Get autoscroll() As Boolean
 autoscroll = mAutoscroll
@@ -1107,13 +1112,15 @@ End Property
 'End Property
 
 Public Property Get chartBackColor() As OLE_COLOR
-chartBackColor = mBackColor
+chartBackColor = mDefaultRegionStyle.backColor
 End Property
 
 Public Property Let chartBackColor(ByVal val As OLE_COLOR)
 Dim i As Long
 
-mBackColor = val
+If mDefaultRegionStyle.backColor = val Then Exit Property
+
+mDefaultRegionStyle.backColor = val
 XAxisPicture.backColor = val
 
 For i = 0 To mRegionsIndex
@@ -1185,28 +1192,21 @@ Case ToolPitchfork
 End Select
 End Property
 
+Public Property Get defaultRegionStyle() As ChartRegionStyle
+Set defaultRegionStyle = mDefaultRegionStyle.clone
+End Property
+
+Public Property Let defaultRegionStyle( _
+                ByVal value As ChartRegionStyle)
+Set mDefaultRegionStyle = value
+End Property
+
 Public Property Get firstVisiblePeriod() As Long
 firstVisiblePeriod = mScaleLeft
 End Property
 
 Public Property Let firstVisiblePeriod(ByVal value As Long)
 scrollX value - mScaleLeft + 1
-End Property
-
-Public Property Get gridColor() As OLE_COLOR
-gridColor = mGridColor
-End Property
-
-Public Property Let gridColor(ByVal val As OLE_COLOR)
-mGridColor = val
-End Property
-
-Public Property Get gridTextColor() As OLE_COLOR
-gridTextColor = mGridTextColor
-End Property
-
-Public Property Let gridTextColor(ByVal val As OLE_COLOR)
-mGridTextColor = val
 End Property
 
 Public Property Get lastVisiblePeriod() As Long
@@ -1267,14 +1267,6 @@ If CDbl(val) >= 1 Then _
                 "ChartSkil25.Chart::(Let)sessionStartTime", _
                 "Value must be a time only"
 mSessionStartTime = val
-End Property
-
-Public Property Get showGrid() As Boolean
-showGrid = mShowGrid
-End Property
-
-Public Property Let showGrid(ByVal val As Boolean)
-mShowGrid = val
 End Property
 
 Public Property Get showHorizontalScrollBar() As Boolean
@@ -1350,9 +1342,13 @@ End Property
 '================================================================================
 
 Public Function addChartRegion(ByVal percentheight As Double, _
+                    Optional ByVal style As ChartRegionStyle, _
                     Optional ByVal minimumPercentHeight As Double, _
                     Optional ByVal name As String) As ChartRegion
 Dim ev As CollectionChangeEvent
+Dim var As Variant
+Dim p As period
+
 '
 ' NB: percentHeight=100 means the region will use whatever space
 ' is available
@@ -1369,6 +1365,8 @@ If name <> "" Then
                 "Region " & name & " already exists"
     End If
 End If
+
+If style Is Nothing Then Set style = mDefaultRegionStyle
 
 Set addChartRegion = New ChartRegion
 addChartRegion.name = name
@@ -1407,22 +1405,20 @@ addChartRegion.controller = controller
 addChartRegion.surface = ChartRegionPicture(regionNumber)
 addChartRegion.suppressDrawing = (mSuppressDrawingCount > 0)
 addChartRegion.currentTool = mCurrentTool
-addChartRegion.gridColor = mGridColor
-addChartRegion.gridTextColor = mGridTextColor
 addChartRegion.minimumPercentHeight = minimumPercentHeight
 addChartRegion.percentheight = percentheight
 addChartRegion.pointerStyle = mPointerStyle
-addChartRegion.regionBackColor = mBackColor
 addChartRegion.regionLeft = mScaleLeft
 addChartRegion.regionNumber = regionNumber
 addChartRegion.regionBottom = 0
 addChartRegion.regionTop = 1
-addChartRegion.showGrid = mShowGrid
 addChartRegion.periodsInView mScaleLeft, mYAxisPosition - 1
-addChartRegion.autoscale = mAutoscale
 addChartRegion.verticalGridUnits = mVerticalGridUnits
 addChartRegion.verticalGridSpacing = mVerticalGridSpacing
 addChartRegion.sessionStartTime = mSessionStartTime
+addChartRegion.style = style
+If mHideGrid Then addChartRegion.hideGrid
+
 
 If mRegionsIndex = UBound(mRegions) Then
     ReDim Preserve mRegions(UBound(mRegions) + 100) As RegionTableEntry
@@ -1447,7 +1443,18 @@ addChartRegion.YAxisRegion = YAxisRegion
 
 mNumRegionsInUse = mNumRegionsInUse + 1
 
-If Not sizeRegions Then
+If sizeRegions Then
+    Set ev.affectedObject = addChartRegion
+    ev.changeType = CollItemAdded
+    mController.fireRegionsChanged ev
+    
+    ' now add all the current periods to ensure the grid lines are properly set up
+    ' NB: this might be a candidate for converting to a task for large charts
+    For Each var In mPeriods
+        Set p = var
+        addChartRegion.addPeriod p.periodNumber, p.timestamp
+    Next
+Else
     ' can't fit this all in! So remove the added region,
     Set addChartRegion = Nothing
     Set mRegions(mRegionsIndex).region = Nothing
@@ -1461,13 +1468,10 @@ If Not sizeRegions Then
     mNumRegionsInUse = mNumRegionsInUse - 1
 End If
 
-Set ev.affectedObject = addChartRegion
-ev.changeType = CollItemAdded
-mController.fireRegionsChanged ev
 End Function
 
-Public Function addperiod(ByVal timestamp As Date) As period
-Set addperiod = mPeriods.addperiod(timestamp)
+Public Function addPeriod(ByVal timestamp As Date) As period
+Set addPeriod = mPeriods.addPeriod(timestamp)
 End Function
 
 Public Function clearChart()
@@ -1500,6 +1504,21 @@ createXAxisRegion
 mController.fireChartCleared
 End Function
 
+Public Sub displayGrid()
+Dim i As Long
+Dim region As ChartRegion
+
+If Not mHideGrid Then Exit Sub
+
+mHideGrid = False
+For i = 0 To mRegionsIndex
+    If Not mRegions(i).region Is Nothing Then
+        Set region = mRegions(i).region
+        region.displayGrid
+    End If
+Next
+End Sub
+
 Public Function getChartRegion(ByVal name As String) As ChartRegion
 Dim i As Long
 
@@ -1513,6 +1532,25 @@ For i = 0 To mRegionsIndex
     End If
 Next
                     
+End Function
+
+Public Sub hideGrid()
+Dim i As Long
+Dim region As ChartRegion
+
+If mHideGrid Then Exit Sub
+
+mHideGrid = True
+For i = 0 To mRegionsIndex
+    If Not mRegions(i).region Is Nothing Then
+        Set region = mRegions(i).region
+        region.hideGrid
+    End If
+Next
+End Sub
+
+Public Function isGridHidden() As Boolean
+isGridHidden = mHideGrid
 End Function
 
 Public Function isTimeInSession(ByVal timestamp As Date) As Boolean
@@ -1841,22 +1879,22 @@ mXAxisRegion.surface = XAxisPicture
 mXAxisRegion.verticalGridSpacing = mVerticalGridSpacing
 mXAxisRegion.verticalGridUnits = mVerticalGridUnits
 mXAxisRegion.pointerStyle = PointerNone
-mXAxisRegion.regionBackColor = mBackColor
+mXAxisRegion.regionBackColor = mDefaultRegionStyle.backColor
 mXAxisRegion.regionBottom = 0
 mXAxisRegion.regionTop = 1
 mXAxisRegion.sessionStartTime = mSessionStartTime
-mXAxisRegion.gridColor = mGridColor
-mXAxisRegion.gridTextColor = mGridTextColor
-mXAxisRegion.showGrid = False
-mXAxisRegion.showGridText = True
+mXAxisRegion.gridColor = mDefaultRegionStyle.gridColor
+mXAxisRegion.gridTextColor = mDefaultRegionStyle.gridTextColor
+mXAxisRegion.hasGrid = False
+mXAxisRegion.hasGridText = True
 
 Set mXCursorText = mXAxisRegion.addText(LayerNumbers.LayerPointer)
 mXCursorText.align = AlignTopCentre
-mXCursorText.Color = vbWhite Xor mBackColor
+mXCursorText.Color = vbWhite Xor mDefaultRegionStyle.backColor
 mXCursorText.box = True
-mXCursorText.boxFillColor = mBackColor
+mXCursorText.boxFillColor = mDefaultRegionStyle.backColor
 mXCursorText.boxStyle = LineSolid
-mXCursorText.boxColor = vbWhite Xor mBackColor
+mXCursorText.boxColor = vbWhite Xor mDefaultRegionStyle.backColor
 Set aFont = New StdFont
 aFont.name = "Arial"
 aFont.Size = 8
@@ -1936,11 +1974,15 @@ mVerticalGridSpacing = 1
 mVerticalGridUnits = TimePeriodHour
 mVerticalGridParametersSet = False
 
-mBackColor = vbWhite
-mGridColor = &HC0C0C0
-mGridTextColor = &HC0C0C0
-mShowGrid = True
-mPointerStyle = PointerCrosshairs
+Set mDefaultRegionStyle = New ChartRegionStyle
+
+mDefaultRegionStyle.autoscale = True
+mDefaultRegionStyle.backColor = vbWhite
+mDefaultRegionStyle.gridColor = &HC0C0C0
+mDefaultRegionStyle.gridlineSpacingY = 1.8
+mDefaultRegionStyle.gridTextColor = &HC0C0C0
+mDefaultRegionStyle.hasGrid = True
+mDefaultRegionStyle.pointerStyle = PointerCrosshairs
 
 mTwipsPerBar = DefaultTwipsPerBar
 mScaleHeight = -100

@@ -82,6 +82,8 @@ Private mController As ChartController
 Private mName As String
 Private mRegionNumber As Long
 
+Private mStyle As ChartRegionStyle
+
 Private mTitle As text
 
 Private mPeriodTable() As PeriodTableEntry
@@ -144,16 +146,24 @@ Private mYGridLines As LineSeries
 Private mXGridTextsCoarse As TextSeries
 Private mXGridTexts As TextSeries
 Private mXGridLines As LineSeries
-Private mShowGridText As Boolean
+
+' indicates whether there is a grid, not whether it
+' is currently visible
+Private mhasGridText As Boolean
+
+' indicates whether the grid is currently
+' hidden
+Private mHideGrid As Boolean
+
 
 Private mSessionOffsetMinutes As Date
 Private mVerticalGridSpacing As Long
 Private mVerticalGridUnits As TimePeriodUnits
 
 Private mAutoscale As Boolean
-Private mMinimumHeight As Single
+Private mMinimumHeight As Double
 'Private mPrevHeight As Single
-Private mPercentHeight As Double
+Private mPercentheight As Double
 Private mMinimumPercentHeight As Double
 Private mYAxisPosition As Long
 Private mIntegerYScale As Boolean
@@ -170,7 +180,7 @@ Private mGridTextHeight As Double
 Private mBackColor As Long
 Private mGridColor As Long
 Private mGridTextColor As Long
-Private mShowGrid As Boolean
+Private mhasGrid As Boolean
 Private mShowPerformanceText As Boolean
 
 Private mPointerStyle As PointerStyles
@@ -723,6 +733,75 @@ Public Property Let gridTextColor(ByVal val As Long)
 mGridTextColor = val
 End Property
 
+Public Property Get hasGrid() As Boolean
+hasGrid = mhasGrid
+End Property
+
+Public Property Let hasGrid(ByVal val As Boolean)
+mhasGrid = val
+If mhasGrid Then
+    Set mXGridLines = Me.addLineSeries(LayerNumbers.LayerGrid)
+    mXGridLines.Color = mGridColor
+    mXGridLines.extendAfter = True
+    mXGridLines.extendBefore = True
+    mXGridLines.includeInAutoscale = False
+    mXGridLines.style = LineSolid
+    mXGridLines.thickness = 1
+    
+    Set mYGridLines = Me.addLineSeries(LayerNumbers.LayerGrid)
+    mYGridLines.Color = mGridColor
+    mYGridLines.extendAfter = True
+    mYGridLines.extendBefore = True
+    mYGridLines.includeInAutoscale = False
+    mYGridLines.style = LineSolid
+    mYGridLines.thickness = 1
+Else
+    Set mXGridLines = Nothing
+    Set mYGridLines = Nothing
+End If
+End Property
+
+Public Property Get hasGridText() As Boolean
+hasGridText = mhasGridText
+End Property
+
+Public Property Let hasGridText(ByVal val As Boolean)
+Dim aFont As StdFont
+
+mhasGridText = val
+If mhasGridText Then
+    Set mXGridTexts = Me.addTextSeries(LayerNumbers.LayerGrid)
+    mXGridTexts.align = AlignBottomCentre
+    mXGridTexts.box = True
+    mXGridTexts.boxFillColor = mBackColor
+    mXGridTexts.boxStyle = LineInvisible
+    mXGridTexts.extended = True
+    mXGridTexts.Color = mGridTextColor
+    Set aFont = New StdFont
+    aFont.name = "Arial"
+    aFont.Size = 8
+    aFont.Underline = False
+    aFont.Bold = False
+    mXGridTexts.font = aFont
+
+    Set mXGridTextsCoarse = Me.addTextSeries(LayerNumbers.LayerGrid)
+    mXGridTextsCoarse.align = AlignTopCentre
+    mXGridTextsCoarse.box = True
+    mXGridTextsCoarse.boxFillColor = mBackColor
+    mXGridTextsCoarse.boxStyle = LineInvisible
+    mXGridTextsCoarse.extended = True
+    mXGridTextsCoarse.Color = mGridTextColor
+    Set aFont = New StdFont
+    aFont.name = "Arial"
+    aFont.Size = 8
+    aFont.Underline = False
+    aFont.Bold = False
+    mXGridTextsCoarse.font = aFont
+Else
+    Set mXGridTexts = Nothing
+End If
+End Property
+
 Public Property Let integerYScale(ByVal value As Boolean)
 mIntegerYScale = value
 End Property
@@ -907,7 +986,7 @@ Public Property Get minimumPercentHeight() As Double
 minimumPercentHeight = mMinimumPercentHeight
 End Property
 
-Public Property Let minimumPercentHeight(ByVal value As Double)
+Friend Property Let minimumPercentHeight(ByVal value As Double)
 mMinimumPercentHeight = value
 End Property
 
@@ -920,11 +999,11 @@ mName = value
 End Property
 
 Public Property Get percentheight() As Double
-percentheight = mPercentHeight
+percentheight = mPercentheight
 End Property
 
-Public Property Let percentheight(ByVal value As Double)
-mPercentHeight = value
+Friend Property Let percentheight(ByVal value As Double)
+mPercentheight = value
 End Property
 
 Public Property Get pointerStyle() As PointerStyles
@@ -1045,75 +1124,6 @@ Friend Property Let sessionStartTime(ByVal val As Date)
 mSessionOffsetMinutes = calculateMinutesFromMidnight(val) Mod 60
 End Property
 
-Public Property Get showGrid() As Boolean
-showGrid = mShowGrid
-End Property
-
-Public Property Let showGrid(ByVal val As Boolean)
-mShowGrid = val
-If mShowGrid Then
-    Set mXGridLines = Me.addLineSeries(LayerNumbers.LayerGrid)
-    mXGridLines.Color = mGridColor
-    mXGridLines.extendAfter = True
-    mXGridLines.extendBefore = True
-    mXGridLines.includeInAutoscale = False
-    mXGridLines.style = LineSolid
-    mXGridLines.thickness = 1
-    
-    Set mYGridLines = Me.addLineSeries(LayerNumbers.LayerGrid)
-    mYGridLines.Color = mGridColor
-    mYGridLines.extendAfter = True
-    mYGridLines.extendBefore = True
-    mYGridLines.includeInAutoscale = False
-    mYGridLines.style = LineSolid
-    mYGridLines.thickness = 1
-Else
-    Set mXGridLines = Nothing
-    Set mYGridLines = Nothing
-End If
-End Property
-
-Public Property Get showGridText() As Boolean
-showGridText = mShowGridText
-End Property
-
-Public Property Let showGridText(ByVal val As Boolean)
-Dim aFont As StdFont
-
-mShowGridText = val
-If mShowGridText Then
-    Set mXGridTexts = Me.addTextSeries(LayerNumbers.LayerGrid)
-    mXGridTexts.align = AlignBottomCentre
-    mXGridTexts.box = True
-    mXGridTexts.boxFillColor = mBackColor
-    mXGridTexts.boxStyle = LineInvisible
-    mXGridTexts.extended = True
-    mXGridTexts.Color = mGridTextColor
-    Set aFont = New StdFont
-    aFont.name = "Arial"
-    aFont.Size = 8
-    aFont.Underline = False
-    aFont.Bold = False
-    mXGridTexts.font = aFont
-
-    Set mXGridTextsCoarse = Me.addTextSeries(LayerNumbers.LayerGrid)
-    mXGridTextsCoarse.align = AlignTopCentre
-    mXGridTextsCoarse.box = True
-    mXGridTextsCoarse.boxFillColor = mBackColor
-    mXGridTextsCoarse.boxStyle = LineInvisible
-    mXGridTextsCoarse.extended = True
-    mXGridTextsCoarse.Color = mGridTextColor
-    Set aFont = New StdFont
-    aFont.name = "Arial"
-    aFont.Size = 8
-    aFont.Underline = False
-    aFont.Bold = False
-    mXGridTextsCoarse.font = aFont
-Else
-    Set mXGridTexts = Nothing
-End If
-End Property
-
 Public Property Get showPerformanceText() As Boolean
 showPerformanceText = mShowPerformanceText
 End Property
@@ -1125,6 +1135,33 @@ If mShowPerformanceText Then
 Else
     Set mElapsedTimer = Nothing
 End If
+End Property
+
+Public Property Get style() As ChartRegionStyle
+Set style = mStyle.clone
+End Property
+
+Public Property Let style( _
+                ByVal value As ChartRegionStyle)
+Dim lSuppress As Boolean
+
+lSuppress = mSuppressDrawing
+mSuppressDrawing = True
+
+If value.autoscale <> mAutoscale Then autoscale = value.autoscale
+If value.backColor <> mBackColor Then regionBackColor = value.backColor
+If value.gridColor <> mGridColor Then gridColor = value.gridColor
+If value.gridlineSpacingY <> mGridlineSpacingY Then gridlineSpacingY = value.gridlineSpacingY
+If value.gridTextColor <> mGridTextColor Then gridTextColor = value.gridTextColor
+If value.integerYScale <> mIntegerYScale Then integerYScale = value.integerYScale
+If value.minimumHeight <> mMinimumHeight Then minimumHeight = value.minimumHeight
+If value.pointerStyle <> mPointerStyle Then pointerStyle = value.pointerStyle
+If value.hasGrid <> mhasGrid Then hasGrid = value.hasGrid
+If value.hasGridText <> mhasGridText Then hasGridText = value.hasGridText
+If value.YScaleQuantum <> mYScaleQuantum Then YScaleQuantum = value.YScaleQuantum
+
+Set mStyle = value
+mSuppressDrawing = lSuppress
 End Property
 
 Friend Property Let suppressDrawing(ByVal val As Boolean)
@@ -1310,7 +1347,7 @@ Dim aFont As StdFont
 
 Set mYAxisRegion = value
 mYAxisRegion.regionBackColor = regionBackColor
-mYAxisRegion.showGrid = False
+mYAxisRegion.hasGrid = False
 mYAxisRegion.periodsInView 0, 99
 mYAxisRegion.pointerStyle = PointerNone
 mYAxisRegion.suppressDrawing = mSuppressDrawing
@@ -1424,7 +1461,7 @@ With addLineSeries
 End With
 End Function
 
-Friend Sub addperiod(ByVal periodNumber As Long, _
+Friend Sub addPeriod(ByVal periodNumber As Long, _
                     ByVal timestamp As Date)
 addNewPeriod periodNumber
 setVerticalGridLine timestamp, periodNumber
@@ -1517,6 +1554,24 @@ If Not mYAxisRegion Is Nothing Then
     mYAxisRegion.clearRegion
 End If
 End Sub
+
+Public Sub displayGrid()
+If Not mHideGrid Then Exit Sub
+
+mHideGrid = False
+paintRegion
+End Sub
+
+Public Sub hideGrid()
+If mHideGrid Then Exit Sub
+
+mHideGrid = True
+paintRegion
+End Sub
+
+Public Function isGridHidden() As Boolean
+isGridHidden = mHideGrid
+End Function
 
 Friend Sub MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal x As Single, ByVal y As Single)
 Dim yVal As Single
@@ -1647,7 +1702,7 @@ Else
     End If
 End If
 
-If mShowGrid Then
+If mhasGrid And Not mHideGrid Then
     setHorizontalGridLines
 End If
 
@@ -2005,7 +2060,7 @@ Dim vGridLine As ChartSkil25.Line
 Dim vGridText As text
 Dim vGridTextCoarse As text
 
-If mShowGrid Then
+If mhasGrid Then
     On Error Resume Next
     Set vGridLine = mXGridLines.item(key)
     On Error GoTo 0
@@ -2019,10 +2074,21 @@ If mShowGrid Then
                                     100, _
                                     CoordsLogical, _
                                     CoordsRelative)
+    Else
+        If vGridLine.point1.XLogical > periodNumber Then
+            vGridLine.point1 = newPoint(periodNumber - 0.5, _
+                                        0, _
+                                        CoordsLogical, _
+                                        CoordsRelative)
+            vGridLine.point2 = newPoint(periodNumber - 0.5, _
+                                        100, _
+                                        CoordsLogical, _
+                                        CoordsRelative)
+        End If
     End If
 End If
 
-If mShowGridText Then
+If mhasGridText Then
     On Error Resume Next
     Set vGridText = mXGridTexts.item(key)
     On Error GoTo 0

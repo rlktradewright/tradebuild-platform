@@ -78,14 +78,6 @@ Public Property Let allowVerticalMouseScrolling(ByVal value As Boolean)
 chartObj.allowVerticalMouseScrolling = value
 End Property
 
-Public Property Get autoscale() As Boolean
-autoscale = chartObj.autoscale
-End Property
-
-Public Property Let autoscale(ByVal value As Boolean)
-chartObj.autoscale = value
-End Property
-
 Public Property Get autoscroll() As Boolean
 autoscroll = chartObj.autoscroll
 End Property
@@ -127,28 +119,21 @@ Public Property Get currentSessionStartTime() As Date
 currentSessionStartTime = chartObj.currentSessionStartTime
 End Property
 
+Public Property Get defaultRegionStyle() As ChartRegionStyle
+Set defaultRegionStyle = chartObj.defaultRegionStyle
+End Property
+
+Public Property Let defaultRegionStyle( _
+                ByVal value As ChartRegionStyle)
+chartObj.defaultRegionStyle = value
+End Property
+
 Public Property Get firstVisiblePeriod() As Long
 firstVisiblePeriod = chartObj.firstVisiblePeriod
 End Property
 
 Public Property Let firstVisiblePeriod(ByVal value As Long)
 chartObj.firstVisiblePeriod = value
-End Property
-
-Public Property Get gridColor() As OLE_COLOR
-gridColor = chartObj.gridColor
-End Property
-
-Public Property Let gridColor(ByVal val As OLE_COLOR)
-chartObj.gridColor = val
-End Property
-
-Public Property Get gridTextColor() As OLE_COLOR
-gridTextColor = chartObj.gridTextColor
-End Property
-
-Public Property Let gridTextColor(ByVal val As OLE_COLOR)
-chartObj.gridTextColor = val
 End Property
 
 Public Property Get lastVisiblePeriod() As Long
@@ -195,14 +180,6 @@ Public Property Let sessionStartTime(ByVal val As Date)
 chartObj.sessionStartTime = val
 End Property
 
-Public Property Get showGrid() As Boolean
-showGrid = chartObj.showGrid
-End Property
-
-Public Property Let showGrid(ByVal val As Boolean)
-chartObj.showGrid = val
-End Property
-
 Public Property Get showHorizontalScrollBar() As Boolean
 showHorizontalScrollBar = chartObj.showHorizontalScrollBar
 End Property
@@ -244,17 +221,22 @@ End Property
 '================================================================================
 
 Public Function addChartRegion(ByVal percentheight As Double, _
+                    Optional ByVal style As ChartRegionStyle, _
                     Optional ByVal minimumPercentHeight As Double, _
                     Optional ByVal name As String) As ChartRegion
-Set addChartRegion = chartObj.addChartRegion(percentheight, minimumPercentHeight, name)
+Set addChartRegion = chartObj.addChartRegion(percentheight, style, minimumPercentHeight, name)
 End Function
 
-Public Function addPeriod(ByVal timestamp As Date) As period
+Public Function addPeriod(ByVal timestamp As Date) As Period
 Set addPeriod = chartObj.addPeriod(timestamp)
 End Function
 
 Public Sub clearChart()
 chartObj.clearChart
+End Sub
+
+Public Sub displayGrid()
+chartObj.displayGrid
 End Sub
 
 Friend Sub fireChartCleared()
@@ -272,6 +254,14 @@ End Sub
 Public Function getChartRegion( _
                 ByVal name As String) As ChartRegion
 Set getChartRegion = chartObj.getChartRegion(name)
+End Function
+
+Public Sub hideGrid()
+chartObj.hideGrid
+End Sub
+
+Public Function isGridHidden() As Boolean
+isGridHidden = chartObj.isGridHidden
 End Function
 
 Public Function isTimeInSession(ByVal timestamp As Date) As Boolean

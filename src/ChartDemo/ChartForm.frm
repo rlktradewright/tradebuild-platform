@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#2.0#0"; "ChartSkil2-5.ocx"
+Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#4.0#0"; "ChartSkil2-5.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo"
    ClientHeight    =   8355
@@ -11,14 +11,13 @@ Begin VB.Form ChartForm
    ScaleWidth      =   12015
    Begin ChartSkil25.Chart Chart1 
       Align           =   1  'Align Top
-      Height          =   6375
+      Height          =   6735
       Left            =   0
       TabIndex        =   17
       Top             =   0
       Width           =   12015
       _ExtentX        =   21193
-      _ExtentY        =   11245
-      autoscale       =   0   'False
+      _ExtentY        =   11880
    End
    Begin VB.PictureBox BasePicture 
       Appearance      =   0  'Flat
@@ -363,8 +362,8 @@ Chart1.setPeriodParameters mBarLength, TimePeriodMinute
 ' the first) that uses available space rather than a specific percentage - if you don't
 ' then resizing regions by dragging the dividers gives odd results!
 
-Set mPriceRegion = Chart1.addChartRegion(100)
-mPriceRegion.minimumPercentHeight = 25  ' don't let this region drop to more than
+Set mPriceRegion = Chart1.addChartRegion(100, , 25)
+                                        ' don't let this region drop to more than
                                         ' 25 percent of the chart by resizing other
                                         ' regions
 
@@ -510,7 +509,7 @@ Set mNewSwingLine = Nothing
 Set mMACDRegion = Chart1.addChartRegion(20)
                                         ' use 20 percent of the space for this region
 mMACDRegion.gridlineSpacingY = 0.8    ' the horizontal grid lines should be about
-                                        ' 5 millimeters apart
+                                        ' 8 millimeters apart
 mMACDRegion.setTitle "MACD (12, 24, 5)", vbBlue, Nothing
 
 ' Set up a datapoint series for the MACD histogram values on lowest user layer
@@ -643,9 +642,13 @@ Private Sub mTickSimulator_HistoricalBar( _
                 ByVal volume As Long)
 Dim barText As Text
 Dim bartime As Date
+Static barnum As Long
 
+barnum = barnum + 1
 
 bartime = BarStartTime(timestamp, BarLengthText, TimePeriodMinute, SessionStartTimeText)
+
+mElapsedTimer.StartTiming
 
 If bartime <> mBarTime Then
     mBarTime = bartime
@@ -686,6 +689,8 @@ Else
     mVolume.lineColor = vbRed
 End If
 mPrevBarVolume = volume
+
+Debug.Print "Time to add bar " & barnum & ": " & mElapsedTimer.ElapsedTimeMicroseconds & " microsecs"
 
 setNewStudyPeriod bartime
 calculateStudies closePrice
@@ -779,18 +784,10 @@ If Not IsEmpty(mMACD.MACDHistValue) Then mMACDHistPoint.datavalue = mMACD.MACDHi
 End Sub
 
 Private Sub initialise()
-' set some basic properties of the chart
-Chart1.chartBackColor = vbWhite     ' sets the default background color for all regions
-                                    ' of the chart - but each separate region can
-                                    ' have its own background color
-Chart1.autoscale = True             ' indicates that by default, each chart region will
-                                    ' automatically adjust its vertical scaling to ensure
-                                    ' that all relevant data is visible
+Dim regionStyle As ChartRegionStyle
+
 Chart1.autoscroll = True            ' requests that the chart should automatically scroll
                                     ' forward one period each time a new period is added
-Chart1.pointerStyle = PointerCrosshairs
-                                    ' request that crosshairs be displayed to track
-                                    ' cursor movement
 Chart1.twipsPerBar = 150            ' specifies the space between bars - there are
                                     ' 1440 twips per inch or 567 per centimetre
 Chart1.suppressDrawing = True       ' tells the chart not to draw anything. This is
@@ -804,6 +801,28 @@ Chart1.allowHorizontalMouseScrolling = True
                                     ' mouse both horizontally...
 Chart1.allowVerticalMouseScrolling = True
                                     ' ... and vertically
+
+' set some default properties of the chart regions
+
+' first get the built-in defaults - we modify those that
+' we want to change
+Set regionStyle = Chart1.defaultRegionStyle
+
+regionStyle.autoscale = True        ' indicates that by default, each chart region will
+                                    ' automatically adjust its vertical scaling to ensure
+                                    ' that all relevant data is visible
+regionStyle.BackColor = vbWhite     ' sets the default background color for all regions
+                                    ' of the chart - but each separate region can
+                                    ' have its own background color
+regionStyle.gridColor = &HC0C0C0    ' sets the colour of the gridlines
+regionStyle.gridlineSpacingY = 1.8  ' specify that the price gridlines should be about 1.8cm apart
+regionStyle.hasGrid = True          ' indicate that there is a grid
+regionStyle.pointerStyle = PointerCrosshairs
+                                    ' request that crosshairs be displayed to track
+                                    ' cursor movement
+
+' now apply these settings
+Chart1.defaultRegionStyle = regionStyle
 
 ' create the moving average objects
 Set mMA1 = New ExponentialMovingAverage
