@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#4.0#0"; "ChartSkil2-5.ocx"
+Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#5.0#0"; "ChartSkil2-5.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo"
    ClientHeight    =   8355
@@ -362,7 +362,7 @@ Chart1.setPeriodParameters mBarLength, TimePeriodMinute
 ' the first) that uses available space rather than a specific percentage - if you don't
 ' then resizing regions by dragging the dividers gives odd results!
 
-Set mPriceRegion = Chart1.addChartRegion(100, , 25)
+Set mPriceRegion = Chart1.addChartRegion(100, 25)
                                         ' don't let this region drop to more than
                                         ' 25 percent of the chart by resizing other
                                         ' regions
