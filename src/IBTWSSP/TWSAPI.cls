@@ -2164,7 +2164,7 @@ With lContract.tradeBuildContract
                 permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttRTHOnly
             Case "SWEEP"
                 permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttSweepToFill
-            Case "BASKET", "COND", "OCA", "OPG", "OPGREROUT", "TIMEPRIO"
+            Case "AVGCOST", "BASKET", "COND", "CONDORDER", "NONALGO", "OCA", "OPG", "OPGREROUT", "TIMEPRIO"
                 ' not sure what these signify
             Case Else
                 If orderTypesStr(i) <> "" Then
