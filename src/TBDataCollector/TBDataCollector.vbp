@@ -1,6 +1,5 @@
 Type=OleDll
 Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#..\..\..\WINDOWS\system32\stdole2.tlb#OLE Automation
-Reference=*\G{1B78E244-45D7-423A-AEA1-E5BBAC807BDE}#43.0#0#..\..\..\Program Files\Common Files\TradeWright\AppFramework.dll#AppFramework
 Reference=*\G{5AB4A685-CB60-4A05-899F-57840462B475}#6.0#0#..\..\TradeWright Common\TimerUtils2\TimerUtils2.dll#TradeWright Interval Timer Utilities Version 2
 Reference=*\G{737D1C10-E0C8-40E3-961D-16EE6F48A686}#3.0#0#..\..\TradeWright Common\TWUtilities\TWUtilities.dll#TradeWright Utility Services
 Reference=*\G{B4B67702-9961-44CD-BACE-BDA709FEE020}#3.0#0#..\TradeBuild\TradeBuild2-5.dll#TradeWright TradeBuild API v2.5
@@ -24,7 +23,7 @@ CompatibleEXE32="TBDataCollector25.dll"
 VersionCompatible32="1"
 MajorVer=2
 MinorVer=5
-RevisionVer=20
+RevisionVer=21
 AutoIncrementVer=1
 ServerSupportFiles=0
 DllBaseAddress=&H73ff0000
