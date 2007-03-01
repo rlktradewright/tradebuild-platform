@@ -93,8 +93,17 @@ Dim lStudyConfig As StudyConfiguration
 key = studyConfig.study.instancePath
 
 On Error Resume Next
-Set lStudyConfig = mStudyConfigurations(key)
+If studyConfig.instanceFullyQualifiedName = "" Then
+    Set lStudyConfig = mStudyConfigurations(key)
+Else
+    Set lStudyConfig = mStudyConfigurations(studyConfig.instanceFullyQualifiedName)
+End If
 On Error GoTo 0
+
+If lStudyConfig Is studyConfig Then
+    ' this studyConfig has already been added
+    Exit Sub
+End If
 
 If lStudyConfig Is Nothing Then
     studyConfig.instanceFullyQualifiedName = key

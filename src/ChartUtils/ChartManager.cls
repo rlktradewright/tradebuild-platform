@@ -222,6 +222,8 @@ If studyConfig.studyHorizontalRules.count > 0 Then
     studyConfig.horizontalRulesLineSeries = horizRulesLineSeries
 End If
 
+mStudyConfigurations.add studyConfig
+
 Set addStudy = study
 End Function
 
@@ -294,7 +296,7 @@ Friend Sub initialise( _
                 ByVal pChartController As chartController)
 Set mStudyManager = pStudyManager
 Set mChartController = pChartController
-initialiseChart
+'initialiseChart
 End Sub
 
 Public Sub notifyInput( _
@@ -400,6 +402,8 @@ Dim taskCompletions() As TaskCompletion
 Dim taskCompletionsIndex As Long
 Dim tc As TaskCompletion
 
+If mBaseStudy Is Nothing Then Set mBaseStudy = studyConfig.study
+
 Set studyValueDefs = studyConfig.study.StudyDefinition.StudyValueDefinitions
 
 For Each studyValueConfig In studyConfig.studyValueConfigurations
@@ -415,6 +419,7 @@ For Each studyValueConfig In studyConfig.studyValueConfigurations
     End If
 Next
 
+' add the study config to the list if it hasn't already been added
 mStudyConfigurations.add studyConfig
 
 If taskCompletionsIndex > 0 Then setupStudyValueListeners = taskCompletions
@@ -440,7 +445,9 @@ Private Sub determineDefaultRegionName( _
                 ByVal studyConfig As StudyConfiguration)
 Dim underlyingStudyConfig As StudyConfiguration
 
-If studyConfig.chartRegionName = RegionNameDefault Then
+If studyConfig.chartRegionName = RegionNameDefault Or _
+    studyConfig.chartRegionName = "" _
+Then
     ' we will use the region for the underlying study
     For Each underlyingStudyConfig In mStudyConfigurations
         If underlyingStudyConfig.study Is studyConfig.underlyingStudy Then Exit For
@@ -456,6 +463,7 @@ Private Function findRegion( _
                 ByVal title As String, _
                 ByVal incrementUsageCount As Boolean) As ChartRegion
 Dim re As RegionEntry
+Dim regionStyle As ChartRegionStyle
 
 On Error Resume Next
 re = mRegions(regionName)
@@ -466,14 +474,15 @@ Set findRegion = re.region
 If findRegion Is Nothing Then
     Set findRegion = mChartController.getChartRegion(regionName)
     If findRegion Is Nothing Then
-        Set findRegion = mChartController.addChartRegion(20, , , regionName)
+        Set regionStyle = mChartController.defaultRegionStyle
+        regionStyle.gridlineSpacingY = 0.8
+        regionStyle.hasGrid = True
+        Set findRegion = mChartController.addChartRegion(20, , regionStyle, regionName)
+        findRegion.setTitle title, vbBlue, Nothing
     End If
     Set re.region = findRegion
     If incrementUsageCount Then re.usageCount = 1
     mRegions.add re, regionName
-    findRegion.gridlineSpacingY = 0.8
-    findRegion.hasGrid = True
-    findRegion.setTitle title, vbBlue, Nothing
 ElseIf incrementUsageCount Then
     re.usageCount = re.usageCount + 1
     mRegions.remove regionName
@@ -493,7 +502,7 @@ Dim regionName As String
 Dim lTaskCompletion As Tasks.TaskCompletion
 
 Set study = studyConfig.study
-If studyValueConfig.chartRegionName = RegionNameDefault Then
+If studyValueConfig.chartRegionName = RegionNameDefault Or studyValueConfig.chartRegionName = "" Then
     ' then use the study's default region
     regionName = studyConfig.chartRegionName
 ElseIf studyValueConfig.chartRegionName = RegionNameCustom Then
