@@ -18,14 +18,8 @@ Option Explicit
 '================================================================================
 
 Event addGraphicObject( _
-                ByVal graphObj As IGraphicObject)
-
-Event boundsExceeded()
-
-Event objectChange( _
-                ByVal handle As Long, _
-                ByRef undrawnArea As TRectangle, _
-                ByRef areaToRedraw As TRectangle)
+                ByVal graphObj As IGraphicObject, _
+                ByVal seriesId As Long)
 
 Event objectChanged( _
                 ByVal handle As Long, _
@@ -36,6 +30,9 @@ Event objectUndrawn( _
                 ByRef undrawnArea As TRectangle)
 
 Event paintRegion()
+
+Event recalcBoundary( _
+                ByVal seriesId As Long)
 
 '================================================================================
 ' Types
@@ -65,8 +62,10 @@ Event paintRegion()
 ' Methods
 '================================================================================
 
-Friend Sub addGraphicObject(ByVal graphObj As IGraphicObject)
-RaiseEvent addGraphicObject(graphObj)
+Friend Sub addGraphicObject( _
+                ByVal graphObj As IGraphicObject, _
+                ByVal seriesId As Long)
+RaiseEvent addGraphicObject(graphObj, seriesId)
 End Sub
 
 Friend Sub objectChanged(ByVal handle As Long, _
@@ -81,6 +80,11 @@ End Sub
 
 Friend Sub paintRegion()
 RaiseEvent paintRegion
+End Sub
+
+Friend Sub recalcBoundary( _
+                ByVal seriesId As Long)
+RaiseEvent recalcBoundary(seriesId)
 End Sub
 
 '================================================================================

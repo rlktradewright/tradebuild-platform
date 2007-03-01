@@ -31,6 +31,8 @@ Implements ChartSkilTypes.IGraphicObjectSeries
 ' Member variables and constants
 '================================================================================
 
+Private mSeriesId As Long
+
 Private mFinished As Boolean
 
 Private mTexts As Collection
@@ -70,6 +72,7 @@ Private mKeepInView As Boolean
 
 Private Sub Class_Initialize()
 Set mTexts = New Collection
+mSeriesId = GenerateID
 End Sub
 
 '================================================================================
@@ -285,7 +288,7 @@ add.layer = mLayer
 add.paddingX = mPaddingX
 add.paddingY = mPaddingY
 mTexts.add add, add.key
-mEventProxy.addGraphicObject add
+mEventProxy.addGraphicObject add, mSeriesId
 End Function
 
 Friend Sub finish()

@@ -33,6 +33,7 @@ End Type
 
 Private Type GraphicObjectTableEntry
     graphObj            As IGraphicObject
+    seriesId            As Long
     boundingRect        As TRectangle
     periodNumber        As Long
     extendedObject      As Boolean
@@ -64,6 +65,7 @@ End Type
 Public Enum LayerNumbers
     LayerBackground = MinLayer
     LayerGrid = MinLayer + 5
+    LayerGridText = LayerGrid + 1
     LayerLowestUser = MinLayer + 10
     LayerHIghestUser = MaxLayer - 10
     LayerDefaultLines
@@ -193,14 +195,7 @@ Private mPerfText As text
 Private mCurrentTool As ToolTypes
 
 ' defaults for bar series
-Private mBarTailThickness As Long
-Private mBarOutlineThickness As Long
-Private mBarUpColor As Long
-Private mBarDownColor As Long
-Private mDisplayMode As BarDisplayModes
-Private mBarSolidUpBody As Boolean
-Private mBarThickness As Long
-Private mBarWidth As Single
+Private mDefaultBarStyle As BarStyle
 
 ' defaults for datapoint series
 Private mDataPointLineThickness As Long
@@ -289,17 +284,19 @@ initialiseVisibleObjectList
 Set mEventProxy = New ChartRegionEventProxy
 
 mGridlineSpacingY = GridlineSpacingCm
-
+Debug.Print "Region " & mName & ": GridlineSpacingY=" & mGridlineSpacingY
 
 ' defaults for bar series
-mBarTailThickness = 1
-mBarOutlineThickness = 1
-mBarUpColor = &H1D9311
-mBarDownColor = &H43FC2
-mDisplayMode = BarDisplayModeCandlestick
-mBarSolidUpBody = True
-mBarThickness = 2
-mBarWidth = 0.5
+Set mDefaultBarStyle = New BarStyle
+mDefaultBarStyle.tailThickness = 1
+mDefaultBarStyle.outlineThickness = 1
+mDefaultBarStyle.upColor = &H1D9311
+mDefaultBarStyle.downColor = &H43FC2
+mDefaultBarStyle.displayMode = BarDisplayModeCandlestick
+mDefaultBarStyle.solidUpBody = True
+mDefaultBarStyle.barThickness = 2
+mDefaultBarStyle.barWidth = 0.5
+mDefaultBarStyle.barColor = -1
 
 ' defaults for datapoint series
 mDataPointLineThickness = 1
@@ -371,8 +368,10 @@ End Sub
 ' mEventProxy Event Handlers
 '================================================================================
 
-Private Sub mEventProxy_addGraphicObject(ByVal graphObj As IGraphicObject)
-addGraphicObject graphObj
+Private Sub mEventProxy_addGraphicObject( _
+                ByVal graphObj As IGraphicObject, _
+                ByVal seriesId As Long)
+addGraphicObject graphObj, seriesId
 End Sub
 
 Private Sub mEventProxy_objectChanged( _
@@ -512,6 +511,29 @@ Private Sub mEventProxy_paintRegion()
 paintRegion
 End Sub
 
+Private Sub mEventProxy_recalcBoundary( _
+                ByVal seriesId As Long)
+Dim i As Long
+Dim index As Long
+
+For i = MinLayer To MaxLayer
+    index = mGraphicObjects(mVisibleTable(i).firstIndex).nextVisibleIndex
+    Do While index <> mVisibleTable(i).lastindex
+        With mGraphicObjects(index)
+            If .seriesId = seriesId Then
+                .boundingRect = .graphObj.boundingRectangle(False, _
+                                                            False, _
+                                                            False, _
+                                                            0, _
+                                                            0, _
+                                                            mCanvas.boundary)
+                index = .nextVisibleIndex
+            End If
+        End With
+    Loop
+Next
+End Sub
+
 '================================================================================
 ' mToolbar Event Handlers
 '================================================================================
@@ -584,69 +606,69 @@ If Not mSuppressDrawing Then
 End If
 End Property
 
-Friend Property Get barWidth() As Single
-barWidth = mBarWidth
-End Property
-
-Friend Property Let barWidth(ByVal value As Single)
-mBarWidth = value
-End Property
-
-Public Property Get barDisplayMode() As BarDisplayModes
-barDisplayMode = mDisplayMode
-End Property
-
-Public Property Let barDisplayMode(ByVal value As BarDisplayModes)
-mDisplayMode = value
-End Property
-
-Public Property Get barDownColor() As Long
-barDownColor = mBarDownColor
-End Property
-
-Public Property Let barDownColor(ByVal value As Long)
-mBarDownColor = value
-End Property
-
-Public Property Get barOutlineThickness() As Long
-barOutlineThickness = mBarOutlineThickness
-End Property
-
-Public Property Let barOutlineThickness(ByVal value As Long)
-mBarOutlineThickness = value
-End Property
-
-Public Property Get barSolidUpBody() As Boolean
-barSolidUpBody = mBarSolidUpBody
-End Property
-
-Public Property Let barSolidUpBody(ByVal value As Boolean)
-mBarSolidUpBody = value
-End Property
-
-Public Property Get barTailThickness() As Long
-barTailThickness = mBarTailThickness
-End Property
-
-Public Property Let barTailThickness(ByVal value As Long)
-mBarTailThickness = value
-End Property
-
-Public Property Get barThickness() As Long
-barThickness = mBarThickness
-End Property
-
-Public Property Let barThickness(ByVal value As Long)
-mBarThickness = value
-End Property
-
-Public Property Get barUpColor() As Long
-barUpColor = mBarUpColor
-End Property
-
-Public Property Let barUpColor(ByVal value As Long)
-mBarUpColor = value
-End Property
+'Friend Property Get barWidth() As Single
+'barWidth = mBarWidth
+'End Property
+'
+'Friend Property Let barWidth(ByVal value As Single)
+'mBarWidth = value
+'End Property
+'
+'Public Property Get barDisplayMode() As BarDisplayModes
+'barDisplayMode = mDisplayMode
+'End Property
+'
+'Public Property Let barDisplayMode(ByVal value As BarDisplayModes)
+'mDisplayMode = value
+'End Property
+'
+'Public Property Get barDownColor() As Long
+'barDownColor = mBarDownColor
+'End Property
+'
+'Public Property Let barDownColor(ByVal value As Long)
+'mBarDownColor = value
+'End Property
+'
+'Public Property Get barOutlineThickness() As Long
+'barOutlineThickness = mBarOutlineThickness
+'End Property
+'
+'Public Property Let barOutlineThickness(ByVal value As Long)
+'mBarOutlineThickness = value
+'End Property
+'
+'Public Property Get barSolidUpBody() As Boolean
+'barSolidUpBody = mBarSolidUpBody
+'End Property
+'
+'Public Property Let barSolidUpBody(ByVal value As Boolean)
+'mBarSolidUpBody = value
+'End Property
+'
+'Public Property Get barTailThickness() As Long
+'barTailThickness = mBarTailThickness
+'End Property
+'
+'Public Property Let barTailThickness(ByVal value As Long)
+'mBarTailThickness = value
+'End Property
+'
+'Public Property Get barThickness() As Long
+'barThickness = mBarThickness
+'End Property
+'
+'Public Property Let barThickness(ByVal value As Long)
+'mBarThickness = value
+'End Property
+'
+'Public Property Get barUpColor() As Long
+'barUpColor = mBarUpColor
+'End Property
+'
+'Public Property Let barUpColor(ByVal value As Long)
+'mBarUpColor = value
+'End Property
 
 Friend Property Let controller( _
                 ByVal value As ChartController)
@@ -709,6 +731,14 @@ Public Property Let dataPointLineThickness(ByVal value As Long)
 mDataPointLineThickness = value
 End Property
 
+Public Property Get defaultBarStyle() As BarStyle
+Set defaultBarStyle = mDefaultBarStyle.clone
+End Property
+
+Public Property Let defaultBarStyle(ByVal value As BarStyle)
+Set mDefaultBarStyle = value
+End Property
+
 Public Property Get gridColor() As Long
 gridColor = mGridColor
 End Property
@@ -723,6 +753,7 @@ End Property
 
 Public Property Let gridlineSpacingY(ByVal value As Double)
 mGridlineSpacingY = value
+Debug.Print "Region " & mName & ": GridlineSpacingY=" & mGridlineSpacingY
 End Property
 
 Public Property Get gridTextColor() As Long
@@ -770,7 +801,7 @@ Dim aFont As StdFont
 
 mhasGridText = val
 If mhasGridText Then
-    Set mXGridTexts = Me.addTextSeries(LayerNumbers.LayerGrid)
+    Set mXGridTexts = Me.addTextSeries(LayerNumbers.LayerGridText)
     mXGridTexts.align = AlignBottomCentre
     mXGridTexts.box = True
     mXGridTexts.boxFillColor = mBackColor
@@ -784,7 +815,7 @@ If mhasGridText Then
     aFont.Bold = False
     mXGridTexts.font = aFont
 
-    Set mXGridTextsCoarse = Me.addTextSeries(LayerNumbers.LayerGrid)
+    Set mXGridTextsCoarse = Me.addTextSeries(LayerNumbers.LayerGridText)
     mXGridTextsCoarse.align = AlignTopCentre
     mXGridTextsCoarse.box = True
     mXGridTextsCoarse.boxFillColor = mBackColor
@@ -1388,23 +1419,23 @@ End Property
 ' Methods
 '================================================================================
 
-Public Function addBarSeries(Optional ByVal layer As Long = -1) As BarSeries
+Public Function addBarSeries( _
+                Optional ByVal layer As Long = -1, _
+                Optional ByVal name As String, _
+                Optional ByVal style As BarStyle) As BarSeries
+Static seriesNumber As Long
 Set addBarSeries = New BarSeries
 If mFirstBarSeries Is Nothing Then Set mFirstBarSeries = addBarSeries
-mBarSeriesCol.add addBarSeries
-addBarSeries.canvas = mCanvas
-addBarSeries.barWidth = barWidth
-addBarSeries.controller = mController
-addBarSeries.displayMode = barDisplayMode
-addBarSeries.downColor = barDownColor
-addBarSeries.eventProxy = mEventProxy
-addBarSeries.layer = getLayer(layer)
-addBarSeries.outlineThickness = barOutlineThickness
-addBarSeries.solidUpBody = barSolidUpBody
-addBarSeries.tailThickness = barTailThickness
-addBarSeries.barThickness = barThickness
-addBarSeries.upColor = barUpColor
-addBarSeries.eventProxy = mEventProxy
+If name = "" Then
+    seriesNumber = seriesNumber + 1
+    name = "BarSeries" & seriesNumber
+End If
+mBarSeriesCol.add addBarSeries, name
+addBarSeries.initialise name, _
+                        mController, _
+                        mEventProxy, _
+                        getLayer(layer), _
+                        mCanvas, IIf(style Is Nothing, mDefaultBarStyle, style)
 End Function
 
 Public Function addDataPointSeries(Optional ByVal layer As Long = -1) As DataPointSeries
@@ -1638,6 +1669,9 @@ For i = IIf(mMinInViewPeriod < 0, 0, mMinInViewPeriod) To IIf(mMaxPeriodNumber <
     End If
 Next
 
+'Dim gridTimer As New ElapsedTimer
+'gridTimer.StartTiming
+
 numGridDivisions = .heightCm / mGridlineSpacingY
 gridSpacing = .height / numGridDivisions
 
@@ -1707,6 +1741,8 @@ If mhasGrid And Not mHideGrid Then
 End If
 
 setHorizontalGridTexts
+
+'Debug.Print "Grid generation " & gridTimer.ElapsedTimeMicroseconds / 1000 & " millisecs"
 
 For i = MinLayer To MaxLayer
     index = mGraphicObjects(mVisibleTable(i).firstIndex).nextVisibleIndex
@@ -1992,7 +2028,9 @@ With mGraphicObjects(index)
 End With
 End Sub
 
-Private Function addGraphicObject(ByVal graphObj As IGraphicObject) As Long
+Private Function addGraphicObject( _
+                ByVal graphObj As IGraphicObject, _
+                ByVal seriesId As Long) As Long
 Dim handle As Long
 
 handle = allocateGraphicObjectTableEntry
@@ -2004,6 +2042,7 @@ graphObj.handle = handle
 
 With mGraphicObjects(handle)
     Set .graphObj = graphObj
+    .seriesId = seriesId
     .boundingRect = graphObj.boundingRectangle(True, True, True, 0, 0, mCanvas.boundary)
     .extendedObject = graphObj.extendedObject
     .gaugeDependent = graphObj.gaugeDependent

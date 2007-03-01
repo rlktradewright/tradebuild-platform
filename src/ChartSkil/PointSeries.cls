@@ -33,6 +33,8 @@ Implements ChartSkilTypes.IGraphicObjectSeries
 
 Private mController As ChartController
 
+Private mSeriesId As Long
+
 Private mFinished As Boolean
 
 Private Const DefaultHistBarWidth As Single = 0.5
@@ -67,6 +69,7 @@ Private Sub Class_Initialize()
 Set mDataPoints = New Collection
 mLineStyle = LineStyles.LineSolid
 mHistBarWidth = DefaultHistBarWidth
+mSeriesId = GenerateID
 End Sub
 
 '================================================================================
@@ -227,7 +230,7 @@ add.lineThickness = mLineThickness
 add.prevDataPoint = mPrevDataPoint
 mDataPoints.add add, add.key
 Set mPrevDataPoint = add
-mEventProxy.addGraphicObject add
+mEventProxy.addGraphicObject add, mSeriesId
 End Function
 
 Friend Sub finish()

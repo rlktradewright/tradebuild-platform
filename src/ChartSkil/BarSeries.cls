@@ -32,6 +32,7 @@ Implements ChartSkilTypes.IGraphicObjectSeries
 '================================================================================
 
 Private mController As ChartController
+Private mSeriesId As Long
 
 Private mFinished As Boolean
 
@@ -43,15 +44,9 @@ Private mLayer As Long
 
 Private mEventProxy As ChartRegionEventProxy
 
+Private mStyle As BarStyle
+
 Private mName As String
-Private mTailThickness As Long
-Private mOutlineThickness As Long
-Private mUpColor As Long
-Private mDownColor As Long
-Private mDisplayMode As BarDisplayModes
-Private mSolidUpBody As Boolean
-Private mBarThickness As Long
-Private mBarWidth As Single
 
 '================================================================================
 ' Enums
@@ -63,6 +58,7 @@ Private mBarWidth As Single
 
 Private Sub Class_Initialize()
 Set mBars = New Collection
+mSeriesId = GenerateID
 End Sub
 
 '================================================================================
@@ -98,40 +94,26 @@ End Sub
 '================================================================================
 
 Public Property Get barThickness() As Long
-barThickness = mBarThickness
+barThickness = mStyle.barThickness
 End Property
 
 Public Property Let barThickness(ByVal value As Long)
-Dim Bar As Bar
-If mBarThickness = value Then Exit Property
-mBarThickness = value
-For Each Bar In mBars
-    Bar.barThickness = mBarThickness
-Next
+If mStyle.barThickness = value Then Exit Property
+mStyle.barThickness = value
 If mBars.count <> 0 Then mEventProxy.paintRegion
-End Property
-
-Friend Property Let canvas(ByVal value As canvas)
-Set mCanvas = value
 End Property
 
 Public Property Get barWidth() As Single
-barWidth = mBarWidth
+barWidth = mStyle.barWidth
 End Property
 
 Public Property Let barWidth(ByVal value As Single)
-Dim Bar As Bar
-If mBarWidth = value Then Exit Property
-mBarWidth = value
-For Each Bar In mBars
-    Bar.barWidth = mBarWidth
-Next
-If mBars.count <> 0 Then mEventProxy.paintRegion
-End Property
-
-Friend Property Let controller( _
-                ByVal value As ChartController)
-Set mController = value
+If mStyle.barWidth = value Then Exit Property
+mStyle.barWidth = value
+If mBars.count <> 0 Then
+    mEventProxy.recalcBoundary mSeriesId
+    mEventProxy.paintRegion
+End If
 End Property
 
 Public Property Get count() As Long
@@ -139,39 +121,23 @@ count = mBars.count
 End Property
 
 Public Property Get displayMode() As BarDisplayModes
-displayMode = mDisplayMode
+displayMode = mStyle.displayMode
 End Property
 
 Public Property Let displayMode(ByVal value As BarDisplayModes)
-Dim Bar As Bar
-If mDisplayMode = value Then Exit Property
-mDisplayMode = value
-For Each Bar In mBars
-    Bar.displayMode = mDisplayMode
-Next
+If mStyle.displayMode = value Then Exit Property
+mStyle.displayMode = value
 If mBars.count <> 0 Then mEventProxy.paintRegion
 End Property
 
 Public Property Get downColor() As Long
-downColor = mDownColor
+downColor = mStyle.downColor
 End Property
 
 Public Property Let downColor(ByVal value As Long)
-Dim Bar As Bar
-If mDownColor = value Then Exit Property
-mDownColor = value
-For Each Bar In mBars
-    Bar.downColor = mDownColor
-Next
+If mStyle.downColor = value Then Exit Property
+mStyle.downColor = value
 If mBars.count <> 0 Then mEventProxy.paintRegion
-End Property
-
-Friend Property Let eventProxy(ByVal value As ChartRegionEventProxy)
-Set mEventProxy = value
-End Property
-
-Friend Property Let layer(ByVal value As Long)
-mLayer = value
 End Property
 
 Public Property Get layer() As Long
@@ -187,58 +153,93 @@ mName = value
 End Property
 
 Public Property Get outlineThickness() As Long
-outlineThickness = mOutlineThickness
+outlineThickness = mStyle.outlineThickness
 End Property
 
 Public Property Let outlineThickness(ByVal value As Long)
-Dim Bar As Bar
-If mOutlineThickness = value Then Exit Property
-mOutlineThickness = value
-For Each Bar In mBars
-    Bar.outlineThickness = mOutlineThickness
-Next
+If mStyle.outlineThickness = value Then Exit Property
+mStyle.outlineThickness = value
 If mBars.count <> 0 Then mEventProxy.paintRegion
 End Property
 
 Public Property Get solidUpBody() As Boolean
-solidUpBody = mSolidUpBody
+solidUpBody = mStyle.solidUpBody
 End Property
 
 Public Property Let solidUpBody(ByVal value As Boolean)
-Dim Bar As Bar
-If mSolidUpBody = value Then Exit Property
-mSolidUpBody = value
-For Each Bar In mBars
-    Bar.solidUpBody = mSolidUpBody
-Next
+If mStyle.solidUpBody = value Then Exit Property
+mStyle.solidUpBody = value
 If mBars.count <> 0 Then mEventProxy.paintRegion
 End Property
 
+Public Property Get style() As BarStyle
+Set style = mStyle.clone
+End Property
+
+Public Property Let style( _
+                ByVal value As BarStyle)
+Dim somethingChanged As Boolean
+
+If value.barColor <> mStyle.barColor Then
+    somethingChanged = True
+    mStyle.barColor = value.barColor
+End If
+If value.barThickness <> mStyle.barThickness Then
+    somethingChanged = True
+    mStyle.barThickness = value.barThickness
+End If
+If value.barWidth <> mStyle.barWidth Then
+    somethingChanged = True
+    mStyle.barWidth = value.barWidth
+    If mBars.count <> 0 Then mEventProxy.recalcBoundary mSeriesId
+End If
+If value.displayMode <> mStyle.displayMode Then
+    somethingChanged = True
+    mStyle.displayMode = value.displayMode
+End If
+If value.downColor <> mStyle.downColor Then
+    somethingChanged = True
+    mStyle.downColor = value.downColor
+End If
+If value.outlineThickness <> mStyle.outlineThickness Then
+    somethingChanged = True
+    mStyle.outlineThickness = value.outlineThickness
+End If
+If value.solidUpBody <> mStyle.solidUpBody Then
+    somethingChanged = True
+    mStyle.solidUpBody = value.solidUpBody
+End If
+If value.tailThickness <> mStyle.tailThickness Then
+    somethingChanged = True
+    mStyle.tailThickness = value.tailThickness
+End If
+If value.upColor <> mStyle.upColor Then
+    somethingChanged = True
+    mStyle.upColor = value.upColor
+End If
+
+If somethingChanged Then
+    If mBars.count <> 0 Then mEventProxy.paintRegion
+End If
+End Property
+
 Public Property Get tailThickness() As Long
-tailThickness = mTailThickness
+tailThickness = mStyle.tailThickness
 End Property
 
 Public Property Let tailThickness(ByVal value As Long)
-Dim Bar As Bar
-If mTailThickness = value Then Exit Property
-mTailThickness = value
-For Each Bar In mBars
-    Bar.tailThickness = mTailThickness
-Next
+If mStyle.tailThickness = value Then Exit Property
+mStyle.tailThickness = value
 If mBars.count <> 0 Then mEventProxy.paintRegion
 End Property
 
 Public Property Get upColor() As Long
-upColor = mUpColor
+upColor = mStyle.upColor
 End Property
 
 Public Property Let upColor(ByVal value As Long)
-Dim Bar As Bar
-If mUpColor = value Then Exit Property
-mUpColor = value
-For Each Bar In mBars
-    Bar.upColor = mUpColor
-Next
+If mStyle.upColor = value Then Exit Property
+mStyle.upColor = value
 If mBars.count <> 0 Then mEventProxy.paintRegion
 End Property
 
@@ -248,7 +249,8 @@ End Property
 
 Public Function add( _
                 ByVal timestamp As Date, _
-                Optional ByVal key As String) As Bar
+                Optional ByVal key As String, _
+                Optional ByVal localStyle As BarStyle) As Bar
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                             "ChartSkil25.BarSeries::add", _
@@ -258,29 +260,32 @@ Set add = New Bar
 
 add.x = gCalculateX(timestamp, mController)
 If key = "" Then
-    add.key = GenerateGUIDString
-Else
-    add.key = key
+    key = GenerateGUIDString
 End If
-add.barThickness = mBarThickness
-add.barWidth = mBarWidth
-add.displayMode = mDisplayMode
-add.downColor = mDownColor
-add.eventProxy = mEventProxy
-add.layer = mLayer
-add.outlineThickness = mOutlineThickness
-add.solidUpBody = mSolidUpBody
-add.canvas = mCanvas
-add.tailThickness = mTailThickness
-add.upColor = mUpColor
+add.initialise key, mEventProxy, mLayer, mCanvas, mStyle, localStyle
 
-mBars.add add, add.key
-mEventProxy.addGraphicObject add
+mBars.add add, key
+mEventProxy.addGraphicObject add, mSeriesId
 End Function
 
 Friend Sub finish()
 mFinished = True
 Set mCanvas = Nothing
+End Sub
+
+Friend Sub initialise( _
+                ByVal name As String, _
+                ByVal controller As ChartController, _
+                ByVal eventProxy As ChartRegionEventProxy, _
+                ByVal layer As Long, _
+                ByVal canvas As canvas, _
+                ByVal style As BarStyle)
+mName = name
+Set mController = controller
+Set mEventProxy = eventProxy
+mLayer = layer
+Set mCanvas = canvas
+Set mStyle = style.clone    ' style cannot be shared between BarSeries
 End Sub
 
 Public Function item(ByVal index As Variant) As Bar

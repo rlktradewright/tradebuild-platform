@@ -31,6 +31,8 @@ Implements ChartSkilTypes.IGraphicObjectSeries
 ' Member variables and constants
 '================================================================================
 
+Private mSeriesId As Long
+
 Private mFinished As Boolean
 
 Private mLines As Collection
@@ -75,6 +77,7 @@ Private mArrowEndFillStyle As FillStyles
 
 Private Sub Class_Initialize()
 Set mLines = New Collection
+mSeriesId = GenerateID
 End Sub
 
 '================================================================================
@@ -357,7 +360,7 @@ With add
     .layer = mLayer
 End With
 mLines.add add, add.key
-mEventProxy.addGraphicObject add
+mEventProxy.addGraphicObject add, mSeriesId
 End Function
 
 Friend Sub finish()

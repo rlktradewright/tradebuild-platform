@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#5.0#0"; "ChartSkil2-5.ocx"
+Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#7.0#0"; "ChartSkil2-5.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo"
    ClientHeight    =   8355
@@ -345,9 +345,7 @@ Dim btn As Button
 Dim startText As Text
 Dim extendedLine As ChartSkil25.Line
 
-LoadButton.Enabled = False  ' prevent the user pressing load again. In a future
-                            ' version we'll allow this, but at present there's no
-                            ' way to clear the current chart
+LoadButton.Enabled = False  ' prevent the user pressing load again until the chart is cleared
 
 mTickSize = TickSizeText.Text
 mBarLength = BarLengthText.Text
@@ -382,13 +380,13 @@ mPriceRegion.showPerformanceText = True ' displays some information about the nu
 Set mBarSeries = mPriceRegion.addBarSeries
 mBarSeries.outlineThickness = 2     ' the thickness in pixels of a candlestick outline
                                     ' (ignored if displaying as bars)
-mBarSeries.tailThickness = 1        ' the thickness in pixels of candlestick tails
+mBarSeries.tailThickness = 2        ' the thickness in pixels of candlestick tails
                                     ' (ignored if displaying as bars)
-mBarSeries.barThickness = 2         ' the thickness in pixels of a the lines used to
+mBarSeries.barThickness = 2         ' the thickness in pixels of the lines used to
                                     ' draw bars (ignored if displaying as candlesticks)
 mBarSeries.displayMode = BarDisplayModeBar
                                     ' draw this bar series as bars not candlesticks
-mBarSeries.solidUpBody = True       ' draw up candlesticks with solid bodies
+mBarSeries.solidUpBody = False      ' draw up candlesticks with solid bodies
                                     ' (ignored if displaying as bars)
 
 ' Create a text object that will display the clock time
@@ -568,7 +566,7 @@ startText.boxThickness = 1              ' ...1 pixel thick...
 startText.boxFillColor = vbGreen        ' ...and a green fill
 startText.boxFillStyle = FillStyles.FillSolid
                                         ' the fill should be solid (this is the default)
-startText.Position = mPriceRegion.newPoint(mBar.periodNumber, mBar.highPrice)
+startText.Position = mPriceRegion.newPoint(mBar.x, mBar.highPrice)
                                         ' position the text at the high of the current
                                         ' bar...
 startText.offset = mPriceRegion.newDimension(0, 0.4)
@@ -663,6 +661,10 @@ mBar.tick lowPrice
 mBar.tick closePrice
 
 If mPeriod.periodNumber Mod BarLabelFrequency = 0 Then
+    ' color the bar blue
+    mBar.barColor = vbBlue
+    
+    ' add a label to the bar
     Set barText = mBarLabelSeries.Add()
     barText.Text = mPeriod.periodNumber
     barText.Position = mPriceRegion.newPoint(mPeriod.periodNumber, mBar.lowPrice)
@@ -722,14 +724,17 @@ Debug.Print "Time for tick: " & mElapsedTimer.ElapsedTimeMicroseconds & " micros
 
 calculateStudies price
 
-swing mBar.periodNumber, price
+swing mBar.x, price
 
 If mPeriod.periodNumber Mod BarLabelFrequency = 0 Then
+    ' color the bar blue
+    mBar.barColor = vbBlue
+    
     If mBarText Is Nothing Then
         Set mBarText = mBarLabelSeries.Add()
         mBarText.Text = mPeriod.periodNumber
     End If
-    mBarText.Position = mPriceRegion.newPoint(mBar.periodNumber, mBar.lowPrice)
+    mBarText.Position = mPriceRegion.newPoint(mBar.x, mBar.lowPrice)
     ' position the text 3mm below the bar's low
     mBarText.offset = mPriceRegion.newDimension(0, -0.3)
 Else

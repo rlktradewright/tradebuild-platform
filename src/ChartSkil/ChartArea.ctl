@@ -1502,6 +1502,7 @@ createXAxisRegion
 'Resize False
 
 mController.fireChartCleared
+Debug.Print "Chart cleared"
 End Function
 
 Public Sub displayGrid()
