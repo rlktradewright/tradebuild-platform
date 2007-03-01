@@ -59,8 +59,10 @@ Private mDataSignalListeners        As Collection
 
 Private mIndex As Long
 
-Private WithEvents mTimer As IntervalTimer
-Attribute mTimer.VB_VarHelpID = -1
+Private WithEvents mTimerList  As TimerList
+Attribute mTimerList.VB_VarHelpID = -1
+Private WithEvents mTimerListItem As TimerListItem
+Attribute mTimerListItem.VB_VarHelpID = -1
 
 '================================================================================
 ' Class Event Handlers
@@ -69,7 +71,6 @@ Attribute mTimer.VB_VarHelpID = -1
 Private Sub Class_Initialize()
 Set mQuoteListeners = New Collection
 Set mDataSignalListeners = New Collection
-Set mTimer = createIntervalTimer(200)
 End Sub
 
 '================================================================================
@@ -78,67 +79,64 @@ End Sub
 
 Private Sub QuoteListener_ask(ev As QuoteEvent)
 fireSignalOn
-mTimer.StartTimer
+startTimer
 fireAsk ev.price, ev.Size
 End Sub
 
 Private Sub QuoteListener_bid(ev As QuoteEvent)
 fireSignalOn
-mTimer.StartTimer
+startTimer
 fireBid ev.price, ev.Size
 End Sub
 
 Private Sub QuoteListener_high(ev As QuoteEvent)
 fireSignalOn
-mTimer.StartTimer
+startTimer
 fireHigh ev.price
 End Sub
 
 Private Sub QuoteListener_Low(ev As QuoteEvent)
 fireSignalOn
-mTimer.StartTimer
+startTimer
 fireLow ev.price
 End Sub
 
 Private Sub QuoteListener_openInterest(ev As QuoteEvent)
 fireSignalOn
-mTimer.StartTimer
+startTimer
 fireOpenInterest ev.Size
 End Sub
 
 Private Sub QuoteListener_previousClose(ev As QuoteEvent)
 fireSignalOn
-mTimer.StartTimer
+startTimer
 firePreviousClose ev.price
 End Sub
 
 Private Sub QuoteListener_trade(ev As QuoteEvent)
 fireSignalOn
-mTimer.StartTimer
+startTimer
 fireTrade ev.price, ev.Size
 End Sub
 
 Private Sub QuoteListener_volume(ev As QuoteEvent)
 fireSignalOn
-mTimer.StartTimer
+startTimer
 fireVolume ev.Size
 End Sub
 
 '================================================================================
-' mTimer Event Handlers
+' mTimerListItem Event Handlers
 '================================================================================
 
-Private Sub mTimer_TimerExpired()
+Private Sub mTimerListItem_Expired()
+Set mTimerListItem = Nothing
 fireSignalOff
 End Sub
 
 '================================================================================
 ' Properties
 '================================================================================
-
-Friend Property Let contract(ByVal value As contract)
-Set mContract = value
-End Property
 
 Public Property Get contract() As contract
 Set contract = mContract
@@ -162,6 +160,13 @@ End Sub
 
 Public Sub addQuoteListener(ByVal value As QuoteListener)
 mQuoteListeners.Add value
+End Sub
+
+Friend Sub initialise( _
+                ByVal contract As contract, _
+                ByVal timer As TimerList)
+Set mContract = contract
+Set mTimerList = timer
 End Sub
 
 Public Sub removeDataSignalListener(ByVal value As DataSignalListener)
@@ -291,5 +296,12 @@ For Each listener In mQuoteListeners
 Next
 End Sub
 
-
+Private Sub startTimer()
+If Not mTimerListItem Is Nothing Then
+    If (mTimerListItem.expiryTime - GetTimestamp) * 8640000 > 100 Then Exit Sub
+    mTimerList.Remove mTimerListItem
+End If
+Set mTimerListItem = mTimerList.Add(Me, 200, ExpiryTimeUnitMilliseconds)
+fireSignalOn
+End Sub
 

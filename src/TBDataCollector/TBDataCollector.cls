@@ -94,7 +94,6 @@ Private mWriteTicks As Boolean
 
 Private WithEvents mTicker As ticker
 Attribute mTicker.VB_VarHelpID = -1
-Private mTickerListener As TickerListener
 
 Private mTimeframe1 As Timeframe
 Private mTimeframe5 As Timeframe
@@ -107,6 +106,7 @@ Private mOutputPath As String
 
 Private WithEvents mTimer As TimerUtils2.IntervalTimer
 Attribute mTimer.VB_VarHelpID = -1
+Private mTimerList As TimerUtils2.TimerList
 
 '================================================================================
 ' Class Event Handlers
@@ -128,6 +128,10 @@ mSupportedOutputFormats = mTradeBuildAPI.SupportedOutputTickfileFormats
 
 mShortnamesMaxIndex = -1
 mInstrumentsMaxIndex = -1
+
+Set mTimerList = createTimerList(200)
+mTimerList.StartTiming
+
 End Sub
 
 '================================================================================
@@ -166,12 +170,18 @@ startNextTicker
 End Sub
 
 Private Sub mTicker_stateChange(ev As TWUtilities.StateChangeEvent)
-If ev.State = TickerStates.TickerStateRunning Then
-    mTickerListener.contract = mTicker.contract
+Dim lTickerListener As TickerListener
+
+If ev.state = TickerStates.TickerStateRunning Then
+
+    Set lTickerListener = New TickerListener
+    lTickerListener.initialise mTicker.contract, mTimerList
+    
+    mTicker.addQuoteListener lTickerListener
     
     RaiseEvent TickerAdded(mTicker)
     
-    RaiseEvent TickerListenerAdded(mTickerListener)
+    RaiseEvent TickerListenerAdded(lTickerListener)
     
     If mWriteBars Then
         RaiseEvent TimeframeAdded(mTimeframe1)
@@ -228,9 +238,6 @@ If mWriteBars Then
     Set mTimeframe15 = mTicker.Timeframes.Add(15, TimePeriodUnits.TimePeriodMinute, "15min", 0, 60)
     Set mTimeframe60 = mTicker.Timeframes.Add(60, TimePeriodUnits.TimePeriodMinute, "60min", 0, 60)
 End If
-
-Set mTickerListener = New TickerListener
-mTicker.addQuoteListener mTickerListener
 
 mTicker.StartTicker contractSpec
 
@@ -352,7 +359,7 @@ sp.keepConnection = True
 
 ' setup the tickers using a short timer
 Set mTimer = createIntervalTimer(1)
-mTimer.StartTimer
+mTimer.startTimer
 
 End Sub
 
@@ -369,9 +376,9 @@ End Sub
 
 Private Sub startNextTicker()
 If mShortnamesIndex <= mShortnamesMaxIndex Then
-    mTimer.StartTimer
+    mTimer.startTimer
 ElseIf mInstrumentsIndex <= mInstrumentsMaxIndex Then
-    mTimer.StartTimer
+    mTimer.startTimer
 Else
     Set mTimer = Nothing
 End If
