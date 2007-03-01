@@ -1,9 +1,9 @@
 VERSION 5.00
-Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
+Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "msflxgrd.ocx"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
-Object = "{CA028305-9CAA-44AE-816E-330E4FEBE823}#2.0#0"; "StudiesUI2-5.ocx"
-Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#2.0#0"; "ChartSkil2-5.ocx"
+Object = "{CA028305-9CAA-44AE-816E-330E4FEBE823}#5.0#0"; "StudiesUI2-5.ocx"
+Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#8.0#0"; "ChartSkil2-5.ocx"
 Begin VB.Form StudyTestForm 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeBuild Study Test Harness"
@@ -91,7 +91,6 @@ Begin VB.Form StudyTestForm
          Width           =   12015
          _ExtentX        =   21193
          _ExtentY        =   15478
-         autoscale       =   0   'False
       End
       Begin StudiesUI25.StudyConfigurer StudyConfigurer1 
          Height          =   5655
@@ -578,7 +577,7 @@ StudyConfigurer1.initialise mStudyDefinition, _
 when = "setting up the Study Value grid"
 setupStudyValueGridColumns testStudyConfig
 
-mChartManager.suppressDrawing = True
+mChartManager.chartController.suppressDrawing = True
 For i = 1 To TestDataGrid.Rows
     TestDataGrid.row = i
     TestDataGrid.Col = TestDataGridColumns.timestamp
@@ -654,7 +653,7 @@ For i = 1 To TestDataGrid.Rows
     processStudyValues testStudy, testStudyConfig, i, when
 Next
 
-mChartManager.suppressDrawing = False
+mChartManager.chartController.suppressDrawing = False
 
 setTestDataGridRowBackColors 1
 
@@ -816,29 +815,28 @@ Dim priceRegion As ChartRegion
 Dim volumeRegion As ChartRegion
 
 
-pChartManager.suppressDrawing = True
+pChartManager.chartController.suppressDrawing = True
 
 pChartManager.clearChart
 pChartManager.chartController.chartBackColor = vbWhite
-pChartManager.chartController.autoscale = True
 pChartManager.chartController.pointerStyle = PointerCrosshairs
 pChartManager.chartController.twipsPerBar = 100
 pChartManager.chartController.showHorizontalScrollBar = True
 pChartManager.chartController.setPeriodParameters mPeriodLength, mPeriodUnits
 
-Set priceRegion = pChartManager.addChartRegion(PriceRegionName, 100, 25)
+Set priceRegion = pChartManager.chartController.addChartRegion(100, 25, , PriceRegionName)
 priceRegion.gridlineSpacingY = 2
-priceRegion.showGrid = True
+priceRegion.hasGrid = True
 priceRegion.setTitle TestDataFilenameText, vbBlue, Nothing
 
-Set volumeRegion = pChartManager.addChartRegion(VolumeRegionName, 20)
+Set volumeRegion = pChartManager.chartController.addChartRegion(20, , , VolumeRegionName)
 volumeRegion.gridlineSpacingY = 0.8
 volumeRegion.minimumHeight = 10
 volumeRegion.integerYScale = True
-volumeRegion.showGrid = True
+volumeRegion.hasGrid = True
 volumeRegion.setTitle "Volume", vbBlue, Nothing
 
-pChartManager.suppressDrawing = False
+pChartManager.chartController.suppressDrawing = False
 
 End Sub
 
