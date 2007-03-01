@@ -527,8 +527,8 @@ For i = MinLayer To MaxLayer
                                                             0, _
                                                             0, _
                                                             mCanvas.boundary)
-                index = .nextVisibleIndex
             End If
+            index = .nextVisibleIndex
         End With
     Loop
 Next
