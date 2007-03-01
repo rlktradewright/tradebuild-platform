@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#5.0#0"; "ChartSkil2-5.ocx"
+Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#5.1#0"; "ChartSkil2-5.ocx"
 Begin VB.UserControl TradeBuildChart 
    ClientHeight    =   5745
    ClientLeft      =   0
@@ -49,12 +49,13 @@ Implements TaskCompletionListener
 ' Events
 '================================================================================
 
+Event StateChange(ev As StateChangeEvent)
+
 ''
 '
 ' Raised when the initial bar study listeners have completed loading historical
 ' data to the chart,
 '@/
-Event Ready()
 
 '================================================================================
 ' Constants
@@ -64,6 +65,20 @@ Event Ready()
 ' Enums
 '================================================================================
 
+Public Enum ChartStates
+    ''
+    ' The chart is ready to have studies added to it
+    '
+    '@/
+    ChartStateInitialised
+    
+    ''
+    ' All historic data has been added to the chart
+    '
+    '@/
+    ChartStateLoaded
+End Enum
+
 '================================================================================
 ' Types
 '================================================================================
@@ -72,15 +87,14 @@ Event Ready()
 ' Member variables
 '================================================================================
 
-Private mChartManager As ChartManager
+Private mChartManager As chartManager
 Private mChartController As chartController
 
-Private mTicker As ticker
+Private WithEvents mTicker As ticker
+Attribute mTicker.VB_VarHelpID = -1
 Private mTimeframes As Timeframes
-Private WithEvents mTimeframe As Timeframe
+Private WithEvents mTimeframe As timeframe
 Attribute mTimeframe.VB_VarHelpID = -1
-
-Private mStudyConfigurations As StudyConfigurations
 
 Private mBarsStudyConfig As StudyConfiguration
 
@@ -96,9 +110,10 @@ Private mPeriodLength As Long
 Private mPeriodUnits As TimePeriodUnits
 
 Private mPriceRegion As ChartRegion
-Private mVolumeRegion As ChartRegion
+Private mPriceRegionStyle As ChartRegionStyle
 
-Private mInitialised As Boolean
+Private mVolumeRegion As ChartRegion
+Private mVolumeRegionStyle As ChartRegionStyle
 
 Private mHighPrice As Double
 Private mLowPrice As Double
@@ -108,6 +123,7 @@ Private mPrevWidth As Single
 Private mPrevHeight As Single
 
 Private mNumberOfOutstandingTasks As Long
+Private mHistDataLoaded As Boolean
 
 '================================================================================
 ' Class Event Handlers
@@ -115,11 +131,10 @@ Private mNumberOfOutstandingTasks As Long
 
 Private Sub UserControl_Initialize()
 
-Set mStudyConfigurations = New StudyConfigurations
-
 mPrevWidth = UserControl.Width
 mPrevHeight = UserControl.Height
 
+mUpdatePerTick = True
 End Sub
 
 Private Sub UserControl_Resize()
@@ -138,8 +153,30 @@ End Sub
 '================================================================================
 
 Private Sub TaskCompletionListener_taskCompleted(ev As Tasks.TaskCompletionEvent)
+Dim stateEv As StateChangeEvent
+
 mNumberOfOutstandingTasks = mNumberOfOutstandingTasks - 1
-If mNumberOfOutstandingTasks = 0 Then RaiseEvent Ready
+If mNumberOfOutstandingTasks = 0 And mHistDataLoaded Then
+    stateEv.State = ChartStates.ChartStateLoaded
+    Set stateEv.Source = Me
+    RaiseEvent StateChange(stateEv)
+End If
+End Sub
+
+'================================================================================
+' mTicker Event Handlers
+'================================================================================
+
+Private Sub mTicker_StateChange(ev As StateChangeEvent)
+Dim stateEv As StateChangeEvent
+If ev.State = TickerStates.TickerStateRunning Then
+    ' this means that the ticker object has retrieved the contract info, so we can
+    ' now start the chart
+    loadchart
+    stateEv.State = ChartStates.ChartStateInitialised
+    Set stateEv.Source = Me
+    RaiseEvent StateChange(stateEv)
+End If
 End Sub
 
 '================================================================================
@@ -147,7 +184,17 @@ End Sub
 '================================================================================
 
 Private Sub mTimeframe_BarsLoaded()
-showStudies
+Dim stateEv As StateChangeEvent
+
+Chart1.suppressDrawing = False
+
+mHistDataLoaded = True
+
+If mNumberOfOutstandingTasks = 0 Then
+    stateEv.State = ChartStates.ChartStateLoaded
+    Set stateEv.Source = Me
+    RaiseEvent StateChange(stateEv)
+End If
 End Sub
 
 '================================================================================
@@ -158,6 +205,10 @@ Public Property Get chartController() As chartController
 Set chartController = Chart1.controller
 End Property
 
+Public Property Get chartManager() As chartManager
+Set chartManager = mChartManager
+End Property
+
 Public Property Get initialNumberOfBars() As Long
 initialNumberOfBars = mInitialNumberOfBars
 End Property
@@ -166,18 +217,17 @@ Public Property Get minimumTicksHeight() As Double
 minimumTicksHeight = mMinimumTicksHeight
 End Property
 
+Public Property Let priceRegionStyle(ByVal value As ChartRegionStyle)
+Set mPriceRegionStyle = value
+If Not mPriceRegion Is Nothing Then mPriceRegion.Style = value
+End Property
+
+Public Property Get priceRegionStyle() As ChartRegionStyle
+Set priceRegionStyle = mPriceRegionStyle
+End Property
+
 Public Property Get regionNames() As String()
 regionNames = mChartManager.regionNames
-End Property
-
-Friend Property Get StudyConfigurations() As StudyConfigurations
-If Not Ambient.UserMode Then Err.Raise 394, , "Get not supported at design time"
-Set StudyConfigurations = mStudyConfigurations
-End Property
-
-Friend Property Let suppressDrawing( _
-                ByVal value As Boolean)
-Chart1.suppressDrawing = value
 End Property
 
 Public Property Get timeframeCaption() As String
@@ -200,8 +250,21 @@ Case TimePeriodUnits.TimePeriodYear
 End Select
 End Property
 
+Public Property Get timeframe() As timeframe
+Set timeframe = mTimeframe
+End Property
+
 Public Property Let updatePerTick(ByVal value As Boolean)
 mUpdatePerTick = value
+End Property
+
+Public Property Let volumeRegionStyle(ByVal value As ChartRegionStyle)
+Set mVolumeRegionStyle = value
+If Not mVolumeRegion Is Nothing Then mVolumeRegion.Style = value
+End Property
+
+Public Property Get volumeRegionStyle() As ChartRegionStyle
+Set volumeRegionStyle = mVolumeRegionStyle
 End Property
 
 '================================================================================
@@ -230,41 +293,24 @@ Public Sub showChart( _
                 ByVal includeBarsOutsideSession As Boolean, _
                 ByVal minimumTicksHeight As Long, _
                 ByVal periodlength As Long, _
-                ByVal periodUnits As TimePeriodUnits)
-Dim i As Long
-
+                ByVal periodUnits As TimePeriodUnits, _
+                Optional ByVal priceRegionStyle As ChartRegionStyle, _
+                Optional ByVal volumeRegionStyle As ChartRegionStyle)
 Set mTicker = pTicker
-Set mChartManager = createChartManager(mTicker.studyManager, Chart1.controller)
-Set mChartController = mChartManager.chartController
-
 mInitialNumberOfBars = initialNumberOfBars
 mIncludeBarsOutsideSession = includeBarsOutsideSession
 mMinimumTicksHeight = minimumTicksHeight
 mPeriodLength = periodlength
 mPeriodUnits = periodUnits
+Set mPriceRegionStyle = priceRegionStyle
+Set mVolumeRegionStyle = volumeRegionStyle
 
-If Not mContract Is Nothing Then
-    If Not mContract.specifier.equals(mTicker.Contract.specifier) Then mInitialised = False
+Set mChartManager = createChartManager(mTicker.studyManager, Chart1.controller)
+Set mChartController = mChartManager.chartController
+
+If mTicker.State = TickerStateRunning Then
+    loadchart
 End If
-Set mContract = mTicker.Contract
-
-initialiseChart
-
-Set mTimeframes = mTicker.Timeframes
-
-Set mTimeframe = mTimeframes.add(mPeriodLength, _
-                            mPeriodUnits, _
-                            "", _
-                            mInitialNumberOfBars, _
-                            mIncludeBarsOutsideSession, _
-                            IIf(mTicker.replayingTickfile, True, False))
-                            
-If mTimeframe.historicDataLoaded Then
-    showStudies
-Else
-    If mInitialNumberOfBars <> 0 Then Chart1.suppressDrawing = True
-End If
-
 End Sub
 
 Public Sub showStudyPickerForm()
@@ -335,8 +381,6 @@ End Function
 Private Sub initialiseChart()
 Dim regionStyle As ChartRegionStyle
 
-If mInitialised Then Exit Sub
-
 Chart1.suppressDrawing = True
 
 Chart1.clearChart
@@ -353,15 +397,22 @@ regionStyle.backColor = vbWhite
 regionStyle.autoscale = True
 regionStyle.hasGrid = True
 regionStyle.pointerStyle = PointerCrosshairs
+
 Chart1.defaultRegionStyle = regionStyle
 
-Set mPriceRegion = mChartController.addChartRegion(100, 25, , RegionNamePrice)
-mPriceRegion.gridlineSpacingY = 2
+If Not mPriceRegionStyle Is Nothing Then
+    Set regionStyle = mPriceRegionStyle
+Else
+    Set regionStyle = Chart1.defaultRegionStyle
+    regionStyle.gridlineSpacingY = 2
+    regionStyle.YScaleQuantum = mContract.ticksize
+    If mMinimumTicksHeight * mContract.ticksize <> 0 Then
+        regionStyle.minimumHeight = mMinimumTicksHeight * mContract.ticksize
+    End If
 
-mPriceRegion.YScaleQuantum = mContract.ticksize
-If mMinimumTicksHeight * mContract.ticksize <> 0 Then
-    mPriceRegion.minimumHeight = mMinimumTicksHeight * mContract.ticksize
 End If
+
+Set mPriceRegion = mChartController.addChartRegion(100, 25, regionStyle, RegionNamePrice)
 
 mPriceRegion.setTitle mContract.specifier.localSymbol & _
                 " (" & mContract.specifier.exchange & ") " & _
@@ -369,15 +420,43 @@ mPriceRegion.setTitle mContract.specifier.localSymbol & _
                 vbBlue, _
                 Nothing
 
-Set mVolumeRegion = mChartController.addChartRegion(20, , , RegionNameVolume)
-mVolumeRegion.gridlineSpacingY = 0.8
-mVolumeRegion.minimumHeight = 10
-mVolumeRegion.integerYScale = True
+If Not mVolumeRegionStyle Is Nothing Then
+    Set regionStyle = mVolumeRegionStyle
+Else
+    Set regionStyle = Chart1.defaultRegionStyle
+    regionStyle.gridlineSpacingY = 0.8
+    regionStyle.minimumHeight = 10
+    regionStyle.integerYScale = True
+End If
+
+Set mVolumeRegion = mChartController.addChartRegion(20, , regionStyle, RegionNameVolume)
+
 mVolumeRegion.setTitle "Volume", vbBlue, Nothing
 
 Chart1.suppressDrawing = False
 
-mInitialised = True
+End Sub
+
+Private Sub loadchart()
+
+Set mContract = mTicker.Contract
+
+initialiseChart
+
+Set mTimeframes = mTicker.Timeframes
+
+Set mTimeframe = mTimeframes.add(mPeriodLength, _
+                            mPeriodUnits, _
+                            "", _
+                            mInitialNumberOfBars, _
+                            mIncludeBarsOutsideSession, _
+                            IIf(mTicker.replayingTickfile, True, False))
+                            
+If Not mTimeframe.historicDataLoaded Then
+    Chart1.suppressDrawing = True
+End If
+
+showStudies
 
 End Sub
 
@@ -404,5 +483,4 @@ If tcMaxIndex <> -1 Then
     Next
 End If
 
-If Chart1.Visible Then Chart1.suppressDrawing = False
 End Sub
