@@ -127,7 +127,10 @@ End Property
 Public Property Let displayMode(ByVal value As BarDisplayModes)
 If mStyle.displayMode = value Then Exit Property
 mStyle.displayMode = value
-If mBars.count <> 0 Then mEventProxy.paintRegion
+If mBars.count <> 0 Then
+    mEventProxy.recalcBoundary mSeriesId
+    mEventProxy.paintRegion
+End If
 End Property
 
 Public Property Get downColor() As Long

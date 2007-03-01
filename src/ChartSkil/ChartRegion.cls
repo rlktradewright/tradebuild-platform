@@ -542,34 +542,44 @@ Private Sub mToolbar_ButtonClick(ByVal Button As MSComctlLib.Button)
 
 Select Case Button.key
 Case ToolbarCommandShowBars
+    If mFirstBarSeries.barThickness > 1 Then
+        mToolbar.Buttons(ToolbarCommandThinnerBars).Enabled = True
+    Else
+        mToolbar.Buttons(ToolbarCommandThinnerBars).Enabled = False
+    End If
     mFirstBarSeries.displayMode = BarDisplayModeBar
 Case ToolbarCommandShowCandlesticks
     mFirstBarSeries.displayMode = BarDisplayModeCandlestick
+    If mFirstBarSeries.barWidth <= 0.1 Then
+        mToolbar.Buttons(ToolbarCommandThinnerBars).Enabled = False
+    Else
+        mToolbar.Buttons(ToolbarCommandThinnerBars).Enabled = True
+    End If
 Case ToolbarCommandShowLine
     ' not yet implemented in ChartSkil
 Case ToolbarCommandThinnerBars
-'    If mFirstBarSeries.barDisplayMode = BarDisplayModeCandlestick Then
+    If mFirstBarSeries.displayMode = BarDisplayModeCandlestick Then
         If mFirstBarSeries.barWidth > 0.1 Then
             mFirstBarSeries.barWidth = mFirstBarSeries.barWidth - 0.1
         End If
         If mFirstBarSeries.barWidth <= 0.1 Then
             Button.Enabled = False
         End If
-    If mFirstBarSeries.displayMode = BarDisplayModeBar Then
+    ElseIf mFirstBarSeries.displayMode = BarDisplayModeBar Then
         If mFirstBarSeries.barThickness > 1 Then
             mFirstBarSeries.barThickness = mFirstBarSeries.barThickness - 1
         End If
-        If mFirstBarSeries.barThickness = 1 And mFirstBarSeries.barWidth <= 0.1 Then
+        If mFirstBarSeries.barThickness = 1 Then
             Button.Enabled = False
         End If
     End If
 Case ToolbarCommandThickerBars
-'    If mFirstBarSeries.barDisplayMode = BarDisplayModeCandlestick Then
+    If mFirstBarSeries.displayMode = BarDisplayModeCandlestick Then
         mFirstBarSeries.barWidth = mFirstBarSeries.barWidth + 0.1
-    If mFirstBarSeries.displayMode = BarDisplayModeBar Then
+    ElseIf mFirstBarSeries.displayMode = BarDisplayModeBar Then
         mFirstBarSeries.barThickness = mFirstBarSeries.barThickness + 1
     End If
-    mToolbar.Buttons("thinnerbars").Enabled = True
+    mToolbar.Buttons(ToolbarCommandThinnerBars).Enabled = True
 Case ToolbarCommandScaleDown
     scaleUp -0.09091
 Case ToolbarCommandScaleUp

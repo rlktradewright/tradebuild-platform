@@ -116,6 +116,8 @@ Private Property Get IGraphicObject_boundingRectangle( _
                         ByVal gaugeX As Double, _
                         ByVal gaugeY As Double, _
                         ByRef regionRect As TRectangle) As ChartSkilTypes.TRectangle
+setBarSemiWidth
+calcBoundingRect
 IGraphicObject_boundingRectangle = mBoundingRect
 End Property
 
@@ -248,6 +250,7 @@ Public Property Let displayMode(ByVal value As BarDisplayModes)
 mDisplayMode = value
 mIsSetDisplayMode = True
 setBarSemiWidth
+calcBoundingRect
 mEventProxy.objectChanged mHandle, mBoundingRect
 End Property
 
@@ -813,8 +816,9 @@ End Sub
 Private Sub setBarSemiWidth()
 Select Case displayMode
 Case BarDisplayModeBar
-    mBarSemiWidth = (2 * barWidth - 0.2) / 2
-    If mBarSemiWidth > 0.5 Then mBarSemiWidth = 0.5
+'    mBarSemiWidth = (2 * barWidth - 0.2) / 2
+'    If mBarSemiWidth > 0.5 Then mBarSemiWidth = 0.5
+    mBarSemiWidth = barWidth / 2
 Case BarDisplayModeCandlestick
     mBarSemiWidth = barWidth / 2
 Case BarDisplayModeLine
