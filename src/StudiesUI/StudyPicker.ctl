@@ -330,11 +330,11 @@ Dim i As Long
 Dim itemText As String
 
 Set mChartManager = pChartManager
-Set mChartController = mChartManager.chartController
 
 DescriptionText = ""
 ChartStudiesList.clear
 If Not mChartManager Is Nothing Then
+    Set mChartController = mChartManager.chartController
     Set mStudyConfigurations = mChartManager.StudyConfigurations
     For Each studyConfig In mStudyConfigurations
         ChartStudiesList.AddItem studyConfig.instanceFullyQualifiedName

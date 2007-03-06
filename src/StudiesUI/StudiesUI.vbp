@@ -1,6 +1,6 @@
 Type=Control
 Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#..\..\..\WINDOWS\system32\stdole2.tlb#OLE Automation
-Reference=*\G{CC4F3ACE-D882-40D5-867C-011B21CA18D8}#1.1#0#..\..\TradeWright Common\Parameters2\Parameters.dll#TradeWright Parameters Collection Object
+Reference=*\G{CC4F3ACE-D882-40D5-867C-011B21CA18D8}#1.1#0#..\..\TradeWright Common\Parameters2\Parameters2.dll#TradeWright Parameters Collection Object
 Reference=*\G{737D1C10-E0C8-40E3-961D-16EE6F48A686}#3.0#0#..\..\TradeWright Common\TWUtilities\TWUtilities.dll#TradeWright Utility Services
 Reference=*\G{BB53971B-CD14-4A28-BF5B-CC977D3A764C}#1.0#0#..\..\TradeWright Common\TypeLib\twcommontypes.tlb#TradeWright Common Types TypeLib
 Reference=*\G{4D0131C6-EA8B-44F1-969D-D6E7CC6840B8}#1.0#0#..\ChartUtils\ChartUtils2-5.dll#TradeWright Chart Utilities v2.5
@@ -26,7 +26,7 @@ CompatibleEXE32="StudiesUI2-5.ocx"
 VersionCompatible32="1"
 MajorVer=2
 MinorVer=5
-RevisionVer=83
+RevisionVer=84
 AutoIncrementVer=1
 ServerSupportFiles=0
 DllBaseAddress=&H3b440000
