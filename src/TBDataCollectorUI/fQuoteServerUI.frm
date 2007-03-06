@@ -1,6 +1,6 @@
 VERSION 5.00
 Begin VB.Form fDataCollectorUI 
-   Caption         =   "TradeBuild Quote Server"
+   Caption         =   "TradeBuild Data Collector Version 2.5"
    ClientHeight    =   2250
    ClientLeft      =   60
    ClientTop       =   390
