@@ -1,10 +1,10 @@
 VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{9D2C4B5E-2539-4900-8B70-B9B41CFF1CA8}#2.0#0"; "TradeBuildUI2-5.ocx"
+Object = "{9D2C4B5E-2539-4900-8B70-B9B41CFF1CA8}#13.0#0"; "TradeBuildUI2-5.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   1  'Fixed Single
-   Caption         =   "TradeSkil Demo Edition"
+   Caption         =   "TradeSkil Demo Edition Version 2.5"
    ClientHeight    =   6855
    ClientLeft      =   210
    ClientTop       =   330
