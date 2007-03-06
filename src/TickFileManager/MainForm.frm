@@ -2,7 +2,7 @@ VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Begin VB.Form MainForm 
-   Caption         =   "TradeBuild Tickfile Manager"
+   Caption         =   "TradeBuild Tickfile Manager Version 2.5"
    ClientHeight    =   6885
    ClientLeft      =   60
    ClientTop       =   345
@@ -76,33 +76,50 @@ Begin VB.Form MainForm
       TabCaption(1)   =   "Contract details"
       TabPicture(1)   =   "MainForm.frx":001C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "ShortNameText"
-      Tab(1).Control(1)=   "ContractDetailsText"
+      Tab(1).Control(0)=   "Label6"
+      Tab(1).Control(0).Enabled=   0   'False
+      Tab(1).Control(1)=   "Label5"
       Tab(1).Control(1).Enabled=   0   'False
-      Tab(1).Control(2)=   "GetContractButton"
-      Tab(1).Control(3)=   "RightCombo"
-      Tab(1).Control(4)=   "TypeCombo"
-      Tab(1).Control(5)=   "SymbolText"
-      Tab(1).Control(6)=   "ExpiryText"
-      Tab(1).Control(7)=   "ExchangeText"
-      Tab(1).Control(8)=   "StrikePriceText"
-      Tab(1).Control(9)=   "Frame2"
-      Tab(1).Control(10)=   "Label2"
-      Tab(1).Control(11)=   "Label11"
-      Tab(1).Control(12)=   "Label21"
-      Tab(1).Control(13)=   "Label17"
-      Tab(1).Control(14)=   "Label7"
-      Tab(1).Control(15)=   "Label4"
-      Tab(1).Control(16)=   "Label5"
-      Tab(1).Control(17)=   "Label6"
+      Tab(1).Control(2)=   "Label4"
+      Tab(1).Control(2).Enabled=   0   'False
+      Tab(1).Control(3)=   "Label7"
+      Tab(1).Control(3).Enabled=   0   'False
+      Tab(1).Control(4)=   "Label17"
+      Tab(1).Control(4).Enabled=   0   'False
+      Tab(1).Control(5)=   "Label21"
+      Tab(1).Control(5).Enabled=   0   'False
+      Tab(1).Control(6)=   "Label11"
+      Tab(1).Control(6).Enabled=   0   'False
+      Tab(1).Control(7)=   "Label2"
+      Tab(1).Control(7).Enabled=   0   'False
+      Tab(1).Control(8)=   "Frame2"
+      Tab(1).Control(8).Enabled=   0   'False
+      Tab(1).Control(9)=   "StrikePriceText"
+      Tab(1).Control(9).Enabled=   0   'False
+      Tab(1).Control(10)=   "ExchangeText"
+      Tab(1).Control(10).Enabled=   0   'False
+      Tab(1).Control(11)=   "ExpiryText"
+      Tab(1).Control(11).Enabled=   0   'False
+      Tab(1).Control(12)=   "SymbolText"
+      Tab(1).Control(12).Enabled=   0   'False
+      Tab(1).Control(13)=   "TypeCombo"
+      Tab(1).Control(13).Enabled=   0   'False
+      Tab(1).Control(14)=   "RightCombo"
+      Tab(1).Control(14).Enabled=   0   'False
+      Tab(1).Control(15)=   "GetContractButton"
+      Tab(1).Control(15).Enabled=   0   'False
+      Tab(1).Control(16)=   "ContractDetailsText"
+      Tab(1).Control(16).Enabled=   0   'False
+      Tab(1).Control(17)=   "ShortNameText"
+      Tab(1).Control(17).Enabled=   0   'False
       Tab(1).ControlCount=   18
       TabCaption(2)   =   "Bar output"
       TabPicture(2)   =   "MainForm.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "Frame7"
-      Tab(2).Control(1)=   "Frame6"
-      Tab(2).Control(2)=   "Frame5"
-      Tab(2).Control(3)=   "Frame4"
+      Tab(2).Control(0)=   "Frame4"
+      Tab(2).Control(1)=   "Frame5"
+      Tab(2).Control(2)=   "Frame6"
+      Tab(2).Control(3)=   "Frame7"
       Tab(2).ControlCount=   4
       Begin VB.TextBox ShortNameText 
          Enabled         =   0   'False
@@ -1204,15 +1221,15 @@ Next
 
 FormatList.ListIndex = 0
 
-TypeCombo.AddItem secTypeToString(SecurityTypes.SecTypeStock)
-TypeCombo.AddItem secTypeToString(SecurityTypes.SecTypeFuture)
-TypeCombo.AddItem secTypeToString(SecurityTypes.SecTypeOption)
-TypeCombo.AddItem secTypeToString(SecurityTypes.SecTypeFuturesOption)
-TypeCombo.AddItem secTypeToString(SecurityTypes.SecTypeCash)
-TypeCombo.AddItem secTypeToString(SecurityTypes.SecTypeIndex)
+TypeCombo.AddItem SecTypeToString(SecurityTypes.SecTypeStock)
+TypeCombo.AddItem SecTypeToString(SecurityTypes.SecTypeFuture)
+TypeCombo.AddItem SecTypeToString(SecurityTypes.SecTypeOption)
+TypeCombo.AddItem SecTypeToString(SecurityTypes.SecTypeFuturesOption)
+TypeCombo.AddItem SecTypeToString(SecurityTypes.SecTypeCash)
+TypeCombo.AddItem SecTypeToString(SecurityTypes.SecTypeIndex)
 
-RightCombo.AddItem optionRightToString(OptionRights.OptCall)
-RightCombo.AddItem optionRightToString(OptionRights.OptPut)
+RightCombo.AddItem OptionRightToString(OptionRights.OptCall)
+RightCombo.AddItem OptionRightToString(OptionRights.OptPut)
 
 QTPortText.Text = "16240"
 
@@ -1230,7 +1247,7 @@ End Sub
 Private Sub InfoListener_notify(ev As TradeBuild25.InfoEvent)
 Select Case ev.valueType
 Case TradeBuild25.TradeBuildListenValueTypes.VTLog
-    writeStatusMessage "Log: " & ev.data
+    writeStatusMessage "Log: " & ev.Data
 End Select
 End Sub
 
@@ -1324,11 +1341,11 @@ Set lContractSpecifier = mTradeBuildAPI.newContractSpecifier( _
                                     ShortNameText, _
                                     SymbolText, _
                                     ExchangeText, _
-                                    secTypeFromString(TypeCombo), _
+                                    SecTypeFromString(TypeCombo), _
                                     , _
                                     ExpiryText, _
                                     IIf(StrikePriceText = "", 0, StrikePriceText), _
-                                    optionRightFromString(RightCombo))
+                                    OptionRightFromString(RightCombo))
 
 Set mContracts = mTradeBuildAPI.NewContracts(lContractSpecifier)
 mContracts.Load
@@ -1377,7 +1394,7 @@ End Sub
 
 Private Sub TypeCombo_Click()
 
-Select Case secTypeFromString(TypeCombo)
+Select Case SecTypeFromString(TypeCombo)
 Case SecurityTypes.SecTypeFuture
     ExpiryText.Enabled = True
     StrikePriceText.Enabled = False
@@ -1542,11 +1559,11 @@ On Error GoTo err
 
 ReplayProgressBar.Min = 0
 ReplayProgressBar.Max = 100
-ReplayProgressBar.value = 0
+ReplayProgressBar.Value = 0
 TickfileList.ListIndex = tickfileIndex
 writeStatusMessage "Converting " & TickfileList.List(TickfileList.ListIndex)
 ReplayContractLabel.Caption = "Symbol:   " & pContract.specifier.symbol & vbCrLf & _
-                            "Type:     " & secTypeToString(pContract.specifier.sectype) & vbCrLf & _
+                            "Type:     " & SecTypeToString(pContract.specifier.sectype) & vbCrLf & _
                             IIf(pContract.specifier.sectype <> SecurityTypes.SecTypeStock, "Expiry:   " & pContract.specifier.expiry & vbCrLf, "") & _
                             "Exchange: " & pContract.specifier.exchange
 
@@ -1562,7 +1579,7 @@ ConvertButton.Enabled = True
 StopButton.Enabled = False
 SelectTickfilesButton.Enabled = True
 ClearTickfileListButton.Enabled = True
-ReplayProgressBar.value = 0
+ReplayProgressBar.Value = 0
 ReplayProgressBar.Visible = False
 ReplayContractLabel.Caption = ""
 ReplayProgressLabel.Caption = ""
@@ -1583,7 +1600,7 @@ Private Sub mTickfileManager_ReplayProgress( _
                             ByVal percentComplete As Single)
 
 On Error GoTo err
-ReplayProgressBar.value = percentComplete
+ReplayProgressBar.Value = percentComplete
 ReplayProgressBar.Refresh
 ReplayProgressLabel.Caption = tickfileTimestamp & _
                                 "  Processed " & _
@@ -1602,18 +1619,18 @@ Set mTicker = pTicker
 mTicker.outputTickfilePath = mOutputPath
 mTicker.outputTickfileFormat = mOutputFormat
 If mOutputFormat <> "" Then
-    mTicker.writeToTickfile = True
+    mTicker.writeToTickFile = True
     mTicker.includeMarketDepthInTickfile = True
 End If
 
 For i = 0 To EnableCheck.UBound
-    If EnableCheck(i).value = vbChecked Then
+    If EnableCheck(i).Value = vbChecked Then
         mTicker.Timeframes.Add BarLengthText(i).Text, _
                                 TimePeriodUnits.TimePeriodMinute, _
                                 BarLengthText(i).Text & "min", _
                                 0, _
                                 0, _
-                                (IncludeBidAndAskCheck(i).value = vbChecked)
+                                (IncludeBidAndAskCheck(i).Value = vbChecked)
     End If
 Next
 
@@ -1994,11 +2011,11 @@ If symbolValue <> "" Then
                                 localSymbolValue, _
                                 symbolValue, _
                                 exchangeValue, _
-                                secTypeFromString(secTypeValue), _
+                                SecTypeFromString(secTypeValue), _
                                 currencyValue, _
                                 monthValue, _
                                 IIf(StrikePriceText.Text = "", 0, StrikePriceText.Text), _
-                                optionRightFromString(rightValue))
+                                OptionRightFromString(rightValue))
     Set mContracts = mTradeBuildAPI.NewContracts(contractSpec)
     mContracts.Load
 
