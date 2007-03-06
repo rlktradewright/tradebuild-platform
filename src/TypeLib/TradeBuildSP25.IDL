@@ -11,7 +11,7 @@ library TradeBuildSP
     importlib("stdole2.tlb");
 
 	// TradeWright Common Types
-	importlib("C:\Projects\TradeWright Common\TypeLib\TWCommonTypes.tlb");
+//	importlib("C:\Projects\TradeWright Common\TypeLib\TWCommonTypes.tlb");
 	
 	// TradeWright Utilities
 	importlib("C:\Projects\TradeWright Common\TWUtilities\TWUtilities.dll");
@@ -20,7 +20,7 @@ library TradeBuildSP
 //	importlib("C:\Projects\TradeBuild Platform\BarsSupport\BarsSupport.dll");
 	
 	// TradeWright Interval Timer Utilities
-    importlib("C:\Projects\TradeWright Common\TimerUtils\timerutils.dll");
+//    importlib("C:\Projects\TradeWright Common\TimerUtils\timerutils.dll");
 
 	// TradeWright Tasks
 //    importlib("C:\Projects\TradeWright Common\Tasks\Tasks.dll");
