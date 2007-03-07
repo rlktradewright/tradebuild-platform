@@ -1093,7 +1093,7 @@ If mServerVersion >= 9 Then
     With theFilter
         addData .clientID
         addData .accountCode
-        addData IIf(CLng(.time) <> 0, Format(.time, "yyyymmdd-hh:nn:ss"), "")
+        addData IIf(CLng(.time) <> 0, Format(.time, "yyyymmdd-hh\:nn\:ss"), "")
         addData .symbol
         addData secTypeToString(.sectype)
         addData .exchange
@@ -1744,7 +1744,7 @@ Set TwsRequest.contractSpec = mHistoricalDataTable(index).barSpecifier.contract.
 '                   1 Y
  
 If mServerVersion >= 20 Then
-    TwsRequest.endDateTime = Format(mHistoricalDataTable(index).barSpecifier.To, "yyyymmdd hh:nn:ss")
+    TwsRequest.endDateTime = Format(mHistoricalDataTable(index).barSpecifier.To, "yyyymmdd hh\:nn\:ss")
     
     With mHistoricalDataTable(index).barSpecifier
         
@@ -4274,7 +4274,7 @@ With pOrder
         If .goodAfterTime = 0 Then
             addData ""
         Else
-            addData Format(.goodAfterTime, "yyyymmdd hh:nn:ss ") & .goodAfterTimeTZ
+            addData Format(.goodAfterTime, "yyyymmdd hh\:nn\:ss ") & .goodAfterTimeTZ
         End If
     End If
     
@@ -4282,7 +4282,7 @@ With pOrder
         If .goodTillDate = 0 Then
             addData ""
         Else
-            addData Format(.goodTillDate, "yyyymmdd hh:nn:ss ") & .goodTillDateTZ
+            addData Format(.goodTillDate, "yyyymmdd hh\:nn\:ss ") & .goodTillDateTZ
         End If
     End If
     
