@@ -455,7 +455,12 @@ If Not area.isValid Then
 Else
     drawPartialBar area, _
                     IIf(upBar, upColor, downColor), _
-                    IIf(barColor <> -1, barColor, IIf(upBar, upColor, downColor))
+                    IIf(barColor <> -1 And outlineThickness <> 0, _
+                        barColor, _
+                        IIf(upBar, upColor, downColor)), _
+                    IIf(barColor <> -1, _
+                        barColor, _
+                        IIf(upBar, upColor, downColor))
 End If
 End Sub
 
@@ -574,16 +579,19 @@ Private Sub drawBody( _
                 ByVal outlineColor As Long)
 Dim barOutlineScaleX As Double
 Dim barOutlineScaleY As Double
+Dim lOutlineThickness As Long
+
+lOutlineThickness = IIf(outlineThickness = 0, 1, outlineThickness)
 
 If upBar And Not solidUpBody Then
     mCanvas.setBrushAttributes mCanvas.backColor, FillStyles.FillSolid
-    barOutlineScaleX = mCanvas.convertPixelsToLogicalX(outlineThickness - 1)
-    barOutlineScaleY = mCanvas.convertPixelsToLogicalY(outlineThickness - 1)
+    barOutlineScaleX = mCanvas.convertPixelsToLogicalX(lOutlineThickness - 1)
+    barOutlineScaleY = mCanvas.convertPixelsToLogicalY(lOutlineThickness - 1)
     
     If bottom = mOpen And top = mClose Then
         ' draw the whole of the body
         mCanvas.setPenAttributes outlineColor, _
-                                outlineThickness, _
+                                lOutlineThickness, _
                                 LineStyles.LineInsideSolid, _
                                 DrawModes.DrawModeCopyPen
         mCanvas.drawRectangle mX - mBarSemiWidth, _
@@ -613,7 +621,7 @@ If upBar And Not solidUpBody Then
         
         If bottom = mOpen Then
             ' draw the base of the body
-            If outlineThickness = 1 Then
+            If lOutlineThickness = 1 Then
                 mCanvas.drawLine mX - mBarSemiWidth, _
                                 bottom, _
                                 mX + mBarSemiWidth, _
@@ -627,7 +635,7 @@ If upBar And Not solidUpBody Then
         End If
         If top = mClose Then
             ' draw the top of the body
-            If outlineThickness = 1 Then
+            If lOutlineThickness = 1 Then
                 mCanvas.drawLine mX - mBarSemiWidth, _
                                 top, _
                                 mX + mBarSemiWidth, _
@@ -639,7 +647,7 @@ If upBar And Not solidUpBody Then
                                 top
             End If
         End If
-        If outlineThickness = 1 Then
+        If lOutlineThickness = 1 Then
             mCanvas.drawLine mX - mBarSemiWidth, _
                             bottom, _
                             mX - mBarSemiWidth, _
@@ -662,7 +670,7 @@ If upBar And Not solidUpBody Then
 Else
     mCanvas.setBrushAttributes Color, FillStyles.FillSolid
     mCanvas.setPenAttributes outlineColor, _
-                            outlineThickness, _
+                            lOutlineThickness, _
                             LineStyles.LineInsideSolid, _
                             DrawModes.DrawModeCopyPen
     mCanvas.drawRectangle mX - mBarSemiWidth, _
@@ -675,7 +683,8 @@ End Sub
 Friend Sub drawPartialBar( _
                 ByRef area As TRectangle, _
                 ByVal Color As Long, _
-                ByVal outlineColor As Long)
+                ByVal outlineColor As Long, _
+                ByVal tailColor As Long)
 Dim barThicknessScaleX As Double
 Dim barThicknessScaleY As Double
 If Not mVisible Then Exit Sub
@@ -684,39 +693,39 @@ If blank Then Exit Sub
 If displayMode = BarDisplayModeCandlestick Then
     If downBar Then
         If area.top < mClose Then
-            drawTail IIf(mLow < area.bottom, area.bottom, mLow), area.top, outlineColor
+            drawTail IIf(mLow < area.bottom, area.bottom, mLow), area.top, tailColor
         ElseIf area.top >= mClose And area.top <= mOpen And area.bottom < mClose Then
-            drawTail IIf(mLow < area.bottom, area.bottom, mLow), mClose, outlineColor
+            drawTail IIf(mLow < area.bottom, area.bottom, mLow), mClose, tailColor
             drawBody mClose, area.top, Color, outlineColor
         ElseIf area.top > mOpen And area.bottom < mClose Then
-            drawTail IIf(mLow < area.bottom, area.bottom, mLow), mClose, outlineColor
+            drawTail IIf(mLow < area.bottom, area.bottom, mLow), mClose, tailColor
             drawBody mClose, mOpen, Color, outlineColor
-            drawTail mOpen, IIf(mHigh > area.top, area.top, mHigh), outlineColor
+            drawTail mOpen, IIf(mHigh > area.top, area.top, mHigh), tailColor
         ElseIf area.top <= mOpen And area.bottom >= mClose Then
             drawBody area.bottom, area.top, Color, outlineColor
         ElseIf area.top > mOpen And area.bottom <= mOpen And area.bottom >= mClose Then
-            drawTail mOpen, IIf(mHigh > area.top, area.top, mHigh), outlineColor
+            drawTail mOpen, IIf(mHigh > area.top, area.top, mHigh), tailColor
             drawBody area.bottom, mOpen, Color, outlineColor
         Else
-            drawTail area.bottom, IIf(mHigh > area.top, area.top, mHigh), outlineColor
+            drawTail area.bottom, IIf(mHigh > area.top, area.top, mHigh), tailColor
         End If
     Else
         If area.top < mOpen Then
-            drawTail IIf(mLow < area.bottom, area.bottom, mLow), area.top, outlineColor
+            drawTail IIf(mLow < area.bottom, area.bottom, mLow), area.top, tailColor
         ElseIf area.top >= mOpen And area.top <= mClose And area.bottom < mOpen Then
-            drawTail IIf(mLow < area.bottom, area.bottom, mLow), mOpen, outlineColor
+            drawTail IIf(mLow < area.bottom, area.bottom, mLow), mOpen, tailColor
             drawBody mOpen, area.top, Color, outlineColor
         ElseIf area.top > mClose And area.bottom < mOpen Then
-            drawTail IIf(mLow < area.bottom, area.bottom, mLow), mOpen, outlineColor
+            drawTail IIf(mLow < area.bottom, area.bottom, mLow), mOpen, tailColor
             drawBody mOpen, mClose, Color, outlineColor
-            drawTail mClose, IIf(mHigh > area.top, area.top, mHigh), outlineColor
+            drawTail mClose, IIf(mHigh > area.top, area.top, mHigh), tailColor
         ElseIf area.top <= mClose And area.bottom >= mOpen Then
             drawBody area.bottom, area.top, Color, outlineColor
         ElseIf area.top > mClose And area.bottom <= mClose And area.bottom >= mOpen Then
-            drawTail mClose, IIf(mHigh > area.top, area.top, mHigh), outlineColor
+            drawTail mClose, IIf(mHigh > area.top, area.top, mHigh), tailColor
             drawBody area.bottom, mClose, Color, outlineColor
         Else
-            drawTail area.bottom, IIf(mHigh > area.top, area.top, mHigh), outlineColor
+            drawTail area.bottom, IIf(mHigh > area.top, area.top, mHigh), tailColor
         End If
     End If
 Else
@@ -909,7 +918,7 @@ If Not area.isValid Then
     drawBar mCanvas.backColor, mCanvas.backColor
     mEventProxy.objectUndrawn mHandle, mBoundingRect
 Else
-    drawPartialBar area, mCanvas.backColor, mCanvas.backColor
+    drawPartialBar area, mCanvas.backColor, mCanvas.backColor, mCanvas.backColor
     mEventProxy.objectUndrawn mHandle, area
 End If
 End Sub
