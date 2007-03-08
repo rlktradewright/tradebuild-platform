@@ -21,12 +21,12 @@ Option Explicit
 ' Events
 '@================================================================================
 
+Event CollectionChanged( _
+                ev As CollectionChangeEvent)
 
 Event Notification(ByRef ev As NotificationEvent)
 
 Event stateChange(ByRef ev As StateChangeEvent)
-
-
 
 '@================================================================================
 ' Constants
@@ -184,14 +184,15 @@ Private Sub fireChange( _
                 ByVal affectedObject As Ticker)
 Dim listener As CollectionChangeListener
 Dim i As Long
-Dim Change As CollectionChangeEvent
-Set Change.source = Me
-Change.changeType = changeType
-Set Change.affectedObject = affectedObject
+Dim ev As CollectionChangeEvent
+Set ev.source = Me
+ev.changeType = changeType
+Set ev.affectedObject = affectedObject
 For i = 1 To mChangeListeners.Count
     Set listener = mChangeListeners(i)
-    listener.Change Change
+    listener.Change ev
 Next
+RaiseEvent CollectionChanged(ev)
 End Sub
 
 

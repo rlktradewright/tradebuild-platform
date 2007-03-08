@@ -36,10 +36,13 @@ Implements TradeBuildSP.IContracts
 ' Events
 '@================================================================================
 
-Event ContractDetailsReceived( _
-                ByVal pContract As Contract)
+Event CollectionChanged( _
+                ev As CollectionChangeEvent)
+
 Event ContractSpecifierInvalid(ByVal reason As String)
+
 Event NoMoreContractDetails()
+
 Event Notification( _
                 ByRef ev As NotificationEvent)
 Event TryLater( _
@@ -144,7 +147,6 @@ End Property
 Friend Sub AddContract(ByVal pContract As Contract)
 mContracts.add pContract, pContract.specifier.key
 fireChange CollItemAdded, pContract
-RaiseEvent ContractDetailsReceived(pContract)
 End Sub
 
 Public Sub addCollectionChangeListener( _
@@ -221,14 +223,15 @@ Private Sub fireChange( _
                 ByVal affectedObject As Contract)
 Dim listener As CollectionChangeListener
 Dim i As Long
-Dim Change As CollectionChangeEvent
-Set Change.source = Me
-Change.changeType = changeType
-Set Change.affectedObject = affectedObject
+Dim ev As CollectionChangeEvent
+Set ev.source = Me
+ev.changeType = changeType
+Set ev.affectedObject = affectedObject
 For i = 1 To mChangeListeners.Count
     Set listener = mChangeListeners(i)
-    listener.Change Change
+    listener.Change ev
 Next
+RaiseEvent CollectionChanged(ev)
 End Sub
 
 

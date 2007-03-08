@@ -34,6 +34,9 @@ Option Explicit
 ' Events
 '@================================================================================
 
+Event CollectionChanged( _
+                ev As CollectionChangeEvent)
+
 '@================================================================================
 ' Constants
 '@================================================================================
@@ -166,16 +169,16 @@ End Function
 Public Sub addCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
 Dim lOrderContext As OrderContext
-Dim Change As CollectionChangeEvent
+Dim ev As CollectionChangeEvent
 
 mChangeListeners.add value
 
 ' notify any existing items
-Set Change.source = Me
-Change.changeType = CollItemAdded
+Set ev.source = Me
+ev.changeType = CollItemAdded
 For Each lOrderContext In mOrderContexts
-    Set Change.affectedObject = lOrderContext
-    value.Change Change
+    Set ev.affectedObject = lOrderContext
+    value.Change ev
 Next
 End Sub
 
@@ -224,14 +227,15 @@ Private Sub fireChange( _
                 ByVal affectedObject As OrderContext)
 Dim listener As CollectionChangeListener
 Dim i As Long
-Dim Change As CollectionChangeEvent
-Set Change.source = Me
-Change.changeType = changeType
-Set Change.affectedObject = affectedObject
+Dim ev As CollectionChangeEvent
+Set ev.source = Me
+ev.changeType = changeType
+Set ev.affectedObject = affectedObject
 For i = 1 To mChangeListeners.Count
     Set listener = mChangeListeners(i)
-    listener.Change Change
+    listener.Change ev
 Next
+RaiseEvent CollectionChanged(ev)
 End Sub
 
 

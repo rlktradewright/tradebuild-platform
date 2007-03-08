@@ -37,6 +37,9 @@ Implements TradeBuildSP.IContractInfoServiceConsumer
 ' Events
 '@================================================================================
 
+Event CollectionChanged( _
+                ev As CollectionChangeEvent)
+
 '@================================================================================
 ' Constants
 '@================================================================================
@@ -267,7 +270,7 @@ End Sub
 ' Properties
 '@================================================================================
 
-Friend Property Get SupportedHistoricalDataPeriods() As TimePeriod()
+Friend Property Get SupportedHistoricalDataPeriods() As timePeriod()
 Dim i As Long
 Dim histDataSp As TradeBuildSP.IBarDataServiceProvider
 
@@ -567,7 +570,7 @@ Set CreateTickfileWriter = tfWriter
 
 End Function
 
-Friend Function IsSupportedHistoricalDataPeriod(ByRef period As TimePeriod)
+Friend Function IsSupportedHistoricalDataPeriod(ByRef period As timePeriod)
 Dim i As Long
 Dim histDataSp As TradeBuildSP.IBarDataServiceProvider
 
@@ -645,14 +648,15 @@ Private Sub fireChange( _
                 ByVal affectedObject As TradeBuildSP.ICommonServiceProvider)
 Dim listener As CollectionChangeListener
 Dim i As Long
-Dim Change As CollectionChangeEvent
-Set Change.source = Me
-Change.changeType = changeType
-Set Change.affectedObject = affectedObject
+Dim ev As CollectionChangeEvent
+Set ev.source = Me
+ev.changeType = changeType
+Set ev.affectedObject = affectedObject
 For i = 1 To mChangeListeners.Count
     Set listener = mChangeListeners(i)
-    listener.Change Change
+    listener.Change ev
 Next
+RaiseEvent CollectionChanged(ev)
 End Sub
 
 Private Function GetSupportedTickfileFormats( _
