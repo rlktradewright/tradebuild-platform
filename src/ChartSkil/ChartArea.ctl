@@ -571,6 +571,8 @@ Option Explicit
 
 Private Const DefaultTwipsPerBar As Long = 150
 
+Private Const HorizScrollBarHeight As Long = 255
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -1276,7 +1278,7 @@ End Property
 Public Property Let showHorizontalScrollBar(ByVal val As Boolean)
 mShowHorizontalScrollBar = val
 If mShowHorizontalScrollBar Then
-    HScroll.height = 255
+    HScroll.height = HorizScrollBarHeight
     HScroll.visible = True
 Else
     HScroll.height = 0
@@ -1979,6 +1981,8 @@ If Not firstInitialisationDone Then
     mPeriodLength = 5
     mPeriodUnits = TimePeriodMinute
     mShowHorizontalScrollBar = True
+    HScroll.height = HorizScrollBarHeight
+    HScroll.visible = True
     mVerticalGridSpacing = 1
     mVerticalGridUnits = TimePeriodHour
     mVerticalGridParametersSet = False
@@ -2007,8 +2011,6 @@ mScaleTop = 100
 
 mAllowHorizontalMouseScrolling = True
 mAllowVerticalMouseScrolling = True
-
-HScroll.height = 0
 
 firstInitialisationDone = True
 End Sub
