@@ -93,6 +93,12 @@ End Sub
 ' Properties
 '================================================================================
 
+Public Property Let barColor(ByVal value As Long)
+If mStyle.barColor = value Then Exit Property
+mStyle.barColor = value
+If mBars.count <> 0 Then mEventProxy.paintRegion
+End Property
+
 Public Property Get barThickness() As Long
 barThickness = mStyle.barThickness
 End Property

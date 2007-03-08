@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#5.1#0"; "ChartSkil2-5.ocx"
+Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#8.1#0"; "ChartSkil2-5.ocx"
 Begin VB.UserControl TradeBuildChart 
    ClientHeight    =   5745
    ClientLeft      =   0
@@ -50,12 +50,6 @@ Implements TaskCompletionListener
 '================================================================================
 
 Event StateChange(ev As StateChangeEvent)
-
-''
-'
-' Raised when the initial bar study listeners have completed loading historical
-' data to the chart,
-'@/
 
 '================================================================================
 ' Constants
@@ -217,6 +211,10 @@ Public Property Get minimumTicksHeight() As Double
 minimumTicksHeight = mMinimumTicksHeight
 End Property
 
+Public Property Get priceRegion() As ChartRegion
+Set priceRegion = mPriceRegion
+End Property
+
 Public Property Let priceRegionStyle(ByVal value As ChartRegionStyle)
 Set mPriceRegionStyle = value
 If Not mPriceRegion Is Nothing Then mPriceRegion.Style = value
@@ -256,6 +254,10 @@ End Property
 
 Public Property Let updatePerTick(ByVal value As Boolean)
 mUpdatePerTick = value
+End Property
+
+Public Property Get volumeRegion() As ChartRegion
+Set volumeRegion = mVolumeRegion
 End Property
 
 Public Property Let volumeRegionStyle(ByVal value As ChartRegionStyle)
@@ -384,21 +386,21 @@ Dim regionStyle As ChartRegionStyle
 Chart1.suppressDrawing = True
 
 Chart1.clearChart
-Chart1.twipsPerBar = 120
-Chart1.showHorizontalScrollBar = True
+'Chart1.twipsPerBar = 120
+'Chart1.showHorizontalScrollBar = True
 
 Chart1.sessionStartTime = mContract.sessionStartTime
 Chart1.sessionEndTime = mContract.sessionEndTime
 
 Chart1.setPeriodParameters mPeriodLength, mPeriodUnits
 
-Set regionStyle = Chart1.defaultRegionStyle
-regionStyle.backColor = vbWhite
-regionStyle.autoscale = True
-regionStyle.hasGrid = True
-regionStyle.pointerStyle = PointerCrosshairs
+'Set regionStyle = Chart1.defaultRegionStyle
+'regionStyle.backColor = vbWhite
+'regionStyle.autoscale = True
+'regionStyle.hasGrid = True
+'regionStyle.pointerStyle = PointerCrosshairs
 
-Chart1.defaultRegionStyle = regionStyle
+'Chart1.defaultRegionStyle = regionStyle
 
 If Not mPriceRegionStyle Is Nothing Then
     Set regionStyle = mPriceRegionStyle

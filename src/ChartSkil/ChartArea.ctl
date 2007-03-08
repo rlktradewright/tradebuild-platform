@@ -1942,15 +1942,15 @@ End Select
 End Sub
 
 Private Sub initialise()
+Static firstInitialisationDone As Boolean
 Dim i As Long
+
 mPrevHeight = UserControl.height
 
 ReDim mRegions(100) As RegionTableEntry
 mRegionsIndex = -1
 mNumRegionsInUse = 0
 mRegionHeightReductionFactor = 1
-
-mAutoscroll = True
 
 For i = 1 To ChartRegionPicture.UBound
     Unload ChartRegionPicture(i)
@@ -1967,32 +1967,40 @@ Next
 Set mPeriods = New Periods
 mPeriods.controller = controller
 
-mPeriodLength = 5
-mPeriodUnits = TimePeriodMinute
 mPeriodParametersSet = False
 
-mVerticalGridSpacing = 1
-mVerticalGridUnits = TimePeriodHour
-mVerticalGridParametersSet = False
+If Not firstInitialisationDone Then
+    ' these values are only set once when the control initialises
+    ' if the chart is subsequently cleared, any values set by the
+    ' application remain in force
+    mAutoscroll = True
+    mPeriodLength = 5
+    mPeriodUnits = TimePeriodMinute
+    mShowHorizontalScrollBar = True
+    mVerticalGridSpacing = 1
+    mVerticalGridUnits = TimePeriodHour
+    mVerticalGridParametersSet = False
+    
+    Set mDefaultRegionStyle = New ChartRegionStyle
+    
+    mDefaultRegionStyle.autoscale = True
+    mDefaultRegionStyle.backColor = vbWhite
+    mDefaultRegionStyle.gridColor = &HC0C0C0
+    mDefaultRegionStyle.gridlineSpacingY = 1.8
+    mDefaultRegionStyle.gridTextColor = vbBlack
+    mDefaultRegionStyle.hasGrid = True
+    mDefaultRegionStyle.pointerStyle = PointerCrosshairs
+    
+    mTwipsPerBar = DefaultTwipsPerBar
+    mYAxisWidthCm = 1.3
 
-Set mDefaultRegionStyle = New ChartRegionStyle
+    mYAxisPosition = 1
+    mScaleLeft = 0
+    mScaleWidth = 0
+End If
 
-mDefaultRegionStyle.autoscale = True
-mDefaultRegionStyle.backColor = vbWhite
-mDefaultRegionStyle.gridColor = &HC0C0C0
-mDefaultRegionStyle.gridlineSpacingY = 1.8
-mDefaultRegionStyle.gridTextColor = &HC0C0C0
-mDefaultRegionStyle.hasGrid = True
-mDefaultRegionStyle.pointerStyle = PointerCrosshairs
-
-mTwipsPerBar = DefaultTwipsPerBar
 mScaleHeight = -100
 mScaleTop = 100
-mYAxisWidthCm = 1.3
-
-mScaleLeft = 0
-mScaleWidth = 0
-mYAxisPosition = 1
 'resizeX
 
 mAllowHorizontalMouseScrolling = True
@@ -2000,6 +2008,7 @@ mAllowVerticalMouseScrolling = True
 
 HScroll.height = 0
 
+firstInitialisationDone = True
 End Sub
 
 Private Sub paintAll()

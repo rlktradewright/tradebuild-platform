@@ -34,6 +34,9 @@ Option Explicit
 ' Events
 '================================================================================
 
+Event CollectionChanged( _
+                ev As CollectionChangeEvent)
+
 '================================================================================
 ' Constants
 '================================================================================
@@ -62,9 +65,15 @@ Private mTimePeriodUnits            As TimePeriodUnits
 
 Private mTickVolume                 As Long
 
+Private mChangeListeners As Collection
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
+
+Private Sub Class_Initialize()
+Set mChangeListeners = New Collection
+End Sub
 
 Private Sub Class_Terminate()
 Debug.Print "Bars terminated"
@@ -335,6 +344,11 @@ End Property
 ' Methods
 '================================================================================
 
+Public Sub addCollectionChangeListener( _
+                ByVal value As CollectionChangeListener)
+mChangeListeners.add value
+End Sub
+
 ''
 ' <p>Increments the tick volume for the current bar.</p>
 '
@@ -400,6 +414,8 @@ If isNewBar Then
         mCurrentBarNumber = mCurrentBarNumber + 1
     End If
     mCurrentBar.barNumber = mCurrentBarNumber
+    
+    fireChange CollItemAdded, mCurrentBar
 End If
 
 mCurrentBar.Tick ev.value
@@ -411,9 +427,34 @@ If isNewBar Then
 End If
 End Sub
 
+Public Sub removeCollectionChangeListener(ByVal value As CollectionChangeListener)
+Dim i As Long
+For i = mChangeListeners.count To 1 Step -1
+    If mChangeListeners.Item(i) Is value Then mChangeListeners.remove i
+Next
+End Sub
+
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub fireChange( _
+                ByVal changeType As CollectionChangeTypes, _
+                ByVal affectedObject As Bar)
+Dim listener As CollectionChangeListener
+Dim i As Long
+Dim ev As CollectionChangeEvent
+
+Set ev.source = Me
+ev.changeType = changeType
+Set ev.affectedObject = affectedObject
+For i = 1 To mChangeListeners.count
+    Set listener = mChangeListeners(i)
+    listener.Change ev
+Next
+
+RaiseEvent CollectionChanged(ev)
+End Sub
 
 Private Function newBar(barNumber As Long) As Boolean
 Static previousBarNumber As Long
