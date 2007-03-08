@@ -1498,6 +1498,8 @@ mPeriods.finish
 Set mPeriods = Nothing
 
 initialise
+mYAxisPosition = 1
+resizeX
 createXAxisRegion
 'Resize False
 
