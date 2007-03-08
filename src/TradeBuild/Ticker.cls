@@ -148,7 +148,7 @@ Private WithEvents mContracts       As TradeBuild25.Contracts
 Attribute mContracts.VB_VarHelpID = -1
 Private mContract                   As Contract
 
-Private WithEvents mSession         As Session
+Private WithEvents mSession         As session
 Attribute mSession.VB_VarHelpID = -1
 
 Private mReplayingTickfile          As Boolean
@@ -1410,6 +1410,10 @@ Public Property Get replayingTickfile() As Boolean
 replayingTickfile = mReplayingTickfile
 End Property
 
+Public Property Get session() As session
+Set session = mSession
+End Property
+
 Friend Property Let simulatedOrders(ByVal value As Boolean)
 mSimulatedOrders = value
 End Property
@@ -2551,7 +2555,7 @@ If mContract Is Nothing Then
 Else
     sourceName = mContract.specifier.ToString
     Set mInputStudy = mStudyManager.addSource(sourceName)
-    Set mSession = mInputStudy.Session
+    Set mSession = mInputStudy.session
     mBidInputHandle = mStudyManager.addInput(mInputStudy, _
                             BidInputName, _
                             "Bid prices", _
