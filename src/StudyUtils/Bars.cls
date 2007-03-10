@@ -383,20 +383,16 @@ End Sub
 Public Sub notify( _
                 ev As StudyValueEvent)
 Dim isNewBar As Boolean
-Dim barTime As Date
+Static barEndTime As Date
 
 If mBarLength = 0 Then
     ' the caller will supply bar numbers
     isNewBar = newBar(ev.barNumber)
 Else
-    barTime = barStartTime(ev.timestamp, _
-                            mBarLength, _
-                            mTimePeriodUnits, _
-                            mSession.sessionStartTime)
     If mCurrentBar Is Nothing Then
         isNewBar = True
     Else
-        isNewBar = (barTime <> mCurrentBar.datetime)
+        isNewBar = (ev.timestamp >= barEndTime)
     End If
 End If
     
@@ -410,7 +406,12 @@ If isNewBar Then
     If mBarLength = 0 Then
         mCurrentBar.datetime = ev.barStartTime
     Else
-        mCurrentBar.datetime = barTime
+        barEndTime = mSession.barEndTime(ev.timestamp, _
+                                    mBarLength, _
+                                    mTimePeriodUnits)
+        mCurrentBar.datetime = mSession.barStartTime(ev.timestamp, _
+                                        mBarLength, _
+                                        mTimePeriodUnits)
         mCurrentBarNumber = mCurrentBarNumber + 1
     End If
     mCurrentBar.barNumber = mCurrentBarNumber
