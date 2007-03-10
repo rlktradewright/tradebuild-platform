@@ -638,7 +638,7 @@ Private Sub setupBarStudies()
 Dim params As New parameters
 Dim barsStudy As BarStudy
 
-Set mInputStudy = studyMgr.addSource(mContract.ToString & mKey & "(historical data)")
+Set mInputStudy = studyMgr.addSource(mContract.specifier.ToString & mKey & "(historical data)")
 Set mSession = mInputStudy.session
 mBidInputHandle = studyMgr.addInput(mInputStudy, _
                         BidInputName, _

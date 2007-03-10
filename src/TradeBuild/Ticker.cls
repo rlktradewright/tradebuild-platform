@@ -1092,6 +1092,8 @@ End If
 
 Set mContract = mContracts(1)
 
+If Not mInputStudy Is Nothing Then mInputStudy.name = mContract.specifier.localSymbol
+
 If mReplayingTickfile Then
     mTickfileManager.Contract = mContract
     prepare
@@ -2553,7 +2555,7 @@ If mContract Is Nothing Then
                             False, _
                             1)
 Else
-    sourceName = mContract.specifier.ToString
+    sourceName = mContract.specifier.localSymbol
     Set mInputStudy = mStudyManager.addSource(sourceName)
     Set mSession = mInputStudy.session
     mBidInputHandle = mStudyManager.addInput(mInputStudy, _
