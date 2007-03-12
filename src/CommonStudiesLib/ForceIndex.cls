@@ -24,7 +24,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements study
+Implements Study
 
 '================================================================================
 ' Events
@@ -56,8 +56,8 @@ Private mFiCache As StudyValueCache
 Private mFiCacheShort As StudyValueCache
 Private mFiCacheLong As StudyValueCache
 
-Private mShortMA As study
-Private mLongMA As study
+Private mShortMA As Study
+Private mLongMA As Study
 
 Private mPrevBarClose As Variant
 Private mCurrentBarVolume As Variant
@@ -76,7 +76,7 @@ Private Sub customInitialise( _
                 ByVal Parameters As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
-                ByVal underlyingStudy As study, _
+                ByVal underlyingStudy As Study, _
                 ByVal pSession As session)
 
 customProcessParameters Parameters
@@ -140,32 +140,32 @@ Else
     ' and update the value caches
     If mStudyFoundation.isNewBar Then
         mFiCache.addValue lForceIndex, _
-                            mStudyFoundation.barnumber, _
+                            mStudyFoundation.barNumber, _
                             ev.timestamp, _
                             ev.barStartTime
         mFiCacheShort.addValue lForceIndexShort, _
-                                mStudyFoundation.barnumber, _
+                                mStudyFoundation.barNumber, _
                                 ev.timestamp, _
                                 ev.barStartTime
         mFiCacheLong.addValue lForceIndexLong, _
-                                mStudyFoundation.barnumber, _
+                                mStudyFoundation.barNumber, _
                                 ev.timestamp, _
                                 ev.barStartTime
     Else
-        mFiCache.updateValue lForceIndex, mStudyFoundation.barnumber, ev.timestamp
+        mFiCache.updateValue lForceIndex, mStudyFoundation.barNumber, ev.timestamp
         mFiCacheShort.updateValue lForceIndexShort, _
-                                mStudyFoundation.barnumber, _
+                                mStudyFoundation.barNumber, _
                                 ev.timestamp
         mFiCacheLong.updateValue lForceIndexLong, _
-                                mStudyFoundation.barnumber, _
+                                mStudyFoundation.barNumber, _
                                 ev.timestamp
     End If
 End If
 
 ' finally notify all interested parties of each new study value
-notifyValue lForceIndex, FiValueForceIndex, ev.barnumber, ev.timestamp
-notifyValue lForceIndexShort, FiValueForceIndexShort, ev.barnumber, ev.timestamp
-notifyValue lForceIndexLong, FiValueForceIndexLong, ev.barnumber, ev.timestamp
+notifyValue lForceIndex, FiValueForceIndex, ev.barNumber, ev.timestamp
+notifyValue lForceIndexShort, FiValueForceIndexShort, ev.barNumber, ev.timestamp
+notifyValue lForceIndexLong, FiValueForceIndexLong, ev.barNumber, ev.timestamp
 
 End Sub
 
@@ -177,22 +177,22 @@ End Function
 
 ' Called from the customInitialise method (this is really a helper method
 ' but is kept here to emphasise its commonality between studies)
-Private Sub customProcessParameters(ByVal params As IParameters)
-Dim param As TradeBuildSP.IParameter
+Private Sub customProcessParameters(ByVal params As Parameters)
+Dim param As Parameter
 Dim shortPeriods As Long
 ' NB: the For Each construct cannot be used with objects of the
-' IParameters class
+' Parameters class
 
 Set param = params.getFirstParameter
 
 Do While Not param Is Nothing
     Select Case UCase$(param.name)
     Case UCase$(FiParamShortPeriods)
-        Set mShortMA = gCreateMA(MATypeExponentialMovingAverage, _
+        Set mShortMA = gCreateMA(EmaName, _
                             param.value, _
                             1)
     Case UCase$(FiParamLongPeriods)
-        Set mLongMA = gCreateMA(MATypeExponentialMovingAverage, _
+        Set mLongMA = gCreateMA(EmaName, _
                             param.value, _
                             1)
     End Select
@@ -202,8 +202,8 @@ Loop
 End Sub
 
 ' called by the infrastructure to obtain the study definition
-Private Function customStudyDefinition() As studyDefinition
-Set customStudyDefinition = GForceIndex.studyDefinition
+Private Function customStudyDefinition() As StudyDefinition
+Set customStudyDefinition = GForceIndex.StudyDefinition
 End Function
 
 '================================================================================
@@ -236,14 +236,14 @@ End Function
 Private Sub notifyValue( _
                 ByVal value As Variant, _
                 ByVal valueName As String, _
-                ByVal barnumber As Long, _
+                ByVal barNumber As Long, _
                 ByVal timestamp As Date)
 Dim ev As StudyValueEvent
 If Not IsEmpty(value) Then
     ev.value = value
     ev.valueName = valueName
     Set ev.Source = Me
-    ev.barnumber = barnumber
+    ev.barNumber = barNumber
     ev.timestamp = timestamp
     mStudyFoundation.notifyValue ev
 End If
@@ -261,14 +261,14 @@ End Sub
 '================================================================================
 
 Private Function Study_addStudy( _
-                ByVal study As study, _
+                ByVal Study As Study, _
                 ByRef valueNames() As String, _
                 ByVal numUnderlyingValuesToUse As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskCompletion
 
 Set Study_addStudy = mStudyFoundation.addStudy( _
-                            study, _
+                            Study, _
                             valueNames, _
                             numUnderlyingValuesToUse, _
                             taskName, _
@@ -289,7 +289,7 @@ Set Study_addStudyValueListener = mStudyFoundation.addStudyValueListener( _
                             taskData)
 End Function
 
-Private Property Get Study_baseStudy() As study
+Private Property Get Study_baseStudy() As Study
 Set Study_baseStudy = Me
 End Property
 
@@ -299,7 +299,7 @@ Private Function Study_getStudyValue( _
 Study_getStudyValue = mStudyFoundation.getStudyValue(valueName, ref)
 End Function
 
-Private Function study_getValueTicksize( _
+Private Function Study_getValueTicksize( _
                 ByVal valueName As String) As Double
 
 End Function
@@ -313,7 +313,7 @@ Private Sub Study_initialise( _
                 ByVal Parameters As Parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
-                ByVal underlyingStudy As study, _
+                ByVal underlyingStudy As Study, _
                 ByVal pSession As session)
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
@@ -364,12 +364,12 @@ Private Sub Study_removeStudyValueListener( _
 mStudyFoundation.removeStudyValueListener listener
 End Sub
 
-Private Sub study_setInputTicksize( _
+Private Sub Study_setInputTicksize( _
                 ByVal inputName As String, ByVal tickSize As Double)
 
 End Sub
 
-Private Property Get Study_studyDefinition() As studyDefinition
+Private Property Get Study_studyDefinition() As StudyDefinition
 Set Study_studyDefinition = customStudyDefinition
 End Property
 

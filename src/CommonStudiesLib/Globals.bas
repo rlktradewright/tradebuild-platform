@@ -33,6 +33,9 @@ Public Const DoncShortName As String = "Donc"
 Public Const EmaName As String = "Exponential Moving Average"
 Public Const EmaShortName As String = "EMA"
 
+Public Const FIName As String = "Force Index"
+Public Const FIShortName As String = "FI"
+
 Public Const MacdName As String = "MACD"
 Public Const MacdShortName As String = "MACD"
 

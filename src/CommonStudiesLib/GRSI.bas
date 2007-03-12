@@ -50,7 +50,7 @@ Public Property Get defaultParameters() As Parameters
 If mDefaultParameters Is Nothing Then
     Set mDefaultParameters = New Parameters
     mDefaultParameters.setParameterValue RsiParamPeriods, 14
-    mDefaultParameters.setParameterValue RsiParamMovingAverageType, "SMA"
+    mDefaultParameters.setParameterValue RsiParamMovingAverageType, SmaName
 End If
 
 ' now create a clone of the default parameters for the caller

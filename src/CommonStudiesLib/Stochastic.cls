@@ -166,7 +166,7 @@ Do While Not param Is Nothing
                                     mKPeriods + 1)
     Case UCase$(StochParamDPeriods)
         mDPeriods = param.value
-        Set mMASmoothing = gCreateMA("SMA", _
+        Set mMASmoothing = gCreateMA(SmaName, _
                                     mDPeriods, _
                                     1)
         Set mMASmoothingStudy = mMASmoothing
@@ -296,7 +296,7 @@ End Property
 
 Private Sub Study_Notify( _
                 ev As StudyValueEvent)
-mStudyFoundation.NotifyInput ev
+mStudyFoundation.notifyInput ev
 customNotify ev
 End Sub
 

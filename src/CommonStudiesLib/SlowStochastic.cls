@@ -86,7 +86,7 @@ Private Sub customInitialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As Session)
+                ByVal pSession As session)
 
 customProcessParameters Parameters
 Set mKCache = mStudyFoundation.FindValueCache(SStochValueK)
@@ -117,7 +117,7 @@ Do While Not param Is Nothing
         mKDPeriods = param.value
     Case UCase$(StochParamDPeriods)
         mDPeriods = param.value
-        Set mMASmoothing = gCreateMA("SMA", _
+        Set mMASmoothing = gCreateMA(SmaName, _
                                     mDPeriods, _
                                     1)
         Set mMASmoothingStudy = mMASmoothing
@@ -155,7 +155,7 @@ Private Sub StudyValueListener_Notify( _
 Static sPrevVal As Variant
 Dim newEv As StudyValueEvent
 
-mStudyFoundation.NotifyInput ev
+mStudyFoundation.notifyInput ev
 
 If Not mStudyFoundation.isNewBar Then
     If ev.value = sPrevVal Then Exit Sub
@@ -275,7 +275,7 @@ Private Sub Study_initialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As Session)
+                ByVal pSession As session)
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
                             id, _
@@ -303,7 +303,7 @@ End Property
 
 Private Sub Study_Notify( _
                 ev As StudyValueEvent)
-mStudyFoundation.NotifyInput ev
+mStudyFoundation.notifyInput ev
 customNotify ev
 End Sub
 

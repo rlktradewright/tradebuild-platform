@@ -71,6 +71,7 @@ addStudyName BbName
 addStudyName ConstTimeBarsName
 addStudyName DoncName
 addStudyName EmaName
+addStudyName FIName
 addStudyName MacdName
 addStudyName PsName
 addStudyName RsiName
@@ -86,7 +87,7 @@ End Sub
 '================================================================================
 
 Private Function StudyLibrary_createStudy( _
-                ByVal name As String) As Study
+                ByVal name As String) As study
 Select Case UCase$(name)
 Case UCase$(AccDistName), UCase$(AccDistShortName)
     Set StudyLibrary_createStudy = New accDist
@@ -100,6 +101,8 @@ Case UCase$(DoncName), UCase$(DoncName)
     Set StudyLibrary_createStudy = New DonchianChannels
 Case UCase$(EmaName), UCase$(EmaShortName)
     Set StudyLibrary_createStudy = New EMA
+Case UCase$(FIName), UCase$(FIShortName)
+    Set StudyLibrary_createStudy = New ForceIndex
 Case UCase$(MacdName), UCase$(MacdShortName)
     Set StudyLibrary_createStudy = New MACD
 Case UCase$(PsName), UCase$(PsShortName)
@@ -138,6 +141,8 @@ Case UCase$(DoncName), UCase$(DoncName)
     Set StudyLibrary_getStudyDefaultParameters = GDonchianChannels.defaultParameters
 Case UCase$(EmaName), UCase$(EmaShortName)
     Set StudyLibrary_getStudyDefaultParameters = GEMA.defaultParameters
+Case UCase$(FIName), UCase$(FIShortName)
+    Set StudyLibrary_getStudyDefaultParameters = GForceIndex.defaultParameters
 Case UCase$(RsiName), UCase$(RsiShortName)
     Set StudyLibrary_getStudyDefaultParameters = GRSI.defaultParameters
 Case UCase$(SmaName), UCase$(SmaShortName)
@@ -158,36 +163,38 @@ End Select
 End Function
 
 Private Function StudyLibrary_getStudyDefinition( _
-                ByVal name As String) As StudyDefinition
+                ByVal name As String) As studyDefinition
 Select Case UCase$(name)
 Case UCase$(AccDistName), UCase$(AccDistShortName)
-    Set StudyLibrary_getStudyDefinition = GAccDist.StudyDefinition
+    Set StudyLibrary_getStudyDefinition = GAccDist.studyDefinition
 Case UCase$(AtrName), UCase$(AtrShortName)
-    Set StudyLibrary_getStudyDefinition = GATR.StudyDefinition
+    Set StudyLibrary_getStudyDefinition = GATR.studyDefinition
 Case UCase$(BbName), UCase$(BbShortName)
-    Set StudyLibrary_getStudyDefinition = GBollingerBands.StudyDefinition
+    Set StudyLibrary_getStudyDefinition = GBollingerBands.studyDefinition
 Case UCase$(ConstTimeBarsName), UCase$(ConstTimeBarsShortName)
-    Set StudyLibrary_getStudyDefinition = GConstTimeBars.StudyDefinition
+    Set StudyLibrary_getStudyDefinition = GConstTimeBars.studyDefinition
 Case UCase$(DoncName), UCase$(DoncName)
-    Set StudyLibrary_getStudyDefinition = GDonchianChannels.StudyDefinition
+    Set StudyLibrary_getStudyDefinition = GDonchianChannels.studyDefinition
 Case UCase$(EmaName), UCase$(EmaShortName)
-    Set StudyLibrary_getStudyDefinition = GEMA.StudyDefinition
+    Set StudyLibrary_getStudyDefinition = GEMA.studyDefinition
+Case UCase$(FIName), UCase$(FIShortName)
+    Set StudyLibrary_getStudyDefinition = GForceIndex.studyDefinition
 Case UCase$(RsiName), UCase$(RsiShortName)
-    Set StudyLibrary_getStudyDefinition = GRSI.StudyDefinition
+    Set StudyLibrary_getStudyDefinition = GRSI.studyDefinition
 Case UCase$(SmaName), UCase$(SmaShortName)
-    Set StudyLibrary_getStudyDefinition = GSMA.StudyDefinition
+    Set StudyLibrary_getStudyDefinition = GSMA.studyDefinition
 Case UCase$(MacdName), UCase$(MacdShortName)
-    Set StudyLibrary_getStudyDefinition = GMACD.StudyDefinition
+    Set StudyLibrary_getStudyDefinition = GMACD.studyDefinition
 Case UCase$(PsName), UCase$(PsShortName)
-    Set StudyLibrary_getStudyDefinition = GParabolicStop.StudyDefinition
+    Set StudyLibrary_getStudyDefinition = GParabolicStop.studyDefinition
 Case UCase$(SdName), UCase$(SdShortName)
-    Set StudyLibrary_getStudyDefinition = GStandardDeviation.StudyDefinition
+    Set StudyLibrary_getStudyDefinition = GStandardDeviation.studyDefinition
 Case UCase$(SStochName), UCase$(SStochShortName)
-    Set StudyLibrary_getStudyDefinition = GSlowStochastic.StudyDefinition
+    Set StudyLibrary_getStudyDefinition = GSlowStochastic.studyDefinition
 Case UCase$(StochName), UCase$(StochShortName)
-    Set StudyLibrary_getStudyDefinition = GStochastic.StudyDefinition
+    Set StudyLibrary_getStudyDefinition = GStochastic.studyDefinition
 Case UCase$(SwingName), UCase$(SwingShortName)
-    Set StudyLibrary_getStudyDefinition = GSwing.StudyDefinition
+    Set StudyLibrary_getStudyDefinition = GSwing.studyDefinition
 End Select
 End Function
 
@@ -226,6 +233,8 @@ Case UCase$(DoncName), UCase$(DoncName)
     GDonchianChannels.defaultParameters = params
 Case UCase$(EmaName), UCase$(EmaShortName)
     GEMA.defaultParameters = params
+Case UCase$(FIName), UCase$(FIShortName)
+    GForceIndex.defaultParameters = params
 Case UCase$(RsiName), UCase$(RsiShortName)
     GRSI.defaultParameters = params
 Case UCase$(SmaName), UCase$(SmaShortName)

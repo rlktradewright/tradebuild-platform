@@ -37,26 +37,19 @@ Public Const FiValueForceIndexLong As String = "FI (long)"
 ' Variables
 '================================================================================
 
-Private mCommonServiceConsumer As ICommonServiceConsumer
-Private mDefaultParameters As IParameters
-Private mStudyDefinition As studyDefinition
+Private mDefaultParameters As Parameters
+Private mStudyDefinition As StudyDefinition
 
 '================================================================================
 ' Procedures
 '================================================================================
 
-Public Property Let commonServiceConsumer( _
-                ByVal value As TradeBuildSP.ICommonServiceConsumer)
-Set mCommonServiceConsumer = value
-End Property
-
-
-Public Property Let defaultParameters(ByVal value As IParameters)
+Public Property Let defaultParameters(ByVal value As Parameters)
 ' create a clone of the default parameters supplied by the caller
 Set mDefaultParameters = value.Clone
 End Property
 
-Public Property Get defaultParameters() As IParameters
+Public Property Get defaultParameters() As Parameters
 If mDefaultParameters Is Nothing Then
     Set mDefaultParameters = New Parameters
     mDefaultParameters.setParameterValue FiParamShortPeriods, 2
@@ -68,13 +61,13 @@ End If
 Set defaultParameters = mDefaultParameters.Clone
 End Property
 
-Public Property Get studyDefinition() As studyDefinition
+Public Property Get StudyDefinition() As StudyDefinition
 Dim inputDef As StudyInputDefinition
 Dim valueDef As StudyValueDefinition
 Dim paramDef As StudyParameterDefinition
 
 If mStudyDefinition Is Nothing Then
-    Set mStudyDefinition = New studyDefinition
+    Set mStudyDefinition = New StudyDefinition
     mStudyDefinition.name = FIName
     mStudyDefinition.shortName = FIShortName
     mStudyDefinition.Description = "Force Index combines price and volume to " & _
@@ -120,7 +113,7 @@ If mStudyDefinition Is Nothing Then
 End If
 
 ' return a clone to prevent the application changing our definition
-Set studyDefinition = mStudyDefinition.Clone
+Set StudyDefinition = mStudyDefinition.Clone
 End Property
 
 '================================================================================
