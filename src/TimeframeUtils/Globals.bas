@@ -80,11 +80,11 @@ startTime = gBarStartTime( _
                 sessionStartTime)
 Select Case units
 Case TimePeriodSecond
-    gBarEndTime = startTime + (barLength / 86400) + OneMicroSecond
+    gBarEndTime = startTime + (barLength / 86400) - OneMicroSecond
 Case TimePeriodMinute
-    gBarEndTime = startTime + (barLength / 1440) + OneMicroSecond
+    gBarEndTime = startTime + (barLength / 1440) - OneMicroSecond
 Case TimePeriodHour
-    gBarEndTime = startTime + (barLength / 24) + OneMicroSecond
+    gBarEndTime = startTime + (barLength / 24) - OneMicroSecond
 Case TimePeriodDay
     gBarEndTime = startTime + barLength
 Case TimePeriodWeek
@@ -101,7 +101,7 @@ Dim sessEnd As Date
 calcSessionTimesHelper startTime, sessionStartTime, sessionEndTime, sessStart, sessEnd
 
 If startTime < sessStart And gBarEndTime > sessStart Then
-    gBarEndTime = Int(gBarEndTime) + sessionEndTime
+    gBarEndTime = Int(gBarEndTime) + sessionStartTime
 End If
 End Function
 
@@ -110,12 +110,13 @@ Public Function gBarStartTime( _
                 ByVal barLength As Long, _
                 ByVal units As TimePeriodUnits, _
                 ByVal sessionStartTime As Date) As Date
+
 ' minutes from midnight to start of sesssion
-Dim sessionOffset              As Long
-Dim theDate As Long
-Dim theTime As Double
-Dim theTimeMins As Long
-Dim theTimeSecs As Long
+Dim sessionOffset           As Long
+Dim theDate                 As Long
+Dim theTime                 As Double
+Dim theTimeMins             As Long
+Dim theTimeSecs             As Long
 
 sessionOffset = Int(1440 * (sessionStartTime + OneMicroSecond - Int(sessionStartTime)))
 
@@ -127,16 +128,28 @@ theTime = CDbl(timestamp + OneMicroSecond) - theDate
 Select Case units
 Case TimePeriodSecond
     theTimeSecs = Fix(theTime * 86400) ' seconds since midnight
+    If theTimeSecs < sessionOffset * 60 Then
+        theDate = theDate - 1
+        theTimeSecs = theTimeSecs + 86400
+    End If
     gBarStartTime = theDate + _
                 (barLength * Int((theTimeSecs - sessionOffset * 60) / barLength) + _
                     sessionOffset * 60) / 86400
 Case TimePeriodMinute
     theTimeMins = Fix(theTime * 1440) ' minutes since midnight
+    If theTimeMins < sessionOffset Then
+        theDate = theDate - 1
+        theTimeMins = theTimeMins + 1440
+    End If
     gBarStartTime = theDate + _
                 (barLength * Int((theTimeMins - sessionOffset) / barLength) + _
                     sessionOffset) / 1440
 Case TimePeriodHour
     theTimeMins = Fix(theTime * 1440) ' minutes since midnight
+    If theTimeMins < sessionOffset Then
+        theDate = theDate - 1
+        theTimeMins = theTimeMins + 1440
+    End If
     gBarStartTime = theDate + _
                 (60 * barLength * Int((theTimeMins - sessionOffset) / (60 * barLength)) + _
                     sessionOffset) / 1440
