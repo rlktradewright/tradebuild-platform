@@ -11,7 +11,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
-Option Explicit
+    Option Explicit
 
 '================================================================================
 ' Description
@@ -61,7 +61,7 @@ Private mCurrentBarNumber           As Long
 Private mSession                    As session
 
 Private mBarLength                  As Long
-Private mTimePeriodUnits            As TimePeriodUnits
+Private mTimeUnits                  As TimePeriodUnits
 
 Private mTickVolume                 As Long
 
@@ -93,6 +93,10 @@ End Sub
 
 Public Property Get Bar(Optional ByVal ref As Long) As Bar
 Set Bar = mBarsCache.getValue(ref)
+End Property
+
+Public Property Get barLength() As Long
+barLength = mBarLength
 End Property
 
 Public Property Get closeValue(Optional ByVal ref As Long) As Variant
@@ -327,13 +331,16 @@ Public Property Get outside(Optional ByVal ref As Long) As Boolean
 outside = (highValue(ref) > highValue(ref - 1)) And (lowValue(ref) < lowValue(ref - 1))
 End Property
 
-Public Property Let session( _
-                ByVal value As session)
-Set mSession = value
+Public Property Get session() As session
+Set session = mSession
 End Property
                 
 Public Property Get tickVolume(Optional ByVal ref As Long) As Long
 tickVolume = Bar(ref).tickVolume
+End Property
+
+Public Property Get timeUnits() As TimePeriodUnits
+timeUnits = mTimeUnits
 End Property
 
 Public Property Get up(Optional ByVal ref As Long) As Boolean
@@ -347,6 +354,11 @@ End Property
 Public Sub addCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
 mChangeListeners.add value
+End Sub
+
+Public Sub changeSession( _
+                ByVal newSession As session)
+Set mSession = newSession
 End Sub
 
 ''
@@ -373,7 +385,7 @@ Friend Sub initialise( _
                 Optional ByVal numberOfBarsToCache As Long)
 
 mBarLength = barLength
-mTimePeriodUnits = timeUnits
+mTimeUnits = timeUnits
 Set mSession = pSession
 Set mBarsCache = New StudyValueCache
 mBarsCache.initialise numberOfBarsToCache, "Bar"
@@ -408,10 +420,10 @@ If isNewBar Then
     Else
         barEndTime = mSession.barEndTime(ev.timestamp, _
                                     mBarLength, _
-                                    mTimePeriodUnits)
+                                    mTimeUnits)
         mCurrentBar.datetime = mSession.barStartTime(ev.timestamp, _
                                         mBarLength, _
-                                        mTimePeriodUnits)
+                                        mTimeUnits)
         mCurrentBarNumber = mCurrentBarNumber + 1
     End If
     mCurrentBar.barNumber = mCurrentBarNumber

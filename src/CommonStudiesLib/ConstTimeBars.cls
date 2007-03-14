@@ -57,7 +57,7 @@ Implements BarStudy
 Private mStudyFoundation As StudyFoundation
 '--------------------------------------------------------
 
-Private WithEvents mSession As session
+Private WithEvents mSession As Session
 Attribute mSession.VB_VarHelpID = -1
 
 Private mBarLength As Long
@@ -120,8 +120,15 @@ End Property
 
 Private Sub BarStudy_switchUnderlyingStudy( _
                 ByVal newUnderlyingStudy As InputStudy)
-Set mSession = newUnderlyingStudy.session
-mBars.session = mSession
+                
+If newUnderlyingStudy.Session.currentSessionStartTime > mSession.currentSessionStartTime Then
+    ' we are now in a different session so reset volume variables
+    mLatestVolume = 0
+    mPrevBarVolume = 0
+End If
+
+Set mSession = newUnderlyingStudy.Session
+mBars.changeSession mSession
 
 ' because we are switching to a new source, the volume figures may not be consistent
 ' with those from the previous source - for example, if the previous source was historical
@@ -153,7 +160,7 @@ Private Sub customInitialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As session)
+                ByVal pSession As Session)
 
 Set mSession = pSession
 
@@ -447,7 +454,7 @@ Private Sub Study_initialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As session)
+                ByVal pSession As Session)
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
                             id, _
@@ -475,7 +482,7 @@ End Property
 
 Private Sub Study_Notify( _
                 ev As StudyValueEvent)
-mStudyFoundation.NotifyInput ev
+mStudyFoundation.notifyInput ev
 customNotify ev
 End Sub
 

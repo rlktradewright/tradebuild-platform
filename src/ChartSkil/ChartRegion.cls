@@ -186,6 +186,8 @@ Private mhasGrid As Boolean
 Private mShowPerformanceText As Boolean
 
 Private mPointerStyle As PointerStyles
+Private mPointerCrosshairsColor As Long
+Private mPointerDiscColor As Long
 
 Private mPrevCursorX As Single
 Private mPrevCursorY As Single
@@ -1045,6 +1047,22 @@ End Property
 
 Friend Property Let percentheight(ByVal value As Double)
 mPercentheight = value
+End Property
+
+Public Property Get PointerCrosshairsColor() As Long
+PointerCrosshairsColor = mPointerCrosshairsColor
+End Property
+
+Public Property Let PointerCrosshairsColor(ByVal value As Long)
+mPointerCrosshairsColor = value
+End Property
+
+Public Property Get PointerDiscColor() As Long
+PointerDiscColor = mPointerDiscColor
+End Property
+
+Public Property Let PointerDiscColor(ByVal value As Long)
+mPointerDiscColor = value
 End Property
 
 Public Property Get pointerStyle() As PointerStyles
@@ -2491,7 +2509,7 @@ Dim lineX As Single
 If mSuppressDrawing Then Exit Sub
 
 With mCanvas
-    .setPenAttributes vbRed Xor .backColor, _
+    .setPenAttributes mPointerCrosshairsColor Xor .backColor, _
                         1, _
                         LineStyles.LineSolid, _
                         DrawModes.DrawModeXorPen
@@ -2516,11 +2534,11 @@ If mSuppressDrawing Then Exit Sub
 
 With mCanvas
     .MousePointer = vbCrosshair
-    .setPenAttributes vbYellow Xor .backColor, _
+    .setPenAttributes mPointerDiscColor Xor .backColor, _
                         1, _
                         LineStyles.LineSolid, _
                         DrawModes.DrawModeXorPen
-    .setBrushAttributes vbYellow Xor .backColor, FillStyles.FillSolid
+    .setBrushAttributes mPointerDiscColor Xor .backColor, FillStyles.FillSolid
     lineX = Round(x)
     .drawCircle lineX, y, .newDimension(0.8, 0.8).XLogical
     mPrevCursorX = x
@@ -3023,7 +3041,7 @@ Dim prevLineX As Single
 If mSuppressDrawing Then Exit Sub
 
 With mCanvas
-    .setPenAttributes vbRed Xor .backColor, _
+    .setPenAttributes mPointerCrosshairsColor Xor .backColor, _
                         1, _
                         LineStyles.LineSolid, _
                         DrawModes.DrawModeXorPen
@@ -3042,11 +3060,11 @@ Dim prevLineX As Single
 If mSuppressDrawing Then Exit Sub
 
 With mCanvas
-    .setPenAttributes vbYellow Xor .backColor, _
+    .setPenAttributes mPointerDiscColor Xor .backColor, _
                         1, _
                         LineStyles.LineSolid, _
                         DrawModes.DrawModeXorPen
-    .setBrushAttributes vbYellow Xor .backColor, FillStyles.FillSolid
+    .setBrushAttributes mPointerDiscColor Xor .backColor, FillStyles.FillSolid
     prevLineX = Round(mPrevCursorX)
     .drawCircle prevLineX, mPrevCursorY, .newDimension(0.8, 0.8).XLogical
 End With

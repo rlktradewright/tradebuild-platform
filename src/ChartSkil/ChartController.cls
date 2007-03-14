@@ -160,6 +160,22 @@ Public Property Let pointerStyle(ByVal value As PointerStyles)
 chartObj.pointerStyle = value
 End Property
 
+Public Property Get PointerCrosshairsColor() As Long
+PointerCrosshairsColor = chartObj.PointerCrosshairsColor
+End Property
+
+Public Property Let PointerCrosshairsColor(ByVal value As Long)
+chartObj.PointerCrosshairsColor = value
+End Property
+
+Public Property Get PointerDiscColor() As Long
+PointerDiscColor = chartObj.PointerDiscColor
+End Property
+
+Public Property Let PointerDiscColor(ByVal value As Long)
+chartObj.PointerDiscColor = value
+End Property
+
 Public Property Get pointerStyle() As PointerStyles
 pointerStyle = chartObj.pointerStyle
 End Property
@@ -186,6 +202,14 @@ End Property
 
 Public Property Let showHorizontalScrollBar(ByVal val As Boolean)
 chartObj.showHorizontalScrollBar = val
+End Property
+
+Public Property Get showToolbar() As Boolean
+showToolbar = chartObj.showToolbar
+End Property
+
+Public Property Let showToolbar(ByVal val As Boolean)
+chartObj.showToolbar = val
 End Property
 
 Public Property Get suppressDrawing() As Boolean

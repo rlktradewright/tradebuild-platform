@@ -30,8 +30,6 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-'Implements Studies
-
 '================================================================================
 ' Events
 '================================================================================
@@ -76,44 +74,6 @@ End Sub
 Private Sub Class_Terminate()
 Debug.Print "Studies terminated"
 End Sub
-
-'================================================================================
-' IStudies Interface Members
-'================================================================================
-
-'Private Sub IStudies_Add( _
-'                ByVal Study As Study, _
-'                ByRef valueNames() As String)
-'addStudy Study, valueNames
-'End Sub
-'
-'Private Property Let iStudies_defaultValueName( _
-'                ByVal RHS As String)
-'defaultValueName = RHS
-'End Property
-'
-'Private Sub IStudies_Notify(ev As TradeBuildSP.StudyValueEvent)
-'Dim i As Long
-'Dim evOut As StudyValueEvent
-'
-'evOut = ev
-'For i = 0 To mNextStudyTableIndex - 1
-'    If ev.valueName = mDefaultValuename Then
-'        If mStudyTable(i).valueName = "$default" Then
-'            evOut.valueName = mStudyTable(i).notifyName
-'            mStudyTable(i).studyToNotify.notify evOut
-'        End If
-'    End If
-'    If mStudyTable(i).valueName = ev.valueName Then
-'        evOut.valueName = mStudyTable(i).notifyName
-'        mStudyTable(i).studyToNotify.notify evOut
-'    End If
-'Next
-'End Sub
-'
-'Private Function IStudies_numberOfBarsRequired() As Long
-'IStudies_numberOfBarsRequired = numberOfBarsRequired
-'End Function
 
 '================================================================================
 ' XXXX Event Handlers
@@ -184,7 +144,7 @@ Dim evOut As StudyValueEvent
 evOut = ev
 For i = 0 To mNextStudyTableIndex - 1
     If ev.valueName = mDefaultValuename Then
-        If mStudyTable(i).valueName = "$default" Then
+        If mStudyTable(i).valueName = DefaultStudyValueNameStr Then
             evOut.valueName = mStudyTable(i).notifyName
             mStudyTable(i).studyToNotify.notify evOut
         End If
@@ -209,6 +169,19 @@ For i = 0 To mNextStudyTableIndex - 1
 Next
 numberOfBarsRequired = num
 End Function
+
+Public Sub notifyValueTicksize( _
+                ByVal valueName As String, _
+                ByVal tickSize As Double)
+Dim i As Long
+
+For i = 0 To mNextStudyTableIndex - 1
+    If mStudyTable(i).valueName = valueName Then
+        mStudyTable(i).theStudy.setInputTicksize mStudyTable(i).notifyName, tickSize
+    End If
+Next
+End Sub
+
 
 '================================================================================
 ' Helper Functions

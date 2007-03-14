@@ -188,6 +188,8 @@ End Property
 
 Public Property Let name(ByVal value As String)
 mName = value
+mIdent = mName
+mStudyDef.name = mName
 End Property
 
 Public Property Get name() As String
@@ -234,7 +236,7 @@ Case InputTypeBoolean
     valueDef.valueType = ValueTypeBoolean
 End Select
     
-mTickSizes.add tickSize, UCase$(name)
+mTickSizes.add tickSize, name
 End Sub
 
 Friend Sub initialise( _
@@ -246,6 +248,24 @@ mIdent = name
 mStudyDef.name = mName
 mSessionBuilder.sessionStartTime = sessionStartTime
 mSessionBuilder.sessionEndTime = sessionEndTime
+End Sub
+
+Friend Sub setInputTicksize( _
+                ByVal name As String, _
+                ByVal tickSize As Double)
+On Error GoTo Err
+
+mTickSizes.add tickSize, name
+mStudies.notifyValueTicksize name, tickSize
+
+Exit Sub
+
+Err:
+If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then
+    mTickSizes.remove name
+    Resume
+End If
+Err.Raise Err.Number
 End Sub
 
 Public Sub setSessionCurrentTime( _

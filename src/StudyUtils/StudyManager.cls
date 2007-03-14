@@ -123,6 +123,10 @@ If mNextInputIndex = UBound(mInputs) Then
 End If
 Set mInputs(mNextInputIndex).source = source
 mInputs(mNextInputIndex).inputName = inputName
+mInputs(mNextInputIndex).description = description
+mInputs(mNextInputIndex).inputType = inputType
+mInputs(mNextInputIndex).isDefault = isDefault
+mInputs(mNextInputIndex).tickSize = tickSize
 addInput = mNextInputIndex
 mNextInputIndex = mNextInputIndex + 1
 End Function
@@ -273,6 +277,13 @@ ev.valueName = mInputs(inputHandle).inputName
 mInputs(inputHandle).source.notify ev
 End Sub
 
+Public Sub setInputTicksize( _
+                ByVal inputHandle As Long, _
+                ByVal tickSize As Double)
+mInputs(inputHandle).tickSize = tickSize
+mInputs(inputHandle).source.setInputTicksize mInputs(inputHandle).inputName, tickSize
+End Sub
+
 ''
 '
 '   Sets the session start and end times. Note that this method can only be called once.
@@ -282,8 +293,9 @@ End Sub
 Public Sub setSessionTimes( _
                 ByVal sessionStartTime As Date, _
                 ByVal sessionEndTime As Date)
-Dim lStudy As study
-Dim lSource As InputStudy
+Dim lStudy As InputStudy
+Dim lStudyEntry As StudyEntry
+Dim lVar As Variant
 
 If mSessionTimesSet Then _
     Err.Raise ErrorCodes.ErrIllegalStateException, _
@@ -297,10 +309,11 @@ mSessionEndTime = sessionEndTime
 
 mSessionTimesSet = True
 
-For Each lStudy In mStudies
-    If TypeOf lStudy Is InputStudy Then
-        Set lSource = lStudy
-        lSource.setSessionTimes mSessionStartTime, mSessionEndTime
+For Each lVar In mStudies
+    lStudyEntry = lVar
+    If TypeOf lStudyEntry.study Is InputStudy Then
+        Set lStudy = lStudyEntry.study
+        lStudy.setSessionTimes mSessionStartTime, mSessionEndTime
     End If
 Next
 End Sub
