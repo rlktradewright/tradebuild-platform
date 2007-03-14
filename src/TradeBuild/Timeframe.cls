@@ -382,34 +382,20 @@ Public Property Get Contract() As Contract
 Set Contract = mContract
 End Property
 
+' only gets called if contract was not available when initialise was called
 Friend Property Let Contract(ByVal value As Contract)
-Dim ev As NotificationEvent
 
 Set mContract = value
 
-setupBarStudies
+mInputStudy.name = mContract.specifier.ToString & mKey & "(historical data)"
+studyMgr.setInputTicksize mBidInputHandle, mContract.TickSize
+studyMgr.setInputTicksize mAskInputHandle, mContract.TickSize
+studyMgr.setInputTicksize mTradeInputHandle, mContract.TickSize
 
-If mSaveIntervalSeconds > 0 Then
-    Set mBarWriter = tb.ServiceProviders.CreateHistoricalDataWriter(Me, _
-                                mContract.specifier, _
-                                "")
-    If mBarWriter Is Nothing Then
-        Set ev.source = Me
-        ev.eventCode = ApiNotifyCodes.ApiNotifyNoHistoricDataSource
-        ev.eventMessage = "Can't create historic data writer"
-        RaiseEvent Notification(ev)
-    Else
-        Set mWriteTimer = createIntervalTimer(0, , mSaveIntervalSeconds * 1000)
-        mWriteTimer.StartTimer
-    End If
-End If
+createBarWriter
 
-' ensure that fetching the historical data occurs after the current call has completed,
-' since this is within the Timeframes.add call, otherwise the caller may miss the
-' BarsLoaded event.
-Set mHistoricBarTimer = createIntervalTimer(1)
-Set mElapsedTimer = New TimerUtils2.ElapsedTimer
-mHistoricBarTimer.StartTimer
+startHistDataFetch
+
 End Property
 
 Public Property Get historicDataLoaded() As Boolean
@@ -447,6 +433,7 @@ Set mTickerRef = Nothing
 End Sub
 
 Friend Sub Initialise( _
+                ByVal pContract As Contract, _
                 ByVal key As String, _
                 ByVal pTicker As Ticker, _
                 ByVal TimePeriod As Long, _
@@ -456,6 +443,7 @@ Friend Sub Initialise( _
                 ByVal excludeCurrentbar As Boolean, _
                 ByVal saveIntervalSeconds As Long, _
                 ByVal writeBidAndAskBars As Boolean)
+Set mContract = pContract
 mKey = key
 Set mTickerRef = createWeakReference(pTicker)
 Set mStudyManagerRef = createWeakReference(pTicker.studyManager)
@@ -471,6 +459,13 @@ mIncludeBarsOutsideSession = includeBarsOutsideSession
 mExcludeCurrentBar = excludeCurrentbar
 
 mSaveIntervalSeconds = saveIntervalSeconds
+
+setupBarStudies
+
+If Not mContract Is Nothing Then
+    createBarWriter
+    startHistDataFetch
+End If
 
 End Sub
 
@@ -516,6 +511,26 @@ If Not mBarReader Is Nothing Then
 End If
 
 Set mContract = Nothing
+
+End Sub
+
+Private Sub createBarWriter()
+Dim ev As NotificationEvent
+
+If mSaveIntervalSeconds > 0 Then
+    Set mBarWriter = tb.ServiceProviders.CreateHistoricalDataWriter(Me, _
+                                mContract.specifier, _
+                                "")
+    If mBarWriter Is Nothing Then
+        Set ev.source = Me
+        ev.eventCode = ApiNotifyCodes.ApiNotifyNoHistoricDataSource
+        ev.eventMessage = "Can't create historic data writer"
+        RaiseEvent Notification(ev)
+    Else
+        Set mWriteTimer = createIntervalTimer(0, , mSaveIntervalSeconds * 1000)
+        mWriteTimer.StartTimer
+    End If
+End If
 
 End Sub
 
@@ -637,27 +652,37 @@ End Sub
 Private Sub setupBarStudies()
 Dim params As New parameters
 Dim barsStudy As BarStudy
+Dim sourceName As String
+Dim TickSize As Double
 
-Set mInputStudy = studyMgr.addSource(mContract.specifier.ToString & mKey & "(historical data)")
+If mContract Is Nothing Then
+    sourceName = GenerateGUIDString
+    TickSize = 0
+Else
+    sourceName = mContract.specifier.ToString & mKey & "(historical data)"
+    TickSize = mContract.TickSize
+End If
+
+Set mInputStudy = studyMgr.addSource(sourceName)
 Set mSession = mInputStudy.session
 mBidInputHandle = studyMgr.addInput(mInputStudy, _
                         BidInputName, _
                         "Bid prices", _
                         StudyInputTypes.InputTypeReal, _
                         False, _
-                        mContract.TickSize)
+                        TickSize)
 mAskInputHandle = studyMgr.addInput(mInputStudy, _
                         AskInputName, _
                         "Ask prices", _
                         StudyInputTypes.InputTypeReal, _
                         False, _
-                        mContract.TickSize)
+                        TickSize)
 mTradeInputHandle = studyMgr.addInput(mInputStudy, _
                         TradeInputName, _
                         "Trade prices", _
                         StudyInputTypes.InputTypeReal, _
                         True, _
-                        mContract.TickSize)
+                        TickSize)
 mTickVolumeInputHandle = studyMgr.addInput(mInputStudy, _
                         TickVolumeInputName, _
                         "Volume", _
@@ -709,6 +734,15 @@ If mWriteBidAndAskBars Then
 
 End If
 
+End Sub
+
+Private Sub startHistDataFetch()
+' ensure that fetching the historical data occurs after the current call has completed,
+' since this is within the Timeframes.add call, otherwise the caller may miss the
+' BarsLoaded event.
+Set mHistoricBarTimer = createIntervalTimer(1)
+Set mElapsedTimer = New TimerUtils2.ElapsedTimer
+mHistoricBarTimer.StartTimer
 End Sub
 
 Private Sub StartStudies()

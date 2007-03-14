@@ -50,7 +50,7 @@ Event CollectionChanged( _
 '@================================================================================
 
 Private Type TimeframeTableEntry
-    timePeriod              As Long
+    TimePeriod              As Long
     timePeriodUnit          As TimePeriodUnits
     key                     As String
     theTimeFrame            As Timeframe
@@ -130,7 +130,7 @@ End Property
 '@================================================================================
 
 Public Function add( _
-                ByVal timePeriod As Long, _
+                ByVal TimePeriod As Long, _
                 ByVal timePeriodUnit As TimePeriodUnits, _
                 ByRef key As String, _
                 ByVal numberOfBarsToFetch As Long, _
@@ -147,7 +147,7 @@ If saveIntervalSeconds > 0 And saveIntervalSeconds < 5 Then _
             "TradeBuild25.Timeframes::add", _
             "Save interval cannot be less than 5 seconds"
 
-timeframeIndex = getTimeframeIndex(timePeriod, _
+timeframeIndex = getTimeframeIndex(TimePeriod, _
                                 timePeriodUnit, _
                                 numberOfBarsToFetch, _
                                 includeBarsOutsideSession, _
@@ -161,7 +161,7 @@ End If
 Set add = New Timeframe
 add.tradeBuildAPI = tb
 Set tte.theTimeFrame = add
-tte.timePeriod = timePeriod
+tte.TimePeriod = TimePeriod
 tte.timePeriodUnit = timePeriodUnit
 tte.numberOfBarsToFetch = numberOfBarsToFetch
 tte.includeBarsOutsideSession = includeBarsOutsideSession
@@ -171,7 +171,7 @@ tte.saveIntervalSeconds = saveIntervalSeconds
 If key <> "" Then
     tte.key = key
 Else
-    tte.key = generateKey(timePeriod, _
+    tte.key = generateKey(TimePeriod, _
                         timePeriodUnit, _
                         numberOfBarsToFetch, _
                         includeBarsOutsideSession, _
@@ -179,9 +179,10 @@ Else
                         saveIntervalSeconds, _
                         writeBidAndAskBars)
 End If
-tte.theTimeFrame.Initialise tte.key, _
+tte.theTimeFrame.Initialise mContract, _
+                            tte.key, _
                             mTicker, _
-                            timePeriod, _
+                            TimePeriod, _
                             timePeriodUnit, _
                             numberOfBarsToFetch, _
                             includeBarsOutsideSession, _
@@ -189,7 +190,6 @@ tte.theTimeFrame.Initialise tte.key, _
                             saveIntervalSeconds, _
                             writeBidAndAskBars
 
-If Not mContract Is Nothing Then tte.theTimeFrame.Contract = mContract
 If mNextTimeframeTableIndex > UBound(mTimeframeTable) Then
     ReDim Preserve mTimeframeTable(UBound(mTimeframeTable) + 10) As TimeframeTableEntry
 End If
@@ -258,7 +258,7 @@ Private Sub clearTimeframeTableEntry(ByVal index As Long)
 mTimeframeTable(index).key = ""
 mTimeframeTable(index).numberOfBarsToFetch = 0
 Set mTimeframeTable(index).theTimeFrame = Nothing
-mTimeframeTable(index).timePeriod = 0
+mTimeframeTable(index).TimePeriod = 0
 mTimeframeTable(index).timePeriodUnit = 0
 End Sub
 
@@ -279,14 +279,14 @@ RaiseEvent CollectionChanged(ev)
 End Sub
 
 Private Function generateKey( _
-                ByVal timePeriod As Long, _
+                ByVal TimePeriod As Long, _
                 ByVal timePeriodUnit As TimePeriodUnits, _
                 ByVal numberOfBarsToFetch As Long, _
                 ByVal includeBarsOutsideSession As Boolean, _
                 ByVal excludeCurrentbar As Boolean, _
                 ByVal saveIntervalSeconds As Long, _
                 ByVal writeBidAndAskBars As Boolean) As String
-generateKey = timePeriod & _
+generateKey = TimePeriod & _
             TimePeriodUnitsToString(timePeriodUnit) & _
             "(" & numberOfBarsToFetch & ")" & _
             IIf(includeBarsOutsideSession, "I", "") & _
@@ -297,7 +297,7 @@ generateKey = timePeriod & _
 End Function
 
 Private Function getTimeframeIndex( _
-                ByVal timePeriod As Long, _
+                ByVal TimePeriod As Long, _
                 ByVal timePeriodUnit As TimePeriodUnits, _
                 ByVal numberOfBarsToFetch As Long, _
                 ByRef includeBarsOutsideSession As Boolean, _
@@ -307,7 +307,7 @@ Dim i As Long
 
 getTimeframeIndex = -1
 For i = 0 To mNextTimeframeTableIndex - 1
-    If mTimeframeTable(i).timePeriod = timePeriod And _
+    If mTimeframeTable(i).TimePeriod = TimePeriod And _
         mTimeframeTable(i).timePeriodUnit = timePeriodUnit And _
         mTimeframeTable(i).includeBarsOutsideSession = includeBarsOutsideSession And _
         mTimeframeTable(i).numberOfBarsToFetch = numberOfBarsToFetch And _

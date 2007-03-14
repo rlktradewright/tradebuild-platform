@@ -236,27 +236,27 @@ Case TradeBuildSP.StandardSPEventCodes.CIConnectedToDataSource
 Case TradeBuildSP.StandardSPEventCodes.CIContractSpecifierInvalid
     lContracts.ContractSpecifierInvalid eventMessage
 Case TradeBuildSP.StandardSPEventCodes.CICantConnectDataSource
-    tb.SetServiceProviderError eventMessage, _
+    tb.SetServiceProviderError eventCode, _
                         "Can't connect to Contract database: " & eventMessage, _
                         tb.ServiceProviders.nameFromHandle(serviceProviderHandle)
 Case TradeBuildSP.StandardSPEventCodes.CIDisconnectedFromDataSource
-    tb.SetServiceProviderError eventMessage, _
+    tb.SetServiceProviderError eventCode, _
                         "Disconnected from Contract database: " & eventMessage, _
                         tb.ServiceProviders.nameFromHandle(serviceProviderHandle)
 Case TradeBuildSP.StandardSPEventCodes.CILostConnectionToDataSource
-    tb.SetServiceProviderError eventMessage, _
+    tb.SetServiceProviderError eventCode, _
                         "Lost connection to Contract database: " & eventMessage, _
                         tb.ServiceProviders.nameFromHandle(serviceProviderHandle)
 Case TradeBuildSP.StandardSPEventCodes.CIReConnectingDataSource
-    tb.SetServiceProviderError eventMessage, _
+    tb.SetServiceProviderError eventCode, _
                         "Reconnecting to Contract database: " & eventMessage, _
                         tb.ServiceProviders.nameFromHandle(serviceProviderHandle)
 Case TradeBuildSP.StandardSPEventCodes.CIRetryConnectDataSource
-    tb.SetServiceProviderError eventMessage, _
+    tb.SetServiceProviderError eventCode, _
                         "Attempting again to connect to Contract database: " & eventMessage, _
                         tb.ServiceProviders.nameFromHandle(serviceProviderHandle)
 Case Else
-    tb.SetServiceProviderError eventMessage, _
+    tb.SetServiceProviderError eventCode, _
                         eventMessage, _
                         nameFromHandle(serviceProviderHandle)
 End Select
@@ -270,7 +270,7 @@ End Sub
 ' Properties
 '@================================================================================
 
-Friend Property Get SupportedHistoricalDataPeriods() As timePeriod()
+Friend Property Get SupportedHistoricalDataPeriods() As TimePeriod()
 Dim i As Long
 Dim histDataSp As TradeBuildSP.IBarDataServiceProvider
 
@@ -570,7 +570,7 @@ Set CreateTickfileWriter = tfWriter
 
 End Function
 
-Friend Function IsSupportedHistoricalDataPeriod(ByRef period As timePeriod)
+Friend Function IsSupportedHistoricalDataPeriod(ByRef period As TimePeriod)
 Dim i As Long
 Dim histDataSp As TradeBuildSP.IBarDataServiceProvider
 
