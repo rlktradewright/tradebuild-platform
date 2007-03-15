@@ -133,7 +133,10 @@ Private mBarsStudyConfig As StudyConfiguration
 
 Private mUpdatePerTick As Boolean
 
+Private mIsHistoricChart As Boolean
 Private mInitialNumberOfBars As Long
+Private mFromTime As Date
+Private mToTime As Date
 Private mIncludeBarsOutsideSession As Boolean
 Private mMinimumTicksHeight As Long
 
@@ -364,7 +367,7 @@ End Sub
 
 Private Sub mTicker_StateChange(ev As StateChangeEvent)
 Dim stateEv As StateChangeEvent
-If ev.State = TickerStates.TickerStateRunning Then
+If ev.State = TickerStates.TickerStateReady Then
     ' this means that the ticker object has retrieved the contract info, so we can
     ' now start the chart
     loadchart
@@ -643,7 +646,7 @@ End Property
 '================================================================================
 
 Public Sub clearChart()
-Chart1.clearChart
+initialiseChart
 End Sub
 
 Public Sub finish()
@@ -679,6 +682,36 @@ Set mVolumeRegionStyle = volumeRegionStyle
 Set mChartManager = createChartManager(mTicker.studyManager, Chart1.controller)
 
 If mTicker.State = TickerStateRunning Then
+    loadchart
+End If
+End Sub
+
+Public Sub showHistoricChart( _
+                ByVal pTicker As ticker, _
+                ByVal initialNumberOfBars As Long, _
+                ByVal fromTime As Date, _
+                ByVal toTime As Date, _
+                ByVal includeBarsOutsideSession As Boolean, _
+                ByVal minimumTicksHeight As Long, _
+                ByVal periodlength As Long, _
+                ByVal periodUnits As TimePeriodUnits, _
+                Optional ByVal priceRegionStyle As ChartRegionStyle, _
+                Optional ByVal volumeRegionStyle As ChartRegionStyle)
+mIsHistoricChart = True
+Set mTicker = pTicker
+mInitialNumberOfBars = initialNumberOfBars
+mFromTime = fromTime
+mToTime = toTime
+mIncludeBarsOutsideSession = includeBarsOutsideSession
+mMinimumTicksHeight = minimumTicksHeight
+mPeriodLength = periodlength
+mPeriodUnits = periodUnits
+Set mPriceRegionStyle = priceRegionStyle
+Set mVolumeRegionStyle = volumeRegionStyle
+
+Set mChartManager = createChartManager(mTicker.studyManager, Chart1.controller)
+
+If mTicker.State = TickerStateReady Then
     loadchart
 End If
 End Sub
@@ -809,13 +842,23 @@ Chart1.suppressDrawing = False
 
 Set mTimeframes = mTicker.Timeframes
 
-Set mTimeframe = mTimeframes.add(mPeriodLength, _
-                            mPeriodUnits, _
-                            "", _
-                            mInitialNumberOfBars, _
-                            mIncludeBarsOutsideSession, _
-                            IIf(mTicker.replayingTickfile, True, False))
-                            
+If mIsHistoricChart Then
+    Set mTimeframe = mTimeframes.addHistorical(mPeriodLength, _
+                                mPeriodUnits, _
+                                "", _
+                                mInitialNumberOfBars, _
+                                mFromTime, _
+                                mToTime, _
+                                mIncludeBarsOutsideSession)
+Else
+    Set mTimeframe = mTimeframes.add(mPeriodLength, _
+                                mPeriodUnits, _
+                                "", _
+                                mInitialNumberOfBars, _
+                                mIncludeBarsOutsideSession, _
+                                IIf(mTicker.replayingTickfile, True, False))
+End If
+
 If Not mTimeframe.historicDataLoaded Then
     Chart1.suppressDrawing = True
 End If
