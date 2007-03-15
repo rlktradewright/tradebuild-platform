@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{9D2C4B5E-2539-4900-8B70-B9B41CFF1CA8}#13.0#0"; "TradeBuildUI2-5.ocx"
+Object = "{9D2C4B5E-2539-4900-8B70-B9B41CFF1CA8}#15.2#0"; "TradeBuildUI2-5.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeSkil Demo Edition Version 2.5"
@@ -19,7 +19,7 @@ Begin VB.Form fTradeSkilDemo
       Left            =   11880
       Locked          =   -1  'True
       MultiLine       =   -1  'True
-      TabIndex        =   81
+      TabIndex        =   66
       TabStop         =   0   'False
       Top             =   120
       Width           =   1335
@@ -38,7 +38,7 @@ Begin VB.Form fTradeSkilDemo
       Height          =   255
       Left            =   10560
       Locked          =   -1  'True
-      TabIndex        =   80
+      TabIndex        =   65
       TabStop         =   0   'False
       Top             =   360
       Width           =   975
@@ -57,7 +57,7 @@ Begin VB.Form fTradeSkilDemo
       Height          =   255
       Left            =   9600
       Locked          =   -1  'True
-      TabIndex        =   79
+      TabIndex        =   64
       TabStop         =   0   'False
       Top             =   360
       Width           =   975
@@ -76,7 +76,7 @@ Begin VB.Form fTradeSkilDemo
       Height          =   255
       Left            =   8640
       Locked          =   -1  'True
-      TabIndex        =   78
+      TabIndex        =   63
       TabStop         =   0   'False
       Top             =   360
       Width           =   975
@@ -95,7 +95,7 @@ Begin VB.Form fTradeSkilDemo
       Height          =   255
       Left            =   7680
       Locked          =   -1  'True
-      TabIndex        =   77
+      TabIndex        =   62
       TabStop         =   0   'False
       Top             =   360
       Width           =   975
@@ -114,7 +114,7 @@ Begin VB.Form fTradeSkilDemo
       Height          =   255
       Left            =   6720
       Locked          =   -1  'True
-      TabIndex        =   76
+      TabIndex        =   61
       TabStop         =   0   'False
       Top             =   360
       Width           =   975
@@ -133,7 +133,7 @@ Begin VB.Form fTradeSkilDemo
       Height          =   255
       Left            =   4800
       Locked          =   -1  'True
-      TabIndex        =   75
+      TabIndex        =   60
       TabStop         =   0   'False
       Top             =   600
       Width           =   975
@@ -152,7 +152,7 @@ Begin VB.Form fTradeSkilDemo
       Height          =   255
       Left            =   5760
       Locked          =   -1  'True
-      TabIndex        =   74
+      TabIndex        =   59
       TabStop         =   0   'False
       Top             =   360
       Width           =   975
@@ -171,7 +171,7 @@ Begin VB.Form fTradeSkilDemo
       Height          =   255
       Left            =   4800
       Locked          =   -1  'True
-      TabIndex        =   73
+      TabIndex        =   58
       TabStop         =   0   'False
       Top             =   360
       Width           =   975
@@ -190,7 +190,7 @@ Begin VB.Form fTradeSkilDemo
       Height          =   255
       Left            =   3840
       Locked          =   -1  'True
-      TabIndex        =   72
+      TabIndex        =   57
       TabStop         =   0   'False
       Top             =   360
       Width           =   975
@@ -209,7 +209,7 @@ Begin VB.Form fTradeSkilDemo
       Height          =   255
       Left            =   2880
       Locked          =   -1  'True
-      TabIndex        =   71
+      TabIndex        =   56
       TabStop         =   0   'False
       Top             =   360
       Width           =   975
@@ -226,7 +226,7 @@ Begin VB.Form fTradeSkilDemo
       EndProperty
       Height          =   255
       Left            =   360
-      TabIndex        =   70
+      TabIndex        =   55
       TabStop         =   0   'False
       Top             =   360
       Width           =   2280
@@ -236,7 +236,7 @@ Begin VB.Form fTradeSkilDemo
       Enabled         =   0   'False
       Height          =   495
       Left            =   13320
-      TabIndex        =   46
+      TabIndex        =   39
       ToolTipText     =   "Display a chart"
       Top             =   480
       Width           =   975
@@ -246,7 +246,7 @@ Begin VB.Form fTradeSkilDemo
       Enabled         =   0   'False
       Height          =   495
       Left            =   13320
-      TabIndex        =   45
+      TabIndex        =   38
       ToolTipText     =   "Display the market depth"
       Top             =   0
       Width           =   975
@@ -254,7 +254,7 @@ Begin VB.Form fTradeSkilDemo
    Begin TabDlg.SSTab MainSSTAB 
       Height          =   4335
       Left            =   120
-      TabIndex        =   57
+      TabIndex        =   50
       Top             =   960
       Width           =   14175
       _ExtentX        =   25003
@@ -268,8 +268,8 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(0)   =   "&1. Configuration"
       TabPicture(0)   =   "fTradeSkilDemo.frx":0000
       Tab(0).ControlEnabled=   0   'False
-      Tab(0).Control(0)=   "Frame1"
-      Tab(0).Control(1)=   "ConfigureButton"
+      Tab(0).Control(0)=   "ConfigureButton"
+      Tab(0).Control(1)=   "Frame1"
       Tab(0).ControlCount=   2
       TabCaption(1)   =   "&2. Tickers"
       TabPicture(1)   =   "fTradeSkilDemo.frx":001C
@@ -280,10 +280,10 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(2)   =   "&3. Orders"
       TabPicture(2)   =   "fTradeSkilDemo.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "OrdersSummary1"
-      Tab(2).Control(1)=   "OrderButton"
-      Tab(2).Control(2)=   "CancelOrderButton"
-      Tab(2).Control(3)=   "ModifyOrderButton"
+      Tab(2).Control(0)=   "ModifyOrderButton"
+      Tab(2).Control(1)=   "CancelOrderButton"
+      Tab(2).Control(2)=   "OrderButton"
+      Tab(2).Control(3)=   "OrdersSummary1"
       Tab(2).ControlCount=   4
       TabCaption(3)   =   "&4. Executions"
       TabPicture(3)   =   "fTradeSkilDemo.frx":0054
@@ -293,25 +293,25 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(4)   =   "&5. Replay tickfiles"
       TabPicture(4)   =   "fTradeSkilDemo.frx":0070
       Tab(4).ControlEnabled=   0   'False
-      Tab(4).Control(0)=   "ReplaySpeedCombo"
-      Tab(4).Control(1)=   "TickfileList"
-      Tab(4).Control(1).Enabled=   0   'False
-      Tab(4).Control(2)=   "StopReplayButton"
-      Tab(4).Control(3)=   "PauseReplayButton"
-      Tab(4).Control(4)=   "ClearTickfileListButton"
-      Tab(4).Control(5)=   "SelectTickfilesButton"
+      Tab(4).Control(0)=   "Label19"
+      Tab(4).Control(1)=   "Label20"
+      Tab(4).Control(2)=   "ReplayProgressLabel"
+      Tab(4).Control(3)=   "ReplayContractLabel"
+      Tab(4).Control(4)=   "ReplayProgressBar"
+      Tab(4).Control(5)=   "SkipReplayButton"
       Tab(4).Control(6)=   "PlayTickFileButton"
-      Tab(4).Control(7)=   "SkipReplayButton"
-      Tab(4).Control(8)=   "ReplayProgressBar"
-      Tab(4).Control(9)=   "ReplayContractLabel"
-      Tab(4).Control(10)=   "ReplayProgressLabel"
-      Tab(4).Control(11)=   "Label20"
-      Tab(4).Control(12)=   "Label19"
+      Tab(4).Control(7)=   "SelectTickfilesButton"
+      Tab(4).Control(8)=   "ClearTickfileListButton"
+      Tab(4).Control(9)=   "PauseReplayButton"
+      Tab(4).Control(10)=   "StopReplayButton"
+      Tab(4).Control(11)=   "TickfileList"
+      Tab(4).Control(11).Enabled=   0   'False
+      Tab(4).Control(12)=   "ReplaySpeedCombo"
       Tab(4).ControlCount=   13
       Begin TradeBuildUI25.ExecutionsSummary ExecutionsSummary1 
          Height          =   3855
          Left            =   -74880
-         TabIndex        =   114
+         TabIndex        =   99
          Top             =   360
          Width           =   13935
          _ExtentX        =   24580
@@ -320,7 +320,7 @@ Begin VB.Form fTradeSkilDemo
       Begin TradeBuildUI25.OrdersSummary OrdersSummary1 
          Height          =   3855
          Left            =   -74880
-         TabIndex        =   113
+         TabIndex        =   98
          Top             =   360
          Width           =   12615
          _ExtentX        =   22251
@@ -332,7 +332,7 @@ Begin VB.Form fTradeSkilDemo
          Left            =   -73800
          List            =   "fTradeSkilDemo.frx":008E
          Style           =   2  'Dropdown List
-         TabIndex        =   41
+         TabIndex        =   34
          Top             =   2040
          Width           =   2775
       End
@@ -340,7 +340,7 @@ Begin VB.Form fTradeSkilDemo
          Caption         =   "Service Providers"
          Height          =   3495
          Left            =   -74640
-         TabIndex        =   93
+         TabIndex        =   78
          Top             =   480
          Width           =   10335
          Begin VB.PictureBox Picture2 
@@ -349,7 +349,7 @@ Begin VB.Form fTradeSkilDemo
             Left            =   120
             ScaleHeight     =   3135
             ScaleWidth      =   10095
-            TabIndex        =   94
+            TabIndex        =   79
             Top             =   240
             Width           =   10095
             Begin VB.TextBox CustomStudiesSpText 
@@ -568,7 +568,7 @@ Begin VB.Form fTradeSkilDemo
                Caption         =   "Custom studies service provider ProgId"
                Height          =   615
                Left            =   0
-               TabIndex        =   110
+               TabIndex        =   95
                Top             =   2040
                Width           =   2055
             End
@@ -577,7 +577,7 @@ Begin VB.Form fTradeSkilDemo
                Caption         =   "Secondary Contract Data"
                Height          =   375
                Left            =   0
-               TabIndex        =   92
+               TabIndex        =   77
                Top             =   960
                Width           =   2055
             End
@@ -586,7 +586,7 @@ Begin VB.Form fTradeSkilDemo
                Caption         =   "Primary Contract Data"
                Height          =   255
                Left            =   360
-               TabIndex        =   103
+               TabIndex        =   88
                Top             =   600
                Width           =   1695
             End
@@ -595,7 +595,7 @@ Begin VB.Form fTradeSkilDemo
                Caption         =   "Broker"
                Height          =   255
                Left            =   360
-               TabIndex        =   102
+               TabIndex        =   87
                Top             =   1680
                Width           =   1695
             End
@@ -604,7 +604,7 @@ Begin VB.Form fTradeSkilDemo
                Caption         =   "Historical Data"
                Height          =   255
                Left            =   360
-               TabIndex        =   101
+               TabIndex        =   86
                Top             =   1320
                Width           =   1695
             End
@@ -613,7 +613,7 @@ Begin VB.Form fTradeSkilDemo
                Caption         =   "Realtime Data"
                Height          =   255
                Left            =   360
-               TabIndex        =   100
+               TabIndex        =   85
                Top             =   240
                Width           =   1695
             End
@@ -621,7 +621,7 @@ Begin VB.Form fTradeSkilDemo
                Caption         =   "Password"
                Height          =   255
                Left            =   8160
-               TabIndex        =   99
+               TabIndex        =   84
                Top             =   0
                Width           =   690
             End
@@ -629,7 +629,7 @@ Begin VB.Form fTradeSkilDemo
                Caption         =   "Client id"
                Height          =   255
                Left            =   6960
-               TabIndex        =   98
+               TabIndex        =   83
                Top             =   0
                Width           =   615
             End
@@ -637,7 +637,7 @@ Begin VB.Form fTradeSkilDemo
                Caption         =   "Port"
                Height          =   255
                Left            =   5760
-               TabIndex        =   97
+               TabIndex        =   82
                Top             =   0
                Width           =   615
             End
@@ -646,7 +646,7 @@ Begin VB.Form fTradeSkilDemo
                Height          =   255
                Index           =   2
                Left            =   4440
-               TabIndex        =   96
+               TabIndex        =   81
                Top             =   0
                Width           =   615
             End
@@ -655,7 +655,7 @@ Begin VB.Form fTradeSkilDemo
                Height          =   255
                Index           =   0
                Left            =   3000
-               TabIndex        =   95
+               TabIndex        =   80
                Top             =   0
                Width           =   1095
             End
@@ -664,7 +664,7 @@ Begin VB.Form fTradeSkilDemo
       Begin VB.ListBox TickfileList 
          Height          =   1230
          Left            =   -74400
-         TabIndex        =   88
+         TabIndex        =   73
          TabStop         =   0   'False
          Top             =   600
          Width           =   6855
@@ -674,7 +674,7 @@ Begin VB.Form fTradeSkilDemo
          Enabled         =   0   'False
          Height          =   495
          Left            =   -68160
-         TabIndex        =   87
+         TabIndex        =   72
          ToolTipText     =   "Stop tickfile replay"
          Top             =   1920
          Width           =   615
@@ -684,7 +684,7 @@ Begin VB.Form fTradeSkilDemo
          Enabled         =   0   'False
          Height          =   495
          Left            =   -69600
-         TabIndex        =   86
+         TabIndex        =   71
          ToolTipText     =   "Pause tickfile replay"
          Top             =   1920
          Width           =   615
@@ -694,7 +694,7 @@ Begin VB.Form fTradeSkilDemo
          Enabled         =   0   'False
          Height          =   375
          Left            =   -67440
-         TabIndex        =   85
+         TabIndex        =   70
          ToolTipText     =   "Clear tickfile list"
          Top             =   1080
          Width           =   495
@@ -703,7 +703,7 @@ Begin VB.Form fTradeSkilDemo
          Caption         =   "..."
          Height          =   375
          Left            =   -67440
-         TabIndex        =   84
+         TabIndex        =   69
          ToolTipText     =   "Select tickfile(s)"
          Top             =   600
          Width           =   495
@@ -713,7 +713,7 @@ Begin VB.Form fTradeSkilDemo
          Enabled         =   0   'False
          Height          =   495
          Left            =   -70320
-         TabIndex        =   83
+         TabIndex        =   68
          ToolTipText     =   "Start or resume tickfile replay"
          Top             =   1920
          Width           =   615
@@ -723,7 +723,7 @@ Begin VB.Form fTradeSkilDemo
          Enabled         =   0   'False
          Height          =   495
          Left            =   -68880
-         TabIndex        =   82
+         TabIndex        =   67
          ToolTipText     =   "Pause tickfile replay"
          Top             =   1920
          Width           =   615
@@ -743,13 +743,13 @@ Begin VB.Form fTradeSkilDemo
          Left            =   60
          ScaleHeight     =   3855
          ScaleWidth      =   13935
-         TabIndex        =   59
+         TabIndex        =   52
          Top             =   360
          Width           =   13935
          Begin TradeBuildUI25.TickerGrid TickerGrid1 
             Height          =   3855
             Left            =   3960
-            TabIndex        =   112
+            TabIndex        =   97
             Top             =   0
             Width           =   9975
             _ExtentX        =   17595
@@ -759,7 +759,7 @@ Begin VB.Form fTradeSkilDemo
             Caption         =   "Charts"
             Height          =   3015
             Left            =   2640
-            TabIndex        =   106
+            TabIndex        =   91
             Top             =   0
             Width           =   1215
             Begin VB.PictureBox Picture4 
@@ -768,14 +768,14 @@ Begin VB.Form fTradeSkilDemo
                Left            =   120
                ScaleHeight     =   2775
                ScaleWidth      =   1035
-               TabIndex        =   107
+               TabIndex        =   92
                Top             =   180
                Width           =   1035
                Begin VB.CheckBox SessionOnlyCheck 
                   Caption         =   "Session only"
                   Height          =   495
                   Left            =   0
-                  TabIndex        =   111
+                  TabIndex        =   96
                   Top             =   1320
                   Value           =   1  'Checked
                   Width           =   975
@@ -785,7 +785,7 @@ Begin VB.Form fTradeSkilDemo
                   Enabled         =   0   'False
                   Height          =   375
                   Left            =   0
-                  TabIndex        =   38
+                  TabIndex        =   31
                   Top             =   2400
                   Width           =   975
                End
@@ -793,7 +793,7 @@ Begin VB.Form fTradeSkilDemo
                   Alignment       =   1  'Right Justify
                   Height          =   285
                   Left            =   0
-                  TabIndex        =   37
+                  TabIndex        =   30
                   Text            =   "500"
                   Top             =   960
                   Width           =   975
@@ -804,7 +804,7 @@ Begin VB.Form fTradeSkilDemo
                   Left            =   0
                   List            =   "fTradeSkilDemo.frx":0151
                   Style           =   2  'Dropdown List
-                  TabIndex        =   36
+                  TabIndex        =   29
                   Top             =   240
                   Width           =   975
                End
@@ -812,7 +812,7 @@ Begin VB.Form fTradeSkilDemo
                   Caption         =   "# history bars"
                   Height          =   255
                   Left            =   0
-                  TabIndex        =   109
+                  TabIndex        =   94
                   Top             =   720
                   Width           =   975
                End
@@ -820,7 +820,7 @@ Begin VB.Form fTradeSkilDemo
                   Caption         =   "Timeframe"
                   Height          =   255
                   Left            =   0
-                  TabIndex        =   108
+                  TabIndex        =   93
                   Top             =   0
                   Width           =   735
                End
@@ -831,7 +831,7 @@ Begin VB.Form fTradeSkilDemo
             Enabled         =   0   'False
             Height          =   375
             Left            =   2760
-            TabIndex        =   39
+            TabIndex        =   32
             Top             =   3240
             Width           =   975
          End
@@ -840,7 +840,7 @@ Begin VB.Form fTradeSkilDemo
             Enabled         =   0   'False
             Height          =   375
             Left            =   1320
-            TabIndex        =   40
+            TabIndex        =   33
             Top             =   3240
             Width           =   975
          End
@@ -848,9 +848,18 @@ Begin VB.Form fTradeSkilDemo
             Caption         =   "Ticker management"
             Height          =   3855
             Left            =   0
-            TabIndex        =   60
+            TabIndex        =   53
             Top             =   0
             Width           =   2535
+            Begin TradeBuildUI25.ContractSpecBuilder ContractSpecBuilder1 
+               Height          =   2895
+               Left            =   120
+               TabIndex        =   27
+               Top             =   240
+               Width           =   2295
+               _ExtentX        =   4048
+               _ExtentY        =   5106
+            End
             Begin VB.PictureBox Picture1 
                Appearance      =   0  'Flat
                BorderStyle     =   0  'None
@@ -859,141 +868,17 @@ Begin VB.Form fTradeSkilDemo
                Left            =   120
                ScaleHeight     =   3495
                ScaleWidth      =   2295
-               TabIndex        =   61
+               TabIndex        =   54
                Top             =   240
                Width           =   2295
-               Begin VB.TextBox ExchangeText 
-                  Height          =   285
-                  Left            =   840
-                  TabIndex        =   31
-                  Top             =   1440
-                  Width           =   1335
-               End
-               Begin VB.TextBox LocalSymbolText 
-                  Height          =   285
-                  Left            =   840
-                  TabIndex        =   27
-                  Top             =   0
-                  Width           =   1335
-               End
-               Begin VB.TextBox CurrencyText 
-                  Height          =   285
-                  Left            =   840
-                  TabIndex        =   32
-                  Top             =   1800
-                  Width           =   1335
-               End
-               Begin VB.TextBox StrikePriceText 
-                  Height          =   285
-                  Left            =   840
-                  TabIndex        =   33
-                  Top             =   2160
-                  Width           =   1335
-               End
-               Begin VB.TextBox ExpiryText 
-                  Height          =   285
-                  Left            =   840
-                  TabIndex        =   30
-                  Top             =   1080
-                  Width           =   1335
-               End
-               Begin VB.TextBox SymbolText 
-                  Height          =   285
-                  Left            =   840
-                  TabIndex        =   28
-                  Top             =   360
-                  Width           =   1335
-               End
-               Begin VB.ComboBox TypeCombo 
-                  Height          =   315
-                  ItemData        =   "fTradeSkilDemo.frx":0153
-                  Left            =   840
-                  List            =   "fTradeSkilDemo.frx":0155
-                  Style           =   2  'Dropdown List
-                  TabIndex        =   29
-                  Top             =   705
-                  Width           =   1335
-               End
-               Begin VB.ComboBox RightCombo 
-                  Height          =   315
-                  Left            =   840
-                  Style           =   2  'Dropdown List
-                  TabIndex        =   34
-                  Top             =   2520
-                  Width           =   855
-               End
                Begin VB.CommandButton StartTickerButton 
                   Caption         =   "&Start ticker"
                   Enabled         =   0   'False
                   Height          =   375
                   Left            =   0
-                  TabIndex        =   35
+                  TabIndex        =   28
                   Top             =   3000
                   Width           =   975
-               End
-               Begin VB.Label Label29 
-                  Caption         =   "Short name"
-                  Height          =   255
-                  Left            =   0
-                  TabIndex        =   69
-                  Top             =   0
-                  Width           =   855
-               End
-               Begin VB.Label Label26 
-                  Caption         =   "Currency"
-                  Height          =   255
-                  Left            =   0
-                  TabIndex        =   68
-                  Top             =   1800
-                  Width           =   855
-               End
-               Begin VB.Label Label6 
-                  Caption         =   "Exchange"
-                  Height          =   255
-                  Left            =   0
-                  TabIndex        =   67
-                  Top             =   1440
-                  Width           =   855
-               End
-               Begin VB.Label Label5 
-                  Caption         =   "Expiry"
-                  Height          =   255
-                  Left            =   0
-                  TabIndex        =   66
-                  Top             =   1080
-                  Width           =   855
-               End
-               Begin VB.Label Label4 
-                  Caption         =   "Type"
-                  Height          =   255
-                  Left            =   0
-                  TabIndex        =   65
-                  Top             =   720
-                  Width           =   855
-               End
-               Begin VB.Label Label3 
-                  Caption         =   "Symbol"
-                  Height          =   255
-                  Left            =   0
-                  TabIndex        =   64
-                  Top             =   360
-                  Width           =   855
-               End
-               Begin VB.Label Label17 
-                  Caption         =   "Strike price"
-                  Height          =   255
-                  Left            =   0
-                  TabIndex        =   63
-                  Top             =   2160
-                  Width           =   855
-               End
-               Begin VB.Label Label21 
-                  Caption         =   "Right"
-                  Height          =   255
-                  Left            =   0
-                  TabIndex        =   62
-                  Top             =   2520
-                  Width           =   855
                End
             End
          End
@@ -1003,7 +888,7 @@ Begin VB.Form fTradeSkilDemo
          Enabled         =   0   'False
          Height          =   495
          Left            =   -62280
-         TabIndex        =   42
+         TabIndex        =   35
          Top             =   360
          Width           =   975
       End
@@ -1012,7 +897,7 @@ Begin VB.Form fTradeSkilDemo
          Enabled         =   0   'False
          Height          =   495
          Left            =   -62280
-         TabIndex        =   44
+         TabIndex        =   37
          Top             =   1560
          Width           =   975
       End
@@ -1021,14 +906,14 @@ Begin VB.Form fTradeSkilDemo
          Enabled         =   0   'False
          Height          =   495
          Left            =   -62280
-         TabIndex        =   43
+         TabIndex        =   36
          Top             =   960
          Width           =   975
       End
       Begin MSComctlLib.ProgressBar ReplayProgressBar 
          Height          =   135
          Left            =   -74400
-         TabIndex        =   89
+         TabIndex        =   74
          Top             =   2760
          Visible         =   0   'False
          Width           =   6855
@@ -1041,14 +926,14 @@ Begin VB.Form fTradeSkilDemo
       Begin VB.Label ReplayContractLabel 
          Height          =   975
          Left            =   -74400
-         TabIndex        =   104
+         TabIndex        =   89
          Top             =   3000
          Width           =   6855
       End
       Begin VB.Label ReplayProgressLabel 
          Height          =   255
          Left            =   -74400
-         TabIndex        =   105
+         TabIndex        =   90
          Top             =   2520
          Width           =   6855
       End
@@ -1056,7 +941,7 @@ Begin VB.Form fTradeSkilDemo
          Caption         =   "Replay speed"
          Height          =   375
          Left            =   -74400
-         TabIndex        =   91
+         TabIndex        =   76
          Top             =   2040
          Width           =   615
       End
@@ -1064,7 +949,7 @@ Begin VB.Form fTradeSkilDemo
          Caption         =   "Select tickfile(s)"
          Height          =   255
          Left            =   -74280
-         TabIndex        =   90
+         TabIndex        =   75
          Top             =   360
          Width           =   1455
       End
@@ -1075,7 +960,7 @@ Begin VB.Form fTradeSkilDemo
       Locked          =   -1  'True
       MultiLine       =   -1  'True
       ScrollBars      =   2  'Vertical
-      TabIndex        =   56
+      TabIndex        =   49
       TabStop         =   0   'False
       ToolTipText     =   "Status messages"
       Top             =   5400
@@ -1085,7 +970,7 @@ Begin VB.Form fTradeSkilDemo
       Caption         =   "Symbol"
       Height          =   255
       Left            =   360
-      TabIndex        =   58
+      TabIndex        =   51
       Top             =   120
       Width           =   855
    End
@@ -1094,7 +979,7 @@ Begin VB.Form fTradeSkilDemo
       Caption         =   "Close"
       Height          =   255
       Left            =   10560
-      TabIndex        =   55
+      TabIndex        =   48
       Top             =   120
       Width           =   855
    End
@@ -1103,7 +988,7 @@ Begin VB.Form fTradeSkilDemo
       Caption         =   "Low"
       Height          =   255
       Left            =   9600
-      TabIndex        =   54
+      TabIndex        =   47
       Top             =   120
       Width           =   855
    End
@@ -1112,7 +997,7 @@ Begin VB.Form fTradeSkilDemo
       Caption         =   "High"
       Height          =   255
       Left            =   8760
-      TabIndex        =   53
+      TabIndex        =   46
       Top             =   120
       Width           =   855
    End
@@ -1121,7 +1006,7 @@ Begin VB.Form fTradeSkilDemo
       Caption         =   "Volume"
       Height          =   255
       Left            =   7800
-      TabIndex        =   52
+      TabIndex        =   45
       Top             =   120
       Width           =   855
    End
@@ -1130,7 +1015,7 @@ Begin VB.Form fTradeSkilDemo
       Caption         =   "Last/Size"
       Height          =   255
       Left            =   4920
-      TabIndex        =   51
+      TabIndex        =   44
       Top             =   120
       Width           =   855
    End
@@ -1139,7 +1024,7 @@ Begin VB.Form fTradeSkilDemo
       Caption         =   "Ask size"
       Height          =   255
       Left            =   6840
-      TabIndex        =   50
+      TabIndex        =   43
       Top             =   120
       Width           =   855
    End
@@ -1148,7 +1033,7 @@ Begin VB.Form fTradeSkilDemo
       Caption         =   "Ask"
       Height          =   255
       Left            =   5760
-      TabIndex        =   49
+      TabIndex        =   42
       Top             =   120
       Width           =   855
    End
@@ -1157,7 +1042,7 @@ Begin VB.Form fTradeSkilDemo
       Caption         =   "Bid"
       Height          =   255
       Left            =   3960
-      TabIndex        =   48
+      TabIndex        =   41
       Top             =   120
       Width           =   855
    End
@@ -1166,7 +1051,7 @@ Begin VB.Form fTradeSkilDemo
       Caption         =   "Bid size"
       Height          =   255
       Left            =   3000
-      TabIndex        =   47
+      TabIndex        =   40
       Top             =   120
       Width           =   855
    End
@@ -1286,6 +1171,7 @@ Me.Top = 0
 Me.Left = 0
 
 Set mTradeBuildAPI = New TradeBuildAPI
+ContractSpecBuilder1.TradeBuildAPI = mTradeBuildAPI
 
 ' listen for log info from TradeBuild components
 mListenerKey = mTradeBuildAPI.addInfoListener(Me, TradeBuildListenValueTypes.VTLog)
@@ -1298,16 +1184,6 @@ TickerGrid1.monitorWorkspace mTradeBuildAPI.defaultWorkSpace
 
 Set mTimer = createIntervalTimer(0, , 500)
 mTimer.StartTimer
-
-TypeCombo.AddItem SecTypeToString(SecurityTypes.SecTypeStock)
-TypeCombo.AddItem SecTypeToString(SecurityTypes.SecTypeFuture)
-TypeCombo.AddItem SecTypeToString(SecurityTypes.SecTypeOption)
-TypeCombo.AddItem SecTypeToString(SecurityTypes.SecTypeFuturesOption)
-TypeCombo.AddItem SecTypeToString(SecurityTypes.SecTypeCash)
-TypeCombo.AddItem SecTypeToString(SecurityTypes.SecTypeIndex)
-
-RightCombo.AddItem OptionRightToString(OptionRights.OptCall)
-RightCombo.AddItem OptionRightToString(OptionRights.OptPut)
 
 RealtimeDataCombo.Text = "TWS"
 ContractDataCombo.Text = "TWS"
@@ -1440,6 +1316,14 @@ logMessage "Configuration updated"
 
 End Sub
 
+Private Sub ContractSpecBuilder1_NotReady()
+StartTickerButton.Enabled = False
+End Sub
+
+Private Sub ContractSpecBuilder1_Ready()
+StartTickerButton.Enabled = True
+End Sub
+
 Private Sub ContractDataCombo_Click()
 If ContractDataCombo.Text = "TradeBuild" Then
     ContractDataServerText.Enabled = False
@@ -1458,24 +1342,12 @@ Private Sub ContractDataCombo_Validate(cancel As Boolean)
 If ContractDataCombo.Text = SecContractDataCombo.Text Then cancel = True
 End Sub
 
-Private Sub CurrencyText_Change()
-checkOkToStartTicker
-End Sub
-
 Private Sub DataClientIdText_Validate(cancel As Boolean)
 If Not gIsInteger(DataClientIdText.Text) Then cancel = True
 End Sub
 
 Private Sub DataPortText_Validate(cancel As Boolean)
 If Not gIsInteger(DataPortText.Text, 0, 65535) Then cancel = True
-End Sub
-
-Private Sub ExchangeText_Change()
-checkOkToStartTicker
-End Sub
-
-Private Sub ExpiryText_Change()
-checkOkToStartTicker
 End Sub
 
 Private Sub GridChartButton_Click()
@@ -1530,13 +1402,9 @@ Private Sub HistDataClientIdText_Validate(cancel As Boolean)
 If Not gIsInteger(HistDataClientIdText.Text) Then cancel = True
 End Sub
 
-Private Sub LocalSymbolText_Change()
-checkOkToStartTicker
-End Sub
-
 Private Sub MainSSTAB_Click(PreviousTab As Integer)
 If MainSSTAB.Tab = TabIndexTickers Then
-    LocalSymbolText.SetFocus
+    ContractSpecBuilder1.SetFocus
 ElseIf MainSSTAB.Tab = TabIndexConfiguration Then
     RealtimeDataCombo.SetFocus
 ElseIf MainSSTAB.Tab = TabIndexOrders Then
@@ -1654,10 +1522,6 @@ If Not mTickfileManager Is Nothing Then
 End If
 End Sub
 
-Private Sub RightCombo_Click()
-checkOkToStartTicker
-End Sub
-
 Private Sub SecContractDataCombo_Click()
 If SecContractDataCombo.Text = "TradeBuild" Then
     SecContractDataServerText.Enabled = False
@@ -1692,36 +1556,14 @@ End Sub
 
 Private Sub StartTickerButton_Click()
 Dim lTicker As Ticker
-Dim lContractSpecifier As ContractSpecifier
-
-If ExchangeText <> "" Then
-    If Not mTradeBuildAPI.IsValidExchangeCode(ExchangeText) Then
-        logMessage "Invalid exchange - " & ExchangeText
-    Exit Sub
-    End If
-End If
-
-Set lContractSpecifier = mTradeBuildAPI.newContractSpecifier( _
-                                LocalSymbolText, _
-                                SymbolText, _
-                                ExchangeText, _
-                                SecTypeFromString(TypeCombo), _
-                                CurrencyText, _
-                                ExpiryText, _
-                                IIf(StrikePriceText = "", 0, StrikePriceText), _
-                                OptionRightFromString(RightCombo))
 
 StartTickerButton.Enabled = False
 
 Set lTicker = createTicker
 lTicker.DOMEventsRequired = DOMEvents.DOMNoEvents
-lTicker.StartTicker lContractSpecifier
+lTicker.StartTicker ContractSpecBuilder1.ContractSpecifier
 
-If LocalSymbolText <> "" Then
-    LocalSymbolText.SetFocus
-Else
-    SymbolText.SetFocus
-End If
+ContractSpecBuilder1.SetFocus
 End Sub
 
 Private Sub StopReplayButton_Click()
@@ -1738,10 +1580,6 @@ End Sub
 
 Private Sub StopTickerButton_Click()
 TickerGrid1.StopSelectedTickers
-End Sub
-
-Private Sub SymbolText_Change()
-checkOkToStartTicker
 End Sub
 
 Private Sub TickerGrid1_Click()
@@ -1852,47 +1690,6 @@ ChartButton.ToolTipText = "Show " & _
                         mChartPeriods & " " & _
                         TimePeriodUnitsToString(mChartUnits) & _
                         " chart"
-End Sub
-
-Private Sub TypeCombo_Click()
-
-Select Case SecTypeFromString(TypeCombo)
-Case SecurityTypes.SecTypeNone
-    ExpiryText.Enabled = True
-    StrikePriceText.Enabled = True
-    RightCombo.Enabled = True
-Case SecurityTypes.SecTypeFuture
-    ExpiryText.Enabled = True
-    StrikePriceText.Enabled = False
-    RightCombo.Enabled = False
-Case SecurityTypes.SecTypeStock
-    ExpiryText.Enabled = False
-    StrikePriceText.Enabled = False
-    RightCombo.Enabled = False
-Case SecurityTypes.SecTypeOption
-    ExpiryText.Enabled = True
-    StrikePriceText.Enabled = True
-    RightCombo.Enabled = True
-Case SecurityTypes.SecTypeFuturesOption
-    ExpiryText.Enabled = True
-    StrikePriceText.Enabled = True
-    RightCombo.Enabled = True
-Case SecurityTypes.SecTypeCash
-    ExpiryText.Enabled = False
-    StrikePriceText.Enabled = False
-    RightCombo.Enabled = False
-Case SecurityTypes.SecTypeIndex
-    ExpiryText.Enabled = False
-    StrikePriceText.Enabled = False
-    RightCombo.Enabled = False
-Case SecurityTypes.SecTypeBag
-    logMessage "BAG type is not implemented"
-    ExpiryText.Enabled = False
-    StrikePriceText.Enabled = False
-    RightCombo.Enabled = False
-End Select
-
-checkOkToStartTicker
 End Sub
 
 '================================================================================
@@ -2201,16 +1998,6 @@ If TickfileList.ListCount <> 0 Then
     PlayTickFileButton.Enabled = True
 Else
     PlayTickFileButton.Enabled = False
-End If
-End Sub
-
-Private Sub checkOkToStartTicker()
-If LocalSymbolText <> "" Or _
-    SymbolText <> "" _
-Then
-    StartTickerButton.Enabled = True
-Else
-    StartTickerButton.Enabled = False
 End If
 End Sub
 
