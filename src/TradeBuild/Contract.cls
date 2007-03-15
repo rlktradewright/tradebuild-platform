@@ -572,6 +572,8 @@ Else
     price = CDbl(priceString)
 End If
 
+If price <= 0 Then Exit Function
+
 If (price - mTickSize * Int(price / mTickSize)) <> 0 Then Exit Function
     
 parsePrice = True

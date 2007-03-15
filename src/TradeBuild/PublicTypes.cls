@@ -432,6 +432,7 @@ Public Enum TickerStates
     TickerStatePaused
     TickerStateClosing
     TickerStateStopped
+    TickerStateReady
 End Enum
 
 Public Enum TickfileFormatType

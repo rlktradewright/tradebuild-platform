@@ -94,6 +94,7 @@ Private mAskInputHandle             As Long
 Private mTradeInputHandle           As Long
 Private mVolumeInputHandle          As Long
 
+Private mLoadOnly                   As Boolean
 
 ''
 '   This is set true whenever the ticker is in an event handler
@@ -1092,9 +1093,18 @@ End If
 
 Set mContract = mContracts(1)
 
-If Not mInputStudy Is Nothing Then mInputStudy.name = mContract.specifier.localSymbol
+State = TickerStateReady
 
-If mReplayingTickfile Then
+If Not mInputStudy Is Nothing Then
+    mInputStudy.name = mContract.specifier.localSymbol
+    mStudyManager.setInputTicksize mBidInputHandle, mContract.TickSize
+    mStudyManager.setInputTicksize mAskInputHandle, mContract.TickSize
+    mStudyManager.setInputTicksize mTradeInputHandle, mContract.TickSize
+End If
+
+If mLoadOnly Then
+    prepare
+ElseIf mReplayingTickfile Then
     mTickfileManager.Contract = mContract
     prepare
     State = TickerStates.TickerStateRunning
@@ -1662,6 +1672,20 @@ Public Function isTimeInSession(ByVal timestamp As Date) As Boolean
 If mSession Is Nothing Then Exit Function
 isTimeInSession = mSession.isTimeInSession(timestamp)
 End Function
+
+Public Sub loadTicker(ByVal pContractSpecifier As contractSpecifier)
+If mState <> TickerStates.TickerStateCreated Then err.Raise ErrorCodes.ErrIllegalStateException, _
+                        "TradeBuild25.Ticker::LoadTicker", _
+                        "Ticker is already in use"
+
+mLoadOnly = True
+State = TickerStates.TickerStateStarting
+
+pContractSpecifier.locked = True
+
+Set mContracts = mTradeBuildAPI.NewContracts(pContractSpecifier)
+mContracts.Load
+End Sub
 
 Friend Sub notifyListeners(value As Variant, valueType As Long, source As Object)
 mInfoListeners.notify value, valueType, source

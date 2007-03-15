@@ -148,6 +148,11 @@ Private mHistoricBar                As TradeBuildSP.Bar
 Private mHistoricBarPending         As Boolean
 Private mHistoricBarRequested       As Boolean
 
+Private mFromTime                   As Date
+Private mToTime                     As Date
+
+Private mIsHistorical               As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -387,7 +392,7 @@ Friend Property Let Contract(ByVal value As Contract)
 
 Set mContract = value
 
-mInputStudy.name = mContract.specifier.ToString & mKey & "(historical data)"
+mInputStudy.name = mContract.specifier.localSymbol & mKey & "(historical data)"
 studyMgr.setInputTicksize mBidInputHandle, mContract.TickSize
 studyMgr.setInputTicksize mAskInputHandle, mContract.TickSize
 studyMgr.setInputTicksize mTradeInputHandle, mContract.TickSize
@@ -400,6 +405,10 @@ End Property
 
 Public Property Get historicDataLoaded() As Boolean
 historicDataLoaded = mHistoricDataLoaded
+End Property
+
+Public Property Get isHistorical() As Boolean
+isHistorical = mIsHistorical
 End Property
 
 Public Property Get key() As String
@@ -439,6 +448,8 @@ Friend Sub Initialise( _
                 ByVal TimePeriod As Long, _
                 ByVal timePeriodUnit As TimePeriodUnits, _
                 ByVal numberOfBarsToFetch As Long, _
+                ByVal fromTime As Date, _
+                ByVal toTime As Date, _
                 ByVal includeBarsOutsideSession As Boolean, _
                 ByVal excludeCurrentbar As Boolean, _
                 ByVal saveIntervalSeconds As Long, _
@@ -454,7 +465,24 @@ mBarUnit = timePeriodUnit
 mWriteBidAndAskBars = writeBidAndAskBars
 
 mNumberOfBarsToFetch = numberOfBarsToFetch
-If mNumberOfBarsToFetch = 0 Then mHistoricDataLoaded = True
+mFromTime = fromTime
+mToTime = toTime
+
+If mNumberOfBarsToFetch = 0 And _
+    mFromTime = 0 And _
+    mToTime = 0 _
+Then
+    mHistoricDataLoaded = True
+ElseIf mNumberOfBarsToFetch = 0 And _
+    (mFromTime = 0 Or mToTime = 0) _
+Then
+    mHistoricDataLoaded = True
+    mIsHistorical = True
+ElseIf mFromTime <> 0 And mToTime <> 0 _
+Then
+    mIsHistorical = True
+End If
+
 mIncludeBarsOutsideSession = includeBarsOutsideSession
 mExcludeCurrentBar = excludeCurrentbar
 
@@ -562,16 +590,20 @@ If mBarReader Is Nothing Then
         barSpecifier.BarLengthUnits = mBarUnit
         barSpecifier.barType = BarTypes.BarTypeTrade
         Set barSpecifier.Contract = mContract
-        barSpecifier.From = CDate(0)
-        If mExcludeCurrentBar Then
-            barSpecifier.To = mSession.barStartTime(tickr.timestamp, _
-                                        mBarLength, _
-                                        mBarUnit)
+        barSpecifier.From = mFromTime
+        If mIsHistorical Then
+            barSpecifier.To = mToTime
         Else
-            ' ensure we get the latest bar
-            barSpecifier.To = mSession.BarEndTime(tickr.timestamp, _
-                                        mBarLength, _
-                                        mBarUnit)
+            If mExcludeCurrentBar Then
+                barSpecifier.To = mSession.barStartTime(tickr.timestamp, _
+                                            mBarLength, _
+                                            mBarUnit)
+            Else
+                ' ensure we get the latest bar
+                barSpecifier.To = mSession.BarEndTime(tickr.timestamp, _
+                                            mBarLength, _
+                                            mBarUnit)
+            End If
         End If
         barSpecifier.NumberOfBars = mNumberOfBarsToFetch
         barSpecifier.includeBarsOutsideSession = mIncludeBarsOutsideSession
@@ -748,6 +780,9 @@ End Sub
 Private Sub StartStudies()
 Dim lInputStudy As inputStudy
 Dim lStudy As BarStudy
+
+' for historical timeframes, don't want to switch to the ticker
+If mIsHistorical Then Exit Sub
 
 Set lInputStudy = tickr.inputStudy
 
