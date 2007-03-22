@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#14.0#0"; "ChartSkil2-5.ocx"
+Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#14.2#0"; "ChartSkil2-5.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo Version 2.5"
    ClientHeight    =   8355
@@ -457,16 +457,14 @@ Set mMovAvg1Series = mPriceRegion.addDataPointSeries
 mMovAvg1Series.displayMode = DataPointDisplayModes.DataPointDisplayModePoint
                                         ' display this series as discrete points...
 mMovAvg1Series.lineThickness = 5        ' ...with a diameter of 5 pixels...
-mMovAvg1Series.upColor = vbRed          ' ...in red
-mMovAvg1Series.downColor = vbRed
+mMovAvg1Series.Color = vbRed           ' ...in red
 
 ' Set up a datapoint series for the second moving average
 Set mMovAvg2Series = mPriceRegion.addDataPointSeries
 mMovAvg2Series.displayMode = DataPointDisplayModes.DataPointDisplayModeLine
                                         ' display this series as a line connecting
                                         ' individual points...
-mMovAvg2Series.upColor = vbBlue         ' ...in blue
-mMovAvg2Series.downColor = vbBlue
+mMovAvg2Series.Color = vbBlue         ' ...in blue
 mMovAvg2Series.lineThickness = 1        ' ...with a thickness of 1 pixel...
 mMovAvg2Series.LineStyle = LineStyles.LineDot
                                         ' ...and a dotted style
@@ -522,12 +520,12 @@ mMACDHistSeries.downColor = vbMagenta
 ' Set up a datapoint series for the MACD values on next layer
 Set mMACDSeries = mMACDRegion.addDataPointSeries(LayerNumbers.LayerLowestUser + 1)
 mMACDSeries.displayMode = DataPointDisplayModes.DataPointDisplayModeLine
-mMACDSeries.upColor = vbBlue
+mMACDSeries.Color = vbBlue
 
 ' Set up a datapoint series for the MACD signal values on next layer
 Set mMACDSignalSeries = mMACDRegion.addDataPointSeries(LayerNumbers.LayerLowestUser + 2)
 mMACDSignalSeries.displayMode = DataPointDisplayModes.DataPointDisplayModeLine
-mMACDSignalSeries.upColor = vbRed
+mMACDSignalSeries.Color = vbRed
 
 ' Create a region to display the volume bars
 Set mVolumeRegion = Chart1.addChartRegion(15)
