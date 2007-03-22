@@ -200,53 +200,13 @@ Private mCurrentTool As ToolTypes
 Private mDefaultBarStyle As BarStyle
 
 ' defaults for datapoint series
-Private mDataPointLineThickness As Long
-Private mDataPointLineColor As Long
-Private mDataPointLineStyle As LineStyles
-Private mDataPointDisplayMode As DataPointDisplayModes
-Private mDataPointHistBarWidth As Single
-Private mDataPointIncludeInAutoscale As Boolean
+Private mDefaultDataPointStyle As DataPointStyle
 
 ' defaults for text and text series
-Private mTextFont As StdFont
-Private mTextColor As Long
-Private mTextBox As Boolean
-Private mTextBoxColor As Long
-Private mTextBoxStyle As LineStyles
-Private mTextBoxThickness As Long
-Private mTextBoxFillColor As Long
-Private mTextBoxFillStyle As FillStyles
-Private mTextAlign As TextAlignModes
-Private mTextKeepInView As Boolean
-Private mTextFixedX As Boolean
-Private mTextFixedY As Boolean
-Private mTextIncludeInAutoscale As Boolean
-Private mTextExtended As Boolean
-Private mTextPaddingX As Double
-Private mTextPaddingY As Double
+Private mDefaultTextStyle As TextStyle
 
 ' defaults for lines and line series
-Private mLineColor As Long
-Private mLineThickness As Long
-Private mLineStyle As LineStyles
-Private mLineExtendBefore As Boolean
-Private mLineExtendAfter As Boolean
-Private mLineArrowStartStyle As ArrowStyles
-Private mLineArrowStartLength As Long
-Private mLineArrowStartWidth As Long
-Private mLineArrowStartColor As Long
-Private mLineArrowStartFillColor As Long
-Private mLineArrowStartFillStyle As FillStyles
-Private mLineArrowEndStyle As ArrowStyles
-Private mLineArrowEndLength As Long
-Private mLineArrowEndWidth As Long
-Private mLineArrowEndColor As Long
-Private mLineArrowEndFillColor As Long
-Private mLineArrowEndFillStyle As FillStyles
-Private mLineFixedX As Boolean
-Private mLineFixedY As Boolean
-Private mLineIncludeInAutoscale As Boolean
-Private mLineExtended As Boolean
+Private mDefaultLineStyle As linestyle
 
 Private mElapsedTimer As ElapsedTimer
 
@@ -259,7 +219,6 @@ Private mElapsedTimer As ElapsedTimer
 '================================================================================
 
 Private Sub Class_Initialize()
-Dim aFont As StdFont
 Dim i As Long
 
 Set mCanvas = New canvas
@@ -287,73 +246,6 @@ Set mEventProxy = New ChartRegionEventProxy
 
 mGridlineSpacingY = GridlineSpacingCm
 Debug.Print "Region " & mName & ": GridlineSpacingY=" & mGridlineSpacingY
-
-' defaults for bar series
-Set mDefaultBarStyle = New BarStyle
-mDefaultBarStyle.tailThickness = 1
-mDefaultBarStyle.outlineThickness = 1
-mDefaultBarStyle.upColor = &H1D9311
-mDefaultBarStyle.downColor = &H43FC2
-mDefaultBarStyle.displayMode = BarDisplayModeCandlestick
-mDefaultBarStyle.solidUpBody = True
-mDefaultBarStyle.barThickness = 2
-mDefaultBarStyle.barWidth = 0.5
-mDefaultBarStyle.barColor = -1
-
-' defaults for datapoint series
-mDataPointLineThickness = 1
-mDataPointLineColor = vbBlack
-mDataPointLineStyle = LineStyles.LineSolid
-mDataPointDisplayMode = DataPointDisplayModes.DataPointDisplayModeLine
-mDataPointHistBarWidth = 0.5
-mDataPointIncludeInAutoscale = True
-
-' defaults for text and text series
-Set aFont = New StdFont
-aFont.Bold = False
-aFont.Italic = False
-aFont.name = "Arial"
-aFont.Size = 10
-aFont.Strikethrough = False
-aFont.Underline = False
-Set mTextFont = aFont
-mTextColor = vbBlack
-mTextBox = False
-mTextBoxColor = vbBlack
-mTextBoxStyle = LineStyles.LineSolid
-mTextBoxThickness = 1
-mTextBoxFillColor = vbWhite
-mTextBoxFillStyle = FillStyles.FillSolid
-mTextAlign = TextAlignModes.AlignBottomLeft
-mTextKeepInView = False
-mTextIncludeInAutoscale = False
-mTextExtended = False
-mTextPaddingX = 0.5
-mTextPaddingY = 0.5
-
-' defaults for lines and line series
-
-mLineColor = vbBlack
-mLineThickness = 1
-mLineStyle = LineStyles.LineSolid
-mLineExtendBefore = False
-mLineExtendAfter = False
-mLineArrowStartStyle = ArrowStyles.ArrowNone
-mLineArrowStartLength = 20
-mLineArrowStartWidth = 20
-mLineArrowStartColor = vbBlack
-mLineArrowStartFillColor = vbBlack
-mLineArrowStartFillStyle = FillStyles.FillSolid
-mLineArrowEndStyle = ArrowStyles.ArrowNone
-mLineArrowEndLength = 10
-mLineArrowEndWidth = 8
-mLineArrowEndColor = vbBlack
-mLineArrowEndFillColor = vbBlack
-mLineArrowEndFillStyle = FillStyles.FillSolid
-mLineFixedX = False
-mLineFixedY = False
-mLineIncludeInAutoscale = False
-mLineExtended = False
 
 Set mBarSeriesCol = New Collection
 Set mDataPointSeriesCol = New Collection
@@ -509,7 +401,18 @@ With mGraphicObjects(handle)
 End With
 End Sub
 
-Private Sub mEventProxy_paintRegion()
+Private Sub mEventProxy_paintRegion( _
+                ByVal recalculate As Boolean)
+
+If mSuppressDrawing Then Exit Sub
+
+If recalculate Then
+    determineInScopeObjects
+    If mAutoscale Then
+        calculateVerticalBounds
+    End If
+    determineVisibleObjects
+End If
 paintRegion
 End Sub
 
@@ -695,60 +598,36 @@ Friend Property Let currentTool(ByVal value As ToolTypes)
 mCurrentTool = value
 End Property
 
-Public Property Get dataPointDisplayMode() As DataPointDisplayModes
-dataPointDisplayMode = mDataPointDisplayMode
-End Property
-
-Public Property Let dataPointDisplayMode(ByVal value As DataPointDisplayModes)
-mDataPointDisplayMode = value
-End Property
-
-Public Property Get dataPointHistBarWidth() As Single
-dataPointHistBarWidth = mDataPointHistBarWidth
-End Property
-
-Public Property Let dataPointHistBarWidth(ByVal value As Single)
-mDataPointHistBarWidth = value
-End Property
-
-Public Property Get dataPointIncludeInAutoscale() As Boolean
-dataPointIncludeInAutoscale = mDataPointIncludeInAutoscale
-End Property
-
-Public Property Let dataPointIncludeInAutoscale(ByVal newValue As Boolean)
-mDataPointIncludeInAutoscale = newValue
-End Property
-
-Public Property Get dataPointLineColor() As Long
-dataPointLineColor = mDataPointLineColor
-End Property
-
-Public Property Let dataPointLineColor(ByVal value As Long)
-mDataPointLineColor = value
-End Property
-
-Public Property Get dataPointLineStyle() As LineStyles
-dataPointLineStyle = mDataPointLineStyle
-End Property
-
-Public Property Let dataPointLineStyle(ByVal value As LineStyles)
-mDataPointLineStyle = value
-End Property
-
-Public Property Get dataPointLineThickness() As Long
-dataPointLineThickness = mDataPointLineThickness
-End Property
-
-Public Property Let dataPointLineThickness(ByVal value As Long)
-mDataPointLineThickness = value
-End Property
-
 Public Property Get defaultBarStyle() As BarStyle
 Set defaultBarStyle = mDefaultBarStyle.clone
 End Property
 
 Public Property Let defaultBarStyle(ByVal value As BarStyle)
-Set mDefaultBarStyle = value
+Set mDefaultBarStyle = value.clone
+End Property
+
+Public Property Get defaultDataPointStyle() As DataPointStyle
+Set defaultDataPointStyle = mDefaultDataPointStyle.clone
+End Property
+
+Public Property Let defaultDataPointStyle(ByVal value As DataPointStyle)
+Set mDefaultDataPointStyle = value.clone
+End Property
+
+Public Property Get defaultLineStyle() As linestyle
+Set defaultLineStyle = mDefaultLineStyle.clone
+End Property
+
+Public Property Let defaultLineStyle(ByVal value As linestyle)
+Set mDefaultLineStyle = value.clone
+End Property
+
+Public Property Get defaultTextStyle() As TextStyle
+Set defaultTextStyle = mDefaultTextStyle.clone
+End Property
+
+Public Property Let defaultTextStyle(ByVal value As TextStyle)
+Set mDefaultTextStyle = value.clone
 End Property
 
 Public Property Get gridColor() As Long
@@ -788,7 +667,7 @@ If mhasGrid Then
     mXGridLines.extendAfter = True
     mXGridLines.extendBefore = True
     mXGridLines.includeInAutoscale = False
-    mXGridLines.style = LineSolid
+    mXGridLines.linestyle = LineSolid
     mXGridLines.thickness = 1
     
     Set mYGridLines = Me.addLineSeries(LayerNumbers.LayerGrid)
@@ -796,7 +675,7 @@ If mhasGrid Then
     mYGridLines.extendAfter = True
     mYGridLines.extendBefore = True
     mYGridLines.includeInAutoscale = False
-    mYGridLines.style = LineSolid
+    mYGridLines.linestyle = LineSolid
     mYGridLines.thickness = 1
 Else
     Set mXGridLines = Nothing
@@ -847,174 +726,6 @@ End Property
 
 Public Property Let integerYScale(ByVal value As Boolean)
 mIntegerYScale = value
-End Property
-
-Public Property Get lineArrowEndColor() As Long
-lineArrowEndColor = mLineArrowEndColor
-End Property
-
-Public Property Let lineArrowEndColor(ByVal newValue As Long)
-mLineArrowEndColor = newValue
-End Property
-
-Public Property Get lineArrowEndFillColor() As Long
-lineArrowEndFillColor = mLineArrowEndFillColor
-End Property
-
-Public Property Let lineArrowEndFillColor(ByVal newValue As Long)
-mLineArrowEndFillColor = newValue
-End Property
-
-Public Property Get lineArrowEndFillStyle() As FillStyles
-lineArrowEndFillStyle = mLineArrowEndFillStyle
-End Property
-
-Public Property Let lineArrowEndFillStyle(ByVal newValue As FillStyles)
-mLineArrowEndFillStyle = newValue
-End Property
-
-Public Property Get lineArrowEndLength() As Long
-lineArrowEndLength = mLineArrowEndLength
-End Property
-
-Public Property Let lineArrowEndLength(ByVal newValue As Long)
-mLineArrowEndLength = newValue
-End Property
-
-Public Property Get lineArrowEndStyle() As ArrowStyles
-lineArrowEndStyle = mLineArrowEndStyle
-End Property
-
-Public Property Let lineArrowEndStyle(ByVal newValue As ArrowStyles)
-mLineArrowEndStyle = newValue
-End Property
-
-Public Property Get lineArrowEndWidth() As Long
-lineArrowEndWidth = mLineArrowEndWidth
-End Property
-
-Public Property Let lineArrowEndWidth(ByVal newValue As Long)
-mLineArrowEndWidth = newValue
-End Property
-
-Public Property Get lineArrowStartColor() As Long
-lineArrowStartColor = mLineArrowStartColor
-End Property
-
-Public Property Let lineArrowStartColor(ByVal newValue As Long)
-mLineArrowStartColor = newValue
-End Property
-
-Public Property Get lineArrowStartFillColor() As Long
-lineArrowStartFillColor = mLineArrowStartFillColor
-End Property
-
-Public Property Let lineArrowStartFillColor(ByVal newValue As Long)
-mLineArrowStartFillColor = newValue
-End Property
-
-Public Property Get lineArrowStartFillStyle() As FillStyles
-lineArrowStartFillStyle = lineArrowStartFillStyle
-End Property
-
-Public Property Let lineArrowStartFillStyle(ByVal newValue As FillStyles)
-mLineArrowStartFillStyle = newValue
-End Property
-
-Public Property Get lineArrowStartLength() As Long
-lineArrowStartLength = mLineArrowStartLength
-End Property
-
-Public Property Let lineArrowStartLength(ByVal newValue As Long)
-mLineArrowStartLength = newValue
-End Property
-
-Public Property Get lineArrowStartStyle() As ArrowStyles
-lineArrowStartStyle = mLineArrowStartStyle
-End Property
-
-Public Property Let lineArrowStartStyle(ByVal newValue As ArrowStyles)
-mLineArrowStartStyle = newValue
-End Property
-
-Public Property Get lineArrowStartWidth() As Long
-lineArrowStartWidth = mLineArrowStartWidth
-End Property
-
-Public Property Let lineArrowStartWidth(ByVal newValue As Long)
-mLineArrowStartWidth = newValue
-End Property
-
-Public Property Get lineColor() As Long
-lineColor = mLineColor
-End Property
-
-Public Property Let lineColor(ByVal val As Long)
-mLineColor = val
-End Property
-
-Public Property Get lineExtendAfter() As Boolean
-lineExtendAfter = mLineExtendAfter
-End Property
-
-Public Property Let lineExtendAfter(ByVal val As Boolean)
-mLineExtendAfter = val
-End Property
-
-Public Property Get lineExtendBefore() As Boolean
-lineExtendBefore = mLineExtendBefore
-End Property
-
-Public Property Let lineExtendBefore(ByVal val As Boolean)
-mLineExtendBefore = val
-End Property
-
-Public Property Get lineExtended() As Boolean
-lineExtended = mLineExtended
-End Property
-
-Public Property Let lineExtended(ByVal val As Boolean)
-mLineExtended = val
-End Property
-
-Public Property Get lineFixedX() As Boolean
-lineFixedX = mLineFixedX
-End Property
-
-Public Property Let lineFixedX(ByVal val As Boolean)
-mLineFixedX = val
-End Property
-
-Public Property Get lineFixedY() As Boolean
-lineFixedY = mLineFixedY
-End Property
-
-Public Property Let lineFixedY(ByVal val As Boolean)
-mLineFixedY = val
-End Property
-
-Public Property Get lineIncludeInAutoscale() As Boolean
-lineIncludeInAutoscale = mLineIncludeInAutoscale
-End Property
-
-Public Property Let lineIncludeInAutoscale(ByVal val As Boolean)
-mLineIncludeInAutoscale = val
-End Property
-
-Public Property Get lineStyle() As LineStyles
-lineStyle = mLineStyle
-End Property
-
-Public Property Let lineStyle(ByVal val As LineStyles)
-mLineStyle = val
-End Property
-
-Public Property Get lineThickness() As Long
-lineThickness = mLineThickness
-End Property
-
-Public Property Let lineThickness(ByVal val As Long)
-mLineThickness = val
 End Property
 
 Public Property Get minimumHeight() As Double
@@ -1243,142 +954,14 @@ Friend Property Let surface(ByVal value As PictureBox)
 mCanvas.surface = value
 End Property
 
-Public Property Get textAlign() As TextAlignModes
-textAlign = mTextAlign
-End Property
-
-Public Property Let textAlign(ByVal newValue As TextAlignModes)
-mTextAlign = newValue
-End Property
-
-Friend Property Get textBox() As Boolean
-textBox = mTextBox
-End Property
-
-Public Property Let textBox(ByVal newValue As Boolean)
-mTextBox = newValue
-End Property
-
-Public Property Get textBoxColor() As Long
-textBoxColor = mTextBoxColor
-End Property
-
-Public Property Let textBoxColor(ByVal newValue As Long)
-mTextBoxColor = newValue
-End Property
-
-Friend Property Get textBoxFillColor() As Long
-textBoxFillColor = mTextBoxFillColor
-End Property
-
-Public Property Let textBoxFillColor(ByVal newValue As Long)
-mTextBoxFillColor = newValue
-End Property
-
-Public Property Get textBoxFillStyle() As FillStyles
-textBoxFillStyle = mTextBoxFillStyle
-End Property
-
-Public Property Let textBoxFillStyle(ByVal newValue As FillStyles)
-mTextBoxFillStyle = newValue
-End Property
-
-Public Property Get textBoxStyle() As LineStyles
-textBoxStyle = mTextBoxStyle
-End Property
-
-Public Property Let textBoxStyle(ByVal newValue As LineStyles)
-mTextBoxStyle = newValue
-End Property
-
-Public Property Get textBoxThickness() As Long
-textBoxThickness = mTextBoxThickness
-End Property
-
-Public Property Let textBoxThickness(ByVal newValue As Long)
-mTextBoxThickness = newValue
-End Property
-
-Public Property Get textColor() As Long
-textColor = mTextColor
-End Property
-
-Public Property Let textColor(ByVal newValue As Long)
-mTextColor = newValue
-End Property
-
-Friend Property Get textExtended() As Boolean
-textExtended = mTextExtended
-End Property
-
-Public Property Let textExtended(ByVal newValue As Boolean)
-mTextExtended = newValue
-End Property
-
-Friend Property Get textFixedX() As Boolean
-textFixedX = mTextFixedX
-End Property
-
-Public Property Let textFixedX(ByVal newValue As Boolean)
-mTextFixedX = newValue
-End Property
-
-Friend Property Get textFixedY() As Boolean
-textFixedY = mTextFixedY
-End Property
-
-Public Property Let textFixedY(ByVal newValue As Boolean)
-mTextFixedY = newValue
-End Property
-
-Public Property Get textFont() As StdFont
-Set textFont = mTextFont
-End Property
-
-Public Property Let textFont(ByVal value As StdFont)
-Set mTextFont = value
-End Property
-
-Public Property Get textIncludeInAutoscale() As Boolean
-textIncludeInAutoscale = mTextIncludeInAutoscale
-End Property
-
-Public Property Let textIncludeInAutoscale(ByVal newValue As Boolean)
-mTextIncludeInAutoscale = newValue
-End Property
-
-Public Property Get textKeepInView() As Boolean
-textKeepInView = mTextKeepInView
-End Property
-
-Public Property Let textKeepInView(ByVal newValue As Boolean)
-mTextKeepInView = newValue
-End Property
-
-Public Property Get textPaddingX() As Double
-textPaddingX = mTextPaddingX
-End Property
-
-Public Property Let textPaddingX(ByVal newValue As Double)
-mTextPaddingX = newValue
-End Property
-
-Public Property Get textPaddingY() As Double
-textPaddingY = mTextPaddingY
-End Property
-
-Public Property Let textPaddingY(ByVal newValue As Double)
-mTextPaddingY = newValue
-End Property
-
 Public Property Get title() As String
 title = mTitle.text
 End Property
 
-Friend Property Let toolbar(ByVal newValue As toolbar)
+Friend Property Let toolbar(ByVal value As toolbar)
 Dim btn As Button
 
-Set mToolbar = newValue
+Set mToolbar = value
 
 For Each btn In mToolbar.Buttons
     If btn.key = "autoscale" Then btn.Enabled = IIf(mAutoscale, False, True)
@@ -1410,6 +993,8 @@ mYAxisRegion.hasGrid = False
 mYAxisRegion.periodsInView 0, 99
 mYAxisRegion.pointerStyle = PointerNone
 mYAxisRegion.suppressDrawing = mSuppressDrawing
+
+mYAxisRegion.defaultTextStyle = mDefaultTextStyle
 
 Set mYPositionText = mYAxisRegion.addText(LayerNumbers.LayerPointer)
 mYPositionText.align = AlignCentreLeft
@@ -1463,22 +1048,27 @@ addBarSeries.initialise name, _
                         mController, _
                         mEventProxy, _
                         getLayer(layer), _
-                        mCanvas, IIf(style Is Nothing, mDefaultBarStyle, style)
+                        mCanvas, _
+                        IIf(style Is Nothing, mDefaultBarStyle, style)
 End Function
 
-Public Function addDataPointSeries(Optional ByVal layer As Long = -1) As DataPointSeries
+Public Function addDataPointSeries( _
+                Optional ByVal layer As Long = -1, _
+                Optional ByVal name As String, _
+                Optional ByVal style As DataPointStyle) As DataPointSeries
+Static seriesNumber As Long
 Set addDataPointSeries = New DataPointSeries
-mDataPointSeriesCol.add addDataPointSeries
-addDataPointSeries.canvas = mCanvas
-addDataPointSeries.controller = mController
-addDataPointSeries.eventProxy = mEventProxy
-addDataPointSeries.displayMode = dataPointDisplayMode
-addDataPointSeries.histBarWidth = dataPointHistBarWidth
-addDataPointSeries.includeInAutoscale = dataPointIncludeInAutoscale
-addDataPointSeries.layer = getLayer(layer)
-addDataPointSeries.lineColor = dataPointLineColor
-addDataPointSeries.lineStyle = dataPointLineStyle
-addDataPointSeries.lineThickness = dataPointLineThickness
+If name = "" Then
+    seriesNumber = seriesNumber + 1
+    name = "DataPointSeries" & seriesNumber
+End If
+mDataPointSeriesCol.add addDataPointSeries, name
+addDataPointSeries.initialise name, _
+                        mController, _
+                        mEventProxy, _
+                        getLayer(layer), _
+                        mCanvas, _
+                        IIf(style Is Nothing, mDefaultDataPointStyle, style)
 End Function
 
 Public Function addLine(Optional ByVal layer As Long = -1) As ChartSkil25.Line
@@ -1489,35 +1079,22 @@ Set addLine = mDefaultLineSeries.add
 If layer <> -1 Then addLine.layer = layer
 End Function
 
-Public Function addLineSeries(Optional ByVal layer As Long = -1) As LineSeries
+Public Function addLineSeries( _
+                Optional ByVal layer As Long = -1, _
+                Optional ByVal name As String, _
+                Optional ByVal style As BarStyle) As LineSeries
+Static seriesNumber As Long
 Set addLineSeries = New LineSeries
-mLineSeriesCol.add addLineSeries
-With addLineSeries
-    .canvas = mCanvas
-    .eventProxy = mEventProxy
-    .arrowEndColor = lineArrowEndColor
-    .arrowEndFillColor = lineArrowEndFillColor
-    .arrowEndFillStyle = lineArrowEndFillStyle
-    .arrowEndLength = lineArrowEndLength
-    .arrowEndStyle = lineArrowEndStyle
-    .arrowEndWidth = lineArrowEndWidth
-    .arrowStartColor = lineArrowStartColor
-    .arrowStartFillColor = lineArrowStartFillColor
-    .arrowStartFillStyle = lineArrowStartFillStyle
-    .arrowStartLength = lineArrowStartLength
-    .arrowStartStyle = lineArrowStartStyle
-    .arrowStartWidth = lineArrowStartWidth
-    .Color = lineColor
-    .extendAfter = lineExtendAfter
-    .extendBefore = lineExtendBefore
-    .extended = lineExtended
-    .fixedX = lineFixedX
-    .fixedY = lineFixedY
-    .includeInAutoscale = lineIncludeInAutoscale
-    .layer = getLayer(layer)
-    .style = lineStyle
-    .thickness = lineThickness
-End With
+If name = "" Then
+    seriesNumber = seriesNumber + 1
+    name = "LineSeries" & seriesNumber
+End If
+mLineSeriesCol.add addLineSeries, name
+addLineSeries.initialise name, _
+                        mEventProxy, _
+                        getLayer(layer), _
+                        mCanvas, _
+                        IIf(style Is Nothing, mDefaultLineStyle, style)
 End Function
 
 Friend Sub addPeriod(ByVal periodNumber As Long, _
@@ -1534,28 +1111,22 @@ Set addText = mDefaultTextSeries.add
 If layer <> -1 Then addText.layer = layer
 End Function
 
-Public Function addTextSeries(Optional ByVal layer As Long = -1) As TextSeries
+Public Function addTextSeries( _
+                Optional ByVal layer As Long = -1, _
+                Optional ByVal name As String, _
+                Optional ByVal style As TextStyle) As TextSeries
+Static seriesNumber As Long
 Set addTextSeries = New TextSeries
-mTextSeriesCol.add addTextSeries
-addTextSeries.canvas = mCanvas
-addTextSeries.eventProxy = mEventProxy
-addTextSeries.align = textAlign
-addTextSeries.box = textBox
-addTextSeries.boxColor = textBoxColor
-addTextSeries.boxFillColor = textBoxFillColor
-addTextSeries.boxFillStyle = textBoxFillStyle
-addTextSeries.boxStyle = textBoxStyle
-addTextSeries.boxThickness = textBoxThickness
-addTextSeries.Color = textColor
-addTextSeries.extended = textExtended
-addTextSeries.fixedX = textFixedX
-addTextSeries.fixedY = textFixedY
-addTextSeries.font = textFont
-addTextSeries.includeInAutoscale = textIncludeInAutoscale
-addTextSeries.layer = getLayer(layer)
-addTextSeries.keepInView = textKeepInView
-addTextSeries.paddingX = textPaddingX
-addTextSeries.paddingY = textPaddingY
+If name = "" Then
+    seriesNumber = seriesNumber + 1
+    name = "TextSeries" & seriesNumber
+End If
+mTextSeriesCol.add addTextSeries, name
+addTextSeries.initialise name, _
+                        mEventProxy, _
+                        getLayer(layer), _
+                        mCanvas, _
+                        IIf(style Is Nothing, mDefaultTextStyle, style)
 End Function
 
 Friend Sub clearRegion()
@@ -1710,57 +1281,59 @@ Dim logSpacing As Double
 Dim exp As Long
 Dim mantissa As Double
 
-log10 = Log(10#)
-logSpacing = Log(gridSpacing) / log10
-
-exp = Fix(logSpacing)
-mantissa = Abs(logSpacing) - Abs(exp)
-
-If logSpacing < 0 Then
-    exp = exp - 1
-    mantissa = 1 - mantissa
-End If
-
-If mYScaleQuantum = 0.03125 And _
-    exp < 0 _
-Then
-    ' tick size is 1/32, which influences where we put the horizontal grid lines
-    If exp >= -1 Then
-        If mantissa >= Log(5) / log10 Then
-            mScaleGridSpacingY = 16 * 0.03125
-        ElseIf mantissa >= Log(2.5) / log10 Then
-            mScaleGridSpacingY = 8 * 0.03125
-        ElseIf mantissa >= Log(1.25) / log10 Then
-            mScaleGridSpacingY = 4 * 0.03125
-        ElseIf mantissa >= Log(0.625) / log10 Then
-            mScaleGridSpacingY = 2 * 0.03125
+If mhasGrid And Not mHideGrid Then
+    log10 = Log(10#)
+    logSpacing = Log(gridSpacing) / log10
+    
+    exp = Fix(logSpacing)
+    mantissa = Abs(logSpacing) - Abs(exp)
+    
+    If logSpacing < 0 Then
+        exp = exp - 1
+        mantissa = 1 - mantissa
+    End If
+    
+    If mYScaleQuantum = 0.03125 And _
+        exp < 0 _
+    Then
+        ' tick size is 1/32, which influences where we put the horizontal grid lines
+        If exp >= -1 Then
+            If mantissa >= Log(5) / log10 Then
+                mScaleGridSpacingY = 16 * 0.03125
+            ElseIf mantissa >= Log(2.5) / log10 Then
+                mScaleGridSpacingY = 8 * 0.03125
+            ElseIf mantissa >= Log(1.25) / log10 Then
+                mScaleGridSpacingY = 4 * 0.03125
+            ElseIf mantissa >= Log(0.625) / log10 Then
+                mScaleGridSpacingY = 2 * 0.03125
+            Else
+                mScaleGridSpacingY = 0.03125
+            End If
         Else
             mScaleGridSpacingY = 0.03125
         End If
     Else
-        mScaleGridSpacingY = 0.03125
+        If mantissa >= Log(5) / log10 Then
+            mScaleGridSpacingY = 5 * 10 ^ exp
+        ElseIf mantissa >= Log(2.5) / log10 Then
+            mScaleGridSpacingY = 2.5 * 10 ^ exp
+        ElseIf mantissa >= Log(2#) / log10 Then
+            mScaleGridSpacingY = 2# * 10 ^ exp
+        Else
+            mScaleGridSpacingY = 10 ^ exp
+        End If
     End If
-Else
-    If mantissa >= Log(5) / log10 Then
-        mScaleGridSpacingY = 5 * 10 ^ exp
-    ElseIf mantissa >= Log(2.5) / log10 Then
-        mScaleGridSpacingY = 2.5 * 10 ^ exp
-    ElseIf mantissa >= Log(2#) / log10 Then
-        mScaleGridSpacingY = 2# * 10 ^ exp
+    If mIntegerYScale Then
+            mYScaleFormatStr = "0"
+            mYScaleSubFormatStr = "0"
     Else
-        mScaleGridSpacingY = 10 ^ exp
-    End If
-End If
-If mIntegerYScale Then
-        mYScaleFormatStr = "0"
-        mYScaleSubFormatStr = "0"
-Else
-    If mScaleGridSpacingY < 1 Then
-        mYScaleFormatStr = "0." & String(Abs(exp) + 1, "0")
-        mYScaleSubFormatStr = "0." & String(Abs(exp) + 2, "0")
-    Else
-        mYScaleFormatStr = "0.0"
-        mYScaleSubFormatStr = "0.00"
+        If mScaleGridSpacingY < 1 Then
+            mYScaleFormatStr = "0." & String(Abs(exp) + 1, "0")
+            mYScaleSubFormatStr = "0." & String(Abs(exp) + 2, "0")
+        Else
+            mYScaleFormatStr = "0.0"
+            mYScaleSubFormatStr = "0.00"
+        End If
     End If
 End If
 
@@ -1815,7 +1388,6 @@ If mShowPerformanceText Then
         mPerfText.fixedY = True
         mPerfText.align = TextAlignModes.AlignBottomLeft
         mPerfText.includeInAutoscale = False
-        mPerfText.keepInView = True
         mPerfText.paddingX = 0.5
         mPerfText.layer = LayerTitle
         
@@ -1950,7 +1522,6 @@ mTitle.fixedX = True
 mTitle.fixedY = True
 mTitle.align = TextAlignModes.AlignTopLeft
 mTitle.includeInAutoscale = False
-mTitle.keepInView = True
 mTitle.paddingX = 0.5
 mTitle.text = val
 End Sub

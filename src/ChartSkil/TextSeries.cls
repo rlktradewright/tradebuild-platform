@@ -37,30 +37,14 @@ Private mFinished As Boolean
 
 Private mTexts As Collection
 
-'Private mSurface As PictureBox
 Private mCanvas As canvas
 Private mLayer As Long
 
 Private mEventProxy As ChartRegionEventProxy
 
-Private mFixedX As Boolean
-Private mFixedY As Boolean
-Private mIncludeInAutoscale As Boolean
-Private mExtended As Boolean
+Private mStyle As TextStyle
 
-Private mFont As StdFont
-Private mColor As Long
-Private mBox As Boolean
-Private mBoxColor As Long
-Private mBoxStyle As LineStyles
-Private mBoxThickness As Long
-Private mBoxFillColor As Long
-Private mBoxFillStyle As FillStyles
-Private mPaddingX As Double
-Private mPaddingY As Double
-
-Private mAlign As TextAlignModes
-Private mKeepInView As Boolean
+Private mName As String
 
 '================================================================================
 ' Enums
@@ -108,127 +92,169 @@ End Sub
 '================================================================================
 
 Public Property Get align() As TextAlignModes
-align = mAlign
+align = mStyle.align
 End Property
 
-Public Property Let align(ByVal newValue As TextAlignModes)
-mAlign = newValue
+Public Property Let align(ByVal value As TextAlignModes)
+If mStyle.align = value Then Exit Property
+mStyle.align = value
+If mTexts.count <> 0 Then
+    mEventProxy.recalcBoundary mSeriesId
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Friend Property Get box() As Boolean
-box = mBox
+box = mStyle.box
 End Property
 
-Public Property Let box(ByVal newValue As Boolean)
-mBox = newValue
+Public Property Let box(ByVal value As Boolean)
+If mStyle.box = value Then Exit Property
+mStyle.box = value
+If mTexts.count <> 0 Then
+    mEventProxy.recalcBoundary mSeriesId
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Public Property Get boxColor() As Long
-boxColor = mBoxColor
+boxColor = mStyle.boxColor
 End Property
 
-Public Property Let boxColor(ByVal newValue As Long)
-mBoxColor = newValue
+Public Property Let boxColor(ByVal value As Long)
+If mStyle.boxColor = value Then Exit Property
+mStyle.boxColor = value
+If mTexts.count <> 0 Then
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Friend Property Get boxFillColor() As Long
-boxFillColor = mBoxFillColor
+boxFillColor = mStyle.boxFillColor
 End Property
 
-Public Property Let boxFillColor(ByVal newValue As Long)
-mBoxFillColor = newValue
+Public Property Let boxFillColor(ByVal value As Long)
+If mStyle.boxFillColor = value Then Exit Property
+mStyle.boxFillColor = value
+If mTexts.count <> 0 Then
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Public Property Get boxFillStyle() As FillStyles
-boxFillStyle = mBoxFillStyle
+boxFillStyle = mStyle.boxFillStyle
 End Property
 
-Public Property Let boxFillStyle(ByVal newValue As FillStyles)
-mBoxFillStyle = newValue
+Public Property Let boxFillStyle(ByVal value As FillStyles)
+If mStyle.boxFillStyle = value Then Exit Property
+mStyle.boxFillStyle = value
+If mTexts.count <> 0 Then
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Public Property Get boxStyle() As LineStyles
-boxStyle = mBoxStyle
+boxStyle = mStyle.boxStyle
 End Property
 
-Public Property Let boxStyle(ByVal newValue As LineStyles)
-mBoxStyle = newValue
+Public Property Let boxStyle(ByVal value As LineStyles)
+If mStyle.boxStyle = value Then Exit Property
+mStyle.boxStyle = value
+If mTexts.count <> 0 Then
+    mEventProxy.recalcBoundary mSeriesId
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Public Property Get boxThickness() As Long
-boxThickness = mBoxThickness
+boxThickness = mStyle.boxThickness
 End Property
 
-Public Property Let boxThickness(ByVal newValue As Long)
-mBoxThickness = newValue
-End Property
-
-Friend Property Let canvas(ByVal value As canvas)
-Set mCanvas = value
+Public Property Let boxThickness(ByVal value As Long)
+If mStyle.boxThickness = value Then Exit Property
+mStyle.boxThickness = value
+If mTexts.count <> 0 Then
+    mEventProxy.recalcBoundary mSeriesId
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Public Property Get Color() As Long
-Color = mColor
+Color = mStyle.Color
 End Property
 
-Public Property Let Color(ByVal newValue As Long)
-mColor = newValue
+Public Property Let Color(ByVal value As Long)
+If mStyle.Color = value Then Exit Property
+mStyle.Color = value
+If mTexts.count <> 0 Then
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Public Property Get count() As Long
 count = mTexts.count
 End Property
 
-Friend Property Let eventProxy(ByVal value As ChartRegionEventProxy)
-Set mEventProxy = value
-End Property
-
 Friend Property Get extended() As Boolean
-extended = mExtended
+extended = mStyle.extended
 End Property
 
-Public Property Let extended(ByVal newValue As Boolean)
-mExtended = newValue
+Public Property Let extended(ByVal value As Boolean)
+If mStyle.extended = value Then Exit Property
+mStyle.extended = value
+If mTexts.count <> 0 Then
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Friend Property Get fixedX() As Boolean
-fixedX = mFixedX
+fixedX = mStyle.fixedX
 End Property
 
-Public Property Let fixedX(ByVal newValue As Boolean)
-mFixedX = newValue
+Public Property Let fixedX(ByVal value As Boolean)
+If mStyle.fixedX = value Then Exit Property
+mStyle.fixedX = value
+If mTexts.count <> 0 Then
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Friend Property Get fixedY() As Boolean
-fixedY = mFixedY
+fixedY = mStyle.fixedY
 End Property
 
-Public Property Let fixedY(ByVal newValue As Boolean)
-mFixedY = newValue
+Public Property Let fixedY(ByVal value As Boolean)
+If mStyle.fixedY = value Then Exit Property
+mStyle.fixedY = value
+If mTexts.count <> 0 Then
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Public Property Get font() As StdFont
-Set font = mFont
+Set font = mStyle.font
 End Property
 
 Public Property Let font(ByVal value As StdFont)
-Set mFont = value
+If mStyle.font = value Then Exit Property
+mStyle.font = value
+If mTexts.count <> 0 Then
+    mEventProxy.recalcBoundary mSeriesId
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Friend Property Get includeInAutoscale() As Boolean
-includeInAutoscale = mIncludeInAutoscale
+includeInAutoscale = mStyle.includeInAutoscale
 End Property
 
-Public Property Let includeInAutoscale(ByVal newValue As Boolean)
-mIncludeInAutoscale = newValue
-End Property
-
-Public Property Get keepInView() As Boolean
-keepInView = mKeepInView
-End Property
-
-Public Property Let keepInView(ByVal newValue As Boolean)
-mKeepInView = newValue
+Public Property Let includeInAutoscale(ByVal value As Boolean)
+If mStyle.includeInAutoscale = value Then Exit Property
+mStyle.includeInAutoscale = value
+If mTexts.count <> 0 Then
+    mEventProxy.recalcBoundary mSeriesId
+    mEventProxy.paintRegion True
+End If
 End Property
 
 Friend Property Let layer(ByVal value As Long)
@@ -240,60 +266,152 @@ layer = mLayer
 End Property
 
 Public Property Get paddingX() As Double
-paddingX = mPaddingX
+paddingX = mStyle.paddingX
 End Property
 
-Public Property Let paddingX(ByVal newValue As Double)
-mPaddingX = newValue
+Public Property Let paddingX(ByVal value As Double)
+If mStyle.paddingX = value Then Exit Property
+mStyle.paddingX = value
+If mTexts.count <> 0 Then
+    mEventProxy.recalcBoundary mSeriesId
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Public Property Get paddingY() As Double
-paddingY = mPaddingY
+paddingY = mStyle.paddingY
 End Property
 
-Public Property Let paddingY(ByVal newValue As Double)
-mPaddingY = newValue
+Public Property Let paddingY(ByVal value As Double)
+If mStyle.paddingY = value Then Exit Property
+mStyle.paddingY = value
+If mTexts.count <> 0 Then
+    mEventProxy.recalcBoundary mSeriesId
+    mEventProxy.paintRegion False
+End If
+End Property
+
+Public Property Get style() As TextStyle
+Set style = mStyle.clone
+End Property
+
+Public Property Let style(ByVal value As TextStyle)
+Dim somethingChanged As Boolean
+Dim recalcBoundaries As Boolean
+Dim recalcRegion As Boolean
+
+If value.align <> mStyle.align Then
+    mStyle.align = value.align
+    somethingChanged = True
+    recalcBoundaries = True
+End If
+If value.box <> mStyle.box Then
+    mStyle.box = value.box
+    somethingChanged = True
+    recalcBoundaries = True
+End If
+If value.boxColor <> mStyle.boxColor Then
+    mStyle.boxColor = value.boxColor
+    somethingChanged = True
+End If
+If value.boxFillColor <> mStyle.boxFillColor Then
+    mStyle.boxFillColor = value.boxFillColor
+    somethingChanged = True
+End If
+If value.boxFillStyle <> mStyle.boxFillStyle Then
+    mStyle.boxFillStyle = value.boxFillStyle
+    somethingChanged = True
+End If
+If value.boxStyle <> mStyle.boxStyle Then
+    mStyle.boxStyle = value.boxStyle
+    somethingChanged = True
+    recalcBoundaries = True
+End If
+If value.boxThickness <> mStyle.boxThickness Then
+    mStyle.boxThickness = value.boxThickness
+    somethingChanged = True
+    recalcBoundaries = True
+End If
+If value.Color <> mStyle.Color Then
+    mStyle.Color = value.Color
+    somethingChanged = True
+End If
+If value.extended <> mStyle.extended Then
+    mStyle.extended = value.extended
+    somethingChanged = True
+End If
+If value.fixedX <> mStyle.fixedX Then
+    mStyle.fixedX = value.fixedX
+    somethingChanged = True
+End If
+If value.fixedY <> mStyle.fixedY Then
+    mStyle.fixedY = value.fixedY
+    somethingChanged = True
+End If
+If Not value.font Is mStyle.font Then
+    mStyle.font = value.font
+    somethingChanged = True
+    recalcBoundaries = True
+End If
+If value.includeInAutoscale <> mStyle.includeInAutoscale Then
+    mStyle.includeInAutoscale = value.includeInAutoscale
+    somethingChanged = True
+    recalcBoundaries = True
+    recalcRegion = True
+End If
+If value.paddingX <> mStyle.paddingX Then
+    mStyle.paddingX = value.paddingX
+    somethingChanged = True
+    recalcBoundaries = True
+End If
+If value.paddingY <> mStyle.paddingY Then
+    mStyle.paddingY = value.paddingY
+    somethingChanged = True
+    recalcBoundaries = True
+End If
+
+If somethingChanged Then
+    If recalcBoundaries Then If mTexts.count <> 0 Then mEventProxy.recalcBoundary mSeriesId
+    If mTexts.count <> 0 Then mEventProxy.paintRegion recalcRegion
+End If
 End Property
 
 '================================================================================
 ' Methods
 '================================================================================
 
-Public Function add(Optional ByVal key As String) As text
+Public Function add( _
+                Optional ByVal key As String, _
+                Optional ByVal localStyle As TextStyle) As text
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                             "ChartSkil25.TextSeries::add", _
                             "Text series is finished"
 Set add = New text
-add.canvas = mCanvas
 If key = "" Then
-    add.key = GenerateGUIDString
-Else
-    add.key = key
+    key = GenerateGUIDString
 End If
-add.align = mAlign
-add.box = mBox
-add.boxColor = mBoxColor
-add.boxFillColor = mBoxFillColor
-add.boxFillStyle = mBoxFillStyle
-add.boxStyle = mBoxStyle
-add.boxThickness = mBoxThickness
-add.Color = mColor
-add.eventProxy = mEventProxy
-add.fixedX = mFixedX
-add.fixedY = mFixedY
-add.font = mFont
-add.includeInAutoscale = mIncludeInAutoscale
-add.keepInView = mKeepInView
-add.layer = mLayer
-add.paddingX = mPaddingX
-add.paddingY = mPaddingY
-mTexts.add add, add.key
+add.initialise key, mEventProxy, mLayer, mCanvas, mStyle, localStyle
+
+mTexts.add add, key
 mEventProxy.addGraphicObject add, mSeriesId
 End Function
 
 Friend Sub finish()
 mFinished = True
 Set mCanvas = Nothing
+End Sub
+
+Friend Sub initialise( _
+                ByVal name As String, _
+                ByVal eventProxy As ChartRegionEventProxy, _
+                ByVal layer As Long, _
+                ByVal canvas As canvas, _
+                ByVal style As TextStyle)
+mName = name
+Set mEventProxy = eventProxy
+mLayer = layer
+Set mCanvas = canvas
+Set mStyle = style.clone    ' style cannot be shared between TextSeries
 End Sub
 
 Public Function item(ByVal index As Variant) As text

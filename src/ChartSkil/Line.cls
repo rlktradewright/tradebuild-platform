@@ -31,6 +31,9 @@ Private mCanvas  As canvas
 Private mLayer As Long
 Private mHandle As Long
 
+Private mLocalStyle As linestyle
+Private mBaseStyle As linestyle
+
 Private mInScope As Boolean
 Private mVisible As Boolean
 
@@ -57,17 +60,34 @@ Private mGaugeY As Double
 Private mThicknessOffsetX As Double
 Private mThicknessOffsetY As Double
 
-Private mFixedX As Boolean
-Private mFixedY As Boolean
-Private mIncludeInAutoscale As Boolean
-Private mExtended As Boolean
-
 Private mBlank As Boolean
 Private mHidden As Boolean
 
+Private mIsSetColor As Boolean
+Private mIsSetThickness As Boolean
+Private mIsSetLineStyle As Boolean
+Private mIsSetExtendBefore As Boolean
+Private mIsSetExtendAfter As Boolean
+Private mIsSetArrowStartStyle As Boolean
+Private mIsSetArrowStartLength As Boolean
+Private mIsSetArrowStartWidth As Boolean
+Private mIsSetArrowStartColor As Boolean
+Private mIsSetArrowStartFillColor As Boolean
+Private mIsSetArrowStartFillStyle As Boolean
+Private mIsSetArrowEndStyle As Boolean
+Private mIsSetArrowEndLength As Boolean
+Private mIsSetArrowEndWidth As Boolean
+Private mIsSetArrowEndColor As Boolean
+Private mIsSetArrowEndFillColor As Boolean
+Private mIsSetArrowEndFillStyle As Boolean
+Private mIsSetFixedX As Boolean
+Private mIsSetFixedY As Boolean
+Private mIsSetIncludeInAutoscale As Boolean
+Private mIsSetExtended As Boolean
+
 Private mColor As Long
 Private mThickness As Long
-Private mStyle As LineStyles
+Private mLineStyle As LineStyles
 Private mExtendBefore As Boolean
 Private mExtendAfter As Boolean
 Private mArrowStartStyle As ArrowStyles
@@ -75,13 +95,17 @@ Private mArrowStartLength As Long
 Private mArrowStartWidth As Long
 Private mArrowStartColor As Long
 Private mArrowStartFillColor As Long
-Private mArrowStartFillStyle As FillStyles
+Private marrowStartfillstyle As FillStyles
 Private mArrowEndStyle As ArrowStyles
 Private mArrowEndLength As Long
 Private mArrowEndWidth As Long
 Private mArrowEndColor As Long
 Private mArrowEndFillColor As Long
 Private mArrowEndFillStyle As FillStyles
+Private mFixedX As Boolean
+Private mFixedY As Boolean
+Private mIncludeInAutoscale As Boolean
+Private mExtended As Boolean
 
 Private mPoint1 As Point
 Private mPoint2 As Point
@@ -174,10 +198,10 @@ If mVertical <> VerticalNot Then
     End If
 Else
     If periodNumber = Int(mRegionRect.right) Or _
-        (Not mLeftToRight And periodNumber = mPoint2.x And Not mExtendAfter) Or _
-        (Not mLeftToRight And periodNumber = mPoint1.x And Not mExtendBefore) _
+        (Not mLeftToRight And periodNumber = mPoint2.x And Not extendAfter) Or _
+        (Not mLeftToRight And periodNumber = mPoint1.x And Not extendBefore) _
     Then
-        If mThickness <= 1 Then Exit Function
+        If thickness <= 1 Then Exit Function
     End If
     
     ReDim rects(0) As TRectangle
@@ -186,19 +210,19 @@ Else
         .left = periodNumber
         If mLeftToRight Then
             If periodNumber < mPoint1.x And _
-                Not mExtendBefore _
+                Not extendBefore _
             Then
                 .left = mPoint1.x - 1
             End If
         Else
             If periodNumber < mPoint2.x And _
-                Not mExtendAfter _
+                Not extendAfter _
             Then
                 .left = mPoint2.x - 1
             End If
         End If
         If mLeftToRight Then
-            If (Not mExtendAfter And periodNumber = mPoint2.x) Or _
+            If (Not extendAfter And periodNumber = mPoint2.x) Or _
                 periodNumber = Int(mRegionRect.right) _
             Then
                 .right = .left
@@ -206,7 +230,7 @@ Else
                 .right = periodNumber + 1
             End If
         Else
-            If (Not mExtendBefore And periodNumber = mPoint1.x) Or _
+            If (Not extendBefore And periodNumber = mPoint1.x) Or _
                 periodNumber = Int(mRegionRect.right) _
             Then
                 .right = .left
@@ -223,15 +247,15 @@ Else
             .bottom = mA * .right + mB - mThicknessOffsetY
         End If
         If mLeftToRight Then
-            If (Not mExtendBefore And periodNumber = mPoint1.x) Then .left = .left - mThicknessOffsetX
-            If (Not mExtendAfter And periodNumber = mPoint2.x) Or _
+            If (Not extendBefore And periodNumber = mPoint1.x) Then .left = .left - mThicknessOffsetX
+            If (Not extendAfter And periodNumber = mPoint2.x) Or _
                 periodNumber = Int(mRegionRect.right) _
             Then
                 .right = .right + mThicknessOffsetX
             End If
         Else
-            If (Not mExtendAfter And periodNumber = mPoint2.x) Then .left = .left - mThicknessOffsetX
-            If (Not mExtendBefore And periodNumber = mPoint1.x) Or _
+            If (Not extendAfter And periodNumber = mPoint2.x) Then .left = .left - mThicknessOffsetX
+            If (Not extendBefore And periodNumber = mPoint1.x) Or _
                 periodNumber = Int(mRegionRect.right) _
             Then
                 .right = .right + mThicknessOffsetX
@@ -241,12 +265,12 @@ Else
     End With
 End If
 
-If Not mArrowEndStyle = ArrowNone Then
+If Not arrowEndStyle = ArrowNone Then
     If rectOverlaps(mEndArrowRect, periodrect) Then
         rects(0) = rectUnion(rects(0), mEndArrowRect)
     End If
 End If
-If Not mArrowStartStyle = ArrowNone Then
+If Not arrowStartStyle = ArrowNone Then
     If rectOverlaps(mStartArrowRect, periodrect) Then
         rects(0) = rectUnion(rects(0), mStartArrowRect)
     End If
@@ -305,7 +329,7 @@ IGraphicObject_handle = mHandle
 End Property
 
 Private Property Get IGraphicObject_includeInAutoscale() As Boolean
-IGraphicObject_includeInAutoscale = mIncludeInAutoscale
+IGraphicObject_includeInAutoscale = includeInAutoscale
 End Property
 
 Private Property Let IGraphicObject_inScope(ByVal value As Boolean)
@@ -329,7 +353,7 @@ IGraphicObject_periodNumber = Int(mPoint1.XLogical + 0.5)
 End Property
 
 Private Property Get IGraphicObject_scaleDependent() As Boolean
-IGraphicObject_scaleDependent = mFixedX Or mFixedY
+IGraphicObject_scaleDependent = fixedX Or fixedY
 End Property
 
 Private Sub IGraphicObject_undraw( _
@@ -348,149 +372,177 @@ End Property
 '================================================================================
 
 Public Property Get arrowEndColor() As Long
-arrowEndColor = mArrowEndColor
+arrowEndColor = mBaseStyle.arrowEndColor
+If Not mLocalStyle Is Nothing Then arrowEndColor = mBaseStyle.arrowEndColor
+If mIsSetArrowEndColor Then arrowEndColor = mArrowEndColor
 End Property
 
-Public Property Let arrowEndColor(ByVal newValue As Long)
-If mArrowEndColor = newValue Then Exit Property
-undraw
-mArrowEndColor = newValue
+Public Property Let arrowEndColor(ByVal value As Long)
+If mArrowEndColor = value And mIsSetArrowEndColor Then Exit Property
+mArrowEndColor = value
+mIsSetArrowEndColor = True
 update
 End Property
 
 Public Property Get arrowEndFillColor() As Long
-arrowEndFillColor = mArrowEndFillColor
+arrowEndFillColor = mBaseStyle.arrowEndFillColor
+If Not mLocalStyle Is Nothing Then arrowEndFillColor = mBaseStyle.arrowEndFillColor
+If mIsSetArrowEndFillColor Then arrowEndFillColor = mArrowEndFillColor
 End Property
 
-Public Property Let arrowEndFillColor(ByVal newValue As Long)
-If mArrowEndFillColor = newValue Then Exit Property
-undraw
-mArrowEndFillColor = newValue
+Public Property Let arrowEndFillColor(ByVal value As Long)
+If mArrowEndFillColor = value And mIsSetArrowEndFillColor Then Exit Property
+mArrowEndFillColor = value
+mIsSetArrowEndFillColor = True
 update
 End Property
 
 Public Property Get arrowEndFillStyle() As FillStyles
-arrowEndFillStyle = mArrowEndFillStyle
+arrowEndFillStyle = mBaseStyle.arrowEndFillStyle
+If Not mLocalStyle Is Nothing Then arrowEndFillStyle = mBaseStyle.arrowEndFillStyle
+If mIsSetArrowEndFillStyle Then arrowEndFillStyle = mArrowEndFillStyle
 End Property
 
-Public Property Let arrowEndFillStyle(ByVal newValue As FillStyles)
-If mArrowEndFillStyle = newValue Then Exit Property
-undraw
-mArrowEndFillStyle = newValue
+Public Property Let arrowEndFillStyle(ByVal value As FillStyles)
+If mArrowEndFillStyle = value And mIsSetArrowEndFillStyle Then Exit Property
+mArrowEndFillStyle = value
+mIsSetArrowEndFillStyle = True
 update
 End Property
 
 Public Property Get arrowEndLength() As Long
-arrowEndLength = mArrowEndLength
+arrowEndLength = mBaseStyle.arrowEndLength
+If Not mLocalStyle Is Nothing Then arrowEndLength = mBaseStyle.arrowEndLength
+If mIsSetArrowEndLength Then arrowEndLength = mArrowEndLength
 End Property
 
-Public Property Let arrowEndLength(ByVal newValue As Long)
-If mArrowEndLength = newValue Then Exit Property
+Public Property Let arrowEndLength(ByVal value As Long)
+If mArrowEndLength = value And mIsSetArrowEndLength Then Exit Property
 undraw
-mArrowEndLength = newValue
+mArrowEndLength = value
+mIsSetArrowEndLength = True
 update
 End Property
 
 Public Property Get arrowEndStyle() As ArrowStyles
-arrowEndStyle = mArrowEndStyle
+arrowEndStyle = mBaseStyle.arrowEndStyle
+If Not mLocalStyle Is Nothing Then arrowEndStyle = mBaseStyle.arrowEndStyle
+If mIsSetArrowEndStyle Then arrowEndStyle = mArrowEndStyle
 End Property
 
-Public Property Let arrowEndStyle(ByVal newValue As ArrowStyles)
-If mArrowEndStyle = newValue Then Exit Property
+Public Property Let arrowEndStyle(ByVal value As ArrowStyles)
+If mArrowEndStyle = value And mIsSetArrowEndStyle Then Exit Property
 undraw
-mArrowEndStyle = newValue
+mArrowEndStyle = value
+mIsSetArrowEndStyle = True
 update
 End Property
 
 Public Property Get arrowEndWidth() As Long
-arrowEndWidth = mArrowEndWidth
+arrowEndWidth = mBaseStyle.arrowEndWidth
+If Not mLocalStyle Is Nothing Then arrowEndWidth = mBaseStyle.arrowEndWidth
+If mIsSetArrowEndWidth Then arrowEndWidth = mArrowEndWidth
 End Property
 
-Public Property Let arrowEndWidth(ByVal newValue As Long)
-If mArrowEndWidth = newValue Then Exit Property
+Public Property Let arrowEndWidth(ByVal value As Long)
+If mArrowEndWidth = value And mIsSetArrowEndWidth Then Exit Property
 undraw
-mArrowEndWidth = newValue
+mArrowEndWidth = value
+mIsSetArrowEndWidth = True
 update
 End Property
 
 Public Property Get arrowStartColor() As Long
-arrowStartColor = mArrowStartColor
+arrowStartColor = mBaseStyle.arrowStartColor
+If Not mLocalStyle Is Nothing Then arrowStartColor = mBaseStyle.arrowStartColor
+If mIsSetArrowStartColor Then arrowStartColor = mArrowStartColor
 End Property
 
-Public Property Let arrowStartColor(ByVal newValue As Long)
-If mArrowStartColor = newValue Then Exit Property
-undraw
-mArrowStartColor = newValue
+Public Property Let arrowStartColor(ByVal value As Long)
+If mArrowStartColor = value And mIsSetArrowStartColor Then Exit Property
+mArrowStartColor = value
+mIsSetArrowStartColor = True
 update
 End Property
 
 Public Property Get arrowStartFillColor() As Long
-arrowStartFillColor = mArrowStartFillColor
+arrowStartFillColor = mBaseStyle.arrowStartFillColor
+If Not mLocalStyle Is Nothing Then arrowStartFillColor = mBaseStyle.arrowStartFillColor
+If mIsSetArrowStartFillColor Then arrowStartFillColor = mArrowStartFillColor
 End Property
 
-Public Property Let arrowStartFillColor(ByVal newValue As Long)
-If mArrowStartFillColor = newValue Then Exit Property
-undraw
-mArrowStartFillColor = newValue
+Public Property Let arrowStartFillColor(ByVal value As Long)
+If mArrowStartFillColor = value And mIsSetArrowStartFillColor Then Exit Property
+mArrowStartFillColor = value
 update
+mIsSetArrowStartFillColor = True
 End Property
 
-Public Property Get arrowStartFillStyle() As FillStyles
-arrowStartFillStyle = arrowStartFillStyle
+Public Property Get arrowStartfillstyle() As FillStyles
+arrowStartfillstyle = mBaseStyle.arrowStartfillstyle
+If Not mLocalStyle Is Nothing Then arrowStartfillstyle = mBaseStyle.arrowStartfillstyle
+If mIsSetArrowStartFillStyle Then arrowStartfillstyle = marrowStartfillstyle
 End Property
 
-Public Property Let arrowStartFillStyle(ByVal newValue As FillStyles)
-If mArrowStartFillStyle = newValue Then Exit Property
-undraw
-mArrowStartFillStyle = newValue
+Public Property Let arrowStartfillstyle(ByVal value As FillStyles)
+If marrowStartfillstyle = value And mIsSetArrowStartFillStyle Then Exit Property
+marrowStartfillstyle = value
+mIsSetArrowStartFillStyle = True
 update
 End Property
 
 Public Property Get arrowStartLength() As Long
-arrowStartLength = mArrowStartLength
+arrowStartLength = mBaseStyle.arrowStartLength
+If Not mLocalStyle Is Nothing Then arrowStartLength = mBaseStyle.arrowStartLength
+If mIsSetArrowStartLength Then arrowStartLength = mArrowStartLength
 End Property
 
-Public Property Let arrowStartLength(ByVal newValue As Long)
-If mArrowStartLength = newValue Then Exit Property
+Public Property Let arrowStartLength(ByVal value As Long)
+If mArrowStartLength = value And mIsSetArrowStartLength Then Exit Property
 undraw
-mArrowStartLength = newValue
+mArrowStartLength = value
+mIsSetArrowStartLength = True
 update
 End Property
 
 Public Property Get arrowStartStyle() As ArrowStyles
-arrowStartStyle = mArrowStartStyle
+arrowStartStyle = mBaseStyle.arrowStartStyle
+If Not mLocalStyle Is Nothing Then arrowStartStyle = mBaseStyle.arrowStartStyle
+If mIsSetArrowStartStyle Then arrowStartStyle = mArrowStartStyle
 End Property
 
-Public Property Let arrowStartStyle(ByVal newValue As ArrowStyles)
-If mArrowStartStyle = newValue Then Exit Property
+Public Property Let arrowStartStyle(ByVal value As ArrowStyles)
+If mArrowStartStyle = value And mIsSetArrowStartStyle Then Exit Property
 undraw
-mArrowStartStyle = newValue
+mArrowStartStyle = value
+mIsSetArrowStartStyle = True
 update
 End Property
 
 Public Property Get arrowStartWidth() As Long
-arrowStartWidth = mArrowStartWidth
+arrowStartWidth = mBaseStyle.arrowStartWidth
+If Not mLocalStyle Is Nothing Then arrowStartWidth = mBaseStyle.arrowStartWidth
+If mIsSetArrowStartWidth Then arrowStartWidth = mArrowStartWidth
 End Property
 
-Public Property Let arrowStartWidth(ByVal newValue As Long)
-If mArrowStartWidth = newValue Then Exit Property
+Public Property Let arrowStartWidth(ByVal value As Long)
+If mArrowStartWidth = value And mIsSetArrowStartWidth Then Exit Property
 undraw
-mArrowStartWidth = newValue
+mArrowStartWidth = value
+mIsSetArrowStartWidth = True
 update
 End Property
 
-Friend Property Let canvas(ByVal value As canvas)
-Set mCanvas = value
-End Property
-
 Public Property Get Color() As Long
-Color = mColor
+Color = mBaseStyle.Color
+If Not mLocalStyle Is Nothing Then Color = mBaseStyle.Color
+If mIsSetColor Then Color = mColor
 End Property
 
-Public Property Let Color(ByVal newValue As Long)
-If mColor = newValue Then Exit Property
-undraw
-mColor = newValue
+Public Property Let Color(ByVal value As Long)
+If mColor = value And mIsSetColor Then Exit Property
+mColor = value
+mIsSetColor = True
 update
 End Property
 
@@ -498,63 +550,74 @@ Public Property Get direction() As Quadrants
 direction = mDirection
 End Property
 
-Friend Property Let eventProxy(ByVal value As ChartRegionEventProxy)
-Set mEventProxy = value
-End Property
-
 Friend Property Get extended() As Boolean
-extended = mExtended
+extended = mBaseStyle.extended
+If Not mLocalStyle Is Nothing Then extended = mBaseStyle.extended
+If mIsSetExtended Then extended = mExtended
 End Property
 
-Public Property Let extended(ByVal newValue As Boolean)
-If mExtended = newValue Then Exit Property
+Public Property Let extended(ByVal value As Boolean)
+If mExtended = value And mIsSetExtended Then Exit Property
 undraw
-mExtended = newValue
+mExtended = value
+mIsSetExtended = True
 update
 End Property
 
 Public Property Get extendAfter() As Boolean
-extendAfter = mExtendAfter
+extendAfter = mBaseStyle.extendAfter
+If Not mLocalStyle Is Nothing Then extendAfter = mBaseStyle.extendAfter
+If mIsSetExtendAfter Then extendAfter = mExtendAfter
 End Property
 
-Public Property Let extendAfter(ByVal newValue As Boolean)
-If mExtendAfter = newValue Then Exit Property
+Public Property Let extendAfter(ByVal value As Boolean)
+If mExtendAfter = value And mIsSetExtendAfter Then Exit Property
 undraw
-mExtendAfter = newValue
+mExtendAfter = value
+mIsSetExtendAfter = True
 update
 End Property
 
 Public Property Get extendBefore() As Boolean
-extendBefore = mExtendBefore
+extendBefore = mBaseStyle.extendBefore
+If Not mLocalStyle Is Nothing Then extendBefore = mBaseStyle.extendBefore
+If mIsSetExtendBefore Then extendBefore = mExtendBefore
 End Property
 
-Public Property Let extendBefore(ByVal newValue As Boolean)
-If mExtendBefore = newValue Then Exit Property
+Public Property Let extendBefore(ByVal value As Boolean)
+If mExtendBefore = value And mIsSetExtendBefore Then Exit Property
 undraw
-mExtendBefore = newValue
+mExtendBefore = value
+mIsSetExtendBefore = True
 update
 End Property
 
 Friend Property Get fixedX() As Boolean
-fixedX = mFixedX
+fixedX = mBaseStyle.fixedX
+If Not mLocalStyle Is Nothing Then fixedX = mBaseStyle.fixedX
+If mIsSetFixedX Then fixedX = mFixedX
 End Property
 
-Public Property Let fixedX(ByVal newValue As Boolean)
-If mFixedX = newValue Then Exit Property
+Public Property Let fixedX(ByVal value As Boolean)
+If mFixedX = value And mIsSetFixedX Then Exit Property
 undraw
-mFixedX = newValue
+mFixedX = value
+mIsSetFixedX = True
 convertPositionX
 update
 End Property
 
 Friend Property Get fixedY() As Boolean
-fixedY = mFixedY
+fixedY = mBaseStyle.fixedY
+If Not mLocalStyle Is Nothing Then fixedY = mBaseStyle.fixedY
+If mIsSetFixedY Then fixedY = mFixedY
 End Property
 
-Public Property Let fixedY(ByVal newValue As Boolean)
-If mFixedY = newValue Then Exit Property
+Public Property Let fixedY(ByVal value As Boolean)
+If mFixedY = value And mIsSetFixedY Then Exit Property
 undraw
-mFixedY = newValue
+mIsSetFixedY = True
+mFixedY = value
 convertPositionY
 update
 End Property
@@ -567,41 +630,29 @@ Public Property Get hidden() As Boolean
 hidden = mHidden
 End Property
 
-Public Property Let hidden(ByVal newValue As Boolean)
-If mHidden = newValue Then Exit Property
-undraw
-mHidden = newValue
+Public Property Let hidden(ByVal value As Boolean)
+If mHidden = value Then Exit Property
+If value Then undraw
+mHidden = value
 update
 End Property
 
 Public Property Get includeInAutoscale() As Boolean
-includeInAutoscale = mIncludeInAutoscale
+includeInAutoscale = mBaseStyle.includeInAutoscale
+If Not mLocalStyle Is Nothing Then includeInAutoscale = mBaseStyle.includeInAutoscale
+If mIsSetIncludeInAutoscale Then includeInAutoscale = mIncludeInAutoscale
 End Property
 
-Public Property Let includeInAutoscale(ByVal newValue As Boolean)
-If mIncludeInAutoscale = newValue Then Exit Property
-undraw
-mIncludeInAutoscale = newValue
+Public Property Let includeInAutoscale(ByVal value As Boolean)
+If mIncludeInAutoscale = value And mIsSetIncludeInAutoscale Then Exit Property
+If Not value Then undraw
+mIncludeInAutoscale = value
+mIsSetIncludeInAutoscale = True
 update
 End Property
 
 Public Property Get inScope() As Boolean
 inScope = mInScope
-End Property
-
-'Public Property Get keepInView() As Boolean
-'keepInView = mKeepInView
-'End Property
-
-'Public Property Let keepInView(ByVal newValue As Boolean)
-'If mKeepInView = newValue Then Exit Property
-'undraw
-'mKeepInView = newValue
-'update
-'End Property
-
-Friend Property Let key(ByVal value As String)
-mKey = value
 End Property
 
 Public Property Get key() As String
@@ -616,13 +667,38 @@ Public Property Get layer() As Long
 layer = mLayer
 End Property
 
+Public Property Get localStyle() As BarStyle
+Set localStyle = mLocalStyle.clone
+End Property
+
+Public Property Let localStyle( _
+                ByVal value As BarStyle)
+
+undraw
+Set mLocalStyle = value.clone
+calcEndArrowConstants
+calcStartArrowConstants
+calcCurrentBoundingRect
+mEventProxy.objectChanged mHandle, mBoundingRect
+
+End Property
+
 Public Property Get point1() As Point
 Set point1 = mPoint1
 End Property
 
 Public Property Let point1(ByVal value As Point)
-If value Is Nothing Or Not value.isAssigned Then Exit Property
-If Not mPoint1 Is Nothing Then
+If value Is Nothing Then
+    undraw
+    Set mPoint1 = Nothing
+    mBlank = True
+    Exit Property
+ElseIf Not value.isAssigned Then
+    undraw
+    Set mPoint1 = Nothing
+    mBlank = True
+    Exit Property
+ElseIf Not mPoint1 Is Nothing Then
     If value.equals(mPoint1) Then Exit Property
 End If
 undraw
@@ -642,8 +718,17 @@ Set point2 = mPoint2
 End Property
 
 Public Property Let point2(ByVal value As Point)
-If value Is Nothing Or Not value.isAssigned Then Exit Property
-If Not mPoint2 Is Nothing Then
+If value Is Nothing Then
+    undraw
+    Set mPoint2 = Nothing
+    mBlank = True
+    Exit Property
+ElseIf Not value.isAssigned Then
+    undraw
+    Set mPoint2 = Nothing
+    mBlank = True
+    Exit Property
+ElseIf Not mPoint2 Is Nothing Then
     If value.equals(mPoint2) Then Exit Property
 End If
 undraw
@@ -658,25 +743,31 @@ With mPoint2
 End With
 End Property
 
-Public Property Get style() As LineStyles
-style = mStyle
+Public Property Get linestyle() As LineStyles
+linestyle = mBaseStyle.linestyle
+If Not mLocalStyle Is Nothing Then linestyle = mBaseStyle.linestyle
+If mIsSetLineStyle Then linestyle = mLineStyle
 End Property
 
-Public Property Let style(ByVal newValue As LineStyles)
-If mStyle = newValue Then Exit Property
+Public Property Let linestyle(ByVal value As LineStyles)
+If mLineStyle = value And mIsSetLineStyle Then Exit Property
 undraw
-mStyle = newValue
+mLineStyle = value
+mIsSetLineStyle = True
 update
 End Property
 
 Public Property Get thickness() As Long
-thickness = mThickness
+thickness = mBaseStyle.thickness
+If Not mLocalStyle Is Nothing Then thickness = mBaseStyle.thickness
+If mIsSetThickness Then thickness = mThickness
 End Property
 
-Public Property Let thickness(ByVal newValue As Long)
-If mThickness = newValue Then Exit Property
+Public Property Let thickness(ByVal value As Long)
+If mThickness = value And mIsSetThickness Then Exit Property
 undraw
-mThickness = newValue
+mThickness = value
+mIsSetThickness = True
 update
 End Property
 
@@ -691,6 +782,23 @@ End Property
 '================================================================================
 ' Methods
 '================================================================================
+
+Friend Sub initialise( _
+                ByVal key As String, _
+                ByVal eventProxy As ChartRegionEventProxy, _
+                ByVal layer As Long, _
+                ByVal canvas As canvas, _
+                ByVal baseStyle As linestyle, _
+                ByVal localStyle As linestyle)
+                
+mKey = key
+Set mEventProxy = eventProxy
+mLayer = layer
+Set mCanvas = canvas
+Set mBaseStyle = baseStyle
+If Not localStyle Is Nothing Then Set mLocalStyle = localStyle.clone ' local style cannot be shared
+calcCurrentBoundingRect
+End Sub
 
 '================================================================================
 ' Helper Functions
@@ -707,8 +815,8 @@ If mBlank Then Exit Sub
 mGaugeX = mCanvas.gaugeX
 mGaugeY = mCanvas.gaugeY
 
-mThicknessOffsetX = mGaugeX * mThickness / 2
-mThicknessOffsetY = mGaugeY * mThickness / 2
+mThicknessOffsetX = mGaugeX * thickness / 2
+mThicknessOffsetY = mGaugeY * thickness / 2
 
 If mVertical = VerticalUp Then
     mLineAngle = Pi / 2
@@ -745,13 +853,13 @@ mLineAngleSin = Sin(mLineAngle)
 mLineAngleCos = Cos(mLineAngle)
 
 'If mLineAngleSin <> 0 Then
-'    mThicknessOffsetX = Abs(mGaugeX * (mThickness / mLineAngleSin) / 2)
+'    mThicknessOffsetX = Abs(mGaugeX * (Thickness / mLineAngleSin) / 2)
 'Else
 '    mThicknessOffsetX = 0
 'End If
 '
 'If mLineAngleCos <> 0 Then
-'    mThicknessOffsetY = Abs(mGaugeY * (mThickness / mLineAngleCos) / 2)
+'    mThicknessOffsetY = Abs(mGaugeY * (Thickness / mLineAngleCos) / 2)
 'Else
 '    mThicknessOffsetY = 0
 'End If
@@ -782,23 +890,23 @@ End With
 With mBoundingRect
     If mVertical <> VerticalNot Then
         If mBottomToTop Then
-            If mExtendBefore Then
+            If extendBefore Then
                 lineInt.startValue = MinusInfinityDouble
             Else
                 lineInt.startValue = y1
             End If
-            If mExtendAfter Then
+            If extendAfter Then
                 lineInt.endValue = PlusInfinityDouble
             Else
                 lineInt.endValue = y2
             End If
         Else
-            If mExtendAfter Then
+            If extendAfter Then
                 lineInt.startValue = MinusInfinityDouble
             Else
                 lineInt.startValue = y2
             End If
-            If mExtendBefore Then
+            If extendBefore Then
                 lineInt.endValue = PlusInfinityDouble
             Else
                 lineInt.endValue = y1
@@ -815,23 +923,23 @@ With mBoundingRect
         .isValid = True
     Else
         If mLeftToRight Then
-            If mExtendBefore Then
+            If extendBefore Then
                 lineInt.startValue = MinusInfinityDouble
             Else
                 lineInt.startValue = x1
             End If
-            If mExtendAfter Then
+            If extendAfter Then
                 lineInt.endValue = PlusInfinityDouble
             Else
                 lineInt.endValue = x2
             End If
         Else
-            If mExtendAfter Then
+            If extendAfter Then
                 lineInt.startValue = MinusInfinityDouble
             Else
                 lineInt.startValue = x2
             End If
-            If mExtendBefore Then
+            If extendBefore Then
                 lineInt.endValue = PlusInfinityDouble
             Else
                 lineInt.endValue = x1
@@ -868,7 +976,7 @@ With mBoundingRect
             .top = mA * .left + mB + mThicknessOffsetY
         End Select
         
-        If mThickness > 1 Then
+        If thickness > 1 Then
             .right = .right + mThicknessOffsetX
             .left = .left - mThicknessOffsetX
         End If
@@ -877,8 +985,8 @@ With mBoundingRect
 'Debug.Print "Calc bounds : (" & .left & "," & (mA * .left + mB) & ")-(" & .right & "," & (mA * .right + mB) & ")"
 End With
 
-If mArrowEndStyle <> ArrowNone Then mBoundingRect = rectUnion(mBoundingRect, mEndArrowRect)
-If mArrowStartStyle <> ArrowNone Then mBoundingRect = rectUnion(mBoundingRect, mStartArrowRect)
+If arrowEndStyle <> ArrowNone Then mBoundingRect = rectUnion(mBoundingRect, mEndArrowRect)
+If arrowStartStyle <> ArrowNone Then mBoundingRect = rectUnion(mBoundingRect, mStartArrowRect)
 
 End Sub
 
@@ -888,11 +996,11 @@ Dim halfAngle As Double
 Dim x As Double
 Dim y As Double
 
-If mArrowEndStyle = ArrowNone Then Exit Sub
+If arrowEndStyle = ArrowNone Then Exit Sub
 If mBlank Then Exit Sub
 
-hyp = Sqr(mArrowEndLength * mArrowEndLength + mArrowEndWidth * mArrowEndWidth / 4)
-halfAngle = Atn(mArrowEndWidth / (2 * mArrowEndLength))
+hyp = Sqr(arrowEndLength * arrowEndLength + arrowEndWidth * arrowEndWidth / 4)
+halfAngle = Atn(arrowEndWidth / (2 * arrowEndLength))
 mEndArrowX1Offset = -hyp * Cos(mLineAngle - halfAngle) * mGaugeX
 mEndArrowY1Offset = -hyp * Sin(mLineAngle - halfAngle) * mGaugeY
 mEndArrowX2Offset = -hyp * Sin(Pi / 2 - mLineAngle - halfAngle) * mGaugeX
@@ -940,11 +1048,11 @@ Dim halfAngle As Double
 Dim x As Double
 Dim y As Double
 
-If mArrowStartStyle = ArrowNone Then Exit Sub
+If arrowStartStyle = ArrowNone Then Exit Sub
 If mBlank Then Exit Sub
 
-hyp = Sqr(mArrowStartLength * mArrowStartLength + mArrowStartWidth * mArrowStartWidth / 4)
-halfAngle = Atn(mArrowStartWidth / (2 * mArrowStartLength))
+hyp = Sqr(arrowStartLength * arrowStartLength + arrowStartWidth * arrowStartWidth / 4)
+halfAngle = Atn(arrowStartWidth / (2 * arrowStartLength))
 mStartArrowX1Offset = hyp * Cos(mLineAngle - halfAngle) * mGaugeX
 mStartArrowY1Offset = hyp * Sin(mLineAngle - halfAngle) * mGaugeY
 mStartArrowX2Offset = hyp * Sin(Pi / 2 - mLineAngle - halfAngle) * mGaugeX
@@ -1059,7 +1167,7 @@ End Sub
 
 Private Sub convertPosition2X()
 If mPoint2 Is Nothing Then Exit Sub
-If mFixedX Then
+If fixedX Then
     If mPoint2.CoordinateSystemX = CoordsLogical Then
         mPoint2.CoordinateSystemX = CoordsRelative
     End If
@@ -1072,7 +1180,7 @@ End Sub
 
 Private Sub convertPosition2Y()
 If mPoint2 Is Nothing Then Exit Sub
-If mFixedY Then
+If fixedY Then
     If mPoint2.CoordinateSystemY = CoordsLogical Then
         mPoint2.CoordinateSystemY = CoordsRelative
     End If
@@ -1102,11 +1210,18 @@ If Not mVisible Then
     Exit Sub
 End If
 
-mCanvas.setPenAttributes IIf(undraw, mCanvas.backColor, mColor), _
-                        mThickness, _
-                        mStyle, _
-                        DrawModes.DrawModeCopyPen
-    
+If thickness = 1 Then
+    mCanvas.setPenAttributes IIf(undraw, mCanvas.backColor, Color), _
+                            thickness, _
+                            linestyle, _
+                            DrawModes.DrawModeCopyPen
+Else
+    mCanvas.setPenAttributes IIf(undraw, mCanvas.backColor, Color), _
+                            thickness, _
+                            LineStyles.LineSolid, _
+                            DrawModes.DrawModeCopyPen
+End If
+
 With mPoint1
     x1 = .XLogical
     y1 = .YLogical
@@ -1120,7 +1235,7 @@ End With
 If mVertical <> VerticalNot Then
     With area
         If mBottomToTop Then
-            If mExtendAfter Then
+            If extendAfter Then
                 top = .top
             Else
                 If .top > y2 Then
@@ -1129,7 +1244,7 @@ If mVertical <> VerticalNot Then
                     top = .top
                 End If
             End If
-            If mExtendBefore Then
+            If extendBefore Then
                 bottom = .bottom
             Else
                 If .bottom < y1 Then
@@ -1139,7 +1254,7 @@ If mVertical <> VerticalNot Then
                 End If
             End If
         Else
-            If mExtendAfter Then
+            If extendAfter Then
                 bottom = .bottom
             Else
                 If .bottom < y2 Then
@@ -1148,7 +1263,7 @@ If mVertical <> VerticalNot Then
                     bottom = .bottom
                 End If
             End If
-            If mExtendBefore Then
+            If extendBefore Then
                 top = .top
             Else
                 If .top > y1 Then
@@ -1167,18 +1282,18 @@ Else
         left = .left
         right = .right
         
-        If mLeftToRight And Not mExtendBefore Then
+        If mLeftToRight And Not extendBefore Then
             If left < x1 Then left = x1
             If right < x1 Then right = x1
-        ElseIf Not mLeftToRight And Not mExtendAfter Then
+        ElseIf Not mLeftToRight And Not extendAfter Then
             If left < x2 Then left = x2
             If right < x2 Then right = x2
         End If
             
-        If mLeftToRight And Not mExtendAfter Then
+        If mLeftToRight And Not extendAfter Then
             If left > x2 Then left = x2
             If right > x2 Then right = x2
-        ElseIf Not mLeftToRight And Not mExtendBefore Then
+        ElseIf Not mLeftToRight And Not extendBefore Then
             If left > x1 Then left = x1
             If right > x1 Then right = x1
         End If
@@ -1221,7 +1336,7 @@ Else
     With mCanvas
         Debug.Assert left <= right
         If left <> right Then
-            If mThickness = 1 Then
+            If thickness = 1 Then
                 ' now calculate the x coordinates that ensure the line
                 ' does not go outside the top or bottom of the area
                 ' to be drawn
@@ -1251,21 +1366,17 @@ Else
                 End If
                 .drawLine left, mA * left + mB, right, mA * right + mB
             Else
-                .setPenAttributes mColor, _
-                                mThickness, _
-                                LineStyles.LineSolid, _
-                                DrawModes.DrawModeCopyPen
                 If left = x1 Then
                     .drawPoint left, y1
                 ElseIf left = x2 Then
                     .drawPoint left, y2
                 End If
                 
-                slopeThicknessY = Abs(mThickness / mLineAngleCos)
+                slopeThicknessY = Abs(thickness / mLineAngleCos)
                                 
                 If left = x1 Or left = x2 Then
-                    Set vertices(0) = .newPoint(left - .convertPixelsToLogicalX(mThickness) * mLineAngleSin / 2, _
-                                            mA * left + mB - .convertPixelsToLogicalY(mThickness) * mLineAngleCos / 2, _
+                    Set vertices(0) = .newPoint(left - .convertPixelsToLogicalX(thickness) * mLineAngleSin / 2, _
+                                            mA * left + mB - .convertPixelsToLogicalY(thickness) * mLineAngleCos / 2, _
                                             CoordsLogical, _
                                             CoordsLogical)
                 Else
@@ -1276,8 +1387,8 @@ Else
                 End If
                 
                 If left = x1 Or left = x2 Then
-                    Set vertices(1) = .newPoint(left + .convertPixelsToLogicalX(mThickness) * mLineAngleSin / 2, _
-                                            mA * left + mB + .convertPixelsToLogicalY(mThickness) * mLineAngleCos / 2, _
+                    Set vertices(1) = .newPoint(left + .convertPixelsToLogicalX(thickness) * mLineAngleSin / 2, _
+                                            mA * left + mB + .convertPixelsToLogicalY(thickness) * mLineAngleCos / 2, _
                                             CoordsLogical, _
                                             CoordsLogical)
                 Else
@@ -1288,8 +1399,8 @@ Else
                 End If
                 
                 If right = x1 Or right = x2 Then
-                    Set vertices(2) = .newPoint(right + .convertPixelsToLogicalX(mThickness) * mLineAngleSin / 2, _
-                                            mA * right + mB + .convertPixelsToLogicalY(mThickness) * mLineAngleCos / 2, _
+                    Set vertices(2) = .newPoint(right + .convertPixelsToLogicalX(thickness) * mLineAngleSin / 2, _
+                                            mA * right + mB + .convertPixelsToLogicalY(thickness) * mLineAngleCos / 2, _
                                             CoordsLogical, _
                                             CoordsLogical)
                 Else
@@ -1300,8 +1411,8 @@ Else
                 End If
                 
                 If right = x1 Or right = x2 Then
-                    Set vertices(3) = .newPoint(right - .convertPixelsToLogicalX(mThickness) * mLineAngleSin / 2, _
-                                            mA * right + mB - .convertPixelsToLogicalY(mThickness) * mLineAngleCos / 2, _
+                    Set vertices(3) = .newPoint(right - .convertPixelsToLogicalX(thickness) * mLineAngleSin / 2, _
+                                            mA * right + mB - .convertPixelsToLogicalY(thickness) * mLineAngleCos / 2, _
                                             CoordsLogical, _
                                             CoordsLogical)
                 Else
@@ -1310,17 +1421,17 @@ Else
                                             CoordsLogical, _
                                             CoordsLogical)
                 End If
-                .setPenAttributes mColor, _
+                .setPenAttributes Color, _
                                 1, _
                                 LineStyles.LineSolid, _
                                 DrawModes.DrawModeCopyPen
-                .setBrushAttributes mColor, _
+                .setBrushAttributes Color, _
                                 FillStyles.FillSolid
                 
                 .drawPolygon vertices
                 
-                .setPenAttributes mColor, _
-                                mThickness, _
+                .setPenAttributes Color, _
+                                thickness, _
                                 LineStyles.LineSolid, _
                                 DrawModes.DrawModeCopyPen
                 If right = x1 Then
@@ -1335,10 +1446,10 @@ Else
         End If
     End With
 End If
-If mArrowEndStyle <> ArrowNone Then
+If arrowEndStyle <> ArrowNone Then
     drawArrowEnd area, undraw
 End If
-If mArrowStartStyle <> ArrowNone Then
+If arrowStartStyle <> ArrowNone Then
     drawArrowStart area, undraw
 End If
     
@@ -1356,12 +1467,12 @@ End With
 
 If Not rectOverlaps(mEndArrowRect, area) Then Exit Sub
 
-mCanvas.setPenAttributes IIf(undraw, mCanvas.backColor, mColor), _
-                        mThickness, _
-                        mStyle, _
+mCanvas.setPenAttributes IIf(undraw, mCanvas.backColor, arrowEndColor), _
+                        thickness, _
+                        linestyle, _
                         DrawModes.DrawModeCopyPen
 
-Select Case mArrowEndStyle
+Select Case arrowEndStyle
 Case ArrowNone
 
 Case ArrowSingleOpen
@@ -1371,7 +1482,7 @@ Case ArrowDoubleOpen
 
 Case ArrowClosed
     With mCanvas
-        .setBrushAttributes IIf(undraw, .backColor, mArrowEndFillColor), mArrowEndFillStyle
+        .setBrushAttributes IIf(undraw, .backColor, arrowEndFillColor), arrowEndFillStyle
         
         Set vertices(0) = .newPoint(x, y)
         Set vertices(1) = .newPoint(x + mEndArrowX1Offset, _
@@ -1406,12 +1517,12 @@ End With
 
 If Not rectOverlaps(mStartArrowRect, area) Then Exit Sub
 
-mCanvas.setPenAttributes IIf(undraw, mCanvas.backColor, mColor), _
-                        mThickness, _
-                        mStyle, _
+mCanvas.setPenAttributes IIf(undraw, mCanvas.backColor, arrowStartColor), _
+                        thickness, _
+                        linestyle, _
                         DrawModes.DrawModeCopyPen
 
-Select Case mArrowStartStyle
+Select Case arrowStartStyle
 Case ArrowNone
 
 Case ArrowSingleOpen
@@ -1421,7 +1532,7 @@ Case ArrowDoubleOpen
 
 Case ArrowClosed
     With mCanvas
-        .setBrushAttributes IIf(undraw, .backColor, mArrowEndFillColor), mArrowEndFillStyle
+        .setBrushAttributes IIf(undraw, .backColor, arrowEndFillColor), arrowEndFillStyle
         
         Set vertices(0) = .newPoint(x, y)
         Set vertices(1) = .newPoint(x + mStartArrowX1Offset, _
@@ -1445,7 +1556,7 @@ End Select
 End Sub
 
 Private Function isExtended() As Boolean
-isExtended = mExtended Or mFixedX
+isExtended = extended Or fixedX
 End Function
 
 Private Sub setDirection()

@@ -38,7 +38,6 @@ Private mFinished As Boolean
 
 Private mBars As Collection
 
-'Private mSurface As PictureBox
 Private mCanvas As canvas
 Private mLayer As Long
 
@@ -96,7 +95,7 @@ End Sub
 Public Property Let barColor(ByVal value As Long)
 If mStyle.barColor = value Then Exit Property
 mStyle.barColor = value
-If mBars.count <> 0 Then mEventProxy.paintRegion
+If mBars.count <> 0 Then mEventProxy.paintRegion False
 End Property
 
 Public Property Get barThickness() As Long
@@ -106,7 +105,7 @@ End Property
 Public Property Let barThickness(ByVal value As Long)
 If mStyle.barThickness = value Then Exit Property
 mStyle.barThickness = value
-If mBars.count <> 0 Then mEventProxy.paintRegion
+If mBars.count <> 0 Then mEventProxy.paintRegion False
 End Property
 
 Public Property Get barWidth() As Single
@@ -118,7 +117,7 @@ If mStyle.barWidth = value Then Exit Property
 mStyle.barWidth = value
 If mBars.count <> 0 Then
     mEventProxy.recalcBoundary mSeriesId
-    mEventProxy.paintRegion
+    mEventProxy.paintRegion False
 End If
 End Property
 
@@ -135,7 +134,7 @@ If mStyle.displayMode = value Then Exit Property
 mStyle.displayMode = value
 If mBars.count <> 0 Then
     mEventProxy.recalcBoundary mSeriesId
-    mEventProxy.paintRegion
+    mEventProxy.paintRegion False
 End If
 End Property
 
@@ -146,7 +145,7 @@ End Property
 Public Property Let downColor(ByVal value As Long)
 If mStyle.downColor = value Then Exit Property
 mStyle.downColor = value
-If mBars.count <> 0 Then mEventProxy.paintRegion
+If mBars.count <> 0 Then mEventProxy.paintRegion False
 End Property
 
 Public Property Get layer() As Long
@@ -168,7 +167,7 @@ End Property
 Public Property Let outlineThickness(ByVal value As Long)
 If mStyle.outlineThickness = value Then Exit Property
 mStyle.outlineThickness = value
-If mBars.count <> 0 Then mEventProxy.paintRegion
+If mBars.count <> 0 Then mEventProxy.paintRegion False
 End Property
 
 Public Property Get solidUpBody() As Boolean
@@ -178,7 +177,7 @@ End Property
 Public Property Let solidUpBody(ByVal value As Boolean)
 If mStyle.solidUpBody = value Then Exit Property
 mStyle.solidUpBody = value
-If mBars.count <> 0 Then mEventProxy.paintRegion
+If mBars.count <> 0 Then mEventProxy.paintRegion False
 End Property
 
 Public Property Get style() As BarStyle
@@ -228,7 +227,7 @@ If value.upColor <> mStyle.upColor Then
 End If
 
 If somethingChanged Then
-    If mBars.count <> 0 Then mEventProxy.paintRegion
+    If mBars.count <> 0 Then mEventProxy.paintRegion False
 End If
 End Property
 
@@ -239,7 +238,7 @@ End Property
 Public Property Let tailThickness(ByVal value As Long)
 If mStyle.tailThickness = value Then Exit Property
 mStyle.tailThickness = value
-If mBars.count <> 0 Then mEventProxy.paintRegion
+If mBars.count <> 0 Then mEventProxy.paintRegion False
 End Property
 
 Public Property Get upColor() As Long
@@ -249,7 +248,7 @@ End Property
 Public Property Let upColor(ByVal value As Long)
 If mStyle.upColor = value Then Exit Property
 mStyle.upColor = value
-If mBars.count <> 0 Then mEventProxy.paintRegion
+If mBars.count <> 0 Then mEventProxy.paintRegion False
 End Property
 
 '================================================================================

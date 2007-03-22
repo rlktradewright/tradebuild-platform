@@ -31,6 +31,7 @@ Implements ChartSkilTypes.IGraphicObjectSeries
 ' Member variables and constants
 '================================================================================
 
+Private mName As String
 Private mSeriesId As Long
 
 Private mFinished As Boolean
@@ -43,29 +44,7 @@ Private mLayer As Long
 
 Private mEventProxy As ChartRegionEventProxy
 
-Private mFixedX As Boolean
-Private mFixedY As Boolean
-Private mIncludeInAutoscale As Boolean
-Private mExtended As Boolean
-
-Private mColor As Long
-Private mThickness As Long
-Private mStyle As LineStyles
-Private mExtendBefore As Boolean
-Private mExtendAfter As Boolean
-Private mArrowStartStyle As ArrowStyles
-Private mArrowStartLength As Long
-Private mArrowStartWidth As Long
-Private mArrowStartColor As Long
-Private mArrowStartFillColor As Long
-Private mArrowStartFillStyle As FillStyles
-Private mArrowEndStyle As ArrowStyles
-Private mArrowEndLength As Long
-Private mArrowEndWidth As Long
-Private mArrowEndColor As Long
-Private mArrowEndFillColor As Long
-Private mArrowEndFillStyle As FillStyles
-
+Private mStyle As linestyle
 
 '================================================================================
 ' Enums
@@ -113,99 +92,153 @@ End Sub
 '================================================================================
 
 Public Property Get arrowEndColor() As Long
-arrowEndColor = mArrowEndColor
+arrowEndColor = mStyle.arrowEndColor
 End Property
 
-Public Property Let arrowEndColor(ByVal newValue As Long)
-mArrowEndColor = newValue
+Public Property Let arrowEndColor(ByVal value As Long)
+If mStyle.arrowEndColor = value Then Exit Property
+mStyle.arrowEndColor = value
+If mLines.count <> 0 Then
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Public Property Get arrowEndFillColor() As Long
-arrowEndFillColor = mArrowEndFillColor
+arrowEndFillColor = mStyle.arrowEndFillColor
 End Property
 
-Public Property Let arrowEndFillColor(ByVal newValue As Long)
-mArrowEndFillColor = newValue
+Public Property Let arrowEndFillColor(ByVal value As Long)
+If mStyle.arrowEndFillColor = value Then Exit Property
+mStyle.arrowEndFillColor = value
+If mLines.count <> 0 Then
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Public Property Get arrowEndFillStyle() As FillStyles
-arrowEndFillStyle = mArrowEndFillStyle
+arrowEndFillStyle = mStyle.arrowEndFillStyle
 End Property
 
-Public Property Let arrowEndFillStyle(ByVal newValue As FillStyles)
-mArrowEndFillStyle = newValue
+Public Property Let arrowEndFillStyle(ByVal value As FillStyles)
+If mStyle.arrowEndFillStyle = value Then Exit Property
+mStyle.arrowEndFillStyle = value
+If mLines.count <> 0 Then
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Public Property Get arrowEndLength() As Long
-arrowEndLength = mArrowEndLength
+arrowEndLength = mStyle.arrowEndLength
 End Property
 
-Public Property Let arrowEndLength(ByVal newValue As Long)
-mArrowEndLength = newValue
+Public Property Let arrowEndLength(ByVal value As Long)
+If mStyle.arrowEndLength = value Then Exit Property
+mStyle.arrowEndLength = value
+If mLines.count <> 0 Then
+    mEventProxy.recalcBoundary mSeriesId
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Public Property Get arrowEndStyle() As ArrowStyles
-arrowEndStyle = mArrowEndStyle
+arrowEndStyle = mStyle.arrowEndStyle
 End Property
 
-Public Property Let arrowEndStyle(ByVal newValue As ArrowStyles)
-mArrowEndStyle = newValue
+Public Property Let arrowEndStyle(ByVal value As ArrowStyles)
+If mStyle.arrowEndStyle = value Then Exit Property
+mStyle.arrowEndStyle = value
+If mLines.count <> 0 Then
+    mEventProxy.recalcBoundary mSeriesId
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Public Property Get arrowEndWidth() As Long
-arrowEndWidth = mArrowEndWidth
+arrowEndWidth = mStyle.arrowEndWidth
 End Property
 
-Public Property Let arrowEndWidth(ByVal newValue As Long)
-mArrowEndWidth = newValue
+Public Property Let arrowEndWidth(ByVal value As Long)
+If mStyle.arrowEndWidth = value Then Exit Property
+mStyle.arrowEndWidth = value
+If mLines.count <> 0 Then
+    mEventProxy.recalcBoundary mSeriesId
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Public Property Get arrowStartColor() As Long
-arrowStartColor = mArrowStartColor
+arrowStartColor = mStyle.arrowStartColor
 End Property
 
-Public Property Let arrowStartColor(ByVal newValue As Long)
-mArrowStartColor = newValue
+Public Property Let arrowStartColor(ByVal value As Long)
+If mStyle.arrowStartColor = value Then Exit Property
+mStyle.arrowStartColor = value
+If mLines.count <> 0 Then
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Public Property Get arrowStartFillColor() As Long
-arrowStartFillColor = mArrowStartFillColor
+arrowStartFillColor = mStyle.arrowStartFillColor
 End Property
 
-Public Property Let arrowStartFillColor(ByVal newValue As Long)
-mArrowStartFillColor = newValue
+Public Property Let arrowStartFillColor(ByVal value As Long)
+If mStyle.arrowStartFillColor = value Then Exit Property
+mStyle.arrowStartFillColor = value
+If mLines.count <> 0 Then
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Public Property Get arrowStartFillStyle() As FillStyles
 arrowStartFillStyle = arrowStartFillStyle
 End Property
 
-Public Property Let arrowStartFillStyle(ByVal newValue As FillStyles)
-mArrowStartFillStyle = newValue
+Public Property Let arrowStartFillStyle(ByVal value As FillStyles)
+If mStyle.arrowStartFillStyle = value Then Exit Property
+mStyle.arrowStartFillStyle = value
+If mLines.count <> 0 Then
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Public Property Get arrowStartLength() As Long
-arrowStartLength = mArrowStartLength
+arrowStartLength = mStyle.arrowStartLength
 End Property
 
-Public Property Let arrowStartLength(ByVal newValue As Long)
-mArrowStartLength = newValue
+Public Property Let arrowStartLength(ByVal value As Long)
+If mStyle.arrowStartLength = value Then Exit Property
+mStyle.arrowStartLength = value
+If mLines.count <> 0 Then
+    mEventProxy.recalcBoundary mSeriesId
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Public Property Get arrowStartStyle() As ArrowStyles
-arrowStartStyle = mArrowStartStyle
+arrowStartStyle = mStyle.arrowStartStyle
 End Property
 
-Public Property Let arrowStartStyle(ByVal newValue As ArrowStyles)
-mArrowStartStyle = newValue
+Public Property Let arrowStartStyle(ByVal value As ArrowStyles)
+If mStyle.arrowStartStyle = value Then Exit Property
+mStyle.arrowStartStyle = value
+If mLines.count <> 0 Then
+    mEventProxy.recalcBoundary mSeriesId
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Public Property Get arrowStartWidth() As Long
-arrowStartWidth = mArrowStartWidth
+arrowStartWidth = mStyle.arrowStartWidth
 End Property
 
-Public Property Let arrowStartWidth(ByVal newValue As Long)
-mArrowStartWidth = newValue
+Public Property Let arrowStartWidth(ByVal value As Long)
+If mStyle.arrowStartWidth = value Then Exit Property
+mStyle.arrowStartWidth = value
+If mLines.count <> 0 Then
+    mEventProxy.recalcBoundary mSeriesId
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Friend Property Let canvas(ByVal value As canvas)
@@ -213,12 +246,15 @@ Set mCanvas = value
 End Property
 
 Public Property Get Color() As Long
-Color = mColor
+Color = mStyle.Color
 End Property
 
-Public Property Let Color(ByVal newValue As Long)
-If mColor = newValue Then Exit Property
-mColor = newValue
+Public Property Let Color(ByVal value As Long)
+If mStyle.Color = value Then Exit Property
+mStyle.Color = value
+If mLines.count <> 0 Then
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Public Property Get count() As Long
@@ -230,67 +266,91 @@ Set mEventProxy = value
 End Property
 
 Friend Property Get extended() As Boolean
-extended = mExtended
+extended = mStyle.extended
 End Property
 
-Public Property Let extended(ByVal newValue As Boolean)
-If mExtended = newValue Then Exit Property
-mExtended = newValue
+Public Property Let extended(ByVal value As Boolean)
+If mStyle.extended = value Then Exit Property
+mStyle.extended = value
+If mLines.count <> 0 Then
+    mEventProxy.recalcBoundary mSeriesId
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Public Property Get extendAfter() As Boolean
-extendAfter = mExtendAfter
+extendAfter = mStyle.extendAfter
 End Property
 
-Public Property Let extendAfter(ByVal newValue As Boolean)
-If mExtendAfter = newValue Then Exit Property
-mExtendAfter = newValue
+Public Property Let extendAfter(ByVal value As Boolean)
+If mStyle.extendAfter = value Then Exit Property
+mStyle.extendAfter = value
+If mLines.count <> 0 Then
+    mEventProxy.recalcBoundary mSeriesId
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Public Property Get extendBefore() As Boolean
-extendBefore = mExtendBefore
+extendBefore = mStyle.extendBefore
 End Property
 
-Public Property Let extendBefore(ByVal newValue As Boolean)
-If mExtendBefore = newValue Then Exit Property
-mExtendBefore = newValue
+Public Property Let extendBefore(ByVal value As Boolean)
+If mStyle.extendBefore = value Then Exit Property
+mStyle.extendBefore = value
+If mLines.count <> 0 Then
+    mEventProxy.recalcBoundary mSeriesId
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Friend Property Get fixedX() As Boolean
-fixedX = mFixedX
+fixedX = mStyle.fixedX
 End Property
 
-Public Property Let fixedX(ByVal newValue As Boolean)
-If mFixedX = newValue Then Exit Property
-mFixedX = newValue
+Public Property Let fixedX(ByVal value As Boolean)
+If mStyle.fixedX = value Then Exit Property
+mStyle.fixedX = value
+If mLines.count <> 0 Then
+    mEventProxy.recalcBoundary mSeriesId
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Friend Property Get fixedY() As Boolean
-fixedY = mFixedY
+fixedY = mStyle.fixedY
 End Property
 
-Public Property Let fixedY(ByVal newValue As Boolean)
-If mFixedY = newValue Then Exit Property
-mFixedY = newValue
+Public Property Let fixedY(ByVal value As Boolean)
+If mStyle.fixedY = value Then Exit Property
+mStyle.fixedY = value
+If mLines.count <> 0 Then
+    mEventProxy.recalcBoundary mSeriesId
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Public Property Get includeInAutoscale() As Boolean
-includeInAutoscale = mIncludeInAutoscale
+includeInAutoscale = mStyle.includeInAutoscale
 End Property
 
-Public Property Let includeInAutoscale(ByVal newValue As Boolean)
-If mIncludeInAutoscale = newValue Then Exit Property
-mIncludeInAutoscale = newValue
+Public Property Let includeInAutoscale(ByVal value As Boolean)
+If mStyle.includeInAutoscale = value Then Exit Property
+mStyle.includeInAutoscale = value
+If mLines.count <> 0 Then
+    mEventProxy.recalcBoundary mSeriesId
+    mEventProxy.paintRegion True
+End If
 End Property
 
 'Public Property Get keepInView() As Boolean
-'keepInView = mKeepInView
+'keepInView = mStyle.KeepInView
 'End Property
 
-'Public Property Let keepInView(ByVal newValue As Boolean)
-'If mKeepInView = newValue Then Exit Property
+'Public Property Let keepInView(ByVal value As Boolean)
+'If mStyle.KeepInView = value Then Exit Property
 'undraw
-'mKeepInView = newValue
+'mStyle.KeepInView = value
 'update
 'End Property
 
@@ -301,71 +361,180 @@ End Property
 Public Property Get layer() As Long
 layer = mLayer
 End Property
-Public Property Get style() As LineStyles
-style = mStyle
+
+Public Property Get linestyle() As LineStyles
+linestyle = mStyle.linestyle
 End Property
 
-Public Property Let style(ByVal newValue As LineStyles)
-If mStyle = newValue Then Exit Property
-mStyle = newValue
+Public Property Let linestyle(ByVal value As LineStyles)
+If mStyle.linestyle = value Then Exit Property
+mStyle.linestyle = value
+If mLines.count <> 0 Then
+    mEventProxy.paintRegion False
+End If
+End Property
+
+Public Property Get style() As linestyle
+Set style = mStyle.clone
+End Property
+
+Public Property Let style(ByVal value As linestyle)
+Dim somethingChanged As Boolean
+Dim recalcBoundaries As Boolean
+Dim recalcRegion As Boolean
+
+If value.arrowEndColor <> mStyle.arrowEndColor Then
+    mStyle.arrowEndColor = value.arrowEndColor
+    somethingChanged = True
+End If
+If value.arrowEndFillColor <> mStyle.arrowEndFillColor Then
+    mStyle.arrowEndFillColor = value.arrowEndFillColor
+    somethingChanged = True
+End If
+If value.arrowEndFillStyle <> mStyle.arrowEndFillStyle Then
+    mStyle.arrowEndFillStyle = value.arrowEndFillStyle
+    somethingChanged = True
+End If
+If value.arrowEndLength <> mStyle.arrowEndLength Then
+    mStyle.arrowEndLength = value.arrowEndLength
+    somethingChanged = True
+    recalcBoundaries = True
+End If
+If value.arrowEndStyle <> mStyle.arrowEndStyle Then
+    mStyle.arrowEndStyle = value.arrowEndStyle
+    somethingChanged = True
+End If
+If value.arrowEndWidth <> mStyle.arrowEndWidth Then
+    mStyle.arrowEndWidth = value.arrowEndWidth
+    somethingChanged = True
+    recalcBoundaries = True
+End If
+If value.arrowStartColor <> mStyle.arrowStartColor Then
+    mStyle.arrowStartColor = value.arrowStartColor
+    somethingChanged = True
+End If
+If value.arrowStartFillColor <> mStyle.arrowStartFillColor Then
+    mStyle.arrowStartFillColor = value.arrowStartFillColor
+    somethingChanged = True
+End If
+If value.arrowStartFillStyle <> mStyle.arrowStartFillStyle Then
+    mStyle.arrowStartFillStyle = value.arrowStartFillStyle
+    somethingChanged = True
+End If
+If value.arrowStartLength <> mStyle.arrowStartLength Then
+    mStyle.arrowStartLength = value.arrowStartLength
+    somethingChanged = True
+    recalcBoundaries = True
+End If
+If value.arrowStartStyle <> mStyle.arrowStartStyle Then
+    mStyle.arrowStartStyle = value.arrowStartStyle
+    somethingChanged = True
+End If
+If value.arrowStartWidth <> mStyle.arrowStartWidth Then
+    mStyle.arrowStartWidth = value.arrowStartWidth
+    somethingChanged = True
+    recalcBoundaries = True
+End If
+If value.Color <> mStyle.Color Then
+    mStyle.Color = value.Color
+    somethingChanged = True
+End If
+If value.extendAfter <> mStyle.extendAfter Then
+    mStyle.extendAfter = value.extendAfter
+    somethingChanged = True
+    recalcBoundaries = True
+End If
+If value.extendBefore <> mStyle.extendBefore Then
+    mStyle.extendBefore = value.extendBefore
+    somethingChanged = True
+    recalcBoundaries = True
+End If
+If value.extended <> mStyle.extended Then
+    mStyle.extended = value.extended
+    somethingChanged = True
+    recalcBoundaries = True
+End If
+If value.fixedX <> mStyle.fixedX Then
+    mStyle.fixedX = value.fixedX
+    somethingChanged = True
+    recalcBoundaries = True
+End If
+If value.fixedY <> mStyle.fixedY Then
+    mStyle.fixedY = value.fixedY
+    somethingChanged = True
+    recalcBoundaries = True
+End If
+If value.includeInAutoscale <> mStyle.includeInAutoscale Then
+    mStyle.includeInAutoscale = value.includeInAutoscale
+    somethingChanged = True
+    recalcBoundaries = True
+    recalcRegion = True
+End If
+If value.linestyle <> mStyle.linestyle Then
+    mStyle.linestyle = value.linestyle
+    somethingChanged = True
+End If
+If value.thickness <> mStyle.thickness Then
+    mStyle.thickness = value.thickness
+    somethingChanged = True
+    recalcBoundaries = True
+End If
+
+If somethingChanged Then
+    If recalcBoundaries Then If mLines.count <> 0 Then mEventProxy.recalcBoundary mSeriesId
+    If mLines.count <> 0 Then mEventProxy.paintRegion recalcRegion
+End If
 End Property
 
 Public Property Get thickness() As Long
-thickness = mThickness
+thickness = mStyle.thickness
 End Property
 
-Public Property Let thickness(ByVal newValue As Long)
-If mThickness = newValue Then Exit Property
-mThickness = newValue
+Public Property Let thickness(ByVal value As Long)
+If mStyle.thickness = value Then Exit Property
+mStyle.thickness = value
+If mLines.count <> 0 Then
+    mEventProxy.recalcBoundary mSeriesId
+    mEventProxy.paintRegion False
+End If
 End Property
 
 '================================================================================
 ' Methods
 '================================================================================
 
-Public Function add(Optional ByVal key As String) As ChartSkil25.Line
+Public Function add( _
+                Optional ByVal key As String, _
+                Optional ByVal localStyle As linestyle) As ChartSkil25.Line
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                             "ChartSkil25.LineSeries::add", _
                             "Line series is finished"
 Set add = New ChartSkil25.Line
-With add
-    .eventProxy = mEventProxy
-    .canvas = mCanvas
-    If key = "" Then
-        .key = GenerateGUIDString
-    Else
-        .key = key
-    End If
-    .arrowEndColor = mArrowEndColor
-    .arrowEndFillColor = mArrowEndFillColor
-    .arrowEndFillStyle = mArrowEndFillStyle
-    .arrowEndLength = mArrowEndLength
-    .arrowEndStyle = mArrowEndStyle
-    .arrowEndWidth = mArrowEndWidth
-    .arrowStartColor = mArrowStartColor
-    .arrowStartFillColor = mArrowStartFillColor
-    .arrowStartFillStyle = mArrowStartFillStyle
-    .arrowStartLength = mArrowStartLength
-    .arrowStartStyle = mArrowStartStyle
-    .arrowStartWidth = mArrowStartWidth
-    .Color = mColor
-    .extendAfter = mExtendAfter
-    .extendBefore = mExtendBefore
-    .extended = mExtended
-    .fixedX = mFixedX
-    .fixedY = mFixedY
-    .style = mStyle
-    .thickness = mThickness
-    .includeInAutoscale = mIncludeInAutoscale
-    .layer = mLayer
-End With
-mLines.add add, add.key
+If key = "" Then
+    key = GenerateGUIDString
+End If
+add.initialise key, mEventProxy, mLayer, mCanvas, mStyle, localStyle
+
+mLines.add add, key
 mEventProxy.addGraphicObject add, mSeriesId
 End Function
 
 Friend Sub finish()
 mFinished = True
 Set mCanvas = Nothing
+End Sub
+
+Friend Sub initialise( _
+                ByVal name As String, _
+                ByVal eventProxy As ChartRegionEventProxy, _
+                ByVal layer As Long, _
+                ByVal canvas As canvas, _
+                ByVal style As linestyle)
+mName = name
+Set mEventProxy = eventProxy
+mLayer = layer
+Set mCanvas = canvas
+Set mStyle = style.clone    ' style cannot be shared between BarSeries
 End Sub
 
 Public Function item(ByVal index As Variant) As ChartSkil25.Line

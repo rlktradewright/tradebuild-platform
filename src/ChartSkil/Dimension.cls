@@ -101,10 +101,10 @@ End Property
 ' Methods
 '================================================================================
 
-Public Function equals(ByVal aPoint As Point) As Boolean
-If aPoint Is Nothing Then Exit Function
-If aPoint Is Me Then Exit Function
-With aPoint
+Public Function equals(ByVal aDim As Dimension) As Boolean
+If aDim Is Nothing Then Exit Function
+If aDim Is Me Then Exit Function
+With aDim
     If Not .canvas Is mCanvas Then Exit Function
     If .isAssignedX <> mXAssigned Then Exit Function
     If .isAssignedY <> mYAssigned Then Exit Function

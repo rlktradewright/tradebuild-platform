@@ -119,6 +119,33 @@ Public Property Get currentSessionStartTime() As Date
 currentSessionStartTime = chartObj.currentSessionStartTime
 End Property
 
+Public Property Get defaultBarStyle() As BarStyle
+Set defaultBarStyle = chartObj.defaultBarStyle
+End Property
+
+Public Property Let defaultBarStyle( _
+                ByVal value As BarStyle)
+chartObj.defaultRegionStyle = value
+End Property
+
+Public Property Get defaultDataPointStyle() As DataPointStyle
+Set defaultDataPointStyle = chartObj.defaultDataPointStyle
+End Property
+
+Public Property Let defaultDataPointStyle( _
+                ByVal value As DataPointStyle)
+chartObj.defaultDataPointStyle = value
+End Property
+
+Public Property Get defaultLineStyle() As linestyle
+Set defaultLineStyle = chartObj.defaultLineStyle
+End Property
+
+Public Property Let defaultLineStyle( _
+                ByVal value As linestyle)
+chartObj.defaultLineStyle = value
+End Property
+
 Public Property Get defaultRegionStyle() As ChartRegionStyle
 Set defaultRegionStyle = chartObj.defaultRegionStyle
 End Property
@@ -126,6 +153,14 @@ End Property
 Public Property Let defaultRegionStyle( _
                 ByVal value As ChartRegionStyle)
 chartObj.defaultRegionStyle = value
+End Property
+
+Public Property Get defaultTextStyle() As TextStyle
+Set defaultTextStyle = chartObj.defaultTextStyle
+End Property
+
+Public Property Let defaultTextStyle(ByVal value As TextStyle)
+chartObj.defaultTextStyle = value
 End Property
 
 Public Property Get firstVisiblePeriod() As Long

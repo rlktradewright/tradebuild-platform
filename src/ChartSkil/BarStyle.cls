@@ -64,7 +64,7 @@ Private mBarWidth As Single
 
 Private Sub Class_Initialize()
 mBarColor = -1
-mUpColor = -1
+mUpColor = vbBlack  ' the minimum color information that must be supplied
 mDownColor = -1
 End Sub
 
@@ -81,6 +81,11 @@ End Sub
 '@================================================================================
 
 Public Property Let barColor(ByVal value As Long)
+If Not gIsValidColor(value) And value <> -1 Then _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            "ChartSkil25" & "." & "BarStyle" & ":" & "barColor", _
+            "Value is not a valid color or -1"
+
 mBarColor = value
 End Property
 
@@ -113,6 +118,10 @@ displayMode = mDisplayMode
 End Property
 
 Public Property Let downColor(ByVal value As Long)
+If Not gIsValidColor(value) And value <> -1 Then _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            "ChartSkil25" & "." & "BarStyle" & ":" & "downColor", _
+            "Value is not a valid color or -1"
 mDownColor = value
 End Property
 
@@ -145,6 +154,11 @@ tailThickness = mTailThickness
 End Property
 
 Public Property Let upColor(ByVal value As Long)
+If Not gIsValidColor(value) Then _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            "ChartSkil25" & "." & "BarStyle" & ":" & "upColor", _
+            "Value is not a valid color"
+
 mUpColor = value
 End Property
 

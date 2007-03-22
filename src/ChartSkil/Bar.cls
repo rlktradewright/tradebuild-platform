@@ -62,8 +62,6 @@ Private mSolidUpBody As Boolean
 Private mBarThickness As Long
 Private mBarWidth As Single
 
-Private mNoDraw As Boolean
-
 Private mInScope As Boolean
 Private mVisible As Boolean
 
@@ -171,7 +169,7 @@ IGraphicObject_layer = layer
 End Property
 
 Private Property Get IGraphicObject_noDraw() As Boolean
-IGraphicObject_noDraw = mBlank Or mNoDraw
+IGraphicObject_noDraw = mBlank
 End Property
 
 Private Property Get IGraphicObject_periodNumber() As Long
@@ -201,6 +199,12 @@ End Property
 '================================================================================
 
 Public Property Let barColor(ByVal value As Long)
+If Not gIsValidColor(value) And value <> -1 Then _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            "ChartSkil25" & "." & "Bar" & ":" & "barColor", _
+            "Value is not a valid color or -1"
+
+If mBarColor = value And mIsSetBarColor Then Exit Property
 mBarColor = value
 mIsSetBarColor = True
 mEventProxy.objectChanged mHandle, mBoundingRect
@@ -208,11 +212,13 @@ End Property
 
 Public Property Get barColor() As Long
 barColor = mBaseStyle.barColor
-If Not mLocalStyle Is Nothing Then barColor = mBaseStyle.barColor
+If Not mLocalStyle Is Nothing Then barColor = mLocalStyle.barColor
 If mIsSetBarColor Then barColor = mBarColor
 End Property
 
 Public Property Let barThickness(ByVal value As Long)
+If mBarThickness = value And mIsSetBarThickness Then Exit Property
+undraw mBoundingRect
 mBarThickness = value
 mIsSetBarThickness = True
 mEventProxy.objectChanged mHandle, mBoundingRect
@@ -225,6 +231,8 @@ If mIsSetBarThickness Then barThickness = mBarThickness
 End Property
 
 Public Property Let barWidth(ByVal value As Single)
+If mBarWidth = value And mIsSetBarWidth Then Exit Property
+undraw mBoundingRect
 mBarWidth = value
 mIsSetBarWidth = True
 setBarSemiWidth
@@ -247,6 +255,8 @@ closePrice = mClose
 End Property
 
 Public Property Let displayMode(ByVal value As BarDisplayModes)
+If mDisplayMode = value And mIsSetDisplayMode Then Exit Property
+undraw mBoundingRect
 mDisplayMode = value
 mIsSetDisplayMode = True
 setBarSemiWidth
@@ -265,6 +275,12 @@ downBar = (mClose <= mOpen)
 End Property
 
 Public Property Let downColor(ByVal value As Long)
+If Not gIsValidColor(value) And value <> -1 Then _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            "ChartSkil25" & "." & "Bar" & ":" & "downColor", _
+            "Value is not a valid color or -1"
+
+If mDownColor = value And mIsSetDownColor Then Exit Property
 mDownColor = value
 mIsSetDownColor = True
 mEventProxy.objectChanged mHandle, mBoundingRect
@@ -272,12 +288,9 @@ End Property
 
 Public Property Get downColor() As Long
 downColor = mBaseStyle.downColor
-If Not mLocalStyle Is Nothing Then downColor = mBaseStyle.downColor
+If Not mLocalStyle Is Nothing Then downColor = mLocalStyle.downColor
 If mIsSetDownColor Then downColor = mDownColor
-End Property
-
-Friend Property Let eventProxy(ByVal value As ChartRegionEventProxy)
-Set mEventProxy = value
+If downColor = -1 Then downColor = upColor
 End Property
 
 Friend Property Get handle() As Long
@@ -311,16 +324,13 @@ End Property
 
 Public Property Let localStyle( _
                 ByVal value As BarStyle)
-Dim somethingChanged As Boolean
 
-mNoDraw = True
+undraw mBoundingRect
 
 Set mLocalStyle = value.clone
 setBarSemiWidth
 calcBoundingRect
 mEventProxy.objectChanged mHandle, mBoundingRect
-
-mNoDraw = False
 End Property
 
 Public Property Get lowPrice() As Double
@@ -332,6 +342,7 @@ openPrice = mOpen
 End Property
 
 Public Property Let outlineThickness(ByVal value As Long)
+If mOutlineThickness = value And mIsSetOutlineThickness Then Exit Property
 mOutlineThickness = value
 mIsSetOutlineThickness = True
 mEventProxy.objectChanged mHandle, mBoundingRect
@@ -344,6 +355,7 @@ If mIsSetOutlineThickness Then outlineThickness = mOutlineThickness
 End Property
 
 Public Property Let solidUpBody(ByVal value As Boolean)
+If mSolidUpBody = value And mIsSetSolidUpBody Then Exit Property
 mSolidUpBody = value
 mIsSetSolidUpBody = True
 mEventProxy.objectChanged mHandle, mBoundingRect
@@ -356,6 +368,8 @@ If mIsSetSolidUpBody Then solidUpBody = mSolidUpBody
 End Property
 
 Public Property Let tailThickness(ByVal value As Long)
+If mTailThickness = value And mIsSetTailThickness Then Exit Property
+undraw mBoundingRect
 mTailThickness = value
 mIsSetTailThickness = True
 mEventProxy.objectChanged mHandle, mBoundingRect
@@ -372,6 +386,12 @@ upBar = (mClose >= mOpen)
 End Property
 
 Public Property Let upColor(ByVal value As Long)
+If Not gIsValidColor(value) And value <> -1 Then _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            "ChartSkil25" & "." & "Bar" & ":" & "upColor", _
+            "Value is not a valid color"
+
+If mUpColor = value And mIsSetUpColor Then Exit Property
 mUpColor = value
 mIsSetUpColor = True
 mEventProxy.objectChanged mHandle, mBoundingRect
@@ -379,7 +399,7 @@ End Property
 
 Public Property Get upColor() As Long
 upColor = mBaseStyle.upColor
-If Not mLocalStyle Is Nothing Then upColor = mBaseStyle.upColor
+If Not mLocalStyle Is Nothing Then upColor = mLocalStyle.upColor
 If mIsSetUpColor Then upColor = mUpColor
 End Property
 

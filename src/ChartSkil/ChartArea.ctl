@@ -781,6 +781,10 @@ Private mRegionsIndex As Long
 Private mNumRegionsInUse As Long
 
 Private mDefaultRegionStyle As ChartRegionStyle
+Private mDefaultBarStyle As BarStyle
+Private mDefaultDataPointStyle As DataPointStyle
+Private mDefaultLineStyle As linestyle
+Private mDefaultTextStyle As TextStyle
 
 Private WithEvents mPeriods As Periods
 Attribute mPeriods.VB_VarHelpID = -1
@@ -815,10 +819,6 @@ Private mPeriodParametersSet As Boolean
 Private mVerticalGridSpacing As Long
 Private mVerticalGridUnits As TimePeriodUnits
 Private mVerticalGridParametersSet As Boolean
-
-'Private mBackColor As Long
-'Private mGridColor As Long
-'Private mGridTextColor As Long
 
 ' indicates whether grids in regions are currently
 ' hidden. Note that a region's hasGrid property
@@ -913,67 +913,67 @@ End If
 
 mDefaultRegionStyle.autoscale = PropBag.ReadProperty(PropNameDefaultRegionAutoscale, PropDfltDefaultRegionAutoscale)
 If Err.Number <> 0 Then
-    DefaultRegionAutoscale = PropDfltDefaultRegionAutoscale
+    RegionDefaultAutoscale = PropDfltDefaultRegionAutoscale
     Err.clear
 End If
 
-DefaultRegionBackColor = PropBag.ReadProperty(PropNameDefaultRegionBackColor, PropDfltDefaultRegionBackColor)
+RegionDefaultBackColor = PropBag.ReadProperty(PropNameDefaultRegionBackColor, PropDfltDefaultRegionBackColor)
 If Err.Number <> 0 Then
-    DefaultRegionBackColor = PropDfltDefaultRegionBackColor
+    RegionDefaultBackColor = PropDfltDefaultRegionBackColor
     Err.clear
 End If
 
-DefaultRegionGridColor = PropBag.ReadProperty(PropNameDefaultRegionGridColor, PropDfltDefaultRegionGridColor)
+RegionDefaultGridColor = PropBag.ReadProperty(PropNameDefaultRegionGridColor, PropDfltDefaultRegionGridColor)
 If Err.Number <> 0 Then
-    DefaultRegionGridColor = PropDfltDefaultRegionGridColor
+    RegionDefaultGridColor = PropDfltDefaultRegionGridColor
     Err.clear
 End If
 
-DefaultRegionGridlineSpacingY = PropBag.ReadProperty(PropNameDefaultRegionGridlineSpacingY, PropDfltDefaultRegionGridlineSpacingY)
+RegionDefaultGridlineSpacingY = PropBag.ReadProperty(PropNameDefaultRegionGridlineSpacingY, PropDfltDefaultRegionGridlineSpacingY)
 If Err.Number <> 0 Then
-    DefaultRegionGridlineSpacingY = PropDfltDefaultRegionGridlineSpacingY
+    RegionDefaultGridlineSpacingY = PropDfltDefaultRegionGridlineSpacingY
     Err.clear
 End If
 
-DefaultRegionGridTextColor = PropBag.ReadProperty(PropNameDefaultRegionGridTextColor, PropDfltDefaultRegionGridTextColor)
+RegionDefaultGridTextColor = PropBag.ReadProperty(PropNameDefaultRegionGridTextColor, PropDfltDefaultRegionGridTextColor)
 If Err.Number <> 0 Then
-    DefaultRegionGridTextColor = PropDfltDefaultRegionGridTextColor
+    RegionDefaultGridTextColor = PropDfltDefaultRegionGridTextColor
     Err.clear
 End If
 
-DefaultRegionHasGrid = PropBag.ReadProperty(PropNameDefaultRegionHasGrid, PropDfltDefaultRegionHasGrid)
+RegionDefaultHasGrid = PropBag.ReadProperty(PropNameDefaultRegionHasGrid, PropDfltDefaultRegionHasGrid)
 If Err.Number <> 0 Then
-    DefaultRegionHasGrid = PropDfltDefaultRegionHasGrid
+    RegionDefaultHasGrid = PropDfltDefaultRegionHasGrid
     Err.clear
 End If
 
-DefaultRegionHasGridText = PropBag.ReadProperty(PropNameDefaultRegionHasGridtext, PropDfltDefaultRegionHasGridtext)
+RegionDefaultHasGridText = PropBag.ReadProperty(PropNameDefaultRegionHasGridtext, PropDfltDefaultRegionHasGridtext)
 If Err.Number <> 0 Then
-    DefaultRegionHasGridText = PropDfltDefaultRegionHasGridtext
+    RegionDefaultHasGridText = PropDfltDefaultRegionHasGridtext
     Err.clear
 End If
 
-DefaultRegionIntegerYScale = PropBag.ReadProperty(PropNameDefaultRegionIntegerYScale, PropDfltDefaultRegionIntegerYScale)
+RegionDefaultIntegerYScale = PropBag.ReadProperty(PropNameDefaultRegionIntegerYScale, PropDfltDefaultRegionIntegerYScale)
 If Err.Number <> 0 Then
-    DefaultRegionIntegerYScale = PropDfltDefaultRegionIntegerYScale
+    RegionDefaultIntegerYScale = PropDfltDefaultRegionIntegerYScale
     Err.clear
 End If
 
-DefaultRegionMinimumHeight = PropBag.ReadProperty(PropNameDefaultRegionMinimumHeight, PropDfltDefaultRegionMinimumHeight)
+RegionDefaultMinimumHeight = PropBag.ReadProperty(PropNameDefaultRegionMinimumHeight, PropDfltDefaultRegionMinimumHeight)
 If Err.Number <> 0 Then
-    DefaultRegionMinimumHeight = PropDfltDefaultRegionMinimumHeight
+    RegionDefaultMinimumHeight = PropDfltDefaultRegionMinimumHeight
     Err.clear
 End If
 
-DefaultRegionPointerStyle = PropBag.ReadProperty(PropNameDefaultRegionPointerStyle, PropDfltDefaultRegionPointerStyle)
+RegionDefaultPointerStyle = PropBag.ReadProperty(PropNameDefaultRegionPointerStyle, PropDfltDefaultRegionPointerStyle)
 If Err.Number <> 0 Then
-    DefaultRegionPointerStyle = PropDfltDefaultRegionPointerStyle
+    RegionDefaultPointerStyle = PropDfltDefaultRegionPointerStyle
     Err.clear
 End If
 
-DefaultRegionYScaleQuantum = PropBag.ReadProperty(PropNameDefaultRegionYScaleQuantum, PropDfltDefaultRegionYScaleQuantum)
+RegionDefaultYScaleQuantum = PropBag.ReadProperty(PropNameDefaultRegionYScaleQuantum, PropDfltDefaultRegionYScaleQuantum)
 If Err.Number <> 0 Then
-    DefaultRegionYScaleQuantum = PropDfltDefaultRegionYScaleQuantum
+    RegionDefaultYScaleQuantum = PropDfltDefaultRegionYScaleQuantum
     Err.clear
 End If
 
@@ -1020,6 +1020,7 @@ If Err.Number <> 0 Then
     setVerticalGridParameters PropDfltVerticalGridSpacing, PropDfltVerticalGridUnits
     Err.clear
 End If
+mVerticalGridParametersSet = False
 
 YAxisWidthCm = PropBag.ReadProperty(PropNameYAxisWidthCm, PropDfltYAxisWidthCm)
 If Err.Number <> 0 Then
@@ -1318,15 +1319,6 @@ mAllowVerticalMouseScrolling = value
 PropertyChanged "allowVerticalMouseScrolling"
 End Property
 
-'Public Property Get autoscale() As Boolean
-'autoscale = mDefaultRegionStyle.autoscale
-'End Property
-'
-'Public Property Let autoscale(ByVal value As Boolean)
-'mDefaultRegionStyle.autoscale = value
-''PropertyChanged "autoscale"
-'End Property
-
 Public Property Get autoscroll() As Boolean
 Attribute autoscroll.VB_ProcData.VB_Invoke_Property = ";Behavior"
 autoscroll = mAutoscroll
@@ -1335,16 +1327,6 @@ End Property
 Public Property Let autoscroll(ByVal value As Boolean)
 mAutoscroll = value
 End Property
-
-'Public Property Get barSpacingPercent() As Single
-'barSpacingPercent = mBarSpacingPercent
-'End Property
-'
-'Public Property Let barSpacingPercent(ByVal value As Single)
-'mBarSpacingPercent = value
-'mBarWidth = 100! / (100! + mBarSpacingPercent)
-'PropertyChanged "barspacingpercent"
-'End Property
 
 Public Property Get chartBackColor() As OLE_COLOR
 Attribute chartBackColor.VB_ProcData.VB_Invoke_Property = ";Appearance"
@@ -1430,111 +1412,48 @@ Case ToolPitchfork
 End Select
 End Property
 
+Public Property Get defaultBarStyle() As BarStyle
+Set defaultBarStyle = mDefaultBarStyle.clone
+End Property
+
+Public Property Let defaultBarStyle( _
+                ByVal value As BarStyle)
+Set mDefaultRegionStyle = value.clone
+End Property
+
+Public Property Get defaultDataPointStyle() As DataPointStyle
+Set defaultDataPointStyle = mDefaultDataPointStyle.clone
+End Property
+
+Public Property Let defaultDataPointStyle( _
+                ByVal value As DataPointStyle)
+Set mDefaultDataPointStyle = value.clone
+End Property
+
+Public Property Get defaultLineStyle() As linestyle
+Set defaultLineStyle = mDefaultLineStyle.clone
+End Property
+
+Public Property Let defaultLineStyle( _
+                ByVal value As linestyle)
+Set mDefaultLineStyle = value.clone
+End Property
+
 Public Property Get defaultRegionStyle() As ChartRegionStyle
 Set defaultRegionStyle = mDefaultRegionStyle.clone
 End Property
 
 Public Property Let defaultRegionStyle( _
                 ByVal value As ChartRegionStyle)
-Set mDefaultRegionStyle = value
+Set mDefaultRegionStyle = value.clone
 End Property
 
-Public Property Get DefaultRegionAutoscale() As Boolean
-Attribute DefaultRegionAutoscale.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-DefaultRegionAutoscale = mDefaultRegionStyle.autoscale
+Public Property Get defaultTextStyle() As TextStyle
+Set defaultTextStyle = mDefaultTextStyle.clone
 End Property
 
-Public Property Let DefaultRegionAutoscale(ByVal value As Boolean)
-mDefaultRegionStyle.autoscale = value
-End Property
-
-Public Property Get DefaultRegionBackColor() As OLE_COLOR
-Attribute DefaultRegionBackColor.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-DefaultRegionBackColor = mDefaultRegionStyle.backColor
-End Property
-
-Public Property Let DefaultRegionBackColor(ByVal val As OLE_COLOR)
-mDefaultRegionStyle.backColor = val
-End Property
-
-Public Property Get DefaultRegionGridColor() As OLE_COLOR
-Attribute DefaultRegionGridColor.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-DefaultRegionGridColor = mDefaultRegionStyle.gridColor
-End Property
-
-Public Property Let DefaultRegionGridColor(ByVal val As OLE_COLOR)
-mDefaultRegionStyle.gridColor = val
-End Property
-
-Public Property Get DefaultRegionGridlineSpacingY() As Double
-Attribute DefaultRegionGridlineSpacingY.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-DefaultRegionGridlineSpacingY = mDefaultRegionStyle.gridlineSpacingY
-End Property
-
-Public Property Let DefaultRegionGridlineSpacingY(ByVal value As Double)
-mDefaultRegionStyle.gridlineSpacingY = value
-End Property
-
-Public Property Get DefaultRegionGridTextColor() As OLE_COLOR
-Attribute DefaultRegionGridTextColor.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-DefaultRegionGridTextColor = mDefaultRegionStyle.gridTextColor
-End Property
-
-Public Property Let DefaultRegionGridTextColor(ByVal val As OLE_COLOR)
-mDefaultRegionStyle.gridTextColor = val
-End Property
-
-Public Property Get DefaultRegionHasGrid() As Boolean
-Attribute DefaultRegionHasGrid.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-DefaultRegionHasGrid = mDefaultRegionStyle.hasGrid
-End Property
-
-Public Property Let DefaultRegionHasGrid(ByVal val As Boolean)
-mDefaultRegionStyle.hasGrid = val
-End Property
-
-Public Property Get DefaultRegionHasGridText() As Boolean
-Attribute DefaultRegionHasGridText.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-DefaultRegionHasGridText = mDefaultRegionStyle.hasGridText
-End Property
-
-Public Property Let DefaultRegionHasGridText(ByVal val As Boolean)
-mDefaultRegionStyle.hasGridText = val
-End Property
-
-Public Property Get DefaultRegionIntegerYScale() As Boolean
-Attribute DefaultRegionIntegerYScale.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-DefaultRegionIntegerYScale = mDefaultRegionStyle.integerYScale
-End Property
-
-Public Property Let DefaultRegionIntegerYScale(ByVal value As Boolean)
-mDefaultRegionStyle.integerYScale = value
-End Property
-
-Public Property Get DefaultRegionMinimumHeight() As Double
-Attribute DefaultRegionMinimumHeight.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-DefaultRegionMinimumHeight = mDefaultRegionStyle.minimumHeight
-End Property
-
-Public Property Let DefaultRegionMinimumHeight(ByVal value As Double)
-mDefaultRegionStyle.minimumHeight = value
-End Property
-
-Public Property Get DefaultRegionPointerStyle() As PointerStyles
-Attribute DefaultRegionPointerStyle.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-DefaultRegionPointerStyle = mDefaultRegionStyle.pointerStyle
-End Property
-
-Public Property Let DefaultRegionPointerStyle(ByVal value As PointerStyles)
-mDefaultRegionStyle.pointerStyle = value
-End Property
-
-Public Property Get DefaultRegionYScaleQuantum() As Double
-DefaultRegionYScaleQuantum = mDefaultRegionStyle.YScaleQuantum
-End Property
-
-Public Property Let DefaultRegionYScaleQuantum(ByVal value As Double)
-mDefaultRegionStyle.YScaleQuantum = value
+Public Property Let defaultTextStyle(ByVal value As TextStyle)
+Set mDefaultTextStyle = value.clone
 End Property
 
 Public Property Get firstVisiblePeriod() As Long
@@ -1614,6 +1533,105 @@ For i = 0 To mRegionsIndex
         region.pointerStyle = value
     End If
 Next
+End Property
+
+Public Property Get RegionDefaultAutoscale() As Boolean
+Attribute RegionDefaultAutoscale.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
+RegionDefaultAutoscale = mDefaultRegionStyle.autoscale
+End Property
+
+Public Property Let RegionDefaultAutoscale(ByVal value As Boolean)
+mDefaultRegionStyle.autoscale = value
+End Property
+
+Public Property Get RegionDefaultBackColor() As OLE_COLOR
+Attribute RegionDefaultBackColor.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
+RegionDefaultBackColor = mDefaultRegionStyle.backColor
+End Property
+
+Public Property Let RegionDefaultBackColor(ByVal val As OLE_COLOR)
+mDefaultRegionStyle.backColor = val
+End Property
+
+Public Property Get RegionDefaultGridColor() As OLE_COLOR
+Attribute RegionDefaultGridColor.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
+RegionDefaultGridColor = mDefaultRegionStyle.gridColor
+End Property
+
+Public Property Let RegionDefaultGridColor(ByVal val As OLE_COLOR)
+mDefaultRegionStyle.gridColor = val
+End Property
+
+Public Property Get RegionDefaultGridlineSpacingY() As Double
+Attribute RegionDefaultGridlineSpacingY.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
+RegionDefaultGridlineSpacingY = mDefaultRegionStyle.gridlineSpacingY
+End Property
+
+Public Property Let RegionDefaultGridlineSpacingY(ByVal value As Double)
+mDefaultRegionStyle.gridlineSpacingY = value
+End Property
+
+Public Property Get RegionDefaultGridTextColor() As OLE_COLOR
+Attribute RegionDefaultGridTextColor.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
+RegionDefaultGridTextColor = mDefaultRegionStyle.gridTextColor
+End Property
+
+Public Property Let RegionDefaultGridTextColor(ByVal val As OLE_COLOR)
+mDefaultRegionStyle.gridTextColor = val
+End Property
+
+Public Property Get RegionDefaultHasGrid() As Boolean
+Attribute RegionDefaultHasGrid.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
+RegionDefaultHasGrid = mDefaultRegionStyle.hasGrid
+End Property
+
+Public Property Let RegionDefaultHasGrid(ByVal val As Boolean)
+mDefaultRegionStyle.hasGrid = val
+End Property
+
+Public Property Get RegionDefaultHasGridText() As Boolean
+Attribute RegionDefaultHasGridText.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
+RegionDefaultHasGridText = mDefaultRegionStyle.hasGridText
+End Property
+
+Public Property Let RegionDefaultHasGridText(ByVal val As Boolean)
+mDefaultRegionStyle.hasGridText = val
+End Property
+
+Public Property Get RegionDefaultIntegerYScale() As Boolean
+Attribute RegionDefaultIntegerYScale.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
+RegionDefaultIntegerYScale = mDefaultRegionStyle.integerYScale
+End Property
+
+Public Property Let RegionDefaultIntegerYScale(ByVal value As Boolean)
+mDefaultRegionStyle.integerYScale = value
+End Property
+
+Public Property Get RegionDefaultMinimumHeight() As Double
+Attribute RegionDefaultMinimumHeight.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
+RegionDefaultMinimumHeight = mDefaultRegionStyle.minimumHeight
+End Property
+
+Public Property Let RegionDefaultMinimumHeight(ByVal value As Double)
+mDefaultRegionStyle.minimumHeight = value
+End Property
+
+Public Property Get RegionDefaultPointerStyle() As PointerStyles
+Attribute RegionDefaultPointerStyle.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
+RegionDefaultPointerStyle = mDefaultRegionStyle.pointerStyle
+End Property
+
+Public Property Let RegionDefaultPointerStyle(ByVal value As PointerStyles)
+mDefaultRegionStyle.pointerStyle = value
+End Property
+
+Public Property Get RegionDefaultYScaleQuantum() As Double
+Attribute RegionDefaultYScaleQuantum.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
+RegionDefaultYScaleQuantum = mDefaultRegionStyle.YScaleQuantum
+End Property
+
+Public Property Let RegionDefaultYScaleQuantum(ByVal value As Double)
+mDefaultRegionStyle.YScaleQuantum = value
 End Property
 
 Public Property Get sessionEndTime() As Date
@@ -1811,7 +1829,13 @@ addChartRegion.periodsInView mScaleLeft, mYAxisPosition - 1
 addChartRegion.verticalGridUnits = mVerticalGridUnits
 addChartRegion.verticalGridSpacing = mVerticalGridSpacing
 addChartRegion.sessionStartTime = mSessionStartTime
+
+addChartRegion.defaultBarStyle = mDefaultBarStyle
+addChartRegion.defaultDataPointStyle = mDefaultDataPointStyle
+addChartRegion.defaultLineStyle = mDefaultLineStyle
+addChartRegion.defaultTextStyle = mDefaultTextStyle
 addChartRegion.style = style
+
 If mHideGrid Then addChartRegion.hideGrid
 
 
@@ -2276,15 +2300,20 @@ mXAxisRegion.controller = controller
 mXAxisRegion.surface = XAxisPicture
 mXAxisRegion.verticalGridSpacing = mVerticalGridSpacing
 mXAxisRegion.verticalGridUnits = mVerticalGridUnits
-mXAxisRegion.pointerStyle = PointerNone
-mXAxisRegion.regionBackColor = mDefaultRegionStyle.backColor
 mXAxisRegion.regionBottom = 0
 mXAxisRegion.regionTop = 1
 mXAxisRegion.sessionStartTime = mSessionStartTime
-mXAxisRegion.gridColor = mDefaultRegionStyle.gridColor
-mXAxisRegion.gridTextColor = mDefaultRegionStyle.gridTextColor
+
+mXAxisRegion.defaultBarStyle = mDefaultBarStyle
+mXAxisRegion.defaultDataPointStyle = mDefaultDataPointStyle
+mXAxisRegion.defaultLineStyle = mDefaultLineStyle
+mXAxisRegion.defaultTextStyle = mDefaultTextStyle
+mXAxisRegion.style = mDefaultRegionStyle
+
 mXAxisRegion.hasGrid = False
 mXAxisRegion.hasGridText = True
+
+mXAxisRegion.pointerStyle = PointerNone
 
 Set mXCursorText = mXAxisRegion.addText(LayerNumbers.LayerPointer)
 mXCursorText.align = AlignTopCentre
@@ -2340,6 +2369,7 @@ End Sub
 
 Private Sub initialise()
 Static firstInitialisationDone As Boolean
+Dim aFont As StdFont
 Dim i As Long
 
 mPrevHeight = UserControl.height
@@ -2384,7 +2414,6 @@ If Not firstInitialisationDone Then
     mVerticalGridParametersSet = False
     
     Set mDefaultRegionStyle = New ChartRegionStyle
-    
     mDefaultRegionStyle.autoscale = PropDfltDefaultRegionAutoscale
     mDefaultRegionStyle.backColor = PropDfltDefaultRegionBackColor
     mDefaultRegionStyle.gridColor = PropDfltDefaultRegionGridColor
@@ -2396,6 +2425,70 @@ If Not firstInitialisationDone Then
     mDefaultRegionStyle.pointerStyle = PropDfltDefaultRegionPointerStyle
     mDefaultRegionStyle.minimumHeight = PropDfltDefaultRegionMinimumHeight
     mDefaultRegionStyle.YScaleQuantum = PropDfltDefaultRegionYScaleQuantum
+    
+    Set mDefaultBarStyle = New BarStyle
+    mDefaultBarStyle.tailThickness = 1
+    mDefaultBarStyle.outlineThickness = 1
+    mDefaultBarStyle.upColor = &H1D9311
+    mDefaultBarStyle.downColor = &H43FC2
+    mDefaultBarStyle.displayMode = BarDisplayModeCandlestick
+    mDefaultBarStyle.solidUpBody = True
+    mDefaultBarStyle.barThickness = 2
+    mDefaultBarStyle.barWidth = 0.5
+    mDefaultBarStyle.barColor = -1
+    
+    Set mDefaultDataPointStyle = New DataPointStyle
+    mDefaultDataPointStyle.lineThickness = 1
+    mDefaultDataPointStyle.upColor = vbBlack
+    mDefaultDataPointStyle.linestyle = LineStyles.LineSolid
+    mDefaultDataPointStyle.displayMode = DataPointDisplayModes.DataPointDisplayModeLine
+    mDefaultDataPointStyle.histBarWidth = 0.5
+    mDefaultDataPointStyle.includeInAutoscale = True
+    
+    Set mDefaultLineStyle = New linestyle
+    mDefaultLineStyle.Color = vbBlack
+    mDefaultLineStyle.thickness = 1
+    mDefaultLineStyle.linestyle = LineStyles.LineSolid
+    mDefaultLineStyle.extendBefore = False
+    mDefaultLineStyle.extendAfter = False
+    mDefaultLineStyle.arrowStartStyle = ArrowStyles.ArrowNone
+    mDefaultLineStyle.arrowStartLength = 10
+    mDefaultLineStyle.arrowStartWidth = 10
+    mDefaultLineStyle.arrowStartColor = vbBlack
+    mDefaultLineStyle.arrowStartFillColor = vbWhite
+    mDefaultLineStyle.arrowStartfillstyle = FillStyles.FillSolid
+    mDefaultLineStyle.arrowEndStyle = ArrowStyles.ArrowNone
+    mDefaultLineStyle.arrowEndLength = 10
+    mDefaultLineStyle.arrowEndWidth = 10
+    mDefaultLineStyle.arrowEndColor = vbBlack
+    mDefaultLineStyle.arrowEndFillColor = vbWhite
+    mDefaultLineStyle.arrowEndFillStyle = FillStyles.FillSolid
+    mDefaultLineStyle.fixedX = False
+    mDefaultLineStyle.fixedY = False
+    mDefaultLineStyle.includeInAutoscale = False
+    mDefaultLineStyle.extended = False
+    
+    Set aFont = New StdFont
+    aFont.Bold = False
+    aFont.Italic = False
+    aFont.name = "Arial"
+    aFont.Size = 8
+    aFont.Strikethrough = False
+    aFont.Underline = False
+    Set mDefaultTextStyle = New TextStyle
+    mDefaultTextStyle.font = aFont
+    mDefaultTextStyle.Color = vbBlack
+    mDefaultTextStyle.box = False
+    mDefaultTextStyle.boxColor = vbBlack
+    mDefaultTextStyle.boxStyle = LineStyles.LineSolid
+    mDefaultTextStyle.boxThickness = 1
+    mDefaultTextStyle.boxFillColor = vbWhite
+    mDefaultTextStyle.boxFillStyle = FillStyles.FillSolid
+    mDefaultTextStyle.align = TextAlignModes.AlignBottomLeft
+    mDefaultTextStyle.includeInAutoscale = False
+    mDefaultTextStyle.extended = False
+    mDefaultTextStyle.paddingX = 1#
+    mDefaultTextStyle.paddingY = 0.5
     
     mTwipsPerBar = PropDfltTwipsPerBar
     mYAxisWidthCm = PropDfltYAxisWidthCm

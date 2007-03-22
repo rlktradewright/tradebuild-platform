@@ -28,34 +28,30 @@ Implements ChartSkilTypes.IGraphicObjectSeries
 '================================================================================
 
 '================================================================================
-' Member variables and constants
+' Constants
 '================================================================================
 
-Private mController As ChartController
+'================================================================================
+' Member variables
+'================================================================================
 
-Private mSeriesId As Long
+Private mController         As ChartController
+Private mSeriesId           As Long
 
-Private mFinished As Boolean
+Private mFinished           As Boolean
 
-Private Const DefaultHistBarWidth As Single = 0.5
-Private mDataPoints As Collection
+Private mDataPoints         As Collection
 
-'Private mSurface As PictureBox
-Private mCanvas As canvas
-Private mLayer As Long
+Private mCanvas             As canvas
+Private mLayer              As Long
 
-Private mEventProxy As ChartRegionEventProxy
+Private mEventProxy         As ChartRegionEventProxy
 
-Private mName As String
-Private mLineThickness As Long
-Private mLineColor As Long
-Private mLineStyle As LineStyles
-Private mDisplayMode As DataPointDisplayModes
-Private mIncludeInAutoscale As Boolean
+Private mStyle              As DataPointStyle
 
-Private mHistBarWidth As Single
+Private mName               As String
 
-Private mPrevDataPoint As DataPoint
+Private mPrevDataPoint      As DataPoint
 
 '================================================================================
 ' Enums
@@ -67,8 +63,6 @@ Private mPrevDataPoint As DataPoint
 
 Private Sub Class_Initialize()
 Set mDataPoints = New Collection
-mLineStyle = LineStyles.LineSolid
-mHistBarWidth = DefaultHistBarWidth
 mSeriesId = GenerateID
 End Sub
 
@@ -104,93 +98,95 @@ End Sub
 ' Properties
 '================================================================================
 
-Friend Property Let canvas(ByVal value As canvas)
-Set mCanvas = value
-End Property
-
-Friend Property Let controller( _
-                ByVal value As ChartController)
-Set mController = value
-End Property
-
 Public Property Get count() As Long
 count = mDataPoints.count
 End Property
 
 Public Property Get displayMode() As DataPointDisplayModes
-displayMode = mDisplayMode
+displayMode = mStyle.displayMode
 End Property
 
 Public Property Let displayMode(ByVal value As DataPointDisplayModes)
-Dim dp As DataPoint
-For Each dp In mDataPoints
-    dp.displayMode = value
-Next
-mDisplayMode = value
+If mStyle.displayMode = value Then Exit Property
+mStyle.displayMode = value
+If mDataPoints.count <> 0 Then
+    mEventProxy.recalcBoundary mSeriesId
+    mEventProxy.paintRegion True
+End If
 End Property
 
-Friend Property Let eventProxy(ByVal value As ChartRegionEventProxy)
-Set mEventProxy = value
+Public Property Get downColor() As Long
+downColor = mStyle.downColor
+End Property
+
+Public Property Let downColor(ByVal value As Long)
+If Not gIsValidColor(value) And value <> -1 Then _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            "ChartSkil25" & "." & "DataPointSeries" & ":" & "downColor", _
+            "Value is not a valid color or -1"
+If mStyle.downColor = value Then Exit Property
+mStyle.downColor = value
+If mDataPoints.count <> 0 Then
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Public Property Get histBarWidth() As Single
-histBarWidth = mHistBarWidth
+histBarWidth = mStyle.histBarWidth
 End Property
 
 Public Property Let histBarWidth(ByVal value As Single)
-mHistBarWidth = value
+If value <= 0 Or value > 1 Then _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            "ChartSkil25" & "." & "DataPointSeries" & ":" & "histBarWidth", _
+            "histBarWidth must be greater than zero but not greater than 1"
+If mStyle.histBarWidth = value Then Exit Property
+mStyle.histBarWidth = value
+If mDataPoints.count <> 0 Then
+    mEventProxy.recalcBoundary mSeriesId
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Friend Property Get includeInAutoscale() As Boolean
-includeInAutoscale = mIncludeInAutoscale
+includeInAutoscale = mStyle.includeInAutoscale
 End Property
 
-Public Property Let includeInAutoscale(ByVal newValue As Boolean)
-mIncludeInAutoscale = newValue
-End Property
-
-Friend Property Let layer(ByVal value As Long)
-mLayer = value
+Public Property Let includeInAutoscale(ByVal value As Boolean)
+If mStyle.includeInAutoscale = value Then Exit Property
+mStyle.includeInAutoscale = value
+If mDataPoints.count <> 0 Then
+    mEventProxy.paintRegion True
+End If
 End Property
 
 Public Property Get layer() As Long
 layer = mLayer
 End Property
 
-Public Property Get lineColor() As Long
-lineColor = mLineColor
+Public Property Get linestyle() As LineStyles
+linestyle = mStyle.linestyle
 End Property
 
-Public Property Let lineColor(ByVal value As Long)
-Dim dp As DataPoint
-For Each dp In mDataPoints
-    dp.lineColor = value
-Next
-mLineColor = value
-End Property
-
-Public Property Get lineStyle() As LineStyles
-lineStyle = mLineStyle
-End Property
-
-Public Property Let lineStyle(ByVal value As LineStyles)
-Dim dp As DataPoint
-For Each dp In mDataPoints
-    dp.lineStyle = value
-Next
-mLineStyle = value
+Public Property Let linestyle(ByVal value As LineStyles)
+If mStyle.linestyle = value Then Exit Property
+mStyle.linestyle = value
+If mDataPoints.count <> 0 Then
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Public Property Get lineThickness() As Long
-lineThickness = mLineThickness
+lineThickness = mStyle.lineThickness
 End Property
 
 Public Property Let lineThickness(ByVal value As Long)
-Dim dp As DataPoint
-For Each dp In mDataPoints
-    dp.lineThickness = value
-Next
-mLineThickness = value
+If mStyle.lineThickness = value Then Exit Property
+mStyle.lineThickness = value
+If mDataPoints.count <> 0 Then
+    mEventProxy.recalcBoundary mSeriesId
+    mEventProxy.paintRegion True
+End If
 End Property
 
 Public Property Get name() As String
@@ -201,34 +197,92 @@ Public Property Let name(ByVal value As String)
 mName = value
 End Property
 
+Public Property Get style() As DataPointStyle
+Set style = mStyle.clone
+End Property
+
+Public Property Let style( _
+                ByVal value As DataPointStyle)
+Dim somethingChanged As Boolean
+Dim recalcBoundaries As Boolean
+Dim recalcRegion As Boolean
+
+If value.displayMode <> mStyle.displayMode Then
+    somethingChanged = True
+    mStyle.displayMode = value.displayMode
+    recalcBoundaries = True
+End If
+If value.downColor <> mStyle.downColor Then
+    somethingChanged = True
+    mStyle.downColor = value.downColor
+End If
+If value.histBarWidth <> mStyle.histBarWidth Then
+    somethingChanged = True
+    mStyle.histBarWidth = value.histBarWidth
+    recalcBoundaries = True
+End If
+If value.includeInAutoscale <> mStyle.includeInAutoscale Then
+    somethingChanged = True
+    recalcRegion = True
+    mStyle.includeInAutoscale = value.includeInAutoscale
+End If
+If value.linestyle <> mStyle.linestyle Then
+    somethingChanged = True
+    mStyle.linestyle = value.linestyle
+End If
+If value.lineThickness <> mStyle.lineThickness Then
+    somethingChanged = True
+    mStyle.lineThickness = value.lineThickness
+    recalcBoundaries = True
+End If
+If value.upColor <> mStyle.upColor Then
+    somethingChanged = True
+    mStyle.upColor = value.upColor
+End If
+
+If somethingChanged Then
+    If recalcBoundaries Then If mDataPoints.count <> 0 Then mEventProxy.recalcBoundary mSeriesId
+    If mDataPoints.count <> 0 Then mEventProxy.paintRegion recalcRegion
+End If
+End Property
+
+Public Property Get upColor() As Long
+upColor = mStyle.upColor
+End Property
+
+Public Property Let upColor(ByVal value As Long)
+If Not gIsValidColor(value) Then _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            "ChartSkil25" & "." & "DataPointSeries" & ":" & "upColor", _
+            "Value is not a valid color"
+If mStyle.upColor = value Then Exit Property
+mStyle.upColor = value
+If mDataPoints.count <> 0 Then
+    mEventProxy.recalcBoundary mSeriesId
+    mEventProxy.paintRegion False
+End If
+End Property
+
 '================================================================================
 ' Methods
 '================================================================================
 
 Public Function add( _
                 ByVal timestamp As Date, _
-                Optional ByVal key As String) As DataPoint
+                Optional ByVal key As String, _
+                Optional ByVal localStyle As DataPointStyle) As DataPoint
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                             "ChartSkil25.DatPointSeries::add", _
                             "DataPoint series is finished"
 Set add = New DataPoint
 add.x = gCalculateX(timestamp, mController)
 If key = "" Then
-    add.key = GenerateGUIDString
-Else
-    add.key = key
+    key = GenerateGUIDString
 End If
-add.canvas = mCanvas
-add.histBarWidth = mHistBarWidth
-add.displayMode = mDisplayMode
-add.eventProxy = mEventProxy
-add.includeInAutoscale = mIncludeInAutoscale
-add.layer = mLayer
-add.lineColor = mLineColor
-add.lineStyle = mLineStyle
-add.lineThickness = mLineThickness
+add.initialise key, mEventProxy, mLayer, mCanvas, mStyle, localStyle
+
 add.prevDataPoint = mPrevDataPoint
-mDataPoints.add add, add.key
+mDataPoints.add add, key
 Set mPrevDataPoint = add
 mEventProxy.addGraphicObject add, mSeriesId
 End Function
@@ -236,6 +290,21 @@ End Function
 Friend Sub finish()
 mFinished = True
 Set mCanvas = Nothing
+End Sub
+
+Friend Sub initialise( _
+                ByVal name As String, _
+                ByVal controller As ChartController, _
+                ByVal eventProxy As ChartRegionEventProxy, _
+                ByVal layer As Long, _
+                ByVal canvas As canvas, _
+                ByVal style As DataPointStyle)
+mName = name
+Set mController = controller
+Set mEventProxy = eventProxy
+mLayer = layer
+Set mCanvas = canvas
+Set mStyle = style.clone    ' style cannot be shared between DataPointSeries
 End Sub
 
 Public Function item(ByVal index As Variant) As DataPoint

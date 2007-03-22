@@ -29,7 +29,8 @@ Event objectUndrawn( _
                 ByVal handle As Long, _
                 ByRef undrawnArea As TRectangle)
 
-Event paintRegion()
+Event paintRegion( _
+                ByVal recalculate As Boolean)
 
 Event recalcBoundary( _
                 ByVal seriesId As Long)
@@ -78,8 +79,9 @@ Friend Sub objectUndrawn(ByVal handle As Long, _
 RaiseEvent objectUndrawn(handle, undrawnArea)
 End Sub
 
-Friend Sub paintRegion()
-RaiseEvent paintRegion
+Friend Sub paintRegion( _
+                ByVal recalculate As Boolean)
+RaiseEvent paintRegion(recalculate)
 End Sub
 
 Friend Sub recalcBoundary( _

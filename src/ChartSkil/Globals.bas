@@ -15,6 +15,8 @@ Public Const PlusInfinitySingle As Single = (2 - 2 ^ -23) * 2 ^ 127
 
 Public Const OneMicroSecond As Double = 1.15740740740741E-11
 
+Public Const MaxSystemColor As Long = &H80000018
+
 Public Const GridlineSpacingCm As Double = 2.5
 
 Public Const TwipsPerCm As Long = 1440 / 2.54
@@ -97,6 +99,14 @@ periodEndtime = BarEndTime(lPeriod.timestamp, _
                         pController.sessionStartTime)
 gCalculateX = lPeriod.periodNumber + (timestamp - lPeriod.timestamp) / (periodEndtime - lPeriod.timestamp)
 
+End Function
+
+Public Function gIsValidColor( _
+                ByVal value As Long) As Boolean
+                
+If value > &HFFFFFF Then Exit Function
+If value < 0 And value > MaxSystemColor Then Exit Function
+gIsValidColor = True
 End Function
 
 '================================================================================
