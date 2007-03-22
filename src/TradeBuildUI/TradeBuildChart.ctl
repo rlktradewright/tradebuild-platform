@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#8.5#0"; "ChartSkil2-5.ocx"
+Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#14.1#0"; "ChartSkil2-5.ocx"
 Begin VB.UserControl TradeBuildChart 
    ClientHeight    =   5745
    ClientLeft      =   0
@@ -448,74 +448,74 @@ End Property
 
 Public Property Get DefaultRegionAutoscale() As Boolean
 Attribute DefaultRegionAutoscale.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-DefaultRegionAutoscale = Chart1.DefaultRegionAutoscale
+DefaultRegionAutoscale = Chart1.RegionDefaultAutoscale
 End Property
 
 Public Property Let DefaultRegionAutoscale(ByVal value As Boolean)
-Chart1.DefaultRegionAutoscale = value
+Chart1.RegionDefaultAutoscale = value
 End Property
 
 Public Property Get DefaultRegionBackColor() As OLE_COLOR
 Attribute DefaultRegionBackColor.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-DefaultRegionBackColor = Chart1.DefaultRegionBackColor
+DefaultRegionBackColor = Chart1.RegionDefaultBackColor
 End Property
 
 Public Property Let DefaultRegionBackColor(ByVal val As OLE_COLOR)
-Chart1.DefaultRegionBackColor = val
+Chart1.RegionDefaultBackColor = val
 End Property
 
 Public Property Get DefaultRegionGridColor() As OLE_COLOR
 Attribute DefaultRegionGridColor.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-DefaultRegionGridColor = Chart1.DefaultRegionGridColor
+DefaultRegionGridColor = Chart1.RegionDefaultGridColor
 End Property
 
 Public Property Let DefaultRegionGridColor(ByVal val As OLE_COLOR)
-Chart1.DefaultRegionGridColor = val
+Chart1.RegionDefaultGridColor = val
 End Property
 
 Public Property Get DefaultRegionGridlineSpacingY() As Double
 Attribute DefaultRegionGridlineSpacingY.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-DefaultRegionGridlineSpacingY = Chart1.DefaultRegionGridlineSpacingY
+DefaultRegionGridlineSpacingY = Chart1.RegionDefaultGridlineSpacingY
 End Property
 
 Public Property Let DefaultRegionGridlineSpacingY(ByVal value As Double)
-Chart1.DefaultRegionGridlineSpacingY = value
+Chart1.RegionDefaultGridlineSpacingY = value
 End Property
 
 Public Property Get DefaultRegionGridTextColor() As OLE_COLOR
 Attribute DefaultRegionGridTextColor.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-DefaultRegionGridTextColor = Chart1.DefaultRegionGridTextColor
+DefaultRegionGridTextColor = Chart1.RegionDefaultGridTextColor
 End Property
 
 Public Property Let DefaultRegionGridTextColor(ByVal val As OLE_COLOR)
-Chart1.DefaultRegionGridTextColor = val
+Chart1.RegionDefaultGridTextColor = val
 End Property
 
 Public Property Get DefaultRegionHasGrid() As Boolean
 Attribute DefaultRegionHasGrid.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-DefaultRegionHasGrid = Chart1.DefaultRegionHasGrid
+DefaultRegionHasGrid = Chart1.RegionDefaultHasGrid
 End Property
 
 Public Property Let DefaultRegionHasGrid(ByVal val As Boolean)
-Chart1.DefaultRegionHasGrid = val
+Chart1.RegionDefaultHasGrid = val
 End Property
 
 Public Property Get DefaultRegionHasGridText() As Boolean
 Attribute DefaultRegionHasGridText.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-DefaultRegionHasGridText = Chart1.DefaultRegionHasGridText
+DefaultRegionHasGridText = Chart1.RegionDefaultHasGridText
 End Property
 
 Public Property Let DefaultRegionHasGridText(ByVal val As Boolean)
-Chart1.DefaultRegionHasGridText = val
+Chart1.RegionDefaultHasGridText = val
 End Property
 
 Public Property Get DefaultRegionPointerStyle() As PointerStyles
 Attribute DefaultRegionPointerStyle.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-DefaultRegionPointerStyle = Chart1.DefaultRegionPointerStyle
+DefaultRegionPointerStyle = Chart1.RegionDefaultPointerStyle
 End Property
 
 Public Property Let DefaultRegionPointerStyle(ByVal value As PointerStyles)
-Chart1.DefaultRegionPointerStyle = value
+Chart1.RegionDefaultPointerStyle = value
 End Property
 
 Public Property Get initialNumberOfBars() As Long
