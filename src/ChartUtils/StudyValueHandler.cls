@@ -411,7 +411,8 @@ If conditionSatisfied Then
     Case StudyRenderingActions.SRActSetPeriodBackgroundColor
         mRegion.setPeriodBackgroundColor chartMgr.getPeriod(timestamp).periodNumber, CLng(pConditionalAction.actionValue)
     Case StudyRenderingActions.SRActSetValueColor
-        mCurrentDataPoint.lineColor = CLng(pConditionalAction.actionValue)
+        mCurrentDataPoint.upColor = CLng(pConditionalAction.actionValue)
+        mCurrentDataPoint.downColor = CLng(pConditionalAction.actionValue)
     End Select
 End If
 processConditionalAction = conditionSatisfied
@@ -528,7 +529,8 @@ Set mDataSeries = mRegion.addDataPointSeries(studyValueConfig.layer)
 mDataSeries.displayMode = studyValueConfig.dataPointDisplayMode
 mDataSeries.histBarWidth = studyValueConfig.histogramBarWidth
 mDataSeries.includeInAutoscale = studyValueConfig.includeInAutoscale
-mDataSeries.lineColor = studyValueConfig.color
+mDataSeries.upColor = studyValueConfig.color
+mDataSeries.downColor = studyValueConfig.color
 mDataSeries.lineStyle = studyValueConfig.lineStyle
 mDataSeries.lineThickness = studyValueConfig.lineThickness
 End Sub
@@ -555,7 +557,7 @@ mLineSeries.extended = studyValueConfig.extended
 mLineSeries.fixedX = studyValueConfig.fixedX
 mLineSeries.fixedY = studyValueConfig.fixedY
 mLineSeries.includeInAutoscale = studyValueConfig.includeInAutoscale
-mLineSeries.style = studyValueConfig.lineStyle
+mLineSeries.lineStyle = studyValueConfig.lineStyle
 mLineSeries.thickness = studyValueConfig.lineThickness
 End Sub
 

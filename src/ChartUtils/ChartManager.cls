@@ -213,7 +213,7 @@ If studyConfig.studyHorizontalRules.count > 0 Then
     horizRulesLineSeries.extendBefore = True
     For Each studyHorizRule In studyConfig.studyHorizontalRules
         horizRulesLineSeries.color = studyHorizRule.color
-        horizRulesLineSeries.style = studyHorizRule.style
+        horizRulesLineSeries.lineStyle = studyHorizRule.style
         horizRulesLineSeries.thickness = studyHorizRule.thickness
         Set line = horizRulesLineSeries.add
         line.point1 = region.newPoint(0, studyHorizRule.y, CoordsRelative, CoordsLogical)
