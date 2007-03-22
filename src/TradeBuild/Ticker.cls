@@ -192,9 +192,11 @@ Private mMaxBidPricesIndex          As Long
 
 Private mQuoteListeners             As Collection
 Private mPriceChangeListeners       As Collection
-Private mMarketDepthListeners  As Collection
+Private mMarketDepthListeners       As Collection
 Private mRawMarketDepthListeners    As Collection
 Private mTickfileWriterListeners    As Collection
+Private mStateChangeListeners       As Collection
+
 Private mDataConsumers              As Collection
 
 Private mInfoListeners              As InfoListeners
@@ -230,13 +232,17 @@ Private Sub Class_Initialize()
 State = TickerStates.TickerStateCreated
 
 Set mStudyManager = New studyManager
+
 Set mInfoListeners = New InfoListeners
 Set mQuoteListeners = New Collection
 Set mPriceChangeListeners = New Collection
 Set mMarketDepthListeners = New Collection
 Set mRawMarketDepthListeners = New Collection
 Set mTickfileWriterListeners = New Collection
+Set mStateChangeListeners = New Collection
+
 Set mDataConsumers = New Collection
+
 Set mExecutions = New executions
 Set mDummyExecutions = New executions
 'Set mStudies = New Collection
@@ -1431,16 +1437,12 @@ mSimulatedOrders = value
 End Property
 
 Private Property Let State(ByVal value As TickerStates)
-Dim ev As StateChangeEvent
 
 If value = mState Then Exit Property
 mState = value
 
-Set ev.source = Me
-ev.State = mState
+fireStateChange mState
 
-RaiseEvent stateChange(ev)
-mTickers.stateChange ev
 End Property
 
 Public Property Get State() As TickerStates
@@ -1621,6 +1623,11 @@ Public Sub addRawMarketDepthListener(ByVal value As RawMarketDepthListener)
 mRawMarketDepthListeners.add value
 End Sub
 
+Public Sub addStateChangeListener( _
+                ByVal value As StateChangeListener)
+mStateChangeListeners.add value
+End Sub
+
 Public Sub addTickfileWriterListener(ByVal value As WriterListener)
 mTickfileWriterListeners.add value
 End Sub
@@ -1714,6 +1721,14 @@ Dim i As Long
 If mPriceChangeListeners Is Nothing Then Exit Sub
 For i = mPriceChangeListeners.Count To 1 Step -1
     If mPriceChangeListeners.item(i) Is value Then mPriceChangeListeners.remove i
+Next
+End Sub
+
+Public Sub removeStateChangeListener(ByVal value As StateChangeListener)
+Dim i As Long
+If mStateChangeListeners Is Nothing Then Exit Sub
+For i = mStateChangeListeners.Count To 1 Step -1
+    If mStateChangeListeners.item(i) Is value Then mStateChangeListeners.remove i
 Next
 End Sub
 
@@ -2287,6 +2302,20 @@ For i = 1 To mMarketDepthListeners.Count
     listener.setMarketDepthCell processedMarketDepth
 Next
 RaiseEvent DOMSetCell(processedMarketDepth)
+End Sub
+
+Private Sub fireStateChange(ByVal newState As TickerStates)
+Dim listener As StateChangeListener
+Dim i As Long
+Dim ev As StateChangeEvent
+Set ev.source = Me
+ev.State = newState
+For i = 1 To mStateChangeListeners.Count
+    Set listener = mStateChangeListeners(i)
+    listener.Change ev
+Next
+RaiseEvent stateChange(ev)
+mTickers.stateChange ev
 End Sub
 
 Private Sub fireTickfileWriterNotify( _

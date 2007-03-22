@@ -454,6 +454,12 @@ Public Enum TickTypes
     TickTypeMarketDepthReset = &H400&
 End Enum
 
+Public Enum TimeframeStates
+    TimeframeStateCreated
+    TimeframeStateLoading
+    TimeframeStateLoaded
+End Enum
+
 Public Enum TradeBuildListenValueTypes
 
     VTAll = -1  ' used by listenenrs to specify that they want to receive all

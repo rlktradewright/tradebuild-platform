@@ -53,7 +53,8 @@ Event BarWriterNotification(ByRef ev As WriterEvent)
 
 Event Notification(ByRef ev As NotificationEvent)
 
-                
+Event StateChange(ByRef ev As StateChangeEvent)
+
 
 '@================================================================================
 ' Constants
@@ -115,6 +116,7 @@ Private WithEvents mSession         As session
 Attribute mSession.VB_VarHelpID = -1
 
 Private mBarWriterListeners         As Collection
+Private mStateChangeListeners       As Collection
 
 Private mBarUnit                    As TimePeriodUnits
 Private mBarLength                  As Long
@@ -159,6 +161,7 @@ Private mIsHistorical               As Boolean
 
 Private Sub Class_Initialize()
 Set mBarWriterListeners = New Collection
+Set mStateChangeListeners = New Collection
 End Sub
 
 Private Sub Class_Terminate()
@@ -199,6 +202,7 @@ Set mBarReader = Nothing
 
 StartStudies
 
+fireStateChange TimeframeStateLoaded
 RaiseEvent BarsLoaded
 Set mInputStudy = Nothing
 Set mSession = Nothing
@@ -222,6 +226,7 @@ Case HDConnectedToDataSource
 Case Else
     StartStudies
     RaiseEvent Notification(ev)
+    fireStateChange TimeframeStateLoaded
     RaiseEvent BarsLoaded
     
     mHistoricBarTimer.StopTimer
@@ -432,8 +437,14 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Sub addBarWriterListener(ByVal value As WriterListener)
+Public Sub addBarWriterListener( _
+                ByVal value As WriterListener)
 mBarWriterListeners.add value
+End Sub
+
+Public Sub addStateChangeListener( _
+                ByVal value As StateChangeListener)
+mStateChangeListeners.add value
 End Sub
 
 Friend Sub finish()
@@ -495,12 +506,23 @@ If Not mContract Is Nothing Then
     startHistDataFetch
 End If
 
+fireStateChange TimeframeStateCreated
 End Sub
 
-Public Sub removeBarWriterListener(ByVal value As WriterListener)
+Public Sub removeBarWriterListener( _
+                ByVal value As WriterListener)
 Dim i As Long
 For i = mBarWriterListeners.Count To 1 Step -1
     If mBarWriterListeners.item(i) Is value Then mBarWriterListeners.remove i
+Next
+End Sub
+
+Public Sub removeStateChangeListener( _
+                ByVal value As StateChangeListener)
+Dim i As Long
+If mStateChangeListeners Is Nothing Then Exit Sub
+For i = mStateChangeListeners.Count To 1 Step -1
+    If mStateChangeListeners.item(i) Is value Then mStateChangeListeners.remove i
 Next
 End Sub
 
@@ -566,9 +588,11 @@ Private Sub FetchHistoricBars()
 Dim barSpecifier As TradeBuildSP.BarDataSpecifier
 Dim ev As NotificationEvent
 If mBarReader Is Nothing Then
+    fireStateChange TimeframeStateLoading
     If mNumberOfBarsToFetch = 0 Then
         mHistoricDataLoaded = True
         StartStudies
+        fireStateChange TimeframeStateLoaded
         RaiseEvent BarsLoaded
         Exit Sub
     End If
@@ -584,6 +608,7 @@ If mBarReader Is Nothing Then
         ev.eventCode = ApiNotifyCodes.ApiNotifyNoHistoricDataSource
         ev.eventMessage = "Can't create historic data reader"
         RaiseEvent Notification(ev)
+        fireStateChange TimeframeStateLoaded
         RaiseEvent BarsLoaded
     Else
         barSpecifier.barLength = mBarLength
@@ -663,6 +688,19 @@ For i = 1 To mBarWriterListeners.Count
 Next
 End Sub
                                 
+Private Sub fireStateChange(ByVal newState As TimeframeStates)
+Dim listener As StateChangeListener
+Dim i As Long
+Dim ev As StateChangeEvent
+Set ev.source = Me
+ev.State = newState
+For i = 1 To mStateChangeListeners.Count
+    Set listener = mStateChangeListeners(i)
+    listener.Change ev
+Next
+RaiseEvent StateChange(ev)
+End Sub
+
 Private Sub ProcessHistoricBar()
 
 mHistoricBarPending = False
