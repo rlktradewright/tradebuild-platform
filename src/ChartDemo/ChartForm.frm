@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#8.0#0"; "ChartSkil2-5.ocx"
+Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#14.0#0"; "ChartSkil2-5.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo Version 2.5"
    ClientHeight    =   8355
@@ -11,13 +11,13 @@ Begin VB.Form ChartForm
    ScaleWidth      =   12015
    Begin ChartSkil25.Chart Chart1 
       Align           =   1  'Align Top
-      Height          =   6735
+      Height          =   6495
       Left            =   0
       TabIndex        =   17
       Top             =   0
       Width           =   12015
       _ExtentX        =   21193
-      _ExtentY        =   11880
+      _ExtentY        =   11456
    End
    Begin VB.PictureBox BasePicture 
       Appearance      =   0  'Flat
@@ -457,14 +457,16 @@ Set mMovAvg1Series = mPriceRegion.addDataPointSeries
 mMovAvg1Series.displayMode = DataPointDisplayModes.DataPointDisplayModePoint
                                         ' display this series as discrete points...
 mMovAvg1Series.lineThickness = 5        ' ...with a diameter of 5 pixels...
-mMovAvg1Series.lineColor = vbRed       ' ...in red
+mMovAvg1Series.upColor = vbRed          ' ...in red
+mMovAvg1Series.downColor = vbRed
 
 ' Set up a datapoint series for the second moving average
 Set mMovAvg2Series = mPriceRegion.addDataPointSeries
 mMovAvg2Series.displayMode = DataPointDisplayModes.DataPointDisplayModeLine
                                         ' display this series as a line connecting
                                         ' individual points...
-mMovAvg2Series.lineColor = vbBlue      ' ...in blue
+mMovAvg2Series.upColor = vbBlue         ' ...in blue
+mMovAvg2Series.downColor = vbBlue
 mMovAvg2Series.lineThickness = 1        ' ...with a thickness of 1 pixel...
 mMovAvg2Series.LineStyle = LineStyles.LineDot
                                         ' ...and a dotted style
@@ -474,7 +476,8 @@ Set mMovAvg3Series = mPriceRegion.addDataPointSeries
 mMovAvg3Series.displayMode = DataPointDisplayModes.DataPointDisplayModeStep
                                         ' display this series as a stepped line
                                         ' connecting the individual points...
-mMovAvg3Series.lineColor = vbGreen     ' ...in green...
+mMovAvg3Series.upColor = vbGreen        ' ...in green for an up move
+mMovAvg3Series.downColor = vbRed        ' ...in red for a down move
 mMovAvg3Series.lineThickness = 3        ' ...3 pixels thick
 
 ' Set up a line series for the swing lines (which connect each high or low
@@ -484,7 +487,7 @@ Set mSwingLineSeries = mPriceRegion.addLineSeries
 mSwingLineSeries.Color = vbRed
 mSwingLineSeries.thickness = 1
 mSwingLineSeries.arrowEndStyle = ArrowClosed
-mSwingLineSeries.arrowEndFillColor = vbBlack
+mSwingLineSeries.arrowEndFillColor = vbYellow
 mSwingLineSeries.arrowEndFillStyle = FillSolid
 mSwingLineSeries.arrowEndColor = vbBlue
 mSwingLineSeries.arrowStartStyle = ArrowNone
@@ -513,17 +516,18 @@ mMACDRegion.setTitle "MACD (12, 24, 5)", vbBlue, Nothing
 ' Set up a datapoint series for the MACD histogram values on lowest user layer
 Set mMACDHistSeries = mMACDRegion.addDataPointSeries(LayerNumbers.LayerLowestUser)
 mMACDHistSeries.displayMode = DataPointDisplayModes.DataPointDisplayModeHistogram
-mMACDHistSeries.lineColor = vbGreen
+mMACDHistSeries.upColor = vbGreen
+mMACDHistSeries.downColor = vbMagenta
 
 ' Set up a datapoint series for the MACD values on next layer
 Set mMACDSeries = mMACDRegion.addDataPointSeries(LayerNumbers.LayerLowestUser + 1)
 mMACDSeries.displayMode = DataPointDisplayModes.DataPointDisplayModeLine
-mMACDSeries.lineColor = vbBlue
+mMACDSeries.upColor = vbBlue
 
 ' Set up a datapoint series for the MACD signal values on next layer
 Set mMACDSignalSeries = mMACDRegion.addDataPointSeries(LayerNumbers.LayerLowestUser + 2)
 mMACDSignalSeries.displayMode = DataPointDisplayModes.DataPointDisplayModeLine
-mMACDSignalSeries.lineColor = vbRed
+mMACDSignalSeries.upColor = vbRed
 
 ' Create a region to display the volume bars
 Set mVolumeRegion = Chart1.addChartRegion(15)
@@ -541,6 +545,8 @@ mVolumeRegion.gridlineSpacingY = 0.8    ' the horizontal grid lines should be ab
 Set mVolumeSeries = mVolumeRegion.addDataPointSeries
 mVolumeSeries.displayMode = DataPointDisplayModes.DataPointDisplayModeHistogram
                                         ' display this series as a histogram
+mVolumeSeries.upColor = vbGreen
+mVolumeSeries.downColor = vbRed
 mCumVolume = 0
 mPrevBarVolume = 0
 
@@ -611,7 +617,6 @@ mTickCountText.fixedX = True
 mTickCountText.fixedY = True
 mTickCountText.Align = TextAlignModes.AlignTopLeft
 mTickCountText.includeInAutoscale = False
-mTickCountText.keepInView = True
 
 ' set up the clock timer to fire an event every 250 milliseconds
 Set mClockTimer = TimerUtils2.createIntervalTimer(250, ExpiryTimeUnitMilliseconds, 250)
@@ -685,11 +690,6 @@ swing mPeriod.periodNumber, closePrice
 Set mVolume = mVolumeSeries.Add(bartime)
 mCumVolume = mCumVolume + volume
 mVolume.datavalue = volume
-If mVolume.datavalue >= mPrevBarVolume Then
-    mVolume.lineColor = vbGreen
-Else
-    mVolume.lineColor = vbRed
-End If
 mPrevBarVolume = volume
 
 Debug.Print "Time to add bar " & barnum & ": " & mElapsedTimer.ElapsedTimeMicroseconds & " microsecs"
@@ -752,11 +752,6 @@ Private Sub mTickSimulator_TickVolume( _
 mVolume.datavalue = mVolume.datavalue + volume - mCumVolume
 mCumVolume = volume
 
-If mVolume.datavalue >= mPrevBarVolume Then
-    mVolume.lineColor = vbGreen
-Else
-    mVolume.lineColor = vbRed
-End If
 End Sub
 
 '================================================================================
@@ -774,6 +769,12 @@ End Sub
 Private Sub calculateStudies(ByVal value As Double)
 mMA1.datavalue value
 If Not IsEmpty(mMA1.maValue) Then mMovAvg1Point.datavalue = mMA1.maValue
+
+If mPeriod.periodNumber Mod 5 = 0 Then
+    mMovAvg1Point.upColor = vbGreen     ' make every 5th data point magenta...
+    mMovAvg1Point.downColor = vbMagenta ' .. or green...
+    mMovAvg1Point.lineThickness = 10    ' ... and bigger
+End If
 
 mMA2.datavalue value
 If Not IsEmpty(mMA2.maValue) Then mMovAvg2Point.datavalue = mMA2.maValue
