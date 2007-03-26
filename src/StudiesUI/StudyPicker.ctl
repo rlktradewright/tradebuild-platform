@@ -446,7 +446,8 @@ Set mConfigForm = New fStudyConfigurer
 
 'mConfigForm.Show vbModeless, Me
 
-mConfigForm.initialise getStudyDefinition(studyName, spName), _
+mConfigForm.initialise mChartManager.chartController, _
+                        getStudyDefinition(studyName, spName), _
                         spName, _
                         mChartManager.regionNames, _
                         mStudyConfigurations, _

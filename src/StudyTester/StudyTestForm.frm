@@ -2,20 +2,20 @@ VERSION 5.00
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "msflxgrd.ocx"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
-Object = "{CA028305-9CAA-44AE-816E-330E4FEBE823}#5.0#0"; "StudiesUI2-5.ocx"
-Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#8.0#0"; "ChartSkil2-5.ocx"
+Object = "{CA028305-9CAA-44AE-816E-330E4FEBE823}#9.0#0"; "StudiesUI2-5.ocx"
+Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#14.2#0"; "ChartSkil2-5.ocx"
 Begin VB.Form StudyTestForm 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeBuild Study Test Harness"
    ClientHeight    =   10365
    ClientLeft      =   5070
    ClientTop       =   3540
-   ClientWidth     =   12510
+   ClientWidth     =   12840
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
    MinButton       =   0   'False
    ScaleHeight     =   10365
-   ScaleWidth      =   12510
+   ScaleWidth      =   12840
    Begin VB.CommandButton TestButton 
       Caption         =   "Test"
       Enabled         =   0   'False
@@ -29,7 +29,7 @@ Begin VB.Form StudyTestForm
          Strikethrough   =   0   'False
       EndProperty
       Height          =   735
-      Left            =   11280
+      Left            =   11640
       TabIndex        =   11
       ToolTipText     =   "Test the study"
       Top             =   120
@@ -40,8 +40,8 @@ Begin VB.Form StudyTestForm
       Left            =   120
       TabIndex        =   12
       Top             =   960
-      Width           =   12255
-      _ExtentX        =   21616
+      Width           =   12615
+      _ExtentX        =   22251
       _ExtentY        =   16325
       _Version        =   393216
       TabHeight       =   520
@@ -66,30 +66,43 @@ Begin VB.Form StudyTestForm
       TabPicture(1)   =   "StudyTestForm.frx":001C
       Tab(1).ControlEnabled=   0   'False
       Tab(1).Control(0)=   "Label2"
+      Tab(1).Control(0).Enabled=   0   'False
       Tab(1).Control(1)=   "Label3"
+      Tab(1).Control(1).Enabled=   0   'False
       Tab(1).Control(2)=   "Label1"
+      Tab(1).Control(2).Enabled=   0   'False
       Tab(1).Control(3)=   "Label19"
+      Tab(1).Control(3).Enabled=   0   'False
       Tab(1).Control(4)=   "StudiesCombo"
+      Tab(1).Control(4).Enabled=   0   'False
       Tab(1).Control(5)=   "StudyLibraryClassNameText"
+      Tab(1).Control(5).Enabled=   0   'False
       Tab(1).Control(6)=   "LibToAddText"
+      Tab(1).Control(6).Enabled=   0   'False
       Tab(1).Control(7)=   "AddLibButton"
+      Tab(1).Control(7).Enabled=   0   'False
       Tab(1).Control(8)=   "SpList"
+      Tab(1).Control(8).Enabled=   0   'False
       Tab(1).Control(9)=   "RemoveLibButton"
+      Tab(1).Control(9).Enabled=   0   'False
       Tab(1).Control(10)=   "SetStudyLibraryButton"
+      Tab(1).Control(10).Enabled=   0   'False
       Tab(1).Control(11)=   "StudyConfigurer1"
+      Tab(1).Control(11).Enabled=   0   'False
       Tab(1).ControlCount=   12
       TabCaption(2)   =   "&Chart"
       TabPicture(2)   =   "StudyTestForm.frx":0038
       Tab(2).ControlEnabled=   0   'False
       Tab(2).Control(0)=   "Chart1"
+      Tab(2).Control(0).Enabled=   0   'False
       Tab(2).ControlCount=   1
       Begin ChartSkil25.Chart Chart1 
          Height          =   8775
          Left            =   -74880
          TabIndex        =   20
          Top             =   360
-         Width           =   12015
-         _ExtentX        =   21193
+         Width           =   12375
+         _ExtentX        =   21828
          _ExtentY        =   15478
       End
       Begin StudiesUI25.StudyConfigurer StudyConfigurer1 
@@ -97,8 +110,8 @@ Begin VB.Form StudyTestForm
          Left            =   -74760
          TabIndex        =   19
          Top             =   3480
-         Width           =   11895
-         _ExtentX        =   20981
+         Width           =   12135
+         _ExtentX        =   21405
          _ExtentY        =   9975
       End
       Begin VB.TextBox MinimumPriceTickText 
@@ -198,8 +211,8 @@ Begin VB.Form StudyTestForm
          TabIndex        =   13
          TabStop         =   0   'False
          Top             =   1260
-         Width           =   12015
-         _ExtentX        =   21193
+         Width           =   12375
+         _ExtentX        =   21828
          _ExtentY        =   13996
          _Version        =   393216
          Cols            =   6
@@ -518,7 +531,8 @@ regionNames(1) = VolumeRegionName
 
 Set mStudyDefinition = getStudyDefinition(StudiesCombo)
 
-StudyConfigurer1.initialise mStudyDefinition, _
+StudyConfigurer1.initialise Chart1.controller, _
+                            mStudyDefinition, _
                             "", _
                             regionNames, _
                             mInitialStudyConfigs, _
@@ -567,7 +581,8 @@ mChartManager.startStudy testStudy
 ' objects are referenced
 regionNames(0) = PriceRegionName
 regionNames(1) = VolumeRegionName
-StudyConfigurer1.initialise mStudyDefinition, _
+StudyConfigurer1.initialise Chart1.controller, _
+                            mStudyDefinition, _
                             "", _
                             regionNames, _
                             mInitialStudyConfigs, _
@@ -715,6 +730,8 @@ Dim studyDef As StudyDefinition
 ReDim inputValueNames(1) As String
 Dim params As New Parameters2.Parameters
 Dim studyValueConfig As StudyValueConfiguration
+Dim barsStyle As barStyle
+Dim volumeStyle As dataPointStyle
 
 Set studyDef = getStudyDefinition("Constant time bars")
 
@@ -730,27 +747,31 @@ createBarsStudyConfig.Parameters = params
 'createBarsStudyConfig.StudyDefinition = studyDef
 
 Set studyValueConfig = createBarsStudyConfig.StudyValueConfigurations.Add("Bar")
-studyValueConfig.outlineThickness = 1
-studyValueConfig.barThickness = 2
-studyValueConfig.barWidth = 0.75
 studyValueConfig.chartRegionName = PriceRegionName
-studyValueConfig.barDisplayMode = BarDisplayModeCandlestick
-studyValueConfig.downColor = &H43FC2
-studyValueConfig.includeInAutoscale = True
 studyValueConfig.includeInChart = True
 studyValueConfig.layer = 200
-studyValueConfig.solidUpBody = True
-studyValueConfig.tailThickness = 1
-studyValueConfig.upColor = &H1D9311
+Set barsStyle = Chart1.defaultBarStyle
+barsStyle.outlineThickness = 1
+barsStyle.barThickness = 2
+barsStyle.barWidth = 0.6
+barsStyle.displayMode = BarDisplayModeCandlestick
+barsStyle.downColor = &H43FC2
+barsStyle.solidUpBody = True
+barsStyle.tailThickness = 1
+barsStyle.upColor = &H1D9311
+studyValueConfig.barStyle = barsStyle
 
 Set studyValueConfig = createBarsStudyConfig.StudyValueConfigurations.Add("Volume")
 studyValueConfig.chartRegionName = VolumeRegionName
-studyValueConfig.Color = vbBlack
-studyValueConfig.dataPointDisplayMode = DataPointDisplayModeHistogram
-studyValueConfig.histogramBarWidth = 0.7
-studyValueConfig.includeInAutoscale = True
 studyValueConfig.includeInChart = True
-studyValueConfig.lineThickness = 1
+Set volumeStyle = Chart1.defaultDataPointStyle
+volumeStyle.downColor = vbRed
+volumeStyle.upColor = vbGreen
+volumeStyle.displayMode = DataPointDisplayModeHistogram
+volumeStyle.histBarWidth = 0.7
+volumeStyle.includeInAutoscale = True
+volumeStyle.lineThickness = 1
+studyValueConfig.dataPointStyle = volumeStyle
 End Function
 
 Private Sub determinePeriodParameters()

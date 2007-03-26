@@ -4,42 +4,42 @@ Begin VB.Form fStudyConfigurer
    ClientHeight    =   5775
    ClientLeft      =   60
    ClientTop       =   450
-   ClientWidth     =   13170
+   ClientWidth     =   13560
    LinkTopic       =   "Form1"
    ScaleHeight     =   5775
-   ScaleWidth      =   13170
+   ScaleWidth      =   13560
    StartUpPosition =   3  'Windows Default
    Begin StudiesUI25.StudyConfigurer StudyConfigurer1 
       Height          =   5535
       Left            =   120
       TabIndex        =   3
       Top             =   120
-      Width           =   11775
-      _ExtentX        =   20770
+      Width           =   12135
+      _ExtentX        =   21405
       _ExtentY        =   9763
    End
    Begin VB.CommandButton AddButton 
       Caption         =   "&Add to chart"
       Height          =   615
-      Left            =   12000
+      Left            =   12360
       TabIndex        =   0
-      Top             =   120
+      Top             =   240
       Width           =   1095
    End
    Begin VB.CommandButton CancelButton 
       Caption         =   "Cancel"
       Height          =   615
-      Left            =   12000
+      Left            =   12360
       TabIndex        =   2
-      Top             =   840
+      Top             =   960
       Width           =   1095
    End
    Begin VB.CommandButton SetDefaultButton 
       Caption         =   "Set as &default"
       Height          =   615
-      Left            =   12000
+      Left            =   12360
       TabIndex        =   1
-      Top             =   1560
+      Top             =   1680
       Width           =   1095
    End
 End
@@ -128,6 +128,7 @@ End Sub
 '================================================================================
 
 Friend Sub initialise( _
+                ByVal controller As chartController, _
                 ByVal studyDef As StudyDefinition, _
                 ByVal StudyLibraryName As String, _
                 ByRef regionNames() As String, _
@@ -138,6 +139,7 @@ Friend Sub initialise( _
 Me.Caption = studyDef.name
 
 StudyConfigurer1.initialise _
+                controller, _
                 studyDef, _
                 StudyLibraryName, _
                 regionNames, _

@@ -44,6 +44,58 @@ Public Const NegativeProfitColor As Long = &H4444EB
 Public Const IncreasedValueColor As Long = &HB7E43
 Public Const DecreasedValueColor As Long = &H4444EB
 
+Public Const NullColor As Long = SystemColorConstants.vbApplicationWorkspace
+
+Public Const BarModeBar As String = "Bars"
+Public Const BarModeCandle As String = "Candles"
+Public Const BarModeSolidCandle As String = "Solid candles"
+Public Const BarModeLine As String = "Line"
+
+Public Const BarStyleNarrow As String = "Narrow"
+Public Const BarStyleMedium As String = "Medium"
+Public Const BarStyleWide As String = "Wide"
+
+Public Const BarWidthNarrow As Single = 0.3
+Public Const BarWidthMedium As Single = 0.6
+Public Const BarWidthWide As Single = 0.9
+
+Public Const HistogramStyleNarrow As String = "Narrow"
+Public Const HistogramStyleMedium As String = "Medium"
+Public Const HistogramStyleWide As String = "Wide"
+
+Public Const HistogramWidthNarrow As Single = 0.3
+Public Const HistogramWidthMedium As Single = 0.6
+Public Const HistogramWidthWide As Single = 0.9
+
+Public Const LineDisplayModePlain As String = "Plain"
+Public Const LineDisplayModeArrowEnd As String = "End arrow"
+Public Const LineDisplayModeArrowStart As String = "Start arrow"
+Public Const LineDisplayModeArrowBoth As String = "Both arrows"
+
+Public Const LineStyleSolid As String = "Solid"
+Public Const LineStyleDash As String = "Dash"
+Public Const LineStyleDot As String = "Dot"
+Public Const LineStyleDashDot As String = "Dash dot"
+Public Const LineStyleDashDotDot As String = "Dash dot dot"
+Public Const LineStyleInsideSolid As String = "Inside solid"
+Public Const LineStyleInvisible As String = "Invisible"
+
+Public Const PointDisplayModeLine As String = "Line"
+Public Const PointDisplayModePoint As String = "Point"
+Public Const PointDisplayModeSteppedLine As String = "Stepped line"
+Public Const PointDisplayModeHistogram As String = "Histogram"
+
+Public Const PointStyleRound As String = "Round"
+Public Const PointStyleSquare As String = "Square"
+
+Public Const TextDisplayModePlain As String = "Plain"
+Public Const TextDisplayModeWIthBackground As String = "With background"
+Public Const TextDisplayModeWithBox As String = "With box"
+Public Const TextDisplayModeWithFilledBox As String = "With filled box"
+
+Public Const CustomStyle As String = "(Custom)"
+Public Const CustomDisplayMode As String = "(Custom)"
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -79,6 +131,36 @@ Public gCustColors(15) As Long
 '================================================================================
 ' Methods
 '================================================================================
+
+Public Function gLineStyleToString( _
+                ByVal value As LineStyles) As String
+Select Case value
+Case LineSolid
+    gLineStyleToString = LineStyleSolid
+Case LineDash
+    gLineStyleToString = LineStyleDash
+Case LineDot
+    gLineStyleToString = LineStyleDot
+Case LineDashDot
+    gLineStyleToString = LineStyleDashDot
+Case LineDashDotDot
+    gLineStyleToString = LineStyleDashDotDot
+Case LineInvisible
+    gLineStyleToString = LineStyleInvisible
+Case LineInsideSolid
+    gLineStyleToString = LineStyleInsideSolid
+End Select
+End Function
+
+Public Function gPointStyleToString( _
+                ByVal value As PointStyles) As String
+Select Case value
+Case PointRound
+    gPointStyleToString = PointStyleRound
+Case PointSquare
+    gPointStyleToString = PointStyleSquare
+End Select
+End Function
 
 Public Sub filterNonNumericKeyPress(ByRef KeyAscii As Integer)
 If (KeyAscii < 48 Or KeyAscii > 57) Then

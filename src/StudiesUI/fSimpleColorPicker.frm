@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin VB.Form fSimpleColorPicker 
    BorderStyle     =   0  'None
-   ClientHeight    =   3135
+   ClientHeight    =   3390
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   1815
@@ -10,10 +10,19 @@ Begin VB.Form fSimpleColorPicker
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
    MinButton       =   0   'False
-   ScaleHeight     =   3135
+   ScaleHeight     =   3390
    ScaleWidth      =   1815
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
+   Begin VB.CommandButton NoColorButton 
+      Caption         =   "No color"
+      Enabled         =   0   'False
+      Height          =   255
+      Left            =   120
+      TabIndex        =   22
+      Top             =   3000
+      Width           =   1575
+   End
    Begin VB.CommandButton MoreColorsButton 
       Caption         =   "More colors..."
       Height          =   255
@@ -23,63 +32,153 @@ Begin VB.Form fSimpleColorPicker
       Width           =   1575
    End
    Begin VB.Label ColorLabel 
-      BackColor       =   &H000000FF&
-      Height          =   135
-      Index           =   1
+      BackColor       =   &H0040C0C0&
+      Height          =   120
+      Index           =   19
       Left            =   120
-      TabIndex        =   11
-      Top             =   600
+      TabIndex        =   21
+      Top             =   2640
       Width           =   1575
    End
    Begin VB.Label ColorLabel 
-      BackColor       =   &H00FF0000&
-      Height          =   135
-      Index           =   2
+      BackColor       =   &H008080FF&
+      Height          =   120
+      Index           =   18
       Left            =   120
-      TabIndex        =   10
-      Top             =   840
+      TabIndex        =   20
+      Top             =   1680
       Width           =   1575
    End
    Begin VB.Label ColorLabel 
-      BackColor       =   &H005A9B07&
-      Height          =   135
-      Index           =   3
+      BackColor       =   &H00FFC0C0&
+      Height          =   120
+      Index           =   17
       Left            =   120
-      TabIndex        =   9
-      Top             =   1080
-      Width           =   1575
-   End
-   Begin VB.Label ColorLabel 
-      BackColor       =   &H00F6FA38&
-      Height          =   135
-      Index           =   4
-      Left            =   120
-      TabIndex        =   8
-      Top             =   1320
-      Width           =   1575
-   End
-   Begin VB.Label ColorLabel 
-      BackColor       =   &H00FA77FB&
-      Height          =   135
-      Index           =   5
-      Left            =   120
-      TabIndex        =   7
+      TabIndex        =   19
       Top             =   1560
       Width           =   1575
    End
    Begin VB.Label ColorLabel 
-      BackColor       =   &H002BD4DF&
-      Height          =   135
+      BackColor       =   &H00C0FFC0&
+      Height          =   120
+      Index           =   16
+      Left            =   120
+      TabIndex        =   18
+      Top             =   1440
+      Width           =   1575
+   End
+   Begin VB.Label ColorLabel 
+      BackColor       =   &H00C0C0FF&
+      Height          =   120
+      Index           =   15
+      Left            =   120
+      TabIndex        =   17
+      Top             =   1320
+      Width           =   1575
+   End
+   Begin VB.Label ColorLabel 
+      BackColor       =   &H00FFFFFF&
+      Height          =   120
+      Index           =   14
+      Left            =   120
+      TabIndex        =   16
+      Top             =   1200
+      Width           =   1575
+   End
+   Begin VB.Label ColorLabel 
+      BackColor       =   &H0000FFFF&
+      Height          =   120
+      Index           =   13
+      Left            =   120
+      TabIndex        =   15
+      Top             =   1080
+      Width           =   1575
+   End
+   Begin VB.Label ColorLabel 
+      BackColor       =   &H00FF00FF&
+      Height          =   120
+      Index           =   12
+      Left            =   120
+      TabIndex        =   14
+      Top             =   960
+      Width           =   1575
+   End
+   Begin VB.Label ColorLabel 
+      BackColor       =   &H00FFFF00&
+      Height          =   120
+      Index           =   11
+      Left            =   120
+      TabIndex        =   13
+      Top             =   840
+      Width           =   1575
+   End
+   Begin VB.Label ColorLabel 
+      BackColor       =   &H0000FF00&
+      Height          =   120
+      Index           =   10
+      Left            =   120
+      TabIndex        =   12
+      Top             =   600
+      Width           =   1575
+   End
+   Begin VB.Label ColorLabel 
+      BackColor       =   &H000000FF&
+      Height          =   120
+      Index           =   1
+      Left            =   120
+      TabIndex        =   11
+      Top             =   480
+      Width           =   1575
+   End
+   Begin VB.Label ColorLabel 
+      BackColor       =   &H00FF0000&
+      Height          =   120
+      Index           =   2
+      Left            =   120
+      TabIndex        =   10
+      Top             =   720
+      Width           =   1575
+   End
+   Begin VB.Label ColorLabel 
+      BackColor       =   &H0040C040&
+      Height          =   120
+      Index           =   3
+      Left            =   120
+      TabIndex        =   9
+      Top             =   2160
+      Width           =   1575
+   End
+   Begin VB.Label ColorLabel 
+      BackColor       =   &H0080FF80&
+      Height          =   120
+      Index           =   4
+      Left            =   120
+      TabIndex        =   8
+      Top             =   1800
+      Width           =   1575
+   End
+   Begin VB.Label ColorLabel 
+      BackColor       =   &H00FF8080&
+      Height          =   120
+      Index           =   5
+      Left            =   120
+      TabIndex        =   7
+      Top             =   1920
+      Width           =   1575
+   End
+   Begin VB.Label ColorLabel 
+      BackColor       =   &H004040C0&
+      Height          =   120
       Index           =   6
       Left            =   120
       TabIndex        =   6
-      Top             =   1800
+      Top             =   2040
       Width           =   1575
    End
    Begin VB.Label ColorLabel 
       BackColor       =   &H00000000&
       Caption         =   "Label7"
-      Height          =   135
+      Height          =   120
       Index           =   0
       Left            =   120
       TabIndex        =   5
@@ -87,26 +186,26 @@ Begin VB.Form fSimpleColorPicker
       Width           =   1575
    End
    Begin VB.Label ColorLabel 
-      BackColor       =   &H006187E7&
-      Height          =   135
+      BackColor       =   &H00C04040&
+      Height          =   120
       Index           =   7
       Left            =   120
       TabIndex        =   4
-      Top             =   2040
-      Width           =   1575
-   End
-   Begin VB.Label ColorLabel 
-      BackColor       =   &H00F3B1BC&
-      Height          =   135
-      Index           =   8
-      Left            =   120
-      TabIndex        =   3
       Top             =   2280
       Width           =   1575
    End
    Begin VB.Label ColorLabel 
-      BackColor       =   &H00257F81&
-      Height          =   135
+      BackColor       =   &H00C0C040&
+      Height          =   120
+      Index           =   8
+      Left            =   120
+      TabIndex        =   3
+      Top             =   2400
+      Width           =   1575
+   End
+   Begin VB.Label ColorLabel 
+      BackColor       =   &H00C040C0&
+      Height          =   120
       Index           =   9
       Left            =   120
       TabIndex        =   2
@@ -119,7 +218,7 @@ Begin VB.Form fSimpleColorPicker
       X1              =   0
       X2              =   0
       Y1              =   0
-      Y2              =   3120
+      Y2              =   3360
    End
    Begin VB.Line Line2 
       BorderColor     =   &H80000014&
@@ -134,7 +233,7 @@ Begin VB.Form fSimpleColorPicker
       BorderWidth     =   2
       X1              =   1800
       X2              =   1800
-      Y1              =   3120
+      Y1              =   3360
       Y2              =   0
    End
    Begin VB.Line Line4 
@@ -142,8 +241,8 @@ Begin VB.Form fSimpleColorPicker
       BorderWidth     =   2
       X1              =   1800
       X2              =   0
-      Y1              =   3120
-      Y2              =   3120
+      Y1              =   3360
+      Y2              =   3360
    End
    Begin VB.Label InitialColorLabel 
       Height          =   135
@@ -178,6 +277,12 @@ Option Explicit
 ' Constants
 '================================================================================
 
+Private Const CC_RGBINIT         As Long = &H1
+Private Const CC_FULLOPEN        As Long = &H2
+Private Const CC_PREVENTFULLOPEN As Long = &H4
+Private Const CC_SOLIDCOLOR      As Long = &H80
+Private Const CC_ANYCOLOR        As Long = &H100
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -185,6 +290,25 @@ Option Explicit
 '================================================================================
 ' Types
 '================================================================================
+
+Private Type W32CHOOSECOLOR
+        lStructSize As Long
+        hwndOwner As Long
+        hInstance As Long
+        rgbResult As Long
+        lpCustColors As Long
+        flags As Long
+        lCustData As Long
+        lpfnHook As Long
+        lpTemplateName As String
+End Type
+
+'================================================================================
+' External procedure declarations
+'================================================================================
+
+Private Declare Function ChooseColor Lib "comdlg32.dll" Alias "ChooseColorA" ( _
+                pChoosecolor As W32CHOOSECOLOR) As Long
 
 '================================================================================
 ' Member variables
@@ -224,7 +348,23 @@ Me.Hide
 End Sub
 
 Private Sub MoreColorsButton_Click()
-notImplemented
+Dim cc As W32CHOOSECOLOR
+
+
+cc.flags = CC_FULLOPEN Or CC_RGBINIT Or CC_ANYCOLOR
+cc.lStructSize = Len(cc)
+cc.hwndOwner = Me.hWnd
+cc.lpCustColors = VarPtr(gCustColors(0))
+cc.rgbResult = InitialColorLabel.BackColor
+ChooseColor cc
+mSelectedColor = cc.rgbResult
+InitialColorLabel.BackColor = mSelectedColor
+Me.Hide
+End Sub
+
+Private Sub NoColorButton_Click()
+mSelectedColor = NullColor
+Me.Hide
 End Sub
 
 '================================================================================
