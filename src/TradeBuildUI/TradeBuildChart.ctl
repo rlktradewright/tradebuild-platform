@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#14.1#0"; "ChartSkil2-5.ocx"
+Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#14.2#0"; "ChartSkil2-5.ocx"
 Begin VB.UserControl TradeBuildChart 
    ClientHeight    =   5745
    ClientLeft      =   0
@@ -151,6 +151,9 @@ Private mPriceRegionStyle As ChartRegionStyle
 Private mVolumeRegion As ChartRegion
 Private mVolumeRegionStyle As ChartRegionStyle
 
+Private mBarsStyle As barStyle
+Private mVolumeStyle As dataPointStyle
+
 Private mHighPrice As Double
 Private mLowPrice As Double
 Private mPrevClosePrice As Double
@@ -181,14 +184,14 @@ AllowHorizontalMouseScrolling = PropDfltAllowHorizontalMouseScrolling
 AllowVerticalMouseScrolling = PropDfltAllowVerticalMouseScrolling
 Autoscroll = PropDfltAutoscroll
 chartBackColor = PropDfltChartBackColor
-DefaultRegionAutoscale = PropDfltDfltRegnStyleAutoscale
-DefaultRegionBackColor = PropDfltDfltRegnStyleBackColor
-DefaultRegionGridColor = PropDfltDfltRegnStyleGridColor
-DefaultRegionGridlineSpacingY = PropDfltDfltRegnStyleGridlineSpacingY
-DefaultRegionGridTextColor = PropDfltDfltRegnStyleGridTextColor
-DefaultRegionHasGrid = PropDfltDfltRegnStyleHasGrid
-DefaultRegionHasGridText = PropDfltDfltRegnStyleHasGridtext
-DefaultRegionPointerStyle = PropDfltDfltRegnStylePointerStyle
+RegionDefaultAutoscale = PropDfltDfltRegnStyleAutoscale
+RegionDefaultBackColor = PropDfltDfltRegnStyleBackColor
+RegionDefaultGridColor = PropDfltDfltRegnStyleGridColor
+RegionDefaultGridlineSpacingY = PropDfltDfltRegnStyleGridlineSpacingY
+RegionDefaultGridTextColor = PropDfltDfltRegnStyleGridTextColor
+RegionDefaultHasGrid = PropDfltDfltRegnStyleHasGrid
+RegionDefaultHasGridText = PropDfltDfltRegnStyleHasGridtext
+RegionDefaultPointerStyle = PropDfltDfltRegnStylePointerStyle
 PointerCrosshairsColor = PropDfltPointerCrosshairsColor
 PointerDiscColor = PropDfltPointerDiscColor
 showHorizontalScrollBar = PropDfltShowHorizontalScrollBar
@@ -227,51 +230,51 @@ If Err.Number <> 0 Then
     Err.clear
 End If
 
-DefaultRegionAutoscale = PropBag.ReadProperty(PropNameDfltRegnStyleAutoscale, PropDfltDfltRegnStyleAutoscale)
+RegionDefaultAutoscale = PropBag.ReadProperty(PropNameDfltRegnStyleAutoscale, PropDfltDfltRegnStyleAutoscale)
 If Err.Number <> 0 Then
-    DefaultRegionAutoscale = PropDfltDfltRegnStyleAutoscale
+    RegionDefaultAutoscale = PropDfltDfltRegnStyleAutoscale
     Err.clear
 End If
 
-DefaultRegionBackColor = PropBag.ReadProperty(PropNameDfltRegnStyleBackColor, PropDfltDfltRegnStyleBackColor)
+RegionDefaultBackColor = PropBag.ReadProperty(PropNameDfltRegnStyleBackColor, PropDfltDfltRegnStyleBackColor)
 If Err.Number <> 0 Then
-    DefaultRegionBackColor = PropDfltDfltRegnStyleBackColor
+    RegionDefaultBackColor = PropDfltDfltRegnStyleBackColor
     Err.clear
 End If
 
-DefaultRegionGridColor = PropBag.ReadProperty(PropNameDfltRegnStyleGridColor, PropDfltDfltRegnStyleGridColor)
+RegionDefaultGridColor = PropBag.ReadProperty(PropNameDfltRegnStyleGridColor, PropDfltDfltRegnStyleGridColor)
 If Err.Number <> 0 Then
-    DefaultRegionGridColor = PropDfltDfltRegnStyleGridColor
+    RegionDefaultGridColor = PropDfltDfltRegnStyleGridColor
     Err.clear
 End If
 
-DefaultRegionGridlineSpacingY = PropBag.ReadProperty(PropNameDfltRegnStyleGridlineSpacingY, PropDfltDfltRegnStyleGridlineSpacingY)
+RegionDefaultGridlineSpacingY = PropBag.ReadProperty(PropNameDfltRegnStyleGridlineSpacingY, PropDfltDfltRegnStyleGridlineSpacingY)
 If Err.Number <> 0 Then
-    DefaultRegionGridlineSpacingY = PropDfltDfltRegnStyleGridlineSpacingY
+    RegionDefaultGridlineSpacingY = PropDfltDfltRegnStyleGridlineSpacingY
     Err.clear
 End If
 
-DefaultRegionGridTextColor = PropBag.ReadProperty(PropNameDfltRegnStyleGridTextColor, PropDfltDfltRegnStyleGridTextColor)
+RegionDefaultGridTextColor = PropBag.ReadProperty(PropNameDfltRegnStyleGridTextColor, PropDfltDfltRegnStyleGridTextColor)
 If Err.Number <> 0 Then
-    DefaultRegionGridTextColor = PropDfltDfltRegnStyleGridTextColor
+    RegionDefaultGridTextColor = PropDfltDfltRegnStyleGridTextColor
     Err.clear
 End If
 
-DefaultRegionHasGrid = PropBag.ReadProperty(PropNameDfltRegnStyleHasGrid, PropDfltDfltRegnStyleHasGrid)
+RegionDefaultHasGrid = PropBag.ReadProperty(PropNameDfltRegnStyleHasGrid, PropDfltDfltRegnStyleHasGrid)
 If Err.Number <> 0 Then
-    DefaultRegionHasGrid = PropDfltDfltRegnStyleHasGrid
+    RegionDefaultHasGrid = PropDfltDfltRegnStyleHasGrid
     Err.clear
 End If
 
-DefaultRegionHasGridText = PropBag.ReadProperty(PropNameDfltRegnStyleHasGridtext, PropDfltDfltRegnStyleHasGridtext)
+RegionDefaultHasGridText = PropBag.ReadProperty(PropNameDfltRegnStyleHasGridtext, PropDfltDfltRegnStyleHasGridtext)
 If Err.Number <> 0 Then
-    DefaultRegionHasGridText = PropDfltDfltRegnStyleHasGridtext
+    RegionDefaultHasGridText = PropDfltDfltRegnStyleHasGridtext
     Err.clear
 End If
 
-DefaultRegionPointerStyle = PropBag.ReadProperty(PropNameDfltRegnStylePointerStyle, PropDfltDfltRegnStylePointerStyle)
+RegionDefaultPointerStyle = PropBag.ReadProperty(PropNameDfltRegnStylePointerStyle, PropDfltDfltRegnStylePointerStyle)
 If Err.Number <> 0 Then
-    DefaultRegionPointerStyle = PropDfltDfltRegnStylePointerStyle
+    RegionDefaultPointerStyle = PropDfltDfltRegnStylePointerStyle
     Err.clear
 End If
 
@@ -330,14 +333,14 @@ PropBag.WriteProperty PropNameAllowHorizontalMouseScrolling, AllowHorizontalMous
 PropBag.WriteProperty PropNameAllowVerticalMouseScrolling, AllowVerticalMouseScrolling, PropDfltAllowVerticalMouseScrolling
 PropBag.WriteProperty PropNameAutoscroll, Autoscroll, PropDfltAutoscroll
 PropBag.WriteProperty PropNameChartBackColor, chartBackColor, PropDfltChartBackColor
-PropBag.WriteProperty PropNameDfltRegnStyleAutoscale, DefaultRegionAutoscale, PropDfltDfltRegnStyleAutoscale
-PropBag.WriteProperty PropNameDfltRegnStyleBackColor, DefaultRegionBackColor, PropDfltDfltRegnStyleBackColor
-PropBag.WriteProperty PropNameDfltRegnStyleGridColor, DefaultRegionGridColor, PropDfltDfltRegnStyleGridColor
-PropBag.WriteProperty PropNameDfltRegnStyleGridlineSpacingY, DefaultRegionGridlineSpacingY, PropDfltDfltRegnStyleGridlineSpacingY
-PropBag.WriteProperty PropNameDfltRegnStyleGridTextColor, DefaultRegionGridTextColor, PropDfltDfltRegnStyleGridTextColor
-PropBag.WriteProperty PropNameDfltRegnStyleHasGrid, DefaultRegionHasGrid, PropDfltDfltRegnStyleHasGrid
-PropBag.WriteProperty PropNameDfltRegnStyleHasGridtext, DefaultRegionHasGridText, PropDfltDfltRegnStyleHasGridtext
-PropBag.WriteProperty PropNameDfltRegnStylePointerStyle, DefaultRegionPointerStyle, PropDfltDfltRegnStylePointerStyle
+PropBag.WriteProperty PropNameDfltRegnStyleAutoscale, RegionDefaultAutoscale, PropDfltDfltRegnStyleAutoscale
+PropBag.WriteProperty PropNameDfltRegnStyleBackColor, RegionDefaultBackColor, PropDfltDfltRegnStyleBackColor
+PropBag.WriteProperty PropNameDfltRegnStyleGridColor, RegionDefaultGridColor, PropDfltDfltRegnStyleGridColor
+PropBag.WriteProperty PropNameDfltRegnStyleGridlineSpacingY, RegionDefaultGridlineSpacingY, PropDfltDfltRegnStyleGridlineSpacingY
+PropBag.WriteProperty PropNameDfltRegnStyleGridTextColor, RegionDefaultGridTextColor, PropDfltDfltRegnStyleGridTextColor
+PropBag.WriteProperty PropNameDfltRegnStyleHasGrid, RegionDefaultHasGrid, PropDfltDfltRegnStyleHasGrid
+PropBag.WriteProperty PropNameDfltRegnStyleHasGridtext, RegionDefaultHasGridText, PropDfltDfltRegnStyleHasGridtext
+PropBag.WriteProperty PropNameDfltRegnStylePointerStyle, RegionDefaultPointerStyle, PropDfltDfltRegnStylePointerStyle
 PropBag.WriteProperty PropNamePointerCrosshairsColor, PointerCrosshairsColor, PropDfltPointerCrosshairsColor
 PropBag.WriteProperty PropNamePointerDiscColor, PointerDiscColor, PropDfltPointerDiscColor
 PropBag.WriteProperty PropNameShowHorizontalScrollBar, showHorizontalScrollBar, PropDfltShowHorizontalScrollBar
@@ -429,6 +432,10 @@ Attribute Autoscroll.VB_ProcData.VB_Invoke_Property = ";Behavior"
 Autoscroll = Chart1.Autoscroll
 End Property
 
+Public Property Let barsStyle(ByVal value As barStyle)
+Set mBarsStyle = value
+End Property
+
 Public Property Get chartBackColor() As OLE_COLOR
 Attribute chartBackColor.VB_ProcData.VB_Invoke_Property = ";Appearance"
 chartBackColor = Chart1.chartBackColor
@@ -444,78 +451,6 @@ End Property
 
 Public Property Get chartManager() As chartManager
 Set chartManager = mChartManager
-End Property
-
-Public Property Get DefaultRegionAutoscale() As Boolean
-Attribute DefaultRegionAutoscale.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-DefaultRegionAutoscale = Chart1.RegionDefaultAutoscale
-End Property
-
-Public Property Let DefaultRegionAutoscale(ByVal value As Boolean)
-Chart1.RegionDefaultAutoscale = value
-End Property
-
-Public Property Get DefaultRegionBackColor() As OLE_COLOR
-Attribute DefaultRegionBackColor.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-DefaultRegionBackColor = Chart1.RegionDefaultBackColor
-End Property
-
-Public Property Let DefaultRegionBackColor(ByVal val As OLE_COLOR)
-Chart1.RegionDefaultBackColor = val
-End Property
-
-Public Property Get DefaultRegionGridColor() As OLE_COLOR
-Attribute DefaultRegionGridColor.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-DefaultRegionGridColor = Chart1.RegionDefaultGridColor
-End Property
-
-Public Property Let DefaultRegionGridColor(ByVal val As OLE_COLOR)
-Chart1.RegionDefaultGridColor = val
-End Property
-
-Public Property Get DefaultRegionGridlineSpacingY() As Double
-Attribute DefaultRegionGridlineSpacingY.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-DefaultRegionGridlineSpacingY = Chart1.RegionDefaultGridlineSpacingY
-End Property
-
-Public Property Let DefaultRegionGridlineSpacingY(ByVal value As Double)
-Chart1.RegionDefaultGridlineSpacingY = value
-End Property
-
-Public Property Get DefaultRegionGridTextColor() As OLE_COLOR
-Attribute DefaultRegionGridTextColor.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-DefaultRegionGridTextColor = Chart1.RegionDefaultGridTextColor
-End Property
-
-Public Property Let DefaultRegionGridTextColor(ByVal val As OLE_COLOR)
-Chart1.RegionDefaultGridTextColor = val
-End Property
-
-Public Property Get DefaultRegionHasGrid() As Boolean
-Attribute DefaultRegionHasGrid.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-DefaultRegionHasGrid = Chart1.RegionDefaultHasGrid
-End Property
-
-Public Property Let DefaultRegionHasGrid(ByVal val As Boolean)
-Chart1.RegionDefaultHasGrid = val
-End Property
-
-Public Property Get DefaultRegionHasGridText() As Boolean
-Attribute DefaultRegionHasGridText.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-DefaultRegionHasGridText = Chart1.RegionDefaultHasGridText
-End Property
-
-Public Property Let DefaultRegionHasGridText(ByVal val As Boolean)
-Chart1.RegionDefaultHasGridText = val
-End Property
-
-Public Property Get DefaultRegionPointerStyle() As PointerStyles
-Attribute DefaultRegionPointerStyle.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-DefaultRegionPointerStyle = Chart1.RegionDefaultPointerStyle
-End Property
-
-Public Property Let DefaultRegionPointerStyle(ByVal value As PointerStyles)
-Chart1.RegionDefaultPointerStyle = value
 End Property
 
 Public Property Get initialNumberOfBars() As Long
@@ -557,6 +492,78 @@ End Property
 
 Public Property Get priceRegionStyle() As ChartRegionStyle
 Set priceRegionStyle = mPriceRegionStyle
+End Property
+
+Public Property Get RegionDefaultAutoscale() As Boolean
+Attribute RegionDefaultAutoscale.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
+RegionDefaultAutoscale = Chart1.RegionDefaultAutoscale
+End Property
+
+Public Property Let RegionDefaultAutoscale(ByVal value As Boolean)
+Chart1.RegionDefaultAutoscale = value
+End Property
+
+Public Property Get RegionDefaultBackColor() As OLE_COLOR
+Attribute RegionDefaultBackColor.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
+RegionDefaultBackColor = Chart1.RegionDefaultBackColor
+End Property
+
+Public Property Let RegionDefaultBackColor(ByVal val As OLE_COLOR)
+Chart1.RegionDefaultBackColor = val
+End Property
+
+Public Property Get RegionDefaultGridColor() As OLE_COLOR
+Attribute RegionDefaultGridColor.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
+RegionDefaultGridColor = Chart1.RegionDefaultGridColor
+End Property
+
+Public Property Let RegionDefaultGridColor(ByVal val As OLE_COLOR)
+Chart1.RegionDefaultGridColor = val
+End Property
+
+Public Property Get RegionDefaultGridlineSpacingY() As Double
+Attribute RegionDefaultGridlineSpacingY.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
+RegionDefaultGridlineSpacingY = Chart1.RegionDefaultGridlineSpacingY
+End Property
+
+Public Property Let RegionDefaultGridlineSpacingY(ByVal value As Double)
+Chart1.RegionDefaultGridlineSpacingY = value
+End Property
+
+Public Property Get RegionDefaultGridTextColor() As OLE_COLOR
+Attribute RegionDefaultGridTextColor.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
+RegionDefaultGridTextColor = Chart1.RegionDefaultGridTextColor
+End Property
+
+Public Property Let RegionDefaultGridTextColor(ByVal val As OLE_COLOR)
+Chart1.RegionDefaultGridTextColor = val
+End Property
+
+Public Property Get RegionDefaultHasGrid() As Boolean
+Attribute RegionDefaultHasGrid.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
+RegionDefaultHasGrid = Chart1.RegionDefaultHasGrid
+End Property
+
+Public Property Let RegionDefaultHasGrid(ByVal val As Boolean)
+Chart1.RegionDefaultHasGrid = val
+End Property
+
+Public Property Get RegionDefaultHasGridText() As Boolean
+Attribute RegionDefaultHasGridText.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
+RegionDefaultHasGridText = Chart1.RegionDefaultHasGridText
+End Property
+
+Public Property Let RegionDefaultHasGridText(ByVal val As Boolean)
+Chart1.RegionDefaultHasGridText = val
+End Property
+
+Public Property Get RegionDefaultPointerStyle() As PointerStyles
+Attribute RegionDefaultPointerStyle.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
+RegionDefaultPointerStyle = Chart1.RegionDefaultPointerStyle
+End Property
+
+Public Property Let RegionDefaultPointerStyle(ByVal value As PointerStyles)
+Chart1.RegionDefaultPointerStyle = value
 End Property
 
 Public Property Get regionNames() As String()
@@ -630,6 +637,10 @@ End Property
 
 Public Property Get volumeRegionStyle() As ChartRegionStyle
 Set volumeRegionStyle = mVolumeRegionStyle
+End Property
+
+Public Property Let volumeStyle(ByVal value As dataPointStyle)
+Set mVolumeStyle = value
 End Property
 
 Public Property Get YAxisWidthCm() As Single
@@ -738,6 +749,8 @@ Dim studyDef As StudyDefinition
 ReDim inputValueNames(1) As String
 Dim params As New Parameters2.Parameters
 Dim studyValueConfig As StudyValueConfiguration
+Dim barsStyle As barStyle
+Dim volumeStyle As dataPointStyle
 
 Set createBarsStudyConfig = New StudyConfiguration
 
@@ -758,27 +771,39 @@ createBarsStudyConfig.Parameters = params
 'createBarsStudyConfig.studyDefinition = studyDef
 
 Set studyValueConfig = createBarsStudyConfig.StudyValueConfigurations.add("Bar")
-studyValueConfig.outlineThickness = 1
-studyValueConfig.barThickness = 2
-studyValueConfig.barWidth = 0.6
 studyValueConfig.chartRegionName = RegionNamePrice
-studyValueConfig.barDisplayMode = BarDisplayModeCandlestick
-studyValueConfig.downColor = &H43FC2
-studyValueConfig.includeInAutoscale = True
 studyValueConfig.includeInChart = True
 studyValueConfig.layer = 200
-studyValueConfig.solidUpBody = True
-studyValueConfig.tailThickness = 2
-studyValueConfig.upColor = &H1D9311
+If Not mBarsStyle Is Nothing Then
+    Set barsStyle = mBarsStyle
+Else
+    Set barsStyle = Chart1.defaultBarStyle
+    barsStyle.outlineThickness = 1
+    barsStyle.barThickness = 2
+    barsStyle.barWidth = 0.6
+    barsStyle.displayMode = BarDisplayModeCandlestick
+    barsStyle.downColor = &H43FC2
+    barsStyle.solidUpBody = True
+    barsStyle.tailThickness = 2
+    barsStyle.upColor = &H1D9311
+End If
+studyValueConfig.barStyle = barsStyle
 
 Set studyValueConfig = createBarsStudyConfig.StudyValueConfigurations.add("Volume")
 studyValueConfig.chartRegionName = RegionNameVolume
-studyValueConfig.Color = vbBlack
-studyValueConfig.dataPointDisplayMode = DataPointDisplayModeHistogram
-studyValueConfig.histogramBarWidth = 0.5
-studyValueConfig.includeInAutoscale = True
 studyValueConfig.includeInChart = True
-studyValueConfig.lineThickness = 1
+If Not mVolumeStyle Is Nothing Then
+    Set volumeStyle = mVolumeStyle
+Else
+    Set volumeStyle = Chart1.defaultDataPointStyle
+    volumeStyle.upColor = vbGreen
+    volumeStyle.downColor = vbRed
+    volumeStyle.displayMode = DataPointDisplayModeHistogram
+    volumeStyle.histBarWidth = 0.5
+    volumeStyle.includeInAutoscale = True
+    volumeStyle.lineThickness = 1
+End If
+studyValueConfig.dataPointStyle = volumeStyle
 End Function
 
 Private Sub initialiseChart()
