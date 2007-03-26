@@ -647,6 +647,11 @@ Enum PointerStyles
     PointerDisc
 End Enum
 
+Enum PointStyles
+    PointRound
+    PointSquare
+End Enum
+
 Enum TextAlignModes
     AlignTopLeft
     AlignCentreLeft
@@ -783,7 +788,7 @@ Private mNumRegionsInUse As Long
 Private mDefaultRegionStyle As ChartRegionStyle
 Private mDefaultBarStyle As BarStyle
 Private mDefaultDataPointStyle As DataPointStyle
-Private mDefaultLineStyle As linestyle
+Private mDefaultLineStyle As lineStyle
 Private mDefaultTextStyle As TextStyle
 
 Private WithEvents mPeriods As Periods
@@ -1430,12 +1435,12 @@ Public Property Let defaultDataPointStyle( _
 Set mDefaultDataPointStyle = value.clone
 End Property
 
-Public Property Get defaultLineStyle() As linestyle
+Public Property Get defaultLineStyle() As lineStyle
 Set defaultLineStyle = mDefaultLineStyle.clone
 End Property
 
 Public Property Let defaultLineStyle( _
-                ByVal value As linestyle)
+                ByVal value As lineStyle)
 Set mDefaultLineStyle = value.clone
 End Property
 
@@ -2434,21 +2439,22 @@ If Not firstInitialisationDone Then
     mDefaultBarStyle.displayMode = BarDisplayModeCandlestick
     mDefaultBarStyle.solidUpBody = True
     mDefaultBarStyle.barThickness = 2
-    mDefaultBarStyle.barWidth = 0.5
+    mDefaultBarStyle.barWidth = 0.6
     mDefaultBarStyle.barColor = -1
     
     Set mDefaultDataPointStyle = New DataPointStyle
     mDefaultDataPointStyle.lineThickness = 1
-    mDefaultDataPointStyle.upColor = vbBlack
-    mDefaultDataPointStyle.linestyle = LineStyles.LineSolid
+    mDefaultDataPointStyle.Color = vbBlack
+    mDefaultDataPointStyle.lineStyle = LineStyles.LineSolid
+    mDefaultDataPointStyle.pointStyle = PointRound
     mDefaultDataPointStyle.displayMode = DataPointDisplayModes.DataPointDisplayModeLine
-    mDefaultDataPointStyle.histBarWidth = 0.5
+    mDefaultDataPointStyle.histBarWidth = 0.6
     mDefaultDataPointStyle.includeInAutoscale = True
     
-    Set mDefaultLineStyle = New linestyle
+    Set mDefaultLineStyle = New lineStyle
     mDefaultLineStyle.Color = vbBlack
     mDefaultLineStyle.thickness = 1
-    mDefaultLineStyle.linestyle = LineStyles.LineSolid
+    mDefaultLineStyle.lineStyle = LineStyles.LineSolid
     mDefaultLineStyle.extendBefore = False
     mDefaultLineStyle.extendAfter = False
     mDefaultLineStyle.arrowStartStyle = ArrowStyles.ArrowNone

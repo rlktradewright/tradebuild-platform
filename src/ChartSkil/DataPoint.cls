@@ -49,17 +49,21 @@ Private mX As Double
 Private mKey As String
 
 Private mIsSetLineThickness As Boolean
+Private mIsSetColor As Boolean
 Private mIsSetUpColor As Boolean
 Private mIsSetDownColor As Boolean
 Private mIsSetLineStyle As Boolean
+Private mIsSetPointStyle As Boolean
 Private mIsSetDisplayMode As Boolean
 Private mIsSetHistBarWidth As Boolean
 Private mIsSetIncludeInAutoscale As Boolean
 
 Private mLineThickness As Long
+Private mColor As Long
 Private mUpColor As Long
 Private mDownColor As Long
 Private mLineStyle As LineStyles
+Private mPointStyle As PointStyles
 Private mDisplayMode As DataPointDisplayModes
 Private mHistBarWidth As Single
 Private mIncludeInAutoscale As Boolean
@@ -202,6 +206,24 @@ Public Property Get blank() As Boolean
 blank = mBlank
 End Property
 
+Public Property Let Color(ByVal value As Long)
+If Not gIsValidColor(value) Then _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            "ChartSkil25" & "." & "DataPoint" & ":" & "color", _
+            "Value is not a valid color"
+
+If mColor = value And mIsSetColor Then Exit Property
+mColor = value
+mIsSetColor = True
+mEventProxy.objectChanged mHandle, mBoundingRect
+End Property
+
+Public Property Get Color() As Long
+Color = mBaseStyle.Color
+If Not mLocalStyle Is Nothing Then Color = mLocalStyle.Color
+If mIsSetColor Then Color = mColor
+End Property
+
 Public Property Get dataValue() As Double
 dataValue = mDataValue
 End Property
@@ -245,7 +267,7 @@ Public Property Get downColor() As Long
 downColor = mBaseStyle.downColor
 If Not mLocalStyle Is Nothing Then downColor = mLocalStyle.downColor
 If mIsSetDownColor Then downColor = mDownColor
-If downColor = -1 Then downColor = upColor
+If downColor = -1 Then downColor = Color
 End Property
 
 Friend Property Get handle() As Long
@@ -302,17 +324,17 @@ Public Property Get layer() As Long
 layer = mLayer
 End Property
 
-Public Property Let linestyle(ByVal value As LineStyles)
+Public Property Let lineStyle(ByVal value As LineStyles)
 If mLineStyle = value And mIsSetLineStyle Then Exit Property
 mLineStyle = value
 mIsSetLineStyle = True
 mEventProxy.objectChanged mHandle, mBoundingRect
 End Property
 
-Public Property Get linestyle() As LineStyles
-linestyle = mBaseStyle.linestyle
-If Not mLocalStyle Is Nothing Then linestyle = mLocalStyle.linestyle
-If mIsSetLineStyle Then linestyle = mLineStyle
+Public Property Get lineStyle() As LineStyles
+lineStyle = mBaseStyle.lineStyle
+If Not mLocalStyle Is Nothing Then lineStyle = mLocalStyle.lineStyle
+If mIsSetLineStyle Then lineStyle = mLineStyle
 End Property
 
 Public Property Let lineThickness(ByVal value As Long)
@@ -345,24 +367,25 @@ mEventProxy.objectChanged mHandle, mBoundingRect
 
 End Property
 
+Public Property Let pointStyle(ByVal value As PointStyles)
+If mPointStyle = value And mIsSetPointStyle Then Exit Property
+mPointStyle = value
+mIsSetPointStyle = True
+mEventProxy.objectChanged mHandle, mBoundingRect
+End Property
+
+Public Property Get pointStyle() As PointStyles
+pointStyle = mBaseStyle.pointStyle
+If Not mLocalStyle Is Nothing Then pointStyle = mLocalStyle.pointStyle
+If mIsSetPointStyle Then pointStyle = mPointStyle
+End Property
+
 Public Property Get prevDataPoint() As DataPoint
 Set prevDataPoint = mPrevDataPoint
 End Property
 
 Public Property Let prevDataPoint(ByVal value As DataPoint)
 Set mPrevDataPoint = value
-End Property
-
-Public Property Get visible() As Boolean
-visible = mVisible
-End Property
-
-Friend Property Let x(ByVal value As Double)
-mX = value
-End Property
-
-Friend Property Get x() As Double
-x = mX
 End Property
 
 Public Property Let upColor(ByVal value As Long)
@@ -381,6 +404,19 @@ Public Property Get upColor() As Long
 upColor = mBaseStyle.upColor
 If Not mLocalStyle Is Nothing Then upColor = mLocalStyle.upColor
 If mIsSetUpColor Then upColor = mUpColor
+If upColor = -1 Then upColor = Color
+End Property
+
+Public Property Get visible() As Boolean
+visible = mVisible
+End Property
+
+Friend Property Let x(ByVal value As Double)
+mX = value
+End Property
+
+Friend Property Get x() As Double
+x = mX
 End Property
 
 '================================================================================
@@ -485,18 +521,18 @@ calcBoundingRect = boundingRect
 End Function
 
 Private Sub draw()
-Dim Color As Long
+Dim lColor As Long
 
 If Not mPrevDataPoint Is Nothing Then
     If mDataValue >= mPrevDataPoint.dataValue Then
-        Color = upColor
+        lColor = upColor
     Else
-        Color = downColor
+        lColor = downColor
     End If
 Else
-    Color = upColor
+    lColor = Color
 End If
-drawPoint Color
+drawPoint lColor
 End Sub
 
 Private Function drawAsPoint() As Boolean
@@ -523,14 +559,31 @@ If displayMode = 0 Then Exit Sub
 
 mCanvas.setPenAttributes Color, _
                         lineThickness, _
-                        linestyle, _
+                        lineStyle, _
                         DrawModes.DrawModeCopyPen
 
 If displayMode = DataPointDisplayModes.DataPointDisplayModeHistogram Then
     mCanvas.setBrushAttributes Color, FillStyles.FillSolid
     mCanvas.drawRectangle mX - histBarWidth / 2, 0, mX + histBarWidth / 2, mDataValue
 ElseIf drawAsPoint Then
-    mCanvas.drawPoint mX, mDataValue
+    If pointStyle = PointRound Then
+        mCanvas.drawPoint mX, mDataValue
+    Else
+        Dim thicknessScaleX As Double
+        Dim thicknessScaleY As Double
+        
+        thicknessScaleX = mCanvas.convertPixelsToLogicalX(lineThickness + 2)
+        thicknessScaleY = mCanvas.convertPixelsToLogicalY(lineThickness + 2)
+        mCanvas.setPenAttributes Color, _
+                                1, _
+                                LineSolid, _
+                                DrawModes.DrawModeCopyPen
+        mCanvas.setBrushAttributes Color, FillSolid
+        mCanvas.drawRectangle mX - thicknessScaleX / 2, _
+                                mDataValue - thicknessScaleY / 2, _
+                                mX + thicknessScaleX / 2, _
+                                mDataValue + thicknessScaleY / 2
+    End If
 ElseIf displayMode = DataPointDisplayModes.DataPointDisplayModeLine Then
     mCanvas.drawLine mPrevDataPoint.x, mPrevDataPoint.dataValue, mX, mDataValue
 ElseIf displayMode = DataPointDisplayModes.DataPointDisplayModeStep Then

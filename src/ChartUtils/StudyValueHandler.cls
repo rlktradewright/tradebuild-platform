@@ -512,73 +512,30 @@ End Sub
 
 Private Sub setupBarSeries( _
                 ByVal studyValueConfig As StudyValueConfiguration)
-Set mBarSeries = mRegion.addBarSeries(studyValueConfig.layer)
-mBarSeries.barThickness = studyValueConfig.barThickness
-mBarSeries.barWidth = studyValueConfig.barWidth
-mBarSeries.displayMode = studyValueConfig.barDisplayMode
-mBarSeries.downColor = studyValueConfig.downColor
-mBarSeries.outlineThickness = studyValueConfig.outlineThickness
-mBarSeries.solidUpBody = studyValueConfig.solidUpBody
-mBarSeries.tailThickness = studyValueConfig.tailThickness
-mBarSeries.upColor = studyValueConfig.upColor
+Set mBarSeries = mRegion.addBarSeries(studyValueConfig.layer, _
+                                        , _
+                                        studyValueConfig.barStyle)
 End Sub
 
 Private Sub setupDataSeries( _
                 ByVal studyValueConfig As StudyValueConfiguration)
-Set mDataSeries = mRegion.addDataPointSeries(studyValueConfig.layer)
-mDataSeries.displayMode = studyValueConfig.dataPointDisplayMode
-mDataSeries.histBarWidth = studyValueConfig.histogramBarWidth
-mDataSeries.includeInAutoscale = studyValueConfig.includeInAutoscale
-mDataSeries.upColor = studyValueConfig.color
-mDataSeries.downColor = studyValueConfig.color
-mDataSeries.lineStyle = studyValueConfig.lineStyle
-mDataSeries.lineThickness = studyValueConfig.lineThickness
+Set mDataSeries = mRegion.addDataPointSeries(studyValueConfig.layer, _
+                                            , _
+                                            studyValueConfig.dataPointStyle)
 End Sub
 
 Private Sub setupLineSeries( _
                 ByVal studyValueConfig As StudyValueConfiguration)
-Set mLineSeries = mRegion.addLineSeries(studyValueConfig.layer)
-mLineSeries.arrowEndColor = studyValueConfig.arrowEndColor
-mLineSeries.arrowEndFillColor = studyValueConfig.arrowEndFillColor
-mLineSeries.arrowEndFillStyle = studyValueConfig.arrowEndFillStyle
-mLineSeries.arrowEndLength = studyValueConfig.arrowEndLength
-mLineSeries.arrowEndStyle = studyValueConfig.arrowEndStyle
-mLineSeries.arrowEndWidth = studyValueConfig.arrowEndWidth
-mLineSeries.arrowStartColor = studyValueConfig.arrowStartColor
-mLineSeries.arrowStartFillColor = studyValueConfig.arrowStartFillColor
-mLineSeries.arrowStartFillStyle = studyValueConfig.arrowStartFillStyle
-mLineSeries.arrowStartLength = studyValueConfig.arrowStartLength
-mLineSeries.arrowStartStyle = studyValueConfig.arrowStartStyle
-mLineSeries.arrowStartWidth = studyValueConfig.arrowStartWidth
-mLineSeries.color = studyValueConfig.color
-mLineSeries.extendAfter = studyValueConfig.extendAfter
-mLineSeries.extendBefore = studyValueConfig.extendBefore
-mLineSeries.extended = studyValueConfig.extended
-mLineSeries.fixedX = studyValueConfig.fixedX
-mLineSeries.fixedY = studyValueConfig.fixedY
-mLineSeries.includeInAutoscale = studyValueConfig.includeInAutoscale
-mLineSeries.lineStyle = studyValueConfig.lineStyle
-mLineSeries.thickness = studyValueConfig.lineThickness
+Set mLineSeries = mRegion.addLineSeries(studyValueConfig.layer, _
+                                        , _
+                                        studyValueConfig.lineStyle)
 End Sub
 
 Private Sub setupTextSeries( _
                 ByVal studyValueConfig As StudyValueConfiguration)
-Set mTextSeries = mRegion.addTextSeries(studyValueConfig.layer)
-mTextSeries.align = studyValueConfig.align
-mTextSeries.box = studyValueConfig.box
-mTextSeries.boxColor = studyValueConfig.boxColor
-mTextSeries.boxFillColor = studyValueConfig.boxFillColor
-mTextSeries.boxFillStyle = studyValueConfig.boxFillStyle
-mTextSeries.boxStyle = studyValueConfig.boxStyle
-mTextSeries.boxThickness = studyValueConfig.boxThickness
-mTextSeries.color = studyValueConfig.color
-mTextSeries.extended = studyValueConfig.extended
-mTextSeries.fixedX = studyValueConfig.fixedX
-mTextSeries.fixedY = studyValueConfig.fixedY
-mTextSeries.font = studyValueConfig.font
-mTextSeries.includeInAutoscale = studyValueConfig.includeInAutoscale
-mTextSeries.paddingX = studyValueConfig.paddingX
-mTextSeries.paddingY = studyValueConfig.paddingY
+Set mTextSeries = mRegion.addTextSeries(studyValueConfig.layer, _
+                                        , _
+                                        studyValueConfig.textStyle)
 Set mTextOffset = studyValueConfig.offset
 End Sub
 

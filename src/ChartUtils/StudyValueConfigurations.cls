@@ -87,23 +87,21 @@ add.valueName = valueName
 mStudyValueConfigurations.add add, valueName
 End Function
 
-Public Function clone() As studyValueConfigurations
+Public Function clone() As StudyValueConfigurations
 Dim svc As StudyValueConfiguration
 Dim newSvc As StudyValueConfiguration
 
-Set clone = New studyValueConfigurations
+Set clone = New StudyValueConfigurations
 
 For Each svc In mStudyValueConfigurations
     newSvc = clone.add(svc.valueName)
+    newSvc.barStyle = svc.barStyle
     newSvc.chartRegionName = svc.chartRegionName
-    newSvc.color = svc.color
-    newSvc.dataPointDisplayMode = svc.dataPointDisplayMode
-    newSvc.histogramBarWidth = svc.histogramBarWidth
-    newSvc.includeInAutoscale = svc.includeInAutoscale
+    newSvc.dataPointStyle = svc.dataPointStyle
     newSvc.includeInChart = svc.includeInChart
     newSvc.layer = svc.layer
     newSvc.lineStyle = svc.lineStyle
-    newSvc.lineThickness = svc.lineThickness
+    newSvc.textStyle = svc.textStyle
 Next
 End Function
 

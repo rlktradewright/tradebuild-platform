@@ -98,6 +98,22 @@ End Sub
 ' Properties
 '================================================================================
 
+Public Property Get Color() As Long
+Color = mStyle.Color
+End Property
+
+Public Property Let Color(ByVal value As Long)
+If Not gIsValidColor(value) Then _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            "ChartSkil25" & "." & "DataPointSeries" & ":" & "color", _
+            "Value is not a valid color"
+If mStyle.Color = value Then Exit Property
+mStyle.Color = value
+If mDataPoints.count <> 0 Then
+    mEventProxy.paintRegion False
+End If
+End Property
+
 Public Property Get count() As Long
 count = mDataPoints.count
 End Property
@@ -164,13 +180,13 @@ Public Property Get layer() As Long
 layer = mLayer
 End Property
 
-Public Property Get linestyle() As LineStyles
-linestyle = mStyle.linestyle
+Public Property Get lineStyle() As LineStyles
+lineStyle = mStyle.lineStyle
 End Property
 
-Public Property Let linestyle(ByVal value As LineStyles)
-If mStyle.linestyle = value Then Exit Property
-mStyle.linestyle = value
+Public Property Let lineStyle(ByVal value As LineStyles)
+If mStyle.lineStyle = value Then Exit Property
+mStyle.lineStyle = value
 If mDataPoints.count <> 0 Then
     mEventProxy.paintRegion False
 End If
@@ -195,6 +211,18 @@ End Property
 
 Public Property Let name(ByVal value As String)
 mName = value
+End Property
+
+Public Property Get pointStyle() As PointStyles
+pointStyle = mStyle.pointStyle
+End Property
+
+Public Property Let pointStyle(ByVal value As PointStyles)
+If mStyle.pointStyle = value Then Exit Property
+mStyle.pointStyle = value
+If mDataPoints.count <> 0 Then
+    mEventProxy.paintRegion False
+End If
 End Property
 
 Public Property Get style() As DataPointStyle
@@ -226,9 +254,9 @@ If value.includeInAutoscale <> mStyle.includeInAutoscale Then
     recalcRegion = True
     mStyle.includeInAutoscale = value.includeInAutoscale
 End If
-If value.linestyle <> mStyle.linestyle Then
+If value.lineStyle <> mStyle.lineStyle Then
     somethingChanged = True
-    mStyle.linestyle = value.linestyle
+    mStyle.lineStyle = value.lineStyle
 End If
 If value.lineThickness <> mStyle.lineThickness Then
     somethingChanged = True

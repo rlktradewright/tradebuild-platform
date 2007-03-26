@@ -58,6 +58,9 @@ Private mSolidUpBody As Boolean
 Private mBarThickness As Long
 Private mBarWidth As Single
 
+Private mIncludeInAutoscale As Boolean
+
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -129,6 +132,14 @@ Public Property Get downColor() As Long
 downColor = mDownColor
 End Property
 
+Public Property Let includeInAutoscale(ByVal value As Boolean)
+mIncludeInAutoscale = value
+End Property
+
+Public Property Get includeInAutoscale() As Boolean
+includeInAutoscale = mIncludeInAutoscale
+End Property
+
 Public Property Let outlineThickness(ByVal value As Long)
 mOutlineThickness = value
 End Property
@@ -177,6 +188,7 @@ clone.barThickness = mBarThickness
 clone.barWidth = mBarWidth
 clone.displayMode = mDisplayMode
 clone.downColor = mDownColor
+clone.includeInAutoscale = mIncludeInAutoscale
 clone.outlineThickness = mOutlineThickness
 clone.solidUpBody = mSolidUpBody
 clone.tailThickness = mTailThickness

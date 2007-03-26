@@ -148,6 +148,18 @@ mStyle.downColor = value
 If mBars.count <> 0 Then mEventProxy.paintRegion False
 End Property
 
+Friend Property Get includeInAutoscale() As Boolean
+includeInAutoscale = mStyle.includeInAutoscale
+End Property
+
+Public Property Let includeInAutoscale(ByVal value As Boolean)
+If mStyle.includeInAutoscale = value Then Exit Property
+mStyle.includeInAutoscale = value
+If mBars.count <> 0 Then
+    mEventProxy.paintRegion True
+End If
+End Property
+
 Public Property Get layer() As Long
 layer = mLayer
 End Property

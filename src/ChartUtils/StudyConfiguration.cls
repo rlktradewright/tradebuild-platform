@@ -207,13 +207,9 @@ Public Function clone() As StudyConfiguration
 Set clone = New StudyConfiguration
 clone.chartRegionName = mChartRegionName
 clone.inputValueNames = mInputValueNames
-'clone.instanceFullyQualifiedName = mInstanceFullyQualifiedName
-'clone.instanceName = mInstanceName
 clone.name = mName
-'clone.notifyNames = mNotifyNames
 clone.parameters = mParameters.clone
 clone.StudyLibraryName = mStudyLibraryName
-'clone.studyDefinition = mStudyDefinition
 
 Dim hr As StudyHorizontalRule
 Dim newHr As StudyHorizontalRule
@@ -237,15 +233,13 @@ Set newSvcs = clone.studyValueConfigurations
 
 For Each svc In mStudyValueConfigurations
     Set newSvc = newSvcs.add(svc.valueName)
+    newSvc.barStyle = svc.barStyle
     newSvc.chartRegionName = svc.chartRegionName
-    newSvc.color = svc.color
-    newSvc.dataPointDisplayMode = svc.dataPointDisplayMode
-    newSvc.histogramBarWidth = svc.histogramBarWidth
-    newSvc.includeInAutoscale = svc.includeInAutoscale
+    newSvc.dataPointStyle = svc.dataPointStyle
     newSvc.includeInChart = svc.includeInChart
     newSvc.layer = svc.layer
     newSvc.lineStyle = svc.lineStyle
-    newSvc.lineThickness = svc.lineThickness
+    newSvc.textStyle = svc.textStyle
 Next
 
 clone.underlyingStudy = mUnderlyingStudy

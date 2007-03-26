@@ -51,6 +51,7 @@ Private mIsSetDisplayMode As Boolean
 Private mIsSetSolidUpBody As Boolean
 Private mIsSetBarThickness As Boolean
 Private mIsSetBarWidth As Boolean
+Private mIsSetIncludeInAutoscale As Boolean
 
 Private mTailThickness As Long
 Private mOutlineThickness As Long
@@ -58,6 +59,7 @@ Private mBarColor As Long
 Private mUpColor As Long
 Private mDownColor As Long
 Private mDisplayMode As BarDisplayModes
+Private mIncludeInAutoscale As Boolean
 Private mSolidUpBody As Boolean
 Private mBarThickness As Long
 Private mBarWidth As Single
@@ -299,6 +301,20 @@ End Property
 
 Public Property Get highPrice() As Double
 highPrice = mHigh
+End Property
+
+Public Property Let includeInAutoscale(ByVal value As Boolean)
+If mIncludeInAutoscale = value And mIsSetIncludeInAutoscale Then Exit Property
+If Not value Then undraw mBoundingRect
+mIncludeInAutoscale = value
+mIsSetIncludeInAutoscale = True
+mEventProxy.objectChanged mHandle, mBoundingRect
+End Property
+
+Public Property Get includeInAutoscale() As Boolean
+includeInAutoscale = mBaseStyle.includeInAutoscale
+If Not mLocalStyle Is Nothing Then includeInAutoscale = mLocalStyle.includeInAutoscale
+If mIsSetIncludeInAutoscale Then includeInAutoscale = mIncludeInAutoscale
 End Property
 
 Public Property Get inScope() As Boolean
