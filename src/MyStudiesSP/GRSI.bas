@@ -32,28 +32,22 @@ Public Const RsiValueRsi As String = "Rsi"
 ' Variables
 '================================================================================
 
-Private mCommonServiceConsumer As ICommonServiceConsumer
-Private mDefaultParameters As IParameters
-Private mStudyDefinition As IStudyDefinition
+
+Private mDefaultParameters As Parameters
+Private mStudyDefinition As studyDefinition
 
 '================================================================================
 ' Procedures
 '================================================================================
 
-Public Property Let commonServiceConsumer( _
-                ByVal value As TradeBuildSP.ICommonServiceConsumer)
-Set mCommonServiceConsumer = value
-End Property
-
-
-Public Property Let defaultParameters(ByVal value As IParameters)
+Public Property Let defaultParameters(ByVal value As Parameters)
 ' create a clone of the default parameters supplied by the caller
 Set mDefaultParameters = value.Clone
 End Property
 
-Public Property Get defaultParameters() As IParameters
+Public Property Get defaultParameters() As Parameters
 If mDefaultParameters Is Nothing Then
-    Set mDefaultParameters = mCommonServiceConsumer.NewParameters
+    Set mDefaultParameters = New Parameters
     mDefaultParameters.setParameterValue RsiParamPeriods, 14
     mDefaultParameters.setParameterValue RsiParamMovingAverageType, "SMA"
 End If
@@ -62,13 +56,13 @@ End If
 Set defaultParameters = mDefaultParameters.Clone
 End Property
 
-Public Property Get studyDefinition() As TradeBuildSP.IStudyDefinition
-Dim inputDef As IStudyInputDefinition
-Dim valueDef As IStudyValueDefinition
-Dim paramDef As IStudyParameterDefinition
+Public Property Get studyDefinition() As studyDefinition
+Dim inputDef As StudyInputDefinition
+Dim valueDef As StudyValueDefinition
+Dim paramDef As StudyParameterDefinition
 
 If mStudyDefinition Is Nothing Then
-    Set mStudyDefinition = mCommonServiceConsumer.NewStudyDefinition
+    Set mStudyDefinition = New studyDefinition
     mStudyDefinition.name = RsiName
     mStudyDefinition.shortName = RsiShortName
     mStudyDefinition.Description = "Relative Strength Indicator shows strength or " & _
@@ -77,26 +71,22 @@ If mStudyDefinition Is Nothing Then
     mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionCustom
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(RsiInputValue)
-    inputDef.name = RsiInputValue
-    inputDef.inputType = InputTypeDouble
+    inputDef.inputType = InputTypeReal
     inputDef.Description = "Input value"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(RsiValueRsi)
-    valueDef.name = RsiValueRsi
     valueDef.Description = "The Relative Strength Index value"
     valueDef.isDefault = True
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.maximumValue = 100
     valueDef.minimumValue = 0
-    valueDef.valueType = ValueTypeDouble
+    valueDef.valueType = ValueTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(RsiParamPeriods)
-    paramDef.name = RsiParamPeriods
     paramDef.Description = "The number of periods used to calculate the RSI"
     paramDef.parameterType = ParameterTypeInteger
 
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(RsiParamMovingAverageType)
-    paramDef.name = RsiParamMovingAverageType
     paramDef.Description = "The type of moving average used to smooth the RSI"
     paramDef.parameterType = ParameterTypeString
 

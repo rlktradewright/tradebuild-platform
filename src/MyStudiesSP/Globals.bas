@@ -57,6 +57,8 @@ Public Const MATypeExponentialMovingAverage As String = "EMA"
 ' Variables
 '================================================================================
 
+Public gLibraryManager As StudyLibraryManager
+
 '================================================================================
 ' Properties
 '================================================================================
@@ -69,12 +71,10 @@ Public Const MATypeExponentialMovingAverage As String = "EMA"
 ' required type, to save us having to implement our own
 Public Function gCreateMA( _
                 ByVal maType As String, _
-                ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
-                ByVal studyServiceConsumer As TradeBuildSP.IStudyServiceConsumer, _
                 ByVal periods As Long, _
-                ByVal numberOfValuesToCache As Long) As IMovingAverageStudy
-Dim lparams As IParameters
-Dim lStudy As IStudy
+                ByVal numberOfValuesToCache As Long) As study
+Dim lparams As Parameters
+Dim lStudy As study
 Dim valueNames(0) As String
 
 valueNames(0) = "in"
@@ -86,17 +86,16 @@ Case Else
     maType = MATypeSimpleMovingAverage
 End Select
 
-Set lStudy = commonServiceConsumer.createStudy(maType, "")
+Set lStudy = gLibraryManager.createStudy(maType, "")
 If lStudy Is Nothing Then Exit Function
 
-Set lparams = commonServiceConsumer.NewParameters
+Set lparams = New Parameters
 lparams.setParameterValue ParamPeriods, periods
-lStudy.initialise commonServiceConsumer, _
-                studyServiceConsumer, _
-                commonServiceConsumer.GenerateGUIDString, _
+lStudy.initialise GenerateGUIDString, _
                 lparams, _
                 numberOfValuesToCache, _
                 valueNames, _
+                Nothing, _
                 Nothing
 Set gCreateMA = lStudy
 

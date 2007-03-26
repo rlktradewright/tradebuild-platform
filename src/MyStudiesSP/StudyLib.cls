@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "StudyServiceProvider"
+Attribute VB_Name = "StudyLib"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -17,15 +17,14 @@ Option Explicit
 ' Description
 '================================================================================
 '
-' A Study Service Provider which serves up IStudy objects that are integrated
-' into TradeBuild's study handling and charting mechanisms.
+' A Study Library which serves up Study objects that are integrated
+' into the TradeWright study handling and charting mechanisms.
 
 '================================================================================
 ' Interfaces
 '================================================================================
 
-Implements TradeBuildSP.ICommonServiceProvider
-Implements TradeBuildSP.IStudyServiceProvider
+Implements StudyLibrary
 
 '================================================================================
 ' Events
@@ -49,9 +48,6 @@ Implements TradeBuildSP.IStudyServiceProvider
 
 Private mName As String
 Private mHandle As Long
-Private mCommonServiceConsumer As ICommonServiceConsumer
-
-Private mLogLevel As TradeBuildSP.LogLevels
 
 Private mStudyLongNames() As String
 
@@ -63,7 +59,7 @@ Private Sub Class_Initialize()
 '
 ' TODO: set the name of your service provider to something unique
 '
-mName = "Richard's Sample Service Provider"
+mName = "Richard's Sample Study Library"
 
 ReDim mStudyLongNames(0) As String
 
@@ -77,127 +73,89 @@ addStudyName RsiName
 End Sub
 
 '================================================================================
-' ICommonServiceProvider Interface Members
+' StudyServiceProvider Interface Members
 '================================================================================
 
-Private Property Get ICommonServiceProvider_Details() As TradeBuildSP.ServiceProviderDetails
-Dim details As TradeBuildSP.ServiceProviderDetails
-With details
-    .Comments = App.Comments
-    .EXEName = App.EXEName
-    .FileDescription = App.FileDescription
-    .LegalCopyright = App.LegalCopyright
-    .LegalTrademarks = App.LegalTrademarks
-    .Path = App.Path
-    .ProductName = App.ProductName
-    .Vendor = App.CompanyName
-    .VersionMajor = App.Major
-    .VersionMinor = App.Minor
-    .VersionRevision = App.Revision
-End With
-ICommonServiceProvider_Details = details
-End Property
-
-Private Sub ICommonServiceProvider_Link( _
-                ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
-                ByVal handle As Long)
-Set mCommonServiceConsumer = commonServiceConsumer
-
+Private Function StudyLibrary_createStudy( _
+                ByVal name As String) As study
 '
-' TODO: add a similar line for each of your studies
+' TODO: add a similar Case for each of your studies
 '
-GRsi.commonServiceConsumer = commonServiceConsumer
+Select Case UCase$(name)
+Case UCase$(RsiName), UCase$(RsiShortName)
+    Set StudyLibrary_createStudy = New rsi
+End Select
 '
 '----------------------------------------------------
 
-mHandle = handle
-mCommonServiceConsumer.RegisterServiceProvider mHandle, _
-                            ServiceProviderTypes.Studies
+End Function
 
+Private Function StudyLibrary_getImplementedStudyNames() As String()
+StudyLibrary_getImplementedStudyNames = mStudyLongNames
+End Function
+
+Private Function StudyLibrary_getStudyDefaultParameters( _
+                ByVal name As String) As Parameters
+'
+' TODO: add a similar Case for each of your studies
+'
+Select Case UCase$(name)
+Case UCase$(RsiName), UCase$(RsiShortName)
+    Set StudyLibrary_getStudyDefaultParameters = GRsi.defaultParameters
+End Select
+'
+'----------------------------------------------------
+
+End Function
+
+Private Function StudyLibrary_getStudyDefinition( _
+                ByVal name As String) As studyDefinition
+'
+' TODO: add a similar Case for each of your studies
+'
+Select Case UCase$(name)
+Case UCase$(RsiName), UCase$(RsiShortName)
+    Set StudyLibrary_getStudyDefinition = GRsi.studyDefinition
+End Select
+
+End Function
+
+Private Sub StudyLibrary_initialise( _
+                ByVal libManager As StudyUtils25.StudyLibraryManager, _
+                ByVal handle As Long)
+Set gLibraryManager = libManager
+mHandle = handle
 End Sub
 
-Private Property Let ICommonServiceProvider_LogLevel( _
-                ByVal RHS As TradeBuildSP.LogLevels)
-mLogLevel = RHS
-End Property
-
-Private Property Let ICommonServiceProvider_name(ByVal RHS As String)
+Private Property Let StudyLibrary_name(ByVal RHS As String)
 mName = RHS
 End Property
 
-Private Property Get ICommonServiceProvider_name() As String
-ICommonServiceProvider_name = name
+Private Property Get StudyLibrary_name() As String
+StudyLibrary_name = mName
 End Property
 
-Private Sub ICommonServiceProvider_Terminate()
+Private Function StudyLibrary_setStudyDefaultParameters( _
+                ByVal name As String, _
+                ByVal Parameters As Parameters) As Boolean
+
+StudyLibrary_setStudyDefaultParameters = True
+
+'
+' TODO: add a similar Case for each of your studies
+'
+Select Case UCase$(name)
+Case UCase$(RsiName), UCase$(RsiShortName)
+    GRsi.defaultParameters = Parameters
+Case Else
+    StudyLibrary_setStudyDefaultParameters = False
+End Select
+
+End Function
+
+Private Sub StudyLibrary_terminate()
 ' nothing to do
 End Sub
-
-'================================================================================
-' IStudyServiceProvider Interface Members
-'================================================================================
-
-Private Function IStudyServiceProvider_createStudy( _
-                ByVal name As String) As TradeBuildSP.IStudy
-'
-' TODO: add a similar Case for each of your studies
-'
-Select Case UCase$(name)
-Case UCase$(RsiName), UCase$(RsiShortName)
-    Set IStudyServiceProvider_createStudy = New rsi
-End Select
-'
-'----------------------------------------------------
-
-End Function
-
-Private Function IStudyServiceProvider_getStudyDefaultParameters( _
-                ByVal name As String) As TradeBuildSP.IParameters
-'
-' TODO: add a similar Case for each of your studies
-'
-Select Case UCase$(name)
-Case UCase$(RsiName), UCase$(RsiShortName)
-    Set IStudyServiceProvider_getStudyDefaultParameters = GRsi.defaultParameters
-End Select
-'
-'----------------------------------------------------
-
-End Function
-
-Private Property Get IStudyServiceProvider_implementedStudyNames() As String()
-IStudyServiceProvider_implementedStudyNames = mStudyLongNames
-End Property
-
-Private Function IStudyServiceProvider_setStudyDefaultParameters( _
-                ByVal name As String, _
-                ByVal parameters As TradeBuildSP.IParameters) As Boolean
-
-IStudyServiceProvider_setStudyDefaultParameters = True
-
-'
-' TODO: add a similar Case for each of your studies
-'
-Select Case UCase$(name)
-Case UCase$(RsiName), UCase$(RsiShortName)
-    GRsi.defaultParameters = parameters
-Case Else
-    IStudyServiceProvider_setStudyDefaultParameters = False
-End Select
-
-End Function
-
-Private Function IStudyServiceProvider_studyDefinition( _
-                ByVal name As String) As TradeBuildSP.IStudyDefinition
-'
-' TODO: add a similar Case for each of your studies
-'
-Select Case UCase$(name)
-Case UCase$(RsiName), UCase$(RsiShortName)
-    Set IStudyServiceProvider_studyDefinition = GRsi.studyDefinition
-End Select
-
-End Function
 
 '================================================================================
 ' XXXX Event Handlers
