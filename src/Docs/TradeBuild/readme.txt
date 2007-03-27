@@ -1,5 +1,5 @@
 Author:	Richard King
-Date:	19 November 2006
+Date:	28 March 2006
 
 
 Contents
@@ -194,6 +194,68 @@ For technical support, email me at:
 
 Appendix A  TradeBuild Version History
 ======================================
+
+Version 2.5.0.10  Released 28 March 2007
+
+	This version is the result of a major restructuring of the various
+	TradeBuild components. The principal aim has been to enable
+	use of the charting and studies facilities in programs that do
+	not otherwise make use of TradeBuild. 
+
+	In addition, a number of fundamental mechanisms within TradeBuild
+	and related components have been signficantly enhanced to provide
+	much greater flexibility that will be exploited in future releases.
+
+	The following notes summarise the structural changes: a detailed 
+	description of the changes and new features would be infeasible in a 
+	document of this nature.
+
+	NB: this version is not binary compatible with previous
+	versions. All client applications will need to be recompiled, 
+	and most will need minor modifications: in particular, project
+	references will need adjustment to take account of the new 
+	components. This version can be installed alongside previous
+	versions.
+
+	Enhancement: the following components now exist:
+
+	TradeWright Chart Utilities v2.5 (ChartUtils2-5.dll)
+		Provides classes that enable the study mechanisms to be used
+		with ChartSkil charts
+
+	TradeWright Common Studies Library v2.5 (CmnStudiesLib2-5.dll)
+		Contains the 'built-in' study classes.
+
+	TradeWright Study Utilities v2.5 (StudyUtils2-5.dll)
+		Contains the mechanisms for managing study libraries, 
+		creating study objects, and loading them with data.
+
+	TradeWright Timeframe Utilities v2.5 (TimeframeUtils2-5.dll)
+		Provides means for determining the start and end times of
+		periods within timeframes of any duration.
+
+	TradeWright TradeBuild API v2.5 (TradeBuild2-5.dll)
+		Provides core ticker management, order management and 
+		timeframe management facilities.
+	
+	TradeWright ChartSkil v2.5 (ChartSkil2-5.ocx)
+		A low-level charting control.
+
+	TradeWright Studies UI Controls (StudiesUI2-5.ocx)
+		Contains ActiveX controls for configuring study values for 
+		display on charts.
+
+	TradeWright TradeBuild UI Controls (TradeBuildUI2-5.ocx)
+		Contains ActiveX controls for use in TradeBuild-based 
+		programs, covering ticker display, order management,
+		position monitoring, market depth display, and a 
+		sophisticated charting control that integrates study 
+		management and chart management with ChartSkil.
+
+	These components are supplemented by a set of service providers,
+	which are ActiveX Dlls that enable TradeBuild to work transparently
+	with various sources of realtime and historical data and with
+	brokers for order management.
 
 Version 2.4c  Released 7 February 2007
 
@@ -714,6 +776,11 @@ Version 1.0.18	Released 11 Jun 2004
 
 Appendix B  TradeSkil Demo Version History
 ==========================================
+
+Version 2.5.0.10  Released 28 March 2007
+
+	Enhancement: charts can now be opened for a much wider range
+	of timeframes, from 5 seconds up to yearly.
 
 Version 2.4  Released 8 November 2006
 
