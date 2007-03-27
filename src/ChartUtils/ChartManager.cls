@@ -296,6 +296,7 @@ Friend Sub initialise( _
                 ByVal pChartController As chartController)
 Set mStudyManager = pStudyManager
 Set mChartController = pChartController
+Set mPeriods = mChartController.Periods
 'initialiseChart
 End Sub
 
