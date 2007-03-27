@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{9D2C4B5E-2539-4900-8B70-B9B41CFF1CA8}#14.4#0"; "TradeBuildUI2-5.ocx"
+Object = "{9D2C4B5E-2539-4900-8B70-B9B41CFF1CA8}#18.0#0"; "TradeBuildUI2-5.ocx"
 Begin VB.Form fChart2 
    ClientHeight    =   6780
    ClientLeft      =   60
@@ -18,11 +18,7 @@ Begin VB.Form fChart2
       Width           =   10335
       _ExtentX        =   18230
       _ExtentY        =   10610
-      ChartBackColor  =   7221810
-      DfltRegnStyleBackColor=   7221810
-      DfltRegnStyleGridColor=   7237230
-      DfltRegnStyleGridTextColor=   16777215
-      PointerDiscColor=   10502219
+      PointerDiscColor=   13893631
    End
    Begin MSComctlLib.Toolbar Toolbar1 
       Align           =   1  'Align Top
