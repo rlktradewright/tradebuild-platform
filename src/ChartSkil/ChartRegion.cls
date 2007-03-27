@@ -206,7 +206,7 @@ Private mDefaultDataPointStyle As DataPointStyle
 Private mDefaultTextStyle As TextStyle
 
 ' defaults for lines and line series
-Private mDefaultLineStyle As linestyle
+Private mDefaultLineStyle As lineStyle
 
 Private mElapsedTimer As ElapsedTimer
 
@@ -614,11 +614,11 @@ Public Property Let defaultDataPointStyle(ByVal value As DataPointStyle)
 Set mDefaultDataPointStyle = value.clone
 End Property
 
-Public Property Get defaultLineStyle() As linestyle
+Public Property Get defaultLineStyle() As lineStyle
 Set defaultLineStyle = mDefaultLineStyle.clone
 End Property
 
-Public Property Let defaultLineStyle(ByVal value As linestyle)
+Public Property Let defaultLineStyle(ByVal value As lineStyle)
 Set mDefaultLineStyle = value.clone
 End Property
 
@@ -667,7 +667,7 @@ If mhasGrid Then
     mXGridLines.extendAfter = True
     mXGridLines.extendBefore = True
     mXGridLines.includeInAutoscale = False
-    mXGridLines.linestyle = LineSolid
+    mXGridLines.lineStyle = LineSolid
     mXGridLines.thickness = 1
     
     Set mYGridLines = Me.addLineSeries(LayerNumbers.LayerGrid)
@@ -675,7 +675,7 @@ If mhasGrid Then
     mYGridLines.extendAfter = True
     mYGridLines.extendBefore = True
     mYGridLines.includeInAutoscale = False
-    mYGridLines.linestyle = LineSolid
+    mYGridLines.lineStyle = LineSolid
     mYGridLines.thickness = 1
 Else
     Set mXGridLines = Nothing
@@ -1082,7 +1082,7 @@ End Function
 Public Function addLineSeries( _
                 Optional ByVal layer As Long = -1, _
                 Optional ByVal name As String, _
-                Optional ByVal style As BarStyle) As LineSeries
+                Optional ByVal style As lineStyle) As LineSeries
 Static seriesNumber As Long
 Set addLineSeries = New LineSeries
 If name = "" Then

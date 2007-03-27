@@ -572,11 +572,11 @@ ElseIf drawAsPoint Then
         Dim thicknessScaleX As Double
         Dim thicknessScaleY As Double
         
-        thicknessScaleX = mCanvas.convertPixelsToLogicalX(lineThickness + 2)
-        thicknessScaleY = mCanvas.convertPixelsToLogicalY(lineThickness + 2)
+        thicknessScaleX = mCanvas.convertPixelsToLogicalX(lineThickness)
+        thicknessScaleY = mCanvas.convertPixelsToLogicalY(lineThickness)
         mCanvas.setPenAttributes Color, _
                                 1, _
-                                LineSolid, _
+                                LineInsideSolid, _
                                 DrawModes.DrawModeCopyPen
         mCanvas.setBrushAttributes Color, FillSolid
         mCanvas.drawRectangle mX - thicknessScaleX / 2, _
