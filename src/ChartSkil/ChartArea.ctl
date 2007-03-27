@@ -788,7 +788,7 @@ Private mNumRegionsInUse As Long
 Private mDefaultRegionStyle As ChartRegionStyle
 Private mDefaultBarStyle As BarStyle
 Private mDefaultDataPointStyle As DataPointStyle
-Private mDefaultLineStyle As lineStyle
+Private mDefaultLineStyle As linestyle
 Private mDefaultTextStyle As TextStyle
 
 Private WithEvents mPeriods As Periods
@@ -1435,12 +1435,12 @@ Public Property Let defaultDataPointStyle( _
 Set mDefaultDataPointStyle = value.clone
 End Property
 
-Public Property Get defaultLineStyle() As lineStyle
+Public Property Get defaultLineStyle() As linestyle
 Set defaultLineStyle = mDefaultLineStyle.clone
 End Property
 
 Public Property Let defaultLineStyle( _
-                ByVal value As lineStyle)
+                ByVal value As linestyle)
 Set mDefaultLineStyle = value.clone
 End Property
 
@@ -2445,29 +2445,29 @@ If Not firstInitialisationDone Then
     Set mDefaultDataPointStyle = New DataPointStyle
     mDefaultDataPointStyle.lineThickness = 1
     mDefaultDataPointStyle.Color = vbBlack
-    mDefaultDataPointStyle.lineStyle = LineStyles.LineSolid
+    mDefaultDataPointStyle.linestyle = LineStyles.LineSolid
     mDefaultDataPointStyle.pointStyle = PointRound
     mDefaultDataPointStyle.displayMode = DataPointDisplayModes.DataPointDisplayModeLine
     mDefaultDataPointStyle.histBarWidth = 0.6
     mDefaultDataPointStyle.includeInAutoscale = True
     
-    Set mDefaultLineStyle = New lineStyle
+    Set mDefaultLineStyle = New linestyle
     mDefaultLineStyle.Color = vbBlack
     mDefaultLineStyle.thickness = 1
-    mDefaultLineStyle.lineStyle = LineStyles.LineSolid
+    mDefaultLineStyle.linestyle = LineStyles.LineSolid
     mDefaultLineStyle.extendBefore = False
     mDefaultLineStyle.extendAfter = False
     mDefaultLineStyle.arrowStartStyle = ArrowStyles.ArrowNone
     mDefaultLineStyle.arrowStartLength = 10
     mDefaultLineStyle.arrowStartWidth = 10
     mDefaultLineStyle.arrowStartColor = vbBlack
-    mDefaultLineStyle.arrowStartFillColor = vbWhite
+    mDefaultLineStyle.arrowStartFillColor = vbBlack
     mDefaultLineStyle.arrowStartfillstyle = FillStyles.FillSolid
     mDefaultLineStyle.arrowEndStyle = ArrowStyles.ArrowNone
     mDefaultLineStyle.arrowEndLength = 10
     mDefaultLineStyle.arrowEndWidth = 10
     mDefaultLineStyle.arrowEndColor = vbBlack
-    mDefaultLineStyle.arrowEndFillColor = vbWhite
+    mDefaultLineStyle.arrowEndFillColor = vbBlack
     mDefaultLineStyle.arrowEndFillStyle = FillStyles.FillSolid
     mDefaultLineStyle.fixedX = False
     mDefaultLineStyle.fixedY = False
@@ -2490,7 +2490,7 @@ If Not firstInitialisationDone Then
     mDefaultTextStyle.boxThickness = 1
     mDefaultTextStyle.boxFillColor = vbWhite
     mDefaultTextStyle.boxFillStyle = FillStyles.FillSolid
-    mDefaultTextStyle.align = TextAlignModes.AlignBottomLeft
+    mDefaultTextStyle.align = TextAlignModes.AlignBottomRight
     mDefaultTextStyle.includeInAutoscale = False
     mDefaultTextStyle.extended = False
     mDefaultTextStyle.paddingX = 1#
