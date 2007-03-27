@@ -145,6 +145,7 @@ Begin VB.UserControl StudyConfigurer
             Index           =   0
             Left            =   5400
             TabIndex        =   50
+            ToolTipText     =   "Click to select the font"
             Top             =   240
             Width           =   615
          End
@@ -229,7 +230,7 @@ Begin VB.UserControl StudyConfigurer
             _Version        =   393216
             Value           =   1
             BuddyControl    =   "ThicknessText(0)"
-            BuddyDispid     =   196617
+            BuddyDispid     =   196618
             BuddyIndex      =   0
             OrigLeft        =   4080
             OrigTop         =   240
@@ -263,7 +264,7 @@ Begin VB.UserControl StudyConfigurer
             Left            =   1320
             TabIndex        =   49
             Top             =   0
-            Width           =   375
+            Width           =   495
          End
          Begin VB.Label DownColorLabel 
             BackColor       =   &H000000FF&
@@ -419,7 +420,7 @@ Begin VB.UserControl StudyConfigurer
             _ExtentY        =   582
             _Version        =   393216
             BuddyControl    =   "ParameterValueText(0)"
-            BuddyDispid     =   196634
+            BuddyDispid     =   196636
             BuddyIndex      =   0
             OrigLeft        =   1920
             OrigRight       =   2175
@@ -815,7 +816,7 @@ studyConfig.Parameters = params
 
 Set studyValueDefs = mStudyDefinition.studyValueDefinitions
 
-For i = 0 To ValueNameLabel.ubound
+For i = 0 To ValueNameLabel.UBound
     Set studyValueDef = studyValueDefs.item(i + 1)
     
     Set studyValueconfig = studyConfig.StudyValueConfigurations.Add(ValueNameLabel(i).Caption)
@@ -904,12 +905,14 @@ For i = 0 To ValueNameLabel.ubound
         
         lnStyle.includeInAutoscale = (AutoscaleCheck(i).value = vbChecked)
         lnStyle.Color = ColorLabel(i).BackColor
-        lnStyle.arrowStartColor = IIf(UpColorLabel(i).BackColor = NullColor, _
+        lnStyle.arrowStartColor = ColorLabel(i).BackColor
+        lnStyle.arrowEndColor = ColorLabel(i).BackColor
+        lnStyle.arrowStartFillColor = IIf(UpColorLabel(i).BackColor = NullColor, _
                                         -1, _
-                                        UpColorLabel(i).BackColor = NullColor)
-        lnStyle.arrowEndColor = IIf(DownColorLabel(i).BackColor = NullColor, _
+                                        UpColorLabel(i).BackColor)
+        lnStyle.arrowEndFillColor = IIf(DownColorLabel(i).BackColor = NullColor, _
                                         -1, _
-                                        DownColorLabel(i).BackColor = NullColor)
+                                        DownColorLabel(i).BackColor)
         
         Select Case DisplayModeCombo(i).SelectedItem.text
         Case LineDisplayModePlain
@@ -996,10 +999,10 @@ For i = 0 To ValueNameLabel.ubound
         txStyle.Color = ColorLabel(i).BackColor
         txStyle.boxFillColor = IIf(UpColorLabel(i).BackColor = NullColor, _
                                         -1, _
-                                        UpColorLabel(i).BackColor = NullColor)
+                                        UpColorLabel(i).BackColor)
         txStyle.boxColor = IIf(DownColorLabel(i).BackColor = NullColor, _
                                         -1, _
-                                        DownColorLabel(i).BackColor = NullColor)
+                                        DownColorLabel(i).BackColor)
         
         Select Case DisplayModeCombo(i).SelectedItem.text
         Case TextDisplayModePlain
@@ -1108,101 +1111,101 @@ Dim i As Long
 
 On Error Resume Next
 
-For i = InputValueNameLabel.ubound To 1 Step -1
+For i = InputValueNameLabel.UBound To 1 Step -1
     Unload InputValueNameLabel(i)
 Next
 InputValueNameLabel(0).Caption = ""
 InputValueNameLabel(0).Visible = False
 
-For i = InputValueCombo.ubound To 1 Step -1
+For i = InputValueCombo.UBound To 1 Step -1
     Unload InputValueCombo(i)
 Next
 
-For i = ParameterNameLabel.ubound To 1 Step -1
+For i = ParameterNameLabel.UBound To 1 Step -1
     Unload ParameterNameLabel(i)
 Next
 ParameterNameLabel(0).Caption = ""
 ParameterNameLabel(0).Visible = False
 
-For i = ParameterValueText.ubound To 1 Step -1
+For i = ParameterValueText.UBound To 1 Step -1
     Unload ParameterValueText(i)
 Next
 ParameterValueText(0).text = ""
 ParameterValueText(0).Visible = False
 
-For i = ParameterValueCombo.ubound To 1 Step -1
+For i = ParameterValueCombo.UBound To 1 Step -1
     Unload ParameterValueCombo(i)
 Next
 ParameterValueCombo(0).text = ""
 ParameterValueCombo(0).ComboItems.clear
 ParameterValueCombo(0).Visible = False
 
-For i = ParameterValueCheck.ubound To 1 Step -1
+For i = ParameterValueCheck.UBound To 1 Step -1
     Unload ParameterValueCheck(i)
 Next
 ParameterValueCombo(0).Visible = False
 
-For i = ParameterValueUpDown.ubound To 1 Step -1
+For i = ParameterValueUpDown.UBound To 1 Step -1
     Unload ParameterValueUpDown(i)
 Next
 ParameterValueUpDown(0).Visible = False
 
-For i = IncludeCheck.ubound To 1 Step -1
+For i = IncludeCheck.UBound To 1 Step -1
     Unload IncludeCheck(i)
 Next
 IncludeCheck(0).value = vbUnchecked
 
-For i = ValueNameLabel.ubound To 1 Step -1
+For i = ValueNameLabel.UBound To 1 Step -1
     Unload ValueNameLabel(i)
 Next
 ValueNameLabel(0).Caption = ""
 
-For i = AutoscaleCheck.ubound To 1 Step -1
+For i = AutoscaleCheck.UBound To 1 Step -1
     Unload AutoscaleCheck(i)
 Next
 AutoscaleCheck(0).value = vbUnchecked
 
-For i = ColorLabel.ubound To 1 Step -1
+For i = ColorLabel.UBound To 1 Step -1
     Unload ColorLabel(i)
 Next
 ColorLabel(0).BackColor = vbBlue
 
-For i = UpColorLabel.ubound To 1 Step -1
+For i = UpColorLabel.UBound To 1 Step -1
     Unload UpColorLabel(i)
 Next
 UpColorLabel(0).BackColor = vbGreen
 
-For i = DownColorLabel.ubound To 1 Step -1
+For i = DownColorLabel.UBound To 1 Step -1
     Unload DownColorLabel(i)
 Next
 DownColorLabel(0).BackColor = vbRed
 
-For i = DisplayModeCombo.ubound To 1 Step -1
+For i = DisplayModeCombo.UBound To 1 Step -1
     Unload DisplayModeCombo(i)
 Next
 DisplayModeCombo(0).ComboItems(0).selected = True
 
-For i = ThicknessText.ubound To 1 Step -1
+For i = ThicknessText.UBound To 1 Step -1
     Unload ThicknessText(i)
 Next
 ThicknessText(0).text = "1"
 
-For i = ThicknessUpDown.ubound To 1 Step -1
+For i = ThicknessUpDown.UBound To 1 Step -1
     Unload ThicknessUpDown(i)
 Next
 
-For i = StyleCombo.ubound To 1 Step -1
+For i = StyleCombo.UBound To 1 Step -1
     Unload StyleCombo(i)
 Next
 StyleCombo(0).ComboItems(0).selected = True
 
-For i = FontButton.ubound To 1 Step -1
+For i = FontButton.UBound To 1 Step -1
     Unload FontButton(i)
 Next
 
 ReDim mFonts(0) As StdFont
 
-For i = AdvancedButton.ubound To 1 Step -1
+For i = AdvancedButton.UBound To 1 Step -1
     Unload AdvancedButton(i)
 Next
 
@@ -1226,6 +1229,8 @@ If pDisplayMode = BarDisplayModeCandlestick And pSolid Then item.selected = True
 
 Set item = combo.ComboItems.Add(, , BarModeLine)
 If pDisplayMode = BarDisplayModeLine Then item.selected = True
+
+combo.ToolTipText = "Select the type of bar"
 
 combo.Refresh
 End Sub
@@ -1253,6 +1258,8 @@ If Not selected Then
     item.Tag = barWidth
 End If
 
+combo.ToolTipText = "Select the width of the bar"
+
 combo.Refresh
 End Sub
 
@@ -1278,6 +1285,8 @@ If Not selected Then
     item.selected = True
     item.Tag = histBarWidth
 End If
+
+combo.ToolTipText = "Select the width of the histogram"
 
 combo.Refresh
 End Sub
@@ -1336,6 +1345,8 @@ If pArrowStart And Not pArrowEnd Then item.selected = True
 Set item = combo.ComboItems.Add(, , LineDisplayModeArrowBoth)
 If pArrowStart And pArrowEnd Then item.selected = True
 
+combo.ToolTipText = "Select the type of line"
+
 combo.Refresh
 End Sub
 
@@ -1360,6 +1371,8 @@ If pLineStyle = LineDashDot Then item.selected = True
 
 Set item = combo.ComboItems.Add(, , LineStyleDashDotDot)
 If pLineStyle = LineDashDotDot Then item.selected = True
+
+combo.ToolTipText = "Select the style of the line"
 
 combo.Refresh
 End Sub
@@ -1399,6 +1412,8 @@ If pPointStyle = PointRound Then item.selected = True
 Set item = combo.ComboItems.Add(, , PointStyleSquare)
 If pPointStyle = PointSquare Then item.selected = True
 
+combo.ToolTipText = "Select the shape of the point"
+
 combo.Refresh
 End Sub
 
@@ -1430,6 +1445,8 @@ If pBox And pBoxStyle <> LineInvisible And pBoxThickness = 0 And pBoxFillStyle =
 If Not selected Then
     Set item = combo.ComboItems.Add(, , CustomDisplayMode)
 End If
+
+combo.ToolTipText = "Select the type of text"
 
 combo.Refresh
 End Sub
@@ -1748,8 +1765,14 @@ For i = 1 To studyValueDefinitions.Count
     Case ValueModeNone
         Dim dpStyle As dataPointStyle
         
+        ColorLabel(i - 1).ToolTipText = "Select the color for all values"
+        
         UpColorLabel(i - 1).Visible = True
+        UpColorLabel(i - 1).ToolTipText = "Optionally, select the color for higher values"
+        
         DownColorLabel(i - 1).Visible = True
+        DownColorLabel(i - 1).ToolTipText = "Optionally, select the color for lower values"
+        
         DisplayModeCombo(i - 1).Visible = True
         StyleCombo(i - 1).Visible = True
         
@@ -1782,22 +1805,28 @@ For i = 1 To studyValueDefinitions.Count
     Case ValueModeLine
         Dim lnStyle As lineStyle
         
+        ColorLabel(i - 1).ToolTipText = "Select the color for the line"
+        
         UpColorLabel(i - 1).Visible = True
+        UpColorLabel(i - 1).ToolTipText = "Optionally, select the color for the start arrowhead"
+        
         DownColorLabel(i - 1).Visible = True
+        DownColorLabel(i - 1).ToolTipText = "Optionally, select the color for the end arrowhead"
+        
         DisplayModeCombo(i - 1).Visible = True
         StyleCombo(i - 1).Visible = True
         
         If Not studyValueconfig Is Nothing Then
             IncludeCheck(i - 1) = IIf(studyValueconfig.includeInChart, vbChecked, vbUnchecked)
-            Set lnStyle = studyValueconfig.dataPointStyle
+            Set lnStyle = studyValueconfig.lineStyle
         Else
             Set lnStyle = mController.defaultLineStyle
         End If
         
         AutoscaleCheck(i - 1) = IIf(lnStyle.includeInAutoscale, vbChecked, vbUnchecked)
         ColorLabel(i - 1).BackColor = lnStyle.Color
-        UpColorLabel(i - 1).BackColor = IIf(lnStyle.arrowStartColor = -1, NullColor, lnStyle.arrowStartColor)
-        DownColorLabel(i - 1).BackColor = IIf(lnStyle.arrowEndColor = -1, NullColor, lnStyle.arrowEndColor)
+        UpColorLabel(i - 1).BackColor = IIf(lnStyle.arrowStartFillColor = -1, NullColor, lnStyle.arrowStartFillColor)
+        DownColorLabel(i - 1).BackColor = IIf(lnStyle.arrowEndFillColor = -1, NullColor, lnStyle.arrowEndFillColor)
         
         initialiseLineDisplayModeCombo DisplayModeCombo(i - 1), _
                                         (lnStyle.arrowStartStyle <> ArrowNone), _
@@ -1810,8 +1839,14 @@ For i = 1 To studyValueDefinitions.Count
     Case ValueModeBar
         Dim brStyle As barStyle
         
+        ColorLabel(i - 1).ToolTipText = "Optionally, select the color for the bar or the candlestick frame"
+        
         UpColorLabel(i - 1).Visible = True
+        UpColorLabel(i - 1).ToolTipText = "Select the color for up bars"
+        
         DownColorLabel(i - 1).Visible = True
+        DownColorLabel(i - 1).ToolTipText = "Optionally, select the color for down bars"
+        
         DisplayModeCombo(i - 1).Visible = True
         StyleCombo(i - 1).Visible = True
         
@@ -1847,8 +1882,14 @@ For i = 1 To studyValueDefinitions.Count
     Case ValueModeText
         Dim txStyle As textStyle
         
+        ColorLabel(i - 1).ToolTipText = "Select the color for the text"
+        
         UpColorLabel(i - 1).Visible = True      ' box fill color
+        UpColorLabel(i - 1).ToolTipText = "Optionally, select the color for the box fill"
+        
         DownColorLabel(i - 1).Visible = True    ' box outline color
+        UpColorLabel(i - 1).ToolTipText = "Optionally, select the color for the box outline"
+        
         DisplayModeCombo(i - 1).Visible = True
         StyleCombo(i - 1).Visible = False
         FontButton(i - 1).Visible = True
