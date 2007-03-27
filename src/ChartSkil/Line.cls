@@ -1532,7 +1532,7 @@ Case ArrowDoubleOpen
 
 Case ArrowClosed
     With mCanvas
-        .setBrushAttributes IIf(undraw, .backColor, arrowEndFillColor), arrowEndFillStyle
+        .setBrushAttributes IIf(undraw, .backColor, arrowStartFillColor), arrowStartfillstyle
         
         Set vertices(0) = .newPoint(x, y)
         Set vertices(1) = .newPoint(x + mStartArrowX1Offset, _
