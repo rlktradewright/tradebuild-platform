@@ -3,7 +3,7 @@ Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "msflxgrd.ocx"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
 Object = "{CA028305-9CAA-44AE-816E-330E4FEBE823}#9.0#0"; "StudiesUI2-5.ocx"
-Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#14.2#0"; "ChartSkil2-5.ocx"
+Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#14.3#0"; "ChartSkil2-5.ocx"
 Begin VB.Form StudyTestForm 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeBuild Study Test Harness"
@@ -521,6 +521,8 @@ End Sub
 
 Private Sub StudiesCombo_Click()
 Dim regionNames(1) As String
+
+addStudyLibraries
 
 setupInitialStudies
                     
