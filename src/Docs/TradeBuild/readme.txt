@@ -96,15 +96,14 @@ TradeSkil Demo Edition is included in the TradeBuild download.
 3.  Installing TradeBuild
 =========================
 
-If you already have a previous version of TradeBuild installed, you must 
-uninstall it using the Control panel's Add or Remove Programs applet before 
+If you already have a previous version of TradeBuild installed, it is advisable
+to uninstall it using the Control panel's Add or Remove Programs applet before 
 installing the current version.
 
 When the download is complete, extract the contents of the TradeBuild.zip file 
 to a convenient location.
 
-Then run the setup.exe program, which will guide you through the installation 
-process.
+To start the installation, run the TradeBuild25.msi file.
 
 The installation process installs the compiled TradeBuild components and the 
 TradeSkil Demo Edition program. It also installs a program called ChartDemo 
