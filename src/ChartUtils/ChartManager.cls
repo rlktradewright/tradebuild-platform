@@ -228,8 +228,8 @@ Set addStudy = study
 End Function
 
 Public Sub clearChart()
-Set mRegions = New Collection
-initialiseChart
+mChartController.clearChart
+Set mPeriods = mChartController.Periods
 End Sub
 
 Public Sub finish()
@@ -507,7 +507,7 @@ If studyValueConfig.chartRegionName = RegionNameDefault Or studyValueConfig.char
     ' then use the study's default region
     regionName = studyConfig.chartRegionName
 ElseIf studyValueConfig.chartRegionName = RegionNameCustom Then
-    regionName = study.instancePath
+    regionName = studyValueDef.name & "." & study.instancePath
     'studyValueConfig.chartRegionName = regionName
 Else
     regionName = studyValueConfig.chartRegionName
@@ -536,27 +536,6 @@ End If
 Set includeStudyValueInChart = lTaskCompletion
 End Function
 
-Private Sub initialiseChart()
-Dim regionStyle As ChartRegionStyle
-
-
-mChartController.suppressDrawing = True
-
-mChartController.clearChart
-mChartController.twipsPerBar = 100
-mChartController.showHorizontalScrollBar = True
-
-Set regionStyle = mChartController.defaultRegionStyle
-regionStyle.BackColor = vbWhite
-regionStyle.autoscale = True
-regionStyle.pointerStyle = PointerCrosshairs
-mChartController.defaultRegionStyle = regionStyle
-
-Set mPeriods = mChartController.Periods
-
-mChartController.suppressDrawing = False
-
-End Sub
 
 
 
