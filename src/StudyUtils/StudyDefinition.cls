@@ -192,7 +192,7 @@ End Property
 ' Methods
 '================================================================================
 
-Public Function clone() As studyDefinition
+Public Function clone() As StudyDefinition
 Dim newSIDs As studyInputDefinitions
 Dim newSID As StudyInputDefinition
 Dim sid As StudyInputDefinition
@@ -203,7 +203,7 @@ Dim newSVDs As studyValueDefinitions
 Dim newSVD As StudyValueDefinition
 Dim svd As StudyValueDefinition
 
-Set clone = New studyDefinition
+Set clone = New StudyDefinition
 clone.defaultRegion = mDefaultRegion
 clone.description = mDescription
 clone.name = mName
@@ -230,6 +230,7 @@ Next
 Set newSVDs = clone.studyValueDefinitions
 For Each svd In mStudyValueDefinitions
     Set newSVD = newSVDs.add(svd.name)
+    newSVD.defaultRegion = svd.defaultRegion
     newSVD.description = svd.description
     newSVD.isDefault = svd.isDefault
     newSVD.maximumValue = svd.maximumValue
