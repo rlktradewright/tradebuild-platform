@@ -66,35 +66,22 @@ Begin VB.Form StudyTestForm
       TabPicture(1)   =   "StudyTestForm.frx":001C
       Tab(1).ControlEnabled=   0   'False
       Tab(1).Control(0)=   "StudyConfigurer1"
-      Tab(1).Control(0).Enabled=   0   'False
       Tab(1).Control(1)=   "SetStudyLibraryButton"
-      Tab(1).Control(1).Enabled=   0   'False
       Tab(1).Control(2)=   "RemoveLibButton"
-      Tab(1).Control(2).Enabled=   0   'False
       Tab(1).Control(3)=   "SpList"
-      Tab(1).Control(3).Enabled=   0   'False
       Tab(1).Control(4)=   "AddLibButton"
-      Tab(1).Control(4).Enabled=   0   'False
       Tab(1).Control(5)=   "LibToAddText"
-      Tab(1).Control(5).Enabled=   0   'False
       Tab(1).Control(6)=   "StudyLibraryClassNameText"
-      Tab(1).Control(6).Enabled=   0   'False
       Tab(1).Control(7)=   "StudiesCombo"
-      Tab(1).Control(7).Enabled=   0   'False
       Tab(1).Control(8)=   "Label19"
-      Tab(1).Control(8).Enabled=   0   'False
       Tab(1).Control(9)=   "Label1"
-      Tab(1).Control(9).Enabled=   0   'False
       Tab(1).Control(10)=   "Label3"
-      Tab(1).Control(10).Enabled=   0   'False
       Tab(1).Control(11)=   "Label2"
-      Tab(1).Control(11).Enabled=   0   'False
       Tab(1).ControlCount=   12
       TabCaption(2)   =   "&Chart"
       TabPicture(2)   =   "StudyTestForm.frx":0038
       Tab(2).ControlEnabled=   0   'False
       Tab(2).Control(0)=   "Chart1"
-      Tab(2).Control(0).Enabled=   0   'False
       Tab(2).ControlCount=   1
       Begin ChartSkil25.Chart Chart1 
          Height          =   8775
@@ -870,6 +857,8 @@ Dim tokens() As String
 Dim row As Long
 Dim accumVolume As Long
 Dim timestamp As Date
+Dim analyzer As DataAnalyzer
+Dim price As Double
 
 On Error GoTo err
 
@@ -894,6 +883,8 @@ Set ts = fso.OpenTextFile(TestDataFilenameText, ForReading)
 
 Chart1.suppressDrawing = True
 
+Set analyzer = New DataAnalyzer
+
 Do While Not ts.AtEndOfStream
     rec = ts.ReadLine
     If rec <> "" And Left$(rec, 2) <> "//" Then
@@ -904,21 +895,29 @@ Do While Not ts.AtEndOfStream
         
         timestamp = CDate(tokens(TestDataFileColumns.timestamp))
         
+        price = CDbl(tokens(TestDataFileColumns.openValue))
         mStudyManager.notifyInput mPriceInputHandle, _
-                        CDbl(tokens(TestDataFileColumns.openValue)), _
+                        price, _
                         timestamp
+        analyzer.addDataValue price
         
+        price = CDbl(tokens(TestDataFileColumns.highValue))
         mStudyManager.notifyInput mPriceInputHandle, _
-                        CDbl(tokens(TestDataFileColumns.highValue)), _
+                        price, _
                         timestamp
+        analyzer.addDataValue price
         
+        price = CDbl(tokens(TestDataFileColumns.lowValue))
         mStudyManager.notifyInput mPriceInputHandle, _
-                        CDbl(tokens(TestDataFileColumns.lowValue)), _
+                        price, _
                         timestamp
+        analyzer.addDataValue price
         
+        price = CDbl(tokens(TestDataFileColumns.closeValue))
         mStudyManager.notifyInput mPriceInputHandle, _
-                        CDbl(tokens(TestDataFileColumns.closeValue)), _
+                        price, _
                         timestamp
+        analyzer.addDataValue price
         
         If tokens(TestDataFileColumns.Volume) <> "" Then
             accumVolume = accumVolume + CLng(tokens(TestDataFileColumns.Volume))
@@ -951,6 +950,9 @@ Loop
 TestDataGrid.Redraw = True
 setTestDataGridRowBackColors 1
 Chart1.suppressDrawing = False
+
+analyzer.analyze
+MinimumPriceTickText = Format(analyzer.minimumDifference, "0.00000")
 
 Screen.MousePointer = MousePointerConstants.vbDefault
 
@@ -993,16 +995,16 @@ For i = 1 To studyConfig.StudyValueConfigurations.Count
         
         Select Case svd.valueMode
         Case ValueModeNone
-            TestDataGrid.TextMatrix(row, TestDataGridColumns.StudyValue1 + j) = lStudyValue.Value
+            TestDataGrid.TextMatrix(row, TestDataGridColumns.StudyValue1 + j) = lStudyValue.value
         Case ValueModeLine
-            Set lLine = lStudyValue.Value
+            Set lLine = lStudyValue.value
             If Not lLine Is Nothing Then
                 TestDataGrid.TextMatrix(row, TestDataGridColumns.StudyValue1 + j) = _
                         "(" & lLine.point1.x & "," & lLine.point1.y & ")-" & _
                         "(" & lLine.point2.x & "," & lLine.point2.y & ")"
             End If
         Case ValueModeBar
-            Set lBar = lStudyValue.Value
+            Set lBar = lStudyValue.value
             If Not lBar Is Nothing Then
                 TestDataGrid.TextMatrix(row, TestDataGridColumns.StudyValue1 + j) = _
                         lBar.openValue & "," & _
@@ -1011,7 +1013,7 @@ For i = 1 To studyConfig.StudyValueConfigurations.Count
                         lBar.closeValue
             End If
         Case ValueModeText
-            Set lText = lStudyValue.Value
+            Set lText = lStudyValue.value
             If Not lText Is Nothing Then
                 TestDataGrid.TextMatrix(row, TestDataGridColumns.StudyValue1 + j) = _
                         "(" & lText.position.x & "," & lText.position.y & ")," & _
