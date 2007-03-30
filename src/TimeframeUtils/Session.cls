@@ -39,6 +39,9 @@ Event sessionEnded( _
 ' Constants
 '@================================================================================
 
+Private Const ProjectName As String = "TimeframeUtils25"
+Private Const ModuleName As String = "SessionBuilder"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -62,6 +65,8 @@ Private mReferenceTime As Date
 Private mCurrentSessionStartTime As Date
 Private mCurrentSessionEndTime As Date
 
+Private mIsLinkable As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -84,6 +89,15 @@ End Property
 
 Public Property Get currentSessionStartTime() As Date
 currentSessionStartTime = mCurrentSessionStartTime
+End Property
+
+Friend Property Let isLinkable( _
+                ByVal value As Boolean)
+mIsLinkable = value
+End Property
+                
+Public Property Get isLinkable() As Boolean
+isLinkable = mIsLinkable
 End Property
 
 Friend Property Let sessionEndTime( _
