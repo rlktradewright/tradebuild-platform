@@ -73,6 +73,8 @@ Private mValueNames(0) As String
 Private mNotifyName As String
 Private mNotifyNames(0) As String
 
+Private mSessionBuilder As SessionBuilder
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
@@ -144,6 +146,7 @@ If Not IsEmpty(valueEntry.value) Then
     End If
     
     If mTargetIsStudy Then
+        mSessionBuilder.setSessionCurrentTime ev.timestamp
         ev.valueName = mNotifyName
         mStudyToNotify.notify ev
     Else
@@ -214,6 +217,7 @@ Friend Sub initialise( _
                 ByVal numberOfValuesToReplay As Long, _
                 ByVal discriminator As Long)
 Dim numValuesToNotify As Long
+Dim studyEntry As StudyTableEntry
 
 Set mValueCache = valueCache
 Set mTarget = target
@@ -226,6 +230,10 @@ If TypeOf target Is study Then
     mTargetIsStudy = True
     Set mTargetStudy = target
     Set mStudyToNotify = mTargetStudy.baseStudy
+    
+    studyEntry = Globals.StudiesCollection(mTargetStudy.id)
+    Set mSessionBuilder = studyEntry.sessionBldr
+    
     mNotifyName = mTargetStudy.studyDefinition.studyInputDefinitions.Item(1).name
     mNotifyNames(0) = mNotifyName
     If numberOfValuesToReplay = ReplayNumbers.ReplayAsRequired Then

@@ -250,6 +250,24 @@ mSessionBuilder.sessionStartTime = sessionStartTime
 mSessionBuilder.sessionEndTime = sessionEndTime
 End Sub
 
+''
+' Links a <code>Session</code> object to this <code>InputStudy</code>
+' object so that it will have identical properties to the <code>InputStudy</code>
+' object's own <code>Session</code> object.
+'
+' This method succeeds only if the <code>Session</code> object to be linked has
+' its <code>IsLinkable</code> property set to <code>True</code>.
+'
+' @param objectToLink the <code>Session</code> object which is to be linked to this
+'               <code>InputStudy</code> object.
+' @see unlinkSession
+'
+'@/
+Friend Sub linkSession( _
+                ByVal objectToLink As session)
+mSessionBuilder.linkSession objectToLink
+End Sub
+
 Friend Sub setInputTicksize( _
                 ByVal name As String, _
                 ByVal tickSize As Double)
@@ -279,6 +297,20 @@ Friend Sub setSessionTimes( _
                 ByVal sessionEndTime As Date)
 mSessionBuilder.sessionStartTime = sessionStartTime
 mSessionBuilder.sessionEndTime = sessionEndTime
+End Sub
+
+''
+' Unlinks a <code>Session</code> object from this <code>InputStudy</code>
+' object.
+'
+' @param objectToUnlink the <code>Session</code> object which is to be unlinked from this
+'               <code>InputStudy</code> object.
+' @see linkSession
+'
+'@/
+Friend Sub unlinkSession( _
+                ByVal objectToUnlink As session)
+mSessionBuilder.unlinkSession objectToUnlink
 End Sub
 
 '================================================================================

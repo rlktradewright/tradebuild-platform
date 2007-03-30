@@ -75,6 +75,8 @@ Private mNotifyNames() As String
 Private mReplayValueNames() As String
 Private mReplayNotifyNames() As String
 
+Private mSessionBuilder As SessionBuilder
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
@@ -161,6 +163,8 @@ For i = 0 To UBound(mReplayValueNames)
         If mTargetIsStudy Then
             
             failpoint = 300
+            
+            mSessionBuilder.setSessionCurrentTime ev.timestamp
             
             ev.valueName = mReplayNotifyNames(i)
             mStudyToNotify.notify ev
@@ -250,6 +254,7 @@ Friend Sub initialise( _
                 ByRef notifyNames() As String, _
                 ByVal discriminator As Long)
 Dim numValuesToNotify As Long
+Dim studyEntry As StudyTableEntry
 
 Set mTarget = target
 Set mSourceStudy = sourceStudy
@@ -265,6 +270,9 @@ If TypeOf target Is study Then
     mTargetIsStudy = True
     Set mTargetStudy = target
     Set mStudyToNotify = mTargetStudy.baseStudy
+    
+    studyEntry = Globals.StudiesCollection(mTargetStudy.id)
+    Set mSessionBuilder = studyEntry.sessionBldr
     
     If numberOfValuesToReplay = ReplayNumbers.ReplayAsRequired Then
         ' just replay the number of values needed by the study

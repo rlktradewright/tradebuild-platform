@@ -23,6 +23,8 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
+Implements Tasks.TaskCompletionListener
+
 '================================================================================
 ' Events
 '================================================================================
@@ -48,20 +50,60 @@ Public Type InputDescriptor
     tickSize            As Double
 End Type
 
-Public Type StudyEntry
-    study As study                  ' reference to the study itself
-    studyName As String             ' name of the study
-    libName As String               ' study library name
-    studyID As String               ' id of this study
-    underlyingStudyID As String     ' id of entry for study this study is to be
-                                    ' added to
-    inputValueNames() As String     ' names of values from the underlying study
-                                    ' used as input to this study
-    numberOfCachedValues As Long    ' the number of study output values that
-                                    ' should be available for access by higher
-                                    ' level studies
-    studyStarted As Boolean         ' set when this study has been added to the
-                                    ' underlying study
+' The following type is no longer used and is kept only to maintain binary
+' compatibility. It has been superseded by StudyTableEntry
+Public Type studyEntry
+    study                   As study
+    studyName               As String
+    libName                 As String
+    studyID                 As String
+    underlyingStudyID       As String
+    inputValueNames()       As String
+    numberOfCachedValues    As Long
+    studyStarted            As Boolean
+End Type
+
+Public Type StudyTableEntry
+    ' the study manager responsible
+    ' for this study
+    studyMgr                As StudyManager
+    
+    ' the input study underlying this study
+    inpStudy                As InputStudy
+    
+    ' the SessionBuilder used when replaying historicalinput
+    ' values to the study
+    sessionBldr             As SessionBuilder
+    
+    ' the study itself
+    study                   As study
+    
+    ' name of the study
+    studyName               As String
+    
+    ' study library name
+    libName                 As String
+    
+    ' id of this study
+    studyID                 As String
+    
+    ' id of entry for study this study is to be
+    ' added to
+    underlyingStudyID       As String
+    
+    ' names of values from the underlying study
+    ' used as input to this study
+    inputValueNames()       As String
+    
+    ' the number of study output values that
+    ' should be available for access by higher
+    ' level studies
+    numberOfCachedValues    As Long
+    
+    ' set when this study has been added to the
+    ' underlying study
+    studyStarted            As Boolean
+
 End Type
 
 '================================================================================
@@ -86,12 +128,25 @@ Private mSessionTimesSet        As Boolean
 Private Sub Class_Initialize()
 ReDim mInputs(10) As InputDescriptor
 Set mStudyLibraryManager = Globals.StudyLibraryManager
-Set mStudies = New Collection
+Set mStudies = Globals.StudiesCollection
 End Sub
 
 '================================================================================
-' XXXX Interface Members
+' TaskCompletionListener Interface Members
 '================================================================================
+
+Private Sub TaskCompletionListener_taskCompleted( _
+                ev As Tasks.TaskCompletionEvent)
+Dim task As ValueReplayTask
+Set task = ev.source
+Select Case task.discriminator
+Case TaskDiscriminators.TaskAddStudy
+    Dim targetStudy As study
+    Set targetStudy = task.target
+    linkSession targetStudy
+Case TaskDiscriminators.TaskAddStudyValueListener
+End Select
+End Sub
 
 '================================================================================
 ' XXXX Event Handlers
@@ -135,18 +190,30 @@ Public Function addSource( _
                 ByVal name As String) As study
 Dim inpStudy As InputStudy
 Dim lStudy As study
-Dim StudyEntry As StudyEntry
+Dim studyEntry As StudyTableEntry
+
+On Error GoTo err
 
 Set inpStudy = New InputStudy
 inpStudy.initialise name, mSessionStartTime, mSessionEndTime
 Set addSource = inpStudy
 
 Set lStudy = inpStudy
-StudyEntry.studyName = name
-Set StudyEntry.study = lStudy
+studyEntry.studyName = name
+Set studyEntry.study = lStudy
 
-StudyEntry.studyID = lStudy.id
-mStudies.add StudyEntry, lStudy.id
+studyEntry.studyID = lStudy.id
+mStudies.add studyEntry, lStudy.id
+
+Exit Function
+
+err:
+If err.Number = VBErrorCodes.VbErrElementAlreadyExists Then
+    mStudies.remove lStudy.id
+    Resume
+End If
+
+err.Raise err.Number
 
 End Function
 
@@ -157,26 +224,26 @@ Public Function addStudy(ByVal name As String, _
                 Optional ByVal libraryName As String, _
                 Optional ByVal numberOfValuesToCache As Long) As study
 
-Dim StudyEntry As StudyEntry
-Dim underlyingStudyEntry As StudyEntry
+Dim studyEntry As StudyTableEntry
+Dim underlyingStudyEntry As StudyTableEntry
 Dim lStudy As study
 Dim inValueNames() As String
 Dim i As Long
 Dim studyInputDefs As studyInputDefinitions
-Dim se As StudyEntry
+Dim se As StudyTableEntry
 Dim inStudy As InputStudy
 
 If underlyingStudy Is Nothing Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "StudyUtils25.StudyManager::addStudy", _
                 "Underlying study must not be nothing"
 End If
 
 On Error Resume Next
 underlyingStudyEntry = mStudies(underlyingStudy.id)
-If Err.Number <> 0 Then
+If err.Number <> 0 Then
     On Error GoTo 0
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "StudyUtils25.StudyManager::addStudy", _
                 "Underlying study id is invalid"
 End If
@@ -198,16 +265,16 @@ If Not lStudy Is Nothing Then
     Exit Function
 End If
 
-StudyEntry.studyName = name
-StudyEntry.libName = libraryName
+studyEntry.studyName = name
+studyEntry.libName = libraryName
 Set lStudy = mStudyLibraryManager.createStudy(name, libraryName)
 
-If lStudy Is Nothing Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+If lStudy Is Nothing Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                                 "StudyUtils25.StudyManager::AddStudy", _
                                                 "Can't create study " & name
                                                 
-Set StudyEntry.study = lStudy
-StudyEntry.numberOfCachedValues = numberOfValuesToCache
+Set studyEntry.study = lStudy
+studyEntry.numberOfCachedValues = numberOfValuesToCache
 
 Set studyInputDefs = lStudy.studyDefinition.studyInputDefinitions
 
@@ -217,10 +284,10 @@ For i = 0 To UBound(inputValueNames)
     lStudy.setInputTicksize studyInputDefs.Item(i + 1).name, _
                             underlyingStudy.getValueTicksize(inputValueNames(i))
 Next
-StudyEntry.inputValueNames = inValueNames
-StudyEntry.underlyingStudyID = underlyingStudy.id
+studyEntry.inputValueNames = inValueNames
+studyEntry.underlyingStudyID = underlyingStudy.id
 
-StudyEntry.studyID = GenerateGUIDString
+studyEntry.studyID = GenerateGUIDString
 
 ' find the relevant InputStudy object to get the session object
 se = underlyingStudyEntry
@@ -229,16 +296,25 @@ Do While Not TypeOf se.study Is InputStudy
 Loop
 Set inStudy = se.study
 
+Set studyEntry.inpStudy = inStudy
+
+'we give the new study it's own session that will be used while replaying
+' historical data. When that is complete and startStudy is called, we'll
+' link that session object to the relevant input study object
+Set studyEntry.sessionBldr = New SessionBuilder
+studyEntry.sessionBldr.sessionStartTime = inStudy.session.sessionStartTime
+studyEntry.sessionBldr.sessionEndTime = inStudy.session.sessionEndTime
+
 underlyingStudyEntry = mStudies(underlyingStudy.id)
 
-StudyEntry.study.initialise StudyEntry.studyID, _
+studyEntry.study.initialise studyEntry.studyID, _
                             parameters, _
                             numberOfValuesToCache, _
                             inputValueNames, _
                             underlyingStudyEntry.study, _
-                            inStudy.session
+                            studyEntry.sessionBldr.session
                             
-mStudies.add StudyEntry, StudyEntry.studyID
+mStudies.add studyEntry, studyEntry.studyID
 Set addStudy = lStudy
 End Function
 
@@ -251,7 +327,7 @@ Public Sub moveStudy(ByVal studyToMove As BarStudy, _
                 ByVal newInputStudy As InputStudy, _
                 ByRef inputValueNames() As String)
 Dim lStudy As study
-Dim lStudyEntry As StudyEntry
+Dim lStudyEntry As StudyTableEntry
 Dim lInputStudy As study
 
 Set lStudy = studyToMove
@@ -294,11 +370,11 @@ Public Sub setSessionTimes( _
                 ByVal sessionStartTime As Date, _
                 ByVal sessionEndTime As Date)
 Dim lStudy As InputStudy
-Dim lStudyEntry As StudyEntry
+Dim lStudyEntry As StudyTableEntry
 Dim lVar As Variant
 
 If mSessionTimesSet Then _
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
             "StudiesSupp" & "." & "StudyManager" & ":" & "setSessionTimes", _
             "Session times have already been set"
 
@@ -323,28 +399,32 @@ Public Function startStudy( _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
                 Optional ByVal taskData As Variant) As TaskCompletion
-Dim StudyEntry As StudyEntry
-Dim underlyingStudyEntry As StudyEntry
+Dim studyEntry As StudyTableEntry
+Dim underlyingStudyEntry As StudyTableEntry
 
-StudyEntry = mStudies(pStudy.id)
-If StudyEntry.studyStarted Then
+studyEntry = mStudies(pStudy.id)
+If studyEntry.studyStarted Then
     ' this study has already been added to the underlying study
     Exit Function
 End If
 
-StudyEntry.studyStarted = True
+studyEntry.studyStarted = True
 
 mStudies.remove pStudy.id
-mStudies.add StudyEntry, pStudy.id
+mStudies.add studyEntry, pStudy.id
 
-underlyingStudyEntry = mStudies(StudyEntry.underlyingStudyID)
+underlyingStudyEntry = mStudies(studyEntry.underlyingStudyID)
 
-Set startStudy = underlyingStudyEntry.study.addStudy(StudyEntry.study, _
-                                                    StudyEntry.inputValueNames, _
+Set startStudy = underlyingStudyEntry.study.addStudy(studyEntry.study, _
+                                                    studyEntry.inputValueNames, _
                                                     numberOfValuesToReplay, _
                                                     taskName, _
                                                     taskData)
-
+If Not startStudy Is Nothing Then
+    startStudy.addTaskCompletionListener Me
+Else
+    linkSession pStudy
+End If
 End Function
 
 '================================================================================
@@ -357,26 +437,38 @@ Private Function findStudy(ByVal studyName As String, _
                 ByRef inputValueNames() As String, _
                 ByVal numberOfValuesToCache As Long, _
                 ByVal parameters As Parameters2.parameters) As study
-Dim StudyEntry As StudyEntry
+Dim studyEntry As StudyTableEntry
 Dim var As Variant
 
 Set findStudy = Nothing
 For Each var In mStudies
-    StudyEntry = var
-    If UCase$(studyName) = UCase$(StudyEntry.studyName) And _
-        UCase$(libName) = UCase$(StudyEntry.libName) And _
-        underlyingStudyID = StudyEntry.underlyingStudyID And _
-        numberOfValuesToCache = StudyEntry.numberOfCachedValues And _
-        stringArraysEqual(inputValueNames, StudyEntry.inputValueNames) And _
-        parameters.equals(StudyEntry.study.parameters) _
+    studyEntry = var
+    If studyEntry.studyMgr Is Me And _
+        UCase$(studyName) = UCase$(studyEntry.studyName) And _
+        UCase$(libName) = UCase$(studyEntry.libName) And _
+        underlyingStudyID = studyEntry.underlyingStudyID And _
+        numberOfValuesToCache = studyEntry.numberOfCachedValues And _
+        stringArraysEqual(inputValueNames, studyEntry.inputValueNames) And _
+        parameters.equals(studyEntry.study.parameters) _
     Then
         ' this study has already been added
-        Set findStudy = StudyEntry.study
+        Set findStudy = studyEntry.study
         Exit For
     End If
 Next
 
 End Function
+
+Private Sub linkSession( _
+                ByVal pStudy As study)
+Dim studyEntry As StudyTableEntry
+
+studyEntry = mStudies(pStudy.id)
+
+studyEntry.sessionBldr.setLinkable
+studyEntry.inpStudy.linkSession studyEntry.sessionBldr.session
+
+End Sub
 
 Private Function stringArraysEqual( _
                 ar1() As String, _
