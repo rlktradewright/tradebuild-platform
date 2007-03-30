@@ -57,7 +57,7 @@ Implements BarStudy
 Private mStudyFoundation As StudyFoundation
 '--------------------------------------------------------
 
-Private WithEvents mSession As Session
+Private WithEvents mSession As session
 Attribute mSession.VB_VarHelpID = -1
 
 Private mBarLength As Long
@@ -78,6 +78,7 @@ Private mPrevBarVolume As Long
 Private mLatestVolume As Long
 
 Private mVolumeCache As StudyValueCache
+Private mTotalVolumeCache As StudyValueCache
 
 Private mPriceTickSize As Double
 Private mVolumeTickSize As Double
@@ -121,13 +122,13 @@ End Property
 Private Sub BarStudy_switchUnderlyingStudy( _
                 ByVal newUnderlyingStudy As InputStudy)
                 
-If newUnderlyingStudy.Session.currentSessionStartTime > mSession.currentSessionStartTime Then
+If newUnderlyingStudy.session.currentSessionStartTime > mSession.currentSessionStartTime Then
     ' we are now in a different session so reset volume variables
     mLatestVolume = 0
     mPrevBarVolume = 0
 End If
 
-Set mSession = newUnderlyingStudy.Session
+Set mSession = newUnderlyingStudy.session
 mBars.changeSession mSession
 
 ' because we are switching to a new source, the volume figures may not be consistent
@@ -160,13 +161,14 @@ Private Sub customInitialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As Session)
+                ByVal pSession As session)
 
 Set mSession = pSession
 
 mStudyFoundation.ReplayUsingStudyValues = True
 customProcessParameters Parameters
 Set mVolumeCache = mStudyFoundation.FindValueCache(BarValueVolume)
+Set mTotalVolumeCache = mStudyFoundation.FindValueCache(ConstTimeBarsValueTotalVolume)
 mPrevBarVolume = -1
 End Sub
 
@@ -197,6 +199,8 @@ Case UCase$(BarValueTickVolume)
         sv.value = bar.tickVolume
 Case UCase$(BarValueVolume)
         sv = mVolumeCache.getStudyValue(ref)
+Case UCase$(ConstTimeBarsValueTotalVolume)
+        sv = mTotalVolumeCache.getStudyValue(ref)
 Case UCase$(BarValueTickVolume)
         sv.value = bar.tickVolume
 Case UCase$(BarValueHL2)
@@ -216,7 +220,7 @@ Dim evOut As StudyValueEvent
 
 If ev.valueName = ConstTimeBarsInputPrice Then
     mBars.Notify ev
-ElseIf ev.valueName = ConstTimeBarsInputVolume Then
+ElseIf ev.valueName = ConstTimeBarsInputTotalVolume Then
     ' we assume that a volume notification belongs to the same bar as the
     ' preceding price notification, so we don't check the timestamp
     mLatestVolume = ev.value
@@ -227,6 +231,7 @@ ElseIf ev.valueName = ConstTimeBarsInputVolume Then
     End If
     'Debug.Assert mLatestVolume >= mPrevBarVolume
     mVolumeCache.updateValue mLatestVolume - mPrevBarVolume
+    mTotalVolumeCache.updateValue mLatestVolume
     
     evOut.barNumber = mBarNumber
     evOut.barStartTime = mBar.DateTime
@@ -234,6 +239,10 @@ ElseIf ev.valueName = ConstTimeBarsInputVolume Then
     evOut.timestamp = ev.timestamp
     evOut.valueName = BarValueVolume
     evOut.value = mLatestVolume - mPrevBarVolume
+    mStudyFoundation.notifyValue evOut
+    
+    evOut.valueName = ConstTimeBarsValueTotalVolume
+    evOut.value = mLatestVolume
     mStudyFoundation.notifyValue evOut
     Exit Sub
 ElseIf ev.valueName = ConstTimeBarsInputTickVolume Then
@@ -262,6 +271,7 @@ If mBars.currentBarNumber <> mBarNumber Then
     mBarNumber = mBars.currentBarNumber
     If mPrevBarVolume <> -1 Then mPrevBarVolume = mLatestVolume
     mVolumeCache.addValue 0, mBarNumber, ev.timestamp, mBar.DateTime
+    mTotalVolumeCache.addValue mLatestVolume, mBarNumber, ev.timestamp, mBar.DateTime
 End If
 
 evOut.barNumber = mBarNumber
@@ -454,7 +464,7 @@ Private Sub Study_initialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As Session)
+                ByVal pSession As session)
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
                             id, _
@@ -513,7 +523,7 @@ Private Sub Study_setInputTicksize( _
                 ByVal tickSize As Double)
 If UCase$(inputName) = UCase$(ConstTimeBarsInputPrice) Then
     mPriceTickSize = tickSize
-ElseIf UCase$(inputName) = UCase$(ConstTimeBarsInputVolume) Then
+ElseIf UCase$(inputName) = UCase$(ConstTimeBarsInputTotalVolume) Then
     mVolumeTickSize = tickSize
 End If
 End Sub

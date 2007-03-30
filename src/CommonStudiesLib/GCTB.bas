@@ -6,13 +6,14 @@ Option Explicit
 '================================================================================
 
 Public Const ConstTimeBarsInputPrice As String = "Price"
-Public Const ConstTimeBarsInputVolume As String = "Volume"
+Public Const ConstTimeBarsInputTotalVolume As String = "Total volume"
 Public Const ConstTimeBarsInputTickVolume As String = "Tick volume"
 
 Public Const ConstTimeBarsParamBarLength As String = "Bar length"
 Public Const ConstTimeBarsParamTimeUnits As String = "Time units"
 
 Public Const ConstTimeBarsValueBar As String = "Bar"
+Public Const ConstTimeBarsValueTotalVolume As String = "Total volume"
 
 '================================================================================
 ' Enums
@@ -81,9 +82,9 @@ If mStudyDefinition Is Nothing Then
     inputDef.inputType = InputTypeReal
     inputDef.Description = "Price"
     
-    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstTimeBarsInputVolume)
+    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstTimeBarsInputTotalVolume)
     inputDef.inputType = InputTypeInteger
-    inputDef.Description = "Volume"
+    inputDef.Description = "Accumulated volume"
     
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstTimeBarsInputTickVolume)
     inputDef.inputType = InputTypeInteger
@@ -122,6 +123,12 @@ If mStudyDefinition Is Nothing Then
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueVolume)
     valueDef.Description = "Bar volume"
+    valueDef.defaultRegion = DefaultRegionCustom
+    valueDef.valueMode = ValueModeNone
+    valueDef.valueType = ValueTypeInteger
+    
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(ConstTimeBarsValueTotalVolume)
+    valueDef.Description = "Accumulated volume"
     valueDef.defaultRegion = DefaultRegionCustom
     valueDef.valueMode = ValueModeNone
     valueDef.valueType = ValueTypeInteger
