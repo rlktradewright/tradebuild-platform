@@ -93,6 +93,10 @@ Case TimePeriodMonth
     gBarEndTime = DateAdd("m", barLength, startTime)
 Case TimePeriodYear
     gBarEndTime = DateAdd("yyyy", barLength, startTime)
+Case TimePeriodVolume, _
+        TimePeriodTickVolume, _
+        TimePeriodTickMovement
+    gBarEndTime = timestamp
 End Select
 
 Dim sessStart As Date
@@ -186,6 +190,10 @@ Case TimePeriodMonth
                                     theDate) + sessionStartTime
 Case TimePeriodYear
     gBarStartTime = DateSerial(1900 + barLength * Int((Year(theDate) - 1900) / barLength), 1, 1)
+Case TimePeriodVolume, _
+        TimePeriodTickVolume, _
+        TimePeriodTickMovement
+    gBarStartTime = timestamp
 End Select
 
 End Function
