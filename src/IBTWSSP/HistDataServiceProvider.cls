@@ -136,12 +136,12 @@ Private Function IBarDataServiceProvider_IsSupportedTimePeriod( _
                 period As TWUtilities.TimePeriod) As Boolean
 Select Case period.units
 Case TimePeriodSecond, _
-    TimePeriodMinute, _
-    TimePeriodHour, _
-    TimePeriodDay, _
-    TimePeriodWeek, _
-    TimePeriodMonth, _
-    TimePeriodYear
+        TimePeriodMinute, _
+        TimePeriodHour, _
+        TimePeriodDay, _
+        TimePeriodWeek, _
+        TimePeriodMonth, _
+        TimePeriodVolume
     IBarDataServiceProvider_IsSupportedTimePeriod = True
 End Select
 End Function
@@ -155,9 +155,9 @@ ar(2).units = TimePeriodHour
 ar(3).units = TimePeriodDay
 ar(4).units = TimePeriodWeek
 ar(5).units = TimePeriodMonth
-ar(6).units = TimePeriodYear
-'ar(7).units = TimePeriodTickMovement
-'ar(8).units = TimePeriodTickVolume
+ar(6).units = TimePeriodTickVolume
+'ar(7).units = TimePeriodYear
+'ar(8).units = TimePeriodTickMovement
 'ar(9).units = TimePeriodVolume
 End Property
 

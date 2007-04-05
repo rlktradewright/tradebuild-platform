@@ -1296,6 +1296,8 @@ Case TimePeriodUnits.TimePeriodYear
     barSpecifier.NumberOfBars = barSpecifier.NumberOfBars * barSpecifier.barLength * NumMonthsInYear
     barSpecifier.barLength = 1
     barSpecifier.BarLengthUnits = TimePeriodMonth
+Case TimePeriodUnits.TimePeriodVolume
+    ' nothing to do
 Case Else
     historicalDataReader.historicalDataRequestInvalid barSpecifier.NumberOfBars & "specified timeframe not supported"
     Exit Function
@@ -1899,6 +1901,9 @@ If mServerVersion >= 20 Then
                     TwsRequest.duration = permittedHistWeeks(.To, .NumberOfBars) & " W"
                 End If
             End If
+        Case TimePeriodUnits.TimePeriodVolume
+            TwsRequest.barSizeSetting = TWSBarSizes.BarSize30Seconds
+            TwsRequest.duration = "86400 S"
         Case Else
             Debug.Assert False
         End Select
@@ -2572,6 +2577,7 @@ Static itemCount As Long
 Static Bar As HistoricBar
 Static i As Long
 Static hint As Long
+Static totalVolume As Long
 
 Dim bardate As String
 Dim timestamp As Date
@@ -2582,6 +2588,8 @@ On Error GoTo err
 If checkPointNumber = 0 Then
     hint = 0
     i = 0
+    totalVolume = 0
+    
     requestID = getLong
     index = (requestID - HistoricalDataTickerBase) Mod HistoricalDataTickerIncrement
     reqNo = Int((requestID - HistoricalDataTickerBase) / HistoricalDataTickerIncrement)
@@ -2612,7 +2620,11 @@ If checkPointNumber >= 200 Then
             End If
             
             If i = 0 Then
-                mHistoricalDataTable(index).barSpecifier.To = mHistoricalDataTable(index).Session.OffsetBarStartTime(timestamp, mHistoricalDataTable(index).barSpecifier.barLength, mHistoricalDataTable(index).barSpecifier.BarLengthUnits, -1)
+                If mHistoricalDataTable(index).barSpecifier.BarLengthUnits = TimePeriodVolume Then
+                    mHistoricalDataTable(index).barSpecifier.To = mHistoricalDataTable(index).Session.OffsetBarStartTime(timestamp, 30, TimePeriodSecond, -1)
+                Else
+                    mHistoricalDataTable(index).barSpecifier.To = mHistoricalDataTable(index).Session.OffsetBarStartTime(timestamp, mHistoricalDataTable(index).barSpecifier.barLength, mHistoricalDataTable(index).barSpecifier.BarLengthUnits, -1)
+                End If
             End If
             
             checkpointBuffer
@@ -2640,6 +2652,7 @@ If checkPointNumber >= 200 Then
         End If
         If checkPointNumber = 250 Then
             Bar.volume = getLong
+            totalVolume = totalVolume + Bar.volume
             checkpointBuffer
             checkPointNumber = 260
         End If
@@ -2676,7 +2689,11 @@ mHistoricalDataTable(index).requestKeys(reqNo) = ""
 mConcurrentHistDataRequests = mConcurrentHistDataRequests - 1
 processNextHistDataRequest
 
-mHistoricalDataTable(index).barSpecifier.NumberOfBars = mHistoricalDataTable(index).barSpecifier.NumberOfBars - itemCount
+If mHistoricalDataTable(index).barSpecifier.BarLengthUnits = TimePeriodVolume Then
+    mHistoricalDataTable(index).barSpecifier.NumberOfBars = mHistoricalDataTable(index).barSpecifier.NumberOfBars - (totalVolume / mHistoricalDataTable(index).barSpecifier.barLength)
+Else
+    mHistoricalDataTable(index).barSpecifier.NumberOfBars = mHistoricalDataTable(index).barSpecifier.NumberOfBars - itemCount
+End If
 If mHistoricalDataTable(index).barSpecifier.NumberOfBars <= 0 Then
     Debug.Print "Historical data retrieved: bars in list: " & mHistoricalDataTable(index).bars.size
     mHistoricalDataTable(index).dataRetrievedFromTWS = True

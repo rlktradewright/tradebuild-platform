@@ -157,9 +157,9 @@ Dim i As Long
 For i = 0 To mTWSAPITableNextIndex - 1
     If mTWSAPITable(i).TWSAPI Is instance Then
         mTWSAPITable(i).usageCount = mTWSAPITable(i).usageCount - 1
-        If mTWSAPITable(i).usageCount = 0 And _
-            ((Not mTWSAPITable(i).keepConnection) Or _
-                forceDisconnect) _
+        If (mTWSAPITable(i).usageCount = 0 And _
+                (Not mTWSAPITable(i).keepConnection)) Or _
+            forceDisconnect _
         Then
             If mTWSAPITable(i).TWSAPI.connectionState <> ConnNotConnected Then
                 mTWSAPITable(i).TWSAPI.disconnect "release"

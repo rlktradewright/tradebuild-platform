@@ -131,12 +131,13 @@ If mRequestInProgress Then err.Raise ErrorCodes.ErrIllegalStateException, _
 
 Select Case barSpecifier.BarLengthUnits
 Case TimePeriodSecond, _
-    TimePeriodMinute, _
-    TimePeriodHour, _
-    TimePeriodDay, _
-    TimePeriodWeek, _
-    TimePeriodMonth, _
-    TimePeriodYear
+        TimePeriodMinute, _
+        TimePeriodHour, _
+        TimePeriodDay, _
+        TimePeriodWeek, _
+        TimePeriodMonth, _
+        TimePeriodYear, _
+        TimePeriodVolume
 Case Else
     mServiceConsumer.NotifyEvent StandardSPEventCodes.HDRequestInvalid, _
                             "Bar time unit not supported", _
