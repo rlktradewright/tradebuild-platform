@@ -1901,9 +1901,9 @@ If mServerVersion >= 20 Then
                     TwsRequest.duration = permittedHistWeeks(.To, .NumberOfBars) & " W"
                 End If
             End If
-        Case TimePeriodUnits.TimePeriodVolume
-            TwsRequest.barSizeSetting = TWSBarSizes.BarSize30Seconds
-            TwsRequest.duration = "86400 S"
+        Case TimePeriodUnits.TimePeriodVolume, TimePeriodUnits.TimePeriodTickMovement
+            TwsRequest.barSizeSetting = TWSBarSizes.BarSize15Seconds
+            TwsRequest.duration = "30000 S"
         Case Else
             Debug.Assert False
         End Select

@@ -141,13 +141,14 @@ Case TimePeriodSecond, _
         TimePeriodDay, _
         TimePeriodWeek, _
         TimePeriodMonth, _
-        TimePeriodVolume
+        TimePeriodVolume, _
+        TimePeriodTickMovement
     IBarDataServiceProvider_IsSupportedTimePeriod = True
 End Select
 End Function
 
 Private Property Get IBarDataServiceProvider_SupportedTimePeriods() As TimePeriod()
-Dim ar(6) As TimePeriod
+Dim ar(7) As TimePeriod
 
 ar(0).units = TimePeriodSecond
 ar(1).units = TimePeriodMinute
@@ -155,10 +156,10 @@ ar(2).units = TimePeriodHour
 ar(3).units = TimePeriodDay
 ar(4).units = TimePeriodWeek
 ar(5).units = TimePeriodMonth
-ar(6).units = TimePeriodTickVolume
-'ar(7).units = TimePeriodYear
-'ar(8).units = TimePeriodTickMovement
-'ar(9).units = TimePeriodVolume
+ar(6).units = TimePeriodVolume
+ar(7).units = TimePeriodTickMovement
+'ar(8).units = TimePeriodYear
+'ar(9).units = TimePeriodTickVolume
 End Property
 
 Private Function IBarDataServiceProvider_Supports( _

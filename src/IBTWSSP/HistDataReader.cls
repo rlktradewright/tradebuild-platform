@@ -137,7 +137,9 @@ Case TimePeriodSecond, _
         TimePeriodWeek, _
         TimePeriodMonth, _
         TimePeriodYear, _
-        TimePeriodVolume
+        TimePeriodVolume, _
+        TimePeriodTickMovement
+
 Case Else
     mServiceConsumer.NotifyEvent StandardSPEventCodes.HDRequestInvalid, _
                             "Bar time unit not supported", _
