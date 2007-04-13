@@ -58,14 +58,20 @@ Private mBarsCache                  As StudyValueCache
 Private mCurrentBar                 As Bar
 Private mCurrentBarNumber           As Long
 
-Private mSession                    As session
+Private WithEvents mSession         As session
+Attribute mSession.VB_VarHelpID = -1
 
 Private mBarLength                  As Long
 Private mTimeUnits                  As TimePeriodUnits
 
+Private mTicksize                   As Double
+Private mMaxBarRange                As Double
+
 Private mTickVolume                 As Long
 
-Private mChangeListeners As Collection
+Private mBarEndTime                 As Date
+
+Private mChangeListeners            As Collection
 
 '================================================================================
 ' Class Event Handlers
@@ -84,8 +90,20 @@ End Sub
 '================================================================================
 
 '================================================================================
-' xxxx Event Handlers
+' mSession Event Handlers
 '================================================================================
+
+Private Sub mSession_SessionStarted(ev As TimeframeUtils25.SessionEvent)
+
+If mBarEndTime <> 0 And _
+    mSession.sessionCurrentTime < mBarEndTime Then Exit Sub
+    
+If mTickVolume <> 0 Then
+    mCurrentBar.tickVolume = mTickVolume
+    mTickVolume = 0
+End If
+Set mCurrentBar = Nothing
+End Sub
 
 '================================================================================
 ' Properties
@@ -367,7 +385,7 @@ End Sub
 ' <p>This should only be used to set the tickvolume for historical bars, where
 ' the ticks cannot be counted in the normal way.</p>
 '
-' <p>Successive calls to this procedure during a sinlge bar cause the tick volume
+' <p>Successive calls to this procedure during a single bar cause the tick volume
 ' to be accumulated.</p>
 '
 ' @param tickVol The amount by which the tick volume is to be incremented.
@@ -382,11 +400,14 @@ Friend Sub initialise( _
                 ByVal barLength As Long, _
                 ByVal timeUnits As TimePeriodUnits, _
                 ByVal pSession As session, _
-                Optional ByVal numberOfBarsToCache As Long)
+                ByVal ticksize As Double, _
+                ByVal numberOfBarsToCache As Long)
 
 mBarLength = barLength
 mTimeUnits = timeUnits
 Set mSession = pSession
+mTicksize = ticksize
+If mTimeUnits = TimePeriodTickMovement Then mMaxBarRange = mBarLength * mTicksize
 Set mBarsCache = New StudyValueCache
 mBarsCache.initialise numberOfBarsToCache, "Bar"
 
@@ -394,50 +415,79 @@ End Sub
 
 Public Sub notify( _
                 ev As StudyValueEvent)
-Dim isNewBar As Boolean
-Static barEndTime As Date
+
+If IsEmpty(ev.value) Then Exit Sub
 
 If mBarLength = 0 Then
     ' the caller will supply bar numbers
-    isNewBar = newBar(ev.barNumber)
-Else
-    If mCurrentBar Is Nothing Then
-        isNewBar = True
+    If newBar(ev.barNumber) Then
+        createNewBar ev.barStartTime
+        mCurrentBar.Tick ev.value
+        fireChange CollItemAdded, mCurrentBar
     Else
-        isNewBar = (ev.timestamp >= barEndTime)
+        mCurrentBar.Tick ev.value
     End If
-End If
-    
-If isNewBar Then
-    If mTickVolume <> 0 Then
-        mCurrentBar.tickVolume = mTickVolume
-        mTickVolume = 0
-    End If
-    
-    Set mCurrentBar = New Bar
-    If mBarLength = 0 Then
-        mCurrentBar.datetime = ev.barStartTime
-    Else
-        barEndTime = mSession.barEndTime(ev.timestamp, _
-                                    mBarLength, _
-                                    mTimeUnits)
-        mCurrentBar.datetime = mSession.barStartTime(ev.timestamp, _
-                                        mBarLength, _
-                                        mTimeUnits)
-        mCurrentBarNumber = mCurrentBarNumber + 1
-    End If
-    mCurrentBar.barNumber = mCurrentBarNumber
-    
+ElseIf mCurrentBar Is Nothing Then
+    createNewBar ev.timestamp
+    mCurrentBar.Tick ev.value
     fireChange CollItemAdded, mCurrentBar
+ElseIf mTimeUnits = TimePeriodTickMovement Then
+    If (ev.value - mCurrentBar.lowValue) > mMaxBarRange Then
+        Dim newHigh As Double
+        newHigh = mCurrentBar.lowValue + mMaxBarRange
+        mCurrentBar.Tick newHigh
+        
+        createNewBar ev.timestamp
+        
+        mCurrentBar.Tick newHigh + mTicksize
+        fireChange CollItemAdded, mCurrentBar
+        
+        Do While (ev.value - mCurrentBar.lowValue) > mMaxBarRange
+            newHigh = mCurrentBar.lowValue + mMaxBarRange
+            mCurrentBar.Tick newHigh
+            
+            createNewBar ev.timestamp
+            
+            mCurrentBar.Tick newHigh + mTicksize
+            fireChange CollItemAdded, mCurrentBar
+        Loop
+        
+    ElseIf (mCurrentBar.highValue - ev.value) > mMaxBarRange Then
+        Dim newLow As Double
+        newLow = mCurrentBar.highValue - mMaxBarRange
+        mCurrentBar.Tick newLow
+        
+        createNewBar ev.timestamp
+        
+        mCurrentBar.Tick newLow - mTicksize
+        fireChange CollItemAdded, mCurrentBar
+        
+        Do While (mCurrentBar.highValue - ev.value) > mMaxBarRange
+            newLow = mCurrentBar.highValue - mMaxBarRange
+            mCurrentBar.Tick newLow
+            
+            createNewBar ev.timestamp
+            
+            mCurrentBar.Tick newLow - mTicksize
+            fireChange CollItemAdded, mCurrentBar
+        Loop
+        
+    End If
+    mCurrentBar.Tick ev.value
+ElseIf mTimeUnits = TimePeriodTickVolume Then
+    If mCurrentBar.tickVolume >= mBarLength Then
+        createNewBar ev.timestamp
+        mCurrentBar.Tick ev.value
+        fireChange CollItemAdded, mCurrentBar
+    End If
+ElseIf ev.timestamp >= mBarEndTime Then
+    createNewBar ev.timestamp
+    mCurrentBar.Tick ev.value
+    fireChange CollItemAdded, mCurrentBar
+Else
+    mCurrentBar.Tick ev.value
 End If
-
-mCurrentBar.Tick ev.value
-If isNewBar Then
-    mBarsCache.addValue mCurrentBar, _
-                    IIf(ev.barNumber <> 0, ev.barNumber, mCurrentBarNumber), _
-                    ev.timestamp, _
-                    mCurrentBar.datetime
-End If
+    
 End Sub
 
 Public Sub removeCollectionChangeListener(ByVal value As CollectionChangeListener)
@@ -450,6 +500,33 @@ End Sub
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub createNewBar( _
+                ByVal timestamp As Date)
+If mTickVolume <> 0 Then
+    mCurrentBar.tickVolume = mTickVolume
+    mTickVolume = 0
+End If
+
+Set mCurrentBar = New Bar
+If mBarLength = 0 Then
+    mCurrentBar.datetime = timestamp
+Else
+    mBarEndTime = mSession.BarEndTime(timestamp, _
+                                mBarLength, _
+                                mTimeUnits)
+    mCurrentBar.datetime = mSession.barStartTime(timestamp, _
+                                    mBarLength, _
+                                    mTimeUnits)
+    mCurrentBarNumber = mCurrentBarNumber + 1
+End If
+mCurrentBar.barNumber = mCurrentBarNumber
+
+mBarsCache.addValue mCurrentBar, _
+                    mCurrentBarNumber, _
+                    timestamp, _
+                    mCurrentBar.datetime
+End Sub
 
 Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _

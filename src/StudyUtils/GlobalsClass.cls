@@ -94,11 +94,13 @@ Public Function CreateBars( _
                 ByVal barLength As Long, _
                 ByVal timeUnits As TimePeriodUnits, _
                 ByVal pSession As session, _
-                Optional ByVal numberOfBarsToCache As Long) As Bars
-Set CreateBars = New Bars
+                Optional ByVal ticksize As Double = 0.01, _
+                Optional ByVal numberOfBarsToCache As Long) As bars
+Set CreateBars = New bars
 CreateBars.initialise barLength, _
                             timeUnits, _
                             pSession, _
+                            ticksize, _
                             numberOfBarsToCache
 End Function
 

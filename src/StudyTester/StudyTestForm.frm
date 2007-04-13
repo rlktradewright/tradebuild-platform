@@ -65,18 +65,18 @@ Begin VB.Form StudyTestForm
       TabCaption(1)   =   "Study setup"
       TabPicture(1)   =   "StudyTestForm.frx":001C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "StudyConfigurer1"
-      Tab(1).Control(1)=   "SetStudyLibraryButton"
-      Tab(1).Control(2)=   "RemoveLibButton"
-      Tab(1).Control(3)=   "SpList"
-      Tab(1).Control(4)=   "AddLibButton"
-      Tab(1).Control(5)=   "LibToAddText"
-      Tab(1).Control(6)=   "StudyLibraryClassNameText"
-      Tab(1).Control(7)=   "StudiesCombo"
-      Tab(1).Control(8)=   "Label19"
-      Tab(1).Control(9)=   "Label1"
-      Tab(1).Control(10)=   "Label3"
-      Tab(1).Control(11)=   "Label2"
+      Tab(1).Control(0)=   "Label2"
+      Tab(1).Control(1)=   "Label3"
+      Tab(1).Control(2)=   "Label1"
+      Tab(1).Control(3)=   "Label19"
+      Tab(1).Control(4)=   "StudiesCombo"
+      Tab(1).Control(5)=   "StudyLibraryClassNameText"
+      Tab(1).Control(6)=   "LibToAddText"
+      Tab(1).Control(7)=   "AddLibButton"
+      Tab(1).Control(8)=   "SpList"
+      Tab(1).Control(9)=   "RemoveLibButton"
+      Tab(1).Control(10)=   "SetStudyLibraryButton"
+      Tab(1).Control(11)=   "StudyConfigurer1"
       Tab(1).ControlCount=   12
       TabCaption(2)   =   "&Chart"
       TabPicture(2)   =   "StudyTestForm.frx":0038
@@ -301,7 +301,7 @@ Private Const TestDataGridRowsInitial As Long = 50
 Private Const TestDataGridRowsIncrement As Long = 25
 
 Private Const InputValuePrice As String = "Price"
-Private Const InputValueVolume As String = "Volume"
+Private Const InputValueVolume As String = "Total volume"
 
 '================================================================================
 ' Enums
