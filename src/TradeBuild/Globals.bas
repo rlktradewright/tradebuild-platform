@@ -5,6 +5,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Public Const ProjectName                    As String = "TradeBuild25"
+
 Public Const S_OK                           As Long = 0
 Public Const NoValidID                      As Long = -1
 Public Const InitialMaxTickers              As Long = 100&
@@ -23,7 +25,7 @@ Public Const BidInputName                   As String = "Bid"
 Public Const AskInputName                   As String = "Ask"
 Public Const TradeInputName                 As String = "Trade"
 Public Const TickVolumeInputName            As String = "Tick volume"
-Public Const VolumeInputName                As String = "Volume"
+Public Const VolumeInputName                As String = "Total volume"
 
 Public Const StrOrderTypeNone               As String = ""
 Public Const StrOrderTypeMarket             As String = "Market"

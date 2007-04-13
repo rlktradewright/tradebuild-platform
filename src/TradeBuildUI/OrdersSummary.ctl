@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
+Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "msflxgrd.ocx"
 Begin VB.UserControl OrdersSummary 
    ClientHeight    =   4245
    ClientLeft      =   0
@@ -106,30 +106,6 @@ Event SelectionChanged()
 '================================================================================
 ' Constants
 '================================================================================
-
-' Percentage widths of the Open Orders columns
-Private Const OpenOrdersOrderIDWidth = 9
-Private Const OpenOrdersStatusWidth = 12
-Private Const OpenOrdersActionWidth = 7
-Private Const OpenOrdersQuantityWidth = 8
-Private Const OpenOrdersSymbolWidth = 8
-Private Const OpenOrdersOrdertypeWidth = 10
-Private Const OpenOrdersPriceWidth = 10
-Private Const OpenOrdersAuxPriceWidth = 10
-Private Const OpenOrdersParentIDWidth = 9
-Private Const OpenOrdersOCAGroupWidth = 9
-
-' Percentage widths of the Open Orders columns
-Private Const ExecutionsExecIdWidth = 25
-Private Const ExecutionsOrderIDWidth = 10
-Private Const ExecutionsActionWidth = 8
-Private Const ExecutionsQuantityWidth = 8
-Private Const ExecutionsSymbolWidth = 8
-Private Const ExecutionsPriceWidth = 10
-Private Const ExecutionsTimeWidth = 23
-
-Private Const StandardFormHeight = 7230
-Private Const ExtendedFormHeight = 9750
 
 Private Const RowDataOrderPlexBase As Long = &H100
 Private Const RowDataPositionManagerBase As Long = &H1000000
@@ -257,8 +233,6 @@ End Type
 Private mSelectedOrderPlexGridRow As Long
 Private mSelectedOrderPlex As OrderPlex
 Private mSelectedOrderIndex  As Long
-
-Private mOrdersCol As Collection
 
 Private mOrderPlexGridMappingTable() As OrderPlexGridMappingEntry
 Private mMaxOrderPlexGridMappingTableIndex As Long
@@ -431,8 +405,8 @@ ElseIf TypeOf ev.affectedObject Is ticker Then
         lTicker.PositionManager.addChangeListener Me
         lTicker.PositionManager.addProfitListener Me
     Case CollItemRemoved
-        lTicker.PositionManager.removeChangeListener Me
-        lTicker.PositionManager.removeProfitListener Me
+        ' nothing to do here as the ticker has already
+        ' tidied everything up
     End Select
 End If
 End Sub
@@ -681,15 +655,15 @@ If index < 0 Then
     Next
     
     If index < 0 Then
-        OrderPlexGrid.AddItem ""
+        OrderPlexGrid.addItem ""
         index = OrderPlexGrid.Rows - 1
     ElseIf OrderPlexGrid.TextMatrix(index, OPGridColumns.symbol) = "" Then
         OrderPlexGrid.TextMatrix(index, OPGridColumns.symbol) = symbol
     Else
-        OrderPlexGrid.AddItem "", index
+        OrderPlexGrid.addItem "", index
     End If
 Else
-    OrderPlexGrid.AddItem "", index
+    OrderPlexGrid.addItem "", index
 End If
 
 OrderPlexGrid.TextMatrix(index, OPGridColumns.symbol) = symbol
@@ -767,19 +741,19 @@ Dim lIndex As Long
 With mOrderPlexGridMappingTable(index)
     If .entryGridOffset >= 0 Then
         lIndex = .gridIndex + .entryGridOffset
-        OrderPlexGrid.RowHeight(lIndex) = 0
+        OrderPlexGrid.rowHeight(lIndex) = 0
     End If
     If .stopGridOffset >= 0 Then
         lIndex = .gridIndex + .stopGridOffset
-        OrderPlexGrid.RowHeight(lIndex) = 0
+        OrderPlexGrid.rowHeight(lIndex) = 0
     End If
     If .targetGridOffset >= 0 Then
         lIndex = .gridIndex + .targetGridOffset
-        OrderPlexGrid.RowHeight(lIndex) = 0
+        OrderPlexGrid.rowHeight(lIndex) = 0
     End If
     If .closeoutGridOffset >= 0 Then
         lIndex = .gridIndex + .closeoutGridOffset
-        OrderPlexGrid.RowHeight(lIndex) = 0
+        OrderPlexGrid.rowHeight(lIndex) = 0
     End If
     
     If Not preserveCurrentExpandedState Then
@@ -808,7 +782,7 @@ Set OrderPlexGrid.CellPicture = OrderPlexImageList.ListImages("Expand").Picture
 symbol = OrderPlexGrid.TextMatrix(mPositionManagerGridMappingTable(index).gridIndex, OPGridColumns.symbol)
 i = mPositionManagerGridMappingTable(index).gridIndex + 1
 Do While OrderPlexGrid.TextMatrix(i, OPGridColumns.symbol) = symbol
-    OrderPlexGrid.RowHeight(i) = 0
+    OrderPlexGrid.rowHeight(i) = 0
     lOpEntryIndex = OrderPlexGrid.rowdata(i) - RowDataOrderPlexBase
     i = contractOrderPlexEntry(lOpEntryIndex, True) + 1
 Loop
@@ -889,19 +863,19 @@ With mOrderPlexGridMappingTable(index)
     
     If .entryGridOffset >= 0 Then
         lIndex = .gridIndex + .entryGridOffset
-        If Not preserveCurrentExpandedState Or .isExpanded Then OrderPlexGrid.RowHeight(lIndex) = -1
+        If Not preserveCurrentExpandedState Or .isExpanded Then OrderPlexGrid.rowHeight(lIndex) = -1
     End If
     If .stopGridOffset >= 0 Then
         lIndex = .gridIndex + .stopGridOffset
-        If Not preserveCurrentExpandedState Or .isExpanded Then OrderPlexGrid.RowHeight(lIndex) = -1
+        If Not preserveCurrentExpandedState Or .isExpanded Then OrderPlexGrid.rowHeight(lIndex) = -1
     End If
     If .targetGridOffset >= 0 Then
         lIndex = .gridIndex + .targetGridOffset
-        If Not preserveCurrentExpandedState Or .isExpanded Then OrderPlexGrid.RowHeight(lIndex) = -1
+        If Not preserveCurrentExpandedState Or .isExpanded Then OrderPlexGrid.rowHeight(lIndex) = -1
     End If
     If .closeoutGridOffset >= 0 Then
         lIndex = .gridIndex + .closeoutGridOffset
-        If Not preserveCurrentExpandedState Or .isExpanded Then OrderPlexGrid.RowHeight(lIndex) = -1
+        If Not preserveCurrentExpandedState Or .isExpanded Then OrderPlexGrid.rowHeight(lIndex) = -1
     End If
     
     If Not preserveCurrentExpandedState Then
@@ -930,7 +904,7 @@ Set OrderPlexGrid.CellPicture = OrderPlexImageList.ListImages("Contract").Pictur
 symbol = OrderPlexGrid.TextMatrix(mPositionManagerGridMappingTable(index).gridIndex, OPGridColumns.symbol)
 i = mPositionManagerGridMappingTable(index).gridIndex + 1
 Do While OrderPlexGrid.TextMatrix(i, OPGridColumns.symbol) = symbol
-    OrderPlexGrid.RowHeight(i) = -1
+    OrderPlexGrid.rowHeight(i) = -1
     lOpEntryIndex = OrderPlexGrid.rowdata(i) - RowDataOrderPlexBase
     i = expandOrderPlexEntry(lOpEntryIndex, True) + 1
 Loop

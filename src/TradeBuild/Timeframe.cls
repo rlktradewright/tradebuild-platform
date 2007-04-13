@@ -53,7 +53,7 @@ Event BarWriterNotification(ByRef ev As WriterEvent)
 
 Event Notification(ByRef ev As NotificationEvent)
 
-Event StateChange(ByRef ev As StateChangeEvent)
+Event stateChange(ByRef ev As StateChangeEvent)
 
 
 '@================================================================================
@@ -63,10 +63,14 @@ Event StateChange(ByRef ev As StateChangeEvent)
 Private Const BarValueVolume As String = "Volume"
 
 Private Const ConstTimeBarsStudyName As String = "Constant time bars"
-Private Const ConstTimeBarsInputPrice As String = "Price"
-Private Const ConstTimeBarsInputVolume As String = "Volume"
 Private Const ConstTimeBarsParamBarLength As String = "Bar length"
 Private Const ConstTimeBarsParamTimeUnits As String = "Time units"
+
+Private Const ConstVolumeBarsStudyName As String = "Constant volume bars"
+Private Const ConstTimeBarsParamVolPerBar As String = "Volume per bar"
+
+Private Const ConstMomentumBarsStudyName As String = "Constant momentum bars"
+Private Const ConstMomentumBarsParamTicksPerBar As String = "Ticks move per bar"
 
 '@================================================================================
 ' Enums
@@ -214,8 +218,6 @@ Private Sub IBarDataInputServiceConsumer_NotifyEvent( _
                 ByVal spHandle As Long)
 Dim ev As NotificationEvent
 
-Debug.Print "Timeframe bars loaded with errors: " & mKey
-
 ev.eventCode = eventCode
 ev.eventMessage = eventMessage
 Set ev.source = Me
@@ -224,6 +226,8 @@ Select Case eventCode
 Case HDConnectedToDataSource
     RaiseEvent Notification(ev)
 Case Else
+    Debug.Print "Timeframe bars loaded with errors: " & mKey
+    
     StartStudies
     RaiseEvent Notification(ev)
     fireStateChange TimeframeStateLoaded
@@ -698,7 +702,7 @@ For i = 1 To mStateChangeListeners.Count
     Set listener = mStateChangeListeners(i)
     listener.Change ev
 Next
-RaiseEvent StateChange(ev)
+RaiseEvent stateChange(ev)
 End Sub
 
 Private Sub ProcessHistoricBar()
@@ -707,8 +711,13 @@ mHistoricBarPending = False
 
 With mHistoricBar
     If .OpenPrice <> 0 Then studyMgr.notifyInput mTradeInputHandle, .OpenPrice, .timestamp
-    If .highPrice <> 0 Then studyMgr.notifyInput mTradeInputHandle, .highPrice, .timestamp
-    If .lowPrice <> 0 Then studyMgr.notifyInput mTradeInputHandle, .lowPrice, .timestamp
+    If .closePrice >= .OpenPrice Then
+        If .lowPrice <> 0 Then studyMgr.notifyInput mTradeInputHandle, .lowPrice, .timestamp
+        If .highPrice <> 0 Then studyMgr.notifyInput mTradeInputHandle, .highPrice, .timestamp
+    Else
+        If .highPrice <> 0 Then studyMgr.notifyInput mTradeInputHandle, .highPrice, .timestamp
+        If .lowPrice <> 0 Then studyMgr.notifyInput mTradeInputHandle, .lowPrice, .timestamp
+    End If
     If .closePrice <> 0 Then studyMgr.notifyInput mTradeInputHandle, .closePrice, .timestamp
     
     mAccumulatedVolume = mAccumulatedVolume + .volume
@@ -720,51 +729,75 @@ End With
 End Sub
 
 Private Sub setupBarStudies()
+
+setupInputStudies
+
+Select Case mBarUnit
+Case TimePeriodSecond, _
+        TimePeriodMinute, _
+        TimePeriodHour, _
+        TimePeriodDay, _
+        TimePeriodWeek, _
+        TimePeriodMonth, _
+        TimePeriodYear
+    setupConstantTimeBarsStudies
+Case TimePeriodTickMovement
+    setupConstantMomentumBarsStudies
+Case TimePeriodTickVolume
+    'setupConstantTickBarsStudies
+Case TimePeriodVolume
+    setupConstantVolumeBarsStudies
+End Select
+
+End Sub
+
+Private Sub setupConstantMomentumBarsStudies()
 Dim params As New parameters
 Dim barsStudy As BarStudy
-Dim sourceName As String
-Dim TickSize As Double
 
-If mContract Is Nothing Then
-    sourceName = GenerateGUIDString
-    TickSize = 0
-Else
-    sourceName = mContract.specifier.ToString & mKey & "(historical data)"
-    TickSize = mContract.TickSize
+params.setParameterValue ConstMomentumBarsParamTicksPerBar, mBarLength
+
+ReDim inputValueNames(2) As String
+inputValueNames(0) = TradeInputName
+inputValueNames(1) = VolumeInputName
+inputValueNames(2) = TickVolumeInputName
+Set mTradeBarsStudy = studyMgr.AddStudy(ConstMomentumBarsStudyName, _
+                                        mInputStudy, _
+                                        inputValueNames, _
+                                        params)
+Set barsStudy = mTradeBarsStudy
+Set mTradeBars = barsStudy.Bars
+studyMgr.startStudy mTradeBarsStudy, 0
+
+If mWriteBidAndAskBars Then
+    ReDim inputValueNames(0) As String
+    inputValueNames(0) = BidInputName
+    Set mBidBarsStudy = studyMgr.AddStudy(ConstMomentumBarsStudyName, _
+                                            mInputStudy, _
+                                            inputValueNames, _
+                                            params)
+    Set barsStudy = mBidBarsStudy
+    Set mBidBars = barsStudy.Bars
+    studyMgr.startStudy mBidBarsStudy, 0
+
+    ReDim inputValueNames(0) As String
+    inputValueNames(0) = AskInputName
+    Set mAskBarsStudy = studyMgr.AddStudy(ConstMomentumBarsStudyName, _
+                                            mInputStudy, _
+                                            inputValueNames, _
+                                            params)
+    Set barsStudy = mAskBarsStudy
+    Set mAskBars = barsStudy.Bars
+    studyMgr.startStudy mAskBarsStudy, 0
+
 End If
 
-Set mInputStudy = studyMgr.addSource(sourceName)
-Set mSession = mInputStudy.session
-mBidInputHandle = studyMgr.addInput(mInputStudy, _
-                        BidInputName, _
-                        "Bid prices", _
-                        StudyInputTypes.InputTypeReal, _
-                        False, _
-                        TickSize)
-mAskInputHandle = studyMgr.addInput(mInputStudy, _
-                        AskInputName, _
-                        "Ask prices", _
-                        StudyInputTypes.InputTypeReal, _
-                        False, _
-                        TickSize)
-mTradeInputHandle = studyMgr.addInput(mInputStudy, _
-                        TradeInputName, _
-                        "Trade prices", _
-                        StudyInputTypes.InputTypeReal, _
-                        True, _
-                        TickSize)
-mTickVolumeInputHandle = studyMgr.addInput(mInputStudy, _
-                        TickVolumeInputName, _
-                        "Volume", _
-                        StudyInputTypes.InputTypeInteger, _
-                        False, _
-                        1)
-mVolumeInputHandle = studyMgr.addInput(mInputStudy, _
-                        VolumeInputName, _
-                        "Tick Volume", _
-                        StudyInputTypes.InputTypeInteger, _
-                        False, _
-                        1)
+End Sub
+
+Private Sub setupConstantTimeBarsStudies()
+Dim params As New parameters
+Dim barsStudy As BarStudy
+
 params.setParameterValue ConstTimeBarsParamBarLength, mBarLength
 params.setParameterValue ConstTimeBarsParamTimeUnits, _
                         TimePeriodUnitsToString(mBarUnit)
@@ -804,6 +837,95 @@ If mWriteBidAndAskBars Then
 
 End If
 
+End Sub
+
+Private Sub setupConstantVolumeBarsStudies()
+Dim params As New parameters
+Dim barsStudy As BarStudy
+
+params.setParameterValue ConstTimeBarsParamVolPerBar, mBarLength
+
+ReDim inputValueNames(2) As String
+inputValueNames(0) = TradeInputName
+inputValueNames(1) = VolumeInputName
+inputValueNames(2) = TickVolumeInputName
+Set mTradeBarsStudy = studyMgr.AddStudy(ConstVolumeBarsStudyName, _
+                                        mInputStudy, _
+                                        inputValueNames, _
+                                        params)
+Set barsStudy = mTradeBarsStudy
+Set mTradeBars = barsStudy.Bars
+studyMgr.startStudy mTradeBarsStudy, 0
+
+If mWriteBidAndAskBars Then
+    ReDim inputValueNames(0) As String
+    inputValueNames(0) = BidInputName
+    Set mBidBarsStudy = studyMgr.AddStudy(ConstVolumeBarsStudyName, _
+                                            mInputStudy, _
+                                            inputValueNames, _
+                                            params)
+    Set barsStudy = mBidBarsStudy
+    Set mBidBars = barsStudy.Bars
+    studyMgr.startStudy mBidBarsStudy, 0
+
+    ReDim inputValueNames(0) As String
+    inputValueNames(0) = AskInputName
+    Set mAskBarsStudy = studyMgr.AddStudy(ConstVolumeBarsStudyName, _
+                                            mInputStudy, _
+                                            inputValueNames, _
+                                            params)
+    Set barsStudy = mAskBarsStudy
+    Set mAskBars = barsStudy.Bars
+    studyMgr.startStudy mAskBarsStudy, 0
+
+End If
+
+End Sub
+
+Private Sub setupInputStudies()
+Dim sourceName As String
+Dim TickSize As Double
+
+If mContract Is Nothing Then
+    sourceName = GenerateGUIDString
+    TickSize = 0
+Else
+    sourceName = mContract.specifier.ToString & mKey & "(historical data)"
+    TickSize = mContract.TickSize
+End If
+
+Set mInputStudy = studyMgr.addSource(sourceName)
+Set mSession = mInputStudy.session
+mBidInputHandle = studyMgr.addInput(mInputStudy, _
+                        BidInputName, _
+                        "Bid prices", _
+                        StudyInputTypes.InputTypeReal, _
+                        False, _
+                        TickSize)
+mAskInputHandle = studyMgr.addInput(mInputStudy, _
+                        AskInputName, _
+                        "Ask prices", _
+                        StudyInputTypes.InputTypeReal, _
+                        False, _
+                        TickSize)
+mTradeInputHandle = studyMgr.addInput(mInputStudy, _
+                        TradeInputName, _
+                        "Trade prices", _
+                        StudyInputTypes.InputTypeReal, _
+                        True, _
+                        TickSize)
+mTickVolumeInputHandle = studyMgr.addInput(mInputStudy, _
+                        TickVolumeInputName, _
+                        "Tick Volume", _
+                        StudyInputTypes.InputTypeInteger, _
+                        False, _
+                        1)
+mVolumeInputHandle = studyMgr.addInput(mInputStudy, _
+                        VolumeInputName, _
+                        "Volume", _
+                        StudyInputTypes.InputTypeInteger, _
+                        False, _
+                        1)
 End Sub
 
 Private Sub startHistDataFetch()

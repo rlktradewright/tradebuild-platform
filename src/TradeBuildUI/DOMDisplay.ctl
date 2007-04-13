@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
+Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "msflxgrd.ocx"
 Begin VB.UserControl DOMDisplay 
    ClientHeight    =   1725
    ClientLeft      =   0
@@ -164,7 +164,7 @@ DOMGrid.Top = 0
 DOMGrid.Width = UserControl.Width
 DOMGrid.Height = UserControl.Height
 
-mNumberOfVisibleRows = Int(DOMGrid.Height / DOMGrid.RowHeight(1))
+mNumberOfVisibleRows = Int(DOMGrid.Height / DOMGrid.rowHeight(1))
 
 colWidth = (UserControl.ScaleWidth - ScrollbarWidth) / DOMGrid.Cols
 For i = 0 To DOMGrid.Cols - 2
@@ -314,7 +314,7 @@ If (price - mBasePrice) / mPriceIncrement <= 5 Then
     Do
         For i = 1 To Int(mNumberOfVisibleRows / 2)
             rowprice = mBasePrice - (i * mPriceIncrement)
-            DOMGrid.AddItem ""
+            DOMGrid.addItem ""
             setCellContents DOMGrid.Rows - 1, DOMColumns.PriceLeft, mTicker.formatPrice(rowprice)
             setCellContents DOMGrid.Rows - 1, DOMColumns.PriceRight, mTicker.formatPrice(rowprice)
         Next
@@ -332,7 +332,7 @@ If (mCeilingPrice - price) / mPriceIncrement <= 5 Then
     Do
         For i = 1 To Int(mNumberOfVisibleRows / 2)
             rowprice = mCeilingPrice + (i * mPriceIncrement)
-            DOMGrid.AddItem ""
+            DOMGrid.addItem ""
             setCellContents DOMGrid.Rows - 1, DOMColumns.PriceLeft, mTicker.formatPrice(rowprice)
             setCellContents DOMGrid.Rows - 1, DOMColumns.PriceRight, mTicker.formatPrice(rowprice)
         Next
@@ -440,13 +440,12 @@ End Sub
 Private Sub setupRows()
 Dim i As Long
 Dim price As Double
-Dim currentGridHeight  As Long
 
 mBasePrice = mInitialPrice - (mPriceIncrement * Int(mNumberOfRows / 2))
 
 For i = 0 To mNumberOfRows - 1
     price = mBasePrice + (i * mPriceIncrement)
-    DOMGrid.AddItem "", 1
+    DOMGrid.addItem "", 1
     setCellContents 1, DOMColumns.PriceLeft, mTicker.formatPrice(price)
     setCellContents 1, DOMColumns.PriceRight, mTicker.formatPrice(price)
     

@@ -94,13 +94,13 @@ End Property
 Public Function add( _
                 ByVal ordersAreLive As Boolean, _
                 Optional ByVal key As String) As Ticker
-Set add = New Ticker
-add.tradeBuildAPI = mTradeBuildAPIRef.Target
-add.handle = AllocateTickerHandle
-add.Tickers = Me
-add.simulatedOrders = Not ordersAreLive
 If key = "" Then key = GenerateGUIDString
-add.key = key
+Set add = New Ticker
+add.initialise mTradeBuildAPIRef.Target, _
+                AllocateTickerHandle, _
+                Me, _
+                key, _
+                Not ordersAreLive
 mTickers.add add, key
 fireChange CollItemAdded, add
 End Function

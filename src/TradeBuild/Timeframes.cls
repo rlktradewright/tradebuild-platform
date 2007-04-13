@@ -41,6 +41,8 @@ Event CollectionChanged( _
 ' Constants
 '@================================================================================
 
+Private Const ModuleName As String = "Timeframes"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -141,6 +143,22 @@ Public Function add( _
                 Optional ByVal saveIntervalSeconds As Long = -1&, _
                 Optional ByVal writeBidAndAskBars As Boolean) As Timeframe
 
+Select Case timePeriodUnit
+Case TimePeriodSecond, _
+        TimePeriodMinute, _
+        TimePeriodHour, _
+        TimePeriodDay, _
+        TimePeriodWeek, _
+        TimePeriodMonth, _
+        TimePeriodYear, _
+        TimePeriodVolume, _
+        TimePeriodTickMovement
+Case Else
+        err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                ProjectName & "." & ModuleName & ":" & "add", _
+                "Time period units not supported"
+End Select
+
 If saveIntervalSeconds > 0 And saveIntervalSeconds < 5 Then _
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "TradeBuild25.Timeframes::add", _
@@ -175,6 +193,24 @@ Public Function addHistorical( _
                 Optional ByVal includeBarsOutsideSession As Boolean, _
                 Optional ByVal saveIntervalSeconds As Long = -1&, _
                 Optional ByVal writeBidAndAskBars As Boolean) As Timeframe
+
+Select Case timePeriodUnit
+Case TimePeriodSecond, _
+        TimePeriodMinute, _
+        TimePeriodHour, _
+        TimePeriodDay, _
+        TimePeriodWeek, _
+        TimePeriodMonth, _
+        TimePeriodYear, _
+        TimePeriodVolume, _
+        TimePeriodTickMovement
+Case Else
+        err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                ProjectName & "." & ModuleName & ":" & "add", _
+                "Time period units not supported"
+    
+End Select
+
 If fromTime > toTime Then
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "TradeBuild25" & "." & "Timeframes" & ":" & "addHistorical", _

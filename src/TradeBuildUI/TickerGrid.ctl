@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
+Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "msflxgrd.ocx"
 Begin VB.UserControl TickerGrid 
    ClientHeight    =   3600
    ClientLeft      =   0
@@ -187,9 +187,6 @@ Private mAltDown As Boolean
 
 Private Sub UserControl_Initialize()
 Dim widthString As String
-Dim realtimeServiceProvider As Object
-Dim TWSContractServiceProvider As Object
-Dim i As Long
 
 ReDim mTickerTable(TickerTableEntriesInitial - 1) As TickerTableEntry
 mNextGridRowIndex = 1
@@ -355,7 +352,6 @@ Dim row As Long
 Dim rowSel As Long
 Dim col As Long
 Dim colSel As Long
-Dim rowdata As Long
 Dim i As Long
 row = TickerGrid.row
 rowSel = TickerGrid.rowSel
@@ -507,7 +503,6 @@ End Sub
 
 Public Property Get SelectedTickers() As SelectedTickers
 Dim i As Long
-Dim j As Long
 
 Set SelectedTickers = New SelectedTickers
 
@@ -613,8 +608,6 @@ End If
 End Sub
 
 Private Sub invertEntryColors(ByVal rowNumber As Long)
-Dim foreColor As Long
-Dim backColor As Long
 Dim i As Long
 
 If rowNumber < 0 Then Exit Sub

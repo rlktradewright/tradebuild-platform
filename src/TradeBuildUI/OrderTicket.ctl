@@ -1202,7 +1202,7 @@ End Sub
 '================================================================================
 
 Private Sub mTicker_StateChange(ev As TWUtilities.StateChangeEvent)
-Dim fred As TickerStates
+
 Select Case ev.State
 Case TickerStateCreated
 
@@ -1344,7 +1344,7 @@ Private Sub addItemToCombo( _
                 ByVal combo As ComboBox, _
                 ByVal itemText As String, _
                 ByVal itemData As Long)
-combo.AddItem itemText
+combo.addItem itemText
 combo.itemData(combo.ListCount - 1) = itemData
 End Sub
 

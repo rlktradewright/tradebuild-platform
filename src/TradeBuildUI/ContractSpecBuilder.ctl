@@ -163,6 +163,12 @@ Event Ready()
 ' Constants
 '@================================================================================
 
+Private Const PropNameBackColor                         As String = "BackColor"
+Private Const PropNameForeColor                         As String = "ForeColor"
+
+Private Const PropDfltBackColor                         As Long = vbWindowBackground
+Private Const PropDfltForeColor                         As Long = vbWindowText
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -177,6 +183,10 @@ Event Ready()
 
 Private mTB As tradeBuildAPI
 
+'@================================================================================
+' UserControl Event Handlers
+'@================================================================================
+
 Private Sub UserControl_GotFocus()
 If LocalSymbolText <> "" Then
     LocalSymbolText.SetFocus
@@ -186,10 +196,6 @@ Else
     LocalSymbolText.SetFocus
 End If
 End Sub
-
-'@================================================================================
-' UserControl Event Handlers
-'@================================================================================
 
 Private Sub UserControl_Initialize()
 RaiseEvent NotReady
@@ -203,6 +209,31 @@ TypeCombo.AddItem SecTypeToString(SecurityTypes.SecTypeIndex)
 
 RightCombo.AddItem OptionRightToString(OptionRights.OptCall)
 RightCombo.AddItem OptionRightToString(OptionRights.OptPut)
+
+End Sub
+
+Private Sub UserControl_InitProperties()
+On Error Resume Next
+
+backColor = PropDfltBackColor
+foreColor = PropDfltForeColor
+End Sub
+
+Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
+
+On Error Resume Next
+
+backColor = PropBag.ReadProperty(PropNameBackColor, PropDfltBackColor)
+If Err.Number <> 0 Then
+    backColor = PropDfltBackColor
+    Err.clear
+End If
+
+foreColor = PropBag.ReadProperty(PropNameForeColor, PropDfltForeColor)
+If Err.Number <> 0 Then
+    backColor = PropDfltForeColor
+    Err.clear
+End If
 
 End Sub
 
@@ -257,6 +288,12 @@ RightCombo.Left = LocalSymbolLabel.Width
 RightCombo.Width = controlWidth
 
 End Sub
+
+Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
+PropBag.WriteProperty PropNameBackColor, backColor, PropDfltBackColor
+PropBag.WriteProperty PropNameForeColor, foreColor, PropDfltForeColor
+End Sub
+
 '@================================================================================
 ' Control Event Handlers
 '@================================================================================
@@ -278,6 +315,10 @@ checkIfValid
 End Sub
 
 Private Sub RightCombo_Click()
+checkIfValid
+End Sub
+
+Private Sub StrikePriceText_Change()
 checkIfValid
 End Sub
 
@@ -337,6 +378,22 @@ End Sub
 ' Properties
 '@================================================================================
 
+Public Property Let backColor( _
+                ByVal value As OLE_COLOR)
+LocalSymbolText.backColor = value
+SymbolText.backColor = value
+TypeCombo.backColor = value
+ExpiryText.backColor = value
+ExchangeCombo.backColor = value
+CurrencyText.backColor = value
+StrikePriceText.backColor = value
+RightCombo.backColor = value
+End Property
+
+Public Property Get backColor() As OLE_COLOR
+backColor = LocalSymbolText.backColor
+End Property
+
 Public Property Get contractSpecifier() As contractSpecifier
 If mTB Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
@@ -353,6 +410,22 @@ Set contractSpecifier = mTB.newContractSpecifier( _
                                 ExpiryText, _
                                 IIf(StrikePriceText = "", 0, StrikePriceText), _
                                 OptionRightFromString(RightCombo))
+End Property
+
+Public Property Let foreColor( _
+                ByVal value As OLE_COLOR)
+LocalSymbolText.foreColor = value
+SymbolText.foreColor = value
+TypeCombo.foreColor = value
+ExpiryText.foreColor = value
+ExchangeCombo.foreColor = value
+CurrencyText.foreColor = value
+StrikePriceText.foreColor = value
+RightCombo.foreColor = value
+End Property
+
+Public Property Get foreColor() As OLE_COLOR
+foreColor = LocalSymbolText.foreColor
 End Property
 
 Public Property Let tradeBuildAPI( _
@@ -378,7 +451,7 @@ End Property
 '@================================================================================
 
 Private Sub checkIfValid()
-If LocalSymbolText = "" And SymbolText <> "" Then
+If LocalSymbolText = "" And SymbolText = "" Then
     RaiseEvent NotReady
     Exit Sub
 End If
@@ -393,6 +466,34 @@ If StrikePriceText <> "" Then
         Exit Sub
     End If
 End If
+
+If LocalSymbolText = "" Then
+    Select Case SecTypeFromString(TypeCombo)
+    Case SecurityTypes.SecTypeNone
+        RaiseEvent NotReady: Exit Sub
+    Case SecurityTypes.SecTypeFuture
+        If ExpiryText = "" Then RaiseEvent NotReady: Exit Sub
+    Case SecurityTypes.SecTypeStock
+    
+    Case SecurityTypes.SecTypeOption
+        If ExpiryText = "" Then RaiseEvent NotReady: Exit Sub
+        If StrikePriceText = "" Then RaiseEvent NotReady: Exit Sub
+        If RightCombo = "" Then RaiseEvent NotReady: Exit Sub
+    Case SecurityTypes.SecTypeFuturesOption
+        If ExpiryText = "" Then RaiseEvent NotReady: Exit Sub
+        If StrikePriceText = "" Then RaiseEvent NotReady: Exit Sub
+        If RightCombo = "" Then RaiseEvent NotReady: Exit Sub
+    Case SecurityTypes.SecTypeCash
+    
+    Case SecurityTypes.SecTypeIndex
+    
+    'Case SecurityTypes.SecTypeBag
+    '    ExpiryText.Enabled = False
+    '    StrikePriceText.Enabled = False
+    '    RightCombo.Enabled = False
+    End Select
+End If
+    
 
 RaiseEvent Ready
 

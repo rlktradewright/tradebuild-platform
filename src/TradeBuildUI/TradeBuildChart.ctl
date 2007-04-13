@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#14.2#0"; "ChartSkil2-5.ocx"
+Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#14.3#0"; "ChartSkil2-5.ocx"
 Begin VB.UserControl TradeBuildChart 
    ClientHeight    =   5745
    ClientLeft      =   0
@@ -78,6 +78,9 @@ End Enum
 ' Constants
 '================================================================================
 
+Private Const ProjectName                               As String = "TradeBuildUI25"
+Private Const ModuleName                                As String = "TradeBuildChart"
+
 Private Const PropNameAllowHorizontalMouseScrolling     As String = "AllowHorizontalMouseScrolling"
 Private Const PropNameAllowVerticalMouseScrolling       As String = "AllowVerticalMouseScrolling"
 Private Const PropNameAutoscroll                        As String = "Autoscroll"
@@ -153,10 +156,6 @@ Private mVolumeRegionStyle As ChartRegionStyle
 
 Private mBarsStyle As barStyle
 Private mVolumeStyle As dataPointStyle
-
-Private mHighPrice As Double
-Private mLowPrice As Double
-Private mPrevClosePrice As Double
 
 Private mPrevWidth As Single
 Private mPrevHeight As Single
@@ -589,7 +588,7 @@ Chart1.showToolbar = val
 End Property
 
 Public Property Get timeframeCaption() As String
-Dim units As String
+
 Select Case mPeriodUnits
 Case TimePeriodUnits.TimePeriodSecond
     timeframeCaption = IIf(mPeriodLength = 1, "1 Sec", mPeriodLength & " Secs")
@@ -681,6 +680,24 @@ Public Sub showChart( _
                 ByVal periodUnits As TimePeriodUnits, _
                 Optional ByVal priceRegionStyle As ChartRegionStyle, _
                 Optional ByVal volumeRegionStyle As ChartRegionStyle)
+
+Select Case periodUnits
+Case TimePeriodSecond, _
+        TimePeriodMinute, _
+        TimePeriodHour, _
+        TimePeriodDay, _
+        TimePeriodWeek, _
+        TimePeriodMonth, _
+        TimePeriodYear, _
+        TimePeriodVolume, _
+        TimePeriodTickMovement
+Case Else
+        Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                ProjectName & "." & ModuleName & ":" & "showChart", _
+                "Time period units not supported"
+    
+End Select
+
 Set mTicker = pTicker
 mInitialNumberOfBars = initialNumberOfBars
 mIncludeBarsOutsideSession = includeBarsOutsideSession
@@ -708,6 +725,24 @@ Public Sub showHistoricChart( _
                 ByVal periodUnits As TimePeriodUnits, _
                 Optional ByVal priceRegionStyle As ChartRegionStyle, _
                 Optional ByVal volumeRegionStyle As ChartRegionStyle)
+
+Select Case periodUnits
+Case TimePeriodSecond, _
+        TimePeriodMinute, _
+        TimePeriodHour, _
+        TimePeriodDay, _
+        TimePeriodWeek, _
+        TimePeriodMonth, _
+        TimePeriodYear, _
+        TimePeriodVolume, _
+        TimePeriodTickMovement
+Case Else
+        Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                ProjectName & "." & ModuleName & ":" & "showHistoricChart", _
+                "Time period units not supported"
+    
+End Select
+
 mIsHistoricChart = True
 Set mTicker = pTicker
 mInitialNumberOfBars = initialNumberOfBars

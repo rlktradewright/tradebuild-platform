@@ -88,7 +88,7 @@ If TypeOf ev.affectedObject Is Ticker Then
         lTicker.PositionManager.OrderContexts.addCollectionChangeListener Me
         lTicker.executions.addCollectionChangeListener Me
     Case CollectionChangeTypes.CollItemRemoved
-        lTicker.PositionManager.OrderContexts.removeCollectionChangeListener Me
+        ' no need to do anything here
     End Select
 ElseIf TypeOf ev.affectedObject Is OrderContext Then
     Dim lOrderContext As OrderContext

@@ -188,6 +188,7 @@ Dim OrderContext As OrderContext
 Set mTicker = Nothing
 Set mPositionManager = Nothing
 Set mOrderSubmitter = Nothing
+Set mChangeListeners = Nothing
 
 For Each OrderContext In mOrderContexts
     OrderContext.finish

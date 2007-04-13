@@ -229,7 +229,7 @@ Attribute mNoMarketDepthNotifyTimer.VB_VarHelpID = -1
 '@================================================================================
 
 Private Sub Class_Initialize()
-State = TickerStates.TickerStateCreated
+mState = -1
 
 Set mStudyManager = New studyManager
 
@@ -1158,6 +1158,8 @@ RaiseEvent tradingSessionEnded
 End Sub
 
 Private Sub mSession_SessionStarted(ev As SessionEvent)
+mAccumulatedVolume = 0
+mVolumeCorrectionIncrement = 0
 RaiseEvent tradingSessionStarted
 End Sub
 
@@ -1290,10 +1292,6 @@ Public Property Get executions() As executions
 Set executions = mExecutions
 End Property
 
-Friend Property Let handle(ByVal value As Long)
-mHandle = value
-End Property
-
 Public Property Get handle() As Long
 handle = mHandle
 End Property
@@ -1341,10 +1339,6 @@ End Property
 
 Public Property Get InputNameVolume() As String
 InputNameVolume = VolumeInputName
-End Property
-
-Friend Property Let key(ByVal value As String)
-mKey = value
 End Property
 
 Public Property Get key() As String
@@ -1432,10 +1426,6 @@ Public Property Get session() As session
 Set session = mSession
 End Property
 
-Friend Property Let simulatedOrders(ByVal value As Boolean)
-mSimulatedOrders = value
-End Property
-
 Private Property Let State(ByVal value As TickerStates)
 
 If value = mState Then Exit Property
@@ -1451,10 +1441,6 @@ End Property
 
 Public Property Get studyManager() As studyManager
 Set studyManager = mStudyManager
-End Property
-
-Friend Property Let Tickers(ByVal value As Tickers)
-Set mTickers = value
 End Property
 
 Friend Property Let TickFileManager(ByVal value As TickFileManager)
@@ -1481,12 +1467,6 @@ End Property
 
 Public Property Get timestamp() As Date
 timestamp = mClock.timestamp
-End Property
-
-Friend Property Let tradeBuildAPI( _
-                ByVal value As tradeBuildAPI)
-Set mTradeBuildAPI = value
-mTimeframes.tradeBuildAPI = value
 End Property
 
 Public Property Get TradePrice() As Double
@@ -1674,6 +1654,27 @@ Else
     formatPrice = Format(price, mPriceFormatString)
 End If
 End Function
+
+Friend Sub Initialise( _
+                ByVal tb As tradeBuildAPI, _
+                ByVal handle As Long, _
+                ByVal pTickers As Tickers, _
+                ByVal key As String, _
+                ByVal simulatedOrders As Boolean)
+
+Set mTradeBuildAPI = tb
+mTimeframes.tradeBuildAPI = tb
+                
+mHandle = handle
+                
+Set mTickers = pTickers
+                
+mKey = key
+
+mSimulatedOrders = simulatedOrders
+                                
+State = TickerStates.TickerStateCreated
+End Sub
 
 Public Function isTimeInSession(ByVal timestamp As Date) As Boolean
 If mSession Is Nothing Then Exit Function
@@ -1923,10 +1924,10 @@ mLowPrice = 0
 mClosePrice = 0
 mVolume = 0
 
-State = TickerStates.TickerStateStopped
 mTickers.remove Me
-Set mTickers = Nothing
 
+State = TickerStates.TickerStateStopped
+Set mTickers = Nothing
 End Sub
 
 Friend Sub updateMarketDepth( _
