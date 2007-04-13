@@ -50,7 +50,7 @@ Private mStudyFoundation As StudyFoundation
 '--------------------------------------------------------
 
 
-Private mSession As session
+Private mSession As Session
 
 Private mKPeriods As Long
 Private mDPeriods As Long
@@ -83,7 +83,7 @@ Private Sub customInitialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As session)
+                ByVal pSession As Session)
 
 Set mSession = pSession
 
@@ -163,6 +163,7 @@ Do While Not param Is Nothing
         Set mBars = CreateBars(0, _
                                     TimePeriodNone, _
                                     mSession, _
+                                    0, _
                                     mKPeriods + 1)
     Case UCase$(StochParamDPeriods)
         mDPeriods = param.value
@@ -268,7 +269,7 @@ Private Sub Study_initialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As session)
+                ByVal pSession As Session)
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
                             id, _

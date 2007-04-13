@@ -68,7 +68,9 @@ ReDim mStudyNames(0) As String
 addStudyName AccDistName
 addStudyName AtrName
 addStudyName BbName
+addStudyName ConstMomentumBarsName
 addStudyName ConstTimeBarsName
+addStudyName ConstVolBarsName
 addStudyName DoncName
 addStudyName EmaName
 addStudyName FIName
@@ -87,7 +89,7 @@ End Sub
 '================================================================================
 
 Private Function StudyLibrary_createStudy( _
-                ByVal name As String) As study
+                ByVal name As String) As Study
 Select Case UCase$(name)
 Case UCase$(AccDistName), UCase$(AccDistShortName)
     Set StudyLibrary_createStudy = New accDist
@@ -95,8 +97,12 @@ Case UCase$(AtrName), UCase$(AtrShortName)
     Set StudyLibrary_createStudy = New ATR
 Case UCase$(BbName), UCase$(BbShortName)
     Set StudyLibrary_createStudy = New BollingerBands
+Case UCase$(ConstMomentumBarsName), UCase$(ConstMomentumBarsShortName)
+    Set StudyLibrary_createStudy = New ConstMomentumBars
 Case UCase$(ConstTimeBarsName), UCase$(ConstTimeBarsShortName)
     Set StudyLibrary_createStudy = New ConstTimeBars
+Case UCase$(ConstVolBarsName), UCase$(ConstVolBarsShortName)
+    Set StudyLibrary_createStudy = New ConstVolumeBars
 Case UCase$(DoncName), UCase$(DoncName)
     Set StudyLibrary_createStudy = New DonchianChannels
 Case UCase$(EmaName), UCase$(EmaShortName)
@@ -135,8 +141,12 @@ Case UCase$(AtrName), UCase$(AtrShortName)
     Set StudyLibrary_getStudyDefaultParameters = GATR.defaultParameters
 Case UCase$(BbName), UCase$(BbShortName)
     Set StudyLibrary_getStudyDefaultParameters = GBollingerBands.defaultParameters
+Case UCase$(ConstMomentumBarsName), UCase$(ConstMomentumBarsShortName)
+    Set StudyLibrary_getStudyDefaultParameters = GConstMomentumBars.defaultParameters
 Case UCase$(ConstTimeBarsName), UCase$(ConstTimeBarsShortName)
     Set StudyLibrary_getStudyDefaultParameters = GConstTimeBars.defaultParameters
+Case UCase$(ConstVolBarsName), UCase$(ConstVolBarsShortName)
+    Set StudyLibrary_getStudyDefaultParameters = GConstVolumeBars.defaultParameters
 Case UCase$(DoncName), UCase$(DoncName)
     Set StudyLibrary_getStudyDefaultParameters = GDonchianChannels.defaultParameters
 Case UCase$(EmaName), UCase$(EmaShortName)
@@ -163,38 +173,42 @@ End Select
 End Function
 
 Private Function StudyLibrary_getStudyDefinition( _
-                ByVal name As String) As studyDefinition
+                ByVal name As String) As StudyDefinition
 Select Case UCase$(name)
 Case UCase$(AccDistName), UCase$(AccDistShortName)
-    Set StudyLibrary_getStudyDefinition = GAccDist.studyDefinition
+    Set StudyLibrary_getStudyDefinition = GAccDist.StudyDefinition
 Case UCase$(AtrName), UCase$(AtrShortName)
-    Set StudyLibrary_getStudyDefinition = GATR.studyDefinition
+    Set StudyLibrary_getStudyDefinition = GATR.StudyDefinition
 Case UCase$(BbName), UCase$(BbShortName)
-    Set StudyLibrary_getStudyDefinition = GBollingerBands.studyDefinition
+    Set StudyLibrary_getStudyDefinition = GBollingerBands.StudyDefinition
+Case UCase$(ConstMomentumBarsName), UCase$(ConstMomentumBarsShortName)
+    Set StudyLibrary_getStudyDefinition = GConstMomentumBars.StudyDefinition
 Case UCase$(ConstTimeBarsName), UCase$(ConstTimeBarsShortName)
-    Set StudyLibrary_getStudyDefinition = GConstTimeBars.studyDefinition
+    Set StudyLibrary_getStudyDefinition = GConstTimeBars.StudyDefinition
+Case UCase$(ConstVolBarsName), UCase$(ConstVolBarsShortName)
+    Set StudyLibrary_getStudyDefinition = GConstVolumeBars.StudyDefinition
 Case UCase$(DoncName), UCase$(DoncName)
-    Set StudyLibrary_getStudyDefinition = GDonchianChannels.studyDefinition
+    Set StudyLibrary_getStudyDefinition = GDonchianChannels.StudyDefinition
 Case UCase$(EmaName), UCase$(EmaShortName)
-    Set StudyLibrary_getStudyDefinition = GEMA.studyDefinition
+    Set StudyLibrary_getStudyDefinition = GEMA.StudyDefinition
 Case UCase$(FIName), UCase$(FIShortName)
-    Set StudyLibrary_getStudyDefinition = GForceIndex.studyDefinition
+    Set StudyLibrary_getStudyDefinition = GForceIndex.StudyDefinition
 Case UCase$(RsiName), UCase$(RsiShortName)
-    Set StudyLibrary_getStudyDefinition = GRSI.studyDefinition
+    Set StudyLibrary_getStudyDefinition = GRSI.StudyDefinition
 Case UCase$(SmaName), UCase$(SmaShortName)
-    Set StudyLibrary_getStudyDefinition = GSMA.studyDefinition
+    Set StudyLibrary_getStudyDefinition = GSMA.StudyDefinition
 Case UCase$(MacdName), UCase$(MacdShortName)
-    Set StudyLibrary_getStudyDefinition = GMACD.studyDefinition
+    Set StudyLibrary_getStudyDefinition = GMACD.StudyDefinition
 Case UCase$(PsName), UCase$(PsShortName)
-    Set StudyLibrary_getStudyDefinition = GParabolicStop.studyDefinition
+    Set StudyLibrary_getStudyDefinition = GParabolicStop.StudyDefinition
 Case UCase$(SdName), UCase$(SdShortName)
-    Set StudyLibrary_getStudyDefinition = GStandardDeviation.studyDefinition
+    Set StudyLibrary_getStudyDefinition = GStandardDeviation.StudyDefinition
 Case UCase$(SStochName), UCase$(SStochShortName)
-    Set StudyLibrary_getStudyDefinition = GSlowStochastic.studyDefinition
+    Set StudyLibrary_getStudyDefinition = GSlowStochastic.StudyDefinition
 Case UCase$(StochName), UCase$(StochShortName)
-    Set StudyLibrary_getStudyDefinition = GStochastic.studyDefinition
+    Set StudyLibrary_getStudyDefinition = GStochastic.StudyDefinition
 Case UCase$(SwingName), UCase$(SwingShortName)
-    Set StudyLibrary_getStudyDefinition = GSwing.studyDefinition
+    Set StudyLibrary_getStudyDefinition = GSwing.StudyDefinition
 End Select
 End Function
 
@@ -227,8 +241,12 @@ Case UCase$(AtrName), UCase$(AtrShortName)
     GATR.defaultParameters = params
 Case UCase$(BbName), UCase$(BbShortName)
     GBollingerBands.defaultParameters = params
+Case UCase$(ConstMomentumBarsName), UCase$(ConstMomentumBarsShortName)
+    GConstMomentumBars.defaultParameters = params
 Case UCase$(ConstTimeBarsName), UCase$(ConstTimeBarsShortName)
     GConstTimeBars.defaultParameters = params
+Case UCase$(ConstVolBarsName), UCase$(ConstVolBarsShortName)
+    GConstVolumeBars.defaultParameters = params
 Case UCase$(DoncName), UCase$(DoncName)
     GDonchianChannels.defaultParameters = params
 Case UCase$(EmaName), UCase$(EmaShortName)

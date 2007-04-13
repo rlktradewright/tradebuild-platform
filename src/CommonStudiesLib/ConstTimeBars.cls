@@ -57,7 +57,7 @@ Implements BarStudy
 Private mStudyFoundation As StudyFoundation
 '--------------------------------------------------------
 
-Private WithEvents mSession As session
+Private WithEvents mSession As Session
 Attribute mSession.VB_VarHelpID = -1
 
 Private mBarLength As Long
@@ -122,13 +122,13 @@ End Property
 Private Sub BarStudy_switchUnderlyingStudy( _
                 ByVal newUnderlyingStudy As InputStudy)
                 
-If newUnderlyingStudy.session.currentSessionStartTime > mSession.currentSessionStartTime Then
+If newUnderlyingStudy.Session.currentSessionStartTime > mSession.currentSessionStartTime Then
     ' we are now in a different session so reset volume variables
     mLatestVolume = 0
     mPrevBarVolume = 0
 End If
 
-Set mSession = newUnderlyingStudy.session
+Set mSession = newUnderlyingStudy.Session
 mBars.changeSession mSession
 
 ' because we are switching to a new source, the volume figures may not be consistent
@@ -161,7 +161,7 @@ Private Sub customInitialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As session)
+                ByVal pSession As Session)
 
 Set mSession = pSession
 
@@ -220,6 +220,15 @@ Dim evOut As StudyValueEvent
 
 If ev.valueName = ConstTimeBarsInputPrice Then
     mBars.Notify ev
+    If mBars.currentBarNumber <> mBarNumber Then
+        ' a new bar has started
+        Set mBar = mBars.bar(0)
+        mBarNumber = mBars.currentBarNumber
+        If mPrevBarVolume <> -1 Then mPrevBarVolume = mLatestVolume
+        mVolumeCache.addValue 0, mBarNumber, ev.timestamp, mBar.DateTime
+        mTotalVolumeCache.addValue mLatestVolume, mBarNumber, ev.timestamp, mBar.DateTime
+    End If
+    notifyBarValues ev.timestamp
 ElseIf ev.valueName = ConstTimeBarsInputTotalVolume Then
     ' we assume that a volume notification belongs to the same bar as the
     ' preceding price notification, so we don't check the timestamp
@@ -232,32 +241,13 @@ ElseIf ev.valueName = ConstTimeBarsInputTotalVolume Then
     'Debug.Assert mLatestVolume >= mPrevBarVolume
     mVolumeCache.updateValue mLatestVolume - mPrevBarVolume
     mTotalVolumeCache.updateValue mLatestVolume
-    
-    evOut.barNumber = mBarNumber
-    evOut.barStartTime = mBar.DateTime
-    Set evOut.Source = Me
-    evOut.timestamp = ev.timestamp
-    evOut.valueName = BarValueVolume
-    evOut.value = mLatestVolume - mPrevBarVolume
-    mStudyFoundation.notifyValue evOut
-    
-    evOut.valueName = ConstTimeBarsValueTotalVolume
-    evOut.value = mLatestVolume
-    mStudyFoundation.notifyValue evOut
-    Exit Sub
+    notifyVolume ev.timestamp
+    notifyTotalVolume ev.timestamp
 ElseIf ev.valueName = ConstTimeBarsInputTickVolume Then
     ' we assume that a tickVolume notification belongs to the same bar as the
     ' preceding price notification, so we don't check the timestamp
     mBars.incrementTickVolume ev.value
-    
-    evOut.barNumber = mBarNumber
-    evOut.barStartTime = mBar.DateTime
-    Set evOut.Source = Me
-    evOut.timestamp = ev.timestamp
-    evOut.valueName = BarValueTickVolume
-    evOut.value = mBar.tickVolume
-    mStudyFoundation.notifyValue evOut
-    Exit Sub
+    notifyTickVolume ev.timestamp
 Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "CommonStudiesLib" & "." & "ConstTimeBars" & ":" & "customNotify", _
@@ -265,24 +255,70 @@ Else
 
 End If
 
-If mBars.currentBarNumber <> mBarNumber Then
-    ' a new bar has started
-    Set mBar = mBars.bar(0)
-    mBarNumber = mBars.currentBarNumber
-    If mPrevBarVolume <> -1 Then mPrevBarVolume = mLatestVolume
-    mVolumeCache.addValue 0, mBarNumber, ev.timestamp, mBar.DateTime
-    mTotalVolumeCache.addValue mLatestVolume, mBarNumber, ev.timestamp, mBar.DateTime
-End If
+End Sub
+
+Private Function customNumberOfBarsRequired() As Long
+customNumberOfBarsRequired = 0
+End Function
+
+Private Sub customProcessParameters(ByVal params As Parameters)
+Dim param As Parameter
+
+Set param = params.getFirstParameter
+
+Do While Not param Is Nothing
+    Select Case UCase$(param.name)
+    Case UCase$(ConstTimeBarsParamBarLength)
+        mBarLength = param.value
+    Case UCase$(ConstTimeBarsParamTimeUnits)
+        mTimeUnits = TimePeriodUnitsFromString(param.value)
+    End Select
+    Set param = params.getNextParameter
+Loop
+
+Set mBars = CreateBars(mBarLength, _
+                                mTimeUnits, _
+                                mSession, _
+                                mPriceTickSize, _
+                                mNumberOfValuesToCache)
+End Sub
+
+Private Function customStudyDefinition() As StudyDefinition
+Set customStudyDefinition = GConstTimeBars.StudyDefinition
+End Function
+
+'================================================================================
+' XXXX Event Handlers
+'================================================================================
+
+'================================================================================
+' Properties
+'================================================================================
+
+Public Property Get Bars() As Bars
+Set Bars = mBars
+End Property
+
+'================================================================================
+' Methods
+'================================================================================
+
+'================================================================================
+' Helper Functions
+'================================================================================
+
+Private Sub notifyBarValues( _
+                ByVal timestamp As Date)
+Dim evOut As StudyValueEvent
 
 evOut.barNumber = mBarNumber
 evOut.barStartTime = mBar.DateTime
 Set evOut.Source = Me
-evOut.timestamp = ev.timestamp
+evOut.timestamp = timestamp
 
 If mBar.barChanged Then
     Set evOut.value = mBar
-    evOut.valueName = ConstTimeBarsValueBar
-    Set evOut.Source = Me
+    evOut.valueName = ConstVolBarsValueBar
     mStudyFoundation.notifyValue evOut
 End If
 
@@ -336,54 +372,44 @@ End If
 
 End Sub
 
-Private Function customNumberOfBarsRequired() As Long
-customNumberOfBarsRequired = 0
-End Function
+Private Sub notifyTickVolume( _
+                ByVal timestamp As Date)
+Dim evOut As StudyValueEvent
 
-Private Sub customProcessParameters(ByVal params As Parameters)
-Dim param As Parameter
-
-Set param = params.getFirstParameter
-
-Do While Not param Is Nothing
-    Select Case UCase$(param.name)
-    Case UCase$(ConstTimeBarsParamBarLength)
-        mBarLength = param.value
-    Case UCase$(ConstTimeBarsParamTimeUnits)
-        mTimeUnits = TimePeriodUnitsFromString(param.value)
-    End Select
-    Set param = params.getNextParameter
-Loop
-
-Set mBars = CreateBars(mBarLength, _
-                                mTimeUnits, _
-                                mSession, _
-                                mNumberOfValuesToCache)
+evOut.barNumber = mBarNumber
+evOut.barStartTime = mBar.DateTime
+Set evOut.Source = Me
+evOut.timestamp = timestamp
+evOut.valueName = BarValueTickVolume
+evOut.value = mBar.tickVolume
+mStudyFoundation.notifyValue evOut
 End Sub
 
-Private Function customStudyDefinition() As StudyDefinition
-Set customStudyDefinition = GConstTimeBars.StudyDefinition
-End Function
+Private Sub notifyTotalVolume( _
+                ByVal timestamp As Date)
+Dim evOut As StudyValueEvent
 
-'================================================================================
-' XXXX Event Handlers
-'================================================================================
+evOut.barNumber = mBarNumber
+evOut.barStartTime = mBar.DateTime
+Set evOut.Source = Me
+evOut.timestamp = timestamp
+evOut.valueName = ConstVolBarsValueTotalVolume
+evOut.value = mTotalVolumeCache.getValue(0)
+mStudyFoundation.notifyValue evOut
+End Sub
 
-'================================================================================
-' Properties
-'================================================================================
+Private Sub notifyVolume( _
+                ByVal timestamp As Date)
+Dim evOut As StudyValueEvent
 
-Public Property Get Bars() As Bars
-Set Bars = mBars
-End Property
-
-'================================================================================
-' Methods
-'================================================================================
-
-'================================================================================
-' Helper Functions
-'================================================================================
+evOut.barNumber = mBarNumber
+evOut.barStartTime = mBar.DateTime
+Set evOut.Source = Me
+evOut.timestamp = timestamp
+evOut.valueName = BarValueVolume
+evOut.value = mVolumeCache.getValue(0)
+mStudyFoundation.notifyValue evOut
+End Sub
 
 Private Function numberOfCachedValues( _
                 Optional ByVal valueName As String) As Long
@@ -464,7 +490,7 @@ Private Sub Study_initialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As session)
+                ByVal pSession As Session)
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
                             id, _

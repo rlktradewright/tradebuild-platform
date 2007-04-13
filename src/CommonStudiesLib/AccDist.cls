@@ -57,7 +57,7 @@ Private mStudyFoundation As StudyFoundation
 '--------------------------------------------------------
 
 
-Private mSession As session
+Private mSession As Session
 
 Private mAccDist As Double
 Private mAccDistAtBarStart As Double
@@ -85,7 +85,7 @@ Private Sub customInitialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As session)
+                ByVal pSession As Session)
 
 Set mSession = pSession
 
@@ -94,6 +94,7 @@ Set mAccDistCache = mStudyFoundation.FindValueCache(AccDistValueAccDist)
 Set mBars = CreateBars(0, _
                                 TimePeriodNone, _
                                 mSession, _
+                                0, _
                                 1)
 End Sub
 
@@ -253,7 +254,7 @@ Private Sub Study_initialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As session)
+                ByVal pSession As Session)
 
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _

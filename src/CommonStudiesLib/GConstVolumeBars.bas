@@ -5,15 +5,14 @@ Option Explicit
 ' Constants
 '================================================================================
 
-Public Const ConstTimeBarsInputPrice As String = "Price"
-Public Const ConstTimeBarsInputTotalVolume As String = "Total volume"
-Public Const ConstTimeBarsInputTickVolume As String = "Tick volume"
+Public Const ConstVolBarsInputPrice As String = "Price"
+Public Const ConstVolBarsInputTotalVolume As String = "Total volume"
+Public Const ConstVolBarsInputTickVolume As String = "Tick volume"
 
-Public Const ConstTimeBarsParamBarLength As String = "Bar length"
-Public Const ConstTimeBarsParamTimeUnits As String = "Time units"
+Public Const ConstVolBarsParamVolPerBar As String = "Volume per bar"
 
-Public Const ConstTimeBarsValueBar As String = "Bar"
-Public Const ConstTimeBarsValueTotalVolume As String = "Total volume"
+Public Const ConstVolBarsValueBar As String = "Bar"
+Public Const ConstVolBarsValueTotalVolume As String = "Total volume"
 
 '================================================================================
 ' Enums
@@ -52,9 +51,7 @@ End Property
 Public Property Get defaultParameters() As Parameters
 If mDefaultParameters Is Nothing Then
     Set mDefaultParameters = New Parameters
-    mDefaultParameters.setParameterValue ConstTimeBarsParamBarLength, 5
-    mDefaultParameters.setParameterValue ConstTimeBarsParamTimeUnits, _
-                                        TimePeriodUnitsToString(TimePeriodMinute)
+    mDefaultParameters.setParameterValue ConstVolBarsParamVolPerBar, 1000
 End If
 
 ' now create a clone of the default parameters for the caller
@@ -69,29 +66,29 @@ ReDim ar(6) As Variant
 
 If mStudyDefinition Is Nothing Then
     Set mStudyDefinition = New StudyDefinition
-    mStudyDefinition.name = ConstTimeBarsName
+    mStudyDefinition.name = ConstVolBarsName
     mStudyDefinition.needsBars = False
-    mStudyDefinition.shortName = ConstTimeBarsShortName
-    mStudyDefinition.Description = "Constant time bars " & _
-                        "divide price movement into periods (bars) of equal time. " & _
+    mStudyDefinition.shortName = ConstVolBarsShortName
+    mStudyDefinition.Description = "Constant volume bars " & _
+                        "divide price movement into periods (bars) of equal volume. " & _
                         "For each period the open, high, low and close price values " & _
                         "are determined."
     mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionCustom
     
-    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstTimeBarsInputPrice)
+    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstVolBarsInputPrice)
     inputDef.inputType = InputTypeReal
     inputDef.Description = "Price"
     
-    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstTimeBarsInputTotalVolume)
+    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstVolBarsInputTotalVolume)
     inputDef.inputType = InputTypeInteger
     inputDef.Description = "Accumulated volume"
     
-    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstTimeBarsInputTickVolume)
+    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstVolBarsInputTickVolume)
     inputDef.inputType = InputTypeInteger
     inputDef.Description = "Tick volume"
     
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(ConstTimeBarsValueBar)
-    valueDef.Description = "The constant time bars"
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(ConstVolBarsValueBar)
+    valueDef.Description = "The constant volume bars"
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueMode = ValueModeBar
     valueDef.valueType = ValueTypeReal
@@ -127,7 +124,7 @@ If mStudyDefinition Is Nothing Then
     valueDef.valueMode = ValueModeNone
     valueDef.valueType = ValueTypeInteger
     
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(ConstTimeBarsValueTotalVolume)
+    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(ConstVolBarsValueTotalVolume)
     valueDef.Description = "Accumulated volume"
     valueDef.defaultRegion = DefaultRegionCustom
     valueDef.valueMode = ValueModeNone
@@ -157,22 +154,10 @@ If mStudyDefinition Is Nothing Then
     valueDef.valueMode = ValueModeNone
     valueDef.valueType = ValueTypeReal
     
-    Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(ConstTimeBarsParamBarLength)
-    paramDef.Description = "The number of time units in each constant time bar"
+    Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(ConstVolBarsParamVolPerBar)
+    paramDef.Description = "The volume in each constant volume bar"
     paramDef.parameterType = ParameterTypeInteger
 
-    Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(ConstTimeBarsParamTimeUnits)
-    paramDef.Description = "The time units that the constant time bars are measured in"
-    paramDef.parameterType = ParameterTypeString
-    ar(0) = TimePeriodUnitsToString(TimePeriodSecond)
-    ar(1) = TimePeriodUnitsToString(TimePeriodMinute)
-    ar(2) = TimePeriodUnitsToString(TimePeriodHour)
-    ar(3) = TimePeriodUnitsToString(TimePeriodDay)
-    ar(4) = TimePeriodUnitsToString(TimePeriodWeek)
-    ar(5) = TimePeriodUnitsToString(TimePeriodMonth)
-    ar(6) = TimePeriodUnitsToString(TimePeriodYear)
-    paramDef.permittedValues = ar
-    
 End If
 
 Set StudyDefinition = mStudyDefinition.Clone
