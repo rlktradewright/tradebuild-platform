@@ -1296,7 +1296,7 @@ Case TimePeriodUnits.TimePeriodYear
     barSpecifier.NumberOfBars = barSpecifier.NumberOfBars * barSpecifier.barLength * NumMonthsInYear
     barSpecifier.barLength = 1
     barSpecifier.BarLengthUnits = TimePeriodMonth
-Case TimePeriodUnits.TimePeriodVolume
+Case TimePeriodUnits.TimePeriodVolume, TimePeriodUnits.TimePeriodTickMovement
     ' nothing to do
 Case Else
     historicalDataReader.historicalDataRequestInvalid barSpecifier.NumberOfBars & "specified timeframe not supported"
@@ -2169,7 +2169,7 @@ With lContract.tradeBuildContract
                 permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttRTHOnly
             Case "SWEEP"
                 permittedOrderAttributes = permittedOrderAttributes Or OrderAttributes.OrderAttSweepToFill
-            Case "AVGCOST", "BASKET", "COND", "CONDORDER", "NONALGO", "OCA", "OPG", "OPGREROUT", "TIMEPRIO"
+            Case "ALGO", "AVGCOST", "BASKET", "COND", "CONDORDER", "NONALGO", "OCA", "OPG", "OPGREROUT", "TIMEPRIO"
                 ' not sure what these signify
             Case Else
                 If orderTypesStr(i) <> "" Then
@@ -2620,8 +2620,10 @@ If checkPointNumber >= 200 Then
             End If
             
             If i = 0 Then
-                If mHistoricalDataTable(index).barSpecifier.BarLengthUnits = TimePeriodVolume Then
-                    mHistoricalDataTable(index).barSpecifier.To = mHistoricalDataTable(index).Session.OffsetBarStartTime(timestamp, 30, TimePeriodSecond, -1)
+                If mHistoricalDataTable(index).barSpecifier.BarLengthUnits = TimePeriodVolume Or _
+                    mHistoricalDataTable(index).barSpecifier.BarLengthUnits = TimePeriodTickMovement _
+                Then
+                    mHistoricalDataTable(index).barSpecifier.To = mHistoricalDataTable(index).Session.OffsetBarStartTime(timestamp, 15, TimePeriodSecond, -1)
                 Else
                     mHistoricalDataTable(index).barSpecifier.To = mHistoricalDataTable(index).Session.OffsetBarStartTime(timestamp, mHistoricalDataTable(index).barSpecifier.barLength, mHistoricalDataTable(index).barSpecifier.BarLengthUnits, -1)
                 End If
