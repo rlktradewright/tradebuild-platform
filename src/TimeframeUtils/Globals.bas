@@ -86,7 +86,7 @@ Case TimePeriodMinute
 Case TimePeriodHour
     gBarEndTime = startTime + (barLength / 24) - OneMicroSecond
 Case TimePeriodDay
-    gBarEndTime = startTime + barLength
+    gBarEndTime = gCalcWorkingDayDate(gCalcWorkingDayNumber(startTime) + barLength, startTime)
 Case TimePeriodWeek
     gBarEndTime = startTime + 7 * barLength
 Case TimePeriodMonth

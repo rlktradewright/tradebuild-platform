@@ -67,9 +67,16 @@ Private mCurrentSessionEndTime As Date
 
 Private mIsLinkable As Boolean
 
+Private mClock As Clock
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+Set mClock = New Clock
+mClock.SimulateTime True
+End Sub
 
 '@================================================================================
 ' XXXX Interface Members
@@ -98,6 +105,10 @@ End Property
                 
 Public Property Get isLinkable() As Boolean
 isLinkable = mIsLinkable
+End Property
+
+Public Property Get sessionCurrentTime() As Date
+sessionCurrentTime = mClock.timestamp
 End Property
 
 Friend Property Let sessionEndTime( _
@@ -177,6 +188,7 @@ Friend Sub setSessionCurrentTime( _
                 ByVal timestamp As Date)
 Dim ev As SessionEvent
 Static sessionStartNotified As Boolean
+mClock.SetTime timestamp
 If timestamp >= mCurrentSessionEndTime Then
     Set ev.source = Me
     RaiseEvent sessionEnded(ev)
