@@ -114,7 +114,9 @@ Case TimePeriodMinute, _
     TimePeriodDay, _
     TimePeriodWeek, _
     TimePeriodMonth, _
-    TimePeriodYear
+    TimePeriodYear, _
+    TimePeriodVolume, _
+    TimePeriodTickMovement
 Case Else
     mServiceConsumer.NotifyEvent StandardSPEventCodes.HDRequestInvalid, _
                             "Bar time unit not supported", _
@@ -270,6 +272,11 @@ With mBarDataSpecifier
     Case TimePeriodUnits.TimePeriodYear
         BarLengthMinutes = 60
         numberOfBars = .numberOfBars * 24 * 260 * .barLength
+    Case TimePeriodUnits.TimePeriodVolume, _
+            TimePeriodUnits.TimePeriodTickMovement, _
+            TimePeriodUnits.TimePeriodTickVolume
+        BarLengthMinutes = 1
+        numberOfBars = 2880
     End Select
     
     
@@ -395,7 +402,9 @@ End Function
 Private Sub setBarSpecifierTimes( _
                 ByRef barSpecifier As BarDataSpecifier, _
                 ByVal pContract As IContract)
+
 With barSpecifier
+    If .BarLengthUnits = TimePeriodVolume Or .BarLengthUnits = TimePeriodTickMovement Or .BarLengthUnits = TimePeriodTickVolume Then Exit Sub
     If .To <> 0 Then
         .From = OffsetBarStartTime(.To, _
                                     .barLength, _
