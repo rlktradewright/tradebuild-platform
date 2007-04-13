@@ -92,24 +92,38 @@ Public Function add( _
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                               "ChartSkil" & "." & "Periods" & ":" & "add", _
                               "Periods object is finished"
-Set add = addperiod(timestamp)
+Set add = addPeriod(timestamp)
 End Function
 
-Friend Function addperiod( _
-                ByVal timestamp As Date) As period
+Friend Function addPeriod( _
+                ByVal timestamp As Date, _
+                Optional ByVal allowDuplicates As Boolean) As period
 Dim periodStart As Date
+Dim duplicateNumber As Long
 
-Set addperiod = New period
+On Error GoTo Err
+
+Set addPeriod = New period
 mCurrentPeriodNumber = mCurrentPeriodNumber + 1
-addperiod.periodNumber = mCurrentPeriodNumber
+addPeriod.periodNumber = mCurrentPeriodNumber
 periodStart = BarStartTime(timestamp, _
                             mController.periodLength, _
                             mController.periodUnits, _
                             mController.sessionStartTime)
-addperiod.timestamp = periodStart
-mPeriods.add addperiod, Format(periodStart, _
-                                "yyyymmddhhmmss")
-RaiseEvent PeriodAdded(addperiod)
+addPeriod.timestamp = periodStart
+mPeriods.add addPeriod, generateKey(periodStart, duplicateNumber)
+RaiseEvent PeriodAdded(addPeriod)
+
+Exit Function
+
+Err:
+
+If Err.Number = VBErrorCodes.VbErrElementAlreadyExists And allowDuplicates Then
+    duplicateNumber = duplicateNumber + 1
+    Resume
+Else
+    Err.Raise Err.Number
+End If
 End Function
 
 Public Function count() As Long
@@ -123,20 +137,34 @@ Friend Sub finish()
 mFinished = True
 End Sub
 
-Public Function item(ByVal index As Variant) As period
+Public Function item( _
+                ByVal index As Variant) As period
 Attribute item.VB_UserMemId = 0
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                               "ChartSkil" & "." & "Periods" & ":" & "item", _
                               "Periods object is finished"
 If VarType(index) = vbDate Then
-    Set item = mPeriods.item(Format(BarStartTime(CDate(index), _
-                                                mController.periodLength, _
-                                                mController.periodUnits, _
-                                                mController.sessionStartTime), _
-                                    "yyyymmddhhmmss"))
+    Set item = mPeriods.item(generateKey(BarStartTime(index, _
+                                                    mController.periodLength, _
+                                                    mController.periodUnits, _
+                                                    mController.sessionStartTime), _
+                                        0))
 Else
     Set item = mPeriods.item(index)
 End If
+End Function
+
+Friend Function itemDup( _
+                ByVal index As Date, _
+                ByVal duplicateNumber As Long) As period
+If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
+                              "ChartSkil" & "." & "Periods" & ":" & "item", _
+                              "Periods object is finished"
+Set itemDup = mPeriods.item(generateKey(BarStartTime(index, _
+                                                mController.periodLength, _
+                                                mController.periodUnits, _
+                                                mController.sessionStartTime), _
+                                    duplicateNumber))
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -145,19 +173,42 @@ Attribute NewEnum.VB_MemberFlags = "40"
 Set NewEnum = mPeriods.[_NewEnum]
 End Function
 
-Public Sub remove(ByVal index As Variant)
+Public Sub remove( _
+                ByVal index As Variant)
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                               "ChartSkil" & "." & "Periods" & ":" & "remove", _
                               "Periods object is finished"
 If VarType(index) = vbDate Then
-    mPeriods.remove Format(CDate(index), "yyyymmddhhmmss")
+    mPeriods.remove generateKey(BarStartTime(index, _
+                                            mController.periodLength, _
+                                            mController.periodUnits, _
+                                            mController.sessionStartTime), _
+                                0)
 Else
     mPeriods.remove index
 End If
 End Sub
 
+Friend Sub removeDup( _
+                ByVal index As Date, _
+                ByVal duplicateNumber As Long)
+If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
+                              "ChartSkil" & "." & "Periods" & ":" & "remove", _
+                              "Periods object is finished"
+mPeriods.remove generateKey(BarStartTime(index, _
+                                        mController.periodLength, _
+                                        mController.periodUnits, _
+                                        mController.sessionStartTime), _
+                            duplicateNumber)
+End Sub
 
 '================================================================================
 ' Helper Functions
 '================================================================================
 
+Private Function generateKey( _
+                ByVal timestamp As Date, _
+                ByVal duplicateNumber As Long) As String
+generateKey = Format(timestamp, "yyyymmddhhnnss") & "." & duplicateNumber
+
+End Function

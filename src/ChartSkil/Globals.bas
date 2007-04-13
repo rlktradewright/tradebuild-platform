@@ -74,30 +74,58 @@ End Type
 
 Public Function gCalculateX( _
                 ByVal timestamp As Date, _
-                ByVal pController As ChartController) As Double
+                ByVal pController As ChartController, _
+                Optional ByVal forceNewPeriod As Boolean, _
+                Optional ByVal duplicateNumber As Long) As Double
 Dim lPeriod As period
 Dim periodEndtime As Date
 
-On Error Resume Next
-Set lPeriod = pController.Periods.item(timestamp)
-On Error GoTo 0
-
-If lPeriod Is Nothing Then
-    If pController.Periods.count = 0 Then
-        Set lPeriod = pController.Periods.addPeriod(timestamp)
-    ElseIf timestamp < pController.Periods.item(1).timestamp Then
-        Set lPeriod = pController.Periods.item(1)
-        timestamp = lPeriod.timestamp
-    Else
-        Set lPeriod = pController.Periods.addPeriod(timestamp)
+Select Case pController.periodUnits
+Case TimePeriodNone, _
+        TimePeriodSecond, _
+        TimePeriodMinute, _
+        TimePeriodHour, _
+        TimePeriodDay, _
+        TimePeriodWeek, _
+        TimePeriodMonth, _
+        TimePeriodYear
+    
+    On Error Resume Next
+    Set lPeriod = pController.Periods.item(timestamp)
+    On Error GoTo 0
+    
+    If lPeriod Is Nothing Then
+        If pController.Periods.count = 0 Then
+            Set lPeriod = pController.Periods.addPeriod(timestamp)
+        ElseIf timestamp < pController.Periods.item(1).timestamp Then
+            Set lPeriod = pController.Periods.item(1)
+            timestamp = lPeriod.timestamp
+        Else
+            Set lPeriod = pController.Periods.addPeriod(timestamp)
+        End If
     End If
-End If
-
-periodEndtime = BarEndTime(lPeriod.timestamp, _
-                        pController.periodLength, _
-                        pController.periodUnits, _
-                        pController.sessionStartTime)
-gCalculateX = lPeriod.periodNumber + (timestamp - lPeriod.timestamp) / (periodEndtime - lPeriod.timestamp)
+    
+    periodEndtime = BarEndTime(lPeriod.timestamp, _
+                            pController.periodLength, _
+                            pController.periodUnits, _
+                            pController.sessionStartTime)
+    gCalculateX = lPeriod.periodNumber + (timestamp - lPeriod.timestamp) / (periodEndtime - lPeriod.timestamp)
+    
+Case TimePeriodVolume, TimePeriodTickVolume, TimePeriodTickMovement
+    If Not forceNewPeriod Then
+        On Error Resume Next
+        Set lPeriod = pController.Periods.itemDup(timestamp, duplicateNumber)
+        On Error GoTo 0
+        
+        If lPeriod Is Nothing Then
+            Set lPeriod = pController.Periods.addPeriod(timestamp, True)
+        End If
+        gCalculateX = lPeriod.periodNumber
+    Else
+        Set lPeriod = pController.Periods.addPeriod(timestamp, True)
+        gCalculateX = lPeriod.periodNumber
+    End If
+End Select
 
 End Function
 

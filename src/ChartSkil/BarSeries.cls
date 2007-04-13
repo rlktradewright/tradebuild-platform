@@ -278,7 +278,7 @@ If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
 
 Set add = New Bar
 
-add.x = gCalculateX(timestamp, mController)
+add.x = gCalculateX(timestamp, mController, True)
 If key = "" Then
     key = GenerateGUIDString
 End If

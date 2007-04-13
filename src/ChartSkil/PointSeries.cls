@@ -180,13 +180,13 @@ Public Property Get layer() As Long
 layer = mLayer
 End Property
 
-Public Property Get lineStyle() As LineStyles
-lineStyle = mStyle.lineStyle
+Public Property Get linestyle() As LineStyles
+linestyle = mStyle.linestyle
 End Property
 
-Public Property Let lineStyle(ByVal value As LineStyles)
-If mStyle.lineStyle = value Then Exit Property
-mStyle.lineStyle = value
+Public Property Let linestyle(ByVal value As LineStyles)
+If mStyle.linestyle = value Then Exit Property
+mStyle.linestyle = value
 If mDataPoints.count <> 0 Then
     mEventProxy.paintRegion False
 End If
@@ -254,9 +254,9 @@ If value.includeInAutoscale <> mStyle.includeInAutoscale Then
     recalcRegion = True
     mStyle.includeInAutoscale = value.includeInAutoscale
 End If
-If value.lineStyle <> mStyle.lineStyle Then
+If value.linestyle <> mStyle.linestyle Then
     somethingChanged = True
-    mStyle.lineStyle = value.lineStyle
+    mStyle.linestyle = value.linestyle
 End If
 If value.lineThickness <> mStyle.lineThickness Then
     somethingChanged = True
@@ -299,11 +299,24 @@ Public Function add( _
                 ByVal timestamp As Date, _
                 Optional ByVal key As String, _
                 Optional ByVal localStyle As DataPointStyle) As DataPoint
+Static duplicateCount As Long       ' counts the number of successive adds with
+                                    ' the same timestamp
+Static prevTimestamp As Date
+
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                             "ChartSkil25.DatPointSeries::add", _
                             "DataPoint series is finished"
+
+If Not mPrevDataPoint Is Nothing Then
+    If timestamp = prevTimestamp Then
+        duplicateCount = duplicateCount + 1
+    Else
+        duplicateCount = 0
+    End If
+End If
+
 Set add = New DataPoint
-add.x = gCalculateX(timestamp, mController)
+add.x = gCalculateX(timestamp, mController, False, duplicateCount)
 If key = "" Then
     key = GenerateGUIDString
 End If
@@ -312,6 +325,7 @@ add.initialise key, mEventProxy, mLayer, mCanvas, mStyle, localStyle
 add.prevDataPoint = mPrevDataPoint
 mDataPoints.add add, key
 Set mPrevDataPoint = add
+prevTimestamp = timestamp
 mEventProxy.addGraphicObject add, mSeriesId
 End Function
 

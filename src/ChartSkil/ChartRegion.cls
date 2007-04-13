@@ -206,7 +206,7 @@ Private mDefaultDataPointStyle As DataPointStyle
 Private mDefaultTextStyle As TextStyle
 
 ' defaults for lines and line series
-Private mDefaultLineStyle As lineStyle
+Private mDefaultLineStyle As linestyle
 
 Private mElapsedTimer As ElapsedTimer
 
@@ -614,11 +614,11 @@ Public Property Let defaultDataPointStyle(ByVal value As DataPointStyle)
 Set mDefaultDataPointStyle = value.clone
 End Property
 
-Public Property Get defaultLineStyle() As lineStyle
+Public Property Get defaultLineStyle() As linestyle
 Set defaultLineStyle = mDefaultLineStyle.clone
 End Property
 
-Public Property Let defaultLineStyle(ByVal value As lineStyle)
+Public Property Let defaultLineStyle(ByVal value As linestyle)
 Set mDefaultLineStyle = value.clone
 End Property
 
@@ -667,7 +667,7 @@ If mhasGrid Then
     mXGridLines.extendAfter = True
     mXGridLines.extendBefore = True
     mXGridLines.includeInAutoscale = False
-    mXGridLines.lineStyle = LineSolid
+    mXGridLines.linestyle = LineSolid
     mXGridLines.thickness = 1
     
     Set mYGridLines = Me.addLineSeries(LayerNumbers.LayerGrid)
@@ -675,7 +675,7 @@ If mhasGrid Then
     mYGridLines.extendAfter = True
     mYGridLines.extendBefore = True
     mYGridLines.includeInAutoscale = False
-    mYGridLines.lineStyle = LineSolid
+    mYGridLines.linestyle = LineSolid
     mYGridLines.thickness = 1
 Else
     Set mXGridLines = Nothing
@@ -1082,7 +1082,7 @@ End Function
 Public Function addLineSeries( _
                 Optional ByVal layer As Long = -1, _
                 Optional ByVal name As String, _
-                Optional ByVal style As lineStyle) As LineSeries
+                Optional ByVal style As linestyle) As LineSeries
 Static seriesNumber As Long
 Set addLineSeries = New LineSeries
 If name = "" Then
@@ -2549,58 +2549,55 @@ gridLineTime = BarStartTime(timestamp, mVerticalGridSpacing, mVerticalGridUnits)
     
 Select Case mVerticalGridUnits
 Case TimePeriodSecond
-'    secs = calculateSecondsFromMidnight(timestamp)
-'    gridLineTime = Int(timestamp) + ((Int((secs - 60 * mSessionOffsetMinutes) / mVerticalGridSpacing) * mVerticalGridSpacing) + 60 * mSessionOffsetMinutes) / 86400
     addVerticalGridLine periodNumber, _
                     Format(gridLineTime, "yyyymmddhhnnss"), _
                     FormatDateTime(gridLineTime, vbLongTime), _
                     Format(gridLineTime, "yyyymmdd"), _
                     Format(gridLineTime, "d Mmm yy")
 Case TimePeriodMinute
-'    mins = calculateMinutesFromMidnight(timestamp)
-'    gridLineTime = Int(timestamp) + ((Int((mins - mSessionOffsetMinutes) / mVerticalGridSpacing) * mVerticalGridSpacing) + mSessionOffsetMinutes) / 1440
     addVerticalGridLine periodNumber, _
                     Format(gridLineTime, "yyyymmddhhnn"), _
                     FormatDateTime(gridLineTime, vbShortTime), _
                     Format(gridLineTime, "yyyymmdd"), _
                     Format(gridLineTime, "d Mmm yy")
 Case TimePeriodHour
-'    mins = calculateMinutesFromMidnight(timestamp)
-'    gridLineTime = Int(timestamp) + ((Int((mins - mSessionOffsetMinutes) / (60 * mVerticalGridSpacing)) * 60 * mVerticalGridSpacing) + mSessionOffsetMinutes) / 1440
     addVerticalGridLine periodNumber, _
                     Format(gridLineTime, "yyyymmddhh"), _
                     FormatDateTime(gridLineTime, vbShortTime), _
                     Format(gridLineTime, "yyyymmdd"), _
                     Format(gridLineTime, "d Mmm yy")
 Case TimePeriodDay
-'    gridLineTime = Int(timestamp) - (DatePart("d", timestamp) - 1) Mod mVerticalGridSpacing
     addVerticalGridLine periodNumber, _
                     Format(gridLineTime, "yyyymmdd"), _
                     Format(gridLineTime, "d"), _
                     Format(gridLineTime, "yyyymm"), _
                     Format(gridLineTime, "Mmm yy")
 Case TimePeriodWeek
-'    gridLineTime = Int(timestamp) - 7 * ((DatePart("ww", timestamp) - 1) Mod mVerticalGridSpacing) - weekday(timestamp) + 1
     addVerticalGridLine periodNumber, _
                     Format(gridLineTime, "yyyymmdd"), _
                     Format(gridLineTime, "d Mmm"), _
                     Format(gridLineTime, "yyyy"), _
                     Format(gridLineTime, "yyyy")
 Case TimePeriodMonth
-'    gridLineTime = DateSerial(Year(timestamp), Int((Month(timestamp) - 1) / mVerticalGridSpacing) * mVerticalGridSpacing + 1, 1)
     addVerticalGridLine periodNumber, _
                     Format(gridLineTime, "yyyymm"), _
                     Format(gridLineTime, "Mmm"), _
                     Format(gridLineTime, "yyyy"), _
                     Format(gridLineTime, "yyyy")
 Case TimePeriodYear
-'    gridLineTime = DateSerial(Int(Year(timestamp) / mVerticalGridSpacing) * mVerticalGridSpacing, 1, 1)
     addVerticalGridLine periodNumber, _
                     Format(gridLineTime, "yyyy"), _
                     Format(gridLineTime, "YYYY"), _
                     "$", _
                     ""
-    
+Case TimePeriodVolume, TimePeriodTickVolume, TimePeriodTickMovement
+    If periodNumber Mod mVerticalGridSpacing = 1 Then
+        addVerticalGridLine periodNumber, _
+                        Format(gridLineTime, "yyyymmddhhnnss"), _
+                        FormatDateTime(gridLineTime, vbLongTime), _
+                        Format(gridLineTime, "yyyymmdd"), _
+                        Format(gridLineTime, "d Mmm yy")
+    End If
 End Select
 End Sub
 

@@ -2075,6 +2075,9 @@ Case TimePeriodDay
 Case TimePeriodWeek
 Case TimePeriodMonth
 Case TimePeriodYear
+Case TimePeriodVolume
+Case TimePeriodTickVolume
+Case TimePeriodTickMovement
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "ChartSkil" & "." & "Chart" & ":" & "setPeriodParameters", _
@@ -2294,6 +2297,15 @@ Case TimePeriodMonth
 Case TimePeriodYear
         mVerticalGridUnits = TimePeriodYear
         mVerticalGridSpacing = 10
+Case TimePeriodVolume
+        mVerticalGridUnits = TimePeriodVolume
+        mVerticalGridSpacing = 10
+Case TimePeriodTickVolume
+        mVerticalGridUnits = TimePeriodTickVolume
+        mVerticalGridSpacing = 10
+Case TimePeriodTickMovement
+        mVerticalGridUnits = TimePeriodTickMovement
+        mVerticalGridSpacing = 10
 End Select
   
 End Sub
@@ -2362,10 +2374,14 @@ mXCursorText.position = mXAxisRegion.newPoint( _
                             CoordsCounterDistance)
 
 Select Case mPeriodUnits
-Case TimePeriodNone, TimePeriodSecond, TimePeriodMinute, TimePeriodHour
+Case TimePeriodNone, TimePeriodMinute, TimePeriodHour
     mXCursorText.text = FormatDateTime(thisPeriod.timestamp, vbShortDate) & _
                         " " & _
                         FormatDateTime(thisPeriod.timestamp, vbShortTime)
+Case TimePeriodSecond, TimePeriodVolume, TimePeriodTickVolume, TimePeriodTickMovement
+    mXCursorText.text = FormatDateTime(thisPeriod.timestamp, vbShortDate) & _
+                        " " & _
+                        FormatDateTime(thisPeriod.timestamp, vbLongTime)
 Case Else
     mXCursorText.text = FormatDateTime(thisPeriod.timestamp, vbShortDate)
 End Select
