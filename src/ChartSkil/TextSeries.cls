@@ -384,7 +384,7 @@ Public Function add( _
                 Optional ByVal key As String, _
                 Optional ByVal localStyle As TextStyle) As text
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                            "ChartSkil25.TextSeries::add", _
+                            "ChartSkil26.TextSeries::add", _
                             "Text series is finished"
 Set add = New text
 If key = "" Then

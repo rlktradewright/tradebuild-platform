@@ -203,7 +203,7 @@ End Property
 Public Property Let barColor(ByVal value As Long)
 If Not gIsValidColor(value) And value <> -1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil25" & "." & "Bar" & ":" & "barColor", _
+            "ChartSkil26" & "." & "Bar" & ":" & "barColor", _
             "Value is not a valid color or -1"
 
 If mBarColor = value And mIsSetBarColor Then Exit Property
@@ -279,7 +279,7 @@ End Property
 Public Property Let downColor(ByVal value As Long)
 If Not gIsValidColor(value) And value <> -1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil25" & "." & "Bar" & ":" & "downColor", _
+            "ChartSkil26" & "." & "Bar" & ":" & "downColor", _
             "Value is not a valid color or -1"
 
 If mDownColor = value And mIsSetDownColor Then Exit Property
@@ -404,7 +404,7 @@ End Property
 Public Property Let upColor(ByVal value As Long)
 If Not gIsValidColor(value) And value <> -1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil25" & "." & "Bar" & ":" & "upColor", _
+            "ChartSkil26" & "." & "Bar" & ":" & "upColor", _
             "Value is not a valid color"
 
 If mUpColor = value And mIsSetUpColor Then Exit Property

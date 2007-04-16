@@ -190,13 +190,13 @@ If mLines.count <> 0 Then
 End If
 End Property
 
-Public Property Get arrowStartFillStyle() As FillStyles
-arrowStartFillStyle = arrowStartFillStyle
+Public Property Get arrowStartfillstyle() As FillStyles
+arrowStartfillstyle = arrowStartfillstyle
 End Property
 
-Public Property Let arrowStartFillStyle(ByVal value As FillStyles)
-If mStyle.arrowStartFillStyle = value Then Exit Property
-mStyle.arrowStartFillStyle = value
+Public Property Let arrowStartfillstyle(ByVal value As FillStyles)
+If mStyle.arrowStartfillstyle = value Then Exit Property
+mStyle.arrowStartfillstyle = value
 If mLines.count <> 0 Then
     mEventProxy.paintRegion False
 End If
@@ -417,8 +417,8 @@ If value.arrowStartFillColor <> mStyle.arrowStartFillColor Then
     mStyle.arrowStartFillColor = value.arrowStartFillColor
     somethingChanged = True
 End If
-If value.arrowStartFillStyle <> mStyle.arrowStartFillStyle Then
-    mStyle.arrowStartFillStyle = value.arrowStartFillStyle
+If value.arrowStartfillstyle <> mStyle.arrowStartfillstyle Then
+    mStyle.arrowStartfillstyle = value.arrowStartfillstyle
     somethingChanged = True
 End If
 If value.arrowStartLength <> mStyle.arrowStartLength Then
@@ -505,11 +505,11 @@ End Property
 
 Public Function add( _
                 Optional ByVal key As String, _
-                Optional ByVal localStyle As linestyle) As ChartSkil25.Line
+                Optional ByVal localStyle As linestyle) As ChartSkil26.Line
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                            "ChartSkil25.LineSeries::add", _
+                            "ChartSkil26.LineSeries::add", _
                             "Line series is finished"
-Set add = New ChartSkil25.Line
+Set add = New ChartSkil26.Line
 If key = "" Then
     key = GenerateGUIDString
 End If
@@ -537,7 +537,7 @@ Set mCanvas = canvas
 Set mStyle = style.clone    ' style cannot be shared between BarSeries
 End Sub
 
-Public Function item(ByVal index As Variant) As ChartSkil25.Line
+Public Function item(ByVal index As Variant) As ChartSkil26.Line
 Attribute item.VB_UserMemId = 0
 Set item = mLines(index)
 End Function

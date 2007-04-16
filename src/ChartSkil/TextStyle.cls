@@ -136,7 +136,7 @@ End Property
 Public Property Let Color(ByVal value As Long)
 If Not gIsValidColor(value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil25" & "." & "TextStyle" & ":" & "color", _
+            "ChartSkil26" & "." & "TextStyle" & ":" & "color", _
             "Value is not a valid color"
 mColor = value
 End Property

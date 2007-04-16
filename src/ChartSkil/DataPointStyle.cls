@@ -80,7 +80,7 @@ End Sub
 Public Property Let Color(ByVal value As Long)
 If Not gIsValidColor(value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil25" & "." & "DataPointStyle" & ":" & "color", _
+            "ChartSkil26" & "." & "DataPointStyle" & ":" & "color", _
             "Value is not a valid color"
 mColor = value
 End Property
@@ -100,7 +100,7 @@ End Property
 Public Property Let downColor(ByVal value As Long)
 If Not gIsValidColor(value) And value <> -1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil25" & "." & "DataPointStyle" & ":" & "downColor", _
+            "ChartSkil26" & "." & "DataPointStyle" & ":" & "downColor", _
             "Value is not a valid color or -1"
 mDownColor = value
 End Property
@@ -112,7 +112,7 @@ End Property
 Public Property Let histBarWidth(ByVal value As Single)
 If value <= 0 Or value > 1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil25" & "." & "DataPointStyle" & ":" & "histBarWidth", _
+            "ChartSkil26" & "." & "DataPointStyle" & ":" & "histBarWidth", _
             "histBarWidth must be greater than zero but not greater than 1"
 
 mHistBarWidth = value
@@ -130,12 +130,12 @@ Public Property Get includeInAutoscale() As Boolean
 includeInAutoscale = mIncludeInAutoscale
 End Property
 
-Public Property Let lineStyle(ByVal value As LineStyles)
+Public Property Let linestyle(ByVal value As LineStyles)
 mLineStyle = value
 End Property
 
-Public Property Get lineStyle() As LineStyles
-lineStyle = mLineStyle
+Public Property Get linestyle() As LineStyles
+linestyle = mLineStyle
 End Property
 
 Public Property Let lineThickness(ByVal value As Long)
@@ -157,7 +157,7 @@ End Property
 Public Property Let upColor(ByVal value As Long)
 If Not gIsValidColor(value) And value <> -1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil25" & "." & "DataPointStyle" & ":" & "downColor", _
+            "ChartSkil26" & "." & "DataPointStyle" & ":" & "downColor", _
             "Value is not a valid color or -1"
 mUpColor = value
 End Property
@@ -177,7 +177,7 @@ clone.displayMode = mDisplayMode
 clone.downColor = mDownColor
 clone.histBarWidth = mHistBarWidth
 clone.includeInAutoscale = mIncludeInAutoscale
-clone.lineStyle = mLineStyle
+clone.linestyle = mLineStyle
 clone.lineThickness = mLineThickness
 clone.pointStyle = pointStyle
 clone.upColor = mUpColor

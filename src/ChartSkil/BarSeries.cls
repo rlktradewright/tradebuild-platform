@@ -273,7 +273,7 @@ Public Function add( _
                 Optional ByVal localStyle As BarStyle) As Bar
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                            "ChartSkil25.BarSeries::add", _
+                            "ChartSkil26.BarSeries::add", _
                             "Bar series is finished"
 
 Set add = New Bar

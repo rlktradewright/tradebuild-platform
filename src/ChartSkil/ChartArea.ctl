@@ -1647,7 +1647,7 @@ End Property
 Public Property Let sessionEndTime(ByVal val As Date)
 If CDbl(val) >= 1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "ChartSkil25.Chart::(Let)sessionEndTime", _
+                "ChartSkil26.Chart::(Let)sessionEndTime", _
                 "Value must be a time only"
 mSessionEndTime = val
 End Property
@@ -1660,7 +1660,7 @@ End Property
 Public Property Let sessionStartTime(ByVal val As Date)
 If CDbl(val) >= 1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "ChartSkil25.Chart::(Let)sessionStartTime", _
+                "ChartSkil26.Chart::(Let)sessionStartTime", _
                 "Value must be a time only"
 mSessionStartTime = val
 End Property
@@ -1777,7 +1777,7 @@ Dim regionNumber As Long
 If name <> "" Then
     If Not getChartRegion(name) Is Nothing Then
         Err.Raise ErrorCodes.ErrIllegalStateException, _
-                "ChartSkil25.Chart::addChartRegion", _
+                "ChartSkil26.Chart::addChartRegion", _
                 "Region " & name & " already exists"
     End If
 End If

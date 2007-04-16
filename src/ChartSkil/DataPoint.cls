@@ -209,7 +209,7 @@ End Property
 Public Property Let Color(ByVal value As Long)
 If Not gIsValidColor(value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil25" & "." & "DataPoint" & ":" & "color", _
+            "ChartSkil26" & "." & "DataPoint" & ":" & "color", _
             "Value is not a valid color"
 
 If mColor = value And mIsSetColor Then Exit Property
@@ -254,7 +254,7 @@ End Property
 Public Property Let downColor(ByVal value As Long)
 If Not gIsValidColor(value) And value <> -1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil25" & "." & "DataPoint" & ":" & "downColor", _
+            "ChartSkil26" & "." & "DataPoint" & ":" & "downColor", _
             "Value is not a valid color or -1"
 
 If mDownColor = value And mIsSetDownColor Then Exit Property
@@ -277,7 +277,7 @@ End Property
 Public Property Let histBarWidth(ByVal value As Single)
 If value <= 0 Or value > 1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil25" & "." & "DataPoint" & ":" & "histBarWidth", _
+            "ChartSkil26" & "." & "DataPoint" & ":" & "histBarWidth", _
             "histBarWidth must be greater than zero but not greater than 1"
 If mHistBarWidth = value And mIsSetHistBarWidth Then Exit Property
 undraw
@@ -324,17 +324,17 @@ Public Property Get layer() As Long
 layer = mLayer
 End Property
 
-Public Property Let lineStyle(ByVal value As LineStyles)
+Public Property Let linestyle(ByVal value As LineStyles)
 If mLineStyle = value And mIsSetLineStyle Then Exit Property
 mLineStyle = value
 mIsSetLineStyle = True
 mEventProxy.objectChanged mHandle, mBoundingRect
 End Property
 
-Public Property Get lineStyle() As LineStyles
-lineStyle = mBaseStyle.lineStyle
-If Not mLocalStyle Is Nothing Then lineStyle = mLocalStyle.lineStyle
-If mIsSetLineStyle Then lineStyle = mLineStyle
+Public Property Get linestyle() As LineStyles
+linestyle = mBaseStyle.linestyle
+If Not mLocalStyle Is Nothing Then linestyle = mLocalStyle.linestyle
+If mIsSetLineStyle Then linestyle = mLineStyle
 End Property
 
 Public Property Let lineThickness(ByVal value As Long)
@@ -391,7 +391,7 @@ End Property
 Public Property Let upColor(ByVal value As Long)
 If Not gIsValidColor(value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil25" & "." & "DataPoint" & ":" & "upColor", _
+            "ChartSkil26" & "." & "DataPoint" & ":" & "upColor", _
             "Value is not a valid color"
 
 If mUpColor = value And mIsSetUpColor Then Exit Property
@@ -559,7 +559,7 @@ If displayMode = 0 Then Exit Sub
 
 mCanvas.setPenAttributes Color, _
                         lineThickness, _
-                        lineStyle, _
+                        linestyle, _
                         DrawModes.DrawModeCopyPen
 
 If displayMode = DataPointDisplayModes.DataPointDisplayModeHistogram Then

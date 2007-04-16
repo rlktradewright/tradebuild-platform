@@ -105,7 +105,7 @@ End Property
 Public Property Let Color(ByVal value As Long)
 If Not gIsValidColor(value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil25" & "." & "DataPointSeries" & ":" & "color", _
+            "ChartSkil26" & "." & "DataPointSeries" & ":" & "color", _
             "Value is not a valid color"
 If mStyle.Color = value Then Exit Property
 mStyle.Color = value
@@ -138,7 +138,7 @@ End Property
 Public Property Let downColor(ByVal value As Long)
 If Not gIsValidColor(value) And value <> -1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil25" & "." & "DataPointSeries" & ":" & "downColor", _
+            "ChartSkil26" & "." & "DataPointSeries" & ":" & "downColor", _
             "Value is not a valid color or -1"
 If mStyle.downColor = value Then Exit Property
 mStyle.downColor = value
@@ -154,7 +154,7 @@ End Property
 Public Property Let histBarWidth(ByVal value As Single)
 If value <= 0 Or value > 1 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil25" & "." & "DataPointSeries" & ":" & "histBarWidth", _
+            "ChartSkil26" & "." & "DataPointSeries" & ":" & "histBarWidth", _
             "histBarWidth must be greater than zero but not greater than 1"
 If mStyle.histBarWidth = value Then Exit Property
 mStyle.histBarWidth = value
@@ -281,7 +281,7 @@ End Property
 Public Property Let upColor(ByVal value As Long)
 If Not gIsValidColor(value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil25" & "." & "DataPointSeries" & ":" & "upColor", _
+            "ChartSkil26" & "." & "DataPointSeries" & ":" & "upColor", _
             "Value is not a valid color"
 If mStyle.upColor = value Then Exit Property
 mStyle.upColor = value
@@ -304,7 +304,7 @@ Static duplicateCount As Long       ' counts the number of successive adds with
 Static prevTimestamp As Date
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                            "ChartSkil25.DatPointSeries::add", _
+                            "ChartSkil26.DatPointSeries::add", _
                             "DataPoint series is finished"
 
 If Not mPrevDataPoint Is Nothing Then

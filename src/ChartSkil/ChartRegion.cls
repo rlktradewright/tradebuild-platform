@@ -811,7 +811,7 @@ Case PointerDisc
     drawPointer mPrevCursorX, mPrevCursorY
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil25.ChartRegion::(let)pointerStyle", _
+            "ChartSkil26.ChartRegion::(let)pointerStyle", _
             "Value must be a member of the PointerStyles enum"
 End Select
 
@@ -1071,7 +1071,7 @@ addDataPointSeries.initialise name, _
                         IIf(style Is Nothing, mDefaultDataPointStyle, style)
 End Function
 
-Public Function addLine(Optional ByVal layer As Long = -1) As ChartSkil25.Line
+Public Function addLine(Optional ByVal layer As Long = -1) As ChartSkil26.Line
 If mDefaultLineSeries Is Nothing Then
     Set mDefaultLineSeries = addLineSeries(LayerDefaultLines)
 End If
@@ -1694,7 +1694,7 @@ Private Sub addVerticalGridLine(ByVal periodNumber As Long, _
                                 ByVal label As String, _
                                 ByVal coarseKey As String, _
                                 ByVal coarseLabel As String)
-Dim vGridLine As ChartSkil25.Line
+Dim vGridLine As ChartSkil26.Line
 Dim vGridText As text
 Dim vGridTextCoarse As text
 
@@ -2462,7 +2462,7 @@ End Sub
 Private Sub setHorizontalGridLines()
 Dim y As Double
 Dim i As Long
-Dim aLine As ChartSkil25.Line
+Dim aLine As ChartSkil26.Line
 Dim currSuppress As Boolean
 
 If mYGridLines Is Nothing Then Exit Sub

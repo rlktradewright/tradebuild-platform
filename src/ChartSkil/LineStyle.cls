@@ -86,7 +86,7 @@ Private mExtended As Boolean
 Public Property Let arrowStartColor(ByVal value As Long)
 If Not gIsValidColor(value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil25" & "." & "LineStyle" & ":" & "arrowStartColor", _
+            "ChartSkil26" & "." & "LineStyle" & ":" & "arrowStartColor", _
             "Value is not a valid color"
 mArrowStartColor = value
 End Property
@@ -98,7 +98,7 @@ End Property
 Public Property Let arrowStartFillColor(ByVal value As Long)
 If Not gIsValidColor(value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil25" & "." & "LineStyle" & ":" & "arrowStartFillColor", _
+            "ChartSkil26" & "." & "LineStyle" & ":" & "arrowStartFillColor", _
             "Value is not a valid color"
 mArrowStartFillColor = value
 End Property
@@ -142,7 +142,7 @@ End Property
 Public Property Let arrowEndColor(ByVal value As Long)
 If Not gIsValidColor(value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil25" & "." & "LineStyle" & ":" & "arrowEndColor", _
+            "ChartSkil26" & "." & "LineStyle" & ":" & "arrowEndColor", _
             "Value is not a valid color"
 mArrowEndColor = value
 End Property
@@ -154,7 +154,7 @@ End Property
 Public Property Let arrowEndFillColor(ByVal value As Long)
 If Not gIsValidColor(value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil25" & "." & "LineStyle" & ":" & "arrowEndFillColor", _
+            "ChartSkil26" & "." & "LineStyle" & ":" & "arrowEndFillColor", _
             "Value is not a valid color"
 mArrowEndFillColor = value
 End Property
@@ -198,7 +198,7 @@ End Property
 Public Property Let Color(ByVal value As Long)
 If Not gIsValidColor(value) Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "ChartSkil25" & "." & "LineStyle" & ":" & "color", _
+            "ChartSkil26" & "." & "LineStyle" & ":" & "color", _
             "Value is not a valid color"
 mColor = value
 End Property
