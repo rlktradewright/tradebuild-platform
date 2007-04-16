@@ -2,11 +2,11 @@ VERSION 5.00
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "msflxgrd.ocx"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
-Object = "{CA028305-9CAA-44AE-816E-330E4FEBE823}#9.0#0"; "StudiesUI2-5.ocx"
-Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#14.3#0"; "ChartSkil2-5.ocx"
+Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#2.0#0"; "StudiesUI2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#1.0#0"; "ChartSkil2-6.ocx"
 Begin VB.Form StudyTestForm 
    BorderStyle     =   1  'Fixed Single
-   Caption         =   "TradeBuild Study Test Harness"
+   Caption         =   "TradeBuild Study Test Harness v2.6"
    ClientHeight    =   10365
    ClientLeft      =   5070
    ClientTop       =   3540
@@ -65,25 +65,25 @@ Begin VB.Form StudyTestForm
       TabCaption(1)   =   "Study setup"
       TabPicture(1)   =   "StudyTestForm.frx":001C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "Label2"
-      Tab(1).Control(1)=   "Label3"
-      Tab(1).Control(2)=   "Label1"
-      Tab(1).Control(3)=   "Label19"
-      Tab(1).Control(4)=   "StudiesCombo"
-      Tab(1).Control(5)=   "StudyLibraryClassNameText"
-      Tab(1).Control(6)=   "LibToAddText"
-      Tab(1).Control(7)=   "AddLibButton"
-      Tab(1).Control(8)=   "SpList"
-      Tab(1).Control(9)=   "RemoveLibButton"
-      Tab(1).Control(10)=   "SetStudyLibraryButton"
-      Tab(1).Control(11)=   "StudyConfigurer1"
+      Tab(1).Control(0)=   "StudyConfigurer1"
+      Tab(1).Control(1)=   "SetStudyLibraryButton"
+      Tab(1).Control(2)=   "RemoveLibButton"
+      Tab(1).Control(3)=   "SpList"
+      Tab(1).Control(4)=   "AddLibButton"
+      Tab(1).Control(5)=   "LibToAddText"
+      Tab(1).Control(6)=   "StudyLibraryClassNameText"
+      Tab(1).Control(7)=   "StudiesCombo"
+      Tab(1).Control(8)=   "Label19"
+      Tab(1).Control(9)=   "Label1"
+      Tab(1).Control(10)=   "Label3"
+      Tab(1).Control(11)=   "Label2"
       Tab(1).ControlCount=   12
       TabCaption(2)   =   "&Chart"
       TabPicture(2)   =   "StudyTestForm.frx":0038
       Tab(2).ControlEnabled=   0   'False
       Tab(2).Control(0)=   "Chart1"
       Tab(2).ControlCount=   1
-      Begin ChartSkil25.Chart Chart1 
+      Begin ChartSkil26.Chart Chart1 
          Height          =   8775
          Left            =   -74880
          TabIndex        =   20
@@ -92,13 +92,13 @@ Begin VB.Form StudyTestForm
          _ExtentX        =   21828
          _ExtentY        =   15478
       End
-      Begin StudiesUI25.StudyConfigurer StudyConfigurer1 
+      Begin StudiesUI26.StudyConfigurer StudyConfigurer1 
          Height          =   5655
          Left            =   -74760
          TabIndex        =   19
          Top             =   3480
-         Width           =   12135
-         _ExtentX        =   21405
+         Width           =   12255
+         _ExtentX        =   21616
          _ExtentY        =   9975
       End
       Begin VB.TextBox MinimumPriceTickText 
@@ -395,7 +395,7 @@ mDigitWidth = Me.TextWidth(widthString) / Len(widthString)
 
 setupTestDataGrid
 
-AddStudyLibrary New CmnStudiesLib25.StudyLib
+AddStudyLibrary New CmnStudiesLib26.StudyLib
 
 ' need to do this in case the user sets up his Study Library and study
 ' before loading the test data
@@ -700,7 +700,7 @@ Dim standardLib As Object
 
 RemoveAllStudyLibraries
 
-Set standardLib = New CmnStudiesLib25.StudyLib
+Set standardLib = New CmnStudiesLib26.StudyLib
 AddStudyLibrary standardLib
 
 For i = 0 To SpList.ListCount - 1
@@ -708,7 +708,7 @@ For i = 0 To SpList.ListCount - 1
 Next
 
 If Not mStudyLibrary Is Nothing Then
-    If Not TypeOf mStudyLibrary Is CmnStudiesLib25.StudyLib Then
+    If Not TypeOf mStudyLibrary Is CmnStudiesLib26.StudyLib Then
         AddStudyLibrary mStudyLibrary
     End If
 End If
