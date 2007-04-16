@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#14.3#0"; "ChartSkil2-5.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#1.0#0"; "ChartSkil2-6.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo Version 2.5"
    ClientHeight    =   8355
@@ -9,14 +9,13 @@ Begin VB.Form ChartForm
    LinkTopic       =   "Form1"
    ScaleHeight     =   8355
    ScaleWidth      =   12015
-   Begin ChartSkil25.Chart Chart1 
-      Align           =   1  'Align Top
+   Begin ChartSkil26.Chart Chart1 
       Height          =   6495
-      Left            =   0
+      Left            =   120
       TabIndex        =   17
-      Top             =   0
-      Width           =   12015
-      _ExtentX        =   21193
+      Top             =   120
+      Width           =   11655
+      _ExtentX        =   20558
       _ExtentY        =   11456
    End
    Begin VB.PictureBox BasePicture 
@@ -271,9 +270,9 @@ Private mCumVolume As Long                  ' the cumulative volume
 
 Private mSwingLineSeries As LineSeries      ' used to define properties for the swing
                                             ' lines
-Private mSwingLine As ChartSkil25.Line        ' the current swing line
-Private mPrevSwingLine As ChartSkil25.Line    ' the previous swing line
-Private mNewSwingLine As ChartSkil25.Line     ' potential new swing line
+Private mSwingLine As ChartSkil26.Line        ' the current swing line
+Private mPrevSwingLine As ChartSkil26.Line    ' the previous swing line
+Private mNewSwingLine As ChartSkil26.Line     ' potential new swing line
 Private mSwingAmountTicks As Double         ' the minimum price movement in ticks to
                                             ' establish a new swing
 Private mSwingingUp As Boolean              ' indicates whether price is swinging up
@@ -343,7 +342,7 @@ Private Sub LoadButton_Click()
 Dim aFont As StdFont
 Dim btn As Button
 Dim startText As Text
-Dim extendedLine As ChartSkil25.Line
+Dim extendedLine As ChartSkil26.Line
 Dim lBarStyle As BarStyle
 Dim lDataPointStyle As DataPointStyle
 Dim lLineStyle As LineStyle
