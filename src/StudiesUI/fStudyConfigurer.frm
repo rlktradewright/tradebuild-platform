@@ -9,7 +9,7 @@ Begin VB.Form fStudyConfigurer
    ScaleHeight     =   5775
    ScaleWidth      =   13560
    StartUpPosition =   3  'Windows Default
-   Begin StudiesUI25.StudyConfigurer StudyConfigurer1 
+   Begin StudiesUI26.StudyConfigurer StudyConfigurer1 
       Height          =   5535
       Left            =   120
       TabIndex        =   3
@@ -48,6 +48,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 Option Explicit
 
 '================================================================================
