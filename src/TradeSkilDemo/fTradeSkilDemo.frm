@@ -1,10 +1,10 @@
 VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{9D2C4B5E-2539-4900-8B70-B9B41CFF1CA8}#20.1#0"; "TradeBuildUI2-5.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#2.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   1  'Fixed Single
-   Caption         =   "TradeSkil Demo Edition Version 2.5"
+   Caption         =   "TradeSkil Demo Edition Version 2.6"
    ClientHeight    =   6855
    ClientLeft      =   210
    ClientTop       =   330
@@ -269,9 +269,7 @@ Begin VB.Form fTradeSkilDemo
       TabPicture(0)   =   "fTradeSkilDemo.frx":0000
       Tab(0).ControlEnabled=   0   'False
       Tab(0).Control(0)=   "ConfigureButton"
-      Tab(0).Control(0).Enabled=   0   'False
       Tab(0).Control(1)=   "Frame1"
-      Tab(0).Control(1).Enabled=   0   'False
       Tab(0).ControlCount=   2
       TabCaption(1)   =   "&2. Tickers"
       TabPicture(1)   =   "fTradeSkilDemo.frx":001C
@@ -282,64 +280,47 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(2)   =   "&3. Orders"
       TabPicture(2)   =   "fTradeSkilDemo.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "ModifyOrderButton"
-      Tab(2).Control(0).Enabled=   0   'False
-      Tab(2).Control(1)=   "CancelOrderButton"
-      Tab(2).Control(1).Enabled=   0   'False
-      Tab(2).Control(2)=   "OrderButton"
-      Tab(2).Control(2).Enabled=   0   'False
-      Tab(2).Control(3)=   "OrdersSummary1"
-      Tab(2).Control(3).Enabled=   0   'False
+      Tab(2).Control(0)=   "OrdersSummary1"
+      Tab(2).Control(1)=   "OrderButton"
+      Tab(2).Control(2)=   "CancelOrderButton"
+      Tab(2).Control(3)=   "ModifyOrderButton"
       Tab(2).ControlCount=   4
       TabCaption(3)   =   "&4. Executions"
       TabPicture(3)   =   "fTradeSkilDemo.frx":0054
       Tab(3).ControlEnabled=   0   'False
       Tab(3).Control(0)=   "ExecutionsSummary1"
-      Tab(3).Control(0).Enabled=   0   'False
       Tab(3).ControlCount=   1
       TabCaption(4)   =   "&5. Replay tickfiles"
       TabPicture(4)   =   "fTradeSkilDemo.frx":0070
       Tab(4).ControlEnabled=   0   'False
       Tab(4).Control(0)=   "Label19"
-      Tab(4).Control(0).Enabled=   0   'False
       Tab(4).Control(1)=   "Label20"
-      Tab(4).Control(1).Enabled=   0   'False
       Tab(4).Control(2)=   "ReplayProgressLabel"
-      Tab(4).Control(2).Enabled=   0   'False
       Tab(4).Control(3)=   "ReplayContractLabel"
-      Tab(4).Control(3).Enabled=   0   'False
       Tab(4).Control(4)=   "ReplayProgressBar"
-      Tab(4).Control(4).Enabled=   0   'False
       Tab(4).Control(5)=   "SkipReplayButton"
-      Tab(4).Control(5).Enabled=   0   'False
       Tab(4).Control(6)=   "PlayTickFileButton"
-      Tab(4).Control(6).Enabled=   0   'False
       Tab(4).Control(7)=   "SelectTickfilesButton"
-      Tab(4).Control(7).Enabled=   0   'False
       Tab(4).Control(8)=   "ClearTickfileListButton"
-      Tab(4).Control(8).Enabled=   0   'False
       Tab(4).Control(9)=   "PauseReplayButton"
-      Tab(4).Control(9).Enabled=   0   'False
       Tab(4).Control(10)=   "StopReplayButton"
-      Tab(4).Control(10).Enabled=   0   'False
       Tab(4).Control(11)=   "TickfileList"
       Tab(4).Control(11).Enabled=   0   'False
       Tab(4).Control(12)=   "ReplaySpeedCombo"
-      Tab(4).Control(12).Enabled=   0   'False
       Tab(4).ControlCount=   13
-      Begin TradeBuildUI25.ExecutionsSummary ExecutionsSummary1 
+      Begin TradeBuildUI26.ExecutionsSummary ExecutionsSummary1 
          Height          =   3855
          Left            =   -74880
-         TabIndex        =   95
+         TabIndex        =   98
          Top             =   360
          Width           =   13935
          _ExtentX        =   24580
          _ExtentY        =   6800
       End
-      Begin TradeBuildUI25.OrdersSummary OrdersSummary1 
+      Begin TradeBuildUI26.OrdersSummary OrdersSummary1 
          Height          =   3855
          Left            =   -74880
-         TabIndex        =   98
+         TabIndex        =   97
          Top             =   360
          Width           =   12495
          _ExtentX        =   22040
@@ -765,14 +746,14 @@ Begin VB.Form fTradeSkilDemo
          TabIndex        =   51
          Top             =   360
          Width           =   13935
-         Begin TradeBuildUI25.TickerGrid TickerGrid1 
-            Height          =   3735
+         Begin TradeBuildUI26.TickerGrid TickerGrid1 
+            Height          =   3855
             Left            =   3960
-            TabIndex        =   97
-            Top             =   120
+            TabIndex        =   99
+            Top             =   0
             Width           =   9975
             _ExtentX        =   17595
-            _ExtentY        =   6588
+            _ExtentY        =   6800
          End
          Begin VB.Frame Frame3 
             Caption         =   "Charts"
@@ -790,7 +771,7 @@ Begin VB.Form fTradeSkilDemo
                TabIndex        =   91
                Top             =   180
                Width           =   1395
-               Begin TradeBuildUI25.TimeframeSelector TimeframeSelector1 
+               Begin TradeBuildUI26.TimeframeSelector TimeframeSelector1 
                   Height          =   330
                   Left            =   0
                   TabIndex        =   96
@@ -869,10 +850,10 @@ Begin VB.Form fTradeSkilDemo
             TabIndex        =   52
             Top             =   0
             Width           =   2175
-            Begin TradeBuildUI25.ContractSpecBuilder ContractSpecBuilder1 
+            Begin TradeBuildUI26.ContractSpecBuilder ContractSpecBuilder1 
                Height          =   2895
                Left            =   120
-               TabIndex        =   99
+               TabIndex        =   95
                Top             =   240
                Width           =   1935
                _ExtentX        =   3413
@@ -1745,7 +1726,7 @@ End Sub
 '================================================================================
 
 Private Sub mTickfileManager_Notification( _
-                ev As TradeBuild25.NotificationEvent)
+                ev As TradeBuild26.NotificationEvent)
 On Error GoTo err
 logMessage "Notification " & ev.eventCode & ": " & ev.eventMessage
 
@@ -1891,7 +1872,7 @@ handleFatalError err.Number, err.Description, "mTradeBuildAPI_errorMessage"
 End Sub
 
 Private Sub mTradeBuildAPI_Notification( _
-                ByRef ev As TradeBuild25.NotificationEvent)
+                ByRef ev As TradeBuild26.NotificationEvent)
 On Error GoTo err
 
 logMessage "Notification " & ev.eventCode & ": " & ev.eventMessage
@@ -2051,7 +2032,7 @@ If CustomStudiesSpText <> "" Then
 End If
 
 ' enable the use of TradeBuild's built-in technical indicators
-progId = "CmnStudiesLib25.StudyLib"
+progId = "CmnStudiesLib26.StudyLib"
 Set studyLib = AddStudyLibrary(CreateObject(progId), "Built-in")
 If studyLib Is Nothing Then MsgBox "Study Llibrary with ProgId " & progId & " is not installed", vbExclamation, "Warning"
 Set serviceProvider = Nothing
