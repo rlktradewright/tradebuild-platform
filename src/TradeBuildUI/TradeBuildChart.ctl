@@ -9,12 +9,13 @@ Begin VB.UserControl TradeBuildChart
    ScaleWidth      =   7275
    ToolboxBitmap   =   "TradeBuildChart.ctx":0000
    Begin ChartSkil26.Chart Chart1 
+      Align           =   1  'Align Top
       Height          =   4575
-      Left            =   120
+      Left            =   0
       TabIndex        =   0
-      Top             =   120
-      Width           =   6855
-      _ExtentX        =   12091
+      Top             =   0
+      Width           =   7275
+      _ExtentX        =   12832
       _ExtentY        =   8070
    End
 End
@@ -705,7 +706,7 @@ mPeriodUnits = periodUnits
 Set mPriceRegionStyle = priceRegionStyle
 Set mVolumeRegionStyle = volumeRegionStyle
 
-Set mChartManager = createChartManager(mTicker.studyManager, Chart1.controller)
+Set mChartManager = createChartManager(mTicker.StudyManager, Chart1.controller)
 
 If mTicker.State = TickerStateRunning Then
     loadchart
@@ -753,7 +754,7 @@ mPeriodUnits = periodUnits
 Set mPriceRegionStyle = priceRegionStyle
 Set mVolumeRegionStyle = volumeRegionStyle
 
-Set mChartManager = createChartManager(mTicker.studyManager, Chart1.controller)
+Set mChartManager = createChartManager(mTicker.StudyManager, Chart1.controller)
 
 If mTicker.State = TickerStateReady Then
     loadchart
@@ -787,7 +788,7 @@ Dim volumeStyle As dataPointStyle
 
 Set createBarsStudyConfig = New StudyConfiguration
 
-createBarsStudyConfig.underlyingStudy = mTicker.inputStudy
+createBarsStudyConfig.underlyingStudy = mTicker.InputStudy
 
 Set lStudy = mTimeframe.tradeStudy
 createBarsStudyConfig.study = mTimeframe.tradeStudy
