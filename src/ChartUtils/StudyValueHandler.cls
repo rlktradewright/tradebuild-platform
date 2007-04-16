@@ -324,7 +324,7 @@ End Function
 Private Sub processBar( _
                 ByRef ev As StudyValueEvent)
 Static prevBarNumber As Long
-Dim lBar As StudyUtils25.Bar
+Dim lBar As StudyUtils26.Bar
 
 If TypeName(ev.value) = "Nothing" Then Exit Sub
 
