@@ -179,7 +179,7 @@ Dim study As study
 Dim region As ChartRegion
 Dim studyHorizRule As StudyHorizontalRule
 Dim horizRulesLineSeries As LineSeries
-Dim line As ChartSkil25.line
+Dim line As ChartSkil26.line
 
 If studyConfig.underlyingStudy Is Nothing Then
     studyConfig.underlyingStudy = mBaseStudy

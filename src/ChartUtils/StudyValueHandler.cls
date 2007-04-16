@@ -104,14 +104,14 @@ Private mValueType As StudyValueTypes
 Private mCurrentDataPoint   As DataPoint
 Private mPrevDataPoint      As DataPoint
 
-Private mCurrentBar         As ChartSkil25.Bar
-Private mPrevBar            As ChartSkil25.Bar
+Private mCurrentBar         As ChartSkil26.Bar
+Private mPrevBar            As ChartSkil26.Bar
 
-Private mCurrentLine        As ChartSkil25.line
-Private mPrevLine           As ChartSkil25.line
+Private mCurrentLine        As ChartSkil26.line
+Private mPrevLine           As ChartSkil26.line
 
-Private mCurrentText        As ChartSkil25.Text
-Private mPrevText           As ChartSkil25.Text
+Private mCurrentText        As ChartSkil26.Text
+Private mPrevText           As ChartSkil26.Text
 
 Private mLatestValue        As Variant
 
