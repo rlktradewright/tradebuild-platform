@@ -13,7 +13,7 @@ Begin VB.Form fTimeframeSpecifier
    ScaleWidth      =   3585
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
-   Begin TradeBuildUI25.TimeframeSpecifier TimeframeSpecifier1 
+   Begin TradeBuildUI26.TimeframeSpecifier TimeframeSpecifier1 
       Height          =   855
       Left            =   120
       TabIndex        =   2
@@ -46,6 +46,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
 Option Explicit
 
 ''
