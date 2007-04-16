@@ -1,24 +1,24 @@
 VERSION 5.00
-Object = "{CA028305-9CAA-44AE-816E-330E4FEBE823}#1.0#0"; "StudiesUI2-5.ocx"
+Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#1.0#0"; "StudiesUI2-6.ocx"
 Begin VB.Form fStudyPicker 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "Select a study"
-   ClientHeight    =   4500
+   ClientHeight    =   4560
    ClientLeft      =   45
    ClientTop       =   435
-   ClientWidth     =   9000
+   ClientWidth     =   8985
    LinkTopic       =   "Form1"
-   ScaleHeight     =   4500
-   ScaleWidth      =   9000
+   ScaleHeight     =   4560
+   ScaleWidth      =   8985
    StartUpPosition =   3  'Windows Default
-   Begin StudiesUI25.StudyPicker StudyPicker1 
-      Height          =   4215
+   Begin StudiesUI26.StudyPicker StudyPicker1 
+      Height          =   4335
       Left            =   120
       TabIndex        =   0
       Top             =   120
       Width           =   8775
       _ExtentX        =   15478
-      _ExtentY        =   7435
+      _ExtentY        =   7646
    End
 End
 Attribute VB_Name = "fStudyPicker"
@@ -80,7 +80,7 @@ End Sub
 '================================================================================
 
 Friend Sub initialise( _
-                ByVal pChartManager As ChartManager)
+                ByVal pChartManager As chartManager)
                 
 StudyPicker1.initialise pChartManager
 End Sub

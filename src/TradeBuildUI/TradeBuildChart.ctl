@@ -1,23 +1,21 @@
 VERSION 5.00
-Object = "{015212C3-04F2-4693-B20B-0BEB304EFC1B}#14.3#0"; "ChartSkil2-5.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#1.0#0"; "ChartSkil2-6.ocx"
 Begin VB.UserControl TradeBuildChart 
-   ClientHeight    =   5745
+   ClientHeight    =   4965
    ClientLeft      =   0
    ClientTop       =   0
-   ClientWidth     =   7365
-   ScaleHeight     =   5745
-   ScaleWidth      =   7365
+   ClientWidth     =   7275
+   ScaleHeight     =   4965
+   ScaleWidth      =   7275
    ToolboxBitmap   =   "TradeBuildChart.ctx":0000
-   Begin ChartSkil25.Chart Chart1 
-      Align           =   1  'Align Top
-      Height          =   5175
-      Left            =   0
+   Begin ChartSkil26.Chart Chart1 
+      Height          =   4575
+      Left            =   120
       TabIndex        =   0
-      Top             =   0
-      Width           =   7365
-      _ExtentX        =   12991
-      _ExtentY        =   9128
-      PointerDiscColor=   794110
+      Top             =   120
+      Width           =   6855
+      _ExtentX        =   12091
+      _ExtentY        =   8070
    End
 End
 Attribute VB_Name = "TradeBuildChart"
