@@ -118,7 +118,7 @@ Set mTradeBuildAPI = New TradeBuildAPI
 'mTradeBuildAPI.ServiceProviders.Add New TBInfoBase25.TickfileServiceProvider
 'mTradeBuildAPI.ServiceProviders.Add New TBInfoBase25.ContractInfoServiceProvider
 'mTradeBuildAPI.ServiceProviders.Add New TBInfoBase25.HistDataServiceProvider
-mTradeBuildAPI.ServiceProviders.Add New TickfileSP25.TickfileServiceProvider
+mTradeBuildAPI.ServiceProviders.Add New TickfileSP26.TickfileServiceProvider
 
 mTradeBuildAPI.addInfoListener Me, TradeBuildListenValueTypes.VTLog
 
@@ -172,7 +172,7 @@ End Sub
 Private Sub mTicker_stateChange(ev As TWUtilities.StateChangeEvent)
 Dim lTickerListener As TickerListener
 
-If ev.state = TickerStates.TickerStateRunning Then
+If ev.State = TickerStates.TickerStateRunning Then
 
     Set lTickerListener = New TickerListener
     lTickerListener.initialise mTicker.contract, mTimerList
