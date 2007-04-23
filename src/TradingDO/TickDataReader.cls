@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "TickDataWriter"
+Attribute VB_Name = "TickDataReader"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -35,18 +35,21 @@ Option Explicit
 '@===============================================================================
 
 Event ConnectFailed( _
-                ByVal errorCode As Long, _
-                ByVal errorDesc As String)
+                            ByVal errorCode As Long, _
+                            ByVal errorDesc As String)
+Event DataFetched()
 Event Error( _
-                ByVal errorCode As Long, _
-                ByVal errorDesc As String)
+                            ByVal errorCode As Long, _
+                            ByVal errorDesc As String)
+Event NotReady()
+Event Ready()
 
 '@===============================================================================
 ' Constants
 '@===============================================================================
 
 Private Const ProjectName As String = "TradingDO26"
-Private Const ModuleName As String = "TickDataWriter"
+Private Const ModuleName As String = "TickDataReader"
 
 '@===============================================================================
 ' Enums
@@ -62,12 +65,14 @@ Private Const ModuleName As String = "TickDataWriter"
 
 Private WithEvents mConnection As ADODB.Connection
 Attribute mConnection.VB_VarHelpID = -1
+Private WithEvents mRsTick As ADODB.recordset
+Attribute mRsTick.VB_VarHelpID = -1
 
 Private mInstrumentID As Long
 
 Private mIsConnecting As Boolean
 
-Private mCmd As ADODB.Command
+Private mFetchInProgress As Boolean
 
 Private mConnectionString As String
 
@@ -90,7 +95,7 @@ Private Sub mConnection_ConnectComplete( _
 
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent ConnectFailed(pError.Number, _
-                            "TickDataAccessor: connection error" & vbCrLf & _
+                            ModuleName & ": connection error" & vbCrLf & _
                             pError.Description & vbCrLf & _
                             gGenerateErrorMessage(pConnection))
     Exit Sub
@@ -98,28 +103,8 @@ End If
 
 mIsConnecting = False
 
-Set mCmd.ActiveConnection = mConnection
-mCmd.Execute , _
-            , _
-            ExecuteOptionEnum.adAsyncExecute + ExecuteOptionEnum.adExecuteNoRecords
-mConnection.Close
-End Sub
+RaiseEvent Ready
 
-Private Sub mConnection_ExecuteComplete( _
-                            ByVal RecordsAffected As Long, _
-                            ByVal pError As ADODB.Error, _
-                            adStatus As ADODB.EventStatusEnum, _
-                            ByVal pCommand As ADODB.Command, _
-                            ByVal pRecordset As ADODB.recordset, _
-                            ByVal pConnection As ADODB.Connection)
-If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
-    RaiseEvent Error(pError.Number, _
-                    "TickDataAccessor: execution error" & vbCrLf & _
-                    pError.Description & vbCrLf & _
-                    gGenerateErrorMessage(pConnection))
-    connectToDB
-    Exit Sub
-End If
 End Sub
 
 Private Sub mConnection_InfoMessage( _
@@ -132,6 +117,33 @@ End If
 End Sub
 
 '@===============================================================================
+' mRsTick Event Handlers
+'@===============================================================================
+
+Private Sub mRsTick_FetchComplete( _
+                            ByVal pError As ADODB.Error, _
+                            adStatus As ADODB.EventStatusEnum, _
+                            ByVal pRecordset As ADODB.recordset)
+If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
+    RaiseEvent Error(pError.Number, _
+                    ModuleName & ": fetch error" & vbCrLf & _
+                    pError.Description & vbCrLf & _
+                    gGenerateErrorMessage(mConnection))
+    Exit Sub
+End If
+mFetchInProgress = False
+RaiseEvent DataFetched
+End Sub
+
+Private Sub mRsTick_FetchProgress( _
+                            ByVal Progress As Long, _
+                            ByVal MaxProgress As Long, _
+                            adStatus As ADODB.EventStatusEnum, _
+                            ByVal pRecordset As ADODB.recordset)
+
+End Sub
+
+'@===============================================================================
 ' Properties
 '@===============================================================================
 
@@ -139,27 +151,48 @@ End Sub
 ' Methods
 '@===============================================================================
 
+Public Sub FetchData( _
+                        ByVal Version As String, _
+                        ByVal fromTime As Date, _
+                        ByVal toTime As Date)
+
+Debug.Assert Not mFetchInProgress
+mFetchInProgress = True
+
+DoQueryTickData Version, fromTime, toTime
+                        
+End Sub
+
 Friend Sub initialise( _
                 ByVal connectionString As String, _
                 ByVal instrumentId As Long)
 mConnectionString = connectionString
 mInstrumentID = instrumentId
+connectToDB
 End Sub
 
-Public Sub WriteData( _
-                        ByVal Version As String, _
-                        ByVal PeriodStartTime As Date, _
-                        ByVal BasePrice As Double, _
-                        ByRef Data() As Byte)
-If Not mCmd Is Nothing Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-                ProjectName & "." & ModuleName & ":WriteData", _
-                "Object has already been used"
+Public Function ReadData( _
+                        ByRef PeriodStartTime As Date, _
+                        ByRef BasePrice As Double, _
+                        ByRef Data() As Byte) As Boolean
+' returns false if no more tickdata is available - this can
+' occur before the full data has been retrieved from the database,
+' so the caller needs to monitor the TickDataFetched event.
+
+If mFetchInProgress Then Exit Function
+
+If mRsTick.EOF Then
+    Exit Function
 End If
 
-DoWriteTickData Version, PeriodStartTime, BasePrice, Data
+PeriodStartTime = mRsTick("DateTime")
+BasePrice = mRsTick("baseprice")
+Data = mRsTick("data")
+mRsTick.MoveNext
 
-End Sub
+ReadData = True
+End Function
+
 '@===============================================================================
 ' Helper Functions
 '@===============================================================================
@@ -172,57 +205,58 @@ mConnection.CursorLocation = CursorLocationEnum.adUseClient
 mConnection.Open mConnectionString, , , ConnectOptionEnum.adAsyncConnect
 End Sub
 
-Private Sub DoWriteTickData( _
+Private Sub DoQueryTickData( _
                         ByVal Version As String, _
-                        ByVal PeriodStartTime As Date, _
-                        ByVal BasePrice As Double, _
-                        ByRef Data() As Byte)
-
+                        ByVal fromTime As Date, _
+                        ByVal toTime As Date)
+Dim cmd As ADODB.Command
 Dim param As ADODB.Parameter
 
-Set mCmd = New ADODB.Command
-mCmd.CommandType = adCmdStoredProc
+Set cmd = New ADODB.Command
+cmd.CommandType = adCmdStoredProc
 
-mCmd.CommandText = "WriteTickData"
+cmd.CommandText = "FetchTickData"
 
-Set param = mCmd.CreateParameter("@InstrumentID", _
+Set param = cmd.CreateParameter("@InstrumentID", _
                             DataTypeEnum.adInteger, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             mInstrumentID)
-mCmd.Parameters.Append param
+cmd.Parameters.Append param
 
-Set param = mCmd.CreateParameter("@DataVersion", _
-                            DataTypeEnum.adVarChar, _
+Set param = cmd.CreateParameter("@DataVersion", _
+                                DataTypeEnum.adVarChar, _
                             ParameterDirectionEnum.adParamInput, _
                             255, _
                             Version)
-mCmd.Parameters.Append param
+cmd.Parameters.Append param
 
-Set param = mCmd.CreateParameter("@DateAndTime", _
+Set param = cmd.CreateParameter("@FromTime", _
                             DataTypeEnum.adDate, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
-                            PeriodStartTime)
-mCmd.Parameters.Append param
+                            fromTime)
+cmd.Parameters.Append param
 
-Set param = mCmd.CreateParameter("@BasePrice", _
-                            DataTypeEnum.adCurrency, _
+Set param = cmd.CreateParameter("@ToTime", _
+                            DataTypeEnum.adDate, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
-                            BasePrice)
-mCmd.Parameters.Append param
+                            toTime)
+cmd.Parameters.Append param
 
-Set param = mCmd.CreateParameter("@Data", _
-                            DataTypeEnum.adBinary, _
-                            ParameterDirectionEnum.adParamInput, _
-                            UBound(Data) + 1, _
-                            Data)
-mCmd.Parameters.Append param
+cmd.ActiveConnection = mConnection
 
-connectToDB
+Set mRsTick = New ADODB.recordset
+mRsTick.Open cmd, _
+                , _
+                CursorTypeEnum.adOpenForwardOnly, _
+                , _
+                CommandTypeEnum.adCmdStoredProc + _
+                ExecuteOptionEnum.adAsyncFetchNonBlocking + _
+                ExecuteOptionEnum.adAsyncExecute
+                        
 End Sub
-
 
 
 

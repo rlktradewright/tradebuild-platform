@@ -1,0 +1,118 @@
+Attribute VB_Name = "Globals"
+Option Explicit
+
+''
+' Description here
+'
+' @remarks
+' @see
+'
+'@/
+
+'@================================================================================
+' Interfaces
+'@================================================================================
+
+'@================================================================================
+' Events
+'@================================================================================
+
+'@================================================================================
+' Enums
+'@================================================================================
+
+'@================================================================================
+' Types
+'@================================================================================
+
+'@================================================================================
+' Constants
+'@================================================================================
+
+Private Const ProjectName As String = "TradingDO26"
+Private Const ModuleName As String = "Globals"
+
+'@================================================================================
+' Member variables
+'@================================================================================
+
+'@================================================================================
+' Class Event Handlers
+'@================================================================================
+
+'@================================================================================
+' XXXX Interface Members
+'@================================================================================
+
+'@================================================================================
+' XXXX Event Handlers
+'@================================================================================
+
+'@================================================================================
+' Properties
+'@================================================================================
+
+'@================================================================================
+' Methods
+'@================================================================================
+
+Public Function gGenerateErrorMessage( _
+                ByVal pConnection As ADODB.Connection) As String
+Dim Err As ADODB.Error
+Dim errMsg As String
+
+For Each Err In pConnection.Errors
+    errMsg = "--------------------" & vbCrLf & _
+            "Error " & Err.Number & ": " & Err.Description & vbCrLf & _
+            "    Source: " & Err.Source & vbCrLf & _
+            "    SQL state: " & Err.SQLState & vbCrLf & _
+            "    Native error: " & Err.NativeError & vbCrLf
+Next
+pConnection.Errors.Clear
+gGenerateErrorMessage = errMsg
+End Function
+
+Public Function gCategoryFromString(ByVal value As String) As InstrumentCategories
+Select Case UCase$(value)
+Case "STOCK", "STK"
+    gCategoryFromString = InstrumentCategoryStock
+Case "FUTURE", "FUT"
+    gCategoryFromString = InstrumentCategoryFuture
+Case "OPTION", "OPT"
+    gCategoryFromString = InstrumentCategoryOption
+Case "FUTURES OPTION", "FOP"
+    gCategoryFromString = InstrumentCategoryFuturesOption
+Case "CASH"
+    gCategoryFromString = InstrumentCategoryCash
+'Case "BAG"
+'    gCategoryFromString = InstrumentCategoryBag
+Case "INDEX", "IND"
+    gCategoryFromString = InstrumentCategoryIndex
+End Select
+End Function
+
+Public Function gCategoryToString(ByVal value As InstrumentCategories) As String
+Select Case value
+Case InstrumentCategoryStock
+    gCategoryToString = "STK"
+Case InstrumentCategoryFuture
+    gCategoryToString = "FUT"
+Case InstrumentCategoryOption
+    gCategoryToString = "OPT"
+Case InstrumentCategoryFuturesOption
+    gCategoryToString = "FOP"
+Case InstrumentCategoryCash
+    gCategoryToString = "CASH"
+'Case InstrumentCategoryBag
+'    gCategoryToString = "BAG"
+Case InstrumentCategoryIndex
+    gCategoryToString = "IND"
+End Select
+End Function
+
+
+'@================================================================================
+' Helper Functions
+'@================================================================================
+
+

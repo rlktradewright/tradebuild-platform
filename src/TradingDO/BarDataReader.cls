@@ -6,63 +6,66 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "BarDataAccessor"
+Attribute VB_Name = "BarDataReader"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-'================================================================================
+'@===============================================================================
 ' Description
-'================================================================================
+'@===============================================================================
 '
 '
-'================================================================================
+'@===============================================================================
 ' Amendment history
-'================================================================================
+'@===============================================================================
 '
 '
 '
 '
 
-'================================================================================
+'@===============================================================================
 ' Interfaces
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+'@===============================================================================
 ' Events
-'================================================================================
+'@===============================================================================
 
 Event ConnectFailed( _
-                            ByVal errorCode As Long, _
-                            ByVal errorDesc As String)
+                ByVal errorCode As Long, _
+                ByVal errorDesc As String)
 Event BarsFetched()
 Event Error( _
-                            ByVal errorCode As Long, _
-                            ByVal errorDesc As String)
+                ByVal errorCode As Long, _
+                ByVal errorDesc As String)
 Event NotReady()
 Event Ready()
 
-'================================================================================
+'@===============================================================================
 ' Constants
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+Private Const ProjectName As String = "TradingDO26"
+Private Const ModuleName As String = "BarDataReader"
+
+'@===============================================================================
 ' Enums
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+'@===============================================================================
 ' Types
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+'@===============================================================================
 ' Member variables
-'================================================================================
+'@===============================================================================
 
 Private WithEvents mConnection As ADODB.Connection
 Attribute mConnection.VB_VarHelpID = -1
-Private WithEvents mRsBars As ADODB.Recordset
+Private WithEvents mRsBars As ADODB.recordset
 Attribute mRsBars.VB_VarHelpID = -1
 
 Private mInstrumentID As Long
@@ -71,23 +74,19 @@ Private mIsConnecting As Boolean
 
 Private mFetchInProgress As Boolean
 
-Private mCommandToRetry As ADODB.Command
+Private mConnectionString As String
 
-'================================================================================
+'@===============================================================================
 ' Class Event Handlers
-'================================================================================
+'@===============================================================================
 
-Private Sub Class_Initialize()
-connectToDB
-End Sub
-
-'================================================================================
+'@===============================================================================
 ' XXXX Interface Members
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+'@===============================================================================
 ' mConnection Event Handlers
-'================================================================================
+'@===============================================================================
 
 Private Sub mConnection_ConnectComplete( _
                             ByVal pError As ADODB.Error, _
@@ -96,58 +95,31 @@ Private Sub mConnection_ConnectComplete( _
 
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent ConnectFailed(pError.Number, _
-                            "BarDataAccessor: connection error" & vbCrLf & _
+                            ModuleName & ": connection error" & vbCrLf & _
                             pError.Description & vbCrLf & _
-                            generateErrorMessage(pConnection))
+                            gGenerateErrorMessage(pConnection))
     Exit Sub
 End If
 
 mIsConnecting = False
 
-If Not mCommandToRetry Is Nothing Then
-    mCommandToRetry.ActiveConnection = mConnection
-    mCommandToRetry.Execute , _
-                    , _
-                    ExecuteOptionEnum.adAsyncExecute + ExecuteOptionEnum.adExecuteNoRecords
-    Set mCommandToRetry = Nothing
-End If
-
 RaiseEvent Ready
 
 End Sub
 
-Private Sub mConnection_ExecuteComplete( _
-                            ByVal RecordsAffected As Long, _
-                            ByVal pError As ADODB.Error, _
-                            adStatus As ADODB.EventStatusEnum, _
-                            ByVal pCommand As ADODB.Command, _
-                            ByVal pRecordset As ADODB.Recordset, _
-                            ByVal pConnection As ADODB.Connection)
-If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
-    RaiseEvent Error(pError.Number, _
-                    "BarDataAccessor: execution error" & vbCrLf & _
-                    pError.Description & vbCrLf & _
-                    generateErrorMessage(pConnection))
-    RaiseEvent NotReady
-    Set mCommandToRetry = pCommand
-    connectToDB
-    Exit Sub
-End If
-End Sub
-
-'================================================================================
+'@===============================================================================
 ' mRsBars Event Handlers
-'================================================================================
+'@===============================================================================
 
 Private Sub mRsBars_FetchComplete( _
                             ByVal pError As ADODB.Error, _
                             adStatus As ADODB.EventStatusEnum, _
-                            ByVal pRecordset As ADODB.Recordset)
+                            ByVal pRecordset As ADODB.recordset)
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent Error(pError.Number, _
-                    "BarDataAccessor: fetch error" & vbCrLf & _
+                    ModuleName & ": fetch error" & vbCrLf & _
                     pError.Description & vbCrLf & _
-                    generateErrorMessage(mConnection))
+                    gGenerateErrorMessage(mConnection))
     Exit Sub
 End If
 mFetchInProgress = False
@@ -161,21 +133,13 @@ Private Sub mRsBars_FetchProgress( _
                             ByVal Progress As Long, _
                             ByVal MaxProgress As Long, _
                             adStatus As ADODB.EventStatusEnum, _
-                            ByVal pRecordset As ADODB.Recordset)
+                            ByVal pRecordset As ADODB.recordset)
 
 End Sub
 
-'================================================================================
+'@===============================================================================
 ' Properties
-'================================================================================
-
-Public Property Get connectionString() As String
-connectionString = setting("connectionstring")
-End Property
-
-Friend Property Let InstrumentID(ByVal value As Long)
-mInstrumentID = value
-End Property
+'@===============================================================================
 
 Public Property Get NumberOfBars() As Long
 If mFetchInProgress Then
@@ -185,9 +149,9 @@ End If
 NumberOfBars = mRsBars.RecordCount
 End Property
 
-'================================================================================
+'@===============================================================================
 ' Methods
-'================================================================================
+'@===============================================================================
 
 Public Sub FetchBars( _
                         ByVal barType As Long, _
@@ -251,15 +215,24 @@ cmd.Parameters.Append param
 
 cmd.ActiveConnection = mConnection
 
-Set mRsBars = New ADODB.Recordset
+Set mRsBars = New ADODB.recordset
 mRsBars.LockType = adLockReadOnly
 mRsBars.Open cmd, _
-                , _
-                CursorTypeEnum.adOpenStatic, _
-                , _
-                CommandTypeEnum.adCmdStoredProc + ExecuteOptionEnum.adAsyncFetchNonBlocking
-
+            , _
+            CursorTypeEnum.adOpenStatic, _
+            , _
+            CommandTypeEnum.adCmdStoredProc + _
+            ExecuteOptionEnum.adAsyncFetchNonBlocking + _
+            ExecuteOptionEnum.adAsyncExecute
                         
+End Sub
+
+Friend Sub initialise( _
+                ByVal connectionString As String, _
+                ByVal instrumentId As Long)
+mConnectionString = connectionString
+mInstrumentID = instrumentId
+connectToDB
 End Sub
 
 Public Function ReadBar( _
@@ -298,121 +271,16 @@ mRsBars.MovePrevious
 ReadBar = True
 End Function
 
-Public Sub WriteBar( _
-                        ByVal timestamp As Date, _
-                        ByVal barType As Long, _
-                        ByVal barLength As Long, _
-                        ByVal openPrice As Double, _
-                        ByVal highPrice As Double, _
-                        ByVal lowPrice As Double, _
-                        ByVal closePrice As Double, _
-                        ByVal volume As Long, _
-                        ByVal tickVolume As Long, _
-                        ByVal openInterest As Long)
-
-Dim cmd As ADODB.Command
-Dim param As ADODB.Parameter
-
-Set cmd = New ADODB.Command
-cmd.CommandType = adCmdStoredProc
-
-cmd.CommandText = "WriteBarData"
-
-Set param = cmd.CreateParameter("@InstrumentID", _
-                            DataTypeEnum.adInteger, _
-                            ParameterDirectionEnum.adParamInput, _
-                            , _
-                            mInstrumentID)
-cmd.Parameters.Append param
-
-Set param = cmd.CreateParameter("@BarType", _
-                            DataTypeEnum.adInteger, _
-                            ParameterDirectionEnum.adParamInput, _
-                            , _
-                            barType)
-cmd.Parameters.Append param
-
-Set param = cmd.CreateParameter("@BarLength", _
-                            DataTypeEnum.adInteger, _
-                            ParameterDirectionEnum.adParamInput, _
-                            , _
-                            barLength)
-cmd.Parameters.Append param
-
-Set param = cmd.CreateParameter("@DateAndTime", _
-                            DataTypeEnum.adDate, _
-                            ParameterDirectionEnum.adParamInput, _
-                            , _
-                            timestamp)
-cmd.Parameters.Append param
-
-Set param = cmd.CreateParameter("@OpenPrice", _
-                            DataTypeEnum.adCurrency, _
-                            ParameterDirectionEnum.adParamInput, _
-                            , _
-                            openPrice)
-cmd.Parameters.Append param
-
-Set param = cmd.CreateParameter("@HighPrice", _
-                            DataTypeEnum.adCurrency, _
-                            ParameterDirectionEnum.adParamInput, _
-                            , _
-                            highPrice)
-cmd.Parameters.Append param
-
-Set param = cmd.CreateParameter("@LowPrice", _
-                            DataTypeEnum.adCurrency, _
-                            ParameterDirectionEnum.adParamInput, _
-                            , _
-                            lowPrice)
-cmd.Parameters.Append param
-
-Set param = cmd.CreateParameter("@ClosePrice", _
-                            DataTypeEnum.adCurrency, _
-                            ParameterDirectionEnum.adParamInput, _
-                            , _
-                            closePrice)
-cmd.Parameters.Append param
-
-Set param = cmd.CreateParameter("@Volume", _
-                            DataTypeEnum.adInteger, _
-                            ParameterDirectionEnum.adParamInput, _
-                            , _
-                            volume)
-cmd.Parameters.Append param
-
-Set param = cmd.CreateParameter("@TickVolume", _
-                            DataTypeEnum.adInteger, _
-                            ParameterDirectionEnum.adParamInput, _
-                            , _
-                            tickVolume)
-cmd.Parameters.Append param
-
-Set param = cmd.CreateParameter("@OpenInterest", _
-                            DataTypeEnum.adInteger, _
-                            ParameterDirectionEnum.adParamInput, _
-                            , _
-                            openInterest)
-cmd.Parameters.Append param
-
-cmd.ActiveConnection = mConnection
-cmd.Execute , _
-            , _
-            ExecuteOptionEnum.adAsyncExecute + ExecuteOptionEnum.adExecuteNoRecords
-
-                        
-End Sub
-
-'================================================================================
+'@===============================================================================
 ' Helper Functions
-'================================================================================
+'@===============================================================================
 
 Private Sub connectToDB()
 If Not mConnection Is Nothing Then mConnection.Close
 mIsConnecting = True
 Set mConnection = New ADODB.Connection
 mConnection.CursorLocation = CursorLocationEnum.adUseClient
-mConnection.Open setting("connectionstring"), , , ConnectOptionEnum.adAsyncConnect
+mConnection.Open mConnectionString, , , ConnectOptionEnum.adAsyncConnect
 End Sub
 
 
