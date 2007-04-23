@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#2.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#3.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeSkil Demo Edition Version 2.6"
@@ -268,8 +268,10 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(0)   =   "&1. Configuration"
       TabPicture(0)   =   "fTradeSkilDemo.frx":0000
       Tab(0).ControlEnabled=   0   'False
-      Tab(0).Control(0)=   "ConfigureButton"
-      Tab(0).Control(1)=   "Frame1"
+      Tab(0).Control(0)=   "Frame1"
+      Tab(0).Control(0).Enabled=   0   'False
+      Tab(0).Control(1)=   "ConfigureButton"
+      Tab(0).Control(1).Enabled=   0   'False
       Tab(0).ControlCount=   2
       TabCaption(1)   =   "&2. Tickers"
       TabPicture(1)   =   "fTradeSkilDemo.frx":001C
@@ -2001,15 +2003,18 @@ On Error Resume Next
 
 If UseTickDBSPCheck = vbChecked Then
     ' enable historical tick data storage/retrieval to/from TradeBuild's database
-    progId = "TBInfoBase25.TickfileServiceProvider"
+    progId = "TBInfoBase26.TickfileServiceProvider"
     Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
+    serviceProvider.DatabaseName = "Trading"
+    serviceProvider.databaseType = SupportedDatabases.SupportedDbSQLServer7
+    serviceProvider.server = "DELPHI"
     If serviceProvider Is Nothing Then MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
     Set serviceProvider = Nothing
 End If
 
 If UseTickfileSPCheck = vbChecked Then
     ' enable historical tick data storage and retrieval to/from various file formats
-    progId = "TickfileSP25.TickfileServiceProvider"
+    progId = "TickfileSP26.TickfileServiceProvider"
     Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
     If serviceProvider Is Nothing Then MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
     Set serviceProvider = Nothing
@@ -2017,7 +2022,7 @@ End If
 
 If UseQTTickfileSPCheck = vbChecked Then
     ' enable historical tick data retrieval from QuoteTracker
-    progId = "QTSP25.QTTickfileServiceProvider"
+    progId = "QTSP26.QTTickfileServiceProvider"
     Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
     If serviceProvider Is Nothing Then MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
     Set serviceProvider = Nothing
@@ -2039,12 +2044,12 @@ Set serviceProvider = Nothing
 
 If RealtimeDataCombo.Text = "TWS" Then
     ' set up TWS realtime data service provider
-    progId = "IBTWSSP25.RealtimeDataServiceProvider"
+    progId = "IBTWSSP26.RealtimeDataServiceProvider"
     Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
     If serviceProvider Is Nothing Then
         MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
     Else
-        serviceProvider.Server = DataServerText
+        serviceProvider.server = DataServerText
         serviceProvider.Port = DataPortText
         serviceProvider.clientID = DataClientIdText
         serviceProvider.providerKey = "IB"
@@ -2054,7 +2059,7 @@ If RealtimeDataCombo.Text = "TWS" Then
     
 ElseIf RealtimeDataCombo.Text = "QuoteTracker" Then
     ' set up QuoteTrackerT realtime data service provider
-    progId = "QTSP25.QTRealtimeDataServiceProvider"
+    progId = "QTSP26.QTRealtimeDataServiceProvider"
     Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
     If serviceProvider Is Nothing Then
         MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
@@ -2069,17 +2074,20 @@ ElseIf RealtimeDataCombo.Text = "QuoteTracker" Then
 End If
 
 If ContractDataCombo.Text = "TradeBuild" Then
-    progId = "TBInfoBase25.ContractInfoSrvcProvider"
+    progId = "TBInfoBase26.ContractInfoSrvcProvider"
     Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
+    serviceProvider.DatabaseName = "Trading"
+    serviceProvider.databaseType = SupportedDatabases.SupportedDbSQLServer7
+    serviceProvider.server = "DELPHI"
     If serviceProvider Is Nothing Then MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
     Set serviceProvider = Nothing
 ElseIf ContractDataCombo.Text = "TWS" Then
-    progId = "IBTWSSP25.ContractInfoServiceProvider"
+    progId = "IBTWSSP26.ContractInfoServiceProvider"
     Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
     If serviceProvider Is Nothing Then
         MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
     Else
-        serviceProvider.Server = ContractDataServerText
+        serviceProvider.server = ContractDataServerText
         serviceProvider.Port = ContractDataPortText
         serviceProvider.clientID = ContractDataClientIdText
         serviceProvider.providerKey = "IB"
@@ -2092,17 +2100,20 @@ End If
 ' able to start tickers for instruments that aren't defined in the primary contracts
 ' data source
 If SecContractDataCombo.Text = "TradeBuild" Then
-    progId = "TBInfoBase25.ContractInfoSrvcProvider"
+    progId = "TBInfoBase26.ContractInfoSrvcProvider"
     Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
+    serviceProvider.DatabaseName = "Trading"
+    serviceProvider.databaseType = SupportedDatabases.SupportedDbSQLServer7
+    serviceProvider.server = "DELPHI"
     If serviceProvider Is Nothing Then MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
     Set serviceProvider = Nothing
 ElseIf SecContractDataCombo.Text = "TWS" Then
-    progId = "IBTWSSP25.ContractInfoServiceProvider"
+    progId = "IBTWSSP26.ContractInfoServiceProvider"
     Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
     If serviceProvider Is Nothing Then
         MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
     Else
-        serviceProvider.Server = SecContractDataServerText
+        serviceProvider.server = SecContractDataServerText
         serviceProvider.Port = SecContractDataPortText
         serviceProvider.clientID = SecContractDataClientIdText
         serviceProvider.providerKey = "IB"
@@ -2112,17 +2123,20 @@ ElseIf SecContractDataCombo.Text = "TWS" Then
 End If
 
 If HistDataCombo.Text = "TradeBuild" Then
-    progId = "TBInfoBase25.HistDataServiceProvider"
+    progId = "TBInfoBase26.HistDataServiceProvider"
     Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
+    serviceProvider.DatabaseName = "Trading"
+    serviceProvider.databaseType = SupportedDatabases.SupportedDbSQLServer7
+    serviceProvider.server = "DELPHI"
     If serviceProvider Is Nothing Then MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
     Set serviceProvider = Nothing
 ElseIf HistDataCombo.Text = "TWS" Then
-    progId = "IBTWSSP25.HistDataServiceProvider"
+    progId = "IBTWSSP26.HistDataServiceProvider"
     Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
     If serviceProvider Is Nothing Then
         MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
     Else
-        serviceProvider.Server = HistDataServerText
+        serviceProvider.server = HistDataServerText
         serviceProvider.Port = HistDataPortText
         serviceProvider.clientID = HistDataClientIdText
         serviceProvider.providerKey = "IB"
@@ -2130,7 +2144,7 @@ ElseIf HistDataCombo.Text = "TWS" Then
         Set serviceProvider = Nothing
     End If
 ElseIf HistDataCombo.Text = "QuoteTracker" Then
-    progId = "QTSP25.QTServiceProvider"
+    progId = "QTSP26.QTServiceProvider"
     Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
     If serviceProvider Is Nothing Then
         MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
@@ -2152,12 +2166,12 @@ setChartButtonTooltip
 
 If BrokerCombo.Text = "IB via TWS" Then
     ' set up TWS live order submission service provider
-    progId = "IBTWSSP25.OrderSubmissionSrvcProvider"
+    progId = "IBTWSSP26.OrderSubmissionSrvcProvider"
     Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
     If serviceProvider Is Nothing Then
         MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
     Else
-        serviceProvider.Server = BrokerServerText
+        serviceProvider.server = BrokerServerText
         serviceProvider.Port = BrokerPortText
         serviceProvider.clientID = BrokerClientIdText
         serviceProvider.providerKey = "IB"
