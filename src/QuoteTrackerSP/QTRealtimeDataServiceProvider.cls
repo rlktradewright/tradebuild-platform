@@ -53,8 +53,8 @@ Implements IRealtimeDataServiceProvider
 ' Member variables
 '================================================================================
 
-Private mQTServer As String
-Private mQTPort As Long
+Private mServer As String
+Private mPort As Long
 Private mPassword As String
 Private mConnectionRetryIntervalSecs As Long
 Private mkeepConnection As Boolean
@@ -78,8 +78,8 @@ Set mRealtimeDataReaders = New Collection
 
 mName = App.ProductName & "(RT)"
 
-mQTServer = "127.0.0.1"
-mQTPort = 16240
+mServer = "127.0.0.1"
+mPort = 16240
 mConnectionRetryIntervalSecs = 10
 
 mLogLevel = LogLevelLow
@@ -113,12 +113,33 @@ End Property
 
 Private Sub ICommonServiceProvider_Link( _
                 ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
-                ByVal handle As Long)
+                ByVal handle As Long, _
+                ByVal params As Parameters)
+Dim param As Parameter
+
 Set mCommonServiceConsumer = CommonServiceConsumer
 mHandle = handle
 mCommonServiceConsumer.RegisterServiceProvider mHandle, _
                             ServiceProviderTypes.RealtimeData
 
+For Each param In params
+    Select Case UCase$(param.Name)
+    Case UCase$(ParamNameServer)
+        mServer = param.value
+    Case UCase$(ParamNamePort)
+        mPort = param.value
+    Case UCase$(ParamNamePassword)
+        mPassword = param.value
+    Case UCase$(ParamNameConnectionRetryIntervalSecs)
+        mConnectionRetryIntervalSecs = param.value
+    Case UCase$(ParamNameKeepConnection)
+        mkeepConnection = param.value
+    Case UCase$(ParamNameProviderKey)
+        mProviderKey = param.value
+    Case UCase$(ParamNameLogLevel)
+        mLogLevel = param.value
+    End Select
+Next
 End Sub
 
 Private Property Let ICommonServiceProvider_LogLevel( _
@@ -127,11 +148,11 @@ mLogLevel = RHS
 End Property
 
 Private Property Let ICommonServiceProvider_Name(ByVal RHS As String)
-Name = RHS
+mName = RHS
 End Property
 
 Private Property Get ICommonServiceProvider_Name() As String
-ICommonServiceProvider_Name = Name
+ICommonServiceProvider_Name = mName
 End Property
 
 Private Sub ICommonServiceProvider_Terminate()
@@ -156,8 +177,8 @@ reader.realtimeDataServiceProvider = Me
 reader.CommonServiceConsumer = mCommonServiceConsumer
 reader.realtimeDataInputServiceConsumer = serviceConsumer
 reader.StreamingDataConsumer = dataConsumer
-reader.server = mQTServer
-reader.port = mQTPort
+reader.server = mServer
+reader.port = mPort
 reader.password = mPassword
 reader.ConnectionRetryIntervalSecs = mConnectionRetryIntervalSecs
 reader.keepConnection = mkeepConnection
@@ -185,59 +206,8 @@ End Function
 ' Properties
 '================================================================================
 
-Public Property Let ConnectionRetryIntervalSecs(ByVal value As Long)
-mConnectionRetryIntervalSecs = value
-End Property
-
-Public Property Get ConnectionRetryIntervalSecs() As Long
-ConnectionRetryIntervalSecs = mConnectionRetryIntervalSecs
-End Property
-
 Friend Property Get handle() As Long
 handle = mHandle
-End Property
-
-Public Property Let keepConnection(ByVal value As Boolean)
-mkeepConnection = value
-End Property
-
-Public Property Let logLevel(ByVal value As LogLevels)
-mLogLevel = value
-End Property
-
-Public Property Let Name(ByVal value As String)
-mName = value
-End Property
-
-Public Property Get Name() As String
-Name = mName
-End Property
-
-Public Property Let password(ByVal value As String)
-mPassword = value
-End Property
-
-Public Property Let providerKey(ByVal value As String)
-mProviderKey = value
-End Property
-
-Public Property Let QTPort(ByVal value As Long)
-mQTPort = value
-End Property
-
-Public Property Get QTPort() As Long
-QTPort = mQTPort
-End Property
-
-Public Property Let QTServer(ByVal value As String)
-mQTServer = value
-If mQTServer = "" Then
-    mQTServer = "127.0.0.1"
-End If
-End Property
-
-Public Property Get QTServer() As String
-QTServer = mQTServer
 End Property
 
 '================================================================================

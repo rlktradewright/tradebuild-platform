@@ -14,6 +14,14 @@ Public Const TIME_ZONE_ID_DAYLIGHT As Long = 2
 
 Public Const OneMinute As Double = 1 / 1440
 
+Public Const ParamNameServer As String = "Server"
+Public Const ParamNamePort As String = "Port"
+Public Const ParamNamePassword As String = "Password"
+Public Const ParamNameConnectionRetryIntervalSecs As String = "Connection Retry Interval Secs"
+Public Const ParamNameKeepConnection As String = "Keep Connection"
+Public Const ParamNameProviderKey As String = "Provider Key"
+Public Const ParamNameLogLevel As String = "Log Level"
+
 '================================================================================
 ' Enums
 '================================================================================
