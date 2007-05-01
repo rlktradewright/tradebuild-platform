@@ -115,13 +115,38 @@ End Property
 
 Private Sub ICommonServiceProvider_Link( _
                 ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
-                ByVal handle As Long)
+                ByVal handle As Long, _
+                ByVal params As Parameters)
+Dim param As Parameter
+
 On Error GoTo err
 gCommonServiceConsumer = commonServiceConsumer
 Set mCommonServiceConsumer = commonServiceConsumer
 mHandle = handle
 mCommonServiceConsumer.RegisterServiceProvider mHandle, _
                             ServiceProviderTypes.LiveOrderSubmission
+
+For Each param In params
+    Select Case UCase$(param.name)
+    Case UCase$(ParamNameClientId)
+        clientID = param.value
+    Case UCase$(ParamNameConnectionRetryIntervalSecs)
+        connectionRetryIntervalSecs = param.value
+    Case UCase$(ParamNameKeepConnection)
+        keepConnection = param.value
+    Case UCase$(ParamNameLogLevel)
+        logLevel = param.value
+    Case UCase$(ParamNamePort)
+        port = param.value
+    Case UCase$(ParamNameProviderKey)
+        providerKey = param.value
+    Case UCase$(ParamNameServer)
+        server = param.value
+    Case UCase$(ParamNameTwsLogLevel)
+        TWSLogLevel = param.value
+    End Select
+Next
+
 Exit Sub
 err:
 handleFatalError err.number, _
@@ -140,7 +165,7 @@ name = RHS
 End Property
 
 Private Property Get ICommonServiceProvider_Name() As String
-ICommonServiceProvider_Name = name
+ICommonServiceProvider_Name = mName
 End Property
 
 Private Sub ICommonServiceProvider_Terminate()
@@ -197,15 +222,15 @@ End Function
 ' Properties
 '================================================================================
 
-Public Property Let clientID(ByVal value As Long)
+Friend Property Let clientID(ByVal value As Long)
 mClientID = value
 End Property
 
-Public Property Let connectionRetryIntervalSecs(ByVal value As Long)
+Friend Property Let connectionRetryIntervalSecs(ByVal value As Long)
 mConnectionRetryIntervalSecs = value
 End Property
 
-Public Property Get connectionRetryIntervalSecs() As Long
+Friend Property Get connectionRetryIntervalSecs() As Long
 connectionRetryIntervalSecs = mConnectionRetryIntervalSecs
 End Property
 
@@ -213,35 +238,45 @@ Friend Property Get handle() As Long
 handle = mHandle
 End Property
 
-Public Property Let keepConnection(ByVal value As Boolean)
+Friend Property Let keepConnection(ByVal value As Boolean)
 mkeepConnection = value
 End Property
 
-Public Property Let logLevel(ByVal value As LogLevels)
+Friend Property Let logLevel(ByVal value As LogLevels)
 mLogLevel = value
 End Property
 
-Public Property Let name(ByVal value As String)
+Friend Property Let name(ByVal value As String)
 mName = value
 End Property
 
-Public Property Get name() As String
-name = mName
-End Property
-
-Public Property Let port(ByVal value As Long)
+Friend Property Let port(ByVal value As Long)
 mPort = value
 End Property
 
-Public Property Let providerKey(ByVal value As String)
+Friend Property Let providerKey(ByVal value As String)
 mProviderKey = value
 End Property
 
-Public Property Let server(ByVal value As String)
-mServer = IIf(value = "", "127.0.0.1", value)
+Friend Property Let server(ByVal value As String)
+mServer = value
+If mServer = "" Then
+    mServer = "127.0.0.1"
+End If
 End Property
 
-Public Property Let TWSLogLevel(ByVal value As TWSLogLevels)
+Friend Property Let TWSLogLevel(ByVal value As TWSLogLevels)
+Select Case value
+Case TWSLogLevelSystem
+Case TWSLogLevelError
+Case TWSLogLevelWarning
+Case TWSLogLevelInformation
+Case TWSLogLevelDetail
+Case Else
+    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                "IBTWSSP.RealtimeDataServiceProvider::(let)TWSLogLevel", _
+                "Value must be one of the TWSLogLevels enum"
+End Select
 mTWSLogLevel = value
 End Property
 

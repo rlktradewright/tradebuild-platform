@@ -15,6 +15,15 @@ Public Const OrderSubmissionSPName As String = "IB TWS Order Submission Service 
 
 Public Const providerKey As String = "TWS"
 
+Public Const ParamNameClientId As String = "Client Id"
+Public Const ParamNameConnectionRetryIntervalSecs As String = "Connection Retry Interval Secs"
+Public Const ParamNameKeepConnection As String = "Keep Connection"
+Public Const ParamNameLogLevel As String = "Log Level"
+Public Const ParamNamePort As String = "Port"
+Public Const ParamNameProviderKey As String = "Provider Key"
+Public Const ParamNameServer As String = "Server"
+Public Const ParamNameTwsLogLevel As String = "TWS Log Level"
+
 '================================================================================
 ' Enums
 '================================================================================
