@@ -100,7 +100,9 @@ End Property
 
 Private Sub ICommonServiceProvider_Link( _
                             ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
-                            ByVal handle As Long)
+                            ByVal handle As Long, _
+                            ByVal params As Parameters)
+Dim param As Parameter
 Set mCommonServiceConsumer = commonServiceConsumer
 mHandle = handle
 mCommonServiceConsumer.RegisterServiceProvider mHandle, _
@@ -145,7 +147,7 @@ On Error GoTo Err
 mNextReaderID = mNextReaderID + 1
 Set reader = New TickfileReader
 Set ITickfileServiceProvider_CreateTickfileReader = reader
-reader.tickfileServiceProvider = Me
+reader.TickfileServiceProvider = Me
 reader.commonServiceConsumer = mCommonServiceConsumer
 reader.TickfileInputServiceConsumer = serviceConsumer
 reader.StreamingDataConsumer = dataConsumer
@@ -175,7 +177,7 @@ End If
 
 Set writer = New TickfileWriter
 Set ITickfileServiceProvider_CreateTickfileWriter = writer
-writer.tickfileServiceProvider = Me
+writer.TickfileServiceProvider = Me
 writer.TickfileFormat = formatId
 writer.TickFileVersion = formatVersion
 writer.path = location
@@ -245,7 +247,7 @@ Friend Property Get handle() As Long
 handle = mHandle
 End Property
 
-Public Property Let Name(ByVal value As String)
+Friend Property Let Name(ByVal value As String)
 mName = value
 End Property
 
