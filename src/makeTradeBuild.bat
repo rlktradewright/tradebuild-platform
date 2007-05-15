@@ -1,8 +1,10 @@
+midl /mktyplib203 typelib/chartskiltypes25.idl
+pause
 regtlib typelib/chartskiltypes25.tlb
 pause
-regtlib typelib/tradebuildsp25.tlb
+midl /mktyplib203 typelib/tradebuildsp25.idl
 pause
-vb6 /m "../TradeWright Common/tasks/tasks.vbp"
+regtlib typelib/tradebuildsp25.tlb
 pause
 vb6 /m TimeframeUtils\TimeframeUtils.vbp
 pause
