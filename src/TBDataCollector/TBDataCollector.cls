@@ -8,7 +8,7 @@ BEGIN
 END
 Attribute VB_Name = "TBDataCollector"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = True
+Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -26,12 +26,9 @@ Implements InfoListener
 Event Connected()
 Event connectFailed(ByVal description As String)
 Event ConnectionClosed()
-Event ConnectionRecovered()
-Event connectionToTWSClosed( _
-                ByVal Reconnecting As Boolean)
-Event errorMessage( _
+Event ErrorMessage( _
                 ByVal errorCode As Long, _
-                ByVal errorMessage As String)
+                ByVal errorMsg As String)
 Event Info(ev As InfoEvent)
 Event NotifyMessage( _
                 ByVal eventCode As ApiNotifyCodes, _
@@ -52,6 +49,37 @@ Event TimeframeAdded( _
 ' Constants
 '================================================================================
 
+Private Const ProjectName                   As String = "TBDataCollector26"
+Private Const ModuleName                    As String = "TBDataCollector"
+
+' This is the value expected for ApplicationName in the config file
+Private Const ApplicationConfigName As String = "TradeBuild Data Collector"
+
+
+Private Const AttributeNameEnabled          As String = "Enabled"
+Private Const AttributeNameTimeframeLength  As String = "Length"
+Private Const AttributeNameTimeframeUnits   As String = "Units"
+Private Const AttributeNameSaveInterval     As String = "SaveInterval"
+Private Const AttributeNameLocalSYmbol      As String = "LocalSymbol"
+Private Const AttributeNameSYmbol           As String = "Symbol"
+Private Const AttributeNameSecType          As String = "SecType"
+Private Const AttributeNameExpiry           As String = "Expiry"
+Private Const AttributeNameExchange         As String = "Exchange"
+Private Const AttributeNameCurrency         As String = "Currency"
+Private Const AttributeNameStrikePrice      As String = "StrikePrice"
+Private Const AttributeNameRight            As String = "Right"
+
+Private Const ConfigNameServiceProviders    As String = "TradeBuildServiceProviders"
+Private Const ConfigNameStudyLibraries      As String = "TradeBuildStudyLibraries"
+Private Const ConfigNameConfig              As String = "DataCollectorConfiguration"
+Private Const ConfigNameTickDataFormat      As String = "TickDataFormat"
+Private Const ConfigNameTickfilePath        As String = "TickfilePath"
+Private Const ConfigNameTimeframes          As String = "Timeframes"
+Private Const ConfigNameTimeframe           As String = "Timeframe"
+Private Const ConfigNameContracts           As String = "Contracts"
+Private Const ConfigNameContract            As String = "Contract"
+
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -60,53 +88,35 @@ Event TimeframeAdded( _
 ' Types
 '================================================================================
 
-Public Type InstrumentSpecifier
-    shortName           As String
-    symbol              As String
-    secType             As String
-    expiry              As String
-    exchange            As String
-    currencyCode        As String
-    strikePrice         As Double
-    right               As String
-End Type
 '================================================================================
 ' Member variables
 '================================================================================
 
-Private WithEvents mTradeBuildAPI As TradeBuildAPI
+Private WithEvents mTradeBuildAPI                       As TradeBuildAPI
 Attribute mTradeBuildAPI.VB_VarHelpID = -1
 
-Private mShortNames() As String
-Private mShortnamesMaxIndex As Long
-Private mShortnamesIndex As Long
+Private mConfig                                         As ConfigItemSet
 
-Private mInstruments() As InstrumentSpecifier
-Private mInstrumentsIndex As Long
-Private mInstrumentsMaxIndex As Long
+Private mTimeframesConfig                               As ConfigItemList
 
-Private mMonth As String
-Private mServer As String
-Private mPort As Long
-Private mClientID As Long
-Private mWriteBars As Boolean
-Private mWriteTicks As Boolean
+Private mContractsConfig                                As ConfigItemList
+Private mContractsIndex                                 As Long
 
-Private WithEvents mTicker As ticker
+Private mTimeframes()                                   As Timeframe
+
+Private mWriteBars                                      As Boolean
+Private mWriteTicks                                     As Boolean
+
+Private WithEvents mTicker                              As ticker
 Attribute mTicker.VB_VarHelpID = -1
 
-Private mTimeframe1 As Timeframe
-Private mTimeframe5 As Timeframe
-Private mTimeframe15 As Timeframe
-Private mTimeframe60 As Timeframe
+Private mSupportedOutputFormats()                       As TickfileFormatSpecifier
+Private mOutputFormat                                   As String
+Private mOutputPath                                     As String
 
-Private mSupportedOutputFormats() As TickfileFormatSpecifier
-Private mOutputFormat As String
-Private mOutputPath As String
-
-Private WithEvents mTimer As TimerUtils2.IntervalTimer
+Private WithEvents mTimer                               As TimerUtils2.IntervalTimer
 Attribute mTimer.VB_VarHelpID = -1
-Private mTimerList As TimerUtils2.TimerList
+Private mTimerList                                      As TimerUtils2.TimerList
 
 '================================================================================
 ' Class Event Handlers
@@ -115,19 +125,10 @@ Private mTimerList As TimerUtils2.TimerList
 Private Sub Class_Initialize()
 
 Set mTradeBuildAPI = New TradeBuildAPI
-'mTradeBuildAPI.ServiceProviders.Add New TBInfoBase25.TickfileServiceProvider
-'mTradeBuildAPI.ServiceProviders.Add New TBInfoBase25.ContractInfoServiceProvider
-'mTradeBuildAPI.ServiceProviders.Add New TBInfoBase25.HistDataServiceProvider
-mTradeBuildAPI.ServiceProviders.Add New TickfileSP26.TickfileServiceProvider
 
 mTradeBuildAPI.addInfoListener Me, TradeBuildListenValueTypes.VTLog
 
 mOutputPath = App.Path
-
-mSupportedOutputFormats = mTradeBuildAPI.SupportedOutputTickfileFormats
-
-mShortnamesMaxIndex = -1
-mInstrumentsMaxIndex = -1
 
 Set mTimerList = createTimerList(200)
 mTimerList.StartTiming
@@ -145,12 +146,6 @@ End Sub
 '================================================================================
 ' mTicker Event Handlers
 '================================================================================
-
-Private Sub mTicker_ContractInvalid( _
-                ByVal ContractSpecifier As ContractSpecifier, _
-                ByVal reason As String)
-startNextTicker
-End Sub
 
 Private Sub mTicker_Notification(ev As NotificationEvent)
 If ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToRealtimeDataSource Then
@@ -171,6 +166,7 @@ End Sub
 
 Private Sub mTicker_stateChange(ev As TWUtilities.StateChangeEvent)
 Dim lTickerListener As TickerListener
+Dim i As Long
 
 If ev.State = TickerStates.TickerStateRunning Then
 
@@ -184,10 +180,9 @@ If ev.State = TickerStates.TickerStateRunning Then
     RaiseEvent TickerListenerAdded(lTickerListener)
     
     If mWriteBars Then
-        RaiseEvent TimeframeAdded(mTimeframe1)
-        RaiseEvent TimeframeAdded(mTimeframe5)
-        RaiseEvent TimeframeAdded(mTimeframe15)
-        RaiseEvent TimeframeAdded(mTimeframe60)
+        For i = 0 To UBound(mTimeframes)
+            RaiseEvent TimeframeAdded(mTimeframes(i))
+        Next
     End If
     
     startNextTicker
@@ -200,28 +195,32 @@ End Sub
 
 Private Sub mTimer_TimerExpired()
 Dim contractSpec As ContractSpecifier
+Dim contractConfig As ConfigItem
+Dim timeframeConfig As ConfigItem
+Dim i As Long
 Dim failpoint As Integer
 
 On Error GoTo err
 
-If mShortnamesIndex > mShortnamesMaxIndex And _
-    mInstrumentsIndex > mInstrumentsMaxIndex Then Exit Sub
+mContractsIndex = mContractsIndex + 1
+If mContractsIndex > mContractsConfig.entries.Count Then Exit Sub
 
 failpoint = 100 '=====================================================
-If mShortnamesIndex <= mShortnamesMaxIndex Then
-    Set contractSpec = mTradeBuildAPI.newContractSpecifier(mShortNames(mShortnamesIndex))
-    mShortnamesIndex = mShortnamesIndex + 1
-ElseIf mInstrumentsIndex <= mInstrumentsMaxIndex Then
-    Set contractSpec = mTradeBuildAPI.newContractSpecifier(mInstruments(mInstrumentsIndex).shortName, _
-                                            mInstruments(mInstrumentsIndex).symbol, _
-                                            mInstruments(mInstrumentsIndex).exchange, _
-                                            SecTypeFromString(mInstruments(mInstrumentsIndex).secType), _
-                                            mInstruments(mInstrumentsIndex).currencyCode, _
-                                            mInstruments(mInstrumentsIndex).expiry, _
-                                            mInstruments(mInstrumentsIndex).strikePrice, _
-                                            OptionRightFromString(mInstruments(mInstrumentsIndex).right))
-    mInstrumentsIndex = mInstrumentsIndex + 1
-End If
+
+Set contractConfig = mContractsConfig.entries.Item(mContractsIndex)
+
+failpoint = 200 '=====================================================
+
+With contractConfig
+    Set contractSpec = mTradeBuildAPI.newContractSpecifier(.getAttribute(AttributeNameLocalSYmbol), _
+                                            .getAttribute(AttributeNameSYmbol), _
+                                            .getAttribute(AttributeNameExchange), _
+                                            SecTypeFromString(.getAttribute(AttributeNameSecType)), _
+                                            .getAttribute(AttributeNameCurrency), _
+                                            .getAttribute(AttributeNameExpiry), _
+                                            "0" & .getAttribute(AttributeNameStrikePrice), _
+                                            OptionRightFromString(.getAttribute(AttributeNameRight)))
+End With
 
 Set mTicker = mTradeBuildAPI.Tickers.Add(False)
 
@@ -233,10 +232,18 @@ If mWriteTicks Then
 End If
 
 If mWriteBars Then
-    Set mTimeframe1 = mTicker.Timeframes.Add(1, TimePeriodUnits.TimePeriodMinute, "1min", 0, 15)
-    Set mTimeframe5 = mTicker.Timeframes.Add(5, TimePeriodUnits.TimePeriodMinute, "5min", 0, 30)
-    Set mTimeframe15 = mTicker.Timeframes.Add(15, TimePeriodUnits.TimePeriodMinute, "15min", 0, 60)
-    Set mTimeframe60 = mTicker.Timeframes.Add(60, TimePeriodUnits.TimePeriodMinute, "60min", 0, 60)
+    Erase mTimeframes
+    ReDim mTimeframes(mTimeframesConfig.entries.Count - 1) As Timeframe
+
+    For i = 1 To mTimeframesConfig.entries.Count
+        Set timeframeConfig = mTimeframesConfig.entries.Item(i)
+        Set mTimeframes(i - 1) = mTicker.Timeframes.Add( _
+                                timeframeConfig.getAttribute(AttributeNameTimeframeLength), _
+                                TimePeriodUnitsFromString(timeframeConfig.getAttribute(AttributeNameTimeframeUnits)), _
+                                "", _
+                                0, _
+                                saveIntervalSeconds:=timeframeConfig.getAttribute(AttributeNameSaveInterval))
+    Next
 End If
 
 mTicker.StartTicker contractSpec
@@ -255,7 +262,7 @@ End Sub
 '================================================================================
 
 Private Sub mTradeBuildAPI_Error(ev As TWUtilities.ErrorEvent)
-RaiseEvent errorMessage(ev.errorCode, _
+RaiseEvent ErrorMessage(ev.errorCode, _
                     ev.errorMsg)
 End Sub
 
@@ -270,7 +277,7 @@ If ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
                                         .message)
     End With
 Else
-    RaiseEvent errorMessage(ev.eventCode, _
+    RaiseEvent ErrorMessage(ev.eventCode, _
                         ev.eventMessage)
 End If
 End Sub
@@ -279,83 +286,52 @@ End Sub
 ' Properties
 '================================================================================
 
-Public Property Let ClientID(ByVal val As String)
-mClientID = val
-End Property
-
-Public Property Let Instruments(ByRef val() As InstrumentSpecifier)
-On Error Resume Next
-mInstruments = val
-mInstrumentsMaxIndex = UBound(mInstruments)
-End Property
-
-Public Property Let OutputFormat(ByVal val As String)
-Dim i As Long
-mOutputFormat = ""
-For i = 0 To UBound(mSupportedOutputFormats)
-    If val = mSupportedOutputFormats(i).Name Then
-        mOutputFormat = mSupportedOutputFormats(i).FormalID
-        Exit Property
-    End If
-Next
-End Property
-
-Public Property Get OutputFormat() As String
-Dim i As Long
-For i = 0 To UBound(mSupportedOutputFormats)
-    If mSupportedOutputFormats(i).FormalID = mOutputFormat Then
-        OutputFormat = mSupportedOutputFormats(i).Name
-        Exit Property
-    End If
-Next
-End Property
-
-Public Property Let OutputPath(ByVal val As String)
-mOutputPath = val
-End Property
-
-Public Property Let Port(ByVal val As Long)
-mPort = val
-End Property
-
-Public Property Let Server(ByVal val As String)
-mServer = val
-End Property
-
-Public Property Let ShortNames(ByRef val() As String)
-On Error Resume Next
-mShortNames = val
-mShortnamesMaxIndex = UBound(mShortNames)
-End Property
-
-Public Property Let WriteBars(ByVal val As Boolean)
-mWriteBars = val
-End Property
-
-Public Property Let WriteTicks(ByVal val As Boolean)
-mWriteTicks = val
-End Property
-
-
 '================================================================================
 ' Methods
 '================================================================================
 
-Public Sub startCollection()
-Dim sp As Object
-Set sp = mTradeBuildAPI.ServiceProviders.Add(CreateObject("IBTWSSP25.RealtimeDataServiceProvider"))
-sp.Server = mServer
-sp.Port = mPort
-sp.ClientID = mClientID
-sp.providerKey = "IB"
-sp.keepConnection = True
+Friend Sub initialise( _
+                ByVal configFilePath As String)
+Dim lConfigFile As ConfigFile
+Dim i As Long
+Dim outputformat As String
+Dim val As ConfigItem
 
-Set sp = mTradeBuildAPI.ServiceProviders.Add(CreateObject("IBTWSSP25.ContractInfoServiceProvider"))
-sp.Server = mServer
-sp.Port = mPort
-sp.ClientID = mClientID
-sp.providerKey = "IB"
-sp.keepConnection = True
+Set lConfigFile = LoadConfigurationFile(configFilePath)
+
+If lConfigFile.applicationName <> ApplicationConfigName Then _
+    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "initialise", _
+            "Configuration file is not valid for this program"
+
+Set mConfig = lConfigFile.entries.Item(ConfigNameConfig)
+
+mTradeBuildAPI.ServiceProviders.loadServiceProviderConfiguration lConfigFile.entries.Item(ConfigNameServiceProviders)
+LoadStudyLibraryConfiguration lConfigFile.entries.Item(ConfigNameStudyLibraries)
+
+mSupportedOutputFormats = mTradeBuildAPI.SupportedOutputTickfileFormats
+
+Set val = mConfig.entries.Item(ConfigNameTickDataFormat)
+mWriteTicks = val.getAttribute(AttributeNameEnabled)
+outputformat = val.value
+For i = 0 To UBound(mSupportedOutputFormats)
+    If outputformat = mSupportedOutputFormats(i).Name Then
+        mOutputFormat = mSupportedOutputFormats(i).FormalID
+        Exit For
+    End If
+Next
+
+Set val = mConfig.entries.Item(ConfigNameTickfilePath)
+mOutputPath = val.value
+
+Set mTimeframesConfig = mConfig.entries.Item(ConfigNameTimeframes)
+mWriteBars = mTimeframesConfig.getAttribute(AttributeNameEnabled)
+
+Set mContractsConfig = mConfig.entries.Item(ConfigNameContracts)
+
+End Sub
+
+Public Sub startCollection()
 
 ' setup the tickers using a short timer
 Set mTimer = createIntervalTimer(1)
@@ -375,13 +351,11 @@ End Sub
 '================================================================================
 
 Private Sub startNextTicker()
-If mShortnamesIndex <= mShortnamesMaxIndex Then
-    mTimer.startTimer
-ElseIf mInstrumentsIndex <= mInstrumentsMaxIndex Then
-    mTimer.startTimer
-Else
+If mContractsIndex > mContractsConfig.entries.Count Then
     Set mTimer = Nothing
+    Exit Sub
 End If
+mTimer.startTimer
 End Sub
 
 
