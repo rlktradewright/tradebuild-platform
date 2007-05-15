@@ -13,66 +13,76 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-'================================================================================
+'@===============================================================================
 ' Description
-'================================================================================
+'@===============================================================================
 '
 '
-'================================================================================
+'@===============================================================================
 ' Amendment history
-'================================================================================
+'@===============================================================================
 '
 '
 '
 '
 
-'================================================================================
+'@===============================================================================
 ' Interfaces
-'================================================================================
+'@===============================================================================
 
 Implements IBarDataWriter
 
-'================================================================================
+'@===============================================================================
 ' Events
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+'@===============================================================================
 ' Constants
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+Private Const ProjectName As String = "TBInfoBase26"
+Private Const ModuleName As String = "HistDataWriter"
+
+'@===============================================================================
 ' Enums
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+'@===============================================================================
 ' Types
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+'@===============================================================================
 ' Member variables
-'================================================================================
+'@===============================================================================
 
-Private mHistDataServiceProvider As histDataServiceProvider
+Private WithEvents mTradingDB       As TradingDB
+Attribute mTradingDB.VB_VarHelpID = -1
+Private mConnectionString           As String
 
-Private mCommonServiceConsumer As ICommonServiceConsumer
-Private mServiceConsumer As IBarDataOutputServiceConsumer
-Private mServiceProviderName As String
+Private mHistDataServiceProvider    As histDataServiceProvider
 
-Private mContractSpec As IContractSpecifier
-Private WithEvents mBarWriter As TradingDO2.BarDataAccessor
+Private mCommonServiceConsumer      As ICommonServiceConsumer
+Private mServiceConsumer            As IBarDataOutputServiceConsumer
+Private mServiceProviderName        As String
+
+Private mContractSpec               As IContractSpecifier
+Private WithEvents mBarWriter       As BarDataWriter
 Attribute mBarWriter.VB_VarHelpID = -1
 
-Private mPath As String
+Private mPath                       As String
 
-Private mBarsWritten As Long
+Private mBarsWritten                As Long
+Private mWrites                     As Long
 
-'================================================================================
+Private mInstrument                 As instrument
+
+'@===============================================================================
 ' Class Event Handlers
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+'@===============================================================================
 ' IBarDataWriter Interface Members
-'================================================================================
+'@===============================================================================
 
 Private Property Get IBarDataWriter_ContractSpecifier() As TradeBuildSP.IContractSpecifier
 
@@ -85,7 +95,7 @@ mHistDataServiceProvider.dataWriterFinished Me
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "HistDataWriter" & "::" & "IBarDataWriter_ReleaseDataStore", _
+                ProjectName & "." & "HistDataWriter" & "::" & "IBarDataWriter_ReleaseDataStore", _
                 Err.Description
 End Sub
 
@@ -94,7 +104,11 @@ Private Sub IBarDataWriter_WriteBar( _
                 ByVal barType As BarTypes, _
                 ByVal barLength As Long, _
                 ByVal barUnit As TimePeriodUnits)
+Static prevTimestamp As Date
 On Error GoTo Err
+
+Set mBarWriter = mInstrument.CreateBarDataWriter
+
 With data
     mBarWriter.WriteBar .timestamp, _
                         barType, _
@@ -106,17 +120,22 @@ With data
                         .volume, _
                         .tickVolume, _
                         0
+    If prevTimestamp <> .timestamp Then
+        mBarsWritten = mBarsWritten + 1
+        prevTimestamp = .timestamp
+    End If
 End With
-mBarsWritten = mBarsWritten + 1
+mWrites = mWrites + 1
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "HistDataWriter" & "::" & "IBarDataWriter_WriteBar", _
+                ProjectName & "." & "HistDataWriter" & "::" & "IBarDataWriter_WriteBar", _
                 Err.Description
 End Sub
-'================================================================================
+
+'@===============================================================================
 ' mBarWriter Event Handlers
-'================================================================================
+'@===============================================================================
 
 Private Sub mBarWriter_ConnectFailed(ByVal errorCode As Long, ByVal errorDesc As String)
 On Error GoTo Err
@@ -126,7 +145,7 @@ mServiceConsumer.NotifyEvent StandardSPEventCodes.HDCantConnectDataSource, _
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "HistDataWriter" & "::" & "mBarWriter_ConnectFailed", _
+                ProjectName & "." & "HistDataWriter" & "::" & "mBarWriter_ConnectFailed", _
                 Err.Description
 End Sub
 
@@ -138,21 +157,25 @@ mCommonServiceConsumer.ServiceProviderError errorCode, _
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "HistDataWriter" & "::" & "mBarWriter_Error", _
+                ProjectName & "." & "HistDataWriter" & "::" & "mBarWriter_Error", _
                 Err.Description
 End Sub
 
-Private Sub mBarWriter_NotReady()
+'@===============================================================================
+' mTradingDB Event Handlers
+'@===============================================================================
+
+Private Sub mTradingDB_ConnectFailed(ByVal errorCode As Long, ByVal errorDesc As String)
 On Error GoTo Err
 mServiceConsumer.Ready = False
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "HistDataWriter" & "::" & "mBarWriter_NotReady", _
+                ProjectName & "." & "HistDataWriter" & "::" & "mBarWriter_NotReady", _
                 Err.Description
 End Sub
 
-Private Sub mBarWriter_Ready()
+Private Sub mTradingDB_ConnectSucceeded()
 On Error GoTo Err
 
 mServiceConsumer.NotifyEvent StandardSPEventCodes.HDConnectedToDataSource, _
@@ -160,45 +183,19 @@ mServiceConsumer.NotifyEvent StandardSPEventCodes.HDConnectedToDataSource, _
                         mHistDataServiceProvider.handle
 
 mServiceConsumer.Ready = True
-mServiceConsumer.OutputBarfileCreated mBarWriter.connectionString
+mServiceConsumer.OutputBarfileCreated mConnectionString
+
+getInstrument
+
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "HistDataWriter" & "::" & "mBarWriter_Ready", _
+                ProjectName & "." & "HistDataWriter" & "::" & "mBarWriter_Ready", _
                 Err.Description
 End Sub
-'================================================================================
+'@===============================================================================
 ' Properties
-'================================================================================
-
-Friend Property Let CommonServiceConsumer(ByVal value As ICommonServiceConsumer)
-Set mCommonServiceConsumer = value
-End Property
-
-Friend Property Let ContractSpecifier(ByVal RHS As TradeBuildSP.IContractSpecifier)
-Dim lInstrumentFactory As TradingDO2.cInstrumentFactory
-Dim lInstrument As TradingDO2.cInstrument
-
-If Not RHS Is Nothing Then
-    Set mContractSpec = RHS.Clone
-End If
-
-Set lInstrumentFactory = New TradingDO2.cInstrumentFactory
-With mContractSpec
-    Set lInstrument = lInstrumentFactory.loadBySpec(.symbol, _
-                                secTypeToString(.SecType), _
-                                Left$(.Expiry, 6), _
-                                .exchange, _
-                                .currencyCode, _
-                                .Strike, _
-                                optRightToString(.Right), _
-                                .localSymbol)
-End With
-Debug.Assert Not lInstrument Is Nothing
-
-Set mBarWriter = lInstrument.CreateBarDataAccessor
-
-End Property
+'@===============================================================================
 
 Friend Property Let histDataServiceProvider( _
                 ByVal value As histDataServiceProvider)
@@ -209,30 +206,63 @@ Friend Property Let Path(ByVal value As String)
 mPath = value
 End Property
 
-Friend Property Let BarDataOutputServiceConsumer(ByVal value As IBarDataOutputServiceConsumer)
-Set mServiceConsumer = value
-End Property
-
-Friend Property Let ServiceProviderName(ByVal value As String)
-mServiceProviderName = value
-End Property
-
-'================================================================================
+'@===============================================================================
 ' Methods
-'================================================================================
+'@===============================================================================
 
 Friend Sub finish()
 mCommonServiceConsumer.NotifyListeners mServiceProviderName & vbCrLf & _
-                            "    Total bars written: " & mBarsWritten, _
+                            "    Total bars written (" & mContractSpec.localSymbol & "): " & mBarsWritten & _
+                            " in " & mWrites & " database writes", _
                             TradeBuildSP.StandardListenValueTypes.Log, _
                             Me
 Set mBarWriter = Nothing
 Set mServiceConsumer = Nothing
 End Sub
 
-'================================================================================
+Friend Sub initialise( _
+                ByVal Name As String, _
+                ByVal connectionString As String, _
+                ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
+                ByVal barDataOutputServiceConsumer As TradeBuildSP.IBarDataOutputServiceConsumer, _
+                ByVal histDataServiceProvider As TradeBuildSP.IBarDataServiceProvider, _
+                ByVal contractSpec As TradeBuildSP.IContractSpecifier)
+mServiceProviderName = Name
+
+Set mCommonServiceConsumer = CommonServiceConsumer
+Set mServiceConsumer = barDataOutputServiceConsumer
+
+mConnectionString = connectionString
+Set mTradingDB = CreateTradingDB(mConnectionString)
+
+Set mHistDataServiceProvider = histDataServiceProvider
+Set mContractSpec = contractSpec.Clone
+
+End Sub
+
+'@===============================================================================
 ' Helper Functions
-'================================================================================
+'@===============================================================================
+
+Friend Sub getInstrument()
+Dim lInstrumentFactory As InstrumentFactory
+
+Set lInstrumentFactory = mTradingDB.InstrumentFactory
+
+With mContractSpec
+    Set mInstrument = lInstrumentFactory.loadBySpec( _
+                                .localSymbol, _
+                                .Symbol, _
+                                .Exchange, _
+                                gSecTypeToCategory(.secType), _
+                                .CurrencyCode, _
+                                Left$(.Expiry, 6), _
+                                .Strike, _
+                                gOptRightToString(.Right))
+End With
+Debug.Assert Not mInstrument Is Nothing
+
+End Sub
 
 Private Sub handleFatalError( _
                 ByVal Number As Long, _

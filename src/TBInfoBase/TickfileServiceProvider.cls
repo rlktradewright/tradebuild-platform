@@ -13,70 +13,87 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-'================================================================================
+'@===============================================================================
 ' Description
-'================================================================================
+'@===============================================================================
 '
 '
-'================================================================================
+'@===============================================================================
 ' Amendment history
-'================================================================================
+'@===============================================================================
 '
 '
 '
 '
 
-'================================================================================
+'@===============================================================================
 ' Interfaces
-'================================================================================
+'@===============================================================================
 
 Implements ICommonServiceProvider
 Implements ITickfileServiceProvider
 
-'================================================================================
+'@===============================================================================
 ' Events
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+'@===============================================================================
 ' Constants
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+Private Const ProjectName As String = "TBInfoBase26"
+Private Const ModuleName As String = "TickfileServiceProvider"
+
+'@===============================================================================
 ' Enums
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+'@===============================================================================
 ' Types
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+'@===============================================================================
 ' Member variables
-'================================================================================
+'@===============================================================================
 
 Private mName As String
 
 Private mHandle As Long
 Private mCommonServiceConsumer As ICommonServiceConsumer
 
+Private mConnectionString As String
+
 Private mNextReaderID As Long
 
 Private mTickfileDataReaders As Collection
 Private mTickfileDataWriters As Collection
 
-'================================================================================
+Private mDatabaseType As DatabaseTypes
+Private mDatabaseName As String
+Private mServer As String
+Private mUserName As String
+Private mPassword As String
+
+'@===============================================================================
 ' Class Event Handlers
-'================================================================================
+'@===============================================================================
 
 Private Sub Class_Initialize()
 Set mTickfileDataReaders = New Collection
 Set mTickfileDataWriters = New Collection
 
 mName = SQLDBTickfileSPName
+
+mDatabaseType = DbSQLServer2005
+mDatabaseName = "Trading"
+mServer = "localhost"
+mUserName = ""
+mPassword = ""
 End Sub
 
-'================================================================================
+'@===============================================================================
 ' ICommonServiceProvider Interface Members
-'================================================================================
+'@===============================================================================
 
 Private Property Get ICommonServiceProvider_Details() As TradeBuildSP.ServiceProviderDetails
 Dim details As TradeBuildSP.ServiceProviderDetails
@@ -98,11 +115,31 @@ End Property
 
 Private Sub ICommonServiceProvider_Link( _
                 ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
-                ByVal handle As Long)
+                ByVal handle As Long, _
+                ByVal params As Parameters)
+Dim param As Parameter
+
 Set mCommonServiceConsumer = CommonServiceConsumer
 mHandle = handle
 mCommonServiceConsumer.RegisterServiceProvider mHandle, _
                             ServiceProviderTypes.Tickfile
+
+For Each param In params
+    Select Case UCase$(param.Name)
+    Case UCase$(ParamNameConnectionString)
+        connectionString = param.value
+    Case UCase$(ParamNameDatabaseType)
+        databaseType = DatabaseTypeFromString(param.value)
+    Case UCase$(ParamNameDatabaseName)
+        databaseName = param.value
+    Case UCase$(ParamNameServer)
+        server = param.value
+    Case UCase$(ParamNameUserName)
+        username = param.value
+    Case UCase$(ParamNamePassword)
+        password = param.value
+    End Select
+Next
 
 End Sub
 
@@ -128,33 +165,47 @@ Set mCommonServiceConsumer = Nothing
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "TickfileServiceProvider" & "::" & "ICommonServiceProvider_Terminate", _
+                ProjectName & "." & "TickfileServiceProvider" & "::" & "ICommonServiceProvider_Terminate", _
                 Err.Description
 End Sub
 
-'================================================================================
+'@===============================================================================
 ' ITickfileServiceProvider Interface Members
-'================================================================================
+'@===============================================================================
 
 Private Function ITickfileServiceProvider_CreateTickfileReader( _
                             ByVal DataConsumer As TradeBuildSP.IStreamingDataConsumer, _
                             ByVal serviceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
                             ByVal FormatIdentifier As String) As TradeBuildSP.ITickfileReader
 Dim reader As TickfileReader
+Dim connectionString As String
+
 On Error GoTo Err
 mNextReaderID = mNextReaderID + 1
 Set reader = New TickfileReader
 Set ITickfileServiceProvider_CreateTickfileReader = reader
-reader.tickfileServiceProvider = Me
-reader.CommonServiceConsumer = mCommonServiceConsumer
-reader.TickfileInputServiceConsumer = serviceConsumer
-reader.StreamingDataConsumer = DataConsumer
-reader.ServiceProviderName = mName & " (reader)"
+
+If mConnectionString <> "" Then
+    connectionString = mConnectionString
+Else
+    connectionString = GenerateConnectionString(mDatabaseType, _
+                                                mServer, _
+                                                mDatabaseName, _
+                                                mUserName, _
+                                                mPassword)
+End If
+
+reader.initialise mName & " (reader)", _
+                    connectionString, _
+                    mCommonServiceConsumer, _
+                    serviceConsumer, _
+                    Me, _
+                    DataConsumer
 mTickfileDataReaders.Add reader
 Exit Function
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "TickfileServiceProvider" & "::" & "ITickfileServiceProvider_CreateTickfileReader", _
+                ProjectName & "." & "TickfileServiceProvider" & "::" & "ITickfileServiceProvider_CreateTickfileReader", _
                 Err.Description
 End Function
 
@@ -163,20 +214,32 @@ Private Function ITickfileServiceProvider_CreateTickfileWriter( _
                             Optional ByVal FormatIdentifier As String = "", _
                             Optional ByVal location As String = "") As TradeBuildSP.ITickfileWriter
 Dim writer As TickfileWriter
+Dim connectionString As String
 
 On Error GoTo Err
 Set writer = New TickfileWriter
 Set ITickfileServiceProvider_CreateTickfileWriter = writer
-writer.tickfileServiceProvider = Me
-writer.Path = location
-writer.CommonServiceConsumer = mCommonServiceConsumer
-writer.TickfileOutputServiceConsumer = serviceConsumer
-writer.ServiceProviderName = mName & " (writer)"
+
+If mConnectionString <> "" Then
+    connectionString = mConnectionString
+Else
+    connectionString = GenerateConnectionString(mDatabaseType, _
+                                                mServer, _
+                                                mDatabaseName, _
+                                                mUserName, _
+                                                mPassword)
+End If
+
+writer.initialise mName & " (writer)", _
+                connectionString, _
+                mCommonServiceConsumer, _
+                serviceConsumer, _
+                Me
 mTickfileDataWriters.Add writer
 Exit Function
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "TickfileServiceProvider" & "::" & "ITickfileServiceProvider_CreateTickfileWriter", _
+                ProjectName & "." & "TickfileServiceProvider" & "::" & "ITickfileServiceProvider_CreateTickfileWriter", _
                 Err.Description
 End Function
 
@@ -203,19 +266,34 @@ Then
 End If
 End Function
 
-'================================================================================
+'@===============================================================================
 ' xxxx Event Handlers
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+'@===============================================================================
 ' Properties
-'================================================================================
+'@===============================================================================
+
+Friend Property Let connectionString( _
+                ByVal value As String)
+mConnectionString = value
+End Property
+
+Friend Property Let databaseName( _
+                ByVal value As String)
+mDatabaseName = value
+End Property
+
+Friend Property Let databaseType( _
+                ByVal value As DatabaseTypes)
+mDatabaseType = value
+End Property
 
 Friend Property Get handle() As Long
 handle = mHandle
 End Property
 
-Public Property Let Name(ByVal value As String)
+Friend Property Let Name(ByVal value As String)
 mName = value
 End Property
 
@@ -223,9 +301,24 @@ Public Property Get Name() As String
 Name = mName
 End Property
 
-'================================================================================
+Friend Property Let password( _
+                ByVal value As String)
+mPassword = value
+End Property
+                
+Friend Property Let server( _
+                ByVal value As String)
+mServer = value
+End Property
+                
+Friend Property Let username( _
+                ByVal value As String)
+mUserName = value
+End Property
+
+'@===============================================================================
 ' Methods
-'================================================================================
+'@===============================================================================
 
 Friend Sub dataReaderFinished( _
                 ByVal dataReader As TickfileReader)
@@ -255,9 +348,9 @@ For Each writer In mTickfileDataWriters
 Next
 End Sub
 
-'================================================================================
+'@===============================================================================
 ' Helper Functions
-'================================================================================
+'@===============================================================================
 
 Private Sub finishReaders()
 Dim reader As TickfileReader

@@ -13,44 +13,51 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-'================================================================================
+'@===============================================================================
 ' Description
-'================================================================================
+'@===============================================================================
 '
 '
-'================================================================================
+'@===============================================================================
 ' Amendment history
-'================================================================================
+'@===============================================================================
 '
 '
 '
 '
 
-'================================================================================
+'@===============================================================================
 ' Interfaces
-'================================================================================
+'@===============================================================================
 
 Implements ITickfileReader
 
-'================================================================================
+'@===============================================================================
 ' Events
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+'@===============================================================================
 ' Constants
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+Private Const ProjectName As String = "TBInfoBase26"
+Private Const ModuleName As String = "TickfileReader"
+
+'@===============================================================================
 ' Enums
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+'@===============================================================================
 ' Types
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+'@===============================================================================
 ' Member variables
-'================================================================================
+'@===============================================================================
+
+Private WithEvents mTradingDB       As TradingDB
+Attribute mTradingDB.VB_VarHelpID = -1
+Private mConnectionString           As String
 
 Private mTickfileServiceProvider As tickfileServiceProvider
 
@@ -65,9 +72,9 @@ Private mReplayProgressEventFrequency As Long
 
 Private mContract As IContract
 Private mContractSpecifier As IContractSpecifier
-Private mInstrument As TradingDO2.cInstrument
+Private mInstrument As instrument
 Attribute mInstrument.VB_VarHelpID = -1
-Private WithEvents mTickReader As TradingDO2.TickDataAccessor
+Private WithEvents mTickReader As TickDataReader
 Attribute mTickReader.VB_VarHelpID = -1
 
 Private mTickSize As Double
@@ -87,9 +94,9 @@ Private mDataIndex As Long
 Private mPeriodStartTime As Date
 Private mBasePrice As Double
 
-'================================================================================
+'@===============================================================================
 ' Class Event Handlers
-'================================================================================
+'@===============================================================================
 
 Private Sub Class_Initialize()
 ' the following ensure that the first call to checkRecord does not
@@ -104,9 +111,9 @@ Private Sub Class_Terminate()
 Debug.Print "TBInfoBase.TickfileReader terminated"
 End Sub
 
-'================================================================================
+'@===============================================================================
 ' ITickfileReader Interface Members
-'================================================================================
+'@===============================================================================
 
 Private Sub ITickfileReader_CloseInputFile()
 On Error GoTo Err
@@ -115,16 +122,16 @@ mTickfileServiceProvider.dataReaderFinished Me
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "TickfileReader" & "::" & "ITickfileReader_CloseInputFile", _
+                ProjectName & "." & "TickfileReader" & "::" & "ITickfileReader_CloseInputFile", _
                 Err.Description
 End Sub
 
 Private Property Let ITickfileReader_Contract(ByVal RHS As TradeBuildSP.IContract)
-Contract = RHS
+Set mContract = RHS
 End Property
 
 Private Property Get ITickfileReader_Contract() As TradeBuildSP.IContract
-Set ITickfileReader_Contract = Contract
+Set ITickfileReader_Contract = mContract
 End Property
 
 Private Property Get ITickfileReader_ContractSpecifier() As TradeBuildSP.IContractSpecifier
@@ -155,17 +162,17 @@ End If
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "TickfileReader" & "::" & "ITickfileReader_FireNextTick", _
+                ProjectName & "." & "TickfileReader" & "::" & "ITickfileReader_FireNextTick", _
                 Err.Description
 
 End Sub
 
 Private Property Get ITickfileReader_FirstTickFileTime() As Date
-ITickfileReader_FirstTickFileTime = FirstTickFileTime
+ITickfileReader_FirstTickFileTime = mFirstTickFileTime
 End Property
 
 Private Property Get ITickfileReader_InputTickfileSpecifier() As TradeBuildSP.TickfileSpec
-ITickfileReader_InputTickfileSpecifier = InputTickfileSpecifier
+ITickfileReader_InputTickfileSpecifier = mInputTickfileSpecifier
 End Property
 
 Private Property Let ITickfileReader_ReplayProgressEventFrequency(ByVal RHS As Long)
@@ -181,22 +188,22 @@ ITickfileReader_ReplayProgressEventFrequency = mReplayProgressEventFrequency
 End Property
 
 Private Sub ITickfileReader_ReplayTickfile(tickfileSpecifier As TradeBuildSP.TickfileSpec)
-Dim lInstrumentFactory As TradingDO2.cInstrumentFactory
+Dim lInstrumentFactory As InstrumentFactory
 
 On Error GoTo Err
 mInputTickfileSpecifier = tickfileSpecifier
 
-Set lInstrumentFactory = New TradingDO2.cInstrumentFactory
+Set lInstrumentFactory = mTradingDB.InstrumentFactory
 
-With mInputTickfileSpecifier.Contract.Specifier
-    Set mInstrument = lInstrumentFactory.loadBySpec(.symbol, _
-                                secTypeToString(.SecType), _
+With mInputTickfileSpecifier.contract.Specifier
+    Set mInstrument = lInstrumentFactory.loadBySpec(.localSymbol, _
+                                .Symbol, _
+                                .Exchange, _
+                                gSecTypeToCategory(.secType), _
+                                .CurrencyCode, _
                                 Left$(.Expiry, 6), _
-                                .exchange, _
-                                .currencyCode, _
                                 .Strike, _
-                                optRightToString(.Right), _
-                                .localSymbol)
+                                gOptRightToString(.Right))
 End With
  
 If mInstrument Is Nothing Then
@@ -206,15 +213,12 @@ If mInstrument Is Nothing Then
     Exit Sub
 End If
 
-Set mContract = mInputTickfileSpecifier.Contract
-'Set mContract = mCommonServiceConsumer.NewContract
-'mContract.Specifier = mCommonServiceConsumer.NewContractSpecifier
-'gContractFromInstrument mContract, mInstrument
-Set mTickReader = mInstrument.CreateTickDataAccessor
+Set mContract = mInputTickfileSpecifier.contract
+Set mTickReader = mInstrument.CreateTickDataReader
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "TickfileReader" & "::" & "ITickfileReader_ReplayTickfile", _
+                ProjectName & "." & "TickfileReader" & "::" & "ITickfileReader_ReplayTickfile", _
                 Err.Description
 
 End Sub
@@ -229,9 +233,9 @@ Private Property Get ITickfileReader_tickfileSizeBytes() As Long
 ITickfileReader_tickfileSizeBytes = 0
 End Property
 
-'================================================================================
+'@===============================================================================
 ' mTickReader Event Handlers
-'================================================================================
+'@===============================================================================
 
 Private Sub mTickReader_ConnectFailed( _
                             ByVal errorCode As Long, _
@@ -243,7 +247,7 @@ mServiceConsumer.NotifyEvent StandardSPEventCodes.TFCantConnectDataSource, _
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "TickfileReader" & "::" & "mTickReader_ConnectFailed", _
+                ProjectName & "." & "TickfileReader" & "::" & "mTickReader_ConnectFailed", _
                 Err.Description
 End Sub
 
@@ -267,7 +271,7 @@ End If
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "TickfileReader" & "::" & "mTickReader_DataFetched", _
+                ProjectName & "." & "TickfileReader" & "::" & "mTickReader_DataFetched", _
                 Err.Description
 End Sub
 
@@ -281,7 +285,7 @@ mCommonServiceConsumer.ServiceProviderError errorCode, _
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "TickfileReader" & "::" & "mTickReader_Error", _
+                ProjectName & "." & "TickfileReader" & "::" & "mTickReader_Error", _
                 Err.Description
 End Sub
 
@@ -299,8 +303,8 @@ With mInputTickfileSpecifier
         SessionTimes .From, _
                     sessionStart, _
                     .To, _
-                    mContract.sessionStartTime, _
-                    mContract.sessionEndTime
+                    mContract.SessionStartTime, _
+                    mContract.SessionEndTime
     End If
     mTickReader.FetchData TickfileFormatTradeBuildSQL, _
                             gTruncateTimeToMinute(.From), _
@@ -309,58 +313,36 @@ End With
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "TickfileReader" & "::" & "mTickReader_Ready", _
+                ProjectName & "." & "TickfileReader" & "::" & "mTickReader_Ready", _
                 Err.Description
 
 End Sub
 
-'================================================================================
+'@===============================================================================
+' mTradingDB Event Handlers
+'@===============================================================================
+
+Private Sub mTradingDB_ConnectFailed( _
+                ByVal errorCode As Long, _
+                ByVal errorDesc As String)
+On Error GoTo Err
+mServiceConsumer.NotifyEvent StandardSPEventCodes.TFCantConnectDataSource, _
+                        "error " & errorCode & ": " & errorDesc, _
+                        mTickfileServiceProvider.handle
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                ProjectName & "." & "TickfileReader" & "::" & "mTradingDB_ConnectFailed", _
+                Err.Description
+End Sub
+
+'@===============================================================================
 ' Properties
-'================================================================================
+'@===============================================================================
 
-Friend Property Let CommonServiceConsumer(ByVal RHS As TradeBuildSP.ICommonServiceConsumer)
-Set mCommonServiceConsumer = RHS
-End Property
-
-Friend Property Let Contract(ByVal value As IContract)
-If Not value Is Nothing Then
-    Set mContract = value.Clone
-End If
-mTickSize = mContract.MinimumTick
-End Property
-
-Friend Property Get Contract() As IContract
-Set Contract = mContract
-End Property
-
-Friend Property Get FirstTickFileTime() As Date
-FirstTickFileTime = mFirstTickFileTime
-End Property
-
-Friend Property Get InputTickfileSpecifier() As TradeBuildSP.TickfileSpec
-InputTickfileSpecifier = mInputTickfileSpecifier
-End Property
-
-Friend Property Let ServiceProviderName(ByVal value As String)
-mServiceProviderName = value
-End Property
-
-Friend Property Let StreamingDataConsumer(ByVal RHS As IStreamingDataConsumer)
-Set mDataConsumer = RHS
-End Property
-
-Friend Property Let TickfileInputServiceConsumer(ByVal RHS As ITickfileInputServiceConsumer)
-Set mServiceConsumer = RHS
-End Property
-
-Friend Property Let tickfileServiceProvider( _
-                ByVal value As tickfileServiceProvider)
-Set mTickfileServiceProvider = value
-End Property
-
-'================================================================================
+'@===============================================================================
 ' Methods
-'================================================================================
+'@===============================================================================
 
 Friend Sub finish()
 Set mTickReader = Nothing
@@ -368,9 +350,28 @@ Set mServiceConsumer = Nothing
 Set mDataConsumer = Nothing
 End Sub
 
-'================================================================================
+Friend Sub initialise( _
+                ByVal Name As String, _
+                ByVal connectionString As String, _
+                ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
+                ByVal tickfileInputServiceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
+                ByVal tickfileServiceProvider As TradeBuildSP.ITickfileServiceProvider, _
+                ByVal DataConsumer As TradeBuildSP.IStreamingDataConsumer)
+
+mServiceProviderName = Name
+Set mCommonServiceConsumer = CommonServiceConsumer
+Set mServiceConsumer = tickfileInputServiceConsumer
+Set mTickfileServiceProvider = tickfileServiceProvider
+Set mDataConsumer = DataConsumer
+                
+mConnectionString = connectionString
+Set mTradingDB = CreateTradingDB(mConnectionString)
+
+End Sub
+
+'@===============================================================================
 ' Helper Functions
-'================================================================================
+'@===============================================================================
 
 Private Function checkRecord(ByRef typeByte As Byte) As Boolean
 Dim tickType As TickTypes

@@ -13,47 +13,54 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-'================================================================================
+'@===============================================================================
 ' Description
-'================================================================================
+'@===============================================================================
 '
 '
-'================================================================================
+'@===============================================================================
 ' Amendment history
-'================================================================================
+'@===============================================================================
 '
 '
 '
 '
 
-'================================================================================
+'@===============================================================================
 ' Interfaces
-'================================================================================
+'@===============================================================================
 
 Implements ICommonServiceProvider
 Implements IContractInfoServiceProvider
 
-'================================================================================
+'@===============================================================================
 ' Events
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+'@===============================================================================
 ' Constants
-'================================================================================
+'@===============================================================================
+
+Private Const ProjectName As String = "TBInfoBase26"
+Private Const ModuleName As String = "ContractInfoSrvcProvider"
 
 Private Const MaxQueuedRequests As Long = 100
 
-'================================================================================
+'@===============================================================================
 ' Enums
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+'@===============================================================================
 ' Types
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+'@===============================================================================
 ' Member variables
-'================================================================================
+'@===============================================================================
+
+Private WithEvents mTradingDB       As TradingDB
+Attribute mTradingDB.VB_VarHelpID = -1
+Private mConnectionString           As String
 
 Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mHandle As Long
@@ -69,21 +76,32 @@ Private mName As String
 Private WithEvents mTimer As IntervalTimer
 Attribute mTimer.VB_VarHelpID = -1
 
-Private mInstrumentFactory As TradingDO2.cInstrumentFactory
+Private mInstrumentFactory As InstrumentFactory
 
+Private mDatabaseType As DatabaseTypes
+Private mDatabaseName As String
+Private mServer As String
+Private mUserName As String
+Private mPassword As String
 
-'================================================================================
+'@===============================================================================
 ' Class Event Handlers
-'================================================================================
+'@===============================================================================
 
 Private Sub Class_Initialize()
 mName = ContractInfoSPName
 Set mTimer = createIntervalTimer(1)
+
+mDatabaseType = DbSQLServer2005
+mDatabaseName = "Trading"
+mServer = "localhost"
+mUserName = ""
+mPassword = ""
 End Sub
 
-'================================================================================
+'@===============================================================================
 ' ICommonServiceProvider Interface Members
-'================================================================================
+'@===============================================================================
 
 Private Property Get ICommonServiceProvider_Details() As TradeBuildSP.ServiceProviderDetails
 Dim ServiceProviderDetails  As TradeBuildSP.ServiceProviderDetails
@@ -105,11 +123,32 @@ End Property
 
 Private Sub ICommonServiceProvider_Link( _
                 ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
-                ByVal handle As Long)
+                ByVal handle As Long, _
+                ByVal params As Parameters)
+Dim param As Parameter
+
 Set mCommonServiceConsumer = CommonServiceConsumer
 mHandle = handle
 mCommonServiceConsumer.RegisterServiceProvider handle, _
                                             ServiceProviderTypes.ContractInfo
+
+For Each param In params
+    Select Case UCase$(param.Name)
+    Case UCase$(ParamNameConnectionString)
+        connectionString = param.value
+    Case UCase$(ParamNameDatabaseType)
+        databaseType = DatabaseTypeFromString(param.value)
+    Case UCase$(ParamNameDatabaseName)
+        databaseName = param.value
+    Case UCase$(ParamNameServer)
+        server = param.value
+    Case UCase$(ParamNameUserName)
+        username = param.value
+    Case UCase$(ParamNamePassword)
+        password = param.value
+    End Select
+Next
+
 End Sub
 
 Private Property Let ICommonServiceProvider_LogLevel( _
@@ -129,9 +168,9 @@ Private Sub ICommonServiceProvider_Terminate()
 ' nothing to do
 End Sub
 
-'================================================================================
+'@===============================================================================
 ' IContractInfoServiceProvider Interface Members
-'================================================================================
+'@===============================================================================
 
 Private Property Let IContractInfoServiceProvider_ContractInfoServiceConsumer( _
                             ByVal RHS As TradeBuildSP.IContractInfoServiceConsumer)
@@ -171,36 +210,50 @@ IContractInfoServiceProvider_Supports = supportedCapabilities And capabilities
 
 End Function
 
-'================================================================================
+'@===============================================================================
 ' mTimer Event Handlers
-'================================================================================
+'@===============================================================================
 
 Private Sub mTimer_TimerExpired()
-Dim instrumentSummaries As TradingDO2.cInstrumentSummaries
-Dim instrumentSummary As TradingDO2.cInstrumentSummary
-Dim instrument As TradingDO2.cInstrument
-Dim Contract As IContract
+Dim instrumentSummaries As instrumentSummaries
+Dim instrumentSummary As instrumentSummary
+Dim instrument As instrument
+Dim contract As IContract
 
-Set mInstrumentFactory = New cInstrumentFactory
+If mTradingDB Is Nothing Then
+    If mConnectionString <> "" Then
+        Set mTradingDB = CreateTradingDB(mConnectionString)
+    Else
+        Set mTradingDB = CreateTradingDB(GenerateConnectionString(mDatabaseType, _
+                                                                mServer, _
+                                                                mDatabaseName, _
+                                                                mUserName, _
+                                                                mPassword))
+    End If
+End If
+
+Set mInstrumentFactory = mTradingDB.InstrumentFactory
 
 With mRequests(mFirstRequestID).ContractSpecifier
-    Set instrumentSummaries = mInstrumentFactory.loadEx( _
+    Set instrumentSummaries = mInstrumentFactory.loadSummaries( _
                                     .localSymbol, _
-                                    .symbol, _
-                                    secTypeToString(.SecType), _
+                                    .Symbol, _
+                                    .Exchange, _
+                                    gSecTypeToCategory(.secType), _
+                                    .CurrencyCode, _
                                     Left$(.Expiry, 6), _
-                                    .exchange, _
-                                    .currencyCode)
+                                    .Strike, _
+                                    gOptRightToString(.Right))
 End With
 
 For Each instrumentSummary In instrumentSummaries
     Set instrument = mInstrumentFactory.loadByID(instrumentSummary.id)
-    Set Contract = mCommonServiceConsumer.NewContract
-    Contract.Specifier = mCommonServiceConsumer.NewContractSpecifier
+    Set contract = mCommonServiceConsumer.NewContract
+    contract.Specifier = mCommonServiceConsumer.NewContractSpecifier
     
-    gContractFromInstrument Contract, instrument
+    gContractFromInstrument contract, instrument
     
-    mRequests(mFirstRequestID).AddContract Contract
+    mRequests(mFirstRequestID).AddContract contract
 Next
 
 mContractInfoServiceConsumer.LoadComplete mHandle, mRequests(mFirstRequestID)
@@ -210,11 +263,26 @@ mFirstRequestID = (mFirstRequestID + 1) Mod MaxQueuedRequests
 If mRequestsOutstanding <> 0 Then mTimer.StartTimer
 End Sub
 
-'================================================================================
+'@===============================================================================
 ' Properties
-'================================================================================
+'@===============================================================================
 
-Public Property Let Name(ByVal value As String)
+Friend Property Let connectionString( _
+                ByVal value As String)
+mConnectionString = value
+End Property
+
+Friend Property Let databaseName( _
+                ByVal value As String)
+mDatabaseName = value
+End Property
+
+Friend Property Let databaseType( _
+                ByVal value As DatabaseTypes)
+mDatabaseType = value
+End Property
+
+Friend Property Let Name(ByVal value As String)
 mName = value
 End Property
 
@@ -222,12 +290,27 @@ Public Property Get Name() As String
 Name = mName
 End Property
 
-'================================================================================
-' Methods
-'================================================================================
+Friend Property Let password( _
+                ByVal value As String)
+mPassword = value
+End Property
+                
+Friend Property Let server( _
+                ByVal value As String)
+mServer = value
+End Property
+                
+Friend Property Let username( _
+                ByVal value As String)
+mUserName = value
+End Property
 
-'================================================================================
+'@===============================================================================
+' Methods
+'@===============================================================================
+
+'@===============================================================================
 ' Helper Functions
-'================================================================================
+'@===============================================================================
 
 

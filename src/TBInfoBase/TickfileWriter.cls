@@ -13,9 +13,9 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-'================================================================================
+'@===============================================================================
 ' Description
-'================================================================================
+'@===============================================================================
 '
 '   The first byte of each record has the following structure:
 '
@@ -24,39 +24,46 @@ Option Explicit
 '    NoTimestamp (bit 6)
 '    NegativeTicks (bit 7)
 '
-'================================================================================
+'@===============================================================================
 ' Amendment history
-'================================================================================
+'@===============================================================================
 '
 '
 '
 '
 
-'================================================================================
+'@===============================================================================
 ' Interfaces
-'================================================================================
+'@===============================================================================
 
 Implements ITickfileWriter
 
-'================================================================================
+'@===============================================================================
 ' Events
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+'@===============================================================================
 ' Constants
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+Private Const ProjectName As String = "TBInfoBase26"
+Private Const ModuleName As String = "TickfileWriter"
+
+'@===============================================================================
 ' Enums
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+'@===============================================================================
 ' Types
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+'@===============================================================================
 ' Member variables
-'================================================================================
+'@===============================================================================
+
+Private WithEvents mTradingDB       As TradingDB
+Attribute mTradingDB.VB_VarHelpID = -1
+Private mConnectionString           As String
 
 Private mTickfileServiceProvider As tickfileServiceProvider
 
@@ -64,12 +71,9 @@ Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mServiceConsumer As ITickfileOutputServiceConsumer
 Private mServiceProviderName As String
 
-Private mTickerID As Long
 Private mContract As IContract
-Private WithEvents mTickWriter As TradingDO2.TickDataAccessor
+Private WithEvents mTickWriter As TickDataWriter
 Attribute mTickWriter.VB_VarHelpID = -1
-
-Private mPath As String
 
 Private mData() As Byte
 Private mDataIndex As Long
@@ -81,9 +85,11 @@ Private mTimestamp As Date          ' current timestamp
 Private mBasePrice As Double        ' first price encountered at start of minute period
 Private mOpeningTimestamp As Date   ' timestamp at start of minute period
 
-'================================================================================
+Private mInstrument As instrument
+
+'@===============================================================================
 ' Class Event Handlers
-'================================================================================
+'@===============================================================================
 
 Private Sub Class_Initialize()
 ReDim mData(8191) As Byte
@@ -93,9 +99,9 @@ Private Sub Class_Terminate()
 Debug.Print "TBInfoBase.TickfileWriter terminated"
 End Sub
 
-'================================================================================
+'@===============================================================================
 ' ITickfileWriter Interface Members
-'================================================================================
+'@===============================================================================
 
 Private Sub ITickfileWriter_CloseOutputFile()
 On Error GoTo Err
@@ -104,7 +110,7 @@ mTickfileServiceProvider.dataWriterFinished Me
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "TickfileWriter" & "::" & "ITickfileWriter_CloseOutputFile", _
+                ProjectName & "." & "TickfileWriter" & "::" & "ITickfileWriter_CloseOutputFile", _
                 Err.Description
 End Sub
 
@@ -113,34 +119,31 @@ Set ITickfileWriter_Contract = mContract
 End Property
 
 Private Property Let ITickfileWriter_Contract(ByVal RHS As IContract)
-Dim lInstrumentFactory As TradingDO2.cInstrumentFactory
-Dim lInstrument As TradingDO2.cInstrument
+Dim lInstrumentFactory As InstrumentFactory
 
 On Error GoTo Err
 If Not RHS Is Nothing Then
     Set mContract = RHS.Clone
 End If
 
-Set lInstrumentFactory = New TradingDO2.cInstrumentFactory
+Set lInstrumentFactory = mTradingDB.InstrumentFactory
 With mContract.Specifier
-    Set lInstrument = lInstrumentFactory.loadBySpec(.symbol, _
-                                secTypeToString(.SecType), _
+    Set mInstrument = lInstrumentFactory.loadBySpec(.localSymbol, _
+                                .Symbol, _
+                                .Exchange, _
+                                gSecTypeToCategory(.secType), _
+                                .CurrencyCode, _
                                 Left$(.Expiry, 6), _
-                                .exchange, _
-                                .currencyCode, _
                                 .Strike, _
-                                optRightToString(.Right), _
-                                .localSymbol)
+                                gOptRightToString(.Right))
 End With
-Debug.Assert Not lInstrument Is Nothing
-
-Set mTickWriter = lInstrument.CreateTickDataAccessor
+Debug.Assert Not mInstrument Is Nothing
 
 mTickSize = mContract.MinimumTick
 Exit Property
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "TickfileWriter" & "::" & "ITickfileWriter_Contract", _
+                ProjectName & "." & "TickfileWriter" & "::" & "ITickfileWriter_Contract", _
                 Err.Description
 
 End Property
@@ -167,7 +170,7 @@ WriteQuoteRecord TickTypes.Ask, timestamp, price, size
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "TickfileWriter" & "::" & "ITickfileWriter_WriteAsk", _
+                ProjectName & "." & "TickfileWriter" & "::" & "ITickfileWriter_WriteAsk", _
                 Err.Description
 End Sub
 
@@ -181,7 +184,7 @@ WriteQuoteRecord TickTypes.Bid, timestamp, price, size
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeBid", _
+                ProjectName & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeBid", _
                 Err.Description
 End Sub
 
@@ -194,7 +197,7 @@ WritePriceRecord TickTypes.closePrice, timestamp, price
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeClose", _
+                ProjectName & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeClose", _
                 Err.Description
 End Sub
 
@@ -207,7 +210,7 @@ WritePriceRecord TickTypes.highPrice, timestamp, price
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeHigh", _
+                ProjectName & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeHigh", _
                 Err.Description
 End Sub
 
@@ -220,7 +223,7 @@ WritePriceRecord TickTypes.lowPrice, timestamp, price
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeLow", _
+                ProjectName & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeLow", _
                 Err.Description
 End Sub
 
@@ -264,7 +267,7 @@ WriteString marketmaker
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeMarketDepthData", _
+                ProjectName & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeMarketDepthData", _
                 Err.Description
 End Sub
 
@@ -282,7 +285,7 @@ WriteTimestamp timestamp
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeMarketDepthReset", _
+                ProjectName & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeMarketDepthReset", _
                 Err.Description
 End Sub
 
@@ -292,7 +295,7 @@ WriteSizeRecord TickTypes.openInterest, timestamp, size
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "TickfileWriter" & "::" & "ITickfileWriter_WriteOpenInterest", _
+                ProjectName & "." & "TickfileWriter" & "::" & "ITickfileWriter_WriteOpenInterest", _
                 Err.Description
 End Sub
 
@@ -312,25 +315,26 @@ WriteSizeRecord TickTypes.volume, timestamp, size
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeVolume", _
+                ProjectName & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeVolume", _
                 Err.Description
 End Sub
 
-'================================================================================
+'@===============================================================================
 ' mTickWriter Event Handlers
-'================================================================================
+'@===============================================================================
 
 Private Sub mTickWriter_ConnectFailed( _
                             ByVal errorCode As Long, _
                             ByVal errorDesc As String)
 On Error GoTo Err
+mServiceConsumer.Ready = False
 mServiceConsumer.NotifyEvent StandardSPEventCodes.TFCantConnectDataSource, _
                         "error " & errorCode & ": " & errorDesc, _
                         mTickfileServiceProvider.handle
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "TickfileWriter" & "::" & "mTickWriter_ConnectFailed", _
+                ProjectName & "." & "TickfileWriter" & "::" & "mTickWriter_ConnectFailed", _
                 Err.Description
 End Sub
 
@@ -344,21 +348,30 @@ mCommonServiceConsumer.ServiceProviderError errorCode, _
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "TickfileWriter" & "::" & "mTickWriter_Error", _
+                ProjectName & "." & "TickfileWriter" & "::" & "mTickWriter_Error", _
                 Err.Description
 End Sub
 
-Private Sub mTickWriter_NotReady()
+'@===============================================================================
+' mTradingDB Event Handlers
+'@===============================================================================
+
+Private Sub mTradingDB_ConnectFailed( _
+                ByVal errorCode As Long, _
+                ByVal errorDesc As String)
 On Error GoTo Err
 mServiceConsumer.Ready = False
+mServiceConsumer.NotifyEvent StandardSPEventCodes.TFCantConnectDataSource, _
+                        "error " & errorCode & ": " & errorDesc, _
+                        mTickfileServiceProvider.handle
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "TickfileWriter" & "::" & "mTickWriter_NotReady", _
+                ProjectName & "." & "TickfileWriter" & "::" & "mTradingDB_ConnectFailed", _
                 Err.Description
 End Sub
 
-Private Sub mTickWriter_Ready()
+Private Sub mTradingDB_ConnectSucceeded()
 On Error GoTo Err
 
 mServiceConsumer.NotifyEvent StandardSPEventCodes.TFConnectedToDataSource, _
@@ -366,46 +379,21 @@ mServiceConsumer.NotifyEvent StandardSPEventCodes.TFConnectedToDataSource, _
                         mTickfileServiceProvider.handle
 
 mServiceConsumer.Ready = True
-mServiceConsumer.OutputTickfileCreated mTickWriter.connectionString
+mServiceConsumer.OutputTickfileCreated mConnectionString
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "TickfileWriter" & "::" & "mTickWriter_Ready", _
+                ProjectName & "." & "TickfileWriter" & "::" & "mTradingDB_ConnectSucceeded", _
                 Err.Description
+
 End Sub
-
-'================================================================================
+'@===============================================================================
 ' Properties
-'================================================================================
+'@===============================================================================
 
-Friend Property Let CommonServiceConsumer(ByVal RHS As TradeBuildSP.ICommonServiceConsumer)
-Set mCommonServiceConsumer = RHS
-End Property
-
-Friend Property Let Path(ByVal value As String)
-mPath = value
-End Property
-
-Friend Property Let ServiceProviderName(ByVal value As String)
-mServiceProviderName = value
-End Property
-
-Friend Property Let Tickerid(ByVal value As Long)
-mTickerID = value
-End Property
-
-Friend Property Let TickfileOutputServiceConsumer(ByVal RHS As ITickfileOutputServiceConsumer)
-Set mServiceConsumer = RHS
-End Property
-
-Friend Property Let tickfileServiceProvider( _
-                ByVal value As tickfileServiceProvider)
-Set mTickfileServiceProvider = value
-End Property
-
-'================================================================================
+'@===============================================================================
 ' Methods
-'================================================================================
+'@===============================================================================
 
 Friend Sub finish()
 WritePeriodData
@@ -417,9 +405,26 @@ mCommonServiceConsumer.NotifyListeners "Total data written: " & mTotalBytes & " 
 
 End Sub
 
-'================================================================================
+Friend Sub initialise( _
+                ByVal Name As String, _
+                ByVal connectionString As String, _
+                ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
+                ByVal tickfileOutputServiceConsumer As TradeBuildSP.ITickfileOutputServiceConsumer, _
+                ByVal tickfileServiceProvider As TradeBuildSP.ITickfileServiceProvider)
+
+mServiceProviderName = Name
+Set mCommonServiceConsumer = CommonServiceConsumer
+Set mServiceConsumer = tickfileOutputServiceConsumer
+Set mTickfileServiceProvider = tickfileServiceProvider
+                
+mConnectionString = connectionString
+Set mTradingDB = CreateTradingDB(mConnectionString)
+
+End Sub
+
+'@===============================================================================
 ' Helper Functions
-'================================================================================
+'@===============================================================================
 
 Private Sub CheckIfNewPeriod(ByVal timestamp As Date)
 Dim barTime As Date
@@ -449,12 +454,13 @@ Private Sub handleFatalError( _
                 ByVal Number As Long, _
                 ByVal Source As String, _
                 ByVal Description As String)
+' discard any pending data
+mDataIndex = 0
 mCommonServiceConsumer.FatalServiceProviderError Number, _
                             Source, _
                             Description, _
                             mTickfileServiceProvider.handle
 
-finish
 mTickfileServiceProvider.dataWriterFinished Me
 End Sub
 
@@ -483,6 +489,9 @@ Private Sub WritePeriodData()
 If mDataIndex = 0 Then Exit Sub
 
 ReDim Preserve mData(mDataIndex - 1) As Byte
+
+Set mTickWriter = mInstrument.CreateTickDataWriter
+
 mTickWriter.WriteData TickfileFormatTradeBuildSQL, _
                             mOpeningTimestamp, _
                             mBasePrice, _

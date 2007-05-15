@@ -13,44 +13,51 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-'================================================================================
+'@===============================================================================
 ' Description
-'================================================================================
+'@===============================================================================
 '
 '
-'================================================================================
+'@===============================================================================
 ' Amendment history
-'================================================================================
+'@===============================================================================
 '
 '
 '
 '
 
-'================================================================================
+'@===============================================================================
 ' Interfaces
-'================================================================================
+'@===============================================================================
 
 Implements TradeBuildSP.IBarDataReader
 
-'================================================================================
+'@===============================================================================
 ' Events
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+'@===============================================================================
 ' Constants
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+Private Const ProjectName As String = "TBInfoBase26"
+Private Const ModuleName As String = "HistDataReader"
+
+'@===============================================================================
 ' Enums
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+'@===============================================================================
 ' Types
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+'@===============================================================================
 ' Member variables
-'================================================================================
+'@===============================================================================
+
+Private WithEvents mTradingDB       As TradingDB
+Attribute mTradingDB.VB_VarHelpID = -1
+Private mConnectionString           As String
 
 Private mHistDataServiceProvider As histDataServiceProvider
 
@@ -65,7 +72,7 @@ Private mBarDataSpecifier  As TradeBuildSP.BarDataSpecifier
 
 Private mContract As IContract
 
-Private WithEvents mBarReader As TradingDO2.BarDataAccessor
+Private WithEvents mBarReader As BarDataReader
 Attribute mBarReader.VB_VarHelpID = -1
 
 Private mWaitingForBarData As Boolean
@@ -74,13 +81,13 @@ Private mBarRequested As Boolean
 Private mSessionBuilder As SessionBuilder
 Private mSession As Session
 
-'================================================================================
+'@===============================================================================
 ' Class Event Handlers
-'================================================================================
+'@===============================================================================
 
-'================================================================================
+'@===============================================================================
 ' IBarDataReader Interface Members
-'================================================================================
+'@===============================================================================
 
 Private Property Get IBarDataReader_BarDataSpecifier( _
                             ) As TradeBuildSP.BarDataSpecifier
@@ -94,17 +101,17 @@ finish
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "HistDataReader" & "::" & "IBarDataReader_CancelFetch", _
+                ProjectName & "." & "HistDataReader" & "::" & "IBarDataReader_CancelFetch", _
                 Err.Description
 End Sub
 
 Private Sub IBarDataReader_FetchBars( _
                             ByRef barSpecifier As TradeBuildSP.BarDataSpecifier)
-Dim lInstrumentFactory As TradingDO2.cInstrumentFactory
-Dim lInstrument As TradingDO2.cInstrument
+Dim lInstrumentFactory As InstrumentFactory
+Dim lInstrument As instrument
 
 On Error GoTo Err
-If mRequestInProgress Then Err.Raise ErrorCodes.IllegalStateException, _
+If mRequestInProgress Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "TBInfoBase.HistDataReader::FetchBars", _
                                     "Request already in progress"
 
@@ -126,32 +133,32 @@ End Select
 
 mRequestInProgress = True
 mBarDataSpecifier = barSpecifier
-Set mContract = mBarDataSpecifier.Contract
+Set mContract = mBarDataSpecifier.contract
 
 Set mSessionBuilder = New SessionBuilder
-mSessionBuilder.sessionStartTime = mContract.sessionStartTime
-mSessionBuilder.sessionEndTime = mContract.sessionEndTime
+mSessionBuilder.SessionStartTime = mContract.SessionStartTime
+mSessionBuilder.SessionEndTime = mContract.SessionEndTime
 Set mSession = mSessionBuilder.Session
 
-Set lInstrumentFactory = New TradingDO2.cInstrumentFactory
+Set lInstrumentFactory = mTradingDB.InstrumentFactory
 
-With mBarDataSpecifier.Contract.Specifier
-    Set lInstrument = lInstrumentFactory.loadBySpec(.symbol, _
-                                secTypeToString(.SecType), _
+With mBarDataSpecifier.contract.Specifier
+    Set lInstrument = lInstrumentFactory.loadBySpec(.localSymbol, _
+                                .Symbol, _
+                                .Exchange, _
+                                gSecTypeToCategory(.secType), _
+                                .CurrencyCode, _
                                 Left$(.Expiry, 6), _
-                                .exchange, _
-                                .currencyCode, _
                                 .Strike, _
-                                optRightToString(.Right), _
-                                .localSymbol)
+                                gOptRightToString(.Right))
 End With
 Debug.Assert Not lInstrument Is Nothing
 
-Set mBarReader = lInstrument.CreateBarDataAccessor
+Set mBarReader = lInstrument.CreateBarDataReader
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "HistDataReader" & "::" & "IBarDataReader_FetchBars", _
+                ProjectName & "." & "HistDataReader" & "::" & "IBarDataReader_FetchBars", _
                 Err.Description
 
 End Sub
@@ -166,7 +173,7 @@ End If
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "HistDataReader" & "::" & "IBarDataReader_FireNextBar", _
+                ProjectName & "." & "HistDataReader" & "::" & "IBarDataReader_FireNextBar", _
                 Err.Description
 End Sub
 
@@ -181,7 +188,7 @@ mHistDataServiceProvider.dataReaderFinished Me
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TBInfoBase" & "." & "HistDataReader" & "::" & "IBarDataReader_ReleaseDataStore", _
+                ProjectName & "." & "HistDataReader" & "::" & "IBarDataReader_ReleaseDataStore", _
                 Err.Description
 End Sub
 
@@ -190,9 +197,9 @@ Private Function IBarDataReader_Supports( _
 IBarDataReader_Supports = gHistDataSupports(capabilities)
 End Function
 
-'================================================================================
+'@===============================================================================
 ' mBarReader Event Handlers
-'================================================================================
+'@===============================================================================
 
 Private Sub mBarReader_BarsFetched()
 Dim lBar As TradeBuildSP.Bar
@@ -209,10 +216,16 @@ End Sub
 Private Sub mBarReader_ConnectFailed( _
                             ByVal errorCode As Long, _
                             ByVal errorDesc As String)
+On Error GoTo Err
 mServiceConsumer.NotifyEvent StandardSPEventCodes.HDCantConnectDataSource, _
                         "error " & errorCode & ": " & errorDesc, _
                         mHistDataServiceProvider.handle
 
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                ProjectName & "." & "HistDataReader" & "::" & "mBarReader_ConnectFailed", _
+                Err.Description
 End Sub
 
 Private Sub mBarReader_Error( _
@@ -289,34 +302,32 @@ End With
 mServiceConsumer.Ready
 End Sub
 
-'================================================================================
+'@===============================================================================
+' mTradingDB Event Handlers
+'@===============================================================================
+
+Private Sub mTradingDB_ConnectFailed( _
+                ByVal errorCode As Long, _
+                ByVal errorDesc As String)
+On Error GoTo Err
+mServiceConsumer.NotifyEvent StandardSPEventCodes.HDCantConnectDataSource, _
+                        "error " & errorCode & ": " & errorDesc, _
+                        mHistDataServiceProvider.handle
+
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                ProjectName & "." & "HistDataReader" & "::" & "mTradingDB_ConnectFailed", _
+                Err.Description
+End Sub
+
+'@===============================================================================
 ' Properties
-'================================================================================
+'@===============================================================================
 
-Friend Property Let BarDataInputServiceConsumer(ByVal value As IBarDataInputServiceConsumer)
-Set mServiceConsumer = value
-End Property
-
-Friend Property Let DataConsumer(ByVal value As IBarDataConsumer)
-Set mDataConsumer = value
-End Property
-
-Friend Property Let CommonServiceConsumer(ByVal value As ICommonServiceConsumer)
-Set mCommonServiceConsumer = value
-End Property
-
-Friend Property Let histDataServiceProvider( _
-                ByVal value As histDataServiceProvider)
-Set mHistDataServiceProvider = value
-End Property
-
-Friend Property Let ServiceProviderName(ByVal value As String)
-mServiceProviderName = value
-End Property
-
-'================================================================================
+'@===============================================================================
 ' Methods
-'================================================================================
+'@===============================================================================
 
 Friend Sub finish()
 Set mBarReader = Nothing
@@ -324,9 +335,28 @@ Set mServiceConsumer = Nothing
 Set mDataConsumer = Nothing
 End Sub
 
-'================================================================================
+Friend Sub initialise( _
+                ByVal Name As String, _
+                ByVal connectionString As String, _
+                ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
+                ByVal barDataInputServiceConsumer As TradeBuildSP.IBarDataInputServiceConsumer, _
+                ByVal histDataServiceProvider As TradeBuildSP.IBarDataServiceProvider, _
+                ByVal DataConsumer As TradeBuildSP.IBarDataConsumer)
+                
+mServiceProviderName = Name
+Set mCommonServiceConsumer = CommonServiceConsumer
+Set mServiceConsumer = barDataInputServiceConsumer
+Set mHistDataServiceProvider = histDataServiceProvider
+Set mDataConsumer = DataConsumer
+                
+mConnectionString = connectionString
+Set mTradingDB = CreateTradingDB(mConnectionString)
+
+End Sub
+
+'@===============================================================================
 ' Helper Functions
-'================================================================================
+'@===============================================================================
 
 Private Sub handleFatalError( _
                 ByVal Number As Long, _
@@ -410,15 +440,15 @@ With barSpecifier
                                     .barLength, _
                                     .BarLengthUnits, _
                                     -.numberOfBars, _
-                                    pContract.sessionStartTime, _
-                                    pContract.sessionEndTime)
+                                    pContract.SessionStartTime, _
+                                    pContract.SessionEndTime)
     Else
         .To = OffsetBarStartTime(.From, _
                                     .barLength, _
                                     .BarLengthUnits, _
                                     .numberOfBars, _
-                                    pContract.sessionStartTime, _
-                                    pContract.sessionEndTime)
+                                    pContract.SessionStartTime, _
+                                    pContract.SessionEndTime)
     End If
 End With
 End Sub
