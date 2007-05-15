@@ -57,7 +57,7 @@ Implements BarStudy
 Private mStudyFoundation As StudyFoundation
 '--------------------------------------------------------
 
-Private WithEvents mSession As Session
+Private WithEvents mSession As session
 Attribute mSession.VB_VarHelpID = -1
 
 Private mBarLength As Long
@@ -86,10 +86,6 @@ Private mVolumeTickSize As Double
 '================================================================================
 ' Class Event Handlers
 '================================================================================
-
-Private Sub Class_Initialize()
-'mPrevBarVolume = -1
-End Sub
 
 Private Sub Class_Terminate()
 Debug.Print "Constant Time Bars study terminated"
@@ -122,13 +118,13 @@ End Property
 Private Sub BarStudy_switchUnderlyingStudy( _
                 ByVal newUnderlyingStudy As InputStudy)
                 
-If newUnderlyingStudy.Session.currentSessionStartTime > mSession.currentSessionStartTime Then
+If newUnderlyingStudy.session.currentSessionStartTime > mSession.currentSessionStartTime Then
     ' we are now in a different session so reset volume variables
     mLatestVolume = 0
     mPrevBarVolume = 0
 End If
 
-Set mSession = newUnderlyingStudy.Session
+Set mSession = newUnderlyingStudy.session
 mBars.changeSession mSession
 
 ' because we are switching to a new source, the volume figures may not be consistent
@@ -161,7 +157,7 @@ Private Sub customInitialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As Session)
+                ByVal pSession As session)
 
 Set mSession = pSession
 
@@ -169,7 +165,6 @@ mStudyFoundation.ReplayUsingStudyValues = True
 customProcessParameters Parameters
 Set mVolumeCache = mStudyFoundation.FindValueCache(BarValueVolume)
 Set mTotalVolumeCache = mStudyFoundation.FindValueCache(ConstTimeBarsValueTotalVolume)
-mPrevBarVolume = -1
 End Sub
 
 Private Function customGetStudyValue( _
@@ -217,6 +212,7 @@ End Function
 Private Sub customNotify( _
                 ev As StudyValueEvent)
 Dim evOut As StudyValueEvent
+Static firstVolumeReceived As Boolean
 
 If ev.valueName = ConstTimeBarsInputPrice Then
     mBars.Notify ev
@@ -239,6 +235,10 @@ ElseIf ev.valueName = ConstTimeBarsInputTotalVolume Then
         mPrevBarVolume = ev.value - mVolumeCache.getValue(0)
     End If
     'Debug.Assert mLatestVolume >= mPrevBarVolume
+    If mPrevBarVolume = 0 And Not firstVolumeReceived Then
+        firstVolumeReceived = True
+        mPrevBarVolume = mLatestVolume
+    End If
     mVolumeCache.updateValue mLatestVolume - mPrevBarVolume
     mTotalVolumeCache.updateValue mLatestVolume
     notifyVolume ev.timestamp
@@ -490,7 +490,7 @@ Private Sub Study_initialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As Session)
+                ByVal pSession As session)
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
                             id, _
