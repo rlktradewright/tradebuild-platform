@@ -1,5 +1,5 @@
 Author:	Richard King
-Date:	28 March 2006
+Date:	13 April 2007
 
 
 Contents
@@ -96,14 +96,15 @@ TradeSkil Demo Edition is included in the TradeBuild download.
 3.  Installing TradeBuild
 =========================
 
-If you already have a previous version of TradeBuild installed, it is advisable
-to uninstall it using the Control panel's Add or Remove Programs applet before 
+If you already have a previous version of TradeBuild installed, you must 
+uninstall it using the Control panel's Add or Remove Programs applet before 
 installing the current version.
 
 When the download is complete, extract the contents of the TradeBuild.zip file 
 to a convenient location.
 
-To start the installation, run the TradeBuild25.msi file.
+Then run the setup.exe program, which will guide you through the installation 
+process.
 
 The installation process installs the compiled TradeBuild components and the 
 TradeSkil Demo Edition program. It also installs a program called ChartDemo 
@@ -194,6 +195,89 @@ For technical support, email me at:
 Appendix A  TradeBuild Version History
 ======================================
 
+Version 2.6.0.16  Released ?? May 2007
+
+	NB: this version is not binary compatible with previous
+	versions. All client applications will need to be recompiled.
+
+	Enhancement: the TradeWright Interval Timer Utilities Version 2
+	component has been enhanced to make more efficient use of Windows
+	Multimedia Timers, which are limited to 16 per process. As a result 
+	IntervalTimer objects are not quite as accurate as before 
+	because they are now implemented on top of the timerlist mechanism
+	which has additional overheads. Applications that need accuracy
+	better than about 5 milliseconds should use the new 
+	BaseIntervalTimer object instead (which uses a dedicated timer).
+
+	Enhancement: the global AddStudyLibrary method (in the TradeWright 
+	Study Utilities v2.6 component) has a new signature. This change 
+	is necessary to ensure that the component can store the correct
+	information about configured study libraries in the configuration
+	file.
+
+	Enhancement: the add method in the ServiceProviders class has a
+	different signature. This reflects that fact that parameters 
+	to service provider objects are now passed in the form of a 
+	Parameters2.parameters object, rather than being set directly. This
+	change is necessary to ensure that TradeBuild can store the correct
+	information about configured service providers in the configuration
+	file.
+
+	Enhancement: a new component, TradeWright TradeBuild Trading Data
+	Objects, provides access to the TradeBuild database.
+
+	Enhancement: a new component, TradeWright Configuration Utilities,
+	provides mechanisms for storing application configuration data in 
+	XML configuration files.
+
+Version 2.5.1.15  Released 13 April 2007
+
+	NB: this version is not binary compatible with previous
+	versions. All client applications will need to be recompiled.
+
+	Enhancement: the TradeBuildUI component contains two new ActiveX
+	controls, the TimeframeSelector and the TimeframeSpecifier controls.
+	The TimeframeSelector control is essentially a combo box with a list
+	of predefined timeframes. It also includes a Custom entry: selecting 
+	this displays a dialog that allows a timeframe of any length to be
+	specified (this dialog uses the TimeframeSpecifier control), and this
+	timeframe is also added to the list in the TimeframeSelector control.
+
+	Enhancement: a Constant Momentum Bars study has been added to the 
+	Common Studies Library.
+
+	Enhancement: a Constant Volume Bars study has been added to the 
+	Common Studies Library.
+
+	Enhancement: a Total Volume value has been added to the Constant Time 
+	Bars study.
+
+	Enhancement: the Study Tester now analyses the test data to attempt
+	to determine the minimum tick size, and includes this in the relevant
+	field on the form. If the value is incorrect, the user can simply 
+	change it.
+
+	Bug fix: the BarEndTime function returned an incorrect value for a
+	multi-day bar that spanned a weekend.
+
+	Bug fix: the ContractSpecBuilder control sometimes incorrectly raised
+	a NotReady event.
+
+	Bug fix: accumulated volume was not reset to 0 at session start.
+
+	Bug fix: volume was not calculated properly for a Constant Time Bars 
+	study based on another Constant Time Bars study with a different 
+	timeframe.
+
+	Bug fix: certain error conditions in the IB service provider prevented
+	further use of that service provider in the program run.
+
+Version 2.5.0.12  Released 29 March 2007
+
+	Bug fix: the Study Tester failed to load custom study libraries.
+
+	Bug fix: some study values displayed in the wrong chart region.
+
 Version 2.5.0.10  Released 28 March 2007
 
 	This version is the result of a major restructuring of the various
@@ -240,11 +324,11 @@ Version 2.5.0.10  Released 28 March 2007
 	TradeWright ChartSkil v2.5 (ChartSkil2-5.ocx)
 		A low-level charting control.
 
-	TradeWright Studies UI Controls (StudiesUI2-5.ocx)
+	TradeWright Studies UI Controls v2.5 (StudiesUI2-5.ocx)
 		Contains ActiveX controls for configuring study values for 
 		display on charts.
 
-	TradeWright TradeBuild UI Controls (TradeBuildUI2-5.ocx)
+	TradeWright TradeBuild UI Controls v2.5 (TradeBuildUI2-5.ocx)
 		Contains ActiveX controls for use in TradeBuild-based 
 		programs, covering ticker display, order management,
 		position monitoring, market depth display, and a 
@@ -775,6 +859,12 @@ Version 1.0.18	Released 11 Jun 2004
 
 Appendix B  TradeSkil Demo Version History
 ==========================================
+
+Version 2.5.1.15  Released 13 April 2007
+
+	Enhancement: the TimeframeSelector control is now used to enable
+	charts with any timeframe supported by the historical data service
+	provider to be displayed.
 
 Version 2.5.0.10  Released 28 March 2007
 
