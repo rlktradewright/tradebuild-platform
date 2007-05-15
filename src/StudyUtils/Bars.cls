@@ -93,7 +93,7 @@ End Sub
 ' mSession Event Handlers
 '================================================================================
 
-Private Sub mSession_SessionStarted(ev As TimeframeUtils25.SessionEvent)
+Private Sub mSession_SessionStarted(ev As SessionEvent)
 
 If mBarEndTime <> 0 And _
     mSession.sessionCurrentTime < mBarEndTime Then Exit Sub

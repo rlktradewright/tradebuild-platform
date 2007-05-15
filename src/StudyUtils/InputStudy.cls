@@ -211,7 +211,7 @@ End Property
 Friend Sub addInput( _
                 ByVal name As String, _
                 ByVal description As String, _
-                ByVal valueType As StudyUtils25.StudyInputTypes, _
+                ByVal valueType As StudyInputTypes, _
                 ByVal isDefault As Boolean, _
                 ByVal tickSize As Double)
 Dim valueDef As StudyValueDefinition

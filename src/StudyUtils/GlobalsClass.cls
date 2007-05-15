@@ -80,27 +80,31 @@ End Type
 '================================================================================
 
 Public Function AddStudyLibrary( _
-                ByVal library As StudyLibrary, _
+                ByVal progId As String, _
+                ByVal enabled As Boolean, _
                 Optional ByVal name As String _
                 ) As StudyLibrary
-Set AddStudyLibrary = Globals.StudyLibraryManager.add(library, name)
+Set AddStudyLibrary = Globals.StudyLibraryManager.AddStudyLibrary( _
+                                progId, _
+                                enabled, _
+                                name)
 End Function
 
-Public Function availableStudies() As StudyListEntry()
-availableStudies = Globals.StudyLibraryManager.availableStudies
+Public Function AvailableStudies() As StudyListEntry()
+AvailableStudies = Globals.StudyLibraryManager.AvailableStudies
 End Function
 
 Public Function CreateBars( _
                 ByVal barLength As Long, _
                 ByVal timeUnits As TimePeriodUnits, _
                 ByVal pSession As session, _
-                Optional ByVal ticksize As Double = 0.01, _
+                Optional ByVal tickSize As Double = 0.01, _
                 Optional ByVal numberOfBarsToCache As Long) As bars
 Set CreateBars = New bars
 CreateBars.initialise barLength, _
                             timeUnits, _
                             pSession, _
-                            ticksize, _
+                            tickSize, _
                             numberOfBarsToCache
 End Function
 
@@ -137,19 +141,24 @@ Public Function DefaultStudyValueName() As String
 DefaultStudyValueName = DefaultStudyValueNameStr
 End Function
 
-Public Function getStudyDefaultParameters( _
+Public Function GetStudyDefaultParameters( _
                 ByVal studyName As String, _
                 Optional ByVal libraryName As String) As Parameters2.parameters
-Set getStudyDefaultParameters = Globals.StudyLibraryManager.FetchStudyDefaultParameters( _
+Set GetStudyDefaultParameters = Globals.StudyLibraryManager.FetchStudyDefaultParameters( _
                                             studyName, _
                                             libraryName)
 End Function
 
-Public Function getStudyDefinition( _
+Public Function GetStudyDefinition( _
                 ByVal name As String, _
                 Optional ByVal libraryName As String) As studyDefinition
-Set getStudyDefinition = Globals.StudyLibraryManager.studyDefinition(name, libraryName)
+Set GetStudyDefinition = Globals.StudyLibraryManager.studyDefinition(name, libraryName)
 End Function
+
+Public Sub LoadStudyLibraryConfiguration( _
+                ByVal config As ConfigItemSet)
+Globals.StudyLibraryManager.LoadStudyLibraryConfiguration config
+End Sub
 
 Public Function MovingAverageStudyValueName() As String
 MovingAverageStudyValueName = MovingAverageStudyValueNameStr
@@ -164,11 +173,11 @@ Public Sub RemoveAllStudyLibraries()
 Globals.StudyLibraryManager.RemoveAll
 End Sub
 
-Public Function setStudyDefaultParameters( _
+Public Function SetStudyDefaultParameters( _
                 ByVal studyName As String, _
                 ByVal libraryName As String, _
                 ByVal params As Parameters2.parameters) As Boolean
-setStudyDefaultParameters = Globals.StudyLibraryManager.setStudyDefaultParameters( _
+SetStudyDefaultParameters = Globals.StudyLibraryManager.SetStudyDefaultParameters( _
                                             studyName, _
                                             libraryName, _
                                             params)

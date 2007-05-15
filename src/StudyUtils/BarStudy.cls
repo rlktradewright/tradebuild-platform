@@ -71,7 +71,7 @@ Option Explicit
 ' @return the<code>Bars</code> object.
 '
 '@/
-Public Property Get bars() As StudyUtils25.bars
+Public Property Get bars() As bars
 
 End Property
 
