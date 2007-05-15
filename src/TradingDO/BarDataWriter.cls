@@ -37,6 +37,9 @@ Option Explicit
 Event ConnectFailed( _
                 ByVal errorCode As Long, _
                 ByVal errorDesc As String)
+
+Event DataWritten()
+
 Event Error( _
                 ByVal errorCode As Long, _
                 ByVal errorDesc As String)
@@ -71,6 +74,8 @@ Private mCmd As ADODB.Command
 
 Private mConnectionString As String
 
+Private mParent As Instrument
+
 '@===============================================================================
 ' Class Event Handlers
 '@===============================================================================
@@ -93,6 +98,7 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
                             ModuleName & ": connection error" & vbCrLf & _
                             pError.Description & vbCrLf & _
                             gGenerateErrorMessage(pConnection))
+    mParent.releaseWriter Me
     Exit Sub
 End If
 
@@ -118,7 +124,10 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
                     pError.Description & vbCrLf & _
                     gGenerateErrorMessage(pConnection))
     connectToDB
-    Exit Sub
+Else
+    mConnection.Close
+    RaiseEvent DataWritten
+    mParent.releaseWriter Me
 End If
 End Sub
 
@@ -132,9 +141,11 @@ End Sub
 
 Friend Sub initialise( _
                 ByVal connectionString As String, _
-                ByVal instrumentId As Long)
+                ByVal instrumentId As Long, _
+                ByVal parent As Instrument)
 mConnectionString = connectionString
 mInstrumentID = instrumentId
+Set mParent = parent
 End Sub
 
 Public Sub WriteBar( _

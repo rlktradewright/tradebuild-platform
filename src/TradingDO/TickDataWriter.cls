@@ -37,10 +37,13 @@ Option Explicit
 Event ConnectFailed( _
                 ByVal errorCode As Long, _
                 ByVal errorDesc As String)
+
+Event DataWritten()
+
 Event Error( _
                 ByVal errorCode As Long, _
                 ByVal errorDesc As String)
-
+                
 '@===============================================================================
 ' Constants
 '@===============================================================================
@@ -71,6 +74,10 @@ Private mCmd As ADODB.Command
 
 Private mConnectionString As String
 
+Private mParent As instrument
+
+Private mWriterId As String
+
 '@===============================================================================
 ' Class Event Handlers
 '@===============================================================================
@@ -93,16 +100,18 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
                             "TickDataAccessor: connection error" & vbCrLf & _
                             pError.Description & vbCrLf & _
                             gGenerateErrorMessage(pConnection))
+    Debug.Print "Writer " & mWriterId & " error connecting to db: (" & pError.Number & ") " & pError.Description
+    mParent.releaseWriter Me
     Exit Sub
 End If
 
 mIsConnecting = False
 
+Debug.Print "Writer " & mWriterId & " connected to db"
 Set mCmd.ActiveConnection = mConnection
 mCmd.Execute , _
             , _
             ExecuteOptionEnum.adAsyncExecute + ExecuteOptionEnum.adExecuteNoRecords
-mConnection.Close
 End Sub
 
 Private Sub mConnection_ExecuteComplete( _
@@ -117,9 +126,15 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
                     "TickDataAccessor: execution error" & vbCrLf & _
                     pError.Description & vbCrLf & _
                     gGenerateErrorMessage(pConnection))
+    Debug.Print "Writer " & mWriterId & " error writing tick data: (" & pError.Number & ") " & pError.Description
     connectToDB
-    Exit Sub
+Else
+    mConnection.Close
+    Debug.Print "Writer " & mWriterId & " data written"
+    RaiseEvent DataWritten
+    mParent.releaseWriter Me
 End If
+
 End Sub
 
 Private Sub mConnection_InfoMessage( _
@@ -141,9 +156,13 @@ End Sub
 
 Friend Sub initialise( _
                 ByVal connectionString As String, _
-                ByVal instrumentId As Long)
+                ByVal instrumentId As Long, _
+                ByVal parent As instrument, _
+                ByVal writerId As String)
 mConnectionString = connectionString
 mInstrumentID = instrumentId
+Set mParent = parent
+mWriterId = writerId
 End Sub
 
 Public Sub WriteData( _

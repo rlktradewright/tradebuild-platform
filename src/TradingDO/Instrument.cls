@@ -85,6 +85,10 @@ Private mMaxExpiryMonthLength As Long
 Private mMaxCurrencyCodeLength As Long
 Private mMaxOptRightLength As Long
 
+Private mWriters As Collection
+
+Private mWriterCounter As Long
+
 '@===============================================================================
 ' Class Event Handlers
 '@===============================================================================
@@ -92,6 +96,7 @@ Private mMaxOptRightLength As Long
 Private Sub Class_Initialize()
 Set mErrorList = New ErrorList
 Set mEventRaiser = New BusinessObjEventRaiser
+Set mWriters = New Collection
 End Sub
 
 '@===============================================================================
@@ -506,16 +511,6 @@ End If
 Clean
 End Sub
 
-Public Function CreateTickDataReader() As TickDataReader
-Set CreateTickDataReader = New TickDataReader
-CreateTickDataReader.initialise mConnectionString, id
-End Function
-
-Public Function CreateTickDataWriter() As TickDataWriter
-Set CreateTickDataWriter = New TickDataWriter
-CreateTickDataWriter.initialise mConnectionString, id
-End Function
-
 Public Function CreateBarDataReader() As BarDataReader
 Set CreateBarDataReader = New BarDataReader
 CreateBarDataReader.initialise mConnectionString, id
@@ -523,11 +518,39 @@ End Function
 
 Public Function CreateBarDataWriter() As BarDataWriter
 Set CreateBarDataWriter = New BarDataWriter
-CreateBarDataWriter.initialise mConnectionString, id
+CreateBarDataWriter.initialise mConnectionString, id, Me
+mWriters.add CreateBarDataWriter
+End Function
+
+Public Function CreateTickDataReader() As TickDataReader
+Set CreateTickDataReader = New TickDataReader
+CreateTickDataReader.initialise mConnectionString, id
+End Function
+
+Public Function CreateTickDataWriter() As TickDataWriter
+Set CreateTickDataWriter = New TickDataWriter
+mWriterCounter = mWriterCounter + 1
+CreateTickDataWriter.initialise mConnectionString, id, Me, shortName & "/" & mWriterCounter
+mWriters.add CreateTickDataWriter
 End Function
 
 Public Sub Delete()
 mDeleted = True
+End Sub
+
+Friend Sub releaseWriter( _
+                ByVal writer As Object)
+Dim i As Long
+Dim obj As Object
+
+For i = mWriters.count To 1 Step -1
+    Set obj = mWriters.item(i)
+    If obj Is writer Then
+        mWriters.remove i
+        Exit Sub
+    End If
+Next
+
 End Sub
 
 '@===============================================================================

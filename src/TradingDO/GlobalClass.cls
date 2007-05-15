@@ -80,10 +80,10 @@ Public Enum InstrumentCategories
     InstrumentCategoryIndex = 6
 End Enum
 
-Public Enum SupportedDatabases
-    SupportedDbSQLServer7
-    SupportedDbSQLServer2000
-    SupportedDbSQLServer2005
+Public Enum DatabaseTypes
+    DbSQLServer7 = 1
+    DbSQLServer2000
+    DbSQLServer2005
 End Enum
 
 '@================================================================================
@@ -129,35 +129,48 @@ Set CreateTradingDB = New tradingDB
 CreateTradingDB.initialise connectionString
 End Function
 
+Public Function DatabaseTypeFromString( _
+                ByVal value As String) As DatabaseTypes
+DatabaseTypeFromString = gDatabaseTypeFromString(value)
+End Function
+
+Public Function DatabaseTypeToString( _
+                ByVal value As DatabaseTypes) As String
+DatabaseTypeToString = gDatabaseTypeToString(value)
+End Function
+
 Public Function GenerateConnectionString( _
-                ByVal dbType As SupportedDatabases, _
+                ByVal dbType As DatabaseTypes, _
                 ByVal server As String, _
                 ByVal databaseName As String, _
                 Optional ByVal username As String, _
                 Optional ByVal password As String) As String
 
 Select Case dbType
-Case SupportedDbSQLServer7
+Case DbSQLServer7
     GenerateConnectionString = "Provider=SQLOLEDB" & _
                         ";Data Source=" & server & _
                         ";Initial Catalog=" & databaseName & _
                         IIf(username = "", _
                             ";Integrated Security=SSPI", _
                             ";User Id=" & username & ";Password=" & password)
-Case SupportedDbSQLServer2000
+Case DbSQLServer2000
     GenerateConnectionString = "Provider=SQLOLEDB" & _
                         ";Data Source=" & server & _
                         ";Initial Catalog=" & databaseName & _
                         IIf(username = "", _
                             ";Integrated Security=SSPI", _
                             ";User Id=" & username & ";Password=" & password)
-Case SupportedDbSQLServer2005
+Case DbSQLServer2005
     GenerateConnectionString = "Provider=SQLNCLI;" & _
                         "Server=" & server & _
                         ";Database=" & databaseName & _
                         IIf(username = "", _
-                            ";Trusted_Connection=yes;", _
-                            ";Uid=" & username & ";Pwd=" & password)
+                            ";Trusted_Connection=yes", _
+                            ";Uid=" & username & ";Pwd=" & password) & _
+                        ";Network Library=DBMSSOCN" & _
+                        ";Min Pool Size=100" & _
+                        ";Max Pool Size=500"
 End Select
                 
 End Function
