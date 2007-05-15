@@ -5,7 +5,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const ProjectName                    As String = "TradeBuild25"
+Public Const ProjectName                    As String = "TradeBuild26"
 
 Public Const S_OK                           As Long = 0
 Public Const NoValidID                      As Long = -1
@@ -93,7 +93,7 @@ End Sub
 '
 '@/
 Public Function gEntryOrderTypeToOrderType( _
-                ByVal pEntryOrderType As TradeBuild25.EntryOrderTypes) As TradeBuild25.OrderTypes
+                ByVal pEntryOrderType As TradeBuild26.EntryOrderTypes) As TradeBuild26.OrderTypes
 Select Case pEntryOrderType
 Case EntryOrderTypeMarket
     gEntryOrderTypeToOrderType = OrderTypeMarket
@@ -125,7 +125,7 @@ Case EntryOrderTypeStopLimit
     gEntryOrderTypeToOrderType = OrderTypeStopLimit
 Case Else
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "TradeBuild25.Module1::gEntryOrderTypeToOrderType", _
+                "TradeBuild26.Module1::gEntryOrderTypeToOrderType", _
                 "Invalid entry type"
 End Select
 End Function
@@ -196,7 +196,7 @@ Case EntryOrderTypeStopLimit
 End Select
 End Function
 
-Public Function gLegOpenCloseFromString(ByVal value As String) As TradeBuild25.LegOpenClose
+Public Function gLegOpenCloseFromString(ByVal value As String) As TradeBuild26.LegOpenClose
 Select Case UCase$(value)
 Case ""
     gLegOpenCloseFromString = LegUnknownPos
@@ -209,7 +209,7 @@ Case "CLOSE"
 End Select
 End Function
 
-Public Function gLegOpenCloseToString(ByVal value As TradeBuild25.LegOpenClose) As String
+Public Function gLegOpenCloseToString(ByVal value As TradeBuild26.LegOpenClose) As String
 Select Case value
 Case LegSamePos
     gLegOpenCloseToString = "SAME"
@@ -418,7 +418,7 @@ End Function
 '
 '@/
 Public Function gStopOrderTypeToOrderType( _
-                ByVal pStopOrderType As TradeBuild25.StopOrderTypes) As TradeBuild25.OrderTypes
+                ByVal pStopOrderType As TradeBuild26.StopOrderTypes) As TradeBuild26.OrderTypes
 Select Case pStopOrderType
 Case StopOrderTypeNone
     gStopOrderTypeToOrderType = OrderTypeNone
@@ -436,7 +436,7 @@ Case StopOrderTypeAuto
     gStopOrderTypeToOrderType = OrderTypeAutoLimit
 Case Else
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "TradeBuild25.Module1::gStopOrderTypeToOrderType", _
+                "TradeBuild26.Module1::gStopOrderTypeToOrderType", _
                 "Invalid entry type"
 End Select
 End Function
@@ -469,7 +469,7 @@ End Function
 '
 '@/
 Public Function gTargetOrderTypeToOrderType( _
-                ByVal pTargetOrderType As TradeBuild25.TargetOrderTypes) As TradeBuild25.OrderTypes
+                ByVal pTargetOrderType As TradeBuild26.TargetOrderTypes) As TradeBuild26.OrderTypes
 Select Case pTargetOrderType
 Case TargetOrderTypeNone
     gTargetOrderTypeToOrderType = OrderTypeNone
@@ -489,7 +489,7 @@ Case TargetOrderTypeAuto
     gTargetOrderTypeToOrderType = OrderTypeAutoLimit
 Case Else
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "TradeBuild25.Module1::gTargetOrderTypeToOrderType", _
+                "TradeBuild26.Module1::gTargetOrderTypeToOrderType", _
                 "Invalid entry type"
 End Select
 End Function
@@ -513,7 +513,7 @@ Case TargetOrderTypeAuto
 End Select
 End Function
 
-Public Function gTickfileSpecifierToString(TickfileSpec As TradeBuild25.TickfileSpecifier) As String
+Public Function gTickfileSpecifierToString(TickfileSpec As TradeBuild26.TickfileSpecifier) As String
 If TickfileSpec.filename <> "" Then
     gTickfileSpecifierToString = TickfileSpec.filename
 Else

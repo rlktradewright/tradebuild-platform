@@ -64,7 +64,7 @@ Event volume(ByRef ev As QuoteEvent)
 ' Constants
 '@================================================================================
 
-Private Const ModuleName As String = "TradeBuild25.Ticker"
+Private Const ModuleName As String = "TradeBuild26.Ticker"
 
 '@================================================================================
 ' Enums
@@ -120,7 +120,7 @@ Private mTickers                    As Tickers
 
 Private mState                      As TickerStates
 
-Private mTimeframes                 As TradeBuild25.Timeframes
+Private mTimeframes                 As TradeBuild26.Timeframes
 
 Private mCurrTickfileIndex          As Long
 
@@ -145,7 +145,7 @@ Private mChange                     As Double
 Private mChangeString               As String
 Private mChangePercent              As Double
 
-Private WithEvents mContracts       As TradeBuild25.Contracts
+Private WithEvents mContracts       As TradeBuild26.Contracts
 Attribute mContracts.VB_VarHelpID = -1
 Private mContract                   As Contract
 
@@ -161,7 +161,7 @@ Private mIncludeMarketDepthInTickfile As Boolean
 Private mOutputTickfileFormat       As String
 Private mOutputTickFilePath         As String
 
-Private mWriter                     As TradeBuild25.TickfileWriter
+Private mWriter                     As TradeBuild26.TickfileWriter
 
 Private mClock                      As Clock
 
@@ -253,7 +253,7 @@ Set mDefaultOrderContext = mPositionManager.OrderContexts.add("$default")
 Set mDefaultDummyOrderContext = mDummyPositionManager.OrderContexts.add("$default")
 
 Set mClock = New Clock
-Set mTimeframes = New TradeBuild25.Timeframes
+Set mTimeframes = New TradeBuild26.Timeframes
 mTimeframes.Ticker = Me
 mCurrTickfileIndex = -1
 
@@ -262,7 +262,7 @@ mMaxBidPricesIndex = -1
 End Sub
 
 Private Sub Class_Terminate()
-Debug.Print "TradeBuild25.Ticker terminated"
+Debug.Print "TradeBuild26.Ticker terminated"
 End Sub
 
 '@================================================================================
@@ -1116,6 +1116,16 @@ ElseIf mReplayingTickfile Then
     State = TickerStates.TickerStateRunning
 Else
     
+    If mContract.ExpiryDate <> 0 And mContract.ExpiryDate < Date Then
+        Set ev.source = Me
+        ev.eventCode = ApiNotifyCodes.ApiNotifyContractExpired
+        ev.eventMessage = "Contract has expired: " & Replace(mContracts.contractSpecifier.ToString, vbCrLf, "; ")
+        RaiseEvent Notification(ev)
+        mTickers.notify ev
+        StopTicker
+        mInEventHandler = False
+        Exit Sub
+    End If
     prepare
     
     Set mRealtimeDataReader = mTradeBuildAPI.ServiceProviders.CreateRealtimeDataReader(Me, Me)
@@ -1270,7 +1280,7 @@ End Property
 Public Property Let DOMEventsRequired(ByVal value As DOMEvents)
 If mState <> TickerStates.TickerStateCreated Then
     err.Raise ErrorCodes.ErrIllegalStateException, _
-            "TradeBuild25.Ticker::(Let)DOMEventsRequired", _
+            "TradeBuild26.Ticker::(Let)DOMEventsRequired", _
             "Ticker is already in use"
 End If
 mDOMEventsRequired = value
@@ -1307,7 +1317,7 @@ End Property
 Public Property Let includeMarketDepthInTickfile(ByVal value As Boolean)
 If mState <> TickerStates.TickerStateCreated Then
     err.Raise ErrorCodes.ErrIllegalStateException, _
-            "TradeBuild25.Ticker::(Let)includeMarketDepthInTickfile", _
+            "TradeBuild26.Ticker::(Let)includeMarketDepthInTickfile", _
             "Ticker is already in use"
 End If
 mIncludeMarketDepthInTickfile = value
@@ -1356,7 +1366,7 @@ End Property
 Public Property Let noImpliedTrades(ByVal value As Boolean)
 If mState <> TickerStates.TickerStateCreated Then
     err.Raise ErrorCodes.ErrIllegalStateException, _
-            "TradeBuild25.Ticker::(Let)noImpliedTrades", _
+            "TradeBuild26.Ticker::(Let)noImpliedTrades", _
             "Ticker is already in use"
 End If
 mNoImpliedTrades = value
@@ -1369,7 +1379,7 @@ End Property
 Public Property Let noVolumeAdjustments(ByVal value As Boolean)
 If mState <> TickerStates.TickerStateCreated Then
     err.Raise ErrorCodes.ErrIllegalStateException, _
-            "TradeBuild25.Ticker::(Let)noVolumeAdjustments", _
+            "TradeBuild26.Ticker::(Let)noVolumeAdjustments", _
             "Ticker is already in use"
 End If
 mNoVolumeAdjustments = value
@@ -1382,7 +1392,7 @@ End Property
 Public Property Let outputTickfileFormat(ByVal value As String)
 If mState <> TickerStates.TickerStateCreated Then
     err.Raise ErrorCodes.ErrIllegalStateException, _
-            "TradeBuild25.Ticker::(Let)OutputTickfileFormat", _
+            "TradeBuild26.Ticker::(Let)OutputTickfileFormat", _
             "Ticker is already in use"
 End If
 mOutputTickfileFormat = value
@@ -1395,7 +1405,7 @@ End Property
 Public Property Let outputTickfilePath(ByVal value As String)
 If mState <> TickerStates.TickerStateCreated Then
     err.Raise ErrorCodes.ErrIllegalStateException, _
-            "TradeBuild25.Ticker::(Let)OutputTickFilePath", _
+            "TradeBuild26.Ticker::(Let)OutputTickFilePath", _
             "Ticker is already in use"
 End If
 mOutputTickFilePath = value
@@ -1451,7 +1461,7 @@ Public Property Get tickNumber() As Long
 tickNumber = mTickNumber
 End Property
 
-Public Property Get Timeframes() As TradeBuild25.Timeframes
+Public Property Get Timeframes() As TradeBuild26.Timeframes
 Set Timeframes = mTimeframes
 End Property
 
@@ -1488,7 +1498,7 @@ End Property
 Public Property Let writeToTickFile(ByVal value As Boolean)
 If mState <> TickerStates.TickerStateCreated Then
     err.Raise ErrorCodes.ErrIllegalStateException, _
-            "TradeBuild25.Ticker::(Let)writeToTickFile", _
+            "TradeBuild26.Ticker::(Let)writeToTickFile", _
             "Ticker is already in use"
 End If
 mWriteToTickFile = value
@@ -1616,7 +1626,7 @@ Friend Function addTimer(ByVal expiryTime As Double, _
                         ByVal expiryTimeUnits As expiryTimeUnits, _
                         ByVal data As Object) As TimerListItem
 If mTimerList Is Nothing Then
-    Set mTimerList = TimerUtils2.createTimerList( _
+    Set mTimerList = TimerUtils2.CreateTimerList( _
                                     500, _
                                     IIf(mReplayingTickfile, True, False))
     mTimerList.StartTiming
@@ -1683,7 +1693,7 @@ End Function
 
 Public Sub loadTicker(ByVal pContractSpecifier As contractSpecifier)
 If mState <> TickerStates.TickerStateCreated Then err.Raise ErrorCodes.ErrIllegalStateException, _
-                        "TradeBuild25.Ticker::LoadTicker", _
+                        "TradeBuild26.Ticker::LoadTicker", _
                         "Ticker is already in use"
 
 mLoadOnly = True
@@ -1783,19 +1793,19 @@ If mState = TickerStates.TickerStateClosing Then Exit Sub
 
 If mState = TickerStates.TickerStateStopped Then
     err.Raise ErrorCodes.ErrIllegalStateException, _
-                    "TradeBuild25.Ticker::requestMarketDepth", _
+                    "TradeBuild26.Ticker::requestMarketDepth", _
                     "Can't call requestMarketDepth on a dead ticker object"
 End If
                         
 If DOMEventsRequired = DOMEvents.DOMNoEvents And Not writeToTickFile Then
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "TradeBuild25.Ticker::requestMarketDepth", _
+                "TradeBuild26.Ticker::requestMarketDepth", _
                 "writeToTickFile must be true if DOMEventsRequired=DOMNoevents"
 End If
 
 If writeToTickFile And mWriter Is Nothing Then
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "TradeBuild25.Ticker::requestMarketDepth", _
+                "TradeBuild26.Ticker::requestMarketDepth", _
                 "Can't write market depth to tickfile: no output tickfile for this ticker"
 End If
 
@@ -1804,7 +1814,7 @@ If mReplayingTickfile Then
     ' with market depth forms that are being started up (eg form catches the
     ' MarketDepthNotAvailable event and unloads, but form creator then shows rhe
     ' form again)
-    Set mNoMarketDepthNotifyTimer = createIntervalTimer(1)
+    Set mNoMarketDepthNotifyTimer = CreateIntervalTimer(1)
     mNoMarketDepthNotifyTimer.StartTimer
     Exit Sub
 End If
@@ -1842,7 +1852,7 @@ End Sub
 
 Public Sub StartTicker(ByVal pContractSpecifier As contractSpecifier)
 If mState <> TickerStates.TickerStateCreated Then err.Raise ErrorCodes.ErrIllegalStateException, _
-                        "TradeBuild25.Ticker::StartTicker", _
+                        "TradeBuild26.Ticker::StartTicker", _
                         "Ticker is already in use"
 
 State = TickerStates.TickerStateStarting
@@ -1857,7 +1867,7 @@ Public Sub StopTicker()
 If mState = TickerStates.TickerStateStopped Or mState = TickerStates.TickerStateClosing Then Exit Sub
 
 If mInEventHandler Then
-    Set mStopTickerTimer = createIntervalTimer(1)
+    Set mStopTickerTimer = CreateIntervalTimer(1)
     mStopTickerTimer.StartTimer
     Exit Sub
 End If
@@ -1874,7 +1884,7 @@ If Not mWriter Is Nothing Then
         ' we've finished processing the input data before the service provider
         ' writer is ready - so delay releasing the writer until the
         ' service provider writer has had a chance to finish initialising
-        Set mWriterReleaseTimer = createIntervalTimer(60, ExpiryTimeUnitSeconds)
+        Set mWriterReleaseTimer = CreateIntervalTimer(60, ExpiryTimeUnitSeconds)
         mWriterReleaseTimer.StartTimer
         Set mSelfRef = Me   ' ensure this ticker isn't released
     End If
@@ -2018,7 +2028,7 @@ calculateSpDomRequirement = DOMEventsReqd
 End Function
 
 Private Sub CreateOutputTickfile()
-Dim tfManager As TradeBuild25.TickFileManager
+Dim tfManager As TradeBuild26.TickFileManager
 
 If mTickfileManager Is Nothing Then
     Set tfManager = New TickFileManager
@@ -2288,7 +2298,7 @@ Next
 End Sub
 
 Private Sub fireSetMarketDepthCell( _
-                ByVal side As TradeBuild25.DOMSides, _
+                ByVal side As TradeBuild26.DOMSides, _
                 ByVal price As Double, _
                 ByVal size As Long)
 Dim listener As MarketDepthListener
@@ -2427,7 +2437,7 @@ End Sub
 
 Private Sub notifyDOMPrices( _
                 ByRef prices() As PriceTableEntry, _
-                ByVal side As TradeBuild25.DOMSides)
+                ByVal side As TradeBuild26.DOMSides)
 Dim i As Long
 
 For i = 0 To UBound(prices)
@@ -2498,7 +2508,7 @@ If size <> 0 Then
 End If
 
 mAccumulatedVolume = mAccumulatedVolume + size
-notifyVolume timestamp, mAccumulatedVolume
+If mFirstVolumeReceived Then notifyVolume timestamp, mAccumulatedVolume
 End Sub
 
 Private Sub notifyVolume(ByVal timestamp As Date, ByVal size As Long)
@@ -2550,12 +2560,12 @@ End If
 
 If mSimulatedOrders Then
     Set orderSubmitter = mTradeBuildAPI.ServiceProviders.CreateSimulatedOrderSubmitter(mPositionManager, mContract)
-    If orderSubmitter Is Nothing Then
-        ' a simulated order submission service provider has not been configured
-        ' so use the default one
-        mTradeBuildAPI.ServiceProviders.add New TradeBuild25.OrderSimulatorSP
-        Set orderSubmitter = mTradeBuildAPI.ServiceProviders.CreateSimulatedOrderSubmitter(mPositionManager, mContract)
-    End If
+'    If orderSubmitter Is Nothing Then
+'        ' a simulated order submission service provider has not been configured
+'        ' so use the default one
+'        mTradeBuildAPI.ServiceProviders.add New TradeBuild26.OrderSimulatorSP, Nothing
+'        Set orderSubmitter = mTradeBuildAPI.ServiceProviders.CreateSimulatedOrderSubmitter(mPositionManager, mContract)
+'    End If
     mPositionManager.simulated = True
     mPositionManager.orderSubmitter = orderSubmitter
 End If

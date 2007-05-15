@@ -226,7 +226,7 @@ On Error GoTo 0
 
 If lOrder Is Nothing Then
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "TradeBuild25.AdvancedOrderSimulator::cancelOrder", _
+                "TradeBuild26.AdvancedOrderSimulator::cancelOrder", _
                 "Unknown order id " & id
 End If
 
@@ -321,14 +321,14 @@ Friend Sub placeOrder( _
                 ByVal transmit As Boolean)
 
 Dim lOrder As SimulatorOrder
-Dim specifier As TradeBuild25.contractSpecifier
+Dim specifier As TradeBuild26.contractSpecifier
 Dim pendingOrder As SimulatorOrder
 
 Select Case pOrder.orderType
-Case TradeBuild25.OrderTypes.OrderTypeMarket, _
-    TradeBuild25.OrderTypes.OrderTypeLimit, _
-    TradeBuild25.OrderTypes.OrderTypeStop, _
-    TradeBuild25.OrderTypes.OrderTypeStopLimit
+Case TradeBuild26.OrderTypes.OrderTypeMarket, _
+    TradeBuild26.OrderTypes.OrderTypeLimit, _
+    TradeBuild26.OrderTypes.OrderTypeStop, _
+    TradeBuild26.OrderTypes.OrderTypeStopLimit
 Case Else
     setRejectOrder pOrder, "Order type " & pOrder.orderType & " not supported by simulator"
     Exit Sub
@@ -336,14 +336,14 @@ End Select
 
 If marketIndex < 0 Or marketIndex > UBound(mMarketTable) Then
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "TradeBuild25.AdvancedOrderSimulator::placeOrder", _
+            "TradeBuild26.AdvancedOrderSimulator::placeOrder", _
             "Invalid marketIndex " & marketIndex & " in order " & pOrder.id
 End If
 
 Set specifier = pOrder.Contract.specifier
 If Not specifier.Equals(mMarketTable(marketIndex).contractSpecifier) Then
     err.Raise ErrorCodes.ErrIllegalStateException, _
-            "TradeBuild25.AdvancedOrderSimulator::placeOrder", _
+            "TradeBuild26.AdvancedOrderSimulator::placeOrder", _
             "Incorrect contract in order " & pOrder.id & ": " & _
             specifier.ToString
 End If
@@ -501,7 +501,7 @@ With mMarketTable(marketIndex)
             lOrder.parentId = "" _
         Then
             Select Case lOrder.order.orderType
-                Case TradeBuild25.OrderTypes.OrderTypeStop
+                Case TradeBuild26.OrderTypes.OrderTypeStop
                     If lOrder.order.action = OrderActions.ActionBuy And _
                         trade >= lOrder.order.triggerPrice Then
                         setSubmitOrder lOrder
@@ -509,7 +509,7 @@ With mMarketTable(marketIndex)
                         trade <= lOrder.order.triggerPrice Then
                         setSubmitOrder lOrder
                     End If
-                Case TradeBuild25.OrderTypes.OrderTypeStopLimit
+                Case TradeBuild26.OrderTypes.OrderTypeStopLimit
                     If lOrder.order.action = OrderActions.ActionBuy And _
                         trade >= lOrder.order.triggerPrice Then
                         setSubmitOrder lOrder
@@ -610,11 +610,11 @@ End Sub
 Private Sub matchOrder(ByVal pOrder As SimulatorOrder)
 With mMarketTable(pOrder.marketIndex)
     Select Case pOrder.order.orderType
-    Case TradeBuild25.OrderTypes.OrderTypeMarket, _
-        TradeBuild25.OrderTypes.OrderTypeStop
+    Case TradeBuild26.OrderTypes.OrderTypeMarket, _
+        TradeBuild26.OrderTypes.OrderTypeStop
         setFillOrder pOrder, IIf(pOrder.order.action = OrderActions.ActionBuy, .ask, .bid), pOrder.order.quantity
-    Case TradeBuild25.OrderTypes.OrderTypeLimit, _
-        TradeBuild25.OrderTypes.OrderTypeStopLimit
+    Case TradeBuild26.OrderTypes.OrderTypeLimit, _
+        TradeBuild26.OrderTypes.OrderTypeStopLimit
         If pOrder.order.action = OrderActions.ActionBuy And _
             pOrder.order.limitPrice >= .ask _
         Then
@@ -632,11 +632,11 @@ Private Sub matchOrderTrade(ByVal pOrder As SimulatorOrder, _
                             ByVal trade As Double)
 With mMarketTable(pOrder.marketIndex)
     Select Case pOrder.order.orderType
-    Case TradeBuild25.OrderTypes.OrderTypeMarket, _
-        TradeBuild25.OrderTypes.OrderTypeStop
+    Case TradeBuild26.OrderTypes.OrderTypeMarket, _
+        TradeBuild26.OrderTypes.OrderTypeStop
         setFillOrder pOrder, IIf(pOrder.order.action = OrderActions.ActionBuy, .ask, .bid), pOrder.order.quantity
-    Case TradeBuild25.OrderTypes.OrderTypeLimit, _
-        TradeBuild25.OrderTypes.OrderTypeStop
+    Case TradeBuild26.OrderTypes.OrderTypeLimit, _
+        TradeBuild26.OrderTypes.OrderTypeStop
         If pOrder.order.action = OrderActions.ActionBuy And _
             pOrder.order.limitPrice >= trade _
         Then
@@ -667,7 +667,7 @@ End Sub
 'On Error GoTo 0
 'If theOrder Is Nothing Then
 '    err.Raise ErrorCodes.UnknownOrderID, _
-'                "TradeBuild25.AdvancedOrderSimulator::removeCancelledOrder", _
+'                "TradeBuild26.AdvancedOrderSimulator::removeCancelledOrder", _
 '                "Unknown order id " & id
 'End If
 '
@@ -718,7 +718,7 @@ End Sub
 'On Error GoTo 0
 'If theOrder Is Nothing Then
 '    err.Raise ErrorCodes.UnknownOrderID, _
-'                "TradeBuild25.AdvancedOrderSimulator::removeFilledOrder", _
+'                "TradeBuild26.AdvancedOrderSimulator::removeFilledOrder", _
 '                "Unknown order id " & id
 'End If
 '
@@ -744,7 +744,7 @@ End Sub
 'On Error GoTo 0
 'If lOrder Is Nothing Then
 '    err.Raise ErrorCodes.UnknownOrderID, _
-'                "TradeBuild25.AdvancedOrderSimulator::removeOrder", _
+'                "TradeBuild26.AdvancedOrderSimulator::removeOrder", _
 '                "Unknown order id " & id
 'End If
 '
@@ -909,7 +909,7 @@ End Sub
 
 Private Sub setSubmitOrder(pOrder As SimulatorOrder)
 Select Case pOrder.order.orderType
-Case TradeBuild25.OrderTypes.OrderTypeLimit, TradeBuild25.OrderTypes.OrderTypeMarket
+Case TradeBuild26.OrderTypes.OrderTypeLimit, TradeBuild26.OrderTypes.OrderTypeMarket
     Select Case pOrder.order.status
     Case OrderStatuses.OrderStatusCreated
         If pOrder.parentId <> "" Then
@@ -948,10 +948,10 @@ Case TradeBuild25.OrderTypes.OrderTypeLimit, TradeBuild25.OrderTypes.OrderTypeMa
         End If
     Case Else
         err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                    "TradeBuild25.AdvancedOrderSimulator::setSubmitOrder", _
+                    "TradeBuild26.AdvancedOrderSimulator::setSubmitOrder", _
                     "Order type " & pOrder.order.orderType & " invalid for submission"
     End Select
-Case TradeBuild25.OrderTypes.OrderTypeStop, TradeBuild25.OrderTypes.OrderTypeStopLimit
+Case TradeBuild26.OrderTypes.OrderTypeStop, TradeBuild26.OrderTypes.OrderTypeStopLimit
     Select Case pOrder.order.status
     Case OrderStatuses.OrderStatusCreated
         ' in all cases, we want the order to move to pending submit on this
@@ -979,13 +979,13 @@ Case TradeBuild25.OrderTypes.OrderTypeStop, TradeBuild25.OrderTypes.OrderTypeSto
         End If
     Case Else
         err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                    "TradeBuild25.AdvancedOrderSimulator::setSubmitOrder", _
+                    "TradeBuild26.AdvancedOrderSimulator::setSubmitOrder", _
                     "Order type " & pOrder.order.orderType & " invalid for submission"
     End Select
         
 Case Else
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "TradeBuild25.AdvancedOrderSimulator::setSubmitOrder", _
+                "TradeBuild26.AdvancedOrderSimulator::setSubmitOrder", _
                 "Order type " & pOrder.order.orderType & " invalid for submission"
 End Select
 

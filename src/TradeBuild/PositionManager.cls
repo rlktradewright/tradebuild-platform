@@ -259,7 +259,7 @@ Private Sub IOrderSubmissionSrvcConsumer_executionDetails( _
                 ByVal pContractSpecifier As TradeBuildSP.IContractSpecifier, _
                 ByVal exec As TradeBuildSP.IExecution)
 Dim lExec As Execution
-Dim lOrder As TradeBuild25.order
+Dim lOrder As TradeBuild26.order
 
 If mDummy Then
     On Error Resume Next
@@ -292,7 +292,7 @@ End Sub
 Private Sub IOrderSubmissionSrvcConsumer_orderStatus( _
                 ByVal orderId As String, _
                 ByVal status As TradeBuildSP.OrderStatuses)
-Dim lOrder As TradeBuild25.order
+Dim lOrder As TradeBuild26.order
 Set lOrder = mOrders.item(orderId)
 lOrder.updateStatus status
 End Sub
@@ -312,7 +312,7 @@ End Sub
 Private Sub IOrderSubmissionSrvcConsumer_rejectOrder( _
                 ByVal orderId As String, _
                 ByVal reason As String)
-Dim lOrder As TradeBuild25.order
+Dim lOrder As TradeBuild26.order
 Set lOrder = mOrders.item(orderId)
 lOrder.updateStatus OrderStatuses.OrderStatusRejected
 End Sub

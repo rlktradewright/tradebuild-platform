@@ -119,7 +119,7 @@ ElseIf TypeOf ev.affectedObject Is Execution Then
         ' should never happen
         tb.notifyFatalError ErrorCodes.ErrUnsupportedOperationException, _
                                         "Unexpected execution deletion", _
-                                        "TradeBuild25.Workspace::CollectionChangeListener_Change"
+                                        "TradeBuild26.Workspace::CollectionChangeListener_Change"
     End Select
 End If
 End Sub

@@ -50,7 +50,7 @@ Public Type PendingBarWrite
     barType         As TradeBuildSP.BarTypes
     barLength       As Long
     barUnit         As TimePeriodUnits
-    Bar             As StudyUtils25.Bar
+    Bar             As StudyUtils26.Bar
     volume          As Long
 End Type
 
@@ -65,7 +65,7 @@ Private mPendingWrites As Queue
 
 Private WithEvents mTimer As TimerUtils2.IntervalTimer
 Attribute mTimer.VB_VarHelpID = -1
-Private mSelfRef As TradeBuild25.HistoricDataWriter
+Private mSelfRef As TradeBuild26.HistoricDataWriter
 
 '@================================================================================
 ' Class Event Handlers
@@ -128,7 +128,7 @@ mTimer.StartTimer
 End Sub
 
 Friend Sub WriteBar( _
-                ByVal theBar As StudyUtils25.Bar, _
+                ByVal theBar As StudyUtils26.Bar, _
                 ByVal barType As TradeBuildSP.BarTypes, _
                 ByVal volume As Long, _
                 ByVal barLength As Long, _

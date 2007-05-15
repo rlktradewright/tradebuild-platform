@@ -86,7 +86,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Function add(ByVal pOrder As TradeBuild25.order) As TradeBuild25.order
+Friend Function add(ByVal pOrder As TradeBuild26.order) As TradeBuild26.order
 Set add = pOrder
 mOrders.add pOrder, pOrder.id
 fireChange CollItemAdded, pOrder
@@ -97,7 +97,7 @@ Public Sub addCollectionChangeListener( _
 mChangeListeners.add value
 End Sub
 
-Public Function item(index As Variant) As TradeBuild25.order
+Public Function item(index As Variant) As TradeBuild26.order
 Attribute item.VB_UserMemId = 0
 Set item = mOrders(index)
 End Function

@@ -180,7 +180,7 @@ mServiceProviders.LoadContracts Me
 Exit Sub
 err:
 err.Raise err.number, _
-            "TradeBuild25.Contracts::Load", _
+            "TradeBuild26.Contracts::Load", _
             err.Description
 End Sub
 

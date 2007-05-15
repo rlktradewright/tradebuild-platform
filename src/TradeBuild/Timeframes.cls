@@ -74,9 +74,9 @@ Private mTradeBuildAPIRef           As WeakReference
 Private mTimeframeTable() As TimeframeTableEntry
 Private mNextTimeframeTableIndex As Long
 
-Private mTicker As TradeBuild25.Ticker
+Private mTicker As TradeBuild26.Ticker
 
-Private mContract As TradeBuild25.Contract
+Private mContract As TradeBuild26.Contract
 
 Private mChangeListeners As Collection
 
@@ -161,7 +161,7 @@ End Select
 
 If saveIntervalSeconds > 0 And saveIntervalSeconds < 5 Then _
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "TradeBuild25.Timeframes::add", _
+            "TradeBuild26.Timeframes::add", _
             "Save interval cannot be less than 5 seconds"
 
 
@@ -213,7 +213,7 @@ End Select
 
 If fromTime > toTime Then
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "TradeBuild25" & "." & "Timeframes" & ":" & "addHistorical", _
+            "TradeBuild26" & "." & "Timeframes" & ":" & "addHistorical", _
             "fromTime must be earlier than toTime"
 End If
 

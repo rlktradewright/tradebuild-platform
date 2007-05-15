@@ -185,7 +185,7 @@ Public Function addLeg( _
 
 If mLocked Then
     err.Raise ErrorCodes.ErrIllegalStateException, _
-                "TradeBuild25.ComboLegs::addLeg", _
+                "TradeBuild26.ComboLegs::addLeg", _
                 "Can't add leg: the object is locked"
 End If
 

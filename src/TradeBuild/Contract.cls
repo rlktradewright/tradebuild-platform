@@ -82,7 +82,7 @@ mTradingClass = PropBag.ReadProperty("tradingclass")
 mContractID = PropBag.ReadProperty("conid")
 mTickSize = PropBag.ReadProperty("mintick")
 mMultiplier = PropBag.ReadProperty("multiplier")
-ReDim mOrderTypes(CLng(PropBag.ReadProperty("uboundordertypes"))) As TradeBuild25.OrderTypes
+ReDim mOrderTypes(CLng(PropBag.ReadProperty("uboundordertypes"))) As TradeBuild26.OrderTypes
 For i = 0 To UBound(mOrderTypes)
     mOrderTypes(i) = PropBag.ReadProperty("ordertype" & i)
 Next
@@ -468,7 +468,7 @@ Set XMLdoc = New DOMDocument30
 XMLdoc.loadXML contractXML
 If XMLdoc.parseError.errorCode <> 0 Then
     err.Raise ErrorCodes.ErrRuntimeException, _
-            "TradeBuild25.Contract::fromXML", _
+            "TradeBuild26.Contract::fromXML", _
             "Contract XML cannot be parsed"
 End If
 
@@ -529,7 +529,7 @@ End With
 
 Set OrderTypes = Contract.selectSingleNode("ordertypes")
 Set nodeList = OrderTypes.selectNodes("ordertype")
-ReDim mOrderTypes(nodeList.length) As TradeBuild25.OrderTypes
+ReDim mOrderTypes(nodeList.length) As TradeBuild26.OrderTypes
 i = 0
 For Each orderType In nodeList
     mOrderTypes(i) = orderType.getAttribute("ordertype")

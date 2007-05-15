@@ -77,7 +77,7 @@ Private mPermittedStopTriggerMethods As Long
 
 Private mIsReady As Boolean
 
-Private mOrigin As TradeBuild25.OrderOrigins
+Private mOrigin As TradeBuild26.OrderOrigins
 Private mBlockOrder As Boolean
 Private mSweepToFill As Boolean
 Private mDisplaySize As Long
@@ -99,11 +99,11 @@ Private mFirmQuoteOnly  As Boolean
 Private mNBBOPriceCap As Double
 Private mOverrideConstraints  As Boolean
 Private mLimitPrice As Double
-Private mOrderType As TradeBuild25.OrderTypes
+Private mOrderType As TradeBuild26.OrderTypes
 Private mQuantity As Long
-Private mTimeInForce As TradeBuild25.OrderTifs
+Private mTimeInForce As TradeBuild26.OrderTifs
 Private mTriggerPrice As Double
-Private mStopTriggerMethod As TradeBuild25.StopTriggerMethods
+Private mStopTriggerMethod As TradeBuild26.StopTriggerMethods
 
 '@================================================================================
 ' Class Event Handlers
@@ -143,7 +143,7 @@ Next
 End Property
 
 Public Property Let allOrNone(ByVal value As Boolean)
-If Not isAttributeSupported(TradeBuild25.OrderAttributeIds.OrderAttAllOrNone) Then attributeNotSupported
+If Not isAttributeSupported(TradeBuild26.OrderAttributeIds.OrderAttAllOrNone) Then attributeNotSupported
 mAllOrNone = value
 End Property
 
@@ -152,7 +152,7 @@ allOrNone = mAllOrNone
 End Property
 
 Public Property Let blockOrder(ByVal value As Boolean)
-If Not isAttributeSupported(TradeBuild25.OrderAttributeIds.OrderAttBlockOrder) Then attributeNotSupported
+If Not isAttributeSupported(TradeBuild26.OrderAttributeIds.OrderAttBlockOrder) Then attributeNotSupported
 mBlockOrder = value
 End Property
 
@@ -177,7 +177,7 @@ CompletedSize = mCompletedSize
 End Property
 
 Public Property Let displaySize(ByVal value As Long)
-If Not isAttributeSupported(TradeBuild25.OrderAttributeIds.OrderAttDisplaySize) Then attributeNotSupported
+If Not isAttributeSupported(TradeBuild26.OrderAttributeIds.OrderAttDisplaySize) Then attributeNotSupported
 mDisplaySize = value
 End Property
 
@@ -194,7 +194,7 @@ dummy = mDummy
 End Property
 
 Public Property Let eTradeOnly(ByVal value As Boolean)
-If Not isAttributeSupported(TradeBuild25.OrderAttributeIds.OrderAttETradeOnly) Then attributeNotSupported
+If Not isAttributeSupported(TradeBuild26.OrderAttributeIds.OrderAttETradeOnly) Then attributeNotSupported
 mETradeOnly = value
 End Property
 
@@ -203,7 +203,7 @@ eTradeOnly = mETradeOnly
 End Property
 
 Public Property Let firmQuoteOnly(ByVal value As Boolean)
-If Not isAttributeSupported(TradeBuild25.OrderAttributeIds.OrderAttFirmQuoteOnly) Then attributeNotSupported
+If Not isAttributeSupported(TradeBuild26.OrderAttributeIds.OrderAttFirmQuoteOnly) Then attributeNotSupported
 mFirmQuoteOnly = value
 End Property
 
@@ -212,7 +212,7 @@ firmQuoteOnly = mFirmQuoteOnly
 End Property
 
 Public Property Let goodAfterTime(ByVal value As Date)
-If Not isAttributeSupported(TradeBuild25.OrderAttributeIds.OrderAttGoodAfterTime) Then attributeNotSupported
+If Not isAttributeSupported(TradeBuild26.OrderAttributeIds.OrderAttGoodAfterTime) Then attributeNotSupported
 mGoodAfterTime = value
 End Property
 
@@ -221,7 +221,7 @@ goodAfterTime = mGoodAfterTime
 End Property
 
 Public Property Let goodAfterTimeTZ(ByVal value As String)
-If Not isAttributeSupported(TradeBuild25.OrderAttributeIds.OrderAttGoodAfterTimeTZ) Then attributeNotSupported
+If Not isAttributeSupported(TradeBuild26.OrderAttributeIds.OrderAttGoodAfterTimeTZ) Then attributeNotSupported
 mGoodAfterTimeTZ = value
 End Property
 
@@ -230,7 +230,7 @@ goodAfterTimeTZ = mGoodAfterTimeTZ
 End Property
 
 Public Property Let goodTillDate(ByVal value As Date)
-If Not isAttributeSupported(TradeBuild25.OrderAttributeIds.OrderAttGoodTillDate) Then attributeNotSupported
+If Not isAttributeSupported(TradeBuild26.OrderAttributeIds.OrderAttGoodTillDate) Then attributeNotSupported
 mGoodTillDate = value
 End Property
 
@@ -239,7 +239,7 @@ goodTillDate = mGoodTillDate
 End Property
 
 Public Property Let goodTillDateTZ(ByVal value As String)
-If Not isAttributeSupported(TradeBuild25.OrderAttributeIds.OrderAttGoodTillDateTZ) Then attributeNotSupported
+If Not isAttributeSupported(TradeBuild26.OrderAttributeIds.OrderAttGoodTillDateTZ) Then attributeNotSupported
 mGoodTillDateTZ = value
 End Property
 
@@ -248,7 +248,7 @@ goodTillDateTZ = mGoodTillDateTZ
 End Property
 
 Public Property Let hidden(ByVal value As Boolean)
-If Not isAttributeSupported(TradeBuild25.OrderAttributeIds.OrderAttHidden) Then attributeNotSupported
+If Not isAttributeSupported(TradeBuild26.OrderAttributeIds.OrderAttHidden) Then attributeNotSupported
 mHidden = value
 End Property
 
@@ -257,7 +257,7 @@ hidden = mHidden
 End Property
 
 Public Property Let ignoreRegularTradingHours(ByVal value As Boolean)
-If Not isAttributeSupported(TradeBuild25.OrderAttributeIds.OrderAttIgnoreRTH) Then attributeNotSupported
+If Not isAttributeSupported(TradeBuild26.OrderAttributeIds.OrderAttIgnoreRTH) Then attributeNotSupported
 mIgnoreRegularTradingHours = value
 End Property
 
@@ -283,7 +283,7 @@ isReady = mIsReady
 End Property
 
 Public Property Let limitPrice(ByVal value As Double)
-If Not isAttributeSupported(TradeBuild25.OrderAttributeIds.OrderAttLimitPrice) Then attributeNotSupported
+If Not isAttributeSupported(TradeBuild26.OrderAttributeIds.OrderAttLimitPrice) Then attributeNotSupported
 mLimitPrice = value
 End Property
 
@@ -292,7 +292,7 @@ limitPrice = mLimitPrice
 End Property
 
 Public Property Let minimumQuantity(ByVal value As Long)
-If Not isAttributeSupported(TradeBuild25.OrderAttributeIds.OrderAttMinimumQuantity) Then attributeNotSupported
+If Not isAttributeSupported(TradeBuild26.OrderAttributeIds.OrderAttMinimumQuantity) Then attributeNotSupported
 mMinimumQuantity = value
 End Property
 
@@ -309,7 +309,7 @@ name = mName
 End Property
 
 Public Property Let NbboPriceCap(ByVal value As Double)
-If Not isAttributeSupported(TradeBuild25.OrderAttributeIds.OrderAttNBBOPriceCap) Then attributeNotSupported
+If Not isAttributeSupported(TradeBuild26.OrderAttributeIds.OrderAttNBBOPriceCap) Then attributeNotSupported
 mNBBOPriceCap = value
 End Property
 
@@ -317,22 +317,22 @@ Public Property Get NbboPriceCap() As Double
 NbboPriceCap = mNBBOPriceCap
 End Property
 
-Public Property Let orderType(ByVal value As TradeBuild25.OrderTypes)
-If Not isAttributeSupported(TradeBuild25.OrderAttributeIds.OrderAttOrderType) Then attributeNotSupported
+Public Property Let orderType(ByVal value As TradeBuild26.OrderTypes)
+If Not isAttributeSupported(TradeBuild26.OrderAttributeIds.OrderAttOrderType) Then attributeNotSupported
 If Not isOrderTypeValueSupported(value) Then attributeValueNotSupported
 mOrderType = value
 End Property
 
-Public Property Get orderType() As TradeBuild25.OrderTypes
+Public Property Get orderType() As TradeBuild26.OrderTypes
 orderType = mOrderType
 End Property
 
-Public Property Let origin(ByVal value As TradeBuild25.OrderOrigins)
-If Not isAttributeSupported(TradeBuild25.OrderAttributeIds.OrderAttOrigin) Then attributeNotSupported
+Public Property Let origin(ByVal value As TradeBuild26.OrderOrigins)
+If Not isAttributeSupported(TradeBuild26.OrderAttributeIds.OrderAttOrigin) Then attributeNotSupported
 mOrigin = value
 End Property
 
-Public Property Get origin() As TradeBuild25.OrderOrigins
+Public Property Get origin() As TradeBuild26.OrderOrigins
 origin = mOrigin
 End Property
 
@@ -342,7 +342,7 @@ Set mOrderSubmitter = value
 End Property
 
 Public Property Let overrideConstraints(ByVal value As Boolean)
-If Not isAttributeSupported(TradeBuild25.OrderAttributeIds.OrderAttOverrideConstraints) Then attributeNotSupported
+If Not isAttributeSupported(TradeBuild26.OrderAttributeIds.OrderAttOverrideConstraints) Then attributeNotSupported
 mOverrideConstraints = value
 End Property
 
@@ -358,7 +358,7 @@ Next
 End Property
 
 Public Property Let percentOffset(ByVal value As Double)
-If Not isAttributeSupported(TradeBuild25.OrderAttributeIds.OrderAttPercentOffset) Then attributeNotSupported
+If Not isAttributeSupported(TradeBuild26.OrderAttributeIds.OrderAttPercentOffset) Then attributeNotSupported
 mPercentOffset = value
 End Property
 
@@ -383,7 +383,7 @@ Set mPositionManager = value
 End Property
 
 Public Property Let quantity(ByVal value As Long)
-If Not isAttributeSupported(TradeBuild25.OrderAttributeIds.OrderAttQuantity) Then attributeNotSupported
+If Not isAttributeSupported(TradeBuild26.OrderAttributeIds.OrderAttQuantity) Then attributeNotSupported
 mQuantity = value
 End Property
 
@@ -399,7 +399,7 @@ Next
 End Property
 
 Public Property Let regularTradingHoursOnly(ByVal value As Boolean)
-If Not isAttributeSupported(TradeBuild25.OrderAttributeIds.OrderAttRTHOnly) Then attributeNotSupported
+If Not isAttributeSupported(TradeBuild26.OrderAttributeIds.OrderAttRTHOnly) Then attributeNotSupported
 mRegularTradingHoursOnly = value
 End Property
 
@@ -408,7 +408,7 @@ regularTradingHoursOnly = mRegularTradingHoursOnly
 End Property
 
 Public Property Let settlingFirm(ByVal value As String)
-If Not isAttributeSupported(TradeBuild25.OrderAttributeIds.OrderAttSettlingFirm) Then attributeNotSupported
+If Not isAttributeSupported(TradeBuild26.OrderAttributeIds.OrderAttSettlingFirm) Then attributeNotSupported
 mSettlingFirm = value
 End Property
 
@@ -434,18 +434,18 @@ For Each orderPlex In mActiveOrderPlexes
 Next
 End Property
 
-Public Property Let StopTriggerMethod(ByVal value As TradeBuild25.StopTriggerMethods)
-If Not isAttributeSupported(TradeBuild25.OrderAttributeIds.OrderAttStopTriggerMethod) Then attributeNotSupported
+Public Property Let StopTriggerMethod(ByVal value As TradeBuild26.StopTriggerMethods)
+If Not isAttributeSupported(TradeBuild26.OrderAttributeIds.OrderAttStopTriggerMethod) Then attributeNotSupported
 If Not isStopTriggerMethodValueSupported(value) Then attributeValueNotSupported
 mStopTriggerMethod = value
 End Property
 
-Public Property Get StopTriggerMethod() As TradeBuild25.StopTriggerMethods
+Public Property Get StopTriggerMethod() As TradeBuild26.StopTriggerMethods
 StopTriggerMethod = mStopTriggerMethod
 End Property
 
 Public Property Let SweepToFill(ByVal value As Boolean)
-If Not isAttributeSupported(TradeBuild25.OrderAttributeIds.OrderAttSweepToFill) Then attributeNotSupported
+If Not isAttributeSupported(TradeBuild26.OrderAttributeIds.OrderAttSweepToFill) Then attributeNotSupported
 mSweepToFill = value
 End Property
 
@@ -463,18 +463,18 @@ Public Property Get Ticker() As Ticker
 Set Ticker = mTicker
 End Property
 
-Public Property Let timeInForce(ByVal value As TradeBuild25.OrderTifs)
-If Not isAttributeSupported(TradeBuild25.OrderAttributeIds.OrderAttTimeInForce) Then attributeNotSupported
+Public Property Let timeInForce(ByVal value As TradeBuild26.OrderTifs)
+If Not isAttributeSupported(TradeBuild26.OrderAttributeIds.OrderAttTimeInForce) Then attributeNotSupported
 If Not isOrderTifValueSupported(value) Then attributeValueNotSupported
 mTimeInForce = value
 End Property
 
-Public Property Get timeInForce() As TradeBuild25.OrderTifs
+Public Property Get timeInForce() As TradeBuild26.OrderTifs
 timeInForce = mTimeInForce
 End Property
 
 Public Property Let triggerPrice(ByVal value As Double)
-If Not isAttributeSupported(TradeBuild25.OrderAttributeIds.OrderAttTriggerPrice) Then attributeNotSupported
+If Not isAttributeSupported(TradeBuild26.OrderAttributeIds.OrderAttTriggerPrice) Then attributeNotSupported
 mTriggerPrice = value
 End Property
 
@@ -587,7 +587,7 @@ Case TIFGoodTillCancelled
 Case TIFImmediateOrCancel
 Case Else
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-    "TradeBuild25.OrderContext::buy", _
+    "TradeBuild26.OrderContext::buy", _
     "Invalid entry TIF"
 End Select
 
@@ -597,7 +597,7 @@ Case TIFGoodTillCancelled
 Case TIFImmediateOrCancel
 Case Else
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-    "TradeBuild25.OrderContext::buy", _
+    "TradeBuild26.OrderContext::buy", _
     "Invalid stop TIF"
 End Select
 
@@ -607,7 +607,7 @@ Case TIFGoodTillCancelled
 Case TIFImmediateOrCancel
 Case Else
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-    "TradeBuild25.OrderContext::buy", _
+    "TradeBuild26.OrderContext::buy", _
     "Invalid target TIF"
 End Select
 
@@ -711,11 +711,11 @@ Dim lStopPrice As Double
 Dim lTargetPrice As Double
 
 If Not mIsReady Then err.Raise ErrorCodes.ErrIllegalStateException, _
-                            "TradeBuild25.OrderContext::CreateOrderPlex", _
+                            "TradeBuild26.OrderContext::CreateOrderPlex", _
                             "The service provider is not ready"
 
 If number <= 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                            "TradeBuild25.OrderContext::CreateOrderPlex", _
+                            "TradeBuild26.OrderContext::CreateOrderPlex", _
                             "The quantity must be greater than zero"
 
 Select Case EntryOrderType
@@ -735,7 +735,7 @@ Case EntryOrderTypeStop
 Case EntryOrderTypeStopLimit
 Case Else
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-    "TradeBuild25.OrderContext::CreateOderPlex", _
+    "TradeBuild26.OrderContext::CreateOderPlex", _
     "Invalid entry type"
 End Select
 
@@ -749,7 +749,7 @@ Case StopOrderTypeLast
 Case StopOrderTypeAuto
 Case Else
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-    "TradeBuild25.OrderContext::CreateOderPlex", _
+    "TradeBuild26.OrderContext::CreateOderPlex", _
     "Invalid stop type"
 End Select
 
@@ -764,7 +764,7 @@ Case TargetOrderTypeLast
 Case TargetOrderTypeAuto
 Case Else
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-    "TradeBuild25.OrderContext::CreateOderPlex", _
+    "TradeBuild26.OrderContext::CreateOderPlex", _
     "Invalid target type"
 End Select
 
@@ -788,7 +788,7 @@ Case EntryOrderTypeMarketOnOpen
 Case EntryOrderTypeMarketOnClose
 Case EntryOrderTypeMarketIfTouched
     If triggerPrice = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                "TradeBuild25.OrderContext::CreateOrderPlex", _
+                                "TradeBuild26.OrderContext::CreateOrderPlex", _
                                 "The trigger price must not be zero for this order type"
     
     entryOrder.triggerPrice = triggerPrice
@@ -801,41 +801,41 @@ Case EntryOrderTypeLast
     entryOrder.limitPrice = mTicker.TradePrice + offset * mTickSize
 Case EntryOrderTypeLimit
     If price = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                "TradeBuild25.OrderContext::CreateOrderPlex", _
+                                "TradeBuild26.OrderContext::CreateOrderPlex", _
                                 "The entry price must not be zero for this order type"
     
     entryOrder.limitPrice = price + offset * mTickSize
 Case EntryOrderTypeLimitOnOpen
     If price = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                "TradeBuild25.OrderContext::CreateOrderPlex", _
+                                "TradeBuild26.OrderContext::CreateOrderPlex", _
                                 "The entry price must not be zero for this order type"
     
     entryOrder.limitPrice = price + offset * mTickSize
 Case EntryOrderTypeLimitOnClose
     If price = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                "TradeBuild25.OrderContext::CreateOrderPlex", _
+                                "TradeBuild26.OrderContext::CreateOrderPlex", _
                                 "The entry price must not be zero for this order type"
     
     entryOrder.limitPrice = price + offset * mTickSize
 Case EntryOrderTypeLimitIfTouched
     If price = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                "TradeBuild25.OrderContext::CreateOrderPlex", _
+                                "TradeBuild26.OrderContext::CreateOrderPlex", _
                                 "The entry price must not be zero for this order type"
     If triggerPrice = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                "TradeBuild25.OrderContext::CreateOrderPlex", _
+                                "TradeBuild26.OrderContext::CreateOrderPlex", _
                                 "The trigger price must not be zero for this order type"
 
     entryOrder.limitPrice = price + offset * mTickSize
     entryOrder.triggerPrice = triggerPrice
 Case EntryOrderTypeStop
     If triggerPrice = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                "TradeBuild25.OrderContext::CreateOrderPlex", _
+                                "TradeBuild26.OrderContext::CreateOrderPlex", _
                                 "The trigger price must not be zero for this order type"
     
     entryOrder.triggerPrice = triggerPrice
 Case EntryOrderTypeStopLimit
     If triggerPrice = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                "TradeBuild25.OrderContext::CreateOrderPlex", _
+                                "TradeBuild26.OrderContext::CreateOrderPlex", _
                                 "The trigger price must not be zero for this order type"
     
     entryOrder.limitPrice = price + offset * mTickSize
@@ -848,23 +848,23 @@ lTriggerPrice = entryOrder.triggerPrice
 
 If StopOrderType <> StopOrderTypeNone Then
     Set stoporder = orderPlex.createStopOrder
-    stoporder.action = IIf(action = ActionBuy, TradeBuild25.OrderActions.ActionSell, TradeBuild25.OrderActions.ActionBuy)
+    stoporder.action = IIf(action = ActionBuy, TradeBuild26.OrderActions.ActionSell, TradeBuild26.OrderActions.ActionBuy)
     stoporder.quantity = number
     
     stoporder.orderType = gStopOrderTypeToOrderType(StopOrderType)
     Select Case StopOrderType
     Case StopOrderTypeStop
         If stopTriggerPrice = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                    "TradeBuild25.OrderContext::CreateOrderPlex", _
+                                    "TradeBuild26.OrderContext::CreateOrderPlex", _
                                     "The stopTrigger price must not be zero for this order type"
         
         stoporder.triggerPrice = stopTriggerPrice + stopOffset * mTickSize
     Case StopOrderTypeStopLimit
         If stopTriggerPrice = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                    "TradeBuild25.OrderContext::CreateOrderPlex", _
+                                    "TradeBuild26.OrderContext::CreateOrderPlex", _
                                     "The stopTrigger price must not be zero for this order type"
         If stopLimitPrice = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                    "TradeBuild25.OrderContext::CreateOrderPlex", _
+                                    "TradeBuild26.OrderContext::CreateOrderPlex", _
                                     "The stopLimit price must not be zero for this order type"
         
         stoporder.triggerPrice = stopTriggerPrice + stopOffset * mTickSize
@@ -885,30 +885,30 @@ End If
 
 If TargetOrderType <> TargetOrderTypeNone Then
     Set targetOrder = orderPlex.createTargetOrder
-    targetOrder.action = IIf(action = ActionBuy, TradeBuild25.OrderActions.ActionSell, TradeBuild25.OrderActions.ActionBuy)
+    targetOrder.action = IIf(action = ActionBuy, TradeBuild26.OrderActions.ActionSell, TradeBuild26.OrderActions.ActionBuy)
     targetOrder.quantity = number
     
     targetOrder.orderType = gTargetOrderTypeToOrderType(TargetOrderType)
     Select Case TargetOrderType
     Case TargetOrderTypeLimit
         If targetPrice = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                    "TradeBuild25.OrderContext::CreateOrderPlex", _
+                                    "TradeBuild26.OrderContext::CreateOrderPlex", _
                                     "The target price must not be zero for this order type"
         
         targetOrder.limitPrice = targetPrice + targetOffset * mTickSize
     Case TargetOrderTypeLimitIfTouched
         If targetPrice = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                    "TradeBuild25.OrderContext::CreateOrderPlex", _
+                                    "TradeBuild26.OrderContext::CreateOrderPlex", _
                                     "The target price must not be zero for this order type"
         If targetTriggerPrice = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                    "TradeBuild25.OrderContext::CreateOrderPlex", _
+                                    "TradeBuild26.OrderContext::CreateOrderPlex", _
                                     "The target trigger price must not be zero for this order type"
     
         targetOrder.limitPrice = targetPrice + offset * mTickSize
         targetOrder.triggerPrice = targetTriggerPrice
     Case TargetOrderTypeMarketIfTouched
         If targetTriggerPrice = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                    "TradeBuild25.OrderContext::CreateOrderPlex", _
+                                    "TradeBuild26.OrderContext::CreateOrderPlex", _
                                     "The target trigger price must not be zero for this order type"
         
         targetOrder.triggerPrice = targetTriggerPrice
@@ -920,7 +920,7 @@ If TargetOrderType <> TargetOrderTypeNone Then
         targetOrder.limitPrice = mTicker.TradePrice + targetOffset * mTickSize
     Case TargetOrderTypeAuto
         If targetPrice <> 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                    "TradeBuild25.OrderContext::CreateOrderPlex", _
+                                    "TradeBuild26.OrderContext::CreateOrderPlex", _
                                     "The target price must be zero for this order type"
         
         targetOrder.offset = targetOffset
@@ -989,7 +989,7 @@ Dim origQuantity As Long
 Dim newQuantity As Long
 
 If orderPlex Is Nothing Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                            "TradeBuild25.OrderContext::executeOrderPlex", _
+                            "TradeBuild26.OrderContext::executeOrderPlex", _
                             "No order plex supplied"
 
 If checkMoneyManagement And Not mDummy Then
@@ -1067,22 +1067,22 @@ getAccountBalance = 10000                       '!!!!!!!!!!!!!!!!!!!!!!!!! need 
 End Function
 
 Public Function isAttributeSupported( _
-                ByVal attributeId As TradeBuild25.OrderAttributeIds) As Boolean
+                ByVal attributeId As TradeBuild26.OrderAttributeIds) As Boolean
 isAttributeSupported = (mPermittedOrderAttributes And attributeId)
 End Function
 
 Public Function isOrderTifValueSupported( _
-                ByVal value As TradeBuild25.OrderTifs) As Boolean
+                ByVal value As TradeBuild26.OrderTifs) As Boolean
 isOrderTifValueSupported = (mPermittedOrderTifs And value)
 End Function
 
 Public Function isOrderTypeValueSupported( _
-                ByVal value As TradeBuild25.OrderTypes) As Boolean
+                ByVal value As TradeBuild26.OrderTypes) As Boolean
 isOrderTypeValueSupported = (mPermittedOrderTypes And value)
 End Function
 
 Public Function isStopTriggerMethodValueSupported( _
-                ByVal value As TradeBuild25.StopTriggerMethods) As Boolean
+                ByVal value As TradeBuild26.StopTriggerMethods) As Boolean
 isStopTriggerMethodValueSupported = (mPermittedStopTriggerMethods And value)
 End Function
 
@@ -1090,7 +1090,7 @@ Friend Function newOrder() As order
 Dim lOrder As order
 Set lOrder = New order
 With lOrder
-    .id = GenerateGUIDString
+    .id = generateGUIDString
     .dummy = mDummy
     .simulated = mSimulated
     .OrderContext = Me
@@ -1175,7 +1175,7 @@ Case TIFGoodTillCancelled
 Case TIFImmediateOrCancel
 Case Else
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-    "TradeBuild25.OrderContext::sell", _
+    "TradeBuild26.OrderContext::sell", _
     "Invalid entry TIF"
 End Select
 
@@ -1185,7 +1185,7 @@ Case TIFGoodTillCancelled
 Case TIFImmediateOrCancel
 Case Else
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-    "TradeBuild25.OrderContext::sell", _
+    "TradeBuild26.OrderContext::sell", _
     "Invalid stop TIF"
 End Select
 
@@ -1195,7 +1195,7 @@ Case TIFGoodTillCancelled
 Case TIFImmediateOrCancel
 Case Else
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-    "TradeBuild25.OrderContext::sell", _
+    "TradeBuild26.OrderContext::sell", _
     "Invalid target TIF"
 End Select
 
@@ -1222,13 +1222,13 @@ End Function
 
 Private Sub attributeNotSupported()
 err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "TradeBuild25.OrderContext", _
+            "TradeBuild26.OrderContext", _
             "This attribute not supported by service provider"
 End Sub
 
 Private Sub attributeValueNotSupported()
 err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "TradeBuild25.OrderContext", _
+            "TradeBuild26.OrderContext", _
             "This attribute value not supported by service provider"
 End Sub
 

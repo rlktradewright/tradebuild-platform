@@ -75,7 +75,7 @@ End Type
 
 Public Type Tick
     timestamp       As Date
-    TickType        As TradeBuild25.TickTypes
+    TickType        As TickTypes
     TickPrice       As Double
     TickSize        As Long
     MDPosition      As Long
@@ -85,7 +85,7 @@ Public Type Tick
 End Type
 
 Public Type TickfileFormatSpecifier
-    FormatType      As TradeBuild25.TickfileFormatType
+    FormatType      As TickfileFormatType
     capabilities    As Long
     FormalID        As String
     name            As String
@@ -167,6 +167,8 @@ Public Enum ApiNotifyCodes
     ApiNotifyDisconnectedFromBroker
     
     ApiNotifyNonSpecificNotification
+    
+    ApiNotifyContractExpired
                             
 End Enum
 

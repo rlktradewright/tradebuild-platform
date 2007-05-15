@@ -57,7 +57,7 @@ Private mName As String
 Private mHandle As Long
 Private mCommonServiceConsumer As ICommonServiceConsumer
 
-Private mSimulator As TradeBuild25.AdvancedOrderSimulator
+Private mSimulator As TradeBuild26.AdvancedOrderSimulator
 
 '@================================================================================
 ' Class Event Handlers
@@ -66,7 +66,7 @@ Private mSimulator As TradeBuild25.AdvancedOrderSimulator
 Private Sub Class_Initialize()
 mName = "TradeBuild Default Order Simulator"
 
-Set mSimulator = New TradeBuild25.AdvancedOrderSimulator
+Set mSimulator = New TradeBuild26.AdvancedOrderSimulator
 End Sub
 
 Private Sub Class_Terminate()
@@ -97,7 +97,8 @@ End Property
 
 Private Sub ICommonServiceProvider_Link( _
                 ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
-                ByVal handle As Long)
+                ByVal handle As Long, _
+                ByVal params As parameters)
 Set mCommonServiceConsumer = commonServiceConsumer
 mSimulator.commonServiceConsumer = mCommonServiceConsumer
 mHandle = handle
@@ -129,9 +130,9 @@ End Sub
 Private Function IOrderSubmissionSrvcProvider_CreateOrderSubmitter( _
                 ByVal serviceConsumer As TradeBuildSP.IOrderSubmissionSrvcConsumer, _
                 ByVal Contract As TradeBuildSP.IContract) As TradeBuildSP.IOrderSubmitter
-Dim orderSubmitter As TradeBuild25.SimulatedOrderSubmitter
+Dim orderSubmitter As TradeBuild26.SimulatedOrderSubmitter
 
-Set orderSubmitter = New TradeBuild25.SimulatedOrderSubmitter
+Set orderSubmitter = New TradeBuild26.SimulatedOrderSubmitter
 orderSubmitter.serviceConsumer = serviceConsumer
 orderSubmitter.Contract = Contract
 orderSubmitter.simulator = mSimulator

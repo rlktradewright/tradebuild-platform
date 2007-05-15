@@ -44,6 +44,22 @@ Event CollectionChanged( _
 ' Constants
 '@================================================================================
 
+Private Const ProjectName As String = "TradeBuild26"
+Private Const ModuleName As String = "ServiceProviders"
+
+Private Const AttributeNameEnabled As String = "Enabled"
+Private Const AttributeNameLogLevel As String = "LogLevel"
+Private Const AttributeNamePropertyName As String = "Name"
+Private Const AttributeNamePropertyValue As String = "Value"
+Private Const AttributeNameServiceProviderEnabled As String = "Enabled"
+Private Const AttributeNameServiceProviderName As String = "Name"
+Private Const AttributeNameServiceProviderProgId As String = "ProgId"
+
+Private Const ConfigNameProperties As String = "Properties"
+Private Const ConfigNameProperty As String = "Property"
+Private Const ConfigNameServiceProvider As String = "ServiceProvider"
+Private Const ConfigNameServiceProviders As String = "ServiceProviders"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -63,10 +79,13 @@ End Type
 
 Private mTradeBuildAPIRef           As WeakReference
 
-Private mServiceProviders() As ServiceProviderTableEntry
-Private mMaxSPIndex As Long
+Private mServiceProviders()         As ServiceProviderTableEntry
+Private mMaxSPIndex                 As Long
 
-Private mChangeListeners As Collection
+Private mChangeListeners            As Collection
+
+Private mConfig                     As ConfigItemSet
+Private mServiceProviderConfigList  As ConfigItemList
 
 '@================================================================================
 ' Class Event Handlers
@@ -181,7 +200,7 @@ End Select
 
 If Not regOk Then
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                "TradeBuild25.ServiceProviders::ICommonServiceConsumer_RegisterServiceProvider", _
+                "TradeBuild26.ServiceProviders::ICommonServiceConsumer_RegisterServiceProvider", _
                 "Caller is not a type " & spType & " service provider object"
 End If
     
@@ -204,7 +223,7 @@ End Sub
 Private Sub IContractInfoServiceConsumer_LoadComplete( _
                             ByVal handle As Long, _
                             ByVal pContracts As TradeBuildSP.IContracts)
-Dim lContracts As TradeBuild25.Contracts
+Dim lContracts As TradeBuild26.Contracts
 
 Set lContracts = pContracts
 If lContracts.Count = 0 Then
@@ -222,7 +241,7 @@ Private Sub IContractInfoServiceConsumer_NotifyEvent( _
                 ByVal eventMessage As String, _
                 ByVal pContracts As TradeBuildSP.IContracts, _
                 ByVal serviceProviderHandle As Long)
-Dim lContracts As TradeBuild25.Contracts
+Dim lContracts As TradeBuild26.Contracts
 
 Set lContracts = pContracts
 
@@ -285,11 +304,11 @@ For i = 0 To mMaxSPIndex
 Next
 End Property
 
-Friend Property Get SupportedInputTickfileFormats() As TradeBuild25.TickfileFormatSpecifier()
+Friend Property Get SupportedInputTickfileFormats() As TradeBuild26.TickfileFormatSpecifier()
 SupportedInputTickfileFormats = GetSupportedTickfileFormats(TradeBuildSP.TickfileServiceProviderCapabilities.Replay)
 End Property
 
-Friend Property Get SupportedOutputTickfileFormats() As TradeBuild25.TickfileFormatSpecifier()
+Friend Property Get SupportedOutputTickfileFormats() As TradeBuild26.TickfileFormatSpecifier()
 SupportedOutputTickfileFormats = GetSupportedTickfileFormats(TradeBuildSP.TickfileServiceProviderCapabilities.Record)
 End Property
 
@@ -303,44 +322,27 @@ End Property
 '@================================================================================
 
 Public Function add( _
-            ByVal serviceProvider As TradeBuildSP.ICommonServiceProvider, _
-            Optional ByVal logLevel As TradeBuild25.LogLevels, _
-            Optional ByVal name As String _
+            ByVal progId As String, _
+            ByVal enabled As Boolean, _
+            ByVal paramString As String, _
+            Optional ByVal logLevel As TradeBuild26.LogLevels = LogLevelLow, _
+            Optional ByVal name As String, _
+            Optional ByVal description As String _
             ) As TradeBuildSP.ICommonServiceProvider
-Dim i As Long
+Dim params As parameters
+Set add = CreateObject(progId)
+Set params = CreateParametersFromString(paramString)
 
-If name <> "" Then serviceProvider.name = name
-
-' we don't reuse removed entries to ensure that service providers added later are
-' always later in the table than those added earlier
-For i = 0 To mMaxSPIndex
-    If Not mServiceProviders(i).SPObject Is Nothing Then
-        If mServiceProviders(i).SPObject Is serviceProvider Then
-            err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                    "TradeBuild25.ServiceProviders::Add", _
-                    "This Service Provider object has already been added"
-        End If
-        If mServiceProviders(i).name = serviceProvider.name Then
-            err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                    "TradeBuild25.ServiceProviders::Add", _
-                    "A Service Provider with this name has already been added"
-        End If
-    End If
-Next
-
-If mMaxSPIndex = UBound(mServiceProviders) Then
-    ReDim Preserve mServiceProviders(UBound(mServiceProviders) + 10) As ServiceProviderTableEntry
+If enabled Then
+    addSP add, params, LogLevelAll, name
 End If
-mMaxSPIndex = mMaxSPIndex + 1
-Set add = serviceProvider
 
-mServiceProviders(mMaxSPIndex).name = serviceProvider.name
-Set mServiceProviders(mMaxSPIndex).SPObject = serviceProvider
-
-serviceProvider.Link Me, mMaxSPIndex
-serviceProvider.logLevel = logLevel
-
-fireChange CollItemAdded, serviceProvider
+addEntryToConfig progId, _
+                enabled, _
+                params, _
+                logLevel, _
+                name, _
+                description
 End Function
 
 Public Sub addCollectionChangeListener( _
@@ -377,13 +379,13 @@ End Function
                             
 Friend Function CreateHistoricalDataWriter( _
                 ByVal serviceConsumer As TradeBuildSP.IBarDataOutputServiceConsumer, _
-                ByVal contractSpec As TradeBuild25.contractSpecifier, _
+                ByVal contractSpec As TradeBuild26.contractSpecifier, _
                 ByVal historicDataPath As String _
-                ) As TradeBuild25.HistoricDataWriter
+                ) As TradeBuild26.HistoricDataWriter
                             
 Dim histDataSp As TradeBuildSP.IBarDataServiceProvider
 Dim histDataSPWriter As TradeBuildSP.IBarDataWriter
-Dim histDataWriter As TradeBuild25.HistoricDataWriter
+Dim histDataWriter As TradeBuild26.HistoricDataWriter
 Dim i As Long
 
 For i = 0 To mMaxSPIndex
@@ -406,7 +408,7 @@ Set histDataSPWriter = histDataSp.CreateBarDataWriter(serviceConsumer, _
                                                     contractSpec, _
                                                     historicDataPath)
 
-Set histDataWriter = New TradeBuild25.HistoricDataWriter
+Set histDataWriter = New TradeBuild26.HistoricDataWriter
 histDataWriter.ServiceProviderWriter = histDataSPWriter
 Set CreateHistoricalDataWriter = histDataWriter
 
@@ -414,7 +416,7 @@ End Function
 
 Friend Function CreateLiveOrderSubmitter( _
                 ByVal serviceConsumer As TradeBuildSP.IOrderSubmissionSrvcConsumer, _
-                ByVal pContract As TradeBuild25.Contract _
+                ByVal pContract As TradeBuild26.Contract _
                 ) As TradeBuildSP.IOrderSubmitter
                             
 Dim lOrderSimulatorSp As TradeBuildSP.IOrderSubmissionSrvcProvider
@@ -464,7 +466,7 @@ End Function
 
 Friend Function CreateSimulatedOrderSubmitter( _
                 ByVal serviceConsumer As TradeBuildSP.IOrderSubmissionSrvcConsumer, _
-                ByVal pContract As TradeBuild25.Contract) As TradeBuildSP.IOrderSubmitter
+                ByVal pContract As TradeBuild26.Contract) As TradeBuildSP.IOrderSubmitter
                             
 Dim lOrderSimulatorSp As TradeBuildSP.IOrderSubmissionSrvcProvider
 Dim orderSubmitter As TradeBuildSP.IOrderSubmitter
@@ -482,8 +484,8 @@ Next
 If lOrderSimulatorSp Is Nothing Then
     ' no order simulator sp has been added, so we will resort
     ' to using the default built-in simulator
-    Set lOrderSimulatorSp = New TradeBuild25.OrderSimulatorSP
-    add lOrderSimulatorSp
+    Set lOrderSimulatorSp = New OrderSimulatorSP
+    addSP lOrderSimulatorSp, Nothing, LogLevelLow, ""
 End If
 
 Set orderSubmitter = lOrderSimulatorSp.CreateOrderSubmitter(serviceConsumer, pContract)
@@ -497,10 +499,10 @@ Friend Function CreateTickfileReader( _
                 ByVal pTicker As Ticker, _
                 ByVal serviceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
                 ByVal inputTickfileFormatID As String _
-                ) As TradeBuild25.TickfileReader
+                ) As TradeBuild26.TickfileReader
 Dim tickfileSp As TradeBuildSP.ITickfileServiceProvider
 Dim tickfileSPReader As TradeBuildSP.ITickfileReader
-Dim tfReader As TradeBuild25.TickfileReader
+Dim tfReader As TradeBuild26.TickfileReader
 Dim i As Long
 
 For i = 0 To mMaxSPIndex
@@ -520,7 +522,7 @@ Next
 
 If tickfileSp Is Nothing Then Exit Function
 
-Set tfReader = New TradeBuild25.TickfileReader
+Set tfReader = New TradeBuild26.TickfileReader
 tfReader.dataConsumer = pTicker
 Set tickfileSPReader = tickfileSp.CreateTickfileReader(tfReader, _
                                                     serviceConsumer, _
@@ -535,11 +537,11 @@ Friend Function CreateTickfileWriter( _
             ByVal serviceConsumer As TradeBuildSP.ITickfileOutputServiceConsumer, _
             ByVal outputTickfileFormatID As String, _
             ByVal outputTickfilePath As String _
-            ) As TradeBuild25.TickfileWriter
+            ) As TradeBuild26.TickfileWriter
                             
 Dim tickfileSp As TradeBuildSP.ITickfileServiceProvider
 Dim tickfileSPWriter As TradeBuildSP.ITickfileWriter
-Dim tfWriter As TradeBuild25.TickfileWriter
+Dim tfWriter As TradeBuild26.TickfileWriter
 Dim i As Long
 
 For i = 0 To mMaxSPIndex
@@ -559,7 +561,7 @@ Next
 
 If tickfileSp Is Nothing Then Exit Function
 
-Set tfWriter = New TradeBuild25.TickfileWriter
+Set tfWriter = New TradeBuild26.TickfileWriter
 Set tickfileSPWriter = tickfileSp.CreateTickfileWriter(serviceConsumer, _
                                                     outputTickfileFormatID, _
                                                     outputTickfilePath)
@@ -586,9 +588,24 @@ Next
 End Function
 
 Friend Sub LoadContracts( _
-                ByVal Contracts As TradeBuild25.Contracts)
+                ByVal Contracts As TradeBuild26.Contracts)
 
 If Not LoadContractsFromNextSP(0, Contracts) Then Contracts.LoadComplete
+End Sub
+
+Public Sub loadServiceProviderConfiguration( _
+                value As ConfigItemSet)
+Set mConfig = value
+
+On Error Resume Next
+Set mServiceProviderConfigList = mConfig.entries.item(ConfigNameServiceProviders)
+On Error GoTo 0
+
+If mServiceProviderConfigList Is Nothing Then
+    Set mServiceProviderConfigList = mConfig.entries.addItemList(ConfigNameServiceProviders, ConfigNameServiceProvider)
+End If
+
+loadConfiguration
 End Sub
 
 Friend Function nameFromHandle( _
@@ -643,6 +660,78 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
+Private Sub addEntryToConfig( _
+            ByVal progId As String, _
+            ByVal enabled As Boolean, _
+            ByVal params As parameters, _
+            ByVal logLevel As TradeBuild26.LogLevels, _
+            ByVal name As String, _
+            ByVal description As String _
+            )
+Dim sp As ConfigItemSet
+Dim props As ConfigItemList
+Dim prop As ConfigItem
+Dim param As Parameter
+
+If mConfig Is Nothing Then Exit Sub
+
+If description <> "" Then mServiceProviderConfigList.entries.addComment description
+Set sp = mServiceProviderConfigList.entries.addItemSet(generateGUIDString)
+sp.setAttribute AttributeNameServiceProviderEnabled, CStr(enabled)
+If name <> "" Then sp.setAttribute AttributeNameServiceProviderName, name
+sp.setAttribute AttributeNameServiceProviderProgId, progId
+sp.setAttribute AttributeNameLogLevel, logLevel
+
+Set props = sp.entries.addItemList(ConfigNameProperties, ConfigNameProperty)
+For Each param In params
+    Set prop = props.entries.AddItem
+    prop.setAttribute AttributeNamePropertyName, param.name
+    prop.setAttribute AttributeNamePropertyValue, param.value
+Next
+
+End Sub
+
+Private Sub addSP( _
+            ByVal serviceProvider As TradeBuildSP.ICommonServiceProvider, _
+            ByVal params As parameters, _
+            ByVal logLevel As TradeBuild26.LogLevels, _
+            ByVal name As String _
+            )
+Dim i As Long
+
+If name <> "" Then serviceProvider.name = name
+
+' we don't reuse removed entries to ensure that service providers added later are
+' always later in the table than those added earlier
+For i = 0 To mMaxSPIndex
+    If Not mServiceProviders(i).SPObject Is Nothing Then
+        If mServiceProviders(i).SPObject Is serviceProvider Then
+            err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                    "TradeBuild26.ServiceProviders::Add", _
+                    "This Service Provider object has already been added"
+        End If
+        If mServiceProviders(i).name = serviceProvider.name Then
+            err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                    "TradeBuild26.ServiceProviders::Add", _
+                    "A Service Provider with this name has already been added"
+        End If
+    End If
+Next
+
+If mMaxSPIndex = UBound(mServiceProviders) Then
+    ReDim Preserve mServiceProviders(UBound(mServiceProviders) + 10) As ServiceProviderTableEntry
+End If
+mMaxSPIndex = mMaxSPIndex + 1
+
+mServiceProviders(mMaxSPIndex).name = serviceProvider.name
+Set mServiceProviders(mMaxSPIndex).SPObject = serviceProvider
+
+serviceProvider.Link Me, mMaxSPIndex, params
+serviceProvider.logLevel = logLevel
+
+fireChange CollItemAdded, serviceProvider
+End Sub
+
 Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
                 ByVal affectedObject As TradeBuildSP.ICommonServiceProvider)
@@ -661,13 +750,13 @@ End Sub
 
 Private Function GetSupportedTickfileFormats( _
                             ByVal capabilities As TradeBuildSP.TickfileServiceProviderCapabilities _
-                            ) As TradeBuild25.TickfileFormatSpecifier()
+                            ) As TradeBuild26.TickfileFormatSpecifier()
 Dim i As Long
 Dim j As Long
 Dim k As Long
 Dim tickfileSp As TradeBuildSP.ITickfileServiceProvider
-Dim supportedFormats() As TradeBuild25.TickfileFormatSpecifier
-ReDim allSupportedFormats(9) As TradeBuild25.TickfileFormatSpecifier
+Dim supportedFormats() As TradeBuild26.TickfileFormatSpecifier
+ReDim allSupportedFormats(9) As TradeBuild26.TickfileFormatSpecifier
 
 k = -1
 For i = 0 To mMaxSPIndex
@@ -679,7 +768,7 @@ For i = 0 To mMaxSPIndex
                 If (supportedFormats(j).capabilities And capabilities) <> 0 Then
                     k = k + 1
                     If k > UBound(allSupportedFormats) Then
-                        ReDim Preserve allSupportedFormats(UBound(allSupportedFormats) + 10) As TradeBuild25.TickfileFormatSpecifier
+                        ReDim Preserve allSupportedFormats(UBound(allSupportedFormats) + 10) As TradeBuild26.TickfileFormatSpecifier
                     End If
                     allSupportedFormats(k) = supportedFormats(j)
                 End If
@@ -689,17 +778,63 @@ For i = 0 To mMaxSPIndex
 Next
 
 If k >= 0 Then
-    ReDim Preserve allSupportedFormats(k) As TradeBuild25.TickfileFormatSpecifier
+    ReDim Preserve allSupportedFormats(k) As TradeBuild26.TickfileFormatSpecifier
     GetSupportedTickfileFormats = allSupportedFormats
 Else
     Erase allSupportedFormats
 End If
 End Function
 
+Private Sub loadConfiguration()
+Dim sp As ConfigItemSet
+Dim spName As String
+Dim spProgId As String
+Dim spLogLevel As String
+Dim props As ConfigItemList
+Dim prop As ConfigItem
+Dim propName As String
+Dim propValue As String
+Dim spObj As Object
+Dim params As parameters
+
+For Each sp In mServiceProviderConfigList.entries
+    If CBool(sp.getAttribute(AttributeNameEnabled)) Then
+        
+        On Error Resume Next
+
+        spName = sp.getAttribute(AttributeNameServiceProviderName)
+        
+        spProgId = sp.getAttribute(AttributeNameServiceProviderProgId)
+        If spProgId = "" Then
+            err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                    ProjectName & "." & ModuleName & ":" & "loadConfiguration", _
+                    "Service provider ProgId not specified in configuration file"
+        End If
+        
+        spLogLevel = sp.getAttribute(AttributeNameLogLevel)
+        If spLogLevel = "" Then spLogLevel = CStr(LogLevels.LogLevelLow)
+        
+        Set props = sp.entries.item(ConfigNameProperties)
+        
+        Set params = New parameters
+        
+        For Each prop In props.entries
+            propName = prop.getAttribute(AttributeNamePropertyName)
+            propValue = prop.getAttribute(AttributeNamePropertyValue)
+            params.setParameterValue propName, propValue
+        Next
+    
+        On Error GoTo 0
+        
+        Set spObj = CreateObject(spProgId)
+        addSP spObj, params, spLogLevel, spName
+    End If
+Next
+End Sub
 
 Private Function LoadContractsFromNextSP( _
                             ByVal startingIndex As Long, _
-                            ByVal pContracts As TradeBuild25.Contracts _
+                            ByVal pContracts As TradeBuild26.Contracts _
                             ) As Boolean
 Dim i As Long
 Dim contractInfoSP As TradeBuildSP.IContractInfoServiceProvider

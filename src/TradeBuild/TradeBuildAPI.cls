@@ -62,6 +62,8 @@ Private mMaxExchangeCodesIndex As Long
 
 Private Sub Class_Initialize()
 
+InitialiseTWUtilities
+
 Set mServiceProviders = New ServiceProviders
 mServiceProviders.tradeBuildAPI = Me
 
@@ -161,6 +163,7 @@ ReDim Preserve mExchangeCodes(mMaxExchangeCodesIndex) As String
 End Sub
 
 Private Sub Class_Terminate()
+TerminateTWUtilities
 Debug.Print "TradeBuildAPI terminated"
 End Sub
 
@@ -184,11 +187,11 @@ Public Property Get SupportedHistoricalDataPeriods() As TimePeriod()
 SupportedHistoricalDataPeriods = mServiceProviders.SupportedHistoricalDataPeriods
 End Property
 
-Public Property Get SupportedInputTickfileFormats() As TradeBuild25.TickfileFormatSpecifier()
+Public Property Get SupportedInputTickfileFormats() As TradeBuild26.TickfileFormatSpecifier()
 SupportedInputTickfileFormats = mServiceProviders.SupportedInputTickfileFormats
 End Property
 
-Public Property Get SupportedOutputTickfileFormats() As TradeBuild25.TickfileFormatSpecifier()
+Public Property Get SupportedOutputTickfileFormats() As TradeBuild26.TickfileFormatSpecifier()
 SupportedOutputTickfileFormats = mServiceProviders.SupportedOutputTickfileFormats
 End Property
 
@@ -252,15 +255,6 @@ Loop Until bottom = middle
 If code = mExchangeCodes(middle) Then IsValidExchangeCode = True
 End Function
 
-'Public Function NewBars( _
-'                ByVal barLength As Long, _
-'                ByVal barType As Long) As bars
-'Set NewBars = createbars(
-'NewBars.tradeBuildAPI = Me
-'NewBars.barLength = barLength
-'NewBars.barType = barType
-'End Function
-
 Public Function NewContracts( _
                 ByVal contractSpec As contractSpecifier) As Contracts
 Set NewContracts = New Contracts
@@ -276,9 +270,9 @@ Public Function newContractSpecifier( _
                 Optional ByVal currencyCode As String, _
                 Optional ByVal expiry As String, _
                 Optional ByVal strike As Double, _
-                Optional ByVal right As OptionRights = OptNone) As TradeBuild25.contractSpecifier
+                Optional ByVal right As OptionRights = OptNone) As TradeBuild26.contractSpecifier
 
-Dim source As String: source = "TradeBuild25.TradeBuildAPI::newContractSpecifier"
+Dim source As String: source = "TradeBuild26.TradeBuildAPI::newContractSpecifier"
 
 If localSymbol = "" And symbol = "" Then
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
@@ -334,7 +328,7 @@ Case Else
                 "'" & sectype & "' is not a valid secType"
 End Select
 
-Set newContractSpecifier = New TradeBuild25.contractSpecifier
+Set newContractSpecifier = New TradeBuild26.contractSpecifier
 With newContractSpecifier
     .localSymbol = localSymbol
     .symbol = symbol
@@ -396,16 +390,6 @@ RaiseEvent Notification(ev)
                     
 End Sub
 
-'Public Function SetStudyDefaultParameters( _
-'                ByVal studyName As String, _
-'                ByVal serviceProviderName As String, _
-'                ByVal params As IParameters) As Boolean
-'SetStudyDefaultParameters = mServiceProviders.SetStudyDefaultParameters( _
-'                studyName, _
-'                serviceProviderName, _
-'                params)
-'End Function
-
 '@================================================================================
 ' Helper Functions
 '@================================================================================
@@ -418,3 +402,6 @@ End If
 mExchangeCodes(mMaxExchangeCodesIndex) = UCase$(code)
 End Sub
 
+Private Sub mConfigFile_ConfigLoaded()
+
+End Sub

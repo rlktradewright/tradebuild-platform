@@ -75,7 +75,7 @@ Option Explicit
 '
 '@/
 Public Function EntryOrderTypeToOrderType( _
-                ByVal pEntryOrderType As TradeBuild25.EntryOrderTypes) As TradeBuild25.OrderTypes
+                ByVal pEntryOrderType As TradeBuild26.EntryOrderTypes) As TradeBuild26.OrderTypes
 EntryOrderTypeToOrderType = gEntryOrderTypeToOrderType(pEntryOrderType)
 End Function
 
@@ -90,12 +90,12 @@ EntryOrderTypeToShortString = gEntryOrderTypeToShortString(value)
 End Function
 
 Public Function LegOpenCloseFromString( _
-                ByVal value As String) As TradeBuild25.LegOpenClose
+                ByVal value As String) As TradeBuild26.LegOpenClose
 LegOpenCloseFromString = gLegOpenCloseFromString(value)
 End Function
 
 Public Function LegOpenCloseToString( _
-                ByVal value As TradeBuild25.LegOpenClose) As String
+                ByVal value As TradeBuild26.LegOpenClose) As String
 LegOpenCloseToString = gLegOpenCloseToString(value)
 End Function
 
@@ -163,7 +163,7 @@ End Function
 '
 '@/
 Public Function StopOrderTypeToOrderType( _
-                ByVal pStopOrderType As TradeBuild25.StopOrderTypes) As TradeBuild25.OrderTypes
+                ByVal pStopOrderType As TradeBuild26.StopOrderTypes) As TradeBuild26.OrderTypes
 StopOrderTypeToOrderType = gStopOrderTypeToOrderType(pStopOrderType)
 End Function
 
@@ -181,7 +181,7 @@ End Function
 '
 '@/
 Public Function TargetOrderTypeToOrderType( _
-                ByVal pTargetOrderType As TradeBuild25.TargetOrderTypes) As TradeBuild25.OrderTypes
+                ByVal pTargetOrderType As TradeBuild26.TargetOrderTypes) As TradeBuild26.OrderTypes
 TargetOrderTypeToOrderType = gTargetOrderTypeToOrderType(pTargetOrderType)
 End Function
 
@@ -191,7 +191,7 @@ TargetOrderTypeToString = gTargetOrderTypeToString(value)
 End Function
 
 Public Function TickfileSpecifierToString( _
-                TickfileSpec As TradeBuild25.TickfileSpecifier) As String
+                TickfileSpec As TradeBuild26.TickfileSpecifier) As String
 TickfileSpecifierToString = gTickfileSpecifierToString(TickfileSpec)
 End Function
 

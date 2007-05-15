@@ -122,11 +122,11 @@ End Function
 ' Properties
 '@================================================================================
 
-Public Property Get action() As TradeBuild25.OrderActions
+Public Property Get action() As TradeBuild26.OrderActions
 action = mAction
 End Property
 
-Friend Property Let action(ByVal value As TradeBuild25.OrderActions)
+Friend Property Let action(ByVal value As TradeBuild26.OrderActions)
 mAction = UCase$(value)
 End Property
 
