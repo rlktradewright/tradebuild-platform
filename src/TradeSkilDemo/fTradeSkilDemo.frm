@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#3.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#15.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeSkil Demo Edition Version 2.6"
@@ -282,10 +282,10 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(2)   =   "&3. Orders"
       TabPicture(2)   =   "fTradeSkilDemo.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "OrdersSummary1"
-      Tab(2).Control(1)=   "OrderButton"
-      Tab(2).Control(2)=   "CancelOrderButton"
-      Tab(2).Control(3)=   "ModifyOrderButton"
+      Tab(2).Control(0)=   "ModifyOrderButton"
+      Tab(2).Control(1)=   "CancelOrderButton"
+      Tab(2).Control(2)=   "OrderButton"
+      Tab(2).Control(3)=   "OrdersSummary1"
       Tab(2).ControlCount=   4
       TabCaption(3)   =   "&4. Executions"
       TabPicture(3)   =   "fTradeSkilDemo.frx":0054
@@ -295,20 +295,20 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(4)   =   "&5. Replay tickfiles"
       TabPicture(4)   =   "fTradeSkilDemo.frx":0070
       Tab(4).ControlEnabled=   0   'False
-      Tab(4).Control(0)=   "Label19"
-      Tab(4).Control(1)=   "Label20"
-      Tab(4).Control(2)=   "ReplayProgressLabel"
-      Tab(4).Control(3)=   "ReplayContractLabel"
-      Tab(4).Control(4)=   "ReplayProgressBar"
-      Tab(4).Control(5)=   "SkipReplayButton"
+      Tab(4).Control(0)=   "ReplaySpeedCombo"
+      Tab(4).Control(1)=   "TickfileList"
+      Tab(4).Control(1).Enabled=   0   'False
+      Tab(4).Control(2)=   "StopReplayButton"
+      Tab(4).Control(3)=   "PauseReplayButton"
+      Tab(4).Control(4)=   "ClearTickfileListButton"
+      Tab(4).Control(5)=   "SelectTickfilesButton"
       Tab(4).Control(6)=   "PlayTickFileButton"
-      Tab(4).Control(7)=   "SelectTickfilesButton"
-      Tab(4).Control(8)=   "ClearTickfileListButton"
-      Tab(4).Control(9)=   "PauseReplayButton"
-      Tab(4).Control(10)=   "StopReplayButton"
-      Tab(4).Control(11)=   "TickfileList"
-      Tab(4).Control(11).Enabled=   0   'False
-      Tab(4).Control(12)=   "ReplaySpeedCombo"
+      Tab(4).Control(7)=   "SkipReplayButton"
+      Tab(4).Control(8)=   "ReplayProgressBar"
+      Tab(4).Control(9)=   "ReplayContractLabel"
+      Tab(4).Control(10)=   "ReplayProgressLabel"
+      Tab(4).Control(11)=   "Label20"
+      Tab(4).Control(12)=   "Label19"
       Tab(4).ControlCount=   13
       Begin TradeBuildUI26.ExecutionsSummary ExecutionsSummary1 
          Height          =   3855
@@ -1091,6 +1091,14 @@ Implements InfoListener
 ' Constants
 '================================================================================
 
+Private Const AppName As String = "TradeSkil Demo Edition"
+Private Const AppConfigFileVersion As String = "1.0"
+
+Private Const ConfigNameServiceProviders As String = "TradeBuildServiceProviders"
+Private Const ConfigNameStudyLibraries As String = "TradeBuildStudyLibraries"
+
+Private Const ConfigFileVersion As String = "1.0"
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -1131,6 +1139,8 @@ Attribute mTickfileManager.VB_VarHelpID = -1
 Private mOrderForm As OrderForm
 Attribute mOrderForm.VB_VarHelpID = -1
 
+Private mConfig As ConfigFile
+
 '================================================================================
 ' Form Event Handlers
 '================================================================================
@@ -1142,9 +1152,13 @@ End Sub
 
 Private Sub Form_Load()
 
+On Error GoTo err
+
 ' position at top left corner of the screen
 Me.Top = 0
 Me.Left = 0
+
+loadConfigFile
 
 Set mTradeBuildAPI = New TradeBuildAPI
 ContractSpecBuilder1.TradeBuildAPI = mTradeBuildAPI
@@ -1189,7 +1203,14 @@ ReplaySpeedCombo.ItemData(8) = 8
 
 ReplaySpeedCombo.Text = "Actual speed"
 
-setupServiceProviders
+configureTradeBuild
+
+Exit Sub
+
+err:
+handleFatalError err.Number, _
+                err.Description, _
+                err.source
 
 End Sub
 
@@ -1199,10 +1220,15 @@ Dim lTicker As Ticker
 
 If Not mTimer Is Nothing Then mTimer.StopTimer
 
+logMessage "Saving configuration file"
+mConfig.save getConfigFilename
+
+logMessage "Closing forms"
 For i = Forms.Count - 1 To 0 Step -1
    Unload Forms(i)
 Next
 
+logMessage "Stopping tickers"
 If Not mTradeBuildAPI Is Nothing Then
     For Each lTicker In mTickers
         lTicker.StopTicker
@@ -1286,7 +1312,7 @@ ExecutionsSummary1.Clear
 
 removeServiceProviders
 
-setupServiceProviders
+'setupServiceProviders
 
 logMessage "Configuration updated"
 
@@ -1919,6 +1945,19 @@ CloseText = ""
 ChartButton.Enabled = False
 End Sub
 
+Private Sub configureTradeBuild()
+setupServiceProviders
+
+' now set up the timeframe selector, which depends on what timeframes the historical data service
+' provider supports (it obtains this info from TradeBuild)
+TimeframeSelector1.TradeBuildAPI = mTradeBuildAPI
+TimeframeSelector1.selectTimeframe TimePeriodFromString("5 minutes")
+setChartButtonTooltip
+
+setupStudyLibraries
+
+End Sub
+
 Private Sub createChart(ByVal pTicker As Ticker)
 Dim chartform As fChart2
 Dim tp As TimePeriod
@@ -1936,6 +1975,15 @@ End Sub
 
 Private Function createTicker() As Ticker
 Set createTicker = mTickers.Add(Not mSimulateOrders)
+End Function
+
+Private Function getConfigFilename() As String
+getConfigFilename = GetSpecialFolderPath(FolderIdLOCAL_APPDATA) & _
+                    "\TradeWright\" & _
+                    AppName & _
+                    "\v" & _
+                    App.Major & "." & App.Minor & _
+                    "\settings.xml"
 End Function
 
 Private Sub handleFatalError(ByVal errNum As Long, _
@@ -1956,6 +2004,16 @@ MsgBox "A fatal error has occurred. The program will close when you click the OK
         vbCritical, _
         "Fatal error"
 Unload Me
+End Sub
+
+Private Sub loadConfigFile()
+On Error Resume Next
+Set mConfig = LoadConfigurationFile(getConfigFilename)
+On Error GoTo 0
+If mConfig Is Nothing Then
+    logMessage "No configuration exists - creating default configuration file"
+    Set mConfig = CreateConfigurationFile(AppName, AppConfigFileVersion)
+End If
 End Sub
 
 Private Sub logMessage(message As String)
@@ -1994,193 +2052,118 @@ ElseIf change = ValueChangeDown Then
 End If
 End Sub
 
-Private Sub setupServiceProviders()
-Dim progId As String
-Dim serviceProvider As Object
-Dim studyLib As StudyLibrary
+Private Sub setupDefaultServiceProviders()
 
 On Error Resume Next
 
-If UseTickDBSPCheck = vbChecked Then
-    ' enable historical tick data storage/retrieval to/from TradeBuild's database
-    progId = "TBInfoBase26.TickfileServiceProvider"
-    Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
-    serviceProvider.DatabaseName = "Trading"
-    serviceProvider.databaseType = SupportedDatabases.SupportedDbSQLServer7
-    serviceProvider.server = "DELPHI"
-    If serviceProvider Is Nothing Then MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
-    Set serviceProvider = Nothing
-End If
+mTradeBuildAPI.ServiceProviders.Add _
+                    ProgId:="IBTWSSP26.RealtimeDataServiceProvider", _
+                    Enabled:=True, _
+                    ParamString:="Server=;Port=7496;Client Id=123;Provider Key=IB;Keep Connection=True", _
+                    LogLevel:=LogLevelLow, _
+                    Description:="Enable realtime data from TWS"
 
-If UseTickfileSPCheck = vbChecked Then
-    ' enable historical tick data storage and retrieval to/from various file formats
-    progId = "TickfileSP26.TickfileServiceProvider"
-    Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
-    If serviceProvider Is Nothing Then MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
-    Set serviceProvider = Nothing
-End If
+mTradeBuildAPI.ServiceProviders.Add _
+                    ProgId:="QTSP26.QTRealtimeDataServiceProvider", _
+                    Enabled:=False, _
+                    ParamString:="QT Server=;QT Port=16240;Password=;Provider Key=QTIB;Keep Connection=True", _
+                    LogLevel:=LogLevelLow, _
+                    Description:="Disable realtime data from QuoteTracker"
 
-If UseQTTickfileSPCheck = vbChecked Then
-    ' enable historical tick data retrieval from QuoteTracker
-    progId = "QTSP26.QTTickfileServiceProvider"
-    Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
-    If serviceProvider Is Nothing Then MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
-    Set serviceProvider = Nothing
-End If
+mTradeBuildAPI.ServiceProviders.Add _
+                    ProgId:="TBInfoBase26.ContractInfoSrvcProvider", _
+                    Enabled:=True, _
+                    ParamString:="Database Name=Trading;Database Type=" & DatabaseTypeToString(DatabaseTypes.DbSQLServer2005) & ";Server=localhost", _
+                    LogLevel:=LogLevelLow, _
+                    Description:="Enable contract data from TradeBuild's database"
 
-If CustomStudiesSpText <> "" Then
-    ' enable the use of custom technical indicators
-    progId = CustomStudiesSpText
-    Set studyLib = AddStudyLibrary(CreateObject(CustomStudiesSpText), "Custom")
-    If studyLib Is Nothing Then MsgBox "Study library with ProgId " & progId & " is not installed", vbExclamation, "Warning"
-    Set serviceProvider = Nothing
-End If
+mTradeBuildAPI.ServiceProviders.Add _
+                    ProgId:="IBTWSSP26.ContractInfoServiceProvider", _
+                    Enabled:=True, _
+                    ParamString:="Server=;Port=7496;Client Id=123;Provider Key=IB;Keep Connection=True", _
+                    LogLevel:=LogLevelLow, _
+                    Description:="Enable contract data from TWS"
 
-' enable the use of TradeBuild's built-in technical indicators
-progId = "CmnStudiesLib26.StudyLib"
-Set studyLib = AddStudyLibrary(CreateObject(progId), "Built-in")
-If studyLib Is Nothing Then MsgBox "Study Llibrary with ProgId " & progId & " is not installed", vbExclamation, "Warning"
-Set serviceProvider = Nothing
+mTradeBuildAPI.ServiceProviders.Add _
+                    ProgId:="TBInfoBase26.TickfileServiceProvider", _
+                    Enabled:=True, _
+                    ParamString:="Database Name=Trading;Database Type=" & DatabaseTypeToString(DatabaseTypes.DbSQLServer2005) & ";Server=localhost", _
+                    LogLevel:=LogLevelLow, _
+                    Description:="Enable historical tick data storage/retrieval to/from TradeBuild's database"
 
-If RealtimeDataCombo.Text = "TWS" Then
-    ' set up TWS realtime data service provider
-    progId = "IBTWSSP26.RealtimeDataServiceProvider"
-    Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
-    If serviceProvider Is Nothing Then
-        MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
-    Else
-        serviceProvider.server = DataServerText
-        serviceProvider.Port = DataPortText
-        serviceProvider.clientID = DataClientIdText
-        serviceProvider.providerKey = "IB"
-        serviceProvider.keepConnection = True
-        Set serviceProvider = Nothing
-    End If
-    
-ElseIf RealtimeDataCombo.Text = "QuoteTracker" Then
-    ' set up QuoteTrackerT realtime data service provider
-    progId = "QTSP26.QTRealtimeDataServiceProvider"
-    Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
-    If serviceProvider Is Nothing Then
-        MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
-    Else
-        serviceProvider.QTServer = DataServerText
-        serviceProvider.QTPort = DataPortText
-        serviceProvider.password = DataPasswordText
-        serviceProvider.providerKey = "QTIB"
-        serviceProvider.keepConnection = True
-        Set serviceProvider = Nothing
-    End If
-End If
+mTradeBuildAPI.ServiceProviders.Add _
+                    ProgId:="TickfileSP26.TickfileServiceProvider", _
+                    Enabled:=True, _
+                    ParamString:="", _
+                    LogLevel:=LogLevelLow, _
+                    Description:="Enable historical tick data storage/retrieval to/from various file formats"
 
-If ContractDataCombo.Text = "TradeBuild" Then
-    progId = "TBInfoBase26.ContractInfoSrvcProvider"
-    Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
-    serviceProvider.DatabaseName = "Trading"
-    serviceProvider.databaseType = SupportedDatabases.SupportedDbSQLServer7
-    serviceProvider.server = "DELPHI"
-    If serviceProvider Is Nothing Then MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
-    Set serviceProvider = Nothing
-ElseIf ContractDataCombo.Text = "TWS" Then
-    progId = "IBTWSSP26.ContractInfoServiceProvider"
-    Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
-    If serviceProvider Is Nothing Then
-        MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
-    Else
-        serviceProvider.server = ContractDataServerText
-        serviceProvider.Port = ContractDataPortText
-        serviceProvider.clientID = ContractDataClientIdText
-        serviceProvider.providerKey = "IB"
-        serviceProvider.keepConnection = True
-        Set serviceProvider = Nothing
-    End If
-End If
+mTradeBuildAPI.ServiceProviders.Add _
+                    ProgId:="QTSP26.QTTickfileServiceProvider", _
+                    Enabled:=False, _
+                    ParamString:="QT Server=;QT Port=16240;Password=;Provider Key=QTIB;Keep Connection=True", _
+                    LogLevel:=LogLevelLow, _
+                    Description:="Disable historical tick data retrieval from QuoteTracker"
 
-' if required, add a secondary contract info service provider - typically used to be
-' able to start tickers for instruments that aren't defined in the primary contracts
-' data source
-If SecContractDataCombo.Text = "TradeBuild" Then
-    progId = "TBInfoBase26.ContractInfoSrvcProvider"
-    Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
-    serviceProvider.DatabaseName = "Trading"
-    serviceProvider.databaseType = SupportedDatabases.SupportedDbSQLServer7
-    serviceProvider.server = "DELPHI"
-    If serviceProvider Is Nothing Then MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
-    Set serviceProvider = Nothing
-ElseIf SecContractDataCombo.Text = "TWS" Then
-    progId = "IBTWSSP26.ContractInfoServiceProvider"
-    Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
-    If serviceProvider Is Nothing Then
-        MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
-    Else
-        serviceProvider.server = SecContractDataServerText
-        serviceProvider.Port = SecContractDataPortText
-        serviceProvider.clientID = SecContractDataClientIdText
-        serviceProvider.providerKey = "IB"
-        serviceProvider.keepConnection = True
-        Set serviceProvider = Nothing
-    End If
-End If
+mTradeBuildAPI.ServiceProviders.Add _
+                    ProgId:="TBInfoBase26.HistDataServiceProvider", _
+                    Enabled:=True, _
+                    ParamString:="Database Name=Trading;Database Type=" & DatabaseTypeToString(DatabaseTypes.DbSQLServer2005) & ";Server=localhost", _
+                    LogLevel:=LogLevelLow, _
+                    Description:="Enable historical bar data storage/retrieval to/from TradeBuild's database"
 
-If HistDataCombo.Text = "TradeBuild" Then
-    progId = "TBInfoBase26.HistDataServiceProvider"
-    Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
-    serviceProvider.DatabaseName = "Trading"
-    serviceProvider.databaseType = SupportedDatabases.SupportedDbSQLServer7
-    serviceProvider.server = "DELPHI"
-    If serviceProvider Is Nothing Then MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
-    Set serviceProvider = Nothing
-ElseIf HistDataCombo.Text = "TWS" Then
-    progId = "IBTWSSP26.HistDataServiceProvider"
-    Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
-    If serviceProvider Is Nothing Then
-        MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
-    Else
-        serviceProvider.server = HistDataServerText
-        serviceProvider.Port = HistDataPortText
-        serviceProvider.clientID = HistDataClientIdText
-        serviceProvider.providerKey = "IB"
-        serviceProvider.keepConnection = True
-        Set serviceProvider = Nothing
-    End If
-ElseIf HistDataCombo.Text = "QuoteTracker" Then
-    progId = "QTSP26.QTServiceProvider"
-    Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
-    If serviceProvider Is Nothing Then
-        MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
-    Else
-        serviceProvider.QTServer = HistDataServerText
-        serviceProvider.QTPort = HistDataPortText
-        serviceProvider.password = HistDataPasswordText
-        serviceProvider.providerKey = "QTIB"
-        serviceProvider.keepConnection = True
-        Set serviceProvider = Nothing
-    End If
-End If
+mTradeBuildAPI.ServiceProviders.Add _
+                    ProgId:="IBTWSSP26.HistDataServiceProvider", _
+                    Enabled:=False, _
+                    ParamString:="Server=;Port=7496;Client Id=123;Provider Key=IB;Keep Connection=True", _
+                    LogLevel:=LogLevelLow, _
+                    Description:="Disable historical bar data storage/retrieval from TWS"
 
-' now set up the timeframe selector, which depends on what timeframes the historical data service
-' provider supports (it obtains this info f'rom TradeBuild)
-TimeframeSelector1.TradeBuildAPI = mTradeBuildAPI
-TimeframeSelector1.selectTimeframe TimePeriodFromString("5 minutes")
-setChartButtonTooltip
+mTradeBuildAPI.ServiceProviders.Add _
+                    ProgId:="QTSP26.QTHistDataServiceProvider", _
+                    Enabled:=False, _
+                    ParamString:="QT Server=;QT Port=16240;Password=;Provider Key=QTIB;Keep Connection=True", _
+                    LogLevel:=LogLevelLow, _
+                    Description:="Disable historical bar data retrieval from QuoteTracker"
 
-If BrokerCombo.Text = "IB via TWS" Then
-    ' set up TWS live order submission service provider
-    progId = "IBTWSSP26.OrderSubmissionSrvcProvider"
-    Set serviceProvider = mTradeBuildAPI.ServiceProviders.Add(CreateObject(progId), LogLevelLow)
-    If serviceProvider Is Nothing Then
-        MsgBox "Service provider with ProgId " & progId & " is not installed", vbExclamation, "Warning"
-    Else
-        serviceProvider.server = BrokerServerText
-        serviceProvider.Port = BrokerPortText
-        serviceProvider.clientID = BrokerClientIdText
-        serviceProvider.providerKey = "IB"
-        serviceProvider.keepConnection = True
-        mSimulateOrders = False
-        Set serviceProvider = Nothing
-    End If
+mTradeBuildAPI.ServiceProviders.Add _
+                    ProgId:="IBTWSSP26.OrderSubmissionSrvcProvider", _
+                    Enabled:=False, _
+                    ParamString:="Server=;Port=7496;Client Id=123;Provider Key=IB;Keep Connection=True", _
+                    LogLevel:=LogLevelLow, _
+                    Description:="Disable live order submission to TWS"
+
+End Sub
+
+Private Sub setupServiceProviders()
+Dim serviceProvidersEntry As ConfigItemSet
+
+On Error Resume Next
+Set serviceProvidersEntry = mConfig.entries.Item(ConfigNameServiceProviders)
+On Error GoTo 0
+
+If serviceProvidersEntry Is Nothing Then
+    Set serviceProvidersEntry = mConfig.entries.addItemSet(ConfigNameServiceProviders)
+    mTradeBuildAPI.ServiceProviders.loadServiceProviderConfiguration serviceProvidersEntry
+    setupDefaultServiceProviders
 Else
-    mSimulateOrders = True
+    mTradeBuildAPI.ServiceProviders.loadServiceProviderConfiguration serviceProvidersEntry
+End If
+End Sub
+
+Private Sub setupStudyLibraries()
+Dim studyLibrariesEntry As ConfigItemSet
+
+On Error Resume Next
+Set studyLibrariesEntry = mConfig.entries.Item(ConfigNameStudyLibraries)
+On Error GoTo 0
+
+If studyLibrariesEntry Is Nothing Then
+    Set studyLibrariesEntry = mConfig.entries.addItemSet(ConfigNameStudyLibraries)
+    LoadStudyLibraryConfiguration studyLibrariesEntry
+    AddStudyLibrary "CmnStudiesLib26.StudyLib", True, "Built-in"
+Else
+    LoadStudyLibraryConfiguration studyLibrariesEntry
 End If
 
 End Sub
