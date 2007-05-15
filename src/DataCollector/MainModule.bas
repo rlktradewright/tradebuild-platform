@@ -37,22 +37,8 @@ Option Explicit
 Private mCLParser As CommandLineParser
 Private mForm As fDataCollectorUI
 
-Private mFso As FileSystemObject
-Private mSymbsTS As TextStream
+Private mConfigPath As String
 
-Private mClientID As Long
-Private mInstruments() As InstrumentSpecifier
-Private mNumInstruments As Long
-
-Private mShortNames() As String
-Private mNumShortNames As Long
-
-Private mServer As String
-Private mOutputTickfilePath As String
-Private mOutputTickfileFormat As String
-Private mPort As Long
-Private mNoWriteBars As Boolean
-Private mNoWriteTicks As Boolean
 Private mNoUI As Boolean
 Private mLeftOffset As Long
 Private mRightOffset As Long
@@ -90,6 +76,8 @@ Dim rec As String
 Dim failpoint As Long
 On Error GoTo Err
 
+InitialiseTWUtilities
+
 mLeftOffset = -1
 mRightOffset = -1
 
@@ -99,15 +87,7 @@ failpoint = 100 '----------------------------------------------------------
 
 If mCLParser.Switch("?") Or mCLParser.NumberOfSwitches = 0 Then
     MsgBox vbCrLf & _
-            "datacollector [/symbs:filename] " & vbCrLf & _
-            "              [/shortnames:symbolshortname[,symbolshortname]...]" & vbCrLf & _
-            "              [/server:servername]" & vbCrLf & _
-            "              [/port:portnumber]" & vbCrLf & _
-            "              [/clientid:clientidnumber]" & vbCrLf & _
-            "              [/outformat:formatname]" & vbCrLf & _
-            "              [/outpath:path]" & vbCrLf & _
-            "              [/noWriteBars  |  /nwb]" & vbCrLf & _
-            "              [/noWriteTicks  |  /nwt]" & vbCrLf & _
+            "datacollector26 [/config:filename] " & vbCrLf & _
             "              [/posn:offsetfromleft,offsetfromtop]" & vbCrLf & _
             "              [/noUI]", , "Usage"
     Exit Sub
@@ -121,148 +101,26 @@ End If
 
 failpoint = 300 '----------------------------------------------------------
 
-If mCLParser.Switch("symbs") Then
-    
-    ReDim mInstruments(15) As InstrumentSpecifier
-
-    Set mFso = New FileSystemObject
-    Set mSymbsTS = mFso.OpenTextFile(mCLParser.SwitchValue("symbs"))
-    Do While Not mSymbsTS.AtEndOfStream
-        If mNumInstruments = 16 Then
-            MsgBox "Attempting to collect data for more than 16 instruments"
-            Exit Sub
-        End If
-        rec = mSymbsTS.ReadLine
-        If rec <> "" And Left$(rec, 2) <> "//" Then
-            ar = Split(rec, ",")
-            mInstruments(mNumInstruments).ShortName = Trim$(ar(0))
-            mInstruments(mNumInstruments).symbol = Trim$(ar(1))
-            mInstruments(mNumInstruments).secType = Trim$(ar(2))
-            mInstruments(mNumInstruments).expiry = Trim$(ar(3))
-            mInstruments(mNumInstruments).exchange = Trim$(ar(4))
-            mInstruments(mNumInstruments).currencyCode = Trim$(ar(5))
-            mInstruments(mNumInstruments).strikePrice = Trim$(ar(6))
-            mInstruments(mNumInstruments).Right = Trim$(ar(7))
-            mNumInstruments = mNumInstruments + 1
-        End If
-    Loop
-    
-    If mNumInstruments <> 0 Then
-        ReDim Preserve mInstruments(mNumInstruments - 1) As InstrumentSpecifier
-    End If
+If mCLParser.Switch("Config") Then
+    mConfigPath = mCLParser.SwitchValue("config")
+Else
+    mConfigPath = GetSpecialFolderPath(FolderIdLOCAL_APPDATA) & _
+                        "\TradeWright\" & _
+                        App.EXEName & _
+                        "\v" & _
+                        App.Major & "." & App.Minor & _
+                        "\settings.xml"
 End If
 
 failpoint = 400 '----------------------------------------------------------
 
-If mCLParser.Switch("shortnames") Then
-    Dim shortNamesStr As String
-    shortNamesStr = mCLParser.SwitchValue("shortnames")
-    mShortNames = Split(shortNamesStr, ",")
-    
-    For i = 0 To UBound(mShortNames)
-        mShortNames(i) = Trim$(Replace(mShortNames(i), """", ""))
-    Next
-    
-    mNumShortNames = UBound(mShortNames) + 1
-End If
-
-If mNumInstruments + mNumShortNames > 16 Then
-    MsgBox "Attempting to collect data for more than 16 instruments"
-    Exit Sub
-End If
-    
-
-failpoint = 500 '----------------------------------------------------------
-
-If mCLParser.Switch("server") Then
-    mServer = mCLParser.SwitchValue("server")
-End If
-
-If mCLParser.Switch("clientid") Then
-    If IsNumeric(mCLParser.SwitchValue("clientid")) Then
-        mClientID = mCLParser.SwitchValue("clientid")
-    Else
-        If mNoUI Then
-            Exit Sub
-        Else
-            MsgBox "Error - clientid  " & mCLParser.SwitchValue("clientid") & " is not numeric"
-            Exit Sub
-        End If
-    End If
-Else
-    Randomize
-    mClientID = CLng(&H7FFFFFFF * Rnd)
-End If
-
-failpoint = 600 '----------------------------------------------------------
-
-If mCLParser.Switch("nwb") Or _
-    mCLParser.Switch("nowritebars") _
-Then
-    mNoWriteBars = True
-End If
-
-failpoint = 700 '----------------------------------------------------------
-
-If mCLParser.Switch("nwt") Or _
-    mCLParser.Switch("nowriteticks") _
-Then
-    mNoWriteTicks = True
-End If
-
-failpoint = 800 '----------------------------------------------------------
-
-If mCLParser.Switch("outpath") Then
-    mOutputTickfilePath = mCLParser.SwitchValue("outpath")
-End If
-
-failpoint = 900 '----------------------------------------------------------
-
-If mCLParser.Switch("outformat") Then
-    mOutputTickfileFormat = mCLParser.SwitchValue("outformat")
-End If
-
-failpoint = 1000 '---------------------------------------------------------
-
-If mCLParser.Switch("port") Then
-    If IsNumeric(mCLParser.SwitchValue("port")) Then
-        mPort = mCLParser.SwitchValue("port")
-    Else
-        If mNoUI Then
-            Exit Sub
-        Else
-            MsgBox "Error - port  " & mCLParser.SwitchValue("port") & " is not numeric"
-            Exit Sub
-        End If
-    End If
-Else
-    mPort = 7496
-End If
-
-failpoint = 1100 '---------------------------------------------------------
-
-Set mDataCollector = New TBDataCollector
-mDataCollector.ShortNames = mShortNames
-mDataCollector.Instruments = mInstruments
-mDataCollector.Server = mServer
-mDataCollector.Port = mPort
-mDataCollector.ClientID = mClientID
-mDataCollector.WriteBars = Not mNoWriteBars
-mDataCollector.WriteTicks = Not mNoWriteTicks
-If mOutputTickfilePath = "" Then
-    mDataCollector.OutputPath = App.Path & "\Tickfiles"
-Else
-    mDataCollector.OutputPath = mOutputTickfilePath
-End If
-If mOutputTickfileFormat = "" Then
-    mDataCollector.OutputFormat = "TradeBuild V4"
-Else
-    mDataCollector.OutputFormat = mOutputTickfileFormat
-End If
+Set mDataCollector = CreateDataCollector(mConfigPath)
 
 failpoint = 1200 '---------------------------------------------------------
 
-If Not mNoUI Then
+If mNoUI Then
+    MsgBox "The /noui switch is not yet implemented - program will close"
+Else
     Set mForm = New fDataCollectorUI
     
     mForm.dataCollector = mDataCollector

@@ -477,6 +477,10 @@ Private Sub Form_Initialize()
 InitCommonControls
 End Sub
 
+Private Sub Form_Terminate()
+TerminateTWUtilities
+End Sub
+
 '================================================================================
 ' DataSignalListener Members
 '================================================================================
@@ -511,11 +515,11 @@ Case WriterNotifications.WriterNotReady
         logMessage tf.barLength & _
                         "-" & TimePeriodUnitsToString(tf.barUnit) & _
                         " bar writer not ready for " & _
-                        tf.contract.specifier.localSymbol
+                        tf.Contract.specifier.localSymbol
     Else
         Set tk = ev.Source
         logMessage "Tickfile writer not ready for " & _
-                        tk.contract.specifier.localSymbol
+                        tk.Contract.specifier.localSymbol
     End If
 Case WriterNotifications.WriterReady
     If TypeOf ev.Source Is Timeframe Then
@@ -523,11 +527,11 @@ Case WriterNotifications.WriterReady
         logMessage tf.barLength & _
                         "-" & TimePeriodUnitsToString(tf.barUnit) & _
                         " bar writer ready for " & _
-                        tf.contract.specifier.localSymbol
+                        tf.Contract.specifier.localSymbol
     Else
         Set tk = ev.Source
         logMessage "Tickfile writer ready for " & _
-                        tk.contract.specifier.localSymbol
+                        tk.Contract.specifier.localSymbol
     End If
 Case WriterNotifications.WriterFileCreated
     If TypeOf ev.Source Is Timeframe Then
@@ -535,12 +539,12 @@ Case WriterNotifications.WriterFileCreated
         logMessage "Writing " & tf.barLength & _
                     "-" & TimePeriodUnitsToString(tf.barUnit) & _
                     " bars for " & _
-                    tf.contract.specifier.localSymbol & _
+                    tf.Contract.specifier.localSymbol & _
                     " to " & ev.FileName
     Else
         Set tk = ev.Source
         logMessage "Writing tickdata for " & _
-                    tk.contract.specifier.localSymbol & _
+                    tk.Contract.specifier.localSymbol & _
                     " to " & ev.FileName
     End If
 End Select
@@ -580,24 +584,7 @@ logMessage "Connection to realtime data source closed"
 StopButton.Enabled = False
 End Sub
 
-Private Sub mDataCollector_Reconnecting()
-logMessage "Reconnecting to realtime data source"
-StopButton.Enabled = True
-End Sub
-
-Private Sub mDataCollector_connectionToTWSClosed( _
-                ByVal reconnecting As Boolean)
-ConnectionStatusText.BackColor = vbRed
-logMessage "Connection to TWS closed"
-If reconnecting Then
-    logMessage "Attempting to reconnect"
-Else
-    clearTickers
-    StopButton.Enabled = False
-End If
-End Sub
-
-Private Sub mDataCollector_errorMessage( _
+Private Sub mDataCollector_ErrorMessage( _
                 ByVal errorCode As ApiNotifyCodes, _
                 ByVal errorMsg As String)
 
@@ -609,9 +596,14 @@ logMessage ev.Data
 End Sub
 
 Private Sub mDataCollector_NotifyMessage( _
-                ByVal eventCode As TradeBuild25.ApiNotifyCodes, _
+                ByVal eventCode As TradeBuild26.ApiNotifyCodes, _
                 ByVal eventMsg As String)
 logMessage "Notification " & eventCode & ": " & eventMsg
+End Sub
+
+Private Sub mDataCollector_Reconnecting()
+logMessage "Reconnecting to realtime data source"
+StopButton.Enabled = True
 End Sub
 
 Private Sub mDataCollector_ServiceProviderError( _
@@ -629,14 +621,14 @@ Private Sub mDataCollector_TickerListenerAdded( _
                 ByVal listener As TickerListener)
 If mTickerListenerIndex > MaxTickerListenerIndex Then
     listener.Index = -1
-    logMessage "Can't display ticker for " & listener.contract.specifier.localSymbol
+    logMessage "Can't display ticker for " & listener.Contract.specifier.localSymbol
     Exit Sub
 End If
 
 listener.Index = mTickerListenerIndex
 mTickerListenerIndex = mTickerListenerIndex + 1
 listener.addDataSignalListener Me
-ShortNameText(listener.Index) = listener.contract.specifier.localSymbol
+ShortNameText(listener.Index) = listener.Contract.specifier.localSymbol
 
 End Sub
 
