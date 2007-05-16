@@ -119,7 +119,13 @@ Set mDataCollector = CreateDataCollector(mConfigPath)
 failpoint = 1200 '---------------------------------------------------------
 
 If mNoUI Then
-    MsgBox "The /noui switch is not yet implemented - program will close"
+    failpoint = 1400 '---------------------------------------------------------
+    
+    mDataCollector.startCollection
+    
+    Do
+        Wait 1000
+    Loop
 Else
     Set mForm = New fDataCollectorUI
     
@@ -157,11 +163,11 @@ Else
     mForm.Top = mPosY * mForm.Height
     mForm.Visible = True
     
+    failpoint = 1300 '---------------------------------------------------------
+    
+    mDataCollector.startCollection
 End If
 
-failpoint = 1200 '---------------------------------------------------------
-
-mDataCollector.startCollection
 
 Exit Sub
 
