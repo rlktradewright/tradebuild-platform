@@ -30,6 +30,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements StateChangeListener
 Implements StudyUtils26.StudyValueListener
 Implements TradeBuildSP.IBarDataInputServiceConsumer
 Implements TradeBuildSP.IBarDataOutputServiceConsumer
@@ -102,18 +103,18 @@ Private mAccumulatedVolume          As Long
 Private mTradeBars                  As StudyUtils26.Bars
 Private mTradeBarsStudy             As study
 Private mCurrTradeBar               As StudyUtils26.Bar
-Private mCurrTradeBarTickvol        As Long
+Private mCurrTradeBarPrevTickvol    As Long
 Private mCurrVolume                 As Long
 
 Private mAskBars                    As StudyUtils26.Bars
 Private mAskBarsStudy               As study
 Private mCurrAskBar                 As StudyUtils26.Bar
-Private mCurrAskBarTickvol          As Long
+Private mCurrAskBarPrevTickvol          As Long
 
 Private mBidBars                    As StudyUtils26.Bars
 Private mBidBarsStudy               As study
 Private mCurrBidBar                 As StudyUtils26.Bar
-Private mCurrBidBarTickvol          As Long
+Private mCurrBidBarPrevTickvol      As Long
 
 Private mContract                   As TradeBuild26.Contract
 
@@ -146,16 +147,10 @@ Private mWriteBidAndAskBars         As Boolean
 Private mBarWriter                  As TradeBuild26.HistoricDataWriter
 Private mBarReader                  As TradeBuildSP.IBarDataReader
 
-Private WithEvents mWriteTimer      As TimerUtils2.IntervalTimer
+Private WithEvents mWriteTimer      As IntervalTimer
 Attribute mWriteTimer.VB_VarHelpID = -1
 
 Private mTimerList                  As TimerList
-Private WithEvents mAskWriteRandomiser As TimerUtils2.TimerListItem
-Attribute mAskWriteRandomiser.VB_VarHelpID = -1
-Private WithEvents mBidWriteRandomiser As TimerUtils2.TimerListItem
-Attribute mBidWriteRandomiser.VB_VarHelpID = -1
-Private WithEvents mTradeWriteRandomiser As TimerUtils2.TimerListItem
-Attribute mTradeWriteRandomiser.VB_VarHelpID = -1
 
 Private mFirstTradeSize             As Long ' nb: this is the size of the very first
                                             ' trade reported. It is needed to get a
@@ -163,9 +158,9 @@ Private mFirstTradeSize             As Long ' nb: this is the size of the very f
 Private mPrevBarVolume              As Long
 Private mLatestVolume               As Long
 
-Private WithEvents mHistoricBarTimer As TimerUtils2.IntervalTimer
+Private WithEvents mHistoricBarTimer As IntervalTimer
 Attribute mHistoricBarTimer.VB_VarHelpID = -1
-Private mElapsedTimer               As TimerUtils2.ElapsedTimer
+Private mElapsedTimer               As ElapsedTimer
 Private mHistReceivingSynchronously As Boolean
 Private mHistoricBar                As TradeBuildSP.Bar
 Private mHistoricBarPending         As Boolean
@@ -331,6 +326,22 @@ RaiseEvent BarWriterNotification(ev)
 End Property
 
 '@================================================================================
+' StateChangeListener Interface Members
+'@================================================================================
+
+Private Sub StateChangeListener_Change( _
+                ev As TWUtilities.StateChangeEvent)
+Dim tli As TimerListItem
+Dim bar2Write As BarToWrite
+
+Set tli = ev.source
+bar2Write = tli.data
+
+WriteBar bar2Write.theBar, bar2Write.barType, bar2Write.volume
+
+End Sub
+
+'@================================================================================
 ' StudyValueListener Interface Members
 '@================================================================================
 
@@ -343,20 +354,20 @@ If ev.barNumber = currBarNumber Then Exit Sub
 If ev.source Is mTradeBarsStudy Then
     If currBarNumber > 0 Then
         mCurrVolume = mTradeBarsStudy.getStudyValue(BarValueVolume, -1).value
-        WriteTradeBar
-        mCurrTradeBarTickvol = 0
+        WriteABar mCurrTradeBar, BarTypeTrade, mCurrVolume, mCurrTradeBarPrevTickvol
+        mCurrTradeBarPrevTickvol = 0
     End If
     Set mCurrTradeBar = ev.value
 ElseIf ev.source Is mAskBarsStudy Then
     If currBarNumber > 0 Then
-        WriteAskBar
-        mCurrAskBarTickvol = 0
+        WriteABar mCurrAskBar, BarTypeAsk, 0, mCurrAskBarPrevTickvol
+        mCurrAskBarPrevTickvol = 0
     End If
     Set mCurrAskBar = ev.value
 ElseIf ev.source Is mBidBarsStudy Then
     If currBarNumber > 0 Then
-        WriteBidBar
-        mCurrBidBarTickvol = 0
+        WriteABar mCurrBidBar, BarTypeBid, 0, mCurrBidBarPrevTickvol
+        mCurrBidBarPrevTickvol = 0
     End If
     Set mCurrBidBar = ev.value
 End If
@@ -365,47 +376,11 @@ currBarNumber = ev.barNumber
 End Sub
 
 '@================================================================================
-' mAskWriteRandomiser Event Handlers
-'@================================================================================
-
-Private Sub mAskWriteRandomiser_Expired()
-Dim bar2Write As BarToWrite
-bar2Write = mAskWriteRandomiser.data
-
-WriteBar bar2Write.theBar, bar2Write.barType, bar2Write.volume
-Set mAskWriteRandomiser = Nothing
-End Sub
-
-'@================================================================================
-' mBidWriteRandomiser Event Handlers
-'@================================================================================
-
-Private Sub mBidWriteRandomiser_Expired()
-Dim bar2Write As BarToWrite
-bar2Write = mBidWriteRandomiser.data
-
-WriteBar bar2Write.theBar, bar2Write.barType, bar2Write.volume
-Set mBidWriteRandomiser = Nothing
-End Sub
-
-'@================================================================================
 ' mHistoricBarTimer Event Handlers
 '@================================================================================
 
 Private Sub mHistoricBarTimer_TimerExpired()
 FetchHistoricBars
-End Sub
-
-'@================================================================================
-' mTradeWriteRandomiser Event Handlers
-'@================================================================================
-
-Private Sub mTradeWriteRandomiser_Expired()
-Dim bar2Write As BarToWrite
-bar2Write = mTradeWriteRandomiser.data
-
-WriteBar bar2Write.theBar, bar2Write.barType, bar2Write.volume
-Set mTradeWriteRandomiser = Nothing
 End Sub
 
 '@================================================================================
@@ -422,9 +397,16 @@ End Sub
 
 Private Sub mWriteTimer_TimerExpired()
 mCurrVolume = mTradeBarsStudy.getStudyValue(BarValueVolume, 0).value
-WriteTradeBar
-WriteAskBar
-WriteBidBar
+
+WriteABar mCurrTradeBar, BarTypeTrade, mCurrVolume, mCurrTradeBarPrevTickvol
+mCurrTradeBarPrevTickvol = mCurrTradeBar.tickVolume
+
+WriteABar mCurrAskBar, BarTypeAsk, 0, mCurrAskBarPrevTickvol
+mCurrAskBarPrevTickvol = mCurrAskBar.tickVolume
+
+WriteABar mCurrBidBar, BarTypeBid, 0, mCurrBidBarPrevTickvol
+mCurrBidBarPrevTickvol = mCurrBidBar.tickVolume
+
 End Sub
 '@================================================================================
 ' Properties
@@ -533,9 +515,9 @@ Friend Sub Initialise( _
                 ByVal writeBidAndAskBars As Boolean)
 
 If pTicker.replayingTickfile Then
-    Set mTimerList = CreateTimerList(0, True)
+    Set mTimerList = GetGlobalTimerList(True)
 Else
-    Set mTimerList = CreateTimerList(0, False)
+    Set mTimerList = GetGlobalTimerList(False)
 End If
 
 Set mContract = pContract
@@ -621,9 +603,9 @@ End If
 
 If Not mBarWriter Is Nothing Then
     mCurrVolume = mTradeBarsStudy.getStudyValue(BarValueVolume, 0).value
-    WriteTradeBar
-    WriteAskBar
-    WriteBidBar
+    WriteABar mCurrTradeBar, BarTypeTrade, mCurrVolume, mCurrTradeBarPrevTickvol
+    WriteABar mCurrAskBar, BarTypeAsk, 0, mCurrAskBarPrevTickvol
+    WriteABar mCurrBidBar, BarTypeBid, 0, mCurrBidBarPrevTickvol
     mBarWriter.ReleaseDataStore
     Set mBarWriter = Nothing
 End If
@@ -1004,7 +986,7 @@ Private Sub startHistDataFetch()
 ' since this is within the Timeframes.add call, otherwise the caller may miss the
 ' BarsLoaded event.
 Set mHistoricBarTimer = CreateIntervalTimer(1)
-Set mElapsedTimer = New TimerUtils2.ElapsedTimer
+Set mElapsedTimer = New ElapsedTimer
 mHistoricBarTimer.StartTimer
 End Sub
 
@@ -1055,27 +1037,30 @@ Private Function tickr() As Ticker
 Set tickr = mTickerRef.Target
 End Function
 
-Private Sub WriteAskBar()
+Private Sub WriteABar( _
+                ByVal theBar As StudyUtils26.Bar, _
+                ByVal barType As BarTypes, _
+                ByVal volume As Long, _
+                ByVal prevTickVolume)
 Dim bar2Write As BarToWrite
 
 If mSaveIntervalSeconds < 0 Then Exit Sub
 
-If mCurrAskBar Is Nothing Then Exit Sub
+If theBar Is Nothing Then Exit Sub
 
-If (Not mCurrAskBar.Blank) And _
-    mCurrAskBar.tickVolume <> mCurrAskBarTickvol _
+If (Not theBar.Blank) And _
+    theBar.tickVolume <> prevTickVolume _
 Then
     If mSaveIntervalSeconds = 0 Then
-        WriteBar mCurrAskBar, BarTypeAsk, 0
+        WriteBar theBar, barType, volume
     Else
-        Set bar2Write.theBar = mCurrAskBar
-        bar2Write.barType = BarTypeAsk
-        bar2Write.volume = 0
-        Set mAskWriteRandomiser = mTimerList.add(bar2Write, _
-                                                    Rnd * 1000 * mSaveIntervalSeconds + 1, _
-                                                    ExpiryTimeUnitMilliseconds)
+        Set bar2Write.theBar = theBar
+        bar2Write.barType = barType
+        bar2Write.volume = volume
+        mTimerList.add(bar2Write, _
+                        Rnd * 1000 * mSaveIntervalSeconds + 1, _
+                        ExpiryTimeUnitMilliseconds).addStateChangeListener Me
     End If
-    mCurrAskBarTickvol = mCurrAskBar.tickVolume
 End If
 End Sub
 
@@ -1096,51 +1081,4 @@ Debug.Print FormatDateTime(Now, vbLongTime) & "  " & mContract.specifier.localSy
 mBarWriter.WriteBar theBar, barType, volume, mBarLength, mBarUnit
 End Sub
 
-Private Sub WriteBidBar()
-Dim bar2Write As BarToWrite
-
-If mSaveIntervalSeconds < 0 Then Exit Sub
-
-If mCurrBidBar Is Nothing Then Exit Sub
-
-If (Not mCurrBidBar.Blank) And _
-    mCurrBidBar.tickVolume <> mCurrBidBarTickvol _
-Then
-    If mSaveIntervalSeconds = 0 Then
-        WriteBar mCurrBidBar, BarTypeBid, 0
-    Else
-        Set bar2Write.theBar = mCurrBidBar
-        bar2Write.barType = BarTypeBid
-        bar2Write.volume = 0
-        Set mBidWriteRandomiser = mTimerList.add(bar2Write, _
-                                                    Rnd * 1000 * mSaveIntervalSeconds + 1, _
-                                                    ExpiryTimeUnitMilliseconds)
-    End If
-    mCurrBidBarTickvol = mCurrBidBar.tickVolume
-End If
-End Sub
-
-Private Sub WriteTradeBar()
-Dim bar2Write As BarToWrite
-
-If mSaveIntervalSeconds < 0 Then Exit Sub
-
-If mCurrTradeBar Is Nothing Then Exit Sub
-
-If (Not mCurrTradeBar.Blank) And _
-    mCurrTradeBar.tickVolume <> mCurrTradeBarTickvol _
-Then
-    If mSaveIntervalSeconds = 0 Then
-        WriteBar mCurrTradeBar, BarTypeTrade, mCurrVolume
-    Else
-        Set bar2Write.theBar = mCurrTradeBar
-        bar2Write.barType = BarTypeTrade
-        bar2Write.volume = mCurrVolume
-        Set mTradeWriteRandomiser = mTimerList.add(bar2Write, _
-                                                    Rnd * 1000 * mSaveIntervalSeconds + 1, _
-                                                    ExpiryTimeUnitMilliseconds)
-    End If
-    mCurrTradeBarTickvol = mCurrTradeBar.tickVolume
-End If
-End Sub
 

@@ -107,7 +107,7 @@ Private mLoadOnly                   As Boolean
 '@/
 Private mInEventHandler             As Boolean
 
-Private WithEvents mStopTickerTimer As TimerUtils2.IntervalTimer
+Private WithEvents mStopTickerTimer As IntervalTimer
 Attribute mStopTickerTimer.VB_VarHelpID = -1
 
 Private mHandle                     As Long
@@ -203,7 +203,7 @@ Private mInfoListeners              As InfoListeners
 
 Private mTickNumber                 As Long
 
-Private WithEvents mWriterReleaseTimer As TimerUtils2.IntervalTimer
+Private WithEvents mWriterReleaseTimer As IntervalTimer
 Attribute mWriterReleaseTimer.VB_VarHelpID = -1
 Private mSelfRef                    As Ticker
 
@@ -221,7 +221,7 @@ Private mDummyExecutions            As executions
 
 'Private mStudies                    As Collection
 
-Private WithEvents mNoMarketDepthNotifyTimer As TimerUtils2.IntervalTimer
+Private WithEvents mNoMarketDepthNotifyTimer As IntervalTimer
 Attribute mNoMarketDepthNotifyTimer.VB_VarHelpID = -1
 
 '@================================================================================
@@ -1626,9 +1626,7 @@ Friend Function addTimer(ByVal expiryTime As Double, _
                         ByVal expiryTimeUnits As expiryTimeUnits, _
                         ByVal data As Object) As TimerListItem
 If mTimerList Is Nothing Then
-    Set mTimerList = TimerUtils2.CreateTimerList( _
-                                    500, _
-                                    IIf(mReplayingTickfile, True, False))
+    Set mTimerList = GetGlobalTimerList(IIf(mReplayingTickfile, True, False))
     mTimerList.StartTiming
 End If
 Set addTimer = mTimerList.add(data, expiryTime, expiryTimeUnits)

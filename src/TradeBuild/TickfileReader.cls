@@ -86,9 +86,9 @@ Private mPercentComplete As Single
 
 Private mTickReceivedSynchronously As Boolean
 
-Private WithEvents mTimer As TimerUtils2.IntervalTimer
+Private WithEvents mTimer As IntervalTimer
 Attribute mTimer.VB_VarHelpID = -1
-Private mElapsedTimer As TimerUtils2.ElapsedTimer
+Private mElapsedTimer As ElapsedTimer
 
 '@================================================================================
 ' Class Event Handlers
@@ -380,7 +380,7 @@ If mState = TickfileStateCodes.TickfilePlaying Then Exit Sub
 
 mState = TickfileStateCodes.TickfilePlaying
 
-Set mElapsedTimer = New TimerUtils2.ElapsedTimer
+Set mElapsedTimer = New ElapsedTimer
 
 ' start replay using the timer to unwind the current stack
 Set mTimer = createIntervalTimer(1)

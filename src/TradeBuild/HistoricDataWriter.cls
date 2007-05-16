@@ -63,7 +63,7 @@ Private mServiceProviderWriterReady As Boolean
 
 Private mPendingWrites As Queue
 
-Private WithEvents mTimer As TimerUtils2.IntervalTimer
+Private WithEvents mTimer As IntervalTimer
 Attribute mTimer.VB_VarHelpID = -1
 Private mSelfRef As TradeBuild26.HistoricDataWriter
 
@@ -149,7 +149,7 @@ Else
         .highPrice = theBar.highValue
         .lowPrice = theBar.lowValue
         .OpenPrice = theBar.openValue
-        .TickVolume = theBar.TickVolume
+        .tickVolume = theBar.tickVolume
         .timestamp = theBar.DateTime
         .volume = volume
     End With

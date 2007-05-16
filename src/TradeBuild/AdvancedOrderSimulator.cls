@@ -23,6 +23,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements StateChangeListener
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -35,6 +37,9 @@ Option Explicit
 '@================================================================================
 ' Constants
 '@================================================================================
+
+Private Const ProjectName               As String = "TradeBuild26"
+Private Const ModuleName                As String = "AdvancedOrderSimulator"
 
 '@================================================================================
 ' Enums
@@ -69,7 +74,7 @@ Private mMarketTable() As MarketTableEntry
 
 Private mAllOrders As Collection
 
-Private WithEvents mTimerList As TimerList
+Private mTimerList As TimerList
 Attribute mTimerList.VB_VarHelpID = -1
     ' This is used to simulate delays in submitting orders to the
     ' exchange for execution. When it is time to change an order's status
@@ -86,8 +91,7 @@ Private Sub Class_Initialize()
 ReDim mMarketTable(InitialMaxTickers) As MarketTableEntry
 Set mAllOrders = New Collection
 
-Set mTimerList = createTimerList(200)
-mTimerList.StartTiming
+Set mTimerList = GetGlobalTimerList
 
 mNextBrokerOrderId = 1
 End Sub
@@ -97,25 +101,31 @@ Debug.Print "AdvancedOrderSimulator terminated"
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' StateChangeListener Interface Members
 '@================================================================================
 
-'@================================================================================
-' mTimerList Event Handlers
-'@================================================================================
-
-Private Sub mTimerList_expired(ByVal data As Object)
+Private Sub StateChangeListener_Change( _
+                ev As TWUtilities.StateChangeEvent)
+Dim tli As TimerListItem
 Dim lOrder As SimulatorOrder
 
-Set lOrder = data
+Set tli = ev.source
+Set lOrder = tli.data
 
-Select Case lOrder.order.status
-Case OrderStatuses.OrderStatusSubmitted
-    lOrder.atExchange = True
-    matchOrder lOrder
-Case OrderStatuses.OrderStatusCancelling
-    setCancelOrder lOrder
-End Select
+If ev.State = TimerListItemStates.TimerListItemStateExpired Then
+    Select Case lOrder.order.status
+    Case OrderStatuses.OrderStatusSubmitted
+        lOrder.atExchange = True
+        matchOrder lOrder
+    Case OrderStatuses.OrderStatusCancelling
+        setCancelOrder lOrder
+    End Select
+Else
+    err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & "StateChangeListener_Change", _
+            "Unexpected TimerListItem status"
+End If
+
 End Sub
 
 '@================================================================================
@@ -579,7 +589,9 @@ With mMarketTable(pOrder.marketIndex)
                     pOrder.order.status = OrderStatuses.OrderStatusSubmitted
                     mMarketTable(pOrder.marketIndex).serviceConsumer.orderStatus pOrder.order.id, _
                                             pOrder.order.status
-                    mTimerList.add pOrder, delay, expiryTimeUnits.ExpiryTimeUnitMilliseconds
+                    mTimerList.add(pOrder, _
+                                    delay, _
+                                    expiryTimeUnits.ExpiryTimeUnitMilliseconds).addStateChangeListener Me
                 Else
                     pOrder.order.status = OrderStatuses.OrderStatusSubmitted
                     pOrder.atExchange = True
@@ -763,9 +775,9 @@ Case OrderStatuses.OrderStatusSubmitted, OrderStatuses.OrderStatusPreSubmitted
     mMarketTable(pOrder.marketIndex).serviceConsumer.orderStatus pOrder.order.id, _
                             OrderStatuses.OrderStatusCancelling
     If mMarketTable(pOrder.marketIndex).simulateExchangeDelays Then
-        mTimerList.add pOrder, _
+        mTimerList.add(pOrder, _
                             delay, _
-                            expiryTimeUnits.ExpiryTimeUnitMilliseconds
+                            expiryTimeUnits.ExpiryTimeUnitMilliseconds).addStateChangeListener Me
     End If
 Case OrderStatuses.OrderStatusCreated, _
         OrderStatuses.OrderStatusCancelling, _
@@ -926,7 +938,9 @@ Case TradeBuild26.OrderTypes.OrderTypeLimit, TradeBuild26.OrderTypes.OrderTypeMa
                 pOrder.order.status = OrderStatuses.OrderStatusSubmitted
                 mMarketTable(pOrder.marketIndex).serviceConsumer.orderStatus pOrder.order.id, _
                                         pOrder.order.status
-                mTimerList.add pOrder, delay, expiryTimeUnits.ExpiryTimeUnitMilliseconds
+                mTimerList.add(pOrder, _
+                                delay, _
+                                expiryTimeUnits.ExpiryTimeUnitMilliseconds).addStateChangeListener Me
             Else
                 pOrder.order.status = OrderStatuses.OrderStatusPendingSubmit
                 mMarketTable(pOrder.marketIndex).serviceConsumer.orderStatus pOrder.order.id, _
@@ -970,7 +984,9 @@ Case TradeBuild26.OrderTypes.OrderTypeStop, TradeBuild26.OrderTypes.OrderTypeSto
             pOrder.order.status = OrderStatuses.OrderStatusSubmitted
             mMarketTable(pOrder.marketIndex).serviceConsumer.orderStatus pOrder.order.id, _
                                     pOrder.order.status
-            mTimerList.add pOrder, delay, expiryTimeUnits.ExpiryTimeUnitMilliseconds
+            mTimerList.add(pOrder, _
+                            delay, _
+                            expiryTimeUnits.ExpiryTimeUnitMilliseconds).addStateChangeListener Me
         Else
             pOrder.order.status = OrderStatuses.OrderStatusSubmitted
             pOrder.atExchange = True

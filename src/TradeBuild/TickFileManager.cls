@@ -103,7 +103,7 @@ Private mTimestampAdjustmentEnd     As Double
 Private mEventsPlayed               As Long
 Private mPercentComplete            As Single
 
-Private WithEvents mProgressTimer   As TimerUtils2.IntervalTimer
+Private WithEvents mProgressTimer   As IntervalTimer
 Attribute mProgressTimer.VB_VarHelpID = -1
 
 '@================================================================================
@@ -579,7 +579,7 @@ Do
         Exit Sub
     End If
     
-    Set mTicker = mTickers.add(False, GenerateGUIDString)
+    Set mTicker = mTickers.add(False, generateGUIDString)
     mTicker.TickFileManager = Me
     mTicker.replayingTickfile = True
     mTicker.clockRate = mReplaySpeed
@@ -627,9 +627,9 @@ If mReplayProgressEventIntervalMillisecs <> 0 Or _
     mReplaySpeed = 0 _
 Then
     If mReplayProgressEventIntervalMillisecs = 0 Then
-        Set mProgressTimer = createIntervalTimer(0, , 500)
+        Set mProgressTimer = CreateIntervalTimer(0, , 500)
     Else
-        Set mProgressTimer = createIntervalTimer(0, , mReplayProgressEventIntervalMillisecs)
+        Set mProgressTimer = CreateIntervalTimer(0, , mReplayProgressEventIntervalMillisecs)
     End If
     mProgressTimer.StartTimer
 End If
