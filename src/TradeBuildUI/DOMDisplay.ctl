@@ -106,7 +106,7 @@ Private mCurrentLast As Double
 
 Private mHalted As Boolean
 
-Private WithEvents mTimer As TimerUtils2.IntervalTimer
+Private WithEvents mTimer As IntervalTimer
 Attribute mTimer.VB_VarHelpID = -1
 
 '================================================================================
