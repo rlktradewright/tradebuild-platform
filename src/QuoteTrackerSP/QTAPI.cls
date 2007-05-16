@@ -141,7 +141,7 @@ End Type
 
 Private mCommonServiceConsumer As ICommonServiceConsumer
 
-Private WithEvents mConnectionTimer As TimerUtils2.IntervalTimer
+Private WithEvents mConnectionTimer As IntervalTimer
 Attribute mConnectionTimer.VB_VarHelpID = -1
 
 Private WithEvents mSocket As Winsock

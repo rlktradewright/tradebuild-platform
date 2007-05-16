@@ -63,7 +63,7 @@ Private mDataConsumer As IStreamingDataConsumer
 
 Private mName As String
 
-Private mElapsedTimer As TimerUtils2.ElapsedTimer
+Private mElapsedTimer As ElapsedTimer
 
 Private WithEvents mQTAPI As QTAPI
 Attribute mQTAPI.VB_VarHelpID = -1
@@ -99,7 +99,7 @@ Private Sub Class_Initialize()
 Set mTickQueue = New Queue
 mTickQueue.initialCapacity = InitialTickQueueCapacity
 
-Set mElapsedTimer = New TimerUtils2.ElapsedTimer
+Set mElapsedTimer = New ElapsedTimer
 
 End Sub
 
