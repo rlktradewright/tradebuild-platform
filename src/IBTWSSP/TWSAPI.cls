@@ -1505,10 +1505,10 @@ Static msgID As TWSSocketInMsgTypes
 Static version As Long
 Static retryCount As Long
 Static eventCount As Long
-Static mElapsedTimer As TimerUtils2.ElapsedTimer
+Static mElapsedTimer As ElapsedTimer
 
 If mElapsedTimer Is Nothing Then
-    Set mElapsedTimer = New TimerUtils2.ElapsedTimer
+    Set mElapsedTimer = New ElapsedTimer
     mElapsedTimer.StartTiming
 End If
 
