@@ -114,9 +114,9 @@ Private mSupportedOutputFormats()                       As TickfileFormatSpecifi
 Private mOutputFormat                                   As String
 Private mOutputPath                                     As String
 
-Private WithEvents mTimer                               As TimerUtils2.IntervalTimer
+Private WithEvents mTimer                               As IntervalTimer
 Attribute mTimer.VB_VarHelpID = -1
-Private mTimerList                                      As TimerUtils2.TimerList
+Private mTimerList                                      As TimerList
 
 '================================================================================
 ' Class Event Handlers
@@ -130,7 +130,7 @@ mTradeBuildAPI.addInfoListener Me, TradeBuildListenValueTypes.VTLog
 
 mOutputPath = App.Path
 
-Set mTimerList = createTimerList(200)
+Set mTimerList = GetGlobalTimerList
 mTimerList.StartTiming
 
 End Sub
@@ -168,7 +168,7 @@ Private Sub mTicker_stateChange(ev As TWUtilities.StateChangeEvent)
 Dim lTickerListener As TickerListener
 Dim i As Long
 
-If ev.State = TickerStates.TickerStateRunning Then
+If ev.state = TickerStates.TickerStateRunning Then
 
     Set lTickerListener = New TickerListener
     lTickerListener.initialise mTicker.contract, mTimerList
