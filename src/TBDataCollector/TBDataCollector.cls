@@ -124,6 +124,9 @@ Private mTimerList                                      As TimerList
 
 Private Sub Class_Initialize()
 
+InitialiseTWUtilities
+InitialiseTimerUtils
+
 Set mTradeBuildAPI = New TradeBuildAPI
 
 mTradeBuildAPI.addInfoListener Me, TradeBuildListenValueTypes.VTLog
@@ -131,8 +134,12 @@ mTradeBuildAPI.addInfoListener Me, TradeBuildListenValueTypes.VTLog
 mOutputPath = App.Path
 
 Set mTimerList = GetGlobalTimerList
-mTimerList.StartTiming
 
+End Sub
+
+Private Sub Class_Terminate()
+TerminateTWUtilities
+TerminateTimerUtils
 End Sub
 
 '================================================================================
@@ -334,7 +341,7 @@ End Sub
 Public Sub startCollection()
 
 ' setup the tickers using a short timer
-Set mTimer = createIntervalTimer(1)
+Set mTimer = CreateIntervalTimer(1)
 mTimer.startTimer
 
 End Sub
