@@ -1,6 +1,6 @@
 Type=OleDll
 Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#..\..\..\WINDOWS\system32\stdole2.tlb#OLE Automation
-Reference=*\G{0D622489-F9F7-41C4-A01A-902A3B9747B6}#1.0#0#..\..\TradeWright Common\BusObjUtils\BusObjUtils2-6.dll#TradeWright Business Object Utilities v2.6
+Reference=*\G{0D622489-F9F7-41C4-A01A-902A3B9747B6}#1.0#0#..\..\TradeWright Common\BusObjUtils\BusObjUtils.dll#TradeWright Business Object Utilities v2.6
 Reference=*\G{737D1C10-E0C8-40E3-961D-16EE6F48A686}#4.8#0#..\..\TradeWright Common\TWUtilities\TWUtilities.dll#TradeWright Utility Services
 Reference=*\G{2A75196C-D9EB-4129-B803-931327F72D5C}#2.8#0#..\..\..\Program Files\Common Files\system\ado\msado15.dll#Microsoft ActiveX Data Objects 2.8 Library
 Class=BarDataReader; BarDataReader.cls
@@ -33,7 +33,7 @@ CompatibleEXE32="TradingDO2-6.dll"
 VersionCompatible32="1"
 MajorVer=2
 MinorVer=6
-RevisionVer=26
+RevisionVer=27
 AutoIncrementVer=1
 ServerSupportFiles=0
 DllBaseAddress=&H6a340000
