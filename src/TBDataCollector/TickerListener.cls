@@ -129,7 +129,8 @@ End Sub
 ' mTimerListItem Event Handlers
 '================================================================================
 
-Private Sub mTimerListItem_Expired()
+Private Sub mTimerListItem_StateChange(ev As TWUtilities.StateChangeEvent)
+If ev.state <> TimerListItemStates.TimerListItemStateExpired Then Exit Sub
 Set mTimerListItem = Nothing
 fireSignalOff
 End Sub
@@ -229,7 +230,7 @@ Set quote.Source = Me
 quote.price = price
 quote.Size = 0
 For Each listener In mQuoteListeners
-    listener.Low quote
+    listener.low quote
 Next
 End Sub
 
