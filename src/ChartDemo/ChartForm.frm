@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#1.0#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#3.0#0"; "ChartSkil2-6.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo Version 2.5"
    ClientHeight    =   8355
@@ -10,12 +10,13 @@ Begin VB.Form ChartForm
    ScaleHeight     =   8355
    ScaleWidth      =   12015
    Begin ChartSkil26.Chart Chart1 
+      Align           =   1  'Align Top
       Height          =   6495
-      Left            =   120
+      Left            =   0
       TabIndex        =   17
-      Top             =   120
-      Width           =   11655
-      _ExtentX        =   20558
+      Top             =   0
+      Width           =   12015
+      _ExtentX        =   21193
       _ExtentY        =   11456
    End
    Begin VB.PictureBox BasePicture 
@@ -278,7 +279,7 @@ Private mSwingAmountTicks As Double         ' the minimum price movement in tick
 Private mSwingingUp As Boolean              ' indicates whether price is swinging up
                                             ' or down
 
-Private WithEvents mClockTimer As TimerUtils2.IntervalTimer
+Private WithEvents mClockTimer As IntervalTimer
 Attribute mClockTimer.VB_VarHelpID = -1
 Private mClockText As Text                  ' displays the current time on the chart
 
@@ -297,6 +298,12 @@ Private mElapsedTimer As ElapsedTimer       ' used to measure how long it takes 
 ' Form Event Handlers
 '================================================================================
 
+Private Sub Form_Initialize()
+InitCommonControls
+InitialiseTWUtilities
+InitialiseTimerUtils
+End Sub
+
 Private Sub Form_Load()
 initialise
 Set mElapsedTimer = New ElapsedTimer
@@ -312,6 +319,11 @@ newChartHeight = BasePicture.Top - Chart1.Top
 If Chart1.Height <> newChartHeight And newChartHeight >= 0 Then
     Chart1.Height = newChartHeight
 End If
+End Sub
+
+Private Sub Form_Terminate()
+TerminateTWUtilities
+TerminateTimerUtils
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
@@ -658,7 +670,7 @@ mTickCountText.Align = TextAlignModes.AlignTopLeft
 mTickCountText.includeInAutoscale = False
 
 ' set up the clock timer to fire an event every 250 milliseconds
-Set mClockTimer = TimerUtils2.createIntervalTimer(250, ExpiryTimeUnitMilliseconds, 250)
+Set mClockTimer = CreateIntervalTimer(250, ExpiryTimeUnitMilliseconds, 250)
 mClockTimer.StartTimer
 
 End Sub

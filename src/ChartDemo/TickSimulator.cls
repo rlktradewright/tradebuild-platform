@@ -70,7 +70,7 @@ Private Const NumTickVolumeElements = 90
 ' Member variables
 '================================================================================
 
-Private WithEvents mTimer As TimerUtils2.IntervalTimer
+Private WithEvents mTimer As IntervalTimer
 Attribute mTimer.VB_VarHelpID = -1
 
 Private mStartPrice As Double
@@ -199,7 +199,7 @@ Do While barcount < numberOfBars
     End If
 Loop
 
-Set mTimer = TimerUtils2.createIntervalTimer(5, ExpiryTimeUnitSeconds, 5000, True)
+Set mTimer = CreateIntervalTimer(5, ExpiryTimeUnitSeconds, 5000, True)
 mTimer.StartTimer
 
 End Sub
