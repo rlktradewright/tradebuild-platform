@@ -77,6 +77,7 @@ Dim failpoint As Long
 On Error GoTo Err
 
 InitialiseTWUtilities
+InitialiseTimerUtils
 
 mLeftOffset = -1
 mRightOffset = -1
@@ -126,6 +127,9 @@ If mNoUI Then
     Do
         Wait 1000
     Loop
+    
+    TerminateTWUtilities
+    TerminateTimerUtils
 Else
     Set mForm = New fDataCollectorUI
     

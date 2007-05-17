@@ -479,6 +479,7 @@ End Sub
 
 Private Sub Form_Terminate()
 TerminateTWUtilities
+TerminateTimerUtils
 End Sub
 
 '================================================================================
