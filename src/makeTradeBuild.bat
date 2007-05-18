@@ -1,10 +1,14 @@
-midl /mktyplib203 typelib/chartskiltypes25.idl
+cd typelib
+midl /mktyplib203 chartskiltypes26.idl
 pause
-regtlib typelib/chartskiltypes25.tlb
+regtlib chartskiltypes26.tlb
 pause
-midl /mktyplib203 typelib/tradebuildsp25.idl
+midl /mktyplib203 tradebuildsp26.idl
 pause
-regtlib typelib/tradebuildsp25.tlb
+regtlib tradebuildsp26.tlb
+pause
+cd ..
+vb6 /m TradingDO\TradingDO.vbp
 pause
 vb6 /m TimeframeUtils\TimeframeUtils.vbp
 pause
