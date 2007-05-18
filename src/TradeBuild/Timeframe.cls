@@ -401,12 +401,13 @@ mCurrVolume = mTradeBarsStudy.getStudyValue(BarValueVolume, 0).value
 WriteABar mCurrTradeBar, BarTypeTrade, mCurrVolume, mCurrTradeBarPrevTickvol
 mCurrTradeBarPrevTickvol = mCurrTradeBar.tickVolume
 
-WriteABar mCurrAskBar, BarTypeAsk, 0, mCurrAskBarPrevTickvol
-mCurrAskBarPrevTickvol = mCurrAskBar.tickVolume
-
-WriteABar mCurrBidBar, BarTypeBid, 0, mCurrBidBarPrevTickvol
-mCurrBidBarPrevTickvol = mCurrBidBar.tickVolume
-
+If mWriteBidAndAskBars Then
+    WriteABar mCurrAskBar, BarTypeAsk, 0, mCurrAskBarPrevTickvol
+    mCurrAskBarPrevTickvol = mCurrAskBar.tickVolume
+    
+    WriteABar mCurrBidBar, BarTypeBid, 0, mCurrBidBarPrevTickvol
+    mCurrBidBarPrevTickvol = mCurrBidBar.tickVolume
+End If
 End Sub
 '@================================================================================
 ' Properties
@@ -478,7 +479,7 @@ End Property
 
 Friend Property Let tradeBuildAPI( _
                 ByVal value As tradeBuildAPI)
-Set mTradeBuildAPIRef = weakrefs.createWeakReference(value)
+Set mTradeBuildAPIRef = WeakRefs.createWeakReference(value)
 End Property
 
 '@================================================================================
@@ -1068,7 +1069,11 @@ Private Sub WriteBar( _
                 ByVal theBar As StudyUtils26.Bar, _
                 ByVal barType As BarTypes, _
                 ByVal volume As Long)
-    
+        
+' because of the delayed writes, the Timeframe may have been finished between
+' initiating the write timer and getting here, so check for this
+If mBarWriter Is Nothing Then Exit Sub
+
 Debug.Print FormatDateTime(Now, vbLongTime) & "  " & mContract.specifier.localSymbol & _
             " Write " & mBarLength & TimePeriodUnitsToString(mBarUnit) & _
             " type " & barType & " bar " & theBar.barNumber & _
