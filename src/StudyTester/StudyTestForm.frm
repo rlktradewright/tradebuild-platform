@@ -2,8 +2,8 @@ VERSION 5.00
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "msflxgrd.ocx"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
-Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#2.0#0"; "StudiesUI2-6.ocx"
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#1.0#0"; "ChartSkil2-6.ocx"
+Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#8.0#0"; "StudiesUI2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#3.0#0"; "ChartSkil2-6.ocx"
 Begin VB.Form StudyTestForm 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeBuild Study Test Harness v2.6"
@@ -65,18 +65,18 @@ Begin VB.Form StudyTestForm
       TabCaption(1)   =   "Study setup"
       TabPicture(1)   =   "StudyTestForm.frx":001C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "StudyConfigurer1"
-      Tab(1).Control(1)=   "SetStudyLibraryButton"
-      Tab(1).Control(2)=   "RemoveLibButton"
-      Tab(1).Control(3)=   "SpList"
-      Tab(1).Control(4)=   "AddLibButton"
-      Tab(1).Control(5)=   "LibToAddText"
-      Tab(1).Control(6)=   "StudyLibraryClassNameText"
-      Tab(1).Control(7)=   "StudiesCombo"
-      Tab(1).Control(8)=   "Label19"
-      Tab(1).Control(9)=   "Label1"
-      Tab(1).Control(10)=   "Label3"
-      Tab(1).Control(11)=   "Label2"
+      Tab(1).Control(0)=   "Label2"
+      Tab(1).Control(1)=   "Label3"
+      Tab(1).Control(2)=   "Label1"
+      Tab(1).Control(3)=   "Label19"
+      Tab(1).Control(4)=   "StudiesCombo"
+      Tab(1).Control(5)=   "StudyLibraryClassNameText"
+      Tab(1).Control(6)=   "LibToAddText"
+      Tab(1).Control(7)=   "AddLibButton"
+      Tab(1).Control(8)=   "StudyLibraryList"
+      Tab(1).Control(9)=   "RemoveLibButton"
+      Tab(1).Control(10)=   "SetStudyLibraryButton"
+      Tab(1).Control(11)=   "StudyConfigurer1"
       Tab(1).ControlCount=   12
       TabCaption(2)   =   "&Chart"
       TabPicture(2)   =   "StudyTestForm.frx":0038
@@ -129,7 +129,7 @@ Begin VB.Form StudyTestForm
          Top             =   2340
          Width           =   855
       End
-      Begin VB.ListBox SpList 
+      Begin VB.ListBox StudyLibraryList 
          Height          =   840
          ItemData        =   "StudyTestForm.frx":0054
          Left            =   -72600
@@ -359,7 +359,7 @@ Private mIsStudySet As Boolean
 
 Private mName As String
 
-Private mStudyLibrary As StudyLibrary
+'Private mStudyLibrary As StudyLibrary
 
 Private mStudyDefinition As StudyDefinition
 
@@ -395,7 +395,7 @@ mDigitWidth = Me.TextWidth(widthString) / Len(widthString)
 
 setupTestDataGrid
 
-AddStudyLibrary New CmnStudiesLib26.StudyLib
+AddStudyLibrary "CmnStudiesLib26.StudyLib", True
 
 ' need to do this in case the user sets up his Study Library and study
 ' before loading the test data
@@ -408,8 +408,8 @@ End Sub
 '================================================================================
 
 Private Sub AddLibButton_Click()
-SpList.AddItem LibToAddText
-SpList.ListIndex = SpList.ListCount - 1
+StudyLibraryList.AddItem LibToAddText
+StudyLibraryList.ListIndex = StudyLibraryList.ListCount - 1
 LibToAddText = ""
 End Sub
 
@@ -442,7 +442,7 @@ If Not IsNumeric(MinimumPriceTickText & Chr(KeyAscii)) Then KeyAscii = 0
 End Sub
 
 Private Sub RemoveLibButton_Click()
-SpList.RemoveItem SpList.ListIndex
+StudyLibraryList.RemoveItem StudyLibraryList.ListIndex
 RemoveLibButton.Enabled = False
 End Sub
 
@@ -456,6 +456,7 @@ End Sub
 
 Private Sub SetStudyLibraryButton_Click()
 Dim availableStudies() As String
+Dim lStudyLibrary As StudyLibrary
 Dim i As Long
 
 StudiesCombo.Clear
@@ -470,28 +471,26 @@ If StudyLibraryClassNameText = "" Then
     Exit Sub
 End If
 
+RemoveAllStudyLibraries
 On Error Resume Next
-Set mStudyLibrary = CreateObject(StudyLibraryClassNameText)
+Set lStudyLibrary = AddStudyLibrary(StudyLibraryClassNameText, True)
 On Error GoTo 0
-If mStudyLibrary Is Nothing Then
+If lStudyLibrary Is Nothing Then
     StudiesCombo.Enabled = False
     MsgBox StudyLibraryClassNameText & " is not a valid Study Library"
     Exit Sub
 End If
 
-RemoveAllStudyLibraries
-AddStudyLibrary mStudyLibrary
-
 StudiesCombo.Enabled = True
-availableStudies = mStudyLibrary.getImplementedStudyNames
+availableStudies = lStudyLibrary.getImplementedStudyNames
 For i = 0 To UBound(availableStudies)
     StudiesCombo.AddItem availableStudies(i)
 Next
 
 End Sub
 
-Private Sub SpList_Click()
-If SpList.ListIndex = -1 Then
+Private Sub StudyLibraryList_Click()
+If StudyLibraryList.ListIndex = -1 Then
     RemoveLibButton.Enabled = False
 Else
     RemoveLibButton.Enabled = True
@@ -513,12 +512,12 @@ addStudyLibraries
 
 setupInitialStudies
                     
-Set mStudyParams = getStudyDefaultParameters(StudiesCombo)
+Set mStudyParams = GetStudyDefaultParameters(StudiesCombo)
 
 regionNames(0) = PriceRegionName
 regionNames(1) = VolumeRegionName
 
-Set mStudyDefinition = getStudyDefinition(StudiesCombo)
+Set mStudyDefinition = GetStudyDefinition(StudiesCombo)
 
 StudyConfigurer1.initialise Chart1.controller, _
                             mStudyDefinition, _
@@ -696,21 +695,17 @@ End Sub
 
 Private Sub addStudyLibraries()
 Dim i As Long
-Dim standardLib As Object
 
 RemoveAllStudyLibraries
 
-Set standardLib = New CmnStudiesLib26.StudyLib
-AddStudyLibrary standardLib
+AddStudyLibrary "CmnStudiesLib26.StudyLib", True
 
-For i = 0 To SpList.ListCount - 1
-    AddStudyLibrary CreateObject(SpList.List(i))
+For i = 0 To StudyLibraryList.ListCount - 1
+    AddStudyLibrary StudyLibraryList.List(i), True
 Next
 
-If Not mStudyLibrary Is Nothing Then
-    If Not TypeOf mStudyLibrary Is CmnStudiesLib26.StudyLib Then
-        AddStudyLibrary mStudyLibrary
-    End If
+If StrComp(StudyLibraryClassNameText, "CmnStudiesLib26.StudyLib", vbTextCompare) <> 0 Then
+    If StudyLibraryClassNameText <> "" Then AddStudyLibrary StudyLibraryClassNameText, True
 End If
 End Sub
 
@@ -722,7 +717,7 @@ Dim studyValueConfig As StudyValueConfiguration
 Dim barsStyle As barStyle
 Dim volumeStyle As dataPointStyle
 
-Set studyDef = getStudyDefinition("Constant time bars")
+Set studyDef = GetStudyDefinition("Constant time bars")
 
 Set createBarsStudyConfig = New StudyConfiguration
 createBarsStudyConfig.chartRegionName = PriceRegionName
