@@ -127,7 +127,24 @@ handleFatalError Err.Number, _
 End Sub
 
 Private Property Let ITickfileReader_Contract(ByVal RHS As TradeBuildSP.IContract)
+Dim sessionStart As Date
+
 Set mContract = RHS
+mTickSize = mContract.MinimumTick
+
+With mInputTickfileSpecifier
+    If .EntireSession Then
+        SessionTimes .From, _
+                    sessionStart, _
+                    .To, _
+                    mContract.SessionStartTime, _
+                    mContract.SessionEndTime
+    End If
+    mTickReader.FetchData TickfileFormatTradeBuildSQL, _
+                            gTruncateTimeToMinute(.From), _
+                            gTruncateTimeToNextMinute(.To)
+End With
+
 End Property
 
 Private Property Get ITickfileReader_Contract() As TradeBuildSP.IContract
@@ -192,6 +209,13 @@ Dim lInstrumentFactory As InstrumentFactory
 
 On Error GoTo Err
 mInputTickfileSpecifier = tickfileSpecifier
+
+' we use the supplied contract specifier to retrieve the relevant Instrument
+' object from the database so that we can create a TickDataReader object from it.
+
+' Note that a 'canonical contract' object will be notified later via
+' ITickfileReader_Contract, and it is that one that we will use for
+' ticksize, session times etc.
 
 Set lInstrumentFactory = mTradingDB.InstrumentFactory
 
@@ -290,26 +314,12 @@ handleFatalError Err.Number, _
 End Sub
 
 Private Sub mTickReader_Ready()
-Dim sessionStart As Date
-
 On Error GoTo Err
 
 mServiceConsumer.NotifyEvent StandardSPEventCodes.TFConnectedToDataSource, _
                         "Connected to data source", _
                         mTickfileServiceProvider.handle
 
-With mInputTickfileSpecifier
-    If .EntireSession Then
-        SessionTimes .From, _
-                    sessionStart, _
-                    .To, _
-                    mContract.SessionStartTime, _
-                    mContract.SessionEndTime
-    End If
-    mTickReader.FetchData TickfileFormatTradeBuildSQL, _
-                            gTruncateTimeToMinute(.From), _
-                            gTruncateTimeToNextMinute(.To)
-End With
 Exit Sub
 Err:
 handleFatalError Err.Number, _
