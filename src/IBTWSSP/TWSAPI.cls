@@ -4145,7 +4145,7 @@ End Sub
 Private Sub retryConnection()
 If mConnectionRetryIntervalSecs <> 0 Then
     If mConnectionTimer Is Nothing Then
-        Set mConnectionTimer = createIntervalTimer(mConnectionRetryIntervalSecs, ExpiryTimeUnitSeconds)
+        Set mConnectionTimer = CreateIntervalTimer(mConnectionRetryIntervalSecs, ExpiryTimeUnitSeconds)
     End If
     mConnectionTimer.StartTimer
 End If

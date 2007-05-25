@@ -59,6 +59,8 @@ Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mTWSAPITable() As TWSAPITableEntry
 Private mTWSAPITableNextIndex As Long
 
+Private mRandomClientIds As Collection
+
 '================================================================================
 ' Procedures
 '================================================================================
@@ -67,6 +69,35 @@ Public Property Let gCommonServiceConsumer( _
                 ByVal RHS As TradeBuildSP.ICommonServiceConsumer)
 Set mCommonServiceConsumer = RHS
 End Property
+
+Public Function gGetRandomClientId( _
+                ByVal designator As Long) As Long
+                
+If mRandomClientIds Is Nothing Then
+    Set mRandomClientIds = New Collection
+    Rnd -1
+    Randomize
+End If
+
+' first see if a clientId has already been generated for this designator
+
+On Error Resume Next
+gGetRandomClientId = mRandomClientIds(CStr(designator))
+On Error GoTo 0
+
+If gGetRandomClientId <> 0 Then
+    Exit Function   ' clientId already exists for this designator
+End If
+
+gGetRandomClientId = Rnd * (&H7FFFFFFF - &H7000000) + &H7000000
+
+Do While clientIdAlreadyInUse(gGetRandomClientId)
+    gGetRandomClientId = Rnd * (&H7FFFFFFF - &H7000000) + &H7000000
+Loop
+
+mRandomClientIds.add gGetRandomClientId, CStr(designator)
+
+End Function
 
 Public Function gGetTWSAPIInstance( _
                 ByVal server As String, _
@@ -195,4 +226,19 @@ Public Function gTruncateTimeToMinute(ByVal timestamp As Date) As Date
 gTruncateTimeToMinute = Int((timestamp + OneMicrosecond) / OneMinute) * OneMinute
 End Function
 
+'================================================================================
+' Helper Functions
+'================================================================================
+
+Public Function clientIdAlreadyInUse( _
+                ByVal value As Long) As Boolean
+Dim i As Long
+For i = 0 To mTWSAPITableNextIndex - 1
+    If mTWSAPITable(i).clientID = value Then
+        clientIdAlreadyInUse = True
+        Exit Function
+    End If
+Next
+                
+End Function
 
