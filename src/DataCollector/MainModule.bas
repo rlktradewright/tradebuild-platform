@@ -69,9 +69,6 @@ Private mDataCollector As TBDataCollector
 
 Public Sub Main()
 Dim posnValue As String
-Dim i As Long
-Dim ar() As String
-Dim rec As String
 
 Dim failpoint As Long
 On Error GoTo Err
@@ -90,7 +87,11 @@ If mCLParser.Switch("?") Or mCLParser.NumberOfSwitches = 0 Then
     MsgBox vbCrLf & _
             "datacollector26 [/config:filename] " & vbCrLf & _
             "              [/posn:offsetfromleft,offsetfromtop]" & vbCrLf & _
-            "              [/noUI]", , "Usage"
+            "              [/noAutoStart" & vbCrLf & _
+            "              [/noUI]" & vbCrLf & _
+            "              [/showMonitor]", _
+            , _
+            "Usage"
     Exit Sub
 End If
 
@@ -131,9 +132,9 @@ If mNoUI Then
     TerminateTWUtilities
     TerminateTimerUtils
 Else
-    Set mForm = New fDataCollectorUI
+    failpoint = 1500 '---------------------------------------------------------
     
-    mForm.dataCollector = mDataCollector
+    Set mForm = New fDataCollectorUI
     
     If mCLParser.Switch("posn") Then
         posnValue = mCLParser.SwitchValue("posn")
@@ -163,13 +164,14 @@ Else
         mPosY = Int(Int(Screen.Height / mForm.Height) * Rnd)
     End If
     
+    mForm.initialise mDataCollector, _
+                    Not mCLParser.Switch("noAutoStart"), _
+                    mCLParser.Switch("showMonitor")
+    
     mForm.Left = mPosX * mForm.Width
     mForm.Top = mPosY * mForm.Height
+    
     mForm.Visible = True
-    
-    failpoint = 1300 '---------------------------------------------------------
-    
-    mDataCollector.startCollection
 End If
 
 

@@ -1,416 +1,261 @@
 VERSION 5.00
+Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Begin VB.Form fDataCollectorUI 
-   Caption         =   "TradeBuild Data Collector Version 2.5"
-   ClientHeight    =   2250
+   Caption         =   "TradeBuild Data Collector Version 2.6"
+   ClientHeight    =   3945
    ClientLeft      =   60
    ClientTop       =   390
-   ClientWidth     =   5250
+   ClientWidth     =   5280
    LinkTopic       =   "Form1"
-   ScaleHeight     =   2250
-   ScaleWidth      =   5250
+   ScaleHeight     =   3945
+   ScaleWidth      =   5280
    StartUpPosition =   3  'Windows Default
-   Begin VB.TextBox LogText 
-      Height          =   975
-      Left            =   120
-      MultiLine       =   -1  'True
-      ScrollBars      =   2  'Vertical
-      TabIndex        =   35
-      Top             =   1200
-      Width           =   5055
-   End
-   Begin VB.TextBox ConnectionStatusText 
-      BackColor       =   &H8000000F&
+   Begin VB.CommandButton ShowHideMonitorButton 
+      Caption         =   "Show activity monitor"
       Height          =   255
-      Left            =   4920
-      Locked          =   -1  'True
-      TabIndex        =   33
-      TabStop         =   0   'False
-      Top             =   840
-      Width           =   255
-   End
-   Begin VB.TextBox DataLightText 
-      BackColor       =   &H8000000F&
-      Height          =   255
-      Index           =   15
-      Left            =   4080
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   32
-      TabStop         =   0   'False
-      Top             =   840
-      Width           =   255
-   End
-   Begin VB.TextBox ShortNameText 
-      Height          =   255
-      Index           =   15
-      Left            =   3360
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   31
-      TabStop         =   0   'False
-      Top             =   840
-      Width           =   735
-   End
-   Begin VB.TextBox DataLightText 
-      BackColor       =   &H8000000F&
-      Height          =   255
-      Index           =   14
-      Left            =   4080
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   30
-      TabStop         =   0   'False
-      Top             =   600
-      Width           =   255
-   End
-   Begin VB.TextBox ShortNameText 
-      Height          =   255
-      Index           =   14
-      Left            =   3360
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   29
-      TabStop         =   0   'False
-      Top             =   600
-      Width           =   735
-   End
-   Begin VB.TextBox DataLightText 
-      BackColor       =   &H8000000F&
-      Height          =   255
-      Index           =   13
-      Left            =   4080
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   28
-      TabStop         =   0   'False
-      Top             =   360
-      Width           =   255
-   End
-   Begin VB.TextBox ShortNameText 
-      Height          =   255
-      Index           =   13
-      Left            =   3360
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   27
-      TabStop         =   0   'False
-      Top             =   360
-      Width           =   735
-   End
-   Begin VB.TextBox DataLightText 
-      BackColor       =   &H8000000F&
-      Height          =   255
-      Index           =   12
-      Left            =   4080
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   26
-      TabStop         =   0   'False
-      Top             =   120
-      Width           =   255
-   End
-   Begin VB.TextBox ShortNameText 
-      Height          =   255
-      Index           =   12
-      Left            =   3360
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   25
-      TabStop         =   0   'False
-      Top             =   120
-      Width           =   735
-   End
-   Begin VB.TextBox DataLightText 
-      BackColor       =   &H8000000F&
-      Height          =   255
-      Index           =   11
-      Left            =   3000
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   24
-      TabStop         =   0   'False
-      Top             =   840
-      Width           =   255
-   End
-   Begin VB.TextBox ShortNameText 
-      Height          =   255
-      Index           =   11
-      Left            =   2280
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   23
-      TabStop         =   0   'False
-      Top             =   840
-      Width           =   735
-   End
-   Begin VB.TextBox DataLightText 
-      BackColor       =   &H8000000F&
-      Height          =   255
-      Index           =   10
-      Left            =   3000
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   22
-      TabStop         =   0   'False
-      Top             =   600
-      Width           =   255
-   End
-   Begin VB.TextBox ShortNameText 
-      Height          =   255
-      Index           =   10
-      Left            =   2280
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   21
-      TabStop         =   0   'False
-      Top             =   600
-      Width           =   735
-   End
-   Begin VB.TextBox DataLightText 
-      BackColor       =   &H8000000F&
-      Height          =   255
-      Index           =   9
-      Left            =   3000
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   20
-      TabStop         =   0   'False
-      Top             =   360
-      Width           =   255
-   End
-   Begin VB.TextBox ShortNameText 
-      Height          =   255
-      Index           =   9
-      Left            =   2280
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   19
-      TabStop         =   0   'False
-      Top             =   360
-      Width           =   735
-   End
-   Begin VB.TextBox DataLightText 
-      BackColor       =   &H8000000F&
-      Height          =   255
-      Index           =   8
-      Left            =   3000
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   18
-      TabStop         =   0   'False
-      Top             =   120
-      Width           =   255
-   End
-   Begin VB.TextBox ShortNameText 
-      Height          =   255
-      Index           =   8
-      Left            =   2280
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   17
-      TabStop         =   0   'False
-      Top             =   120
-      Width           =   735
-   End
-   Begin VB.TextBox DataLightText 
-      BackColor       =   &H8000000F&
-      Height          =   255
-      Index           =   7
-      Left            =   1920
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   16
-      TabStop         =   0   'False
-      Top             =   840
-      Width           =   255
-   End
-   Begin VB.TextBox ShortNameText 
-      Height          =   255
-      Index           =   7
-      Left            =   1200
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   15
-      TabStop         =   0   'False
-      Top             =   840
-      Width           =   735
-   End
-   Begin VB.TextBox DataLightText 
-      BackColor       =   &H8000000F&
-      Height          =   255
-      Index           =   6
-      Left            =   1920
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   14
-      TabStop         =   0   'False
-      Top             =   600
-      Width           =   255
-   End
-   Begin VB.TextBox ShortNameText 
-      Height          =   255
-      Index           =   6
-      Left            =   1200
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   13
-      TabStop         =   0   'False
-      Top             =   600
-      Width           =   735
-   End
-   Begin VB.TextBox DataLightText 
-      BackColor       =   &H8000000F&
-      Height          =   255
-      Index           =   5
-      Left            =   1920
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   12
-      TabStop         =   0   'False
-      Top             =   360
-      Width           =   255
-   End
-   Begin VB.TextBox ShortNameText 
-      Height          =   255
-      Index           =   5
-      Left            =   1200
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   11
-      TabStop         =   0   'False
-      Top             =   360
-      Width           =   735
-   End
-   Begin VB.TextBox DataLightText 
-      BackColor       =   &H8000000F&
-      Height          =   255
-      Index           =   4
-      Left            =   1920
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
+      Left            =   2040
       TabIndex        =   10
-      TabStop         =   0   'False
-      Top             =   120
-      Width           =   255
+      Top             =   360
+      Width           =   1815
    End
-   Begin VB.TextBox ShortNameText 
-      Height          =   255
-      Index           =   4
-      Left            =   1200
+   Begin VB.TextBox TicksPerSecText 
+      Alignment       =   1  'Right Justify
+      Height          =   285
+      Left            =   1320
       Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   9
-      TabStop         =   0   'False
-      Top             =   120
-      Width           =   735
-   End
-   Begin VB.TextBox DataLightText 
-      BackColor       =   &H8000000F&
-      Height          =   255
-      Index           =   3
-      Left            =   840
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
       TabIndex        =   8
       TabStop         =   0   'False
-      Top             =   840
-      Width           =   255
+      Top             =   360
+      Width           =   615
    End
-   Begin VB.TextBox ShortNameText 
-      Height          =   255
-      Index           =   3
-      Left            =   120
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   7
-      TabStop         =   0   'False
-      Top             =   840
-      Width           =   735
-   End
-   Begin VB.TextBox DataLightText 
-      BackColor       =   &H8000000F&
-      Height          =   255
-      Index           =   2
-      Left            =   840
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   6
-      TabStop         =   0   'False
-      Top             =   600
-      Width           =   255
-   End
-   Begin VB.TextBox ShortNameText 
-      Height          =   255
-      Index           =   2
-      Left            =   120
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
+   Begin TabDlg.SSTab ActivityMonitor 
+      Height          =   3135
+      Left            =   0
       TabIndex        =   5
-      TabStop         =   0   'False
-      Top             =   600
-      Width           =   735
+      Top             =   720
+      Width           =   5295
+      _ExtentX        =   9340
+      _ExtentY        =   5530
+      _Version        =   393216
+      Tabs            =   2
+      TabHeight       =   415
+      ForeColor       =   -2147483630
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      TabCaption(0)   =   "&Activity"
+      TabPicture(0)   =   "fQuoteServerUI.frx":0000
+      Tab(0).ControlEnabled=   -1  'True
+      Tab(0).Control(0)=   "TickerScroll"
+      Tab(0).Control(0).Enabled=   0   'False
+      Tab(0).Control(1)=   "TickersContainerPicture"
+      Tab(0).Control(1).Enabled=   0   'False
+      Tab(0).ControlCount=   2
+      TabCaption(1)   =   "&Log"
+      TabPicture(1)   =   "fQuoteServerUI.frx":001C
+      Tab(1).ControlEnabled=   0   'False
+      Tab(1).Control(0)=   "LogText"
+      Tab(1).ControlCount=   1
+      Begin VB.PictureBox TickersContainerPicture 
+         Appearance      =   0  'Flat
+         ForeColor       =   &H80000008&
+         Height          =   2655
+         Left            =   120
+         ScaleHeight     =   2625
+         ScaleWidth      =   4785
+         TabIndex        =   11
+         Top             =   360
+         Width           =   4815
+         Begin VB.PictureBox TickersPicture 
+            Appearance      =   0  'Flat
+            BorderStyle     =   0  'None
+            ForeColor       =   &H80000008&
+            Height          =   285
+            Left            =   0
+            ScaleHeight     =   285
+            ScaleWidth      =   4815
+            TabIndex        =   12
+            Top             =   0
+            Width           =   4815
+            Begin VB.TextBox ShortNameText 
+               Height          =   285
+               Index           =   4
+               Left            =   3840
+               Locked          =   -1  'True
+               MousePointer    =   1  'Arrow
+               TabIndex        =   17
+               TabStop         =   0   'False
+               Top             =   0
+               Visible         =   0   'False
+               Width           =   735
+            End
+            Begin VB.TextBox ShortNameText 
+               Height          =   285
+               Index           =   0
+               Left            =   0
+               Locked          =   -1  'True
+               MousePointer    =   1  'Arrow
+               TabIndex        =   16
+               TabStop         =   0   'False
+               Top             =   0
+               Visible         =   0   'False
+               Width           =   735
+            End
+            Begin VB.TextBox ShortNameText 
+               Height          =   285
+               Index           =   1
+               Left            =   960
+               Locked          =   -1  'True
+               MousePointer    =   1  'Arrow
+               TabIndex        =   15
+               TabStop         =   0   'False
+               Top             =   0
+               Visible         =   0   'False
+               Width           =   735
+            End
+            Begin VB.TextBox ShortNameText 
+               Height          =   285
+               Index           =   2
+               Left            =   1920
+               Locked          =   -1  'True
+               MousePointer    =   1  'Arrow
+               TabIndex        =   14
+               TabStop         =   0   'False
+               Top             =   0
+               Visible         =   0   'False
+               Width           =   735
+            End
+            Begin VB.TextBox ShortNameText 
+               Height          =   285
+               Index           =   3
+               Left            =   2880
+               Locked          =   -1  'True
+               MousePointer    =   1  'Arrow
+               TabIndex        =   13
+               TabStop         =   0   'False
+               Top             =   0
+               Visible         =   0   'False
+               Width           =   735
+            End
+            Begin VB.Label DataLightLabel 
+               Height          =   285
+               Index           =   4
+               Left            =   4560
+               TabIndex        =   22
+               Top             =   0
+               Width           =   255
+            End
+            Begin VB.Label DataLightLabel 
+               Height          =   285
+               Index           =   0
+               Left            =   720
+               TabIndex        =   21
+               Top             =   0
+               Width           =   255
+            End
+            Begin VB.Label DataLightLabel 
+               Height          =   285
+               Index           =   3
+               Left            =   3600
+               TabIndex        =   20
+               Top             =   0
+               Width           =   255
+            End
+            Begin VB.Label DataLightLabel 
+               Height          =   285
+               Index           =   2
+               Left            =   2640
+               TabIndex        =   19
+               Top             =   0
+               Width           =   255
+            End
+            Begin VB.Label DataLightLabel 
+               Height          =   285
+               Index           =   1
+               Left            =   1680
+               TabIndex        =   18
+               Top             =   0
+               Width           =   255
+            End
+         End
+      End
+      Begin VB.TextBox LogText 
+         Height          =   2655
+         Left            =   -74880
+         MultiLine       =   -1  'True
+         ScrollBars      =   3  'Both
+         TabIndex        =   7
+         Top             =   360
+         Width           =   5055
+      End
+      Begin VB.VScrollBar TickerScroll 
+         Height          =   2700
+         Left            =   4920
+         TabIndex        =   6
+         Top             =   360
+         Width           =   255
+      End
    End
-   Begin VB.TextBox DataLightText 
-      BackColor       =   &H8000000F&
-      Height          =   255
-      Index           =   1
-      Left            =   840
+   Begin VB.TextBox SecsSinceLastTickText 
+      Alignment       =   1  'Right Justify
+      Height          =   285
+      Left            =   1320
       Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
       TabIndex        =   4
       TabStop         =   0   'False
-      Top             =   360
-      Width           =   255
-   End
-   Begin VB.TextBox ShortNameText 
-      Height          =   255
-      Index           =   1
-      Left            =   120
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   3
-      TabStop         =   0   'False
-      Top             =   360
-      Width           =   735
-   End
-   Begin VB.TextBox DataLightText 
-      BackColor       =   &H8000000F&
-      Height          =   255
-      Index           =   0
-      Left            =   840
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   2
-      TabStop         =   0   'False
       Top             =   120
-      Width           =   255
+      Width           =   615
    End
-   Begin VB.TextBox ShortNameText 
-      Height          =   255
-      Index           =   0
-      Left            =   120
-      Locked          =   -1  'True
-      MousePointer    =   1  'Arrow
-      TabIndex        =   1
-      TabStop         =   0   'False
-      Top             =   120
-      Width           =   735
-   End
-   Begin VB.CommandButton StopButton 
-      Caption         =   "Stop"
-      Height          =   375
+   Begin VB.CommandButton StartStopButton 
+      Caption         =   "Start"
+      Height          =   495
       Left            =   4560
       TabIndex        =   0
       Top             =   120
       Width           =   615
    End
-   Begin VB.Label Label1 
-      Caption         =   "Conn"
+   Begin VB.TextBox ConnectionStatusText 
+      BackColor       =   &H8000000F&
       Height          =   255
-      Left            =   4440
-      TabIndex        =   34
-      Top             =   840
-      Width           =   375
+      Left            =   3480
+      Locked          =   -1  'True
+      TabIndex        =   1
+      TabStop         =   0   'False
+      Top             =   120
+      Width           =   255
+   End
+   Begin VB.Label Label3 
+      Alignment       =   1  'Right Justify
+      Caption         =   "Ticks per sec"
+      Height          =   255
+      Left            =   240
+      TabIndex        =   9
+      Top             =   360
+      Width           =   975
+   End
+   Begin VB.Label Label2 
+      Alignment       =   1  'Right Justify
+      Caption         =   "Secs no data"
+      Height          =   255
+      Left            =   240
+      TabIndex        =   3
+      Top             =   120
+      Width           =   975
+   End
+   Begin VB.Label Label1 
+      Alignment       =   1  'Right Justify
+      Caption         =   "Connection status"
+      Height          =   255
+      Left            =   1920
+      TabIndex        =   2
+      Top             =   120
+      Width           =   1455
    End
 End
 Attribute VB_Name = "fDataCollectorUI"
@@ -437,7 +282,8 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements DataSignalListener
+Implements QuoteListener
+Implements StateChangeListener
 Implements WriterListener
 
 '================================================================================
@@ -448,7 +294,8 @@ Implements WriterListener
 ' Constants
 '================================================================================
 
-Private Const MaxTickerListenerIndex As Long = 15
+Private Const TickerScrollMax As Integer = 32767
+Private Const TickerScrollMin As Integer = 0
 
 '================================================================================
 ' Enums
@@ -458,6 +305,11 @@ Private Const MaxTickerListenerIndex As Long = 15
 ' Types
 '================================================================================
 
+Private Type TickerTableEntry
+    theTicker               As ticker
+    tli                     As TimerListItem
+End Type
+
 '================================================================================
 ' Member variables
 '================================================================================
@@ -465,9 +317,31 @@ Private Const MaxTickerListenerIndex As Long = 15
 Private WithEvents mDataCollector As TBDataCollector
 Attribute mDataCollector.VB_VarHelpID = -1
 Private mStop As Boolean
-Private mFailpoint As Long
 
-Private mTickerListenerIndex As Long
+Private mTickers() As TickerTableEntry
+
+Private mTimerList As TimerList
+
+Private mLastTickTime As Date
+
+Private WithEvents mTimer As IntervalTimer
+Attribute mTimer.VB_VarHelpID = -1
+
+Private mTickCount As Long
+
+Private mActivityMonitorVisible As Boolean
+
+Private mCollectingData As Boolean
+
+Private mAdjustingSize As Boolean
+Private mCurrentHeight As Long
+Private mCurrentWidth As Long
+
+Private mStartStopButtonInitialLeft As Long
+
+Private mLinesToScroll As Integer
+
+Private mLineSpacing As Integer
 
 '================================================================================
 ' Form Event Handlers
@@ -475,6 +349,22 @@ Private mTickerListenerIndex As Long
 
 Private Sub Form_Initialize()
 InitCommonControls
+Set mTimerList = GetGlobalTimerList(False)
+ReDim mTickers(99) As TickerTableEntry
+End Sub
+
+Private Sub Form_Load()
+mStartStopButtonInitialLeft = StartStopButton.Left
+TickerScroll.Min = TickerScrollMin
+TickerScroll.Max = TickerScrollMax
+mLineSpacing = ShortNameText(0).Height - Screen.TwipsPerPixelY
+End Sub
+
+Private Sub Form_Resize()
+
+If Me.Height <> mCurrentHeight Then resizeHeight
+If Me.Width <> mCurrentWidth Then resizeWidth
+
 End Sub
 
 Private Sub Form_Terminate()
@@ -483,22 +373,55 @@ TerminateTimerUtils
 End Sub
 
 '================================================================================
-' DataSignalListener Members
+' QuoteListener Interface Members
 '================================================================================
 
-Private Sub DataSignalListener_signalOff(ev As DataSignalEvent)
-Dim listener As TickerListener
-Set listener = ev.Source
-If listener.Index = -1 Then Exit Sub
-DataLightText(listener.Index).BackColor = vbButtonFace
+Private Sub QuoteListener_ask(ev As QuoteEvent)
+processQuoteEvent ev
 End Sub
 
-Private Sub DataSignalListener_signalOn(ev As DataSignalEvent)
-Dim listener As TickerListener
-Set listener = ev.Source
-If listener.Index = -1 Then Exit Sub
-DataLightText(listener.Index).BackColor = vbGreen
-ConnectionStatusText.BackColor = vbGreen
+Private Sub QuoteListener_bid(ev As QuoteEvent)
+processQuoteEvent ev
+End Sub
+
+Private Sub QuoteListener_high(ev As QuoteEvent)
+processQuoteEvent ev
+End Sub
+
+Private Sub QuoteListener_Low(ev As QuoteEvent)
+processQuoteEvent ev
+End Sub
+
+Private Sub QuoteListener_openInterest(ev As QuoteEvent)
+processQuoteEvent ev
+End Sub
+
+Private Sub QuoteListener_previousClose(ev As QuoteEvent)
+processQuoteEvent ev
+End Sub
+
+Private Sub QuoteListener_trade(ev As QuoteEvent)
+processQuoteEvent ev
+End Sub
+
+Private Sub QuoteListener_volume(ev As QuoteEvent)
+processQuoteEvent ev
+End Sub
+
+'================================================================================
+' StateChangeListener Interface Members
+'================================================================================
+
+Private Sub StateChangeListener_Change(ev As TWUtilities.StateChangeEvent)
+Dim tli As TimerListItem
+
+Set tli = ev.Source
+If Not tli Is Nothing Then
+    If ev.state = TimerListItemStates.TimerListItemStateExpired Then
+        switchDataLightOff tli.Data
+        Set mTickers(tli.Data).tli = Nothing
+    End If
+End If
 End Sub
 
 '================================================================================
@@ -555,12 +478,24 @@ End Sub
 ' Form Control Event Handlers
 '================================================================================
 
-Private Sub StopButton_Click()
-mStop = True
-mDataCollector.stopCollection
-StopButton.Enabled = False
-ConnectionStatusText.BackColor = vbButtonFace
-logMessage "Data collection stopped by user"
+Private Sub ShowHideMonitorButton_Click()
+If mActivityMonitorVisible Then
+    hideActivityMonitor
+Else
+    showActivityMonitor
+End If
+End Sub
+
+Private Sub StartStopButton_Click()
+If mCollectingData Then
+    stopCollecting "Data collection stopped by user"
+Else
+    startCollecting "Data collection started by user"
+End If
+End Sub
+
+Private Sub TickerScroll_Change()
+scrollTickers
 End Sub
 
 '================================================================================
@@ -570,19 +505,18 @@ End Sub
 Private Sub mDataCollector_connected()
 ConnectionStatusText.BackColor = vbGreen
 logMessage "Connected ok to realtime data source"
-StopButton.Enabled = True
+StartStopButton.Enabled = True
 End Sub
 
 Private Sub mDataCollector_connectFailed(ByVal description As String)
 ConnectionStatusText.BackColor = vbRed
 logMessage "Connect failed: " & description
-StopButton.Enabled = False
 End Sub
 
 Private Sub mDataCollector_ConnectionClosed()
 ConnectionStatusText.BackColor = vbRed
 logMessage "Connection to realtime data source closed"
-StopButton.Enabled = False
+StartStopButton.Enabled = False
 End Sub
 
 Private Sub mDataCollector_ErrorMessage( _
@@ -604,7 +538,7 @@ End Sub
 
 Private Sub mDataCollector_Reconnecting()
 logMessage "Reconnecting to realtime data source"
-StopButton.Enabled = True
+StartStopButton.Enabled = True
 End Sub
 
 Private Sub mDataCollector_ServiceProviderError( _
@@ -615,21 +549,42 @@ logMessage "Service provider error (" & serviceProviderName & "): " & errorCode 
 End Sub
 
 Private Sub mDataCollector_TickerAdded(ByVal ticker As ticker)
-ticker.addTickfileWriterListener Me
-End Sub
+Dim i As Long
+Dim index As Long
 
-Private Sub mDataCollector_TickerListenerAdded( _
-                ByVal listener As TickerListener)
-If mTickerListenerIndex > MaxTickerListenerIndex Then
-    listener.Index = -1
-    logMessage "Can't display ticker for " & listener.Contract.specifier.localSymbol
-    Exit Sub
+index = ticker.Handle
+If index > UBound(mTickers) Then
+    ReDim Preserve mTickers(index / 100 * 100 + 99) As TickerTableEntry
+End If
+Set mTickers(index).theTicker = ticker
+Set mTickers(index).tli = Nothing
+
+If index > ShortNameText.UBound Then
+    For i = ShortNameText.UBound + 1 To index
+        Load ShortNameText(i)
+        ShortNameText(i).Left = ShortNameText(i - 5).Left
+        ShortNameText(i).Top = ShortNameText(i - 5).Top + mLineSpacing
+        ShortNameText(i).ZOrder 0
+        If i Mod 5 = 0 Then TickersPicture.Height = ShortNameText(i).Top + ShortNameText(i).Height
+        
+        Load DataLightLabel(i)
+        DataLightLabel(i).Left = DataLightLabel(i - 5).Left
+        DataLightLabel(i).Top = DataLightLabel(i - 5).Top + mLineSpacing
+        DataLightLabel(i).ZOrder 0
+        
+        setupTickerScroll
+    Next
 End If
 
-listener.Index = mTickerListenerIndex
-mTickerListenerIndex = mTickerListenerIndex + 1
-listener.addDataSignalListener Me
-ShortNameText(listener.Index) = listener.Contract.specifier.localSymbol
+ShortNameText(index) = ticker.Contract.specifier.localSymbol
+ShortNameText(index).ToolTipText = ticker.Contract.specifier.localSymbol
+ShortNameText(index).Visible = True
+DataLightLabel(index).Visible = True
+
+ticker.addQuoteListener Me
+ticker.addTickfileWriterListener Me
+
+Me.Refresh
 
 End Sub
 
@@ -638,16 +593,42 @@ tf.addBarWriterListener Me
 End Sub
 
 '================================================================================
+' mTimer Event Handlers
+'================================================================================
+
+Private Sub mTimer_TimerExpired()
+Static timerCount As Long
+timerCount = timerCount + 1
+If timerCount Mod 4 = 0 Then
+    TicksPerSecText = mTickCount
+    mTickCount = 0
+End If
+SecsSinceLastTickText = Format(86400 * (GetTimestamp - mLastTickTime), "0")
+End Sub
+
+'================================================================================
 ' Properties
 '================================================================================
 
 Public Property Let dataCollector(ByVal value As TBDataCollector)
-Set mDataCollector = value
 End Property
 
 '================================================================================
 ' Methods
 '================================================================================
+
+Friend Sub initialise( _
+                ByVal pDataCollector As TBDataCollector, _
+                ByVal autoStart As Boolean, _
+                ByVal showMonitor As Boolean)
+
+Set mDataCollector = pDataCollector
+
+If Not showMonitor Then hideActivityMonitor
+
+If autoStart Then startCollecting "Data collection started automatically"
+
+End Sub
 
 '================================================================================
 ' Helper Functions
@@ -656,22 +637,202 @@ End Property
 Private Sub clearTickers()
 Dim i As Long
 
-If mTickerListenerIndex = 0 Then Exit Sub
-    
-For i = 0 To mTickerListenerIndex - 1
+For i = 0 To ShortNameText.UBound
     ShortNameText(i).text = ""
-    DataLightText(i).BackColor = vbButtonFace
+    DataLightLabel(i).BackColor = vbButtonFace
 Next
-mTickerListenerIndex = 0
 End Sub
 
+Private Sub hideActivityMonitor()
+ShowHideMonitorButton.Caption = "Show activity monitor"
+mAdjustingSize = True
+Me.Height = Me.Height - ActivityMonitor.Height - 120
+mAdjustingSize = False
+mActivityMonitorVisible = False
+End Sub
+    
 Private Sub logMessage(ByVal text As String)
 If Len(LogText.text) > (32000 - Len(text)) Then
     LogText.text = Right$(LogText.text, 32000 - Len(text)) & vbCrLf & Format(Now, "hh:mm:ss") & "  " & text
 Else
     LogText.text = LogText.text & vbCrLf & Format(Now, "hh:mm:ss") & "  " & text
 End If
-LogText.SelStart = Len(LogText.text)
+LogText.SelStart = InStrRev(LogText.text, vbCrLf)
 End Sub
 
+Private Sub processQuoteEvent( _
+                ev As QuoteEvent)
+Dim lTicker As ticker
+Set lTicker = ev.Source
+switchDataLightOn lTicker.Handle
+mLastTickTime = GetTimestamp
+mTickCount = mTickCount + 1
+End Sub
+
+Private Sub resizeHeight()
+Dim heightIncrement As Long
+
+If Not mActivityMonitorVisible And Not mAdjustingSize Then
+    Me.Height = mCurrentHeight
+    Exit Sub
+End If
+
+heightIncrement = Me.Height - mCurrentHeight
+
+If Not mAdjustingSize Then
+    If TickersContainerPicture.Height + heightIncrement <= 0 Then
+        Me.Height = mCurrentHeight
+        Exit Sub
+    End If
+    
+    ActivityMonitor.Height = ActivityMonitor.Height + heightIncrement
+
+    TickersContainerPicture.Height = TickersContainerPicture.Height + heightIncrement
+
+    TickerScroll.Height = TickerScroll.Height + heightIncrement
+
+    LogText.Height = LogText.Height + heightIncrement
+End If
+
+mCurrentHeight = Me.Height
+setupTickerScroll
+End Sub
+
+Private Sub resizeWidth()
+Dim widthIncrement As Long
+
+If Not mActivityMonitorVisible And Not mAdjustingSize Then
+    Me.Width = mCurrentWidth
+    Exit Sub
+End If
+
+If Me.Width <= mStartStopButtonInitialLeft + StartStopButton.Width + 120 Then
+    Me.Width = mCurrentWidth
+    Exit Sub
+End If
+
+widthIncrement = Me.Width - mCurrentWidth
+
+If Not mAdjustingSize Then
+    
+    ActivityMonitor.Width = ActivityMonitor.Width + widthIncrement
+
+    TickersPicture.Width = TickersPicture.Width + widthIncrement
+
+    TickerScroll.Left = TickerScroll.Left + widthIncrement
+
+    LogText.Width = LogText.Width + widthIncrement
+
+    StartStopButton.Left = StartStopButton.Left + widthIncrement
+End If
+
+mCurrentHeight = Me.Height
+mCurrentWidth = Me.Width
+
+End Sub
+
+Private Sub scrollTickers()
+If TickersPicture.Height <= TickersContainerPicture.Height Then
+    TickersPicture.Top = 0
+ElseIf TickerScroll.value = TickerScrollMax Then
+    TickersPicture.Top = -mLinesToScroll * mLineSpacing
+Else
+    TickersPicture.Top = -Round((mLinesToScroll / TickerScrollMax) * TickerScroll.value, 0) * mLineSpacing
+End If
+End Sub
+
+Private Sub setupTickerScroll()
+Dim totalLines As Long
+Dim linesPerpage As Single
+Dim pagesToScroll As Single
+
+totalLines = (ShortNameText.UBound + 5) / 5
+linesPerpage = TickersContainerPicture.Height / mLineSpacing
+If totalLines > linesPerpage Then mLinesToScroll = -Int(linesPerpage - totalLines)
+pagesToScroll = mLinesToScroll / linesPerpage
+
+If mLinesToScroll > 1 Then
+    TickerScroll.SmallChange = (CLng(TickerScrollMax) + mLinesToScroll - 1) / mLinesToScroll
+Else
+    TickerScroll.SmallChange = TickerScrollMax
+End If
+
+If pagesToScroll > 1 Then
+    TickerScroll.LargeChange = TickerScrollMax / pagesToScroll
+Else
+    TickerScroll.LargeChange = TickerScrollMax
+End If
+TickerScroll.Refresh
+End Sub
+
+Private Sub showActivityMonitor()
+ShowHideMonitorButton.Caption = "Hide activity monitor"
+mAdjustingSize = True
+Me.Height = Me.Height + ActivityMonitor.Height + 120
+mAdjustingSize = False
+mActivityMonitorVisible = True
+End Sub
+
+Private Sub startCollecting( _
+                ByVal message As String)
+                
+logMessage message
+
+mCollectingData = True
+StartStopButton.Caption = "Stop"
+StartStopButton.Enabled = True
+
+mLastTickTime = GetTimestamp
+
+Set mTimer = CreateIntervalTimer(0, , 250)
+mTimer.StartTimer
+
+mDataCollector.startCollection
+
+End Sub
+
+Private Sub stopCollecting( _
+                ByVal message As String)
+If MsgBox("Please confirm that you wish to stop data collection", _
+            vbYesNo + vbDefaultButton2 + vbQuestion) <> vbYes Then Exit Sub
+
+logMessage message
+
+mCollectingData = False
+StartStopButton.Caption = "Start"
+
+ConnectionStatusText.BackColor = vbButtonFace
+
+clearTickers
+
+SecsSinceLastTickText = ""
+TicksPerSecText = ""
+
+mTimer.StopTimer
+mStop = True
+mDataCollector.stopCollection
+
+End Sub
+
+Private Sub switchDataLightOn( _
+                ByVal index As Long)
+If Not mActivityMonitorVisible Then Exit Sub
+
+If Not mTickers(index).tli Is Nothing Then
+    mTimerList.Remove mTickers(index).tli
+    mTickers(index).tli.removeStateChangeListener Me
+End If
+
+Set mTickers(index).tli = mTimerList.Add(index, 200, ExpiryTimeUnitMilliseconds)
+mTickers(index).tli.addStateChangeListener Me
+
+DataLightLabel(index).BackColor = vbGreen
+ConnectionStatusText.BackColor = vbGreen
+
+End Sub
+
+Private Sub switchDataLightOff( _
+                ByVal index As Long)
+DataLightLabel(index).BackColor = vbButtonFace
+End Sub
 
