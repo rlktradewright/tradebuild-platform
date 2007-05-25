@@ -162,15 +162,21 @@ Case DbSQLServer2000
                             ";Integrated Security=SSPI", _
                             ";User Id=" & username & ";Password=" & password)
 Case DbSQLServer2005
+'    GenerateConnectionString = "Provider=SQLNCLI;" & _
+'                        "Server=" & server & _
+'                        ";Database=" & databaseName & _
+'                        IIf(username = "", _
+'                            ";Trusted_Connection=yes", _
+'                            ";Uid=" & username & ";Pwd=" & password) & _
+'                        ";Network Library=DBMSSOCN" & _
+'                        ";Min Pool Size=100" & _
+'                        ";Max Pool Size=500"
     GenerateConnectionString = "Provider=SQLNCLI;" & _
                         "Server=" & server & _
                         ";Database=" & databaseName & _
                         IIf(username = "", _
                             ";Trusted_Connection=yes", _
-                            ";Uid=" & username & ";Pwd=" & password) & _
-                        ";Network Library=DBMSSOCN" & _
-                        ";Min Pool Size=100" & _
-                        ";Max Pool Size=500"
+                            ";Uid=" & username & ";Pwd=" & password)
 End Select
                 
 End Function
