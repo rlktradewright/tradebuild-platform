@@ -396,6 +396,11 @@ End Sub
 '@================================================================================
 
 Private Sub mWriteTimer_TimerExpired()
+If mCurrTradeBar Is Nothing Then
+    ' can happen if the write timer expires before we've received the first tick
+    Exit Sub
+End If
+
 mCurrVolume = mTradeBarsStudy.getStudyValue(BarValueVolume, 0).value
 
 WriteABar mCurrTradeBar, BarTypeTrade, mCurrVolume, mCurrTradeBarPrevTickvol
@@ -479,7 +484,7 @@ End Property
 
 Friend Property Let tradeBuildAPI( _
                 ByVal value As tradeBuildAPI)
-Set mTradeBuildAPIRef = WeakRefs.createWeakReference(value)
+Set mTradeBuildAPIRef = weakrefs.createWeakReference(value)
 End Property
 
 '@================================================================================
@@ -603,10 +608,12 @@ If Not mWriteTimer Is Nothing Then
 End If
 
 If Not mBarWriter Is Nothing Then
-    mCurrVolume = mTradeBarsStudy.getStudyValue(BarValueVolume, 0).value
-    WriteABar mCurrTradeBar, BarTypeTrade, mCurrVolume, mCurrTradeBarPrevTickvol
-    WriteABar mCurrAskBar, BarTypeAsk, 0, mCurrAskBarPrevTickvol
-    WriteABar mCurrBidBar, BarTypeBid, 0, mCurrBidBarPrevTickvol
+    If Not mCurrTradeBar Is Nothing Then
+        mCurrVolume = mTradeBarsStudy.getStudyValue(BarValueVolume, 0).value
+        WriteABar mCurrTradeBar, BarTypeTrade, mCurrVolume, mCurrTradeBarPrevTickvol
+        WriteABar mCurrAskBar, BarTypeAsk, 0, mCurrAskBarPrevTickvol
+        WriteABar mCurrBidBar, BarTypeBid, 0, mCurrBidBarPrevTickvol
+    End If
     mBarWriter.ReleaseDataStore
     Set mBarWriter = Nothing
 End If
