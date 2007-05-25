@@ -6,7 +6,7 @@
         <Properties __ItemType="list" __ListItemName="Property">
           <Property __ItemType="item" Name="Server" Value="Delphi" />
           <Property __ItemType="item" Name="Port" Value="7496" />
-          <Property __ItemType="item" Name="Client Id" Value="544187" />
+          <Property __ItemType="item" Name="Client Id" Value="-1" />
           <Property __ItemType="item" Name="Provider Key" Value="IB" />
           <Property __ItemType="item" Name="Keep Connection" Value="True" />
         </Properties>
@@ -34,7 +34,7 @@
         <Properties __ItemType="list" __ListItemName="Property">
           <Property __ItemType="item" Name="Server" Value="Delphi" />
           <Property __ItemType="item" Name="Port" Value="7496" />
-          <Property __ItemType="item" Name="Client Id" Value="544187" />
+          <Property __ItemType="item" Name="Client Id" Value="-1" />
           <Property __ItemType="item" Name="Provider Key" Value="IB" />
           <Property __ItemType="item" Name="Keep Connection" Value="True" />
         </Properties>
