@@ -69,9 +69,15 @@ Private Const ModuleName                    As String = "GlobalClass"
 '@================================================================================
 
 Public Function CreateDataCollector( _
-                ByVal configFilePath As String) As TBDataCollector
+                ByVal configFilePath As String, _
+                ByVal startTimeDescriptor As String, _
+                ByVal endTimeDescriptor As String, _
+                ByVal exitTimeDescriptor As String) As TBDataCollector
 Set CreateDataCollector = New TBDataCollector
-CreateDataCollector.initialise configFilePath
+CreateDataCollector.initialise configFilePath, _
+                            startTimeDescriptor, _
+                            endTimeDescriptor, _
+                            exitTimeDescriptor
 End Function
 
 '@================================================================================
