@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#3.0#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#4.0#0"; "ChartSkil2-6.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo Version 2.5"
    ClientHeight    =   8355
@@ -301,7 +301,6 @@ Private mElapsedTimer As ElapsedTimer       ' used to measure how long it takes 
 Private Sub Form_Initialize()
 InitCommonControls
 InitialiseTWUtilities
-InitialiseTimerUtils
 End Sub
 
 Private Sub Form_Load()
@@ -323,7 +322,6 @@ End Sub
 
 Private Sub Form_Terminate()
 TerminateTWUtilities
-TerminateTimerUtils
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
