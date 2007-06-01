@@ -55,7 +55,7 @@ Private Type TimeframeTableEntry
     TimePeriod              As Long
     timePeriodUnit          As TimePeriodUnits
     key                     As String
-    theTimeFrame            As Timeframe
+    theTimeFrame            As timeframe
     numberOfBarsToFetch     As Long
     fromTime                As Date
     toTime                  As Date
@@ -126,7 +126,7 @@ End Property
 
 Friend Property Let tradeBuildAPI( _
                 ByVal value As tradeBuildAPI)
-Set mTradeBuildAPIRef = weakrefs.createWeakReference(value)
+Set mTradeBuildAPIRef = CreateWeakReference(value)
 End Property
 
 '@================================================================================
@@ -139,9 +139,7 @@ Public Function add( _
                 ByRef key As String, _
                 ByVal numberOfBarsToFetch As Long, _
                 Optional ByVal includeBarsOutsideSession As Boolean, _
-                Optional ByVal excludeCurrentbar As Boolean, _
-                Optional ByVal saveIntervalSeconds As Long = -1&, _
-                Optional ByVal writeBidAndAskBars As Boolean) As Timeframe
+                Optional ByVal excludeCurrentbar As Boolean) As timeframe
 
 Select Case timePeriodUnit
 Case TimePeriodSecond, _
@@ -159,12 +157,6 @@ Case Else
                 "Time period units not supported"
 End Select
 
-If saveIntervalSeconds > 0 And saveIntervalSeconds < 5 Then _
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "TradeBuild26.Timeframes::add", _
-            "Save interval cannot be less than 5 seconds"
-
-
 Set add = addTimeframe(TimePeriod, _
                     timePeriodUnit, _
                     key, _
@@ -173,8 +165,9 @@ Set add = addTimeframe(TimePeriod, _
                     0, _
                     includeBarsOutsideSession, _
                     excludeCurrentbar, _
-                    saveIntervalSeconds, _
-                    writeBidAndAskBars)
+                    Nothing, _
+                    0, _
+                    False)
 
 End Function
 
@@ -190,9 +183,7 @@ Public Function addHistorical( _
                 ByVal numberOfBarsToFetch As Long, _
                 Optional ByVal fromTime As Date, _
                 Optional ByVal toTime As Date, _
-                Optional ByVal includeBarsOutsideSession As Boolean, _
-                Optional ByVal saveIntervalSeconds As Long = -1&, _
-                Optional ByVal writeBidAndAskBars As Boolean) As Timeframe
+                Optional ByVal includeBarsOutsideSession As Boolean) As timeframe
 
 Select Case timePeriodUnit
 Case TimePeriodSecond, _
@@ -225,8 +216,86 @@ Set addHistorical = addTimeframe(TimePeriod, _
                     toTime, _
                     includeBarsOutsideSession, _
                     False, _
-                    saveIntervalSeconds, _
-                    writeBidAndAskBars)
+                    Nothing, _
+                    0, _
+                    False)
+
+End Function
+
+Friend Function addTimeframe( _
+                ByVal TimePeriod As Long, _
+                ByVal timePeriodUnit As TimePeriodUnits, _
+                ByRef key As String, _
+                ByVal numberOfBarsToFetch As Long, _
+                ByVal fromTime As Date, _
+                ByVal toTime As Date, _
+                ByVal includeBarsOutsideSession As Boolean, _
+                ByVal excludeCurrentbar As Boolean, _
+                ByVal barWriter As HistoricDataWriter, _
+                ByVal saveIntervalSeconds As Long, _
+                ByVal writeBidAndAskBars As Boolean) As timeframe
+
+Dim tte As TimeframeTableEntry
+Dim timeframeIndex As Long
+
+timeframeIndex = getTimeframeIndex(TimePeriod, _
+                                timePeriodUnit, _
+                                numberOfBarsToFetch, _
+                                fromTime, _
+                                toTime, _
+                                includeBarsOutsideSession, _
+                                saveIntervalSeconds, _
+                                writeBidAndAskBars)
+If timeframeIndex >= 0 Then
+    Set addTimeframe = mTimeframeTable(timeframeIndex).theTimeFrame
+    Exit Function
+End If
+
+Set addTimeframe = New timeframe
+addTimeframe.tradeBuildAPI = tb
+Set tte.theTimeFrame = addTimeframe
+tte.TimePeriod = TimePeriod
+tte.timePeriodUnit = timePeriodUnit
+tte.numberOfBarsToFetch = numberOfBarsToFetch
+tte.fromTime = fromTime
+tte.toTime = toTime
+tte.includeBarsOutsideSession = includeBarsOutsideSession
+tte.writeBidAndAskBars = writeBidAndAskBars
+tte.saveIntervalSeconds = saveIntervalSeconds
+
+If key <> "" Then
+    tte.key = key
+Else
+    tte.key = generateKey(TimePeriod, _
+                        timePeriodUnit, _
+                        numberOfBarsToFetch, _
+                        fromTime, _
+                        toTime, _
+                        includeBarsOutsideSession, _
+                        excludeCurrentbar, _
+                        saveIntervalSeconds, _
+                        writeBidAndAskBars)
+End If
+tte.theTimeFrame.Initialise mContract, _
+                            tte.key, _
+                            mTicker, _
+                            TimePeriod, _
+                            timePeriodUnit, _
+                            numberOfBarsToFetch, _
+                            fromTime, _
+                            toTime, _
+                            includeBarsOutsideSession, _
+                            excludeCurrentbar, _
+                            barWriter, _
+                            saveIntervalSeconds, _
+                            writeBidAndAskBars
+
+If mNextTimeframeTableIndex > UBound(mTimeframeTable) Then
+    ReDim Preserve mTimeframeTable(UBound(mTimeframeTable) + 10) As TimeframeTableEntry
+End If
+mTimeframeTable(mNextTimeframeTableIndex) = tte
+mNextTimeframeTableIndex = mNextTimeframeTableIndex + 1
+fireChange CollItemAdded, tte.theTimeFrame
 
 End Function
 
@@ -235,7 +304,7 @@ RemoveAll
 Set mTicker = Nothing
 End Sub
 
-Public Function item(key As String) As Timeframe
+Public Function item(key As String) As timeframe
 Dim i As Long
 
 For i = 0 To mNextTimeframeTableIndex - 1
@@ -280,81 +349,6 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Function addTimeframe( _
-                ByVal TimePeriod As Long, _
-                ByVal timePeriodUnit As TimePeriodUnits, _
-                ByRef key As String, _
-                ByVal numberOfBarsToFetch As Long, _
-                ByVal fromTime As Date, _
-                ByVal toTime As Date, _
-                ByVal includeBarsOutsideSession As Boolean, _
-                ByVal excludeCurrentbar As Boolean, _
-                ByVal saveIntervalSeconds As Long, _
-                ByVal writeBidAndAskBars As Boolean) As Timeframe
-
-Dim tte As TimeframeTableEntry
-Dim timeframeIndex As Long
-
-timeframeIndex = getTimeframeIndex(TimePeriod, _
-                                timePeriodUnit, _
-                                numberOfBarsToFetch, _
-                                fromTime, _
-                                toTime, _
-                                includeBarsOutsideSession, _
-                                saveIntervalSeconds, _
-                                writeBidAndAskBars)
-If timeframeIndex >= 0 Then
-    Set addTimeframe = mTimeframeTable(timeframeIndex).theTimeFrame
-    Exit Function
-End If
-
-Set addTimeframe = New Timeframe
-addTimeframe.tradeBuildAPI = tb
-Set tte.theTimeFrame = addTimeframe
-tte.TimePeriod = TimePeriod
-tte.timePeriodUnit = timePeriodUnit
-tte.numberOfBarsToFetch = numberOfBarsToFetch
-tte.fromTime = fromTime
-tte.toTime = toTime
-tte.includeBarsOutsideSession = includeBarsOutsideSession
-tte.writeBidAndAskBars = writeBidAndAskBars
-tte.saveIntervalSeconds = saveIntervalSeconds
-
-If key <> "" Then
-    tte.key = key
-Else
-    tte.key = generateKey(TimePeriod, _
-                        timePeriodUnit, _
-                        numberOfBarsToFetch, _
-                        fromTime, _
-                        toTime, _
-                        includeBarsOutsideSession, _
-                        excludeCurrentbar, _
-                        saveIntervalSeconds, _
-                        writeBidAndAskBars)
-End If
-tte.theTimeFrame.Initialise mContract, _
-                            tte.key, _
-                            mTicker, _
-                            TimePeriod, _
-                            timePeriodUnit, _
-                            numberOfBarsToFetch, _
-                            fromTime, _
-                            toTime, _
-                            includeBarsOutsideSession, _
-                            excludeCurrentbar, _
-                            saveIntervalSeconds, _
-                            writeBidAndAskBars
-
-If mNextTimeframeTableIndex > UBound(mTimeframeTable) Then
-    ReDim Preserve mTimeframeTable(UBound(mTimeframeTable) + 10) As TimeframeTableEntry
-End If
-mTimeframeTable(mNextTimeframeTableIndex) = tte
-mNextTimeframeTableIndex = mNextTimeframeTableIndex + 1
-fireChange CollItemAdded, tte.theTimeFrame
-
-End Function
-
 Private Sub clearTimeframeTableEntry(ByVal index As Long)
 mTimeframeTable(index).key = ""
 mTimeframeTable(index).numberOfBarsToFetch = 0
@@ -365,7 +359,7 @@ End Sub
 
 Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
-                ByVal affectedObject As Timeframe)
+                ByVal affectedObject As timeframe)
 Dim listener As CollectionChangeListener
 Dim i As Long
 Dim ev As CollectionChangeEvent

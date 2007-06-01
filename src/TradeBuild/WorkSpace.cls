@@ -154,7 +154,7 @@ End Property
 
 Friend Property Let tradeBuildAPI( _
                 ByVal value As tradeBuildAPI)
-Set mTradeBuildAPIRef = weakrefs.createWeakReference(value)
+Set mTradeBuildAPIRef = CreateWeakReference(value)
 mTickers.tradeBuildAPI = value
 End Property
 

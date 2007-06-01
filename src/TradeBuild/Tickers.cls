@@ -94,9 +94,9 @@ End Property
 Public Function add( _
                 ByVal ordersAreLive As Boolean, _
                 Optional ByVal key As String) As Ticker
-If key = "" Then key = GenerateGUIDString
+If key = "" Then key = generateGUIDString
 Set add = New Ticker
-add.initialise mTradeBuildAPIRef.Target, _
+add.Initialise mTradeBuildAPIRef.Target, _
                 AllocateTickerHandle, _
                 Me, _
                 key, _
@@ -151,7 +151,7 @@ End Sub
 
 Friend Property Let tradeBuildAPI( _
                 ByVal value As tradeBuildAPI)
-Set mTradeBuildAPIRef = weakrefs.createWeakReference(value)
+Set mTradeBuildAPIRef = CreateWeakReference(value)
 End Property
 
 '@================================================================================

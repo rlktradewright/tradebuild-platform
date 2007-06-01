@@ -445,7 +445,7 @@ End Property
 
 Friend Property Let tradeBuildAPI( _
                 ByVal value As tradeBuildAPI)
-Set mTradeBuildAPIRef = weakrefs.createWeakReference(value)
+Set mTradeBuildAPIRef = CreateWeakReference(value)
 End Property
 
 '@================================================================================
@@ -631,7 +631,7 @@ Then
     Else
         Set mProgressTimer = CreateIntervalTimer(0, , mReplayProgressEventIntervalMillisecs)
     End If
-    mProgressTimer.StartTimer
+    mProgressTimer.startTimer
 End If
 End Sub
 

@@ -33,7 +33,6 @@ Option Explicit
 Implements StateChangeListener
 Implements StudyUtils26.StudyValueListener
 Implements TradeBuildSP.IBarDataInputServiceConsumer
-Implements TradeBuildSP.IBarDataOutputServiceConsumer
 Implements TradeBuildSP.IBarDataConsumer
 
 '@================================================================================
@@ -47,10 +46,6 @@ Event BarLoadProgress( _
 Event BarsLoaded()
 
 Event BarWriterNotification(ByRef ev As WriterEvent)
-
-'Event CantCreateHistoricDataWriter()
-
-'Event HistoricalDataRequestFailed(ByVal reason As String)
 
 Event Notification(ByRef ev As NotificationEvent)
 
@@ -129,7 +124,6 @@ Private mTickVolumeInputHandle      As Long
 Private WithEvents mSession         As session
 Attribute mSession.VB_VarHelpID = -1
 
-Private mBarWriterListeners         As Collection
 Private mStateChangeListeners       As Collection
 
 Private mBarUnit                    As TimePeriodUnits
@@ -176,7 +170,6 @@ Private mIsHistorical               As Boolean
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mBarWriterListeners = New Collection
 Set mStateChangeListeners = New Collection
 End Sub
 
@@ -200,7 +193,7 @@ If Not mHistReceivingSynchronously Then
     ' We use the timer with a very short delay: this is to prevent
     ' calling back into the Service Provider for the next bar
     ' before it has completed the function that provided the bar.
-    mHistoricBarTimer.StartTimer
+    mHistoricBarTimer.startTimer
 End If
 End Sub
 
@@ -264,66 +257,8 @@ End Sub
 
 Private Sub IBarDataInputServiceConsumer_Ready()
 ' unwind the stack
-mHistoricBarTimer.StartTimer
+mHistoricBarTimer.startTimer
 End Sub
-
-'@================================================================================
-' IBarDataOutputServiceConsumer Interface Members
-'@================================================================================
-
-Private Sub IBarDataOutputServiceConsumer_NotifyEvent( _
-                ByVal eventCode As TradeBuildSP.StandardSPEventCodes, _
-                ByVal eventMessage As String, _
-                ByVal spHandle As Long)
-Dim ev As NotificationEvent
-
-Set ev.source = Me
-
-Select Case eventCode
-Case HDCantConnectDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyCantConnectHistoricDataSource
-    ev.eventMessage = "Can't connect to historic data source: " & vbCrLf & _
-                        eventMessage
-    RaiseEvent Notification(ev)
-    Set mBarWriter = Nothing
-    mSaveIntervalSeconds = -1
-Case HDRetryConnectDataSource
-    ev.eventCode = ApiNotifyCodes.ApiNotifyRetryingConnectionToHistoricDataSource
-    ev.eventMessage = "Retrying connection to historic data source: " & vbCrLf & _
-                        eventMessage
-    RaiseEvent Notification(ev)
-Case Else
-    tb.SetServiceProviderError eventCode, _
-                        eventMessage, _
-                        tb.ServiceProviders.nameFromHandle(spHandle)
-End Select
-End Sub
-
-Private Sub IBarDataOutputServiceConsumer_OutputBarfileCreated( _
-                            ByVal filename As String)
-Dim ev As WriterEvent
-fireBarWriterNotify WriterNotifications.WriterFileCreated, _
-                                filename
-ev.action = WriterNotifications.WriterFileCreated
-ev.filename = filename
-Set ev.source = Me
-RaiseEvent BarWriterNotification(ev)
-End Sub
-
-Private Property Let IBarDataOutputServiceConsumer_Ready(ByVal RHS As Boolean)
-Dim ev As WriterEvent
-mBarWriter.ServiceProviderWriterReady = RHS
-
-fireBarWriterNotify IIf(RHS, _
-                    WriterNotifications.WriterReady, _
-                    WriterNotifications.WriterNotReady), _
-                ""
-
-ev.action = IIf(RHS, _
-                    WriterNotifications.WriterReady, _
-                    WriterNotifications.WriterNotReady)
-RaiseEvent BarWriterNotification(ev)
-End Property
 
 '@================================================================================
 ' StateChangeListener Interface Members
@@ -456,8 +391,6 @@ studyMgr.setInputTicksize mBidInputHandle, mContract.TickSize
 studyMgr.setInputTicksize mAskInputHandle, mContract.TickSize
 studyMgr.setInputTicksize mTradeInputHandle, mContract.TickSize
 
-createBarWriter
-
 startHistDataFetch
 
 End Property
@@ -484,17 +417,12 @@ End Property
 
 Friend Property Let tradeBuildAPI( _
                 ByVal value As tradeBuildAPI)
-Set mTradeBuildAPIRef = weakrefs.createWeakReference(value)
+Set mTradeBuildAPIRef = CreateWeakReference(value)
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
-
-Public Sub addBarWriterListener( _
-                ByVal value As WriterListener)
-mBarWriterListeners.add value
-End Sub
 
 Public Sub addStateChangeListener( _
                 ByVal value As StateChangeListener)
@@ -517,6 +445,7 @@ Friend Sub Initialise( _
                 ByVal toTime As Date, _
                 ByVal includeBarsOutsideSession As Boolean, _
                 ByVal excludeCurrentbar As Boolean, _
+                ByVal barWriter As HistoricDataWriter, _
                 ByVal saveIntervalSeconds As Long, _
                 ByVal writeBidAndAskBars As Boolean)
 
@@ -528,8 +457,8 @@ End If
 
 Set mContract = pContract
 mKey = key
-Set mTickerRef = createWeakReference(pTicker)
-Set mStudyManagerRef = createWeakReference(pTicker.studyManager)
+Set mTickerRef = CreateWeakReference(pTicker)
+Set mStudyManagerRef = CreateWeakReference(pTicker.studyManager)
 
 mBarLength = TimePeriod
 mBarUnit = timePeriodUnit
@@ -563,19 +492,18 @@ mSaveIntervalSeconds = saveIntervalSeconds
 setupBarStudies
 
 If Not mContract Is Nothing Then
-    createBarWriter
     startHistDataFetch
 End If
 
-fireStateChange TimeframeStateCreated
-End Sub
+If Not barWriter Is Nothing Then
+    Set mBarWriter = barWriter
+    If mSaveIntervalSeconds > 0 Then
+        Set mWriteTimer = CreateIntervalTimer(Rnd * 1000 * mSaveIntervalSeconds + 1, , mSaveIntervalSeconds * 1000)
+        mWriteTimer.startTimer
+    End If
+End If
 
-Public Sub removeBarWriterListener( _
-                ByVal value As WriterListener)
-Dim i As Long
-For i = mBarWriterListeners.Count To 1 Step -1
-    If mBarWriterListeners.item(i) Is value Then mBarWriterListeners.remove i
-Next
+fireStateChange TimeframeStateCreated
 End Sub
 
 Public Sub removeStateChangeListener( _
@@ -614,33 +542,12 @@ If Not mBarWriter Is Nothing Then
         WriteABar mCurrAskBar, BarTypeAsk, 0, mCurrAskBarPrevTickvol
         WriteABar mCurrBidBar, BarTypeBid, 0, mCurrBidBarPrevTickvol
     End If
-    mBarWriter.ReleaseDataStore
     Set mBarWriter = Nothing
 End If
 
 If Not mBarReader Is Nothing Then
     mBarReader.ReleaseDataStore
     Set mBarReader = Nothing
-End If
-
-End Sub
-
-Private Sub createBarWriter()
-Dim ev As NotificationEvent
-
-If mSaveIntervalSeconds >= 0 Then
-    Set mBarWriter = tb.ServiceProviders.CreateHistoricalDataWriter(Me, _
-                                mContract.specifier, _
-                                "")
-    If mBarWriter Is Nothing Then
-        Set ev.source = Me
-        ev.eventCode = ApiNotifyCodes.ApiNotifyNoHistoricDataSource
-        ev.eventMessage = "Can't create historic data writer"
-        RaiseEvent Notification(ev)
-    ElseIf mSaveIntervalSeconds > 0 Then
-        Set mWriteTimer = CreateIntervalTimer(Rnd * 1000 * mSaveIntervalSeconds + 1, , mSaveIntervalSeconds * 1000)
-        mWriteTimer.StartTimer
-    End If
 End If
 
 End Sub
@@ -729,26 +636,11 @@ If Not mHistoricDataLoaded And _
     Not mBarReader Is Nothing _
 Then
     ' schedule the next processing quantum
-    mHistoricBarTimer.StartTimer
+    mHistoricBarTimer.startTimer
 End If
 
 End Sub
 
-Private Sub fireBarWriterNotify( _
-                ByVal action As WriterNotifications, _
-                ByVal filename As String)
-Dim listener As WriterListener
-Dim i As Long
-Dim ev As WriterEvent
-Set ev.source = Me
-ev.action = action
-ev.filename = filename
-For i = 1 To mBarWriterListeners.Count
-    Set listener = mBarWriterListeners(i)
-    listener.notify ev
-Next
-End Sub
-                                
 Private Sub fireStateChange(ByVal newState As TimeframeStates)
 Dim listener As StateChangeListener
 Dim i As Long
@@ -995,7 +887,7 @@ Private Sub startHistDataFetch()
 ' BarsLoaded event.
 Set mHistoricBarTimer = CreateIntervalTimer(1)
 Set mElapsedTimer = New ElapsedTimer
-mHistoricBarTimer.StartTimer
+mHistoricBarTimer.startTimer
 End Sub
 
 Private Sub StartStudies()
