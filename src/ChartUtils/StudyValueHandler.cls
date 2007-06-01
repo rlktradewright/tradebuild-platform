@@ -231,7 +231,7 @@ Friend Sub initialise( _
                 ByVal studyValueDef As StudyValueDefinition, _
                 ByVal updatePerTick As Boolean)
 
-Set mChartManagerRef = WeakRefs.createWeakReference(chartMgr)
+Set mChartManagerRef = createWeakReference(chartMgr)
 Set mRegion = region
                 
 mUpdatePerTick = updatePerTick

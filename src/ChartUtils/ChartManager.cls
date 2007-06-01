@@ -30,7 +30,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements Tasks.TaskCompletionListener
+Implements TaskCompletionListener
 
 '================================================================================
 ' Events
@@ -98,7 +98,7 @@ End Sub
 ' TaskCompletionListener Interface Members
 '================================================================================
 
-Private Sub TaskCompletionListener_taskCompleted(ev As Tasks.TaskCompletionEvent)
+Private Sub TaskCompletionListener_taskCompleted(ev As TaskCompletionEvent)
 
 If ev.resultCode <> 0 Then
     Debug.Print "Task: " & ev.TaskName; "; Error: " & ev.resultCode; "; Message: " & ev.message
@@ -428,7 +428,7 @@ End Function
 
 Public Function startStudy( _
                 ByVal pStudy As study) As TaskCompletion
-Dim lTaskCompletion As Tasks.TaskCompletion
+Dim lTaskCompletion As TaskCompletion
 Set lTaskCompletion = mStudyManager.startStudy(pStudy, ReplayNumbers.ReplayAll)
 
 If lTaskCompletion Is Nothing Then Exit Function
@@ -500,7 +500,7 @@ Dim lStudyValueHandler As StudyValueHandler
 Dim study As study
 Dim region As ChartRegion
 Dim regionName As String
-Dim lTaskCompletion As Tasks.TaskCompletion
+Dim lTaskCompletion As TaskCompletion
 
 Set study = studyConfig.study
 If studyValueConfig.chartRegionName = RegionNameDefault Or studyValueConfig.chartRegionName = "" Then
