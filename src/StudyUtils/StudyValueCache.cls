@@ -245,7 +245,7 @@ replayTask.initialise Me, _
                     numberOfValuesToReplay, _
                     discriminator
 
-Set replayValues = Tasks.startTask( _
+Set replayValues = startTask( _
                                 replayTask, _
                                 PriorityNormal, _
                                 IIf(taskName <> "", taskName, GenerateGUIDString), _

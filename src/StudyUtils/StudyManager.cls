@@ -23,7 +23,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements Tasks.TaskCompletionListener
+Implements TaskCompletionListener
 
 '================================================================================
 ' Events
@@ -136,7 +136,7 @@ End Sub
 '================================================================================
 
 Private Sub TaskCompletionListener_taskCompleted( _
-                ev As Tasks.TaskCompletionEvent)
+                ev As TaskCompletionEvent)
 Dim task As ValueReplayTask
 Set task = ev.source
 Select Case task.discriminator

@@ -86,7 +86,7 @@ Private Function Study_addStudy( _
                 ByRef valueNames() As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As Tasks.TaskCompletion
+                Optional ByVal taskData As Variant) As TaskCompletion
 mStudies.add pStudy, valueNames
 End Function
 
@@ -95,7 +95,7 @@ Private Function Study_addStudyValueListener( _
                 ByVal valueName As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As Tasks.TaskCompletion
+                Optional ByVal taskData As Variant) As TaskCompletion
 mListeners.add listener, valueName
 End Function
 

@@ -30,7 +30,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements Tasks.task
+Implements task
 Implements ValueReplayTask
 
 '================================================================================

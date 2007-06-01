@@ -23,7 +23,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements Tasks.TaskCompletionListener
+Implements TaskCompletionListener
 
 '================================================================================
 ' Events
@@ -92,7 +92,7 @@ End Sub
 '================================================================================
 
 Private Sub TaskCompletionListener_taskCompleted( _
-                ev As Tasks.TaskCompletionEvent)
+                ev As TaskCompletionEvent)
 Dim task As ValueReplayTask
 Set task = ev.source
 Select Case task.discriminator
@@ -162,7 +162,7 @@ Public Function addStudy( _
                 ByRef valueNames() As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As Tasks.TaskCompletion
+                Optional ByVal taskData As Variant) As TaskCompletion
 Dim notifyNames() As String
 Dim replayValueNames() As String
 Dim replayNotifyNames() As String
@@ -241,7 +241,7 @@ Public Function addStudyValueListener( _
                 ByVal valueName As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As Tasks.TaskCompletion
+                Optional ByVal taskData As Variant) As TaskCompletion
 Dim valueDefs As studyValueDefinitions
 Dim valNames(0) As String
 Dim notifyNames(0) As String 'dummy
@@ -275,7 +275,7 @@ If mReplayUsingStudyValues Then
                             valNames, _
                             notifyNames, _
                             TaskDiscriminators.TaskAddStudyValueListener
-    Set addStudyValueListener = Tasks.startTask(replayTask, PriorityNormal, taskName, taskData)
+    Set addStudyValueListener = StartTask(replayTask, PriorityNormal, taskName, taskData)
     addStudyValueListener.addTaskCompletionListener Me
 Else
     Set addStudyValueListener = FindValueCache(valueName).replayValues( _
@@ -322,7 +322,7 @@ Public Sub initialise( _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As study)
 
-Set mStudyRef = WeakRefs.createWeakReference(study)
+Set mStudyRef = CreateWeakReference(study)
 mShortName = study.studyDefinition.shortName
 mIdent = id
 Set mParams = parameters
@@ -392,7 +392,7 @@ Private Function addStudyHelper( _
                 ByRef replayNotifyNames() As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As Tasks.TaskCompletion
+                Optional ByVal taskData As Variant) As TaskCompletion
 Dim valueDefs As studyValueDefinitions
 Dim valueDef As StudyValueDefinition
 Dim i As Long
@@ -441,7 +441,7 @@ Else
                             valueNames, _
                             notifyNames, _
                             TaskDiscriminators.TaskAddStudy
-    Set addStudyHelper = Tasks.startTask(replayTask, PriorityNormal, taskName, taskData)
+    Set addStudyHelper = StartTask(replayTask, PriorityNormal, taskName, taskData)
     addStudyHelper.addTaskCompletionListener Me
     
 End If
