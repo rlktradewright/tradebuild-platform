@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#1.0#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#4.0#0"; "ChartSkil2-6.ocx"
 Begin VB.UserControl TradeBuildChart 
    ClientHeight    =   4965
    ClientLeft      =   0
@@ -351,7 +351,7 @@ End Sub
 ' TaskCompletionListener Interface Members
 '================================================================================
 
-Private Sub TaskCompletionListener_taskCompleted(ev As Tasks.TaskCompletionEvent)
+Private Sub TaskCompletionListener_taskCompleted(ev As TaskCompletionEvent)
 Dim stateEv As StateChangeEvent
 
 mNumberOfOutstandingTasks = mNumberOfOutstandingTasks - 1
