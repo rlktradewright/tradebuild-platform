@@ -111,7 +111,7 @@ If mStudyFoundation.isNewBar Then
         mTR = trueRange(newval)
         
         evMa.value = mTR
-        mMAStudy.Notify evMa
+        mMAStudy.notify evMa
         mATR = mMAStudy.getStudyValue(MovingAverageStudyValueName, 0).value
     End If
     mATRCache.addValue mATR, ev.barNumber, ev.timestamp, ev.barStartTime
@@ -128,7 +128,7 @@ Else
         mTR = trueRange(newval)
         
         evMa.value = mTR
-        mMAStudy.Notify evMa
+        mMAStudy.notify evMa
         mATR = mMAStudy.getStudyValue(MovingAverageStudyValueName, 0).value
         mATRCache.updateValue mATR, ev.barNumber, ev.timestamp
     End If
@@ -222,7 +222,7 @@ Private Function Study_addStudy( _
                 ByRef valueNames() As String, _
                 ByVal numUnderlyingValuesToUse As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As Tasks.TaskCompletion
+                Optional ByVal taskData As Variant) As TaskCompletion
 
 Set Study_addStudy = mStudyFoundation.addStudy( _
                             Study, _
@@ -237,7 +237,7 @@ Private Function Study_addStudyValueListener( _
                 ByVal valueName As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As Tasks.TaskCompletion
+                Optional ByVal taskData As Variant) As TaskCompletion
 Set Study_addStudyValueListener = mStudyFoundation.addStudyValueListener( _
                             listener, _
                             valueName, _
@@ -299,7 +299,7 @@ End Property
 
 Private Sub Study_Notify( _
                 ev As StudyValueEvent)
-mStudyFoundation.NotifyInput ev
+mStudyFoundation.notifyInput ev
 customNotify ev
 End Sub
 

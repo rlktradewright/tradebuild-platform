@@ -215,7 +215,7 @@ Dim evOut As StudyValueEvent
 Static firstVolumeReceived As Boolean
 
 If ev.valueName = ConstTimeBarsInputPrice Then
-    mBars.Notify ev
+    mBars.notify ev
     If mBars.currentBarNumber <> mBarNumber Then
         ' a new bar has started
         Set mBar = mBars.bar(0)
@@ -430,7 +430,7 @@ Private Function Study_addStudy( _
                 ByRef valueNames() As String, _
                 ByVal numUnderlyingValuesToUse As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As Tasks.TaskCompletion
+                Optional ByVal taskData As Variant) As TaskCompletion
 
 Set Study_addStudy = mStudyFoundation.addStudy( _
                             Study, _
@@ -445,7 +445,7 @@ Private Function Study_addStudyValueListener( _
                 ByVal valueName As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As Tasks.TaskCompletion
+                Optional ByVal taskData As Variant) As TaskCompletion
 Set Study_addStudyValueListener = mStudyFoundation.addStudyValueListener( _
                             listener, _
                             valueName, _

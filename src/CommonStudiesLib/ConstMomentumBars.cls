@@ -58,7 +58,7 @@ Implements CollectionChangeListener
 Private mStudyFoundation As StudyFoundation
 '--------------------------------------------------------
 
-Private WithEvents mSession As Session
+Private WithEvents mSession As session
 Attribute mSession.VB_VarHelpID = -1
 
 Private mMovementPerBar As Long
@@ -121,12 +121,12 @@ End Property
 Private Sub BarStudy_switchUnderlyingStudy( _
                 ByVal newUnderlyingStudy As InputStudy)
                 
-If newUnderlyingStudy.Session.currentSessionStartTime > mSession.currentSessionStartTime Then
+If newUnderlyingStudy.session.currentSessionStartTime > mSession.currentSessionStartTime Then
     ' we are now in a different session so reset volume variables
     mPrevBarVolume = 0
 End If
 
-Set mSession = newUnderlyingStudy.Session
+Set mSession = newUnderlyingStudy.session
 mBars.changeSession mSession
 
 ' because we are switching to a new source, the volume figures may not be consistent
@@ -176,7 +176,7 @@ Private Sub customInitialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As Session)
+                ByVal pSession As session)
 
 Set mSession = pSession
 
@@ -238,7 +238,7 @@ If IsEmpty(ev.value) Then Exit Sub
 mLatestTimestamp = ev.timestamp
 
 If ev.valueName = ConstMomentumBarsInputPrice Then
-    mBars.Notify ev
+    mBars.notify ev
     If Not mBar Is Nothing Then notifyBarValues ev.timestamp
 
 ElseIf ev.valueName = ConstMomentumBarsInputTotalVolume Then
@@ -441,7 +441,7 @@ Private Function Study_addStudy( _
                 ByRef valueNames() As String, _
                 ByVal numUnderlyingValuesToUse As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As Tasks.TaskCompletion
+                Optional ByVal taskData As Variant) As TaskCompletion
 
 Set Study_addStudy = mStudyFoundation.addStudy( _
                             Study, _
@@ -456,7 +456,7 @@ Private Function Study_addStudyValueListener( _
                 ByVal valueName As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As Tasks.TaskCompletion
+                Optional ByVal taskData As Variant) As TaskCompletion
 Set Study_addStudyValueListener = mStudyFoundation.addStudyValueListener( _
                             listener, _
                             valueName, _
@@ -501,7 +501,7 @@ Private Sub Study_initialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As Session)
+                ByVal pSession As session)
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
                             id, _

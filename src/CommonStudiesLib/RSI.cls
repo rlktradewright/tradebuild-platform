@@ -69,7 +69,7 @@ Private mStudyFoundation As StudyFoundation
 '--------------------------------------------------------
 
 
-Private mSession As Session
+Private mSession As session
 Private mRsiCache As StudyValueCache
 
 Private mPeriods As Long
@@ -106,7 +106,7 @@ Private Sub customInitialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As Session)
+                ByVal pSession As session)
 
 Set mSession = pSession
 customProcessParameters Parameters
@@ -139,7 +139,7 @@ End If
 sPrevVal = ev.value
 
 ' update the bars
-mBars.Notify ev
+mBars.notify ev
 
 ' pass the loss and gain values for the current bar to the relevant moving
 ' average object
@@ -147,10 +147,10 @@ mBars.Notify ev
 evMa = ev
 evMa.value = mBars.gain(0)  ' NB: parameter value of 0 means current bar,
                             ' -1 is previous bar etc
-mMaGains.Notify evMa        ' update the gains moving average
+mMaGains.notify evMa        ' update the gains moving average
 
 evMa.value = mBars.loss(0)
-mMaLosses.Notify evMa        ' update the losses moving average
+mMaLosses.notify evMa        ' update the losses moving average
 
 ' now get the updated gain and loss moving averages. Note that we don't actually
 ' need to know the name of the moving average study values, because we can use
@@ -270,7 +270,7 @@ Private Function Study_addStudy( _
                 ByRef valueNames() As String, _
                 ByVal numUnderlyingValuesToUse As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As Tasks.TaskCompletion
+                Optional ByVal taskData As Variant) As TaskCompletion
 
 Set Study_addStudy = mStudyFoundation.addStudy( _
                             Study, _
@@ -285,7 +285,7 @@ Private Function Study_addStudyValueListener( _
                 ByVal valueName As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As Tasks.TaskCompletion
+                Optional ByVal taskData As Variant) As TaskCompletion
 Set Study_addStudyValueListener = mStudyFoundation.addStudyValueListener( _
                             listener, _
                             valueName, _
@@ -319,7 +319,7 @@ Private Sub Study_initialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As Session)
+                ByVal pSession As session)
 
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
@@ -348,7 +348,7 @@ End Property
 
 Private Sub Study_Notify( _
                 ev As StudyValueEvent)
-mStudyFoundation.NotifyInput ev
+mStudyFoundation.notifyInput ev
 customNotify ev
 End Sub
 

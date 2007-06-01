@@ -50,7 +50,7 @@ Private mStudyFoundation As StudyFoundation
 '--------------------------------------------------------
 
 
-Private mSession As Session
+Private mSession As session
 
 Private mKPeriods As Long
 Private mDPeriods As Long
@@ -83,7 +83,7 @@ Private Sub customInitialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As Session)
+                ByVal pSession As session)
 
 Set mSession = pSession
 
@@ -104,7 +104,7 @@ If Not mStudyFoundation.isNewBar Then
 End If
 sPrevVal = ev.value
 
-mBars.Notify ev
+mBars.notify ev
 
 If mBars.Count > mKPeriods Then
     If mStudyFoundation.isNewBar Then
@@ -126,7 +126,7 @@ End If
 newEv.barNumber = ev.barNumber
 newEv.timestamp = ev.timestamp
 newEv.value = mK
-mMASmoothingStudy.Notify newEv
+mMASmoothingStudy.notify newEv
 mD = mMASmoothing.ma.value
 
 If mStudyFoundation.isNewBar Then
@@ -220,7 +220,7 @@ Private Function Study_addStudy( _
                 ByRef valueNames() As String, _
                 ByVal numUnderlyingValuesToUse As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As Tasks.TaskCompletion
+                Optional ByVal taskData As Variant) As TaskCompletion
 
 Set Study_addStudy = mStudyFoundation.addStudy( _
                             Study, _
@@ -235,7 +235,7 @@ Private Function Study_addStudyValueListener( _
                 ByVal valueName As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As Tasks.TaskCompletion
+                Optional ByVal taskData As Variant) As TaskCompletion
 Set Study_addStudyValueListener = mStudyFoundation.addStudyValueListener( _
                             listener, _
                             valueName, _
@@ -269,7 +269,7 @@ Private Sub Study_initialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As Session)
+                ByVal pSession As session)
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
                             id, _
