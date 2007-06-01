@@ -403,11 +403,12 @@ End Sub
 
 Friend Sub finish()
 WritePeriodData
-mCommonServiceConsumer.NotifyListeners "Total data written: " & mTotalBytes & " bytes", _
+mCommonServiceConsumer.NotifyListeners mServiceProviderName & " (" & mContract.Specifier.localSymbol & ")" & vbCrLf & _
+                            "    Total data written: " & mTotalBytes & " bytes", _
                             TradeBuildSP.StandardListenValueTypes.Log, _
                             Me
 ' we really ought to get rid of mWriter after a suitable delay, or after we
-' know that all writes hve been completed
+' know that all writes have been completed
 
 End Sub
 

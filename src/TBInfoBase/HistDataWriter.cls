@@ -51,6 +51,14 @@ Private Const ModuleName As String = "HistDataWriter"
 ' Types
 '@===============================================================================
 
+Private Type TimeframeEntry
+    timeframe               As TimePeriod
+    saveIntervalSeconds     As Long
+    prevTimestamp           As Date
+    barsWritten             As Long
+    writes                  As Long
+End Type
+
 '@===============================================================================
 ' Member variables
 '@===============================================================================
@@ -71,21 +79,39 @@ Attribute mBarWriter.VB_VarHelpID = -1
 
 Private mPath                       As String
 
-Private mBarsWritten                As Long
-Private mWrites                     As Long
-
 Private mInstrument                 As instrument
+
+Private mTimeframeTable(3)          As TimeframeEntry
 
 '@===============================================================================
 ' Class Event Handlers
 '@===============================================================================
+
+Private Sub Class_Initialize()
+mTimeframeTable(0).timeframe.length = 1
+mTimeframeTable(0).timeframe.units = TimePeriodMinute
+mTimeframeTable(0).saveIntervalSeconds = 15
+
+mTimeframeTable(1).timeframe.length = 5
+mTimeframeTable(1).timeframe.units = TimePeriodMinute
+mTimeframeTable(1).saveIntervalSeconds = 30
+
+mTimeframeTable(2).timeframe.length = 15
+mTimeframeTable(2).timeframe.units = TimePeriodMinute
+mTimeframeTable(2).saveIntervalSeconds = 60
+
+mTimeframeTable(3).timeframe.length = 60
+mTimeframeTable(3).timeframe.units = TimePeriodMinute
+mTimeframeTable(3).saveIntervalSeconds = 60
+
+End Sub
 
 '@===============================================================================
 ' IBarDataWriter Interface Members
 '@===============================================================================
 
 Private Property Get IBarDataWriter_ContractSpecifier() As TradeBuildSP.IContractSpecifier
-
+Set IBarDataWriter_ContractSpecifier = mContractSpec
 End Property
 
 Private Sub IBarDataWriter_ReleaseDataStore()
@@ -104,7 +130,8 @@ Private Sub IBarDataWriter_WriteBar( _
                 ByVal barType As BarTypes, _
                 ByVal barLength As Long, _
                 ByVal barUnit As TimePeriodUnits)
-Static prevTimestamp As Date
+Dim index As Long
+
 On Error GoTo Err
 
 Set mBarWriter = mInstrument.CreateBarDataWriter
@@ -120,12 +147,22 @@ With data
                         .volume, _
                         .tickVolume, _
                         0
-    If prevTimestamp <> .timestamp Then
-        mBarsWritten = mBarsWritten + 1
-        prevTimestamp = .timestamp
-    End If
+    
+    For index = 0 To UBound(mTimeframeTable)
+        If mTimeframeTable(index).timeframe.length = barLength Then
+            With mTimeframeTable(index)
+                If .prevTimestamp <> data.timestamp Then
+                    .barsWritten = .barsWritten + 1
+                    .prevTimestamp = data.timestamp
+                End If
+                .writes = .writes + 1
+            End With
+            Exit For
+        End If
+    Next
+    
 End With
-mWrites = mWrites + 1
+
 Exit Sub
 Err:
 handleFatalError Err.Number, _
@@ -167,7 +204,7 @@ End Sub
 
 Private Sub mTradingDB_ConnectFailed(ByVal errorCode As Long, ByVal errorDesc As String)
 On Error GoTo Err
-mServiceConsumer.Ready = False
+mServiceConsumer.NotReady
 Exit Sub
 Err:
 handleFatalError Err.Number, _
@@ -176,13 +213,20 @@ handleFatalError Err.Number, _
 End Sub
 
 Private Sub mTradingDB_ConnectSucceeded()
+Dim i As Long
+
 On Error GoTo Err
 
 mServiceConsumer.NotifyEvent StandardSPEventCodes.HDConnectedToDataSource, _
                         "Connected to data source", _
                         mHistDataServiceProvider.handle
 
-mServiceConsumer.Ready = True
+For i = 0 To UBound(mTimeframeTable)
+    mServiceConsumer.RequiredTimePeriod mTimeframeTable(i).timeframe, _
+                                        mTimeframeTable(i).saveIntervalSeconds
+Next
+
+mServiceConsumer.Ready
 mServiceConsumer.OutputBarfileCreated mConnectionString
 
 getInstrument
@@ -211,11 +255,19 @@ End Property
 '@===============================================================================
 
 Friend Sub finish()
-mCommonServiceConsumer.NotifyListeners mServiceProviderName & vbCrLf & _
-                            "    Total bars written (" & mContractSpec.localSymbol & "): " & mBarsWritten & _
-                            " in " & mWrites & " database writes", _
-                            TradeBuildSP.StandardListenValueTypes.Log, _
-                            Me
+Dim s As String
+Dim i As Long
+
+s = mServiceProviderName & " (" & mContractSpec.localSymbol & ")"
+For i = 0 To UBound(mTimeframeTable)
+    s = s & vbCrLf & "    Total of " & mTimeframeTable(i).barsWritten & " bars (" & _
+            TimePeriodToString(mTimeframeTable(i).timeframe) & _
+            ") written in " & _
+            mTimeframeTable(i).writes & " database writes"
+Next
+mCommonServiceConsumer.NotifyListeners s, _
+                                    TradeBuildSP.StandardListenValueTypes.Log, _
+                                    Me
 Set mBarWriter = Nothing
 Set mServiceConsumer = Nothing
 End Sub

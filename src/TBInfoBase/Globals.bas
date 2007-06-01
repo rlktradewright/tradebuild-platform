@@ -22,8 +22,8 @@ Public Const TickTypeBits As Byte = &HF
 
 Public Const TickfileFormatTradeBuildSQL As String = "urn:tradewright.com:names.tickfileformats.TradeBuildSQL"
 
-Public Const ContractInfoSPName As String = "TradeBuild Contract Info Service Provider"
-Public Const HistoricDataSPName As String = "TradeBuild Historic Data Service Provider"
+Public Const ContractInfoSPName As String = "TradeBuild SQLDB Contract Info Service Provider"
+Public Const HistoricDataSPName As String = "TradeBuild SQLDB Historic Data Service Provider"
 Public Const SQLDBTickfileSPName As String = "TradeBuild SQLDB Tickfile Service Provider"
 
 Public Const ProviderKey As String = "TradeBuild"
