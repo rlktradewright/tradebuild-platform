@@ -140,7 +140,6 @@ Private mExitProgramTime                                 As Date
 Private Sub Class_Initialize()
 
 InitialiseTWUtilities
-InitialiseTimerUtils
 
 Set mTradeBuildAPI = New TradeBuildAPI
 
@@ -152,7 +151,6 @@ End Sub
 
 Private Sub Class_Terminate()
 TerminateTWUtilities
-TerminateTimerUtils
 End Sub
 
 '================================================================================
@@ -221,7 +219,7 @@ End Sub
 Private Sub mTicker_stateChange(ev As TWUtilities.StateChangeEvent)
 Dim i As Long
 
-If ev.state = TickerStates.TickerStateRunning Then
+If ev.State = TickerStates.TickerStateRunning Then
     RaiseEvent TickerAdded(mTicker)
 End If
 End Sub
