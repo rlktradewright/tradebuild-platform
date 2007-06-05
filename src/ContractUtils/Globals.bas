@@ -56,6 +56,28 @@ Private Const ModuleName                    As String = "Globals"
 ' Methods
 '@================================================================================
 
+Public Function gOptionRightFromString(ByVal value As String) As OptionRights
+Select Case UCase$(value)
+Case ""
+    gOptionRightFromString = OptNone
+Case "CALL"
+    gOptionRightFromString = OptCall
+Case "PUT"
+    gOptionRightFromString = OptPut
+End Select
+End Function
+
+Public Function gOptionRightToString(ByVal value As OptionRights) As String
+Select Case value
+Case OptNone
+    gOptionRightToString = ""
+Case OptCall
+    gOptionRightToString = "Call"
+Case OptPut
+    gOptionRightToString = "Put"
+End Select
+End Function
+
 Public Function gSecTypeFromString(ByVal value As String) As SecurityTypes
 Select Case UCase$(value)
 Case "STOCK", "STK"
@@ -68,8 +90,8 @@ Case "FUTURES OPTION", "FOP"
     gSecTypeFromString = SecTypeFuturesOption
 Case "CASH"
     gSecTypeFromString = SecTypeCash
-Case "BAG"
-    gSecTypeFromString = SecTypeBag
+Case "COMBO", "CMB"
+    gSecTypeFromString = SecTypeCombo
 Case "INDEX", "IND"
     gSecTypeFromString = SecTypeIndex
 End Select
@@ -87,8 +109,8 @@ Case SecTypeFuturesOption
     gSecTypeToString = "Futures Option"
 Case SecTypeCash
     gSecTypeToString = "Cash"
-Case SecTypeBag
-    gSecTypeToString = "Bag"
+Case SecTypeCombo
+    gSecTypeToString = "Combo"
 Case SecTypeIndex
     gSecTypeToString = "Index"
 End Select
@@ -106,8 +128,8 @@ Case SecTypeFuturesOption
     gSecTypeToShortString = "FOP"
 Case SecTypeCash
     gSecTypeToShortString = "CASH"
-Case SecTypeBag
-    gSecTypeToShortString = "BAG"
+Case SecTypeCombo
+    gSecTypeToShortString = "CMB"
 Case SecTypeIndex
     gSecTypeToShortString = "IND"
 End Select

@@ -177,22 +177,6 @@ Public Property Get tickValue() As Double
 tickValue = mTickSize * mMultiplier
 End Property
 
-Public Property Get tradingClass() As String
-tradingClass = mTradingClass
-End Property
-
-Friend Property Let tradingClass(ByVal value As String)
-mTradingClass = value
-End Property
-
-Public Property Get validExchanges() As String()
-validExchanges = mValidExchanges
-End Property
-
-Friend Property Let validExchanges(ByRef value() As String)
-mValidExchanges = value
-End Property
-
 Public Property Get timezone() As timezone
 Set timezone = mTimeZone
 End Property
@@ -250,7 +234,7 @@ Dim i As Long
 Set XMLdoc = New DOMDocument30
 XMLdoc.loadXML contractXML
 If XMLdoc.parseError.errorCode <> 0 Then
-    err.Raise ErrorCodes.ErrRuntimeException, _
+    Err.Raise ErrorCodes.ErrRuntimeException, _
             "TradeBuild26.Contract::fromXML", _
             "Contract XML cannot be parsed"
 End If

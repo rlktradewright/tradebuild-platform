@@ -8,7 +8,7 @@ BEGIN
 END
 Attribute VB_Name = "ComboLeg"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = True
+Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -30,8 +30,6 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements TradeBuildSP.IComboLeg
-
 '@================================================================================
 ' Events
 '@================================================================================
@@ -52,67 +50,13 @@ Implements TradeBuildSP.IComboLeg
 ' Member variables
 '@================================================================================
 
-Private mContractID As Long
-Private mAction As OrderActions
+Private mContractSpec As ContractSpecifier
+Private mIsBuyLeg As Boolean
 Private mRatio As Long
-Private mExchange As String
-Private mOpenClose As LegOpenClose
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
-
-'@================================================================================
-' IComboLeg Interface Members
-'@================================================================================
-
-Private Property Let IComboLeg_Action(ByVal RHS As TradeBuildSP.OrderActions)
-action = RHS
-End Property
-
-Private Property Get IComboLeg_Action() As TradeBuildSP.OrderActions
-IComboLeg_Action = action
-End Property
-
-Private Function IComboLeg_Clone() As TradeBuildSP.IComboLeg
-Set IComboLeg_Clone = clone
-End Function
-
-Private Property Let IComboLeg_ContractID(ByVal RHS As Long)
-contractID = RHS
-End Property
-
-Private Property Get IComboLeg_ContractID() As Long
-IComboLeg_ContractID = contractID
-End Property
-
-Private Property Let IComboLeg_Exchange(ByVal RHS As String)
-exchange = RHS
-End Property
-
-Private Property Get IComboLeg_Exchange() As String
-IComboLeg_Exchange = exchange
-End Property
-
-Private Property Let IComboLeg_OpenClose(ByVal RHS As TradeBuildSP.LegOpenClose)
-openClose = RHS
-End Property
-
-Private Property Get IComboLeg_OpenClose() As TradeBuildSP.LegOpenClose
-IComboLeg_OpenClose = openClose
-End Property
-
-Private Property Let IComboLeg_Ratio(ByVal RHS As Long)
-ratio = RHS
-End Property
-
-Private Property Get IComboLeg_Ratio() As Long
-IComboLeg_Ratio = ratio
-End Property
-
-Private Function IComboLeg_ToString() As String
-IComboLeg_ToString = ToString
-End Function
 
 '@================================================================================
 ' xxxx Event Handlers
@@ -122,44 +66,16 @@ End Function
 ' Properties
 '@================================================================================
 
-Public Property Get action() As TradeBuild26.OrderActions
-action = mAction
+Public Property Get contractSpec() As ContractSpecifier
+Set contractSpec = mContractSpec
 End Property
 
-Friend Property Let action(ByVal value As TradeBuild26.OrderActions)
-mAction = UCase$(value)
-End Property
-
-Public Property Get contractID() As Long
-contractID = mContractID
-End Property
-
-Friend Property Let contractID(ByVal value As Long)
-mContractID = value
-End Property
-
-Public Property Get exchange() As String
-exchange = mExchange
-End Property
-
-Friend Property Let exchange(ByVal value As String)
-mExchange = UCase$(value)
-End Property
-
-Friend Property Let openClose(ByVal value As LegOpenClose)
-mOpenClose = value
-End Property
-
-Public Property Get openClose() As LegOpenClose
-openClose = mOpenClose
+Public Property Get isBuyLeg() As Boolean
+isBuyLeg = mIsBuyLeg
 End Property
 
 Public Property Get ratio() As Long
 ratio = mRatio
-End Property
-
-Friend Property Let ratio(ByVal value As Long)
-mRatio = value
 End Property
 
 '@================================================================================
@@ -177,33 +93,27 @@ With clone
 End With
 End Function
 
-Public Function ToString() As String
+Friend Sub initialise( _
+                ByVal contractSpec As ContractSpecifier, _
+                ByVal isBuyLeg As Boolean, _
+                ByVal ratio As Long)
+Set mContractSpec = contractSpec
+mIsBuyLeg = isBuyLeg
+mRatio = ratio
+End Sub
 
-ToString = "action=" & gOrderActionToString(mAction) & "; " & _
-            "contractid=" & mContractID & "; " & _
-            "exchange=" & mExchange & "; " & _
-            "openclose=" & mOpenClose & "; " & _
-            "ratio=" & mRatio & "; "
-
-End Function
+'Public Function ToString() As String
+'
+'ToString = "action=" & gOrderActionToString(mAction) & "; " & _
+'            "contractid=" & mContractID & "; " & _
+'            "exchange=" & mExchange & "; " & _
+'            "openclose=" & mOpenClose & "; " & _
+'            "ratio=" & mRatio & "; "
+'
+'End Function
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Sub Class_ReadProperties(PropBag As PropertyBag)
-mContractID = PropBag.ReadProperty("conid")
-mAction = PropBag.ReadProperty("action")
-mRatio = PropBag.ReadProperty("ratio")
-mExchange = PropBag.ReadProperty("exchange")
-mOpenClose = PropBag.ReadProperty("openclose")
-End Sub
-
-Private Sub Class_WriteProperties(PropBag As PropertyBag)
-PropBag.WriteProperty "conid", mContractID
-PropBag.WriteProperty "action", mAction
-PropBag.WriteProperty "ratio", mRatio
-PropBag.WriteProperty "exchange", mExchange
-PropBag.ReadProperty "openclose", mOpenClose
-End Sub
 

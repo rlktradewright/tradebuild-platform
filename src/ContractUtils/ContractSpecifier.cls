@@ -30,8 +30,6 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements TradeBuildSP.IContractSpecifier
-
 '@================================================================================
 ' Events
 '@================================================================================
@@ -92,112 +90,6 @@ PropBag.WriteProperty "curency", mCurrency
 PropBag.WriteProperty "localSymbol", mLocalSymbol
 PropBag.WriteProperty "combolegs", mComboLegs
 End Sub
-
-'@================================================================================
-' IContractSpecifier Interface Members
-'@================================================================================
-
-Private Function IContractSpecifier_Clone() As TradeBuildSP.IContractSpecifier
-Set IContractSpecifier_Clone = clone
-End Function
-
-Private Property Let IContractSpecifier_ComboLegs(ByVal RHS As TradeBuildSP.IComboLegs)
-ComboLegs = RHS
-End Property
-
-Private Property Get IContractSpecifier_ComboLegs() As TradeBuildSP.IComboLegs
-Set IContractSpecifier_ComboLegs = ComboLegs
-End Property
-
-Private Property Let IContractSpecifier_CurrencyCode(ByVal RHS As String)
-currencyCode = RHS
-End Property
-
-Private Property Get IContractSpecifier_CurrencyCode() As String
-IContractSpecifier_CurrencyCode = currencyCode
-End Property
-
-Private Function IContractSpecifier_Equals( _
-                            ByVal pContractSpecifier As TradeBuildSP.IContractSpecifier) As Boolean
-IContractSpecifier_Equals = Equals(pContractSpecifier)
-End Function
-
-Private Property Let IContractSpecifier_Exchange(ByVal RHS As String)
-exchange = RHS
-End Property
-
-Private Property Get IContractSpecifier_Exchange() As String
-IContractSpecifier_Exchange = exchange
-End Property
-
-Private Property Let IContractSpecifier_Expiry(ByVal RHS As String)
-expiry = RHS
-End Property
-
-Private Property Get IContractSpecifier_Expiry() As String
-IContractSpecifier_Expiry = expiry
-End Property
-
-Private Function IContractSpecifier_FuzzyEquals( _
-                            ByVal pContractSpecifier As TradeBuildSP.IContractSpecifier) As Boolean
-IContractSpecifier_FuzzyEquals = Equals(pContractSpecifier)
-End Function
-
-Private Property Get IContractSpecifier_Key() As String
-IContractSpecifier_Key = key
-End Property
-
-Private Property Let IContractSpecifier_LocalSymbol(ByVal RHS As String)
-localSymbol = RHS
-End Property
-
-Private Property Get IContractSpecifier_LocalSymbol() As String
-IContractSpecifier_LocalSymbol = localSymbol
-End Property
-
-Private Property Let IContractSpecifier_Locked(ByVal RHS As Boolean)
-locked = RHS
-End Property
-
-Private Property Get IContractSpecifier_Locked() As Boolean
-IContractSpecifier_Locked = locked
-End Property
-
-Private Property Let IContractSpecifier_Right(ByVal RHS As TradeBuildSP.OptionRights)
-right = RHS
-End Property
-
-Private Property Get IContractSpecifier_Right() As TradeBuildSP.OptionRights
-IContractSpecifier_Right = right
-End Property
-
-Private Property Let IContractSpecifier_SecType(ByVal RHS As TradeBuildSP.SecurityTypes)
-sectype = RHS
-End Property
-
-Private Property Get IContractSpecifier_SecType() As TradeBuildSP.SecurityTypes
-IContractSpecifier_SecType = sectype
-End Property
-
-Private Property Let IContractSpecifier_Strike(ByVal RHS As Double)
-strike = RHS
-End Property
-
-Private Property Get IContractSpecifier_Strike() As Double
-IContractSpecifier_Strike = strike
-End Property
-
-Private Property Let IContractSpecifier_Symbol(ByVal RHS As String)
-symbol = RHS
-End Property
-
-Private Property Get IContractSpecifier_Symbol() As String
-IContractSpecifier_Symbol = symbol
-End Property
-
-Private Function IContractSpecifier_ToString() As String
-IContractSpecifier_ToString = ToString
-End Function
 
 '@================================================================================
 ' Properties
@@ -303,8 +195,8 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Function clone() As contractSpecifier
-Set clone = New contractSpecifier
+Friend Function clone() As ContractSpecifier
+Set clone = New ContractSpecifier
 With clone
     If Not mComboLegs Is Nothing Then
         .ComboLegs = mComboLegs.clone
@@ -321,12 +213,12 @@ With clone
 End With
 End Function
 
-Public Function Equals(ByVal pContractSpecifier As contractSpecifier) As Boolean
+Public Function Equals(ByVal pContractSpecifier As ContractSpecifier) As Boolean
 If pContractSpecifier Is Me Then Equals = True
 Equals = (Me.key = pContractSpecifier.key)
 End Function
 
-Public Function FuyEquals(ByVal pContractSpecifier As contractSpecifier) As Boolean
+Public Function FuyEquals(ByVal pContractSpecifier As ContractSpecifier) As Boolean
 FuyEquals = (Me.sectype = pContractSpecifier.sectype And _
                 Me.symbol = pContractSpecifier.symbol)
 End Function

@@ -30,8 +30,6 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements TradeBuildSP.IContracts
-
 '@================================================================================
 ' Events
 '@================================================================================
@@ -67,11 +65,11 @@ Event TryLater( _
 
 Private mContracts As Collection
 
-Private mContractSpecifier As contractSpecifier
+Private mContractSpecifier As ContractSpecifier
 
 Private mChangeListeners As Collection
 
-Private mServiceProviders As ServiceProviders
+'Private mServiceProviders As ServiceProviders
 
 '@================================================================================
 ' Class Event Handlers
@@ -83,40 +81,6 @@ Set mChangeListeners = New Collection
 End Sub
 
 '@================================================================================
-' IContracts Interface Members
-'@================================================================================
-
-Private Sub IContracts_AddContract(ByVal pContract As TradeBuildSP.IContract)
-AddContract pContract
-End Sub
-
-Private Property Get IContracts_ContractSpecifier() As TradeBuildSP.IContractSpecifier
-Set IContracts_ContractSpecifier = contractSpecifier
-End Property
-
-Private Property Let IContracts_ContractSpecifier(ByVal RHS As TradeBuildSP.IContractSpecifier)
-contractSpecifier = RHS
-End Property
-
-Private Property Get IContracts_Count() As Long
-IContracts_Count = Count
-End Property
-
-Private Function IContracts_Item(ByVal index As Variant) As TradeBuildSP.IContract
-Set IContracts_Item = item(index)
-End Function
-
-Private Sub IContracts_Remove(ByVal index As Variant)
-remove index
-End Sub
-
-Private Sub IContracts_ServiceProviderCantHandle( _
-                            ByVal reason As String, _
-                            ByVal serviceProviderName As String)
-RaiseEvent TryLater(reason, serviceProviderName)
-End Sub
-
-'@================================================================================
 ' xxxx Event Handlers
 '@================================================================================
 
@@ -124,20 +88,16 @@ End Sub
 ' Properties
 '@================================================================================
 
-Friend Property Let contractSpecifier(ByVal value As contractSpecifier)
+Friend Property Let ContractSpecifier(ByVal value As ContractSpecifier)
 Set mContractSpecifier = value
 End Property
 
-Public Property Get contractSpecifier() As contractSpecifier
-Set contractSpecifier = mContractSpecifier
+Public Property Get ContractSpecifier() As ContractSpecifier
+Set ContractSpecifier = mContractSpecifier
 End Property
 
 Public Property Get Count() As Long
 Count = mContracts.Count
-End Property
-
-Friend Property Let ServiceProviders(ByVal value As ServiceProviders)
-Set mServiceProviders = value
 End Property
 
 '@================================================================================
@@ -179,9 +139,9 @@ mServiceProviders.LoadContracts Me
 
 Exit Sub
 err:
-err.Raise err.number, _
+err.Raise err.Number, _
             "TradeBuild26.Contracts::Load", _
-            err.Description
+            err.description
 End Sub
 
 Friend Sub LoadComplete()
@@ -212,6 +172,12 @@ Dim i As Long
 For i = mChangeListeners.Count To 1 Step -1
     If mChangeListeners.item(i) Is value Then mChangeListeners.remove i
 Next
+End Sub
+
+Friend Sub serviceProviderCantHandle( _
+                            ByVal reason As String, _
+                            ByVal serviceProviderName As String)
+RaiseEvent TryLater(reason, serviceProviderName)
 End Sub
 
 '@================================================================================
