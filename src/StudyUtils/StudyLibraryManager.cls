@@ -224,7 +224,7 @@ End Function
 
 Public Function createStudy( _
                 ByVal studyName As String, _
-                ByVal libName As String) As study
+                ByVal libName As String) As Study
 Dim studyLib As StudyLibrary
 Dim i As Long
 
@@ -272,7 +272,7 @@ End Sub
 
 Friend Function FetchStudyDefaultParameters( _
                 ByVal studyName As String, _
-                ByVal libName As String) As Parameters2.parameters
+                ByVal libName As String) As parameters
 Dim studyLib As StudyLibrary
 Dim i As Long
 
@@ -366,7 +366,7 @@ End Sub
 Friend Function SetStudyDefaultParameters( _
                 ByVal studyName As String, _
                 ByVal libName As String, _
-                ByVal params As Parameters2.parameters) As Boolean
+                ByVal params As parameters) As Boolean
 Dim studyLib As StudyLibrary
 Dim i As Long
 

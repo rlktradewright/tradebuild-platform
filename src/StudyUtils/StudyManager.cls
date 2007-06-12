@@ -47,7 +47,7 @@ Public Type InputDescriptor
     description         As String
     inputType           As StudyInputTypes
     isDefault           As Boolean
-    tickSize            As Double
+    ticksize            As Double
 End Type
 
 ' The following type is no longer used and is kept only to maintain binary
@@ -166,12 +166,12 @@ Public Function addInput( _
                 ByVal description As String, _
                 ByVal inputType As StudyInputTypes, _
                 ByVal isDefault As Boolean, _
-                ByVal tickSize As Double) As Long
+                ByVal ticksize As Double) As Long
 Dim inpStudy As InputStudy
 
 Set inpStudy = source   ' check the right class
 
-inpStudy.addInput inputName, description, inputType, isDefault, tickSize
+inpStudy.addInput inputName, description, inputType, isDefault, ticksize
 
 If mNextInputIndex = UBound(mInputs) Then
     ReDim Preserve mInputs(UBound(mInputs) + 10) As InputDescriptor
@@ -181,7 +181,7 @@ mInputs(mNextInputIndex).inputName = inputName
 mInputs(mNextInputIndex).description = description
 mInputs(mNextInputIndex).inputType = inputType
 mInputs(mNextInputIndex).isDefault = isDefault
-mInputs(mNextInputIndex).tickSize = tickSize
+mInputs(mNextInputIndex).ticksize = ticksize
 addInput = mNextInputIndex
 mNextInputIndex = mNextInputIndex + 1
 End Function
@@ -192,7 +192,7 @@ Dim inpStudy As InputStudy
 Dim lStudy As study
 Dim studyEntry As StudyTableEntry
 
-On Error GoTo err
+On Error GoTo Err
 
 Set inpStudy = New InputStudy
 inpStudy.initialise name, mSessionStartTime, mSessionEndTime
@@ -207,20 +207,20 @@ mStudies.add studyEntry, lStudy.id
 
 Exit Function
 
-err:
-If err.Number = VBErrorCodes.VbErrElementAlreadyExists Then
+Err:
+If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then
     mStudies.remove lStudy.id
     Resume
 End If
 
-err.Raise err.Number
+Err.Raise Err.Number
 
 End Function
 
 Public Function addStudy(ByVal name As String, _
                 ByVal underlyingStudy As study, _
                 ByRef inputValueNames() As String, _
-                Optional ByVal parameters As Parameters2.parameters, _
+                Optional ByVal parameters As parameters, _
                 Optional ByVal libraryName As String, _
                 Optional ByVal numberOfValuesToCache As Long) As study
 
@@ -234,16 +234,16 @@ Dim se As StudyTableEntry
 Dim inStudy As InputStudy
 
 If underlyingStudy Is Nothing Then
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "StudyUtils25.StudyManager::addStudy", _
                 "Underlying study must not be nothing"
 End If
 
 On Error Resume Next
 underlyingStudyEntry = mStudies(underlyingStudy.id)
-If err.Number <> 0 Then
+If Err.Number <> 0 Then
     On Error GoTo 0
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "StudyUtils25.StudyManager::addStudy", _
                 "Underlying study id is invalid"
 End If
@@ -269,14 +269,14 @@ studyEntry.studyName = name
 studyEntry.libName = libraryName
 Set lStudy = mStudyLibraryManager.createStudy(name, libraryName)
 
-If lStudy Is Nothing Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
+If lStudy Is Nothing Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                                 "StudyUtils25.StudyManager::AddStudy", _
                                                 "Can't create study " & name
                                                 
 Set studyEntry.study = lStudy
 studyEntry.numberOfCachedValues = numberOfValuesToCache
 
-Set studyInputDefs = lStudy.studyDefinition.studyInputDefinitions
+Set studyInputDefs = lStudy.StudyDefinition.studyInputDefinitions
 
 ReDim inValueNames(UBound(inputValueNames)) As String
 For i = 0 To UBound(inputValueNames)
@@ -355,9 +355,9 @@ End Sub
 
 Public Sub setInputTicksize( _
                 ByVal inputHandle As Long, _
-                ByVal tickSize As Double)
-mInputs(inputHandle).tickSize = tickSize
-mInputs(inputHandle).source.setInputTicksize mInputs(inputHandle).inputName, tickSize
+                ByVal ticksize As Double)
+mInputs(inputHandle).ticksize = ticksize
+mInputs(inputHandle).source.setInputTicksize mInputs(inputHandle).inputName, ticksize
 End Sub
 
 ''
@@ -374,7 +374,7 @@ Dim lStudyEntry As StudyTableEntry
 Dim lVar As Variant
 
 If mSessionTimesSet Then _
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
             "StudiesSupp" & "." & "StudyManager" & ":" & "setSessionTimes", _
             "Session times have already been set"
 
@@ -436,7 +436,7 @@ Private Function findStudy(ByVal studyName As String, _
                 ByVal underlyingStudyID As String, _
                 ByRef inputValueNames() As String, _
                 ByVal numberOfValuesToCache As Long, _
-                ByVal parameters As Parameters2.parameters) As study
+                ByVal parameters As parameters) As study
 Dim studyEntry As StudyTableEntry
 Dim var As Variant
 

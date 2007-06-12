@@ -73,7 +73,7 @@ End Property
 '================================================================================
 
 Public Function createStudy( _
-                ByVal name As String) As study
+                ByVal name As String) As Study
                 
 End Function
 
@@ -82,7 +82,7 @@ Public Function getImplementedStudyNames() As String()
 End Function
 
 Public Function GetStudyDefaultParameters( _
-                ByVal name As String) As Parameters2.parameters
+                ByVal name As String) As parameters
                 
 End Function
 
@@ -99,7 +99,7 @@ End Sub
 
 Public Function SetStudyDefaultParameters( _
                 ByVal name As String, _
-                ByVal params As Parameters2.parameters) As Boolean
+                ByVal params As parameters) As Boolean
 
 End Function
 

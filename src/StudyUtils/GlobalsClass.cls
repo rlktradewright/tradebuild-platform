@@ -111,7 +111,7 @@ End Function
 Public Function CreateCacheReplayTask( _
                 ByVal valueCache As StudyValueCache, _
                 ByVal target As Object, _
-                ByVal sourceStudy As study, _
+                ByVal sourceStudy As Study, _
                 ByVal numberOfValuesToReplay As Long, _
                 ByVal discriminator As Long) As CacheReplayTask
 Set CreateCacheReplayTask = New CacheReplayTask
@@ -143,7 +143,7 @@ End Function
 
 Public Function GetStudyDefaultParameters( _
                 ByVal studyName As String, _
-                Optional ByVal libraryName As String) As Parameters2.parameters
+                Optional ByVal libraryName As String) As parameters
 Set GetStudyDefaultParameters = Globals.StudyLibraryManager.FetchStudyDefaultParameters( _
                                             studyName, _
                                             libraryName)
@@ -176,7 +176,7 @@ End Sub
 Public Function SetStudyDefaultParameters( _
                 ByVal studyName As String, _
                 ByVal libraryName As String, _
-                ByVal params As Parameters2.parameters) As Boolean
+                ByVal params As parameters) As Boolean
 SetStudyDefaultParameters = Globals.StudyLibraryManager.SetStudyDefaultParameters( _
                                             studyName, _
                                             libraryName, _

@@ -84,7 +84,7 @@ Public Property Get numberOfBarsRequired() As Long
 
 End Property
 
-Public Property Get parameters() As Parameters2.parameters
+Public Property Get parameters() As parameters
 
 End Property
 
@@ -127,11 +127,11 @@ End Function
      
 Public Sub initialise( _
                 ByVal id As String, _
-                ByVal params As Parameters2.parameters, _
+                ByVal params As parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef valueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As Session)
+                ByVal pSession As session)
 
 End Sub
 

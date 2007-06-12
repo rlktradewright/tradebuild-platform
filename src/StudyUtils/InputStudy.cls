@@ -23,7 +23,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements study
+Implements Study
 
 '================================================================================
 ' Events
@@ -82,7 +82,7 @@ End Sub
 '================================================================================
 
 Private Function Study_addStudy( _
-                ByVal pStudy As study, _
+                ByVal pStudy As Study, _
                 ByRef valueNames() As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
@@ -99,7 +99,7 @@ Private Function Study_addStudyValueListener( _
 mListeners.add listener, valueName
 End Function
 
-Private Property Get Study_baseStudy() As study
+Private Property Get Study_baseStudy() As Study
 Set Study_baseStudy = Me
 End Property
 
@@ -121,10 +121,10 @@ End Property
 
 Private Sub Study_initialise( _
                 ByVal id As String, _
-                ByVal parameters As Parameters2.parameters, _
+                ByVal parameters As parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 valueNames() As String, _
-                ByVal underlyingStudy As study, _
+                ByVal underlyingStudy As Study, _
                 ByVal pSession As session)
 
 End Sub

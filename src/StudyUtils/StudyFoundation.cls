@@ -63,7 +63,7 @@ Private mIdent As String
 Private mInputValueNames() As String
 Private mUnderlyingStudy As study
 
-Private mParams As Parameters2.parameters
+Private mParams As parameters
 Private mStudies As Studies
 Private mListeners As StudyValueListeners
 
@@ -144,7 +144,7 @@ Public Property Get localBarNumber() As Long
 localBarNumber = mLocalBarNumber
 End Property
 
-Public Property Get parameters() As Parameters2.parameters
+Public Property Get parameters() As parameters
 Set parameters = mParams.clone
 End Property
 
@@ -317,7 +317,7 @@ End Function
 Public Sub initialise( _
                 ByVal study As study, _
                 ByVal id As String, _
-                ByVal parameters As Parameters2.parameters, _
+                ByVal parameters As parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As study)
