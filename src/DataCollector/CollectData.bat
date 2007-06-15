@@ -1,1 +1,1 @@
-start DataCollector26.exe /config:DataCollectorSettings.xml /posn:0,0 /showMonitor /startAt:Sun22:00 /endAt:Fri22:00 /exitAt:Fri22:05
+start DataCollector26.exe /config:DataCollectorSettings.xml /showmonitor /posn:0,0 /startAt:Sun22:00 /endAt:Fri22:00 /exitAt:Fri22:05

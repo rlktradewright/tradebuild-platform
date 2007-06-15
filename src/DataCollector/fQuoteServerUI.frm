@@ -52,13 +52,13 @@ Begin VB.Form fDataCollectorUI
       Width           =   615
    End
    Begin VB.CommandButton ShowHideMonitorButton 
-      Caption         =   "Show activity monitor"
+      Caption         =   "Hide activity monitor"
       Height          =   375
       Left            =   2040
       TabIndex        =   6
       ToolTipText     =   "Shows or hides the activity monitor"
       Top             =   360
-      Width           =   1815
+      Width           =   1695
    End
    Begin TabDlg.SSTab ActivityMonitor 
       Height          =   3135
@@ -276,7 +276,6 @@ Begin VB.Form fDataCollectorUI
       Width           =   975
    End
    Begin VB.Label Label1 
-      Alignment       =   1  'Right Justify
       BackStyle       =   0  'Transparent
       Caption         =   "Connection status"
       Height          =   255
@@ -383,11 +382,25 @@ ReDim mTickers(99) As TickerTableEntry
 End Sub
 
 Private Sub Form_Load()
-Set mStartStopTimePanel = StatusBar1.Panels.Item(1)
 mStartStopButtonInitialLeft = StartStopButton.Left
 TickerScroll.Min = TickerScrollMin
 TickerScroll.Max = TickerScrollMax
 mLineSpacing = ShortNameText(0).Height - Screen.TwipsPerPixelY
+mCurrentHeight = Me.Height
+mCurrentWidth = Me.Width
+End Sub
+
+Private Sub Form_QueryUnload(Cancel As Integer, UnloadMode As Integer)
+Select Case UnloadMode
+Case QueryUnloadConstants.vbAppTaskManager
+Case QueryUnloadConstants.vbAppWindows
+Case QueryUnloadConstants.vbFormCode
+Case QueryUnloadConstants.vbFormControlMenu
+    If mCollectingData Then
+        If MsgBox("Please confirm that you wish to stop data collection", _
+                    vbYesNo + vbDefaultButton2 + vbQuestion) = vbNo Then Cancel = True
+    End If
+End Select
 End Sub
 
 Private Sub Form_Resize()
@@ -690,21 +703,41 @@ Friend Sub initialise( _
                 ByVal noAutoStart As Boolean, _
                 ByVal showMonitor As Boolean)
 
+Set mStartStopTimePanel = StatusBar1.Panels.Item(1)
+
 Set mDataCollector = pDataCollector
 
-If Not showMonitor Then hideActivityMonitor
+If showMonitor Then
+    mActivityMonitorVisible = True
+Else
+    hideActivityMonitor
+End If
 
-If Not noAutoStart Then
+If noAutoStart Then
+    If mDataCollector.exitProgramTime <> 0 Then
+        mStartStopTimePanel.text = "Program exit: " & _
+                                    FormatDateTime(mDataCollector.exitProgramTime, vbShortDate) & " " & _
+                                    FormatDateTime(mDataCollector.exitProgramTime, vbShortTime)
+    End If
+Else
+Dim s As String
+    If mDataCollector.nextStartTime <> 0 Then
+        s = "Collection start: " & _
+            FormatDateTime(mDataCollector.nextStartTime, vbShortDate) & " " & _
+            FormatDateTime(mDataCollector.nextStartTime, vbShortTime)
+    End If
+    If mDataCollector.exitProgramTime <> 0 Then
+        s = IIf(s = "", "P", s & "; p") & _
+            "rogram exit: " & _
+            FormatDateTime(mDataCollector.exitProgramTime, vbShortDate) & " " & _
+            FormatDateTime(mDataCollector.exitProgramTime, vbShortTime)
+    End If
+    mStartStopTimePanel.text = s
     If mDataCollector.nextStartTime = 0 Then
         startCollecting "Data collection started automatically"
     End If
 End If
 
-If mDataCollector.exitProgramTime <> 0 Then
-    mStartStopTimePanel.text = "Program exit: " & _
-                                FormatDateTime(mDataCollector.exitProgramTime, vbShortDate) & " " & _
-                                FormatDateTime(mDataCollector.exitProgramTime, vbShortTime)
-End If
 End Sub
 
 '================================================================================
@@ -805,7 +838,6 @@ If Not mAdjustingSize Then
     StartStopButton.Left = StartStopButton.Left + widthIncrement
 End If
 
-mCurrentHeight = Me.Height
 mCurrentWidth = Me.Width
 
 End Sub
@@ -828,7 +860,7 @@ StartStopButton.Enabled = True
 mLastTickTime = getTimestamp
 
 Set mTimer = CreateIntervalTimer(0, , 250)
-mTimer.startTimer
+mTimer.StartTimer
 End Sub
 
 Private Sub setStopped()
