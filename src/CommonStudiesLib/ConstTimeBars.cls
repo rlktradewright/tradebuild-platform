@@ -71,6 +71,12 @@ Private mNumberOfValuesToCache As Long
 
 Private mBarNumber As Long
 
+' indicates that a new session has started and we are expecting the volume
+' to start again from zero. This is used to cater for cases where the data
+' source does not reset the volume immediately (for example the data source's
+' clock may not be precisely synchronised with ours
+Private mVolumeResetPending As Boolean
+
 ' accumulated volume at end of previous bar
 Private mPrevBarVolume As Long
 
@@ -143,8 +149,7 @@ End Sub
 
 Private Sub mSession_SessionStarted( _
                 ev As SessionEvent)
-mLatestVolume = 0
-mPrevBarVolume = 0
+mVolumeResetPending = True
 End Sub
 
 '================================================================================
@@ -239,6 +244,12 @@ ElseIf ev.valueName = ConstTimeBarsInputTotalVolume Then
         firstVolumeReceived = True
         mPrevBarVolume = mLatestVolume
     End If
+    If mVolumeResetPending Then
+        ' we've started a new session and are expecting the data source to
+        ' start sending low volume figures
+        If mLatestVolume < mPrevBarVolume Then mPrevBarVolume = 0
+    End If
+    
     mVolumeCache.updateValue mLatestVolume - mPrevBarVolume
     mTotalVolumeCache.updateValue mLatestVolume
     notifyVolume ev.timestamp

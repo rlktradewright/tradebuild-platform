@@ -133,7 +133,7 @@ StudyLibrary_getImplementedStudyNames = mStudyNames
 End Function
 
 Private Function StudyLibrary_getStudyDefaultParameters( _
-                ByVal name As String) As Parameters2.Parameters
+                ByVal name As String) As Parameters
 Select Case UCase$(name)
 Case UCase$(AccDistName), UCase$(AccDistShortName)
     Set StudyLibrary_getStudyDefaultParameters = GAccDist.defaultParameters
@@ -230,7 +230,7 @@ End Property
 
 Private Function StudyLibrary_setStudyDefaultParameters( _
                 ByVal name As String, _
-                ByVal params As Parameters2.Parameters) As Boolean
+                ByVal params As Parameters) As Boolean
 
 StudyLibrary_setStudyDefaultParameters = True
 

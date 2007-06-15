@@ -143,7 +143,7 @@ End Sub
 ' CollectionChangeListener Interface Members
 '================================================================================
 
-Private Sub CollectionChangeListener_Change(ev As TWUtilities.CollectionChangeEvent)
+Private Sub CollectionChangeListener_Change(ev As CollectionChangeEvent)
 If ev.changeType = CollItemAdded Then
     If Not mBar Is Nothing Then notifyBarValues mLatestTimestamp
     Set mBar = mBars.bar(0)
