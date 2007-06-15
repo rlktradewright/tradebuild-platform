@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#18.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#32.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeSkil Demo Edition Version 2.6"
@@ -12,6 +12,17 @@ Begin VB.Form fTradeSkilDemo
    LinkTopic       =   "Form1"
    ScaleHeight     =   6855
    ScaleWidth      =   14385
+   Begin VB.TextBox TimeZoneText 
+      Alignment       =   1  'Right Justify
+      BackColor       =   &H8000000F&
+      Height          =   285
+      Left            =   10560
+      Locked          =   -1  'True
+      TabIndex        =   3
+      TabStop         =   0   'False
+      Top             =   720
+      Width           =   2655
+   End
    Begin VB.TextBox DateTimeText 
       Alignment       =   2  'Center
       BackColor       =   &H8000000F&
@@ -269,9 +280,7 @@ Begin VB.Form fTradeSkilDemo
       TabPicture(0)   =   "fTradeSkilDemo.frx":0000
       Tab(0).ControlEnabled=   0   'False
       Tab(0).Control(0)=   "ConfigureButton"
-      Tab(0).Control(0).Enabled=   0   'False
       Tab(0).Control(1)=   "Frame1"
-      Tab(0).Control(1).Enabled=   0   'False
       Tab(0).ControlCount=   2
       TabCaption(1)   =   "&2. Tickers"
       TabPicture(1)   =   "fTradeSkilDemo.frx":001C
@@ -776,7 +785,7 @@ Begin VB.Form fTradeSkilDemo
                Begin TradeBuildUI26.TimeframeSelector TimeframeSelector1 
                   Height          =   330
                   Left            =   0
-                  TabIndex        =   3
+                  TabIndex        =   100
                   Top             =   360
                   Width           =   1335
                   _ExtentX        =   2355
@@ -1121,8 +1130,6 @@ End Enum
 
 Private WithEvents mTradeBuildAPI As TradeBuildAPI
 Attribute mTradeBuildAPI.VB_VarHelpID = -1
-Private WithEvents mTimer As IntervalTimer
-Attribute mTimer.VB_VarHelpID = -1
 
 Private mListenerKey As String
 
@@ -1141,6 +1148,10 @@ Attribute mOrderForm.VB_VarHelpID = -1
 
 Private mConfig As ConfigFile
 
+Private mDefaultClock As Clock
+Private WithEvents mCurrentClock As Clock
+Attribute mCurrentClock.VB_VarHelpID = -1
+
 '================================================================================
 ' Form Event Handlers
 '================================================================================
@@ -1148,7 +1159,6 @@ Private mConfig As ConfigFile
 Private Sub Form_Initialize()
 ' ensure we get the Windows XP look and feel if running on XP
 InitCommonControls
-InitialiseTimerUtils
 InitialiseTWUtilities
 End Sub
 
@@ -1162,20 +1172,20 @@ Me.Left = 0
 
 loadConfigFile
 
-Set mTradeBuildAPI = New TradeBuildAPI
-ContractSpecBuilder1.TradeBuildAPI = mTradeBuildAPI
+Set mTradeBuildAPI = TradeBuildAPI
 
 ' listen for log info from TradeBuild components
 mListenerKey = mTradeBuildAPI.addInfoListener(Me, TradeBuildListenValueTypes.VTLog)
 
 Set mTickers = mTradeBuildAPI.Tickers
 
+' create a clock running local time
+Set mDefaultClock = CreateClock("")
+setCurrentClock mDefaultClock
+
 OrdersSummary1.monitorWorkspace mTradeBuildAPI.defaultWorkSpace
 ExecutionsSummary1.monitorWorkspace mTradeBuildAPI.defaultWorkSpace
 TickerGrid1.monitorWorkspace mTradeBuildAPI.defaultWorkSpace
-
-Set mTimer = CreateIntervalTimer(0, , 500)
-mTimer.StartTimer
 
 RealtimeDataCombo.Text = "TWS"
 ContractDataCombo.Text = "TWS"
@@ -1217,15 +1227,12 @@ handleFatalError err.Number, _
 End Sub
 
 Private Sub Form_Terminate()
-TerminateTimerUtils
 TerminateTWUtilities
 End Sub
 
 Private Sub Form_Unload(cancel As Integer)
 Dim i As Integer
 Dim lTicker As Ticker
-
-If Not mTimer Is Nothing Then mTimer.StopTimer
 
 logMessage "Saving configuration file"
 mConfig.save getConfigFilename
@@ -1240,7 +1247,7 @@ If Not mTradeBuildAPI Is Nothing Then
     For Each lTicker In mTickers
         lTicker.StopTicker
     Next
-    If mListenerKey <> "" Then mTradeBuildAPI.RemoveListener mListenerKey
+    If mListenerKey <> "" Then mTradeBuildAPI.RemoveInfoListener mListenerKey
     Set mTradeBuildAPI = Nothing
 End If
 
@@ -1554,8 +1561,26 @@ If ContractDataCombo.Text = SecContractDataCombo.Text Then cancel = True
 End Sub
 
 Private Sub SelectTickfilesButton_Click()
+Dim tickfiles() As TickfileSpecifier
+Dim i As Long
+
 Set mTickfileManager = mTickers.createTickFileManager
-mTickfileManager.ShowTickfileSelectionDialogue
+tickfiles = ChooseTickfiles
+
+On Error Resume Next
+i = -1
+i = UBound(tickfiles)
+On Error GoTo 0
+If i = -1 Then Exit Sub ' get out if no tickfiles selected
+
+mTickfileManager.TickfileSpecifiers = tickfiles
+
+TickfileList.Clear
+For i = 0 To UBound(tickfiles)
+    TickfileList.AddItem tickfiles(i).FileName
+Next
+checkOkToStartReplay
+ClearTickfileListButton.Enabled = True
 End Sub
 
 Private Sub SkipReplayButton_Click()
@@ -1568,7 +1593,8 @@ Dim lTicker As Ticker
 
 Set lTicker = createTicker
 lTicker.DOMEventsRequired = DOMEvents.DOMNoEvents
-lTicker.StartTicker ContractSpecBuilder1.ContractSpecifier
+lTicker.useExchangeTime = True
+lTicker.StartTicker ContractSpecBuilder1.contractSpecifier
 
 ContractSpecBuilder1.SetFocus
 End Sub
@@ -1612,6 +1638,8 @@ Else
             OrderButton.Enabled = True
         End If
         
+        setCurrentClock mTicker.Clock
+        
         NameText = mTicker.Contract.specifier.localSymbol
         BidSizeText = mTicker.bidSize
         BidText = mTicker.BidPriceString
@@ -1630,6 +1658,14 @@ End Sub
 
 Private Sub TimeframeSelector1_Click()
 setChartButtonTooltip
+End Sub
+
+'================================================================================
+' mCurrentClock Event Handlers
+'================================================================================
+
+Private Sub mCurrentClock_Tick(ev As ClockTickEvent)
+displayTime
 End Sub
 
 '================================================================================
@@ -1688,10 +1724,10 @@ Set lTicker = ev.source
 Select Case ev.eventCode
 Case ApiNotifyCodes.ApiNotifyContractSpecifierAmbiguous
     logMessage "Ambiguous contract details(" & ev.eventMessage & "):" & _
-                        lTicker.Contracts.ContractSpecifier.ToString
+                        lTicker.Contracts.contractSpecifier.ToString
 Case ApiNotifyCodes.ApiNotifyContractSpecifierInvalid
     logMessage "Invalid contract details (" & ev.eventMessage & "):" & _
-                        lTicker.Contracts.ContractSpecifier.ToString
+                        lTicker.Contracts.contractSpecifier.ToString
 Case ApiNotifyCodes.ApiNotifyMarketDepthNotAvailable
     logMessage "No market depth for " & _
                         lTicker.Contract.specifier.localSymbol & _
@@ -1713,11 +1749,13 @@ On Error GoTo err
 
 Set lTicker = ev.source
 
-Select Case ev.state
+Select Case ev.State
 Case TickerStateCreated
     ConfigureButton.Enabled = False
 Case TickerStateStarting
 
+Case TickerStateReady
+    If lTicker Is mTicker Then setCurrentClock mTicker.Clock
 Case TickerStateRunning
     If lTicker Is mTicker Then
         MarketDepthButton.Enabled = True
@@ -1745,6 +1783,7 @@ Case TickerStateStopped
     If lTicker Is mTicker Then
         clearTickerFields
         Set mTicker = Nothing
+        setCurrentClock mDefaultClock
     End If
     
     If mTickers.Count = 0 Then ConfigureButton.Enabled = True
@@ -1761,7 +1800,7 @@ End Sub
 '================================================================================
 
 Private Sub mTickfileManager_Notification( _
-                ev As TradeBuild26.NotificationEvent)
+                ev As NotificationEvent)
 On Error GoTo err
 logMessage "Notification " & ev.eventCode & ": " & ev.eventMessage
 
@@ -1781,6 +1820,7 @@ On Error GoTo err
 If tickfileIndex <> 0 Then
     clearTickerFields
     Set mTicker = Nothing
+    setCurrentClock mDefaultClock
 End If
 
 ReplayProgressBar.Min = 0
@@ -1839,41 +1879,11 @@ On Error GoTo err
 Set mTicker = pTicker
 mTicker.DOMEventsRequired = DOMProcessedEvents
 mTicker.includeMarketDepthInTickfile = True
+mTicker.useExchangeTime = True
 
 Exit Sub
 err:
 handleFatalError err.Number, err.Description, "mTickfileManager_TickerAllocated"
-End Sub
-
-Private Sub mTickfileManager_TickfilesSelected()
-Dim tickfiles() As TickfileSpecifier
-Dim i As Long
-On Error GoTo err
-TickfileList.Clear
-tickfiles = mTickfileManager.TickfileSpecifiers
-For i = 0 To UBound(tickfiles)
-    TickfileList.AddItem tickfiles(i).FileName
-Next
-checkOkToStartReplay
-ClearTickfileListButton.Enabled = True
-
-Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTickfileManager_TickfilesSelected"
-End Sub
-
-'================================================================================
-' mTimer Event Handlers
-'================================================================================
-
-Private Sub mTimer_TimerExpired()
-Dim theTime As Date
-If Not mTicker Is Nothing Then
-    theTime = mTicker.TimeStamp
-Else
-    theTime = GetTimestamp
-End If
-DateTimeText = FormatDateTime(theTime, vbShortDate) & vbCrLf & Format(theTime, "hh:mm:ss")
 End Sub
 
 '================================================================================
@@ -1907,7 +1917,7 @@ handleFatalError err.Number, err.Description, "mTradeBuildAPI_errorMessage"
 End Sub
 
 Private Sub mTradeBuildAPI_Notification( _
-                ByRef ev As TradeBuild26.NotificationEvent)
+                ByRef ev As NotificationEvent)
 On Error GoTo err
 
 logMessage "Notification " & ev.eventCode & ": " & ev.eventMessage
@@ -1957,7 +1967,6 @@ setupServiceProviders
 
 ' now set up the timeframe selector, which depends on what timeframes the historical data service
 ' provider supports (it obtains this info from TradeBuild)
-TimeframeSelector1.TradeBuildAPI = mTradeBuildAPI
 TimeframeSelector1.selectTimeframe TimePeriodFromString("5 minutes")
 setChartButtonTooltip
 
@@ -1984,6 +1993,13 @@ Private Function createTicker() As Ticker
 Set createTicker = mTickers.Add(Not mSimulateOrders)
 End Function
 
+Private Sub displayTime()
+Dim theTime As Date
+theTime = mCurrentClock.TimeStamp
+DateTimeText = FormatDateTime(theTime, vbShortDate) & vbCrLf & _
+                Format(theTime, "hh:mm:ss")
+End Sub
+
 Private Function getConfigFilename() As String
 getConfigFilename = GetSpecialFolderPath(FolderIdLOCAL_APPDATA) & _
                     "\TradeWright\" & _
@@ -1999,7 +2015,7 @@ Private Sub handleFatalError(ByVal errNum As Long, _
 Set mTicker = Nothing
 removeServiceProviders
 
-If mListenerKey <> "" Then mTradeBuildAPI.RemoveListener mListenerKey
+If mListenerKey <> "" Then mTradeBuildAPI.RemoveInfoListener mListenerKey
 
 Set mTradeBuildAPI = Nothing
 
@@ -2047,6 +2063,13 @@ ChartButton.ToolTipText = "Show " & _
                         TimePeriodToString(tp) & _
                         " chart"
 GridChartButton.ToolTipText = ChartButton.ToolTipText
+End Sub
+
+Private Sub setCurrentClock( _
+                ByVal pClock As Clock)
+Set mCurrentClock = pClock
+TimeZoneText = mCurrentClock.TimeZone.standardName
+displayTime
 End Sub
 
 Private Sub setForeColor( _
