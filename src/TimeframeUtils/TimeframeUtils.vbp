@@ -1,6 +1,6 @@
 Type=OleDll
 Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#..\..\..\WINDOWS\system32\stdole2.tlb#OLE Automation
-Reference=*\G{737D1C10-E0C8-40E3-961D-16EE6F48A686}#4.0#0#..\..\TradeWright Common\TWUtilities\TWUtilities.dll#TradeWright Utility Services
+Reference=*\G{4E990061-92D4-4DF7-9794-92C37C4FCB4A}#2.0#0#..\..\TradeWright Common\TWUtilities\TWUtilities30.dll#TradeWright Utility Services v2.0
 Class=GlobalsClass; GlobalsClass.cls
 Class=SessionBuilder; SessionBuilder.cls
 Module=Globals; Globals.bas
@@ -19,7 +19,7 @@ CompatibleEXE32="TimeframeUtils2-6.dll"
 VersionCompatible32="1"
 MajorVer=2
 MinorVer=6
-RevisionVer=89
+RevisionVer=102
 AutoIncrementVer=1
 ServerSupportFiles=0
 DllBaseAddress=&H1a760000
