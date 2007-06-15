@@ -141,7 +141,7 @@ Private Sub Class_Initialize()
 
 InitialiseTWUtilities
 
-Set mTradeBuildAPI = New TradeBuildAPI
+Set mTradeBuildAPI = TradeBuildAPI
 
 mTradeBuildAPI.addInfoListener Me, TradeBuildListenValueTypes.VTLog
 
@@ -157,7 +157,7 @@ End Sub
 ' CollectionChangeListener Interface Members
 '================================================================================
 
-Private Sub CollectionChangeListener_Change(ev As TWUtilities.CollectionChangeEvent)
+Private Sub CollectionChangeListener_Change(ev As CollectionChangeEvent)
 If ev.changeType = CollItemAdded Then
     RaiseEvent TimeframeAdded(ev.affectedObject)
 End If
@@ -216,7 +216,7 @@ Else
 End If
 End Sub
 
-Private Sub mTicker_stateChange(ev As TWUtilities.StateChangeEvent)
+Private Sub mTicker_stateChange(ev As StateChangeEvent)
 Dim i As Long
 
 If ev.State = TickerStates.TickerStateRunning Then
@@ -229,7 +229,7 @@ End Sub
 '================================================================================
 
 Private Sub mTickerStartTimer_TimerExpired()
-Dim contractSpec As ContractSpecifier
+Dim contractSpec As contractSpecifier
 Dim contractConfig As ConfigItemSet
 Dim contractSpecConfig As ConfigItem
 Dim i As Long
@@ -261,7 +261,7 @@ Set contractSpecConfig = contractConfig.entries.Item(ConfigNameContractSpecifier
 failpoint = 300 '=====================================================
 
 With contractSpecConfig
-    Set contractSpec = mTradeBuildAPI.newContractSpecifier(.getAttribute(AttributeNameLocalSYmbol), _
+    Set contractSpec = CreateContractSpecifier(.getAttribute(AttributeNameLocalSYmbol), _
                                             .getAttribute(AttributeNameSYmbol), _
                                             .getAttribute(AttributeNameExchange), _
                                             SecTypeFromString(.getAttribute(AttributeNameSecType)), _
@@ -307,7 +307,7 @@ End Sub
 ' mTradeBuildAPI Event Handlers
 '================================================================================
 
-Private Sub mTradeBuildAPI_Error(ev As TWUtilities.ErrorEvent)
+Private Sub mTradeBuildAPI_Error(ev As ErrorEvent)
 RaiseEvent ErrorMessage(ev.errorCode, _
                     ev.errorMsg)
 End Sub

@@ -30,8 +30,6 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements QuoteListener
-
 '================================================================================
 ' Events
 '================================================================================
@@ -71,58 +69,6 @@ Attribute mTimerListItem.VB_VarHelpID = -1
 Private Sub Class_Initialize()
 Set mQuoteListeners = New Collection
 Set mDataSignalListeners = New Collection
-End Sub
-
-'================================================================================
-' QuoteListener Interface Members
-'================================================================================
-
-Private Sub QuoteListener_ask(ev As QuoteEvent)
-fireSignalOn
-startTimer
-fireAsk ev.price, ev.Size
-End Sub
-
-Private Sub QuoteListener_bid(ev As QuoteEvent)
-fireSignalOn
-startTimer
-fireBid ev.price, ev.Size
-End Sub
-
-Private Sub QuoteListener_high(ev As QuoteEvent)
-fireSignalOn
-startTimer
-fireHigh ev.price
-End Sub
-
-Private Sub QuoteListener_Low(ev As QuoteEvent)
-fireSignalOn
-startTimer
-fireLow ev.price
-End Sub
-
-Private Sub QuoteListener_openInterest(ev As QuoteEvent)
-fireSignalOn
-startTimer
-fireOpenInterest ev.Size
-End Sub
-
-Private Sub QuoteListener_previousClose(ev As QuoteEvent)
-fireSignalOn
-startTimer
-firePreviousClose ev.price
-End Sub
-
-Private Sub QuoteListener_trade(ev As QuoteEvent)
-fireSignalOn
-startTimer
-fireTrade ev.price, ev.Size
-End Sub
-
-Private Sub QuoteListener_volume(ev As QuoteEvent)
-fireSignalOn
-startTimer
-fireVolume ev.Size
 End Sub
 
 '================================================================================
