@@ -2,7 +2,7 @@
 
 [
   uuid(872e3a7f-9b81-4863-8699-ee01860c59ed),
-  version(2.0),
+  version(3.0),
   helpstring("TradeBuild 2.6 Service Provider Interface Type Library")
 ]
 library TradeBuildSP
@@ -11,10 +11,10 @@ library TradeBuildSP
     importlib("stdole2.tlb");
 
 	// TradeWright Utilities
-	importlib("C:\Projects\TradeWright Common\TWUtilities\TWUtilities.dll");
+	importlib("C:\Projects\TradeWright Common\TWUtilities\TWUtilities30.dll");
 	
-	// Parameters2 component
-	importlib("C:\Projects\TradeWright Common\Parameters2\Parameters2.dll");
+	// TradeWright Contract Utilities
+	importlib("C:\Projects\TradeBuild Platform\ContractUtils\ContractUtils26.dll");
 	
     // Forward declare all types defined in this typelib
     interface IBarDataConsumer;
@@ -22,17 +22,18 @@ library TradeBuildSP
     interface IBarDataOutputServiceConsumer;
     interface IBarDataReader;
     interface IBarDataServiceProvider;
+	interface IBarDataSpecifier;
     interface IBarDataWriter;
     interface ICommonServiceConsumer;
     interface ICommonServiceProvider;
-    interface IContract;
-    interface IContracts;
-    interface IContractSpecifier;
-    interface IComboLegs;
-    interface IComboLeg;
-    interface IContractInfoServiceProvider;
+    //interface IContract;
+    //interface IContracts;
+    //interface IContractSpecifier;
+    //interface IComboLegs;
+    //interface IComboLeg;
     interface IContractInfoServiceConsumer;
-    interface IExecution;
+    interface IContractInfoServiceProvider;
+    //interface IExecution;
     interface IOrder;
     interface IOrderPlex;
     interface IOrderSubmissionSrvcConsumer;
@@ -46,6 +47,7 @@ library TradeBuildSP
     interface ITickfileOutputServiceConsumer;
     interface ITickfileReader;
     interface ITickfileServiceProvider;
+    interface ITickfileSpecifier;
     interface ITickfileWriter;
 
 // Enums *************************************************************************
@@ -137,12 +139,12 @@ library TradeBuildSP
     	NoValidId = -1
     } Misc;
 
-    typedef [uuid(432653EE-39C0-4AEF-BE8E-F69213F3B41B), version(1.0)]
-    enum {
-        OptNone = 0,
-        OptCall = 1,
-        OptPut = 2
-    } OptionRights;
+    //typedef [uuid(432653EE-39C0-4AEF-BE8E-F69213F3B41B), version(1.0)]
+    //enum {
+    //    OptNone = 0,
+    //    OptCall = 1,
+    //    OptPut = 2
+    //} OptionRights;
 
 	typedef [uuid(2c8981a4-675a-4a14-bb0b-f6573dcdce57), version(1.0)]
 	enum {
@@ -263,16 +265,16 @@ library TradeBuildSP
         RtCapMarketDepthByPosition = 2
     } RealtimeDataServiceProviderCapabilities;
 
-    typedef [uuid(B2552E20-11F4-486E-A351-2B1212F90982), version(1.0)]
-    enum {
-        SecTypeStock = 1,
-        SecTypeFuture = 2,
-        SecTypeOption = 3,
-        SecTypeFuturesOption = 4,
-        SecTypeCash = 5,
-        SecTypeBag = 6,
-        SecTypeIndex = 7
-    } SecurityTypes;
+    //typedef [uuid(B2552E20-11F4-486E-A351-2B1212F90982), version(1.0)]
+    //enum {
+    //    SecTypeStock = 1,
+    //    SecTypeFuture = 2,
+    //    SecTypeOption = 3,
+    //    SecTypeFuturesOption = 4,
+    //    SecTypeCash = 5,
+    //    SecTypeBag = 6,
+    //    SecTypeIndex = 7
+    //} SecurityTypes;
 
     typedef [uuid(6fa60c65-34bb-4602-863f-210003444d85), 
 	version(1.0)]
@@ -520,35 +522,6 @@ library TradeBuildSP
 		long OpenInterest;
     } Bar;
 
-    typedef [uuid(93b0e0dd-806c-4759-aead-d80d1590eac6), version(1.0)]
-    struct tagBarDataSpecifier {
-
-        [helpstring("Contains the contract for the required data")]
-        IContract Contract;
-
-        [helpstring("Contains the bar length for the required data")]
-		long BarLength;
-
-        [helpstring("Contains the time units for the bar length")]
-		TimePeriodUnits BarLengthUnits;
-
-		[helpstring("Specifies the type of bar data required")]
-		BarTypes Bartype;
-
-        [helpstring("Specifies the start date and time for the data")]
-        DATE From;
-
-        [helpstring("Specifies the end date and time for the data")]
-        DATE To;
-
-		[helpstring("Specifies the maximum number of bars to be returned")]
-		long NumberOfBars;
-
-		[helpstring("Indicates that bars starting outside the session times declared in the relevant contract object are to be included")]
-		VARIANT_BOOL includeBarsOutsideSession;
-
-    } BarDataSpecifier;
-
     typedef [uuid(eb2da908-cd7f-43a5-aa44-9e22e131ae9a), version(1.0)]
     struct tagDictionaryEntry {
         BSTR Key;
@@ -588,29 +561,6 @@ library TradeBuildSP
 		[helpstring("For file-based tickfile formats, this is the filename extension used to identify tickfiles in this format")]
 		BSTR FileExtension;
     } TickfileFormatSpecifier;
-
-    typedef [uuid(53fb89b4-d006-42b8-a060-44c781882dd4), version(1.0)]
-    struct tagTickfileSpec {
-
-        [helpstring("Identifies the tickfile format")]
-		BSTR TickfileFormatID;
-
-        [helpstring("For file-based tickfile formats, contains the full path and filename of the tickfile")]
-		BSTR Filename;
-
-        [helpstring("For stream-based tickfile formats, contains the contract for the tickstream")]
-        IContract Contract;
-
-        [helpstring("For stream-based tickfile formats, specifies the start date and time for the tickstream")]
-        DATE From;
-
-        [helpstring("For stream-based tickfile formats, specifies the end date and time for the tickstream")]
-        DATE To;
-
-	[helpstring("Indicates that the timespan is the whole of the session in which the From value falls")]
-	VARIANT_BOOL EntireSession;
-
-    } TickfileSpec;
 
 // Interfaces *************************************************************************
 
@@ -657,7 +607,7 @@ library TradeBuildSP
     };
 
     [
-      uuid(26f2bc53-234c-4c2c-ae58-734eb96a85b8),
+      uuid(e8639452-d193-4201-8f31-d4329cb3497c),
       version(1.0),
       nonextensible,
       helpstring("Provides the interface into TradeBuild to be called by Bar Data Writers")
@@ -665,9 +615,6 @@ library TradeBuildSP
     interface IBarDataOutputServiceConsumer : IUnknown {
 
 		// Properties ==================================================
-
-        [propput]
-        HRESULT Ready([in] VARIANT_BOOL );
 
 
 		// Methods =====================================================
@@ -677,8 +624,16 @@ library TradeBuildSP
 			[in] BSTR eventMessage,
 			[in] long serviceProviderHandle);
 
+        HRESULT NotReady();
+
         HRESULT OutputBarfileCreated(
-                        [in] BSTR filename);
+            [in] BSTR filename);
+
+        HRESULT Ready();
+
+		HRESULT RequiredTimePeriod(
+			[in] TimePeriod* timeframe,
+			[in] long saveIntervalSeconds);
 
     };
 
@@ -694,7 +649,7 @@ library TradeBuildSP
 
         [propget]
         HRESULT BarDataSpecifier(
-                        [out, retval] BarDataSpecifier* );
+            [out, retval] IBarDataSpecifier** );
 
 		[propget]
 		HRESULT NumberOfBars(
@@ -705,7 +660,7 @@ library TradeBuildSP
 		HRESULT CancelFetch();
 
 		HRESULT FetchBars(
-				[in] BarDataSpecifier* barSpecifier);
+				[in] IBarDataSpecifier* barSpecifier);
 
 		HRESULT ReleaseDataStore();
 
@@ -739,7 +694,7 @@ library TradeBuildSP
 
         HRESULT CreateBarDataWriter(
 			[in] IBarDataOutputServiceConsumer* serviceConsumer,
-			[in] IContractSpecifier* contractSpec,
+			[in] ContractSpecifier* contractSpec,
             [in, optional, defaultvalue("")] BSTR location, 
             [out, retval] IBarDataWriter** );
 
@@ -754,7 +709,83 @@ library TradeBuildSP
     };
 
     [
-      uuid(71c6e4fd-a87b-46ec-838e-84279a8c3e73),
+      uuid(71d4591a-1c32-4616-81e0-65115c474aa2),
+      version(1.0),
+      nonextensible,
+      helpstring("Specifies the interface to be implemented by Bar Data Specifier object")
+    ]
+    interface IBarDataSpecifier : IUnknown {
+
+		// Properties ==================================================
+
+		[propput,
+		helpstring("Contains the contract for the required data")]
+		HRESULT Contract([in] Contract*) ;
+
+		[propget,
+		helpstring("Contains the contract for the required data")]
+		HRESULT Contract([out, retval] Contract**) ;
+
+		[propput,
+		helpstring("Contains the bar length for the required data")]
+		HRESULT BarLength([in] long) ;
+
+		[propget,
+		helpstring("Contains the bar length for the required data")]
+		HRESULT BarLength([out, retval] long*) ;
+
+        [propput,
+	    helpstring("Contains the time units for the bar length")]
+		HRESULT BarLengthUnits([in] TimePeriodUnits) ;
+
+        [propget,
+	    helpstring("Contains the time units for the bar length")]
+		HRESULT BarLengthUnits([out, retval] TimePeriodUnits*) ;
+
+		[propput,
+	    helpstring("Specifies the type of bar data required")]
+		HRESULT Bartype([in] BarTypes) ;
+
+		[propget,
+	    helpstring("Specifies the type of bar data required")]
+		HRESULT Bartype([out, retval] BarTypes*) ;
+
+        [propput,
+	    helpstring("Specifies the start date and time for the data")]
+        HRESULT FromDate([in] DATE) ;
+
+        [propget,
+	    helpstring("Specifies the start date and time for the data")]
+        HRESULT FromDate([out, retval] DATE*) ;
+
+        [propput,
+	    helpstring("Specifies the end date and time for the data")]
+        HRESULT ToDate([in] DATE) ;
+
+        [propget,
+	    helpstring("Specifies the end date and time for the data")]
+        HRESULT ToDate([out, retval] DATE*) ;
+
+		[propput,
+	    helpstring("Specifies the maximum number of bars to be returned")]
+		HRESULT NumberOfBars([in] long) ;
+
+		[propget,
+	    helpstring("Specifies the maximum number of bars to be returned")]
+		HRESULT NumberOfBars([out, retval] long*) ;
+
+		[propput,
+	    helpstring("Indicates that bars starting outside the session times declared in the relevant contract object are to be included")]
+		HRESULT includeBarsOutsideSession([in] VARIANT_BOOL) ;
+
+		[propget,
+	    helpstring("Indicates that bars starting outside the session times declared in the relevant contract object are to be included")]
+		HRESULT includeBarsOutsideSession([out, retval] VARIANT_BOOL*) ;
+
+	};
+
+    [
+      uuid(4c1da235-2896-45c4-b5d5-f9e87c904056),
       version(1.0),
       nonextensible,
       helpstring("Specifies the interface to be implemented by Tickfile Writers")
@@ -764,12 +795,11 @@ library TradeBuildSP
 		// Properties ==================================================
 
         [propget]
-        HRESULT ContractSpecifier([out, retval] IContractSpecifier** );
+        HRESULT ContractSpecifier([out, retval] ContractSpecifier** );
 
 		// Methods =====================================================
 
 		HRESULT ReleaseDataStore();
-
 
         HRESULT WriteBar(
 			[in] Bar* data,
@@ -779,85 +809,85 @@ library TradeBuildSP
 
     };
 
-    [
-      uuid(FCD8A452-31DD-4131-9E2B-1807F9522921),
-      version(1.0),
-      nonextensible,
-      helpstring("An object that holds specification information relating to a compound contract")
-    ]
-    interface IComboLeg : IUnknown {
+ //   [
+ //     uuid(FCD8A452-31DD-4131-9E2B-1807F9522921),
+ //     version(1.0),
+ //     nonextensible,
+ //     helpstring("An object that holds specification information relating to a compound contract")
+ //   ]
+ //   interface IComboLeg : IUnknown {
 
-	// Properties ==================================================
+	//// Properties ==================================================
 
-        [propget]
-        HRESULT Action([out, retval] OrderActions* );
+ //       [propget]
+ //       HRESULT Action([out, retval] OrderActions* );
 
-        [propput]
-        HRESULT Action([in] OrderActions );
+ //       [propput]
+ //       HRESULT Action([in] OrderActions );
 
-        [propget]
-        HRESULT ContractID([out, retval] long* );
+ //       [propget]
+ //       HRESULT ContractID([out, retval] long* );
 
-        [propput]
-        HRESULT ContractID([in] long );
+ //       [propput]
+ //       HRESULT ContractID([in] long );
 
-        [propget]
-        HRESULT Exchange([out, retval] BSTR* );
+ //       [propget]
+ //       HRESULT Exchange([out, retval] BSTR* );
 
-        [propput]
-        HRESULT Exchange([in] BSTR );
+ //       [propput]
+ //       HRESULT Exchange([in] BSTR );
 
-        [propput]
-        HRESULT OpenClose([in] LegOpenClose );
+ //       [propput]
+ //       HRESULT OpenClose([in] LegOpenClose );
 
-        [propget]
-        HRESULT OpenClose([out, retval] LegOpenClose* );
+ //       [propget]
+ //       HRESULT OpenClose([out, retval] LegOpenClose* );
 
-        [propget]
-        HRESULT Ratio([out, retval] long* );
+ //       [propget]
+ //       HRESULT Ratio([out, retval] long* );
 
-        [propput]
-        HRESULT Ratio([in] long );
+ //       [propput]
+ //       HRESULT Ratio([in] long );
 
-		// Methods =====================================================
+	//	// Methods =====================================================
 
-        HRESULT Clone([out, retval] IComboLeg** );
+ //       HRESULT Clone([out, retval] IComboLeg** );
 
-        HRESULT ToString([out, retval] BSTR* );
-    };
+ //       HRESULT ToString([out, retval] BSTR* );
+ //   };
 
-    [
-      uuid(C157B09E-693D-415E-9818-641AB96F919F),
-      version(1.0),
-      nonextensible,
-      helpstring("Defines a collection of IComboLeg objects")
-    ]
-    interface IComboLegs : IUnknown {
+  //  [
+  //    uuid(C157B09E-693D-415E-9818-641AB96F919F),
+  //    version(1.0),
+  //    nonextensible,
+  //    helpstring("Defines a collection of IComboLeg objects")
+  //  ]
+  //  interface IComboLegs : IUnknown {
 
-		// Properties ==================================================
+		//// Properties ==================================================
 
-        [propget]
-        HRESULT Count([out, retval] long* );
+  //      [propget]
+  //      HRESULT Count([out, retval] long* );
 
-		// Methods =====================================================
+		//// Methods =====================================================
 
-		HRESULT Add(
-			[in] IComboLeg* comboLeg,
-			[in, optional, defaultvalue("")] BSTR key); 
+		//HRESULT Add(
+		//	[in] IComboLeg* comboLeg,
+		//	[in, optional, defaultvalue("")] BSTR key); 
 
-        HRESULT Clone([out, retval] IComboLegs** );
+  //      HRESULT Clone([out, retval] IComboLegs** );
 
-        HRESULT Item(
-            [in] VARIANT index, 
-            [out, retval] IComboLeg** );
+  //      HRESULT Item(
+  //          [in] VARIANT index, 
+  //          [out, retval] IComboLeg** );
 
-        HRESULT NewComboLeg(
-			[out, retval] IcomboLeg**);
+  //      HRESULT NewComboLeg(
+		//	[out, retval] IcomboLeg**);
 
-        HRESULT Remove(
-			[in] VARIANT index);
+  //      HRESULT Remove(
+		//	[in] VARIANT index);
 
-    };
+  //  };
 
     [
       uuid(0d39f668-74e4-4eff-93ee-a10ebc859a0a),
@@ -874,18 +904,6 @@ library TradeBuildSP
 			[in] BSTR source,
 			[in] BSTR errorMessage,
 			[in] long serviceProviderHandle);
-
-		HRESULT NewContract(
-			[out, retval] IContract**);
-
-		HRESULT NewContracts(
-			[out, retval] IContracts**);
-
-		HRESULT NewContractSpecifier(
-			[out, retval] IContractSpecifier**);
-
-		HRESULT NewExecution(
-			[out, retval] IExecution**);
 
 		HRESULT NotifyListeners(
 			[in] VARIANT value,
@@ -936,112 +954,112 @@ library TradeBuildSP
 
     };
 
-    [
-      uuid(bc732d2c-7256-4117-bc75-12885ebd560c),
-      version(1.0),
-      nonextensible,
-      helpstring("Defines the interface for passing contract details")
-    ]
-    interface IContract : IUnknown {
+ //   [
+ //     uuid(bc732d2c-7256-4117-bc75-12885ebd560c),
+ //     version(1.0),
+ //     nonextensible,
+ //     helpstring("Defines the interface for passing contract details")
+ //   ]
+ //   interface IContract : IUnknown {
 
-	// Properties ==================================================
+	//// Properties ==================================================
 
-        [propget]
-        HRESULT ContractID([out, retval] long* );
+ //       [propget]
+ //       HRESULT ContractID([out, retval] long* );
 
-        [propput]
-        HRESULT ContractID([in] long );
+ //       [propput]
+ //       HRESULT ContractID([in] long );
 
-        [propget]
-        HRESULT DaysBeforeExpiryToSwitch([out, retval] long* );
+ //       [propget]
+ //       HRESULT DaysBeforeExpiryToSwitch([out, retval] long* );
 
-        [propput]
-        HRESULT DaysBeforeExpiryToSwitch([in] long );
+ //       [propput]
+ //       HRESULT DaysBeforeExpiryToSwitch([in] long );
 
-        [propget]
-        HRESULT Description([out, retval] BSTR* );
+ //       [propget]
+ //       HRESULT Description([out, retval] BSTR* );
 
-        [propput]
-        HRESULT Description([in] BSTR );
+ //       [propput]
+ //       HRESULT Description([in] BSTR );
 
-        [propget]
-        HRESULT ExpiryDate([out, retval] DATE* );
+ //       [propget]
+ //       HRESULT ExpiryDate([out, retval] DATE* );
 
-        [propput]
-        HRESULT ExpiryDate([in] DATE );
+ //       [propput]
+ //       HRESULT ExpiryDate([in] DATE );
 
-        [propget]
-        HRESULT Key([out, retval] BSTR* );
+ //       [propget]
+ //       HRESULT Key([out, retval] BSTR* );
 
-        [propget]
-        HRESULT MarketName([out, retval] BSTR* );
+ //       [propget]
+ //       HRESULT MarketName([out, retval] BSTR* );
 
-        [propput]
-        HRESULT MarketName([in] BSTR );
+ //       [propput]
+ //       HRESULT MarketName([in] BSTR );
 
-        [propget]
-        HRESULT MinimumTick([out, retval] double* );
+ //       [propget]
+ //       HRESULT MinimumTick([out, retval] double* );
 
-        [propput]
-        HRESULT MinimumTick([in] double );
+ //       [propput]
+ //       HRESULT MinimumTick([in] double );
 
-        [propget]
-        HRESULT Multiplier([out, retval] long* );
+ //       [propget]
+ //       HRESULT Multiplier([out, retval] long* );
 
-        [propput]
-        HRESULT Multiplier([in] long );
+ //       [propput]
+ //       HRESULT Multiplier([in] long );
 
-        [propget]
-        HRESULT NumberOfDecimals([out, retval] long* );
+ //       [propget]
+ //       HRESULT NumberOfDecimals([out, retval] long* );
 
-        [propget]
-        HRESULT ProviderID(
-			[in] BSTR providerKey,
-			[out, retval] BSTR* );
+ //       [propget]
+ //       HRESULT ProviderID(
+	//		[in] BSTR providerKey,
+	//		[out, retval] BSTR* );
 
-        [propput]
-        HRESULT ProviderIDs([in] SAFEARRAY(DictionaryEntry)* );
+ //       [propput]
+ //       HRESULT ProviderIDs([in] SAFEARRAY(DictionaryEntry)* );
 
-        [propget]
-        HRESULT SessionEndTime([out, retval] DATE* );
+ //       [propget]
+ //       HRESULT SessionEndTime([out, retval] DATE* );
 
-        [propput]
-        HRESULT SessionEndTime([in] DATE );
+ //       [propput]
+ //       HRESULT SessionEndTime([in] DATE );
 
-        [propget]
-        HRESULT SessionStartTime([out, retval] DATE* );
+ //       [propget]
+ //       HRESULT SessionStartTime([out, retval] DATE* );
 
-        [propput]
-        HRESULT SessionStartTime([in] DATE );
+ //       [propput]
+ //       HRESULT SessionStartTime([in] DATE );
 
-        [propget]
-        HRESULT Specifier([out, retval] IContractSpecifier** );
+ //       [propget]
+ //       HRESULT Specifier([out, retval] IContractSpecifier** );
 
-        [propput]
-        HRESULT Specifier([in] IContractSpecifier* );
+ //       [propput]
+ //       HRESULT Specifier([in] IContractSpecifier* );
 
-        [propget]
-        HRESULT TradingClass([out, retval] BSTR* );
+ //       [propget]
+ //       HRESULT TradingClass([out, retval] BSTR* );
 
-        [propput]
-        HRESULT TradingClass([in] BSTR );
+ //       [propput]
+ //       HRESULT TradingClass([in] BSTR );
 
-        [propget]
-        HRESULT ValidExchanges([out, retval] SAFEARRAY(BSTR)* );
+ //       [propget]
+ //       HRESULT ValidExchanges([out, retval] SAFEARRAY(BSTR)* );
 
-        [propput]
-        HRESULT ValidExchanges([in, out] SAFEARRAY(BSTR)* );
+ //       [propput]
+ //       HRESULT ValidExchanges([in, out] SAFEARRAY(BSTR)* );
 
-	// Methods =====================================================
+	//// Methods =====================================================
 
-        HRESULT Clone([out, retval] IContract** );
+ //       HRESULT Clone([out, retval] IContract** );
 
-        HRESULT FromXML([in] BSTR contractXML);
+ //       HRESULT FromXML([in] BSTR contractXML);
 
-        HRESULT ToString([out, retval] BSTR* );
+ //       HRESULT ToString([out, retval] BSTR* );
 
-        HRESULT ToXML([out, retval] BSTR* );
-    };
+ //       HRESULT ToXML([out, retval] BSTR* );
+ //   };
 
     [
       uuid(8afff4c8-1c22-4b52-9d13-48f4a3b86655),
@@ -1059,12 +1077,12 @@ library TradeBuildSP
 		HResult NotifyEvent(
 			[in] StandardSPEventCodes eventCode,
 			[in] BSTR eventMessage,
-            [in] IContracts* pContracts,
+            [in] ContractsBuilder* pContractsBuilder,
 			[in] long serviceProviderHandle);
 
 		HRESULT LoadComplete(
 			[in] long handle,
-                        [in] IContracts* pContracts);
+            [in] ContractsBuilder* pContractsBuilder);
 
     };
 
@@ -1084,10 +1102,10 @@ library TradeBuildSP
 		// Methods =====================================================
 
         HRESULT RequestContractDetails(
-                        [in] IContracts* pContracts);
+                        [in] ContractsBuilder* pContractsBuilder);
 
 		HRESULT StoreContractDetails(
-			[in] IContract* pContract);
+			[in] Contract* pContract);
 
         HRESULT Supports(
                         [in] long capabilities, 
@@ -1095,208 +1113,208 @@ library TradeBuildSP
 
     };
 
-    [
-      uuid(097ab811-caf4-4b83-a7d5-20d5d177bee7),
-      version(1.0),
-      nonextensible,
-      helpstring("A collection of IContract objects")
-    ]
-    interface IContracts : IUnknown {
+ //   [
+ //     uuid(097ab811-caf4-4b83-a7d5-20d5d177bee7),
+ //     version(1.0),
+ //     nonextensible,
+ //     helpstring("A collection of IContract objects")
+ //   ]
+ //   interface IContracts : IUnknown {
 
-		// Properties ==================================================
+	//	// Properties ==================================================
 
 
-		[propput]
-		HRESULT ContractSpecifier([in] IContractSpecifier*);
+	//	[propput]
+	//	HRESULT ContractSpecifier([in] IContractSpecifier*);
 
-		[propget]
-		HResult ContractSpecifier([out, retval] IContractSpecifier**);
+	//	[propget]
+	//	HResult ContractSpecifier([out, retval] IContractSpecifier**);
 
-		[propget]
-		HRESULT Count([out, retval] long*);
+	//	[propget]
+	//	HRESULT Count([out, retval] long*);
 
-	// Methods =====================================================
+	//// Methods =====================================================
 
-		HRESULT AddContract(
-			[in] IContract* pContract );
-	
-		HRESULT Item(
-			[in] VARIANT index,
-			[out, retval] IContract**);
+	//	HRESULT AddContract(
+	//		[in] IContract* pContract );
+	//
+	//	HRESULT Item(
+	//		[in] VARIANT index,
+	//		[out, retval] IContract**);
 
-		HRESULT Remove([in] VARIANT index);
+	//	HRESULT Remove([in] VARIANT index);
 
-		HRESULT ServiceProviderCantHandle(
-			[in] BSTR reason,
-			[in] BSTR serviceProviderName);
+	//	HRESULT ServiceProviderCantHandle(
+	//		[in] BSTR reason,
+	//		[in] BSTR serviceProviderName);
 
-    };
+ //   };
 
-    [
-      uuid(D09D30E9-D3EF-4790-AE0D-EEA07BD8645D),
-      version(1.0),
-      nonextensible,
-      helpstring("Defines the interface for passing contract specifications")
-    ]
-    interface IContractSpecifier : IUnknown {
+ //   [
+ //     uuid(D09D30E9-D3EF-4790-AE0D-EEA07BD8645D),
+ //     version(1.0),
+ //     nonextensible,
+ //     helpstring("Defines the interface for passing contract specifications")
+ //   ]
+ //   interface IContractSpecifier : IUnknown {
 
-	// Properties ==================================================
+	//// Properties ==================================================
 
-        [propput]
-        HRESULT ComboLegs([in] IComboLegs* );
+ //       [propput]
+ //       HRESULT ComboLegs([in] IComboLegs* );
 
-        [propget]
-        HRESULT ComboLegs([out, retval] IComboLegs** );
+ //       [propget]
+ //       HRESULT ComboLegs([out, retval] IComboLegs** );
 
-        [propput]
-        HRESULT CurrencyCode([in] BSTR );
+ //       [propput]
+ //       HRESULT CurrencyCode([in] BSTR );
 
-        [propget]
-        HRESULT CurrencyCode([out, retval] BSTR* );
+ //       [propget]
+ //       HRESULT CurrencyCode([out, retval] BSTR* );
 
-        [propput]
-        HRESULT Exchange([in] BSTR );
+ //       [propput]
+ //       HRESULT Exchange([in] BSTR );
 
-        [propget]
-        HRESULT Exchange([out, retval] BSTR* );
+ //       [propget]
+ //       HRESULT Exchange([out, retval] BSTR* );
 
-        [propput]
-        HRESULT Expiry([in] BSTR );
+ //       [propput]
+ //       HRESULT Expiry([in] BSTR );
 
-        [propget]
-        HRESULT Expiry([out, retval] BSTR* );
+ //       [propget]
+ //       HRESULT Expiry([out, retval] BSTR* );
 
-        [propget]
-        HRESULT Key([out, retval] BSTR* );
+ //       [propget]
+ //       HRESULT Key([out, retval] BSTR* );
 
-        [propput]
-        HRESULT LocalSymbol([in] BSTR );
+ //       [propput]
+ //       HRESULT LocalSymbol([in] BSTR );
 
-        [propget]
-        HRESULT LocalSymbol([out, retval] BSTR* );
+ //       [propget]
+ //       HRESULT LocalSymbol([out, retval] BSTR* );
 
-        [propput]
-        HRESULT Locked([in] VARIANT_BOOL );
+ //       [propput]
+ //       HRESULT Locked([in] VARIANT_BOOL );
 
-        [propget]
-        HRESULT Locked([out, retval] VARIANT_BOOL* );
+ //       [propget]
+ //       HRESULT Locked([out, retval] VARIANT_BOOL* );
 
-        [propput]
-        HRESULT Right([in] OptionRights );
+ //       [propput]
+ //       HRESULT Right([in] OptionRights );
 
-        [propget]
-        HRESULT Right([out, retval] OptionRights* );
+ //       [propget]
+ //       HRESULT Right([out, retval] OptionRights* );
 
-        [propput]
-        HRESULT SecType([in] SecurityTypes );
+ //       [propput]
+ //       HRESULT SecType([in] SecurityTypes );
 
-        [propget]
-        HRESULT SecType([out, retval] SecurityTypes* );
+ //       [propget]
+ //       HRESULT SecType([out, retval] SecurityTypes* );
 
-        [propput]
-        HRESULT Strike([in] double );
+ //       [propput]
+ //       HRESULT Strike([in] double );
 
-        [propget]
-        HRESULT Strike([out, retval] double* );
+ //       [propget]
+ //       HRESULT Strike([out, retval] double* );
 
-        [propput]
-        HRESULT Symbol([in] BSTR );
+ //       [propput]
+ //       HRESULT Symbol([in] BSTR );
 
-        [propget]
-        HRESULT Symbol([out, retval] BSTR* );
+ //       [propget]
+ //       HRESULT Symbol([out, retval] BSTR* );
 
-	// Methods =====================================================
+	//// Methods =====================================================
 
-        HRESULT Clone([out, retval] IContractSpecifier** );
+ //       HRESULT Clone([out, retval] IContractSpecifier** );
 
-        HRESULT Equals(
-                        [in] IContractSpecifier* pContractSpecifier, 
-                        [out, retval] VARIANT_BOOL* );
+ //       HRESULT Equals(
+ //                       [in] IContractSpecifier* pContractSpecifier, 
+ //                       [out, retval] VARIANT_BOOL* );
 
-        HRESULT FuzzyEquals(
-                        [in] IContractSpecifier* pContractSpecifier, 
-                        [out, retval] VARIANT_BOOL* );
+ //       HRESULT FuzzyEquals(
+ //                       [in] IContractSpecifier* pContractSpecifier, 
+ //                       [out, retval] VARIANT_BOOL* );
 
-        HRESULT ToString([out, retval] BSTR* );
-    };
+ //       HRESULT ToString([out, retval] BSTR* );
+ //   };
 
-    [
-      uuid(e8c72f3e-a0a4-4fbc-abf9-062adde15fc0),
-      version(1.0),
-      nonextensible,
-      helpstring("Defines the interface to be implemented by Execution classes")
-    ]
-    interface IExecution : IUnknown {
+ //   [
+ //     uuid(e8c72f3e-a0a4-4fbc-abf9-062adde15fc0),
+ //     version(1.0),
+ //     nonextensible,
+ //     helpstring("Defines the interface to be implemented by Execution classes")
+ //   ]
+ //   interface IExecution : IUnknown {
 
-	// Properties ==================================================
+	//// Properties ==================================================
 
-	[propput]
-	HRESULT accountIdentifier([in] BSTR );
+	//[propput]
+	//HRESULT accountIdentifier([in] BSTR );
 
-	[propget]
-	HRESULT accountIdentifier([out, retval] BSTR* );
+	//[propget]
+	//HRESULT accountIdentifier([out, retval] BSTR* );
 
-	[propput]
-	HRESULT action([in] OrderActions );
+	//[propput]
+	//HRESULT action([in] OrderActions );
 
-	[propget]
-	HRESULT action([out, retval] OrderActions* );
+	//[propget]
+	//HRESULT action([out, retval] OrderActions* );
 
-	[propput]
-	HRESULT contractSpecifier([in] IContractSpecifier* );
+	//[propput]
+	//HRESULT contractSpecifier([in] IContractSpecifier* );
 
-	[propget]
-	HRESULT contractSpecifier([out, retval] IContractSpecifier** );
+	//[propget]
+	//HRESULT contractSpecifier([out, retval] IContractSpecifier** );
 
-	[propput]
-	HRESULT execId([in] BSTR );
+	//[propput]
+	//HRESULT execId([in] BSTR );
 
-	[propget]
-	HRESULT execId([out, retval] BSTR* );
+	//[propget]
+	//HRESULT execId([out, retval] BSTR* );
 
-	[propput]
-	HRESULT fillingExchange([in] BSTR );
+	//[propput]
+	//HRESULT fillingExchange([in] BSTR );
 
-	[propget]
-	HRESULT fillingExchange([out, retval] BSTR* );
+	//[propget]
+	//HRESULT fillingExchange([out, retval] BSTR* );
 
-	[propput]
-	HRESULT isLiquidation([in] VARIANT_BOOL );
+	//[propput]
+	//HRESULT isLiquidation([in] VARIANT_BOOL );
 
-	[propget]
-	HRESULT isLiquidation([out, retval] VARIANT_BOOL* );
+	//[propget]
+	//HRESULT isLiquidation([out, retval] VARIANT_BOOL* );
 
-	[propput]
-	HRESULT orderBrokerId([in] BSTR );
+	//[propput]
+	//HRESULT orderBrokerId([in] BSTR );
 
-	[propget]
-	HRESULT orderBrokerId([out, retval] BSTR* );
+	//[propget]
+	//HRESULT orderBrokerId([out, retval] BSTR* );
 
-	[propput]
-	HRESULT orderTradeBuildId([in] BSTR );
+	//[propput]
+	//HRESULT orderTradeBuildId([in] BSTR );
 
-	[propget]
-	HRESULT orderTradeBuildId([out, retval] BSTR* );
+	//[propget]
+	//HRESULT orderTradeBuildId([out, retval] BSTR* );
 
-	[propput]
-	HRESULT price([in] double );
+	//[propput]
+	//HRESULT price([in] double );
 
-	[propget]
-	HRESULT price([out, retval] double* );
+	//[propget]
+	//HRESULT price([out, retval] double* );
 
-	[propput]
-	HRESULT quantity([in] long );
+	//[propput]
+	//HRESULT quantity([in] long );
 
-	[propget]
-	HRESULT quantity([out, retval] long* );
+	//[propget]
+	//HRESULT quantity([out, retval] long* );
 
-	[propput]
-	HRESULT time([in] DATE );
+	//[propput]
+	//HRESULT time([in] DATE );
 
-	[propget]
-	HRESULT time([out, retval] DATE* );
+	//[propget]
+	//HRESULT time([out, retval] DATE* );
 
-	};
+	//};
 
 	[
       uuid(a0f1ab28-facb-4c2c-ad04-0cc504cbcca2),
@@ -1324,7 +1342,7 @@ library TradeBuildSP
         HRESULT brokerId([out, retval] BSTR* );
 
         [propget]
-        HRESULT Contract([out, retval] IContract** );
+        HRESULT Contract([out, retval] Contract** );
 
         [propget]
         HRESULT displaySize([out, retval] long* );
@@ -1468,8 +1486,17 @@ interface IOrderPlex : IDispatch {
 			[in] long serviceProviderHandle);
 
 	HRESULT executionDetails(
-		[in] IContractSpecifier* pContractSpecifier, 
-		[in] IExecution* exec);
+		[in] ContractSpecifier* pContractSpecifier, 
+		[in] BSTR accountIdentifier,
+		[in] OrderActions action,
+		[in] BSTR execId,
+		[in] BSTR fillingExchange,
+		[in] VARIANT_BOOL isLiquidation,
+		[in] BSTR orderBrokerId,
+		[in] BSTR orderTradeBuildId,
+		[in] double price,
+		[in] long quantity,
+		[in] DATE fillTime);
 
 	HRESULT notReady();
 
@@ -1506,7 +1533,7 @@ interface IOrderPlex : IDispatch {
 
 	HRESULT CreateOrderSubmitter(
 		[in] IOrderSubmissionSrvcConsumer* serviceConsumer, 
-		[in] IContract* pContract, 
+		[in] Contract* pContract, 
 		[out, retval] IOrderSubmitter** );
     };
 
@@ -1563,77 +1590,77 @@ interface IOrderPlex : IDispatch {
 	HRESULT resubmitTargetOrder([in] IOrderPlex* pOrderPlex);
 };
 
-    [
-      uuid(96352d8b-e6d3-44de-9c61-3329de6c0c91),
-      version(1.0),
-      nonextensible,
-      helpstring("Defines the interface for parameter objects")
-    ]
-    interface IParameter : IUnknown {
+ //   [
+ //     uuid(96352d8b-e6d3-44de-9c61-3329de6c0c91),
+ //     version(1.0),
+ //     nonextensible,
+ //     helpstring("Defines the interface for parameter objects")
+ //   ]
+ //   interface IParameter : IUnknown {
 
-	// Properties ==================================================
+	//// Properties ==================================================
 
-	[propput]
-	HRESULT name([in] BSTR );
+	//[propput]
+	//HRESULT name([in] BSTR );
 
-	[propget]
-	HRESULT name([out, retval] BSTR* );
+	//[propget]
+	//HRESULT name([out, retval] BSTR* );
 
-	[propput]
-	HRESULT value([in] BSTR );
+	//[propput]
+	//HRESULT value([in] BSTR );
 
-	[propget]
-	HRESULT value([out, retval] BSTR* );
+	//[propget]
+	//HRESULT value([out, retval] BSTR* );
 
-    };
+ //   };
 
-    [
-      uuid(6531cddc-92d8-497e-a68a-4561cfd97c7a),
-      version(1.0),
-      nonextensible,
-      helpstring("This interface provides means for manipulating collections of parameter objects")
-    ]
-    interface IParameters : IUnknown {
+ //   [
+ //     uuid(6531cddc-92d8-497e-a68a-4561cfd97c7a),
+ //     version(1.0),
+ //     nonextensible,
+ //     helpstring("This interface provides means for manipulating collections of parameter objects")
+ //   ]
+ //   interface IParameters : IUnknown {
 
-	// Properties ==================================================
+	//// Properties ==================================================
 
-	[propget]
-	HRESULT count([out, retval] long* );
+	//[propget]
+	//HRESULT count([out, retval] long* );
 
-	[propget]
-	HRESULT isDirty([out, retval] VARIANT_BOOL* );
+	//[propget]
+	//HRESULT isDirty([out, retval] VARIANT_BOOL* );
 
-	// Methods =====================================================
+	//// Methods =====================================================
 
-	HRESULT addParameter([in] IParameter* param);
+	//HRESULT addParameter([in] IParameter* param);
 
-	HRESULT clone(
-			[out, retval] IParameters** );
+	//HRESULT clone(
+	//		[out, retval] IParameters** );
 
-	HRESULT equals(
-			[in, out] IParameters** params, 
-			[out, retval] VARIANT_BOOL* );
+	//HRESULT equals(
+	//		[in, out] IParameters** params, 
+	//		[out, retval] VARIANT_BOOL* );
 
-	HRESULT getFirstParameter(
-			[out, retval] IParameter** );
+	//HRESULT getFirstParameter(
+	//		[out, retval] IParameter** );
 
-	HRESULT getNextParameter(
-			[out, retval] IParameter** );
+	//HRESULT getNextParameter(
+	//		[out, retval] IParameter** );
 
-	HRESULT getParameterValue(
-			[in] BSTR name, 
-			[in, optional] BSTR defaultValue, 
-			[out, retval] BSTR* );
+	//HRESULT getParameterValue(
+	//		[in] BSTR name, 
+	//		[in, optional] BSTR defaultValue, 
+	//		[out, retval] BSTR* );
 
 
-	HRESULT setParameterValue(
-			[in] BSTR name, 
-			[in] BSTR value, 
-			[out, retval] IParameter** );
+	//HRESULT setParameterValue(
+	//		[in] BSTR name, 
+	//		[in] BSTR value, 
+	//		[out, retval] IParameter** );
 
-	HRESULT sortByName();
+	//HRESULT sortByName();
 
-    };
+ //   };
 
     [
       uuid(4f690d6e-0742-46c0-9c2d-379c2a827aa4),
@@ -1664,7 +1691,7 @@ interface IOrderPlex : IDispatch {
 		// Methods =====================================================
 
 		HRESULT StartData(
-						[in] IContract* contract, 
+						[in] Contract* contract, 
 			[in] DOMEventTypes DomEventsRequired);
 
 		HRESULT StartMarketDepth(
@@ -1943,7 +1970,7 @@ interface IOrderPlex : IDispatch {
 			[in] long serviceProviderHandle);
 
 		HRESULT Ready(                            
-			[in] TickfileSpec* tickfileSpec,
+			[in] ITickfileSpecifier* tickfileSpec,
 			[in] long tickfileSizeBytes);
 
         HRESULT TickfileReplayComplete();
@@ -1994,14 +2021,14 @@ interface IOrderPlex : IDispatch {
 
         [propget]
         HRESULT Contract(
-                        [out, retval] IContract** );
+                        [out, retval] Contract** );
 
         [propput]
-        HRESULT Contract([in] IContract* );
+        HRESULT Contract([in] Contract* );
 
         [propget]
         HRESULT ContractSpecifier(
-                        [out, retval] IContractSpecifier** );
+                        [out, retval] ContractSpecifier** );
 
         [propget]
         HRESULT FirstTickFileTime(
@@ -2009,7 +2036,7 @@ interface IOrderPlex : IDispatch {
 
         [propget]
         HRESULT InputTickfileSpecifier(
-                        [out, retval] TickfileSpec* );
+                        [out, retval] ITickfileSpecifier** );
 
         [propput]
         HRESULT ReplayProgressEventFrequency(
@@ -2030,7 +2057,7 @@ interface IOrderPlex : IDispatch {
 		HRESULT FireNextTick();
 
         HRESULT ReplayTickfile(
-                        [in] TickfileSpec* tickfileSpecifier);
+                        [in] ITickfileSpecifier* tickfileSpecifier);
 
         HRESULT Supports(
                         [in] long capabilities, 
@@ -2075,6 +2102,64 @@ interface IOrderPlex : IDispatch {
     };
 
     [
+      uuid(d406d86d-78c3-4df9-ba52-429c689f822f),
+      version(1.0),
+      nonextensible,
+      helpstring("Specifies the interface to be implemented by Tickfile Specifier objects")
+    ]
+    interface ITickfileSpecifier : IUnknown {
+
+        [propput,
+		 helpstring("Identifies the tickfile format")]
+		HRESULT TickfileFormatID([in] BSTR) ;
+
+        [propget,
+		 helpstring("Identifies the tickfile format")]
+		HRESULT TickfileFormatID([out, retval] BSTR*) ;
+
+        [propput,
+		 helpstring("For file-based tickfile formats, contains the full path and filename of the tickfile")]
+		HRESULT Filename([in] BSTR) ;
+
+        [propget,
+		 helpstring("For file-based tickfile formats, contains the full path and filename of the tickfile")]
+		HRESULT Filename([out, retval] BSTR*) ;
+
+        [propput,
+		 helpstring("For stream-based tickfile formats, contains the contract for the tickstream")]
+        HRESULT Contract([in] Contract*) ;
+
+        [propget,
+		 helpstring("For stream-based tickfile formats, contains the contract for the tickstream")]
+        HRESULT Contract([out, retval] Contract**) ;
+
+        [propput,
+		 helpstring("For stream-based tickfile formats, specifies the start date and time for the tickstream")]
+        HRESULT FromDate([in] DATE) ;
+
+        [propget,
+		 helpstring("For stream-based tickfile formats, specifies the start date and time for the tickstream")]
+        HRESULT FromDate([out, retval] DATE*) ;
+
+        [propput,
+		 helpstring("For stream-based tickfile formats, specifies the end date and time for the tickstream")]
+        HRESULT ToDate([in] DATE) ;
+
+        [propget,
+		 helpstring("For stream-based tickfile formats, specifies the end date and time for the tickstream")]
+        HRESULT ToDate([out, retval] DATE*) ;
+
+		[propput,
+		 helpstring("Indicates that the timespan is the whole of the session in which the From value falls")]
+		HRESULT EntireSession([in] VARIANT_BOOL) ;
+
+		[propget,
+		 helpstring("Indicates that the timespan is the whole of the session in which the From value falls")]
+		HRESULT EntireSession([out, retval] VARIANT_BOOL*) ;
+
+    };
+
+    [
       uuid(23156A1B-88C6-48B9-B9E3-1F4C143D8344),
       version(1.0),
       nonextensible,
@@ -2085,10 +2170,10 @@ interface IOrderPlex : IDispatch {
 		// Properties ==================================================
 
         [propput]
-        HRESULT Contract([in] IContract* );
+        HRESULT Contract([in] Contract* );
 
         [propget]
-        HRESULT Contract([out, retval] IContract** );
+        HRESULT Contract([out, retval] Contract** );
 
 		// Methods =====================================================
 
