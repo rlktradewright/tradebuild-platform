@@ -62,70 +62,46 @@ End Enum
 ' Procedures
 '@===============================================================================
 
-Public Sub gContractFromInstrument( _
-                ByVal contract As IContract, _
-                ByVal instrument As instrument)
-Dim OrderTypes() As TradeBuildSP.OrderTypes
-Dim validExchanges() As String
+Public Function gContractFromInstrument( _
+                ByVal instrument As instrument) As Contract
+Dim lContractBuilder As ContractBuilder
+Dim contractSpec As ContractSpecifier
 Dim localSymbol As InstrumentLocalSymbol
-Dim providerIDs() As DictionaryEntry
-Dim i As Long
+Dim providerIDs As Parameters
 
-With contract.Specifier
-    .Symbol = instrument.Symbol
-    .secType = gSecTypeFromCategoryID(instrument.categoryid)
-    .Expiry = instrument.Month
-    .Exchange = instrument.Exchange
-    .CurrencyCode = instrument.CurrencyCode
-    .localSymbol = instrument.shortName
-    .Strike = instrument.strikePrice
-    .Right = gOptRightFromString(instrument.optionRight)
-End With
+Set contractSpec = CreateContractSpecifier(instrument.shortName, _
+                                        instrument.symbol, _
+                                        instrument.Exchange, _
+                                        gSecTypeFromCategoryID(instrument.categoryid), _
+                                        instrument.currencyCode, _
+                                        instrument.Month, _
+                                        instrument.strikePrice, _
+                                        gOptRightFromString(instrument.optionRight))
 
-With contract
-    '.ContractID = instrument.ContractID
-    .DaysBeforeExpiryToSwitch = instrument.DaysBeforeExpiryToSwitch
+Set lContractBuilder = CreateContractBuilder(contractSpec)
+With lContractBuilder
+    .daysBeforeExpiryToSwitch = instrument.daysBeforeExpiryToSwitch
     .Description = instrument.Name
     .ExpiryDate = instrument.ExpiryDate
-    .MarketName = instrument.Symbol
-    .MinimumTick = instrument.TickSize
-    .Multiplier = instrument.TickValue / instrument.TickSize
+    .TickSize = instrument.TickSize
+    .multiplier = instrument.TickValue / instrument.TickSize
+    .TimeZone = CreateTimeZone(instrument.TimeZoneCanonicalName)
     
     If instrument.localSymbols.Count > 0 Then
-        ReDim providerIDs(instrument.localSymbols.Count - 1) As DictionaryEntry
+        Set providerIDs = New Parameters
 
         For Each localSymbol In instrument.localSymbols
-            providerIDs(i).Key = localSymbol.ProviderKey
-            providerIDs(i).value = localSymbol.localSymbol
-            i = i + 1
+            providerIDs.setParameterValue localSymbol.ProviderKey, localSymbol.localSymbol
         Next
         .providerIDs = providerIDs
     End If
     
-    .SessionEndTime = instrument.SessionEndTime
-    .SessionStartTime = instrument.SessionStartTime
+    .sessionEndTime = instrument.sessionEndTime
+    .sessionStartTime = instrument.sessionStartTime
     
-'    If instrument.OrderTypes <> "" Then
-'        Dim orderTypesStr() As String
-'        orderTypesStr = Split(instrument.OrderTypes)
-'        ReDim OrderTypes(UBound(orderTypesStr)) As TradeBuildSP.OrderTypes
-'        For i = 0 To UBound(orderTypesStr)
-'            OrderTypes(i) = CLng(orderTypesStr(i))
-'        Next
-'    Else
-'        ReDim OrderTypes(3) As TradeBuildSP.OrderTypes
-'        OrderTypes(0) = TradeBuildSP.OrderTypes.OrderTypeMarket
-'        OrderTypes(1) = TradeBuildSP.OrderTypes.OrderTypeLimit
-'        OrderTypes(2) = TradeBuildSP.OrderTypes.OrderTypeStop
-'        OrderTypes(3) = TradeBuildSP.OrderTypes.OrderTypeStopLimit
-'    End If
-'    .OrderTypes = OrderTypes
-    
-    ReDim validExchanges(0) As String
-    validExchanges(0) = instrument.Exchange
-    .validExchanges = validExchanges
 End With
-End Sub
+Set gContractFromInstrument = lContractBuilder.Contract
+End Function
 
 Public Function gHistDataCapabilities() As Long
 gHistDataCapabilities = _
@@ -161,17 +137,17 @@ End Function
 Public Function gSecTypeToCategory( _
                 ByVal secType As SecurityTypes) As String
 Select Case secType
-Case TradeBuildSP.SecurityTypes.SecTypeCash
+Case SecurityTypes.SecTypeCash
     gSecTypeToCategory = InstrumentCategoryToString(InstrumentCategories.InstrumentCategoryCash)
-Case TradeBuildSP.SecurityTypes.SecTypeFuture
+Case SecurityTypes.SecTypeFuture
     gSecTypeToCategory = InstrumentCategoryToString(InstrumentCategories.InstrumentCategoryFuture)
-Case TradeBuildSP.SecurityTypes.SecTypeFuturesOption
+Case SecurityTypes.SecTypeFuturesOption
     gSecTypeToCategory = InstrumentCategoryToString(InstrumentCategories.InstrumentCategoryFuturesOption)
-Case TradeBuildSP.SecurityTypes.SecTypeIndex
+Case SecurityTypes.SecTypeIndex
     gSecTypeToCategory = InstrumentCategoryToString(InstrumentCategories.InstrumentCategoryIndex)
-Case TradeBuildSP.SecurityTypes.SecTypeOption
+Case SecurityTypes.SecTypeOption
     gSecTypeToCategory = InstrumentCategoryToString(InstrumentCategories.InstrumentCategoryOption)
-Case TradeBuildSP.SecurityTypes.SecTypeStock
+Case SecurityTypes.SecTypeStock
     gSecTypeToCategory = InstrumentCategoryToString(InstrumentCategories.InstrumentCategoryStock)
 End Select
 End Function

@@ -59,40 +59,42 @@ Private WithEvents mTradingDB       As TradingDB
 Attribute mTradingDB.VB_VarHelpID = -1
 Private mConnectionString           As String
 
-Private mTickfileServiceProvider As tickfileServiceProvider
+Private mTickfileServiceProvider    As tickfileServiceProvider
 
-Private mCommonServiceConsumer As ICommonServiceConsumer
-Private mServiceConsumer As ITickfileInputServiceConsumer
-Private mDataConsumer As IStreamingDataConsumer
-Private mServiceProviderName As String
+Private mCommonServiceConsumer      As ICommonServiceConsumer
+Private mServiceConsumer            As ITickfileInputServiceConsumer
+Private mDataConsumer               As IStreamingDataConsumer
+Private mServiceProviderName        As String
 
-Private mReadyNotified As Boolean
+Private mReadyNotified              As Boolean
+Private mFetchInProgress            As Boolean
+Private mTickRequested              As Boolean
 
 Private mReplayProgressEventFrequency As Long
 
-Private mContract As IContract
-Private mContractSpecifier As IContractSpecifier
-Private mInstrument As instrument
+Private mContract                   As Contract
+Private mContractSpecifier          As ContractSpecifier
+Private mInstrument                 As instrument
 Attribute mInstrument.VB_VarHelpID = -1
-Private WithEvents mTickReader As TickDataReader
+Private WithEvents mTickReader      As TickDataReader
 Attribute mTickReader.VB_VarHelpID = -1
 
-Private mTickSize As Double
+Private mTickSize                   As Double
 
-Private mCurrentTimestamp As Date
-Private mTypeByte As Byte
+Private mCurrentTimestamp           As Date
+Private mTypeByte                   As Byte
 
-Private mRecordsRead As Long
+Private mRecordsRead                As Long
 
-Private mInputTickfileSpecifier As TradeBuildSP.TickfileSpec
+Private mInputTickfileSpecifier     As TradeBuildSP.ITickfileSpecifier
 
-Private mFirstTickFileTime As Date
+Private mFirstTickFileTime          As Date
 
-Private mData() As Byte
-Private mDataIndex As Long
+Private mData()                     As Byte
+Private mDataIndex                  As Long
 
-Private mPeriodStartTime As Date
-Private mBasePrice As Double
+Private mPeriodStartTime            As Date
+Private mBasePrice                  As Double
 
 '@===============================================================================
 ' Class Event Handlers
@@ -126,70 +128,55 @@ handleFatalError Err.Number, _
                 Err.Description
 End Sub
 
-Private Property Let ITickfileReader_Contract(ByVal RHS As TradeBuildSP.IContract)
-Dim sessionStart As Date
+Private Property Let ITickfileReader_Contract(ByVal RHS As Contract)
+Dim startTime As Date
+Dim endTime As Date
 
 Set mContract = RHS
-mTickSize = mContract.MinimumTick
+mTickSize = mContract.TickSize
 
 With mInputTickfileSpecifier
     If .EntireSession Then
-        SessionTimes .From, _
-                    sessionStart, _
-                    .To, _
-                    mContract.SessionStartTime, _
-                    mContract.SessionEndTime
+        SessionTimes .fromDate, _
+                    startTime, _
+                    endTime, _
+                    mContract.sessionStartTime, _
+                    mContract.sessionEndTime
+    .fromDate = startTime
+    .toDate = endTime
     End If
     mTickReader.FetchData TickfileFormatTradeBuildSQL, _
-                            gTruncateTimeToMinute(.From), _
-                            gTruncateTimeToNextMinute(.To)
+                            gTruncateTimeToMinute(.fromDate), _
+                            gTruncateTimeToNextMinute(.toDate)
 End With
+
+mFetchInProgress = True
 
 End Property
 
-Private Property Get ITickfileReader_Contract() As TradeBuildSP.IContract
+Private Property Get ITickfileReader_Contract() As Contract
 Set ITickfileReader_Contract = mContract
 End Property
 
-Private Property Get ITickfileReader_ContractSpecifier() As TradeBuildSP.IContractSpecifier
+Private Property Get ITickfileReader_ContractSpecifier() As ContractSpecifier
 Set ITickfileReader_ContractSpecifier = mContractSpecifier
 End Property
 
 Private Sub ITickfileReader_FireNextTick()
-Dim percentComplete As Single
-Static noMoreData As Boolean
 
-On Error GoTo Err
-If noMoreData Then
-    mServiceConsumer.TickfileReplayComplete
-    Exit Sub
+If mFetchInProgress Then
+    mTickRequested = True
+Else
+    processTickRequest
 End If
-
-If mRecordsRead = 0 Then
-ElseIf mRecordsRead Mod mReplayProgressEventFrequency = 0 Then
-    mServiceConsumer.ReplayProgress mCurrentTimestamp, _
-                            mRecordsRead, _
-                            0#
-End If
-
-processNextTickRecord mTypeByte
-If Not checkRecord(mTypeByte) Then
-    noMoreData = True
-End If
-Exit Sub
-Err:
-handleFatalError Err.Number, _
-                ProjectName & "." & "TickfileReader" & "::" & "ITickfileReader_FireNextTick", _
-                Err.Description
-
 End Sub
 
 Private Property Get ITickfileReader_FirstTickFileTime() As Date
 ITickfileReader_FirstTickFileTime = mFirstTickFileTime
 End Property
 
-Private Property Get ITickfileReader_InputTickfileSpecifier() As TradeBuildSP.TickfileSpec
-ITickfileReader_InputTickfileSpecifier = mInputTickfileSpecifier
+Private Property Get ITickfileReader_InputTickfileSpecifier() As TradeBuildSP.ITickfileSpecifier
+Set ITickfileReader_InputTickfileSpecifier = mInputTickfileSpecifier
 End Property
 
 Private Property Let ITickfileReader_ReplayProgressEventFrequency(ByVal RHS As Long)
@@ -204,11 +191,12 @@ Private Property Get ITickfileReader_ReplayProgressEventFrequency() As Long
 ITickfileReader_ReplayProgressEventFrequency = mReplayProgressEventFrequency
 End Property
 
-Private Sub ITickfileReader_ReplayTickfile(tickfileSpecifier As TradeBuildSP.TickfileSpec)
+Private Sub ITickfileReader_ReplayTickfile( _
+                ByVal tickfileSpecifier As TradeBuildSP.ITickfileSpecifier)
 Dim lInstrumentFactory As InstrumentFactory
 
 On Error GoTo Err
-mInputTickfileSpecifier = tickfileSpecifier
+Set mInputTickfileSpecifier = tickfileSpecifier
 
 ' we use the supplied contract specifier to retrieve the relevant Instrument
 ' object from the database so that we can create a TickDataReader object from it.
@@ -219,14 +207,14 @@ mInputTickfileSpecifier = tickfileSpecifier
 
 Set lInstrumentFactory = mTradingDB.InstrumentFactory
 
-With mInputTickfileSpecifier.contract.Specifier
+With mInputTickfileSpecifier.Contract.specifier
     Set mInstrument = lInstrumentFactory.loadBySpec(.localSymbol, _
-                                .Symbol, _
+                                .symbol, _
                                 .Exchange, _
                                 gSecTypeToCategory(.secType), _
-                                .CurrencyCode, _
-                                Left$(.Expiry, 6), _
-                                .Strike, _
+                                .currencyCode, _
+                                Left$(.expiry, 6), _
+                                .strike, _
                                 gOptRightToString(.Right))
 End With
  
@@ -237,7 +225,7 @@ If mInstrument Is Nothing Then
     Exit Sub
 End If
 
-Set mContract = mInputTickfileSpecifier.contract
+Set mContract = mInputTickfileSpecifier.Contract
 Set mTickReader = mInstrument.CreateTickDataReader
 Exit Sub
 Err:
@@ -277,6 +265,9 @@ End Sub
 
 Private Sub mTickReader_DataFetched()
 On Error GoTo Err
+
+mFetchInProgress = False
+
 If Not checkRecord(mTypeByte) Then
     If mReadyNotified Then
         mServiceConsumer.TickfileReplayComplete
@@ -287,10 +278,16 @@ If Not checkRecord(mTypeByte) Then
     End If
     Exit Sub
 End If
+
 If Not mReadyNotified Then
     mFirstTickFileTime = mCurrentTimestamp
     mReadyNotified = True
     mServiceConsumer.Ready mInputTickfileSpecifier, 0
+End If
+
+If mTickRequested Then
+    mTickRequested = False
+    processTickRequest
 End If
 Exit Sub
 Err:
@@ -319,6 +316,9 @@ On Error GoTo Err
 mServiceConsumer.NotifyEvent StandardSPEventCodes.TFConnectedToDataSource, _
                         "Connected to data source", _
                         mTickfileServiceProvider.handle
+
+mReadyNotified = True
+mServiceConsumer.Ready mInputTickfileSpecifier, 0
 
 Exit Sub
 Err:
@@ -409,14 +409,14 @@ Do
     
     ReadTimestamp typeByte
     
-    If mCurrentTimestamp >= mInputTickfileSpecifier.From Then
+    If mCurrentTimestamp >= mInputTickfileSpecifier.fromDate Then
         Exit Do
     End If
     
     ReadRecord typeByte, tickType, price, size, position, operation, side, marketmaker
 Loop
 'If mCurrentTimestamp >= "7/10/5 17:28:59" Then Stop
-If mCurrentTimestamp >= mInputTickfileSpecifier.To Then
+If mCurrentTimestamp >= mInputTickfileSpecifier.toDate Then
     checkRecord = False
     Exit Function
 End If
@@ -486,6 +486,35 @@ Case volume
 Case openInterest
     mDataConsumer.openInterest mCurrentTimestamp, size
 End Select
+
+End Sub
+
+Private Sub processTickRequest()
+Dim percentComplete As Single
+Static noMoreData As Boolean
+
+On Error GoTo Err
+If noMoreData Then
+    mServiceConsumer.TickfileReplayComplete
+    Exit Sub
+End If
+
+If mRecordsRead = 0 Then
+ElseIf mRecordsRead Mod mReplayProgressEventFrequency = 0 Then
+    mServiceConsumer.ReplayProgress mCurrentTimestamp, _
+                            mRecordsRead, _
+                            0#
+End If
+
+processNextTickRecord mTypeByte
+If Not checkRecord(mTypeByte) Then
+    noMoreData = True
+End If
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                ProjectName & "." & "TickfileReader" & "::" & "ITickfileReader_processTickRequest", _
+                Err.Description
 
 End Sub
 

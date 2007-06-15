@@ -71,7 +71,7 @@ Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mServiceConsumer As ITickfileOutputServiceConsumer
 Private mServiceProviderName As String
 
-Private mContract As IContract
+Private mContract As contract
 Private WithEvents mTickWriter As TickDataWriter
 Attribute mTickWriter.VB_VarHelpID = -1
 
@@ -114,25 +114,25 @@ handleFatalError Err.Number, _
                 Err.Description
 End Sub
 
-Private Property Get ITickfileWriter_Contract() As IContract
+Private Property Get ITickfileWriter_Contract() As contract
 Set ITickfileWriter_Contract = mContract
 End Property
 
-Private Property Let ITickfileWriter_Contract(ByVal RHS As IContract)
+Private Property Let ITickfileWriter_Contract(ByVal RHS As contract)
 Dim lInstrumentFactory As InstrumentFactory
 
 On Error GoTo Err
 If Not RHS Is Nothing Then
-    Set mContract = RHS.Clone
+    Set mContract = RHS
 End If
 
 Set lInstrumentFactory = mTradingDB.InstrumentFactory
 With mContract.Specifier
     Set mInstrument = lInstrumentFactory.loadBySpec(.localSymbol, _
-                                .Symbol, _
+                                .symbol, _
                                 .Exchange, _
                                 gSecTypeToCategory(.secType), _
-                                .CurrencyCode, _
+                                .currencyCode, _
                                 Left$(.Expiry, 6), _
                                 .Strike, _
                                 gOptRightToString(.Right))
@@ -145,7 +145,7 @@ End With
     
 Debug.Assert Not mInstrument Is Nothing
 
-mTickSize = mContract.MinimumTick
+mTickSize = mContract.TickSize
 Exit Property
 Err:
 handleFatalError Err.Number, _

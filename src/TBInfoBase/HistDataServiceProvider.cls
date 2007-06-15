@@ -135,7 +135,7 @@ End Function
 
 Private Function IBarDataServiceProvider_CreateBarDataWriter( _
                             ByVal serviceConsumer As TradeBuildSP.IBarDataOutputServiceConsumer, _
-                            ByVal contractSpec As TradeBuildSP.IContractSpecifier, _
+                            ByVal contractSpec As ContractSpecifier, _
                             Optional ByVal location As String = "" _
                             ) As TradeBuildSP.IBarDataWriter
 
@@ -171,7 +171,7 @@ handleFatalError Err.Number, _
 End Function
 
 Private Function IBarDataServiceProvider_IsSupportedTimePeriod( _
-                period As TWUtilities.TimePeriod) As Boolean
+                period As TimePeriod) As Boolean
 Select Case period.units
 Case TimePeriodMinute, _
     TimePeriodHour, _

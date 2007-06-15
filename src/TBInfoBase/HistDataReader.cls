@@ -68,9 +68,9 @@ Private mServiceProviderName As String
 
 Private mRequestInProgress As Boolean
 
-Private mBarDataSpecifier  As TradeBuildSP.BarDataSpecifier
+Private mBarDataSpecifier  As TradeBuildSP.IBarDataSpecifier
 
-Private mContract As IContract
+Private mContract As Contract
 
 Private WithEvents mBarReader As BarDataReader
 Attribute mBarReader.VB_VarHelpID = -1
@@ -90,8 +90,8 @@ Private mSession As Session
 '@===============================================================================
 
 Private Property Get IBarDataReader_BarDataSpecifier( _
-                            ) As TradeBuildSP.BarDataSpecifier
-IBarDataReader_BarDataSpecifier = mBarDataSpecifier
+                            ) As TradeBuildSP.IBarDataSpecifier
+Set IBarDataReader_BarDataSpecifier = mBarDataSpecifier
 End Property
 
 Private Sub IBarDataReader_CancelFetch()
@@ -106,7 +106,7 @@ handleFatalError Err.Number, _
 End Sub
 
 Private Sub IBarDataReader_FetchBars( _
-                            ByRef barSpecifier As TradeBuildSP.BarDataSpecifier)
+                            ByVal barSpecifier As TradeBuildSP.IBarDataSpecifier)
 Dim lInstrumentFactory As InstrumentFactory
 Dim lInstrument As instrument
 
@@ -132,24 +132,24 @@ Case Else
 End Select
 
 mRequestInProgress = True
-mBarDataSpecifier = barSpecifier
-Set mContract = mBarDataSpecifier.contract
+Set mBarDataSpecifier = barSpecifier
+Set mContract = mBarDataSpecifier.Contract
 
 Set mSessionBuilder = New SessionBuilder
-mSessionBuilder.SessionStartTime = mContract.SessionStartTime
-mSessionBuilder.SessionEndTime = mContract.SessionEndTime
+mSessionBuilder.sessionStartTime = mContract.sessionStartTime
+mSessionBuilder.sessionEndTime = mContract.sessionEndTime
 Set mSession = mSessionBuilder.Session
 
 Set lInstrumentFactory = mTradingDB.InstrumentFactory
 
-With mBarDataSpecifier.contract.Specifier
+With mBarDataSpecifier.Contract.specifier
     Set lInstrument = lInstrumentFactory.loadBySpec(.localSymbol, _
-                                .Symbol, _
+                                .symbol, _
                                 .Exchange, _
                                 gSecTypeToCategory(.secType), _
-                                .CurrencyCode, _
-                                Left$(.Expiry, 6), _
-                                .Strike, _
+                                .currencyCode, _
+                                Left$(.expiry, 6), _
+                                .strike, _
                                 gOptRightToString(.Right))
 End With
 Debug.Assert Not lInstrument Is Nothing
@@ -239,6 +239,8 @@ End Sub
 Private Sub mBarReader_Ready()
 Dim BarLengthMinutes As Long
 Dim numberOfBars As Long
+Dim fromDate As Date
+Dim toDate As Date
 
 mWaitingForBarData = True
 
@@ -248,8 +250,6 @@ mServiceConsumer.NotifyEvent StandardSPEventCodes.HDConnectedToDataSource, _
 
 With mBarDataSpecifier
 
-    If .From < #1/1/1900# Then .From = #1/1/1900# ' don't exceed range of SmallDateTime
-    
     numberOfBars = .numberOfBars
     
     Select Case .BarLengthUnits
@@ -294,9 +294,11 @@ With mBarDataSpecifier
     
     
     setBarSpecifierTimes mBarDataSpecifier, _
-                        mContract
+                        mContract, _
+                        fromDate, _
+                        toDate
     
-    mBarReader.FetchBars .barType, BarLengthMinutes, numberOfBars, .From, .To
+    mBarReader.FetchBars .barType, BarLengthMinutes, numberOfBars, fromDate, toDate
 End With
 
 mServiceConsumer.Ready
@@ -430,25 +432,29 @@ End If
 End Function
 
 Private Sub setBarSpecifierTimes( _
-                ByRef barSpecifier As BarDataSpecifier, _
-                ByVal pContract As IContract)
+                ByVal barSpecifier As IBarDataSpecifier, _
+                ByVal pContract As Contract, _
+                ByRef fromDate As Date, _
+                ByRef toDate As Date)
 
 With barSpecifier
     If .BarLengthUnits = TimePeriodVolume Or .BarLengthUnits = TimePeriodTickMovement Or .BarLengthUnits = TimePeriodTickVolume Then Exit Sub
-    If .To <> 0 Then
-        .From = OffsetBarStartTime(.To, _
+    If .toDate <> 0 Then
+        fromDate = OffsetBarStartTime(.toDate, _
                                     .barLength, _
                                     .BarLengthUnits, _
                                     -.numberOfBars, _
-                                    pContract.SessionStartTime, _
-                                    pContract.SessionEndTime)
+                                    pContract.sessionStartTime, _
+                                    pContract.sessionEndTime)
+        toDate = .toDate
     Else
-        .To = OffsetBarStartTime(.From, _
+        fromDate = .fromDate
+        toDate = OffsetBarStartTime(.fromDate, _
                                     .barLength, _
                                     .BarLengthUnits, _
                                     .numberOfBars, _
-                                    pContract.SessionStartTime, _
-                                    pContract.SessionEndTime)
+                                    pContract.sessionStartTime, _
+                                    pContract.sessionEndTime)
     End If
 End With
 End Sub

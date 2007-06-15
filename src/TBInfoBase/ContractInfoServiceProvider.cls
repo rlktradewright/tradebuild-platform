@@ -66,7 +66,7 @@ Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mHandle As Long
 Private mContractInfoServiceConsumer As IContractInfoServiceConsumer
 
-Private mRequests(MaxQueuedRequests - 1) As IContracts
+Private mRequests(MaxQueuedRequests - 1) As ContractsBuilder
 Private mFirstRequestID As Long
 Private mNextRequestID As Long
 Private mRequestsOutstanding As Long
@@ -90,7 +90,7 @@ Private mPassword As String
 
 Private Sub Class_Initialize()
 mName = ContractInfoSPName
-Set mTimer = createIntervalTimer(1)
+Set mTimer = CreateIntervalTimer(1)
 
 mDatabaseType = DbSQLServer2005
 mDatabaseName = "Trading"
@@ -178,18 +178,18 @@ Set mContractInfoServiceConsumer = RHS
 End Property
 
 Private Sub IContractInfoServiceProvider_RequestContractDetails( _
-                            ByVal pContracts As TradeBuildSP.IContracts)
+                            ByVal pContractsBuilder As ContractsBuilder)
 
 If mNextRequestID = mFirstRequestID And mRequestsOutstanding > 0 Then
-    pContracts.ServiceProviderCantHandle "Too many contract details requests queued", _
-                                mName
+    pContractsBuilder.unableToLoad "Too many contract details requests queued", _
+                                    mName
 End If
 
-Set mRequests(mNextRequestID) = pContracts
+Set mRequests(mNextRequestID) = pContractsBuilder
 
 If mRequestsOutstanding = 0 Then
     ' no requests currently queued so start the timer
-    mTimer.StartTimer
+    mTimer.startTimer
 End If
 
 mNextRequestID = (mNextRequestID + 1) Mod MaxQueuedRequests
@@ -197,7 +197,7 @@ mRequestsOutstanding = mRequestsOutstanding + 1
 End Sub
 
 Private Sub IContractInfoServiceProvider_StoreContractDetails( _
-                            ByVal pContract As TradeBuildSP.IContract)
+                            ByVal pContract As Contract)
 
 End Sub
 
@@ -218,7 +218,7 @@ Private Sub mTimer_TimerExpired()
 Dim instrumentSummaries As instrumentSummaries
 Dim instrumentSummary As instrumentSummary
 Dim instrument As instrument
-Dim contract As IContract
+Dim lContract As Contract
 
 If mTradingDB Is Nothing Then
     If mConnectionString <> "" Then
@@ -234,33 +234,32 @@ End If
 
 Set mInstrumentFactory = mTradingDB.InstrumentFactory
 
-With mRequests(mFirstRequestID).ContractSpecifier
+With mRequests(mFirstRequestID).Contracts.ContractSpecifier
     Set instrumentSummaries = mInstrumentFactory.loadSummaries( _
+                                    "", _
                                     .localSymbol, _
-                                    .Symbol, _
+                                    .symbol, _
                                     .Exchange, _
                                     gSecTypeToCategory(.secType), _
-                                    .CurrencyCode, _
-                                    Left$(.Expiry, 6), _
-                                    .Strike, _
+                                    .currencyCode, _
+                                    Left$(.expiry, 6), _
+                                    .strike, _
                                     gOptRightToString(.Right))
 End With
 
 For Each instrumentSummary In instrumentSummaries
     Set instrument = mInstrumentFactory.loadByID(instrumentSummary.id)
-    Set contract = mCommonServiceConsumer.NewContract
-    contract.Specifier = mCommonServiceConsumer.NewContractSpecifier
     
-    gContractFromInstrument contract, instrument
+    Set lContract = gContractFromInstrument(instrument)
     
-    mRequests(mFirstRequestID).AddContract contract
+    mRequests(mFirstRequestID).AddContract lContract
 Next
 
 mContractInfoServiceConsumer.LoadComplete mHandle, mRequests(mFirstRequestID)
 
 mRequestsOutstanding = mRequestsOutstanding - 1
 mFirstRequestID = (mFirstRequestID + 1) Mod MaxQueuedRequests
-If mRequestsOutstanding <> 0 Then mTimer.StartTimer
+If mRequestsOutstanding <> 0 Then mTimer.startTimer
 End Sub
 
 '@===============================================================================

@@ -73,7 +73,7 @@ Private mCommonServiceConsumer      As ICommonServiceConsumer
 Private mServiceConsumer            As IBarDataOutputServiceConsumer
 Private mServiceProviderName        As String
 
-Private mContractSpec               As IContractSpecifier
+Private mContractSpec               As ContractSpecifier
 Private WithEvents mBarWriter       As BarDataWriter
 Attribute mBarWriter.VB_VarHelpID = -1
 
@@ -110,7 +110,7 @@ End Sub
 ' IBarDataWriter Interface Members
 '@===============================================================================
 
-Private Property Get IBarDataWriter_ContractSpecifier() As TradeBuildSP.IContractSpecifier
+Private Property Get IBarDataWriter_ContractSpecifier() As ContractSpecifier
 Set IBarDataWriter_ContractSpecifier = mContractSpec
 End Property
 
@@ -278,7 +278,7 @@ Friend Sub initialise( _
                 ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
                 ByVal barDataOutputServiceConsumer As TradeBuildSP.IBarDataOutputServiceConsumer, _
                 ByVal histDataServiceProvider As TradeBuildSP.IBarDataServiceProvider, _
-                ByVal contractSpec As TradeBuildSP.IContractSpecifier)
+                ByVal contractSpec As ContractSpecifier)
 mServiceProviderName = Name
 
 Set mCommonServiceConsumer = CommonServiceConsumer
@@ -288,7 +288,7 @@ mConnectionString = connectionString
 Set mTradingDB = CreateTradingDB(mConnectionString)
 
 Set mHistDataServiceProvider = histDataServiceProvider
-Set mContractSpec = contractSpec.Clone
+Set mContractSpec = contractSpec
 
 End Sub
 
@@ -304,10 +304,10 @@ Set lInstrumentFactory = mTradingDB.InstrumentFactory
 With mContractSpec
     Set mInstrument = lInstrumentFactory.loadBySpec( _
                                 .localSymbol, _
-                                .Symbol, _
+                                .symbol, _
                                 .Exchange, _
                                 gSecTypeToCategory(.secType), _
-                                .CurrencyCode, _
+                                .currencyCode, _
                                 Left$(.Expiry, 6), _
                                 .Strike, _
                                 gOptRightToString(.Right))
