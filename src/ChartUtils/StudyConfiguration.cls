@@ -51,7 +51,7 @@ Option Explicit
 '================================================================================
 
 'Private mStudyDefinition As studyDefinition
-Private mParameters                         As Parameters2.parameters
+Private mParameters                         As parameters
 Private mStudyValueConfigurations           As studyValueConfigurations
 Private mStudyValueHandlers                 As studyValueHandlers
 Private mStudyHorizontalRules               As studyHorizontalRules
@@ -147,11 +147,11 @@ End Property
 'notifyNames = mNotifyNames
 'End Property
 
-Public Property Let parameters(ByVal value As Parameters2.parameters)
+Public Property Let parameters(ByVal value As parameters)
 Set mParameters = value
 End Property
 
-Public Property Get parameters() As Parameters2.parameters
+Public Property Get parameters() As parameters
 Set parameters = mParameters
 End Property
 
