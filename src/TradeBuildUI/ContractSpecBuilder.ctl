@@ -157,7 +157,7 @@ Option Explicit
 '@================================================================================
 
 Event NotReady()
-Event Ready()
+Event ready()
 
 '@================================================================================
 ' Constants
@@ -181,7 +181,7 @@ Private Const PropDfltForeColor                         As Long = vbWindowText
 ' Member variables
 '@================================================================================
 
-Private mTB As tradeBuildAPI
+Private mReady As Boolean
 
 '@================================================================================
 ' UserControl Event Handlers
@@ -198,18 +198,27 @@ End If
 End Sub
 
 Private Sub UserControl_Initialize()
+Dim exchangeCodes() As String
+Dim var As Variant
+
+mReady = False
 RaiseEvent NotReady
 
-TypeCombo.AddItem SecTypeToString(SecurityTypes.SecTypeStock)
-TypeCombo.AddItem SecTypeToString(SecurityTypes.SecTypeFuture)
-TypeCombo.AddItem SecTypeToString(SecurityTypes.SecTypeOption)
-TypeCombo.AddItem SecTypeToString(SecurityTypes.SecTypeFuturesOption)
-TypeCombo.AddItem SecTypeToString(SecurityTypes.SecTypeCash)
-TypeCombo.AddItem SecTypeToString(SecurityTypes.SecTypeIndex)
+TypeCombo.addItem SecTypeToString(SecurityTypes.SecTypeStock)
+TypeCombo.addItem SecTypeToString(SecurityTypes.SecTypeFuture)
+TypeCombo.addItem SecTypeToString(SecurityTypes.SecTypeOption)
+TypeCombo.addItem SecTypeToString(SecurityTypes.SecTypeFuturesOption)
+TypeCombo.addItem SecTypeToString(SecurityTypes.SecTypeCash)
+TypeCombo.addItem SecTypeToString(SecurityTypes.SecTypeIndex)
 
-RightCombo.AddItem OptionRightToString(OptionRights.OptCall)
-RightCombo.AddItem OptionRightToString(OptionRights.OptPut)
+RightCombo.addItem OptionRightToString(OptionRights.OptCall)
+RightCombo.addItem OptionRightToString(OptionRights.OptPut)
 
+exchangeCodes = GetExchangeCodes
+
+For Each var In exchangeCodes
+    ExchangeCombo.addItem CStr(var)
+Next
 End Sub
 
 Private Sub UserControl_InitProperties()
@@ -395,13 +404,7 @@ backColor = LocalSymbolText.backColor
 End Property
 
 Public Property Get contractSpecifier() As contractSpecifier
-If mTB Is Nothing Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            "TradeBuildUI25" & "." & "ContractSpecBuilder" & ":" & "contractSpecifier", _
-            "No reference to TradeBuildAPI supplied yet"
-End If
-
-Set contractSpecifier = mTB.newContractSpecifier( _
+Set contractSpecifier = CreateContractSpecifier( _
                                 LocalSymbolText, _
                                 SymbolText, _
                                 ExchangeCombo, _
@@ -428,20 +431,10 @@ Public Property Get foreColor() As OLE_COLOR
 foreColor = LocalSymbolText.foreColor
 End Property
 
-Public Property Let tradeBuildAPI( _
-                ByVal tb As tradeBuildAPI)
-Dim exchangeCodes() As String
-Dim var As Variant
-
-Set mTB = tb
-
-exchangeCodes = mTB.GetExchangeCodes
-
-For Each var In exchangeCodes
-    ExchangeCombo.AddItem CStr(var)
-Next
+Public Property Get ready() As Boolean
+ready = mReady
 End Property
-                
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -451,6 +444,7 @@ End Property
 '@================================================================================
 
 Private Sub checkIfValid()
+mReady = False
 If LocalSymbolText = "" And SymbolText = "" Then
     RaiseEvent NotReady
     Exit Sub
@@ -495,7 +489,8 @@ If LocalSymbolText = "" Then
 End If
     
 
-RaiseEvent Ready
+mReady = True
+RaiseEvent ready
 
 End Sub
 

@@ -56,12 +56,6 @@ Public Const DecreasedValueColor As Long = &H4444EB
 ' External function declarations
 '================================================================================
 
-Public Declare Sub InitCommonControls Lib "comctl32" ()
-
-Public Declare Function SendMessageByNum Lib "user32" _
-    Alias "SendMessageA" (ByVal hwnd As Long, ByVal wMsg As Long, _
-    ByVal wParam As Long, ByVal lParam As Long) As Long
-
 '================================================================================
 ' Member variables
 '================================================================================
@@ -160,7 +154,7 @@ MsgBox "This facility has not yet been implemented", , "Sorry"
 End Sub
 
 Public Sub showStudyPicker( _
-                ByVal chartMgr As ChartManager)
+                ByVal chartMgr As chartManager)
 If mStudyPickerForm Is Nothing Then
     Set mStudyPickerForm = New fStudyPicker
 End If
@@ -169,7 +163,7 @@ mStudyPickerForm.Show vbModeless
 End Sub
 
 Public Sub syncStudyPicker( _
-                ByVal chartMgr As ChartManager)
+                ByVal chartMgr As chartManager)
 If mStudyPickerForm Is Nothing Then Exit Sub
 mStudyPickerForm.initialise chartMgr
 End Sub

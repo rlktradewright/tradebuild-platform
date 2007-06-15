@@ -132,7 +132,7 @@ Option Explicit
 ' Events
 '@================================================================================
 
-Event TickfilesSelected()
+'Event TickfilesSelected()
 
 '@================================================================================
 ' Constants
@@ -150,12 +150,10 @@ Event TickfilesSelected()
 ' Member variables
 '@================================================================================
 
-Private mTradeBuildAPIRef           As WeakReference
+Private mTickfileSpecifiers() As TickfileSPecifier
 
-Private mTickfileSpecifiers() As TradeBuild26.TickfileSpecifier
-
-Private mSupportedTickfileFormats() As TradeBuild26.TickfileFormatSpecifier
-Private mSupportedTickStreamFormats() As TradeBuild26.TickfileFormatSpecifier
+Private mSupportedTickfileFormats() As TickfileFormatSpecifier
+Private mSupportedTickStreamFormats() As TickfileFormatSpecifier
 
 Private mFilterString As String
 
@@ -166,6 +164,10 @@ Attribute mfTickfileSpecifier.VB_VarHelpID = -1
 ' Class Event Handlers
 '@================================================================================
 
+Private Sub Form_Load()
+getSupportedTickfileFormats
+End Sub
+
 '@================================================================================
 ' xxxx Interface Members
 '@================================================================================
@@ -175,7 +177,7 @@ Attribute mfTickfileSpecifier.VB_VarHelpID = -1
 '@================================================================================
 
 Private Sub mfTickfileSpecifier_TickfilesSpecified( _
-                pTickfileSpecifier() As TickfileSpecifier)
+                pTickfileSpecifier() As TickfileSPecifier)
 Dim i As Long
 Dim j As Long
 
@@ -185,19 +187,19 @@ i = UBound(mTickfileSpecifiers)
 On Error GoTo 0
 
 If i = -1 Then
-    ReDim mTickfileSpecifiers(UBound(pTickfileSpecifier)) As TradeBuild26.TickfileSpecifier
+    ReDim mTickfileSpecifiers(UBound(pTickfileSpecifier)) As TickfileSPecifier
 Else
-    ReDim Preserve mTickfileSpecifiers(UBound(mTickfileSpecifiers) + UBound(pTickfileSpecifier) + 1) As TradeBuild26.TickfileSpecifier
+    ReDim Preserve mTickfileSpecifiers(UBound(mTickfileSpecifiers) + UBound(pTickfileSpecifier) + 1) As TickfileSPecifier
 End If
 
 For j = 0 To UBound(pTickfileSpecifier)
-    TickFileList.AddItem pTickfileSpecifier(j).filename
-    mTickfileSpecifiers(i + j + 1) = pTickfileSpecifier(j)
+    TickFileList.addItem pTickfileSpecifier(j).FileName
+    Set mTickfileSpecifiers(i + j + 1) = pTickfileSpecifier(j)
 Next
 
 Set mfTickfileSpecifier = Nothing
 
-OkButton.enabled = True
+OkButton.Enabled = True
 
 End Sub
 
@@ -207,7 +209,7 @@ End Sub
 
 Private Sub AddTickfileButton_Click()
 Dim fileNames() As String
-Dim TickfileSpec As TradeBuild26.TickfileSpecifier
+Dim TickfileSpec As TickfileSPecifier
 Dim filePath As String
 Dim fileExt As String
 Dim i As Long
@@ -215,7 +217,7 @@ Dim j As Long
 Dim k As Long
 
 CommonDialogs.CancelError = True
-On Error GoTo err
+On Error GoTo Err
 
 CommonDialogs.MaxFileSize = 32767
 'CommonDialogs.Filename = ".tck"
@@ -231,95 +233,108 @@ CommonDialogs.Flags = cdlOFNFileMustExist + _
                     cdlOFNReadOnly
 CommonDialogs.ShowOpen
 
-fileNames = Split(CommonDialogs.filename, Chr(0), , vbBinaryCompare)
+fileNames = Split(CommonDialogs.FileName, Chr(0), , vbBinaryCompare)
 
 On Error Resume Next
 
-TickFileList.Clear
+TickFileList.clear
 
 j = UBound(mTickfileSpecifiers)
-If err.number <> 0 Then j = -1
+If Err.Number <> 0 Then j = -1
 On Error GoTo 0
 
 If j >= 0 Then
     For i = 0 To UBound(mTickfileSpecifiers)
-        TickfileSpec = mTickfileSpecifiers(i)
-        If TickfileSpec.filename <> "" Then
-            TickFileList.AddItem TickfileSpec.filename
+        Set TickfileSpec = mTickfileSpecifiers(i)
+        If TickfileSpec.FileName <> "" Then
+            TickFileList.addItem TickfileSpec.FileName
         End If
     Next
 End If
 
 If UBound(fileNames) = 0 Then
-    ReDim Preserve mTickfileSpecifiers(j + 1) As TradeBuild26.TickfileSpecifier
+    ReDim Preserve mTickfileSpecifiers(j + 1) As TickfileSPecifier
 Else
-    ReDim Preserve mTickfileSpecifiers(j + UBound(fileNames)) As TradeBuild26.TickfileSpecifier
+    ReDim Preserve mTickfileSpecifiers(j + UBound(fileNames)) As TickfileSPecifier
 End If
 
 If UBound(fileNames) = 0 Then
-    TickFileList.AddItem fileNames(0)
+    TickFileList.addItem fileNames(0)
 Else
     ' the first entry is the file path
     filePath = fileNames(0)
     SortStrings fileNames, 1, UBound(fileNames)
     For i = 1 To UBound(fileNames)
-        TickFileList.AddItem filePath & "\" & fileNames(i)
+        TickFileList.addItem filePath & "\" & fileNames(i)
     Next
 End If
 
 For i = 0 To TickFileList.ListCount - 1
     TickFileList.ListIndex = i
-    mTickfileSpecifiers(i).filename = TickFileList.Text
+    Set mTickfileSpecifiers(i) = New TickfileSPecifier
+    mTickfileSpecifiers(i).FileName = TickFileList.Text
     
     ' set up the FormatID - we set it to the first one that matches
     ' the file extension
-    fileExt = right$(mTickfileSpecifiers(i).filename, _
-                    Len(mTickfileSpecifiers(i).filename) - InStrRev(mTickfileSpecifiers(i).filename, "."))
+    fileExt = Right$(mTickfileSpecifiers(i).FileName, _
+                    Len(mTickfileSpecifiers(i).FileName) - InStrRev(mTickfileSpecifiers(i).FileName, "."))
     For k = 0 To UBound(mSupportedTickfileFormats)
         If mSupportedTickfileFormats(k).FormatType = FileBased Then
             If UCase$(fileExt) = UCase$(mSupportedTickfileFormats(k).FileExtension) Then
-                mTickfileSpecifiers(i).tickfileFormatID = mSupportedTickfileFormats(k).FormalID
+                mTickfileSpecifiers(i).TickfileFormatID = mSupportedTickfileFormats(k).FormalID
                 Exit For
             End If
         End If
     Next
 Next
 
-OkButton.enabled = True
+OkButton.Enabled = True
 
 Exit Sub
 
-err:
+Err:
 
 End Sub
 
 Private Sub AddTickerSpecButton_Click()
 Set mfTickfileSpecifier = New fTickfileSpecifier
-mfTickfileSpecifier.tradeBuildAPI = tb
 mfTickfileSpecifier.SupportedTickfileFormats = mSupportedTickStreamFormats
 mfTickfileSpecifier.Show vbModal, Me
 End Sub
 
 Private Sub CancelButton_Click()
+Erase mTickfileSpecifiers
 Unload Me
 End Sub
 
 Private Sub OkButton_Click()
-RaiseEvent TickfilesSelected
+'RaiseEvent TickfilesSelected
+Me.Hide
 End Sub
 
 '@================================================================================
 ' Properties
 '@================================================================================
 
-Public Property Let SupportedTickfileFormats( _
-                            ByRef value() As TradeBuild26.TickfileFormatSpecifier)
+Friend Property Get TickfileSpecifiers() As TickfileSPecifier()
+TickfileSpecifiers = mTickfileSpecifiers
+End Property
+
+'@================================================================================
+' Methods
+'@================================================================================
+
+'@================================================================================
+' Helper Functions
+'@================================================================================
+
+Private Sub getSupportedTickfileFormats()
 Dim i As Long
 Dim j As Long
 
-mSupportedTickfileFormats = value
+mSupportedTickfileFormats = TradeBuildAPI.SupportedInputTickfileFormats
 
-ReDim mSupportedTickStreamFormats(9) As TradeBuild26.TickfileFormatSpecifier
+ReDim mSupportedTickStreamFormats(9) As TickfileFormatSpecifier
 j = -1
 
 For i = 0 To UBound(mSupportedTickfileFormats)
@@ -331,7 +346,7 @@ For i = 0 To UBound(mSupportedTickfileFormats)
     Else
         j = j + 1
         If j > UBound(mSupportedTickStreamFormats) Then
-            ReDim Preserve mSupportedTickStreamFormats(UBound(mSupportedTickStreamFormats) + 9) As TradeBuild26.TickfileFormatSpecifier
+            ReDim Preserve mSupportedTickStreamFormats(UBound(mSupportedTickStreamFormats) + 9) As TickfileFormatSpecifier
         End If
         mSupportedTickStreamFormats(j) = mSupportedTickfileFormats(i)
     End If
@@ -340,39 +355,17 @@ Next
 If j = -1 Then
     Erase mSupportedTickStreamFormats
 Else
-    ReDim Preserve mSupportedTickStreamFormats(j) As TradeBuild26.TickfileFormatSpecifier
-    AddTickerSpecButton.enabled = True
+    ReDim Preserve mSupportedTickStreamFormats(j) As TickfileFormatSpecifier
+    AddTickerSpecButton.Enabled = True
 End If
 
 If mFilterString <> "" Then
     mFilterString = mFilterString & "|All files (*.*)|*.*"
-    AddTickfileButton.enabled = True
+    AddTickfileButton.Enabled = True
 Else
-    AddTickfileButton.enabled = True
+    AddTickfileButton.Enabled = True
 End If
 
-End Property
-
-
-Public Property Get TickfileSpecifiers() As TradeBuild26.TickfileSpecifier()
-TickfileSpecifiers = mTickfileSpecifiers
-End Property
-
-Friend Property Let tradeBuildAPI( _
-                ByVal value As tradeBuildAPI)
-Set mTradeBuildAPIRef = CreateWeakReference(value)
-End Property
-
-'@================================================================================
-' Methods
-'@================================================================================
-
-'@================================================================================
-' Helper Functions
-'@================================================================================
-
-Private Function tb() As tradeBuildAPI
-Set tb = mTradeBuildAPIRef.Target
-End Function
+End Sub
 
 

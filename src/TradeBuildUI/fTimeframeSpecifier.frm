@@ -95,6 +95,10 @@ mCancelled = False
 TimeframeSpecifier1.SetFocus
 End Sub
 
+Private Sub Form_Load()
+If TimeframeSpecifier1.isTimeframeValid Then OkButton.Enabled = True
+End Sub
+
 '@================================================================================
 ' XXXX Interface Members
 '@================================================================================
@@ -125,20 +129,16 @@ cancelled = mCancelled
 End Property
 
 Friend Property Get timeframeDesignator() As TimePeriod
+Dim tp As TimePeriod
 If mCancelled Then
         Err.Raise ErrorCodes.ErrIllegalStateException, _
                 ProjectName & "." & ModuleName & ":" & "timeframeDesignator", _
                 "Cancelled by user"
 End If
-timeframeDesignator = TimeframeSpecifier1.timeframeDesignator
+tp = TimeframeSpecifier1.timeframeDesignator
+timeframeDesignator = tp
 End Property
 
-Public Property Let tradeBuildAPI( _
-                ByVal tb As tradeBuildAPI)
-TimeframeSpecifier1.tradeBuildAPI = tb
-If TimeframeSpecifier1.isTimeframeValid Then OkButton.Enabled = True
-End Property
-                
 '@================================================================================
 ' Methods
 '@================================================================================

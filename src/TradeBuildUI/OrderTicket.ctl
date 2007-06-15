@@ -727,7 +727,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements TWUtilities.ChangeListener
+Implements ChangeListener
 Implements QuoteListener
 
 '================================================================================
@@ -815,7 +815,7 @@ End Sub
 ' ChangeListener Interface Members
 '================================================================================
 
-Private Sub ChangeListener_Change(ev As TWUtilities.ChangeEvent)
+Private Sub ChangeListener_Change(ev As ChangeEvent)
 Dim op As OrderPlex
 
 Set op = ev.Source
@@ -1201,7 +1201,7 @@ End Sub
 ' mTicker Event Handlers
 '================================================================================
 
-Private Sub mTicker_StateChange(ev As TWUtilities.StateChangeEvent)
+Private Sub mTicker_StateChange(ev As StateChangeEvent)
 
 Select Case ev.State
 Case TickerStateCreated

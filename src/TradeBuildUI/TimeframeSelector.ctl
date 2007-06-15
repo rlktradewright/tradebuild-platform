@@ -75,9 +75,6 @@ Private Const TimeframeCustom As String = "Custom"
 ' Member variables
 '@================================================================================
 
-Private mTB As tradeBuildAPI
-Attribute mTB.VB_VarHelpID = -1
-
 Private mSpecifier As fTimeframeSpecifier
 
 Private mLatestLength As Long
@@ -86,6 +83,10 @@ Private mLatestUnit As TimePeriodUnits
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub UserControl_Initialize()
+setupTimeframeCombo
+End Sub
 
 Private Sub UserControl_InitProperties()
 On Error Resume Next
@@ -141,7 +142,6 @@ Dim tp As TimePeriod
 If TimeframeCombo.Text = TimeframeCustom Then
     If mSpecifier Is Nothing Then
         Set mSpecifier = New fTimeframeSpecifier
-        mSpecifier.tradeBuildAPI = mTB
     End If
     mSpecifier.Show vbModal
     If Not mSpecifier.cancelled Then
@@ -189,46 +189,23 @@ End Property
 
 Public Property Let timeframeDesignator( _
                 ByRef value As TimePeriod)
-
-If mTB Is Nothing Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "timeframeDesignator", _
-            "No reference to TradeBuildAPI supplied yet"
-End If
-
 selectComboEntry value.length, value.units
 End Property
 
 Public Property Get timeframeDesignator() As TimePeriod
+Dim tp As TimePeriod
 
-If mTB Is Nothing Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "timeframeDesignator", _
-            "No reference to TradeBuildAPI supplied yet"
-End If
-
-timeframeDesignator = TimePeriodFromString(TimeframeCombo.selectedItem.Text)
+tp = TimePeriodFromString(TimeframeCombo.selectedItem.Text)
+timeframeDesignator = tp
 
 End Property
 
-Public Property Let tradeBuildAPI( _
-                ByVal tb As tradeBuildAPI)
-Set mTB = tb
-setupTimeframeCombo
-End Property
-                
 '@================================================================================
 ' Methods
 '@================================================================================
 
 Public Sub selectTimeframe( _
                 ByRef tfDesignator As TimePeriod)
-
-If mTB Is Nothing Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "timeframeDesignator", _
-            "No reference to TradeBuildAPI supplied yet"
-End If
 
 selectComboEntry tfDesignator.length, tfDesignator.units
 End Sub
@@ -247,7 +224,7 @@ Dim s As String
 tp.length = periodlength
 tp.units = periodUnit
 s = TimePeriodToString(tp)
-If mTB.IsSupportedHistoricalDataPeriod(periodlength, periodUnit) Then
+If TradeBuildAPI.IsSupportedHistoricalDataPeriod(periodlength, periodUnit) Then
     TimeframeCombo.ComboItems.add , s, s
 End If
 End Sub
@@ -264,7 +241,7 @@ Dim unitFound As Boolean
 tp.length = periodlength
 tp.units = periodUnit
 s = TimePeriodToString(tp)
-If mTB.IsSupportedHistoricalDataPeriod(periodlength, periodUnit) Then
+If TradeBuildAPI.IsSupportedHistoricalDataPeriod(periodlength, periodUnit) Then
     For i = 2 To TimeframeCombo.ComboItems.count
         Dim currTp As TimePeriod
         currTp = TimePeriodFromString(TimeframeCombo.ComboItems(i).Text)
@@ -288,7 +265,7 @@ On Error GoTo Err
 tp.length = periodlength
 tp.units = periodUnit
 s = TimePeriodToString(tp)
-If mTB.IsSupportedHistoricalDataPeriod(periodlength, periodUnit) Then
+If TradeBuildAPI.IsSupportedHistoricalDataPeriod(periodlength, periodUnit) Then
     TimeframeCombo.ComboItems.item(s).Selected = True
     mLatestLength = periodlength
     mLatestUnit = periodUnit

@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#4.0#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#6.0#0"; "ChartSkil2-6.ocx"
 Begin VB.UserControl TradeBuildChart 
    ClientHeight    =   4965
    ClientLeft      =   0
@@ -781,7 +781,7 @@ Private Function createBarsStudyConfig() As StudyConfiguration
 Dim lStudy As study
 Dim studyDef As StudyDefinition
 ReDim inputValueNames(1) As String
-Dim params As New Parameters2.Parameters
+Dim params As New Parameters
 Dim studyValueConfig As StudyValueConfiguration
 Dim barsStyle As barStyle
 Dim volumeStyle As dataPointStyle

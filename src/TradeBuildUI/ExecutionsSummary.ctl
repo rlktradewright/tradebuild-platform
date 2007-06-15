@@ -45,7 +45,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements TWUtilities.CollectionChangeListener
+Implements CollectionChangeListener
 
 '================================================================================
 ' Events
@@ -69,7 +69,7 @@ Private Const ExecutionsTimeWidth = 23
 '================================================================================
 
 Private Enum ExecutionsColumns
-    ExecId = 1
+    execId = 1
     orderId
     Action
     quantity
@@ -98,7 +98,7 @@ Set mMonitoredWorkspaces = New Collection
 ExecutionsList.Left = 0
 ExecutionsList.Top = 0
 
-ExecutionsList.ColumnHeaders.add ExecutionsColumns.ExecId, , "Exec id"
+ExecutionsList.ColumnHeaders.add ExecutionsColumns.execId, , "Exec id"
 ExecutionsList.ColumnHeaders.add ExecutionsColumns.orderId, , "ID"
 ExecutionsList.ColumnHeaders.add ExecutionsColumns.Action, , "Action"
 ExecutionsList.ColumnHeaders.add ExecutionsColumns.quantity, , "Quant"
@@ -115,7 +115,7 @@ Private Sub UserControl_Resize()
 ExecutionsList.Height = UserControl.Height
 ExecutionsList.Width = UserControl.Width
 
-ExecutionsList.ColumnHeaders(ExecutionsColumns.ExecId).Width = _
+ExecutionsList.ColumnHeaders(ExecutionsColumns.execId).Width = _
     ExecutionsExecIdWidth * ExecutionsList.Width / 100
 
 ExecutionsList.ColumnHeaders(ExecutionsColumns.orderId).Width = _
@@ -147,7 +147,7 @@ End Sub
 '================================================================================
 
 Private Sub CollectionChangeListener_Change( _
-                ev As TWUtilities.CollectionChangeEvent)
+                ev As CollectionChangeEvent)
 Dim exec As Execution
 Dim listItem As listItem
 
@@ -156,18 +156,18 @@ If ev.changeType <> CollItemAdded Then Exit Sub
 Set exec = ev.affectedObject
 
 On Error Resume Next
-Set listItem = ExecutionsList.ListItems(exec.ExecId)
+Set listItem = ExecutionsList.ListItems(exec.execId)
 On Error GoTo 0
 
 If listItem Is Nothing Then
-    Set listItem = ExecutionsList.ListItems.add(, exec.ExecId, exec.ExecId)
+    Set listItem = ExecutionsList.ListItems.add(, exec.execId, exec.execId)
 End If
 
 listItem.SubItems(ExecutionsColumns.Action - 1) = IIf(exec.Action = ActionBuy, "BUY", "SELL")
 listItem.SubItems(ExecutionsColumns.orderId - 1) = exec.orderBrokerId
 listItem.SubItems(ExecutionsColumns.price - 1) = exec.price
 listItem.SubItems(ExecutionsColumns.quantity - 1) = exec.quantity
-listItem.SubItems(ExecutionsColumns.symbol - 1) = exec.ContractSpecifier.localSymbol
+listItem.SubItems(ExecutionsColumns.symbol - 1) = exec.contractSpecifier.localSymbol
 listItem.SubItems(ExecutionsColumns.Time - 1) = exec.Time
 
 End Sub

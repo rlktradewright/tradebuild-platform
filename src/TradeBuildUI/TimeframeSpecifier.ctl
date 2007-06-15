@@ -101,13 +101,15 @@ Private Const PropDfltForeColor                         As Long = vbWindowText
 ' Member variables
 '@================================================================================
 
-Private mTB As tradeBuildAPI
-
 Private mDefaultUnits As TimePeriodUnits
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub UserControl_Initialize()
+setupTimeframeUnitsCombo
+End SUb
 
 Private Sub UserControl_InitProperties()
 On Error Resume Next
@@ -283,35 +285,19 @@ foreColor = TimeframeUnitsCombo.foreColor
 End Property
 
 Public Property Get isTimeframeValid() As Boolean
-If mTB Is Nothing Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "isTimeframeValid", _
-            "No reference to TradeBuildAPI supplied yet"
-End If
 
 If TimeframeLengthText = "" Then Exit Function
 
-If mTB.IsSupportedHistoricalDataPeriod(CLng(TimeframeLengthText), _
+If TradeBuildAPI.IsSupportedHistoricalDataPeriod(CLng(TimeframeLengthText), _
                                         TimePeriodUnitsFromString(TimeframeUnitsCombo.Text)) Then isTimeframeValid = True
 End Property
 
 Public Property Get timeframeDesignator() As TimePeriod
-If mTB Is Nothing Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "timeframeDesignator", _
-            "No reference to TradeBuildAPI supplied yet"
-End If
 
 timeframeDesignator.length = TimeframeLengthText
 timeframeDesignator.units = TimePeriodUnitsFromString(TimeframeUnitsCombo.selectedItem.Text)
 End Property
 
-Public Property Let tradeBuildAPI( _
-                ByVal tb As tradeBuildAPI)
-Set mTB = tb
-setupTimeframeUnitsCombo
-End Property
-                
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -321,9 +307,7 @@ Public Sub initialise( _
                 ByVal units As TimePeriodUnits)
 TimeframeLengthText = length
 mDefaultUnits = units
-If Not mTB Is Nothing Then
-    setUnitsSelection mDefaultUnits
-End If
+setUnitsSelection mDefaultUnits
 End Sub
 
 '@================================================================================
@@ -334,12 +318,12 @@ Private Sub addItem( _
                 ByVal value As TimePeriodUnits)
 Dim s As String
 s = TimePeriodUnitsToString(value)
-If mTB.IsSupportedHistoricalDataPeriod(0, value) Then TimeframeUnitsCombo.ComboItems.add , s, s
+If TradeBuildAPI.IsSupportedHistoricalDataPeriod(0, value) Then TimeframeUnitsCombo.ComboItems.add , s, s
 End Sub
 
 Private Function setUnitsSelection( _
                 ByVal value As TimePeriodUnits) As Boolean
-If mTB.IsSupportedHistoricalDataPeriod(0, value) Then
+If TradeBuildAPI.IsSupportedHistoricalDataPeriod(0, value) Then
     TimeframeUnitsCombo.ComboItems.item(TimePeriodUnitsToString(value)).Selected = True
     setUnitsSelection = True
 End If

@@ -68,10 +68,17 @@ Private Const ModuleName                    As String = "GlobalClass"
 ' Methods
 '@================================================================================
 
+Public Function ChooseTickfiles() As TickfileSPecifier()
+Dim f As fTickfileSelector
+Set f = New fTickfileSelector
+f.Show vbModal
+ChooseTickfiles = f.TickfileSpecifiers
+Unload f
+End Function
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
 
-Option Explicit
 

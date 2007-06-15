@@ -84,7 +84,7 @@ Private Enum TickerGridColumns
     openInterest
     Description
     symbol
-    sectype
+    secType
     expiry
     exchange
     OptionRight
@@ -416,7 +416,7 @@ End Sub
 ' mTickers Event Handlers
 '================================================================================
 
-Private Sub mTickers_StateChange(ev As TWUtilities.StateChangeEvent)
+Private Sub mTickers_StateChange(ev As StateChangeEvent)
 Dim lTicker As ticker
 Dim handle As Long
 Dim lContract As Contract
@@ -465,13 +465,13 @@ Case TickerStateRunning
     TickerGrid.Text = lContract.specifier.exchange
     
     TickerGrid.col = TickerGridColumns.expiry
-    TickerGrid.Text = lContract.ExpiryDate
+    TickerGrid.Text = lContract.expiryDate
     
     TickerGrid.col = TickerGridColumns.OptionRight
     TickerGrid.Text = OptionRightToString(lContract.specifier.Right)
     
-    TickerGrid.col = TickerGridColumns.sectype
-    TickerGrid.Text = SecTypeToString(lContract.specifier.sectype)
+    TickerGrid.col = TickerGridColumns.secType
+    TickerGrid.Text = SecTypeToString(lContract.specifier.secType)
     
     TickerGrid.col = TickerGridColumns.strike
     TickerGrid.Text = lContract.specifier.strike
@@ -635,7 +635,7 @@ invertCellColors
 TickerGrid.col = TickerGridColumns.exchange
 invertCellColors
 
-TickerGrid.col = TickerGridColumns.sectype
+TickerGrid.col = TickerGridColumns.secType
 invertCellColors
 
 TickerGrid.col = TickerGridColumns.symbol
@@ -743,7 +743,7 @@ setupTickerGridColumn 0, TickerGridColumns.closePrice, TickerGridColumnWidths.Cl
 setupTickerGridColumn 0, TickerGridColumns.openInterest, TickerGridColumnWidths.openInterestWidth, "Open interest", False, AlignmentSettings.flexAlignCenterCenter
 setupTickerGridColumn 0, TickerGridColumns.Description, TickerGridColumnWidths.DescriptionWidth, "Description", True, AlignmentSettings.flexAlignLeftCenter
 setupTickerGridColumn 0, TickerGridColumns.symbol, TickerGridColumnWidths.SymbolWidth, "Symbol", True, AlignmentSettings.flexAlignLeftCenter
-setupTickerGridColumn 0, TickerGridColumns.sectype, TickerGridColumnWidths.SecTypeWidth, "Sec Type", True, AlignmentSettings.flexAlignLeftCenter
+setupTickerGridColumn 0, TickerGridColumns.secType, TickerGridColumnWidths.SecTypeWidth, "Sec Type", True, AlignmentSettings.flexAlignLeftCenter
 setupTickerGridColumn 0, TickerGridColumns.expiry, TickerGridColumnWidths.ExpiryWidth, "Expiry", True, AlignmentSettings.flexAlignLeftCenter
 setupTickerGridColumn 0, TickerGridColumns.exchange, TickerGridColumnWidths.ExchangeWidth, "Exchange", True, AlignmentSettings.flexAlignLeftCenter
 setupTickerGridColumn 0, TickerGridColumns.OptionRight, TickerGridColumnWidths.OptionRightWidth, "Right", True, AlignmentSettings.flexAlignLeftCenter

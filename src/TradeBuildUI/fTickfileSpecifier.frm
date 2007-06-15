@@ -17,8 +17,8 @@ Begin VB.Form fTickfileSpecifier
       Caption         =   "Session times"
       Height          =   855
       Left            =   3000
-      TabIndex        =   35
-      Top             =   2160
+      TabIndex        =   21
+      Top             =   2520
       Width           =   3735
       Begin VB.PictureBox Picture4 
          BorderStyle     =   0  'None
@@ -26,7 +26,7 @@ Begin VB.Form fTickfileSpecifier
          Left            =   120
          ScaleHeight     =   570
          ScaleWidth      =   3495
-         TabIndex        =   36
+         TabIndex        =   22
          Top             =   240
          Width           =   3495
          Begin VB.OptionButton UseContractTimesOption 
@@ -34,7 +34,7 @@ Begin VB.Form fTickfileSpecifier
             Enabled         =   0   'False
             Height          =   255
             Left            =   0
-            TabIndex        =   39
+            TabIndex        =   25
             Top             =   0
             Value           =   -1  'True
             Width           =   1695
@@ -44,7 +44,7 @@ Begin VB.Form fTickfileSpecifier
             Enabled         =   0   'False
             Height          =   285
             Left            =   2640
-            TabIndex        =   14
+            TabIndex        =   8
             Top             =   240
             Width           =   660
          End
@@ -53,7 +53,7 @@ Begin VB.Form fTickfileSpecifier
             Enabled         =   0   'False
             Height          =   285
             Left            =   2640
-            TabIndex        =   13
+            TabIndex        =   7
             Top             =   0
             Width           =   660
          End
@@ -62,7 +62,7 @@ Begin VB.Form fTickfileSpecifier
             Enabled         =   0   'False
             Height          =   255
             Left            =   0
-            TabIndex        =   12
+            TabIndex        =   6
             Top             =   240
             Width           =   1695
          End
@@ -71,7 +71,7 @@ Begin VB.Form fTickfileSpecifier
             Caption         =   "To"
             Height          =   255
             Left            =   2040
-            TabIndex        =   38
+            TabIndex        =   24
             Top             =   240
             Width           =   495
          End
@@ -80,7 +80,7 @@ Begin VB.Form fTickfileSpecifier
             Caption         =   "From"
             Height          =   255
             Left            =   2040
-            TabIndex        =   37
+            TabIndex        =   23
             Top             =   0
             Width           =   495
          End
@@ -91,7 +91,7 @@ Begin VB.Form fTickfileSpecifier
       Enabled         =   0   'False
       Height          =   495
       Left            =   6840
-      TabIndex        =   15
+      TabIndex        =   9
       Top             =   240
       Width           =   735
    End
@@ -100,62 +100,65 @@ Begin VB.Form fTickfileSpecifier
       Caption         =   "Cancel"
       Height          =   495
       Left            =   6840
-      TabIndex        =   16
+      TabIndex        =   10
       Top             =   840
       Width           =   735
    End
    Begin VB.Frame Frame3 
       Caption         =   "Dates/Times"
-      Height          =   975
+      Height          =   1455
       Left            =   3000
-      TabIndex        =   29
-      Top             =   1200
+      TabIndex        =   16
+      Top             =   960
       Width           =   3735
       Begin VB.PictureBox Picture3 
          BorderStyle     =   0  'None
-         Height          =   615
+         Height          =   1095
          Left            =   120
-         ScaleHeight     =   615
+         ScaleHeight     =   1095
          ScaleWidth      =   3495
-         TabIndex        =   30
+         TabIndex        =   17
          Top             =   240
          Width           =   3495
-         Begin VB.CheckBox CompleteSessionCheck 
-            Height          =   255
-            Left            =   1560
-            TabIndex        =   11
-            Top             =   360
+         Begin VB.CheckBox UseExchangeTimezoneCheck 
+            Caption         =   "Use exchange timezone"
+            Enabled         =   0   'False
+            Height          =   375
+            Left            =   0
+            TabIndex        =   2
+            Top             =   0
             Value           =   1  'Checked
-            Width           =   255
+            Width           =   3015
+         End
+         Begin VB.CheckBox CompleteSessionCheck 
+            Caption         =   "Complete sessions"
+            Height          =   255
+            Left            =   480
+            TabIndex        =   5
+            Top             =   840
+            Value           =   1  'Checked
+            Width           =   2775
          End
          Begin VB.TextBox FromText 
             Height          =   285
             Left            =   480
-            TabIndex        =   9
-            Top             =   0
+            TabIndex        =   3
+            Top             =   480
             Width           =   1260
          End
          Begin VB.TextBox ToText 
             Height          =   285
             Left            =   2160
-            TabIndex        =   10
-            Top             =   0
+            TabIndex        =   4
+            Top             =   480
             Width           =   1260
-         End
-         Begin VB.Label Label9 
-            Caption         =   "Complete session(s)"
-            Height          =   255
-            Left            =   0
-            TabIndex        =   33
-            Top             =   360
-            Width           =   1455
          End
          Begin VB.Label Label8 
             Caption         =   "From"
             Height          =   255
             Left            =   0
-            TabIndex        =   32
-            Top             =   0
+            TabIndex        =   19
+            Top             =   480
             Width           =   855
          End
          Begin VB.Label Label7 
@@ -163,26 +166,26 @@ Begin VB.Form fTickfileSpecifier
             Caption         =   "To"
             Height          =   255
             Left            =   1800
-            TabIndex        =   31
-            Top             =   0
+            TabIndex        =   18
+            Top             =   480
             Width           =   255
          End
       End
    End
    Begin VB.Frame Frame1 
       Caption         =   "Data source"
-      Height          =   1095
+      Height          =   735
       Left            =   3000
-      TabIndex        =   26
+      TabIndex        =   13
       Top             =   120
       Width           =   3735
       Begin VB.PictureBox Picture2 
          BorderStyle     =   0  'None
-         Height          =   735
+         Height          =   375
          Left            =   120
-         ScaleHeight     =   735
+         ScaleHeight     =   375
          ScaleWidth      =   3495
-         TabIndex        =   27
+         TabIndex        =   14
          Top             =   240
          Width           =   3495
          Begin VB.ComboBox FormatCombo 
@@ -191,7 +194,7 @@ Begin VB.Form fTickfileSpecifier
             Left            =   720
             List            =   "fTickfileSpecifier.frx":0002
             Style           =   2  'Dropdown List
-            TabIndex        =   8
+            TabIndex        =   1
             Top             =   0
             Width           =   2775
          End
@@ -199,7 +202,7 @@ Begin VB.Form fTickfileSpecifier
             Caption         =   "Format"
             Height          =   255
             Left            =   120
-            TabIndex        =   28
+            TabIndex        =   15
             Top             =   0
             Width           =   855
          End
@@ -209,7 +212,7 @@ Begin VB.Form fTickfileSpecifier
       Caption         =   "Contract specification"
       Height          =   3255
       Left            =   120
-      TabIndex        =   17
+      TabIndex        =   11
       Top             =   120
       Width           =   2775
       Begin VB.PictureBox Picture1 
@@ -220,134 +223,17 @@ Begin VB.Form fTickfileSpecifier
          Left            =   120
          ScaleHeight     =   2895
          ScaleWidth      =   2535
-         TabIndex        =   18
+         TabIndex        =   12
          Top             =   240
          Width           =   2535
-         Begin VB.TextBox ShortNameText 
-            Height          =   285
-            Left            =   1200
+         Begin TradeBuildUI26.ContractSpecBuilder ContractSpecBuilder1 
+            Height          =   2895
+            Left            =   0
             TabIndex        =   0
             Top             =   0
-            Width           =   1335
-         End
-         Begin VB.ComboBox RightCombo 
-            Height          =   315
-            ItemData        =   "fTickfileSpecifier.frx":0004
-            Left            =   1200
-            List            =   "fTickfileSpecifier.frx":0006
-            Style           =   2  'Dropdown List
-            TabIndex        =   7
-            Top             =   2520
-            Width           =   855
-         End
-         Begin VB.ComboBox TypeCombo 
-            Height          =   315
-            ItemData        =   "fTickfileSpecifier.frx":0008
-            Left            =   1200
-            List            =   "fTickfileSpecifier.frx":000A
-            Style           =   2  'Dropdown List
-            TabIndex        =   2
-            Top             =   720
-            Width           =   1335
-         End
-         Begin VB.TextBox SymbolText 
-            Height          =   285
-            Left            =   1200
-            TabIndex        =   1
-            Top             =   360
-            Width           =   1335
-         End
-         Begin VB.TextBox ExpiryText 
-            Height          =   285
-            Left            =   1200
-            TabIndex        =   3
-            Top             =   1080
-            Width           =   1335
-         End
-         Begin VB.TextBox ExchangeText 
-            Height          =   285
-            Left            =   1200
-            TabIndex        =   4
-            Top             =   1440
-            Width           =   1335
-         End
-         Begin VB.TextBox StrikePriceText 
-            Height          =   285
-            Left            =   1200
-            TabIndex        =   6
-            Top             =   2160
-            Width           =   1335
-         End
-         Begin VB.TextBox CurrencyText 
-            Height          =   285
-            Left            =   1200
-            TabIndex        =   5
-            Top             =   1800
-            Width           =   1335
-         End
-         Begin VB.Label Label12 
-            Caption         =   "Short name"
-            Height          =   255
-            Left            =   120
-            TabIndex        =   40
-            Top             =   0
-            Width           =   855
-         End
-         Begin VB.Label Label21 
-            Caption         =   "Right"
-            Height          =   255
-            Left            =   120
-            TabIndex        =   25
-            Top             =   2520
-            Width           =   855
-         End
-         Begin VB.Label Label17 
-            Caption         =   "Strike price"
-            Height          =   255
-            Left            =   120
-            TabIndex        =   24
-            Top             =   2160
-            Width           =   855
-         End
-         Begin VB.Label Label3 
-            Caption         =   "Symbol"
-            Height          =   255
-            Left            =   120
-            TabIndex        =   23
-            Top             =   360
-            Width           =   855
-         End
-         Begin VB.Label Label4 
-            Caption         =   "Type"
-            Height          =   255
-            Left            =   120
-            TabIndex        =   22
-            Top             =   720
-            Width           =   855
-         End
-         Begin VB.Label Label5 
-            Caption         =   "Expiry"
-            Height          =   255
-            Left            =   120
-            TabIndex        =   21
-            Top             =   1080
-            Width           =   855
-         End
-         Begin VB.Label Label6 
-            Caption         =   "Exchange"
-            Height          =   255
-            Left            =   120
-            TabIndex        =   20
-            Top             =   1440
-            Width           =   855
-         End
-         Begin VB.Label Label26 
-            Caption         =   "Currency"
-            Height          =   255
-            Left            =   120
-            TabIndex        =   19
-            Top             =   1800
-            Width           =   855
+            Width           =   2535
+            _ExtentX        =   4471
+            _ExtentY        =   5106
          End
       End
    End
@@ -355,7 +241,7 @@ Begin VB.Form fTickfileSpecifier
       ForeColor       =   &H000000FF&
       Height          =   255
       Left            =   120
-      TabIndex        =   34
+      TabIndex        =   20
       Top             =   3480
       Width           =   7455
    End
@@ -388,7 +274,7 @@ Option Explicit
 ' Events
 '@================================================================================
 
-Event TickfilesSpecified(ByRef pTickfileSpecifier() As TradeBuild26.TickfileSpecifier)
+Event TickfilesSpecified(ByRef pTickfileSpecifier() As TickfileSPecifier)
 
 '@================================================================================
 ' Constants
@@ -406,28 +292,15 @@ Event TickfilesSpecified(ByRef pTickfileSpecifier() As TradeBuild26.TickfileSpec
 ' Member variables
 '@================================================================================
 
-Private mTradeBuildAPIRef           As WeakReference
-
-Private mSupportedTickfileFormats() As TradeBuild26.TickfileFormatSpecifier
-Private WithEvents mContracts As TradeBuild26.Contracts
+Private mSupportedTickfileFormats() As TickfileFormatSpecifier
+Private WithEvents mContracts       As Contracts
 Attribute mContracts.VB_VarHelpID = -1
+
+Private mSecType                    As SecurityTypes
 
 '@================================================================================
 ' Form Event Handlers
 '@================================================================================
-
-Private Sub Form_Load()
-gAddItemToCombo TypeCombo, gSecTypeToString(SecurityTypes.SecTypeStock), SecurityTypes.SecTypeStock
-gAddItemToCombo TypeCombo, gSecTypeToString(SecurityTypes.SecTypeFuture), SecurityTypes.SecTypeFuture
-gAddItemToCombo TypeCombo, gSecTypeToString(SecurityTypes.SecTypeOption), SecurityTypes.SecTypeOption
-gAddItemToCombo TypeCombo, gSecTypeToString(SecurityTypes.SecTypeFuturesOption), SecurityTypes.SecTypeFuturesOption
-gAddItemToCombo TypeCombo, gSecTypeToString(SecurityTypes.SecTypeCash), SecurityTypes.SecTypeCash
-gAddItemToCombo TypeCombo, gSecTypeToString(SecurityTypes.SecTypeIndex), SecurityTypes.SecTypeIndex
-
-gAddItemToCombo RightCombo, gOptionRightToString(OptionRights.OptCall), OptionRights.OptCall
-gAddItemToCombo RightCombo, gOptionRightToString(OptionRights.OptPut), OptionRights.OptPut
-
-End Sub
 
 '@================================================================================
 ' xxxx Interface Members
@@ -443,17 +316,21 @@ End Sub
 
 Private Sub CompleteSessionCheck_Click()
 If CompleteSessionCheck = vbChecked Then
-    UseContractTimesOption.enabled = True
-    UseCustomTimesOption.enabled = True
+    UseContractTimesOption.Enabled = True
+    UseCustomTimesOption.Enabled = True
 Else
-    UseContractTimesOption.enabled = False
-    UseCustomTimesOption.enabled = False
+    UseContractTimesOption.Enabled = False
+    UseCustomTimesOption.Enabled = False
 End If
 adjustCustomTimeFieldAttributes
 checkOk
 End Sub
 
-Private Sub CurrencyText_Change()
+Private Sub ContractSpecBuilder1_NotReady()
+OkButton.Enabled = False
+End Sub
+
+Private Sub ContractSpecBuilder1_Ready()
 checkOk
 End Sub
 
@@ -465,111 +342,42 @@ Private Sub CustomToTimeText_Change()
 checkOk
 End Sub
 
-Private Sub ExchangeText_Change()
-checkOk
-End Sub
-
-Private Sub ExpiryText_Change()
-checkOk
-End Sub
-
 Private Sub FromText_Change()
 checkOk
 End Sub
 
 Private Sub OkButton_Click()
-Dim contractSpec As TradeBuild26.contractSpecifier
+Dim contractSpec As contractSpecifier
+Dim lContractsBuilder As ContractsBuilder
 
-ErrorLabel.Caption = ""
+On Error GoTo Err
+
+ErrorLabel.caption = ""
 
 Screen.MousePointer = vbHourglass
 
-Set contractSpec = New TradeBuild26.contractSpecifier
-With contractSpec
-    .symbol = SymbolText.Text
-    .localSymbol = ShortNameText.Text
-    .sectype = getSecType
-    .expiry = IIf(.sectype = SecurityTypes.SecTypeFuture Or _
-                    .sectype = SecurityTypes.SecTypeFuturesOption Or _
-                    .sectype = SecurityTypes.SecTypeOption, _
-                    ExpiryText.Text, _
-                    "")
-    .exchange = ExchangeText.Text
-    .currencyCode = CurrencyText.Text
-    If .sectype = SecurityTypes.SecTypeFuturesOption Or _
-        .sectype = SecurityTypes.SecTypeOption _
-    Then
-        .strike = IIf(StrikePriceText.Text = "", 0, StrikePriceText.Text)
-        If RightCombo.Text <> "" Then
-            .right = RightCombo.itemData(RightCombo.ListIndex)
-        End If
-    End If
-End With
+Set contractSpec = ContractSpecBuilder1.contractSpecifier
+mSecType = contractSpec.sectype
 
-Set mContracts = tb.NewContracts(contractSpec)
-mContracts.Load
+Set lContractsBuilder = CreateContractsBuilder(contractSpec)
+Set mContracts = lContractsBuilder.Contracts
+TradeBuildAPI.loadContracts lContractsBuilder
 
-End Sub
+Exit Sub
 
-Private Sub RightCombo_Click()
-checkOk
-End Sub
+Err:
 
-Private Sub shortnametext_Change()
-checkOk
-End Sub
-
-Private Sub StrikePriceText_Change()
-checkOk
-End Sub
-
-Private Sub SymbolText_Change()
-checkOk
+Screen.MousePointer = vbDefault
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    ErrorLabel.caption = Err.Description
+Else
+    Err.Raise Err.Number
+End If
+    
 End Sub
 
 Private Sub ToText_Change()
 checkOk
-End Sub
-
-Private Sub TypeCombo_Click()
-
-Select Case getSecType
-Case SecurityTypes.SecTypeNone
-    ExpiryText.enabled = True
-    StrikePriceText.enabled = True
-    RightCombo.enabled = True
-Case SecurityTypes.SecTypeFuture
-    ExpiryText.enabled = True
-    StrikePriceText.enabled = False
-    RightCombo.enabled = False
-Case SecurityTypes.SecTypeStock
-    ExpiryText.enabled = False
-    StrikePriceText.enabled = False
-    RightCombo.enabled = False
-Case SecurityTypes.SecTypeOption
-    ExpiryText.enabled = True
-    StrikePriceText.enabled = True
-    RightCombo.enabled = True
-Case SecurityTypes.SecTypeFuturesOption
-    ExpiryText.enabled = True
-    StrikePriceText.enabled = True
-    RightCombo.enabled = True
-Case SecurityTypes.SecTypeCash
-    ExpiryText.enabled = False
-    StrikePriceText.enabled = False
-    RightCombo.enabled = False
-Case SecurityTypes.SecTypeIndex
-    ExpiryText.enabled = False
-    StrikePriceText.enabled = False
-    RightCombo.enabled = False
-Case SecurityTypes.SecTypeBag
-    ExpiryText.enabled = False
-    StrikePriceText.enabled = False
-    RightCombo.enabled = False
-End Select
-
-checkOk
-
 End Sub
 
 Private Sub UseContractTimesOption_Click()
@@ -588,19 +396,18 @@ End Sub
 
 Private Sub mContracts_ContractSpecifierInvalid(ByVal reason As String)
 Screen.MousePointer = vbDefault
-ErrorLabel.Caption = "Invalid contract specification:" & reason
+ErrorLabel.caption = "Invalid contract specification:" & reason
 End Sub
 
 Private Sub mContracts_NoMoreContractDetails()
-Dim lTickfileSpecifiers() As TradeBuild26.TickfileSpecifier
+Dim lTickfileSpecifiers() As TickfileSPecifier
 Dim i As Long
 Dim j As Long
 Dim k As Long
-Dim lContract As TradeBuild26.Contract
+Dim lContract As Contract
 Dim lSessionBuilder As SessionBuilder
 Dim lSession As session
-Dim currContract As TradeBuild26.Contract
-Dim sectype As TradeBuild26.SecurityTypes
+Dim currContract As Contract
 Dim sessionStartTime As Date
 Dim sessionEndTime As Date
 Dim fromSessionStart As Date
@@ -608,36 +415,35 @@ Dim fromSessionEnd As Date
 Dim toSessionStart As Date
 Dim toSessionEnd As Date
 Dim endTime As Date
-Dim tickfileFormatID As String
+Dim TickfileFormatID As String
 
 Screen.MousePointer = vbDefault
-If mContracts.Count = 0 Then
-    ErrorLabel.Caption = "No contracts meet this specification"
+If mContracts.count = 0 Then
+    ErrorLabel.caption = "No contracts meet this specification"
     Exit Sub
 End If
 
-sectype = getSecType
-If sectype <> TradeBuild26.SecurityTypes.SecTypeFuture And _
-    sectype <> TradeBuild26.SecurityTypes.SecTypeOption And _
-    sectype <> TradeBuild26.SecurityTypes.SecTypeFuturesOption _
+If mSecType <> SecurityTypes.SecTypeFuture And _
+    mSecType <> SecurityTypes.SecTypeOption And _
+    mSecType <> SecurityTypes.SecTypeFuturesOption _
 Then
-    If mContracts.Count > 1 Then
+    If mContracts.count > 1 Then
         ' don't see how this can happen, but just in case!
-        ErrorLabel.Caption = "More than one contract meets this specification"
+        ErrorLabel.caption = "More than one contract meets this specification"
         Exit Sub
     End If
 End If
     
 For k = 0 To UBound(mSupportedTickfileFormats)
     If mSupportedTickfileFormats(k).name = FormatCombo.Text Then
-        tickfileFormatID = mSupportedTickfileFormats(k).FormalID
+        TickfileFormatID = mSupportedTickfileFormats(k).FormalID
         Exit For
     End If
 Next
 
 ' get the most recent contract (though they should all have the same
 'info regarding session times)
-Set lContract = mContracts(mContracts.Count)
+Set lContract = mContracts(mContracts.count)
 
 Set lSessionBuilder = New SessionBuilder
 Set lSession = lSessionBuilder.session
@@ -672,18 +478,18 @@ Else
 End If
 
 ' find contract for datetime
-Dim aContract As TradeBuild26.Contract
+Dim aContract As Contract
 
-If sectype <> TradeBuild26.SecurityTypes.SecTypeFuture And _
-    sectype <> TradeBuild26.SecurityTypes.SecTypeOption And _
-    sectype <> TradeBuild26.SecurityTypes.SecTypeFuturesOption _
+If mSecType <> SecurityTypes.SecTypeFuture And _
+    mSecType <> SecurityTypes.SecTypeOption And _
+    mSecType <> SecurityTypes.SecTypeFuturesOption _
 Then
     Set currContract = mContracts(1)
 Else
-    For i = 1 To mContracts.Count
+    For i = 1 To mContracts.count
         Set aContract = mContracts(i)
         If DateValue(fromSessionStart) <= _
-            (aContract.ExpiryDate - aContract.daysBeforeExpiryToSwitch) _
+            (aContract.expiryDate - aContract.daysBeforeExpiryToSwitch) _
         Then
             Set currContract = aContract
             Exit For
@@ -691,17 +497,16 @@ Else
     Next
     
     If currContract Is Nothing Then
-        ErrorLabel.Caption = "No contract for this from date"
+        ErrorLabel.caption = "No contract for this from date"
         Exit Sub
     End If
 End If
 
 If UseCustomTimesOption Then
-    currContract.sessionStartTime = sessionStartTime
-    currContract.sessionEndTime = sessionEndTime
+    Set currContract = editContractSessionTimes(currContract, sessionStartTime, sessionEndTime)
 End If
 
-ReDim lTickfileSpecifiers(1000) As TradeBuild26.TickfileSpecifier
+ReDim lTickfileSpecifiers(1000) As TickfileSPecifier
 
 Dim currSessionStart As Date
 Dim thisSessionStart As Date
@@ -713,25 +518,26 @@ j = 0
 If CompleteSessionCheck.value = vbChecked Then
     Do While currSessionStart < endTime
         If j > UBound(lTickfileSpecifiers) Then
-            ReDim Preserve lTickfileSpecifiers(UBound(lTickfileSpecifiers) + 1000) As TradeBuild26.TickfileSpecifier
+            ReDim Preserve lTickfileSpecifiers(UBound(lTickfileSpecifiers) + 1000) As TickfileSPecifier
         End If
-        Set lTickfileSpecifiers(j).Contract = currContract
-        lTickfileSpecifiers(j).tickfileFormatID = tickfileFormatID
+        Set lTickfileSpecifiers(j) = New TickfileSPecifier
+        lTickfileSpecifiers(j).Contract = currContract
+        lTickfileSpecifiers(j).TickfileFormatID = TickfileFormatID
         
         If UseCustomTimesOption Then
             lSession.SessionTimes currSessionStart, thisSessionStart, thisSessionEnd
-            lTickfileSpecifiers(j).From = thisSessionStart
-            lTickfileSpecifiers(j).To = thisSessionEnd
+            lTickfileSpecifiers(j).FromDate = thisSessionStart
+            lTickfileSpecifiers(j).ToDate = thisSessionEnd
             lTickfileSpecifiers(j).EntireSession = False
-            lTickfileSpecifiers(j).filename = FormatDateTime(lTickfileSpecifiers(j).From, vbGeneralDate) & _
+            lTickfileSpecifiers(j).FileName = FormatDateTime(lTickfileSpecifiers(j).FromDate, vbGeneralDate) & _
                                         "-" & _
-                                        FormatDateTime(lTickfileSpecifiers(j).To, vbGeneralDate) & _
+                                        FormatDateTime(lTickfileSpecifiers(j).ToDate, vbGeneralDate) & _
                                         " " & _
                                         Replace(currContract.specifier.ToString, vbCrLf, "; ")
         Else
-            lTickfileSpecifiers(j).From = currSessionStart
+            lTickfileSpecifiers(j).FromDate = currSessionStart
             lTickfileSpecifiers(j).EntireSession = True
-            lTickfileSpecifiers(j).filename = "Session " & _
+            lTickfileSpecifiers(j).FileName = "Session " & _
                                             FormatDateTime(DateValue(currSessionStart), vbShortDate) & _
                                             " " & _
                                             Replace(currContract.specifier.ToString, vbCrLf, "; ")
@@ -743,28 +549,29 @@ If CompleteSessionCheck.value = vbChecked Then
 '                                        sessionEndTime)
         currSessionStart = currSessionStart + 1
         
-        If sectype = TradeBuild26.SecurityTypes.SecTypeFuture Or _
-            sectype = TradeBuild26.SecurityTypes.SecTypeOption Or _
-            sectype = TradeBuild26.SecurityTypes.SecTypeFuturesOption _
+        If mSecType = SecurityTypes.SecTypeFuture Or _
+            mSecType = SecurityTypes.SecTypeOption Or _
+            mSecType = SecurityTypes.SecTypeFuturesOption _
         Then
             If DateValue(currSessionStart) > _
-                (currContract.ExpiryDate - currContract.daysBeforeExpiryToSwitch) _
+                (currContract.expiryDate - currContract.daysBeforeExpiryToSwitch) _
             Then
-                For i = i + 1 To mContracts.Count
+                For i = i + 1 To mContracts.count
                     Set aContract = mContracts(i)
                     If DateValue(currSessionStart) <= _
-                        (aContract.ExpiryDate - aContract.daysBeforeExpiryToSwitch) _
+                        (aContract.expiryDate - aContract.daysBeforeExpiryToSwitch) _
                     Then
                         Set currContract = aContract
                         If UseCustomTimesOption Then
-                            currContract.sessionStartTime = sessionStartTime
-                            currContract.sessionEndTime = sessionEndTime
+                            Set currContract = editContractSessionTimes(currContract, _
+                                                                        sessionStartTime, _
+                                                                        sessionEndTime)
                         End If
                         Exit For
                     End If
                 Next
                 If currContract Is Nothing Then
-                    ErrorLabel.Caption = "No contract from " & currSessionStart
+                    ErrorLabel.caption = "No contract from " & currSessionStart
                     Exit Sub
                 End If
             End If
@@ -773,52 +580,54 @@ If CompleteSessionCheck.value = vbChecked Then
         j = j + 1
     Loop
     If j = 0 Then
-        ErrorLabel.Caption = "No trading sessions in specified date range"
+        ErrorLabel.caption = "No trading sessions in specified date range"
         Exit Sub
     End If
-    ReDim Preserve lTickfileSpecifiers(j - 1) As TradeBuild26.TickfileSpecifier
+    ReDim Preserve lTickfileSpecifiers(j - 1) As TickfileSPecifier
 Else
-    Set lTickfileSpecifiers(0).Contract = currContract
-    lTickfileSpecifiers(j).tickfileFormatID = tickfileFormatID
+    Set lTickfileSpecifiers(0) = New TickfileSPecifier
+    lTickfileSpecifiers(0).Contract = currContract
+    lTickfileSpecifiers(0).TickfileFormatID = TickfileFormatID
 
-    lTickfileSpecifiers(0).From = CDate(FromText)
+    lTickfileSpecifiers(0).FromDate = CDate(FromText)
     currSessionStart = currSessionStart + 1
     Do While currSessionStart < endTime
         
-        If sectype = TradeBuild26.SecurityTypes.SecTypeFuture Or _
-            sectype = TradeBuild26.SecurityTypes.SecTypeOption Or _
-            sectype = TradeBuild26.SecurityTypes.SecTypeFuturesOption _
+        If mSecType = SecurityTypes.SecTypeFuture Or _
+            mSecType = SecurityTypes.SecTypeOption Or _
+            mSecType = SecurityTypes.SecTypeFuturesOption _
         Then
             If DateValue(currSessionStart) > _
-                (currContract.ExpiryDate - currContract.daysBeforeExpiryToSwitch) _
+                (currContract.expiryDate - currContract.daysBeforeExpiryToSwitch) _
             Then
-                For i = i + 1 To mContracts.Count
+                For i = i + 1 To mContracts.count
                     Set aContract = mContracts(i)
                     If DateValue(currSessionStart) <= _
-                        (aContract.ExpiryDate - aContract.daysBeforeExpiryToSwitch) _
+                        (aContract.expiryDate - aContract.daysBeforeExpiryToSwitch) _
                     Then
-                        lTickfileSpecifiers(j).To = currSessionStart
-                        lTickfileSpecifiers(j).filename = FormatDateTime(lTickfileSpecifiers(j).From, vbGeneralDate) & _
+                        lTickfileSpecifiers(j).ToDate = currSessionStart
+                        lTickfileSpecifiers(j).FileName = FormatDateTime(lTickfileSpecifiers(j).FromDate, vbGeneralDate) & _
                                                     "-" & _
-                                                    FormatDateTime(lTickfileSpecifiers(j).To, vbGeneralDate) & " " & _
+                                                    FormatDateTime(lTickfileSpecifiers(j).ToDate, vbGeneralDate) & " " & _
                                                     Replace(currContract.specifier.ToString, vbCrLf, "; ")
                         
                         Set currContract = aContract
                         
                         j = j + 1
                         If j > UBound(lTickfileSpecifiers) Then
-                            ReDim Preserve lTickfileSpecifiers(UBound(lTickfileSpecifiers) + 1000) As TradeBuild26.TickfileSpecifier
+                            ReDim Preserve lTickfileSpecifiers(UBound(lTickfileSpecifiers) + 1000) As TickfileSPecifier
                         End If
                         
-                        Set lTickfileSpecifiers(j).Contract = currContract
-                        lTickfileSpecifiers(j).tickfileFormatID = tickfileFormatID
+                        Set lTickfileSpecifiers(j) = New TickfileSPecifier
+                        lTickfileSpecifiers(j).Contract = currContract
+                        lTickfileSpecifiers(j).TickfileFormatID = TickfileFormatID
                     
-                        lTickfileSpecifiers(j).From = currSessionStart
+                        lTickfileSpecifiers(j).FromDate = currSessionStart
                         Exit For
                     End If
                 Next
                 If currContract Is Nothing Then
-                    ErrorLabel.Caption = "No contract from " & currSessionStart
+                    ErrorLabel.caption = "No contract from " & currSessionStart
                     Exit Sub
                 End If
             End If
@@ -828,13 +637,13 @@ Else
         
     Loop
         
-    lTickfileSpecifiers(j).To = endTime
-    lTickfileSpecifiers(j).filename = FormatDateTime(lTickfileSpecifiers(j).From, vbGeneralDate) & _
+    lTickfileSpecifiers(j).ToDate = endTime
+    lTickfileSpecifiers(j).FileName = FormatDateTime(lTickfileSpecifiers(j).FromDate, vbGeneralDate) & _
                                 "-" & _
-                                FormatDateTime(lTickfileSpecifiers(j).To, vbGeneralDate) & " " & _
+                                FormatDateTime(lTickfileSpecifiers(j).ToDate, vbGeneralDate) & " " & _
                                 Replace(currContract.specifier.ToString, vbCrLf, "; ")
 
-    ReDim Preserve lTickfileSpecifiers(j) As TradeBuild26.TickfileSpecifier
+    ReDim Preserve lTickfileSpecifiers(j) As TickfileSPecifier
 End If
 
 RaiseEvent TickfilesSpecified(lTickfileSpecifiers)
@@ -848,21 +657,16 @@ End Sub
 '@================================================================================
 
 Public Property Let SupportedTickfileFormats( _
-                            ByRef value() As TradeBuild26.TickfileFormatSpecifier)
+                            ByRef value() As TickfileFormatSpecifier)
 Dim i As Long
 
 mSupportedTickfileFormats = value
 
 For i = 0 To UBound(mSupportedTickfileFormats)
-    FormatCombo.AddItem mSupportedTickfileFormats(i).name
+    FormatCombo.addItem mSupportedTickfileFormats(i).name
 Next
 
 FormatCombo.ListIndex = 0
-End Property
-
-Friend Property Let tradeBuildAPI( _
-                ByVal value As tradeBuildAPI)
-Set mTradeBuildAPIRef = CreateWeakReference(value)
 End Property
 
 '@================================================================================
@@ -882,23 +686,11 @@ End If
 End Sub
 
 Private Sub checkOk()
-Dim sectype As TradeBuild26.SecurityTypes
 
-OkButton.enabled = False
+OkButton.Enabled = False
 
-sectype = getSecType
+If Not ContractSpecBuilder1.ready Then Exit Sub
 
-If ShortNameText.Text = "" Then
-    If SymbolText = "" Then Exit Sub
-    If sectype = SecurityTypes.SecTypeNone Then Exit Sub
-    If sectype = SecurityTypes.SecTypeBag Then Exit Sub
-    If sectype = SecurityTypes.SecTypeOption Or _
-        sectype = SecurityTypes.SecTypeFuturesOption _
-    Then
-        If StrikePriceText = "" Or RightCombo.Text = "" Then Exit Sub
-    End If
-End If
-    
 If Not IsDate(FromText.Text) Then Exit Sub
 If CompleteSessionCheck.value = vbUnchecked And Not IsDate(ToText.Text) Then Exit Sub
 If CompleteSessionCheck.value = vbChecked And _
@@ -915,22 +707,35 @@ If UseCustomTimesOption Then
     If CDbl(CDate(CustomToTimeText)) >= 1# Then Exit Sub
 End If
 
-OkButton.enabled = True
+OkButton.Enabled = True
 
 End Sub
 
 Private Sub disableCustomTimeFields()
-CustomFromTimeText.enabled = False
-CustomFromTimeText.BackColor = vbButtonFace
-CustomToTimeText.enabled = False
-CustomToTimeText.BackColor = vbButtonFace
+CustomFromTimeText.Enabled = False
+CustomFromTimeText.backColor = vbButtonFace
+CustomToTimeText.Enabled = False
+CustomToTimeText.backColor = vbButtonFace
 End Sub
 
+Private Function editContractSessionTimes( _
+                ByVal pContract As Contract, _
+                ByVal sessionStartTime As Date, _
+                ByVal sessionEndTime As Date) As Contract
+Dim lContractBuilder As ContractBuilder
+
+Set lContractBuilder = CreateContractBuilder(pContract.specifier)
+lContractBuilder.buildFrom pContract
+lContractBuilder.sessionEndTime = sessionEndTime
+lContractBuilder.sessionStartTime = sessionStartTime
+Set editContractSessionTimes = lContractBuilder.Contract
+End Function
+
 Private Sub enableCustomTimeFields()
-CustomFromTimeText.enabled = True
-CustomFromTimeText.BackColor = vbWindowBackground
-CustomToTimeText.enabled = True
-CustomToTimeText.BackColor = vbWindowBackground
+CustomFromTimeText.Enabled = True
+CustomFromTimeText.backColor = vbWindowBackground
+CustomToTimeText.Enabled = True
+CustomToTimeText.backColor = vbWindowBackground
 End Sub
 
 'Private Function skipWeekends( _
@@ -953,16 +758,5 @@ End Sub
 'skipWeekends = timestamp
 'End Function
 
-Private Function getSecType() As TradeBuild26.SecurityTypes
-If TypeCombo.ListIndex = -1 Then
-    getSecType = SecTypeNone
-Else
-    getSecType = TypeCombo.itemData(TypeCombo.ListIndex)
-End If
-End Function
-
-Private Function tb() As tradeBuildAPI
-Set tb = mTradeBuildAPIRef.Target
-End Function
 
 

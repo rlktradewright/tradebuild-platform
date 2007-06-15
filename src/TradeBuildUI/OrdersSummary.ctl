@@ -92,8 +92,8 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements TWUtilities.ChangeListener
-Implements TWUtilities.CollectionChangeListener
+Implements ChangeListener
+Implements CollectionChangeListener
 Implements ProfitListener
 
 '================================================================================
@@ -286,7 +286,7 @@ End Sub
 ' ChangeListener Interface Members
 '================================================================================
 
-Private Sub ChangeListener_Change(ev As TWUtilities.ChangeEvent)
+Private Sub ChangeListener_Change(ev As ChangeEvent)
 If TypeOf ev.Source Is OrderPlex Then
     Dim opChangeType As OrderPlexChangeTypes
     Dim op As OrderPlex
@@ -383,7 +383,7 @@ End Sub
 ' CollectionChangeListener Interface Members
 '================================================================================
 
-Private Sub CollectionChangeListener_Change(ev As TWUtilities.CollectionChangeEvent)
+Private Sub CollectionChangeListener_Change(ev As CollectionChangeEvent)
 If TypeOf ev.affectedObject Is OrderPlex Then
     Dim op As OrderPlex
     Set op = ev.affectedObject
