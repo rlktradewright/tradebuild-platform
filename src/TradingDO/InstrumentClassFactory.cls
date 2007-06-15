@@ -78,16 +78,29 @@ Friend Sub initialise( _
 Set mDB = db
 End Sub
 
-Public Function loadByName(ByVal pName As String) As InstrumentClass
+Public Function loadByName( _
+                ByVal pName As String) As InstrumentClass
 Dim where As String
 where = "Name='" & Replace(pName, "'", "''") & "'"
 Set loadByName = loadDetails(where)
 End Function
 
-Public Function loadByID(ByVal id As Long) As InstrumentClass
+Public Function loadByID( _
+                ByVal id As Long) As InstrumentClass
 Dim where As String
 where = "ID=" & id
 Set loadByID = loadDetails(where)
+End Function
+
+Public Function loadSummaries( _
+                Optional ByVal pExchange As String, _
+                Optional ByVal pCategory As String, _
+                Optional ByVal pCurrency As String) As DataObjectSummaries
+Dim where As String
+If pExchange <> "" Then where = IIf(where = "", "", where & " AND ") & "Exchange='" & pExchange & "'"
+If pCategory <> "" Then where = IIf(where = "", "", where & " AND ") & "Category='" & pCategory & "'"
+If pCurrency <> "" Then where = IIf(where = "", "", where & " AND ") & "Currency='" & pCurrency & "'"
+Set loadSummaries = searchWhere(where)
 End Function
 
 Public Function makeNew() As InstrumentClass
@@ -118,9 +131,9 @@ lInstrumentClass.initialise mDB
 lInstrumentClass.recordset = mRs
 Set makeNew = lInstrumentClass
 
-mConn.Close
 Set mRs.ActiveConnection = Nothing
 Set mRs = Nothing
+mConn.Close
 
 Exit Function
 
@@ -129,61 +142,6 @@ Err.Raise Err.Number, _
         "TradingDO26" & "." & "InstrumentClassFactory" & "::" & "makeNew" & "." & failpoint & _
         IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
         Err.Description
-
-End Function
-
-Public Function search(ByVal criterion As String) As DataObjectSummaries
-Dim summ As DataObjectSummaries
-Dim SQL As String
-Dim where As String
-Dim lDataObjectSummary As DataObjectSummary
-
-
-Dim failpoint As Long
-On Error GoTo Err
-
-where = IIf(criterion = "", "", "WHERE name LIKE '" & criterion & "' ")
-failpoint = 100
-
-Set mConn = New ADODB.Connection
-mConn.Open mDB.connectionString
-
-failpoint = 200
-
-Set mRs = New recordset
-mRs.CursorLocation = adUseClient
-SQL = "SELECT ID, Name " & _
-        "FROM InstrumentClass " & _
-        where & _
-        "ORDER BY Name"
-
-
-mRs.Open SQL, mConn, adOpenStatic, adLockBatchOptimistic
-
-Set summ = New DataObjectSummaries
-
-Do While Not mRs.EOF
-    Set lDataObjectSummary = New DataObjectSummary
-    lDataObjectSummary.id = mRs("ID")
-    lDataObjectSummary.name = Trim$(mRs("Name"))
-    summ.add lDataObjectSummary
-    Set lDataObjectSummary = Nothing
-    mRs.MoveNext
-Loop
-
-mConn.Close
-Set mRs.ActiveConnection = Nothing
-
-Set search = summ
-
-Exit Function
-
-Err:
-Err.Raise Err.Number, _
-        "TradingDO26" & "." & "InstrumentClassFactory" & "::" & "search" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
 
 End Function
 
@@ -225,9 +183,9 @@ Else
     Set loadDetails = Nothing
 End If
 
-mConn.Close
 Set mRs.ActiveConnection = Nothing
 Set mRs = Nothing
+mConn.Close
 Set lInstrumentClass = Nothing
 
 Exit Function
@@ -237,6 +195,59 @@ Err.Raise Err.Number, _
         "TradingDO26" & "." & "InstrumentClassFactory" & "::" & "loadDetails" & "." & failpoint & _
         IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
         Err.Description
+End Function
+
+Private Function searchWhere(ByVal where As String) As DataObjectSummaries
+Dim summ As DataObjectSummaries
+Dim SQL As String
+Dim lDataObjectSummary As DataObjectSummary
+
+
+Dim failpoint As Long
+On Error GoTo Err
+
+failpoint = 100
+
+Set mConn = New ADODB.Connection
+mConn.Open mDB.connectionString
+
+failpoint = 200
+
+Set mRs = New recordset
+mRs.CursorLocation = adUseClient
+SQL = "SELECT DISTINCT InstrumentClassID, InstrumentClassName " & _
+        "FROM vInstrumentDetails " & _
+        IIf(where <> "", "WHERE " & where, "") & _
+        " ORDER BY InstrumentClassName"
+
+
+mRs.Open SQL, mConn, adOpenStatic, adLockBatchOptimistic
+
+Set summ = New DataObjectSummaries
+
+Do While Not mRs.EOF
+    Set lDataObjectSummary = New DataObjectSummary
+    lDataObjectSummary.id = mRs("InstrumentClassID")
+    lDataObjectSummary.name = Trim$(mRs("InstrumentClassName"))
+    summ.add lDataObjectSummary
+    Set lDataObjectSummary = Nothing
+    mRs.MoveNext
+Loop
+
+Set mRs.ActiveConnection = Nothing
+mConn.Close
+
+Set searchWhere = summ
+
+Exit Function
+
+Err:
+Err.Raise Err.Number, _
+        "TradingDO26" & "." & "InstrumentClassFactory" & "::" & "searchWhere" & "." & failpoint & _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
+        Err.Description
+
+
 End Function
 
 

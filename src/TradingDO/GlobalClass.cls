@@ -34,23 +34,30 @@ Option Explicit
 '@================================================================================
 
 Public Enum BusinessRuleIds
-    BusRuleExchangeNameInvalid = 10000
-'    BusRuleAccountNameInvalid = 10001
-    BusRuleCurrencyCodeInvalid = 10002
-    BusRuleInstrumentNameInvalid = 10003
-    BusRuleInstrumentShortNameInvalid = 10004
-    BusRuleInstrumentSymbolInvalid = 10005
-    BusRuleInstrumentExpiryMonthInvalid = 10006
-    BusRuleInstrumentTickSizeInvalid = 10007
-    BusRuleInstrumentTickValueInvalid = 10008
-    BusRuleInstrumentCategoryInvalid = 10009
-    BusRuleInstrumentExchangeInvalid = 10010
-'    BusRuleInstrumentExpiryMonthNotBlank = 10012
-    BusRuleInstrumentExpiryMonthOutOfRange = 10013
-    BusRuleInstrumentSessionStartAndEndEqual = 10016
-    BusRuleStrategyNameInvalid = 10030
-    BusRuleStrikePriceInvalid = 10031
-    BusRuleOptionRightInvalid = 10032
+    BusRuleExchangeNameValid = 10000
+
+    BusRuleInstrumentNameValid = 10100
+    BusRuleInstrumentShortNameValid
+    BusRuleInstrumentSymbolValid
+    BusRuleInstrumentExpiryMonthValid
+    BusRuleInstrumentExpiryMonthOutOfRange
+    BusRuleInstrumentStrikePriceValid
+    BusRuleInstrumentOptionRightvalid
+    
+    BusRuleTimeZoneNameValid = 10200
+    BusRuleTimeZoneCanonicalNameValid
+    
+    BusRuleInstrumentClassNameValid = 10300
+    BusRuleInstrumentClassCurrencyCodeValid
+    BusRuleInstrumentClassCategoryValid
+    BusRuleInstrumentClassDaysBeforeExpiryValid
+    BusRuleInstrumentClassExchangeValid
+    BusRuleInstrumentClassTickSizeValid
+    BusRuleInstrumentClassTickValueValid
+    BusRuleInstrumentClassSessionTimesValid
+    BusRuleInstrumentClassTimeZoneNameValid
+    
+
 '    BR_STRATEGY_PROGR_ID_LENGTH_INVALID = 10031
 '    BR_STRATEGY_PROGR_ID_SYNTAX_ERROR = 10032
 '    BR_STRATEGY_PROGR_ID_IS_NOT_A_MANAGED_STRATEGY = 10033
@@ -122,9 +129,9 @@ Private Const ModuleName As String = "GlobalClass"
 '@================================================================================
 
 Public Function CreateTradingDB( _
-                ByVal connectionString As String) As tradingDB
+                ByVal connectionString As String) As TradingDB
 
-Set CreateTradingDB = New tradingDB
+Set CreateTradingDB = New TradingDB
 
 CreateTradingDB.initialise connectionString
 End Function

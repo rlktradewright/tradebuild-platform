@@ -76,16 +76,9 @@ Private mRs As ADODB.recordset
 Private mEventRaiser As BusinessObjEventRaiser
 
 Private mMaxNameLength As Long
-Private mMaxSymbolLength As Long
-Private mMaxExpiryMonthLength As Long
 Private mMaxCurrencyCodeLength As Long
-Private mMaxOptRightLength As Long
 Private mTimeZoneNameLength As Long
 Private mExchangeNameLength As Long
-
-Private mWriters As Collection
-
-Private mWriterCounter As Long
 
 '@===============================================================================
 ' Class Event Handlers
@@ -94,7 +87,6 @@ Private mWriterCounter As Long
 Private Sub Class_Initialize()
 Set mErrorList = New ErrorList
 Set mEventRaiser = New BusinessObjEventRaiser
-Set mWriters = New Collection
 End Sub
 
 '@===============================================================================
@@ -154,7 +146,7 @@ End Property
 '@===============================================================================
 
 Private Sub mErrorList_ItemAdded( _
-                ByVal item As TWUtilities.ErrorItem)
+                ByVal item As ErrorItem)
 RaiseEvent Invalid
 mEventRaiser.Invalid
 End Sub
@@ -172,53 +164,26 @@ Public Property Let category(ByVal value As String)
 Dim catid As InstrumentCategories
 
 catid = gCategoryFromString(value)
-ruleBroken BusRuleInstrumentCategoryInvalid, catid = 0
-mRs("categoryid") = catid
+ruleBroken BusRuleInstrumentClassCategoryValid, catid = 0
+mRs("instrumentcategoryid") = catid
 
-Select Case catid
-Case InstrumentCategoryStock
-    
-Case InstrumentCategoryFuture
-    ValidateMonth month
-Case InstrumentCategoryOption
-    ValidateMonth month
-    validateOptionRight optionRight
-    validateStrikePrice strikePrice
-Case InstrumentCategoryCash
-
-Case InstrumentCategoryFuturesOption
-    ValidateMonth month
-    validateOptionRight optionRight
-    validateStrikePrice strikePrice
-Case InstrumentCategoryIndex
-
-End Select
 Dirty
 End Property
 
 Public Property Get category() As String
-category = gCategoryToString(mRs("Categoryid"))
+category = gCategoryToString(mRs("instrumentcategoryid"))
 End Property
 
-Public Property Get categoryid() As InstrumentCategories
-categoryid = mRs("Categoryid")
+Public Property Get categoryid() As Long
+categoryid = mRs("instrumentcategoryid")
 End Property
-
-'Public Property Get contractID() As Long
-'contractID = Nz(mRs("contractID"), 0)
-'End Property
-'
-'Public Property Let contractID(ByVal value As Long)
-'mRs("contractID") = value
-'Dirty
-'End Property
 
 Public Property Get currencyCode() As String
 currencyCode = mRs!Currency
 End Property
 
 Public Property Let currencyCode(ByVal value As String)
-ruleBroken BusRuleInstrumentCurrencyCodeInvalid, _
+ruleBroken BusRuleInstrumentClassCurrencyCodeValid, _
     Len(value) = 0 Or Len(value) > mMaxCurrencyCodeLength
 mRs!Currency = Left$(value, mMaxCurrencyCodeLength)
 Dirty
@@ -229,19 +194,11 @@ daysBeforeExpiryToSwitch = Nz(mRs("DaysBeforeExpiryToSwitch"), 0)
 End Property
 
 Public Property Let daysBeforeExpiryToSwitch(ByVal value As Long)
+ruleBroken BusRuleInstrumentClassDaysBeforeExpiryValid, _
+    value < 0
 mRs("DaysBeforeExpiryToSwitch") = value
 Dirty
 End Property
-
-'Public Property Get defaultTradeQuantity() As Long
-'defaultTradeQuantity = mRs("defaultTradeQuantity")
-'End Property
-'
-'Public Property Let defaultTradeQuantity(ByVal value As Long)
-'ruleBroken BR_INSTRUMENT_DEFAULT_QUANTITY_INVALID, value <= 0
-'mRs("defaultTradeQuantity") = value
-'Dirty
-'End Property
 
 Public Property Get ErrorList() As ErrorList
 Set ErrorList = mErrorList
@@ -250,12 +207,12 @@ End Property
 Public Property Let Exchange(ByVal value As String)
 Dim lExchange As Exchange
 
-ruleBroken BusRuleExchangeNameInvalid, _
+ruleBroken BusRuleInstrumentClassExchangeValid, _
     Len(value) = 0 Or Len(value) > mExchangeNameLength
 
 Set lExchange = mDB.ExchangeFactory.loadByName(value)
 
-ruleBroken BusRuleInstrumentExchangeInvalid, _
+ruleBroken BusRuleInstrumentClassExchangeValid, _
     lExchange Is Nothing
 If Not lExchange Is Nothing Then mRs("exchangeid") = lExchange.id
 Dirty
@@ -263,15 +220,6 @@ End Property
 
 Public Property Get Exchange() As String
 Exchange = Trim$(Nz(mRs("Exchange"), ""))
-End Property
-
-Public Property Get ExpiryDate() As Date
-ExpiryDate = Nz(mRs("ExpiryDate"), 0#)
-End Property
-
-Public Property Let ExpiryDate(ByVal value As Date)
-mRs("ExpiryDate") = value
-Dirty
 End Property
 
 Public Property Get id() As Long
@@ -294,32 +242,12 @@ Public Property Get IsValid() As Boolean
 IsValid = (mErrorList.count = 0)
 End Property
 
-Public Property Get localSymbols() As InstrumentLocalSymbols
-If mLocalSymbols Is Nothing Then
-    Set mLocalSymbols = New InstrumentLocalSymbols
-    mLocalSymbols.connectionString = mDB.connectionString
-    mLocalSymbols.load id
-End If
-Set localSymbols = mLocalSymbols
-End Property
-
-Public Property Let month(ByVal value As String)
-
-ValidateMonth value
-mRs("expirymonth") = Left$(value, mMaxExpiryMonthLength)
-Dirty
-End Property
-
-Public Property Get month() As String
-month = Trim$(Nz(mRs("ExpiryMonth"), ""))
-End Property
-
 Public Property Get name() As String
 name = Trim$(mRs("NAME"))
 End Property
 
 Public Property Let name(ByVal value As String)
-ruleBroken BusRuleInstrumentNameInvalid, _
+ruleBroken BusRuleInstrumentClassNameValid, _
     Len(value) = 0 Or Len(value) > mMaxNameLength
 mRs("NAME") = Left$(value, mMaxNameLength)
 Dirty
@@ -334,27 +262,14 @@ mRs("notes") = val
 Dirty
 End Property
 
-Public Property Get optionRight() As String
-optionRight = Nz(mRs("optRight"), "")
-End Property
-
-Public Property Let optionRight(ByVal value As String)
-validateOptionRight value
-mRs("optRight") = Left$(value, mMaxOptRightLength)
-Dirty
-End Property
-
 Friend Property Let recordset(value As ADODB.recordset)
 Set mRs = value
 
 mMaxNameLength = mRs.Fields("NAME").DefinedSize
-mMaxShortNameLength = mRs.Fields("SHORTNAME").DefinedSize
-mMaxSymbolLength = mRs.Fields("SYMBOL").DefinedSize
-mMaxExpiryMonthLength = mRs.Fields("EXPIRYMONTH").DefinedSize
 mMaxCurrencyCodeLength = mRs.Fields("Currency").DefinedSize
-mMaxOptRightLength = mRs.Fields("OptRight").DefinedSize
 mTimeZoneNameLength = mRs.Fields("TimeZoneName").DefinedSize
 mExchangeNameLength = mRs.Fields("Exchange").DefinedSize
+
 If mRs.EOF Then
     mRs.AddNew
     mNew = True
@@ -363,61 +278,29 @@ End If
 End Property
 
 Public Property Get sessionEndTime() As Date
-sessionEndTime = Nz(mRs("sessionEndTime"), CDate("31/12/2999"))
+sessionEndTime = Nz(mRs("sessionEndTime"), CDate(0))
 End Property
 
 Public Property Let sessionEndTime(value As Date)
-ruleBroken BusRuleInstrumentSessionStartAndEndEqual, _
+ruleBroken BusRuleInstrumentClassSessionTimesValid, _
     value = sessionStartTime
 mRs("sessionEndTime") = value
 Dirty
 End Property
 
 Public Property Get sessionStartTime() As Date
-sessionStartTime = Nz(mRs("sessionStartTime"), CDate("01/01/1900"))
+sessionStartTime = Nz(mRs("sessionStartTime"), CDate(0))
 End Property
 
 Public Property Let sessionStartTime(value As Date)
-ruleBroken BusRuleInstrumentSessionStartAndEndEqual, _
+ruleBroken BusRuleInstrumentClassSessionTimesValid, _
     value = sessionEndTime
 mRs("sessionStartTime") = value
 Dirty
 End Property
 
-Public Property Get shortName() As String
-shortName = Trim$(mRs("SHORTNAME"))
-End Property
-
-Public Property Let shortName(ByVal value As String)
-ruleBroken BusRuleInstrumentShortNameInvalid, _
-    Len(value) = 0 Or Len(value) > mMaxShortNameLength
-mRs("SHORTNAME") = Left$(value, mMaxShortNameLength)
-Dirty
-End Property
-
-Public Property Get strikePrice() As Double
-strikePrice = Nz(mRs("strikePrice"), 0#)
-End Property
-
-Public Property Let strikePrice(ByVal value As Double)
-validateStrikePrice value
-mRs("strikePrice") = value
-Dirty
-End Property
-
-Public Property Let symbol(ByVal value As String)
-ruleBroken BusRuleInstrumentSymbolInvalid, _
-    Len(value) = 0 Or Len(value) > mMaxSymbolLength
-mRs("SYMBOL") = Left$(value, mMaxSymbolLength)
-Dirty
-End Property
-
-Public Property Get symbol() As String
-symbol = Trim$(mRs("Symbol"))
-End Property
-
 Public Property Let TickSize(ByVal value As Currency)
-ruleBroken BusRuleInstrumentTickSizeInvalid, _
+ruleBroken BusRuleInstrumentClassTickSizeValid, _
     value <= 0
 mRs("TickSize") = value
 Dirty
@@ -428,7 +311,7 @@ TickSize = mRs("TickSize")
 End Property
 
 Public Property Let TickValue(ByVal value As Currency)
-ruleBroken BusRuleInstrumentTickValueInvalid, _
+ruleBroken BusRuleInstrumentClassTickValueValid, _
     value <= 0
 mRs("TickValue") = value
 Dirty
@@ -438,38 +321,27 @@ Public Property Get TickValue() As Currency
 TickValue = mRs("TickValue")
 End Property
 
-'Public Property Get TradingDayOffsetMinutes() As Integer
-'TradingDayOffsetMinutes = mRs("tradingDayOffsetMinutes")
-'End Property
-'
-'Public Property Let TradingDayOffsetMinutes(value As Integer)
-'ruleBroken BR_INSTRUMENT_TRADING_DAY_OFFSET_INVALID, _
-'    value < 0 Or value > 59
-'mRs("tradingDayOffsetMinutes") = value
-'Dirty
-'End Property
+Public Property Get TimeZoneCanonicalName() As String
+TimeZoneCanonicalName = Trim$(Nz(mRs("TimeZoneCanonicalName"), ""))
+End Property
 
-'Public Property Get tradingEndTime() As Date
-'tradingEndTime = Nz(mRs("tradingEndTime"), CDate("31/12/2999"))
-'End Property
-'
-'Public Property Let tradingEndTime(value As Date)
-'ruleBroken BR_INSTRUMENT_TRADING_START_AND_END_EQUAL, _
-'    value = tradingStartTime
-'mRs("tradingEndTime") = value
-'Dirty
-'End Property
+Public Property Let TimeZoneName(ByVal value As String)
+Dim lTimeZone As TimeZone
 
-'Public Property Get tradingStartTime() As Date
-'tradingStartTime = Nz(mRs("tradingStartTime"), CDate("01/01/1900"))
-'End Property
-'
-'Public Property Let tradingStartTime(value As Date)
-'ruleBroken BR_INSTRUMENT_TRADING_START_AND_END_EQUAL, _
-'    value = tradingEndTime
-'mRs("tradingStartTime") = value
-'Dirty
-'End Property
+ruleBroken BusRuleInstrumentClassTimeZoneNameValid, _
+    Len(value) = 0 Or Len(value) > mTimeZoneNameLength
+
+Set lTimeZone = mDB.TimeZoneFactory.loadByName(value)
+
+ruleBroken BusRuleInstrumentClassTimeZoneNameValid, _
+    lTimeZone Is Nothing
+If Not lTimeZone Is Nothing Then mRs("TimeZoneId") = lTimeZone.id
+Dirty
+End Property
+
+Public Property Get TimeZoneName() As String
+TimeZoneName = Trim$(Nz(mRs("TimeZoneName"), ""))
+End Property
 
 '@===============================================================================
 ' Methods
@@ -501,29 +373,6 @@ End If
 Clean
 End Sub
 
-Public Function CreateBarDataReader() As BarDataReader
-Set CreateBarDataReader = New BarDataReader
-CreateBarDataReader.initialise mDB.connectionString, id
-End Function
-
-Public Function CreateBarDataWriter() As BarDataWriter
-Set CreateBarDataWriter = New BarDataWriter
-CreateBarDataWriter.initialise mDB.connectionString, id, Me
-mWriters.add CreateBarDataWriter
-End Function
-
-Public Function CreateTickDataReader() As TickDataReader
-Set CreateTickDataReader = New TickDataReader
-CreateTickDataReader.initialise mDB.connectionString, id
-End Function
-
-Public Function CreateTickDataWriter() As TickDataWriter
-Set CreateTickDataWriter = New TickDataWriter
-mWriterCounter = mWriterCounter + 1
-CreateTickDataWriter.initialise mDB.connectionString, id, Me, shortName & "/" & mWriterCounter
-mWriters.add CreateTickDataWriter
-End Function
-
 Public Sub Delete()
 mDeleted = True
 End Sub
@@ -531,21 +380,6 @@ End Sub
 Friend Sub initialise( _
                 ByVal db As TradingDB)
 Set mDB = db
-End Sub
-
-Friend Sub releaseWriter( _
-                ByVal writer As Object)
-Dim i As Long
-Dim obj As Object
-
-For i = mWriters.count To 1 Step -1
-    Set obj = mWriters.item(i)
-    If obj Is writer Then
-        mWriters.remove i
-        Exit Sub
-    End If
-Next
-
 End Sub
 
 '@===============================================================================
@@ -589,8 +423,8 @@ failpoint = 200
 
 Set mRs.ActiveConnection = mConn
 mRs.Update
-mConn.Close
 Set mRs.ActiveConnection = Nothing
+mConn.Close
 
 Exit Sub
 
@@ -604,70 +438,15 @@ End Sub
 
 Private Sub setInitialErrors()
 ' sets errors for fields that are invalid when a new record is created
-ruleBroken BusRuleInstrumentNameInvalid, True
-ruleBroken BusRuleInstrumentShortNameInvalid, True
-ruleBroken BusRuleInstrumentSymbolInvalid, True
-'ruleBroken BusRuleInstrumentExpiryMonthInvalid, True
-ruleBroken BusRuleInstrumentTickSizeInvalid, True
-ruleBroken BusRuleInstrumentTickValueInvalid, True
-ruleBroken BusRuleInstrumentCategoryInvalid, True
-ruleBroken BusRuleInstrumentExchangeInvalid, True
-ruleBroken BusRuleInstrumentSessionStartAndEndEqual, True
-ruleBroken BusRuleInstrumentCurrencyCodeInvalid, True
+ruleBroken BusRuleInstrumentClassNameValid, True
+ruleBroken BusRuleInstrumentClassTickSizeValid, True
+ruleBroken BusRuleInstrumentClassTickValueValid, True
+ruleBroken BusRuleInstrumentClassCategoryValid, True
+ruleBroken BusRuleInstrumentClassExchangeValid, True
+ruleBroken BusRuleInstrumentClassSessionTimesValid, True
+ruleBroken BusRuleInstrumentClassCurrencyCodeValid, True
+ruleBroken BusRuleInstrumentClassTimeZoneNameValid, True
 End Sub
-
-Private Sub ValidateMonth( _
-                ByVal value As String)
-Dim theYear As String
-Dim theMonth As String
-
-If Len(value) > mMaxExpiryMonthLength Then
-    ruleBroken BusRuleInstrumentExpiryMonthInvalid, True
-    Exit Sub
-End If
-
-If categoryid = InstrumentCategoryFuture Or _
-    categoryid = InstrumentCategoryFuturesOption Or _
-    categoryid = InstrumentCategoryOption _
-Then
-    If Len(value) = mMaxExpiryMonthLength And IsNumeric(value) Then
-        theYear = Left$(value, 4)
-        theMonth = Right$(value, 2)
-        ruleBroken BusRuleInstrumentExpiryMonthInvalid, _
-                    theMonth <= 0 Or theMonth > 12
-        ruleBroken BusRuleInstrumentExpiryMonthOutOfRange, _
-                    theYear < 1990 Or theYear > Year(Date) + 2
-    Else
-        ruleBroken BusRuleInstrumentExpiryMonthInvalid, True
-    End If
-End If
-
-End Sub
-
-Private Sub validateOptionRight( _
-                ByVal value As String)
-
-If Len(value) > mMaxOptRightLength Then
-    ruleBroken BusRuleInstrumentOptionRightInvalid, True
-    Exit Sub
-End If
-
-ruleBroken BusRuleInstrumentOptionRightInvalid, _
-    ((categoryid = InstrumentCategoryOption Or _
-        categoryid = InstrumentCategoryFuturesOption) And _
-    (value <> "C" And value <> "P"))
-
-End Sub
-
-Private Sub validateStrikePrice( _
-                ByVal value As Double)
-ruleBroken BusRuleInstrumentStrikePriceInvalid, _
-    (categoryid = InstrumentCategoryOption Or _
-        categoryid = InstrumentCategoryFuturesOption) And _
-    value <= 0
-
-End Sub
-
 
 
 

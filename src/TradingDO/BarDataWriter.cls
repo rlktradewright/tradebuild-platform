@@ -74,7 +74,7 @@ Private mCmd As ADODB.Command
 
 Private mConnectionString As String
 
-Private mParent As Instrument
+Private mParent As instrument
 
 '@===============================================================================
 ' Class Event Handlers
@@ -142,7 +142,7 @@ End Sub
 Friend Sub initialise( _
                 ByVal connectionString As String, _
                 ByVal instrumentId As Long, _
-                ByVal parent As Instrument)
+                ByVal parent As instrument)
 mConnectionString = connectionString
 mInstrumentID = instrumentId
 Set mParent = parent
@@ -165,7 +165,7 @@ Dim param As ADODB.Parameter
 Set mCmd = New ADODB.Command
 mCmd.CommandType = adCmdStoredProc
 
-mCmd.CommandText = "WriteBarData"
+mCmd.CommandText = "WriteBarDataUTC"
 
 Set param = mCmd.CreateParameter("@InstrumentID", _
                             DataTypeEnum.adInteger, _

@@ -42,7 +42,7 @@ Option Explicit
 '@================================================================================
 
 Private Const ProjectName As String = "TradingDO26"
-Private Const ModuleName As String = "TimeZoneSummary"
+Private Const ModuleName As String = "DataObjectSummary"
 
 '@================================================================================
 ' Member variables

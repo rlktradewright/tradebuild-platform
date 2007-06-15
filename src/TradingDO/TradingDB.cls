@@ -53,23 +53,19 @@ Private Const ModuleName As String = "TradingDB"
 ' Member variables
 '@================================================================================
 
+Private mConnectionString As String
+
 Private WithEvents mConnection As ADODB.Connection
 Attribute mConnection.VB_VarHelpID = -1
 
-Private mExchangeFactory As exchangeFactory
-Private mInstrumentFactory As instrumentFactory
+Private mExchangeFactory As ExchangeFactory
+Private mInstrumentFactory As InstrumentFactory
+Private mInstrumentClassFactory As InstrumentClassFactory
+Private mTimeZoneFactory As TimeZoneFactory
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
-
-Private Sub Class_Initialize()
-Set mInstrumentFactory = New instrumentFactory
-mInstrumentFactory.tradingDB = Me
-
-Set mExchangeFactory = New exchangeFactory
-mExchangeFactory.tradingDB = Me
-End Sub
 
 '@================================================================================
 ' XXXX Interface Members
@@ -101,12 +97,24 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get instrumentFactory() As instrumentFactory
-Set instrumentFactory = mInstrumentFactory
+Public Property Get connectionString() As String
+connectionString = mConnectionString
 End Property
 
-Public Property Get exchangeFactory() As exchangeFactory
-Set exchangeFactory = mExchangeFactory
+Public Property Get ExchangeFactory() As ExchangeFactory
+Set ExchangeFactory = mExchangeFactory
+End Property
+
+Public Property Get InstrumentFactory() As InstrumentFactory
+Set InstrumentFactory = mInstrumentFactory
+End Property
+
+Public Property Get InstrumentClassFactory() As InstrumentClassFactory
+Set InstrumentClassFactory = mInstrumentClassFactory
+End Property
+
+Public Property Get TimeZoneFactory() As TimeZoneFactory
+Set TimeZoneFactory = mTimeZoneFactory
 End Property
 
 '@================================================================================
@@ -115,12 +123,23 @@ End Property
 
 Friend Sub initialise( _
                 ByVal connectionString As String)
-mInstrumentFactory.connectionString = connectionString
-mExchangeFactory.connectionString = connectionString
+mConnectionString = connectionString
+
+Set mExchangeFactory = New ExchangeFactory
+mExchangeFactory.initialise Me
+
+Set mInstrumentFactory = New InstrumentFactory
+mInstrumentFactory.initialise Me
+
+Set mInstrumentClassFactory = New InstrumentClassFactory
+mInstrumentClassFactory.initialise Me
+
+Set mTimeZoneFactory = New TimeZoneFactory
+mTimeZoneFactory.initialise Me
 
 Set mConnection = New ADODB.Connection
 mConnection.CursorLocation = CursorLocationEnum.adUseClient
-mConnection.Open connectionString, , , ConnectOptionEnum.adAsyncConnect
+mConnection.Open mConnectionString, , , ConnectOptionEnum.adAsyncConnect
 End Sub
 
 '@================================================================================

@@ -41,7 +41,6 @@ Event DataFetched()
 Event Error( _
                             ByVal errorCode As Long, _
                             ByVal errorDesc As String)
-Event NotReady()
 Event Ready()
 
 '@===============================================================================
@@ -185,7 +184,11 @@ If mRsTick.EOF Then
     Exit Function
 End If
 
-PeriodStartTime = mRsTick("DateTime")
+If CBool(mRsTick("IsUTCTime")) Then
+    PeriodStartTime = mRsTick("DateTime")
+Else
+    PeriodStartTime = ConvertDateLocalToUTC(mRsTick("DateTime"))
+End If
 BasePrice = mRsTick("baseprice")
 Data = mRsTick("data")
 mRsTick.MoveNext
@@ -215,7 +218,7 @@ Dim param As ADODB.Parameter
 Set cmd = New ADODB.Command
 cmd.CommandType = adCmdStoredProc
 
-cmd.CommandText = "FetchTickData"
+cmd.CommandText = "FetchTickDataEx"
 
 Set param = cmd.CreateParameter("@InstrumentID", _
                             DataTypeEnum.adInteger, _
@@ -231,18 +234,32 @@ Set param = cmd.CreateParameter("@DataVersion", _
                             Version)
 cmd.Parameters.Append param
 
-Set param = cmd.CreateParameter("@FromTime", _
+Set param = cmd.CreateParameter("@FromUTC", _
                             DataTypeEnum.adDate, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             fromTime)
 cmd.Parameters.Append param
 
-Set param = cmd.CreateParameter("@ToTime", _
+Set param = cmd.CreateParameter("@ToUTC", _
                             DataTypeEnum.adDate, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             toTime)
+cmd.Parameters.Append param
+
+Set param = cmd.CreateParameter("@FromLocal", _
+                            DataTypeEnum.adDate, _
+                            ParameterDirectionEnum.adParamInput, _
+                            , _
+                            ConvertDateUTCToLocal(fromTime))
+cmd.Parameters.Append param
+
+Set param = cmd.CreateParameter("@ToLocal", _
+                            DataTypeEnum.adDate, _
+                            ParameterDirectionEnum.adParamInput, _
+                            , _
+                            ConvertDateUTCToLocal(toTime))
 cmd.Parameters.Append param
 
 cmd.ActiveConnection = mConnection

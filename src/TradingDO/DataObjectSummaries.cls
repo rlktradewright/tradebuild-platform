@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "TimeZoneSummaries"
+Attribute VB_Name = "DataObjectSummaries"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -42,7 +42,7 @@ Option Explicit
 '@================================================================================
 
 Private Const ProjectName As String = "TradingDO26"
-Private Const ModuleName As String = "ExchangeSummaries"
+Private Const ModuleName As String = "DataObjectSummaries"
 
 '@================================================================================
 ' Member variables
@@ -75,7 +75,7 @@ End Sub
 '@================================================================================
 
 Friend Sub add( _
-                pItem As ExchangeSummary)
+                pItem As DataObjectSummary)
 mSummaries.add pItem
 End Sub
 
@@ -84,7 +84,7 @@ count = mSummaries.count
 End Function
 
 Public Function item( _
-                index As Variant) As ExchangeSummary
+                index As Variant) As DataObjectSummary
 Set item = mSummaries(index)
 End Function
 
@@ -93,9 +93,10 @@ mSummaries.remove (index)
 End Sub
 
 Public Function NewEnum() As IUnknown
+Attribute NewEnum.VB_UserMemId = -4
+Attribute NewEnum.VB_MemberFlags = "40"
    Set NewEnum = mSummaries.[_NewEnum]
 End Function
-
 
 '@================================================================================
 ' Helper Functions

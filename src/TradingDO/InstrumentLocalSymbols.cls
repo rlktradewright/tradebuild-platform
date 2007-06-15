@@ -139,8 +139,8 @@ Do While Not mRs.EOF
     mRs.MoveNext
 Loop
 
-mConn.Close
 Set mRs.ActiveConnection = Nothing
+mConn.Close
 
 mInstrumentID = instrumentID
 

@@ -42,14 +42,13 @@ Option Explicit
 '@================================================================================
 
 Private Const ProjectName As String = "TradingDO26"
-Private Const ModuleName As String = "ExchangeFactory"
+Private Const ModuleName As String = "TimeZoneFactory"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private mTradingDB As tradingDB
-Private mConnectionString As String
+Private mDB As TradingDB
 
 Private mConn As ADODB.Connection
 Private mRs As ADODB.recordset
@@ -70,35 +69,30 @@ Private mRs As ADODB.recordset
 ' Properties
 '@================================================================================
 
-Friend Property Let connectionString( _
-                ByVal value As String)
-mConnectionString = value
-End Property
-
-Friend Property Let tradingDB( _
-                ByVal value As tradingDB)
-Set mTradingDB = value
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Function loadByName(ByVal pName As String) As Exchange
+Friend Sub initialise( _
+                ByVal db As TradingDB)
+Set mDB = db
+End Sub
+
+Public Function loadByName(ByVal pName As String) As TimeZone
 Dim where As String
 where = "Name='" & Replace(pName, "'", "''") & "'"
 Set loadByName = loadDetails(where)
 End Function
 
-Public Function loadByID(ByVal id As Long) As Exchange
+Public Function loadByID(ByVal id As Long) As TimeZone
 Dim where As String
 where = "ID=" & id
 Set loadByID = loadDetails(where)
 End Function
 
-Public Function makeNew() As Exchange
+Public Function makeNew() As TimeZone
 Dim SQL As String
-Dim Exchange As Exchange
+Dim lTimeZone As TimeZone
 
 Dim failpoint As Long
 On Error GoTo Err
@@ -106,43 +100,43 @@ On Error GoTo Err
 failpoint = 100
 
 Set mConn = New ADODB.Connection
-mConn.Open mConnectionString
+mConn.Open mDB.connectionString
 
 failpoint = 200
 
 Set mRs = New recordset
 mRs.CursorLocation = adUseClient
 SQL = "SELECT * " & _
-        "FROM exchange " & _
+        "FROM timezone " & _
         "WHERE 1=0"
 
 
 mRs.Open SQL, mConn, adOpenStatic, adLockBatchOptimistic
 
-Set Exchange = New Exchange
-Exchange.connectionString = mConnectionString
-Exchange.recordset = mRs
-Set makeNew = Exchange
+Set lTimeZone = New TimeZone
+lTimeZone.initialise mDB
+lTimeZone.recordset = mRs
+Set makeNew = lTimeZone
 
-mConn.Close
 Set mRs.ActiveConnection = Nothing
 Set mRs = Nothing
+mConn.Close
 
 Exit Function
 
 Err:
 Err.Raise Err.Number, _
-        "TradingDO26" & "." & "ExchangeFactory" & "::" & "makeNew" & "." & failpoint & _
+        "TradingDO26" & "." & "TimeZoneFactory" & "::" & "makeNew" & "." & failpoint & _
         IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
         Err.Description
 
 End Function
 
-Public Function search(ByVal criterion As String) As ExchangeSummaries
-Dim summ As ExchangeSummaries
+Public Function search(ByVal criterion As String) As DataObjectSummaries
+Dim summ As DataObjectSummaries
 Dim SQL As String
 Dim where As String
-Dim ExchangeSummary As ExchangeSummary
+Dim lDataObjectSummary As DataObjectSummary
 
 
 Dim failpoint As Long
@@ -152,28 +146,28 @@ where = IIf(criterion = "", "", "WHERE name LIKE '" & criterion & "' ")
 failpoint = 100
 
 Set mConn = New ADODB.Connection
-mConn.Open mConnectionString
+mConn.Open mDB.connectionString
 
 failpoint = 200
 
 Set mRs = New recordset
 mRs.CursorLocation = adUseClient
 SQL = "SELECT ID, Name " & _
-        "FROM exchange " & _
+        "FROM TimeZone " & _
         where & _
         "ORDER BY Name"
 
 
 mRs.Open SQL, mConn, adOpenStatic, adLockBatchOptimistic
 
-Set summ = New ExchangeSummaries
+Set summ = New DataObjectSummaries
 
 Do While Not mRs.EOF
-    Set ExchangeSummary = New ExchangeSummary
-    ExchangeSummary.id = mRs("ID")
-    ExchangeSummary.name = Trim$(mRs("Name"))
-    summ.add ExchangeSummary
-    Set ExchangeSummary = Nothing
+    Set lDataObjectSummary = New DataObjectSummary
+    lDataObjectSummary.id = mRs("ID")
+    lDataObjectSummary.name = Trim$(mRs("Name"))
+    summ.add lDataObjectSummary
+    Set lDataObjectSummary = Nothing
     mRs.MoveNext
 Loop
 
@@ -186,7 +180,7 @@ Exit Function
 
 Err:
 Err.Raise Err.Number, _
-        "TradingDO26" & "." & "ExchangeFactory" & "::" & "search" & "." & failpoint & _
+        "TradingDO26" & "." & "TimeZoneFactory" & "::" & "search" & "." & failpoint & _
         IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
         Err.Description
 
@@ -197,8 +191,8 @@ End Function
 ' Helper Functions
 '@================================================================================
 
-Private Function loadDetails(ByVal where As String) As Exchange
-Dim Exchange As Exchange
+Private Function loadDetails(ByVal where As String) As TimeZone
+Dim TimeZone As TimeZone
 Dim SQL As String
 Dim failpoint As Integer
 
@@ -207,14 +201,15 @@ On Error GoTo Err
 failpoint = 100
 
 Set mConn = New ADODB.Connection
-mConn.Open mConnectionString
+mConn.Open mDB.connectionString
 
 failpoint = 200
 
 Set mRs = New recordset
 mRs.CursorLocation = adUseClient
-SQL = "SELECT * " & _
-        "FROM exchange " & _
+SQL = "SELECT TZ1.id, TZ1.name, TZ1.canonicalId, TZ2.Name AS CanonicalName " & _
+        "FROM TimeZone AS TZ1 LEFT JOIN TimeZone AS TZ2 ON " & _
+        "       TZ1.CanonicalId = TZ2.Id " & _
         "WHERE " & where
 
 mRs.Open SQL, mConn, adOpenStatic, adLockBatchOptimistic
@@ -222,11 +217,11 @@ mRs.Open SQL, mConn, adOpenStatic, adLockBatchOptimistic
 failpoint = 300
 
 If Not mRs.EOF Then
-    Set Exchange = New Exchange
+    Set TimeZone = New TimeZone
     
-    Exchange.recordset = mRs
-    Exchange.connectionString = mConnectionString
-    Set loadDetails = Exchange
+    TimeZone.recordset = mRs
+    TimeZone.initialise mDB
+    Set loadDetails = TimeZone
 Else
     Set loadDetails = Nothing
 End If
@@ -234,13 +229,13 @@ End If
 mConn.Close
 Set mRs.ActiveConnection = Nothing
 Set mRs = Nothing
-Set Exchange = Nothing
+Set TimeZone = Nothing
 
 Exit Function
 
 Err:
 Err.Raise Err.Number, _
-        "TradingDO26" & "." & "ExchangeFactory" & "::" & "loadDetails" & "." & failpoint & _
+        "TradingDO26" & "." & "TimeZoneFactory" & "::" & "loadDetails" & "." & failpoint & _
         IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
         Err.Description
 End Function

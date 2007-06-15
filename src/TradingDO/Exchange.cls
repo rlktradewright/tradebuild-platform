@@ -56,8 +56,7 @@ Private Const ModuleName As String = "Exchange"
 ' Member variables
 '@================================================================================
 
-Private mTradingDB As tradingDB
-Private mConnectionString As String
+Private mDB As TradingDB
 
 Private mConn As ADODB.Connection
 
@@ -141,7 +140,7 @@ End Property
 '@===============================================================================
 
 Private Sub mErrorList_ItemAdded( _
-                ByVal item As TWUtilities.ErrorItem)
+                ByVal item As ErrorItem)
 RaiseEvent Invalid
 mEventRaiser.Invalid
 End Sub
@@ -157,11 +156,6 @@ End Sub
 
 Public Property Get ErrorList() As ErrorList
 Set ErrorList = mErrorList
-End Property
-
-Friend Property Let connectionString( _
-                ByVal value As String)
-mConnectionString = value
 End Property
 
 Public Property Get id() As Long
@@ -190,7 +184,7 @@ name = Trim$(mRs("NAME"))
 End Property
 
 Public Property Let name(ByVal value As String)
-ruleBroken BusRuleExchangeNameInvalid, _
+ruleBroken BusRuleExchangeNameValid, _
     Len(value) = 0 Or Len(value) > mMaxNameLength
 mRs("NAME") = Left$(value, mMaxNameLength)
 Dirty
@@ -251,6 +245,11 @@ Public Sub Delete()
 mDeleted = True
 End Sub
 
+Friend Sub initialise( _
+                ByVal db As TradingDB)
+Set mDB = db
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
@@ -286,7 +285,7 @@ On Error GoTo Err
 failpoint = 100
 
 Set mConn = New ADODB.Connection
-mConn.Open mConnectionString
+mConn.Open mDB.connectionString
 
 failpoint = 200
 
@@ -307,7 +306,7 @@ End Sub
 
 Private Sub setInitialErrors()
 ' sets errors for fields that are invalid when a new record is created
-ruleBroken BusRuleExchangeNameInvalid, True
+ruleBroken BusRuleExchangeNameValid, True
 End Sub
 
 

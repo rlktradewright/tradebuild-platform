@@ -48,8 +48,7 @@ Private Const ModuleName As String = "ExchangeFactory"
 ' Member variables
 '@================================================================================
 
-Private mTradingDB As tradingDB
-Private mConnectionString As String
+Private mDB As TradingDB
 
 Private mConn As ADODB.Connection
 Private mRs As ADODB.recordset
@@ -70,19 +69,14 @@ Private mRs As ADODB.recordset
 ' Properties
 '@================================================================================
 
-Friend Property Let connectionString( _
-                ByVal value As String)
-mConnectionString = value
-End Property
-
-Friend Property Let tradingDB( _
-                ByVal value As tradingDB)
-Set mTradingDB = value
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Friend Sub initialise( _
+                ByVal db As TradingDB)
+Set mDB = db
+End Sub
 
 Public Function loadByName(ByVal pName As String) As Exchange
 Dim where As String
@@ -106,7 +100,7 @@ On Error GoTo Err
 failpoint = 100
 
 Set mConn = New ADODB.Connection
-mConn.Open mConnectionString
+mConn.Open mDB.connectionString
 
 failpoint = 200
 
@@ -120,7 +114,7 @@ SQL = "SELECT * " & _
 mRs.Open SQL, mConn, adOpenStatic, adLockBatchOptimistic
 
 Set Exchange = New Exchange
-Exchange.connectionString = mConnectionString
+Exchange.initialise mDB
 Exchange.recordset = mRs
 Set makeNew = Exchange
 
@@ -138,11 +132,11 @@ Err.Raise Err.Number, _
 
 End Function
 
-Public Function search(ByVal criterion As String) As ExchangeSummaries
-Dim summ As ExchangeSummaries
+Public Function search(ByVal criterion As String) As DataObjectSummaries
+Dim summ As DataObjectSummaries
 Dim SQL As String
 Dim where As String
-Dim ExchangeSummary As ExchangeSummary
+Dim lDataObjectSummary As DataObjectSummary
 
 
 Dim failpoint As Long
@@ -152,7 +146,7 @@ where = IIf(criterion = "", "", "WHERE name LIKE '" & criterion & "' ")
 failpoint = 100
 
 Set mConn = New ADODB.Connection
-mConn.Open mConnectionString
+mConn.Open mDB.connectionString
 
 failpoint = 200
 
@@ -166,19 +160,19 @@ SQL = "SELECT ID, Name " & _
 
 mRs.Open SQL, mConn, adOpenStatic, adLockBatchOptimistic
 
-Set summ = New ExchangeSummaries
+Set summ = New DataObjectSummaries
 
 Do While Not mRs.EOF
-    Set ExchangeSummary = New ExchangeSummary
-    ExchangeSummary.id = mRs("ID")
-    ExchangeSummary.name = Trim$(mRs("Name"))
-    summ.add ExchangeSummary
-    Set ExchangeSummary = Nothing
+    Set lDataObjectSummary = New DataObjectSummary
+    lDataObjectSummary.id = mRs("ID")
+    lDataObjectSummary.name = Trim$(mRs("Name"))
+    summ.add lDataObjectSummary
+    Set lDataObjectSummary = Nothing
     mRs.MoveNext
 Loop
 
-mConn.Close
 Set mRs.ActiveConnection = Nothing
+mConn.Close
 
 Set search = summ
 
@@ -207,7 +201,7 @@ On Error GoTo Err
 failpoint = 100
 
 Set mConn = New ADODB.Connection
-mConn.Open mConnectionString
+mConn.Open mDB.connectionString
 
 failpoint = 200
 
@@ -225,7 +219,7 @@ If Not mRs.EOF Then
     Set Exchange = New Exchange
     
     Exchange.recordset = mRs
-    Exchange.connectionString = mConnectionString
+    Exchange.initialise mDB
     Set loadDetails = Exchange
 Else
     Set loadDetails = Nothing

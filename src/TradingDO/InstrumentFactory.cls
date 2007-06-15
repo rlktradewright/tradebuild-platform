@@ -48,8 +48,7 @@ Private Const ModuleName As String = "InstrumentFactory"
 ' Member variables
 '@================================================================================
 
-Private mTradingDB As tradingDB
-Private mConnectionString As String
+Private mDB As TradingDB
 
 Private mConn As ADODB.Connection
 Private mRs As ADODB.recordset
@@ -70,19 +69,14 @@ Private mRs As ADODB.recordset
 ' Properties
 '@================================================================================
 
-Friend Property Let connectionString( _
-                ByVal value As String)
-mConnectionString = value
-End Property
-
-Friend Property Let tradingDB( _
-                ByVal value As tradingDB)
-Set mTradingDB = value
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Friend Sub initialise( _
+                ByVal db As TradingDB)
+Set mDB = db
+End Sub
 
 Public Function loadByID( _
                 ByVal id As Long) As instrument
@@ -92,14 +86,14 @@ Set loadByID = loadDetails(where)
 End Function
 
 Public Function loadBySpec( _
-                ByVal pShortName As String, _
-                ByVal pSymbol As String, _
-                ByVal pExchange As String, _
-                ByVal pCategory As String, _
-                ByVal pCurrency As String, _
-                ByVal pExpiry As String, _
-                ByVal pStrike As Double, _
-                ByVal pRight As String) As instrument
+                Optional ByVal pShortName As String, _
+                Optional ByVal pSymbol As String, _
+                Optional ByVal pExchange As String, _
+                Optional ByVal pCategory As String, _
+                Optional ByVal pCurrency As String, _
+                Optional ByVal pExpiry As String, _
+                Optional ByVal pStrike As Double, _
+                Optional ByVal pRight As String) As instrument
 Dim where As String
 If pShortName <> "" Then where = "shortname='" & Replace(pShortName, "'", "''") & "'"
 If pSymbol <> "" Then where = IIf(where = "", "", where & " AND ") & "Symbol='" & Replace(pSymbol, "'", "''") & "'"
@@ -113,6 +107,7 @@ Set loadBySpec = loadDetails(where)
 End Function
 
 Public Function loadSummaries( _
+                Optional ByVal pInstrumentClassName, _
                 Optional ByVal pShortName As String, _
                 Optional ByVal pSymbol As String, _
                 Optional ByVal pExchange As String, _
@@ -122,7 +117,8 @@ Public Function loadSummaries( _
                 Optional ByVal pStrike As Double, _
                 Optional ByVal pRight As String) As InstrumentSummaries
 Dim where As String
-If pShortName <> "" Then where = "shortname='" & Replace(pShortName, "'", "''") & "'"
+If pInstrumentClassName <> "" Then where = "InstrumentClassName='" & Replace(pInstrumentClassName, "'", "''") & "'"
+If pShortName <> "" Then where = IIf(where = "", "", where & " AND ") & "shortname='" & Replace(pShortName, "'", "''") & "'"
 If pSymbol <> "" Then where = IIf(where = "", "", where & " AND ") & "Symbol='" & Replace(pSymbol, "'", "''") & "'"
 If pExchange <> "" Then where = IIf(where = "", "", where & " AND ") & "Exchange='" & pExchange & "'"
 If pCategory <> "" Then where = IIf(where = "", "", where & " AND ") & "Category='" & pCategory & "'"
@@ -143,7 +139,7 @@ On Error GoTo Err
 failpoint = 100
 
 Set mConn = New ADODB.Connection
-mConn.Open mConnectionString
+mConn.Open mDB.connectionString
 
 failpoint = 200
 
@@ -159,7 +155,7 @@ mRs.Open SQL, mConn, adOpenStatic, adLockBatchOptimistic
 Set instrument = New instrument
 
 instrument.recordset = mRs
-instrument.connectionString = mConnectionString
+instrument.initialise mDB
 Set makeNew = instrument
 
 mConn.Close
@@ -190,7 +186,7 @@ On Error GoTo Err
 failpoint = 100 '===================================================
 
 Set mConn = New ADODB.Connection
-mConn.Open mConnectionString
+mConn.Open mDB.connectionString
 
 failpoint = 200 '===================================================
 
@@ -204,7 +200,7 @@ mRs.Open SQL, mConn, adOpenStatic, adLockBatchOptimistic
 failpoint = 300 '===================================================
 If Not mRs.EOF Then
     Set instrument = New instrument
-    instrument.connectionString = mConnectionString
+    instrument.initialise mDB
     instrument.recordset = mRs
     Set loadDetails = instrument
 Else
@@ -238,7 +234,7 @@ On Error GoTo Err
 failpoint = 100 '===================================================
 
 Set mConn = New ADODB.Connection
-mConn.Open mConnectionString
+mConn.Open mDB.connectionString
 
 failpoint = 200 '===================================================
 
@@ -266,8 +262,8 @@ Do While Not mRs.EOF
     mRs.MoveNext
 Loop
 
-mConn.Close
 Set mRs.ActiveConnection = Nothing
+mConn.Close
 
 Set searchWhere = summ
 

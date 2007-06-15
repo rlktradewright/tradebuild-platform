@@ -162,6 +162,8 @@ Public Sub FetchBars( _
 
 Dim cmd As ADODB.Command
 Dim param As ADODB.Parameter
+Dim fromLocal As Date
+Dim toLocal As Date
 
 Debug.Assert Not mFetchInProgress
 mFetchInProgress = True
@@ -169,7 +171,7 @@ mFetchInProgress = True
 Set cmd = New ADODB.Command
 cmd.CommandType = adCmdStoredProc
 
-cmd.CommandText = "FetchBarData"
+cmd.CommandText = "FetchBarDataEx"
 
 Set param = cmd.CreateParameter("@InstrumentID", _
                             DataTypeEnum.adInteger, _
@@ -199,18 +201,38 @@ Set param = cmd.CreateParameter("@NumberRequired", _
                             NumberOfBars)
 cmd.Parameters.Append param
 
-Set param = cmd.CreateParameter("@From", _
+If fromTime < #1/1/1900# Then fromTime = #1/1/1900# ' don't exceed range of SmallDateTime
+If toTime < #1/1/1900# Then toTime = #1/1/1900# ' don't exceed range of SmallDateTime
+Set param = cmd.CreateParameter("@FromUTC", _
                             DataTypeEnum.adDate, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             fromTime)
 cmd.Parameters.Append param
 
-Set param = cmd.CreateParameter("@To", _
+Set param = cmd.CreateParameter("@ToUTC", _
                             DataTypeEnum.adDate, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             toTime)
+cmd.Parameters.Append param
+
+fromLocal = ConvertDateUTCToLocal(fromTime)
+If fromLocal < #1/1/1900# Then fromLocal = #1/1/1900# ' don't exceed range of SmallDateTime
+Set param = cmd.CreateParameter("@FromLocal", _
+                            DataTypeEnum.adDate, _
+                            ParameterDirectionEnum.adParamInput, _
+                            , _
+                            fromLocal)
+cmd.Parameters.Append param
+
+toLocal = ConvertDateUTCToLocal(toTime)
+If toLocal < #1/1/1900# Then toLocal = #1/1/1900# ' don't exceed range of SmallDateTime
+Set param = cmd.CreateParameter("@ToLocal", _
+                            DataTypeEnum.adDate, _
+                            ParameterDirectionEnum.adParamInput, _
+                            , _
+                            toLocal)
 cmd.Parameters.Append param
 
 cmd.ActiveConnection = mConnection
@@ -256,7 +278,11 @@ If mRsBars.BOF Then
     Exit Function
 End If
 
-timestamp = mRsBars("DateTime")
+If CBool(mRsBars("IsUTCTime")) Then
+    timestamp = mRsBars("DateTime")
+Else
+    timestamp = ConvertDateLocalToUTC(mRsBars("DateTime"))
+End If
 barType = mRsBars("BarType")
 barLength = mRsBars("BarLengthMinutes")
 openPrice = mRsBars("openprice")

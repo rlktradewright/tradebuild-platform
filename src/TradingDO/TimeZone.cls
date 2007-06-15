@@ -56,7 +56,7 @@ Private Const ModuleName As String = "TimeZone"
 ' Member variables
 '@================================================================================
 
-Private mConnectionString As String
+Private mDB As TradingDB
 
 Private mConn As ADODB.Connection
 
@@ -140,7 +140,7 @@ End Property
 '@===============================================================================
 
 Private Sub mErrorList_ItemAdded( _
-                ByVal item As TWUtilities.ErrorItem)
+                ByVal item As ErrorItem)
 RaiseEvent Invalid
 mEventRaiser.Invalid
 End Sub
@@ -154,13 +154,26 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get ErrorList() As ErrorList
-Set ErrorList = mErrorList
+Public Property Get canonicalName() As String
+canonicalName = Trim$(Nz(mRs("canonicalName"), ""))
 End Property
 
-Friend Property Let connectionString( _
-                ByVal value As String)
-mConnectionString = value
+Public Property Let canonicalName(ByVal value As String)
+Dim lTimeZone As TimeZone
+
+ruleBroken BusRuleTimeZoneCanonicalNameValid, _
+    Len(value) = 0 Or Len(value) > mMaxNameLength
+
+Set lTimeZone = mDB.TimeZoneFactory.loadByName(value)
+
+ruleBroken BusRuleTimeZoneCanonicalNameValid, _
+    lTimeZone Is Nothing
+If Not lTimeZone Is Nothing Then mRs("canonicalid") = lTimeZone.id
+Dirty
+End Property
+
+Public Property Get ErrorList() As ErrorList
+Set ErrorList = mErrorList
 End Property
 
 Public Property Get id() As Long
@@ -170,7 +183,6 @@ End Property
 Public Property Get IsValid() As Boolean
     IsValid = (mErrorList.count = 0)
 End Property
-
 
 Public Property Get IsDeleted() As Boolean
   IsDeleted = mDeleted
@@ -189,18 +201,9 @@ name = Trim$(mRs("NAME"))
 End Property
 
 Public Property Let name(ByVal value As String)
-ruleBroken BusRuleExchangeNameInvalid, _
+ruleBroken BusRuleTimeZoneNameValid, _
     Len(value) = 0 Or Len(value) > mMaxNameLength
 mRs("NAME") = Left$(value, mMaxNameLength)
-Dirty
-End Property
-
-Public Property Get notes() As String
-notes = Nz(mRs("notes"), "")
-End Property
-
-Public Property Let notes(ByVal val As String)
-mRs("notes") = val
 Dirty
 End Property
 
@@ -250,6 +253,11 @@ Public Sub Delete()
 mDeleted = True
 End Sub
 
+Friend Sub initialise( _
+                ByVal db As TradingDB)
+Set mDB = db
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
@@ -285,14 +293,14 @@ On Error GoTo Err
 failpoint = 100
 
 Set mConn = New ADODB.Connection
-mConn.Open mConnectionString
+mConn.Open mDB.connectionString
 
 failpoint = 200
 
 Set mRs.ActiveConnection = mConn
-mRs.Update
-mConn.Close
+mRs.UpdateBatch
 Set mRs.ActiveConnection = Nothing
+mConn.Close
 
 Exit Sub
 
@@ -306,7 +314,7 @@ End Sub
 
 Private Sub setInitialErrors()
 ' sets errors for fields that are invalid when a new record is created
-ruleBroken BusRuleExchangeNameInvalid, True
+ruleBroken BusRuleTimeZoneNameValid, True
 End Sub
 
 

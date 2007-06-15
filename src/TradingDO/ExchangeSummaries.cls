@@ -75,7 +75,7 @@ End Sub
 '@================================================================================
 
 Friend Sub add( _
-                pItem As exchangeSummary)
+                pItem As ExchangeSummary)
 mSummaries.add pItem
 End Sub
 
@@ -84,7 +84,7 @@ count = mSummaries.count
 End Function
 
 Public Function item( _
-                index As Variant) As exchangeSummary
+                index As Variant) As ExchangeSummary
 Set item = mSummaries(index)
 End Function
 
@@ -93,6 +93,8 @@ mSummaries.remove (index)
 End Sub
 
 Public Function NewEnum() As IUnknown
+Attribute NewEnum.VB_UserMemId = -4
+Attribute NewEnum.VB_MemberFlags = "40"
    Set NewEnum = mSummaries.[_NewEnum]
 End Function
 
