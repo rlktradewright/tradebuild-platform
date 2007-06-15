@@ -85,7 +85,7 @@ Private mTickRequestPending As Boolean
 
 Private mReplayProgressEventFrequency As Long
 
-Private mInputTickfileSpecifier As TradeBuildSP.TickfileSpec
+Private mInputTickfileSpecifier As TradeBuildSP.ITickfileSpecifier
 Private mTickRequestId As Long
 
 Private mLogLevel As LogLevels
@@ -122,15 +122,15 @@ handleFatalError err.Number, _
                 err.Description
 End Sub
 
-Private Property Let ITickfileReader_Contract(ByVal RHS As TradeBuildSP.IContract)
+Private Property Let ITickfileReader_Contract(ByVal RHS As Contract)
 End Property
 
-Private Property Get ITickfileReader_Contract() As TradeBuildSP.IContract
+Private Property Get ITickfileReader_Contract() As Contract
 Set ITickfileReader_Contract = mInputTickfileSpecifier.Contract
 End Property
 
-Private Property Get ITickfileReader_ContractSpecifier() As TradeBuildSP.IContractSpecifier
-Set ITickfileReader_ContractSpecifier = mInputTickfileSpecifier.Contract.Specifier
+Private Property Get ITickfileReader_ContractSpecifier() As ContractSpecifier
+Set ITickfileReader_ContractSpecifier = mInputTickfileSpecifier.Contract.specifier
 End Property
 
 Private Sub ITickfileReader_FireNextTick()
@@ -147,8 +147,8 @@ Private Property Get ITickfileReader_FirstTickFileTime() As Date
 ITickfileReader_FirstTickFileTime = FirstTickFileTime
 End Property
 
-Private Property Get ITickfileReader_InputTickfileSpecifier() As TradeBuildSP.TickfileSpec
-ITickfileReader_InputTickfileSpecifier = InputTickfileSpecifier
+Private Property Get ITickfileReader_InputTickfileSpecifier() As TradeBuildSP.ITickfileSpecifier
+Set ITickfileReader_InputTickfileSpecifier = InputTickfileSpecifier
 End Property
 
 Private Property Let ITickfileReader_ReplayProgressEventFrequency(ByVal RHS As Long)
@@ -163,9 +163,10 @@ Private Property Get ITickfileReader_ReplayProgressEventFrequency() As Long
 ITickfileReader_ReplayProgressEventFrequency = mReplayProgressEventFrequency
 End Property
 
-Private Sub ITickfileReader_ReplayTickfile(tickfileSpecifier As TradeBuildSP.TickfileSpec)
+Private Sub ITickfileReader_ReplayTickfile( _
+                ByVal tickfileSpecifier As TradeBuildSP.ITickfileSpecifier)
 On Error GoTo err
-mInputTickfileSpecifier = tickfileSpecifier
+Set mInputTickfileSpecifier = tickfileSpecifier
 
 If mQTAPI Is Nothing Then
     Set mQTAPI = gGetQTAPIInstance(mServer, mPort, mPassword, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection)
@@ -293,8 +294,8 @@ Friend Property Get FirstTickFileTime() As Date
 ' not supported
 End Property
 
-Friend Property Get InputTickfileSpecifier() As TradeBuildSP.TickfileSpec
-InputTickfileSpecifier = mInputTickfileSpecifier
+Friend Property Get InputTickfileSpecifier() As TradeBuildSP.ITickfileSpecifier
+Set InputTickfileSpecifier = mInputTickfileSpecifier
 End Property
 
 Public Property Let keepConnection(ByVal value As Boolean)

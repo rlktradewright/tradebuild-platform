@@ -74,7 +74,7 @@ Private mLockId As Long
 
 Private mRequestId As Long
 
-Private mBarDataSpecifier  As TradeBuildSP.BarDataSpecifier
+Private mBarDataSpecifier  As TradeBuildSP.IBarDataSpecifier
 
 Private mWaitingForBarData As Boolean
 Private mBarRequested As Boolean
@@ -105,8 +105,8 @@ End Sub
 '================================================================================
 
 Private Property Get IBarDataReader_BarDataSpecifier( _
-                            ) As TradeBuildSP.BarDataSpecifier
-IBarDataReader_BarDataSpecifier = mBarDataSpecifier
+                            ) As TradeBuildSP.IBarDataSpecifier
+Set IBarDataReader_BarDataSpecifier = mBarDataSpecifier
 End Property
 
 Private Sub IBarDataReader_CancelFetch()
@@ -120,7 +120,7 @@ handleFatalError err.Number, _
 End Sub
 
 Private Sub IBarDataReader_FetchBars( _
-                barSpecifier As TradeBuildSP.BarDataSpecifier)
+                ByVal barSpecifier As TradeBuildSP.IBarDataSpecifier)
 
 On Error GoTo err
 If mRequestInProgress Then err.Raise ErrorCodes.ErrIllegalStateException, _
@@ -143,7 +143,7 @@ End Select
 
 mRequestInProgress = True
 mWaitingForBarData = True
-mBarDataSpecifier = barSpecifier
+Set mBarDataSpecifier = barSpecifier
 
 If mQTAPI Is Nothing Then
     Set mQTAPI = gGetQTAPIInstance(mServer, mPort, mPassword, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection)

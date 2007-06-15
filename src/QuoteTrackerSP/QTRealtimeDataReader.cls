@@ -59,7 +59,7 @@ Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mServiceConsumer As IRealtimeDataInputServiceConsumer
 Private mDataConsumer As IStreamingDataConsumer
 
-Private mContract As TradeBuildSP.IContract
+Private mContract As Contract
 Private mL1QuoteRequestId As Long
 
 Private mName As String
@@ -93,7 +93,7 @@ End Sub
 '================================================================================
 
 Private Sub IRealtimeDataReader_StartData( _
-                ByVal Contract As TradeBuildSP.IContract, _
+                ByVal Contract As Contract, _
                 ByVal DomEventsRequired As TradeBuildSP.DOMEventTypes)
 
 On Error GoTo err
