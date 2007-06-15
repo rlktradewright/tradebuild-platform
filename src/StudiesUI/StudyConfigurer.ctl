@@ -752,7 +752,7 @@ End Sub
 
 Public Property Get studyConfiguration() As studyConfiguration
 Dim studyConfig As studyConfiguration
-Dim params As Parameters2.Parameters
+Dim params As Parameters
 Dim studyParamDef As StudyParameterDefinition
 Dim studyValueDefs As studyValueDefinitions
 Dim studyValueDef As StudyValueDefinition
@@ -798,7 +798,7 @@ Else
 End If
 studyConfig.chartRegionName = regionName
 
-Set params = New Parameters2.Parameters
+Set params = New Parameters
 
 For i = 0 To mStudyDefinition.studyParameterDefinitions.Count - 1
     Set studyParamDef = mStudyDefinition.studyParameterDefinitions.item(i + 1)
@@ -1062,7 +1062,7 @@ Public Sub initialise( _
                 ByRef regionNames() As String, _
                 ByVal configuredStudies As StudyConfigurations, _
                 ByVal defaultConfiguration As studyConfiguration, _
-                ByVal defaultParameters As Parameters2.Parameters)
+                ByVal defaultParameters As Parameters)
                 
 If Not defaultConfiguration Is Nothing And defaultParameters Is Nothing Then
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
@@ -1473,7 +1473,7 @@ ChartRegionCombo.Refresh
 End Sub
 
 Private Sub processStudyDefinition( _
-                ByVal defaultParams As Parameters2.Parameters)
+                ByVal defaultParams As Parameters)
 Dim i As Long
 Dim studyInputDefinitions As studyInputDefinitions
 Dim studyParameterDefinitions As studyParameterDefinitions

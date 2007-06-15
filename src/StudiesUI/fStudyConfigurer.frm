@@ -135,7 +135,7 @@ Friend Sub initialise( _
                 ByRef regionNames() As String, _
                 ByVal configuredStudies As StudyConfigurations, _
                 ByVal defaultConfiguration As studyConfiguration, _
-                ByVal defaultParameters As Parameters2.Parameters)
+                ByVal defaultParameters As Parameters)
                 
 Me.Caption = studyDef.name
 
