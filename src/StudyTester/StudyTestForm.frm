@@ -2,8 +2,8 @@ VERSION 5.00
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "msflxgrd.ocx"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
-Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#8.0#0"; "StudiesUI2-6.ocx"
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#3.0#0"; "ChartSkil2-6.ocx"
+Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#13.0#0"; "StudiesUI2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#6.0#0"; "ChartSkil2-6.ocx"
 Begin VB.Form StudyTestForm 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeBuild Study Test Harness v2.6"
@@ -381,6 +381,7 @@ Private mPeriodUnits As TimePeriodUnits
 
 Private Sub Form_Initialize()
 InitCommonControls  ' enables WinXP look and feel
+InitialiseTWUtilities
 End Sub
 
 Private Sub Form_Load()
@@ -401,6 +402,10 @@ AddStudyLibrary "CmnStudiesLib26.StudyLib", True
 ' before loading the test data
 setupInitialStudies
 
+End Sub
+
+Private Sub Form_Terminate()
+TerminateTWUtilities
 End Sub
 
 '================================================================================
@@ -712,7 +717,7 @@ End Sub
 Private Function createBarsStudyConfig() As StudyConfiguration
 Dim studyDef As StudyDefinition
 ReDim inputValueNames(1) As String
-Dim params As New Parameters2.Parameters
+Dim params As New Parameters
 Dim studyValueConfig As StudyValueConfiguration
 Dim barsStyle As barStyle
 Dim volumeStyle As dataPointStyle
