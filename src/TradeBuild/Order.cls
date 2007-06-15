@@ -53,8 +53,8 @@ Event fill( _
 '@================================================================================
 
 Private mTicker         As Ticker
-Private mContract       As TradeBuild26.Contract
-Private mOrderContext   As TradeBuild26.OrderContext
+Private mContract       As Contract
+Private mOrderContext   As OrderContext
 
 Private mIsDirty        As Boolean
 
@@ -75,7 +75,7 @@ Private mQuantityFilled As Long
 Private mQuantityRemaining As Long
 Private mAveragePrice   As Double
 Private mLastFillPrice  As Double
-Private mOrderType      As TradeBuild26.OrderTypes
+Private mOrderType      As OrderTypes
 Private mLimitPrice     As Double
 Private mTriggerPrice   As Double
 Private mOffset         As Long
@@ -140,7 +140,7 @@ Private Property Get IOrder_brokerId() As String
 IOrder_brokerId = mBrokerId
 End Property
 
-Private Property Get IOrder_Contract() As TradeBuildSP.IContract
+Private Property Get IOrder_Contract() As Contract
 Set IOrder_Contract = mContract
 End Property
 
@@ -310,7 +310,7 @@ Public Property Get brokerId() As String
 brokerId = mBrokerId
 End Property
 
-Public Property Get Contract() As TradeBuild26.Contract
+Public Property Get Contract() As Contract
 Set Contract = mContract
 End Property
 
@@ -498,15 +498,15 @@ Friend Property Get offset() As Long
 offset = mOffset
 End Property
 
-Friend Property Let OrderContext(ByVal value As TradeBuild26.OrderContext)
+Friend Property Let OrderContext(ByVal value As OrderContext)
 Set mOrderContext = value
 End Property
 
-Public Property Get OrderContext() As TradeBuild26.OrderContext
+Public Property Get OrderContext() As OrderContext
 Set OrderContext = mOrderContext
 End Property
 
-Friend Property Let orderType(ByVal value As TradeBuild26.OrderTypes)
+Friend Property Let orderType(ByVal value As OrderTypes)
 checkAttributeModificationPermitted (TradeBuild26.OrderAttributeIds.OrderAttOrderType)
 If Not mOrderContext.isOrderTypeValueSupported(value) Then attributeValueNotSupported
 If value = mOrderType Then Exit Property
@@ -514,7 +514,7 @@ setDirty
 mOrderType = value
 End Property
 
-Public Property Get orderType() As TradeBuild26.OrderTypes
+Public Property Get orderType() As OrderTypes
 orderType = mOrderType
 End Property
 
@@ -628,7 +628,7 @@ Public Property Get status() As OrderStatuses
 status = mStatus
 End Property
 
-Public Property Let StopTriggerMethod(ByVal value As TradeBuild26.StopTriggerMethods)
+Public Property Let StopTriggerMethod(ByVal value As StopTriggerMethods)
 checkAttributeModificationPermitted (TradeBuild26.OrderAttributeIds.OrderAttStopTriggerMethod)
 If Not mOrderContext.isStopTriggerMethodValueSupported(value) Then attributeValueNotSupported
 If value = mStopTriggerMethod Then Exit Property
@@ -636,7 +636,7 @@ setDirty
 mStopTriggerMethod = value
 End Property
 
-Public Property Get StopTriggerMethod() As TradeBuild26.StopTriggerMethods
+Public Property Get StopTriggerMethod() As StopTriggerMethods
 StopTriggerMethod = mStopTriggerMethod
 End Property
 
@@ -823,12 +823,12 @@ Then isModifiable = True
 End Function
 
 ' commented out 22/5/6
-'Friend Sub openOrder(ByVal action As TradeBuild26.OrderActions, _
+'Friend Sub openOrder(ByVal action As OrderActions, _
 '                        ByVal quantity As Long, _
-'                        ByVal orderType As TradeBuild26.OrderTypes, _
+'                        ByVal orderType As OrderTypes, _
 '                        ByVal lmtPrice As Double, _
 '                        ByVal auxPrice As Double, _
-'                        ByVal tif As TradeBuild26.OrderTifs, _
+'                        ByVal tif As OrderTifs, _
 '                        ByVal ocaGroup As String)
 '
 'mTWSAction = action
@@ -845,8 +845,8 @@ End Function
 'If orderType <> mOrderType Then
 '    mDifferent = True
 'End If
-'If orderType = TradeBuild26.OrderTypes.OrderTypeLimit Or _
-'    orderType = TradeBuild26.OrderTypes.OrderTypeStopLimit _
+'If orderType = OrderTypes.OrderTypeLimit Or _
+'    orderType = OrderTypes.OrderTypeStopLimit _
 'Then
 '    mTWSLimitPrice = lmtPrice
 '    If lmtPrice <> mLimitPrice Then
@@ -855,8 +855,8 @@ End Function
 'Else
 '    mTWSLimitPrice = 0
 'End If
-'If orderType = TradeBuild26.OrderTypes.OrderTypeStop Or _
-'    orderType = TradeBuild26.OrderTypes.OrderTypeStopLimit _
+'If orderType = OrderTypes.OrderTypeStop Or _
+'    orderType = OrderTypes.OrderTypeStopLimit _
 'Then
 '    mTWSTriggerPrice = auxPrice
 '    If auxPrice <> mTriggerPrice Then
@@ -939,7 +939,7 @@ End Sub
 '                   specifying the <code>order</code>'s new status
 '
 '@/
-Friend Sub updateStatus(ByVal pStatus As TradeBuild26.OrderStatuses)
+Friend Sub updateStatus(ByVal pStatus As OrderStatuses)
 
 If pStatus <> mStatus Then
     mStatus = pStatus
@@ -964,7 +964,7 @@ err.Raise ErrorCodes.ErrIllegalArgumentException, _
 End Sub
 
 Private Sub checkAttributeModificationPermitted( _
-                ByVal attributeId As TradeBuild26.OrderAttributeIds)
+                ByVal attributeId As OrderAttributeIds)
 If Not isAttributeModifiable(attributeId) Then attributeNotModifiable
 End Sub
 

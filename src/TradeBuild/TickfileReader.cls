@@ -52,7 +52,7 @@ Private Type TickStruct
     UnProcessed     As Boolean
     Timed           As Boolean
     timestamp       As Date
-    TickType        As TradeBuild26.TickTypes
+    TickType        As TickTypes
     TickPrice       As Double
     TickSize        As Long
     volume          As Long
@@ -99,7 +99,7 @@ mState = TickfileStateCodes.TickfileNotPlaying
 End Sub
 
 Private Sub Class_Terminate()
-Debug.Print "TradeBuild26.TickfileReader terminated"
+Debug.Print "TickfileReader terminated"
 End Sub
 
 '@================================================================================
@@ -112,7 +112,7 @@ Private Sub IStreamingDataConsumer_Ask( _
                             ByVal size As Long)
 With mCurrentTick
     .UnProcessed = True
-    .TickType = TradeBuild26.TickTypes.TickTypeAsk
+    .TickType = TickTypes.TickTypeAsk
     .timestamp = AdjustTimestamp(timestamp)
     .TickPrice = price
     .TickSize = size
@@ -126,7 +126,7 @@ Private Sub IStreamingDataConsumer_Bid( _
                             ByVal size As Long)
 With mCurrentTick
     .UnProcessed = True
-    .TickType = TradeBuild26.TickTypes.TickTypeBid
+    .TickType = TickTypes.TickTypeBid
     .timestamp = AdjustTimestamp(timestamp)
     .TickPrice = price
     .TickSize = size
@@ -139,7 +139,7 @@ Private Sub IStreamingDataConsumer_High( _
                             ByVal price As Double)
 With mCurrentTick
     .UnProcessed = True
-    .TickType = TradeBuild26.TickTypes.TickTypeHigh
+    .TickType = TickTypes.TickTypeHigh
     .timestamp = AdjustTimestamp(timestamp)
     .TickPrice = price
 End With
@@ -151,7 +151,7 @@ Private Sub IStreamingDataConsumer_Low( _
                             ByVal price As Double)
 With mCurrentTick
     .UnProcessed = True
-    .TickType = TradeBuild26.TickTypes.TickTypeLow
+    .TickType = TickTypes.TickTypeLow
     .timestamp = AdjustTimestamp(timestamp)
     .TickPrice = price
 End With
@@ -163,7 +163,7 @@ Private Sub IStreamingDataConsumer_OpenInterest( _
                             ByVal size As Long)
 With mCurrentTick
     .UnProcessed = True
-    .TickType = TradeBuild26.TickTypes.TickTypeOpenInterest
+    .TickType = TickTypes.TickTypeOpenInterest
     .timestamp = AdjustTimestamp(timestamp)
     .TickSize = size
 End With
@@ -175,7 +175,7 @@ Private Sub IStreamingDataConsumer_PreviousClose( _
                             ByVal price As Double)
 With mCurrentTick
     .UnProcessed = True
-    .TickType = TradeBuild26.TickTypes.TickTypePrevClose
+    .TickType = TickTypes.TickTypePrevClose
     .timestamp = AdjustTimestamp(timestamp)
     .TickPrice = price
 End With
@@ -187,7 +187,7 @@ Private Sub IStreamingDataConsumer_ResetMarketDepth( _
                             ByVal marketDepthReRequested As Boolean)
 With mCurrentTick
     .UnProcessed = True
-    .TickType = TradeBuild26.TickTypes.TickTypeMarketDepthReset
+    .TickType = TickTypes.TickTypeMarketDepthReset
     .timestamp = AdjustTimestamp(timestamp)
     .marketDepthReRequested = marketDepthReRequested
 End With
@@ -200,7 +200,7 @@ Private Sub IStreamingDataConsumer_Trade( _
                             ByVal size As Long)
 With mCurrentTick
     .UnProcessed = True
-    .TickType = TradeBuild26.TickTypes.TickTypeLast
+    .TickType = TickTypes.TickTypeLast
     .timestamp = AdjustTimestamp(timestamp)
     .TickPrice = price
     .TickSize = size
@@ -217,7 +217,7 @@ Private Sub IStreamingDataConsumer_UpdateMktDepth( _
                             ByVal size As Long)
 With mCurrentTick
     .UnProcessed = True
-    .TickType = TradeBuild26.TickTypes.TickTypeMarketDepth
+    .TickType = TickTypes.TickTypeMarketDepth
     .timestamp = AdjustTimestamp(timestamp)
     .MDPosition = position
     .MDOperation = operation
@@ -238,7 +238,7 @@ Private Sub IStreamingDataConsumer_UpdateMktDepthL2( _
                             ByVal size As Long)
 With mCurrentTick
     .UnProcessed = True
-    .TickType = TradeBuild26.TickTypes.TickTypeMarketDepthL2
+    .TickType = TickTypes.TickTypeMarketDepthL2
     .timestamp = AdjustTimestamp(timestamp)
     .MDMarketMaker = marketMaker
     .MDPosition = position
@@ -255,7 +255,7 @@ Private Sub IStreamingDataConsumer_Volume( _
                             ByVal size As Long)
 With mCurrentTick
     .UnProcessed = True
-    .TickType = TradeBuild26.TickTypes.TickTypeVolume
+    .TickType = TickTypes.TickTypeVolume
     .timestamp = AdjustTimestamp(timestamp)
     .TickSize = size
 End With
@@ -274,15 +274,15 @@ End Sub
 ' Properties
 '@================================================================================
 
-Friend Property Let Contract(ByVal value As IContract)
+Friend Property Let Contract(ByVal value As Contract)
 mReader.Contract = value
 End Property
 
-Friend Property Get Contract() As IContract
+Friend Property Get Contract() As Contract
 Set Contract = mReader.Contract
 End Property
 
-Friend Property Get contractSpecifier() As IContractSpecifier
+Friend Property Get contractSpecifier() As contractSpecifier
 Set contractSpecifier = mReader.contractSpecifier
 End Property
 
@@ -309,7 +309,7 @@ End Property
 Friend Property Let replaySpeed(ByVal value As Long)
 mReplaySpeed = value
 If mState = TickfileStateCodes.TickfilePlaying Then
-    Set mTimer = createIntervalTimer(1)
+    Set mTimer = CreateIntervalTimer(1)
     mTimer.StartTimer
 End If
 End Property
@@ -356,17 +356,7 @@ mState = TickfileStateCodes.TickfilePaused
 'gPauseTime
 End Sub
 
-Friend Sub ReplayTickfile(TickfileSpecifier As TradeBuild26.TickfileSpecifier)
-Dim tfSpec As TradeBuildSP.TickfileSpec
-With tfSpec
-    Set .Contract = TickfileSpecifier.Contract
-    .filename = TickfileSpecifier.filename
-    .From = TickfileSpecifier.From
-    .tickfileFormatID = TickfileSpecifier.tickfileFormatID
-    .To = TickfileSpecifier.To
-    .EntireSession = TickfileSpecifier.EntireSession
-End With
-
+Friend Sub ReplayTickfile(tfSpec As TickfileSpecifier)
 mReader.ReplayTickfile tfSpec
 End Sub
 
@@ -383,7 +373,7 @@ mState = TickfileStateCodes.TickfilePlaying
 Set mElapsedTimer = New ElapsedTimer
 
 ' start replay using the timer to unwind the current stack
-Set mTimer = createIntervalTimer(1)
+Set mTimer = CreateIntervalTimer(1)
 mTimer.StartTimer
 
 End Sub
@@ -436,12 +426,12 @@ If delayMillisecs < 5 Then
     ' completed the function that raised the tick event.
     If Not mTickReceivedSynchronously Then
         mCurrentTick.Timed = True
-        Set mTimer = createIntervalTimer(1)
+        Set mTimer = CreateIntervalTimer(1)
         mTimer.StartTimer
     End If
 Else
     mCurrentTick.Timed = True
-    Set mTimer = createIntervalTimer(delayMillisecs)
+    Set mTimer = CreateIntervalTimer(delayMillisecs)
     mTimer.StartTimer
 End If
 
@@ -490,38 +480,38 @@ Private Sub ProcessTickData()
 
 With mCurrentTick
     Select Case .TickType
-    Case TradeBuild26.TickTypes.TickTypeBid
+    Case TickTypes.TickTypeBid
         mDataConsumer.bid .timestamp, _
                             .TickPrice, _
                             .TickSize
-    Case TradeBuild26.TickTypes.TickTypeAsk
+    Case TickTypes.TickTypeAsk
         mDataConsumer.ask .timestamp, _
                             .TickPrice, _
                             .TickSize
-    Case TradeBuild26.TickTypes.TickTypeLast
+    Case TickTypes.TickTypeLast
         mDataConsumer.trade .timestamp, _
                             .TickPrice, _
                             .TickSize
-    Case TradeBuild26.TickTypes.TickTypeHigh
+    Case TickTypes.TickTypeHigh
         mDataConsumer.high .timestamp, _
                             .TickPrice
-    Case TradeBuild26.TickTypes.TickTypeLow
+    Case TickTypes.TickTypeLow
         mDataConsumer.low .timestamp, _
                             .TickPrice
-    Case TradeBuild26.TickTypes.TickTypePrevClose
+    Case TickTypes.TickTypePrevClose
         mDataConsumer.previousClose .timestamp, _
                                     .TickPrice
-    Case TradeBuild26.TickTypes.TickTypeVolume
+    Case TickTypes.TickTypeVolume
         mDataConsumer.volume .timestamp, _
                                 .TickSize
-    Case TradeBuild26.TickTypes.TickTypeMarketDepth
+    Case TickTypes.TickTypeMarketDepth
         mDataConsumer.UpdateMktDepth .timestamp, _
                                             .MDPosition, _
                                             .MDOperation, _
                                             .MDSide, _
                                             .TickPrice, _
                                             .TickSize
-    Case TradeBuild26.TickTypes.TickTypeMarketDepthL2
+    Case TickTypes.TickTypeMarketDepthL2
         mDataConsumer.UpdateMktDepthL2 .timestamp, _
                                             .MDPosition, _
                                             .MDMarketMaker, _
@@ -529,7 +519,7 @@ With mCurrentTick
                                             .MDSide, _
                                             .TickPrice, _
                                             .TickSize
-    Case TradeBuild26.TickTypes.TickTypeMarketDepthReset
+    Case TickTypes.TickTypeMarketDepthReset
         mDataConsumer.resetMarketDepth .timestamp, .marketDepthReRequested
     End Select
     .UnProcessed = False

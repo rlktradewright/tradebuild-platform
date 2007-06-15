@@ -55,11 +55,11 @@ Implements TradeBuildSP.IStreamingDataConsumer
 
 Private mServiceConsumer As TradeBuildSP.IOrderSubmissionSrvcConsumer
 
-Private mSimulator As TradeBuild26.AdvancedOrderSimulator
+Private mSimulator As AdvancedOrderSimulator
 
 Private mMarketIndex As Long
 
-Private mContract As TradeBuild26.Contract
+Private mContract As Contract
 
 '@================================================================================
 ' Class Event Handlers
@@ -80,10 +80,10 @@ Dim targetOrder As order
 
 Set entryOrder = pOrderPlex.entryOrder
 Select Case entryOrder.status
-Case TradeBuild26.OrderStatuses.OrderStatusCreated, _
-    TradeBuild26.OrderStatuses.OrderStatusFilled, _
-    TradeBuild26.OrderStatuses.OrderStatusCancelling, _
-    TradeBuild26.OrderStatuses.OrderStatusCancelled
+Case OrderStatuses.OrderStatusCreated, _
+    OrderStatuses.OrderStatusFilled, _
+    OrderStatuses.OrderStatusCancelling, _
+    OrderStatuses.OrderStatusCancelled
 Case Else
     mSimulator.cancelOrder entryOrder.brokerId  ' should automatically cancel the other orders
                                                     ' if they have parentid set
@@ -93,15 +93,15 @@ End Select
 Set stoporder = pOrderPlex.stoporder
 If Not stoporder Is Nothing Then
     Select Case stoporder.status
-    Case TradeBuild26.OrderStatuses.OrderStatusCreated, _
-        TradeBuild26.OrderStatuses.OrderStatusFilled, _
-        TradeBuild26.OrderStatuses.OrderStatusCancelling, _
-        TradeBuild26.OrderStatuses.OrderStatusCancelled
+    Case OrderStatuses.OrderStatusCreated, _
+        OrderStatuses.OrderStatusFilled, _
+        OrderStatuses.OrderStatusCancelling, _
+        OrderStatuses.OrderStatusCancelled
     Case Else
         Select Case entryOrder.status
-        Case TradeBuild26.OrderStatuses.OrderStatusFilled, _
-            TradeBuild26.OrderStatuses.OrderStatusCancelling, _
-            TradeBuild26.OrderStatuses.OrderStatusCancelled
+        Case OrderStatuses.OrderStatusFilled, _
+            OrderStatuses.OrderStatusCancelling, _
+            OrderStatuses.OrderStatusCancelled
             mSimulator.cancelOrder stoporder.brokerId
             IOrderSubmitter_cancelOrderPlex = True
         End Select
@@ -111,15 +111,15 @@ End If
 Set targetOrder = pOrderPlex.targetOrder
 If Not targetOrder Is Nothing Then
     Select Case targetOrder.status
-    Case TradeBuild26.OrderStatuses.OrderStatusCreated, _
-        TradeBuild26.OrderStatuses.OrderStatusFilled, _
-        TradeBuild26.OrderStatuses.OrderStatusCancelling, _
-        TradeBuild26.OrderStatuses.OrderStatusCancelled
+    Case OrderStatuses.OrderStatusCreated, _
+        OrderStatuses.OrderStatusFilled, _
+        OrderStatuses.OrderStatusCancelling, _
+        OrderStatuses.OrderStatusCancelled
     Case Else
         Select Case entryOrder.status
-        Case TradeBuild26.OrderStatuses.OrderStatusFilled, _
-            TradeBuild26.OrderStatuses.OrderStatusCancelling, _
-            TradeBuild26.OrderStatuses.OrderStatusCancelled
+        Case OrderStatuses.OrderStatusFilled, _
+            OrderStatuses.OrderStatusCancelling, _
+            OrderStatuses.OrderStatusCancelled
             mSimulator.cancelOrder targetOrder.brokerId
             IOrderSubmitter_cancelOrderPlex = True
         End Select
@@ -139,10 +139,10 @@ If stoporder Is Nothing Then err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "Order plex has no stop order"
 
 Select Case stoporder.status
-Case TradeBuild26.OrderStatuses.OrderStatusCreated, _
-    TradeBuild26.OrderStatuses.OrderStatusFilled, _
-    TradeBuild26.OrderStatuses.OrderStatusCancelling, _
-    TradeBuild26.OrderStatuses.OrderStatusCancelled
+Case OrderStatuses.OrderStatusCreated, _
+    OrderStatuses.OrderStatusFilled, _
+    OrderStatuses.OrderStatusCancelling, _
+    OrderStatuses.OrderStatusCancelled
     err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "OrderSubmissionServiceProvider::cancelStopOrder", _
                                     "Stop order state invalid for cancellation"
@@ -161,9 +161,9 @@ If targetOrder Is Nothing Then err.Raise ErrorCodes.ErrIllegalStateException, _
 
 
 Select Case targetOrder.status
-Case TradeBuild26.OrderStatuses.OrderStatusCreated, _
-    TradeBuild26.OrderStatuses.OrderStatusCancelling, _
-    TradeBuild26.OrderStatuses.OrderStatusCancelled
+Case OrderStatuses.OrderStatusCreated, _
+    OrderStatuses.OrderStatusCancelling, _
+    OrderStatuses.OrderStatusCancelled
     err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "OrderSubmissionServiceProvider::cancelTargetOrder", _
                                     "Target order state invalid for cancellation"
@@ -190,10 +190,10 @@ Set targetOrder = pOrderPlex.targetOrder
 If Not entryOrder Is Nothing Then
     transmit = True
     If Not stoporder Is Nothing Then
-        If stoporder.orderType <> TradeBuild26.OrderTypes.OrderTypeAutoStop Then transmit = False
+        If stoporder.orderType <> OrderTypes.OrderTypeAutoStop Then transmit = False
     End If
     If Not targetOrder Is Nothing Then
-        If targetOrder.orderType <> TradeBuild26.OrderTypes.OrderTypeAutoLimit Then transmit = False
+        If targetOrder.orderType <> OrderTypes.OrderTypeAutoLimit Then transmit = False
     End If
         
     placeOrder entryOrder, "", "", transmit
@@ -203,17 +203,17 @@ If Not entryOrder Is Nothing Then
     If Not stoporder Is Nothing Then
         transmit = True
         If Not targetOrder Is Nothing Then
-            If targetOrder.orderType <> TradeBuild26.OrderTypes.OrderTypeAutoLimit Then transmit = False
+            If targetOrder.orderType <> OrderTypes.OrderTypeAutoLimit Then transmit = False
         End If
         
-        If stoporder.orderType <> TradeBuild26.OrderTypes.OrderTypeAutoStop Then
+        If stoporder.orderType <> OrderTypes.OrderTypeAutoStop Then
             ' note that AUTOSTP orders will be sent when the entry order is filled
             placeOrder stoporder, entryOrder.id, ocaGroup, transmit
         End If
     End If
     
     If Not targetOrder Is Nothing Then
-        If targetOrder.orderType <> TradeBuild26.OrderTypes.OrderTypeAutoLimit Then
+        If targetOrder.orderType <> OrderTypes.OrderTypeAutoLimit Then
             placeOrder targetOrder, entryOrder.id, ocaGroup, True
         End If
     End If
@@ -236,7 +236,7 @@ Private Sub IOrderSubmitter_modifyOrderPlex( _
                 ByVal stopOrderChanged As Boolean, _
                 ByVal targetOrderChanged As Boolean, _
                 ByVal closeoutOrderChanged As Boolean)
-Dim lOrder As TradeBuild26.order
+Dim lOrder As order
 
 If entryOrderChanged Then
     placeOrder pOrderPlex.entryOrder, "", "", True
@@ -257,13 +257,13 @@ End Sub
 
 Private Property Get IOrderSubmitter_permittedOrderAttributes() As Long
 Dim attributes As Long
-attributes = TradeBuild26.OrderAttributeIds.OrderAttAction
-attributes = attributes Or TradeBuild26.OrderAttributeIds.OrderAttLimitPrice
-attributes = attributes Or TradeBuild26.OrderAttributeIds.OrderAttOrderType
-attributes = attributes Or TradeBuild26.OrderAttributeIds.OrderAttOriginatorRef
-attributes = attributes Or TradeBuild26.OrderAttributeIds.OrderAttQuantity
-attributes = attributes Or TradeBuild26.OrderAttributeIds.OrderAttTimeInForce
-attributes = attributes Or TradeBuild26.OrderAttributeIds.OrderAttTriggerPrice
+attributes = OrderAttributeIds.OrderAttAction
+attributes = attributes Or OrderAttributeIds.OrderAttLimitPrice
+attributes = attributes Or OrderAttributeIds.OrderAttOrderType
+attributes = attributes Or OrderAttributeIds.OrderAttOriginatorRef
+attributes = attributes Or OrderAttributeIds.OrderAttQuantity
+attributes = attributes Or OrderAttributeIds.OrderAttTimeInForce
+attributes = attributes Or OrderAttributeIds.OrderAttTriggerPrice
 IOrderSubmitter_permittedOrderAttributes = attributes
 End Property
 
@@ -305,8 +305,8 @@ placeOrder targetOrder, "", ocaGroup, True
 End Sub
 
 Private Sub IOrderSubmitter_resubmitStopOrder(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
-Dim stoporder As TradeBuild26.order
-Dim targetOrder As TradeBuild26.order
+Dim stoporder As order
+Dim targetOrder As order
 
 Set stoporder = pOrderPlex.stoporder
 Set targetOrder = pOrderPlex.targetOrder
@@ -319,7 +319,7 @@ End If
 End Sub
 
 Private Sub IOrderSubmitter_resubmitTargetOrder(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
-Dim stoporder As TradeBuild26.order
+Dim stoporder As order
 Dim targetOrder As order
 
 Set stoporder = pOrderPlex.stoporder
@@ -388,7 +388,7 @@ End Sub
 ' Properties
 '@================================================================================
 
-Friend Property Let Contract(ByVal value As TradeBuild26.Contract)
+Friend Property Let Contract(ByVal value As Contract)
 Set mContract = value
 End Property
 
@@ -397,10 +397,10 @@ Set mServiceConsumer = value
 mServiceConsumer.requestTickData Me, False
 End Property
 
-Friend Property Let simulator(ByVal value As TradeBuild26.AdvancedOrderSimulator)
+Friend Property Let simulator(ByVal value As AdvancedOrderSimulator)
 Set mSimulator = value
 mMarketIndex = mSimulator.startMarket(mServiceConsumer, _
-                                    mContract.specifier)
+                                    mContract)
 End Property
 
 '@================================================================================

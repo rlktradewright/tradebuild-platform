@@ -86,8 +86,6 @@ End Type
 ' Member variables
 '@================================================================================
 
-Private mTradeBuildAPIRef           As WeakReference
-
 Private mKey                        As String
 Private mTickerRef                  As WeakReference
 
@@ -111,7 +109,7 @@ Private mBidBarsStudy               As study
 Private mCurrBidBar                 As StudyUtils26.Bar
 Private mCurrBidBarPrevTickvol      As Long
 
-Private mContract                   As TradeBuild26.Contract
+Private mContract                   As Contract
 
 Private mInputStudy                 As inputStudy
 
@@ -138,7 +136,7 @@ Private mHistoricDataLoaded         As Boolean
 
 Private mWriteBidAndAskBars         As Boolean
 
-Private mBarWriter                  As TradeBuild26.HistoricDataWriter
+Private mBarWriter                  As HistoricDataWriter
 Private mBarReader                  As TradeBuildSP.IBarDataReader
 
 Private WithEvents mWriteTimer      As IntervalTimer
@@ -193,7 +191,7 @@ If Not mHistReceivingSynchronously Then
     ' We use the timer with a very short delay: this is to prevent
     ' calling back into the Service Provider for the next bar
     ' before it has completed the function that provided the bar.
-    mHistoricBarTimer.startTimer
+    mHistoricBarTimer.StartTimer
 End If
 End Sub
 
@@ -257,7 +255,7 @@ End Sub
 
 Private Sub IBarDataInputServiceConsumer_Ready()
 ' unwind the stack
-mHistoricBarTimer.startTimer
+mHistoricBarTimer.StartTimer
 End Sub
 
 '@================================================================================
@@ -265,7 +263,7 @@ End Sub
 '@================================================================================
 
 Private Sub StateChangeListener_Change( _
-                ev As TWUtilities.StateChangeEvent)
+                ev As StateChangeEvent)
 Dim tli As TimerListItem
 Dim bar2Write As BarToWrite
 
@@ -415,11 +413,6 @@ Public Property Get tradeStudy() As BarStudy
 Set tradeStudy = mTradeBarsStudy
 End Property
 
-Friend Property Let tradeBuildAPI( _
-                ByVal value As tradeBuildAPI)
-Set mTradeBuildAPIRef = CreateWeakReference(value)
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -499,7 +492,7 @@ If Not barWriter Is Nothing Then
     Set mBarWriter = barWriter
     If mSaveIntervalSeconds > 0 Then
         Set mWriteTimer = CreateIntervalTimer(Rnd * 1000 * mSaveIntervalSeconds + 1, , mSaveIntervalSeconds * 1000)
-        mWriteTimer.startTimer
+        mWriteTimer.StartTimer
     End If
 End If
 
@@ -553,7 +546,7 @@ End If
 End Sub
 
 Private Sub FetchHistoricBars()
-Dim barSpecifier As TradeBuildSP.BarDataSpecifier
+Dim barSpecifier As New BarDataSpecifier
 Dim ev As NotificationEvent
 If mBarReader Is Nothing Then
     fireStateChange TimeframeStateLoading
@@ -565,7 +558,7 @@ If mBarReader Is Nothing Then
         Exit Sub
     End If
     
-    Set mBarReader = tb.ServiceProviders.CreateHistoricalDataReader( _
+    Set mBarReader = gTB.ServiceProviders.CreateHistoricalDataReader( _
                                 Me, _
                                 Me)
                                 
@@ -582,18 +575,18 @@ If mBarReader Is Nothing Then
         barSpecifier.barLength = mBarLength
         barSpecifier.BarLengthUnits = mBarUnit
         barSpecifier.barType = BarTypes.BarTypeTrade
-        Set barSpecifier.Contract = mContract
-        barSpecifier.From = mFromTime
+        barSpecifier.Contract = mContract
+        barSpecifier.FromDate = mFromTime
         If mIsHistorical Then
-            barSpecifier.To = mToTime
+            barSpecifier.ToDate = mToTime
         Else
             If mExcludeCurrentBar Then
-                barSpecifier.To = mSession.barStartTime(tickr.timestamp, _
+                barSpecifier.ToDate = mSession.barStartTime(tickr.timestamp, _
                                             mBarLength, _
                                             mBarUnit)
             Else
                 ' ensure we get the latest bar
-                barSpecifier.To = mSession.BarEndTime(tickr.timestamp, _
+                barSpecifier.ToDate = mSession.BarEndTime(tickr.timestamp, _
                                             mBarLength, _
                                             mBarUnit)
             End If
@@ -636,7 +629,7 @@ If Not mHistoricDataLoaded And _
     Not mBarReader Is Nothing _
 Then
     ' schedule the next processing quantum
-    mHistoricBarTimer.startTimer
+    mHistoricBarTimer.StartTimer
 End If
 
 End Sub
@@ -887,7 +880,7 @@ Private Sub startHistDataFetch()
 ' BarsLoaded event.
 Set mHistoricBarTimer = CreateIntervalTimer(1)
 Set mElapsedTimer = New ElapsedTimer
-mHistoricBarTimer.startTimer
+mHistoricBarTimer.StartTimer
 End Sub
 
 Private Sub StartStudies()
@@ -927,10 +920,6 @@ End Sub
 
 Private Function studyMgr() As studyManager
 Set studyMgr = mStudyManagerRef.Target
-End Function
-
-Private Function tb() As tradeBuildAPI
-Set tb = mTradeBuildAPIRef.Target
 End Function
 
 Private Function tickr() As Ticker

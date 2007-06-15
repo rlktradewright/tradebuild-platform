@@ -53,8 +53,6 @@ Event CollectionChanged( _
 ' Member variables
 '@================================================================================
 
-Private mTradeBuildAPIRef           As WeakReference
-
 Private mWorkSpaces As Collection
 Private mChangeListeners As Collection
 
@@ -83,11 +81,6 @@ Public Property Get Count() As Long
 Count = mWorkSpaces.Count
 End Property
 
-Friend Property Let tradeBuildAPI( _
-                ByVal value As tradeBuildAPI)
-Set mTradeBuildAPIRef = CreateWeakReference(value)
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -96,7 +89,6 @@ Public Function add(ByVal name As String) As WorkSpace
 Attribute add.VB_UserMemId = 0
 Set add = New WorkSpace
 add.name = name
-add.tradeBuildAPI = mTradeBuildAPIRef.Target
 mWorkSpaces.add add, name
 fireChange CollItemAdded, add
 End Function

@@ -57,8 +57,6 @@ Private mTickerHandleTable()        As Boolean
 Private mTickers                    As Collection
 Private mChangeListeners            As Collection
 
-Private mTradeBuildAPIRef           As WeakReference
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -96,8 +94,7 @@ Public Function add( _
                 Optional ByVal key As String) As Ticker
 If key = "" Then key = generateGUIDString
 Set add = New Ticker
-add.Initialise mTradeBuildAPIRef.Target, _
-                AllocateTickerHandle, _
+add.Initialise AllocateTickerHandle, _
                 Me, _
                 key, _
                 Not ordersAreLive
@@ -113,7 +110,6 @@ End Sub
 Public Function createTickFileManager() As TickFileManager
 Set createTickFileManager = New TickFileManager
 createTickFileManager.Tickers = Me
-createTickFileManager.tradeBuildAPI = mTradeBuildAPIRef.Target
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -148,11 +144,6 @@ End Sub
 Friend Sub notify(ByRef ev As NotificationEvent)
 RaiseEvent Notification(ev)
 End Sub
-
-Friend Property Let tradeBuildAPI( _
-                ByVal value As tradeBuildAPI)
-Set mTradeBuildAPIRef = CreateWeakReference(value)
-End Property
 
 '@================================================================================
 ' Helper Functions

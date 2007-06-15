@@ -17,6 +17,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements TradeBuildSP.IBarDataOutputServiceConsumer
 Implements TradeBuildSP.IRealtimeDataInputServiceConsumer
 Implements TradeBuildSP.ITickfileOutputServiceConsumer
 Implements TradeBuildSP.IStreamingDataConsumer
@@ -26,6 +27,8 @@ Implements TradeBuildSP.IStreamingDataConsumer
 '@================================================================================
 
 Event ask(ByRef ev As QuoteEvent)
+
+Event BarWriterNotification(ByRef ev As WriterEvent)
 
 Event bid(ByRef ev As QuoteEvent)
 
@@ -84,8 +87,6 @@ End Type
 ' Member variables
 '@================================================================================
 
-Private mTradeBuildAPI              As tradeBuildAPI
-
 Private mStudyManager               As studyManager
 Private mInputStudy                 As inputStudy
 
@@ -120,7 +121,7 @@ Private mTickers                    As Tickers
 
 Private mState                      As TickerStates
 
-Private mTimeframes                 As TradeBuild26.Timeframes
+Private mTimeframes                 As Timeframes
 
 Private mCurrTickfileIndex          As Long
 
@@ -145,7 +146,7 @@ Private mChange                     As Double
 Private mChangeString               As String
 Private mChangePercent              As Double
 
-Private WithEvents mContracts       As TradeBuild26.Contracts
+Private WithEvents mContracts       As Contracts
 Attribute mContracts.VB_VarHelpID = -1
 Private mContract                   As Contract
 
@@ -156,12 +157,16 @@ Private mReplayingTickfile          As Boolean
 
 Private mTickfileManager            As TickFileManager
 
-Private mWriteToTickFile            As Boolean
+Private mWriteTickData              As Boolean
+Private mWriteTradeBarData          As Boolean
+Private mWriteBidAskBarData         As Boolean
+Private mUpdateLatestBar            As Boolean
 Private mIncludeMarketDepthInTickfile As Boolean
 Private mOutputTickfileFormat       As String
 Private mOutputTickFilePath         As String
 
-Private mWriter                     As TradeBuild26.TickfileWriter
+Private mTickWriter                 As TickfileWriter
+Private mBarWriter                  As HistoricDataWriter
 
 Private mClock                      As Clock
 
@@ -190,6 +195,7 @@ Private mMaxAskPricesIndex          As Long
 Private mBidPrices()                As PriceTableEntry
 Private mMaxBidPricesIndex          As Long
 
+Private mBarWriterListeners         As Collection
 Private mQuoteListeners             As Collection
 Private mPriceChangeListeners       As Collection
 Private mMarketDepthListeners       As Collection
@@ -203,8 +209,8 @@ Private mInfoListeners              As InfoListeners
 
 Private mTickNumber                 As Long
 
-Private WithEvents mWriterReleaseTimer As IntervalTimer
-Attribute mWriterReleaseTimer.VB_VarHelpID = -1
+Private WithEvents mTickWriterReleaseTimer As IntervalTimer
+Attribute mTickWriterReleaseTimer.VB_VarHelpID = -1
 Private mSelfRef                    As Ticker
 
 Private mPositionManager            As PositionManager
@@ -224,6 +230,10 @@ Private mDummyExecutions            As executions
 Private WithEvents mNoMarketDepthNotifyTimer As IntervalTimer
 Attribute mNoMarketDepthNotifyTimer.VB_VarHelpID = -1
 
+Private mUseExchangeTime            As Boolean
+Private mClockRate                  As Long
+
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -233,6 +243,7 @@ mState = -1
 
 Set mStudyManager = New studyManager
 
+Set mBarWriterListeners = New Collection
 Set mInfoListeners = New InfoListeners
 Set mQuoteListeners = New Collection
 Set mPriceChangeListeners = New Collection
@@ -252,17 +263,104 @@ Set mDummyPositionManager = New PositionManager
 Set mDefaultOrderContext = mPositionManager.OrderContexts.add("$default")
 Set mDefaultDummyOrderContext = mDummyPositionManager.OrderContexts.add("$default")
 
-Set mClock = New Clock
-Set mTimeframes = New TradeBuild26.Timeframes
+Set mTimeframes = New Timeframes
 mTimeframes.Ticker = Me
 mCurrTickfileIndex = -1
 
 mMaxAskPricesIndex = -1
 mMaxBidPricesIndex = -1
+
+mClockRate = 1
 End Sub
 
 Private Sub Class_Terminate()
-Debug.Print "TradeBuild26.Ticker terminated"
+Debug.Print "Ticker terminated"
+End Sub
+
+'@================================================================================
+' IBarDataOutputServiceConsumer Interface Members
+'@================================================================================
+
+Private Sub IBarDataOutputServiceConsumer_NotifyEvent( _
+                ByVal eventCode As TradeBuildSP.StandardSPEventCodes, _
+                ByVal eventMessage As String, _
+                ByVal spHandle As Long)
+Dim ev As NotificationEvent
+
+Set ev.source = Me
+
+Select Case eventCode
+Case HDCantConnectDataSource
+    ev.eventCode = ApiNotifyCodes.ApiNotifyCantConnectHistoricDataSource
+    ev.eventMessage = "Can't connect to historic data source: " & vbCrLf & _
+                        eventMessage
+    RaiseEvent Notification(ev)
+    Set mBarWriter = Nothing
+Case HDRetryConnectDataSource
+    ev.eventCode = ApiNotifyCodes.ApiNotifyRetryingConnectionToHistoricDataSource
+    ev.eventMessage = "Retrying connection to historic data source: " & vbCrLf & _
+                        eventMessage
+    RaiseEvent Notification(ev)
+Case Else
+    gTB.SetServiceProviderError eventCode, _
+                        eventMessage, _
+                        gTB.ServiceProviders.nameFromHandle(spHandle)
+End Select
+End Sub
+
+Private Sub IBarDataOutputServiceConsumer_NotReady()
+Dim ev As WriterEvent
+mBarWriter.ServiceProviderWriterReady = False
+
+fireBarWriterNotify WriterNotifications.WriterNotReady, ""
+
+Set ev.source = Me
+ev.action = WriterNotifications.WriterNotReady
+RaiseEvent BarWriterNotification(ev)
+End Sub
+
+Private Sub IBarDataOutputServiceConsumer_OutputBarfileCreated( _
+                            ByVal filename As String)
+Dim ev As WriterEvent
+fireBarWriterNotify WriterNotifications.WriterFileCreated, _
+                                filename
+ev.action = WriterNotifications.WriterFileCreated
+ev.filename = filename
+Set ev.source = Me
+RaiseEvent BarWriterNotification(ev)
+End Sub
+
+Private Sub IBarDataOutputServiceConsumer_Ready()
+Dim ev As WriterEvent
+mBarWriter.ServiceProviderWriterReady = True
+
+fireBarWriterNotify WriterNotifications.WriterReady, ""
+
+Set ev.source = Me
+ev.action = WriterNotifications.WriterReady
+RaiseEvent BarWriterNotification(ev)
+End Sub
+
+Private Sub IBarDataOutputServiceConsumer_RequiredTimePeriod( _
+                timeframe As TimePeriod, _
+                ByVal saveIntervalSeconds As Long)
+
+If saveIntervalSeconds > 0 And saveIntervalSeconds < 5 Then _
+    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            "TradeBuild26.Ticker::IBarDataOutputServiceConsumer_RequiredTimePeriod", _
+            "Save interval cannot be less than 5 seconds"
+
+mTimeframes.addTimeframe timeframe.length, _
+                        timeframe.units, _
+                        "", _
+                        IIf(mUpdateLatestBar, 1, 0), _
+                        0, _
+                        0, _
+                        False, _
+                        False, _
+                        mBarWriter, _
+                        saveIntervalSeconds, _
+                        mWriteBidAskBarData
 End Sub
 
 '@================================================================================
@@ -351,7 +449,7 @@ mInEventHandler = False
 Exit Sub
 
 err:
-mTradeBuildAPI.notifyFatalError err.code, err.Description, ModuleName & "IRealtimeDataInputServiceConsumer_Error"
+gTB.notifyFatalError err.code, err.Description, ModuleName & "IRealtimeDataInputServiceConsumer_Error"
 mInEventHandler = False
 End Sub
 
@@ -374,8 +472,8 @@ If mState <> TickerStates.TickerStateRunning Then
     Exit Sub    ' ticker has been stopped
 End If
     
-If mReplayingTickfile And Not mTimerList Is Nothing Then mTimerList.SetTime timestamp
-mClock.SetTime timestamp
+setTime timestamp
+
 
 If price < (0.5 * mPrevAsk) Then
     mInEventHandler = False
@@ -415,7 +513,7 @@ If size <> 0 Then
             size
 End If
 
-If mWriteToTickFile Then mWriter.writeAsk timestamp, price, size
+If mWriteTickData Then mTickWriter.writeAsk timestamp, price, size
 
 mPrevAsk = price
 mPrevAskSize = mAskSize
@@ -424,7 +522,7 @@ mInEventHandler = False
 Exit Sub
 
 err:
-mTradeBuildAPI.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:Ask"
+gTB.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:Ask"
 mInEventHandler = False
 End Sub
 
@@ -444,8 +542,8 @@ If mState <> TickerStates.TickerStateRunning Then
     Exit Sub     ' ticker has been stopped
 End If
 
-If mReplayingTickfile And Not mTimerList Is Nothing Then mTimerList.SetTime timestamp
-mClock.SetTime timestamp
+setTime timestamp
+
 
 If price < (0.5 * mPrevBid) Then
     mInEventHandler = False
@@ -485,7 +583,7 @@ If size <> 0 Then
             size
 End If
 
-If mWriteToTickFile Then mWriter.writeBid timestamp, price, size
+If mWriteTickData Then mTickWriter.writeBid timestamp, price, size
    
 mPrevBid = mBidPrice
 mPrevBidSize = mBidSize
@@ -494,7 +592,7 @@ mInEventHandler = False
 Exit Sub
 
 err:
-mTradeBuildAPI.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:Bid"
+gTB.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:Bid"
 mInEventHandler = False
 End Sub
 
@@ -515,8 +613,8 @@ End If
 mHighPrice = price
 mHighPriceString = formatPrice(price)
 
-If mReplayingTickfile And Not mTimerList Is Nothing Then mTimerList.SetTime timestamp
-mClock.SetTime timestamp
+setTime timestamp
+
 
 
 Dim i As Long
@@ -528,13 +626,13 @@ Next
 
 fireHigh mHighPrice, mHighPriceString
 
-If mWriteToTickFile Then mWriter.writeHigh timestamp, price
+If mWriteTickData Then mTickWriter.writeHigh timestamp, price
 
 mInEventHandler = False
 Exit Sub
 
 err:
-mTradeBuildAPI.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:High"
+gTB.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:High"
 mInEventHandler = False
 End Sub
 
@@ -555,8 +653,8 @@ End If
 mLowPrice = price
 mLowPriceString = formatPrice(price)
 
-If mReplayingTickfile And Not mTimerList Is Nothing Then mTimerList.SetTime timestamp
-mClock.SetTime timestamp
+setTime timestamp
+
 
 
 Dim i As Long
@@ -568,13 +666,13 @@ Next
 
 fireLow mLowPrice, mLowPriceString
 
-If mWriteToTickFile Then mWriter.writeLow timestamp, price
+If mWriteTickData Then mTickWriter.writeLow timestamp, price
 
 mInEventHandler = False
 Exit Sub
 
 err:
-mTradeBuildAPI.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:Low"
+gTB.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:Low"
 mInEventHandler = False
 End Sub
 
@@ -594,8 +692,8 @@ End If
 
 mOpenInterest = size
 
-If mReplayingTickfile And Not mTimerList Is Nothing Then mTimerList.SetTime timestamp
-mClock.SetTime timestamp
+setTime timestamp
+
 
 
 Dim i As Long
@@ -607,7 +705,7 @@ Next
 
 fireOpenInterest mOpenInterest
                     
-If mWriteToTickFile Then mWriter.writeOpenInterest timestamp, size
+If mWriteTickData Then mTickWriter.writeOpenInterest timestamp, size
 
 mPrevOpenInterest = mOpenInterest
 
@@ -615,7 +713,7 @@ mInEventHandler = False
 Exit Sub
 
 err:
-mTradeBuildAPI.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:OpenInterest"
+gTB.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:OpenInterest"
 mInEventHandler = False
 End Sub
 
@@ -636,8 +734,8 @@ End If
 mClosePrice = price
 mClosePriceString = formatPrice(price)
 
-If mReplayingTickfile And Not mTimerList Is Nothing Then mTimerList.SetTime timestamp
-mClock.SetTime timestamp
+setTime timestamp
+
 
 
 Dim i As Long
@@ -656,13 +754,13 @@ If mTradePrice <> 0 Then
     firePriceChange mChange, mChangeString, mChangePercent
 End If
 
-If mWriteToTickFile Then mWriter.writeClose timestamp, price
+If mWriteTickData Then mTickWriter.writeClose timestamp, price
 
 mInEventHandler = False
 Exit Sub
 
 err:
-mTradeBuildAPI.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:PreviousClose"
+gTB.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:PreviousClose"
 mInEventHandler = False
 End Sub
 
@@ -680,8 +778,8 @@ If mState <> TickerStates.TickerStateRunning Then
     Exit Sub    ' ticker has been stopped
 End If
     
-If mReplayingTickfile And Not mTimerList Is Nothing Then mTimerList.SetTime timestamp
-mClock.SetTime timestamp
+setTime timestamp
+
 
 
 Dim i As Long
@@ -693,13 +791,13 @@ Next
 
 DOMReset timestamp, marketDepthReRequested
     
-If mWriteToTickFile Then mWriter.writeMarketDepthReset timestamp
+If mWriteTickData Then mTickWriter.writeMarketDepthReset timestamp
 
 mInEventHandler = False
 Exit Sub
 
 err:
-mTradeBuildAPI.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:ResetMarketDepth"
+gTB.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:ResetMarketDepth"
 mInEventHandler = False
 End Sub
 
@@ -718,8 +816,8 @@ If mState <> TickerStates.TickerStateRunning Then
     Exit Sub    ' ticker has been stopped
 End If
     
-If mReplayingTickfile And Not mTimerList Is Nothing Then mTimerList.SetTime timestamp
-mClock.SetTime timestamp
+setTime timestamp
+
 
 
 If price < (0.5 * mPrevTrade) Then
@@ -736,7 +834,7 @@ mStudyManager.notifyInput mTradeInputHandle, price, timestamp
 
 notifyTrade timestamp, price, size
 
-If mWriteToTickFile Then mWriter.writeTrade timestamp, price, size
+If mWriteTickData Then mTickWriter.writeTrade timestamp, price, size
 
 mPrevTrade = price
 mPrevTradeSize = size
@@ -745,7 +843,7 @@ mInEventHandler = False
 Exit Sub
 
 err:
-mTradeBuildAPI.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:Trade"
+gTB.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:Trade"
 mInEventHandler = False
 End Sub
 
@@ -767,8 +865,8 @@ If mState <> TickerStates.TickerStateRunning Then
     Exit Sub    ' ticker has been stopped
 End If
 
-If mReplayingTickfile And Not mTimerList Is Nothing Then mTimerList.SetTime timestamp
-mClock.SetTime timestamp
+setTime timestamp
+
 
 
 Dim i As Long
@@ -817,7 +915,7 @@ Else
 End If
 
 If mIncludeMarketDepthInTickfile Then
-    mWriter.writeMarketDepthData timestamp, _
+    mTickWriter.writeMarketDepthData timestamp, _
                                     position, _
                                     "", _
                                     operation, _
@@ -830,7 +928,7 @@ mInEventHandler = False
 Exit Sub
 
 err:
-mTradeBuildAPI.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:UpdateMktDepth"
+gTB.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:UpdateMktDepth"
 mInEventHandler = False
 End Sub
 
@@ -853,8 +951,8 @@ If mState <> TickerStates.TickerStateRunning Then
     Exit Sub
 End If
         
-If mReplayingTickfile And Not mTimerList Is Nothing Then mTimerList.SetTime timestamp
-mClock.SetTime timestamp
+setTime timestamp
+
 
 
 Dim i As Long
@@ -879,7 +977,7 @@ DOMRawUpdateL2 timestamp, _
                 size
 
 If mIncludeMarketDepthInTickfile Then
-    mWriter.writeMarketDepthData timestamp, _
+    mTickWriter.writeMarketDepthData timestamp, _
                                 position, _
                                 marketMaker, _
                                 operation, _
@@ -892,7 +990,7 @@ mInEventHandler = False
 Exit Sub
 
 err:
-mTradeBuildAPI.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:UodateMktDepthL2"
+gTB.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:UodateMktDepthL2"
 mInEventHandler = False
 End Sub
 
@@ -910,8 +1008,8 @@ If mState <> TickerStates.TickerStateRunning Then
     Exit Sub    ' ticker has been stopped
 End If
 
-If mReplayingTickfile And Not mTimerList Is Nothing Then mTimerList.SetTime timestamp
-mClock.SetTime timestamp
+setTime timestamp
+
 
 
 If size = 0 Then
@@ -951,7 +1049,7 @@ Else
 End If
 
 ' write the uncorrected size to the tickfile
-If mWriteToTickFile Then mWriter.writeVolume timestamp, size
+If mWriteTickData Then mTickWriter.writeVolume timestamp, size
 
 mPrevVolume = mVolume
 
@@ -959,7 +1057,7 @@ mInEventHandler = False
 Exit Sub
 
 err:
-mTradeBuildAPI.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:Volume"
+gTB.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:Volume"
 mInEventHandler = False
 End Sub
 
@@ -1008,7 +1106,7 @@ mInEventHandler = False
 Exit Sub
 
 err:
-mTradeBuildAPI.notifyFatalError err.code, err.Description, ModuleName & "ITickfileOutputServiceConsumer_Error"
+gTB.notifyFatalError err.code, err.Description, ModuleName & "ITickfileOutputServiceConsumer_Error"
 mInEventHandler = False
 End Sub
 
@@ -1027,7 +1125,7 @@ mInEventHandler = False
 Exit Sub
 
 err:
-mTradeBuildAPI.notifyFatalError err.code, err.Description, ModuleName & "ITickfileOutputServiceConsumer_OutputTickfileCreated"
+gTB.notifyFatalError err.code, err.Description, ModuleName & "ITickfileOutputServiceConsumer_OutputTickfileCreated"
 mInEventHandler = False
 End Sub
 
@@ -1037,16 +1135,16 @@ mInEventHandler = True
 
 On Error GoTo err
 
-mWriter.ServiceProviderWriterReady = RHS
+mTickWriter.ServiceProviderWriterReady = RHS
 If mState = TickerStates.TickerStateStopped Then
     ' the ticker is being closed before the tickfile writer has notified that it
     ' is ready
-    mWriter.closeOutputFile
-    Set mWriter = Nothing
+    mTickWriter.closeOutputFile
+    Set mTickWriter = Nothing
     Set mSelfRef = Nothing
-    If Not mWriterReleaseTimer Is Nothing Then
-        mWriterReleaseTimer.StopTimer
-        Set mWriterReleaseTimer = Nothing
+    If Not mTickWriterReleaseTimer Is Nothing Then
+        mTickWriterReleaseTimer.StopTimer
+        Set mTickWriterReleaseTimer = Nothing
     End If
 End If
 
@@ -1059,7 +1157,7 @@ mInEventHandler = False
 Exit Property
 
 err:
-mTradeBuildAPI.notifyFatalError err.code, err.Description, ModuleName & "ITickfileOutputServiceConsumer_Ready"
+gTB.notifyFatalError err.code, err.Description, ModuleName & "ITickfileOutputServiceConsumer_Ready"
 mInEventHandler = False
 End Property
 
@@ -1099,8 +1197,6 @@ End If
 
 Set mContract = mContracts(1)
 
-State = TickerStateReady
-
 If Not mInputStudy Is Nothing Then
     mInputStudy.name = mContract.specifier.localSymbol
     mStudyManager.setInputTicksize mBidInputHandle, mContract.TickSize
@@ -1110,13 +1206,15 @@ End If
 
 If mLoadOnly Then
     prepare
+    State = TickerStateReady
 ElseIf mReplayingTickfile Then
-    mTickfileManager.Contract = mContract
     prepare
+    State = TickerStateReady
+    mTickfileManager.Contract = mContract
     State = TickerStates.TickerStateRunning
 Else
     
-    If mContract.ExpiryDate <> 0 And mContract.ExpiryDate < Date Then
+    If mContract.expiryDate <> 0 And mContract.expiryDate < Date Then
         Set ev.source = Me
         ev.eventCode = ApiNotifyCodes.ApiNotifyContractExpired
         ev.eventMessage = "Contract has expired: " & Replace(mContracts.contractSpecifier.ToString, vbCrLf, "; ")
@@ -1127,8 +1225,9 @@ Else
         Exit Sub
     End If
     prepare
+    State = TickerStateReady
     
-    Set mRealtimeDataReader = mTradeBuildAPI.ServiceProviders.CreateRealtimeDataReader(Me, Me)
+    Set mRealtimeDataReader = gTB.ServiceProviders.CreateRealtimeDataReader(Me, Me)
     
     If Not mRealtimeDataReader Is Nothing Then
         mRealtimeDataReader.StartData mContract, calculateSpDomRequirement
@@ -1147,7 +1246,7 @@ mInEventHandler = False
 End Sub
 
 '@================================================================================
-' mWriterReleaseTimer Event Handlers
+' mTickWriterReleaseTimer Event Handlers
 '@================================================================================
 
 Private Sub mNoMarketDepthNotifyTimer_TimerExpired()
@@ -1183,17 +1282,17 @@ StopTicker
 End Sub
 
 '@================================================================================
-' mWriterReleaseTimer Event Handlers
+' mTickWriterReleaseTimer Event Handlers
 '@================================================================================
 
-Private Sub mWriterReleaseTimer_TimerExpired()
+Private Sub mTickWriterReleaseTimer_TimerExpired()
 
 mInEventHandler = True
 
-mWriter.closeOutputFile
-Set mWriter = Nothing
+mTickWriter.closeOutputFile
+Set mTickWriter = Nothing
 Set mSelfRef = Nothing
-Set mWriterReleaseTimer = Nothing
+Set mTickWriterReleaseTimer = Nothing
 mInEventHandler = False
 End Sub
 
@@ -1237,8 +1336,18 @@ Public Property Get ChangePercent() As Double
 ChangePercent = mChangePercent
 End Property
 
+Public Property Get Clock() As Clock
+Set Clock = mClock
+End Property
+
 Friend Property Let clockRate(ByVal value As Long)
-mClock.Rate = IIf(value > 0, value, 0)
+If value < 0 Then value = 0
+If Not mClock Is Nothing Then
+    If value <> mClock.Rate Then
+        mClockRate = value
+        mClock.Rate = mClockRate
+    End If
+End If
 End Property
 
 Public Property Get closePrice() As Double
@@ -1267,10 +1376,6 @@ End Property
 
 Public Property Get defaultOrderContext() As OrderContext
 Set defaultOrderContext = mDefaultOrderContext
-End Property
-
-Friend Property Let Description(ByVal value As String)
-mContract.Description = value
 End Property
 
 Public Property Get Description() As String
@@ -1461,18 +1566,23 @@ Public Property Get tickNumber() As Long
 tickNumber = mTickNumber
 End Property
 
-Public Property Get Timeframes() As TradeBuild26.Timeframes
+Public Property Get Timeframes() As Timeframes
 Set Timeframes = mTimeframes
 End Property
 
 Friend Property Let timestamp(ByVal value As Date)
-mClock.SimulateTime True
+If Not mClock.simulated Then
+    err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & "timestamp", _
+            "Ticker clock is not simulated"
+End If
+
 If mReplayingTickfile Then
     If Not mTimerList Is Nothing Then
-        mTimerList.SetTime value
+        mTimerList.setTime value
     End If
 End If
-mClock.SetTime value
+mClock.setTime value
 End Property
 
 Public Property Get timestamp() As Date
@@ -1491,26 +1601,44 @@ Public Property Get TradeSize() As Long
 TradeSize = mTradeSize
 End Property
 
+Public Property Let useExchangeTime( _
+                ByVal value As Boolean)
+Dim latestTimestamp As Date
+
+mUseExchangeTime = value
+If Not mClock Is Nothing Then
+    mClock.timeZoneName = IIf(mUseExchangeTime, mContract.timezone.standardName, "")
+End If
+End Property
+
+Public Property Get useExchangeTime() As Boolean
+useExchangeTime = mUseExchangeTime
+End Property
+
 Public Property Get volume() As Long
 volume = mVolume
 End Property
 
-Public Property Let writeToTickFile(ByVal value As Boolean)
-If mState <> TickerStates.TickerStateCreated Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
-            "TradeBuild26.Ticker::(Let)writeToTickFile", _
-            "Ticker is already in use"
-End If
-mWriteToTickFile = value
+Public Property Get writingBidAskBarData() As Boolean
+writingBidAskBarData = mWriteBidAskBarData
 End Property
 
-Public Property Get writeToTickFile() As Boolean
-writeToTickFile = mWriteToTickFile
+Public Property Get writingTickData() As Boolean
+writingTickData = mWriteTickData
+End Property
+
+Public Property Get writingTradeBarData() As Boolean
+writingTradeBarData = mWriteTradeBarData
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub addBarWriterListener( _
+                ByVal value As WriterListener)
+mBarWriterListeners.add value
+End Sub
 
 Friend Sub addDataConsumer( _
                 ByVal consumer As TradeBuildSP.IStreamingDataConsumer, _
@@ -1638,7 +1766,7 @@ If mState = TickerStates.TickerStateStopped Or _
 If Not mReceivingMarketDepth Then Exit Sub
 mDOMEventsRequired = DOMEvents.DOMNoEvents
 If mTickfileManager Is Nothing Then
-    If (Not (mWriteToTickFile And mIncludeMarketDepthInTickfile)) Or forceCancel Then
+    If (Not (mWriteTickData And mIncludeMarketDepthInTickfile)) Or forceCancel Then
         If Not mRealtimeDataReader Is Nothing Then
             If mMarketDepthListeners.Count = 0 Or forceCancel Then
                 mRealtimeDataReader.StopMarketDepth
@@ -1664,15 +1792,11 @@ End If
 End Function
 
 Friend Sub Initialise( _
-                ByVal tb As tradeBuildAPI, _
                 ByVal handle As Long, _
                 ByVal pTickers As Tickers, _
                 ByVal key As String, _
                 ByVal simulatedOrders As Boolean)
 
-Set mTradeBuildAPI = tb
-mTimeframes.tradeBuildAPI = tb
-                
 mHandle = handle
                 
 Set mTickers = pTickers
@@ -1690,6 +1814,7 @@ isTimeInSession = mSession.isTimeInSession(timestamp)
 End Function
 
 Public Sub loadTicker(ByVal pContractSpecifier As contractSpecifier)
+Dim lContractsBuilder As ContractsBuilder
 If mState <> TickerStates.TickerStateCreated Then err.Raise ErrorCodes.ErrIllegalStateException, _
                         "TradeBuild26.Ticker::LoadTicker", _
                         "Ticker is already in use"
@@ -1697,10 +1822,9 @@ If mState <> TickerStates.TickerStateCreated Then err.Raise ErrorCodes.ErrIllega
 mLoadOnly = True
 State = TickerStates.TickerStateStarting
 
-pContractSpecifier.locked = True
-
-Set mContracts = mTradeBuildAPI.NewContracts(pContractSpecifier)
-mContracts.Load
+Set lContractsBuilder = CreateContractsBuilder(pContractSpecifier)
+Set mContracts = lContractsBuilder.Contracts
+gTB.loadContracts lContractsBuilder
 End Sub
 
 Friend Sub notifyListeners(value As Variant, valueType As Long, source As Object)
@@ -1715,6 +1839,14 @@ End Function
 
 Friend Sub PauseTicker()
 State = TickerStates.TickerStatePaused
+End Sub
+
+Public Sub removeBarWriterListener( _
+                ByVal value As WriterListener)
+Dim i As Long
+For i = mBarWriterListeners.Count To 1 Step -1
+    If mBarWriterListeners.item(i) Is value Then mBarWriterListeners.remove i
+Next
 End Sub
 
 Friend Sub removeDataConsumer(ByVal consumer As TradeBuildSP.IStreamingDataConsumer)
@@ -1801,7 +1933,7 @@ If DOMEventsRequired = DOMEvents.DOMNoEvents And Not writeToTickFile Then
                 "writeToTickFile must be true if DOMEventsRequired=DOMNoevents"
 End If
 
-If writeToTickFile And mWriter Is Nothing Then
+If writeToTickFile And mTickWriter Is Nothing Then
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "TradeBuild26.Ticker::requestMarketDepth", _
                 "Can't write market depth to tickfile: no output tickfile for this ticker"
@@ -1849,16 +1981,17 @@ End If
 End Sub
 
 Public Sub StartTicker(ByVal pContractSpecifier As contractSpecifier)
+Dim lContractsBuilder As ContractsBuilder
+
 If mState <> TickerStates.TickerStateCreated Then err.Raise ErrorCodes.ErrIllegalStateException, _
                         "TradeBuild26.Ticker::StartTicker", _
                         "Ticker is already in use"
 
 State = TickerStates.TickerStateStarting
 
-pContractSpecifier.locked = True
-
-Set mContracts = mTradeBuildAPI.NewContracts(pContractSpecifier)
-mContracts.Load
+Set lContractsBuilder = CreateContractsBuilder(pContractSpecifier)
+Set mContracts = lContractsBuilder.Contracts
+gTB.loadContracts lContractsBuilder
 End Sub
 
 Public Sub StopTicker()
@@ -1872,18 +2005,18 @@ End If
 
 Set mContract = Nothing
 
-If Not mWriter Is Nothing Then
-    If mWriter.numberOfPendingWrites = 0 Or _
-        mWriter.ServiceProviderWriterReady _
+If Not mTickWriter Is Nothing Then
+    If mTickWriter.numberOfPendingWrites = 0 Or _
+        mTickWriter.ServiceProviderWriterReady _
     Then
-        mWriter.closeOutputFile
-        Set mWriter = Nothing
+        mTickWriter.closeOutputFile
+        Set mTickWriter = Nothing
     Else
         ' we've finished processing the input data before the service provider
         ' writer is ready - so delay releasing the writer until the
         ' service provider writer has had a chance to finish initialising
-        Set mWriterReleaseTimer = CreateIntervalTimer(60, ExpiryTimeUnitSeconds)
-        mWriterReleaseTimer.StartTimer
+        Set mTickWriterReleaseTimer = CreateIntervalTimer(60, ExpiryTimeUnitSeconds)
+        mTickWriterReleaseTimer.StartTimer
         Set mSelfRef = Me   ' ensure this ticker isn't released
     End If
 End If
@@ -1908,6 +2041,11 @@ End If
 mTimeframes.finish
 Set mTimeframes = Nothing
 
+If Not mBarWriter Is Nothing Then
+    mBarWriter.ReleaseDataStore
+    Set mBarWriter = Nothing
+End If
+
 If Not mPositionManager Is Nothing Then
     mPositionManager.finish
     Set mPositionManager = Nothing
@@ -1919,7 +2057,6 @@ End If
 
 Set mDefaultOrderContext = Nothing
 Set mDefaultDummyOrderContext = Nothing
-Set mTradeBuildAPI = Nothing
 
 mBidPrice = 0
 mBidSize = 0
@@ -1946,8 +2083,7 @@ Friend Sub updateMarketDepth( _
                 ByVal price As Double, _
                 ByVal size As Long)
 
-If mReplayingTickfile And Not mTimerList Is Nothing Then mTimerList.SetTime timestamp
-mClock.SetTime timestamp
+setTime timestamp
 
 fireUpdateMarketDepth position, _
                         "", _
@@ -1966,8 +2102,8 @@ Friend Sub UpdateMarketDepthL2( _
                 ByVal price As Double, _
                 ByVal size As Long)
 
-If mReplayingTickfile And Not mTimerList Is Nothing Then mTimerList.SetTime timestamp
-mClock.SetTime timestamp
+setTime timestamp
+
 
 fireUpdateMarketDepth position, _
                         marketMaker, _
@@ -1977,6 +2113,22 @@ fireUpdateMarketDepth position, _
                         size
 End Sub
 
+Public Sub writeBarData( _
+                ByVal updateLatestBar As Boolean, _
+                ByVal includeBidAndAsk As Boolean)
+If mState <> TickerStates.TickerStateCreated Then
+    err.Raise ErrorCodes.ErrIllegalStateException, _
+            "TradeBuild26.Ticker::writeBarData", _
+            "Ticker is already in use"
+End If
+mWriteTradeBarData = True
+mUpdateLatestBar = updateLatestBar
+mWriteBidAskBarData = includeBidAndAsk
+End Sub
+
+Public Sub writeTickData()
+mWriteTickData = True
+End Sub
 
 '@================================================================================
 ' Helper Functions
@@ -2025,20 +2177,34 @@ End Select
 calculateSpDomRequirement = DOMEventsReqd
 End Function
 
+Private Sub createBarWriter()
+Dim ev As NotificationEvent
+
+Set mBarWriter = gTB.ServiceProviders.CreateHistoricalDataWriter(Me, _
+                            mContract.specifier, _
+                            "")
+If mBarWriter Is Nothing Then
+    Set ev.source = Me
+    ev.eventCode = ApiNotifyCodes.ApiNotifyNoHistoricDataSource
+    ev.eventMessage = "Can't create historic data writer"
+    RaiseEvent Notification(ev)
+End If
+
+End Sub
+
 Private Sub CreateOutputTickfile()
-Dim tfManager As TradeBuild26.TickFileManager
+Dim tfManager As TickFileManager
 
 If mTickfileManager Is Nothing Then
     Set tfManager = New TickFileManager
-    tfManager.tradeBuildAPI = mTradeBuildAPI
 Else
     Set tfManager = mTickfileManager
 End If
 
-Set mWriter = tfManager.CreateOutputTickfile(Me, _
+Set mTickWriter = tfManager.CreateOutputTickfile(Me, _
                         mOutputTickfileFormat, _
                         mOutputTickFilePath)
-mWriter.Contract = mContract
+mTickWriter.Contract = mContract
 
 End Sub
 
@@ -2049,8 +2215,8 @@ Private Sub DOMClearCell( _
 
 If mDOMEventsRequired = DOMNoEvents Or mDOMEventsRequired = DOMRawEvents Then Exit Sub
 
-If mReplayingTickfile And Not mTimerList Is Nothing Then mTimerList.SetTime timestamp
-mClock.SetTime timestamp
+setTime timestamp
+
 
 fireSetMarketDepthCell side, price, 0
 End Sub
@@ -2104,8 +2270,8 @@ Private Sub DOMReset( _
 
 If mDOMEventsRequired = DOMNoEvents Then Exit Sub
 
-If mReplayingTickfile And Not mTimerList Is Nothing Then mTimerList.SetTime timestamp
-mClock.SetTime timestamp
+setTime timestamp
+
 
 fireResetMarketDepth
 End Sub
@@ -2118,8 +2284,8 @@ Private Sub DOMSetCell( _
 
 If mDOMEventsRequired = DOMNoEvents Or mDOMEventsRequired = DOMRawEvents Then Exit Sub
 
-If mReplayingTickfile And Not mTimerList Is Nothing Then mTimerList.SetTime timestamp
-mClock.SetTime timestamp
+setTime timestamp
+
 
 fireSetMarketDepthCell side, price, size
 End Sub
@@ -2157,6 +2323,21 @@ Next
 RaiseEvent ask(quote)
 End Sub
 
+Private Sub fireBarWriterNotify( _
+                ByVal action As WriterNotifications, _
+                ByVal filename As String)
+Dim listener As WriterListener
+Dim i As Long
+Dim ev As WriterEvent
+Set ev.source = Me
+ev.action = action
+ev.filename = filename
+For i = 1 To mBarWriterListeners.Count
+    Set listener = mBarWriterListeners(i)
+    listener.notify ev
+Next
+End Sub
+                                
 Private Sub fireBid(ByVal price As Double, _
                 ByVal priceString As String, _
                 ByVal size As Long, _
@@ -2296,7 +2477,7 @@ Next
 End Sub
 
 Private Sub fireSetMarketDepthCell( _
-                ByVal side As TradeBuild26.DOMSides, _
+                ByVal side As DOMSides, _
                 ByVal price As Double, _
                 ByVal size As Long)
 Dim listener As MarketDepthListener
@@ -2435,7 +2616,7 @@ End Sub
 
 Private Sub notifyDOMPrices( _
                 ByRef prices() As PriceTableEntry, _
-                ByVal side As TradeBuild26.DOMSides)
+                ByVal side As DOMSides)
 Dim i As Long
 
 For i = 0 To UBound(prices)
@@ -2512,8 +2693,8 @@ End Sub
 Private Sub notifyVolume(ByVal timestamp As Date, ByVal size As Long)
 mVolume = size
 
-'If mReplayingTickfile and not mtimerlist is nothing Then mTimerList.SetTime timestamp
-'mClock.SetTime timestamp
+'settime timestamp
+'
 '
 
 Dim i As Long
@@ -2531,7 +2712,19 @@ End Sub
 Private Sub prepare()
 Dim orderSubmitter As IOrderSubmitter
 
-mStudyManager.setSessionTimes mContract.sessionStartTime, mContract.sessionEndTime
+If mReplayingTickfile Then
+    Set mClock = CreateSimulatedClock(mClockRate, _
+                                    IIf(mUseExchangeTime, _
+                                    mContract.timezone.standardName, _
+                                    ""))
+Else
+    Set mClock = CreateClock(IIf(mUseExchangeTime, mContract.timezone.standardName, ""))
+End If
+
+mStudyManager.setSessionTimes ConvertDateTZToUTC(mContract.sessionStartTime, _
+                                                mContract.timezone), _
+                            ConvertDateTZToUTC(mContract.sessionEndTime, _
+                                                mContract.timezone)
 
 If mInputStudy Is Nothing Then setupInputStudy
 
@@ -2545,7 +2738,7 @@ If mTickSize = 0.03125 Then mDisplayThirtySeconds = True
 mPositionManager.Ticker = Me
 
 If Not mSimulatedOrders Then
-    Set orderSubmitter = mTradeBuildAPI.ServiceProviders.CreateLiveOrderSubmitter(mPositionManager, mContract)
+    Set orderSubmitter = gTB.ServiceProviders.CreateLiveOrderSubmitter(mPositionManager, mContract)
     If orderSubmitter Is Nothing Then
         ' a live order submission service provider has not been configured
         ' so use simulated orders instead
@@ -2557,12 +2750,12 @@ If Not mSimulatedOrders Then
 End If
 
 If mSimulatedOrders Then
-    Set orderSubmitter = mTradeBuildAPI.ServiceProviders.CreateSimulatedOrderSubmitter(mPositionManager, mContract)
+    Set orderSubmitter = gTB.ServiceProviders.CreateSimulatedOrderSubmitter(mPositionManager, mContract)
 '    If orderSubmitter Is Nothing Then
 '        ' a simulated order submission service provider has not been configured
 '        ' so use the default one
-'        mTradeBuildAPI.ServiceProviders.add New TradeBuild26.OrderSimulatorSP, Nothing
-'        Set orderSubmitter = mTradeBuildAPI.ServiceProviders.CreateSimulatedOrderSubmitter(mPositionManager, mContract)
+'        gtb.ServiceProviders.add New TradeBuild26.OrderSimulatorSP, Nothing
+'        Set orderSubmitter = gtb.ServiceProviders.CreateSimulatedOrderSubmitter(mPositionManager, mContract)
 '    End If
     mPositionManager.simulated = True
     mPositionManager.orderSubmitter = orderSubmitter
@@ -2570,16 +2763,28 @@ End If
 
 mDummyPositionManager.dummy = True
 mDummyPositionManager.Ticker = Me
-mDummyPositionManager.orderSubmitter = mTradeBuildAPI.ServiceProviders.CreateSimulatedOrderSubmitter(mDummyPositionManager, mContract)
+mDummyPositionManager.orderSubmitter = gTB.ServiceProviders.CreateSimulatedOrderSubmitter(mDummyPositionManager, mContract)
 
-If mWriteToTickFile Then
+If mWriteTickData Then
     CreateOutputTickfile
+End If
+
+If mWriteTradeBarData Or mWriteBidAskBarData Then
+    createBarWriter
 End If
 
 If mDOMEventsRequired <> DOMNoEvents Or mIncludeMarketDepthInTickfile Then
     initialisePriceTables
 End If
 
+End Sub
+
+Private Sub setTime( _
+                ByVal pTime As Date)
+If Not mReplayingTickfile Then Exit Sub
+    
+If Not mTimerList Is Nothing Then mTimerList.setTime pTime
+mClock.setTime pTime
 End Sub
 
 Private Sub setupInputStudy()

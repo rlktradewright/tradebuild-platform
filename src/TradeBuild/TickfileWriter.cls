@@ -58,7 +58,7 @@ Private mPendingWrites As Collection
 Private WithEvents mTimer As IntervalTimer
 Attribute mTimer.VB_VarHelpID = -1
 
-Private mSelfRef As TradeBuild26.TickfileWriter
+Private mSelfRef As TickfileWriter
 
 '@================================================================================
 ' Class Event Handlers
@@ -114,23 +114,23 @@ If mPendingWrites.Count <> 0 Then
         pendingWrite = item
         With pendingWrite
             Select Case .TickType
-            Case TradeBuild26.TickTypes.TickTypeBid
+            Case TickTypes.TickTypeBid
                 mWriter.writeBid .timestamp, .TickPrice, .TickSize
-            Case TradeBuild26.TickTypes.TickTypeAsk
+            Case TickTypes.TickTypeAsk
                 mWriter.writeAsk .timestamp, .TickPrice, .TickSize
-            Case TradeBuild26.TickTypes.TickTypeLast
+            Case TickTypes.TickTypeLast
                 mWriter.writeTrade .timestamp, .TickPrice, .TickSize
-            Case TradeBuild26.TickTypes.TickTypeHigh
+            Case TickTypes.TickTypeHigh
                 mWriter.writeHigh .timestamp, .TickPrice
-            Case TradeBuild26.TickTypes.TickTypeLow
+            Case TickTypes.TickTypeLow
                 mWriter.writeLow .timestamp, .TickPrice
-            Case TradeBuild26.TickTypes.TickTypePrevClose
+            Case TickTypes.TickTypePrevClose
                 mWriter.writeClose .timestamp, .TickPrice
-            Case TradeBuild26.TickTypes.TickTypeVolume
+            Case TickTypes.TickTypeVolume
                 mWriter.writeVolume .timestamp, .TickSize
-            Case TradeBuild26.TickTypes.TickTypeOpenInterest
+            Case TickTypes.TickTypeOpenInterest
                 mWriter.writeOpenInterest .timestamp, .TickSize
-            Case TradeBuild26.TickTypes.TickTypeMarketDepth
+            Case TickTypes.TickTypeMarketDepth
                 mWriter.writeMarketDepthData .timestamp, _
                             .MDPosition, _
                             .MDMarketMaker, _
@@ -138,7 +138,7 @@ If mPendingWrites.Count <> 0 Then
                             .MDSide, _
                             .TickPrice, _
                             .TickSize
-            Case TradeBuild26.TickTypes.TickTypeMarketDepthReset
+            Case TickTypes.TickTypeMarketDepthReset
                 mWriter.writeMarketDepthReset .timestamp
             End Select
         End With
@@ -165,7 +165,7 @@ Set mSelfRef = Me   ' to ensure this object is kept alive while
                     ' the writer closes down (it may be doing
                     ' asynchronous writes)
 
-Set mTimer = createIntervalTimer(60, ExpiryTimeUnitSeconds)
+Set mTimer = CreateIntervalTimer(60, ExpiryTimeUnitSeconds)
 mTimer.StartTimer
 End Sub
 
@@ -175,7 +175,7 @@ Friend Sub writeAsk(ByVal timestamp As Date, _
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild26.TickTypes.TickTypeAsk
+        .TickType = TickTypes.TickTypeAsk
         .timestamp = timestamp
         .TickPrice = price
         .TickSize = size
@@ -193,7 +193,7 @@ Friend Sub writeBid(ByVal timestamp As Date, _
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild26.TickTypes.TickTypeBid
+        .TickType = TickTypes.TickTypeBid
         .timestamp = timestamp
         .TickPrice = price
         .TickSize = size
@@ -209,7 +209,7 @@ Friend Sub writeClose(ByVal timestamp As Date, _
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild26.TickTypes.TickTypePrevClose
+        .TickType = TickTypes.TickTypePrevClose
         .timestamp = timestamp
         .TickPrice = price
     End With
@@ -224,7 +224,7 @@ Friend Sub writeHigh(ByVal timestamp As Date, _
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild26.TickTypes.TickTypeHigh
+        .TickType = TickTypes.TickTypeHigh
         .timestamp = timestamp
         .TickPrice = price
     End With
@@ -239,7 +239,7 @@ Friend Sub writeLow(ByVal timestamp As Date, _
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild26.TickTypes.TickTypeLow
+        .TickType = TickTypes.TickTypeLow
         .timestamp = timestamp
         .TickPrice = price
     End With
@@ -261,7 +261,7 @@ Friend Sub writeMarketDepthData( _
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild26.TickTypes.TickTypeMarketDepth
+        .TickType = TickTypes.TickTypeMarketDepth
         .MDPosition = position
         .MDMarketMaker = marketMaker
         .MDOperation = operation
@@ -288,7 +288,7 @@ Friend Sub writeMarketDepthReset( _
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild26.TickTypes.TickTypeMarketDepthReset
+        .TickType = TickTypes.TickTypeMarketDepthReset
         .timestamp = timestamp
     End With
     mPendingWrites.add pendingTick
@@ -302,7 +302,7 @@ Friend Sub writeOpenInterest(ByVal timestamp As Date, _
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild26.TickTypes.TickTypeOpenInterest
+        .TickType = TickTypes.TickTypeOpenInterest
         .timestamp = timestamp
         .TickSize = size
     End With
@@ -318,7 +318,7 @@ Friend Sub writeTrade(ByVal timestamp As Date, _
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild26.TickTypes.TickTypeLast
+        .TickType = TickTypes.TickTypeLast
         .timestamp = timestamp
         .TickPrice = price
         .TickSize = size
@@ -334,7 +334,7 @@ Friend Sub writeVolume(ByVal timestamp As Date, _
 Dim pendingTick As Tick
 If Not mServiceProviderWriterReady Then
     With pendingTick
-        .TickType = TradeBuild26.TickTypes.TickTypeVolume
+        .TickType = TickTypes.TickTypeVolume
         .timestamp = timestamp
         .TickSize = size
     End With

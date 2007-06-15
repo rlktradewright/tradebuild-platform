@@ -79,18 +79,15 @@ Event TickfilesSelected()
 ' Member variables
 '@================================================================================
 
-Private mTradeBuildAPIRef           As WeakReference
 Private mContract                   As Contract
 
 Private mReader                     As TickfileReader
-Private mTickfileSpecifiers()       As TradeBuild26.TickfileSpecifier
+
+Private mTickfileSpecifiers()       As TickfileSpecifier
 Private mCurrTickfileIndex          As Long
 
 Private mTickers                    As Tickers
 Private mTicker                     As Ticker
-
-Private WithEvents mTickfileSelector As fTickfileSelector
-Attribute mTickfileSelector.VB_VarHelpID = -1
 
 Private mReplayInProgress           As Boolean
 
@@ -116,7 +113,7 @@ mReplayProgressEventFrequency = 25
 End Sub
 
 Private Sub Class_Terminate()
-Debug.Print "TradeBuild26.TickFileManager terminated"
+Debug.Print "TickFileManager terminated"
 End Sub
 
 '@================================================================================
@@ -199,28 +196,19 @@ Case TradeBuildSP.StandardSPEventCodes.TFContractSpecifierInvalid
     RaiseEvent Notification(ev)
     Set mReader = Nothing
 Case Else
-    tb.SetServiceProviderError eventCode, _
+    gTB.SetServiceProviderError eventCode, _
                         eventMessage, _
-                        tb.ServiceProviders.nameFromHandle(spHandle)
+                        gTB.ServiceProviders.nameFromHandle(spHandle)
 End Select
 
 End Sub
 
 Private Sub ITickfileInputServiceConsumer_Ready( _
-                TickfileSpec As TradeBuildSP.TickfileSpec, _
+                ByVal tfSpec As TradeBuildSP.ITickfileSpecifier, _
                 ByVal TickfileSizeBytes As Long)
 
-Dim tfSpec As TradeBuild26.TickfileSpecifier
-Dim contractSpec As TradeBuild26.contractSpecifier
-Dim lContracts As TradeBuild26.Contracts
-
-With tfSpec
-    Set .Contract = TickfileSpec.Contract
-    .filename = TickfileSpec.filename
-    .From = TickfileSpec.From
-    .tickfileFormatID = TickfileSpec.tickfileFormatID
-    .To = TickfileSpec.To
-End With
+Dim contractSpec As contractSpecifier
+Dim lContractsBuilder As ContractsBuilder
 
 ' we now determine a contract specifier with which we'll query the
 ' contract info service providers to get the canonical contract definition
@@ -246,9 +234,9 @@ End If
 
 'now query the Contract Details service provider(s) to see if we can
 ' determine the canonical contract for this contract spec
-Set lContracts = tb.NewContracts(contractSpec)
-lContracts.Load
-mTicker.Contracts = lContracts
+Set lContractsBuilder = CreateContractsBuilder(contractSpec)
+gTB.loadContracts lContractsBuilder
+mTicker.Contracts = lContractsBuilder.Contracts
 End Sub
 
 Private Sub ITickfileInputServiceConsumer_TickfileReplayComplete()
@@ -284,18 +272,6 @@ RaiseEvent ReplayProgress(mTicker.timestamp, _
 End Sub
 
 '@================================================================================
-' mTickfileSelector Event Handlers
-'@================================================================================
-
-Private Sub mTickfileSelector_TickfilesSelected()
-mTickfileSelector.Hide
-mTickfileSpecifiers = mTickfileSelector.TickfileSpecifiers
-RaiseEvent TickfilesSelected
-Unload mTickfileSelector
-Set mTickfileSelector = Nothing
-End Sub
-
-'@================================================================================
 ' Properties
 '@================================================================================
 
@@ -310,7 +286,7 @@ End Property
 Friend Property Get firstTickFileTime() As Date
 If mReader Is Nothing Then
     err.Raise ErrorCodes.ErrIllegalStateException, _
-                "TradeBuild26.TickFileManage::firstTickFileTime", _
+                "TickFileManage::firstTickFileTime", _
                 "Tickfile reader not yet created"
 End If
 firstTickFileTime = mReader.firstTickFileTime
@@ -326,12 +302,12 @@ End Property
 Public Property Let ReplayProgressEventFrequency(ByVal value As Long)
 If Not mTicker Is Nothing Then
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "TradeBuild26.TickFileManager::(Let)ReplayProgressEventFrequency", _
+            "TickFileManager::(Let)ReplayProgressEventFrequency", _
             "Tickfile is already replaying"
 End If
 If value < 0 Then
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "TradeBuild26.TickFileManager::(Let)ReplayProgressEventFrequency", _
+            "TickFileManager::(Let)ReplayProgressEventFrequency", _
             "Value cannot be less than 0"
 End If
 
@@ -350,12 +326,12 @@ End Property
 Public Property Let ReplayProgressEventIntervalMillisecs(ByVal value As Long)
 If Not mTicker Is Nothing Then
     err.Raise ErrorCodes.ErrIllegalStateException, _
-            "TradeBuild26.TickFileManager::(Let)ReplayProgressEventIntervalMillisecs", _
+            "TickFileManager::(Let)ReplayProgressEventIntervalMillisecs", _
             "Tickfile is already replaying"
 End If
 If value < 50 Then
     err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "TradeBuild26.TickFileManager::(Let)ReplayProgressEventIntervalMillisecs", _
+            "TickFileManager::(Let)ReplayProgressEventIntervalMillisecs", _
             "Value must be greater than 50"
 End If
 
@@ -392,35 +368,35 @@ Public Property Get Ticker() As Ticker
 Set Ticker = mTicker
 End Property
 
-Public Property Let TickfileSpecifier(value As TradeBuild26.TickfileSpecifier)
+Public Property Let TickfileSpecifier(value As TickfileSpecifier)
 If Not mTicker Is Nothing Then
     err.Raise ErrorCodes.ErrIllegalStateException, _
-            "TradeBuild26.TickFileManager::(Let)TickfileSpecifiers", _
+            "TickFileManager::(Let)TickfileSpecifiers", _
             "Tickfile is already replaying"
 End If
-ReDim mTickfileSpecifiers(0) As TradeBuild26.TickfileSpecifier
-mTickfileSpecifiers(0) = value
+ReDim mTickfileSpecifiers(0) As TickfileSpecifier
+Set mTickfileSpecifiers(0) = value
 mCurrTickfileIndex = -1
 End Property
 
-Public Property Let TickfileSpecifiers(value() As TradeBuild26.TickfileSpecifier)
+Public Property Let TickfileSpecifiers(value() As TickfileSpecifier)
 If Not mTicker Is Nothing Then
     err.Raise ErrorCodes.ErrIllegalStateException, _
-            "TradeBuild26.TickFileManager::(Let)TickfileSpecifiers", _
+            "TickFileManager::(Let)TickfileSpecifiers", _
             "Tickfile is already replaying"
 End If
 mTickfileSpecifiers = value
 mCurrTickfileIndex = -1
 End Property
 
-Public Property Get TickfileSpecifiers() As TradeBuild26.TickfileSpecifier()
+Public Property Get TickfileSpecifiers() As TickfileSpecifier()
 TickfileSpecifiers = mTickfileSpecifiers
 End Property
 
 Public Property Let TimestampAdjustmentStart(ByVal value As Double)
 If Not mTicker Is Nothing Then
     err.Raise ErrorCodes.ErrIllegalStateException, _
-            "TradeBuild26.TickFileManager::(Let)TimestampAdjustmentStart", _
+            "TickFileManager::(Let)TimestampAdjustmentStart", _
             "Tickfile is already replaying"
 End If
 mTimestampAdjustmentStart = value
@@ -433,7 +409,7 @@ End Property
 Public Property Let TimestampAdjustmentEnd(ByVal value As Double)
 If Not mTicker Is Nothing Then
     err.Raise ErrorCodes.ErrIllegalStateException, _
-            "TradeBuild26.TickFileManager::(Let)TimestampAdjustmentEnd", _
+            "TickFileManager::(Let)TimestampAdjustmentEnd", _
             "Tickfile is already replaying"
 End If
 mTimestampAdjustmentEnd = value
@@ -441,11 +417,6 @@ End Property
 
 Public Property Get TimestampAdjustmentEnd() As Double
 TimestampAdjustmentEnd = mTimestampAdjustmentEnd
-End Property
-
-Friend Property Let tradeBuildAPI( _
-                ByVal value As tradeBuildAPI)
-Set mTradeBuildAPIRef = CreateWeakReference(value)
 End Property
 
 '@================================================================================
@@ -460,9 +431,9 @@ End Sub
 Friend Function CreateOutputTickfile( _
                 ByVal pTicker As Ticker, _
                 ByVal outputTickfileFormat As String, _
-                ByVal outputTickfilePath As String) As TradeBuild26.TickfileWriter
+                ByVal outputTickfilePath As String) As TickfileWriter
             
-Set CreateOutputTickfile = tb.ServiceProviders.CreateTickfileWriter( _
+Set CreateOutputTickfile = gTB.ServiceProviders.CreateTickfileWriter( _
                             pTicker, _
                             outputTickfileFormat, _
                             outputTickfilePath)
@@ -472,31 +443,17 @@ End Function
 Public Sub PauseReplay()
 If mTicker Is Nothing Or mReader Is Nothing Then
     err.Raise ErrorCodes.ErrIllegalStateException, _
-            "TradeBuild26.TickFileManager::PauseReplay", _
+            "TickFileManager::PauseReplay", _
             "Tickfile is not replaying"
 End If
 mTicker.PauseTicker
 mReader.PauseReplay
 End Sub
 
-Public Sub ShowTickfileSelectionDialogue()
-If Not mTicker Is Nothing Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
-            "TradeBuild26.TickFileManager::ShowTickfileSelectionDialogue", _
-            "Tickfile is already replaying"
-End If
-If mTickfileSelector Is Nothing Then
-    Set mTickfileSelector = New fTickfileSelector
-    mTickfileSelector.tradeBuildAPI = tb
-End If
-mTickfileSelector.SupportedTickfileFormats = tb.ServiceProviders.SupportedInputTickfileFormats
-mTickfileSelector.Show vbModal
-End Sub
-
 Public Sub SkipTickfile()
 If mTicker Is Nothing Or mReader Is Nothing Then
     err.Raise ErrorCodes.ErrIllegalStateException, _
-            "TradeBuild26.TickfileManager::SkipTickfile", _
+            "TickfileManager::SkipTickfile", _
             "Tickfile is not replaying"
 End If
 FinishTickfile
@@ -531,7 +488,7 @@ Set mTicker = Nothing
 End Sub
 
 Private Sub playOrNot( _
-                            TickfileSpec As TradeBuild26.TickfileSpecifier, _
+                            TickfileSpec As TickfileSpecifier, _
                             ByVal TickfileSizeBytes As Long)
 
 Dim continueMode As ReplayContinueModes
@@ -570,7 +527,7 @@ mReader.replaySpeed = mReplaySpeed
 End Sub
 
 Private Sub SetupNextTickfile()
-Dim lTickfileSpecifier As TradeBuild26.TickfileSpecifier
+Dim lTickfileSpecifier As TickfileSpecifier
 
 Set mReader = Nothing
 Do
@@ -585,11 +542,11 @@ Do
     mTicker.clockRate = mReplaySpeed
     RaiseEvent TickerAllocated(mTicker)
     
-    lTickfileSpecifier = mTickfileSpecifiers(mCurrTickfileIndex)
-    Set mReader = tb.ServiceProviders.CreateTickfileReader( _
+    Set lTickfileSpecifier = mTickfileSpecifiers(mCurrTickfileIndex)
+    Set mReader = gTB.ServiceProviders.CreateTickfileReader( _
                                     mTicker, _
                                     Me, _
-                                    lTickfileSpecifier.tickfileFormatID)
+                                    lTickfileSpecifier.TickfileFormatID)
     
     setReplayAttributes
     mReader.TimestampAdjustmentStart = mTimestampAdjustmentStart
@@ -631,7 +588,7 @@ Then
     Else
         Set mProgressTimer = CreateIntervalTimer(0, , mReplayProgressEventIntervalMillisecs)
     End If
-    mProgressTimer.startTimer
+    mProgressTimer.StartTimer
 End If
 End Sub
 
@@ -642,9 +599,5 @@ If mProgressTimer Is Nothing Then Exit Sub
 mProgressTimer.StopTimer
 Set mProgressTimer = Nothing
 End Sub
-
-Private Function tb() As tradeBuildAPI
-Set tb = mTradeBuildAPIRef.Target
-End Function
 
 

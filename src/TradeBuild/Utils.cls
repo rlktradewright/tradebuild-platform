@@ -75,7 +75,7 @@ Option Explicit
 '
 '@/
 Public Function EntryOrderTypeToOrderType( _
-                ByVal pEntryOrderType As TradeBuild26.EntryOrderTypes) As TradeBuild26.OrderTypes
+                ByVal pEntryOrderType As EntryOrderTypes) As OrderTypes
 EntryOrderTypeToOrderType = gEntryOrderTypeToOrderType(pEntryOrderType)
 End Function
 
@@ -90,23 +90,13 @@ EntryOrderTypeToShortString = gEntryOrderTypeToShortString(value)
 End Function
 
 Public Function LegOpenCloseFromString( _
-                ByVal value As String) As TradeBuild26.LegOpenClose
+                ByVal value As String) As LegOpenClose
 LegOpenCloseFromString = gLegOpenCloseFromString(value)
 End Function
 
 Public Function LegOpenCloseToString( _
-                ByVal value As TradeBuild26.LegOpenClose) As String
+                ByVal value As LegOpenClose) As String
 LegOpenCloseToString = gLegOpenCloseToString(value)
-End Function
-
-Public Function OptionRightFromString( _
-                ByVal value As String) As OptionRights
-OptionRightFromString = gOptionRightFromString(value)
-End Function
-
-Public Function OptionRightToString( _
-                ByVal value As OptionRights) As String
-OptionRightToString = gOptionRightToString(value)
 End Function
 
 Public Function OrderActionFromString( _
@@ -139,21 +129,6 @@ Public Function OrderTypeToString( _
 OrderTypeToString = gOrderTypeToString(value)
 End Function
 
-Public Function SecTypeFromString( _
-                ByVal value As String) As SecurityTypes
-SecTypeFromString = gSecTypeFromString(value)
-End Function
-
-Public Function SecTypeToShortString( _
-                ByVal value As SecurityTypes) As String
-SecTypeToShortString = gSecTypeToShortString(value)
-End Function
-
-Public Function SecTypeToString( _
-                ByVal value As SecurityTypes) As String
-SecTypeToString = gSecTypeToString(value)
-End Function
-
 ''
 ' Converts a member of the StopOrderTypes enumeration to the equivalent OrderTypes value.
 '
@@ -163,7 +138,7 @@ End Function
 '
 '@/
 Public Function StopOrderTypeToOrderType( _
-                ByVal pStopOrderType As TradeBuild26.StopOrderTypes) As TradeBuild26.OrderTypes
+                ByVal pStopOrderType As StopOrderTypes) As OrderTypes
 StopOrderTypeToOrderType = gStopOrderTypeToOrderType(pStopOrderType)
 End Function
 
@@ -181,7 +156,7 @@ End Function
 '
 '@/
 Public Function TargetOrderTypeToOrderType( _
-                ByVal pTargetOrderType As TradeBuild26.TargetOrderTypes) As TradeBuild26.OrderTypes
+                ByVal pTargetOrderType As TargetOrderTypes) As OrderTypes
 TargetOrderTypeToOrderType = gTargetOrderTypeToOrderType(pTargetOrderType)
 End Function
 
@@ -191,9 +166,14 @@ TargetOrderTypeToString = gTargetOrderTypeToString(value)
 End Function
 
 Public Function TickfileSpecifierToString( _
-                TickfileSpec As TradeBuild26.TickfileSpecifier) As String
+                TickfileSpec As TickfileSpecifier) As String
 TickfileSpecifierToString = gTickfileSpecifierToString(TickfileSpec)
 End Function
+
+Public Property Get TradeBuildAPI() As TradeBuildAPI
+If gTB Is Nothing Then Set gTB = New TradeBuildAPI
+Set TradeBuildAPI = gTB
+End Property
 
 '@================================================================================
 ' Helper Functions

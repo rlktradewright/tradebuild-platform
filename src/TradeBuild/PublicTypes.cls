@@ -27,12 +27,6 @@ Public Type InfoEvent
     data            As Variant
 End Type
 
-Public Type NotificationEvent
-    source          As Object
-    eventCode       As Long
-    eventMessage    As Variant
-End Type
-
 Public Type PriceChangeEvent
     source          As Object
     Change          As Double
@@ -90,15 +84,6 @@ Public Type TickfileFormatSpecifier
     FormalID        As String
     name            As String
     FileExtension   As String
-End Type
-
-Public Type TickfileSpecifier
-    tickfileFormatID    As String
-    filename            As String
-    Contract            As Contract
-    From                As Date
-    To                  As Date
-    EntireSession       As Boolean
 End Type
 
 Public Type WriterEvent
@@ -250,12 +235,6 @@ Public Enum MarketDepthTypes
     MarketDepthRawL2
 End Enum
 
-Public Enum OptionRights
-    OptNone = 0
-    OptCall
-    OptPut
-End Enum
-    
 Public Enum OrderActions
     ActionNone
     ActionBuy = 1
@@ -385,17 +364,6 @@ Public Enum ReplayContinueModes
     ReplayContinue
     ReplayCancelThisFile
     ReplayCancelAllFiles
-End Enum
-
-Public Enum SecurityTypes
-    SecTypeNone
-    SecTypeStock
-    SecTypeFuture
-    SecTypeOption
-    SecTypeFuturesOption
-    SecTypeCash
-    SecTypeBag
-    SecTypeIndex
 End Enum
 
 Public Enum StopOrderTypes

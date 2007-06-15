@@ -69,6 +69,7 @@ Private mSessionEndTime As Date
 Private mExpiryDate As Date
 Private mDaysBeforeExpiryToSwitch As Long
 Private mProviderIDs() As TradeBuildSP.DictionaryEntry
+Private mTimeZone As timezone
 
 '@================================================================================
 ' Class Event Handlers
@@ -420,6 +421,15 @@ Friend Property Let validExchanges(ByRef value() As String)
 mValidExchanges = value
 End Property
 
+Public Property Get timezone() As timezone
+Set timezone = mTimeZone
+End Property
+
+Friend Property Let timezone( _
+                ByVal value As timezone)
+Set mTimeZone = value
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -445,6 +455,7 @@ With clone
     .validExchanges = mValidExchanges
     .sessionEndTime = sessionEndTime
     .sessionStartTime = sessionStartTime
+    .timezone = timezone
     '.NumberOfDecimals = mNumberOfDecimals  ' set automatically by tickSize
 End With
 End Function

@@ -71,18 +71,11 @@ Public Const StrOrderActionSell             As String = "Sell"
 ' Variables
 '@================================================================================
 
+Public gTB As TradeBuildAPI
 
 '@================================================================================
 ' Procedures
 '@================================================================================
-
-Public Sub gAddItemToCombo( _
-                ByVal combo As ComboBox, _
-                ByVal itemText As String, _
-                ByVal itemData As Long)
-combo.AddItem itemText
-combo.itemData(combo.ListCount - 1) = itemData
-End Sub
 
 ''
 ' Converts a member of the EntryOrderTypes enumeration to the equivalent OrderTypes value.
@@ -93,7 +86,7 @@ End Sub
 '
 '@/
 Public Function gEntryOrderTypeToOrderType( _
-                ByVal pEntryOrderType As TradeBuild26.EntryOrderTypes) As TradeBuild26.OrderTypes
+                ByVal pEntryOrderType As EntryOrderTypes) As OrderTypes
 Select Case pEntryOrderType
 Case EntryOrderTypeMarket
     gEntryOrderTypeToOrderType = OrderTypeMarket
@@ -196,7 +189,7 @@ Case EntryOrderTypeStopLimit
 End Select
 End Function
 
-Public Function gLegOpenCloseFromString(ByVal value As String) As TradeBuild26.LegOpenClose
+Public Function gLegOpenCloseFromString(ByVal value As String) As LegOpenClose
 Select Case UCase$(value)
 Case ""
     gLegOpenCloseFromString = LegUnknownPos
@@ -209,7 +202,7 @@ Case "CLOSE"
 End Select
 End Function
 
-Public Function gLegOpenCloseToString(ByVal value As TradeBuild26.LegOpenClose) As String
+Public Function gLegOpenCloseToString(ByVal value As LegOpenClose) As String
 Select Case value
 Case LegSamePos
     gLegOpenCloseToString = "SAME"
@@ -217,28 +210,6 @@ Case LegOpenPos
     gLegOpenCloseToString = "OPEN"
 Case LegClosePos
     gLegOpenCloseToString = "CLOSE"
-End Select
-End Function
-
-Public Function gOptionRightFromString(ByVal value As String) As OptionRights
-Select Case UCase$(value)
-Case ""
-    gOptionRightFromString = OptNone
-Case "CALL"
-    gOptionRightFromString = OptCall
-Case "PUT"
-    gOptionRightFromString = OptPut
-End Select
-End Function
-
-Public Function gOptionRightToString(ByVal value As OptionRights) As String
-Select Case value
-Case OptNone
-    gOptionRightToString = ""
-Case OptCall
-    gOptionRightToString = "Call"
-Case OptPut
-    gOptionRightToString = "Put"
 End Select
 End Function
 
@@ -353,63 +324,6 @@ End Select
 
 End Function
 
-Public Function gSecTypeFromString(ByVal value As String) As SecurityTypes
-Select Case UCase$(value)
-Case "STOCK", "STK"
-    gSecTypeFromString = SecTypeStock
-Case "FUTURE", "FUT"
-    gSecTypeFromString = SecTypeFuture
-Case "OPTION", "OPT"
-    gSecTypeFromString = SecTypeOption
-Case "FUTURES OPTION", "FOP"
-    gSecTypeFromString = SecTypeFuturesOption
-Case "CASH"
-    gSecTypeFromString = SecTypeCash
-Case "BAG"
-    gSecTypeFromString = SecTypeBag
-Case "INDEX", "IND"
-    gSecTypeFromString = SecTypeIndex
-End Select
-End Function
-
-Public Function gSecTypeToString(ByVal value As SecurityTypes) As String
-Select Case value
-Case SecTypeStock
-    gSecTypeToString = "Stock"
-Case SecTypeFuture
-    gSecTypeToString = "Future"
-Case SecTypeOption
-    gSecTypeToString = "Option"
-Case SecTypeFuturesOption
-    gSecTypeToString = "Futures Option"
-Case SecTypeCash
-    gSecTypeToString = "Cash"
-Case SecTypeBag
-    gSecTypeToString = "Bag"
-Case SecTypeIndex
-    gSecTypeToString = "Index"
-End Select
-End Function
-
-Public Function gSecTypeToShortString(ByVal value As SecurityTypes) As String
-Select Case value
-Case SecTypeStock
-    gSecTypeToShortString = "STK"
-Case SecTypeFuture
-    gSecTypeToShortString = "FUT"
-Case SecTypeOption
-    gSecTypeToShortString = "OPT"
-Case SecTypeFuturesOption
-    gSecTypeToShortString = "FOP"
-Case SecTypeCash
-    gSecTypeToShortString = "CASH"
-Case SecTypeBag
-    gSecTypeToShortString = "BAG"
-Case SecTypeIndex
-    gSecTypeToShortString = "IND"
-End Select
-End Function
-
 ''
 ' Converts a member of the StopOrderTypes enumeration to the equivalent OrderTypes value.
 '
@@ -418,7 +332,7 @@ End Function
 '
 '@/
 Public Function gStopOrderTypeToOrderType( _
-                ByVal pStopOrderType As TradeBuild26.StopOrderTypes) As TradeBuild26.OrderTypes
+                ByVal pStopOrderType As StopOrderTypes) As OrderTypes
 Select Case pStopOrderType
 Case StopOrderTypeNone
     gStopOrderTypeToOrderType = OrderTypeNone
@@ -469,7 +383,7 @@ End Function
 '
 '@/
 Public Function gTargetOrderTypeToOrderType( _
-                ByVal pTargetOrderType As TradeBuild26.TargetOrderTypes) As TradeBuild26.OrderTypes
+                ByVal pTargetOrderType As TargetOrderTypes) As OrderTypes
 Select Case pTargetOrderType
 Case TargetOrderTypeNone
     gTargetOrderTypeToOrderType = OrderTypeNone
@@ -513,14 +427,14 @@ Case TargetOrderTypeAuto
 End Select
 End Function
 
-Public Function gTickfileSpecifierToString(TickfileSpec As TradeBuild26.TickfileSpecifier) As String
-If TickfileSpec.filename <> "" Then
-    gTickfileSpecifierToString = TickfileSpec.filename
+Public Function gTickfileSpecifierToString(tfSpec As ITickfileSpecifier) As String
+If tfSpec.filename <> "" Then
+    gTickfileSpecifierToString = tfSpec.filename
 Else
     gTickfileSpecifierToString = "Contract: " & _
-                                Replace(TickfileSpec.Contract.specifier.ToString, vbCrLf, "; ") & _
-                            ": From: " & FormatDateTime(TickfileSpec.From, vbGeneralDate) & _
-                            " To: " & FormatDateTime(TickfileSpec.To, vbGeneralDate)
+                                Replace(tfSpec.Contract.specifier.ToString, vbCrLf, "; ") & _
+                            ": From: " & FormatDateTime(tfSpec.FromDate, vbGeneralDate) & _
+                            " To: " & FormatDateTime(tfSpec.ToDate, vbGeneralDate)
 End If
 End Function
 

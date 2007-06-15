@@ -150,7 +150,7 @@ End Property
 Public Function add(ByVal name As String) As OrderContext
 If Not mEnabled Then
     err.Raise ErrorCodes.ErrIllegalStateException, _
-                "TradeBuild26.OrderContexts::add", _
+                "OrderContexts::add", _
                 "Order context addition is disabled"
 End If
 

@@ -69,14 +69,12 @@ End Type
 ' Member variables
 '@================================================================================
 
-Private mTradeBuildAPIRef           As WeakReference
-
 Private mTimeframeTable() As TimeframeTableEntry
 Private mNextTimeframeTableIndex As Long
 
-Private mTicker As TradeBuild26.Ticker
+Private mTicker As Ticker
 
-Private mContract As TradeBuild26.Contract
+Private mContract As Contract
 
 Private mChangeListeners As Collection
 
@@ -122,11 +120,6 @@ End Property
 
 Friend Property Let Ticker(ByVal value As Ticker)
 Set mTicker = value
-End Property
-
-Friend Property Let tradeBuildAPI( _
-                ByVal value As tradeBuildAPI)
-Set mTradeBuildAPIRef = CreateWeakReference(value)
 End Property
 
 '@================================================================================
@@ -252,7 +245,6 @@ If timeframeIndex >= 0 Then
 End If
 
 Set addTimeframe = New timeframe
-addTimeframe.tradeBuildAPI = tb
 Set tte.theTimeFrame = addTimeframe
 tte.TimePeriod = TimePeriod
 tte.timePeriodUnit = timePeriodUnit
@@ -422,9 +414,5 @@ For i = 0 To mNextTimeframeTableIndex - 1
         Exit Function
     End If
 Next
-End Function
-
-Private Function tb() As tradeBuildAPI
-Set tb = mTradeBuildAPIRef.Target
 End Function
 

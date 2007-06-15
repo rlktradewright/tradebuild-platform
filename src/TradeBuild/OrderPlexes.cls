@@ -86,7 +86,7 @@ End Property
 '@================================================================================
 
 Friend Function add( _
-                ByVal pOrderPlex As TradeBuild26.orderPlex) As TradeBuild26.orderPlex
+                ByVal pOrderPlex As orderPlex) As orderPlex
 Set add = pOrderPlex
 mOrderPlexes.add pOrderPlex, pOrderPlex.key
 fireChange CollItemAdded, pOrderPlex
@@ -98,7 +98,7 @@ mChangeListeners.add value
 End Sub
 
 Public Function item( _
-                index As Variant) As TradeBuild26.orderPlex
+                index As Variant) As orderPlex
 Set item = mOrderPlexes(index)
 End Function
 

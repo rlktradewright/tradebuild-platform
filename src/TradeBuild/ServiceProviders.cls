@@ -77,8 +77,6 @@ End Type
 ' Member variables
 '@================================================================================
 
-Private mTradeBuildAPIRef           As WeakReference
-
 Private mServiceProviders()         As ServiceProviderTableEntry
 Private mMaxSPIndex                 As Long
 
@@ -108,32 +106,16 @@ Private Sub ICommonServiceConsumer_FatalServiceProviderError( _
                 ByVal source As String, _
                 ByVal errorMessage As String, _
                 ByVal spHandle As Long)
-tb.notifyFatalError errorCode, _
+gTB.notifyFatalError errorCode, _
                     errorMessage, _
                     nameFromHandle(spHandle) & ":" & source
 End Sub
-
-Private Function ICommonServiceConsumer_NewContract() As TradeBuildSP.IContract
-Set ICommonServiceConsumer_NewContract = New Contract
-End Function
-
-Private Function ICommonServiceConsumer_NewContracts() As TradeBuildSP.IContracts
-Set ICommonServiceConsumer_NewContracts = tb.NewContracts(Nothing)
-End Function
-
-Private Function ICommonServiceConsumer_NewContractSpecifier() As TradeBuildSP.IContractSpecifier
-Set ICommonServiceConsumer_NewContractSpecifier = New contractSpecifier
-End Function
-
-Private Function ICommonServiceConsumer_NewExecution() As TradeBuildSP.IExecution
-Set ICommonServiceConsumer_NewExecution = New Execution
-End Function
 
 Private Sub ICommonServiceConsumer_NotifyListeners( _
                 ByVal value As Variant, _
                 ByVal valueType As Long, _
                 ByVal source As Object)
-tb.notifyListeners value, valueType, source
+gTB.notifyListeners value, valueType, source
 End Sub
 
 Private Sub ICommonServiceConsumer_RegisterServiceProvider( _
@@ -211,7 +193,7 @@ Private Sub ICommonServiceConsumer_ServiceProviderError( _
                             ByVal errorCode As Long, _
                             ByVal errorMessage As String, _
                             ByVal spHandle As Long)
-tb.SetServiceProviderError errorCode, _
+gTB.SetServiceProviderError errorCode, _
                 errorMessage, _
                 nameFromHandle(spHandle)
 End Sub
@@ -222,60 +204,57 @@ End Sub
 
 Private Sub IContractInfoServiceConsumer_LoadComplete( _
                             ByVal handle As Long, _
-                            ByVal pContracts As TradeBuildSP.IContracts)
-Dim lContracts As TradeBuild26.Contracts
+                            ByVal pContractsbuilder As ContractsBuilder)
+Dim lContracts As Contracts
 
-Set lContracts = pContracts
+Set lContracts = pContractsbuilder.Contracts
 If lContracts.Count = 0 Then
     ' try another service provider if any
-    If Not LoadContractsFromNextSP(handle + 1, pContracts) Then
-        lContracts.LoadComplete
+    If Not LoadContractsFromNextSP(handle + 1, pContractsbuilder) Then
+        pContractsbuilder.LoadComplete
     End If
 Else
-    lContracts.LoadComplete
+    pContractsbuilder.LoadComplete
 End If
 End Sub
 
 Private Sub IContractInfoServiceConsumer_NotifyEvent( _
                 ByVal eventCode As TradeBuildSP.StandardSPEventCodes, _
                 ByVal eventMessage As String, _
-                ByVal pContracts As TradeBuildSP.IContracts, _
+                ByVal pContractsbuilder As ContractsBuilder, _
                 ByVal serviceProviderHandle As Long)
-Dim lContracts As TradeBuild26.Contracts
-
-Set lContracts = pContracts
 
 Select Case eventCode
 Case TradeBuildSP.StandardSPEventCodes.CIConnectedToDataSource
     Dim ev As NotificationEvent
     ev.eventCode = eventCode
     ev.eventMessage = eventMessage
-    Set ev.source = lContracts
-    lContracts.notify ev
+    Set ev.source = pContractsbuilder.Contracts
+    pContractsbuilder.notify ev
 Case TradeBuildSP.StandardSPEventCodes.CIContractSpecifierInvalid
-    lContracts.ContractSpecifierInvalid eventMessage
+    pContractsbuilder.ContractSpecifierInvalid eventMessage
 Case TradeBuildSP.StandardSPEventCodes.CICantConnectDataSource
-    tb.SetServiceProviderError eventCode, _
+    gTB.SetServiceProviderError eventCode, _
                         "Can't connect to Contract database: " & eventMessage, _
-                        tb.ServiceProviders.nameFromHandle(serviceProviderHandle)
+                        gTB.ServiceProviders.nameFromHandle(serviceProviderHandle)
 Case TradeBuildSP.StandardSPEventCodes.CIDisconnectedFromDataSource
-    tb.SetServiceProviderError eventCode, _
+    gTB.SetServiceProviderError eventCode, _
                         "Disconnected from Contract database: " & eventMessage, _
-                        tb.ServiceProviders.nameFromHandle(serviceProviderHandle)
+                        gTB.ServiceProviders.nameFromHandle(serviceProviderHandle)
 Case TradeBuildSP.StandardSPEventCodes.CILostConnectionToDataSource
-    tb.SetServiceProviderError eventCode, _
+    gTB.SetServiceProviderError eventCode, _
                         "Lost connection to Contract database: " & eventMessage, _
-                        tb.ServiceProviders.nameFromHandle(serviceProviderHandle)
+                        gTB.ServiceProviders.nameFromHandle(serviceProviderHandle)
 Case TradeBuildSP.StandardSPEventCodes.CIReConnectingDataSource
-    tb.SetServiceProviderError eventCode, _
+    gTB.SetServiceProviderError eventCode, _
                         "Reconnecting to Contract database: " & eventMessage, _
-                        tb.ServiceProviders.nameFromHandle(serviceProviderHandle)
+                        gTB.ServiceProviders.nameFromHandle(serviceProviderHandle)
 Case TradeBuildSP.StandardSPEventCodes.CIRetryConnectDataSource
-    tb.SetServiceProviderError eventCode, _
+    gTB.SetServiceProviderError eventCode, _
                         "Attempting again to connect to Contract database: " & eventMessage, _
-                        tb.ServiceProviders.nameFromHandle(serviceProviderHandle)
+                        gTB.ServiceProviders.nameFromHandle(serviceProviderHandle)
 Case Else
-    tb.SetServiceProviderError eventCode, _
+    gTB.SetServiceProviderError eventCode, _
                         eventMessage, _
                         nameFromHandle(serviceProviderHandle)
 End Select
@@ -304,17 +283,12 @@ For i = 0 To mMaxSPIndex
 Next
 End Property
 
-Friend Property Get SupportedInputTickfileFormats() As TradeBuild26.TickfileFormatSpecifier()
+Friend Property Get SupportedInputTickfileFormats() As TickfileFormatSpecifier()
 SupportedInputTickfileFormats = GetSupportedTickfileFormats(TradeBuildSP.TickfileServiceProviderCapabilities.Replay)
 End Property
 
-Friend Property Get SupportedOutputTickfileFormats() As TradeBuild26.TickfileFormatSpecifier()
+Friend Property Get SupportedOutputTickfileFormats() As TickfileFormatSpecifier()
 SupportedOutputTickfileFormats = GetSupportedTickfileFormats(TradeBuildSP.TickfileServiceProviderCapabilities.Record)
-End Property
-
-Friend Property Let tradeBuildAPI( _
-                ByVal value As tradeBuildAPI)
-Set mTradeBuildAPIRef = CreateWeakReference(value)
 End Property
 
 '@================================================================================
@@ -325,9 +299,9 @@ Public Function add( _
             ByVal progId As String, _
             ByVal enabled As Boolean, _
             ByVal paramString As String, _
-            Optional ByVal logLevel As TradeBuild26.LogLevels = LogLevelLow, _
+            Optional ByVal logLevel As LogLevels = LogLevelLow, _
             Optional ByVal name As String, _
-            Optional ByVal description As String _
+            Optional ByVal Description As String _
             ) As TradeBuildSP.ICommonServiceProvider
 Dim params As parameters
 Set add = CreateObject(progId)
@@ -342,7 +316,7 @@ addEntryToConfig progId, _
                 params, _
                 logLevel, _
                 name, _
-                description
+                Description
 End Function
 
 Public Sub addCollectionChangeListener( _
@@ -379,13 +353,13 @@ End Function
                             
 Friend Function CreateHistoricalDataWriter( _
                 ByVal serviceConsumer As TradeBuildSP.IBarDataOutputServiceConsumer, _
-                ByVal contractSpec As TradeBuild26.contractSpecifier, _
+                ByVal contractSpec As contractSpecifier, _
                 ByVal historicDataPath As String _
-                ) As TradeBuild26.HistoricDataWriter
+                ) As HistoricDataWriter
                             
 Dim histDataSp As TradeBuildSP.IBarDataServiceProvider
 Dim histDataSPWriter As TradeBuildSP.IBarDataWriter
-Dim histDataWriter As TradeBuild26.HistoricDataWriter
+Dim histDataWriter As HistoricDataWriter
 Dim i As Long
 
 For i = 0 To mMaxSPIndex
@@ -408,7 +382,7 @@ Set histDataSPWriter = histDataSp.CreateBarDataWriter(serviceConsumer, _
                                                     contractSpec, _
                                                     historicDataPath)
 
-Set histDataWriter = New TradeBuild26.HistoricDataWriter
+Set histDataWriter = New HistoricDataWriter
 histDataWriter.ServiceProviderWriter = histDataSPWriter
 Set CreateHistoricalDataWriter = histDataWriter
 
@@ -416,7 +390,7 @@ End Function
 
 Friend Function CreateLiveOrderSubmitter( _
                 ByVal serviceConsumer As TradeBuildSP.IOrderSubmissionSrvcConsumer, _
-                ByVal pContract As TradeBuild26.Contract _
+                ByVal pContract As Contract _
                 ) As TradeBuildSP.IOrderSubmitter
                             
 Dim lOrderSimulatorSp As TradeBuildSP.IOrderSubmissionSrvcProvider
@@ -466,7 +440,7 @@ End Function
 
 Friend Function CreateSimulatedOrderSubmitter( _
                 ByVal serviceConsumer As TradeBuildSP.IOrderSubmissionSrvcConsumer, _
-                ByVal pContract As TradeBuild26.Contract) As TradeBuildSP.IOrderSubmitter
+                ByVal pContract As Contract) As TradeBuildSP.IOrderSubmitter
                             
 Dim lOrderSimulatorSp As TradeBuildSP.IOrderSubmissionSrvcProvider
 Dim orderSubmitter As TradeBuildSP.IOrderSubmitter
@@ -499,10 +473,10 @@ Friend Function CreateTickfileReader( _
                 ByVal pTicker As Ticker, _
                 ByVal serviceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
                 ByVal inputTickfileFormatID As String _
-                ) As TradeBuild26.TickfileReader
+                ) As TickfileReader
 Dim tickfileSp As TradeBuildSP.ITickfileServiceProvider
 Dim tickfileSPReader As TradeBuildSP.ITickfileReader
-Dim tfReader As TradeBuild26.TickfileReader
+Dim tfReader As TickfileReader
 Dim i As Long
 
 For i = 0 To mMaxSPIndex
@@ -522,7 +496,7 @@ Next
 
 If tickfileSp Is Nothing Then Exit Function
 
-Set tfReader = New TradeBuild26.TickfileReader
+Set tfReader = New TickfileReader
 tfReader.dataConsumer = pTicker
 Set tickfileSPReader = tickfileSp.CreateTickfileReader(tfReader, _
                                                     serviceConsumer, _
@@ -537,11 +511,11 @@ Friend Function CreateTickfileWriter( _
             ByVal serviceConsumer As TradeBuildSP.ITickfileOutputServiceConsumer, _
             ByVal outputTickfileFormatID As String, _
             ByVal outputTickfilePath As String _
-            ) As TradeBuild26.TickfileWriter
+            ) As TickfileWriter
                             
 Dim tickfileSp As TradeBuildSP.ITickfileServiceProvider
 Dim tickfileSPWriter As TradeBuildSP.ITickfileWriter
-Dim tfWriter As TradeBuild26.TickfileWriter
+Dim tfWriter As TickfileWriter
 Dim i As Long
 
 For i = 0 To mMaxSPIndex
@@ -561,7 +535,7 @@ Next
 
 If tickfileSp Is Nothing Then Exit Function
 
-Set tfWriter = New TradeBuild26.TickfileWriter
+Set tfWriter = New TickfileWriter
 Set tickfileSPWriter = tickfileSp.CreateTickfileWriter(serviceConsumer, _
                                                     outputTickfileFormatID, _
                                                     outputTickfilePath)
@@ -587,10 +561,10 @@ For i = 0 To mMaxSPIndex
 Next
 End Function
 
-Friend Sub LoadContracts( _
-                ByVal Contracts As TradeBuild26.Contracts)
+Friend Sub loadContracts( _
+                ByVal pContractsbuilder As ContractsBuilder)
 
-If Not LoadContractsFromNextSP(0, Contracts) Then Contracts.LoadComplete
+If Not LoadContractsFromNextSP(0, pContractsbuilder) Then pContractsbuilder.LoadComplete
 End Sub
 
 Public Sub loadServiceProviderConfiguration( _
@@ -664,9 +638,9 @@ Private Sub addEntryToConfig( _
             ByVal progId As String, _
             ByVal enabled As Boolean, _
             ByVal params As parameters, _
-            ByVal logLevel As TradeBuild26.LogLevels, _
+            ByVal logLevel As LogLevels, _
             ByVal name As String, _
-            ByVal description As String _
+            ByVal Description As String _
             )
 Dim sp As ConfigItemSet
 Dim props As ConfigItemList
@@ -675,7 +649,7 @@ Dim param As Parameter
 
 If mConfig Is Nothing Then Exit Sub
 
-If description <> "" Then mServiceProviderConfigList.entries.addComment description
+If Description <> "" Then mServiceProviderConfigList.entries.addComment Description
 Set sp = mServiceProviderConfigList.entries.addItemSet(generateGUIDString)
 sp.setAttribute AttributeNameServiceProviderEnabled, CStr(enabled)
 If name <> "" Then sp.setAttribute AttributeNameServiceProviderName, name
@@ -694,7 +668,7 @@ End Sub
 Private Sub addSP( _
             ByVal serviceProvider As TradeBuildSP.ICommonServiceProvider, _
             ByVal params As parameters, _
-            ByVal logLevel As TradeBuild26.LogLevels, _
+            ByVal logLevel As LogLevels, _
             ByVal name As String _
             )
 Dim i As Long
@@ -750,13 +724,13 @@ End Sub
 
 Private Function GetSupportedTickfileFormats( _
                             ByVal capabilities As TradeBuildSP.TickfileServiceProviderCapabilities _
-                            ) As TradeBuild26.TickfileFormatSpecifier()
+                            ) As TickfileFormatSpecifier()
 Dim i As Long
 Dim j As Long
 Dim k As Long
 Dim tickfileSp As TradeBuildSP.ITickfileServiceProvider
-Dim supportedFormats() As TradeBuild26.TickfileFormatSpecifier
-ReDim allSupportedFormats(9) As TradeBuild26.TickfileFormatSpecifier
+Dim supportedFormats() As TickfileFormatSpecifier
+ReDim allSupportedFormats(9) As TickfileFormatSpecifier
 
 k = -1
 For i = 0 To mMaxSPIndex
@@ -768,7 +742,7 @@ For i = 0 To mMaxSPIndex
                 If (supportedFormats(j).capabilities And capabilities) <> 0 Then
                     k = k + 1
                     If k > UBound(allSupportedFormats) Then
-                        ReDim Preserve allSupportedFormats(UBound(allSupportedFormats) + 10) As TradeBuild26.TickfileFormatSpecifier
+                        ReDim Preserve allSupportedFormats(UBound(allSupportedFormats) + 10) As TickfileFormatSpecifier
                     End If
                     allSupportedFormats(k) = supportedFormats(j)
                 End If
@@ -778,7 +752,7 @@ For i = 0 To mMaxSPIndex
 Next
 
 If k >= 0 Then
-    ReDim Preserve allSupportedFormats(k) As TradeBuild26.TickfileFormatSpecifier
+    ReDim Preserve allSupportedFormats(k) As TickfileFormatSpecifier
     GetSupportedTickfileFormats = allSupportedFormats
 Else
     Erase allSupportedFormats
@@ -834,7 +808,7 @@ End Sub
 
 Private Function LoadContractsFromNextSP( _
                             ByVal startingIndex As Long, _
-                            ByVal pContracts As TradeBuild26.Contracts _
+                            ByVal pContractsbuilder As ContractsBuilder _
                             ) As Boolean
 Dim i As Long
 Dim contractInfoSP As TradeBuildSP.IContractInfoServiceProvider
@@ -850,11 +824,7 @@ Next
 
 If contractInfoSP Is Nothing Then Exit Function
 
-contractInfoSP.RequestContractDetails pContracts
+contractInfoSP.RequestContractDetails pContractsbuilder
 LoadContractsFromNextSP = True
-End Function
-
-Private Function tb() As tradeBuildAPI
-Set tb = mTradeBuildAPIRef.Target
 End Function
 

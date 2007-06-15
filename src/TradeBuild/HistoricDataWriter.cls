@@ -65,7 +65,7 @@ Private mPendingWrites As Queue
 
 Private WithEvents mTimer As IntervalTimer
 Attribute mTimer.VB_VarHelpID = -1
-Private mSelfRef As TradeBuild26.HistoricDataWriter
+Private mSelfRef As HistoricDataWriter
 
 '@================================================================================
 ' Class Event Handlers
@@ -123,7 +123,7 @@ Friend Sub ReleaseDataStore()
 mWriter.ReleaseDataStore
 
 Set mSelfRef = Me
-Set mTimer = createIntervalTimer(60, ExpiryTimeUnitMilliseconds)
+Set mTimer = CreateIntervalTimer(60, ExpiryTimeUnitMilliseconds)
 mTimer.StartTimer
 End Sub
 

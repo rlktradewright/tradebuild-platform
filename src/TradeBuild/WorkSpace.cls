@@ -52,8 +52,6 @@ Implements CollectionChangeListener
 ' Member variables
 '@================================================================================
 
-Private mTradeBuildAPIRef           As WeakReference
-
 Private mName                       As String
 
 Private mTickers                    As Tickers
@@ -117,9 +115,9 @@ ElseIf TypeOf ev.affectedObject Is Execution Then
         mExecutions.add lExec
     Case CollectionChangeTypes.CollItemRemoved
         ' should never happen
-        tb.notifyFatalError ErrorCodes.ErrUnsupportedOperationException, _
+        gTB.notifyFatalError ErrorCodes.ErrUnsupportedOperationException, _
                                         "Unexpected execution deletion", _
-                                        "TradeBuild26.Workspace::CollectionChangeListener_Change"
+                                        "Workspace::CollectionChangeListener_Change"
     End Select
 End If
 End Sub
@@ -152,12 +150,6 @@ Public Property Get Tickers() As Tickers
 Set Tickers = mTickers
 End Property
 
-Friend Property Let tradeBuildAPI( _
-                ByVal value As tradeBuildAPI)
-Set mTradeBuildAPIRef = CreateWeakReference(value)
-mTickers.tradeBuildAPI = value
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -166,7 +158,4 @@ End Property
 ' Helper Functions
 '@================================================================================
 
-Private Function tb() As tradeBuildAPI
-Set tb = mTradeBuildAPIRef.Target
-End Function
 

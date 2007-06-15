@@ -196,6 +196,60 @@ Private Sub IOrderSubmissionSrvcConsumer_cancelTickData( _
 mTicker.removeDataConsumer consumer
 End Sub
 
+Private Sub IOrderSubmissionSrvcConsumer_executionDetails( _
+                ByVal pContractSpecifier As contractSpecifier, _
+                ByVal accountIdentifier As String, _
+                ByVal action As TradeBuildSP.OrderActions, _
+                ByVal execId As String, _
+                ByVal fillingExchange As String, _
+                ByVal isLiquidation As Boolean, _
+                ByVal orderBrokerId As String, _
+                ByVal orderTradeBuildId As String, _
+                ByVal price As Double, _
+                ByVal quantity As Long, _
+                ByVal fillTime As Date)
+Dim lExec As Execution
+Dim lOrder As order
+
+If mDummy Then
+    On Error Resume Next
+    Set lExec = mTicker.dummyExecutions.item(execId)
+    On Error GoTo 0
+Else
+    On Error Resume Next
+    Set lExec = mTicker.executions.item(execId)
+    On Error GoTo 0
+End If
+
+If lExec Is Nothing Then
+    Set lExec = New Execution
+    With lExec
+        .accountIdentifier = accountIdentifier
+        .action = action
+        .contractSpecifier = pContractSpecifier
+        .execId = execId
+        .fillingExchange = fillingExchange
+        .isLiquidation = isLiquidation
+        .orderBrokerId = orderBrokerId
+        .orderTradeBuildId = orderTradeBuildId
+        .price = price
+        .quantity = quantity
+        .time = fillTime
+    End With
+End If
+
+If mDummy Then
+    mTicker.dummyExecutions.add lExec
+    Set lOrder = mOrders.item(lExec.orderTradeBuildId)
+    lOrder.notifyFill lExec
+Else
+    mTicker.executions.add lExec
+    Set lOrder = mOrders.item(lExec.orderTradeBuildId)
+    lOrder.notifyFill lExec
+End If
+
+End Sub
+
 Private Sub IOrderSubmissionSrvcConsumer_NotifyEvent( _
                 ByVal eventCode As TradeBuildSP.StandardSPEventCodes, _
                 ByVal eventMessage As String, _
@@ -255,35 +309,6 @@ Case LODisconnectedFromBroker
 End Select
 End Sub
 
-Private Sub IOrderSubmissionSrvcConsumer_executionDetails( _
-                ByVal pContractSpecifier As TradeBuildSP.IContractSpecifier, _
-                ByVal exec As TradeBuildSP.IExecution)
-Dim lExec As Execution
-Dim lOrder As TradeBuild26.order
-
-If mDummy Then
-    On Error Resume Next
-    Set lExec = mTicker.dummyExecutions.item(exec.ExecId)
-    On Error GoTo 0
-    
-    If lExec Is Nothing Then
-        mTicker.dummyExecutions.add exec
-        Set lOrder = mOrders.item(exec.orderTradeBuildId)
-        lOrder.notifyFill exec
-    End If
-Else
-    On Error Resume Next
-    Set lExec = mTicker.executions.item(exec.ExecId)
-    On Error GoTo 0
-    
-    If lExec Is Nothing Then
-        mTicker.executions.add exec
-        Set lOrder = mOrders.item(exec.orderTradeBuildId)
-        lOrder.notifyFill exec
-    End If
-End If
-End Sub
-
 Private Sub IOrderSubmissionSrvcConsumer_notReady()
 mOrderContexts.ProviderReady = False
 RaiseEvent ProviderNotReady
@@ -292,7 +317,7 @@ End Sub
 Private Sub IOrderSubmissionSrvcConsumer_orderStatus( _
                 ByVal orderId As String, _
                 ByVal status As TradeBuildSP.OrderStatuses)
-Dim lOrder As TradeBuild26.order
+Dim lOrder As order
 Set lOrder = mOrders.item(orderId)
 lOrder.updateStatus status
 End Sub
@@ -312,7 +337,7 @@ End Sub
 Private Sub IOrderSubmissionSrvcConsumer_rejectOrder( _
                 ByVal orderId As String, _
                 ByVal reason As String)
-Dim lOrder As TradeBuild26.order
+Dim lOrder As order
 Set lOrder = mOrders.item(orderId)
 lOrder.updateStatus OrderStatuses.OrderStatusRejected
 End Sub
