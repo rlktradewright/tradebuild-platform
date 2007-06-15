@@ -66,12 +66,16 @@ Private mContracts                          As Contracts
 ' Properties
 '@================================================================================
 
+Public Property Get Contracts() As Contracts
+Set Contracts = mContracts
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
 Public Sub AddContract(ByVal pContract As Contract)
-mContracts.AddContract pContract
+mContracts.Add pContract
 End Sub
 
 Public Sub ContractSpecifierInvalid(ByVal reason As String)
@@ -93,8 +97,14 @@ Public Sub notify( _
 mContracts.notify ev
 End Sub
 
-Friend Sub remove(ByVal index As Variant)
+Public Sub remove(ByVal index As Variant)
 mContracts.remove index
+End Sub
+
+Public Sub unableToLoad( _
+                ByVal reason As String, _
+                ByVal serviceProviderName As String)
+mContracts.serviceProviderCantHandle reason, serviceProviderName
 End Sub
 
 '@================================================================================

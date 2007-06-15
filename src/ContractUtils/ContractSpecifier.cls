@@ -60,36 +60,9 @@ Private mCurrency     As String
 Private mLocalSymbol  As String
 Private mComboLegs    As ComboLegs
 
-Private mLocked As Boolean
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
-
-Private Sub Class_ReadProperties(PropBag As PropertyBag)
-mSymbol = PropBag.ReadProperty("symbol")
-mSecType = PropBag.ReadProperty("secType")
-mExpiry = PropBag.ReadProperty("expiry")
-mStrike = PropBag.ReadProperty("strike")
-mRight = PropBag.ReadProperty("right")
-mExchange = PropBag.ReadProperty("exchange")
-mCurrency = PropBag.ReadProperty("curency")
-mLocalSymbol = PropBag.ReadProperty("localSymbol")
-On Error Resume Next
-Set mComboLegs = PropBag.ReadProperty("combolegs")
-End Sub
-
-Private Sub Class_WriteProperties(PropBag As PropertyBag)
-PropBag.WriteProperty "symbol", mSymbol
-PropBag.WriteProperty "secType", mSecType
-PropBag.WriteProperty "expiry", mExpiry
-PropBag.WriteProperty "strike", mStrike
-PropBag.WriteProperty "right", mRight
-PropBag.WriteProperty "exchange", mExchange
-PropBag.WriteProperty "curency", mCurrency
-PropBag.WriteProperty "localSymbol", mLocalSymbol
-PropBag.WriteProperty "combolegs", mComboLegs
-End Sub
 
 '@================================================================================
 ' Properties
@@ -100,10 +73,6 @@ Set mComboLegs = value
 End Property
 
 Public Property Get ComboLegs() As ComboLegs
-If mComboLegs Is Nothing Then
-    Set mComboLegs = New ComboLegs
-    If mLocked Then mComboLegs.locked = True
-End If
 Set ComboLegs = mComboLegs
 End Property
 
@@ -150,15 +119,6 @@ Public Property Get localSymbol() As String
 localSymbol = mLocalSymbol
 End Property
 
-Friend Property Let locked(ByVal value As Boolean)
-mLocked = value
-If Not mComboLegs Is Nothing Then mComboLegs.locked = mLocked
-End Property
-
-Friend Property Get locked() As Boolean
-locked = mLocked
-End Property
-
 Friend Property Let right(ByVal value As OptionRights)
 mRight = value
 End Property
@@ -195,31 +155,13 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Function clone() As ContractSpecifier
-Set clone = New ContractSpecifier
-With clone
-    If Not mComboLegs Is Nothing Then
-        .ComboLegs = mComboLegs.clone
-    End If
-    .currencyCode = mCurrency
-    .exchange = mExchange
-    .expiry = mExpiry
-    .localSymbol = mLocalSymbol
-    .right = mRight
-    .sectype = mSecType
-    .strike = mStrike
-    .symbol = mSymbol
-    .locked = mLocked
-End With
-End Function
-
 Public Function Equals(ByVal pContractSpecifier As ContractSpecifier) As Boolean
 If pContractSpecifier Is Me Then Equals = True
 Equals = (Me.key = pContractSpecifier.key)
 End Function
 
-Public Function FuyEquals(ByVal pContractSpecifier As ContractSpecifier) As Boolean
-FuyEquals = (Me.sectype = pContractSpecifier.sectype And _
+Public Function FuzzyEquals(ByVal pContractSpecifier As ContractSpecifier) As Boolean
+FuzzyEquals = (Me.sectype = pContractSpecifier.sectype And _
                 Me.symbol = pContractSpecifier.symbol)
 End Function
 

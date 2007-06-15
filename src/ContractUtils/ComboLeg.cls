@@ -82,17 +82,6 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Function clone() As ComboLeg
-Set clone = New ComboLeg
-With clone
-    .action = mAction
-    .contractID = mContractID
-    .exchange = mExchange
-    .openClose = mOpenClose
-    .ratio = mRatio
-End With
-End Function
-
 Friend Sub initialise( _
                 ByVal contractSpec As ContractSpecifier, _
                 ByVal isBuyLeg As Boolean, _
@@ -102,15 +91,13 @@ mIsBuyLeg = isBuyLeg
 mRatio = ratio
 End Sub
 
-'Public Function ToString() As String
-'
-'ToString = "action=" & gOrderActionToString(mAction) & "; " & _
-'            "contractid=" & mContractID & "; " & _
-'            "exchange=" & mExchange & "; " & _
-'            "openclose=" & mOpenClose & "; " & _
-'            "ratio=" & mRatio & "; "
-'
-'End Function
+Public Function ToString() As String
+
+ToString = "action=" & IIf(mIsBuyLeg, "BUY", "SELL") & "; " & _
+            "ratio=" & mRatio & "; " & _
+            "contractSpec=(" & mContractSpec.ToString & "); "
+
+End Function
 
 '@================================================================================
 ' Helper Functions

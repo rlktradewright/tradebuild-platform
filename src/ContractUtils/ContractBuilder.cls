@@ -70,51 +70,70 @@ Public Property Get Contract() As Contract
 Set Contract = mContract
 End Property
 
-Friend Property Let daysBeforeExpiryToSwitch(ByVal value As Long)
+Public Property Let daysBeforeExpiryToSwitch(ByVal value As Long)
 mContract.daysBeforeExpiryToSwitch = value
 End Property
 
-Friend Property Let description(ByVal value As String)
+Public Property Let description(ByVal value As String)
 mContract.description = value
 End Property
 
-Friend Property Let expiryDate(ByVal value As Date)
+Public Property Let expiryDate(ByVal value As Date)
 mContract.expiryDate = value
 End Property
 
-Friend Property Let multiplier(ByVal value As Long)
+Public Property Let multiplier(ByVal value As Long)
 mContract.multiplier = value
 End Property
 
-Friend Property Let providerIDs(ByRef value As Parameters)
+Public Property Let providerIDs(ByRef value As Parameters)
 mContract.providerIDs = value
 End Property
 
-Friend Property Let sessionStartTime(ByVal value As Date)
+Public Property Let sessionStartTime(ByVal value As Date)
 mContract.sessionStartTime = TimeValue(value)
 End Property
 
-Friend Property Let sessionEndTime(ByVal value As Date)
+Public Property Let sessionEndTime(ByVal value As Date)
 mContract.sessionEndTime = TimeValue(value)
 End Property
 
-Friend Property Let TickSize(ByVal value As Double)
+Public Property Let TickSize(ByVal value As Double)
 mContract.TickSize = value
 End Property
 
-Friend Property Let timezone( _
+Public Property Let timezone( _
                 ByVal value As timezone)
-Set mContract.timezone = value
+mContract.timezone = value
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
 
+Public Sub buildFrom( _
+                ByVal pContract As Contract)
+With mContract
+    .daysBeforeExpiryToSwitch = pContract.daysBeforeExpiryToSwitch
+    .description = pContract.description
+    .expiryDate = pContract.expiryDate
+    .multiplier = pContract.multiplier
+    .providerIDs = pContract.providerIDs
+    .sessionEndTime = pContract.sessionEndTime
+    .sessionStartTime = pContract.sessionStartTime
+    .specifier = pContract.specifier
+    .TickSize = pContract.TickSize
+    .timezone = pContract.timezone
+End With
+
+End Sub
+
 Public Sub initialise( _
                 ByVal specifier As ContractSpecifier)
 Set mContract = New Contract
 mContract.specifier = specifier
+mContract.timezone = CreateTimeZone("")
+mContract.daysBeforeExpiryToSwitch = 1
 End Sub
 
 '@================================================================================

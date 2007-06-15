@@ -88,7 +88,13 @@ Private Const ModuleName                    As String = "GlobalClass"
 Public Function CreateContractBuilder( _
                 ByVal specifier As ContractSpecifier) As ContractBuilder
 Set CreateContractBuilder = New ContractBuilder
-CreateContractBuilder.specifier = specifier
+CreateContractBuilder.initialise specifier
+End Function
+
+Public Function CreateContractsBuilder( _
+                ByVal specifier As ContractSpecifier) As ContractsBuilder
+Set CreateContractsBuilder = New ContractsBuilder
+CreateContractsBuilder.initialise specifier
 End Function
 
 Public Function CreateContractSpecifier( _
@@ -102,7 +108,7 @@ Public Function CreateContractSpecifier( _
                 Optional ByVal right As OptionRights = OptNone) As ContractSpecifier
 
 If localSymbol = "" And symbol = "" Then
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "CreateContractSpecifier", _
             "Symbol must be supplied if localSymbol is not supplied"
 End If
@@ -110,7 +116,7 @@ End If
 If exchange <> "" And _
     Not IsValidExchangeCode(exchange) _
 Then
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "CreateContractSpecifier", _
             "'" & exchange & "' is not a valid exchange code"
 End If
@@ -133,7 +139,7 @@ Case SecTypeOption, SecTypeFuturesOption
 '                    "expiry must be supplied"
     End If
     If strike < 0 Then
-        err.Raise ErrorCodes.ErrIllegalArgumentException, _
+        Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 ProjectName & "." & ModuleName & ":" & "CreateContractSpecifier", _
                 "strike must be > 0"
     End If
@@ -142,15 +148,18 @@ Case SecTypeOption, SecTypeFuturesOption
     Case OptPut
     Case OptNone
     Case Else
-        err.Raise ErrorCodes.ErrIllegalArgumentException, _
+        Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 ProjectName & "." & ModuleName & ":" & "CreateContractSpecifier", _
                 "'" & right & "' is not a valid option right"
     End Select
 Case SecTypeCash
-Case SecTypeBag
+Case SecTypeCombo
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "CreateContractSpecifier", _
+            "Sectype 'combo' is not permissible"
 Case SecTypeIndex
 Case Else
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "CreateContractSpecifier", _
             "'" & sectype & "' is not a valid secType"
 End Select
@@ -166,6 +175,20 @@ With CreateContractSpecifier
     .strike = strike
     .right = right
 End With
+End Function
+
+Public Function CreateContractFromXML( _
+                ByVal xmlString As String) As Contract
+Set CreateContractFromXML = New Contract
+CreateContractFromXML.FromXML xmlString
+End Function
+
+Public Function GetExchangeCodes() As String()
+GetExchangeCodes = gGetExchangeCodes
+End Function
+
+Public Function IsValidExchangeCode(ByVal code As String) As Boolean
+IsValidExchangeCode = gIsValidExchangeCode(code)
 End Function
 
 Public Function OptionRightFromString( _

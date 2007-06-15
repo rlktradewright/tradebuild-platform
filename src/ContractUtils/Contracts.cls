@@ -88,10 +88,6 @@ End Sub
 ' Properties
 '@================================================================================
 
-Friend Property Let ContractSpecifier(ByVal value As ContractSpecifier)
-Set mContractSpecifier = value
-End Property
-
 Public Property Get ContractSpecifier() As ContractSpecifier
 Set ContractSpecifier = mContractSpecifier
 End Property
@@ -104,18 +100,23 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub AddContract(ByVal pContract As Contract)
-mContracts.add pContract, pContract.specifier.key
+Friend Sub Add(ByVal pContract As Contract)
+mContracts.Add pContract, pContract.specifier.key
 fireChange CollItemAdded, pContract
 End Sub
 
 Public Sub addCollectionChangeListener( _
                 ByVal value As CollectionChangeListener)
-mChangeListeners.add value
+mChangeListeners.Add value
 End Sub
 
 Friend Sub ContractSpecifierInvalid(ByVal reason As String)
 RaiseEvent ContractSpecifierInvalid(reason)
+End Sub
+
+Friend Sub initialise( _
+                ByVal contractSpec As ContractSpecifier)
+Set mContractSpecifier = contractSpec
 End Sub
 
 Public Function item(ByVal index As Variant) As Contract
@@ -123,26 +124,24 @@ Attribute item.VB_UserMemId = 0
 Set item = mContracts(index)
 End Function
 
-Public Sub Load()
-Dim i As Long
-
-On Error GoTo err
-
-mContractSpecifier.locked = True
-
-' remove any current contents
-For i = mContracts.Count To 1 Step -1
-    mContracts.remove i
-Next
-
-mServiceProviders.LoadContracts Me
-
-Exit Sub
-err:
-err.Raise err.Number, _
-            "TradeBuild26.Contracts::Load", _
-            err.description
-End Sub
+'Public Sub Load()
+'Dim i As Long
+'
+'On Error GoTo err
+'
+'' remove any current contents
+'For i = mContracts.Count To 1 Step -1
+'    mContracts.remove i
+'Next
+'
+'mServiceProviders.LoadContracts Me
+'
+'Exit Sub
+'err:
+'err.Raise err.Number, _
+'            "TradeBuild26.Contracts::Load", _
+'            err.description
+'End Sub
 
 Friend Sub LoadComplete()
 RaiseEvent NoMoreContractDetails
@@ -160,14 +159,15 @@ RaiseEvent Notification(ev)
 End Sub
 
 
-Public Sub remove(ByVal index As Variant)
+Friend Sub remove(ByVal index As Variant)
 Dim lContract As Contract
 Set lContract = mContracts(index)
 mContracts.remove index
 fireChange CollItemRemoved, lContract
 End Sub
 
-Public Sub removeCollectionChangeListener(ByVal value As CollectionChangeListener)
+Public Sub removeCollectionChangeListener( _
+                ByVal value As CollectionChangeListener)
 Dim i As Long
 For i = mChangeListeners.Count To 1 Step -1
     If mChangeListeners.item(i) Is value Then mChangeListeners.remove i
@@ -175,8 +175,8 @@ Next
 End Sub
 
 Friend Sub serviceProviderCantHandle( _
-                            ByVal reason As String, _
-                            ByVal serviceProviderName As String)
+                ByVal reason As String, _
+                ByVal serviceProviderName As String)
 RaiseEvent TryLater(reason, serviceProviderName)
 End Sub
 
@@ -190,7 +190,7 @@ Private Sub fireChange( _
 Dim listener As CollectionChangeListener
 Dim i As Long
 Dim ev As CollectionChangeEvent
-Set ev.source = Me
+Set ev.Source = Me
 ev.changeType = changeType
 Set ev.affectedObject = affectedObject
 For i = 1 To mChangeListeners.Count

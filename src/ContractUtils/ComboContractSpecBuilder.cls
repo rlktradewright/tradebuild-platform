@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "ComboContractSpecBuilder"
+Attribute VB_Name = "ComboContractSpecBildr"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -49,6 +49,7 @@ Private Const ModuleName                    As String = "ComboContractSpecBuilde
 '@================================================================================
 
 Private mContractSpecifier                  As ContractSpecifier
+Private mComboLegs                          As ComboLegs
 
 '@================================================================================
 ' Class Event Handlers
@@ -57,6 +58,9 @@ Private mContractSpecifier                  As ContractSpecifier
 Private Sub Class_Initialize()
 Set mContractSpecifier = New ContractSpecifier
 mContractSpecifier.sectype = SecTypeCombo
+
+Set mComboLegs = New ComboLegs
+mContractSpecifier.ComboLegs = mComboLegs
 End Sub
 
 '@================================================================================
@@ -78,6 +82,18 @@ End Property
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Function addLeg( _
+                ByVal contractSpec As ContractSpecifier, _
+                ByVal isBuyLeg As Boolean, _
+                ByVal ratio As Long, _
+                Optional ByVal key As String) As ComboLeg
+Set addLeg = mComboLegs.addLeg(contractSpec, isBuyLeg, ratio, key)
+End Function
+
+Public Sub removeLeg(ByVal index As Variant)
+mComboLegs.remove index
+End Sub
 
 '@================================================================================
 ' Helper Functions

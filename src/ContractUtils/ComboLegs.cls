@@ -46,7 +46,6 @@ Event CollectionChanged( _
 '@================================================================================
 
 Private mComboLegs As Collection
-Private mLocked As Boolean
 
 Private mChangeListeners As Collection
 
@@ -75,14 +74,6 @@ Public Property Get Count() As Long
 Count = mComboLegs.Count
 End Property
 
-Friend Property Let locked(ByVal value As Boolean)
-mLocked = value
-End Property
-
-Friend Property Get locked() As Boolean
-locked = mLocked
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -102,31 +93,19 @@ Public Sub addCollectionChangeListener( _
 mChangeListeners.add value
 End Sub
 
-Public Function addLeg( _
+Friend Function addLeg( _
                 ByVal contractSpec As ContractSpecifier, _
                 ByVal isBuyLeg As Boolean, _
-                ByVal ratio As Long) As ComboLeg
-
-If mLocked Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
-                "TradeBuild26.ComboLegs::addLeg", _
-                "Can't add leg: the object is locked"
-End If
+                ByVal ratio As Long, _
+                ByVal key As String) As ComboLeg
 
 Set addLeg = New ComboLeg
-addLeg.initialise contractSpec, isBuyLeg, ration
-add addLeg
-End Function
-
-Friend Function clone() As ComboLegs
-Dim cl As ComboLeg
-Set clone = New ComboLegs
-For Each cl In mComboLegs
-    clone.add cl.clone
-Next
+addLeg.initialise contractSpec, isBuyLeg, ratio
+add addLeg, key
 End Function
 
 Public Function item(ByVal index As Variant) As ComboLeg
+Attribute item.VB_UserMemId = 0
 Dim theItem As ComboLeg
 Set theItem = mComboLegs(index)
 item = theItem
