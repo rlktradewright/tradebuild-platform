@@ -72,7 +72,7 @@ Private mRequestInProgress As Boolean
 
 Private mRequestId As Long
 
-Private mBarDataSpecifier  As TradeBuildSP.BarDataSpecifier
+Private mBarDataSpecifier  As TradeBuildSP.IBarDataSpecifier
 
 Private mWaitingForBarData As Boolean
 Private mBarRequested As Boolean
@@ -107,8 +107,8 @@ End Sub
 '================================================================================
 
 Private Property Get IBarDataReader_BarDataSpecifier( _
-                            ) As TradeBuildSP.BarDataSpecifier
-IBarDataReader_BarDataSpecifier = mBarDataSpecifier
+                            ) As TradeBuildSP.IBarDataSpecifier
+Set IBarDataReader_BarDataSpecifier = mBarDataSpecifier
 End Property
 
 Private Sub IBarDataReader_CancelFetch()
@@ -122,7 +122,7 @@ handleFatalError err.number, _
 End Sub
 
 Private Sub IBarDataReader_FetchBars( _
-                            barSpecifier As TradeBuildSP.BarDataSpecifier)
+                            ByVal barSpecifier As TradeBuildSP.IBarDataSpecifier)
 
 On Error GoTo err
 If mRequestInProgress Then err.Raise ErrorCodes.ErrIllegalStateException, _
@@ -147,13 +147,19 @@ Case Else
     Exit Sub
 End Select
 
+If barSpecifier.Contract.specifier.secType = SecTypeCombo Then
+    mServiceConsumer.NotifyEvent StandardSPEventCodes.HDRequestInvalid, _
+                            "Combo contracts not supported", _
+                            mHistDataServiceProvider.handle
+End If
+
 mRequestInProgress = True
 mWaitingForBarData = True
-mBarDataSpecifier = barSpecifier
+Set mBarDataSpecifier = barSpecifier
 
 Set mSessionBuilder = New SessionBuilder
-mSessionBuilder.SessionStartTime = mBarDataSpecifier.contract.SessionStartTime
-mSessionBuilder.SessionEndTime = mBarDataSpecifier.contract.SessionEndTime
+mSessionBuilder.sessionStartTime = mBarDataSpecifier.Contract.sessionStartTime
+mSessionBuilder.sessionEndTime = mBarDataSpecifier.Contract.sessionEndTime
 Set mSession = mSessionBuilder.Session
 
 If mTWSAPI Is Nothing Then

@@ -185,7 +185,8 @@ End Sub
 
 Private Function IOrderSubmissionSrvcProvider_CreateOrderSubmitter( _
                 ByVal serviceConsumer As TradeBuildSP.IOrderSubmissionSrvcConsumer, _
-                ByVal contract As TradeBuildSP.IContract) As TradeBuildSP.IOrderSubmitter
+                ByVal pContract As Contract) As TradeBuildSP.IOrderSubmitter
+
 Dim orderSubmitter As orderSubmitter
 
 On Error GoTo err
@@ -193,7 +194,7 @@ Set orderSubmitter = New orderSubmitter
 orderSubmitter.OrderSubmissionServiceProvider = Me
 orderSubmitter.commonServiceConsumer = mCommonServiceConsumer
 orderSubmitter.serviceConsumer = serviceConsumer
-orderSubmitter.contract = contract
+orderSubmitter.Contract = pContract
 orderSubmitter.server = mServer
 orderSubmitter.port = mPort
 orderSubmitter.clientID = mClientID
@@ -320,6 +321,5 @@ finishSubmitters
 
 Set mCommonServiceConsumer = Nothing
 End Sub
-
 
 

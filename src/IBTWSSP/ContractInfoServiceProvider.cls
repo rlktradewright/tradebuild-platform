@@ -99,7 +99,7 @@ Public Sub ContractDetailsRequester_cancelRequest( _
                 ByRef request As TWSContractDetailsRequestQueueEntry, _
                 ByVal reason As String)
 On Error GoTo err
-request.tradeBuildContracts.ServiceProviderCantHandle reason, mName
+request.tradeBuildContractsBuilder.unableToLoad reason, mName
 Exit Sub
 err:
 handleFatalError err.number, _
@@ -109,13 +109,13 @@ End Sub
 
 Private Sub ContractDetailsRequester_contractsLoaded( _
                 ByRef request As TWSContractDetailsRequestQueueEntry)
-Dim lContract As contract
+Dim lContractWrapper As contractWrapper
 
 On Error GoTo err
-For Each lContract In request.localContracts
-    request.tradeBuildContracts.AddContract lContract.tradeBuildContract
+For Each lContractWrapper In request.contractWrappers
+    request.tradeBuildContractsBuilder.AddContract lContractWrapper.tradeBuildContract
 Next
-mContractInfoServiceConsumer.LoadComplete mHandle, request.tradeBuildContracts
+mContractInfoServiceConsumer.LoadComplete mHandle, request.tradeBuildContractsBuilder
 Exit Sub
 err:
 handleFatalError err.number, _
@@ -129,7 +129,7 @@ Private Sub ContractDetailsRequester_contractSpecifierInvalid( _
 On Error GoTo err
 mContractInfoServiceConsumer.NotifyEvent StandardSPEventCodes.CIContractSpecifierInvalid, _
                                     reason, _
-                                    request.tradeBuildContracts, _
+                                    request.tradeBuildContractsBuilder, _
                                     mHandle
 Exit Sub
 err:
@@ -233,12 +233,12 @@ End Sub
 '================================================================================
 
 Private Property Let IContractInfoServiceProvider_ContractInfoServiceConsumer( _
-                            ByVal RHS As TradeBuildSP.IContractInfoServiceConsumer)
+                ByVal RHS As TradeBuildSP.IContractInfoServiceConsumer)
 Set mContractInfoServiceConsumer = RHS
 End Property
 
 Private Sub IContractInfoServiceProvider_RequestContractDetails( _
-                            ByVal pContracts As TradeBuildSP.IContracts)
+                ByVal pContractsBuilder As ContractsBuilder)
 
 On Error GoTo err
 If mTWSAPI Is Nothing Then
@@ -248,7 +248,9 @@ If mTWSAPI Is Nothing Then
     mTWSAPI.TWSLogLevel = mTWSLogLevel
 End If
 
-mTWSAPI.RequestContract pContracts.contractSpecifier, pContracts, Me
+mTWSAPI.RequestContract pContractsBuilder.Contracts.ContractSpecifier, _
+                        pContractsBuilder, _
+                        Me
 Exit Sub
 err:
 handleFatalError err.number, _
@@ -258,12 +260,12 @@ handleFatalError err.number, _
 End Sub
 
 Private Sub IContractInfoServiceProvider_StoreContractDetails( _
-                            ByVal pContract As TradeBuildSP.IContract)
+                ByVal pContract As ContractUtils26.Contract)
 
 End Sub
 
 Private Function IContractInfoServiceProvider_Supports( _
-                            ByVal capabilities As Long) As Boolean
+                ByVal capabilities As Long) As Boolean
 Dim supportedCapabilities As Long
 
 IContractInfoServiceProvider_Supports = supportedCapabilities And capabilities
@@ -274,7 +276,9 @@ End Function
 ' mTWSAPI Event Handlers
 '================================================================================
 
-Private Sub mTWSAPI_ConnectFailed(ByVal Description As String, ByVal retrying As Boolean)
+Private Sub mTWSAPI_ConnectFailed( _
+                ByVal Description As String, _
+                ByVal retrying As Boolean)
 On Error GoTo err
 If retrying Then
     mContractInfoServiceConsumer.NotifyEvent StandardSPEventCodes.CIRetryConnectDataSource, _

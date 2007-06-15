@@ -59,7 +59,7 @@ Public Enum TickTypes
     prevClose
     High
     Low
-    openInterest
+    OpenInterest
 End Enum
 
 Public Enum TWSBarSizes
@@ -152,6 +152,20 @@ End Enum
 ' Types
 '================================================================================
 
+Public Type Execution
+    execId         As String
+    Time           As Date
+    AccountIdentifier As String
+    ContractSpecifier As ContractSpecifier
+    FillingExchange As String
+    Action         As OrderActions
+    Quantity       As Long
+    Price          As Double
+    OrderBrokerId  As String
+    OrderTradeBuildId  As String
+    IsLiquidation  As Boolean
+End Type
+
 Public Type HistoricBar
     timestamp       As Date
     openValue       As Double
@@ -169,15 +183,15 @@ Public Type OrderIdMapEntry
 End Type
 
 Public Type TWSContractDetailsRequestQueueEntry
-    contractSpec                As TradeBuildSP.IContractSpecifier
-    tradeBuildContracts         As TradeBuildSP.IContracts
-    localContracts              As Collection
+    contractSpec                As ContractSpecifier
+    tradeBuildContractsBuilder  As ContractsBuilder
+    contractWrappers            As Collection
     requester                   As ContractDetailsRequester
 End Type
 
 Public Type TWSHistoricalDataRequestQueueEntry
     id                      As Long
-    contractSpec            As TradeBuildSP.IContractSpecifier
+    contractSpec            As ContractSpecifier
     endDateTime             As String
     barSizeSetting          As TWSBarSizes
     duration                As String
@@ -189,7 +203,7 @@ Public Type TWSSocketMsgTickPrice
     version         As Long
     tickerid        As Long
     tickType        As TWSSocketTickTypes
-    price           As Double
+    Price           As Double
     size            As Long
 End Type
 
@@ -228,15 +242,15 @@ Public Type TWSSocketMsgOpenOrder
     version         As Long
     orderId         As Long
     symbol          As String
-    sectype         As String
+    secType         As String
     expiry          As String
     strike          As Double
     right           As String
     exchange        As String
     currencyCode    As String
     localSymbol     As String
-    action          As String
-    quantity        As Long
+    Action          As String
+    Quantity        As Long
     orderType       As String
     limitPrice      As Double
     auxPrice        As Double
@@ -272,7 +286,7 @@ Public Type TWSSocketMsgPortfolioValue
     msgType         As TWSSocketInMsgTypes
     version         As Long
     symbol          As String
-    sectype         As String
+    secType         As String
     expiry          As String
     strike          As Double
     right           As String
@@ -303,7 +317,7 @@ Public Type TWSSocketMsgContractData
     msgType         As TWSSocketInMsgTypes
     version         As Long
     symbol          As String
-    sectype         As String
+    secType         As String
     expiry          As String
     strike          As Double
     right           As String
@@ -312,7 +326,7 @@ Public Type TWSSocketMsgContractData
     localSymbol     As String
     marketName      As String
     tradingClass    As String
-    contractID      As Long
+    contractId      As Long
     minimumTick     As Double
     multiplier      As Long
     OrderTypes      As String
@@ -324,7 +338,7 @@ Public Type TWSSocketMsgExecutionData
     version         As Long
     orderId         As Long
     symbol          As String
-    sectype         As String
+    secType         As String
     expiry          As String
     strike          As Double
     right           As String
@@ -332,12 +346,12 @@ Public Type TWSSocketMsgExecutionData
     currencyCode    As String
     localSymbol     As String
     execId          As String
-    time            As String
+    Time            As String
     accountNumber   As String
     execExchange    As String
     side            As String
-    quantity        As Long
-    price           As Double
+    Quantity        As Long
+    Price           As Double
     permId          As Long
     clientID        As Long
 End Type
@@ -349,7 +363,7 @@ Public Type TWSSocketMsgMarketDepth
     position        As Long
     operation       As Long
     side            As Long
-    price           As Double
+    Price           As Double
     size            As Long
 End Type
 
@@ -361,7 +375,7 @@ Public Type TWSSocketMsgMarketDepthL2
     marketmaker     As String
     operation       As Long
     side            As Long
-    price           As Double
+    Price           As Double
     size            As Long
 End Type
 

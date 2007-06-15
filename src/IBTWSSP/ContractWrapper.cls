@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "Contract"
+Attribute VB_Name = "ContractWrapper"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -50,13 +50,14 @@ Option Explicit
 ' Member variables
 '================================================================================
 
-Private mTradeBuildContract As TradeBuildSP.IContract
+Private mTradeBuildContract             As Contract
 
 Private mPermittedOrderAttributes       As Long
 Private mPermittedOrderTifs             As Long
 Private mPermittedOrderTypes            As Long
 Private mPermittedStopTriggerMethods    As Long
 Private mPriceMagnifier                 As Long
+Private mContractId                     As String
 
 '================================================================================
 ' Class Event Handlers
@@ -73,6 +74,15 @@ Private mPriceMagnifier                 As Long
 '================================================================================
 ' Properties
 '================================================================================
+
+Friend Property Let contractId( _
+                ByVal value As String)
+mContractId = value
+End Property
+
+Friend Property Get contractId() As String
+contractId = mContractId
+End Property
 
 Friend Property Let permittedOrderAttributes( _
                 ByVal value As Long)
@@ -118,11 +128,11 @@ Friend Property Get priceMagnifier() As Long
 priceMagnifier = mPriceMagnifier
 End Property
 
-Friend Property Let tradeBuildContract(ByVal value As TradeBuildSP.IContract)
+Friend Property Let tradeBuildContract(ByVal value As Contract)
 Set mTradeBuildContract = value
 End Property
 
-Friend Property Get tradeBuildContract() As TradeBuildSP.IContract
+Friend Property Get tradeBuildContract() As Contract
 Set tradeBuildContract = mTradeBuildContract
 End Property
 

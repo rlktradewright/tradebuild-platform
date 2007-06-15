@@ -58,8 +58,8 @@ Private mOrderSubmissionServiceProvider As OrderSubmissionSrvcProvider
 Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mServiceConsumer As TradeBuildSP.IOrderSubmissionSrvcConsumer
 
-Private mTradeBuildContract As TradeBuildSP.IContract
-Private mContract As contract
+Private mTradeBuildContract As Contract
+Private mContractWrapper As contractWrapper
 
 Private mName As String
 
@@ -97,8 +97,8 @@ End Sub
 
 Private Sub ContractDetailsRequester_contractsLoaded( _
                 ByRef request As TWSContractDetailsRequestQueueEntry)
-If request.localContracts.Count = 1 Then
-    Set mContract = request.localContracts(1)
+If request.contractWrappers.Count = 1 Then
+    Set mContractWrapper = request.contractWrappers(1)
     mServiceConsumer.Ready
 Else
     mServiceConsumer.NotifyEvent StandardSPEventCodes.LONotUniqueContract, _
@@ -327,19 +327,19 @@ handleFatalError err.number, _
 End Sub
 
 Private Property Get IOrderSubmitter_permittedOrderAttributes() As Long
-IOrderSubmitter_permittedOrderAttributes = mContract.permittedOrderAttributes
+IOrderSubmitter_permittedOrderAttributes = mContractWrapper.permittedOrderAttributes
 End Property
 
 Private Property Get IOrderSubmitter_permittedOrderTifs() As Long
-IOrderSubmitter_permittedOrderTifs = mContract.permittedOrderTifs
+IOrderSubmitter_permittedOrderTifs = mContractWrapper.permittedOrderTifs
 End Property
 
 Private Property Get IOrderSubmitter_permittedOrderTypes() As Long
-IOrderSubmitter_permittedOrderTypes = mContract.permittedOrderTypes
+IOrderSubmitter_permittedOrderTypes = mContractWrapper.permittedOrderTypes
 End Property
 
 Private Property Get IOrderSubmitter_permittedStopTriggerMethods() As Long
-IOrderSubmitter_permittedStopTriggerMethods = mContract.permittedStopTriggerMethods
+IOrderSubmitter_permittedStopTriggerMethods = mContractWrapper.permittedStopTriggerMethods
 End Property
 
 Private Sub IOrderSubmitter_resubmitStopAndTargetOrders(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
@@ -418,7 +418,7 @@ Private Sub mTWSAPI_Connected()
 mServiceConsumer.NotifyEvent StandardSPEventCodes.LOConnectedToBroker, _
                         "Connected to " & mTWSAPI.connectionString, _
                         mOrderSubmissionServiceProvider.handle
-If Not mContract Is Nothing Then mServiceConsumer.Ready
+If Not mContractWrapper Is Nothing Then mServiceConsumer.Ready
 End Sub
 
 Private Sub mTWSAPI_ConnectFailed(ByVal Description As String, ByVal retrying As Boolean)
@@ -432,7 +432,7 @@ Else
                             Description, _
                             mOrderSubmissionServiceProvider.handle
 End If
-mServiceConsumer.notReady
+mServiceConsumer.NotReady
 Exit Sub
 err:
 handleFatalError err.number, _
@@ -445,7 +445,7 @@ On Error GoTo err
 mServiceConsumer.NotifyEvent StandardSPEventCodes.LOReConnectingToBroker, _
                         "Lost connection from TWS to IB servers", _
                         mOrderSubmissionServiceProvider.handle
-mServiceConsumer.notReady
+mServiceConsumer.NotReady
 Exit Sub
 err:
 handleFatalError err.number, _
@@ -455,7 +455,7 @@ End Sub
 
 Private Sub mTWSAPI_ConnectionToIBRecovered()
 On Error GoTo err
-If Not mContract Is Nothing Then mServiceConsumer.Ready
+If Not mContractWrapper Is Nothing Then mServiceConsumer.Ready
 Exit Sub
 err:
 handleFatalError err.number, _
@@ -474,7 +474,7 @@ Else
                             "Lost connection to TWS (reconnecting)", _
                             mOrderSubmissionServiceProvider.handle
 End If
-mServiceConsumer.notReady
+mServiceConsumer.NotReady
 End Sub
 
 Private Sub mTWSAPI_Disconnected(ByVal reason As String)
@@ -508,7 +508,7 @@ Friend Property Get connectionRetryIntervalSecs() As Long
 connectionRetryIntervalSecs = mConnectionRetryIntervalSecs
 End Property
 
-Friend Property Let contract(ByVal value As TradeBuildSP.IContract)
+Friend Property Let Contract(ByVal value As ContractUtils26.Contract)
 Set mTradeBuildContract = value
 End Property
 
@@ -554,9 +554,28 @@ End Property
 '================================================================================
 
 Friend Sub executionDetails( _
-                ByVal pContractSpecifier As TradeBuildSP.IContractSpecifier, _
-                ByVal exec As TradeBuildSP.IExecution)
-mServiceConsumer.executionDetails pContractSpecifier, exec
+                ByVal pContractSpecifier As ContractSpecifier, _
+                ByVal AccountIdentifier As String, _
+                ByVal Action As TradeBuildSP.OrderActions, _
+                ByVal execId As String, _
+                ByVal FillingExchange As String, _
+                ByVal IsLiquidation As Boolean, _
+                ByVal OrderBrokerId As String, _
+                ByVal OrderTradeBuildId As String, _
+                ByVal Price As Double, _
+                ByVal Quantity As Long, _
+                ByVal fillTime As Date)
+mServiceConsumer.executionDetails pContractSpecifier, _
+                                AccountIdentifier, _
+                                Action, _
+                                execId, _
+                                FillingExchange, _
+                                IsLiquidation, _
+                                OrderBrokerId, _
+                                OrderTradeBuildId, _
+                                Price, _
+                                Quantity, _
+                                fillTime
 End Sub
 
 Friend Sub finish()

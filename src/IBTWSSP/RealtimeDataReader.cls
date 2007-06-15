@@ -58,7 +58,7 @@ Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mServiceConsumer As IRealtimeDataInputServiceConsumer
 Private mDataConsumer As IStreamingDataConsumer
 
-Private mContract As TradeBuildSP.IContract
+Private mContract As Contract
 Private mTickerId As Long
 Private mIncludeMarketDepth As Boolean
 
@@ -95,7 +95,7 @@ End Sub
 '================================================================================
 
 Private Sub IRealtimeDataReader_StartData( _
-                ByVal contract As TradeBuildSP.IContract, _
+                ByVal Contract As ContractUtils26.Contract, _
                 ByVal DomEventsRequired As TradeBuildSP.DOMEventTypes)
 
 On Error GoTo err
@@ -108,7 +108,14 @@ Else
     "Only market depth by position is supported"
 End If
 
-Set mContract = contract
+Set mContract = Contract
+
+If mContract.specifier.secType = SecTypeCombo Then
+        mServiceConsumer.NotifyEvent StandardSPEventCodes.RTRequestInvalid, _
+                                "Realtime data for Combo contracts not supported", _
+                                mRealtimeDataServiceProvider.handle
+End If
+
 If mTWSAPI Is Nothing Then
     Set mTWSAPI = gGetTWSAPIInstance(mServer, mPort, mClientID, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection)
     mTWSAPI.logLevel = mLogLevel
