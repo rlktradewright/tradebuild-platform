@@ -67,12 +67,11 @@
     </StudyLibraries>
   </TradeBuildStudyLibraries>
   <DataCollectorConfiguration __ItemType="set">
-    <TickDataFormat __ItemType="item" Enabled="True">
+    <CollectionControl  __ItemType="item"  WriteTickData="True" WriteBarData="True" />
+    <TickDataFormat __ItemType="item">
       <!--Set to: "TradeBuild SQLDB" (for database output)
         "TradeBuild V4" (for file output)
-      -->
-      TradeBuild SQLDB
-    </TickDataFormat>
+      -->TradeBuild SQLDB</TickDataFormat>
     <TickfilePath __ItemType="item">
       <!--If no value is specified, tick files will be placed in a folder tree 
 whose root is called TickFiles and which sits below the folder that 
@@ -80,24 +79,40 @@ the program is loaded from. This value is ignored where output is to
 database.
       -->
     </TickfilePath>
-    <Timeframes __ItemType="list" Enabled="True" __ListItemName="Timeframe">
-      <Timeframe __ItemType="item" Length="1" Units="Mins" SaveInterval="15" />
-      <Timeframe __ItemType="item" Length="5" Units="Mins" SaveInterval="30" />
-      <Timeframe __ItemType="item" Length="15" Units="Mins" SaveInterval="60" />
-      <Timeframe __ItemType="item" Length="60" Units="Mins" SaveInterval="60" />
-    </Timeframes>
     <Contracts __ItemType="list" __ListItemName="Contract">
-      <Contract __ItemType="item" Enabled="True" LocalSymbol="ZM7" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
-      <Contract __ItemType="item" Enabled="True" LocalSymbol="ESM7" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
-      <Contract __ItemType="item" Enabled="True" LocalSymbol="NQM7" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
-      <Contract __ItemType="item" Enabled="True" LocalSymbol="ER2M7" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
-      <Contract __ItemType="item" Enabled="True" LocalSymbol="YM   JUN 07" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
-      <Contract __ItemType="item" Enabled="True" LocalSymbol="ZB   JUN 07" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
-      <Contract __ItemType="item" Enabled="True" LocalSymbol="FDAX JUN 07" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
-      <Contract __ItemType="item" Enabled="True" LocalSymbol="FESX JUN 07" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
-      <Contract __ItemType="item" Enabled="True" LocalSymbol="FGBL JUN 07" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
-      <Contract __ItemType="item" Enabled="True" LocalSymbol="6EM7" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
-      <Contract __ItemType="item" Enabled="True" LocalSymbol="6BM7" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
+      <Contract __ItemType="set" Enabled="True" WriteBidAndAskBars="False">
+        <ContractSpecifier __ItemType="item" LocalSymbol="ZM7" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
+      </Contract>
+      <Contract __ItemType="set" Enabled="True" WriteBidAndAskBars="False">
+        <ContractSpecifier __ItemType="item" LocalSymbol="ESM7" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
+      </Contract>
+      <Contract __ItemType="set" Enabled="True" WriteBidAndAskBars="False">
+        <ContractSpecifier __ItemType="item" LocalSymbol="NQM7" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
+      </Contract>
+      <Contract __ItemType="set" Enabled="True" WriteBidAndAskBars="False">
+        <ContractSpecifier __ItemType="item" LocalSymbol="ER2M7" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
+      </Contract>
+      <Contract __ItemType="set" Enabled="True" WriteBidAndAskBars="False">
+        <ContractSpecifier __ItemType="item" LocalSymbol="YM   JUN 07" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
+      </Contract>
+      <Contract __ItemType="set" Enabled="True" WriteBidAndAskBars="False">
+        <ContractSpecifier __ItemType="item" LocalSymbol="ZB   JUN 07" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
+      </Contract>
+      <Contract __ItemType="set" Enabled="True" WriteBidAndAskBars="False">
+        <ContractSpecifier __ItemType="item" LocalSymbol="FDAX JUN 07" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
+      </Contract>
+      <Contract __ItemType="set" Enabled="True" WriteBidAndAskBars="False">
+        <ContractSpecifier __ItemType="item" LocalSymbol="FESX JUN 07" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
+      </Contract>
+      <Contract __ItemType="set" Enabled="True" WriteBidAndAskBars="False">
+        <ContractSpecifier __ItemType="item" LocalSymbol="FGBL JUN 07" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
+      </Contract>
+      <Contract __ItemType="set" Enabled="True" WriteBidAndAskBars="False">
+        <ContractSpecifier __ItemType="item" LocalSymbol="6EM7" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
+      </Contract>
+      <Contract __ItemType="set" Enabled="True" WriteBidAndAskBars="False">
+        <ContractSpecifier __ItemType="item" LocalSymbol="6BM7" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
+      </Contract>
     </Contracts>
   </DataCollectorConfiguration>
 </Configuration>

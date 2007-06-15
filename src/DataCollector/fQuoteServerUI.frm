@@ -1,44 +1,77 @@
 VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
+Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.Form fDataCollectorUI 
    Caption         =   "TradeBuild Data Collector Version 2.6"
-   ClientHeight    =   3945
+   ClientHeight    =   4230
    ClientLeft      =   60
    ClientTop       =   390
    ClientWidth     =   5280
    LinkTopic       =   "Form1"
-   ScaleHeight     =   3945
+   ScaleHeight     =   4230
    ScaleWidth      =   5280
    StartUpPosition =   3  'Windows Default
-   Begin VB.CommandButton ShowHideMonitorButton 
-      Caption         =   "Show activity monitor"
-      Height          =   255
-      Left            =   2040
-      TabIndex        =   10
-      Top             =   360
-      Width           =   1815
+   Begin MSComctlLib.StatusBar StatusBar1 
+      Align           =   2  'Align Bottom
+      Height          =   375
+      Left            =   0
+      TabIndex        =   23
+      Top             =   3855
+      Width           =   5280
+      _ExtentX        =   9313
+      _ExtentY        =   661
+      _Version        =   393216
+      BeginProperty Panels {8E3867A5-8586-11D1-B16A-00C0F0283628} 
+         NumPanels       =   1
+         BeginProperty Panel1 {8E3867AB-8586-11D1-B16A-00C0F0283628} 
+            AutoSize        =   1
+            Object.Width           =   8784
+         EndProperty
+      EndProperty
+   End
+   Begin VB.TextBox SecsSinceLastTickText 
+      Alignment       =   1  'Right Justify
+      Height          =   285
+      Left            =   1200
+      Locked          =   -1  'True
+      TabIndex        =   20
+      TabStop         =   0   'False
+      ToolTipText     =   "The number of seconds since the last tick received"
+      Top             =   120
+      Width           =   615
    End
    Begin VB.TextBox TicksPerSecText 
       Alignment       =   1  'Right Justify
       Height          =   285
-      Left            =   1320
+      Left            =   1200
       Locked          =   -1  'True
-      TabIndex        =   8
+      TabIndex        =   19
       TabStop         =   0   'False
+      ToolTipText     =   "The number of ticks received during the last second"
       Top             =   360
       Width           =   615
+   End
+   Begin VB.CommandButton ShowHideMonitorButton 
+      Caption         =   "Show activity monitor"
+      Height          =   375
+      Left            =   2040
+      TabIndex        =   6
+      ToolTipText     =   "Shows or hides the activity monitor"
+      Top             =   360
+      Width           =   1815
    End
    Begin TabDlg.SSTab ActivityMonitor 
       Height          =   3135
       Left            =   0
-      TabIndex        =   5
+      TabIndex        =   3
       Top             =   720
       Width           =   5295
       _ExtentX        =   9340
       _ExtentY        =   5530
       _Version        =   393216
+      Style           =   1
       Tabs            =   2
-      TabHeight       =   415
+      TabHeight       =   494
       ForeColor       =   -2147483630
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
          Name            =   "MS Sans Serif"
@@ -69,7 +102,7 @@ Begin VB.Form fDataCollectorUI
          Left            =   120
          ScaleHeight     =   2625
          ScaleWidth      =   4785
-         TabIndex        =   11
+         TabIndex        =   7
          Top             =   360
          Width           =   4815
          Begin VB.PictureBox TickersPicture 
@@ -80,7 +113,7 @@ Begin VB.Form fDataCollectorUI
             Left            =   0
             ScaleHeight     =   285
             ScaleWidth      =   4815
-            TabIndex        =   12
+            TabIndex        =   8
             Top             =   0
             Width           =   4815
             Begin VB.TextBox ShortNameText 
@@ -89,7 +122,7 @@ Begin VB.Form fDataCollectorUI
                Left            =   3840
                Locked          =   -1  'True
                MousePointer    =   1  'Arrow
-               TabIndex        =   17
+               TabIndex        =   13
                TabStop         =   0   'False
                Top             =   0
                Visible         =   0   'False
@@ -101,7 +134,7 @@ Begin VB.Form fDataCollectorUI
                Left            =   0
                Locked          =   -1  'True
                MousePointer    =   1  'Arrow
-               TabIndex        =   16
+               TabIndex        =   12
                TabStop         =   0   'False
                Top             =   0
                Visible         =   0   'False
@@ -113,7 +146,7 @@ Begin VB.Form fDataCollectorUI
                Left            =   960
                Locked          =   -1  'True
                MousePointer    =   1  'Arrow
-               TabIndex        =   15
+               TabIndex        =   11
                TabStop         =   0   'False
                Top             =   0
                Visible         =   0   'False
@@ -125,7 +158,7 @@ Begin VB.Form fDataCollectorUI
                Left            =   1920
                Locked          =   -1  'True
                MousePointer    =   1  'Arrow
-               TabIndex        =   14
+               TabIndex        =   10
                TabStop         =   0   'False
                Top             =   0
                Visible         =   0   'False
@@ -137,7 +170,7 @@ Begin VB.Form fDataCollectorUI
                Left            =   2880
                Locked          =   -1  'True
                MousePointer    =   1  'Arrow
-               TabIndex        =   13
+               TabIndex        =   9
                TabStop         =   0   'False
                Top             =   0
                Visible         =   0   'False
@@ -147,7 +180,7 @@ Begin VB.Form fDataCollectorUI
                Height          =   285
                Index           =   4
                Left            =   4560
-               TabIndex        =   22
+               TabIndex        =   18
                Top             =   0
                Width           =   255
             End
@@ -155,7 +188,7 @@ Begin VB.Form fDataCollectorUI
                Height          =   285
                Index           =   0
                Left            =   720
-               TabIndex        =   21
+               TabIndex        =   17
                Top             =   0
                Width           =   255
             End
@@ -163,7 +196,7 @@ Begin VB.Form fDataCollectorUI
                Height          =   285
                Index           =   3
                Left            =   3600
-               TabIndex        =   20
+               TabIndex        =   16
                Top             =   0
                Width           =   255
             End
@@ -171,7 +204,7 @@ Begin VB.Form fDataCollectorUI
                Height          =   285
                Index           =   2
                Left            =   2640
-               TabIndex        =   19
+               TabIndex        =   15
                Top             =   0
                Width           =   255
             End
@@ -179,7 +212,7 @@ Begin VB.Form fDataCollectorUI
                Height          =   285
                Index           =   1
                Left            =   1680
-               TabIndex        =   18
+               TabIndex        =   14
                Top             =   0
                Width           =   255
             End
@@ -190,33 +223,24 @@ Begin VB.Form fDataCollectorUI
          Left            =   -74880
          MultiLine       =   -1  'True
          ScrollBars      =   3  'Both
-         TabIndex        =   7
+         TabIndex        =   5
          Top             =   360
          Width           =   5055
       End
       Begin VB.VScrollBar TickerScroll 
          Height          =   2700
          Left            =   4920
-         TabIndex        =   6
+         TabIndex        =   4
          Top             =   360
          Width           =   255
       End
-   End
-   Begin VB.TextBox SecsSinceLastTickText 
-      Alignment       =   1  'Right Justify
-      Height          =   285
-      Left            =   1320
-      Locked          =   -1  'True
-      TabIndex        =   4
-      TabStop         =   0   'False
-      Top             =   120
-      Width           =   615
    End
    Begin VB.CommandButton StartStopButton 
       Caption         =   "Start"
       Height          =   495
       Left            =   4560
       TabIndex        =   0
+      ToolTipText     =   "Starts or stops data collection"
       Top             =   120
       Width           =   615
    End
@@ -227,35 +251,39 @@ Begin VB.Form fDataCollectorUI
       Locked          =   -1  'True
       TabIndex        =   1
       TabStop         =   0   'False
+      ToolTipText     =   "Indicates the health of the connection to the realtime data source: green is ok, red is error"
       Top             =   120
       Width           =   255
    End
-   Begin VB.Label Label3 
-      Alignment       =   1  'Right Justify
-      Caption         =   "Ticks per sec"
-      Height          =   255
-      Left            =   240
-      TabIndex        =   9
-      Top             =   360
-      Width           =   975
-   End
    Begin VB.Label Label2 
       Alignment       =   1  'Right Justify
+      BackStyle       =   0  'Transparent
       Caption         =   "Secs no data"
       Height          =   255
-      Left            =   240
-      TabIndex        =   3
+      Left            =   120
+      TabIndex        =   22
       Top             =   120
+      Width           =   975
+   End
+   Begin VB.Label Label3 
+      Alignment       =   1  'Right Justify
+      BackStyle       =   0  'Transparent
+      Caption         =   "Ticks per sec"
+      Height          =   255
+      Left            =   120
+      TabIndex        =   21
+      Top             =   360
       Width           =   975
    End
    Begin VB.Label Label1 
       Alignment       =   1  'Right Justify
+      BackStyle       =   0  'Transparent
       Caption         =   "Connection status"
       Height          =   255
-      Left            =   1920
+      Left            =   2040
       TabIndex        =   2
       Top             =   120
-      Width           =   1455
+      Width           =   1335
    End
 End
 Attribute VB_Name = "fDataCollectorUI"
@@ -316,7 +344,6 @@ End Type
 
 Private WithEvents mDataCollector As TBDataCollector
 Attribute mDataCollector.VB_VarHelpID = -1
-Private mStop As Boolean
 
 Private mTickers() As TickerTableEntry
 
@@ -343,6 +370,8 @@ Private mLinesToScroll As Integer
 
 Private mLineSpacing As Integer
 
+Private mStartStopTimePanel As Panel
+
 '================================================================================
 ' Form Event Handlers
 '================================================================================
@@ -354,6 +383,7 @@ ReDim mTickers(99) As TickerTableEntry
 End Sub
 
 Private Sub Form_Load()
+Set mStartStopTimePanel = StatusBar1.Panels.Item(1)
 mStartStopButtonInitialLeft = StartStopButton.Left
 TickerScroll.Min = TickerScrollMin
 TickerScroll.Max = TickerScrollMax
@@ -369,7 +399,6 @@ End Sub
 
 Private Sub Form_Terminate()
 TerminateTWUtilities
-TerminateTimerUtils
 End Sub
 
 '================================================================================
@@ -412,12 +441,12 @@ End Sub
 ' StateChangeListener Interface Members
 '================================================================================
 
-Private Sub StateChangeListener_Change(ev As TWUtilities.StateChangeEvent)
+Private Sub StateChangeListener_Change(ev As StateChangeEvent)
 Dim tli As TimerListItem
 
 Set tli = ev.Source
 If Not tli Is Nothing Then
-    If ev.state = TimerListItemStates.TimerListItemStateExpired Then
+    If ev.State = TimerListItemStates.TimerListItemStateExpired Then
         switchDataLightOff tli.Data
         Set mTickers(tli.Data).tli = Nothing
     End If
@@ -502,6 +531,44 @@ End Sub
 ' mDataCollector Event Handlers
 '================================================================================
 
+Private Sub mDataCollector_CollectionStarted()
+Dim s As String
+If mDataCollector.nextEndTime <> 0 Then
+    s = "Collection end: " & _
+        FormatDateTime(mDataCollector.nextEndTime, vbShortDate) & " " & _
+        FormatDateTime(mDataCollector.nextEndTime, vbShortTime)
+End If
+If mDataCollector.exitProgramTime <> 0 Then
+    s = IIf(s = "", "P", s & "; p") & _
+        "rogram exit: " & _
+        FormatDateTime(mDataCollector.exitProgramTime, vbShortDate) & " " & _
+        FormatDateTime(mDataCollector.exitProgramTime, vbShortTime)
+End If
+
+mStartStopTimePanel.text = s
+
+setStarted
+End Sub
+
+Private Sub mDataCollector_CollectionStopped()
+Dim s As String
+If mDataCollector.nextStartTime <> 0 Then
+    s = "Collection start: " & _
+        FormatDateTime(mDataCollector.nextStartTime, vbShortDate) & " " & _
+        FormatDateTime(mDataCollector.nextStartTime, vbShortTime)
+End If
+If mDataCollector.exitProgramTime <> 0 Then
+    s = IIf(s = "", "P", s & "; p") & _
+        "rogram exit: " & _
+        FormatDateTime(mDataCollector.exitProgramTime, vbShortDate) & " " & _
+        FormatDateTime(mDataCollector.exitProgramTime, vbShortTime)
+End If
+
+mStartStopTimePanel.text = s
+
+setStopped
+End Sub
+
 Private Sub mDataCollector_connected()
 ConnectionStatusText.BackColor = vbGreen
 logMessage "Connected ok to realtime data source"
@@ -524,6 +591,10 @@ Private Sub mDataCollector_ErrorMessage( _
                 ByVal errorMsg As String)
 
 logMessage "Error " & errorCode & ": " & errorMsg
+End Sub
+
+Private Sub mDataCollector_ExitProgram()
+Unload Me
 End Sub
 
 Private Sub mDataCollector_Info(ev As InfoEvent)
@@ -583,13 +654,10 @@ DataLightLabel(index).Visible = True
 
 ticker.addQuoteListener Me
 ticker.addTickfileWriterListener Me
+ticker.addBarWriterListener Me
 
 Me.Refresh
 
-End Sub
-
-Private Sub mDataCollector_TimeframeAdded(ByVal tf As Timeframe)
-tf.addBarWriterListener Me
 End Sub
 
 '================================================================================
@@ -603,7 +671,7 @@ If timerCount Mod 4 = 0 Then
     TicksPerSecText = mTickCount
     mTickCount = 0
 End If
-SecsSinceLastTickText = Format(86400 * (GetTimestamp - mLastTickTime), "0")
+SecsSinceLastTickText = Format(86400 * (getTimestamp - mLastTickTime), "0")
 End Sub
 
 '================================================================================
@@ -619,15 +687,24 @@ End Property
 
 Friend Sub initialise( _
                 ByVal pDataCollector As TBDataCollector, _
-                ByVal autoStart As Boolean, _
+                ByVal noAutoStart As Boolean, _
                 ByVal showMonitor As Boolean)
 
 Set mDataCollector = pDataCollector
 
 If Not showMonitor Then hideActivityMonitor
 
-If autoStart Then startCollecting "Data collection started automatically"
+If Not noAutoStart Then
+    If mDataCollector.nextStartTime = 0 Then
+        startCollecting "Data collection started automatically"
+    End If
+End If
 
+If mDataCollector.exitProgramTime <> 0 Then
+    mStartStopTimePanel.text = "Program exit: " & _
+                                FormatDateTime(mDataCollector.exitProgramTime, vbShortDate) & " " & _
+                                FormatDateTime(mDataCollector.exitProgramTime, vbShortTime)
+End If
 End Sub
 
 '================================================================================
@@ -646,8 +723,9 @@ End Sub
 Private Sub hideActivityMonitor()
 ShowHideMonitorButton.Caption = "Show activity monitor"
 mAdjustingSize = True
-Me.Height = Me.Height - ActivityMonitor.Height - 120
+Me.Height = Me.Height - ActivityMonitor.Height
 mAdjustingSize = False
+ActivityMonitor.Visible = False
 mActivityMonitorVisible = False
 End Sub
     
@@ -657,7 +735,7 @@ If Len(LogText.text) > (32000 - Len(text)) Then
 Else
     LogText.text = LogText.text & vbCrLf & Format(Now, "hh:mm:ss") & "  " & text
 End If
-LogText.SelStart = InStrRev(LogText.text, vbCrLf)
+LogText.SelStart = InStrRev(LogText.text, vbCrLf) + 2
 End Sub
 
 Private Sub processQuoteEvent( _
@@ -665,7 +743,7 @@ Private Sub processQuoteEvent( _
 Dim lTicker As ticker
 Set lTicker = ev.Source
 switchDataLightOn lTicker.Handle
-mLastTickTime = GetTimestamp
+mLastTickTime = getTimestamp
 mTickCount = mTickCount + 1
 End Sub
 
@@ -692,6 +770,7 @@ If Not mAdjustingSize Then
     TickerScroll.Height = TickerScroll.Height + heightIncrement
 
     LogText.Height = LogText.Height + heightIncrement
+    
 End If
 
 mCurrentHeight = Me.Height
@@ -741,6 +820,31 @@ Else
 End If
 End Sub
 
+Private Sub setStarted()
+mCollectingData = True
+StartStopButton.Caption = "Stop"
+StartStopButton.Enabled = True
+
+mLastTickTime = getTimestamp
+
+Set mTimer = CreateIntervalTimer(0, , 250)
+mTimer.startTimer
+End Sub
+
+Private Sub setStopped()
+mCollectingData = False
+StartStopButton.Caption = "Start"
+
+ConnectionStatusText.BackColor = vbButtonFace
+
+clearTickers
+
+SecsSinceLastTickText = ""
+TicksPerSecText = ""
+
+mTimer.StopTimer
+End Sub
+
 Private Sub setupTickerScroll()
 Dim totalLines As Long
 Dim linesPerpage As Single
@@ -768,8 +872,9 @@ End Sub
 Private Sub showActivityMonitor()
 ShowHideMonitorButton.Caption = "Hide activity monitor"
 mAdjustingSize = True
-Me.Height = Me.Height + ActivityMonitor.Height + 120
+Me.Height = Me.Height + ActivityMonitor.Height
 mAdjustingSize = False
+ActivityMonitor.Visible = True
 mActivityMonitorVisible = True
 End Sub
 
@@ -777,15 +882,6 @@ Private Sub startCollecting( _
                 ByVal message As String)
                 
 logMessage message
-
-mCollectingData = True
-StartStopButton.Caption = "Stop"
-StartStopButton.Enabled = True
-
-mLastTickTime = GetTimestamp
-
-Set mTimer = CreateIntervalTimer(0, , 250)
-mTimer.StartTimer
 
 mDataCollector.startCollection
 
@@ -798,18 +894,6 @@ If MsgBox("Please confirm that you wish to stop data collection", _
 
 logMessage message
 
-mCollectingData = False
-StartStopButton.Caption = "Start"
-
-ConnectionStatusText.BackColor = vbButtonFace
-
-clearTickers
-
-SecsSinceLastTickText = ""
-TicksPerSecText = ""
-
-mTimer.StopTimer
-mStop = True
 mDataCollector.stopCollection
 
 End Sub
