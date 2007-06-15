@@ -63,7 +63,7 @@ Private mFileSys As Scripting.FileSystemObject
 Private mTsOut As Scripting.TextStream
 
 Private mTickerID As Long
-Private mContract As IContract
+Private mContract As Contract
 
 Private mPath As String
 
@@ -101,13 +101,13 @@ handleFatalError Err.Number, _
                 Err.Description
 End Sub
 
-Private Property Get ITickfileWriter_Contract() As IContract
+Private Property Get ITickfileWriter_Contract() As Contract
 Set ITickfileWriter_Contract = mContract
 End Property
 
-Private Property Let ITickfileWriter_Contract(ByVal RHS As IContract)
+Private Property Let ITickfileWriter_Contract(ByVal RHS As Contract)
 If Not RHS Is Nothing Then
-    Set mContract = RHS.Clone
+    Set mContract = RHS
 End If
 mServiceConsumer.Ready = True
 End Property
@@ -309,9 +309,9 @@ On Error Resume Next
 mFileSys.CreateFolder tfPath
 On Error GoTo Err
 
-With mContract.Specifier
-    tfPath = tfPath & UCase$(.Symbol) & .Expiry & "\"
-    tfName = UCase$(.Symbol) & .Expiry & "-" _
+With mContract.specifier
+    tfPath = tfPath & UCase$(.symbol) & .expiry & "\"
+    tfName = UCase$(.symbol) & .expiry & "-" _
             & format(timestamp, "yyyymmdd-hhmmss") & ".csv"
     Set mTsOut = mFileSys.CreateTextFile(tfPath & tfName)
     
@@ -324,9 +324,9 @@ With mContract.Specifier
     
     writeTickfileLine "tickfile," & _
                 TICKFILE_CURR_VERSION & "," & _
-                .Exchange & "," & _
-                .Symbol & "," & _
-                .Expiry & "," & _
+                .exchange & "," & _
+                .symbol & "," & _
+                .expiry & "," & _
                 CDbl(timestamp) & "," & _
                 FormatDateTime(timestamp, vbGeneralDate)
 End With
@@ -355,8 +355,8 @@ On Error Resume Next
 mFileSys.CreateFolder tfPath
 On Error GoTo Err
 
-tfPath = tfPath & UCase$(mContract.Specifier.LocalSymbol) & "\"
-tfName = UCase$(mContract.Specifier.LocalSymbol) & "-" & _
+tfPath = tfPath & UCase$(mContract.specifier.localSymbol) & "\"
+tfName = UCase$(mContract.specifier.localSymbol) & "-" & _
         format(timestamp, "yyyymmdd-hhmmss") & ".tck"
 Set mTsOut = mFileSys.CreateTextFile(tfPath & tfName)
 
@@ -368,9 +368,9 @@ mServiceConsumer.OutputTickfileCreated tfPath & tfName
 logMessage "Created output tickfile " & tfPath & tfName
 writeTickfileLine TICKFILE_DECLARER & "," & _
             TICKFILE_CURR_VERSION & "," & _
-            UCase$(mContract.Specifier.Exchange) & "," & _
-            UCase$(mContract.Specifier.Symbol) & "," & _
-            mContract.Specifier.Expiry & "," & _
+            UCase$(mContract.specifier.exchange) & "," & _
+            UCase$(mContract.specifier.symbol) & "," & _
+            mContract.specifier.expiry & "," & _
             CDbl(timestamp) & "," & _
             FormatDateTime(timestamp, vbGeneralDate)
 writeTickfileLine CONTRACT_DETAILS_MARKER & mContract.ToXML
@@ -419,10 +419,10 @@ Static priceFormatString As String
 
 
 If priceFormatString = "" Then
-    If mContract.NumberOfDecimals = 0 Then
+    If mContract.numberOfDecimals = 0 Then
         priceFormatString = "0"
     Else
-        priceFormatString = "0." & String(mContract.NumberOfDecimals, "0")
+        priceFormatString = "0." & String(mContract.numberOfDecimals, "0")
     End If
 End If
 

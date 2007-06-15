@@ -8,7 +8,7 @@ Option Explicit
 Public Const ServiceProviderName As String = "TickfileSP"
 Public Const ProviderKey As String = "TickfileSP"
 
-Public Const TICKFILE_CURR_VERSION As Integer = 4
+Public Const TICKFILE_CURR_VERSION As Integer = 5
 
 Public Const TICKFILE_DECLARER As String = "tickfile"
 Public Const CONTRACT_DETAILS_MARKER As String = "contractdetails="
@@ -29,6 +29,7 @@ Public Const ESIGNAL_TICK_TRADE As String = "T"
 
 Public Const TickfileFormatTradeBuildV3 As String = "urn:tradewright.com:names.tickfileformats.TradeBuildV3"
 Public Const TickfileFormatTradeBuildV4 As String = "urn:tradewright.com:names.tickfileformats.TradeBuildV4"
+Public Const TickfileFormatTradeBuildV5 As String = "urn:tradewright.com:names.tickfileformats.TradeBuildV5"
 Public Const TickfileFormatCrescendoV1 As String = "urn:tradewright.com:names.tickfileformats.CrescendoV1"
 Public Const TickfileFormatCrescendoV2 As String = "urn:tradewright.com:names.tickfileformats.CrescendoV2"
 Public Const TickfileFormatESignal As String = "urn:tradewright.com:names.tickfileformats.ESignal"
@@ -47,9 +48,9 @@ End Enum
 
 Public Enum TickfileFieldsV1
     TimestampString
-    Exchange
-    Symbol
-    Expiry
+    exchange
+    symbol
+    expiry
     tickType
     tickPrice
     TickSize
@@ -84,18 +85,18 @@ End Enum
 Public Enum TickfileHeaderFieldsV2
     ContentDeclarer
     version
-    Exchange
-    Symbol
-    Expiry
+    exchange
+    symbol
+    expiry
     StartTime
 End Enum
 
 Public Enum TickfileHeaderFieldsV3
     ContentDeclarer
     version
-    Exchange
-    Symbol
-    Expiry
+    exchange
+    symbol
+    expiry
     StartTime
 End Enum
 
@@ -106,6 +107,7 @@ Public Enum TickFileVersions
     CrescendoV1
     CrescendoV2
     ESignal
+    TradeBuildV5
 End Enum
 
 Public Enum TickTypes
@@ -163,7 +165,6 @@ End Function
 
 Public Function gCapabilitiesTradeBuildV3() As Long
 gCapabilitiesTradeBuildV3 = _
-            TickfileServiceProviderCapabilities.RecordMarketDepth Or _
             TickfileServiceProviderCapabilities.Replay Or _
             TickfileServiceProviderCapabilities.ReplayMarketDepth Or _
             TickfileServiceProviderCapabilities.ReportReplayProgress
@@ -171,6 +172,14 @@ End Function
 
 Public Function gCapabilitiesTradeBuildV4() As Long
 gCapabilitiesTradeBuildV4 = _
+            TickfileServiceProviderCapabilities.Replay Or _
+            TickfileServiceProviderCapabilities.ReplayMarketDepth Or _
+            TickfileServiceProviderCapabilities.ReportReplayProgress Or _
+            TickfileServiceProviderCapabilities.SaveContractInformation
+End Function
+
+Public Function gCapabilitiesTradeBuildV5() As Long
+gCapabilitiesTradeBuildV5 = _
             TickfileServiceProviderCapabilities.Record Or _
             TickfileServiceProviderCapabilities.RecordMarketDepth Or _
             TickfileServiceProviderCapabilities.Replay Or _
@@ -194,6 +203,8 @@ Case TickfileFormats.TickfileTradeBuild
         gFormatSpecifiersToString = TickfileFormatTradeBuildV3
     Case TickFileVersions.TradeBuildV4
         gFormatSpecifiersToString = TickfileFormatTradeBuildV4
+    Case TickFileVersions.TradeBuildV5
+        gFormatSpecifiersToString = TickfileFormatTradeBuildV5
     End Select
 Case TickfileFormats.TickfileCrescendo
     Select Case version
@@ -216,6 +227,9 @@ Case TickfileFormatTradeBuildV3
 Case TickfileFormatTradeBuildV4
     formatId = TickfileFormats.TickfileTradeBuild
     version = TickFileVersions.TradeBuildV4
+Case TickfileFormatTradeBuildV5
+    formatId = TickfileFormats.TickfileTradeBuild
+    version = TickFileVersions.TradeBuildV5
 Case TickfileFormatCrescendoV1
     formatId = TickfileFormats.TickfileCrescendo
     version = TickFileVersions.CrescendoV1
@@ -251,6 +265,8 @@ Case TradeBuildV3
     capMask = gCapabilitiesTradeBuildV3
 Case TradeBuildV4
     capMask = gCapabilitiesTradeBuildV4
+Case TradeBuildV5
+    capMask = gCapabilitiesTradeBuildV5
 Case CrescendoV1
     capMask = gCapabilitiesCrescendoV1
 Case CrescendoV2

@@ -85,8 +85,8 @@ Private mNextFreeRecordTableEntry As Long
 
 Private mPendingImpliedVolumeTick As Boolean
 
-Private mContract As IContract
-Private mContractSpecifier As IContractSpecifier
+Private mContract As Contract
+Private mContractSpecifier As ContractSpecifier
 
 Private mCurrentTimestamp As Double
 
@@ -97,7 +97,7 @@ Private mRecordsRead As Long
 Private mTickFileVersion As TickFileVersions
 Private mInputTickfileFormat As TickfileFormats
 
-Private mInputTickfileSpecifier As TradeBuildSP.TickfileSpec
+Private mInputTickfileSpecifier As TradeBuildSP.ITickfileSpecifier
 
 Private mFirstTickFileTime As Date
 
@@ -141,15 +141,15 @@ handleFatalError Err.Number, _
                 Err.Description
 End Sub
 
-Private Property Let ITickfileReader_Contract(ByVal RHS As TradeBuildSP.IContract)
+Private Property Let ITickfileReader_Contract(ByVal RHS As Contract)
 Contract = RHS
 End Property
 
-Private Property Get ITickfileReader_Contract() As TradeBuildSP.IContract
+Private Property Get ITickfileReader_Contract() As Contract
 Set ITickfileReader_Contract = Contract
 End Property
 
-Private Property Get ITickfileReader_ContractSpecifier() As TradeBuildSP.IContractSpecifier
+Private Property Get ITickfileReader_ContractSpecifier() As ContractSpecifier
 Set ITickfileReader_ContractSpecifier = mContractSpecifier
 End Property
 
@@ -184,8 +184,8 @@ Private Property Get ITickfileReader_FirstTickFileTime() As Date
 ITickfileReader_FirstTickFileTime = FirstTickFileTime
 End Property
 
-Private Property Get ITickfileReader_InputTickfileSpecifier() As TradeBuildSP.TickfileSpec
-ITickfileReader_InputTickfileSpecifier = InputTickfileSpecifier
+Private Property Get ITickfileReader_InputTickfileSpecifier() As TradeBuildSP.ITickfileSpecifier
+Set ITickfileReader_InputTickfileSpecifier = InputTickfileSpecifier
 End Property
 
 Private Property Let ITickfileReader_ReplayProgressEventFrequency(ByVal RHS As Long)
@@ -200,9 +200,10 @@ Private Property Get ITickfileReader_ReplayProgressEventFrequency() As Long
 ITickfileReader_ReplayProgressEventFrequency = mReplayProgressEventFrequency
 End Property
 
-Private Sub ITickfileReader_ReplayTickfile(tickfileSpecifier As TradeBuildSP.TickfileSpec)
+Private Sub ITickfileReader_ReplayTickfile( _
+                ByVal tickfileSpecifier As TradeBuildSP.ITickfileSpecifier)
 On Error GoTo Err
-mInputTickfileSpecifier = tickfileSpecifier
+Set mInputTickfileSpecifier = tickfileSpecifier
 getFile mInputTickfileSpecifier.filename, _
             mInputTickfileFormat, _
             mTickFileVersion, _
@@ -239,13 +240,13 @@ Friend Property Let commonServiceConsumer(ByVal RHS As TradeBuildSP.ICommonServi
 Set mCommonServiceConsumer = RHS
 End Property
 
-Friend Property Let Contract(ByVal value As IContract)
+Friend Property Let Contract(ByVal value As Contract)
 If Not value Is Nothing Then
-    Set mContract = value.Clone
+    Set mContract = value
 End If
 End Property
 
-Friend Property Get Contract() As IContract
+Friend Property Get Contract() As Contract
 Set Contract = mContract
 End Property
 
@@ -253,8 +254,8 @@ Friend Property Get FirstTickFileTime() As Date
 FirstTickFileTime = mFirstTickFileTime
 End Property
 
-Friend Property Get InputTickfileSpecifier() As TradeBuildSP.TickfileSpec
-InputTickfileSpecifier = mInputTickfileSpecifier
+Friend Property Get InputTickfileSpecifier() As TradeBuildSP.ITickfileSpecifier
+Set InputTickfileSpecifier = mInputTickfileSpecifier
 End Property
 
 Friend Property Let logLevel(ByVal RHS As TradeBuildSP.LogLevels)
@@ -295,7 +296,7 @@ Private Sub getFile(ByVal filename As String, _
                         ByRef version As TickFileVersions, _
                         ByRef ts As TextStream, _
                         ByRef filesize As Long, _
-                        ByRef Contract As IContract, _
+                        ByRef Contract As Contract, _
                         ByRef FirstTickFileTime As Date)
 Dim inRec As String
 Dim xmlContract As String
@@ -372,13 +373,15 @@ End If
 Select Case version
 Case TickFileVersions.CrescendoV1
     
-    Set mContractSpecifier = mCommonServiceConsumer.NewContractSpecifier
-    mContractSpecifier.Exchange = dataFields(TickfileFieldsV1.Exchange)
-    mContractSpecifier.Symbol = dataFields(TickfileFieldsV1.Symbol)
-    mContractSpecifier.Expiry = dataFields(TickfileFieldsV1.Expiry)
-    mContractSpecifier.SecType = SecTypeFuture
+    Set mContractSpecifier = CreateContractSpecifier( _
+                                    , _
+                                    dataFields(TickfileFieldsV1.symbol), _
+                                    dataFields(TickfileFieldsV1.exchange), _
+                                    SecTypeFuture, _
+                                    , _
+                                    dataFields(TickfileFieldsV1.expiry))
     
-    FirstTickFileTime = CDate(dataFields(TickfileFieldsV1.TimestampString))
+    FirstTickFileTime = ConvertDateLocalToUTC(CDate(dataFields(TickfileFieldsV1.TimestampString)))
     
     ' now need to reopen the file so it's correctly positioned
     ts.Close
@@ -390,26 +393,34 @@ Case TickFileVersions.CrescendoV1
 '                        "Tickfile contains no contract details: " & filename
 Case TickFileVersions.CrescendoV2
     
-    Set mContractSpecifier = mCommonServiceConsumer.NewContractSpecifier
-    mContractSpecifier.Exchange = dataFields(TickfileHeaderFieldsV2.Exchange)
-    mContractSpecifier.Symbol = dataFields(TickfileHeaderFieldsV2.Symbol)
-    mContractSpecifier.Expiry = dataFields(TickfileHeaderFieldsV2.Expiry)
-    mContractSpecifier.SecType = SecTypeFuture
+    Set mContractSpecifier = CreateContractSpecifier( _
+                                    , _
+                                    dataFields(TickfileHeaderFieldsV2.symbol), _
+                                    dataFields(TickfileHeaderFieldsV2.exchange), _
+                                    SecTypeFuture, _
+                                    , _
+                                    dataFields(TickfileHeaderFieldsV2.expiry))
     
-    FirstTickFileTime = CDate(dataFields(TickfileHeaderFieldsV2.StartTime))
+    FirstTickFileTime = ConvertDateLocalToUTC(CDate(dataFields(TickfileHeaderFieldsV2.StartTime)))
     
 '    mServiceConsumer.Notifyevent StandardSPEventCodes.TFNoContractDetails, _
 '                        "Tickfile contains no contract details: " & filename
 
-Case TickFileVersions.TradeBuildV3, TickFileVersions.TradeBuildV4
+Case TickFileVersions.TradeBuildV3, TickFileVersions.TradeBuildV4, TickFileVersions.TradeBuildV5
     
-    Set mContractSpecifier = mCommonServiceConsumer.NewContractSpecifier
-    mContractSpecifier.Exchange = dataFields(TickfileHeaderFieldsV3.Exchange)
-    mContractSpecifier.Symbol = dataFields(TickfileHeaderFieldsV3.Symbol)
-    mContractSpecifier.Expiry = dataFields(TickfileHeaderFieldsV3.Expiry)
-    mContractSpecifier.SecType = SecTypeFuture
-        
-    FirstTickFileTime = CDate(dataFields(TickfileHeaderFieldsV3.StartTime))
+    Set mContractSpecifier = CreateContractSpecifier( _
+                                    , _
+                                    dataFields(TickfileHeaderFieldsV3.symbol), _
+                                    dataFields(TickfileHeaderFieldsV3.exchange), _
+                                    SecTypeFuture, _
+                                    , _
+                                    dataFields(TickfileHeaderFieldsV3.expiry))
+    
+    If version = TickFileVersions.TradeBuildV5 Then
+        FirstTickFileTime = CDate(dataFields(TickfileHeaderFieldsV3.StartTime))
+    Else
+        FirstTickFileTime = ConvertDateLocalToUTC(CDate(dataFields(TickfileHeaderFieldsV3.StartTime)))
+    End If
     
     ' read the serialised contract details
     inRec = ts.ReadLine
@@ -431,8 +442,7 @@ Case TickFileVersions.TradeBuildV3, TickFileVersions.TradeBuildV4
                 ' can no longer get contract details from this version so do nothing
             Else
                 xmlContract = Right$(inRec, Len(inRec) - Len(CONTRACT_DETAILS_MARKER))
-                Set Contract = mCommonServiceConsumer.NewContract
-                Contract.FromXML xmlContract
+                Set Contract = CreateContractFromXML(xmlContract)
             End If
         End If
     End If
@@ -953,8 +963,15 @@ initialiseRecordTableEntry index
 With mRecordTable(index)
     
     Select Case mTickFileVersion
-    Case TickFileVersions.TradeBuildV3, TickFileVersions.TradeBuildV4
-        .timestamp = CDate(dataFields(TickfileFieldsV3.timestamp))
+    Case TickFileVersions.TradeBuildV3, _
+            TickFileVersions.TradeBuildV4, _
+            TickFileVersions.TradeBuildV5
+        If mTickFileVersion = TickFileVersions.TradeBuildV5 Then
+            .timestamp = CDate(dataFields(TickfileFieldsV3.timestamp))
+        Else
+            ' earlier versions were recorded in local time, so convert to UTC
+            .timestamp = ConvertDateLocalToUTC(CDate(dataFields(TickfileFieldsV3.timestamp)))
+        End If
         ticktypeStr = dataFields(TickfileFieldsV3.tickType)
         
         Select Case ticktypeStr
@@ -997,7 +1014,7 @@ With mRecordTable(index)
             .TickSize = dataFields(TickfileFieldsV3.OpenInterest)
         End Select
     Case TickFileVersions.CrescendoV2
-        .timestamp = CDate(dataFields(TickfileFieldsV2.timestamp))
+        .timestamp = ConvertDateLocalToUTC(CDate(dataFields(TickfileFieldsV2.timestamp)))
         .tickType = dataFields(TickfileFieldsV2.tickType)
         
         Select Case .tickType
@@ -1032,7 +1049,7 @@ With mRecordTable(index)
             .TickSize = dataFields(TickfileFieldsV2.TickSize)
         End Select
     Case TickFileVersions.CrescendoV1
-        .timestamp = CDate(dataFields(TickfileFieldsV1.TimestampString))
+        .timestamp = ConvertDateLocalToUTC(CDate(dataFields(TickfileFieldsV1.TimestampString)))
         .tickType = dataFields(TickfileFieldsV1.tickType)
         
         Select Case .tickType
@@ -1061,12 +1078,13 @@ With mRecordTable(index)
             .TickSize = dataFields(TickfileFieldsV1.TickSize)
         End Select
     Case TickFileVersions.ESignal
-        .timestamp = DateSerial("20" & Left$(dataFields(ESignalTickFileFields.TimestampDate), 2), _
-                            Mid$(dataFields(ESignalTickFileFields.TimestampDate), 3, 2), _
-                            Right$(dataFields(ESignalTickFileFields.TimestampDate), 2)) + _
-                    TimeSerial(Left$(dataFields(ESignalTickFileFields.TimestampTime), 2), _
-                            Mid$(dataFields(ESignalTickFileFields.TimestampTime), 3, 2), _
-                            Right$(dataFields(ESignalTickFileFields.TimestampTime), 2))
+        .timestamp = ConvertDateLocalToUTC( _
+                        DateSerial("20" & Left$(dataFields(ESignalTickFileFields.TimestampDate), 2), _
+                                Mid$(dataFields(ESignalTickFileFields.TimestampDate), 3, 2), _
+                                Right$(dataFields(ESignalTickFileFields.TimestampDate), 2)) + _
+                        TimeSerial(Left$(dataFields(ESignalTickFileFields.TimestampTime), 2), _
+                                Mid$(dataFields(ESignalTickFileFields.TimestampTime), 3, 2), _
+                                Right$(dataFields(ESignalTickFileFields.TimestampTime), 2)))
         ticktypeStr = dataFields(ESignalTickFileFields.tickType)
         Select Case ticktypeStr
         Case ESIGNAL_TICK_TRADE
