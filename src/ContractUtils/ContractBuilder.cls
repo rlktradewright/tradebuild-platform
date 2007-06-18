@@ -111,7 +111,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Sub buildFrom( _
+Friend Sub buildFrom( _
                 ByVal pContract As Contract)
 With mContract
     .daysBeforeExpiryToSwitch = pContract.daysBeforeExpiryToSwitch
@@ -128,7 +128,7 @@ End With
 
 End Sub
 
-Public Sub initialise( _
+Friend Sub initialise( _
                 ByVal specifier As ContractSpecifier)
 Set mContract = New Contract
 mContract.specifier = specifier

@@ -91,6 +91,13 @@ Set CreateContractBuilder = New ContractBuilder
 CreateContractBuilder.initialise specifier
 End Function
 
+Public Function CreateContractBuilderFromContract( _
+                ByVal pContract As Contract) As ContractBuilder
+Set CreateContractBuilderFromContract = New ContractBuilder
+CreateContractBuilderFromContract.initialise pContract.specifier
+CreateContractBuilderFromContract.buildFrom pContract
+End Function
+
 Public Function CreateContractsBuilder( _
                 ByVal specifier As ContractSpecifier) As ContractsBuilder
 Set CreateContractsBuilder = New ContractsBuilder
