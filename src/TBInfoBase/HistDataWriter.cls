@@ -208,7 +208,7 @@ mServiceConsumer.NotReady
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "HistDataWriter" & "::" & "mBarWriter_NotReady", _
+                ProjectName & "." & "HistDataWriter" & "::" & "mTradingDB_ConnectFailed", _
                 Err.Description
 End Sub
 
@@ -234,7 +234,7 @@ getInstrument
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "HistDataWriter" & "::" & "mBarWriter_Ready", _
+                ProjectName & "." & "HistDataWriter" & "::" & "mTradingDB_ConnectSucceeded", _
                 Err.Description
 End Sub
 '@===============================================================================
@@ -308,8 +308,8 @@ With mContractSpec
                                 .Exchange, _
                                 gSecTypeToCategory(.secType), _
                                 .currencyCode, _
-                                Left$(.Expiry, 6), _
-                                .Strike, _
+                                Left$(.expiry, 6), _
+                                .strike, _
                                 gOptRightToString(.Right))
 End With
 Debug.Assert Not mInstrument Is Nothing
