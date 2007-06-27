@@ -282,7 +282,7 @@ If mRsBars.BOF Then
     Exit Function
 End If
 
-If CBool(mRsBars("IsUTCTime")) Then
+If CBool(mRsBars("IsExchangeTime")) Then
     timestamp = mRsBars("DateTime")
 Else
     timestamp = ConvertDateUTCToTZ(ConvertDateLocalToUTC(mRsBars("DateTime")), mTimeZone)

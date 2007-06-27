@@ -188,7 +188,7 @@ If mRsTick.EOF Then
     Exit Function
 End If
 
-If CBool(mRsTick("IsUTCTime")) Then
+If CBool(mRsTick("IsExchangeTime")) Then
     PeriodStartTime = mRsTick("DateTime")
 Else
     PeriodStartTime = ConvertDateLocalToUTC(mRsTick("DateTime"))
