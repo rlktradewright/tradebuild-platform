@@ -273,17 +273,17 @@ End With
 
 failpoint = 400 '=====================================================
 
-Set mTicker = mTradeBuildAPI.Tickers.Add(False)
+Set mTicker = mTradeBuildAPI.Tickers.Add( _
+                        IIf(mWriteBars, TickerOptions.TickerOptWriteTradeBarData, 0) + _
+                        IIf(mWriteTicks, TickerOptions.TickerOptWriteTickData, 0) + _
+                        IIf(mWriteTicks And CBool(contractConfig.getAttribute(AttributeNameBidAskBars)), _
+                            TickerOptions.TickerOptWriteBidAndAskBarData, 0) + _
+                        IIf(mWriteTicks, TickerOptions.TickerOptUpdateLatestBar, 0))
 
 If mWriteTicks Then
     mTicker.outputTickfileFormat = mOutputFormat
     mTicker.outputTickfilePath = mOutputPath
     mTicker.DOMEventsRequired = DOMNoEvents
-    mTicker.writeTickData
-End If
-
-If mWriteBars Then
-    mTicker.writeBarData True, contractConfig.getAttribute(AttributeNameBidAskBars)
 End If
 
 mTicker.Timeframes.addCollectionChangeListener Me

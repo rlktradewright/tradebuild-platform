@@ -99,6 +99,17 @@ End If
 mSession.sessionEndTime = value
 End Property
 
+Public Property Let TimeZone( _
+                ByVal value As TimeZone)
+If mSession.isLinkable Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & "TimeZone", _
+            "Session has been made linkable, so no further modification is allowed via this SessionBuilder"
+End If
+
+mSession.TimeZone = value
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================

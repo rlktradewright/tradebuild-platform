@@ -23,7 +23,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements Study
+Implements study
 
 '================================================================================
 ' Events
@@ -59,6 +59,9 @@ Private mSessionBuilder As SessionBuilder
 
 Private mTimestamp As Date
 
+Private mExchangeTimeZone As TimeZone
+Private mUseLocalTimeForStudies As Boolean
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
@@ -82,7 +85,7 @@ End Sub
 '================================================================================
 
 Private Function Study_addStudy( _
-                ByVal pStudy As Study, _
+                ByVal pStudy As study, _
                 ByRef valueNames() As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
@@ -99,7 +102,7 @@ Private Function Study_addStudyValueListener( _
 mListeners.add listener, valueName
 End Function
 
-Private Property Get Study_baseStudy() As Study
+Private Property Get Study_baseStudy() As study
 Set Study_baseStudy = Me
 End Property
 
@@ -124,7 +127,7 @@ Private Sub Study_initialise( _
                 ByVal parameters As parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 valueNames() As String, _
-                ByVal underlyingStudy As Study, _
+                ByVal underlyingStudy As study, _
                 ByVal pSession As session)
 
 End Sub
@@ -145,6 +148,11 @@ mTimestamp = ev.timestamp
 mSessionBuilder.setSessionCurrentTime ev.timestamp
 
 evOut = ev
+
+If mUseLocalTimeForStudies Then
+    evOut.timestamp = ConvertDateUTCToLocal(ConvertDateTZToUTC(ev.timestamp, mExchangeTimeZone))
+End If
+
 evOut.barStartTime = 0  ' a higher level study must generate this
 mStudies.notify evOut
 mListeners.notify evOut
@@ -242,12 +250,17 @@ End Sub
 Friend Sub initialise( _
                 ByVal name As String, _
                 ByVal sessionStartTime As Date, _
-                ByVal sessionEndTime As Date)
+                ByVal sessionEndTime As Date, _
+                ByVal exchangeTimeZone As TimeZone, _
+                ByVal useLocalTimeForStudies As Boolean)
 mName = name
 mIdent = name
 mStudyDef.name = mName
 mSessionBuilder.sessionStartTime = sessionStartTime
 mSessionBuilder.sessionEndTime = sessionEndTime
+Set mExchangeTimeZone = exchangeTimeZone
+mSessionBuilder.TimeZone = mExchangeTimeZone
+mUseLocalTimeForStudies = useLocalTimeForStudies
 End Sub
 
 ''
@@ -294,9 +307,14 @@ End Sub
                 
 Friend Sub setSessionTimes( _
                 ByVal sessionStartTime As Date, _
-                ByVal sessionEndTime As Date)
+                ByVal sessionEndTime As Date, _
+                ByVal exchangeTimeZone As TimeZone, _
+                ByVal useLocalTimeForStudies As Boolean)
 mSessionBuilder.sessionStartTime = sessionStartTime
 mSessionBuilder.sessionEndTime = sessionEndTime
+Set mExchangeTimeZone = exchangeTimeZone
+mSessionBuilder.TimeZone = mExchangeTimeZone
+mUseLocalTimeForStudies = useLocalTimeForStudies
 End Sub
 
 ''

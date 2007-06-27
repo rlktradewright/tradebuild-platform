@@ -88,6 +88,7 @@ Private mCurrTickfileIndex          As Long
 
 Private mTickers                    As Tickers
 Private mTicker                     As Ticker
+Private mTickerOptions              As Long
 
 Private mReplayInProgress           As Boolean
 
@@ -297,6 +298,11 @@ NumberOfInputTickfiles = -1
 On Error Resume Next
 NumberOfInputTickfiles = UBound(mTickfileSpecifiers) + 1
 If NumberOfInputTickfiles = -1 Then NumberOfInputTickfiles = 0
+End Property
+
+Friend Property Let TickerOptions( _
+                ByVal value As Long)
+mTickerOptions = value
 End Property
 
 Public Property Let ReplayProgressEventFrequency(ByVal value As Long)
@@ -536,7 +542,7 @@ Do
         Exit Sub
     End If
     
-    Set mTicker = mTickers.add(False, generateGUIDString)
+    Set mTicker = mTickers.add(mTickerOptions)
     mTicker.TickFileManager = Me
     mTicker.replayingTickfile = True
     mTicker.clockRate = mReplaySpeed

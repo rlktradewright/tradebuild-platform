@@ -395,6 +395,18 @@ Public Enum TargetOrderTypes
     TargetOrderTypeAuto
 End Enum
 
+Public Enum TickerOptions
+    TickerOptOrdersAreLive = 1
+    TickerOptUseExchangeTimeZone = 2
+    TickerOptWriteTickData = 4
+    TickerOptWriteTradeBarData = 8
+    TickerOptWriteBidAndAskBarData = &H10
+    TickerOptUpdateLatestBar = &H20
+    TickerOptIncludeMarketDepthInTickfile = &H40
+    TickerOptNoImpliedTrades = &H80
+    TickerOptNoVolumeAdjustments = &H100
+End Enum
+
 Public Enum TickerStates
     TickerStateCreated
     TickerStateStarting

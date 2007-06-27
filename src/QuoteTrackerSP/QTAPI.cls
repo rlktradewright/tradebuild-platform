@@ -95,6 +95,7 @@ Private Type HistoricalBarDataRequestEntry
 End Type
 
 Private Type HistoricalTickDataRequestEntry
+    Contract            As Contract
     inUse               As Boolean
     cancelling          As Boolean
     lockId              As Long
@@ -114,6 +115,7 @@ End Type
 
 Private Type L1QuotesRequestEntry
     inUse               As Boolean
+    Contract            As Contract
     cancelling          As Boolean
     reuseTime           As Date
     symbol              As String
@@ -175,7 +177,7 @@ Private mL1QuotesRequestTable() As L1QuotesRequestEntry
 
 Private mLockManager As LockManager
 
-Private mESTTimeZone As timezone
+Private mESTTimeZone As TimeZone
 
 '================================================================================
 ' Class Event Handlers
@@ -602,6 +604,7 @@ If i > UBound(mHistoricalTickDataRequestTable) Then
 End If
 
 mHistoricalTickDataRequestTable(i).inUse = True
+Set mHistoricalTickDataRequestTable(i).Contract = tickfileSpecifier.Contract
 mHistoricalTickDataRequestTable(i).lockId = lockId
 Set mHistoricalTickDataRequestTable(i).requester = requester
 mHistoricalTickDataRequestTable(i).symbol = UCase$(tickfileSpecifier.Contract.providerID(mProviderKey))
@@ -609,6 +612,8 @@ mHistoricalTickDataRequestTable(i).symbol = UCase$(tickfileSpecifier.Contract.pr
 Set lSessionBuilder = New SessionBuilder
 lSessionBuilder.sessionStartTime = tickfileSpecifier.Contract.sessionStartTime
 lSessionBuilder.sessionEndTime = tickfileSpecifier.Contract.sessionEndTime
+lSessionBuilder.TimeZone = tickfileSpecifier.Contract.TimeZone
+
 Set mHistoricalTickDataRequestTable(i).session = lSessionBuilder.session
 
 If tickfileSpecifier.EntireSession Then
@@ -669,6 +674,7 @@ If i > UBound(mL1QuotesRequestTable) Then
 End If
 
 mL1QuotesRequestTable(i).inUse = True
+Set mL1QuotesRequestTable(i).Contract = pContract
 mL1QuotesRequestTable(i).cancelling = False
 mL1QuotesRequestTable(i).reuseTime = 0
 Set mL1QuotesRequestTable(i).requester = requester
@@ -1114,7 +1120,8 @@ Do
                             Mid$(timestampString, 11, 2) & ":" & _
                             Mid(timestampString, 13, 2))
         'we assume that QT always sends the bars in increasing time order
-        Bar.timestamp = ConvertDateTZToUTC(timestamp, mESTTimeZone)
+        Bar.timestamp = ConvertDateUTCToTZ(ConvertDateTZToUTC(timestamp, mESTTimeZone), _
+                                        mHistoricalBarDataRequestTable(index).barSpecifier.Contract.TimeZone)
         If Bar.timestamp < mHistoricalBarDataRequestTable(index).barSpecifier.ToDate Then
             mHistoricalBarDataRequestTable(index).barSpecifier.ToDate = Bar.timestamp
         End If
@@ -1215,7 +1222,8 @@ End If
 
 If mHistoricalTickDataRequestTable(index).cancelling Then Exit Sub
 
-timestamp = ConvertDateTZToUTC(timestamp, mESTTimeZone)
+timestamp = ConvertDateUTCToTZ(ConvertDateTZToUTC(timestamp, mESTTimeZone), _
+                            mHistoricalTickDataRequestTable(index).Contract.TimeZone)
 
 If timestamp >= mHistoricalTickDataRequestTable(index).endTime Then Exit Sub
 
@@ -1338,7 +1346,8 @@ Do
                             Mid$(timestampString, 9, 2) & ":" & _
                             Mid$(timestampString, 11, 2) & ":" & _
                             Mid(timestampString, 13, 2))
-        mL1QuotesRequestTable(index).timestamp = ConvertDateTZToUTC(timestamp, mESTTimeZone)
+        mL1QuotesRequestTable(index).timestamp = ConvertDateUTCToTZ(ConvertDateTZToUTC(timestamp, mESTTimeZone), _
+                                                            mL1QuotesRequestTable(index).Contract.TimeZone)
     Case Else
         skippedValue = GetFieldValue(fieldID, bytesProcessed)
         Debug.Print "Skipped field(" & fieldID & "): " & skippedValue

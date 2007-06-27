@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#32.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#35.1#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeSkil Demo Edition Version 2.6"
@@ -1164,7 +1164,7 @@ End Sub
 
 Private Sub Form_Load()
 
-On Error GoTo err
+On Error GoTo Err
 
 ' position at top left corner of the screen
 Me.Top = 0
@@ -1219,10 +1219,10 @@ configureTradeBuild
 
 Exit Sub
 
-err:
-handleFatalError err.Number, _
-                err.Description, _
-                err.source
+Err:
+handleFatalError Err.Number, _
+                Err.Description, _
+                Err.source
 
 End Sub
 
@@ -1561,19 +1561,20 @@ If ContractDataCombo.Text = SecContractDataCombo.Text Then cancel = True
 End Sub
 
 Private Sub SelectTickfilesButton_Click()
+Dim lTickfileOrganiser As fTickfileOrganiser
 Dim tickfiles() As TickfileSpecifier
 Dim i As Long
 
-Set mTickfileManager = mTickers.createTickFileManager
-tickfiles = ChooseTickfiles
+Set lTickfileOrganiser = New fTickfileOrganiser
 
-On Error Resume Next
-i = -1
-i = UBound(tickfiles)
-On Error GoTo 0
-If i = -1 Then Exit Sub ' get out if no tickfiles selected
+lTickfileOrganiser.Show vbModal, Me
 
-mTickfileManager.TickfileSpecifiers = tickfiles
+If lTickfileOrganiser.cancelled Then Exit Sub
+
+Set mTickfileManager = mTickers.createTickFileManager(TickerOptions.TickerOptUseExchangeTimeZone)
+tickfiles = lTickfileOrganiser.tickfileSpecifiers
+
+mTickfileManager.tickfileSpecifiers = tickfiles
 
 TickfileList.Clear
 For i = 0 To UBound(tickfiles)
@@ -1593,7 +1594,6 @@ Dim lTicker As Ticker
 
 Set lTicker = createTicker
 lTicker.DOMEventsRequired = DOMEvents.DOMNoEvents
-lTicker.useExchangeTime = True
 lTicker.StartTicker ContractSpecBuilder1.contractSpecifier
 
 ContractSpecBuilder1.SetFocus
@@ -1717,7 +1717,7 @@ Private Sub mTickers_Notification( _
                 ByRef ev As NotificationEvent)
 Dim lTicker As Ticker
 
-On Error GoTo err
+On Error GoTo Err
 
 Set lTicker = ev.source
 
@@ -1737,15 +1737,15 @@ Case Else
 End Select
 
 Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTickers_tickerError"
+Err:
+handleFatalError Err.Number, Err.Description, "mTickers_tickerError"
 End Sub
 
 Private Sub mTickers_StateChange( _
                 ev As StateChangeEvent)
 Dim lTicker As Ticker
 
-On Error GoTo err
+On Error GoTo Err
 
 Set lTicker = ev.source
 
@@ -1791,8 +1791,8 @@ End Select
 
 Exit Sub
 
-err:
-handleFatalError err.Number, err.Description, "mTickers_TickerStateEvent"
+Err:
+handleFatalError Err.Number, Err.Description, "mTickers_TickerStateEvent"
 End Sub
 
 '================================================================================
@@ -1801,12 +1801,12 @@ End Sub
 
 Private Sub mTickfileManager_Notification( _
                 ev As NotificationEvent)
-On Error GoTo err
+On Error GoTo Err
 logMessage "Notification " & ev.eventCode & ": " & ev.eventMessage
 
 Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTickfileManager_Notification"
+Err:
+handleFatalError Err.Number, Err.Description, "mTickfileManager_Notification"
 End Sub
 
 Private Sub mTickfileManager_QueryReplayNextTickfile( _
@@ -1815,7 +1815,7 @@ Private Sub mTickfileManager_QueryReplayNextTickfile( _
                 ByVal TickfileSizeBytes As Long, _
                 ByVal pContract As Contract, _
                 continueMode As ReplayContinueModes)
-On Error GoTo err
+On Error GoTo Err
 
 If tickfileIndex <> 0 Then
     clearTickerFields
@@ -1830,12 +1830,12 @@ TickfileList.ListIndex = tickfileIndex
 ReplayContractLabel.caption = Replace(pContract.specifier.ToString, vbCrLf, "; ")
 
 Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTickfileManager_QueryReplayNextTickfile"
+Err:
+handleFatalError Err.Number, Err.Description, "mTickfileManager_QueryReplayNextTickfile"
 End Sub
 
 Private Sub mTickfileManager_ReplayCompleted()
-On Error GoTo err
+On Error GoTo Err
 
 MarketDepthButton.Enabled = False
 PlayTickFileButton.Enabled = True
@@ -1853,15 +1853,15 @@ ReplayProgressLabel.caption = ""
 logMessage "Tickfile replay completed"
 
 Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTickfileManager_ReplayCompleted"
+Err:
+handleFatalError Err.Number, Err.Description, "mTickfileManager_ReplayCompleted"
 End Sub
 
 Private Sub mTickfileManager_ReplayProgress( _
                 ByVal tickfileTimestamp As Date, _
                 ByVal eventsPlayed As Long, _
                 ByVal percentComplete As Single)
-On Error GoTo err
+On Error GoTo Err
 ReplayProgressBar.value = percentComplete
 ReplayProgressLabel.caption = tickfileTimestamp & _
                                 "  Processed " & _
@@ -1869,21 +1869,19 @@ ReplayProgressLabel.caption = tickfileTimestamp & _
                                 " events"
 
 Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTickfileManager_ReplayProgress"
+Err:
+handleFatalError Err.Number, Err.Description, "mTickfileManager_ReplayProgress"
 End Sub
 
 Private Sub mTickfileManager_TickerAllocated(ByVal pTicker As Ticker)
-On Error GoTo err
+On Error GoTo Err
 
 Set mTicker = pTicker
 mTicker.DOMEventsRequired = DOMProcessedEvents
-mTicker.includeMarketDepthInTickfile = True
-mTicker.useExchangeTime = True
 
 Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTickfileManager_TickerAllocated"
+Err:
+handleFatalError Err.Number, Err.Description, "mTickfileManager_TickerAllocated"
 End Sub
 
 '================================================================================
@@ -1894,7 +1892,7 @@ Private Sub mTradeBuildAPI_Error( _
                 ByRef ev As ErrorEvent)
 Dim spError As ServiceProviderError
 
-On Error GoTo err
+On Error GoTo Err
 
 Select Case ev.errorCode
 Case ApiNotifyCodes.ApiNotifyServiceProviderError
@@ -1912,19 +1910,19 @@ End Select
 
 
 Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTradeBuildAPI_errorMessage"
+Err:
+handleFatalError Err.Number, Err.Description, "mTradeBuildAPI_errorMessage"
 End Sub
 
 Private Sub mTradeBuildAPI_Notification( _
                 ByRef ev As NotificationEvent)
-On Error GoTo err
+On Error GoTo Err
 
 logMessage "Notification " & ev.eventCode & ": " & ev.eventMessage
 
 Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTradeBuildAPI_notification"
+Err:
+handleFatalError Err.Number, Err.Description, "mTradeBuildAPI_notification"
 End Sub
 
 '================================================================================
@@ -1990,7 +1988,8 @@ chartform.Visible = True
 End Sub
 
 Private Function createTicker() As Ticker
-Set createTicker = mTickers.Add(Not mSimulateOrders)
+Set createTicker = mTickers.Add(IIf(Not mSimulateOrders, TickerOptions.TickerOptOrdersAreLive, 0) + _
+                                TickerOptions.TickerOptUseExchangeTimeZone)
 End Function
 
 Private Sub displayTime()

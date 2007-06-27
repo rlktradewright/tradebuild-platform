@@ -202,7 +202,7 @@ Dim param As ADODB.Parameter
 Set mCmd = New ADODB.Command
 mCmd.CommandType = adCmdStoredProc
 
-mCmd.CommandText = "WriteTickDataUTC"
+mCmd.CommandText = "WriteTickDataExchange"
 
 Set param = mCmd.CreateParameter("@InstrumentID", _
                             DataTypeEnum.adInteger, _

@@ -367,7 +367,7 @@ mServiceConsumer.NotifyEvent StandardSPEventCodes.TFConnectedToDataSource, _
 mServiceConsumer.OutputTickfileCreated tfPath & tfName
 logMessage "Created output tickfile " & tfPath & tfName
 writeTickfileLine TICKFILE_DECLARER & "," & _
-            TICKFILE_CURR_VERSION & "," & _
+            TRADEBUILD_TICKFILE_CURR_VERSION & "," & _
             UCase$(mContract.specifier.exchange) & "," & _
             UCase$(mContract.specifier.symbol) & "," & _
             mContract.specifier.expiry & "," & _

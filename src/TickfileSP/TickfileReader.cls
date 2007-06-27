@@ -251,7 +251,14 @@ Set Contract = mContract
 End Property
 
 Friend Property Get FirstTickFileTime() As Date
-FirstTickFileTime = mFirstTickFileTime
+If mInputTickfileFormat = TickfileTradeBuild And _
+    mTickFileVersion = TickFileVersions.TradeBuildV5 _
+Then
+    FirstTickFileTime = mFirstTickFileTime
+Else
+    FirstTickFileTime = ConvertDateUTCToTZ(ConvertDateLocalToUTC(mFirstTickFileTime), _
+                                            mContract.timezone)
+End If
 End Property
 
 Friend Property Get InputTickfileSpecifier() As TradeBuildSP.ITickfileSpecifier
@@ -364,6 +371,9 @@ If dataFields(TickfileHeaderFieldsV3.ContentDeclarer) = TICKFILE_DECLARER Then
     Case 4
         format = TickfileFormats.TickfileTradeBuild
         version = TickFileVersions.TradeBuildV4
+    Case 5
+        format = TickfileFormats.TickfileTradeBuild
+        version = TickFileVersions.TradeBuildV5
     End Select
 Else
     format = TickfileFormats.TickfileCrescendo
@@ -381,7 +391,7 @@ Case TickFileVersions.CrescendoV1
                                     , _
                                     dataFields(TickfileFieldsV1.expiry))
     
-    FirstTickFileTime = ConvertDateLocalToUTC(CDate(dataFields(TickfileFieldsV1.TimestampString)))
+    FirstTickFileTime = CDate(dataFields(TickfileFieldsV1.TimestampString))
     
     ' now need to reopen the file so it's correctly positioned
     ts.Close
@@ -401,12 +411,14 @@ Case TickFileVersions.CrescendoV2
                                     , _
                                     dataFields(TickfileHeaderFieldsV2.expiry))
     
-    FirstTickFileTime = ConvertDateLocalToUTC(CDate(dataFields(TickfileHeaderFieldsV2.StartTime)))
+    FirstTickFileTime = CDate(dataFields(TickfileHeaderFieldsV2.StartTime))
     
 '    mServiceConsumer.Notifyevent StandardSPEventCodes.TFNoContractDetails, _
 '                        "Tickfile contains no contract details: " & filename
 
-Case TickFileVersions.TradeBuildV3, TickFileVersions.TradeBuildV4, TickFileVersions.TradeBuildV5
+Case TickFileVersions.TradeBuildV3, _
+        TickFileVersions.TradeBuildV4, _
+        TickFileVersions.TradeBuildV5
     
     Set mContractSpecifier = CreateContractSpecifier( _
                                     , _
@@ -416,11 +428,7 @@ Case TickFileVersions.TradeBuildV3, TickFileVersions.TradeBuildV4, TickFileVersi
                                     , _
                                     dataFields(TickfileHeaderFieldsV3.expiry))
     
-    If version = TickFileVersions.TradeBuildV5 Then
-        FirstTickFileTime = CDate(dataFields(TickfileHeaderFieldsV3.StartTime))
-    Else
-        FirstTickFileTime = ConvertDateLocalToUTC(CDate(dataFields(TickfileHeaderFieldsV3.StartTime)))
-    End If
+    FirstTickFileTime = CDate(dataFields(TickfileHeaderFieldsV3.StartTime))
     
     ' read the serialised contract details
     inRec = ts.ReadLine
@@ -969,8 +977,9 @@ With mRecordTable(index)
         If mTickFileVersion = TickFileVersions.TradeBuildV5 Then
             .timestamp = CDate(dataFields(TickfileFieldsV3.timestamp))
         Else
-            ' earlier versions were recorded in local time, so convert to UTC
-            .timestamp = ConvertDateLocalToUTC(CDate(dataFields(TickfileFieldsV3.timestamp)))
+            ' earlier versions were recorded in local time, so convert to timezone
+            .timestamp = ConvertDateUTCToTZ(ConvertDateLocalToUTC(CDate(dataFields(TickfileFieldsV3.timestamp))), _
+                                            mContract.timezone)
         End If
         ticktypeStr = dataFields(TickfileFieldsV3.tickType)
         
@@ -1014,7 +1023,8 @@ With mRecordTable(index)
             .TickSize = dataFields(TickfileFieldsV3.OpenInterest)
         End Select
     Case TickFileVersions.CrescendoV2
-        .timestamp = ConvertDateLocalToUTC(CDate(dataFields(TickfileFieldsV2.timestamp)))
+        .timestamp = ConvertDateUTCToTZ(ConvertDateLocalToUTC(CDate(dataFields(TickfileFieldsV2.timestamp))), _
+                                        mContract.timezone)
         .tickType = dataFields(TickfileFieldsV2.tickType)
         
         Select Case .tickType
@@ -1049,7 +1059,8 @@ With mRecordTable(index)
             .TickSize = dataFields(TickfileFieldsV2.TickSize)
         End Select
     Case TickFileVersions.CrescendoV1
-        .timestamp = ConvertDateLocalToUTC(CDate(dataFields(TickfileFieldsV1.TimestampString)))
+        .timestamp = ConvertDateUTCToTZ(ConvertDateLocalToUTC(CDate(dataFields(TickfileFieldsV1.TimestampString))), _
+                                        mContract.timezone)
         .tickType = dataFields(TickfileFieldsV1.tickType)
         
         Select Case .tickType
@@ -1078,13 +1089,14 @@ With mRecordTable(index)
             .TickSize = dataFields(TickfileFieldsV1.TickSize)
         End Select
     Case TickFileVersions.ESignal
-        .timestamp = ConvertDateLocalToUTC( _
-                        DateSerial("20" & Left$(dataFields(ESignalTickFileFields.TimestampDate), 2), _
-                                Mid$(dataFields(ESignalTickFileFields.TimestampDate), 3, 2), _
-                                Right$(dataFields(ESignalTickFileFields.TimestampDate), 2)) + _
-                        TimeSerial(Left$(dataFields(ESignalTickFileFields.TimestampTime), 2), _
-                                Mid$(dataFields(ESignalTickFileFields.TimestampTime), 3, 2), _
-                                Right$(dataFields(ESignalTickFileFields.TimestampTime), 2)))
+        .timestamp = ConvertDateUTCToTZ(ConvertDateLocalToUTC( _
+                                                DateSerial("20" & Left$(dataFields(ESignalTickFileFields.TimestampDate), 2), _
+                                                        Mid$(dataFields(ESignalTickFileFields.TimestampDate), 3, 2), _
+                                                        Right$(dataFields(ESignalTickFileFields.TimestampDate), 2)) + _
+                                                TimeSerial(Left$(dataFields(ESignalTickFileFields.TimestampTime), 2), _
+                                                        Mid$(dataFields(ESignalTickFileFields.TimestampTime), 3, 2), _
+                                                        Right$(dataFields(ESignalTickFileFields.TimestampTime), 2))), _
+                                        mContract.timezone)
         ticktypeStr = dataFields(ESignalTickFileFields.tickType)
         Select Case ticktypeStr
         Case ESIGNAL_TICK_TRADE

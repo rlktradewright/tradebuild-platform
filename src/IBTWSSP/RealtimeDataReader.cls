@@ -127,7 +127,7 @@ If mTWSAPI Is Nothing Then
 End If
 
 If mTWSAPI.connectionState = ConnConnected Then
-    mTickerId = mTWSAPI.RequestMarketData(mContract.specifier, Me, mDataConsumer, mIncludeMarketDepth)
+    mTickerId = mTWSAPI.RequestMarketData(mContract, Me, mDataConsumer, mIncludeMarketDepth)
 End If
 Exit Sub
 err:
@@ -194,7 +194,7 @@ On Error GoTo err
 mServiceConsumer.NotifyEvent StandardSPEventCodes.RTConnectedToDataSource, _
                         "Connected to " & mTWSAPI.connectionString, _
                         mRealtimeDataServiceProvider.handle
-mTickerId = mTWSAPI.RequestMarketData(mContract.specifier, Me, mDataConsumer, mIncludeMarketDepth)
+mTickerId = mTWSAPI.RequestMarketData(mContract, Me, mDataConsumer, mIncludeMarketDepth)
 Exit Sub
 err:
 handleFatalError err.number, _

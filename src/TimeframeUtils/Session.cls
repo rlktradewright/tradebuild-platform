@@ -58,10 +58,14 @@ End Type
 ' Member variables
 '@================================================================================
 
+' All times are in this timezone
+Private mTimezone As TimeZone
+
 Private mSessionStartTime As Date
 Private mSessionEndTime As Date
 
 Private mReferenceTime As Date
+
 Private mCurrentSessionStartTime As Date
 Private mCurrentSessionEndTime As Date
 
@@ -74,8 +78,7 @@ Private mClock As Clock
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mClock = New Clock
-mClock.SimulateTime True
+Set mClock = CreateSimulatedClock(1, "")
 End Sub
 
 '@================================================================================
@@ -127,6 +130,16 @@ End Property
                 
 Public Property Get sessionStartTime() As Date
 sessionStartTime = mSessionStartTime
+End Property
+
+Friend Property Let TimeZone( _
+                ByVal value As TimeZone)
+Set mTimezone = value
+Set mClock = CreateSimulatedClock(1, mTimezone.standardName)
+End Property
+
+Public Property Get TimeZone() As TimeZone
+Set TimeZone = mTimezone
 End Property
 
 '@================================================================================

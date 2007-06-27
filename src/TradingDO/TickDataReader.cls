@@ -75,6 +75,8 @@ Private mFetchInProgress As Boolean
 
 Private mConnectionString As String
 
+Private mTimeZone As TWutilities30.TimeZone
+
 '@===============================================================================
 ' Class Event Handlers
 '@===============================================================================
@@ -164,9 +166,11 @@ End Sub
 
 Friend Sub initialise( _
                 ByVal connectionString As String, _
-                ByVal instrumentId As Long)
+                ByVal instrumentId As Long, _
+                ByVal TimeZoneName As String)
 mConnectionString = connectionString
 mInstrumentID = instrumentId
+Set mTimeZone = CreateTimeZone(TimeZoneName)
 connectToDB
 End Sub
 
@@ -234,14 +238,14 @@ Set param = cmd.CreateParameter("@DataVersion", _
                             Version)
 cmd.Parameters.Append param
 
-Set param = cmd.CreateParameter("@FromUTC", _
+Set param = cmd.CreateParameter("@FromExchange", _
                             DataTypeEnum.adDate, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             fromTime)
 cmd.Parameters.Append param
 
-Set param = cmd.CreateParameter("@ToUTC", _
+Set param = cmd.CreateParameter("@ToExchange", _
                             DataTypeEnum.adDate, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
@@ -252,14 +256,14 @@ Set param = cmd.CreateParameter("@FromLocal", _
                             DataTypeEnum.adDate, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
-                            ConvertDateUTCToLocal(fromTime))
+                            ConvertDateUTCToLocal(ConvertDateTZToUTC(fromTime, mTimeZone)))
 cmd.Parameters.Append param
 
 Set param = cmd.CreateParameter("@ToLocal", _
                             DataTypeEnum.adDate, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
-                            ConvertDateUTCToLocal(toTime))
+                            ConvertDateUTCToLocal(ConvertDateTZToUTC(toTime, mTimeZone)))
 cmd.Parameters.Append param
 
 cmd.ActiveConnection = mConnection

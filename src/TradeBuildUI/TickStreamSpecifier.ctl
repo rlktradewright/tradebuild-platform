@@ -10,7 +10,7 @@ Begin VB.UserControl TickStreamSpecifier
       Caption         =   "Contract specification"
       Height          =   3255
       Left            =   0
-      TabIndex        =   20
+      TabIndex        =   21
       Top             =   0
       Width           =   2775
       Begin VB.PictureBox Picture1 
@@ -21,17 +21,17 @@ Begin VB.UserControl TickStreamSpecifier
          Left            =   120
          ScaleHeight     =   2895
          ScaleWidth      =   2535
-         TabIndex        =   21
+         TabIndex        =   22
          Top             =   240
          Width           =   2535
          Begin TradeBuildUI26.ContractSpecBuilder ContractSpecBuilder1 
             Height          =   2895
             Left            =   0
-            TabIndex        =   22
+            TabIndex        =   0
             Top             =   0
             Width           =   2535
-            _extentx        =   4471
-            _extenty        =   5106
+            _ExtentX        =   4471
+            _ExtentY        =   5106
          End
       End
    End
@@ -39,7 +39,7 @@ Begin VB.UserControl TickStreamSpecifier
       Caption         =   "Data source"
       Height          =   735
       Left            =   2880
-      TabIndex        =   16
+      TabIndex        =   18
       Top             =   0
       Width           =   3735
       Begin VB.PictureBox Picture2 
@@ -48,7 +48,7 @@ Begin VB.UserControl TickStreamSpecifier
          Left            =   120
          ScaleHeight     =   375
          ScaleWidth      =   3495
-         TabIndex        =   17
+         TabIndex        =   19
          Top             =   240
          Width           =   3495
          Begin VB.ComboBox FormatCombo 
@@ -57,7 +57,7 @@ Begin VB.UserControl TickStreamSpecifier
             Left            =   720
             List            =   "TickStreamSpecifier.ctx":0002
             Style           =   2  'Dropdown List
-            TabIndex        =   18
+            TabIndex        =   1
             Top             =   0
             Width           =   2775
          End
@@ -65,7 +65,7 @@ Begin VB.UserControl TickStreamSpecifier
             Caption         =   "Format"
             Height          =   255
             Left            =   120
-            TabIndex        =   19
+            TabIndex        =   20
             Top             =   0
             Width           =   855
          End
@@ -75,7 +75,7 @@ Begin VB.UserControl TickStreamSpecifier
       Caption         =   "Dates/Times"
       Height          =   2535
       Left            =   2880
-      TabIndex        =   0
+      TabIndex        =   10
       Top             =   720
       Width           =   3735
       Begin VB.PictureBox Picture3 
@@ -84,20 +84,20 @@ Begin VB.UserControl TickStreamSpecifier
          Left            =   120
          ScaleHeight     =   2175
          ScaleWidth      =   3495
-         TabIndex        =   1
+         TabIndex        =   11
          Top             =   240
          Width           =   3495
          Begin VB.TextBox ToDateText 
             Height          =   285
             Left            =   2160
-            TabIndex        =   13
+            TabIndex        =   3
             Top             =   0
             Width           =   1260
          End
          Begin VB.TextBox FromDateText 
             Height          =   285
             Left            =   480
-            TabIndex        =   12
+            TabIndex        =   2
             Top             =   0
             Width           =   1260
          End
@@ -105,7 +105,7 @@ Begin VB.UserControl TickStreamSpecifier
             Caption         =   "Complete sessions"
             Height          =   255
             Left            =   480
-            TabIndex        =   11
+            TabIndex        =   4
             Top             =   360
             Value           =   1  'Checked
             Width           =   2775
@@ -115,7 +115,7 @@ Begin VB.UserControl TickStreamSpecifier
             Enabled         =   0   'False
             Height          =   375
             Left            =   480
-            TabIndex        =   10
+            TabIndex        =   5
             Top             =   600
             Value           =   1  'Checked
             Width           =   2895
@@ -124,7 +124,7 @@ Begin VB.UserControl TickStreamSpecifier
             Caption         =   "Session times"
             Height          =   1095
             Left            =   0
-            TabIndex        =   2
+            TabIndex        =   12
             Top             =   1080
             Width           =   3495
             Begin VB.PictureBox Picture4 
@@ -133,7 +133,7 @@ Begin VB.UserControl TickStreamSpecifier
                Left            =   120
                ScaleHeight     =   810
                ScaleWidth      =   3285
-               TabIndex        =   3
+               TabIndex        =   13
                Top             =   240
                Width           =   3285
                Begin VB.OptionButton UseContractTimesOption 
@@ -141,7 +141,7 @@ Begin VB.UserControl TickStreamSpecifier
                   Enabled         =   0   'False
                   Height          =   255
                   Left            =   0
-                  TabIndex        =   7
+                  TabIndex        =   6
                   Top             =   0
                   Value           =   -1  'True
                   Width           =   1695
@@ -151,7 +151,7 @@ Begin VB.UserControl TickStreamSpecifier
                   Enabled         =   0   'False
                   Height          =   285
                   Left            =   2520
-                  TabIndex        =   6
+                  TabIndex        =   9
                   Top             =   240
                   Width           =   660
                End
@@ -160,7 +160,7 @@ Begin VB.UserControl TickStreamSpecifier
                   Enabled         =   0   'False
                   Height          =   285
                   Left            =   2520
-                  TabIndex        =   5
+                  TabIndex        =   8
                   Top             =   0
                   Width           =   660
                End
@@ -169,7 +169,7 @@ Begin VB.UserControl TickStreamSpecifier
                   Enabled         =   0   'False
                   Height          =   495
                   Left            =   0
-                  TabIndex        =   4
+                  TabIndex        =   7
                   Top             =   240
                   Width           =   2055
                End
@@ -178,7 +178,7 @@ Begin VB.UserControl TickStreamSpecifier
                   Caption         =   "To"
                   Height          =   255
                   Left            =   1920
-                  TabIndex        =   9
+                  TabIndex        =   15
                   Top             =   240
                   Width           =   495
                End
@@ -187,7 +187,7 @@ Begin VB.UserControl TickStreamSpecifier
                   Caption         =   "From"
                   Height          =   255
                   Left            =   1920
-                  TabIndex        =   8
+                  TabIndex        =   14
                   Top             =   0
                   Width           =   495
                End
@@ -198,7 +198,7 @@ Begin VB.UserControl TickStreamSpecifier
             Caption         =   "To"
             Height          =   255
             Left            =   1800
-            TabIndex        =   15
+            TabIndex        =   17
             Top             =   0
             Width           =   255
          End
@@ -206,7 +206,7 @@ Begin VB.UserControl TickStreamSpecifier
             Caption         =   "From"
             Height          =   255
             Left            =   0
-            TabIndex        =   14
+            TabIndex        =   16
             Top             =   0
             Width           =   855
          End
@@ -249,7 +249,9 @@ Option Explicit
 ' Events
 '@================================================================================
 
-Event TickfilesSpecified(ByRef pTickfileSpecifier() As TickfileSpecifier)
+Event NotReady()
+Event ready()
+Event TickStreamsSpecified(ByRef pTickfileSpecifier() As TickfileSpecifier)
 
 '@================================================================================
 ' Constants
@@ -267,7 +269,7 @@ Event TickfilesSpecified(ByRef pTickfileSpecifier() As TickfileSpecifier)
 ' Member variables
 '@================================================================================
 
-Private mSupportedTickfileFormats() As TickfileFormatSpecifier
+Private mSupportedTickStreamFormats() As TickfileFormatSpecifier
 Private WithEvents mContracts       As Contracts
 Attribute mContracts.VB_VarHelpID = -1
 
@@ -277,6 +279,10 @@ Private mSecType                    As SecurityTypes
 ' Form Event Handlers
 '@================================================================================
 
+Private Sub UserControl_Initialize()
+getSupportedTickstreamFormats
+End Sub
+
 '@================================================================================
 ' xxxx Interface Members
 '@================================================================================
@@ -284,10 +290,6 @@ Private mSecType                    As SecurityTypes
 '@================================================================================
 ' Control Event Handlers
 '@================================================================================
-
-Private Sub CancelButton_Click()
-Unload Me
-End Sub
 
 Private Sub CompleteSessionCheck_Click()
 If CompleteSessionCheck = vbChecked Then
@@ -298,71 +300,41 @@ Else
     UseCustomTimesOption.Enabled = False
 End If
 adjustCustomTimeFieldAttributes
-checkOk
+checkReady
 End Sub
 
 Private Sub ContractSpecBuilder1_NotReady()
-OkButton.Enabled = False
+RaiseEvent NotReady
 End Sub
 
 Private Sub ContractSpecBuilder1_Ready()
-checkOk
+checkReady
 End Sub
 
 Private Sub CustomFromTimeText_Change()
-checkOk
+checkReady
 End Sub
 
 Private Sub CustomToTimeText_Change()
-checkOk
+checkReady
 End Sub
 
 Private Sub FromDateText_Change()
-checkOk
-End Sub
-
-Private Sub OkButton_Click()
-Dim contractSpec As contractSpecifier
-Dim lContractsBuilder As ContractsBuilder
-
-On Error GoTo err
-
-ErrorLabel.caption = ""
-
-Screen.MousePointer = vbHourglass
-
-Set contractSpec = ContractSpecBuilder1.contractSpecifier
-mSecType = contractSpec.sectype
-
-Set lContractsBuilder = CreateContractsBuilder(contractSpec)
-Set mContracts = lContractsBuilder.Contracts
-TradeBuildAPI.loadContracts lContractsBuilder
-
-Exit Sub
-
-err:
-
-Screen.MousePointer = vbDefault
-If err.Number = ErrorCodes.ErrIllegalArgumentException Then
-    ErrorLabel.caption = err.Description
-Else
-    err.Raise err.Number
-End If
-    
+checkReady
 End Sub
 
 Private Sub ToDateText_Change()
-checkOk
+checkReady
 End Sub
 
 Private Sub UseContractTimesOption_Click()
 adjustCustomTimeFieldAttributes
-checkOk
+checkReady
 End Sub
 
 Private Sub UseCustomTimesOption_Click()
 adjustCustomTimeFieldAttributes
-checkOk
+checkReady
 End Sub
 
 '@================================================================================
@@ -416,9 +388,9 @@ Then
     End If
 End If
     
-For k = 0 To UBound(mSupportedTickfileFormats)
-    If mSupportedTickfileFormats(k).name = FormatCombo.Text Then
-        TickfileFormatID = mSupportedTickfileFormats(k).FormalID
+For k = 0 To UBound(mSupportedTickStreamFormats)
+    If mSupportedTickStreamFormats(k).name = FormatCombo.Text Then
+        TickfileFormatID = mSupportedTickStreamFormats(k).FormalID
         Exit For
     End If
 Next
@@ -534,7 +506,7 @@ If CompleteSessionCheck.value = vbChecked Then
             lTickfileSpecifiers(j).fromDate = ConvertDateTZToUTC(thisSessionStart, currContract.TimeZone)
             lTickfileSpecifiers(j).toDate = ConvertDateTZToUTC(thisSessionEnd, currContract.TimeZone)
             lTickfileSpecifiers(j).EntireSession = False
-            lTickfileSpecifiers(j).filename = FormatDateTime(lTickfileSpecifiers(j).fromDate, vbGeneralDate) & _
+            lTickfileSpecifiers(j).FileName = FormatDateTime(lTickfileSpecifiers(j).fromDate, vbGeneralDate) & _
                                         "-" & _
                                         FormatDateTime(lTickfileSpecifiers(j).toDate, vbGeneralDate) & _
                                         " " & _
@@ -542,7 +514,7 @@ If CompleteSessionCheck.value = vbChecked Then
         Else
             lTickfileSpecifiers(j).fromDate = currSessionStartUTC
             lTickfileSpecifiers(j).EntireSession = True
-            lTickfileSpecifiers(j).filename = "Session " & _
+            lTickfileSpecifiers(j).FileName = "Session " & _
                                             FormatDateTime(DateValue(currSessionStartUTC), vbShortDate) & _
                                             " " & _
                                             Replace(currContract.specifier.ToString, vbCrLf, "; ")
@@ -608,7 +580,7 @@ Else
                         (aContract.expiryDate - aContract.daysBeforeExpiryToSwitch) _
                     Then
                         lTickfileSpecifiers(j).toDate = currSessionStartUTC
-                        lTickfileSpecifiers(j).filename = FormatDateTime(lTickfileSpecifiers(j).fromDate, vbGeneralDate) & _
+                        lTickfileSpecifiers(j).FileName = FormatDateTime(lTickfileSpecifiers(j).fromDate, vbGeneralDate) & _
                                                     "-" & _
                                                     FormatDateTime(lTickfileSpecifiers(j).toDate, vbGeneralDate) & " " & _
                                                     Replace(currContract.specifier.ToString, vbCrLf, "; ")
@@ -640,7 +612,7 @@ Else
     Loop
         
     lTickfileSpecifiers(j).toDate = toDateUTC
-    lTickfileSpecifiers(j).filename = FormatDateTime(lTickfileSpecifiers(j).fromDate, vbGeneralDate) & _
+    lTickfileSpecifiers(j).FileName = FormatDateTime(lTickfileSpecifiers(j).fromDate, vbGeneralDate) & _
                                 "-" & _
                                 FormatDateTime(lTickfileSpecifiers(j).toDate, vbGeneralDate) & " " & _
                                 Replace(currContract.specifier.ToString, vbCrLf, "; ")
@@ -648,9 +620,7 @@ Else
     ReDim Preserve lTickfileSpecifiers(j) As TickfileSpecifier
 End If
 
-RaiseEvent TickfilesSpecified(lTickfileSpecifiers)
-
-Unload Me
+RaiseEvent TickStreamsSpecified(lTickfileSpecifiers)
 
 End Sub
 
@@ -658,22 +628,39 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let SupportedTickfileFormats( _
-                            ByRef value() As TickfileFormatSpecifier)
-Dim i As Long
-
-mSupportedTickfileFormats = value
-
-For i = 0 To UBound(mSupportedTickfileFormats)
-    FormatCombo.addItem mSupportedTickfileFormats(i).name
-Next
-
-FormatCombo.ListIndex = 0
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub load()
+Dim contractSpec As contractSpecifier
+Dim lContractsBuilder As ContractsBuilder
+
+On Error GoTo Err
+
+ErrorLabel.caption = ""
+
+Screen.MousePointer = vbHourglass
+
+Set contractSpec = ContractSpecBuilder1.contractSpecifier
+mSecType = contractSpec.sectype
+
+Set lContractsBuilder = CreateContractsBuilder(contractSpec)
+Set mContracts = lContractsBuilder.Contracts
+TradeBuildAPI.loadContracts lContractsBuilder
+
+Exit Sub
+
+Err:
+
+Screen.MousePointer = vbDefault
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    ErrorLabel.caption = Err.Description
+Else
+    Err.Raise Err.Number
+End If
+    
+End Sub
 
 '@================================================================================
 ' Helper Functions
@@ -687,30 +674,38 @@ Else
 End If
 End Sub
 
-Private Sub checkOk()
+Private Function checkOk() As Boolean
 
-OkButton.Enabled = False
+If FormatCombo.ListCount = 0 Then Exit Function
 
-If Not ContractSpecBuilder1.ready Then Exit Sub
+If Not ContractSpecBuilder1.ready Then Exit Function
 
-If Not IsDate(FromDateText.Text) Then Exit Sub
-If CompleteSessionCheck.value = vbUnchecked And Not IsDate(ToDateText.Text) Then Exit Sub
+If Not IsDate(FromDateText.Text) Then Exit Function
+If CompleteSessionCheck.value = vbUnchecked And Not IsDate(ToDateText.Text) Then Exit Function
 If CompleteSessionCheck.value = vbChecked And _
     ToDateText.Text <> "" And _
-    Not IsDate(ToDateText.Text) Then Exit Sub
+    Not IsDate(ToDateText.Text) Then Exit Function
 If IsDate(ToDateText.Text) Then
-    If CDate(FromDateText.Text) > CDate(ToDateText.Text) Then Exit Sub
+    If CDate(FromDateText.Text) > CDate(ToDateText.Text) Then Exit Function
 End If
 
 If UseCustomTimesOption Then
-    If Not IsDate(CustomFromTimeText) Then Exit Sub
-    If Not IsDate(CustomToTimeText) Then Exit Sub
-    If CDbl(CDate(CustomFromTimeText)) >= 1# Then Exit Sub
-    If CDbl(CDate(CustomToTimeText)) >= 1# Then Exit Sub
+    If Not IsDate(CustomFromTimeText) Then Exit Function
+    If Not IsDate(CustomToTimeText) Then Exit Function
+    If CDbl(CDate(CustomFromTimeText)) >= 1# Then Exit Function
+    If CDbl(CDate(CustomToTimeText)) >= 1# Then Exit Function
 End If
 
-OkButton.Enabled = True
+checkOk = True
 
+End Function
+
+Private Sub checkReady()
+If checkOk Then
+    RaiseEvent ready
+Else
+    RaiseEvent NotReady
+End If
 End Sub
 
 Private Sub disableCustomTimeFields()
@@ -739,25 +734,42 @@ CustomToTimeText.Enabled = True
 CustomToTimeText.backColor = vbWindowBackground
 End Sub
 
-'Private Function skipWeekends( _
-'                ByVal timestamp As Date, _
-'                ByVal sessionStartTime As Date, _
-'                ByVal sessionEndTime As Date) As Date
-'Dim tradesOvernight As Boolean
-'Dim dayOfWeek As Integer
-'
-'If sessionEndTime < sessionStartTime Then
-'    tradesOvernight = True
-'End If
-'
-'dayOfWeek = DatePart("w", timestamp, vbMonday)
-'Do While (tradesOvernight And (dayOfWeek = 5 Or dayOfWeek = 6)) Or _
-'    (Not tradesOvernight And (dayOfWeek = 6 Or dayOfWeek = 7))
-'    timestamp = timestamp + 1
-'    dayOfWeek = DatePart("w", timestamp, vbMonday)
-'Loop
-'skipWeekends = timestamp
-'End Function
+Private Sub getSupportedTickstreamFormats()
+Dim tff() As TickfileFormatSpecifier
+Dim i As Long
+Dim j As Long
+
+On Error GoTo Err
+
+tff = TradeBuildAPI.SupportedInputTickfileFormats
+
+ReDim mSupportedTickStreamFormats(9) As TickfileFormatSpecifier
+j = -1
+
+For i = 0 To UBound(tff)
+    If tff(i).FormatType = StreamBased Then
+        j = j + 1
+        If j > UBound(mSupportedTickStreamFormats) Then
+            ReDim Preserve mSupportedTickStreamFormats(UBound(mSupportedTickStreamFormats) + 9) As TickfileFormatSpecifier
+        End If
+        mSupportedTickStreamFormats(j) = tff(i)
+        FormatCombo.addItem mSupportedTickStreamFormats(j).name
+    End If
+Next
+
+FormatCombo.ListIndex = 0
+
+If j = -1 Then
+    Erase mSupportedTickStreamFormats
+Else
+    ReDim Preserve mSupportedTickStreamFormats(j) As TickfileFormatSpecifier
+End If
+
+Exit Sub
+
+Err:
+
+End Sub
 
 
 

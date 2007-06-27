@@ -47,7 +47,7 @@ Public Type InputDescriptor
     description         As String
     inputType           As StudyInputTypes
     isDefault           As Boolean
-    ticksize            As Double
+    tickSize            As Double
 End Type
 
 ' The following type is no longer used and is kept only to maintain binary
@@ -110,7 +110,7 @@ End Type
 ' Member variables
 '================================================================================
 
-Private mInputs() As InputDescriptor
+Private mInputs()               As InputDescriptor
 Private mNextInputIndex         As Long
 
 Private mStudies                As Collection
@@ -120,6 +120,9 @@ Private mSessionStartTime       As Date
 Private mSessionEndTime         As Date
 
 Private mSessionTimesSet        As Boolean
+
+Private mExchangeTimeZone       As TimeZone
+Private mUseLocalTimeForStudies As Boolean
 
 '================================================================================
 ' Class Event Handlers
@@ -166,12 +169,12 @@ Public Function addInput( _
                 ByVal description As String, _
                 ByVal inputType As StudyInputTypes, _
                 ByVal isDefault As Boolean, _
-                ByVal ticksize As Double) As Long
+                ByVal tickSize As Double) As Long
 Dim inpStudy As InputStudy
 
 Set inpStudy = source   ' check the right class
 
-inpStudy.addInput inputName, description, inputType, isDefault, ticksize
+inpStudy.addInput inputName, description, inputType, isDefault, tickSize
 
 If mNextInputIndex = UBound(mInputs) Then
     ReDim Preserve mInputs(UBound(mInputs) + 10) As InputDescriptor
@@ -181,7 +184,7 @@ mInputs(mNextInputIndex).inputName = inputName
 mInputs(mNextInputIndex).description = description
 mInputs(mNextInputIndex).inputType = inputType
 mInputs(mNextInputIndex).isDefault = isDefault
-mInputs(mNextInputIndex).ticksize = ticksize
+mInputs(mNextInputIndex).tickSize = tickSize
 addInput = mNextInputIndex
 mNextInputIndex = mNextInputIndex + 1
 End Function
@@ -195,7 +198,11 @@ Dim studyEntry As StudyTableEntry
 On Error GoTo Err
 
 Set inpStudy = New InputStudy
-inpStudy.initialise name, mSessionStartTime, mSessionEndTime
+inpStudy.initialise name, _
+                    mSessionStartTime, _
+                    mSessionEndTime, _
+                    mExchangeTimeZone, _
+                    mUseLocalTimeForStudies
 Set addSource = inpStudy
 
 Set lStudy = inpStudy
@@ -276,7 +283,7 @@ If lStudy Is Nothing Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
 Set studyEntry.study = lStudy
 studyEntry.numberOfCachedValues = numberOfValuesToCache
 
-Set studyInputDefs = lStudy.StudyDefinition.studyInputDefinitions
+Set studyInputDefs = lStudy.studyDefinition.studyInputDefinitions
 
 ReDim inValueNames(UBound(inputValueNames)) As String
 For i = 0 To UBound(inputValueNames)
@@ -342,6 +349,7 @@ lInputStudy.addStudy studyToMove, inputValueNames, 0
 studyToMove.switchUnderlyingStudy lInputStudy
 End Sub
 
+' timestamp is in exchange timezone
 Public Sub notifyInput( _
                 ByVal inputHandle As Long, _
                 ByVal inputValue As Variant, _
@@ -355,9 +363,9 @@ End Sub
 
 Public Sub setInputTicksize( _
                 ByVal inputHandle As Long, _
-                ByVal ticksize As Double)
-mInputs(inputHandle).ticksize = ticksize
-mInputs(inputHandle).source.setInputTicksize mInputs(inputHandle).inputName, ticksize
+                ByVal tickSize As Double)
+mInputs(inputHandle).tickSize = tickSize
+mInputs(inputHandle).source.setInputTicksize mInputs(inputHandle).inputName, tickSize
 End Sub
 
 ''
@@ -368,7 +376,9 @@ End Sub
 '@/
 Public Sub setSessionTimes( _
                 ByVal sessionStartTime As Date, _
-                ByVal sessionEndTime As Date)
+                ByVal sessionEndTime As Date, _
+                ByVal exchangeTimeZone As TimeZone, _
+                ByVal useLocalTimeForStudies As Boolean)
 Dim lStudy As InputStudy
 Dim lStudyEntry As StudyTableEntry
 Dim lVar As Variant
@@ -378,10 +388,15 @@ If mSessionTimesSet Then _
             "StudiesSupp" & "." & "StudyManager" & ":" & "setSessionTimes", _
             "Session times have already been set"
 
+Set mExchangeTimeZone = exchangeTimeZone
+If mExchangeTimeZone Is Nothing Then Set mExchangeTimeZone = CreateTimeZone("")
+
 If CDbl(sessionStartTime) > 1 Then sessionStartTime = sessionStartTime - Int(sessionStartTime)
 mSessionStartTime = sessionStartTime
 If CDbl(sessionEndTime) > 1 Then sessionEndTime = sessionEndTime - Int(sessionEndTime)
 mSessionEndTime = sessionEndTime
+
+mUseLocalTimeForStudies = useLocalTimeForStudies
 
 mSessionTimesSet = True
 
@@ -389,7 +404,10 @@ For Each lVar In mStudies
     lStudyEntry = lVar
     If TypeOf lStudyEntry.study Is InputStudy Then
         Set lStudy = lStudyEntry.study
-        lStudy.setSessionTimes mSessionStartTime, mSessionEndTime
+        lStudy.setSessionTimes mSessionStartTime, _
+                                mSessionEndTime, _
+                                mExchangeTimeZone, _
+                                useLocalTimeForStudies
     End If
 Next
 End Sub

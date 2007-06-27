@@ -8,7 +8,7 @@ Option Explicit
 Public Const ServiceProviderName As String = "TickfileSP"
 Public Const ProviderKey As String = "TickfileSP"
 
-Public Const TICKFILE_CURR_VERSION As Integer = 5
+Public Const TRADEBUILD_TICKFILE_CURR_VERSION As Integer = 5
 
 Public Const TICKFILE_DECLARER As String = "tickfile"
 Public Const CONTRACT_DETAILS_MARKER As String = "contractdetails="

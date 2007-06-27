@@ -5,93 +5,20 @@ Begin VB.Form fTickfileSpecifier
    ClientHeight    =   3855
    ClientLeft      =   45
    ClientTop       =   375
-   ClientWidth     =   7680
+   ClientWidth     =   7665
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
    MinButton       =   0   'False
    ScaleHeight     =   3855
-   ScaleWidth      =   7680
+   ScaleWidth      =   7665
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
-   Begin VB.Frame SessionTimesFrame 
-      Caption         =   "Session times"
-      Height          =   855
-      Left            =   3000
-      TabIndex        =   21
-      Top             =   2520
-      Width           =   3735
-      Begin VB.PictureBox Picture4 
-         BorderStyle     =   0  'None
-         Height          =   570
-         Left            =   120
-         ScaleHeight     =   570
-         ScaleWidth      =   3495
-         TabIndex        =   22
-         Top             =   240
-         Width           =   3495
-         Begin VB.OptionButton UseContractTimesOption 
-            Caption         =   "Use contract times"
-            Enabled         =   0   'False
-            Height          =   255
-            Left            =   0
-            TabIndex        =   25
-            Top             =   0
-            Value           =   -1  'True
-            Width           =   1695
-         End
-         Begin VB.TextBox CustomToTimeText 
-            BackColor       =   &H8000000F&
-            Enabled         =   0   'False
-            Height          =   285
-            Left            =   2640
-            TabIndex        =   8
-            Top             =   240
-            Width           =   660
-         End
-         Begin VB.TextBox CustomFromTimeText 
-            BackColor       =   &H8000000F&
-            Enabled         =   0   'False
-            Height          =   285
-            Left            =   2640
-            TabIndex        =   7
-            Top             =   0
-            Width           =   660
-         End
-         Begin VB.OptionButton UseCustomTimesOption 
-            Caption         =   "Use custom times"
-            Enabled         =   0   'False
-            Height          =   255
-            Left            =   0
-            TabIndex        =   6
-            Top             =   240
-            Width           =   1695
-         End
-         Begin VB.Label Label11 
-            Alignment       =   1  'Right Justify
-            Caption         =   "To"
-            Height          =   255
-            Left            =   2040
-            TabIndex        =   24
-            Top             =   240
-            Width           =   495
-         End
-         Begin VB.Label Label10 
-            Alignment       =   1  'Right Justify
-            Caption         =   "From"
-            Height          =   255
-            Left            =   2040
-            TabIndex        =   23
-            Top             =   0
-            Width           =   495
-         End
-      End
-   End
    Begin VB.CommandButton OkButton 
       Caption         =   "Ok"
       Enabled         =   0   'False
       Height          =   495
       Left            =   6840
-      TabIndex        =   9
+      TabIndex        =   10
       Top             =   240
       Width           =   735
    End
@@ -100,65 +27,138 @@ Begin VB.Form fTickfileSpecifier
       Caption         =   "Cancel"
       Height          =   495
       Left            =   6840
-      TabIndex        =   10
+      TabIndex        =   11
       Top             =   840
       Width           =   735
    End
    Begin VB.Frame Frame3 
       Caption         =   "Dates/Times"
-      Height          =   1455
+      Height          =   2535
       Left            =   3000
-      TabIndex        =   16
-      Top             =   960
+      TabIndex        =   17
+      Top             =   840
       Width           =   3735
       Begin VB.PictureBox Picture3 
          BorderStyle     =   0  'None
-         Height          =   1095
+         Height          =   2175
          Left            =   120
-         ScaleHeight     =   1095
+         ScaleHeight     =   2175
          ScaleWidth      =   3495
-         TabIndex        =   17
+         TabIndex        =   18
          Top             =   240
          Width           =   3495
+         Begin VB.Frame SessionTimesFrame 
+            Caption         =   "Session times"
+            Height          =   1095
+            Left            =   0
+            TabIndex        =   22
+            Top             =   1080
+            Width           =   3495
+            Begin VB.PictureBox Picture4 
+               BorderStyle     =   0  'None
+               Height          =   810
+               Left            =   120
+               ScaleHeight     =   810
+               ScaleWidth      =   3285
+               TabIndex        =   23
+               Top             =   240
+               Width           =   3285
+               Begin VB.OptionButton UseCustomTimesOption 
+                  Caption         =   "Use custom times (must be in exchange timezone)"
+                  Enabled         =   0   'False
+                  Height          =   495
+                  Left            =   0
+                  TabIndex        =   7
+                  Top             =   240
+                  Width           =   2055
+               End
+               Begin VB.TextBox CustomFromTimeText 
+                  BackColor       =   &H8000000F&
+                  Enabled         =   0   'False
+                  Height          =   285
+                  Left            =   2520
+                  TabIndex        =   8
+                  Top             =   0
+                  Width           =   660
+               End
+               Begin VB.TextBox CustomToTimeText 
+                  BackColor       =   &H8000000F&
+                  Enabled         =   0   'False
+                  Height          =   285
+                  Left            =   2520
+                  TabIndex        =   9
+                  Top             =   240
+                  Width           =   660
+               End
+               Begin VB.OptionButton UseContractTimesOption 
+                  Caption         =   "Use contract times"
+                  Enabled         =   0   'False
+                  Height          =   255
+                  Left            =   0
+                  TabIndex        =   6
+                  Top             =   0
+                  Value           =   -1  'True
+                  Width           =   1695
+               End
+               Begin VB.Label Label10 
+                  Alignment       =   1  'Right Justify
+                  Caption         =   "From"
+                  Height          =   255
+                  Left            =   1920
+                  TabIndex        =   25
+                  Top             =   0
+                  Width           =   495
+               End
+               Begin VB.Label Label11 
+                  Alignment       =   1  'Right Justify
+                  Caption         =   "To"
+                  Height          =   255
+                  Left            =   1920
+                  TabIndex        =   24
+                  Top             =   240
+                  Width           =   495
+               End
+            End
+         End
          Begin VB.CheckBox UseExchangeTimezoneCheck 
-            Caption         =   "Use exchange timezone"
+            Caption         =   "Use exchange timezone (otherwise local time)"
             Enabled         =   0   'False
             Height          =   375
-            Left            =   0
-            TabIndex        =   2
-            Top             =   0
+            Left            =   480
+            TabIndex        =   5
+            Top             =   600
             Value           =   1  'Checked
-            Width           =   3015
+            Width           =   2895
          End
          Begin VB.CheckBox CompleteSessionCheck 
             Caption         =   "Complete sessions"
             Height          =   255
             Left            =   480
-            TabIndex        =   5
-            Top             =   840
+            TabIndex        =   4
+            Top             =   360
             Value           =   1  'Checked
             Width           =   2775
          End
-         Begin VB.TextBox FromText 
+         Begin VB.TextBox FromDateText 
             Height          =   285
             Left            =   480
-            TabIndex        =   3
-            Top             =   480
+            TabIndex        =   2
+            Top             =   0
             Width           =   1260
          End
-         Begin VB.TextBox ToText 
+         Begin VB.TextBox ToDateText 
             Height          =   285
             Left            =   2160
-            TabIndex        =   4
-            Top             =   480
+            TabIndex        =   3
+            Top             =   0
             Width           =   1260
          End
          Begin VB.Label Label8 
             Caption         =   "From"
             Height          =   255
             Left            =   0
-            TabIndex        =   19
-            Top             =   480
+            TabIndex        =   20
+            Top             =   0
             Width           =   855
          End
          Begin VB.Label Label7 
@@ -166,8 +166,8 @@ Begin VB.Form fTickfileSpecifier
             Caption         =   "To"
             Height          =   255
             Left            =   1800
-            TabIndex        =   18
-            Top             =   480
+            TabIndex        =   19
+            Top             =   0
             Width           =   255
          End
       End
@@ -176,7 +176,7 @@ Begin VB.Form fTickfileSpecifier
       Caption         =   "Data source"
       Height          =   735
       Left            =   3000
-      TabIndex        =   13
+      TabIndex        =   14
       Top             =   120
       Width           =   3735
       Begin VB.PictureBox Picture2 
@@ -185,7 +185,7 @@ Begin VB.Form fTickfileSpecifier
          Left            =   120
          ScaleHeight     =   375
          ScaleWidth      =   3495
-         TabIndex        =   14
+         TabIndex        =   15
          Top             =   240
          Width           =   3495
          Begin VB.ComboBox FormatCombo 
@@ -202,7 +202,7 @@ Begin VB.Form fTickfileSpecifier
             Caption         =   "Format"
             Height          =   255
             Left            =   120
-            TabIndex        =   15
+            TabIndex        =   16
             Top             =   0
             Width           =   855
          End
@@ -212,7 +212,7 @@ Begin VB.Form fTickfileSpecifier
       Caption         =   "Contract specification"
       Height          =   3255
       Left            =   120
-      TabIndex        =   11
+      TabIndex        =   12
       Top             =   120
       Width           =   2775
       Begin VB.PictureBox Picture1 
@@ -223,7 +223,7 @@ Begin VB.Form fTickfileSpecifier
          Left            =   120
          ScaleHeight     =   2895
          ScaleWidth      =   2535
-         TabIndex        =   12
+         TabIndex        =   13
          Top             =   240
          Width           =   2535
          Begin TradeBuildUI26.ContractSpecBuilder ContractSpecBuilder1 
@@ -241,7 +241,7 @@ Begin VB.Form fTickfileSpecifier
       ForeColor       =   &H000000FF&
       Height          =   255
       Left            =   120
-      TabIndex        =   20
+      TabIndex        =   21
       Top             =   3480
       Width           =   7455
    End
@@ -274,7 +274,7 @@ Option Explicit
 ' Events
 '@================================================================================
 
-Event TickfilesSpecified(ByRef pTickfileSpecifier() As TickfileSPecifier)
+Event TickfilesSpecified(ByRef pTickfileSpecifier() As TickfileSpecifier)
 
 '@================================================================================
 ' Constants
@@ -342,7 +342,7 @@ Private Sub CustomToTimeText_Change()
 checkOk
 End Sub
 
-Private Sub FromText_Change()
+Private Sub FromDateText_Change()
 checkOk
 End Sub
 
@@ -376,7 +376,7 @@ End If
     
 End Sub
 
-Private Sub ToText_Change()
+Private Sub ToDateText_Change()
 checkOk
 End Sub
 
@@ -400,7 +400,7 @@ ErrorLabel.caption = "Invalid contract specification:" & reason
 End Sub
 
 Private Sub mContracts_NoMoreContractDetails()
-Dim lTickfileSpecifiers() As TickfileSPecifier
+Dim lTickfileSpecifiers() As TickfileSpecifier
 Dim i As Long
 Dim j As Long
 Dim k As Long
@@ -408,14 +408,21 @@ Dim lContract As Contract
 Dim lSessionBuilder As SessionBuilder
 Dim lSession As session
 Dim currContract As Contract
-Dim sessionStartTime As Date
-Dim sessionEndTime As Date
+Dim customSessionStartTime As Date
+Dim customSessionEndTime As Date
 Dim fromSessionStart As Date
 Dim fromSessionEnd As Date
 Dim toSessionStart As Date
 Dim toSessionEnd As Date
-Dim endTime As Date
 Dim TickfileFormatID As String
+
+' the from and to dates converted (if necessary) to the contract's timezone
+Dim fromDate As Date
+Dim toDate As Date
+
+' the from and to dates, session-oriented if required, converted to UTC
+Dim fromDateUTC As Date
+Dim toDateUTC As Date
 
 Screen.MousePointer = vbDefault
 If mContracts.count = 0 Then
@@ -442,42 +449,64 @@ For k = 0 To UBound(mSupportedTickfileFormats)
 Next
 
 ' get the most recent contract (though they should all have the same
-'info regarding session times)
+' info regarding session times)
 Set lContract = mContracts(mContracts.count)
+
+If UseExchangeTimezoneCheck = vbChecked Then
+    fromDate = CDate(FromDateText)
+    If ToDateText <> "" Then toDate = CDate(ToDateText)
+Else
+    fromDate = ConvertDateUTCToTZ(ConvertDateLocalToUTC(CDate(FromDateText)), lContract.TimeZone)
+    If ToDateText <> "" Then toDate = ConvertDateUTCToTZ(ConvertDateLocalToUTC(CDate(ToDateText)), lContract.TimeZone)
+End If
+
+' determine start and end times ---------------------------------------------------
 
 Set lSessionBuilder = New SessionBuilder
 Set lSession = lSessionBuilder.session
 
+' note that the custom times are in the contract's timezone
+If CustomFromTimeText <> "" Then customSessionStartTime = CDate(CustomFromTimeText)
+If CustomToTimeText <> "" Then customSessionEndTime = CDate(CustomToTimeText)
+
 If UseCustomTimesOption Then
-    lSessionBuilder.sessionStartTime = CDate(CustomFromTimeText)
-    lSessionBuilder.sessionEndTime = CDate(CustomToTimeText)
+    lSessionBuilder.sessionStartTime = customSessionStartTime
+    lSessionBuilder.sessionEndTime = customSessionEndTime
 Else
     lSessionBuilder.sessionStartTime = lContract.sessionStartTime
     lSessionBuilder.sessionEndTime = lContract.sessionEndTime
 End If
 
-sessionStartTime = lContract.sessionStartTime
-sessionEndTime = lContract.sessionEndTime
-
-' datetime=sessionstart(fromdatetime)
-lSession.SessionTimes CDate(FromText), _
+' set the session start and end times for the starting date (in the contract's
+' local timezone)...
+lSession.SessionTimes fromDate, _
                     fromSessionStart, _
                     fromSessionEnd
+' ... and convert to UTC
+fromSessionStart = ConvertDateTZToUTC(fromSessionStart, lContract.TimeZone)
+fromSessionEnd = ConvertDateTZToUTC(fromSessionEnd, lContract.TimeZone)
+fromDateUTC = fromSessionStart
 
-If ToText <> "" Then
-    lSession.SessionTimes CDate(ToText), toSessionStart, toSessionEnd
+If toDate <> 0 Then
+    ' set the session start and end times for the starting date (in the contract's
+    ' local timezone)...
+    lSession.SessionTimes toDate, toSessionStart, toSessionEnd
+    ' ... and convert to UTC
+    toSessionStart = ConvertDateTZToUTC(toSessionStart, lContract.TimeZone)
+    toSessionEnd = ConvertDateTZToUTC(toSessionEnd, lContract.TimeZone)
+    
     If CompleteSessionCheck.value = vbChecked Then
-        endTime = toSessionEnd
+        toDateUTC = toSessionEnd
     Else
-        endTime = CDate(ToText)
+        toDateUTC = ConvertDateTZToUTC(toDate, lContract.TimeZone)
     End If
 Else
     toSessionStart = fromSessionStart
     toSessionEnd = fromSessionEnd
-    endTime = toSessionEnd
+    toDateUTC = toSessionEnd
 End If
 
-' find contract for datetime
+' find contract for start date ------------------------------------------------------
 Dim aContract As Contract
 
 If mSecType <> SecurityTypes.SecTypeFuture And _
@@ -488,7 +517,7 @@ Then
 Else
     For i = 1 To mContracts.count
         Set aContract = mContracts(i)
-        If DateValue(fromSessionStart) <= _
+        If DateValue(fromDateUTC) <= _
             (aContract.expiryDate - aContract.daysBeforeExpiryToSwitch) _
         Then
             Set currContract = aContract
@@ -503,75 +532,73 @@ Else
 End If
 
 If UseCustomTimesOption Then
-    Set currContract = editContractSessionTimes(currContract, sessionStartTime, sessionEndTime)
+    Set currContract = editContractSessionTimes(currContract, customSessionStartTime, customSessionEndTime)
 End If
 
-ReDim lTickfileSpecifiers(1000) As TickfileSPecifier
+ReDim lTickfileSpecifiers(1000) As TickfileSpecifier
 
-Dim currSessionStart As Date
+Dim currSessionStartUTC As Date
 Dim thisSessionStart As Date
 Dim thisSessionEnd As Date
 
-'currSessionStart = skipWeekends(fromSessionStart, sessionStartTime, sessionEndTime)
-currSessionStart = fromSessionStart
+currSessionStartUTC = fromDateUTC
 j = 0
 If CompleteSessionCheck.value = vbChecked Then
-    Do While currSessionStart < endTime
+    Do While currSessionStartUTC < toDateUTC
         If j > UBound(lTickfileSpecifiers) Then
-            ReDim Preserve lTickfileSpecifiers(UBound(lTickfileSpecifiers) + 1000) As TickfileSPecifier
+            ReDim Preserve lTickfileSpecifiers(UBound(lTickfileSpecifiers) + 1000) As TickfileSpecifier
         End If
-        Set lTickfileSpecifiers(j) = New TickfileSPecifier
+        Set lTickfileSpecifiers(j) = New TickfileSpecifier
         lTickfileSpecifiers(j).Contract = currContract
         lTickfileSpecifiers(j).TickfileFormatID = TickfileFormatID
         
         If UseCustomTimesOption Then
-            lSession.SessionTimes currSessionStart, thisSessionStart, thisSessionEnd
-            lTickfileSpecifiers(j).FromDate = thisSessionStart
-            lTickfileSpecifiers(j).ToDate = thisSessionEnd
+            lSession.SessionTimes ConvertDateUTCToTZ(currSessionStartUTC, currContract.TimeZone), _
+                                    thisSessionStart, _
+                                    thisSessionEnd
+            lTickfileSpecifiers(j).fromDate = ConvertDateTZToUTC(thisSessionStart, currContract.TimeZone)
+            lTickfileSpecifiers(j).toDate = ConvertDateTZToUTC(thisSessionEnd, currContract.TimeZone)
             lTickfileSpecifiers(j).EntireSession = False
-            lTickfileSpecifiers(j).FileName = FormatDateTime(lTickfileSpecifiers(j).FromDate, vbGeneralDate) & _
+            lTickfileSpecifiers(j).FileName = FormatDateTime(lTickfileSpecifiers(j).fromDate, vbGeneralDate) & _
                                         "-" & _
-                                        FormatDateTime(lTickfileSpecifiers(j).ToDate, vbGeneralDate) & _
+                                        FormatDateTime(lTickfileSpecifiers(j).toDate, vbGeneralDate) & _
                                         " " & _
                                         Replace(currContract.specifier.ToString, vbCrLf, "; ")
         Else
-            lTickfileSpecifiers(j).FromDate = currSessionStart
+            lTickfileSpecifiers(j).fromDate = currSessionStartUTC
             lTickfileSpecifiers(j).EntireSession = True
             lTickfileSpecifiers(j).FileName = "Session " & _
-                                            FormatDateTime(DateValue(currSessionStart), vbShortDate) & _
+                                            FormatDateTime(DateValue(currSessionStartUTC), vbShortDate) & _
                                             " " & _
                                             Replace(currContract.specifier.ToString, vbCrLf, "; ")
             
         End If
         
-'        currSessionStart = skipWeekends(currSessionStart + 1, _
-'                                        sessionStartTime, _
-'                                        sessionEndTime)
-        currSessionStart = currSessionStart + 1
+        currSessionStartUTC = currSessionStartUTC + 1
         
         If mSecType = SecurityTypes.SecTypeFuture Or _
             mSecType = SecurityTypes.SecTypeOption Or _
             mSecType = SecurityTypes.SecTypeFuturesOption _
         Then
-            If DateValue(currSessionStart) > _
+            If DateValue(currSessionStartUTC) > _
                 (currContract.expiryDate - currContract.daysBeforeExpiryToSwitch) _
             Then
                 For i = i + 1 To mContracts.count
                     Set aContract = mContracts(i)
-                    If DateValue(currSessionStart) <= _
+                    If DateValue(currSessionStartUTC) <= _
                         (aContract.expiryDate - aContract.daysBeforeExpiryToSwitch) _
                     Then
                         Set currContract = aContract
                         If UseCustomTimesOption Then
                             Set currContract = editContractSessionTimes(currContract, _
-                                                                        sessionStartTime, _
-                                                                        sessionEndTime)
+                                                                        customSessionStartTime, _
+                                                                        customSessionEndTime)
                         End If
                         Exit For
                     End If
                 Next
                 If currContract Is Nothing Then
-                    ErrorLabel.caption = "No contract from " & currSessionStart
+                    ErrorLabel.caption = "No contract from " & currSessionStartUTC
                     Exit Sub
                 End If
             End If
@@ -583,67 +610,67 @@ If CompleteSessionCheck.value = vbChecked Then
         ErrorLabel.caption = "No trading sessions in specified date range"
         Exit Sub
     End If
-    ReDim Preserve lTickfileSpecifiers(j - 1) As TickfileSPecifier
+    ReDim Preserve lTickfileSpecifiers(j - 1) As TickfileSpecifier
 Else
-    Set lTickfileSpecifiers(0) = New TickfileSPecifier
+    Set lTickfileSpecifiers(0) = New TickfileSpecifier
     lTickfileSpecifiers(0).Contract = currContract
     lTickfileSpecifiers(0).TickfileFormatID = TickfileFormatID
 
-    lTickfileSpecifiers(0).FromDate = CDate(FromText)
-    currSessionStart = currSessionStart + 1
-    Do While currSessionStart < endTime
+    lTickfileSpecifiers(0).fromDate = fromDateUTC
+    currSessionStartUTC = currSessionStartUTC + 1
+    Do While currSessionStartUTC < toDateUTC
         
         If mSecType = SecurityTypes.SecTypeFuture Or _
             mSecType = SecurityTypes.SecTypeOption Or _
             mSecType = SecurityTypes.SecTypeFuturesOption _
         Then
-            If DateValue(currSessionStart) > _
+            If DateValue(currSessionStartUTC) > _
                 (currContract.expiryDate - currContract.daysBeforeExpiryToSwitch) _
             Then
                 For i = i + 1 To mContracts.count
                     Set aContract = mContracts(i)
-                    If DateValue(currSessionStart) <= _
+                    If DateValue(currSessionStartUTC) <= _
                         (aContract.expiryDate - aContract.daysBeforeExpiryToSwitch) _
                     Then
-                        lTickfileSpecifiers(j).ToDate = currSessionStart
-                        lTickfileSpecifiers(j).FileName = FormatDateTime(lTickfileSpecifiers(j).FromDate, vbGeneralDate) & _
+                        lTickfileSpecifiers(j).toDate = currSessionStartUTC
+                        lTickfileSpecifiers(j).FileName = FormatDateTime(lTickfileSpecifiers(j).fromDate, vbGeneralDate) & _
                                                     "-" & _
-                                                    FormatDateTime(lTickfileSpecifiers(j).ToDate, vbGeneralDate) & " " & _
+                                                    FormatDateTime(lTickfileSpecifiers(j).toDate, vbGeneralDate) & " " & _
                                                     Replace(currContract.specifier.ToString, vbCrLf, "; ")
                         
                         Set currContract = aContract
                         
                         j = j + 1
                         If j > UBound(lTickfileSpecifiers) Then
-                            ReDim Preserve lTickfileSpecifiers(UBound(lTickfileSpecifiers) + 1000) As TickfileSPecifier
+                            ReDim Preserve lTickfileSpecifiers(UBound(lTickfileSpecifiers) + 1000) As TickfileSpecifier
                         End If
                         
-                        Set lTickfileSpecifiers(j) = New TickfileSPecifier
+                        Set lTickfileSpecifiers(j) = New TickfileSpecifier
                         lTickfileSpecifiers(j).Contract = currContract
                         lTickfileSpecifiers(j).TickfileFormatID = TickfileFormatID
                     
-                        lTickfileSpecifiers(j).FromDate = currSessionStart
+                        lTickfileSpecifiers(j).fromDate = currSessionStartUTC
                         Exit For
                     End If
                 Next
                 If currContract Is Nothing Then
-                    ErrorLabel.caption = "No contract from " & currSessionStart
+                    ErrorLabel.caption = "No contract from " & currSessionStartUTC
                     Exit Sub
                 End If
             End If
         End If
         
-        currSessionStart = currSessionStart + 1
+        currSessionStartUTC = currSessionStartUTC + 1
         
     Loop
         
-    lTickfileSpecifiers(j).ToDate = endTime
-    lTickfileSpecifiers(j).FileName = FormatDateTime(lTickfileSpecifiers(j).FromDate, vbGeneralDate) & _
+    lTickfileSpecifiers(j).toDate = toDateUTC
+    lTickfileSpecifiers(j).FileName = FormatDateTime(lTickfileSpecifiers(j).fromDate, vbGeneralDate) & _
                                 "-" & _
-                                FormatDateTime(lTickfileSpecifiers(j).ToDate, vbGeneralDate) & " " & _
+                                FormatDateTime(lTickfileSpecifiers(j).toDate, vbGeneralDate) & " " & _
                                 Replace(currContract.specifier.ToString, vbCrLf, "; ")
 
-    ReDim Preserve lTickfileSpecifiers(j) As TickfileSPecifier
+    ReDim Preserve lTickfileSpecifiers(j) As TickfileSpecifier
 End If
 
 RaiseEvent TickfilesSpecified(lTickfileSpecifiers)
@@ -691,13 +718,13 @@ OkButton.Enabled = False
 
 If Not ContractSpecBuilder1.ready Then Exit Sub
 
-If Not IsDate(FromText.Text) Then Exit Sub
-If CompleteSessionCheck.value = vbUnchecked And Not IsDate(ToText.Text) Then Exit Sub
+If Not IsDate(FromDateText.Text) Then Exit Sub
+If CompleteSessionCheck.value = vbUnchecked And Not IsDate(ToDateText.Text) Then Exit Sub
 If CompleteSessionCheck.value = vbChecked And _
-    ToText.Text <> "" And _
-    Not IsDate(ToText.Text) Then Exit Sub
-If IsDate(ToText.Text) Then
-    If CDate(FromText.Text) > CDate(ToText.Text) Then Exit Sub
+    ToDateText.Text <> "" And _
+    Not IsDate(ToDateText.Text) Then Exit Sub
+If IsDate(ToDateText.Text) Then
+    If CDate(FromDateText.Text) > CDate(ToDateText.Text) Then Exit Sub
 End If
 
 If UseCustomTimesOption Then
@@ -724,8 +751,7 @@ Private Function editContractSessionTimes( _
                 ByVal sessionEndTime As Date) As Contract
 Dim lContractBuilder As ContractBuilder
 
-Set lContractBuilder = CreateContractBuilder(pContract.specifier)
-lContractBuilder.buildFrom pContract
+Set lContractBuilder = CreateContractBuilderFromContract(pContract)
 lContractBuilder.sessionEndTime = sessionEndTime
 lContractBuilder.sessionStartTime = sessionStartTime
 Set editContractSessionTimes = lContractBuilder.Contract

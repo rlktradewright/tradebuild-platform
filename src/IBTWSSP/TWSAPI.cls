@@ -48,7 +48,6 @@ Event FAData( _
                 ByVal XMLData As String)
                 
 Event managedAccounts( _
-                ByVal timestamp As Date, _
                 ByVal accountsList As String)
 
 Event updateAccountTime( _
@@ -146,7 +145,7 @@ End Type
 
 Private Type TickerTableEntry
     incarnation             As Long
-    ContractSpecifier       As ContractSpecifier
+    Contract                As Contract
     prevBid                 As Double
     prevBidSize             As Long
     prevAsk                 As Double
@@ -1159,7 +1158,7 @@ handleFatalError err.number, _
                 err.Description
 End Sub
 
-Friend Function RequestMarketData(ByVal pContractSpecifier As ContractSpecifier, _
+Friend Function RequestMarketData(ByVal pContract As Contract, _
                             ByVal dataReader As RealtimeDataReader, _
                             ByVal dataConsumer As IStreamingDataConsumer, _
                             Optional ByVal includeMarketDepth As Boolean = False) As Long
@@ -1175,13 +1174,13 @@ End If
 
 lTickerID = AllocateTickerTableEntry(dataConsumer)
 RequestMarketData = lTickerID
-Set mTickerTable(lTickerID).ContractSpecifier = pContractSpecifier
+Set mTickerTable(lTickerID).Contract = pContract
 Set mTickerTable(lTickerID).dataReader = dataReader
 reqMarketData lTickerID
 
 If includeMarketDepth Then
     mTickerTable(lTickerID).receivingMarketDepth = True
-    reqMarketDepth lTickerID, pContractSpecifier
+    reqMarketDepth lTickerID, pContract.specifier
 End If
 Exit Function
 err:
@@ -1201,9 +1200,9 @@ If mConnectionState <> ConnectionStates.ConnConnected Then
 End If
 
 With mTickerTable(pTickerID)
-    If .ContractSpecifier Is Nothing Then err.Raise ErrorCodes.ErrIllegalArgumentException, "IBTWSSP.TWSAPI::requestMarketDepth", "Invalid ticker id: " & pTickerID
+    If .Contract Is Nothing Then err.Raise ErrorCodes.ErrIllegalArgumentException, "IBTWSSP.TWSAPI::requestMarketDepth", "Invalid ticker id: " & pTickerID
     .receivingMarketDepth = True
-    reqMarketDepth pTickerID, .ContractSpecifier
+    reqMarketDepth pTickerID, .Contract.specifier
 End With
 Exit Sub
 err:
@@ -2001,7 +2000,6 @@ End Function
 
 Private Sub getAccountTime(ByVal version As Long)
 Dim listendata As TWSSocketMsgAcctUpdateTime
-Dim timestamp As Date: timestamp = GetTimestampUTC
 Dim accountTime As String: accountTime = getString
 
 If mLogLevel >= LogLevelHigh Then
@@ -2018,7 +2016,6 @@ End Sub
 
 Private Sub getAccountValue(ByVal version As Long)
 Dim listendata As TWSSocketMsgAcctValue
-Dim timestamp As Date: timestamp = GetTimestampUTC
 Dim key As String: key = getString
 Dim val As String: val = getString
 Dim cur As String: cur = getString
@@ -2071,8 +2068,7 @@ End Sub
 
 Private Sub getContractData(ByVal version As Long)
 Dim listendata As TWSSocketMsgContractData
-Dim timestamp As Date
-Dim lContractWrapper As contractWrapper
+Dim lContractWrapper As ContractWrapper
 Dim lContractSpec As ContractSpecifier
 
 Dim symbol As String
@@ -2100,9 +2096,7 @@ Dim permittedOrderTifs As Long
 Dim permittedOrderAttributes As Long
 Dim i As Long
 
-timestamp = GetTimestampUTC
-
-Set lContractWrapper = New contractWrapper
+Set lContractWrapper = New ContractWrapper
 
 symbol = getString
 secType = getString
@@ -2262,7 +2256,6 @@ End Sub
 
 Private Sub getErrorMsg(ByVal version As Long)
 Dim listendata As TWSSocketMsgErrMsg
-Dim timestamp As Date
 Dim id As Long
 Dim errorCode As Long
 Dim errorMsg As String
@@ -2287,8 +2280,6 @@ failpoint = 300
 
 errorMsg = getString
 Debug.Print "Error msg: " & errorMsg
-timestamp = GetTimestampUTC
-
 
 Select Case errorCode
 Case 101
@@ -2457,7 +2448,6 @@ End Sub
 
 Private Sub getExecutionData(ByVal version As Long)
 Dim listendata As TWSSocketMsgExecutionData
-Dim timestamp As Date
 Dim timeString  As String
 
 Dim symbol As String
@@ -2483,7 +2473,6 @@ Dim lContractSpecifier As ContractSpecifier
 
 Dim exec As Execution
 
-timestamp = GetTimestampUTC
 id = getLong
 
 On Error Resume Next
@@ -2600,7 +2589,6 @@ End Sub
 
 Private Sub getFAData(ByVal version As Long)
 Dim listendata As TWSSocketMsgReceiveFa
-Dim timestamp As Date: timestamp = GetTimestampUTC
 Dim DataType As FADataTypes: DataType = getLong
 Dim XMLData As String: XMLData = getString
 
@@ -2781,10 +2769,9 @@ End Sub
 
 Private Sub getManagedAccounts(ByVal version As Long)
 Dim listendata As TWSSocketMsgManagedAccts
-Dim timestamp As Date: timestamp = GetTimestampUTC
 Dim accountsList As String: accountsList = getString
 
-RaiseEvent managedAccounts(timestamp, accountsList)
+RaiseEvent managedAccounts(accountsList)
 
 If mLogLevel >= LogLevelHigh Then
     listendata.msgType = TWSSocketInMsgTypes.MANAGED_ACCTS
@@ -2800,7 +2787,6 @@ End Sub
 
 Private Sub getMarketDepth(ByVal version As Long)
 Dim listendata As TWSSocketMsgMarketDepth
-Dim timestamp As Date
 Dim id As Long: id = getLong
 Dim position As Long: position = getLong
 Dim operation As Long: operation = getLong
@@ -2808,10 +2794,7 @@ Dim side As Long: side = getLong
 Dim Price As Double: Price = getDouble
 Dim size As Long: size = getLong
 
-timestamp = GetTimestampUTC
-
-processMarketDepth timestamp, _
-                id - MarketDepthTickerBase, _
+processMarketDepth id - MarketDepthTickerBase, _
                 position, _
                 operation, _
                 side, _
@@ -2837,7 +2820,7 @@ End Sub
 
 Private Sub getMarketDepthL2(ByVal version As Long)
 Dim listendata As TWSSocketMsgMarketDepthL2
-Dim timestamp As Date: timestamp = GetTimestampUTC
+Dim timestamp As Date
 Dim id As Long: id = getLong
 Dim position As Long: position = getLong
 Dim marketmaker As String: marketmaker = getString
@@ -2848,6 +2831,8 @@ Dim size As Long: size = getLong
 
 With mTickerTable(id - MarketDepthTickerBase)
     If .inUse Then
+    
+        timestamp = ConvertDateUTCToTZ(GetTimestampUTC, .Contract.TimeZone)
         
         .dataConsumer.UpdateMktDepthL2 timestamp, _
                         position, _
@@ -2880,7 +2865,6 @@ End Sub
 
 Private Sub getNewsBulletins(ByVal version As Long)
 Dim listendata As TWSSocketMsgNewsBulletins
-Dim timestamp As Date: timestamp = GetTimestampUTC
 Dim msgID As Long: msgID = getLong
 Dim msgType As Long: msgType = getLong
 Dim newsMessage As String: newsMessage = getString
@@ -2905,7 +2889,6 @@ End Sub
 
 Private Sub getNextValidId(ByVal version As Long)
 Dim listendata As TWSSocketMsgNextValidId
-Dim timestamp As Date: timestamp = GetTimestampUTC
 
 mNextOrderID = getLong
 
@@ -2925,7 +2908,6 @@ End Sub
 
 Private Sub getOpenOrder(ByVal version As Long)
 Dim listendata As TWSSocketMsgOpenOrder
-Dim timestamp As Date
 'Dim lOrder As Order
 Dim id As Long
 
@@ -2944,7 +2926,6 @@ Dim timeInForce As String
 
 Dim lContractSpecifier As ContractSpecifier
 
-timestamp = GetTimestampUTC
 id = getLong
 
 'On Error Resume Next
@@ -3112,7 +3093,6 @@ Private Sub getOrderStatus(ByVal version As Long)
 Dim mapEntry As OrderIdMapEntry
 Dim listendata As TWSSocketMsgOrderStatus
 
-Dim timestamp As Date: timestamp = GetTimestampUTC
 Dim id As Long: id = getLong
 Dim statusString As String: statusString = getString
 Dim status As TradeBuildSP.OrderStatuses: status = orderStatusFromString(statusString)
@@ -3178,7 +3158,6 @@ End Sub
 
 Private Sub getPortfolioValue(ByVal version As Long)
 Dim listendata As TWSSocketMsgPortfolioValue
-Dim timestamp As Date
 
 Dim symbol As String
 Dim localSymbol As String
@@ -3190,8 +3169,6 @@ Dim exchange As String
 Dim currencyCode As String
 
 Dim lContractSpecifier As ContractSpecifier
-
-timestamp = GetTimestampUTC
 
 symbol = getString
 secType = getString
@@ -3311,7 +3288,6 @@ End Sub
 
 Private Sub getTickPrice(ByVal version As Long)
 Dim listendata As TWSSocketMsgTickPrice
-Dim timestamp As Date
 Dim Price As Double
 Dim size As Long
 Dim tickType As Long
@@ -3338,12 +3314,9 @@ failpoint = 400
 If version >= 2 Then size = getLong
 If version >= 3 Then canAutoExecute = getBoolean
 
-timestamp = GetTimestampUTC
-
 failpoint = 500
 
-processTickPrice timestamp, _
-                tickerid Mod IncarnationIncrement, _
+processTickPrice tickerid Mod IncarnationIncrement, _
                 tickType, _
                 Price, _
                 size
@@ -3369,7 +3342,6 @@ End Sub
 
 Private Sub getTickSize(ByVal version As Long)
 Dim listendata As TWSSocketMsgTickSize
-Dim timestamp As Date
 Dim size As Long
 Dim tickType As Long
 Dim tickerid As Long
@@ -3388,12 +3360,10 @@ tickType = getLong
 failpoint = 300
 
 size = getLong
-timestamp = GetTimestampUTC
 
 failpoint = 400
 
-processTickSize timestamp, _
-                tickerid Mod IncarnationIncrement, _
+processTickSize tickerid Mod IncarnationIncrement, _
                 tickType, _
                 size
 
@@ -3752,7 +3722,7 @@ With mTickerTable(tickerid)
 End With
 End Sub
 
-Private Sub processContract(ByVal pContractWrapper As contractWrapper)
+Private Sub processContract(ByVal pContractWrapper As ContractWrapper)
 
 If Not mFirstContractDetailsReceived Then
     mFirstContractDetailsReceived = True
@@ -3852,15 +3822,18 @@ With mTickerTable(tickerid)
 End With
 End Sub
 
-Private Sub processMarketDepth(ByVal timestamp As Date, _
-                                ByVal id As Long, _
+Private Sub processMarketDepth(ByVal id As Long, _
                                 ByVal position As Long, _
                                 ByVal operation As DOMOperations, _
                                 ByVal side As DOMSides, _
                                 ByVal Price As Double, _
                                 ByVal size As Long)
 
+Dim timestamp As Date
+
 With mTickerTable(id)
+
+    timestamp = ConvertDateUTCToTZ(GetTimestampUTC, .Contract.TimeZone)
 
     If Not .inUse Then Exit Sub     ' ticker has been stopped
     
@@ -3883,11 +3856,11 @@ If mTwsHistDataRequestQueue.size <> 0 Then
 End If
 End Sub
 
-Private Sub processTickPrice(ByVal timestamp As Date, _
-                            ByVal tickerid As Long, _
+Private Sub processTickPrice(ByVal tickerid As Long, _
                             ByVal tickType As TWSSocketTickTypes, _
                             ByVal Price As Double, _
                             ByVal size As Long)
+Dim timestamp As Date
 
 With mTickerTable(tickerid)
 
@@ -3896,6 +3869,8 @@ With mTickerTable(tickerid)
     If Price < (0.5 * .prevTrade) Then
         Exit Sub        ' ignore invalid prices
     End If
+    
+    timestamp = ConvertDateUTCToTZ(GetTimestampUTC, .Contract.TimeZone)
     
     Select Case tickType
     Case TICK_BID
@@ -3943,14 +3918,16 @@ End With
 
 End Sub
 
-Private Sub processTickSize(ByVal timestamp As Date, _
-                            ByVal tickerid As Long, _
+Private Sub processTickSize(ByVal tickerid As Long, _
                             ByVal tickType As TWSSocketTickTypes, _
                             ByVal size As Long)
+Dim timestamp As Date
 
 With mTickerTable(tickerid)
     
     If Not .inUse Then Exit Sub     ' ticker has been stopped
+    
+    timestamp = ConvertDateUTCToTZ(GetTimestampUTC, .Contract.TimeZone)
     
     Select Case tickType
     Case TICK_BID_SIZE
@@ -4027,7 +4004,7 @@ Private Sub reEstablishMarketData(ByVal newConnection As Boolean)
 Dim i As Long
 For i = 0 To UBound(mTickerTable)
     With mTickerTable(i)
-        If Not .ContractSpecifier Is Nothing Then
+        If Not .Contract Is Nothing Then
             If Not newConnection Then cancelMarketDataEx i, False
             .incarnation = .incarnation + IncarnationIncrement
             reqMarketData i
@@ -4072,7 +4049,7 @@ Private Sub releaseTickerTableEntry(ByVal tickerid As Long)
 With mTickerTable(tickerid)
     .inUse = False
     .incarnation = .incarnation + IncarnationIncrement
-    Set .ContractSpecifier = Nothing
+    Set .Contract = Nothing
     .prevBid = 0#
     .prevBidSize = 0&
     .prevAsk = 0#
@@ -4180,7 +4157,7 @@ Const version = 3
 addData REQ_MKT_DATA
 addData version
 addData tickerTableIndex + mTickerTable(tickerTableIndex).incarnation
-With mTickerTable(tickerTableIndex).ContractSpecifier
+With mTickerTable(tickerTableIndex).Contract.specifier
     addData .symbol
     addData secTypeToString(.secType)
     addData Left$(.expiry, 6)
@@ -4236,8 +4213,9 @@ Dim i As Long
 For i = 0 To UBound(mTickerTable)
     With mTickerTable(i)
         If .receivingMarketDepth Then
-            If reEstablish Then reqMarketDepth i, .ContractSpecifier
-            .dataConsumer.resetMarketDepth GetTimestampUTC, reEstablish
+            If reEstablish Then reqMarketDepth i, .Contract.specifier
+            .dataConsumer.resetMarketDepth ConvertDateUTCToTZ(GetTimestampUTC, .Contract.TimeZone), _
+                                            reEstablish
         End If
     End With
 Next

@@ -77,7 +77,7 @@ Private Const ConstMomentumBarsParamTicksPerBar As String = "Ticks move per bar"
 '@================================================================================
 
 Public Type BarToWrite
-    theBar              As Bar
+    theBar              As StudyUtils26.Bar
     volume              As Long
     barType             As BarTypes
 End Type
@@ -652,6 +652,7 @@ Private Sub ProcessHistoricBar()
 mHistoricBarPending = False
 
 With mHistoricBar
+
     If .OpenPrice <> 0 Then studyMgr.notifyInput mTradeInputHandle, .OpenPrice, .timestamp
     If .closePrice >= .OpenPrice Then
         If .lowPrice <> 0 Then studyMgr.notifyInput mTradeInputHandle, .lowPrice, .timestamp

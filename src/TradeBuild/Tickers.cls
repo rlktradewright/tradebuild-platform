@@ -90,14 +90,14 @@ End Property
 '@================================================================================
 
 Public Function add( _
-                ByVal ordersAreLive As Boolean, _
+                ByVal pTickerOptions As Long, _
                 Optional ByVal key As String) As Ticker
 If key = "" Then key = generateGUIDString
 Set add = New Ticker
+add.key = key
 add.Initialise AllocateTickerHandle, _
                 Me, _
-                key, _
-                Not ordersAreLive
+                pTickerOptions
 mTickers.add add, key
 fireChange CollItemAdded, add
 End Function
@@ -107,8 +107,10 @@ Public Sub addCollectionChangeListener( _
 mChangeListeners.add value
 End Sub
 
-Public Function createTickFileManager() As TickFileManager
+Public Function createTickFileManager( _
+                ByVal pTickerOptions As Long) As TickFileManager
 Set createTickFileManager = New TickFileManager
+createTickFileManager.TickerOptions = pTickerOptions
 createTickFileManager.Tickers = Me
 End Function
 
@@ -119,12 +121,19 @@ Set NewEnum = mTickers.[_NewEnum]
 End Function
 
 Public Sub remove(ByVal pTicker As Ticker)
+Dim i As Long
+
 If pTicker.State <> TickerStates.TickerStateClosing Then
     pTicker.StopTicker
     Exit Sub
 End If
     
-mTickers.remove pTicker.key
+For i = 1 To mTickers.Count
+    If mTickers.item(i) Is pTicker Then
+        mTickers.remove i
+        Exit For
+    End If
+Next
 mTickerHandleTable(pTicker.handle) = False
 fireChange CollItemRemoved, pTicker
 End Sub

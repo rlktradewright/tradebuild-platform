@@ -375,7 +375,7 @@ End Sub
 
 Public Function CreateBarDataReader() As BarDataReader
 Set CreateBarDataReader = New BarDataReader
-CreateBarDataReader.initialise mDB.connectionString, id
+CreateBarDataReader.initialise mDB.connectionString, id, TimeZoneCanonicalName
 End Function
 
 Public Function CreateBarDataWriter() As BarDataWriter
@@ -386,7 +386,7 @@ End Function
 
 Public Function CreateTickDataReader() As TickDataReader
 Set CreateTickDataReader = New TickDataReader
-CreateTickDataReader.initialise mDB.connectionString, id
+CreateTickDataReader.initialise mDB.connectionString, id, TimeZoneCanonicalName
 End Function
 
 Public Function CreateTickDataWriter() As TickDataWriter

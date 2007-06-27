@@ -138,6 +138,7 @@ Set mContract = mBarDataSpecifier.Contract
 Set mSessionBuilder = New SessionBuilder
 mSessionBuilder.sessionStartTime = mContract.sessionStartTime
 mSessionBuilder.sessionEndTime = mContract.sessionEndTime
+mSessionBuilder.TimeZone = mContract.TimeZone
 Set mSession = mSessionBuilder.Session
 
 Set lInstrumentFactory = mTradingDB.InstrumentFactory

@@ -76,6 +76,8 @@ Private mFetchInProgress As Boolean
 
 Private mConnectionString As String
 
+Private mTimeZone As TWutilities30.TimeZone
+
 '@===============================================================================
 ' Class Event Handlers
 '@===============================================================================
@@ -203,21 +205,21 @@ cmd.Parameters.Append param
 
 If fromTime < #1/1/1900# Then fromTime = #1/1/1900# ' don't exceed range of SmallDateTime
 If toTime < #1/1/1900# Then toTime = #1/1/1900# ' don't exceed range of SmallDateTime
-Set param = cmd.CreateParameter("@FromUTC", _
+Set param = cmd.CreateParameter("@FromExchange", _
                             DataTypeEnum.adDate, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             fromTime)
 cmd.Parameters.Append param
 
-Set param = cmd.CreateParameter("@ToUTC", _
+Set param = cmd.CreateParameter("@ToExchange", _
                             DataTypeEnum.adDate, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             toTime)
 cmd.Parameters.Append param
 
-fromLocal = ConvertDateUTCToLocal(fromTime)
+fromLocal = ConvertDateUTCToLocal(ConvertDateTZToUTC(fromTime, mTimeZone))
 If fromLocal < #1/1/1900# Then fromLocal = #1/1/1900# ' don't exceed range of SmallDateTime
 Set param = cmd.CreateParameter("@FromLocal", _
                             DataTypeEnum.adDate, _
@@ -226,7 +228,7 @@ Set param = cmd.CreateParameter("@FromLocal", _
                             fromLocal)
 cmd.Parameters.Append param
 
-toLocal = ConvertDateUTCToLocal(toTime)
+toLocal = ConvertDateUTCToLocal(ConvertDateTZToUTC(toTime, mTimeZone))
 If toLocal < #1/1/1900# Then toLocal = #1/1/1900# ' don't exceed range of SmallDateTime
 Set param = cmd.CreateParameter("@ToLocal", _
                             DataTypeEnum.adDate, _
@@ -251,9 +253,11 @@ End Sub
 
 Friend Sub initialise( _
                 ByVal connectionString As String, _
-                ByVal instrumentId As Long)
+                ByVal instrumentId As Long, _
+                ByVal timezoneName As String)
 mConnectionString = connectionString
 mInstrumentID = instrumentId
+Set mTimeZone = CreateTimeZone(timezoneName)
 connectToDB
 End Sub
 
@@ -281,7 +285,7 @@ End If
 If CBool(mRsBars("IsUTCTime")) Then
     timestamp = mRsBars("DateTime")
 Else
-    timestamp = ConvertDateLocalToUTC(mRsBars("DateTime"))
+    timestamp = ConvertDateUTCToTZ(ConvertDateLocalToUTC(mRsBars("DateTime")), mTimeZone)
 End If
 barType = mRsBars("BarType")
 barLength = mRsBars("BarLengthMinutes")

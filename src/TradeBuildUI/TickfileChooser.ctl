@@ -5,22 +5,27 @@ Begin VB.UserControl TickfileChooser
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   1755
+   InvisibleAtRuntime=   -1  'True
    ScaleHeight     =   1500
    ScaleWidth      =   1755
-   Begin MSComDlg.CommonDialog CommonDialog1 
+   Begin MSComDlg.CommonDialog CommonDialogs 
       Left            =   720
       Top             =   720
       _ExtentX        =   847
       _ExtentY        =   847
       _Version        =   393216
    End
-   Begin VB.Label Label1 
+   Begin VB.Label ChooserLabel 
+      Appearance      =   0  'Flat
+      BackColor       =   &H008080FF&
+      BorderStyle     =   1  'Fixed Single
       Caption         =   "Tickfile Chooser"
-      Height          =   375
+      ForeColor       =   &H80000008&
+      Height          =   495
       Left            =   0
       TabIndex        =   0
       Top             =   0
-      Width           =   615
+      Width           =   735
    End
 End
 Attribute VB_Name = "TickfileChooser"
@@ -69,22 +74,23 @@ Option Explicit
 ' Member variables
 '@================================================================================
 
-Private mTickfileSpecifiers() As TickfileSpecifier
-
 Private mSupportedTickfileFormats() As TickfileFormatSpecifier
-Private mSupportedTickStreamFormats() As TickfileFormatSpecifier
 
 Private mFilterString As String
 
-Private WithEvents mfTickfileSpecifier As fTickfileSpecifier
-Attribute mfTickfileSpecifier.VB_VarHelpID = -1
+Private mCancelled As Boolean
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
-Private Sub Form_Load()
+Private Sub UserControl_Initialize()
 getSupportedTickfileFormats
+End Sub
+
+Private Sub UserControl_Resize()
+UserControl.Width = ChooserLabel.Width
+UserControl.Height = ChooserLabel.Height
 End Sub
 
 '@================================================================================
@@ -92,48 +98,23 @@ End Sub
 '@================================================================================
 
 '@================================================================================
-' mfTickfileSpecifier Event Handlers
+' Properties
 '@================================================================================
 
-Private Sub mfTickfileSpecifier_TickfilesSpecified( _
-                pTickfileSpecifier() As TickfileSpecifier)
-Dim i As Long
-Dim j As Long
-
-On Error Resume Next
-i = -1
-i = UBound(mTickfileSpecifiers)
-On Error GoTo 0
-
-If i = -1 Then
-    ReDim mTickfileSpecifiers(UBound(pTickfileSpecifier)) As TickfileSpecifier
-Else
-    ReDim Preserve mTickfileSpecifiers(UBound(mTickfileSpecifiers) + UBound(pTickfileSpecifier) + 1) As TickfileSpecifier
-End If
-
-For j = 0 To UBound(pTickfileSpecifier)
-    TickFileList.addItem pTickfileSpecifier(j).FileName
-    Set mTickfileSpecifiers(i + j + 1) = pTickfileSpecifier(j)
-Next
-
-Set mfTickfileSpecifier = Nothing
-
-OkButton.Enabled = True
-
-End Sub
+Public Property Get cancelled() As Boolean
+cancelled = mCancelled
+End Property
 
 '@================================================================================
-' Control Event Handlers
+' Methods
 '@================================================================================
 
-Private Sub AddTickfileButton_Click()
+Public Function chooseTickfiles() As String()
 Dim fileNames() As String
-Dim tickfileSpec As TickfileSpecifier
+Dim outFileNames() As String
 Dim filePath As String
-Dim fileExt As String
 Dim i As Long
-Dim j As Long
-Dim k As Long
+
 
 CommonDialogs.CancelError = True
 On Error GoTo Err
@@ -156,92 +137,30 @@ fileNames = Split(CommonDialogs.FileName, Chr(0), , vbBinaryCompare)
 
 On Error Resume Next
 
-TickFileList.clear
-
-j = UBound(mTickfileSpecifiers)
-If Err.Number <> 0 Then j = -1
-On Error GoTo 0
-
-If j >= 0 Then
-    For i = 0 To UBound(mTickfileSpecifiers)
-        Set tickfileSpec = mTickfileSpecifiers(i)
-        If tickfileSpec.FileName <> "" Then
-            TickFileList.addItem tickfileSpec.FileName
-        End If
-    Next
-End If
-
 If UBound(fileNames) = 0 Then
-    ReDim Preserve mTickfileSpecifiers(j + 1) As TickfileSpecifier
+    ReDim outFileNames(0) As String
+    outFileNames(0) = fileNames(0)
 Else
-    ReDim Preserve mTickfileSpecifiers(j + UBound(fileNames)) As TickfileSpecifier
-End If
-
-If UBound(fileNames) = 0 Then
-    TickFileList.addItem fileNames(0)
-Else
+    ReDim outFileNames(UBound(fileNames) - 1) As String
+    
     ' the first entry is the file path
     filePath = fileNames(0)
+    
     SortStrings fileNames, 1, UBound(fileNames)
+    
     For i = 1 To UBound(fileNames)
-        TickFileList.addItem filePath & "\" & fileNames(i)
+        outFileNames(i - 1) = filePath & "\" & fileNames(i)
     Next
 End If
 
-For i = 0 To TickFileList.ListCount - 1
-    TickFileList.ListIndex = i
-    Set mTickfileSpecifiers(i) = New TickfileSpecifier
-    mTickfileSpecifiers(i).FileName = TickFileList.Text
-    
-    ' set up the FormatID - we set it to the first one that matches
-    ' the file extension
-    fileExt = Right$(mTickfileSpecifiers(i).FileName, _
-                    Len(mTickfileSpecifiers(i).FileName) - InStrRev(mTickfileSpecifiers(i).FileName, "."))
-    For k = 0 To UBound(mSupportedTickfileFormats)
-        If mSupportedTickfileFormats(k).FormatType = FileBased Then
-            If UCase$(fileExt) = UCase$(mSupportedTickfileFormats(k).FileExtension) Then
-                mTickfileSpecifiers(i).TickfileFormatID = mSupportedTickfileFormats(k).FormalID
-                Exit For
-            End If
-        End If
-    Next
-Next
+chooseTickfiles = outFileNames
 
-OkButton.Enabled = True
-
-Exit Sub
+Exit Function
 
 Err:
+mCancelled = True
 
-End Sub
-
-Private Sub AddTickerSpecButton_Click()
-Set mfTickfileSpecifier = New fTickfileSpecifier
-mfTickfileSpecifier.SupportedTickfileFormats = mSupportedTickStreamFormats
-mfTickfileSpecifier.Show vbModal, Me
-End Sub
-
-Private Sub CancelButton_Click()
-Erase mTickfileSpecifiers
-Unload Me
-End Sub
-
-Private Sub OkButton_Click()
-'RaiseEvent TickfilesSelected
-Me.Hide
-End Sub
-
-'@================================================================================
-' Properties
-'@================================================================================
-
-Friend Property Get TickfileSpecifiers() As TickfileSpecifier()
-TickfileSpecifiers = mTickfileSpecifiers
-End Property
-
-'@================================================================================
-' Methods
-'@================================================================================
+End Function
 
 '@================================================================================
 ' Helper Functions
@@ -249,12 +168,10 @@ End Property
 
 Private Sub getSupportedTickfileFormats()
 Dim i As Long
-Dim j As Long
 
 mSupportedTickfileFormats = TradeBuildAPI.SupportedInputTickfileFormats
 
-ReDim mSupportedTickStreamFormats(9) As TickfileFormatSpecifier
-j = -1
+On Error GoTo Err
 
 For i = 0 To UBound(mSupportedTickfileFormats)
     If mSupportedTickfileFormats(i).FormatType = FileBased Then
@@ -262,28 +179,16 @@ For i = 0 To UBound(mSupportedTickfileFormats)
                     mSupportedTickfileFormats(i).name & _
                     " tick files(*." & mSupportedTickfileFormats(i).FileExtension & _
                     ")|*." & mSupportedTickfileFormats(i).FileExtension
-    Else
-        j = j + 1
-        If j > UBound(mSupportedTickStreamFormats) Then
-            ReDim Preserve mSupportedTickStreamFormats(UBound(mSupportedTickStreamFormats) + 9) As TickfileFormatSpecifier
-        End If
-        mSupportedTickStreamFormats(j) = mSupportedTickfileFormats(i)
     End If
 Next
 
-If j = -1 Then
-    Erase mSupportedTickStreamFormats
-Else
-    ReDim Preserve mSupportedTickStreamFormats(j) As TickfileFormatSpecifier
-    AddTickerSpecButton.Enabled = True
-End If
-
 If mFilterString <> "" Then
     mFilterString = mFilterString & "|All files (*.*)|*.*"
-    AddTickfileButton.Enabled = True
-Else
-    AddTickfileButton.Enabled = True
 End If
+
+Exit Sub
+
+Err:
 
 End Sub
 

@@ -86,6 +86,8 @@ Private Const ModuleName                    As String = "fTickstreamSpecifier"
 
 Private mCancelled                          As Boolean
 
+Private mTickfileSpecifiers()               As TickfileSpecifier
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -103,16 +105,24 @@ mCancelled = True
 Unload Me
 End Sub
 
-Private Sub TickStreamSpecifier1_NotReady()
-OkButton.Enabled = True
+Private Sub OkButton_Click()
+Screen.MousePointer = vbHourglass
+TickStreamSpecifier1.Load
 End Sub
 
-Private Sub TickStreamSpecifier1_ready()
+Private Sub TickStreamSpecifier1_NotReady()
 OkButton.Enabled = False
 End Sub
 
-Private Sub TickStreamSpecifier1_TickStreamsSpecified(pTickfileSpecifier() As TradeBuild26.TickfileSpecifier)
+Private Sub TickStreamSpecifier1_ready()
+OkButton.Enabled = True
+End Sub
 
+Private Sub TickStreamSpecifier1_TickStreamsSpecified( _
+                pTickfileSpecifiers() As TickfileSpecifier)
+Screen.MousePointer = vbDefault
+mTickfileSpecifiers = pTickfileSpecifiers
+Me.Hide
 End Sub
 
 '@================================================================================
@@ -125,6 +135,10 @@ End Sub
 
 Public Property Get cancelled() As Boolean
 cancelled = mCancelled
+End Property
+
+Public Property Get TickfileSpecifiers() As TickfileSpecifier()
+TickfileSpecifiers = mTickfileSpecifiers
 End Property
 
 '@================================================================================
