@@ -123,7 +123,8 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
                     ModuleName & ": execution error" & vbCrLf & _
                     pError.Description & vbCrLf & _
                     gGenerateErrorMessage(pConnection))
-    connectToDB
+    Debug.Print "BarDataWriter error writing bar data: (" & pError.Number & ") " & pError.Description
+    'connectToDB
 Else
     mConnection.Close
     RaiseEvent DataWritten
@@ -167,77 +168,88 @@ mCmd.CommandType = adCmdStoredProc
 
 mCmd.CommandText = "WriteBarDataExchange"
 
-Set param = mCmd.CreateParameter("@InstrumentID", _
+' @InstrumentID
+Set param = mCmd.CreateParameter(, _
                             DataTypeEnum.adInteger, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             mInstrumentID)
 mCmd.Parameters.Append param
 
-Set param = mCmd.CreateParameter("@BarType", _
+' @BarType
+Set param = mCmd.CreateParameter(, _
                             DataTypeEnum.adInteger, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             barType)
 mCmd.Parameters.Append param
 
-Set param = mCmd.CreateParameter("@BarLength", _
+' @BarLength
+Set param = mCmd.CreateParameter(, _
                             DataTypeEnum.adInteger, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             barLength)
 mCmd.Parameters.Append param
 
-Set param = mCmd.CreateParameter("@DateAndTime", _
-                            DataTypeEnum.adDate, _
+' @DateAndTime
+Set param = mCmd.CreateParameter(, _
+                            DataTypeEnum.adDBTimeStamp, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             timestamp)
 mCmd.Parameters.Append param
 
-Set param = mCmd.CreateParameter("@OpenPrice", _
-                            DataTypeEnum.adCurrency, _
+' @OpenPrice
+Set param = mCmd.CreateParameter(, _
+                            DataTypeEnum.adDouble, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             openPrice)
 mCmd.Parameters.Append param
 
-Set param = mCmd.CreateParameter("@HighPrice", _
-                            DataTypeEnum.adCurrency, _
+' @HighPrice
+Set param = mCmd.CreateParameter(, _
+                            DataTypeEnum.adDouble, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             highPrice)
 mCmd.Parameters.Append param
 
-Set param = mCmd.CreateParameter("@LowPrice", _
-                            DataTypeEnum.adCurrency, _
+' @LowPrice
+Set param = mCmd.CreateParameter(, _
+                            DataTypeEnum.adDouble, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             lowPrice)
 mCmd.Parameters.Append param
 
-Set param = mCmd.CreateParameter("@ClosePrice", _
-                            DataTypeEnum.adCurrency, _
+' @ClosePrice
+Set param = mCmd.CreateParameter(, _
+                            DataTypeEnum.adDouble, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             closePrice)
 mCmd.Parameters.Append param
 
-Set param = mCmd.CreateParameter("@Volume", _
+' @Volume
+Set param = mCmd.CreateParameter(, _
                             DataTypeEnum.adInteger, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             volume)
 mCmd.Parameters.Append param
 
-Set param = mCmd.CreateParameter("@TickVolume", _
+' @TickVolume
+Set param = mCmd.CreateParameter(, _
                             DataTypeEnum.adInteger, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             tickVolume)
 mCmd.Parameters.Append param
 
-Set param = mCmd.CreateParameter("@OpenInterest", _
+' @OpenInterest
+Set param = mCmd.CreateParameter(, _
                             DataTypeEnum.adInteger, _
                             ParameterDirectionEnum.adParamInput, _
                             , _

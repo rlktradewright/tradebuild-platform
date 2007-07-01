@@ -224,42 +224,48 @@ cmd.CommandType = adCmdStoredProc
 
 cmd.CommandText = "FetchTickDataEx"
 
-Set param = cmd.CreateParameter("@InstrumentID", _
+' @InstrumentID
+Set param = cmd.CreateParameter(, _
                             DataTypeEnum.adInteger, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             mInstrumentID)
 cmd.Parameters.Append param
 
-Set param = cmd.CreateParameter("@DataVersion", _
+' @DataVersion
+Set param = cmd.CreateParameter(, _
                                 DataTypeEnum.adVarChar, _
                             ParameterDirectionEnum.adParamInput, _
                             255, _
                             Version)
 cmd.Parameters.Append param
 
-Set param = cmd.CreateParameter("@FromExchange", _
+' @FromExchange
+Set param = cmd.CreateParameter(, _
                             DataTypeEnum.adDate, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             fromTime)
 cmd.Parameters.Append param
 
-Set param = cmd.CreateParameter("@ToExchange", _
+' @ToExchange
+Set param = cmd.CreateParameter(, _
                             DataTypeEnum.adDate, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             toTime)
 cmd.Parameters.Append param
 
-Set param = cmd.CreateParameter("@FromLocal", _
+' @FromLocal
+Set param = cmd.CreateParameter(, _
                             DataTypeEnum.adDate, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             ConvertDateUTCToLocal(ConvertDateTZToUTC(fromTime, mTimeZone)))
 cmd.Parameters.Append param
 
-Set param = cmd.CreateParameter("@ToLocal", _
+' @ToLocal
+Set param = cmd.CreateParameter(, _
                             DataTypeEnum.adDate, _
                             ParameterDirectionEnum.adParamInput, _
                             , _

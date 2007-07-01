@@ -175,28 +175,32 @@ cmd.CommandType = adCmdStoredProc
 
 cmd.CommandText = "FetchBarDataEx"
 
-Set param = cmd.CreateParameter("@InstrumentID", _
+' @InstrumentID
+Set param = cmd.CreateParameter(, _
                             DataTypeEnum.adInteger, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             mInstrumentID)
 cmd.Parameters.Append param
 
-Set param = cmd.CreateParameter("@BarType", _
+' @BarType
+Set param = cmd.CreateParameter(, _
                             DataTypeEnum.adInteger, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             barType)
 cmd.Parameters.Append param
 
-Set param = cmd.CreateParameter("@BarLength", _
+' @BarLength
+Set param = cmd.CreateParameter(, _
                             DataTypeEnum.adInteger, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             barLength)
 cmd.Parameters.Append param
 
-Set param = cmd.CreateParameter("@NumberRequired", _
+' @NumberRequired
+Set param = cmd.CreateParameter(, _
                             DataTypeEnum.adInteger, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
@@ -205,14 +209,16 @@ cmd.Parameters.Append param
 
 If fromTime < #1/1/1900# Then fromTime = #1/1/1900# ' don't exceed range of SmallDateTime
 If toTime < #1/1/1900# Then toTime = #1/1/1900# ' don't exceed range of SmallDateTime
-Set param = cmd.CreateParameter("@FromExchange", _
+' @FromExchange
+Set param = cmd.CreateParameter(, _
                             DataTypeEnum.adDate, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             fromTime)
 cmd.Parameters.Append param
 
-Set param = cmd.CreateParameter("@ToExchange", _
+' @ToExchange
+Set param = cmd.CreateParameter(, _
                             DataTypeEnum.adDate, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
@@ -221,7 +227,8 @@ cmd.Parameters.Append param
 
 fromLocal = ConvertDateUTCToLocal(ConvertDateTZToUTC(fromTime, mTimeZone))
 If fromLocal < #1/1/1900# Then fromLocal = #1/1/1900# ' don't exceed range of SmallDateTime
-Set param = cmd.CreateParameter("@FromLocal", _
+' @FromLocal
+Set param = cmd.CreateParameter(, _
                             DataTypeEnum.adDate, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
@@ -230,7 +237,8 @@ cmd.Parameters.Append param
 
 toLocal = ConvertDateUTCToLocal(ConvertDateTZToUTC(toTime, mTimeZone))
 If toLocal < #1/1/1900# Then toLocal = #1/1/1900# ' don't exceed range of SmallDateTime
-Set param = cmd.CreateParameter("@ToLocal", _
+' @ToLocal
+Set param = cmd.CreateParameter(, _
                             DataTypeEnum.adDate, _
                             ParameterDirectionEnum.adParamInput, _
                             , _

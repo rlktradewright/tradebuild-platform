@@ -119,6 +119,8 @@ Case "SQLSERVER2000", "SQL SERVER 2000"
     gDatabaseTypeFromString = DbSQLServer2000
 Case "SQLSERVER2005", "SQL SERVER 2005"
     gDatabaseTypeFromString = DbSQLServer2005
+Case "MYSQL5", "MYSQL 5", "MYSQL"
+    gDatabaseTypeFromString = DbMySQL5
 End Select
 End Function
 
@@ -131,6 +133,8 @@ Case DbSQLServer2000
     gDatabaseTypeToString = "SQL Server 2000"
 Case DbSQLServer2005
     gDatabaseTypeToString = "SQL Server 2005"
+Case DbMySQL5
+    gDatabaseTypeToString = "MySQL 5"
 End Select
 End Function
 

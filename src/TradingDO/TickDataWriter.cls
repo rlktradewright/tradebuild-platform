@@ -108,6 +108,7 @@ End If
 mIsConnecting = False
 
 Debug.Print "Writer " & mWriterId & " connected to db"
+
 Set mCmd.ActiveConnection = mConnection
 mCmd.Execute , _
             , _
@@ -123,11 +124,11 @@ Private Sub mConnection_ExecuteComplete( _
                             ByVal pConnection As ADODB.Connection)
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent Error(pError.Number, _
-                    "TickDataAccessor: execution error" & vbCrLf & _
+                    "TickDataWriter: execution error" & vbCrLf & _
                     pError.Description & vbCrLf & _
                     gGenerateErrorMessage(pConnection))
-    Debug.Print "Writer " & mWriterId & " error writing tick data: (" & pError.Number & ") " & pError.Description
-    connectToDB
+    Debug.Print "TickDataWriter " & mWriterId & " error writing tick data: (" & pError.Number & ") " & pError.Description
+    'connectToDB
 Else
     mConnection.Close
     Debug.Print "Writer " & mWriterId & " data written"
@@ -204,35 +205,40 @@ mCmd.CommandType = adCmdStoredProc
 
 mCmd.CommandText = "WriteTickDataExchange"
 
-Set param = mCmd.CreateParameter("@InstrumentID", _
+' @InstrumentID
+Set param = mCmd.CreateParameter(, _
                             DataTypeEnum.adInteger, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             mInstrumentID)
 mCmd.Parameters.Append param
 
-Set param = mCmd.CreateParameter("@DataVersion", _
+' @DataVersion
+Set param = mCmd.CreateParameter(, _
                             DataTypeEnum.adVarChar, _
                             ParameterDirectionEnum.adParamInput, _
                             255, _
                             Version)
 mCmd.Parameters.Append param
 
-Set param = mCmd.CreateParameter("@DateAndTime", _
-                            DataTypeEnum.adDate, _
+' @DateAndTime
+Set param = mCmd.CreateParameter(, _
+                            DataTypeEnum.adDBTimeStamp, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             PeriodStartTime)
 mCmd.Parameters.Append param
 
-Set param = mCmd.CreateParameter("@BasePrice", _
-                            DataTypeEnum.adCurrency, _
+' @BasePrice
+Set param = mCmd.CreateParameter(, _
+                            DataTypeEnum.adDouble, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             BasePrice)
 mCmd.Parameters.Append param
 
-Set param = mCmd.CreateParameter("@Data", _
+' @Data
+Set param = mCmd.CreateParameter(, _
                             DataTypeEnum.adBinary, _
                             ParameterDirectionEnum.adParamInput, _
                             UBound(Data) + 1, _

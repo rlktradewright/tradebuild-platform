@@ -91,6 +91,7 @@ Public Enum DatabaseTypes
     DbSQLServer7 = 1
     DbSQLServer2000
     DbSQLServer2005
+    DbMySQL5
 End Enum
 
 '@================================================================================
@@ -178,12 +179,20 @@ Case DbSQLServer2005
 '                        ";Network Library=DBMSSOCN" & _
 '                        ";Min Pool Size=100" & _
 '                        ";Max Pool Size=500"
-    GenerateConnectionString = "Provider=SQLNCLI;" & _
-                        "Server=" & server & _
+    GenerateConnectionString = "Provider=SQLNCLI" & _
+                        ";Server=" & server & _
                         ";Database=" & databaseName & _
                         IIf(username = "", _
                             ";Trusted_Connection=yes", _
                             ";Uid=" & username & ";Pwd=" & password)
+Case DbMySQL5
+    GenerateConnectionString = "Driver={MySQL ODBC 3.51 Driver}" & _
+                        ";Server=" & server & _
+                        ";Port=3306" & _
+                        ";Database=" & databaseName & _
+                        ";User=" & username & _
+                        ";Password=" & password & _
+                        ";Option=3"
 End Select
                 
 End Function
