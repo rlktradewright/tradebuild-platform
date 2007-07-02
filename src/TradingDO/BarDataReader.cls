@@ -211,7 +211,7 @@ If fromTime < #1/1/1900# Then fromTime = #1/1/1900# ' don't exceed range of Smal
 If toTime < #1/1/1900# Then toTime = #1/1/1900# ' don't exceed range of SmallDateTime
 ' @FromExchange
 Set param = cmd.CreateParameter(, _
-                            DataTypeEnum.adDate, _
+                            DataTypeEnum.adDBTimeStamp, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             fromTime)
@@ -219,7 +219,7 @@ cmd.Parameters.Append param
 
 ' @ToExchange
 Set param = cmd.CreateParameter(, _
-                            DataTypeEnum.adDate, _
+                            DataTypeEnum.adDBTimeStamp, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             toTime)
@@ -229,7 +229,7 @@ fromLocal = ConvertDateUTCToLocal(ConvertDateTZToUTC(fromTime, mTimeZone))
 If fromLocal < #1/1/1900# Then fromLocal = #1/1/1900# ' don't exceed range of SmallDateTime
 ' @FromLocal
 Set param = cmd.CreateParameter(, _
-                            DataTypeEnum.adDate, _
+                            DataTypeEnum.adDBTimeStamp, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             fromLocal)
@@ -239,7 +239,7 @@ toLocal = ConvertDateUTCToLocal(ConvertDateTZToUTC(toTime, mTimeZone))
 If toLocal < #1/1/1900# Then toLocal = #1/1/1900# ' don't exceed range of SmallDateTime
 ' @ToLocal
 Set param = cmd.CreateParameter(, _
-                            DataTypeEnum.adDate, _
+                            DataTypeEnum.adDBTimeStamp, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             toLocal)
@@ -262,10 +262,10 @@ End Sub
 Friend Sub initialise( _
                 ByVal connectionString As String, _
                 ByVal instrumentId As Long, _
-                ByVal timezoneName As String)
+                ByVal TimeZoneName As String)
 mConnectionString = connectionString
 mInstrumentID = instrumentId
-Set mTimeZone = CreateTimeZone(timezoneName)
+Set mTimeZone = CreateTimeZone(TimeZoneName)
 connectToDB
 End Sub
 

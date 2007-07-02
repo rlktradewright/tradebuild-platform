@@ -242,7 +242,7 @@ cmd.Parameters.Append param
 
 ' @FromExchange
 Set param = cmd.CreateParameter(, _
-                            DataTypeEnum.adDate, _
+                            DataTypeEnum.adDBTimeStamp, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             fromTime)
@@ -250,7 +250,7 @@ cmd.Parameters.Append param
 
 ' @ToExchange
 Set param = cmd.CreateParameter(, _
-                            DataTypeEnum.adDate, _
+                            DataTypeEnum.adDBTimeStamp, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             toTime)
@@ -258,7 +258,7 @@ cmd.Parameters.Append param
 
 ' @FromLocal
 Set param = cmd.CreateParameter(, _
-                            DataTypeEnum.adDate, _
+                            DataTypeEnum.adDBTimeStamp, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             ConvertDateUTCToLocal(ConvertDateTZToUTC(fromTime, mTimeZone)))
@@ -266,7 +266,7 @@ cmd.Parameters.Append param
 
 ' @ToLocal
 Set param = cmd.CreateParameter(, _
-                            DataTypeEnum.adDate, _
+                            DataTypeEnum.adDBTimeStamp, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             ConvertDateUTCToLocal(ConvertDateTZToUTC(toTime, mTimeZone)))
