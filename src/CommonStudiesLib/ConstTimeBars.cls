@@ -247,7 +247,10 @@ ElseIf ev.valueName = ConstTimeBarsInputTotalVolume Then
     If mVolumeResetPending Then
         ' we've started a new session and are expecting the data source to
         ' start sending low volume figures
-        If mLatestVolume < mPrevBarVolume Then mPrevBarVolume = 0
+        If mLatestVolume < mPrevBarVolume Then
+            mPrevBarVolume = 0
+            mVolumeResetPending = False
+        End If
     End If
     
     mVolumeCache.updateValue mLatestVolume - mPrevBarVolume
@@ -257,7 +260,11 @@ ElseIf ev.valueName = ConstTimeBarsInputTotalVolume Then
 ElseIf ev.valueName = ConstTimeBarsInputTickVolume Then
     ' we assume that a tickVolume notification belongs to the same bar as the
     ' preceding price notification, so we don't check the timestamp
-    mBars.incrementTickVolume ev.value
+    
+    ' We also assume that a tickvolume notification represents the actual
+    ' current tickvolume for the bar, and therefore replaces the bar's
+    ' tickvolume rather than incrementing it
+    mBars.incrementTickVolume ev.value - mBar.tickVolume
     notifyTickVolume ev.timestamp
 Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
