@@ -67,8 +67,6 @@ Private mTimeUnits                  As TimePeriodUnits
 Private mTicksize                   As Double
 Private mMaxBarRange                As Double
 
-Private mTickVolume                 As Long
-
 Private mBarEndTime                 As Date
 
 Private mChangeListeners            As Collection
@@ -98,10 +96,6 @@ Private Sub mSession_SessionStarted(ev As SessionEvent)
 If mBarEndTime <> 0 And _
     mSession.sessionCurrentTime < mBarEndTime Then Exit Sub
     
-If mTickVolume <> 0 Then
-    mCurrentBar.tickVolume = mTickVolume
-    mTickVolume = 0
-End If
 Set mCurrentBar = Nothing
 End Sub
 
@@ -392,21 +386,21 @@ End Sub
 '
 '@/
 Public Sub incrementTickVolume( _
-                ByVal tickVol As Long)
-mTickVolume = mTickVolume + tickVol
+                ByVal increment As Long)
+mCurrentBar.incrementTickVolume increment
 End Sub
 
 Friend Sub initialise( _
                 ByVal barLength As Long, _
                 ByVal timeUnits As TimePeriodUnits, _
                 ByVal pSession As session, _
-                ByVal ticksize As Double, _
+                ByVal tickSize As Double, _
                 ByVal numberOfBarsToCache As Long)
 
 mBarLength = barLength
 mTimeUnits = timeUnits
 Set mSession = pSession
-mTicksize = ticksize
+mTicksize = tickSize
 If mTimeUnits = TimePeriodTickMovement Then mMaxBarRange = mBarLength * mTicksize
 Set mBarsCache = New StudyValueCache
 mBarsCache.initialise numberOfBarsToCache, "Bar"
@@ -503,10 +497,6 @@ End Sub
 
 Private Sub createNewBar( _
                 ByVal timestamp As Date)
-If mTickVolume <> 0 Then
-    mCurrentBar.tickVolume = mTickVolume
-    mTickVolume = 0
-End If
 
 Set mCurrentBar = New Bar
 If mBarLength = 0 Then

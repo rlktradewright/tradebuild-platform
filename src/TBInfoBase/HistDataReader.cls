@@ -441,12 +441,7 @@ Private Sub setBarSpecifierTimes( _
 With barSpecifier
     If .BarLengthUnits = TimePeriodVolume Or .BarLengthUnits = TimePeriodTickMovement Or .BarLengthUnits = TimePeriodTickVolume Then Exit Sub
     If .toDate <> 0 Then
-        fromDate = OffsetBarStartTime(.toDate, _
-                                    .barLength, _
-                                    .BarLengthUnits, _
-                                    -.numberOfBars, _
-                                    pContract.sessionStartTime, _
-                                    pContract.sessionEndTime)
+        fromDate = .fromDate
         toDate = .toDate
     Else
         fromDate = .fromDate

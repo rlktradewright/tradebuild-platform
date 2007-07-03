@@ -347,14 +347,14 @@ Private Sub IBarDataOutputServiceConsumer_RequiredTimePeriod( _
                 ByVal saveIntervalSeconds As Long)
 
 If saveIntervalSeconds > 0 And saveIntervalSeconds < 5 Then _
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "TradeBuild26.Ticker::IBarDataOutputServiceConsumer_RequiredTimePeriod", _
             "Save interval cannot be less than 5 seconds"
 
 mTimeframes.addTimeframe timeframe.length, _
                         timeframe.units, _
                         "", _
-                        IIf(mUpdateLatestBar, 1, 0), _
+                        IIf(mUpdateLatestBar, 2, 0), _
                         0, _
                         0, _
                         False, _
@@ -376,7 +376,7 @@ Dim ev As NotificationEvent
 
 mInEventHandler = True
 
-On Error GoTo err
+On Error GoTo Err
 
 Select Case eventCode
 Case TradeBuildSP.StandardSPEventCodes.RTCantConnectDataSource
@@ -449,8 +449,8 @@ mInEventHandler = False
 
 Exit Sub
 
-err:
-gTB.notifyFatalError err.code, err.Description, ModuleName & "IRealtimeDataInputServiceConsumer_Error"
+Err:
+gTB.notifyFatalError Err.number, Err.Description, ModuleName & "IRealtimeDataInputServiceConsumer_Error"
 mInEventHandler = False
 End Sub
 
@@ -465,7 +465,7 @@ Private Sub IStreamingDataConsumer_Ask( _
 
 mInEventHandler = True
 
-On Error GoTo err
+On Error GoTo Err
 
 mTickNumber = mTickNumber + 1
 If mState <> TickerStates.TickerStateRunning Then
@@ -524,8 +524,8 @@ mPrevAskSize = mAskSize
 mInEventHandler = False
 Exit Sub
 
-err:
-gTB.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:Ask"
+Err:
+gTB.notifyFatalError Err.number, Err.Description, ModuleName & "IStreamingDataConsumer:Ask"
 mInEventHandler = False
 End Sub
 
@@ -537,7 +537,7 @@ Private Sub IStreamingDataConsumer_Bid( _
 
 mInEventHandler = True
 
-On Error GoTo err
+On Error GoTo Err
 
 mTickNumber = mTickNumber + 1
 If mState <> TickerStates.TickerStateRunning Then
@@ -595,8 +595,8 @@ mPrevBidSize = mBidSize
 mInEventHandler = False
 Exit Sub
 
-err:
-gTB.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:Bid"
+Err:
+gTB.notifyFatalError Err.number, Err.Description, ModuleName & "IStreamingDataConsumer:Bid"
 mInEventHandler = False
 End Sub
 
@@ -606,7 +606,7 @@ Private Sub IStreamingDataConsumer_High( _
 
 mInEventHandler = True
 
-On Error GoTo err
+On Error GoTo Err
 
 mTickNumber = mTickNumber + 1
 If mState <> TickerStates.TickerStateRunning Then
@@ -637,8 +637,8 @@ fireHigh mHighPrice, mHighPriceString
 mInEventHandler = False
 Exit Sub
 
-err:
-gTB.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:High"
+Err:
+gTB.notifyFatalError Err.number, Err.Description, ModuleName & "IStreamingDataConsumer:High"
 mInEventHandler = False
 End Sub
 
@@ -648,7 +648,7 @@ Private Sub IStreamingDataConsumer_Low( _
 
 mInEventHandler = True
 
-On Error GoTo err
+On Error GoTo Err
 
 mTickNumber = mTickNumber + 1
 If mState <> TickerStates.TickerStateRunning Then
@@ -677,8 +677,8 @@ fireLow mLowPrice, mLowPriceString
 mInEventHandler = False
 Exit Sub
 
-err:
-gTB.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:Low"
+Err:
+gTB.notifyFatalError Err.number, Err.Description, ModuleName & "IStreamingDataConsumer:Low"
 mInEventHandler = False
 End Sub
 
@@ -688,7 +688,7 @@ Private Sub IStreamingDataConsumer_OpenInterest( _
 
 mInEventHandler = True
 
-On Error GoTo err
+On Error GoTo Err
 
 mTickNumber = mTickNumber + 1
 If mState <> TickerStates.TickerStateRunning Then
@@ -718,8 +718,8 @@ mPrevOpenInterest = mOpenInterest
 mInEventHandler = False
 Exit Sub
 
-err:
-gTB.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:OpenInterest"
+Err:
+gTB.notifyFatalError Err.number, Err.Description, ModuleName & "IStreamingDataConsumer:OpenInterest"
 mInEventHandler = False
 End Sub
 
@@ -729,7 +729,7 @@ Private Sub IStreamingDataConsumer_PreviousClose( _
 
 mInEventHandler = True
 
-On Error GoTo err
+On Error GoTo Err
 
 mTickNumber = mTickNumber + 1
 If mState <> TickerStates.TickerStateRunning Then
@@ -765,8 +765,8 @@ End If
 mInEventHandler = False
 Exit Sub
 
-err:
-gTB.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:PreviousClose"
+Err:
+gTB.notifyFatalError Err.number, Err.Description, ModuleName & "IStreamingDataConsumer:PreviousClose"
 mInEventHandler = False
 End Sub
 
@@ -776,7 +776,7 @@ Private Sub IStreamingDataConsumer_ResetMarketDepth( _
 
 mInEventHandler = True
 
-On Error GoTo err
+On Error GoTo Err
 
 mTickNumber = mTickNumber + 1
 If mState <> TickerStates.TickerStateRunning Then
@@ -802,8 +802,8 @@ DOMReset timestamp, marketDepthReRequested
 mInEventHandler = False
 Exit Sub
 
-err:
-gTB.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:ResetMarketDepth"
+Err:
+gTB.notifyFatalError Err.number, Err.Description, ModuleName & "IStreamingDataConsumer:ResetMarketDepth"
 mInEventHandler = False
 End Sub
 
@@ -814,7 +814,7 @@ Private Sub IStreamingDataConsumer_Trade( _
 
 mInEventHandler = True
 
-On Error GoTo err
+On Error GoTo Err
 
 mTickNumber = mTickNumber + 1
 If mState <> TickerStates.TickerStateRunning Then
@@ -848,8 +848,8 @@ mPrevTradeSize = size
 mInEventHandler = False
 Exit Sub
 
-err:
-gTB.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:Trade"
+Err:
+gTB.notifyFatalError Err.number, Err.Description, ModuleName & "IStreamingDataConsumer:Trade"
 mInEventHandler = False
 End Sub
 
@@ -863,7 +863,7 @@ Private Sub IStreamingDataConsumer_UpdateMktDepth( _
 
 mInEventHandler = True
 
-On Error GoTo err
+On Error GoTo Err
 
 mTickNumber = mTickNumber + 1
 If mState <> TickerStates.TickerStateRunning Then
@@ -933,8 +933,8 @@ End If
 mInEventHandler = False
 Exit Sub
 
-err:
-gTB.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:UpdateMktDepth"
+Err:
+gTB.notifyFatalError Err.number, Err.Description, ModuleName & "IStreamingDataConsumer:UpdateMktDepth"
 mInEventHandler = False
 End Sub
 
@@ -949,7 +949,7 @@ Private Sub IStreamingDataConsumer_UpdateMktDepthL2( _
 
 mInEventHandler = True
 
-On Error GoTo err
+On Error GoTo Err
 
 mTickNumber = mTickNumber + 1
 If mState <> TickerStates.TickerStateRunning Then
@@ -995,8 +995,8 @@ DOMRawUpdateL2 timestamp, _
 mInEventHandler = False
 Exit Sub
 
-err:
-gTB.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:UodateMktDepthL2"
+Err:
+gTB.notifyFatalError Err.number, Err.Description, ModuleName & "IStreamingDataConsumer:UodateMktDepthL2"
 mInEventHandler = False
 End Sub
 
@@ -1006,7 +1006,7 @@ Private Sub IStreamingDataConsumer_Volume( _
 
 mInEventHandler = True
 
-On Error GoTo err
+On Error GoTo Err
 
 mTickNumber = mTickNumber + 1
 If mState <> TickerStates.TickerStateRunning Then
@@ -1062,8 +1062,8 @@ mPrevVolume = mVolume
 mInEventHandler = False
 Exit Sub
 
-err:
-gTB.notifyFatalError err.code, err.Description, ModuleName & "IStreamingDataConsumer:Volume"
+Err:
+gTB.notifyFatalError Err.number, Err.Description, ModuleName & "IStreamingDataConsumer:Volume"
 mInEventHandler = False
 End Sub
 
@@ -1080,7 +1080,7 @@ Dim ev As NotificationEvent
 
 mInEventHandler = True
 
-On Error GoTo err
+On Error GoTo Err
 
 Select Case eventCode
 Case TradeBuildSP.StandardSPEventCodes.TFCantConnectDataSource
@@ -1111,8 +1111,8 @@ End Select
 mInEventHandler = False
 Exit Sub
 
-err:
-gTB.notifyFatalError err.code, err.Description, ModuleName & "ITickfileOutputServiceConsumer_Error"
+Err:
+gTB.notifyFatalError Err.number, Err.Description, ModuleName & "ITickfileOutputServiceConsumer_Error"
 mInEventHandler = False
 End Sub
 
@@ -1121,7 +1121,7 @@ Private Sub ITickfileOutputServiceConsumer_OutputTickfileCreated( _
 
 mInEventHandler = True
 
-On Error GoTo err
+On Error GoTo Err
 
 fireTickfileWriterNotify WriterNotifications.WriterFileCreated, _
                         filename
@@ -1130,8 +1130,8 @@ fireTickfileWriterNotify WriterNotifications.WriterFileCreated, _
 mInEventHandler = False
 Exit Sub
 
-err:
-gTB.notifyFatalError err.code, err.Description, ModuleName & "ITickfileOutputServiceConsumer_OutputTickfileCreated"
+Err:
+gTB.notifyFatalError Err.number, Err.Description, ModuleName & "ITickfileOutputServiceConsumer_OutputTickfileCreated"
 mInEventHandler = False
 End Sub
 
@@ -1139,7 +1139,7 @@ Private Property Let ITickfileOutputServiceConsumer_Ready(ByVal RHS As Boolean)
 
 mInEventHandler = True
 
-On Error GoTo err
+On Error GoTo Err
 
 mTickWriter.ServiceProviderWriterReady = RHS
 If mState = TickerStates.TickerStateStopped Then
@@ -1162,8 +1162,8 @@ fireTickfileWriterNotify IIf(RHS, _
 mInEventHandler = False
 Exit Property
 
-err:
-gTB.notifyFatalError err.code, err.Description, ModuleName & "ITickfileOutputServiceConsumer_Ready"
+Err:
+gTB.notifyFatalError Err.number, Err.Description, ModuleName & "ITickfileOutputServiceConsumer_Ready"
 mInEventHandler = False
 End Property
 
@@ -1390,7 +1390,7 @@ End Property
 
 Public Property Let DOMEventsRequired(ByVal value As DOMEvents)
 If mState <> TickerStates.TickerStateCreated Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
             "TradeBuild26.Ticker::(Let)DOMEventsRequired", _
             "Ticker is already in use"
 End If
@@ -1483,7 +1483,7 @@ End Property
 
 Public Property Let outputTickfileFormat(ByVal value As String)
 If mState <> TickerStates.TickerStateCreated Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
             "TradeBuild26.Ticker::(Let)OutputTickfileFormat", _
             "Ticker is already in use"
 End If
@@ -1496,7 +1496,7 @@ End Property
 
 Public Property Let outputTickfilePath(ByVal value As String)
 If mState <> TickerStates.TickerStateCreated Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
             "TradeBuild26.Ticker::(Let)OutputTickFilePath", _
             "Ticker is already in use"
 End If
@@ -1559,7 +1559,7 @@ End Property
 
 Friend Property Let timestamp(ByVal value As Date)
 If Not mClock.simulated Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
             ProjectName & "." & ModuleName & ":" & "timestamp", _
             "Ticker clock is not simulated"
 End If
@@ -1799,7 +1799,7 @@ End Function
 
 Public Sub loadTicker(ByVal pContractSpecifier As contractSpecifier)
 Dim lContractsBuilder As ContractsBuilder
-If mState <> TickerStates.TickerStateCreated Then err.Raise ErrorCodes.ErrIllegalStateException, _
+If mState <> TickerStates.TickerStateCreated Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                         "TradeBuild26.Ticker::LoadTicker", _
                         "Ticker is already in use"
 
@@ -1906,19 +1906,19 @@ Public Sub RequestMarketDepth(ByVal DOMEventsRequired As DOMEvents, _
 If mState = TickerStates.TickerStateClosing Then Exit Sub
 
 If mState = TickerStates.TickerStateStopped Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                     "TradeBuild26.Ticker::requestMarketDepth", _
                     "Can't call requestMarketDepth on a dead ticker object"
 End If
                         
 If DOMEventsRequired = DOMEvents.DOMNoEvents And Not writeToTickFile Then
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "TradeBuild26.Ticker::requestMarketDepth", _
                 "writeToTickFile must be true if DOMEventsRequired=DOMNoevents"
 End If
 
 If writeToTickFile And mTickWriter Is Nothing Then
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "TradeBuild26.Ticker::requestMarketDepth", _
                 "Can't write market depth to tickfile: no output tickfile for this ticker"
 End If
@@ -1967,7 +1967,7 @@ End Sub
 Public Sub StartTicker(ByVal pContractSpecifier As contractSpecifier)
 Dim lContractsBuilder As ContractsBuilder
 
-If mState <> TickerStates.TickerStateCreated Then err.Raise ErrorCodes.ErrIllegalStateException, _
+If mState <> TickerStates.TickerStateCreated Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                         "TradeBuild26.Ticker::StartTicker", _
                         "Ticker is already in use"
 

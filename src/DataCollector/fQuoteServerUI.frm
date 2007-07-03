@@ -944,7 +944,6 @@ mTickers(index).tli.addStateChangeListener Me
 
 DataLightLabel(index).BackColor = vbGreen
 ConnectionStatusText.BackColor = vbGreen
-
 End Sub
 
 Private Sub switchDataLightOff( _

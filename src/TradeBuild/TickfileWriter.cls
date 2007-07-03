@@ -332,6 +332,8 @@ End Sub
 Friend Sub writeVolume(ByVal timestamp As Date, _
                     ByVal size As Long)
 Dim pendingTick As Tick
+
+On Error GoTo Err
 If Not mServiceProviderWriterReady Then
     With pendingTick
         .TickType = TickTypes.TickTypeVolume
@@ -342,6 +344,11 @@ If Not mServiceProviderWriterReady Then
 Else
     mWriter.writeVolume timestamp, size
 End If
+
+Exit Sub
+
+Err:
+Stop
 End Sub
 
 '@================================================================================

@@ -3979,7 +3979,6 @@ End Sub
 Private Sub processVolume(ByVal timestamp As Date, _
                             ByVal tickerid As Long, _
                             ByVal size As Long)
-
 With mTickerTable(tickerid)
 
     If Not .inUse Then Exit Sub     ' ticker has been stopped
@@ -3988,6 +3987,7 @@ With mTickerTable(tickerid)
     
     .dataConsumer.volume timestamp, _
                 size
+    If err.number <> 0 Then Stop
 End With
 End Sub
 

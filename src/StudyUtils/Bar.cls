@@ -172,10 +172,6 @@ Public Property Get openChanged() As Boolean
 openChanged = mOpenChanged
 End Property
 
-Friend Property Let tickVolume(ByVal value As Long)
-mTickVolume = value
-End Property
-
 Public Property Get tickVolume() As Long
 tickVolume = mTickVolume
 End Property
@@ -183,6 +179,11 @@ End Property
 '================================================================================
 ' Methods
 '================================================================================
+
+Friend Sub incrementTickVolume( _
+                ByVal increment As Long)
+mTickVolume = mTickVolume + increment
+End Sub
 
 Friend Sub Tick(ByVal value As Double)
 mBarChanged = False

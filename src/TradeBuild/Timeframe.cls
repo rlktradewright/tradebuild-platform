@@ -56,6 +56,9 @@ Event stateChange(ByRef ev As StateChangeEvent)
 ' Constants
 '@================================================================================
 
+Private Const ProjectName                       As String = "TradeBuild26"
+Private Const ModuleName                        As String = "Timeframe"
+
 Private Const BarValueVolume As String = "Volume"
 
 Private Const ConstTimeBarsStudyName As String = "Constant time bars"
@@ -184,6 +187,9 @@ Private Sub IBarDataConsumer_Bar( _
                 ByRef data As TradeBuildSP.Bar, _
                 ByVal barLength As Long, _
                 ByVal barUnit As TimePeriodUnits)
+Dim failpoint As Long
+On Error GoTo Err
+
 mHistoricBarRequested = False
 mHistoricBarPending = True
 mHistoricBar = data
@@ -193,6 +199,15 @@ If Not mHistReceivingSynchronously Then
     ' before it has completed the function that provided the bar.
     mHistoricBarTimer.StartTimer
 End If
+
+Exit Sub
+
+Err:
+Err.Raise Err.number, _
+        ProjectName & "." & ModuleName & ":" & "IBarDataConsumer_Bar" & "." & failpoint & _
+        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
+        Err.Description
+
 End Sub
 
 '@================================================================================
@@ -255,7 +270,19 @@ End Sub
 
 Private Sub IBarDataInputServiceConsumer_Ready()
 ' unwind the stack
+Dim failpoint As Long
+On Error GoTo Err
+
 mHistoricBarTimer.StartTimer
+
+Exit Sub
+
+Err:
+Err.Raise Err.number, _
+        ProjectName & "." & ModuleName & ":" & "IBarDataInputServiceConsumer_Ready" & "." & failpoint & _
+        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
+        Err.Description
+
 End Sub
 
 '@================================================================================
@@ -548,6 +575,9 @@ End Sub
 Private Sub FetchHistoricBars()
 Dim barSpecifier As New BarDataSpecifier
 Dim ev As NotificationEvent
+Dim failpoint As Long
+On Error GoTo Err
+
 If mBarReader Is Nothing Then
     fireStateChange TimeframeStateLoading
     If mNumberOfBarsToFetch = 0 Then
@@ -632,6 +662,15 @@ Then
     mHistoricBarTimer.StartTimer
 End If
 
+Exit Sub
+
+Err:
+Err.Raise Err.number, _
+        ProjectName & "." & ModuleName & ":" & "FetchHistoricBars" & "." & failpoint & _
+        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
+        Err.Description
+
+
 End Sub
 
 Private Sub fireStateChange(ByVal newState As TimeframeStates)
@@ -667,6 +706,7 @@ With mHistoricBar
     studyMgr.notifyInput mVolumeInputHandle, mAccumulatedVolume, .timestamp
     
     studyMgr.notifyInput mTickVolumeInputHandle, .tickVolume, .timestamp
+    mCurrTradeBarPrevTickvol = .tickVolume
     
 End With
 End Sub

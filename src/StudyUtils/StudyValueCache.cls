@@ -40,6 +40,9 @@ Option Explicit
 ' Constants
 '================================================================================
 
+Private Const ProjectName                   As String = "StudyUtils26"
+Private Const ModuleName                    As String = "StudyValueCache"
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -183,6 +186,9 @@ End Sub
 
 Public Function getStudyValue(Optional ByVal ref As Long) As StudyValue
 Dim valueEntry As StudyValue
+Dim failpoint As Long
+On Error GoTo Err
+
 valueEntry = mValues(refToIndex(ref))
 getStudyValue.barNumber = valueEntry.barNumber
 getStudyValue.timestamp = valueEntry.timestamp
@@ -194,14 +200,38 @@ ElseIf TypeOf valueEntry.value Is Object  Then
 Else
     getStudyValue.value = valueEntry.value
 End If
+
+Exit Function
+
+Err:
+Err.Raise Err.Number, _
+        ProjectName & "." & ModuleName & ":" & "getStudyValue" & "." & failpoint & _
+        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
+        Err.description
+
 End Function
 
 Public Function getValue(Optional ByVal ref As Long) As Variant
-If TypeOf mValues(refToIndex(ref)).value Is Object  Then
-    Set getValue = mValues(refToIndex(ref)).value
+Dim index As Long
+
+Dim failpoint As Long
+On Error GoTo Err
+
+index = refToIndex(ref)
+If TypeOf mValues(index).value Is Object  Then
+    Set getValue = mValues(index).value
 Else
-    getValue = mValues(refToIndex(ref)).value
+    getValue = mValues(index).value
 End If
+
+Exit Function
+
+Err:
+Err.Raise Err.Number, _
+        ProjectName & "." & ModuleName & ":" & "getValue" & "." & failpoint & _
+        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
+        Err.description
+
 End Function
 
 Friend Sub initialise( _
@@ -245,7 +275,7 @@ replayTask.initialise Me, _
                     numberOfValuesToReplay, _
                     discriminator
 
-Set replayValues = startTask( _
+Set replayValues = StartTask( _
                                 replayTask, _
                                 PriorityNormal, _
                                 IIf(taskName <> "", taskName, GenerateGUIDString), _
