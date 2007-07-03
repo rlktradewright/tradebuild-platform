@@ -525,7 +525,7 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.notifyFatalError Err.number, Err.Description, ModuleName & "IStreamingDataConsumer:Ask"
+gTB.notifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:Ask"
 mInEventHandler = False
 End Sub
 
@@ -596,7 +596,7 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.notifyFatalError Err.number, Err.Description, ModuleName & "IStreamingDataConsumer:Bid"
+gTB.notifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:Bid"
 mInEventHandler = False
 End Sub
 
@@ -638,7 +638,7 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.notifyFatalError Err.number, Err.Description, ModuleName & "IStreamingDataConsumer:High"
+gTB.notifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:High"
 mInEventHandler = False
 End Sub
 
@@ -678,7 +678,7 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.notifyFatalError Err.number, Err.Description, ModuleName & "IStreamingDataConsumer:Low"
+gTB.notifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:Low"
 mInEventHandler = False
 End Sub
 
@@ -719,7 +719,7 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.notifyFatalError Err.number, Err.Description, ModuleName & "IStreamingDataConsumer:OpenInterest"
+gTB.notifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:OpenInterest"
 mInEventHandler = False
 End Sub
 
@@ -766,7 +766,7 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.notifyFatalError Err.number, Err.Description, ModuleName & "IStreamingDataConsumer:PreviousClose"
+gTB.notifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:PreviousClose"
 mInEventHandler = False
 End Sub
 
@@ -803,7 +803,7 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.notifyFatalError Err.number, Err.Description, ModuleName & "IStreamingDataConsumer:ResetMarketDepth"
+gTB.notifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:ResetMarketDepth"
 mInEventHandler = False
 End Sub
 
@@ -838,8 +838,6 @@ If size < 0 Then
     Exit Sub
 End If
         
-mStudyManager.notifyInput mTradeInputHandle, price, timestamp
-
 notifyTrade timestamp, price, size
 
 mPrevTrade = price
@@ -849,7 +847,7 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.notifyFatalError Err.number, Err.Description, ModuleName & "IStreamingDataConsumer:Trade"
+gTB.notifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:Trade"
 mInEventHandler = False
 End Sub
 
@@ -934,7 +932,7 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.notifyFatalError Err.number, Err.Description, ModuleName & "IStreamingDataConsumer:UpdateMktDepth"
+gTB.notifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:UpdateMktDepth"
 mInEventHandler = False
 End Sub
 
@@ -996,13 +994,14 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.notifyFatalError Err.number, Err.Description, ModuleName & "IStreamingDataConsumer:UodateMktDepthL2"
+gTB.notifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:UodateMktDepthL2"
 mInEventHandler = False
 End Sub
 
 Private Sub IStreamingDataConsumer_Volume( _
                             ByVal timestamp As Date, _
                             ByVal size As Long)
+Dim failpoint As Long
 
 mInEventHandler = True
 
@@ -1014,11 +1013,17 @@ If mState <> TickerStates.TickerStateRunning Then
     Exit Sub    ' ticker has been stopped
 End If
 
+
+failpoint = 100
+
 ' write the uncorrected size to the tickfile
 If mWriteTickData Then mTickWriter.writeVolume timestamp, size
 
 ' timestamp = convertTime(timestamp)
     
+
+failpoint = 200
+
 setTime timestamp
 
 If size = 0 Then
@@ -1028,6 +1033,9 @@ End If
 
 ' note that the previous trade will have notified volume of mAccumulatedVolume
 
+
+failpoint = 300
+
 If Not mFirstVolumeReceived Then
     notifyVolume timestamp, size
     
@@ -1035,6 +1043,9 @@ If Not mFirstVolumeReceived Then
     mFirstVolumeReceived = True
     
 ElseIf size + mVolumeCorrectionIncrement < mAccumulatedVolume Then
+
+    failpoint = 400
+
     If mNoVolumeAdjustments Then
         notifyVolume timestamp, size
     Else
@@ -1045,9 +1056,15 @@ ElseIf size + mVolumeCorrectionIncrement > mAccumulatedVolume Then
     If mNoImpliedTrades Or _
         (size + mVolumeCorrectionIncrement - mAccumulatedVolume) <> mPrevTradeSize _
     Then
+
+        failpoint = 500
+
         mAccumulatedVolume = size + mVolumeCorrectionIncrement
         notifyVolume timestamp, mAccumulatedVolume
     Else
+
+        failpoint = 600
+
         notifyTrade timestamp, _
                     mPrevTrade, _
                     size + mVolumeCorrectionIncrement - mAccumulatedVolume
@@ -1063,7 +1080,7 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.notifyFatalError Err.number, Err.Description, ModuleName & "IStreamingDataConsumer:Volume"
+gTB.notifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:Volume:" & failpoint
 mInEventHandler = False
 End Sub
 
@@ -2601,6 +2618,8 @@ For i = 1 To mDataConsumers.Count
     Set consumer = mDataConsumers(i)
     consumer.trade timestamp, price, size
 Next
+
+mStudyManager.notifyInput mTradeInputHandle, price, timestamp
 
 fireTrade mTradePrice, mTradePriceString, size, mPrevTrade, mPrevTradeSize
 
