@@ -1743,8 +1743,7 @@ Friend Function addTimer(ByVal expiryTime As Double, _
                         ByVal expiryTimeUnits As expiryTimeUnits, _
                         ByVal data As Object) As TimerListItem
 If mTimerList Is Nothing Then
-    Set mTimerList = CreatePrivateTimerList(IIf(mReplayingTickfile, True, False))
-    mTimerList.StartTiming
+    Set mTimerList = GetGlobalTimerList(IIf(mReplayingTickfile, True, False))
 End If
 Set addTimer = mTimerList.add(data, expiryTime, expiryTimeUnits)
 End Function
