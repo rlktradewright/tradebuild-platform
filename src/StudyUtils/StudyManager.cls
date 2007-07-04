@@ -113,7 +113,7 @@ End Type
 Private mInputs()               As InputDescriptor
 Private mNextInputIndex         As Long
 
-Private mStudies                As Collection
+Private mInputStudies                As Collection
 Private mStudyLibraryManager    As StudyLibraryManager
 
 Private mSessionStartTime       As Date
@@ -131,7 +131,7 @@ Private mUseLocalTimeForStudies As Boolean
 Private Sub Class_Initialize()
 ReDim mInputs(10) As InputDescriptor
 Set mStudyLibraryManager = Globals.StudyLibraryManager
-Set mStudies = Globals.StudiesCollection
+Set mInputStudies = New Collection
 End Sub
 
 '================================================================================
@@ -210,13 +210,15 @@ studyEntry.studyName = name
 Set studyEntry.study = lStudy
 
 studyEntry.studyID = lStudy.id
-mStudies.add studyEntry, lStudy.id
+Globals.StudiesCollection.add studyEntry, lStudy.id
+mInputStudies.add inpStudy, lStudy.id
 
 Exit Function
 
 Err:
 If Err.Number = VBErrorCodes.VbErrElementAlreadyExists Then
-    mStudies.remove lStudy.id
+    Globals.StudiesCollection.remove lStudy.id
+    mInputStudies.remove lStudy.id
     Resume
 End If
 
@@ -247,7 +249,7 @@ If underlyingStudy Is Nothing Then
 End If
 
 On Error Resume Next
-underlyingStudyEntry = mStudies(underlyingStudy.id)
+underlyingStudyEntry = Globals.StudiesCollection(underlyingStudy.id)
 If Err.Number <> 0 Then
     On Error GoTo 0
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
@@ -299,7 +301,7 @@ studyEntry.studyID = GenerateGUIDString
 ' find the relevant InputStudy object to get the session object
 se = underlyingStudyEntry
 Do While Not TypeOf se.study Is InputStudy
-    se = mStudies(se.underlyingStudyID)
+    se = Globals.StudiesCollection(se.underlyingStudyID)
 Loop
 Set inStudy = se.study
 
@@ -312,7 +314,7 @@ Set studyEntry.sessionBldr = New SessionBuilder
 studyEntry.sessionBldr.sessionStartTime = inStudy.session.sessionStartTime
 studyEntry.sessionBldr.sessionEndTime = inStudy.session.sessionEndTime
 
-underlyingStudyEntry = mStudies(underlyingStudy.id)
+underlyingStudyEntry = Globals.StudiesCollection(underlyingStudy.id)
 
 studyEntry.study.initialise studyEntry.studyID, _
                             parameters, _
@@ -321,7 +323,7 @@ studyEntry.study.initialise studyEntry.studyID, _
                             underlyingStudyEntry.study, _
                             studyEntry.sessionBldr.session
                             
-mStudies.add studyEntry, studyEntry.studyID
+Globals.StudiesCollection.add studyEntry, studyEntry.studyID
 Set addStudy = lStudy
 End Function
 
@@ -338,7 +340,7 @@ Dim lStudyEntry As StudyTableEntry
 Dim lInputStudy As study
 
 Set lStudy = studyToMove
-lStudyEntry = mStudies(lStudy.id)
+lStudyEntry = Globals.StudiesCollection(lStudy.id)
 
 Set lInputStudy = newInputStudy
 
@@ -400,15 +402,13 @@ mUseLocalTimeForStudies = useLocalTimeForStudies
 
 mSessionTimesSet = True
 
-For Each lVar In mStudies
+For Each lVar In mInputStudies
     lStudyEntry = lVar
-    If TypeOf lStudyEntry.study Is InputStudy Then
-        Set lStudy = lStudyEntry.study
-        lStudy.setSessionTimes mSessionStartTime, _
-                                mSessionEndTime, _
-                                mExchangeTimeZone, _
-                                useLocalTimeForStudies
-    End If
+    Set lStudy = lStudyEntry.study
+    lStudy.setSessionTimes mSessionStartTime, _
+                            mSessionEndTime, _
+                            mExchangeTimeZone, _
+                            useLocalTimeForStudies
 Next
 End Sub
 
@@ -420,7 +420,7 @@ Public Function startStudy( _
 Dim studyEntry As StudyTableEntry
 Dim underlyingStudyEntry As StudyTableEntry
 
-studyEntry = mStudies(pStudy.id)
+studyEntry = Globals.StudiesCollection(pStudy.id)
 If studyEntry.studyStarted Then
     ' this study has already been added to the underlying study
     Exit Function
@@ -428,10 +428,10 @@ End If
 
 studyEntry.studyStarted = True
 
-mStudies.remove pStudy.id
-mStudies.add studyEntry, pStudy.id
+Globals.StudiesCollection.remove pStudy.id
+Globals.StudiesCollection.add studyEntry, pStudy.id
 
-underlyingStudyEntry = mStudies(studyEntry.underlyingStudyID)
+underlyingStudyEntry = Globals.StudiesCollection(studyEntry.underlyingStudyID)
 
 Set startStudy = underlyingStudyEntry.study.addStudy(studyEntry.study, _
                                                     studyEntry.inputValueNames, _
@@ -459,7 +459,7 @@ Dim studyEntry As StudyTableEntry
 Dim var As Variant
 
 Set findStudy = Nothing
-For Each var In mStudies
+For Each var In Globals.StudiesCollection
     studyEntry = var
     If studyEntry.studyMgr Is Me And _
         UCase$(studyName) = UCase$(studyEntry.studyName) And _
@@ -481,7 +481,7 @@ Private Sub linkSession( _
                 ByVal pStudy As study)
 Dim studyEntry As StudyTableEntry
 
-studyEntry = mStudies(pStudy.id)
+studyEntry = Globals.StudiesCollection(pStudy.id)
 
 studyEntry.sessionBldr.setLinkable
 studyEntry.inpStudy.linkSession studyEntry.sessionBldr.session

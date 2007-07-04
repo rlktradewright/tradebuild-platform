@@ -196,7 +196,7 @@ End Property
 
 Public Property Let name(ByVal value As String)
 mName = value
-mIdent = mName
+'mIdent = mName
 mStudyDef.name = mName
 End Property
 
