@@ -47,7 +47,7 @@ Begin VB.UserControl TickfileListManager
       Left            =   6360
       Picture         =   "TickfileListManager.ctx":0000
       TabIndex        =   1
-      Top             =   240
+      Top             =   480
       Width           =   375
    End
    Begin VB.CommandButton DownButton 
@@ -66,7 +66,7 @@ Begin VB.UserControl TickfileListManager
       Left            =   6360
       Picture         =   "TickfileListManager.ctx":0442
       TabIndex        =   3
-      Top             =   2040
+      Top             =   1800
       Width           =   375
    End
 End
@@ -98,7 +98,7 @@ Option Explicit
 ' Events
 '@================================================================================
 
-'Event TickfilesSelected()
+Event TickfileCountChanged()
 
 '@================================================================================
 ' Constants
@@ -123,12 +123,42 @@ Private mSupportedTickfileFormats() As TickfileFormatSpecifier
 Private mSupportsTickFiles As Boolean
 Private mSupportsTickStreams As Boolean
 
+Private mMinHeight As Long
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub UserControl_Initialize()
+
+mMinHeight = 2 * ((UpButton.Height + _
+                        105 + _
+                        DownButton.Height + _
+                        105 + _
+                        RemoveButton.Height _
+                        + 1) / 2)
+                        
+
 getSupportedTickfileFormats
+End Sub
+
+Private Sub UserControl_Resize()
+
+UpButton.Left = UserControl.Width - UpButton.Width
+DownButton.Left = UserControl.Width - DownButton.Width
+RemoveButton.Left = UserControl.Width - RemoveButton.Width
+
+If UserControl.Height < mMinHeight Then
+    UserControl.Height = mMinHeight
+End If
+
+TickFileList.Width = UpButton.Left - 105
+TickFileList.Height = UserControl.Height
+
+RemoveButton.Top = TickFileList.Height / 2 - RemoveButton.Height / 2
+UpButton.Top = RemoveButton.Top - UpButton.Height - 105
+DownButton.Top = RemoveButton.Top + RemoveButton.Height + 105
+
 End Sub
 
 '@================================================================================
@@ -166,6 +196,8 @@ Next
 DownButton.Enabled = False
 UpButton.Enabled = False
 RemoveButton.Enabled = False
+
+RaiseEvent TickfileCountChanged
 End Sub
 
 Private Sub TickFileList_Click()
@@ -205,8 +237,14 @@ Public Property Get supportsTickStreams() As Boolean
 supportsTickStreams = mSupportsTickStreams
 End Property
 
+Public Property Get tickfileCount() As Long
+tickfileCount = TickFileList.ListCount
+End Property
+
 Public Property Get TickfileSpecifiers() As TickfileSpecifier()
 Dim i As Long
+
+If TickFileList.ListCount = 0 Then Exit Property
 
 ReDim tfs(TickFileList.ListCount - 1) As TickfileSpecifier
 
@@ -231,6 +269,8 @@ Dim j As Long
 Dim k As Long
 
 On Error Resume Next
+
+If UBound(fileNames) < 0 Then Exit Sub
 
 j = UBound(mTickfileSpecifiers)
 If Err.Number <> 0 Then j = -1
@@ -259,6 +299,8 @@ For i = j + 1 To UBound(mTickfileSpecifiers)
     Next
 Next
 
+RaiseEvent TickfileCountChanged
+
 Exit Sub
 
 Err:
@@ -270,6 +312,8 @@ Public Sub addTickfileSpecifiers( _
 Dim i As Long
 Dim j As Long
 
+If UBound(pTickfileSpecifier) < 0 Then Exit Sub
+
 On Error Resume Next
 j = -1
 j = UBound(mTickfileSpecifiers)
@@ -279,15 +323,24 @@ ReDim Preserve mTickfileSpecifiers(j + UBound(pTickfileSpecifier) + 1) As Tickfi
 
 For i = j + 1 To UBound(mTickfileSpecifiers)
     TickFileList.addItem pTickfileSpecifier(i - j - 1).FileName
-    TickFileList.itemData(i) = i
+    ' NB: can't use i as index in the following line because mTickfileSpecifiers
+    ' may contain entries that have been deleted from the TickFileList
+    TickFileList.itemData(TickFileList.ListCount - 1) = i
     Set mTickfileSpecifiers(i) = pTickfileSpecifier(i - j - 1)
 Next
+
+RaiseEvent TickfileCountChanged
 
 End Sub
 
 Public Sub clear()
+
+If TickFileList.ListCount = 0 Then Exit Sub
+
 Erase mTickfileSpecifiers
 TickFileList.clear
+
+RaiseEvent TickfileCountChanged
 End Sub
 
 '@================================================================================
