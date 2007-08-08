@@ -450,7 +450,7 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.notifyFatalError Err.number, Err.Description, ModuleName & "IRealtimeDataInputServiceConsumer_Error"
+gTB.NotifyFatalError Err.number, Err.Description, ModuleName & "IRealtimeDataInputServiceConsumer_Error"
 mInEventHandler = False
 End Sub
 
@@ -525,7 +525,7 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.notifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:Ask"
+gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:Ask"
 mInEventHandler = False
 End Sub
 
@@ -596,7 +596,7 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.notifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:Bid"
+gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:Bid"
 mInEventHandler = False
 End Sub
 
@@ -638,7 +638,7 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.notifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:High"
+gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:High"
 mInEventHandler = False
 End Sub
 
@@ -678,7 +678,7 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.notifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:Low"
+gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:Low"
 mInEventHandler = False
 End Sub
 
@@ -719,7 +719,7 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.notifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:OpenInterest"
+gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:OpenInterest"
 mInEventHandler = False
 End Sub
 
@@ -766,7 +766,7 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.notifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:PreviousClose"
+gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:PreviousClose"
 mInEventHandler = False
 End Sub
 
@@ -803,7 +803,7 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.notifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:ResetMarketDepth"
+gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:ResetMarketDepth"
 mInEventHandler = False
 End Sub
 
@@ -847,7 +847,7 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.notifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:Trade"
+gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:Trade"
 mInEventHandler = False
 End Sub
 
@@ -932,7 +932,7 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.notifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:UpdateMktDepth"
+gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:UpdateMktDepth"
 mInEventHandler = False
 End Sub
 
@@ -994,7 +994,7 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.notifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:UodateMktDepthL2"
+gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:UodateMktDepthL2"
 mInEventHandler = False
 End Sub
 
@@ -1080,7 +1080,7 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.notifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:Volume:" & failpoint
+gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:Volume:" & failpoint
 mInEventHandler = False
 End Sub
 
@@ -1129,7 +1129,7 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.notifyFatalError Err.number, Err.Description, ModuleName & "ITickfileOutputServiceConsumer_Error"
+gTB.NotifyFatalError Err.number, Err.Description, ModuleName & "ITickfileOutputServiceConsumer_Error"
 mInEventHandler = False
 End Sub
 
@@ -1148,7 +1148,7 @@ mInEventHandler = False
 Exit Sub
 
 Err:
-gTB.notifyFatalError Err.number, Err.Description, ModuleName & "ITickfileOutputServiceConsumer_OutputTickfileCreated"
+gTB.NotifyFatalError Err.number, Err.Description, ModuleName & "ITickfileOutputServiceConsumer_OutputTickfileCreated"
 mInEventHandler = False
 End Sub
 
@@ -1180,7 +1180,7 @@ mInEventHandler = False
 Exit Property
 
 Err:
-gTB.notifyFatalError Err.number, Err.Description, ModuleName & "ITickfileOutputServiceConsumer_Ready"
+gTB.NotifyFatalError Err.number, Err.Description, ModuleName & "ITickfileOutputServiceConsumer_Ready"
 mInEventHandler = False
 End Property
 
@@ -1739,9 +1739,9 @@ Public Sub addTickfileWriterListener(ByVal value As WriterListener)
 mTickfileWriterListeners.add value
 End Sub
 
-Friend Function addTimer(ByVal expiryTime As Double, _
+Friend Function addTimer(ByVal expiryTime As Variant, _
                         ByVal expiryTimeUnits As expiryTimeUnits, _
-                        ByVal data As Object) As TimerListItem
+                        ByVal data As Variant) As TimerListItem
 If mTimerList Is Nothing Then
     Set mTimerList = GetGlobalTimerList(IIf(mReplayingTickfile, True, False))
 End If
