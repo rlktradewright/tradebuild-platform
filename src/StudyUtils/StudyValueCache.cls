@@ -172,9 +172,7 @@ Else
     mNumValues = mNumValues + 1
 End If
 
-If TypeName(value) = "Nothing" Then
-    Set mValues(mNewest).value = Nothing
-ElseIf TypeOf value Is Object  Then
+If IsObject(value) Then
     Set mValues(mNewest).value = value
 Else
     mValues(mNewest).value = value
@@ -193,9 +191,7 @@ valueEntry = mValues(refToIndex(ref))
 getStudyValue.barNumber = valueEntry.barNumber
 getStudyValue.timestamp = valueEntry.timestamp
 getStudyValue.barStartTime = valueEntry.barStartTime
-If TypeName(valueEntry.value) = "Nothing" Then
-    Set getStudyValue.value = Nothing
-ElseIf TypeOf valueEntry.value Is Object  Then
+If IsObject(valueEntry.value) Then
     Set getStudyValue.value = valueEntry.value
 Else
     getStudyValue.value = valueEntry.value
@@ -218,7 +214,7 @@ Dim failpoint As Long
 On Error GoTo Err
 
 index = refToIndex(ref)
-If TypeOf mValues(index).value Is Object  Then
+If IsObject(mValues(index).value) Then
     Set getValue = mValues(index).value
 Else
     getValue = mValues(index).value
@@ -290,7 +286,7 @@ Public Sub updateValue( _
                 Optional ByVal ref As Long)
 Dim i As Long
 i = refToIndex(ref)
-If TypeOf value Is Object  Then
+If IsObject(value) Then
     Set mValues(i).value = value
 Else
     mValues(i).value = value
