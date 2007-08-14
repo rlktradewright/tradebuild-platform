@@ -295,9 +295,11 @@ Private Sub CompleteSessionCheck_Click()
 If CompleteSessionCheck = vbChecked Then
     UseContractTimesOption.Enabled = True
     UseCustomTimesOption.Enabled = True
+    UseExchangeTimezoneCheck.Enabled = False
 Else
     UseContractTimesOption.Enabled = False
     UseCustomTimesOption.Enabled = False
+    UseExchangeTimezoneCheck.Enabled = True
 End If
 adjustCustomTimeFieldAttributes
 checkReady
@@ -368,8 +370,10 @@ Dim fromDate As Date
 Dim toDate As Date
 
 ' the from and to dates, session-oriented if required, converted to UTC
-Dim fromDateUTC As Date
-Dim toDateUTC As Date
+Dim replayFromDate As Date
+Dim replayToDate As Date
+
+On Error GoTo Err
 
 Screen.MousePointer = vbDefault
 If mContracts.count = 0 Then
@@ -395,232 +399,23 @@ For k = 0 To UBound(mSupportedTickStreamFormats)
     End If
 Next
 
-' get the most recent contract (though they should all have the same
-' info regarding session times)
-Set lContract = mContracts(mContracts.count)
+lTickfileSpecifiers = TradeBuildAPI.GenerateTickfileSpecifiers( _
+                                                mContracts, _
+                                                TickfileFormatID, _
+                                                CDate(FromDateText), _
+                                                CDate(IIf(ToDateText <> "", ToDateText, 0)), _
+                                                CompleteSessionCheck = vbChecked, _
+                                                UseExchangeTimezoneCheck = vbChecked, _
+                                                CDate(IIf(CustomFromTimeText <> "", CustomFromTimeText, 0)), _
+                                                CDate(IIf(CustomToTimeText <> "", CustomToTimeText, 0)))
 
-If UseExchangeTimezoneCheck = vbChecked Then
-    fromDate = CDate(FromDateText)
-    If ToDateText <> "" Then toDate = CDate(ToDateText)
-Else
-    fromDate = ConvertDateUTCToTZ(ConvertDateLocalToUTC(CDate(FromDateText)), lContract.TimeZone)
-    If ToDateText <> "" Then toDate = ConvertDateUTCToTZ(ConvertDateLocalToUTC(CDate(ToDateText)), lContract.TimeZone)
-End If
-
-' determine start and end times ---------------------------------------------------
-
-Set lSessionBuilder = New SessionBuilder
-Set lSession = lSessionBuilder.session
-
-' note that the custom times are in the contract's timezone
-If CustomFromTimeText <> "" Then customSessionStartTime = CDate(CustomFromTimeText)
-If CustomToTimeText <> "" Then customSessionEndTime = CDate(CustomToTimeText)
-
-If UseCustomTimesOption Then
-    lSessionBuilder.sessionStartTime = customSessionStartTime
-    lSessionBuilder.sessionEndTime = customSessionEndTime
-Else
-    lSessionBuilder.sessionStartTime = lContract.sessionStartTime
-    lSessionBuilder.sessionEndTime = lContract.sessionEndTime
-End If
-
-' set the session start and end times for the starting date (in the contract's
-' local timezone)...
-lSession.SessionTimes fromDate, _
-                    fromSessionStart, _
-                    fromSessionEnd
-' ... and convert to UTC
-fromSessionStart = ConvertDateTZToUTC(fromSessionStart, lContract.TimeZone)
-fromSessionEnd = ConvertDateTZToUTC(fromSessionEnd, lContract.TimeZone)
-fromDateUTC = fromSessionStart
-
-If toDate <> 0 Then
-    ' set the session start and end times for the starting date (in the contract's
-    ' local timezone)...
-    lSession.SessionTimes toDate, toSessionStart, toSessionEnd
-    ' ... and convert to UTC
-    toSessionStart = ConvertDateTZToUTC(toSessionStart, lContract.TimeZone)
-    toSessionEnd = ConvertDateTZToUTC(toSessionEnd, lContract.TimeZone)
-    
-    If CompleteSessionCheck.value = vbChecked Then
-        toDateUTC = toSessionEnd
-    Else
-        toDateUTC = ConvertDateTZToUTC(toDate, lContract.TimeZone)
-    End If
-Else
-    toSessionStart = fromSessionStart
-    toSessionEnd = fromSessionEnd
-    toDateUTC = toSessionEnd
-End If
-
-' find contract for start date ------------------------------------------------------
-Dim aContract As Contract
-
-If mSecType <> SecurityTypes.SecTypeFuture And _
-    mSecType <> SecurityTypes.SecTypeOption And _
-    mSecType <> SecurityTypes.SecTypeFuturesOption _
-Then
-    Set currContract = mContracts(1)
-Else
-    For i = 1 To mContracts.count
-        Set aContract = mContracts(i)
-        If DateValue(fromDateUTC) <= _
-            (aContract.expiryDate - aContract.daysBeforeExpiryToSwitch) _
-        Then
-            Set currContract = aContract
-            Exit For
-        End If
-    Next
-    
-    If currContract Is Nothing Then
-        ErrorLabel.caption = "No contract for this from date"
-        Exit Sub
-    End If
-End If
-
-If UseCustomTimesOption Then
-    Set currContract = editContractSessionTimes(currContract, customSessionStartTime, customSessionEndTime)
-End If
-
-ReDim lTickfileSpecifiers(1000) As TickfileSpecifier
-
-Dim currSessionStartUTC As Date
-Dim thisSessionStart As Date
-Dim thisSessionEnd As Date
-
-currSessionStartUTC = fromDateUTC
-j = 0
-If CompleteSessionCheck.value = vbChecked Then
-    Do While currSessionStartUTC < toDateUTC
-        If j > UBound(lTickfileSpecifiers) Then
-            ReDim Preserve lTickfileSpecifiers(UBound(lTickfileSpecifiers) + 1000) As TickfileSpecifier
-        End If
-        Set lTickfileSpecifiers(j) = New TickfileSpecifier
-        lTickfileSpecifiers(j).Contract = currContract
-        lTickfileSpecifiers(j).TickfileFormatID = TickfileFormatID
-        
-        If UseCustomTimesOption Then
-            lSession.SessionTimes ConvertDateUTCToTZ(currSessionStartUTC, currContract.TimeZone), _
-                                    thisSessionStart, _
-                                    thisSessionEnd
-            lTickfileSpecifiers(j).fromDate = ConvertDateTZToUTC(thisSessionStart, currContract.TimeZone)
-            lTickfileSpecifiers(j).toDate = ConvertDateTZToUTC(thisSessionEnd, currContract.TimeZone)
-            lTickfileSpecifiers(j).EntireSession = False
-            lTickfileSpecifiers(j).FileName = FormatDateTime(lTickfileSpecifiers(j).fromDate, vbGeneralDate) & _
-                                        "-" & _
-                                        FormatDateTime(lTickfileSpecifiers(j).toDate, vbGeneralDate) & _
-                                        " " & _
-                                        Replace(currContract.specifier.ToString, vbCrLf, "; ")
-        Else
-            lTickfileSpecifiers(j).fromDate = currSessionStartUTC
-            lTickfileSpecifiers(j).EntireSession = True
-            lTickfileSpecifiers(j).FileName = "Session " & _
-                                            FormatDateTime(DateValue(currSessionStartUTC), vbShortDate) & _
-                                            " " & _
-                                            Replace(currContract.specifier.ToString, vbCrLf, "; ")
-            
-        End If
-        
-        currSessionStartUTC = currSessionStartUTC + 1
-        
-        If mSecType = SecurityTypes.SecTypeFuture Or _
-            mSecType = SecurityTypes.SecTypeOption Or _
-            mSecType = SecurityTypes.SecTypeFuturesOption _
-        Then
-            If DateValue(currSessionStartUTC) > _
-                (currContract.expiryDate - currContract.daysBeforeExpiryToSwitch) _
-            Then
-                For i = i + 1 To mContracts.count
-                    Set aContract = mContracts(i)
-                    If DateValue(currSessionStartUTC) <= _
-                        (aContract.expiryDate - aContract.daysBeforeExpiryToSwitch) _
-                    Then
-                        Set currContract = aContract
-                        If UseCustomTimesOption Then
-                            Set currContract = editContractSessionTimes(currContract, _
-                                                                        customSessionStartTime, _
-                                                                        customSessionEndTime)
-                        End If
-                        Exit For
-                    End If
-                Next
-                If currContract Is Nothing Then
-                    ErrorLabel.caption = "No contract from " & currSessionStartUTC
-                    Exit Sub
-                End If
-            End If
-        End If
-        
-        j = j + 1
-    Loop
-    If j = 0 Then
-        ErrorLabel.caption = "No trading sessions in specified date range"
-        Exit Sub
-    End If
-    ReDim Preserve lTickfileSpecifiers(j - 1) As TickfileSpecifier
-Else
-    Set lTickfileSpecifiers(0) = New TickfileSpecifier
-    lTickfileSpecifiers(0).Contract = currContract
-    lTickfileSpecifiers(0).TickfileFormatID = TickfileFormatID
-
-    lTickfileSpecifiers(0).fromDate = fromDateUTC
-    currSessionStartUTC = currSessionStartUTC + 1
-    Do While currSessionStartUTC < toDateUTC
-        
-        If mSecType = SecurityTypes.SecTypeFuture Or _
-            mSecType = SecurityTypes.SecTypeOption Or _
-            mSecType = SecurityTypes.SecTypeFuturesOption _
-        Then
-            If DateValue(currSessionStartUTC) > _
-                (currContract.expiryDate - currContract.daysBeforeExpiryToSwitch) _
-            Then
-                For i = i + 1 To mContracts.count
-                    Set aContract = mContracts(i)
-                    If DateValue(currSessionStartUTC) <= _
-                        (aContract.expiryDate - aContract.daysBeforeExpiryToSwitch) _
-                    Then
-                        lTickfileSpecifiers(j).toDate = currSessionStartUTC
-                        lTickfileSpecifiers(j).FileName = FormatDateTime(lTickfileSpecifiers(j).fromDate, vbGeneralDate) & _
-                                                    "-" & _
-                                                    FormatDateTime(lTickfileSpecifiers(j).toDate, vbGeneralDate) & " " & _
-                                                    Replace(currContract.specifier.ToString, vbCrLf, "; ")
-                        
-                        Set currContract = aContract
-                        
-                        j = j + 1
-                        If j > UBound(lTickfileSpecifiers) Then
-                            ReDim Preserve lTickfileSpecifiers(UBound(lTickfileSpecifiers) + 1000) As TickfileSpecifier
-                        End If
-                        
-                        Set lTickfileSpecifiers(j) = New TickfileSpecifier
-                        lTickfileSpecifiers(j).Contract = currContract
-                        lTickfileSpecifiers(j).TickfileFormatID = TickfileFormatID
-                    
-                        lTickfileSpecifiers(j).fromDate = currSessionStartUTC
-                        Exit For
-                    End If
-                Next
-                If currContract Is Nothing Then
-                    ErrorLabel.caption = "No contract from " & currSessionStartUTC
-                    Exit Sub
-                End If
-            End If
-        End If
-        
-        currSessionStartUTC = currSessionStartUTC + 1
-        
-    Loop
-        
-    lTickfileSpecifiers(j).toDate = toDateUTC
-    lTickfileSpecifiers(j).FileName = FormatDateTime(lTickfileSpecifiers(j).fromDate, vbGeneralDate) & _
-                                "-" & _
-                                FormatDateTime(lTickfileSpecifiers(j).toDate, vbGeneralDate) & " " & _
-                                Replace(currContract.specifier.ToString, vbCrLf, "; ")
-
-    ReDim Preserve lTickfileSpecifiers(j) As TickfileSpecifier
-End If
+' get the most recent contract (though they should all have thRaiseEvent TickStreamsSpecified(lTickfileSpecifiers)
 
 RaiseEvent TickStreamsSpecified(lTickfileSpecifiers)
+Exit Sub
+
+Err:
+ErrorLabel.caption = Err.Description
 
 End Sub
 
@@ -714,18 +509,6 @@ CustomFromTimeText.backColor = vbButtonFace
 CustomToTimeText.Enabled = False
 CustomToTimeText.backColor = vbButtonFace
 End Sub
-
-Private Function editContractSessionTimes( _
-                ByVal pContract As Contract, _
-                ByVal sessionStartTime As Date, _
-                ByVal sessionEndTime As Date) As Contract
-Dim lContractBuilder As ContractBuilder
-
-Set lContractBuilder = CreateContractBuilderFromContract(pContract)
-lContractBuilder.sessionEndTime = sessionEndTime
-lContractBuilder.sessionStartTime = sessionStartTime
-Set editContractSessionTimes = lContractBuilder.Contract
-End Function
 
 Private Sub enableCustomTimeFields()
 CustomFromTimeText.Enabled = True

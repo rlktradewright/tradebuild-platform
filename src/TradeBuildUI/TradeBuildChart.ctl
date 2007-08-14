@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#6.0#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#9.0#0"; "ChartSkil2-6.ocx"
 Begin VB.UserControl TradeBuildChart 
    ClientHeight    =   4965
    ClientLeft      =   0
@@ -356,7 +356,7 @@ Dim stateEv As StateChangeEvent
 
 mNumberOfOutstandingTasks = mNumberOfOutstandingTasks - 1
 If mNumberOfOutstandingTasks = 0 And mHistDataLoaded Then
-    stateEv.State = ChartStates.ChartStateLoaded
+    stateEv.state = ChartStates.ChartStateLoaded
     Set stateEv.Source = Me
     RaiseEvent StateChange(stateEv)
 End If
@@ -368,11 +368,11 @@ End Sub
 
 Private Sub mTicker_StateChange(ev As StateChangeEvent)
 Dim stateEv As StateChangeEvent
-If ev.State = TickerStates.TickerStateReady Then
+If ev.state = TickerStates.TickerStateReady Then
     ' this means that the ticker object has retrieved the contract info, so we can
     ' now start the chart
     loadchart
-    stateEv.State = ChartStates.ChartStateInitialised
+    stateEv.state = ChartStates.ChartStateInitialised
     Set stateEv.Source = Me
     RaiseEvent StateChange(stateEv)
 End If
@@ -390,7 +390,7 @@ Chart1.suppressDrawing = False
 mHistDataLoaded = True
 
 If mNumberOfOutstandingTasks = 0 Then
-    stateEv.State = ChartStates.ChartStateLoaded
+    stateEv.state = ChartStates.ChartStateLoaded
     Set stateEv.Source = Me
     RaiseEvent StateChange(stateEv)
 End If
@@ -708,7 +708,7 @@ Set mVolumeRegionStyle = volumeRegionStyle
 
 Set mChartManager = createChartManager(mTicker.StudyManager, Chart1.controller)
 
-If mTicker.State = TickerStateRunning Then
+If mTicker.state = TickerStateRunning Then
     loadchart
 End If
 End Sub
@@ -756,17 +756,17 @@ Set mVolumeRegionStyle = volumeRegionStyle
 
 Set mChartManager = createChartManager(mTicker.StudyManager, Chart1.controller)
 
-If mTicker.State = TickerStateReady Then
+If mTicker.state = TickerStateReady Then
     loadchart
 End If
 End Sub
 
 Public Sub showStudyPickerForm()
-If mTicker.State = TickerStateRunning Then showStudyPicker mChartManager
+If mTicker.state = TickerStateRunning Then showStudyPicker mChartManager
 End Sub
 
 Public Sub syncStudyPickerForm()
-If mTicker.State = TickerStateRunning Then syncStudyPicker mChartManager
+If mTicker.state = TickerStateRunning Then syncStudyPicker mChartManager
 End Sub
 
 Public Sub unsyncStudyPickerForm()
@@ -927,8 +927,8 @@ showStudies
 End Sub
 
 Private Sub showStudies()
-Dim tcs() As TaskCompletion
-Dim tc As TaskCompletion
+Dim tcs() As TaskController
+Dim tc As TaskController
 Dim tcMaxIndex As Long
 Dim i As Long
 
