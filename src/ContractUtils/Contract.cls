@@ -239,9 +239,9 @@ Else
     mNumberOfDecimals = Contract.getAttribute("numberofdecimals")
 End If
 If IsNull(Contract.getAttribute("timezonename")) Then
-    Set mTimeZone = CreateTimeZone()
+    Set mTimeZone = GetTimeZone()
 Else
-    Set mTimeZone = CreateTimeZone(CStr(Contract.getAttribute("timezonename")))
+    Set mTimeZone = GetTimeZone(CStr(Contract.getAttribute("timezonename")))
 End If
 
 Set specifier = Contract.selectSingleNode("specifier")
@@ -261,7 +261,7 @@ With specifierObj
     Set nodeList = ComboLegs.selectNodes("comboleg")
     For Each ComboLeg In nodeList
         Set comboLegObj = New ComboLeg
-        .ComboLegs.add ComboLeg
+        .ComboLegs.Add ComboLeg
         Set comboSpecifier = ComboLeg.selectSingleNode("specifier")
         Set comboSpecifierObj = New ContractSpecifier
         With comboSpecifierObj

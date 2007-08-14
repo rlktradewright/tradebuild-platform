@@ -132,7 +132,7 @@ Friend Sub initialise( _
                 ByVal specifier As ContractSpecifier)
 Set mContract = New Contract
 mContract.specifier = specifier
-mContract.timezone = CreateTimeZone("")
+mContract.timezone = GetTimeZone("")
 mContract.daysBeforeExpiryToSwitch = 1
 End Sub
 
