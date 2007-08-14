@@ -193,17 +193,14 @@ Dim param As Parameter
 ' NB: the For Each construct cannot be used with objects of the
 ' IParameters class
 
-Set param = params.getFirstParameter
-
-Do While Not param Is Nothing
+For Each param In params
     Select Case UCase$(param.name)
     Case UCase$(RsiParamPeriods)
         mPeriods = param.value
     Case UCase$(RsiParamMovingAverageType)
         mMovingAverageType = param.value
     End Select
-    Set param = params.getNextParameter
-Loop
+Next
 
 ' Now we know what we need to create the two moving average study objects. Note
 ' that we only need these studies to cache the latest moving average value.
@@ -270,7 +267,7 @@ Private Function Study_addStudy( _
                 ByRef valueNames() As String, _
                 ByVal numUnderlyingValuesToUse As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As TaskCompletion
+                Optional ByVal taskData As Variant) As TaskController
 
 Set Study_addStudy = mStudyFoundation.addStudy( _
                             Study, _
@@ -285,7 +282,7 @@ Private Function Study_addStudyValueListener( _
                 ByVal valueName As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As TaskCompletion
+                Optional ByVal taskData As Variant) As TaskController
 Set Study_addStudyValueListener = mStudyFoundation.addStudyValueListener( _
                             listener, _
                             valueName, _

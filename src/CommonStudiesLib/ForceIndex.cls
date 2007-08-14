@@ -131,10 +131,10 @@ Else
     maEv = ev
     maEv.value = lForceIndex
     
-    mShortMA.Notify maEv
+    mShortMA.notify maEv
     lForceIndexShort = mShortMA.getStudyValue(DefaultStudyValueName, 0).value
     
-    mLongMA.Notify maEv
+    mLongMA.notify maEv
     lForceIndexLong = mLongMA.getStudyValue(DefaultStudyValueName, 0).value
     
     ' and update the value caches
@@ -180,12 +180,8 @@ End Function
 Private Sub customProcessParameters(ByVal params As Parameters)
 Dim param As Parameter
 Dim shortPeriods As Long
-' NB: the For Each construct cannot be used with objects of the
-' Parameters class
 
-Set param = params.getFirstParameter
-
-Do While Not param Is Nothing
+For Each param In params
     Select Case UCase$(param.name)
     Case UCase$(FiParamShortPeriods)
         Set mShortMA = gCreateMA(EmaName, _
@@ -196,8 +192,7 @@ Do While Not param Is Nothing
                             param.value, _
                             1)
     End Select
-    Set param = params.getNextParameter
-Loop
+Next
 
 End Sub
 
@@ -265,7 +260,7 @@ Private Function Study_addStudy( _
                 ByRef valueNames() As String, _
                 ByVal numUnderlyingValuesToUse As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As TaskCompletion
+                Optional ByVal taskData As Variant) As TaskController
 
 Set Study_addStudy = mStudyFoundation.addStudy( _
                             Study, _
@@ -280,7 +275,7 @@ Private Function Study_addStudyValueListener( _
                 ByVal valueName As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As TaskCompletion
+                Optional ByVal taskData As Variant) As TaskController
 Set Study_addStudyValueListener = mStudyFoundation.addStudyValueListener( _
                             listener, _
                             valueName, _

@@ -433,17 +433,14 @@ End Function
 Private Sub customProcessParameters(ByVal params As Parameters)
 Dim param As Parameter
 
-Set param = params.getFirstParameter
-
-Do While Not param Is Nothing
+For Each param In params
     Select Case UCase$(param.name)
     Case UCase$(SwingParamMinimumSwingTicks)
         mMinimumSwing = param.value * mTickSize
     Case UCase$(SwingParamIncludeImplicitSwingPoints)
         mIncludeImplicitSwingPoints = IIf((UCase$(param.value) = "Y") Or (UCase$(param.value) = "YES") Or (UCase$(param.value) = "T") Or (UCase$(param.value) = "TRUE") Or (UCase$(param.value) = "1"), True, False)
     End Select
-    Set param = params.getNextParameter
-Loop
+Next
 
 End Sub
 
@@ -827,7 +824,7 @@ Private Function Study_addStudy( _
                 ByRef valueNames() As String, _
                 ByVal numUnderlyingValuesToUse As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As TaskCompletion
+                Optional ByVal taskData As Variant) As TaskController
 
 Set Study_addStudy = mStudyFoundation.addStudy( _
                             Study, _
@@ -842,7 +839,7 @@ Private Function Study_addStudyValueListener( _
                 ByVal valueName As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As TaskCompletion
+                Optional ByVal taskData As Variant) As TaskController
 Set Study_addStudyValueListener = mStudyFoundation.addStudyValueListener( _
                             listener, _
                             valueName, _

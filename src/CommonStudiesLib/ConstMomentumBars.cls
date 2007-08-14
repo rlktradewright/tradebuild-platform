@@ -276,15 +276,12 @@ End Function
 Private Sub customProcessParameters(ByVal params As Parameters)
 Dim param As Parameter
 
-Set param = params.getFirstParameter
-
-Do While Not param Is Nothing
+For Each param In params
     Select Case UCase$(param.name)
     Case UCase$(ConstMomentumBarsParamTicksPerBar)
         mMovementPerBar = param.value
     End Select
-    Set param = params.getNextParameter
-Loop
+Next
 
 Set mBars = CreateBars(mMovementPerBar, _
                         TimePeriodTickMovement, _
@@ -441,7 +438,7 @@ Private Function Study_addStudy( _
                 ByRef valueNames() As String, _
                 ByVal numUnderlyingValuesToUse As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As TaskCompletion
+                Optional ByVal taskData As Variant) As TaskController
 
 Set Study_addStudy = mStudyFoundation.addStudy( _
                             Study, _
@@ -456,7 +453,7 @@ Private Function Study_addStudyValueListener( _
                 ByVal valueName As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As TaskCompletion
+                Optional ByVal taskData As Variant) As TaskController
 Set Study_addStudyValueListener = mStudyFoundation.addStudyValueListener( _
                             listener, _
                             valueName, _
