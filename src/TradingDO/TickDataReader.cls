@@ -170,7 +170,7 @@ Friend Sub initialise( _
                 ByVal TimeZoneName As String)
 mConnectionString = connectionString
 mInstrumentID = instrumentId
-Set mTimeZone = CreateTimeZone(TimeZoneName)
+Set mTimeZone = GetTimeZone(TimeZoneName)
 connectToDB
 End Sub
 
@@ -261,7 +261,7 @@ Set param = cmd.CreateParameter(, _
                             DataTypeEnum.adDBTimeStamp, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
-                            ConvertDateUTCToLocal(ConvertDateTZToUTC(fromTime, mTimeZone)))
+                            ConvertDateUTCToLocal(ConvertDateTzToUTC(fromTime, mTimeZone)))
 cmd.Parameters.Append param
 
 ' @ToLocal
@@ -269,7 +269,7 @@ Set param = cmd.CreateParameter(, _
                             DataTypeEnum.adDBTimeStamp, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
-                            ConvertDateUTCToLocal(ConvertDateTZToUTC(toTime, mTimeZone)))
+                            ConvertDateUTCToLocal(ConvertDateTzToUTC(toTime, mTimeZone)))
 cmd.Parameters.Append param
 
 cmd.ActiveConnection = mConnection

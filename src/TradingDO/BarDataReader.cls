@@ -225,7 +225,7 @@ Set param = cmd.CreateParameter(, _
                             toTime)
 cmd.Parameters.Append param
 
-fromLocal = ConvertDateUTCToLocal(ConvertDateTZToUTC(fromTime, mTimeZone))
+fromLocal = ConvertDateUTCToLocal(ConvertDateTzToUTC(fromTime, mTimeZone))
 If fromLocal < #1/1/1900# Then fromLocal = #1/1/1900# ' don't exceed range of SmallDateTime
 ' @FromLocal
 Set param = cmd.CreateParameter(, _
@@ -235,7 +235,7 @@ Set param = cmd.CreateParameter(, _
                             fromLocal)
 cmd.Parameters.Append param
 
-toLocal = ConvertDateUTCToLocal(ConvertDateTZToUTC(toTime, mTimeZone))
+toLocal = ConvertDateUTCToLocal(ConvertDateTzToUTC(toTime, mTimeZone))
 If toLocal < #1/1/1900# Then toLocal = #1/1/1900# ' don't exceed range of SmallDateTime
 ' @ToLocal
 Set param = cmd.CreateParameter(, _
@@ -265,7 +265,7 @@ Friend Sub initialise( _
                 ByVal TimeZoneName As String)
 mConnectionString = connectionString
 mInstrumentID = instrumentId
-Set mTimeZone = CreateTimeZone(TimeZoneName)
+Set mTimeZone = GetTimeZone(TimeZoneName)
 connectToDB
 End Sub
 
