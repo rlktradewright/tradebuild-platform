@@ -391,7 +391,7 @@ If mSessionTimesSet Then _
             "Session times have already been set"
 
 Set mExchangeTimeZone = exchangeTimeZone
-If mExchangeTimeZone Is Nothing Then Set mExchangeTimeZone = CreateTimeZone("")
+If mExchangeTimeZone Is Nothing Then Set mExchangeTimeZone = GetTimeZone("")
 
 If CDbl(sessionStartTime) > 1 Then sessionStartTime = sessionStartTime - Int(sessionStartTime)
 mSessionStartTime = sessionStartTime
@@ -416,7 +416,7 @@ Public Function startStudy( _
                 ByVal pStudy As study, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As TaskCompletion
+                Optional ByVal taskData As Variant) As TaskController
 Dim studyEntry As StudyTableEntry
 Dim underlyingStudyEntry As StudyTableEntry
 

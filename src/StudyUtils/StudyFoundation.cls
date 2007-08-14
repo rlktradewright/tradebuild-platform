@@ -162,7 +162,7 @@ Public Function addStudy( _
                 ByRef valueNames() As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As TaskCompletion
+                Optional ByVal taskData As Variant) As TaskController
 Dim notifyNames() As String
 Dim replayValueNames() As String
 Dim replayNotifyNames() As String
@@ -241,7 +241,7 @@ Public Function addStudyValueListener( _
                 ByVal valueName As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As TaskCompletion
+                Optional ByVal taskData As Variant) As TaskController
 Dim valueDefs As studyValueDefinitions
 Dim valNames(0) As String
 Dim notifyNames(0) As String 'dummy
@@ -392,7 +392,7 @@ Private Function addStudyHelper( _
                 ByRef replayNotifyNames() As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As TaskCompletion
+                Optional ByVal taskData As Variant) As TaskController
 Dim valueDefs As studyValueDefinitions
 Dim valueDef As StudyValueDefinition
 Dim i As Long

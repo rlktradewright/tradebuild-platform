@@ -64,6 +64,7 @@ Private mTargetListener As StudyValueListener
 Private mSourceStudy As study
 Private mDiscriminator As Long
 
+Private mFirstValueNumber As Long
 Private mNextValueNumber As Long
 Private mValuesNotified As Long
 
@@ -136,7 +137,15 @@ On Error GoTo Err
 failpoint = 100
 
 If mSourceStudy.numberOfCachedValues = 0 Then
-    mTaskContext.finish
+    mTaskContext.progress 100
+    mTaskContext.finish 0, False
+    Set mTaskContext = Nothing
+    Exit Sub
+End If
+
+If mTaskContext.cancelPending Then
+    mTaskContext.progress 100 * mValuesNotified / (mSourceStudy.numberOfCachedValues - mFirstValueNumber + 1)
+    mTaskContext.finish 0, True
     Set mTaskContext = Nothing
     Exit Sub
 End If
@@ -180,12 +189,19 @@ Next
 
 mNextValueNumber = mNextValueNumber + 1
 mValuesNotified = mValuesNotified + 1
+
+If mValuesNotified Mod 20 = 0 Then
+    ' notify progress each 20 values
+    mTaskContext.progress 100 * mValuesNotified / (mSourceStudy.numberOfCachedValues - mFirstValueNumber + 1)
+End If
+
 If mNextValueNumber > mSourceStudy.numberOfCachedValues Then
     Debug.Print "Study (" & mSourceStudy.id & ") " & _
                 mSourceStudy.instanceName & _
                 " replayed " & mValuesNotified & _
                 " values for " & Join(mReplayValueNames(), ",")
-    mTaskContext.finish
+    mTaskContext.progress 100
+    mTaskContext.finish 0, False
     Set mTaskContext = Nothing
 End If
 
@@ -292,7 +308,7 @@ Then
 End If
 
 mNextValueNumber = mSourceStudy.numberOfCachedValues - numValuesToNotify + 1
-
+mFirstValueNumber = mNextValueNumber
 End Sub
 
 '================================================================================

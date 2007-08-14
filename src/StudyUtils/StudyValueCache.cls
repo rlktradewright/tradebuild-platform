@@ -14,23 +14,8 @@ Attribute VB_Exposed = True
 Option Explicit
 
 '================================================================================
-' Description
-'================================================================================
-'
-'
-'================================================================================
-' Amendment history
-'================================================================================
-'
-'
-'
-'
-
-'================================================================================
 ' Interfaces
 '================================================================================
-
-'Implements StudyValueCache
 
 '================================================================================
 ' Events
@@ -68,64 +53,6 @@ Private mCyclicSize As Long
 '================================================================================
 ' IStudyValueCache Interface Members
 '================================================================================
-
-'Private Sub IStudyValueCache_addValue( _
-'                ByVal value As Variant, _
-'                ByVal barNumber As Long, _
-'                ByVal timestamp As Date, _
-'                ByVal barStartTime As Date)
-'addValue value, barNumber, timestamp, barStartTime
-'End Sub
-'
-'Private Property Get IStudyValueCache_Count() As Long
-'IStudyValueCache_Count = mNumValues
-'End Property
-'
-'Private Property Get IStudyValueCache_cyclicSize() As Long
-'IStudyValueCache_cyclicSize = mCyclicSize
-'End Property
-'
-'Private Function IStudyValueCache_getStudyValue( _
-'                Optional ByVal ref As Long) As TradeBuildSP.StudyValue
-'IStudyValueCache_getStudyValue = mValues(refToIndex(ref))
-'End Function
-'
-'Private Function IStudyValueCache_getValue( _
-'                Optional ByVal ref As Long) As Variant
-'If TypeOf getValue(ref) Is Object  Then
-'    Set IStudyValueCache_getValue = getValue(ref)
-'Else
-'    IStudyValueCache_getValue = getValue(ref)
-'End If
-'End Function
-'
-'Private Function IStudyValueCache_replayValues( _
-'                ByVal target As Object, _
-'                ByVal sourceStudy As Study, _
-'                ByVal numberOfValuesToReplay As Long, _
-'                Optional ByVal discriminator As Long, _
-'                Optional ByVal taskName As String, _
-'                Optional ByVal taskData As Variant) As Tasks.TaskCompletion
-'Set IStudyValueCache_replayValues = replayValues(target, _
-'                                                sourceStudy, _
-'                                                numberOfValuesToReplay, _
-'                                                discriminator, _
-'                                                taskName, _
-'                                                taskData)
-'End Function
-'
-'Private Sub IStudyValueCache_updateValue( _
-'                ByVal value As Variant, _
-'                Optional ByVal barNumber As Long, _
-'                Optional ByVal timestamp As Date, _
-'                Optional ByVal barStartTime As Date, _
-'                Optional ByVal ref As Long)
-'updateValue value, barNumber, timestamp, barStartTime, ref
-'End Sub
-'
-'Private Property Get IStudyValueCache_ValueName() As String
-'IStudyValueCache_ValueName = mValueName
-'End Property
 
 '================================================================================
 ' XXXX Event Handlers
@@ -253,7 +180,7 @@ Public Function replayValues( _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal discriminator As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As TaskCompletion
+                Optional ByVal taskData As Variant) As TaskController
 Dim replayTask As New CacheReplayTask
 
 If numberOfValuesToReplay >= 0 Or _

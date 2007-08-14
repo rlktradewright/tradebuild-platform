@@ -81,8 +81,8 @@ End Type
 Private mStudyLibraries() As LibraryTableEntry
 Private mMaxLibIndex As Long
 
-Private mConfig As ConfigItemSet
-Private mStudyLibs As ConfigItemList
+Private mConfig As ConfigItem
+Private mStudyLibs As ConfigItems
 
 '================================================================================
 ' Class Event Handlers
@@ -204,7 +204,7 @@ Dim sl As ConfigItem
 
 If mConfig Is Nothing Then Exit Sub
 
-Set sl = mStudyLibs.entries.AddItem(GenerateGUIDString)
+Set sl = mStudyLibs.AddItem(ConfigNameStudyLibrary)
 sl.setAttribute AttributeNameStudyLibraryName, name
 sl.setAttribute AttributeNameEnabled, enabled
 sl.setAttribute AttributeNameStudyLibraryProgId, progId
@@ -224,7 +224,7 @@ End Function
 
 Public Function createStudy( _
                 ByVal studyName As String, _
-                ByVal libName As String) As Study
+                ByVal libName As String) As study
 Dim studyLib As StudyLibrary
 Dim i As Long
 
@@ -292,7 +292,7 @@ Next
 End Function
 
 Friend Sub LoadStudyLibraryConfiguration( _
-                ByVal config As ConfigItemSet)
+                ByVal config As ConfigItem)
 Dim sl As ConfigItem
 Dim slName As String
 Dim slProgId As String
@@ -302,14 +302,14 @@ Dim slEnabled As String
 Set mConfig = config
 
 On Error Resume Next
-Set mStudyLibs = mConfig.entries.Item(ConfigNameStudyLibraries)
+Set mStudyLibs = mConfig.childItems.Item(ConfigNameStudyLibraries)
 On Error GoTo 0
 
 If mStudyLibs Is Nothing Then
-    Set mStudyLibs = mConfig.entries.addItemList(ConfigNameStudyLibraries, ConfigNameStudyLibrary)
+    Set mStudyLibs = mConfig.childItems.AddItem(ConfigNameStudyLibraries)
 End If
 
-For Each sl In mStudyLibs.entries
+For Each sl In mStudyLibs
     On Error Resume Next
     slEnabled = sl.getAttribute(AttributeNameEnabled)
     If slEnabled = "" Then slEnabled = "True"
