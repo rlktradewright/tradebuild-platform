@@ -100,8 +100,8 @@ End Sub
 
 Private Sub TaskCompletionListener_taskCompleted(ev As TaskCompletionEvent)
 
-If ev.resultCode <> 0 Then
-    Debug.Print "Task: " & ev.TaskName; "; Error: " & ev.resultCode; "; Message: " & ev.message
+If ev.errorNumber <> 0 Then
+    Debug.Print "Task: " & ev.taskName; "; Error: " & ev.errorNumber; "; Message: "; ev.errorMessage
 End If
 
 mChartController.suppressDrawing = False
@@ -396,12 +396,12 @@ err.Raise err.Number
 End Sub
 
 Public Function setupStudyValueListeners( _
-                ByVal studyConfig As StudyConfiguration) As TaskCompletion()
+                ByVal studyConfig As StudyConfiguration) As TaskController()
 Dim studyValueConfig As StudyValueConfiguration
 Dim studyValueDefs As StudyValueDefinitions
-Dim taskCompletions() As TaskCompletion
+Dim taskCompletions() As TaskController
 Dim taskCompletionsIndex As Long
-Dim tc As TaskCompletion
+Dim tc As TaskController
 
 If mBaseStudy Is Nothing Then Set mBaseStudy = studyConfig.study
 
@@ -413,7 +413,7 @@ For Each studyValueConfig In studyConfig.studyValueConfigurations
                                 studyValueConfig, _
                                 studyValueDefs.item(studyValueConfig.valueName))
         If Not tc Is Nothing Then
-            ReDim Preserve taskCompletions(taskCompletionsIndex) As TaskCompletion
+            ReDim Preserve taskCompletions(taskCompletionsIndex) As TaskController
             Set taskCompletions(taskCompletionsIndex) = tc
             taskCompletionsIndex = taskCompletionsIndex + 1
         End If
@@ -427,8 +427,8 @@ If taskCompletionsIndex > 0 Then setupStudyValueListeners = taskCompletions
 End Function
 
 Public Function startStudy( _
-                ByVal pStudy As study) As TaskCompletion
-Dim lTaskCompletion As TaskCompletion
+                ByVal pStudy As study) As TaskController
+Dim lTaskCompletion As TaskController
 Set lTaskCompletion = mStudyManager.startStudy(pStudy, ReplayNumbers.ReplayAll)
 
 If lTaskCompletion Is Nothing Then Exit Function
@@ -494,13 +494,13 @@ End Function
 Private Function includeStudyValueInChart( _
                 ByVal studyConfig As StudyConfiguration, _
                 ByVal studyValueConfig As StudyValueConfiguration, _
-                ByVal studyValueDef As StudyValueDefinition) As TaskCompletion
+                ByVal studyValueDef As StudyValueDefinition) As TaskController
 
 Dim lStudyValueHandler As StudyValueHandler
 Dim study As study
 Dim region As ChartRegion
 Dim regionName As String
-Dim lTaskCompletion As TaskCompletion
+Dim lTaskCompletion As TaskController
 
 Set study = studyConfig.study
 If studyValueConfig.chartRegionName = RegionNameDefault Or studyValueConfig.chartRegionName = "" Then
