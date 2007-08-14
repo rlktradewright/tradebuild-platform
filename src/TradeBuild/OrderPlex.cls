@@ -344,7 +344,7 @@ Select Case mCloseoutOrder.status
                             
         checkAllOrdersComplete
         
-        If size <> 0 Then err.Raise errCloseoutIncomplete, "OrderPlex::mCloseoutOrder_StatusChanged", "Closeout incomplete: size remaining is " & size
+        If size <> 0 Then Err.Raise errCloseoutIncomplete, "OrderPlex::mCloseoutOrder_StatusChanged", "Closeout incomplete: size remaining is " & size
         
     Case OrderStatuses.OrderStatusPendingSubmit
     Case OrderStatuses.OrderStatusCancelling
@@ -565,7 +565,7 @@ Select Case mStopOrder.status
                             mStopOrder.id & ")", _
                             IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
                             Me
-        mStateEngine.setCondition COND_STOP_ORDER_CANCELLED
+        mStateEngine.setConditions COND_STOP_ORDER_CANCELLED
         handleStimulus STIM_STOP_ORDER_CANCELLED
         checkAllOrdersComplete
 End Select
@@ -637,7 +637,7 @@ Select Case mTargetOrder.status
                             mTargetOrder.id & ")", _
                             IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
                             Me
-        mStateEngine.setCondition COND_TARGET_ORDER_CANCELLED
+        mStateEngine.setConditions COND_TARGET_ORDER_CANCELLED
         handleStimulus STIM_TARGET_ORDER_CANCELLED
         checkAllOrdersComplete
     
@@ -758,12 +758,12 @@ Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Property
 Case OrderPlexStateCodes.OrderPlexStateSubmitted
 Case Else
-    err.Raise errActionNotAllowedInThisState, _
+    Err.Raise errActionNotAllowedInThisState, _
                 "OrderPlex::(let)newEntryPrice", _
                 "Action not allowed in state " & mStateEngine.State
 End Select
 
-If mEntryOrder.status = OrderStatuses.OrderStatusFilled Then err.Raise errCantChangeFilledOrder, _
+If mEntryOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise errCantChangeFilledOrder, _
                                                 "OrderPlex::(let)newEntryPrice", _
                                                 "Can't change entry price - order " & entryOrder.id & " already filled"
 
@@ -773,7 +773,7 @@ Select Case mEntryOrder.orderType
         OrderTypes.OrderTypeAutoStop, _
         OrderTypes.OrderTypeAutoLimit, _
         OrderTypes.OrderTypeStop
-        err.Raise errPriceChangeNotAllowedForOrderType, _
+        Err.Raise errPriceChangeNotAllowedForOrderType, _
                     "OrderPlex::(let)newEntryPrice", _
                     "Can't change entry price for order type " & gOrderTypeToString(mEntryOrder.orderType)
 End Select
@@ -792,12 +792,12 @@ Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Property
 Case OrderPlexStateCodes.OrderPlexStateSubmitted
 Case Else
-    err.Raise errActionNotAllowedInThisState, _
+    Err.Raise errActionNotAllowedInThisState, _
                 "OrderPlex::(let)newEntryTriggerPrice", _
                 "Action not allowed in state " & mStateEngine.State
 End Select
 
-If mEntryOrder.status = OrderStatuses.OrderStatusFilled Then err.Raise errCantChangeFilledOrder, _
+If mEntryOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise errCantChangeFilledOrder, _
                                                 "OrderPlex::(let)newEntryTriggerPrice", _
                                                 "Can't change entry trigger price - order " & entryOrder.id & " already filled"
 
@@ -806,7 +806,7 @@ Select Case mEntryOrder.orderType
         OrderTypes.OrderTypeLimit, _
         OrderTypes.OrderTypeTrail, _
         OrderTypes.OrderTypeAutoLimit
-        err.Raise errTriggerPriceChangeNotAllowedForOrderType, _
+        Err.Raise errTriggerPriceChangeNotAllowedForOrderType, _
                     "OrderPlex::(let)newEntryTriggerPrice", _
                     "Can't change trigger price for order type " & gOrderTypeToString(mEntryOrder.orderType)
 End Select
@@ -883,12 +883,12 @@ Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Property
 Case OrderPlexStateCodes.OrderPlexStateSubmitted
 Case Else
-    err.Raise errActionNotAllowedInThisState, _
+    Err.Raise errActionNotAllowedInThisState, _
                 "OrderPlex::(let)newQuantity", _
                 "Action not allowed in state " & mStateEngine.State
 End Select
 
-If mEntryOrder.status = OrderStatuses.OrderStatusFilled Then err.Raise errCantChangeFilledOrder, _
+If mEntryOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise errCantChangeFilledOrder, _
                                                 "OrderPlex::(let)newQuantity", _
                                                 "Can't change quantity - order " & entryOrder.id & " already filled"
 
@@ -904,22 +904,22 @@ Public Property Let newStopOffset(ByVal value As Long)
 Select Case mStateEngine.State
 Case OrderPlexStateCodes.OrderPlexStateSubmitted
 Case Else
-    err.Raise errActionNotAllowedInThisState, _
+    Err.Raise errActionNotAllowedInThisState, _
                 "OrderPlex::(let)newStopOffset", _
                 "Action not allowed in state " & mStateEngine.State
 End Select
 
-If mStopOrder Is Nothing Then err.Raise errNoStopOrder, _
+If mStopOrder Is Nothing Then Err.Raise errNoStopOrder, _
                                         "OrderPlex::(let)newStopOffset", _
                                         "No stop order exists"
 
 If Not mStopOrder.orderType = OrderTypes.OrderTypeAutoStop Then
-        err.Raise errOffsetChangeNotAllowedForOrderType, _
+        Err.Raise errOffsetChangeNotAllowedForOrderType, _
                     "OrderPlex::(let)newStopOffset", _
                     "Can't change offset for order type " & gOrderTypeToString(mEntryOrder.orderType)
 End If
 
-If mStopOrder.status <> OrderStatuses.OrderStatusCreated Then err.Raise errCantChangeUnplacedOrder, _
+If mStopOrder.status <> OrderStatuses.OrderStatusCreated Then Err.Raise errCantChangeUnplacedOrder, _
                                         "OrderPlex::(let)newStopOffset", _
                                         "Can't change stop offset - order " & mStopOrder.id & " already placed"
 
@@ -937,19 +937,19 @@ Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Property
 Case OrderPlexStateCodes.OrderPlexStateSubmitted
 Case Else
-    err.Raise errActionNotAllowedInThisState, _
+    Err.Raise errActionNotAllowedInThisState, _
                 "OrderPlex::(let)newStopPrice", _
                 "Action not allowed in state " & mStateEngine.State
 End Select
 
-If mStopOrder Is Nothing Then err.Raise errNoStopOrder, _
+If mStopOrder Is Nothing Then Err.Raise errNoStopOrder, _
                                         "OrderPlex::(let)newStopPrice", _
                                         "No stop order exists"
 
 Select Case mStopOrder.orderType
 Case OrderTypes.OrderTypeStopLimit
 Case Else
-    err.Raise errTriggerPriceChangeNotAllowedForOrderType, _
+    Err.Raise errTriggerPriceChangeNotAllowedForOrderType, _
                 "OrderPlex::(let)newStopPrice", _
                 "Can't change trigger price for order type " & gOrderTypeToString(mEntryOrder.orderType)
 End Select
@@ -968,12 +968,12 @@ Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Property
 Case OrderPlexStateCodes.OrderPlexStateSubmitted
 Case Else
-    err.Raise errActionNotAllowedInThisState, _
+    Err.Raise errActionNotAllowedInThisState, _
                 "OrderPlex::(let)newStopQuantity", _
                 "Action not allowed in state " & mStateEngine.State
 End Select
 
-If mStopOrder Is Nothing Then err.Raise errNoStopOrder, _
+If mStopOrder Is Nothing Then Err.Raise errNoStopOrder, _
                                         "OrderPlex::(let)newStopQuantity", _
                                         "No stop order exists"
 
@@ -991,12 +991,12 @@ Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Property
 Case OrderPlexStateCodes.OrderPlexStateSubmitted
 Case Else
-    err.Raise errActionNotAllowedInThisState, _
+    Err.Raise errActionNotAllowedInThisState, _
                 "OrderPlex::(let)newStopTriggerPrice", _
                 "Action not allowed in state " & mStateEngine.State
 End Select
 
-If mStopOrder Is Nothing Then err.Raise errNoStopOrder, _
+If mStopOrder Is Nothing Then Err.Raise errNoStopOrder, _
                                         "OrderPlex::(let)newStopTriggerPrice", _
                                         "No stop order exists"
 
@@ -1004,7 +1004,7 @@ Select Case mStopOrder.orderType
     Case OrderTypes.OrderTypeStop, _
         OrderTypes.OrderTypeStopLimit
     Case Else
-        err.Raise errTriggerPriceChangeNotAllowedForOrderType, _
+        Err.Raise errTriggerPriceChangeNotAllowedForOrderType, _
                     "OrderPlex::(let)newStopTriggerPrice", _
                     "Can't change trigger price for order type " & gOrderTypeToString(mEntryOrder.orderType)
 End Select
@@ -1023,12 +1023,12 @@ Case OrderPlexStateCodes.OrderPlexStateSubmitted
 Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Property
 Case Else
-    err.Raise errActionNotAllowedInThisState, _
+    Err.Raise errActionNotAllowedInThisState, _
                 "OrderPlex::(let)newTargetPrice", _
                 "Action not allowed in state " & mStateEngine.State
 End Select
 
-If mTargetOrder Is Nothing Then err.Raise errNoTargetOrder, _
+If mTargetOrder Is Nothing Then Err.Raise errNoTargetOrder, _
                                         "OrderPlex::(let)newTargetPrice", _
                                         "No target order exists"
 
@@ -1036,7 +1036,7 @@ Select Case mTargetOrder.orderType
 Case OrderTypes.OrderTypeLimitIfTouched, _
     OrderTypes.OrderTypeLimit
 Case Else
-    err.Raise errTriggerPriceChangeNotAllowedForOrderType, _
+    Err.Raise errTriggerPriceChangeNotAllowedForOrderType, _
                 "OrderPlex::(let)newTargetPrice", _
                 "Can't change price for order type " & gOrderTypeToString(mEntryOrder.orderType)
 End Select
@@ -1053,22 +1053,22 @@ Public Property Let newTargetOffset(ByVal value As Long)
 Select Case mStateEngine.State
 Case OrderPlexStateCodes.OrderPlexStateSubmitted
 Case Else
-    err.Raise errActionNotAllowedInThisState, _
+    Err.Raise errActionNotAllowedInThisState, _
                 "OrderPlex::(let)newTargetOffset", _
                 "Action not allowed in state " & mStateEngine.State
 End Select
 
-If mTargetOrder Is Nothing Then err.Raise errNoTargetOrder, _
+If mTargetOrder Is Nothing Then Err.Raise errNoTargetOrder, _
                                         "OrderPlex::(let)newTargetOffset", _
                                         "No target order exists"
 
 If Not mTargetOrder.orderType = OrderTypes.OrderTypeAutoLimit Then
-        err.Raise errOffsetChangeNotAllowedForOrderType, _
+        Err.Raise errOffsetChangeNotAllowedForOrderType, _
                     "OrderPlex::(let)newTargetOffset", _
                     "Can't change offset for order type " & gOrderTypeToString(mEntryOrder.orderType)
 End If
 
-If mTargetOrder.status <> OrderStatuses.OrderStatusCreated Then err.Raise errCantChangeUnplacedOrder, _
+If mTargetOrder.status <> OrderStatuses.OrderStatusCreated Then Err.Raise errCantChangeUnplacedOrder, _
                                         "OrderPlex::(let)newTargetOffset", _
                                         "Can't change target offset - order " & targetOrder.id & " already placed"
 
@@ -1086,12 +1086,12 @@ Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Property
 Case OrderPlexStateCodes.OrderPlexStateSubmitted
 Case Else
-    err.Raise errActionNotAllowedInThisState, _
+    Err.Raise errActionNotAllowedInThisState, _
                 "OrderPlex::(let)newTargetQuantity", _
                 "Action not allowed in state " & mStateEngine.State
 End Select
 
-If mStopOrder Is Nothing Then err.Raise errNoTargetOrder, _
+If mStopOrder Is Nothing Then Err.Raise errNoTargetOrder, _
                                         "OrderPlex::(let)newTargetQuantity", _
                                         "No target order exists"
 
@@ -1109,12 +1109,12 @@ Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Property
 Case OrderPlexStateCodes.OrderPlexStateSubmitted
 Case Else
-    err.Raise errActionNotAllowedInThisState, _
+    Err.Raise errActionNotAllowedInThisState, _
                 "OrderPlex::(let)newTargetTriggerPrice", _
                 "Action not allowed in state " & mStateEngine.State
 End Select
 
-If mTargetOrder Is Nothing Then err.Raise errNoStopOrder, _
+If mTargetOrder Is Nothing Then Err.Raise errNoStopOrder, _
                                         "OrderPlex::(let)newTargetTriggerPrice", _
                                         "No target order exists"
 
@@ -1122,7 +1122,7 @@ Select Case mTargetOrder.orderType
 Case OrderTypes.OrderTypeLimitIfTouched, _
     OrderTypes.OrderTypeMarketIfTouched
 Case Else
-    err.Raise errTriggerPriceChangeNotAllowedForOrderType, _
+    Err.Raise errTriggerPriceChangeNotAllowedForOrderType, _
                 "OrderPlex::(let)newTargetTriggerPrice", _
                 "Can't change trigger price for order type " & gOrderTypeToString(mEntryOrder.orderType)
 End Select
@@ -1321,10 +1321,10 @@ End Sub
 Public Function Cancel(Optional ByVal evenIfFilled As Boolean = False) As Boolean
 
 If evenIfFilled Then
-    mStateEngine.clearCondition COND_NO_FILL_CANCELLATION
+    mStateEngine.clearConditions COND_NO_FILL_CANCELLATION
     Cancel = doActions(mStateEngine.notifyStimulus(STIM_CANCEL_EVEN_IF_FILL))
 Else
-    mStateEngine.setCondition COND_NO_FILL_CANCELLATION
+    mStateEngine.setConditions COND_NO_FILL_CANCELLATION
     Cancel = doActions(mStateEngine.notifyStimulus(STIM_CANCEL_IF_NO_FILL))
 End If
 End Function
@@ -1383,7 +1383,7 @@ End Sub
 Public Sub CloseOut(ByVal method As String)
 
 If UCase(method) <> "MKT" Then
-    err.Raise ErrNotImplemented, "OrderPlex::closeout", "method " & method & " not implemented"
+    Err.Raise ErrNotImplemented, "OrderPlex::closeout", "method " & method & " not implemented"
 End If
 
 mTicker.notifyListeners _
@@ -1399,7 +1399,7 @@ End Sub
 
 Friend Function createEntryOrder() As order
 If Not mEntryOrder Is Nothing Then _
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "OrderPlex::createEntryOrder", _
                 "Entry order already exists"
 
@@ -1416,15 +1416,15 @@ End Function
 
 Friend Function createStopOrder() As order
 If Not mStopOrder Is Nothing Then _
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "OrderPlex::createStopOrder", _
                 "Stop order already exists"
 
 Set mStopOrder = mOrderContext.newOrder
 
 Set createStopOrder = mStopOrder
-mStateEngine.setCondition COND_STOP_ORDER_EXISTS
-mStateEngine.clearCondition COND_STOP_ORDER_CANCELLED
+mStateEngine.setConditions COND_STOP_ORDER_EXISTS
+mStateEngine.clearConditions COND_STOP_ORDER_CANCELLED
 
 If Not mEntryOrder Is Nothing Then
     mOrders.add mStopOrder, , , 1
@@ -1437,15 +1437,15 @@ End Function
 
 Friend Function createTargetOrder() As order
 If Not mTargetOrder Is Nothing Then _
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "OrderPlex::createTargetOrder", _
                 "Target order already exists"
 
 Set mTargetOrder = mOrderContext.newOrder
 
 Set createTargetOrder = mTargetOrder
-mStateEngine.setCondition COND_TARGET_ORDER_EXISTS
-mStateEngine.clearCondition COND_TARGET_ORDER_CANCELLED
+mStateEngine.setConditions COND_TARGET_ORDER_EXISTS
+mStateEngine.clearConditions COND_TARGET_ORDER_CANCELLED
 
 If mEntryOrder Is Nothing And _
     mStopOrder Is Nothing _
@@ -1505,7 +1505,7 @@ Case OrderPlexStateCodes.OrderPlexStateSubmitted
 Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Sub
 Case Else
-    err.Raise errActionNotAllowedInThisState, _
+    Err.Raise errActionNotAllowedInThisState, _
                 "OrderPlex::update", _
                 "Action not allowed in state " & mStateEngine.State
 End Select
@@ -1701,7 +1701,7 @@ If Not mEntryOrder Is Nothing Then
     If mNewQuantity >= 0 And _
         mNewQuantity <> mEntryOrder.quantity _
     Then
-        If mEntryOrder.status = OrderStatuses.OrderStatusFilled Then err.Raise errCantChangeFilledOrder, _
+        If mEntryOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise errCantChangeFilledOrder, _
                                                         "OrderPlex::update", _
                                                         "Can't change size - order " & entryOrder.id & " already filled"
         mEntryOrder.quantity = mNewQuantity
@@ -1712,7 +1712,7 @@ If Not mEntryOrder Is Nothing Then
     If mNewEntryPrice >= 0 And _
         mNewEntryPrice <> mEntryOrder.limitPrice _
     Then
-        If mEntryOrder.status = OrderStatuses.OrderStatusFilled Then err.Raise errCantChangeFilledOrder, _
+        If mEntryOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise errCantChangeFilledOrder, _
                                                         "OrderPlex::update", _
                                                         "Can't change price - order " & mEntryOrder.id & " already filled"
         mEntryOrder.limitPrice = mNewEntryPrice
@@ -1723,7 +1723,7 @@ If Not mEntryOrder Is Nothing Then
     If mNewEntryTriggerPrice >= 0 And _
         mNewEntryTriggerPrice <> mEntryOrder.triggerPrice _
     Then
-        If mEntryOrder.status = OrderStatuses.OrderStatusFilled Then err.Raise errCantChangeFilledOrder, _
+        If mEntryOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise errCantChangeFilledOrder, _
                                                         "OrderPlex::update", _
                                                         "Can't change trigger price - order " & mEntryOrder.id & " already filled"
         mEntryOrder.triggerPrice = mNewEntryTriggerPrice
@@ -1737,10 +1737,10 @@ If Not mStopOrder Is Nothing Then
     If mNewStopPrice >= 0 And _
         mNewStopPrice <> mStopOrder.limitPrice _
     Then
-        If mStopOrder.status = OrderStatuses.OrderStatusFilled Then err.Raise errCantChangeFilledOrder, _
+        If mStopOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise errCantChangeFilledOrder, _
                                                         "OrderPlex::update", _
                                                         "Can't change trigger price - order " & mStopOrder.id & " already filled"
-        If mStopOrder.status = OrderStatuses.OrderStatusSubmitted Then err.Raise errCantChangeSubmittedOrder, _
+        If mStopOrder.status = OrderStatuses.OrderStatusSubmitted Then Err.Raise errCantChangeSubmittedOrder, _
                                                         "OrderPlex::update", _
                                                         "Can't change price - order " & mStopOrder.id & " already submitted"
         mStopOrder.limitPrice = mNewStopPrice
@@ -1751,7 +1751,7 @@ If Not mStopOrder Is Nothing Then
     If mNewStopOffset <> DummyOffset And _
         mNewStopOffset <> mStopOrder.offset _
     Then
-        If mStopOrder.status <> OrderStatuses.OrderStatusCreated Then err.Raise errCantChangeUnplacedOrder, _
+        If mStopOrder.status <> OrderStatuses.OrderStatusCreated Then Err.Raise errCantChangeUnplacedOrder, _
                                                             "OrderPlex::update", _
                                                             "Can't change stop offset - order " & mStopOrder.id & " already placed"
         mStopOrder.offset = mNewStopOffset
@@ -1761,7 +1761,7 @@ If Not mStopOrder Is Nothing Then
     If mNewStopQuantity >= 0 And _
         mNewStopQuantity <> mStopOrder.quantity _
     Then
-        If mStopOrder.status = OrderStatuses.OrderStatusFilled Then err.Raise errCantChangeUnplacedOrder, _
+        If mStopOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise errCantChangeUnplacedOrder, _
                                                             "OrderPlex::update", _
                                                             "Can't change stop quantity - order " & mStopOrder.id & " already placed"
         mStopOrder.quantity = mNewStopQuantity
@@ -1771,7 +1771,7 @@ If Not mStopOrder Is Nothing Then
     If mNewStopTriggerPrice >= 0 And _
         mNewStopTriggerPrice <> mStopOrder.triggerPrice _
     Then
-        If mStopOrder.status = OrderStatuses.OrderStatusFilled Then err.Raise errCantChangeFilledOrder, _
+        If mStopOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise errCantChangeFilledOrder, _
                                                         "OrderPlex::update", _
                                                         "Can't change trigger price - order " & mEntryOrder.id & " already filled"
         mStopOrder.triggerPrice = mNewStopTriggerPrice
@@ -1785,7 +1785,7 @@ If Not mTargetOrder Is Nothing Then
     If mNewTargetPrice >= 0 And _
         mNewTargetPrice <> mTargetOrder.limitPrice _
     Then
-        If mTargetOrder.status = OrderStatuses.OrderStatusFilled Then err.Raise errCantChangeFilledOrder, _
+        If mTargetOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise errCantChangeFilledOrder, _
                                                         "OrderPlex::update", _
                                                         "Can't change price - order " & mTargetOrder.id & " already filled"
         mTargetOrder.limitPrice = mNewTargetPrice
@@ -1796,7 +1796,7 @@ If Not mTargetOrder Is Nothing Then
     If mNewTargetOffset <> DummyOffset And _
         mNewTargetOffset <> mTargetOrder.offset _
     Then
-        If mTargetOrder.status <> OrderStatuses.OrderStatusCreated Then err.Raise errCantChangeUnplacedOrder, _
+        If mTargetOrder.status <> OrderStatuses.OrderStatusCreated Then Err.Raise errCantChangeUnplacedOrder, _
                                                             "OrderPlex::update", _
                                                             "Can't change target offset - order " & targetOrder.id & " already placed"
         mTargetOrder.offset = mNewTargetOffset
@@ -1806,7 +1806,7 @@ If Not mTargetOrder Is Nothing Then
     If mNewTargetQuantity >= 0 And _
         mNewTargetQuantity <> mTargetOrder.quantity _
     Then
-        If mTargetOrder.status = OrderStatuses.OrderStatusFilled Then err.Raise errCantChangeUnplacedOrder, _
+        If mTargetOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise errCantChangeUnplacedOrder, _
                                                             "OrderPlex::update", _
                                                             "Can't change target quantity - order " & mTargetOrder.id & " already placed"
         mTargetOrder.quantity = mNewTargetQuantity
@@ -1816,7 +1816,7 @@ If Not mTargetOrder Is Nothing Then
     If mNewTargetTriggerPrice >= 0 And _
         mNewTargetTriggerPrice <> mTargetOrder.triggerPrice _
     Then
-        If mTargetOrder.status = OrderStatuses.OrderStatusFilled Then err.Raise errCantChangeFilledOrder, _
+        If mTargetOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise errCantChangeFilledOrder, _
                                                         "OrderPlex::update", _
                                                         "Can't change trigger price - order " & mEntryOrder.id & " already filled"
         mTargetOrder.triggerPrice = mNewTargetTriggerPrice
@@ -1841,7 +1841,7 @@ Dim action As Variant
 
 For Each action In Actions
     Select Case CLng(action)
-    Case SpecialActions.NO_ACTION
+    Case SpecialActions.NoAction
     Case ACT_PLACE_ORDERS
         doActions = placeOrders
     Case ACT_CANCEL_ORDERS
@@ -1863,7 +1863,7 @@ For Each action In Actions
     Case ACT_ALARM
         ' need to put something in here
     Case Else
-        err.Raise errInvalidActionReturnedFromStateEngine, _
+        Err.Raise errInvalidActionReturnedFromStateEngine, _
                     "OrderPlex::doActions", _
                     "Invalid action " & action
     End Select
@@ -1974,7 +1974,7 @@ mTicker.notifyListeners _
             "new broker id " & mStopOrder.brokerId, _
             IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
             Me
-mStateEngine.clearCondition COND_STOP_ORDER_CANCELLED
+mStateEngine.clearConditions COND_STOP_ORDER_CANCELLED
 mStopOrderFinished = False
 End Function
 
@@ -1990,9 +1990,9 @@ mTicker.notifyListeners _
             " new broker id " & mTargetOrder.brokerId, _
             IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
             Me
-mStateEngine.clearCondition COND_STOP_ORDER_CANCELLED
+mStateEngine.clearConditions COND_STOP_ORDER_CANCELLED
 mStopOrderFinished = False
-mStateEngine.clearCondition COND_TARGET_ORDER_CANCELLED
+mStateEngine.clearConditions COND_TARGET_ORDER_CANCELLED
 mTargetOrderFinished = False
 
 End Function
@@ -2004,7 +2004,7 @@ mTicker.notifyListeners _
             " new broker id " & mTargetOrder.brokerId, _
             IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
             Me
-mStateEngine.clearCondition COND_TARGET_ORDER_CANCELLED
+mStateEngine.clearConditions COND_TARGET_ORDER_CANCELLED
 mTargetOrderFinished = False
 End Function
 
@@ -2024,9 +2024,9 @@ End Sub
 Private Sub setSize(ByVal value As Long)
 mSize = value
 If mSize <> 0 Then
-    mStateEngine.setCondition COND_SIZE_NON_ZERO
+    mStateEngine.setConditions COND_SIZE_NON_ZERO
 Else
-    mStateEngine.clearCondition COND_SIZE_NON_ZERO
+    mStateEngine.clearConditions COND_SIZE_NON_ZERO
 End If
 fireChange OrderPlexChangeTypes.OrderPlexSizeChanged
 End Sub

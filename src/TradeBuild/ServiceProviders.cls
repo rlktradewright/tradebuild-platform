@@ -82,8 +82,8 @@ Private mMaxSPIndex                 As Long
 
 Private mChangeListeners            As Collection
 
-Private mConfig                     As ConfigItemSet
-Private mServiceProviderConfigList  As ConfigItemList
+Private mConfig                     As ConfigItem
+Private mServiceProviderConfigList  As ConfigItem
 
 '@================================================================================
 ' Class Event Handlers
@@ -106,7 +106,7 @@ Private Sub ICommonServiceConsumer_FatalServiceProviderError( _
                 ByVal source As String, _
                 ByVal errorMessage As String, _
                 ByVal spHandle As Long)
-gTB.notifyFatalError errorCode, _
+gTB.NotifyFatalError errorCode, _
                     errorMessage, _
                     nameFromHandle(spHandle) & ":" & source
 End Sub
@@ -181,7 +181,7 @@ Case TradeBuildSP.ServiceProviderTypes.Tickfile
 End Select
 
 If Not regOk Then
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "TradeBuild26.ServiceProviders::ICommonServiceConsumer_RegisterServiceProvider", _
                 "Caller is not a type " & spType & " service provider object"
 End If
@@ -568,15 +568,15 @@ If Not LoadContractsFromNextSP(0, pContractsbuilder) Then pContractsbuilder.Load
 End Sub
 
 Public Sub loadServiceProviderConfiguration( _
-                value As ConfigItemSet)
+                value As ConfigItem)
 Set mConfig = value
 
 On Error Resume Next
-Set mServiceProviderConfigList = mConfig.entries.item(ConfigNameServiceProviders)
+Set mServiceProviderConfigList = mConfig.childItems.item(ConfigNameServiceProviders)
 On Error GoTo 0
 
 If mServiceProviderConfigList Is Nothing Then
-    Set mServiceProviderConfigList = mConfig.entries.addItemList(ConfigNameServiceProviders, ConfigNameServiceProvider)
+    Set mServiceProviderConfigList = mConfig.childItems.AddItem(ConfigNameServiceProviders)
 End If
 
 loadConfiguration
@@ -642,23 +642,23 @@ Private Sub addEntryToConfig( _
             ByVal name As String, _
             ByVal Description As String _
             )
-Dim sp As ConfigItemSet
-Dim props As ConfigItemList
+Dim sp As ConfigItem
+Dim props As ConfigItems
 Dim prop As ConfigItem
 Dim param As Parameter
 
 If mConfig Is Nothing Then Exit Sub
 
-If Description <> "" Then mServiceProviderConfigList.entries.addComment Description
-Set sp = mServiceProviderConfigList.entries.addItemSet(generateGUIDString)
+Set sp = mServiceProviderConfigList.childItems.AddItem(ConfigNameServiceProvider, _
+                                                        , _
+                                                        Description)
 sp.setAttribute AttributeNameServiceProviderEnabled, CStr(enabled)
 If name <> "" Then sp.setAttribute AttributeNameServiceProviderName, name
 sp.setAttribute AttributeNameServiceProviderProgId, progId
 sp.setAttribute AttributeNameLogLevel, logLevel
 
-Set props = sp.entries.addItemList(ConfigNameProperties, ConfigNameProperty)
 For Each param In params
-    Set prop = props.entries.AddItem
+    Set prop = sp.childItems.AddItem(ConfigNameProperty)
     prop.setAttribute AttributeNamePropertyName, param.name
     prop.setAttribute AttributeNamePropertyValue, param.value
 Next
@@ -680,12 +680,12 @@ If name <> "" Then serviceProvider.name = name
 For i = 0 To mMaxSPIndex
     If Not mServiceProviders(i).SPObject Is Nothing Then
         If mServiceProviders(i).SPObject Is serviceProvider Then
-            err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                     "TradeBuild26.ServiceProviders::Add", _
                     "This Service Provider object has already been added"
         End If
         If mServiceProviders(i).name = serviceProvider.name Then
-            err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                     "TradeBuild26.ServiceProviders::Add", _
                     "A Service Provider with this name has already been added"
         End If
@@ -760,18 +760,17 @@ End If
 End Function
 
 Private Sub loadConfiguration()
-Dim sp As ConfigItemSet
+Dim sp As ConfigItem
 Dim spName As String
 Dim spProgId As String
 Dim spLogLevel As String
-Dim props As ConfigItemList
 Dim prop As ConfigItem
 Dim propName As String
 Dim propValue As String
 Dim spObj As Object
 Dim params As parameters
 
-For Each sp In mServiceProviderConfigList.entries
+For Each sp In mServiceProviderConfigList.childItems
     If CBool(sp.getAttribute(AttributeNameEnabled)) Then
         
         On Error Resume Next
@@ -780,7 +779,7 @@ For Each sp In mServiceProviderConfigList.entries
         
         spProgId = sp.getAttribute(AttributeNameServiceProviderProgId)
         If spProgId = "" Then
-            err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                     ProjectName & "." & ModuleName & ":" & "loadConfiguration", _
                     "Service provider ProgId not specified in configuration file"
         End If
@@ -788,11 +787,9 @@ For Each sp In mServiceProviderConfigList.entries
         spLogLevel = sp.getAttribute(AttributeNameLogLevel)
         If spLogLevel = "" Then spLogLevel = CStr(LogLevels.LogLevelLow)
         
-        Set props = sp.entries.item(ConfigNameProperties)
-        
         Set params = New parameters
         
-        For Each prop In props.entries
+        For Each prop In sp.childItems
             propName = prop.getAttribute(AttributeNamePropertyName)
             propValue = prop.getAttribute(AttributeNamePropertyValue)
             params.setParameterValue propName, propValue

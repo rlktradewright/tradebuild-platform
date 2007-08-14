@@ -220,8 +220,8 @@ Private Sub buildStateTable()
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCreated, _
             STIM_CANCEL_IF_NO_FILL, _
-            SpecialConditions.NO_CONDITIONS, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
+            SpecialConditions.NoConditions, _
             OrderPlexStateCodes.OrderPlexStateClosed, _
             ACT_CANCEL_ORDERS, ACT_COMPLETION_ACTIONS
             
@@ -231,8 +231,8 @@ mTableBuilder.addStateTableEntry _
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCreated, _
             STIM_CANCEL_EVEN_IF_FILL, _
-            SpecialConditions.NO_CONDITIONS, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
+            SpecialConditions.NoConditions, _
             OrderPlexStateCodes.OrderPlexStateClosed, _
             ACT_CANCEL_ORDERS, ACT_COMPLETION_ACTIONS
             
@@ -241,8 +241,8 @@ mTableBuilder.addStateTableEntry _
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCreated, _
             STIM_EXECUTE, _
-            SpecialConditions.NO_CONDITIONS, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
+            SpecialConditions.NoConditions, _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             ACT_PLACE_ORDERS
 
@@ -254,8 +254,8 @@ mTableBuilder.addStateTableEntry _
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             STIM_ENTRY_ORDER_FILL, _
-            SpecialConditions.NO_CONDITIONS, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
+            SpecialConditions.NoConditions, _
             OrderPlexStateCodes.OrderPlexStateSubmitted
 
 ' All orders have been completed, so we set the state to closed and do any
@@ -263,8 +263,8 @@ mTableBuilder.addStateTableEntry _
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             STIM_ALL_ORDERS_COMPLETE, _
-            SpecialConditions.NO_CONDITIONS, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
+            SpecialConditions.NoConditions, _
             OrderPlexStateCodes.OrderPlexStateClosed, _
             ACT_COMPLETION_ACTIONS
 
@@ -274,7 +274,7 @@ mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             STIM_CANCEL_IF_NO_FILL, _
             COND_SIZE_NON_ZERO, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
             OrderPlexStateCodes.OrderPlexStateSubmitted
 
 ' The application requests that the order plex be cancelled provided no fill
@@ -283,7 +283,7 @@ mTableBuilder.addStateTableEntry _
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             STIM_CANCEL_IF_NO_FILL, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
             COND_SIZE_NON_ZERO, _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             ACT_CANCEL_ORDERS
@@ -293,8 +293,8 @@ mTableBuilder.addStateTableEntry _
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             STIM_CANCEL_EVEN_IF_FILL, _
-            SpecialConditions.NO_CONDITIONS, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
+            SpecialConditions.NoConditions, _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             ACT_CANCEL_ORDERS
 
@@ -305,7 +305,7 @@ mTableBuilder.addStateTableEntry _
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             STIM_ENTRY_ORDER_CANCELLED, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
             COND_SIZE_NON_ZERO, _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             ACT_CANCEL_STOP_ORDER, ACT_CANCEL_TARGET_ORDER
@@ -322,7 +322,7 @@ mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             STIM_ENTRY_ORDER_CANCELLED, _
             COND_SIZE_NON_ZERO, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
             OrderPlexStateCodes.OrderPlexStateClosingOut, _
             ACT_CANCEL_STOP_ORDER, ACT_CANCEL_TARGET_ORDER
 
@@ -334,8 +334,8 @@ mTableBuilder.addStateTableEntry _
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             STIM_STOP_ORDER_CANCELLED, _
-            SpecialConditions.NO_CONDITIONS, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
+            SpecialConditions.NoConditions, _
             OrderPlexStateCodes.OrderPlexStateClosingOut, _
             ACT_CANCEL_ORDERS
 
@@ -347,8 +347,8 @@ mTableBuilder.addStateTableEntry _
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             STIM_TARGET_ORDER_CANCELLED, _
-            SpecialConditions.NO_CONDITIONS, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
+            SpecialConditions.NoConditions, _
             OrderPlexStateCodes.OrderPlexStateClosingOut, _
             ACT_CANCEL_ORDERS
 
@@ -357,8 +357,8 @@ mTableBuilder.addStateTableEntry _
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             STIM_CLOSEOUT, _
-            SpecialConditions.NO_CONDITIONS, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
+            SpecialConditions.NoConditions, _
             OrderPlexStateCodes.OrderPlexStateClosingOut, _
             ACT_CANCEL_ORDERS
             
@@ -372,8 +372,8 @@ mTableBuilder.addStateTableEntry _
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             STIM_CANCEL_IF_NO_FILL, _
-            SpecialConditions.NO_CONDITIONS, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
+            SpecialConditions.NoConditions, _
             OrderPlexStateCodes.OrderPlexStateCancelling
 
 ' The application has requested that the order plex be cancelled, even if
@@ -382,8 +382,8 @@ mTableBuilder.addStateTableEntry _
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             STIM_CANCEL_EVEN_IF_FILL, _
-            SpecialConditions.NO_CONDITIONS, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
+            SpecialConditions.NoConditions, _
             OrderPlexStateCodes.OrderPlexStateCancelling
 
 ' All orders have now been completed, so do any tidying up and go to the
@@ -391,8 +391,8 @@ mTableBuilder.addStateTableEntry _
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             STIM_ALL_ORDERS_COMPLETE, _
-            SpecialConditions.NO_CONDITIONS, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
+            SpecialConditions.NoConditions, _
             OrderPlexStateCodes.OrderPlexStateClosed, _
             ACT_COMPLETION_ACTIONS
 
@@ -401,8 +401,8 @@ mTableBuilder.addStateTableEntry _
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             STIM_ENTRY_ORDER_CANCELLED, _
-            SpecialConditions.NO_CONDITIONS, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
+            SpecialConditions.NoConditions, _
             OrderPlexStateCodes.OrderPlexStateCancelling
 
 ' We are notified that the stop order has been cancelled. Now we just need
@@ -410,8 +410,8 @@ mTableBuilder.addStateTableEntry _
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             STIM_STOP_ORDER_CANCELLED, _
-            SpecialConditions.NO_CONDITIONS, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
+            SpecialConditions.NoConditions, _
             OrderPlexStateCodes.OrderPlexStateCancelling
 
 ' We are notified that the target order has been cancelled. Now we just need
@@ -419,8 +419,8 @@ mTableBuilder.addStateTableEntry _
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             STIM_TARGET_ORDER_CANCELLED, _
-            SpecialConditions.NO_CONDITIONS, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
+            SpecialConditions.NoConditions, _
             OrderPlexStateCodes.OrderPlexStateCancelling
 
 ' The entry order has been unexpectedly filled (this occurred between the
@@ -432,7 +432,7 @@ mTableBuilder.addStateTableEntry _
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             STIM_ENTRY_ORDER_FILL, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
             COND_NO_FILL_CANCELLATION, _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             ACT_CANCEL_ORDERS
@@ -562,7 +562,7 @@ mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateCancelling, _
             STIM_ENTRY_ORDER_FILL, _
             COND_NO_FILL_CANCELLATION + COND_STOP_ORDER_CANCELLED + COND_TARGET_ORDER_CANCELLED, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
             OrderPlexStateCodes.OrderPlexStateSubmitted, _
             ACT_RESUBMIT_STOP_AND_TARGET_ORDERS
             
@@ -575,8 +575,8 @@ mTableBuilder.addStateTableEntry _
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateClosingOut, _
             STIM_ENTRY_ORDER_CANCELLED, _
-            SpecialConditions.NO_CONDITIONS, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
+            SpecialConditions.NoConditions, _
             OrderPlexStateCodes.OrderPlexStateClosingOut
 
 ' The entry order has been unexpectedly filled (this occurred between the
@@ -586,24 +586,24 @@ mTableBuilder.addStateTableEntry _
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateClosingOut, _
             STIM_ENTRY_ORDER_FILL, _
-            SpecialConditions.NO_CONDITIONS, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
+            SpecialConditions.NoConditions, _
             OrderPlexStateCodes.OrderPlexStateClosingOut
 
 ' The stop order has been cancelled, nothing for us to do.
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateClosingOut, _
             STIM_STOP_ORDER_CANCELLED, _
-            SpecialConditions.NO_CONDITIONS, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
+            SpecialConditions.NoConditions, _
             OrderPlexStateCodes.OrderPlexStateClosingOut
 
 ' The target order has been cancelled, nothing for us to do.
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateClosingOut, _
             STIM_TARGET_ORDER_CANCELLED, _
-            SpecialConditions.NO_CONDITIONS, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
+            SpecialConditions.NoConditions, _
             OrderPlexStateCodes.OrderPlexStateClosingOut
 
 ' All orders have completed, and we are left with a non-zero size. So submit
@@ -613,7 +613,7 @@ mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateClosingOut, _
             STIM_ALL_ORDERS_COMPLETE, _
             COND_SIZE_NON_ZERO, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
             OrderPlexStateCodes.OrderPlexStateClosingOut, _
             ACT_PLACE_CLOSEOUT_ORDER
 
@@ -622,7 +622,7 @@ mTableBuilder.addStateTableEntry _
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateClosingOut, _
             STIM_ALL_ORDERS_COMPLETE, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
             COND_SIZE_NON_ZERO, _
             OrderPlexStateCodes.OrderPlexStateClosed, _
             ACT_COMPLETION_ACTIONS
@@ -633,8 +633,8 @@ mTableBuilder.addStateTableEntry _
 mTableBuilder.addStateTableEntry _
             OrderPlexStateCodes.OrderPlexStateClosingOut, _
             STIM_CLOSEOUT_ORDER_CANCELLED, _
-            SpecialConditions.NO_CONDITIONS, _
-            SpecialConditions.NO_CONDITIONS, _
+            SpecialConditions.NoConditions, _
+            SpecialConditions.NoConditions, _
             OrderPlexStateCodes.OrderPlexStateClosed, _
             ACT_ALARM, ACT_COMPLETION_ACTIONS
 

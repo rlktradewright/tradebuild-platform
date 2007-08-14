@@ -30,6 +30,9 @@ Event Notification(ByRef ev As NotificationEvent)
 ' Constants
 '@================================================================================
 
+Private Const ProjectName                   As String = "TradeBuild26"
+Private Const ModuleName                    As String = "TradeBuildAPI"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -124,8 +127,282 @@ Public Function addInfoListener(ByVal newListener As InfoListener, _
 addInfoListener = mListeners.add(newListener, valueType)
 End Function
 
-Public Function getServiceProviderError() As ServiceProviderError
-Set getServiceProviderError = mServiceProviderError
+Public Function GenerateTickfileSpecifiers( _
+                ByVal pContracts As Contracts, _
+                ByVal TickfileFormatID As String, _
+                ByVal startDate As Date, _
+                ByVal endDate As Date, _
+                Optional ByVal completeSessionsOnly As Boolean = True, _
+                Optional ByVal useExchangeTimezone As Boolean = True, _
+                Optional ByVal customSessionStartTime As Date, _
+                Optional ByVal customSessionEndTime As Date) As TickfileSpecifier()
+Dim useCustomSessionTimes As Boolean
+Dim lTickfileSpecifiers() As TickfileSpecifier
+Dim i As Long
+Dim j As Long
+Dim k As Long
+Dim lContract As Contract
+Dim lSessionBuilder As SessionBuilder
+Dim lSession As session
+Dim fromSessionStart As Date
+Dim fromSessionEnd As Date
+Dim toSessionStart As Date
+Dim toSessionEnd As Date
+
+Dim lSecType As SecurityTypes
+Dim currContract As Contract
+Dim aContract As Contract
+
+' the from and to dates converted (if necessary) to the contract's timezone
+Dim FromDate As Date
+Dim ToDate As Date
+
+' the from and to dates, session-oriented if required
+Dim replayFromDate As Date
+Dim replayToDate As Date
+
+If (customSessionStartTime = 0 And customSessionEndTime <> 0) Or _
+    (customSessionStartTime <> 0 And customSessionEndTime = 0) Then _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "GenerateTickfileSpecifiers", _
+            "session start and end times must be either both supplied or both omitted"
+    
+If customSessionStartTime <> 0 Then useCustomSessionTimes = True
+
+' get the most recent contract (though they should all have the same
+' info regarding session times)
+Set lContract = pContracts(pContracts.Count)
+
+If useExchangeTimezone Then
+    FromDate = startDate
+    If endDate <> 0 Then ToDate = endDate
+Else
+    FromDate = ConvertDateUTCToTZ(ConvertDateLocalToUTC(startDate), lContract.TimeZone)
+    If endDate <> 0 Then ToDate = ConvertDateUTCToTZ(ConvertDateLocalToUTC(endDate), lContract.TimeZone)
+End If
+
+' determine start and end times ---------------------------------------------------
+
+Set lSessionBuilder = New SessionBuilder
+Set lSession = lSessionBuilder.session
+
+' note that the custom times are in the contract's timezone
+If useCustomSessionTimes Then
+    lSessionBuilder.sessionStartTime = customSessionStartTime
+    lSessionBuilder.sessionEndTime = customSessionEndTime
+Else
+    lSessionBuilder.sessionStartTime = lContract.sessionStartTime
+    lSessionBuilder.sessionEndTime = lContract.sessionEndTime
+End If
+
+' set the session start and end times for the starting date (in the contract's
+' local timezone)...
+lSession.SessionTimes FromDate, _
+                    fromSessionStart, _
+                    fromSessionEnd
+If completeSessionsOnly Then
+    replayFromDate = fromSessionStart
+Else
+    replayFromDate = FromDate
+End If
+
+If ToDate <> 0 Then
+    ' set the session start and end times for the ending date (in the contract's
+    ' local timezone)...
+    lSession.SessionTimes ToDate, toSessionStart, toSessionEnd
+    
+    If completeSessionsOnly Then
+        replayToDate = toSessionEnd
+    Else
+        replayToDate = ToDate
+    End If
+Else
+    toSessionStart = fromSessionStart
+    toSessionEnd = fromSessionEnd
+    replayToDate = toSessionEnd
+End If
+
+' find contract for start date ------------------------------------------------------
+
+lSecType = pContracts(1).specifier.sectype
+
+If lSecType <> SecurityTypes.SecTypeFuture And _
+    lSecType <> SecurityTypes.SecTypeOption And _
+    lSecType <> SecurityTypes.SecTypeFuturesOption _
+Then
+    Set currContract = pContracts(1)
+Else
+    For i = 1 To pContracts.Count
+        Set aContract = pContracts(i)
+        If DateValue(FromDate) <= _
+            (aContract.expiryDate - aContract.daysBeforeExpiryToSwitch) _
+        Then
+            Set currContract = aContract
+            Exit For
+        End If
+    Next
+    
+    If currContract Is Nothing Then
+        Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                ProjectName & "." & ModuleName & ":" & "GenerateTickfileSpecifiers", _
+                "No contract for this from date"
+    End If
+End If
+
+If completeSessionsOnly Then
+    If useCustomSessionTimes Then
+        Set currContract = editContractSessionTimes(currContract, customSessionStartTime, customSessionEndTime)
+    End If
+End If
+
+ReDim lTickfileSpecifiers(1000) As TickfileSpecifier
+
+Dim currSessionStart As Date
+Dim thisSessionStart As Date
+Dim thisSessionEnd As Date
+
+currSessionStart = FromDate
+j = 0
+If completeSessionsOnly Then
+    Do While currSessionStart < replayToDate
+        If j > UBound(lTickfileSpecifiers) Then
+            ReDim Preserve lTickfileSpecifiers(UBound(lTickfileSpecifiers) + 1000) As TickfileSpecifier
+        End If
+        Set lTickfileSpecifiers(j) = New TickfileSpecifier
+        lTickfileSpecifiers(j).Contract = currContract
+        lTickfileSpecifiers(j).TickfileFormatID = TickfileFormatID
+        
+        If useCustomSessionTimes Then
+            lSession.SessionTimes currSessionStart, _
+                                    thisSessionStart, _
+                                    thisSessionEnd
+            lTickfileSpecifiers(j).FromDate = thisSessionStart
+            lTickfileSpecifiers(j).ToDate = thisSessionEnd
+            lTickfileSpecifiers(j).EntireSession = False
+            lTickfileSpecifiers(j).filename = FormatDateTime(lTickfileSpecifiers(j).FromDate, vbGeneralDate) & _
+                                        "-" & _
+                                        FormatDateTime(lTickfileSpecifiers(j).ToDate, vbGeneralDate) & _
+                                        " " & _
+                                        Replace(currContract.specifier.ToString, vbCrLf, "; ")
+        Else
+            lTickfileSpecifiers(j).FromDate = currSessionStart
+            lTickfileSpecifiers(j).EntireSession = True
+            lTickfileSpecifiers(j).filename = "Session " & _
+                                            FormatDateTime(DateValue(currSessionStart), vbShortDate) & _
+                                            " " & _
+                                            Replace(currContract.specifier.ToString, vbCrLf, "; ")
+            
+        End If
+        
+        currSessionStart = currSessionStart + 1
+        
+        If lSecType = SecurityTypes.SecTypeFuture Or _
+            lSecType = SecurityTypes.SecTypeOption Or _
+            lSecType = SecurityTypes.SecTypeFuturesOption _
+        Then
+            If DateValue(currSessionStart) > _
+                (currContract.expiryDate - currContract.daysBeforeExpiryToSwitch) _
+            Then
+                For i = i + 1 To pContracts.Count
+                    Set aContract = pContracts(i)
+                    If DateValue(currSessionStart) <= _
+                        (aContract.expiryDate - aContract.daysBeforeExpiryToSwitch) _
+                    Then
+                        Set currContract = aContract
+                        If useCustomSessionTimes Then
+                            Set currContract = editContractSessionTimes(currContract, _
+                                                                        customSessionStartTime, _
+                                                                        customSessionEndTime)
+                        End If
+                        Exit For
+                    End If
+                Next
+                If currContract Is Nothing Then
+                    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                            ProjectName & "." & ModuleName & ":" & "GenerateTickfileSpecifiers", _
+                            "No contract from " & currSessionStart
+                                    
+                End If
+            End If
+        End If
+        
+        j = j + 1
+    Loop
+    If j = 0 Then
+        Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                ProjectName & "." & ModuleName & ":" & "GenerateTickfileSpecifiers", _
+                "No trading sessions in specified date range"
+    End If
+    ReDim Preserve lTickfileSpecifiers(j - 1) As TickfileSpecifier
+Else
+    Set lTickfileSpecifiers(0) = New TickfileSpecifier
+    lTickfileSpecifiers(0).Contract = currContract
+    lTickfileSpecifiers(0).TickfileFormatID = TickfileFormatID
+
+    lTickfileSpecifiers(0).FromDate = FromDate
+    currSessionStart = currSessionStart + 1
+    Do While currSessionStart < replayToDate
+        
+        If lSecType = SecurityTypes.SecTypeFuture Or _
+            lSecType = SecurityTypes.SecTypeOption Or _
+            lSecType = SecurityTypes.SecTypeFuturesOption _
+        Then
+            If DateValue(currSessionStart) > _
+                (currContract.expiryDate - currContract.daysBeforeExpiryToSwitch) _
+            Then
+                For i = i + 1 To pContracts.Count
+                    Set aContract = pContracts(i)
+                    If DateValue(currSessionStart) <= _
+                        (aContract.expiryDate - aContract.daysBeforeExpiryToSwitch) _
+                    Then
+                        lTickfileSpecifiers(j).ToDate = currSessionStart
+                        lTickfileSpecifiers(j).filename = FormatDateTime(lTickfileSpecifiers(j).FromDate, vbGeneralDate) & _
+                                                    "-" & _
+                                                    FormatDateTime(lTickfileSpecifiers(j).ToDate, vbGeneralDate) & " " & _
+                                                    Replace(currContract.specifier.ToString, vbCrLf, "; ")
+                        
+                        Set currContract = aContract
+                        
+                        j = j + 1
+                        If j > UBound(lTickfileSpecifiers) Then
+                            ReDim Preserve lTickfileSpecifiers(UBound(lTickfileSpecifiers) + 1000) As TickfileSpecifier
+                        End If
+                        
+                        Set lTickfileSpecifiers(j) = New TickfileSpecifier
+                        lTickfileSpecifiers(j).Contract = currContract
+                        lTickfileSpecifiers(j).TickfileFormatID = TickfileFormatID
+                    
+                        lTickfileSpecifiers(j).FromDate = currSessionStart
+                        Exit For
+                    End If
+                Next
+                If currContract Is Nothing Then
+                    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                            ProjectName & "." & ModuleName & ":" & "GenerateTickfileSpecifiers", _
+                            "No contract from " & currSessionStart
+                End If
+            End If
+        End If
+        
+        currSessionStart = currSessionStart + 1
+        
+    Loop
+        
+    lTickfileSpecifiers(j).ToDate = replayToDate
+    lTickfileSpecifiers(j).filename = FormatDateTime(lTickfileSpecifiers(j).FromDate, vbGeneralDate) & _
+                                "-" & _
+                                FormatDateTime(lTickfileSpecifiers(j).ToDate, vbGeneralDate) & " " & _
+                                Replace(currContract.specifier.ToString, vbCrLf, "; ")
+
+    ReDim Preserve lTickfileSpecifiers(j) As TickfileSpecifier
+End If
+
+GenerateTickfileSpecifiers = lTickfileSpecifiers
+
+End Function
+
+Public Function GetServiceProviderError() As ServiceProviderError
+Set GetServiceProviderError = mServiceProviderError
 Set mServiceProviderError = Nothing
 End Function
 
@@ -143,7 +420,7 @@ Public Sub loadContracts( _
 mServiceProviders.loadContracts pContractsbuilder
 End Sub
 
-Friend Sub notifyFatalError( _
+Friend Sub NotifyFatalError( _
                 ByVal errorCode As Long, _
                 ByVal errorMessage As String, _
                 ByVal source As String)
@@ -195,4 +472,18 @@ End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Function editContractSessionTimes( _
+                ByVal pContract As Contract, _
+                ByVal sessionStartTime As Date, _
+                ByVal sessionEndTime As Date) As Contract
+Dim lContractBuilder As ContractBuilder
+
+Set lContractBuilder = CreateContractBuilderFromContract(pContract)
+lContractBuilder.sessionEndTime = sessionEndTime
+lContractBuilder.sessionStartTime = sessionStartTime
+Set editContractSessionTimes = lContractBuilder.Contract
+End Function
+
+
 

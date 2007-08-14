@@ -2674,7 +2674,7 @@ If mReplayingTickfile Then
                                     mContract.TimeZone.standardName, _
                                     ""))
 Else
-    Set mClock = CreateClock(IIf(mUseExchangeTimeZone, mContract.TimeZone.standardName, ""))
+    Set mClock = GetClock(IIf(mUseExchangeTimeZone, mContract.TimeZone.standardName, ""))
 End If
 
 mStudyManager.setSessionTimes mContract.sessionStartTime, _
