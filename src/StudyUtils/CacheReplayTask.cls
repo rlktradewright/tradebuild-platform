@@ -13,45 +13,45 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-'================================================================================
+'@================================================================================
 ' Description
-'================================================================================
+'@================================================================================
 '
 '
-'================================================================================
+'@================================================================================
 ' Amendment history
-'================================================================================
+'@================================================================================
 '
 '
 '
 '
 
-'================================================================================
+'@================================================================================
 ' Interfaces
-'================================================================================
+'@================================================================================
 
 Implements task
 Implements ValueReplayTask
 
-'================================================================================
+'@================================================================================
 ' Events
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Constants
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Enums
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Types
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Member variables
-'================================================================================
+'@================================================================================
 
 Private mTaskContext As TaskContext
 
@@ -65,6 +65,7 @@ Private mSourceStudy As study
 Private mDiscriminator As Long
 Private mValueCache As StudyValueCache
 
+Private mFirstValueNumber As Long
 Private mNextValueNumber As Long
 Private mValuesNotified As Long
 
@@ -75,13 +76,13 @@ Private mNotifyNames(0) As String
 
 Private mSessionBuilder As SessionBuilder
 
-'================================================================================
+'@================================================================================
 ' Class Event Handlers
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' ValueReplayTask Interface Members
-'================================================================================
+'@================================================================================
 
 Private Property Get ValueReplayTask_discriminator() As Long
 ValueReplayTask_discriminator = mDiscriminator
@@ -115,9 +116,9 @@ Private Property Get ValueReplayTask_valueNames() As String()
 ValueReplayTask_valueNames = mValueNames
 End Property
 
-'================================================================================
+'@================================================================================
 ' Task Interface Members
-'================================================================================
+'@================================================================================
 
 Private Property Get task_TaskName() As String
 task_TaskName = mTaskContext.name
@@ -128,7 +129,15 @@ Dim ev As StudyValueEvent
 Dim valueEntry As StudyValue
 
 If mValueCache.count = 0 Then
-    mTaskContext.finish
+    mTaskContext.progress 100
+    mTaskContext.finish 0, False
+    Set mTaskContext = Nothing
+    Exit Sub
+End If
+
+If mTaskContext.cancelPending Then
+    mTaskContext.progress 100 * mValuesNotified / (mSourceStudy.numberOfCachedValues - mFirstValueNumber + 1)
+    mTaskContext.finish 0, True
     Set mTaskContext = Nothing
     Exit Sub
 End If
@@ -158,9 +167,16 @@ End If
 
 mNextValueNumber = mNextValueNumber + 1
 mValuesNotified = mValuesNotified + 1
+
+If mValuesNotified Mod 20 = 0 Then
+    ' notify progress each 20 values
+    mTaskContext.progress 100 * mValuesNotified / (mSourceStudy.numberOfCachedValues - mFirstValueNumber + 1)
+End If
+
 If mNextValueNumber > mValueCache.count Then
     Debug.Print "Cache for " & mValueName & " replayed " & mValuesNotified & " values"
-    mTaskContext.finish
+    mTaskContext.progress 100
+    mTaskContext.finish 0, False
     Set mTaskContext = Nothing
 End If
 
@@ -170,13 +186,13 @@ Private Property Let Task_TaskContext(ByVal RHS As TaskContext)
 Set mTaskContext = RHS
 End Property
 
-'================================================================================
+'@================================================================================
 ' XXXX Event Handlers
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Properties
-'================================================================================
+'@================================================================================
 
 Public Property Get discriminator() As Long
 discriminator = mDiscriminator
@@ -206,9 +222,9 @@ Public Property Get valueNames() As String()
 valueNames = mValueNames
 End Property
 
-'================================================================================
+'@================================================================================
 ' Methods
-'================================================================================
+'@================================================================================
 
 Friend Sub initialise( _
                 ByVal valueCache As StudyValueCache, _
@@ -234,7 +250,7 @@ If TypeOf target Is study Then
     studyEntry = Globals.StudiesCollection(mTargetStudy.id)
     Set mSessionBuilder = studyEntry.sessionBldr
     
-    mNotifyName = mTargetStudy.studyDefinition.studyInputDefinitions.Item(1).name
+    mNotifyName = mTargetStudy.StudyDefinition.studyInputDefinitions.Item(1).name
     mNotifyNames(0) = mNotifyName
     If numberOfValuesToReplay = ReplayNumbers.ReplayAsRequired Then
         ' just replay the number of values needed by the study
@@ -253,12 +269,13 @@ Then
 End If
 
 mNextValueNumber = mValueCache.count - numValuesToNotify + 1
+mFirstValueNumber = mNextValueNumber
 
 End Sub
 
-'================================================================================
+'@================================================================================
 ' Helper Functions
-'================================================================================
+'@================================================================================
 
 
 

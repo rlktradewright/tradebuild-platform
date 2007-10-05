@@ -13,29 +13,29 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-'================================================================================
+'@================================================================================
 ' Description
-'================================================================================
+'@================================================================================
 '
 '
 
-'================================================================================
+'@================================================================================
 ' Interfaces
-'================================================================================
+'@================================================================================
 
 Implements TaskCompletionListener
 
-'================================================================================
+'@================================================================================
 ' Events
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Constants
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Enums
-'================================================================================
+'@================================================================================
 
 Public Enum TaskDiscriminators
     TaskAddStudy
@@ -47,13 +47,13 @@ Private Type ValueCacheTableEntry
     isDefault           As Boolean
 End Type
 
-'================================================================================
+'@================================================================================
 ' Types
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Member variables
-'================================================================================
+'@================================================================================
 
 Private mStudyRef As WeakReference
 Private mShortName As String
@@ -79,17 +79,17 @@ Private mReplayUsingStudyValues As Boolean
 
 Private mNumberOfValuesToCache As Long
 
-'================================================================================
+'@================================================================================
 ' Class Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub Class_Initialize()
 
 End Sub
 
-'================================================================================
+'@================================================================================
 ' TaskCompletionListener Interface Members
-'================================================================================
+'@================================================================================
 
 Private Sub TaskCompletionListener_taskCompleted( _
                 ev As TaskCompletionEvent)
@@ -107,13 +107,13 @@ Case TaskDiscriminators.TaskAddStudyValueListener
 End Select
 End Sub
 
-'================================================================================
+'@================================================================================
 ' XXXX Event Handlers
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Properties
-'================================================================================
+'@================================================================================
 
 Public Property Get barNumber() As Long
 barNumber = mBarNumber
@@ -153,9 +153,9 @@ Public Property Let ReplayUsingStudyValues( _
 mReplayUsingStudyValues = value
 End Property
 
-'================================================================================
+'@================================================================================
 ' Methods
-'================================================================================
+'@================================================================================
 
 Public Function addStudy( _
                 ByVal studyToAdd As study, _
@@ -171,7 +171,7 @@ Dim lBarStudy As BarStudy
 Dim i As Long
 Dim j As Long
 
-Set inputDefs = studyToAdd.studyDefinition.studyInputDefinitions
+Set inputDefs = studyToAdd.StudyDefinition.studyInputDefinitions
 
 ReDim notifyNames(inputDefs.count - 1) As String
 
@@ -187,7 +187,7 @@ If TypeOf study Is BarStudy Then
     
     ReDim replayValueNames(UBound(valueNames)) As String
     ReDim replayNotifyNames(UBound(valueNames)) As String
-    Set inputDefs = study.studyDefinition.studyInputDefinitions
+    Set inputDefs = study.StudyDefinition.studyInputDefinitions
     
     For i = 0 To UBound(valueNames)
         If UCase$(valueNames(i)) = UCase$(lBarStudy.closeValueName) Then
@@ -262,7 +262,7 @@ If numberOfValuesToReplay = 0 Or study.numberOfCachedValues = 0 Then
     Exit Function
 End If
     
-Set valueDefs = study.studyDefinition.studyValueDefinitions
+Set valueDefs = study.StudyDefinition.studyValueDefinitions
 valueName = UCase$(valueName)
 If mReplayUsingStudyValues Then
     Dim replayTask As New StudyValueReplayTask
@@ -323,7 +323,7 @@ Public Sub initialise( _
                 ByVal underlyingStudy As study)
 
 Set mStudyRef = CreateWeakReference(study)
-mShortName = study.studyDefinition.shortName
+mShortName = study.StudyDefinition.shortName
 mIdent = id
 Set mParams = parameters
 mInputValueNames = inputValueNames
@@ -380,9 +380,9 @@ mListeners.remove listener
 End Sub
 
 
-'================================================================================
+'@================================================================================
 ' Helper Functions
-'================================================================================
+'@================================================================================
 
 Private Function addStudyHelper( _
                 ByVal studyToAdd As study, _
@@ -414,7 +414,7 @@ If numberOfValuesToReplay = 0 Or study.numberOfCachedValues = 0 Then
     Exit Function
 End If
 
-Set valueDefs = study.studyDefinition.studyValueDefinitions
+Set valueDefs = study.StudyDefinition.studyValueDefinitions
 If UBound(valueNames) = 0 And (Not mReplayUsingStudyValues) Then
     Dim valueName As String
     valueName = UCase$(valueNames(0))
@@ -454,7 +454,7 @@ Dim valueDefs As studyValueDefinitions
 Dim valueDef As StudyValueDefinition
 Dim i As Long
 
-Set valueDefs = study.studyDefinition.studyValueDefinitions
+Set valueDefs = study.StudyDefinition.studyValueDefinitions
 
 ReDim mValueCaches(valueDefs.count - 1) As ValueCacheTableEntry
 For Each valueDef In valueDefs
@@ -471,7 +471,7 @@ Dim paramDef As StudyParameterDefinition
 Dim i As Long
 
 On Error Resume Next
-Set paramDefs = study.studyDefinition.studyParameterDefinitions
+Set paramDefs = study.StudyDefinition.studyParameterDefinitions
 For i = 1 To paramDefs.count
     Set paramDef = paramDefs.Item(i)
     If Len(ParamsToString) = 0 Then

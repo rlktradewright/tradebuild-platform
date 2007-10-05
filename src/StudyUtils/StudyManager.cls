@@ -13,33 +13,33 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-'================================================================================
+'@================================================================================
 ' Description
-'================================================================================
+'@================================================================================
 '
 '
 
-'================================================================================
+'@================================================================================
 ' Interfaces
-'================================================================================
+'@================================================================================
 
 Implements TaskCompletionListener
 
-'================================================================================
+'@================================================================================
 ' Events
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Constants
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Enums
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Types
-'================================================================================
+'@================================================================================
 
 Public Type InputDescriptor
     source              As study
@@ -106,14 +106,14 @@ Public Type StudyTableEntry
 
 End Type
 
-'================================================================================
+'@================================================================================
 ' Member variables
-'================================================================================
+'@================================================================================
 
 Private mInputs()               As InputDescriptor
 Private mNextInputIndex         As Long
 
-Private mInputStudies                As Collection
+Private mInputStudies           As Collection
 Private mStudyLibraryManager    As StudyLibraryManager
 
 Private mSessionStartTime       As Date
@@ -124,19 +124,31 @@ Private mSessionTimesSet        As Boolean
 Private mExchangeTimeZone       As TimeZone
 Private mUseLocalTimeForStudies As Boolean
 
-'================================================================================
+'@================================================================================
 ' Class Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub Class_Initialize()
 ReDim mInputs(10) As InputDescriptor
 Set mStudyLibraryManager = Globals.StudyLibraryManager
 Set mInputStudies = New Collection
+Set mExchangeTimeZone = GetTimeZone("")
 End Sub
 
-'================================================================================
+Private Sub Class_Terminate()
+Dim lStudy As study
+Dim i As Long
+
+For i = mInputStudies.count To 1 Step -1
+    Set lStudy = mInputStudies(i)
+    Globals.StudiesCollection.remove lStudy.id
+    mInputStudies.remove i
+Next
+End Sub
+
+'@================================================================================
 ' TaskCompletionListener Interface Members
-'================================================================================
+'@================================================================================
 
 Private Sub TaskCompletionListener_taskCompleted( _
                 ev As TaskCompletionEvent)
@@ -151,17 +163,17 @@ Case TaskDiscriminators.TaskAddStudyValueListener
 End Select
 End Sub
 
-'================================================================================
+'@================================================================================
 ' XXXX Event Handlers
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Properties
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Methods
-'================================================================================
+'@================================================================================
 
 Public Function addInput( _
                 ByVal source As study, _
@@ -285,7 +297,7 @@ If lStudy Is Nothing Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
 Set studyEntry.study = lStudy
 studyEntry.numberOfCachedValues = numberOfValuesToCache
 
-Set studyInputDefs = lStudy.studyDefinition.studyInputDefinitions
+Set studyInputDefs = lStudy.StudyDefinition.studyInputDefinitions
 
 ReDim inValueNames(UBound(inputValueNames)) As String
 For i = 0 To UBound(inputValueNames)
@@ -382,7 +394,6 @@ Public Sub setSessionTimes( _
                 ByVal exchangeTimeZone As TimeZone, _
                 ByVal useLocalTimeForStudies As Boolean)
 Dim lStudy As InputStudy
-Dim lStudyEntry As StudyTableEntry
 Dim lVar As Variant
 
 If mSessionTimesSet Then _
@@ -390,8 +401,7 @@ If mSessionTimesSet Then _
             "StudiesSupp" & "." & "StudyManager" & ":" & "setSessionTimes", _
             "Session times have already been set"
 
-Set mExchangeTimeZone = exchangeTimeZone
-If mExchangeTimeZone Is Nothing Then Set mExchangeTimeZone = GetTimeZone("")
+If Not exchangeTimeZone Is Nothing Then Set mExchangeTimeZone = exchangeTimeZone
 
 If CDbl(sessionStartTime) > 1 Then sessionStartTime = sessionStartTime - Int(sessionStartTime)
 mSessionStartTime = sessionStartTime
@@ -403,8 +413,7 @@ mUseLocalTimeForStudies = useLocalTimeForStudies
 mSessionTimesSet = True
 
 For Each lVar In mInputStudies
-    lStudyEntry = lVar
-    Set lStudy = lStudyEntry.study
+    Set lStudy = lVar
     lStudy.setSessionTimes mSessionStartTime, _
                             mSessionEndTime, _
                             mExchangeTimeZone, _
@@ -445,9 +454,9 @@ Else
 End If
 End Function
 
-'================================================================================
+'@================================================================================
 ' Helper Functions
-'================================================================================
+'@================================================================================
 
 Private Function findStudy(ByVal studyName As String, _
                 ByVal libName As String, _

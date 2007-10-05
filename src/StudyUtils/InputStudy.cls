@@ -13,42 +13,42 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-'================================================================================
+'@================================================================================
 ' Description
-'================================================================================
+'@================================================================================
 '
 '
 
-'================================================================================
+'@================================================================================
 ' Interfaces
-'================================================================================
+'@================================================================================
 
 Implements study
 
-'================================================================================
+'@================================================================================
 ' Events
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Constants
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Enums
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Types
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Member variables
-'================================================================================
+'@================================================================================
 
 Private mIdent As String
 Private mName As String
 
-Private mStudyDef As studyDefinition
+Private mStudyDef As StudyDefinition
 
 Private mStudies As Studies
 Private mListeners As StudyValueListeners
@@ -62,16 +62,16 @@ Private mTimestamp As Date
 Private mExchangeTimeZone As TimeZone
 Private mUseLocalTimeForStudies As Boolean
 
-'================================================================================
+'@================================================================================
 ' Class Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub Class_Initialize()
 'mIdent = gGenerateGUIDString
 Set mStudies = New Studies
 Set mListeners = New StudyValueListeners
 
-Set mStudyDef = New studyDefinition
+Set mStudyDef = New StudyDefinition
 mStudyDef.defaultRegion = StudyDefaultRegions.DefaultRegionNone
 
 Set mTickSizes = New Collection
@@ -80,16 +80,16 @@ Set mSessionBuilder = New SessionBuilder
 
 End Sub
 
-'================================================================================
+'@================================================================================
 ' Study Interface Members
-'================================================================================
+'@================================================================================
 
 Private Function Study_addStudy( _
                 ByVal pStudy As study, _
                 ByRef valueNames() As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As TaskCompletion
+                Optional ByVal taskData As Variant) As TaskController
 mStudies.add pStudy, valueNames
 End Function
 
@@ -98,7 +98,7 @@ Private Function Study_addStudyValueListener( _
                 ByVal valueName As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As TaskCompletion
+                Optional ByVal taskData As Variant) As TaskController
 mListeners.add listener, valueName
 End Function
 
@@ -150,7 +150,7 @@ mSessionBuilder.setSessionCurrentTime ev.timestamp
 evOut = ev
 
 If mUseLocalTimeForStudies Then
-    evOut.timestamp = ConvertDateUTCToLocal(ConvertDateTZToUTC(ev.timestamp, mExchangeTimeZone))
+    evOut.timestamp = ConvertDateUTCToLocal(ConvertDateTzToUTC(ev.timestamp, mExchangeTimeZone))
 End If
 
 evOut.barStartTime = 0  ' a higher level study must generate this
@@ -180,19 +180,19 @@ Private Sub study_setInputTicksize(ByVal inputName As String, ByVal tickSize As 
 
 End Sub
 
-Private Property Get Study_studyDefinition() As studyDefinition
+Private Property Get Study_studyDefinition() As StudyDefinition
 
 Set Study_studyDefinition = mStudyDef.clone
 
 End Property
 
-'================================================================================
+'@================================================================================
 ' XXXX Event Handlers
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Properties
-'================================================================================
+'@================================================================================
 
 Public Property Let name(ByVal value As String)
 mName = value
@@ -212,9 +212,9 @@ Public Property Get timestamp() As Date
 timestamp = mTimestamp
 End Property
 
-'================================================================================
+'@================================================================================
 ' Methods
-'================================================================================
+'@================================================================================
 
 Friend Sub addInput( _
                 ByVal name As String, _
@@ -331,9 +331,9 @@ Friend Sub unlinkSession( _
 mSessionBuilder.unlinkSession objectToUnlink
 End Sub
 
-'================================================================================
+'@================================================================================
 ' Helper Functions
-'================================================================================
+'@================================================================================
 
 
 

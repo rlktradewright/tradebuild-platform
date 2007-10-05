@@ -13,28 +13,28 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-'================================================================================
+'@================================================================================
 ' Description
-'================================================================================
+'@================================================================================
 '
 '
-'================================================================================
+'@================================================================================
 ' Amendment history
-'================================================================================
+'@================================================================================
 '
 '
 '
 '
 
-'================================================================================
+'@================================================================================
 ' Interfaces
-'================================================================================
+'@================================================================================
 
 'Implements ICommonServiceConsumer
 
-'================================================================================
+'@================================================================================
 ' Events
-'================================================================================
+'@================================================================================
 
 Event FatalStudyLibraryError( _
                 ByRef ev As ErrorEvent)
@@ -42,9 +42,9 @@ Event FatalStudyLibraryError( _
 Event StudyLibraryError( _
                 ByRef ev As ErrorEvent)
 
-'================================================================================
+'@================================================================================
 ' Constants
-'================================================================================
+'@================================================================================
 
 Private Const ProjectName As String = "StudyUtils26"
 Private Const ModuleName As String = "StudyLibraryManager"
@@ -56,13 +56,13 @@ Private Const AttributeNameStudyLibraryProgId As String = "ProgId"
 Private Const ConfigNameStudyLibraries As String = "StudyLibraries"
 Private Const ConfigNameStudyLibrary As String = "StudyLibrary"
 
-'================================================================================
+'@================================================================================
 ' Enums
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Types
-'================================================================================
+'@================================================================================
 
 Private Type LibraryTableEntry
     name            As String
@@ -74,36 +74,36 @@ Public Type StudyListEntry
     StudyLibrary As String
 End Type
 
-'================================================================================
+'@================================================================================
 ' Member variables
-'================================================================================
+'@================================================================================
 
 Private mStudyLibraries() As LibraryTableEntry
 Private mMaxLibIndex As Long
 
 Private mConfig As ConfigItem
-Private mStudyLibs As ConfigItems
+Private mStudyLibs As ConfigItem
 
-'================================================================================
+'@================================================================================
 ' Class Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub Class_Initialize()
 ReDim mStudyLibraries(9) As LibraryTableEntry
 mMaxLibIndex = -1
 End Sub
 
-'================================================================================
+'@================================================================================
 ' ICommonServiceConsumer Interface Members
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' XXXX Event Handlers
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Properties
-'================================================================================
+'@================================================================================
 
 Friend Property Get AvailableStudies() As StudyListEntry()
 ReDim studylist(20) As StudyListEntry
@@ -132,9 +132,9 @@ ReDim Preserve studylist(nextStudyListIndex - 1) As StudyListEntry
 AvailableStudies = studylist
 End Property
 
-Friend Property Get studyDefinition( _
+Friend Property Get StudyDefinition( _
                 ByVal name As String, _
-                ByVal libName As String) As studyDefinition
+                ByVal libName As String) As StudyDefinition
 Dim studyLib As StudyLibrary
 Dim i As Long
 
@@ -144,8 +144,8 @@ For i = 0 To mMaxLibIndex
             libName = "") _
         Then
             Set studyLib = mStudyLibraries(i).libObject
-            Set studyDefinition = studyLib.GetStudyDefinition(name)
-            If Not studyDefinition Is Nothing Or _
+            Set StudyDefinition = studyLib.GetStudyDefinition(name)
+            If Not StudyDefinition Is Nothing Or _
                 libName <> "" _
                 Then Exit For
         End If
@@ -153,9 +153,9 @@ For i = 0 To mMaxLibIndex
 Next
 End Property
 
-'================================================================================
+'@================================================================================
 ' Methods
-'================================================================================
+'@================================================================================
 
 Friend Function add( _
                 ByVal studyLib As StudyLibrary, _
@@ -204,7 +204,7 @@ Dim sl As ConfigItem
 
 If mConfig Is Nothing Then Exit Sub
 
-Set sl = mStudyLibs.AddItem(ConfigNameStudyLibrary)
+Set sl = mStudyLibs.childItems.AddItem(ConfigNameStudyLibrary)
 sl.setAttribute AttributeNameStudyLibraryName, name
 sl.setAttribute AttributeNameEnabled, enabled
 sl.setAttribute AttributeNameStudyLibraryProgId, progId
@@ -309,7 +309,7 @@ If mStudyLibs Is Nothing Then
     Set mStudyLibs = mConfig.childItems.AddItem(ConfigNameStudyLibraries)
 End If
 
-For Each sl In mStudyLibs
+For Each sl In mStudyLibs.childItems
     On Error Resume Next
     slEnabled = sl.getAttribute(AttributeNameEnabled)
     If slEnabled = "" Then slEnabled = "True"
@@ -385,9 +385,9 @@ For i = 0 To mMaxLibIndex
 Next
 End Function
 
-'================================================================================
+'@================================================================================
 ' Helper Functions
-'================================================================================
+'@================================================================================
 
 Private Function nameFromHandle( _
                 ByVal handle As Long) As String
