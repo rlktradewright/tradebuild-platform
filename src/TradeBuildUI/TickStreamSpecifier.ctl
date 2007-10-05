@@ -429,7 +429,6 @@ End Sub
 
 Public Sub load()
 Dim contractSpec As contractSpecifier
-Dim lContractsBuilder As ContractsBuilder
 
 On Error GoTo Err
 
@@ -440,9 +439,8 @@ Screen.MousePointer = vbHourglass
 Set contractSpec = ContractSpecBuilder1.contractSpecifier
 mSecType = contractSpec.sectype
 
-Set lContractsBuilder = CreateContractsBuilder(contractSpec)
-Set mContracts = lContractsBuilder.Contracts
-TradeBuildAPI.loadContracts lContractsBuilder
+Set mContracts = TradeBuildAPI.loadContracts(contractSpec)
+
 
 Exit Sub
 

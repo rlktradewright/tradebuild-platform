@@ -25,28 +25,28 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-'================================================================================
+'@================================================================================
 ' Description
-'================================================================================
+'@================================================================================
 '
 '
 
-'================================================================================
+'@================================================================================
 ' Interfaces
-'================================================================================
+'@================================================================================
 
 Implements QuoteListener
 Implements PriceChangeListener
 
-'================================================================================
+'@================================================================================
 ' Events
-'================================================================================
+'@================================================================================
 
 Event Click()
 
-'================================================================================
+'@================================================================================
 ' Constants
-'================================================================================
+'@================================================================================
 
 Private Const CellBackColorOdd As Long = &HF8F8F8
 Private Const CellBackColorEven As Long = &HEEEEEE
@@ -61,9 +61,9 @@ Private Const KeyDownAlt As Integer = &H4
 Private Const TickerTableEntriesInitial As Long = 30
 Private Const TickerTableEntriesIncrement As Long = 30
 
-'================================================================================
+'@================================================================================
 ' Enums
-'================================================================================
+'@================================================================================
 
 Private Enum TickerGridColumns
     Selector
@@ -84,7 +84,7 @@ Private Enum TickerGridColumns
     openInterest
     Description
     symbol
-    secType
+    sectype
     expiry
     exchange
     OptionRight
@@ -149,18 +149,18 @@ Private Enum TickerGridSummaryColumnWidths
     openInterestWidth
 End Enum
 
-'================================================================================
+'@================================================================================
 ' Types
-'================================================================================
+'@================================================================================
 
 Private Type TickerTableEntry
     theTicker               As ticker
     tickerGridRow           As Long
 End Type
 
-'================================================================================
+'@================================================================================
 ' Member variables
-'================================================================================
+'@================================================================================
 
 Private WithEvents mTickers As Tickers
 Attribute mTickers.VB_VarHelpID = -1
@@ -181,9 +181,9 @@ Private mControlDown As Boolean
 Private mShiftDown As Boolean
 Private mAltDown As Boolean
 
-'================================================================================
+'@================================================================================
 ' Form Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub UserControl_Initialize()
 Dim widthString As String
@@ -209,9 +209,9 @@ TickerGrid.Width = UserControl.Width
 TickerGrid.Height = UserControl.Height
 End Sub
 
-'================================================================================
+'@================================================================================
 ' PriceChangeListener Interface Members
-'================================================================================
+'@================================================================================
 
 Private Sub PriceChangeListener_Change(ev As PriceChangeEvent)
 Dim lTicker As ticker
@@ -236,9 +236,9 @@ End If
 TickerGrid.CellForeColor = vbWhite
 End Sub
 
-'================================================================================
+'@================================================================================
 ' QuoteListener Interface Members
-'================================================================================
+'@================================================================================
 
 Private Sub QuoteListener_ask(ev As QuoteEvent)
 Dim lTicker As ticker
@@ -343,9 +343,9 @@ TickerGrid.col = TickerGridColumns.volume
 TickerGrid.Text = ev.size
 End Sub
 
-'================================================================================
+'@================================================================================
 ' Control Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub TickerGrid_Click()
 Dim row As Long
@@ -412,9 +412,9 @@ mControlDown = (Shift And KeyDownCtrl)
 mAltDown = (Shift And KeyDownAlt)
 End Sub
 
-'================================================================================
+'@================================================================================
 ' mTickers Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub mTickers_StateChange(ev As StateChangeEvent)
 Dim lTicker As ticker
@@ -427,7 +427,7 @@ Set lTicker = ev.Source
 handle = lTicker.handle
     
 
-Select Case ev.State
+Select Case ev.state
 Case TickerStateCreated
 
 Case TickerStateStarting
@@ -470,8 +470,8 @@ Case TickerStateRunning
     TickerGrid.col = TickerGridColumns.OptionRight
     TickerGrid.Text = OptionRightToString(lContract.specifier.Right)
     
-    TickerGrid.col = TickerGridColumns.secType
-    TickerGrid.Text = SecTypeToString(lContract.specifier.secType)
+    TickerGrid.col = TickerGridColumns.sectype
+    TickerGrid.Text = SecTypeToString(lContract.specifier.sectype)
     
     TickerGrid.col = TickerGridColumns.strike
     TickerGrid.Text = lContract.specifier.strike
@@ -497,9 +497,9 @@ Case TickerStateStopped
 End Select
 End Sub
 
-'================================================================================
+'@================================================================================
 ' Properties
-'================================================================================
+'@================================================================================
 
 Public Property Get SelectedTickers() As SelectedTickers
 Dim i As Long
@@ -514,9 +514,9 @@ Next
 
 End Property
 
-'================================================================================
+'@================================================================================
 ' Methods
-'================================================================================
+'@================================================================================
 
 Public Sub finish()
 On Error GoTo Err
@@ -568,9 +568,9 @@ TickerGrid.Redraw = True
 setGridRowBackColors lowestIndex
 End Sub
 
-'================================================================================
+'@================================================================================
 ' Helper Functions
-'================================================================================
+'@================================================================================
 
 Private Sub deselectSelectedRows()
 Dim i As Long
@@ -635,7 +635,7 @@ invertCellColors
 TickerGrid.col = TickerGridColumns.exchange
 invertCellColors
 
-TickerGrid.col = TickerGridColumns.secType
+TickerGrid.col = TickerGridColumns.sectype
 invertCellColors
 
 TickerGrid.col = TickerGridColumns.symbol
@@ -743,7 +743,7 @@ setupTickerGridColumn 0, TickerGridColumns.closePrice, TickerGridColumnWidths.Cl
 setupTickerGridColumn 0, TickerGridColumns.openInterest, TickerGridColumnWidths.openInterestWidth, "Open interest", False, AlignmentSettings.flexAlignCenterCenter
 setupTickerGridColumn 0, TickerGridColumns.Description, TickerGridColumnWidths.DescriptionWidth, "Description", True, AlignmentSettings.flexAlignLeftCenter
 setupTickerGridColumn 0, TickerGridColumns.symbol, TickerGridColumnWidths.SymbolWidth, "Symbol", True, AlignmentSettings.flexAlignLeftCenter
-setupTickerGridColumn 0, TickerGridColumns.secType, TickerGridColumnWidths.SecTypeWidth, "Sec Type", True, AlignmentSettings.flexAlignLeftCenter
+setupTickerGridColumn 0, TickerGridColumns.sectype, TickerGridColumnWidths.SecTypeWidth, "Sec Type", True, AlignmentSettings.flexAlignLeftCenter
 setupTickerGridColumn 0, TickerGridColumns.expiry, TickerGridColumnWidths.ExpiryWidth, "Expiry", True, AlignmentSettings.flexAlignLeftCenter
 setupTickerGridColumn 0, TickerGridColumns.exchange, TickerGridColumnWidths.ExchangeWidth, "Exchange", True, AlignmentSettings.flexAlignLeftCenter
 setupTickerGridColumn 0, TickerGridColumns.OptionRight, TickerGridColumnWidths.OptionRightWidth, "Right", True, AlignmentSettings.flexAlignLeftCenter

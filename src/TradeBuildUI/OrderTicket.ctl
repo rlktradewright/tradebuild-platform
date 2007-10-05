@@ -710,39 +710,39 @@ Attribute VB_Exposed = True
 Option Explicit
 
 
-'================================================================================
+'@================================================================================
 ' Description
-'================================================================================
+'@================================================================================
 '
 '
-'================================================================================
+'@================================================================================
 ' Amendment history
-'================================================================================
+'@================================================================================
 '
 '
 '
 '
 
-'================================================================================
+'@================================================================================
 ' Interfaces
-'================================================================================
+'@================================================================================
 
 Implements ChangeListener
 Implements QuoteListener
 
-'================================================================================
+'@================================================================================
 ' Events
-'================================================================================
+'@================================================================================
 
 Event CaptionChanged(ByVal caption As String)
 
-'================================================================================
+'@================================================================================
 ' Constants
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Enums
-'================================================================================
+'@================================================================================
 
 Private Enum BracketIndices
     BracketEntryOrder
@@ -762,13 +762,13 @@ Private Enum OrderSchemes
     OCAOrder
 End Enum
 
-'================================================================================
+'@================================================================================
 ' Types
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Member variables
-'================================================================================
+'@================================================================================
 
 Private WithEvents mTicker As ticker
 Attribute mTicker.VB_VarHelpID = -1
@@ -786,9 +786,9 @@ Private mCurrentBrackerOrderIndex As BracketIndices
 
 Private mInvalidControls(2) As Control
 
-'================================================================================
+'@================================================================================
 ' Form Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub Form_Initialize()
 InitCommonControls
@@ -811,9 +811,9 @@ Private Sub UserControl_Terminate()
 finish
 End Sub
 
-'================================================================================
+'@================================================================================
 ' ChangeListener Interface Members
-'================================================================================
+'@================================================================================
 
 Private Sub ChangeListener_Change(ev As ChangeEvent)
 Dim op As OrderPlex
@@ -852,9 +852,9 @@ Case OrderPlexChangeTypes.OrderPlexStateChanged
 End Select
 End Sub
 
-'================================================================================
+'@================================================================================
 ' QuoteListener Interface Members
-'================================================================================
+'@================================================================================
 
 Private Sub QuoteListener_ask(ev As QuoteEvent)
 AskText = ev.priceString
@@ -900,9 +900,9 @@ Private Sub QuoteListener_volume(ev As QuoteEvent)
 VolumeText = ev.size
 End Sub
 
-'================================================================================
+'@================================================================================
 ' Form Control Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub ActionCombo_Click(ByRef index As Integer)
 setAction index
@@ -1168,9 +1168,9 @@ Private Sub UndoButton_Click()
 mOrderPlex.cancelChanges
 End Sub
 
-'================================================================================
+'@================================================================================
 ' mOrderContext Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub mOrderContext_NotReady()
 disableAll
@@ -1181,9 +1181,9 @@ OrderSchemeCombo.Enabled = True
 setupTicker
 End Sub
 
-'================================================================================
+'@================================================================================
 ' mOrderPlex Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub mOrderPlex_EntryOrderFilled()
 disableOrderFields BracketIndices.BracketEntryOrder
@@ -1197,13 +1197,13 @@ Private Sub mOrderPlex_TargetOrderFilled()
 disableOrderFields BracketIndices.BracketTargetOrder
 End Sub
 
-'================================================================================
+'@================================================================================
 ' mTicker Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub mTicker_StateChange(ev As StateChangeEvent)
 
-Select Case ev.State
+Select Case ev.state
 Case TickerStateCreated
 
 Case TickerStateStarting
@@ -1221,9 +1221,9 @@ Case TickerStateStopped
 End Select
 End Sub
 
-'================================================================================
+'@================================================================================
 ' Properties
-'================================================================================
+'@================================================================================
 
 Public Property Let ordersAreSimulated(ByVal value As Boolean)
 If value Then
@@ -1250,9 +1250,9 @@ End If
 
 End Property
 
-'================================================================================
+'@================================================================================
 ' Methods
-'================================================================================
+'@================================================================================
 
 Public Sub finish()
 On Error GoTo Err
@@ -1336,9 +1336,9 @@ ResetButton.Visible = True
 mOrderPlex.addChangeListener Me
 End Sub
 
-'================================================================================
+'@================================================================================
 ' Helper Functions
-'================================================================================
+'@================================================================================
 
 Private Sub addItemToCombo( _
                 ByVal combo As ComboBox, _
@@ -1635,7 +1635,7 @@ End If
 
 Select Case index
 Case BracketEntryOrder
-    If Not isInteger(QuantityText(index), 0) Then setInvalidControl QuantityText(index), index: Exit Function
+    If Not IsInteger(QuantityText(index), 0) Then setInvalidControl QuantityText(index), index: Exit Function
     If QuantityText(index) = 0 And mOrderPlex Is Nothing Then setInvalidControl QuantityText(index), index: Exit Function
     
     Select Case comboItemData(TypeCombo(index))
@@ -1647,7 +1647,7 @@ Case BracketEntryOrder
         If Not isPrice(PriceText(index), mTickSize) Then setInvalidControl PriceText(index), index: Exit Function
     Case EntryOrderTypeBid, EntryOrderTypeAsk, EntryOrderTypeLast
         If OffsetText(index) <> "" Then
-            If Not isInteger(OffsetText(index), -100, 100) Then setInvalidControl OffsetText(index), index: Exit Function
+            If Not IsInteger(OffsetText(index), -100, 100) Then setInvalidControl OffsetText(index), index: Exit Function
         End If
     Case EntryOrderTypeLimitIfTouched, EntryOrderTypeStopLimit
         If Not isPrice(StopPriceText(index), mTickSize) Then setInvalidControl StopPriceText(index), index: Exit Function
@@ -1659,7 +1659,7 @@ Case BracketStopOrder
         Exit Function
     End If
     
-    If Not isInteger(QuantityText(index), 1) Then setInvalidControl QuantityText(index), index: Exit Function
+    If Not IsInteger(QuantityText(index), 1) Then setInvalidControl QuantityText(index), index: Exit Function
     
     Select Case comboItemData(TypeCombo(index))
     Case StopOrderTypeStop
@@ -1669,7 +1669,7 @@ Case BracketStopOrder
         If Not isPrice(PriceText(index), mTickSize) Then setInvalidControl PriceText(index), index: Exit Function
     Case StopOrderTypeBid, StopOrderTypeAsk, StopOrderTypeLast, StopOrderTypeAuto
         If OffsetText(index) <> "" Then
-            If Not isInteger(OffsetText(index), -100, 100) Then setInvalidControl OffsetText(index), index: Exit Function
+            If Not IsInteger(OffsetText(index), -100, 100) Then setInvalidControl OffsetText(index), index: Exit Function
         End If
     End Select
 Case BracketTargetOrder
@@ -1678,7 +1678,7 @@ Case BracketTargetOrder
         Exit Function
     End If
     
-    If Not isInteger(QuantityText(index), 1) Then setInvalidControl QuantityText(index), index: Exit Function
+    If Not IsInteger(QuantityText(index), 1) Then setInvalidControl QuantityText(index), index: Exit Function
     
     Select Case comboItemData(TypeCombo(index))
     Case TargetOrderTypeLimit
@@ -1690,17 +1690,17 @@ Case BracketTargetOrder
         If Not isPrice(StopPriceText(index), mTickSize) Then setInvalidControl StopPriceText(index), index: Exit Function
     Case TargetOrderTypeBid, TargetOrderTypeAsk, TargetOrderTypeLast, TargetOrderTypeAuto
         If OffsetText(index) <> "" Then
-            If Not isInteger(OffsetText(index), -100, 100) Then setInvalidControl OffsetText(index), index: Exit Function
+            If Not IsInteger(OffsetText(index), -100, 100) Then setInvalidControl OffsetText(index), index: Exit Function
         End If
     End Select
 End Select
 
 If DisplaySizeText(index) <> "" Then
-    If Not isInteger(DisplaySizeText(index), 1) Then setInvalidControl DisplaySizeText(index), index: Exit Function
+    If Not IsInteger(DisplaySizeText(index), 1) Then setInvalidControl DisplaySizeText(index), index: Exit Function
 End If
 
 If MinQuantityText(index) <> "" Then
-    If Not isInteger(MinQuantityText(index), 1) Then setInvalidControl MinQuantityText(index), index: Exit Function
+    If Not IsInteger(MinQuantityText(index), 1) Then setInvalidControl MinQuantityText(index), index: Exit Function
 End If
 
 If DiscrAmountText(index) <> "" Then
@@ -1711,33 +1711,33 @@ isValidOrder = True
 End Function
 
 Private Sub loadOrderFields(ByVal index As Long)
-Load OrderIDText(index)
-Load ActionCombo(index)
-Load QuantityText(index)
-Load TypeCombo(index)
-Load PriceText(index)
-Load StopPriceText(index)
-Load IgnoreRthCheck(index)
-Load OffsetText(index)
-Load OffsetValueText(index)
-Load TIFCombo(index)
-Load RthOnlyCheck(index)
-Load OrderRefText(index)
-Load AllOrNoneCheck(index)
-Load BlockOrderCheck(index)
-Load ETradeOnlyCheck(index)
-Load FirmQuoteOnlyCheck(index)
-Load HiddenCheck(index)
-Load OverrideCheck(index)
-Load SweepToFillCheck(index)
-Load DisplaySizeText(index)
-Load MinQuantityText(index)
-Load TriggerMethodCombo(index)
-Load DiscrAmountText(index)
-Load GoodAfterTimeText(index)
-Load GoodAfterTimeTZText(index)
-Load GoodTillDateText(index)
-Load GoodTillDateTZText(index)
+load OrderIDText(index)
+load ActionCombo(index)
+load QuantityText(index)
+load TypeCombo(index)
+load PriceText(index)
+load StopPriceText(index)
+load IgnoreRthCheck(index)
+load OffsetText(index)
+load OffsetValueText(index)
+load TIFCombo(index)
+load RthOnlyCheck(index)
+load OrderRefText(index)
+load AllOrNoneCheck(index)
+load BlockOrderCheck(index)
+load ETradeOnlyCheck(index)
+load FirmQuoteOnlyCheck(index)
+load HiddenCheck(index)
+load OverrideCheck(index)
+load SweepToFillCheck(index)
+load DisplaySizeText(index)
+load MinQuantityText(index)
+load TriggerMethodCombo(index)
+load DiscrAmountText(index)
+load GoodAfterTimeText(index)
+load GoodAfterTimeTZText(index)
+load GoodTillDateText(index)
+load GoodTillDateTZText(index)
 End Sub
 
 Private Sub reset()

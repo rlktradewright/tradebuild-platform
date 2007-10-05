@@ -75,44 +75,44 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-'================================================================================
+'@================================================================================
 ' Description
-'================================================================================
+'@================================================================================
 '
 '
-'================================================================================
+'@================================================================================
 ' Amendment history
-'================================================================================
+'@================================================================================
 '
 '
 '
 '
 
-'================================================================================
+'@================================================================================
 ' Interfaces
-'================================================================================
+'@================================================================================
 
 Implements ChangeListener
 Implements CollectionChangeListener
 Implements ProfitListener
 
-'================================================================================
+'@================================================================================
 ' Events
-'================================================================================
+'@================================================================================
 
 Event Click()
 Event SelectionChanged()
                 
-'================================================================================
+'@================================================================================
 ' Constants
-'================================================================================
+'@================================================================================
 
 Private Const RowDataOrderPlexBase As Long = &H100
 Private Const RowDataPositionManagerBase As Long = &H1000000
 
-'================================================================================
+'@================================================================================
 ' Enums
-'================================================================================
+'@================================================================================
 
 Private Enum OPGridColumns
     symbol
@@ -193,9 +193,9 @@ Private Enum OPGridOrderColumnWidths
     VendorIdWidth = 10
 End Enum
 
-'================================================================================
+'@================================================================================
 ' Types
-'================================================================================
+'@================================================================================
 
 Private Type OrderPlexGridMappingEntry
     op                  As OrderPlex
@@ -226,9 +226,9 @@ Private Type PositionManagerGridMappingEntry
                                 
 End Type
 
-'================================================================================
+'@================================================================================
 ' Member variables
-'================================================================================
+'@================================================================================
 
 Private mSelectedOrderPlexGridRow As Long
 Private mSelectedOrderPlex As OrderPlex
@@ -249,9 +249,9 @@ Private mDigitWidth As Single
 
 Private mMonitoredWorkspaces As Collection
 
-'================================================================================
+'@================================================================================
 ' User Control Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub UserControl_Initialize()
 Dim widthString As String
@@ -282,9 +282,9 @@ Private Sub UserControl_Terminate()
 Debug.Print "OrdersSummary control terminated"
 End Sub
 
-'================================================================================
+'@================================================================================
 ' ChangeListener Interface Members
-'================================================================================
+'@================================================================================
 
 Private Sub ChangeListener_Change(ev As ChangeEvent)
 If TypeOf ev.Source Is OrderPlex Then
@@ -341,11 +341,11 @@ If TypeOf ev.Source Is OrderPlex Then
         Case OrderPlexChangeTypes.OrderPlexSizeChanged
             OrderPlexGrid.TextMatrix(.gridIndex, OPGridOrderPlexColumns.size) = op.size
         Case OrderPlexChangeTypes.OrderPlexStateChanged
-            If op.State = OrderPlexStateCodes.OrderPlexStateSubmitted Then
+            If op.state = OrderPlexStateCodes.OrderPlexStateSubmitted Then
                 OrderPlexGrid.TextMatrix(.gridIndex, OPGridOrderPlexColumns.creationTime) = op.creationTime
             End If
-            If op.State <> OrderPlexStateCodes.OrderPlexStateCreated And _
-                op.State <> OrderPlexStateCodes.OrderPlexStateSubmitted _
+            If op.state <> OrderPlexStateCodes.OrderPlexStateCreated And _
+                op.state <> OrderPlexStateCodes.OrderPlexStateSubmitted _
             Then
                 ' the order plex is now in a state where it can't be modified.
                 ' If it's the currently selected order plex, make it not so.
@@ -379,9 +379,9 @@ ElseIf TypeOf ev.Source Is PositionManager Then
 End If
 End Sub
 
-'================================================================================
+'@================================================================================
 ' CollectionChangeListener Interface Members
-'================================================================================
+'@================================================================================
 
 Private Sub CollectionChangeListener_Change(ev As CollectionChangeEvent)
 If TypeOf ev.affectedObject Is OrderPlex Then
@@ -411,9 +411,9 @@ ElseIf TypeOf ev.affectedObject Is ticker Then
 End If
 End Sub
 
-'================================================================================
+'@================================================================================
 ' ProfitListener Interface Members
-'================================================================================
+'@================================================================================
 
 Private Sub ProfitListener_profitAmount(ev As ProfitEvent)
 Dim rowIndex As Long
@@ -463,9 +463,9 @@ ElseIf TypeOf ev.Source Is PositionManager Then
 End If
 End Sub
 
-'================================================================================
+'@================================================================================
 ' Form Control Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub EditText_KeyDown(KeyCode As Integer, Shift As Integer)
 Select Case KeyCode
@@ -514,8 +514,8 @@ Else
     Then
         index = rowdata - RowDataOrderPlexBase
         Set op = mOrderPlexGridMappingTable(index).op
-        If op.State = OrderPlexStateCodes.OrderPlexStateCreated Or _
-            op.State = OrderPlexStateCodes.OrderPlexStateSubmitted _
+        If op.state = OrderPlexStateCodes.OrderPlexStateCreated Or _
+            op.state = OrderPlexStateCodes.OrderPlexStateSubmitted _
         Then
             
             mSelectedOrderPlexGridRow = row
@@ -567,9 +567,9 @@ If EditText.Visible Then
 End If
 End Sub
 
-'================================================================================
+'@================================================================================
 ' Properties
-'================================================================================
+'@================================================================================
 
 Public Property Get isSelectedItemModifiable() As Boolean
 Dim selectedOrder As Order
@@ -588,9 +588,9 @@ Public Property Get selectedOrderIndex() As Long
 selectedOrderIndex = mSelectedOrderIndex
 End Property
 
-'================================================================================
+'@================================================================================
 ' Methods
-'================================================================================
+'@================================================================================
 
 Public Sub finish()
 Dim i As Long
@@ -627,9 +627,9 @@ pWorkspace.OrderPlexes.addCollectionChangeListener Me
 mMonitoredWorkspaces.add pWorkspace
 End Sub
                 
-'================================================================================
+'@================================================================================
 ' Helper Functions
-'================================================================================
+'@================================================================================
 
 Private Function addEntryToOrderPlexGrid( _
                 ByVal symbol As String, _
