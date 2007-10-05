@@ -107,36 +107,36 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-'================================================================================
+'@================================================================================
 ' Description
-'================================================================================
+'@================================================================================
 '
 '
 
-'================================================================================
+'@================================================================================
 ' Interfaces
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Events
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Constants
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Enums
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Types
-'================================================================================
+'@================================================================================
 
 
-'================================================================================
+'@================================================================================
 ' Member variables
-'================================================================================
+'@================================================================================
 
 Private mChartManager As ChartManager
 Private mChartController As chartController
@@ -154,9 +154,9 @@ Attribute mConfigForm.VB_VarHelpID = -1
 '*/
 Private mNewStudyConfiguration As studyConfiguration
 
-'================================================================================
+'@================================================================================
 ' UserControl Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub UserControl_Initialize()
 InitCommonControls
@@ -164,9 +164,9 @@ SendMessage StudyList.hWnd, LB_SETHORZEXTENT, 1000, 0
 SendMessage ChartStudiesList.hWnd, LB_SETHORZEXTENT, 1000, 0
 End Sub
 
-'================================================================================
+'@================================================================================
 ' Control Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub AddButton_Click()
 Dim spName As String
@@ -221,7 +221,7 @@ If ChartStudiesList.ListIndex < 1 Then
     ChangeButton.Enabled = False
 Else
     Set studyConfig = mStudyConfigurations.item(ChartStudiesList.List(ChartStudiesList.ListIndex))
-    Set studyDef = getStudyDefinition( _
+    Set studyDef = GetStudyDefinition( _
                             studyConfig.name, _
                             studyConfig.StudyLibraryName)
     If Not studyDef Is Nothing Then
@@ -265,7 +265,7 @@ If StudyList.ListIndex <> -1 Then
     AddButton.Enabled = True
     ConfigureButton.Enabled = True
     spName = mAvailableStudies(StudyList.ListIndex).StudyLibrary
-    Set studyDef = getStudyDefinition( _
+    Set studyDef = GetStudyDefinition( _
                             mAvailableStudies(StudyList.ListIndex).name, _
                             spName)
     DescriptionText.text = studyDef.Description
@@ -275,9 +275,9 @@ Else
 End If
 End Sub
 
-'================================================================================
+'@================================================================================
 ' mConfigForm Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub mConfigForm_Cancelled()
 End Sub
@@ -295,9 +295,9 @@ If studyConfig.StudyValueConfigurations.Count = 0 Then Exit Sub
 addStudyToChart studyConfig
 End Sub
 
-'================================================================================
+'@================================================================================
 ' mStudyConfigurations Event Handlers
-'================================================================================
+'@================================================================================
 
 Private Sub mStudyConfigurations_ItemAdded( _
                 ByVal studyConfig As studyConfiguration)
@@ -315,13 +315,13 @@ For i = 0 To ChartStudiesList.ListCount - 1
 Next
 End Sub
 
-'================================================================================
+'@================================================================================
 ' Properties
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
 ' Methods
-'================================================================================
+'@================================================================================
 
 Public Sub initialise( _
                 ByVal pChartManager As ChartManager)
@@ -342,7 +342,7 @@ If Not mChartManager Is Nothing Then
 End If
 
 StudyList.clear
-mAvailableStudies = availableStudies
+mAvailableStudies = AvailableStudies
 
 For i = 0 To UBound(mAvailableStudies)
     itemText = mAvailableStudies(i).name & "  (" & mAvailableStudies(i).StudyLibrary & ")"
@@ -364,9 +364,9 @@ ChangeButton.Enabled = False
 'End If
 End Sub
 
-'================================================================================
+'@================================================================================
 ' Helper Functions
-'================================================================================
+'@================================================================================
 
 Private Sub addStudyToChart(ByVal studyConfig As studyConfiguration)
 On Error Resume Next
@@ -447,12 +447,12 @@ Set mConfigForm = New fStudyConfigurer
 'mConfigForm.Show vbModeless, Me
 
 mConfigForm.initialise mChartManager.chartController, _
-                        getStudyDefinition(studyName, spName), _
+                        GetStudyDefinition(studyName, spName), _
                         spName, _
                         mChartManager.regionNames, _
                         mStudyConfigurations, _
                         defaultConfiguration, _
-                        getStudyDefaultParameters(studyName, spName)
+                        GetStudyDefaultParameters(studyName, spName)
 mConfigForm.Show vbModal, Me
 Set showConfigForm = mNewStudyConfiguration
 Set mNewStudyConfiguration = Nothing
