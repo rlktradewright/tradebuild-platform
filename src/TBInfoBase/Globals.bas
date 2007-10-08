@@ -5,6 +5,9 @@ Option Explicit
 ' Constants
 '@===============================================================================
 
+Private Const ProjectName               As String = "TBInfoBase26"
+Private Const ModuleName                As String = "Globals"
+
 Public Const NegativeTicks As Byte = &H80
 Public Const NoTimestamp As Byte = &H40
 
@@ -34,6 +37,7 @@ Public Const ParamNameDatabaseName As String = "Database Name"
 Public Const ParamNameServer As String = "Server"
 Public Const ParamNameUserName As String = "User Name"
 Public Const ParamNamePassword As String = "Password"
+Public Const ParamNameUseSynchronousWrites As String = "Use Synchronous Writes"
 
 '@===============================================================================
 ' Enums
@@ -85,7 +89,7 @@ With lContractBuilder
     .ExpiryDate = instrument.ExpiryDate
     .TickSize = instrument.TickSize
     .multiplier = instrument.TickValue / instrument.TickSize
-    .TimeZone = CreateTimeZone(instrument.TimeZoneCanonicalName)
+    .TimeZone = GetTimeZone(instrument.TimeZoneCanonicalName)
     
     If instrument.localSymbols.Count > 0 Then
         Set providerIDs = New Parameters
@@ -185,6 +189,28 @@ Public Function gSQLDBSupports(ByVal capabilities As Long) As Boolean
 gSQLDBSupports = (gSQLDBCapabilities And capabilities)
 End Function
 
+Public Function gStringToBool( _
+                ByVal value As String) As Boolean
+Select Case UCase$(value)
+Case "Y", "YES", "T", "TRUE"
+    gStringToBool = True
+Case "N", "NO", "F", "FALSE"
+    gStringToBool = False
+Case Else
+    If IsNumeric(value) Then
+        If value = 0 Then
+            gStringToBool = False
+        Else
+            gStringToBool = True
+        End If
+    Else
+        Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                ProjectName & "." & ModuleName & ":" & "gStringToBool", _
+                "Value does not represent a Boolean"
+    
+    End If
+End Select
+End Function
 
 Public Function gTruncateTimeToNextMinute(ByVal timestamp As Date) As Date
 gTruncateTimeToNextMinute = Int((timestamp + OneMinute - OneMicrosecond) / OneMinute) * OneMinute

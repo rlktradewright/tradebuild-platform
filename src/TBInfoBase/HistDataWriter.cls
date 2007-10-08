@@ -83,6 +83,8 @@ Private mInstrument                 As instrument
 
 Private mTimeframeTable(3)          As TimeframeEntry
 
+Private mUseSynchronousWrites As Boolean
+
 '@===============================================================================
 ' Class Event Handlers
 '@===============================================================================
@@ -146,7 +148,8 @@ With data
                         .closePrice, _
                         .volume, _
                         .tickVolume, _
-                        0
+                        0, _
+                        Not mUseSynchronousWrites
     
     For index = 0 To UBound(mTimeframeTable)
         If mTimeframeTable(index).timeframe.length = barLength Then
@@ -278,11 +281,14 @@ Friend Sub initialise( _
                 ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
                 ByVal barDataOutputServiceConsumer As TradeBuildSP.IBarDataOutputServiceConsumer, _
                 ByVal histDataServiceProvider As TradeBuildSP.IBarDataServiceProvider, _
-                ByVal contractSpec As ContractSpecifier)
+                ByVal contractSpec As ContractSpecifier, _
+                ByVal useSynchronousWrites As Boolean)
 mServiceProviderName = Name
 
 Set mCommonServiceConsumer = CommonServiceConsumer
 Set mServiceConsumer = barDataOutputServiceConsumer
+
+mUseSynchronousWrites = useSynchronousWrites
 
 mConnectionString = connectionString
 Set mTradingDB = CreateTradingDB(mConnectionString)

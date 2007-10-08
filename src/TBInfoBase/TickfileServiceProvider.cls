@@ -73,6 +73,7 @@ Private mDatabaseName As String
 Private mServer As String
 Private mUserName As String
 Private mPassword As String
+Private mUseSynchronousWrites As Boolean
 
 '@===============================================================================
 ' Class Event Handlers
@@ -138,6 +139,8 @@ For Each param In params
         username = param.value
     Case UCase$(ParamNamePassword)
         password = param.value
+    Case UCase$(ParamNameUseSynchronousWrites)
+        useSynchronousWrites = gStringToBool(param.value)
     End Select
 Next
 
@@ -234,7 +237,9 @@ writer.initialise mName & " (writer)", _
                 connectionString, _
                 mCommonServiceConsumer, _
                 serviceConsumer, _
-                Me
+                Me, _
+                mUseSynchronousWrites
+                
 mTickfileDataWriters.Add writer
 Exit Function
 Err:
@@ -314,6 +319,11 @@ End Property
 Friend Property Let username( _
                 ByVal value As String)
 mUserName = value
+End Property
+
+Friend Property Let useSynchronousWrites( _
+                ByVal value As Boolean)
+mUseSynchronousWrites = value
 End Property
 
 '@===============================================================================

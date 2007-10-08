@@ -71,7 +71,7 @@ Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mServiceConsumer As ITickfileOutputServiceConsumer
 Private mServiceProviderName As String
 
-Private mContract As contract
+Private mContract As Contract
 Private WithEvents mTickWriter As TickDataWriter
 Attribute mTickWriter.VB_VarHelpID = -1
 
@@ -86,6 +86,7 @@ Private mBasePrice As Double        ' first price encountered at start of minute
 Private mOpeningTimestamp As Date   ' timestamp at start of minute period
 
 Private mInstrument As instrument
+Private mUseSynchronousWrites As Boolean
 
 '@===============================================================================
 ' Class Event Handlers
@@ -114,11 +115,11 @@ handleFatalError Err.Number, _
                 Err.Description
 End Sub
 
-Private Property Get ITickfileWriter_Contract() As contract
+Private Property Get ITickfileWriter_Contract() As Contract
 Set ITickfileWriter_Contract = mContract
 End Property
 
-Private Property Let ITickfileWriter_Contract(ByVal RHS As contract)
+Private Property Let ITickfileWriter_Contract(ByVal RHS As Contract)
 Dim lInstrumentFactory As InstrumentFactory
 
 On Error GoTo Err
@@ -127,14 +128,14 @@ If Not RHS Is Nothing Then
 End If
 
 Set lInstrumentFactory = mTradingDB.InstrumentFactory
-With mContract.Specifier
+With mContract.specifier
     Set mInstrument = lInstrumentFactory.loadBySpec(.localSymbol, _
                                 .symbol, _
                                 .Exchange, _
                                 gSecTypeToCategory(.secType), _
                                 .currencyCode, _
-                                Left$(.Expiry, 6), _
-                                .Strike, _
+                                Left$(.expiry, 6), _
+                                .strike, _
                                 gOptRightToString(.Right))
 End With
 
@@ -403,7 +404,7 @@ End Sub
 
 Friend Sub finish()
 WritePeriodData
-mCommonServiceConsumer.NotifyListeners mServiceProviderName & " (" & mContract.Specifier.localSymbol & ")" & vbCrLf & _
+mCommonServiceConsumer.NotifyListeners mServiceProviderName & " (" & mContract.specifier.localSymbol & ")" & vbCrLf & _
                             "    Total data written: " & mTotalBytes & " bytes", _
                             TradeBuildSP.StandardListenValueTypes.Log, _
                             Me
@@ -417,13 +418,16 @@ Friend Sub initialise( _
                 ByVal connectionString As String, _
                 ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
                 ByVal tickfileOutputServiceConsumer As TradeBuildSP.ITickfileOutputServiceConsumer, _
-                ByVal tickfileServiceProvider As TradeBuildSP.ITickfileServiceProvider)
+                ByVal tickfileServiceProvider As TradeBuildSP.ITickfileServiceProvider, _
+                ByVal useSynchronousWrites As Boolean)
 
 mServiceProviderName = Name
 Set mCommonServiceConsumer = CommonServiceConsumer
 Set mServiceConsumer = tickfileOutputServiceConsumer
 Set mTickfileServiceProvider = tickfileServiceProvider
                 
+mUseSynchronousWrites = useSynchronousWrites
+
 mConnectionString = connectionString
 Set mTradingDB = CreateTradingDB(mConnectionString)
 
@@ -502,7 +506,9 @@ Set mTickWriter = mInstrument.CreateTickDataWriter
 mTickWriter.WriteData TickfileFormatTradeBuildSQL, _
                             mOpeningTimestamp, _
                             mBasePrice, _
-                            mData
+                            mData, _
+                            Not mUseSynchronousWrites
+
 mTotalBytes = mTotalBytes + mDataIndex
 End Sub
 
