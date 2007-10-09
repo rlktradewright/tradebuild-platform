@@ -1,36 +1,37 @@
 VERSION 5.00
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#36.1#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#40.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fTickfileOrganiser 
    BorderStyle     =   3  'Fixed Dialog
    Caption         =   "Tickfile Organiser"
-   ClientHeight    =   3450
+   ClientHeight    =   3480
    ClientLeft      =   45
    ClientTop       =   435
-   ClientWidth     =   7785
+   ClientWidth     =   7830
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
    MinButton       =   0   'False
-   ScaleHeight     =   3450
-   ScaleWidth      =   7785
+   ScaleHeight     =   3480
+   ScaleWidth      =   7830
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
    Begin TradeBuildUI26.TickfileChooser TickfileChooser1 
-      Left            =   7080
+      Left            =   6960
       Top             =   2640
       _ExtentX        =   1296
       _ExtentY        =   873
    End
    Begin TradeBuildUI26.TickfileListManager TickfileListManager1 
-      Height          =   2775
+      Height          =   2895
       Left            =   120
       TabIndex        =   5
       Top             =   120
       Width           =   6735
       _ExtentX        =   11880
-      _ExtentY        =   4895
+      _ExtentY        =   5106
    End
    Begin VB.CommandButton OkButton 
       Caption         =   "&Ok"
+      Default         =   -1  'True
       Enabled         =   0   'False
       Height          =   495
       Left            =   6960
@@ -126,6 +127,7 @@ Private mCancelled                          As Boolean
 Private Sub Form_Load()
 If TickfileListManager1.supportsTickFiles Then AddTickfilesButton.Enabled = True
 If TickfileListManager1.supportsTickStreams Then AddTickstreamsButton.Enabled = True
+mCancelled = True
 End Sub
 
 '@================================================================================
@@ -148,8 +150,6 @@ If TickfileChooser1.cancelled Then Exit Sub
 
 TickfileListManager1.addTickfileNames tickfileNames
 
-OkButton.Enabled = True
-ClearButton.Enabled = True
 End Sub
 
 Private Sub AddTickstreamsButton_Click()
@@ -162,8 +162,6 @@ If lTickstreamSpecifier.cancelled Then Exit Sub
 
 TickfileListManager1.addTickfileSpecifiers lTickstreamSpecifier.TickfileSpecifiers
 
-OkButton.Enabled = True
-ClearButton.Enabled = True
 End Sub
 
 Private Sub CancelButton_Click()
@@ -173,12 +171,21 @@ End Sub
 
 Private Sub ClearButton_Click()
 TickfileListManager1.Clear
-OkButton.Enabled = False
-ClearButton.Enabled = False
 End Sub
 
 Private Sub OkButton_Click()
+mCancelled = False
 Me.Hide
+End Sub
+
+Private Sub TickfileListManager1_TickfileCountChanged()
+If TickfileListManager1.tickfileCount > 0 Then
+    OkButton.Enabled = True
+    ClearButton.Enabled = True
+Else
+    OkButton.Enabled = False
+    ClearButton.Enabled = False
+End If
 End Sub
 
 '@================================================================================
