@@ -254,7 +254,7 @@ Friend Sub initialise( _
                 ByVal exchangeTimeZone As TimeZone, _
                 ByVal useLocalTimeForStudies As Boolean)
 mName = name
-mIdent = name
+mIdent = GenerateGUIDString
 mStudyDef.name = mName
 mSessionBuilder.sessionStartTime = sessionStartTime
 mSessionBuilder.sessionEndTime = sessionEndTime
