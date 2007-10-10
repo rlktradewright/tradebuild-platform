@@ -84,10 +84,6 @@ Private mLatestUnit As TimePeriodUnits
 ' Class Event Handlers
 '@================================================================================
 
-Private Sub UserControl_Initialize()
-setupTimeframeCombo
-End Sub
-
 Private Sub UserControl_InitProperties()
 On Error Resume Next
 
@@ -204,87 +200,13 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Sub selectTimeframe( _
-                ByRef tfDesignator As TimePeriod)
-
-selectComboEntry tfDesignator.length, tfDesignator.units
-End Sub
-
-'@================================================================================
-' Helper Functions
-'@================================================================================
-
-Private Sub addComboEntry( _
+Public Sub appendEntry( _
                 ByVal periodlength As Long, _
                 ByVal periodUnit As TimePeriodUnits)
-                
-Dim tp As TimePeriod
-Dim s As String
-
-tp.length = periodlength
-tp.units = periodUnit
-s = TimePeriodToString(tp)
-If TradeBuildAPI.IsSupportedHistoricalDataPeriod(periodlength, periodUnit) Then
-    TimeframeCombo.ComboItems.add , s, s
-End If
+addComboEntry periodlength, periodUnit
 End Sub
 
-Private Sub insertComboEntry( _
-                ByVal periodlength As Long, _
-                ByVal periodUnit As TimePeriodUnits)
-                
-Dim tp As TimePeriod
-Dim s As String
-Dim i As Long
-Dim unitFound As Boolean
-
-tp.length = periodlength
-tp.units = periodUnit
-s = TimePeriodToString(tp)
-If TradeBuildAPI.IsSupportedHistoricalDataPeriod(periodlength, periodUnit) Then
-    For i = 2 To TimeframeCombo.ComboItems.count
-        Dim currTp As TimePeriod
-        currTp = TimePeriodFromString(TimeframeCombo.ComboItems(i).Text)
-        If currTp.units = periodUnit Then unitFound = True
-        If currTp.units = periodUnit And currTp.length > periodlength Then Exit For
-        If unitFound And currTp.units <> periodUnit Then Exit For
-    Next
-    TimeframeCombo.ComboItems.add i, s, s
-    TimeframeCombo.Refresh
-End If
-End Sub
-
-Private Function selectComboEntry( _
-                ByVal periodlength As Long, _
-                ByVal periodUnit As TimePeriodUnits) As Boolean
-Dim tp As TimePeriod
-Dim s As String
-
-On Error GoTo Err
-
-tp.length = periodlength
-tp.units = periodUnit
-s = TimePeriodToString(tp)
-If TradeBuildAPI.IsSupportedHistoricalDataPeriod(periodlength, periodUnit) Then
-    TimeframeCombo.ComboItems.item(s).Selected = True
-    mLatestLength = periodlength
-    mLatestUnit = periodUnit
-    selectComboEntry = True
-End If
-
-Exit Function
-
-Err:
-
-If Err.Number = 35601 Then
-    insertComboEntry periodlength, periodUnit
-    Resume
-End If
-
-Err.Raise Err.Number
-End Function
-
-Private Sub setupTimeframeCombo()
+Public Sub initialise()
 TimeframeCombo.ComboItems.clear
 TimeframeCombo.ComboItems.add , TimeframeCustom, TimeframeCustom
 addComboEntry 5, TimePeriodSecond
@@ -327,5 +249,92 @@ Else
     selectComboEntry 1, TimePeriodMonth
 End If
 End Sub
+
+Public Sub insertEntry( _
+                ByVal periodlength As Long, _
+                ByVal periodUnit As TimePeriodUnits)
+insertComboEntry periodlength, periodUnit
+End Sub
+
+Public Sub selectTimeframe( _
+                ByRef tfDesignator As TimePeriod)
+
+selectComboEntry tfDesignator.length, tfDesignator.units
+End Sub
+
+'@================================================================================
+' Helper Functions
+'@================================================================================
+
+Private Sub addComboEntry( _
+                ByVal periodlength As Long, _
+                ByVal periodUnit As TimePeriodUnits)
+                
+Dim tp As TimePeriod
+Dim s As String
+
+tp.length = periodlength
+tp.units = periodUnit
+s = TimePeriodToString(tp)
+If TradeBuildAPI.IsSupportedHistoricalDataPeriod(periodlength, periodUnit) Then
+    TimeframeCombo.ComboItems.add , s, s
+End If
+End Sub
+
+Private Sub insertComboEntry( _
+                ByVal periodlength As Long, _
+                ByVal periodUnit As TimePeriodUnits)
+                
+Dim tp As TimePeriod
+Dim s As String
+Dim i As Long
+Dim unitFound As Boolean
+
+tp.length = periodlength
+tp.units = periodUnit
+s = TimePeriodToString(tp)
+If TradeBuildAPI.IsSupportedHistoricalDataPeriod(periodlength, periodUnit) Then
+    For i = 2 To TimeframeCombo.ComboItems.count
+        Dim currTp As TimePeriod
+        currTp = TimePeriodFromString(TimeframeCombo.ComboItems(i).Text)
+        If currTp.units = periodUnit Then unitFound = True
+        If currTp.units = periodUnit And currTp.length >= periodlength Then Exit For
+        If unitFound And currTp.units <> periodUnit Then Exit For
+    Next
+    If currTp.units = periodUnit And currTp.length = periodlength Then Exit Sub
+    TimeframeCombo.ComboItems.add i, s, s
+    TimeframeCombo.Refresh
+End If
+End Sub
+
+Private Function selectComboEntry( _
+                ByVal periodlength As Long, _
+                ByVal periodUnit As TimePeriodUnits) As Boolean
+Dim tp As TimePeriod
+Dim s As String
+
+On Error GoTo Err
+
+tp.length = periodlength
+tp.units = periodUnit
+s = TimePeriodToString(tp)
+If TradeBuildAPI.IsSupportedHistoricalDataPeriod(periodlength, periodUnit) Then
+    TimeframeCombo.ComboItems.item(s).Selected = True
+    mLatestLength = periodlength
+    mLatestUnit = periodUnit
+    selectComboEntry = True
+End If
+
+Exit Function
+
+Err:
+
+If Err.Number = 35601 Then
+    insertComboEntry periodlength, periodUnit
+    Resume
+End If
+
+Err.Raise Err.Number
+End Function
 
 
