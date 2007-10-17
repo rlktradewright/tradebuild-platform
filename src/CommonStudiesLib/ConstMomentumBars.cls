@@ -148,10 +148,10 @@ If ev.changeType = CollItemAdded Then
     If Not mBar Is Nothing Then notifyBarValues mLatestTimestamp
     Set mBar = mBars.bar(0)
     mBarNumber = mBar.barNumber
-    notifyBarValues mLatestTimestamp
     If mPrevBarVolume <> -1 Then mPrevBarVolume = mLatestVolume
     mVolumeCache.addValue 0, mBar.barNumber, mBar.DateTime, mBar.DateTime
     mTotalVolumeCache.addValue 0, mBar.barNumber, mBar.DateTime, mBar.DateTime
+    notifyBarValues mLatestTimestamp
 End If
 End Sub
 
