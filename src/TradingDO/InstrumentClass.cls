@@ -71,14 +71,14 @@ Private mDirty As Boolean
 Private WithEvents mErrorList As ErrorList
 Attribute mErrorList.VB_VarHelpID = -1
 
-Private mRs As ADODB.recordset
+Private mRs As ADODB.Recordset
 
 Private mEventRaiser As BusinessObjEventRaiser
 
 Private mMaxNameLength As Long
 Private mMaxCurrencyCodeLength As Long
-Private mTimeZoneNameLength As Long
-Private mExchangeNameLength As Long
+
+Private mExchange As Exchange
 
 '@===============================================================================
 ' Class Event Handlers
@@ -160,31 +160,14 @@ End Sub
 ' Properties
 '@===============================================================================
 
-Public Property Let category(ByVal value As String)
-Dim catid As InstrumentCategories
-
-catid = gCategoryFromString(value)
-ruleBroken BusRuleInstrumentClassCategoryValid, catid = 0
-mRs("instrumentcategoryid") = catid
-
-Dirty
-End Property
-
-Public Property Get category() As String
-category = gCategoryToString(mRs("instrumentcategoryid"))
-End Property
-
-Public Property Get categoryid() As Long
-categoryid = mRs("instrumentcategoryid")
-End Property
-
 Public Property Get currencyCode() As String
 currencyCode = mRs!Currency
 End Property
 
 Public Property Let currencyCode(ByVal value As String)
+value = Trim$(value)
 ruleBroken BusRuleInstrumentClassCurrencyCodeValid, _
-    Len(value) = 0 Or Len(value) > mMaxCurrencyCodeLength
+    Len(value) = 0 Or Len(value) > mMaxCurrencyCodeLength Or Not IsValidCurrencyCode(value)
 mRs!Currency = Left$(value, mMaxCurrencyCodeLength)
 Dirty
 End Property
@@ -200,26 +183,45 @@ mRs("DaysBeforeExpiryToSwitch") = value
 Dirty
 End Property
 
+Public Property Let daysBeforeExpiryToSwitchString(ByVal value As String)
+If value = "" Then Exit Property
+If IsInteger(value) Then
+    daysBeforeExpiryToSwitch = CLng(value)
+Else
+    ruleBroken BusRuleInstrumentClassDaysBeforeExpiryValid, True
+    Dirty
+End If
+End Property
+
 Public Property Get ErrorList() As ErrorList
 Set ErrorList = mErrorList
 End Property
 
-Public Property Let Exchange(ByVal value As String)
-Dim lExchange As Exchange
-
+Public Property Let Exchange( _
+                ByVal value As Exchange)
 ruleBroken BusRuleInstrumentClassExchangeValid, _
-    Len(value) = 0 Or Len(value) > mExchangeNameLength
-
-Set lExchange = mDB.ExchangeFactory.loadByName(value)
-
-ruleBroken BusRuleInstrumentClassExchangeValid, _
-    lExchange Is Nothing
-If Not lExchange Is Nothing Then mRs("exchangeid") = lExchange.id
+    value Is Nothing
+If Not value Is Nothing Then
+    Set mExchange = value
+    mRs("exchangeid") = mExchange.id
+End If
 Dirty
 End Property
 
-Public Property Get Exchange() As String
-Exchange = Trim$(Nz(mRs("Exchange"), ""))
+Public Property Get Exchange() As Exchange
+If mExchange Is Nothing Then
+    Set mExchange = mDB.ExchangeFactory.loadByID(mRs("exchangeid"))
+End If
+Set Exchange = mExchange
+End Property
+
+Public Property Let exchangeName( _
+                ByVal value As String)
+Exchange = mDB.ExchangeFactory.loadByName(value)
+End Property
+
+Public Property Get exchangeName() As String
+exchangeName = Exchange.name
 End Property
 
 Public Property Get id() As Long
@@ -247,6 +249,7 @@ name = Trim$(mRs("NAME"))
 End Property
 
 Public Property Let name(ByVal value As String)
+value = Trim$(value)
 ruleBroken BusRuleInstrumentClassNameValid, _
     Len(value) = 0 Or Len(value) > mMaxNameLength
 mRs("NAME") = Left$(value, mMaxNameLength)
@@ -262,85 +265,128 @@ mRs("notes") = val
 Dirty
 End Property
 
-Friend Property Let recordset(value As ADODB.recordset)
-Set mRs = value
+Public Property Let secType(ByVal value As SecurityTypes)
+Dim catid As InstrumentCategories
 
-mMaxNameLength = mRs.Fields("NAME").DefinedSize
-mMaxCurrencyCodeLength = mRs.Fields("Currency").DefinedSize
-mTimeZoneNameLength = mRs.Fields("TimeZoneName").DefinedSize
-mExchangeNameLength = mRs.Fields("Exchange").DefinedSize
-
-If mRs.EOF Then
-    mRs.AddNew
-    mNew = True
-    setInitialErrors
+If IsValidSecType(value) Then
+    ruleBroken BusRuleInstrumentClassSecTypeValid, False
+    catid = gCategoryFromSecType(value)
+    mRs("instrumentcategoryid") = catid
+Else
+    ruleBroken BusRuleInstrumentClassSecTypeValid, True
 End If
+
+Dirty
+End Property
+
+Public Property Get secType() As SecurityTypes
+secType = gCategoryToSecType(mRs("instrumentcategoryid"))
+End Property
+
+Public Property Let secTypeString(ByVal value As String)
+value = Trim$(value)
+secType = SecTypeFromString(value)
+End Property
+
+Public Property Get secTypeString() As String
+secTypeString = SecTypeToString(secType)
 End Property
 
 Public Property Get sessionEndTime() As Date
 sessionEndTime = Nz(mRs("sessionEndTime"), CDate(0))
+sessionEndTime = sessionEndTime - Int(sessionEndTime)
 End Property
 
-Public Property Let sessionEndTime(value As Date)
-ruleBroken BusRuleInstrumentClassSessionTimesValid, _
-    value = sessionStartTime
+Public Property Let sessionEndTime( _
+                ByVal value As Date)
+ruleBroken BusRuleInstrumentClassSessionEndTimeValid, _
+    value >= 1
 mRs("sessionEndTime") = value
 Dirty
 End Property
 
-Public Property Get sessionStartTime() As Date
-sessionStartTime = Nz(mRs("sessionStartTime"), CDate(0))
+Public Property Let sessionEndTimeString( _
+                ByVal value As String)
+If Not IsDate(value) Then
+    ruleBroken BusRuleInstrumentClassSessionEndTimeValid, True
+    Dirty
+Else
+    sessionEndTime = CDate(value)
+End If
 End Property
 
-Public Property Let sessionStartTime(value As Date)
-ruleBroken BusRuleInstrumentClassSessionTimesValid, _
-    value = sessionEndTime
+Public Property Get sessionStartTime() As Date
+sessionStartTime = Nz(mRs("sessionStartTime"), CDate(0))
+sessionStartTime = sessionStartTime - Int(sessionStartTime)
+End Property
+
+Public Property Let sessionStartTime( _
+                ByVal value As Date)
+ruleBroken BusRuleInstrumentClassSessionStartTimeValid, _
+    value >= 1
 mRs("sessionStartTime") = value
 Dirty
 End Property
 
-Public Property Let TickSize(ByVal value As Currency)
+Public Property Let sessionStartTimeString( _
+                ByVal value As String)
+If Not IsDate(value) Then
+    ruleBroken BusRuleInstrumentClassSessionStartTimeValid, True
+    Dirty
+Else
+    sessionStartTime = CDate(value)
+End If
+End Property
+
+Public Property Let tickSize( _
+                ByVal value As Double)
 ruleBroken BusRuleInstrumentClassTickSizeValid, _
     value <= 0
 mRs("TickSize") = value
 Dirty
 End Property
 
-Public Property Get TickSize() As Currency
-TickSize = mRs("TickSize")
+Public Property Get tickSize() As Double
+tickSize = mRs("TickSize")
 End Property
 
-Public Property Let TickValue(ByVal value As Currency)
+Public Property Let tickSizeString( _
+                ByVal value As String)
+If Not IsNumeric(value) Then
+    ruleBroken BusRuleInstrumentClassTickSizeValid, True
+    Dirty
+Else
+    tickSize = CDbl(value)
+End If
+End Property
+
+Public Property Let tickValue(ByVal value As Double)
 ruleBroken BusRuleInstrumentClassTickValueValid, _
     value <= 0
 mRs("TickValue") = value
 Dirty
 End Property
 
-Public Property Get TickValue() As Currency
-TickValue = mRs("TickValue")
+Public Property Get tickValue() As Double
+tickValue = mRs("TickValue")
 End Property
 
-Public Property Get TimeZoneCanonicalName() As String
-TimeZoneCanonicalName = Trim$(Nz(mRs("TimeZoneCanonicalName"), ""))
+Public Property Let tickValueString( _
+                ByVal value As String)
+If Not IsNumeric(value) Then
+    ruleBroken BusRuleInstrumentClassTickValueValid, True
+    Dirty
+Else
+    tickValue = CDbl(value)
+End If
 End Property
 
-Public Property Let TimeZoneName(ByVal value As String)
-Dim lTimeZone As TimeZone
-
-ruleBroken BusRuleInstrumentClassTimeZoneNameValid, _
-    Len(value) = 0 Or Len(value) > mTimeZoneNameLength
-
-Set lTimeZone = mDB.TimeZoneFactory.loadByName(value)
-
-ruleBroken BusRuleInstrumentClassTimeZoneNameValid, _
-    lTimeZone Is Nothing
-If Not lTimeZone Is Nothing Then mRs("TimeZoneId") = lTimeZone.id
-Dirty
+Public Property Get timeZoneCanonicalName() As String
+timeZoneCanonicalName = Exchange.timeZoneCanonicalName
 End Property
 
 Public Property Get TimeZoneName() As String
-TimeZoneName = Trim$(Nz(mRs("TimeZoneName"), ""))
+TimeZoneName = Exchange.TimeZoneName
 End Property
 
 '@===============================================================================
@@ -363,6 +409,7 @@ Clean
 End Sub
 
 Public Sub CancelEdit()
+Set mExchange = Nothing
 mRs.CancelUpdate
 mDeleted = False
 If mRs.EOF Then
@@ -378,8 +425,20 @@ mDeleted = True
 End Sub
 
 Friend Sub initialise( _
-                ByVal db As TradingDB)
+                ByVal db As TradingDB, _
+                ByVal rs As ADODB.Recordset)
 Set mDB = db
+
+Set mRs = rs
+
+mMaxNameLength = mRs.Fields("NAME").DefinedSize
+mMaxCurrencyCodeLength = mRs.Fields("Currency").DefinedSize
+
+If mRs.EOF Then
+    mRs.AddNew
+    mNew = True
+    setInitialErrors
+End If
 End Sub
 
 '@===============================================================================
@@ -422,7 +481,7 @@ mConn.Open mDB.connectionString
 failpoint = 200
 
 Set mRs.ActiveConnection = mConn
-mRs.Update
+mRs.UpdateBatch
 Set mRs.ActiveConnection = Nothing
 mConn.Close
 
@@ -439,13 +498,13 @@ End Sub
 Private Sub setInitialErrors()
 ' sets errors for fields that are invalid when a new record is created
 ruleBroken BusRuleInstrumentClassNameValid, True
+ruleBroken BusRuleInstrumentClassExchangeValid, True
+ruleBroken BusRuleInstrumentClassSecTypeValid, True
+ruleBroken BusRuleInstrumentClassCurrencyCodeValid, True
 ruleBroken BusRuleInstrumentClassTickSizeValid, True
 ruleBroken BusRuleInstrumentClassTickValueValid, True
-ruleBroken BusRuleInstrumentClassCategoryValid, True
-ruleBroken BusRuleInstrumentClassExchangeValid, True
-ruleBroken BusRuleInstrumentClassSessionTimesValid, True
-ruleBroken BusRuleInstrumentClassCurrencyCodeValid, True
-ruleBroken BusRuleInstrumentClassTimeZoneNameValid, True
+ruleBroken BusRuleInstrumentClassSessionStartTimeValid, True
+ruleBroken BusRuleInstrumentClassSessionEndTimeValid, True
 End Sub
 
 

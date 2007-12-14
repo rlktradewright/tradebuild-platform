@@ -189,9 +189,9 @@ If mRsTick.EOF Then
 End If
 
 If CBool(mRsTick("IsExchangeTime")) Then
-    PeriodStartTime = mRsTick("DateTime")
+    PeriodStartTime = gRoundTimeToSecond(mRsTick("DateTime"))
 Else
-    PeriodStartTime = ConvertDateLocalToUTC(mRsTick("DateTime"))
+    PeriodStartTime = ConvertDateUTCToTZ(ConvertDateLocalToUTC(gRoundTimeToSecond(mRsTick("DateTime"))), mTimeZone)
 End If
 BasePrice = mRsTick("baseprice")
 Data = mRsTick("data")
@@ -218,6 +218,9 @@ Private Sub DoQueryTickData( _
                         ByVal toTime As Date)
 Dim cmd As ADODB.Command
 Dim param As ADODB.Parameter
+
+fromTime = gRoundTimeToSecond(fromTime)
+toTime = gRoundTimeToSecond(toTime)
 
 Set cmd = New ADODB.Command
 cmd.CommandType = adCmdStoredProc

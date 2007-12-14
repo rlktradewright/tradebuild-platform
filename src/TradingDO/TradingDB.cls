@@ -124,6 +124,7 @@ End Property
 Friend Sub initialise( _
                 ByVal connectionString As String)
 mConnectionString = connectionString
+Set gLogger = GetLogger(InfoTypeTradingDO)
 
 Set mExchangeFactory = New ExchangeFactory
 mExchangeFactory.initialise Me

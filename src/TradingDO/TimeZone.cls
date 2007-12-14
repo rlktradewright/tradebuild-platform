@@ -60,7 +60,7 @@ Private mDB As TradingDB
 
 Private mConn As ADODB.Connection
 
-Private mRs As ADODB.recordset
+Private mRs As ADODB.Recordset
 Private mNew As Boolean
 
 Private mDeleted As Boolean
@@ -155,12 +155,19 @@ End Sub
 '@================================================================================
 
 Public Property Get canonicalName() As String
-canonicalName = Trim$(Nz(mRs("canonicalName"), ""))
+Dim tz As TimeZone
+If IsNull(mRs("canonicalid")) Then
+    canonicalName = name
+Else
+    Set tz = mDB.TimeZoneFactory.loadByID(mRs("canonicalid"))
+    canonicalName = tz.name
+End If
 End Property
 
 Public Property Let canonicalName(ByVal value As String)
 Dim lTimeZone As TimeZone
 
+value = Trim$(value)
 ruleBroken BusRuleTimeZoneCanonicalNameValid, _
     Len(value) = 0 Or Len(value) > mMaxNameLength
 
@@ -168,7 +175,7 @@ Set lTimeZone = mDB.TimeZoneFactory.loadByName(value)
 
 ruleBroken BusRuleTimeZoneCanonicalNameValid, _
     lTimeZone Is Nothing
-If Not lTimeZone Is Nothing Then mRs("canonicalid") = lTimeZone.id
+If Not lTimeZone Is Nothing Then mRs("CanonicalId") = lTimeZone.id
 Dirty
 End Property
 
@@ -197,26 +204,15 @@ Public Property Get IsNew() As Boolean
 End Property
 
 Public Property Get name() As String
-name = Trim$(mRs("NAME"))
+name = Trim$(mRs(TimeZoneColumnName))
 End Property
 
 Public Property Let name(ByVal value As String)
+value = Trim$(value)
 ruleBroken BusRuleTimeZoneNameValid, _
     Len(value) = 0 Or Len(value) > mMaxNameLength
 mRs("NAME") = Left$(value, mMaxNameLength)
 Dirty
-End Property
-
-Friend Property Let recordset(value As ADODB.recordset)
-Set mRs = value
-
-mMaxNameLength = mRs.Fields("NAME").DefinedSize
-
-If mRs.EOF Then
-    mRs.AddNew
-    mNew = True
-    setInitialErrors
-End If
 End Property
 
 '@================================================================================
@@ -254,8 +250,19 @@ mDeleted = True
 End Sub
 
 Friend Sub initialise( _
-                ByVal db As TradingDB)
+                ByVal db As TradingDB, _
+                ByVal rs As ADODB.Recordset)
 Set mDB = db
+
+Set mRs = rs
+
+mMaxNameLength = mRs.Fields("NAME").DefinedSize
+
+If mRs.EOF Then
+    mRs.AddNew
+    mNew = True
+    setInitialErrors
+End If
 End Sub
 
 '@================================================================================

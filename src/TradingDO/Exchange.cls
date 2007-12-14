@@ -60,7 +60,7 @@ Private mDB As TradingDB
 
 Private mConn As ADODB.Connection
 
-Private mRs As ADODB.recordset
+Private mRs As ADODB.Recordset
 Private mNew As Boolean
 
 Private mDeleted As Boolean
@@ -180,10 +180,11 @@ Public Property Get IsNew() As Boolean
 End Property
 
 Public Property Get name() As String
-name = Trim$(mRs("NAME"))
+name = Trim$(mRs(ExchangeColumnName))
 End Property
 
 Public Property Let name(ByVal value As String)
+value = Trim$(value)
 ruleBroken BusRuleExchangeNameValid, _
     Len(value) = 0 Or Len(value) > mMaxNameLength
 mRs("NAME") = Left$(value, mMaxNameLength)
@@ -191,24 +192,46 @@ Dirty
 End Property
 
 Public Property Get notes() As String
-notes = Nz(mRs("notes"), "")
+notes = Nz(mRs(ExchangeColumnNotes), "")
 End Property
 
 Public Property Let notes(ByVal val As String)
-mRs("notes") = val
+mRs(ExchangeColumnNotes) = val
 Dirty
 End Property
 
-Friend Property Let recordset(value As ADODB.recordset)
-Set mRs = value
+Public Property Let TimeZone( _
+                ByVal value As TimeZone)
+ruleBroken BusRuleExchangeTimezoneValid, value Is Nothing
 
-mMaxNameLength = mRs.Fields("NAME").DefinedSize
+If Not value Is Nothing Then mRs("timezoneid") = value.id
+Dirty
+End Property
 
-If mRs.EOF Then
-    mRs.AddNew
-    mNew = True
-    setInitialErrors
+Public Property Get TimeZone() As TimeZone
+If IsNull(mRs("timezoneid")) Then Exit Property
+Set TimeZone = mDB.TimeZoneFactory.loadByID(CLng(mRs("timezoneid")))
+End Property
+
+Public Property Get timeZoneCanonicalName() As String
+If Not TimeZone Is Nothing Then timeZoneCanonicalName = TimeZone.canonicalName
+End Property
+
+Public Property Let TimeZoneName( _
+                ByVal value As String)
+Dim tz As TimeZone
+Set tz = mDB.TimeZoneFactory.loadByName(value)
+If tz Is Nothing Then
+    ruleBroken BusRuleExchangeTimezoneValid, True
+    Dirty
+Else
+    TimeZone = tz
 End If
+End Property
+
+Public Property Get TimeZoneName() As String
+If TimeZone Is Nothing Then Exit Property
+TimeZoneName = TimeZone.name
 End Property
 
 '@================================================================================
@@ -246,8 +269,19 @@ mDeleted = True
 End Sub
 
 Friend Sub initialise( _
-                ByVal db As TradingDB)
+                ByVal db As TradingDB, _
+                ByVal rs As ADODB.Recordset)
 Set mDB = db
+
+Set mRs = rs
+
+mMaxNameLength = mRs.Fields(ExchangeColumnName).DefinedSize
+
+If mRs.EOF Then
+    mRs.AddNew
+    mNew = True
+    setInitialErrors
+End If
 End Sub
 
 '@================================================================================
@@ -290,9 +324,9 @@ mConn.Open mDB.connectionString
 failpoint = 200
 
 Set mRs.ActiveConnection = mConn
-mRs.Update
-mConn.Close
+mRs.UpdateBatch
 Set mRs.ActiveConnection = Nothing
+mConn.Close
 
 Exit Sub
 
@@ -307,6 +341,7 @@ End Sub
 Private Sub setInitialErrors()
 ' sets errors for fields that are invalid when a new record is created
 ruleBroken BusRuleExchangeNameValid, True
+ruleBroken BusRuleExchangeTimezoneValid, True
 End Sub
 
 

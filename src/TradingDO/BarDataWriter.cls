@@ -68,13 +68,13 @@ Attribute mConnection.VB_VarHelpID = -1
 
 Private mInstrumentID As Long
 
-Private mIsConnecting As Boolean
-
 Private mCmd As ADODB.Command
 
 Private mConnectionString As String
 
 Private mParent As instrument
+
+Private mAsynchronous As Boolean
 
 '@===============================================================================
 ' Class Event Handlers
@@ -102,13 +102,16 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     Exit Sub
 End If
 
-mIsConnecting = False
-
 Set mCmd.ActiveConnection = mConnection
-mCmd.Execute , _
-            , _
-            ExecuteOptionEnum.adAsyncExecute + ExecuteOptionEnum.adExecuteNoRecords
-
+If mAsynchronous Then
+    mCmd.Execute , _
+                , _
+                ExecuteOptionEnum.adAsyncExecute + ExecuteOptionEnum.adExecuteNoRecords
+Else
+    mCmd.Execute , _
+                , _
+                ExecuteOptionEnum.adExecuteNoRecords
+End If
 End Sub
 
 Private Sub mConnection_ExecuteComplete( _
@@ -159,9 +162,12 @@ Public Sub WriteBar( _
                         ByVal closePrice As Double, _
                         ByVal volume As Long, _
                         ByVal tickVolume As Long, _
-                        ByVal openInterest As Long)
+                        ByVal openInterest As Long, _
+                        ByVal asynchronous As Boolean)
 
 Dim param As ADODB.Parameter
+
+mAsynchronous = asynchronous
 
 Set mCmd = New ADODB.Command
 mCmd.CommandType = adCmdStoredProc
@@ -256,20 +262,26 @@ Set param = mCmd.CreateParameter(, _
                             openInterest)
 mCmd.Parameters.Append param
 
-connectToDB
-                        
+connectToDB mAsynchronous
+' note that the ConnectComplete event fires regardless of whether the
+' connection is obtained synchronously or asynchronously, and we
+' execute the command when the event fires
 End Sub
 
 '@===============================================================================
 ' Helper Functions
 '@===============================================================================
 
-Private Sub connectToDB()
+Private Sub connectToDB( _
+                ByVal asynchronous As Boolean)
 If Not mConnection Is Nothing Then mConnection.Close
-mIsConnecting = True
 Set mConnection = New ADODB.Connection
 mConnection.CursorLocation = CursorLocationEnum.adUseClient
-mConnection.Open mConnectionString, , , ConnectOptionEnum.adAsyncConnect
+If asynchronous Then
+    mConnection.Open mConnectionString, , , ConnectOptionEnum.adAsyncConnect
+Else
+    mConnection.Open mConnectionString
+End If
 End Sub
 
 

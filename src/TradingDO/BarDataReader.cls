@@ -170,6 +170,9 @@ Dim toLocal As Date
 Debug.Assert Not mFetchInProgress
 mFetchInProgress = True
 
+fromTime = gRoundTimeToSecond(fromTime)
+toTime = gRoundTimeToSecond(toTime)
+
 Set cmd = New ADODB.Command
 cmd.CommandType = adCmdStoredProc
 
@@ -291,9 +294,9 @@ If mRsBars.BOF Then
 End If
 
 If CBool(mRsBars("IsExchangeTime")) Then
-    timestamp = mRsBars("DateTime")
+    timestamp = gRoundTimeToSecond(mRsBars("DateTime"))
 Else
-    timestamp = ConvertDateUTCToTZ(ConvertDateLocalToUTC(mRsBars("DateTime")), mTimeZone)
+    timestamp = ConvertDateUTCToTZ(ConvertDateLocalToUTC(gRoundTimeToSecond(mRsBars("DateTime"))), mTimeZone)
 End If
 barType = mRsBars("BarType")
 barLength = mRsBars("BarLengthMinutes")

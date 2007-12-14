@@ -52,7 +52,7 @@ Option Explicit
 
 Private mConnectionString As String
 Private mConn As ADODB.Connection
-Private mRs As ADODB.recordset
+Private mRs As ADODB.Recordset
 Private mCol As Collection
 Private mInstrumentID As Long
 
@@ -78,6 +78,7 @@ End Sub
 
 Friend Property Let connectionString( _
                 ByVal value As String)
+value = Trim$(value)
 mConnectionString = value
 End Property
 
@@ -123,7 +124,7 @@ mConn.Open mConnectionString
 
 failpoint = 200
 
-Set mRs = New recordset
+Set mRs = New Recordset
 mRs.CursorLocation = adUseClient
 SQL = "SELECT ID, ProviderKey, InstrumentID, LocalSymbol " & _
         "FROM InstrumentLocalSymbol " & _

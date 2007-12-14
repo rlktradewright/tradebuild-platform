@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "GlobalClass"
+Attribute VB_Name = "TradingDO"
 Attribute VB_GlobalNameSpace = True
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -35,27 +35,31 @@ Option Explicit
 
 Public Enum BusinessRuleIds
     BusRuleExchangeNameValid = 10000
+    BusRuleExchangeTimezoneValid
 
     BusRuleInstrumentNameValid = 10100
     BusRuleInstrumentShortNameValid
     BusRuleInstrumentSymbolValid
-    BusRuleInstrumentExpiryMonthValid
-    BusRuleInstrumentExpiryMonthOutOfRange
+    BusRuleInstrumentExpiryDateValid
     BusRuleInstrumentStrikePriceValid
     BusRuleInstrumentOptionRightvalid
+    BusRuleInstrumentInstrumentClassValid
+    BusRuleInstrumentCurrencyCodeValid
+    BusRuleInstrumentTickSizeValid
+    BusRuleInstrumentTickValueValid
     
     BusRuleTimeZoneNameValid = 10200
     BusRuleTimeZoneCanonicalNameValid
     
     BusRuleInstrumentClassNameValid = 10300
     BusRuleInstrumentClassCurrencyCodeValid
-    BusRuleInstrumentClassCategoryValid
+    BusRuleInstrumentClassSecTypeValid
     BusRuleInstrumentClassDaysBeforeExpiryValid
     BusRuleInstrumentClassExchangeValid
     BusRuleInstrumentClassTickSizeValid
     BusRuleInstrumentClassTickValueValid
-    BusRuleInstrumentClassSessionTimesValid
-    BusRuleInstrumentClassTimeZoneNameValid
+    BusRuleInstrumentClassSessionStartTimeValid
+    BusRuleInstrumentClassSessionEndTimeValid
     
 
 '    BR_STRATEGY_PROGR_ID_LENGTH_INVALID = 10031
@@ -88,6 +92,7 @@ Public Enum InstrumentCategories
 End Enum
 
 Public Enum DatabaseTypes
+    DbNone = 0
     DbSQLServer7 = 1
     DbSQLServer2000
     DbSQLServer2005
@@ -135,6 +140,11 @@ Public Function CreateTradingDB( _
 Set CreateTradingDB = New TradingDB
 
 CreateTradingDB.initialise connectionString
+End Function
+
+Public Function ContractFromInstrument( _
+                ByVal instrument As instrument) As Contract
+Set ContractFromInstrument = gContractFromInstrument(instrument)
 End Function
 
 Public Function DatabaseTypeFromString( _
@@ -197,14 +207,14 @@ End Select
                 
 End Function
 
-Public Function InstrumentCategoryFromString( _
-                ByVal value As String) As InstrumentCategories
-InstrumentCategoryFromString = gCategoryFromString(value)
-End Function
-
-Public Function InstrumentCategoryToString(ByVal value As InstrumentCategories) As String
-InstrumentCategoryToString = gCategoryToString(value)
-End Function
+'Public Function InstrumentCategoryFromString( _
+'                ByVal value As String) As InstrumentCategories
+'InstrumentCategoryFromString = gCategoryFromString(value)
+'End Function
+'
+'Public Function InstrumentCategoryToString(ByVal value As InstrumentCategories) As String
+'InstrumentCategoryToString = gCategoryToString(value)
+'End Function
 '@================================================================================
 ' Helper Functions
 '@================================================================================

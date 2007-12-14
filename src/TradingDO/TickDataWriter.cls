@@ -68,8 +68,6 @@ Attribute mConnection.VB_VarHelpID = -1
 
 Private mInstrumentID As Long
 
-Private mIsConnecting As Boolean
-
 Private mCmd As ADODB.Command
 
 Private mConnectionString As String
@@ -77,6 +75,8 @@ Private mConnectionString As String
 Private mParent As instrument
 
 Private mWriterId As String
+
+Private mAsynchronous As Boolean
 
 '@===============================================================================
 ' Class Event Handlers
@@ -105,14 +105,18 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     Exit Sub
 End If
 
-mIsConnecting = False
-
 Debug.Print "Writer " & mWriterId & " connected to db"
 
 Set mCmd.ActiveConnection = mConnection
-mCmd.Execute , _
-            , _
-            ExecuteOptionEnum.adAsyncExecute + ExecuteOptionEnum.adExecuteNoRecords
+If mAsynchronous Then
+    mCmd.Execute , _
+                , _
+                ExecuteOptionEnum.adAsyncExecute + ExecuteOptionEnum.adExecuteNoRecords
+Else
+    mCmd.Execute , _
+                , _
+                ExecuteOptionEnum.adExecuteNoRecords
+End If
 End Sub
 
 Private Sub mConnection_ExecuteComplete( _
@@ -170,35 +174,43 @@ Public Sub WriteData( _
                         ByVal Version As String, _
                         ByVal PeriodStartTime As Date, _
                         ByVal BasePrice As Double, _
-                        ByRef Data() As Byte)
+                        ByRef Data() As Byte, _
+                        ByVal asynchronous As Boolean)
 If Not mCmd Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
                 ProjectName & "." & ModuleName & ":WriteData", _
                 "Object has already been used"
 End If
 
-DoWriteTickData Version, PeriodStartTime, BasePrice, Data
+DoWriteTickData Version, PeriodStartTime, BasePrice, Data, asynchronous
 
 End Sub
 '@===============================================================================
 ' Helper Functions
 '@===============================================================================
 
-Private Sub connectToDB()
+Private Sub connectToDB( _
+                        ByVal asynchronous As Boolean)
 If Not mConnection Is Nothing Then mConnection.Close
-mIsConnecting = True
 Set mConnection = New ADODB.Connection
 mConnection.CursorLocation = CursorLocationEnum.adUseClient
-mConnection.Open mConnectionString, , , ConnectOptionEnum.adAsyncConnect
+If asynchronous Then
+    mConnection.Open mConnectionString, , , ConnectOptionEnum.adAsyncConnect
+Else
+    mConnection.Open mConnectionString
+End If
 End Sub
 
 Private Sub DoWriteTickData( _
                         ByVal Version As String, _
                         ByVal PeriodStartTime As Date, _
                         ByVal BasePrice As Double, _
-                        ByRef Data() As Byte)
+                        ByRef Data() As Byte, _
+                        ByVal asynchronous As Boolean)
 
 Dim param As ADODB.Parameter
+
+mAsynchronous = asynchronous
 
 Set mCmd = New ADODB.Command
 mCmd.CommandType = adCmdStoredProc
@@ -245,7 +257,10 @@ Set param = mCmd.CreateParameter(, _
                             Data)
 mCmd.Parameters.Append param
 
-connectToDB
+connectToDB mAsynchronous
+' note that the ConnectComplete event fires regardless of whether the
+' connection is obtained synchronously or asynchronously, and we
+' execute the command when the event fires
 End Sub
 
 

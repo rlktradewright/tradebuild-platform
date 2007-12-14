@@ -32,9 +32,109 @@ Option Explicit
 Private Const ProjectName As String = "TradingDO26"
 Private Const ModuleName As String = "Globals"
 
+Public Const ExchangeColumnName                 As String = "NAME"
+Public Const ExchangeColumnNotes                As String = "NOTES"
+Public Const ExchangeColumnTimeZone             As String = "TIMEZONE"
+
+Public Const FieldAlignCurrency                 As Long = FieldAlignments.FieldAlignLeft
+Public Const FieldAlignExchange                 As Long = FieldAlignments.FieldAlignLeft
+Public Const FieldAlignExpiry                   As Long = FieldAlignments.FieldAlignLeft
+Public Const FieldAlignInstrumentClass          As Long = FieldAlignments.FieldAlignLeft
+Public Const FieldAlignInstrument               As Long = FieldAlignments.FieldAlignLeft
+Public Const FieldAlignNotes                    As Long = FieldAlignments.FieldAlignLeft
+Public Const FieldAlignOptionRight              As Long = FieldAlignments.FieldAlignLeft
+Public Const FieldAlignSecType                  As Long = FieldAlignments.FieldAlignLeft
+Public Const FieldAlignSessionEndTime           As Long = FieldAlignments.FieldAlignLeft
+Public Const FieldAlignSessionStartTime         As Long = FieldAlignments.FieldAlignLeft
+Public Const FieldAlignShortName                As Long = FieldAlignments.FieldAlignLeft
+Public Const FieldAlignStrikePrice              As Long = FieldAlignments.FieldAlignRight
+Public Const FieldAlignSwitchDays               As Long = FieldAlignments.FieldAlignRight
+Public Const FieldAlignSymbol                   As Long = FieldAlignments.FieldAlignLeft
+Public Const FieldAlignTickSize                 As Long = FieldAlignments.FieldAlignRight
+Public Const FieldAlignTickValue                As Long = FieldAlignments.FieldAlignRight
+Public Const FieldAlignTimeZone                 As Long = FieldAlignments.FieldAlignLeft
+
+Public Const FieldNameCanonicalName             As String = "Canonical Name"
+Public Const FieldNameCurrency                  As String = "Curr"
+Public Const FieldNameExchange                  As String = "Exchange"
+Public Const FieldNameExpiry                    As String = "Expiry date"
+Public Const FieldNameName                      As String = "Name"
+Public Const FieldNameNotes                     As String = "Notes"
+Public Const FieldNameOptionRight               As String = "Right"
+Public Const FieldNameSecType                   As String = "Sec Type"
+Public Const FieldNameSessionEndTime            As String = "Session End"
+Public Const FieldNameSessionStartTime          As String = "Session Start"
+Public Const FieldNameShortName                 As String = "Short name"
+Public Const FieldNameStrikePrice               As String = "Strike"
+Public Const FieldNameSwitchDays                As String = "Switch Day"
+Public Const FieldNameSymbol                    As String = "Symbol"
+Public Const FieldNameTickSize                  As String = "Tick Size"
+Public Const FieldNameTickValue                 As String = "Tick Value"
+Public Const FieldNameTimeZone                  As String = "Time Zone"
+
+Public Const FieldWidthCurrency                 As Long = 50
+Public Const FieldWidthExchange                 As Long = 100
+Public Const FieldWidthExpiry                   As Long = 75
+Public Const FieldWidthInstrumentClass          As Long = 200
+Public Const FieldWidthInstrument               As Long = 200
+Public Const FieldWidthNotes                    As Long = 500
+Public Const FieldWidthOptionRight              As Long = 50
+Public Const FieldWidthSecType                  As Long = 75
+Public Const FieldWidthSessionEndTime           As Long = 75
+Public Const FieldWidthSessionStartTime         As Long = 75
+Public Const FieldWidthShortName                As Long = 75
+Public Const FieldWidthStrikePrice              As Long = 100
+Public Const FieldWidthSwitchDays               As Long = 65
+Public Const FieldWidthSymbol                   As Long = 65
+Public Const FieldWidthTickSize                 As Long = 65
+Public Const FieldWidthTickValue                As Long = 65
+Public Const FieldWidthTimeZone                 As Long = 150
+
+Public Const InfoTypeTradingDO                  As String = "tradebuild.tradingdo"
+
+Public Const InstrumentColumnCurrency           As String = "CURRENCY"
+Public Const InstrumentColumnExchange           As String = "EXCHANGE"
+Public Const InstrumentColumnExpiry             As String = "EXPIRYDATE"
+Public Const InstrumentColumnExpiryMonth        As String = "EXPIRYMONTH"
+Public Const InstrumentColumnInstrumentClassName    As String = "INSTRUMENTCLASSNAME"
+Public Const InstrumentColumnInstrumentClassID  As String = "INSTRUMENTCLASSID"
+Public Const InstrumentColumnName               As String = "NAME"
+Public Const InstrumentColumnNotes              As String = "NOTES"
+Public Const InstrumentColumnOptionRight        As String = "OPTRIGHT"
+Public Const InstrumentColumnSecType            As String = "CATEGORY"
+Public Const InstrumentColumnSessionEndTime     As String = "SESSIONENDTIME"
+Public Const InstrumentColumnSessionStartTime   As String = "SESSIONSTARTTIME"
+Public Const InstrumentColumnShortName          As String = "SHORTNAME"
+Public Const InstrumentColumnStrikePrice        As String = "STRIKEPRICE"
+Public Const InstrumentColumnSymbol             As String = "SYMBOL"
+Public Const InstrumentColumnTickSize           As String = "TICKSIZE"
+Public Const InstrumentColumnTickValue          As String = "TICKVALUE"
+Public Const InstrumentColumnTimeZone           As String = "CANONICALTIMEZONENAME"
+
+Public Const InstrumentClassColumnId            As String = "ID"
+Public Const InstrumentClassColumnCurrency      As String = "CURRENCY"
+Public Const InstrumentClassColumnExchange      As String = "EXCHANGE"
+Public Const InstrumentClassColumnExchangeID    As String = "EXCHANGEID"
+Public Const InstrumentClassColumnName          As String = "NAME"
+Public Const InstrumentClassColumnNotes         As String = "NOTES"
+Public Const InstrumentClassColumnSecType       As String = "CATEGORY"
+Public Const InstrumentClassColumnSessionEndTime    As String = "SESSIONENDTIME"
+Public Const InstrumentClassColumnSessionStartTime  As String = "SESSIONSTARTTIME"
+Public Const InstrumentClassColumnSwitchDays    As String = "DAYSBEFOREEXPIRYTOSWITCH"
+Public Const InstrumentClassColumnTickSize      As String = "TICKSIZE"
+Public Const InstrumentClassColumnTickValue     As String = "TICKVALUE"
+Public Const InstrumentClassColumnTimeZone      As String = "CANONICALTIMEZONENAME"
+
+Public Const TimeZoneColumnCanonicalName        As String = "CANONICALNAME"
+Public Const TimeZoneColumnName                 As String = "NAME"
+
 '@================================================================================
 ' Member variables
 '@================================================================================
+
+Private mSqlBadWords()                          As Variant
+
+Public gLogger                                  As Logger
 
 '@================================================================================
 ' Class Event Handlers
@@ -72,7 +172,48 @@ pConnection.Errors.Clear
 gGenerateErrorMessage = errMsg
 End Function
 
+Public Function gCategoryFromSecType( _
+                ByVal value As SecurityTypes) As InstrumentCategories
+Select Case value
+Case SecurityTypes.SecTypeStock
+    gCategoryFromSecType = InstrumentCategoryStock
+Case SecurityTypes.SecTypeFuture
+    gCategoryFromSecType = InstrumentCategoryFuture
+Case SecurityTypes.SecTypeOption
+    gCategoryFromSecType = InstrumentCategoryOption
+Case SecurityTypes.SecTypeFuturesOption
+    gCategoryFromSecType = InstrumentCategoryFuturesOption
+Case SecurityTypes.SecTypeCash
+    gCategoryFromSecType = InstrumentCategoryCash
+'Case SecurityTypes.SecTypeCombo
+'    gCategoryFromSecType = InstrumentCategoryBag
+Case SecurityTypes.SecTypeIndex
+    gCategoryFromSecType = InstrumentCategoryIndex
+End Select
+End Function
+
+Public Function gCategoryToSecType( _
+                ByVal value As InstrumentCategories) As SecurityTypes
+Select Case value
+Case InstrumentCategoryStock
+    gCategoryToSecType = SecurityTypes.SecTypeStock
+Case InstrumentCategoryFuture
+    gCategoryToSecType = SecurityTypes.SecTypeFuture
+Case InstrumentCategoryOption
+    gCategoryToSecType = SecurityTypes.SecTypeOption
+Case InstrumentCategoryFuturesOption
+    gCategoryToSecType = SecurityTypes.SecTypeFuturesOption
+Case InstrumentCategoryCash
+    gCategoryToSecType = SecurityTypes.SecTypeCash
+'Case InstrumentCategoryBag
+'    gCategoryToSecType= SecurityTypes.SecTypeCombo
+Case InstrumentCategoryIndex
+    gCategoryToSecType = SecurityTypes.SecTypeIndex
+End Select
+End Function
+
 Public Function gCategoryFromString(ByVal value As String) As InstrumentCategories
+value = Trim$(value)
 Select Case UCase$(value)
 Case "STOCK", "STK"
     gCategoryFromString = InstrumentCategoryStock
@@ -110,8 +251,31 @@ Case InstrumentCategoryIndex
 End Select
 End Function
 
+Public Function gCleanQueryArg( _
+                ByRef inString) As String
+
+Dim i As Long
+
+On Error GoTo Err
+
+gCleanQueryArg = inString
+
+For i = 0 To UBound(mSqlBadWords)
+    gCleanQueryArg = Replace(gCleanQueryArg, mSqlBadWords(i), "")
+Next
+
+Exit Function
+
+Err:
+
+mSqlBadWords = Array("'", "select", "drop", ";", "--", "insert", "delete", "xp_")
+Resume
+End Function
+
+
 Public Function gDatabaseTypeFromString( _
                 ByVal value As String) As DatabaseTypes
+value = Trim$(value)
 Select Case UCase$(value)
 Case "SQLSERVER7", "SQL SERVER 7"
     gDatabaseTypeFromString = DbSQLServer7
@@ -136,6 +300,54 @@ Case DbSQLServer2005
 Case DbMySQL5
     gDatabaseTypeToString = "MySQL 5"
 End Select
+End Function
+
+Public Function gContractFromInstrument( _
+                ByVal instrument As instrument) As Contract
+Dim lContractBuilder As ContractBuilder
+Dim contractSpec As ContractSpecifier
+Dim localSymbol As InstrumentLocalSymbol
+Dim providerIDs As Parameters
+
+Set contractSpec = CreateContractSpecifier(instrument.shortName, _
+                                        instrument.symbol, _
+                                        instrument.exchangeName, _
+                                        instrument.secType, _
+                                        instrument.currencyCode, _
+                                        IIf(instrument.expiryDate = 0, "", Format(instrument.expiryDate, "yyyymmdd")), _
+                                        instrument.strikePrice, _
+                                        instrument.optionRight)
+
+Set lContractBuilder = CreateContractBuilder(contractSpec)
+With lContractBuilder
+    .daysBeforeExpiryToSwitch = instrument.daysBeforeExpiryToSwitch
+    .Description = instrument.name
+    .expiryDate = instrument.expiryDate
+    .tickSize = instrument.tickSize
+    .multiplier = instrument.tickValue / instrument.tickSize
+    .TimeZone = GetTimeZone(instrument.timeZoneCanonicalName)
+    
+    If instrument.localSymbols.count > 0 Then
+        Set providerIDs = New TWutilities30.Parameters
+
+        For Each localSymbol In instrument.localSymbols
+            providerIDs.setParameterValue localSymbol.providerKey, localSymbol.localSymbol
+        Next
+        .providerIDs = providerIDs
+    End If
+    
+    .sessionEndTime = instrument.sessionEndTime
+    .sessionStartTime = instrument.sessionStartTime
+    
+End With
+Set gContractFromInstrument = lContractBuilder.Contract
+End Function
+
+
+
+Public Function gRoundTimeToSecond( _
+                ByVal timestamp As Date) As Date
+gRoundTimeToSecond = Int((timestamp + (499 / 86400000)) * 86400) / 86400 + 1 / 86400000000#
 End Function
 
 '@================================================================================

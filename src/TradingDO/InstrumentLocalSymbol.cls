@@ -53,7 +53,7 @@ Private Const ModuleName As String = "InstrumentLocalSymbol"
 ' Member variables
 '@===============================================================================
 
-Private mRs As ADODB.recordset
+Private mRs As ADODB.Recordset
 Private mBookmark As Variant
 
 '@===============================================================================
@@ -82,6 +82,7 @@ End Property
 
 Public Property Let localSymbol( _
                 ByVal value As String)
+value = Trim$(value)
 mRs("localSymbol") = value
 End Property
 
@@ -91,6 +92,7 @@ End Property
 
 Public Property Let providerKey( _
                 ByVal value As String)
+value = Trim$(value)
 mRs("providerkey") = value
 End Property
 
@@ -99,7 +101,7 @@ End Property
 '@===============================================================================
 
 Friend Sub initialise( _
-                ByVal value As ADODB.recordset, _
+                ByVal value As ADODB.Recordset, _
                 ByVal bookmark As Variant)
 Set mRs = value
 mBookmark = bookmark
