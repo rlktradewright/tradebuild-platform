@@ -62,18 +62,6 @@ Private Type VisibleTableEntry
     lastindex           As Long
 End Type
 
-Public Enum LayerNumbers
-    LayerBackground = MinLayer
-    LayerGrid = MinLayer + 5
-    LayerGridText = LayerGrid + 1
-    LayerLowestUser = MinLayer + 10
-    LayerHIghestUser = MaxLayer - 10
-    LayerDefaultLines
-    LayerDefaultTexts
-    LayerTitle = MaxLayer - 5
-    LayerPointer = MaxLayer
-End Enum
-
 
 '================================================================================
 ' Member variables

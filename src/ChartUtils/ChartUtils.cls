@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "GlobalClass"
+Attribute VB_Name = "ChartUtils"
 Attribute VB_GlobalNameSpace = True
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -38,6 +38,11 @@ Option Explicit
 '@================================================================================
 ' Types
 '@================================================================================
+
+Public Type RegionEntry
+    region              As ChartRegion
+    usageCount          As Long
+End Type
 
 '@================================================================================
 ' Member variables

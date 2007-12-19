@@ -54,7 +54,7 @@ Private Const ThirtySecondsSeparator As String = "'"
 
 Private mSpecifier As ContractSpecifier
 Private mTickSize As Double
-Private mMultiplier As Long
+Private mMultiplier As Double
 Private mNumberOfDecimals As Long
 Private mPriceFormatString As String
 Private mDescription As String
@@ -101,11 +101,11 @@ Public Property Get key() As String
 key = specifier.key
 End Property
 
-Public Property Get multiplier() As Long
+Public Property Get multiplier() As Double
 multiplier = mMultiplier
 End Property
 
-Friend Property Let multiplier(ByVal value As Long)
+Friend Property Let multiplier(ByVal value As Double)
 mMultiplier = value
 End Property
 
@@ -192,20 +192,15 @@ End Property
 
 Friend Sub FromXML(ByVal contractXML As String)
 Dim XMLdoc As DOMDocument30
-Dim Contract As IXMLDOMElement
-Dim specifier As IXMLDOMElement
+Dim contractEl As IXMLDOMElement
+Dim specifierEl As IXMLDOMElement
 Dim specifierObj As ContractSpecifier
-Dim OrderTypes As IXMLDOMElement
-Dim orderType As IXMLDOMElement
-Dim exchanges As IXMLDOMElement
-Dim exchange As IXMLDOMElement
-Dim ComboLegs As IXMLDOMElement
-Dim ComboLeg As IXMLDOMElement
+Dim comboLegsEl As IXMLDOMElement
+Dim comboLegEl As IXMLDOMElement
 Dim comboLegObj As ComboLeg
 Dim nodeList As IXMLDOMNodeList
-Dim comboSpecifier As IXMLDOMElement
+Dim comboSpecifierEl As IXMLDOMElement
 Dim comboSpecifierObj As ContractSpecifier
-Dim i As Long
 
 Set XMLdoc = New DOMDocument30
 XMLdoc.loadXML contractXML
@@ -215,68 +210,69 @@ If XMLdoc.parseError.errorCode <> 0 Then
             "Contract XML cannot be parsed"
 End If
 
-Set Contract = XMLdoc.selectSingleNode("contract")
-TickSize = Contract.getAttribute("minimumtick")
-mMultiplier = Contract.getAttribute("multiplier")
-If IsNull(Contract.getAttribute("sessionstarttime")) Then
+Set contractEl = XMLdoc.selectSingleNode("contract")
+TickSize = contractEl.getAttribute("minimumtick")
+mMultiplier = contractEl.getAttribute("multiplier")
+If IsNull(contractEl.getAttribute("sessionstarttime")) Then
     mSessionStartTime = "00:00:00"
 Else
-    mSessionStartTime = Contract.getAttribute("sessionstarttime")
+    mSessionStartTime = contractEl.getAttribute("sessionstarttime")
 End If
-If IsNull(Contract.getAttribute("sessionendtime")) Then
+If IsNull(contractEl.getAttribute("sessionendtime")) Then
     mSessionEndTime = "00:00:00"
 Else
-    mSessionEndTime = Contract.getAttribute("sessionendtime")
+    mSessionEndTime = contractEl.getAttribute("sessionendtime")
 End If
-If IsNull(Contract.getAttribute("description")) Then
+If IsNull(contractEl.getAttribute("description")) Then
     mDescription = ""
 Else
-    mDescription = Contract.getAttribute("description")
+    mDescription = contractEl.getAttribute("description")
 End If
-If IsNull(Contract.getAttribute("numberofdecimals")) Then
+If IsNull(contractEl.getAttribute("numberofdecimals")) Then
     mNumberOfDecimals = 4
 Else
-    mNumberOfDecimals = Contract.getAttribute("numberofdecimals")
+    mNumberOfDecimals = contractEl.getAttribute("numberofdecimals")
 End If
-If IsNull(Contract.getAttribute("timezonename")) Then
+If IsNull(contractEl.getAttribute("timezonename")) Then
     Set mTimeZone = GetTimeZone()
 Else
-    Set mTimeZone = GetTimeZone(CStr(Contract.getAttribute("timezonename")))
+    Set mTimeZone = GetTimeZone(CStr(contractEl.getAttribute("timezonename")))
 End If
 
-Set specifier = Contract.selectSingleNode("specifier")
+Set specifierEl = contractEl.selectSingleNode("specifier")
 Set specifierObj = New ContractSpecifier
 Me.specifier = specifierObj
 With specifierObj
-    .currencyCode = specifier.getAttribute("currencycode")
-    .exchange = specifier.getAttribute("exchange")
-    .expiry = specifier.getAttribute("expiry")
-    .localSymbol = specifier.getAttribute("localsymbol")
-    .right = specifier.getAttribute("right")
-    .sectype = specifier.getAttribute("sectype")
-    .strike = specifier.getAttribute("strike")
-    .symbol = specifier.getAttribute("symbol")
+    .currencyCode = specifierEl.getAttribute("currencycode")
+    .exchange = specifierEl.getAttribute("exchange")
+    .expiry = specifierEl.getAttribute("expiry")
+    .localSymbol = specifierEl.getAttribute("localsymbol")
+    .right = specifierEl.getAttribute("right")
+    .sectype = specifierEl.getAttribute("sectype")
+    .strike = specifierEl.getAttribute("strike")
+    .symbol = specifierEl.getAttribute("symbol")
 
-    Set ComboLegs = specifier.selectSingleNode("combolegs")
-    Set nodeList = ComboLegs.selectNodes("comboleg")
-    For Each ComboLeg In nodeList
+    Set comboLegsEl = specifierEl.selectSingleNode("combolegs")
+    Set nodeList = comboLegsEl.selectNodes("comboleg")
+    If nodeList.length <> 0 Then .ComboLegs = New ComboLegs
+    For Each comboLegEl In nodeList
         Set comboLegObj = New ComboLeg
-        .ComboLegs.Add ComboLeg
-        Set comboSpecifier = ComboLeg.selectSingleNode("specifier")
+        .ComboLegs.Add comboLegObj
+        Set comboSpecifierEl = comboLegEl.selectSingleNode("specifier")
         Set comboSpecifierObj = New ContractSpecifier
         With comboSpecifierObj
-            .currencyCode = comboSpecifier.getAttribute("currencycode")
-            .exchange = comboSpecifier.getAttribute("exchange")
-            .expiry = comboSpecifier.getAttribute("expiry")
-            .localSymbol = comboSpecifier.getAttribute("localsymbol")
-            .right = comboSpecifier.getAttribute("right")
-            .sectype = comboSpecifier.getAttribute("sectype")
-            .strike = comboSpecifier.getAttribute("strike")
-            .symbol = comboSpecifier.getAttribute("symbol")
+            .currencyCode = comboSpecifierEl.getAttribute("currencycode")
+            .exchange = comboSpecifierEl.getAttribute("exchange")
+            .expiry = comboSpecifierEl.getAttribute("expiry")
+            .localSymbol = comboSpecifierEl.getAttribute("localsymbol")
+            .right = comboSpecifierEl.getAttribute("right")
+            .sectype = comboSpecifierEl.getAttribute("sectype")
+            .strike = comboSpecifierEl.getAttribute("strike")
+            .symbol = comboSpecifierEl.getAttribute("symbol")
         End With
         comboLegObj.initialise comboSpecifierObj, _
-                                CBool(ComboLeg.getAttribute("isbuyleg")), _
-                                CLng(ComboLeg.getAttribute("ratio"))
+                                CBool(comboLegEl.getAttribute("isbuyleg")), _
+                                CLng(comboLegEl.getAttribute("ratio"))
     Next
 
 End With
@@ -332,14 +328,9 @@ Public Function ToXML() As String
 Dim XMLdoc As DOMDocument30
 Dim Contract As IXMLDOMElement
 Dim specifier As IXMLDOMElement
-Dim OrderTypes As IXMLDOMElement
-'Dim orderType As IXMLDOMElement
-Dim exchanges As IXMLDOMElement
-Dim exchange As IXMLDOMElement
 Dim ComboLegs As IXMLDOMElement
 Dim ComboLeg As IXMLDOMElement
 Dim comboLegObj As ComboLeg
-Dim i As Long
 
 Set XMLdoc = New DOMDocument30
 Set Contract = XMLdoc.createElement("contract")
@@ -366,24 +357,25 @@ specifier.setAttribute "strike", mSpecifier.strike
 
 Set ComboLegs = XMLdoc.createElement("combolegs")
 specifier.appendChild ComboLegs
-For Each comboLegObj In mSpecifier.ComboLegs
-    Set ComboLeg = XMLdoc.createElement("comboleg")
-    ComboLegs.appendChild ComboLeg
-    
-    Set specifier = XMLdoc.createElement("specifier")
-    ComboLeg.appendChild specifier
-    ComboLeg.setAttribute "isBuyLeg", comboLegObj.isBuyLeg
-    ComboLeg.setAttribute "ratio", comboLegObj.ratio
-    specifier.setAttribute "symbol", mSpecifier.symbol
-    specifier.setAttribute "sectype", mSpecifier.sectype
-    specifier.setAttribute "expiry", mSpecifier.expiry
-    specifier.setAttribute "exchange", mSpecifier.exchange
-    specifier.setAttribute "currencycode", mSpecifier.currencyCode
-    specifier.setAttribute "localsymbol", mSpecifier.localSymbol
-    specifier.setAttribute "right", mSpecifier.right
-    specifier.setAttribute "strike", mSpecifier.strike
-Next
-
+If Not mSpecifier.ComboLegs Is Nothing Then
+    For Each comboLegObj In mSpecifier.ComboLegs
+        Set ComboLeg = XMLdoc.createElement("comboleg")
+        ComboLegs.appendChild ComboLeg
+        
+        Set specifier = XMLdoc.createElement("specifier")
+        ComboLeg.appendChild specifier
+        ComboLeg.setAttribute "isBuyLeg", comboLegObj.isBuyLeg
+        ComboLeg.setAttribute "ratio", comboLegObj.ratio
+        specifier.setAttribute "symbol", mSpecifier.symbol
+        specifier.setAttribute "sectype", mSpecifier.sectype
+        specifier.setAttribute "expiry", mSpecifier.expiry
+        specifier.setAttribute "exchange", mSpecifier.exchange
+        specifier.setAttribute "currencycode", mSpecifier.currencyCode
+        specifier.setAttribute "localsymbol", mSpecifier.localSymbol
+        specifier.setAttribute "right", mSpecifier.right
+        specifier.setAttribute "strike", mSpecifier.strike
+    Next
+End If
 ToXML = XMLdoc.xml
 
 End Function

@@ -42,14 +42,6 @@ Option Explicit
 ' Enums
 '================================================================================
 
-Public Enum CanvasComparisonCodes
-    CantCompare = 1
-    GaugeChangedX = 2
-    GaugeChangedY = 4
-    BoundsChangedX = 8
-    BoundsChangedY = 16
-End Enum
-
 '================================================================================
 ' Types
 '================================================================================
@@ -453,7 +445,7 @@ End Sub
 Public Function newDimension(ByVal x As Double, _
                         ByVal y As Double) As Dimension
 Set newDimension = New Dimension
-newDimension.canvas = Me
+newDimension.Canvas = Me
 newDimension.x = x
 newDimension.y = y
 End Function
@@ -463,7 +455,7 @@ Public Function newPoint(ByVal x As Double, _
                         Optional ByVal coordSystemX As CoordinateSystems = CoordsLogical, _
                         Optional ByVal coordSystemY As CoordinateSystems = CoordsLogical) As Point
 Set newPoint = New Point
-newPoint.canvas = Me
+newPoint.Canvas = Me
 newPoint.x = x
 newPoint.y = y
 newPoint.CoordinateSystemX = coordSystemX

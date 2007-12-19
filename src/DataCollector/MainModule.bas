@@ -48,7 +48,7 @@ Private mRightOffset As Long
 Private mPosX As Single
 Private mPosY As Single
 
-Private mDataCollector As TBDataCollector
+Private mDataCollector As dataCollector
 
 Private mStartTimeDescriptor As String
 Private mEndTimeDescriptor As String
@@ -169,7 +169,6 @@ If mCLParser.Switch("posn") Then
     
     mPosY = Right$(posnValue, Len(posnValue) - InStr(1, posnValue, ","))
 Else
-    Randomize
     mPosX = Int(Int(Screen.Width / createForm.Width) * Rnd)
     mPosY = Int(Int(Screen.Height / createForm.Height) * Rnd)
 End If
@@ -189,7 +188,7 @@ Private Function getConfig() As String
 If mCLParser.Switch("Config") Then
     getConfig = mCLParser.SwitchValue("config")
 Else
-    getConfig = GetSpecialFolderPath(FolderIdLOCAL_APPDATA) & _
+    getConfig = GetSpecialFolderPath(FolderIdLocalAppdata) & _
                         "\TradeWright\" & _
                         App.EXEName & _
                         "\v" & _

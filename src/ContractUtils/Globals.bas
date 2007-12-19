@@ -39,6 +39,9 @@ Private Const ModuleName                    As String = "Globals"
 Private mExchangeCodes() As String
 Private mMaxExchangeCodesIndex As Long
 
+Private mCurrencyDescs() As CurrencyDescriptor
+Private mMaxCurrencyDescsIndex As Long
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -59,9 +62,32 @@ Private mMaxExchangeCodesIndex As Long
 ' Methods
 '@================================================================================
 
+Public Function gGetCurrencyDescriptor( _
+                ByVal code As String) As CurrencyDescriptor
+Dim index As Long
+If mMaxCurrencyDescsIndex = 0 Then setupCurrencyDescs
+index = getCurrencyIndex(code)
+If index < 0 Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "gGetCurrencyDescriptor", _
+            "Invalid currency code"
+End If
+
+gGetCurrencyDescriptor = mCurrencyDescs(index)
+End Function
+
+Public Function gGetCurrencyDescriptors() As CurrencyDescriptor()
+If mMaxCurrencyDescsIndex = 0 Then setupCurrencyDescs
+gGetCurrencyDescriptors = mCurrencyDescs
+End Function
+
 Public Function gGetExchangeCodes() As String()
 If mMaxExchangeCodesIndex = 0 Then setupExchangeCodes
 gGetExchangeCodes = mExchangeCodes
+End Function
+
+Public Function gIsValidCurrencyCode(ByVal code As String) As Boolean
+gIsValidCurrencyCode = (getCurrencyIndex(code) >= 0)
 End Function
 
 Public Function gIsValidExchangeCode(ByVal code As String) As Boolean
@@ -91,13 +117,29 @@ Loop Until bottom = middle
 If code = mExchangeCodes(middle) Then gIsValidExchangeCode = True
 End Function
 
+Public Function gIsValidSecType( _
+                ByVal value As Long) As Boolean
+gIsValidSecType = True
+Select Case value
+Case SecTypeStock
+Case SecTypeFuture
+Case SecTypeOption
+Case SecTypeFuturesOption
+Case SecTypeCash
+Case SecTypeCombo
+Case SecTypeIndex
+Case Else
+    gIsValidSecType = False
+End Select
+End Function
+
 Public Function gOptionRightFromString(ByVal value As String) As OptionRights
 Select Case UCase$(value)
 Case ""
     gOptionRightFromString = OptNone
-Case "CALL"
+Case "CALL", "C"
     gOptionRightFromString = OptCall
-Case "PUT"
+Case "PUT", "P"
     gOptionRightFromString = OptPut
 End Select
 End Function
@@ -182,6 +224,46 @@ End If
 mExchangeCodes(mMaxExchangeCodesIndex) = UCase$(code)
 End Sub
 
+Private Sub addCurrencyDesc( _
+                ByVal code As String, _
+                ByVal description As String)
+mMaxCurrencyDescsIndex = mMaxCurrencyDescsIndex + 1
+If mMaxCurrencyDescsIndex > UBound(mCurrencyDescs) Then
+    ReDim Preserve mCurrencyDescs(UBound(mCurrencyDescs) + 10) As CurrencyDescriptor
+End If
+mCurrencyDescs(mMaxCurrencyDescsIndex).code = UCase$(code)
+mCurrencyDescs(mMaxCurrencyDescsIndex).description = UCase$(description)
+End Sub
+
+Public Function getCurrencyIndex(ByVal code As String) As Long
+Dim bottom As Long
+Dim top As Long
+Dim middle As Long
+
+If mMaxCurrencyDescsIndex = 0 Then setupCurrencyDescs
+
+getCurrencyIndex = -1
+
+code = UCase$(code)
+bottom = 0
+top = mMaxCurrencyDescsIndex
+middle = Fix((bottom + top) / 2)
+
+Do
+    If code < mCurrencyDescs(middle).code Then
+        top = middle
+    ElseIf code > mCurrencyDescs(middle).code Then
+        bottom = middle
+    Else
+        getCurrencyIndex = middle
+        Exit Function
+    End If
+    middle = Fix((bottom + top) / 2)
+Loop Until bottom = middle
+
+If code = mCurrencyDescs(middle).code Then getCurrencyIndex = middle
+End Function
+
 Private Sub setupExchangeCodes()
 ReDim mExchangeCodes(100) As String
 mMaxExchangeCodesIndex = -1
@@ -199,13 +281,17 @@ addExchangeCode "BVME"
 
 addExchangeCode "CAES"
 addExchangeCode "CBOE"
+addExchangeCode "CBSX"
 addExchangeCode "CDE"
 addExchangeCode "CFE"
+addExchangeCode "CHX"
 
+addExchangeCode "DRCTEDGE"
 addExchangeCode "DTB"
 
 addExchangeCode "EBS"
 addExchangeCode "ECBOT"
+addExchangeCode "EDGEA"
 addExchangeCode "EUREX"
 addExchangeCode "EUREXUS"
 
@@ -225,9 +311,11 @@ addExchangeCode "INSTINET"
 addExchangeCode "ISE"
 addExchangeCode "ISLAND"
 
+addExchangeCode "LAVA"
 addExchangeCode "LIFFE"
 addExchangeCode "LIFFE_NF"
 addExchangeCode "LSE"
+addExchangeCode "LSSF"
 
 addExchangeCode "MATIF"
 addExchangeCode "MEFF"
@@ -259,6 +347,7 @@ addExchangeCode "SOFFEX"
 addExchangeCode "SWB"
 addExchangeCode "SWX"
 
+addExchangeCode "TRACKECN"
 addExchangeCode "TSE"
 addExchangeCode "TSE.JPN"
 
@@ -267,5 +356,186 @@ addExchangeCode "VIRTX"
 addExchangeCode "VWAP"
 
 ReDim Preserve mExchangeCodes(mMaxExchangeCodesIndex) As String
+
+End Sub
+
+Private Sub setupCurrencyDescs()
+ReDim mCurrencyDescs(200) As CurrencyDescriptor
+mMaxCurrencyDescsIndex = -1
+
+addCurrencyDesc "AED", "United Arab Emirates, Dirhams"
+addCurrencyDesc "AFN", "Afghanistan, Afghanis"
+addCurrencyDesc "ALL", "Albania, Leke"
+addCurrencyDesc "AMD", "Armenia, Drams"
+addCurrencyDesc "ANG", "Netherlands Antilles, Guilders"
+addCurrencyDesc "AOA", "Angola, Kwanza"
+addCurrencyDesc "ARS", "Argentina, Pesos"
+addCurrencyDesc "AUD", "Australia, Dollars"
+addCurrencyDesc "AWG", "Aruba, Guilders"
+addCurrencyDesc "AZN", "Azerbaijan, New Manats"
+addCurrencyDesc "BAM", "Bosnia and Herzegovina, Convertible Marka"
+addCurrencyDesc "BBD", "Barbados, Dollars"
+addCurrencyDesc "BDT", "Bangladesh, Taka"
+addCurrencyDesc "BGN", "Bulgaria, Leva"
+addCurrencyDesc "BHD", "Bahrain, Dinars"
+addCurrencyDesc "BIF", "Burundi, Francs"
+addCurrencyDesc "BMD", "Bermuda, Dollars"
+addCurrencyDesc "BND", "Brunei Darussalam, Dollars"
+addCurrencyDesc "BOB", "Bolivia, Bolivianos"
+addCurrencyDesc "BRL", "Brazil, Brazil Real"
+addCurrencyDesc "BSD", "Bahamas, Dollars"
+addCurrencyDesc "BTN", "Bhutan, Ngultrum"
+addCurrencyDesc "BWP", "Botswana, Pulas"
+addCurrencyDesc "BYR", "Belarus, Rubles"
+addCurrencyDesc "BZD", "Belize, Dollars"
+addCurrencyDesc "CAD", "Canada, Dollars"
+addCurrencyDesc "CDF", "Congo/Kinshasa, Congolese Francs"
+addCurrencyDesc "CHF", "Switzerland, Francs"
+addCurrencyDesc "CLP", "Chile, Pesos"
+addCurrencyDesc "CNY", "China, Yuan Renminbi"
+addCurrencyDesc "COP", "Colombia, Pesos"
+addCurrencyDesc "CRC", "Costa Rica, Colones"
+addCurrencyDesc "CUP", "Cuba, Pesos"
+addCurrencyDesc "CVE", "Cape Verde, Escudos"
+addCurrencyDesc "CYP", "Cyprus, Pounds"
+addCurrencyDesc "CZK", "Czech Republic, Koruny"
+addCurrencyDesc "DJF", "Djibouti, Francs"
+addCurrencyDesc "DKK", "Denmark, Kroner"
+addCurrencyDesc "DOP", "Dominican Republic, Pesos"
+addCurrencyDesc "DZD", "Algeria, Algeria Dinars"
+addCurrencyDesc "EEK", "Estonia, Krooni"
+addCurrencyDesc "EGP", "Egypt, Pounds"
+addCurrencyDesc "ERN", "Eritrea, Nakfa"
+addCurrencyDesc "ETB", "Ethiopia, Birr"
+addCurrencyDesc "EUR", "Euro Member Countries, Euro"
+addCurrencyDesc "FJD", "Fiji, Dollars"
+addCurrencyDesc "FKP", "Falkland Islands (Malvinas), Pounds"
+addCurrencyDesc "GBP", "United Kingdom, Pounds"
+addCurrencyDesc "GEL", "Georgia, Lari"
+addCurrencyDesc "GGP", "Guernsey, Pounds"
+addCurrencyDesc "GHC", "Ghana, Cedis"
+addCurrencyDesc "GHS", "Ghana, Cedis"
+addCurrencyDesc "GIP", "Gibraltar, Pounds"
+addCurrencyDesc "GMD", "Gambia, Dalasi"
+addCurrencyDesc "GNF", "Guinea, Francs"
+addCurrencyDesc "GTQ", "Guatemala, Quetzales"
+addCurrencyDesc "GYD", "Guyana, Dollars"
+addCurrencyDesc "HKD", "Hong Kong, Dollars"
+addCurrencyDesc "HNL", "Honduras, Lempiras"
+addCurrencyDesc "HRK", "Croatia, Kuna"
+addCurrencyDesc "HTG", "Haiti, Gourdes"
+addCurrencyDesc "HUF", "Hungary, Forint"
+addCurrencyDesc "IDR", "Indonesia, Rupiahs"
+addCurrencyDesc "ILS", "Israel, New Shekels"
+addCurrencyDesc "IMP", "Isle of Man, Pounds"
+addCurrencyDesc "INR", "India, Rupees"
+addCurrencyDesc "IQD", "Iraq, Dinars"
+addCurrencyDesc "IRR", "Iran, Rials"
+addCurrencyDesc "ISK", "Iceland, Kronur"
+addCurrencyDesc "JEP", "Jersey, Pounds"
+addCurrencyDesc "JMD", "Jamaica, Dollars"
+addCurrencyDesc "JOD", "Jordan, Dinars"
+addCurrencyDesc "JPY", "Japan, Yen"
+addCurrencyDesc "KES", "Kenya, Shillings"
+addCurrencyDesc "KGS", "Kyrgyzstan, Soms"
+addCurrencyDesc "KHR", "Cambodia, Riels"
+addCurrencyDesc "KMF", "Comoros, Francs"
+addCurrencyDesc "KPW", "Korea (North), Won"
+addCurrencyDesc "KRW", "Korea (South), Won"
+addCurrencyDesc "KWD", "Kuwait, Dinars"
+addCurrencyDesc "KYD", "Cayman Islands, Dollars"
+addCurrencyDesc "KZT", "Kazakhstan, Tenge"
+addCurrencyDesc "LAK", "Laos, Kips"
+addCurrencyDesc "LBP", "Lebanon, Pounds"
+addCurrencyDesc "LKR", "Sri Lanka, Rupees"
+addCurrencyDesc "LRD", "Liberia, Dollars"
+addCurrencyDesc "LSL", "Lesotho, Maloti"
+addCurrencyDesc "LTL", "Lithuania, Litai"
+addCurrencyDesc "LVL", "Latvia, Lati"
+addCurrencyDesc "LYD", "Libya, Dinars"
+addCurrencyDesc "MAD", "Morocco, Dirhams"
+addCurrencyDesc "MDL", "Moldova, Lei"
+addCurrencyDesc "MGA", "Madagascar, Ariary"
+addCurrencyDesc "MKD", "Macedonia, Denars"
+addCurrencyDesc "MMK", "Myanmar (Burma), Kyats"
+addCurrencyDesc "MNT", "Mongolia, Tugriks"
+addCurrencyDesc "MOP", "Macau, Patacas"
+addCurrencyDesc "MRO", "Mauritania, Ouguiyas"
+addCurrencyDesc "MTL", "Malta, Liri"
+addCurrencyDesc "MUR", "Mauritius, Rupees"
+addCurrencyDesc "MVR", "Maldives (Maldive Islands), Rufiyaa"
+addCurrencyDesc "MWK", "Malawi, Kwachas"
+addCurrencyDesc "MXN", "Mexico, Pesos"
+addCurrencyDesc "MYR", "Malaysia, Ringgits"
+addCurrencyDesc "MZN", "Mozambique, Meticais"
+addCurrencyDesc "NAD", "Namibia, Dollars"
+addCurrencyDesc "NGN", "Nigeria, Nairas"
+addCurrencyDesc "NIO", "Nicaragua, Cordobas"
+addCurrencyDesc "NOK", "Norway, Krone"
+addCurrencyDesc "NPR", "Nepal, Nepal Rupees"
+addCurrencyDesc "NZD", "New Zealand, Dollars"
+addCurrencyDesc "OMR", "Oman, Rials"
+addCurrencyDesc "PAB", "Panama, Balboa"
+addCurrencyDesc "PEN", "Peru, Nuevos Soles"
+addCurrencyDesc "PGK", "Papua New Guinea, Kina"
+addCurrencyDesc "PHP", "Philippines, Pesos"
+addCurrencyDesc "PKR", "Pakistan, Rupees"
+addCurrencyDesc "PLN", "Poland, Zlotych"
+addCurrencyDesc "PYG", "Paraguay, Guarani"
+addCurrencyDesc "QAR", "Qatar, Rials"
+addCurrencyDesc "RON", "Romania, New Lei"
+addCurrencyDesc "RSD", "Serbia, Dinars"
+addCurrencyDesc "RUB", "Russia, Rubles"
+addCurrencyDesc "RWF", "Rwanda, Rwanda Francs"
+addCurrencyDesc "SAR", "Saudi Arabia, Riyals"
+addCurrencyDesc "SBD", "Solomon Islands, Dollars"
+addCurrencyDesc "SCR", "Seychelles, Rupees"
+addCurrencyDesc "SDG", "Sudan, Pounds"
+addCurrencyDesc "SEK", "Sweden, Kronor"
+addCurrencyDesc "SGD", "Singapore, Dollars"
+addCurrencyDesc "SHP", "Saint Helena, Pounds"
+addCurrencyDesc "SKK", "Slovakia, Koruny"
+addCurrencyDesc "SLL", "Sierra Leone, Leones"
+addCurrencyDesc "SOS", "Somalia, Shillings"
+addCurrencyDesc "SPL", "Seborga, Luigini"
+addCurrencyDesc "SRD", "Suriname, Dollars"
+addCurrencyDesc "STD", "São Tome and Principe, Dobras"
+addCurrencyDesc "SVC", "El Salvador, Colones"
+addCurrencyDesc "SYP", "Syria, Pounds"
+addCurrencyDesc "SZL", "Swaziland, Emalangeni"
+addCurrencyDesc "THB", "Thailand, Baht"
+addCurrencyDesc "TJS", "Tajikistan, Somoni"
+addCurrencyDesc "TMM", "Turkmenistan, Manats"
+addCurrencyDesc "TND", "Tunisia, Dinars"
+addCurrencyDesc "TOP", "Tonga, Pa'anga"
+addCurrencyDesc "TRY", "Turkey, New Lira"
+addCurrencyDesc "TTD", "Trinidad and Tobago, Dollars"
+addCurrencyDesc "TVD", "Tuvalu, Tuvalu Dollars"
+addCurrencyDesc "TWD", "Taiwan, New Dollars"
+addCurrencyDesc "TZS", "Tanzania, Shillings"
+addCurrencyDesc "UAH", "Ukraine, Hryvnia"
+addCurrencyDesc "UGX", "Uganda, Shillings"
+addCurrencyDesc "USD", "United States of America, Dollars"
+addCurrencyDesc "UYU", "Uruguay, Pesos"
+addCurrencyDesc "UZS", "Uzbekistan, Sums"
+addCurrencyDesc "VEB", "Venezuela, Bolivares"
+addCurrencyDesc "VND", "Viet Nam, Dong"
+addCurrencyDesc "VUV", "Vanuatu, Vatu"
+addCurrencyDesc "WST", "Samoa, Tala"
+addCurrencyDesc "XAF", "Communauté Financière Africaine BEAC, Francs"
+addCurrencyDesc "XAG", "Silver, Ounces"
+addCurrencyDesc "XAU", "Gold, Ounces"
+addCurrencyDesc "XCD", "East Caribbean Dollars"
+addCurrencyDesc "XOF", "Communauté Financière Africaine BCEAO, Francs"
+addCurrencyDesc "XPD", "Palladium Ounces"
+addCurrencyDesc "XPF", "Comptoirs Français du Pacifique Francs"
+addCurrencyDesc "XPT", "Platinum, Ounces"
+addCurrencyDesc "YER", "Yemen, Rials"
+addCurrencyDesc "ZAR", "South Africa, Rand"
+addCurrencyDesc "ZMK", "Zambia, Kwacha"
+addCurrencyDesc "ZWD", "Zimbabwe, Zimbabwe Dollars"
+
+
+ReDim Preserve mCurrencyDescs(mMaxCurrencyDescsIndex) As CurrencyDescriptor
 
 End Sub

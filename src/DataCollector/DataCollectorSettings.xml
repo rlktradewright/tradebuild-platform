@@ -1,127 +1,134 @@
 <Configuration __AppName="TradeBuild Data Collector" __AppVersion="1.0" __FileVersion="1.0">
-  <TradeBuildServiceProviders __ItemType="set">
-    <ServiceProviders __ItemType="list" __ListItemName="ServiceProvider">
+  <TradeBuildServiceProviders >
+    <ServiceProviders>
       <!--Enable realtime data from TWS-->
-      <ServiceProvider __ID="DAA1EF54-14A7-491B-8697-F5988AE05189" __ItemType="set" Enabled="True" ProgId="IBTWSSP26.RealtimeDataServiceProvider" LogLevel="1">
-        <Properties __ItemType="list" __ListItemName="Property">
-          <Property __ItemType="item" Name="Server" Value="Delphi" />
-          <Property __ItemType="item" Name="Port" Value="7496" />
-          <Property __ItemType="item" Name="Client Id" Value="-1" />
-          <Property __ItemType="item" Name="Provider Key" Value="IB" />
-          <Property __ItemType="item" Name="Keep Connection" Value="True" />
+      <ServiceProvider Enabled="True" ProgId="IBTWSSP26.RealtimeDataServiceProvider" LogLevel="1">
+        <Properties>
+          <Property  Name="Server" Value="EBBY" />
+          <Property  Name="Port" Value="7496" />
+          <Property  Name="Client Id" Value="-1" />
+          <Property  Name="Provider Key" Value="IB" />
+          <Property  Name="Keep Connection" Value="True" />
         </Properties>
       </ServiceProvider>
       <!--Disable realtime data from QuoteTracker-->
-      <ServiceProvider __ID="D5440987-582D-4076-B901-41263248ACA4" __ItemType="set" Enabled="False" ProgId="QTSP26.QTRealtimeDataServiceProvider" LogLevel="1">
-        <Properties __ItemType="list" __ListItemName="Property">
-          <Property __ItemType="item" Name="QT Server" Value="" />
-          <Property __ItemType="item" Name="QT Port" Value="16240" />
-          <Property __ItemType="item" Name="Password" Value="" />
-          <Property __ItemType="item" Name="Provider Key" Value="QTIB" />
-          <Property __ItemType="item" Name="Keep Connection" Value="True" />
+      <ServiceProvider Enabled="False" ProgId="QTSP26.QTRealtimeDataServiceProvider" LogLevel="1">
+        <Properties>
+          <Property  Name="QT Server" Value="" />
+          <Property  Name="QT Port" Value="16240" />
+          <Property  Name="Password" Value="" />
+          <Property  Name="Provider Key" Value="QTIB" />
+          <Property  Name="Keep Connection" Value="True" />
         </Properties>
       </ServiceProvider>
       <!--Enable contract data from TradeBuild's database-->
-      <ServiceProvider __ID="2BA2415C-6550-49E7-BF6E-0512CF7D8AA7" __ItemType="set" Enabled="True" ProgId="TBInfoBase26.ContractInfoSrvcProvider" LogLevel="1">
-        <Properties __ItemType="list" __ListItemName="Property">
-          <Property __ItemType="item" Name="Database Name" Value="Trading" />
-          <Property __ItemType="item" Name="Database Type" Value="SQL Server 2005" />
-          <Property __ItemType="item" Name="Server" Value="GIGI\SQLExpress" />
+      <ServiceProvider Enabled="True" ProgId="TBInfoBase26.ContractInfoSrvcProvider" LogLevel="1">
+        <Properties>
+          <Property  Name="Database Name" Value="Trading" />
+          <Property  Name="Database Type" Value="SQL Server 2005" />
+          <Property  Name="Server" Value=".\SQLExpress" />
+<!--
+	  <Property  Name="User name" Value="TradeBuild" />
+          <Property  Name="Password" Value="Wthlataw,ashbr" />
+-->
         </Properties>
       </ServiceProvider>
       <!--Disable contract data from TWS-->
-      <ServiceProvider __ID="46C948F9-FC03-4D27-8A9D-6ABBCA07B4F1" __ItemType="set" Enabled="False" ProgId="IBTWSSP26.ContractInfoServiceProvider" LogLevel="1">
-        <Properties __ItemType="list" __ListItemName="Property">
-          <Property __ItemType="item" Name="Server" Value="Delphi" />
-          <Property __ItemType="item" Name="Port" Value="7496" />
-          <Property __ItemType="item" Name="Client Id" Value="-1" />
-          <Property __ItemType="item" Name="Provider Key" Value="IB" />
-          <Property __ItemType="item" Name="Keep Connection" Value="True" />
+      <ServiceProvider Enabled="False" ProgId="IBTWSSP26.ContractInfoServiceProvider" LogLevel="1">
+        <Properties>
+          <Property  Name="Server" Value="EBBY" />
+          <Property  Name="Port" Value="7496" />
+          <Property  Name="Client Id" Value="-1" />
+          <Property  Name="Provider Key" Value="IB" />
+          <Property  Name="Keep Connection" Value="True" />
         </Properties>
       </ServiceProvider>
       <!--Enable historical tick data storage/retrieval to/from TradeBuild's database-->
-      <ServiceProvider __ID="5B942C51-5E45-465D-9AB1-B4CF5C9B1C87" __ItemType="set" Enabled="True" ProgId="TBInfoBase26.TickfileServiceProvider" LogLevel="1">
-        <Properties __ItemType="list" __ListItemName="Property">
-          <Property __ItemType="item" Name="Database Name" Value="Trading" />
-          <Property __ItemType="item" Name="Database Type" Value="SQL Server 2005" />
-          <Property __ItemType="item" Name="Server" Value="GIGI\SQLExpress" />
+      <ServiceProvider Enabled="True" ProgId="TBInfoBase26.TickfileServiceProvider" LogLevel="1">
+        <Properties>
+          <Property  Name="Database Name" Value="Trading" />
+          <Property  Name="Database Type" Value="SQL Server 2005" />
+          <Property  Name="Server" Value=".\SQLExpress" />
+<!--
+	  <Property  Name="User name" Value="TradeBuild" />
+          <Property  Name="Password" Value="Wthlataw,ashbr" />
+-->
         </Properties>
       </ServiceProvider>
       <!--Enable historical tick data storage/retrieval to/from various file formats-->
-      <ServiceProvider __ID="081B2969-7647-4A59-A738-D3AC5C54D3A6" __ItemType="set" Enabled="True" ProgId="TickfileSP26.TickfileServiceProvider" LogLevel="1">
-        <Properties __ItemType="list" __ListItemName="Property" />
+      <ServiceProvider Enabled="True" ProgId="TickfileSP26.TickfileServiceProvider" LogLevel="1">
+        <Properties />
       </ServiceProvider>
       <!--Enable historical bar data storage/retrieval to/from TradeBuild's database-->
-      <ServiceProvider __ID="047A7937-FD2E-4820-BD0B-48BAC4CA18A3" __ItemType="set" Enabled="True" ProgId="TBInfoBase26.HistDataServiceProvider" LogLevel="1">
-        <Properties __ItemType="list" __ListItemName="Property">
-          <Property __ItemType="item" Name="Database Name" Value="Trading" />
-          <Property __ItemType="item" Name="Database Type" Value="SQL Server 2005" />
-          <Property __ItemType="item" Name="Server" Value="GIGI\SQLExpress" />
+      <ServiceProvider Enabled="True" ProgId="TBInfoBase26.HistDataServiceProvider" LogLevel="1">
+        <Properties>
+          <Property  Name="Database Name" Value="Trading" />
+          <Property  Name="Database Type" Value="SQL Server 2005" />
+          <Property  Name="Server" Value=".\SQLExpress" />
+<!--
+	  <Property  Name="User name" Value="TradeBuild" />
+          <Property  Name="Password" Value="Wthlataw,ashbr" />
+-->
         </Properties>
       </ServiceProvider>
     </ServiceProviders>
   </TradeBuildServiceProviders>
-  <TradeBuildStudyLibraries __ItemType="set">
-    <StudyLibraries __ItemType="list" __ListItemName="StudyLibrary">
-      <StudyLibrary __ID="62B5608F-D5A4-4D79-9536-F87B1F0E5230" __ItemType="item" Name="Built-in" Enabled="True" ProgId="CmnStudiesLib26.StudyLib" />
+  <TradeBuildStudyLibraries >
+    <StudyLibraries>
+      <StudyLibrary Name="Built-in" Enabled="True" ProgId="CmnStudiesLib26.StudyLib" />
     </StudyLibraries>
   </TradeBuildStudyLibraries>
-  <DataCollectorConfiguration __ItemType="set">
-    <CollectionControl  __ItemType="item"  WriteTickData="True" WriteBarData="True" />
-    <TickDataFormat __ItemType="item">
+  <DataCollectorConfiguration >
+    <CollectionControl    WriteTickData="True" WriteBarData="True" />
+    <TickDataFormat >
       <!--Set to: "TradeBuild SQLDB" (for database output)
         "TradeBuild V4" (for file output)
       -->TradeBuild SQLDB</TickDataFormat>
-    <TickfilePath __ItemType="item">
+    <TickfilePath >
       <!--If no value is specified, tick files will be placed in a folder tree 
 whose root is called TickFiles and which sits below the folder that 
 the program is loaded from. This value is ignored where output is to
 database.
       -->
     </TickfilePath>
-    <Contracts __ItemType="list" __ListItemName="Contract">
-      <Contract __ItemType="set" Enabled="True" WriteBidAndAskBars="False">
-        <ContractSpecifier __ItemType="item" LocalSymbol="ZB   JUN 07" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
+    <Contracts>
+<!--
+      <Contract  Enabled="True" WriteBidAndAskBars="False">
+        <ContractSpecifier  LocalSymbol="" Symbol="Z" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
       </Contract>
-      <Contract __ItemType="set" Enabled="True" WriteBidAndAskBars="False">
-        <ContractSpecifier __ItemType="item" LocalSymbol="6EM7" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
+-->
+      <Contract  Enabled="True" WriteBidAndAskBars="False">
+        <ContractSpecifier  LocalSymbol="" Symbol="ES" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
       </Contract>
-      <Contract __ItemType="set" Enabled="True" WriteBidAndAskBars="False">
-        <ContractSpecifier __ItemType="item" LocalSymbol="6BM7" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
+      <Contract  Enabled="True" WriteBidAndAskBars="False">
+        <ContractSpecifier  LocalSymbol="" Symbol="NQ" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
       </Contract>
-      <Contract __ItemType="set" Enabled="True" WriteBidAndAskBars="False">
-        <ContractSpecifier __ItemType="item" LocalSymbol="ZU7" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
+<!--
+      <Contract  Enabled="True" WriteBidAndAskBars="False">
+        <ContractSpecifier  LocalSymbol="" Symbol="ER2" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
       </Contract>
-      <Contract __ItemType="set" Enabled="True" WriteBidAndAskBars="False">
-        <ContractSpecifier __ItemType="item" LocalSymbol="ESU7" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
+      <Contract  Enabled="True" WriteBidAndAskBars="False">
+        <ContractSpecifier  LocalSymbol="" Symbol="YM" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
       </Contract>
-      <Contract __ItemType="set" Enabled="True" WriteBidAndAskBars="False">
-        <ContractSpecifier __ItemType="item" LocalSymbol="NQU7" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
+      <Contract  Enabled="True" WriteBidAndAskBars="False">
+        <ContractSpecifier  LocalSymbol="" Symbol="ZB" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
       </Contract>
-      <Contract __ItemType="set" Enabled="True" WriteBidAndAskBars="False">
-        <ContractSpecifier __ItemType="item" LocalSymbol="ER2U7" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
+      <Contract  Enabled="True" WriteBidAndAskBars="False">
+        <ContractSpecifier  LocalSymbol="" Symbol="DAX" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
       </Contract>
-      <Contract __ItemType="set" Enabled="True" WriteBidAndAskBars="False">
-        <ContractSpecifier __ItemType="item" LocalSymbol="YM   SEP 07" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
+      <Contract  Enabled="True" WriteBidAndAskBars="False">
+        <ContractSpecifier  LocalSymbol="" Symbol="ESTX50" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
       </Contract>
-      <Contract __ItemType="set" Enabled="True" WriteBidAndAskBars="False">
-        <ContractSpecifier __ItemType="item" LocalSymbol="ZB   SEP 07" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
+      <Contract  Enabled="True" WriteBidAndAskBars="False">
+        <ContractSpecifier  LocalSymbol="" Symbol="GBL" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
       </Contract>
-      <Contract __ItemType="set" Enabled="True" WriteBidAndAskBars="False">
-        <ContractSpecifier __ItemType="item" LocalSymbol="FDAX SEP 07" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
+      <Contract  Enabled="True" WriteBidAndAskBars="False">
+        <ContractSpecifier  LocalSymbol="" Symbol="EUR" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
       </Contract>
-      <Contract __ItemType="set" Enabled="True" WriteBidAndAskBars="False">
-        <ContractSpecifier __ItemType="item" LocalSymbol="FESX SEP 07" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
+      <Contract  Enabled="True" WriteBidAndAskBars="False">
+        <ContractSpecifier  LocalSymbol="" Symbol="GBP" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
       </Contract>
-      <Contract __ItemType="set" Enabled="True" WriteBidAndAskBars="False">
-        <ContractSpecifier __ItemType="item" LocalSymbol="FGBL SEP 07" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
-      </Contract>
-      <Contract __ItemType="set" Enabled="True" WriteBidAndAskBars="False">
-        <ContractSpecifier __ItemType="item" LocalSymbol="6EU7" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
-      </Contract>
-      <Contract __ItemType="set" Enabled="True" WriteBidAndAskBars="False">
-        <ContractSpecifier __ItemType="item" LocalSymbol="6BU7" Symbol="" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
-      </Contract>
+-->
     </Contracts>
   </DataCollectorConfiguration>
 </Configuration>

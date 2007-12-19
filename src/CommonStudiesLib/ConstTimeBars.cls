@@ -237,7 +237,11 @@ ElseIf ev.valueName = ConstTimeBarsInputTotalVolume Then
     If mPrevBarVolume < 0 Then
         ' this is the first volume notification after switching to a new
         ' source
-        mPrevBarVolume = ev.value - mVolumeCache.getValue(0)
+        If mVolumeCache.Count = 0 Then
+            mPrevBarVolume = ev.value
+        Else
+            mPrevBarVolume = ev.value - mVolumeCache.getValue(0)
+        End If
     End If
     'Debug.Assert mLatestVolume >= mPrevBarVolume
     If mPrevBarVolume = 0 And Not firstVolumeReceived Then
@@ -253,10 +257,12 @@ ElseIf ev.valueName = ConstTimeBarsInputTotalVolume Then
         End If
     End If
     
-    mVolumeCache.updateValue mLatestVolume - mPrevBarVolume
-    mTotalVolumeCache.updateValue mLatestVolume
-    notifyVolume ev.timestamp
-    notifyTotalVolume ev.timestamp
+    If mVolumeCache.Count <> 0 Then
+        mVolumeCache.updateValue mLatestVolume - mPrevBarVolume
+        mTotalVolumeCache.updateValue mLatestVolume
+        notifyVolume ev.timestamp
+        notifyTotalVolume ev.timestamp
+    End If
 ElseIf ev.valueName = ConstTimeBarsInputTickVolume Then
     ' we assume that a tickVolume notification belongs to the same bar as the
     ' preceding price notification, so we don't check the timestamp

@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "ComboContractSpecBildr"
+Attribute VB_Name = "ComboContractSpecBldr"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
@@ -42,7 +42,7 @@ Option Explicit
 '@================================================================================
 
 Private Const ProjectName                   As String = "ContractUtils26"
-Private Const ModuleName                    As String = "ComboContractSpecBuilder"
+Private Const ModuleName                    As String = "ComboContractSpecBldr"
 
 '@================================================================================
 ' Member variables

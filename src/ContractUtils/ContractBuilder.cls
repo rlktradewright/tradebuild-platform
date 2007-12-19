@@ -82,7 +82,7 @@ Public Property Let expiryDate(ByVal value As Date)
 mContract.expiryDate = value
 End Property
 
-Public Property Let multiplier(ByVal value As Long)
+Public Property Let multiplier(ByVal value As Double)
 mContract.multiplier = value
 End Property
 

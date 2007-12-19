@@ -46,6 +46,7 @@ Private Const ModuleName                    As String = "StringStreamer"
 '@================================================================================
 
 Private mStr As String
+Private mInPosn As Long
 
 '@================================================================================
 ' Class Event Handlers
@@ -67,32 +68,32 @@ Private mStr As String
 ' Methods
 '@================================================================================
 
+Public Function eos() As Boolean
+eos = mInPosn > Len(mStr)
+End Function
+
 Friend Sub initialise( _
                 value As String)
 mStr = value
 End Sub
 
-'@================================================================================
-' Helper Functions
-'@================================================================================
-
-Private Function nextChar() As String
+Public Function nextChar() As String
 mInPosn = mInPosn + 1
 If Not eos Then
-    nextChar = Mid$(mNameTemplate, mInPosn, 1)
+    nextChar = Mid$(mStr, mInPosn, 1)
 End If
 End Function
 
-Private Function peekChar() As String
+Public Function peekChar() As String
 mInPosn = mInPosn + 1
 If Not eos Then
-    peekChar = Mid$(mNameTemplate, mInPosn, 1)
+    peekChar = Mid$(mStr, mInPosn, 1)
 End If
 mInPosn = mInPosn - 1
 End Function
 
-Private Function eos() As Boolean
-eos = mInPosn > Len(mNameTemplate)
-End Function
+'@================================================================================
+' Helper Functions
+'@================================================================================
 
 

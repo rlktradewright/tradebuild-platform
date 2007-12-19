@@ -71,6 +71,7 @@ Begin VB.Form fDataCollectorUI
       _Version        =   393216
       Style           =   1
       Tabs            =   2
+      Tab             =   1
       TabHeight       =   494
       ForeColor       =   -2147483630
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
@@ -84,7 +85,7 @@ Begin VB.Form fDataCollectorUI
       EndProperty
       TabCaption(0)   =   "&Activity"
       TabPicture(0)   =   "fQuoteServerUI.frx":0000
-      Tab(0).ControlEnabled=   -1  'True
+      Tab(0).ControlEnabled=   0   'False
       Tab(0).Control(0)=   "TickerScroll"
       Tab(0).Control(0).Enabled=   0   'False
       Tab(0).Control(1)=   "TickersContainerPicture"
@@ -92,14 +93,15 @@ Begin VB.Form fDataCollectorUI
       Tab(0).ControlCount=   2
       TabCaption(1)   =   "&Log"
       TabPicture(1)   =   "fQuoteServerUI.frx":001C
-      Tab(1).ControlEnabled=   0   'False
+      Tab(1).ControlEnabled=   -1  'True
       Tab(1).Control(0)=   "LogText"
+      Tab(1).Control(0).Enabled=   0   'False
       Tab(1).ControlCount=   1
       Begin VB.PictureBox TickersContainerPicture 
          Appearance      =   0  'Flat
          ForeColor       =   &H80000008&
          Height          =   2655
-         Left            =   120
+         Left            =   -74880
          ScaleHeight     =   2625
          ScaleWidth      =   4785
          TabIndex        =   7
@@ -220,7 +222,8 @@ Begin VB.Form fDataCollectorUI
       End
       Begin VB.TextBox LogText 
          Height          =   2655
-         Left            =   -74880
+         Left            =   120
+         MaxLength       =   65535
          MultiLine       =   -1  'True
          ScrollBars      =   3  'Both
          TabIndex        =   5
@@ -229,7 +232,7 @@ Begin VB.Form fDataCollectorUI
       End
       Begin VB.VScrollBar TickerScroll 
          Height          =   2700
-         Left            =   4920
+         Left            =   -70080
          TabIndex        =   4
          Top             =   360
          Width           =   255
@@ -309,9 +312,10 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
+Implements BarWriterListener
 Implements QuoteListener
 Implements StateChangeListener
-Implements WriterListener
+Implements TickfileWriterListener
 
 '================================================================================
 ' Events
@@ -341,7 +345,7 @@ End Type
 ' Member variables
 '================================================================================
 
-Private WithEvents mDataCollector As TBDataCollector
+Private WithEvents mDataCollector As dataCollector
 Attribute mDataCollector.VB_VarHelpID = -1
 
 Private mTickers() As TickerTableEntry
@@ -377,7 +381,7 @@ Private mStartStopTimePanel As Panel
 
 Private Sub Form_Initialize()
 InitCommonControls
-Set mTimerList = GetGlobalTimerList(False)
+Set mTimerList = GetGlobalTimerList
 ReDim mTickers(99) As TickerTableEntry
 End Sub
 
@@ -412,6 +416,30 @@ End Sub
 
 Private Sub Form_Terminate()
 TerminateTWUtilities
+End Sub
+
+'================================================================================
+' BarWriterListener Interface Members
+'================================================================================
+
+Private Sub BarWriterListener_notify(ev As TradeBuild26.WriterEvent)
+Dim tk As ticker
+
+Select Case ev.Action
+Case WriterNotifications.WriterNotReady
+    Set tk = ev.Source
+    logMessage "Bar writer not ready for " & _
+                tk.Contract.specifier.localSymbol
+Case WriterNotifications.WriterReady
+    Set tk = ev.Source
+    logMessage "Bar writer ready for " & _
+                tk.Contract.specifier.localSymbol
+Case WriterNotifications.WriterFileCreated
+    Set tk = ev.Source
+    logMessage "Writing bars for " & _
+                tk.Contract.specifier.localSymbol & _
+                " to " & ev.FileName
+End Select
 End Sub
 
 '================================================================================
@@ -467,52 +495,26 @@ End If
 End Sub
 
 '================================================================================
-' WriterListener Interface Members
+' TickfileWriterListener Interface Members
 '================================================================================
 
-Private Sub WriterListener_notify(ev As WriterEvent)
-Dim tf As Timeframe
+Private Sub TickfileWriterListener_notify(ev As TradeBuild26.WriterEvent)
 Dim tk As ticker
 
 Select Case ev.Action
 Case WriterNotifications.WriterNotReady
-    If TypeOf ev.Source Is Timeframe Then
-        Set tf = ev.Source
-        logMessage tf.barLength & _
-                        "-" & TimePeriodUnitsToString(tf.barUnit) & _
-                        " bar writer not ready for " & _
-                        tf.Contract.specifier.localSymbol
-    Else
-        Set tk = ev.Source
-        logMessage "Tickfile writer not ready for " & _
-                        tk.Contract.specifier.localSymbol
-    End If
+    Set tk = ev.Source
+    logMessage "Tickfile writer not ready for " & _
+                    tk.Contract.specifier.localSymbol
 Case WriterNotifications.WriterReady
-    If TypeOf ev.Source Is Timeframe Then
-        Set tf = ev.Source
-        logMessage tf.barLength & _
-                        "-" & TimePeriodUnitsToString(tf.barUnit) & _
-                        " bar writer ready for " & _
-                        tf.Contract.specifier.localSymbol
-    Else
-        Set tk = ev.Source
-        logMessage "Tickfile writer ready for " & _
-                        tk.Contract.specifier.localSymbol
-    End If
+    Set tk = ev.Source
+    logMessage "Tickfile writer ready for " & _
+                    tk.Contract.specifier.localSymbol
 Case WriterNotifications.WriterFileCreated
-    If TypeOf ev.Source Is Timeframe Then
-        Set tf = ev.Source
-        logMessage "Writing " & tf.barLength & _
-                    "-" & TimePeriodUnitsToString(tf.barUnit) & _
-                    " bars for " & _
-                    tf.Contract.specifier.localSymbol & _
-                    " to " & ev.FileName
-    Else
-        Set tk = ev.Source
-        logMessage "Writing tickdata for " & _
-                    tk.Contract.specifier.localSymbol & _
-                    " to " & ev.FileName
-    End If
+    Set tk = ev.Source
+    logMessage "Writing tickdata for " & _
+                tk.Contract.specifier.localSymbol & _
+                " to " & ev.FileName
 End Select
 End Sub
 
@@ -684,7 +686,7 @@ If timerCount Mod 4 = 0 Then
     TicksPerSecText = mTickCount
     mTickCount = 0
 End If
-SecsSinceLastTickText = Format(86400 * (getTimestamp - mLastTickTime), "0")
+SecsSinceLastTickText = Format(86400 * (GetTimestamp - mLastTickTime), "0")
 End Sub
 
 '================================================================================
@@ -699,7 +701,7 @@ End Property
 '================================================================================
 
 Friend Sub initialise( _
-                ByVal pDataCollector As TBDataCollector, _
+                ByVal pDataCollector As dataCollector, _
                 ByVal noAutoStart As Boolean, _
                 ByVal showMonitor As Boolean)
 
@@ -763,11 +765,12 @@ mActivityMonitorVisible = False
 End Sub
     
 Private Sub logMessage(ByVal text As String)
-If Len(LogText.text) > (32000 - Len(text)) Then
-    LogText.text = Right$(LogText.text, 32000 - Len(text)) & vbCrLf & Format(Now, "hh:mm:ss") & "  " & text
-Else
-    LogText.text = LogText.text & vbCrLf & Format(Now, "hh:mm:ss") & "  " & text
-End If
+LogText.SelStart = Len(LogText.text)
+LogText.SelLength = 0
+If Len(LogText.text) > 0 Then LogText.SelText = vbCrLf
+LogText.SelText = Format(Now, "hh:mm:ss")
+LogText.SelText = "  "
+LogText.SelText = text
 LogText.SelStart = InStrRev(LogText.text, vbCrLf) + 2
 End Sub
 
@@ -776,7 +779,7 @@ Private Sub processQuoteEvent( _
 Dim lTicker As ticker
 Set lTicker = ev.Source
 switchDataLightOn lTicker.Handle
-mLastTickTime = getTimestamp
+mLastTickTime = GetTimestamp
 mTickCount = mTickCount + 1
 End Sub
 
@@ -857,7 +860,7 @@ mCollectingData = True
 StartStopButton.Caption = "Stop"
 StartStopButton.Enabled = True
 
-mLastTickTime = getTimestamp
+mLastTickTime = GetTimestamp
 
 Set mTimer = CreateIntervalTimer(0, , 250)
 mTimer.StartTimer

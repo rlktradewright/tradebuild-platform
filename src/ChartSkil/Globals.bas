@@ -54,12 +54,6 @@ Public Const ToolbarCommandThinnerBars As String = "thinnerbars"
 ' Types
 '================================================================================
 
-Public Type TInterval
-    isValid         As Boolean
-    startValue      As Double
-    endValue        As Double
-End Type
-
 '================================================================================
 ' Member variables
 '================================================================================

@@ -48,7 +48,7 @@ Private Const ModuleName                    As String = "CollectorMonitor"
 ' Member variables
 '@================================================================================
 
-Private WithEvents mDataCollector As TBDataCollector
+Private WithEvents mDataCollector As dataCollector
 Attribute mDataCollector.VB_VarHelpID = -1
 
 '@================================================================================
