@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#4.0#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#13.0#0"; "ChartSkil2-6.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo Version 2.5"
    ClientHeight    =   8355
@@ -709,10 +709,10 @@ If bartime <> mBarTime Then
     Set mPeriod = Chart1.periods.Item(bartime)
 End If
 
-mBar.tick openPrice
-mBar.tick highPrice
-mBar.tick lowPrice
-mBar.tick closePrice
+mBar.Tick openPrice
+mBar.Tick highPrice
+mBar.Tick lowPrice
+mBar.Tick closePrice
 
 If mPeriod.periodNumber Mod BarLabelFrequency = 0 Then
     ' color the bar blue
@@ -768,7 +768,7 @@ If bartime <> mBarTime Then
 End If
 
 mElapsedTimer.StartTiming
-mBar.tick price
+mBar.Tick price
 Debug.Print "Time for tick: " & mElapsedTimer.ElapsedTimeMicroseconds & " microsecs"
 
 calculateStudies price

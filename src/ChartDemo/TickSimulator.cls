@@ -164,6 +164,8 @@ Dim lowPrice As Double
 Dim closePrice As Double
 Dim volume As Long
 
+Randomize
+
 timestamp = Now - (numberOfBars - 1) * mBarLength / 1440
 bartime = calcBarTime(timestamp)
 lowPrice = 999999
