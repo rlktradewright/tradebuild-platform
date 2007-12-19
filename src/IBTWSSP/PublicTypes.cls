@@ -62,19 +62,19 @@ Public Enum TickTypes
     OpenInterest
 End Enum
 
-Public Enum TWSBarSizes
-    BarSize1Second = 1
-    BarSize5Seconds = 2
-    BarSize15Seconds = 3
-    BarSize30Seconds = 4
-    BarSize1Minute = 5
-    BarSize2Minutes = 6
-    BarSize5Minutes = 7
-    BarSize15Minutes = 8
-    BarSize30Minutes = 9
-    BarSize1Hour = 10
-    BarSize1Day = 11
-End Enum
+'Public Enum TWSBarSizes
+'    BarSize1Second = 1
+'    BarSize5Seconds = 2
+'    BarSize15Seconds = 3
+'    BarSize30Seconds = 4
+'    BarSize1Minute = 5
+'    BarSize2Minutes = 6
+'    BarSize5Minutes = 7
+'    BarSize15Minutes = 8
+'    BarSize30Minutes = 9
+'    BarSize1Hour = 10
+'    BarSize1Day = 11
+'End Enum
 
 Public Enum TWSLogLevels
     TWSLogLevelSystem
@@ -105,6 +105,12 @@ Public Enum TWSSocketInMsgTypes
     BOND_CONTRACT_DATA = 18
     SCANNER_PARAMETERS = 19
     SCANNER_DATA = 20
+    TICK_OPTION_COMPUTATION = 21
+    TICK_GENERIC = 45
+    TICK_STRING = 46
+    TICK_EFP = 47
+    CURRENT_TIME = 49
+    REAL_TIME_BARS = 50
 End Enum
 
 Public Enum TWSSocketOutMsgTypes
@@ -133,19 +139,59 @@ Public Enum TWSSocketOutMsgTypes
     CANCEL_SCANNER_SUBSCRIPTION = 23
     REQ_SCANNER_PARAMETERS = 24
     CANCEL_HISTORICAL_DATA = 25
+    REQ_CURRENT_TIME = 49
+    REQ_REAL_TIME_BARS = 50
+    CANCEL_REAL_TIME_BARS = 51
 End Enum
 
 Public Enum TWSSocketTickTypes
-    TICK_BID_SIZE   ' 0
-    TICK_BID        ' 1
-    TICK_ASK        ' 2
-    TICK_ASK_SIZE   ' 3
-    TICK_LAST       ' 4
-    TICK_LAST_SIZE  ' 5
-    TICK_HIGH       ' 6
-    TICK_LOW        ' 7
-    TICK_VOLUME     ' 8
-    TICK_CLOSE      ' 9
+    TICK_BID_SIZE                   ' 0
+    TICK_BID                        ' 1
+    TICK_ASK                        ' 2
+    TICK_ASK_SIZE                   ' 3
+    TICK_LAST                       ' 4
+    TICK_LAST_SIZE                  ' 5
+    TICK_HIGH                       ' 6
+    TICK_LOW                        ' 7
+    TICK_VOLUME                     ' 8
+    TICK_CLOSE                      ' 9
+    TICK_BID_OPTION                 ' 10
+    TICK_ASK_OPTION                 ' 11
+    TICK_LAST_OPTION                ' 12
+    TICK_MODEL_OPTION               ' 13
+    TICK_OPEN                       ' 14
+    TICK_LOW_13_WEEK                ' 15
+    TICK_HIGH_13_WEEK               ' 16
+    TICK_LOW_26_WEEK                ' 17
+    TICK_HIGH_26_WEEK               ' 18
+    TICK_LOW_52_WEEK                ' 19
+    TICK_HIGH_52_WEEK               ' 20
+    TICK_AVG_VOLUME                 ' 21
+    TICK_OPEN_INTEREST              ' 22
+    TICK_OPTION_HISTORICAL_VOL      ' 23
+    TICK_OPTION_IMPLIED_VOL         ' 24
+    TICK_OPTION_BID_EXCH            ' 25
+    TICK_OPTION_ASK_EXCH            ' 26
+    TICK_OPTION_CALL_OPEN_INTEREST  ' 27
+    TICK_OPTION_PUT_OPEN_INTEREST   ' 28
+    TICK_OPTION_CALL_VOLUME         ' 29
+    TICK_OPTION_PUT_VOLUME          ' 30
+    TICK_INDEX_FUTURE_PREMIUM       ' 31
+    TICK_BID_EXCH                   ' 32
+    TICK_ASK_EXCH                   ' 33
+    TICK_AUCTION_VOLUME             ' 34
+    TICK_AUCTION_PRICE              ' 35
+    TICK_AUCTION_IMBALANCE          ' 36
+    TICK_MARK_PRICE                 ' 37
+    TICK_BID_EFP_COMPUTATION        ' 38
+    TICK_ASK_EFP_COMPUTATION        ' 39
+    TICK_LAST_EFP_COMPUTATION       ' 40
+    TICK_OPEN_EFP_COMPUTATION       ' 41
+    TICK_HIGH_EFP_COMPUTATION       ' 42
+    TICK_LOW_EFP_COMPUTATION        ' 43
+    TICK_CLOSE_EFP_COMPUTATION      ' 44
+    TICK_LAST_TIMESTAMP             ' 45
+    TICK_SHORTABLE                  ' 46
 End Enum
 
 '================================================================================
@@ -154,7 +200,7 @@ End Enum
 
 Public Type Execution
     execId         As String
-    Time           As Date
+    time           As Date
     AccountIdentifier As String
     ContractSpecifier As ContractSpecifier
     FillingExchange As String
@@ -175,6 +221,7 @@ Public Type HistoricBar
     volume          As Long
     WAP             As Double
     hasGaps         As Boolean
+    tickVolume      As Long
 End Type
 
 Public Type OrderIdMapEntry
@@ -193,7 +240,7 @@ Public Type TWSHistoricalDataRequestQueueEntry
     id                      As Long
     contractSpec            As ContractSpecifier
     endDateTime             As String
-    barSizeSetting          As TWSBarSizes
+    barSizeSetting          As String
     duration                As String
     whatToShow              As String
 End Type
@@ -242,7 +289,7 @@ Public Type TWSSocketMsgOpenOrder
     version         As Long
     orderId         As Long
     symbol          As String
-    secType         As String
+    sectype         As String
     expiry          As String
     strike          As Double
     right           As String
@@ -286,7 +333,7 @@ Public Type TWSSocketMsgPortfolioValue
     msgType         As TWSSocketInMsgTypes
     version         As Long
     symbol          As String
-    secType         As String
+    sectype         As String
     expiry          As String
     strike          As Double
     right           As String
@@ -317,7 +364,7 @@ Public Type TWSSocketMsgContractData
     msgType         As TWSSocketInMsgTypes
     version         As Long
     symbol          As String
-    secType         As String
+    sectype         As String
     expiry          As String
     strike          As Double
     right           As String
@@ -338,7 +385,7 @@ Public Type TWSSocketMsgExecutionData
     version         As Long
     orderId         As Long
     symbol          As String
-    secType         As String
+    sectype         As String
     expiry          As String
     strike          As Double
     right           As String
@@ -346,7 +393,7 @@ Public Type TWSSocketMsgExecutionData
     currencyCode    As String
     localSymbol     As String
     execId          As String
-    Time            As String
+    time            As String
     accountNumber   As String
     execExchange    As String
     side            As String

@@ -221,7 +221,6 @@ End Function
 
 Friend Property Let clientID(ByVal value As Long)
 mClientID = value
-If mClientID < 0 Then mClientID = gGetRandomClientId(mClientID)
 End Property
 
 Friend Property Let connectionRetryIntervalSecs(ByVal value As Long)

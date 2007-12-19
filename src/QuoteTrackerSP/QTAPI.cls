@@ -209,7 +209,7 @@ ReDim mHistoricalTickDataRequestTable(5) As HistoricalTickDataRequestEntry
 
 ReDim mL1QuotesRequestTable(10) As L1QuotesRequestEntry
 
-Set mESTTimeZone = CreateTimeZone("Eastern Standard Time")
+Set mESTTimeZone = GetTimeZone("Eastern Standard Time")
 
 End Sub
 
@@ -290,7 +290,7 @@ Private Sub mSocket_Error(ByVal Number As Integer, _
                         ByVal HelpContext As Long, _
                         CancelDisplay As Boolean)
 Dim errorNum As MSWinsockLib.ErrorConstants
-Dim timestamp As Date: timestamp = getTimestamp
+Dim timestamp As Date: timestamp = GetTimestamp
 
 On Error GoTo err
 errorNum = Number
@@ -1120,7 +1120,7 @@ Do
                             Mid$(timestampString, 11, 2) & ":" & _
                             Mid(timestampString, 13, 2))
         'we assume that QT always sends the bars in increasing time order
-        Bar.timestamp = ConvertDateUTCToTZ(ConvertDateTZToUTC(timestamp, mESTTimeZone), _
+        Bar.timestamp = ConvertDateUTCToTZ(ConvertDateTzToUTC(timestamp, mESTTimeZone), _
                                         mHistoricalBarDataRequestTable(index).barSpecifier.Contract.TimeZone)
         If Bar.timestamp < mHistoricalBarDataRequestTable(index).barSpecifier.ToDate Then
             mHistoricalBarDataRequestTable(index).barSpecifier.ToDate = Bar.timestamp
@@ -1222,7 +1222,7 @@ End If
 
 If mHistoricalTickDataRequestTable(index).cancelling Then Exit Sub
 
-timestamp = ConvertDateUTCToTZ(ConvertDateTZToUTC(timestamp, mESTTimeZone), _
+timestamp = ConvertDateUTCToTZ(ConvertDateTzToUTC(timestamp, mESTTimeZone), _
                             mHistoricalTickDataRequestTable(index).Contract.TimeZone)
 
 If timestamp >= mHistoricalTickDataRequestTable(index).endTime Then Exit Sub
@@ -1346,7 +1346,7 @@ Do
                             Mid$(timestampString, 9, 2) & ":" & _
                             Mid$(timestampString, 11, 2) & ":" & _
                             Mid(timestampString, 13, 2))
-        mL1QuotesRequestTable(index).timestamp = ConvertDateUTCToTZ(ConvertDateTZToUTC(timestamp, mESTTimeZone), _
+        mL1QuotesRequestTable(index).timestamp = ConvertDateUTCToTZ(ConvertDateTzToUTC(timestamp, mESTTimeZone), _
                                                             mL1QuotesRequestTable(index).Contract.TimeZone)
     Case Else
         skippedValue = GetFieldValue(fieldID, bytesProcessed)

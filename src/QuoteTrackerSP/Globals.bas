@@ -26,6 +26,12 @@ Public Const ParamNameLogLevel As String = "Log Level"
 ' Enums
 '================================================================================
 
+Public Enum ConnectionStates
+    ConnNotConnected
+    ConnConnecting
+    ConnConnected
+End Enum
+
 Public Enum LocalErrorCodes
     LongJump = vbObjectError + 512
 End Enum
@@ -55,13 +61,23 @@ Public Enum FieldTypes
     AverageVolume
     Dividend
     Earnings
-    Exchange
+    exchange
     MarketCap
     PE
     openInterest
     UPC
     Yield
     closePrice
+End Enum
+
+Public Enum SPErrorCodes
+    CantConnectToQuoteTracker = 700
+    LogonResponseCannotBeParsed
+    FieldDescriptionCannotBeParsed
+    ErrorCannotBeParsed
+    PasswordInvalid
+    UnexpectedError
+    ErrorFromQuoteTracker
 End Enum
 
 '================================================================================

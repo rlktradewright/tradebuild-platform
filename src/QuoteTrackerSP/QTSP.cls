@@ -30,9 +30,47 @@ Option Explicit
 ' Enums
 '@================================================================================
 
+Public Enum TickTypes
+    None
+    bid
+    ask
+    last
+    volume
+    prevClose
+    high
+    low
+    openInterest
+End Enum
+
 '@================================================================================
 ' Types
 '@================================================================================
+
+Public Type HistoricBar
+    timestamp       As Date
+    openValue       As Double
+    highValue       As Double
+    lowValue        As Double
+    closeValue      As Double
+    volume          As Long
+End Type
+
+Public Type QTHistoricalDataRequestQueueEntry
+    symbol                  As String
+    startDateTime           As Date
+    endDateTime             As Date
+    includeBarsOutsideSession   As Boolean
+    barLength               As Long
+    barUnits                As TimePeriodUnits
+    rth                     As Boolean
+End Type
+
+Public Type Tick
+    TickType    As TickTypes
+    timestamp   As Date
+    Price       As Double
+    size        As Long
+End Type
 
 '@================================================================================
 ' Constants

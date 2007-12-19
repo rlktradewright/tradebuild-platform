@@ -70,6 +70,8 @@ Private mPort As Long
 Private mServer As String
 Private mClientID As Long
 
+Private mReconnecting As Boolean
+
 Private mConnectionRetryIntervalSecs As Long
 Private mkeepConnection As Boolean
 Private mProviderKey As String
@@ -110,7 +112,7 @@ End If
 
 Set mContract = Contract
 
-If mContract.specifier.secType = SecTypeCombo Then
+If mContract.specifier.sectype = SecTypeCombo Then
         mServiceConsumer.NotifyEvent StandardSPEventCodes.RTRequestInvalid, _
                                 "Realtime data for Combo contracts not supported", _
                                 mRealtimeDataServiceProvider.handle
@@ -194,7 +196,12 @@ On Error GoTo err
 mServiceConsumer.NotifyEvent StandardSPEventCodes.RTConnectedToDataSource, _
                         "Connected to " & mTWSAPI.connectionString, _
                         mRealtimeDataServiceProvider.handle
-mTickerId = mTWSAPI.RequestMarketData(mContract, Me, mDataConsumer, mIncludeMarketDepth)
+If mReconnecting Then
+    ' the market data request will be re-sent automatically by TWSAPI
+    mReconnecting = False
+Else
+    mTickerId = mTWSAPI.RequestMarketData(mContract, Me, mDataConsumer, mIncludeMarketDepth)
+End If
 Exit Sub
 err:
 handleFatalError err.number, _
@@ -230,6 +237,7 @@ If reconnecting Then
     mServiceConsumer.NotifyEvent StandardSPEventCodes.RTReConnectingDataSource, _
                         "Lost connection to TWS (reconnecting)", _
                         mRealtimeDataServiceProvider.handle
+    mReconnecting = True
 Else
     mServiceConsumer.NotifyEvent StandardSPEventCodes.RTLostConnectionToDataSource, _
                         "Lost connection to TWS", _
@@ -337,6 +345,12 @@ Friend Sub marketDataRequestFailed(ByVal reason As String)
 mServiceConsumer.NotifyEvent StandardSPEventCodes.RTRequestFailed, _
                         reason, _
                         mRealtimeDataServiceProvider.handle
+
+' now get rid of the TWSAPI reference. We need to do this because TradeBuild processes
+' the above notification asynchronously, and when it calls IRealtimeDataReader_StopData
+' the ticker id is no longer valid
+gReleaseTWSAPIInstance mTWSAPI
+Set mTWSAPI = Nothing
 End Sub
 
 Friend Sub marketDepthRequestFailed(ByVal reason As String)

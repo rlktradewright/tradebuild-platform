@@ -109,7 +109,7 @@ End Sub
 
 Private Sub ContractDetailsRequester_contractsLoaded( _
                 ByRef request As TWSContractDetailsRequestQueueEntry)
-Dim lContractWrapper As contractWrapper
+Dim lContractWrapper As ContractWrapper
 
 On Error GoTo err
 For Each lContractWrapper In request.contractWrappers
@@ -242,7 +242,6 @@ Private Sub IContractInfoServiceProvider_RequestContractDetails( _
 
 On Error GoTo err
 If mTWSAPI Is Nothing Then
-    If mClientID = -1 Then mClientID = Int(&H7FFFFFFF * Rnd) + 1
     Set mTWSAPI = gGetTWSAPIInstance(mServer, mPort, mClientID, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection)
     mTWSAPI.logLevel = mLogLevel
     mTWSAPI.TWSLogLevel = mTWSLogLevel
@@ -336,7 +335,6 @@ End Sub
 
 Friend Property Let clientID(ByVal value As Long)
 mClientID = value
-If mClientID < 0 Then mClientID = gGetRandomClientId(mClientID)
 End Property
 
 Friend Property Let connectionRetryIntervalSecs(ByVal value As Long)

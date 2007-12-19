@@ -70,35 +70,6 @@ Public Property Let gCommonServiceConsumer( _
 Set mCommonServiceConsumer = RHS
 End Property
 
-Public Function gGetRandomClientId( _
-                ByVal designator As Long) As Long
-                
-If mRandomClientIds Is Nothing Then
-    Set mRandomClientIds = New Collection
-    Rnd -1
-    Randomize
-End If
-
-' first see if a clientId has already been generated for this designator
-
-On Error Resume Next
-gGetRandomClientId = mRandomClientIds(CStr(designator))
-On Error GoTo 0
-
-If gGetRandomClientId <> 0 Then
-    Exit Function   ' clientId already exists for this designator
-End If
-
-gGetRandomClientId = Rnd * (&H7FFFFFFF - &H7000000) + &H7000000
-
-Do While clientIdAlreadyInUse(gGetRandomClientId)
-    gGetRandomClientId = Rnd * (&H7FFFFFFF - &H7000000) + &H7000000
-Loop
-
-mRandomClientIds.add gGetRandomClientId, CStr(designator)
-
-End Function
-
 Public Function gGetTWSAPIInstance( _
                 ByVal server As String, _
                 ByVal port As Long, _
@@ -111,6 +82,8 @@ Dim i As Long
 If mTWSAPITableNextIndex = 0 Then
     ReDim mTWSAPITable(5) As TWSAPITableEntry
 End If
+
+If clientID < 0 Then clientID = getRandomClientId(clientID)
 
 For i = 0 To mTWSAPITableNextIndex - 1
     If mTWSAPITable(i).server = server And _
@@ -241,4 +214,39 @@ For i = 0 To mTWSAPITableNextIndex - 1
 Next
                 
 End Function
+
+Public Function getRandomClientId( _
+                ByVal designator As Long) As Long
+                
+If mRandomClientIds Is Nothing Then
+    Set mRandomClientIds = New Collection
+    Randomize
+End If
+
+' first see if a clientId has already been generated for this designator
+
+On Error Resume Next
+getRandomClientId = mRandomClientIds(CStr(designator))
+On Error GoTo 0
+
+If getRandomClientId <> 0 Then
+    Exit Function   ' clientId already exists for this designator
+End If
+
+getRandomClientId = Rnd * (&H7FFFFFFF - &H7000000) + &H7000000
+
+Do While clientIdAlreadyInUse(getRandomClientId)
+    getRandomClientId = Rnd * (&H7FFFFFFF - &H7000000) + &H7000000
+Loop
+
+mRandomClientIds.add getRandomClientId, CStr(designator)
+
+End Function
+
+Public Function gRoundTimeToSecond( _
+                ByVal timestamp As Date) As Date
+gRoundTimeToSecond = Int((timestamp + (499 / 86400000)) * 86400) / 86400 + 1 / 86400000000#
+End Function
+
+
 

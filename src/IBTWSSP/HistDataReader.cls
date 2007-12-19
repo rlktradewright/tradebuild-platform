@@ -147,10 +147,11 @@ Case Else
     Exit Sub
 End Select
 
-If barSpecifier.Contract.specifier.secType = SecTypeCombo Then
+If barSpecifier.Contract.specifier.sectype = SecTypeCombo Then
     mServiceConsumer.NotifyEvent StandardSPEventCodes.HDRequestInvalid, _
                             "Combo contracts not supported", _
                             mHistDataServiceProvider.handle
+    Exit Sub
 End If
 
 mRequestInProgress = True
@@ -163,7 +164,6 @@ mSessionBuilder.sessionEndTime = mBarDataSpecifier.Contract.sessionEndTime
 Set mSession = mSessionBuilder.Session
 
 If mTWSAPI Is Nothing Then
-    If mClientID = -1 Then mClientID = Int(&H7FFFFFFF * Rnd) + 1
     Set mTWSAPI = gGetTWSAPIInstance(mServer, mPort, mClientID, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection)
     mTWSAPI.logLevel = mLogLevel
     mTWSAPI.TWSLogLevel = mTWSLogLevel
