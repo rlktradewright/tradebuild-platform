@@ -45,8 +45,6 @@ Event BarLoadProgress( _
 
 Event BarsLoaded()
 
-Event BarWriterNotification(ByRef ev As WriterEvent)
-
 Event Notification(ByRef ev As NotificationEvent)
 
 Event stateChange(ByRef ev As StateChangeEvent)
@@ -146,12 +144,6 @@ Private WithEvents mWriteTimer      As IntervalTimer
 Attribute mWriteTimer.VB_VarHelpID = -1
 
 Private mTimerList                  As TimerList
-
-Private mFirstTradeSize             As Long ' nb: this is the size of the very first
-                                            ' trade reported. It is needed to get a
-                                            ' more accurate volume value for the first bar
-Private mPrevBarVolume              As Long
-Private mLatestVolume               As Long
 
 Private WithEvents mHistoricBarTimer As IntervalTimer
 Attribute mHistoricBarTimer.VB_VarHelpID = -1
@@ -469,10 +461,9 @@ Friend Sub Initialise( _
                 ByVal saveIntervalSeconds As Long, _
                 ByVal writeBidAndAskBars As Boolean)
 
-If pTicker.replayingTickfile Then
-    Set mTimerList = GetGlobalTimerList(True)
-Else
-    Set mTimerList = GetGlobalTimerList(False)
+If Not pTicker.replayingTickfile Then
+    mSaveIntervalSeconds = saveIntervalSeconds
+    Set mTimerList = GetGlobalTimerList
 End If
 
 Set mContract = pContract
@@ -507,8 +498,6 @@ End If
 mIncludeBarsOutsideSession = includeBarsOutsideSession
 mExcludeCurrentBar = excludeCurrentbar
 
-mSaveIntervalSeconds = saveIntervalSeconds
-
 setupBarStudies
 
 If Not mContract Is Nothing Then
@@ -538,10 +527,6 @@ End Sub
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
-Private Function CalcBarKey(ByVal barTime As Date) As String
-CalcBarKey = Format(barTime, "yyyymmddhhnn")
-End Function
 
 Private Sub Clear()
 If Not mHistoricBarTimer Is Nothing Then

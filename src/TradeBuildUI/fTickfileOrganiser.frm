@@ -1,6 +1,6 @@
 VERSION 5.00
 Begin VB.Form fTickfileOrganiser 
-   Caption         =   "Form1"
+   Caption         =   "Tickfile Organiser"
    ClientHeight    =   3495
    ClientLeft      =   60
    ClientTop       =   450
@@ -148,9 +148,9 @@ TickfileListManager1.addTickfileNames tickfileNames
 End Sub
 
 Private Sub AddTickstreamsButton_Click()
-Dim lTickstreamSpecifier As fTickstreamSpecifier
+Dim lTickstreamSpecifier As fTickStreamSpecifier
 
-Set lTickstreamSpecifier = New fTickstreamSpecifier
+Set lTickstreamSpecifier = New fTickStreamSpecifier
 lTickstreamSpecifier.Show vbModal
 
 If lTickstreamSpecifier.cancelled Then Exit Sub

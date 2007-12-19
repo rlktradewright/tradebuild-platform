@@ -57,7 +57,7 @@ Private Const ModuleName                    As String = "TickDataEncoderv1"
 
 Private mTimestamp As Date          ' current timestamp
 Private mBasePrice As Double        ' first price encountered at start of encoding period
-Private mOpeningTimestamp As Date   ' timestamp at start of encoding period
+Private mPeriodStartTime As Date   ' timestamp at start of encoding period
 
 Private mData() As Byte
 Private mDataIndex As Long
@@ -71,6 +71,10 @@ Private mTickSize As Double
 '@================================================================================
 ' TickDataEncoder Interface Members
 '@================================================================================
+
+Private Property Get TickDataEncoder_basePrice() As Double
+TickDataEncoder_basePrice = mBasePrice
+End Property
 
 Private Sub TickDataEncoder_encodeAsk( _
                 ByVal timestamp As Date, _
@@ -87,7 +91,7 @@ Exit Sub
 Err:
 Err.Raise Err.Number, _
         ProjectName & "." & ModuleName & ":" & "TickDataEncoder_encodeAsk" & "." & failpoint & _
-        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
         Err.Description
 
 End Sub
@@ -107,7 +111,7 @@ Exit Sub
 Err:
 Err.Raise Err.Number, _
         ProjectName & "." & ModuleName & ":" & "TickDataEncoder_encodeBid" & "." & failpoint & _
-        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
         Err.Description
 
 End Sub
@@ -126,10 +130,24 @@ Exit Sub
 Err:
 Err.Raise Err.Number, _
         ProjectName & "." & ModuleName & ":" & "TickDataEncoder_encodeClose" & "." & failpoint & _
-        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
         Err.Description
 
 End Sub
+
+Private Property Get TickDataEncoder_encodedData() As Byte()
+If mDataIndex = 0 Then Exit Property
+
+If UBound(mData) > (mDataIndex - 1) Then
+    ReDim Preserve mData(mDataIndex - 1) As Byte
+End If
+
+TickDataEncoder_encodedData = mData
+End Property
+
+Private Property Get TickDataEncoder_encodedDataLength() As Long
+TickDataEncoder_encodedDataLength = mDataIndex
+End Property
 
 Private Sub TickDataEncoder_encodeHigh( _
                 ByVal timestamp As Date, _
@@ -145,7 +163,7 @@ Exit Sub
 Err:
 Err.Raise Err.Number, _
         ProjectName & "." & ModuleName & ":" & "TickDataEncoder_encodeHigh" & "." & failpoint & _
-        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
         Err.Description
 
 End Sub
@@ -164,7 +182,7 @@ Exit Sub
 Err:
 Err.Raise Err.Number, _
         ProjectName & "." & ModuleName & ":" & "TickDataEncoder_encodeLow" & "." & failpoint & _
-        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
         Err.Description
 
 End Sub
@@ -212,7 +230,7 @@ Exit Sub
 Err:
 Err.Raise Err.Number, _
         ProjectName & "." & ModuleName & ":" & "TickDataEncoder_encodeMarketDepthData" & "." & failpoint & _
-        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
         Err.Description
 
 End Sub
@@ -236,7 +254,7 @@ Exit Sub
 Err:
 Err.Raise Err.Number, _
         ProjectName & "." & ModuleName & ":" & "TickDataEncoder_encodeMarketDepthReset" & "." & failpoint & _
-        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
         Err.Description
 
 End Sub
@@ -253,7 +271,7 @@ Exit Sub
 Err:
 Err.Raise Err.Number, _
         ProjectName & "." & ModuleName & ":" & "TickDataEncoder_encodeOpenInterest" & "." & failpoint & _
-        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
         Err.Description
 
 End Sub
@@ -273,7 +291,7 @@ Exit Sub
 Err:
 Err.Raise Err.Number, _
         ProjectName & "." & ModuleName & ":" & "TickDataEncoder_encodeTrade" & "." & failpoint & _
-        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
         Err.Description
 
 End Sub
@@ -291,10 +309,22 @@ Exit Sub
 Err:
 Err.Raise Err.Number, _
         ProjectName & "." & ModuleName & ":" & "TickDataEncoder_encodeVolume" & "." & failpoint & _
-        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
         Err.Description
 
 End Sub
+
+Private Property Get TickDataEncoder_encodingFormatIdentifier() As String
+TickDataEncoder_encodingFormatIdentifier = TickEncodingFormatV1
+End Property
+
+Private Property Get TickDataEncoder_periodStartTime() As Date
+TickDataEncoder_periodStartTime = mPeriodStartTime
+End Property
+
+Private Property Get TickDataEncoder_tickSize() As String
+TickDataEncoder_tickSize = mTickSize
+End Property
 
 '@================================================================================
 ' XXXX Event Handlers
@@ -304,14 +334,6 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get encodedData() As Byte()
-If mDataIndex = 0 Then Exit Sub
-
-ReDim Preserve mData(mDataIndex - 1) As Byte
-
-encodedData = mData
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -319,7 +341,7 @@ End Property
 Friend Sub initialise( _
                 ByVal periodStartTime As Date, _
                 ByVal tickSize As Double)
-mOpeningTimestamp = periodStartTime
+mPeriodStartTime = periodStartTime
 mTickSize = tickSize
 ReDim mData(8191) As Byte
 End Sub
@@ -480,7 +502,7 @@ Private Sub WriteTimestamp( _
                 ByVal timestamp As Date)
 Dim diff As Long
 If timestamp <> mTimestamp Then
-    diff = (timestamp - mOpeningTimestamp) * 86400 * 1000
+    diff = (timestamp - mPeriodStartTime) * 86400 * 1000
     Debug.Assert diff < &H10000
     If diff < &H8000& Then
         WriteInt diff

@@ -30,6 +30,20 @@ Option Explicit
 ' Enums
 '@================================================================================
 
+Public Enum ChartStates
+    ''
+    ' The chart is ready to have studies added to it
+    '
+    '@/
+    ChartStateInitialised
+    
+    ''
+    ' All historic data has been added to the chart
+    '
+    '@/
+    ChartStateLoaded
+End Enum
+
 '@================================================================================
 ' Types
 '@================================================================================
@@ -64,6 +78,20 @@ Private Const ModuleName                    As String = "TradeBuildUI"
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Function SelectTickfiles() As TickfileSelection
+Static inHere As Boolean
+
+If inHere Then
+    ' this is a re-entrant call
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & "SelectTickfiles", _
+            "Already selecting tickfiles"
+End If
+
+Set SelectTickfiles = New TickfileSelection
+SelectTickfiles.SelectTickfiles
+End Function
 
 '@================================================================================
 ' Helper Functions

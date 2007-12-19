@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin VB.Form fNewFolder 
    BorderStyle     =   3  'Fixed Dialog
-   Caption         =   "Dialog Caption"
+   Caption         =   "Create new folder"
    ClientHeight    =   1245
    ClientLeft      =   2760
    ClientTop       =   3750

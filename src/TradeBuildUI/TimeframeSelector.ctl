@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#18.0#0"; "TWControls10.ocx"
 Begin VB.UserControl TimeframeSelector 
    BackStyle       =   0  'Transparent
    ClientHeight    =   1710
@@ -8,18 +8,25 @@ Begin VB.UserControl TimeframeSelector
    ClientWidth     =   3705
    ScaleHeight     =   1710
    ScaleWidth      =   3705
-   Begin MSComctlLib.ImageCombo TimeframeCombo 
+   Begin TWControls10.TWImageCombo TimeframeCombo 
       Height          =   330
-      Left            =   360
+      Left            =   120
       TabIndex        =   0
-      Top             =   360
-      Width           =   3135
-      _ExtentX        =   5530
+      Top             =   120
+      Width           =   2775
+      _ExtentX        =   4895
       _ExtentY        =   582
-      _Version        =   393216
-      ForeColor       =   -2147483640
-      BackColor       =   -2147483643
-      Locked          =   -1  'True
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      MouseIcon       =   "TimeframeSelector.ctx":0000
+      Text            =   ""
    End
 End
 Attribute VB_Name = "TimeframeSelector"

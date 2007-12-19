@@ -124,7 +124,7 @@ Private Sub mConnection_ExecuteComplete( _
                             ByVal pError As ADODB.Error, _
                             adStatus As ADODB.EventStatusEnum, _
                             ByVal pCommand As ADODB.Command, _
-                            ByVal pRecordset As ADODB.recordset, _
+                            ByVal pRecordset As ADODB.Recordset, _
                             ByVal pConnection As ADODB.Connection)
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent Error(pError.Number, _
@@ -174,6 +174,7 @@ Public Sub WriteData( _
                         ByVal Version As String, _
                         ByVal PeriodStartTime As Date, _
                         ByVal BasePrice As Double, _
+                        ByVal tickSize As Double, _
                         ByRef Data() As Byte, _
                         ByVal asynchronous As Boolean)
 If Not mCmd Is Nothing Then
@@ -182,7 +183,7 @@ If Not mCmd Is Nothing Then
                 "Object has already been used"
 End If
 
-DoWriteTickData Version, PeriodStartTime, BasePrice, Data, asynchronous
+DoWriteTickData Version, PeriodStartTime, BasePrice, tickSize, Data, asynchronous
 
 End Sub
 '@===============================================================================
@@ -205,6 +206,7 @@ Private Sub DoWriteTickData( _
                         ByVal Version As String, _
                         ByVal PeriodStartTime As Date, _
                         ByVal BasePrice As Double, _
+                        ByVal tickSize As Double, _
                         ByRef Data() As Byte, _
                         ByVal asynchronous As Boolean)
 
@@ -215,7 +217,7 @@ mAsynchronous = asynchronous
 Set mCmd = New ADODB.Command
 mCmd.CommandType = adCmdStoredProc
 
-mCmd.CommandText = "WriteTickDataExchange"
+mCmd.CommandText = "WriteTickData"
 
 ' @InstrumentID
 Set param = mCmd.CreateParameter(, _
@@ -247,6 +249,14 @@ Set param = mCmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             BasePrice)
+mCmd.Parameters.Append param
+
+' @TickSize
+Set param = mCmd.CreateParameter(, _
+                            DataTypeEnum.adDouble, _
+                            ParameterDirectionEnum.adParamInput, _
+                            , _
+                            tickSize)
 mCmd.Parameters.Append param
 
 ' @Data

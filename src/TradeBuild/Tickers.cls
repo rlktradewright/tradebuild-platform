@@ -50,7 +50,7 @@ Event stateChange(ByRef ev As StateChangeEvent)
 '  can be used by the application to index quickly into tables or collections
 '  of tickers. When a ticker is created, the first entry in this table that is
 '  not set to true is allocated for the new ticker, and its index becomes the
-'  ticker's handle.
+'  ticker's handle. The handle is only unique within workspace.
 '@/
 Private mTickerHandleTable()        As Boolean
 
@@ -148,6 +148,21 @@ End Sub
 Friend Sub stateChange( _
                 ByRef ev As StateChangeEvent)
 RaiseEvent stateChange(ev)
+End Sub
+
+Public Sub startTickers( _
+                ByVal pTickerOptions As Long, _
+                ByVal pContractSpec As contractSpecifier, _
+                Optional ByVal pDOMEventsRequired As DOMEvents, _
+                Optional ByVal poutputTickfileFormat As String, _
+                Optional ByVal poutputTickfilePath As String)
+Dim lTickersStarter As New TickersStarter
+lTickersStarter.startTickers Me, _
+                            pTickerOptions, _
+                            pContractSpec, _
+                            pDOMEventsRequired, _
+                            poutputTickfileFormat, _
+                            poutputTickfilePath
 End Sub
 
 Friend Sub notify(ByRef ev As NotificationEvent)

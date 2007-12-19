@@ -1,4 +1,5 @@
 VERSION 5.00
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#18.0#0"; "TWControls10.ocx"
 Begin VB.UserControl ContractSpecBuilder 
    BackStyle       =   0  'Transparent
    ClientHeight    =   2835
@@ -7,31 +8,85 @@ Begin VB.UserControl ContractSpecBuilder
    ClientWidth     =   2190
    ScaleHeight     =   2835
    ScaleWidth      =   2190
-   Begin VB.ComboBox ExchangeCombo 
-      Height          =   315
+   Begin TWControls10.TWImageCombo CurrencyCombo 
+      Height          =   330
       Left            =   840
-      Style           =   2  'Dropdown List
+      TabIndex        =   5
+      Top             =   1800
+      Width           =   1335
+      _ExtentX        =   2355
+      _ExtentY        =   582
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      MouseIcon       =   "ContractSpecBuilder.ctx":0000
+      Text            =   ""
+   End
+   Begin TWControls10.TWImageCombo RightCombo 
+      Height          =   330
+      Left            =   840
+      TabIndex        =   7
+      Top             =   2520
+      Width           =   1335
+      _ExtentX        =   2355
+      _ExtentY        =   582
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      MouseIcon       =   "ContractSpecBuilder.ctx":001C
+      Text            =   ""
+   End
+   Begin TWControls10.TWImageCombo ExchangeCombo 
+      Height          =   330
+      Left            =   840
       TabIndex        =   4
       Top             =   1440
       Width           =   1335
+      _ExtentX        =   2355
+      _ExtentY        =   582
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      MouseIcon       =   "ContractSpecBuilder.ctx":0038
+      Text            =   ""
    End
-   Begin VB.ComboBox RightCombo 
-      Height          =   315
+   Begin TWControls10.TWImageCombo TypeCombo 
+      Height          =   330
       Left            =   840
-      Style           =   2  'Dropdown List
-      TabIndex        =   7
-      Top             =   2520
-      Width           =   855
-   End
-   Begin VB.ComboBox TypeCombo 
-      Height          =   315
-      ItemData        =   "ContractSpecBuilder.ctx":0000
-      Left            =   840
-      List            =   "ContractSpecBuilder.ctx":0002
-      Style           =   2  'Dropdown List
       TabIndex        =   2
-      Top             =   705
+      Top             =   720
       Width           =   1335
+      _ExtentX        =   2355
+      _ExtentY        =   582
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      MouseIcon       =   "ContractSpecBuilder.ctx":0054
+      Text            =   ""
    End
    Begin VB.TextBox SymbolText 
       Height          =   285
@@ -52,13 +107,6 @@ Begin VB.UserControl ContractSpecBuilder
       Left            =   840
       TabIndex        =   6
       Top             =   2160
-      Width           =   1335
-   End
-   Begin VB.TextBox CurrencyText 
-      Height          =   285
-      Left            =   840
-      TabIndex        =   5
-      Top             =   1800
       Width           =   1335
    End
    Begin VB.TextBox LocalSymbolText 
@@ -199,25 +247,34 @@ End Sub
 
 Private Sub UserControl_Initialize()
 Dim exchangeCodes() As String
-Dim var As Variant
+Dim currDescs() As CurrencyDescriptor
+Dim i As Long
 
 mReady = False
 RaiseEvent NotReady
 
-TypeCombo.addItem SecTypeToString(SecurityTypes.SecTypeStock)
-TypeCombo.addItem SecTypeToString(SecurityTypes.SecTypeFuture)
-TypeCombo.addItem SecTypeToString(SecurityTypes.SecTypeOption)
-TypeCombo.addItem SecTypeToString(SecurityTypes.SecTypeFuturesOption)
-TypeCombo.addItem SecTypeToString(SecurityTypes.SecTypeCash)
-TypeCombo.addItem SecTypeToString(SecurityTypes.SecTypeIndex)
+TypeCombo.ComboItems.add , , SecTypeToString(SecurityTypes.SecTypeStock)
+TypeCombo.ComboItems.add , , SecTypeToString(SecurityTypes.SecTypeFuture)
+TypeCombo.ComboItems.add , , SecTypeToString(SecurityTypes.SecTypeOption)
+TypeCombo.ComboItems.add , , SecTypeToString(SecurityTypes.SecTypeFuturesOption)
+TypeCombo.ComboItems.add , , SecTypeToString(SecurityTypes.SecTypeCash)
+TypeCombo.ComboItems.add , , SecTypeToString(SecurityTypes.SecTypeIndex)
 
-RightCombo.addItem OptionRightToString(OptionRights.OptCall)
-RightCombo.addItem OptionRightToString(OptionRights.OptPut)
+RightCombo.ComboItems.add , , OptionRightToString(OptionRights.OptCall)
+RightCombo.ComboItems.add , , OptionRightToString(OptionRights.OptPut)
 
 exchangeCodes = GetExchangeCodes
 
-For Each var In exchangeCodes
-    ExchangeCombo.addItem CStr(var)
+ExchangeCombo.ComboItems.add , , ""
+For i = 0 To UBound(exchangeCodes)
+    ExchangeCombo.ComboItems.add , , exchangeCodes(i)
+Next
+
+currDescs = GetCurrencyDescriptors
+
+CurrencyCombo.ComboItems.add , , ""
+For i = 0 To UBound(currDescs)
+    CurrencyCombo.ComboItems.add , , currDescs(i).code
 Next
 End Sub
 
@@ -282,9 +339,9 @@ ExchangeCombo.Left = LocalSymbolLabel.Width
 ExchangeCombo.Width = controlWidth
 
 CurrencyLabel.Top = 5 * rowHeight
-CurrencyText.Top = 5 * rowHeight
-CurrencyText.Left = LocalSymbolLabel.Width
-CurrencyText.Width = controlWidth
+CurrencyCombo.Top = 5 * rowHeight
+CurrencyCombo.Left = LocalSymbolLabel.Width
+CurrencyCombo.Width = controlWidth
 
 StrikePriceLabel.Top = 6 * rowHeight
 StrikePriceText.Top = 6 * rowHeight
@@ -307,8 +364,17 @@ End Sub
 ' Control Event Handlers
 '@================================================================================
 
-Private Sub CurrencyText_Change()
+Private Sub CurrencyCombo_Change()
 checkIfValid
+CurrencyCombo.ToolTipText = ""
+If CurrencyCombo.Text <> "" Then
+    Dim currDesc As CurrencyDescriptor
+    If IsValidCurrencyCode(CurrencyCombo.Text) Then
+        currDesc = GetCurrencyDescriptor(CurrencyCombo.Text)
+        CurrencyCombo.ToolTipText = currDesc.Description
+    End If
+End If
+   
 End Sub
 
 Private Sub ExchangeCombo_Click()
@@ -394,7 +460,7 @@ SymbolText.backColor = value
 TypeCombo.backColor = value
 ExpiryText.backColor = value
 ExchangeCombo.backColor = value
-CurrencyText.backColor = value
+CurrencyCombo.backColor = value
 StrikePriceText.backColor = value
 RightCombo.backColor = value
 End Property
@@ -409,7 +475,7 @@ Set contractSpecifier = CreateContractSpecifier( _
                                 SymbolText, _
                                 ExchangeCombo, _
                                 SecTypeFromString(TypeCombo), _
-                                CurrencyText, _
+                                CurrencyCombo, _
                                 ExpiryText, _
                                 IIf(StrikePriceText = "", 0, StrikePriceText), _
                                 OptionRightFromString(RightCombo))
@@ -422,7 +488,7 @@ SymbolText.foreColor = value
 TypeCombo.foreColor = value
 ExpiryText.foreColor = value
 ExchangeCombo.foreColor = value
-CurrencyText.foreColor = value
+CurrencyCombo.foreColor = value
 StrikePriceText.foreColor = value
 RightCombo.foreColor = value
 End Property

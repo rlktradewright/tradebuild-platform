@@ -307,17 +307,7 @@ Dim lInstrumentFactory As InstrumentFactory
 
 Set lInstrumentFactory = mTradingDB.InstrumentFactory
 
-With mContractSpec
-    Set mInstrument = lInstrumentFactory.loadBySpec( _
-                                .localSymbol, _
-                                .symbol, _
-                                .Exchange, _
-                                gSecTypeToCategory(.secType), _
-                                .currencyCode, _
-                                Left$(.expiry, 6), _
-                                .strike, _
-                                gOptRightToString(.Right))
-End With
+Set mInstrument = lInstrumentFactory.loadBySpecifier(mContractSpec)
 Debug.Assert Not mInstrument Is Nothing
 
 End Sub

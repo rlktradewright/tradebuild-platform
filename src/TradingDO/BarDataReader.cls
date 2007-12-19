@@ -65,7 +65,7 @@ Private Const ModuleName As String = "BarDataReader"
 
 Private WithEvents mConnection As ADODB.Connection
 Attribute mConnection.VB_VarHelpID = -1
-Private WithEvents mRsBars As ADODB.recordset
+Private WithEvents mRsBars As ADODB.Recordset
 Attribute mRsBars.VB_VarHelpID = -1
 
 Private mInstrumentID As Long
@@ -116,7 +116,7 @@ End Sub
 Private Sub mRsBars_FetchComplete( _
                             ByVal pError As ADODB.Error, _
                             adStatus As ADODB.EventStatusEnum, _
-                            ByVal pRecordset As ADODB.recordset)
+                            ByVal pRecordset As ADODB.Recordset)
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent Error(pError.Number, _
                     ModuleName & ": fetch error" & vbCrLf & _
@@ -135,7 +135,7 @@ Private Sub mRsBars_FetchProgress( _
                             ByVal Progress As Long, _
                             ByVal MaxProgress As Long, _
                             adStatus As ADODB.EventStatusEnum, _
-                            ByVal pRecordset As ADODB.recordset)
+                            ByVal pRecordset As ADODB.Recordset)
 
 End Sub
 
@@ -176,7 +176,7 @@ toTime = gRoundTimeToSecond(toTime)
 Set cmd = New ADODB.Command
 cmd.CommandType = adCmdStoredProc
 
-cmd.CommandText = "FetchBarDataEx"
+cmd.CommandText = "FetchBarData"
 
 ' @InstrumentID
 Set param = cmd.CreateParameter(, _
@@ -250,7 +250,7 @@ cmd.Parameters.Append param
 
 cmd.ActiveConnection = mConnection
 
-Set mRsBars = New ADODB.recordset
+Set mRsBars = New ADODB.Recordset
 mRsBars.LockType = adLockReadOnly
 mRsBars.Open cmd, _
             , _

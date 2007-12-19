@@ -76,7 +76,9 @@ Private mDataConsumer As TradeBuildSP.IStreamingDataConsumer
 Private mReplaySpeed As Long
 
 Private mState As TickfileStateCodes
-Private mCurrentTimestamp As Double
+
+Private mBaseTimestampUTC As Double
+Private mFirstTickTime As Double
 
 Private mSkip As Boolean
 
@@ -383,7 +385,7 @@ mCurrentTick.UnProcessed = False
 'If mState = TickfileStateCodes.TickfileNotPlaying Then Exit Sub
 If Not mTimer Is Nothing Then mTimer.StopTimer
 mState = TickfileStateCodes.TickfileNotPlaying
-mCurrentTimestamp = 0
+mBaseTimestampUTC = 0
 mReader.CloseInputFile
 Set mReader = Nothing
 End Sub
@@ -410,10 +412,19 @@ Dim delayMillisecs As Long
 
 mCurrentTick.Timed = False
 
-If mCurrentTimestamp = 0 Then mCurrentTimestamp = mCurrentTick.timestamp
+If mBaseTimestampUTC = 0 Then
+    mBaseTimestampUTC = GetTimestampUTC
+    ' note that we don't bother to get the tick time in UTC - this is because
+    ' it's not likely that anyone would replay a tickfile that spans a standard
+    ' time to daylight time transition at normal speed. On the other hand
+    ' the base timestamp is in UTC because someone might replay a tickfile
+    ' during a period that spans such a transition
+    mFirstTickTime = mCurrentTick.timestamp
+End If
 
 If mReplaySpeed > 0 Then
-    delayMillisecs = CLng((mCurrentTick.timestamp - mCurrentTimestamp) * 86400# * 1000# / CDbl(mReplaySpeed))
+    delayMillisecs = CLng(((mCurrentTick.timestamp - mFirstTickTime) - mReplaySpeed * (GetTimestampUTC - mBaseTimestampUTC)) * 86400# * 1000# / CDbl(mReplaySpeed))
+'    delayMillisecs = CLng((mCurrentTick.timestamp - mCurrentTimestamp) * 86400# * 1000# / CDbl(mReplaySpeed))
 Else
     delayMillisecs = -mReplaySpeed
 End If
@@ -523,7 +534,6 @@ With mCurrentTick
         mDataConsumer.resetMarketDepth .timestamp, .marketDepthReRequested
     End Select
     .UnProcessed = False
-    mCurrentTimestamp = .timestamp
 End With
     
 End Sub

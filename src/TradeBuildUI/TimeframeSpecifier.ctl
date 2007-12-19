@@ -1,25 +1,32 @@
 VERSION 5.00
-Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#18.0#0"; "TWControls10.ocx"
 Begin VB.UserControl TimeframeSpecifier 
    BackStyle       =   0  'Transparent
-   ClientHeight    =   750
+   ClientHeight    =   690
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   2295
-   ScaleHeight     =   750
+   ScaleHeight     =   690
    ScaleWidth      =   2295
-   Begin MSComctlLib.ImageCombo TimeframeUnitsCombo 
+   Begin TWControls10.TWImageCombo TimeframeUnitsCombo 
       Height          =   330
       Left            =   840
-      TabIndex        =   3
+      TabIndex        =   1
       Top             =   360
       Width           =   1335
       _ExtentX        =   2355
       _ExtentY        =   582
-      _Version        =   393216
-      ForeColor       =   -2147483640
-      BackColor       =   -2147483643
-      Locked          =   -1  'True
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      MouseIcon       =   "TimeframeSpecifier.ctx":0000
+      Text            =   ""
    End
    Begin VB.TextBox TimeframeLengthText 
       Height          =   285
@@ -32,7 +39,7 @@ Begin VB.UserControl TimeframeSpecifier
       Caption         =   "Length"
       Height          =   255
       Left            =   0
-      TabIndex        =   2
+      TabIndex        =   3
       Top             =   0
       Width           =   855
    End
@@ -40,7 +47,7 @@ Begin VB.UserControl TimeframeSpecifier
       Caption         =   "Units"
       Height          =   255
       Left            =   0
-      TabIndex        =   1
+      TabIndex        =   2
       Top             =   360
       Width           =   855
    End
@@ -109,7 +116,7 @@ Private mDefaultUnits As TimePeriodUnits
 
 Private Sub UserControl_Initialize()
 setupTimeframeUnitsCombo
-End SUb
+End Sub
 
 Private Sub UserControl_InitProperties()
 On Error Resume Next

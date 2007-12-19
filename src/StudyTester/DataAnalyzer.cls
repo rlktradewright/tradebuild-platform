@@ -94,7 +94,7 @@ Public Sub analyze()
 Dim i As Long
 Dim diff As Double
 
-SortDoubles mDataValues, 0, mDataValuesMaxIndex
+SortDoubles mDataValues, False, 0, mDataValuesMaxIndex
 
 For i = 0 To mDataValuesMaxIndex - 1
     diff = mDataValues(i + 1) - mDataValues(i)

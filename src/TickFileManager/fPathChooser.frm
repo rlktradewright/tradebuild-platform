@@ -62,7 +62,12 @@ Option Explicit
 
 Private mCancelled As Boolean
 
+Public Property Get cancelled() As Boolean
+cancelled = mCancelled
+End Property
+
 Public Property Let path(ByVal newvalue As String)
+On Error Resume Next ' in case path doesn't exist
 If Mid$(newvalue, 2, 1) = ":" Then
     DriveList.Drive = Left$(newvalue, 2)
     DirList.path = newvalue
@@ -82,6 +87,14 @@ End Sub
 
 Private Sub DriveList_Change()
 DirList.path = DriveList.Drive
+End Sub
+
+Private Sub Form_Activate()
+mCancelled = True
+End Sub
+
+Private Sub Form_Initialize()
+mCancelled = True
 End Sub
 
 Private Sub NewFolderButton_Click()

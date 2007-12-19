@@ -61,6 +61,24 @@ Private Const ModuleName                    As String = "TickDataEncoder"
 ' Properties
 '@================================================================================
 
+Public Property Get basePrice() As Double
+End Property
+
+Public Property Get encodedData() As Byte()
+End Property
+
+Public Property Get encodedDataLength() As Long
+End Property
+
+Public Property Get encodingFormatIdentifier() As String
+End Property
+
+Public Property Get periodStartTime() As Date
+End Property
+
+Public Property Get tickSize() As String
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================

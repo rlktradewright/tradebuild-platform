@@ -15,6 +15,7 @@ Option Explicit
 
 Private mForm As fPathChooser
 Private mPath As String
+Private mCancelled As Boolean
 
 Private Sub Class_Initialize()
 Set mForm = New fPathChooser
@@ -23,6 +24,10 @@ End Sub
 Private Sub Class_Terminate()
 Unload mForm
 End Sub
+
+Public Property Get cancelled() As Boolean
+cancelled = mCancelled
+End Property
 
 Public Property Let path(ByVal newvalue As String)
 mPath = newvalue
@@ -34,7 +39,8 @@ End Property
 
 Public Sub choose()
 If mPath <> "" Then mForm.path = mPath
-mForm.Show vbModal
+mForm.show vbModal
+mCancelled = mForm.cancelled
 mPath = mForm.path
 End Sub
 

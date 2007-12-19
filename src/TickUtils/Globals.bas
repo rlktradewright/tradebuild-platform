@@ -49,6 +49,9 @@ Public Const TickTypeBits As Byte = &HF
 
 Public Const TickfileFormatTradeBuildSQL As String = "urn:tradewright.com:names.tickfileformats.TradeBuildSQL"
 
+Public Const TickEncodingFormatV1 As String = "urn:tradewright.com:names.tickencodingformats.V1"
+
+
 '@================================================================================
 ' Member variables
 '@================================================================================

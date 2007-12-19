@@ -8,6 +8,8 @@ Option Explicit
 Public Const ServiceProviderName As String = "TickfileSP"
 Public Const ProviderKey As String = "TickfileSP"
 
+Public Const ParamNameAccessMode As String = "Access Mode"
+
 Public Const TRADEBUILD_TICKFILE_CURR_VERSION As Integer = 5
 
 Public Const TICKFILE_DECLARER As String = "tickfile"
@@ -38,6 +40,11 @@ Public Const TickfileFormatESignal As String = "urn:tradewright.com:names.tickfi
 ' Enums
 '================================================================================
 
+Public Enum AccessModes
+    ReadOnly
+    WriteOnly
+    ReadWrite
+End Enum
 
 Public Enum TickfileFormats
     TickfileUnknown
@@ -144,48 +151,110 @@ End Enum
 ' Procedures
 '================================================================================
 
-Public Function gCapabilitiesCrescendoV1() As Long
-gCapabilitiesCrescendoV1 = _
-            TickfileServiceProviderCapabilities.Replay Or _
-            TickfileServiceProviderCapabilities.ReportReplayProgress
+Public Function gCapabilitiesCrescendoV1(ByVal mode As AccessModes) As Long
+Select Case mode
+Case ReadOnly
+    gCapabilitiesCrescendoV1 = _
+                TickfileServiceProviderCapabilities.Replay Or _
+                TickfileServiceProviderCapabilities.ReportReplayProgress
+Case WriteOnly
+    gCapabilitiesCrescendoV1 = 0
+Case ReadWrite
+    gCapabilitiesCrescendoV1 = _
+                TickfileServiceProviderCapabilities.Replay Or _
+                TickfileServiceProviderCapabilities.ReportReplayProgress
+End Select
 End Function
 
-Public Function gCapabilitiesCrescendoV2() As Long
-gCapabilitiesCrescendoV2 = _
-            TickfileServiceProviderCapabilities.Record Or _
-            TickfileServiceProviderCapabilities.Replay Or _
-            TickfileServiceProviderCapabilities.ReportReplayProgress
+Public Function gCapabilitiesCrescendoV2(ByVal mode As AccessModes) As Long
+Select Case mode
+Case ReadOnly
+    gCapabilitiesCrescendoV2 = _
+                TickfileServiceProviderCapabilities.Replay Or _
+                TickfileServiceProviderCapabilities.ReportReplayProgress
+Case WriteOnly
+    gCapabilitiesCrescendoV2 = 0
+Case ReadWrite
+    gCapabilitiesCrescendoV2 = _
+                TickfileServiceProviderCapabilities.Record Or _
+                TickfileServiceProviderCapabilities.Replay Or _
+                TickfileServiceProviderCapabilities.ReportReplayProgress
+End Select
 End Function
 
-Public Function gCapabilitiesESignal() As Long
-gCapabilitiesESignal = _
-            TickfileServiceProviderCapabilities.Replay Or _
-            TickfileServiceProviderCapabilities.ReportReplayProgress
+Public Function gCapabilitiesESignal(ByVal mode As AccessModes) As Long
+Select Case mode
+Case ReadOnly
+    gCapabilitiesESignal = _
+                TickfileServiceProviderCapabilities.Replay Or _
+                TickfileServiceProviderCapabilities.ReportReplayProgress
+Case WriteOnly
+    gCapabilitiesESignal = 0
+Case ReadWrite
+    gCapabilitiesESignal = _
+                TickfileServiceProviderCapabilities.Replay Or _
+                TickfileServiceProviderCapabilities.ReportReplayProgress
+End Select
 End Function
 
-Public Function gCapabilitiesTradeBuildV3() As Long
-gCapabilitiesTradeBuildV3 = _
-            TickfileServiceProviderCapabilities.Replay Or _
-            TickfileServiceProviderCapabilities.ReplayMarketDepth Or _
-            TickfileServiceProviderCapabilities.ReportReplayProgress
+Public Function gCapabilitiesTradeBuildV3(ByVal mode As AccessModes) As Long
+Select Case mode
+Case ReadOnly
+    gCapabilitiesTradeBuildV3 = _
+                TickfileServiceProviderCapabilities.Replay Or _
+                TickfileServiceProviderCapabilities.ReplayMarketDepth Or _
+                TickfileServiceProviderCapabilities.ReportReplayProgress
+Case WriteOnly
+    gCapabilitiesTradeBuildV3 = 0
+Case ReadWrite
+    gCapabilitiesTradeBuildV3 = _
+                TickfileServiceProviderCapabilities.Replay Or _
+                TickfileServiceProviderCapabilities.ReplayMarketDepth Or _
+                TickfileServiceProviderCapabilities.ReportReplayProgress
+End Select
 End Function
 
-Public Function gCapabilitiesTradeBuildV4() As Long
-gCapabilitiesTradeBuildV4 = _
-            TickfileServiceProviderCapabilities.Replay Or _
-            TickfileServiceProviderCapabilities.ReplayMarketDepth Or _
-            TickfileServiceProviderCapabilities.ReportReplayProgress Or _
-            TickfileServiceProviderCapabilities.SaveContractInformation
+Public Function gCapabilitiesTradeBuildV4(ByVal mode As AccessModes) As Long
+Select Case mode
+Case ReadOnly
+    gCapabilitiesTradeBuildV4 = _
+                TickfileServiceProviderCapabilities.Replay Or _
+                TickfileServiceProviderCapabilities.ReplayMarketDepth Or _
+                TickfileServiceProviderCapabilities.ReportReplayProgress Or _
+                TickfileServiceProviderCapabilities.SaveContractInformation
+Case WriteOnly
+    gCapabilitiesTradeBuildV4 = 0
+Case ReadWrite
+    gCapabilitiesTradeBuildV4 = _
+                TickfileServiceProviderCapabilities.Replay Or _
+                TickfileServiceProviderCapabilities.ReplayMarketDepth Or _
+                TickfileServiceProviderCapabilities.ReportReplayProgress Or _
+                TickfileServiceProviderCapabilities.SaveContractInformation
+End Select
 End Function
 
-Public Function gCapabilitiesTradeBuildV5() As Long
-gCapabilitiesTradeBuildV5 = _
-            TickfileServiceProviderCapabilities.Record Or _
-            TickfileServiceProviderCapabilities.RecordMarketDepth Or _
-            TickfileServiceProviderCapabilities.Replay Or _
-            TickfileServiceProviderCapabilities.ReplayMarketDepth Or _
-            TickfileServiceProviderCapabilities.ReportReplayProgress Or _
-            TickfileServiceProviderCapabilities.SaveContractInformation
+Public Function gCapabilitiesTradeBuildV5(ByVal mode As AccessModes) As Long
+Select Case mode
+Case ReadOnly
+    gCapabilitiesTradeBuildV5 = _
+                TickfileServiceProviderCapabilities.Replay Or _
+                TickfileServiceProviderCapabilities.ReplayMarketDepth Or _
+                TickfileServiceProviderCapabilities.ReportReplayProgress Or _
+                TickfileServiceProviderCapabilities.SaveContractInformation
+Case WriteOnly
+    gCapabilitiesTradeBuildV5 = _
+                TickfileServiceProviderCapabilities.Record Or _
+                TickfileServiceProviderCapabilities.RecordMarketDepth Or _
+                TickfileServiceProviderCapabilities.SaveContractInformation
+Case ReadWrite
+    gCapabilitiesTradeBuildV5 = _
+                TickfileServiceProviderCapabilities.Record Or _
+                TickfileServiceProviderCapabilities.RecordMarketDepth Or _
+                TickfileServiceProviderCapabilities.Replay Or _
+                TickfileServiceProviderCapabilities.ReplayMarketDepth Or _
+                TickfileServiceProviderCapabilities.ReportReplayProgress Or _
+                TickfileServiceProviderCapabilities.SaveContractInformation
+End Select
 End Function
 
 Public Function gFormatSpecifiersToString( _
@@ -250,6 +319,7 @@ End Sub
 
 Public Function gSupports( _
                             ByVal Capabilities As Long, _
+                            ByVal mode As AccessModes, _
                             Optional ByVal FormatIdentifier As String) As Boolean
 Dim formatId As TickfileFormats
 Dim formatVersion As TickFileVersions
@@ -262,17 +332,17 @@ End If
 
 Select Case formatVersion
 Case TradeBuildV3
-    capMask = gCapabilitiesTradeBuildV3
+    capMask = gCapabilitiesTradeBuildV3(mode)
 Case TradeBuildV4
-    capMask = gCapabilitiesTradeBuildV4
+    capMask = gCapabilitiesTradeBuildV4(mode)
 Case TradeBuildV5
-    capMask = gCapabilitiesTradeBuildV5
+    capMask = gCapabilitiesTradeBuildV5(mode)
 Case CrescendoV1
-    capMask = gCapabilitiesCrescendoV1
+    capMask = gCapabilitiesCrescendoV1(mode)
 Case CrescendoV2
-    capMask = gCapabilitiesCrescendoV2
+    capMask = gCapabilitiesCrescendoV2(mode)
 Case ESignal
-    capMask = gCapabilitiesESignal
+    capMask = gCapabilitiesESignal(mode)
 End Select
 
 gSupports = (capMask And Capabilities)

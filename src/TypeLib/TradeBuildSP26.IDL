@@ -16,6 +16,9 @@ library TradeBuildSP
 	// TradeWright Contract Utilities
 	importlib("C:\Projects\TradeBuild Platform\ContractUtils\ContractUtils26.dll");
 	
+	// TradeWright Timeframe Utilities
+	importlib("C:\Projects\TradeBuild Platform\TimeframeUtils\TimeframeUtils2-6.dll");
+	
     // Forward declare all types defined in this typelib
     interface IBarDataConsumer;
     interface IBarDataInputServiceConsumer;

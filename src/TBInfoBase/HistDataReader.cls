@@ -143,16 +143,7 @@ Set mSession = mSessionBuilder.Session
 
 Set lInstrumentFactory = mTradingDB.InstrumentFactory
 
-With mBarDataSpecifier.Contract.specifier
-    Set lInstrument = lInstrumentFactory.loadBySpec(.localSymbol, _
-                                .symbol, _
-                                .Exchange, _
-                                gSecTypeToCategory(.secType), _
-                                .currencyCode, _
-                                Left$(.expiry, 6), _
-                                .strike, _
-                                gOptRightToString(.Right))
-End With
+Set lInstrument = lInstrumentFactory.loadBySpecifier(mBarDataSpecifier.Contract.specifier)
 Debug.Assert Not lInstrument Is Nothing
 
 Set mBarReader = lInstrument.CreateBarDataReader
@@ -203,7 +194,6 @@ End Function
 '@===============================================================================
 
 Private Sub mBarReader_BarsFetched()
-Dim lBar As TradeBuildSP.Bar
 
 If Not mRequestInProgress Then Exit Sub
 mWaitingForBarData = False
@@ -294,12 +284,41 @@ With mBarDataSpecifier
     End Select
     
     
-    setBarSpecifierTimes mBarDataSpecifier, _
-                        mContract, _
-                        fromDate, _
-                        toDate
+    If .BarLengthUnits = TimePeriodVolume Or .BarLengthUnits = TimePeriodTickMovement Or .BarLengthUnits = TimePeriodTickVolume Then
+        fromDate = .fromDate
+        toDate = .toDate
+    Else
+        If .toDate <> 0 Then
+            toDate = .toDate
+            
+            If .fromDate = 0 Then
+                ' calculate the earliest possible date for the supplied number of bars (assuming
+                ' there are no gaps in the data)
+                fromDate = OffsetBarStartTime(.toDate, _
+                                            .barLength, _
+                                            .BarLengthUnits, _
+                                            -1 * .numberOfBars, _
+                                            mContract.sessionStartTime, _
+                                            mContract.sessionEndTime)
+            Else
+                fromDate = .fromDate
+            End If
+        Else
+            fromDate = .fromDate
+            toDate = OffsetBarStartTime(.fromDate, _
+                                        .barLength, _
+                                        .BarLengthUnits, _
+                                        .numberOfBars, _
+                                        mContract.sessionStartTime, _
+                                        mContract.sessionEndTime)
+        End If
+    End If
     
-    mBarReader.FetchBars .barType, BarLengthMinutes, numberOfBars, fromDate, toDate
+    If .includeBarsOutsideSession Then
+        mBarReader.FetchBars .barType, BarLengthMinutes, numberOfBars, fromDate, toDate
+    Else
+        mBarReader.FetchBars .barType, BarLengthMinutes, &H7FFFFFFF, fromDate, toDate
+    End If
 End With
 
 mServiceConsumer.Ready
@@ -432,27 +451,5 @@ Else
 End If
 End Function
 
-Private Sub setBarSpecifierTimes( _
-                ByVal barSpecifier As IBarDataSpecifier, _
-                ByVal pContract As Contract, _
-                ByRef fromDate As Date, _
-                ByRef toDate As Date)
-
-With barSpecifier
-    If .BarLengthUnits = TimePeriodVolume Or .BarLengthUnits = TimePeriodTickMovement Or .BarLengthUnits = TimePeriodTickVolume Then Exit Sub
-    If .toDate <> 0 Then
-        fromDate = .fromDate
-        toDate = .toDate
-    Else
-        fromDate = .fromDate
-        toDate = OffsetBarStartTime(.fromDate, _
-                                    .barLength, _
-                                    .BarLengthUnits, _
-                                    .numberOfBars, _
-                                    pContract.sessionStartTime, _
-                                    pContract.sessionEndTime)
-    End If
-End With
-End Sub
 
 

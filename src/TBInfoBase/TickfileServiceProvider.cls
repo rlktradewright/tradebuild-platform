@@ -58,6 +58,8 @@ Private Const ModuleName As String = "TickfileServiceProvider"
 
 Private mName As String
 
+Private mMode As AccessModes
+
 Private mHandle As Long
 Private mCommonServiceConsumer As ICommonServiceConsumer
 
@@ -90,6 +92,8 @@ mDatabaseName = "Trading"
 mServer = "localhost"
 mUserName = ""
 mPassword = ""
+
+mMode = ReadWrite
 End Sub
 
 '@===============================================================================
@@ -131,6 +135,12 @@ For Each param In params
         connectionString = param.value
     Case UCase$(ParamNameDatabaseType)
         databaseType = DatabaseTypeFromString(param.value)
+        If databaseType = DbNone Then
+            handleFatalError ErrorCodes.ErrIllegalArgumentException, _
+                            "ICommonServiceProvider_Link", _
+                            "Invalid database type parameter"
+            Exit Sub
+        End If
     Case UCase$(ParamNameDatabaseName)
         databaseName = param.value
     Case UCase$(ParamNameServer)
@@ -141,6 +151,20 @@ For Each param In params
         password = param.value
     Case UCase$(ParamNameUseSynchronousWrites)
         useSynchronousWrites = gStringToBool(param.value)
+    Case UCase$(ParamNameAccessMode)
+        Select Case UCase$(param.value)
+        Case "R", "RO", "READ", "READONLY", "READ ONLY"
+            mMode = ReadOnly
+        Case "W", "WO", "WRITE", "WRITEONLY", "WRITE ONLY"
+            mMode = WriteOnly
+        Case "RW", "READWRITE", "READ WRITE", "READ & WRITE"
+            mMode = ReadWrite
+        Case Else
+            handleFatalError ErrorCodes.ErrIllegalArgumentException, _
+                            "ICommonServiceProvider_Link", _
+                            "Invalid access mode parameter"
+            Exit Sub
+        End Select
     End Select
 Next
 
@@ -203,7 +227,8 @@ reader.initialise mName & " (reader)", _
                     mCommonServiceConsumer, _
                     serviceConsumer, _
                     Me, _
-                    DataConsumer
+                    DataConsumer, _
+                    getCapabilities
 mTickfileDataReaders.Add reader
 Exit Function
 Err:
@@ -255,7 +280,7 @@ formats(0).Name = "TradeBuild SQLDB"
 formats(0).FormalID = TickfileFormatTradeBuildSQL
 formats(0).FileExtension = ""
 formats(0).FormatType = StreamBased
-formats(0).capabilities = gSQLDBCapabilities
+formats(0).capabilities = getCapabilities
 
 ITickfileServiceProvider_SupportedFormats = formats
 
@@ -267,7 +292,7 @@ Private Function ITickfileServiceProvider_Supports( _
 If FormatIdentifier = TickfileFormatTradeBuildSQL Or _
     FormatIdentifier = "" _
 Then
-    ITickfileServiceProvider_Supports = gSQLDBSupports(capabilities)
+    ITickfileServiceProvider_Supports = getCapabilities And capabilities
 End If
 End Function
 
@@ -279,26 +304,30 @@ End Function
 ' Properties
 '@===============================================================================
 
-Friend Property Let connectionString( _
+Public Property Let connectionString( _
                 ByVal value As String)
 mConnectionString = value
 End Property
 
-Friend Property Let databaseName( _
+Public Property Let databaseName( _
                 ByVal value As String)
 mDatabaseName = value
 End Property
 
-Friend Property Let databaseType( _
+Public Property Let databaseType( _
                 ByVal value As DatabaseTypes)
 mDatabaseType = value
 End Property
 
-Friend Property Get handle() As Long
+Friend Property Get databaseType() As DatabaseTypes
+databaseType = mDatabaseType
+End Property
+
+Public Property Get handle() As Long
 handle = mHandle
 End Property
 
-Friend Property Let Name(ByVal value As String)
+Public Property Let Name(ByVal value As String)
 mName = value
 End Property
 
@@ -306,22 +335,22 @@ Public Property Get Name() As String
 Name = mName
 End Property
 
-Friend Property Let password( _
+Public Property Let password( _
                 ByVal value As String)
 mPassword = value
 End Property
                 
-Friend Property Let server( _
+Public Property Let server( _
                 ByVal value As String)
 mServer = value
 End Property
                 
-Friend Property Let username( _
+Public Property Let username( _
                 ByVal value As String)
 mUserName = value
 End Property
 
-Friend Property Let useSynchronousWrites( _
+Public Property Let useSynchronousWrites( _
                 ByVal value As Boolean)
 mUseSynchronousWrites = value
 End Property
@@ -361,6 +390,18 @@ End Sub
 '@===============================================================================
 ' Helper Functions
 '@===============================================================================
+
+Private Function getCapabilities() As Long
+Select Case mMode
+Case ReadOnly
+    getCapabilities = gSQLDBCapabilitiesReadOnly
+Case WriteOnly
+    getCapabilities = gSQLDBCapabilitiesWriteOnly
+Case ReadWrite
+    getCapabilities = gSQLDBCapabilitiesReadWrite
+End Select
+
+End Function
 
 Private Sub finishReaders()
 Dim reader As TickfileReader

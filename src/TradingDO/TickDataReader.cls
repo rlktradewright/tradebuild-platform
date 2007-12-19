@@ -64,7 +64,7 @@ Private Const ModuleName As String = "TickDataReader"
 
 Private WithEvents mConnection As ADODB.Connection
 Attribute mConnection.VB_VarHelpID = -1
-Private WithEvents mRsTick As ADODB.recordset
+Private WithEvents mRsTick As ADODB.Recordset
 Attribute mRsTick.VB_VarHelpID = -1
 
 Private mInstrumentID As Long
@@ -124,7 +124,7 @@ End Sub
 Private Sub mRsTick_FetchComplete( _
                             ByVal pError As ADODB.Error, _
                             adStatus As ADODB.EventStatusEnum, _
-                            ByVal pRecordset As ADODB.recordset)
+                            ByVal pRecordset As ADODB.Recordset)
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent Error(pError.Number, _
                     ModuleName & ": fetch error" & vbCrLf & _
@@ -140,7 +140,7 @@ Private Sub mRsTick_FetchProgress( _
                             ByVal Progress As Long, _
                             ByVal MaxProgress As Long, _
                             adStatus As ADODB.EventStatusEnum, _
-                            ByVal pRecordset As ADODB.recordset)
+                            ByVal pRecordset As ADODB.Recordset)
 
 End Sub
 
@@ -153,14 +153,13 @@ End Sub
 '@===============================================================================
 
 Public Sub FetchData( _
-                        ByVal Version As String, _
                         ByVal fromTime As Date, _
                         ByVal toTime As Date)
 
 Debug.Assert Not mFetchInProgress
 mFetchInProgress = True
 
-DoQueryTickData Version, fromTime, toTime
+DoQueryTickData fromTime, toTime
                         
 End Sub
 
@@ -176,7 +175,9 @@ End Sub
 
 Public Function ReadData( _
                         ByRef PeriodStartTime As Date, _
+                        ByRef format As String, _
                         ByRef BasePrice As Double, _
+                        ByRef tickSize As Double, _
                         ByRef Data() As Byte) As Boolean
 ' returns false if no more tickdata is available - this can
 ' occur before the full data has been retrieved from the database,
@@ -193,7 +194,9 @@ If CBool(mRsTick("IsExchangeTime")) Then
 Else
     PeriodStartTime = ConvertDateUTCToTZ(ConvertDateLocalToUTC(gRoundTimeToSecond(mRsTick("DateTime"))), mTimeZone)
 End If
+format = mRsTick("Version")
 BasePrice = mRsTick("baseprice")
+tickSize = mRsTick("ticksize")
 Data = mRsTick("data")
 mRsTick.MoveNext
 
@@ -213,7 +216,6 @@ mConnection.Open mConnectionString, , , ConnectOptionEnum.adAsyncConnect
 End Sub
 
 Private Sub DoQueryTickData( _
-                        ByVal Version As String, _
                         ByVal fromTime As Date, _
                         ByVal toTime As Date)
 Dim cmd As ADODB.Command
@@ -225,7 +227,7 @@ toTime = gRoundTimeToSecond(toTime)
 Set cmd = New ADODB.Command
 cmd.CommandType = adCmdStoredProc
 
-cmd.CommandText = "FetchTickDataEx"
+cmd.CommandText = "FetchTickData"
 
 ' @InstrumentID
 Set param = cmd.CreateParameter(, _
@@ -233,14 +235,6 @@ Set param = cmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             mInstrumentID)
-cmd.Parameters.Append param
-
-' @DataVersion
-Set param = cmd.CreateParameter(, _
-                                DataTypeEnum.adVarChar, _
-                            ParameterDirectionEnum.adParamInput, _
-                            255, _
-                            Version)
 cmd.Parameters.Append param
 
 ' @FromExchange
@@ -277,7 +271,7 @@ cmd.Parameters.Append param
 
 cmd.ActiveConnection = mConnection
 
-Set mRsTick = New ADODB.recordset
+Set mRsTick = New ADODB.Recordset
 mRsTick.Open cmd, _
                 , _
                 CursorTypeEnum.adOpenForwardOnly, _

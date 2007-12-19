@@ -109,6 +109,7 @@ Private Sub ICommonServiceConsumer_FatalServiceProviderError( _
 gTB.NotifyFatalError errorCode, _
                     errorMessage, _
                     nameFromHandle(spHandle) & ":" & source
+removeSP spHandle
 End Sub
 
 Private Sub ICommonServiceConsumer_NotifyListeners( _
@@ -224,9 +225,10 @@ Private Sub IContractInfoServiceConsumer_NotifyEvent( _
                 ByVal pContractsbuilder As ContractsBuilder, _
                 ByVal serviceProviderHandle As Long)
 
+Dim ev As NotificationEvent
+
 Select Case eventCode
 Case TradeBuildSP.StandardSPEventCodes.CIConnectedToDataSource
-    Dim ev As NotificationEvent
     ev.eventCode = eventCode
     ev.eventMessage = eventMessage
     Set ev.source = pContractsbuilder.Contracts
@@ -308,7 +310,10 @@ Set add = CreateObject(progId)
 Set params = CreateParametersFromString(paramString)
 
 If enabled Then
-    addSP add, params, LogLevelAll, name
+    If Not addSP(add, params, logLevel, name) Then
+        Set add = Nothing
+        Exit Function
+    End If
 End If
 
 addEntryToConfig progId, _
@@ -472,8 +477,7 @@ End Function
 Friend Function CreateTickfileReader( _
                 ByVal pTicker As Ticker, _
                 ByVal serviceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
-                ByVal inputTickfileFormatID As String _
-                ) As TickfileReader
+                ByVal inputTickfileFormatID As String) As TickfileReader
 Dim tickfileSp As TradeBuildSP.ITickfileServiceProvider
 Dim tickfileSPReader As TradeBuildSP.ITickfileReader
 Dim tfReader As TickfileReader
@@ -510,8 +514,7 @@ End Function
 Friend Function CreateTickfileWriter( _
             ByVal serviceConsumer As TradeBuildSP.ITickfileOutputServiceConsumer, _
             ByVal outputTickfileFormatID As String, _
-            ByVal outputTickfilePath As String _
-            ) As TickfileWriter
+            ByVal outputTickfilePath As String) As TickfileWriter
                             
 Dim tickfileSp As TradeBuildSP.ITickfileServiceProvider
 Dim tickfileSPWriter As TradeBuildSP.ITickfileWriter
@@ -546,7 +549,7 @@ Set CreateTickfileWriter = tfWriter
 
 End Function
 
-Friend Function IsSupportedHistoricalDataPeriod(ByRef period As TimePeriod)
+Friend Function IsSupportedHistoricalDataPeriod(ByRef period As TimePeriod) As Boolean
 Dim i As Long
 Dim histDataSp As TradeBuildSP.IBarDataServiceProvider
 
@@ -597,10 +600,7 @@ If sp Is Nothing Then Exit Sub
 For i = 0 To mMaxSPIndex
     If mServiceProviders(i).SPObject Is sp Then
         mServiceProviders(i).SPObject.Terminate
-        Set mServiceProviders(i).SPObject = Nothing
-        mServiceProviders(i).SPTypes = 0
-        mServiceProviders(i).name = ""
-        fireChange CollItemRemoved, sp
+        removeSP i
         Exit For
     End If
 Next
@@ -643,7 +643,7 @@ Private Sub addEntryToConfig( _
             ByVal Description As String _
             )
 Dim sp As ConfigItem
-Dim props As ConfigItems
+Dim props As ConfigItem
 Dim prop As ConfigItem
 Dim param As Parameter
 
@@ -657,20 +657,22 @@ If name <> "" Then sp.setAttribute AttributeNameServiceProviderName, name
 sp.setAttribute AttributeNameServiceProviderProgId, progId
 sp.setAttribute AttributeNameLogLevel, logLevel
 
+Set props = sp.childItems.AddItem(ConfigNameProperties)
+
 For Each param In params
-    Set prop = sp.childItems.AddItem(ConfigNameProperty)
+    Set prop = props.childItems.AddItem(ConfigNameProperty)
     prop.setAttribute AttributeNamePropertyName, param.name
     prop.setAttribute AttributeNamePropertyValue, param.value
 Next
 
 End Sub
 
-Private Sub addSP( _
+Private Function addSP( _
             ByVal serviceProvider As TradeBuildSP.ICommonServiceProvider, _
             ByVal params As parameters, _
             ByVal logLevel As LogLevels, _
             ByVal name As String _
-            )
+            ) As Boolean
 Dim i As Long
 
 If name <> "" Then serviceProvider.name = name
@@ -701,10 +703,17 @@ mServiceProviders(mMaxSPIndex).name = serviceProvider.name
 Set mServiceProviders(mMaxSPIndex).SPObject = serviceProvider
 
 serviceProvider.Link Me, mMaxSPIndex, params
-serviceProvider.logLevel = logLevel
 
-fireChange CollItemAdded, serviceProvider
-End Sub
+If mServiceProviders(i).SPObject Is Nothing Then
+    ' a fatal error has occurred while linking the SP - eg, invalid parameter
+    ' has been passed
+    addSP = False
+Else
+    serviceProvider.logLevel = logLevel
+    fireChange CollItemAdded, serviceProvider
+    addSP = True
+End If
+End Function
 
 Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
@@ -764,6 +773,7 @@ Dim sp As ConfigItem
 Dim spName As String
 Dim spProgId As String
 Dim spLogLevel As String
+Dim props As ConfigItem
 Dim prop As ConfigItem
 Dim propName As String
 Dim propValue As String
@@ -789,12 +799,16 @@ For Each sp In mServiceProviderConfigList.childItems
         
         Set params = New parameters
         
-        For Each prop In sp.childItems
-            propName = prop.getAttribute(AttributeNamePropertyName)
-            propValue = prop.getAttribute(AttributeNamePropertyValue)
-            params.setParameterValue propName, propValue
-        Next
-    
+        Set props = sp.childItems.item(ConfigNameProperties)
+        
+        If Not props Is Nothing Then
+            For Each prop In props.childItems
+                propName = prop.getAttribute(AttributeNamePropertyName)
+                propValue = prop.getAttribute(AttributeNamePropertyValue)
+                params.setParameterValue propName, propValue
+            Next
+        End If
+        
         On Error GoTo 0
         
         Set spObj = CreateObject(spProgId)
@@ -825,3 +839,12 @@ contractInfoSP.RequestContractDetails pContractsbuilder
 LoadContractsFromNextSP = True
 End Function
 
+Private Sub removeSP( _
+                ByVal handle As Long)
+Dim sp As ICommonServiceProvider
+Set sp = mServiceProviders(handle).SPObject
+Set mServiceProviders(handle).SPObject = Nothing
+mServiceProviders(handle).SPTypes = 0
+mServiceProviders(handle).name = ""
+fireChange CollItemRemoved, sp
+End Sub

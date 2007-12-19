@@ -65,6 +65,10 @@ Private Const ModuleName                    As String = "TickDataDecoder"
 ' Methods
 '@================================================================================
 
+Public Function getNextTick( _
+                ByRef tick As GenericTick) As Boolean
+End Function
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================

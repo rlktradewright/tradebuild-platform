@@ -119,7 +119,7 @@ Private Sub mConnection_ExecuteComplete( _
                             ByVal pError As ADODB.Error, _
                             adStatus As ADODB.EventStatusEnum, _
                             ByVal pCommand As ADODB.Command, _
-                            ByVal pRecordset As ADODB.recordset, _
+                            ByVal pRecordset As ADODB.Recordset, _
                             ByVal pConnection As ADODB.Connection)
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent Error(pError.Number, _
@@ -172,7 +172,7 @@ mAsynchronous = asynchronous
 Set mCmd = New ADODB.Command
 mCmd.CommandType = adCmdStoredProc
 
-mCmd.CommandText = "WriteBarDataExchange"
+mCmd.CommandText = "WriteBarData"
 
 ' @InstrumentID
 Set param = mCmd.CreateParameter(, _

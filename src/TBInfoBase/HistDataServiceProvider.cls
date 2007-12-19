@@ -296,26 +296,26 @@ End Sub
 ' Properties
 '@===============================================================================
 
-Friend Property Let connectionString( _
+Public Property Let connectionString( _
                 ByVal value As String)
 mConnectionString = value
 End Property
 
-Friend Property Let databaseName( _
+Public Property Let databaseName( _
                 ByVal value As String)
 mDatabaseName = value
 End Property
 
-Friend Property Let databaseType( _
+Public Property Let databaseType( _
                 ByVal value As DatabaseTypes)
 mDatabaseType = value
 End Property
 
-Friend Property Get handle() As Long
+Public Property Get handle() As Long
 handle = mHandle
 End Property
 
-Friend Property Let Name(ByVal value As String)
+Public Property Let Name(ByVal value As String)
 mName = value
 End Property
 
@@ -323,22 +323,22 @@ Public Property Get Name() As String
 Name = mName
 End Property
 
-Friend Property Let password( _
+Public Property Let password( _
                 ByVal value As String)
 mPassword = value
 End Property
                 
-Friend Property Let server( _
+Public Property Let server( _
                 ByVal value As String)
 mServer = value
 End Property
                 
-Friend Property Let username( _
+Public Property Let username( _
                 ByVal value As String)
 mUserName = value
 End Property
 
-Friend Property Let useSynchronousWrites( _
+Public Property Let useSynchronousWrites( _
                 ByVal value As Boolean)
 mUseSynchronousWrites = value
 End Property

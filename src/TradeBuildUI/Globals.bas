@@ -84,6 +84,95 @@ Private mStudyPickerForm As fStudyPicker
 ' Methods
 '@================================================================================
 
+'Public Sub cleverComboChanged( _
+'                ByVal combo As ComboBox)
+'Dim l As Long
+'Dim selItem As Long
+'
+'l = Len(combo.Text)
+'If combo.Text <> "" Then
+'    selItem = SendMessageW(combo.hWnd, CB_FINDSTRING, -1, StrPtr(combo.Text))
+'    If selItem <> CB_ERR Then
+'        SendMessageW combo.hWnd, CB_SETCURSEL, selItem, 0
+'        combo.SelStart = l
+'        combo.SelLength = Len(combo.Text) - l
+'    End If
+'End If
+'
+'End Sub
+'
+'Public Sub cleverComboKeyDown( _
+'                ByVal combo As ComboBox, _
+'                KeyCode As Integer)
+'Dim i As Long
+'Dim posn As Long
+'If KeyCode = vbKeyUp Then
+'    posn = 0
+'    If combo.ListIndex = -1 Then
+'        For i = 0 To combo.ListCount - 1
+'            If StrComp(combo.Text, combo.List(i), vbTextCompare) = 0 Then
+'                combo.ListIndex = i
+'                Exit Sub
+'            End If
+'            If StrComp(combo.List(i), combo.Text, vbTextCompare) < 0 Then posn = i
+'        Next
+'        If posn = combo.ListCount - 1 Then
+'            KeyCode = 0
+'        Else
+'            posn = posn + 1
+'        End If
+'        combo.ListIndex = posn
+'    End If
+'ElseIf KeyCode = vbKeyDown Then
+'    posn = combo.ListCount - 1
+'    If combo.ListIndex = -1 Then
+'        For i = combo.ListCount - 1 To 0 Step -1
+'            If StrComp(combo.Text, combo.List(i), vbTextCompare) = 0 Then
+'                combo.ListIndex = i
+'                Exit Sub
+'            End If
+'            If StrComp(combo.Text, combo.List(i), vbTextCompare) < 0 Then posn = i
+'        Next
+'        If posn = 0 Then
+'            KeyCode = 0
+'        Else
+'            posn = posn - 1
+'        End If
+'        combo.ListIndex = posn
+'    End If
+'End If
+'End Sub
+'
+'Public Sub cleverComboKeyPress( _
+'                ByVal combo As ComboBox, _
+'                KeyAscii As Integer)
+'
+'If KeyAscii = vbKeyBack Then
+'    If combo.SelStart <> 0 And combo.SelLength <> 0 Then
+'        Dim l As Long
+'        l = combo.SelLength
+'        combo.SelStart = combo.SelStart - 1
+'        combo.SelLength = l + 1
+'    End If
+'End If
+'End Sub
+'
+'Public Sub cleverComboValidate( _
+'                ByVal combo As ComboBox, _
+'                Cancel As Boolean)
+'Dim i As Long
+'If combo.Text = "" Then Exit Sub
+'If combo.ListIndex = -1 Then
+'    For i = 0 To combo.ListCount - 1
+'        If combo.Text = combo.List(i) Then
+'            combo.ListIndex = i
+'            Exit Sub
+'        End If
+'    Next
+'    Cancel = True
+'End If
+'End Sub
+
 Public Sub filterNonNumericKeyPress(ByRef KeyAscii As Integer)
 If (KeyAscii < 48 Or KeyAscii > 57) Then
     KeyAscii = 0

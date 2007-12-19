@@ -77,7 +77,7 @@ Set mExecutions = defaultWorkSpace.executions
 End Sub
 
 Private Sub Class_Terminate()
-TerminateTWUtilities
+'TerminateTWUtilities
 Debug.Print "TradeBuildAPI terminated"
 End Sub
 
@@ -140,7 +140,6 @@ Dim useCustomSessionTimes As Boolean
 Dim lTickfileSpecifiers() As TickfileSpecifier
 Dim i As Long
 Dim j As Long
-Dim k As Long
 Dim lContract As Contract
 Dim lSessionBuilder As SessionBuilder
 Dim lSession As session
@@ -403,22 +402,25 @@ End Function
 
 Public Function GetServiceProviderError() As ServiceProviderError
 Set GetServiceProviderError = mServiceProviderError
-Set mServiceProviderError = Nothing
+'Set mServiceProviderError = Nothing
 End Function
 
 Public Function IsSupportedHistoricalDataPeriod( _
                 ByVal periodLength As Long, _
-                ByVal periodUnits As TimePeriodUnits)
+                ByVal periodUnits As TimePeriodUnits) As Boolean
 Dim period As TimePeriod
 period.length = periodLength
 period.units = periodUnits
 IsSupportedHistoricalDataPeriod = mServiceProviders.IsSupportedHistoricalDataPeriod(period)
 End Function
 
-Public Sub loadContracts( _
-                ByVal pContractsbuilder As ContractsBuilder)
-mServiceProviders.loadContracts pContractsbuilder
-End Sub
+Public Function loadContracts( _
+                ByVal pContractSpec As contractSpecifier) As Contracts
+Dim lContractsBuilder As ContractsBuilder
+Set lContractsBuilder = CreateContractsBuilder(pContractSpec)
+Set loadContracts = lContractsBuilder.Contracts
+mServiceProviders.loadContracts lContractsBuilder
+End Function
 
 Friend Sub NotifyFatalError( _
                 ByVal errorCode As Long, _
@@ -460,7 +462,7 @@ Set mServiceProviderError = New ServiceProviderError
 mServiceProviderError.errorCode = errorCode
 mServiceProviderError.message = errorMessage
 mServiceProviderError.serviceProviderName = serviceProviderName
-mServiceProviderError.timestamp = getTimestamp
+mServiceProviderError.timestamp = GetTimestamp
 
 Set ev.source = Me
 ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError

@@ -86,7 +86,7 @@ Dim i As Long
 
 Set mTickfileOrganiser = New fTickfileOrganiser
 
-mTickfileOrganiser.Show vbModal, Me
+mTickfileOrganiser.Show vbModal
 
 End Sub
 

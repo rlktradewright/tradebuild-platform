@@ -65,15 +65,17 @@ Private WithEvents mTradingDB       As TradingDB
 Attribute mTradingDB.VB_VarHelpID = -1
 Private mConnectionString           As String
 
-Private mTickfileServiceProvider As tickfileServiceProvider
+Private mTickfileServiceProvider    As tickfileServiceProvider
 
-Private mCommonServiceConsumer As ICommonServiceConsumer
-Private mServiceConsumer As ITickfileOutputServiceConsumer
-Private mServiceProviderName As String
+Private mCommonServiceConsumer      As ICommonServiceConsumer
+Private mServiceConsumer            As ITickfileOutputServiceConsumer
+Private mServiceProviderName        As String
 
-Private mContract As Contract
-Private WithEvents mTickWriter As TickDataWriter
+Private mContract                   As Contract
+Private WithEvents mTickWriter      As TickDataWriter
 Attribute mTickWriter.VB_VarHelpID = -1
+
+Private mTde                        As TickDataEncoder
 
 Private mData() As Byte
 Private mDataIndex As Long
@@ -128,16 +130,7 @@ If Not RHS Is Nothing Then
 End If
 
 Set lInstrumentFactory = mTradingDB.InstrumentFactory
-With mContract.specifier
-    Set mInstrument = lInstrumentFactory.loadBySpec(.localSymbol, _
-                                .symbol, _
-                                .Exchange, _
-                                gSecTypeToCategory(.secType), _
-                                .currencyCode, _
-                                Left$(.expiry, 6), _
-                                .strike, _
-                                gOptRightToString(.Right))
-End With
+Set mInstrument = lInstrumentFactory.loadBySpecifier(mContract.specifier)
 
 '?????????????????????????????????????????????????????
 ' consider inserting this instrument into the database
@@ -146,7 +139,8 @@ End With
     
 Debug.Assert Not mInstrument Is Nothing
 
-mTickSize = mContract.TickSize
+mTickSize = mContract.ticksize
+
 Exit Property
 Err:
 handleFatalError Err.Number, _
@@ -173,7 +167,8 @@ Private Sub ITickfileWriter_WriteAsk( _
                             ByVal size As Long)
 On Error GoTo Err
 If price = 0# Then Exit Sub
-WriteQuoteRecord TickTypes.Ask, timestamp, price, size
+checkIfNewPeriod timestamp
+mTde.encodeAsk timestamp, price, size
 Exit Sub
 Err:
 handleFatalError Err.Number, _
@@ -187,7 +182,8 @@ Private Sub ITickfileWriter_writeBid( _
                             ByVal size As Long)
 On Error GoTo Err
 If price = 0# Then Exit Sub
-WriteQuoteRecord TickTypes.Bid, timestamp, price, size
+checkIfNewPeriod timestamp
+mTde.encodeBid timestamp, price, size
 Exit Sub
 Err:
 handleFatalError Err.Number, _
@@ -200,7 +196,8 @@ Private Sub ITickfileWriter_writeClose( _
                             ByVal price As Double)
 On Error GoTo Err
 If price = 0# Then Exit Sub
-WritePriceRecord TickTypes.closePrice, timestamp, price
+checkIfNewPeriod timestamp
+mTde.encodeClose timestamp, price
 Exit Sub
 Err:
 handleFatalError Err.Number, _
@@ -213,7 +210,8 @@ Private Sub ITickfileWriter_writeHigh( _
                             ByVal price As Double)
 On Error GoTo Err
 If price = 0# Then Exit Sub
-WritePriceRecord TickTypes.highPrice, timestamp, price
+checkIfNewPeriod timestamp
+mTde.encodeHigh timestamp, price
 Exit Sub
 Err:
 handleFatalError Err.Number, _
@@ -226,7 +224,8 @@ Private Sub ITickfileWriter_writeLow( _
                             ByVal price As Double)
 On Error GoTo Err
 If price = 0# Then Exit Sub
-WritePriceRecord TickTypes.lowPrice, timestamp, price
+checkIfNewPeriod timestamp
+mTde.encodeLow timestamp, price
 Exit Sub
 Err:
 handleFatalError Err.Number, _
@@ -249,28 +248,9 @@ Dim sideOperationPositionByte As Byte
 On Error GoTo Err
 If price = 0# Then Exit Sub
 
-CheckIfNewPeriod timestamp
+checkIfNewPeriod timestamp
+mTde.encodeMarketDepthData timestamp, position, marketmaker, operation, side, price, size
 
-typeByte = TickTypes.marketDepth
-
-sizeType = GetSizeType(size)
-typeByte = typeByte Or (sizeType * SizeTypeShifter)
-
-If timestamp = mTimestamp Then typeByte = typeByte Or NoTimestamp
-
-If mBasePrice = 0# Then mBasePrice = price
-If price < mBasePrice Then typeByte = typeByte Or NegativeTicks
-
-WriteByte typeByte
-WriteTimestamp timestamp
-sideOperationPositionByte = CByte(position)
-sideOperationPositionByte = sideOperationPositionByte Or CByte(operation * OperationShifter)
-sideOperationPositionByte = sideOperationPositionByte Or CByte(side * SideShifter)
-WriteByte sideOperationPositionByte
-
-WritePrice price
-WriteSize size, sizeType
-WriteString marketmaker
 Exit Sub
 Err:
 handleFatalError Err.Number, _
@@ -283,12 +263,9 @@ Private Sub ITickfileWriter_writeMarketDepthReset( _
 Dim typeByte As Byte
 
 On Error GoTo Err
-typeByte = TickTypes.MarketDepthReset
+checkIfNewPeriod timestamp
+mTde.encodeMarketDepthReset timestamp
 
-If timestamp = mTimestamp Then typeByte = typeByte Or NoTimestamp
-
-WriteByte typeByte
-WriteTimestamp timestamp
 Exit Sub
 Err:
 handleFatalError Err.Number, _
@@ -298,7 +275,8 @@ End Sub
 
 Private Sub ITickfileWriter_WriteOpenInterest(ByVal timestamp As Date, ByVal size As Long)
 On Error GoTo Err
-WriteSizeRecord TickTypes.openInterest, timestamp, size
+checkIfNewPeriod timestamp
+mTde.encodeOpenInterest timestamp, size
 Exit Sub
 Err:
 handleFatalError Err.Number, _
@@ -311,14 +289,16 @@ Private Sub ITickfileWriter_writeTrade( _
                             ByVal price As Double, _
                             ByVal size As Long)
 If price = 0# Then Exit Sub
-WriteQuoteRecord TickTypes.Trade, timestamp, price, size
+checkIfNewPeriod timestamp
+mTde.encodeTrade timestamp, price, size
 End Sub
 
 Private Sub ITickfileWriter_writeVolume( _
                             ByVal timestamp As Date, _
                             ByVal size As Long)
 On Error GoTo Err
-WriteSizeRecord TickTypes.volume, timestamp, size
+checkIfNewPeriod timestamp
+mTde.encodeVolume timestamp, size
 Exit Sub
 Err:
 handleFatalError Err.Number, _
@@ -403,7 +383,7 @@ End Sub
 '@===============================================================================
 
 Friend Sub finish()
-WritePeriodData
+writePeriodData
 mCommonServiceConsumer.NotifyListeners mServiceProviderName & " (" & mContract.specifier.localSymbol & ")" & vbCrLf & _
                             "    Total data written: " & mTotalBytes & " bytes", _
                             TradeBuildSP.StandardListenValueTypes.Log, _
@@ -437,29 +417,18 @@ End Sub
 ' Helper Functions
 '@===============================================================================
 
-Private Sub CheckIfNewPeriod(ByVal timestamp As Date)
+Private Sub checkIfNewPeriod(ByVal timestamp As Date)
 Dim barTime As Date
 barTime = gTruncateTimeToMinute(timestamp)
 If barTime = mOpeningTimestamp Then Exit Sub
 
-WritePeriodData
+If Not mTde Is Nothing Then writePeriodData
 
-ReDim mData(8191) As Byte
-mDataIndex = 0
+Set mTde = CreateTickEncoder(barTime, mTickSize, LatestEncodingFormatIdentifier)
+
 mOpeningTimestamp = barTime
-mTimestamp = mOpeningTimestamp
-mBasePrice = 0#
-End Sub
 
-Private Function GetSizeType(ByVal size As Long) As SizeTypes
-If size < &H100 Then
-    GetSizeType = SizeTypes.ShortSize
-ElseIf size < &H10000 Then
-    GetSizeType = SizeTypes.IntSize
-Else
-    GetSizeType = SizeTypes.LongSize
-End If
-End Function
+End Sub
 
 Private Sub handleFatalError( _
                 ByVal Number As Long, _
@@ -475,170 +444,17 @@ mCommonServiceConsumer.FatalServiceProviderError Number, _
 mTickfileServiceProvider.dataWriterFinished Me
 End Sub
 
-Private Sub WriteByte(ByVal theByte As Byte)
-If mDataIndex > UBound(mData) Then
-    ReDim Preserve mData(UBound(mData) + 8192) As Byte
-End If
-mData(mDataIndex) = theByte
-mDataIndex = mDataIndex + 1
-End Sub
-
-Private Sub WriteInt(ByVal theInt As Integer)
-WriteByte CByte(theInt And &HFF)
-WriteByte CByte(Int(theInt / &H100) And &HFF)
-End Sub
-
-Private Sub WriteLong(ByVal theLong As Long)
-WriteByte CByte(theLong And &HFF)
-WriteByte CByte(Int(theLong / &H100) And &HFF)
-WriteByte CByte(Int(theLong / &H10000) And &HFF)
-WriteByte CByte(Int(theLong / &H1000000) And &HFF)
-End Sub
-
-Private Sub WritePeriodData()
-
-If mDataIndex = 0 Then Exit Sub
-
-ReDim Preserve mData(mDataIndex - 1) As Byte
+Private Sub writePeriodData()
 
 Set mTickWriter = mInstrument.CreateTickDataWriter
 
-mTickWriter.WriteData TickfileFormatTradeBuildSQL, _
-                            mOpeningTimestamp, _
-                            mBasePrice, _
-                            mData, _
+mTickWriter.WriteData mTde.encodingFormatIdentifier, _
+                            mTde.periodStartTime, _
+                            mTde.basePrice, _
+                            mTde.ticksize, _
+                            mTde.encodedData, _
                             Not mUseSynchronousWrites
 
-mTotalBytes = mTotalBytes + mDataIndex
-End Sub
-
-Private Sub WritePrice(ByVal price As Double)
-Dim numticks As Integer
-If price = mBasePrice Then
-    WriteByte &H0
-Else
-    numticks = Abs(price - mBasePrice) / mTickSize
-    If numticks <= 127 Then
-        WriteByte CByte(Abs(price - mBasePrice) / mTickSize)
-    Else
-        ' won't fit in 7 bits. Write it out as an int value, with
-        ' the high-order byte written first and bit 7 set
-        WriteByte CByte(Int(numticks / &H100) And &H7F) Or &H80
-        WriteByte CByte(numticks And &HFF)
-    End If
-End If
-End Sub
-
-Private Sub WritePriceRecord( _
-                            ByVal tickType As TickTypes, _
-                            ByVal timestamp As Date, _
-                            ByVal price As Double)
-Dim typeByte As Byte
-
-CheckIfNewPeriod timestamp
-
-typeByte = tickType
-
-If timestamp = mTimestamp Then typeByte = typeByte Or NoTimestamp
-
-If mBasePrice = 0# Then mBasePrice = price
-If price < mBasePrice Then typeByte = typeByte Or NegativeTicks
-
-WriteByte typeByte
-WriteTimestamp timestamp
-WritePrice price
-End Sub
-
-Private Sub WriteQuoteRecord( _
-                            ByVal tickType As TickTypes, _
-                            ByVal timestamp As Date, _
-                            ByVal price As Double, _
-                            ByVal size As Long)
-Dim typeByte As Byte
-Dim sizeType As SizeTypes
-
-CheckIfNewPeriod timestamp
-
-typeByte = tickType
-
-sizeType = GetSizeType(size)
-typeByte = typeByte Or (sizeType * SizeTypeShifter)
-
-If timestamp = mTimestamp Then typeByte = typeByte Or NoTimestamp
-
-If mBasePrice = 0# Then mBasePrice = price
-If price < mBasePrice Then typeByte = typeByte Or NegativeTicks
-
-WriteByte typeByte
-
-WriteTimestamp timestamp
-
-WritePrice price
-
-WriteSize size, sizeType
-End Sub
-
-Private Sub WriteSize(ByVal size As Long, ByVal sizeType As SizeTypes)
-Select Case sizeType
-Case SizeTypes.ShortSize
-    Debug.Assert size < &H100&
-    WriteByte CByte(size)
-Case SizeTypes.IntSize
-    Debug.Assert size < &H10000
-    If size < &H8000& Then
-        WriteInt size
-    Else
-        WriteInt CInt(size - &H10000)
-    End If
-Case SizeTypes.LongSize
-    WriteLong size
-End Select
-End Sub
-
-Private Sub WriteSizeRecord( _
-                            ByVal tickType As TickTypes, _
-                            ByVal timestamp As Date, _
-                            ByVal size As Long)
-Dim typeByte As Byte
-Dim sizeType As SizeTypes
-
-CheckIfNewPeriod timestamp
-
-typeByte = tickType
-
-sizeType = GetSizeType(size)
-typeByte = typeByte Or (sizeType * SizeTypeShifter)
-
-If timestamp = mTimestamp Then typeByte = typeByte Or NoTimestamp
-
-WriteByte typeByte
-WriteTimestamp timestamp
-WriteSize size, sizeType
-End Sub
-
-Private Sub WriteString(ByVal theString As String)
-Dim ar() As Byte
-Dim i As Long
-
-WriteByte CByte(Len(theString))
-
-ar = theString
-For i = 0 To UBound(ar)
-    WriteByte ar(i)
-Next
-End Sub
-
-Private Sub WriteTimestamp(ByVal timestamp As Date)
-Dim diff As Long
-If timestamp <> mTimestamp Then
-    diff = (timestamp - mOpeningTimestamp) * 86400 * 1000
-    Debug.Assert diff < &H10000
-    If diff < &H8000& Then
-        WriteInt diff
-    Else
-        WriteInt CInt(diff - &H10000)
-    End If
-    mTimestamp = timestamp
-End If
+mTotalBytes = mTotalBytes + mTde.encodedDataLength
 End Sub
 

@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#12.0#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#16.0#0"; "ChartSkil2-6.ocx"
 Begin VB.UserControl TradeBuildChart 
    ClientHeight    =   4965
    ClientLeft      =   0
@@ -54,20 +54,6 @@ Event StateChange(ev As StateChangeEvent)
 '@================================================================================
 ' Enums
 '@================================================================================
-
-Public Enum ChartStates
-    ''
-    ' The chart is ready to have studies added to it
-    '
-    '@/
-    ChartStateInitialised
-    
-    ''
-    ' All historic data has been added to the chart
-    '
-    '@/
-    ChartStateLoaded
-End Enum
 
 '@================================================================================
 ' Types

@@ -11,7 +11,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
-Option Explicit
+                           Option Explicit
 
 '@===============================================================================
 ' Description
@@ -189,7 +189,7 @@ Set mRequests(mNextRequestID) = pContractsBuilder
 
 If mRequestsOutstanding = 0 Then
     ' no requests currently queued so start the timer
-    mTimer.startTimer
+    mTimer.StartTimer
 End If
 
 mNextRequestID = (mNextRequestID + 1) Mod MaxQueuedRequests
@@ -215,10 +215,14 @@ End Function
 '@===============================================================================
 
 Private Sub mTimer_TimerExpired()
-Dim instrumentSummaries As instrumentSummaries
-Dim instrumentSummary As instrumentSummary
+Dim instrumentSummaries As DataObjectSummaries
+Dim instrumentSummary As DataObjectSummary
 Dim instrument As instrument
 Dim lContract As Contract
+Dim fieldNames() As String
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If mTradingDB Is Nothing Then
     If mConnectionString <> "" Then
@@ -234,23 +238,14 @@ End If
 
 Set mInstrumentFactory = mTradingDB.InstrumentFactory
 
-With mRequests(mFirstRequestID).Contracts.ContractSpecifier
-    Set instrumentSummaries = mInstrumentFactory.loadSummaries( _
-                                    "", _
-                                    .localSymbol, _
-                                    .symbol, _
-                                    .Exchange, _
-                                    gSecTypeToCategory(.secType), _
-                                    .currencyCode, _
-                                    Left$(.expiry, 6), _
-                                    .strike, _
-                                    gOptRightToString(.Right))
-End With
+Set instrumentSummaries = mInstrumentFactory.loadSummariesBySpec( _
+                                        fieldNames, _
+                                        mRequests(mFirstRequestID).Contracts.ContractSpecifier)
 
 For Each instrumentSummary In instrumentSummaries
     Set instrument = mInstrumentFactory.loadByID(instrumentSummary.id)
     
-    Set lContract = gContractFromInstrument(instrument)
+    Set lContract = ContractFromInstrument(instrument)
     
     mRequests(mFirstRequestID).AddContract lContract
 Next
@@ -259,29 +254,39 @@ mContractInfoServiceConsumer.LoadComplete mHandle, mRequests(mFirstRequestID)
 
 mRequestsOutstanding = mRequestsOutstanding - 1
 mFirstRequestID = (mFirstRequestID + 1) Mod MaxQueuedRequests
-If mRequestsOutstanding <> 0 Then mTimer.startTimer
+If mRequestsOutstanding <> 0 Then mTimer.StartTimer
+
+Exit Sub
+
+Err:
+
+mCommonServiceConsumer.FatalServiceProviderError Err.Number, _
+                ProjectName & "." & ModuleName & ":" & "mTimer_TimerExpired" & "." & failpoint & _
+                IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
+                Err.Description, _
+                mHandle
 End Sub
 
 '@===============================================================================
 ' Properties
 '@===============================================================================
 
-Friend Property Let connectionString( _
+Public Property Let connectionString( _
                 ByVal value As String)
 mConnectionString = value
 End Property
 
-Friend Property Let databaseName( _
+Public Property Let databaseName( _
                 ByVal value As String)
 mDatabaseName = value
 End Property
 
-Friend Property Let databaseType( _
+Public Property Let databaseType( _
                 ByVal value As DatabaseTypes)
 mDatabaseType = value
 End Property
 
-Friend Property Let Name(ByVal value As String)
+Public Property Let Name(ByVal value As String)
 mName = value
 End Property
 
@@ -289,17 +294,17 @@ Public Property Get Name() As String
 Name = mName
 End Property
 
-Friend Property Let password( _
+Public Property Let password( _
                 ByVal value As String)
 mPassword = value
 End Property
                 
-Friend Property Let server( _
+Public Property Let server( _
                 ByVal value As String)
 mServer = value
 End Property
                 
-Friend Property Let username( _
+Public Property Let username( _
                 ByVal value As String)
 mUserName = value
 End Property
