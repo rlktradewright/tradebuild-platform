@@ -9,6 +9,7 @@ Public Const ServiceProviderName As String = "TickfileSP"
 Public Const ProviderKey As String = "TickfileSP"
 
 Public Const ParamNameAccessMode As String = "Access Mode"
+Public Const ParamNameTickfilePath As String = "Tickfile Path"
 
 Public Const TRADEBUILD_TICKFILE_CURR_VERSION As Integer = 5
 

@@ -67,6 +67,8 @@ Private mTickfileDataWriters As Collection
 
 Private mLogLevel As TradeBuildSP.LogLevels
 
+Private mTickfilePath As String
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
@@ -114,6 +116,8 @@ mCommonServiceConsumer.RegisterServiceProvider mHandle, _
 
 For Each param In params
     Select Case UCase$(param.Name)
+    Case UCase$(ParamNameTickfilePath)
+        mTickfilePath = param.value
     Case UCase$(ParamNameAccessMode)
         Select Case UCase$(param.value)
         Case "R", "RO", "READ", "READONLY", "READ ONLY"
@@ -170,7 +174,7 @@ On Error GoTo Err
 mNextReaderID = mNextReaderID + 1
 Set reader = New TickfileReader
 Set ITickfileServiceProvider_CreateTickfileReader = reader
-reader.tickfileServiceProvider = Me
+reader.TickfileServiceProvider = Me
 reader.commonServiceConsumer = mCommonServiceConsumer
 reader.TickfileInputServiceConsumer = serviceConsumer
 reader.StreamingDataConsumer = dataConsumer
@@ -200,10 +204,14 @@ End If
 
 Set writer = New TickfileWriter
 Set ITickfileServiceProvider_CreateTickfileWriter = writer
-writer.tickfileServiceProvider = Me
+writer.TickfileServiceProvider = Me
 writer.TickfileFormat = formatId
 writer.TickFileVersion = formatVersion
-writer.path = location
+If location = "" Then
+    If mTickfilePath <> "" Then writer.path = mTickfilePath
+Else
+    writer.path = location
+End If
 writer.commonServiceConsumer = mCommonServiceConsumer
 writer.TickfileOutputServiceConsumer = serviceConsumer
 writer.logLevel = mLogLevel

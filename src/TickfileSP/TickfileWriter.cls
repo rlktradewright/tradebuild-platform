@@ -52,7 +52,7 @@ Implements ITickfileWriter
 ' Member variables
 '================================================================================
 
-Private mTickfileServiceProvider As tickfileServiceProvider
+Private mTickfileServiceProvider As TickfileServiceProvider
 
 Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mServiceConsumer As ITickfileOutputServiceConsumer
@@ -77,8 +77,7 @@ Private mBytesWritten As Long
 '================================================================================
 
 Private Sub Class_Initialize()
-mPath = App.path
-If Right$(mPath, 1) <> "\" Then mPath = mPath & "\"
+mPath = App.path & "\TickFiles"
 Set mFileSys = CreateObject("scripting.filesystemobject")
 End Sub
 
@@ -265,8 +264,8 @@ Friend Property Let TickfileOutputServiceConsumer(ByVal RHS As ITickfileOutputSe
 Set mServiceConsumer = RHS
 End Property
 
-Friend Property Let tickfileServiceProvider( _
-                ByVal value As tickfileServiceProvider)
+Friend Property Let TickfileServiceProvider( _
+                ByVal value As TickfileServiceProvider)
 Set mTickfileServiceProvider = value
 End Property
 
