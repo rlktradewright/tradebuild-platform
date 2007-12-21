@@ -143,7 +143,7 @@ Set mTickers = mTradeBuildAPI.Tickers
 
 mTradeBuildAPI.addInfoListener Me, TradeBuildListenValueTypes.VTLog
 
-mOutputPath = App.Path
+mOutputPath = App.Path & "\TickFiles"
 
 End Sub
 
@@ -327,6 +327,9 @@ Dim i As Long
 Dim outputformat As String
 Dim val As ConfigItem
 
+Dim failpoint As Long
+On Error GoTo Err
+
 mTradeBuildAPI.ServiceProviders.RemoveAll
 RemoveAllStudyLibraries
 
@@ -363,8 +366,10 @@ If mOutputFormat = "" Then
     Exit Sub
 End If
 
+On Error Resume Next
 Set val = mConfig.childItems.Item(ConfigNameTickfilePath)
-mOutputPath = val.Value
+On Error GoTo Err
+If Not val Is Nothing Then mOutputPath = val.Value
 
 Set mContractsConfig = mConfig.childItems.Item(ConfigNameContracts)
 
@@ -383,6 +388,15 @@ If mEndTime <> 0 Then
 End If
 
 RaiseEvent CollectionStarted
+
+Exit Sub
+
+Err:
+Err.Raise Err.Number, _
+        ProjectName & "." & ModuleName & ":" & "startCollection" & "." & failpoint & _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
+        Err.description
+
 
 End Sub
 
