@@ -133,6 +133,8 @@ SQL = "SELECT ID, ProviderKey, InstrumentID, LocalSymbol " & _
 
 mRs.Open SQL, mConn, adOpenKeyset, adLockBatchOptimistic
 
+Set mRs.ActiveConnection = Nothing
+
 Do While Not mRs.EOF
     Set obj = New InstrumentLocalSymbol
     obj.initialise mRs.Clone, mRs.bookmark
@@ -140,7 +142,6 @@ Do While Not mRs.EOF
     mRs.MoveNext
 Loop
 
-Set mRs.ActiveConnection = Nothing
 mConn.Close
 
 mInstrumentID = instrumentID
