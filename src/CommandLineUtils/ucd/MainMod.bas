@@ -322,18 +322,6 @@ End If
 If validInput Then
     Dim lInstr As Instrument
     Dim scb As New SimpleConditionBuilder
-'    Dim contractSpec As ContractSpecifier
-'
-'    Set contractSpec = CreateContractSpecifier( _
-'                        shortname, _
-'                        symbol, _
-'                        gInstrumentClass.exchange.name, _
-'                        gInstrumentClass.sectype, _
-'                        IIf(currencyCode <> "", currencyCode, gInstrumentClass.currencyCode), _
-'                        expiry, _
-'                        strike, _
-'                        optRight)
-'    Set lInstr = gDb.InstrumentFactory.loadBySpecifier(contractSpec)
 
     scb.addTerm "shortname", CondOpEqual, shortname
     Set lInstr = gDb.InstrumentFactory.loadByQuery(scb.conditionString)
@@ -360,8 +348,23 @@ If validInput Then
         lInstr.optionRight = optRight
     End If
     
-    If tickSize <> 0 And tickSize <> gInstrumentClass.tickSize Then lInstr.tickSize = tickSize
-    If tickValue <> 0 And tickValue <> gInstrumentClass.tickValue Then lInstr.tickValue = tickValue
+    If tickSize <> 0 And tickSize <> gInstrumentClass.tickSize Then
+        lInstr.tickSize = tickSize
+    Else
+        lInstr.tickSizeString = ""
+    End If
+    
+    If tickValue <> 0 And tickValue <> gInstrumentClass.tickValue Then
+        lInstr.tickValue = tickValue
+    Else
+        lInstr.tickValueString = ""
+    End If
+    
+    If currencyCode <> "" And currencyCode <> gInstrumentClass.currencyCode Then
+        lInstr.currencyCode = currencyCode
+    Else
+        lInstr.currencyCode = ""
+    End If
     
     If lInstr.IsValid Then
         lInstr.ApplyEdit
