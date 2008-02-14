@@ -265,10 +265,10 @@ mDigitWidth = UserControl.TextWidth(widthString) / Len(widthString)
 
 setupOrderPlexGrid
 
-ReDim mOrderPlexGridMappingTable(50) As OrderPlexGridMappingEntry
+ReDim mOrderPlexGridMappingTable(3) As OrderPlexGridMappingEntry
 mMaxOrderPlexGridMappingTableIndex = -1
 
-ReDim mPositionManagerGridMappingTable(20) As PositionManagerGridMappingEntry
+ReDim mPositionManagerGridMappingTable(3) As PositionManagerGridMappingEntry
 mMaxPositionManagerGridMappingTableIndex = -1
 
 End Sub
@@ -921,7 +921,7 @@ findPositionManagerTableIndex op.ticker.PositionManager
 symbol = op.Contract.specifier.localSymbol
 opIndex = op.indexApplication
 If opIndex > UBound(mOrderPlexGridMappingTable) Then
-    ReDim Preserve mOrderPlexGridMappingTable(UBound(mOrderPlexGridMappingTable) + 50) As OrderPlexGridMappingEntry
+    ReDim Preserve mOrderPlexGridMappingTable(2 * (UBound(mOrderPlexGridMappingTable) + 1) - 1) As OrderPlexGridMappingEntry
 End If
 If opIndex > mMaxOrderPlexGridMappingTableIndex Then mMaxOrderPlexGridMappingTableIndex = opIndex
 
@@ -990,7 +990,7 @@ Dim symbol As String
 symbol = pm.ticker.Contract.specifier.localSymbol
 pmIndex = pm.indexApplication
 If pmIndex > UBound(mPositionManagerGridMappingTable) Then
-    ReDim Preserve mPositionManagerGridMappingTable(UBound(mPositionManagerGridMappingTable) + 20) As PositionManagerGridMappingEntry
+    ReDim Preserve mPositionManagerGridMappingTable(2 * (UBound(mPositionManagerGridMappingTable) + 1) - 1) As PositionManagerGridMappingEntry
 End If
 If pmIndex > mMaxPositionManagerGridMappingTableIndex Then mMaxPositionManagerGridMappingTableIndex = pmIndex
 
@@ -1170,7 +1170,7 @@ ElseIf OrderPlexGrid.col = OPGridOrderColumns.quantityRemaining Then
     End If
 End If
     
-If mSelectedOrderPlex.Dirty Then mSelectedOrderPlex.Update
+If mSelectedOrderPlex.dirty Then mSelectedOrderPlex.Update
 
 EditText.Visible = False
 End Sub

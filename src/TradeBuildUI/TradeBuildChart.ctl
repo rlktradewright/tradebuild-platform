@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#16.0#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#16.1#0"; "ChartSkil2-6.ocx"
 Begin VB.UserControl TradeBuildChart 
    ClientHeight    =   4965
    ClientLeft      =   0
@@ -70,6 +70,7 @@ Private Const PropNameAllowHorizontalMouseScrolling     As String = "AllowHorizo
 Private Const PropNameAllowVerticalMouseScrolling       As String = "AllowVerticalMouseScrolling"
 Private Const PropNameAutoscroll                        As String = "Autoscroll"
 Private Const PropNameChartBackColor                    As String = "ChartBackColor"
+Private Const PropNameDefaultBarDisplayMode             As String = "DefaultBarDisplayMode"
 Private Const PropNameDfltRegnStyleAutoscale            As String = "DfltRegnStyleAutoscale"
 Private Const PropNameDfltRegnStyleBackColor            As String = "DfltRegnStyleBackColor"
 Private Const PropNameDfltRegnStyleGridColor            As String = "DfltRegnStyleGridColor"
@@ -89,6 +90,7 @@ Private Const PropDfltAllowHorizontalMouseScrolling     As Boolean = True
 Private Const PropDfltAllowVerticalMouseScrolling       As Boolean = True
 Private Const PropDfltAutoscroll                        As Boolean = True
 Private Const PropDfltChartBackColor                    As Long = vbWhite
+Private Const PropDfltDefaultBarDisplayMode             As Long = BarDisplayModes.BarDisplayModeBar
 Private Const PropDfltDfltRegnStyleAutoscale            As Boolean = True
 Private Const PropDfltDfltRegnStyleBackColor            As Long = vbWhite
 Private Const PropDfltDfltRegnStyleGridColor            As Long = &HC0C0C0
@@ -167,7 +169,8 @@ On Error Resume Next
 AllowHorizontalMouseScrolling = PropDfltAllowHorizontalMouseScrolling
 AllowVerticalMouseScrolling = PropDfltAllowVerticalMouseScrolling
 Autoscroll = PropDfltAutoscroll
-chartBackColor = PropDfltChartBackColor
+ChartBackColor = PropDfltChartBackColor
+DefaultBarDisplayMode = PropDfltDefaultBarDisplayMode
 RegionDefaultAutoscale = PropDfltDfltRegnStyleAutoscale
 RegionDefaultBackColor = PropDfltDfltRegnStyleBackColor
 RegionDefaultGridColor = PropDfltDfltRegnStyleGridColor
@@ -208,9 +211,15 @@ If Err.Number <> 0 Then
     Err.clear
 End If
 
-chartBackColor = PropBag.ReadProperty(PropNameChartBackColor, PropDfltChartBackColor)
+ChartBackColor = PropBag.ReadProperty(PropNameChartBackColor, PropDfltChartBackColor)
 If Err.Number <> 0 Then
-    chartBackColor = PropDfltChartBackColor
+    ChartBackColor = PropDfltChartBackColor
+    Err.clear
+End If
+
+DefaultBarDisplayMode = PropBag.ReadProperty(PropNameDefaultBarDisplayMode, PropDfltDefaultBarDisplayMode)
+If Err.Number <> 0 Then
+    DefaultBarDisplayMode = PropDfltDefaultBarDisplayMode
     Err.clear
 End If
 
@@ -316,7 +325,8 @@ Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
 PropBag.WriteProperty PropNameAllowHorizontalMouseScrolling, AllowHorizontalMouseScrolling, PropDfltAllowHorizontalMouseScrolling
 PropBag.WriteProperty PropNameAllowVerticalMouseScrolling, AllowVerticalMouseScrolling, PropDfltAllowVerticalMouseScrolling
 PropBag.WriteProperty PropNameAutoscroll, Autoscroll, PropDfltAutoscroll
-PropBag.WriteProperty PropNameChartBackColor, chartBackColor, PropDfltChartBackColor
+PropBag.WriteProperty PropNameChartBackColor, ChartBackColor, PropDfltChartBackColor
+PropBag.WriteProperty PropNameDefaultBarDisplayMode, DefaultBarDisplayMode, PropDfltDefaultBarDisplayMode
 PropBag.WriteProperty PropNameDfltRegnStyleAutoscale, RegionDefaultAutoscale, PropDfltDfltRegnStyleAutoscale
 PropBag.WriteProperty PropNameDfltRegnStyleBackColor, RegionDefaultBackColor, PropDfltDfltRegnStyleBackColor
 PropBag.WriteProperty PropNameDfltRegnStyleGridColor, RegionDefaultGridColor, PropDfltDfltRegnStyleGridColor
@@ -420,13 +430,13 @@ Public Property Let barsStyle(ByVal value As barStyle)
 Set mBarsStyle = value
 End Property
 
-Public Property Get chartBackColor() As OLE_COLOR
-Attribute chartBackColor.VB_ProcData.VB_Invoke_Property = ";Appearance"
-chartBackColor = Chart1.chartBackColor
+Public Property Get ChartBackColor() As OLE_COLOR
+Attribute ChartBackColor.VB_ProcData.VB_Invoke_Property = ";Appearance"
+ChartBackColor = Chart1.ChartBackColor
 End Property
 
-Public Property Let chartBackColor(ByVal val As OLE_COLOR)
-Chart1.chartBackColor = val
+Public Property Let ChartBackColor(ByVal val As OLE_COLOR)
+Chart1.ChartBackColor = val
 End Property
 
 Public Property Get chartController() As chartController
@@ -435,6 +445,15 @@ End Property
 
 Public Property Get chartManager() As chartManager
 Set chartManager = mChartManager
+End Property
+
+Public Property Get DefaultBarDisplayMode() As BarDisplayModes
+DefaultBarDisplayMode = Chart1.DefaultBarDisplayMode
+End Property
+
+Public Property Let DefaultBarDisplayMode( _
+                ByVal value As BarDisplayModes)
+Chart1.DefaultBarDisplayMode = value
 End Property
 
 Public Property Get initialNumberOfBars() As Long
@@ -794,20 +813,20 @@ Set studyValueConfig = createBarsStudyConfig.StudyValueConfigurations.add("Bar")
 studyValueConfig.chartRegionName = RegionNamePrice
 studyValueConfig.includeInChart = True
 studyValueConfig.layer = 200
-If Not mBarsStyle Is Nothing Then
-    Set barsStyle = mBarsStyle
-Else
-    Set barsStyle = Chart1.defaultBarStyle
-    barsStyle.outlineThickness = 1
-    barsStyle.barThickness = 2
-    barsStyle.barWidth = 0.6
-    barsStyle.displayMode = BarDisplayModeCandlestick
-    barsStyle.downColor = &H43FC2
-    barsStyle.solidUpBody = True
-    barsStyle.tailThickness = 2
-    barsStyle.upColor = &H1D9311
-End If
-studyValueConfig.barStyle = barsStyle
+'If Not mBarsStyle Is Nothing Then
+'    Set barsStyle = mBarsStyle
+'Else
+'    Set barsStyle = Chart1.defaultBarStyle
+'    barsStyle.outlineThickness = 1
+'    barsStyle.barThickness = 2
+'    barsStyle.barWidth = 0.6
+'    barsStyle.displayMode = BarDisplayModeCandlestick
+'    barsStyle.downColor = &H43FC2
+'    barsStyle.solidUpBody = True
+'    barsStyle.tailThickness = 2
+'    barsStyle.upColor = &H1D9311
+'End If
+studyValueConfig.barStyle = mBarsStyle
 
 Set studyValueConfig = createBarsStudyConfig.StudyValueConfigurations.add("Volume")
 studyValueConfig.chartRegionName = RegionNameVolume

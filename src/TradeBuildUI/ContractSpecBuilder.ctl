@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#18.0#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#24.3#0"; "TWControls10.ocx"
 Begin VB.UserControl ContractSpecBuilder 
    BackStyle       =   0  'Transparent
    ClientHeight    =   2835
@@ -516,6 +516,13 @@ If LocalSymbolText = "" And SymbolText = "" Then
     Exit Sub
 End If
 
+If ExpiryText <> "" Then
+    If Not isValidExpiry(ExpiryText) Then
+        RaiseEvent NotReady
+        Exit Sub
+    End If
+End If
+
 If StrikePriceText <> "" Then
     If Not IsNumeric(StrikePriceText) Then
         RaiseEvent NotReady
@@ -532,17 +539,17 @@ If LocalSymbolText = "" Then
     Case SecurityTypes.SecTypeNone
         RaiseEvent NotReady: Exit Sub
     Case SecurityTypes.SecTypeFuture
-        If ExpiryText = "" Then RaiseEvent NotReady: Exit Sub
+'        If ExpiryText = "" Then RaiseEvent NotReady: Exit Sub
     Case SecurityTypes.SecTypeStock
     
     Case SecurityTypes.SecTypeOption
-        If ExpiryText = "" Then RaiseEvent NotReady: Exit Sub
-        If StrikePriceText = "" Then RaiseEvent NotReady: Exit Sub
-        If RightCombo = "" Then RaiseEvent NotReady: Exit Sub
+'        If ExpiryText = "" Then RaiseEvent NotReady: Exit Sub
+'        If StrikePriceText = "" Then RaiseEvent NotReady: Exit Sub
+'        If RightCombo = "" Then RaiseEvent NotReady: Exit Sub
     Case SecurityTypes.SecTypeFuturesOption
-        If ExpiryText = "" Then RaiseEvent NotReady: Exit Sub
-        If StrikePriceText = "" Then RaiseEvent NotReady: Exit Sub
-        If RightCombo = "" Then RaiseEvent NotReady: Exit Sub
+'        If ExpiryText = "" Then RaiseEvent NotReady: Exit Sub
+'        If StrikePriceText = "" Then RaiseEvent NotReady: Exit Sub
+'        If RightCombo = "" Then RaiseEvent NotReady: Exit Sub
     Case SecurityTypes.SecTypeCash
     
     Case SecurityTypes.SecTypeIndex

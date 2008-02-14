@@ -198,6 +198,8 @@ End Property
 Public Property Get timeframeDesignator() As TimePeriod
 Dim tp As TimePeriod
 
+If TimeframeCombo.selectedItem Is Nothing Then Exit Sub
+
 tp = TimePeriodFromString(TimeframeCombo.selectedItem.Text)
 timeframeDesignator = tp
 

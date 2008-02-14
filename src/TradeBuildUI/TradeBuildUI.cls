@@ -30,6 +30,17 @@ Option Explicit
 ' Enums
 '@================================================================================
 
+Public Enum PermittedServiceProviders
+    SPRealtimeData = 1
+    SPPrimaryContractData = 2
+    SPSecondaryContractData = 4
+    SPHistoricalDataInput = 8
+    SPHistoricalDataOutput = &H10
+    SPBroker = &H20
+    SPTickfileInput = &H40
+    SPTickfileOutput = &H80
+End Enum
+
 Public Enum ChartStates
     ''
     ' The chart is ready to have studies added to it

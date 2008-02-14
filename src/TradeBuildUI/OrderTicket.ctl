@@ -684,7 +684,6 @@ Begin VB.UserControl OrderTicket
    End
    Begin VB.Label OrderSimulationLabel 
       Alignment       =   2  'Center
-      Caption         =   "Orders are simulated"
       BeginProperty Font 
          Name            =   "MS Sans Serif"
          Size            =   12
@@ -1225,14 +1224,6 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let ordersAreSimulated(ByVal value As Boolean)
-If value Then
-    OrderSimulationLabel.caption = "Orders are simulated"
-Else
-    OrderSimulationLabel.caption = "Orders are LIVE !!"
-End If
-End Property
-
 Public Property Let ticker(ByVal value As ticker)
 
 If value Is mTicker Then Exit Property
@@ -1544,6 +1535,8 @@ LastSizeText = ""
 VolumeText = ""
 HighText = ""
 LowText = ""
+
+OrderSimulationLabel = ""
 End Sub
 
 Private Sub disableControl(ByVal field As Control)
@@ -2098,6 +2091,13 @@ reset
 
 mTicker.addQuoteListener Me
 showTickerValues
+
+If mOrderContext.simulated Then
+    OrderSimulationLabel.caption = "Orders are simulated"
+Else
+    OrderSimulationLabel.caption = "Orders are LIVE !!"
+End If
+
 End Sub
 
 Private Sub setupTifCombo(ByVal index As Long)

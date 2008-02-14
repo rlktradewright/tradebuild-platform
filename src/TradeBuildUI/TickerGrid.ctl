@@ -58,8 +58,8 @@ Private Const KeyDownShift As Integer = &H1
 Private Const KeyDownCtrl As Integer = &H2
 Private Const KeyDownAlt As Integer = &H4
 
-Private Const TickerTableEntriesInitial As Long = 30
-Private Const TickerTableEntriesIncrement As Long = 30
+Private Const TickerTableEntriesInitial As Long = 4
+Private Const TickerTableEntriesGrowthFactor As Long = 2
 
 '@================================================================================
 ' Enums
@@ -181,6 +181,13 @@ Private mControlDown As Boolean
 Private mShiftDown As Boolean
 Private mAltDown As Boolean
 
+Private mEventCount As Long
+
+Private WithEvents mCountTimer As IntervalTimer
+Attribute mCountTimer.VB_VarHelpID = -1
+
+Private mLogger As Logger
+
 '@================================================================================
 ' Form Event Handlers
 '@================================================================================
@@ -216,6 +223,7 @@ End Sub
 Private Sub PriceChangeListener_Change(ev As PriceChangeEvent)
 Dim lTicker As ticker
 Set lTicker = ev.Source
+TickerGrid.Redraw = False
 TickerGrid.row = mTickerTable(lTicker.handle).tickerGridRow
 TickerGrid.col = TickerGridColumns.Change
 TickerGrid.Text = ev.ChangeString
@@ -225,6 +233,7 @@ Else
     TickerGrid.CellBackColor = NegativeChangebackColor
 End If
 TickerGrid.CellForeColor = vbWhite
+incrementEventCount
 
 TickerGrid.col = TickerGridColumns.ChangePercent
 TickerGrid.Text = Format(ev.ChangePercent, "0.0")
@@ -234,6 +243,8 @@ Else
     TickerGrid.CellBackColor = NegativeChangebackColor
 End If
 TickerGrid.CellForeColor = vbWhite
+TickerGrid.Redraw = True
+incrementEventCount
 End Sub
 
 '@================================================================================
@@ -241,106 +252,53 @@ End Sub
 '@================================================================================
 
 Private Sub QuoteListener_ask(ev As QuoteEvent)
-Dim lTicker As ticker
-Set lTicker = ev.Source
-TickerGrid.row = mTickerTable(lTicker.handle).tickerGridRow
-TickerGrid.col = TickerGridColumns.ask
-TickerGrid.Text = ev.priceString
-If ev.priceChange = ValueChangeUp Then
-    TickerGrid.CellForeColor = IncreasedValueColor
-ElseIf ev.priceChange = ValueChangeDown Then
-    TickerGrid.CellForeColor = DecreasedValueColor
-End If
-
-TickerGrid.col = TickerGridColumns.AskSize
-TickerGrid.Text = ev.size
-If ev.sizeChange = ValueChangeUp Then
-    TickerGrid.CellForeColor = IncreasedValueColor
-ElseIf ev.sizeChange = ValueChangeDown Then
-    TickerGrid.CellForeColor = DecreasedValueColor
-End If
+TickerGrid.Redraw = False
+displayPrice ev, TickerGridColumns.ask
+displaySize ev, TickerGridColumns.AskSize
+TickerGrid.Redraw = True
 End Sub
 
 Private Sub QuoteListener_bid(ev As QuoteEvent)
-Dim lTicker As ticker
-Set lTicker = ev.Source
-TickerGrid.row = mTickerTable(lTicker.handle).tickerGridRow
-TickerGrid.col = TickerGridColumns.bid
-If ev.priceChange = ValueChangeUp Then
-    TickerGrid.CellForeColor = IncreasedValueColor
-ElseIf ev.priceChange = ValueChangeDown Then
-    TickerGrid.CellForeColor = DecreasedValueColor
-End If
-
-TickerGrid.Text = ev.priceString
-TickerGrid.col = TickerGridColumns.bidSize
-TickerGrid.Text = ev.size
-If ev.sizeChange = ValueChangeUp Then
-    TickerGrid.CellForeColor = IncreasedValueColor
-ElseIf ev.sizeChange = ValueChangeDown Then
-    TickerGrid.CellForeColor = DecreasedValueColor
-End If
+TickerGrid.Redraw = False
+displaySize ev, TickerGridColumns.bidSize
+TickerGrid.Redraw = True
 End Sub
 
 Private Sub QuoteListener_high(ev As QuoteEvent)
-Dim lTicker As ticker
-Set lTicker = ev.Source
-TickerGrid.row = mTickerTable(lTicker.handle).tickerGridRow
-TickerGrid.col = TickerGridColumns.highPrice
-TickerGrid.Text = ev.priceString
+TickerGrid.Redraw = False
+displayPrice ev, TickerGridColumns.highPrice
+TickerGrid.Redraw = True
 End Sub
 
 Private Sub QuoteListener_Low(ev As QuoteEvent)
-Dim lTicker As ticker
-Set lTicker = ev.Source
-TickerGrid.row = mTickerTable(lTicker.handle).tickerGridRow
-TickerGrid.col = TickerGridColumns.lowPrice
-TickerGrid.Text = ev.priceString
+TickerGrid.Redraw = False
+displayPrice ev, TickerGridColumns.lowPrice
+TickerGrid.Redraw = True
 End Sub
 
 Private Sub QuoteListener_openInterest(ev As QuoteEvent)
-Dim lTicker As ticker
-Set lTicker = ev.Source
-TickerGrid.row = mTickerTable(lTicker.handle).tickerGridRow
-TickerGrid.col = TickerGridColumns.openInterest
-TickerGrid.Text = ev.size
+TickerGrid.Redraw = False
+displaySize ev, TickerGridColumns.openInterest
+TickerGrid.Redraw = True
 End Sub
 
 Private Sub QuoteListener_previousClose(ev As QuoteEvent)
-Dim lTicker As ticker
-Set lTicker = ev.Source
-TickerGrid.row = mTickerTable(lTicker.handle).tickerGridRow
-TickerGrid.col = TickerGridColumns.closePrice
-TickerGrid.Text = ev.priceString
+TickerGrid.Redraw = False
+displayPrice ev, TickerGridColumns.closePrice
+TickerGrid.Redraw = True
 End Sub
 
 Private Sub QuoteListener_trade(ev As QuoteEvent)
-Dim lTicker As ticker
-Set lTicker = ev.Source
-TickerGrid.row = mTickerTable(lTicker.handle).tickerGridRow
-TickerGrid.col = TickerGridColumns.trade
-TickerGrid.Text = ev.priceString
-If ev.priceChange = ValueChangeUp Then
-    TickerGrid.CellForeColor = IncreasedValueColor
-ElseIf ev.priceChange = ValueChangeDown Then
-    TickerGrid.CellForeColor = DecreasedValueColor
-End If
-
-TickerGrid.col = TickerGridColumns.TradeSize
-TickerGrid.Text = ev.size
-If ev.sizeChange = ValueChangeUp Then
-    TickerGrid.CellForeColor = IncreasedValueColor
-ElseIf ev.sizeChange = ValueChangeDown Then
-    TickerGrid.CellForeColor = DecreasedValueColor
-End If
+TickerGrid.Redraw = False
+displayPrice ev, TickerGridColumns.trade
+displaySize ev, TickerGridColumns.TradeSize
+TickerGrid.Redraw = True
 End Sub
 
 Private Sub QuoteListener_volume(ev As QuoteEvent)
-Dim lTicker As ticker
-Set lTicker = ev.Source
-TickerGrid.row = mTickerTable(lTicker.handle).tickerGridRow
-TickerGrid.col = TickerGridColumns.volume
-TickerGrid.Text = ev.size
+TickerGrid.Redraw = False
+displaySize ev, TickerGridColumns.volume
+TickerGrid.Redraw = True
 End Sub
 
 '@================================================================================
@@ -413,6 +371,15 @@ mAltDown = (Shift And KeyDownAlt)
 End Sub
 
 '@================================================================================
+' mCountTimer Event Handlers
+'@================================================================================
+
+Private Sub mCountTimer_TimerExpired()
+mLogger.Log LogLevelMediumDetail, "TickerGrid: events per second=" & mEventCount / 10
+mEventCount = 0
+End Sub
+
+'@================================================================================
 ' mTickers Event Handlers
 '@================================================================================
 
@@ -431,11 +398,9 @@ Select Case ev.state
 Case TickerStateCreated
 
 Case TickerStateStarting
-
-Case TickerStateRunning
     
     If handle > UBound(mTickerTable) Then
-        ReDim Preserve mTickerTable(UBound(mTickerTable) + TickerTableEntriesIncrement) As TickerTableEntry
+        ReDim Preserve mTickerTable((UBound(mTickerTable) + 1) * TickerTableEntriesGrowthFactor - 1) As TickerTableEntry
     End If
     
     Set mTickerTable(handle).theTicker = lTicker
@@ -449,11 +414,18 @@ Case TickerStateRunning
     mNextGridRowIndex = mNextGridRowIndex + 1
     lTicker.addQuoteListener Me
     lTicker.addPriceChangeListener Me
+
+    TickerGrid.row = mTickerTable(handle).tickerGridRow
+    TickerGrid.rowdata(mTickerTable(handle).tickerGridRow) = handle
+    
+    TickerGrid.col = TickerGridColumns.TickerName
+    TickerGrid.Text = "Starting"
+    
+Case TickerStateRunning
     
     Set lContract = lTicker.Contract
     
     TickerGrid.row = mTickerTable(handle).tickerGridRow
-    TickerGrid.rowdata(mTickerTable(handle).tickerGridRow) = handle
     
     TickerGrid.col = TickerGridColumns.currencyCode
     TickerGrid.Text = lContract.specifier.currencyCode
@@ -523,6 +495,7 @@ On Error GoTo Err
 StopAllTickers
 Set mTickers = Nothing
 ReDim mTickerTable(TickerTableEntriesInitial - 1) As TickerTableEntry
+If Not mCountTimer Is Nothing Then mCountTimer.StopTimer
 Exit Sub
 Err:
 'ignore any errors
@@ -534,6 +507,12 @@ If Not mTickers Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                             "TradeBuildUI.TickerGrid::monitorWorkspace", _
                                             "A workspace is already being monitored"
 Set mTickers = pWorkspace.Tickers
+
+Set mLogger = GetLogger("diag.tradebuild.tradebuildui")
+
+Set mCountTimer = CreateIntervalTimer(10, ExpiryTimeUnitSeconds, 10000)
+mCountTimer.StartTimer
+
 End Sub
                 
 Public Sub StopAllTickers()
@@ -584,6 +563,40 @@ Next
 TickerGrid.Redraw = True
 End Sub
 
+Private Sub displayPrice( _
+                ev As QuoteEvent, _
+                ByVal col As Long)
+Dim lTicker As ticker
+Set lTicker = ev.Source
+TickerGrid.row = mTickerTable(lTicker.handle).tickerGridRow
+TickerGrid.col = col
+TickerGrid.Text = ev.priceString
+If ev.priceChange = ValueChangeUp Then
+    TickerGrid.CellForeColor = IncreasedValueColor
+ElseIf ev.priceChange = ValueChangeDown Then
+    TickerGrid.CellForeColor = DecreasedValueColor
+End If
+
+incrementEventCount
+End Sub
+
+Private Sub displaySize( _
+                ev As QuoteEvent, _
+                ByVal col As Long)
+Dim lTicker As ticker
+Set lTicker = ev.Source
+TickerGrid.row = mTickerTable(lTicker.handle).tickerGridRow
+TickerGrid.col = col
+TickerGrid.Text = ev.size
+If ev.sizeChange = ValueChangeUp Then
+    TickerGrid.CellForeColor = IncreasedValueColor
+ElseIf ev.sizeChange = ValueChangeDown Then
+    TickerGrid.CellForeColor = DecreasedValueColor
+End If
+
+incrementEventCount
+End Sub
+
 '/**
 '   Inverts the foreground and background colors for the current grid cell
 '*/
@@ -605,6 +618,10 @@ ElseIf backColor = SystemColorConstants.vbHighlight Then
 ElseIf backColor > 0 Then
     TickerGrid.CellBackColor = IIf((backColor Xor &HFFFFFF) = 0, 1, backColor Xor &HFFFFFF)
 End If
+End Sub
+
+Private Sub incrementEventCount()
+mEventCount = mEventCount + 1
 End Sub
 
 Private Sub invertEntryColors(ByVal rowNumber As Long)
