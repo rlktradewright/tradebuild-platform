@@ -9,7 +9,6 @@ Public Const ProjectName                    As String = "TradeBuild26"
 
 Public Const S_OK                           As Long = 0
 Public Const NoValidID                      As Long = -1
-Public Const InitialMaxTickers              As Long = 100&
 
 Public Const DefaultStudyValue              As String = "$default"
 
@@ -59,6 +58,39 @@ Public Const StrOrderActionSell             As String = "Sell"
 ' Enums
 '@================================================================================
 
+Public Enum TradeBuildListenValueTypes
+
+    VTAll = -1  ' used by listenenrs to specify that they want to receive all
+                ' types of listen data
+    
+    VTLog = 1
+    VTTrace
+    VTDebug
+
+    VTProfitProfile
+    VTDummyProfitProfile
+    VTMoneyManagement
+    VTOrderPlexProfileStruct
+    VTDummyOrderPlexProfileStruct
+    VTOrderPlexProfileString
+    VTDummyOrderPlexProfileString
+    VTOrder
+    VTDummyOrder
+    VTPosition
+    VTDummyPosition
+    VTTradeProfile
+    VTDummyTradeProfile
+    VTProfit
+    VTDummyProfit
+    VTDrawdown
+    VTDummyDrawdown
+    VTMaxProfit
+    VTDummyMaxProfit
+    VTOrderDetail
+    VTOrderDetailDummy
+        
+End Enum
+
 '@================================================================================
 ' Types
 '@================================================================================
@@ -72,6 +104,55 @@ Public Const StrOrderActionSell             As String = "Sell"
 '@================================================================================
 
 Public gTB As TradeBuildAPI
+
+Public gLogLogger As Logger
+Public gSpLogLogger As Logger
+
+Public gTraceLogger As Logger
+
+Public gDebugLogger As Logger
+
+Public gProfitProfileLogger As Logger
+
+Public gDummyProfitProfileLogger As Logger
+
+Public gMoneyManagementLogger As Logger
+
+Public gOrderPlexProfileStructLogger As Logger
+
+Public gDummyOrderPlexProfileStructLogger As Logger
+
+Public gOrderPlexProfileStringLogger As Logger
+
+Public gDummyOrderPlexProfileStringLogger As Logger
+
+Public gOrderLogger As Logger
+
+Public gDummyOrderLogger As Logger
+
+Public gPositionLogger As Logger
+
+Public gDummyPositionLogger As Logger
+
+Public gTradeProfileLogger As Logger
+
+Public gDummyTradeProfileLogger As Logger
+
+Public gProfitLogger As Logger
+
+Public gDummyProfitLogger As Logger
+
+Public gDrawdownlogger  As Logger
+
+Public gDummyDrawdownlogger As Logger
+
+Public gMaxProfitlogger As Logger
+
+Public gDummyMaxProfitlogger As Logger
+
+Public gOrderDetaillogger As Logger
+
+Public gOrderDetailDummylogger As Logger
 
 '@================================================================================
 ' Procedures
@@ -117,7 +198,7 @@ Case EntryOrderTypeStop
 Case EntryOrderTypeStopLimit
     gEntryOrderTypeToOrderType = OrderTypeStopLimit
 Case Else
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "TradeBuild26.Module1::gEntryOrderTypeToOrderType", _
                 "Invalid entry type"
 End Select
@@ -349,7 +430,7 @@ Case StopOrderTypeLast
 Case StopOrderTypeAuto
     gStopOrderTypeToOrderType = OrderTypeAutoLimit
 Case Else
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "TradeBuild26.Module1::gStopOrderTypeToOrderType", _
                 "Invalid entry type"
 End Select
@@ -402,7 +483,7 @@ Case TargetOrderTypeLast
 Case TargetOrderTypeAuto
     gTargetOrderTypeToOrderType = OrderTypeAutoLimit
 Case Else
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "TradeBuild26.Module1::gTargetOrderTypeToOrderType", _
                 "Invalid entry type"
 End Select

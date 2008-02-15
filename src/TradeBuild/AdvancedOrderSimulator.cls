@@ -61,7 +61,7 @@ Private Type MarketTableEntry
     Clock                   As Clock
     serviceConsumer         As TradeBuildSP.IOrderSubmissionSrvcConsumer
     simulateExchangeDelays  As Boolean
-    readyNotified           As Boolean
+'    readyNotified           As Boolean
 End Type
 
 '@================================================================================
@@ -88,7 +88,7 @@ Private mNextBrokerOrderId As Long
 '@================================================================================
 
 Private Sub Class_Initialize()
-ReDim mMarketTable(InitialMaxTickers) As MarketTableEntry
+ReDim mMarketTable(3) As MarketTableEntry
 Set mAllOrders = New Collection
 
 Set mTimerList = GetGlobalTimerList
@@ -121,7 +121,7 @@ If ev.State = TimerListItemStates.TimerListItemStateExpired Then
         setCancelOrder lOrder
     End Select
 Else
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
             ProjectName & "." & ModuleName & ":" & "StateChangeListener_Change", _
             "Unexpected TimerListItem status"
 End If
@@ -140,7 +140,7 @@ With mMarketTable(marketIndex)
     If Not .Clock Is Nothing Then
         latestTimestamp = .Clock.timestamp
     End If
-    Set .Clock = CreateSimulatedClock(value, .Contract.timezone.standardName)
+    Set .Clock = CreateSimulatedClock(value, .Contract.TimeZone.standardName)
     .simulateExchangeDelays = (value <> 0)
 End With
 End Property
@@ -162,11 +162,6 @@ Dim lOrder As SimulatorOrder
 With mMarketTable(marketIndex)
     .Clock.setTime timestamp
     .bid = bid
-    
-    If .ask <> 0 And .bid <> 0 And Not .readyNotified Then
-        .readyNotified = True
-        .serviceConsumer.Ready
-    End If
     
     handleCreatedOrders marketIndex
     If Not .simulateExchangeDelays Then handlePendingSubmitOrders marketIndex
@@ -201,11 +196,6 @@ With mMarketTable(marketIndex)
     .Clock.setTime timestamp
     .ask = ask
     
-    If .ask <> 0 And .bid <> 0 And Not .readyNotified Then
-        .readyNotified = True
-        .serviceConsumer.Ready
-    End If
-    
     handleCreatedOrders marketIndex
     If Not .simulateExchangeDelays Then handlePendingSubmitOrders marketIndex
 
@@ -239,7 +229,7 @@ Set lOrder = mAllOrders(id)
 On Error GoTo 0
 
 If lOrder Is Nothing Then
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "TradeBuild26.AdvancedOrderSimulator::cancelOrder", _
                 "Unknown order id " & id
 End If
@@ -349,14 +339,14 @@ Case Else
 End Select
 
 If marketIndex < 0 Or marketIndex > UBound(mMarketTable) Then
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "TradeBuild26.AdvancedOrderSimulator::placeOrder", _
             "Invalid marketIndex " & marketIndex & " in order " & pOrder.id
 End If
 
 Set specifier = pOrder.Contract.specifier
 If Not specifier.Equals(mMarketTable(marketIndex).Contract.specifier) Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
             "TradeBuild26.AdvancedOrderSimulator::placeOrder", _
             "Incorrect contract in order " & pOrder.id & ": " & _
             specifier.ToString
@@ -462,7 +452,7 @@ Next
 
 If startMarket = -1 Then
     startMarket = UBound(mMarketTable) + 1
-    ReDim Preserve mMarketTable(UBound(mMarketTable) + 20) As MarketTableEntry
+    ReDim Preserve mMarketTable(2 * (UBound(mMarketTable) + 1) - 1) As MarketTableEntry
 End If
 
 With mMarketTable(startMarket)
@@ -471,7 +461,7 @@ With mMarketTable(startMarket)
     Set .serviceConsumer = serviceConsumer
     Set .activeOrders = New Collection
     Set .pendingOrders = New Collection
-    Set .Clock = CreateSimulatedClock(1, pContract.timezone.standardName)
+    Set .Clock = CreateSimulatedClock(1, pContract.TimeZone.standardName)
 End With
 
 End Function
@@ -972,7 +962,7 @@ Case OrderTypes.OrderTypeLimit, OrderTypes.OrderTypeMarket
                                     pOrder.order.status
         End If
     Case Else
-        err.Raise ErrorCodes.ErrIllegalArgumentException, _
+        Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                     "TradeBuild26.AdvancedOrderSimulator::setSubmitOrder", _
                     "Order type " & pOrder.order.orderType & " invalid for submission"
     End Select
@@ -1005,13 +995,13 @@ Case OrderTypes.OrderTypeStop, OrderTypes.OrderTypeStopLimit
                                     pOrder.order.status
         End If
     Case Else
-        err.Raise ErrorCodes.ErrIllegalArgumentException, _
+        Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                     "TradeBuild26.AdvancedOrderSimulator::setSubmitOrder", _
                     "Order type " & pOrder.order.orderType & " invalid for submission"
     End Select
         
 Case Else
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "TradeBuild26.AdvancedOrderSimulator::setSubmitOrder", _
                 "Order type " & pOrder.order.orderType & " invalid for submission"
 End Select

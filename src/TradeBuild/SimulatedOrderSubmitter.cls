@@ -61,6 +61,11 @@ Private mMarketIndex As Long
 
 Private mContract As Contract
 
+Private mFirstAskReceived       As Boolean
+Private mFirstBidReceived       As Boolean
+Private mReadyNotified          As Boolean
+
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -134,7 +139,7 @@ Private Sub IOrderSubmitter_cancelStopOrder(ByVal pOrderPlex As TradeBuildSP.IOr
 Dim stoporder As order
 
 Set stoporder = pOrderPlex.stoporder
-If stoporder Is Nothing Then err.Raise ErrorCodes.ErrIllegalStateException, _
+If stoporder Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "OrderSubmissionServiceProvider::cancelStopOrder", _
                                     "Order plex has no stop order"
 
@@ -143,7 +148,7 @@ Case OrderStatuses.OrderStatusCreated, _
     OrderStatuses.OrderStatusFilled, _
     OrderStatuses.OrderStatusCancelling, _
     OrderStatuses.OrderStatusCancelled
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "OrderSubmissionServiceProvider::cancelStopOrder", _
                                     "Stop order state invalid for cancellation"
 Case Else
@@ -155,7 +160,7 @@ Private Sub IOrderSubmitter_cancelTargetOrder(ByVal pOrderPlex As TradeBuildSP.I
 Dim targetOrder As order
 
 Set targetOrder = pOrderPlex.targetOrder
-If targetOrder Is Nothing Then err.Raise ErrorCodes.ErrIllegalStateException, _
+If targetOrder Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "OrderSubmissionServiceProvider::cancelTargetOrder", _
                                     "Order plex has no target order"
 
@@ -164,7 +169,7 @@ Select Case targetOrder.status
 Case OrderStatuses.OrderStatusCreated, _
     OrderStatuses.OrderStatusCancelling, _
     OrderStatuses.OrderStatusCancelled
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "OrderSubmissionServiceProvider::cancelTargetOrder", _
                                     "Target order state invalid for cancellation"
 Case Else
@@ -337,10 +342,22 @@ End Sub
 '@================================================================================
 
 Private Sub IStreamingDataConsumer_Ask(ByVal timestamp As Date, ByVal price As Double, ByVal size As Long)
+mFirstAskReceived = True
+If mFirstBidReceived And Not mReadyNotified Then
+    mReadyNotified = True
+    mServiceConsumer.Ready
+End If
+    
 mSimulator.ask timestamp, mMarketIndex, price
 End Sub
 
 Private Sub IStreamingDataConsumer_Bid(ByVal timestamp As Date, ByVal price As Double, ByVal size As Long)
+mFirstBidReceived = True
+If mFirstAskReceived And Not mReadyNotified Then
+    mReadyNotified = True
+    mServiceConsumer.Ready
+End If
+    
 mSimulator.bid timestamp, mMarketIndex, price
 End Sub
 

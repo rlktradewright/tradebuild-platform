@@ -311,6 +311,7 @@ End Property
 Friend Property Let replaySpeed(ByVal value As Long)
 mReplaySpeed = value
 If mState = TickfileStateCodes.TickfilePlaying Then
+    setBaseTimes
     Set mTimer = CreateIntervalTimer(1)
     mTimer.StartTimer
 End If
@@ -413,13 +414,7 @@ Dim delayMillisecs As Long
 mCurrentTick.Timed = False
 
 If mBaseTimestampUTC = 0 Then
-    mBaseTimestampUTC = GetTimestampUTC
-    ' note that we don't bother to get the tick time in UTC - this is because
-    ' it's not likely that anyone would replay a tickfile that spans a standard
-    ' time to daylight time transition at normal speed. On the other hand
-    ' the base timestamp is in UTC because someone might replay a tickfile
-    ' during a period that spans such a transition
-    mFirstTickTime = mCurrentTick.timestamp
+    setBaseTimes
 End If
 
 If mReplaySpeed > 0 Then
@@ -538,3 +533,12 @@ End With
     
 End Sub
 
+Private Sub setBaseTimes()
+mBaseTimestampUTC = GetTimestampUTC
+' note that we don't bother to get the tick time in UTC - this is because
+' it's not likely that anyone would replay a tickfile that spans a standard
+' time to daylight time transition at normal speed. On the other hand
+' the base timestamp is in UTC because someone might replay a tickfile
+' during a period that spans such a transition
+mFirstTickTime = mCurrentTick.timestamp
+End Sub

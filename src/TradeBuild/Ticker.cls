@@ -209,8 +209,6 @@ Private mStateChangeListeners       As Collection
 
 Private mDataConsumers              As Collection
 
-Private mInfoListeners              As InfoListeners
-
 Private mTickNumber                 As Long
 
 Private WithEvents mTickWriterReleaseTimer As IntervalTimer
@@ -245,7 +243,6 @@ mState = -1
 Set mStudyManager = New studyManager
 
 Set mBarWriterListeners = New Collection
-Set mInfoListeners = New InfoListeners
 Set mQuoteListeners = New Collection
 Set mPriceChangeListeners = New Collection
 Set mMarketDepthListeners = New Collection
@@ -1200,11 +1197,13 @@ End Property
 Private Sub mContracts_ContractSpecifierInvalid(ByVal reason As String)
 Dim ev As NotificationEvent
 
+If State <> TickerStateStarting Then Exit Sub
+
 mInEventHandler = True
 
 Set ev.source = Me
 ev.eventCode = ApiNotifyCodes.ApiNotifyContractSpecifierInvalid
-ev.eventMessage = reason & ": " & Replace(mContracts.contractSpecifier.ToString, vbCrLf, "; ")
+ev.eventMessage = reason
 RaiseEvent Notification(ev)
 mTickers.notify ev
 StopTicker
@@ -1214,12 +1213,14 @@ End Sub
 Private Sub mContracts_NoMoreContractDetails()
 Dim ev As NotificationEvent
 
+If State <> TickerStateStarting Then Exit Sub
+
 mInEventHandler = True
 
 If mContracts.Count <> 1 Then
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyContractSpecifierAmbiguous
-    ev.eventMessage = "Ambiguous contract specification: " & Replace(mContracts.contractSpecifier.ToString, vbCrLf, "; ")
+    ev.eventMessage = "Ambiguous contract specification: " & mContracts.contractSpecifier.ToString
     RaiseEvent Notification(ev)
     mTickers.notify ev
     StopTicker
@@ -1352,12 +1353,10 @@ End Property
 
 Friend Property Let Contracts(ByVal value As Contracts)
 Set mContracts = value
+State = TickerStateStarting
 End Property
 
-' This property is marked as Hidden. It should be removed because it is of no
-' value and in some situations mContracts is Nothing.
 Public Property Get Contracts() As Contracts
-Attribute Contracts.VB_MemberFlags = "40"
 Set Contracts = mContracts
 End Property
 
@@ -1604,12 +1603,6 @@ mDataConsumers.add consumer
 If includeMarketDepth Then RequestMarketDepth DOMBothEvents, False
 End Sub
 
-Public Function addInfoListener( _
-                ByVal newListener As InfoListener, _
-                Optional ByVal valueType As Long = TradeBuildListenValueTypes.VTAll) As String
-addInfoListener = mInfoListeners.add(newListener, valueType)
-End Function
-
 Public Sub addPriceChangeListener( _
                 ByVal value As PriceChangeListener)
 mPriceChangeListeners.add value
@@ -1748,7 +1741,7 @@ Else
 End If
 End Function
 
-Friend Sub Initialise( _
+Friend Sub initialise( _
                 ByVal handle As Long, _
                 ByVal pTickers As Tickers, _
                 ByVal options As Long)
@@ -1791,10 +1784,6 @@ mLoadOnly = True
 State = TickerStates.TickerStateStarting
 
 Set mContracts = gTB.loadContracts(pContractSpecifier)
-End Sub
-
-Friend Sub notifyListeners(value As Variant, valueType As Long, source As Object)
-mInfoListeners.notify value, valueType, source
 End Sub
 
 Public Function parsePrice( _
@@ -1974,6 +1963,10 @@ End If
 
 Set mContract = Nothing
 
+' NB: we don't do the following because the app may want to look at the contracts
+' after being notified of a duplicate contract spec
+'Set mContracts = Nothing
+
 If Not mTickWriter Is Nothing Then
     If mTickWriter.numberOfPendingWrites = 0 Or _
         mTickWriter.ServiceProviderWriterReady _
@@ -2005,8 +1998,6 @@ Then
 Else
     State = TickerStates.TickerStateClosing
 End If
-
-'Set mStudies = Nothing
 
 mTimeframes.finish
 Set mTimeframes = Nothing
@@ -2091,15 +2082,6 @@ Case DOMBothEvents
 End Select
 calculateSpDomRequirement = DOMEventsReqd
 End Function
-
-'Private Function convertTime( _
-'                ByVal pTime As Date) As Date
-'If mUseExchangeTime Then
-'    convertTime = ConvertDateUTCToTZ(pTime, mContract.TimeZone)
-'Else
-'    convertTime = ConvertDateUTCToLocal(pTime)
-'End If
-'End Function
 
 Private Sub createBarWriter()
 Dim ev As NotificationEvent
@@ -2527,8 +2509,8 @@ RaiseEvent volume(quote)
 End Sub
 
 Private Sub initialisePriceTables()
-ReDim mAskPrices(20) As PriceTableEntry
-ReDim mBidPrices(20) As PriceTableEntry
+ReDim mAskPrices(15) As PriceTableEntry
+ReDim mBidPrices(15) As PriceTableEntry
 mMaxAskPricesIndex = 0
 mMaxBidPricesIndex = 0
 End Sub
@@ -2626,10 +2608,6 @@ End Sub
 Private Sub notifyVolume(ByVal timestamp As Date, ByVal size As Long)
 mVolume = size
 
-'settime timestamp
-'
-'
-
 Dim i As Long
 Dim consumer As TradeBuildSP.IStreamingDataConsumer
 For i = 1 To mDataConsumers.Count
@@ -2672,12 +2650,6 @@ End If
 
 If mSimulatedOrders Then
     Set orderSubmitter = gTB.ServiceProviders.CreateSimulatedOrderSubmitter(mPositionManager, mContract)
-'    If orderSubmitter Is Nothing Then
-'        ' a simulated order submission service provider has not been configured
-'        ' so use the default one
-'        gtb.ServiceProviders.add New TradeBuild26.OrderSimulatorSP, Nothing
-'        Set orderSubmitter = gtb.ServiceProviders.CreateSimulatedOrderSubmitter(mPositionManager, mContract)
-'    End If
     mPositionManager.simulated = True
     mPositionManager.orderSubmitter = orderSubmitter
 End If
@@ -2736,7 +2708,7 @@ Else
     If mContract.expiryDate <> 0 And mContract.expiryDate < Date Then
         Set ev.source = Me
         ev.eventCode = ApiNotifyCodes.ApiNotifyContractExpired
-        ev.eventMessage = "Contract has expired: " & Replace(mContracts.contractSpecifier.ToString, vbCrLf, "; ")
+        ev.eventMessage = "Contract has expired: " & mContracts.contractSpecifier.ToString
         RaiseEvent Notification(ev)
         mTickers.notify ev
         StopTicker
@@ -2907,7 +2879,7 @@ Case DOMOperations.DOMDelete
     End If
 End Select
 If maxIndex >= UBound(prices) Then
-    ReDim Preserve prices(UBound(prices) + 10) As PriceTableEntry
+    ReDim Preserve prices(2 * (UBound(prices) + 1) - 1) As PriceTableEntry
 End If
 
 Select Case operation

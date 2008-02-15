@@ -312,7 +312,7 @@ Else
     End Select
 End If
 If cancelPriceHit Then
-    mTicker.notifyListeners _
+    gTB.notifyListeners _
                         "Cancel price hit (" & mTicker.TradePrice & ")", _
                         IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
                         Me
@@ -334,7 +334,7 @@ Private Sub mCloseoutOrder_StatusChanged()
 fireChange OrderPlexCloseoutOrderChanged
 Select Case mCloseoutOrder.status
     Case OrderStatuses.OrderStatusFilled
-        mTicker.notifyListeners _
+        gTB.notifyListeners _
                             "Closeout order completed (" & _
                             mCloseoutOrder.id & "): " & _
                             gOrderActionToString(mCloseoutOrder.action) & " " & mCloseoutOrder.quantityFilled & " at " & _
@@ -351,7 +351,7 @@ Select Case mCloseoutOrder.status
     Case OrderStatuses.OrderStatusPreSubmitted
     Case OrderStatuses.OrderStatusSubmitted
     Case OrderStatuses.OrderStatusCancelled
-        mTicker.notifyListeners _
+        gTB.notifyListeners _
                             "Closeout order cancelled (" & _
                             mCloseoutOrder.id & ")", _
                             IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
@@ -368,7 +368,7 @@ calcProfitLoss fillPrice
 fireChange OrderPlexCloseoutOrderChanged
 thisSize = IIf(mCloseoutOrder.action = ActionBuy, quantityFilled, -quantityFilled)
 setSize size + thisSize
-mTicker.notifyListeners _
+gTB.notifyListeners _
                     "Closeout order fill (" & _
                     mCloseoutOrder.id & "): " & _
                     gOrderActionToString(mCloseoutOrder.action) & " " & quantityFilled & " at " & _
@@ -404,7 +404,7 @@ thisSize = IIf(longPosition, quantityFilled, -quantityFilled)
 setSize size + thisSize
 
 
-mTicker.notifyListeners _
+gTB.notifyListeners _
                     "Entry order fill (" & _
                     mEntryOrder.id & "): " & _
                     gOrderActionToString(mEntryOrder.action) & " " & quantityFilled & " at " & _
@@ -465,7 +465,7 @@ Select Case mEntryOrder.status
     Case OrderStatuses.OrderStatusFilled
         mCancelPrice = 0
         
-        mTicker.notifyListeners _
+        gTB.notifyListeners _
                             "Entry order completed (" & _
                             mEntryOrder.id & "): " & _
                             gOrderActionToString(mEntryOrder.action) & " " & mEntryOrder.quantityFilled & " at " & _
@@ -488,7 +488,7 @@ Select Case mEntryOrder.status
         End If
     Case OrderStatuses.OrderStatusCancelled
         mEntryOrderFinished = True
-        mTicker.notifyListeners _
+        gTB.notifyListeners _
                             "Entry order cancelled (" & _
                             mEntryOrder.id & ") ", _
                             IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
@@ -516,7 +516,7 @@ fireChange OrderPlexStopOrderChanged
 
 thisSize = IIf(mStopOrder.action = ActionBuy, quantityFilled, -quantityFilled)
 setSize size + thisSize
-mTicker.notifyListeners _
+gTB.notifyListeners _
                         "Stop order fill (" & _
                         mStopOrder.id & "): " & _
                         gOrderActionToString(mStopOrder.action) & " " & quantityFilled & " at " & _
@@ -541,7 +541,7 @@ Private Sub mStopOrder_StatusChanged()
 fireChange OrderPlexStopOrderChanged
 Select Case mStopOrder.status
     Case OrderStatuses.OrderStatusFilled
-        mTicker.notifyListeners _
+        gTB.notifyListeners _
                             "Stop order completed (" & _
                             mStopOrder.id & "): " & _
                             gOrderActionToString(mStopOrder.action) & " " & mStopOrder.quantityFilled & " at " & _
@@ -560,7 +560,7 @@ Select Case mStopOrder.status
     Case OrderStatuses.OrderStatusSubmitted
     Case OrderStatuses.OrderStatusCancelled
         mStopOrderFinished = True
-        mTicker.notifyListeners _
+        gTB.notifyListeners _
                             "Stop order cancelled (" & _
                             mStopOrder.id & ")", _
                             IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
@@ -588,7 +588,7 @@ calcProfitLoss fillPrice
 fireChange OrderPlexTargetOrderChanged
 thisSize = IIf(mTargetOrder.action = ActionBuy, quantityFilled, -quantityFilled)
 setSize size + thisSize
-mTicker.notifyListeners _
+gTB.notifyListeners _
                         "Target order fill (" & _
                         mTargetOrder.id & "): " & _
                         gOrderActionToString(mTargetOrder.action) & " " & quantityFilled & " at " & _
@@ -613,7 +613,7 @@ Private Sub mTargetOrder_StatusChanged()
 fireChange OrderPlexTargetOrderChanged
 Select Case mTargetOrder.status
     Case OrderStatuses.OrderStatusFilled
-        mTicker.notifyListeners _
+        gTB.notifyListeners _
                             "Target order completed (" & _
                             mTargetOrder.id & "): " & _
                             gOrderActionToString(mTargetOrder.action) & " " & mTargetOrder.quantityFilled & " at " & _
@@ -632,7 +632,7 @@ Select Case mTargetOrder.status
     Case OrderStatuses.OrderStatusSubmitted
     Case OrderStatuses.OrderStatusCancelled
         mTargetOrderFinished = True
-        mTicker.notifyListeners _
+        gTB.notifyListeners _
                             "Target order cancelled (" & _
                             mTargetOrder.id & ")", _
                             IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
@@ -649,7 +649,7 @@ End Sub
 '@================================================================================
 
 Private Sub mTimerEntry_Expired()
-mTicker.notifyListeners _
+gTB.notifyListeners _
                     "Cancel time expired (" & mTicker.TradePrice & ")", _
                     IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
                     Me
@@ -1290,7 +1290,7 @@ End Sub
 
 Public Sub adjustStop(ByVal stopPrice As Double, _
                     Optional ByVal quantity As Long = -1)
-mTicker.notifyListeners _
+gTB.notifyListeners _
                             "Adjust stop: (" & mTicker.TradePrice & ") " & _
                             " stop " & stopPrice & _
                             ", quantity " & quantity, _
@@ -1305,7 +1305,7 @@ End Sub
 
 Public Sub adjustTarget(ByVal targetPrice As Double, _
                     Optional ByVal quantity As Long = -1)
-mTicker.notifyListeners _
+gTB.notifyListeners _
                             "Adjust target: (" & mTicker.TradePrice & ") " & _
                             " target " & targetPrice & _
                             ", quantity " & quantity, _
@@ -1386,7 +1386,7 @@ If UCase(method) <> "MKT" Then
     Err.Raise ErrNotImplemented, "OrderPlex::closeout", "method " & method & " not implemented"
 End If
 
-mTicker.notifyListeners _
+gTB.notifyListeners _
                     "Closing out: (" & mTicker.TradePrice & ") " & _
                     "size " & size & _
                     ", pending size " & pendingSize, _
@@ -1634,7 +1634,7 @@ If mOrderSubmitter.cancelOrderPlex(Me) Then
     
     If Not mStopOrder Is Nothing Then stopOrderID = mStopOrder.id
     If Not mTargetOrder Is Nothing Then targetOrderID = mTargetOrder.id
-    mTicker.notifyListeners _
+    gTB.notifyListeners _
                     "Cancel orders: (" & mTicker.TradePrice & ") " & _
                     entryOrder.id & _
                     IIf(stopOrderID <> "", ", " & stopOrderID, ", ") & _
@@ -1654,7 +1654,7 @@ Case OrderStatuses.OrderStatusFilled, _
     OrderStatuses.OrderStatusCancelling, _
     OrderStatuses.OrderStatusCancelled
 Case Else
-    mTicker.notifyListeners _
+    gTB.notifyListeners _
                 "Cancel order: (" & mTicker.TradePrice & ") " & _
                 mStopOrder.id, _
                 IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
@@ -1672,7 +1672,7 @@ Case OrderStatuses.OrderStatusFilled, _
     OrderStatuses.OrderStatusCancelling, _
     OrderStatuses.OrderStatusCancelled
 Case Else
-    mTicker.notifyListeners _
+    gTB.notifyListeners _
                 "Cancel order: (" & mTicker.TradePrice & ") " & _
                 mTargetOrder.id, _
                 IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
@@ -1969,7 +1969,7 @@ End Sub
 
 Private Function resubmitStopOrder()
 mOrderSubmitter.resubmitStopOrder Me
-mTicker.notifyListeners _
+gTB.notifyListeners _
             "Resubmit stop order: (" & mTicker.TradePrice & ") id " & mStopOrder.id & _
             "new broker id " & mStopOrder.brokerId, _
             IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
@@ -1980,12 +1980,12 @@ End Function
 
 Private Function resubmitStopAndTargetOrders()
 mOrderSubmitter.resubmitStopAndTargetOrders Me
-mTicker.notifyListeners _
+gTB.notifyListeners _
             "Resubmit stop order: (" & mTicker.TradePrice & ") id " & mStopOrder.id & _
             " new broker id " & mStopOrder.brokerId, _
             IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
             Me
-mTicker.notifyListeners _
+gTB.notifyListeners _
             "Resubmit target order: (" & mTicker.TradePrice & ") id " & mTargetOrder.id & _
             " new broker id " & mTargetOrder.brokerId, _
             IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
@@ -1999,7 +1999,7 @@ End Function
 
 Private Function resubmitTargetOrder()
 mOrderSubmitter.resubmitTargetOrder Me
-mTicker.notifyListeners _
+gTB.notifyListeners _
             "Resubmit target order: (" & mTicker.TradePrice & ") id " & mTargetOrder.id & _
             " new broker id " & mTargetOrder.brokerId, _
             IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _

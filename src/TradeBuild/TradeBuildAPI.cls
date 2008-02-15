@@ -49,8 +49,6 @@ Private mServiceProviderError As ServiceProviderError
 
 Private mServiceProviders As ServiceProviders
 
-Private mListeners As InfoListeners
-
 Private mWorkSpaces As WorkSpaces
 Private mDefaultWorkSpace As WorkSpace
 Private mTickers As Tickers
@@ -65,8 +63,6 @@ Private Sub Class_Initialize()
 InitialiseTWUtilities
 
 Set mServiceProviders = New ServiceProviders
-
-Set mListeners = New InfoListeners
 
 Set mWorkSpaces = New WorkSpaces
 
@@ -120,12 +116,6 @@ End Property
 '@================================================================================
 ' Methods
 '@================================================================================
-
-Public Function addInfoListener(ByVal newListener As InfoListener, _
-                            Optional ByRef valueType As Long = TradeBuildListenValueTypes.VTAll _
-                            ) As String
-addInfoListener = mListeners.add(newListener, valueType)
-End Function
 
 Public Function GenerateTickfileSpecifiers( _
                 ByVal pContracts As Contracts, _
@@ -254,7 +244,7 @@ If completeSessionsOnly Then
     End If
 End If
 
-ReDim lTickfileSpecifiers(1000) As TickfileSpecifier
+ReDim lTickfileSpecifiers(4) As TickfileSpecifier
 
 Dim currSessionStart As Date
 Dim thisSessionStart As Date
@@ -265,7 +255,7 @@ j = 0
 If completeSessionsOnly Then
     Do While currSessionStart < replayToDate
         If j > UBound(lTickfileSpecifiers) Then
-            ReDim Preserve lTickfileSpecifiers(UBound(lTickfileSpecifiers) + 1000) As TickfileSpecifier
+            ReDim Preserve lTickfileSpecifiers(UBound(lTickfileSpecifiers) * 2) As TickfileSpecifier
         End If
         Set lTickfileSpecifiers(j) = New TickfileSpecifier
         lTickfileSpecifiers(j).Contract = currContract
@@ -364,7 +354,7 @@ Else
                         
                         j = j + 1
                         If j > UBound(lTickfileSpecifiers) Then
-                            ReDim Preserve lTickfileSpecifiers(UBound(lTickfileSpecifiers) + 1000) As TickfileSpecifier
+                            ReDim Preserve lTickfileSpecifiers(UBound(lTickfileSpecifiers) * 2) As TickfileSpecifier
                         End If
                         
                         Set lTickfileSpecifiers(j) = New TickfileSpecifier
@@ -417,9 +407,12 @@ End Function
 Public Function loadContracts( _
                 ByVal pContractSpec As contractSpecifier) As Contracts
 Dim lContractsBuilder As ContractsBuilder
+Dim cla As ContractLoadAction
 Set lContractsBuilder = CreateContractsBuilder(pContractSpec)
 Set loadContracts = lContractsBuilder.Contracts
-mServiceProviders.loadContracts lContractsBuilder
+Set cla = New ContractLoadAction
+cla.initialise lContractsBuilder
+DeferAction cla
 End Function
 
 Friend Sub NotifyFatalError( _
@@ -430,6 +423,12 @@ Dim ev As ErrorEvent
 
 On Error Resume Next
 
+gLogLogger.Log LogLevelSevere, "Fatal error " & errorCode & ": " & _
+                                errorMessage & "( occurred in " & source & ")"
+
+' kill all the service providers
+mServiceProviders.RemoveAll
+
 ' give the application a chance to handle this
 
 Set ev.source = Me
@@ -437,21 +436,64 @@ ev.errorCode = errorCode
 ev.errorMsg = errorMessage & "( occurred in " & source & ")"
 RaiseEvent Error(ev)
 
-' kill all the service providers if the app hasn't already done so
-mServiceProviders.RemoveAll
 End Sub
 
 Friend Sub notifyListeners( _
                             ByVal value As Variant, _
                             ByVal valueType As Long, _
                             ByVal source As Object)
-mListeners.notify value, valueType, source
+Select Case valueType
+Case VTLog
+    gLogLogger.Log LogLevelNormal, value
+Case VTTrace
+    gTraceLogger.Log LogLevelNormal, value, source
+Case VTDebug
+    gDebugLogger.Log LogLevelNormal, value, source
+Case VTProfitProfile
+    gProfitProfileLogger.Log LogLevelNormal, value, source
+Case VTDummyProfitProfile
+    gDummyProfitProfileLogger.Log LogLevelNormal, value, source
+Case VTMoneyManagement
+    gMoneyManagementLogger.Log LogLevelNormal, value, source
+Case VTOrderPlexProfileStruct
+    gOrderPlexProfileStructLogger.Log LogLevelNormal, value, source
+Case VTDummyOrderPlexProfileStruct
+    gDummyOrderPlexProfileStructLogger.Log LogLevelNormal, value, source
+Case VTOrderPlexProfileString
+    gOrderPlexProfileStringLogger.Log LogLevelNormal, value, source
+Case VTDummyOrderPlexProfileString
+    gDummyOrderPlexProfileStringLogger.Log LogLevelNormal, value, source
+Case VTOrder
+    gOrderLogger.Log LogLevelNormal, value, source
+Case VTDummyOrder
+    gDummyOrderLogger.Log LogLevelNormal, value, source
+Case VTPosition
+    gPositionLogger.Log LogLevelNormal, value, source
+Case VTDummyPosition
+    gDummyPositionLogger.Log LogLevelNormal, value, source
+Case VTTradeProfile
+    gTradeProfileLogger.Log LogLevelNormal, value, source
+Case VTDummyTradeProfile
+    gDummyTradeProfileLogger.Log LogLevelNormal, value, source
+Case VTProfit
+    gProfitLogger.Log LogLevelNormal, value, source
+Case VTDummyProfit
+    gDummyProfitLogger.Log LogLevelNormal, value, source
+Case VTDrawdown
+    gDrawdownlogger.Log LogLevelNormal, value, source
+Case VTDummyDrawdown
+    gDummyDrawdownlogger.Log LogLevelNormal, value, source
+Case VTMaxProfit
+    gMaxProfitlogger.Log LogLevelNormal, value, source
+Case VTDummyMaxProfit
+    gDummyMaxProfitlogger.Log LogLevelNormal, value, source
+Case VTOrderDetail
+    gOrderDetaillogger.Log LogLevelNormal, value, source
+Case VTOrderDetailDummy
+    gOrderDetailDummylogger.Log LogLevelNormal, value, source
+End Select
 End Sub
                             
-Public Sub RemoveInfoListener(ByVal key As String)
-mListeners.remove key
-End Sub
-
 Friend Sub SetServiceProviderError( _
                 ByVal errorCode As Long, _
                 ByVal errorMessage As String, _

@@ -83,7 +83,7 @@ Private mChangeListeners As Collection
 '@================================================================================
 
 Private Sub Class_Initialize()
-ReDim mTimeframeTable(10) As TimeframeTableEntry
+ReDim mTimeframeTable(1) As TimeframeTableEntry
 Set mChangeListeners = New Collection
 End Sub
 
@@ -145,7 +145,7 @@ Case TimePeriodSecond, _
         TimePeriodVolume, _
         TimePeriodTickMovement
 Case Else
-        err.Raise ErrorCodes.ErrIllegalArgumentException, _
+        Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 ProjectName & "." & ModuleName & ":" & "add", _
                 "Time period units not supported"
 End Select
@@ -189,14 +189,14 @@ Case TimePeriodSecond, _
         TimePeriodVolume, _
         TimePeriodTickMovement
 Case Else
-        err.Raise ErrorCodes.ErrIllegalArgumentException, _
+        Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 ProjectName & "." & ModuleName & ":" & "add", _
                 "Time period units not supported"
     
 End Select
 
 If fromTime > toTime Then
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "TradeBuild26" & "." & "Timeframes" & ":" & "addHistorical", _
             "fromTime must be earlier than toTime"
 End If
@@ -283,7 +283,7 @@ tte.theTimeFrame.Initialise mContract, _
                             writeBidAndAskBars
 
 If mNextTimeframeTableIndex > UBound(mTimeframeTable) Then
-    ReDim Preserve mTimeframeTable(UBound(mTimeframeTable) + 10) As TimeframeTableEntry
+    ReDim Preserve mTimeframeTable(2 * (UBound(mTimeframeTable) + 1) - 1) As TimeframeTableEntry
 End If
 mTimeframeTable(mNextTimeframeTableIndex) = tte
 mNextTimeframeTableIndex = mNextTimeframeTableIndex + 1

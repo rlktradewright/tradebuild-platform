@@ -44,21 +44,23 @@ Event CollectionChanged( _
 ' Constants
 '@================================================================================
 
-Private Const ProjectName As String = "TradeBuild26"
-Private Const ModuleName As String = "ServiceProviders"
+Private Const ProjectName                           As String = "TradeBuild26"
+Private Const ModuleName                            As String = "ServiceProviders"
 
-Private Const AttributeNameEnabled As String = "Enabled"
-Private Const AttributeNameLogLevel As String = "LogLevel"
-Private Const AttributeNamePropertyName As String = "Name"
-Private Const AttributeNamePropertyValue As String = "Value"
-Private Const AttributeNameServiceProviderEnabled As String = "Enabled"
-Private Const AttributeNameServiceProviderName As String = "Name"
-Private Const AttributeNameServiceProviderProgId As String = "ProgId"
+Private Const AttributeNameEnabled                  As String = "Enabled"
+Private Const AttributeNameLogLevel                 As String = "LogLevel"
+Private Const AttributeNamePropertyName             As String = "Name"
+Private Const AttributeNamePropertyValue            As String = "Value"
+Private Const AttributeNameServiceProviderEnabled   As String = "Enabled"
+Private Const AttributeNameServiceProviderName      As String = "Name"
+Private Const AttributeNameServiceProviderProgId    As String = "ProgId"
 
-Private Const ConfigNameProperties As String = "Properties"
-Private Const ConfigNameProperty As String = "Property"
-Private Const ConfigNameServiceProvider As String = "ServiceProvider"
-Private Const ConfigNameServiceProviders As String = "ServiceProviders"
+Private Const ConfigNameProperties                  As String = "Properties"
+Private Const ConfigNameProperty                    As String = "Property"
+Private Const ConfigNameServiceProvider             As String = "ServiceProvider"
+Private Const ConfigNameServiceProviders            As String = "ServiceProviders"
+
+Private Const ProgIdTbOrders                        As String = "TB26.OrderSubmissionSrvcProvider"
 
 '@================================================================================
 ' Enums
@@ -72,6 +74,7 @@ Private Type ServiceProviderTableEntry
     name        As String
     SPTypes     As Long
     SPObject    As TradeBuildSP.ICommonServiceProvider
+    SpConfig    As ConfigItem
 End Type
 '@================================================================================
 ' Member variables
@@ -116,7 +119,7 @@ Private Sub ICommonServiceConsumer_NotifyListeners( _
                 ByVal value As Variant, _
                 ByVal valueType As Long, _
                 ByVal source As Object)
-gTB.notifyListeners value, valueType, source
+gSpLogLogger.Log LogLevelNormal, value
 End Sub
 
 Private Sub ICommonServiceConsumer_RegisterServiceProvider( _
@@ -133,6 +136,16 @@ Case TradeBuildSP.ServiceProviderTypes.ContractInfo
     On Error GoTo 0
     If Not contractInfoSP Is Nothing Then
         contractInfoSP.ContractInfoServiceConsumer = Me
+        regOk = True
+    End If
+Case TradeBuildSP.ServiceProviderTypes.SecondaryContractInfo
+    Dim secContractInfoSP As TradeBuildSP.IContractInfoServiceProvider
+    
+    On Error Resume Next
+    Set secContractInfoSP = mServiceProviders(handle).SPObject
+    On Error GoTo 0
+    If Not secContractInfoSP Is Nothing Then
+        secContractInfoSP.ContractInfoServiceConsumer = Me
         regOk = True
     End If
 Case TradeBuildSP.ServiceProviderTypes.ExchangeSimulator
@@ -205,24 +218,24 @@ End Sub
 
 Private Sub IContractInfoServiceConsumer_LoadComplete( _
                             ByVal handle As Long, _
-                            ByVal pContractsbuilder As ContractsBuilder)
+                            ByVal pContractsBuilder As ContractsBuilder)
 Dim lContracts As Contracts
 
-Set lContracts = pContractsbuilder.Contracts
+Set lContracts = pContractsBuilder.Contracts
 If lContracts.Count = 0 Then
-    ' try another service provider if any
-    If Not LoadContractsFromNextSP(handle + 1, pContractsbuilder) Then
-        pContractsbuilder.LoadComplete
+    ' try the secondary contract service provider if any
+    If Not loadContractsFromSecondarySP(handle, pContractsBuilder) Then
+        pContractsBuilder.LoadComplete
     End If
 Else
-    pContractsbuilder.LoadComplete
+    pContractsBuilder.LoadComplete
 End If
 End Sub
 
 Private Sub IContractInfoServiceConsumer_NotifyEvent( _
                 ByVal eventCode As TradeBuildSP.StandardSPEventCodes, _
                 ByVal eventMessage As String, _
-                ByVal pContractsbuilder As ContractsBuilder, _
+                ByVal pContractsBuilder As ContractsBuilder, _
                 ByVal serviceProviderHandle As Long)
 
 Dim ev As NotificationEvent
@@ -231,10 +244,10 @@ Select Case eventCode
 Case TradeBuildSP.StandardSPEventCodes.CIConnectedToDataSource
     ev.eventCode = eventCode
     ev.eventMessage = eventMessage
-    Set ev.source = pContractsbuilder.Contracts
-    pContractsbuilder.notify ev
+    Set ev.source = pContractsBuilder.Contracts
+    pContractsBuilder.notify ev
 Case TradeBuildSP.StandardSPEventCodes.CIContractSpecifierInvalid
-    pContractsbuilder.ContractSpecifierInvalid eventMessage
+    pContractsBuilder.ContractSpecifierInvalid eventMessage
 Case TradeBuildSP.StandardSPEventCodes.CICantConnectDataSource
     gTB.SetServiceProviderError eventCode, _
                         "Can't connect to Contract database: " & eventMessage, _
@@ -306,22 +319,26 @@ Public Function add( _
             Optional ByVal Description As String _
             ) As TradeBuildSP.ICommonServiceProvider
 Dim params As parameters
+Dim spindex As Long
+
 Set add = CreateObject(progId)
 Set params = CreateParametersFromString(paramString)
 
 If enabled Then
-    If Not addSP(add, params, logLevel, name) Then
+    spindex = addSP(add, params, logLevel, name)
+    If spindex < 0 Then
         Set add = Nothing
         Exit Function
     End If
 End If
 
-addEntryToConfig progId, _
-                enabled, _
-                params, _
-                logLevel, _
-                name, _
-                Description
+Set mServiceProviders(spindex).SpConfig = addEntryToConfig(progId, _
+                                                        enabled, _
+                                                        params, _
+                                                        logLevel, _
+                                                        name, _
+                                                        Description)
+
 End Function
 
 Public Sub addCollectionChangeListener( _
@@ -565,24 +582,45 @@ Next
 End Function
 
 Friend Sub loadContracts( _
-                ByVal pContractsbuilder As ContractsBuilder)
+                ByVal pContractsBuilder As ContractsBuilder)
+Dim i As Long
+Dim contractInfoSP As TradeBuildSP.IContractInfoServiceProvider
 
-If Not LoadContractsFromNextSP(0, pContractsbuilder) Then pContractsbuilder.LoadComplete
+For i = 0 To mMaxSPIndex
+    If Not mServiceProviders(i).SPObject Is Nothing Then
+        If (mServiceProviders(i).SPTypes And TradeBuildSP.ServiceProviderTypes.ContractInfo) <> 0 Then
+            Set contractInfoSP = mServiceProviders(i).SPObject
+            Exit For
+        End If
+    End If
+Next
+
+If contractInfoSP Is Nothing Then
+    ' there doesn't seem to be a primary contract service provider configured,
+    ' so let's try the secondary
+    If Not loadContractsFromSecondarySP(-1, pContractsBuilder) Then
+        pContractsBuilder.unableToLoad "No contract info service provider has been configured", ""
+    End If
+Else
+    contractInfoSP.RequestContractDetails pContractsBuilder
+End If
+
 End Sub
 
 Public Sub loadServiceProviderConfiguration( _
                 value As ConfigItem)
 Set mConfig = value
 
+RemoveAll
+
 On Error Resume Next
 Set mServiceProviderConfigList = mConfig.childItems.item(ConfigNameServiceProviders)
 On Error GoTo 0
 
-If mServiceProviderConfigList Is Nothing Then
-    Set mServiceProviderConfigList = mConfig.childItems.AddItem(ConfigNameServiceProviders)
+If Not mServiceProviderConfigList Is Nothing Then
+    loadConfiguration
 End If
 
-loadConfiguration
 End Sub
 
 Friend Function nameFromHandle( _
@@ -614,10 +652,7 @@ For i = 0 To mMaxSPIndex
     If Not mServiceProviders(i).SPObject Is Nothing Then
         Set sp = mServiceProviders(i).SPObject
         sp.Terminate
-        Set mServiceProviders(i).SPObject = Nothing
-        mServiceProviders(i).SPTypes = 0
-        mServiceProviders(i).name = ""
-        fireChange CollItemRemoved, sp
+        removeSP i
     End If
 Next
 End Sub
@@ -634,20 +669,24 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub addEntryToConfig( _
+Private Function addEntryToConfig( _
             ByVal progId As String, _
             ByVal enabled As Boolean, _
             ByVal params As parameters, _
             ByVal logLevel As LogLevels, _
             ByVal name As String, _
             ByVal Description As String _
-            )
+            ) As ConfigItem
 Dim sp As ConfigItem
 Dim props As ConfigItem
 Dim prop As ConfigItem
 Dim param As Parameter
 
-If mConfig Is Nothing Then Exit Sub
+If mConfig Is Nothing Then Exit Function
+
+If mServiceProviderConfigList Is Nothing Then
+    Set mServiceProviderConfigList = mConfig.childItems.AddItem(ConfigNameServiceProviders)
+End If
 
 Set sp = mServiceProviderConfigList.childItems.AddItem(ConfigNameServiceProvider, _
                                                         , _
@@ -665,14 +704,15 @@ For Each param In params
     prop.setAttribute AttributeNamePropertyValue, param.value
 Next
 
-End Sub
+Set addEntryToConfig = sp
+End Function
 
 Private Function addSP( _
             ByVal serviceProvider As TradeBuildSP.ICommonServiceProvider, _
             ByVal params As parameters, _
             ByVal logLevel As LogLevels, _
             ByVal name As String _
-            ) As Boolean
+            ) As Long
 Dim i As Long
 
 If name <> "" Then serviceProvider.name = name
@@ -707,11 +747,11 @@ serviceProvider.Link Me, mMaxSPIndex, params
 If mServiceProviders(i).SPObject Is Nothing Then
     ' a fatal error has occurred while linking the SP - eg, invalid parameter
     ' has been passed
-    addSP = False
+    addSP = -1
 Else
     serviceProvider.logLevel = logLevel
     fireChange CollItemAdded, serviceProvider
-    addSP = True
+    addSP = mMaxSPIndex
 End If
 End Function
 
@@ -778,13 +818,14 @@ Dim prop As ConfigItem
 Dim propName As String
 Dim propValue As String
 Dim spObj As Object
+Dim spindex As Long
 Dim params As parameters
 
 For Each sp In mServiceProviderConfigList.childItems
+    On Error Resume Next
+
     If CBool(sp.getAttribute(AttributeNameEnabled)) Then
         
-        On Error Resume Next
-
         spName = sp.getAttribute(AttributeNameServiceProviderName)
         
         spProgId = sp.getAttribute(AttributeNameServiceProviderProgId)
@@ -811,23 +852,33 @@ For Each sp In mServiceProviderConfigList.childItems
         
         On Error GoTo 0
         
-        Set spObj = CreateObject(spProgId)
-        addSP spObj, params, spLogLevel, spName
+        If spProgId = ProgIdTbOrders Then
+            ' this is the built-in order simulator
+            Set spObj = New OrderSimulatorSP
+        Else
+            Set spObj = CreateObject(spProgId)
+        End If
+        spindex = addSP(spObj, params, spLogLevel, spName)
+        If spindex <> 0 Then Set mServiceProviders(spindex).SpConfig = sp
     End If
 Next
 End Sub
 
-Private Function LoadContractsFromNextSP( _
-                            ByVal startingIndex As Long, _
-                            ByVal pContractsbuilder As ContractsBuilder _
+Private Function loadContractsFromSecondarySP( _
+                            ByVal prevSPIndex As Long, _
+                            ByVal pContractsBuilder As ContractsBuilder _
                             ) As Boolean
 Dim i As Long
 Dim contractInfoSP As TradeBuildSP.IContractInfoServiceProvider
 
-For i = startingIndex To mMaxSPIndex
+For i = 0 To mMaxSPIndex
     If Not mServiceProviders(i).SPObject Is Nothing Then
-        If (mServiceProviders(i).SPTypes And TradeBuildSP.ServiceProviderTypes.ContractInfo) <> 0 Then
-            Set contractInfoSP = mServiceProviders(i).SPObject
+        If (mServiceProviders(i).SPTypes And TradeBuildSP.ServiceProviderTypes.SecondaryContractInfo) <> 0 Then
+            If i = prevSPIndex Then
+                ' we've already tried the secondary, so nothing more we can do
+            Else
+                Set contractInfoSP = mServiceProviders(i).SPObject
+            End If
             Exit For
         End If
     End If
@@ -835,15 +886,22 @@ Next
 
 If contractInfoSP Is Nothing Then Exit Function
 
-contractInfoSP.RequestContractDetails pContractsbuilder
-LoadContractsFromNextSP = True
+contractInfoSP.RequestContractDetails pContractsBuilder
+loadContractsFromSecondarySP = True
 End Function
 
 Private Sub removeSP( _
-                ByVal handle As Long)
+                ByVal handle As Long, _
+                Optional ByVal removeFromConfig As Boolean)
 Dim sp As ICommonServiceProvider
 Set sp = mServiceProviders(handle).SPObject
+
+If removeFromConfig And Not mServiceProviders(handle).SpConfig Is Nothing Then
+    mServiceProviderConfigList.childItems.remove mServiceProviders(handle).SpConfig
+End If
+
 Set mServiceProviders(handle).SPObject = Nothing
+Set mServiceProviders(handle).SpConfig = Nothing
 mServiceProviders(handle).SPTypes = 0
 mServiceProviders(handle).name = ""
 fireChange CollItemRemoved, sp

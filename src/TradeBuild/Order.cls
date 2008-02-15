@@ -684,8 +684,8 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function clone() As order
-Set clone = New order
+Public Function clone() As Order
+Set clone = New Order
 syncToMe clone
 End Function
 
@@ -698,7 +698,7 @@ End Function
 Friend Sub notifyFill( _
                 ByVal exec As Execution)
 
-If Not mDummy Then mTicker.notifyListeners _
+If Not mDummy Then gTB.notifyListeners _
                         mContract.specifier.exchange & "," & _
                         mContract.specifier.symbol & "," & _
                         mContract.specifier.expiry & "," & _
@@ -885,7 +885,7 @@ End Sub
 '
 ' @param  targetOrder the <code>order</code> that must be made identical
 '@/
-Friend Sub syncToMe(ByVal targetOrder As order)
+Friend Sub syncToMe(ByVal targetOrder As Order)
 With targetOrder
     .OrderContext = mOrderContext   ' set this first because others depend on it
     .status = mStatus               ' ditto
@@ -952,13 +952,13 @@ End Sub
 '@================================================================================
 
 Private Sub attributeNotModifiable()
-err.Raise ErrorCodes.ErrIllegalStateException, _
+Err.Raise ErrorCodes.ErrIllegalStateException, _
             "TradeBuild26.Order", _
             "This attribute is not currently modifiable"
 End Sub
 
 Private Sub attributeValueNotSupported()
-err.Raise ErrorCodes.ErrIllegalArgumentException, _
+Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "TradeBuild26.Order", _
             "This attribute value not supported by service provider"
 End Sub

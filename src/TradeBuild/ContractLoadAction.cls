@@ -47,6 +47,8 @@ Private Const ModuleName                    As String = "ContractLoadAction"
 ' Member variables
 '@================================================================================
 
+Private mContractsBuilder                   As ContractsBuilder
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -56,7 +58,7 @@ Private Const ModuleName                    As String = "ContractLoadAction"
 '@================================================================================
 
 Private Sub DeferredAction_run()
-
+gTB.ServiceProviders.loadContracts mContractsBuilder
 End Sub
 
 '@================================================================================
@@ -66,6 +68,11 @@ End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Friend Sub initialise( _
+                ByVal pContractsBuilder As ContractsBuilder)
+Set mContractsBuilder = pContractsBuilder
+End Sub
 
 '@================================================================================
 ' Methods

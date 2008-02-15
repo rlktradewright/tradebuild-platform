@@ -380,39 +380,6 @@ Public Enum TimeframeStates
     TimeframeStateLoaded
 End Enum
 
-Public Enum TradeBuildListenValueTypes
-
-    VTAll = -1  ' used by listenenrs to specify that they want to receive all
-                ' types of listen data
-    
-    VTLog = 1
-    VTTrace
-    VTDebug
-
-    VTProfitProfile
-    VTDummyProfitProfile
-    VTMoneyManagement
-    VTOrderPlexProfileStruct
-    VTDummyOrderPlexProfileStruct
-    VTOrderPlexProfileString
-    VTDummyOrderPlexProfileString
-    VTOrder
-    VTDummyOrder
-    VTPosition
-    VTDummyPosition
-    VTTradeProfile
-    VTDummyTradeProfile
-    VTProfit
-    VTDummyProfit
-    VTDrawdown
-    VTDummyDrawdown
-    VTMaxProfit
-    VTDummyMaxProfit
-    VTOrderDetail
-    VTOrderDetailDummy
-        
-End Enum
-
 Public Enum ValueChanges
     ValueChangeNone
     ValueChangeUp
@@ -635,7 +602,48 @@ TickfileSpecifierToString = gTickfileSpecifierToString(TickfileSpec)
 End Function
 
 Public Property Get TradeBuildAPI() As TradeBuildAPI
-If gTB Is Nothing Then Set gTB = New TradeBuildAPI
+If gTB Is Nothing Then
+    Set gTB = New TradeBuildAPI
+    
+    Set gLogLogger = GetLogger("log")
+    Set gSpLogLogger = GetLogger("log.serviceprovider")
+    
+    Set gTraceLogger = GetLogger("trace")
+    
+    Set gDebugLogger = GetLogger("debug")
+    
+    GetLogger("tradebuild").logToParent = False
+    
+    Set gProfitProfileLogger = GetLogger("tradebuild.ProfitProfile")
+    
+    Set gDummyProfitProfileLogger = GetLogger("tradebuild.dummyProfitProfile")
+    
+    Set gMoneyManagementLogger = GetLogger("tradebuild.MoneyManagement")
+    
+    Set gOrderPlexProfileStructLogger = GetLogger("tradebuild.gOrderPlexProfileStruct")
+    
+    Set gDummyOrderPlexProfileStructLogger = GetLogger("tradebuild.DummyOrderPlexProfileStruct")
+    
+    Set gOrderPlexProfileStringLogger = GetLogger("tradebuild.OrderPlexProfileString")
+    
+    Set gDummyOrderPlexProfileStringLogger = GetLogger("tradebuild.DummyOrderPlexProfileString")
+    
+    Set gOrderLogger = GetLogger("tradebuild.order")
+    
+    Set gDummyOrderLogger = GetLogger("tradebuild.dummyorder")
+    
+    Set gPositionLogger = GetLogger("tradebuild.position")
+    
+    Set gDummyPositionLogger = GetLogger("tradebuild.dummyposition")
+    
+    Set gTradeProfileLogger = GetLogger("tradebuild.TradeProfile")
+    
+    Set gDummyTradeProfileLogger = GetLogger("tradebuild.dummyTradeProfile")
+    
+    Set gProfitLogger = GetLogger("tradebuild.profit")
+    
+    Set gDummyProfitLogger = GetLogger("tradebuild.dummyprofit")
+End If
 Set TradeBuildAPI = gTB
 End Property
 

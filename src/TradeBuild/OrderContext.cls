@@ -57,11 +57,11 @@ Private mDummy As Boolean
 
 Private mSimulated As Boolean
 
-Private mActiveOrderPlexes As OrderPlexes
+Private mActiveOrderPlexes As orderPlexes
     ' this contains all order plexes for which one or more orders are
     ' not yet complete (or not yet cancelled)
     
-Private mClosedOrderPlexes As OrderPlexes
+Private mClosedOrderPlexes As orderPlexes
     ' this contains all order plexes for which all orders have completed (or
     ' been cancelled)
     
@@ -110,8 +110,8 @@ Private mStopTriggerMethod As StopTriggerMethods
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mActiveOrderPlexes = New OrderPlexes
-Set mClosedOrderPlexes = New OrderPlexes
+Set mActiveOrderPlexes = New orderPlexes
+Set mClosedOrderPlexes = New orderPlexes
 End Sub
 
 Private Sub Class_Terminate()
@@ -130,7 +130,7 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get activeOrderPlexes() As OrderPlexes
+Public Property Get activeOrderPlexes() As orderPlexes
 Set activeOrderPlexes = mActiveOrderPlexes
 End Property
 
@@ -160,7 +160,7 @@ Public Property Get blockOrder() As Boolean
 blockOrder = mBlockOrder
 End Property
 
-Public Property Get closedOrderPlexes() As OrderPlexes
+Public Property Get closedOrderPlexes() As orderPlexes
 Set closedOrderPlexes = mClosedOrderPlexes
 End Property
 
@@ -586,7 +586,7 @@ Case TIFDay
 Case TIFGoodTillCancelled
 Case TIFImmediateOrCancel
 Case Else
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
     "OrderContext::buy", _
     "Invalid entry TIF"
 End Select
@@ -596,7 +596,7 @@ Case TIFDay
 Case TIFGoodTillCancelled
 Case TIFImmediateOrCancel
 Case Else
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
     "OrderContext::buy", _
     "Invalid stop TIF"
 End Select
@@ -606,7 +606,7 @@ Case TIFDay
 Case TIFGoodTillCancelled
 Case TIFImmediateOrCancel
 Case Else
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
     "OrderContext::buy", _
     "Invalid target TIF"
 End Select
@@ -710,11 +710,11 @@ Dim lTriggerPrice As Double
 Dim lStopPrice As Double
 Dim lTargetPrice As Double
 
-If Not mIsReady Then err.Raise ErrorCodes.ErrIllegalStateException, _
+If Not mIsReady Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                             "OrderContext::CreateOrderPlex", _
                             "The service provider is not ready"
 
-If number <= 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
+If number <= 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                             "OrderContext::CreateOrderPlex", _
                             "The quantity must be greater than zero"
 
@@ -734,7 +734,7 @@ Case EntryOrderTypeLimitIfTouched
 Case EntryOrderTypeStop
 Case EntryOrderTypeStopLimit
 Case Else
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
     "OrderContext::CreateOderPlex", _
     "Invalid entry type"
 End Select
@@ -748,7 +748,7 @@ Case StopOrderTypeAsk
 Case StopOrderTypeLast
 Case StopOrderTypeAuto
 Case Else
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
     "OrderContext::CreateOderPlex", _
     "Invalid stop type"
 End Select
@@ -763,7 +763,7 @@ Case TargetOrderTypeAsk
 Case TargetOrderTypeLast
 Case TargetOrderTypeAuto
 Case Else
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
     "OrderContext::CreateOderPlex", _
     "Invalid target type"
 End Select
@@ -787,7 +787,7 @@ Case EntryOrderTypeMarket
 Case EntryOrderTypeMarketOnOpen
 Case EntryOrderTypeMarketOnClose
 Case EntryOrderTypeMarketIfTouched
-    If triggerPrice = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    If triggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                 "OrderContext::CreateOrderPlex", _
                                 "The trigger price must not be zero for this order type"
     
@@ -800,41 +800,41 @@ Case EntryOrderTypeAsk
 Case EntryOrderTypeLast
     entryOrder.limitPrice = mTicker.TradePrice + offset * mTickSize
 Case EntryOrderTypeLimit
-    If price = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    If price = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                 "OrderContext::CreateOrderPlex", _
                                 "The entry price must not be zero for this order type"
     
     entryOrder.limitPrice = price + offset * mTickSize
 Case EntryOrderTypeLimitOnOpen
-    If price = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    If price = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                 "OrderContext::CreateOrderPlex", _
                                 "The entry price must not be zero for this order type"
     
     entryOrder.limitPrice = price + offset * mTickSize
 Case EntryOrderTypeLimitOnClose
-    If price = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    If price = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                 "OrderContext::CreateOrderPlex", _
                                 "The entry price must not be zero for this order type"
     
     entryOrder.limitPrice = price + offset * mTickSize
 Case EntryOrderTypeLimitIfTouched
-    If price = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    If price = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                 "OrderContext::CreateOrderPlex", _
                                 "The entry price must not be zero for this order type"
-    If triggerPrice = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    If triggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                 "OrderContext::CreateOrderPlex", _
                                 "The trigger price must not be zero for this order type"
 
     entryOrder.limitPrice = price + offset * mTickSize
     entryOrder.triggerPrice = triggerPrice
 Case EntryOrderTypeStop
-    If triggerPrice = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    If triggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                 "OrderContext::CreateOrderPlex", _
                                 "The trigger price must not be zero for this order type"
     
     entryOrder.triggerPrice = triggerPrice
 Case EntryOrderTypeStopLimit
-    If triggerPrice = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    If triggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                 "OrderContext::CreateOrderPlex", _
                                 "The trigger price must not be zero for this order type"
     
@@ -854,16 +854,16 @@ If StopOrderType <> StopOrderTypeNone Then
     stoporder.orderType = gStopOrderTypeToOrderType(StopOrderType)
     Select Case StopOrderType
     Case StopOrderTypeStop
-        If stopTriggerPrice = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
+        If stopTriggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                     "OrderContext::CreateOrderPlex", _
                                     "The stopTrigger price must not be zero for this order type"
         
         stoporder.triggerPrice = stopTriggerPrice + stopOffset * mTickSize
     Case StopOrderTypeStopLimit
-        If stopTriggerPrice = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
+        If stopTriggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                     "OrderContext::CreateOrderPlex", _
                                     "The stopTrigger price must not be zero for this order type"
-        If stopLimitPrice = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
+        If stopLimitPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                     "OrderContext::CreateOrderPlex", _
                                     "The stopLimit price must not be zero for this order type"
         
@@ -891,23 +891,23 @@ If TargetOrderType <> TargetOrderTypeNone Then
     targetOrder.orderType = gTargetOrderTypeToOrderType(TargetOrderType)
     Select Case TargetOrderType
     Case TargetOrderTypeLimit
-        If targetPrice = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
+        If targetPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                     "OrderContext::CreateOrderPlex", _
                                     "The target price must not be zero for this order type"
         
         targetOrder.limitPrice = targetPrice + targetOffset * mTickSize
     Case TargetOrderTypeLimitIfTouched
-        If targetPrice = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
+        If targetPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                     "OrderContext::CreateOrderPlex", _
                                     "The target price must not be zero for this order type"
-        If targetTriggerPrice = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
+        If targetTriggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                     "OrderContext::CreateOrderPlex", _
                                     "The target trigger price must not be zero for this order type"
     
         targetOrder.limitPrice = targetPrice + offset * mTickSize
         targetOrder.triggerPrice = targetTriggerPrice
     Case TargetOrderTypeMarketIfTouched
-        If targetTriggerPrice = 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
+        If targetTriggerPrice = 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                     "OrderContext::CreateOrderPlex", _
                                     "The target trigger price must not be zero for this order type"
         
@@ -919,7 +919,7 @@ If TargetOrderType <> TargetOrderTypeNone Then
     Case TargetOrderTypeLast
         targetOrder.limitPrice = mTicker.TradePrice + targetOffset * mTickSize
     Case TargetOrderTypeAuto
-        If targetPrice <> 0 Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
+        If targetPrice <> 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                     "OrderContext::CreateOrderPlex", _
                                     "The target price must be zero for this order type"
         
@@ -934,7 +934,7 @@ orderPlex.checkpoint
 
 Set CreateOrderPlex = orderPlex
 
-mTicker.notifyListeners _
+gTB.notifyListeners _
             "Create order plex: (" & mTicker.TradePrice & ") " & _
             orderPlex.key & ": " & _
             gOrderActionToString(action) & " " & number & " at " & _
@@ -988,7 +988,7 @@ Dim msg As String
 Dim origQuantity As Long
 Dim newQuantity As Long
 
-If orderPlex Is Nothing Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
+If orderPlex Is Nothing Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                             "OrderContext::executeOrderPlex", _
                             "No order plex supplied"
 
@@ -1001,7 +1001,7 @@ If checkMoneyManagement And Not mDummy Then
                             orderPlex.risk, _
                             msg) _
     Then
-        mTicker.notifyListeners "Rejected: " & msg, _
+        gTB.notifyListeners "Rejected: " & msg, _
                             TradeBuildListenValueTypes.VTOrder, _
                             Me
         Set orderPlex = Nothing
@@ -1033,7 +1033,7 @@ If Not scalingStrategy Is Nothing Then
     orderPlex.scalingStrategy = scalingStrategy
 End If
 
-mTicker.notifyListeners _
+gTB.notifyListeners _
             "Execute order plex: (" & mTicker.TradePrice & ") " & _
             orderPlex.key, _
             IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
@@ -1174,7 +1174,7 @@ Case TIFDay
 Case TIFGoodTillCancelled
 Case TIFImmediateOrCancel
 Case Else
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
     "OrderContext::sell", _
     "Invalid entry TIF"
 End Select
@@ -1184,7 +1184,7 @@ Case TIFDay
 Case TIFGoodTillCancelled
 Case TIFImmediateOrCancel
 Case Else
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
     "OrderContext::sell", _
     "Invalid stop TIF"
 End Select
@@ -1194,7 +1194,7 @@ Case TIFDay
 Case TIFGoodTillCancelled
 Case TIFImmediateOrCancel
 Case Else
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
     "OrderContext::sell", _
     "Invalid target TIF"
 End Select
@@ -1221,13 +1221,13 @@ End Function
 '@================================================================================
 
 Private Sub attributeNotSupported()
-err.Raise ErrorCodes.ErrIllegalArgumentException, _
+Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "OrderContext", _
             "This attribute not supported by service provider"
 End Sub
 
 Private Sub attributeValueNotSupported()
-err.Raise ErrorCodes.ErrIllegalArgumentException, _
+Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "OrderContext", _
             "This attribute value not supported by service provider"
 End Sub

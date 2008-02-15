@@ -62,7 +62,7 @@ Private mChangeListeners            As Collection
 '@================================================================================
 
 Private Sub Class_Initialize()
-ReDim mTickerHandleTable(99) As Boolean
+ReDim mTickerHandleTable(3) As Boolean
 Set mTickers = New Collection
 Set mChangeListeners = New Collection
 
@@ -187,7 +187,7 @@ Next
 
 If AllocateTickerHandle = -1 Then
     AllocateTickerHandle = UBound(mTickerHandleTable) + 1
-    ReDim Preserve mTickerHandleTable(UBound(mTickerHandleTable) + 100) As Boolean
+    ReDim Preserve mTickerHandleTable(2 * (UBound(mTickerHandleTable) + 1) - 1) As Boolean
 End If
 
 mTickerHandleTable(AllocateTickerHandle) = True

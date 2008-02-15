@@ -99,7 +99,7 @@ Dim ev As NotificationEvent
 
 Set ev.source = mContracts.contractSpecifier
 ev.eventCode = ApiNotifyCodes.ApiNotifyContractSpecifierInvalid
-ev.eventMessage = reason & ": " & Replace(mContracts.contractSpecifier.ToString, vbCrLf, "; ")
+ev.eventMessage = reason & ": " & mContracts.contractSpecifier.ToString
 tckrs.notify ev
 End Sub
 

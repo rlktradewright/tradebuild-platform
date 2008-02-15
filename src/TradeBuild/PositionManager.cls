@@ -103,7 +103,7 @@ Private mFirstActivePlexTableIndex As Long
 Private mLastActivePlexTableIndex As Long
 
 Private mSettlingOrderContext As OrderContext
-Private mSettlingOrderPlex As orderPlex
+Private mSettlingOrderPlex As OrderPlex
 Private mSettlingHandle As Long
 
 Private mClosing As Boolean
@@ -170,10 +170,10 @@ mOrderContexts.PositionManager = Me
 
 Set mStudies = New Studies
 
-ReDim mPlexTable(1023) As OrderPlexProfile
+ReDim mPlexTable(3) As OrderPlexProfile
 mFirstActivePlexTableIndex = 0
 mLastActivePlexTableIndex = 1
-mNextPlexTableIndex = 2
+mNextPlexTableIndex = 4
 mPlexTable(mFirstActivePlexTableIndex).NextActiveIndex = mLastActivePlexTableIndex
 mPlexTable(mLastActivePlexTableIndex).PrevActiveIndex = mFirstActivePlexTableIndex
 
@@ -628,7 +628,7 @@ If mClosing Then
 Else
     If positionSize <> 0 Then
         
-        mTicker.notifyListeners _
+        gTB.notifyListeners _
                 "Close positions: (" & mTicker.TradePriceString & ") at market", _
                 IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
                 Me
@@ -658,7 +658,7 @@ End Sub
 
 Friend Sub endOfSession(ByVal timestamp As Date)
 If mProfitIncrement = 0 Then Exit Sub
-mTicker.notifyListeners mProfitProfileBarStartTime & "," & _
+gTB.notifyListeners mProfitProfileBarStartTime & "," & _
                 mProfitProfileBarNumber & "," & _
                 mProfitProfileBarOpen & "," & _
                 mProfitProfileBarHigh & "," & _
@@ -668,7 +668,7 @@ mTicker.notifyListeners mProfitProfileBarStartTime & "," & _
                     TradeBuildListenValueTypes.VTDummyProfitProfile, _
                     TradeBuildListenValueTypes.VTProfitProfile), _
                 Me
-mTicker.notifyListeners timestamp & "," & _
+gTB.notifyListeners timestamp & "," & _
                 mProfitProfileBarNumber + 1 & "," & _
                 mProfit & "," & _
                 mProfit & "," & _
@@ -707,7 +707,7 @@ mQuantityOutstanding = mQuantityOutstanding + quantity
 
 If mQuantityOutstanding <> 0 Then
     'we need to notify the position change before the profit
-    mTicker.notifyListeners _
+    gTB.notifyListeners _
                     mQuantityOutstanding, _
                     IIf(mDummy, TradeBuildListenValueTypes.VTDummyPosition, TradeBuildListenValueTypes.VTPosition), _
                     Me
@@ -725,11 +725,11 @@ Else
     'we need to notify the position change after the final profit
     calcTradeProfit
     
-    mTicker.notifyListeners _
+    gTB.notifyListeners _
                     mQuantityOutstanding, _
                     IIf(mDummy, TradeBuildListenValueTypes.VTDummyPosition, TradeBuildListenValueTypes.VTPosition), _
                     Me
-    mTicker.notifyListeners _
+    gTB.notifyListeners _
                     mTradeStartTime & "," & _
                     mTicker.timestamp & "," & _
                     mProfitThisTrade & "," & _
@@ -804,7 +804,7 @@ If Not mClosing Then
     ' all OrderContexts are complete
     checkCloseall
     If mEndSession Then
-        mTicker.notifyListeners "Ending session", _
+        gTB.notifyListeners "Ending session", _
                         TradeBuildListenValueTypes.VTMoneyManagement, _
                         Me
     End If
@@ -855,7 +855,7 @@ If Not mSettlingOrderContext Is Nothing Then
         
         
         If mEndSession Then
-            mTicker.notifyListeners "Ending session", _
+            gTB.notifyListeners "Ending session", _
                                 TradeBuildListenValueTypes.VTMoneyManagement, _
                                 Me
         End If
@@ -876,13 +876,13 @@ If size = 0 Then
     mClosing = False
     mOrderContexts.enabled = True
     If mEndSession Then
-        mTicker.notifyListeners "Ending session", _
+        gTB.notifyListeners "Ending session", _
                             TradeBuildListenValueTypes.VTMoneyManagement, _
                             Me
     End If
 Else
     
-    mTicker.notifyListeners _
+    gTB.notifyListeners _
             "Close positions: (" & mTicker.TradePriceString & ") at market", _
             IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
             Me
@@ -914,7 +914,7 @@ Friend Function registerPlex(ByVal key As String, _
                             ByVal action As OrderActions, _
                             ByVal risk As Currency) As Long
 If mNextPlexTableIndex >= UBound(mPlexTable) Then
-    ReDim Preserve mPlexTable(UBound(mPlexTable) + 1024) As OrderPlexProfile
+    ReDim Preserve mPlexTable(2 * (UBound(mPlexTable) + 1) - 1) As OrderPlexProfile
 End If
 registerPlex = mNextPlexTableIndex
 mNextPlexTableIndex = mNextPlexTableIndex + 1
@@ -1038,10 +1038,10 @@ If profit <> mProfit Then
     ev.valueName = "profit"
     mStudies.notify ev
     
-    mTicker.notifyListeners mProfit, _
+    gTB.notifyListeners mProfit, _
                     IIf(mDummy, TradeBuildListenValueTypes.VTDummyProfit, TradeBuildListenValueTypes.VTProfit), _
                     Me
-    mTicker.notifyListeners mMaxProfit - mProfit, _
+    gTB.notifyListeners mMaxProfit - mProfit, _
                     IIf(mDummy, TradeBuildListenValueTypes.VTDummyDrawdown, TradeBuildListenValueTypes.VTDrawdown), _
                     Me
 End If
@@ -1049,7 +1049,7 @@ End If
 If mProfit > mMaxProfit Then
     mMaxProfit = mProfit
     fireProfit mMaxProfit, ProfitTypes.ProfitTypeSessionMaxProfit
-    mTicker.notifyListeners mMaxProfit, _
+    gTB.notifyListeners mMaxProfit, _
                         IIf(mDummy, TradeBuildListenValueTypes.VTDummyMaxProfit, TradeBuildListenValueTypes.VTMaxProfit), _
                         Me
 ElseIf mProfit < mMaxProfit Then
@@ -1077,7 +1077,7 @@ If mProfit - mProfitProfileBarLow >= mProfitIncrement Or _
     mProfitProfileBarHigh - mProfit >= mProfitIncrement _
 Then
     ' start a new profit profile bar
-    mTicker.notifyListeners mProfitProfileBarStartTime & "," & _
+    gTB.notifyListeners mProfitProfileBarStartTime & "," & _
                         mProfitProfileBarNumber & "," & _
                         mProfitProfileBarOpen & "," & _
                         mProfitProfileBarHigh & "," & _
@@ -1116,7 +1116,7 @@ If Not mMoneyManager Is Nothing Then
                                 endSession) _
     Then
         If Not mClosing Then
-            mTicker.notifyListeners "Close all positions: " & msg, _
+            gTB.notifyListeners "Close all positions: " & msg, _
                             TradeBuildListenValueTypes.VTMoneyManagement, _
                             Me
             closePositions
@@ -1125,7 +1125,7 @@ If Not mMoneyManager Is Nothing Then
         If endSession And Not mClosing Then
             If Not mEndSession Then
                 mEndSession = True
-                mTicker.notifyListeners "Ending session: " & msg, _
+                gTB.notifyListeners "Ending session: " & msg, _
                                 TradeBuildListenValueTypes.VTMoneyManagement, _
                                 Me
             End If
@@ -1166,7 +1166,7 @@ End Sub
 Private Sub notifyPlexProfileListeners(ByVal index As Long)
 Dim data As Variant
 data = mPlexTable(index)
-mTicker.notifyListeners _
+gTB.notifyListeners _
                 data, _
                 IIf(mDummy, _
                     TradeBuildListenValueTypes.VTDummyOrderPlexProfileStruct, _
@@ -1174,7 +1174,7 @@ mTicker.notifyListeners _
                 Me
 
 With mPlexTable(index)
-    mTicker.notifyListeners _
+    gTB.notifyListeners _
                 FormatDateTime(.StartTime) & "," & _
                 FormatDateTime(.endTime) & "," & _
                 .Description & "," & _

@@ -132,7 +132,11 @@ Set mPositionManager = value
 End Property
 
 Friend Property Let simulated(ByVal value As Boolean)
+Dim lOrderContext As OrderContext
 mSimulated = value
+For Each lOrderContext In mOrderContexts
+    lOrderContext.simulated = value
+Next
 End Property
 
 Friend Property Let Ticker(ByVal value As Ticker)
@@ -149,7 +153,7 @@ End Property
 
 Public Function add(ByVal name As String) As OrderContext
 If Not mEnabled Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "OrderContexts::add", _
                 "Order context addition is disabled"
 End If
