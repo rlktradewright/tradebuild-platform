@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#2.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#48.2#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fChart2 
    ClientHeight    =   6780
    ClientLeft      =   60
@@ -18,6 +18,7 @@ Begin VB.Form fChart2
       Width           =   10215
       _ExtentX        =   18018
       _ExtentY        =   10610
+      TwipsPerBar     =   100
    End
    Begin MSComctlLib.Toolbar Toolbar1 
       Align           =   1  'Align Top

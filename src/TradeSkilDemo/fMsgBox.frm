@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#21.0#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#24.3#0"; "TWControls10.ocx"
 Begin VB.Form fMsgBox 
    BorderStyle     =   3  'Fixed Dialog
    Caption         =   "Form1"
@@ -15,13 +15,13 @@ Begin VB.Form fMsgBox
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
    Begin TWControls10.TWModelessMsgBox TWModelessMsgBox1 
-      Height          =   1815
-      Left            =   120
+      Height          =   1500
+      Left            =   0
       TabIndex        =   0
-      Top             =   120
-      Width           =   3255
-      _ExtentX        =   5741
-      _ExtentY        =   3201
+      Top             =   0
+      Width           =   5055
+      _ExtentX        =   8916
+      _ExtentY        =   2646
    End
 End
 Attribute VB_Name = "fMsgBox"
@@ -99,8 +99,7 @@ Public Sub initialise( _
                 ByVal prompt As String, _
                 ByVal buttons As VbMsgBoxStyle, _
                 Optional ByVal title As String)
-TWModelessMsgBox1.initialise prompt, buttons
-Me.caption = title
+TWModelessMsgBox1.initialise prompt, buttons, title
 End Sub
 
 '@================================================================================

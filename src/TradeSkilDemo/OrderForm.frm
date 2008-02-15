@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#2.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#48.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form OrderForm 
    BorderStyle     =   1  'Fixed Single
    ClientHeight    =   6135
@@ -101,10 +101,6 @@ End Sub
 '================================================================================
 ' Properties
 '================================================================================
-
-Public Property Let ordersAreSimulated(ByVal value As Boolean)
-OrderTicket1.ordersAreSimulated = value
-End Property
 
 Public Property Let Ticker(ByVal value As Ticker)
 OrderTicket1.Ticker = value
