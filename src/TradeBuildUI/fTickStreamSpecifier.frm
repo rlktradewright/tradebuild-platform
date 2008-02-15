@@ -23,14 +23,14 @@ Begin VB.Form fTickStreamSpecifier
       Caption         =   "Cancel"
       Height          =   495
       Left            =   6840
-      TabIndex        =   0
+      TabIndex        =   2
       Top             =   840
       Width           =   735
    End
    Begin TradeBuildUI26.TickStreamSpecifier TickStreamSpecifier1 
       Height          =   3735
       Left            =   120
-      TabIndex        =   2
+      TabIndex        =   0
       Top             =   120
       Width           =   6615
       _ExtentX        =   11668
