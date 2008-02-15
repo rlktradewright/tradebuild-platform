@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "msflxgrd.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#25.0#0"; "TWControls10.ocx"
 Begin VB.UserControl TickerGrid 
    ClientHeight    =   3600
    ClientLeft      =   0
@@ -7,15 +7,14 @@ Begin VB.UserControl TickerGrid
    ClientWidth     =   4800
    ScaleHeight     =   3600
    ScaleWidth      =   4800
-   Begin MSFlexGridLib.MSFlexGrid TickerGrid 
-      Height          =   1335
-      Left            =   240
+   Begin TWControls10.TWGrid TickerGrid 
+      Height          =   2655
+      Left            =   360
       TabIndex        =   0
-      Top             =   120
-      Width           =   2175
-      _ExtentX        =   3836
-      _ExtentY        =   2355
-      _Version        =   393216
+      Top             =   240
+      Width           =   3855
+      _ExtentX        =   6800
+      _ExtentY        =   4683
    End
 End
 Attribute VB_Name = "TickerGrid"
@@ -96,13 +95,13 @@ Private Enum TickerGridColumnWidths
     SelectorWidth = 3
     NameWidth = 11
     CurrencyWidth = 5
-    BidSizeWidth = 7
+    BidSizeWidth = 8
     BidWidth = 9
     AskWidth = 9
-    AskSizeWidth = 7
+    AskSizeWidth = 8
     TradeWidth = 9
     TradeSIzeWidth = 7
-    VolumeWidth = 9
+    VolumeWidth = 10
     ChangeWidth = 7
     ChangePercentWidth = 7
     highWidth = 9
@@ -223,7 +222,7 @@ End Sub
 Private Sub PriceChangeListener_Change(ev As PriceChangeEvent)
 Dim lTicker As ticker
 Set lTicker = ev.Source
-TickerGrid.Redraw = False
+
 TickerGrid.row = mTickerTable(lTicker.handle).tickerGridRow
 TickerGrid.col = TickerGridColumns.Change
 TickerGrid.Text = ev.ChangeString
@@ -243,7 +242,7 @@ Else
     TickerGrid.CellBackColor = NegativeChangebackColor
 End If
 TickerGrid.CellForeColor = vbWhite
-TickerGrid.Redraw = True
+
 incrementEventCount
 End Sub
 
@@ -252,53 +251,53 @@ End Sub
 '@================================================================================
 
 Private Sub QuoteListener_ask(ev As QuoteEvent)
-TickerGrid.Redraw = False
+
 displayPrice ev, TickerGridColumns.ask
 displaySize ev, TickerGridColumns.AskSize
-TickerGrid.Redraw = True
+
 End Sub
 
 Private Sub QuoteListener_bid(ev As QuoteEvent)
-TickerGrid.Redraw = False
+
 displaySize ev, TickerGridColumns.bidSize
-TickerGrid.Redraw = True
+
 End Sub
 
 Private Sub QuoteListener_high(ev As QuoteEvent)
-TickerGrid.Redraw = False
+
 displayPrice ev, TickerGridColumns.highPrice
-TickerGrid.Redraw = True
+
 End Sub
 
 Private Sub QuoteListener_Low(ev As QuoteEvent)
-TickerGrid.Redraw = False
+
 displayPrice ev, TickerGridColumns.lowPrice
-TickerGrid.Redraw = True
+
 End Sub
 
 Private Sub QuoteListener_openInterest(ev As QuoteEvent)
-TickerGrid.Redraw = False
+
 displaySize ev, TickerGridColumns.openInterest
-TickerGrid.Redraw = True
+
 End Sub
 
 Private Sub QuoteListener_previousClose(ev As QuoteEvent)
-TickerGrid.Redraw = False
+
 displayPrice ev, TickerGridColumns.closePrice
-TickerGrid.Redraw = True
+
 End Sub
 
 Private Sub QuoteListener_trade(ev As QuoteEvent)
-TickerGrid.Redraw = False
+
 displayPrice ev, TickerGridColumns.trade
 displaySize ev, TickerGridColumns.TradeSize
-TickerGrid.Redraw = True
+
 End Sub
 
 Private Sub QuoteListener_volume(ev As QuoteEvent)
-TickerGrid.Redraw = False
+
 displaySize ev, TickerGridColumns.volume
-TickerGrid.Redraw = True
+
 End Sub
 
 '@================================================================================
@@ -323,12 +322,12 @@ If col = 1 And colSel = TickerGrid.Cols - 1 Then
         ' regardless of whether ctrl is down
         deselectSelectedRows
         
-        TickerGrid.Redraw = False
+        
         For i = 1 To mNextGridRowIndex - 1
             mSelectedRowsTable(i) = 1
             invertEntryColors i
         Next
-        TickerGrid.Redraw = True
+        
     Else
         If Not mControlDown Then
             deselectSelectedRows
@@ -553,14 +552,14 @@ End Sub
 
 Private Sub deselectSelectedRows()
 Dim i As Long
-TickerGrid.Redraw = False
+
 For i = 0 To mNextGridRowIndex - 1
     If mSelectedRowsTable(i) <> 0 Then
         invertEntryColors i
         mSelectedRowsTable(i) = 0
     End If
 Next
-TickerGrid.Redraw = True
+
 End Sub
 
 Private Sub displayPrice( _
@@ -731,10 +730,11 @@ Private Sub setupDefaultTickerGrid()
 
 With TickerGrid
     .AllowBigSelection = True
-    .AllowUserResizing = flexResizeBoth
-    .FillStyle = flexFillRepeat
-    .FocusRect = flexFocusNone
-    .HighLight = flexHighlightNever
+    .AllowUserResizing = TwGridResizeBoth
+    .RowSizingMode = TwGridRowSizeAll
+    .FillStyle = TwGridFillRepeat
+    .FocusRect = TwGridFocusNone
+    .HighLight = TwGridHighlightNever
     
     .Cols = 2
     .Rows = GridRowsInitial
@@ -742,29 +742,29 @@ With TickerGrid
     .FixedCols = 1
 End With
     
-setupTickerGridColumn 0, TickerGridColumns.Selector, TickerGridColumnWidths.SelectorWidth, "", True, AlignmentSettings.flexAlignLeftCenter
-setupTickerGridColumn 0, TickerGridColumns.TickerName, TickerGridColumnWidths.NameWidth, "Name", True, AlignmentSettings.flexAlignLeftCenter
-setupTickerGridColumn 0, TickerGridColumns.currencyCode, TickerGridColumnWidths.CurrencyWidth, "Curr", True, AlignmentSettings.flexAlignCenterCenter
-setupTickerGridColumn 0, TickerGridColumns.bidSize, TickerGridColumnWidths.BidSizeWidth, "Bid size", False, AlignmentSettings.flexAlignCenterCenter
-setupTickerGridColumn 0, TickerGridColumns.bid, TickerGridColumnWidths.BidWidth, "Bid", False, AlignmentSettings.flexAlignCenterCenter
-setupTickerGridColumn 0, TickerGridColumns.ask, TickerGridColumnWidths.AskWidth, "Ask", False, AlignmentSettings.flexAlignCenterCenter
-setupTickerGridColumn 0, TickerGridColumns.AskSize, TickerGridColumnWidths.AskSizeWidth, "Ask size", False, AlignmentSettings.flexAlignCenterCenter
-setupTickerGridColumn 0, TickerGridColumns.trade, TickerGridColumnWidths.TradeWidth, "Last", False, AlignmentSettings.flexAlignCenterCenter
-setupTickerGridColumn 0, TickerGridColumns.TradeSize, TickerGridColumnWidths.TradeSIzeWidth, "Last size", False, AlignmentSettings.flexAlignCenterCenter
-setupTickerGridColumn 0, TickerGridColumns.volume, TickerGridColumnWidths.VolumeWidth, "Volume", False, AlignmentSettings.flexAlignCenterCenter
-setupTickerGridColumn 0, TickerGridColumns.Change, TickerGridColumnWidths.ChangeWidth, "Chg", False, AlignmentSettings.flexAlignCenterCenter
-setupTickerGridColumn 0, TickerGridColumns.ChangePercent, TickerGridColumnWidths.ChangePercentWidth, "Chg %", False, AlignmentSettings.flexAlignCenterCenter
-setupTickerGridColumn 0, TickerGridColumns.highPrice, TickerGridColumnWidths.highWidth, "High", False, AlignmentSettings.flexAlignCenterCenter
-setupTickerGridColumn 0, TickerGridColumns.lowPrice, TickerGridColumnWidths.LowWidth, "Low", False, AlignmentSettings.flexAlignCenterCenter
-setupTickerGridColumn 0, TickerGridColumns.closePrice, TickerGridColumnWidths.CloseWidth, "Close", False, AlignmentSettings.flexAlignCenterCenter
-setupTickerGridColumn 0, TickerGridColumns.openInterest, TickerGridColumnWidths.openInterestWidth, "Open interest", False, AlignmentSettings.flexAlignCenterCenter
-setupTickerGridColumn 0, TickerGridColumns.Description, TickerGridColumnWidths.DescriptionWidth, "Description", True, AlignmentSettings.flexAlignLeftCenter
-setupTickerGridColumn 0, TickerGridColumns.symbol, TickerGridColumnWidths.SymbolWidth, "Symbol", True, AlignmentSettings.flexAlignLeftCenter
-setupTickerGridColumn 0, TickerGridColumns.sectype, TickerGridColumnWidths.SecTypeWidth, "Sec Type", True, AlignmentSettings.flexAlignLeftCenter
-setupTickerGridColumn 0, TickerGridColumns.expiry, TickerGridColumnWidths.ExpiryWidth, "Expiry", True, AlignmentSettings.flexAlignLeftCenter
-setupTickerGridColumn 0, TickerGridColumns.exchange, TickerGridColumnWidths.ExchangeWidth, "Exchange", True, AlignmentSettings.flexAlignLeftCenter
-setupTickerGridColumn 0, TickerGridColumns.OptionRight, TickerGridColumnWidths.OptionRightWidth, "Right", True, AlignmentSettings.flexAlignLeftCenter
-setupTickerGridColumn 0, TickerGridColumns.strike, TickerGridColumnWidths.StrikeWidth, "Strike", False, AlignmentSettings.flexAlignLeftCenter
+setupTickerGridColumn 0, TickerGridColumns.Selector, TickerGridColumnWidths.SelectorWidth, "", True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
+setupTickerGridColumn 0, TickerGridColumns.TickerName, TickerGridColumnWidths.NameWidth, "Name", True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
+setupTickerGridColumn 0, TickerGridColumns.currencyCode, TickerGridColumnWidths.CurrencyWidth, "Curr", True, TWControls10.AlignmentSettings.TwGridAlignCenterCenter
+setupTickerGridColumn 0, TickerGridColumns.bidSize, TickerGridColumnWidths.BidSizeWidth, "Bid size", False, TWControls10.AlignmentSettings.TwGridAlignCenterCenter
+setupTickerGridColumn 0, TickerGridColumns.bid, TickerGridColumnWidths.BidWidth, "Bid", False, TWControls10.AlignmentSettings.TwGridAlignCenterCenter
+setupTickerGridColumn 0, TickerGridColumns.ask, TickerGridColumnWidths.AskWidth, "Ask", False, TWControls10.AlignmentSettings.TwGridAlignCenterCenter
+setupTickerGridColumn 0, TickerGridColumns.AskSize, TickerGridColumnWidths.AskSizeWidth, "Ask size", False, TWControls10.AlignmentSettings.TwGridAlignCenterCenter
+setupTickerGridColumn 0, TickerGridColumns.trade, TickerGridColumnWidths.TradeWidth, "Last", False, TWControls10.AlignmentSettings.TwGridAlignCenterCenter
+setupTickerGridColumn 0, TickerGridColumns.TradeSize, TickerGridColumnWidths.TradeSIzeWidth, "Last size", False, TWControls10.AlignmentSettings.TwGridAlignCenterCenter
+setupTickerGridColumn 0, TickerGridColumns.volume, TickerGridColumnWidths.VolumeWidth, "Volume", False, TWControls10.AlignmentSettings.TwGridAlignCenterCenter
+setupTickerGridColumn 0, TickerGridColumns.Change, TickerGridColumnWidths.ChangeWidth, "Chg", False, TWControls10.AlignmentSettings.TwGridAlignCenterCenter
+setupTickerGridColumn 0, TickerGridColumns.ChangePercent, TickerGridColumnWidths.ChangePercentWidth, "Chg %", False, TWControls10.AlignmentSettings.TwGridAlignCenterCenter
+setupTickerGridColumn 0, TickerGridColumns.highPrice, TickerGridColumnWidths.highWidth, "High", False, TWControls10.AlignmentSettings.TwGridAlignCenterCenter
+setupTickerGridColumn 0, TickerGridColumns.lowPrice, TickerGridColumnWidths.LowWidth, "Low", False, TWControls10.AlignmentSettings.TwGridAlignCenterCenter
+setupTickerGridColumn 0, TickerGridColumns.closePrice, TickerGridColumnWidths.CloseWidth, "Close", False, TWControls10.AlignmentSettings.TwGridAlignCenterCenter
+setupTickerGridColumn 0, TickerGridColumns.openInterest, TickerGridColumnWidths.openInterestWidth, "Open interest", False, TWControls10.AlignmentSettings.TwGridAlignCenterCenter
+setupTickerGridColumn 0, TickerGridColumns.Description, TickerGridColumnWidths.DescriptionWidth, "Description", True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
+setupTickerGridColumn 0, TickerGridColumns.symbol, TickerGridColumnWidths.SymbolWidth, "Symbol", True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
+setupTickerGridColumn 0, TickerGridColumns.sectype, TickerGridColumnWidths.SecTypeWidth, "Sec Type", True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
+setupTickerGridColumn 0, TickerGridColumns.expiry, TickerGridColumnWidths.ExpiryWidth, "Expiry", True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
+setupTickerGridColumn 0, TickerGridColumns.exchange, TickerGridColumnWidths.ExchangeWidth, "Exchange", True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
+setupTickerGridColumn 0, TickerGridColumns.OptionRight, TickerGridColumnWidths.OptionRightWidth, "Right", True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
+setupTickerGridColumn 0, TickerGridColumns.strike, TickerGridColumnWidths.StrikeWidth, "Strike", False, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
 
 setGridRowBackColors 1
 End Sub
@@ -772,10 +772,11 @@ End Sub
 Private Sub setupSummaryTickerGrid()
 With TickerGrid
     .AllowBigSelection = True
-    .AllowUserResizing = flexResizeBoth
-    .FillStyle = flexFillRepeat
-    .FocusRect = flexFocusNone
-    .HighLight = flexHighlightNever
+    .AllowUserResizing = TwGridResizeBoth
+    .RowSizingMode = TwGridRowSizeAll
+    .FillStyle = TwGridFillRepeat
+    .FocusRect = TwGridFocusNone
+    .HighLight = TwGridHighlightNever
     
     .Cols = 2
     .Rows = GridRowsInitial
@@ -783,18 +784,18 @@ With TickerGrid
     .FixedCols = 1
 End With
     
-setupTickerGridColumn 0, TickerGridSummaryColumns.Selector, TickerGridSummaryColumnWidths.SelectorWidth, "", True, AlignmentSettings.flexAlignLeftCenter
-setupTickerGridColumn 0, TickerGridSummaryColumns.TickerName, TickerGridSummaryColumnWidths.NameWidth, "Name", True, AlignmentSettings.flexAlignLeftCenter
-setupTickerGridColumn 0, TickerGridSummaryColumns.bidSize, TickerGridSummaryColumnWidths.BidSizeWidth, "Bid size", False, AlignmentSettings.flexAlignLeftCenter
-setupTickerGridColumn 0, TickerGridSummaryColumns.bid, TickerGridSummaryColumnWidths.BidWidth, "Bid", False, AlignmentSettings.flexAlignLeftCenter
-setupTickerGridColumn 0, TickerGridSummaryColumns.ask, TickerGridSummaryColumnWidths.AskWidth, "Ask", False, AlignmentSettings.flexAlignLeftCenter
-setupTickerGridColumn 0, TickerGridSummaryColumns.AskSize, TickerGridSummaryColumnWidths.AskSizeWidth, "Ask size", False, AlignmentSettings.flexAlignLeftCenter
-setupTickerGridColumn 0, TickerGridSummaryColumns.trade, TickerGridSummaryColumnWidths.TradeWidth, "Last", False, AlignmentSettings.flexAlignLeftCenter
-setupTickerGridColumn 0, TickerGridSummaryColumns.TradeSize, TickerGridSummaryColumnWidths.TradeSIzeWidth, "Last size", False, AlignmentSettings.flexAlignLeftCenter
-setupTickerGridColumn 0, TickerGridSummaryColumns.volume, TickerGridSummaryColumnWidths.VolumeWidth, "Volume", False, AlignmentSettings.flexAlignLeftCenter
-setupTickerGridColumn 0, TickerGridSummaryColumns.Change, TickerGridSummaryColumnWidths.ChangeWidth, "Change", False, AlignmentSettings.flexAlignLeftCenter
-setupTickerGridColumn 0, TickerGridSummaryColumns.ChangePercent, TickerGridSummaryColumnWidths.ChangePercentWidth, "Change %", False, AlignmentSettings.flexAlignLeftCenter
-setupTickerGridColumn 0, TickerGridSummaryColumns.openInterest, TickerGridSummaryColumnWidths.openInterestWidth, "Open interest", False, AlignmentSettings.flexAlignLeftCenter
+setupTickerGridColumn 0, TickerGridSummaryColumns.Selector, TickerGridSummaryColumnWidths.SelectorWidth, "", True, TWControls10.AlignmentSettings.TwGridAlignCenterBottom
+setupTickerGridColumn 0, TickerGridSummaryColumns.TickerName, TickerGridSummaryColumnWidths.NameWidth, "Name", True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
+setupTickerGridColumn 0, TickerGridSummaryColumns.bidSize, TickerGridSummaryColumnWidths.BidSizeWidth, "Bid size", False, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
+setupTickerGridColumn 0, TickerGridSummaryColumns.bid, TickerGridSummaryColumnWidths.BidWidth, "Bid", False, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
+setupTickerGridColumn 0, TickerGridSummaryColumns.ask, TickerGridSummaryColumnWidths.AskWidth, "Ask", False, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
+setupTickerGridColumn 0, TickerGridSummaryColumns.AskSize, TickerGridSummaryColumnWidths.AskSizeWidth, "Ask size", False, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
+setupTickerGridColumn 0, TickerGridSummaryColumns.trade, TickerGridSummaryColumnWidths.TradeWidth, "Last", False, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
+setupTickerGridColumn 0, TickerGridSummaryColumns.TradeSize, TickerGridSummaryColumnWidths.TradeSIzeWidth, "Last size", False, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
+setupTickerGridColumn 0, TickerGridSummaryColumns.volume, TickerGridSummaryColumnWidths.VolumeWidth, "Volume", False, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
+setupTickerGridColumn 0, TickerGridSummaryColumns.Change, TickerGridSummaryColumnWidths.ChangeWidth, "Change", False, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
+setupTickerGridColumn 0, TickerGridSummaryColumns.ChangePercent, TickerGridSummaryColumnWidths.ChangePercentWidth, "Change %", False, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
+setupTickerGridColumn 0, TickerGridSummaryColumns.openInterest, TickerGridSummaryColumnWidths.openInterestWidth, "Open interest", False, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
 
 setGridRowBackColors 1
 End Sub
@@ -805,7 +806,7 @@ Private Sub setupTickerGridColumn( _
                 ByVal columnWidth As Single, _
                 ByVal columnHeader As String, _
                 ByVal isLetters As Boolean, _
-                ByVal align As AlignmentSettings)
+                ByVal align As TWControls10.AlignmentSettings)
     
 Dim lColumnWidth As Long
 
