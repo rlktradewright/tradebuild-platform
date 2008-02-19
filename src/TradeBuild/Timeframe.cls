@@ -490,7 +490,7 @@ ElseIf mNumberOfBarsToFetch = 0 And _
 Then
     mHistoricDataLoaded = True
     mIsHistorical = True
-ElseIf mFromTime <> 0 And mToTime <> 0 _
+ElseIf mFromTime <> 0 Or mToTime <> 0 _
 Then
     mIsHistorical = True
 End If
