@@ -169,6 +169,30 @@ Public Sub addCollectionChangeListener( _
 mChangeListeners.add value
 End Sub
 
+''
+' Adds a timeframe of a specified length and fetches historical data for
+' a specified period.
+'
+' @return
+'   A reference to the new <code>Timeframe</code> object.
+' @param timePeriod
+'   The bar length for this timeframe.
+' @param timePeriodUnit
+'   The unit in which this timeframe is measured.
+' @param key
+'   A unique identifier for this timeframe. This may be left blank, in which
+'   case a unique key is allocated by the system.
+' @param numberOfBarsToFetch
+'   The maximum number of bars of historical data to be fetched.
+' @param fromTime
+'   The earliest time for which historical data is to be fetched. This is specified
+'   in local time, NOT the timezone for the exchange.
+' @param fromTime
+'   The latest time for which historical data is to be fetched. This is specified
+'   in local time, NOT the timezone for the exchange.
+' @see
+'
+'@/
 Public Function addHistorical( _
                 ByVal TimePeriod As Long, _
                 ByVal timePeriodUnit As TimePeriodUnits, _
