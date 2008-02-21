@@ -145,7 +145,7 @@ End Sub
 '@================================================================================
 
 Friend Sub startData( _
-                ByVal spec As contractSpecifier, _
+                ByVal spec As ContractSpecifier, _
                 ByVal fromDate As Date, _
                 ByVal toDate As Date, _
                 ByVal number As Long, _
@@ -211,84 +211,4 @@ gCon.writeString CStr(sv.Value)
 gCon.writeString ","
 gCon.writeLine mBar.tickVolume
 End Sub
-
-Private Sub outputPrice( _
-        ByRef ev As QuoteEvent, _
-        ByVal tickType As String)
-gCon.writeString FormatTimestamp(mTicker.TimeStamp, TimestampDateAndTimeISO8601)
-gCon.writeString ","
-gCon.writeString tickType
-gCon.writeString ","
-gCon.writeString ev.priceString
-gCon.writeString ","
-
-Select Case ev.priceChange
-Case ValueChanges.ValueChangeDown
-    gCon.writeString "PRICEDOWN"
-Case ValueChanges.ValueChangeUp
-    gCon.writeString "PRICEUP"
-Case ValueChanges.ValueChangeNone
-    gCon.writeString "PRICESAME"
-End Select
-
-gCon.writeLine ""
-End Sub
-
-Private Sub outputPriceAndSize( _
-        ByRef ev As QuoteEvent, _
-        ByVal tickType As String)
-gCon.writeString FormatTimestamp(mTicker.TimeStamp, TimestampDateAndTimeISO8601)
-gCon.writeString ","
-gCon.writeString tickType
-gCon.writeString ","
-gCon.writeString ev.priceString
-gCon.writeString ","
-gCon.writeString CStr(ev.Size)
-gCon.writeString ","
-
-Select Case ev.priceChange
-Case ValueChanges.ValueChangeDown
-    gCon.writeString "PRICEDOWN"
-Case ValueChanges.ValueChangeUp
-    gCon.writeString "PRICEUP"
-Case ValueChanges.ValueChangeNone
-    gCon.writeString "PRICESAME"
-End Select
-
-gCon.writeString ","
-
-Select Case ev.sizeChange
-Case ValueChanges.ValueChangeDown
-    gCon.writeString "SIZEDOWN"
-Case ValueChanges.ValueChangeUp
-    gCon.writeString "SIZEUP"
-Case ValueChanges.ValueChangeNone
-    gCon.writeString "SIZESAME"
-End Select
-
-gCon.writeLine ""
-End Sub
-
-Private Sub outputSize( _
-        ByRef ev As QuoteEvent, _
-        ByVal tickType As String)
-gCon.writeString FormatTimestamp(mTicker.TimeStamp, TimestampDateAndTimeISO8601)
-gCon.writeString ","
-gCon.writeString tickType
-gCon.writeString ","
-gCon.writeString CStr(ev.Size)
-gCon.writeString ","
-
-Select Case ev.sizeChange
-Case ValueChanges.ValueChangeDown
-    gCon.writeString "SIZEDOWN"
-Case ValueChanges.ValueChangeUp
-    gCon.writeString "SIZEUP"
-Case ValueChanges.ValueChangeNone
-    gCon.writeString "SIZESAME"
-End Select
-
-gCon.writeLine ""
-End Sub
-
 
