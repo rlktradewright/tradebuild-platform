@@ -187,6 +187,7 @@ Private mPrevTradeSize              As Long
 Private mPrevVolume                 As Long
 Private mPrevOpenInterest           As Long
 Private mAccumulatedVolume          As Long
+Private mPrevSessionAccumulatedVolume   As Long
 Private mVolumeCorrectionIncrement  As Long
 Private mFirstVolumeReceived        As Boolean
 
@@ -1015,7 +1016,22 @@ End If
 
 failpoint = 100
 
-' write the uncorrected size to the tickfile
+If Not mFirstVolumeReceived Then
+    ' this is the start of a new session, but there may be a volume
+    ' tick including the accumulated volume for the previous session
+    ' before the first true volume tick for the new session
+    If mPrevSessionAccumulatedVolume = 0 Or _
+        size < mPrevSessionAccumulatedVolume _
+    Then
+        ' this is the first true volume tick for the new session
+        mFirstVolumeReceived = True
+    Else
+        ' correct this volume figure
+        size = size - mPrevSessionAccumulatedVolume
+    End If
+End If
+
+' write the unadjusted size to the tickfile
 If mWriteTickData Then mTickWriter.writeVolume timestamp, size
 
 ' timestamp = convertTime(timestamp)
@@ -1035,20 +1051,7 @@ End If
 
 failpoint = 300
 
-If Not mFirstVolumeReceived Then
-    ' this is the start of a new session, but there may be a volume
-    ' tick showing the accumulated volume for the previous session
-    ' before the first true volume tick for the new session
-    If mAccumulatedVolume = 0 Or _
-        size + mVolumeCorrectionIncrement < mAccumulatedVolume _
-    Then
-        ' this is the first true volume tick for the new session
-        mFirstVolumeReceived = True
-        mAccumulatedVolume = size
-        mVolumeCorrectionIncrement = 0
-        notifyVolume timestamp, size
-    End If
-ElseIf size + mVolumeCorrectionIncrement < mAccumulatedVolume Then
+If size + mVolumeCorrectionIncrement < mAccumulatedVolume Then
 
     failpoint = 400
 
@@ -1220,7 +1223,7 @@ mInEventHandler = True
 If mContracts.Count <> 1 Then
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyContractSpecifierAmbiguous
-    ev.eventMessage = "Ambiguous contract specification: " & mContracts.contractSpecifier.ToString
+    ev.eventMessage = "Ambiguous contract specification: " & mContracts.contractSpecifier.toString
     RaiseEvent Notification(ev)
     mTickers.notify ev
     StopTicker
@@ -1258,6 +1261,9 @@ End Sub
 
 Private Sub mSession_SessionStarted(ev As SessionEvent)
 mFirstVolumeReceived = False
+mPrevSessionAccumulatedVolume = mAccumulatedVolume
+mAccumulatedVolume = 0
+mVolumeCorrectionIncrement = 0
 RaiseEvent tradingSessionStarted
 End Sub
 
@@ -1784,6 +1790,10 @@ mLoadOnly = True
 State = TickerStates.TickerStateStarting
 
 Set mContracts = gTB.loadContracts(pContractSpecifier)
+End Sub
+
+Friend Sub notifyCurrentVolume()
+mStudyManager.notifyInput mVolumeInputHandle, mVolume, timestamp
 End Sub
 
 Public Function parsePrice( _
@@ -2599,13 +2609,14 @@ If size <> 0 Then
             size
 End If
 
-If mFirstVolumeReceived Then
+If Not mNoVolumeAdjustments Then
     mAccumulatedVolume = mAccumulatedVolume + size
     notifyVolume timestamp, mAccumulatedVolume
 End If
 End Sub
 
 Private Sub notifyVolume(ByVal timestamp As Date, ByVal size As Long)
+Static firstVolumeNotified As Boolean
 mVolume = size
 
 Dim i As Long
@@ -2615,7 +2626,16 @@ For i = 1 To mDataConsumers.Count
     consumer.volume timestamp, size
 Next
 
-mStudyManager.notifyInput mVolumeInputHandle, size, timestamp
+If Not firstVolumeNotified Then
+    ' send an initial volume of 1, because the first volume notification
+    ' is used by the bar studies to set the accum volume at end of
+    ' previous bar
+    mStudyManager.notifyInput mVolumeInputHandle, 1, timestamp
+    mStudyManager.notifyInput mVolumeInputHandle, size + 1, timestamp
+    firstVolumeNotified = True
+Else
+    mStudyManager.notifyInput mVolumeInputHandle, size, timestamp
+End If
 
 fireVolume size
 End Sub
@@ -2708,7 +2728,7 @@ Else
     If mContract.expiryDate <> 0 And mContract.expiryDate < Date Then
         Set ev.source = Me
         ev.eventCode = ApiNotifyCodes.ApiNotifyContractExpired
-        ev.eventMessage = "Contract has expired: " & mContracts.contractSpecifier.ToString
+        ev.eventMessage = "Contract has expired: " & mContracts.contractSpecifier.toString
         RaiseEvent Notification(ev)
         mTickers.notify ev
         StopTicker
@@ -2750,7 +2770,7 @@ If mContract Is Nothing Then
     ' we don't yet have the contract details, so we can't generate a proper
     ' name for this source, so do the best we can
     Set contractSpec = mContracts.contractSpecifier
-    sourceName = contractSpec.ToString
+    sourceName = contractSpec.toString
         
     Set mInputStudy = mStudyManager.addSource(sourceName)
     mBidInputHandle = mStudyManager.addInput(mInputStudy, _

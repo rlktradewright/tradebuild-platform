@@ -105,54 +105,54 @@ End Enum
 
 Public gTB As TradeBuildAPI
 
-Public gLogLogger As Logger
-Public gSpLogLogger As Logger
+Private mLogLogger As Logger
+Private mSpLogLogger As Logger
 
-Public gTraceLogger As Logger
+Private mTraceLogger As Logger
 
-Public gDebugLogger As Logger
+Private mDebugLogger As Logger
 
-Public gProfitProfileLogger As Logger
+Private mProfitProfileLogger As Logger
 
-Public gDummyProfitProfileLogger As Logger
+Private mDummyProfitProfileLogger As Logger
 
-Public gMoneyManagementLogger As Logger
+Private mMoneyManagementLogger As Logger
 
-Public gOrderPlexProfileStructLogger As Logger
+Private mOrderPlexProfileStructLogger As Logger
 
-Public gDummyOrderPlexProfileStructLogger As Logger
+Private mDummyOrderPlexProfileStructLogger As Logger
 
-Public gOrderPlexProfileStringLogger As Logger
+Private mOrderPlexProfileStringLogger As Logger
 
-Public gDummyOrderPlexProfileStringLogger As Logger
+Private mDummyOrderPlexProfileStringLogger As Logger
 
-Public gOrderLogger As Logger
+Private mOrderLogger As Logger
 
-Public gDummyOrderLogger As Logger
+Private mDummyOrderLogger As Logger
 
-Public gPositionLogger As Logger
+Private mPositionLogger As Logger
 
-Public gDummyPositionLogger As Logger
+Private mDummyPositionLogger As Logger
 
-Public gTradeProfileLogger As Logger
+Private mTradeProfileLogger As Logger
 
-Public gDummyTradeProfileLogger As Logger
+Private mDummyTradeProfileLogger As Logger
 
-Public gProfitLogger As Logger
+Private mProfitLogger As Logger
 
-Public gDummyProfitLogger As Logger
+Private mDummyProfitLogger As Logger
 
-Public gDrawdownlogger  As Logger
+Private mDrawdownlogger  As Logger
 
-Public gDummyDrawdownlogger As Logger
+Private mDummyDrawdownlogger As Logger
 
-Public gMaxProfitlogger As Logger
+Private mMaxProfitlogger As Logger
 
-Public gDummyMaxProfitlogger As Logger
+Private mDummyMaxProfitlogger As Logger
 
-Public gOrderDetaillogger As Logger
+Private mOrderDetaillogger As Logger
 
-Public gOrderDetailDummylogger As Logger
+Private mDummyOrderDetaillogger As Logger
 
 '@================================================================================
 ' Procedures
@@ -519,4 +519,178 @@ Else
 End If
 End Function
 
+Public Property Get gLogLogger() As Logger
+If mLogLogger Is Nothing Then
+    Set mLogLogger = GetLogger("log")
+End If
+Set gLogLogger = mLogLogger
+End Property
+
+Public Property Get gSpLogLogger() As Logger
+If mSpLogLogger Is Nothing Then
+    Set mSpLogLogger = GetLogger("log.serviceprovider")
+End If
+Set gSpLogLogger = mSpLogLogger
+End Property
+
+Public Property Get gTraceLogger() As Logger
+If mTraceLogger Is Nothing Then
+    Set mTraceLogger = GetLogger("trace")
+End If
+Set gTraceLogger = mTraceLogger
+End Property
+
+Public Property Get gDebugLogger() As Logger
+If mDebugLogger Is Nothing Then
+    Set mDebugLogger = GetLogger("debug")
+End If
+Set gDebugLogger = mDebugLogger
+End Property
+
+Public Property Get gProfitProfileLogger() As Logger
+If mProfitProfileLogger Is Nothing Then
+    Set mProfitProfileLogger = GetLogger("tradebuild.ProfitProfile")
+End If
+Set gProfitProfileLogger = mProfitProfileLogger
+End Property
+
+Public Property Get gDummyProfitProfileLogger() As Logger
+If mDummyProfitProfileLogger Is Nothing Then
+    Set mDummyProfitProfileLogger = GetLogger("tradebuild.dummyProfitProfile")
+End If
+Set gDummyProfitProfileLogger = mDummyProfitProfileLogger
+End Property
+
+Public Property Get gMoneyManagementLogger() As Logger
+If mMoneyManagementLogger Is Nothing Then
+    Set mMoneyManagementLogger = GetLogger("tradebuild.MoneyManagement")
+End If
+Set gMoneyManagementLogger = mMoneyManagementLogger
+End Property
+
+Public Property Get gOrderPlexProfileStructLogger() As Logger
+If mOrderPlexProfileStructLogger Is Nothing Then
+    Set mOrderPlexProfileStructLogger = GetLogger("tradebuild.gOrderPlexProfileStruct")
+End If
+Set gOrderPlexProfileStructLogger = mOrderPlexProfileStructLogger
+End Property
+
+Public Property Get gDummyOrderPlexProfileStructLogger() As Logger
+If mDummyOrderPlexProfileStructLogger Is Nothing Then
+    Set mDummyOrderPlexProfileStructLogger = GetLogger("tradebuild.DummyOrderPlexProfileStruct")
+End If
+Set gDummyOrderPlexProfileStructLogger = mDummyOrderPlexProfileStructLogger
+End Property
+
+Public Property Get gOrderPlexProfileStringLogger() As Logger
+If mOrderPlexProfileStringLogger Is Nothing Then
+    Set mOrderPlexProfileStringLogger = GetLogger("tradebuild.OrderPlexProfileString")
+End If
+Set gOrderPlexProfileStringLogger = mOrderPlexProfileStringLogger
+End Property
+
+Public Property Get gDummyOrderPlexProfileStringLogger() As Logger
+If mDummyOrderPlexProfileStringLogger Is Nothing Then
+    Set mDummyOrderPlexProfileStringLogger = GetLogger("tradebuild.DummyOrderPlexProfileString")
+End If
+Set gDummyOrderPlexProfileStringLogger = mDummyOrderPlexProfileStringLogger
+End Property
+
+Public Property Get gOrderLogger() As Logger
+If mOrderLogger Is Nothing Then
+    Set mOrderLogger = GetLogger("tradebuild.order")
+End If
+Set gOrderLogger = mOrderLogger
+End Property
+
+Public Property Get gDummyOrderLogger() As Logger
+If mDummyOrderLogger Is Nothing Then
+    Set mDummyOrderLogger = GetLogger("tradebuild.dummyorder")
+End If
+Set gDummyOrderLogger = mDummyOrderLogger
+End Property
+
+Public Property Get gPositionLogger() As Logger
+If mPositionLogger Is Nothing Then
+    Set mPositionLogger = GetLogger("tradebuild.position")
+End If
+Set gPositionLogger = mPositionLogger
+End Property
+
+Public Property Get gDummyPositionLogger() As Logger
+If mDummyPositionLogger Is Nothing Then
+    Set mDummyPositionLogger = GetLogger("tradebuild.dummyposition")
+End If
+Set gDummyPositionLogger = mDummyPositionLogger
+End Property
+
+Public Property Get gTradeProfileLogger() As Logger
+If mTradeProfileLogger Is Nothing Then
+    Set mTradeProfileLogger = GetLogger("tradebuild.TradeProfile")
+End If
+Set gTradeProfileLogger = mTradeProfileLogger
+End Property
+
+Public Property Get gDummyTradeProfileLogger() As Logger
+If mDummyTradeProfileLogger Is Nothing Then
+    Set mDummyTradeProfileLogger = GetLogger("tradebuild.dummyTradeProfile")
+End If
+Set gDummyTradeProfileLogger = mDummyTradeProfileLogger
+End Property
+
+Public Property Get gProfitLogger() As Logger
+If mProfitLogger Is Nothing Then
+    Set mProfitLogger = GetLogger("tradebuild.profit")
+End If
+Set gProfitLogger = mProfitLogger
+End Property
+
+Public Property Get gDummyProfitLogger() As Logger
+If mDummyProfitLogger Is Nothing Then
+    Set mDummyProfitLogger = GetLogger("tradebuild.dummyprofit")
+End If
+Set gDummyProfitLogger = mDummyProfitLogger
+End Property
+
+Public Property Get gDrawdownlogger() As Logger
+If mDrawdownlogger Is Nothing Then
+    Set mDrawdownlogger = GetLogger("tradebuild.drawdown")
+End If
+Set gDrawdownlogger = mDrawdownlogger
+End Property
+
+Public Property Get gDummyDrawdownlogger() As Logger
+If mDummyDrawdownlogger Is Nothing Then
+    Set mDummyDrawdownlogger = GetLogger("tradebuild.dummydrawdown")
+End If
+Set gDummyDrawdownlogger = mDummyDrawdownlogger
+End Property
+
+Public Property Get gMaxProfitlogger() As Logger
+If mMaxProfitlogger Is Nothing Then
+    Set mMaxProfitlogger = GetLogger("tradebuild.MaxProfit")
+End If
+Set gMaxProfitlogger = mMaxProfitlogger
+End Property
+
+Public Property Get gDummyMaxProfitlogger() As Logger
+If mDummyMaxProfitlogger Is Nothing Then
+    Set mDummyMaxProfitlogger = GetLogger("tradebuild.DummyMaxProfit")
+End If
+Set gDummyMaxProfitlogger = mDummyMaxProfitlogger
+End Property
+
+Public Property Get gOrderDetaillogger() As Logger
+If mOrderDetaillogger Is Nothing Then
+    Set mOrderDetaillogger = GetLogger("tradebuild.orderdetail")
+End If
+Set gOrderDetaillogger = mOrderDetaillogger
+End Property
+
+Public Property Get gDummyOrderDetailLogger() As Logger
+If mDummyOrderDetaillogger Is Nothing Then
+    Set mDummyOrderDetaillogger = GetLogger("tradebuild.dummyorderdetail")
+End If
+Set gDummyOrderDetailLogger = mDummyOrderDetaillogger
+End Property
 

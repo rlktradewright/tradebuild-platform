@@ -359,7 +359,7 @@ mState = TickfileStateCodes.TickfilePaused
 'gPauseTime
 End Sub
 
-Friend Sub ReplayTickfile(tfSpec As TickfileSpecifier)
+Friend Sub ReplayTickfile(ByVal tfSpec As TickfileSpecifier)
 mReader.ReplayTickfile tfSpec
 End Sub
 
@@ -477,6 +477,7 @@ Loop
 If mCurrentTick.UnProcessed And _
     Not mCurrentTick.Timed _
 Then
+    Set mTimer = CreateIntervalTimer(1)
     mTimer.StartTimer
 End If
 

@@ -608,7 +608,7 @@ End If
 End Sub
 
 Public Sub loadServiceProviderConfiguration( _
-                value As ConfigItem)
+                ByVal value As ConfigItem)
 Set mConfig = value
 
 RemoveAll

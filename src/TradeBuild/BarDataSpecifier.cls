@@ -175,6 +175,17 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Function toString() As String
+toString = _
+    "    Number of bars: " & mNumberOfBars & vbCrLf & _
+    "    Bar length:     " & mBarLength & vbCrLf & _
+    "    Bar units:      " & TimePeriodUnitsToString(mBarLengthUnits) & vbCrLf & _
+    "    From:           " & FormatTimestamp(mFromDate, TimestampDateAndTimeISO8601) & vbCrLf & _
+    "    To:             " & FormatTimestamp(mToDate, TimestampDateAndTimeISO8601) & vbCrLf & _
+    "    Session only:   " & IIf(mIncludeBarsOutsideSession, "False", "True") & vbCrLf & _
+    "    Contract:       " & mContract.toString
+End Function
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================

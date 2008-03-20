@@ -597,53 +597,12 @@ TargetOrderTypeToString = gTargetOrderTypeToString(value)
 End Function
 
 Public Function TickfileSpecifierToString( _
-                TickfileSpec As TickfileSpecifier) As String
+                ByVal TickfileSpec As TickfileSpecifier) As String
 TickfileSpecifierToString = gTickfileSpecifierToString(TickfileSpec)
 End Function
 
 Public Property Get TradeBuildAPI() As TradeBuildAPI
-If gTB Is Nothing Then
-    Set gTB = New TradeBuildAPI
-    
-    Set gLogLogger = GetLogger("log")
-    Set gSpLogLogger = GetLogger("log.serviceprovider")
-    
-    Set gTraceLogger = GetLogger("trace")
-    
-    Set gDebugLogger = GetLogger("debug")
-    
-    GetLogger("tradebuild").logToParent = False
-    
-    Set gProfitProfileLogger = GetLogger("tradebuild.ProfitProfile")
-    
-    Set gDummyProfitProfileLogger = GetLogger("tradebuild.dummyProfitProfile")
-    
-    Set gMoneyManagementLogger = GetLogger("tradebuild.MoneyManagement")
-    
-    Set gOrderPlexProfileStructLogger = GetLogger("tradebuild.gOrderPlexProfileStruct")
-    
-    Set gDummyOrderPlexProfileStructLogger = GetLogger("tradebuild.DummyOrderPlexProfileStruct")
-    
-    Set gOrderPlexProfileStringLogger = GetLogger("tradebuild.OrderPlexProfileString")
-    
-    Set gDummyOrderPlexProfileStringLogger = GetLogger("tradebuild.DummyOrderPlexProfileString")
-    
-    Set gOrderLogger = GetLogger("tradebuild.order")
-    
-    Set gDummyOrderLogger = GetLogger("tradebuild.dummyorder")
-    
-    Set gPositionLogger = GetLogger("tradebuild.position")
-    
-    Set gDummyPositionLogger = GetLogger("tradebuild.dummyposition")
-    
-    Set gTradeProfileLogger = GetLogger("tradebuild.TradeProfile")
-    
-    Set gDummyTradeProfileLogger = GetLogger("tradebuild.dummyTradeProfile")
-    
-    Set gProfitLogger = GetLogger("tradebuild.profit")
-    
-    Set gDummyProfitLogger = GetLogger("tradebuild.dummyprofit")
-End If
+If gTB Is Nothing Then Set gTB = New TradeBuildAPI
 Set TradeBuildAPI = gTB
 End Property
 

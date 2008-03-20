@@ -446,7 +446,7 @@ Clear
 Set mTickerRef = Nothing
 End Sub
 
-Friend Sub Initialise( _
+Friend Sub initialise( _
                 ByVal pContract As Contract, _
                 ByVal key As String, _
                 ByVal pTicker As Ticker, _
@@ -608,6 +608,8 @@ If mBarReader Is Nothing Then
         End If
         barSpecifier.NumberOfBars = mNumberOfBarsToFetch
         barSpecifier.includeBarsOutsideSession = mIncludeBarsOutsideSession
+        Debug.Print "Fetching bars:" & vbCrLf & _
+                    barSpecifier.toString
         mBarReader.FetchBars barSpecifier
     End If
     
@@ -672,7 +674,7 @@ RaiseEvent stateChange(ev)
 End Sub
 
 Private Sub ProcessHistoricBar()
-
+Static firstVolumeSent As Boolean
 mHistoricBarPending = False
 
 With mHistoricBar
@@ -688,8 +690,17 @@ With mHistoricBar
     If .closePrice <> 0 Then studyMgr.notifyInput mTradeInputHandle, .closePrice, .timestamp
     
     mAccumulatedVolume = mAccumulatedVolume + .volume
-    studyMgr.notifyInput mVolumeInputHandle, mAccumulatedVolume, .timestamp
-    
+    If Not firstVolumeSent Then
+        ' send an initial volume of 1, because the first volume notification
+        ' is used by the bar studies to set the accum volume at end of
+        ' previous bar
+        studyMgr.notifyInput mVolumeInputHandle, 1, .timestamp
+        studyMgr.notifyInput mVolumeInputHandle, mAccumulatedVolume + 1, .timestamp
+        firstVolumeSent = True
+    Else
+        studyMgr.notifyInput mVolumeInputHandle, mAccumulatedVolume, .timestamp
+    End If
+        
     studyMgr.notifyInput mTickVolumeInputHandle, .tickVolume, .timestamp
     mCurrTradeBarPrevTickvol = .tickVolume
     
@@ -862,7 +873,7 @@ If mContract Is Nothing Then
     sourceName = generateGUIDString
     TickSize = 0
 Else
-    sourceName = mContract.specifier.ToString & mKey & "(historical data)"
+    sourceName = mContract.specifier.toString & mKey & "(historical data)"
     TickSize = mContract.TickSize
 End If
 
@@ -929,6 +940,10 @@ inputValueNames(1) = VolumeInputName
 
 Set lStudy = mTradeBarsStudy
 studyMgr.moveStudy lStudy, lInputStudy, inputValueNames
+
+' now make sure any volume studies get the correct
+' current volume value
+tickr.notifyCurrentVolume
 
 If mWriteBidAndAskBars Then
     ReDim inputValueNames(0) As String

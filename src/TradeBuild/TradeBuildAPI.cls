@@ -125,18 +125,16 @@ Public Function GenerateTickfileSpecifiers( _
                 Optional ByVal completeSessionsOnly As Boolean = True, _
                 Optional ByVal useExchangeTimezone As Boolean = True, _
                 Optional ByVal customSessionStartTime As Date, _
-                Optional ByVal customSessionEndTime As Date) As TickfileSpecifier()
+                Optional ByVal customSessionEndTime As Date) As TickfileSpecifiers
 Dim useCustomSessionTimes As Boolean
-Dim lTickfileSpecifiers() As TickfileSpecifier
+Dim lTickfileSpecifiers As New TickfileSpecifiers
+Dim tfs As TickfileSpecifier
 Dim i As Long
-Dim j As Long
 Dim lContract As Contract
 Dim lSessionBuilder As SessionBuilder
 Dim lSession As session
-Dim fromSessionStart As Date
-Dim fromSessionEnd As Date
-Dim toSessionStart As Date
-Dim toSessionEnd As Date
+Dim fromSessionTimes As SessionTimes
+Dim toSessionTimes As SessionTimes
 
 Dim lSecType As SecurityTypes
 Dim currContract As Contract
@@ -186,11 +184,9 @@ End If
 
 ' set the session start and end times for the starting date (in the contract's
 ' local timezone)...
-lSession.SessionTimes FromDate, _
-                    fromSessionStart, _
-                    fromSessionEnd
+fromSessionTimes = lSession.GetSessionTimes(FromDate)
 If completeSessionsOnly Then
-    replayFromDate = fromSessionStart
+    replayFromDate = fromSessionTimes.StartTime
 Else
     replayFromDate = FromDate
 End If
@@ -198,17 +194,17 @@ End If
 If ToDate <> 0 Then
     ' set the session start and end times for the ending date (in the contract's
     ' local timezone)...
-    lSession.SessionTimes ToDate, toSessionStart, toSessionEnd
+    toSessionTimes = lSession.GetSessionTimes(ToDate)
     
     If completeSessionsOnly Then
-        replayToDate = toSessionEnd
+        replayToDate = toSessionTimes.endTime
     Else
         replayToDate = ToDate
     End If
 Else
-    toSessionStart = fromSessionStart
-    toSessionEnd = fromSessionEnd
-    replayToDate = toSessionEnd
+    toSessionTimes.StartTime = fromSessionTimes.StartTime
+    toSessionTimes.endTime = fromSessionTimes.endTime
+    replayToDate = toSessionTimes.endTime
 End If
 
 ' find contract for start date ------------------------------------------------------
@@ -244,42 +240,35 @@ If completeSessionsOnly Then
     End If
 End If
 
-ReDim lTickfileSpecifiers(4) As TickfileSpecifier
-
 Dim currSessionStart As Date
-Dim thisSessionStart As Date
-Dim thisSessionEnd As Date
+Dim thisSessionTimes As SessionTimes
 
 currSessionStart = FromDate
-j = 0
+
 If completeSessionsOnly Then
     Do While currSessionStart < replayToDate
-        If j > UBound(lTickfileSpecifiers) Then
-            ReDim Preserve lTickfileSpecifiers(UBound(lTickfileSpecifiers) * 2) As TickfileSpecifier
-        End If
-        Set lTickfileSpecifiers(j) = New TickfileSpecifier
-        lTickfileSpecifiers(j).Contract = currContract
-        lTickfileSpecifiers(j).TickfileFormatID = TickfileFormatID
+        Set tfs = New TickfileSpecifier
+        lTickfileSpecifiers.add tfs
+        tfs.Contract = currContract
+        tfs.TickfileFormatID = TickfileFormatID
         
         If useCustomSessionTimes Then
-            lSession.SessionTimes currSessionStart, _
-                                    thisSessionStart, _
-                                    thisSessionEnd
-            lTickfileSpecifiers(j).FromDate = thisSessionStart
-            lTickfileSpecifiers(j).ToDate = thisSessionEnd
-            lTickfileSpecifiers(j).EntireSession = False
-            lTickfileSpecifiers(j).filename = FormatDateTime(lTickfileSpecifiers(j).FromDate, vbGeneralDate) & _
+            thisSessionTimes = lSession.GetSessionTimes(currSessionStart)
+            tfs.FromDate = thisSessionTimes.StartTime
+            tfs.ToDate = thisSessionTimes.endTime
+            tfs.EntireSession = False
+            tfs.filename = FormatDateTime(tfs.FromDate, vbGeneralDate) & _
                                         "-" & _
-                                        FormatDateTime(lTickfileSpecifiers(j).ToDate, vbGeneralDate) & _
+                                        FormatDateTime(tfs.ToDate, vbGeneralDate) & _
                                         " " & _
                                         Replace(currContract.specifier.ToString, vbCrLf, "; ")
         Else
-            lTickfileSpecifiers(j).FromDate = currSessionStart
-            lTickfileSpecifiers(j).EntireSession = True
-            lTickfileSpecifiers(j).filename = "Session " & _
-                                            FormatDateTime(DateValue(currSessionStart), vbShortDate) & _
-                                            " " & _
-                                            Replace(currContract.specifier.ToString, vbCrLf, "; ")
+            tfs.FromDate = currSessionStart
+            tfs.EntireSession = True
+            tfs.filename = "Session " & _
+                            FormatDateTime(DateValue(currSessionStart), vbShortDate) & _
+                            " " & _
+                            Replace(currContract.specifier.ToString, vbCrLf, "; ")
             
         End If
         
@@ -315,20 +304,19 @@ If completeSessionsOnly Then
             End If
         End If
         
-        j = j + 1
-    Loop
-    If j = 0 Then
+        Loop
+    If lTickfileSpecifiers.Count = 0 Then
         Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 ProjectName & "." & ModuleName & ":" & "GenerateTickfileSpecifiers", _
                 "No trading sessions in specified date range"
     End If
-    ReDim Preserve lTickfileSpecifiers(j - 1) As TickfileSpecifier
 Else
-    Set lTickfileSpecifiers(0) = New TickfileSpecifier
-    lTickfileSpecifiers(0).Contract = currContract
-    lTickfileSpecifiers(0).TickfileFormatID = TickfileFormatID
+    Set tfs = New TickfileSpecifier
+    lTickfileSpecifiers.add tfs
+    tfs.Contract = currContract
+    tfs.TickfileFormatID = TickfileFormatID
 
-    lTickfileSpecifiers(0).FromDate = FromDate
+    tfs.FromDate = FromDate
     currSessionStart = currSessionStart + 1
     Do While currSessionStart < replayToDate
         
@@ -344,24 +332,21 @@ Else
                     If DateValue(currSessionStart) <= _
                         (aContract.expiryDate - aContract.daysBeforeExpiryToSwitch) _
                     Then
-                        lTickfileSpecifiers(j).ToDate = currSessionStart
-                        lTickfileSpecifiers(j).filename = FormatDateTime(lTickfileSpecifiers(j).FromDate, vbGeneralDate) & _
+                        tfs.ToDate = currSessionStart
+                        tfs.filename = FormatDateTime(tfs.FromDate, vbGeneralDate) & _
                                                     "-" & _
-                                                    FormatDateTime(lTickfileSpecifiers(j).ToDate, vbGeneralDate) & " " & _
+                                                    FormatDateTime(tfs.ToDate, vbGeneralDate) & " " & _
                                                     Replace(currContract.specifier.ToString, vbCrLf, "; ")
                         
                         Set currContract = aContract
                         
-                        j = j + 1
-                        If j > UBound(lTickfileSpecifiers) Then
-                            ReDim Preserve lTickfileSpecifiers(UBound(lTickfileSpecifiers) * 2) As TickfileSpecifier
-                        End If
+                        Set tfs = New TickfileSpecifier
+                        lTickfileSpecifiers.add tfs
                         
-                        Set lTickfileSpecifiers(j) = New TickfileSpecifier
-                        lTickfileSpecifiers(j).Contract = currContract
-                        lTickfileSpecifiers(j).TickfileFormatID = TickfileFormatID
+                        tfs.Contract = currContract
+                        tfs.TickfileFormatID = TickfileFormatID
                     
-                        lTickfileSpecifiers(j).FromDate = currSessionStart
+                        tfs.FromDate = currSessionStart
                         Exit For
                     End If
                 Next
@@ -377,16 +362,15 @@ Else
         
     Loop
         
-    lTickfileSpecifiers(j).ToDate = replayToDate
-    lTickfileSpecifiers(j).filename = FormatDateTime(lTickfileSpecifiers(j).FromDate, vbGeneralDate) & _
+    tfs.ToDate = replayToDate
+    tfs.filename = FormatDateTime(tfs.FromDate, vbGeneralDate) & _
                                 "-" & _
-                                FormatDateTime(lTickfileSpecifiers(j).ToDate, vbGeneralDate) & " " & _
+                                FormatDateTime(tfs.ToDate, vbGeneralDate) & " " & _
                                 Replace(currContract.specifier.ToString, vbCrLf, "; ")
 
-    ReDim Preserve lTickfileSpecifiers(j) As TickfileSpecifier
 End If
 
-GenerateTickfileSpecifiers = lTickfileSpecifiers
+Set GenerateTickfileSpecifiers = lTickfileSpecifiers
 
 End Function
 
@@ -433,7 +417,7 @@ mServiceProviders.RemoveAll
 
 Set ev.source = Me
 ev.errorCode = errorCode
-ev.errorMsg = errorMessage & "( occurred in " & source & ")"
+ev.errorMessage = errorMessage & "( occurred in " & source & ")"
 RaiseEvent Error(ev)
 
 End Sub
@@ -490,7 +474,7 @@ Case VTDummyMaxProfit
 Case VTOrderDetail
     gOrderDetaillogger.Log LogLevelNormal, value, source
 Case VTOrderDetailDummy
-    gOrderDetailDummylogger.Log LogLevelNormal, value, source
+    gDummyOrderDetailLogger.Log LogLevelNormal, value, source
 End Select
 End Sub
                             

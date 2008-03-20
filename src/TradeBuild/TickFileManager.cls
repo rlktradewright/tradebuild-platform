@@ -84,7 +84,7 @@ Private mDefaultContract            As Contract
 
 Private mReader                     As TickfileReader
 
-Private mTickfileSpecifiers()       As TickfileSpecifier
+Private mTickfileSpecifiers         As TickfileSpecifiers
 Private mCurrTickfileIndex          As Long
 
 Private mTickers                    As Tickers
@@ -110,7 +110,7 @@ Attribute mProgressTimer.VB_VarHelpID = -1
 '@================================================================================
 
 Private Sub Class_Initialize()
-mCurrTickfileIndex = -1
+mCurrTickfileIndex = 0
 mReplayProgressEventFrequency = 25
 End Sub
 
@@ -294,10 +294,7 @@ firstTickFileTime = mReader.firstTickFileTime
 End Property
 
 Friend Property Get NumberOfInputTickfiles() As Long
-NumberOfInputTickfiles = -1
-On Error Resume Next
-NumberOfInputTickfiles = UBound(mTickfileSpecifiers) + 1
-If NumberOfInputTickfiles = -1 Then NumberOfInputTickfiles = 0
+NumberOfInputTickfiles = mTickfileSpecifiers.Count
 End Property
 
 Friend Property Let TickerOptions( _
@@ -374,29 +371,29 @@ Public Property Get Ticker() As Ticker
 Set Ticker = mTicker
 End Property
 
-Public Property Let TickfileSpecifier(value As TickfileSpecifier)
+Public Property Let TickfileSpecifier(ByVal value As TickfileSpecifier)
 If Not mTicker Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             "TickFileManager::(Let)TickfileSpecifiers", _
             "Tickfile is already replaying"
 End If
-ReDim mTickfileSpecifiers(0) As TickfileSpecifier
-Set mTickfileSpecifiers(0) = value
-mCurrTickfileIndex = -1
+Set mTickfileSpecifiers = New TickfileSpecifiers
+mTickfileSpecifiers.add value
+mCurrTickfileIndex = 0
 End Property
 
-Public Property Let TickfileSpecifiers(value() As TickfileSpecifier)
+Public Property Let TickfileSpecifiers(ByVal value As TickfileSpecifiers)
 If Not mTicker Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             "TickFileManager::(Let)TickfileSpecifiers", _
             "Tickfile is already replaying"
 End If
-mTickfileSpecifiers = value
-mCurrTickfileIndex = -1
+Set mTickfileSpecifiers = value
+mCurrTickfileIndex = 0
 End Property
 
-Public Property Get TickfileSpecifiers() As TickfileSpecifier()
-TickfileSpecifiers = mTickfileSpecifiers
+Public Property Get TickfileSpecifiers() As TickfileSpecifiers
+Set TickfileSpecifiers = mTickfileSpecifiers
 End Property
 
 Public Property Let TimestampAdjustmentStart(ByVal value As Double)
@@ -430,8 +427,8 @@ End Property
 '@================================================================================
 
 Public Sub ClearTickfileSpecifiers()
-Erase mTickfileSpecifiers
-mCurrTickfileIndex = -1
+mTickfileSpecifiers.Clear
+mCurrTickfileIndex = 0
 End Sub
 
 Friend Sub FinishTickfile()
@@ -458,7 +455,7 @@ If mTicker Is Nothing Or mReader Is Nothing Then
             "Tickfile is not replaying"
 End If
 RaiseEvent TickfileCompleted(mCurrTickfileIndex, _
-                            mTickfileSpecifiers(mCurrTickfileIndex).filename)
+                            mTickfileSpecifiers.item(mCurrTickfileIndex).filename)
 mTicker.StopTicker
 End Sub
 
@@ -467,7 +464,7 @@ Friend Sub StartNextTickfile()
 If mReader Is Nothing Then
     SetupNextTickfile
     If mReader Is Nothing Then
-        mCurrTickfileIndex = -1
+        mCurrTickfileIndex = 0
         mReplayInProgress = False
         RaiseEvent ReplayCompleted
         Exit Sub
@@ -484,7 +481,7 @@ End Sub
 Public Sub StartReplay()
 If Not mReplayInProgress Then
     ' reset to play the first tickfile
-    mCurrTickfileIndex = -1
+    mCurrTickfileIndex = 0
     mReplayInProgress = True
 End If
 StartNextTickfile
@@ -494,8 +491,8 @@ Public Sub stopReplay()
 If Not mReplayInProgress Then Exit Sub
 mReplayInProgress = False
 RaiseEvent TickfileCompleted(mCurrTickfileIndex, _
-                            mTickfileSpecifiers(mCurrTickfileIndex).filename)
-mCurrTickfileIndex = UBound(mTickfileSpecifiers)
+                            mTickfileSpecifiers.item(mCurrTickfileIndex).filename)
+mCurrTickfileIndex = mTickfileSpecifiers.Count + 1
 mTicker.StopTicker
 RaiseEvent ReplayCompleted
 End Sub
@@ -505,8 +502,8 @@ End Sub
 '@================================================================================
 
 Private Sub playOrNot( _
-                            TickfileSpec As TickfileSpecifier, _
-                            ByVal TickfileSizeBytes As Long)
+                ByVal TickfileSpec As TickfileSpecifier, _
+                ByVal TickfileSizeBytes As Long)
 
 Dim continueMode As ReplayContinueModes
 
@@ -522,7 +519,7 @@ RaiseEvent QueryReplayNextTickfile( _
 
 Select Case continueMode
 Case ReplayContinueModes.ReplayCancelAllFiles
-    mCurrTickfileIndex = -1
+    mCurrTickfileIndex = 0
     mReader.stopReplay
 Case ReplayContinueModes.ReplayCancelThisFile
     SkipTickfile
@@ -549,7 +546,7 @@ Dim lTickfileSpecifier As TickfileSpecifier
 Set mReader = Nothing
 Do
     mCurrTickfileIndex = mCurrTickfileIndex + 1
-    If mCurrTickfileIndex > UBound(mTickfileSpecifiers) Then
+    If mCurrTickfileIndex > mTickfileSpecifiers.Count Then
         Exit Sub
     End If
     
@@ -559,7 +556,7 @@ Do
     mTicker.clockRate = mReplaySpeed
     RaiseEvent TickerAllocated(mTicker)
     
-    Set lTickfileSpecifier = mTickfileSpecifiers(mCurrTickfileIndex)
+    Set lTickfileSpecifier = mTickfileSpecifiers.item(mCurrTickfileIndex)
     Set mReader = gTB.ServiceProviders.CreateTickfileReader( _
                                     mTicker, _
                                     Me, _
