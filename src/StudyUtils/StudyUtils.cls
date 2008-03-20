@@ -137,6 +137,12 @@ Set CreateStudyValueCache = New StudyValueCache
 CreateStudyValueCache.initialise cyclicSize, valueName
 End Function
 
+Public Function CreateVolumeParser( _
+                ByVal pSession As session) As VolumeParser
+Set CreateVolumeParser = New VolumeParser
+CreateVolumeParser.initialise pSession
+End Function
+
 Public Function DefaultStudyValueName() As String
 DefaultStudyValueName = DefaultStudyValueNameStr
 End Function

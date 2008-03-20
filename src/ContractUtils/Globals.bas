@@ -117,6 +117,37 @@ Loop Until bottom = middle
 If code = mExchangeCodes(middle) Then gIsValidExchangeCode = True
 End Function
 
+Public Function gIsValidExpiry( _
+                ByVal value As String) As Boolean
+Dim d As Date
+
+If IsDate(value) Then
+    d = CDate(value)
+ElseIf Len(value) = 8 Then
+    Dim datestring As String
+    datestring = Left$(value, 4) & "/" & Mid$(value, 5, 2) & "/" & right$(value, 2)
+    If IsDate(datestring) Then d = CDate(datestring)
+End If
+
+If d <> 0 Then
+    If d >= CDate((Year(Now) - 20) & "/01/01") And d <= CDate((Year(Now) + 10) & "/12/31") Then
+        gIsValidExpiry = True
+        Exit Function
+    End If
+End If
+
+If Len(value) = 6 Then
+    If IsInteger(value, (Year(Now) - 20) * 100 + 1, (Year(Now) + 10) * 100 + 12) Then
+        If right$(value, 2) <= 12 Then
+            gIsValidExpiry = True
+            Exit Function
+        End If
+    End If
+End If
+
+gIsValidExpiry = False
+End Function
+
 Public Function gIsValidSecType( _
                 ByVal value As Long) As Boolean
 gIsValidSecType = True
@@ -219,7 +250,7 @@ End Function
 Private Sub addExchangeCode(ByVal code As String)
 mMaxExchangeCodesIndex = mMaxExchangeCodesIndex + 1
 If mMaxExchangeCodesIndex > UBound(mExchangeCodes) Then
-    ReDim Preserve mExchangeCodes(UBound(mExchangeCodes) + 10) As String
+    ReDim Preserve mExchangeCodes(2 * (UBound(mExchangeCodes) + 1) - 1) As String
 End If
 mExchangeCodes(mMaxExchangeCodesIndex) = UCase$(code)
 End Sub
@@ -229,7 +260,7 @@ Private Sub addCurrencyDesc( _
                 ByVal description As String)
 mMaxCurrencyDescsIndex = mMaxCurrencyDescsIndex + 1
 If mMaxCurrencyDescsIndex > UBound(mCurrencyDescs) Then
-    ReDim Preserve mCurrencyDescs(UBound(mCurrencyDescs) + 10) As CurrencyDescriptor
+    ReDim Preserve mCurrencyDescs(2 * (UBound(mCurrencyDescs) + 1) - 1) As CurrencyDescriptor
 End If
 mCurrencyDescs(mMaxCurrencyDescsIndex).code = UCase$(code)
 mCurrencyDescs(mMaxCurrencyDescsIndex).description = UCase$(description)
@@ -265,7 +296,7 @@ If code = mCurrencyDescs(middle).code Then getCurrencyIndex = middle
 End Function
 
 Private Sub setupExchangeCodes()
-ReDim mExchangeCodes(100) As String
+ReDim mExchangeCodes(31) As String
 mMaxExchangeCodesIndex = -1
 
 addExchangeCode "ACE"
@@ -360,7 +391,7 @@ ReDim Preserve mExchangeCodes(mMaxExchangeCodesIndex) As String
 End Sub
 
 Private Sub setupCurrencyDescs()
-ReDim mCurrencyDescs(200) As CurrencyDescriptor
+ReDim mCurrencyDescs(127) As CurrencyDescriptor
 mMaxCurrencyDescsIndex = -1
 
 addCurrencyDesc "AED", "United Arab Emirates, Dirhams"

@@ -179,7 +179,6 @@ End Function
 ' but is kept here to emphasise its commonality between studies)
 Private Sub customProcessParameters(ByVal params As Parameters)
 Dim param As Parameter
-Dim shortPeriods As Long
 
 For Each param In params
     Select Case UCase$(param.name)

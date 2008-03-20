@@ -149,9 +149,9 @@ Attribute mStudyConfigurations.VB_VarHelpID = -1
 Private WithEvents mConfigForm As fStudyConfigurer
 Attribute mConfigForm.VB_VarHelpID = -1
 
-'/**
+''
 '   Set in the Study Configuration Form's AddStudyConfiguration event
-'*/
+'@/
 Private mNewStudyConfiguration As studyConfiguration
 
 '@================================================================================
@@ -257,6 +257,8 @@ Private Sub StudyList_Click()
 Dim studyDef As StudyDefinition
 Dim spName As String
 
+If mChartManager Is Nothing Then Exit Sub
+
 If StudyList.ListIndex <> -1 Then
     ChartStudiesList.ListIndex = -1
     RemoveButton.Enabled = False
@@ -328,6 +330,10 @@ Public Sub initialise( _
 Dim studyConfig As studyConfiguration
 Dim i As Long
 Dim itemText As String
+Dim lLogger As Logger
+
+Set lLogger = GetLogger("diag.tradebuild.studiesui")
+lLogger.Log LogLevelMediumDetail, "initialise"
 
 Set mChartManager = pChartManager
 
@@ -336,9 +342,12 @@ ChartStudiesList.clear
 If Not mChartManager Is Nothing Then
     Set mChartController = mChartManager.chartController
     Set mStudyConfigurations = mChartManager.StudyConfigurations
+    lLogger.Log LogLevelMediumDetail, "Study configurations: " & mStudyConfigurations.Count
     For Each studyConfig In mStudyConfigurations
         ChartStudiesList.AddItem studyConfig.instanceFullyQualifiedName
     Next
+Else
+    lLogger.Log LogLevelMediumDetail, "Chart manager is Nothing"
 End If
 
 StudyList.clear
@@ -354,14 +363,6 @@ ConfigureButton.Enabled = False
 RemoveButton.Enabled = False
 ChangeButton.Enabled = False
 
-'If mTicker Is Nothing Or mChartManager Is Nothing Then
-'    Me.Caption = "(No chart selected)"
-'Else
-'    Me.Caption = "Select a study for " & mTicker.Contract.specifier.localSymbol & _
-'                " (" & mTicker.Contract.specifier.exchange & ") "
-'                " (" & mTicker.Contract.specifier.exchange & ") " & _
-'                mChartManager.timeframeCaption
-'End If
 End Sub
 
 '@================================================================================

@@ -68,7 +68,7 @@ Private mNextStudyTableIndex As Long
 '@================================================================================
 
 Private Sub Class_Initialize()
-ReDim mStudyTable(10) As StudyTableEntry
+ReDim mStudyTable(3) As StudyTableEntry
 End Sub
 
 Private Sub Class_Terminate()
@@ -103,7 +103,7 @@ Set inputDefs = study.StudyDefinition.studyInputDefinitions
 For i = 0 To UBound(valueNames)
     If valueNames(i) <> "" Then
         If mNextStudyTableIndex > UBound(mStudyTable) Then
-            ReDim Preserve mStudyTable(UBound(mStudyTable) + 10) As StudyTableEntry
+            ReDim Preserve mStudyTable(2 * (UBound(mStudyTable) + 1) - 1) As StudyTableEntry
         End If
         Set tableEntry.theStudy = study
         Set tableEntry.studyToNotify = study.baseStudy
@@ -125,7 +125,7 @@ Dim i As Long
 For i = 0 To UBound(valueNames)
     If valueNames(i) <> "" Then
         If mNextStudyTableIndex > UBound(mStudyTable) Then
-            ReDim Preserve mStudyTable(UBound(mStudyTable) + 10) As StudyTableEntry
+            ReDim Preserve mStudyTable(2 * (UBound(mStudyTable) + 1) - 1) As StudyTableEntry
         End If
         Set tableEntry.theStudy = study
         Set tableEntry.studyToNotify = study.baseStudy

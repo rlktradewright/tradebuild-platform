@@ -8,20 +8,8 @@ Option Explicit
 Private Const ProjectName               As String = "TBInfoBase26"
 Private Const ModuleName                As String = "Globals"
 
-Public Const NegativeTicks As Byte = &H80
-Public Const NoTimestamp As Byte = &H40
-
 Public Const OneMicrosecond As Double = 1# / 86400000000#
 Public Const OneMinute As Double = 1# / 1440#
-
-Public Const OperationBits As Byte = &H60
-Public Const OperationShifter As Byte = &H20
-Public Const PositionBits As Byte = &H1F
-Public Const SideBits As Byte = &H80
-Public Const SideShifter As Byte = &H80
-Public Const SizeTypeBits As Byte = &H30
-Public Const SizeTypeShifter As Byte = &H10
-Public Const TickTypeBits As Byte = &HF
 
 Public Const TickfileFormatTradeBuildSQL As String = "urn:tradewright.com:names.tickfileformats.TradeBuildSQL"
 
@@ -29,16 +17,20 @@ Public Const ContractInfoSPName As String = "TradeBuild SQLDB Contract Info Serv
 Public Const HistoricDataSPName As String = "TradeBuild SQLDB Historic Data Service Provider"
 Public Const SQLDBTickfileSPName As String = "TradeBuild SQLDB Tickfile Service Provider"
 
+Public Const MaxLong As Long = &H7FFFFFFF
+
 Public Const ProviderKey As String = "TradeBuild"
 
 Public Const ParamNameAccessMode As String = "Access Mode"
 Public Const ParamNameConnectionString As String = "Connection String"
 Public Const ParamNameDatabaseType As String = "Database Type"
 Public Const ParamNameDatabaseName As String = "Database Name"
+Public Const ParamNamePassword As String = "Password"
+Public Const ParamNameRole As String = "Role"
 Public Const ParamNameServer As String = "Server"
 Public Const ParamNameUserName As String = "User Name"
-Public Const ParamNamePassword As String = "Password"
 Public Const ParamNameUseSynchronousWrites As String = "Use Synchronous Writes"
+
 
 '@===============================================================================
 ' Enums
@@ -50,36 +42,28 @@ Public Enum AccessModes
     ReadWrite
 End Enum
 
-Public Enum SizeTypes
-    ShortSize = 1
-    IntSize
-    LongSize
-End Enum
-
-Public Enum TickTypes
-    Bid
-    Ask
-    closePrice
-    highPrice
-    lowPrice
-    marketDepth
-    MarketDepthReset
-    Trade
-    volume
-    openInterest
-End Enum
-
 '@===============================================================================
 ' Procedures
 '@===============================================================================
 
-Public Function gHistDataCapabilities() As Long
-gHistDataCapabilities = _
-            HistoricDataServiceProviderCapabilities.HistDataStore
+Public Function gHistDataCapabilities( _
+                ByVal mode As AccessModes) As Long
+Select Case mode
+Case ReadOnly
+    gHistDataCapabilities = 0
+Case WriteOnly
+    gHistDataCapabilities = _
+                HistoricDataServiceProviderCapabilities.HistDataStore
+Case ReadWrite
+    gHistDataCapabilities = _
+                HistoricDataServiceProviderCapabilities.HistDataStore
+End Select
 End Function
 
-Public Function gHistDataSupports(ByVal capabilities As Long) As Boolean
-gHistDataSupports = (gHistDataCapabilities And capabilities)
+Public Function gHistDataSupports( _
+                ByVal capabilities As Long, _
+                ByVal mode As AccessModes) As Boolean
+gHistDataSupports = (gHistDataCapabilities(mode) And capabilities)
 End Function
 
 Public Function gSQLDBCapabilitiesReadWrite() As Long

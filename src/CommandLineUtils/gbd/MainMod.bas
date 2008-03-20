@@ -48,7 +48,7 @@ Private Const NonSessCommand                As String = "NONSESS"
 Public gCon As Console
 
 Private mLineNumber As Long
-Private mContractSpec As contractSpecifier
+Private mContractSpec As ContractSpecifier
 Private mFrom As Date
 Private mTo As Date
 Private mNumber As Long
@@ -424,8 +424,7 @@ End Function
 
 Private Sub showUsage()
 gCon.writeErrorLine "Usage:"
-gCon.writeErrorLine "gtd -fromdb:databaseserver,databasetype,catalog[,username[,password]]"
-gCon.writeErrorLine "    -speed:n"
+gCon.writeErrorLine "gbd -fromdb:databaseserver,databasetype,catalog[,username[,password]]"
 gCon.writeErrorLine ""
 gCon.writeErrorLine "StdIn Format:"
 gCon.writeErrorLine "#comment"

@@ -77,14 +77,9 @@ Attribute mTickWriter.VB_VarHelpID = -1
 
 Private mTde                        As TickDataEncoder
 
-Private mData() As Byte
-Private mDataIndex As Long
-
 Private mTotalBytes As Long
 
 Private mTickSize As Double
-Private mTimestamp As Date          ' current timestamp
-Private mBasePrice As Double        ' first price encountered at start of minute period
 Private mOpeningTimestamp As Date   ' timestamp at start of minute period
 
 Private mInstrument As instrument
@@ -93,10 +88,6 @@ Private mUseSynchronousWrites As Boolean
 '@===============================================================================
 ' Class Event Handlers
 '@===============================================================================
-
-Private Sub Class_Initialize()
-ReDim mData(8191) As Byte
-End Sub
 
 Private Sub Class_Terminate()
 Debug.Print "TBInfoBase.TickfileWriter terminated"
@@ -241,9 +232,6 @@ Private Sub ITickfileWriter_writeMarketDepthData( _
                             ByVal side As Long, _
                             ByVal price As Double, _
                             ByVal size As Long)
-Dim typeByte As Byte
-Dim sizeType As SizeTypes
-Dim sideOperationPositionByte As Byte
 
 On Error GoTo Err
 If price = 0# Then Exit Sub
@@ -260,7 +248,6 @@ End Sub
 
 Private Sub ITickfileWriter_writeMarketDepthReset( _
                             ByVal timestamp As Date)
-Dim typeByte As Byte
 
 On Error GoTo Err
 checkIfNewPeriod timestamp
@@ -424,7 +411,7 @@ If barTime = mOpeningTimestamp Then Exit Sub
 
 If Not mTde Is Nothing Then writePeriodData
 
-Set mTde = CreateTickEncoder(barTime, mTickSize, LatestEncodingFormatIdentifier)
+Set mTde = CreateTickEncoder(barTime, mTickSize)
 
 mOpeningTimestamp = barTime
 
@@ -434,8 +421,7 @@ Private Sub handleFatalError( _
                 ByVal Number As Long, _
                 ByVal Source As String, _
                 ByVal Description As String)
-' discard any pending data
-mDataIndex = 0
+
 mCommonServiceConsumer.FatalServiceProviderError Number, _
                             Source, _
                             Description, _
@@ -445,6 +431,8 @@ mTickfileServiceProvider.dataWriterFinished Me
 End Sub
 
 Private Sub writePeriodData()
+
+If mTde Is Nothing Then Exit Sub
 
 Set mTickWriter = mInstrument.CreateTickDataWriter
 

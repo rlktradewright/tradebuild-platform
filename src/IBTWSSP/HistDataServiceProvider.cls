@@ -219,7 +219,7 @@ For Each param In params
     Case UCase$(ParamNameServer)
         server = param.value
     Case UCase$(ParamNameTwsLogLevel)
-        TWSLogLevel = param.value
+        TWSLogLevel = gTwsLogLevelFromString(param.value)
     End Select
 Next
 

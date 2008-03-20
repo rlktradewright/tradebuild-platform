@@ -86,7 +86,7 @@ End Sub
 
 Friend Sub initialise( _
                 ByVal pSession As session)
-mSession = session
+Set mSession = pSession
 End Sub
 
 Public Function notify( _
@@ -115,21 +115,21 @@ End If
 
 If newTotalVolume > mCurrSessionVolume Then notify = newTotalVolume - mCurrSessionVolume
 
-mCurrSessionVolume = ev.value
+mCurrSessionVolume = newTotalVolume
 
 End Function
 
-Public Sub switchUnderlyingStudy( _
-                ByVal newUnderlyingStudy As InputStudy)
+Public Sub changeSession( _
+                ByVal newSession As session)
                 
-If newUnderlyingStudy.session.currentSessionStartTime > mSession.currentSessionStartTime Then
+If newSession.currentSessionStartTime > mSession.currentSessionStartTime Then
     ' we are now in a different session so reset volume variables
     mPrevSessionVolume = mCurrSessionVolume
     mCurrSessionVolume = 0
     mVolumeResetPending = True
 End If
 
-Set mSession = newUnderlyingStudy.session
+Set mSession = newSession
 
 ' because we are switching to a new source, the volume figures may not be consistent
 ' with those from the previous source - for example, if the previous source was historical

@@ -83,6 +83,7 @@ Private mDatabaseName As String
 Private mServer As String
 Private mUserName As String
 Private mPassword As String
+Private mRole As String
 
 '@===============================================================================
 ' Class Event Handlers
@@ -97,6 +98,7 @@ mDatabaseName = "Trading"
 mServer = "localhost"
 mUserName = ""
 mPassword = ""
+mRole = "PRIMARY"
 End Sub
 
 '@===============================================================================
@@ -129,8 +131,6 @@ Dim param As Parameter
 
 Set mCommonServiceConsumer = CommonServiceConsumer
 mHandle = handle
-mCommonServiceConsumer.RegisterServiceProvider handle, _
-                                            ServiceProviderTypes.ContractInfo
 
 For Each param In params
     Select Case UCase$(param.Name)
@@ -146,9 +146,28 @@ For Each param In params
         username = param.value
     Case UCase$(ParamNamePassword)
         password = param.value
+    Case UCase$(ParamNameRole)
+        Select Case UCase$(param.value)
+        Case "P", "PR", "PRIM", "PRIMARY"
+            mRole = "PRIMARY"
+        Case "S", "SEC", "SECOND", "SECONDARY"
+            mRole = "SECONDARY"
+        Case Else
+            handleFatalError ErrorCodes.ErrIllegalArgumentException, _
+                            "ICommonServiceProvider_Link", _
+                            "Invalid role parameter"
+            Exit Sub
+        End Select
     End Select
 Next
 
+If mRole = "PRIMARY" Then
+    mCommonServiceConsumer.RegisterServiceProvider handle, _
+                                            ServiceProviderTypes.ContractInfo
+Else
+    mCommonServiceConsumer.RegisterServiceProvider handle, _
+                                            ServiceProviderTypes.SecondaryContractInfo
+End If
 End Sub
 
 Private Property Let ICommonServiceProvider_LogLevel( _
@@ -316,5 +335,14 @@ End Property
 '@===============================================================================
 ' Helper Functions
 '@===============================================================================
+
+Private Sub handleFatalError( _
+                ByVal Number As Long, _
+                ByVal Source As String, _
+                ByVal Description As String)
+mCommonServiceConsumer.FatalServiceProviderError Number, Source, Description, mHandle
+
+Set mCommonServiceConsumer = Nothing
+End Sub
 
 

@@ -117,20 +117,17 @@ handleFatalError Err.Number, _
 End Sub
 
 Private Property Let ITickfileReader_Contract(ByVal RHS As Contract)
-Dim startTime As Date
-Dim endTime As Date
+Dim st As SessionTimes
 
 Set mContract = RHS
 
 With mInputTickfileSpecifier
     If .EntireSession Then
-        SessionTimes .fromDate, _
-                    startTime, _
-                    endTime, _
+        st = GetSessionTimes(.fromDate, _
                     mContract.sessionStartTime, _
-                    mContract.sessionEndTime
-    .fromDate = startTime
-    .toDate = endTime
+                    mContract.sessionEndTime)
+    .fromDate = st.startTime
+    .toDate = st.endTime
     End If
     
     ' the following is a kludge. We need to modify the service provider handshake so
@@ -402,9 +399,7 @@ mTickfileServiceProvider.dataReaderFinished Me
 End Sub
 
 Private Sub processTickRequest()
-Dim percentComplete As Single
 Dim tick As GenericTick
-Static noMoreData As Boolean
 
 On Error GoTo Err
 
@@ -426,17 +421,17 @@ End If
 mRecordsRead = mRecordsRead + 1
 
 Select Case tick.tickType
-Case Bid
+Case TickTypeBid
     mDataConsumer.Bid tick.timestamp, tick.price, tick.size
-Case Ask
+Case TickTypeAsk
     mDataConsumer.Ask tick.timestamp, tick.price, tick.size
-Case closePrice
+Case TickTypeClosePrice
     mDataConsumer.PreviousClose tick.timestamp, tick.price
-Case highPrice
+Case TickTypeHighPrice
     mDataConsumer.High tick.timestamp, tick.price
-Case lowPrice
+Case TickTypeLowPrice
     mDataConsumer.Low tick.timestamp, tick.price
-Case marketDepth
+Case TickTypeMarketDepth
     If tick.marketmaker = "" Then
         mDataConsumer.UpdateMktDepth tick.timestamp, _
                                     tick.position, _
@@ -453,13 +448,13 @@ Case marketDepth
                                     tick.price, _
                                     tick.size
     End If
-Case MarketDepthReset
+Case TickTypeMarketDepthReset
     mDataConsumer.ResetMarketDepth tick.timestamp, False
-Case Trade
+Case TickTypeTrade
     mDataConsumer.Trade tick.timestamp, tick.price, tick.size
-Case volume
+Case TickTypeVolume
     mDataConsumer.volume tick.timestamp, tick.size
-Case openInterest
+Case TickTypeOpenInterest
     mDataConsumer.openInterest tick.timestamp, tick.size
 End Select
 

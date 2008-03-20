@@ -71,6 +71,7 @@ Private mConnectionRetryIntervalSecs As Long
 
 Private mLogLevel As LogLevels
 Private mTWSLogLevel As TWSLogLevels
+Private mRole As String
 
 '================================================================================
 ' Class Event Handlers
@@ -100,7 +101,9 @@ Public Sub ContractDetailsRequester_cancelRequest( _
                 ByVal reason As String)
 On Error GoTo err
 request.tradeBuildContractsBuilder.unableToLoad reason, mName
+checkReleaseTWSAPI
 Exit Sub
+
 err:
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "ContractInfoServiceProvider" & "::" & "ContractDetailsRequester_cancelRequest", _
@@ -116,6 +119,7 @@ For Each lContractWrapper In request.contractWrappers
     request.tradeBuildContractsBuilder.AddContract lContractWrapper.tradeBuildContract
 Next
 mContractInfoServiceConsumer.LoadComplete mHandle, request.tradeBuildContractsBuilder
+checkReleaseTWSAPI
 Exit Sub
 err:
 handleFatalError err.number, _
@@ -131,7 +135,9 @@ mContractInfoServiceConsumer.NotifyEvent StandardSPEventCodes.CIContractSpecifie
                                     reason, _
                                     request.tradeBuildContractsBuilder, _
                                     mHandle
+checkReleaseTWSAPI
 Exit Sub
+
 err:
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "ContractInfoServiceProvider" & "::" & "ContractDetailsRequester_contractSpecifierInvalid", _
@@ -170,8 +176,6 @@ On Error GoTo err
 gCommonServiceConsumer = commonServiceConsumer
 Set mCommonServiceConsumer = commonServiceConsumer
 mHandle = handle
-mCommonServiceConsumer.RegisterServiceProvider handle, _
-                                            ServiceProviderTypes.ContractInfo
 
 For Each param In params
     Select Case UCase$(param.name)
@@ -190,9 +194,29 @@ For Each param In params
     Case UCase$(ParamNameServer)
         server = param.value
     Case UCase$(ParamNameTwsLogLevel)
-        TWSLogLevel = param.value
+        TWSLogLevel = gTwsLogLevelFromString(param.value)
+    Case UCase$(ParamNameRole)
+        Select Case UCase$(param.value)
+        Case "P", "PR", "PRIM", "PRIMARY"
+            mRole = "PRIMARY"
+        Case "S", "SEC", "SECOND", "SECONDARY"
+            mRole = "SECONDARY"
+        Case Else
+            handleFatalError ErrorCodes.ErrIllegalArgumentException, _
+                            "ICommonServiceProvider_Link", _
+                            "Invalid role parameter"
+            Exit Sub
+        End Select
     End Select
 Next
+
+If mRole = "PRIMARY" Then
+    mCommonServiceConsumer.RegisterServiceProvider handle, _
+                                            ServiceProviderTypes.ContractInfo
+Else
+    mCommonServiceConsumer.RegisterServiceProvider handle, _
+                                            ServiceProviderTypes.SecondaryContractInfo
+End If
 
 Exit Sub
 err:
@@ -242,9 +266,7 @@ Private Sub IContractInfoServiceProvider_RequestContractDetails( _
 
 On Error GoTo err
 If mTWSAPI Is Nothing Then
-    Set mTWSAPI = gGetTWSAPIInstance(mServer, mPort, mClientID, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection)
-    mTWSAPI.logLevel = mLogLevel
-    mTWSAPI.TWSLogLevel = mTWSLogLevel
+    Set mTWSAPI = gGetTWSAPIInstance(mServer, mPort, mClientID, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection, mLogLevel, mTWSLogLevel)
 End If
 
 mTWSAPI.RequestContract pContractsBuilder.Contracts.ContractSpecifier, _
@@ -394,6 +416,13 @@ End Property
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub checkReleaseTWSAPI()
+If mTWSAPI.contractDetailsRequestQueueLength = 0 Then
+    gReleaseTWSAPIInstance mTWSAPI
+    Set mTWSAPI = Nothing
+End If
+End Sub
 
 Private Sub handleFatalError( _
                 ByVal number As Long, _

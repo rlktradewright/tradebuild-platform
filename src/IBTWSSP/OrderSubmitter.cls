@@ -59,7 +59,7 @@ Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mServiceConsumer As TradeBuildSP.IOrderSubmissionSrvcConsumer
 
 Private mTradeBuildContract As Contract
-Private mContractWrapper As contractWrapper
+Private mContractWrapper As ContractWrapper
 
 Private mName As String
 
@@ -545,7 +545,7 @@ Friend Property Let serviceConsumer(ByVal value As TradeBuildSP.IOrderSubmission
 Set mServiceConsumer = value
 End Property
 
-Friend Property Let TWSLogLevel(ByVal value As TWSLogLevels)
+Friend Property Let TwsLogLevel(ByVal value As TWSLogLevels)
 mTWSLogLevel = value
 End Property
 
@@ -595,8 +595,7 @@ End Sub
 
 Friend Sub start()
 If mTWSAPI Is Nothing Then
-    Set mTWSAPI = gGetTWSAPIInstance(mServer, mPort, mClientID, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection)
-    mTWSAPI.logLevel = mLogLevel
+    Set mTWSAPI = gGetTWSAPIInstance(mServer, mPort, mClientID, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection, mLogLevel, mTWSLogLevel)
     If mTWSAPI.connectionState = ConnConnected Then
         mServiceConsumer.NotifyEvent StandardSPEventCodes.LOConnectedToBroker, _
                                 "Connected to " & mTWSAPI.connectionString, _

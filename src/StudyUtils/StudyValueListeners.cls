@@ -46,7 +46,7 @@ Private mNextListenerTableIndex As Long
 '@================================================================================
 
 Private Sub Class_Initialize()
-ReDim mListenerTable(10) As ListenerTableEntry
+ReDim mListenerTable(3) As ListenerTableEntry
 End Sub
 
 '@================================================================================
@@ -67,7 +67,7 @@ Public Sub add( _
 Dim tableEntry As ListenerTableEntry
 
 If mNextListenerTableIndex > UBound(mListenerTable) Then
-    ReDim Preserve mListenerTable(UBound(mListenerTable) + 10) As ListenerTableEntry
+    ReDim Preserve mListenerTable(2 * (UBound(mListenerTable) + 1) - 1) As ListenerTableEntry
 End If
 Set tableEntry.theListener = listener
 tableEntry.valueName = UCase$(valueName)

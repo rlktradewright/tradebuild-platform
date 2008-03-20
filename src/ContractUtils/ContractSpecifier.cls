@@ -38,6 +38,9 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ProjectName                As String = "ContractUtils26"
+Private Const ModuleName                    As String = "ContractSpecifier"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -93,6 +96,13 @@ exchange = mExchange
 End Property
 
 Friend Property Let expiry(ByVal value As String)
+If value = "" Then Exit Property
+If Not gIsValidExpiry(value) Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "expiry", _
+            "Invalid expiry"
+End If
+
 mExpiry = value
 End Property
 

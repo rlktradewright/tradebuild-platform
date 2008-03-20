@@ -120,7 +120,7 @@ End Sub
 
 Private Sub mTB_Error(ev As TWUtilities30.ErrorEvent)
 gCon.writeLineToConsole "Error " & ev.errorCode & _
-                        ": " & ev.errorMsg
+                        ": " & ev.errorMessage
 End Sub
 
 Private Sub mTB_Notification(ev As TWUtilities30.NotificationEvent)

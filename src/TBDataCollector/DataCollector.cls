@@ -18,7 +18,7 @@ Option Explicit
 '@================================================================================
 
 Implements CollectionChangeListener
-Implements InfoListener
+
 
 '@================================================================================
 ' Events
@@ -33,7 +33,6 @@ Event ErrorMessage( _
                 ByVal errorCode As Long, _
                 ByVal errorMsg As String)
 Event ExitProgram()
-Event Info(ev As InfoEvent)
 Event NotifyMessage( _
                 ByVal eventCode As ApiNotifyCodes, _
                 ByVal eventMsg As String)
@@ -58,30 +57,31 @@ Private Const ModuleName                    As String = "TBDataCollector"
 Private Const ApplicationConfigName As String = "TradeBuild Data Collector"
 
 
+Private Const AttributeNameBidAskBars       As String = "WriteBidAndAskBars"
+Private Const AttributeNameCurrency         As String = "Currency"
 Private Const AttributeNameEnabled          As String = "Enabled"
-Private Const AttributeNameTimeframeLength  As String = "Length"
-Private Const AttributeNameTimeframeUnits   As String = "Units"
-Private Const AttributeNameSaveInterval     As String = "SaveInterval"
-Private Const AttributeNameLocalSYmbol      As String = "LocalSymbol"
-Private Const AttributeNameSYmbol           As String = "Symbol"
-Private Const AttributeNameSecType          As String = "SecType"
 Private Const AttributeNameExpiry           As String = "Expiry"
 Private Const AttributeNameExchange         As String = "Exchange"
-Private Const AttributeNameCurrency         As String = "Currency"
-Private Const AttributeNameStrikePrice      As String = "StrikePrice"
+Private Const AttributeNameIncludeMktDepth  As String = "IncludeMarketDepth"
+Private Const AttributeNameLocalSYmbol      As String = "LocalSymbol"
 Private Const AttributeNameRight            As String = "Right"
-Private Const AttributeNameBidAskBars       As String = "WriteBidAndAskBars"
+Private Const AttributeNameSaveInterval     As String = "SaveInterval"
+Private Const AttributeNameSecType          As String = "SecType"
+Private Const AttributeNameStrikePrice      As String = "StrikePrice"
+Private Const AttributeNameSymbol           As String = "Symbol"
+Private Const AttributeNameTimeframeLength  As String = "Length"
+Private Const AttributeNameTimeframeUnits   As String = "Units"
 Private Const AttributeNameWriteTickData    As String = "WriteTickData"
 Private Const AttributeNameWriteBarData     As String = "WriteBarData"
 
-Private Const ConfigNameServiceProviders    As String = "TradeBuildServiceProviders"
-Private Const ConfigNameStudyLibraries      As String = "TradeBuildStudyLibraries"
+Private Const ConfigNameCollectionControl   As String = "CollectionControl"
 Private Const ConfigNameConfig              As String = "DataCollectorConfiguration"
-Private Const ConfigNameTickDataFormat      As String = "TickDataFormat"
-Private Const ConfigNameTickfilePath        As String = "TickfilePath"
 Private Const ConfigNameContracts           As String = "Contracts"
 Private Const ConfigNameContractSpecifier   As String = "ContractSpecifier"
-Private Const ConfigNameCollectionControl   As String = "CollectionControl"
+Private Const ConfigNameServiceProviders    As String = "TradeBuildServiceProviders"
+Private Const ConfigNameStudyLibraries      As String = "TradeBuildStudyLibraries"
+Private Const ConfigNameTickDataFormat      As String = "TickDataFormat"
+Private Const ConfigNameTickfilePath        As String = "TickfilePath"
 
 '@================================================================================
 ' Enums
@@ -108,7 +108,10 @@ Private mContractsConfig                                As ConfigItem
 Private mContractsIndex                                 As Long
 
 Private mWriteBars                                      As Boolean
+Private mWriteBidAskBars                                As Boolean
+
 Private mWriteTicks                                     As Boolean
+Private mIncludeMarketDepth                             As Boolean
 
 Private mSupportedOutputFormats()                       As TickfileFormatSpecifier
 Private mOutputFormat                                   As String
@@ -130,6 +133,8 @@ Private mStartTime                                      As Date
 Private mEndTime                                        As Date
 Private mExitProgramTime                                As Date
 
+Private mLogger                                         As Logger
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -138,10 +143,10 @@ Private Sub Class_Initialize()
 
 InitialiseTWUtilities
 
+Set mLogger = GetLogger("")
+
 Set mTradeBuildAPI = TradeBuildAPI
 Set mTickers = mTradeBuildAPI.Tickers
-
-mTradeBuildAPI.addInfoListener Me, TradeBuildListenValueTypes.VTLog
 
 mOutputPath = App.Path & "\TickFiles"
 
@@ -159,14 +164,6 @@ Private Sub CollectionChangeListener_Change(ev As CollectionChangeEvent)
 If ev.changeType = CollItemAdded Then
     RaiseEvent TimeframeAdded(ev.affectedObject)
 End If
-End Sub
-
-'@================================================================================
-' InfoListener Interface Members
-'@================================================================================
-
-Private Sub InfoListener_notify(ev As InfoEvent)
-RaiseEvent Info(ev)
 End Sub
 
 '@================================================================================
@@ -191,7 +188,16 @@ End Sub
 '@================================================================================
 
 Private Sub mStartCollectionTimer_TimerExpired()
+On Error GoTo Err
+
 startCollection
+Exit Sub
+
+Err:
+mLogger.Log LogLevelSevere, "Error " & Err.Number & " in " & _
+        ProjectName & "." & ModuleName & ":" & "startCollection" & vbCrLf & _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, "") & _
+        Err.description
 End Sub
 
 '@================================================================================
@@ -208,15 +214,20 @@ End Sub
 
 Private Sub mTickers_Notification(ev As NotificationEvent)
 If ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToRealtimeDataSource Then
+    mLogger.Log LogLevelNormal, "Connected ok to realtime data source"
     RaiseEvent Connected
 ElseIf ev.eventCode = ApiNotifyCodes.ApiNotifyCantConnectRealtimeDataSource Then
+    mLogger.Log LogLevelNormal, "Connect to realtime data source failed: " & ev.eventMessage
     RaiseEvent ConnectFailed(ev.eventMessage)
 ElseIf ev.eventCode = ApiNotifyCodes.ApiNotifyDisconnectedFromRealtimeDataSource Or _
         ev.eventCode = ApiNotifyCodes.ApiNotifyLostConnectionToRealtimeDataSource Then
+    mLogger.Log LogLevelNormal, "Connection to realtime data source closed"
     RaiseEvent ConnectionClosed
 ElseIf ev.eventCode = ApiNotifyCodes.ApiNotifyReconnectingToRealtimeDataSource Then
+    mLogger.Log LogLevelNormal, "Reconnecting to realtime data source"
     RaiseEvent Reconnecting
 Else
+    mLogger.Log LogLevelNormal, "Notification " & ev.eventCode & ": " & ev.eventMessage
     RaiseEvent NotifyMessage(ev.eventCode, _
                             ev.eventMessage)
 End If
@@ -239,8 +250,9 @@ End Sub
 '@================================================================================
 
 Private Sub mTradeBuildAPI_Error(ev As ErrorEvent)
+mLogger.Log LogLevelNormal, "Error " & ev.errorCode & ": " & ev.ErrorMessage
 RaiseEvent ErrorMessage(ev.errorCode, _
-                    ev.errorMsg)
+                    ev.ErrorMessage)
 End Sub
 
 Private Sub mTradeBuildAPI_Notification( _
@@ -250,11 +262,14 @@ Dim evNotify As NotificationEvent
 If ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
     Set spError = mTradeBuildAPI.GetServiceProviderError
     With spError
+        mLogger.Log LogLevelNormal, _
+                    "Service provider error (" & .serviceProviderName & "): " & .errorCode & ": " & .message
         RaiseEvent ServiceProviderError(.errorCode, _
                                         .serviceProviderName, _
                                         .message)
     End With
 Else
+    mLogger.Log LogLevelNormal, "Notification " & ev.eventCode & ": " & ev.eventMessage
     RaiseEvent NotifyMessage(ev.eventCode, _
                         ev.eventMessage)
 End If
@@ -286,96 +301,42 @@ Friend Sub initialise( _
                 ByVal endTimeDescriptor As String, _
                 ByVal exitTimeDescriptor As String)
 
+Dim failpoint As Long
+On Error GoTo Err
+
 mConfigFilePath = configFilePath
 
-mStartTimeDescriptor = startTimeDescriptor
-mEndTimeDescriptor = endTimeDescriptor
+failpoint = 100
+determineProcessingTimes startTimeDescriptor, _
+                        endTimeDescriptor, _
+                        exitTimeDescriptor
 
-If mStartTimeDescriptor <> "" Then mStartTime = calcTimeFromDescriptor(mStartTimeDescriptor)
-If mEndTimeDescriptor <> "" Then mEndTime = calcTimeFromDescriptor(mEndTimeDescriptor)
+failpoint = 200
+processConfigFile
 
-If mStartTime <> 0 Then
-    If mStartTime < mEndTime Then
-        Set mStartCollectionTimer = CreateIntervalTimer(mStartTime, _
-                                                        ExpiryTimeUnitDateTime)
-        mStartCollectionTimer.StartTimer
-    ElseIf mEndTime <> 0 And _
-        mStartTime > mEndTime _
-    Then
-        ' we are in mid-session so start immediately
-        Set mStartCollectionTimer = CreateIntervalTimer(1, ExpiryTimeUnitMilliseconds)
-        mStartCollectionTimer.StartTimer
-    Else
-        Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                ProjectName & "." & ModuleName & ":" & "initialise", _
-                "Start time and end time descriptors must be different"
-    End If
-End If
+failpoint = 300
+scheduleStart
 
-If exitTimeDescriptor <> "" Then
-    mExitProgramTime = calcTimeFromDescriptor(exitTimeDescriptor)
-    Set mExitProgramTimer = CreateIntervalTimer(mExitProgramTime, _
-                                                ExpiryTimeUnitDateTime)
-    mExitProgramTimer.StartTimer
-End If
+Exit Sub
+
+Err:
+Err.Raise Err.Number, _
+        ProjectName & "." & ModuleName & ":" & "initialise" & "." & failpoint & _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
+        Err.description
+
 
 End Sub
 
 Public Sub startCollection()
-Dim lConfigFile As ConfigFile
-Dim i As Long
-Dim outputformat As String
-Dim val As ConfigItem
-
 Dim failpoint As Long
 On Error GoTo Err
 
-mTradeBuildAPI.ServiceProviders.RemoveAll
-RemoveAllStudyLibraries
-
-Set lConfigFile = LoadXMLConfigurationFile(mConfigFilePath)
-
-If lConfigFile.applicationName <> ApplicationConfigName Then _
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "initialise", _
-            "Configuration file is not valid for this program"
-
-Set mConfig = lConfigFile.rootItem.childItems.Item(ConfigNameConfig)
-
-mTradeBuildAPI.ServiceProviders.loadServiceProviderConfiguration lConfigFile.rootItem.childItems.Item(ConfigNameServiceProviders)
-LoadStudyLibraryConfiguration lConfigFile.rootItem.childItems.Item(ConfigNameStudyLibraries)
-
-mSupportedOutputFormats = mTradeBuildAPI.SupportedOutputTickfileFormats
-
-Set val = mConfig.childItems.Item(ConfigNameCollectionControl)
-mWriteTicks = val.getAttribute(AttributeNameWriteTickData)
-mWriteBars = val.getAttribute(AttributeNameWriteBarData)
-
-Set val = mConfig.childItems.Item(ConfigNameTickDataFormat)
-outputformat = val.Value
-For i = 0 To UBound(mSupportedOutputFormats)
-    If UCase$(outputformat) = UCase$(mSupportedOutputFormats(i).Name) Then
-        mOutputFormat = mSupportedOutputFormats(i).FormalID
-        Exit For
-    End If
-Next
-
-If mOutputFormat = "" Then
-    RaiseEvent ErrorMessage(ErrorCodes.ErrIllegalArgumentException, _
-                            "Invalid tickfile output format specified in config file")
-    Exit Sub
-End If
-
-On Error Resume Next
-Set val = mConfig.childItems.Item(ConfigNameTickfilePath)
-On Error GoTo Err
-If Not val Is Nothing Then mOutputPath = val.Value
-
-Set mContractsConfig = mConfig.childItems.Item(ConfigNameContracts)
-
-StartTickers
+processConfigFile
 
 If Not mStartCollectionTimer Is Nothing Then
+    ' startCollection may have been called as a result of user action, so
+    ' cancel any automatic start
     mStartCollectionTimer.StopTimer
     Set mStartCollectionTimer = Nothing
 End If
@@ -387,6 +348,9 @@ If mEndTime <> 0 Then
     mEndCollectionTimer.StartTimer
 End If
 
+startTickers
+
+mLogger.Log LogLevelNormal, "Data collection started"
 RaiseEvent CollectionStarted
 
 Exit Sub
@@ -396,14 +360,13 @@ Err.Raise Err.Number, _
         ProjectName & "." & ModuleName & ":" & "startCollection" & "." & failpoint & _
         IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
         Err.description
-
-
 End Sub
 
 Public Sub stopCollection()
 Dim lTicker As ticker
 Dim startTime As Date
 
+mLogger.Log LogLevelNormal, "Data collection stopped"
 For Each lTicker In mTradeBuildAPI.Tickers
     lTicker.StopTicker
 Next
@@ -475,7 +438,136 @@ calcTimeFromDescriptor = Int(Now + day - Weekday(Now)) + theTime
 If calcTimeFromDescriptor <= Now Then calcTimeFromDescriptor = calcTimeFromDescriptor + 7
 End Function
 
-Private Sub StartTickers()
+Private Sub determineProcessingTimes( _
+                ByVal startTimeDescriptor As String, _
+                ByVal endTimeDescriptor As String, _
+                ByVal exitTimeDescriptor As String)
+mStartTimeDescriptor = startTimeDescriptor
+mEndTimeDescriptor = endTimeDescriptor
+
+If mStartTimeDescriptor <> "" Then mStartTime = calcTimeFromDescriptor(mStartTimeDescriptor)
+If mEndTimeDescriptor <> "" Then mEndTime = calcTimeFromDescriptor(mEndTimeDescriptor)
+If exitTimeDescriptor <> "" Then mExitProgramTime = calcTimeFromDescriptor(exitTimeDescriptor)
+
+End Sub
+
+Private Sub processConfigFile()
+Dim lConfigFile As ConfigFile
+Dim i As Long
+Dim outputformat As String
+Dim val As ConfigItem
+
+Dim failpoint As Long
+On Error GoTo Err
+
+
+failpoint = 100
+
+mTradeBuildAPI.ServiceProviders.RemoveAll
+RemoveAllStudyLibraries
+
+
+failpoint = 200
+
+Set lConfigFile = LoadXMLConfigurationFile(mConfigFilePath)
+
+If lConfigFile.applicationName <> ApplicationConfigName Then _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "initialise", _
+            "Configuration file is not valid for this program"
+
+
+failpoint = 300
+
+Set mConfig = lConfigFile.rootItem.childItems.Item(ConfigNameConfig)
+
+
+failpoint = 400
+
+mTradeBuildAPI.ServiceProviders.loadServiceProviderConfiguration lConfigFile.rootItem.childItems.Item(ConfigNameServiceProviders)
+
+failpoint = 500
+
+LoadStudyLibraryConfiguration lConfigFile.rootItem.childItems.Item(ConfigNameStudyLibraries)
+
+mSupportedOutputFormats = mTradeBuildAPI.SupportedOutputTickfileFormats
+
+
+failpoint = 600
+
+Set val = mConfig.childItems.Item(ConfigNameCollectionControl)
+
+On Error Resume Next    ' don't mind if attributes aren't specified
+mWriteTicks = val.getAttribute(AttributeNameWriteTickData)
+mIncludeMarketDepth = val.getAttribute(AttributeNameIncludeMktDepth)
+mWriteBars = val.getAttribute(AttributeNameWriteBarData)
+mWriteBidAskBars = val.getAttribute(AttributeNameBidAskBars)
+On Error GoTo Err
+
+
+failpoint = 700
+
+If mWriteTicks Then
+    Set val = mConfig.childItems.Item(ConfigNameTickDataFormat)
+    outputformat = val.Value
+    For i = 0 To UBound(mSupportedOutputFormats)
+        If UCase$(outputformat) = UCase$(mSupportedOutputFormats(i).Name) Then
+            mOutputFormat = mSupportedOutputFormats(i).FormalID
+            Exit For
+        End If
+    Next
+    If mOutputFormat = "" Then
+        RaiseEvent ErrorMessage(ErrorCodes.ErrIllegalArgumentException, _
+                                "Invalid tickfile output format specified in config file")
+        Exit Sub
+    End If
+End If
+
+On Error Resume Next
+Set val = mConfig.childItems.Item(ConfigNameTickfilePath)
+On Error GoTo Err
+If Not val Is Nothing Then mOutputPath = val.Value
+
+failpoint = 700
+
+Set mContractsConfig = mConfig.childItems.Item(ConfigNameContracts)
+Exit Sub
+
+Err:
+Err.Raise Err.Number, _
+        ProjectName & "." & ModuleName & ":" & "startCollection" & "." & failpoint & _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
+        Err.description
+End Sub
+
+Private Sub scheduleStart()
+If mStartTime <> 0 Then
+    If mStartTime < mEndTime Then
+        Set mStartCollectionTimer = CreateIntervalTimer(mStartTime, _
+                                                        ExpiryTimeUnitDateTime)
+        mStartCollectionTimer.StartTimer
+    ElseIf mEndTime <> 0 And _
+        mStartTime > mEndTime _
+    Then
+        ' we are in mid-session so start immediately
+        Set mStartCollectionTimer = CreateIntervalTimer(1, ExpiryTimeUnitMilliseconds)
+        mStartCollectionTimer.StartTimer
+    Else
+        Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                ProjectName & "." & ModuleName & ":" & "initialise", _
+                "Start time and end time descriptors must be different"
+    End If
+End If
+
+If mExitProgramTime <> 0 Then
+    Set mExitProgramTimer = CreateIntervalTimer(mExitProgramTime, _
+                                                ExpiryTimeUnitDateTime)
+    mExitProgramTimer.StartTimer
+End If
+
+End Sub
+
+Private Sub startTickers()
 Dim contractSpec As contractSpecifier
 Dim contractConfig As ConfigItem
 Dim contractSpecConfig As ConfigItem
@@ -510,7 +602,7 @@ For Each contractConfig In mContractsConfig.childItems
         With contractSpecConfig
             On Error Resume Next
             localSymbol = .getAttribute(AttributeNameLocalSYmbol)
-            symbol = .getAttribute(AttributeNameSYmbol)
+            symbol = .getAttribute(AttributeNameSymbol)
             exchange = .getAttribute(AttributeNameExchange)
             sectype = SecTypeFromString(.getAttribute(AttributeNameSecType))
             currencyCode = .getAttribute(AttributeNameCurrency)
@@ -531,14 +623,16 @@ For Each contractConfig In mContractsConfig.childItems
         
         failpoint = 400 '=====================================================
         
-        mTickers.StartTickers _
+        mTickers.startTickers _
                         IIf(mWriteBars, TickerOptions.TickerOptWriteTradeBarData, 0) + _
-                        IIf(mWriteTicks, TickerOptions.TickerOptWriteTickData, 0) + _
-                        IIf(mWriteTicks And CBool(contractConfig.getAttribute(AttributeNameBidAskBars)), _
+                        IIf(mWriteBars And mWriteBidAskBars, _
                             TickerOptions.TickerOptWriteBidAndAskBarData, 0) + _
-                        IIf(mWriteTicks, TickerOptions.TickerOptUpdateLatestBar, 0), _
+                        IIf(mWriteBars, TickerOptions.TickerOptUpdateLatestBar, 0) + _
+                        IIf(mWriteTicks, TickerOptions.TickerOptWriteTickData, 0) + _
+                        IIf(mWriteTicks And mIncludeMarketDepth, _
+                            TickerOptions.TickerOptIncludeMarketDepthInTickfile, 0), _
                         contractSpec, _
-                        DOMNoEvents, _
+                        IIf(mWriteTicks And mIncludeMarketDepth, DOMEvents.DOMRawEvents, DOMNoEvents), _
                         mOutputFormat, _
                         mOutputPath
         

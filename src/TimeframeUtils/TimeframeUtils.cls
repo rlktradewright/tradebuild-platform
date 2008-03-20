@@ -105,6 +105,11 @@ End Enum
 ' Types
 '@================================================================================
 
+Public Type SessionTimes
+    startTime       As Date
+    endTime         As Date
+End Type
+
 Public Type TimePeriod
     length          As Long
     units           As TimePeriodUnits
@@ -174,6 +179,34 @@ BarStartTime = gBarStartTime(timestamp, _
                             gNormaliseTime(sessionStartTime))
 End Function
 
+Public Function GetSessionTimes( _
+                ByVal timestamp As Date, _
+                Optional ByVal startTime As Date, _
+                Optional ByVal endTime As Date) As SessionTimes
+Dim st As SessionTimes
+gCalcSessionTimes timestamp, _
+                            gNormaliseTime(startTime), _
+                            gNormaliseTime(endTime), _
+                            st.startTime, _
+                            st.endTime
+GetSessionTimes = st
+End Function
+
+Public Function GetOffsetSessionTimes( _
+                ByVal timestamp As Date, _
+                ByVal offset As Long, _
+                Optional ByVal startTime As Date, _
+                Optional ByVal endTime As Date) As SessionTimes
+Dim st As SessionTimes
+gCalcOffsetSessionTimes timestamp, _
+                            offset, _
+                            gNormaliseTime(startTime), _
+                            gNormaliseTime(endTime), _
+                            st.startTime, _
+                            st.endTime
+GetOffsetSessionTimes = st
+End Function
+
 Public Function MonthStartDate( _
                 ByVal monthNumber As Long, _
                 ByVal baseDate As Date) As Date
@@ -223,19 +256,6 @@ OffsetBarStartTime = gCalcOffsetBarStartTime( _
                                                 gNormaliseTime(sessionStartTime), _
                                                 gNormaliseTime(sessionEndTime))
 End Function
-
-Public Sub SessionTimes( _
-                ByVal timestamp As Date, _
-                ByRef sessionStartTime As Date, _
-                ByRef sessionEndTime As Date, _
-                Optional ByVal startTime As Date, _
-                Optional ByVal endTime As Date)
-gCalcSessionTimes timestamp, _
-                            gNormaliseTime(startTime), _
-                            gNormaliseTime(endTime), _
-                            sessionStartTime, _
-                            sessionEndTime
-End Sub
 
 Public Function TimePeriodFromString( _
                 ByVal value As String) As TimePeriod

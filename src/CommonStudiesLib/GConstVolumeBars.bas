@@ -12,7 +12,6 @@ Public Const ConstVolBarsInputTickVolume As String = "Tick volume"
 Public Const ConstVolBarsParamVolPerBar As String = "Volume per bar"
 
 Public Const ConstVolBarsValueBar As String = "Bar"
-Public Const ConstVolBarsValueTotalVolume As String = "Total volume"
 
 '@================================================================================
 ' Enums
@@ -120,12 +119,6 @@ If mStudyDefinition Is Nothing Then
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueVolume)
     valueDef.Description = "Bar volume"
-    valueDef.defaultRegion = DefaultRegionCustom
-    valueDef.valueMode = ValueModeNone
-    valueDef.valueType = ValueTypeInteger
-    
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(ConstVolBarsValueTotalVolume)
-    valueDef.Description = "Accumulated volume"
     valueDef.defaultRegion = DefaultRegionCustom
     valueDef.valueMode = ValueModeNone
     valueDef.valueType = ValueTypeInteger

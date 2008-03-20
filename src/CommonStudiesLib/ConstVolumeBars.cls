@@ -41,6 +41,8 @@ Implements BarStudy
 ' Constants
 '@================================================================================
 
+Private Const NoPrice As Double = MaxDouble
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -70,16 +72,19 @@ Private mNumberOfValuesToCache As Long
 Private mBarNumber As Long
 Private mBarStartTime As Date
 
-' accumulated volume at end of previous bar
-Private mPrevBarVolume As Long
+Private mVolParser As VolumeParser
 
-' the latest volume figure received
-Private mLatestVolume As Long
+Private mCurrBarVolume As Long
+
+'' accumulated volume at end of previous bar
+'Private mPrevBarVolume As Long
+'
+'' the latest volume figure received
+'Private mLatestVolume As Long
 
 Private mLatestPrice As Double
 
 Private mVolumeCache As StudyValueCache
-Private mTotalVolumeCache As StudyValueCache
 
 Private mPriceTickSize As Double
 Private mVolumeTickSize As Double
@@ -118,24 +123,9 @@ End Property
 
 Private Sub BarStudy_switchUnderlyingStudy( _
                 ByVal newUnderlyingStudy As InputStudy)
-                
-If newUnderlyingStudy.session.currentSessionStartTime > mSession.currentSessionStartTime Then
-    ' we are now in a different session so reset volume variables
-    mLatestVolume = 0
-    mPrevBarVolume = 0
-End If
-
 Set mSession = newUnderlyingStudy.session
+mVolParser.changeSession mSession
 mBars.changeSession mSession
-
-' because we are switching to a new source, the volume figures may not be consistent
-' with those from the previous source - for example, if the previous source was historical
-' data, it may not have run from the start of the session so the aggregate volume will
-' be lower than the tick data source.
-'
-' To compensate for this, we have to adjust mPrevBarVolume when we receive the first
-' volume tick from the new source, so set it to indicate this
-mPrevBarVolume = -1
 End Sub
 
 '@================================================================================
@@ -144,8 +134,6 @@ End Sub
 
 Private Sub mSession_SessionStarted( _
                 ev As SessionEvent)
-mLatestVolume = 0
-mPrevBarVolume = 0
 Set mBar = Nothing
 End Sub
 
@@ -161,13 +149,14 @@ Private Sub customInitialise( _
                 ByVal underlyingStudy As Study, _
                 ByVal pSession As session)
 
+mLatestPrice = NoPrice
+
 Set mSession = pSession
+Set mVolParser = CreateVolumeParser(pSession)
 
 mStudyFoundation.ReplayUsingStudyValues = True
 customProcessParameters Parameters
 Set mVolumeCache = mStudyFoundation.FindValueCache(BarValueVolume)
-Set mTotalVolumeCache = mStudyFoundation.FindValueCache(ConstVolBarsValueTotalVolume)
-'mPrevBarVolume = -1
 End Sub
 
 Private Function customGetStudyValue( _
@@ -197,8 +186,6 @@ Case UCase$(BarValueTickVolume)
         sv.value = bar.tickVolume
 Case UCase$(BarValueVolume)
         sv = mVolumeCache.getStudyValue(ref)
-Case UCase$(ConstVolBarsValueTotalVolume)
-        sv = mTotalVolumeCache.getStudyValue(ref)
 Case UCase$(BarValueTickVolume)
         sv.value = bar.tickVolume
 Case UCase$(BarValueHL2)
@@ -215,6 +202,7 @@ End Function
 Private Sub customNotify( _
                 ev As StudyValueEvent)
 Dim evOut As StudyValueEvent
+Dim volIncrement As Long
 
 If IsEmpty(ev.value) Then Exit Sub
 
@@ -230,57 +218,53 @@ If ev.valueName = ConstVolBarsInputPrice Then
     notifyBarValues ev.timestamp
 ElseIf ev.valueName = ConstVolBarsInputTotalVolume Then
     
-    mLatestVolume = ev.value
-    If mPrevBarVolume < 0 Then
-        ' this is the first volume notification after switching to a new
-        ' source
-        mPrevBarVolume = ev.value - mVolumeCache.getValue(0)
-    End If
+    volIncrement = mVolParser.notify(ev.value)
     
     If mBar Is Nothing Then
-        createNewBar ev.timestamp
-        notifyBarValues ev.timestamp
+        If mLatestPrice <> NoPrice Then
+            createNewBar ev.timestamp
+            notifyBarValues ev.timestamp
+        Else
+            ' can't create a bar till we've had a price tick
+            Exit Sub
+        End If
     End If
     
-    If mLatestVolume - mPrevBarVolume >= mVolumePerBar Then
-        mVolumeCache.updateValue mVolumePerBar
+    If volIncrement + mCurrBarVolume >= mVolumePerBar Then
         
-        mTotalVolumeCache.updateValue mPrevBarVolume + mVolumePerBar
+        volIncrement = volIncrement - (mVolumePerBar - mCurrBarVolume)
+        mCurrBarVolume = mVolumePerBar
+        mVolumeCache.updateValue mVolumePerBar
         notifyVolume ev.timestamp
-        notifyTotalVolume ev.timestamp
         
         ' need to create one or more new bars
-        mPrevBarVolume = mPrevBarVolume + mVolumePerBar
         
-        Do While mLatestVolume - mPrevBarVolume >= mVolumePerBar
+        Do While volIncrement >= mVolumePerBar
             createNewBar ev.timestamp
             
+            mCurrBarVolume = mVolumePerBar
             mVolumeCache.updateValue mVolumePerBar
-            mTotalVolumeCache.updateValue mPrevBarVolume + mVolumePerBar
         
             notifyBarValues ev.timestamp
             notifyVolume ev.timestamp
-            notifyTotalVolume ev.timestamp
             
-            mPrevBarVolume = mPrevBarVolume + mVolumePerBar
+            volIncrement = volIncrement - mVolumePerBar
         
         Loop
         
-        If mLatestVolume - mPrevBarVolume > 0 Then
+        If volIncrement > 0 Then
             createNewBar ev.timestamp
-            
-            mVolumeCache.updateValue mLatestVolume - mPrevBarVolume
-            mTotalVolumeCache.updateValue mLatestVolume
+            mCurrBarVolume = volIncrement
+            mVolumeCache.updateValue mCurrBarVolume
         
             notifyBarValues ev.timestamp
             notifyVolume ev.timestamp
-            notifyTotalVolume ev.timestamp
         Else
             Set mBar = Nothing
         End If
     Else
-        mVolumeCache.updateValue mLatestVolume - mPrevBarVolume
-        mTotalVolumeCache.updateValue mLatestVolume
+        mCurrBarVolume = mCurrBarVolume + volIncrement
+        mVolumeCache.updateValue mCurrBarVolume
         notifyVolume ev.timestamp
     End If
     
@@ -371,7 +355,7 @@ mBars.notify ev
 
 Set mBar = mBars.bar(0)
 mVolumeCache.addValue 0, mBarNumber, timestamp, mBarStartTime
-mTotalVolumeCache.addValue 0, mBarNumber, timestamp, mBar.DateTime
+mCurrBarVolume = 0
 
 End Sub
 
@@ -440,19 +424,6 @@ End If
 
 End Sub
 
-Private Sub notifyTotalVolume( _
-                ByVal timestamp As Date)
-Dim evOut As StudyValueEvent
-
-evOut.barNumber = mBarNumber
-evOut.barStartTime = mBarStartTime
-Set evOut.Source = Me
-evOut.timestamp = timestamp
-evOut.valueName = ConstVolBarsValueTotalVolume
-evOut.value = mTotalVolumeCache.getValue(0)
-mStudyFoundation.notifyValue evOut
-End Sub
-
 Private Sub notifyVolume( _
                 ByVal timestamp As Date)
 Dim evOut As StudyValueEvent
@@ -462,7 +433,7 @@ evOut.barStartTime = mBarStartTime
 Set evOut.Source = Me
 evOut.timestamp = timestamp
 evOut.valueName = BarValueVolume
-evOut.value = mVolumeCache.getValue(0)
+evOut.value = mCurrBarVolume
 mStudyFoundation.notifyValue evOut
 End Sub
 

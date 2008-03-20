@@ -43,6 +43,14 @@ Implements QuoteListener
 Private Const ProjectName                   As String = "gxd"
 Private Const ModuleName                    As String = "Processor"
 
+Private Const PriceDown                     As String = "-"
+Private Const PriceSame                     As String = "="
+Private Const PriceUp                       As String = "+"
+
+Private Const SizeDown                      As String = "-"
+Private Const SizeSame                      As String = "="
+Private Const SIzeUp                        As String = "+"
+
 '@================================================================================
 ' Member variables
 '@================================================================================
@@ -85,7 +93,7 @@ outputPrice ev, "L"
 End Sub
 
 Private Sub QuoteListener_openInterest(ev As TradeBuild26.QuoteEvent)
-outputSize ev, "O"
+outputSize ev, "I"
 End Sub
 
 Private Sub QuoteListener_previousClose(ev As TradeBuild26.QuoteEvent)
@@ -115,7 +123,7 @@ End Sub
 
 Private Sub mTB_Error(ev As TWUtilities30.ErrorEvent)
 gCon.writeLineToConsole "Error " & ev.errorCode & _
-                        ": " & ev.errorMsg
+                        ": " & ev.errorMessage
 End Sub
 
 Private Sub mTB_Notification(ev As TWUtilities30.NotificationEvent)
@@ -176,24 +184,30 @@ If mTFManager.Ticker.state = TickerStatePaused Then mTFManager.StartReplay
 End Sub
 
 Friend Sub startData( _
-                ByVal spec As contractSpecifier, _
+                ByVal spec As ContractSpecifier, _
                 ByVal fromDate As Date, _
                 ByVal toDate As Date, _
-                ByVal speed As Long)
-ReDim tfSpecs(0) As TickfileSpecifier
+                ByVal speed As Long, _
+                ByVal raw As Boolean)
+Dim tfSpecs As New TickFileSpecifiers
+Dim tfs As New TickfileSpecifier
 Dim inFormats() As TickfileFormatSpecifier
                 
-Set tfSpecs(0) = New TickfileSpecifier
-tfSpecs(0).Contract = CreateContractBuilder(spec).Contract
+tfSpecs.Add tfs
+tfs.Contract = CreateContractBuilder(spec).Contract
 If fromDate < 1 Then fromDate = Date + fromDate
-tfSpecs(0).fromDate = fromDate
+tfs.fromDate = fromDate
 If toDate = 0 Then toDate = Now
 If toDate < 1 Then toDate = Date + toDate
-tfSpecs(0).toDate = toDate
+tfs.toDate = toDate
 inFormats = mTB.SupportedInputTickfileFormats
-tfSpecs(0).TickfileFormatID = inFormats(0).FormalID
-Set mTFManager = TradeBuildAPI.Tickers.createTickFileManager(TickerOptions.TickerOptUseExchangeTimeZone)
-mTFManager.TickfileSpecifiers = tfSpecs
+tfs.TickfileFormatID = inFormats(0).FormalID
+Set mTFManager = TradeBuildAPI.Tickers.createTickFileManager( _
+                                TickerOptions.TickerOptUseExchangeTimeZone + _
+                                IIf(raw, TickerOptions.TickerOptNoImpliedTrades + _
+                                    TickerOptions.TickerOptNoVolumeAdjustments, _
+                                    0))
+mTFManager.TickFileSpecifiers = tfSpecs
 mTFManager.replaySpeed = speed
 mTFManager.StartReplay
 End Sub
@@ -219,11 +233,11 @@ gCon.writeString ","
 
 Select Case ev.priceChange
 Case ValueChanges.ValueChangeDown
-    gCon.writeString "PRICEDOWN"
+    gCon.writeString PriceDown
 Case ValueChanges.ValueChangeUp
-    gCon.writeString "PRICEUP"
+    gCon.writeString PriceUp
 Case ValueChanges.ValueChangeNone
-    gCon.writeString "PRICESAME"
+    gCon.writeString PriceSame
 End Select
 
 gCon.writeLine ""
@@ -243,22 +257,22 @@ gCon.writeString ","
 
 Select Case ev.priceChange
 Case ValueChanges.ValueChangeDown
-    gCon.writeString "PRICEDOWN"
+    gCon.writeString PriceDown
 Case ValueChanges.ValueChangeUp
-    gCon.writeString "PRICEUP"
+    gCon.writeString PriceUp
 Case ValueChanges.ValueChangeNone
-    gCon.writeString "PRICESAME"
+    gCon.writeString PriceSame
 End Select
 
 gCon.writeString ","
 
 Select Case ev.sizeChange
 Case ValueChanges.ValueChangeDown
-    gCon.writeString "SIZEDOWN"
+    gCon.writeString SizeDown
 Case ValueChanges.ValueChangeUp
-    gCon.writeString "SIZEUP"
+    gCon.writeString SIzeUp
 Case ValueChanges.ValueChangeNone
-    gCon.writeString "SIZESAME"
+    gCon.writeString SizeSame
 End Select
 
 gCon.writeLine ""
@@ -276,11 +290,11 @@ gCon.writeString ","
 
 Select Case ev.sizeChange
 Case ValueChanges.ValueChangeDown
-    gCon.writeString "SIZEDOWN"
+    gCon.writeString SizeDown
 Case ValueChanges.ValueChangeUp
-    gCon.writeString "SIZEUP"
+    gCon.writeString SIzeUp
 Case ValueChanges.ValueChangeNone
-    gCon.writeString "SIZESAME"
+    gCon.writeString SizeSame
 End Select
 
 gCon.writeLine ""

@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "PublicTypes"
+Attribute VB_Name = "IBTWSSP"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -111,6 +111,7 @@ Public Enum TWSSocketInMsgTypes
     TICK_EFP = 47
     CURRENT_TIME = 49
     REAL_TIME_BARS = 50
+    MAX_SOCKET_INMSG
 End Enum
 
 Public Enum TWSSocketOutMsgTypes
@@ -226,7 +227,7 @@ End Type
 
 Public Type OrderIdMapEntry
     order                   As IOrder
-    orderSubmitter          As orderSubmitter
+    OrderSubmitter          As OrderSubmitter
 End Type
 
 Public Type TWSContractDetailsRequestQueueEntry
@@ -238,7 +239,7 @@ End Type
 
 Public Type TWSHistoricalDataRequestQueueEntry
     id                      As Long
-    contractSpec            As ContractSpecifier
+    Contract                As Contract
     endDateTime             As String
     barSizeSetting          As String
     duration                As String

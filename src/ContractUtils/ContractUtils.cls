@@ -172,6 +172,14 @@ Then
             "'" & exchange & "' is not a valid exchange code"
 End If
 
+If expiry <> "" Then
+    If Not gIsValidExpiry(expiry) Then
+        Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                ProjectName & "." & ModuleName & ":" & "CreateContractSpecifier", _
+                "'" & expiry & "' is not a valid expiry format"
+    End If
+End If
+
 Select Case sectype
 Case 0  ' ie not supplied
 Case SecTypeStock
@@ -331,6 +339,23 @@ Exit Function
 Err:
 Err.Raise Err.Number, _
         ProjectName & "." & ModuleName & ":" & "IsValidExchangeCode" & "." & failpoint & _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
+        Err.description
+
+End Function
+
+Public Function isValidExpiry( _
+                ByVal value As String) As Boolean
+Dim failpoint As Long
+On Error GoTo Err
+
+isValidExpiry = gIsValidExpiry(value)
+
+Exit Function
+
+Err:
+Err.Raise Err.Number, _
+        ProjectName & "." & ModuleName & ":" & "isValidExpiry" & "." & failpoint & _
         IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
         Err.description
 

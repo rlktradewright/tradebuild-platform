@@ -22,7 +22,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements InfoListener
+Implements LogListener
 
 '@================================================================================
 ' Events
@@ -64,15 +64,20 @@ Private mLineNumber As Long
 
 Private Sub Class_Initialize()
 Set mTB = TradeBuildAPI
-mTB.addInfoListener Me
+GetLogger("").addLogListener Me
+GetLogger("").logLevel = LogLevelNormal
 End Sub
 
 '@================================================================================
 ' InfoListener Interface Members
 '@================================================================================
 
-Private Sub InfoListener_notify(ev As TradeBuild26.InfoEvent)
-gCon.writeErrorLine VariantToString(ev.Data)
+Private Sub LogListener_finish()
+
+End Sub
+
+Private Sub LogListener_Notify(ByVal logrec As TWUtilities30.LogRecord)
+gCon.writeErrorLine VariantToString(logrec.Data)
 End Sub
 
 '@================================================================================
@@ -103,7 +108,7 @@ End Sub
 '@================================================================================
 
 Private Sub mTB_Error(ev As TWUtilities30.ErrorEvent)
-gCon.writeErrorLine "TradeBuild error: " & ev.errorMsg
+gCon.writeErrorLine "TradeBuild error: " & ev.errorMessage
 End Sub
 
 Private Sub mTB_Notification(ev As TWUtilities30.NotificationEvent)

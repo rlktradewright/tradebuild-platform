@@ -591,6 +591,7 @@ Private Const PropNameAllowHorizontalMouseScrolling     As String = "AllowHorizo
 Private Const PropNameAllowVerticalMouseScrolling       As String = "AllowVerticalMouseScrolling"
 Private Const PropNameAutoscroll                        As String = "Autoscroll"
 Private Const PropNameChartBackColor                    As String = "ChartBackColor"
+Private Const PropNameDefaultBarDisplayMode             As String = "DefaultBarDisplayMode"
 Private Const PropNameDefaultRegionAutoscale            As String = "DefaultRegionAutoscale"
 Private Const PropNameDefaultRegionBackColor            As String = "DefaultRegionBackColor"
 Private Const PropNameDefaultRegionGridColor            As String = "DefaultRegionGridColor"
@@ -617,6 +618,7 @@ Private Const PropDfltAllowHorizontalMouseScrolling     As Boolean = True
 Private Const PropDfltAllowVerticalMouseScrolling       As Boolean = True
 Private Const PropDfltAutoscroll                        As Boolean = True
 Private Const PropDfltChartBackColor                    As Long = vbWhite
+Private Const PropDfltDefaultBarDisplayMode             As Long = BarDisplayModes.BarDisplayModeBar
 Private Const PropDfltDefaultRegionAutoscale            As Boolean = True
 Private Const PropDfltDefaultRegionBackColor            As Long = vbWhite
 Private Const PropDfltDefaultRegionGridColor            As Long = &HC0C0C0
@@ -727,6 +729,8 @@ Private mReferenceTime As Date
 
 Private mAutoscroll As Boolean
 
+Private mDefaultBarDisplayMode As BarDisplayModes
+
 '================================================================================
 ' User Control Event Handlers
 '================================================================================
@@ -771,6 +775,12 @@ End If
 UserControl.backColor = PropBag.ReadProperty(PropNameChartBackColor, PropDfltChartBackColor)
 If Err.Number <> 0 Then
     UserControl.backColor = PropDfltChartBackColor
+    Err.clear
+End If
+
+defaultBarDisplayMode = PropBag.ReadProperty(PropNameDefaultBarDisplayMode, PropDfltDefaultBarDisplayMode)
+If Err.Number <> 0 Then
+    defaultBarDisplayMode = PropDfltDefaultBarDisplayMode
     Err.clear
 End If
 
@@ -918,6 +928,7 @@ PropBag.WriteProperty PropNameAllowHorizontalMouseScrolling, allowHorizontalMous
 PropBag.WriteProperty PropNameAllowVerticalMouseScrolling, allowVerticalMouseScrolling, PropDfltAllowVerticalMouseScrolling
 PropBag.WriteProperty PropNameAutoscroll, autoscroll, PropDfltAutoscroll
 PropBag.WriteProperty PropNameChartBackColor, UserControl.backColor, PropDfltChartBackColor
+PropBag.WriteProperty PropNameDefaultBarDisplayMode, mDefaultBarDisplayMode, PropDfltDefaultBarDisplayMode
 PropBag.WriteProperty PropNameDefaultRegionAutoscale, mDefaultRegionStyle.autoscale, PropDfltDefaultRegionAutoscale
 PropBag.WriteProperty PropNameDefaultRegionBackColor, mDefaultRegionStyle.backColor, PropDfltDefaultRegionBackColor
 PropBag.WriteProperty PropNameDefaultRegionGridColor, mDefaultRegionStyle.gridColor, PropDfltDefaultRegionGridColor
@@ -1279,6 +1290,15 @@ Case ToolText
 Case ToolPitchfork
     mCurrentTool = ToolTypes.ToolPointer
 End Select
+End Property
+
+Public Property Get defaultBarDisplayMode() As BarDisplayModes
+defaultBarDisplayMode = mDefaultBarDisplayMode
+End Property
+
+Public Property Let defaultBarDisplayMode( _
+                ByVal value As BarDisplayModes)
+mDefaultBarDisplayMode = value
 End Property
 
 Public Property Get defaultBarStyle() As BarStyle
@@ -1709,7 +1729,7 @@ If mHideGrid Then addChartRegion.hideGrid
 
 
 If mRegionsIndex = UBound(mRegions) Then
-    ReDim Preserve mRegions(UBound(mRegions) + 100) As RegionTableEntry
+    ReDim Preserve mRegions(2 * (UBound(mRegions) + 1) - 1) As RegionTableEntry
 End If
 
 mRegionsIndex = mRegionsIndex + 1
@@ -2259,7 +2279,7 @@ Dim i As Long
 
 mPrevHeight = UserControl.height
 
-ReDim mRegions(100) As RegionTableEntry
+ReDim mRegions(3) As RegionTableEntry
 mRegionsIndex = -1
 mNumRegionsInUse = 0
 mRegionHeightReductionFactor = 1
@@ -2293,7 +2313,7 @@ If Not firstInitialisationDone Then
     mShowHorizontalScrollBar = PropDfltShowHorizontalScrollBar
     mShowToolbar = PropDfltShowToolbar
     HScroll.height = HorizScrollBarHeight
-    HScroll.visible = True
+    HScroll.visible = mShowHorizontalScrollBar
     mVerticalGridSpacing = PropDfltVerticalGridSpacing
     mVerticalGridUnits = PropDfltVerticalGridUnits
     mVerticalGridParametersSet = False
@@ -2312,11 +2332,11 @@ If Not firstInitialisationDone Then
     mDefaultRegionStyle.YScaleQuantum = PropDfltDefaultRegionYScaleQuantum
     
     Set mDefaultBarStyle = New BarStyle
-    mDefaultBarStyle.tailThickness = 1
+    mDefaultBarStyle.tailThickness = 2
     mDefaultBarStyle.outlineThickness = 1
     mDefaultBarStyle.upColor = &H1D9311
     mDefaultBarStyle.downColor = &H43FC2
-    mDefaultBarStyle.displayMode = BarDisplayModeCandlestick
+    mDefaultBarStyle.displayMode = mDefaultBarDisplayMode
     mDefaultBarStyle.solidUpBody = True
     mDefaultBarStyle.barThickness = 2
     mDefaultBarStyle.barWidth = 0.6

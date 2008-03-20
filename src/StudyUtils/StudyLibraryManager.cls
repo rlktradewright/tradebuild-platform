@@ -50,8 +50,11 @@ Private Const ProjectName As String = "StudyUtils26"
 Private Const ModuleName As String = "StudyLibraryManager"
 
 Private Const AttributeNameEnabled As String = "Enabled"
+Private Const AttributeNameStudyLibraryBuiltIn As String = "BuiltIn"
 Private Const AttributeNameStudyLibraryName As String = "Name"
 Private Const AttributeNameStudyLibraryProgId As String = "ProgId"
+
+Private Const BuiltInStudyLibProgId As String = "CmnStudiesLib26.StudyLib"
 
 Private Const ConfigNameStudyLibraries As String = "StudyLibraries"
 Private Const ConfigNameStudyLibrary As String = "StudyLibrary"
@@ -89,7 +92,7 @@ Private mStudyLibs As ConfigItem
 '@================================================================================
 
 Private Sub Class_Initialize()
-ReDim mStudyLibraries(9) As LibraryTableEntry
+ReDim mStudyLibraries(1) As LibraryTableEntry
 mMaxLibIndex = -1
 End Sub
 
@@ -106,7 +109,7 @@ End Sub
 '@================================================================================
 
 Friend Property Get AvailableStudies() As StudyListEntry()
-ReDim studylist(20) As StudyListEntry
+ReDim studylist(31) As StudyListEntry
 Dim spList() As String
 Dim nextStudyListIndex As Long
 Dim studyLib As StudyLibrary
@@ -119,7 +122,7 @@ For i = 0 To mMaxLibIndex
         spList = studyLib.getImplementedStudyNames
         For j = 0 To UBound(spList)
             If nextStudyListIndex > UBound(studylist) Then
-                ReDim studylist(UBound(studylist) + 20) As StudyListEntry
+                ReDim Preserve studylist(2 * (UBound(studylist) + 1) - 1) As StudyListEntry
             End If
             studylist(nextStudyListIndex).name = spList(j)
             studylist(nextStudyListIndex).StudyLibrary = mStudyLibraries(i).name
@@ -183,7 +186,7 @@ For i = 0 To mMaxLibIndex
 Next
 
 If mMaxLibIndex = UBound(mStudyLibraries) Then
-    ReDim Preserve mStudyLibraries(UBound(mStudyLibraries) + 10) As LibraryTableEntry
+    ReDim Preserve mStudyLibraries(2 * (UBound(mStudyLibraries) + 1) - 1) As LibraryTableEntry
 End If
 mMaxLibIndex = mMaxLibIndex + 1
 Set add = studyLib
@@ -203,6 +206,10 @@ Friend Sub addConfigEntry( _
 Dim sl As ConfigItem
 
 If mConfig Is Nothing Then Exit Sub
+
+If mStudyLibs Is Nothing Then
+    Set mStudyLibs = mConfig.childItems.AddItem(ConfigNameStudyLibraries)
+End If
 
 Set sl = mStudyLibs.childItems.AddItem(ConfigNameStudyLibrary)
 sl.setAttribute AttributeNameStudyLibraryName, name
@@ -249,7 +256,7 @@ Public Sub errorInLibrary( _
                 ByVal libHandle As Long)
 Dim ev As ErrorEvent
 ev.errorCode = errorCode
-ev.errorMsg = errorMessage
+ev.errorMessage = errorMessage
 If libHandle >= 0 Then
     Set ev.source = mStudyLibraries(libHandle).libObject
 End If
@@ -263,7 +270,7 @@ Public Sub fatalErrorInLibrary( _
                 ByVal libHandle As Long)
 Dim ev As ErrorEvent
 ev.errorCode = errorCode
-ev.errorMsg = errorMessage & " (" & source & ")"
+ev.errorMessage = errorMessage & " (" & source & ")"
 If libHandle >= 0 Then
     Set ev.source = mStudyLibraries(libHandle).libObject
 End If
@@ -293,11 +300,6 @@ End Function
 
 Friend Sub LoadStudyLibraryConfiguration( _
                 ByVal config As ConfigItem)
-Dim sl As ConfigItem
-Dim slName As String
-Dim slProgId As String
-Dim slObj As StudyLibrary
-Dim slEnabled As String
 
 Set mConfig = config
 
@@ -305,9 +307,17 @@ On Error Resume Next
 Set mStudyLibs = mConfig.childItems.Item(ConfigNameStudyLibraries)
 On Error GoTo 0
 
-If mStudyLibs Is Nothing Then
-    Set mStudyLibs = mConfig.childItems.AddItem(ConfigNameStudyLibraries)
+If Not mStudyLibs Is Nothing Then
+    loadStudyLibs
 End If
+End Sub
+
+Private Sub loadStudyLibs()
+Dim sl As ConfigItem
+Dim slName As String
+Dim slProgId As String
+Dim slObj As StudyLibrary
+Dim slEnabled As String
 
 For Each sl In mStudyLibs.childItems
     On Error Resume Next
@@ -316,11 +326,15 @@ For Each sl In mStudyLibs.childItems
     If CBool(slEnabled) Then
         slName = sl.getAttribute(AttributeNameStudyLibraryName)
         
-        slProgId = sl.getAttribute(AttributeNameStudyLibraryProgId)
-        If slProgId = "" Then _
-            Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                    ProjectName & "." & ModuleName & ":" & "LoadStudyLibraryConfiguration", _
-                    "Study library ProgId not specified in configuration file"
+        If sl.getAttribute(AttributeNameStudyLibraryBuiltIn) = "True" Then
+            slProgId = BuiltInStudyLibProgId
+        Else
+            slProgId = sl.getAttribute(AttributeNameStudyLibraryProgId)
+            If slProgId = "" Then _
+                Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                        ProjectName & "." & ModuleName & ":" & "LoadStudyLibraryConfiguration", _
+                        "Study library ProgId not specified in configuration file"
+        End If
         
         Set slObj = CreateObject(slProgId)
         If slObj Is Nothing Then _

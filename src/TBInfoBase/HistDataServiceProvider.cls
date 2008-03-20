@@ -58,6 +58,8 @@ Private Const ModuleName As String = "HistDataServiceProvider"
 
 Private mName As String
 
+Private mMode As AccessModes
+
 Private mHandle As Long
 Private mCommonServiceConsumer As ICommonServiceConsumer
 
@@ -88,6 +90,7 @@ mDatabaseName = "Trading"
 mServer = "localhost"
 mUserName = ""
 mPassword = ""
+mMode = ReadWrite
 End Sub
 
 Private Sub Class_Terminate()
@@ -125,7 +128,8 @@ reader.initialise mName & " (reader)", _
                 mCommonServiceConsumer, _
                 serviceConsumer, _
                 Me, _
-                DataConsumer
+                DataConsumer, _
+                mMode
 mHistDataReaders.Add reader
 Exit Function
 Err:
@@ -207,7 +211,7 @@ End Property
 Private Function IBarDataServiceProvider_Supports( _
                             ByVal capabilities As Long _
                             ) As Boolean
-IBarDataServiceProvider_Supports = gHistDataSupports(capabilities)
+IBarDataServiceProvider_Supports = gHistDataSupports(capabilities, mMode)
 End Function
 
 '@===============================================================================
@@ -259,6 +263,20 @@ For Each param In params
         password = param.value
     Case UCase$(ParamNameUseSynchronousWrites)
         useSynchronousWrites = gStringToBool(param.value)
+    Case UCase$(ParamNameAccessMode)
+        Select Case UCase$(param.value)
+        Case "R", "RO", "READ", "READONLY", "READ ONLY"
+            mMode = ReadOnly
+        Case "W", "WO", "WRITE", "WRITEONLY", "WRITE ONLY"
+            mMode = WriteOnly
+        Case "RW", "READWRITE", "READ WRITE", "READ & WRITE"
+            mMode = ReadWrite
+        Case Else
+            handleFatalError ErrorCodes.ErrIllegalArgumentException, _
+                            "ICommonServiceProvider_Link", _
+                            "Invalid access mode parameter"
+            Exit Sub
+        End Select
     End Select
 Next
 End Sub

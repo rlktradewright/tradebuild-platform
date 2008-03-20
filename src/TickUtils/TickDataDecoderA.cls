@@ -6,11 +6,29 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "TickDataDecoderV1"
+Attribute VB_Name = "TickDataDecoderA"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = True
+Attribute VB_Exposed = False
+' Copyright 2008 Richard L King
+'
+' This file is part of TradeBuild Tick Utilities Package.
+'
+' TradeBuild Tick Utilities Package is free software: you can redistribute it
+' and/or modify it under the terms of the GNU General Public License as
+' published by the Free Software Foundation, either version 3 of the License,
+' or (at your option) any later version.
+'
+' TradeBuild Tick Utilities Package is distributed in the hope that it will
+' be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+'
+' You should have received a copy of the GNU General Public License
+' along with TradeBuild Tick Utilities Package.  If not, see
+' <http://www.gnu.org/licenses/>.
+ 
 Option Explicit
 
 ''
@@ -52,10 +70,12 @@ Private mDataIndex                  As Long
 
 Private mTickSize                   As Double
 
-Private mPeriodStartTime           As Date   ' timestamp at start of encoding period
+Private mPeriodStartTime            As Date   ' timestamp at start of encoding period
 Private mCurrentTimestamp           As Date
 
 Private mBasePrice                  As Double
+
+Private mVersion                    As Long
 
 '@================================================================================
 ' Class Event Handlers
@@ -67,30 +87,43 @@ Private mBasePrice                  As Double
 
 Private Function TickDataDecoder_getNextTick( _
                 ByRef tick As GenericTick) As Boolean
-Dim timestamp As Date
-Dim tickType As TickTypes
-Dim price As Double
-Dim size As Long
-Dim position As Long
-Dim operation As DOMOperations
-Dim side As DOMSides
-Dim marketmaker As String
+Dim typeByte As Byte
+Dim sizeType As SizeTypes
 
-If mDataIndex > UBound(mData) Then
-    TickDataDecoder_getNextTick = False
-    Exit Function
-End If
+If mDataIndex > UBound(mData) Then Exit Function
 
-ReadRecord timestamp, tickType, price, size, position, operation, side, marketmaker
+typeByte = readByte
 
-tick.marketmaker = marketmaker
-tick.operation = operation
-tick.position = position
-tick.price = price
-tick.side = side
-tick.size = size
-tick.tickType = tickType
-tick.timestamp = timestamp
+tick.timestamp = readTimestamp(typeByte)
+
+tick.tickType = typeByte And TickTypeBits
+sizeType = (typeByte And SizeTypeBits) / SizeTypeShifter
+
+Select Case tick.tickType
+Case TickTypes.TickTypeBid
+    readQuoteRecord typeByte, sizeType, tick
+Case TickTypes.TickTypeAsk
+    readQuoteRecord typeByte, sizeType, tick
+Case TickTypes.TickTypeClosePrice
+    readPriceRecord typeByte, tick
+Case TickTypes.TickTypeHighPrice
+    readPriceRecord typeByte, tick
+Case TickTypes.TickTypeLowPrice
+    readPriceRecord typeByte, tick
+Case TickTypes.TickTypeMarketDepth
+    readMarketDepthRecord typeByte, sizeType, tick
+Case TickTypes.TickTypeMarketDepthReset
+    readMarketDepthResetRecord typeByte, tick
+Case TickTypes.TickTypeTrade
+    readQuoteRecord typeByte, sizeType, tick
+Case TickTypes.TickTypeVolume
+    readSizeRecord typeByte, sizeType, tick
+Case TickTypes.TickTypeOpenInterest
+    readSizeRecord typeByte, sizeType, tick
+Case TickTypes.TickTypeOpenPrice
+    readPriceRecord typeByte, tick
+End Select
+
 TickDataDecoder_getNextTick = True
 
 End Function
@@ -111,11 +144,20 @@ Friend Sub initialise( _
                 ByVal periodStartTime As Date, _
                 ByVal basePrice As Double, _
                 ByVal tickSize As Double, _
+                ByVal encodingFormat As String, _
                 ByRef data() As Byte)
 mPeriodStartTime = periodStartTime
 mCurrentTimestamp = mPeriodStartTime
 mBasePrice = basePrice
 mTickSize = tickSize
+
+Select Case encodingFormat
+Case TickEncodingFormatV1
+    mVersion = 1
+Case TickEncodingFormatV2
+    mVersion = 2
+End Select
+
 mData = data
 End Sub
 
@@ -123,176 +165,167 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Function ReadByte() As Byte
-ReadByte = mData(mDataIndex)
+Private Function readByte() As Byte
+readByte = mData(mDataIndex)
 mDataIndex = mDataIndex + 1
 End Function
 
-Private Function ReadInt() As Long
-ReadInt = ReadByte + (ReadByte * &H100&)
+Private Function readInt() As Long
+readInt = readByte + (readByte * &H100&)
 End Function
 
-Private Function ReadLong() As Long
+Private Function readLong() As Long
 ' note that this will fail (overflow) if attempting to read a negative long,
 ' but this should never happen
-ReadLong = CLng(ReadByte) + _
-            &H100& * CLng(ReadByte) + _
-            &H10000 * CLng(ReadByte) + _
-            &H1000000 * CLng(ReadByte)
+readLong = CLng(readByte) + _
+            &H100& * CLng(readByte) + _
+            &H10000 * CLng(readByte) + _
+            &H1000000 * CLng(readByte)
 End Function
 
-Private Sub ReadMarketDepthRecord( _
+Private Sub readMarketDepthRecord( _
                 ByVal typeByte As Byte, _
-                ByRef position As Long, _
-                ByRef marketmaker As String, _
-                ByRef operation As DOMOperations, _
-                ByRef side As DOMSides, _
-                ByRef price As Double, _
-                ByRef size As Long, _
-                ByVal sizeType As SizeTypes)
+                ByVal sizeType As SizeTypes, _
+                ByRef tick As GenericTick)
 Dim sideOperationPositionByte As Byte
 
-sideOperationPositionByte = ReadByte
-position = sideOperationPositionByte And PositionBits
-operation = (sideOperationPositionByte And OperationBits) / OperationShifter
-side = (sideOperationPositionByte And SideBits) / SideShifter
-ReadPrice typeByte, price
-ReadSize sizeType, size
-marketmaker = ReadString
+sideOperationPositionByte = readByte
+tick.position = sideOperationPositionByte And PositionBits
+tick.operation = (sideOperationPositionByte And OperationBits) / OperationShifter
+tick.side = (sideOperationPositionByte And SideBits) / SideShifter
+tick.price = readPrice(typeByte)
+tick.side = readSize(sizeType)
+tick.marketmaker = readString
 End Sub
 
-Private Sub ReadMarketDepthResetRecord( _
-                ByVal typeByte)
-End Sub
-
-Private Sub ReadPrice( _
+Private Sub readMarketDepthResetRecord( _
                 ByVal typeByte As Byte, _
-                ByRef price As Double)
+                ByRef tick As GenericTick)
+' nothing to do
+End Sub
+
+Private Function readPrice( _
+                ByVal typeByte As Byte) As Double
 Dim mostSigByte As Byte
 Dim leastSigByte As Byte
 Dim numticks As Integer
 
-mostSigByte = ReadByte
+mostSigByte = readByte
 If (mostSigByte And &H80) = 0 Then
     numticks = CInt(mostSigByte)
 Else
     mostSigByte = mostSigByte And &H7F
-    leastSigByte = ReadByte
+    leastSigByte = readByte
     numticks = CInt(mostSigByte) * &H100 + CInt(leastSigByte)
 End If
     
 If (typeByte And NegativeTicks) <> 0 Then
-    price = mBasePrice - mTickSize * numticks
+    readPrice = mBasePrice - mTickSize * numticks
 Else
-    price = mBasePrice + mTickSize * numticks
+    readPrice = mBasePrice + mTickSize * numticks
 End If
-End Sub
+End Function
 
-Private Sub ReadPriceRecord( _
+Private Sub readPriceRecord( _
                 ByVal typeByte As Byte, _
-                ByRef price As Double)
-ReadPrice typeByte, price
+                ByRef tick As GenericTick)
+tick.price = readPrice(typeByte)
 End Sub
 
-Private Sub ReadQuoteRecord( _
+Private Sub readQuoteRecord( _
                 ByVal typeByte As Byte, _
-                ByRef price As Double, _
-                ByRef size As Long, _
-                ByVal sizeType As SizeTypes)
-ReadPrice typeByte, price
-ReadSize sizeType, size
-End Sub
-
-Private Sub ReadRecord( _
-                ByRef timestamp As Date, _
-                ByRef tickType As TickTypes, _
-                ByRef price As Double, _
-                ByRef size As Long, _
-                ByRef position As Long, _
-                ByRef operation As DOMOperations, _
-                ByRef side As DOMSides, _
-                ByRef marketmaker As String _
-                )
-Dim typeByte As Byte
-Dim sizeType As SizeTypes
-
-typeByte = ReadByte
-
-ReadTimestamp typeByte, timestamp
-
-tickType = typeByte And TickTypeBits
-sizeType = (typeByte And SizeTypeBits) / SizeTypeShifter
-
-Select Case tickType
-Case Bid
-    ReadQuoteRecord typeByte, price, size, sizeType
-Case Ask
-    ReadQuoteRecord typeByte, price, size, sizeType
-Case closePrice
-    ReadPriceRecord typeByte, price
-Case highPrice
-    ReadPriceRecord typeByte, price
-Case lowPrice
-    ReadPriceRecord typeByte, price
-Case marketDepth
-    ReadMarketDepthRecord typeByte, position, marketmaker, operation, side, price, size, sizeType
-Case MarketDepthReset
-    ReadMarketDepthResetRecord typeByte
-Case Trade
-    ReadQuoteRecord typeByte, price, size, sizeType
-Case volume
-    ReadSizeRecord typeByte, size, sizeType
-End Select
-
-End Sub
-
-Private Sub ReadSize( _
                 ByVal sizeType As SizeTypes, _
-                ByRef size As Long)
+                ByRef tick As GenericTick)
+tick.price = readPrice(typeByte)
+tick.size = readSize(sizeType)
+End Sub
+
+Private Function readSize( _
+                ByVal sizeType As SizeTypes) As Long
 Select Case sizeType
-Case ShortSize
-    size = ReadByte
-Case IntSize
-    size = ReadInt
-Case LongSize
-    size = ReadLong
+Case ByteSize
+    readSize = readByte
+Case UInt16Size
+    readSize = readInt
+Case UInt32Size
+    readSize = readLong
 End Select
-End Sub
+End Function
 
-Private Sub ReadSizeRecord( _
+Private Sub readSizeRecord( _
                 ByVal typeByte As Byte, _
-                ByRef size As Long, _
-                ByVal sizeType As SizeTypes)
-ReadSize sizeType, size
+                ByVal sizeType As SizeTypes, _
+                ByRef tick As GenericTick)
+tick.size = readSize(sizeType)
 End Sub
 
-Private Function ReadString() As String
+Private Function readString() As String
 Dim ar() As Byte
 Dim length As Long
 Dim i As Long
+Dim startIndex As Long
+Dim b0 As Byte
+Dim b1 As Byte
+Dim bigEndian As Boolean
 
-length = ReadByte
+length = readByte
 If length = 0 Then Exit Function
 
-ReDim ar(2 * length - 1) As Byte
-For i = 0 To UBound(ar)
-    ar(i) = ReadByte
-Next
-ReadString = ar
+If mVersion = 1 Then
+    ' version 1 wrote length of string instead of length of array
+    ReDim ar(2 * length - 1) As Byte
+Else
+
+    b0 = readByte
+    b1 = readByte
+    
+    ' see RFC 2781 4.3 for details of interpeting the Byte Order Marker (BOM)
+    If b0 = &HFE And b1 = &HFF Then
+        bigEndian = True
+        ReDim ar(length - 3) As Byte
+    ElseIf b0 = &HFF And b1 = &HFE Then
+        bigEndian = False
+        ReDim ar(length - 3) As Byte
+    Else
+        bigEndian = True
+        ReDim ar(length - 1) As Byte
+        ar(0) = b0
+        ar(1) = b1
+        startIndex = 2
+    End If
+    
+End If
+
+If bigEndian Then
+    ' we need to change it to little-endian, because that's how
+    ' VB stores strings
+    For i = startIndex To UBound(ar)
+        If i Mod 2 = 0 Then
+            ar(i + 1) = readByte
+        Else
+            ar(i - 1) = readByte
+        End If
+    Next
+Else
+    For i = startIndex To UBound(ar)
+        ar(i) = readByte
+    Next
+End If
+
+readString = ar
 End Function
 
-Private Sub ReadTimestamp( _
-                ByVal typeByte As Byte, _
-                ByRef timestamp As Date)
+Private Function readTimestamp( _
+                ByVal typeByte As Byte) As Date
 Dim diff As Long
 If (typeByte And NoTimestamp) = 0 Then
-    diff = ReadInt
-    timestamp = mPeriodStartTime + (diff / (86400 * 1000))
-    mCurrentTimestamp = timestamp
+    diff = readInt
+    readTimestamp = mPeriodStartTime + (diff / (86400 * 1000))
+    mCurrentTimestamp = readTimestamp
 Else
-    timestamp = mCurrentTimestamp
+    readTimestamp = mCurrentTimestamp
 End If
-End Sub
+End Function
 
 
 

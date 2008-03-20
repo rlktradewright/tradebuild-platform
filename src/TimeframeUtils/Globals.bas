@@ -384,6 +384,29 @@ gCalcOffsetBarStartTime = gBarStartTime(proposedStart, _
 
 End Function
 
+Public Sub gCalcOffsetSessionTimes( _
+                ByVal timestamp As Date, _
+                ByVal offset As Long, _
+                ByVal startTime As Date, _
+                ByVal endTime As Date, _
+                ByRef sessionStartTime As Date, _
+                ByRef sessionEndTime As Date)
+Dim datumSessionStart As Date
+Dim datumSessionEnd As Date
+Dim targetWorkingDayNum As Long
+
+gCalcSessionTimes timestamp, startTime, endTime, datumSessionStart, datumSessionEnd
+
+targetWorkingDayNum = gCalcWorkingDayNumber(datumSessionStart) + offset
+
+gCalcSessionTimes gCalcWorkingDayDate(targetWorkingDayNum, datumSessionStart), _
+                    startTime, _
+                    endTime, _
+                    sessionStartTime, _
+                    sessionEndTime
+                
+End Sub
+
 ' !!!!!!!!!!!!!!!!!!!!!!!!!!!
 ' calcSessionTimes needs to be amended
 ' to take account of holidays

@@ -617,10 +617,10 @@ lSessionBuilder.TimeZone = tickfileSpecifier.Contract.TimeZone
 Set mHistoricalTickDataRequestTable(i).session = lSessionBuilder.session
 
 If tickfileSpecifier.EntireSession Then
-    lSessionBuilder.session.SessionTimes _
-                                tickfileSpecifier.FromDate, _
-                                mHistoricalTickDataRequestTable(i).startTime, _
-                                mHistoricalTickDataRequestTable(i).endTime
+    Dim st As SessionTimes
+    st = lSessionBuilder.session.GetSessionTimes(tickfileSpecifier.FromDate)
+    mHistoricalTickDataRequestTable(i).startTime = st.startTime
+    mHistoricalTickDataRequestTable(i).endTime = st.endTime
 Else
     mHistoricalTickDataRequestTable(i).startTime = tickfileSpecifier.FromDate
     mHistoricalTickDataRequestTable(i).endTime = tickfileSpecifier.ToDate

@@ -1,22 +1,22 @@
 VERSION 5.00
 Begin VB.Form fStudyConfigurer 
    Caption         =   "Configure a Study"
-   ClientHeight    =   5775
+   ClientHeight    =   5805
    ClientLeft      =   60
    ClientTop       =   450
    ClientWidth     =   13560
    LinkTopic       =   "Form1"
-   ScaleHeight     =   5775
+   ScaleHeight     =   5805
    ScaleWidth      =   13560
    StartUpPosition =   3  'Windows Default
    Begin StudiesUI26.StudyConfigurer StudyConfigurer1 
-      Height          =   5535
+      Height          =   5655
       Left            =   120
       TabIndex        =   3
       Top             =   120
       Width           =   12135
       _ExtentX        =   21405
-      _ExtentY        =   9763
+      _ExtentY        =   9975
    End
    Begin VB.CommandButton AddButton 
       Caption         =   "&Add to chart"

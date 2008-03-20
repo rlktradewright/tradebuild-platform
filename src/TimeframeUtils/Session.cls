@@ -160,6 +160,26 @@ Public Function BarStartTime( _
 BarStartTime = gBarStartTime(timestamp, barLength, units, mSessionStartTime)
 End Function
 
+Public Function GetSessionTimes( _
+                            ByVal timestamp As Date) As SessionTimes
+Dim st As SessionTimes
+gCalcSessionTimes timestamp, mSessionStartTime, mSessionEndTime, st.startTime, st.endTime
+GetSessionTimes = st
+End Function
+
+Public Function GetOffsetSessionTimes( _
+                ByVal timestamp As Date, _
+                ByVal offset As Long) As SessionTimes
+Dim st As SessionTimes
+gCalcOffsetSessionTimes timestamp, _
+                        offset, _
+                        mSessionStartTime, _
+                        mSessionEndTime, _
+                        st.startTime, _
+                        st.endTime
+GetOffsetSessionTimes = st
+End Function
+
 Public Function isTimeInSession(ByVal timestamp As Date) As Boolean
 
 If timestamp >= mCurrentSessionStartTime And _
@@ -189,13 +209,6 @@ OffsetBarStartTime = gCalcOffsetBarStartTime( _
                                     mSessionStartTime, _
                                     mSessionEndTime)
 End Function
-
-Public Sub SessionTimes( _
-                            ByVal timestamp As Date, _
-                            ByRef sessionStartTime As Date, _
-                            ByRef sessionEndTime As Date)
-gCalcSessionTimes timestamp, mSessionStartTime, mSessionEndTime, sessionStartTime, sessionEndTime
-End Sub
 
 Friend Sub setSessionCurrentTime( _
                 ByVal timestamp As Date)

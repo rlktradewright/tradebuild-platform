@@ -124,25 +124,6 @@ Attribute item.VB_UserMemId = 0
 Set item = mContracts(index)
 End Function
 
-'Public Sub Load()
-'Dim i As Long
-'
-'On Error GoTo err
-'
-'' remove any current contents
-'For i = mContracts.Count To 1 Step -1
-'    mContracts.remove i
-'Next
-'
-'mServiceProviders.LoadContracts Me
-'
-'Exit Sub
-'err:
-'err.Raise err.Number, _
-'            "TradeBuild26.Contracts::Load", _
-'            err.description
-'End Sub
-
 Friend Sub LoadComplete()
 RaiseEvent NoMoreContractDetails
 End Sub
@@ -179,6 +160,13 @@ Friend Sub serviceProviderCantHandle( _
                 ByVal serviceProviderName As String)
 RaiseEvent TryLater(reason, serviceProviderName)
 End Sub
+
+Public Function ToString() As String
+Dim lContract As Contract
+For Each lContract In mContracts
+    ToString = ToString & lContract.specifier.ToString & vbCrLf
+Next
+End Function
 
 '@================================================================================
 ' Helper Functions

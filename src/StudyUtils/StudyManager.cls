@@ -129,7 +129,7 @@ Private mUseLocalTimeForStudies As Boolean
 '@================================================================================
 
 Private Sub Class_Initialize()
-ReDim mInputs(10) As InputDescriptor
+ReDim mInputs(3) As InputDescriptor
 Set mStudyLibraryManager = Globals.StudyLibraryManager
 Set mInputStudies = New Collection
 Set mExchangeTimeZone = GetTimeZone("")
@@ -189,7 +189,7 @@ Set inpStudy = source   ' check the right class
 inpStudy.addInput inputName, description, inputType, isDefault, tickSize
 
 If mNextInputIndex = UBound(mInputs) Then
-    ReDim Preserve mInputs(UBound(mInputs) + 10) As InputDescriptor
+    ReDim Preserve mInputs(2 * (UBound(mInputs) + 1) - 1) As InputDescriptor
 End If
 Set mInputs(mNextInputIndex).source = source
 mInputs(mNextInputIndex).inputName = inputName

@@ -36,7 +36,7 @@
       <!--Disable contract data from TWS-->
       <ServiceProvider Enabled="False" ProgId="IBTWSSP26.ContractInfoServiceProvider" LogLevel="1">
         <Properties>
-          <Property  Name="Server" Value="EBBY" />
+          <Property  Name="Server" Value="" />
           <Property  Name="Port" Value="7496" />
           <Property  Name="Client Id" Value="-1" />
           <Property  Name="Provider Key" Value="IB" />
@@ -92,18 +92,16 @@ database.
       -->
     </TickfilePath>
     <Contracts>
-<!--
       <Contract  Enabled="True" WriteBidAndAskBars="False">
-        <ContractSpecifier  LocalSymbol="" Symbol="Z" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
+        <ContractSpecifier  LocalSymbol="" Symbol="ES" SecType="FUT" Expiry="200803" Exchange="globex" Currency="" StrikePrice="" Right="" />
       </Contract>
--->
+<!--
       <Contract  Enabled="True" WriteBidAndAskBars="False">
         <ContractSpecifier  LocalSymbol="" Symbol="ES" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
       </Contract>
       <Contract  Enabled="True" WriteBidAndAskBars="False">
         <ContractSpecifier  LocalSymbol="" Symbol="NQ" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
       </Contract>
-<!--
       <Contract  Enabled="True" WriteBidAndAskBars="False">
         <ContractSpecifier  LocalSymbol="" Symbol="ER2" SecType="FUT" Expiry="" Exchange="" Currency="" StrikePrice="" Right="" />
       </Contract>

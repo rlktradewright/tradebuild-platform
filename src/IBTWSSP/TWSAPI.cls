@@ -89,11 +89,9 @@ Private Const HistoricalDataTickerIncrement As Long = &H100
 
 Private Const IncarnationIncrement As Long = &H1000&
 
-Private Const InitialMaxTickers As Long = 100&
-
 Private Const MarketDepthTickerBase As Long = &H400000
 
-Private Const MaxConcurrentHistDataRequests As Long = 50    ' Limit imposed by IB
+Private Const MaxConcurrentHistDataRequests As Long = 50 ' limit imposed by IB
 
 Private Const NumDaysInWeek As Long = 5
 Private Const NumDaysInMonth  As Long = 22
@@ -111,6 +109,14 @@ Private Const TWSWhatToShowTrades As String = "TRADES"
 '================================================================================
 ' Enums
 '================================================================================
+
+Private Enum IdTypes
+    IdTypeNone
+    IdTypeRealtimeData
+    IdTypeMarketDepth
+    IdTypeHistoricalData
+    IdTypeOrder
+End Enum
 
 Private Enum InternalErrorCodes
     dataincomplete = vbObjectError + 512
@@ -141,6 +147,18 @@ Private Type HistoricalDataRequestTableEntry
     nextBarIndex            As Long
     bars                    As LinkedList
     requestKeys()           As String
+End Type
+
+Private Type StatsEntry
+    lastSecondCount         As Long
+    lastSecondTime          As Single
+    lastPeriodCount         As Long
+    lastPeriodTime          As Single
+    totalCount              As Long
+    totalTime               As Single
+    maxSecondCount          As Long
+    longestTime             As Single
+    shortestTime            As Single
 End Type
 
 Private Type TickerTableEntry
@@ -211,6 +229,17 @@ Private mTwsContractDetailsRequestQueue As Queue
 
 Private mExecutions As Collection
 
+Private mPerformanceStats(MAX_SOCKET_INMSG) As StatsEntry
+
+Private WithEvents mPerformanceTimerSecond As IntervalTimer
+Attribute mPerformanceTimerSecond.VB_VarHelpID = -1
+Private WithEvents mPerformanceTimerPeriod As IntervalTimer
+Attribute mPerformanceTimerPeriod.VB_VarHelpID = -1
+
+Private mPerformanceElapsedTimer As ElapsedTimer
+
+Private mPerformanceLogger As Logger
+
 '================================================================================
 ' External function declarations
 '================================================================================
@@ -231,9 +260,9 @@ Private Declare Sub MoveMemory Lib "Kernel32" Alias "RtlMoveMemory" ( _
 
 Private Sub Class_Initialize()
 
-ReDim mTickerTable(InitialMaxTickers) As TickerTableEntry
+ReDim mTickerTable(3) As TickerTableEntry
 ReDim mBufferIn(1023) As Byte
-ReDim mBufferOut(1023) As Byte
+ReDim mBufferOut(15) As Byte
 mConnectionState = ConnectionStates.ConnNotConnected
 
 Set mOrderIDMap = New Collection
@@ -247,11 +276,12 @@ mTWSLogLevel = TWSLogLevelError ' this is the TWS default
 Set mTwsHistDataRequestQueue = New Queue
 mTwsHistDataRequestQueue.initialCapacity = 20
 
-ReDim mHistoricalDataTable(MaxConcurrentHistDataRequests) As HistoricalDataRequestTableEntry
+ReDim mHistoricalDataTable(3) As HistoricalDataRequestTableEntry
 
 Set mTwsContractDetailsRequestQueue = New Queue
 mTwsContractDetailsRequestQueue.initialCapacity = 20
 
+Set mPerformanceElapsedTimer = New ElapsedTimer
 End Sub
 
 
@@ -271,6 +301,62 @@ err:
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "mConnectionTimer_TimerExpired", _
                 err.Description
+End Sub
+
+'================================================================================
+' mPerformanceTimerSecond Event Handlers
+'================================================================================
+
+Private Sub mPerformanceTimerPeriod_TimerExpired()
+Dim i As Long
+Dim s As String
+For i = 0 To TWSSocketInMsgTypes.MAX_SOCKET_INMSG
+    With mPerformanceStats(i)
+        .lastPeriodCount = .lastPeriodCount + .lastSecondCount
+        .lastPeriodTime = .lastPeriodTime + .lastSecondTime
+        .totalCount = .totalCount + .lastSecondCount
+        .totalTime = .totalTime + .lastSecondTime
+        
+        If .totalCount <> 0 Then
+            s = gSocketInMsgTypeToString(i)
+            s = s & Format(.lastPeriodCount, " 00000")
+            If .lastPeriodCount <> 0 Then
+                s = s & Format(.lastPeriodTime / .lastPeriodCount, " 00000.0")
+            Else
+                s = s & "     0.0"
+            End If
+            s = s & Format(.totalCount, " 00000000")
+            If .totalCount <> 0 Then
+                s = s & Format(.totalTime / .totalCount, " 00000.0")
+            Else
+                s = s & "     0.0"
+            End If
+            s = s & Format(.maxSecondCount, " 0000")
+            s = s & Format(.longestTime, " 00000.0")
+            s = s & Format(.shortestTime, " 00000.0")
+            mPerformanceLogger.Log LogLevelMediumDetail, s
+        End If
+        
+        .lastPeriodCount = 0
+        .lastPeriodTime = 0
+        .lastSecondCount = 0
+        .lastSecondTime = 0
+    End With
+Next
+End Sub
+
+Private Sub mPerformanceTimerSecond_TimerExpired()
+Dim i As Long
+For i = 0 To TWSSocketInMsgTypes.MAX_SOCKET_INMSG
+    With mPerformanceStats(i)
+        .lastPeriodCount = .lastPeriodCount + .lastSecondCount
+        .lastPeriodTime = .lastPeriodTime + .lastSecondTime
+        .totalCount = .totalCount + .lastSecondCount
+        .totalTime = .totalTime + .lastSecondTime
+        .lastSecondCount = 0
+        .lastSecondTime = 0
+    End With
+Next
 End Sub
 
 '================================================================================
@@ -508,6 +594,10 @@ connectionString = "server=" & mServer & _
                         "; client Id=" & mClientID
 End Property
 
+Friend Property Get contractDetailsRequestQueueLength() As Long
+contractDetailsRequestQueueLength = mTwsContractDetailsRequestQueue.size
+End Property
+
 Friend Property Get InBuffer() As String
 InBuffer = showBuffer(mBufferIn, mIndexIn - 1)
 End Property
@@ -518,6 +608,25 @@ End Property
 
 Friend Property Let logLevel(ByVal value As LogLevels)
 mLogLevel = value
+
+If mLogLevel >= LogLevelMedium Then
+    If mPerformanceTimerSecond Is Nothing Then
+        Set mPerformanceTimerSecond = CreateIntervalTimer(CDate(Int((Now + 2 * OneSecond) / OneSecond) * OneSecond), _
+                                                ExpiryTimeUnitDateTime, _
+                                                1000)
+        Set mPerformanceTimerPeriod = CreateIntervalTimer(CDate(Int((Now + OneMinute) / OneMinute) * OneMinute), _
+                                                ExpiryTimeUnitDateTime, _
+                                                60000)
+        mPerformanceTimerSecond.StartTimer
+        mPerformanceTimerPeriod.StartTimer
+        
+        Set mPerformanceLogger = GetLogger("tradebuild.serviceprovider.ibtwssp.performance")
+    End If
+End If
+End Property
+
+Friend Property Get logLevel() As LogLevels
+logLevel = mLogLevel
 End Property
 
 Friend Property Let port(ByVal value As Long)
@@ -723,7 +832,8 @@ handleFatalError err.number, _
 End Sub
 
 Friend Sub disconnect( _
-                ByVal reason As String)
+                ByVal reason As String, _
+                ByVal forced As Boolean)
 On Error GoTo err
 
 If mConnectionState = ConnectionStates.ConnNotConnected Then Exit Sub
@@ -733,9 +843,8 @@ If Not mConnectionTimer Is Nothing Then mConnectionTimer.StopTimer
 mConnectionState = ConnectionStates.ConnNotConnected
 releaseAllTickerTableEntries
 ReleaseSocket
-RaiseEvent Disconnected(reason)
-logMessage "Disconnected from: " & connectionString, LogLevelLow
-gReleaseTWSAPIInstance Me, True
+If forced Then RaiseEvent Disconnected(reason)
+logMessage "Disconnected from: " & connectionString & ": " & reason, LogLevelLow
 Exit Sub
 err:
 handleFatalError err.number, _
@@ -744,7 +853,7 @@ handleFatalError err.number, _
 End Sub
 
 Friend Sub placeOrder( _
-                ByVal orderSubmitter As orderSubmitter, _
+                ByVal OrderSubmitter As OrderSubmitter, _
                 ByVal pOrder As TradeBuildSP.IOrder, _
                 ByVal transmit As Boolean, _
                 ByVal parentId As String, _
@@ -764,7 +873,7 @@ If pOrder.brokerId = "" Then
     pOrder.brokerId = CStr(mNextOrderID)
     mNextOrderID = mNextOrderID + 1
     Set mapEntry.order = pOrder
-    Set mapEntry.orderSubmitter = orderSubmitter
+    Set mapEntry.OrderSubmitter = OrderSubmitter
     mOrderIDMap.add mapEntry, generateTwsOrderKey(pOrder.brokerId, mClientID)
 End If
 
@@ -1201,7 +1310,7 @@ Next
 
 If requestID = -1 Then
     requestID = UBound(mHistoricalDataTable) + 1
-    ReDim Preserve mHistoricalDataTable(UBound(mHistoricalDataTable) + 10) As HistoricalDataRequestTableEntry
+    ReDim Preserve mHistoricalDataTable(2 * (UBound(mHistoricalDataTable) + 1) - 1) As HistoricalDataRequestTableEntry
 End If
 
 mHistoricalDataTable(requestID).inUse = True
@@ -1289,19 +1398,21 @@ Private Sub addBoolean(ByVal val As Boolean)
 addData IIf(val, 1, 0)
 End Sub
 
+Private Sub addByte(ByVal value As Integer)
+If mIndexOut > UBound(mBufferOut) Then
+    ReDim Preserve mBufferOut(2 * (UBound(mBufferOut) + 1) - 1) As Byte
+End If
+mBufferOut(mIndexOut) = value
+mIndexOut = mIndexOut + 1
+End Sub
+
 Private Sub addData(ByVal data As String)
 Dim i As Long
 
-If mIndexOut + Len(data) + 1 > UBound(mBufferOut) Then
-    ReDim Preserve mBufferOut(UBound(mBufferOut) + 1024) As Byte
-End If
-
 For i = 1 To Len(data)
-    mBufferOut(mIndexOut) = Asc(Mid$(data, i, 1))
-    mIndexOut = mIndexOut + 1
+    addByte Asc(Mid$(data, i, 1))
 Next
-mBufferOut(mIndexOut) = 0
-mIndexOut = mIndexOut + 1
+addByte 0
 End Sub
 
 Private Sub addDouble(ByVal data As String)
@@ -1334,7 +1445,7 @@ Next
 
 If AllocateTickerTableEntry = -1 Then
     AllocateTickerTableEntry = UBound(mTickerTable) + 1
-    ReDim Preserve mTickerTable(UBound(mTickerTable) + 100) As TickerTableEntry
+    ReDim Preserve mTickerTable(2 * (UBound(mTickerTable) + 1) - 1) As TickerTableEntry
 '    mOrderSimulator.MaxTickers = UBound(mTickerTable) + 1
 '    mTickers.MaxTickers = UBound(mTickerTable) + 1
 End If
@@ -1469,6 +1580,8 @@ Do While mInputIndex < mIndexIn
         'Debug.Print "Set checkpoint number=" & 1200 & ": version=" & version
     End If
     
+    mPerformanceElapsedTimer.StartTiming
+    
     Select Case msgID
     Case TWSSocketInMsgTypes.TICK_PRICE
         'Debug.Print "getTickPrice"
@@ -1541,10 +1654,19 @@ Do While mInputIndex < mIndexIn
             formatBuffer
         
         Debug.Print s
-        disconnect s
+        gReleaseTWSAPIInstance Me, True
         Exit Sub
     End Select
     retryCount = 0
+    
+    Dim et As Single
+    et = mPerformanceElapsedTimer.ElapsedTimeMicroseconds
+    With mPerformanceStats(msgID)
+        .lastSecondCount = .lastSecondCount + 1
+        .lastSecondTime = .lastSecondTime + et
+        If et > .longestTime Then .longestTime = et
+        If et < .shortestTime Or .shortestTime = 0 Then .shortestTime = et
+    End With
     
     eventCount = eventCount + 1
     
@@ -1580,7 +1702,7 @@ s = "msgID=" & msgID & _
 Debug.Print "Error " & err.number & ": " & err.Description & vbCrLf & s
 
 mCommonServiceConsumer.ServiceProviderError err.number, err.Description, -1
-disconnect "Error " & err.number & ": " & err.Description
+gReleaseTWSAPIInstance Me, True
 End Sub
 
 Private Sub checkpointBuffer()
@@ -1593,6 +1715,15 @@ If mSocket Is Nothing Then
     Set mSocket = mWinsockForm.Winsock1
 End If
 End Sub
+
+Private Function expiryToDate( _
+                ByVal expiry As String) As Date
+If Len(expiry) = 8 Then
+    expiryToDate = CDate(Left$(expiry, 4) & "/" & Mid$(expiry, 5, 2) & "/" & right$(expiry, 2))
+ElseIf Len(expiry) = 6 Then
+    expiryToDate = CDate(Left$(expiry, 4) & "/" & Mid$(expiry, 5, 2) & "/" & "01")
+End If
+End Function
 
 Private Function formatBuffer() As String
 Dim s As StringBuilder
@@ -1626,7 +1757,7 @@ TwsRequest.id = index + HistoricalDataTickerBase + (mHistoricalDataTable(index).
 
 ReDim mHistoricalDataTable(index).requestKeys(reqNum - 1) As String
 
-Set TwsRequest.contractSpec = mHistoricalDataTable(index).barSpecifier.Contract.specifier
+Set TwsRequest.Contract = mHistoricalDataTable(index).barSpecifier.Contract
 
 ' Set the TWS bar size and duration to retrieve as many bars as possible in one
 ' go, taking account of the following max durations per bar size.
@@ -1669,7 +1800,9 @@ Set TwsRequest.contractSpec = mHistoricalDataTable(index).barSpecifier.Contract.
 '                   1 Y
  
 If mServerVersion >= 20 Then
-    TwsRequest.endDateTime = Format(mHistoricalDataTable(index).barSpecifier.ToDate, "yyyymmdd hh\:nn\:ss")
+    TwsRequest.endDateTime = Format(ConvertDateUTCToLocal(ConvertDateTzToUTC(mHistoricalDataTable(index).barSpecifier.ToDate, _
+                                                                            mHistoricalDataTable(index).barSpecifier.Contract.TimeZone)), _
+                                    "yyyymmdd hh\:nn\:ss")
     
     With mHistoricalDataTable(index).barSpecifier
         
@@ -2133,6 +2266,7 @@ For i = 0 To UBound(orderTypesStr)
             "DEACTEOD", _
             "FOK", _
             "HPENNY", _
+            "LTH", _
             "NONALGO", _
             "OCA", _
             "OPG", _
@@ -2177,18 +2311,18 @@ Else
 End If
 
 If Not ignore Then
-    Dim expirydate As Date
+    Dim expiryDate As Date
     If expiry <> "" Then
-        expirydate = CDate(Left$(expiry, 4) & "/" & _
+        expiryDate = CDate(Left$(expiry, 4) & "/" & _
                                             Mid$(expiry, 5, 2) & "/" & _
                                             right$(expiry, 2))
     End If
     
-    lContractBuilder.expirydate = expirydate
+    lContractBuilder.expiryDate = expiryDate
     
     lContractBuilder.Description = symbol & _
                                 " (" & SecTypeToShortString(sectype) & ")" & _
-                                IIf(expirydate <> 0, Format(expirydate, " dd mmm yy"), "") & _
+                                IIf(expiryDate <> 0, Format(expiryDate, " dd mmm yy"), "") & _
                                 IIf(optRight <> OptNone, " " & optionRightToString(optRight), "") & _
                                 IIf(strike <> 0#, " " & strike, "")
 
@@ -2287,9 +2421,9 @@ Case 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, _
     failpoint = 400
 
     mapEntry = mOrderIDMap(generateTwsOrderKey(id, mClientID))
-    mapEntry.orderSubmitter.updateStatus mapEntry.order.tradeBuildId, _
+    mapEntry.OrderSubmitter.updateStatus mapEntry.order.tradeBuildId, _
                                         OrderStatuses.OrderStatusRejected
-    mapEntry.orderSubmitter.invalidOrder mapEntry.order.tradeBuildId, errorMsg
+    mapEntry.OrderSubmitter.invalidOrder mapEntry.order.tradeBuildId, errorMsg
 Case 162    ' historical data request problem
     failpoint = 500
 
@@ -2312,22 +2446,13 @@ Case 165
 
     logMessage "Connected to IB Historical Market Data Service"
 Case 200    ' security definition not known
-    If id >= OrderIdBase Then
-        mapEntry = mOrderIDMap(generateTwsOrderKey(id, mClientID))
-        mapEntry.orderSubmitter.updateStatus mapEntry.order.tradeBuildId, _
-                                            OrderStatuses.OrderStatusRejected
-        mapEntry.orderSubmitter.invalidOrder mapEntry.order.tradeBuildId, errorMsg
-    ElseIf id >= HistoricalDataTickerBase Then
-        index = (id - HistoricalDataTickerBase) Mod HistoricalDataTickerIncrement
-    
-        logMessage "Error " & errorCode & " from TWS: " & errorMsg
-        mHistoricalDataTable(index).historicalDataReader.historicalDataRequestFailed errorMsg
-        releaseHistoricalDataTableEntry index
-        
-        processNextHistDataRequest
-    ElseIf id >= MarketDepthTickerBase Then
-        mTickerTable(id - MarketDepthTickerBase).dataReader.marketDepthRequestFailed errorMsg
-    ElseIf id >= 0 Then
+    Select Case getIdType(id)
+    Case IdTypeNone
+        ' this must relate to a RequestContract
+        failpoint = 750
+
+        processContractError errorMsg
+    Case IdTypeRealtimeData
         ' this must relate to a reqMktData - this can occur even though
         ' we make sure the contract is valid before starting the ticker because
         ' for example the contract may have expired
@@ -2336,17 +2461,28 @@ Case 200    ' security definition not known
 
         mTickerTable(id Mod IncarnationIncrement).dataReader.marketDataRequestFailed errorMsg
         releaseTickerTableEntry (id Mod IncarnationIncrement)
-    Else
-        ' this must relate to a RequestContract
-        failpoint = 750
-
-        processContractError errorMsg
-    End If
+    Case IdTypeMarketDepth
+        mTickerTable(id - MarketDepthTickerBase).dataReader.marketDepthRequestFailed errorMsg
+    Case IdTypeHistoricalData
+        index = (id - HistoricalDataTickerBase) Mod HistoricalDataTickerIncrement
+    
+        logMessage "Error " & errorCode & " from TWS: " & errorMsg
+        mHistoricalDataTable(index).historicalDataReader.historicalDataRequestFailed errorMsg
+        releaseHistoricalDataTableEntry index
+        
+        processNextHistDataRequest
+    Case IdTypeOrder
+        mapEntry = mOrderIDMap(generateTwsOrderKey(id, mClientID))
+        mapEntry.OrderSubmitter.updateStatus mapEntry.order.tradeBuildId, _
+                                            OrderStatuses.OrderStatusRejected
+        mapEntry.OrderSubmitter.invalidOrder mapEntry.order.tradeBuildId, errorMsg
+    End Select
+    
 Case 202
     failpoint = 800
 
     mapEntry = mOrderIDMap(generateTwsOrderKey(id, mClientID))
-    mapEntry.orderSubmitter.updateStatus mapEntry.order.tradeBuildId, _
+    mapEntry.OrderSubmitter.updateStatus mapEntry.order.tradeBuildId, _
                                         OrderStatuses.OrderStatusCancelled
     mOrderIDMap.remove generateTwsOrderKey(id, mClientID)
 Case 309
@@ -2365,7 +2501,11 @@ Case 317
 Case 321    ' invalid request
     failpoint = 1200
 
-    If id >= HistoricalDataTickerBase And id < OrderIdBase Then
+    Select Case getIdType(id)
+    Case IdTypeNone
+    Case IdTypeRealtimeData
+    Case IdTypeMarketDepth
+    Case IdTypeHistoricalData
         index = (id - HistoricalDataTickerBase) Mod HistoricalDataTickerIncrement
     
         If mHistoricalDataTable(index).bars.size <> 0 Then
@@ -2379,8 +2519,27 @@ Case 321    ' invalid request
             releaseHistoricalDataTableEntry index
         End If
         processNextHistDataRequest
-    End If
+    Case IdTypeOrder
+    End Select
 Case 326    ' clientID already in use
+
+Case 354    ' no market data subscription
+    failpoint = 1250
+    
+    Select Case getIdType(id)
+    Case IdTypeNone
+
+    Case IdTypeRealtimeData
+        mTickerTable(id Mod IncarnationIncrement).dataReader.marketDataRequestFailed errorMsg
+        releaseTickerTableEntry (id Mod IncarnationIncrement)
+    Case IdTypeMarketDepth
+
+    Case IdTypeHistoricalData
+
+    Case IdTypeOrder
+
+    End Select
+    
 
 Case 1100
     failpoint = 1300
@@ -2538,8 +2697,8 @@ If err.number = 0 Then
     On Error GoTo 0
 Else
     On Error GoTo 0
-    If Not mapEntry.orderSubmitter Is Nothing Then
-        mapEntry.orderSubmitter.executionDetails lContractSpecifier, _
+    If Not mapEntry.OrderSubmitter Is Nothing Then
+        mapEntry.OrderSubmitter.executionDetails lContractSpecifier, _
                                                     exec.AccountIdentifier, _
                                                     exec.Action, _
                                                     exec.execId, _
@@ -2555,10 +2714,10 @@ Else
         ' in response to the reqExecutions call made when the connection is recovered. In these
         ' circumstances TWS will not itself issue an orderStatus.
         If exec.Quantity >= mapEntry.order.quantityRemaining Then
-            mapEntry.orderSubmitter.updateStatus mapEntry.order.tradeBuildId, _
+            mapEntry.OrderSubmitter.updateStatus mapEntry.order.tradeBuildId, _
                                                 OrderStatuses.OrderStatusFilled
         Else
-            mapEntry.orderSubmitter.updateStatus mapEntry.order.tradeBuildId, _
+            mapEntry.OrderSubmitter.updateStatus mapEntry.order.tradeBuildId, _
                                                 OrderStatuses.OrderStatusSubmitted
         End If
     End If
@@ -2685,7 +2844,9 @@ If checkPointNumber >= 200 Then
                                                 Mid$(bardate, 7, 2) & " " & _
                                                 right$(bardate, 8)))
             End If
-            Bar.timestamp = timestamp
+            Bar.timestamp = ConvertDateUTCToTZ( _
+                                    ConvertDateLocalToUTC(timestamp), _
+                                    mHistoricalDataTable(index).barSpecifier.Contract.TimeZone)
             If mHistoricalDataTable(index).ignoreTimestamps Then
                 Bar.timestamp = Bar.timestamp + mHistoricalDataTable(index).barSpecifier.Contract.sessionStartTime
             End If
@@ -2811,6 +2972,21 @@ err.Raise err.number, _
 
 
 End Sub
+
+Private Function getIdType( _
+                ByVal id As Long) As IdTypes
+If id >= OrderIdBase Then
+    getIdType = IdTypeOrder
+ElseIf id >= HistoricalDataTickerBase Then
+    getIdType = IdTypeHistoricalData
+ElseIf id >= MarketDepthTickerBase Then
+    getIdType = IdTypeMarketDepth
+ElseIf id >= 0 Then
+    getIdType = IdTypeRealtimeData
+Else
+    getIdType = IdTypeNone
+End If
+End Function
 
 Private Sub getManagedAccounts(ByVal version As Long)
 Dim listendata As TWSSocketMsgManagedAccts
@@ -3194,7 +3370,7 @@ If Not mapEntry.order Is Nothing Then
     avgFillPrice = adjustPrice(avgFillPrice, mapEntry.order.Contract.specifier)
     lastFillPrice = adjustPrice(lastFillPrice, mapEntry.order.Contract.specifier)
     
-    mapEntry.orderSubmitter.updateStatus mapEntry.order.tradeBuildId, _
+    mapEntry.OrderSubmitter.updateStatus mapEntry.order.tradeBuildId, _
                             status
     If status = OrderStatusCancelled Or status = OrderStatusFilled Then
         mOrderIDMap.remove generateTwsOrderKey(id, clientID)
@@ -3473,7 +3649,7 @@ Private Sub handleFatalError( _
                 ByVal Description As String)
 mCommonServiceConsumer.FatalServiceProviderError number, source, Description, -1
 
-If mConnectionState = ConnConnected Then disconnect "Fatal error"
+If mConnectionState = ConnConnected Then gReleaseTWSAPIInstance Me, True
 End Sub
 
 Private Sub handleTwsDisconnection()
@@ -4134,6 +4310,7 @@ End With
 End Sub
 
 Private Sub reqContract()
+
 Dim ContractSpecifier As ContractSpecifier
 Set ContractSpecifier = mContractDetailsRequest.contractSpec
 
@@ -4155,7 +4332,11 @@ With ContractSpecifier
     If mServerVersion >= 15 Then addData "" ' multiplier
     addData .exchange
     addData .currencyCode
-    addData .localSymbol
+    If expiryToDate(.expiry) < Now Then
+        addData ""
+    Else
+        addData .localSymbol
+    End If
     If mServerVersion >= 31 Then
         If .sectype = SecTypeCash Or .sectype = SecTypeIndex Or .sectype = SecTypeStock Then
             addData 0  ' can't include expired for non-expiring contracts
@@ -4177,20 +4358,24 @@ If mConnectionState <> ConnectionStates.ConnConnected Then Exit Sub
 addData REQ_HISTORICAL_DATA
 addData version
 addData request.id
-addData request.contractSpec.symbol
-addData secTypeToString(request.contractSpec.sectype)
-addData request.contractSpec.expiry
-addDouble request.contractSpec.strike
-addData optionRightToString(request.contractSpec.right)
+addData request.Contract.specifier.symbol
+addData secTypeToString(request.Contract.specifier.sectype)
+addData Left$(request.Contract.specifier.expiry, 6)
+addDouble request.Contract.specifier.strike
+addData optionRightToString(request.Contract.specifier.right)
 addData ""      ' >>>>>>>>>>>>>>>>>>>>>>>>>>>>> multiplier ??? why?
-addData request.contractSpec.exchange
+addData request.Contract.specifier.exchange
 addData ""      ' >>>>>>>>>>>>>>>>>>>>>>>>>>>>> primaryExch ??? not in ActiveX interface
-addData request.contractSpec.currencyCode
-addData request.contractSpec.localSymbol
+addData request.Contract.specifier.currencyCode
+If expiryToDate(request.Contract.specifier.expiry) < Now Then
+    addData ""
+Else
+    addData request.Contract.specifier.localSymbol
+End If
 If mServerVersion >= 31 Then
-    If request.contractSpec.sectype = SecTypeCash Or _
-        request.contractSpec.sectype = SecTypeIndex Or _
-        request.contractSpec.sectype = SecTypeStock _
+    If request.Contract.specifier.sectype = SecTypeCash Or _
+        request.Contract.specifier.sectype = SecTypeIndex Or _
+        request.Contract.specifier.sectype = SecTypeStock _
     Then
         addData 0  ' can't include expired for non-expiring contracts
     Else
@@ -4216,7 +4401,7 @@ If mServerVersion > 16 Then
     addData TWSHistDataDateFormats.DateFormatString
 End If
 
-If request.contractSpec.ComboLegs Is Nothing Then
+If request.Contract.specifier.ComboLegs Is Nothing Then
     addData 0
 Else
     ' not supported
@@ -4365,6 +4550,7 @@ End Function
 Private Sub send()
 ReDim Preserve mBufferOut(mIndexOut - 1) As Byte
 mSocket.SendData mBufferOut
+ReDim mBufferOut(15) As Byte
 mIndexOut = 0
 End Sub
 

@@ -57,7 +57,7 @@ Implements BarStudy
 Private mStudyFoundation As StudyFoundation
 '--------------------------------------------------------
 
-Private WithEvents mSession As session
+Private mSession As session
 Attribute mSession.VB_VarHelpID = -1
 
 Private mBarLength As Long
@@ -71,20 +71,11 @@ Private mNumberOfValuesToCache As Long
 
 Private mBarNumber As Long
 
-' indicates that a new session has started and we are expecting the volume
-' to start again from zero. This is used to cater for cases where the data
-' source does not reset the volume immediately (for example the data source's
-' clock may not be precisely synchronised with ours
-Private mVolumeResetPending As Boolean
+Private mVolParser As VolumeParser
 
-' accumulated volume at end of previous bar
-Private mPrevBarVolume As Long
-
-' the latest volume figure received
-Private mLatestVolume As Long
+Private mCurrBarVolume As Long
 
 Private mVolumeCache As StudyValueCache
-Private mTotalVolumeCache As StudyValueCache
 
 Private mPriceTickSize As Double
 Private mVolumeTickSize As Double
@@ -123,33 +114,9 @@ End Property
 
 Private Sub BarStudy_switchUnderlyingStudy( _
                 ByVal newUnderlyingStudy As InputStudy)
-                
-If newUnderlyingStudy.session.currentSessionStartTime > mSession.currentSessionStartTime Then
-    ' we are now in a different session so reset volume variables
-    mLatestVolume = 0
-    mPrevBarVolume = 0
-End If
-
 Set mSession = newUnderlyingStudy.session
+mVolParser.changeSession mSession
 mBars.changeSession mSession
-
-' because we are switching to a new source, the volume figures may not be consistent
-' with those from the previous source - for example, if the previous source was historical
-' data, it may not have run from the start of the session so the aggregate volume will
-' be lower than the tick data source.
-'
-' To compensate for this, we have to adjust mPrevBarVolume when we receive the first
-' volume tick from the new source, so set it to indicate this
-mPrevBarVolume = -1
-End Sub
-
-'@================================================================================
-' mSession Event Handlers
-'@================================================================================
-
-Private Sub mSession_SessionStarted( _
-                ev As SessionEvent)
-mVolumeResetPending = True
 End Sub
 
 '@================================================================================
@@ -165,11 +132,11 @@ Private Sub customInitialise( _
                 ByVal pSession As session)
 
 Set mSession = pSession
+Set mVolParser = CreateVolumeParser(pSession)
 
 mStudyFoundation.ReplayUsingStudyValues = True
 customProcessParameters Parameters
 Set mVolumeCache = mStudyFoundation.FindValueCache(BarValueVolume)
-Set mTotalVolumeCache = mStudyFoundation.FindValueCache(ConstTimeBarsValueTotalVolume)
 End Sub
 
 Private Function customGetStudyValue( _
@@ -199,8 +166,6 @@ Case UCase$(BarValueTickVolume)
         sv.value = bar.tickVolume
 Case UCase$(BarValueVolume)
         sv = mVolumeCache.getStudyValue(ref)
-Case UCase$(ConstTimeBarsValueTotalVolume)
-        sv = mTotalVolumeCache.getStudyValue(ref)
 Case UCase$(BarValueTickVolume)
         sv.value = bar.tickVolume
 Case UCase$(BarValueHL2)
@@ -216,8 +181,6 @@ End Function
 
 Private Sub customNotify( _
                 ev As StudyValueEvent)
-Dim evOut As StudyValueEvent
-Static firstVolumeReceived As Boolean
 
 If ev.valueName = ConstTimeBarsInputPrice Then
     mBars.notify ev
@@ -225,44 +188,20 @@ If ev.valueName = ConstTimeBarsInputPrice Then
         ' a new bar has started
         Set mBar = mBars.bar(0)
         mBarNumber = mBars.currentBarNumber
-        If mPrevBarVolume <> -1 Then mPrevBarVolume = mLatestVolume
+        mCurrBarVolume = 0
         mVolumeCache.addValue 0, mBarNumber, ev.timestamp, mBar.DateTime
-        mTotalVolumeCache.addValue mLatestVolume, mBarNumber, ev.timestamp, mBar.DateTime
     End If
     notifyBarValues ev.timestamp
 ElseIf ev.valueName = ConstTimeBarsInputTotalVolume Then
     ' we assume that a volume notification belongs to the same bar as the
     ' preceding price notification, so we don't check the timestamp
-    mLatestVolume = ev.value
-    If mPrevBarVolume < 0 Then
-        ' this is the first volume notification after switching to a new
-        ' source
-        If mVolumeCache.Count = 0 Then
-            mPrevBarVolume = ev.value
-        Else
-            mPrevBarVolume = ev.value - mVolumeCache.getValue(0)
-        End If
-    End If
-    'Debug.Assert mLatestVolume >= mPrevBarVolume
-    If mPrevBarVolume = 0 And Not firstVolumeReceived Then
-        firstVolumeReceived = True
-        mPrevBarVolume = mLatestVolume
-    End If
-    If mVolumeResetPending Then
-        ' we've started a new session and are expecting the data source to
-        ' start sending low volume figures
-        If mLatestVolume < mPrevBarVolume Then
-            mPrevBarVolume = 0
-            mVolumeResetPending = False
-        End If
-    End If
     
     If mVolumeCache.Count <> 0 Then
-        mVolumeCache.updateValue mLatestVolume - mPrevBarVolume
-        mTotalVolumeCache.updateValue mLatestVolume
+        mCurrBarVolume = mCurrBarVolume + mVolParser.notify(ev.value)
+        mVolumeCache.updateValue mCurrBarVolume
         notifyVolume ev.timestamp
-        notifyTotalVolume ev.timestamp
     End If
+    
 ElseIf ev.valueName = ConstTimeBarsInputTickVolume Then
     ' we assume that a tickVolume notification belongs to the same bar as the
     ' preceding price notification, so we don't check the timestamp
@@ -406,19 +345,6 @@ evOut.value = mBar.tickVolume
 mStudyFoundation.notifyValue evOut
 End Sub
 
-Private Sub notifyTotalVolume( _
-                ByVal timestamp As Date)
-Dim evOut As StudyValueEvent
-
-evOut.barNumber = mBarNumber
-evOut.barStartTime = mBar.DateTime
-Set evOut.Source = Me
-evOut.timestamp = timestamp
-evOut.valueName = ConstVolBarsValueTotalVolume
-evOut.value = mTotalVolumeCache.getValue(0)
-mStudyFoundation.notifyValue evOut
-End Sub
-
 Private Sub notifyVolume( _
                 ByVal timestamp As Date)
 Dim evOut As StudyValueEvent
@@ -428,7 +354,7 @@ evOut.barStartTime = mBar.DateTime
 Set evOut.Source = Me
 evOut.timestamp = timestamp
 evOut.valueName = BarValueVolume
-evOut.value = mVolumeCache.getValue(0)
+evOut.value = mCurrBarVolume
 mStudyFoundation.notifyValue evOut
 End Sub
 
@@ -482,7 +408,6 @@ End Property
 Private Function Study_getStudyValue( _
                 ByVal valueName As String, _
                 ByVal ref As Long) As StudyValue
-'Study_getStudyValue = mStudyFoundation.getStudyValue(valueName, ref)
 Study_getStudyValue = customGetStudyValue(valueName, ref)
 End Function
 

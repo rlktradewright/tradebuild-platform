@@ -119,8 +119,7 @@ If mContract.specifier.sectype = SecTypeCombo Then
 End If
 
 If mTWSAPI Is Nothing Then
-    Set mTWSAPI = gGetTWSAPIInstance(mServer, mPort, mClientID, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection)
-    mTWSAPI.logLevel = mLogLevel
+    Set mTWSAPI = gGetTWSAPIInstance(mServer, mPort, mClientID, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection, mLogLevel, mTWSLogLevel)
     If mTWSAPI.connectionState = ConnConnected Then
         mServiceConsumer.NotifyEvent StandardSPEventCodes.RTConnectedToDataSource, _
                                 "Connected to " & mTWSAPI.connectionString, _

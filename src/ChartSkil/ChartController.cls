@@ -88,7 +88,7 @@ End Property
 
 Friend Property Let Chart( _
                 ByVal value As Chart)
-Set mChartRef = createWeakReference(value)
+Set mChartRef = CreateWeakReference(value)
 End Property
 
 Public Property Get chartBackColor() As OLE_COLOR
@@ -117,6 +117,15 @@ End Property
 
 Public Property Get currentSessionStartTime() As Date
 currentSessionStartTime = chartObj.currentSessionStartTime
+End Property
+
+Public Property Get defaultBarDisplayMode() As BarDisplayModes
+defaultBarDisplayMode = chartObj.defaultBarDisplayMode
+End Property
+
+Public Property Let defaultBarDisplayMode( _
+                ByVal value As BarDisplayModes)
+chartObj.defaultBarDisplayMode = value
 End Property
 
 Public Property Get defaultBarStyle() As BarStyle

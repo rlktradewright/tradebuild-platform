@@ -6,11 +6,29 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "TickDataEncoderv1"
+Attribute VB_Name = "TickDataEncoderA"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = True
+Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = True
+Attribute VB_Exposed = False
+' Copyright 2008 Richard L King
+'
+' This file is part of TradeBuild Tick Utilities Package.
+'
+' TradeBuild Tick Utilities Package is free software: you can redistribute it
+' and/or modify it under the terms of the GNU General Public License as
+' published by the Free Software Foundation, either version 3 of the License,
+' or (at your option) any later version.
+'
+' TradeBuild Tick Utilities Package is distributed in the hope that it will
+' be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+' MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+' GNU General Public License for more details.
+'
+' You should have received a copy of the GNU General Public License
+' along with TradeBuild Tick Utilities Package.  If not, see
+' <http://www.gnu.org/licenses/>.
+ 
 Option Explicit
 
 ''
@@ -64,9 +82,15 @@ Private mDataIndex As Long
 
 Private mTickSize As Double
 
+Private mVersion As Long
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+mBasePrice = MaxDoubleValue
+End Sub
 
 '@================================================================================
 ' TickDataEncoder Interface Members
@@ -81,10 +105,12 @@ Private Sub TickDataEncoder_encodeAsk( _
                 ByVal price As Double, _
                 ByVal size As Long)
 Dim failpoint As Long
+
 On Error GoTo Err
 
-If price = 0# Then Exit Sub
-WriteQuoteRecord TickTypes.Ask, timestamp, price, size
+If size < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
+
+WriteQuoteRecord TickTypes.TickTypeAsk, timestamp, price, size
 
 Exit Sub
 
@@ -103,8 +129,9 @@ Private Sub TickDataEncoder_encodeBid( _
 Dim failpoint As Long
 On Error GoTo Err
 
-If price = 0# Then Exit Sub
-WriteQuoteRecord TickTypes.Bid, timestamp, price, size
+If size < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
+
+WriteQuoteRecord TickTypes.TickTypeBid, timestamp, price, size
 
 Exit Sub
 
@@ -122,8 +149,7 @@ Private Sub TickDataEncoder_encodeClose( _
 Dim failpoint As Long
 On Error GoTo Err
 
-If price = 0# Then Exit Sub
-WritePriceRecord TickTypes.closePrice, timestamp, price
+WritePriceRecord TickTypes.TickTypeClosePrice, timestamp, price
 
 Exit Sub
 
@@ -155,8 +181,7 @@ Private Sub TickDataEncoder_encodeHigh( _
 Dim failpoint As Long
 On Error GoTo Err
 
-If price = 0# Then Exit Sub
-WritePriceRecord TickTypes.highPrice, timestamp, price
+WritePriceRecord TickTypes.TickTypeHighPrice, timestamp, price
 
 Exit Sub
 
@@ -174,8 +199,7 @@ Private Sub TickDataEncoder_encodeLow( _
 Dim failpoint As Long
 On Error GoTo Err
 
-If price = 0# Then Exit Sub
-WritePriceRecord TickTypes.lowPrice, timestamp, price
+WritePriceRecord TickTypes.TickTypeLowPrice, timestamp, price
 
 Exit Sub
 
@@ -202,16 +226,16 @@ Dim sideOperationPositionByte As Byte
 Dim failpoint As Long
 On Error GoTo Err
 
-If price = 0# Then Exit Sub
+If size < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
 
-typeByte = TickTypes.marketDepth
+typeByte = TickTypes.TickTypeMarketDepth
 
 sizeType = GetSizeType(size)
 typeByte = typeByte Or (sizeType * SizeTypeShifter)
 
 If timestamp = mTimestamp Then typeByte = typeByte Or NoTimestamp
 
-If mBasePrice = 0# Then mBasePrice = price
+If mBasePrice = MaxDoubleValue Then mBasePrice = price
 If price < mBasePrice Then typeByte = typeByte Or NegativeTicks
 
 WriteByte typeByte
@@ -242,7 +266,7 @@ Dim typeByte As Byte
 Dim failpoint As Long
 On Error GoTo Err
 
-typeByte = TickTypes.MarketDepthReset
+typeByte = TickTypes.TickTypeMarketDepthReset
 
 If timestamp = mTimestamp Then typeByte = typeByte Or NoTimestamp
 
@@ -259,12 +283,30 @@ Err.Raise Err.Number, _
 
 End Sub
 
+Private Sub TickDataEncoder_encodeOpen(ByVal timestamp As Date, ByVal price As Double)
+Dim failpoint As Long
+On Error GoTo Err
+
+WritePriceRecord TickTypes.TickTypeOpenPrice, timestamp, price
+
+Exit Sub
+
+Err:
+Err.Raise Err.Number, _
+        ProjectName & "." & ModuleName & ":" & "TickDataEncoder_encodeOpen" & "." & failpoint & _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
+        Err.Description
+
+End Sub
+
 Private Sub TickDataEncoder_encodeOpenInterest( _
                 ByVal timestamp As Date, ByVal size As Long)
 Dim failpoint As Long
 On Error GoTo Err
 
-WriteSizeRecord TickTypes.openInterest, timestamp, size
+If size < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
+
+WriteSizeRecord TickTypes.TickTypeOpenInterest, timestamp, size
 
 Exit Sub
 
@@ -283,8 +325,9 @@ Private Sub TickDataEncoder_encodeTrade( _
 Dim failpoint As Long
 On Error GoTo Err
 
-If price = 0# Then Exit Sub
-WriteQuoteRecord TickTypes.Trade, timestamp, price, size
+If size < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
+
+WriteQuoteRecord TickTypes.TickTypeTrade, timestamp, price, size
 
 Exit Sub
 
@@ -302,7 +345,9 @@ Private Sub TickDataEncoder_encodeVolume( _
 Dim failpoint As Long
 On Error GoTo Err
 
-WriteSizeRecord TickTypes.volume, timestamp, size
+If size < 0 Then Err.Raise ErrInvalidProcedureCall, , "Size cannot be negative"
+
+WriteSizeRecord TickTypes.TickTypeVolume, timestamp, size
 
 Exit Sub
 
@@ -315,14 +360,18 @@ Err.Raise Err.Number, _
 End Sub
 
 Private Property Get TickDataEncoder_encodingFormatIdentifier() As String
-TickDataEncoder_encodingFormatIdentifier = TickEncodingFormatV1
+If mVersion = 1 Then
+    TickDataEncoder_encodingFormatIdentifier = TickEncodingFormatV1
+Else
+    TickDataEncoder_encodingFormatIdentifier = TickEncodingFormatV2
+End If
 End Property
 
 Private Property Get TickDataEncoder_periodStartTime() As Date
 TickDataEncoder_periodStartTime = mPeriodStartTime
 End Property
 
-Private Property Get TickDataEncoder_tickSize() As String
+Private Property Get TickDataEncoder_tickSize() As Double
 TickDataEncoder_tickSize = mTickSize
 End Property
 
@@ -340,9 +389,18 @@ End Property
 
 Friend Sub initialise( _
                 ByVal periodStartTime As Date, _
-                ByVal tickSize As Double)
+                ByVal tickSize As Double, _
+                ByVal encodingFormat As String)
 mPeriodStartTime = periodStartTime
 mTickSize = tickSize
+
+Select Case encodingFormat
+Case TickEncodingFormatV1
+    mVersion = 1
+Case TickEncodingFormatV2
+    mVersion = 2
+End Select
+
 ReDim mData(8191) As Byte
 End Sub
 
@@ -353,11 +411,11 @@ End Sub
 Private Function GetSizeType( _
                 ByVal size As Long) As SizeTypes
 If size < &H100 Then
-    GetSizeType = SizeTypes.ShortSize
+    GetSizeType = SizeTypes.ByteSize
 ElseIf size < &H10000 Then
-    GetSizeType = SizeTypes.IntSize
+    GetSizeType = SizeTypes.UInt16Size
 Else
-    GetSizeType = SizeTypes.LongSize
+    GetSizeType = SizeTypes.UInt32Size
 End If
 End Function
 
@@ -392,10 +450,13 @@ If price = mBasePrice Then
 Else
     numticks = Abs(price - mBasePrice) / mTickSize
     If numticks <= 127 Then
-        WriteByte CByte(Abs(price - mBasePrice) / mTickSize)
+        WriteByte CByte(numticks)
     Else
         ' won't fit in 7 bits. Write it out as an int value, with
-        ' the high-order byte written first and bit 7 set
+        ' the high-order byte written first and bit 7 set.  NB: there is
+        ' an implicit assumption here that we won't ever need to deal with
+        ' a price which is more than 0x7FFF ticks from the base price in
+        ' a single encoding period. That would be one hell of a crash!
         WriteByte CByte(Int(numticks / &H100) And &H7F) Or &H80
         WriteByte CByte(numticks And &HFF)
     End If
@@ -412,7 +473,7 @@ typeByte = tickType
 
 If timestamp = mTimestamp Then typeByte = typeByte Or NoTimestamp
 
-If mBasePrice = 0# Then mBasePrice = price
+If mBasePrice = MaxDoubleValue Then mBasePrice = price
 If price < mBasePrice Then typeByte = typeByte Or NegativeTicks
 
 WriteByte typeByte
@@ -435,7 +496,7 @@ typeByte = typeByte Or (sizeType * SizeTypeShifter)
 
 If timestamp = mTimestamp Then typeByte = typeByte Or NoTimestamp
 
-If mBasePrice = 0# Then mBasePrice = price
+If mBasePrice = MaxDoubleValue Then mBasePrice = price
 If price < mBasePrice Then typeByte = typeByte Or NegativeTicks
 
 WriteByte typeByte
@@ -451,17 +512,17 @@ Private Sub WriteSize( _
                 ByVal size As Long, _
                 ByVal sizeType As SizeTypes)
 Select Case sizeType
-Case SizeTypes.ShortSize
+Case SizeTypes.ByteSize
     Debug.Assert size < &H100&
     WriteByte CByte(size)
-Case SizeTypes.IntSize
+Case SizeTypes.UInt16Size
     Debug.Assert size < &H10000
     If size < &H8000& Then
         WriteInt size
     Else
         WriteInt CInt(size - &H10000)
     End If
-Case SizeTypes.LongSize
+Case SizeTypes.UInt32Size
     WriteLong size
 End Select
 End Sub
@@ -490,12 +551,23 @@ Private Sub WriteString( _
 Dim ar() As Byte
 Dim i As Long
 
-WriteByte CByte(Len(theString))
-
 ar = theString
+
+If mVersion = 1 Then
+    WriteByte CByte(Len(theString))
+Else
+    WriteByte CByte(UBound(ar) + 3)
+
+    ' prepend a UTF-16 little-endian BOM
+    ' see RFC 2781 4.3 for details of interpeting the Byte Order Marker (BOM)
+    WriteByte &HFF
+    WriteByte &HFE
+End If
+    
 For i = 0 To UBound(ar)
     WriteByte ar(i)
 Next
+
 End Sub
 
 Private Sub WriteTimestamp( _

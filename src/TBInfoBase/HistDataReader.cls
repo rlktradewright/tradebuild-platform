@@ -81,6 +81,8 @@ Private mBarRequested As Boolean
 Private mSessionBuilder As SessionBuilder
 Private mSession As Session
 
+Private mMode As AccessModes
+
 '@===============================================================================
 ' Class Event Handlers
 '@===============================================================================
@@ -186,7 +188,7 @@ End Sub
 
 Private Function IBarDataReader_Supports( _
                             ByVal capabilities As Long) As Boolean
-IBarDataReader_Supports = gHistDataSupports(capabilities)
+IBarDataReader_Supports = gHistDataSupports(capabilities, mMode)
 End Function
 
 '@===============================================================================
@@ -232,6 +234,7 @@ Dim BarLengthMinutes As Long
 Dim numberOfBars As Long
 Dim fromDate As Date
 Dim toDate As Date
+Dim st As SessionTimes
 
 mWaitingForBarData = True
 
@@ -280,13 +283,48 @@ With mBarDataSpecifier
             TimePeriodUnits.TimePeriodTickMovement, _
             TimePeriodUnits.TimePeriodTickVolume
         BarLengthMinutes = 1
-        numberOfBars = 2880
     End Select
     
     
-    If .BarLengthUnits = TimePeriodVolume Or .BarLengthUnits = TimePeriodTickMovement Or .BarLengthUnits = TimePeriodTickVolume Then
-        fromDate = .fromDate
-        toDate = .toDate
+    If .BarLengthUnits = TimePeriodVolume Or _
+        .BarLengthUnits = TimePeriodTickMovement Or _
+        .BarLengthUnits = TimePeriodTickVolume _
+    Then
+        If .fromDate <> 0 And .toDate <> 0 Then
+            st = GetSessionTimes(.fromDate, _
+                                        mContract.sessionStartTime, _
+                                        mContract.sessionEndTime)
+            fromDate = st.startTime
+            toDate = .toDate
+            numberOfBars = MaxLong
+        ElseIf .toDate = 0 Then
+            st = GetSessionTimes(.fromDate, _
+                                        mContract.sessionStartTime, _
+                                        mContract.sessionEndTime)
+            fromDate = st.startTime
+            st = GetOffsetSessionTimes(fromDate, _
+                                        .numberOfBars, _
+                                        mContract.sessionStartTime, _
+                                        mContract.sessionEndTime)
+            toDate = st.startTime
+            numberOfBars = MaxLong
+        ElseIf .fromDate = 0 Then
+            toDate = .toDate
+            st = GetOffsetSessionTimes(toDate, _
+                                        -.numberOfBars, _
+                                        mContract.sessionStartTime, _
+                                        mContract.sessionEndTime)
+            fromDate = st.startTime
+            numberOfBars = MaxLong
+        Else
+            toDate = Now
+            st = GetOffsetSessionTimes(toDate, _
+                                        -.numberOfBars, _
+                                        mContract.sessionStartTime, _
+                                        mContract.sessionEndTime)
+            fromDate = st.startTime
+            numberOfBars = MaxLong
+        End If
     Else
         If .toDate <> 0 Then
             toDate = .toDate
@@ -317,7 +355,7 @@ With mBarDataSpecifier
     If .includeBarsOutsideSession Then
         mBarReader.FetchBars .barType, BarLengthMinutes, numberOfBars, fromDate, toDate
     Else
-        mBarReader.FetchBars .barType, BarLengthMinutes, &H7FFFFFFF, fromDate, toDate
+        mBarReader.FetchBars .barType, BarLengthMinutes, MaxLong, fromDate, toDate
     End If
 End With
 
@@ -363,13 +401,15 @@ Friend Sub initialise( _
                 ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
                 ByVal barDataInputServiceConsumer As TradeBuildSP.IBarDataInputServiceConsumer, _
                 ByVal histDataServiceProvider As TradeBuildSP.IBarDataServiceProvider, _
-                ByVal DataConsumer As TradeBuildSP.IBarDataConsumer)
+                ByVal DataConsumer As TradeBuildSP.IBarDataConsumer, _
+                ByVal mode As AccessModes)
                 
 mServiceProviderName = Name
 Set mCommonServiceConsumer = CommonServiceConsumer
 Set mServiceConsumer = barDataInputServiceConsumer
 Set mHistDataServiceProvider = histDataServiceProvider
 Set mDataConsumer = DataConsumer
+mMode = mode
                 
 mConnectionString = connectionString
 Set mTradingDB = CreateTradingDB(mConnectionString)

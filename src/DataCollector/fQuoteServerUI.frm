@@ -71,7 +71,6 @@ Begin VB.Form fDataCollectorUI
       _Version        =   393216
       Style           =   1
       Tabs            =   2
-      Tab             =   1
       TabHeight       =   494
       ForeColor       =   -2147483630
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
@@ -85,7 +84,7 @@ Begin VB.Form fDataCollectorUI
       EndProperty
       TabCaption(0)   =   "&Activity"
       TabPicture(0)   =   "fQuoteServerUI.frx":0000
-      Tab(0).ControlEnabled=   0   'False
+      Tab(0).ControlEnabled=   -1  'True
       Tab(0).Control(0)=   "TickerScroll"
       Tab(0).Control(0).Enabled=   0   'False
       Tab(0).Control(1)=   "TickersContainerPicture"
@@ -93,7 +92,7 @@ Begin VB.Form fDataCollectorUI
       Tab(0).ControlCount=   2
       TabCaption(1)   =   "&Log"
       TabPicture(1)   =   "fQuoteServerUI.frx":001C
-      Tab(1).ControlEnabled=   -1  'True
+      Tab(1).ControlEnabled=   0   'False
       Tab(1).Control(0)=   "LogText"
       Tab(1).Control(0).Enabled=   0   'False
       Tab(1).ControlCount=   1
@@ -101,7 +100,7 @@ Begin VB.Form fDataCollectorUI
          Appearance      =   0  'Flat
          ForeColor       =   &H80000008&
          Height          =   2655
-         Left            =   -74880
+         Left            =   120
          ScaleHeight     =   2625
          ScaleWidth      =   4785
          TabIndex        =   7
@@ -222,7 +221,7 @@ Begin VB.Form fDataCollectorUI
       End
       Begin VB.TextBox LogText 
          Height          =   2655
-         Left            =   120
+         Left            =   -74880
          MaxLength       =   65535
          MultiLine       =   -1  'True
          ScrollBars      =   3  'Both
@@ -232,7 +231,7 @@ Begin VB.Form fDataCollectorUI
       End
       Begin VB.VScrollBar TickerScroll 
          Height          =   2700
-         Left            =   -70080
+         Left            =   4920
          TabIndex        =   4
          Top             =   360
          Width           =   255
@@ -313,6 +312,7 @@ Option Explicit
 '================================================================================
 
 Implements BarWriterListener
+Implements LogListener
 Implements QuoteListener
 Implements StateChangeListener
 Implements TickfileWriterListener
@@ -375,6 +375,8 @@ Private mLineSpacing As Integer
 
 Private mStartStopTimePanel As Panel
 
+Private mFormatter As LogFormatter
+
 '================================================================================
 ' Form Event Handlers
 '================================================================================
@@ -383,6 +385,8 @@ Private Sub Form_Initialize()
 InitCommonControls
 Set mTimerList = GetGlobalTimerList
 ReDim mTickers(99) As TickerTableEntry
+Set mFormatter = CreateBasicLogFormatter(TimestampTimeOnlyLocal)
+gLogger.addLogListener Me
 End Sub
 
 Private Sub Form_Load()
@@ -418,6 +422,11 @@ Private Sub Form_Terminate()
 TerminateTWUtilities
 End Sub
 
+Private Sub Form_Unload(Cancel As Integer)
+gLogger.Log LogLevelNormal, "Data Collector program exiting"
+gLogger.removeLogListener Me
+End Sub
+
 '================================================================================
 ' BarWriterListener Interface Members
 '================================================================================
@@ -428,18 +437,34 @@ Dim tk As ticker
 Select Case ev.Action
 Case WriterNotifications.WriterNotReady
     Set tk = ev.Source
-    logMessage "Bar writer not ready for " & _
+    gLogger.Log LogLevelNormal, "Bar writer not ready for " & _
                 tk.Contract.specifier.localSymbol
 Case WriterNotifications.WriterReady
     Set tk = ev.Source
-    logMessage "Bar writer ready for " & _
+    gLogger.Log LogLevelNormal, "Bar writer ready for " & _
                 tk.Contract.specifier.localSymbol
 Case WriterNotifications.WriterFileCreated
     Set tk = ev.Source
-    logMessage "Writing bars for " & _
+    gLogger.Log LogLevelNormal, "Writing bars for " & _
                 tk.Contract.specifier.localSymbol & _
                 " to " & ev.FileName
 End Select
+End Sub
+
+'================================================================================
+' LogListener Interface Members
+'================================================================================
+
+Private Sub LogListener_finish()
+'nothing to do
+End Sub
+
+Private Sub LogListener_Notify(ByVal logrec As TWUtilities30.LogRecord)
+LogText.SelStart = Len(LogText.Text)
+LogText.SelLength = 0
+If Len(LogText.Text) > 0 Then LogText.SelText = vbCrLf
+LogText.SelText = mFormatter.formatRecord(logrec)
+LogText.SelStart = InStrRev(LogText.Text, vbCrLf) + 2
 End Sub
 
 '================================================================================
@@ -504,15 +529,15 @@ Dim tk As ticker
 Select Case ev.Action
 Case WriterNotifications.WriterNotReady
     Set tk = ev.Source
-    logMessage "Tickfile writer not ready for " & _
+    gLogger.Log LogLevelNormal, "Tickfile writer not ready for " & _
                     tk.Contract.specifier.localSymbol
 Case WriterNotifications.WriterReady
     Set tk = ev.Source
-    logMessage "Tickfile writer ready for " & _
+    gLogger.Log LogLevelNormal, "Tickfile writer ready for " & _
                     tk.Contract.specifier.localSymbol
 Case WriterNotifications.WriterFileCreated
     Set tk = ev.Source
-    logMessage "Writing tickdata for " & _
+    gLogger.Log LogLevelNormal, "Writing tickdata for " & _
                 tk.Contract.specifier.localSymbol & _
                 " to " & ev.FileName
 End Select
@@ -560,7 +585,7 @@ If mDataCollector.exitProgramTime <> 0 Then
         FormatDateTime(mDataCollector.exitProgramTime, vbShortTime)
 End If
 
-mStartStopTimePanel.text = s
+mStartStopTimePanel.Text = s
 
 setStarted
 End Sub
@@ -579,59 +604,31 @@ If mDataCollector.exitProgramTime <> 0 Then
         FormatDateTime(mDataCollector.exitProgramTime, vbShortTime)
 End If
 
-mStartStopTimePanel.text = s
+mStartStopTimePanel.Text = s
 
 setStopped
 End Sub
 
 Private Sub mDataCollector_connected()
 ConnectionStatusText.BackColor = vbGreen
-logMessage "Connected ok to realtime data source"
 StartStopButton.Enabled = True
 End Sub
 
 Private Sub mDataCollector_connectFailed(ByVal description As String)
 ConnectionStatusText.BackColor = vbRed
-logMessage "Connect failed: " & description
 End Sub
 
 Private Sub mDataCollector_ConnectionClosed()
 ConnectionStatusText.BackColor = vbRed
-logMessage "Connection to realtime data source closed"
 StartStopButton.Enabled = False
-End Sub
-
-Private Sub mDataCollector_ErrorMessage( _
-                ByVal errorCode As ApiNotifyCodes, _
-                ByVal errorMsg As String)
-
-logMessage "Error " & errorCode & ": " & errorMsg
 End Sub
 
 Private Sub mDataCollector_ExitProgram()
 Unload Me
 End Sub
 
-Private Sub mDataCollector_Info(ev As InfoEvent)
-logMessage ev.Data
-End Sub
-
-Private Sub mDataCollector_NotifyMessage( _
-                ByVal eventCode As TradeBuild26.ApiNotifyCodes, _
-                ByVal eventMsg As String)
-logMessage "Notification " & eventCode & ": " & eventMsg
-End Sub
-
 Private Sub mDataCollector_Reconnecting()
-logMessage "Reconnecting to realtime data source"
 StartStopButton.Enabled = True
-End Sub
-
-Private Sub mDataCollector_ServiceProviderError( _
-                ByVal errorCode As Long, _
-                ByVal serviceProviderName As String, _
-                ByVal message As String)
-logMessage "Service provider error (" & serviceProviderName & "): " & errorCode & ": " & message
 End Sub
 
 Private Sub mDataCollector_TickerAdded(ByVal ticker As ticker)
@@ -717,7 +714,7 @@ End If
 
 If noAutoStart Then
     If mDataCollector.exitProgramTime <> 0 Then
-        mStartStopTimePanel.text = "Program exit: " & _
+        mStartStopTimePanel.Text = "Program exit: " & _
                                     FormatDateTime(mDataCollector.exitProgramTime, vbShortDate) & " " & _
                                     FormatDateTime(mDataCollector.exitProgramTime, vbShortTime)
     End If
@@ -734,7 +731,7 @@ Dim s As String
             FormatDateTime(mDataCollector.exitProgramTime, vbShortDate) & " " & _
             FormatDateTime(mDataCollector.exitProgramTime, vbShortTime)
     End If
-    mStartStopTimePanel.text = s
+    mStartStopTimePanel.Text = s
     If mDataCollector.nextStartTime = 0 Then
         startCollecting "Data collection started automatically"
     End If
@@ -750,7 +747,7 @@ Private Sub clearTickers()
 Dim i As Long
 
 For i = 0 To ShortNameText.UBound
-    ShortNameText(i).text = ""
+    ShortNameText(i).Text = ""
     DataLightLabel(i).BackColor = vbButtonFace
 Next
 End Sub
@@ -764,16 +761,6 @@ ActivityMonitor.Visible = False
 mActivityMonitorVisible = False
 End Sub
     
-Private Sub logMessage(ByVal text As String)
-LogText.SelStart = Len(LogText.text)
-LogText.SelLength = 0
-If Len(LogText.text) > 0 Then LogText.SelText = vbCrLf
-LogText.SelText = Format(Now, "hh:mm:ss")
-LogText.SelText = "  "
-LogText.SelText = text
-LogText.SelStart = InStrRev(LogText.text, vbCrLf) + 2
-End Sub
-
 Private Sub processQuoteEvent( _
                 ev As QuoteEvent)
 Dim lTicker As ticker
@@ -916,7 +903,7 @@ End Sub
 Private Sub startCollecting( _
                 ByVal message As String)
                 
-logMessage message
+gLogger.Log LogLevelNormal, message
 
 mDataCollector.startCollection
 
@@ -927,7 +914,7 @@ Private Sub stopCollecting( _
 If MsgBox("Please confirm that you wish to stop data collection", _
             vbYesNo + vbDefaultButton2 + vbQuestion) <> vbYes Then Exit Sub
 
-logMessage message
+gLogger.Log LogLevelNormal, message
 
 mDataCollector.stopCollection
 

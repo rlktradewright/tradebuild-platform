@@ -93,7 +93,7 @@ If mCyclicSize > 0 Then
     End If
 Else
     If mNewest = UBound(mValues) Then
-        ReDim Preserve mValues(2 * UBound(mValues)) As StudyValue
+        ReDim Preserve mValues(2 * (UBound(mValues) + 1) - 1) As StudyValue
     End If
     mNewest = mNewest + 1
     mNumValues = mNumValues + 1
@@ -164,7 +164,7 @@ If cyclicSize > 0 Then
     mCyclicSize = cyclicSize
     ReDim mValues(mCyclicSize - 1) As StudyValue
 Else
-    ReDim mValues(1000) As StudyValue
+    ReDim mValues(15) As StudyValue
     mCyclicSize = 0
 End If
 mNewest = -1

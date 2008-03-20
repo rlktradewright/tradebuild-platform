@@ -164,9 +164,8 @@ mSessionBuilder.sessionEndTime = mBarDataSpecifier.Contract.sessionEndTime
 Set mSession = mSessionBuilder.Session
 
 If mTWSAPI Is Nothing Then
-    Set mTWSAPI = gGetTWSAPIInstance(mServer, mPort, mClientID, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection)
-    mTWSAPI.logLevel = mLogLevel
-    mTWSAPI.TWSLogLevel = mTWSLogLevel
+    Set mTWSAPI = gGetTWSAPIInstance(mServer, mPort, mClientID, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection, mLogLevel, mTWSLogLevel)
+    mTWSAPI.TwsLogLevel = mTWSLogLevel
     If mTWSAPI.connectionState = ConnConnected Then
     mServiceConsumer.NotifyEvent StandardSPEventCodes.HDConnectedToDataSource, _
                             "Connected to " & mTWSAPI.connectionString, _
@@ -352,7 +351,7 @@ Friend Property Let ServiceProviderName(ByVal value As String)
 mServiceProviderName = value
 End Property
 
-Friend Property Let TWSLogLevel(ByVal value As TWSLogLevels)
+Friend Property Let TwsLogLevel(ByVal value As TWSLogLevels)
 mTWSLogLevel = value
 End Property
 

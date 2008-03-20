@@ -36,6 +36,8 @@ Option Explicit
 
 Public gStop As Boolean
 
+Public gLogger As Logger
+
 Private mCLParser As CommandLineParser
 Private mForm As fDataCollectorUI
 
@@ -87,6 +89,8 @@ If showHelp Then Exit Sub
 
 InitialiseTWUtilities
 
+getLog
+
 mNoUI = getNoUi
 
 mConfigPath = getConfig
@@ -98,12 +102,14 @@ mNoAutoStart = getNoAutostart
 
 If mNoUI Then
     
+    gLogger.Log LogLevelNormal, "Creating data collector object"
     Set mDataCollector = CreateDataCollector(mConfigPath, _
                                             mStartTimeDescriptor, _
                                             mEndTimeDescriptor, _
                                             mExitTimeDescriptor)
     
     If mStartTimeDescriptor = "" Then
+        gLogger.Log LogLevelNormal, "Starting data collection"
         mDataCollector.startCollection
     End If
     
@@ -111,14 +117,18 @@ If mNoUI Then
         Wait 1000
     Loop
     
+    gLogger.Log LogLevelNormal, "Data Collector program exiting"
+    
     TerminateTWUtilities
     
 Else
+    gLogger.Log LogLevelNormal, "Creating data collector object"
     Set mDataCollector = CreateDataCollector(mConfigPath, _
                                             IIf(mNoAutoStart, "", mStartTimeDescriptor), _
                                             mEndTimeDescriptor, _
                                             mExitTimeDescriptor)
     
+    gLogger.Log LogLevelNormal, "Creating form"
     Set mForm = createForm
 End If
 
@@ -173,6 +183,8 @@ Else
     mPosY = Int(Int(Screen.Height / createForm.Height) * Rnd)
 End If
 
+gLogger.Log LogLevelNormal, "Form position: " & mPosX & "," & mPosY
+
 createForm.initialise mDataCollector, _
                 getNoAutostart, _
                 mCLParser.Switch("showMonitor")
@@ -195,36 +207,64 @@ Else
                         App.Major & "." & App.Minor & _
                         "\settings.xml"
 End If
+gLogger.Log LogLevelNormal, "Config file: " & getConfig
 End Function
+
+Private Sub getLog()
+Dim logFile As String
+
+If mCLParser.Switch("Log") Then
+    logFile = mCLParser.SwitchValue("log")
+Else
+    logFile = GetSpecialFolderPath(FolderIdLocalAppdata) & _
+                        "\TradeWright\" & _
+                        App.EXEName & _
+                        "\v" & _
+                        App.Major & "." & App.Minor & _
+                        "\log.log"
+End If
+Set gLogger = GetLogger("")
+gLogger.logLevel = LogLevelNormal
+gLogger.addLogListener CreateFileLogListener(logFile, _
+                                        CreateBasicLogFormatter, _
+                                        True, _
+                                        False)
+gLogger.Log LogLevelNormal, "Log file: " & logFile
+End Sub
 
 Private Function getEndTimeDescriptor() As String
 If mCLParser.Switch("endAt") Then
     getEndTimeDescriptor = mCLParser.SwitchValue("endAt")
 End If
+gLogger.Log LogLevelNormal, "End at: " & getEndTimeDescriptor
 End Function
 
 Private Function getExitTimeDescriptor() As String
 If mCLParser.Switch("exitAt") Then
     getExitTimeDescriptor = mCLParser.SwitchValue("exitAt")
 End If
+gLogger.Log LogLevelNormal, "Exit at: " & getExitTimeDescriptor
 End Function
 
 Private Function getNoAutostart() As Boolean
 If mCLParser.Switch("noAutoStart") Then
     getNoAutostart = True
 End If
+gLogger.Log LogLevelNormal, "Auto start: " & Not getNoAutostart
 End Function
 
 Private Function getNoUi() As Boolean
 If mCLParser.Switch("noui") Then
     getNoUi = True
 End If
+gLogger.Log LogLevelNormal, "Run with UI: " & Not getNoUi
 End Function
 
 Private Function getStartTimeDescriptor() As String
 If mCLParser.Switch("startAt") Then
     getStartTimeDescriptor = mCLParser.SwitchValue("startAt")
 End If
+gLogger.Log LogLevelNormal, "Start at: " & getStartTimeDescriptor
 End Function
 
 Private Function showHelp() As Boolean
@@ -232,6 +272,7 @@ Private Function showHelp() As Boolean
 If mCLParser.Switch("?") Or mCLParser.NumberOfSwitches = 0 Then
     MsgBox vbCrLf & _
             "datacollector26 [/config:filename] " & vbCrLf & _
+            "              [/log:filename] " & vbCrLf & _
             "              [/posn:offsetfromleft,offsetfromtop]" & vbCrLf & _
             "              [/noAutoStart" & vbCrLf & _
             "              [/noUI]" & vbCrLf & _

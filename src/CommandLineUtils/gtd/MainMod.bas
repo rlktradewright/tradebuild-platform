@@ -38,6 +38,7 @@ Private Const StartCommand                  As String = "START"
 Private Const PauseCommand                  As String = "PAUSE"
 Private Const StopCommand                   As String = "STOP"
 Private Const SpeedCommand                  As String = "SPEED"
+Private Const RawCommand                    As String = "RAW"
 
 '@================================================================================
 ' Member variables
@@ -46,11 +47,13 @@ Private Const SpeedCommand                  As String = "SPEED"
 Public gCon As Console
 
 Private mLineNumber As Long
-Private mContractSpec As contractSpecifier
+Private mContractSpec As ContractSpecifier
 Private mFrom As Date
 Private mTo As Date
 
 Private mSpeed As Long
+
+Private mRaw As Boolean
 
 ' this is public so that the Processor object can
 ' kill itself when it has finished replaying
@@ -151,6 +154,8 @@ Do While inString <> gCon.eofString
             processStopCommand
         Case SpeedCommand
             processSpeedCommand params
+        Case RawCommand
+            processRawCommand params
         Case Else
             gCon.writeErrorLine "Invalid command '" & command
         End Select
@@ -267,6 +272,20 @@ Else
 End If
 End Sub
 
+Private Sub processRawCommand( _
+                ByVal params As String)
+Select Case UCase$(Trim$(params))
+Case ""
+    mRaw = Not mRaw
+Case "ON", "YES", "TRUE", "T"
+    mRaw = True
+Case "OFF", "NO", "FALSE", "F"
+    mRaw = True
+Case Else
+    gCon.writeErrorLine "Line " & mLineNumber & ": Invalid raw command '" & params & "'"
+End Select
+End Sub
+
 Private Sub processSpeedCommand( _
                 ByVal params As String)
 If IsInteger(params) Then
@@ -287,7 +306,7 @@ ElseIf mFrom = 0 Then
     gCon.writeErrorLine "Line " & mLineNumber & ": Cannot start - from time not specified"
 ElseIf gProcessor Is Nothing Then
     Set gProcessor = New Processor
-    gProcessor.startData mContractSpec, mFrom, mTo, mSpeed
+    gProcessor.startData mContractSpec, mFrom, mTo, mSpeed, mRaw
 ElseIf gProcessor.tickerState = TickerStatePaused Then
     gProcessor.resumeData
 Else
@@ -396,16 +415,18 @@ gCon.writeErrorLine "    -speed:n"
 gCon.writeErrorLine ""
 gCon.writeErrorLine "StdIn Format:"
 gCon.writeErrorLine "#comment"
-gCon.writeErrorLine "$contract shortname,sectype,exchange,symbol,currency,expiry,strike,right"
-gCon.writeErrorLine "$from starttime"
-gCon.writeErrorLine "$to endtime"
-gCon.writeErrorLine "$start"
-gCon.writeErrorLine "$pause"
-gCon.writeErrorLine "$stop"
+gCon.writeErrorLine "contract shortname,sectype,exchange,symbol,currency,expiry,strike,right"
+gCon.writeErrorLine "from starttime"
+gCon.writeErrorLine "to endtime"
+gCon.writeErrorLine "stop"
+gCon.writeErrorLine "speed n"
+gCon.writeErrorLine "raw [on | off]"
+gCon.writeErrorLine "pause"
+gCon.writeErrorLine "stop"
 gCon.writeErrorLine ""
 gCon.writeErrorLine "StdOUt Format:"
 gCon.writeErrorLine ""
-gCon.writeErrorLine "timestamp , ticktype, tickvalues"
+gCon.writeErrorLine "timestamp, ticktype, tickvalues"
 gCon.writeErrorLine ""
 gCon.writeErrorLine "  where"
 gCon.writeErrorLine ""
@@ -415,12 +436,13 @@ gCon.writeErrorLine "    ticktype ::=   B   bid"
 gCon.writeErrorLine "                   A   ask"
 gCon.writeErrorLine "                   T   trade"
 gCon.writeErrorLine "                   V   volume"
-gCon.writeErrorLine "                   O   open interest"
+gCon.writeErrorLine "                   I   open interest"
+gCon.writeErrorLine "                   O   open"
 gCon.writeErrorLine "                   H   high"
 gCon.writeErrorLine "                   L   low"
 gCon.writeErrorLine "                   C   previous session close"
 gCon.writeErrorLine ""
-gCon.writeErrorLine "    tickvalues ::=  price[,size][,PRICEUP | PRICEDOWN | PRICESAME][,SIZEUP | SIZEDOWN | SIZESAME]"
+gCon.writeErrorLine "    tickvalues ::=  price[,size][,+ | - | =][,+ | - | =]"
 gCon.writeErrorLine ""
 End Sub
 
