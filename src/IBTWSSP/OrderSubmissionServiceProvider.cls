@@ -119,7 +119,7 @@ Private Sub ICommonServiceProvider_Link( _
                 ByVal params As Parameters)
 Dim param As Parameter
 
-On Error GoTo err
+On Error GoTo Err
 gCommonServiceConsumer = commonServiceConsumer
 Set mCommonServiceConsumer = commonServiceConsumer
 mHandle = handle
@@ -129,29 +129,29 @@ mCommonServiceConsumer.RegisterServiceProvider mHandle, _
 For Each param In params
     Select Case UCase$(param.name)
     Case UCase$(ParamNameClientId)
-        clientID = param.value
+        clientID = gParseClientId(param.value)
     Case UCase$(ParamNameConnectionRetryIntervalSecs)
-        connectionRetryIntervalSecs = param.value
+        connectionRetryIntervalSecs = gParseConnectionRetryInterval(param.value)
     Case UCase$(ParamNameKeepConnection)
-        keepConnection = param.value
+        keepConnection = gParseKeepConnection(param.value)
     Case UCase$(ParamNameLogLevel)
-        logLevel = param.value
+        logLevel = gParseLogLevel(param.value)
     Case UCase$(ParamNamePort)
-        port = param.value
+        port = gParsePort(param.value)
     Case UCase$(ParamNameProviderKey)
         providerKey = param.value
     Case UCase$(ParamNameServer)
         server = param.value
     Case UCase$(ParamNameTwsLogLevel)
-        TWSLogLevel = gTwsLogLevelFromString(param.value)
+        TWSLogLevel = gParseTwsLogLevel(param.value)
     End Select
 Next
 
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "OrderSubmissionServiceProvider" & "::" & "ICommonServiceProvider_Link", _
-                err.Description
+                Err.Description
 
 End Sub
 
@@ -169,14 +169,14 @@ ICommonServiceProvider_Name = mName
 End Property
 
 Private Sub ICommonServiceProvider_Terminate()
-On Error GoTo err
+On Error GoTo Err
 finishSubmitters
 Set mCommonServiceConsumer = Nothing
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "OrderSubmissionServiceProvider" & "::" & "ICommonServiceProvider_Terminate", _
-                err.Description
+                Err.Description
 End Sub
 
 '================================================================================
@@ -189,7 +189,7 @@ Private Function IOrderSubmissionSrvcProvider_CreateOrderSubmitter( _
 
 Dim orderSubmitter As orderSubmitter
 
-On Error GoTo err
+On Error GoTo Err
 Set orderSubmitter = New orderSubmitter
 orderSubmitter.OrderSubmissionServiceProvider = Me
 orderSubmitter.commonServiceConsumer = mCommonServiceConsumer
@@ -209,10 +209,10 @@ orderSubmitter.start
 
 Set IOrderSubmissionSrvcProvider_CreateOrderSubmitter = orderSubmitter
 Exit Function
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "OrderSubmissionServiceProvider" & "::" & "IOrderSubmissionSrvcProvider_CreateOrderSubmitter", _
-                err.Description
+                Err.Description
 End Function
 
 '================================================================================
@@ -274,7 +274,7 @@ Case TWSLogLevelWarning
 Case TWSLogLevelInformation
 Case TWSLogLevelDetail
 Case Else
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "IBTWSSP.RealtimeDataServiceProvider::(let)TWSLogLevel", _
                 "Value must be one of the TWSLogLevels enum"
 End Select

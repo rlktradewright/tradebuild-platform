@@ -129,21 +129,21 @@ mCommonServiceConsumer.RegisterServiceProvider mHandle, _
 For Each param In params
     Select Case UCase$(param.name)
     Case UCase$(ParamNameClientId)
-        clientID = param.value
+        clientID = gParseClientId(param.value)
     Case UCase$(ParamNameConnectionRetryIntervalSecs)
-        connectionRetryIntervalSecs = param.value
+        connectionRetryIntervalSecs = gParseConnectionRetryInterval(param.value)
     Case UCase$(ParamNameKeepConnection)
-        keepConnection = param.value
+        keepConnection = gParseKeepConnection(param.value)
     Case UCase$(ParamNameLogLevel)
-        logLevel = param.value
+        logLevel = gParseLogLevel(param.value)
     Case UCase$(ParamNamePort)
-        port = param.value
+        port = gParsePort(param.value)
     Case UCase$(ParamNameProviderKey)
         providerKey = param.value
     Case UCase$(ParamNameServer)
         server = param.value
     Case UCase$(ParamNameTwsLogLevel)
-        TWSLogLevel = gTwsLogLevelFromString(param.value)
+        TWSLogLevel = gParseTwsLogLevel(param.value)
     End Select
 Next
 
@@ -162,14 +162,14 @@ ICommonServiceProvider_Name = mName
 End Property
 
 Private Sub ICommonServiceProvider_Terminate()
-On Error GoTo err
+On Error GoTo Err
 finishReaders
 Set mCommonServiceConsumer = Nothing
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "RealtimeDataServiceProvider" & "::" & "ICommonServiceProvider_Terminate", _
-                err.Description
+                Err.Description
 End Sub
 
 '================================================================================
@@ -182,7 +182,7 @@ Private Function IRealtimeDataServiceProvider_CreateRealtimeDataReader( _
 
 Dim reader As RealtimeDataReader
 
-On Error GoTo err
+On Error GoTo Err
 Set reader = New RealtimeDataReader
 Set IRealtimeDataServiceProvider_CreateRealtimeDataReader = reader
 reader.RealtimeDataServiceProvider = Me
@@ -200,10 +200,10 @@ reader.TWSLogLevel = mTWSLogLevel
 reader.name = mName & " (reader)"
 mRealtimeDataReaders.add reader
 Exit Function
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "RealtimeDataServiceProvider" & "::" & "IRealtimeDataServiceProvider_CreateRealtimeDataReader", _
-                err.Description
+                Err.Description
 End Function
 
 Private Function IRealtimeDataServiceProvider_Supports( _
@@ -266,7 +266,7 @@ Case TWSLogLevelWarning
 Case TWSLogLevelInformation
 Case TWSLogLevelDetail
 Case Else
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "IBTWSSP.RealtimeDataServiceProvider::(let)TWSLogLevel", _
                 "Value must be one of the TWSLogLevels enum"
 End Select

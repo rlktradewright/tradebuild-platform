@@ -152,6 +152,96 @@ Public Function gHistDataSupports(ByVal capabilities As Long) As Boolean
 gHistDataSupports = (gHistDataCapabilities And capabilities)
 End Function
 
+Public Function gParseClientId( _
+                value As String) As Long
+If value = "" Then gParseClientId = -1
+If Not IsInteger(value) Then
+    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            , _
+            "Invalid 'Client Id' parameter: value must be an integer"
+End If
+gParseClientId = CLng(value)
+End Function
+
+Public Function gParseConnectionRetryInterval( _
+                value As String) As Long
+If value = "" Then gParseConnectionRetryInterval = 0
+If Not IsInteger(value, 0) Then
+    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            , _
+            "Invalid 'Connection Retry Interval Secs' parameter: value must be an integer >= 0"
+End If
+gParseConnectionRetryInterval = CLng(value)
+End Function
+
+Public Function gParseKeepConnection( _
+                value As String) As Boolean
+On Error GoTo err
+If value = "" Then gParseKeepConnection = False
+gParseKeepConnection = CBool(value)
+Exit Function
+
+err:
+err.Raise ErrorCodes.ErrIllegalArgumentException, _
+        , _
+        "Invalid 'Keep Connection' parameter: value must be 'true' or 'false'"
+End Function
+
+Public Function gParseLogLevel( _
+                value As String) As Long
+If value = "" Then gParseLogLevel = LogLevels.LogLevelLow
+If Not IsInteger(value, 0, 4) Then
+    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            , _
+            "Invalid 'Log Level' parameter: value must be a positive integer less than 5 "
+End If
+gParseLogLevel = CLng(value)
+End Function
+
+Public Function gParsePort( _
+                value As String) As Long
+If value = "" Then gParsePort = 7496
+If Not IsInteger(value, 1024, 65535) Then
+    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            , _
+            "Invalid 'Port' parameter: value must be an integer >= 1024 and <=65535"
+End If
+gParsePort = CLng(value)
+End Function
+
+Public Function gParseRole( _
+                value As String) As String
+
+Select Case UCase$(value)
+Case "", "P", "PR", "PRIM", "PRIMARY"
+    gParseRole = "PRIMARY"
+Case "S", "SEC", "SECOND", "SECONDARY"
+    gParseRole = "SECONDARY"
+Case Else
+    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            , _
+            "Invalid 'Role' parameter: value must be one of 'P', 'PR', 'PRIM', 'PRIMARY', 'S', 'SEC', 'SECOND', or 'SECONDARY'"
+End Select
+End Function
+
+Public Function gParseTwsLogLevel( _
+                value As String) As TWSLogLevels
+On Error GoTo err
+If value = "" Then gParseTwsLogLevel = TWSLogLevelError
+gParseTwsLogLevel = gTwsLogLevelFromString(value)
+Exit Function
+
+err:
+err.Raise ErrorCodes.ErrIllegalArgumentException, _
+        , _
+        "Invalid 'Tws Log Level' parameter: value must be one of " & _
+        TWSLogLevelSystemString & ", " & _
+        TWSLogLevelErrorString & ", " & _
+        TWSLogLevelWarningString & ", " & _
+        TWSLogLevelInformationString & " or " & _
+        TWSLogLevelDetailString
+End Function
+
 Public Function gRealtimeDataCapabilities() As Long
 gRealtimeDataCapabilities = TradeBuildSP.RealtimeDataServiceProviderCapabilities.RtCapMarketDepthByPosition
 End Function
@@ -289,6 +379,8 @@ Case UCase$(TWSLogLevelSystemString)
     gTwsLogLevelFromString = TWSLogLevelSystem
 Case UCase$(TWSLogLevelWarningString)
     gTwsLogLevelFromString = TWSLogLevelWarning
+Case Else
+    err.Raise ErrorCodes.ErrIllegalArgumentException
 End Select
 End Function
 

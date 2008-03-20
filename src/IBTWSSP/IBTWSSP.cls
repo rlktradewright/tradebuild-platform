@@ -77,7 +77,7 @@ End Enum
 'End Enum
 
 Public Enum TWSLogLevels
-    TWSLogLevelSystem
+    TWSLogLevelSystem = 1
     TWSLogLevelError
     TWSLogLevelWarning
     TWSLogLevelInformation

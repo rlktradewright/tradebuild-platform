@@ -86,6 +86,7 @@ mConnectionRetryIntervalSecs = 10
 mLogLevel = LogLevelLow
 mTWSLogLevel = TWSLogLevelError
 
+mRole = "PRIMARY"
 End Sub
 
 Private Sub Class_Terminate()
@@ -99,38 +100,38 @@ End Sub
 Public Sub ContractDetailsRequester_cancelRequest( _
                 ByRef request As TWSContractDetailsRequestQueueEntry, _
                 ByVal reason As String)
-On Error GoTo err
+On Error GoTo Err
 request.tradeBuildContractsBuilder.unableToLoad reason, mName
 checkReleaseTWSAPI
 Exit Sub
 
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "ContractInfoServiceProvider" & "::" & "ContractDetailsRequester_cancelRequest", _
-                err.Description
+                Err.Description
 End Sub
 
 Private Sub ContractDetailsRequester_contractsLoaded( _
                 ByRef request As TWSContractDetailsRequestQueueEntry)
 Dim lContractWrapper As ContractWrapper
 
-On Error GoTo err
+On Error GoTo Err
 For Each lContractWrapper In request.contractWrappers
     request.tradeBuildContractsBuilder.AddContract lContractWrapper.tradeBuildContract
 Next
 mContractInfoServiceConsumer.LoadComplete mHandle, request.tradeBuildContractsBuilder
 checkReleaseTWSAPI
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "ContractInfoServiceProvider" & "::" & "ContractDetailsRequester_contractsLoaded", _
-                err.Description
+                Err.Description
 End Sub
 
 Private Sub ContractDetailsRequester_contractSpecifierInvalid( _
                 ByRef request As TWSContractDetailsRequestQueueEntry, _
                 ByVal reason As String)
-On Error GoTo err
+On Error GoTo Err
 mContractInfoServiceConsumer.NotifyEvent StandardSPEventCodes.CIContractSpecifierInvalid, _
                                     reason, _
                                     request.tradeBuildContractsBuilder, _
@@ -138,10 +139,10 @@ mContractInfoServiceConsumer.NotifyEvent StandardSPEventCodes.CIContractSpecifie
 checkReleaseTWSAPI
 Exit Sub
 
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "ContractInfoServiceProvider" & "::" & "ContractDetailsRequester_contractSpecifierInvalid", _
-                err.Description
+                Err.Description
 End Sub
 
 '================================================================================
@@ -172,7 +173,7 @@ Private Sub ICommonServiceProvider_Link( _
                 ByVal params As Parameters)
 Dim param As Parameter
 
-On Error GoTo err
+On Error GoTo Err
 gCommonServiceConsumer = commonServiceConsumer
 Set mCommonServiceConsumer = commonServiceConsumer
 mHandle = handle
@@ -180,33 +181,23 @@ mHandle = handle
 For Each param In params
     Select Case UCase$(param.name)
     Case UCase$(ParamNameClientId)
-        clientID = param.value
+        clientID = gParseClientId(param.value)
     Case UCase$(ParamNameConnectionRetryIntervalSecs)
-        connectionRetryIntervalSecs = param.value
+        connectionRetryIntervalSecs = gParseConnectionRetryInterval(param.value)
     Case UCase$(ParamNameKeepConnection)
-        keepConnection = param.value
+        keepConnection = gParseKeepConnection(param.value)
     Case UCase$(ParamNameLogLevel)
-        logLevel = param.value
+        logLevel = gParseLogLevel(param.value)
     Case UCase$(ParamNamePort)
-        port = param.value
+        port = gParsePort(param.value)
     Case UCase$(ParamNameProviderKey)
         providerKey = param.value
     Case UCase$(ParamNameServer)
         server = param.value
     Case UCase$(ParamNameTwsLogLevel)
-        TWSLogLevel = gTwsLogLevelFromString(param.value)
+        TWSLogLevel = gParseTwsLogLevel(param.value)
     Case UCase$(ParamNameRole)
-        Select Case UCase$(param.value)
-        Case "P", "PR", "PRIM", "PRIMARY"
-            mRole = "PRIMARY"
-        Case "S", "SEC", "SECOND", "SECONDARY"
-            mRole = "SECONDARY"
-        Case Else
-            handleFatalError ErrorCodes.ErrIllegalArgumentException, _
-                            "ICommonServiceProvider_Link", _
-                            "Invalid role parameter"
-            Exit Sub
-        End Select
+        mRole = gParseRole(param.value)
     End Select
 Next
 
@@ -219,10 +210,10 @@ Else
 End If
 
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "ContractInfoServiceProvider" & "::" & "ICommonServiceProvider_Link", _
-                err.Description
+                Err.Description
 End Sub
 
 Private Property Let ICommonServiceProvider_LogLevel( _
@@ -239,17 +230,17 @@ ICommonServiceProvider_Name = mName
 End Property
 
 Private Sub ICommonServiceProvider_Terminate()
-On Error GoTo err
+On Error GoTo Err
 If Not mTWSAPI Is Nothing Then gReleaseTWSAPIInstance mTWSAPI, True
 Set mTWSAPI = Nothing
 ' do these last because there may be a disconnected event from TWSAPI
 Set mCommonServiceConsumer = Nothing
 Set mContractInfoServiceConsumer = Nothing
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "ContractInfoServiceProvider" & "::" & "ICommonServiceProvider_Terminate", _
-                err.Description
+                Err.Description
 End Sub
 
 '================================================================================
@@ -264,7 +255,7 @@ End Property
 Private Sub IContractInfoServiceProvider_RequestContractDetails( _
                 ByVal pContractsBuilder As ContractsBuilder)
 
-On Error GoTo err
+On Error GoTo Err
 If mTWSAPI Is Nothing Then
     Set mTWSAPI = gGetTWSAPIInstance(mServer, mPort, mClientID, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection, mLogLevel, mTWSLogLevel)
 End If
@@ -273,10 +264,10 @@ mTWSAPI.RequestContract pContractsBuilder.Contracts.ContractSpecifier, _
                         pContractsBuilder, _
                         Me
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "ContractInfoServiceProvider" & "::" & "IContractInfoServiceProvider_RequestContractDetails", _
-                err.Description
+                Err.Description
 
 End Sub
 
@@ -300,7 +291,7 @@ End Function
 Private Sub mTWSAPI_ConnectFailed( _
                 ByVal Description As String, _
                 ByVal retrying As Boolean)
-On Error GoTo err
+On Error GoTo Err
 If retrying Then
     mContractInfoServiceConsumer.NotifyEvent StandardSPEventCodes.CIRetryConnectDataSource, _
                                         Description, _
@@ -313,14 +304,14 @@ Else
                                         mHandle
 End If
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "ContractInfoServiceProvider" & "::" & "mTWSAPI_ConnectFailed", _
-                err.Description
+                Err.Description
 End Sub
 
 Private Sub mTWSAPI_ConnectionToTWSClosed(ByVal reconnecting As Boolean)
-On Error GoTo err
+On Error GoTo Err
 If reconnecting Then
     mContractInfoServiceConsumer.NotifyEvent StandardSPEventCodes.CIReConnectingDataSource, _
                                     "Lost connection to TWS (reconnecting)", _
@@ -333,23 +324,23 @@ Else
                                     mHandle
 End If
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "ContractInfoServiceProvider" & "::" & "mTWSAPI_ConnectionToTWSClosed", _
-                err.Description
+                Err.Description
 End Sub
 
 Private Sub mTWSAPI_Disconnected(ByVal reason As String)
-On Error GoTo err
+On Error GoTo Err
 mContractInfoServiceConsumer.NotifyEvent StandardSPEventCodes.CIDisconnectedFromDataSource, _
                                     reason, _
                                     Nothing, _
                                     mHandle
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "ContractInfoServiceProvider" & "::" & "mTWSAPI_Disconnected", _
-                err.Description
+                Err.Description
 End Sub
 '================================================================================
 ' Properties
@@ -402,7 +393,7 @@ Case TWSLogLevelWarning
 Case TWSLogLevelInformation
 Case TWSLogLevelDetail
 Case Else
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "IBTWSSP.RealtimeDataServiceProvider::(let)TWSLogLevel", _
                 "Value must be one of the TWSLogLevels enum"
 End Select
