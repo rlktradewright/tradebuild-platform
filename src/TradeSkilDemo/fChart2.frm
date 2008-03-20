@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#48.2#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#54.1#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fChart2 
    ClientHeight    =   6780
    ClientLeft      =   60
@@ -104,11 +104,9 @@ Private mPreviousClose As String
 '================================================================================
 
 Private Sub Form_Activate()
-TradeBuildChart1.syncStudyPickerForm
-End Sub
-
-Private Sub Form_Deactivate()
-TradeBuildChart1.unsyncStudyPickerForm
+gSyncStudyPicker TradeBuildChart1.chartManager, _
+                "Study picker for " & mSymbol & _
+                " (" & mPeriodlength & " " & TimeframeUtils.TimePeriodUnitsToString(mPeriodUnits) & ")"
 End Sub
 
 Private Sub Form_Load()
@@ -132,7 +130,7 @@ End Sub
 
 Private Sub Form_Unload(cancel As Integer)
 Set mTicker = Nothing
-TradeBuildChart1.unsyncStudyPickerForm
+gUnsyncStudyPicker
 TradeBuildChart1.finish
 End Sub
 
@@ -143,7 +141,9 @@ End Sub
 Private Sub Toolbar1_ButtonClick(ByVal Button As MSComctlLib.Button)
 Select Case Button.Key
 Case "studies"
-    TradeBuildChart1.showStudyPickerForm
+    gShowStudyPicker TradeBuildChart1.chartManager, _
+                    mSymbol & _
+                    " (" & mPeriodlength & " " & TimeframeUtils.TimePeriodUnitsToString(mPeriodUnits) & ")"
 End Select
 End Sub
 

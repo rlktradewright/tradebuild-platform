@@ -113,6 +113,7 @@ Begin VB.UserControl ConfigManager
       Width           =   2775
    End
    Begin VB.Line Line1 
+      Visible         =   0   'False
       X1              =   10920
       X2              =   10080
       Y1              =   600

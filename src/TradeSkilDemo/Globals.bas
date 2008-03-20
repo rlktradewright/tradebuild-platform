@@ -30,7 +30,32 @@ Public gLogger As Logger
 ' Variables
 '================================================================================
 
+Private mStudyPickerForm As fStudyPicker
+
 '================================================================================
 ' Procedures
 '================================================================================
+
+Public Sub gShowStudyPicker( _
+                ByVal chartMgr As chartManager, _
+                ByVal title As String)
+    If mStudyPickerForm Is Nothing Then
+        Set mStudyPickerForm = New fStudyPicker
+    End If
+    mStudyPickerForm.initialise chartMgr, title
+    mStudyPickerForm.Show vbModeless
+End Sub
+
+Public Sub gSyncStudyPicker( _
+                ByVal chartMgr As chartManager, _
+                ByVal title As String)
+    If mStudyPickerForm Is Nothing Then Exit Sub
+    mStudyPickerForm.initialise chartMgr, title
+End Sub
+
+Public Sub gUnsyncStudyPicker()
+    If mStudyPickerForm Is Nothing Then Exit Sub
+    mStudyPickerForm.initialise Nothing, "Study picker"
+End Sub
+
 
