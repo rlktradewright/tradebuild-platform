@@ -62,8 +62,6 @@ Public Const DecreasedValueColor As Long = &H4444EB
 
 Private mDefaultStudyConfigurations As Collection
 
-Private mStudyPickerForm As fStudyPicker
-
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -129,26 +127,6 @@ End Function
 
 Public Sub notImplemented()
 MsgBox "This facility has not yet been implemented", , "Sorry"
-End Sub
-
-Public Sub showStudyPicker( _
-                ByVal chartMgr As chartManager)
-If mStudyPickerForm Is Nothing Then
-    Set mStudyPickerForm = New fStudyPicker
-End If
-mStudyPickerForm.initialise chartMgr
-mStudyPickerForm.Show vbModeless
-End Sub
-
-Public Sub syncStudyPicker( _
-                ByVal chartMgr As chartManager)
-If mStudyPickerForm Is Nothing Then Exit Sub
-mStudyPickerForm.initialise chartMgr
-End Sub
-
-Public Sub unsyncStudyPicker()
-If mStudyPickerForm Is Nothing Then Exit Sub
-mStudyPickerForm.initialise Nothing
 End Sub
 
 Public Sub updateDefaultStudyConfiguration( _

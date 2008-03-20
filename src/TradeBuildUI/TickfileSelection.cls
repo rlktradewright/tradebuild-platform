@@ -63,8 +63,8 @@ Private mTickfileOrganiser As fTickfileOrganiser
 ' Properties
 '@================================================================================
 
-Public Property Get TickfileSpecifiers() As TickfileSpecifier()
-If Not userCancelled Then TickfileSpecifiers = mTickfileOrganiser.TickfileSpecifiers
+Public Property Get TickfileSpecifiers() As TickfileSpecifiers
+If Not userCancelled Then Set TickfileSpecifiers = mTickfileOrganiser.TickfileSpecifiers
 End Property
 
 Public Property Get userCancelled() As Boolean

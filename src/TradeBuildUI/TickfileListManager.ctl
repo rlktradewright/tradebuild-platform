@@ -116,7 +116,7 @@ Event TickfileCountChanged()
 ' Member variables
 '@================================================================================
 
-Private mTickfileSpecifiers() As TickfileSpecifier
+Private mTickfileSpecifiers As TickfileSpecifiers
 
 Private mSupportedTickfileFormats() As TickfileFormatSpecifier
 
@@ -138,6 +138,8 @@ mMinHeight = 2 * ((UpButton.Height + _
                         RemoveButton.Height _
                         + 1) / 2)
                         
+
+Set mTickfileSpecifiers = New TickfileSpecifiers
 
 getSupportedTickfileFormats
 End Sub
@@ -241,18 +243,17 @@ Public Property Get tickfileCount() As Long
 tickfileCount = TickFileList.ListCount
 End Property
 
-Public Property Get TickfileSpecifiers() As TickfileSpecifier()
+Public Property Get TickfileSpecifiers() As TickfileSpecifiers
 Dim i As Long
+Dim tfs As New TickfileSpecifiers
 
 If TickFileList.ListCount = 0 Then Exit Property
 
-ReDim tfs(TickFileList.ListCount - 1) As TickfileSpecifier
-
-For i = 0 To UBound(tfs)
-    Set tfs(i) = mTickfileSpecifiers(TickFileList.itemData(i))
+For i = 0 To TickFileList.ListCount - 1
+    tfs.add mTickfileSpecifiers.item(TickFileList.itemData(i))
 Next
 
-TickfileSpecifiers = tfs
+Set TickfileSpecifiers = tfs
 End Property
 
 '@================================================================================
@@ -262,37 +263,29 @@ End Property
 Public Sub addTickfileNames( _
                 ByRef fileNames() As String)
 
-Dim TickfileSpec As TickfileSpecifier
+Dim tfs As TickfileSpecifier
 Dim fileExt As String
 Dim i As Long
-Dim j As Long
 Dim k As Long
 
-On Error Resume Next
+On Error GoTo Err
 
-If UBound(fileNames) < 0 Then Exit Sub
-
-j = UBound(mTickfileSpecifiers)
-If Err.Number <> 0 Then j = -1
-On Error GoTo 0
-
-ReDim Preserve mTickfileSpecifiers(j + UBound(fileNames) + 1) As TickfileSpecifier
-
-For i = j + 1 To UBound(mTickfileSpecifiers)
-    TickFileList.addItem fileNames(i - j - 1)
-    TickFileList.itemData(i) = i
+For i = 0 To UBound(fileNames)
+    TickFileList.addItem fileNames(i)
     
-    Set mTickfileSpecifiers(i) = New TickfileSpecifier
-    mTickfileSpecifiers(i).FileName = fileNames(i - j - 1)
+    Set tfs = New TickfileSpecifier
+    mTickfileSpecifiers.add tfs
+    tfs.FileName = fileNames(i)
+    TickFileList.itemData(TickFileList.ListCount - 1) = mTickfileSpecifiers.count
 
     ' set up the FormatID - we set it to the first one that matches
     ' the file extension
-    fileExt = Right$(mTickfileSpecifiers(i).FileName, _
-                    Len(mTickfileSpecifiers(i).FileName) - InStrRev(mTickfileSpecifiers(i).FileName, "."))
+    fileExt = Right$(tfs.FileName, _
+                    Len(tfs.FileName) - InStrRev(tfs.FileName, "."))
     For k = 0 To UBound(mSupportedTickfileFormats)
         If mSupportedTickfileFormats(k).FormatType = FileBased Then
             If UCase$(fileExt) = UCase$(mSupportedTickfileFormats(k).FileExtension) Then
-                mTickfileSpecifiers(i).TickfileFormatID = mSupportedTickfileFormats(k).FormalID
+                tfs.TickfileFormatID = mSupportedTickfileFormats(k).FormalID
                 Exit For
             End If
         End If
@@ -308,25 +301,13 @@ Err:
 End Sub
 
 Public Sub addTickfileSpecifiers( _
-                pTickfileSpecifier() As TickfileSpecifier)
+                ByVal pTickfileSpecifiers As TickfileSpecifiers)
 Dim i As Long
-Dim j As Long
 
-If UBound(pTickfileSpecifier) < 0 Then Exit Sub
-
-On Error Resume Next
-j = -1
-j = UBound(mTickfileSpecifiers)
-On Error GoTo 0
-
-ReDim Preserve mTickfileSpecifiers(j + UBound(pTickfileSpecifier) + 1) As TickfileSpecifier
-
-For i = j + 1 To UBound(mTickfileSpecifiers)
-    TickFileList.addItem pTickfileSpecifier(i - j - 1).FileName
-    ' NB: can't use i as index in the following line because mTickfileSpecifiers
-    ' may contain entries that have been deleted from the TickFileList
-    TickFileList.itemData(TickFileList.ListCount - 1) = i
-    Set mTickfileSpecifiers(i) = pTickfileSpecifier(i - j - 1)
+For i = 1 To pTickfileSpecifiers.count
+    TickFileList.addItem pTickfileSpecifiers.item(i).FileName
+    mTickfileSpecifiers.add pTickfileSpecifiers.item(i)
+    TickFileList.itemData(TickFileList.ListCount - 1) = mTickfileSpecifiers.count
 Next
 
 RaiseEvent TickfileCountChanged
@@ -335,9 +316,10 @@ End Sub
 
 Public Sub clear()
 
+Set mTickfileSpecifiers = New TickfileSpecifiers ' ensure any 'deleted' specifiers have gone
+
 If TickFileList.ListCount = 0 Then Exit Sub
 
-Erase mTickfileSpecifiers
 TickFileList.clear
 
 RaiseEvent TickfileCountChanged

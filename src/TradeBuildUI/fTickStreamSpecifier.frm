@@ -81,7 +81,7 @@ Private Const ModuleName                    As String = "fTickstreamSpecifier"
 
 Private mCancelled                          As Boolean
 
-Private mTickfileSpecifiers()               As TickfileSpecifier
+Private mTickfileSpecifiers                 As TickfileSpecifiers
 
 '@================================================================================
 ' Class Event Handlers
@@ -119,9 +119,9 @@ OkButton.Enabled = True
 End Sub
 
 Private Sub TickStreamSpecifier1_TickStreamsSpecified( _
-                pTickfileSpecifiers() As TickfileSpecifier)
+                ByVal pTickfileSpecifiers As TickfileSpecifiers)
 Screen.MousePointer = vbDefault
-mTickfileSpecifiers = pTickfileSpecifiers
+Set mTickfileSpecifiers = pTickfileSpecifiers
 Me.Hide
 End Sub
 
@@ -137,8 +137,8 @@ Public Property Get cancelled() As Boolean
 cancelled = mCancelled
 End Property
 
-Public Property Get TickfileSpecifiers() As TickfileSpecifier()
-TickfileSpecifiers = mTickfileSpecifiers
+Public Property Get TickfileSpecifiers() As TickfileSpecifiers
+Set TickfileSpecifiers = mTickfileSpecifiers
 End Property
 
 '@================================================================================

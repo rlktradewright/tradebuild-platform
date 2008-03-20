@@ -58,8 +58,8 @@ Begin VB.Form fTickfileOrganiser
    Begin TradeBuildUI26.TickfileChooser TickfileChooser1 
       Left            =   6960
       Top             =   2640
-      _extentx        =   1296
-      _extenty        =   873
+      _ExtentX        =   1296
+      _ExtentY        =   873
    End
    Begin TradeBuildUI26.TickfileListManager TickfileListManager1 
       Height          =   2895
@@ -67,8 +67,8 @@ Begin VB.Form fTickfileOrganiser
       TabIndex        =   0
       Top             =   120
       Width           =   6735
-      _extentx        =   11880
-      _extenty        =   5106
+      _ExtentX        =   11880
+      _ExtentY        =   5106
    End
 End
 Attribute VB_Name = "fTickfileOrganiser"
@@ -191,8 +191,8 @@ Public Property Get cancelled() As Boolean
 cancelled = mCancelled
 End Property
 
-Public Property Get TickfileSpecifiers() As TickfileSpecifier()
-If Not mCancelled Then TickfileSpecifiers = TickfileListManager1.TickfileSpecifiers
+Public Property Get TickfileSpecifiers() As TickfileSpecifiers
+If Not mCancelled Then Set TickfileSpecifiers = TickfileListManager1.TickfileSpecifiers
 End Property
 
 '@================================================================================

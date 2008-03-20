@@ -90,8 +90,16 @@ Private Const ModuleName                    As String = "TradeBuildUI"
 ' Methods
 '@================================================================================
 
-Public Function SelectTickfiles() As TickfileSelection
+Public Function SelectTickfiles( _
+                ByRef userCancelled As Boolean) As TickfileSpecifiers
 Static inHere As Boolean
+
+Dim lTickfileOrganiser As fTickfileOrganiser
+Dim lLogger As Logger
+
+
+Set lLogger = GetLogger("diag.tradebuild.tradebuildui")
+lLogger.Log LogLevelMediumDetail, "SelectTickfiles"
 
 If inHere Then
     ' this is a re-entrant call
@@ -100,8 +108,18 @@ If inHere Then
             "Already selecting tickfiles"
 End If
 
-Set SelectTickfiles = New TickfileSelection
-SelectTickfiles.SelectTickfiles
+lLogger.Log LogLevelMediumDetail, "Create tickfile organiser form"
+Set lTickfileOrganiser = New fTickfileOrganiser
+
+lLogger.Log LogLevelMediumDetail, "Show tickfile organiser form"
+lTickfileOrganiser.Show vbModal
+
+lLogger.Log LogLevelMediumDetail, "Tickfile organiser form closed"
+
+userCancelled = lTickfileOrganiser.cancelled
+
+Set SelectTickfiles = lTickfileOrganiser.TickfileSpecifiers
+
 End Function
 
 '@================================================================================

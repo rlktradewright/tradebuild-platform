@@ -766,18 +766,6 @@ If mTicker.state = TickerStateReady Then
 End If
 End Sub
 
-Public Sub showStudyPickerForm()
-If mTicker.state = TickerStateRunning Then showStudyPicker mChartManager
-End Sub
-
-Public Sub syncStudyPickerForm()
-If mTicker.state = TickerStateRunning Then syncStudyPicker mChartManager
-End Sub
-
-Public Sub unsyncStudyPickerForm()
-unsyncStudyPicker
-End Sub
-
 '@================================================================================
 ' Helper Functions
 '@================================================================================

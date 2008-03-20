@@ -251,7 +251,7 @@ Option Explicit
 
 Event NotReady()
 Event ready()
-Event TickStreamsSpecified(ByRef pTickfileSpecifier() As TickfileSpecifier)
+Event TickStreamsSpecified(ByVal pTickfileSpecifiers As TickfileSpecifiers)
 
 '@================================================================================
 ' Constants
@@ -349,7 +349,7 @@ ErrorLabel.caption = "Invalid contract specification:" & reason
 End Sub
 
 Private Sub mContracts_NoMoreContractDetails()
-Dim lTickfileSpecifiers() As TickfileSpecifier
+Dim lTickfileSpecifiers As TickfileSpecifiers
 Dim i As Long
 Dim j As Long
 Dim k As Long
@@ -399,7 +399,7 @@ For k = 0 To UBound(mSupportedTickStreamFormats)
     End If
 Next
 
-lTickfileSpecifiers = TradeBuildAPI.GenerateTickfileSpecifiers( _
+Set lTickfileSpecifiers = TradeBuildAPI.GenerateTickfileSpecifiers( _
                                                 mContracts, _
                                                 TickfileFormatID, _
                                                 CDate(FromDateText), _
@@ -408,8 +408,6 @@ lTickfileSpecifiers = TradeBuildAPI.GenerateTickfileSpecifiers( _
                                                 UseExchangeTimezoneCheck = vbChecked, _
                                                 CDate(IIf(CustomFromTimeText <> "", CustomFromTimeText, 0)), _
                                                 CDate(IIf(CustomToTimeText <> "", CustomToTimeText, 0)))
-
-' get the most recent contract (though they should all have thRaiseEvent TickStreamsSpecified(lTickfileSpecifiers)
 
 RaiseEvent TickStreamsSpecified(lTickfileSpecifiers)
 Exit Sub
