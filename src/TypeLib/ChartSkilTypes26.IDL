@@ -1,11 +1,11 @@
 // Generated .IDL file (by the OLE/COM Object Viewer)
 // 
-// typelib filename: ChartSkilTypes.dll
+// typelib filename: ChartSkilTypes26.tlb
 
 [
-  uuid(58386083-1e3c-4ae6-aa24-452cbff9673a),
+  uuid(f14ef9fb-585f-44ce-beab-08ef86eea762),
   version(1.0),
-  helpstring("ChartSkil Type Library v2.5"),
+  helpstring("ChartSkil Type Library v2.6"),
 
 ]
 library ChartSkilTypes
