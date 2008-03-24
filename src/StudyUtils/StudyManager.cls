@@ -253,6 +253,8 @@ Dim i As Long
 Dim studyInputDefs As studyInputDefinitions
 Dim se As StudyTableEntry
 Dim inStudy As InputStudy
+Dim params As parameters
+Dim param As Parameter
 
 If underlyingStudy Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
@@ -270,8 +272,11 @@ If Err.Number <> 0 Then
 End If
 On Error GoTo 0
 
-If parameters Is Nothing Then
-    Set parameters = mStudyLibraryManager.FetchStudyDefaultParameters(name, libraryName)
+Set params = mStudyLibraryManager.FetchStudyDefaultParameters(name, libraryName)
+If Not parameters Is Nothing Then
+    For Each param In parameters
+        params.setParameterValue param.name, param.value
+    Next
 End If
     
 Set lStudy = findStudy(name, _
