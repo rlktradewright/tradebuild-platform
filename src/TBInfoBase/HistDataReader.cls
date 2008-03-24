@@ -43,6 +43,15 @@ Implements TradeBuildSP.IBarDataReader
 Private Const ProjectName As String = "TBInfoBase26"
 Private Const ModuleName As String = "HistDataReader"
 
+Private Const ConstMomentumBarsName As String = "Constant momentum bars"
+Private Const ConstVolBarsName As String = "Constant volume bars"
+
+Private Const ConstMomentumBarsParamTicksPerBar As String = "Ticks move per bar"
+Private Const ConstVolBarsParamVolPerBar As String = "Volume per bar"
+
+Private Const InputValueNamePrice As String = "Price"
+Private Const InputValueNameVolume As String = "Volume"
+
 '@===============================================================================
 ' Enums
 '@===============================================================================
@@ -58,30 +67,46 @@ Private Const ModuleName As String = "HistDataReader"
 Private WithEvents mTradingDB       As TradingDB
 Attribute mTradingDB.VB_VarHelpID = -1
 Private mConnectionString           As String
+Private mInstrument As instrument
 
-Private mHistDataServiceProvider As histDataServiceProvider
+Private mHistDataServiceProvider    As histDataServiceProvider
 
-Private mCommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer
-Private mServiceConsumer As TradeBuildSP.IBarDataInputServiceConsumer
-Private mDataConsumer As TradeBuildSP.IBarDataConsumer
-Private mServiceProviderName As String
+Private mCommonServiceConsumer      As TradeBuildSP.ICommonServiceConsumer
+Private mServiceConsumer            As TradeBuildSP.IBarDataInputServiceConsumer
+Private mDataConsumer               As TradeBuildSP.IBarDataConsumer
+Private mServiceProviderName        As String
 
-Private mRequestInProgress As Boolean
+Private mRequestInProgress          As Boolean
+            
+Private mBarDataSpecifier           As TradeBuildSP.IBarDataSpecifier
 
-Private mBarDataSpecifier  As TradeBuildSP.IBarDataSpecifier
+Private mContract                   As Contract
 
-Private mContract As Contract
-
-Private WithEvents mBarReader As BarDataReader
+Private WithEvents mBarReader       As BarDataReader
 Attribute mBarReader.VB_VarHelpID = -1
+Private WithEvents mTickReader      As TickDataReader
+Attribute mTickReader.VB_VarHelpID = -1
+Private mRequestTicks               As Boolean
 
-Private mWaitingForBarData As Boolean
-Private mBarRequested As Boolean
+Private mWaitingForData             As Boolean
+Private mBarRequested               As Boolean
 
-Private mSessionBuilder As SessionBuilder
-Private mSession As Session
+Private mSessionBuilder             As SessionBuilder
+Private mSession                    As Session
 
-Private mMode As AccessModes
+Private mMode                       As AccessModes
+
+Private mBarLengthMinutes           As Long
+Private mNumberOfBars               As Long
+Private mFromDate                   As Date
+Private mToDate                     As Date
+
+Private mStudyManager               As StudyManager
+Private mPriceHandle                As Long
+Private mVolumeHandle               As Long
+
+Private mBarsStudy                  As Study
+Private mBars                       As Bars
 
 '@===============================================================================
 ' Class Event Handlers
@@ -110,7 +135,6 @@ End Sub
 Private Sub IBarDataReader_FetchBars( _
                             ByVal barSpecifier As TradeBuildSP.IBarDataSpecifier)
 Dim lInstrumentFactory As InstrumentFactory
-Dim lInstrument As instrument
 
 On Error GoTo Err
 If mRequestInProgress Then Err.Raise ErrorCodes.ErrIllegalStateException, _
@@ -145,10 +169,17 @@ Set mSession = mSessionBuilder.Session
 
 Set lInstrumentFactory = mTradingDB.InstrumentFactory
 
-Set lInstrument = lInstrumentFactory.loadBySpecifier(mBarDataSpecifier.Contract.specifier)
-Debug.Assert Not lInstrument Is Nothing
+Set mInstrument = lInstrumentFactory.loadBySpecifier(mBarDataSpecifier.Contract.specifier)
+Debug.Assert Not mInstrument Is Nothing
 
-Set mBarReader = lInstrument.CreateBarDataReader
+generateRequestDetails
+
+If mRequestTicks Then
+    Set mTickReader = mInstrument.CreateTickDataReader
+Else
+    Set mBarReader = mInstrument.CreateBarDataReader
+End If
+
 Exit Sub
 Err:
 handleFatalError Err.Number, _
@@ -159,7 +190,7 @@ End Sub
 
 Private Sub IBarDataReader_FireNextBar()
 On Error GoTo Err
-If mWaitingForBarData Then
+If mWaitingForData Then
     mBarRequested = True
 Else
     ProcessBar
@@ -198,7 +229,7 @@ End Function
 Private Sub mBarReader_BarsFetched()
 
 If Not mRequestInProgress Then Exit Sub
-mWaitingForBarData = False
+mWaitingForData = False
 If mBarRequested Then
     mBarRequested = False
     ProcessBar
@@ -230,136 +261,98 @@ mCommonServiceConsumer.ServiceProviderError errorCode, _
 End Sub
 
 Private Sub mBarReader_Ready()
-Dim BarLengthMinutes As Long
-Dim numberOfBars As Long
-Dim fromDate As Date
-Dim toDate As Date
-Dim st As SessionTimes
 
-mWaitingForBarData = True
+mWaitingForData = True
 
 mServiceConsumer.NotifyEvent StandardSPEventCodes.HDConnectedToDataSource, _
                         "Connected to data source", _
                         mHistDataServiceProvider.handle
 
-With mBarDataSpecifier
-
-    numberOfBars = .numberOfBars
-    
-    Select Case .BarLengthUnits
-    Case TimePeriodUnits.TimePeriodDay
-        BarLengthMinutes = 60
-        numberOfBars = .numberOfBars * 24 * .barLength
-    Case TimePeriodUnits.TimePeriodHour
-        BarLengthMinutes = 60
-        numberOfBars = .numberOfBars * .barLength
-    Case TimePeriodUnits.TimePeriodMinute
-        If (.barLength Mod 60) = 0 Then
-            BarLengthMinutes = 60
-            numberOfBars = .numberOfBars * (.barLength / 60)
-        ElseIf (.barLength Mod 15) = 0 Then
-            BarLengthMinutes = 15
-            numberOfBars = .numberOfBars * (.barLength / 15)
-        ElseIf (.barLength Mod 5) = 0 Then
-            BarLengthMinutes = 5
-            numberOfBars = .numberOfBars * (.barLength / 5)
-        Else
-            BarLengthMinutes = 1
-            numberOfBars = .numberOfBars * .barLength
-        End If
-    Case TimePeriodUnits.TimePeriodMonth
-        BarLengthMinutes = 60
-        numberOfBars = .numberOfBars * 24 * 22 * .barLength
-    Case TimePeriodUnits.TimePeriodSecond
-        BarLengthMinutes = 1
-        numberOfBars = .numberOfBars / 60 * .barLength
-    Case TimePeriodUnits.TimePeriodWeek
-        BarLengthMinutes = 60
-        numberOfBars = .numberOfBars * 24 * 5 * .barLength
-    Case TimePeriodUnits.TimePeriodYear
-        BarLengthMinutes = 60
-        numberOfBars = .numberOfBars * 24 * 260 * .barLength
-    Case TimePeriodUnits.TimePeriodVolume, _
-            TimePeriodUnits.TimePeriodTickMovement, _
-            TimePeriodUnits.TimePeriodTickVolume
-        BarLengthMinutes = 1
-    End Select
-    
-    
-    If .BarLengthUnits = TimePeriodVolume Or _
-        .BarLengthUnits = TimePeriodTickMovement Or _
-        .BarLengthUnits = TimePeriodTickVolume _
-    Then
-        If .fromDate <> 0 And .toDate <> 0 Then
-            st = GetSessionTimes(.fromDate, _
-                                        mContract.sessionStartTime, _
-                                        mContract.sessionEndTime)
-            fromDate = st.startTime
-            toDate = .toDate
-            numberOfBars = MaxLong
-        ElseIf .toDate = 0 Then
-            st = GetSessionTimes(.fromDate, _
-                                        mContract.sessionStartTime, _
-                                        mContract.sessionEndTime)
-            fromDate = st.startTime
-            st = GetOffsetSessionTimes(fromDate, _
-                                        .numberOfBars, _
-                                        mContract.sessionStartTime, _
-                                        mContract.sessionEndTime)
-            toDate = st.startTime
-            numberOfBars = MaxLong
-        ElseIf .fromDate = 0 Then
-            toDate = .toDate
-            st = GetOffsetSessionTimes(toDate, _
-                                        -.numberOfBars, _
-                                        mContract.sessionStartTime, _
-                                        mContract.sessionEndTime)
-            fromDate = st.startTime
-            numberOfBars = MaxLong
-        Else
-            toDate = Now
-            st = GetOffsetSessionTimes(toDate, _
-                                        -.numberOfBars, _
-                                        mContract.sessionStartTime, _
-                                        mContract.sessionEndTime)
-            fromDate = st.startTime
-            numberOfBars = MaxLong
-        End If
-    Else
-        If .toDate <> 0 Then
-            toDate = .toDate
-            
-            If .fromDate = 0 Then
-                ' calculate the earliest possible date for the supplied number of bars (assuming
-                ' there are no gaps in the data)
-                fromDate = OffsetBarStartTime(.toDate, _
-                                            .barLength, _
-                                            .BarLengthUnits, _
-                                            -1 * .numberOfBars, _
-                                            mContract.sessionStartTime, _
-                                            mContract.sessionEndTime)
-            Else
-                fromDate = .fromDate
-            End If
-        Else
-            fromDate = .fromDate
-            toDate = OffsetBarStartTime(.fromDate, _
-                                        .barLength, _
-                                        .BarLengthUnits, _
-                                        .numberOfBars, _
-                                        mContract.sessionStartTime, _
-                                        mContract.sessionEndTime)
-        End If
-    End If
-    
-    If .includeBarsOutsideSession Then
-        mBarReader.FetchBars .barType, BarLengthMinutes, numberOfBars, fromDate, toDate
-    Else
-        mBarReader.FetchBars .barType, BarLengthMinutes, MaxLong, fromDate, toDate
-    End If
-End With
+If mBarDataSpecifier.includeBarsOutsideSession Then
+    mBarReader.FetchBars mBarDataSpecifier.barType, _
+                        mBarLengthMinutes, _
+                        mNumberOfBars, _
+                        mFromDate, _
+                        mToDate
+Else
+    mBarReader.FetchBars mBarDataSpecifier.barType, _
+                        mBarLengthMinutes, _
+                        MaxLong, _
+                        mFromDate, _
+                        mToDate
+End If
 
 mServiceConsumer.Ready
+End Sub
+
+'@===============================================================================
+' mTickReader Event Handlers
+'@===============================================================================
+
+Private Sub mTickReader_ConnectFailed( _
+                ByVal errorCode As Long, _
+                ByVal errorDesc As String)
+On Error GoTo Err
+mServiceConsumer.NotifyEvent StandardSPEventCodes.HDCantConnectDataSource, _
+                        "error " & errorCode & ": " & errorDesc, _
+                        mHistDataServiceProvider.handle
+
+Exit Sub
+Err:
+handleFatalError Err.Number, _
+                ProjectName & "." & "HistDataReader" & "::" & "mTickReader_ConnectFailed", _
+                Err.Description
+End Sub
+
+Private Sub mTickReader_DataFetched()
+Dim data() As Byte
+Dim tdd As TickDataDecoder
+Dim startTime As Date
+Dim formatId As String
+Dim basePrice As Double
+Dim ticksize As Double
+Dim tick As GenericTick
+Dim et As Single
+
+Do While mTickReader.ReadData(startTime, formatId, basePrice, ticksize, data)
+    
+    Set tdd = CreateTickDecoder(startTime, ticksize, basePrice, data, formatId)
+    
+    Do While tdd.getNextTick(tick)
+        processTick tick
+    Loop
+Loop
+
+If Not mRequestInProgress Then Exit Sub
+mWaitingForData = False
+If mBarRequested Then
+    mBarRequested = False
+    ProcessBar
+End If
+
+End Sub
+
+Private Sub mTickReader_Error( _
+                ByVal errorCode As Long, _
+                ByVal errorDesc As String)
+mCommonServiceConsumer.ServiceProviderError errorCode, _
+                                    errorDesc, _
+                                    mHistDataServiceProvider.handle
+End Sub
+
+Private Sub mTickReader_Ready()
+mWaitingForData = True
+
+mServiceConsumer.NotifyEvent StandardSPEventCodes.HDConnectedToDataSource, _
+                        "Connected to data source", _
+                        mHistDataServiceProvider.handle
+
+mTickReader.FetchData mFromDate, _
+                        mToDate
+
+mServiceConsumer.Ready
+
+setupBars
 End Sub
 
 '@===============================================================================
@@ -420,6 +413,124 @@ End Sub
 ' Helper Functions
 '@===============================================================================
 
+Private Sub generateRequestDetails()
+Dim st As SessionTimes
+
+With mBarDataSpecifier
+
+    mNumberOfBars = .NumberOfBars
+    
+    Select Case .BarLengthUnits
+    Case TimePeriodUnits.TimePeriodDay
+        mBarLengthMinutes = 60
+        mNumberOfBars = .NumberOfBars * 24 * .barLength
+    Case TimePeriodUnits.TimePeriodHour
+        mBarLengthMinutes = 60
+        mNumberOfBars = .NumberOfBars * .barLength
+    Case TimePeriodUnits.TimePeriodMinute
+        If (.barLength Mod 60) = 0 Then
+            mBarLengthMinutes = 60
+            mNumberOfBars = .NumberOfBars * (.barLength / 60)
+        ElseIf (.barLength Mod 15) = 0 Then
+            mBarLengthMinutes = 15
+            mNumberOfBars = .NumberOfBars * (.barLength / 15)
+        ElseIf (.barLength Mod 5) = 0 Then
+            mBarLengthMinutes = 5
+            mNumberOfBars = .NumberOfBars * (.barLength / 5)
+        Else
+            mBarLengthMinutes = 1
+            mNumberOfBars = .NumberOfBars * .barLength
+        End If
+    Case TimePeriodUnits.TimePeriodMonth
+        mBarLengthMinutes = 60
+        mNumberOfBars = .NumberOfBars * 24 * 22 * .barLength
+    Case TimePeriodUnits.TimePeriodSecond
+        mBarLengthMinutes = 1
+        mNumberOfBars = .NumberOfBars / 60 * .barLength
+    Case TimePeriodUnits.TimePeriodWeek
+        mBarLengthMinutes = 60
+        mNumberOfBars = .NumberOfBars * 24 * 5 * .barLength
+    Case TimePeriodUnits.TimePeriodYear
+        mBarLengthMinutes = 60
+        mNumberOfBars = .NumberOfBars * 24 * 260 * .barLength
+    Case TimePeriodUnits.TimePeriodVolume, _
+            TimePeriodUnits.TimePeriodTickMovement, _
+            TimePeriodUnits.TimePeriodTickVolume
+        mBarLengthMinutes = 1
+    End Select
+    
+    
+    If .BarLengthUnits = TimePeriodVolume Or _
+        .BarLengthUnits = TimePeriodTickMovement Or _
+        .BarLengthUnits = TimePeriodTickVolume _
+    Then
+        mRequestTicks = True
+        
+        If .FromDate <> 0 And .ToDate <> 0 Then
+            st = GetSessionTimes(.FromDate, _
+                                        mContract.sessionStartTime, _
+                                        mContract.sessionEndTime)
+            mFromDate = st.startTime
+            mToDate = .ToDate
+            mNumberOfBars = MaxLong
+        ElseIf .ToDate = 0 Then
+            st = GetSessionTimes(.FromDate, _
+                                        mContract.sessionStartTime, _
+                                        mContract.sessionEndTime)
+            mFromDate = st.startTime
+            st = GetOffsetSessionTimes(mFromDate, _
+                                        .NumberOfBars, _
+                                        mContract.sessionStartTime, _
+                                        mContract.sessionEndTime)
+            mToDate = st.startTime
+            mNumberOfBars = MaxLong
+        ElseIf .FromDate = 0 Then
+            mToDate = .ToDate
+            st = GetOffsetSessionTimes(mToDate, _
+                                        -.NumberOfBars, _
+                                        mContract.sessionStartTime, _
+                                        mContract.sessionEndTime)
+            mFromDate = st.startTime
+            mNumberOfBars = MaxLong
+        Else
+            mToDate = Now
+            st = GetOffsetSessionTimes(mToDate, _
+                                        -.NumberOfBars, _
+                                        mContract.sessionStartTime, _
+                                        mContract.sessionEndTime)
+            mFromDate = st.startTime
+            mNumberOfBars = MaxLong
+        End If
+    Else
+        If .ToDate <> 0 Then
+            mToDate = .ToDate
+            
+            If .FromDate = 0 Then
+                ' calculate the earliest possible date for the supplied number of bars (assuming
+                ' there are no gaps in the data)
+                mFromDate = OffsetBarStartTime(.ToDate, _
+                                            .barLength, _
+                                            .BarLengthUnits, _
+                                            -1 * .NumberOfBars, _
+                                            mContract.sessionStartTime, _
+                                            mContract.sessionEndTime)
+            Else
+                mFromDate = .FromDate
+            End If
+        Else
+            mFromDate = .FromDate
+            mToDate = OffsetBarStartTime(.FromDate, _
+                                        .barLength, _
+                                        .BarLengthUnits, _
+                                        .NumberOfBars, _
+                                        mContract.sessionStartTime, _
+                                        mContract.sessionEndTime)
+        End If
+    End If
+End With
+
+End Sub
+
 Private Sub handleFatalError( _
                 ByVal Number As Long, _
                 ByVal Source As String, _
@@ -440,15 +551,15 @@ Dim barLength As Long
 
 With lBar
     Do While ReadBar(.timestamp, _
-                    barType, _
-                    barLength, _
-                    .openPrice, _
-                    .highPrice, _
-                    .lowPrice, _
-                    .closePrice, _
-                    .volume, _
-                    .tickVolume, _
-                    .openInterest)
+                        barType, _
+                        barLength, _
+                        .openPrice, _
+                        .highPrice, _
+                        .lowPrice, _
+                        .closePrice, _
+                        .volume, _
+                        .tickVolume, _
+                        .openInterest)
         mSessionBuilder.setSessionCurrentTime .timestamp
         If mBarDataSpecifier.includeBarsOutsideSession Or _
             mSession.isTimeInSession(.timestamp) _
@@ -459,6 +570,20 @@ With lBar
     Loop
 End With
 
+End Sub
+
+Private Sub processTick( _
+                ByRef tick As GenericTick)
+Select Case tick.tickType
+Case TickTypeBid
+    If mBarDataSpecifier.barType = BarTypeBid Then mStudyManager.notifyInput mPriceHandle, tick.price, tick.timestamp
+Case TickTypeAsk
+    If mBarDataSpecifier.barType = BarTypeAsk Then mStudyManager.notifyInput mPriceHandle, tick.price, tick.timestamp
+Case TickTypeTrade
+    If mBarDataSpecifier.barType = BarTypeTrade Then mStudyManager.notifyInput mPriceHandle, tick.price, tick.timestamp
+Case TickTypeVolume
+    If mBarDataSpecifier.barType = BarTypeTrade Then mStudyManager.notifyInput mVolumeHandle, tick.size, tick.timestamp
+End Select
 End Sub
 
 Private Function ReadBar( _
@@ -472,24 +597,98 @@ Private Function ReadBar( _
                 ByRef volume As Long, _
                 ByRef tickVolume As Long, _
                 ByRef openInterest As Long) As Boolean
-If Not mBarReader.ReadBar(timestamp, _
-                        barType, _
-                        barLength, _
-                        openPrice, _
-                        highPrice, _
-                        lowPrice, _
-                        closePrice, _
-                        volume, _
-                        tickVolume, _
-                        openInterest) _
-Then
-    mServiceConsumer.BarDataComplete
-    mRequestInProgress = False
-    ReadBar = False
+Static i As Long
+Dim lBar As StudyUtils26.Bar
+
+If mRequestTicks Then
+    i = i + 1
+    If i > mBars.Count Then
+        mServiceConsumer.BarDataComplete
+        mRequestInProgress = False
+        ReadBar = False
+    Else
+        Set lBar = mBars.Bar(i)
+        timestamp = lBar.DateTime
+        barType = mBarDataSpecifier.barType
+        barLength = mBarDataSpecifier.barLength
+        openPrice = lBar.openValue
+        highPrice = lBar.highValue
+        lowPrice = lBar.lowValue
+        closePrice = lBar.closeValue
+        volume = mBarsStudy.getStudyValue("volume", i).value
+        ReadBar = True
+    End If
 Else
-    ReadBar = True
+    If Not mBarReader.ReadBar(timestamp, _
+                            barType, _
+                            barLength, _
+                            openPrice, _
+                            highPrice, _
+                            lowPrice, _
+                            closePrice, _
+                            volume, _
+                            tickVolume, _
+                            openInterest) _
+    Then
+        mServiceConsumer.BarDataComplete
+        mRequestInProgress = False
+        ReadBar = False
+    Else
+        ReadBar = True
+    End If
 End If
 End Function
 
+Private Sub setupBars()
+Dim lInputStudy As InputStudy
+Dim lBarStudy As BarStudy
+Dim inputValueNames(1) As String
 
+mWaitingForData = True
+
+mServiceConsumer.NotifyEvent StandardSPEventCodes.HDConnectedToDataSource, _
+                        "Connected to data source", _
+                        mHistDataServiceProvider.handle
+
+mTickReader.FetchData mFromDate, _
+                        mToDate
+
+mServiceConsumer.Ready
+
+Set mStudyManager = New StudyManager
+mStudyManager.setSessionTimes mContract.sessionStartTime, mContract.sessionEndTime, mContract.TimeZone, False
+Set lInputStudy = mStudyManager.addSource("Tick data")
+mPriceHandle = mStudyManager.addInput(lInputStudy, _
+                                    InputValueNamePrice, _
+                                    "", _
+                                    InputTypeReal, _
+                                    True, _
+                                    mContract.ticksize)
+mVolumeHandle = mStudyManager.addInput(lInputStudy, _
+                                    InputValueNameVolume, _
+                                    "", _
+                                    InputTypeInteger, _
+                                    False, _
+                                    1)
+                                    
+inputValueNames(0) = InputValueNamePrice
+inputValueNames(1) = InputValueNameVolume
+Select Case mBarDataSpecifier.BarLengthUnits
+Case TimePeriodUnits.TimePeriodTickMovement
+    Set lBarStudy = mStudyManager.addStudy(ConstMomentumBarsName, _
+                                            lInputStudy, _
+                                            inputValueNames, _
+                                            CreateParametersFromString(ConstMomentumBarsParamTicksPerBar & "=" & mBarDataSpecifier.barLength))
+Case TimePeriodUnits.TimePeriodTickVolume
+Case TimePeriodUnits.TimePeriodVolume
+    Set lBarStudy = mStudyManager.addStudy(ConstVolBarsName, _
+                                            lInputStudy, _
+                                            inputValueNames, _
+                                            CreateParametersFromString(ConstVolBarsParamVolPerBar & "=" & mBarDataSpecifier.barLength))
+End Select
+
+mStudyManager.startStudy lBarStudy, 0
+Set mBarsStudy = lBarStudy
+Set mBars = lBarStudy.Bars
+End Sub
 
