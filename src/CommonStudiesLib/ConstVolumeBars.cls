@@ -41,7 +41,10 @@ Implements BarStudy
 ' Constants
 '@================================================================================
 
-Private Const NoPrice As Double = MaxDouble
+Private Const ProjectName               As String = "CmnStudiesLib26"
+Private Const ModuleName                As String = "ConstVolumeBars"
+
+Private Const NoPrice                   As Double = MaxDouble
 
 '@================================================================================
 ' Enums
@@ -306,6 +309,11 @@ For Each param In params
     Select Case UCase$(param.name)
     Case UCase$(ConstVolBarsParamVolPerBar)
         mVolumePerBar = param.value
+        If mVolumePerBar <= 0 Then
+            Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                    ProjectName & "." & ModuleName & ":" & "customProcessParameters", _
+                    "Volume per bar parameter must be > 0"
+        End If
     End Select
 Next
 

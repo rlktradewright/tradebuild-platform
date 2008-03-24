@@ -148,7 +148,7 @@ If mStudyDefinition Is Nothing Then
     valueDef.valueType = ValueTypeReal
     
     Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(ConstMomentumBarsParamTicksPerBar)
-    paramDef.Description = "The number of ticks ovement in each constant momentum bar"
+    paramDef.Description = "The number of ticks movement in each constant momentum bar"
     paramDef.parameterType = ParameterTypeInteger
 
 End If
