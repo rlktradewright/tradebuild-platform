@@ -188,8 +188,12 @@ Private mPrevVolume                 As Long
 Private mPrevOpenInterest           As Long
 Private mAccumulatedVolume          As Long
 Private mPrevSessionAccumulatedVolume   As Long
-Private mVolumeCorrectionIncrement  As Long
-Private mFirstVolumeReceived        As Boolean
+Private mVolumeCorrectionIncrement      As Long
+Private mReceivedFirstVolumeInSession   As Boolean
+
+' indicates whether we have received the very first
+' volume figure
+Private mGotFirstVolume             As Boolean
 
 Private mReceivingMarketDepth       As Boolean
 Private mDOMEventsRequired          As DOMEvents
@@ -1013,10 +1017,11 @@ If mState <> TickerStates.TickerStateRunning Then
     Exit Sub    ' ticker has been stopped
 End If
 
-
 failpoint = 100
 
-If Not mFirstVolumeReceived Then
+mGotFirstVolume = True
+
+If Not mReceivedFirstVolumeInSession Then
     ' this is the start of a new session, but there may be a volume
     ' tick including the accumulated volume for the previous session
     ' before the first true volume tick for the new session
@@ -1024,7 +1029,7 @@ If Not mFirstVolumeReceived Then
         size + mVolumeCorrectionIncrement < mPrevSessionAccumulatedVolume _
     Then
         ' this is the first true volume tick for the new session
-        mFirstVolumeReceived = True
+        mReceivedFirstVolumeInSession = True
         mVolumeCorrectionIncrement = 0
     Else
         ' correct this volume figure
@@ -1261,7 +1266,7 @@ RaiseEvent tradingSessionEnded
 End Sub
 
 Private Sub mSession_SessionStarted(ev As SessionEvent)
-mFirstVolumeReceived = False
+mReceivedFirstVolumeInSession = False
 mPrevSessionAccumulatedVolume = mAccumulatedVolume
 mAccumulatedVolume = 0
 RaiseEvent tradingSessionStarted
@@ -2609,7 +2614,7 @@ If size <> 0 Then
             size
 End If
 
-If Not mNoVolumeAdjustments Then
+If Not mNoVolumeAdjustments And mGotFirstVolume Then
     mAccumulatedVolume = mAccumulatedVolume + size
     notifyVolume timestamp, mAccumulatedVolume
 End If
