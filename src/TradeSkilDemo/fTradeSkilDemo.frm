@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#57.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#62.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeSkil Demo Edition Version 2.6"
@@ -279,8 +279,8 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(0)   =   "&1. Configuration"
       TabPicture(0)   =   "fTradeSkilDemo.frx":0000
       Tab(0).ControlEnabled=   0   'False
-      Tab(0).Control(0)=   "ConfigManager1"
-      Tab(0).Control(1)=   "ConfigureButton"
+      Tab(0).Control(0)=   "ConfigureButton"
+      Tab(0).Control(1)=   "ConfigManager1"
       Tab(0).ControlCount=   2
       TabCaption(1)   =   "&2. Tickers"
       TabPicture(1)   =   "fTradeSkilDemo.frx":001C
@@ -291,13 +291,13 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(2)   =   "&3. Orders"
       TabPicture(2)   =   "fTradeSkilDemo.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "ModifyOrderButton"
+      Tab(2).Control(0)=   "OrdersSummary1"
       Tab(2).Control(0).Enabled=   0   'False
-      Tab(2).Control(1)=   "CancelOrderButton"
+      Tab(2).Control(1)=   "OrderButton"
       Tab(2).Control(1).Enabled=   0   'False
-      Tab(2).Control(2)=   "OrderButton"
+      Tab(2).Control(2)=   "CancelOrderButton"
       Tab(2).Control(2).Enabled=   0   'False
-      Tab(2).Control(3)=   "OrdersSummary1"
+      Tab(2).Control(3)=   "ModifyOrderButton"
       Tab(2).Control(3).Enabled=   0   'False
       Tab(2).ControlCount=   4
       TabCaption(3)   =   "&4. Executions"
@@ -308,31 +308,31 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(4)   =   "&5. Replay tickfiles"
       TabPicture(4)   =   "fTradeSkilDemo.frx":0070
       Tab(4).ControlEnabled=   0   'False
-      Tab(4).Control(0)=   "Label19"
+      Tab(4).Control(0)=   "ReplaySpeedCombo"
       Tab(4).Control(0).Enabled=   0   'False
-      Tab(4).Control(1)=   "Label20"
+      Tab(4).Control(1)=   "TickfileList"
       Tab(4).Control(1).Enabled=   0   'False
-      Tab(4).Control(2)=   "ReplayProgressLabel"
+      Tab(4).Control(2)=   "StopReplayButton"
       Tab(4).Control(2).Enabled=   0   'False
-      Tab(4).Control(3)=   "ReplayContractLabel"
+      Tab(4).Control(3)=   "PauseReplayButton"
       Tab(4).Control(3).Enabled=   0   'False
-      Tab(4).Control(4)=   "ReplayProgressBar"
+      Tab(4).Control(4)=   "ClearTickfileListButton"
       Tab(4).Control(4).Enabled=   0   'False
-      Tab(4).Control(5)=   "SkipReplayButton"
+      Tab(4).Control(5)=   "SelectTickfilesButton"
       Tab(4).Control(5).Enabled=   0   'False
       Tab(4).Control(6)=   "PlayTickFileButton"
       Tab(4).Control(6).Enabled=   0   'False
-      Tab(4).Control(7)=   "SelectTickfilesButton"
+      Tab(4).Control(7)=   "SkipReplayButton"
       Tab(4).Control(7).Enabled=   0   'False
-      Tab(4).Control(8)=   "ClearTickfileListButton"
+      Tab(4).Control(8)=   "ReplayProgressBar"
       Tab(4).Control(8).Enabled=   0   'False
-      Tab(4).Control(9)=   "PauseReplayButton"
+      Tab(4).Control(9)=   "ReplayContractLabel"
       Tab(4).Control(9).Enabled=   0   'False
-      Tab(4).Control(10)=   "StopReplayButton"
+      Tab(4).Control(10)=   "ReplayProgressLabel"
       Tab(4).Control(10).Enabled=   0   'False
-      Tab(4).Control(11)=   "TickfileList"
+      Tab(4).Control(11)=   "Label20"
       Tab(4).Control(11).Enabled=   0   'False
-      Tab(4).Control(12)=   "ReplaySpeedCombo"
+      Tab(4).Control(12)=   "Label19"
       Tab(4).Control(12).Enabled=   0   'False
       Tab(4).ControlCount=   13
       Begin TradeSkilDemo26.ConfigManager ConfigManager1 
@@ -1344,31 +1344,31 @@ Set lTicker = ev.source
 Select Case ev.eventCode
 Case ApiNotifyCodes.ApiNotifyContractExpired
     logMessage "Contract has expired: " & _
-                        lTicker.Contracts.contractSpecifier.ToString
+                        lTicker.Contracts.contractSpecifier.toString
     modelessMsgBox "Contract has expired - you specified: " & vbCrLf & _
-                        vbTab & lTicker.Contracts.contractSpecifier.ToString, _
+                        vbTab & lTicker.Contracts.contractSpecifier.toString, _
                     MsgBoxCritical, _
                     "Attention"
 Case ApiNotifyCodes.ApiNotifyContractSpecifierAmbiguous
     logMessage "Ambiguous contract details (" & ev.eventMessage & "): " & _
-                        lTicker.Contracts.contractSpecifier.ToString
+                        lTicker.Contracts.contractSpecifier.toString
     modelessMsgBox "Ambiguous contract details - you specified: " & vbCrLf & _
-                        vbTab & lTicker.Contracts.contractSpecifier.ToString & vbCrLf & _
+                        vbTab & lTicker.Contracts.contractSpecifier.toString & vbCrLf & _
                         "which matched: " & vbCrLf & _
-                        lTicker.Contracts.ToString, _
+                        lTicker.Contracts.toString, _
                     MsgBoxInformation, _
                     "Attention"
 Case ApiNotifyCodes.ApiNotifyContractSpecifierInvalid
     logMessage "Invalid contract details (" & ev.eventMessage & "): " & _
-                        lTicker.Contracts.contractSpecifier.ToString
+                        lTicker.Contracts.contractSpecifier.toString
     modelessMsgBox "Invalid contract details - you specified: " & vbCrLf & _
-                        vbTab & lTicker.Contracts.contractSpecifier.ToString & vbCrLf & _
+                        vbTab & lTicker.Contracts.contractSpecifier.toString & vbCrLf & _
                         ev.eventMessage, _
                     MsgBoxCritical, _
                     "Attention"
 Case ApiNotifyCodes.ApiNotifyMarketDepthNotAvailable
     logMessage "No market depth for: " & _
-                        lTicker.Contract.specifier.ToString & _
+                        lTicker.Contract.specifier.toString & _
                         ": " & ev.eventMessage
     modelessMsgBox "No market depth available for: " & vbCrLf & _
                                 lTicker.Contract.specifier.localSymbol & vbCrLf & _
@@ -1380,7 +1380,7 @@ Case ApiNotifyCodes.ApiNotifyRealtimeDataRequestFailed
                         lTicker.Contract.specifier.localSymbol & _
                         ": " & ev.eventMessage
     modelessMsgBox "Market data request failed for: " & vbCrLf & _
-                        vbTab & lTicker.Contract.specifier.ToString & vbCrLf & _
+                        vbTab & lTicker.Contract.specifier.toString & vbCrLf & _
                         ev.eventMessage, _
                     MsgBoxCritical, _
                     "Attention"
@@ -1479,7 +1479,7 @@ ReplayProgressBar.Min = 0
 ReplayProgressBar.Max = 100
 ReplayProgressBar.value = 0
 TickfileList.ListIndex = tickfileIndex - 1
-ReplayContractLabel.caption = Replace(pContract.specifier.ToString, vbCrLf, "; ")
+ReplayContractLabel.caption = Replace(pContract.specifier.toString, vbCrLf, "; ")
 
 Exit Sub
 err:
@@ -1945,6 +1945,7 @@ If mClp.Switch("?") Then
             "       Medium  or M" & vbCrLf & _
             "       High    or H" & vbCrLf & _
             "       All     or A", _
+            , _
             "Usage"
     err.Raise UnloadNotifyException
 End If
