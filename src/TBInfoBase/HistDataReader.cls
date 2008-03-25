@@ -44,9 +44,14 @@ Private Const ProjectName As String = "TBInfoBase26"
 Private Const ModuleName As String = "HistDataReader"
 
 Private Const ConstMomentumBarsName As String = "Constant momentum bars"
+Private Const ConstTimeBarsName As String = "Constant time bars"
 Private Const ConstVolBarsName As String = "Constant volume bars"
 
 Private Const ConstMomentumBarsParamTicksPerBar As String = "Ticks move per bar"
+
+Private Const ConstTimeBarsParamBarLength As String = "Bar length"
+Private Const ConstTimeBarsParamTimeUnits As String = "Time units"
+
 Private Const ConstVolBarsParamVolPerBar As String = "Volume per bar"
 
 Private Const InputValueNamePrice As String = "Price"
@@ -108,6 +113,9 @@ Private mVolumeHandle               As Long
 Private mBarsStudy                  As Study
 Private mBars                       As Bars
 
+Private WithEvents mTC              As TaskController
+Attribute mTC.VB_VarHelpID = -1
+
 '@===============================================================================
 ' Class Event Handlers
 '@===============================================================================
@@ -142,7 +150,8 @@ If mRequestInProgress Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "Request already in progress"
 
 Select Case barSpecifier.BarLengthUnits
-Case TimePeriodMinute, _
+Case TimePeriodSecond, _
+    TimePeriodMinute, _
     TimePeriodHour, _
     TimePeriodDay, _
     TimePeriodWeek, _
@@ -286,6 +295,29 @@ mServiceConsumer.Ready
 End Sub
 
 '@===============================================================================
+' mTC Event Handlers
+'@===============================================================================
+
+Private Sub mTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+If ev.cancelled Then Exit Sub
+
+If ev.errorNumber <> 0 Then
+    handleFatalError ev.errorNumber, ev.Source, ev.errorMessage
+    Exit Sub
+End If
+
+If Not mRequestInProgress Then Exit Sub
+mWaitingForData = False
+If mBarRequested Then
+    mBarRequested = False
+    ProcessBar
+End If
+
+Set mTC = Nothing
+
+End Sub
+
+'@===============================================================================
 ' mTickReader Event Handlers
 '@===============================================================================
 
@@ -305,30 +337,16 @@ handleFatalError Err.Number, _
 End Sub
 
 Private Sub mTickReader_DataFetched()
-Dim data() As Byte
-Dim tdd As TickDataDecoder
-Dim startTime As Date
-Dim formatId As String
-Dim basePrice As Double
-Dim ticksize As Double
-Dim tick As GenericTick
-Dim et As Single
 
-Do While mTickReader.ReadData(startTime, formatId, basePrice, ticksize, data)
-    
-    Set tdd = CreateTickDecoder(startTime, ticksize, basePrice, data, formatId)
-    
-    Do While tdd.getNextTick(tick)
-        processTick tick
-    Loop
-Loop
+Dim lTickTask As New TickProcessingTask
 
-If Not mRequestInProgress Then Exit Sub
-mWaitingForData = False
-If mBarRequested Then
-    mBarRequested = False
-    ProcessBar
-End If
+lTickTask.initialise mTickReader, _
+                    mStudyManager, _
+                    mPriceHandle, _
+                    mVolumeHandle, _
+                    mBarDataSpecifier.barType
+
+Set mTC = StartTask(lTickTask, PriorityNormal)
 
 End Sub
 
@@ -383,7 +401,12 @@ End Sub
 '@===============================================================================
 
 Friend Sub finish()
+If Not mTC Is Nothing Then
+    mTC.cancelTask
+    Set mTC = Nothing
+End If
 Set mBarReader = Nothing
+Set mTickReader = Nothing
 Set mServiceConsumer = Nothing
 Set mDataConsumer = Nothing
 End Sub
@@ -445,8 +468,7 @@ With mBarDataSpecifier
         mBarLengthMinutes = 60
         mNumberOfBars = .NumberOfBars * 24 * 22 * .barLength
     Case TimePeriodUnits.TimePeriodSecond
-        mBarLengthMinutes = 1
-        mNumberOfBars = .NumberOfBars / 60 * .barLength
+        mRequestTicks = True
     Case TimePeriodUnits.TimePeriodWeek
         mBarLengthMinutes = 60
         mNumberOfBars = .NumberOfBars * 24 * 5 * .barLength
@@ -456,7 +478,7 @@ With mBarDataSpecifier
     Case TimePeriodUnits.TimePeriodVolume, _
             TimePeriodUnits.TimePeriodTickMovement, _
             TimePeriodUnits.TimePeriodTickVolume
-        mBarLengthMinutes = 1
+        mRequestTicks = True
     End Select
     
     
@@ -464,7 +486,6 @@ With mBarDataSpecifier
         .BarLengthUnits = TimePeriodTickMovement Or _
         .BarLengthUnits = TimePeriodTickVolume _
     Then
-        mRequestTicks = True
         
         If .FromDate <> 0 And .ToDate <> 0 Then
             st = GetSessionTimes(.FromDate, _
@@ -572,20 +593,6 @@ End With
 
 End Sub
 
-Private Sub processTick( _
-                ByRef tick As GenericTick)
-Select Case tick.tickType
-Case TickTypeBid
-    If mBarDataSpecifier.barType = BarTypeBid Then mStudyManager.notifyInput mPriceHandle, tick.price, tick.timestamp
-Case TickTypeAsk
-    If mBarDataSpecifier.barType = BarTypeAsk Then mStudyManager.notifyInput mPriceHandle, tick.price, tick.timestamp
-Case TickTypeTrade
-    If mBarDataSpecifier.barType = BarTypeTrade Then mStudyManager.notifyInput mPriceHandle, tick.price, tick.timestamp
-Case TickTypeVolume
-    If mBarDataSpecifier.barType = BarTypeTrade Then mStudyManager.notifyInput mVolumeHandle, tick.size, tick.timestamp
-End Select
-End Sub
-
 Private Function ReadBar( _
                 ByRef timestamp As Date, _
                 ByRef barType As Long, _
@@ -685,6 +692,12 @@ Case TimePeriodUnits.TimePeriodVolume
                                             lInputStudy, _
                                             inputValueNames, _
                                             CreateParametersFromString(ConstVolBarsParamVolPerBar & "=" & mBarDataSpecifier.barLength))
+Case Else
+    Set lBarStudy = mStudyManager.addStudy(ConstTimeBarsName, _
+                                            lInputStudy, _
+                                            inputValueNames, _
+                                            CreateParametersFromString(ConstTimeBarsParamBarLength & "=" & mBarDataSpecifier.barLength & ";" & _
+                                                                        ConstTimeBarsParamTimeUnits & "=" & TimePeriodUnitsToString(mBarDataSpecifier.BarLengthUnits)))
 End Select
 
 mStudyManager.startStudy lBarStudy, 0

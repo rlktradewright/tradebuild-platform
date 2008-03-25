@@ -92,19 +92,19 @@ Private mUseSynchronousWrites As Boolean
 Private Sub Class_Initialize()
 mTimeframeTable(0).timeframe.length = 1
 mTimeframeTable(0).timeframe.units = TimePeriodMinute
-mTimeframeTable(0).saveIntervalSeconds = 15
+mTimeframeTable(0).saveIntervalSeconds = 5
 
 mTimeframeTable(1).timeframe.length = 5
 mTimeframeTable(1).timeframe.units = TimePeriodMinute
-mTimeframeTable(1).saveIntervalSeconds = 30
+mTimeframeTable(1).saveIntervalSeconds = 5
 
 mTimeframeTable(2).timeframe.length = 15
 mTimeframeTable(2).timeframe.units = TimePeriodMinute
-mTimeframeTable(2).saveIntervalSeconds = 60
+mTimeframeTable(2).saveIntervalSeconds = 5
 
 mTimeframeTable(3).timeframe.length = 60
 mTimeframeTable(3).timeframe.units = TimePeriodMinute
-mTimeframeTable(3).saveIntervalSeconds = 60
+mTimeframeTable(3).saveIntervalSeconds = 5
 
 End Sub
 

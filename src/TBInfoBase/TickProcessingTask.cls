@@ -54,6 +54,7 @@ Attribute mTickReader.VB_VarHelpID = -1
 Private mStudyManager                       As StudyManager
 Private mPriceHandle                        As Long
 Private mVolumeHandle                       As Long
+Private mBarType                            As BarTypes
 
 '@================================================================================
 ' Class Event Handlers
@@ -108,11 +109,13 @@ Friend Sub initialise( _
                 ByVal pTickReader As TickDataReader, _
                 ByVal pStudyManager As StudyManager, _
                 ByVal pPriceHandle As Long, _
-                ByVal pVolumeHandle As Long)
+                ByVal pVolumeHandle As Long, _
+                ByVal barType As BarTypes)
 Set mTickReader = pTickReader
 Set mStudyManager = pStudyManager
 mPriceHandle = pPriceHandle
 mVolumeHandle = pVolumeHandle
+mBarType = barType
 End Sub
 
 '@================================================================================
@@ -123,13 +126,13 @@ Private Sub processTick( _
                 ByRef tick As GenericTick)
 Select Case tick.tickType
 Case TickTypeBid
-    If mBarDataSpecifier.barType = BarTypeBid Then mStudyManager.notifyInput mPriceHandle, tick.price, tick.timestamp
+    If mBarType = BarTypeBid Then mStudyManager.notifyInput mPriceHandle, tick.price, tick.timestamp
 Case TickTypeAsk
-    If mBarDataSpecifier.barType = BarTypeAsk Then mStudyManager.notifyInput mPriceHandle, tick.price, tick.timestamp
+    If mBarType = BarTypeAsk Then mStudyManager.notifyInput mPriceHandle, tick.price, tick.timestamp
 Case TickTypeTrade
-    If mBarDataSpecifier.barType = BarTypeTrade Then mStudyManager.notifyInput mPriceHandle, tick.price, tick.timestamp
+    If mBarType = BarTypeTrade Then mStudyManager.notifyInput mPriceHandle, tick.price, tick.timestamp
 Case TickTypeVolume
-    If mBarDataSpecifier.barType = BarTypeTrade Then mStudyManager.notifyInput mVolumeHandle, tick.size, tick.timestamp
+    If mBarType = BarTypeTrade Then mStudyManager.notifyInput mVolumeHandle, tick.size, tick.timestamp
 End Select
 End Sub
 

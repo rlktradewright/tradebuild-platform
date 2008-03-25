@@ -77,17 +77,26 @@ Attribute mTickWriter.VB_VarHelpID = -1
 
 Private mTde                        As TickDataEncoder
 
-Private mTotalBytes As Long
+Private mTotalBytes                 As Long
 
-Private mTickSize As Double
-Private mOpeningTimestamp As Date   ' timestamp at start of minute period
+Private mTickSize                   As Double
+Private mOpeningTimestamp           As Date   ' timestamp at start of minute period
 
-Private mInstrument As instrument
-Private mUseSynchronousWrites As Boolean
+Private mInstrument                 As instrument
+Private mUseSynchronousWrites       As Boolean
+
+Private WithEvents mWriteTimer      As IntervalTimer
+Attribute mWriteTimer.VB_VarHelpID = -1
+
+Private mDataAdded                  As Boolean
 
 '@===============================================================================
 ' Class Event Handlers
 '@===============================================================================
+
+Private Sub Class_Initialize()
+Set mWriteTimer = CreateIntervalTimer(5000, ExpiryTimeUnitMilliseconds, 5000, True)
+End Sub
 
 Private Sub Class_Terminate()
 Debug.Print "TBInfoBase.TickfileWriter terminated"
@@ -160,6 +169,7 @@ On Error GoTo Err
 If price = 0# Then Exit Sub
 checkIfNewPeriod timestamp
 mTde.encodeAsk timestamp, price, size
+mDataAdded = True
 Exit Sub
 Err:
 handleFatalError Err.Number, _
@@ -175,6 +185,7 @@ On Error GoTo Err
 If price = 0# Then Exit Sub
 checkIfNewPeriod timestamp
 mTde.encodeBid timestamp, price, size
+mDataAdded = True
 Exit Sub
 Err:
 handleFatalError Err.Number, _
@@ -189,6 +200,7 @@ On Error GoTo Err
 If price = 0# Then Exit Sub
 checkIfNewPeriod timestamp
 mTde.encodeClose timestamp, price
+mDataAdded = True
 Exit Sub
 Err:
 handleFatalError Err.Number, _
@@ -203,6 +215,7 @@ On Error GoTo Err
 If price = 0# Then Exit Sub
 checkIfNewPeriod timestamp
 mTde.encodeHigh timestamp, price
+mDataAdded = True
 Exit Sub
 Err:
 handleFatalError Err.Number, _
@@ -217,6 +230,7 @@ On Error GoTo Err
 If price = 0# Then Exit Sub
 checkIfNewPeriod timestamp
 mTde.encodeLow timestamp, price
+mDataAdded = True
 Exit Sub
 Err:
 handleFatalError Err.Number, _
@@ -238,6 +252,7 @@ If price = 0# Then Exit Sub
 
 checkIfNewPeriod timestamp
 mTde.encodeMarketDepthData timestamp, position, marketmaker, operation, side, price, size
+mDataAdded = True
 
 Exit Sub
 Err:
@@ -252,6 +267,7 @@ Private Sub ITickfileWriter_writeMarketDepthReset( _
 On Error GoTo Err
 checkIfNewPeriod timestamp
 mTde.encodeMarketDepthReset timestamp
+mDataAdded = True
 
 Exit Sub
 Err:
@@ -264,6 +280,7 @@ Private Sub ITickfileWriter_WriteOpenInterest(ByVal timestamp As Date, ByVal siz
 On Error GoTo Err
 checkIfNewPeriod timestamp
 mTde.encodeOpenInterest timestamp, size
+mDataAdded = True
 Exit Sub
 Err:
 handleFatalError Err.Number, _
@@ -278,6 +295,7 @@ Private Sub ITickfileWriter_writeTrade( _
 If price = 0# Then Exit Sub
 checkIfNewPeriod timestamp
 mTde.encodeTrade timestamp, price, size
+mDataAdded = True
 End Sub
 
 Private Sub ITickfileWriter_writeVolume( _
@@ -286,6 +304,7 @@ Private Sub ITickfileWriter_writeVolume( _
 On Error GoTo Err
 checkIfNewPeriod timestamp
 mTde.encodeVolume timestamp, size
+mDataAdded = True
 Exit Sub
 Err:
 handleFatalError Err.Number, _
@@ -371,6 +390,8 @@ End Sub
 
 Friend Sub finish()
 writePeriodData
+mWriteTimer.StopTimer
+Set mWriteTimer = Nothing
 mCommonServiceConsumer.NotifyListeners mServiceProviderName & " (" & mContract.specifier.localSymbol & ")" & vbCrLf & _
                             "    Total data written: " & mTotalBytes & " bytes", _
                             TradeBuildSP.StandardListenValueTypes.Log, _
@@ -409,9 +430,14 @@ Dim barTime As Date
 barTime = gTruncateTimeToMinute(timestamp)
 If barTime = mOpeningTimestamp Then Exit Sub
 
-If Not mTde Is Nothing Then writePeriodData
+If Not mTde Is Nothing Then
+    writePeriodData
+    mTotalBytes = mTotalBytes + mTde.encodedDataLength
+End If
 
 Set mTde = CreateTickEncoder(barTime, mTickSize)
+mWriteTimer.StopTimer
+mWriteTimer.StartTimer
 
 mOpeningTimestamp = barTime
 
@@ -433,6 +459,7 @@ End Sub
 Private Sub writePeriodData()
 
 If mTde Is Nothing Then Exit Sub
+If Not mDataAdded Then Exit Sub
 
 Set mTickWriter = mInstrument.CreateTickDataWriter
 
@@ -443,6 +470,10 @@ mTickWriter.WriteData mTde.encodingFormatIdentifier, _
                             mTde.encodedData, _
                             Not mUseSynchronousWrites
 
-mTotalBytes = mTotalBytes + mTde.encodedDataLength
+mDataAdded = False
+
 End Sub
 
+Private Sub mWriteTimer_TimerExpired()
+writePeriodData
+End Sub
