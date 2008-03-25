@@ -1021,10 +1021,11 @@ If Not mFirstVolumeReceived Then
     ' tick including the accumulated volume for the previous session
     ' before the first true volume tick for the new session
     If mPrevSessionAccumulatedVolume = 0 Or _
-        size < mPrevSessionAccumulatedVolume _
+        size + mVolumeCorrectionIncrement < mPrevSessionAccumulatedVolume _
     Then
         ' this is the first true volume tick for the new session
         mFirstVolumeReceived = True
+        mVolumeCorrectionIncrement = 0
     Else
         ' correct this volume figure
         size = size - mPrevSessionAccumulatedVolume
@@ -1263,7 +1264,6 @@ Private Sub mSession_SessionStarted(ev As SessionEvent)
 mFirstVolumeReceived = False
 mPrevSessionAccumulatedVolume = mAccumulatedVolume
 mAccumulatedVolume = 0
-mVolumeCorrectionIncrement = 0
 RaiseEvent tradingSessionStarted
 End Sub
 
