@@ -356,14 +356,14 @@ End If
 mCurrVolume = mTradeBarsStudy.getStudyValue(BarValueVolume, 0).value
 
 WriteABar mCurrTradeBar, BarTypeTrade, mCurrVolume, mCurrTradeBarPrevTickvol
-mCurrTradeBarPrevTickvol = mCurrTradeBar.tickVolume
+mCurrTradeBarPrevTickvol = mCurrTradeBar.TickVolume
 
 If mWriteBidAndAskBars Then
     WriteABar mCurrAskBar, BarTypeAsk, 0, mCurrAskBarPrevTickvol
-    mCurrAskBarPrevTickvol = mCurrAskBar.tickVolume
+    mCurrAskBarPrevTickvol = mCurrAskBar.TickVolume
     
     WriteABar mCurrBidBar, BarTypeBid, 0, mCurrBidBarPrevTickvol
-    mCurrBidBarPrevTickvol = mCurrBidBar.tickVolume
+    mCurrBidBarPrevTickvol = mCurrBidBar.TickVolume
 End If
 End Sub
 '@================================================================================
@@ -596,7 +596,7 @@ If mBarReader Is Nothing Then
             barSpecifier.ToDate = mToTime
         Else
             If mExcludeCurrentBar Then
-                barSpecifier.ToDate = mSession.barStartTime(tickr.timestamp, _
+                barSpecifier.ToDate = mSession.BarStartTime(tickr.timestamp, _
                                             mBarLength, _
                                             mBarUnit)
             Else
@@ -679,6 +679,7 @@ mHistoricBarPending = False
 
 With mHistoricBar
 
+    Debug.Print "Historic bar (" & mKey & ") " & .OpenPrice & " " & .highPrice & " " & .lowPrice & " " & .closePrice & " " & .volume
     If .OpenPrice <> 0 Then studyMgr.notifyInput mTradeInputHandle, .OpenPrice, .timestamp
     If .closePrice >= .OpenPrice Then
         If .lowPrice <> 0 Then studyMgr.notifyInput mTradeInputHandle, .lowPrice, .timestamp
@@ -695,14 +696,15 @@ With mHistoricBar
         ' is used by the bar studies to set the accum volume at end of
         ' previous bar
         studyMgr.notifyInput mVolumeInputHandle, 1, .timestamp
-        studyMgr.notifyInput mVolumeInputHandle, mAccumulatedVolume + 1, .timestamp
+        mAccumulatedVolume = mAccumulatedVolume + 1
+        studyMgr.notifyInput mVolumeInputHandle, mAccumulatedVolume, .timestamp
         firstVolumeSent = True
     Else
         studyMgr.notifyInput mVolumeInputHandle, mAccumulatedVolume, .timestamp
     End If
         
-    studyMgr.notifyInput mTickVolumeInputHandle, .tickVolume, .timestamp
-    mCurrTradeBarPrevTickvol = .tickVolume
+    studyMgr.notifyInput mTickVolumeInputHandle, .TickVolume, .timestamp
+    mCurrTradeBarPrevTickvol = .TickVolume
     
 End With
 End Sub
@@ -979,7 +981,7 @@ If mSaveIntervalSeconds < 0 Then Exit Sub
 If theBar Is Nothing Then Exit Sub
 
 If (Not theBar.Blank) And _
-    theBar.tickVolume <> prevTickVolume _
+    theBar.TickVolume <> prevTickVolume _
 Then
     If mSaveIntervalSeconds = 0 Then
         WriteBar theBar, barType, volume

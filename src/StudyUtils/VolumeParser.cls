@@ -57,9 +57,23 @@ Private mVolumeResetPending As Boolean
 Private mCurrSessionVolume As Long
 Private mPrevSessionVolume As Long
 
+' indicates that we have switched to a new session object - this normally occurs
+' after historical data retrieval is complete, so that the study can start receiving
+' current tick data. Since this may start in the middle of a session, we need to
+' treat the first volume received as simply setting the current accumulated
+' volume for the session
+Private mSwitchedSession As Boolean
+
+Private mObjId As Long
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Initialize()
+mObjId = ObjPtr(Me)
+mSwitchedSession = True
+End Sub
 
 '@================================================================================
 ' XXXX Interface Members
@@ -71,9 +85,11 @@ Private mPrevSessionVolume As Long
 
 Private Sub mSession_SessionStarted( _
                 ev As SessionEvent)
-mPrevSessionVolume = mCurrSessionVolume
-mCurrSessionVolume = 0
-mVolumeResetPending = True
+If Not mSwitchedSession Then
+    mPrevSessionVolume = mCurrSessionVolume
+    mCurrSessionVolume = 0
+    mVolumeResetPending = True
+End If
 End Sub
 
 '@================================================================================
@@ -91,25 +107,26 @@ End Sub
 
 Public Function notify( _
                 ByVal newTotalVolume As Long) As Long
-Static firstVolumeReceived As Boolean
 
-If mCurrSessionVolume < 0 Then
+Debug.Print "VolumeParser(" & mObjId & "): notify: " & newTotalVolume
+If mSwitchedSession Then
     ' this is the first volume notification after switching to a new
     ' source
     mCurrSessionVolume = newTotalVolume
+    mSwitchedSession = False
+    Debug.Print "VolumeParser(" & mObjId & "): current session volume set to " & newTotalVolume
     Exit Function
 End If
-
-If Not firstVolumeReceived Then mCurrSessionVolume = newTotalVolume
-firstVolumeReceived = True
 
 If mVolumeResetPending Then
     ' we've started a new session and are expecting the data source to
     ' start sending low volume figures
     If mPrevSessionVolume = 0 Or newTotalVolume < mPrevSessionVolume Then
         mVolumeResetPending = False
+        Debug.Print "VolumeParser(" & mObjId & "): first volume for new session received"
     Else
         newTotalVolume = newTotalVolume - mPrevSessionVolume
+        Debug.Print "VolumeParser(" & mObjId & "): adjusted to " & newTotalVolume
     End If
 End If
 
@@ -117,17 +134,14 @@ If newTotalVolume > mCurrSessionVolume Then notify = newTotalVolume - mCurrSessi
 
 mCurrSessionVolume = newTotalVolume
 
+Debug.Print "VolumeParser(" & mObjId & "): volume increment returned " & notify
+
 End Function
 
 Public Sub changeSession( _
                 ByVal newSession As session)
                 
-If newSession.currentSessionStartTime > mSession.currentSessionStartTime Then
-    ' we are now in a different session so reset volume variables
-    mPrevSessionVolume = mCurrSessionVolume
-    mCurrSessionVolume = 0
-    mVolumeResetPending = True
-End If
+Debug.Print "VolumeParser(" & mObjId & "): ChangeSession object"
 
 Set mSession = newSession
 
@@ -136,9 +150,15 @@ Set mSession = newSession
 ' data, it may not have run from the start of the session so the aggregate volume will
 ' be lower than the tick data source.
 '
-' To compensate for this, we have to adjust mPrevBarVolume when we receive the first
-' volume tick from the new source, so set it to indicate this
-mCurrSessionVolume = -1
+' To compensate for this, we have to adjust mCurrSessionVolume when we receive the first
+' volume tick from the new source, so indicate this
+mSwitchedSession = True
+mCurrSessionVolume = 0
+
+' since we may not actually be at the start of a session, we can't make any
+' use of previous session figures
+mPrevSessionVolume = 0
+mVolumeResetPending = False
 End Sub
 
 '@================================================================================

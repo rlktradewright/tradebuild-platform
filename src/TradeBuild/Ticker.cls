@@ -1798,7 +1798,10 @@ Set mContracts = gTB.loadContracts(pContractSpecifier)
 End Sub
 
 Friend Sub notifyCurrentVolume()
-mStudyManager.notifyInput mVolumeInputHandle, mVolume, timestamp
+If mVolume <> 0 Then
+    Debug.Print "Ticker: notifyCurrentVolume: " & mVolume
+    mStudyManager.notifyInput mVolumeInputHandle, mVolume, timestamp
+End If
 End Sub
 
 Public Function parsePrice( _
@@ -2621,7 +2624,6 @@ End If
 End Sub
 
 Private Sub notifyVolume(ByVal timestamp As Date, ByVal size As Long)
-Static firstVolumeNotified As Boolean
 mVolume = size
 
 Dim i As Long
@@ -2631,16 +2633,7 @@ For i = 1 To mDataConsumers.Count
     consumer.volume timestamp, size
 Next
 
-If Not firstVolumeNotified Then
-    ' send an initial volume of 1, because the first volume notification
-    ' is used by the bar studies to set the accum volume at end of
-    ' previous bar
-    mStudyManager.notifyInput mVolumeInputHandle, 1, timestamp
-    mStudyManager.notifyInput mVolumeInputHandle, size + 1, timestamp
-    firstVolumeNotified = True
-Else
-    mStudyManager.notifyInput mVolumeInputHandle, size, timestamp
-End If
+mStudyManager.notifyInput mVolumeInputHandle, size, timestamp
 
 fireVolume size
 End Sub
