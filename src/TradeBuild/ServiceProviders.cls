@@ -829,11 +829,6 @@ For Each sp In mServiceProviderConfigList.childItems
         spName = sp.getAttribute(AttributeNameServiceProviderName)
         
         spProgId = sp.getAttribute(AttributeNameServiceProviderProgId)
-        If spProgId = "" Then
-            Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                    ProjectName & "." & ModuleName & ":" & "loadConfiguration", _
-                    "Service provider ProgId not specified in configuration file"
-        End If
         
         spLogLevel = sp.getAttribute(AttributeNameLogLevel)
         If spLogLevel = "" Then spLogLevel = CStr(LogLevels.LogLevelLow)
@@ -852,6 +847,12 @@ For Each sp In mServiceProviderConfigList.childItems
         
         On Error GoTo 0
         
+        If spProgId = "" Then
+            Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                    ProjectName & "." & ModuleName & ":" & "loadConfiguration", _
+                    "Service provider ProgId not specified in configuration file"
+        End If
+        
         If spProgId = ProgIdTbOrders Then
             ' this is the built-in order simulator
             Set spObj = New OrderSimulatorSP
@@ -862,6 +863,7 @@ For Each sp In mServiceProviderConfigList.childItems
         If spindex <> 0 Then Set mServiceProviders(spindex).SpConfig = sp
     End If
 Next
+
 End Sub
 
 Private Function loadContractsFromSecondarySP( _
