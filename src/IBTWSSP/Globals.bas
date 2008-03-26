@@ -154,59 +154,70 @@ End Function
 
 Public Function gParseClientId( _
                 value As String) As Long
-If value = "" Then gParseClientId = -1
-If Not IsInteger(value) Then
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+If value = "" Then
+    gParseClientId = -1
+ElseIf Not IsInteger(value) Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             , _
             "Invalid 'Client Id' parameter: value must be an integer"
+Else
+    gParseClientId = CLng(value)
 End If
-gParseClientId = CLng(value)
 End Function
 
 Public Function gParseConnectionRetryInterval( _
                 value As String) As Long
-If value = "" Then gParseConnectionRetryInterval = 0
-If Not IsInteger(value, 0) Then
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+If value = "" Then
+    gParseConnectionRetryInterval = 0
+ElseIf Not IsInteger(value, 0) Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             , _
             "Invalid 'Connection Retry Interval Secs' parameter: value must be an integer >= 0"
+Else
+    gParseConnectionRetryInterval = CLng(value)
 End If
-gParseConnectionRetryInterval = CLng(value)
 End Function
 
 Public Function gParseKeepConnection( _
                 value As String) As Boolean
-On Error GoTo err
-If value = "" Then gParseKeepConnection = False
-gParseKeepConnection = CBool(value)
+On Error GoTo Err
+If value = "" Then
+    gParseKeepConnection = False
+Else
+    gParseKeepConnection = CBool(value)
+End If
 Exit Function
 
-err:
-err.Raise ErrorCodes.ErrIllegalArgumentException, _
+Err:
+Err.Raise ErrorCodes.ErrIllegalArgumentException, _
         , _
         "Invalid 'Keep Connection' parameter: value must be 'true' or 'false'"
 End Function
 
 Public Function gParseLogLevel( _
                 value As String) As Long
-If value = "" Then gParseLogLevel = LogLevels.LogLevelLow
-If Not IsInteger(value, 0, 4) Then
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+If value = "" Then
+    gParseLogLevel = LogLevels.LogLevelLow
+ElseIf Not IsInteger(value, 0, 4) Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             , _
             "Invalid 'Log Level' parameter: value must be a positive integer less than 5 "
+Else
+    gParseLogLevel = CLng(value)
 End If
-gParseLogLevel = CLng(value)
 End Function
 
 Public Function gParsePort( _
                 value As String) As Long
-If value = "" Then gParsePort = 7496
-If Not IsInteger(value, 1024, 65535) Then
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+If value = "" Then
+    gParsePort = 7496
+ElseIf Not IsInteger(value, 1024, 65535) Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             , _
             "Invalid 'Port' parameter: value must be an integer >= 1024 and <=65535"
+Else
+    gParsePort = CLng(value)
 End If
-gParsePort = CLng(value)
 End Function
 
 Public Function gParseRole( _
@@ -218,7 +229,7 @@ Case "", "P", "PR", "PRIM", "PRIMARY"
 Case "S", "SEC", "SECOND", "SECONDARY"
     gParseRole = "SECONDARY"
 Case Else
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             , _
             "Invalid 'Role' parameter: value must be one of 'P', 'PR', 'PRIM', 'PRIMARY', 'S', 'SEC', 'SECOND', or 'SECONDARY'"
 End Select
@@ -226,13 +237,16 @@ End Function
 
 Public Function gParseTwsLogLevel( _
                 value As String) As TWSLogLevels
-On Error GoTo err
-If value = "" Then gParseTwsLogLevel = TWSLogLevelError
-gParseTwsLogLevel = gTwsLogLevelFromString(value)
+On Error GoTo Err
+If value = "" Then
+    gParseTwsLogLevel = TWSLogLevelError
+Else
+    gParseTwsLogLevel = gTwsLogLevelFromString(value)
+End If
 Exit Function
 
-err:
-err.Raise ErrorCodes.ErrIllegalArgumentException, _
+Err:
+Err.Raise ErrorCodes.ErrIllegalArgumentException, _
         , _
         "Invalid 'Tws Log Level' parameter: value must be one of " & _
         TWSLogLevelSystemString & ", " & _
@@ -380,7 +394,7 @@ Case UCase$(TWSLogLevelSystemString)
 Case UCase$(TWSLogLevelWarningString)
     gTwsLogLevelFromString = TWSLogLevelWarning
 Case Else
-    err.Raise ErrorCodes.ErrIllegalArgumentException
+    Err.Raise ErrorCodes.ErrIllegalArgumentException
 End Select
 End Function
 
