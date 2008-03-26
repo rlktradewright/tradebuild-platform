@@ -279,8 +279,8 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(0)   =   "&1. Configuration"
       TabPicture(0)   =   "fTradeSkilDemo.frx":0000
       Tab(0).ControlEnabled=   0   'False
-      Tab(0).Control(0)=   "ConfigureButton"
-      Tab(0).Control(1)=   "ConfigManager1"
+      Tab(0).Control(0)=   "ConfigManager1"
+      Tab(0).Control(1)=   "ConfigureButton"
       Tab(0).ControlCount=   2
       TabCaption(1)   =   "&2. Tickers"
       TabPicture(1)   =   "fTradeSkilDemo.frx":001C
@@ -291,13 +291,13 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(2)   =   "&3. Orders"
       TabPicture(2)   =   "fTradeSkilDemo.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "OrdersSummary1"
+      Tab(2).Control(0)=   "ModifyOrderButton"
       Tab(2).Control(0).Enabled=   0   'False
-      Tab(2).Control(1)=   "OrderButton"
+      Tab(2).Control(1)=   "CancelOrderButton"
       Tab(2).Control(1).Enabled=   0   'False
-      Tab(2).Control(2)=   "CancelOrderButton"
+      Tab(2).Control(2)=   "OrderButton"
       Tab(2).Control(2).Enabled=   0   'False
-      Tab(2).Control(3)=   "ModifyOrderButton"
+      Tab(2).Control(3)=   "OrdersSummary1"
       Tab(2).Control(3).Enabled=   0   'False
       Tab(2).ControlCount=   4
       TabCaption(3)   =   "&4. Executions"
@@ -308,31 +308,31 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(4)   =   "&5. Replay tickfiles"
       TabPicture(4)   =   "fTradeSkilDemo.frx":0070
       Tab(4).ControlEnabled=   0   'False
-      Tab(4).Control(0)=   "ReplaySpeedCombo"
+      Tab(4).Control(0)=   "Label19"
       Tab(4).Control(0).Enabled=   0   'False
-      Tab(4).Control(1)=   "TickfileList"
+      Tab(4).Control(1)=   "Label20"
       Tab(4).Control(1).Enabled=   0   'False
-      Tab(4).Control(2)=   "StopReplayButton"
+      Tab(4).Control(2)=   "ReplayProgressLabel"
       Tab(4).Control(2).Enabled=   0   'False
-      Tab(4).Control(3)=   "PauseReplayButton"
+      Tab(4).Control(3)=   "ReplayContractLabel"
       Tab(4).Control(3).Enabled=   0   'False
-      Tab(4).Control(4)=   "ClearTickfileListButton"
+      Tab(4).Control(4)=   "ReplayProgressBar"
       Tab(4).Control(4).Enabled=   0   'False
-      Tab(4).Control(5)=   "SelectTickfilesButton"
+      Tab(4).Control(5)=   "SkipReplayButton"
       Tab(4).Control(5).Enabled=   0   'False
       Tab(4).Control(6)=   "PlayTickFileButton"
       Tab(4).Control(6).Enabled=   0   'False
-      Tab(4).Control(7)=   "SkipReplayButton"
+      Tab(4).Control(7)=   "SelectTickfilesButton"
       Tab(4).Control(7).Enabled=   0   'False
-      Tab(4).Control(8)=   "ReplayProgressBar"
+      Tab(4).Control(8)=   "ClearTickfileListButton"
       Tab(4).Control(8).Enabled=   0   'False
-      Tab(4).Control(9)=   "ReplayContractLabel"
+      Tab(4).Control(9)=   "PauseReplayButton"
       Tab(4).Control(9).Enabled=   0   'False
-      Tab(4).Control(10)=   "ReplayProgressLabel"
+      Tab(4).Control(10)=   "StopReplayButton"
       Tab(4).Control(10).Enabled=   0   'False
-      Tab(4).Control(11)=   "Label20"
+      Tab(4).Control(11)=   "TickfileList"
       Tab(4).Control(11).Enabled=   0   'False
-      Tab(4).Control(12)=   "Label19"
+      Tab(4).Control(12)=   "ReplaySpeedCombo"
       Tab(4).Control(12).Enabled=   0   'False
       Tab(4).ControlCount=   13
       Begin TradeSkilDemo26.ConfigManager ConfigManager1 
@@ -875,7 +875,7 @@ End Sub
 
 Private Sub Form_Load()
 
-On Error GoTo err
+On Error GoTo Err
 
 DefaultLogLevel = TWUtilities30.LogLevelNormal
 
@@ -909,10 +909,10 @@ configure
 
 Exit Sub
 
-err:
-handleFatalError err.Number, _
-                err.Description, _
-                err.source
+Err:
+handleFatalError Err.Number, _
+                Err.Description, _
+                Err.source
 
 End Sub
 
@@ -1337,7 +1337,7 @@ Private Sub mTickers_Notification( _
                 ByRef ev As NotificationEvent)
 Dim lTicker As Ticker
 
-On Error GoTo err
+On Error GoTo Err
 
 Set lTicker = ev.source
 
@@ -1389,15 +1389,15 @@ Case Else
 End Select
 
 Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTickers_tickerError"
+Err:
+handleFatalError Err.Number, Err.Description, "mTickers_tickerError"
 End Sub
 
 Private Sub mTickers_StateChange( _
                 ev As StateChangeEvent)
 Dim lTicker As Ticker
 
-On Error GoTo err
+On Error GoTo Err
 
 Set lTicker = ev.source
 
@@ -1443,8 +1443,8 @@ End Select
 
 Exit Sub
 
-err:
-handleFatalError err.Number, err.Description, "mTickers_TickerStateEvent"
+Err:
+handleFatalError Err.Number, Err.Description, "mTickers_TickerStateEvent"
 End Sub
 
 '================================================================================
@@ -1453,12 +1453,12 @@ End Sub
 
 Private Sub mTickfileManager_Notification( _
                 ev As NotificationEvent)
-On Error GoTo err
+On Error GoTo Err
 logMessage "Notification " & ev.eventCode & ": " & ev.eventMessage
 
 Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTickfileManager_Notification"
+Err:
+handleFatalError Err.Number, Err.Description, "mTickfileManager_Notification"
 End Sub
 
 Private Sub mTickfileManager_QueryReplayNextTickfile( _
@@ -1467,7 +1467,7 @@ Private Sub mTickfileManager_QueryReplayNextTickfile( _
                 ByVal TickfileSizeBytes As Long, _
                 ByVal pContract As Contract, _
                 continueMode As ReplayContinueModes)
-On Error GoTo err
+On Error GoTo Err
 
 If tickfileIndex <> 0 Then
     clearTickerFields
@@ -1482,12 +1482,12 @@ TickfileList.ListIndex = tickfileIndex - 1
 ReplayContractLabel.caption = Replace(pContract.specifier.toString, vbCrLf, "; ")
 
 Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTickfileManager_QueryReplayNextTickfile"
+Err:
+handleFatalError Err.Number, Err.Description, "mTickfileManager_QueryReplayNextTickfile"
 End Sub
 
 Private Sub mTickfileManager_ReplayCompleted()
-On Error GoTo err
+On Error GoTo Err
 
 MarketDepthButton.Enabled = False
 PlayTickFileButton.Enabled = True
@@ -1505,15 +1505,15 @@ ReplayProgressLabel.caption = ""
 logMessage "Tickfile replay completed"
 
 Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTickfileManager_ReplayCompleted"
+Err:
+handleFatalError Err.Number, Err.Description, "mTickfileManager_ReplayCompleted"
 End Sub
 
 Private Sub mTickfileManager_ReplayProgress( _
                 ByVal tickfileTimestamp As Date, _
                 ByVal eventsPlayed As Long, _
                 ByVal percentComplete As Single)
-On Error GoTo err
+On Error GoTo Err
 ReplayProgressBar.value = percentComplete
 ReplayProgressLabel.caption = tickfileTimestamp & _
                                 "  Processed " & _
@@ -1521,19 +1521,19 @@ ReplayProgressLabel.caption = tickfileTimestamp & _
                                 " events"
 
 Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTickfileManager_ReplayProgress"
+Err:
+handleFatalError Err.Number, Err.Description, "mTickfileManager_ReplayProgress"
 End Sub
 
 Private Sub mTickfileManager_TickerAllocated(ByVal pTicker As Ticker)
-On Error GoTo err
+On Error GoTo Err
 
 Set mTicker = pTicker
 mTicker.DOMEventsRequired = DOMProcessedEvents
 
 Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTickfileManager_TickerAllocated"
+Err:
+handleFatalError Err.Number, Err.Description, "mTickfileManager_TickerAllocated"
 End Sub
 
 '================================================================================
@@ -1543,12 +1543,12 @@ End Sub
 ' fires when an unrecoverable error has occurred in TradeBuild
 Private Sub mTradeBuildAPI_Error( _
                 ByRef ev As ErrorEvent)
-On Error GoTo err
+On Error GoTo Err
 
 handleFatalError ev.errorCode, ev.errorMessage, "mTradeBuildAPI_Error"
 
 Exit Sub
-err:
+Err:
 
 ' an error has occurred in the fatal error handler!! All we can do is terminate abruptly
 End
@@ -1559,7 +1559,7 @@ Private Sub mTradeBuildAPI_Notification( _
                 ByRef ev As NotificationEvent)
 Dim spError As ServiceProviderError
 
-On Error GoTo err
+On Error GoTo Err
 
 Select Case ev.eventCode
 Case ApiNotifyCodes.ApiNotifyServiceProviderError
@@ -1574,8 +1574,8 @@ Case Else
 End Select
 
 Exit Sub
-err:
-handleFatalError err.Number, err.Description, "mTradeBuildAPI_notification"
+Err:
+handleFatalError Err.Number, Err.Description, "mTradeBuildAPI_notification"
 End Sub
 
 '================================================================================
@@ -1710,7 +1710,7 @@ Private Sub getLog()
 Dim logFile As String
 Dim listener As LogListener
 
-On Error GoTo err
+On Error GoTo Err
 
 If mClp.Switch(SwitchLogFilename) Then logFile = mClp.SwitchValue(SwitchLogFilename)
 
@@ -1742,13 +1742,13 @@ gLogger.Log LogLevelNormal, "Log level: " & LogLevelToString(DefaultLogLevel)
 
 Exit Sub
 
-err:
-If err.Number = ErrorCodes.ErrSecurityException Then
+Err:
+If Err.Number = ErrorCodes.ErrSecurityException Then
     MsgBox "You don't have write access to  '" & logFile & "': the program will close", vbCritical, "Attention"
-    err.Raise UnloadNotifyException
+    Err.Raise UnloadNotifyException
 End If
 
-err.Raise err.Number    ' unknown error so re-raise it
+Err.Raise Err.Number    ' unknown error so re-raise it
 End Sub
 
 Private Function getNamedConfig() As ConfigItem
@@ -1764,7 +1764,7 @@ If configToLoad <> "" Then
         MsgBox "The required configuration does not exist: " & configToLoad, _
                 vbCritical, _
                 "Error"
-        err.Raise UnloadNotifyException
+        Err.Raise UnloadNotifyException
         Exit Function
     End If
 End If
@@ -1902,9 +1902,16 @@ If tradebuildEntry Is Nothing Then
     logMessage "No service providers defined in this configuration"
     setupServiceProviders = False
 Else
+    On Error GoTo Err
     mTradeBuildAPI.ServiceProviders.loadServiceProviderConfiguration tradebuildEntry
     setupServiceProviders = True
 End If
+
+Exit Function
+
+Err:
+logMessage "Service provider configuration failed: " & Err.Description
+setupServiceProviders = False
 End Function
 
 Private Function setupStudyLibraries() As Boolean
@@ -1947,7 +1954,7 @@ If mClp.Switch("?") Then
             "       All     or A", _
             , _
             "Usage"
-    err.Raise UnloadNotifyException
+    Err.Raise UnloadNotifyException
 End If
 End Sub
 
