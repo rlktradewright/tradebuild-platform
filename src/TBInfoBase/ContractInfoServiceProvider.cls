@@ -153,10 +153,9 @@ For Each param In params
         Case "S", "SEC", "SECOND", "SECONDARY"
             mRole = "SECONDARY"
         Case Else
-            handleFatalError ErrorCodes.ErrIllegalArgumentException, _
-                            "ICommonServiceProvider_Link", _
-                            "Invalid role parameter"
-            Exit Sub
+            Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                    "ICommonServiceProvider_Link", _
+                    "Invalid role parameter"
         End Select
     End Select
 Next

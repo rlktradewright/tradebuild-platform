@@ -160,9 +160,9 @@ For Each param In params
         Case "RW", "READWRITE", "READ WRITE", "READ & WRITE"
             mMode = ReadWrite
         Case Else
-            handleFatalError ErrorCodes.ErrIllegalArgumentException, _
-                            "ICommonServiceProvider_Link", _
-                            "Invalid access mode parameter"
+            Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                    "ICommonServiceProvider_Link", _
+                    "Invalid access mode parameter"
             Exit Sub
         End Select
     End Select
