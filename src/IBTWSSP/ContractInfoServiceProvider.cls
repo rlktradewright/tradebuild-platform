@@ -173,7 +173,6 @@ Private Sub ICommonServiceProvider_Link( _
                 ByVal params As Parameters)
 Dim param As Parameter
 
-On Error GoTo Err
 gCommonServiceConsumer = commonServiceConsumer
 Set mCommonServiceConsumer = commonServiceConsumer
 mHandle = handle
@@ -209,11 +208,6 @@ Else
                                             ServiceProviderTypes.SecondaryContractInfo
 End If
 
-Exit Sub
-Err:
-handleFatalError Err.number, _
-                "IBTWSSP" & "." & "ContractInfoServiceProvider" & "::" & "ICommonServiceProvider_Link", _
-                Err.Description
 End Sub
 
 Private Property Let ICommonServiceProvider_LogLevel( _

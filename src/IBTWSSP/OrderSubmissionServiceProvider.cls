@@ -119,7 +119,6 @@ Private Sub ICommonServiceProvider_Link( _
                 ByVal params As Parameters)
 Dim param As Parameter
 
-On Error GoTo Err
 gCommonServiceConsumer = commonServiceConsumer
 Set mCommonServiceConsumer = commonServiceConsumer
 mHandle = handle
@@ -146,12 +145,6 @@ For Each param In params
         TWSLogLevel = gParseTwsLogLevel(param.value)
     End Select
 Next
-
-Exit Sub
-Err:
-handleFatalError Err.number, _
-                "IBTWSSP" & "." & "OrderSubmissionServiceProvider" & "::" & "ICommonServiceProvider_Link", _
-                Err.Description
 
 End Sub
 
