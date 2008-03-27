@@ -2633,7 +2633,6 @@ Dim AccountIdentifier  As String
 Dim FillingExchange  As String
 Dim side As String
 Dim Price As Double
-Dim Quantity As Long
 Dim mapEntry As OrderIdMapEntry
 Dim id As Long
 Dim permId As Long
@@ -2679,7 +2678,7 @@ exec.AccountIdentifier = getString
 exec.FillingExchange = getString
 side = getString
 exec.Action = IIf(side = "BUY", OrderActions.ActionBuy, OrderActions.ActionSell)
-Quantity = getLong
+exec.Quantity = getLong
 Price = getDouble
 exec.Price = adjustPrice(Price, lContractSpecifier)
     
