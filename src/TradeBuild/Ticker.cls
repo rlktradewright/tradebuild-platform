@@ -1019,6 +1019,15 @@ End If
 
 failpoint = 100
 
+setTime timestamp
+
+If size <= 0 Then
+    mInEventHandler = False
+    Exit Sub
+End If
+
+failpoint = 200
+
 mGotFirstVolume = True
 
 If Not mReceivedFirstVolumeInSession Then
@@ -1033,24 +1042,14 @@ If Not mReceivedFirstVolumeInSession Then
         mVolumeCorrectionIncrement = 0
     Else
         ' correct this volume figure
-        size = size - mPrevSessionAccumulatedVolume
+        size = size - (mPrevSessionAccumulatedVolume - mVolumeCorrectionIncrement)
     End If
 End If
 
-' write the unadjusted size to the tickfile
+' we write the corrected size to the tickfile rather than the raw size because
+' otherwise replaying from the start of the session gives inflated volume figures
+' if the first tick was subject to correction
 If mWriteTickData Then mTickWriter.writeVolume timestamp, size
-
-' timestamp = convertTime(timestamp)
-    
-
-failpoint = 200
-
-setTime timestamp
-
-If size = 0 Then
-    mInEventHandler = False
-    Exit Sub
-End If
 
 ' note that the previous trade will have notified volume of mAccumulatedVolume
 
