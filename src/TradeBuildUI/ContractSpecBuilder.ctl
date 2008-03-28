@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#24.3#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#27.5#0"; "TWControls10.ocx"
 Begin VB.UserControl ContractSpecBuilder 
    BackStyle       =   0  'Transparent
    ClientHeight    =   2835
@@ -117,6 +117,7 @@ Begin VB.UserControl ContractSpecBuilder
       Width           =   1335
    End
    Begin VB.Label RightLabel 
+      BackStyle       =   0  'Transparent
       Caption         =   "Right"
       Height          =   255
       Left            =   0
@@ -125,6 +126,7 @@ Begin VB.UserControl ContractSpecBuilder
       Width           =   855
    End
    Begin VB.Label StrikePriceLabel 
+      BackStyle       =   0  'Transparent
       Caption         =   "Strike price"
       Height          =   255
       Left            =   0
@@ -133,6 +135,7 @@ Begin VB.UserControl ContractSpecBuilder
       Width           =   855
    End
    Begin VB.Label SymbolLabel 
+      BackStyle       =   0  'Transparent
       Caption         =   "Symbol"
       Height          =   255
       Left            =   0
@@ -141,6 +144,7 @@ Begin VB.UserControl ContractSpecBuilder
       Width           =   855
    End
    Begin VB.Label TypeLabel 
+      BackStyle       =   0  'Transparent
       Caption         =   "Type"
       Height          =   255
       Left            =   0
@@ -149,6 +153,7 @@ Begin VB.UserControl ContractSpecBuilder
       Width           =   855
    End
    Begin VB.Label ExpiryLabel 
+      BackStyle       =   0  'Transparent
       Caption         =   "Expiry"
       Height          =   255
       Left            =   0
@@ -157,6 +162,7 @@ Begin VB.UserControl ContractSpecBuilder
       Width           =   855
    End
    Begin VB.Label ExchangeLabel 
+      BackStyle       =   0  'Transparent
       Caption         =   "Exchange"
       Height          =   255
       Left            =   0
@@ -165,6 +171,7 @@ Begin VB.UserControl ContractSpecBuilder
       Width           =   855
    End
    Begin VB.Label CurrencyLabel 
+      BackStyle       =   0  'Transparent
       Caption         =   "Currency"
       Height          =   255
       Left            =   0
@@ -173,6 +180,7 @@ Begin VB.UserControl ContractSpecBuilder
       Width           =   855
    End
    Begin VB.Label LocalSymbolLabel 
+      BackStyle       =   0  'Transparent
       Caption         =   "Short name"
       Height          =   255
       Left            =   0

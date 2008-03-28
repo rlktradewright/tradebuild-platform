@@ -424,6 +424,8 @@ Dim lContract As Contract
     
 
 Set lTicker = ev.Source
+If lTicker.isHistorical Then Exit Sub
+
 index = getTickerIndexFromHandle(lTicker.handle)
     
 Select Case ev.state

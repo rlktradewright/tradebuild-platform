@@ -582,6 +582,7 @@ Begin VB.UserControl SPConfigurer
       Y2              =   3420
    End
    Begin VB.Label Label12 
+      BackStyle       =   0  'Transparent
       Caption         =   "Log level"
       Height          =   375
       Left            =   2520
@@ -597,6 +598,7 @@ Begin VB.UserControl SPConfigurer
       Width           =   4815
    End
    Begin VB.Label OptionLabel 
+      BackStyle       =   0  'Transparent
       Height          =   615
       Left            =   2280
       TabIndex        =   45

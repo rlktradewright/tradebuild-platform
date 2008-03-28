@@ -659,6 +659,7 @@ Begin VB.UserControl OrderTicket
    End
    Begin VB.Label SymbolLabel 
       Alignment       =   1  'Right Justify
+      BackStyle       =   0  'Transparent
       BeginProperty Font 
          Name            =   "MS Sans Serif"
          Size            =   12
@@ -675,6 +676,7 @@ Begin VB.UserControl OrderTicket
       Width           =   3615
    End
    Begin VB.Label Label13 
+      BackStyle       =   0  'Transparent
       Caption         =   "Order scheme"
       Height          =   255
       Left            =   240
@@ -684,6 +686,7 @@ Begin VB.UserControl OrderTicket
    End
    Begin VB.Label OrderSimulationLabel 
       Alignment       =   2  'Center
+      BackStyle       =   0  'Transparent
       BeginProperty Font 
          Name            =   "MS Sans Serif"
          Size            =   12

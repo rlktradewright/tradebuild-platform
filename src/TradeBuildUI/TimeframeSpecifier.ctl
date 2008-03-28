@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#18.0#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#27.5#0"; "TWControls10.ocx"
 Begin VB.UserControl TimeframeSpecifier 
    BackStyle       =   0  'Transparent
    ClientHeight    =   690
@@ -36,6 +36,7 @@ Begin VB.UserControl TimeframeSpecifier
       Width           =   1335
    End
    Begin VB.Label LengthLabel 
+      BackStyle       =   0  'Transparent
       Caption         =   "Length"
       Height          =   255
       Left            =   0
@@ -44,6 +45,7 @@ Begin VB.UserControl TimeframeSpecifier
       Width           =   855
    End
    Begin VB.Label UnitsLabel 
+      BackStyle       =   0  'Transparent
       Caption         =   "Units"
       Height          =   255
       Left            =   0
