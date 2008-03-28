@@ -296,7 +296,9 @@ If mCancelPrice = 0 Then Exit Sub
 
 If longPosition Then
     Select Case mEntryOrder.orderType
-    Case OrderTypes.OrderTypeLimit
+    Case OrderTypes.OrderTypeLimit, _
+            OrderTypes.OrderTypeLimitIfTouched, _
+            OrderTypes.OrderTypeMarketIfTouched
         If ev.price >= mCancelPrice Then cancelPriceHit = True
     Case OrderTypes.OrderTypeStop, _
         OrderTypes.OrderTypeStopLimit
@@ -304,7 +306,9 @@ If longPosition Then
     End Select
 Else
     Select Case mEntryOrder.orderType
-    Case OrderTypes.OrderTypeLimit
+    Case OrderTypes.OrderTypeLimit, _
+            OrderTypes.OrderTypeLimitIfTouched, _
+            OrderTypes.OrderTypeMarketIfTouched
         If ev.price <= mCancelPrice Then cancelPriceHit = True
     Case OrderTypes.OrderTypeStop, _
         OrderTypes.OrderTypeStopLimit
@@ -1914,8 +1918,6 @@ mCloseoutOrder.action = IIf(longPosition, OrderActions.ActionSell, OrderActions.
 mCloseoutOrder.quantity = Abs(size)
 mCloseoutOrder.orderType = OrderTypes.OrderTypeMarket
 mCloseoutOrder.timeInForce = OrderTifs.TIFGoodTillCancelled
-
-mOrderSubmitter.modifyOrderPlex Me, False, False, False, True
 
 mOrders.add mCloseoutOrder
 
