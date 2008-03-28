@@ -1,6 +1,7 @@
 VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
+Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
 Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#62.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   1  'Fixed Single
@@ -272,16 +273,19 @@ Begin VB.Form fTradeSkilDemo
       _ExtentY        =   7858
       _Version        =   393216
       Style           =   1
-      Tabs            =   5
+      Tabs            =   6
       Tab             =   1
-      TabsPerRow      =   5
+      TabsPerRow      =   6
       TabHeight       =   520
       TabCaption(0)   =   "&1. Configuration"
       TabPicture(0)   =   "fTradeSkilDemo.frx":0000
       Tab(0).ControlEnabled=   0   'False
-      Tab(0).Control(0)=   "ConfigManager1"
-      Tab(0).Control(1)=   "ConfigureButton"
-      Tab(0).ControlCount=   2
+      Tab(0).Control(0)=   "CurrentConfigNameText"
+      Tab(0).Control(0).Enabled=   0   'False
+      Tab(0).Control(1)=   "ConfigManager1"
+      Tab(0).Control(2)=   "ConfigureButton"
+      Tab(0).Control(3)=   "Label1"
+      Tab(0).ControlCount=   4
       TabCaption(1)   =   "&2. Tickers"
       TabPicture(1)   =   "fTradeSkilDemo.frx":001C
       Tab(1).ControlEnabled=   -1  'True
@@ -291,14 +295,10 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(2)   =   "&3. Orders"
       TabPicture(2)   =   "fTradeSkilDemo.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "ModifyOrderButton"
-      Tab(2).Control(0).Enabled=   0   'False
-      Tab(2).Control(1)=   "CancelOrderButton"
-      Tab(2).Control(1).Enabled=   0   'False
-      Tab(2).Control(2)=   "OrderButton"
-      Tab(2).Control(2).Enabled=   0   'False
-      Tab(2).Control(3)=   "OrdersSummary1"
-      Tab(2).Control(3).Enabled=   0   'False
+      Tab(2).Control(0)=   "OrdersSummary1"
+      Tab(2).Control(1)=   "OrderButton"
+      Tab(2).Control(2)=   "CancelOrderPlexButton"
+      Tab(2).Control(3)=   "ModifyOrderPlexButton"
       Tab(2).ControlCount=   4
       TabCaption(3)   =   "&4. Executions"
       TabPicture(3)   =   "fTradeSkilDemo.frx":0054
@@ -308,33 +308,158 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(4)   =   "&5. Replay tickfiles"
       TabPicture(4)   =   "fTradeSkilDemo.frx":0070
       Tab(4).ControlEnabled=   0   'False
-      Tab(4).Control(0)=   "Label19"
-      Tab(4).Control(0).Enabled=   0   'False
-      Tab(4).Control(1)=   "Label20"
+      Tab(4).Control(0)=   "ReplaySpeedCombo"
+      Tab(4).Control(1)=   "TickfileList"
       Tab(4).Control(1).Enabled=   0   'False
-      Tab(4).Control(2)=   "ReplayProgressLabel"
-      Tab(4).Control(2).Enabled=   0   'False
-      Tab(4).Control(3)=   "ReplayContractLabel"
-      Tab(4).Control(3).Enabled=   0   'False
-      Tab(4).Control(4)=   "ReplayProgressBar"
-      Tab(4).Control(4).Enabled=   0   'False
-      Tab(4).Control(5)=   "SkipReplayButton"
-      Tab(4).Control(5).Enabled=   0   'False
+      Tab(4).Control(2)=   "StopReplayButton"
+      Tab(4).Control(3)=   "PauseReplayButton"
+      Tab(4).Control(4)=   "ClearTickfileListButton"
+      Tab(4).Control(5)=   "SelectTickfilesButton"
       Tab(4).Control(6)=   "PlayTickFileButton"
-      Tab(4).Control(6).Enabled=   0   'False
-      Tab(4).Control(7)=   "SelectTickfilesButton"
-      Tab(4).Control(7).Enabled=   0   'False
-      Tab(4).Control(8)=   "ClearTickfileListButton"
-      Tab(4).Control(8).Enabled=   0   'False
-      Tab(4).Control(9)=   "PauseReplayButton"
-      Tab(4).Control(9).Enabled=   0   'False
-      Tab(4).Control(10)=   "StopReplayButton"
-      Tab(4).Control(10).Enabled=   0   'False
-      Tab(4).Control(11)=   "TickfileList"
-      Tab(4).Control(11).Enabled=   0   'False
-      Tab(4).Control(12)=   "ReplaySpeedCombo"
-      Tab(4).Control(12).Enabled=   0   'False
+      Tab(4).Control(7)=   "SkipReplayButton"
+      Tab(4).Control(8)=   "ReplayProgressBar"
+      Tab(4).Control(9)=   "ReplayContractLabel"
+      Tab(4).Control(10)=   "ReplayProgressLabel"
+      Tab(4).Control(11)=   "Label20"
+      Tab(4).Control(12)=   "Label19"
       Tab(4).ControlCount=   13
+      TabCaption(5)   =   "&6. Historical charts"
+      TabPicture(5)   =   "fTradeSkilDemo.frx":008C
+      Tab(5).ControlEnabled=   0   'False
+      Tab(5).Control(0)=   "Frame1"
+      Tab(5).ControlCount=   1
+      Begin VB.Frame Frame1 
+         Caption         =   "Chart specifier"
+         Height          =   3975
+         Left            =   -74880
+         TabIndex        =   65
+         Top             =   360
+         Width           =   6375
+         Begin VB.PictureBox Picture2 
+            BorderStyle     =   0  'None
+            Height          =   3645
+            Left            =   120
+            ScaleHeight     =   3645
+            ScaleWidth      =   6015
+            TabIndex        =   66
+            Top             =   240
+            Width           =   6015
+            Begin VB.TextBox NumHistBarsText 
+               Alignment       =   1  'Right Justify
+               Height          =   285
+               Left            =   2400
+               TabIndex        =   69
+               Text            =   "500"
+               Top             =   840
+               Width           =   975
+            End
+            Begin VB.CommandButton HistChartButton 
+               Caption         =   "Show &Chart"
+               Enabled         =   0   'False
+               Height          =   375
+               Left            =   4920
+               TabIndex        =   73
+               Top             =   0
+               Width           =   975
+            End
+            Begin VB.CheckBox HistSessionOnlyCheck 
+               Caption         =   "Session only"
+               Height          =   375
+               Left            =   2400
+               TabIndex        =   70
+               Top             =   1200
+               Value           =   1  'Checked
+               Width           =   1935
+            End
+            Begin TradeBuildUI26.ContractSpecBuilder HistContractSpecBuilder 
+               Height          =   2895
+               Left            =   0
+               TabIndex        =   67
+               Top             =   0
+               Width           =   1935
+               _ExtentX        =   3413
+               _ExtentY        =   5106
+            End
+            Begin TradeBuildUI26.TimeframeSelector HistTimeframeSelector 
+               Height          =   330
+               Left            =   2400
+               TabIndex        =   68
+               Top             =   240
+               Width           =   1935
+               _ExtentX        =   3413
+               _ExtentY        =   582
+            End
+            Begin MSComCtl2.DTPicker ToDatePicker 
+               Height          =   375
+               Left            =   2400
+               TabIndex        =   72
+               Top             =   2520
+               Width           =   1935
+               _ExtentX        =   3413
+               _ExtentY        =   661
+               _Version        =   393216
+               CheckBox        =   -1  'True
+               CustomFormat    =   "yyy-MM-dd HH:mm"
+               Format          =   20643843
+               CurrentDate     =   39365
+            End
+            Begin MSComCtl2.DTPicker FromDatePicker 
+               Height          =   375
+               Left            =   2400
+               TabIndex        =   71
+               Top             =   1800
+               Width           =   1935
+               _ExtentX        =   3413
+               _ExtentY        =   661
+               _Version        =   393216
+               CheckBox        =   -1  'True
+               CustomFormat    =   "yyy-MM-dd HH:mm"
+               Format          =   20643843
+               CurrentDate     =   39365
+            End
+            Begin VB.Label Label5 
+               Caption         =   "To"
+               Height          =   255
+               Left            =   2400
+               TabIndex        =   77
+               Top             =   2280
+               Width           =   855
+            End
+            Begin VB.Label Label4 
+               Caption         =   "From"
+               Height          =   255
+               Left            =   2400
+               TabIndex        =   76
+               Top             =   1560
+               Width           =   855
+            End
+            Begin VB.Label Label2 
+               Caption         =   "Timeframe"
+               Height          =   255
+               Left            =   2400
+               TabIndex        =   75
+               Top             =   0
+               Width           =   735
+            End
+            Begin VB.Label Label3 
+               Caption         =   "# history bars"
+               Height          =   255
+               Left            =   2400
+               TabIndex        =   74
+               Top             =   600
+               Width           =   975
+            End
+         End
+      End
+      Begin VB.TextBox CurrentConfigNameText 
+         Height          =   285
+         Left            =   -64560
+         Locked          =   -1  'True
+         TabIndex        =   64
+         TabStop         =   0   'False
+         Top             =   1140
+         Width           =   3615
+      End
       Begin TradeSkilDemo26.ConfigManager ConfigManager1 
          Height          =   4095
          Left            =   -74880
@@ -364,12 +489,12 @@ Begin VB.Form fTradeSkilDemo
       End
       Begin VB.ComboBox ReplaySpeedCombo 
          Height          =   315
-         ItemData        =   "fTradeSkilDemo.frx":008C
+         ItemData        =   "fTradeSkilDemo.frx":00A8
          Left            =   -73800
-         List            =   "fTradeSkilDemo.frx":008E
+         List            =   "fTradeSkilDemo.frx":00AA
          Style           =   2  'Dropdown List
          TabIndex        =   17
-         Top             =   2400
+         Top             =   2460
          Width           =   2775
       End
       Begin VB.ListBox TickfileList 
@@ -377,7 +502,7 @@ Begin VB.Form fTradeSkilDemo
          Left            =   -74400
          TabIndex        =   52
          TabStop         =   0   'False
-         Top             =   600
+         Top             =   660
          Width           =   6855
       End
       Begin VB.CommandButton StopReplayButton 
@@ -387,7 +512,7 @@ Begin VB.Form fTradeSkilDemo
          Left            =   -68160
          TabIndex        =   21
          ToolTipText     =   "Stop tickfile replay"
-         Top             =   2280
+         Top             =   2340
          Width           =   615
       End
       Begin VB.CommandButton PauseReplayButton 
@@ -397,7 +522,7 @@ Begin VB.Form fTradeSkilDemo
          Left            =   -69600
          TabIndex        =   19
          ToolTipText     =   "Pause tickfile replay"
-         Top             =   2280
+         Top             =   2340
          Width           =   615
       End
       Begin VB.CommandButton ClearTickfileListButton 
@@ -407,7 +532,7 @@ Begin VB.Form fTradeSkilDemo
          Left            =   -67440
          TabIndex        =   16
          ToolTipText     =   "Clear tickfile list"
-         Top             =   1080
+         Top             =   1140
          Width           =   495
       End
       Begin VB.CommandButton SelectTickfilesButton 
@@ -416,7 +541,7 @@ Begin VB.Form fTradeSkilDemo
          Left            =   -67440
          TabIndex        =   15
          ToolTipText     =   "Select tickfile(s)"
-         Top             =   600
+         Top             =   660
          Width           =   495
       End
       Begin VB.CommandButton PlayTickFileButton 
@@ -426,7 +551,7 @@ Begin VB.Form fTradeSkilDemo
          Left            =   -70320
          TabIndex        =   18
          ToolTipText     =   "Start or resume tickfile replay"
-         Top             =   2280
+         Top             =   2340
          Width           =   615
       End
       Begin VB.CommandButton SkipReplayButton 
@@ -436,7 +561,7 @@ Begin VB.Form fTradeSkilDemo
          Left            =   -68880
          TabIndex        =   20
          ToolTipText     =   "Pause tickfile replay"
-         Top             =   2280
+         Top             =   2340
          Width           =   615
       End
       Begin VB.CommandButton ConfigureButton 
@@ -445,7 +570,7 @@ Begin VB.Form fTradeSkilDemo
          Left            =   -64560
          TabIndex        =   25
          ToolTipText     =   "Set this configuration"
-         Top             =   480
+         Top             =   420
          Width           =   1815
       End
       Begin VB.PictureBox Picture3 
@@ -599,32 +724,32 @@ Begin VB.Form fTradeSkilDemo
          Height          =   495
          Left            =   -62280
          TabIndex        =   12
-         Top             =   360
+         Top             =   420
          Width           =   975
       End
-      Begin VB.CommandButton CancelOrderButton 
+      Begin VB.CommandButton CancelOrderPlexButton 
          Caption         =   "&Cancel"
          Enabled         =   0   'False
          Height          =   495
          Left            =   -62280
          TabIndex        =   14
-         Top             =   1560
+         Top             =   1620
          Width           =   975
       End
-      Begin VB.CommandButton ModifyOrderButton 
+      Begin VB.CommandButton ModifyOrderPlexButton 
          Caption         =   "&Modify"
          Enabled         =   0   'False
          Height          =   495
          Left            =   -62280
          TabIndex        =   13
-         Top             =   960
+         Top             =   1020
          Width           =   975
       End
       Begin MSComctlLib.ProgressBar ReplayProgressBar 
          Height          =   135
          Left            =   -74400
          TabIndex        =   53
-         Top             =   3120
+         Top             =   3180
          Visible         =   0   'False
          Width           =   6855
          _ExtentX        =   12091
@@ -633,18 +758,26 @@ Begin VB.Form fTradeSkilDemo
          BorderStyle     =   1
          Appearance      =   0
       End
+      Begin VB.Label Label1 
+         Caption         =   "Current configuration is:"
+         Height          =   375
+         Left            =   -64560
+         TabIndex        =   63
+         Top             =   1260
+         Width           =   2295
+      End
       Begin VB.Label ReplayContractLabel 
          Height          =   975
          Left            =   -74400
          TabIndex        =   56
-         Top             =   3360
+         Top             =   3420
          Width           =   6855
       End
       Begin VB.Label ReplayProgressLabel 
          Height          =   255
          Left            =   -74400
          TabIndex        =   57
-         Top             =   2880
+         Top             =   2940
          Width           =   6855
       End
       Begin VB.Label Label20 
@@ -652,7 +785,7 @@ Begin VB.Form fTradeSkilDemo
          Height          =   375
          Left            =   -74400
          TabIndex        =   55
-         Top             =   2400
+         Top             =   2460
          Width           =   615
       End
       Begin VB.Label Label19 
@@ -660,7 +793,7 @@ Begin VB.Form fTradeSkilDemo
          Height          =   255
          Left            =   -74280
          TabIndex        =   54
-         Top             =   360
+         Top             =   420
          Width           =   1455
       End
    End
@@ -827,6 +960,7 @@ Private Enum TabIndexNumbers
     TabIndexOrders
     TabIndexExecutions
     TabIndexReplayTickfiles
+    TabIndexHistoricalCharts
 End Enum
 
 '================================================================================
@@ -841,8 +975,6 @@ Private mClp                                    As CommandLineParser
 
 Private WithEvents mTradeBuildAPI               As TradeBuildAPI
 Attribute mTradeBuildAPI.VB_VarHelpID = -1
-
-Private mSimulateOrders                         As Boolean
 
 Private WithEvents mTickers                     As Tickers
 Attribute mTickers.VB_VarHelpID = -1
@@ -906,6 +1038,10 @@ TickerGrid1.monitorWorkspace mTradeBuildAPI.defaultWorkSpace
 setupReplaySpeedCombo
 
 configure
+
+FromDatePicker.value = DateAdd("m", -1, Now)
+FromDatePicker.value = Empty    ' clear the checkbox
+ToDatePicker.value = Now
 
 Exit Sub
 
@@ -986,14 +1122,14 @@ End Sub
 ' Form Control Event Handlers
 '================================================================================
 
-Private Sub CancelOrderButton_Click()
+Private Sub CancelOrderPlexButton_Click()
 Dim op As OrderPlex
 
 Set op = OrdersSummary1.SelectedItem
-If Not op Is Nothing Then op.cancel
+If Not op Is Nothing Then op.cancel True
 
-CancelOrderButton.Enabled = False
-ModifyOrderButton.Enabled = False
+CancelOrderPlexButton.Enabled = False
+ModifyOrderPlexButton.Enabled = False
 End Sub
 
 Private Sub ChartButton_Click()
@@ -1068,6 +1204,56 @@ For Each lTicker In TickerGrid1.SelectedTickers
 Next
 End Sub
 
+Private Sub HistChartButton_Click()
+Dim lTicker As Ticker
+Dim fromDate As Date
+Dim toDate As Date
+Dim chartForm As fChart2
+
+Set lTicker = mTickers.Add(TickerOptions.TickerOptUseExchangeTimeZone)
+lTicker.loadTicker HistContractSpecBuilder.contractSpecifier
+
+HistContractSpecBuilder.SetFocus
+
+If IsNull(FromDatePicker.value) Then
+    fromDate = CDate(0)
+Else
+    fromDate = DateSerial(FromDatePicker.Year, FromDatePicker.Month, FromDatePicker.Day) + _
+                TimeSerial(FromDatePicker.Hour, FromDatePicker.Minute, 0)
+End If
+
+If IsNull(ToDatePicker.value) Then
+    toDate = Now
+Else
+    toDate = DateSerial(ToDatePicker.Year, ToDatePicker.Month, ToDatePicker.Day) + _
+                TimeSerial(ToDatePicker.Hour, ToDatePicker.Minute, 0)
+End If
+
+Set chartForm = New fChart2
+chartForm.showHistoricalChart lTicker, _
+                    NumHistBarsText, _
+                    fromDate, _
+                    toDate, _
+                    IIf(HistSessionOnlyCheck = vbChecked, False, True), _
+                    20, _
+                    HistTimeframeSelector.timeframeDesignator.length, _
+                    HistTimeframeSelector.timeframeDesignator.units
+chartForm.Show vbModeless
+chartForm.Visible = True
+End Sub
+
+Private Sub HistContractSpecBuilder_NotReady()
+HistChartButton.Enabled = False
+End Sub
+
+Private Sub HistContractSpecBuilder_ready()
+HistChartButton.Enabled = True
+End Sub
+
+Private Sub HistTimeframeSelector_Change()
+setHistChartButtonTooltip
+End Sub
+
 Private Sub MainSSTAB_Click(PreviousTab As Integer)
 If MainSSTAB.Tab = TabIndexTickers Then
     ContractSpecBuilder1.SetFocus
@@ -1076,10 +1262,10 @@ ElseIf MainSSTAB.Tab = TabIndexConfiguration Then
 ElseIf MainSSTAB.Tab = TabIndexOrders Then
     If OrderButton.Enabled Then
         OrderButton.SetFocus
-    ElseIf ModifyOrderButton.Enabled Then
-        ModifyOrderButton.SetFocus
-    ElseIf CancelOrderButton.Enabled Then
-        CancelOrderButton.SetFocus
+    ElseIf ModifyOrderPlexButton.Enabled Then
+        ModifyOrderPlexButton.SetFocus
+    ElseIf CancelOrderPlexButton.Enabled Then
+        CancelOrderPlexButton.SetFocus
     End If
 ElseIf MainSSTAB.Tab = TabIndexReplayTickfiles Then
     If mTickfileManager Is Nothing Then
@@ -1089,6 +1275,8 @@ ElseIf MainSSTAB.Tab = TabIndexReplayTickfiles Then
     ElseIf StopReplayButton.Enabled Then
         StopReplayButton.SetFocus
     End If
+ElseIf MainSSTAB.Tab = TabIndexHistoricalCharts Then
+    HistContractSpecBuilder.SetFocus
 End If
 End Sub
 
@@ -1096,17 +1284,21 @@ Private Sub MarketDepthButton_Click()
 showMarketDepthForm mTicker
 End Sub
 
-Private Sub ModifyOrderButton_Click()
+Private Sub ModifyOrderPlexButton_Click()
 Dim op As OrderPlex
 
 Set op = OrdersSummary1.SelectedItem
 If op Is Nothing Then
-    ModifyOrderButton.Enabled = False
+    ModifyOrderPlexButton.Enabled = False
 ElseIf OrdersSummary1.isSelectedItemModifiable Then
     If mOrderForm Is Nothing Then Set mOrderForm = New OrderForm
     mOrderForm.Show vbModeless
     mOrderForm.showOrderPlex op, OrdersSummary1.selectedOrderIndex
 End If
+End Sub
+
+Private Sub NumHistBarsText_Validate(cancel As Boolean)
+If Not IsInteger(NumHistBarsText.Text, 0, 2000) Then cancel = True
 End Sub
 
 Private Sub NumHistoryBarsText_Validate(cancel As Boolean)
@@ -1129,12 +1321,18 @@ Dim selection As OrderPlex
 Set selection = OrdersSummary1.SelectedItem
 
 If selection Is Nothing Then
-    CancelOrderButton.Enabled = False
-    ModifyOrderButton.Enabled = False
+    CancelOrderPlexButton.Enabled = False
+    ModifyOrderPlexButton.Enabled = False
 Else
-    CancelOrderButton.Enabled = True
+    If OrdersSummary1.selectedOrderIndex = 0 Then
+        CancelOrderPlexButton.Enabled = True
+    Else
+        CancelOrderPlexButton.Enabled = False
+    End If
     If OrdersSummary1.isSelectedItemModifiable Then
-        ModifyOrderButton.Enabled = True
+        ModifyOrderPlexButton.Enabled = True
+    Else
+        ModifyOrderPlexButton.Enabled = False
     End If
 End If
 End Sub
@@ -1664,25 +1862,25 @@ loadAppConfig configToLoad
 End Sub
 
 Private Sub createChart(ByVal pTicker As Ticker)
-Dim chartform As fChart2
+Dim chartForm As fChart2
 Dim tp As TimePeriod
 
 If Not pTicker.State = TickerStateRunning Then Exit Sub
 
 tp = TimeframeSelector1.timeframeDesignator
-Set chartform = New fChart2
-chartform.showChart pTicker, _
+Set chartForm = New fChart2
+chartForm.showChart pTicker, _
                     NumHistoryBarsText, _
                     IIf(SessionOnlyCheck = vbChecked, False, True), _
                     20, _
                     tp.length, _
                     tp.units
-chartform.Show vbModeless
-chartform.Visible = True
+chartForm.Show vbModeless
+chartForm.Visible = True
 End Sub
 
 Private Function createTicker() As Ticker
-Set createTicker = mTickers.Add(IIf(Not mSimulateOrders, TickerOptions.TickerOptOrdersAreLive, 0) + _
+Set createTicker = mTickers.Add(TickerOptions.TickerOptOrdersAreLive + _
                                 TickerOptions.TickerOptUseExchangeTimeZone)
 End Function
 
@@ -1807,12 +2005,16 @@ Then
     Exit Sub
 End If
 
-' now set up the timeframe selector, which depends on what timeframes the historical data service
+' now set up the timeframe selectors, which depends on what timeframes the historical data service
 ' provider supports (it obtains this info from TradeBuild)
 TimeframeSelector1.initialise   ' use the default settings built-in to the control
+HistTimeframeSelector.initialise
+
 setChartButtonTooltip
+setHistChartButtonTooltip
 
 logMessage "Loaded configuration: " & mLoadedConfig.getAttribute(AttributeNameAppConfigName)
+CurrentConfigNameText = mLoadedConfig.getAttribute(AttributeNameAppConfigName)
 End Sub
 
 Private Sub logMessage(message As String)
@@ -1865,6 +2067,16 @@ If change = ValueChangeUp Then
 ElseIf change = ValueChangeDown Then
     pControl.ForeColor = DecreasedValueColor
 End If
+End Sub
+
+Private Sub setHistChartButtonTooltip()
+Dim tp As TimePeriod
+
+tp = HistTimeframeSelector.timeframeDesignator
+
+HistChartButton.ToolTipText = "Show " & _
+                        TimePeriodToString(tp) & _
+                        " chart"
 End Sub
 
 Private Sub setupReplaySpeedCombo()

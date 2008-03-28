@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#54.1#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#62.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fChart2 
    ClientHeight    =   6780
    ClientLeft      =   60
@@ -99,12 +99,14 @@ Private mCurrentHigh As String
 Private mCurrentLow As String
 Private mPreviousClose As String
 
+Private mIsHistorical As Boolean
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
 
 Private Sub Form_Activate()
-gSyncStudyPicker TradeBuildChart1.chartManager, _
+gSyncStudyPicker TradeBuildChart1.ChartManager, _
                 "Study picker for " & mSymbol & _
                 " (" & mPeriodlength & " " & TimeframeUtils.TimePeriodUnitsToString(mPeriodUnits) & ")"
 End Sub
@@ -129,6 +131,7 @@ End If
 End Sub
 
 Private Sub Form_Unload(cancel As Integer)
+If mIsHistorical Then mTicker.StopTicker
 Set mTicker = Nothing
 gUnsyncStudyPicker
 TradeBuildChart1.finish
@@ -141,7 +144,7 @@ End Sub
 Private Sub Toolbar1_ButtonClick(ByVal Button As MSComctlLib.Button)
 Select Case Button.Key
 Case "studies"
-    gShowStudyPicker TradeBuildChart1.chartManager, _
+    gShowStudyPicker TradeBuildChart1.ChartManager, _
                     mSymbol & _
                     " (" & mPeriodlength & " " & TimeframeUtils.TimePeriodUnitsToString(mPeriodUnits) & ")"
 End Select
@@ -176,6 +179,14 @@ mPreviousClose = ev.priceString
 setCaption
 End Sub
 
+Private Sub mTicker_stateChange( _
+                ByRef ev As TWUtilities30.StateChangeEvent)
+If ev.State = TickerStates.TickerStateReady Then
+    mSymbol = mTicker.Contract.specifier.localSymbol
+    setCaption
+End If
+End Sub
+
 Private Sub mTicker_trade(ev As QuoteEvent)
 mCurrentTrade = ev.priceString
 setCaption
@@ -202,6 +213,7 @@ Friend Sub showChart( _
                 ByVal periodlength As Long, _
                 ByVal periodUnits As TimePeriodUnits)
 
+mIsHistorical = False
 
 Set mTicker = pTicker
 mSymbol = mTicker.Contract.specifier.localSymbol
@@ -227,19 +239,56 @@ setCaption
 
 End Sub
 
+Friend Sub showHistoricalChart( _
+                ByVal pTicker As Ticker, _
+                ByVal initialNumberOfBars As Long, _
+                ByVal fromDate As Date, _
+                ByVal toDate As Date, _
+                ByVal includeBarsOutsideSession As Boolean, _
+                ByVal minimumTicksHeight As Long, _
+                ByVal periodlength As Long, _
+                ByVal periodUnits As TimePeriodUnits)
+
+mIsHistorical = True
+
+Set mTicker = pTicker
+
+mPeriodlength = periodlength
+mPeriodUnits = periodUnits
+
+TradeBuildChart1.showHistoricChart mTicker, _
+                        initialNumberOfBars, _
+                        fromDate, _
+                        toDate, _
+                        includeBarsOutsideSession, _
+                        minimumTicksHeight, _
+                        mPeriodlength, _
+                        mPeriodUnits
+
+End Sub
+
 '================================================================================
 ' Helper Functions
 '================================================================================
 
 Private Sub setCaption()
-Me.caption = mSymbol & _
-            " (" & mPeriodlength & " " & TimePeriodUnitsToString(mPeriodUnits) & ")" & _
-            "    B=" & mCurrentBid & _
-            "  T=" & mCurrentTrade & _
-            "  A=" & mCurrentAsk & _
-            "  V=" & mCurrentVolume & _
-            "  H=" & mCurrentHigh & _
-            "  L=" & mCurrentLow & _
-            "  C=" & mPreviousClose
+Dim s As String
 
+s = mSymbol & _
+    " (" & mPeriodlength & " " & TimePeriodUnitsToString(mPeriodUnits) & ")"
+    
+If mIsHistorical Then
+    s = s & _
+        "    (historical)"
+Else
+    s = s & _
+        "    B=" & mCurrentBid & _
+        "  T=" & mCurrentTrade & _
+        "  A=" & mCurrentAsk & _
+        "  V=" & mCurrentVolume & _
+        "  H=" & mCurrentHigh & _
+        "  L=" & mCurrentLow & _
+        "  C=" & mPreviousClose
+End If
+Me.caption = s
 End Sub
