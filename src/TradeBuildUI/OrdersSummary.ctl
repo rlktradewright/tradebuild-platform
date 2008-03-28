@@ -325,12 +325,12 @@ If TypeOf ev.Source Is OrderPlex Then
             End If
             
             addOrderEntryToOrderPlexGrid .gridIndex + .closeoutGridOffset, _
-                                    .op.Contract.specifier.symbol, _
+                                    .op.Contract.specifier.localSymbol, _
                                     op.closeoutOrder, _
                                     opIndex, _
                                     "Closeout"
         Case OrderPlexChangeTypes.OrderPlexCloseoutOrderChanged
-            displayOrderValuesInOrderPlexGrid .gridIndex + .targetGridOffset, _
+            displayOrderValuesInOrderPlexGrid .gridIndex + .closeoutGridOffset, _
                                                 op.closeoutOrder
         Case OrderPlexChangeTypes.OrderPlexProfitThresholdExceeded
     
@@ -523,30 +523,29 @@ Else
             invertEntryColors mSelectedOrderPlexGridRow
             
             mSelectedOrderIndex = mSelectedOrderPlexGridRow - mOrderPlexGridMappingTable(index).gridIndex
-            If mSelectedOrderIndex = 0 Then Exit Sub
-            
-            Set selectedOrder = op.Order(mSelectedOrderIndex)
-            If selectedOrder.isModifiable Then
-                If (OrderPlexGrid.MouseCol = OPGridOrderColumns.price And _
-                        selectedOrder.isAttributeModifiable(OrderAttributeIds.OrderAttLimitPrice)) Or _
-                    (OrderPlexGrid.MouseCol = OPGridOrderColumns.auxPrice And _
-                        selectedOrder.isAttributeModifiable(OrderAttributeIds.OrderAttTriggerPrice)) Or _
-                    (OrderPlexGrid.MouseCol = OPGridOrderColumns.quantityRemaining And _
-                    selectedOrder.isAttributeModifiable(OrderAttributeIds.OrderAttQuantity)) _
-                Then
-                    OrderPlexGrid.col = OrderPlexGrid.MouseCol
-                    EditText.Move OrderPlexGrid.Left + OrderPlexGrid.CellLeft + 8, _
-                                OrderPlexGrid.Top + OrderPlexGrid.CellTop + 8, _
-                                OrderPlexGrid.CellWidth - 16, _
-                                OrderPlexGrid.CellHeight - 16
-                    EditText.Text = OrderPlexGrid.Text
-                    EditText.SelStart = 0
-                    EditText.SelLength = Len(EditText.Text)
-                    EditText.Visible = True
-                    EditText.SetFocus
+            If mSelectedOrderIndex <> 0 Then
+                Set selectedOrder = op.Order(mSelectedOrderIndex)
+                If selectedOrder.isModifiable Then
+                    If (OrderPlexGrid.MouseCol = OPGridOrderColumns.price And _
+                            selectedOrder.isAttributeModifiable(OrderAttributeIds.OrderAttLimitPrice)) Or _
+                        (OrderPlexGrid.MouseCol = OPGridOrderColumns.auxPrice And _
+                            selectedOrder.isAttributeModifiable(OrderAttributeIds.OrderAttTriggerPrice)) Or _
+                        (OrderPlexGrid.MouseCol = OPGridOrderColumns.quantityRemaining And _
+                        selectedOrder.isAttributeModifiable(OrderAttributeIds.OrderAttQuantity)) _
+                    Then
+                        OrderPlexGrid.col = OrderPlexGrid.MouseCol
+                        EditText.Move OrderPlexGrid.Left + OrderPlexGrid.CellLeft + 8, _
+                                    OrderPlexGrid.Top + OrderPlexGrid.CellTop + 8, _
+                                    OrderPlexGrid.CellWidth - 16, _
+                                    OrderPlexGrid.CellHeight - 16
+                        EditText.Text = OrderPlexGrid.Text
+                        EditText.SelStart = 0
+                        EditText.SelLength = Len(EditText.Text)
+                        EditText.Visible = True
+                        EditText.SetFocus
+                    End If
                 End If
             End If
-            
         End If
     End If
 End If
@@ -573,6 +572,8 @@ End Sub
 
 Public Property Get isSelectedItemModifiable() As Boolean
 Dim selectedOrder As Order
+
+If mSelectedOrderIndex = 0 Then Exit Property
 
 Set selectedOrder = mSelectedOrderPlex.Order(mSelectedOrderIndex)
 If Not selectedOrder Is Nothing Then
