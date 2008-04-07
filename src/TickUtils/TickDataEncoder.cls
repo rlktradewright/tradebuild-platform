@@ -85,7 +85,10 @@ Private Const ModuleName                    As String = "TickDataEncoder"
 '
 ' This value must be stored by the application in addition to the encoded data itself,
 ' because it has to be passed to the decoder to enable the data to be correctly decoded.
-' @return The first price recorded in the data encoded by this encoder.
+' @return The first price recorded in the data encoded by this encoder. Note that
+'   if there are no ticks with prices during the encoding period, the value returned is
+'   the maximum positive value that can be held in a 64-bit floating point number, ie
+'   (2-2<sup>-52</sup>)&middot;2<sup>1023</sup>.
 '@/
 Public Property Get basePrice() As Double
 End Property
