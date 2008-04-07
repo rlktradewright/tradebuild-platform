@@ -465,7 +465,7 @@ Set mTickWriter = mInstrument.CreateTickDataWriter
 
 mTickWriter.WriteData mTde.encodingFormatIdentifier, _
                             mTde.periodStartTime, _
-                            mTde.basePrice, _
+                            IIf(mTde.basePrice = MaxDouble, 0#, mTde.basePrice), _
                             mTde.ticksize, _
                             mTde.encodedData, _
                             Not mUseSynchronousWrites

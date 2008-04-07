@@ -8,27 +8,29 @@ Option Explicit
 Private Const ProjectName               As String = "TBInfoBase26"
 Private Const ModuleName                As String = "Globals"
 
-Public Const OneMicrosecond As Double = 1# / 86400000000#
-Public Const OneMinute As Double = 1# / 1440#
+Public Const OneMicrosecond             As Double = 1# / 86400000000#
+Public Const OneMinute                  As Double = 1# / 1440#
 
 Public Const TickfileFormatTradeBuildSQL As String = "urn:tradewright.com:names.tickfileformats.TradeBuildSQL"
 
-Public Const ContractInfoSPName As String = "TradeBuild SQLDB Contract Info Service Provider"
-Public Const HistoricDataSPName As String = "TradeBuild SQLDB Historic Data Service Provider"
-Public Const SQLDBTickfileSPName As String = "TradeBuild SQLDB Tickfile Service Provider"
+Public Const ContractInfoSPName         As String = "TradeBuild SQLDB Contract Info Service Provider"
+Public Const HistoricDataSPName         As String = "TradeBuild SQLDB Historic Data Service Provider"
+Public Const SQLDBTickfileSPName        As String = "TradeBuild SQLDB Tickfile Service Provider"
 
-Public Const MaxLong As Long = &H7FFFFFFF
+Public Const MaxLong                    As Long = &H7FFFFFFF
 
-Public Const ProviderKey As String = "TradeBuild"
+Public Const MaxDouble                  As Double = (2 - 2 ^ -52) * 2 ^ 1023
 
-Public Const ParamNameAccessMode As String = "Access Mode"
-Public Const ParamNameConnectionString As String = "Connection String"
-Public Const ParamNameDatabaseType As String = "Database Type"
-Public Const ParamNameDatabaseName As String = "Database Name"
-Public Const ParamNamePassword As String = "Password"
-Public Const ParamNameRole As String = "Role"
-Public Const ParamNameServer As String = "Server"
-Public Const ParamNameUserName As String = "User Name"
+Public Const ProviderKey                As String = "TradeBuild"
+
+Public Const ParamNameAccessMode        As String = "Access Mode"
+Public Const ParamNameConnectionString  As String = "Connection String"
+Public Const ParamNameDatabaseType      As String = "Database Type"
+Public Const ParamNameDatabaseName      As String = "Database Name"
+Public Const ParamNamePassword          As String = "Password"
+Public Const ParamNameRole              As String = "Role"
+Public Const ParamNameServer            As String = "Server"
+Public Const ParamNameUserName          As String = "User Name"
 Public Const ParamNameUseSynchronousWrites As String = "Use Synchronous Writes"
 
 
