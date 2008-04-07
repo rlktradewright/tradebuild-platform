@@ -2,7 +2,6 @@ VERSION 5.00
 Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDATGRD.OCX"
 Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#27.5#0"; "TWControls10.ocx"
 Begin VB.UserControl SPConfigurer 
-   BackStyle       =   0  'Transparent
    ClientHeight    =   12750
    ClientLeft      =   0
    ClientTop       =   0
@@ -839,8 +838,18 @@ SpLogLevelCombo.Text = LogLevelLowString
 
 End Sub
 
+Private Sub UserControl_InitProperties()
+UserControl.backColor = UserControl.Ambient.backColor
+UserControl.foreColor = UserControl.Ambient.foreColor
+End Sub
+
 Private Sub UserControl_LostFocus()
 checkForOutstandingUpdates
+End Sub
+
+Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
+UserControl.backColor = UserControl.Ambient.backColor
+UserControl.foreColor = UserControl.Ambient.foreColor
 End Sub
 
 Private Sub UserControl_Resize()

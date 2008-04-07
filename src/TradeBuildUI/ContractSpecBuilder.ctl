@@ -1,7 +1,6 @@
 VERSION 5.00
 Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#27.5#0"; "TWControls10.ocx"
 Begin VB.UserControl ContractSpecBuilder 
-   BackStyle       =   0  'Transparent
    ClientHeight    =   2835
    ClientLeft      =   0
    ClientTop       =   0
@@ -289,6 +288,9 @@ End Sub
 Private Sub UserControl_InitProperties()
 On Error Resume Next
 
+UserControl.backColor = UserControl.Ambient.backColor
+UserControl.foreColor = UserControl.Ambient.foreColor
+
 backColor = PropDfltBackColor
 foreColor = PropDfltForeColor
 End Sub
@@ -296,6 +298,9 @@ End Sub
 Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
 
 On Error Resume Next
+
+UserControl.backColor = UserControl.Ambient.backColor
+UserControl.foreColor = UserControl.Ambient.foreColor
 
 backColor = PropBag.ReadProperty(PropNameBackColor, PropDfltBackColor)
 If Err.Number <> 0 Then
