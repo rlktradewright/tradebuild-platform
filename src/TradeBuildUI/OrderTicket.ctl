@@ -1,12 +1,12 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.UserControl OrderTicket 
-   ClientHeight    =   6165
+   ClientHeight    =   6195
    ClientLeft      =   0
    ClientTop       =   0
-   ClientWidth     =   8790
-   ScaleHeight     =   6165
-   ScaleWidth      =   8790
+   ClientWidth     =   8730
+   ScaleHeight     =   6195
+   ScaleWidth      =   8730
    Begin VB.Frame Frame2 
       Caption         =   "Ticker"
       Height          =   1815
@@ -640,6 +640,7 @@ Begin VB.UserControl OrderTicket
       _ExtentX        =   12938
       _ExtentY        =   9313
       MultiRow        =   -1  'True
+      HotTracking     =   -1  'True
       _Version        =   393216
       BeginProperty Tabs {1EFB6598-857C-11D1-B16A-00C0F0283628} 
          NumTabs         =   3
