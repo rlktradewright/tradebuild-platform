@@ -280,11 +280,11 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(0)   =   "&1. Configuration"
       TabPicture(0)   =   "fTradeSkilDemo.frx":0000
       Tab(0).ControlEnabled=   0   'False
-      Tab(0).Control(0)=   "CurrentConfigNameText"
-      Tab(0).Control(0).Enabled=   0   'False
-      Tab(0).Control(1)=   "ConfigManager1"
-      Tab(0).Control(2)=   "ConfigureButton"
-      Tab(0).Control(3)=   "Label1"
+      Tab(0).Control(0)=   "Label1"
+      Tab(0).Control(1)=   "ConfigureButton"
+      Tab(0).Control(2)=   "ConfigManager1"
+      Tab(0).Control(3)=   "CurrentConfigNameText"
+      Tab(0).Control(3).Enabled=   0   'False
       Tab(0).ControlCount=   4
       TabCaption(1)   =   "&2. Tickers"
       TabPicture(1)   =   "fTradeSkilDemo.frx":001C
@@ -295,10 +295,10 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(2)   =   "&3. Orders"
       TabPicture(2)   =   "fTradeSkilDemo.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "OrdersSummary1"
-      Tab(2).Control(1)=   "OrderButton"
-      Tab(2).Control(2)=   "CancelOrderPlexButton"
-      Tab(2).Control(3)=   "ModifyOrderPlexButton"
+      Tab(2).Control(0)=   "ModifyOrderPlexButton"
+      Tab(2).Control(1)=   "CancelOrderPlexButton"
+      Tab(2).Control(2)=   "OrderButton"
+      Tab(2).Control(3)=   "OrdersSummary1"
       Tab(2).ControlCount=   4
       TabCaption(3)   =   "&4. Executions"
       TabPicture(3)   =   "fTradeSkilDemo.frx":0054
@@ -308,20 +308,20 @@ Begin VB.Form fTradeSkilDemo
       TabCaption(4)   =   "&5. Replay tickfiles"
       TabPicture(4)   =   "fTradeSkilDemo.frx":0070
       Tab(4).ControlEnabled=   0   'False
-      Tab(4).Control(0)=   "ReplaySpeedCombo"
-      Tab(4).Control(1)=   "TickfileList"
-      Tab(4).Control(1).Enabled=   0   'False
-      Tab(4).Control(2)=   "StopReplayButton"
-      Tab(4).Control(3)=   "PauseReplayButton"
-      Tab(4).Control(4)=   "ClearTickfileListButton"
-      Tab(4).Control(5)=   "SelectTickfilesButton"
+      Tab(4).Control(0)=   "Label19"
+      Tab(4).Control(1)=   "Label20"
+      Tab(4).Control(2)=   "ReplayProgressLabel"
+      Tab(4).Control(3)=   "ReplayContractLabel"
+      Tab(4).Control(4)=   "ReplayProgressBar"
+      Tab(4).Control(5)=   "SkipReplayButton"
       Tab(4).Control(6)=   "PlayTickFileButton"
-      Tab(4).Control(7)=   "SkipReplayButton"
-      Tab(4).Control(8)=   "ReplayProgressBar"
-      Tab(4).Control(9)=   "ReplayContractLabel"
-      Tab(4).Control(10)=   "ReplayProgressLabel"
-      Tab(4).Control(11)=   "Label20"
-      Tab(4).Control(12)=   "Label19"
+      Tab(4).Control(7)=   "SelectTickfilesButton"
+      Tab(4).Control(8)=   "ClearTickfileListButton"
+      Tab(4).Control(9)=   "PauseReplayButton"
+      Tab(4).Control(10)=   "StopReplayButton"
+      Tab(4).Control(11)=   "TickfileList"
+      Tab(4).Control(11).Enabled=   0   'False
+      Tab(4).Control(12)=   "ReplaySpeedCombo"
       Tab(4).ControlCount=   13
       TabCaption(5)   =   "&6. Historical charts"
       TabPicture(5)   =   "fTradeSkilDemo.frx":008C
@@ -400,7 +400,7 @@ Begin VB.Form fTradeSkilDemo
                _Version        =   393216
                CheckBox        =   -1  'True
                CustomFormat    =   "yyy-MM-dd HH:mm"
-               Format          =   20643843
+               Format          =   20578307
                CurrentDate     =   39365
             End
             Begin MSComCtl2.DTPicker FromDatePicker 
@@ -414,7 +414,7 @@ Begin VB.Form fTradeSkilDemo
                _Version        =   393216
                CheckBox        =   -1  'True
                CustomFormat    =   "yyy-MM-dd HH:mm"
-               Format          =   20643843
+               Format          =   20578307
                CurrentDate     =   39365
             End
             Begin VB.Label Label5 
@@ -926,29 +926,16 @@ Implements LogListener
 ' Constants
 '================================================================================
     
-Private Const AppName                       As String = "TradeSkil Demo Edition"
-
 Private Const AttributeNameAppConfigName    As String = "Name"
 
 Private Const ConfigNameTradeBuild          As String = "TradeBuild"
 
 Private Const DefaultConfigName             As String = "Default config"
 
-' command line switch indicating which configuration to load
-' when the programs starts (if not specified, the default configuration
-' is loaded)
-Private Const SwitchConfig                  As String = "config"
-
-' command line switch specifying the log filename
-Private Const SwitchLogFilename             As String = "log"
-
-' command line switch specifying the loglevel
-Private Const SwitchLogLevel                As String = "loglevel"
-
 ' This is a locally defined 'error' code that can be raised to indicate that
 ' the program should exit because of some condition. Before raising it,
 ' the user must be notified via a suitable message.
-Private Const UnloadNotifyException         As Long = vbObjectError + 512
+'Private Const UnloadNotifyException         As Long = vbObjectError + 512
 
 '================================================================================
 ' Enums
@@ -971,8 +958,6 @@ End Enum
 ' Member variables
 '================================================================================
 
-Private mClp                                    As CommandLineParser
-
 Private WithEvents mTradeBuildAPI               As TradeBuildAPI
 Attribute mTradeBuildAPI.VB_VarHelpID = -1
 
@@ -984,16 +969,8 @@ Attribute mTicker.VB_VarHelpID = -1
 Private WithEvents mTickfileManager             As TickFileManager
 Attribute mTickfileManager.VB_VarHelpID = -1
 
-Private mOrderForm                              As OrderForm
-Attribute mOrderForm.VB_VarHelpID = -1
-
-Private mDefaultClock                           As Clock
 Private WithEvents mCurrentClock                As Clock
 Attribute mCurrentClock.VB_VarHelpID = -1
-
-Private mFormatter                              As LogFormatter
-
-Private mLoadedConfig                           As ConfigItem
 
 '================================================================================
 ' Form Event Handlers
@@ -1002,7 +979,6 @@ Private mLoadedConfig                           As ConfigItem
 Private Sub Form_Initialize()
 ' ensure we get the Windows XP look and feel if running on XP
 InitCommonControls
-InitialiseTWUtilities
 End Sub
 
 Private Sub Form_Load()
@@ -1015,29 +991,19 @@ DefaultLogLevel = TWUtilities30.LogLevelNormal
 Me.Left = 0
 Me.Top = 0
 
-parseCommandLine
-
-showCommandLineOptions
-
-getLog
+setupLogging
 
 Set mTradeBuildAPI = TradeBuildAPI
 
 Set mTickers = mTradeBuildAPI.Tickers
 
-If Not ConfigManager1.initialise(getConfigFilename, App.ProductName) Then Exit Sub
-
-' create a clock running local time
-Set mDefaultClock = GetClock("")
-setCurrentClock mDefaultClock
+setCurrentClock getDefaultClock
 
 OrdersSummary1.monitorWorkspace mTradeBuildAPI.defaultWorkSpace
 ExecutionsSummary1.monitorWorkspace mTradeBuildAPI.defaultWorkSpace
 TickerGrid1.monitorWorkspace mTradeBuildAPI.defaultWorkSpace
 
 setupReplaySpeedCombo
-
-configure
 
 FromDatePicker.value = DateAdd("m", -1, Now)
 FromDatePicker.value = Empty    ' clear the checkbox
@@ -1050,10 +1016,6 @@ handleFatalError Err.Number, _
                 Err.Description, _
                 Err.source
 
-End Sub
-
-Private Sub Form_Terminate()
-TerminateTWUtilities
 End Sub
 
 Private Sub Form_QueryUnload( _
@@ -1075,6 +1037,10 @@ If ConfigManager1.dirty Then
         ConfigManager1.saveConfigFile
     End If
 End If
+End Sub
+
+Private Sub Form_Terminate()
+TerminateTWUtilities
 End Sub
 
 Private Sub Form_Unload(cancel As Integer)
@@ -1114,7 +1080,7 @@ Private Sub LogListener_Notify(ByVal logrec As TWUtilities30.LogRecord)
 LogText.SelStart = Len(LogText.Text)
 LogText.SelLength = 0
 If Len(LogText.Text) > 0 Then LogText.SelText = vbCrLf
-LogText.SelText = mFormatter.formatRecord(logrec)
+LogText.SelText = formatLogRecord(logrec)
 LogText.SelStart = InStrRev(LogText.Text, vbCrLf) + 2
 End Sub
 
@@ -1145,13 +1111,6 @@ PauseReplayButton.Enabled = False
 SkipReplayButton.Enabled = False
 StopReplayButton.Enabled = False
 ChartButton.Enabled = False
-End Sub
-
-Private Sub ConfigManager1_ConfigFileInvalid()
-MsgBox "The configuration file is not the correct format for this program", _
-        vbCritical, _
-        "Error"
-Unload Me
 End Sub
 
 Private Sub ConfigManager1_GotFocus()
@@ -1285,15 +1244,10 @@ showMarketDepthForm mTicker
 End Sub
 
 Private Sub ModifyOrderPlexButton_Click()
-Dim op As OrderPlex
-
-Set op = OrdersSummary1.SelectedItem
-If op Is Nothing Then
+If OrdersSummary1.SelectedItem Is Nothing Then
     ModifyOrderPlexButton.Enabled = False
 ElseIf OrdersSummary1.isSelectedItemModifiable Then
-    If mOrderForm Is Nothing Then Set mOrderForm = New OrderForm
-    mOrderForm.Show vbModeless
-    mOrderForm.showOrderPlex op, OrdersSummary1.selectedOrderIndex
+    getOrderForm.showOrderPlex OrdersSummary1.SelectedItem, OrdersSummary1.selectedOrderIndex
 End If
 End Sub
 
@@ -1310,9 +1264,7 @@ If mTicker Is Nothing Then
     MsgBox "No ticker selected - please select a ticker", vbExclamation, "Error"
     Exit Sub
 End If
-If mOrderForm Is Nothing Then Set mOrderForm = New OrderForm
-mOrderForm.Show vbModeless
-mOrderForm.Ticker = mTicker
+getOrderForm.Ticker = mTicker
 End Sub
 
 Private Sub OrdersSummary1_SelectionChanged()
@@ -1463,7 +1415,7 @@ Else
             CloseText = mTicker.closePriceString
         Else
             
-            setCurrentClock mDefaultClock
+            setCurrentClock getDefaultClock
             
             GridChartButton.Enabled = False
             GridMarketDepthButton.Enabled = False
@@ -1633,7 +1585,7 @@ Case TickerStateStopped
     If lTicker Is mTicker Then
         clearTickerFields
         Set mTicker = Nothing
-        setCurrentClock mDefaultClock
+        setCurrentClock getDefaultClock
     End If
     
     checkOkToLoadConfiguration
@@ -1670,7 +1622,7 @@ On Error GoTo Err
 If tickfileIndex <> 0 Then
     clearTickerFields
     Set mTicker = Nothing
-    setCurrentClock mDefaultClock
+    setCurrentClock getDefaultClock
 End If
 
 ReplayProgressBar.Min = 0
@@ -1784,6 +1736,24 @@ End Sub
 ' Methods
 '================================================================================
 
+Public Function configure() As Boolean
+On Error GoTo Err
+
+If getConfigToLoad() Is Nothing Then
+    ' put the user on the configuration tab
+    MainSSTAB.Tab = TabIndexConfiguration
+Else
+    loadAppConfig getConfigToLoad()
+End If
+
+configure = True
+
+Exit Function
+
+Err:
+configure = False
+End Function
+
 '================================================================================
 ' Helper Functions
 '================================================================================
@@ -1821,46 +1791,6 @@ CloseText = ""
 ChartButton.Enabled = False
 End Sub
 
-Private Sub configure()
-Dim configToLoad As ConfigItem
-
-Set configToLoad = getNamedConfig
-
-If configToLoad Is Nothing Then
-    Set configToLoad = ConfigManager1.selectedAppConfig
-End If
-
-If configToLoad Is Nothing Then
-    Set configToLoad = ConfigManager1.firstAppConfig
-End If
-
-If configToLoad Is Nothing Then
-    If MsgBox("No existing configuration details can be found. Would you like to " & vbCrLf & _
-                "proceed with a default configuration?" & vbCrLf & vbCrLf & _
-                "The default configuration will connect to TWS running on the " & vbCrLf & _
-                "same computer. It wll obtain contract data and historical data " & vbCrLf & _
-                "from TWS, and will simulate any orders placed." & vbCrLf & vbCrLf & _
-                "You may amend the default configuration by going to the " & vbCrLf & _
-                "Configuration tab." & vbCrLf & vbCrLf & _
-                "Click Yes to continue with the default configuration. Click No " & vbCrLf & _
-                "to manually set up the configuration you want.", _
-                vbYesNo Or vbQuestion, _
-                "Attention!") = vbYes _
-    Then
-        logMessage "Creating a new default configuration"
-        ConfigManager1.createNewAppConfig DefaultConfigName, True, True
-        Set configToLoad = ConfigManager1.appConfig(DefaultConfigName)
-    Else
-        ' put the user on the configuration tab
-        MainSSTAB.Tab = TabIndexConfiguration
-        Exit Sub
-    End If
-End If
-
-loadAppConfig configToLoad
-
-End Sub
-
 Private Sub createChart(ByVal pTicker As Ticker)
 Dim chartForm As fChart2
 Dim tp As TimePeriod
@@ -1891,9 +1821,15 @@ DateTimeText = FormatDateTime(theTime, vbShortDate) & vbCrLf & _
                 Format(theTime, "hh:mm:ss")
 End Sub
 
+Private Function formatLogRecord(ByVal logrec As LogRecord) As String
+Static formatter As LogFormatter
+If formatter Is Nothing Then Set formatter = CreateBasicLogFormatter(TimestampFormats.TimestampTimeOnlyLocal)
+formatLogRecord = formatter.formatRecord(logrec)
+End Function
+
 Private Function getConfigFilename() As String
 
-getConfigFilename = mClp.Arg(0)
+getConfigFilename = gCommandLineParser.Arg(0)
 If getConfigFilename = "" Then
     getConfigFilename = GetSpecialFolderPath(FolderIdLocalAppdata) & _
                         "\TradeWright\" & _
@@ -1904,68 +1840,88 @@ If getConfigFilename = "" Then
 End If
 End Function
 
-Private Sub getLog()
-Dim logFile As String
-Dim listener As LogListener
+Private Function getConfigToLoad() As ConfigItem
+Static configToLoad As ConfigItem
 
-On Error GoTo Err
-
-If mClp.Switch(SwitchLogFilename) Then logFile = mClp.SwitchValue(SwitchLogFilename)
-
-If mClp.Switch(SwitchLogLevel) Then DefaultLogLevel = LogLevelFromString(mClp.SwitchValue(SwitchLogLevel))
-
-If logFile = "" Then
-    logFile = GetSpecialFolderPath(FolderIdLocalAppdata) & _
-                        "\TradeWright\" & _
-                        AppName & _
-                        "\v" & _
-                        App.Major & "." & App.Minor & _
-                        "\log.txt"
-End If
-Set gLogger = GetLogger("log")
-gLogger.addLogListener Me   ' so that log entries of infotype 'log' will be written
-                            ' to the logging text box
-
-Set listener = CreateFileLogListener(logFile, _
-                                        CreateBasicLogFormatter, _
-                                        True, _
-                                        False)
-' ensure log entries of all infotypes get written to the log file
-GetLogger("").addLogListener listener
-
-Set mFormatter = CreateBasicLogFormatter(TimestampTimeOnlyLocal)
-
-gLogger.Log LogLevelNormal, "Log file: " & logFile
-gLogger.Log LogLevelNormal, "Log level: " & LogLevelToString(DefaultLogLevel)
-
-Exit Sub
-
-Err:
-If Err.Number = ErrorCodes.ErrSecurityException Then
-    MsgBox "You don't have write access to  '" & logFile & "': the program will close", vbCritical, "Attention"
-    Err.Raise UnloadNotifyException
-End If
-
-Err.Raise Err.Number    ' unknown error so re-raise it
-End Sub
-
-Private Function getNamedConfig() As ConfigItem
-Dim configToLoad As String
-
-If Not mClp.Switch(SwitchConfig) Then Exit Function
-
-configToLoad = mClp.SwitchValue(SwitchConfig)
-
-If configToLoad <> "" Then
-    Set getNamedConfig = ConfigManager1.appConfig(configToLoad)
-    If getNamedConfig Is Nothing Then
-        MsgBox "The required configuration does not exist: " & configToLoad, _
+If configToLoad Is Nothing Then
+    If Not ConfigManager1.initialise(getConfigFilename, App.ProductName) Then
+        MsgBox "The configuration file (" & _
+                getConfigFilename & _
+                ") is not the correct format for this program", _
                 vbCritical, _
                 "Error"
-        Err.Raise UnloadNotifyException
+        Err.Raise ErrorCodes.ErrIllegalArgumentException
+    End If
+    
+    On Error Resume Next
+    Set configToLoad = getNamedConfig()
+    If Err.Number <> 0 Then Exit Function
+    On Error GoTo 0
+
+    If configToLoad Is Nothing Then
+        Set configToLoad = ConfigManager1.selectedAppConfig
+    End If
+
+    If configToLoad Is Nothing Then
+        Set configToLoad = ConfigManager1.firstAppConfig
+    End If
+
+    If configToLoad Is Nothing Then
+        If MsgBox("No existing configuration details can be found. Would you like to " & vbCrLf & _
+                "proceed with a default configuration?" & vbCrLf & vbCrLf & _
+                "The default configuration will connect to TWS running on the " & vbCrLf & _
+                "same computer. It wll obtain contract data and historical data " & vbCrLf & _
+                "from TWS, and will simulate any orders placed." & vbCrLf & vbCrLf & _
+                "You may amend the default configuration by going to the " & vbCrLf & _
+                "Configuration tab." & vbCrLf & vbCrLf & _
+                "Click Yes to continue with the default configuration. Click No " & vbCrLf & _
+                "to manually set up the configuration you want.", _
+                vbYesNo Or vbQuestion, _
+                "Attention!") = vbYes _
+        Then
+            logMessage ("Creating a new default configuration")
+            ConfigManager1.createNewAppConfig DefaultConfigName, True, True
+            Set configToLoad = ConfigManager1.appConfig(DefaultConfigName)
+        End If
+    End If
+End If
+
+Set getConfigToLoad = configToLoad
+
+End Function
+
+Private Function getDefaultClock() As Clock
+Static lClock As Clock
+If lClock Is Nothing Then Set lClock = GetClock("") ' create a clock running local time
+Set getDefaultClock = lClock
+End Function
+
+Private Function getNamedConfig() As ConfigItem
+Dim configName As String
+
+If Not gCommandLineParser.Switch(SwitchConfig) Then Exit Function
+
+configName = gCommandLineParser.SwitchValue(SwitchConfig)
+
+If configName <> "" Then
+    Set getNamedConfig = ConfigManager1.appConfig(configName)
+    If getNamedConfig Is Nothing Then
+        MsgBox "The required configuration does not exist: " & configName, _
+                vbCritical, _
+                "Error"
+        Err.Raise ErrorCodes.ErrIllegalArgumentException
         Exit Function
     End If
 End If
+End Function
+
+Private Function getOrderForm() As OrderForm
+Static lOrderForm As OrderForm
+If lOrderForm Is Nothing Then
+    Set lOrderForm = New OrderForm
+    lOrderForm.Show vbModeless
+End If
+Set getOrderForm = lOrderForm
 End Function
 
 Private Sub handleFatalError(ByVal errNum As Long, _
@@ -1975,15 +1931,14 @@ Set mTicker = Nothing
 
 Set mTradeBuildAPI = Nothing
 
-If errNum <> UnloadNotifyException Then
-    MsgBox "A fatal error has occurred. The program will close when you click the OK button." & vbCrLf & _
-            "Please note the error message below and email it to support@tradewright.com" & vbCrLf & _
-            "Error number: " & errNum & vbCrLf & _
-            "Description: " & Description & vbCrLf & _
-            "Source: fTradeSkilDemo::" & source, _
-            vbCritical, _
-            "Fatal error"
-End If
+MsgBox "A fatal error has occurred. The program will close when you click the OK button." & vbCrLf & _
+        "Please note the error message below and email it to support@tradewright.com" & vbCrLf & _
+        "Error number: " & errNum & vbCrLf & _
+        "Description: " & Description & vbCrLf & _
+        "Source: fTradeSkilDemo::" & source, _
+        vbCritical, _
+        "Fatal error"
+
 Unload Me
 End Sub
 
@@ -1992,14 +1947,12 @@ Private Sub loadAppConfig( _
 ExecutionsSummary1.Clear
 removeServiceProviders
 
-Set mLoadedConfig = configToLoad
+logMessage "Loading configuration: " & configToLoad.getAttribute(AttributeNameAppConfigName)
 
-logMessage "Loading configuration: " & mLoadedConfig.getAttribute(AttributeNameAppConfigName)
-
-If Not setupServiceProviders Or _
-    Not setupStudyLibraries _
+If Not setupServiceProviders(configToLoad) Or _
+    Not setupStudyLibraries(configToLoad) _
 Then
-    logMessage "Failed loading configuration: " & mLoadedConfig.getAttribute(AttributeNameAppConfigName)
+    logMessage "Failed loading configuration: " & configToLoad.getAttribute(AttributeNameAppConfigName)
     ' put the user on the configuration tab
     MainSSTAB.Tab = TabIndexConfiguration
     Exit Sub
@@ -2013,8 +1966,8 @@ HistTimeframeSelector.initialise
 setChartButtonTooltip
 setHistChartButtonTooltip
 
-logMessage "Loaded configuration: " & mLoadedConfig.getAttribute(AttributeNameAppConfigName)
-CurrentConfigNameText = mLoadedConfig.getAttribute(AttributeNameAppConfigName)
+logMessage "Loaded configuration: " & configToLoad.getAttribute(AttributeNameAppConfigName)
+CurrentConfigNameText = configToLoad.getAttribute(AttributeNameAppConfigName)
 End Sub
 
 Private Sub logMessage(message As String)
@@ -2032,10 +1985,6 @@ lMsgBox.initialise prompt, buttons, title
 lMsgBox.Show vbModeless, Me
                 
 End Sub
-Private Sub parseCommandLine()
-Set mClp = CreateCommandLineParser(Command)
-End Sub
-
 Private Sub removeServiceProviders()
 If Not mTradeBuildAPI Is Nothing Then mTradeBuildAPI.ServiceProviders.RemoveAll
 RemoveAllStudyLibraries
@@ -2079,6 +2028,14 @@ HistChartButton.ToolTipText = "Show " & _
                         " chart"
 End Sub
 
+Private Sub setupLogging()
+gLogger.addLogListener Me  ' so that log entries of infotype 'log' will be written to the logging text box
+
+gLogger.Log TWUtilities30.LogLevels.LogLevelNormal, "Log file: " & gLogFileName
+gLogger.Log TWUtilities30.LogLevels.LogLevelNormal, "Log level: " & TWUtilities.LogLevelToString(DefaultLogLevel)
+
+End Sub
+
 Private Sub setupReplaySpeedCombo()
 ReplaySpeedCombo.AddItem "10 Second intervals"
 ReplaySpeedCombo.ItemData(0) = -10000
@@ -2103,11 +2060,12 @@ ReplaySpeedCombo.Text = "Actual speed"
 
 End Sub
 
-Private Function setupServiceProviders() As Boolean
+Private Function setupServiceProviders( _
+                ByVal config As ConfigItem) As Boolean
 Dim tradebuildEntry As ConfigItem
 
 On Error Resume Next
-Set tradebuildEntry = mLoadedConfig.childItems.Item(ConfigNameTradeBuild)
+Set tradebuildEntry = config.childItems.Item(ConfigNameTradeBuild)
 On Error GoTo 0
 
 If tradebuildEntry Is Nothing Then
@@ -2126,11 +2084,12 @@ logMessage "Service provider configuration failed: " & Err.Description
 setupServiceProviders = False
 End Function
 
-Private Function setupStudyLibraries() As Boolean
+Private Function setupStudyLibraries( _
+                ByVal config As ConfigItem) As Boolean
 Dim tradebuildEntry As ConfigItem
 
 On Error Resume Next
-Set tradebuildEntry = mLoadedConfig.childItems.Item(ConfigNameTradeBuild)
+Set tradebuildEntry = config.childItems.Item(ConfigNameTradeBuild)
 On Error GoTo 0
 
 If tradebuildEntry Is Nothing Then
@@ -2142,33 +2101,6 @@ Else
 End If
 
 End Function
-
-Private Sub showCommandLineOptions()
-
-If mClp.Switch("?") Then
-    MsgBox vbCrLf & _
-            "tradeskildemo26 [configfile] " & vbCrLf & _
-            "                [/config:configtoload] " & vbCrLf & _
-            "                [/log:filename] " & vbCrLf & _
-            "                [/loglevel:levelName]" & vbCrLf & _
-            vbCrLf & _
-            "  where" & vbCrLf & _
-            vbCrLf & _
-            "    levelname is one of:" & vbCrLf & _
-            "       None    or 0" & vbCrLf & _
-            "       Severe  or S" & vbCrLf & _
-            "       Warning or W" & vbCrLf & _
-            "       Info    or I" & vbCrLf & _
-            "       Normal  or N" & vbCrLf & _
-            "       Detail  or D" & vbCrLf & _
-            "       Medium  or M" & vbCrLf & _
-            "       High    or H" & vbCrLf & _
-            "       All     or A", _
-            , _
-            "Usage"
-    Err.Raise UnloadNotifyException
-End If
-End Sub
 
 Private Sub showMarketDepthForm(ByVal pTicker As Ticker)
 Dim mktDepthForm As fMarketDepth
