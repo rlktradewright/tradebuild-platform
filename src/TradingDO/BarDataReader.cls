@@ -273,11 +273,7 @@ If mRsBars.BOF Then
     Exit Function
 End If
 
-If CBool(mRsBars("IsExchangeTime")) Then
-    timestamp = gRoundTimeToSecond(mRsBars("DateTime"))
-Else
-    timestamp = ConvertDateUTCToTZ(ConvertDateLocalToUTC(gRoundTimeToSecond(mRsBars("DateTime"))), mTimeZone)
-End If
+timestamp = gRoundTimeToSecond(mRsBars("DateTime"))
 barType = mRsBars("BarType")
 barLength = mRsBars("BarLengthMinutes")
 openPrice = mRsBars("openprice")

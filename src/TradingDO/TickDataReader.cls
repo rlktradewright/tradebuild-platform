@@ -189,11 +189,7 @@ If mRsTick.EOF Then
     Exit Function
 End If
 
-If CBool(mRsTick("IsExchangeTime")) Then
-    PeriodStartTime = gRoundTimeToSecond(mRsTick("DateTime"))
-Else
-    PeriodStartTime = ConvertDateUTCToTZ(ConvertDateLocalToUTC(gRoundTimeToSecond(mRsTick("DateTime"))), mTimeZone)
-End If
+PeriodStartTime = gRoundTimeToSecond(mRsTick("DateTime"))
 format = mRsTick("Version")
 BasePrice = mRsTick("baseprice")
 tickSize = mRsTick("ticksize")
