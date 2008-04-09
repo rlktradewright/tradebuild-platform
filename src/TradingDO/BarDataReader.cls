@@ -212,7 +212,7 @@ cmd.Parameters.Append param
 
 If fromTime < #1/1/1900# Then fromTime = #1/1/1900# ' don't exceed range of SmallDateTime
 If toTime < #1/1/1900# Then toTime = #1/1/1900# ' don't exceed range of SmallDateTime
-' @FromExchange
+' @From
 Set param = cmd.CreateParameter(, _
                             DataTypeEnum.adDBTimeStamp, _
                             ParameterDirectionEnum.adParamInput, _
@@ -220,32 +220,12 @@ Set param = cmd.CreateParameter(, _
                             fromTime)
 cmd.Parameters.Append param
 
-' @ToExchange
+' @To
 Set param = cmd.CreateParameter(, _
                             DataTypeEnum.adDBTimeStamp, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             toTime)
-cmd.Parameters.Append param
-
-fromLocal = ConvertDateUTCToLocal(ConvertDateTzToUTC(fromTime, mTimeZone))
-If fromLocal < #1/1/1900# Then fromLocal = #1/1/1900# ' don't exceed range of SmallDateTime
-' @FromLocal
-Set param = cmd.CreateParameter(, _
-                            DataTypeEnum.adDBTimeStamp, _
-                            ParameterDirectionEnum.adParamInput, _
-                            , _
-                            fromLocal)
-cmd.Parameters.Append param
-
-toLocal = ConvertDateUTCToLocal(ConvertDateTzToUTC(toTime, mTimeZone))
-If toLocal < #1/1/1900# Then toLocal = #1/1/1900# ' don't exceed range of SmallDateTime
-' @ToLocal
-Set param = cmd.CreateParameter(, _
-                            DataTypeEnum.adDBTimeStamp, _
-                            ParameterDirectionEnum.adParamInput, _
-                            , _
-                            toLocal)
 cmd.Parameters.Append param
 
 cmd.ActiveConnection = mConnection

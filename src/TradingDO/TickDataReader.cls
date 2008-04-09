@@ -237,7 +237,7 @@ Set param = cmd.CreateParameter(, _
                             mInstrumentID)
 cmd.Parameters.Append param
 
-' @FromExchange
+' @From
 Set param = cmd.CreateParameter(, _
                             DataTypeEnum.adDBTimeStamp, _
                             ParameterDirectionEnum.adParamInput, _
@@ -245,28 +245,12 @@ Set param = cmd.CreateParameter(, _
                             fromTime)
 cmd.Parameters.Append param
 
-' @ToExchange
+' @To
 Set param = cmd.CreateParameter(, _
                             DataTypeEnum.adDBTimeStamp, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             toTime)
-cmd.Parameters.Append param
-
-' @FromLocal
-Set param = cmd.CreateParameter(, _
-                            DataTypeEnum.adDBTimeStamp, _
-                            ParameterDirectionEnum.adParamInput, _
-                            , _
-                            ConvertDateUTCToLocal(ConvertDateTzToUTC(fromTime, mTimeZone)))
-cmd.Parameters.Append param
-
-' @ToLocal
-Set param = cmd.CreateParameter(, _
-                            DataTypeEnum.adDBTimeStamp, _
-                            ParameterDirectionEnum.adParamInput, _
-                            , _
-                            ConvertDateUTCToLocal(ConvertDateTzToUTC(toTime, mTimeZone)))
 cmd.Parameters.Append param
 
 cmd.ActiveConnection = mConnection
