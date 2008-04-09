@@ -21,6 +21,7 @@ Begin VB.UserControl ExecutionsSummary
       LabelWrap       =   -1  'True
       HideSelection   =   -1  'True
       AllowReorder    =   -1  'True
+      HotTracking     =   -1  'True
       _Version        =   393217
       ForeColor       =   -2147483640
       BackColor       =   -2147483643
