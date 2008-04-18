@@ -1,39 +1,33 @@
 VERSION 5.00
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#27.6#0"; "TWControls10.ocx"
 Begin VB.Form fPathChooser 
-   BorderStyle     =   3  'Fixed Dialog
    Caption         =   "Choose folder"
-   ClientHeight    =   3195
-   ClientLeft      =   2760
-   ClientTop       =   3750
+   ClientHeight    =   2775
+   ClientLeft      =   2775
+   ClientTop       =   3765
    ClientWidth     =   6030
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
    MinButton       =   0   'False
-   ScaleHeight     =   3195
+   ScaleHeight     =   2775
    ScaleWidth      =   6030
-   ShowInTaskbar   =   0   'False
+   Begin TWControls10.PathChooser PathChooser1 
+      Height          =   2655
+      Left            =   120
+      TabIndex        =   3
+      Top             =   120
+      Width           =   4455
+      _ExtentX        =   7858
+      _ExtentY        =   4683
+   End
    Begin VB.CommandButton NewFolderButton 
       Cancel          =   -1  'True
       Caption         =   "New folder..."
       Height          =   375
       Left            =   4680
-      TabIndex        =   4
+      TabIndex        =   2
       Top             =   2280
       Width           =   1215
-   End
-   Begin VB.DirListBox DirList 
-      Height          =   2565
-      Left            =   240
-      TabIndex        =   3
-      Top             =   480
-      Width           =   4335
-   End
-   Begin VB.DriveListBox DriveList 
-      Height          =   315
-      Left            =   240
-      TabIndex        =   2
-      Top             =   120
-      Width           =   4335
    End
    Begin VB.CommandButton CancelButton 
       Caption         =   "Cancel"
@@ -57,37 +51,45 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-
 Option Explicit
+
+''
+' Description here
+'
+'@/
+
+'@================================================================================
+' Interfaces
+'@================================================================================
+
+'@================================================================================
+' Events
+'@================================================================================
+
+'@================================================================================
+' Enums
+'@================================================================================
+
+'@================================================================================
+' Types
+'@================================================================================
+
+'@================================================================================
+' Constants
+'@================================================================================
+
+Private Const ProjectName                   As String = "TickFileManager26"
+Private Const ModuleName                    As String = "fPathChooser"
+
+'@================================================================================
+' Member variables
+'@================================================================================
 
 Private mCancelled As Boolean
 
-Public Property Get cancelled() As Boolean
-cancelled = mCancelled
-End Property
-
-Public Property Let path(ByVal newvalue As String)
-On Error Resume Next ' in case path doesn't exist
-If Mid$(newvalue, 2, 1) = ":" Then
-    DriveList.Drive = Left$(newvalue, 2)
-    DirList.path = newvalue
-ElseIf Left$(newvalue, 2) = "\\" Then
-End If
-
-End Property
-
-Public Property Get path() As String
-If Not mCancelled Then path = DirList.path
-End Property
-
-Private Sub CancelButton_Click()
-Me.Hide
-mCancelled = True
-End Sub
-
-Private Sub DriveList_Change()
-DirList.path = DriveList.Drive
-End Sub
+'@================================================================================
+' Class Event Handlers
+'@================================================================================
 
 Private Sub Form_Activate()
 mCancelled = True
@@ -97,42 +99,70 @@ Private Sub Form_Initialize()
 mCancelled = True
 End Sub
 
-Private Sub NewFolderButton_Click()
-Dim fNew As New fNewFolder
-Dim filesys As FileSystemObject
-Dim folder As folder
-Dim folders As folders
-Dim newFolderPath As String
-
-On Error GoTo err
-
-show:
-
-fNew.show vbModal
-If fNew.NewFolderText = "" Then Unload fNew: Exit Sub
-
-Set filesys = New FileSystemObject
-Set folder = filesys.GetFolder(DirList.path)
-Set folders = folder.SubFolders
-folders.Add fNew.NewFolderText
-
-newFolderPath = DirList.path & "\" & fNew.NewFolderText
-
-DirList.Refresh
-DirList.path = newFolderPath
-Unload fNew
-Exit Sub
-
-err:
-If err.Number = 58 Then
-    ' folder already exists
-    MsgBox "Folder already exists", , "Error"
-    Resume show
+Private Sub Form_Resize()
+Dim butleft As Long
+butleft = Me.ScaleWidth - OKButton.Width - 8 * Screen.TwipsPerPixelX
+If butleft >= 2160 Then
+    OKButton.Left = butleft
+    CancelButton.Left = butleft
+    NewFolderButton.Left = butleft
+    PathChooser1.Width = butleft - 8 * Screen.TwipsPerPixelX - PathChooser1.Left
 End If
-Unload fNew
+
+If Me.ScaleHeight >= 1560 Then
+    PathChooser1.Height = Me.ScaleHeight - 8 * Screen.TwipsPerPixelY - PathChooser1.Top
+    NewFolderButton.Top = PathChooser1.Height + PathChooser1.Top - NewFolderButton.Height
+End If
+End Sub
+
+'@================================================================================
+' XXXX Interface Members
+'@================================================================================
+
+'@================================================================================
+' Control Event Handlers
+'@================================================================================
+
+Private Sub CancelButton_Click()
+Me.Hide
+mCancelled = True
+End Sub
+
+Private Sub NewFolderButton_Click()
+PathChooser1.NewFolder
 End Sub
 
 Private Sub OKButton_Click()
 mCancelled = False
 Me.Hide
 End Sub
+
+'@================================================================================
+' XXXX Event Handlers
+'@================================================================================
+
+'@================================================================================
+' Properties
+'@================================================================================
+
+Public Property Get cancelled() As Boolean
+cancelled = mCancelled
+End Property
+
+Public Property Let path(ByVal newvalue As String)
+PathChooser1.path = newvalue
+End Property
+
+Public Property Get path() As String
+If Not mCancelled Then path = PathChooser1.path
+End Property
+
+'@================================================================================
+' Methods
+'@================================================================================
+
+'@================================================================================
+' Helper Functions
+'@================================================================================
+
+
