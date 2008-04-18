@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDATGRD.OCX"
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#27.5#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#27.6#0"; "TWControls10.ocx"
 Begin VB.UserControl SPConfigurer 
    ClientHeight    =   12750
    ClientLeft      =   0
@@ -12,7 +12,7 @@ Begin VB.UserControl SPConfigurer
    Begin TWControls10.TWImageCombo SpLogLevelCombo 
       Height          =   330
       Left            =   3480
-      TabIndex        =   26
+      TabIndex        =   28
       Top             =   3480
       Width           =   1335
       _ExtentX        =   2355
@@ -55,13 +55,13 @@ Begin VB.UserControl SPConfigurer
       Left            =   10080
       ScaleHeight     =   2175
       ScaleWidth      =   4815
-      TabIndex        =   48
+      TabIndex        =   50
       Top             =   4080
       Width           =   4815
       Begin MSDataGridLib.DataGrid ParamsGrid 
          Height          =   1455
          Left            =   960
-         TabIndex        =   51
+         TabIndex        =   53
          Top             =   720
          Width           =   3855
          _ExtentX        =   6800
@@ -131,7 +131,7 @@ Begin VB.UserControl SPConfigurer
       Begin VB.TextBox ProgIdText 
          Height          =   285
          Left            =   960
-         TabIndex        =   25
+         TabIndex        =   27
          Top             =   360
          Width           =   3855
       End
@@ -139,7 +139,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Enabled"
          Height          =   255
          Left            =   0
-         TabIndex        =   24
+         TabIndex        =   26
          Top             =   0
          Width           =   2535
       End
@@ -147,7 +147,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Parameters"
          Height          =   255
          Left            =   0
-         TabIndex        =   50
+         TabIndex        =   52
          Top             =   720
          Width           =   1575
       End
@@ -155,7 +155,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Prog ID"
          Height          =   255
          Left            =   0
-         TabIndex        =   49
+         TabIndex        =   51
          Top             =   360
          Width           =   735
       End
@@ -165,7 +165,7 @@ Begin VB.UserControl SPConfigurer
       Enabled         =   0   'False
       Height          =   375
       Left            =   5280
-      TabIndex        =   27
+      TabIndex        =   29
       Top             =   3480
       Width           =   975
    End
@@ -175,9 +175,24 @@ Begin VB.UserControl SPConfigurer
       Left            =   5040
       ScaleHeight     =   2175
       ScaleWidth      =   4815
-      TabIndex        =   47
+      TabIndex        =   49
       Top             =   6480
       Width           =   4815
+      Begin VB.CommandButton PathChooserButton 
+         Caption         =   "..."
+         Height          =   375
+         Left            =   4320
+         TabIndex        =   24
+         Top             =   360
+         Width           =   495
+      End
+      Begin VB.TextBox TickfilePathText 
+         Height          =   285
+         Left            =   960
+         TabIndex        =   23
+         Top             =   360
+         Width           =   3375
+      End
       Begin VB.CheckBox TfEnabledCheck 
          Caption         =   "Enabled"
          Height          =   255
@@ -186,6 +201,14 @@ Begin VB.UserControl SPConfigurer
          Top             =   0
          Width           =   2535
       End
+      Begin VB.Label Label18 
+         Caption         =   "Output path"
+         Height          =   375
+         Left            =   0
+         TabIndex        =   60
+         Top             =   360
+         Width           =   975
+      End
    End
    Begin VB.PictureBox BrOptionsPicture 
       BorderStyle     =   0  'None
@@ -193,14 +216,14 @@ Begin VB.UserControl SPConfigurer
       Left            =   10080
       ScaleHeight     =   2175
       ScaleWidth      =   4815
-      TabIndex        =   46
+      TabIndex        =   48
       Top             =   6480
       Width           =   4815
       Begin VB.CheckBox BrEnabledCheck 
          Caption         =   "Enabled"
          Height          =   255
          Left            =   0
-         TabIndex        =   23
+         TabIndex        =   25
          Top             =   0
          Width           =   2535
       End
@@ -210,7 +233,7 @@ Begin VB.UserControl SPConfigurer
       Enabled         =   0   'False
       Height          =   375
       Left            =   6360
-      TabIndex        =   28
+      TabIndex        =   30
       Top             =   3480
       Width           =   975
    End
@@ -220,7 +243,7 @@ Begin VB.UserControl SPConfigurer
       Left            =   5040
       ScaleHeight     =   2175
       ScaleWidth      =   4815
-      TabIndex        =   41
+      TabIndex        =   43
       Top             =   4080
       Visible         =   0   'False
       Width           =   4815
@@ -284,7 +307,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Connection retry interval"
          Height          =   375
          Left            =   0
-         TabIndex        =   57
+         TabIndex        =   59
          Top             =   1800
          Width           =   975
       End
@@ -292,7 +315,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Provider key"
          Height          =   255
          Left            =   0
-         TabIndex        =   56
+         TabIndex        =   58
          Top             =   1440
          Width           =   975
       End
@@ -300,7 +323,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Password"
          Height          =   255
          Left            =   0
-         TabIndex        =   44
+         TabIndex        =   46
          Top             =   1080
          Width           =   735
       End
@@ -308,7 +331,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Port"
          Height          =   255
          Left            =   0
-         TabIndex        =   43
+         TabIndex        =   45
          Top             =   720
          Width           =   615
       End
@@ -316,7 +339,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Server"
          Height          =   255
          Left            =   0
-         TabIndex        =   42
+         TabIndex        =   44
          Top             =   360
          Width           =   615
       End
@@ -327,7 +350,7 @@ Begin VB.UserControl SPConfigurer
       Left            =   0
       ScaleHeight     =   2175
       ScaleWidth      =   4815
-      TabIndex        =   35
+      TabIndex        =   37
       Top             =   6480
       Visible         =   0   'False
       Width           =   4815
@@ -393,7 +416,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Database"
          Height          =   255
          Left            =   0
-         TabIndex        =   40
+         TabIndex        =   42
          Top             =   1080
          Width           =   975
       End
@@ -401,7 +424,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Server"
          Height          =   255
          Left            =   0
-         TabIndex        =   39
+         TabIndex        =   41
          Top             =   360
          Width           =   975
       End
@@ -409,7 +432,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "DB Type"
          Height          =   255
          Left            =   0
-         TabIndex        =   38
+         TabIndex        =   40
          Top             =   720
          Width           =   975
       End
@@ -417,7 +440,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Username"
          Height          =   255
          Left            =   0
-         TabIndex        =   37
+         TabIndex        =   39
          Top             =   1440
          Width           =   975
       End
@@ -425,7 +448,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Password"
          Height          =   255
          Left            =   0
-         TabIndex        =   36
+         TabIndex        =   38
          Top             =   1800
          Width           =   975
       End
@@ -436,7 +459,7 @@ Begin VB.UserControl SPConfigurer
       Left            =   0
       ScaleHeight     =   2175
       ScaleWidth      =   4815
-      TabIndex        =   31
+      TabIndex        =   33
       Top             =   4080
       Visible         =   0   'False
       Width           =   4815
@@ -519,7 +542,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "TWS Log Level"
          Height          =   375
          Left            =   2520
-         TabIndex        =   54
+         TabIndex        =   56
          Top             =   360
          Width           =   975
       End
@@ -527,7 +550,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Connection retry interval"
          Height          =   375
          Left            =   0
-         TabIndex        =   53
+         TabIndex        =   55
          Top             =   1800
          Width           =   975
       End
@@ -535,7 +558,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Provider key"
          Height          =   255
          Left            =   0
-         TabIndex        =   52
+         TabIndex        =   54
          Top             =   1440
          Width           =   975
       End
@@ -543,7 +566,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Client id"
          Height          =   255
          Left            =   0
-         TabIndex        =   34
+         TabIndex        =   36
          Top             =   1080
          Width           =   615
       End
@@ -551,7 +574,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Port"
          Height          =   255
          Left            =   0
-         TabIndex        =   33
+         TabIndex        =   35
          Top             =   720
          Width           =   615
       End
@@ -559,7 +582,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Server"
          Height          =   255
          Left            =   0
-         TabIndex        =   32
+         TabIndex        =   34
          Top             =   360
          Width           =   615
       End
@@ -569,7 +592,7 @@ Begin VB.UserControl SPConfigurer
       ItemData        =   "SPConfigurer.ctx":0070
       Left            =   120
       List            =   "SPConfigurer.ctx":0072
-      TabIndex        =   29
+      TabIndex        =   31
       Top             =   120
       Width           =   2055
    End
@@ -585,7 +608,7 @@ Begin VB.UserControl SPConfigurer
       Caption         =   "Log level"
       Height          =   375
       Left            =   2520
-      TabIndex        =   55
+      TabIndex        =   57
       Top             =   3480
       Width           =   735
    End
@@ -600,7 +623,7 @@ Begin VB.UserControl SPConfigurer
       BackStyle       =   0  'Transparent
       Height          =   615
       Left            =   2280
-      TabIndex        =   45
+      TabIndex        =   47
       Top             =   720
       Width           =   1935
    End
@@ -628,7 +651,7 @@ Begin VB.UserControl SPConfigurer
       ForeColor       =   &H00FE8100&
       Height          =   255
       Left            =   2400
-      TabIndex        =   30
+      TabIndex        =   32
       Top             =   240
       Width           =   4815
    End
@@ -734,6 +757,9 @@ Private Const PropertyNameTbPassword        As String = "Password"
 Private Const PropertyNameTbAccessMode      As String = "Access Mode"
 Private Const PropertyNameTbRole            As String = "Role"
 
+Private Const PropertyNameTfAccessMode      As String = "Access Mode"
+Private Const PropertyNameTfTickfilePath    As String = "Tickfile Path"
+
 Private Const PropertyNameTwsServer         As String = "Server"
 Private Const PropertyNameTwsPort           As String = "Port"
 Private Const PropertyNameTwsClientId       As String = "Client Id"
@@ -817,6 +843,7 @@ Private Sub UserControl_Initialize()
 UserControl.Width = OutlineBox.Width
 UserControl.Height = OutlineBox.Height
 
+DbTypeCombo.ComboItems.add , , ""
 DbTypeCombo.ComboItems.add , , DbTypeMySql
 DbTypeCombo.ComboItems.add , , DbTypeSqlServer7
 DbTypeCombo.ComboItems.add , , DbTypeSqlServer2000
@@ -988,6 +1015,14 @@ Else
 End If
 mCurrSpOption = OptionCombo.Text
 enableCancelButton True
+End Sub
+
+Private Sub PathChooserButton_Click()
+Dim f As New fPathChooser
+f.path = TickfilePathText.Text
+f.Show vbModal
+If Not f.cancelled Then TickfilePathText.Text = f.path
+Unload f
 End Sub
 
 Private Sub ProgIdText_Change()
@@ -1328,10 +1363,11 @@ Else
     mCurrSP.setAttribute AttributeNameServiceProviderEnabled, "False"
 End If
 If mCurrCategory = CategoryTickfileInput Then
-    setProperty mCurrProps, PropertyNameTbAccessMode, AccessModeReadOnly
+    setProperty mCurrProps, PropertyNameTfAccessMode, AccessModeReadOnly
 End If
 If mCurrCategory = CategoryTickfileOutput Then
-    setProperty mCurrProps, PropertyNameTbAccessMode, AccessModeWriteOnly
+    setProperty mCurrProps, PropertyNameTfAccessMode, AccessModeWriteOnly
+    setProperty mCurrProps, PropertyNameTfTickfilePath, TickfilePathText
 End If
 End Sub
 
@@ -1472,6 +1508,7 @@ End Function
 
 Private Function isValidDbProperties() As Boolean
 If DbDatabaseText = "" Then
+ElseIf DbTypeCombo.Text = "" Then
 ElseIf DbTypeCombo.Text = DbTypeMySql And DbUsernameText = "" Then
 Else
     isValidDbProperties = True
@@ -1674,6 +1711,7 @@ End Sub
 
 Private Sub setupBrProperties()
 On Error Resume Next
+BrEnabledCheck.value = vbUnchecked
 BrEnabledCheck.value = IIf(mCurrSP.getAttribute(AttributeNameServiceProviderEnabled) = "True", vbChecked, vbUnchecked)
 End Sub
 
@@ -1746,6 +1784,12 @@ End Sub
 
 Private Sub setupDbProperties()
 On Error Resume Next
+DbEnabledCheck.value = vbUnchecked
+DbServerText = ""
+DbTypeCombo = ""
+DbDatabaseText = ""
+DbUsernameText = ""
+DbPasswordText = ""
 DbEnabledCheck.value = IIf(getSpAttribute(AttributeNameServiceProviderEnabled) = "True", vbChecked, vbUnchecked)
 DbServerText = getPropertyValue(PropertyNameTbServer)
 DbTypeCombo = getPropertyValue(PropertyNameTbDbType)
@@ -1917,6 +1961,13 @@ End Sub
 
 Private Sub setupQtProperties()
 On Error Resume Next
+QtEnabledCheck.value = vbUnchecked
+QtKeepConnectionCheck.value = vbUnchecked
+QtServerText = ""
+QtPortText = ""
+QtPasswordText = ""
+QtProviderKeyText = ""
+QtConnectRetryIntervalText = ""
 QtEnabledCheck.value = IIf(getSpAttribute(AttributeNameServiceProviderEnabled) = "True", vbChecked, vbUnchecked)
 QtKeepConnectionCheck.value = IIf(getPropertyValue(PropertyNameQtKeepConnection) = "True", vbChecked, vbUnchecked)
 QtServerText = getPropertyValue(PropertyNameQtServer)
@@ -1968,7 +2019,10 @@ End Sub
 
 Private Sub setupTfProperties()
 On Error Resume Next
+TfEnabledCheck.value = vbUnchecked
+TickfilePathText.Text = ""
 TfEnabledCheck.value = IIf(getSpAttribute(AttributeNameServiceProviderEnabled) = "True", vbChecked, vbUnchecked)
+TickfilePathText.Text = getPropertyValue(PropertyNameTfTickfilePath)
 End Sub
 
 Private Sub setupTickfileInputSP()
@@ -2059,6 +2113,13 @@ End Sub
 Private Sub setupTwsProperties()
 Dim twsLogLevel As String
 On Error Resume Next
+TwsEnabledCheck.value = vbUnchecked
+TwsKeepConnectionCheck.value = vbUnchecked
+TWSServerText = ""
+TWSPortText = ""
+TWSClientIdText = ""
+TwsProviderKeyText = ""
+TwsConnectRetryIntervalText = ""
 TwsEnabledCheck.value = IIf(getSpAttribute(AttributeNameServiceProviderEnabled) = "True", vbChecked, vbUnchecked)
 TwsKeepConnectionCheck.value = IIf(getPropertyValue(PropertyNameTwsKeepConnection) = "True", vbChecked, vbUnchecked)
 TWSServerText = getPropertyValue(PropertyNameTwsServer)
@@ -2138,6 +2199,8 @@ Case CategoryTickfileInput
         Set mCurrOptionsPic = QtOptionsPicture
     Case SpOptionFileTickData
         Set mCurrOptionsPic = TfOptionsPicture
+        TickfilePathText.Enabled = False
+        PathChooserButton.Enabled = False
     Case SpOptionCustomTickData
         Set mCurrOptionsPic = CustomOptionsPicture
     End Select
@@ -2147,10 +2210,11 @@ Case CategoryTickfileOutput
         Set mCurrOptionsPic = DbOptionsPicture
     Case SpOptionFileTickData
         Set mCurrOptionsPic = TfOptionsPicture
+        TickfilePathText.Enabled = True
+        PathChooserButton.Enabled = True
     Case SpOptionCustomTickData
         Set mCurrOptionsPic = CustomOptionsPicture
     End Select
-Case CategoryTickfileOutput
 End Select
 
 If Not mCurrOptionsPic Is Nothing Then
