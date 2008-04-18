@@ -65,12 +65,9 @@ Private Const AttributeNameExchange         As String = "Exchange"
 Private Const AttributeNameIncludeMktDepth  As String = "IncludeMarketDepth"
 Private Const AttributeNameLocalSYmbol      As String = "LocalSymbol"
 Private Const AttributeNameRight            As String = "Right"
-Private Const AttributeNameSaveInterval     As String = "SaveInterval"
 Private Const AttributeNameSecType          As String = "SecType"
 Private Const AttributeNameStrikePrice      As String = "StrikePrice"
 Private Const AttributeNameSymbol           As String = "Symbol"
-Private Const AttributeNameTimeframeLength  As String = "Length"
-Private Const AttributeNameTimeframeUnits   As String = "Units"
 Private Const AttributeNameWriteTickData    As String = "WriteTickData"
 Private Const AttributeNameWriteBarData     As String = "WriteBarData"
 
@@ -102,10 +99,7 @@ Attribute mTickers.VB_VarHelpID = -1
 
 Private mConfig                                         As ConfigItem
 
-Private mTimeframesConfig                               As ConfigItem
-
 Private mContractsConfig                                As ConfigItem
-Private mContractsIndex                                 As Long
 
 Private mWriteBars                                      As Boolean
 Private mWriteBidAskBars                                As Boolean
@@ -234,8 +228,6 @@ End If
 End Sub
 
 Private Sub mTickers_stateChange(ev As StateChangeEvent)
-Dim i As Long
-
 If ev.State = TickerStates.TickerStateRunning Then
     RaiseEvent TickerAdded(ev.Source)
 End If
@@ -258,7 +250,6 @@ End Sub
 Private Sub mTradeBuildAPI_Notification( _
                 ev As NotificationEvent)
 Dim spError As ServiceProviderError
-Dim evNotify As NotificationEvent
 If ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
     Set spError = mTradeBuildAPI.GetServiceProviderError
     With spError
@@ -466,6 +457,12 @@ failpoint = 100
 mTradeBuildAPI.ServiceProviders.RemoveAll
 RemoveAllStudyLibraries
 
+mWriteTicks = False
+mIncludeMarketDepth = False
+mWriteBars = False
+mWriteBidAskBars = False
+mOutputFormat = ""
+mOutputPath = ""
 
 failpoint = 200
 
@@ -508,18 +505,25 @@ On Error GoTo Err
 failpoint = 700
 
 If mWriteTicks Then
+    On Error Resume Next
     Set val = mConfig.childItems.Item(ConfigNameTickDataFormat)
-    outputformat = val.Value
-    For i = 0 To UBound(mSupportedOutputFormats)
-        If UCase$(outputformat) = UCase$(mSupportedOutputFormats(i).Name) Then
-            mOutputFormat = mSupportedOutputFormats(i).FormalID
-            Exit For
+    On Error GoTo Err
+    
+    If val Is Nothing Then
+        ' the service provider's default format will be used
+    Else
+        outputformat = val.Value
+        For i = 0 To UBound(mSupportedOutputFormats)
+            If UCase$(outputformat) = UCase$(mSupportedOutputFormats(i).Name) Then
+                mOutputFormat = mSupportedOutputFormats(i).FormalID
+                Exit For
+            End If
+        Next
+        If mOutputFormat = "" Then
+            RaiseEvent ErrorMessage(ErrorCodes.ErrIllegalArgumentException, _
+                                    "Invalid tickfile output format specified in config file")
+            Exit Sub
         End If
-    Next
-    If mOutputFormat = "" Then
-        RaiseEvent ErrorMessage(ErrorCodes.ErrIllegalArgumentException, _
-                                "Invalid tickfile output format specified in config file")
-        Exit Sub
     End If
 End If
 
@@ -581,7 +585,6 @@ Dim expiry As String
 Dim strikePrice As Double
 Dim optRight As OptionRights
 
-Dim i As Long
 Dim failpoint As Integer
 
 
