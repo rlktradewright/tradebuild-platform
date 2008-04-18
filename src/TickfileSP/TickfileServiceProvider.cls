@@ -41,6 +41,9 @@ Implements ITickfileServiceProvider
 ' Constants
 '================================================================================
 
+Private Const ProjectName               As String = "TickfileSP26"
+Private Const ModuleName                As String = "TickfileServiceProvider"
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -198,8 +201,9 @@ Dim writer As TickfileWriter
 On Error GoTo Err
 gFormatSpecifiersFromString FormatIdentifier, formatId, formatVersion
 If formatId = TickfileFormats.TickfileUnknown Then
-    formatId = TickfileFormats.TickfileTradeBuild
-    formatVersion = TickFileVersions.DefaultVersion
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "ITickfileServiceProvider_CreateTickfileWriter", _
+            "Invalid format identifier"
 End If
 
 Set writer = New TickfileWriter

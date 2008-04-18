@@ -312,7 +312,7 @@ Case TickfileFormatESignal
     version = TickFileVersions.ESignal
 Case ""
     formatId = TickfileFormats.TickfileTradeBuild
-    version = TickFileVersions.TradeBuildV4
+    version = TickFileVersions.DefaultVersion
 Case Else
     formatId = TickfileFormats.TickfileUnknown
     version = TickFileVersions.UnknownVersion
@@ -328,9 +328,7 @@ Dim formatVersion As TickFileVersions
 Dim capMask As Long
 
 gFormatSpecifiersFromString FormatIdentifier, formatId, formatVersion
-If formatId = TickfileFormats.TickfileUnknown Then
-    Exit Function
-End If
+If formatId = TickfileFormats.TickfileUnknown Then Exit Function
 
 Select Case formatVersion
 Case TradeBuildV3
