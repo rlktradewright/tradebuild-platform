@@ -116,6 +116,7 @@ Public Enum TickFileVersions
     CrescendoV2
     ESignal
     TradeBuildV5
+    DefaultVersion = TradeBuildV5
 End Enum
 
 Public Enum TickTypes

@@ -199,7 +199,7 @@ On Error GoTo Err
 gFormatSpecifiersFromString FormatIdentifier, formatId, formatVersion
 If formatId = TickfileFormats.TickfileUnknown Then
     formatId = TickfileFormats.TickfileTradeBuild
-    formatVersion = TickFileVersions.TradeBuildV4
+    formatVersion = TickFileVersions.DefaultVersion
 End If
 
 Set writer = New TickfileWriter
