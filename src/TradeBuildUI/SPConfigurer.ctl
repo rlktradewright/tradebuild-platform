@@ -1481,14 +1481,6 @@ On Error Resume Next
 getPropertyValue = findProperty(name).getAttribute(AttributeNamePropertyValue)
 End Function
 
-Private Function getSpAttribute( _
-                ByVal name As String, _
-                Optional ByVal default As String) As String
-On Error Resume Next
-getSpAttribute = default
-getSpAttribute = mCurrSP.getAttribute(name)
-End Function
-
 Private Sub hideSpOptions()
 If Not mCurrOptionsPic Is Nothing Then
     mCurrOptionsPic.Visible = False
@@ -1728,7 +1720,7 @@ OptionCombo.ComboItems.add , , SpOptionCustomOrders
 
 On Error Resume Next
 findSp CategoryBroker
-progId = getSpAttribute(AttributeNameServiceProviderProgId)
+progId = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo 0
 
 If mCurrSP Is Nothing Then
@@ -1736,7 +1728,7 @@ If mCurrSP Is Nothing Then
     Exit Sub
 End If
 
-SpLogLevelCombo.Text = logLevelToString(getSpAttribute(AttributeNameServiceProviderLogLevel, tradebuild26.LogLevels.LogLevelLow))
+SpLogLevelCombo.Text = logLevelToString(mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderLogLevel, tradebuild26.LogLevels.LogLevelLow))
 
 Select Case progId
 Case ProgIdTbOrders
@@ -1760,8 +1752,8 @@ Dim prop As ConfigItem
 Dim da As DataAdapter
 
 On Error Resume Next
-CustomEnabledCheck.value = IIf(getSpAttribute(AttributeNameServiceProviderEnabled) = "True", vbChecked, vbUnchecked)
-ProgIdText = getSpAttribute(AttributeNameServiceProviderProgId)
+CustomEnabledCheck.value = IIf(mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
+ProgIdText = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
 
 mCustomParams.removeCollectionChangeListener Me
 
@@ -1790,7 +1782,7 @@ DbTypeCombo = ""
 DbDatabaseText = ""
 DbUsernameText = ""
 DbPasswordText = ""
-DbEnabledCheck.value = IIf(getSpAttribute(AttributeNameServiceProviderEnabled) = "True", vbChecked, vbUnchecked)
+DbEnabledCheck.value = IIf(mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
 DbServerText = getPropertyValue(PropertyNameTbServer)
 DbTypeCombo = getPropertyValue(PropertyNameTbDbType)
 DbDatabaseText = getPropertyValue(PropertyNameTbDbName)
@@ -1812,7 +1804,7 @@ OptionCombo.ComboItems.add , , SpOptionCustomBarData
 
 On Error Resume Next
 findSp CategoryHistoricalDataInput
-progId = getSpAttribute(AttributeNameServiceProviderProgId)
+progId = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo 0
 
 If mCurrSP Is Nothing Then
@@ -1820,7 +1812,7 @@ If mCurrSP Is Nothing Then
     Exit Sub
 End If
 
-SpLogLevelCombo.Text = logLevelToString(getSpAttribute(AttributeNameServiceProviderLogLevel, tradebuild26.LogLevels.LogLevelLow))
+SpLogLevelCombo.Text = logLevelToString(mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderLogLevel, tradebuild26.LogLevels.LogLevelLow))
 
 Select Case progId
 Case ProgIdTwsBarData
@@ -1856,7 +1848,7 @@ OptionCombo.ComboItems.add , , SpOptionCustomBarData
 
 On Error Resume Next
 findSp CategoryHistoricalDataOutput
-progId = getSpAttribute(AttributeNameServiceProviderProgId)
+progId = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo 0
 
 If mCurrSP Is Nothing Then
@@ -1864,7 +1856,7 @@ If mCurrSP Is Nothing Then
     Exit Sub
 End If
 
-SpLogLevelCombo.Text = logLevelToString(getSpAttribute(AttributeNameServiceProviderLogLevel, tradebuild26.LogLevels.LogLevelLow))
+SpLogLevelCombo.Text = logLevelToString(mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderLogLevel, tradebuild26.LogLevels.LogLevelLow))
 
 Select Case progId
 Case ProgIdTbBarData
@@ -1892,7 +1884,7 @@ OptionCombo.ComboItems.add , , SpOptionCustomContractData
 
 On Error Resume Next
 findSp CategoryPrimaryContractData
-progId = getSpAttribute(AttributeNameServiceProviderProgId)
+progId = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo 0
 
 If mCurrSP Is Nothing Then
@@ -1900,7 +1892,7 @@ If mCurrSP Is Nothing Then
     Exit Sub
 End If
 
-SpLogLevelCombo.Text = logLevelToString(getSpAttribute(AttributeNameServiceProviderLogLevel, tradebuild26.LogLevels.LogLevelLow))
+SpLogLevelCombo.Text = logLevelToString(mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderLogLevel, tradebuild26.LogLevels.LogLevelLow))
 
 Select Case progId
 Case ProgIdTwsContractData
@@ -1932,7 +1924,7 @@ OptionCombo.ComboItems.add , , SpOptionCustomRealtimeData
 
 On Error Resume Next
 findSp CategoryRealtimeData
-progId = getSpAttribute(AttributeNameServiceProviderProgId)
+progId = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo 0
 
 If mCurrSP Is Nothing Then
@@ -1940,7 +1932,7 @@ If mCurrSP Is Nothing Then
     Exit Sub
 End If
 
-SpLogLevelCombo.Text = logLevelToString(getSpAttribute(AttributeNameServiceProviderLogLevel, tradebuild26.LogLevels.LogLevelLow))
+SpLogLevelCombo.Text = logLevelToString(mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderLogLevel, tradebuild26.LogLevels.LogLevelLow))
 
 Select Case progId
 Case ProgIdTwsRealtimeData
@@ -1961,14 +1953,7 @@ End Sub
 
 Private Sub setupQtProperties()
 On Error Resume Next
-QtEnabledCheck.value = vbUnchecked
-QtKeepConnectionCheck.value = vbUnchecked
-QtServerText = ""
-QtPortText = ""
-QtPasswordText = ""
-QtProviderKeyText = ""
-QtConnectRetryIntervalText = ""
-QtEnabledCheck.value = IIf(getSpAttribute(AttributeNameServiceProviderEnabled) = "True", vbChecked, vbUnchecked)
+QtEnabledCheck.value = IIf(mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
 QtKeepConnectionCheck.value = IIf(getPropertyValue(PropertyNameQtKeepConnection) = "True", vbChecked, vbUnchecked)
 QtServerText = getPropertyValue(PropertyNameQtServer)
 QtPortText = getPropertyValue(PropertyNameQtPort)
@@ -1990,7 +1975,7 @@ OptionCombo.ComboItems.add , , SpOptionCustomContractData
 
 On Error Resume Next
 findSp CategorySecondaryContractData
-progId = getSpAttribute(AttributeNameServiceProviderProgId)
+progId = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo 0
 
 If mCurrSP Is Nothing Then
@@ -1998,7 +1983,7 @@ If mCurrSP Is Nothing Then
     Exit Sub
 End If
 
-SpLogLevelCombo.Text = logLevelToString(getSpAttribute(AttributeNameServiceProviderLogLevel, tradebuild26.LogLevels.LogLevelLow))
+SpLogLevelCombo.Text = logLevelToString(mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderLogLevel, tradebuild26.LogLevels.LogLevelLow))
 
 Select Case progId
 Case ProgIdTwsContractData
@@ -2021,7 +2006,7 @@ Private Sub setupTfProperties()
 On Error Resume Next
 TfEnabledCheck.value = vbUnchecked
 TickfilePathText.Text = ""
-TfEnabledCheck.value = IIf(getSpAttribute(AttributeNameServiceProviderEnabled) = "True", vbChecked, vbUnchecked)
+TfEnabledCheck.value = IIf(mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
 TickfilePathText.Text = getPropertyValue(PropertyNameTfTickfilePath)
 End Sub
 
@@ -2039,7 +2024,7 @@ OptionCombo.ComboItems.add , , SpOptionCustomTickData
 
 On Error Resume Next
 findSp CategoryTickfileInput
-progId = getSpAttribute(AttributeNameServiceProviderProgId)
+progId = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo 0
 
 If mCurrSP Is Nothing Then
@@ -2047,7 +2032,7 @@ If mCurrSP Is Nothing Then
     Exit Sub
 End If
 
-SpLogLevelCombo.Text = logLevelToString(getSpAttribute(AttributeNameServiceProviderLogLevel, tradebuild26.LogLevels.LogLevelLow))
+SpLogLevelCombo.Text = logLevelToString(mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderLogLevel, tradebuild26.LogLevels.LogLevelLow))
 
 Select Case progId
 Case ProgIdTbTickData
@@ -2083,7 +2068,7 @@ OptionCombo.ComboItems.add , , SpOptionCustomTickData
 
 On Error Resume Next
 findSp CategoryTickfileOutput
-progId = getSpAttribute(AttributeNameServiceProviderProgId)
+progId = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo 0
 
 If mCurrSP Is Nothing Then
@@ -2091,7 +2076,7 @@ If mCurrSP Is Nothing Then
     Exit Sub
 End If
 
-SpLogLevelCombo.Text = logLevelToString(getSpAttribute(AttributeNameServiceProviderLogLevel, tradebuild26.LogLevels.LogLevelLow))
+SpLogLevelCombo.Text = logLevelToString(mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderLogLevel, tradebuild26.LogLevels.LogLevelLow))
 
 Select Case progId
 Case ProgIdTbTickData
@@ -2120,7 +2105,7 @@ TWSPortText = ""
 TWSClientIdText = ""
 TwsProviderKeyText = ""
 TwsConnectRetryIntervalText = ""
-TwsEnabledCheck.value = IIf(getSpAttribute(AttributeNameServiceProviderEnabled) = "True", vbChecked, vbUnchecked)
+TwsEnabledCheck.value = IIf(mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
 TwsKeepConnectionCheck.value = IIf(getPropertyValue(PropertyNameTwsKeepConnection) = "True", vbChecked, vbUnchecked)
 TWSServerText = getPropertyValue(PropertyNameTwsServer)
 TWSPortText = getPropertyValue(PropertyNameTwsPort)
