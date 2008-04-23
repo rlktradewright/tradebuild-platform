@@ -835,6 +835,8 @@ Private mPermittedSPs               As Long
 
 Private mCustomParams               As Parameters
 
+Private mReadOnly                   As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -1131,7 +1133,10 @@ End Sub
 
 Public Sub initialise( _
                 ByVal configdata As ConfigItem, _
-                ByVal permittedSPs As Long)
+                ByVal permittedSPs As PermittedServiceProviders, _
+                Optional ByVal readonly As Boolean)
+mReadOnly = readonly
+
 checkForOutstandingUpdates
 mPermittedSPs = permittedSPs
 
@@ -1151,6 +1156,8 @@ If mCustomParams Is Nothing Then
 End If
 
 loadConfig configdata
+
+If mReadOnly Then disableControls
 End Sub
 
 Public Sub setDefaultServiceProviders( _
@@ -1421,19 +1428,26 @@ Set mCurrSP = Nothing
 Set mCurrProps = Nothing
 End Sub
 
+Private Sub disableControls()
+CancelButton.Enabled = False
+ApplyButton.Enabled = False
+End Sub
+
 Private Sub enableApplyButton( _
                 ByVal enable As Boolean)
+If mReadOnly Then Exit Sub
 If enable Then
     ApplyButton.Enabled = True
-    ApplyButton.default = True
+    ApplyButton.Default = True
 Else
     ApplyButton.Enabled = False
-    ApplyButton.default = False
+    ApplyButton.Default = False
 End If
 End Sub
 
 Private Sub enableCancelButton( _
                 ByVal enable As Boolean)
+If mReadOnly Then Exit Sub
 If enable Then
     CancelButton.Enabled = True
     CancelButton.Cancel = True
