@@ -253,6 +253,8 @@ Private mNames                      As Collection
 
 Private mNoCheck                    As Boolean
 
+Private mReadOnly                   As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -516,13 +518,16 @@ enableCancelButton False
 End Sub
 
 Public Sub initialise( _
-                ByVal configdata As ConfigItem)
+                ByVal configdata As ConfigItem, _
+                Optional ByVal readOnly As Boolean)
+mReadOnly = readOnly
 checkForOutstandingUpdates
 clearFields
 Set mCurrSLsList = Nothing
 mCurrSLIndex = -1
 Set mNames = New Collection
 loadConfig configdata
+If mReadOnly Then disableControls
 End Sub
 
 Public Sub setDefaultStudyLibrary( _
@@ -604,8 +609,19 @@ For i = 0 To StudyLibList.ListCount - 1
 Next
 End Sub
 
+Private Sub disableControls()
+AddButton.Enabled = False
+UpButton.Enabled = False
+DownButton.Enabled = False
+RemoveButton.Enabled = False
+CancelButton.Enabled = False
+ApplyButton.Enabled = False
+End Sub
+
+
 Private Sub enableApplyButton( _
                 ByVal enable As Boolean)
+If mReadOnly Then Exit Sub
 If enable Then
     ApplyButton.Enabled = True
     ApplyButton.Default = True
@@ -617,6 +633,7 @@ End Sub
 
 Private Sub enableCancelButton( _
                 ByVal enable As Boolean)
+If mReadOnly Then Exit Sub
 If enable Then
     CancelButton.Enabled = True
     CancelButton.Cancel = True
@@ -713,7 +730,7 @@ Dim i As Long
 
 For i = 0 To StudyLibList.ListCount - 2
     If StudyLibList.selected(i) And Not StudyLibList.selected(i + 1) Then
-        DownButton.Enabled = True
+        If Not mReadOnly Then DownButton.Enabled = True
         Exit Sub
     End If
 Next
@@ -722,7 +739,7 @@ End Sub
 
 Private Sub setRemoveButton()
 If StudyLibList.SelCount <> 0 Then
-    RemoveButton.Enabled = True
+    If Not mReadOnly Then RemoveButton.Enabled = True
 Else
     RemoveButton.Enabled = False
 End If
@@ -733,7 +750,7 @@ Dim i As Long
 
 For i = 1 To StudyLibList.ListCount - 1
     If StudyLibList.selected(i) And Not StudyLibList.selected(i - 1) Then
-        UpButton.Enabled = True
+        If Not mReadOnly Then UpButton.Enabled = True
         Exit Sub
     End If
 Next
