@@ -93,7 +93,8 @@ End Enum
 
 Public Enum DatabaseTypes
     DbNone = 0
-    DbSQLServer7 = 1
+    DbSQLServer = 1
+    DbSQLServer7 = DbSQLServer
     DbSQLServer2000
     DbSQLServer2005
     DbMySQL5
@@ -165,21 +166,7 @@ Public Function GenerateConnectionString( _
                 Optional ByVal password As String) As String
 
 Select Case dbType
-Case DbSQLServer7
-    GenerateConnectionString = "Provider=SQLOLEDB" & _
-                        ";Data Source=" & server & _
-                        ";Initial Catalog=" & databaseName & _
-                        IIf(username = "", _
-                            ";Integrated Security=SSPI", _
-                            ";User Id=" & username & ";Password=" & password)
-Case DbSQLServer2000
-    GenerateConnectionString = "Provider=SQLOLEDB" & _
-                        ";Data Source=" & server & _
-                        ";Initial Catalog=" & databaseName & _
-                        IIf(username = "", _
-                            ";Integrated Security=SSPI", _
-                            ";User Id=" & username & ";Password=" & password)
-Case DbSQLServer2005
+Case DbSQLServer, DbSQLServer2005, DbSQLServer2000, DbSQLServer7
 '    GenerateConnectionString = "Provider=SQLNCLI;" & _
 '                        "Server=" & server & _
 '                        ";Database=" & databaseName & _

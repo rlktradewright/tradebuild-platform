@@ -277,12 +277,15 @@ Public Function gDatabaseTypeFromString( _
                 ByVal value As String) As DatabaseTypes
 value = Trim$(value)
 Select Case UCase$(value)
-Case "SQLSERVER7", "SQL SERVER 7"
-    gDatabaseTypeFromString = DbSQLServer7
-Case "SQLSERVER2000", "SQL SERVER 2000"
-    gDatabaseTypeFromString = DbSQLServer2000
-Case "SQLSERVER2005", "SQL SERVER 2005"
-    gDatabaseTypeFromString = DbSQLServer2005
+Case "SQLSERVER", _
+        "SQL SERVER", _
+        "SQLSERVER7", _
+        "SQL SERVER 7", _
+        "SQLSERVER2000", _
+        "SQL SERVER 2000", _
+        "SQLSERVER2005", _
+        "SQL SERVER 2005"
+    gDatabaseTypeFromString = DbSQLServer
 Case "MYSQL5", "MYSQL 5", "MYSQL"
     gDatabaseTypeFromString = DbMySQL5
 End Select
@@ -291,12 +294,11 @@ End Function
 Public Function gDatabaseTypeToString( _
                 ByVal value As DatabaseTypes) As String
 Select Case value
-Case DbSQLServer7
-    gDatabaseTypeToString = "SQL Server 7"
-Case DbSQLServer2000
-    gDatabaseTypeToString = "SQL Server 2000"
-Case DbSQLServer2005
-    gDatabaseTypeToString = "SQL Server 2005"
+Case DbSQLServer, _
+        DbSQLServer7, _
+        DbSQLServer2000, _
+        DbSQLServer2005
+    gDatabaseTypeToString = "SQL Server"
 Case DbMySQL5
     gDatabaseTypeToString = "MySQL 5"
 End Select
@@ -314,7 +316,7 @@ Set contractSpec = CreateContractSpecifier(instrument.shortName, _
                                         instrument.exchangeName, _
                                         instrument.secType, _
                                         instrument.currencyCode, _
-                                        IIf(instrument.expiryDate = 0, "", Format(instrument.expiryDate, "yyyymmdd")), _
+                                        IIf(instrument.expiryDate = 0, "", format(instrument.expiryDate, "yyyymmdd")), _
                                         instrument.strikePrice, _
                                         instrument.optionRight)
 
