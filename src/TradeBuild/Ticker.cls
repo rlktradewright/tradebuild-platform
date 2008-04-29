@@ -1244,7 +1244,7 @@ mInEventHandler = False
 End Sub
 
 '@================================================================================
-' mTickWriterReleaseTimer Event Handlers
+' mNoMarketDepthNotifyTimer Event Handlers
 '@================================================================================
 
 Private Sub mNoMarketDepthNotifyTimer_TimerExpired()
@@ -1445,6 +1445,10 @@ If mInputStudy Is Nothing Then
 End If
         
 Set inputStudy = mInputStudy
+End Property
+
+Public Property Get isHistorical() As Boolean
+isHistorical = mLoadOnly
 End Property
 
 Friend Property Let key(ByVal value As String)
@@ -2048,6 +2052,10 @@ mClosePrice = 0
 mVolume = 0
 
 mTickers.remove Me
+
+Set mStudyManager = Nothing
+Set mInputStudy = Nothing
+
 
 State = TickerStates.TickerStateStopped
 Set mTickers = Nothing

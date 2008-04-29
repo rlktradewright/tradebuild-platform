@@ -820,37 +820,36 @@ Dim propValue As String
 Dim spObj As Object
 Dim spindex As Long
 Dim params As parameters
+Dim errMess As String
+
+On Error GoTo Err
 
 For Each sp In mServiceProviderConfigList.childItems
-    On Error Resume Next
 
+    errMess = "service provider 'enabled' attribute not specified"
     If CBool(sp.getAttribute(AttributeNameEnabled)) Then
         
-        spName = sp.getAttribute(AttributeNameServiceProviderName)
+        spName = sp.getDefaultableAttribute(AttributeNameServiceProviderName, "")
         
+        errMess = "service provider ProgId not specified"
         spProgId = sp.getAttribute(AttributeNameServiceProviderProgId)
         
-        spLogLevel = sp.getAttribute(AttributeNameLogLevel)
-        If spLogLevel = "" Then spLogLevel = CStr(LogLevels.LogLevelLow)
+        spLogLevel = sp.getDefaultableAttribute(AttributeNameLogLevel, CStr(LogLevels.LogLevelLow))
         
         Set params = New parameters
         
+        On Error Resume Next
+        Set props = Nothing
         Set props = sp.childItems.item(ConfigNameProperties)
+        On Error GoTo Err
         
         If Not props Is Nothing Then
             For Each prop In props.childItems
+                errMess = "property name attribute not specified"
                 propName = prop.getAttribute(AttributeNamePropertyName)
-                propValue = prop.getAttribute(AttributeNamePropertyValue)
+                propValue = prop.getDefaultableAttribute(AttributeNamePropertyValue, "")
                 params.setParameterValue propName, propValue
             Next
-        End If
-        
-        On Error GoTo 0
-        
-        If spProgId = "" Then
-            Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                    ProjectName & "." & ModuleName & ":" & "loadConfiguration", _
-                    "Service provider ProgId not specified in configuration file"
         End If
         
         If spProgId = ProgIdTbOrders Then
@@ -864,6 +863,12 @@ For Each sp In mServiceProviderConfigList.childItems
     End If
 Next
 
+Exit Sub
+
+Err:
+Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+        ProjectName & "." & ModuleName & ":" & "loadConfiguration", _
+        "Error processing service provider configuration - " & errMess
 End Sub
 
 Private Function loadContractsFromSecondarySP( _

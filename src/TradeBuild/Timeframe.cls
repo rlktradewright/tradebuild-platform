@@ -103,7 +103,7 @@ Private mCurrVolume                 As Long
 Private mAskBars                    As StudyUtils26.Bars
 Private mAskBarsStudy               As study
 Private mCurrAskBar                 As StudyUtils26.Bar
-Private mCurrAskBarPrevTickvol          As Long
+Private mCurrAskBarPrevTickvol      As Long
 
 Private mBidBars                    As StudyUtils26.Bars
 Private mBidBarsStudy               As study
@@ -298,33 +298,40 @@ End Sub
 '@================================================================================
 
 Private Sub StudyValueListener_notify(ev As StudyUtils26.StudyValueEvent)
-Static currBarNumber As Long
-If ev.barNumber = currBarNumber Then Exit Sub
-
-' a new bar has started - need to write out the previous one
+Static currAskBarNumber As Long
+Static currBidBarNumber As Long
+Static currTradeBarNumber As Long
 
 If ev.source Is mTradeBarsStudy Then
-    If currBarNumber > 0 Then
+    If ev.barNumber = currTradeBarNumber Then Exit Sub
+    ' a new bar has started - need to write out the previous one
+    If currTradeBarNumber > 0 Then
         mCurrVolume = mTradeBarsStudy.getStudyValue(BarValueVolume, -1).value
         WriteABar mCurrTradeBar, BarTypeTrade, mCurrVolume, mCurrTradeBarPrevTickvol
         mCurrTradeBarPrevTickvol = 0
     End If
     Set mCurrTradeBar = ev.value
+    currTradeBarNumber = ev.barNumber
 ElseIf ev.source Is mAskBarsStudy Then
-    If currBarNumber > 0 Then
+    If ev.barNumber = currAskBarNumber Then Exit Sub
+    ' a new bar has started - need to write out the previous one
+    If currAskBarNumber > 0 Then
         WriteABar mCurrAskBar, BarTypeAsk, 0, mCurrAskBarPrevTickvol
         mCurrAskBarPrevTickvol = 0
     End If
     Set mCurrAskBar = ev.value
+    currAskBarNumber = ev.barNumber
 ElseIf ev.source Is mBidBarsStudy Then
-    If currBarNumber > 0 Then
+    If ev.barNumber = currBidBarNumber Then Exit Sub
+    ' a new bar has started - need to write out the previous one
+    If currBidBarNumber > 0 Then
         WriteABar mCurrBidBar, BarTypeBid, 0, mCurrBidBarPrevTickvol
         mCurrBidBarPrevTickvol = 0
     End If
     Set mCurrBidBar = ev.value
+    currBidBarNumber = ev.barNumber
 End If
 
-currBarNumber = ev.barNumber
 End Sub
 
 '@================================================================================
@@ -356,14 +363,14 @@ End If
 mCurrVolume = mTradeBarsStudy.getStudyValue(BarValueVolume, 0).value
 
 WriteABar mCurrTradeBar, BarTypeTrade, mCurrVolume, mCurrTradeBarPrevTickvol
-mCurrTradeBarPrevTickvol = mCurrTradeBar.TickVolume
+mCurrTradeBarPrevTickvol = mCurrTradeBar.tickVolume
 
 If mWriteBidAndAskBars Then
     WriteABar mCurrAskBar, BarTypeAsk, 0, mCurrAskBarPrevTickvol
-    mCurrAskBarPrevTickvol = mCurrAskBar.TickVolume
+    mCurrAskBarPrevTickvol = mCurrAskBar.tickVolume
     
     WriteABar mCurrBidBar, BarTypeBid, 0, mCurrBidBarPrevTickvol
-    mCurrBidBarPrevTickvol = mCurrBidBar.TickVolume
+    mCurrBidBarPrevTickvol = mCurrBidBar.tickVolume
 End If
 End Sub
 '@================================================================================
@@ -596,7 +603,7 @@ If mBarReader Is Nothing Then
             barSpecifier.ToDate = mToTime
         Else
             If mExcludeCurrentBar Then
-                barSpecifier.ToDate = mSession.BarStartTime(tickr.timestamp, _
+                barSpecifier.ToDate = mSession.barStartTime(tickr.timestamp, _
                                             mBarLength, _
                                             mBarUnit)
             Else
@@ -703,8 +710,8 @@ With mHistoricBar
         studyMgr.notifyInput mVolumeInputHandle, mAccumulatedVolume, .timestamp
     End If
         
-    studyMgr.notifyInput mTickVolumeInputHandle, .TickVolume, .timestamp
-    mCurrTradeBarPrevTickvol = .TickVolume
+    studyMgr.notifyInput mTickVolumeInputHandle, .tickVolume, .timestamp
+    mCurrTradeBarPrevTickvol = .tickVolume
     
 End With
 End Sub
@@ -732,6 +739,10 @@ End Select
 
 If mSaveIntervalSeconds >= 0 Then
     mTradeBarsStudy.addStudyValueListener Me, "Bar", 0
+    If mWriteBidAndAskBars Then
+        mAskBarsStudy.addStudyValueListener Me, "Bar", 0
+        mBidBarsStudy.addStudyValueListener Me, "Bar", 0
+    End If
 End If
 
 End Sub
@@ -981,7 +992,7 @@ If mSaveIntervalSeconds < 0 Then Exit Sub
 If theBar Is Nothing Then Exit Sub
 
 If (Not theBar.Blank) And _
-    theBar.TickVolume <> prevTickVolume _
+    theBar.tickVolume <> prevTickVolume _
 Then
     If mSaveIntervalSeconds = 0 Then
         WriteBar theBar, barType, volume
