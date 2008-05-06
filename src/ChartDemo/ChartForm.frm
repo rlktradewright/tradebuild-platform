@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#13.0#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#18.0#0"; "ChartSkil2-6.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo Version 2.5"
    ClientHeight    =   8355
@@ -226,7 +226,7 @@ Private mMACDRegion As ChartRegion          ' the region of the chart that displ
 
 Private mBarSeries As BarSeries             ' used to define properties for all the
                                             ' bars
-Private mBar As Bar                         ' an individual bar
+Private mBar As chartskil26.Bar             ' an individual bar
 Private mBarTime                            ' the bar start time for mBar
 Private mBarLabelSeries As TextSeries       ' used to define properties for text
                                             ' labels displaying to bar number
@@ -271,9 +271,9 @@ Private mCumVolume As Long                  ' the cumulative volume
 
 Private mSwingLineSeries As LineSeries      ' used to define properties for the swing
                                             ' lines
-Private mSwingLine As ChartSkil26.Line        ' the current swing line
-Private mPrevSwingLine As ChartSkil26.Line    ' the previous swing line
-Private mNewSwingLine As ChartSkil26.Line     ' potential new swing line
+Private mSwingLine As chartskil26.Line        ' the current swing line
+Private mPrevSwingLine As chartskil26.Line    ' the previous swing line
+Private mNewSwingLine As chartskil26.Line     ' potential new swing line
 Private mSwingAmountTicks As Double         ' the minimum price movement in ticks to
                                             ' establish a new swing
 Private mSwingingUp As Boolean              ' indicates whether price is swinging up
@@ -352,7 +352,7 @@ Private Sub LoadButton_Click()
 Dim aFont As StdFont
 Dim btn As Button
 Dim startText As Text
-Dim extendedLine As ChartSkil26.Line
+Dim extendedLine As chartskil26.Line
 Dim lBarStyle As BarStyle
 Dim lDataPointStyle As DataPointStyle
 Dim lLineStyle As LineStyle
