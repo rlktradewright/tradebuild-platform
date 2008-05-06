@@ -276,7 +276,6 @@ If setupDbServiceProvider Then
                                     ";Server=" & server & _
                                     ";user name=" & username & _
                                     ";password=" & password, _
-                        logLevel:=LogLevelLow, _
                         Description:="Enable contract data from TradeBuild's database"
     
 End If
@@ -337,7 +336,6 @@ If setupTwsServiceProvider Then
                                     ";Port=" & port & _
                                     ";Client Id=" & clientId & _
                                     ";Provider Key=IB;Keep Connection=True", _
-                        logLevel:=LogLevelLow, _
                         Description:="Enable contract data from TWS"
 End If
 
