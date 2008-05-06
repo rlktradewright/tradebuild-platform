@@ -385,7 +385,6 @@ If setupServiceProviders Then
                                 ";Server=" & server & _
                                 ";User name=" & username & _
                                 ";Password=" & password, _
-                    logLevel:=LogLevelLow, _
                     Description:="Enable contract data from TradeBuild's database")
     If sp Is Nothing Then
         gCon.writeErrorLine "Required contract info service provider is not installed"
@@ -399,7 +398,6 @@ If setupServiceProviders Then
                                 ";Server=" & server & _
                                 ";User name=" & username & _
                                 ";Password=" & password, _
-                    logLevel:=LogLevelLow, _
                     Description:="Enable historical bar data storage/retrieval to/from TradeBuild's database")
     If sp Is Nothing Then
         gCon.writeErrorLine "Required historical data service provider is not installed"
