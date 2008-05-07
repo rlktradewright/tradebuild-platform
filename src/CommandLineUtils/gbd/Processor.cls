@@ -66,9 +66,9 @@ Private mBarUnits As TimePeriodUnits
 Private mSessionOnly As Boolean
 
 Private mBarStudy As Study
-Private mBars As Bars
+Private mBars As StudyBars
 
-Private mBar As Bar
+Private mBar As StudyBar
 
 '@================================================================================
 ' Class Event Handlers
@@ -85,7 +85,7 @@ End Sub
 Private Sub CollectionChangeListener_Change(ev As TWUtilities30.CollectionChangeEvent)
 
 outputBar
-Set mBar = ev.affectedObject
+Set mBar = ev.affectedItem
 
 End Sub
 
@@ -186,7 +186,7 @@ Set mTimeframe = mTicker.Timeframes.addHistorical(mBarLength, _
                                         mToDate, _
                                         Not mSessionOnly)
 Set mBarStudy = mTimeframe.tradeStudy
-Set mBars = mTimeframe.tradeStudy.Bars
+Set mBars = mTimeframe.tradeStudy.bars
 mBars.addCollectionChangeListener Me
 
 End Sub
