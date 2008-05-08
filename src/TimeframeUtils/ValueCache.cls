@@ -1,0 +1,263 @@
+VERSION 1.0 CLASS
+BEGIN
+  MultiUse = -1  'True
+  Persistable = 0  'NotPersistable
+  DataBindingBehavior = 0  'vbNone
+  DataSourceBehavior  = 0  'vbNone
+  MTSTransactionMode  = 0  'NotAnMTSObject
+END
+Attribute VB_Name = "ValueCache"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = False
+Attribute VB_Exposed = True
+Option Explicit
+
+'@================================================================================
+' Interfaces
+'@================================================================================
+
+'@================================================================================
+' Events
+'@================================================================================
+
+'@================================================================================
+' Constants
+'@================================================================================
+
+Private Const ProjectName                   As String = "TimeframeUtils26"
+Private Const ModuleName                    As String = "ValueCache"
+
+'@================================================================================
+' Enums
+'@================================================================================
+
+'@================================================================================
+' Types
+'@================================================================================
+
+'@================================================================================
+' Member variables
+'@================================================================================
+
+Private mValueName As String
+Private mValues() As SValue
+Private mNewest As Long
+Private mNumValues As Long
+Private mCyclicSize As Long
+
+'@================================================================================
+' Class Event Handlers
+'@================================================================================
+
+'@================================================================================
+' IStudyValueCache Interface Members
+'@================================================================================
+
+'@================================================================================
+' XXXX Event Handlers
+'@================================================================================
+
+'@================================================================================
+' Properties
+'@================================================================================
+
+Public Property Get count() As Long
+count = mNumValues
+End Property
+
+Public Property Get cyclicSize() As Long
+cyclicSize = mCyclicSize
+End Property
+
+Public Property Get valueName() As String
+valueName = mValueName
+End Property
+
+'@================================================================================
+' Methods
+'@================================================================================
+
+Public Sub addValue( _
+                ByVal Value As Variant, _
+                ByVal barNumber As Long, _
+                ByVal timestamp As Date, _
+                ByVal barStartTime As Date)
+
+If mCyclicSize > 0 Then
+    If mNumValues < mCyclicSize Then
+        mNewest = mNewest + 1
+        mNumValues = mNumValues + 1
+    Else
+        mNewest = (mNewest + 1) Mod mCyclicSize
+    End If
+Else
+    If mNewest = UBound(mValues) Then
+        ReDim Preserve mValues(2 * (UBound(mValues) + 1) - 1) As StudyValue
+    End If
+    mNewest = mNewest + 1
+    mNumValues = mNumValues + 1
+End If
+
+If IsObject(Value) Then
+    Set mValues(mNewest).Value = Value
+Else
+    mValues(mNewest).Value = Value
+End If
+mValues(mNewest).barNumber = barNumber
+mValues(mNewest).timestamp = timestamp
+mValues(mNewest).barStartTime = barStartTime
+End Sub
+
+Public Function getStudyValue(Optional ByVal ref As Long) As SValue
+Dim valueEntry As StudyValue
+Dim failpoint As Long
+On Error GoTo Err
+
+valueEntry = mValues(refToIndex(ref))
+getStudyValue.barNumber = valueEntry.barNumber
+getStudyValue.timestamp = valueEntry.timestamp
+getStudyValue.barStartTime = valueEntry.barStartTime
+If IsObject(valueEntry.Value) Then
+    Set getStudyValue.Value = valueEntry.Value
+Else
+    getStudyValue.Value = valueEntry.Value
+End If
+
+Exit Function
+
+Err:
+Err.Raise Err.Number, _
+        ProjectName & "." & ModuleName & ":" & "getStudyValue" & "." & failpoint & _
+        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
+        Err.Description
+
+End Function
+
+Public Function getValue(Optional ByVal ref As Long) As Variant
+Dim index As Long
+
+Dim failpoint As Long
+On Error GoTo Err
+
+index = refToIndex(ref)
+If IsObject(mValues(index).Value) Then
+    Set getValue = mValues(index).Value
+Else
+    getValue = mValues(index).Value
+End If
+
+Exit Function
+
+Err:
+Err.Raise Err.Number, _
+        ProjectName & "." & ModuleName & ":" & "getValue" & "." & failpoint & _
+        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
+        Err.Description
+
+End Function
+
+Friend Sub initialise( _
+                ByVal cyclicSize As Long, _
+                ByVal valueName As String)
+If cyclicSize > 0 Then
+    mCyclicSize = cyclicSize
+    ReDim mValues(mCyclicSize - 1) As StudyValue
+Else
+    ReDim mValues(15) As StudyValue
+    mCyclicSize = 0
+End If
+mNewest = -1
+
+mValueName = valueName
+End Sub
+
+
+
+'Public Function replayValues( _
+'                ByVal target As Object, _
+'                ByVal sourceStudy As study, _
+'                ByVal numberOfValuesToReplay As Long, _
+'                Optional ByVal discriminator As Long, _
+'                Optional ByVal taskName As String, _
+'                Optional ByVal taskData As Variant) As TaskController
+'Dim replayTask As New CacheReplayTask
+'
+'If numberOfValuesToReplay >= 0 Or _
+'    numberOfValuesToReplay = ReplayNumbers.ReplayAll _
+'Then
+'Else
+'    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+'            "StudiesSupp" & "." & "StudyValueCache" & ":" & "replayValues", _
+'            "numberOfValuesToReplay must be >=0 or set to ReplayNumbers.ReplayAll"
+'
+'End If
+'replayTask.initialise Me, _
+'                    target, _
+'                    sourceStudy, _
+'                    numberOfValuesToReplay, _
+'                    discriminator
+'
+'Set replayValues = StartTask( _
+'                                replayTask, _
+'                                PriorityNormal, _
+'                                IIf(taskName <> "", taskName, GenerateGUIDString), _
+'                                taskData)
+'End Function
+
+Public Sub updateValue( _
+                ByVal Value As Variant, _
+                Optional ByVal barNumber As Long, _
+                Optional ByVal timestamp As Date, _
+                Optional ByVal barStartTime As Date, _
+                Optional ByVal ref As Long)
+Dim i As Long
+i = refToIndex(ref)
+If IsObject(Value) Then
+    Set mValues(i).Value = Value
+Else
+    mValues(i).Value = Value
+End If
+If barNumber > 0 Then mValues(i).barNumber = barNumber
+If CDbl(timestamp) > 0 Then mValues(i).timestamp = timestamp
+If CDbl(barStartTime) > 0 Then mValues(i).barStartTime = barStartTime
+End Sub
+
+'@================================================================================
+' Helper Functions
+'@================================================================================
+
+Private Function refToIndex(ByVal ref As Long) As Long
+If ref > mNumValues Or _
+    ref < (1 - mNumValues) _
+Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            "StudyUtils25.StudyValueCache::refToIndex", _
+            "<ref> out of bounds"
+End If
+    
+If mCyclicSize <> 0 Then
+    If ref > 0 Then
+        If mNumValues < mCyclicSize Then
+            refToIndex = ref - 1
+        Else
+            refToIndex = (mNewest + ref) Mod mCyclicSize
+        End If
+    Else
+        refToIndex = (mCyclicSize + mNewest + ref) Mod mCyclicSize
+    End If
+Else
+    If ref > 0 Then
+        refToIndex = ref - 1
+    Else
+        refToIndex = mNewest + ref
+    End If
+End If
+
+End Function
+
+
+
+
+
+
