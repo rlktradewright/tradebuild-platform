@@ -83,7 +83,7 @@ Private Property Get IBarDataSpecifier_BarLengthUnits() As TimePeriodUnits
 IBarDataSpecifier_BarLengthUnits = mBarLengthUnits
 End Property
 
-Private Property Let IBarDataSpecifier_Bartype(ByVal value As TradeBuildSP.BarTypes)
+Private Property Let IBarDataSpecifier_Bartype(ByVal value As BarTypes)
 mBartype = value
 End Property
 
