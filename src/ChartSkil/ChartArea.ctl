@@ -1169,7 +1169,7 @@ If mSuppressDrawingCount = 0 Then setHorizontalScrollBar
 setSession period.timestamp
 If mAutoscroll Then scrollX 1
 
-Set ev.affectedObject = period
+Set ev.affectedItem = period
 ev.changeType = CollItemAdded
 Set ev.Source = mPeriods
 mController.firePeriodsChanged ev
@@ -1752,7 +1752,7 @@ addChartRegion.YAxisRegion = YAxisRegion
 mNumRegionsInUse = mNumRegionsInUse + 1
 
 If sizeRegions Then
-    Set ev.affectedObject = addChartRegion
+    Set ev.affectedItem = addChartRegion
     ev.changeType = CollItemAdded
     mController.fireRegionsChanged ev
     
@@ -1898,7 +1898,7 @@ sizeRegions
 paintAll
 
 ev.changeType = CollItemRemoved
-Set ev.affectedObject = region
+Set ev.affectedItem = region
 mController.fireRegionsChanged ev
 End Sub
 

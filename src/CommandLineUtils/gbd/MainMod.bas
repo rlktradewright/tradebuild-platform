@@ -88,6 +88,8 @@ On Error GoTo Err
 
 InitialiseTWUtilities
 
+mTo = MaxDate
+
 Set gCon = GetConsole
 
 Set clp = CreateCommandLineParser(command)

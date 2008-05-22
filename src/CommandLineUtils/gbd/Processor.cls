@@ -66,9 +66,9 @@ Private mBarUnits As TimePeriodUnits
 Private mSessionOnly As Boolean
 
 Private mBarStudy As Study
-Private mBars As StudyBars
+Private mBars As bars
 
-Private mBar As StudyBar
+Private mBar As Bar
 
 '@================================================================================
 ' Class Event Handlers
@@ -192,11 +192,11 @@ mBars.addCollectionChangeListener Me
 End Sub
 
 Private Sub outputBar()
-Dim sv As StudyValue
+Dim sv As SValue
 
 If mBar Is Nothing Then Exit Sub
 
-gCon.writeString FormatTimestamp(mBar.DateTime, TimestampDateAndTimeISO8601)
+gCon.writeString FormatTimestamp(mBar.TimeStamp, TimestampDateAndTimeISO8601)
 gCon.writeString ","
 gCon.writeString Format(mBar.openValue, mPriceFormatString)
 gCon.writeString ","
@@ -206,9 +206,10 @@ gCon.writeString Format(mBar.lowValue, mPriceFormatString)
 gCon.writeString ","
 gCon.writeString Format(mBar.closeValue, mPriceFormatString)
 gCon.writeString ","
-sv = mBarStudy.getStudyValue("Volume", 0)
-gCon.writeString CStr(sv.Value)
+gCon.writeString mBar.volume
 gCon.writeString ","
-gCon.writeLine mBar.tickVolume
+gCon.writeString mBar.tickVolume
+gCon.writeString ","
+gCon.writeLine mBar.openInterest
 End Sub
 

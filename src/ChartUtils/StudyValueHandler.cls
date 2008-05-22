@@ -144,7 +144,7 @@ End Sub
 Private Sub StudyValueListener_notify( _
                 ByRef ev As StudyValueEvent)
 
-If IsEmpty(ev.value) Then Exit Sub
+If IsEmpty(ev.sVal.value) Then Exit Sub
 
 If mUpdatePerTick Then
     Select Case mValueMode
@@ -283,39 +283,35 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Function addBarToChart( _
-                ByVal timestamp As Date) As DataPoint
-'Dim Period As Period
+Private Sub addBarToChart( _
+                ByVal timestamp As Date)
 
 Set mPrevBar = mCurrentBar
 
-'Set Period = chartMgr.getPeriod(timestamp)  ' add period and scroll chart if need be
 Set mCurrentBar = mBarSeries.add(timestamp)
-End Function
+End Sub
 
 Private Sub addDataPointToChart( _
                 ByVal timestamp As Date)
-'Dim Period As Period
 
 Set mPrevDataPoint = mCurrentDataPoint
 
-'Set Period = chartMgr.getPeriod(timestamp)
 Set mCurrentDataPoint = mDataSeries.add(timestamp)
 If Not IsEmpty(mLatestValue) Then mCurrentDataPoint.dataValue = mLatestValue
 End Sub
 
-Private Function addLineToChart() As DataPoint
+Private Sub addLineToChart()
 
 Set mPrevLine = mCurrentLine
 
 Set mCurrentLine = mLineSeries.add
-End Function
+End Sub
 
-Private Function addTextToChart() As DataPoint
+Private Sub addTextToChart()
 Set mPrevText = mCurrentText
 
 Set mCurrentText = mTextSeries.add
-End Function
+End Sub
 
 Private Function chartMgr() As ChartManager
 Set chartMgr = mChartManagerRef.Target
@@ -324,28 +320,35 @@ End Function
 Private Sub processBar( _
                 ByRef ev As StudyValueEvent)
 Static prevBarNumber As Long
-Dim lBar As StudyUtils26.Bar
+Dim lBar As TimeframeUtils26.Bar
 
-If TypeName(ev.value) = "Nothing" Then Exit Sub
+If TypeName(ev.sVal.value) = "Nothing" Then Exit Sub
 
-Set lBar = ev.value
+Set lBar = ev.sVal.value
 
 If mCurrentBar Is Nothing Or _
-    ev.barNumber <> prevBarNumber _
+    ev.sVal.barNumber <> prevBarNumber _
 Then
-    addBarToChart lBar.DateTime
-    ' we may be processing a historical bar here, so make sure open, high
-    ' low and close are all set
-    mCurrentBar.Tick lBar.openValue
-    mCurrentBar.Tick lBar.highValue
-    mCurrentBar.Tick lBar.lowValue
-    mCurrentBar.Tick lBar.closeValue
+    addBarToChart lBar.timestamp
+    
+    If Not lBar.Blank Then
+        ' we may be processing a historical bar here, so make sure open, high
+        ' low and close are all set
+        
+        mCurrentBar.Tick lBar.openValue
+        mCurrentBar.Tick lBar.highValue
+        mCurrentBar.Tick lBar.lowValue
+        mCurrentBar.Tick lBar.closeValue
+    End If
 Else
-    mCurrentBar.Tick lBar.closeValue
+    If Not lBar.Blank Then mCurrentBar.Tick lBar.closeValue
 End If
 
-If mConditionalActionsIndex >= 0 Then processConditionalActions ev.timestamp
-prevBarNumber = ev.barNumber
+If Not lBar.Blank Then
+    If mConditionalActionsIndex >= 0 Then processConditionalActions ev.sVal.timestamp
+End If
+
+prevBarNumber = ev.sVal.barNumber
 End Sub
 
 Private Function processConditionalAction( _
@@ -437,14 +440,14 @@ Private Sub processDataPoint( _
                 ByRef ev As StudyValueEvent)
 Static prevBarNumber As Long
 If mCurrentDataPoint Is Nothing Or _
-    ev.barNumber <> prevBarNumber _
+    ev.sVal.barNumber <> prevBarNumber _
 Then
-    addDataPointToChart ev.barStartTime
+    addDataPointToChart ev.sVal.BarStartTime
 End If
-mCurrentDataPoint.dataValue = ev.value
-If mConditionalActionsIndex >= 0 Then processConditionalActions ev.timestamp
-prevBarNumber = ev.barNumber
-mLatestValue = ev.value
+mCurrentDataPoint.dataValue = ev.sVal.value
+If mConditionalActionsIndex >= 0 Then processConditionalActions ev.sVal.timestamp
+prevBarNumber = ev.sVal.barNumber
+mLatestValue = ev.sVal.value
 End Sub
 
 Private Sub processLine( _
@@ -452,23 +455,23 @@ Private Sub processLine( _
 Static prevBarNumber As Long
 Dim studyLine As studyLine
 
-If TypeName(ev.value) = "Nothing" Then Exit Sub
+If TypeName(ev.sVal.value) = "Nothing" Then Exit Sub
 
 If mCurrentLine Is Nothing Or _
-    ev.barNumber <> prevBarNumber _
+    ev.sVal.barNumber <> prevBarNumber _
 Then
     addLineToChart
 End If
 
-Set studyLine = ev.value
+Set studyLine = ev.sVal.value
 mCurrentLine.point1 = mRegion.newPoint( _
                                 chartMgr.getPeriod(studyLine.point1.x).periodNumber, _
                                 studyLine.point1.y)
 mCurrentLine.point2 = mRegion.newPoint( _
                                 chartMgr.getPeriod(studyLine.point2.x).periodNumber, _
                                 studyLine.point2.y)
-If mConditionalActionsIndex >= 0 Then processConditionalActions ev.timestamp
-prevBarNumber = ev.barNumber
+If mConditionalActionsIndex >= 0 Then processConditionalActions ev.sVal.timestamp
+prevBarNumber = ev.sVal.barNumber
 End Sub
 
 Private Sub processString( _
@@ -476,17 +479,17 @@ Private Sub processString( _
 Static prevBarNumber As Long
 
 If mCurrentText Is Nothing Or _
-    ev.barNumber <> prevBarNumber _
+    ev.sVal.barNumber <> prevBarNumber _
 Then
     addTextToChart
 End If
 
 mCurrentText.position = mRegion.newPoint( _
-                                chartMgr.getPeriod(ev.barStartTime), _
+                                chartMgr.getPeriod(ev.sVal.BarStartTime), _
                                 0, CoordsCounterDistance, CoordsRelative)
-mCurrentText.Text = ev.value
-If mConditionalActionsIndex >= 0 Then processConditionalActions ev.timestamp
-prevBarNumber = ev.barNumber
+mCurrentText.Text = ev.sVal.value
+If mConditionalActionsIndex >= 0 Then processConditionalActions ev.sVal.timestamp
+prevBarNumber = ev.sVal.barNumber
 End Sub
 
 Private Sub processText( _
@@ -495,19 +498,19 @@ Static prevBarNumber As Long
 Dim studyText As studyText
 
 If mCurrentText Is Nothing Or _
-    ev.barNumber <> prevBarNumber _
+    ev.sVal.barNumber <> prevBarNumber _
 Then
     addTextToChart
 End If
 
-Set studyText = ev.value
+Set studyText = ev.sVal.value
 mCurrentText.position = mRegion.newPoint( _
                                 chartMgr.getPeriod(studyText.position.x), _
                                 studyText.position.y)
 mCurrentText.offset = mTextOffset
 mCurrentText.Text = studyText.Text
-If mConditionalActionsIndex >= 0 Then processConditionalActions ev.timestamp
-prevBarNumber = ev.barNumber
+If mConditionalActionsIndex >= 0 Then processConditionalActions ev.sVal.timestamp
+prevBarNumber = ev.sVal.barNumber
 End Sub
 
 Private Sub setupBarSeries( _
