@@ -82,7 +82,6 @@ End Property
 '@================================================================================
 
 Friend Sub SelectTickfiles()
-Dim i As Long
 
 Set mTickfileOrganiser = New fTickfileOrganiser
 

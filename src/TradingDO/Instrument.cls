@@ -36,7 +36,6 @@ Implements BusinessDataObject
 ' Events
 '@===============================================================================
 
-Public Event Loaded()
 Public Event Clean()
 Public Event Deleted()
 Public Event Dirty()
@@ -46,6 +45,9 @@ Public Event Valid()
 '@===============================================================================
 ' Constants
 '@===============================================================================
+
+Private Const ProjectName               As String = "TradingDO26"
+Private Const ModuleName                As String = "Instrument"
 
 '@===============================================================================
 ' Enums
@@ -87,8 +89,6 @@ Private mWriters As Collection
 
 Private mWriterCounter As Long
 
-Private mInstrumentClass As InstrumentClass
-
 '@===============================================================================
 ' Class Event Handlers
 '@===============================================================================
@@ -126,6 +126,10 @@ End Property
 Private Property Get BusinessDataObject_ID() As Long
 BusinessDataObject_ID = id
 End Property
+
+Private Sub BusinessDataObject_InitialiseFromRecordset(ByVal rs As ADODB.Recordset)
+initialiseRs rs
+End Sub
 
 Private Property Get BusinessDataObject_IsDeleted() As Boolean
 BusinessDataObject_IsDeleted = IsDeleted
@@ -186,11 +190,7 @@ Dirty
 End Property
 
 Public Property Get currencyCode() As String
-If IsNull(mRs(InstrumentColumnCurrency)) Then
-    currencyCode = InstrumentClass.currencyCode
-Else
-    currencyCode = Trim$(mRs(InstrumentColumnCurrency))
-End If
+currencyCode = Trim$(mRs(InstrumentColumnCurrency))
 End Property
 
 Public Property Get currencyCodeInheritedFromClass() As Boolean
@@ -200,7 +200,7 @@ End If
 End Property
 
 Public Property Get daysBeforeExpiryToSwitch() As Long
-daysBeforeExpiryToSwitch = InstrumentClass.daysBeforeExpiryToSwitch
+daysBeforeExpiryToSwitch = mRs("daysBeforeExpiryToSwitch")
 End Property
 
 Public Property Get ErrorList() As ErrorList
@@ -208,7 +208,7 @@ Set ErrorList = mErrorList
 End Property
 
 Public Property Get exchangeName() As String
-exchangeName = InstrumentClass.exchangeName
+exchangeName = Trim$(mRs(InstrumentColumnExchange))
 End Property
 
 Public Property Get expiryDate() As Date
@@ -255,17 +255,17 @@ Public Property Let InstrumentClass( _
                 ByVal value As InstrumentClass)
 ruleBroken BusRuleInstrumentInstrumentClassValid, value Is Nothing
 If Not value Is Nothing Then
-    Set mInstrumentClass = value
-    mRs("instrumentclassid") = mInstrumentClass.id
+    mRs("instrumentclassid") = value.id
 End If
 Dirty
 End Property
 
 Public Property Get InstrumentClass() As InstrumentClass
-If mInstrumentClass Is Nothing Then
-    Set mInstrumentClass = mDB.InstrumentClassFactory.loadByID(mRs("instrumentclassid"))
-End If
-Set InstrumentClass = mInstrumentClass
+Set InstrumentClass = mDB.InstrumentClassFactory.loadByID(mRs("instrumentclassid"))
+End Property
+
+Public Property Get InstrumentClassId() As Long
+InstrumentClassId = mRs("instrumentclassid")
 End Property
 
 Public Property Let instrumentClassName( _
@@ -274,7 +274,7 @@ InstrumentClass = mDB.InstrumentClassFactory.loadByName(value)
 End Property
 
 Public Property Get instrumentClassName() As String
-instrumentClassName = mInstrumentClass.name
+instrumentClassName = Trim$(mRs("instrumentclassname"))
 End Property
 
 Public Property Get IsDeleted() As Boolean
@@ -303,7 +303,7 @@ Set localSymbols = mLocalSymbols
 End Property
 
 Public Property Get month() As String
-month = Format(expiryDate, "yyyymm")
+month = format(expiryDate, "yyyymm")
 End Property
 
 Public Property Get name() As String
@@ -338,15 +338,15 @@ Dirty
 End Property
 
 Public Property Get secType() As SecurityTypes
-secType = InstrumentClass.secType
+secType = gCategoryToSecType(mRs("instrumentcategoryid"))
 End Property
 
 Public Property Get sessionEndTime() As Date
-sessionEndTime = InstrumentClass.sessionEndTime
+sessionEndTime = mRs("sessionEndTime")
 End Property
 
 Public Property Get sessionStartTime() As Date
-sessionStartTime = InstrumentClass.sessionStartTime
+sessionStartTime = mRs("sessionstartTime")
 End Property
 
 Public Property Get shortName() As String
@@ -405,11 +405,7 @@ Dirty
 End Property
 
 Public Property Get tickSize() As Double
-If IsNull(mRs(InstrumentColumnTickSize)) Then
-    tickSize = InstrumentClass.tickSize
-Else
-    tickSize = Trim$(mRs(InstrumentColumnTickSize))
-End If
+tickSize = mRs(InstrumentColumnTickSize)
 End Property
 
 Public Property Get tickSizeInheritedFromClass() As Boolean
@@ -443,11 +439,7 @@ Dirty
 End Property
 
 Public Property Get tickValue() As Double
-If IsNull(mRs(InstrumentColumnTickValue)) Then
-    tickValue = InstrumentClass.tickValue
-Else
-    tickValue = Trim$(mRs(InstrumentColumnTickValue))
-End If
+tickValue = mRs(InstrumentColumnTickValue)
 End Property
 
 Public Property Get tickValueInheritedFromClass() As Boolean
@@ -469,11 +461,11 @@ End If
 End Property
 
 Public Property Get timeZoneCanonicalName() As String
-timeZoneCanonicalName = InstrumentClass.timeZoneCanonicalName
+timeZoneCanonicalName = Trim$(mRs(InstrumentColumnTimeZone))
 End Property
 
 Public Property Get TimeZoneName() As String
-TimeZoneName = InstrumentClass.TimeZoneName
+TimeZoneName = Trim$(mRs("TimeZoneName"))
 End Property
 
 '@===============================================================================
@@ -496,7 +488,6 @@ Clean
 End Sub
 
 Public Sub CancelEdit()
-Set mInstrumentClass = Nothing
 mRs.CancelUpdate
 mDeleted = False
 If mRs.EOF Then
@@ -534,18 +525,116 @@ Public Sub Delete()
 mDeleted = True
 End Sub
 
+Public Function FetchBars( _
+                ByVal barLength As Long, _
+                ByVal barLengthUnits As TimePeriodUnits, _
+                ByVal maxNumberOfBars As Long, _
+                Optional ByVal fromDate As Date, _
+                Optional ByVal toDate As Date = MaxDateValue, _
+                Optional ByVal customSessionStartTime As Date, _
+                Optional ByVal customSessionEndTime As Date, _
+                Optional ByVal includeBarsOutsideSession As Boolean, _
+                Optional ByVal barType As BarTypes = BarTypeTrade) As bars
+Dim bf As BarFetcher
+Dim specifier As BarDataSpecifier
+
+Select Case barLengthUnits
+Case TimePeriodSecond, _
+    TimePeriodMinute, _
+    TimePeriodHour, _
+    TimePeriodDay, _
+    TimePeriodWeek, _
+    TimePeriodMonth, _
+    TimePeriodYear, _
+    TimePeriodVolume, _
+    TimePeriodTickMovement
+Case Else
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "FetchBars", _
+            "Bar time unit not supported"
+End Select
+
+Set specifier = New BarDataSpecifier
+specifier.barLength = barLength
+specifier.barLengthUnits = barLengthUnits
+specifier.barType = barType
+specifier.fromDate = fromDate
+specifier.includeBarsOutsideSession = includeBarsOutsideSession
+specifier.maxNumberOfBars = maxNumberOfBars
+specifier.toDate = toDate
+specifier.setCustomSessionTimes customSessionStartTime, customSessionEndTime
+
+Set bf = New BarFetcher
+bf.initialise mDB, Me
+
+Set FetchBars = bf.FetchBars(specifier)
+Set bf = Nothing
+End Function
+
+Public Function fetchbarsAsync( _
+                ByVal barLength As Long, _
+                ByVal barLengthUnits As TimePeriodUnits, _
+                ByVal maxNumberOfBars As Long, _
+                Optional ByVal fromDate As Date, _
+                Optional ByVal toDate As Date = MaxDateValue, _
+                Optional ByVal customSessionStartTime As Date, _
+                Optional ByVal customSessionEndTime As Date, _
+                Optional ByVal includeBarsOutsideSession As Boolean, _
+                Optional ByVal barType As BarTypes = BarTypeTrade) As TaskController
+Dim bf As BarFetcher
+Dim specifier As BarDataSpecifier
+
+Select Case barLengthUnits
+Case TimePeriodSecond, _
+    TimePeriodMinute, _
+    TimePeriodHour, _
+    TimePeriodDay, _
+    TimePeriodWeek, _
+    TimePeriodMonth, _
+    TimePeriodYear, _
+    TimePeriodVolume, _
+    TimePeriodTickMovement
+Case Else
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "FetchBarsAsync", _
+            "Bar time unit not supported"
+End Select
+
+Set specifier = New BarDataSpecifier
+specifier.barLength = barLength
+specifier.barLengthUnits = barLengthUnits
+specifier.barType = barType
+specifier.fromDate = fromDate
+specifier.includeBarsOutsideSession = includeBarsOutsideSession
+specifier.maxNumberOfBars = maxNumberOfBars
+specifier.toDate = toDate
+specifier.setCustomSessionTimes customSessionStartTime, customSessionEndTime
+
+Set bf = New BarFetcher
+bf.initialise mDB, Me
+
+Set fetchbarsAsync = bf.fetchbarsAsync(specifier)
+Set bf = Nothing
+End Function
+
 Friend Sub initialise( _
                 ByVal db As TradingDB, _
-                ByVal rs As ADODB.Recordset)
+                Optional ByVal rs As ADODB.Recordset)
 Set mDB = db
 
+If Not rs Is Nothing Then initialiseRs rs
+End Sub
+
+Friend Sub initialiseRs( _
+                ByVal rs As ADODB.Recordset)
 Set mRs = rs
 
-mMaxNameLength = mRs.Fields("NAME").DefinedSize
-mMaxShortNameLength = mRs.Fields("SHORTNAME").DefinedSize
-mMaxSymbolLength = mRs.Fields("SYMBOL").DefinedSize
-mMaxOptRightLength = mRs.Fields("OptRight").DefinedSize
-mMaxCurrencyCodeLength = mRs.Fields("Currency").DefinedSize
+mMaxNameLength = mRs.Fields(InstrumentColumnName).DefinedSize
+mMaxShortNameLength = mRs.Fields(InstrumentColumnShortName).DefinedSize
+mMaxSymbolLength = mRs.Fields(InstrumentColumnSymbol).DefinedSize
+mMaxOptRightLength = mRs.Fields(InstrumentColumnOptionRight).DefinedSize
+mMaxCurrencyCodeLength = mRs.Fields(InstrumentColumnCurrency).DefinedSize
+
 If mRs.EOF Then
     mRs.AddNew
     mNew = True

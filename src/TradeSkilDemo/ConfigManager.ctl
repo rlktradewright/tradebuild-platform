@@ -343,16 +343,8 @@ Else
     If Not Node.Parent.Tag Is mCurrAppConfig Then setCurrentConfig Node.Parent.Tag, Node.Parent
     
     If Node.Text = ConfigNodeServiceProviders Then
-        SPConfigurer1.Left = Box1.Left
-        SPConfigurer1.Top = Box1.Top
-        SPConfigurer1.Visible = True
-        StudyLibConfigurer1.Visible = False
         showServiceProviderConfigDetails
     Else
-        StudyLibConfigurer1.Left = Box1.Left
-        StudyLibConfigurer1.Top = Box1.Top
-        StudyLibConfigurer1.Visible = True
-        SPConfigurer1.Visible = False
         showStudyLibraryConfigDetails
     End If
     DeleteConfigButton.Enabled = False
@@ -436,7 +428,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Sub appyPendingChanges()
+Public Sub applyPendingChanges()
 If StudyLibConfigurer1.dirty Then
     StudyLibConfigurer1.ApplyChanges
 End If
@@ -582,6 +574,11 @@ Next
 
 End Function
 
+Private Sub hideConfigControls()
+SPConfigurer1.Visible = False
+StudyLibConfigurer1.Visible = False
+End Sub
+
 Private Function nameAlreadyInUse( _
                 ByVal name As String) As Boolean
 Dim s As String
@@ -620,6 +617,10 @@ DeleteConfigButton.Enabled = True
 End Sub
 
 Private Sub showServiceProviderConfigDetails()
+hideConfigControls
+SPConfigurer1.Left = Box1.Left
+SPConfigurer1.Top = Box1.Top
+SPConfigurer1.Visible = True
 SPConfigurer1.initialise mCurrAppConfig.childItems.Item(ConfigNameTradeBuild), _
                                         PermittedServiceProviders.SPRealtimeData Or _
                                         PermittedServiceProviders.SPPrimaryContractData Or _
@@ -630,6 +631,10 @@ SPConfigurer1.initialise mCurrAppConfig.childItems.Item(ConfigNameTradeBuild), _
 End Sub
 
 Private Sub showStudyLibraryConfigDetails()
+hideConfigControls
+StudyLibConfigurer1.Left = Box1.Left
+StudyLibConfigurer1.Top = Box1.Top
+StudyLibConfigurer1.Visible = True
 StudyLibConfigurer1.initialise mCurrAppConfig.childItems.Item(ConfigNameTradeBuild)
 End Sub
 

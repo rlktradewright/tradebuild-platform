@@ -25,7 +25,7 @@ library TradeBuildSP
     interface IBarDataOutputServiceConsumer;
     interface IBarDataReader;
     interface IBarDataServiceProvider;
-	interface IBarDataSpecifier;
+	//interface IBarDataSpecifier;
     interface IBarDataWriter;
     interface ICommonServiceConsumer;
     interface ICommonServiceProvider;
@@ -55,12 +55,12 @@ library TradeBuildSP
 
 // Enums *************************************************************************
 
-    typedef [uuid(cb987243-e48a-4f5a-90c5-1b36217268e8), version(1.0)]
-    enum {
-        BarTypeTrade = 0,
-        BarTypeBid = 1,
-        BarTypeAsk = 2
-    } BarTypes;
+    //typedef [uuid(cb987243-e48a-4f5a-90c5-1b36217268e8), version(1.0)]
+    //enum {
+    //    BarTypeTrade = 0,
+    //    BarTypeBid = 1,
+    //    BarTypeAsk = 2
+    //} BarTypes;
 
     typedef [uuid(85d2b0ef-7649-40bb-abb6-a0813d43597f), version(1.0)]
     enum {
@@ -74,14 +74,14 @@ library TradeBuildSP
         Store = 1
     } ContractInfoServiceProviderCapabilities;
 
-	typedef [uuid(e5be4e16-1e30-4aaa-8be2-35bd02206256), version(1.0)]
-	enum {
-		DisplayNone = 0,
-		displayAsPoints = 1,
-		DisplayAsLines = 2,
-		DisplayAsSteppedLines = 3,
-		displayAsHistogram = 4
-	} DisplayModes;
+	//typedef [uuid(e5be4e16-1e30-4aaa-8be2-35bd02206256), version(1.0)]
+	//enum {
+	//	DisplayNone = 0,
+	//	displayAsPoints = 1,
+	//	DisplayAsLines = 2,
+	//	DisplayAsSteppedLines = 3,
+	//	displayAsHistogram = 4
+	//} DisplayModes;
 
     typedef [uuid(170DD609-38C8-49DA-9096-33BA70A4ECDB), version(1.0)]
     enum {
@@ -117,30 +117,30 @@ library TradeBuildSP
         LegUnknownPos = 3
     } LegOpenClose;
 
-	typedef [uuid(bdeea36a-06c4-4683-b1e9-facfd4ff4352), version(1.0)]
-	enum {
-		LineSolid = 0,
-		LineDash = 1,
-		LineDot = 2,
-		LineDashDot = 3,
-		LineDashDotDot = 4,
-		LineInvisible = 5,
-		LineInsideSolid = 6
-	} LineStyles;
+	//typedef [uuid(bdeea36a-06c4-4683-b1e9-facfd4ff4352), version(1.0)]
+	//enum {
+	//	LineSolid = 0,
+	//	LineDash = 1,
+	//	LineDot = 2,
+	//	LineDashDot = 3,
+	//	LineDashDotDot = 4,
+	//	LineInvisible = 5,
+	//	LineInsideSolid = 6
+	//} LineStyles;
 
-    typedef [uuid(dd44a224-1338-455f-95b6-cdfe7b3e4884), version(1.0)]
-    enum {
-		LogLevelNone = 0,
-		LogLevelLow = 1,
-		LogLevelMedium = 2,
-		LogLevelHigh = 3,
-		LogLevelAll = 4
-    } LogLevels;
+  //  typedef [uuid(dd44a224-1338-455f-95b6-cdfe7b3e4884), version(1.0)]
+  //  enum {
+		//LogLevelNone = 0,
+		//LogLevelLow = 1,
+		//LogLevelMedium = 2,
+		//LogLevelHigh = 3,
+		//LogLevelAll = 4
+  //  } LogLevels;
 
-    typedef [uuid(756ef079-7875-4ad8-90e2-ed3f4944ee05), version(1.0)]
-    enum {
-    	NoValidId = -1
-    } Misc;
+    //typedef [uuid(756ef079-7875-4ad8-90e2-ed3f4944ee05), version(1.0)]
+    //enum {
+    //	NoValidId = -1
+    //} Misc;
 
     //typedef [uuid(432653EE-39C0-4AEF-BE8E-F69213F3B41B), version(1.0)]
     //enum {
@@ -149,23 +149,23 @@ library TradeBuildSP
     //    OptPut = 2
     //} OptionRights;
 
-	typedef [uuid(2c8981a4-675a-4a14-bb0b-f6573dcdce57), version(1.0)]
-	enum {
-		OpTrue = 0,
-		OpLessThan = 1,
-		OpEqual = 2,
-		OpGreaterThan = 3,
-		OpBetween = 4,
-		OpLessThanPrevious = 5,
-		OpEqualPrevious = 6,
-		OpGreaterThanPrevious = 7,
-		OpStartsWith = 8,
-		OpContains = 9,
-		OpEndsWith = 10,
-		OpAnd = 11,
-		OpOr = 12,
-		OpXor = 13
-	} Operators;
+	//typedef [uuid(2c8981a4-675a-4a14-bb0b-f6573dcdce57), version(1.0)]
+	//enum {
+	//	OpTrue = 0,
+	//	OpLessThan = 1,
+	//	OpEqual = 2,
+	//	OpGreaterThan = 3,
+	//	OpBetween = 4,
+	//	OpLessThanPrevious = 5,
+	//	OpEqualPrevious = 6,
+	//	OpGreaterThanPrevious = 7,
+	//	OpStartsWith = 8,
+	//	OpContains = 9,
+	//	OpEndsWith = 10,
+	//	OpAnd = 11,
+	//	OpOr = 12,
+	//	OpXor = 13
+	//} Operators;
 
     typedef [uuid(9f77deb1-43ef-484a-8138-f029377382bf), version(1.0)]
     enum {
@@ -285,21 +285,21 @@ library TradeBuildSP
 		SecondaryContractInfo = 0x800
     } ServiceProviderTypes;
 
-	typedef [uuid(02e561db-66bd-4696-90a9-e2a04568cff8), version(1.0)]
-	enum {
-		SVCurrentSessionStartTime = 0,
-		SVCurrentSessionEndTime = 1,
-		SVHighPrice = 2,
-		SVLowPrice = 3,
-		SVPreviousClosePrice = 4
-	} SpecialValues;
+	//typedef [uuid(02e561db-66bd-4696-90a9-e2a04568cff8), version(1.0)]
+	//enum {
+	//	SVCurrentSessionStartTime = 0,
+	//	SVCurrentSessionEndTime = 1,
+	//	SVHighPrice = 2,
+	//	SVLowPrice = 3,
+	//	SVPreviousClosePrice = 4
+	//} SpecialValues;
 
-    typedef [uuid(4FA2EF4F-D6B1-4201-965C-9E0550F0960F), version(1.0)]
-    enum {
-		Log = 1,
-		Trace = 2,
-		Debug = 3
-    } StandardListenValueTypes;
+  //  typedef [uuid(4FA2EF4F-D6B1-4201-965C-9E0550F0960F), version(1.0)]
+  //  enum {
+		//Log = 1,
+		//Trace = 2,
+		//Debug = 3
+  //  } StandardListenValueTypes;
 
     typedef [uuid(d8fee7c0-401e-454e-910a-1d16a3a75685), 
 	version(1.0)]
@@ -501,25 +501,25 @@ library TradeBuildSP
 
 // Types*************************************************************   
 
-    typedef [uuid(b62bc45a-ca8b-41e3-9d9a-99a4c473d55a), version(1.0)]
-    struct tagBar {
-		DATE Timestamp;
-		//BarTypes BarType;
-		//long PeriodMinutes;
-		double OpenPrice;
-		double HighPrice;
-		double LowPrice;
-		double ClosePrice;
-		long Volume;
-		long TickVolume;
-		long OpenInterest;
-    } Bar;
+  //  typedef [uuid(b62bc45a-ca8b-41e3-9d9a-99a4c473d55a), version(1.0)]
+  //  struct tagBar {
+		//DATE Timestamp;
+		////BarTypes BarType;
+		////long PeriodMinutes;
+		//double OpenPrice;
+		//double HighPrice;
+		//double LowPrice;
+		//double ClosePrice;
+		//long Volume;
+		//long TickVolume;
+		//long OpenInterest;
+  //  } Bar;
 
-    typedef [uuid(eb2da908-cd7f-43a5-aa44-9e22e131ae9a), version(1.0)]
-    struct tagDictionaryEntry {
-        BSTR Key;
-		BSTR Value;
-    } DictionaryEntry;
+  //  typedef [uuid(eb2da908-cd7f-43a5-aa44-9e22e131ae9a), version(1.0)]
+  //  struct tagDictionaryEntry {
+  //      BSTR Key;
+		//BSTR Value;
+  //  } DictionaryEntry;
 
     typedef [uuid(c7fb9add-a3d6-48e4-b4e4-b5bf2b2168b2), version(1.0)]
     struct tagServiceProviderDetails {
@@ -642,7 +642,7 @@ library TradeBuildSP
 
         [propget]
         HRESULT BarDataSpecifier(
-            [out, retval] IBarDataSpecifier** );
+            [out, retval] BarDataSpecifier** );
 
 		[propget]
 		HRESULT NumberOfBars(
@@ -653,7 +653,7 @@ library TradeBuildSP
 		HRESULT CancelFetch();
 
 		HRESULT FetchBars(
-				[in] IBarDataSpecifier* barSpecifier);
+				[in] BarDataSpecifier* barSpecifier);
 
 		HRESULT ReleaseDataStore();
 
@@ -701,81 +701,81 @@ library TradeBuildSP
 
     };
 
-    [
-      uuid(71d4591a-1c32-4616-81e0-65115c474aa2),
-      version(1.0),
-      nonextensible,
-      helpstring("Specifies the interface to be implemented by Bar Data Specifier object")
-    ]
-    interface IBarDataSpecifier : IUnknown {
+ //   [
+ //     uuid(71d4591a-1c32-4616-81e0-65115c474aa2),
+ //     version(1.0),
+ //     nonextensible,
+ //     helpstring("Specifies the interface to be implemented by Bar Data Specifier object")
+ //   ]
+ //   interface IBarDataSpecifier : IUnknown {
 
-		// Properties ==================================================
+	//	// Properties ==================================================
 
-		[propput,
-		helpstring("Contains the contract for the required data")]
-		HRESULT Contract([in] Contract*) ;
+	//	[propput,
+	//	helpstring("Contains the contract for the required data")]
+	//	HRESULT Contract([in] Contract*) ;
 
-		[propget,
-		helpstring("Contains the contract for the required data")]
-		HRESULT Contract([out, retval] Contract**) ;
+	//	[propget,
+	//	helpstring("Contains the contract for the required data")]
+	//	HRESULT Contract([out, retval] Contract**) ;
 
-		[propput,
-		helpstring("Contains the bar length for the required data")]
-		HRESULT BarLength([in] long) ;
+	//	[propput,
+	//	helpstring("Contains the bar length for the required data")]
+	//	HRESULT BarLength([in] long) ;
 
-		[propget,
-		helpstring("Contains the bar length for the required data")]
-		HRESULT BarLength([out, retval] long*) ;
+	//	[propget,
+	//	helpstring("Contains the bar length for the required data")]
+	//	HRESULT BarLength([out, retval] long*) ;
 
-        [propput,
-	    helpstring("Contains the time units for the bar length")]
-		HRESULT BarLengthUnits([in] TimePeriodUnits) ;
+ //       [propput,
+	//    helpstring("Contains the time units for the bar length")]
+	//	HRESULT BarLengthUnits([in] TimePeriodUnits) ;
 
-        [propget,
-	    helpstring("Contains the time units for the bar length")]
-		HRESULT BarLengthUnits([out, retval] TimePeriodUnits*) ;
+ //       [propget,
+	//    helpstring("Contains the time units for the bar length")]
+	//	HRESULT BarLengthUnits([out, retval] TimePeriodUnits*) ;
 
-		[propput,
-	    helpstring("Specifies the type of bar data required")]
-		HRESULT Bartype([in] BarTypes) ;
+	//	[propput,
+	//    helpstring("Specifies the type of bar data required")]
+	//	HRESULT Bartype([in] BarTypes) ;
 
-		[propget,
-	    helpstring("Specifies the type of bar data required")]
-		HRESULT Bartype([out, retval] BarTypes*) ;
+	//	[propget,
+	//    helpstring("Specifies the type of bar data required")]
+	//	HRESULT Bartype([out, retval] BarTypes*) ;
 
-        [propput,
-	    helpstring("Specifies the start date and time for the data")]
-        HRESULT FromDate([in] DATE) ;
+ //       [propput,
+	//    helpstring("Specifies the start date and time for the data")]
+ //       HRESULT FromDate([in] DATE) ;
 
-        [propget,
-	    helpstring("Specifies the start date and time for the data")]
-        HRESULT FromDate([out, retval] DATE*) ;
+ //       [propget,
+	//    helpstring("Specifies the start date and time for the data")]
+ //       HRESULT FromDate([out, retval] DATE*) ;
 
-        [propput,
-	    helpstring("Specifies the end date and time for the data")]
-        HRESULT ToDate([in] DATE) ;
+ //       [propput,
+	//    helpstring("Specifies the end date and time for the data")]
+ //       HRESULT ToDate([in] DATE) ;
 
-        [propget,
-	    helpstring("Specifies the end date and time for the data")]
-        HRESULT ToDate([out, retval] DATE*) ;
+ //       [propget,
+	//    helpstring("Specifies the end date and time for the data")]
+ //       HRESULT ToDate([out, retval] DATE*) ;
 
-		[propput,
-	    helpstring("Specifies the maximum number of bars to be returned")]
-		HRESULT NumberOfBars([in] long) ;
+	//	[propput,
+	//    helpstring("Specifies the maximum number of bars to be returned")]
+	//	HRESULT NumberOfBars([in] long) ;
 
-		[propget,
-	    helpstring("Specifies the maximum number of bars to be returned")]
-		HRESULT NumberOfBars([out, retval] long*) ;
+	//	[propget,
+	//    helpstring("Specifies the maximum number of bars to be returned")]
+	//	HRESULT NumberOfBars([out, retval] long*) ;
 
-		[propput,
-	    helpstring("Indicates that bars starting outside the session times declared in the relevant contract object are to be included")]
-		HRESULT includeBarsOutsideSession([in] VARIANT_BOOL) ;
+	//	[propput,
+	//    helpstring("Indicates that bars starting outside the session times declared in the relevant contract object are to be included")]
+	//	HRESULT includeBarsOutsideSession([in] VARIANT_BOOL) ;
 
-		[propget,
-	    helpstring("Indicates that bars starting outside the session times declared in the relevant contract object are to be included")]
-		HRESULT includeBarsOutsideSession([out, retval] VARIANT_BOOL*) ;
+	//	[propget,
+	//    helpstring("Indicates that bars starting outside the session times declared in the relevant contract object are to be included")]
+	//	HRESULT includeBarsOutsideSession([out, retval] VARIANT_BOOL*) ;
 
-	};
+	//};
 
     [
       uuid(4c1da235-2896-45c4-b5d5-f9e87c904056),
@@ -818,11 +818,6 @@ library TradeBuildSP
 			[in] BSTR errorMessage,
 			[in] long serviceProviderHandle);
 
-		HRESULT NotifyListeners(
-			[in] VARIANT value,
-			[in] long valueType,
-			[in] IDispatch* source);
-
 		HRESULT RegisterServiceProvider(
 			[in] long handle,
 			[in] ServiceProviderTypes spType);
@@ -852,9 +847,6 @@ library TradeBuildSP
 
 		[propget]
 		HRESULT Details([out, retval] ServiceProviderDetails* );
-
-		[propput]
-		HRESULT LogLevel([in] LogLevels );
 
 	// Methods =====================================================
 

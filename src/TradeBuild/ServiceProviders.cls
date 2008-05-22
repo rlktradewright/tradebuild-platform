@@ -48,7 +48,6 @@ Private Const ProjectName                           As String = "TradeBuild26"
 Private Const ModuleName                            As String = "ServiceProviders"
 
 Private Const AttributeNameEnabled                  As String = "Enabled"
-Private Const AttributeNameLogLevel                 As String = "LogLevel"
 Private Const AttributeNamePropertyName             As String = "Name"
 Private Const AttributeNamePropertyValue            As String = "Value"
 Private Const AttributeNameServiceProviderEnabled   As String = "Enabled"
@@ -115,12 +114,12 @@ gTB.NotifyFatalError errorCode, _
 removeSP spHandle
 End Sub
 
-Private Sub ICommonServiceConsumer_NotifyListeners( _
-                ByVal value As Variant, _
-                ByVal valueType As Long, _
-                ByVal source As Object)
-gSpLogLogger.Log LogLevelNormal, value
-End Sub
+'Private Sub ICommonServiceConsumer_NotifyListeners( _
+'                ByVal value As Variant, _
+'                ByVal valueType As Long, _
+'                ByVal source As Object)
+'gSpLogLogger.Log LogLevelNormal, value
+'End Sub
 
 Private Sub ICommonServiceConsumer_RegisterServiceProvider( _
                             ByVal handle As Long, _
@@ -314,7 +313,6 @@ Public Function add( _
             ByVal progId As String, _
             ByVal enabled As Boolean, _
             ByVal paramString As String, _
-            Optional ByVal logLevel As LogLevels = LogLevelLow, _
             Optional ByVal name As String, _
             Optional ByVal Description As String _
             ) As TradeBuildSP.ICommonServiceProvider
@@ -325,7 +323,7 @@ Set add = CreateObject(progId)
 Set params = CreateParametersFromString(paramString)
 
 If enabled Then
-    spindex = addSP(add, params, logLevel, name)
+    spindex = addSP(add, params, name)
     If spindex < 0 Then
         Set add = Nothing
         Exit Function
@@ -335,7 +333,6 @@ End If
 Set mServiceProviders(spindex).SpConfig = addEntryToConfig(progId, _
                                                         enabled, _
                                                         params, _
-                                                        logLevel, _
                                                         name, _
                                                         Description)
 
@@ -481,7 +478,7 @@ If lOrderSimulatorSp Is Nothing Then
     ' no order simulator sp has been added, so we will resort
     ' to using the default built-in simulator
     Set lOrderSimulatorSp = New OrderSimulatorSP
-    addSP lOrderSimulatorSp, Nothing, LogLevelLow, ""
+    addSP lOrderSimulatorSp, Nothing, ""
 End If
 
 Set orderSubmitter = lOrderSimulatorSp.CreateOrderSubmitter(serviceConsumer, pContract)
@@ -673,7 +670,6 @@ Private Function addEntryToConfig( _
             ByVal progId As String, _
             ByVal enabled As Boolean, _
             ByVal params As parameters, _
-            ByVal logLevel As LogLevels, _
             ByVal name As String, _
             ByVal Description As String _
             ) As ConfigItem
@@ -694,7 +690,6 @@ Set sp = mServiceProviderConfigList.childItems.AddItem(ConfigNameServiceProvider
 sp.setAttribute AttributeNameServiceProviderEnabled, CStr(enabled)
 If name <> "" Then sp.setAttribute AttributeNameServiceProviderName, name
 sp.setAttribute AttributeNameServiceProviderProgId, progId
-sp.setAttribute AttributeNameLogLevel, logLevel
 
 Set props = sp.childItems.AddItem(ConfigNameProperties)
 
@@ -710,7 +705,6 @@ End Function
 Private Function addSP( _
             ByVal serviceProvider As TradeBuildSP.ICommonServiceProvider, _
             ByVal params As parameters, _
-            ByVal logLevel As LogLevels, _
             ByVal name As String _
             ) As Long
 Dim i As Long
@@ -749,7 +743,6 @@ If mServiceProviders(i).SPObject Is Nothing Then
     ' has been passed
     addSP = -1
 Else
-    serviceProvider.logLevel = logLevel
     fireChange CollItemAdded, serviceProvider
     addSP = mMaxSPIndex
 End If
@@ -763,7 +756,7 @@ Dim i As Long
 Dim ev As CollectionChangeEvent
 Set ev.source = Me
 ev.changeType = changeType
-Set ev.affectedObject = affectedObject
+Set ev.affectedItem = affectedObject
 For i = 1 To mChangeListeners.Count
     Set listener = mChangeListeners(i)
     listener.Change ev
@@ -812,7 +805,6 @@ Private Sub loadConfiguration()
 Dim sp As ConfigItem
 Dim spName As String
 Dim spProgId As String
-Dim spLogLevel As String
 Dim props As ConfigItem
 Dim prop As ConfigItem
 Dim propName As String
@@ -833,8 +825,6 @@ For Each sp In mServiceProviderConfigList.childItems
         
         errMess = "service provider ProgId not specified"
         spProgId = sp.getAttribute(AttributeNameServiceProviderProgId)
-        
-        spLogLevel = sp.getDefaultableAttribute(AttributeNameLogLevel, CStr(LogLevels.LogLevelLow))
         
         Set params = New parameters
         
@@ -858,7 +848,7 @@ For Each sp In mServiceProviderConfigList.childItems
         Else
             Set spObj = CreateObject(spProgId)
         End If
-        spindex = addSP(spObj, params, spLogLevel, spName)
+        spindex = addSP(spObj, params, spName)
         If spindex <> 0 Then Set mServiceProviders(spindex).SpConfig = sp
     End If
 Next

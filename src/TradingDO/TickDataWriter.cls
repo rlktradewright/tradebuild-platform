@@ -97,7 +97,7 @@ Private Sub mConnection_ConnectComplete( _
 
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent ConnectFailed(pError.Number, _
-                            "TickDataAccessor: connection error" & vbCrLf & _
+                            "TickDataAccessor: connection error " & pError.NativeError & vbCrLf & _
                             pError.Description & vbCrLf & _
                             gGenerateErrorMessage(pConnection))
     Debug.Print "Writer " & mWriterId & " error connecting to db: (" & pError.Number & ") " & pError.Description
@@ -128,7 +128,7 @@ Private Sub mConnection_ExecuteComplete( _
                             ByVal pConnection As ADODB.Connection)
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent Error(pError.Number, _
-                    "TickDataWriter: execution error" & vbCrLf & _
+                    "TickDataWriter: execution error " & pError.NativeError & vbCrLf & _
                     pError.Description & vbCrLf & _
                     gGenerateErrorMessage(pConnection))
     Debug.Print "TickDataWriter " & mWriterId & " error writing tick data: (" & pError.Number & ") " & pError.Description
@@ -225,7 +225,7 @@ Set param = mCmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             mInstrumentID)
-mCmd.Parameters.Append param
+mCmd.Parameters.append param
 
 ' @DataVersion
 Set param = mCmd.CreateParameter(, _
@@ -233,7 +233,7 @@ Set param = mCmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             255, _
                             Version)
-mCmd.Parameters.Append param
+mCmd.Parameters.append param
 
 ' @DateAndTime
 Set param = mCmd.CreateParameter(, _
@@ -241,7 +241,7 @@ Set param = mCmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             PeriodStartTime)
-mCmd.Parameters.Append param
+mCmd.Parameters.append param
 
 ' @BasePrice
 Set param = mCmd.CreateParameter(, _
@@ -249,7 +249,7 @@ Set param = mCmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             BasePrice)
-mCmd.Parameters.Append param
+mCmd.Parameters.append param
 
 ' @TickSize
 Set param = mCmd.CreateParameter(, _
@@ -257,7 +257,7 @@ Set param = mCmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             tickSize)
-mCmd.Parameters.Append param
+mCmd.Parameters.append param
 
 ' @Data
 Set param = mCmd.CreateParameter(, _
@@ -265,7 +265,7 @@ Set param = mCmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             UBound(Data) + 1, _
                             Data)
-mCmd.Parameters.Append param
+mCmd.Parameters.append param
 
 connectToDB mAsynchronous
 ' note that the ConnectComplete event fires regardless of whether the

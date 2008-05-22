@@ -350,28 +350,8 @@ End Sub
 
 Private Sub mContracts_NoMoreContractDetails()
 Dim lTickfileSpecifiers As TickfileSpecifiers
-Dim i As Long
-Dim j As Long
 Dim k As Long
-Dim lContract As Contract
-Dim lSessionBuilder As SessionBuilder
-Dim lSession As session
-Dim currContract As Contract
-Dim customSessionStartTime As Date
-Dim customSessionEndTime As Date
-Dim fromSessionStart As Date
-Dim fromSessionEnd As Date
-Dim toSessionStart As Date
-Dim toSessionEnd As Date
 Dim TickfileFormatID As String
-
-' the from and to dates converted (if necessary) to the contract's timezone
-Dim fromDate As Date
-Dim toDate As Date
-
-' the from and to dates, session-oriented if required, converted to UTC
-Dim replayFromDate As Date
-Dim replayToDate As Date
 
 On Error GoTo Err
 

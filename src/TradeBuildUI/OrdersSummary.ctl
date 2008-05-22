@@ -384,9 +384,9 @@ End Sub
 '@================================================================================
 
 Private Sub CollectionChangeListener_Change(ev As CollectionChangeEvent)
-If TypeOf ev.affectedObject Is OrderPlex Then
+If TypeOf ev.affectedItem Is OrderPlex Then
     Dim op As OrderPlex
-    Set op = ev.affectedObject
+    Set op = ev.affectedItem
     
     Select Case ev.changeType
     Case CollItemAdded
@@ -396,9 +396,9 @@ If TypeOf ev.affectedObject Is OrderPlex Then
         op.removeChangeListener Me
         op.removeProfitListener Me
     End Select
-ElseIf TypeOf ev.affectedObject Is ticker Then
+ElseIf TypeOf ev.affectedItem Is ticker Then
     Dim lTicker As ticker
-    Set lTicker = ev.affectedObject
+    Set lTicker = ev.affectedItem
     
     Select Case ev.changeType
     Case CollItemAdded
@@ -1049,21 +1049,6 @@ For i = OPGridColumns.OtherColumns To OrderPlexGrid.Cols - 1
 Next
 
 End Sub
-
-Private Function isValidLong(value As String) As Boolean
-Dim longValue As Long
-Dim floatValue As Double
-
-If value = "" Then
-    isValidLong = True
-ElseIf IsNumeric(value) Then
-    floatValue = CDbl(value)
-    If floatValue < 0 Or floatValue > &H7FFFFFFF Then Exit Function
-    longValue = CLng(floatValue)
-    If longValue <> floatValue Then Exit Function
-    isValidLong = True
-End If
-End Function
 
 Private Sub setupOrderPlexGrid()
 With OrderPlexGrid

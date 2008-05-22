@@ -292,7 +292,7 @@ Else
                         saveIntervalSeconds, _
                         writeBidAndAskBars)
 End If
-tte.theTimeFrame.Initialise mContract, _
+tte.theTimeFrame.initialise mContract, _
                             tte.key, _
                             mTicker, _
                             TimePeriod, _
@@ -381,7 +381,7 @@ Dim i As Long
 Dim ev As CollectionChangeEvent
 Set ev.source = Me
 ev.changeType = changeType
-Set ev.affectedObject = affectedObject
+Set ev.affectedItem = affectedObject
 For i = 1 To mChangeListeners.Count
     Set listener = mChangeListeners(i)
     listener.Change ev

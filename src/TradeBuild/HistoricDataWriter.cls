@@ -47,10 +47,10 @@ Option Explicit
 '@================================================================================
 
 Public Type PendingBarWrite
-    barType         As TradeBuildSP.BarTypes
+    barType         As BarTypes
     barLength       As Long
     barUnit         As TimePeriodUnits
-    Bar             As StudyUtils26.Bar
+    Bar             As Bar
     volume          As Long
 End Type
 
@@ -128,12 +128,11 @@ mTimer.StartTimer
 End Sub
 
 Friend Sub WriteBar( _
-                ByVal theBar As StudyUtils26.Bar, _
-                ByVal barType As TradeBuildSP.BarTypes, _
+                ByVal theBar As Bar, _
+                ByVal barType As BarTypes, _
                 ByVal volume As Long, _
                 ByVal barLength As Long, _
                 ByVal barUnit As TimePeriodUnits)
-Dim spBar As TradeBuildSP.Bar
 Dim pendingWrite As PendingBarWrite
 
 If Not mServiceProviderWriterReady Then
@@ -144,16 +143,7 @@ If Not mServiceProviderWriterReady Then
     pendingWrite.volume = volume
     mPendingWrites.addToEnd pendingWrite
 Else
-    With spBar
-        .closePrice = theBar.closeValue
-        .highPrice = theBar.highValue
-        .lowPrice = theBar.lowValue
-        .OpenPrice = theBar.openValue
-        .tickVolume = theBar.tickVolume
-        .timestamp = theBar.DateTime
-        .volume = volume
-    End With
-    mWriter.WriteBar spBar, barType, barLength, barUnit
+    mWriter.WriteBar theBar, barType, barLength, barUnit
 End If
 End Sub
 

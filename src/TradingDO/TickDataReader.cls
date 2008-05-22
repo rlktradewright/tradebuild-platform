@@ -75,7 +75,7 @@ Private mFetchInProgress As Boolean
 
 Private mConnectionString As String
 
-Private mTimeZone As TWutilities30.TimeZone
+Private mTimeZone As TWUtilities30.TimeZone
 
 '@===============================================================================
 ' Class Event Handlers
@@ -90,13 +90,13 @@ Private mTimeZone As TWutilities30.TimeZone
 '@===============================================================================
 
 Private Sub mConnection_ConnectComplete( _
-                            ByVal pError As ADODB.Error, _
-                            adStatus As ADODB.EventStatusEnum, _
-                            ByVal pConnection As ADODB.Connection)
+                ByVal pError As ADODB.Error, _
+                adStatus As ADODB.EventStatusEnum, _
+                ByVal pConnection As ADODB.Connection)
 
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent ConnectFailed(pError.Number, _
-                            ModuleName & ": connection error" & vbCrLf & _
+                            ModuleName & ": connection error " & pError.NativeError & vbCrLf & _
                             pError.Description & vbCrLf & _
                             gGenerateErrorMessage(pConnection))
     Exit Sub
@@ -108,12 +108,20 @@ RaiseEvent Ready
 
 End Sub
 
-Private Sub mConnection_InfoMessage( _
-                            ByVal pError As ADODB.Error, _
-                            adStatus As ADODB.EventStatusEnum, _
-                            ByVal pConnection As ADODB.Connection)
+Private Sub mConnection_ExecuteComplete( _
+                ByVal RecordsAffected As Long, _
+                ByVal pError As ADODB.Error, _
+                adStatus As ADODB.EventStatusEnum, _
+                ByVal pCommand As ADODB.Command, _
+                ByVal pRecordset As ADODB.Recordset, _
+                ByVal pConnection As ADODB.Connection)
+mFetchInProgress = False
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
-    Stop
+    RaiseEvent Error(pError.Number, _
+                    ModuleName & ": fetch error " & pError.NativeError & vbCrLf & _
+                    pError.Description & vbCrLf & _
+                    gGenerateErrorMessage(mConnection))
+    mConnection.Close
 End If
 End Sub
 
@@ -122,25 +130,25 @@ End Sub
 '@===============================================================================
 
 Private Sub mRsTick_FetchComplete( _
-                            ByVal pError As ADODB.Error, _
-                            adStatus As ADODB.EventStatusEnum, _
-                            ByVal pRecordset As ADODB.Recordset)
+                ByVal pError As ADODB.Error, _
+                adStatus As ADODB.EventStatusEnum, _
+                ByVal pRecordset As ADODB.Recordset)
+mFetchInProgress = False
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent Error(pError.Number, _
-                    ModuleName & ": fetch error" & vbCrLf & _
+                    ModuleName & ": fetch error " & pError.NativeError & vbCrLf & _
                     pError.Description & vbCrLf & _
                     gGenerateErrorMessage(mConnection))
     Exit Sub
 End If
-mFetchInProgress = False
 RaiseEvent DataFetched
 End Sub
 
 Private Sub mRsTick_FetchProgress( _
-                            ByVal Progress As Long, _
-                            ByVal MaxProgress As Long, _
-                            adStatus As ADODB.EventStatusEnum, _
-                            ByVal pRecordset As ADODB.Recordset)
+                ByVal Progress As Long, _
+                ByVal MaxProgress As Long, _
+                adStatus As ADODB.EventStatusEnum, _
+                ByVal pRecordset As ADODB.Recordset)
 
 End Sub
 
@@ -153,8 +161,8 @@ End Sub
 '@===============================================================================
 
 Public Sub FetchData( _
-                        ByVal fromTime As Date, _
-                        ByVal toTime As Date)
+                ByVal fromTime As Date, _
+                ByVal toTime As Date)
 
 Debug.Assert Not mFetchInProgress
 mFetchInProgress = True
@@ -174,11 +182,11 @@ connectToDB
 End Sub
 
 Public Function ReadData( _
-                        ByRef PeriodStartTime As Date, _
-                        ByRef format As String, _
-                        ByRef BasePrice As Double, _
-                        ByRef tickSize As Double, _
-                        ByRef Data() As Byte) As Boolean
+                ByRef PeriodStartTime As Date, _
+                ByRef format As String, _
+                ByRef BasePrice As Double, _
+                ByRef tickSize As Double, _
+                ByRef Data() As Byte) As Boolean
 ' returns false if no more tickdata is available - this can
 ' occur before the full data has been retrieved from the database,
 ' so the caller needs to monitor the TickDataFetched event.
@@ -186,6 +194,10 @@ Public Function ReadData( _
 If mFetchInProgress Then Exit Function
 
 If mRsTick.EOF Then
+    Set mRsTick.ActiveConnection = Nothing
+    Set mRsTick = Nothing
+    mConnection.Close
+    Set mConnection = Nothing
     Exit Function
 End If
 
@@ -194,7 +206,7 @@ format = mRsTick("Version")
 BasePrice = mRsTick("baseprice")
 tickSize = mRsTick("ticksize")
 Data = mRsTick("data")
-mRsTick.MoveNext
+mRsTick.moveNext
 
 ReadData = True
 End Function
@@ -212,8 +224,8 @@ mConnection.Open mConnectionString, , , ConnectOptionEnum.adAsyncConnect
 End Sub
 
 Private Sub DoQueryTickData( _
-                        ByVal fromTime As Date, _
-                        ByVal toTime As Date)
+                ByVal fromTime As Date, _
+                ByVal toTime As Date)
 Dim cmd As ADODB.Command
 Dim param As ADODB.Parameter
 
@@ -231,7 +243,7 @@ Set param = cmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             mInstrumentID)
-cmd.Parameters.Append param
+cmd.Parameters.append param
 
 ' @From
 Set param = cmd.CreateParameter(, _
@@ -239,7 +251,7 @@ Set param = cmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             fromTime)
-cmd.Parameters.Append param
+cmd.Parameters.append param
 
 ' @To
 Set param = cmd.CreateParameter(, _
@@ -247,7 +259,7 @@ Set param = cmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             toTime)
-cmd.Parameters.Append param
+cmd.Parameters.append param
 
 cmd.ActiveConnection = mConnection
 

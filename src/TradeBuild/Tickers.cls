@@ -95,7 +95,7 @@ Public Function add( _
 If key = "" Then key = generateGUIDString
 Set add = New Ticker
 add.key = key
-add.Initialise AllocateTickerHandle, _
+add.initialise AllocateTickerHandle, _
                 Me, _
                 pTickerOptions
 mTickers.add add, key
@@ -202,7 +202,7 @@ Dim i As Long
 Dim ev As CollectionChangeEvent
 Set ev.source = Me
 ev.changeType = changeType
-Set ev.affectedObject = affectedObject
+Set ev.affectedItem = affectedObject
 For i = 1 To mChangeListeners.Count
     Set listener = mChangeListeners(i)
     listener.Change ev

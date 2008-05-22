@@ -80,7 +80,7 @@ Private Sub mContracts_CollectionChanged( _
 Dim lContract As Contract
 Dim lTicker As Ticker
 
-Set lContract = ev.affectedObject
+Set lContract = ev.affectedItem
 
 'check contract is still current
 If lContract.expiryDate <> 0 And lContract.expiryDate < Date Then Exit Sub
@@ -99,7 +99,7 @@ Dim ev As NotificationEvent
 
 Set ev.source = mContracts.contractSpecifier
 ev.eventCode = ApiNotifyCodes.ApiNotifyContractSpecifierInvalid
-ev.eventMessage = reason & ": " & mContracts.contractSpecifier.ToString
+ev.eventMessage = reason & ": " & mContracts.contractSpecifier.toString
 tckrs.notify ev
 End Sub
 

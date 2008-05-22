@@ -82,7 +82,7 @@ Private Sub mConnection_ConnectComplete( _
 
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent ConnectFailed(pError.Number, _
-                            ModuleName & ": connection error" & vbCrLf & _
+                            ModuleName & ": connection error " & pError.NativeError & vbCrLf & _
                             pError.Description & vbCrLf & _
                             gGenerateErrorMessage(pConnection))
 Else
@@ -120,6 +120,74 @@ End Property
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Function FetchBars( _
+                ByVal specifier As ContractSpecifier, _
+                ByVal barLength As Long, _
+                ByVal barLengthUnits As TimePeriodUnits, _
+                ByVal maxNumberOfBars As Long, _
+                Optional ByVal fromDate As Date, _
+                Optional ByVal toDate As Date = MaxDateValue, _
+                Optional ByVal customSessionStartTime As Date, _
+                Optional ByVal customSessionEndTime As Date, _
+                Optional ByVal includeBarsOutsideSession As Boolean, _
+                Optional ByVal barType As BarTypes = BarTypeTrade) As bars
+Dim lInstrument As instrument
+
+Dim failpoint As Long
+On Error GoTo Err
+
+Set lInstrument = InstrumentFactory.loadBySpecifier(specifier)
+If lInstrument Is Nothing Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "fetchbars", _
+            "The specified contract is not known"
+End If
+
+Set FetchBars = lInstrument.FetchBars(barLength, _
+                barLengthUnits, _
+                maxNumberOfBars, _
+                fromDate, _
+                toDate, _
+                customSessionStartTime, _
+                customSessionEndTime, _
+                includeBarsOutsideSession, _
+                barType)
+
+Exit Function
+
+Err:
+Err.Raise Err.Number, _
+        ProjectName & "." & ModuleName & ":" & "fetchbars" & "." & failpoint & _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
+        Err.Description
+End Function
+
+Public Function fetchbarsAsync( _
+                ByVal specifier As ContractSpecifier, _
+                ByVal barLength As Long, _
+                ByVal barLengthUnits As TimePeriodUnits, _
+                ByVal maxNumberOfBars As Long, _
+                Optional ByVal fromDate As Date, _
+                Optional ByVal toDate As Date = MaxDateValue, _
+                Optional ByVal customSessionStartTime As Date, _
+                Optional ByVal customSessionEndTime As Date, _
+                Optional ByVal includeBarsOutsideSession As Boolean, _
+                Optional ByVal barType As BarTypes = BarTypeTrade) As TaskController
+Dim fbt As New FetchBarsTask
+fbt.initialise Me, _
+                specifier, _
+                barLength, _
+                barLengthUnits, _
+                maxNumberOfBars, _
+                fromDate, _
+                toDate, _
+                customSessionStartTime, _
+                customSessionEndTime, _
+                includeBarsOutsideSession, _
+                barType
+Set fetchbarsAsync = StartTask(fbt, PriorityNormal)
+End Function
 
 Friend Sub initialise( _
                 ByVal connectionString As String)

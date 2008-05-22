@@ -181,7 +181,7 @@ mChangeListeners.add value
 Set ev.source = Me
 ev.changeType = CollItemAdded
 For Each lOrderContext In mOrderContexts
-    Set ev.affectedObject = lOrderContext
+    Set ev.affectedItem = lOrderContext
     value.Change ev
 Next
 End Sub
@@ -235,7 +235,7 @@ Dim i As Long
 Dim ev As CollectionChangeEvent
 Set ev.source = Me
 ev.changeType = changeType
-Set ev.affectedObject = affectedObject
+Set ev.affectedItem = affectedObject
 For i = 1 To mChangeListeners.Count
     Set listener = mChangeListeners(i)
     listener.Change ev

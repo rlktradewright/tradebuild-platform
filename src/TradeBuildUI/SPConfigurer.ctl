@@ -9,26 +9,6 @@ Begin VB.UserControl SPConfigurer
    DefaultCancel   =   -1  'True
    ScaleHeight     =   12750
    ScaleWidth      =   16740
-   Begin TWControls10.TWImageCombo SpLogLevelCombo 
-      Height          =   330
-      Left            =   3480
-      TabIndex        =   28
-      Top             =   3480
-      Width           =   1335
-      _ExtentX        =   2355
-      _ExtentY        =   582
-      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
-         Name            =   "MS Sans Serif"
-         Size            =   8.25
-         Charset         =   0
-         Weight          =   400
-         Underline       =   0   'False
-         Italic          =   0   'False
-         Strikethrough   =   0   'False
-      EndProperty
-      MouseIcon       =   "SPConfigurer.ctx":0000
-      Text            =   ""
-   End
    Begin TWControls10.TWImageCombo OptionCombo 
       Height          =   330
       Left            =   4320
@@ -46,7 +26,7 @@ Begin VB.UserControl SPConfigurer
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      MouseIcon       =   "SPConfigurer.ctx":001C
+      MouseIcon       =   "SPConfigurer.ctx":0000
       Text            =   ""
    End
    Begin VB.PictureBox CustomOptionsPicture 
@@ -55,13 +35,13 @@ Begin VB.UserControl SPConfigurer
       Left            =   10080
       ScaleHeight     =   2175
       ScaleWidth      =   4815
-      TabIndex        =   50
+      TabIndex        =   49
       Top             =   4080
       Width           =   4815
       Begin MSDataGridLib.DataGrid ParamsGrid 
          Height          =   1455
          Left            =   960
-         TabIndex        =   53
+         TabIndex        =   52
          Top             =   720
          Width           =   3855
          _ExtentX        =   6800
@@ -147,7 +127,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Parameters"
          Height          =   255
          Left            =   0
-         TabIndex        =   52
+         TabIndex        =   51
          Top             =   720
          Width           =   1575
       End
@@ -155,7 +135,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Prog ID"
          Height          =   255
          Left            =   0
-         TabIndex        =   51
+         TabIndex        =   50
          Top             =   360
          Width           =   735
       End
@@ -165,7 +145,7 @@ Begin VB.UserControl SPConfigurer
       Enabled         =   0   'False
       Height          =   375
       Left            =   5280
-      TabIndex        =   29
+      TabIndex        =   28
       Top             =   3480
       Width           =   975
    End
@@ -175,7 +155,7 @@ Begin VB.UserControl SPConfigurer
       Left            =   5040
       ScaleHeight     =   2175
       ScaleWidth      =   4815
-      TabIndex        =   49
+      TabIndex        =   48
       Top             =   6480
       Width           =   4815
       Begin VB.CommandButton PathChooserButton 
@@ -205,7 +185,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Output path"
          Height          =   375
          Left            =   0
-         TabIndex        =   60
+         TabIndex        =   58
          Top             =   360
          Width           =   975
       End
@@ -216,7 +196,7 @@ Begin VB.UserControl SPConfigurer
       Left            =   10080
       ScaleHeight     =   2175
       ScaleWidth      =   4815
-      TabIndex        =   48
+      TabIndex        =   47
       Top             =   6480
       Width           =   4815
       Begin VB.CheckBox BrEnabledCheck 
@@ -233,7 +213,7 @@ Begin VB.UserControl SPConfigurer
       Enabled         =   0   'False
       Height          =   375
       Left            =   6360
-      TabIndex        =   30
+      TabIndex        =   29
       Top             =   3480
       Width           =   975
    End
@@ -243,7 +223,7 @@ Begin VB.UserControl SPConfigurer
       Left            =   5040
       ScaleHeight     =   2175
       ScaleWidth      =   4815
-      TabIndex        =   43
+      TabIndex        =   42
       Top             =   4080
       Visible         =   0   'False
       Width           =   4815
@@ -307,7 +287,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Connection retry interval"
          Height          =   375
          Left            =   0
-         TabIndex        =   59
+         TabIndex        =   57
          Top             =   1800
          Width           =   975
       End
@@ -315,7 +295,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Provider key"
          Height          =   255
          Left            =   0
-         TabIndex        =   58
+         TabIndex        =   56
          Top             =   1440
          Width           =   975
       End
@@ -323,7 +303,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Password"
          Height          =   255
          Left            =   0
-         TabIndex        =   46
+         TabIndex        =   45
          Top             =   1080
          Width           =   735
       End
@@ -331,7 +311,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Port"
          Height          =   255
          Left            =   0
-         TabIndex        =   45
+         TabIndex        =   44
          Top             =   720
          Width           =   615
       End
@@ -339,7 +319,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Server"
          Height          =   255
          Left            =   0
-         TabIndex        =   44
+         TabIndex        =   43
          Top             =   360
          Width           =   615
       End
@@ -350,7 +330,7 @@ Begin VB.UserControl SPConfigurer
       Left            =   0
       ScaleHeight     =   2175
       ScaleWidth      =   4815
-      TabIndex        =   37
+      TabIndex        =   36
       Top             =   6480
       Visible         =   0   'False
       Width           =   4815
@@ -371,7 +351,7 @@ Begin VB.UserControl SPConfigurer
             Italic          =   0   'False
             Strikethrough   =   0   'False
          EndProperty
-         MouseIcon       =   "SPConfigurer.ctx":0038
+         MouseIcon       =   "SPConfigurer.ctx":001C
          Text            =   ""
       End
       Begin VB.CheckBox DbEnabledCheck 
@@ -416,7 +396,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Database"
          Height          =   255
          Left            =   0
-         TabIndex        =   42
+         TabIndex        =   41
          Top             =   1080
          Width           =   975
       End
@@ -424,7 +404,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Server"
          Height          =   255
          Left            =   0
-         TabIndex        =   41
+         TabIndex        =   40
          Top             =   360
          Width           =   975
       End
@@ -432,7 +412,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "DB Type"
          Height          =   255
          Left            =   0
-         TabIndex        =   40
+         TabIndex        =   39
          Top             =   720
          Width           =   975
       End
@@ -440,7 +420,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Username"
          Height          =   255
          Left            =   0
-         TabIndex        =   39
+         TabIndex        =   38
          Top             =   1440
          Width           =   975
       End
@@ -448,7 +428,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Password"
          Height          =   255
          Left            =   0
-         TabIndex        =   38
+         TabIndex        =   37
          Top             =   1800
          Width           =   975
       End
@@ -459,7 +439,7 @@ Begin VB.UserControl SPConfigurer
       Left            =   0
       ScaleHeight     =   2175
       ScaleWidth      =   4815
-      TabIndex        =   33
+      TabIndex        =   32
       Top             =   4080
       Visible         =   0   'False
       Width           =   4815
@@ -480,7 +460,7 @@ Begin VB.UserControl SPConfigurer
             Italic          =   0   'False
             Strikethrough   =   0   'False
          EndProperty
-         MouseIcon       =   "SPConfigurer.ctx":0054
+         MouseIcon       =   "SPConfigurer.ctx":0038
          Text            =   ""
       End
       Begin VB.CheckBox TwsKeepConnectionCheck 
@@ -542,7 +522,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "TWS Log Level"
          Height          =   375
          Left            =   2520
-         TabIndex        =   56
+         TabIndex        =   55
          Top             =   360
          Width           =   975
       End
@@ -550,7 +530,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Connection retry interval"
          Height          =   375
          Left            =   0
-         TabIndex        =   55
+         TabIndex        =   54
          Top             =   1800
          Width           =   975
       End
@@ -558,7 +538,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Provider key"
          Height          =   255
          Left            =   0
-         TabIndex        =   54
+         TabIndex        =   53
          Top             =   1440
          Width           =   975
       End
@@ -566,7 +546,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Client id"
          Height          =   255
          Left            =   0
-         TabIndex        =   36
+         TabIndex        =   35
          Top             =   1080
          Width           =   615
       End
@@ -574,7 +554,7 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Port"
          Height          =   255
          Left            =   0
-         TabIndex        =   35
+         TabIndex        =   34
          Top             =   720
          Width           =   615
       End
@@ -582,17 +562,17 @@ Begin VB.UserControl SPConfigurer
          Caption         =   "Server"
          Height          =   255
          Left            =   0
-         TabIndex        =   34
+         TabIndex        =   33
          Top             =   360
          Width           =   615
       End
    End
    Begin VB.ListBox CategoryList 
       Height          =   3765
-      ItemData        =   "SPConfigurer.ctx":0070
+      ItemData        =   "SPConfigurer.ctx":0054
       Left            =   120
-      List            =   "SPConfigurer.ctx":0072
-      TabIndex        =   31
+      List            =   "SPConfigurer.ctx":0056
+      TabIndex        =   30
       Top             =   120
       Width           =   2055
    End
@@ -602,15 +582,6 @@ Begin VB.UserControl SPConfigurer
       X2              =   7320
       Y1              =   3420
       Y2              =   3420
-   End
-   Begin VB.Label Label12 
-      BackStyle       =   0  'Transparent
-      Caption         =   "Log level"
-      Height          =   375
-      Left            =   2520
-      TabIndex        =   57
-      Top             =   3480
-      Width           =   735
    End
    Begin VB.Shape OptionsBox 
       Height          =   2175
@@ -623,7 +594,7 @@ Begin VB.UserControl SPConfigurer
       BackStyle       =   0  'Transparent
       Height          =   615
       Left            =   2280
-      TabIndex        =   47
+      TabIndex        =   46
       Top             =   720
       Width           =   1935
    End
@@ -651,7 +622,7 @@ Begin VB.UserControl SPConfigurer
       ForeColor       =   &H00FE8100&
       Height          =   255
       Left            =   2400
-      TabIndex        =   32
+      TabIndex        =   31
       Top             =   240
       Width           =   4815
    End
@@ -706,16 +677,11 @@ Private Const AccessModeReadOnly            As String = "Read only"
 Private Const AccessModeWriteOnly           As String = "Write only"
 Private Const AccessModeReadWrite           As String = "Read write"
 
-Private Const AttributeNameConfigName       As String = "Name"
-Private Const AttributeNameDefault          As String = "Default"
-Private Const AttributeNameEnabled          As String = "Enabled"
-Private Const AttributeNameLogLevel         As String = "LogLevel"
 Private Const AttributeNamePropertyName     As String = "Name"
 Private Const AttributeNamePropertyValue    As String = "Value"
 Private Const AttributeNameServiceProviderEnabled As String = "Enabled"
 Private Const AttributeNameServiceProviderName As String = "Name"
 Private Const AttributeNameServiceProviderProgId As String = "ProgId"
-Private Const AttributeNameServiceProviderLogLevel As String = "LogLevel"
 
 Private Const CategoryRealtimeData          As String = "Realtime data"
 Private Const CategoryPrimaryContractData   As String = "Primary contract data"
@@ -735,12 +701,6 @@ Private Const DbTypeMySql                   As String = "MySQL5"
 Private Const DbTypeSqlServer7              As String = "SQL Server 7"
 Private Const DbTypeSqlServer2000           As String = "SQL Server 2000"
 Private Const DbTypeSqlServer2005           As String = "SQL Server 2005"
-
-Private Const LogLevelAllString             As String = "All"
-Private Const LogLevelHighString            As String = "High"
-Private Const LogLevelLowString             As String = "Low"
-Private Const LogLevelMediumString          As String = "Medium"
-Private Const LogLevelNoneString            As String = "None"
 
 Private Const PropertyNameQtServer          As String = "Server"
 Private Const PropertyNameQtPort            As String = "Port"
@@ -857,13 +817,6 @@ TwsLogLevelCombo.ComboItems.add , , TWSLogLevelInformation
 TwsLogLevelCombo.ComboItems.add , , TWSLogLevelSystem
 TwsLogLevelCombo.ComboItems.add , , TWSLogLevelWarning
 TwsLogLevelCombo.Text = TWSLogLevelSystem
-
-SpLogLevelCombo.ComboItems.add , , LogLevelNoneString
-SpLogLevelCombo.ComboItems.add , , LogLevelLowString
-SpLogLevelCombo.ComboItems.add , , LogLevelMediumString
-SpLogLevelCombo.ComboItems.add , , LogLevelHighString
-SpLogLevelCombo.ComboItems.add , , LogLevelAllString
-SpLogLevelCombo.Text = LogLevelLowString
 
 End Sub
 
@@ -1328,8 +1281,6 @@ clearProperties
 
 setProgId
 
-mCurrSP.setAttribute AttributeNameServiceProviderLogLevel, logLeveFromString(SpLogLevelCombo.Text)
-
 If mCurrOptionsPic Is BrOptionsPicture Then
     applyBrProperties
 ElseIf mCurrOptionsPic Is CustomOptionsPicture Then
@@ -1395,6 +1346,14 @@ setProperty mCurrProps, PropertyNameTwsClientId, TWSClientIdText
 setProperty mCurrProps, PropertyNameTwsProviderKey, TwsProviderKeyText
 setProperty mCurrProps, PropertyNameTwsConnectionRetryInterval, TwsConnectRetryIntervalText
 setProperty mCurrProps, PropertyNameTwsLogLevel, TwsLogLevelCombo
+
+If mCurrCategory = CategoryPrimaryContractData Then
+    setProperty mCurrProps, PropertyNameTbRole, RolePrimary
+End If
+
+If mCurrCategory = CategorySecondaryContractData Then
+    setProperty mCurrProps, PropertyNameTbRole, RoleSecondary
+End If
 End Sub
 
 Private Sub checkForOutstandingUpdates()
@@ -1540,8 +1499,6 @@ End Function
 Private Sub loadConfig( _
                 ByVal configdata As ConfigItem)
                 
-Dim sp As ConfigItem
-
 Set mConfig = configdata
 
 On Error Resume Next
@@ -1578,46 +1535,6 @@ End If
 If CategoryList.ListCount > 0 Then CategoryList.ListIndex = 0
 
 End Sub
-
-Private Function logLeveFromString( _
-                ByVal value As String) As tradebuild26.LogLevels
-
-Select Case UCase$(value)
-Case UCase$(LogLevelAllString)
-    logLeveFromString = LogLevelAll
-Case UCase$(LogLevelHighString)
-    logLeveFromString = LogLevelHigh
-Case UCase$(LogLevelLowString)
-    logLeveFromString = LogLevelLow
-Case UCase$(LogLevelMediumString)
-    logLeveFromString = LogLevelMedium
-Case UCase$(LogLevelNoneString)
-    logLeveFromString = LogLevelNone
-Case Else
-    logLeveFromString = LogLevelLow
-End Select
-
-End Function
-
-Private Function logLevelToString( _
-                ByVal value As tradebuild26.LogLevels) As String
-
-Select Case value
-Case LogLevelAll
-    logLevelToString = LogLevelAllString
-Case LogLevelHigh
-    logLevelToString = LogLevelHighString
-Case LogLevelLow
-    logLevelToString = LogLevelLowString
-Case LogLevelMedium
-    logLevelToString = LogLevelMediumString
-Case LogLevelNone
-    logLevelToString = LogLevelNoneString
-Case Else
-    logLevelToString = LogLevelLowString
-End Select
-
-End Function
 
 Private Sub setProgId()
 Dim progId As String
@@ -1742,8 +1659,6 @@ If mCurrSP Is Nothing Then
     Exit Sub
 End If
 
-SpLogLevelCombo.Text = logLevelToString(mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderLogLevel, tradebuild26.LogLevels.LogLevelLow))
-
 Select Case progId
 Case ProgIdTbOrders
     OptionCombo.Text = SpOptionTbOrders
@@ -1826,8 +1741,6 @@ If mCurrSP Is Nothing Then
     Exit Sub
 End If
 
-SpLogLevelCombo.Text = logLevelToString(mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderLogLevel, tradebuild26.LogLevels.LogLevelLow))
-
 Select Case progId
 Case ProgIdTwsBarData
     OptionCombo.Text = SpOptionTwsBarData
@@ -1870,8 +1783,6 @@ If mCurrSP Is Nothing Then
     Exit Sub
 End If
 
-SpLogLevelCombo.Text = logLevelToString(mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderLogLevel, tradebuild26.LogLevels.LogLevelLow))
-
 Select Case progId
 Case ProgIdTbBarData
     OptionCombo.Text = SpOptionTbBarData
@@ -1905,8 +1816,6 @@ If mCurrSP Is Nothing Then
     OptionCombo.Text = SpOptionNotConfigured
     Exit Sub
 End If
-
-SpLogLevelCombo.Text = logLevelToString(mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderLogLevel, tradebuild26.LogLevels.LogLevelLow))
 
 Select Case progId
 Case ProgIdTwsContractData
@@ -1945,8 +1854,6 @@ If mCurrSP Is Nothing Then
     OptionCombo.Text = SpOptionNotConfigured
     Exit Sub
 End If
-
-SpLogLevelCombo.Text = logLevelToString(mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderLogLevel, tradebuild26.LogLevels.LogLevelLow))
 
 Select Case progId
 Case ProgIdTwsRealtimeData
@@ -1997,8 +1904,6 @@ If mCurrSP Is Nothing Then
     Exit Sub
 End If
 
-SpLogLevelCombo.Text = logLevelToString(mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderLogLevel, tradebuild26.LogLevels.LogLevelLow))
-
 Select Case progId
 Case ProgIdTwsContractData
     OptionCombo.Text = SpOptionTwsContractData
@@ -2046,8 +1951,6 @@ If mCurrSP Is Nothing Then
     Exit Sub
 End If
 
-SpLogLevelCombo.Text = logLevelToString(mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderLogLevel, tradebuild26.LogLevels.LogLevelLow))
-
 Select Case progId
 Case ProgIdTbTickData
     OptionCombo.Text = SpOptionTbTickData
@@ -2089,8 +1992,6 @@ If mCurrSP Is Nothing Then
     OptionCombo.Text = SpOptionNotConfigured
     Exit Sub
 End If
-
-SpLogLevelCombo.Text = logLevelToString(mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderLogLevel, tradebuild26.LogLevels.LogLevelLow))
 
 Select Case progId
 Case ProgIdTbTickData

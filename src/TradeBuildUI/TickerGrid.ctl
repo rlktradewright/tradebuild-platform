@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#27.5#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#27.6#0"; "TWControls10.ocx"
 Begin VB.UserControl TickerGrid 
    ClientHeight    =   3600
    ClientLeft      =   0
@@ -330,7 +330,6 @@ Dim row As Long
 Dim rowSel As Long
 Dim col As Long
 Dim colSel As Long
-Dim i As Long
 row = TickerGrid.row
 rowSel = TickerGrid.rowSel
 col = TickerGrid.col

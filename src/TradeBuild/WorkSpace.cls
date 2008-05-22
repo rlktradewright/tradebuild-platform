@@ -78,9 +78,9 @@ End Sub
 '@================================================================================
 
 Private Sub CollectionChangeListener_Change(ev As CollectionChangeEvent)
-If TypeOf ev.affectedObject Is Ticker Then
+If TypeOf ev.affectedItem Is Ticker Then
     Dim lTicker As Ticker
-    Set lTicker = ev.affectedObject
+    Set lTicker = ev.affectedItem
     Select Case ev.changeType
     Case CollectionChangeTypes.CollItemAdded
         lTicker.PositionManager.OrderContexts.addCollectionChangeListener Me
@@ -88,18 +88,18 @@ If TypeOf ev.affectedObject Is Ticker Then
     Case CollectionChangeTypes.CollItemRemoved
         ' no need to do anything here
     End Select
-ElseIf TypeOf ev.affectedObject Is OrderContext Then
+ElseIf TypeOf ev.affectedItem Is OrderContext Then
     Dim lOrderContext As OrderContext
-    Set lOrderContext = ev.affectedObject
+    Set lOrderContext = ev.affectedItem
     Select Case ev.changeType
     Case CollectionChangeTypes.CollItemAdded
         lOrderContext.activeOrderPlexes.addCollectionChangeListener Me
     Case CollectionChangeTypes.CollItemRemoved
         lOrderContext.activeOrderPlexes.removeCollectionChangeListener Me
     End Select
-ElseIf TypeOf ev.affectedObject Is orderPlex Then
+ElseIf TypeOf ev.affectedItem Is orderPlex Then
     Dim lOrderPlex As orderPlex
-    Set lOrderPlex = ev.affectedObject
+    Set lOrderPlex = ev.affectedItem
     Select Case ev.changeType
     Case CollectionChangeTypes.CollItemAdded
         mOrderPlexes.add lOrderPlex
@@ -107,15 +107,15 @@ ElseIf TypeOf ev.affectedObject Is orderPlex Then
         ' do nothing here because we don't care whether the order plex
         ' is active or not
     End Select
-ElseIf TypeOf ev.affectedObject Is Execution Then
+ElseIf TypeOf ev.affectedItem Is Execution Then
     Dim lExec As Execution
-    Set lExec = ev.affectedObject
+    Set lExec = ev.affectedItem
     Select Case ev.changeType
     Case CollectionChangeTypes.CollItemAdded
         mExecutions.add lExec
     Case CollectionChangeTypes.CollItemRemoved
         ' should never happen
-        gTB.notifyFatalError ErrorCodes.ErrUnsupportedOperationException, _
+        gTB.NotifyFatalError ErrorCodes.ErrUnsupportedOperationException, _
                                         "Unexpected execution deletion", _
                                         "Workspace::CollectionChangeListener_Change"
     End Select

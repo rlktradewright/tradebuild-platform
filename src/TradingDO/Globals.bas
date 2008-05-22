@@ -125,6 +125,9 @@ Public Const InstrumentClassColumnTickSize      As String = "TICKSIZE"
 Public Const InstrumentClassColumnTickValue     As String = "TICKVALUE"
 Public Const InstrumentClassColumnTimeZone      As String = "CANONICALTIMEZONENAME"
 
+Public Const MaxDateValue                       As Date = 2958465 ' 31 Dec 9999
+Public Const MaxLong                            As Long = &H7FFFFFFF
+
 Public Const TimeZoneColumnCanonicalName        As String = "CANONICALNAME"
 Public Const TimeZoneColumnName                 As String = "NAME"
 
@@ -330,7 +333,7 @@ With lContractBuilder
     .TimeZone = GetTimeZone(instrument.timeZoneCanonicalName)
     
     If instrument.localSymbols.count > 0 Then
-        Set providerIDs = New TWutilities30.Parameters
+        Set providerIDs = New TWUtilities30.Parameters
 
         For Each localSymbol In instrument.localSymbols
             providerIDs.setParameterValue localSymbol.providerKey, localSymbol.localSymbol

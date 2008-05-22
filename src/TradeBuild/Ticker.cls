@@ -1225,6 +1225,17 @@ If State <> TickerStateStarting Then Exit Sub
 
 mInEventHandler = True
 
+If mContracts.Count = 0 Then
+    Set ev.source = Me
+    ev.eventCode = ApiNotifyCodes.ApiNotifyContractDoesNotExist
+    ev.eventMessage = "No such contract exists: " & mContracts.contractSpecifier.toString
+    RaiseEvent Notification(ev)
+    mTickers.notify ev
+    StopTicker
+    mInEventHandler = False
+    Exit Sub
+End If
+
 If mContracts.Count <> 1 Then
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyContractSpecifierAmbiguous

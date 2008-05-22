@@ -62,12 +62,8 @@ Private mBaseFactory As AbstractDOFactory
 ' DataObjectFactory Interface Members
 '@================================================================================
 
-Private Property Get DataObjectFactory_fieldNames() As String()
-DataObjectFactory_fieldNames = fieldNames
-End Property
-
-Private Property Get DataObjectFactory_fieldSpecifiers() As BusObjUtils10.FieldSpecifier()
-DataObjectFactory_fieldSpecifiers = fieldSpecifiers
+Private Property Get DataObjectFactory_fieldSpecifiers() As BusObjUtils10.fieldSpecifiers
+Set DataObjectFactory_fieldSpecifiers = fieldSpecifiers
 End Property
 
 Private Function DataObjectFactory_loadByID( _
@@ -75,9 +71,19 @@ Private Function DataObjectFactory_loadByID( _
 Set DataObjectFactory_loadByID = loadByID(id)
 End Function
 
+Private Function DataObjectFactory_loadByIDAsync( _
+                ByVal id As Long) As TWUtilities30.TaskController
+Set DataObjectFactory_loadByIDAsync = loadByIDAsync(id)
+End Function
+
 Private Function DataObjectFactory_loadByName( _
                 ByVal pName As String) As BusinessDataObject
-Set DataObjectFactory_loadByName = loadByName(pName)
+Set DataObjectFactory_loadByName = loadByName(Trim$(pName))
+End Function
+
+Private Function DataObjectFactory_loadByNameAsync( _
+                ByVal pName As String) As TWUtilities30.TaskController
+Set DataObjectFactory_loadByNameAsync = loadByNameAsync(pName)
 End Function
 
 Private Function DataObjectFactory_loadByQuery( _
@@ -85,8 +91,17 @@ Private Function DataObjectFactory_loadByQuery( _
 Set DataObjectFactory_loadByQuery = loadByQuery(whereCondition)
 End Function
 
+Private Function DataObjectFactory_loadByQueryAsync( _
+                ByVal whereCondition As String) As TWUtilities30.TaskController
+Set DataObjectFactory_loadByQueryAsync = loadByQueryAsync(whereCondition)
+End Function
+
 Private Function DataObjectFactory_makeNew() As BusinessDataObject
 Set DataObjectFactory_makeNew = makeNew
+End Function
+
+Private Function DataObjectFactory_makeNewAsync() As TWUtilities30.TaskController
+Set DataObjectFactory_makeNewAsync = makeNewAsync
 End Function
 
 Private Function DataObjectFactory_query( _
@@ -95,10 +110,22 @@ Private Function DataObjectFactory_query( _
 Set DataObjectFactory_query = query(whereCondition, fieldNames)
 End Function
 
+Private Function DataObjectFactory_queryAsync( _
+                ByVal whereCondition As String, _
+                fieldNames() As String) As TWUtilities30.TaskController
+Set DataObjectFactory_queryAsync = queryAsync(whereCondition, fieldNames)
+End Function
+
 Private Function DataObjectFactory_search( _
                 ByVal criterion As String, _
                 fieldNames() As String) As DataObjectSummaries
 Set DataObjectFactory_search = search(criterion, fieldNames)
+End Function
+
+Private Function DataObjectFactory_searchAsync( _
+                ByVal criterion As String, _
+                fieldNames() As String) As TWUtilities30.TaskController
+Set DataObjectFactory_searchAsync = searchAsync(criterion, fieldNames)
 End Function
 
 '@================================================================================
@@ -109,12 +136,8 @@ End Function
 ' Properties
 '@================================================================================
 
-Public Property Get fieldNames() As String()
-fieldNames = mBaseFactory.fieldNames
-End Property
-
-Public Property Get fieldSpecifiers() As FieldSpecifier()
-fieldSpecifiers = mBaseFactory.fieldSpecifiers
+Public Property Get fieldSpecifiers() As fieldSpecifiers
+Set fieldSpecifiers = mBaseFactory.fieldSpecifiers
 End Property
 
 '@================================================================================
@@ -125,7 +148,7 @@ Friend Sub initialise( _
                 ByVal db As TradingDB)
 
 Set mDB = db
-Set mBaseFactory = CreateAbstractDOFactory(mDB.connectionString, "Exchange", "vExchanges")
+Set mBaseFactory = CreateAbstractDOFactory(Me, mDB.connectionString, "Exchange", "vExchanges")
 
 mBaseFactory.addField FieldNameName, ExchangeColumnName, FieldWidthExchange, FieldAlignExchange, True
 mBaseFactory.addField FieldNameTimeZone, ExchangeColumnTimeZone, FieldWidthTimeZone, FieldAlignTimeZone, True
@@ -155,6 +178,25 @@ Err.Raise Err.Number, _
 
 End Function
 
+Public Function loadByIDAsync( _
+                ByVal id As Long) As TaskController
+Dim newDataObj As New Exchange
+Dim failpoint As Long
+On Error GoTo Err
+
+newDataObj.initialise mDB
+Set loadByIDAsync = mBaseFactory.loadByIDAsync(newDataObj, id)
+
+Exit Function
+
+Err:
+Err.Raise Err.Number, _
+        ProjectName & "." & ModuleName & ":" & "loadByIDAsync" & "." & failpoint & _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
+        Err.Description
+
+End Function
+
 Public Function loadByName( _
                 ByVal pName As String) As Exchange
 Dim failpoint As Long
@@ -164,7 +206,7 @@ Dim rs As Recordset
 
 pName = Trim$(pName)
 
-Set rs = mBaseFactory.loadByName(pName)
+Set rs = mBaseFactory.loadByName(Trim$(pName))
 If Not rs Is Nothing Then
     Set loadByName = New Exchange
     loadByName.initialise mDB, rs
@@ -175,6 +217,25 @@ Exit Function
 Err:
 Err.Raise Err.Number, _
         ProjectName & "." & ModuleName & ":" & "loadByName" & "." & failpoint & _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
+        Err.Description
+
+End Function
+
+Public Function loadByNameAsync( _
+                ByVal pName As String) As TaskController
+Dim newDataObj As New Exchange
+Dim failpoint As Long
+On Error GoTo Err
+
+newDataObj.initialise mDB
+Set loadByNameAsync = mBaseFactory.loadByNameAsync(newDataObj, Trim$(pName))
+
+Exit Function
+
+Err:
+Err.Raise Err.Number, _
+        ProjectName & "." & ModuleName & ":" & "loadByNameAsync" & "." & failpoint & _
         IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
         Err.Description
 
@@ -202,6 +263,25 @@ Err.Raise Err.Number, _
 
 End Function
 
+Public Function loadByQueryAsync( _
+                ByVal whereCondition As String) As TaskController
+Dim newDataObj As New Exchange
+Dim failpoint As Long
+On Error GoTo Err
+
+newDataObj.initialise mDB
+Set loadByQueryAsync = mBaseFactory.loadByQueryAsync(newDataObj, whereCondition)
+
+Exit Function
+
+Err:
+Err.Raise Err.Number, _
+        ProjectName & "." & ModuleName & ":" & "loadByQueryAsync" & "." & failpoint & _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
+        Err.Description
+
+End Function
+
 Public Function makeNew() As Exchange
 Dim failpoint As Long
 On Error GoTo Err
@@ -214,6 +294,25 @@ Exit Function
 Err:
 Err.Raise Err.Number, _
         ProjectName & "." & ModuleName & ":" & "makeNew" & "." & failpoint & _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
+        Err.Description
+
+End Function
+
+Public Function makeNewAsync() As TaskController
+Dim newDataObj As New instrument
+
+Dim failpoint As Long
+On Error GoTo Err
+
+newDataObj.initialise mDB
+Set makeNewAsync = mBaseFactory.makeNewAsync(newDataObj)
+
+Exit Function
+
+Err:
+Err.Raise Err.Number, _
+        ProjectName & "." & ModuleName & ":" & "makeNewAsync" & "." & failpoint & _
         IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
         Err.Description
 
@@ -237,6 +336,24 @@ Err.Raise Err.Number, _
 
 End Function
 
+Public Function queryAsync( _
+                ByVal whereCondition As String, _
+                ByRef fieldNames() As String) As TaskController
+Dim failpoint As Long
+On Error GoTo Err
+
+Set queryAsync = mBaseFactory.queryAsync(whereCondition, fieldNames)
+
+Exit Function
+
+Err:
+Err.Raise Err.Number, _
+        ProjectName & "." & ModuleName & ":" & "queryAsync" & "." & failpoint & _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
+        Err.Description
+
+End Function
+
 Public Function search( _
                 ByVal criterion As String, _
                 ByRef fieldNames() As String) As DataObjectSummaries
@@ -250,6 +367,24 @@ Exit Function
 Err:
 Err.Raise Err.Number, _
         ProjectName & "." & ModuleName & ":" & "search" & "." & failpoint & _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
+        Err.Description
+
+End Function
+
+Public Function searchAsync( _
+                ByVal criterion As String, _
+                ByRef fieldNames() As String) As TaskController
+Dim failpoint As Long
+On Error GoTo Err
+
+Set searchAsync = mBaseFactory.searchAsync(criterion, fieldNames)
+
+Exit Function
+
+Err:
+Err.Raise Err.Number, _
+        ProjectName & "." & ModuleName & ":" & "searchAsync" & "." & failpoint & _
         IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
         Err.Description
 

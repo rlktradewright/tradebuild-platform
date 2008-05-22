@@ -111,6 +111,10 @@ Private Property Get BusinessDataObject_ID() As Long
 BusinessDataObject_ID = id
 End Property
 
+Private Sub BusinessDataObject_InitialiseFromRecordset(ByVal rs As ADODB.Recordset)
+initialiseRs rs
+End Sub
+
 Private Property Get BusinessDataObject_IsDeleted() As Boolean
 BusinessDataObject_IsDeleted = IsDeleted
 End Property
@@ -270,9 +274,14 @@ End Sub
 
 Friend Sub initialise( _
                 ByVal db As TradingDB, _
-                ByVal rs As ADODB.Recordset)
+                Optional ByVal rs As ADODB.Recordset)
 Set mDB = db
 
+If Not rs Is Nothing Then initialiseRs rs
+End Sub
+
+Friend Sub initialiseRs( _
+                ByVal rs As ADODB.Recordset)
 Set mRs = rs
 
 mMaxNameLength = mRs.Fields(ExchangeColumnName).DefinedSize

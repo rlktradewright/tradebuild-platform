@@ -154,7 +154,7 @@ Dim listItem As listItem
 
 If ev.changeType <> CollItemAdded Then Exit Sub
 
-Set exec = ev.affectedObject
+Set exec = ev.affectedItem
 
 On Error Resume Next
 Set listItem = ExecutionsList.ListItems(exec.execId)

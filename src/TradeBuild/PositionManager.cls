@@ -103,7 +103,7 @@ Private mFirstActivePlexTableIndex As Long
 Private mLastActivePlexTableIndex As Long
 
 Private mSettlingOrderContext As OrderContext
-Private mSettlingOrderPlex As OrderPlex
+Private mSettlingOrderPlex As orderPlex
 Private mSettlingHandle As Long
 
 Private mClosing As Boolean
@@ -1033,8 +1033,8 @@ If profit <> mProfit Then
     fireProfit mProfit, ProfitTypes.ProfitTypeSessionProfit
     
     Set ev.source = Me
-    ev.timestamp = mTicker.timestamp
-    ev.value = mProfit
+    ev.sVal.timestamp = mTicker.timestamp
+    ev.sVal.value = mProfit
     ev.valueName = "profit"
     mStudies.notify ev
     

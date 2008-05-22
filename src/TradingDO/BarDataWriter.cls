@@ -95,7 +95,7 @@ Private Sub mConnection_ConnectComplete( _
 
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent ConnectFailed(pError.Number, _
-                            ModuleName & ": connection error" & vbCrLf & _
+                            ModuleName & ": connection error " & pError.NativeError & vbCrLf & _
                             pError.Description & vbCrLf & _
                             gGenerateErrorMessage(pConnection))
     mParent.releaseWriter Me
@@ -123,7 +123,7 @@ Private Sub mConnection_ExecuteComplete( _
                             ByVal pConnection As ADODB.Connection)
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent Error(pError.Number, _
-                    ModuleName & ": execution error" & vbCrLf & _
+                    ModuleName & ": execution error " & pError.NativeError & vbCrLf & _
                     pError.Description & vbCrLf & _
                     gGenerateErrorMessage(pConnection))
     Debug.Print "BarDataWriter error writing bar data: (" & pError.Number & ") " & pError.Description
@@ -180,7 +180,7 @@ Set param = mCmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             mInstrumentID)
-mCmd.Parameters.Append param
+mCmd.Parameters.append param
 
 ' @BarType
 Set param = mCmd.CreateParameter(, _
@@ -188,7 +188,7 @@ Set param = mCmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             barType)
-mCmd.Parameters.Append param
+mCmd.Parameters.append param
 
 ' @BarLength
 Set param = mCmd.CreateParameter(, _
@@ -196,7 +196,7 @@ Set param = mCmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             barLength)
-mCmd.Parameters.Append param
+mCmd.Parameters.append param
 
 ' @DateAndTime
 Set param = mCmd.CreateParameter(, _
@@ -204,7 +204,7 @@ Set param = mCmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             timestamp)
-mCmd.Parameters.Append param
+mCmd.Parameters.append param
 
 ' @OpenPrice
 Set param = mCmd.CreateParameter(, _
@@ -212,7 +212,7 @@ Set param = mCmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             openPrice)
-mCmd.Parameters.Append param
+mCmd.Parameters.append param
 
 ' @HighPrice
 Set param = mCmd.CreateParameter(, _
@@ -220,7 +220,7 @@ Set param = mCmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             highPrice)
-mCmd.Parameters.Append param
+mCmd.Parameters.append param
 
 ' @LowPrice
 Set param = mCmd.CreateParameter(, _
@@ -228,7 +228,7 @@ Set param = mCmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             lowPrice)
-mCmd.Parameters.Append param
+mCmd.Parameters.append param
 
 ' @ClosePrice
 Set param = mCmd.CreateParameter(, _
@@ -236,7 +236,7 @@ Set param = mCmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             closePrice)
-mCmd.Parameters.Append param
+mCmd.Parameters.append param
 
 ' @Volume
 Set param = mCmd.CreateParameter(, _
@@ -244,7 +244,7 @@ Set param = mCmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             volume)
-mCmd.Parameters.Append param
+mCmd.Parameters.append param
 
 ' @TickVolume
 Set param = mCmd.CreateParameter(, _
@@ -252,7 +252,7 @@ Set param = mCmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             tickVolume)
-mCmd.Parameters.Append param
+mCmd.Parameters.append param
 
 ' @OpenInterest
 Set param = mCmd.CreateParameter(, _
@@ -260,7 +260,7 @@ Set param = mCmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             openInterest)
-mCmd.Parameters.Append param
+mCmd.Parameters.append param
 
 connectToDB mAsynchronous
 ' note that the ConnectComplete event fires regardless of whether the

@@ -133,7 +133,7 @@ Dim i As Long
 Dim ev As CollectionChangeEvent
 Set ev.source = Me
 ev.changeType = changeType
-Set ev.affectedObject = affectedObject
+Set ev.affectedItem = affectedObject
 For i = 1 To mChangeListeners.Count
     Set listener = mChangeListeners(i)
     listener.Change ev

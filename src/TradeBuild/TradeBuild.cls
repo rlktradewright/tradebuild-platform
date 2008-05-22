@@ -93,6 +93,8 @@ Public Enum ApiNotifyCodes
     
     ApiNOtifyTickfileFormatNotSupported
     
+    ApiNotifyContractDoesNotExist
+    
 End Enum
 
 Public Enum BulletinTypes
@@ -156,14 +158,6 @@ Public Enum LegOpenClose
     LegOpenPos
     LegClosePos
     LegUnknownPos
-End Enum
-
-Public Enum LogLevels
-    LogLevelNone
-    LogLevelLow
-    LogLevelMedium
-    LogLevelHigh
-    LogLevelAll
 End Enum
 
 Public Enum MarketDepthTypes

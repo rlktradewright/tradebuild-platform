@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#27.5#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#27.6#0"; "TWControls10.ocx"
 Begin VB.UserControl ContractSpecBuilder 
    ClientHeight    =   2835
    ClientLeft      =   0
@@ -378,16 +378,15 @@ End Sub
 '@================================================================================
 
 Private Sub CurrencyCombo_Change()
+handleCurrencyComboChange
+End Sub
+
+Private Sub CurrencyCombo_Click()
+handleCurrencyComboChange
+End Sub
+
+Private Sub ExchangeCombo_Change()
 checkIfValid
-CurrencyCombo.ToolTipText = ""
-If CurrencyCombo.Text <> "" Then
-    Dim currDesc As CurrencyDescriptor
-    If IsValidCurrencyCode(CurrencyCombo.Text) Then
-        currDesc = GetCurrencyDescriptor(CurrencyCombo.Text)
-        CurrencyCombo.ToolTipText = currDesc.Description
-    End If
-End If
-   
 End Sub
 
 Private Sub ExchangeCombo_Click()
@@ -399,6 +398,10 @@ checkIfValid
 End Sub
 
 Private Sub LocalSymbolText_Change()
+checkIfValid
+End Sub
+
+Private Sub RightCombo_Change()
 checkIfValid
 End Sub
 
@@ -414,44 +417,12 @@ Private Sub SymbolText_Change()
 checkIfValid
 End Sub
 
+Private Sub TypeCombo_Change()
+handleTypeComboChange
+End Sub
+
 Private Sub TypeCombo_Click()
-
-Select Case SecTypeFromString(TypeCombo)
-Case SecurityTypes.SecTypeNone
-    ExpiryText.Enabled = True
-    StrikePriceText.Enabled = True
-    RightCombo.Enabled = True
-Case SecurityTypes.SecTypeFuture
-    ExpiryText.Enabled = True
-    StrikePriceText.Enabled = False
-    RightCombo.Enabled = False
-Case SecurityTypes.SecTypeStock
-    ExpiryText.Enabled = False
-    StrikePriceText.Enabled = False
-    RightCombo.Enabled = False
-Case SecurityTypes.SecTypeOption
-    ExpiryText.Enabled = True
-    StrikePriceText.Enabled = True
-    RightCombo.Enabled = True
-Case SecurityTypes.SecTypeFuturesOption
-    ExpiryText.Enabled = True
-    StrikePriceText.Enabled = True
-    RightCombo.Enabled = True
-Case SecurityTypes.SecTypeCash
-    ExpiryText.Enabled = False
-    StrikePriceText.Enabled = False
-    RightCombo.Enabled = False
-Case SecurityTypes.SecTypeIndex
-    ExpiryText.Enabled = False
-    StrikePriceText.Enabled = False
-    RightCombo.Enabled = False
-'Case SecurityTypes.SecTypeBag
-'    ExpiryText.Enabled = False
-'    StrikePriceText.Enabled = False
-'    RightCombo.Enabled = False
-End Select
-
-checkIfValid
+handleTypeComboChange
 End Sub
 
 '@================================================================================
@@ -480,6 +451,22 @@ End Property
 
 Public Property Get backColor() As OLE_COLOR
 backColor = LocalSymbolText.backColor
+End Property
+
+Public Property Let contractSpecifier( _
+                ByVal value As contractSpecifier)
+If value Is Nothing Then
+    clear
+    Exit Property
+End If
+LocalSymbolText = value.localSymbol
+SymbolText = value.symbol
+ExchangeCombo = value.exchange
+TypeCombo = SecTypeToString(value.sectype)
+CurrencyCombo = value.currencyCode
+ExpiryText = value.expiry
+StrikePriceText = value.expiry
+RightCombo = OptionRightToString(value.Right)
 End Property
 
 Public Property Get contractSpecifier() As contractSpecifier
@@ -518,6 +505,17 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Sub clear()
+LocalSymbolText.Text = ""
+SymbolText.Text = ""
+ExchangeCombo.Text = ""
+TypeCombo.Text = ""
+CurrencyCombo.Text = ""
+ExpiryText.Text = ""
+StrikePriceText.Text = ""
+RightCombo.Text = ""
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
@@ -536,6 +534,20 @@ If ExpiryText <> "" Then
     End If
 End If
 
+If ExchangeCombo.Text <> "" Then
+    If Not IsValidExchangeCode(ExchangeCombo.Text) Then
+        RaiseEvent NotReady
+        Exit Sub
+    End If
+End If
+
+If CurrencyCombo.Text <> "" Then
+    If Not IsValidCurrencyCode(CurrencyCombo.Text) Then
+        RaiseEvent NotReady
+        Exit Sub
+    End If
+End If
+
 If StrikePriceText <> "" Then
     If Not IsNumeric(StrikePriceText) Then
         RaiseEvent NotReady
@@ -548,36 +560,73 @@ If StrikePriceText <> "" Then
 End If
 
 If LocalSymbolText = "" Then
-    Select Case SecTypeFromString(TypeCombo)
-    Case SecurityTypes.SecTypeNone
-        RaiseEvent NotReady: Exit Sub
-    Case SecurityTypes.SecTypeFuture
-'        If ExpiryText = "" Then RaiseEvent NotReady: Exit Sub
-    Case SecurityTypes.SecTypeStock
-    
-    Case SecurityTypes.SecTypeOption
-'        If ExpiryText = "" Then RaiseEvent NotReady: Exit Sub
-'        If StrikePriceText = "" Then RaiseEvent NotReady: Exit Sub
-'        If RightCombo = "" Then RaiseEvent NotReady: Exit Sub
-    Case SecurityTypes.SecTypeFuturesOption
-'        If ExpiryText = "" Then RaiseEvent NotReady: Exit Sub
-'        If StrikePriceText = "" Then RaiseEvent NotReady: Exit Sub
-'        If RightCombo = "" Then RaiseEvent NotReady: Exit Sub
-    Case SecurityTypes.SecTypeCash
-    
-    Case SecurityTypes.SecTypeIndex
-    
-    'Case SecurityTypes.SecTypeBag
-    '    ExpiryText.Enabled = False
-    '    StrikePriceText.Enabled = False
-    '    RightCombo.Enabled = False
-    End Select
+    If SecTypeFromString(TypeCombo) = SecurityTypes.SecTypeNone Then
+        RaiseEvent NotReady
+        Exit Sub
+    End If
 End If
     
+If SecTypeFromString(TypeCombo) = SecurityTypes.SecTypeFuturesOption Or _
+    SecTypeFromString(TypeCombo) = SecurityTypes.SecTypeOption _
+Then
+    If OptionRightFromString(RightCombo.Text) = OptNone Then
+        RaiseEvent NotReady
+        Exit Sub
+    End If
+End If
 
 mReady = True
 RaiseEvent ready
 
 End Sub
 
+Private Sub handleCurrencyComboChange()
+checkIfValid
+CurrencyCombo.ToolTipText = ""
+If CurrencyCombo.Text <> "" Then
+    Dim currDesc As CurrencyDescriptor
+    If IsValidCurrencyCode(CurrencyCombo.Text) Then
+        currDesc = GetCurrencyDescriptor(CurrencyCombo.Text)
+        CurrencyCombo.ToolTipText = currDesc.Description
+    End If
+End If
+End Sub
 
+Private Sub handleTypeComboChange()
+Select Case SecTypeFromString(TypeCombo)
+Case SecurityTypes.SecTypeNone
+    ExpiryText.Enabled = True
+    StrikePriceText.Enabled = True
+    RightCombo.Enabled = True
+Case SecurityTypes.SecTypeFuture
+    ExpiryText.Enabled = True
+    StrikePriceText.Enabled = False
+    RightCombo.Enabled = False
+Case SecurityTypes.SecTypeStock
+    ExpiryText.Enabled = False
+    StrikePriceText.Enabled = False
+    RightCombo.Enabled = False
+Case SecurityTypes.SecTypeOption
+    ExpiryText.Enabled = True
+    StrikePriceText.Enabled = True
+    RightCombo.Enabled = True
+Case SecurityTypes.SecTypeFuturesOption
+    ExpiryText.Enabled = True
+    StrikePriceText.Enabled = True
+    RightCombo.Enabled = True
+Case SecurityTypes.SecTypeCash
+    ExpiryText.Enabled = False
+    StrikePriceText.Enabled = False
+    RightCombo.Enabled = False
+Case SecurityTypes.SecTypeIndex
+    ExpiryText.Enabled = False
+    StrikePriceText.Enabled = False
+    RightCombo.Enabled = False
+'Case SecurityTypes.SecTypeBag
+'    ExpiryText.Enabled = False
+'    StrikePriceText.Enabled = False
+'    RightCombo.Enabled = False
+End Select
+
+checkIfValid
+End Sub

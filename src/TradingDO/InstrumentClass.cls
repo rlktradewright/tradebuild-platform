@@ -36,7 +36,6 @@ Implements BusinessDataObject
 ' Events
 '@===============================================================================
 
-Public Event Loaded()
 Public Event Clean()
 Public Event Deleted()
 Public Event Dirty()
@@ -78,8 +77,6 @@ Private mEventRaiser As BusinessObjEventRaiser
 Private mMaxNameLength As Long
 Private mMaxCurrencyCodeLength As Long
 
-Private mExchange As Exchange
-
 '@===============================================================================
 ' Class Event Handlers
 '@===============================================================================
@@ -116,6 +113,10 @@ End Property
 Private Property Get BusinessDataObject_ID() As Long
 BusinessDataObject_ID = id
 End Property
+
+Private Sub BusinessDataObject_InitialiseFromRecordset(ByVal rs As ADODB.Recordset)
+initialiseRs rs
+End Sub
 
 Private Property Get BusinessDataObject_IsDeleted() As Boolean
 BusinessDataObject_IsDeleted = IsDeleted
@@ -202,17 +203,13 @@ Public Property Let Exchange( _
 ruleBroken BusRuleInstrumentClassExchangeValid, _
     value Is Nothing
 If Not value Is Nothing Then
-    Set mExchange = value
-    mRs("exchangeid") = mExchange.id
+    mRs("exchangeid") = value.id
 End If
 Dirty
 End Property
 
 Public Property Get Exchange() As Exchange
-If mExchange Is Nothing Then
-    Set mExchange = mDB.ExchangeFactory.loadByID(mRs("exchangeid"))
-End If
-Set Exchange = mExchange
+Set Exchange = mDB.ExchangeFactory.loadByID(mRs("exchangeid"))
 End Property
 
 Public Property Let exchangeName( _
@@ -221,7 +218,7 @@ Exchange = mDB.ExchangeFactory.loadByName(value)
 End Property
 
 Public Property Get exchangeName() As String
-exchangeName = Exchange.name
+exchangeName = Trim$(mRs(InstrumentClassColumnExchange))
 End Property
 
 Public Property Get id() As Long
@@ -382,11 +379,11 @@ End If
 End Property
 
 Public Property Get timeZoneCanonicalName() As String
-timeZoneCanonicalName = Exchange.timeZoneCanonicalName
+timeZoneCanonicalName = Trim$(mRs(InstrumentClassColumnTimeZone))
 End Property
 
 Public Property Get TimeZoneName() As String
-TimeZoneName = Exchange.TimeZoneName
+TimeZoneName = Trim$(mRs("TimeZone"))
 End Property
 
 '@===============================================================================
@@ -409,7 +406,6 @@ Clean
 End Sub
 
 Public Sub CancelEdit()
-Set mExchange = Nothing
 mRs.CancelUpdate
 mDeleted = False
 If mRs.EOF Then
@@ -426,13 +422,18 @@ End Sub
 
 Friend Sub initialise( _
                 ByVal db As TradingDB, _
-                ByVal rs As ADODB.Recordset)
+                Optional ByVal rs As ADODB.Recordset)
 Set mDB = db
 
+If Not rs Is Nothing Then initialiseRs rs
+End Sub
+
+Friend Sub initialiseRs( _
+                ByVal rs As ADODB.Recordset)
 Set mRs = rs
 
-mMaxNameLength = mRs.Fields("NAME").DefinedSize
-mMaxCurrencyCodeLength = mRs.Fields("Currency").DefinedSize
+mMaxNameLength = mRs.Fields(InstrumentClassColumnName).DefinedSize
+mMaxCurrencyCodeLength = mRs.Fields(InstrumentClassColumnCurrency).DefinedSize
 
 If mRs.EOF Then
     mRs.AddNew

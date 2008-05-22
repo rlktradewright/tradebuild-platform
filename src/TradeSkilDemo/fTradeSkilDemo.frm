@@ -2,7 +2,7 @@ VERSION 5.00
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#62.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#65.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fTradeSkilDemo 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeSkil Demo Edition Version 2.6"
@@ -400,7 +400,7 @@ Begin VB.Form fTradeSkilDemo
                _Version        =   393216
                CheckBox        =   -1  'True
                CustomFormat    =   "yyy-MM-dd HH:mm"
-               Format          =   20578307
+               Format          =   63176707
                CurrentDate     =   39365
             End
             Begin MSComCtl2.DTPicker FromDatePicker 
@@ -414,7 +414,7 @@ Begin VB.Form fTradeSkilDemo
                _Version        =   393216
                CheckBox        =   -1  'True
                CustomFormat    =   "yyy-MM-dd HH:mm"
-               Format          =   20578307
+               Format          =   63176707
                CurrentDate     =   39365
             End
             Begin VB.Label Label5 
@@ -1026,7 +1026,7 @@ If ConfigManager1.changesPending Then
             "If you click No, your changes to this configuration item will be lost", _
             vbYesNo Or vbQuestion, _
             "Attention!") = vbYes Then
-        ConfigManager1.appyPendingChanges
+        ConfigManager1.applyPendingChanges
     End If
 End If
 If ConfigManager1.dirty Then
@@ -1492,6 +1492,13 @@ On Error GoTo Err
 Set lTicker = ev.source
 
 Select Case ev.eventCode
+Case ApiNotifyCodes.ApiNotifyContractDoesNotExist
+    logMessage "Contract does not exist: " & _
+                        lTicker.Contracts.contractSpecifier.toString
+    modelessMsgBox "No such contract is available - you specified: " & vbCrLf & _
+                        vbTab & lTicker.Contracts.contractSpecifier.toString, _
+                    MsgBoxCritical, _
+                    "Attention"
 Case ApiNotifyCodes.ApiNotifyContractExpired
     logMessage "Contract has expired: " & _
                         lTicker.Contracts.contractSpecifier.toString

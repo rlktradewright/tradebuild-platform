@@ -78,7 +78,7 @@ Private Const ConstMomentumBarsParamTicksPerBar As String = "Ticks move per bar"
 '@================================================================================
 
 Public Type BarToWrite
-    theBar              As StudyUtils26.Bar
+    theBar              As Bar
     volume              As Long
     barType             As BarTypes
 End Type
@@ -94,20 +94,20 @@ Private mStudyManagerRef            As WeakReference
 
 Private mAccumulatedVolume          As Long
 
-Private mTradeBars                  As StudyUtils26.Bars
+Private mTradeBars                  As bars
 Private mTradeBarsStudy             As study
-Private mCurrTradeBar               As StudyUtils26.Bar
+Private mCurrTradeBar               As Bar
 Private mCurrTradeBarPrevTickvol    As Long
 Private mCurrVolume                 As Long
 
-Private mAskBars                    As StudyUtils26.Bars
+Private mAskBars                    As bars
 Private mAskBarsStudy               As study
-Private mCurrAskBar                 As StudyUtils26.Bar
+Private mCurrAskBar                 As Bar
 Private mCurrAskBarPrevTickvol      As Long
 
-Private mBidBars                    As StudyUtils26.Bars
+Private mBidBars                    As bars
 Private mBidBarsStudy               As study
-Private mCurrBidBar                 As StudyUtils26.Bar
+Private mCurrBidBar                 As Bar
 Private mCurrBidBarPrevTickvol      As Long
 
 Private mContract                   As Contract
@@ -149,7 +149,7 @@ Private WithEvents mHistoricBarTimer As IntervalTimer
 Attribute mHistoricBarTimer.VB_VarHelpID = -1
 Private mElapsedTimer               As ElapsedTimer
 Private mHistReceivingSynchronously As Boolean
-Private mHistoricBar                As TradeBuildSP.Bar
+Private mHistoricBar                As TimeframeUtils26.Bar
 Private mHistoricBarPending         As Boolean
 Private mHistoricBarRequested       As Boolean
 
@@ -176,7 +176,7 @@ End Sub
 
 
 Private Sub IBarDataConsumer_Bar( _
-                ByRef data As TradeBuildSP.Bar, _
+                ByVal data As Bar, _
                 ByVal barLength As Long, _
                 ByVal barUnit As TimePeriodUnits)
 Dim failpoint As Long
@@ -184,7 +184,7 @@ On Error GoTo Err
 
 mHistoricBarRequested = False
 mHistoricBarPending = True
-mHistoricBar = data
+Set mHistoricBar = data
 If Not mHistReceivingSynchronously Then
     ' We use the timer with a very short delay: this is to prevent
     ' calling back into the Service Provider for the next bar
@@ -303,33 +303,33 @@ Static currBidBarNumber As Long
 Static currTradeBarNumber As Long
 
 If ev.source Is mTradeBarsStudy Then
-    If ev.barNumber = currTradeBarNumber Then Exit Sub
+    If ev.sVal.barNumber = currTradeBarNumber Then Exit Sub
     ' a new bar has started - need to write out the previous one
     If currTradeBarNumber > 0 Then
         mCurrVolume = mTradeBarsStudy.getStudyValue(BarValueVolume, -1).value
         WriteABar mCurrTradeBar, BarTypeTrade, mCurrVolume, mCurrTradeBarPrevTickvol
         mCurrTradeBarPrevTickvol = 0
     End If
-    Set mCurrTradeBar = ev.value
-    currTradeBarNumber = ev.barNumber
+    Set mCurrTradeBar = ev.sVal.value
+    currTradeBarNumber = ev.sVal.barNumber
 ElseIf ev.source Is mAskBarsStudy Then
-    If ev.barNumber = currAskBarNumber Then Exit Sub
+    If ev.sVal.barNumber = currAskBarNumber Then Exit Sub
     ' a new bar has started - need to write out the previous one
     If currAskBarNumber > 0 Then
         WriteABar mCurrAskBar, BarTypeAsk, 0, mCurrAskBarPrevTickvol
         mCurrAskBarPrevTickvol = 0
     End If
-    Set mCurrAskBar = ev.value
-    currAskBarNumber = ev.barNumber
+    Set mCurrAskBar = ev.sVal.value
+    currAskBarNumber = ev.sVal.barNumber
 ElseIf ev.source Is mBidBarsStudy Then
-    If ev.barNumber = currBidBarNumber Then Exit Sub
+    If ev.sVal.barNumber = currBidBarNumber Then Exit Sub
     ' a new bar has started - need to write out the previous one
     If currBidBarNumber > 0 Then
         WriteABar mCurrBidBar, BarTypeBid, 0, mCurrBidBarPrevTickvol
         mCurrBidBarPrevTickvol = 0
     End If
-    Set mCurrBidBar = ev.value
-    currBidBarNumber = ev.barNumber
+    Set mCurrBidBar = ev.sVal.value
+    currBidBarNumber = ev.sVal.barNumber
 End If
 
 End Sub
@@ -343,7 +343,7 @@ FetchHistoricBars
 End Sub
 
 '@================================================================================
-' mWriteTimer Event Handlers
+' mSession Event Handlers
 '@================================================================================
 
 Private Sub mSession_SessionStarted(ev As SessionEvent)
@@ -377,7 +377,7 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get askBars() As Bars
+Public Property Get askBars() As bars
 Set askBars = mAskBars
 End Property
 
@@ -393,7 +393,7 @@ Public Property Get barUnit() As Long
 barUnit = mBarUnit
 End Property
 
-Public Property Get bidBars() As Bars
+Public Property Get bidBars() As bars
 Set bidBars = mBidBars
 End Property
 
@@ -431,7 +431,7 @@ Public Property Get key() As String
 key = mKey
 End Property
 
-Public Property Get tradeBars() As Bars
+Public Property Get tradeBars() As bars
 Set tradeBars = mTradeBars
 End Property
 
@@ -595,7 +595,7 @@ If mBarReader Is Nothing Then
         RaiseEvent BarsLoaded
     Else
         barSpecifier.barLength = mBarLength
-        barSpecifier.BarLengthUnits = mBarUnit
+        barSpecifier.barLengthUnits = mBarUnit
         barSpecifier.barType = BarTypes.BarTypeTrade
         barSpecifier.Contract = mContract
         barSpecifier.FromDate = mFromTime
@@ -603,7 +603,7 @@ If mBarReader Is Nothing Then
             barSpecifier.ToDate = mToTime
         Else
             If mExcludeCurrentBar Then
-                barSpecifier.ToDate = mSession.barStartTime(tickr.timestamp, _
+                barSpecifier.ToDate = mSession.BarStartTime(tickr.timestamp, _
                                             mBarLength, _
                                             mBarUnit)
             Else
@@ -613,8 +613,7 @@ If mBarReader Is Nothing Then
                                             mBarUnit)
             End If
         End If
-        barSpecifier.NumberOfBars = mNumberOfBarsToFetch
-        barSpecifier.includeBarsOutsideSession = mIncludeBarsOutsideSession
+        barSpecifier.maxNumberOfBars = mNumberOfBarsToFetch
         Debug.Print "Fetching bars:" & vbCrLf & _
                     barSpecifier.toString
         mBarReader.FetchBars barSpecifier
@@ -686,33 +685,50 @@ mHistoricBarPending = False
 
 With mHistoricBar
 
-    Debug.Print "Historic bar (" & mKey & ") " & .OpenPrice & " " & .highPrice & " " & .lowPrice & " " & .closePrice & " " & .volume
-    If .OpenPrice <> 0 Then studyMgr.notifyInput mTradeInputHandle, .OpenPrice, .timestamp
-    If .closePrice >= .OpenPrice Then
-        If .lowPrice <> 0 Then studyMgr.notifyInput mTradeInputHandle, .lowPrice, .timestamp
-        If .highPrice <> 0 Then studyMgr.notifyInput mTradeInputHandle, .highPrice, .timestamp
-    Else
-        If .highPrice <> 0 Then studyMgr.notifyInput mTradeInputHandle, .highPrice, .timestamp
-        If .lowPrice <> 0 Then studyMgr.notifyInput mTradeInputHandle, .lowPrice, .timestamp
-    End If
-    If .closePrice <> 0 Then studyMgr.notifyInput mTradeInputHandle, .closePrice, .timestamp
+    Debug.Print "Historic bar (" & mKey & ") " & FormatTimestamp(.timestamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & .openValue & " " & .highValue & " " & .lowValue & " " & .closeValue & " " & .volume & " " & .tickVolume
+    studyMgr.notifyInput mTradeInputHandle, .openValue, .timestamp
     
-    mAccumulatedVolume = mAccumulatedVolume + .volume
     If Not firstVolumeSent Then
         ' send an initial volume of 1, because the first volume notification
         ' is used by the bar studies to set the accum volume at end of
         ' previous bar
         studyMgr.notifyInput mVolumeInputHandle, 1, .timestamp
-        mAccumulatedVolume = mAccumulatedVolume + 1
-        studyMgr.notifyInput mVolumeInputHandle, mAccumulatedVolume, .timestamp
+        mAccumulatedVolume = 1
         firstVolumeSent = True
-    Else
-        studyMgr.notifyInput mVolumeInputHandle, mAccumulatedVolume, .timestamp
     End If
-        
-    studyMgr.notifyInput mTickVolumeInputHandle, .tickVolume, .timestamp
-    mCurrTradeBarPrevTickvol = .tickVolume
     
+    If .closeValue >= .openValue Then
+        studyMgr.notifyInput mTradeInputHandle, .lowValue, .timestamp
+        studyMgr.notifyInput mTickVolumeInputHandle, Int(.tickVolume / 3) - 2, .timestamp
+        studyMgr.notifyInput mVolumeInputHandle, mAccumulatedVolume + Int(.volume / 3), .timestamp
+        
+        studyMgr.notifyInput mTradeInputHandle, .lowValue, .timestamp
+        studyMgr.notifyInput mTradeInputHandle, .highValue, .timestamp
+        studyMgr.notifyInput mTickVolumeInputHandle, Int(.tickVolume / 3) - 2, .timestamp
+        studyMgr.notifyInput mVolumeInputHandle, mAccumulatedVolume + 2 * Int(.volume / 3), .timestamp
+    
+        studyMgr.notifyInput mTradeInputHandle, .highValue, .timestamp
+        studyMgr.notifyInput mTradeInputHandle, .closeValue, .timestamp
+        studyMgr.notifyInput mTickVolumeInputHandle, .tickVolume - 2 * Int(.tickVolume / 3) - 2, .timestamp
+        studyMgr.notifyInput mVolumeInputHandle, mAccumulatedVolume + .volume, .timestamp
+    Else
+        studyMgr.notifyInput mTradeInputHandle, .highValue, .timestamp
+        studyMgr.notifyInput mTickVolumeInputHandle, Int(.tickVolume / 3) - 2, .timestamp
+        studyMgr.notifyInput mVolumeInputHandle, mAccumulatedVolume + Int(.volume / 3), .timestamp
+        
+        studyMgr.notifyInput mTradeInputHandle, .highValue, .timestamp
+        studyMgr.notifyInput mTradeInputHandle, .lowValue, .timestamp
+        studyMgr.notifyInput mTickVolumeInputHandle, Int(.tickVolume / 3) - 2, .timestamp
+        studyMgr.notifyInput mVolumeInputHandle, mAccumulatedVolume + 2 * Int(.volume / 3), .timestamp
+    
+        studyMgr.notifyInput mTradeInputHandle, .lowValue, .timestamp
+        studyMgr.notifyInput mTradeInputHandle, .closeValue, .timestamp
+        studyMgr.notifyInput mTickVolumeInputHandle, .tickVolume - 2 * Int(.tickVolume / 3) - 2, .timestamp
+        studyMgr.notifyInput mVolumeInputHandle, mAccumulatedVolume + .volume, .timestamp
+    End If
+    
+    mAccumulatedVolume = mAccumulatedVolume + .volume
+        
 End With
 End Sub
 
@@ -762,7 +778,7 @@ Set mTradeBarsStudy = studyMgr.AddStudy(ConstMomentumBarsStudyName, _
                                         inputValueNames, _
                                         params)
 Set barsStudy = mTradeBarsStudy
-Set mTradeBars = barsStudy.Bars
+Set mTradeBars = barsStudy.bars
 studyMgr.startStudy mTradeBarsStudy, 0
 
 If mWriteBidAndAskBars Then
@@ -773,7 +789,7 @@ If mWriteBidAndAskBars Then
                                             inputValueNames, _
                                             params)
     Set barsStudy = mBidBarsStudy
-    Set mBidBars = barsStudy.Bars
+    Set mBidBars = barsStudy.bars
     studyMgr.startStudy mBidBarsStudy, 0
 
     ReDim inputValueNames(0) As String
@@ -783,7 +799,7 @@ If mWriteBidAndAskBars Then
                                             inputValueNames, _
                                             params)
     Set barsStudy = mAskBarsStudy
-    Set mAskBars = barsStudy.Bars
+    Set mAskBars = barsStudy.bars
     studyMgr.startStudy mAskBarsStudy, 0
 
 End If
@@ -807,7 +823,7 @@ Set mTradeBarsStudy = studyMgr.AddStudy(ConstTimeBarsStudyName, _
                                         inputValueNames, _
                                         params)
 Set barsStudy = mTradeBarsStudy
-Set mTradeBars = barsStudy.Bars
+Set mTradeBars = barsStudy.bars
 studyMgr.startStudy mTradeBarsStudy, 0
 
 If mWriteBidAndAskBars Then
@@ -818,7 +834,7 @@ If mWriteBidAndAskBars Then
                                             inputValueNames, _
                                             params)
     Set barsStudy = mBidBarsStudy
-    Set mBidBars = barsStudy.Bars
+    Set mBidBars = barsStudy.bars
     studyMgr.startStudy mBidBarsStudy, 0
 
     ReDim inputValueNames(0) As String
@@ -828,7 +844,7 @@ If mWriteBidAndAskBars Then
                                             inputValueNames, _
                                             params)
     Set barsStudy = mAskBarsStudy
-    Set mAskBars = barsStudy.Bars
+    Set mAskBars = barsStudy.bars
     studyMgr.startStudy mAskBarsStudy, 0
 
 End If
@@ -850,7 +866,7 @@ Set mTradeBarsStudy = studyMgr.AddStudy(ConstVolumeBarsStudyName, _
                                         inputValueNames, _
                                         params)
 Set barsStudy = mTradeBarsStudy
-Set mTradeBars = barsStudy.Bars
+Set mTradeBars = barsStudy.bars
 studyMgr.startStudy mTradeBarsStudy, 0
 
 If mWriteBidAndAskBars Then
@@ -861,7 +877,7 @@ If mWriteBidAndAskBars Then
                                             inputValueNames, _
                                             params)
     Set barsStudy = mBidBarsStudy
-    Set mBidBars = barsStudy.Bars
+    Set mBidBars = barsStudy.bars
     studyMgr.startStudy mBidBarsStudy, 0
 
     ReDim inputValueNames(0) As String
@@ -871,7 +887,7 @@ If mWriteBidAndAskBars Then
                                             inputValueNames, _
                                             params)
     Set barsStudy = mAskBarsStudy
-    Set mAskBars = barsStudy.Bars
+    Set mAskBars = barsStudy.bars
     studyMgr.startStudy mAskBarsStudy, 0
 
 End If
@@ -981,7 +997,7 @@ Set tickr = mTickerRef.Target
 End Function
 
 Private Sub WriteABar( _
-                ByVal theBar As StudyUtils26.Bar, _
+                ByVal theBar As Bar, _
                 ByVal barType As BarTypes, _
                 ByVal volume As Long, _
                 ByVal prevTickVolume)
@@ -1008,7 +1024,7 @@ End If
 End Sub
 
 Private Sub WriteBar( _
-                ByVal theBar As StudyUtils26.Bar, _
+                ByVal theBar As Bar, _
                 ByVal barType As BarTypes, _
                 ByVal volume As Long)
         
@@ -1019,7 +1035,7 @@ If mBarWriter Is Nothing Then Exit Sub
 Debug.Print FormatDateTime(Now, vbLongTime) & "  " & mContract.specifier.localSymbol & _
             " Write " & mBarLength & TimePeriodUnitsToString(mBarUnit) & _
             " type " & barType & " bar " & theBar.barNumber & _
-            " (" & FormatDateTime(theBar.DateTime, vbLongTime) & _
+            " (" & FormatDateTime(theBar.timestamp, vbLongTime) & _
             "): open=" & theBar.openValue & _
             "; high=" & theBar.highValue & _
             "; low=" & theBar.lowValue & _

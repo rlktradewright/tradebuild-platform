@@ -76,7 +76,7 @@ Private mFetchInProgress As Boolean
 
 Private mConnectionString As String
 
-Private mTimeZone As TWutilities30.TimeZone
+Private mTimeZone As TWUtilities30.TimeZone
 
 '@===============================================================================
 ' Class Event Handlers
@@ -97,7 +97,7 @@ Private Sub mConnection_ConnectComplete( _
 
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent ConnectFailed(pError.Number, _
-                            ModuleName & ": connection error" & vbCrLf & _
+                            ModuleName & ": connection error " & pError.NativeError & vbCrLf & _
                             pError.Description & vbCrLf & _
                             gGenerateErrorMessage(pConnection))
     Exit Sub
@@ -109,6 +109,23 @@ RaiseEvent Ready
 
 End Sub
 
+Private Sub mConnection_ExecuteComplete( _
+                ByVal RecordsAffected As Long, _
+                ByVal pError As ADODB.Error, _
+                adStatus As ADODB.EventStatusEnum, _
+                ByVal pCommand As ADODB.Command, _
+                ByVal pRecordset As ADODB.Recordset, _
+                ByVal pConnection As ADODB.Connection)
+mFetchInProgress = False
+If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
+    RaiseEvent Error(pError.Number, _
+                    ModuleName & ": fetch error " & pError.NativeError & vbCrLf & _
+                    pError.Description & vbCrLf & _
+                    gGenerateErrorMessage(mConnection))
+    mConnection.Close
+End If
+End Sub
+
 '@===============================================================================
 ' mRsBars Event Handlers
 '@===============================================================================
@@ -117,26 +134,21 @@ Private Sub mRsBars_FetchComplete( _
                             ByVal pError As ADODB.Error, _
                             adStatus As ADODB.EventStatusEnum, _
                             ByVal pRecordset As ADODB.Recordset)
+mFetchInProgress = False
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent Error(pError.Number, _
-                    ModuleName & ": fetch error" & vbCrLf & _
+                    ModuleName & ": fetch error " & pError.NativeError & vbCrLf & _
                     pError.Description & vbCrLf & _
                     gGenerateErrorMessage(mConnection))
+    mConnection.Close
     Exit Sub
 End If
-mFetchInProgress = False
 If Not mRsBars.BOF Then
     mRsBars.MoveLast    ' because the stored procedure returns them in reverse order
 End If
+Set mRsBars.ActiveConnection = Nothing
+mConnection.Close
 RaiseEvent BarsFetched
-End Sub
-
-Private Sub mRsBars_FetchProgress( _
-                            ByVal Progress As Long, _
-                            ByVal MaxProgress As Long, _
-                            adStatus As ADODB.EventStatusEnum, _
-                            ByVal pRecordset As ADODB.Recordset)
-
 End Sub
 
 '@===============================================================================
@@ -184,7 +196,7 @@ Set param = cmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             mInstrumentID)
-cmd.Parameters.Append param
+cmd.Parameters.append param
 
 ' @BarType
 Set param = cmd.CreateParameter(, _
@@ -192,7 +204,7 @@ Set param = cmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             barType)
-cmd.Parameters.Append param
+cmd.Parameters.append param
 
 ' @BarLength
 Set param = cmd.CreateParameter(, _
@@ -200,7 +212,7 @@ Set param = cmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             barLength)
-cmd.Parameters.Append param
+cmd.Parameters.append param
 
 ' @NumberRequired
 Set param = cmd.CreateParameter(, _
@@ -208,7 +220,7 @@ Set param = cmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             NumberOfBars)
-cmd.Parameters.Append param
+cmd.Parameters.append param
 
 If fromTime < #1/1/1900# Then fromTime = #1/1/1900# ' don't exceed range of SmallDateTime
 If toTime < #1/1/1900# Then toTime = #1/1/1900# ' don't exceed range of SmallDateTime
@@ -218,7 +230,7 @@ Set param = cmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             fromTime)
-cmd.Parameters.Append param
+cmd.Parameters.append param
 
 ' @To
 Set param = cmd.CreateParameter(, _
@@ -226,7 +238,7 @@ Set param = cmd.CreateParameter(, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
                             toTime)
-cmd.Parameters.Append param
+cmd.Parameters.append param
 
 cmd.ActiveConnection = mConnection
 
