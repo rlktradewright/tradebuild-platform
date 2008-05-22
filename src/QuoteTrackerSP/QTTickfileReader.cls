@@ -433,11 +433,10 @@ End Sub
 Private Sub logMessage( _
                 ByVal message As String, _
                 ByVal logLevel As LogLevels)
-If mLogLevel < logLevel Or _
-    mLogLevel = LogLevelNone Then Exit Sub
-mCommonServiceConsumer.NotifyListeners message, _
-                                        TradeBuildSP.StandardListenValueTypes.Log, _
-                                        Now
+If Not gLogger.isLoggable(logLevel) Then Exit Sub
+gLogger.Log logLevel, _
+            message, _
+            Now
 End Sub
 
 

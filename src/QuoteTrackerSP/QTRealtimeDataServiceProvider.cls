@@ -64,8 +64,6 @@ Private mName As String
 Private mHandle As Long
 Private mCommonServiceConsumer As ICommonServiceConsumer
 
-Private mLogLevel As LogLevels
-
 Private mRealtimeDataReaders As Collection
 
 '================================================================================
@@ -82,7 +80,6 @@ mServer = "127.0.0.1"
 mPort = 16240
 mConnectionRetryIntervalSecs = 10
 
-mLogLevel = LogLevelLow
 End Sub
 
 Private Sub Class_Terminate()
@@ -136,16 +133,9 @@ For Each param In params
         mkeepConnection = param.value
     Case UCase$(ParamNameProviderKey)
         mProviderKey = param.value
-    Case UCase$(ParamNameLogLevel)
-        mLogLevel = param.value
     End Select
 Next
 End Sub
-
-Private Property Let ICommonServiceProvider_LogLevel( _
-                ByVal RHS As TradeBuildSP.LogLevels)
-mLogLevel = RHS
-End Property
 
 Private Property Let ICommonServiceProvider_Name(ByVal RHS As String)
 mName = RHS
@@ -183,7 +173,6 @@ reader.password = mPassword
 reader.ConnectionRetryIntervalSecs = mConnectionRetryIntervalSecs
 reader.keepConnection = mkeepConnection
 reader.providerKey = mProviderKey
-reader.logLevel = mLogLevel
 reader.Name = mName & " (reader)"
 mRealtimeDataReaders.add reader
 Exit Function

@@ -135,13 +135,13 @@ Private Type HistoricalDataRequestTableEntry
     dataRetrievedFromTWS    As Boolean
     cancelling              As Boolean
     ignoreTimestamps        As Boolean
-    barSpecifier            As TradeBuildSP.IBarDataSpecifier
+    barSpecifier            As BarDataSpecifier
     SessionBuilder          As SessionBuilder
     Session                 As Session
     earliestReuseTime       As Date
     numberOfTwsRequests     As Long         ' the number of historical data requests
                                             ' made to TWS
-    barType                 As TradeBuildSP.BarTypes
+    barType                 As BarTypes
     barLength               As Double       ' days
     historicalDataReader    As HistDataReader
     nextBarIndex            As Long
@@ -215,7 +215,6 @@ Private mFirstContractDetailsReceived As Boolean
 
 Private mNextOrderID  As Long
 
-Private mLogLevel As LogLevels
 Private mTWSLogLevel As TWSLogLevels
 
 Private mTwsHistDataRequestQueue As Queue
@@ -239,6 +238,7 @@ Attribute mPerformanceTimerPeriod.VB_VarHelpID = -1
 Private mPerformanceElapsedTimer As ElapsedTimer
 
 Private mPerformanceLogger As Logger
+Private mSocketLogger As Logger
 
 '================================================================================
 ' External function declarations
@@ -263,6 +263,9 @@ Private Sub Class_Initialize()
 ReDim mTickerTable(3) As TickerTableEntry
 ReDim mBufferIn(1023) As Byte
 ReDim mBufferOut(15) As Byte
+
+createLoggers
+
 mConnectionState = ConnectionStates.ConnNotConnected
 
 Set mOrderIDMap = New Collection
@@ -270,7 +273,6 @@ Set mExecutions = New Collection
 
 mNextOrderID = 1
 
-mLogLevel = LogLevelLow
 mTWSLogLevel = TWSLogLevelError ' this is the TWS default
 
 Set mTwsHistDataRequestQueue = New Queue
@@ -404,10 +406,10 @@ mSocket.GetData mSocketInputData, vbArray + vbByte
 bytesReceived = UBound(mSocketInputData) + 1
 'Debug.Print "Received " & bytesReceived & " from socket: " & showBuffer(mSocketInputData, bytesReceived)
 
-If mLogLevel >= LogLevelHigh Then
-    mCommonServiceConsumer.NotifyListeners showBuffer(mSocketInputData, bytesReceived), _
-                                        ListenValueTypes.ValueTypeRawSocketData, _
-                                        Me
+If mSocketLogger.isLoggable(LogLevelHighDetail) Then
+    mSocketLogger.Log LogLevels.LogLevelHighDetail, _
+                        showBuffer(mSocketInputData, bytesReceived), _
+                        Me
 End If
 
 If mIndexIn = mInputIndex Then
@@ -514,16 +516,14 @@ Case sckAddressNotAvailable, _
         If mConnectionRetryIntervalSecs = 0 Then
             logMessage "Failed to connect to TWS: " & _
                         Description & ": " & _
-                        connectionString, _
-                        LogLevelLow
+                        connectionString
             
             cancelContractRequests "Failed to connect to TWS"
             RaiseEvent ConnectFailed(Description, False)
         Else
             logMessage "Failed to connect to TWS - retrying: " & _
                         Description & ": " & _
-                        connectionString, _
-                        LogLevelLow
+                        connectionString
             
             RaiseEvent ConnectFailed(Description, True)
             retryConnection
@@ -531,8 +531,7 @@ Case sckAddressNotAvailable, _
     Else
         logMessage "Socket error " & number & ": " & _
                     Description & ": " & _
-                    connectionString, _
-                    LogLevelLow
+                    connectionString
         handleTwsDisconnection
     End If
 'Case sckConnectionReset
@@ -554,8 +553,7 @@ Case Else
     cancelContractRequests "Failed to connect to TWS"
     logMessage "Socket error " & number & ": " & _
                 Description & ": " & _
-                connectionString, _
-                LogLevelLow
+                connectionString
     RaiseEvent ConnectFailed(Description, False)
 End Select
 
@@ -604,29 +602,6 @@ End Property
 
 Friend Property Get initialOrderId() As Long
 initialOrderId = mNextOrderID
-End Property
-
-Friend Property Let logLevel(ByVal value As LogLevels)
-mLogLevel = value
-
-If mLogLevel >= LogLevelMedium Then
-    If mPerformanceTimerSecond Is Nothing Then
-        Set mPerformanceTimerSecond = CreateIntervalTimer(CDate(Int((Now + 2 * OneSecond) / OneSecond) * OneSecond), _
-                                                ExpiryTimeUnitDateTime, _
-                                                1000)
-        Set mPerformanceTimerPeriod = CreateIntervalTimer(CDate(Int((Now + OneMinute) / OneMinute) * OneMinute), _
-                                                ExpiryTimeUnitDateTime, _
-                                                60000)
-        mPerformanceTimerSecond.StartTimer
-        mPerformanceTimerPeriod.StartTimer
-        
-        Set mPerformanceLogger = GetLogger("tradebuild.serviceprovider.ibtwssp.performance")
-    End If
-End If
-End Property
-
-Friend Property Get logLevel() As LogLevels
-logLevel = mLogLevel
 End Property
 
 Friend Property Let port(ByVal value As Long)
@@ -844,7 +819,7 @@ mConnectionState = ConnectionStates.ConnNotConnected
 releaseAllTickerTableEntries
 ReleaseSocket
 If forced Then RaiseEvent Disconnected(reason)
-logMessage "Disconnected from: " & connectionString & ": " & reason, LogLevelLow
+logMessage "Disconnected from: " & connectionString & ": " & reason
 Exit Sub
 err:
 handleFatalError err.number, _
@@ -888,7 +863,7 @@ End Sub
                     
 Public Function ReadHistoricalBar( _
                         ByVal requestHandle As Long, _
-                        ByRef pBar As TradeBuildSP.Bar, _
+                        ByVal pBar As Bar, _
                         ByRef barLength As Long, _
                         ByRef barUnit As TimePeriodUnits) As Boolean
 
@@ -902,16 +877,15 @@ With mHistoricalDataTable(requestHandle)
         ReadHistoricalBar = True
         Bar = .bars.itemAt(.nextBarIndex)
         barLength = .barSpecifier.barLength
-        barUnit = .barSpecifier.BarLengthUnits
+        barUnit = .barSpecifier.barLengthUnits
         With Bar
-            pBar.timestamp = .timestamp
-            pBar.OpenPrice = .openValue
-            pBar.HighPrice = .highValue
-            pBar.LowPrice = .lowValue
-            pBar.ClosePrice = .closeValue
-            pBar.volume = .volume
-            pBar.tickVolume = .tickVolume
-            pBar.OpenInterest = 0
+            Set pBar = CreateBar(.timestamp, _
+                            .openValue, _
+                            .highValue, _
+                            .lowValue, _
+                            .closeValue, _
+                            .volume, _
+                            .tickVolume)
         End With
         .nextBarIndex = .bars.nextIndex(.nextBarIndex)
     End If
@@ -1212,7 +1186,7 @@ handleFatalError err.number, _
 End Sub
 
 Friend Function RequestHistoricalData( _
-                barSpecifier As TradeBuildSP.IBarDataSpecifier, _
+                barSpecifier As BarDataSpecifier, _
                 ByVal historicalDataReader As HistDataReader) As Long
 
 Dim requestID As Long
@@ -1236,66 +1210,66 @@ End If
 
 ' now adjust the bar specifier to indicate the number of bars of
 ' appropriate length supported by IB
-Select Case barSpecifier.BarLengthUnits
+Select Case barSpecifier.barLengthUnits
 Case TimePeriodUnits.TimePeriodDay
     ignoreTimestamps = True
     If barSpecifier.barLength > 1 Then
-        barSpecifier.NumberOfBars = barSpecifier.NumberOfBars * barSpecifier.barLength
+        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barLength
         barSpecifier.barLength = 1
     End If
 Case TimePeriodUnits.TimePeriodHour
     If barSpecifier.barLength > 1 Then
-        barSpecifier.NumberOfBars = barSpecifier.NumberOfBars * barSpecifier.barLength
+        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barLength
         barSpecifier.barLength = 1
     End If
 Case TimePeriodUnits.TimePeriodMinute
     If barSpecifier.barLength Mod 30 = 0 Then
-        barSpecifier.NumberOfBars = barSpecifier.NumberOfBars * (barSpecifier.barLength / 30)
+        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barLength / 30)
         barSpecifier.barLength = 30
     ElseIf barSpecifier.barLength Mod 15 = 0 Then
-        barSpecifier.NumberOfBars = barSpecifier.NumberOfBars * (barSpecifier.barLength / 15)
+        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barLength / 15)
         barSpecifier.barLength = 15
     ElseIf barSpecifier.barLength Mod 5 = 0 Then
-        barSpecifier.NumberOfBars = barSpecifier.NumberOfBars * (barSpecifier.barLength / 5)
+        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barLength / 5)
         barSpecifier.barLength = 5
     ElseIf barSpecifier.barLength Mod 2 = 0 Then
-        barSpecifier.NumberOfBars = barSpecifier.NumberOfBars * (barSpecifier.barLength / 2)
+        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barLength / 2)
         barSpecifier.barLength = 2
     ElseIf barSpecifier.barLength > 1 Then
-        barSpecifier.NumberOfBars = barSpecifier.NumberOfBars * barSpecifier.barLength
+        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barLength
         barSpecifier.barLength = 1
     End If
 Case TimePeriodUnits.TimePeriodMonth
     ignoreTimestamps = True
-    barSpecifier.NumberOfBars = barSpecifier.NumberOfBars * barSpecifier.barLength
+    barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barLength
     barSpecifier.barLength = 1
 Case TimePeriodUnits.TimePeriodSecond
     If barSpecifier.barLength Mod 30 = 0 Then
-        barSpecifier.NumberOfBars = barSpecifier.NumberOfBars * (barSpecifier.barLength / 30)
+        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barLength / 30)
         barSpecifier.barLength = 30
     ElseIf barSpecifier.barLength Mod 15 = 0 Then
-        barSpecifier.NumberOfBars = barSpecifier.NumberOfBars * (barSpecifier.barLength / 15)
+        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barLength / 15)
         barSpecifier.barLength = 15
     ElseIf barSpecifier.barLength Mod 5 = 0 Then
-        barSpecifier.NumberOfBars = barSpecifier.NumberOfBars * (barSpecifier.barLength / 5)
+        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barLength / 5)
         barSpecifier.barLength = 5
     ElseIf barSpecifier.barLength > 1 Then
-        barSpecifier.NumberOfBars = barSpecifier.NumberOfBars * barSpecifier.barLength
+        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barLength
         barSpecifier.barLength = 1
     End If
 Case TimePeriodUnits.TimePeriodWeek
     ignoreTimestamps = True
-    barSpecifier.NumberOfBars = barSpecifier.NumberOfBars * barSpecifier.barLength
+    barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barLength
     barSpecifier.barLength = 1
 Case TimePeriodUnits.TimePeriodYear
     ignoreTimestamps = True
-    barSpecifier.NumberOfBars = barSpecifier.NumberOfBars * barSpecifier.barLength * NumMonthsInYear
+    barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barLength * NumMonthsInYear
     barSpecifier.barLength = 1
-    barSpecifier.BarLengthUnits = TimePeriodMonth
+    barSpecifier.barLengthUnits = TimePeriodMonth
 Case TimePeriodUnits.TimePeriodVolume, TimePeriodUnits.TimePeriodTickMovement
     ' nothing to do
 Case Else
-    historicalDataReader.historicalDataRequestInvalid barSpecifier.NumberOfBars & "specified timeframe not supported"
+    historicalDataReader.historicalDataRequestInvalid barSpecifier.maxNumberOfBars & "specified timeframe not supported"
     Exit Function
 End Select
 
@@ -1329,7 +1303,7 @@ mHistoricalDataTable(requestID).barType = barSpecifier.barType
 mHistoricalDataTable(requestID).nextBarIndex = -1
 Set mHistoricalDataTable(requestID).historicalDataReader = historicalDataReader
 Set mHistoricalDataTable(requestID).bars = New LinkedList
-mHistoricalDataTable(requestID).bars.initialCapacity = IIf(barSpecifier.NumberOfBars <> 0, barSpecifier.NumberOfBars, 50)
+mHistoricalDataTable(requestID).bars.initialCapacity = IIf(barSpecifier.maxNumberOfBars <> 0, barSpecifier.maxNumberOfBars, 50)
 
 generateTwsHistoricalDataRequest requestID
 RequestHistoricalData = requestID
@@ -1671,7 +1645,7 @@ Do While mInputIndex < mIndexIn
     eventCount = eventCount + 1
     
     If mElapsedTimer.ElapsedTimeMicroseconds >= 10000000 Then
-        logMessage "Event rate per second = " & Format(eventCount / 10, "0.0"), LogLevelMedium
+        logMessage "Event rate per second = " & Format(eventCount / 10, "0.0"), LogLevelMediumDetail
         Debug.Print "Event rate per second = " & Format(eventCount / 10, "0.0")
         eventCount = 0
         mElapsedTimer.StartTiming
@@ -1707,6 +1681,26 @@ End Sub
 
 Private Sub checkpointBuffer()
 mInputIndexChk = mInputIndex
+End Sub
+
+Private Sub createLoggers()
+
+If gLogger.isLoggable(LogLevelMediumDetail) Then
+    If mPerformanceTimerSecond Is Nothing Then
+        Set mPerformanceTimerSecond = CreateIntervalTimer(CDate(Int((Now + 2 * OneSecond) / OneSecond) * OneSecond), _
+                                                ExpiryTimeUnitDateTime, _
+                                                1000)
+        Set mPerformanceTimerPeriod = CreateIntervalTimer(CDate(Int((Now + OneMinute) / OneMinute) * OneMinute), _
+                                                ExpiryTimeUnitDateTime, _
+                                                60000)
+        mPerformanceTimerSecond.StartTimer
+        mPerformanceTimerPeriod.StartTimer
+        
+        Set mPerformanceLogger = GetLogger("tradebuild.serviceprovider.ibtwssp.performance")
+    End If
+End If
+
+Set mSocketLogger = GetLogger("tradebuild.serviceprovider.ibtwssp.socket")
 End Sub
 
 Private Sub createsocket()
@@ -1806,19 +1800,19 @@ If mServerVersion >= 20 Then
     
     With mHistoricalDataTable(index).barSpecifier
         
-        Select Case .BarLengthUnits
+        Select Case .barLengthUnits
         Case TimePeriodUnits.TimePeriodDay
             TwsRequest.barSizeSetting = "1 day"
-            If .NumberOfBars >= NumDaysInYear Then
+            If .maxNumberOfBars >= NumDaysInYear Then
                 If DateAdd("d", 1, .ToDate) > Now Then
                     TwsRequest.duration = "1 Y"
                 Else
                     TwsRequest.duration = permittedHistDays(.ToDate, 60) & " D"
                 End If
-            ElseIf .NumberOfBars <= 60 Then
-                TwsRequest.duration = permittedHistDays(.ToDate, .NumberOfBars) & " D"
-            ElseIf .NumberOfBars <= 52 * NumDaysInWeek Then
-                TwsRequest.duration = permittedHistWeeks(.ToDate, Int(.NumberOfBars / NumDaysInWeek)) & " W"
+            ElseIf .maxNumberOfBars <= 60 Then
+                TwsRequest.duration = permittedHistDays(.ToDate, .maxNumberOfBars) & " D"
+            ElseIf .maxNumberOfBars <= 52 * NumDaysInWeek Then
+                TwsRequest.duration = permittedHistWeeks(.ToDate, Int(.maxNumberOfBars / NumDaysInWeek)) & " W"
             Else
                 TwsRequest.duration = permittedHistDays(.ToDate, 60) & " D"
             End If
@@ -1827,12 +1821,12 @@ If mServerVersion >= 20 Then
             
             numBarsInsession = mHistoricalDataTable(index).Session.NumberOfBarsInSession( _
                                                                     .barLength, _
-                                                                    .BarLengthUnits)
+                                                                    .barLengthUnits)
             
-            If .NumberOfBars <= 24 Then
-                TwsRequest.duration = permittedHistSeconds(.ToDate, .NumberOfBars * 3600) & " S"
-            ElseIf -Int(-.NumberOfBars / numBarsInsession) <= 34 Then
-                TwsRequest.duration = permittedHistDays(.ToDate, -Int(-.NumberOfBars / numBarsInsession)) & " D"
+            If .maxNumberOfBars <= 24 Then
+                TwsRequest.duration = permittedHistSeconds(.ToDate, .maxNumberOfBars * 3600) & " S"
+            ElseIf -Int(-.maxNumberOfBars / numBarsInsession) <= 34 Then
+                TwsRequest.duration = permittedHistDays(.ToDate, -Int(-.maxNumberOfBars / numBarsInsession)) & " D"
             Else
                 TwsRequest.duration = permittedHistDays(.ToDate, 34) & " D"
             End If
@@ -1840,121 +1834,121 @@ If mServerVersion >= 20 Then
             
             numBarsInsession = mHistoricalDataTable(index).Session.NumberOfBarsInSession( _
                                                                     .barLength, _
-                                                                    .BarLengthUnits)
+                                                                    .barLengthUnits)
             
             Select Case .barLength
             Case 1
                 TwsRequest.barSizeSetting = "1 min"
-                If .NumberOfBars <= 1440 Then
-                    TwsRequest.duration = permittedHistSeconds(.ToDate, .NumberOfBars * 60) & " S"
-                ElseIf -Int(-.NumberOfBars / numBarsInsession) <= 3 Then
+                If .maxNumberOfBars <= 1440 Then
+                    TwsRequest.duration = permittedHistSeconds(.ToDate, .maxNumberOfBars * 60) & " S"
+                ElseIf -Int(-.maxNumberOfBars / numBarsInsession) <= 3 Then
                     TwsRequest.duration = permittedHistSeconds(.ToDate, 86400) & " S"
-                ElseIf -Int(-.NumberOfBars / numBarsInsession) <= 6 Then
-                    TwsRequest.duration = permittedHistDays(.ToDate, -Int(-.NumberOfBars / numBarsInsession)) & " D"
+                ElseIf -Int(-.maxNumberOfBars / numBarsInsession) <= 6 Then
+                    TwsRequest.duration = permittedHistDays(.ToDate, -Int(-.maxNumberOfBars / numBarsInsession)) & " D"
                 Else
                     TwsRequest.duration = permittedHistDays(.ToDate, 6) & " D"
                 End If
             Case 2
                 TwsRequest.barSizeSetting = "2 mins"
-                If .NumberOfBars <= 720 Then
-                    TwsRequest.duration = permittedHistSeconds(.ToDate, .NumberOfBars * 120) & " S"
-                ElseIf -Int(-.NumberOfBars / numBarsInsession) <= 3 Then
+                If .maxNumberOfBars <= 720 Then
+                    TwsRequest.duration = permittedHistSeconds(.ToDate, .maxNumberOfBars * 120) & " S"
+                ElseIf -Int(-.maxNumberOfBars / numBarsInsession) <= 3 Then
                     TwsRequest.duration = permittedHistSeconds(.ToDate, 86400) & " S"
-                ElseIf -Int(-.NumberOfBars / numBarsInsession) <= 6 Then
-                    TwsRequest.duration = permittedHistDays(.ToDate, -Int(-.NumberOfBars / numBarsInsession)) & " D"
+                ElseIf -Int(-.maxNumberOfBars / numBarsInsession) <= 6 Then
+                    TwsRequest.duration = permittedHistDays(.ToDate, -Int(-.maxNumberOfBars / numBarsInsession)) & " D"
                 Else
                     TwsRequest.duration = permittedHistDays(.ToDate, 6) & " D"
                 End If
             Case 5
                 TwsRequest.barSizeSetting = "5 mins"
-                If .NumberOfBars <= 288 Then
-                    TwsRequest.duration = permittedHistSeconds(.ToDate, .NumberOfBars * 300) & " S"
-                ElseIf -Int(-.NumberOfBars / numBarsInsession) <= 3 Then
+                If .maxNumberOfBars <= 288 Then
+                    TwsRequest.duration = permittedHistSeconds(.ToDate, .maxNumberOfBars * 300) & " S"
+                ElseIf -Int(-.maxNumberOfBars / numBarsInsession) <= 3 Then
                     TwsRequest.duration = permittedHistSeconds(.ToDate, 86400) & " S"
-                ElseIf -Int(-.NumberOfBars / numBarsInsession) <= 6 Then
-                    TwsRequest.duration = permittedHistDays(.ToDate, -Int(-.NumberOfBars / numBarsInsession)) & " D"
+                ElseIf -Int(-.maxNumberOfBars / numBarsInsession) <= 6 Then
+                    TwsRequest.duration = permittedHistDays(.ToDate, -Int(-.maxNumberOfBars / numBarsInsession)) & " D"
                 Else
                     TwsRequest.duration = permittedHistDays(.ToDate, 6) & " D"
                 End If
             Case 15
                 TwsRequest.barSizeSetting = "15 mins"
-                If .NumberOfBars <= 96 Then
-                    TwsRequest.duration = permittedHistSeconds(.ToDate, .NumberOfBars * 900) & " S"
-                ElseIf -Int(-.NumberOfBars / numBarsInsession) <= 3 Then
+                If .maxNumberOfBars <= 96 Then
+                    TwsRequest.duration = permittedHistSeconds(.ToDate, .maxNumberOfBars * 900) & " S"
+                ElseIf -Int(-.maxNumberOfBars / numBarsInsession) <= 3 Then
                     TwsRequest.duration = permittedHistSeconds(.ToDate, 86400) & " S"
-                ElseIf -Int(-.NumberOfBars / numBarsInsession) <= 20 Then
-                    TwsRequest.duration = permittedHistDays(.ToDate, -Int(-.NumberOfBars / numBarsInsession)) & " D"
+                ElseIf -Int(-.maxNumberOfBars / numBarsInsession) <= 20 Then
+                    TwsRequest.duration = permittedHistDays(.ToDate, -Int(-.maxNumberOfBars / numBarsInsession)) & " D"
                 Else
                     TwsRequest.duration = permittedHistDays(.ToDate, 20) & " D"
                 End If
             Case 30
                 TwsRequest.barSizeSetting = "30 mins"
-                If .NumberOfBars <= 48 Then
-                    TwsRequest.duration = permittedHistSeconds(.ToDate, .NumberOfBars * 1800) & " S"
-                ElseIf -Int(-.NumberOfBars / numBarsInsession) <= 3 Then
+                If .maxNumberOfBars <= 48 Then
+                    TwsRequest.duration = permittedHistSeconds(.ToDate, .maxNumberOfBars * 1800) & " S"
+                ElseIf -Int(-.maxNumberOfBars / numBarsInsession) <= 3 Then
                     TwsRequest.duration = permittedHistSeconds(.ToDate, 86400) & " S"
-                ElseIf -Int(-.NumberOfBars / numBarsInsession) <= 34 Then
-                    TwsRequest.duration = permittedHistDays(.ToDate, -Int(-.NumberOfBars / numBarsInsession)) & " D"
+                ElseIf -Int(-.maxNumberOfBars / numBarsInsession) <= 34 Then
+                    TwsRequest.duration = permittedHistDays(.ToDate, -Int(-.maxNumberOfBars / numBarsInsession)) & " D"
                 Else
                     TwsRequest.duration = permittedHistDays(.ToDate, 34) & " D"
                 End If
             End Select
         Case TimePeriodUnits.TimePeriodMonth
             TwsRequest.barSizeSetting = "1 day"
-            If .NumberOfBars <= 12 Then
-                TwsRequest.duration = permittedHistMonths(.ToDate, .NumberOfBars) & " M"
+            If .maxNumberOfBars <= 12 Then
+                TwsRequest.duration = permittedHistMonths(.ToDate, .maxNumberOfBars) & " M"
             Else
                 If DateAdd("d", 1, .ToDate) > Now Then
                     TwsRequest.duration = "12 M"
                 Else
-                    TwsRequest.duration = permittedHistMonths(.ToDate, .NumberOfBars) & " M"
+                    TwsRequest.duration = permittedHistMonths(.ToDate, .maxNumberOfBars) & " M"
                 End If
             End If
         Case TimePeriodUnits.TimePeriodSecond
             
             numBarsInsession = mHistoricalDataTable(index).Session.NumberOfBarsInSession( _
                                                                     .barLength, _
-                                                                    .BarLengthUnits)
+                                                                    .barLengthUnits)
             
             Select Case .barLength
             Case 1
                 
-                If .NumberOfBars <= 2000 Then
-                    TwsRequest.duration = permittedHistSeconds(.ToDate, .NumberOfBars) & " S"
+                If .maxNumberOfBars <= 2000 Then
+                    TwsRequest.duration = permittedHistSeconds(.ToDate, .maxNumberOfBars) & " S"
                 Else
                     TwsRequest.duration = permittedHistSeconds(.ToDate, 2000) & " S"
                 End If
             Case 5
                 TwsRequest.barSizeSetting = "5 secs"
-                If .NumberOfBars <= 2000 Then
-                    TwsRequest.duration = permittedHistSeconds(.ToDate, .NumberOfBars * 5) & " S"
+                If .maxNumberOfBars <= 2000 Then
+                    TwsRequest.duration = permittedHistSeconds(.ToDate, .maxNumberOfBars * 5) & " S"
                 Else
                     TwsRequest.duration = permittedHistSeconds(.ToDate, 10000) & " S"
                 End If
             Case 15
                 TwsRequest.barSizeSetting = "15 secs"
-                If .NumberOfBars <= 2000 Then
-                    TwsRequest.duration = permittedHistSeconds(.ToDate, .NumberOfBars * 15) & " S"
+                If .maxNumberOfBars <= 2000 Then
+                    TwsRequest.duration = permittedHistSeconds(.ToDate, .maxNumberOfBars * 15) & " S"
                 Else
                     TwsRequest.duration = permittedHistSeconds(.ToDate, 30000) & "S"
                 End If
             Case 30
                 TwsRequest.barSizeSetting = "30 secs"
-                If .NumberOfBars <= 2880 Then
-                    TwsRequest.duration = permittedHistSeconds(.ToDate, .NumberOfBars * 30) & " S"
+                If .maxNumberOfBars <= 2880 Then
+                    TwsRequest.duration = permittedHistSeconds(.ToDate, .maxNumberOfBars * 30) & " S"
                 Else
                     TwsRequest.duration = permittedHistSeconds(.ToDate, 86400) & " S"
                 End If
             End Select
         Case TimePeriodUnits.TimePeriodWeek
             TwsRequest.barSizeSetting = "1 day"
-            If .NumberOfBars <= 52 Then
-                TwsRequest.duration = permittedHistWeeks(.ToDate, .NumberOfBars) & " W"
+            If .maxNumberOfBars <= 52 Then
+                TwsRequest.duration = permittedHistWeeks(.ToDate, .maxNumberOfBars) & " W"
             Else
                 If DateAdd("d", 1, .ToDate) > Now Then
                     TwsRequest.duration = "52 W"
                 Else
-                    TwsRequest.duration = permittedHistWeeks(.ToDate, .NumberOfBars) & " W"
+                    TwsRequest.duration = permittedHistWeeks(.ToDate, .maxNumberOfBars) & " W"
                 End If
             End If
         Case TimePeriodUnits.TimePeriodVolume, TimePeriodUnits.TimePeriodTickMovement
@@ -1967,11 +1961,11 @@ If mServerVersion >= 20 Then
 End If
 
 Select Case mHistoricalDataTable(index).barSpecifier.barType
-Case TradeBuildSP.BarTypes.BarTypeAsk
+Case BarTypes.BarTypeAsk
     TwsRequest.whatToShow = TWSWhatToShowAsk
-Case TradeBuildSP.BarTypes.BarTypeBid
+Case BarTypes.BarTypeBid
     TwsRequest.whatToShow = TWSWhatToShowBid
-Case TradeBuildSP.BarTypes.BarTypeTrade
+Case BarTypes.BarTypeTrade
     If mHistoricalDataTable(index).barSpecifier.Contract.specifier.sectype = SecTypeCash Then
         TwsRequest.whatToShow = TWSWhatToShowMidpoint
     Else
@@ -2062,38 +2056,36 @@ err.Raise dataincomplete
 End Function
 
 Private Sub getAccountTime(ByVal version As Long)
-Dim listendata As TWSSocketMsgAcctUpdateTime
+Dim socketdata As TWSSocketMsgAcctUpdateTime
 Dim accountTime As String: accountTime = getString
 
-If mLogLevel >= LogLevelHigh Then
-    listendata.msgType = TWSSocketInMsgTypes.ACCT_UPDATE_TIME
-    listendata.accountTime = accountTime
-    listendata.version = version
+If mSocketLogger.isLoggable(LogLevelHighDetail) Then
+    socketdata.msgType = TWSSocketInMsgTypes.ACCT_UPDATE_TIME
+    socketdata.accountTime = accountTime
+    socketdata.version = version
     
-    mCommonServiceConsumer.NotifyListeners listendata, _
-                    ListenValueTypes.ValueTypeTWSSocketMsgAcctUpdateTime, _
+    mSocketLogger.Log LogLevelHighDetail, socketdata, _
                     Me
 End If
 
 End Sub
 
 Private Sub getAccountValue(ByVal version As Long)
-Dim listendata As TWSSocketMsgAcctValue
+Dim socketdata As TWSSocketMsgAcctValue
 Dim key As String: key = getString
 Dim val As String: val = getString
 Dim cur As String: cur = getString
 Dim accountName As String: If version >= 2 Then accountName = getString
 
-If mLogLevel >= LogLevelHigh Then
-    listendata.msgType = TWSSocketInMsgTypes.ACCT_VALUE
-    listendata.accountName = accountName
-    listendata.currencyCode = cur
-    listendata.key = key
-    listendata.value = val
-    listendata.version = version
+If mSocketLogger.isLoggable(LogLevelHighDetail) Then
+    socketdata.msgType = TWSSocketInMsgTypes.ACCT_VALUE
+    socketdata.accountName = accountName
+    socketdata.currencyCode = cur
+    socketdata.key = key
+    socketdata.value = val
+    socketdata.version = version
     
-    mCommonServiceConsumer.NotifyListeners listendata, _
-                    ListenValueTypes.ValueTypeTWSSocketMsgAcctValue, _
+    mSocketLogger.Log LogLevelHighDetail, socketdata, _
                     Me
 End If
 
@@ -2130,7 +2122,7 @@ mContractDetailsRequest.requester.contractSpecifierInvalid mContractDetailsReque
 End Sub
 
 Private Sub getContractData(ByVal version As Long)
-Dim listendata As TWSSocketMsgContractData
+Dim socketdata As TWSSocketMsgContractData
 Dim lContractWrapper As ContractWrapper
 Dim lContractSpec As ContractSpecifier
 
@@ -2280,7 +2272,7 @@ For i = 0 To UBound(orderTypesStr)
             ' not sure what these signify
         Case Else
             If orderTypesStr(i) <> "" Then
-                logMessage "Unknown order type " & orderTypesStr(i) & " received from TWS", LogLevelLow
+                logMessage "Unknown order type " & orderTypesStr(i) & " received from TWS"
             End If
         End Select
     End If
@@ -2354,35 +2346,34 @@ If Not mFirstContractDetailsReceived Then
     send
 End If
 
-If mLogLevel >= LogLevelHigh Then
+If mSocketLogger.isLoggable(LogLevelHighDetail) Then
     With lContractWrapper.tradeBuildContract
-        listendata.msgType = TWSSocketInMsgTypes.CONTRACT_DATA
-        listendata.contractId = lContractWrapper.contractId
-        listendata.currencyCode = currencyCode
-        listendata.exchange = exchange
-        listendata.expiry = expiry
-        listendata.localSymbol = localSymbol
-        listendata.marketName = marketName
-        listendata.minimumTick = minimumTick
-        listendata.multiplier = multiplier
-        listendata.OrderTypes = OrderTypes
-        listendata.right = optRight
-        listendata.sectype = sectype
-        listendata.strike = strike
-        listendata.symbol = symbol
-        listendata.tradingClass = tradingClass
-        listendata.validExchanges = validExchanges
-        listendata.version = version
+        socketdata.msgType = TWSSocketInMsgTypes.CONTRACT_DATA
+        socketdata.contractId = lContractWrapper.contractId
+        socketdata.currencyCode = currencyCode
+        socketdata.exchange = exchange
+        socketdata.expiry = expiry
+        socketdata.localSymbol = localSymbol
+        socketdata.marketName = marketName
+        socketdata.minimumTick = minimumTick
+        socketdata.multiplier = multiplier
+        socketdata.OrderTypes = OrderTypes
+        socketdata.right = optRight
+        socketdata.sectype = sectype
+        socketdata.strike = strike
+        socketdata.symbol = symbol
+        socketdata.tradingClass = tradingClass
+        socketdata.validExchanges = validExchanges
+        socketdata.version = version
     End With
-    mCommonServiceConsumer.NotifyListeners listendata, _
-                    ListenValueTypes.ValueTypeTWSSocketMsgContractData, _
+    mSocketLogger.Log LogLevelHighDetail, socketdata, _
                     Me
 End If
 
 End Sub
 
 Private Sub getErrorMsg(ByVal version As Long)
-Dim listendata As TWSSocketMsgErrMsg
+Dim socketdata As TWSSocketMsgErrMsg
 Dim id As Long
 Dim errorCode As Long
 Dim errorMsg As String
@@ -2597,15 +2588,14 @@ Case Else
     mCommonServiceConsumer.ServiceProviderError errorCode, errorMsg, -1
 End Select
 
-If mLogLevel >= LogLevelHigh Then
-    listendata.msgType = TWSSocketInMsgTypes.ERR_MSG
-    listendata.errorCode = errorCode
-    listendata.errorMsg = errorMsg
-    listendata.id = id
-    listendata.version = version
+If mSocketLogger.isLoggable(LogLevelHighDetail) Then
+    socketdata.msgType = TWSSocketInMsgTypes.ERR_MSG
+    socketdata.errorCode = errorCode
+    socketdata.errorMsg = errorMsg
+    socketdata.id = id
+    socketdata.version = version
     
-    mCommonServiceConsumer.NotifyListeners listendata, _
-                    ListenValueTypes.ValueTypeTWSSocketMsgErrMsg, _
+    mSocketLogger.Log LogLevelHighDetail, socketdata, _
                     Me
 End If
 
@@ -2616,7 +2606,7 @@ err.Raise err.number, , "TWSAPI::getErrorMsg(failpoint=" & failpoint & "): " & e
 End Sub
 
 Private Sub getExecutionData(ByVal version As Long)
-Dim listendata As TWSSocketMsgExecutionData
+Dim socketdata As TWSSocketMsgExecutionData
 Dim timeString  As String
 
 Dim symbol As String
@@ -2722,54 +2712,52 @@ Else
     End If
 End If
 
-If mLogLevel >= LogLevelHigh Then
-    listendata.msgType = TWSSocketInMsgTypes.EXECUTION_DATA
+If mSocketLogger.isLoggable(LogLevelHighDetail) Then
+    socketdata.msgType = TWSSocketInMsgTypes.EXECUTION_DATA
     With lContractSpecifier
-        listendata.currencyCode = .currencyCode
-        listendata.exchange = .exchange
-        listendata.expiry = .expiry
-        listendata.localSymbol = .localSymbol
-        listendata.right = rightString
-        listendata.sectype = sectype
-        listendata.strike = .strike
-        listendata.symbol = .symbol
+        socketdata.currencyCode = .currencyCode
+        socketdata.exchange = .exchange
+        socketdata.expiry = .expiry
+        socketdata.localSymbol = .localSymbol
+        socketdata.right = rightString
+        socketdata.sectype = sectype
+        socketdata.strike = .strike
+        socketdata.symbol = .symbol
     End With
     With exec
-        listendata.accountNumber = .AccountIdentifier
-        listendata.clientID = clientID
-        listendata.execExchange = .FillingExchange
-        listendata.execId = .execId
-        listendata.orderId = id
-        listendata.permId = permId
-        listendata.Price = Price
-        listendata.Quantity = .Quantity
-        listendata.side = side
-        listendata.time = timeString
+        socketdata.accountNumber = .AccountIdentifier
+        socketdata.clientID = clientID
+        socketdata.execExchange = .FillingExchange
+        socketdata.execId = .execId
+        socketdata.orderId = id
+        socketdata.permId = permId
+        socketdata.Price = Price
+        socketdata.Quantity = .Quantity
+        socketdata.side = side
+        socketdata.time = timeString
     End With
-    listendata.version = version
+    socketdata.version = version
     
-    mCommonServiceConsumer.NotifyListeners listendata, _
-                    ListenValueTypes.ValueTypeTWSSocketMsgExecutionData, _
+    mSocketLogger.Log LogLevelHighDetail, socketdata, _
                     Me
 End If
 
 End Sub
 
 Private Sub getFAData(ByVal version As Long)
-Dim listendata As TWSSocketMsgReceiveFa
+Dim socketdata As TWSSocketMsgReceiveFa
 Dim DataType As FADataTypes: DataType = getLong
 Dim XMLData As String: XMLData = getString
 
 RaiseEvent FAData(DataType, XMLData)
 
-If mLogLevel >= LogLevelHigh Then
-    listendata.msgType = TWSSocketInMsgTypes.MANAGED_ACCTS
-    listendata.DataType = DataType
-    listendata.XMLData = XMLData
-    listendata.version = version
+If mSocketLogger.isLoggable(LogLevelHighDetail) Then
+    socketdata.msgType = TWSSocketInMsgTypes.MANAGED_ACCTS
+    socketdata.DataType = DataType
+    socketdata.XMLData = XMLData
+    socketdata.version = version
     
-    mCommonServiceConsumer.NotifyListeners listendata, _
-                    ListenValueTypes.ValueTypeTWSSocketMsgManagedAccts, _
+    mSocketLogger.Log LogLevelHighDetail, socketdata, _
                     Me
 End If
 
@@ -2785,6 +2773,7 @@ Static Bar As HistoricBar
 Static i As Long
 Static hint As Long
 Static totalVolume As Currency  ' can get too large for a Long
+Static lCustomSessionBuilder As SessionBuilder
 
 Dim bardate As String
 Dim timestamp As Date
@@ -2800,6 +2789,15 @@ If checkPointNumber = 0 Then
     requestID = getLong
     index = (requestID - HistoricalDataTickerBase) Mod HistoricalDataTickerIncrement
     reqNo = Int((requestID - HistoricalDataTickerBase) / HistoricalDataTickerIncrement)
+    
+    If mHistoricalDataTable(index).barSpecifier.customSessionStartTime <> 0 Or _
+        mHistoricalDataTable(index).barSpecifier.customSessionEndTime <> 0 _
+    Then
+        Set lCustomSessionBuilder = New SessionBuilder
+        lCustomSessionBuilder.sessionStartTime = mHistoricalDataTable(index).barSpecifier.customSessionStartTime
+        lCustomSessionBuilder.sessionEndTime = mHistoricalDataTable(index).barSpecifier.customSessionEndTime
+        lCustomSessionBuilder.TimeZone = mHistoricalDataTable(index).barSpecifier.Contract.TimeZone
+    End If
     
     checkpointBuffer
     checkPointNumber = 100
@@ -2851,12 +2849,12 @@ If checkPointNumber >= 200 Then
             End If
             
             If i = 0 Then
-                If mHistoricalDataTable(index).barSpecifier.BarLengthUnits = TimePeriodVolume Or _
-                    mHistoricalDataTable(index).barSpecifier.BarLengthUnits = TimePeriodTickMovement _
+                If mHistoricalDataTable(index).barSpecifier.barLengthUnits = TimePeriodVolume Or _
+                    mHistoricalDataTable(index).barSpecifier.barLengthUnits = TimePeriodTickMovement _
                 Then
                     mHistoricalDataTable(index).barSpecifier.ToDate = mHistoricalDataTable(index).Session.OffsetBarStartTime(timestamp, 15, TimePeriodSecond, -1)
                 Else
-                    mHistoricalDataTable(index).barSpecifier.ToDate = mHistoricalDataTable(index).Session.OffsetBarStartTime(timestamp, mHistoricalDataTable(index).barSpecifier.barLength, mHistoricalDataTable(index).barSpecifier.BarLengthUnits, -1)
+                    mHistoricalDataTable(index).barSpecifier.ToDate = mHistoricalDataTable(index).Session.OffsetBarStartTime(timestamp, mHistoricalDataTable(index).barSpecifier.barLength, mHistoricalDataTable(index).barSpecifier.barLengthUnits, -1)
                 End If
             End If
             
@@ -2909,11 +2907,23 @@ If checkPointNumber >= 200 Then
         
         If Not mHistoricalDataTable(index).cancelling Then
             mHistoricalDataTable(index).SessionBuilder.setSessionCurrentTime Bar.timestamp
-            If mHistoricalDataTable(index).barSpecifier.includeBarsOutsideSession Or _
-                mHistoricalDataTable(index).Session.isTimeInSession(Bar.timestamp) Or _
-                mHistoricalDataTable(index).ignoreTimestamps _
-            Then
-                hint = mHistoricalDataTable(index).bars.add(Bar, Bar.timestamp, hint)
+            If Not lCustomSessionBuilder Is Nothing Then
+                lCustomSessionBuilder.setSessionCurrentTime Bar.timestamp
+                If lCustomSessionBuilder.Session.isTimeInSession(Bar.timestamp) Then
+                    If mHistoricalDataTable(index).barSpecifier.includeBarsOutsideSession Or _
+                        mHistoricalDataTable(index).Session.isTimeInSession(Bar.timestamp) Or _
+                        mHistoricalDataTable(index).ignoreTimestamps _
+                    Then
+                        hint = mHistoricalDataTable(index).bars.add(Bar, Bar.timestamp, hint)
+                    End If
+                End If
+            Else
+                If mHistoricalDataTable(index).barSpecifier.includeBarsOutsideSession Or _
+                    mHistoricalDataTable(index).Session.isTimeInSession(Bar.timestamp) Or _
+                    mHistoricalDataTable(index).ignoreTimestamps _
+                Then
+                    hint = mHistoricalDataTable(index).bars.add(Bar, Bar.timestamp, hint)
+                End If
             End If
         End If
         
@@ -2930,12 +2940,12 @@ mHistoricalDataTable(index).requestKeys(reqNo) = ""
 mConcurrentHistDataRequests = mConcurrentHistDataRequests - 1
 processNextHistDataRequest
 
-If mHistoricalDataTable(index).barSpecifier.BarLengthUnits = TimePeriodVolume Then
-    mHistoricalDataTable(index).barSpecifier.NumberOfBars = mHistoricalDataTable(index).barSpecifier.NumberOfBars - Int(totalVolume / mHistoricalDataTable(index).barSpecifier.barLength)
+If mHistoricalDataTable(index).barSpecifier.barLengthUnits = TimePeriodVolume Then
+    mHistoricalDataTable(index).barSpecifier.maxNumberOfBars = mHistoricalDataTable(index).barSpecifier.maxNumberOfBars - Int(totalVolume / mHistoricalDataTable(index).barSpecifier.barLength)
 Else
-    mHistoricalDataTable(index).barSpecifier.NumberOfBars = mHistoricalDataTable(index).barSpecifier.NumberOfBars - itemCount
+    mHistoricalDataTable(index).barSpecifier.maxNumberOfBars = mHistoricalDataTable(index).barSpecifier.maxNumberOfBars - itemCount
 End If
-If mHistoricalDataTable(index).barSpecifier.NumberOfBars <= 0 Then
+If mHistoricalDataTable(index).barSpecifier.maxNumberOfBars <= 0 Then
     Debug.Print "Historical data retrieved: bars in list: " & mHistoricalDataTable(index).bars.size
     mHistoricalDataTable(index).dataRetrievedFromTWS = True
     mHistoricalDataTable(index).nextBarIndex = mHistoricalDataTable(index).bars.firstIndex
@@ -2951,7 +2961,7 @@ Exit Sub
 err:
 
 If err.number = ErrHistGenerationFailed Then
-    mHistoricalDataTable(index).barSpecifier.NumberOfBars = 0
+    mHistoricalDataTable(index).barSpecifier.maxNumberOfBars = 0
     Debug.Print "Historical data retrieved: bars in list: " & mHistoricalDataTable(index).bars.size
     mHistoricalDataTable(index).dataRetrievedFromTWS = True
     mHistoricalDataTable(index).nextBarIndex = mHistoricalDataTable(index).bars.firstIndex
@@ -2988,25 +2998,24 @@ End If
 End Function
 
 Private Sub getManagedAccounts(ByVal version As Long)
-Dim listendata As TWSSocketMsgManagedAccts
+Dim socketdata As TWSSocketMsgManagedAccts
 Dim accountsList As String: accountsList = getString
 
 RaiseEvent managedAccounts(accountsList)
 
-If mLogLevel >= LogLevelHigh Then
-    listendata.msgType = TWSSocketInMsgTypes.MANAGED_ACCTS
-    listendata.accountsList = accountsList
-    listendata.version = version
+If mSocketLogger.isLoggable(LogLevelHighDetail) Then
+    socketdata.msgType = TWSSocketInMsgTypes.MANAGED_ACCTS
+    socketdata.accountsList = accountsList
+    socketdata.version = version
     
-    mCommonServiceConsumer.NotifyListeners listendata, _
-                    ListenValueTypes.ValueTypeTWSSocketMsgManagedAccts, _
+    mSocketLogger.Log LogLevelHighDetail, socketdata, _
                     Me
 End If
 
 End Sub
 
 Private Sub getMarketDepth(ByVal version As Long)
-Dim listendata As TWSSocketMsgMarketDepth
+Dim socketdata As TWSSocketMsgMarketDepth
 Dim id As Long: id = getLong
 Dim position As Long: position = getLong
 Dim operation As Long: operation = getLong
@@ -3021,25 +3030,24 @@ processMarketDepth id - MarketDepthTickerBase, _
                 Price, _
                 size
 
-If mLogLevel >= LogLevelHigh Then
-    listendata.msgType = TWSSocketInMsgTypes.MARKET_DEPTH
-    listendata.operation = operation
-    listendata.position = position
-    listendata.Price = Price
-    listendata.side = side
-    listendata.size = size
-    listendata.tickerid = id
-    listendata.version = version
+If mSocketLogger.isLoggable(LogLevelHighDetail) Then
+    socketdata.msgType = TWSSocketInMsgTypes.MARKET_DEPTH
+    socketdata.operation = operation
+    socketdata.position = position
+    socketdata.Price = Price
+    socketdata.side = side
+    socketdata.size = size
+    socketdata.tickerid = id
+    socketdata.version = version
     
-    mCommonServiceConsumer.NotifyListeners listendata, _
-                    ListenValueTypes.ValueTypeTWSSocketMsgMarketDepth, _
+    mSocketLogger.Log LogLevelHighDetail, socketdata, _
                     Me
 End If
 
 End Sub
 
 Private Sub getMarketDepthL2(ByVal version As Long)
-Dim listendata As TWSSocketMsgMarketDepthL2
+Dim socketdata As TWSSocketMsgMarketDepthL2
 Dim timestamp As Date
 Dim id As Long: id = getLong
 Dim position As Long: position = getLong
@@ -3065,26 +3073,25 @@ With mTickerTable(id - MarketDepthTickerBase)
     End If
 End With
 
-If mLogLevel >= LogLevelHigh Then
-    listendata.msgType = TWSSocketInMsgTypes.MARKET_DEPTH_L2
-    listendata.marketmaker = marketmaker
-    listendata.operation = operation
-    listendata.position = position
-    listendata.Price = Price
-    listendata.side = side
-    listendata.size = size
-    listendata.tickerid = id
-    listendata.version = version
+If mSocketLogger.isLoggable(LogLevelHighDetail) Then
+    socketdata.msgType = TWSSocketInMsgTypes.MARKET_DEPTH_L2
+    socketdata.marketmaker = marketmaker
+    socketdata.operation = operation
+    socketdata.position = position
+    socketdata.Price = Price
+    socketdata.side = side
+    socketdata.size = size
+    socketdata.tickerid = id
+    socketdata.version = version
     
-    mCommonServiceConsumer.NotifyListeners listendata, _
-                    ListenValueTypes.ValueTypeTWSSocketMsgMarketDepthL2, _
+    mSocketLogger.Log LogLevelHighDetail, socketdata, _
                     Me
 End If
 
 End Sub
 
 Private Sub getNewsBulletins(ByVal version As Long)
-Dim listendata As TWSSocketMsgNewsBulletins
+Dim socketdata As TWSSocketMsgNewsBulletins
 Dim msgID As Long: msgID = getLong
 Dim msgType As Long: msgType = getLong
 Dim newsMessage As String: newsMessage = getString
@@ -3092,33 +3099,31 @@ Dim originatingExch As String: originatingExch = getString
 
 RaiseEvent updateNewsBulletin(msgID, msgType, newsMessage, originatingExch)
 
-If mLogLevel >= LogLevelHigh Then
-    listendata.msgType = TWSSocketInMsgTypes.NEWS_BULLETINS
-    listendata.newsID = msgID
-    listendata.newsMessage = newsMessage
-    listendata.newsType = msgType
-    listendata.originatingExch = originatingExch
-    listendata.version = version
+If mSocketLogger.isLoggable(LogLevelHighDetail) Then
+    socketdata.msgType = TWSSocketInMsgTypes.NEWS_BULLETINS
+    socketdata.newsID = msgID
+    socketdata.newsMessage = newsMessage
+    socketdata.newsType = msgType
+    socketdata.originatingExch = originatingExch
+    socketdata.version = version
     
-    mCommonServiceConsumer.NotifyListeners listendata, _
-                    ListenValueTypes.ValueTypeTWSSocketMsgNewsBulletins, _
+    mSocketLogger.Log LogLevelHighDetail, socketdata, _
                     Me
 End If
 
 End Sub
 
 Private Sub getNextValidId(ByVal version As Long)
-Dim listendata As TWSSocketMsgNextValidId
+Dim socketdata As TWSSocketMsgNextValidId
 
 mNextOrderID = getLong
 
-If mLogLevel >= LogLevelHigh Then
-    listendata.msgType = TWSSocketInMsgTypes.NEXT_VALID_ID
-    listendata.id = mNextOrderID
-    listendata.version = version
+If mSocketLogger.isLoggable(LogLevelHighDetail) Then
+    socketdata.msgType = TWSSocketInMsgTypes.NEXT_VALID_ID
+    socketdata.id = mNextOrderID
+    socketdata.version = version
     
-    mCommonServiceConsumer.NotifyListeners listendata, _
-                    ListenValueTypes.ValueTypeTWSSocketMsgNextValidId, _
+    mSocketLogger.Log LogLevelHighDetail, socketdata, _
                     Me
 End If
 
@@ -3127,7 +3132,7 @@ If mNextOrderID < OrderIdBase Then mNextOrderID = OrderIdBase
 End Sub
 
 Private Sub getOpenOrder(ByVal version As Long)
-Dim listendata As TWSSocketMsgOpenOrder
+Dim socketdata As TWSSocketMsgOpenOrder
 'Dim lOrder As Order
 Dim id As Long
 
@@ -3286,51 +3291,49 @@ Set lContractSpecifier = CreateContractSpecifier(localSymbol, _
 '            "; Trig: " & lOrder.auxPrice & _
 '            "; TIF: " & orderTIFToString(lOrder.timeInForce) & _
 '            "; OCA: " & lOrder.ocaGroup, _
-'            TradeBuildSP.StandardListenValueTypes.Log, _
 '            timestamp
 'End If
 
-'If mLogLevel >= LogLevelHigh Then
-'    listendata.msgType = TWSSocketInMsgTypes.OPEN_ORDER
+'If mSocketLogger.isLoggable(LogLevelHighDetail) Then
+'    socketdata.msgType = TWSSocketInMsgTypes.OPEN_ORDER
 '    With lContractSpecifier
-'        listendata.currencyCode = .currencyCode
-'        listendata.exchange = .exchange
-'        listendata.expiry = .expiry
-'        listendata.localSymbol = .localSymbol
-'        listendata.right = .right
-'        listendata.sectype = .sectype
-'        listendata.strike = .strike
-'        listendata.symbol = .symbol
+'        socketdata.currencyCode = .currencyCode
+'        socketdata.exchange = .exchange
+'        socketdata.expiry = .expiry
+'        socketdata.localSymbol = .localSymbol
+'        socketdata.right = .right
+'        socketdata.sectype = .sectype
+'        socketdata.strike = .strike
+'        socketdata.symbol = .symbol
 '    End With
 '    With lOrder
-'        listendata.account = .account
-'        listendata.action = action
-'        listendata.auxPrice = .auxPrice
-'        listendata.clientID = .clientID
-'        listendata.discretionaryAmt = .discretionaryAmt
-'        listendata.FAGroup = .FAGroup
-'        listendata.FAMethod = .FAMethod
-'        listendata.FAPercentage = .FAPercentage
-'        listendata.FAProfile = .FAProfile
-'        listendata.goodAfterTime = .goodAfterTime
-'        listendata.hidden = .hidden
-'        listendata.ignoreRTH = .ignoreRTH
-'        listendata.limitPrice = .limitPrice
-'        listendata.ocaGroup = .ocaGroup
-'        listendata.openClose = .openClose
-'        listendata.orderId = id
-'        listendata.orderRef = .orderRef
-'        listendata.orderType = orderType
-'        listendata.origin = .origin
-'        listendata.permId = .permId
-'        listendata.quantity = .quantity
-'        listendata.sharesAllocation = .sharesAllocation
-'        listendata.timeInForce = timeInForce
+'        socketdata.account = .account
+'        socketdata.action = action
+'        socketdata.auxPrice = .auxPrice
+'        socketdata.clientID = .clientID
+'        socketdata.discretionaryAmt = .discretionaryAmt
+'        socketdata.FAGroup = .FAGroup
+'        socketdata.FAMethod = .FAMethod
+'        socketdata.FAPercentage = .FAPercentage
+'        socketdata.FAProfile = .FAProfile
+'        socketdata.goodAfterTime = .goodAfterTime
+'        socketdata.hidden = .hidden
+'        socketdata.ignoreRTH = .ignoreRTH
+'        socketdata.limitPrice = .limitPrice
+'        socketdata.ocaGroup = .ocaGroup
+'        socketdata.openClose = .openClose
+'        socketdata.orderId = id
+'        socketdata.orderRef = .orderRef
+'        socketdata.orderType = orderType
+'        socketdata.origin = .origin
+'        socketdata.permId = .permId
+'        socketdata.quantity = .quantity
+'        socketdata.sharesAllocation = .sharesAllocation
+'        socketdata.timeInForce = timeInForce
 '    End With
-'    listendata.version = version
+'    socketdata.version = version
 '
-'    mCommonServiceConsumer.NotifyListeners listendata, _
-'                    ListenValueTypes.ValueTypeTWSSocketMsgOpenOrder, _
+'    msocketlogger.log LogLevelHighDetail, socketdata, _
 '                    timestamp
 'End If
 
@@ -3338,7 +3341,7 @@ End Sub
 
 Private Sub getOrderStatus(ByVal version As Long)
 Dim mapEntry As OrderIdMapEntry
-Dim listendata As TWSSocketMsgOrderStatus
+Dim socketdata As TWSSocketMsgOrderStatus
 
 Dim id As Long: id = getLong
 Dim statusString As String: statusString = getString
@@ -3386,28 +3389,27 @@ Else
     ' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! need to improve this!!!!!!!!!!!!!!!
 End If
 
-If mLogLevel >= LogLevelHigh Then
-    listendata.msgType = TWSSocketInMsgTypes.ORDER_STATUS
-    listendata.avgFillPrice = avgFillPrice
-    listendata.clientID = clientID
-    listendata.filled = filled
-    listendata.lastFillPrice = lastFillPrice
-    listendata.orderId = id
-    listendata.parentId = parentId
-    listendata.permId = permId
-    listendata.remaining = remaining
-    listendata.status = statusString
-    listendata.version = version
+If mSocketLogger.isLoggable(LogLevelHighDetail) Then
+    socketdata.msgType = TWSSocketInMsgTypes.ORDER_STATUS
+    socketdata.avgFillPrice = avgFillPrice
+    socketdata.clientID = clientID
+    socketdata.filled = filled
+    socketdata.lastFillPrice = lastFillPrice
+    socketdata.orderId = id
+    socketdata.parentId = parentId
+    socketdata.permId = permId
+    socketdata.remaining = remaining
+    socketdata.status = statusString
+    socketdata.version = version
     
-    mCommonServiceConsumer.NotifyListeners listendata, _
-                    ListenValueTypes.ValueTypeTWSSocketMsgOrderStatus, _
+    mSocketLogger.Log LogLevelHighDetail, socketdata, _
                     Me
 End If
 
 End Sub
 
 Private Sub getPortfolioValue(ByVal version As Long)
-Dim listendata As TWSSocketMsgPortfolioValue
+Dim socketdata As TWSSocketMsgPortfolioValue
 
 Dim symbol As String
 Dim localSymbol As String
@@ -3452,28 +3454,27 @@ Dim accountName As String: If version >= 4 Then accountName = getString
                          
 RaiseEvent updatePortfolioValue(lContractSpecifier, position, marketPrice, marketValue, averageCost, unrealizedPNL, realizedPNL, accountName)
 
-If mLogLevel >= LogLevelHigh Then
-    listendata.msgType = TWSSocketInMsgTypes.PORTFOLIO_VALUE
+If mSocketLogger.isLoggable(LogLevelHighDetail) Then
+    socketdata.msgType = TWSSocketInMsgTypes.PORTFOLIO_VALUE
     With lContractSpecifier
-        listendata.currencyCode = .currencyCode
-        listendata.expiry = .expiry
-        listendata.localSymbol = .localSymbol
-        listendata.right = rightString
-        listendata.sectype = sectype
-        listendata.strike = .strike
-        listendata.symbol = .symbol
+        socketdata.currencyCode = .currencyCode
+        socketdata.expiry = .expiry
+        socketdata.localSymbol = .localSymbol
+        socketdata.right = rightString
+        socketdata.sectype = sectype
+        socketdata.strike = .strike
+        socketdata.symbol = .symbol
     End With
-    listendata.accountName = accountName
-    listendata.averageCost = averageCost
-    listendata.marketPrice = marketPrice
-    listendata.marketValue = marketValue
-    listendata.position = position
-    listendata.realizedPNL = realizedPNL
-    listendata.unrealizedPNL = unrealizedPNL
-    listendata.version = version
+    socketdata.accountName = accountName
+    socketdata.averageCost = averageCost
+    socketdata.marketPrice = marketPrice
+    socketdata.marketValue = marketValue
+    socketdata.position = position
+    socketdata.realizedPNL = realizedPNL
+    socketdata.unrealizedPNL = unrealizedPNL
+    socketdata.version = version
     
-    mCommonServiceConsumer.NotifyListeners listendata, _
-                    ListenValueTypes.ValueTypeTWSSocketMsgPortfolioValue, _
+    mSocketLogger.Log LogLevelHighDetail, socketdata, _
                     Me
 End If
 
@@ -3537,7 +3538,7 @@ xml = getString
 End Sub
 
 Private Sub getTickPrice(ByVal version As Long)
-Dim listendata As TWSSocketMsgTickPrice
+Dim socketdata As TWSSocketMsgTickPrice
 Dim Price As Double
 Dim size As Long
 Dim tickType As Long
@@ -3572,16 +3573,15 @@ processTickPrice tickerid Mod IncarnationIncrement, _
                 Price, _
                 size
 
-If mLogLevel >= LogLevelHigh Then
-    listendata.msgType = TWSSocketInMsgTypes.TICK_PRICE
-    listendata.Price = Price
-    listendata.size = size
-    listendata.tickerid = tickerid
-    listendata.tickType = tickType
-    listendata.version = version
+If mSocketLogger.isLoggable(LogLevelHighDetail) Then
+    socketdata.msgType = TWSSocketInMsgTypes.TICK_PRICE
+    socketdata.Price = Price
+    socketdata.size = size
+    socketdata.tickerid = tickerid
+    socketdata.tickType = tickType
+    socketdata.version = version
     
-    mCommonServiceConsumer.NotifyListeners listendata, _
-                    ListenValueTypes.ValueTypeTWSSocketMsgTickPrice, _
+    mSocketLogger.Log LogLevelHighDetail, socketdata, _
                     Me
 End If
 
@@ -3592,7 +3592,7 @@ err.Raise err.number, , "TWSAPI::getTickPrice(failpoint=" & failpoint & "): " & 
 End Sub
 
 Private Sub getTickSize(ByVal version As Long)
-Dim listendata As TWSSocketMsgTickSize
+Dim socketdata As TWSSocketMsgTickSize
 Dim size As Long
 Dim tickType As Long
 Dim tickerid As Long
@@ -3618,15 +3618,14 @@ processTickSize tickerid Mod IncarnationIncrement, _
                 tickType, _
                 size
 
-If mLogLevel >= LogLevelHigh Then
-    listendata.msgType = TWSSocketInMsgTypes.TICK_PRICE
-    listendata.size = size
-    listendata.tickerid = tickerid
-    listendata.tickType = tickType
-    listendata.version = version
+If mSocketLogger.isLoggable(LogLevelHighDetail) Then
+    socketdata.msgType = TWSSocketInMsgTypes.TICK_PRICE
+    socketdata.size = size
+    socketdata.tickerid = tickerid
+    socketdata.tickType = tickType
+    socketdata.version = version
     
-    mCommonServiceConsumer.NotifyListeners listendata, _
-                    ListenValueTypes.ValueTypeTWSSocketMsgTickSize, _
+    mSocketLogger.Log LogLevelHighDetail, socketdata, _
                     Me
 End If
 
@@ -3656,20 +3655,18 @@ mConnectionState = ConnectionStates.ConnNotConnected
 ReleaseSocket
 If mDisconnectedByApplication Then
     RaiseEvent ConnectionToTWSClosed(False)
-    logMessage "Connection to TWS closed: " & connectionString, LogLevelLow
+    logMessage "Connection to TWS closed: " & connectionString
 Else
     If mConnectionRetryIntervalSecs = 0 Then
         cancelContractRequests "Lost connection to TWS"
         RaiseEvent ConnectionToTWSClosed(False)
         logMessage "Connection to TWS closed" & _
-                    connectionString, _
-                    LogLevelLow
+                    connectionString
     Else
         retryConnection
         RaiseEvent ConnectionToTWSClosed(True)
         logMessage "Connection to TWS closed - reconnecting: " & _
-                    connectionString, _
-                    LogLevelLow
+                    connectionString
     End If
 End If
 End Sub
@@ -3700,12 +3697,11 @@ End Function
 
 Private Sub logMessage( _
                 ByVal message As String, _
-                Optional ByVal logLevel As LogLevels = LogLevelLow)
-If mLogLevel < logLevel Or _
-    mLogLevel = LogLevelNone Then Exit Sub
-mCommonServiceConsumer.NotifyListeners "IBTWSSP: " & message, _
-                                        TradeBuildSP.StandardListenValueTypes.Log, _
-                                        Me
+                Optional ByVal logLevel As LogLevels = LogLevelNormal)
+If Not gLogger.isLoggable(LogLevelAll) Then Exit Sub
+gLogger.Log logLevel, _
+            message, _
+            Me
 End Sub
 
 Private Function optionRightFromString(ByVal value As String) As OptionRights

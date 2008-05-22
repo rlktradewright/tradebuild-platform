@@ -79,10 +79,10 @@ End Property
 '@================================================================================
 
 Public Sub addValue( _
-                ByVal Value As Variant, _
+                ByVal value As Variant, _
                 ByVal barNumber As Long, _
                 ByVal timestamp As Date, _
-                ByVal barStartTime As Date)
+                ByVal BarStartTime As Date)
 
 If mCyclicSize > 0 Then
     If mNumValues < mCyclicSize Then
@@ -93,42 +93,62 @@ If mCyclicSize > 0 Then
     End If
 Else
     If mNewest = UBound(mValues) Then
-        ReDim Preserve mValues(2 * (UBound(mValues) + 1) - 1) As StudyValue
+        ReDim Preserve mValues(2 * (UBound(mValues) + 1) - 1) As SValue
     End If
     mNewest = mNewest + 1
     mNumValues = mNumValues + 1
 End If
 
-If IsObject(Value) Then
-    Set mValues(mNewest).Value = Value
+If IsObject(value) Then
+    Set mValues(mNewest).value = value
 Else
-    mValues(mNewest).Value = Value
+    mValues(mNewest).value = value
 End If
 mValues(mNewest).barNumber = barNumber
 mValues(mNewest).timestamp = timestamp
-mValues(mNewest).barStartTime = barStartTime
+mValues(mNewest).BarStartTime = BarStartTime
 End Sub
 
-Public Function getStudyValue(Optional ByVal ref As Long) As SValue
-Dim valueEntry As StudyValue
+Public Sub appendValues( _
+                ByVal pValueCache As ValueCache)
+Dim i As Long
+Dim val As SValue
+
+For i = 1 To pValueCache.count
+    val = pValueCache.getSValue(i)
+    addValue val.value, val.barNumber, val.timestamp, val.BarStartTime
+Next
+End Sub
+
+Public Function appendValuesAsync( _
+                ByVal pValueCache As ValueCache) As TaskController
+Dim avt As New AppendValuesTask
+
+avt.initialise Me, pValueCache
+
+Set appendValuesAsync = StartTask(avt, PriorityNormal)
+End Function
+
+Public Function getSValue(Optional ByVal ref As Long) As SValue
+Dim valueEntry As SValue
 Dim failpoint As Long
 On Error GoTo Err
 
 valueEntry = mValues(refToIndex(ref))
-getStudyValue.barNumber = valueEntry.barNumber
-getStudyValue.timestamp = valueEntry.timestamp
-getStudyValue.barStartTime = valueEntry.barStartTime
-If IsObject(valueEntry.Value) Then
-    Set getStudyValue.Value = valueEntry.Value
+getSValue.barNumber = valueEntry.barNumber
+getSValue.timestamp = valueEntry.timestamp
+getSValue.BarStartTime = valueEntry.BarStartTime
+If IsObject(valueEntry.value) Then
+    Set getSValue.value = valueEntry.value
 Else
-    getStudyValue.Value = valueEntry.Value
+    getSValue.value = valueEntry.value
 End If
 
 Exit Function
 
 Err:
 Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "getStudyValue" & "." & failpoint & _
+        ProjectName & "." & ModuleName & ":" & "getSValue" & "." & failpoint & _
         IIf(Err.source <> "", vbCrLf & Err.source, ""), _
         Err.Description
 
@@ -141,10 +161,10 @@ Dim failpoint As Long
 On Error GoTo Err
 
 index = refToIndex(ref)
-If IsObject(mValues(index).Value) Then
-    Set getValue = mValues(index).Value
+If IsObject(mValues(index).value) Then
+    Set getValue = mValues(index).value
 Else
-    getValue = mValues(index).Value
+    getValue = mValues(index).value
 End If
 
 Exit Function
@@ -162,9 +182,9 @@ Friend Sub initialise( _
                 ByVal valueName As String)
 If cyclicSize > 0 Then
     mCyclicSize = cyclicSize
-    ReDim mValues(mCyclicSize - 1) As StudyValue
+    ReDim mValues(mCyclicSize - 1) As SValue
 Else
-    ReDim mValues(15) As StudyValue
+    ReDim mValues(15) As SValue
     mCyclicSize = 0
 End If
 mNewest = -1
@@ -172,55 +192,22 @@ mNewest = -1
 mValueName = valueName
 End Sub
 
-
-
-'Public Function replayValues( _
-'                ByVal target As Object, _
-'                ByVal sourceStudy As study, _
-'                ByVal numberOfValuesToReplay As Long, _
-'                Optional ByVal discriminator As Long, _
-'                Optional ByVal taskName As String, _
-'                Optional ByVal taskData As Variant) As TaskController
-'Dim replayTask As New CacheReplayTask
-'
-'If numberOfValuesToReplay >= 0 Or _
-'    numberOfValuesToReplay = ReplayNumbers.ReplayAll _
-'Then
-'Else
-'    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-'            "StudiesSupp" & "." & "StudyValueCache" & ":" & "replayValues", _
-'            "numberOfValuesToReplay must be >=0 or set to ReplayNumbers.ReplayAll"
-'
-'End If
-'replayTask.initialise Me, _
-'                    target, _
-'                    sourceStudy, _
-'                    numberOfValuesToReplay, _
-'                    discriminator
-'
-'Set replayValues = StartTask( _
-'                                replayTask, _
-'                                PriorityNormal, _
-'                                IIf(taskName <> "", taskName, GenerateGUIDString), _
-'                                taskData)
-'End Function
-
 Public Sub updateValue( _
-                ByVal Value As Variant, _
+                ByVal value As Variant, _
                 Optional ByVal barNumber As Long, _
                 Optional ByVal timestamp As Date, _
-                Optional ByVal barStartTime As Date, _
+                Optional ByVal BarStartTime As Date, _
                 Optional ByVal ref As Long)
 Dim i As Long
 i = refToIndex(ref)
-If IsObject(Value) Then
-    Set mValues(i).Value = Value
+If IsObject(value) Then
+    Set mValues(i).value = value
 Else
-    mValues(i).Value = Value
+    mValues(i).value = value
 End If
 If barNumber > 0 Then mValues(i).barNumber = barNumber
 If CDbl(timestamp) > 0 Then mValues(i).timestamp = timestamp
-If CDbl(barStartTime) > 0 Then mValues(i).barStartTime = barStartTime
+If CDbl(BarStartTime) > 0 Then mValues(i).BarStartTime = BarStartTime
 End Sub
 
 '@================================================================================
@@ -232,7 +219,7 @@ If ref > mNumValues Or _
     ref < (1 - mNumValues) _
 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "StudyUtils25.StudyValueCache::refToIndex", _
+            ProjectName & "." & ModuleName & ":" & "refToIndex", _
             "<ref> out of bounds"
 End If
     

@@ -5,6 +5,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Public Const ConstTimeBarsInputOpenInterest As String = "Open interest"
 Public Const ConstTimeBarsInputPrice As String = "Price"
 Public Const ConstTimeBarsInputTotalVolume As String = "Total volume"
 Public Const ConstTimeBarsInputTickVolume As String = "Tick volume"
@@ -88,6 +89,10 @@ If mStudyDefinition Is Nothing Then
     Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstTimeBarsInputTickVolume)
     inputDef.inputType = InputTypeInteger
     inputDef.Description = "Tick volume"
+    
+    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstTimeBarsInputOpenInterest)
+    inputDef.inputType = InputTypeInteger
+    inputDef.Description = "Open interest"
     
     Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(ConstTimeBarsValueBar)
     valueDef.Description = "The constant time bars"

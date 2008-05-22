@@ -68,8 +68,6 @@ Private mNextReaderID As Long
 Private mTickfileDataReaders As Collection
 Private mTickfileDataWriters As Collection
 
-Private mLogLevel As TradeBuildSP.LogLevels
-
 Private mTickfilePath As String
 
 '================================================================================
@@ -140,10 +138,6 @@ Next
 
 End Sub
 
-Private Property Let ICommonServiceProvider_LogLevel(ByVal RHS As TradeBuildSP.LogLevels)
-mLogLevel = RHS
-End Property
-
 Private Property Let ICommonServiceProvider_Name(ByVal RHS As String)
 Name = RHS
 End Property
@@ -181,7 +175,6 @@ reader.TickfileServiceProvider = Me
 reader.commonServiceConsumer = mCommonServiceConsumer
 reader.TickfileInputServiceConsumer = serviceConsumer
 reader.StreamingDataConsumer = dataConsumer
-reader.logLevel = mLogLevel
 mTickfileDataReaders.Add reader
 Exit Function
 Err:
@@ -218,7 +211,6 @@ Else
 End If
 writer.commonServiceConsumer = mCommonServiceConsumer
 writer.TickfileOutputServiceConsumer = serviceConsumer
-writer.logLevel = mLogLevel
 mTickfileDataWriters.Add writer
 Exit Function
 Err:

@@ -65,7 +65,6 @@ Private mProviderKey As String
 Private mConnectionRetryIntervalSecs As Long
 Private mkeepConnection As Boolean
 
-Private mLogLevel As LogLevels
 Private mTWSLogLevel As TWSLogLevels
 
 Private mHistDataReaders As Collection
@@ -84,7 +83,6 @@ mServer = "127.0.0.1"
 mPort = 7496
 mConnectionRetryIntervalSecs = 10
 
-mLogLevel = LogLevelLow
 mTWSLogLevel = TWSLogLevelError
 End Sub
 
@@ -99,7 +97,7 @@ Private Function IBarDataServiceProvider_CreateBarDataReader( _
 
 Dim reader As HistDataReader
 
-On Error GoTo Err
+On Error GoTo err
 Set reader = New HistDataReader
 Set IBarDataServiceProvider_CreateBarDataReader = reader
 reader.HistDataServiceProvider = Me
@@ -111,16 +109,15 @@ reader.port = mPort
 reader.server = mServer
 reader.keepConnection = mkeepConnection
 reader.providerKey = mProviderKey
-reader.logLevel = mLogLevel
 reader.TWSLogLevel = mTWSLogLevel
 reader.connectionRetryIntervalSecs = mConnectionRetryIntervalSecs
 reader.ServiceProviderName = mName & " (reader)"
 mHistDataReaders.add reader
 Exit Function
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "HistDataServiceProvider" & "::" & "IBarDataServiceProvider_CreateBarDataReader", _
-                Err.Description
+                err.Description
 End Function
 
 Private Function IBarDataServiceProvider_CreateBarDataWriter( _
@@ -209,8 +206,6 @@ For Each param In params
         connectionRetryIntervalSecs = gParseConnectionRetryInterval(param.value)
     Case UCase$(ParamNameKeepConnection)
         keepConnection = gParseKeepConnection(param.value)
-    Case UCase$(ParamNameLogLevel)
-        logLevel = gParseLogLevel(param.value)
     Case UCase$(ParamNamePort)
         port = gParsePort(param.value)
     Case UCase$(ParamNameProviderKey)
@@ -224,11 +219,6 @@ Next
 
 End Sub
 
-Private Property Let ICommonServiceProvider_LogLevel( _
-                ByVal RHS As TradeBuildSP.LogLevels)
-mLogLevel = RHS
-End Property
-
 Private Property Let ICommonServiceProvider_Name(ByVal RHS As String)
 name = RHS
 End Property
@@ -239,16 +229,16 @@ End Property
 
 Private Sub ICommonServiceProvider_Terminate()
 
-On Error GoTo Err
+On Error GoTo err
 
 finishReaders
 Set mCommonServiceConsumer = Nothing
 
 Exit Sub
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "HistDataServiceProvider" & "::" & "ICommonServiceProvider_Terminate", _
-                Err.Description
+                err.Description
 End Sub
 
 '================================================================================
@@ -273,10 +263,6 @@ End Property
 
 Friend Property Let keepConnection(ByVal value As Boolean)
 mkeepConnection = value
-End Property
-
-Friend Property Let logLevel(ByVal value As LogLevels)
-mLogLevel = value
 End Property
 
 Friend Property Let name(ByVal value As String)
@@ -306,7 +292,7 @@ Case TWSLogLevelWarning
 Case TWSLogLevelInformation
 Case TWSLogLevelDetail
 Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "IBTWSSP.RealtimeDataServiceProvider::(let)TWSLogLevel", _
                 "Value must be one of the TWSLogLevels enum"
 End Select

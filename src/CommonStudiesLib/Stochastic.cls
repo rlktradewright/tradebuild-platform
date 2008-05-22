@@ -55,9 +55,10 @@ Private mSession As session
 Private mKPeriods As Long
 Private mDPeriods As Long
 
-Private mKCache As StudyValueCache
-Private mDCache As StudyValueCache
+Private mKCache As ValueCache
+Private mDCache As ValueCache
 
+Private mBarsBuilder As BarsBuilder
 Private mBars As Bars
 Private mMASmoothing As SMA
 Private mMASmoothingStudy As Study
@@ -100,19 +101,19 @@ Static sPrevVal As Variant
 Dim newEv As StudyValueEvent
 
 If Not mStudyFoundation.isNewBar Then
-    If ev.value = sPrevVal Then Exit Sub
+    If ev.sVal.value = sPrevVal Then Exit Sub
 End If
-sPrevVal = ev.value
+sPrevVal = ev.sVal.value
 
-mBars.notify ev
+mBarsBuilder.notifyValue ev.sVal
 
 If mBars.Count > mKPeriods Then
     If mStudyFoundation.isNewBar Then
         hh = mBars.highestHighValue(mKPeriods)
         ll = mBars.lowestLowValue(mKPeriods)
     Else
-        If ev.value > hh Then hh = ev.value
-        If ev.value < ll Then ll = ev.value
+        If ev.sVal.value > hh Then hh = ev.sVal.value
+        If ev.sVal.value < ll Then ll = ev.sVal.value
     End If
 End If
 If Not (IsEmpty(hh) Or IsEmpty(ll)) Then
@@ -123,26 +124,26 @@ If Not (IsEmpty(hh) Or IsEmpty(ll)) Then
     End If
 End If
 
-newEv.barNumber = ev.barNumber
-newEv.timestamp = ev.timestamp
-newEv.value = mK
+newEv.sVal.barNumber = ev.sVal.barNumber
+newEv.sVal.timestamp = ev.sVal.timestamp
+newEv.sVal.value = mK
 mMASmoothingStudy.notify newEv
 mD = mMASmoothing.ma.value
 
 If mStudyFoundation.isNewBar Then
-    mKCache.addValue mK, ev.barNumber, ev.timestamp, ev.barStartTime
-    mDCache.addValue mD, ev.barNumber, ev.timestamp, ev.barStartTime
+    mKCache.addValue mK, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+    mDCache.addValue mD, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
 Else
-    mKCache.updateValue mK, ev.barNumber, ev.timestamp
-    mDCache.updateValue mD, ev.barNumber, ev.timestamp
+    mKCache.updateValue mK, ev.sVal.barNumber, ev.sVal.timestamp
+    mDCache.updateValue mD, ev.sVal.barNumber, ev.sVal.timestamp
 End If
             
 Set newEv.Source = Me
-newEv.value = mK
+newEv.sVal.value = mK
 newEv.valueName = StochValueK
 mStudyFoundation.notifyValue newEv
 
-newEv.value = mD
+newEv.sVal.value = mD
 newEv.valueName = StochValueD
 mStudyFoundation.notifyValue newEv
 End Sub
@@ -158,11 +159,12 @@ For Each param In params
     Select Case UCase$(param.name)
     Case UCase$(StochParamKPeriods)
         mKPeriods = param.value
-        Set mBars = CreateBars(0, _
+        Set mBarsBuilder = CreateBarsBuilder(0, _
                                     TimePeriodNone, _
                                     mSession, _
                                     0, _
                                     mKPeriods + 1)
+        Set mBars = mBarsBuilder.Bars
     Case UCase$(StochParamDPeriods)
         mDPeriods = param.value
         Set mMASmoothing = gCreateMA(SmaName, _
@@ -186,12 +188,12 @@ End Function
 ' Properties
 '@================================================================================
 
-Public Property Get percentD(Optional ByVal ref As Integer) As StudyValue
-percentD = mDCache.getStudyValue(ref)
+Public Property Get percentD(Optional ByVal ref As Integer) As SValue
+percentD = mDCache.getSValue(ref)
 End Property
 
-Public Property Get percentK(Optional ByVal ref As Integer) As StudyValue
-percentK = mKCache.getStudyValue(ref)
+Public Property Get percentK(Optional ByVal ref As Integer) As SValue
+percentK = mKCache.getSValue(ref)
 End Property
 
 '@================================================================================
@@ -247,7 +249,7 @@ End Property
 
 Private Function Study_getStudyValue( _
                 ByVal valueName As String, _
-                ByVal ref As Long) As StudyValue
+                ByVal ref As Long) As SValue
 Study_getStudyValue = mStudyFoundation.getStudyValue(valueName, ref)
 End Function
 

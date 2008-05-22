@@ -60,8 +60,8 @@ Private mDPeriods As Long
 Private mK As Variant
 Private mD As Variant
 
-Private mKCache As StudyValueCache
-Private mDCache As StudyValueCache
+Private mKCache As ValueCache
+Private mDCache As ValueCache
 
 Private mStoch As Stochastic
 Private mStochStudy As Study
@@ -155,30 +155,30 @@ Dim newEv As StudyValueEvent
 mStudyFoundation.notifyInput ev
 
 If Not mStudyFoundation.isNewBar Then
-    If ev.value = sPrevVal Then Exit Sub
-    sPrevVal = ev.value
+    If ev.sVal.value = sPrevVal Then Exit Sub
+    sPrevVal = ev.sVal.value
 End If
 
-mK = ev.value
+mK = ev.sVal.value
 mMASmoothingStudy.notify ev
 mD = mMASmoothing.ma.value
 
 If mStudyFoundation.isNewBar Then
-    mKCache.addValue mK, ev.barNumber, ev.timestamp, ev.barStartTime
-    mDCache.addValue mD, ev.barNumber, ev.timestamp, ev.barStartTime
+    mKCache.addValue mK, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+    mDCache.addValue mD, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
 Else
-    mKCache.updateValue mK, ev.barNumber, ev.timestamp
-    mDCache.updateValue mD, ev.barNumber, ev.timestamp
+    mKCache.updateValue mK, ev.sVal.barNumber, ev.sVal.timestamp
+    mDCache.updateValue mD, ev.sVal.barNumber, ev.sVal.timestamp
 End If
 
-newEv.barNumber = ev.barNumber
-newEv.timestamp = ev.timestamp
+newEv.sVal.barNumber = ev.sVal.barNumber
+newEv.sVal.timestamp = ev.sVal.timestamp
 Set newEv.Source = Me
-newEv.value = mK
+newEv.sVal.value = mK
 newEv.valueName = SStochValueK
 mStudyFoundation.notifyValue newEv
 
-newEv.value = mD
+newEv.sVal.value = mD
 newEv.valueName = SStochValueD
 mStudyFoundation.notifyValue newEv
 End Sub
@@ -191,12 +191,12 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get percentD(Optional ByVal ref As Integer) As StudyValue
-percentD = mKCache.getStudyValue(ref)
+Public Property Get percentD(Optional ByVal ref As Integer) As SValue
+percentD = mKCache.getSValue(ref)
 End Property
 
-Public Property Get percentK(Optional ByVal ref As Integer) As StudyValue
-percentK = mKCache.getStudyValue(ref)
+Public Property Get percentK(Optional ByVal ref As Integer) As SValue
+percentK = mKCache.getSValue(ref)
 End Property
 
 '@================================================================================
@@ -253,7 +253,7 @@ End Property
 
 Private Function Study_getStudyValue( _
                 ByVal valueName As String, _
-                ByVal ref As Long) As StudyValue
+                ByVal ref As Long) As SValue
 Study_getStudyValue = mStudyFoundation.getStudyValue(valueName, ref)
 End Function
 

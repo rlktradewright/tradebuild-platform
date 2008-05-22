@@ -57,6 +57,7 @@ Private mToDate As Date
 Private mMaxNumberOfBars As Long
 Private mCustomSessionStartTime As Date
 Private mCustomSessionEndTime As Date
+Private mIncludeBarsOutsideSession As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -70,20 +71,36 @@ Private mCustomSessionEndTime As Date
 ' Properties
 '@================================================================================
 
-Friend Property Let barLength(ByVal value As Long)
+Public Property Let barLength(ByVal value As Long)
 mBarLength = value
 End Property
 
-Friend Property Let barLengthUnits(ByVal value As TimePeriodUnits)
+Public Property Get barLength() As Long
+barLength = mBarLength
+End Property
+
+Public Property Let barLengthUnits(ByVal value As TimePeriodUnits)
 mBarLengthUnits = value
 End Property
 
-Friend Property Let barType(ByVal value As BarTypes)
+Public Property Get barLengthUnits() As TimePeriodUnits
+barLengthUnits = mBarLengthUnits
+End Property
+
+Public Property Let barType(ByVal value As BarTypes)
 mBartype = value
 End Property
 
-Friend Property Let Contract(ByVal value As Contract)
+Public Property Get barType() As BarTypes
+barType = mBartype
+End Property
+
+Public Property Let Contract(ByVal value As Contract)
 Set mContract = value
+End Property
+
+Public Property Get Contract() As Contract
+Set Contract = mContract
 End Property
 
 Public Property Get customSessionStartTime() As Date
@@ -94,20 +111,36 @@ Public Property Get customSessionEndTime() As Date
 customSessionEndTime = mCustomSessionEndTime
 End Property
 
-Friend Property Let fromDate(ByVal value As Date)
+Public Property Let fromDate(ByVal value As Date)
 mFromDate = value
 End Property
 
-Friend Property Let includeBarsOutsideSession(ByVal value As Boolean)
+Public Property Get fromDate() As Date
+fromDate = mFromDate
+End Property
+
+Public Property Let includeBarsOutsideSession(ByVal value As Long)
 mIncludeBarsOutsideSession = value
 End Property
 
-Friend Property Let maxNumberOfBars(ByVal value As Long)
+Public Property Get includeBarsOutsideSession() As Long
+includeBarsOutsideSession = mIncludeBarsOutsideSession
+End Property
+
+Public Property Let maxNumberOfBars(ByVal value As Long)
 mMaxNumberOfBars = value
 End Property
 
-Friend Property Let toDate(ByVal value As Date)
+Public Property Get maxNumberOfBars() As Long
+maxNumberOfBars = mMaxNumberOfBars
+End Property
+
+Public Property Let toDate(ByVal value As Date)
 mToDate = value
+End Property
+
+Public Property Get toDate() As Date
+toDate = mToDate
 End Property
 
 '@================================================================================
@@ -128,10 +161,13 @@ Public Function toString() As String
 toString = _
     "    Max bars:       " & mMaxNumberOfBars & vbCrLf & _
     "    Bar length:     " & mBarLength & vbCrLf & _
-    "    Bar units:      " & TimePeriodUnitsToString(mBarLengthUnits) & vbCrLf & _
+    "    Bar units:      " & gTimePeriodUnitsToString(mBarLengthUnits) & vbCrLf & _
     "    From:           " & FormatTimestamp(mFromDate, TimestampDateAndTimeISO8601) & vbCrLf & _
     "    To:             " & FormatTimestamp(mToDate, TimestampDateAndTimeISO8601) & vbCrLf & _
-    "    Session only:   " & IIf(mIncludeBarsOutsideSession, "False", "True") & vbCrLf & _
+    IIf(mCustomSessionStartTime <> 0 And customSessionEndTime <> 0, _
+        "    Session start:   " & FormatTimestamp(mCustomSessionStartTime, TimestampDateAndTimeISO8601) & vbCrLf & _
+        "    Session end:     " & FormatTimestamp(mCustomSessionEndTime, TimestampDateAndTimeISO8601), _
+        "") & vbCrLf & _
     "    Contract:       " & mContract.toString
 End Function
 

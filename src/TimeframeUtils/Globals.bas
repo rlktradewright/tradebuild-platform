@@ -30,6 +30,25 @@ Public Const OneSecond As Double = 1 / 86400
 Public Const OneMinute As Double = 1 / 1440
 Public Const OneHour As Double = 1 / 24
 
+Public Const TimePeriodNameSecond As String = "Second"
+Public Const TimePeriodNameMinute As String = "Minute"
+Public Const TimePeriodNameHour As String = "Hourly"
+Public Const TimePeriodNameDay As String = "Daily"
+Public Const TimePeriodNameWeek As String = "Weekly"
+Public Const TimePeriodNameMonth As String = "Monthly"
+Public Const TimePeriodNameYear As String = "Yearly"
+
+Public Const TimePeriodNameSeconds As String = "Seconds"
+Public Const TimePeriodNameMinutes As String = "Minutes"
+Public Const TimePeriodNameHours As String = "Hours"
+Public Const TimePeriodNameDays As String = "Days"
+Public Const TimePeriodNameWeeks As String = "Weeks"
+Public Const TimePeriodNameMonths As String = "Months"
+Public Const TimePeriodNameYears As String = "Years"
+Public Const TimePeriodNameVolumeIncrement As String = "Volume"
+Public Const TimePeriodNameTickVolumeIncrement As String = "Tick Volume"
+Public Const TimePeriodNameTickIncrement As String = "Ticks Movement"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -562,6 +581,62 @@ End Function
 Public Function gNormaliseTime( _
             ByVal timestamp As Date) As Date
 gNormaliseTime = timestamp - Int(timestamp)
+End Function
+
+Public Function gTimePeriodUnitsFromString( _
+                timeUnits As String) As TimePeriodUnits
+
+Select Case UCase$(timeUnits)
+Case UCase$(TimePeriodNameSecond), UCase$(TimePeriodNameSeconds), "SEC", "SECS", "S"
+    gTimePeriodUnitsFromString = TimePeriodSecond
+Case UCase$(TimePeriodNameMinute), UCase$(TimePeriodNameMinutes), "MIN", "MINS", "M"
+    gTimePeriodUnitsFromString = TimePeriodMinute
+Case UCase$(TimePeriodNameHour), UCase$(TimePeriodNameHours), "HR", "HRS", "H"
+    gTimePeriodUnitsFromString = TimePeriodHour
+Case UCase$(TimePeriodNameDay), UCase$(TimePeriodNameDays), "D", "DY", "DYS"
+    gTimePeriodUnitsFromString = TimePeriodDay
+Case UCase$(TimePeriodNameWeek), UCase$(TimePeriodNameWeeks), "W", "WK", "WKS"
+    gTimePeriodUnitsFromString = TimePeriodWeek
+Case UCase$(TimePeriodNameMonth), UCase$(TimePeriodNameMonths), "MTH", "MNTH", "MTHS", "MNTHS", "MM"
+    gTimePeriodUnitsFromString = TimePeriodMonth
+Case UCase$(TimePeriodNameYear), UCase$(TimePeriodNameYears), "YR", "YRS", "Y", "YY", "YS"
+    gTimePeriodUnitsFromString = TimePeriodYear
+Case UCase$(TimePeriodNameVolumeIncrement), "VOL", "V"
+    gTimePeriodUnitsFromString = TimePeriodVolume
+Case UCase$(TimePeriodNameTickVolumeIncrement), "TICKVOL", "TICK VOL", "TICKVOLUME", "TV"
+    gTimePeriodUnitsFromString = TimePeriodTickVolume
+Case UCase$(TimePeriodNameTickIncrement), "TICK", "TICKS", "TCK", "TCKS", "TM", "TICKSMOVEMENT", "TICKMOVEMENT"
+    gTimePeriodUnitsFromString = TimePeriodTickMovement
+Case Else
+    gTimePeriodUnitsFromString = TimePeriodNone
+End Select
+End Function
+
+Public Function gTimePeriodUnitsToString( _
+                timeUnits As TimePeriodUnits) As String
+
+Select Case timeUnits
+Case TimePeriodSecond
+    gTimePeriodUnitsToString = TimePeriodNameSeconds
+Case TimePeriodMinute
+    gTimePeriodUnitsToString = TimePeriodNameMinutes
+Case TimePeriodHour
+    gTimePeriodUnitsToString = TimePeriodNameHours
+Case TimePeriodDay
+    gTimePeriodUnitsToString = TimePeriodNameDays
+Case TimePeriodWeek
+    gTimePeriodUnitsToString = TimePeriodNameWeeks
+Case TimePeriodMonth
+    gTimePeriodUnitsToString = TimePeriodNameMonths
+Case TimePeriodYear
+    gTimePeriodUnitsToString = TimePeriodNameYears
+Case TimePeriodVolume
+    gTimePeriodUnitsToString = TimePeriodNameVolumeIncrement
+Case TimePeriodTickVolume
+    gTimePeriodUnitsToString = TimePeriodNameTickVolumeIncrement
+Case TimePeriodTickMovement
+    gTimePeriodUnitsToString = TimePeriodNameTickIncrement
+End Select
 End Function
 
 '@================================================================================

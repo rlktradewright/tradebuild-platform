@@ -53,7 +53,7 @@ Private mMAStudy As Study
 
 Private mTR As Double
 Private mATR As Variant
-Private mATRCache As StudyValueCache
+Private mATRCache As ValueCache
 
 Private mPrevClose As Variant   ' this is Variant type to cater for cases where
                                 ' a bar is empty (eg the first bar has no previous bar)
@@ -93,11 +93,11 @@ Dim evOut As StudyValueEvent
 Static sPrevVal As Variant
 
 If Not mStudyFoundation.isNewBar Then
-    If ev.value = sPrevVal Then Exit Sub
+    If ev.sVal.value = sPrevVal Then Exit Sub
 End If
-sPrevVal = ev.value
+sPrevVal = ev.sVal.value
 
-newval = CDbl(ev.value)
+newval = CDbl(ev.sVal.value)
 
 evMa = ev
 
@@ -110,11 +110,11 @@ If mStudyFoundation.isNewBar Then
     If mStudyFoundation.localBarNumber <> 1 Then
         mTR = trueRange(newval)
         
-        evMa.value = mTR
+        evMa.sVal.value = mTR
         mMAStudy.notify evMa
         mATR = mMAStudy.getStudyValue(MovingAverageStudyValueName, 0).value
     End If
-    mATRCache.addValue mATR, ev.barNumber, ev.timestamp, ev.barStartTime
+    mATRCache.addValue mATR, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
 Else
     If newval > mCurrHigh Then
         mCurrHigh = newval
@@ -127,18 +127,18 @@ Else
     If mStudyFoundation.localBarNumber <> 1 Then
         mTR = trueRange(newval)
         
-        evMa.value = mTR
+        evMa.sVal.value = mTR
         mMAStudy.notify evMa
         mATR = mMAStudy.getStudyValue(MovingAverageStudyValueName, 0).value
-        mATRCache.updateValue mATR, ev.barNumber, ev.timestamp
+        mATRCache.updateValue mATR, ev.sVal.barNumber, ev.sVal.timestamp
     End If
 End If
 
 Set evOut.Source = Me
-evOut.barNumber = ev.barNumber
-evOut.barStartTime = ev.barStartTime
-evOut.timestamp = ev.timestamp
-evOut.value = mATR
+evOut.sVal.barNumber = ev.sVal.barNumber
+evOut.sVal.barStartTime = ev.sVal.barStartTime
+evOut.sVal.timestamp = ev.sVal.timestamp
+evOut.sVal.value = mATR
 evOut.valueName = AtrValueATR
 mStudyFoundation.notifyValue evOut
 End Sub
@@ -177,8 +177,8 @@ End Function
 ' Properties
 '@================================================================================
 
-Public Property Get ATR(Optional ByVal ref As Long) As StudyValue
-ATR = mATRCache.getStudyValue(ref)
+Public Property Get ATR(Optional ByVal ref As Long) As SValue
+ATR = mATRCache.getSValue(ref)
 End Property
 
 '@================================================================================
@@ -249,7 +249,7 @@ End Property
 
 Private Function Study_getStudyValue( _
                 ByVal valueName As String, _
-                ByVal ref As Long) As StudyValue
+                ByVal ref As Long) As SValue
 Study_getStudyValue = mStudyFoundation.getStudyValue(valueName, ref)
 End Function
 

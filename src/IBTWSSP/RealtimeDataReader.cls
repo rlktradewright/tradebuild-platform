@@ -76,7 +76,6 @@ Private mConnectionRetryIntervalSecs As Long
 Private mkeepConnection As Boolean
 Private mProviderKey As String
 
-Private mLogLevel As LogLevels
 Private mTWSLogLevel As TWSLogLevels
 
 '================================================================================
@@ -119,7 +118,7 @@ If mContract.specifier.sectype = SecTypeCombo Then
 End If
 
 If mTWSAPI Is Nothing Then
-    Set mTWSAPI = gGetTWSAPIInstance(mServer, mPort, mClientID, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection, mLogLevel, mTWSLogLevel)
+    Set mTWSAPI = gGetTWSAPIInstance(mServer, mPort, mClientID, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection, mTWSLogLevel)
     If mTWSAPI.connectionState = ConnConnected Then
         mServiceConsumer.NotifyEvent StandardSPEventCodes.RTConnectedToDataSource, _
                                 "Connected to " & mTWSAPI.connectionString, _
@@ -287,10 +286,6 @@ Public Property Let keepConnection(ByVal value As Boolean)
 mkeepConnection = value
 End Property
 
-Friend Property Let logLevel(ByVal value As LogLevels)
-mLogLevel = value
-End Property
-
 Friend Property Let name(ByVal value As String)
 mName = value
 End Property
@@ -379,10 +374,9 @@ End Sub
 Private Sub logMessage( _
                 ByVal message As String, _
                 ByVal logLevel As LogLevels)
-If mLogLevel < logLevel Or _
-    mLogLevel = LogLevelNone Then Exit Sub
-mCommonServiceConsumer.NotifyListeners message, _
-                                        TradeBuildSP.StandardListenValueTypes.Log, _
-                                        Me
+If Not gLogger.isLoggable(logLevel) Then Exit Sub
+gLogger.Log logLevel, _
+            message, _
+            Me
 End Sub
 

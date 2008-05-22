@@ -83,7 +83,6 @@ mServer = "127.0.0.1"
 mPort = 16240
 mConnectionRetryIntervalSecs = 10
 
-mLogLevel = LogLevelLow
 End Sub
 
 Private Sub Class_Terminate()
@@ -213,16 +212,9 @@ For Each param In params
         mkeepConnection = param.value
     Case UCase$(ParamNameProviderKey)
         mProviderKey = param.value
-    Case UCase$(ParamNameLogLevel)
-        mLogLevel = param.value
     End Select
 Next
 End Sub
-
-Private Property Let ICommonServiceProvider_LogLevel( _
-                ByVal RHS As TradeBuildSP.LogLevels)
-mLogLevel = RHS
-End Property
 
 Private Property Let ICommonServiceProvider_Name(ByVal RHS As String)
 mName = RHS

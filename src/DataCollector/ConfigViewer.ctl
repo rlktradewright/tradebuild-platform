@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#62.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#62.2#0"; "TradeBuildUI2-6.ocx"
 Begin VB.UserControl ConfigViewer 
    BackStyle       =   0  'Transparent
    ClientHeight    =   13740
@@ -13,7 +13,7 @@ Begin VB.UserControl ConfigViewer
    Begin DataCollector26.ContractsConfigurer ContractsConfigurer1 
       Height          =   4005
       Left            =   8520
-      TabIndex        =   13
+      TabIndex        =   11
       Top             =   4320
       Width           =   7500
       _ExtentX        =   13229
@@ -25,24 +25,9 @@ Begin VB.UserControl ConfigViewer
       Left            =   120
       ScaleHeight     =   4005
       ScaleWidth      =   7500
-      TabIndex        =   12
+      TabIndex        =   10
       Top             =   8520
       Width           =   7500
-      Begin VB.CommandButton PathChooserButton 
-         Caption         =   "..."
-         Height          =   375
-         Left            =   6000
-         TabIndex        =   7
-         Top             =   1440
-         Width           =   495
-      End
-      Begin VB.TextBox TickfilePathText 
-         Height          =   285
-         Left            =   600
-         TabIndex        =   6
-         Top             =   1440
-         Width           =   5415
-      End
       Begin VB.CheckBox WriteTickDataCheck 
          Caption         =   "Write tick data"
          Height          =   375
@@ -103,7 +88,7 @@ Begin VB.UserControl ConfigViewer
    Begin TradeBuildUI26.SPConfigurer SPConfigurer1 
       Height          =   3975
       Left            =   120
-      TabIndex        =   8
+      TabIndex        =   6
       Top             =   4320
       Visible         =   0   'False
       Width           =   7500
@@ -129,7 +114,7 @@ Begin VB.UserControl ConfigViewer
       ForeColor       =   &H000000FF&
       Height          =   735
       Left            =   10560
-      TabIndex        =   11
+      TabIndex        =   9
       Top             =   2640
       Visible         =   0   'False
       Width           =   2775
@@ -146,7 +131,7 @@ Begin VB.UserControl ConfigViewer
       ForeColor       =   &H000000FF&
       Height          =   615
       Left            =   5520
-      TabIndex        =   10
+      TabIndex        =   8
       Top             =   1080
       Visible         =   0   'False
       Width           =   2775
@@ -163,7 +148,7 @@ Begin VB.UserControl ConfigViewer
       ForeColor       =   &H000000FF&
       Height          =   495
       Left            =   10320
-      TabIndex        =   9
+      TabIndex        =   7
       Top             =   120
       Visible         =   0   'False
       Width           =   2775
@@ -260,21 +245,13 @@ Private Const ConfigFileVersion             As String = "1.0"
 Private WithEvents mConfigManager           As ConfigManager
 Attribute mConfigManager.VB_VarHelpID = -1
 
-'Private mConfigFilename                     As String
-'Private mConfigFile                         As ConfigFile
-'Private mAppConfigs                         As ConfigItem
-
-'Private mCurrAppConfig                      As ConfigItem
 Private mCurrConfigNode                     As Node
 
 Private mSelectedAppConfig                  As ConfigItem
 
 Private mReadOnly                           As Boolean
 
-'Private mDefaultAppConfig                   As ConfigItem
 Private mDefaultConfigNode                  As Node
-
-'Private mConfigNames                        As Collection
 
 '@================================================================================
 ' Class Event Handlers
@@ -311,10 +288,10 @@ Dim lNode As Node
 If Button = vbRightButton Then
     Set lNode = ConfigsTV.HitTest(x, y)
     If Not lNode Is Nothing Then
-        If Not mReadOnly Then DeleteConfigMenu.Enabled = True
-        If Not mReadOnly Then NewConfigMenu.Enabled = True
-        If Not mReadOnly Then RenameConfigMenu.Enabled = True
-        If Not mReadOnly Then SetDefaultConfigMenu.Enabled = True
+        If Not mReadOnly Then DeleteConfigMenu.enabled = True
+        If Not mReadOnly Then NewConfigMenu.enabled = True
+        If Not mReadOnly Then RenameConfigMenu.enabled = True
+        If Not mReadOnly Then SetDefaultConfigMenu.enabled = True
         If IsObject(lNode.Tag) Then
             If lNode Is mDefaultConfigNode Then
                 SetDefaultConfigMenu.Checked = True
@@ -324,10 +301,10 @@ If Button = vbRightButton Then
             PopupMenu ConfigTVMenu, , , , RenameConfigMenu
         End If
     Else
-        DeleteConfigMenu.Enabled = False
-        If Not mReadOnly Then NewConfigMenu.Enabled = True
-        RenameConfigMenu.Enabled = False
-        SetDefaultConfigMenu.Enabled = False
+        DeleteConfigMenu.enabled = False
+        If Not mReadOnly Then NewConfigMenu.enabled = True
+        RenameConfigMenu.enabled = False
+        SetDefaultConfigMenu.enabled = False
         SetDefaultConfigMenu.Checked = False
         PopupMenu ConfigTVMenu, , , , RenameConfigMenu
     End If
@@ -350,7 +327,7 @@ Else
     ElseIf Node.Text = ConfigNodeContractSpecs Then
         showContractSpecsConfigDetails
     End If
-    DeleteConfigButton.Enabled = False
+    DeleteConfigButton.enabled = False
     
     Set mSelectedAppConfig = Nothing
 End If
@@ -366,11 +343,11 @@ deleteAppConfig
 End Sub
 
 Private Sub NewConfigButton_Click()
-mConfigManager.addNew
+addConfigNode mConfigManager.addNew
 End Sub
 
 Private Sub NewConfigMenu_Click()
-mConfigManager.addNew
+addConfigNode (mConfigManager.addNew)
 End Sub
 
 Private Sub RenameConfigMenu_Click()
@@ -389,18 +366,32 @@ Private Sub SetDefaultConfigMenu_Click()
 toggleDefaultConfig
 End Sub
 
+Private Sub WriteBarDataCheck_Click()
+Dim ci As ConfigItem
+If mReadOnly Then Exit Sub
+Set ci = mConfigManager.currentAppConfig.childItems.Item(ConfigNameCollectionControl)
+ci.setAttribute AttributeNameWriteBarData, CStr(WriteBarDataCheck.value = vbChecked)
+End Sub
+
+Private Sub WriteTickDataCheck_Click()
+Dim ci As ConfigItem
+If mReadOnly Then Exit Sub
+Set ci = mConfigManager.currentAppConfig.childItems.Item(ConfigNameCollectionControl)
+ci.setAttribute AttributeNameWriteTickData, CStr(WriteTickDataCheck.value = vbChecked)
+End Sub
+
 '@================================================================================
 ' mConfigManager Event Handlers
 '@================================================================================
 
 Private Sub mConfigManager_Clean()
-SaveConfigButton.Enabled = False
-SaveConfigMenu.Enabled = False
+SaveConfigButton.enabled = False
+SaveConfigMenu.enabled = False
 End Sub
 
 Private Sub mConfigManager_Dirty()
-If Not mReadOnly Then SaveConfigButton.Enabled = True
-If Not mReadOnly Then SaveConfigMenu.Enabled = True
+If Not mReadOnly Then SaveConfigButton.enabled = True
+If Not mReadOnly Then SaveConfigMenu.enabled = True
 End Sub
 
 '@================================================================================
@@ -515,9 +506,9 @@ End If
 End Sub
 
 Private Sub disableControls()
-DeleteConfigButton.Enabled = False
-NewConfigButton.Enabled = False
-SaveConfigButton.Enabled = False
+DeleteConfigButton.enabled = False
+NewConfigButton.enabled = False
+SaveConfigButton.enabled = False
 End Sub
 
 Private Sub hideConfigControls()
@@ -533,14 +524,15 @@ mConfigManager.setCurrent ci
 Set mCurrConfigNode = lNode
 
 hideConfigControls
-If Not mReadOnly Then DeleteConfigButton.Enabled = True
+If Not mReadOnly Then DeleteConfigButton.enabled = True
 End Sub
 
 Private Sub showContractSpecsConfigDetails()
 
 hideConfigControls
 
-ContractsConfigurer1.initialise mConfigManager.currentAppConfig.childItems.Item(ConfigNameContracts)
+ContractsConfigurer1.initialise mConfigManager.currentAppConfig.childItems.Item(ConfigNameContracts), _
+                                mReadOnly
 
 ContractsConfigurer1.Left = Box1.Left
 ContractsConfigurer1.Top = Box1.Top
@@ -556,15 +548,6 @@ Set ci = mConfigManager.currentAppConfig.childItems.Item(ConfigNameCollectionCon
 
 WriteBarDataCheck.value = IIf(ci.getDefaultableAttribute(AttributeNameWriteBarData, "False") = "True", vbChecked, vbUnchecked)
 WriteTickDataCheck.value = IIf(ci.getDefaultableAttribute(AttributeNameWriteTickData, "False") = "True", vbChecked, vbUnchecked)
-
-On Error Resume Next
-Set ci = mConfigManager.currentAppConfig.childItems.Item(ConfigNameTickfilePath)
-On Error GoTo 0
-If Not ci Is Nothing Then
-    TickfilePathText = ci.value
-Else
-    TickfilePathText = ""
-End If
 
 ParametersPicture.Left = Box1.Left
 ParametersPicture.Top = Box1.Top

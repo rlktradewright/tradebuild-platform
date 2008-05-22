@@ -113,7 +113,7 @@ mTickfileServiceProvider.dataWriterFinished Me
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "TickfileWriter" & "::" & "ITickfileWriter_CloseOutputFile", _
+                ProjectName & "." & ModuleName & "::" & "ITickfileWriter_CloseOutputFile", _
                 Err.Description
 End Sub
 
@@ -144,7 +144,7 @@ mTickSize = mContract.ticksize
 Exit Property
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "TickfileWriter" & "::" & "ITickfileWriter_Contract", _
+                ProjectName & "." & ModuleName & "::" & "ITickfileWriter_Contract", _
                 Err.Description
 
 End Property
@@ -173,7 +173,7 @@ mDataAdded = True
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "TickfileWriter" & "::" & "ITickfileWriter_WriteAsk", _
+                ProjectName & "." & ModuleName & "::" & "ITickfileWriter_WriteAsk", _
                 Err.Description
 End Sub
 
@@ -189,7 +189,7 @@ mDataAdded = True
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeBid", _
+                ProjectName & "." & ModuleName & "::" & "ITickfileWriter_writeBid", _
                 Err.Description
 End Sub
 
@@ -204,7 +204,7 @@ mDataAdded = True
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeClose", _
+                ProjectName & "." & ModuleName & "::" & "ITickfileWriter_writeClose", _
                 Err.Description
 End Sub
 
@@ -219,7 +219,7 @@ mDataAdded = True
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeHigh", _
+                ProjectName & "." & ModuleName & "::" & "ITickfileWriter_writeHigh", _
                 Err.Description
 End Sub
 
@@ -234,7 +234,7 @@ mDataAdded = True
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeLow", _
+                ProjectName & "." & ModuleName & "::" & "ITickfileWriter_writeLow", _
                 Err.Description
 End Sub
 
@@ -257,7 +257,7 @@ mDataAdded = True
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeMarketDepthData", _
+                ProjectName & "." & ModuleName & "::" & "ITickfileWriter_writeMarketDepthData", _
                 Err.Description
 End Sub
 
@@ -272,7 +272,7 @@ mDataAdded = True
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeMarketDepthReset", _
+                ProjectName & "." & ModuleName & "::" & "ITickfileWriter_writeMarketDepthReset", _
                 Err.Description
 End Sub
 
@@ -284,7 +284,7 @@ mDataAdded = True
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "TickfileWriter" & "::" & "ITickfileWriter_WriteOpenInterest", _
+                ProjectName & "." & ModuleName & "::" & "ITickfileWriter_WriteOpenInterest", _
                 Err.Description
 End Sub
 
@@ -308,7 +308,7 @@ mDataAdded = True
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeVolume", _
+                ProjectName & "." & ModuleName & "::" & "ITickfileWriter_writeVolume", _
                 Err.Description
 End Sub
 
@@ -327,7 +327,7 @@ mServiceConsumer.NotifyEvent StandardSPEventCodes.TFCantConnectDataSource, _
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "TickfileWriter" & "::" & "mTickWriter_ConnectFailed", _
+                ProjectName & "." & ModuleName & "::" & "mTickWriter_ConnectFailed", _
                 Err.Description
 End Sub
 
@@ -341,7 +341,7 @@ mCommonServiceConsumer.ServiceProviderError errorCode, _
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "TickfileWriter" & "::" & "mTickWriter_Error", _
+                ProjectName & "." & ModuleName & "::" & "mTickWriter_Error", _
                 Err.Description
 End Sub
 
@@ -360,7 +360,7 @@ mServiceConsumer.NotifyEvent StandardSPEventCodes.TFCantConnectDataSource, _
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "TickfileWriter" & "::" & "mTradingDB_ConnectFailed", _
+                ProjectName & "." & ModuleName & "::" & "mTradingDB_ConnectFailed", _
                 Err.Description
 End Sub
 
@@ -376,7 +376,7 @@ mServiceConsumer.OutputTickfileCreated mConnectionString
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "TickfileWriter" & "::" & "mTradingDB_ConnectSucceeded", _
+                ProjectName & "." & ModuleName & "::" & "mTradingDB_ConnectSucceeded", _
                 Err.Description
 
 End Sub
@@ -392,10 +392,10 @@ Friend Sub finish()
 writePeriodData
 mWriteTimer.StopTimer
 Set mWriteTimer = Nothing
-mCommonServiceConsumer.NotifyListeners mServiceProviderName & " (" & mContract.specifier.localSymbol & ")" & vbCrLf & _
-                            "    Total data written: " & mTotalBytes & " bytes", _
-                            TradeBuildSP.StandardListenValueTypes.Log, _
-                            Me
+gLogger.Log LogLevelNormal, _
+            mServiceProviderName & " (" & mContract.specifier.localSymbol & ")" & vbCrLf & _
+            "    Total data written: " & mTotalBytes & " bytes", _
+            Me
 ' we really ought to get rid of mWriter after a suitable delay, or after we
 ' know that all writes have been completed
 

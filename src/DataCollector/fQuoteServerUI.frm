@@ -70,7 +70,6 @@ Begin VB.Form fDataCollectorUI
       _ExtentY        =   5530
       _Version        =   393216
       Style           =   1
-      Tabs            =   2
       TabHeight       =   494
       ForeColor       =   -2147483630
       BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
@@ -94,8 +93,30 @@ Begin VB.Form fDataCollectorUI
       TabPicture(1)   =   "fQuoteServerUI.frx":001C
       Tab(1).ControlEnabled=   0   'False
       Tab(1).Control(0)=   "LogText"
-      Tab(1).Control(0).Enabled=   0   'False
       Tab(1).ControlCount=   1
+      TabCaption(2)   =   "Configuration"
+      TabPicture(2)   =   "fQuoteServerUI.frx":0038
+      Tab(2).ControlEnabled=   0   'False
+      Tab(2).Control(0)=   "ConfigDetailsButton"
+      Tab(2).Control(1)=   "ConfigNameText"
+      Tab(2).Control(2)=   "Label4"
+      Tab(2).ControlCount=   3
+      Begin VB.CommandButton ConfigDetailsButton 
+         Caption         =   "Details..."
+         Height          =   375
+         Left            =   -71640
+         TabIndex        =   26
+         Top             =   2160
+         Width           =   735
+      End
+      Begin VB.TextBox ConfigNameText 
+         Height          =   285
+         Left            =   -74400
+         Locked          =   -1  'True
+         TabIndex        =   25
+         Top             =   960
+         Width           =   3495
+      End
       Begin VB.PictureBox TickersContainerPicture 
          Appearance      =   0  'Flat
          ForeColor       =   &H80000008&
@@ -236,6 +257,14 @@ Begin VB.Form fDataCollectorUI
          Top             =   360
          Width           =   255
       End
+      Begin VB.Label Label4 
+         Caption         =   "Current configuration:"
+         Height          =   375
+         Left            =   -74760
+         TabIndex        =   24
+         Top             =   720
+         Width           =   1695
+      End
    End
    Begin VB.CommandButton StartStopButton 
       Caption         =   "Start"
@@ -314,6 +343,7 @@ Option Explicit
 Implements BarWriterListener
 Implements LogListener
 Implements QuoteListener
+Implements RawMarketDepthListener
 Implements StateChangeListener
 Implements TickfileWriterListener
 
@@ -376,6 +406,8 @@ Private mLineSpacing As Integer
 Private mStartStopTimePanel As Panel
 
 Private mFormatter As LogFormatter
+
+Private mConfigFilename As String
 
 '================================================================================
 ' Form Event Handlers
@@ -447,7 +479,7 @@ Case WriterNotifications.WriterFileCreated
     Set tk = ev.Source
     gLogger.Log LogLevelNormal, "Writing bars for " & _
                 tk.Contract.specifier.localSymbol & _
-                " to " & ev.FileName
+                " to " & ev.filename
 End Select
 End Sub
 
@@ -459,7 +491,7 @@ Private Sub LogListener_finish()
 'nothing to do
 End Sub
 
-Private Sub LogListener_Notify(ByVal logrec As TWUtilities30.LogRecord)
+Private Sub LogListener_Notify(ByVal logrec As twutilities30.LogRecord)
 LogText.SelStart = Len(LogText.Text)
 LogText.SelLength = 0
 If Len(LogText.Text) > 0 Then LogText.SelText = vbCrLf
@@ -472,35 +504,47 @@ End Sub
 '================================================================================
 
 Private Sub QuoteListener_ask(ev As QuoteEvent)
-processQuoteEvent ev
+processTickEvent ev.Source
 End Sub
 
 Private Sub QuoteListener_bid(ev As QuoteEvent)
-processQuoteEvent ev
+processTickEvent ev.Source
 End Sub
 
 Private Sub QuoteListener_high(ev As QuoteEvent)
-processQuoteEvent ev
+processTickEvent ev.Source
 End Sub
 
 Private Sub QuoteListener_Low(ev As QuoteEvent)
-processQuoteEvent ev
+processTickEvent ev.Source
 End Sub
 
 Private Sub QuoteListener_openInterest(ev As QuoteEvent)
-processQuoteEvent ev
+processTickEvent ev.Source
 End Sub
 
 Private Sub QuoteListener_previousClose(ev As QuoteEvent)
-processQuoteEvent ev
+processTickEvent ev.Source
 End Sub
 
 Private Sub QuoteListener_trade(ev As QuoteEvent)
-processQuoteEvent ev
+processTickEvent ev.Source
 End Sub
 
 Private Sub QuoteListener_volume(ev As QuoteEvent)
-processQuoteEvent ev
+processTickEvent ev.Source
+End Sub
+
+'================================================================================
+' RawMarketDepth Interface Members
+'================================================================================
+
+Private Sub RawMarketDepthListener_resetMarketDepth(ev As TradeBuild26.RawMarketDepthEvent)
+
+End Sub
+
+Private Sub RawMarketDepthListener_updateMarketDepth(ev As TradeBuild26.RawMarketDepthEvent)
+processTickEvent ev.Source
 End Sub
 
 '================================================================================
@@ -539,13 +583,22 @@ Case WriterNotifications.WriterFileCreated
     Set tk = ev.Source
     gLogger.Log LogLevelNormal, "Writing tickdata for " & _
                 tk.Contract.specifier.localSymbol & _
-                " to " & ev.FileName
+                " to " & ev.filename
 End Select
 End Sub
 
 '================================================================================
 ' Form Control Event Handlers
 '================================================================================
+
+Private Sub ConfigDetailsButton_Click()
+Dim f As New fConfig
+Set f = New fConfig
+
+f.initialise mConfigFilename, True
+f.Show vbModeless
+
+End Sub
 
 Private Sub ShowHideMonitorButton_Click()
 If mActivityMonitorVisible Then
@@ -611,7 +664,7 @@ End Sub
 
 Private Sub mDataCollector_connected()
 ConnectionStatusText.BackColor = vbGreen
-StartStopButton.Enabled = True
+StartStopButton.enabled = True
 End Sub
 
 Private Sub mDataCollector_connectFailed(ByVal description As String)
@@ -620,7 +673,7 @@ End Sub
 
 Private Sub mDataCollector_ConnectionClosed()
 ConnectionStatusText.BackColor = vbRed
-StartStopButton.Enabled = False
+StartStopButton.enabled = False
 End Sub
 
 Private Sub mDataCollector_ExitProgram()
@@ -628,7 +681,7 @@ Unload Me
 End Sub
 
 Private Sub mDataCollector_Reconnecting()
-StartStopButton.Enabled = True
+StartStopButton.enabled = True
 End Sub
 
 Private Sub mDataCollector_TickerAdded(ByVal ticker As ticker)
@@ -665,6 +718,7 @@ ShortNameText(index).Visible = True
 DataLightLabel(index).Visible = True
 
 ticker.addQuoteListener Me
+ticker.addRawMarketDepthListener Me
 ticker.addTickfileWriterListener Me
 ticker.addBarWriterListener Me
 
@@ -699,12 +753,17 @@ End Property
 
 Friend Sub initialise( _
                 ByVal pDataCollector As dataCollector, _
+                ByVal configFilename As String, _
+                ByVal configName As String, _
                 ByVal noAutoStart As Boolean, _
                 ByVal showMonitor As Boolean)
 
 Set mStartStopTimePanel = StatusBar1.Panels.Item(1)
 
 Set mDataCollector = pDataCollector
+
+mConfigFilename = configFilename
+ConfigNameText = configName
 
 If showMonitor Then
     mActivityMonitorVisible = True
@@ -761,11 +820,9 @@ ActivityMonitor.Visible = False
 mActivityMonitorVisible = False
 End Sub
     
-Private Sub processQuoteEvent( _
-                ev As QuoteEvent)
-Dim lTicker As ticker
-Set lTicker = ev.Source
-switchDataLightOn lTicker.Handle
+Private Sub processTickEvent( _
+                pTicker As ticker)
+switchDataLightOn pTicker.Handle
 mLastTickTime = GetTimestamp
 mTickCount = mTickCount + 1
 End Sub
@@ -845,7 +902,7 @@ End Sub
 Private Sub setStarted()
 mCollectingData = True
 StartStopButton.Caption = "Stop"
-StartStopButton.Enabled = True
+StartStopButton.enabled = True
 
 mLastTickTime = GetTimestamp
 

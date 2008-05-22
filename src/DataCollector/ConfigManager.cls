@@ -48,27 +48,6 @@ Event SelectedItemChanged()
 Private Const ProjectName                   As String = "TradeSkilDemo26"
 Private Const ModuleName                    As String = "ConfigManager"
 
-Private Const AttributeNameAppConfigDefault As String = "Default"
-Private Const AttributeNameAppConfigName    As String = "Name"
-Private Const AttributeNameWriteTickData    As String = "WriteTickData"
-Private Const AttributeNameWriteBarData     As String = "WriteBarData"
-
-
-Private Const ConfigFileVersion             As String = "1.0"
-
-Private Const ConfigNameAppConfig           As String = "AppConfig"
-Private Const ConfigNameAppConfigs          As String = "AppConfigs"
-Private Const ConfigNameTradeBuild          As String = "TradeBuild"
-Private Const ConfigNameCollectionControl   As String = "CollectionControl"
-Private Const ConfigNameContract            As String = "Contract"
-Private Const ConfigNameContracts           As String = "Contracts"
-Private Const ConfigNameTickfilePath        As String = "TickfilePath"
-
-Private Const ConfigNodeContractSpecs       As String = "Contract Specifications"
-Private Const ConfigNodeServiceProviders    As String = "Service Providers"
-Private Const ConfigNodeStudyLibraries      As String = "Study Libraries"
-Private Const ConfigNodeParameters          As String = "Parameters"
-
 Private Const NewConfigNameStub             As String = "New config"
 
 '@================================================================================
@@ -118,13 +97,21 @@ End Sub
 ' Properties
 '@================================================================================
 
+Public Property Get appConfig( _
+                ByVal name As String) As ConfigItem
+Set appConfig = findConfig(name)
+End Property
+
 Public Property Get Dirty() As Boolean
 If Not mConfigFile Is Nothing Then Dirty = mConfigFile.Dirty
 End Property
 
-Public Property Get appConfig( _
-                ByVal name As String) As ConfigItem
-Set appConfig = findConfig(name)
+Public Property Get currentAppConfig() As ConfigItem
+Set currentAppConfig = mCurrAppConfig
+End Property
+
+Public Property Get defaultAppConfig() As ConfigItem
+Set defaultAppConfig = mDefaultAppConfig
 End Property
 
 Public Property Get firstAppConfig() As ConfigItem
@@ -138,32 +125,16 @@ Set firstAppConfig = appConfig
 
 End Property
 
-Public Property Get selectedAppConfig() As ConfigItem
-Set selectedAppConfig = mSelectedAppConfig
-End Property
-
 '@================================================================================
 ' Methods
 '@================================================================================
-
-Public Sub appyPendingChanges()
-If StudyLibConfigurer1.Dirty Then
-    StudyLibConfigurer1.ApplyChanges
-End If
-If SPConfigurer1.Dirty Then
-    SPConfigurer1.ApplyChanges
-End If
-
-End Sub
 
 Public Sub clearCurrent()
 Set mCurrAppConfig = Nothing
 End Sub
 
 Public Function addNew( _
-                Optional ByVal configName As String, _
-                Optional ByVal includeDefaultServiceProviders As Boolean, _
-                Optional ByVal includeDefaultStudyLibrary As Boolean) As ConfigItem
+                Optional ByVal configName As String) As ConfigItem
 Dim i As Long
 
 If configName = "" Then
@@ -178,32 +149,21 @@ Set mCurrAppConfig = mAppConfigs.childItems.AddItem(ConfigNameAppConfig)
 mCurrAppConfig.setAttribute AttributeNameAppConfigName, configName
 mCurrAppConfig.setAttribute AttributeNameAppConfigDefault, "False"
 mCurrAppConfig.childItems.AddItem ConfigNameTradeBuild
-
-If includeDefaultServiceProviders Then
-    SPConfigurer1.setDefaultServiceProviders mCurrAppConfig.childItems.Item(ConfigNameTradeBuild), _
-                                            PermittedServiceProviders.SPHistoricalDataInput Or _
-                                            PermittedServiceProviders.SPHistoricalDataOutput Or _
-                                            PermittedServiceProviders.SPPrimaryContractData Or _
-                                            PermittedServiceProviders.SPRealtimeData Or _
-                                            PermittedServiceProviders.SPTickfileOutput
-End If
-If includeDefaultStudyLibrary Then
-    StudyLibConfigurer1.setDefaultStudyLibrary mCurrAppConfig.childItems.Item(ConfigNameTradeBuild)
-End If
-
+mCurrAppConfig.childItems.AddItem ConfigNameCollectionControl
+mCurrAppConfig.childItems.AddItem ConfigNameContracts
 
 Set addNew = mCurrAppConfig
 End Function
 
-Private Sub deleteCurrent()
+Public Sub deleteCurrent()
 mAppConfigs.childItems.Remove mCurrAppConfig
 If mCurrAppConfig Is mDefaultAppConfig Then Set mDefaultAppConfig = Nothing
+mConfigNames.Remove mCurrAppConfig.getAttribute(AttributeNameAppConfigName)
 Set mCurrAppConfig = Nothing
 End Sub
 
 Public Function initialise( _
-                ByVal configFilename As String, _
-                ByVal applicationName As String) As Boolean
+                ByVal configFilename As String) As Boolean
 Dim appConfig As ConfigItem
 Dim isDefault As Boolean
 Dim index As Long
@@ -216,9 +176,9 @@ Set mConfigFile = LoadXMLConfigurationFile(mConfigFilename)
 On Error GoTo 0
 If mConfigFile Is Nothing Then
     gLogger.Log LogLevelNormal, "No configuration exists - creating skeleton configuration file"
-    Set mConfigFile = CreateXMLConfigurationFile(applicationName, ConfigFileVersion)
+    Set mConfigFile = CreateXMLConfigurationFile(AppName, ConfigFileVersion)
 Else
-    If mConfigFile.applicationName <> applicationName Or _
+    If mConfigFile.applicationName <> AppName Or _
         mConfigFile.applicationVersion <> ConfigFileVersion _
     Then
         gLogger.Log LogLevelNormal, "The configuration file is not the correct format for this program"
@@ -237,39 +197,36 @@ If mAppConfigs Is Nothing Then
 End If
 
 For Each appConfig In mAppConfigs.childItems
+    mConfigNames.Add appConfig.getAttribute(AttributeNameAppConfigName), appConfig.getAttribute(AttributeNameAppConfigName)
     isDefault = False
     On Error Resume Next
     isDefault = (UCase$(appConfig.getAttribute(AttributeNameAppConfigDefault)) = "TRUE")
     On Error GoTo 0
-    Set newnode = addConfigNode(appConfig)
-    If isDefault Then
-        newnode.Bold = True
-        Set mDefaultAppConfig = appConfig
-        Set mDefaultConfigNode = newnode
-    End If
+    If isDefault Then Set mDefaultAppConfig = appConfig
     index = index + 1
 Next
 
-If Not mDefaultConfigNode Is Nothing Then
-    ConfigsTV.SelectedItem = mDefaultConfigNode
-ElseIf ConfigsTV.Nodes.Count > 0 Then
-    ConfigsTV.SelectedItem = ConfigsTV.Nodes(1)
-End If
-If Not ConfigsTV.SelectedItem Is Nothing Then ConfigsTV_NodeClick ConfigsTV.SelectedItem
 initialise = True
+End Function
+
+Public Function NewEnum() As IUnknown
+Attribute NewEnum.VB_UserMemId = -4
+Attribute NewEnum.VB_MemberFlags = "40"
+Set NewEnum = mAppConfigs.childItems.NewEnum
 End Function
 
 Public Function renameCurrent( _
                 ByVal newName As String) As Boolean
-If newName = "" Then Exit Sub
+If newName = "" Then Exit Function
 
-If newName = mCurrAppConfig.getAttribute(AttributeNameAppConfigName) Then Exit Sub
+If newName = mCurrAppConfig.getAttribute(AttributeNameAppConfigName) Then Exit Function
 
-If nameAlreadyInUse(newName) Then Exit Sub
+If nameAlreadyInUse(newName) Then Exit Function
 
 mConfigNames.Remove mCurrAppConfig.getAttribute(AttributeNameAppConfigName)
 mCurrAppConfig.setAttribute AttributeNameAppConfigName, newName
 mConfigNames.Add newName, newName
+renameCurrent = True
 End Function
 
 Public Sub saveConfigFile( _
@@ -303,19 +260,6 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Function addConfigNode( _
-                ByVal appConfig As ConfigItem) As Node
-Dim name As String
-name = appConfig.getAttribute(AttributeNameAppConfigName)
-Set addConfigNode = ConfigsTV.Nodes.Add(, , name, name)
-Set addConfigNode.Tag = appConfig
-mConfigNames.Add name, name
-ConfigsTV.Nodes.Add addConfigNode, tvwChild, , ConfigNodeServiceProviders
-ConfigsTV.Nodes.Add addConfigNode, tvwChild, , ConfigNodeStudyLibraries
-ConfigsTV.Nodes.Add addConfigNode, tvwChild, , ConfigNodeParameters
-ConfigsTV.Nodes.Add addConfigNode, tvwChild, , ConfigNodeContractSpecs
-End Function
-
 Private Function findConfig( _
                 ByVal name As String) As ConfigItem
 Dim appConfig As ConfigItem
@@ -329,13 +273,6 @@ Next
 
 End Function
 
-Private Sub hideConfigControls()
-SPConfigurer1.Visible = False
-StudyLibConfigurer1.Visible = False
-ParametersPicture.Visible = False
-ContractsConfigurer1.Visible = False
-End Sub
-
 Private Function nameAlreadyInUse( _
                 ByVal name As String) As Boolean
 Dim s As String
@@ -343,64 +280,6 @@ On Error Resume Next
 s = mConfigNames(name)
 If s <> "" Then nameAlreadyInUse = True
 End Function
-
-Private Sub showContractSpecsConfigDetails()
-
-hideConfigControls
-
-ContractsConfigurer1.initialise mCurrAppConfig.childItems.Item(ConfigNameContracts)
-
-ContractsConfigurer1.Left = Box1.Left
-ContractsConfigurer1.Top = Box1.Top
-ContractsConfigurer1.Visible = True
-End Sub
-
-Private Sub showParametersConfigDetails()
-Dim ci As ConfigItem
-
-hideConfigControls
-
-Set ci = mCurrAppConfig.childItems.Item(ConfigNameCollectionControl)
-
-WriteBarDataCheck.value = IIf(ci.getDefaultableAttribute(AttributeNameWriteBarData, "False") = "True", vbChecked, vbUnchecked)
-WriteTickDataCheck.value = IIf(ci.getDefaultableAttribute(AttributeNameWriteTickData, "False") = "True", vbChecked, vbUnchecked)
-
-On Error Resume Next
-Set ci = mCurrAppConfig.childItems.Item(ConfigNameTickfilePath)
-On Error GoTo 0
-If Not ci Is Nothing Then
-    TickfilePathText = ci.value
-Else
-    TickfilePathText = ""
-End If
-
-ParametersPicture.Left = Box1.Left
-ParametersPicture.Top = Box1.Top
-ParametersPicture.Visible = True
-End Sub
-
-Private Sub showServiceProviderConfigDetails()
-hideConfigControls
-SPConfigurer1.Left = Box1.Left
-SPConfigurer1.Top = Box1.Top
-SPConfigurer1.initialise mCurrAppConfig.childItems.Item(ConfigNameTradeBuild), _
-                                        PermittedServiceProviders.SPRealtimeData Or _
-                                        PermittedServiceProviders.SPPrimaryContractData Or _
-                                        PermittedServiceProviders.SPHistoricalDataInput Or _
-                                        PermittedServiceProviders.SPHistoricalDataOutput Or _
-                                        PermittedServiceProviders.SPTickfileOutput
-SPConfigurer1.Visible = True
-End Sub
-
-Private Sub showStudyLibraryConfigDetails()
-hideConfigControls
-StudyLibConfigurer1.Left = Box1.Left
-StudyLibConfigurer1.Top = Box1.Top
-StudyLibConfigurer1.initialise mCurrAppConfig.childItems.Item(ConfigNameTradeBuild)
-StudyLibConfigurer1.Visible = True
-End Sub
-
-
 
 
 

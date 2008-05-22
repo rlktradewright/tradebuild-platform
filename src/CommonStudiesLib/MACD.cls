@@ -87,13 +87,13 @@ Private mLowerBalance As Variant
 Private mStrength As Variant
 Private mStrengthCount As Variant
 
-Private mMACDCache As StudyValueCache
-Private mMACDSignalCache As StudyValueCache
-Private mMACDHistCache As StudyValueCache
-Private mUpperBalanceCache As StudyValueCache
-Private mLowerBalanceCache As StudyValueCache
-Private mStrengthCache As StudyValueCache
-Private mStrengthCountCache As StudyValueCache
+Private mMACDCache As ValueCache
+Private mMACDSignalCache As ValueCache
+Private mMACDHistCache As ValueCache
+Private mUpperBalanceCache As ValueCache
+Private mLowerBalanceCache As ValueCache
+Private mStrengthCache As ValueCache
+Private mStrengthCountCache As ValueCache
 
 Private mTickSize As Double
 
@@ -138,15 +138,15 @@ prevMACD = mMACD
 prevMACDHist = mMACDHist
 
 If Not mStudyFoundation.isNewBar Then
-    If ev.value = sPrevVal Then Exit Sub
+    If ev.sVal.value = sPrevVal Then Exit Sub
 End If
-sPrevVal = ev.value
+sPrevVal = ev.sVal.value
 
-evOut.barNumber = ev.barNumber
-evOut.barStartTime = ev.barStartTime
+evOut.sVal.barNumber = ev.sVal.barNumber
+evOut.sVal.barStartTime = ev.sVal.barStartTime
 Set evOut.Source = Me
-evOut.timestamp = ev.timestamp
-evOut.value = ev.value
+evOut.sVal.timestamp = ev.sVal.timestamp
+evOut.sVal.value = ev.sVal.value
 evOut.valueName = ""
 
 If mStudyFoundation.isNewBar Then
@@ -156,14 +156,14 @@ If mStudyFoundation.isNewBar Then
     ' on the first tick of each bar, determine the two balance points, using
     ' the previous values as starting point where they are non-empty
     If mTickSize <> 0 Then
-        determineLowerBalancePoint IIf(IsEmpty(mLowerBalance), ev.value, mLowerBalance), ev.barNumber, ev.timestamp
+        determineLowerBalancePoint IIf(IsEmpty(mLowerBalance), ev.sVal.value, mLowerBalance), ev.sVal.barNumber, ev.sVal.timestamp
     End If
-    mLowerBalanceCache.addValue mLowerBalance, ev.barNumber, ev.timestamp, ev.barStartTime
+    mLowerBalanceCache.addValue mLowerBalance, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
     
     If mTickSize <> 0 Then
-        determineUpperBalancePoint IIf(IsEmpty(mUpperBalance), ev.value, mUpperBalance), ev.barNumber, ev.timestamp
+        determineUpperBalancePoint IIf(IsEmpty(mUpperBalance), ev.sVal.value, mUpperBalance), ev.sVal.barNumber, ev.sVal.timestamp
     End If
-    mUpperBalanceCache.addValue mUpperBalance, ev.barNumber, ev.timestamp, ev.barStartTime
+    mUpperBalanceCache.addValue mUpperBalance, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
 End If
 
 calcMACDValues ev
@@ -199,17 +199,17 @@ If mStrengthCache.Count > 1 Then
 End If
 
 If mStudyFoundation.isNewBar Then
-    mMACDCache.addValue mMACD, ev.barNumber, ev.timestamp, ev.barStartTime
-    mMACDHistCache.addValue mMACDHist, ev.barNumber, ev.timestamp, ev.barStartTime
-    mMACDSignalCache.addValue mMACDSignal, ev.barNumber, ev.timestamp, ev.barStartTime
-    mStrengthCache.addValue mStrength, ev.barNumber, ev.timestamp, ev.barStartTime
-    mStrengthCountCache.addValue mStrengthCount, ev.barNumber, ev.timestamp, ev.barStartTime
+    mMACDCache.addValue mMACD, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+    mMACDHistCache.addValue mMACDHist, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+    mMACDSignalCache.addValue mMACDSignal, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+    mStrengthCache.addValue mStrength, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+    mStrengthCountCache.addValue mStrengthCount, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
 Else
-    mMACDCache.updateValue mMACD, ev.barNumber, ev.timestamp
-    mMACDHistCache.updateValue mMACDHist, ev.barNumber, ev.timestamp
-    mMACDSignalCache.updateValue mMACDSignal, ev.barNumber, ev.timestamp
-    mStrengthCache.updateValue mStrength, ev.barNumber, ev.timestamp
-    mStrengthCountCache.updateValue mStrengthCount, ev.barNumber, ev.timestamp
+    mMACDCache.updateValue mMACD, ev.sVal.barNumber, ev.sVal.timestamp
+    mMACDHistCache.updateValue mMACDHist, ev.sVal.barNumber, ev.sVal.timestamp
+    mMACDSignalCache.updateValue mMACDSignal, ev.sVal.barNumber, ev.sVal.timestamp
+    mStrengthCache.updateValue mStrength, ev.sVal.barNumber, ev.sVal.timestamp
+    mStrengthCountCache.updateValue mStrengthCount, ev.sVal.barNumber, ev.sVal.timestamp
 End If
 
 notifyValue mMACD, MACDValueMACD, evOut
@@ -273,60 +273,60 @@ End Function
 ' Properties
 '@================================================================================
 
-Public Property Get MACD(Optional ByVal ref As Long) As StudyValue
-MACD = mMACDCache.getStudyValue(ref)
+Public Property Get MACD(Optional ByVal ref As Long) As SValue
+MACD = mMACDCache.getSValue(ref)
 End Property
 
-Public Property Get MACDDown(Optional ByVal ref As Long) As StudyValue
-Dim sv As StudyValue
+Public Property Get MACDDown(Optional ByVal ref As Long) As SValue
+Dim sv As SValue
 sv = MACD(ref)
 sv.value = (sv.value < MACD(ref - 1).value)
 MACDDown = sv
 End Property
 
-Public Property Get MACDHist(Optional ByVal ref As Long) As StudyValue
-MACDHist = mMACDHistCache.getStudyValue(ref)
+Public Property Get MACDHist(Optional ByVal ref As Long) As SValue
+MACDHist = mMACDHistCache.getSValue(ref)
 End Property
 
-Public Property Get MACDHistDown(Optional ByVal ref As Long) As StudyValue
-Dim sv As StudyValue
+Public Property Get MACDHistDown(Optional ByVal ref As Long) As SValue
+Dim sv As SValue
 sv = MACDHist(ref)
 sv.value = (sv.value < MACDHist(ref - 1).value)
 MACDHistDown = sv
 End Property
 
-Public Property Get MACDHistUp(Optional ByVal ref As Long) As StudyValue
-Dim sv As StudyValue
+Public Property Get MACDHistUp(Optional ByVal ref As Long) As SValue
+Dim sv As SValue
 sv = MACDHist(ref)
 sv.value = (sv.value > MACDHist(ref - 1).value)
 MACDHistUp = sv
 End Property
 
-Public Property Get MACDLowerBalance(Optional ByVal ref As Long) As StudyValue
-MACDLowerBalance = mLowerBalanceCache.getStudyValue(ref)
+Public Property Get MACDLowerBalance(Optional ByVal ref As Long) As SValue
+MACDLowerBalance = mLowerBalanceCache.getSValue(ref)
 End Property
 
-Public Property Get MACDSignal(Optional ByVal ref As Long) As StudyValue
-MACDSignal = mMACDSignalCache.getStudyValue(ref)
+Public Property Get MACDSignal(Optional ByVal ref As Long) As SValue
+MACDSignal = mMACDSignalCache.getSValue(ref)
 End Property
 
-Public Property Get MACDUp(Optional ByVal ref As Long) As StudyValue
-Dim sv As StudyValue
+Public Property Get MACDUp(Optional ByVal ref As Long) As SValue
+Dim sv As SValue
 sv = MACD(ref)
 sv.value = (sv.value > MACD(ref - 1).value)
 MACDUp = sv
 End Property
 
-Public Property Get MACDUpperBalance(Optional ByVal ref As Long) As StudyValue
-MACDUpperBalance = mUpperBalanceCache.getStudyValue(ref)
+Public Property Get MACDUpperBalance(Optional ByVal ref As Long) As SValue
+MACDUpperBalance = mUpperBalanceCache.getSValue(ref)
 End Property
 
-Public Property Get strength(Optional ByVal ref As Long) As StudyValue
-strength = mStrengthCache.getStudyValue(ref)
+Public Property Get strength(Optional ByVal ref As Long) As SValue
+strength = mStrengthCache.getSValue(ref)
 End Property
 
-Public Property Get strengthCount(Optional ByVal ref As Long) As StudyValue
-strengthCount = mStrengthCountCache.getStudyValue(ref)
+Public Property Get strengthCount(Optional ByVal ref As Long) As SValue
+strengthCount = mStrengthCountCache.getSValue(ref)
 End Property
 
 '@================================================================================
@@ -356,7 +356,7 @@ End If
 mMACD = maShort - maLong
 
 newEv = ev
-newEv.value = mMACD
+newEv.sVal.value = mMACD
 mMASignalStudy.notify newEv
 mMACDSignal = mMASignalStudy.getStudyValue(MovingAverageStudyValueName, 0).value
 If IsEmpty(mMACDSignal) Then
@@ -375,12 +375,12 @@ Dim trialPrice As Double
 Dim ev As StudyValueEvent
 
 If mMACDCache.Count = 0 Then Exit Function
-ev.barNumber = barNumber
+ev.sVal.barNumber = barNumber
 Set ev.Source = Me
-ev.timestamp = timestamp
+ev.sVal.timestamp = timestamp
 
 trialPrice = startingPrice
-ev.value = trialPrice
+ev.sVal.value = trialPrice
 calcMACDValues ev
 
 If IsEmpty(mMACD) Or _
@@ -393,7 +393,7 @@ determineLowerBalancePoint = True
 If mMACD < MACD.value Or mMACDHist < MACDHist.value Then
     Do
         trialPrice = trialPrice + mTickSize
-        ev.value = trialPrice
+        ev.sVal.value = trialPrice
         
         calcMACDValues ev
         
@@ -402,7 +402,7 @@ If mMACD < MACD.value Or mMACDHist < MACDHist.value Then
 Else
     Do
         trialPrice = trialPrice - mTickSize
-        ev.value = trialPrice
+        ev.sVal.value = trialPrice
     
         calcMACDValues ev
         
@@ -422,12 +422,12 @@ Dim ev As StudyValueEvent
 
 If mMACDCache.Count = 0 Then Exit Function
 
-ev.barNumber = barNumber
+ev.sVal.barNumber = barNumber
 Set ev.Source = Me
-ev.timestamp = timestamp
+ev.sVal.timestamp = timestamp
 
 trialPrice = startingPrice
-ev.value = trialPrice
+ev.sVal.value = trialPrice
 calcMACDValues ev
 
 If IsEmpty(mMACD) Or _
@@ -440,7 +440,7 @@ determineUpperBalancePoint = True
 If mMACD > MACD.value And mMACDHist > MACDHist.value Then
     Do
         trialPrice = trialPrice - mTickSize
-        ev.value = trialPrice
+        ev.sVal.value = trialPrice
         
         calcMACDValues ev
         
@@ -449,7 +449,7 @@ If mMACD > MACD.value And mMACDHist > MACDHist.value Then
 Else
     Do
         trialPrice = trialPrice + mTickSize
-        ev.value = trialPrice
+        ev.sVal.value = trialPrice
     
         calcMACDValues ev
         
@@ -465,7 +465,7 @@ Private Sub notifyValue( _
                 ByVal valueName As String, _
                 ByRef ev As StudyValueEvent)
 If Not IsEmpty(value) Then
-    ev.value = value
+    ev.sVal.value = value
     ev.valueName = valueName
     mStudyFoundation.notifyValue ev
 End If
@@ -516,7 +516,7 @@ End Property
 
 Private Function Study_getStudyValue( _
                 ByVal valueName As String, _
-                ByVal ref As Long) As StudyValue
+                ByVal ref As Long) As SValue
 Study_getStudyValue = mStudyFoundation.getStudyValue(valueName, ref)
 End Function
 

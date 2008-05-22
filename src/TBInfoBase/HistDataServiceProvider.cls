@@ -134,7 +134,7 @@ mHistDataReaders.Add reader
 Exit Function
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "HistDataServiceProvider" & "::" & "IBarDataServiceProvider_CreateBarDataReader", _
+                ProjectName & "." & ModuleName & "::" & "IBarDataServiceProvider_CreateBarDataReader", _
                 Err.Description
 End Function
 
@@ -173,7 +173,7 @@ mHistDataWriters.Add writer
 Exit Function
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "HistDataServiceProvider" & "::" & "IBarDataServiceProvider_CreateBarDataWriter", _
+                ProjectName & "." & ModuleName & "::" & "IBarDataServiceProvider_CreateBarDataWriter", _
                 Err.Description
 End Function
 
@@ -282,11 +282,6 @@ For Each param In params
 Next
 End Sub
 
-Private Property Let ICommonServiceProvider_LogLevel( _
-                ByVal RHS As TradeBuildSP.LogLevels)
-
-End Property
-
 Private Property Let ICommonServiceProvider_Name(ByVal RHS As String)
 Name = RHS
 End Property
@@ -303,7 +298,7 @@ Set mCommonServiceConsumer = Nothing
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "HistDataServiceProvider" & "::" & "ICommonServiceProvider_Terminate", _
+                ProjectName & "." & ModuleName & "::" & "ICommonServiceProvider_Terminate", _
                 Err.Description
 End Sub
 

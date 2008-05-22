@@ -34,28 +34,15 @@ Option Explicit
 Private Const ProjectName               As String = "TimeframeUtils26"
 Private Const ModuleName                As String = "GlobalsClass"
 
-Private Const TimePeriodNameSecond As String = "Second"
-Private Const TimePeriodNameMinute As String = "Minute"
-Private Const TimePeriodNameHour As String = "Hourly"
-Private Const TimePeriodNameDay As String = "Daily"
-Private Const TimePeriodNameWeek As String = "Weekly"
-Private Const TimePeriodNameMonth As String = "Monthly"
-Private Const TimePeriodNameYear As String = "Yearly"
-
-Private Const TimePeriodNameSeconds As String = "Seconds"
-Private Const TimePeriodNameMinutes As String = "Minutes"
-Private Const TimePeriodNameHours As String = "Hours"
-Private Const TimePeriodNameDays As String = "Days"
-Private Const TimePeriodNameWeeks As String = "Weeks"
-Private Const TimePeriodNameMonths As String = "Months"
-Private Const TimePeriodNameYears As String = "Years"
-Private Const TimePeriodNameVolumeIncrement As String = "Volume"
-Private Const TimePeriodNameTickVolumeIncrement As String = "Tick Volume"
-Private Const TimePeriodNameTickIncrement As String = "Ticks Movement"
-
 '@================================================================================
 ' Enums
 '@================================================================================
+
+Public Enum BarTypes
+        BarTypeTrade = 0
+        BarTypeBid = 1
+        BarTypeAsk = 2
+End Enum
 
 ''
 ' These values identify different units for measuring elapsed time.
@@ -104,6 +91,24 @@ End Enum
 '@================================================================================
 ' Types
 '@================================================================================
+
+'Public Type Bar
+'    timestamp       As Date
+'    openPrice       As Double
+'    highPrice       As Double
+'    lowPrice        As Double
+'    closePrice      As Double
+'    volume          As Long
+'    tickVolume      As Long
+'    openInterest    As Long
+'End Type
+
+Public Type SValue
+    value           As Variant
+    barNumber       As Long
+    timestamp       As Date
+    BarStartTime    As Date
+End Type
 
 Public Type SessionTimes
     startTime       As Date
@@ -162,7 +167,7 @@ Case TimePeriodHour
 Case TimePeriodDay
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "StudiesSupp" & "." & "GlobalsClass" & ":" & "BarLength", _
+            ProjectName & "." & ModuleName & ":" & "barLength", _
             "Can't calculate bar length for this time unit"
 End Select
 barLength = gCalcBarLength(length, units)
@@ -177,6 +182,51 @@ BarStartTime = gBarStartTime(timestamp, _
                             barLength, _
                             units, _
                             gNormaliseTime(sessionStartTime))
+End Function
+
+Public Function CreateBar( _
+                ByVal timestamp As Date, _
+                ByVal openValue As Double, _
+                ByVal highValue As Double, _
+                ByVal lowValue As Double, _
+                ByVal closeValue As Double, _
+                Optional ByVal volume As Long, _
+                Optional ByVal tickVolume As Long, _
+                Optional ByVal openInterest As Long) As Bar
+Set CreateBar = New Bar
+CreateBar.initialise timestamp, _
+                    openValue, _
+                    highValue, _
+                    lowValue, _
+                    closeValue, _
+                    volume, _
+                    tickVolume, _
+                    openInterest
+End Function
+
+Public Function CreateBarsBuilder( _
+                ByVal barLength As Long, _
+                ByVal timeUnits As TimePeriodUnits, _
+                Optional ByVal pSession As Session, _
+                Optional ByVal tickSize As Double, _
+                Optional ByVal numberOfBarsToCache As Long) As BarsBuilder
+Set CreateBarsBuilder = New BarsBuilder
+CreateBarsBuilder.initialise barLength, _
+                            timeUnits, _
+                            pSession, tickSize, numberOfBarsToCache
+End Function
+
+Public Function CreateValueCache( _
+                ByVal cyclicSize As Long, _
+                ByVal valueName As String) As ValueCache
+Set CreateValueCache = New ValueCache
+CreateValueCache.initialise cyclicSize, valueName
+End Function
+
+Public Function CreateVolumeParser( _
+                ByVal pSession As Session) As VolumeParser
+Set CreateVolumeParser = New VolumeParser
+CreateVolumeParser.initialise pSession
 End Function
 
 Public Function GetSessionTimes( _
@@ -225,7 +275,7 @@ Case TimePeriodMinute
 Case TimePeriodHour
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "BarsSupport" & "." & "GlobalsClass" & ":" & "NumberOfBarsInSession", _
+            ProjectName & "." & ModuleName & ":" & "NumberOfBarsInSession", _
             "Can't calculate number of bars in session for this time unit"
 End Select
 
@@ -245,7 +295,7 @@ Public Function OffsetBarStartTime( _
                 Optional ByVal sessionEndTime As Date) As Date
 If units = TimePeriodNone Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "BarsSupport" & "." & "GlobalsClass" & ":" & "OffsetBarStartTime", _
+            ProjectName & "." & ModuleName & ":" & "OffsetBarStartTime", _
             "Invalid time units argument"
 End If
 OffsetBarStartTime = gCalcOffsetBarStartTime( _

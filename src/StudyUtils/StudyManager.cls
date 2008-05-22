@@ -374,8 +374,8 @@ Public Sub notifyInput( _
                 ByVal inputValue As Variant, _
                 ByVal timestamp As Date)
 Dim ev As StudyValueEvent
-ev.timestamp = timestamp
-ev.value = inputValue
+ev.sVal.timestamp = timestamp
+ev.sVal.value = inputValue
 ev.valueName = mInputs(inputHandle).inputName
 mInputs(inputHandle).source.notify ev
 End Sub

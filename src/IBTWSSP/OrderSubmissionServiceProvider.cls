@@ -65,7 +65,6 @@ Private mHandle As Long
 Private mCommonServiceConsumer As ICommonServiceConsumer
 
 Private mTWSLogLevel As TWSLogLevels
-Private mLogLevel As LogLevels
 
 Private mOrderSubmitters As Collection
 
@@ -83,7 +82,6 @@ mServer = "127.0.0.1"
 mPort = 7496
 mConnectionRetryIntervalSecs = 10
 
-mLogLevel = LogLevelLow
 mTWSLogLevel = TWSLogLevelError
 End Sub
 
@@ -133,8 +131,6 @@ For Each param In params
         connectionRetryIntervalSecs = gParseConnectionRetryInterval(param.value)
     Case UCase$(ParamNameKeepConnection)
         keepConnection = gParseKeepConnection(param.value)
-    Case UCase$(ParamNameLogLevel)
-        logLevel = gParseLogLevel(param.value)
     Case UCase$(ParamNamePort)
         port = gParsePort(param.value)
     Case UCase$(ParamNameProviderKey)
@@ -148,11 +144,6 @@ Next
 
 End Sub
 
-Private Property Let ICommonServiceProvider_LogLevel( _
-                ByVal RHS As TradeBuildSP.LogLevels)
-mLogLevel = RHS
-End Property
-
 Private Property Let ICommonServiceProvider_Name(ByVal RHS As String)
 name = RHS
 End Property
@@ -162,14 +153,14 @@ ICommonServiceProvider_Name = mName
 End Property
 
 Private Sub ICommonServiceProvider_Terminate()
-On Error GoTo Err
+On Error GoTo err
 finishSubmitters
 Set mCommonServiceConsumer = Nothing
 Exit Sub
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "OrderSubmissionServiceProvider" & "::" & "ICommonServiceProvider_Terminate", _
-                Err.Description
+                err.Description
 End Sub
 
 '================================================================================
@@ -180,32 +171,31 @@ Private Function IOrderSubmissionSrvcProvider_CreateOrderSubmitter( _
                 ByVal serviceConsumer As TradeBuildSP.IOrderSubmissionSrvcConsumer, _
                 ByVal pContract As Contract) As TradeBuildSP.IOrderSubmitter
 
-Dim orderSubmitter As orderSubmitter
+Dim OrderSubmitter As OrderSubmitter
 
-On Error GoTo Err
-Set orderSubmitter = New orderSubmitter
-orderSubmitter.OrderSubmissionServiceProvider = Me
-orderSubmitter.commonServiceConsumer = mCommonServiceConsumer
-orderSubmitter.serviceConsumer = serviceConsumer
-orderSubmitter.Contract = pContract
-orderSubmitter.server = mServer
-orderSubmitter.port = mPort
-orderSubmitter.clientID = mClientID
-orderSubmitter.connectionRetryIntervalSecs = mConnectionRetryIntervalSecs
-orderSubmitter.keepConnection = mkeepConnection
-orderSubmitter.providerKey = mProviderKey
-orderSubmitter.logLevel = mLogLevel
-orderSubmitter.TWSLogLevel = mTWSLogLevel
-mOrderSubmitters.add orderSubmitter
+On Error GoTo err
+Set OrderSubmitter = New OrderSubmitter
+OrderSubmitter.OrderSubmissionServiceProvider = Me
+OrderSubmitter.commonServiceConsumer = mCommonServiceConsumer
+OrderSubmitter.serviceConsumer = serviceConsumer
+OrderSubmitter.Contract = pContract
+OrderSubmitter.server = mServer
+OrderSubmitter.port = mPort
+OrderSubmitter.clientID = mClientID
+OrderSubmitter.connectionRetryIntervalSecs = mConnectionRetryIntervalSecs
+OrderSubmitter.keepConnection = mkeepConnection
+OrderSubmitter.providerKey = mProviderKey
+OrderSubmitter.TWSLogLevel = mTWSLogLevel
+mOrderSubmitters.add OrderSubmitter
 
-orderSubmitter.start
+OrderSubmitter.start
 
-Set IOrderSubmissionSrvcProvider_CreateOrderSubmitter = orderSubmitter
+Set IOrderSubmissionSrvcProvider_CreateOrderSubmitter = OrderSubmitter
 Exit Function
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "OrderSubmissionServiceProvider" & "::" & "IOrderSubmissionSrvcProvider_CreateOrderSubmitter", _
-                Err.Description
+                err.Description
 End Function
 
 '================================================================================
@@ -236,10 +226,6 @@ Friend Property Let keepConnection(ByVal value As Boolean)
 mkeepConnection = value
 End Property
 
-Friend Property Let logLevel(ByVal value As LogLevels)
-mLogLevel = value
-End Property
-
 Friend Property Let name(ByVal value As String)
 mName = value
 End Property
@@ -267,7 +253,7 @@ Case TWSLogLevelWarning
 Case TWSLogLevelInformation
 Case TWSLogLevelDetail
 Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "IBTWSSP.RealtimeDataServiceProvider::(let)TWSLogLevel", _
                 "Value must be one of the TWSLogLevels enum"
 End Select
@@ -279,9 +265,9 @@ End Property
 '================================================================================
 
 Friend Sub orderSubmitterFinished( _
-                ByVal pOrderSubmitter As orderSubmitter)
+                ByVal pOrderSubmitter As OrderSubmitter)
 Dim i As Long
-Dim submitter As orderSubmitter
+Dim submitter As OrderSubmitter
 i = 1
 For Each submitter In mOrderSubmitters
     If submitter Is pOrderSubmitter Then
@@ -297,7 +283,7 @@ End Sub
 '================================================================================
 
 Private Sub finishSubmitters()
-Dim submitter As orderSubmitter
+Dim submitter As OrderSubmitter
 For Each submitter In mOrderSubmitters
     submitter.finish
 Next

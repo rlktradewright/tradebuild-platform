@@ -170,11 +170,6 @@ Next
 
 End Sub
 
-Private Property Let ICommonServiceProvider_LogLevel( _
-                ByVal RHS As TradeBuildSP.LogLevels)
-
-End Property
-
 Private Property Let ICommonServiceProvider_Name(ByVal RHS As String)
 
 Name = RHS
@@ -192,7 +187,7 @@ Set mCommonServiceConsumer = Nothing
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "TickfileServiceProvider" & "::" & "ICommonServiceProvider_Terminate", _
+                ProjectName & "." & ModuleName & "::" & "ICommonServiceProvider_Terminate", _
                 Err.Description
 End Sub
 
@@ -233,7 +228,7 @@ mTickfileDataReaders.Add reader
 Exit Function
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "TickfileServiceProvider" & "::" & "ITickfileServiceProvider_CreateTickfileReader", _
+                ProjectName & "." & ModuleName & "::" & "ITickfileServiceProvider_CreateTickfileReader", _
                 Err.Description
 End Function
 
@@ -269,7 +264,7 @@ mTickfileDataWriters.Add writer
 Exit Function
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "TickfileServiceProvider" & "::" & "ITickfileServiceProvider_CreateTickfileWriter", _
+                ProjectName & "." & ModuleName & "::" & "ITickfileServiceProvider_CreateTickfileWriter", _
                 Err.Description
 End Function
 

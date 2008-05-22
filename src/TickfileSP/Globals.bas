@@ -150,7 +150,26 @@ Public Enum ESignalTickFileFields
 End Enum
 
 '================================================================================
-' Procedures
+' Global variables
+'================================================================================
+
+'================================================================================
+' Private variables
+'================================================================================
+
+Private mLogger As Logger
+
+'================================================================================
+' Properties
+'================================================================================
+
+Public Property Get gLogger() As Logger
+If mLogger Is Nothing Then Set mLogger = GetLogger("log.serviceprovider.tickfilesp")
+Set gLogger = mLogger
+End Property
+
+'================================================================================
+' Methods
 '================================================================================
 
 Public Function gCapabilitiesCrescendoV1(ByVal mode As AccessModes) As Long

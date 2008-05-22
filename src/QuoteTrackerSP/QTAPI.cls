@@ -80,7 +80,7 @@ Private Type HistoricalBarDataRequestEntry
     useOffset               As Boolean
     QtRequestKey            As String
     symbol                  As String
-    barSpecifier            As TradeBuildSP.IBarDataSpecifier
+    barSpecifier            As BarDataSpecifier
     session                 As session
     barsReceivedThisRequest As Long
 '    timestampOffset         As Date ' used to convert timestamps received from QT
@@ -238,15 +238,14 @@ mConnectionState = ConnectionStates.ConnNotConnected
 ReleaseSocket
 If mDisconnectedByApplication Then
     RaiseEvent ConnectionClosed(False)
-    logMessage "Connection to QT closed: " & calcConnectionString, LogLevelLow
+    logMessage "Connection to QT closed: " & calcConnectionString
 Else
     retryConnection
     RaiseEvent ConnectionClosed( _
                             IIf(mConnectionRetryIntervalSecs = 0, False, True))
     logMessage "Connection to QT closed" & _
                 IIf(mConnectionRetryIntervalSecs = 0, "", " (retrying)") & ": " & _
-                calcConnectionString, _
-                LogLevelLow
+                calcConnectionString
 End If
 End Sub
 
@@ -254,7 +253,7 @@ Private Sub mSocket_Connect()
 On Error GoTo err
 mConnectionState = ConnectionStates.ConnConnecting
 RaiseEvent Connecting
-logMessage "Connecting to QT: " & calcConnectionString, LogLevelLow
+logMessage "Connecting to QT: " & calcConnectionString
 RequestFieldDescription
 Exit Sub
 err:
@@ -308,8 +307,7 @@ Case sckAddressNotAvailable, _
         logMessage "Failed to connect to QuoteTracker" & _
                     IIf(mConnectionRetryIntervalSecs = 0, "", " (retrying)") & ": " & _
                     Description & ": " & _
-                    calcConnectionString, _
-                    LogLevelLow
+                    calcConnectionString
         RaiseEvent ConnectFailed(Description, _
                                 IIf(mConnectionRetryIntervalSecs = 0, False, True))
         retryConnection
@@ -320,8 +318,7 @@ Case sckAddressNotAvailable, _
         logMessage "Connection to QuoteTracker closed: " & _
                     IIf(mConnectionRetryIntervalSecs = 0, "", " (retrying)") & ": " & _
                     Description & ": " & _
-                    calcConnectionString, _
-                    LogLevelLow
+                    calcConnectionString
         RaiseEvent ConnectionClosed(IIf(mConnectionRetryIntervalSecs = 0, False, True))
     End If
 Case Else
@@ -329,8 +326,7 @@ Case Else
                 "Socket error:" & vbCrLf & _
                 "Number: " & Number & vbCrLf & _
                 "Description: " & Description & vbCrLf & _
-                "Scode: " & Scode, _
-                LogLevelLow
+                "Scode: " & Scode
     err.Raise ErrorCodes.ErrRuntimeException, _
                 "QTSP.QTAPI::mSocket_error", _
                 "Socket error:" & vbCrLf & _
@@ -476,17 +472,10 @@ handleFatalError err.Number, _
 End Sub
 
 Public Function readHistoricalBar( _
-                ByVal requestHandle As Long, _
-                ByRef timestamp As Date, _
-                ByRef barLength As Long, _
-                ByRef barUnits As TimePeriodUnits, _
-                ByRef openPrice As Double, _
-                ByRef highPrice As Double, _
-                ByRef lowPrice As Double, _
-                ByRef closePrice As Double, _
-                ByRef volume As Long, _
-                ByRef tickVolume As Long, _
-                ByRef openInterest As Long) As Boolean
+                        ByVal requestHandle As Long, _
+                        ByVal pBar As Bar, _
+                        ByRef barLength As Long, _
+                        ByRef barUnit As TimePeriodUnits) As Boolean
 
 Dim Bar As HistoricBar
 
@@ -497,17 +486,15 @@ With mHistoricalBarDataRequestTable(requestHandle)
     Else
         readHistoricalBar = True
         barLength = .barSpecifier.barLength
-        barUnits = .barSpecifier.BarLengthUnits
+        barUnit = .barSpecifier.barLengthUnits
         Bar = .bars.itemAt(.nextBarIndex)
         With Bar
-            timestamp = .timestamp
-            openPrice = .openValue
-            highPrice = .highValue
-            lowPrice = .lowValue
-            closePrice = .closeValue
-            volume = .volume
-            tickVolume = 0
-            openInterest = 0
+            Set pBar = CreateBar(.timestamp, _
+                            .openValue, _
+                            .highValue, _
+                            .lowValue, _
+                            .closeValue, _
+                            .volume)
         End With
         .nextBarIndex = .bars.nextIndex(.nextBarIndex)
     End If
@@ -521,7 +508,7 @@ handleFatalError err.Number, _
 End Function
 
 Friend Function requestHistoricalBarData( _
-                barSpecifier As TradeBuildSP.IBarDataSpecifier, _
+                barSpecifier As BarDataSpecifier, _
                 ByVal historicalDataReader As QTHistDataReader, _
                 ByRef lockId As Long) As Long
 
@@ -566,7 +553,7 @@ mHistoricalBarDataRequestTable(i).nextBarIndex = 0
 mHistoricalBarDataRequestTable(i).nextBarIndex = -1
 Set mHistoricalBarDataRequestTable(i).historicalDataReader = historicalDataReader
 Set mHistoricalBarDataRequestTable(i).bars = New LinkedList
-mHistoricalBarDataRequestTable(i).bars.initialCapacity = IIf(barSpecifier.NumberOfBars <> 0, barSpecifier.NumberOfBars, 50)
+mHistoricalBarDataRequestTable(i).bars.initialCapacity = IIf(barSpecifier.maxNumberOfBars <> 0, barSpecifier.maxNumberOfBars, 50)
 
 generateQTHistoricalDataRequest requestID
 requestHistoricalBarData = requestID
@@ -735,7 +722,7 @@ End Function
 Private Sub connectToQT()
 Set mSocket = New Winsock
 mSocket.connect mServer, mPort
-logMessage "Connecting to QuoteTracker: " & calcConnectionString, LogLevelLow
+logMessage "Connecting to QuoteTracker: " & calcConnectionString
 End Sub
 
 Private Function findHistoricalBarDataRequestEntryIndex(ByVal symbol As String) As Long
@@ -788,12 +775,12 @@ qtRequest.symbol = mHistoricalBarDataRequestTable(index).symbol
 
 Set lSession = mHistoricalBarDataRequestTable(index).session
 With mHistoricalBarDataRequestTable(index).barSpecifier
-    If .NumberOfBars <> 0 Then
+    If .maxNumberOfBars <> 0 Then
         startDateTime = OffsetBarStartTime( _
                                         .ToDate, _
                                         .barLength, _
-                                        .BarLengthUnits, _
-                                        -1 * .NumberOfBars)
+                                        .barLengthUnits, _
+                                        -1 * .maxNumberOfBars)
         If startDateTime < .FromDate Then
             startDateTime = .FromDate
         End If
@@ -806,7 +793,7 @@ qtRequest.startDateTime = startDateTime
 qtRequest.endDateTime = mHistoricalBarDataRequestTable(index).barSpecifier.ToDate
 
 qtRequest.barLength = mHistoricalBarDataRequestTable(index).barSpecifier.barLength
-qtRequest.barUnits = mHistoricalBarDataRequestTable(index).barSpecifier.BarLengthUnits
+qtRequest.barUnits = mHistoricalBarDataRequestTable(index).barSpecifier.barLengthUnits
 qtRequest.rth = False
 
 mHistoricalBarDataRequestTable(index).barsReceivedThisRequest = 0
@@ -918,13 +905,12 @@ End Sub
 
 Private Sub logMessage( _
                 ByVal message As String, _
-                ByVal logLevel As LogLevels)
-If mLogLevel < logLevel Or _
-    mLogLevel = LogLevelNone Then Exit Sub
+                Optional ByVal logLevel As LogLevels = LogLevelNormal)
+If Not gLogger.isLoggable(LogLevelAll) Then Exit Sub
 Debug.Print message
-mCommonServiceConsumer.NotifyListeners message, _
-                                        TradeBuildSP.StandardListenValueTypes.Log, _
-                                        Now
+gLogger.Log logLevel, _
+            message, _
+            Now
 End Sub
 
 Private Sub ProcessError( _
@@ -943,7 +929,7 @@ bytesProcessed = bytesProcessed + Len(XMLData)
 Set XMLdoc = New DOMDocument30
 XMLdoc.loadXML XMLData
 If XMLdoc.parseError.errorCode <> 0 Then
-    logMessage "QT API Error: XML cannot be parsed: " & XMLData, LogLevelLow
+    logMessage "QT API Error: XML cannot be parsed: " & XMLData
     err.Raise LocalErrorCodes.LongJump
 End If
 
@@ -951,7 +937,7 @@ Set error = XMLdoc.selectSingleNode("ERROR")
 Set errorCode = error.selectSingleNode("ERRORCODE")
 Set errorDesc = error.selectSingleNode("ERRORDESC")
 
-logMessage "QT API Error (" & errorCode.Text & "): " & errorDesc.Text, LogLevelLow
+logMessage "QT API Error (" & errorCode.Text & "): " & errorDesc.Text
 Debug.Print "QT API Error (" & errorCode.Text & "): " & errorDesc.Text
 'err.Raise LocalErrorCodes.LongJump
 End Sub
@@ -1054,7 +1040,7 @@ Else
     
     mHistoricalBarDataRequestTable(index).QtRequestKey = ""
     
-    If mHistoricalBarDataRequestTable(index).barSpecifier.NumberOfBars <= 0 Or _
+    If mHistoricalBarDataRequestTable(index).barSpecifier.maxNumberOfBars <= 0 Or _
         mHistoricalBarDataRequestTable(index).barsReceivedThisRequest = 0 _
     Then
         Debug.Print "Historical data retrieved: bars in list: " & mHistoricalBarDataRequestTable(index).bars.size
@@ -1135,7 +1121,7 @@ If mHistoricalBarDataRequestTable(index).cancelling Then Exit Sub
 
 mHistoricalBarDataRequestTable(index).hint = mHistoricalBarDataRequestTable(index).bars.add(Bar, Bar.timestamp, mHistoricalBarDataRequestTable(index).hint)
 
-mHistoricalBarDataRequestTable(index).barSpecifier.NumberOfBars = mHistoricalBarDataRequestTable(index).barSpecifier.NumberOfBars - 1
+mHistoricalBarDataRequestTable(index).barSpecifier.maxNumberOfBars = mHistoricalBarDataRequestTable(index).barSpecifier.maxNumberOfBars - 1
 
 mHistoricalBarDataRequestTable(index).barsReceivedThisRequest = mHistoricalBarDataRequestTable(index).barsReceivedThisRequest + 1
 End Sub
@@ -1438,8 +1424,7 @@ Case "1"
             "Logon password invalid", _
             -1
     logMessage "Failed to connect to QuoteTracker: logon password invalid: " & _
-                calcConnectionString, _
-                LogLevelLow
+                calcConnectionString
     RaiseEvent ConnectFailed("logon password invalid", False)
     err.Raise LocalErrorCodes.LongJump
 Case Else
@@ -1574,7 +1559,7 @@ If lockId <> 0 Then mLockManager.releaseLock lockId
 End Sub
 
 Private Sub ReleaseSocket()
-logMessage "Disconnecting from QuoteTracker: " & calcConnectionString, LogLevelLow
+logMessage "Disconnecting from QuoteTracker: " & calcConnectionString
 If Not mSocket Is Nothing Then
     mSocket.Close
     Set mSocket = Nothing

@@ -59,8 +59,8 @@ Private mSD As Variant
 Private mSum As Double
 Private mSumSquares As Double
 
-Private mSDCache As StudyValueCache
-Private mInputValueCache As StudyValueCache
+Private mSDCache As ValueCache
+Private mInputValueCache As ValueCache
 
 '@================================================================================
 ' Class Event Handlers
@@ -93,15 +93,15 @@ Dim newValue As Double
 Dim valueToRemove As Double
 
 If Not mStudyFoundation.isNewBar Then
-    If ev.value = sPrevVal Then Exit Sub
+    If ev.sVal.value = sPrevVal Then Exit Sub
 End If
 
-newValue = CDbl(ev.value)
+newValue = CDbl(ev.sVal.value)
 
 If mStudyFoundation.isNewBar Then
     If mInputValueCache.Count < mPeriods Then
-        If Not IsEmpty(ev.value) Then
-            mInputValueCache.addValue newValue, ev.barNumber, ev.timestamp, ev.barStartTime
+        If Not IsEmpty(ev.sVal.value) Then
+            mInputValueCache.addValue newValue, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
             mSum = mSum + newValue
             mSumSquares = mSumSquares + newValue * newValue
         End If
@@ -109,30 +109,30 @@ If mStudyFoundation.isNewBar Then
             mSD = Sqr((mPeriods * mSumSquares - mSum * mSum) / (mPeriods * mPeriods))
         End If
     Else
-        If Not IsEmpty(ev.value) Then
+        If Not IsEmpty(ev.sVal.value) Then
             valueToRemove = mInputValueCache.getValue(1)
-            mInputValueCache.addValue newValue, ev.barNumber, ev.timestamp, ev.barStartTime
+            mInputValueCache.addValue newValue, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
             mSum = mSum - valueToRemove + newValue
             mSumSquares = mSumSquares - valueToRemove * valueToRemove + newValue * newValue
             mSD = Sqr((mPeriods * mSumSquares - mSum * mSum) / (mPeriods * mPeriods))
         End If
     End If
-    sPrevVal = ev.value
+    sPrevVal = ev.sVal.value
 Else
-    If Not IsEmpty(ev.value) Then
+    If Not IsEmpty(ev.sVal.value) Then
         If Not IsEmpty(sPrevVal) Then
             valueToRemove = sPrevVal
-            mInputValueCache.updateValue newValue, ev.barNumber, ev.timestamp
+            mInputValueCache.updateValue newValue, ev.sVal.barNumber, ev.sVal.timestamp
             mSum = mSum - valueToRemove
             mSumSquares = mSumSquares - valueToRemove * valueToRemove
         Else
             ' this can only happen when there has not yet been a non-empty
             ' input value in this bar
-            mInputValueCache.addValue newValue, ev.barNumber, ev.timestamp, ev.barStartTime
+            mInputValueCache.addValue newValue, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
         End If
         mSum = mSum + newValue
         mSumSquares = mSumSquares + newValue * newValue
-        sPrevVal = ev.value
+        sPrevVal = ev.sVal.value
     End If
     If mInputValueCache.Count >= mPeriods Then
         mSD = Sqr((mPeriods * mSumSquares - mSum * mSum) / (mPeriods * mPeriods))
@@ -140,12 +140,12 @@ Else
 End If
 
 If mStudyFoundation.isNewBar Then
-    mSDCache.addValue mSD, ev.barNumber, ev.timestamp, ev.barStartTime
+    mSDCache.addValue mSD, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
 Else
-    mSDCache.updateValue mSD, ev.barNumber, ev.timestamp
+    mSDCache.updateValue mSD, ev.sVal.barNumber, ev.sVal.timestamp
 End If
             
-notifyValue mSD, SDValueStandardDeviation, ev.barNumber, ev.timestamp, ev.barStartTime
+notifyValue mSD, SDValueStandardDeviation, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
 End Sub
 
 Private Function customNumberOfBarsRequired() As Long
@@ -159,7 +159,7 @@ For Each param In params
     Select Case UCase$(param.name)
     Case UCase$(SDParamPeriods)
         mPeriods = param.value
-        Set mInputValueCache = CreateStudyValueCache(mPeriods, "")
+        Set mInputValueCache = CreateValueCache(mPeriods, "")
     End Select
 Next
 
@@ -177,8 +177,8 @@ End Function
 ' Properties
 '@================================================================================
 
-Public Property Get SD(Optional ByVal ref As Long) As StudyValue
-SD = mSDCache.getStudyValue(ref)
+Public Property Get SD(Optional ByVal ref As Long) As SValue
+SD = mSDCache.getSValue(ref)
 End Property
 
 '@================================================================================
@@ -197,12 +197,12 @@ Private Sub notifyValue( _
                 ByVal timestamp As Date)
 Dim ev As StudyValueEvent
 If Not IsEmpty(value) Then
-    ev.value = value
+    ev.sVal.value = value
     ev.valueName = valueName
     Set ev.Source = Me
-    ev.barNumber = barNumber
-    ev.barStartTime = barStartTime
-    ev.timestamp = timestamp
+    ev.sVal.barNumber = barNumber
+    ev.sVal.barStartTime = barStartTime
+    ev.sVal.timestamp = timestamp
     mStudyFoundation.notifyValue ev
 End If
 End Sub
@@ -252,7 +252,7 @@ End Property
 
 Private Function Study_getStudyValue( _
                 ByVal valueName As String, _
-                ByVal ref As Long) As StudyValue
+                ByVal ref As Long) As SValue
 Study_getStudyValue = mStudyFoundation.getStudyValue(valueName, ref)
 End Function
 

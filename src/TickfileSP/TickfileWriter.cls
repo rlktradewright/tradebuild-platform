@@ -57,8 +57,6 @@ Private mTickfileServiceProvider As TickfileServiceProvider
 Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mServiceConsumer As ITickfileOutputServiceConsumer
 
-Private mLogLevel As TradeBuildSP.LogLevels
-
 Private mFileSys As Scripting.FileSystemObject
 Private mTsOut As Scripting.TextStream
 
@@ -238,10 +236,6 @@ Friend Property Let commonServiceConsumer(ByVal RHS As TradeBuildSP.ICommonServi
 Set mCommonServiceConsumer = RHS
 End Property
 
-Friend Property Let logLevel(ByVal RHS As TradeBuildSP.LogLevels)
-mLogLevel = RHS
-End Property
-
 Friend Property Let path(ByVal value As String)
 If value = "" Then Exit Property
 mPath = value
@@ -400,12 +394,11 @@ End Sub
 
 Private Sub logMessage( _
                 ByVal message As String, _
-                Optional ByVal logLevel As LogLevels = LogLevelLow)
-If mLogLevel < logLevel Or _
-    mLogLevel = LogLevelNone Then Exit Sub
-mCommonServiceConsumer.NotifyListeners "TickfileSP: " & message, _
-                                        TradeBuildSP.StandardListenValueTypes.Log, _
-                                        Me
+                Optional ByVal logLevel As LogLevels = LogLevelNormal)
+If Not gLogger.isLoggable(logLevel) Then Exit Sub
+gLogger.Log logLevel, _
+            message, _
+            Me
 End Sub
 
 Private Sub writeTickData( _

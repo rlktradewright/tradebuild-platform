@@ -41,18 +41,8 @@ Option Explicit
 
 Public Type StudyValueEvent
     source              As Object
-    value               As Variant
     valueName           As String
-    timestamp           As Date
-    barNumber           As Long
-    barStartTime        As Date
-End Type
-
-Public Type StudyValue
-    value           As Variant
-    barNumber       As Long
-    timestamp       As Date
-    barStartTime    As Date
+    sVal                As SValue
 End Type
 
 '@================================================================================
@@ -94,22 +84,8 @@ Public Function AvailableStudies() As StudyListEntry()
 AvailableStudies = Globals.StudyLibraryManager.AvailableStudies
 End Function
 
-Public Function CreateBars( _
-                ByVal barLength As Long, _
-                ByVal timeUnits As TimePeriodUnits, _
-                ByVal pSession As session, _
-                Optional ByVal tickSize As Double = 0.01, _
-                Optional ByVal numberOfBarsToCache As Long) As bars
-Set CreateBars = New bars
-CreateBars.initialise barLength, _
-                            timeUnits, _
-                            pSession, _
-                            tickSize, _
-                            numberOfBarsToCache
-End Function
-
 Public Function CreateCacheReplayTask( _
-                ByVal valueCache As StudyValueCache, _
+                ByVal valueCache As valueCache, _
                 ByVal target As Object, _
                 ByVal sourceStudy As study, _
                 ByVal numberOfValuesToReplay As Long, _
@@ -128,19 +104,6 @@ Public Function CreateStudyPoint( _
 Set CreateStudyPoint = New StudyPoint
 CreateStudyPoint.x = x
 CreateStudyPoint.y = y
-End Function
-
-Public Function CreateStudyValueCache( _
-                ByVal cyclicSize As Long, _
-                ByVal valueName As String) As StudyValueCache
-Set CreateStudyValueCache = New StudyValueCache
-CreateStudyValueCache.initialise cyclicSize, valueName
-End Function
-
-Public Function CreateVolumeParser( _
-                ByVal pSession As session) As VolumeParser
-Set CreateVolumeParser = New VolumeParser
-CreateVolumeParser.initialise pSession
 End Function
 
 Public Function DefaultStudyValueName() As String

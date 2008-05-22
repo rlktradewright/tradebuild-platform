@@ -63,7 +63,7 @@ Private mStudyToNotify As study
 Private mTargetListener As StudyValueListener
 Private mSourceStudy As study
 Private mDiscriminator As Long
-Private mValueCache As StudyValueCache
+Private mValueCache As valueCache
 
 Private mFirstValueNumber As Long
 Private mNextValueNumber As Long
@@ -120,13 +120,17 @@ End Property
 ' Task Interface Members
 '@================================================================================
 
+Private Sub task_cancel()
+
+End Sub
+
 Private Property Get task_TaskName() As String
 task_TaskName = mTaskContext.name
 End Property
 
 Private Sub Task_run()
 Dim ev As StudyValueEvent
-Dim valueEntry As StudyValue
+Dim valueEntry As SValue
 
 If mValueCache.count = 0 Then
     mTaskContext.progress 100
@@ -142,20 +146,13 @@ If mTaskContext.cancelPending Then
     Exit Sub
 End If
 
-valueEntry = mValueCache.getStudyValue(mNextValueNumber)
+valueEntry = mValueCache.getSValue(mNextValueNumber)
 If Not IsEmpty(valueEntry.value) Then
     Set ev.source = mSourceStudy
-    ev.timestamp = valueEntry.timestamp
-    ev.barNumber = valueEntry.barNumber
-    ev.barStartTime = valueEntry.barStartTime
-    If TypeOf valueEntry.value Is Object  Then
-        Set ev.value = valueEntry.value
-    Else
-        ev.value = valueEntry.value
-    End If
+    ev.sVal = valueEntry
     
     If mTargetIsStudy Then
-        mSessionBuilder.setSessionCurrentTime ev.timestamp
+        mSessionBuilder.setSessionCurrentTime ev.sVal.timestamp
         ev.valueName = mNotifyName
         mStudyToNotify.notify ev
     Else
@@ -227,7 +224,7 @@ End Property
 '@================================================================================
 
 Friend Sub initialise( _
-                ByVal valueCache As StudyValueCache, _
+                ByVal valueCache As valueCache, _
                 ByVal target As Object, _
                 ByVal sourceStudy As study, _
                 ByVal numberOfValuesToReplay As Long, _

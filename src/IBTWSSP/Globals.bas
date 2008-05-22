@@ -19,7 +19,6 @@ Public Const providerKey As String = "TWS"
 Public Const ParamNameClientId As String = "Client Id"
 Public Const ParamNameConnectionRetryIntervalSecs As String = "Connection Retry Interval Secs"
 Public Const ParamNameKeepConnection As String = "Keep Connection"
-Public Const ParamNameLogLevel As String = "Log Level"
 Public Const ParamNamePort As String = "Port"
 Public Const ParamNameProviderKey As String = "Provider Key"
 Public Const ParamNameRole As String = "Role"
@@ -69,14 +68,25 @@ Private mTWSAPITableNextIndex As Long
 
 Private mRandomClientIds As Collection
 
+Private mLogger As Logger
+
 '================================================================================
-' Procedures
+' Properties
 '================================================================================
 
 Public Property Let gCommonServiceConsumer( _
                 ByVal RHS As TradeBuildSP.ICommonServiceConsumer)
 Set mCommonServiceConsumer = RHS
 End Property
+
+Public Property Get gLogger() As Logger
+If mLogger Is Nothing Then Set mLogger = GetLogger("log.serviceprovider.ibtwssp")
+Set gLogger = mLogger
+End Property
+
+'================================================================================
+' Methods
+'================================================================================
 
 Public Function gGetTWSAPIInstance( _
                 ByVal server As String, _
@@ -85,7 +95,6 @@ Public Function gGetTWSAPIInstance( _
                 ByVal providerKey As String, _
                 ByVal connectionRetryIntervalSecs As Long, _
                 ByVal keepConnection As Boolean, _
-                ByVal logLevel As LogLevels, _
                 ByVal TWSLogLevel As TWSLogLevels) As TWSAPI
 Dim i As Long
 
@@ -111,7 +120,6 @@ For i = 0 To mTWSAPITableNextIndex - 1
         Then
             mTWSAPITable(i).connectionRetryIntervalSecs = connectionRetryIntervalSecs
         End If
-        If gGetTWSAPIInstance.logLevel < LogLevelAll Then gGetTWSAPIInstance.logLevel = logLevel
         Exit Function
     End If
 Next
@@ -138,7 +146,6 @@ gGetTWSAPIInstance.port = port
 gGetTWSAPIInstance.clientID = clientID
 gGetTWSAPIInstance.providerKey = providerKey
 gGetTWSAPIInstance.connectionRetryIntervalSecs = connectionRetryIntervalSecs
-gGetTWSAPIInstance.logLevel = logLevel
 gGetTWSAPIInstance.TWSLogLevel = TWSLogLevel
 gGetTWSAPIInstance.Connect
 
@@ -157,7 +164,7 @@ Public Function gParseClientId( _
 If value = "" Then
     gParseClientId = -1
 ElseIf Not IsInteger(value) Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    err.Raise ErrorCodes.ErrIllegalArgumentException, _
             , _
             "Invalid 'Client Id' parameter: value must be an integer"
 Else
@@ -170,7 +177,7 @@ Public Function gParseConnectionRetryInterval( _
 If value = "" Then
     gParseConnectionRetryInterval = 0
 ElseIf Not IsInteger(value, 0) Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    err.Raise ErrorCodes.ErrIllegalArgumentException, _
             , _
             "Invalid 'Connection Retry Interval Secs' parameter: value must be an integer >= 0"
 Else
@@ -180,7 +187,7 @@ End Function
 
 Public Function gParseKeepConnection( _
                 value As String) As Boolean
-On Error GoTo Err
+On Error GoTo err
 If value = "" Then
     gParseKeepConnection = False
 Else
@@ -188,23 +195,10 @@ Else
 End If
 Exit Function
 
-Err:
-Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+err:
+err.Raise ErrorCodes.ErrIllegalArgumentException, _
         , _
         "Invalid 'Keep Connection' parameter: value must be 'true' or 'false'"
-End Function
-
-Public Function gParseLogLevel( _
-                value As String) As Long
-If value = "" Then
-    gParseLogLevel = LogLevels.LogLevelLow
-ElseIf Not IsInteger(value, 0, 4) Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            , _
-            "Invalid 'Log Level' parameter: value must be a positive integer less than 5 "
-Else
-    gParseLogLevel = CLng(value)
-End If
 End Function
 
 Public Function gParsePort( _
@@ -212,7 +206,7 @@ Public Function gParsePort( _
 If value = "" Then
     gParsePort = 7496
 ElseIf Not IsInteger(value, 1024, 65535) Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    err.Raise ErrorCodes.ErrIllegalArgumentException, _
             , _
             "Invalid 'Port' parameter: value must be an integer >= 1024 and <=65535"
 Else
@@ -229,7 +223,7 @@ Case "", "P", "PR", "PRIM", "PRIMARY"
 Case "S", "SEC", "SECOND", "SECONDARY"
     gParseRole = "SECONDARY"
 Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    err.Raise ErrorCodes.ErrIllegalArgumentException, _
             , _
             "Invalid 'Role' parameter: value must be one of 'P', 'PR', 'PRIM', 'PRIMARY', 'S', 'SEC', 'SECOND', or 'SECONDARY'"
 End Select
@@ -237,7 +231,7 @@ End Function
 
 Public Function gParseTwsLogLevel( _
                 value As String) As TWSLogLevels
-On Error GoTo Err
+On Error GoTo err
 If value = "" Then
     gParseTwsLogLevel = TWSLogLevelError
 Else
@@ -245,8 +239,8 @@ Else
 End If
 Exit Function
 
-Err:
-Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+err:
+err.Raise ErrorCodes.ErrIllegalArgumentException, _
         , _
         "Invalid 'Tws Log Level' parameter: value must be one of " & _
         TWSLogLevelSystemString & ", " & _
@@ -394,7 +388,7 @@ Case UCase$(TWSLogLevelSystemString)
 Case UCase$(TWSLogLevelWarningString)
     gTwsLogLevelFromString = TWSLogLevelWarning
 Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException
+    err.Raise ErrorCodes.ErrIllegalArgumentException
 End Select
 End Function
 

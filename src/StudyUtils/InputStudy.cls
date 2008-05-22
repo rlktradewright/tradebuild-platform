@@ -108,7 +108,7 @@ End Property
 
 Private Function Study_getStudyValue( _
                 ByVal valueName As String, _
-                ByVal ref As Long) As StudyValue
+                ByVal ref As Long) As SValue
 
 End Function
 
@@ -144,16 +144,16 @@ Private Sub Study_Notify( _
                 ByRef ev As StudyValueEvent)
 Dim evOut As StudyValueEvent
 
-mTimestamp = ev.timestamp
-mSessionBuilder.setSessionCurrentTime ev.timestamp
+mTimestamp = ev.sVal.timestamp
+mSessionBuilder.setSessionCurrentTime ev.sVal.timestamp
 
 evOut = ev
 
 If mUseLocalTimeForStudies Then
-    evOut.timestamp = ConvertDateUTCToLocal(ConvertDateTzToUTC(ev.timestamp, mExchangeTimeZone))
+    evOut.sVal.timestamp = ConvertDateUTCToLocal(ConvertDateTzToUTC(ev.sVal.timestamp, mExchangeTimeZone))
 End If
 
-evOut.barStartTime = 0  ' a higher level study must generate this
+evOut.sVal.barStartTime = 0  ' a higher level study must generate this
 mStudies.notify evOut
 mListeners.notify evOut
 End Sub

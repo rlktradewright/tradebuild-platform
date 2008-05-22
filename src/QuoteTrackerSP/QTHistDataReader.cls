@@ -74,7 +74,7 @@ Private mLockId As Long
 
 Private mRequestId As Long
 
-Private mBarDataSpecifier  As TradeBuildSP.IBarDataSpecifier
+Private mBarDataSpecifier  As BarDataSpecifier
 
 Private mWaitingForBarData As Boolean
 Private mBarRequested As Boolean
@@ -89,7 +89,6 @@ Private Sub Class_Initialize()
 
 mPort = 7496
 mConnectionRetryIntervalSecs = 10
-mLogLevel = LogLevelLow
 
 mRequestId = -1
 End Sub
@@ -105,7 +104,7 @@ End Sub
 '================================================================================
 
 Private Property Get IBarDataReader_BarDataSpecifier( _
-                            ) As TradeBuildSP.IBarDataSpecifier
+                            ) As BarDataSpecifier
 Set IBarDataReader_BarDataSpecifier = mBarDataSpecifier
 End Property
 
@@ -120,14 +119,14 @@ handleFatalError err.Number, _
 End Sub
 
 Private Sub IBarDataReader_FetchBars( _
-                ByVal barSpecifier As TradeBuildSP.IBarDataSpecifier)
+                ByVal barSpecifier As BarDataSpecifier)
 
 On Error GoTo err
 If mRequestInProgress Then err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "IBTWSSP.HistDataReader::FetchBars", _
                                     "Request already in progress"
 
-Select Case barSpecifier.BarLengthUnits
+Select Case barSpecifier.barLengthUnits
 Case TimePeriodMinute, _
     TimePeriodHour, _
     TimePeriodDay, _
@@ -386,24 +385,12 @@ mHistDataServiceProvider.dataReaderFinished Me
 End Sub
 
 Private Sub ProcessBar()
-Dim lBar As TradeBuildSP.Bar
+Dim lBar As Bar
 Dim barLength As Long
 Dim barUnits As TimePeriodUnits
 
 With lBar
-    If Not mQTAPI.readHistoricalBar( _
-                            mRequestId, _
-                            .timestamp, _
-                            barLength, _
-                            barUnits, _
-                            .openPrice, _
-                            .highPrice, _
-                            .lowPrice, _
-                            .closePrice, _
-                            .volume, _
-                            .tickVolume, _
-                            .openInterest) _
-    Then
+    If Not mQTAPI.readHistoricalBar(mRequestId, lBar, barLength, barUnits) Then
         mServiceConsumer.BarDataComplete
         mRequestInProgress = False
         mRequestId = -1

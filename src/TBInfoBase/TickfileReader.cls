@@ -112,7 +112,7 @@ mTickfileServiceProvider.dataReaderFinished Me
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "TickfileReader" & "::" & "ITickfileReader_CloseInputFile", _
+                ProjectName & "." & ModuleName & "::" & "ITickfileReader_CloseInputFile", _
                 Err.Description
 End Sub
 
@@ -123,21 +123,21 @@ Set mContract = RHS
 
 With mInputTickfileSpecifier
     If .EntireSession Then
-        st = GetSessionTimes(.fromDate, _
+        st = GetSessionTimes(.FromDate, _
                     mContract.sessionStartTime, _
                     mContract.sessionEndTime)
-    .fromDate = st.startTime
-    .toDate = st.endTime
+    .FromDate = st.startTime
+    .ToDate = st.endTime
     End If
     
     ' the following is a kludge. We need to modify the service provider handshake so
     ' that so there is something after the 'ready' which tells the tickfile manager
     ' to start the replay, because we haven't got the data at this point (which is after
     ' 'ready' has been sent. Then we can get the firsttickfiletime from the data)
-    mFirstTickFileTime = .fromDate
+    mFirstTickFileTime = .FromDate
     
-    mTickReader.FetchData gTruncateTimeToMinute(.fromDate), _
-                            gTruncateTimeToNextMinute(.toDate)
+    mTickReader.FetchData gTruncateTimeToMinute(.FromDate), _
+                            gTruncateTimeToNextMinute(.ToDate)
 End With
 
 mFetchInProgress = True
@@ -211,7 +211,7 @@ Set mTickReader = mInstrument.CreateTickDataReader
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "TickfileReader" & "::" & "ITickfileReader_ReplayTickfile", _
+                ProjectName & "." & ModuleName & "::" & "ITickfileReader_ReplayTickfile", _
                 Err.Description
 
 End Sub
@@ -240,7 +240,7 @@ mServiceConsumer.NotifyEvent StandardSPEventCodes.TFCantConnectDataSource, _
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "TickfileReader" & "::" & "mTickReader_ConnectFailed", _
+                ProjectName & "." & ModuleName & "::" & "mTickReader_ConnectFailed", _
                 Err.Description
 End Sub
 
@@ -269,7 +269,7 @@ End If
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "TickfileReader" & "::" & "mTickReader_DataFetched", _
+                ProjectName & "." & ModuleName & "::" & "mTickReader_DataFetched", _
                 Err.Description
 End Sub
 
@@ -283,7 +283,7 @@ mCommonServiceConsumer.ServiceProviderError errorCode, _
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "TickfileReader" & "::" & "mTickReader_Error", _
+                ProjectName & "." & ModuleName & "::" & "mTickReader_Error", _
                 Err.Description
 End Sub
 
@@ -300,7 +300,7 @@ mServiceConsumer.Ready mInputTickfileSpecifier, 0
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "TickfileReader" & "::" & "mTickReader_Ready", _
+                ProjectName & "." & ModuleName & "::" & "mTickReader_Ready", _
                 Err.Description
 
 End Sub
@@ -319,7 +319,7 @@ mServiceConsumer.NotifyEvent StandardSPEventCodes.TFCantConnectDataSource, _
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "TickfileReader" & "::" & "mTradingDB_ConnectFailed", _
+                ProjectName & "." & ModuleName & "::" & "mTradingDB_ConnectFailed", _
                 Err.Description
 End Sub
 
@@ -408,12 +408,12 @@ Do
     If Not mTdd.getNextTick(tick) Then
         If Not getNextPeriodData Then Exit Sub
     End If
-    If tick.timestamp >= mInputTickfileSpecifier.fromDate Then
+    If tick.timestamp >= mInputTickfileSpecifier.FromDate Then
         Exit Do
     End If
 Loop
     
-If tick.timestamp >= mInputTickfileSpecifier.toDate Then
+If tick.timestamp >= mInputTickfileSpecifier.ToDate Then
     mServiceConsumer.TickfileReplayComplete
     Exit Sub
 End If
@@ -453,22 +453,22 @@ Case TickTypeMarketDepthReset
 Case TickTypeTrade
     mDataConsumer.Trade tick.timestamp, tick.price, tick.size
 Case TickTypeVolume
-    mDataConsumer.volume tick.timestamp, tick.size
+    mDataConsumer.Volume tick.timestamp, tick.size
 Case TickTypeOpenInterest
-    mDataConsumer.openInterest tick.timestamp, tick.size
+    mDataConsumer.OpenInterest tick.timestamp, tick.size
 End Select
 
 If mRecordsRead Mod mReplayProgressEventFrequency = 0 Then
     mServiceConsumer.ReplayProgress tick.timestamp, _
                             mRecordsRead, _
-                            100 * (tick.timestamp - mInputTickfileSpecifier.fromDate) / (mInputTickfileSpecifier.toDate - mInputTickfileSpecifier.fromDate)
+                            100 * (tick.timestamp - mInputTickfileSpecifier.FromDate) / (mInputTickfileSpecifier.ToDate - mInputTickfileSpecifier.FromDate)
 End If
 
 Exit Sub
 
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "TickfileReader" & "::" & "ITickfileReader_processTickRequest", _
+                ProjectName & "." & ModuleName & "::" & "ITickfileReader_processTickRequest", _
                 Err.Description
 
 End Sub

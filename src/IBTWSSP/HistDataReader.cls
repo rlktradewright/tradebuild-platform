@@ -72,12 +72,11 @@ Private mRequestInProgress As Boolean
 
 Private mRequestId As Long
 
-Private mBarDataSpecifier  As TradeBuildSP.IBarDataSpecifier
+Private mBarDataSpecifier  As BarDataSpecifier
 
 Private mWaitingForBarData As Boolean
 Private mBarRequested As Boolean
 
-Private mLogLevel As LogLevels
 Private mTWSLogLevel As TWSLogLevels
 
 Private mSessionBuilder As SessionBuilder
@@ -91,7 +90,6 @@ Private Sub Class_Initialize()
 mClientID = -1
 mPort = 7496
 mConnectionRetryIntervalSecs = 10
-mLogLevel = LogLevelLow
 mTWSLogLevel = TWSLogLevelError
 
 mRequestId = -1
@@ -107,7 +105,7 @@ End Sub
 '================================================================================
 
 Private Property Get IBarDataReader_BarDataSpecifier( _
-                            ) As TradeBuildSP.IBarDataSpecifier
+                            ) As BarDataSpecifier
 Set IBarDataReader_BarDataSpecifier = mBarDataSpecifier
 End Property
 
@@ -122,14 +120,14 @@ handleFatalError err.number, _
 End Sub
 
 Private Sub IBarDataReader_FetchBars( _
-                            ByVal barSpecifier As TradeBuildSP.IBarDataSpecifier)
+                            ByVal barSpecifier As BarDataSpecifier)
 
 On Error GoTo err
 If mRequestInProgress Then err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "IBTWSSP.HistDataReader::FetchBars", _
                                     "Request already in progress"
 
-Select Case barSpecifier.BarLengthUnits
+Select Case barSpecifier.barLengthUnits
 Case TimePeriodSecond, _
         TimePeriodMinute, _
         TimePeriodHour, _
@@ -164,8 +162,8 @@ mSessionBuilder.sessionEndTime = mBarDataSpecifier.Contract.sessionEndTime
 Set mSession = mSessionBuilder.Session
 
 If mTWSAPI Is Nothing Then
-    Set mTWSAPI = gGetTWSAPIInstance(mServer, mPort, mClientID, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection, mLogLevel, mTWSLogLevel)
-    mTWSAPI.TwsLogLevel = mTWSLogLevel
+    Set mTWSAPI = gGetTWSAPIInstance(mServer, mPort, mClientID, mProviderKey, mConnectionRetryIntervalSecs, mkeepConnection, mTWSLogLevel)
+    mTWSAPI.TWSLogLevel = mTWSLogLevel
     If mTWSAPI.connectionState = ConnConnected Then
     mServiceConsumer.NotifyEvent StandardSPEventCodes.HDConnectedToDataSource, _
                             "Connected to " & mTWSAPI.connectionString, _
@@ -331,10 +329,6 @@ Public Property Let keepConnection(ByVal value As Boolean)
 mkeepConnection = value
 End Property
 
-Friend Property Let logLevel(ByVal value As LogLevels)
-mLogLevel = value
-End Property
-
 Friend Property Let port(ByVal value As Long)
 mPort = value
 End Property
@@ -351,7 +345,7 @@ Friend Property Let ServiceProviderName(ByVal value As String)
 mServiceProviderName = value
 End Property
 
-Friend Property Let TwsLogLevel(ByVal value As TWSLogLevels)
+Friend Property Let TWSLogLevel(ByVal value As TWSLogLevels)
 mTWSLogLevel = value
 End Property
 
@@ -406,19 +400,24 @@ mHistDataServiceProvider.dataReaderFinished Me
 End Sub
 
 Private Sub ProcessBar()
-Dim lBar As TradeBuildSP.Bar
+Dim lBar As Bar
 Dim barLength As Long
 Dim barUnit As TimePeriodUnits
 
-Do While mTWSAPI.ReadHistoricalBar(mRequestId, lBar, barLength, barUnit)
-    mSessionBuilder.setSessionCurrentTime lBar.timestamp
-    If mBarDataSpecifier.includeBarsOutsideSession Or _
-        mSession.isTimeInSession(lBar.timestamp) _
-    Then
+'Do While mTWSAPI.ReadHistoricalBar(mRequestId, lBar, barLength, barUnit)
+'    mSessionBuilder.setSessionCurrentTime lBar.timestamp
+'    If mBarDataSpecifier.includeBarsOutsideSession Or _
+'        mSession.isTimeInSession(lBar.timestamp) _
+'    Then
+'        mDataConsumer.Bar lBar, barLength, barUnit
+'        Exit Sub
+'    End If
+'Loop
+
+If mTWSAPI.ReadHistoricalBar(mRequestId, lBar, barLength, barUnit) Then
         mDataConsumer.Bar lBar, barLength, barUnit
         Exit Sub
-    End If
-Loop
+End If
 
 mServiceConsumer.BarDataComplete
 mRequestInProgress = False

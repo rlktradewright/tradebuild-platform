@@ -20,7 +20,6 @@ Public Const ParamNamePassword As String = "Password"
 Public Const ParamNameConnectionRetryIntervalSecs As String = "Connection Retry Interval Secs"
 Public Const ParamNameKeepConnection As String = "Keep Connection"
 Public Const ParamNameProviderKey As String = "Provider Key"
-Public Const ParamNameLogLevel As String = "Log Level"
 
 '================================================================================
 ' Enums
@@ -150,8 +149,19 @@ Public Declare Function TzSpecificLocalTimeToSystemTime Lib "kernel32" ( _
 Private mQTAPITable() As QTAPITableEntry
 Private mQTAPITableNextIndex As Long
 
+Private mLogger As Logger
+
 '================================================================================
-' Procedures
+' Properties
+'================================================================================
+
+Public Property Get gLogger() As Logger
+If mLogger Is Nothing Then Set mLogger = GetLogger("log.serviceprovider.qtsp")
+Set gLogger = mLogger
+End Property
+
+'================================================================================
+' Methods
 '================================================================================
 
 Public Function gCapabilities() As Long

@@ -59,19 +59,19 @@ Private mLow As Double
 Private mPrevLow As Double
 Private mPrevPrevLow As Double
 
-Private mSwingCache As StudyValueCache
+Private mSwingCache As ValueCache
 Private mSwingLineBuilder As StudyLineBuilder
-Private mSwingLineCache As StudyValueCache
+Private mSwingLineCache As ValueCache
 
 Private mSwingHigh As SwingPoint
-Private mSwingHighCache As StudyValueCache
+Private mSwingHighCache As ValueCache
 Private mSwingHighLineBuilder As StudyLineBuilder
-Private mSwingHighLineCache As StudyValueCache
+Private mSwingHighLineCache As ValueCache
 
 Private mSwingLow As SwingPoint
-Private mSwingLowCache As StudyValueCache
+Private mSwingLowCache As ValueCache
 Private mSwingLowLineBuilder As StudyLineBuilder
-Private mSwingLowLineCache As StudyValueCache
+Private mSwingLowLineCache As ValueCache
 
 Private mHighBeforeLowPoint As SwingPoint
 Private mHighAfterLowPoint As SwingPoint
@@ -137,23 +137,23 @@ Static sPrevVal As Variant
 Dim prevSwingHigh As SwingPoint
 Dim prevSwingLow As SwingPoint
 
-If IsEmpty(ev.value) Then Exit Sub
+If IsEmpty(ev.sVal.value) Then Exit Sub
 
 If Not mStudyFoundation.isNewBar Then
-    If ev.value = sPrevVal Then Exit Sub
+    If ev.sVal.value = sPrevVal Then Exit Sub
 End If
-sPrevVal = ev.value
+sPrevVal = ev.sVal.value
 
 If Not mSwingLineBuilder Is Nothing Then
-    mSwingLineBuilder.point2 = CreateStudyPoint(ev.timestamp, ev.value)
+    mSwingLineBuilder.point2 = CreateStudyPoint(ev.sVal.timestamp, ev.sVal.value)
     notifySwingLine
 End If
 If Not mSwingHighLineBuilder Is Nothing Then
-    mSwingHighLineBuilder.point2 = CreateStudyPoint(ev.timestamp, ev.value)
+    mSwingHighLineBuilder.point2 = CreateStudyPoint(ev.sVal.timestamp, ev.sVal.value)
     notifySwingHighLine
 End If
 If Not mSwingLowLineBuilder Is Nothing Then
-    mSwingLowLineBuilder.point2 = CreateStudyPoint(ev.timestamp, ev.value)
+    mSwingLowLineBuilder.point2 = CreateStudyPoint(ev.sVal.timestamp, ev.sVal.value)
     notifySwingLowLine
 End If
 
@@ -163,31 +163,31 @@ If mSwingLowCache.Count >= 1 Then prevSwingLow = mSwingLowCache.getValue(0)
 If mStudyFoundation.isNewBar Then
     mPrevPrevLow = mPrevLow
     mPrevLow = mLow
-    mLow = ev.value
+    mLow = ev.sVal.value
     mPrevPrevHigh = mPrevHigh
     mPrevHigh = mHigh
-    mHigh = ev.value
+    mHigh = ev.sVal.value
 
     mHighAfterLowPointExcl = mHighAfterLowPoint
     mLowAfterHighPointExcl = mLowAfterHighPoint
     
     If mStudyFoundation.localBarNumber = 1 Then
-        mSwingHigh.barNumber = ev.barNumber
-        mSwingHigh.barStartTime = ev.barStartTime
-        mSwingHigh.timestamp = ev.timestamp
+        mSwingHigh.barNumber = ev.sVal.barNumber
+        mSwingHigh.barStartTime = ev.sVal.barStartTime
+        mSwingHigh.timestamp = ev.sVal.timestamp
         mSwingHigh.value = Empty
-        mSwingCache.addValue mSwingHigh, 1, ev.timestamp, ev.barStartTime
-        mSwingLineCache.addValue Nothing, 1, ev.timestamp, ev.barStartTime
-        mSwingHighCache.addValue mSwingHigh, 1, ev.timestamp, ev.barStartTime
-        mSwingHighLineCache.addValue Nothing, 1, ev.timestamp, ev.barStartTime
+        mSwingCache.addValue mSwingHigh, 1, ev.sVal.timestamp, ev.sVal.barStartTime
+        mSwingLineCache.addValue Nothing, 1, ev.sVal.timestamp, ev.sVal.barStartTime
+        mSwingHighCache.addValue mSwingHigh, 1, ev.sVal.timestamp, ev.sVal.barStartTime
+        mSwingHighLineCache.addValue Nothing, 1, ev.sVal.timestamp, ev.sVal.barStartTime
         mSwingHigh.value = DummyHigh
         
-        mSwingLow.barNumber = ev.barNumber
-        mSwingLow.barStartTime = ev.barStartTime
-        mSwingLow.timestamp = ev.timestamp
+        mSwingLow.barNumber = ev.sVal.barNumber
+        mSwingLow.barStartTime = ev.sVal.barStartTime
+        mSwingLow.timestamp = ev.sVal.timestamp
         mSwingLow.value = Empty
-        mSwingLowCache.addValue mSwingLow, 1, ev.timestamp, ev.barStartTime
-        mSwingLowLineCache.addValue Nothing, 1, ev.timestamp, ev.barStartTime
+        mSwingLowCache.addValue mSwingLow, 1, ev.sVal.timestamp, ev.sVal.barStartTime
+        mSwingLowLineCache.addValue Nothing, 1, ev.sVal.timestamp, ev.sVal.barStartTime
         mSwingLow.value = DummyLow
     End If
     
@@ -248,9 +248,9 @@ If mStudyFoundation.isNewBar Then
             
             prevSwingHigh = mSwingHigh
             mSwingHigh.value = DummyHigh
-            mSwingHigh.barNumber = ev.barNumber
-            mSwingHigh.barStartTime = ev.barStartTime
-            mSwingHigh.timestamp = ev.timestamp
+            mSwingHigh.barNumber = ev.sVal.barNumber
+            mSwingHigh.barStartTime = ev.sVal.barStartTime
+            mSwingHigh.timestamp = ev.sVal.timestamp
             mSwingHigh.swingType = SwingUnknownHigh
             mSwingHigh.implied = False
                 
@@ -262,9 +262,9 @@ If mStudyFoundation.isNewBar Then
                 mSwingLow.timestamp < prevSwingHigh.timestamp _
             Then
                 mSwingLow.value = DummyLow
-                mSwingLow.barNumber = ev.barNumber
-                mSwingLow.barStartTime = ev.barStartTime
-                mSwingLow.timestamp = ev.timestamp
+                mSwingLow.barNumber = ev.sVal.barNumber
+                mSwingLow.barStartTime = ev.sVal.barStartTime
+                mSwingLow.timestamp = ev.sVal.timestamp
                 mSwingLow.swingType = SwingUnknownLow
                 mSwingLow.implied = False
             End If
@@ -327,9 +327,9 @@ If mStudyFoundation.isNewBar Then
             
             prevSwingLow = mSwingLow
             mSwingLow.value = DummyLow
-            mSwingLow.barNumber = ev.barNumber
-            mSwingLow.barStartTime = ev.barStartTime
-            mSwingLow.timestamp = ev.timestamp
+            mSwingLow.barNumber = ev.sVal.barNumber
+            mSwingLow.barStartTime = ev.sVal.barStartTime
+            mSwingLow.timestamp = ev.sVal.timestamp
             mSwingLow.swingType = SwingUnknownLow
             mSwingLow.implied = False
             
@@ -341,9 +341,9 @@ If mStudyFoundation.isNewBar Then
                 mSwingHigh.timestamp < prevSwingLow.timestamp _
             Then
                 mSwingHigh.value = DummyHigh
-                mSwingHigh.barNumber = ev.barNumber
-                mSwingHigh.barStartTime = ev.barStartTime
-                mSwingHigh.timestamp = ev.timestamp
+                mSwingHigh.barNumber = ev.sVal.barNumber
+                mSwingHigh.barStartTime = ev.sVal.barStartTime
+                mSwingHigh.timestamp = ev.sVal.timestamp
                 mSwingHigh.swingType = SwingUnknownHigh
                 mSwingHigh.implied = False
             End If
@@ -354,11 +354,11 @@ If mStudyFoundation.isNewBar Then
 
 End If
 
-If ev.value < mLow Then mLow = ev.value
-If ev.value > mHigh Then mHigh = ev.value
+If ev.sVal.value < mLow Then mLow = ev.sVal.value
+If ev.sVal.value > mHigh Then mHigh = ev.sVal.value
 
 If Not IsEmpty(prevSwingHigh.value) Then
-    If ev.value > prevSwingHigh.value Then
+    If ev.sVal.value > prevSwingHigh.value Then
         If prevSwingHigh.swingType = SwingUnknownHigh Then
             prevSwingHigh.swingType = SwingMinorHigh
             mSwingHighCache.updateValue prevSwingHigh, prevSwingHigh.barNumber, prevSwingHigh.timestamp
@@ -366,7 +366,7 @@ If Not IsEmpty(prevSwingHigh.value) Then
     End If
 End If
 If Not IsEmpty(prevSwingLow.value) Then
-    If ev.value < prevSwingLow.value Then
+    If ev.sVal.value < prevSwingLow.value Then
         If prevSwingLow.swingType = SwingUnknownLow Then
             prevSwingLow.swingType = SwingMinorLow
             mSwingLowCache.updateValue prevSwingLow, prevSwingLow.barNumber, prevSwingLow.timestamp
@@ -375,54 +375,54 @@ If Not IsEmpty(prevSwingLow.value) Then
 End If
 
 If (mSwingHigh.value = DummyHigh And _
-    ev.value >= mPrevHigh And _
-    ev.value >= mPrevPrevHigh) Or _
-    (mSwingHigh.value <> DummyHigh And ev.value >= mSwingHigh.value) _
+    ev.sVal.value >= mPrevHigh And _
+    ev.sVal.value >= mPrevPrevHigh) Or _
+    (mSwingHigh.value <> DummyHigh And ev.sVal.value >= mSwingHigh.value) _
 Then
-    mSwingHigh.value = ev.value
-    mSwingHigh.barNumber = ev.barNumber
-    mSwingHigh.barStartTime = ev.barStartTime
-    mSwingHigh.timestamp = ev.timestamp
+    mSwingHigh.value = ev.sVal.value
+    mSwingHigh.barNumber = ev.sVal.barNumber
+    mSwingHigh.barStartTime = ev.sVal.barStartTime
+    mSwingHigh.timestamp = ev.sVal.timestamp
     
     If mLowBeforeHighPoint.value >= mLowAfterHighPoint.value Then
         mLowBeforeHighPoint = mLowAfterHighPoint
     End If
-    mLowAfterHighPoint.value = ev.value
-    mLowAfterHighPoint.timestamp = ev.timestamp
-    mLowAfterHighPoint.barNumber = ev.barNumber
-    mLowAfterHighPoint.barStartTime = ev.barStartTime
+    mLowAfterHighPoint.value = ev.sVal.value
+    mLowAfterHighPoint.timestamp = ev.sVal.timestamp
+    mLowAfterHighPoint.barNumber = ev.sVal.barNumber
+    mLowAfterHighPoint.barStartTime = ev.sVal.barStartTime
 End If
 
 If (mSwingLow.value = DummyLow And _
-    ev.value <= mPrevLow And _
-    ev.value <= mPrevPrevLow) Or _
-    (mSwingLow.value <> DummyLow And ev.value <= mSwingLow.value) _
+    ev.sVal.value <= mPrevLow And _
+    ev.sVal.value <= mPrevPrevLow) Or _
+    (mSwingLow.value <> DummyLow And ev.sVal.value <= mSwingLow.value) _
 Then
-    mSwingLow.value = ev.value
-    mSwingLow.barNumber = ev.barNumber
-    mSwingLow.barStartTime = ev.barStartTime
-    mSwingLow.timestamp = ev.timestamp
+    mSwingLow.value = ev.sVal.value
+    mSwingLow.barNumber = ev.sVal.barNumber
+    mSwingLow.barStartTime = ev.sVal.barStartTime
+    mSwingLow.timestamp = ev.sVal.timestamp
     
     If mHighBeforeLowPoint.value <= mHighAfterLowPoint.value Then
         mHighBeforeLowPoint = mHighAfterLowPoint
     End If
-    mHighAfterLowPoint.value = ev.value
-    mHighAfterLowPoint.timestamp = ev.timestamp
-    mHighAfterLowPoint.barNumber = ev.barNumber
-    mHighAfterLowPoint.barStartTime = ev.barStartTime
+    mHighAfterLowPoint.value = ev.sVal.value
+    mHighAfterLowPoint.timestamp = ev.sVal.timestamp
+    mHighAfterLowPoint.barNumber = ev.sVal.barNumber
+    mHighAfterLowPoint.barStartTime = ev.sVal.barStartTime
 End If
 
-If ev.value >= mHighAfterLowPoint.value Then
-    mHighAfterLowPoint.value = ev.value
-    mHighAfterLowPoint.timestamp = ev.timestamp
-    mHighAfterLowPoint.barNumber = ev.barNumber
-    mHighAfterLowPoint.barStartTime = ev.barStartTime
+If ev.sVal.value >= mHighAfterLowPoint.value Then
+    mHighAfterLowPoint.value = ev.sVal.value
+    mHighAfterLowPoint.timestamp = ev.sVal.timestamp
+    mHighAfterLowPoint.barNumber = ev.sVal.barNumber
+    mHighAfterLowPoint.barStartTime = ev.sVal.barStartTime
 End If
-If ev.value <= mLowAfterHighPoint.value Then
-    mLowAfterHighPoint.value = ev.value
-    mLowAfterHighPoint.timestamp = ev.timestamp
-    mLowAfterHighPoint.barNumber = ev.barNumber
-    mLowAfterHighPoint.barStartTime = ev.barStartTime
+If ev.sVal.value <= mLowAfterHighPoint.value Then
+    mLowAfterHighPoint.value = ev.sVal.value
+    mLowAfterHighPoint.timestamp = ev.sVal.timestamp
+    mLowAfterHighPoint.barNumber = ev.sVal.barNumber
+    mLowAfterHighPoint.barStartTime = ev.sVal.barStartTime
 End If
 End Sub
 
@@ -457,7 +457,7 @@ End Function
 '@================================================================================
 
 Public Property Get HighAfterLow( _
-                Optional ByVal excludingCurrentBar As Boolean) As StudyValue
+                Optional ByVal excludingCurrentBar As Boolean) As SValue
 Dim thePoint As SwingPoint
 thePoint = HighAfterLowPoint(excludingCurrentBar).value
 HighAfterLow.barNumber = thePoint.barNumber
@@ -466,7 +466,7 @@ HighAfterLow.value = thePoint.value
 End Property
 
 Public Property Get HighAfterLowPoint( _
-                Optional ByVal excludingCurrentBar As Boolean) As StudyValue
+                Optional ByVal excludingCurrentBar As Boolean) As SValue
 Dim thePoint As SwingPoint
 If excludingCurrentBar Then
     If mSwingLow.value = DummyLow Then
@@ -493,7 +493,7 @@ HighAfterLowPoint.value = thePoint
 End Property
 
 Public Property Get LowAfterHigh( _
-                Optional ByVal excludingCurrentBar As Boolean) As StudyValue
+                Optional ByVal excludingCurrentBar As Boolean) As SValue
 Dim thePoint As SwingPoint
 thePoint = LowAfterHighPoint(excludingCurrentBar).value
 LowAfterHigh.barNumber = thePoint.barNumber
@@ -502,7 +502,7 @@ LowAfterHigh.value = thePoint.value
 End Property
 
 Public Property Get LowAfterHighPoint( _
-                Optional ByVal excludingCurrentBar As Boolean) As StudyValue
+                Optional ByVal excludingCurrentBar As Boolean) As SValue
 Dim thePoint As SwingPoint
 If excludingCurrentBar Then
     If mSwingHigh.value = DummyHigh Then
@@ -528,11 +528,11 @@ LowAfterHighPoint.timestamp = thePoint.timestamp
 LowAfterHighPoint.value = thePoint
 End Property
 
-Public Property Get swingHighPoint(Optional ByVal ref As Long) As StudyValue
-swingHighPoint = mSwingHighCache.getStudyValue(ref)
+Public Property Get swingHighPoint(Optional ByVal ref As Long) As SValue
+swingHighPoint = mSwingHighCache.getSValue(ref)
 End Property
 
-Public Property Get swingHigh(Optional ByVal ref As Long) As StudyValue
+Public Property Get swingHigh(Optional ByVal ref As Long) As SValue
 Dim sh As SwingPoint
 sh = mSwingHighCache.getValue(ref)
 swingHigh.barNumber = sh.barNumber
@@ -540,11 +540,11 @@ swingHigh.timestamp = sh.timestamp
 swingHigh.value = sh.value
 End Property
 
-Public Property Get swingLowPoint(Optional ByVal ref As Long) As StudyValue
-swingLowPoint = mSwingLowCache.getStudyValue(ref)
+Public Property Get swingLowPoint(Optional ByVal ref As Long) As SValue
+swingLowPoint = mSwingLowCache.getSValue(ref)
 End Property
 
-Public Property Get swingLow(Optional ByVal ref As Long) As StudyValue
+Public Property Get swingLow(Optional ByVal ref As Long) As SValue
 Dim sh As SwingPoint
 sh = mSwingLowCache.getValue(ref)
 swingLow.barNumber = sh.barNumber
@@ -552,7 +552,7 @@ swingLow.timestamp = sh.timestamp
 swingLow.value = sh.value
 End Property
 
-Public Property Get Swing(Optional ByVal ref As Long) As StudyValue
+Public Property Get Swing(Optional ByVal ref As Long) As SValue
 Dim sh As SwingPoint
 sh = mSwingCache.getValue(ref)
 Swing.barNumber = sh.barNumber
@@ -560,7 +560,7 @@ Swing.timestamp = sh.timestamp
 Swing.value = sh.value
 End Property
 
-Public Property Get SwingPoint(Optional ByVal ref As Long) As StudyValue
+Public Property Get SwingPoint(Optional ByVal ref As Long) As SValue
 Dim sh As SwingPoint
 sh = mSwingCache.getValue(ref)
 Swing.barNumber = sh.barNumber
@@ -715,7 +715,7 @@ End Sub
 
 Private Function getStudyValue( _
                 ByVal valueName As String, _
-                ByVal ref As Long) As StudyValue
+                ByVal ref As Long) As SValue
 Select Case UCase$(valueName)
 Case UCase$(SwingValueSwingPoint)
     getStudyValue = Swing(ref)
@@ -724,23 +724,23 @@ Case UCase$(SwingValueSwingHighPoint)
 Case UCase$(SwingValueSwingLowPoint)
     getStudyValue = swingLow(ref)
 Case UCase$(SwingValueSwingLine)
-    getStudyValue = mSwingLineCache.getStudyValue(ref)
+    getStudyValue = mSwingLineCache.getSValue(ref)
 Case UCase$(SwingValueSwingHighLine)
-    getStudyValue = mSwingHighLineCache.getStudyValue(ref)
+    getStudyValue = mSwingHighLineCache.getSValue(ref)
 Case UCase$(SwingValueSwingLowLine)
-    getStudyValue = mSwingLowLineCache.getStudyValue(ref)
+    getStudyValue = mSwingLowLineCache.getSValue(ref)
 End Select
 End Function
 
 Private Sub notifySwingHighLine()
-Dim sv As StudyValue
+Dim sv As SValue
 Dim evOut As StudyValueEvent
-sv = mSwingHighLineCache.getStudyValue(0)
+sv = mSwingHighLineCache.getSValue(0)
 Set evOut.Source = Me
-evOut.barNumber = sv.barNumber
-evOut.barStartTime = sv.barStartTime
-evOut.timestamp = sv.timestamp
-Set evOut.value = mSwingHighLineBuilder.StudyLine
+evOut.sVal.barNumber = sv.barNumber
+evOut.sVal.barStartTime = sv.barStartTime
+evOut.sVal.timestamp = sv.timestamp
+Set evOut.sVal.value = mSwingHighLineBuilder.StudyLine
 evOut.valueName = SwingValueSwingHighLine
 mStudyFoundation.notifyValue evOut
 End Sub
@@ -748,38 +748,38 @@ End Sub
 Private Sub notifySwingHighPoint()
 Dim sp As SwingPoint
 Dim evOut As StudyValueEvent
-sp = mSwingHighCache.getStudyValue(0).value
+sp = mSwingHighCache.getSValue(0).value
 Set evOut.Source = Me
-evOut.barNumber = sp.barNumber
-evOut.barStartTime = sp.barStartTime
-evOut.timestamp = sp.timestamp
-evOut.value = sp.value
+evOut.sVal.barNumber = sp.barNumber
+evOut.sVal.barStartTime = sp.barStartTime
+evOut.sVal.timestamp = sp.timestamp
+evOut.sVal.value = sp.value
 evOut.valueName = SwingValueSwingHighPoint
 mStudyFoundation.notifyValue evOut
 End Sub
 
 Private Sub notifySwingLine()
-Dim sv As StudyValue
+Dim sv As SValue
 Dim evOut As StudyValueEvent
-sv = mSwingLineCache.getStudyValue(0)
+sv = mSwingLineCache.getSValue(0)
 Set evOut.Source = Me
-evOut.barNumber = sv.barNumber
-evOut.barStartTime = sv.barStartTime
-evOut.timestamp = sv.timestamp
-Set evOut.value = mSwingLineBuilder.StudyLine
+evOut.sVal.barNumber = sv.barNumber
+evOut.sVal.barStartTime = sv.barStartTime
+evOut.sVal.timestamp = sv.timestamp
+Set evOut.sVal.value = mSwingLineBuilder.StudyLine
 evOut.valueName = SwingValueSwingLine
 mStudyFoundation.notifyValue evOut
 End Sub
 
 Private Sub notifySwingLowLine()
-Dim sv As StudyValue
+Dim sv As SValue
 Dim evOut As StudyValueEvent
-sv = mSwingLowLineCache.getStudyValue(0)
+sv = mSwingLowLineCache.getSValue(0)
 Set evOut.Source = Me
-evOut.barNumber = sv.barNumber
-evOut.barStartTime = sv.barStartTime
-evOut.timestamp = sv.timestamp
-Set evOut.value = mSwingLowLineBuilder.StudyLine
+evOut.sVal.barNumber = sv.barNumber
+evOut.sVal.barStartTime = sv.barStartTime
+evOut.sVal.timestamp = sv.timestamp
+Set evOut.sVal.value = mSwingLowLineBuilder.StudyLine
 evOut.valueName = SwingValueSwingLowLine
 mStudyFoundation.notifyValue evOut
 End Sub
@@ -787,12 +787,12 @@ End Sub
 Private Sub notifySwingLowPoint()
 Dim sp As SwingPoint
 Dim evOut As StudyValueEvent
-sp = mSwingLowCache.getStudyValue(0).value
+sp = mSwingLowCache.getSValue(0).value
 Set evOut.Source = Me
-evOut.barNumber = sp.barNumber
-evOut.barStartTime = sp.barStartTime
-evOut.timestamp = sp.timestamp
-evOut.value = sp.value
+evOut.sVal.barNumber = sp.barNumber
+evOut.sVal.barStartTime = sp.barStartTime
+evOut.sVal.timestamp = sp.timestamp
+evOut.sVal.value = sp.value
 evOut.valueName = SwingValueSwingLowPoint
 mStudyFoundation.notifyValue evOut
 End Sub
@@ -800,12 +800,12 @@ End Sub
 Private Sub notifySwingPoint()
 Dim sp As SwingPoint
 Dim evOut As StudyValueEvent
-sp = mSwingCache.getStudyValue(0).value
+sp = mSwingCache.getSValue(0).value
 Set evOut.Source = Me
-evOut.barNumber = sp.barNumber
-evOut.barStartTime = sp.barStartTime
-evOut.timestamp = sp.timestamp
-evOut.value = sp.value
+evOut.sVal.barNumber = sp.barNumber
+evOut.sVal.barStartTime = sp.barStartTime
+evOut.sVal.timestamp = sp.timestamp
+evOut.sVal.value = sp.value
 evOut.valueName = SwingValueSwingPoint
 mStudyFoundation.notifyValue evOut
 End Sub
@@ -854,7 +854,7 @@ End Property
 
 Private Function Study_getStudyValue( _
                 ByVal valueName As String, _
-                ByVal ref As Long) As StudyValue
+                ByVal ref As Long) As SValue
 'Study_getStudyValue = mStudyFoundation.getStudyValue(valueName, ref)
 Study_getStudyValue = getStudyValue(valueName, ref)
 End Function

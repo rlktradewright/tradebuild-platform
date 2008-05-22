@@ -169,11 +169,6 @@ Else
 End If
 End Sub
 
-Private Property Let ICommonServiceProvider_LogLevel( _
-                ByVal RHS As TradeBuildSP.LogLevels)
-
-End Property
-
 Private Property Let ICommonServiceProvider_Name(ByVal RHS As String)
 Name = RHS
 End Property

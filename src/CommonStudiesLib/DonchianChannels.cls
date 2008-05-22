@@ -61,16 +61,16 @@ Private mStudyFoundation As StudyFoundation
 
 Private mPeriods As Long
 
-Private mHighCache As StudyValueCache
-Private mLowcache As StudyValueCache
+Private mHighCache As ValueCache
+Private mLowcache As ValueCache
 Private mCurrHigh As Double
 Private mCurrLow As Double
 
 Private mUpper As Double
 Private mLower As Double
 
-Private mUpperCache As StudyValueCache
-Private mLowerCache As StudyValueCache
+Private mUpperCache As ValueCache
+Private mLowerCache As ValueCache
 
 '@================================================================================
 ' Class Event Handlers
@@ -103,19 +103,19 @@ Static sPrevVal As Variant
 Static numValues As Long
 Dim i As Long
 
-If IsEmpty(ev.value) Then Exit Sub
+If IsEmpty(ev.sVal.value) Then Exit Sub
 
 If Not mStudyFoundation.isNewBar Then
-    If ev.value = sPrevVal Then Exit Sub
+    If ev.sVal.value = sPrevVal Then Exit Sub
 End If
-sPrevVal = ev.value
+sPrevVal = ev.sVal.value
 
 If mStudyFoundation.isNewBar Then
     numValues = numValues + 1
-    mCurrHigh = ev.value
-    mCurrLow = ev.value
-    mHighCache.addValue mCurrHigh, ev.barNumber, ev.timestamp, ev.barStartTime
-    mLowcache.addValue mCurrLow, ev.barNumber, ev.timestamp, ev.barStartTime
+    mCurrHigh = ev.sVal.value
+    mCurrLow = ev.sVal.value
+    mHighCache.addValue mCurrHigh, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+    mLowcache.addValue mCurrLow, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
     If numValues >= mPeriods Then
         mUpper = DummyHigh
         For i = 1 To mPeriods - 1
@@ -123,8 +123,8 @@ If mStudyFoundation.isNewBar Then
                 mUpper = mHighCache.getValue(i)
             End If
         Next
-        mUpperCache.addValue mUpper, ev.barNumber, ev.timestamp, ev.barStartTime
-        notifyValue mUpper, DoncValueUpper, ev.barNumber, ev.timestamp, ev.barStartTime
+        mUpperCache.addValue mUpper, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+        notifyValue mUpper, DoncValueUpper, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
         
         mLower = DummyLow
         For i = 1 To mPeriods - 1
@@ -132,36 +132,36 @@ If mStudyFoundation.isNewBar Then
                 mLower = mLowcache.getValue(i)
             End If
         Next
-        mLowerCache.addValue mLower, ev.barNumber, ev.timestamp, ev.barStartTime
-        notifyValue mLower, DoncValueLower, ev.barNumber, ev.timestamp, ev.barStartTime
+        mLowerCache.addValue mLower, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+        notifyValue mLower, DoncValueLower, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
     Else
-        mUpperCache.addValue Empty, ev.barNumber, ev.timestamp, ev.barStartTime
-        notifyValue Empty, DoncValueUpper, ev.barNumber, ev.timestamp, ev.barStartTime
-        mLowerCache.addValue Empty, ev.barNumber, ev.timestamp, ev.barStartTime
-        notifyValue Empty, DoncValueLower, ev.barNumber, ev.timestamp, ev.barStartTime
+        mUpperCache.addValue Empty, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+        notifyValue Empty, DoncValueUpper, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+        mLowerCache.addValue Empty, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+        notifyValue Empty, DoncValueLower, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
     End If
 End If
 
-If ev.value > mCurrHigh Then
-    mCurrHigh = ev.value
-    mHighCache.updateValue mCurrHigh, ev.barNumber, ev.timestamp
+If ev.sVal.value > mCurrHigh Then
+    mCurrHigh = ev.sVal.value
+    mHighCache.updateValue mCurrHigh, ev.sVal.barNumber, ev.sVal.timestamp
 End If
-If ev.value < mCurrLow Then
-    mCurrLow = ev.value
-    mLowcache.updateValue mCurrLow, ev.barNumber, ev.timestamp
+If ev.sVal.value < mCurrLow Then
+    mCurrLow = ev.sVal.value
+    mLowcache.updateValue mCurrLow, ev.sVal.barNumber, ev.sVal.timestamp
 End If
     
 If numValues < mPeriods Then Exit Sub
 
-If ev.value > mUpper Then
-    mUpper = ev.value
-    mUpperCache.updateValue mUpper, ev.barNumber, ev.timestamp
-    notifyValue mUpper, DoncValueUpper, ev.barNumber, ev.timestamp, ev.barStartTime
+If ev.sVal.value > mUpper Then
+    mUpper = ev.sVal.value
+    mUpperCache.updateValue mUpper, ev.sVal.barNumber, ev.sVal.timestamp
+    notifyValue mUpper, DoncValueUpper, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
 End If
-If ev.value < mLower Then
-    mLower = ev.value
-    mLowerCache.updateValue mLower, ev.barNumber, ev.timestamp
-    notifyValue mLower, DoncValueLower, ev.barNumber, ev.timestamp, ev.barStartTime
+If ev.sVal.value < mLower Then
+    mLower = ev.sVal.value
+    mLowerCache.updateValue mLower, ev.sVal.barNumber, ev.sVal.timestamp
+    notifyValue mLower, DoncValueLower, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
 End If
         
 End Sub
@@ -177,8 +177,8 @@ For Each param In params
     Select Case UCase$(param.name)
     Case UCase$(DoncParamPeriods)
         mPeriods = param.value
-        Set mHighCache = CreateStudyValueCache(mPeriods, "highs")
-        Set mLowcache = CreateStudyValueCache(mPeriods, "lows")
+        Set mHighCache = CreateValueCache(mPeriods, "highs")
+        Set mLowcache = CreateValueCache(mPeriods, "lows")
     End Select
 Next
 
@@ -196,12 +196,12 @@ End Function
 ' Properties
 '@================================================================================
 
-Public Property Get lower(Optional ByVal ref As Long) As StudyValue
-lower = mLowerCache.getStudyValue(ref)
+Public Property Get lower(Optional ByVal ref As Long) As SValue
+lower = mLowerCache.getSValue(ref)
 End Property
 
-Public Property Get upper(Optional ByVal ref As Long) As StudyValue
-upper = mUpperCache.getStudyValue(ref)
+Public Property Get upper(Optional ByVal ref As Long) As SValue
+upper = mUpperCache.getSValue(ref)
 End Property
 
 '@================================================================================
@@ -220,12 +220,12 @@ Private Sub notifyValue( _
                 ByVal timestamp As Date)
 Dim ev As StudyValueEvent
 If Not IsEmpty(value) Then
-    ev.value = value
+    ev.sVal.value = value
     ev.valueName = valueName
     Set ev.Source = Me
-    ev.barNumber = barNumber
-    ev.barStartTime = barStartTime
-    ev.timestamp = timestamp
+    ev.sVal.barNumber = barNumber
+    ev.sVal.barStartTime = barStartTime
+    ev.sVal.timestamp = timestamp
     mStudyFoundation.notifyValue ev
 End If
 End Sub
@@ -275,7 +275,7 @@ End Property
 
 Private Function Study_getStudyValue( _
                 ByVal valueName As String, _
-                ByVal ref As Long) As StudyValue
+                ByVal ref As Long) As SValue
 Study_getStudyValue = mStudyFoundation.getStudyValue(valueName, ref)
 End Function
 

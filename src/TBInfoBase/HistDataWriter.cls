@@ -67,7 +67,7 @@ Private WithEvents mTradingDB       As TradingDB
 Attribute mTradingDB.VB_VarHelpID = -1
 Private mConnectionString           As String
 
-Private mHistDataServiceProvider    As histDataServiceProvider
+Private mHistDataServiceProvider    As HistDataServiceProvider
 
 Private mCommonServiceConsumer      As ICommonServiceConsumer
 Private mServiceConsumer            As IBarDataOutputServiceConsumer
@@ -123,12 +123,12 @@ mHistDataServiceProvider.dataWriterFinished Me
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "HistDataWriter" & "::" & "IBarDataWriter_ReleaseDataStore", _
+                ProjectName & "." & ModuleName & "::" & "IBarDataWriter_ReleaseDataStore", _
                 Err.Description
 End Sub
 
 Private Sub IBarDataWriter_WriteBar( _
-                ByRef data As TradeBuildSP.Bar, _
+                ByVal data As Bar, _
                 ByVal barType As BarTypes, _
                 ByVal barLength As Long, _
                 ByVal barUnit As TimePeriodUnits)
@@ -142,11 +142,11 @@ With data
     mBarWriter.WriteBar .timestamp, _
                         barType, _
                         barLength, _
-                        .openPrice, _
-                        .highPrice, _
-                        .lowPrice, _
-                        .closePrice, _
-                        .volume, _
+                        .openValue, _
+                        .highValue, _
+                        .lowValue, _
+                        .closeValue, _
+                        .Volume, _
                         .tickVolume, _
                         0, _
                         Not mUseSynchronousWrites
@@ -169,7 +169,7 @@ End With
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "HistDataWriter" & "::" & "IBarDataWriter_WriteBar", _
+                ProjectName & "." & ModuleName & "::" & "IBarDataWriter_WriteBar", _
                 Err.Description
 End Sub
 
@@ -185,7 +185,7 @@ mServiceConsumer.NotifyEvent StandardSPEventCodes.HDCantConnectDataSource, _
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "HistDataWriter" & "::" & "mBarWriter_ConnectFailed", _
+                ProjectName & "." & ModuleName & "::" & "mBarWriter_ConnectFailed", _
                 Err.Description
 End Sub
 
@@ -197,7 +197,7 @@ mCommonServiceConsumer.ServiceProviderError errorCode, _
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "HistDataWriter" & "::" & "mBarWriter_Error", _
+                ProjectName & "." & ModuleName & "::" & "mBarWriter_Error", _
                 Err.Description
 End Sub
 
@@ -211,7 +211,7 @@ mServiceConsumer.NotReady
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "HistDataWriter" & "::" & "mTradingDB_ConnectFailed", _
+                ProjectName & "." & ModuleName & "::" & "mTradingDB_ConnectFailed", _
                 Err.Description
 End Sub
 
@@ -237,15 +237,15 @@ getInstrument
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & "HistDataWriter" & "::" & "mTradingDB_ConnectSucceeded", _
+                ProjectName & "." & ModuleName & "::" & "mTradingDB_ConnectSucceeded", _
                 Err.Description
 End Sub
 '@===============================================================================
 ' Properties
 '@===============================================================================
 
-Friend Property Let histDataServiceProvider( _
-                ByVal value As histDataServiceProvider)
+Friend Property Let HistDataServiceProvider( _
+                ByVal value As HistDataServiceProvider)
 Set mHistDataServiceProvider = value
 End Property
 
@@ -268,9 +268,9 @@ For i = 0 To UBound(mTimeframeTable)
             ") written in " & _
             mTimeframeTable(i).writes & " database writes"
 Next
-mCommonServiceConsumer.NotifyListeners s, _
-                                    TradeBuildSP.StandardListenValueTypes.Log, _
-                                    Me
+gLogger.Log LogLevelNormal, _
+            s, _
+            Me
 Set mBarWriter = Nothing
 Set mServiceConsumer = Nothing
 End Sub
@@ -280,7 +280,7 @@ Friend Sub initialise( _
                 ByVal connectionString As String, _
                 ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
                 ByVal barDataOutputServiceConsumer As TradeBuildSP.IBarDataOutputServiceConsumer, _
-                ByVal histDataServiceProvider As TradeBuildSP.IBarDataServiceProvider, _
+                ByVal HistDataServiceProvider As TradeBuildSP.IBarDataServiceProvider, _
                 ByVal contractSpec As ContractSpecifier, _
                 ByVal useSynchronousWrites As Boolean)
 mServiceProviderName = Name
@@ -293,7 +293,7 @@ mUseSynchronousWrites = useSynchronousWrites
 mConnectionString = connectionString
 Set mTradingDB = CreateTradingDB(mConnectionString)
 
-Set mHistDataServiceProvider = histDataServiceProvider
+Set mHistDataServiceProvider = HistDataServiceProvider
 Set mContractSpec = contractSpec
 
 End Sub

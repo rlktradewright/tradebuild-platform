@@ -122,6 +122,10 @@ End Property
 ' Task Interface Members
 '@================================================================================
 
+Private Sub task_cancel()
+
+End Sub
+
 Private Property Get task_TaskName() As String
 task_TaskName = mTaskContext.name
 End Property
@@ -129,7 +133,7 @@ End Property
 Private Sub Task_run()
 Dim i As Long
 Dim ev As StudyValueEvent
-Dim valueEntry As StudyValue
+Dim valueEntry As SValue
 
 Dim failpoint As Long
 On Error GoTo Err
@@ -158,22 +162,13 @@ For i = 0 To UBound(mReplayValueNames)
      
     If Not IsEmpty(valueEntry.value) Then
         Set ev.source = mSourceStudy
-        ev.timestamp = valueEntry.timestamp
-        ev.barNumber = valueEntry.barNumber
-        ev.barStartTime = valueEntry.barStartTime
-        If TypeName(valueEntry.value) = "Nothing" Then
-            Set ev.value = Nothing
-        ElseIf TypeOf valueEntry.value Is Object  Then
-            Set ev.value = valueEntry.value
-        Else
-            ev.value = valueEntry.value
-        End If
+        ev.sVal = valueEntry
         
         If mTargetIsStudy Then
             
             failpoint = 300
             
-            mSessionBuilder.setSessionCurrentTime ev.timestamp
+            mSessionBuilder.setSessionCurrentTime ev.sVal.timestamp
             
             ev.valueName = mReplayNotifyNames(i)
             mStudyToNotify.notify ev

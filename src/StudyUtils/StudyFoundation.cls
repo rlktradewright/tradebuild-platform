@@ -33,6 +33,9 @@ Implements TaskCompletionListener
 ' Constants
 '@================================================================================
 
+Private Const ProjectName                   As String = "StudyUtils26"
+Private Const ModuleName                    As String = "StudyFoundation"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -43,7 +46,7 @@ Public Enum TaskDiscriminators
 End Enum
 
 Private Type ValueCacheTableEntry
-    valueCache          As StudyValueCache
+    valueCache          As valueCache
     isDefault           As Boolean
 End Type
 
@@ -278,7 +281,7 @@ If mReplayUsingStudyValues Then
     Set addStudyValueListener = StartTask(replayTask, PriorityNormal, taskName, taskData)
     addStudyValueListener.addTaskCompletionListener Me
 Else
-    Set addStudyValueListener = FindValueCache(valueName).replayValues( _
+    Set addStudyValueListener = replayCacheValues(FindValueCache(valueName), _
                                     listener, _
                                     study, _
                                     numberOfValuesToReplay, _
@@ -290,7 +293,7 @@ End If
 End Function
 
 Public Function FindValueCache( _
-                ByVal valueName As String) As StudyValueCache
+                ByVal valueName As String) As valueCache
 Dim i As Long
 
 valueName = UCase$(valueName)
@@ -307,11 +310,11 @@ End Function
 
 Public Function getStudyValue( _
                 ByVal valueName As String, _
-                ByVal ref As Long) As StudyValue
-Dim valueCache As StudyValueCache
+                ByVal ref As Long) As SValue
+Dim valueCache As valueCache
 
 Set valueCache = FindValueCache(valueName)
-getStudyValue = valueCache.getStudyValue(ref)
+getStudyValue = valueCache.getSValue(ref)
 End Function
 
 Public Sub initialise( _
@@ -338,10 +341,10 @@ End Sub
 
 Public Sub notifyInput( _
                 ByRef ev As StudyValueEvent)
-If ev.barNumber <> mBarNumber Then
-    mBarNumber = ev.barNumber
+If ev.sVal.barNumber <> mBarNumber Then
+    mBarNumber = ev.sVal.barNumber
     mLocalBarNumber = mLocalBarNumber + 1
-    mBarStartTime = ev.barStartTime
+    mBarStartTime = ev.sVal.barStartTime
     mIsNewBar = True
 Else
     mIsNewBar = False
@@ -350,7 +353,7 @@ End Sub
                 
 Public Sub NotifyValue( _
                 ByRef ev As StudyValueEvent)
-If ev.barStartTime = 0 Then ev.barStartTime = mBarStartTime
+If ev.sVal.barStartTime = 0 Then ev.sVal.barStartTime = mBarStartTime
 mStudies.notify ev
 mListeners.notify ev
 End Sub
@@ -420,7 +423,8 @@ If UBound(valueNames) = 0 And (Not mReplayUsingStudyValues) Then
     valueName = UCase$(valueNames(0))
     For Each valueDef In valueDefs
         If UCase$(valueDef.name) = valueName Then
-            Set addStudyHelper = mValueCaches(i).valueCache.replayValues(studyToAdd, _
+            Set addStudyHelper = replayCacheValues(mValueCaches(i).valueCache, _
+                                        studyToAdd, _
                                         study, _
                                         numberOfValuesToReplay, _
                                         TaskDiscriminators.TaskAddStudy, _
@@ -458,8 +462,7 @@ Set valueDefs = study.StudyDefinition.studyValueDefinitions
 
 ReDim mValueCaches(valueDefs.count - 1) As ValueCacheTableEntry
 For Each valueDef In valueDefs
-    Set mValueCaches(i).valueCache = New StudyValueCache
-    mValueCaches(i).valueCache.initialise numberOfValuesToCache, valueDef.name
+    Set mValueCaches(i).valueCache = CreateValueCache(numberOfValuesToCache, valueDef.name)
     mValueCaches(i).isDefault = valueDef.isDefault
     i = i + 1
 Next
@@ -480,6 +483,38 @@ For i = 1 To paramDefs.count
         ParamsToString = ParamsToString & "," & mParams.getParameterValue(paramDef.name)
     End If
 Next
+End Function
+
+Private Function replayCacheValues( _
+                ByVal cache As valueCache, _
+                ByVal target As Object, _
+                ByVal sourceStudy As study, _
+                ByVal numberOfValuesToReplay As Long, _
+                Optional ByVal discriminator As Long, _
+                Optional ByVal taskName As String, _
+                Optional ByVal taskData As Variant) As TaskController
+Dim replayTask As New CacheReplayTask
+
+If numberOfValuesToReplay >= 0 Or _
+    numberOfValuesToReplay = ReplayNumbers.ReplayAll _
+Then
+Else
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & "." & ":" & "replayValues", _
+            "numberOfValuesToReplay must be >=0 or set to ReplayNumbers.ReplayAll"
+
+End If
+replayTask.initialise cache, _
+                    target, _
+                    sourceStudy, _
+                    numberOfValuesToReplay, _
+                    discriminator
+
+Set replayCacheValues = StartTask( _
+                                replayTask, _
+                                PriorityNormal, _
+                                IIf(taskName <> "", taskName, GenerateGUIDString), _
+                                taskData)
 End Function
 
 Private Function study() As study

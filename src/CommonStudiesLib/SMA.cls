@@ -61,9 +61,9 @@ Private mPeriods As Long
 
 Private mSlopeThreshold As Double
 
-Private mInputValueCache As StudyValueCache
+Private mInputValueCache As ValueCache
 
-Private mMaCache As StudyValueCache
+Private mMaCache As ValueCache
 
 Private mSum As Double
 Private mMA As Variant
@@ -98,38 +98,38 @@ Static sPrevVal As Variant
 Dim evOut As StudyValueEvent
 
 If Not mStudyFoundation.isNewBar Then
-    If ev.value = sPrevVal Then Exit Sub
+    If ev.sVal.value = sPrevVal Then Exit Sub
 End If
 
 If mStudyFoundation.isNewBar Then
     If mInputValueCache.Count < mPeriods Then
-        If Not IsEmpty(ev.value) Then
-            mSum = mSum + ev.value
-            mInputValueCache.addValue ev.value, ev.barNumber, ev.timestamp, ev.barStartTime
+        If Not IsEmpty(ev.sVal.value) Then
+            mSum = mSum + ev.sVal.value
+            mInputValueCache.addValue ev.sVal.value, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
         End If
         If mInputValueCache.Count = mPeriods Then
             mMA = mSum / mPeriods
         End If
     Else
-        If Not IsEmpty(ev.value) Then
-            mSum = mSum - mInputValueCache.getValue(1) + ev.value
+        If Not IsEmpty(ev.sVal.value) Then
+            mSum = mSum - mInputValueCache.getValue(1) + ev.sVal.value
             mMA = mSum / mPeriods
-            mInputValueCache.addValue ev.value, ev.barNumber, ev.timestamp, ev.barStartTime
+            mInputValueCache.addValue ev.sVal.value, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
         End If
     End If
-    sPrevVal = ev.value
+    sPrevVal = ev.sVal.value
 Else
-    If Not IsEmpty(ev.value) Then
+    If Not IsEmpty(ev.sVal.value) Then
         If Not IsEmpty(sPrevVal) Then
             mSum = mSum - sPrevVal
-            mInputValueCache.updateValue ev.value, ev.barNumber, ev.timestamp
+            mInputValueCache.updateValue ev.sVal.value, ev.sVal.barNumber, ev.sVal.timestamp
         Else
             ' this can only happen when there has not yet been a non-empty
             ' input value in this bar
-            mInputValueCache.addValue ev.value, ev.barNumber, ev.timestamp, ev.barStartTime
+            mInputValueCache.addValue ev.sVal.value, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
         End If
-        mSum = mSum + ev.value
-        sPrevVal = ev.value
+        mSum = mSum + ev.sVal.value
+        sPrevVal = ev.sVal.value
     End If
     If mInputValueCache.Count >= mPeriods Then
         mMA = mSum / mPeriods
@@ -137,16 +137,16 @@ Else
 End If
 
 If mStudyFoundation.isNewBar Then
-    mMaCache.addValue mMA, ev.barNumber, ev.timestamp, ev.barStartTime
+    mMaCache.addValue mMA, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
 Else
-    mMaCache.updateValue mMA, ev.barNumber, ev.timestamp
+    mMaCache.updateValue mMA, ev.sVal.barNumber, ev.sVal.timestamp
 End If
             
 Set evOut.Source = Me
-evOut.barNumber = ev.barNumber
-evOut.barStartTime = ev.barStartTime
-evOut.timestamp = ev.timestamp
-evOut.value = mMA
+evOut.sVal.barNumber = ev.sVal.barNumber
+evOut.sVal.barStartTime = ev.sVal.barStartTime
+evOut.sVal.timestamp = ev.sVal.timestamp
+evOut.sVal.value = mMA
 evOut.valueName = MovingAverageStudyValueName
 mStudyFoundation.notifyValue evOut
 End Sub
@@ -162,7 +162,7 @@ For Each param In params
     Select Case UCase$(param.name)
     Case UCase$(SMAParamPeriods)
         mPeriods = param.value
-        Set mInputValueCache = CreateStudyValueCache(mPeriods, "")
+        Set mInputValueCache = CreateValueCache(mPeriods, "")
     Case UCase$(SMAParamSlopeThreshold)
         mSlopeThreshold = param.value
     End Select
@@ -184,8 +184,8 @@ End Function
 
 Public Property Get falling( _
     Optional ByVal ref As Long, _
-    Optional ByVal periods As Long = 2) As StudyValue
-Dim sv As StudyValue
+    Optional ByVal periods As Long = 2) As SValue
+Dim sv As SValue
 sv = slope(ref, periods)
 sv.value = (sv.value <= (-1 * mSlopeThreshold))
 falling = sv
@@ -193,22 +193,22 @@ End Property
 
 Public Property Get flat( _
     Optional ByVal ref As Long, _
-    Optional ByVal periods As Long = 2) As StudyValue
-Dim sv As StudyValue
+    Optional ByVal periods As Long = 2) As SValue
+Dim sv As SValue
 sv = slope(ref, periods)
 sv.value = (sv.value < mSlopeThreshold And _
     sv.value > (-1 * mSlopeThreshold))
 flat = sv
 End Property
 
-Public Property Get ma(Optional ByVal ref As Long) As StudyValue
-ma = mMaCache.getStudyValue(ref)
+Public Property Get ma(Optional ByVal ref As Long) As SValue
+ma = mMaCache.getSValue(ref)
 End Property
 
 Public Property Get rising( _
     Optional ByVal ref As Long, _
-    Optional ByVal periods As Long = 2) As StudyValue
-Dim sv As StudyValue
+    Optional ByVal periods As Long = 2) As SValue
+Dim sv As SValue
 sv = slope(ref, periods)
 sv.value = (sv.value >= mSlopeThreshold)
 rising = sv
@@ -216,8 +216,8 @@ End Property
 
 Public Property Get slope( _
     Optional ByVal ref As Long, _
-    Optional ByVal periods As Long = 2) As StudyValue
-Dim sv As StudyValue
+    Optional ByVal periods As Long = 2) As SValue
+Dim sv As SValue
 sv = ma(ref)
 sv.value = (sv.value - ma(ref - periods + 1).value) / periods
 slope = sv
@@ -275,7 +275,7 @@ End Property
 
 Private Function Study_getStudyValue( _
                 ByVal valueName As String, _
-                ByVal ref As Long) As StudyValue
+                ByVal ref As Long) As SValue
 Study_getStudyValue = mStudyFoundation.getStudyValue(valueName, ref)
 End Function
 

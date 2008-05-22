@@ -51,7 +51,7 @@ Private mStudyFoundation As StudyFoundation
 
 Private mInitialStopForBar As Double
 Private mCurrentStop As Double
-Private mPsCache As StudyValueCache
+Private mPsCache As ValueCache
 Private mExtremePoint As Double
 Private mSignificantPoint As Double
 
@@ -98,14 +98,14 @@ Dim evOut As StudyValueEvent
 Static accelAdjustedThisbar As Boolean
 Static sPrevVal As Variant
 
-If IsEmpty(ev.value) Then Exit Sub
+If IsEmpty(ev.sVal.value) Then Exit Sub
 
 If Not mStudyFoundation.isNewBar Then
-    If ev.value = sPrevVal Then Exit Sub
+    If ev.sVal.value = sPrevVal Then Exit Sub
 End If
-sPrevVal = ev.value
+sPrevVal = ev.sVal.value
 
-newValue = CDbl(ev.value)
+newValue = CDbl(ev.sVal.value)
 
 If mCurrentStop = MaxDouble Then
     mCurrentStop = newValue * 0.999
@@ -116,7 +116,7 @@ End If
 If mStudyFoundation.isNewBar Then
     accelAdjustedThisbar = False
     mInitialStopForBar = mCurrentStop
-    mPsCache.addValue mCurrentStop, ev.barNumber, ev.timestamp, ev.barStartTime
+    mPsCache.addValue mCurrentStop, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
     If mAccelerationFactor = 0 Then
         mAccelerationFactor = mStartFactor
     End If
@@ -125,7 +125,7 @@ If mStudyFoundation.isNewBar Then
     Else
         mCurrentStop = mInitialStopForBar - mAccelerationFactor * (mInitialStopForBar - mExtremePoint)
     End If
-    mPsCache.updateValue mCurrentStop, ev.barNumber, ev.timestamp
+    mPsCache.updateValue mCurrentStop, ev.sVal.barNumber, ev.sVal.timestamp
 End If
 
 If mPsCache.Count < 2 Then Exit Sub
@@ -141,7 +141,7 @@ If mLong Then
                 End If
             End If
             mCurrentStop = mInitialStopForBar + mAccelerationFactor * (mExtremePoint - mInitialStopForBar)
-            mPsCache.updateValue mCurrentStop, ev.barNumber, ev.timestamp
+            mPsCache.updateValue mCurrentStop, ev.sVal.barNumber, ev.sVal.timestamp
         End If
         If newValue > mSignificantPoint Then mSignificantPoint = newValue
     ElseIf newValue > mPsCache.getValue(-1) Then
@@ -150,7 +150,7 @@ If mLong Then
         mLong = False
         mCurrentStop = mSignificantPoint
         mInitialStopForBar = mCurrentStop
-        mPsCache.updateValue mCurrentStop, ev.barNumber, ev.timestamp
+        mPsCache.updateValue mCurrentStop, ev.sVal.barNumber, ev.sVal.timestamp
         mAccelerationFactor = 0
         mExtremePoint = newValue
         mSignificantPoint = newValue
@@ -166,7 +166,7 @@ Else
                 End If
             End If
             mCurrentStop = mInitialStopForBar - mAccelerationFactor * (mInitialStopForBar - mExtremePoint)
-            mPsCache.updateValue mCurrentStop, ev.barNumber, ev.timestamp
+            mPsCache.updateValue mCurrentStop, ev.sVal.barNumber, ev.sVal.timestamp
         End If
         If newValue < mSignificantPoint Then mSignificantPoint = newValue
     ElseIf newValue < mPsCache.getValue(-1) Then
@@ -175,7 +175,7 @@ Else
         mLong = True
         mCurrentStop = mSignificantPoint
         mInitialStopForBar = mCurrentStop
-        mPsCache.updateValue mCurrentStop, ev.barNumber, ev.timestamp
+        mPsCache.updateValue mCurrentStop, ev.sVal.barNumber, ev.sVal.timestamp
         mAccelerationFactor = 0
         mExtremePoint = newValue
         mSignificantPoint = newValue
@@ -183,10 +183,10 @@ Else
 End If
 
 Set evOut.Source = Me
-evOut.barNumber = ev.barNumber
-evOut.barStartTime = ev.barStartTime
-evOut.timestamp = ev.timestamp
-evOut.value = mCurrentStop
+evOut.sVal.barNumber = ev.sVal.barNumber
+evOut.sVal.barStartTime = ev.sVal.barStartTime
+evOut.sVal.timestamp = ev.sVal.timestamp
+evOut.sVal.value = mCurrentStop
 evOut.valueName = PsValuePs
 mStudyFoundation.notifyValue evOut
 
@@ -224,8 +224,8 @@ End Function
 ' Properties
 '@================================================================================
 
-Public Property Get ps(Optional ByVal ref As Integer) As StudyValue
-ps = mPsCache.getStudyValue(ref)
+Public Property Get ps(Optional ByVal ref As Integer) As SValue
+ps = mPsCache.getSValue(ref)
 End Property
 
 Public Sub setStop(ByVal stopValue As Double, _
@@ -293,7 +293,7 @@ End Property
 
 Private Function Study_getStudyValue( _
                 ByVal valueName As String, _
-                ByVal ref As Long) As StudyValue
+                ByVal ref As Long) As SValue
 Study_getStudyValue = mStudyFoundation.getStudyValue(valueName, ref)
 End Function
 

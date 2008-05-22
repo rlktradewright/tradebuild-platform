@@ -60,7 +60,7 @@ Private mPeriods As Long
 Private mExpFactor As Double
 Private mSlopeThreshold As Double
 
-Private mMaCache As StudyValueCache
+Private mMaCache As ValueCache
 
 Private mPrevMA As Variant  ' MA for the previous bar
 Private mMA As Variant
@@ -95,43 +95,43 @@ Static sPrevVal As Variant
 Dim evOut As StudyValueEvent
 
 If Not mStudyFoundation.isNewBar Then
-    If ev.value = sPrevVal Then Exit Sub
+    If ev.sVal.value = sPrevVal Then Exit Sub
 End If
-sPrevVal = ev.value
+sPrevVal = ev.sVal.value
 
 If mStudyFoundation.isNewBar Then
     If IsEmpty(mPrevMA) Then
-        mPrevMA = ev.value
+        mPrevMA = ev.sVal.value
     Else
         mPrevMA = mMA
     End If
 End If
 
-If Not IsEmpty(ev.value) Then
-    mMA = (mExpFactor * ev.value) + mPrevMA * (1 - mExpFactor)
+If Not IsEmpty(ev.sVal.value) Then
+    mMA = (mExpFactor * ev.sVal.value) + mPrevMA * (1 - mExpFactor)
 End If
 
 
 If mStudyFoundation.isNewBar Then
-    If ev.barNumber >= mPeriods Then
-        mMaCache.addValue mMA, ev.barNumber, ev.timestamp, ev.barStartTime
+    If ev.sVal.barNumber >= mPeriods Then
+        mMaCache.addValue mMA, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
     Else
-        mMaCache.addValue Empty, ev.barNumber, ev.timestamp, ev.barStartTime
+        mMaCache.addValue Empty, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
     End If
 Else
-    If ev.barNumber >= mPeriods Then
-        mMaCache.updateValue mMA, ev.barNumber, ev.timestamp
+    If ev.sVal.barNumber >= mPeriods Then
+        mMaCache.updateValue mMA, ev.sVal.barNumber, ev.sVal.timestamp
     End If
 End If
             
 Set evOut.Source = Me
-evOut.barNumber = ev.barNumber
-evOut.barStartTime = ev.barStartTime
-evOut.timestamp = ev.timestamp
-If ev.barNumber >= mPeriods Then
-    evOut.value = mMA
+evOut.sVal.barNumber = ev.sVal.barNumber
+evOut.sVal.barStartTime = ev.sVal.barStartTime
+evOut.sVal.timestamp = ev.sVal.timestamp
+If ev.sVal.barNumber >= mPeriods Then
+    evOut.sVal.value = mMA
 Else
-    evOut.value = Empty
+    evOut.sVal.value = Empty
 End If
 evOut.valueName = MovingAverageStudyValueName
 mStudyFoundation.notifyValue evOut
@@ -170,8 +170,8 @@ End Function
 
 Public Property Get falling( _
     Optional ByVal ref As Long, _
-    Optional ByVal periods As Long = 2) As StudyValue
-Dim sv As StudyValue
+    Optional ByVal periods As Long = 2) As SValue
+Dim sv As SValue
 sv = slope(ref, periods)
 sv.value = (sv.value <= (-1 * mSlopeThreshold))
 falling = sv
@@ -179,22 +179,22 @@ End Property
 
 Public Property Get flat( _
     Optional ByVal ref As Long, _
-    Optional ByVal periods As Long = 2) As StudyValue
-Dim sv As StudyValue
+    Optional ByVal periods As Long = 2) As SValue
+Dim sv As SValue
 sv = slope(ref, periods)
 sv.value = (sv.value < mSlopeThreshold And _
     sv.value > (-1 * mSlopeThreshold))
 flat = sv
 End Property
 
-Public Property Get ma(Optional ByVal ref As Long) As StudyValue
-ma = mMaCache.getStudyValue(ref)
+Public Property Get ma(Optional ByVal ref As Long) As SValue
+ma = mMaCache.getSValue(ref)
 End Property
 
 Public Property Get rising( _
     Optional ByVal ref As Long, _
-    Optional ByVal periods As Long = 2) As StudyValue
-Dim sv As StudyValue
+    Optional ByVal periods As Long = 2) As SValue
+Dim sv As SValue
 sv = slope(ref, periods)
 sv.value = (sv.value >= mSlopeThreshold)
 rising = sv
@@ -202,8 +202,8 @@ End Property
 
 Public Property Get slope( _
     Optional ByVal ref As Long, _
-    Optional ByVal periods As Long = 2) As StudyValue
-Dim sv As StudyValue
+    Optional ByVal periods As Long = 2) As SValue
+Dim sv As SValue
 sv = ma(ref)
 sv.value = (sv.value - ma(ref - periods + 1).value) / periods
 slope = sv
@@ -266,7 +266,7 @@ End Property
 
 Private Function Study_getStudyValue( _
                 ByVal valueName As String, _
-                ByVal ref As Long) As StudyValue
+                ByVal ref As Long) As SValue
 Study_getStudyValue = mStudyFoundation.getStudyValue(valueName, ref)
 End Function
 

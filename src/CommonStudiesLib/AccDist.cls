@@ -61,8 +61,9 @@ Private mSession As session
 
 Private mAccDist As Double
 Private mAccDistAtBarStart As Double
-Private mAccDistCache As StudyValueCache
+Private mAccDistCache As ValueCache
 
+Private mBarsBuilder As BarsBuilder
 Private mBars As Bars
 Private mCurrentBar As bar
 Private mCurrentBarVolume As Long
@@ -91,11 +92,12 @@ Set mSession = pSession
 
 customProcessParameters Parameters
 Set mAccDistCache = mStudyFoundation.FindValueCache(AccDistValueAccDist)
-Set mBars = CreateBars(0, _
-                                TimePeriodNone, _
-                                mSession, _
-                                0, _
-                                1)
+Set mBarsBuilder = CreateBarsBuilder(0, _
+                        TimePeriodNone, _
+                        mSession, _
+                        0, _
+                        1)
+Set mBars = mBarsBuilder.Bars
 End Sub
 
 Private Sub customNotify( _
@@ -109,16 +111,16 @@ If mStudyFoundation.isNewBar Then
 End If
 
 If ev.valueName = AccDistInputVolume Then
-    mCurrentBarVolume = ev.value
+    mCurrentBarVolume = ev.sVal.value
     calcAccDist
-    mAccDistCache.updateValue mAccDist, mStudyFoundation.barNumber, ev.timestamp
+    mAccDistCache.updateValue mAccDist, mStudyFoundation.barNumber, ev.sVal.timestamp
 Else
     If Not mStudyFoundation.isNewBar Then
-        If ev.value = sPrevVal Then Exit Sub
+        If ev.sVal.value = sPrevVal Then Exit Sub
     End If
-    sPrevVal = ev.value
+    sPrevVal = ev.sVal.value
     
-    mBars.notify ev
+    mBarsBuilder.notifyValue ev.sVal
     
     If mStudyFoundation.isNewBar Then
         Set mCurrentBar = mBars.bar(0)
@@ -127,17 +129,15 @@ Else
     calcAccDist
     
     If mStudyFoundation.isNewBar Then
-        mAccDistCache.addValue mAccDist, ev.barNumber, ev.timestamp, ev.barStartTime
+        mAccDistCache.addValue mAccDist, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
     Else
-        mAccDistCache.updateValue mAccDist, ev.barNumber, ev.timestamp
+        mAccDistCache.updateValue mAccDist, ev.sVal.barNumber, ev.sVal.timestamp
     End If
 End If
 
 Set evOut.Source = Me
-evOut.barNumber = ev.barNumber
-evOut.barStartTime = ev.barStartTime
-evOut.timestamp = ev.timestamp
-evOut.value = IIf(mStudyFoundation.localBarNumber = 1, Empty, mAccDist)
+evOut.sVal = ev.sVal
+evOut.sVal.value = IIf(mStudyFoundation.localBarNumber = 1, Empty, mAccDist)
 evOut.valueName = AccDistValueAccDist
 mStudyFoundation.notifyValue evOut
 End Sub
@@ -162,8 +162,8 @@ End Function
 ' Properties
 '@================================================================================
 
-Public Property Get accDist(Optional ByVal ref As Long) As StudyValue
-accDist = mAccDistCache.getStudyValue(ref)
+Public Property Get accDist(Optional ByVal ref As Long) As SValue
+accDist = mAccDistCache.getSValue(ref)
 End Property
 
 '@================================================================================
@@ -228,7 +228,7 @@ End Property
 
 Private Function Study_getStudyValue( _
                 ByVal valueName As String, _
-                ByVal ref As Long) As StudyValue
+                ByVal ref As Long) As SValue
 Study_getStudyValue = mStudyFoundation.getStudyValue(valueName, ref)
 End Function
 

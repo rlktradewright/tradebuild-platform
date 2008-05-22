@@ -66,13 +66,11 @@ End Type
 ' Member variables
 '================================================================================
 
-Private mTickfileServiceProvider As tickfileServiceProvider
+Private mTickfileServiceProvider As TickfileServiceProvider
 
 Private mCommonServiceConsumer As ICommonServiceConsumer
 Private mServiceConsumer As ITickfileInputServiceConsumer
 Private mDataConsumer As IStreamingDataConsumer
-
-Private mLogLevel As TradeBuildSP.LogLevels
 
 Private mReplayProgressEventFrequency As Long
 
@@ -265,10 +263,6 @@ Friend Property Get InputTickfileSpecifier() As TradeBuildSP.ITickfileSpecifier
 Set InputTickfileSpecifier = mInputTickfileSpecifier
 End Property
 
-Friend Property Let logLevel(ByVal RHS As TradeBuildSP.LogLevels)
-mLogLevel = RHS
-End Property
-
 Friend Property Let StreamingDataConsumer(ByVal RHS As IStreamingDataConsumer)
 Set mDataConsumer = RHS
 End Property
@@ -277,8 +271,8 @@ Friend Property Let TickfileInputServiceConsumer(ByVal RHS As ITickfileInputServ
 Set mServiceConsumer = RHS
 End Property
 
-Friend Property Let tickfileServiceProvider( _
-                ByVal value As tickfileServiceProvider)
+Friend Property Let TickfileServiceProvider( _
+                ByVal value As TickfileServiceProvider)
 Set mTickfileServiceProvider = value
 End Property
 
@@ -559,12 +553,11 @@ End Function
 
 Private Sub logMessage( _
                 ByVal message As String, _
-                Optional ByVal logLevel As LogLevels = LogLevelLow)
-If mLogLevel < logLevel Or _
-    mLogLevel = LogLevelNone Then Exit Sub
-mCommonServiceConsumer.NotifyListeners "TickfileSP: " & message, _
-                                        TradeBuildSP.StandardListenValueTypes.Log, _
-                                        Me
+                Optional ByVal logLevel As LogLevels = LogLevelNormal)
+If Not gLogger.isLoggable(logLevel) Then Exit Sub
+gLogger.Log logLevel, _
+            message, _
+            Me
 End Sub
 
 Private Function lookAhead(lookAheadRecord As Long) As Boolean

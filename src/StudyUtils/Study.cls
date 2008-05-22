@@ -64,7 +64,7 @@ End Enum
 ' Properties
 '@================================================================================
 
-Public Property Get baseStudy() As study
+Public Property Get baseStudy() As Study
 
 End Property
 
@@ -97,7 +97,7 @@ End Property
 '@================================================================================
 
 Public Function addStudy( _
-                ByVal pStudy As study, _
+                ByVal pStudy As Study, _
                 ByRef valueNames() As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
@@ -116,7 +116,7 @@ End Function
 
 Public Function getStudyValue( _
                 ByVal valueName As String, _
-                ByVal ref As Long) As StudyValue
+                ByVal ref As Long) As SValue
 
 End Function
 
@@ -130,7 +130,7 @@ Public Sub initialise( _
                 ByVal params As parameters, _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef valueNames() As String, _
-                ByVal underlyingStudy As study, _
+                ByVal underlyingStudy As Study, _
                 ByVal pSession As session)
 
 End Sub

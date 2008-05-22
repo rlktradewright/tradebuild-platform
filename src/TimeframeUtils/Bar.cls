@@ -69,7 +69,15 @@ Private mLowChanged As Boolean
 Private mClose As Double
 Private mCloseChanged As Boolean
 
+Private mVolume As Long
+Private mVolumeChanged As Boolean
+
+Private mOpenInterest As Long
+Private mOpenInterestChanged As Boolean
+
 Private mTickVolume As Long
+Private mTickVolumeChanged As Boolean
+
 Private mTimestamp As Date
 Private mBlank As Boolean   ' indicates that there were no ticks during the bar
 
@@ -146,6 +154,14 @@ Public Property Get highChanged() As Boolean
 highChanged = mHighChanged
 End Property
 
+Public Property Get HL2() As Double
+HL2 = (mHigh + mLow) / 2
+End Property
+
+Public Property Get HLC3() As Double
+HLC3 = (mHigh + mLow + mClose) / 3
+End Property
+
 Public Property Get IsDownBar() As Boolean
 IsDownBar = (mClose < mOpen)
 End Property
@@ -167,16 +183,36 @@ Public Property Get lowChanged() As Boolean
 lowChanged = mLowChanged
 End Property
 
-Public Property Get openValue() As Double
-openValue = mOpen
+Public Property Get OHLC4() As Double
+OHLC4 = (mOpen + mHigh + mLow + mClose) / 4
 End Property
 
 Public Property Get openChanged() As Boolean
 openChanged = mOpenChanged
 End Property
 
+Public Property Get openInterest() As Long
+openInterest = mOpenInterest
+End Property
+
+Public Property Get openInterestChanged() As Long
+openInterestChanged = mOpenInterestChanged
+End Property
+
+Public Property Get openValue() As Double
+openValue = mOpen
+End Property
+
 Public Property Get tickVolume() As Long
 tickVolume = mTickVolume
+End Property
+
+Public Property Get volume() As Long
+volume = mVolume
+End Property
+
+Public Property Get volumeChanged() As Long
+volumeChanged = mVolumeChanged
 End Property
 
 '@================================================================================
@@ -193,26 +229,43 @@ Friend Sub initialise( _
                 ByVal openValue As Double, _
                 ByVal highValue As Double, _
                 ByVal lowValue As Double, _
-                ByVal closeVale As Double, _
-                ByVal tickVolume As Long)
+                ByVal closeValue As Double, _
+                Optional ByVal volume As Long, _
+                Optional ByVal tickVolume As Long, _
+                Optional ByVal openInterest As Long)
 mTimestamp = timestamp
 mOpen = openValue
 mHigh = highValue
 mLow = lowValue
 mClose = closeValue
+mVolume = volume
+mTickVolume = tickVolume
+mOpenInterest = openInterest
+
 mBarChanged = True
 mOpenChanged = True
 mHighChanged = True
 mLowChanged = True
 mCloseChanged = True
+If mVolume <> 0 Then mVolumeChanged = True
+
+If mOpenInterest <> 0 Then mOpenInterestChanged = True
+If mTickVolume <> 0 Then mTickVolumeChanged = True
 End Sub
 
-Friend Sub Tick(ByVal value As Double)
-mBarChanged = False
-mOpenChanged = False
-mHighChanged = False
-mLowChanged = False
-mCloseChanged = False
+Friend Sub notifyOpenInterest( _
+                ByVal openInterest As Long)
+clean
+' note that we don't set mBlank to false because the bar is blank until
+' the first value is notified
+mOpenInterest = openInterest
+mBarChanged = True
+mOpenInterestChanged = True
+
+End Sub
+
+Friend Sub notifyValue(ByVal value As Double)
+clean
 
 If mBlank Then
     mBlank = False
@@ -241,11 +294,34 @@ End If
 mTickVolume = mTickVolume + 1
 End Sub
 
+Friend Sub notifyVolume( _
+                ByVal volume As Long)
+clean
+' note that we don't set mBlank to false because the bar is blank until
+' the first value is notified
+mVolume = volume
+mBarChanged = True
+mVolumeChanged = True
+
+End Sub
+
+Public Sub resetChangeIndicators()
+clean
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-
+Private Sub clean()
+mBarChanged = False
+mOpenChanged = False
+mHighChanged = False
+mLowChanged = False
+mCloseChanged = False
+mVolumeChanged = False
+mOpenInterestChanged = False
+End Sub
 
 
 

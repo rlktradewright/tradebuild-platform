@@ -52,9 +52,9 @@ Implements Study
 Private mStudyFoundation As StudyFoundation
 '--------------------------------------------------------
 
-Private mFiCache As StudyValueCache
-Private mFiCacheShort As StudyValueCache
-Private mFiCacheLong As StudyValueCache
+Private mFiCache As ValueCache
+Private mFiCacheShort As ValueCache
+Private mFiCacheLong As ValueCache
 
 Private mShortMA As Study
 Private mLongMA As Study
@@ -112,24 +112,24 @@ If ev.valueName = FiInputVolume Then
     ' this is a volume notification. We will assume that a volume
     ' that is received as the first notification in a bar relates to a price
     ' reported in the previous bar, so we will not check for a new bar here
-    mCurrentBarVolume = ev.value
+    mCurrentBarVolume = ev.sVal.value
     lForceIndex = calcForceIndex(sPrevInputVal, mPrevBarClose, mCurrentBarVolume)
-    mFiCache.updateValue lForceIndex, , ev.timestamp
+    mFiCache.updateValue lForceIndex, , ev.sVal.timestamp
 Else
     ' this is a price notification
     If Not mStudyFoundation.isNewBar Then
         ' this is the same value as last time, so don't need to do
         ' anything as it won't change the study values
-        If ev.value = sPrevInputVal Then Exit Sub
+        If ev.sVal.value = sPrevInputVal Then Exit Sub
     End If
-    sPrevInputVal = ev.value
+    sPrevInputVal = ev.sVal.value
     
     ' calculate the new value of the Force Index
-    lForceIndex = calcForceIndex(ev.value, mPrevBarClose, mCurrentBarVolume)
+    lForceIndex = calcForceIndex(ev.sVal.value, mPrevBarClose, mCurrentBarVolume)
     
     ' now calculate the two moving averages
     maEv = ev
-    maEv.value = lForceIndex
+    maEv.sVal.value = lForceIndex
     
     mShortMA.notify maEv
     lForceIndexShort = mShortMA.getStudyValue(DefaultStudyValueName, 0).value
@@ -141,31 +141,31 @@ Else
     If mStudyFoundation.isNewBar Then
         mFiCache.addValue lForceIndex, _
                             mStudyFoundation.barNumber, _
-                            ev.timestamp, _
-                            ev.barStartTime
+                            ev.sVal.timestamp, _
+                            ev.sVal.barStartTime
         mFiCacheShort.addValue lForceIndexShort, _
                                 mStudyFoundation.barNumber, _
-                                ev.timestamp, _
-                                ev.barStartTime
+                                ev.sVal.timestamp, _
+                                ev.sVal.barStartTime
         mFiCacheLong.addValue lForceIndexLong, _
                                 mStudyFoundation.barNumber, _
-                                ev.timestamp, _
-                                ev.barStartTime
+                                ev.sVal.timestamp, _
+                                ev.sVal.barStartTime
     Else
-        mFiCache.updateValue lForceIndex, mStudyFoundation.barNumber, ev.timestamp
+        mFiCache.updateValue lForceIndex, mStudyFoundation.barNumber, ev.sVal.timestamp
         mFiCacheShort.updateValue lForceIndexShort, _
                                 mStudyFoundation.barNumber, _
-                                ev.timestamp
+                                ev.sVal.timestamp
         mFiCacheLong.updateValue lForceIndexLong, _
                                 mStudyFoundation.barNumber, _
-                                ev.timestamp
+                                ev.sVal.timestamp
     End If
 End If
 
 ' finally notify all interested parties of each new study value
-notifyValue lForceIndex, FiValueForceIndex, ev.barNumber, ev.timestamp
-notifyValue lForceIndexShort, FiValueForceIndexShort, ev.barNumber, ev.timestamp
-notifyValue lForceIndexLong, FiValueForceIndexLong, ev.barNumber, ev.timestamp
+notifyValue lForceIndex, FiValueForceIndex, ev.sVal.barNumber, ev.sVal.timestamp
+notifyValue lForceIndexShort, FiValueForceIndexShort, ev.sVal.barNumber, ev.sVal.timestamp
+notifyValue lForceIndexLong, FiValueForceIndexLong, ev.sVal.barNumber, ev.sVal.timestamp
 
 End Sub
 
@@ -234,11 +234,11 @@ Private Sub notifyValue( _
                 ByVal timestamp As Date)
 Dim ev As StudyValueEvent
 If Not IsEmpty(value) Then
-    ev.value = value
+    ev.sVal.value = value
     ev.valueName = valueName
     Set ev.Source = Me
-    ev.barNumber = barNumber
-    ev.timestamp = timestamp
+    ev.sVal.barNumber = barNumber
+    ev.sVal.timestamp = timestamp
     mStudyFoundation.notifyValue ev
 End If
 End Sub
@@ -289,7 +289,7 @@ End Property
 
 Private Function Study_getStudyValue( _
                 ByVal valueName As String, _
-                ByVal ref As Long) As StudyValue
+                ByVal ref As Long) As SValue
 Study_getStudyValue = mStudyFoundation.getStudyValue(valueName, ref)
 End Function
 

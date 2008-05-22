@@ -66,10 +66,10 @@ Private mDevs As Double
 
 Private mNumberOfValuesToCache As Long
 
-'Private mBottomCache As StudyValueCache
-'Private mCentreCache As StudyValueCache
-'Private mTopCache As StudyValueCache
-'Private mSpreadCache As StudyValueCache
+'Private mBottomCache As ValueCache
+'Private mCentreCache As ValueCache
+'Private mTopCache As ValueCache
+'Private mSpreadCache As ValueCache
 
 '@================================================================================
 ' Class Event Handlers
@@ -107,9 +107,9 @@ Static sPrevVal As Variant
 Dim ma As Variant
 
 If Not mStudyFoundation.isNewBar Then
-    If ev.value = sPrevVal Then Exit Sub
+    If ev.sVal.value = sPrevVal Then Exit Sub
 End If
-sPrevVal = ev.value
+sPrevVal = ev.sVal.value
 
 mSDStudy.notify ev
 mMAStudy.notify ev
@@ -117,10 +117,10 @@ mMAStudy.notify ev
 ma = mMAStudy.getStudyValue(MovingAverageStudyValueName, 0).value
 If IsEmpty(ma) Or IsEmpty(mSD.SD.value) Then Exit Sub
 
-notifyValue ma, BBValueCentre, ev.barNumber, ev.timestamp, ev.barStartTime
-notifyValue ma + mDevs * mSD.SD.value, BBValueTop, ev.barNumber, ev.timestamp, ev.barStartTime
-notifyValue ma - mDevs * mSD.SD.value, BBValueBottom, ev.barNumber, ev.timestamp, ev.barStartTime
-notifyValue 2 * mDevs * mSD.SD.value, BBValueSpread, ev.barNumber, ev.timestamp, ev.barStartTime
+notifyValue ma, BBValueCentre, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+notifyValue ma + mDevs * mSD.SD.value, BBValueTop, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+notifyValue ma - mDevs * mSD.SD.value, BBValueBottom, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+notifyValue 2 * mDevs * mSD.SD.value, BBValueSpread, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
 End Sub
 
 Private Function customNumberOfBarsRequired() As Long
@@ -182,8 +182,8 @@ End Function
 ' Properties
 '@================================================================================
 
-Public Property Get bottom(Optional ByVal ref As Long) As StudyValue
-Dim sv As StudyValue
+Public Property Get bottom(Optional ByVal ref As Long) As SValue
+Dim sv As SValue
 bottom = mMAStudy.getStudyValue(MovingAverageStudyValueName, ref)
 sv = mSD.SD(ref)
 If IsEmpty(bottom.value) Or IsEmpty(sv.value) Then Exit Property
@@ -191,14 +191,14 @@ bottom.value = bottom.value - mDevs * sv.value
 End Property
 
 Public Property Get bottomFalling(Optional ByVal ref As Long, _
-                                Optional ByVal periods As Long = 1) As StudyValue
+                                Optional ByVal periods As Long = 1) As SValue
 bottomFalling = bottomSlope(ref, periods)
 If IsEmpty(bottomFalling.value) Then Exit Property
 bottomFalling.value = (bottomFalling.value <= (-1 * mSlopeThreshold))
 End Property
 
 Public Property Get bottomFlat(Optional ByVal ref As Long, _
-                                Optional ByVal periods As Long = 1) As StudyValue
+                                Optional ByVal periods As Long = 1) As SValue
 bottomFlat = bottomSlope(ref, periods)
 If IsEmpty(bottomFlat.value) Then Exit Property
 bottomFlat.value = (bottomFlat.value < mSlopeThreshold And _
@@ -206,34 +206,34 @@ bottomFlat.value = (bottomFlat.value < mSlopeThreshold And _
 End Property
 
 Public Property Get bottomRising(Optional ByVal ref As Long, _
-                            Optional ByVal periods As Long = 1) As StudyValue
+                            Optional ByVal periods As Long = 1) As SValue
 bottomRising = bottomSlope(ref, periods)
 If IsEmpty(bottomRising.value) Then Exit Property
 bottomRising.value = (bottomRising.value >= mSlopeThreshold)
 End Property
 
 Public Property Get bottomSlope(Optional ByVal ref As Long, _
-                                Optional ByVal periods As Long = 1) As StudyValue
-Dim sv As StudyValue
+                                Optional ByVal periods As Long = 1) As SValue
+Dim sv As SValue
 bottomSlope = bottom(ref)
 sv = bottom(ref - periods + 1)
 If IsEmpty(bottomSlope.value) Or IsEmpty(sv.value) Then Exit Property
 bottomSlope.value = (bottomSlope.value - sv.value) / periods
 End Property
 
-Public Property Get centre(Optional ByVal ref As Long) As StudyValue
+Public Property Get centre(Optional ByVal ref As Long) As SValue
 centre = mMAStudy.getStudyValue(MovingAverageStudyValueName, ref)
 End Property
 
 Public Property Get centreFalling(Optional ByVal ref As Long, _
-                                Optional ByVal periods As Long = 1) As StudyValue
+                                Optional ByVal periods As Long = 1) As SValue
 centreFalling = centreSlope(ref, periods)
 If IsEmpty(centreFalling.value) Then Exit Property
 centreFalling.value = (centreFalling.value <= (-1 * mSlopeThreshold))
 End Property
 
 Public Property Get centreFlat(Optional ByVal ref As Long, _
-                            Optional ByVal periods As Long = 1) As StudyValue
+                            Optional ByVal periods As Long = 1) As SValue
 centreFlat = centreSlope(ref, periods)
 If IsEmpty(centreFlat.value) Then Exit Property
 centreFlat.value = (centreFlat.value < mSlopeThreshold And _
@@ -241,15 +241,15 @@ centreFlat.value = (centreFlat.value < mSlopeThreshold And _
 End Property
 
 Public Property Get centreRising(Optional ByVal ref As Long, _
-                                Optional ByVal periods As Long = 1) As StudyValue
+                                Optional ByVal periods As Long = 1) As SValue
 centreRising = centreSlope(ref, periods)
 If IsEmpty(centreRising.value) Then Exit Property
 centreRising.value = (centreRising.value >= mSlopeThreshold)
 End Property
 
 Public Property Get centreSlope(Optional ByVal ref As Long, _
-                                Optional ByVal periods As Long = 1) As StudyValue
-Dim sv As StudyValue
+                                Optional ByVal periods As Long = 1) As SValue
+Dim sv As SValue
 centreSlope = centre(ref)
 sv = centre(ref - periods + 1)
 If IsEmpty(centreSlope.value) Or IsEmpty(sv.value) Then Exit Property
@@ -257,14 +257,14 @@ centreSlope.value = (centreSlope.value - sv.value) / periods
 End Property
 
 Public Property Get inBottomBand(ByVal value As Double, _
-                                Optional ByVal ref As Long) As StudyValue
+                                Optional ByVal ref As Long) As SValue
 inBottomBand = bottom(ref)
 If IsEmpty(inBottomBand.value) Then Exit Property
 inBottomBand.value = (value <= (inBottomBand.value + mEdgeBandWidth))
 End Property
 
 Public Property Get inCentreBand(ByVal value As Double, _
-                                Optional ByVal ref As Long) As StudyValue
+                                Optional ByVal ref As Long) As SValue
 Dim bandUpper As Double
 Dim bandLower As Double
 
@@ -279,7 +279,7 @@ inCentreBand.value = (value <= bandUpper _
 End Property
 
 Public Property Get inTopBand(ByVal value As Double, _
-                            Optional ByVal ref As Long) As StudyValue
+                            Optional ByVal ref As Long) As SValue
 inTopBand = top(ref)
 If IsEmpty(inTopBand.value) Then Exit Property
 inTopBand.value = (value >= (inTopBand.value - mEdgeBandWidth))
@@ -288,7 +288,7 @@ End Property
 Public Property Get rangeIntersectsCentreBand( _
                     ByVal lowValue As Double, _
                     ByVal highValue As Double, _
-                    Optional ByVal ref As Long) As StudyValue
+                    Optional ByVal ref As Long) As SValue
 Dim bandUpper As Double
 Dim bandLower As Double
 
@@ -309,16 +309,16 @@ Else
 End If
 End Property
 
-Public Property Get spread(Optional ByVal ref As Long) As StudyValue
-Dim sv As StudyValue
+Public Property Get spread(Optional ByVal ref As Long) As SValue
+Dim sv As SValue
 spread = top(ref)
 sv = bottom(ref)
 If IsEmpty(spread.value) Or IsEmpty(sv.value) Then Exit Property
 spread.value = spread.value - sv.value
 End Property
 
-Public Property Get top(Optional ByVal ref As Long) As StudyValue
-Dim sv As StudyValue
+Public Property Get top(Optional ByVal ref As Long) As SValue
+Dim sv As SValue
 top = mMAStudy.getStudyValue(MovingAverageStudyValueName, ref)
 sv = mSD.SD(ref)
 If IsEmpty(top.value) Or IsEmpty(sv.value) Then Exit Property
@@ -326,14 +326,14 @@ top.value = top.value + mDevs * sv.value
 End Property
 
 Public Property Get topFalling(Optional ByVal ref As Long, _
-                                Optional ByVal periods As Long = 1) As StudyValue
+                                Optional ByVal periods As Long = 1) As SValue
 topFalling = topSlope(ref, periods)
 If IsEmpty(topFalling.value) Then Exit Property
 topFalling.value = (topFalling.value <= (-1 * mSlopeThreshold))
 End Property
 
 Public Property Get topFlat(Optional ByVal ref As Long, _
-                            Optional ByVal periods As Long = 1) As StudyValue
+                            Optional ByVal periods As Long = 1) As SValue
 topFlat = topSlope(ref, periods)
 If IsEmpty(topFlat.value) Then Exit Property
 topFlat.value = (topFlat.value < mSlopeThreshold And _
@@ -341,15 +341,15 @@ topFlat.value = (topFlat.value < mSlopeThreshold And _
 End Property
 
 Public Property Get topRising(Optional ByVal ref As Long, _
-                            Optional ByVal periods As Long = 1) As StudyValue
+                            Optional ByVal periods As Long = 1) As SValue
 topRising = topSlope(ref, periods)
 If IsEmpty(topRising.value) Then Exit Property
 topRising.value = (topRising.value >= mSlopeThreshold)
 End Property
 
 Public Property Get topSlope(Optional ByVal ref As Long, _
-                            Optional ByVal periods As Long = 1) As StudyValue
-Dim sv As StudyValue
+                            Optional ByVal periods As Long = 1) As SValue
+Dim sv As SValue
 topSlope = top(ref)
 sv = top(ref - periods + 1)
 If IsEmpty(topSlope.value) Or IsEmpty(sv.value) Then Exit Property
@@ -366,7 +366,7 @@ End Property
 
 Private Function getStudyValue( _
                 ByVal valueName As String, _
-                ByVal ref As Long) As StudyValue
+                ByVal ref As Long) As SValue
 Select Case UCase$(valueName)
 Case UCase$(BBValueBottom)
     getStudyValue = Me.bottom(ref)
@@ -387,12 +387,12 @@ Private Sub notifyValue( _
                 ByVal timestamp As Date)
 Dim ev As StudyValueEvent
 If Not IsEmpty(value) Then
-    ev.value = value
+    ev.sVal.value = value
     ev.valueName = valueName
     Set ev.Source = Me
-    ev.barNumber = barNumber
-    ev.barStartTime = barStartTime
-    ev.timestamp = timestamp
+    ev.sVal.barNumber = barNumber
+    ev.sVal.barStartTime = barStartTime
+    ev.sVal.timestamp = timestamp
     mStudyFoundation.notifyValue ev
 End If
 End Sub
@@ -447,7 +447,7 @@ End Property
 
 Private Function Study_getStudyValue( _
                 ByVal valueName As String, _
-                ByVal ref As Long) As StudyValue
+                ByVal ref As Long) As SValue
 'Study_getStudyValue = mStudyFoundation.getStudyValue(ValueName, ref)
 Study_getStudyValue = getStudyValue(valueName, ref)
 End Function
