@@ -710,7 +710,7 @@ Then
         mNumberOfBars = MaxLong
     ElseIf toDate <> 0 Then
         mToDate = toDate
-        st = GetOffsetSessionTimes(mToDate, _
+        st = GetOffsetSessionTimes(IIf(mToDate = MaxDateValue, Now, mToDate), _
                                     -1, _
                                     getInstrument.sessionStartTime, _
                                     getInstrument.sessionEndTime)
@@ -732,7 +732,7 @@ Else
         If fromDate = 0 Then
             ' calculate the earliest possible date for the supplied number of bars (assuming
             ' there are no gaps in the data)
-            mFromDate = OffsetBarStartTime(IIf(toDate = MaxDateValue, Now, toDate), _
+            mFromDate = OffsetBarStartTime(IIf(mToDate = MaxDateValue, Now, mToDate), _
                                         mSpecifier.barLength, _
                                         mSpecifier.barLengthUnits, _
                                         -1 * mSpecifier.maxNumberOfBars, _
