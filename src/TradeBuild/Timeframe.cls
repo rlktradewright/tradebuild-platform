@@ -208,7 +208,7 @@ End Sub
 
 Private Sub IBarDataInputServiceConsumer_BarDataComplete()
 Debug.Print "Timeframe bars loaded: " & mKey
-Debug.Print "Volume: " & mAccumulatedVolume & " at " & mHistoricBar.timestamp
+'Debug.Print "Volume: " & mAccumulatedVolume & " at " & mHistoricBar.timestamp
 mHistoricBarTimer.StopTimer
 mHistoricDataLoaded = True
 mBarReader.ReleaseDataStore
