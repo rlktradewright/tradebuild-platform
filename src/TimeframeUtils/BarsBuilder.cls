@@ -128,13 +128,15 @@ mBars.add pBar, mCurrentBarNumber, pBar.timestamp
 End Sub
 
 Public Sub appendBars( _
-                ByVal pBars As Bars)
-mBars.appendBars pBars
+                ByVal pBars As Bars, _
+                Optional ByVal maxNumberToAppend As Long = &H7FFFFFFF)
+mBars.appendBars pBars, maxNumberToAppend
 End Sub
 
 Public Function appendBarsAsync( _
-                ByVal pBars As Bars) As TaskController
-Set appendBarsAsync = mBars.appendBarsAsync(pBars)
+                ByVal pBars As Bars, _
+                Optional ByVal maxNumberToAppend As Long = &H7FFFFFFF) As TaskController
+Set appendBarsAsync = mBars.appendBarsAsync(pBars, maxNumberToAppend)
 End Function
 
 Public Sub changeSession( _

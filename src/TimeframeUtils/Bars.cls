@@ -431,18 +431,22 @@ fireChange CollItemAdded, pBar
 End Sub
 
 Friend Sub appendBars( _
-                ByVal pBars As Bars)
+                ByVal pBars As Bars, _
+                ByVal maxNumberToAppend As Long)
 Dim i As Long
+Dim max As Long
 
-For i = 1 To pBars.count
+max = IIf(maxNumberToAppend < pBars.count, maxNumberToAppend, pBars.count)
+For i = 1 To max
     add pBars.Bar(i), mCurrentBarNumber + 1, pBars.Bar(i).timestamp
 Next
 End Sub
 
 Friend Function appendBarsAsync( _
-                ByVal pBars As Bars) As TaskController
+                ByVal pBars As Bars, _
+                ByVal maxNumberToAppend As Long) As TaskController
 Dim abt As New AppendBarsTask
-abt.initialise Me, pBars
+abt.initialise Me, pBars, IIf(maxNumberToAppend < pBars.count, maxNumberToAppend, pBars.count)
 Set appendBarsAsync = StartTask(abt, PriorityNormal)
 End Function
 

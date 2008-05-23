@@ -52,6 +52,7 @@ Private mDestBars                           As Bars
 Private mSourceBars                         As Bars
 Private mIndex                              As Long
 Private mProgressModulus                    As Long
+Private mNumberToAppend                     As Long
 
 '@================================================================================
 ' Class Event Handlers
@@ -68,20 +69,20 @@ End Sub
 Private Sub Task_run()
 Dim i As Long
 
-Do While mIndex <= mSourceBars.count And i < 100
+Do While mIndex <= mNumberToAppend And i < 100
     mDestBars.add mSourceBars.Bar(mIndex), _
                     mDestBars.currentBarNumber + 1, _
                     mSourceBars.Bar(mIndex).timestamp
     
     If mProgressModulus <> 0 Then
-        If mIndex Mod mProgressModulus = 0 Then mTaskContext.progress 100 * mIndex / mSourceBars.count
+        If mIndex Mod mProgressModulus = 0 Then mTaskContext.progress 100 * mIndex / mNumberToAppend
     End If
     
     mIndex = mIndex + 1
     i = i + 1
 Loop
 
-If mIndex > mSourceBars.count Then
+If mIndex > mNumberToAppend Then
     mTaskContext.progress 100
     mTaskContext.finish Empty, False
     Exit Sub
@@ -111,10 +112,12 @@ End Property
 
 Friend Sub initialise( _
                 ByVal destBars As Bars, _
-                ByVal sourceBars As Bars)
+                ByVal sourceBars As Bars, _
+                ByVal numberToAppend As Long)
 Set mSourceBars = sourceBars
 Set mDestBars = destBars
-If mSourceBars.count / 20 >= 200 Then mProgressModulus = mSourceBars.count / 20
+mNumberToAppend = numberToAppend
+If mNumberToAppend / 20 >= 200 Then mProgressModulus = mNumberToAppend / 20
 
 mIndex = 1
 
