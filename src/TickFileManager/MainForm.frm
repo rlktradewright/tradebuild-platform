@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#59.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#75.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form MainForm 
    Caption         =   "TradeBuild Tickfile Manager Version 2.6"
    ClientHeight    =   7875
@@ -2014,7 +2014,7 @@ Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             ";Server=" & Replace(ContractServerText, "\", "\\") & _
                             ";User name=" & ContractUsernameText & _
                             ";Password=" & ContractPasswordText, _
-                            , _
+                            "Contracts database", _
                             "Contract database")
 On Error GoTo 0
 If Not sp Is Nothing Then
@@ -2058,7 +2058,7 @@ Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             ";User name=" & UsernameInText & _
                             ";Password=" & PasswordInText & _
                             ";Access mode=ReadOnly", _
-                            , _
+                            "Input tick database", _
                             "Historical tick data input from database")
                                                         
 On Error GoTo 0
@@ -2080,7 +2080,7 @@ Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             ";Server=" & Replace(DbInServerText, "\", "\\") & _
                             ";User name=" & UsernameInText & _
                             ";Password=" & PasswordInText, _
-                            , _
+                            "Contract database", _
                             "Contract data from input database")
 On Error GoTo 0
 If Not sp Is Nothing Then
@@ -2097,7 +2097,7 @@ Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             "TickfileSP26.TickfileServiceProvider", _
                             True, _
                             "Access mode=ReadOnly", _
-                            , _
+                            "Input tickfiles", _
                             "Historical tick data input from files")
 On Error GoTo 0
 If Not sp Is Nothing Then
@@ -2119,7 +2119,7 @@ Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             ";User name=" & UsernameOutText & _
                             ";Password=" & PasswordOutText & _
                             ";Use Synchronous Writes=Yes", _
-                            , _
+                            "Output bar database", _
                             "Historical bar data output to database")
 On Error GoTo 0
 If Not sp Is Nothing Then
@@ -2142,7 +2142,7 @@ Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             ";Password=" & PasswordOutText & _
                             ";Use Synchronous Writes=Yes" & _
                             ";Access mode=WriteOnly", _
-                            , _
+                            "Output tick database", _
                             "Historical tick data output to database")
 On Error GoTo 0
 If Not sp Is Nothing Then
@@ -2163,7 +2163,7 @@ Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             ";Server=" & Replace(DbOutServerText, "\", "\\") & _
                             ";User name=" & UsernameOutText & _
                             ";Password=" & PasswordOutText, _
-                            , _
+                            "Contract database", _
                             "Contract data from output database")
 On Error GoTo 0
 If Not sp Is Nothing Then
@@ -2180,7 +2180,7 @@ Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             "TickfileSP26.TickfileServiceProvider", _
                             True, _
                             "Access mode=WriteOnly", _
-                            , _
+                            "Output tickfiles", _
                             "Historical tick data output to files")
 On Error GoTo 0
 If Not sp Is Nothing Then
@@ -2202,7 +2202,7 @@ Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             ";Password=" & _
                             ";Connection Retry Interval Secs=10" & _
                             ";Keep connection=true", _
-                            , _
+                            "QuoteTracker input tickdata", _
                             "Historical tick data input from QuoteTracker")
 On Error GoTo 0
 If Not sp Is Nothing Then
