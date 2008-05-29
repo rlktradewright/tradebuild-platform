@@ -97,9 +97,9 @@ Private Sub mConnection_ConnectComplete( _
 
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent ConnectFailed(pError.Number, _
-                            ModuleName & ": connection error " & pError.NativeError & vbCrLf & _
-                            pError.Description & vbCrLf & _
-                            gGenerateErrorMessage(pConnection))
+                            ModuleName & ": connection error " & vbCrLf & _
+                            gGenerateErrorMessage(pError) & _
+                            gGenerateConnectionErrorMessages(pConnection))
     Exit Sub
 End If
 
@@ -119,9 +119,9 @@ Private Sub mConnection_ExecuteComplete( _
 mFetchInProgress = False
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent Error(pError.Number, _
-                    ModuleName & ": fetch error " & pError.NativeError & vbCrLf & _
-                    pError.Description & vbCrLf & _
-                    gGenerateErrorMessage(mConnection))
+                    ModuleName & ": fetch error " & vbCrLf & _
+                    gGenerateErrorMessage(pError) & _
+                    gGenerateConnectionErrorMessages(mConnection))
     mConnection.Close
 End If
 End Sub
@@ -137,9 +137,9 @@ Private Sub mRsBars_FetchComplete( _
 mFetchInProgress = False
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent Error(pError.Number, _
-                    ModuleName & ": fetch error " & pError.NativeError & vbCrLf & _
-                    pError.Description & vbCrLf & _
-                    gGenerateErrorMessage(mConnection))
+                    ModuleName & ": fetch error " & vbCrLf & _
+                    gGenerateErrorMessage(pError) & _
+                    gGenerateConnectionErrorMessages(mConnection))
     mConnection.Close
     Exit Sub
 End If
@@ -167,7 +167,7 @@ End Property
 ' Methods
 '@===============================================================================
 
-Public Sub FetchBars( _
+Public Sub fetchBars( _
                         ByVal barType As Long, _
                         ByVal barLength As Long, _
                         ByVal NumberOfBars As Long, _

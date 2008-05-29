@@ -82,9 +82,9 @@ Private Sub mConnection_ConnectComplete( _
 
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent ConnectFailed(pError.Number, _
-                            ModuleName & ": connection error " & pError.NativeError & vbCrLf & _
-                            pError.Description & vbCrLf & _
-                            gGenerateErrorMessage(pConnection))
+                            ModuleName & ": connection error " & vbCrLf & _
+                            gGenerateErrorMessage(pError) & _
+                            gGenerateConnectionErrorMessages(pConnection))
 Else
     RaiseEvent ConnectSucceeded
     mConnection.Close
@@ -121,7 +121,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function FetchBars( _
+Public Function fetchBars( _
                 ByVal specifier As ContractSpecifier, _
                 ByVal barLength As Long, _
                 ByVal barLengthUnits As TimePeriodUnits, _
@@ -131,8 +131,8 @@ Public Function FetchBars( _
                 Optional ByVal customSessionStartTime As Date, _
                 Optional ByVal customSessionEndTime As Date, _
                 Optional ByVal includeBarsOutsideSession As Boolean, _
-                Optional ByVal barType As BarTypes = BarTypeTrade) As bars
-Dim lInstrument As instrument
+                Optional ByVal barType As BarTypes = BarTypeTrade) As Bars
+Dim lInstrument As Instrument
 
 Dim failpoint As Long
 On Error GoTo Err
@@ -140,11 +140,11 @@ On Error GoTo Err
 Set lInstrument = InstrumentFactory.loadBySpecifier(specifier)
 If lInstrument Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "fetchbars", _
+            ProjectName & "." & ModuleName & ":" & "fetchBars", _
             "The specified contract is not known"
 End If
 
-Set FetchBars = lInstrument.FetchBars(barLength, _
+Set fetchBars = lInstrument.fetchBars(barLength, _
                 barLengthUnits, _
                 maxNumberOfBars, _
                 fromDate, _
@@ -158,7 +158,7 @@ Exit Function
 
 Err:
 Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "fetchbars" & "." & failpoint & _
+        ProjectName & "." & ModuleName & ":" & "fetchBars" & "." & failpoint & _
         IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
         Err.Description
 End Function
@@ -173,7 +173,8 @@ Public Function fetchbarsAsync( _
                 Optional ByVal customSessionStartTime As Date, _
                 Optional ByVal customSessionEndTime As Date, _
                 Optional ByVal includeBarsOutsideSession As Boolean, _
-                Optional ByVal barType As BarTypes = BarTypeTrade) As TaskController
+                Optional ByVal barType As BarTypes = BarTypeTrade, _
+                Optional ByVal cookie As Variant) As TaskController
 Dim fbt As New FetchBarsTask
 fbt.initialise Me, _
                 specifier, _
@@ -186,7 +187,7 @@ fbt.initialise Me, _
                 customSessionEndTime, _
                 includeBarsOutsideSession, _
                 barType
-Set fetchbarsAsync = StartTask(fbt, PriorityNormal)
+Set fetchbarsAsync = StartTask(fbt, PriorityNormal, , cookie)
 End Function
 
 Friend Sub initialise( _
@@ -210,6 +211,31 @@ Set mConnection = New ADODB.Connection
 mConnection.CursorLocation = CursorLocationEnum.adUseClient
 mConnection.Open mConnectionString, , , ConnectOptionEnum.adAsyncConnect
 End Sub
+
+Public Function loadContracts( _
+                ByVal contractSpec As ContractSpecifier) As Contracts
+Dim instruments As DataObjects
+Dim Instrument As BusinessDataObject
+Dim builder As ContractsBuilder
+
+Set instruments = Me.InstrumentFactory.queryObjectsBySpec(contractSpec)
+
+Set builder = CreateContractsBuilder(contractSpec)
+
+For Each Instrument In instruments
+    builder.AddContract gContractFromInstrument(Instrument)
+Next
+
+Set loadContracts = builder.Contracts
+End Function
+
+Public Function loadContractsAsync( _
+                ByVal contractSpec As ContractSpecifier, _
+                Optional ByVal cookie As Variant) As TaskController
+Dim crt As New ContractsRetrievalTask
+crt.initialise Me, contractSpec
+Set loadContractsAsync = StartTask(crt, PriorityNormal, , cookie)
+End Function
 
 '@================================================================================
 ' Helper Functions

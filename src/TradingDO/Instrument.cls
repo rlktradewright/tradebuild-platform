@@ -506,7 +506,7 @@ End Function
 Public Function CreateBarDataWriter() As BarDataWriter
 Set CreateBarDataWriter = New BarDataWriter
 CreateBarDataWriter.initialise mDB.connectionString, id, Me
-mWriters.add CreateBarDataWriter
+mWriters.add CreateBarDataWriter, CStr(ObjPtr(CreateBarDataWriter))
 End Function
 
 Public Function CreateTickDataReader() As TickDataReader
@@ -518,14 +518,14 @@ Public Function CreateTickDataWriter() As TickDataWriter
 Set CreateTickDataWriter = New TickDataWriter
 mWriterCounter = mWriterCounter + 1
 CreateTickDataWriter.initialise mDB.connectionString, id, Me, shortName & "/" & mWriterCounter
-mWriters.add CreateTickDataWriter
+mWriters.add CreateTickDataWriter, CStr(ObjPtr(CreateTickDataWriter))
 End Function
 
 Public Sub Delete()
 mDeleted = True
 End Sub
 
-Public Function FetchBars( _
+Public Function fetchBars( _
                 ByVal barLength As Long, _
                 ByVal barLengthUnits As TimePeriodUnits, _
                 ByVal maxNumberOfBars As Long, _
@@ -534,9 +534,12 @@ Public Function FetchBars( _
                 Optional ByVal customSessionStartTime As Date, _
                 Optional ByVal customSessionEndTime As Date, _
                 Optional ByVal includeBarsOutsideSession As Boolean, _
-                Optional ByVal barType As BarTypes = BarTypeTrade) As bars
+                Optional ByVal barType As BarTypes = BarTypeTrade) As Bars
 Dim bf As BarFetcher
 Dim specifier As BarDataSpecifier
+
+Dim failpoint As Long
+On Error GoTo Err
 
 Select Case barLengthUnits
 Case TimePeriodSecond, _
@@ -550,7 +553,7 @@ Case TimePeriodSecond, _
     TimePeriodTickMovement
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "FetchBars", _
+            ProjectName & "." & ModuleName & ":" & "fetchBars", _
             "Bar time unit not supported"
 End Select
 
@@ -567,8 +570,17 @@ specifier.setCustomSessionTimes customSessionStartTime, customSessionEndTime
 Set bf = New BarFetcher
 bf.initialise mDB, Me
 
-Set FetchBars = bf.FetchBars(specifier)
+Set fetchBars = bf.fetchBars(specifier)
 Set bf = Nothing
+
+Exit Function
+
+Err:
+Err.Raise Err.Number, _
+        ProjectName & "." & ModuleName & ":" & "fetchBars" & "." & failpoint & _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
+        Err.Description
+
 End Function
 
 Public Function fetchbarsAsync( _
@@ -580,7 +592,8 @@ Public Function fetchbarsAsync( _
                 Optional ByVal customSessionStartTime As Date, _
                 Optional ByVal customSessionEndTime As Date, _
                 Optional ByVal includeBarsOutsideSession As Boolean, _
-                Optional ByVal barType As BarTypes = BarTypeTrade) As TaskController
+                Optional ByVal barType As BarTypes = BarTypeTrade, _
+                Optional ByVal cookie As Variant) As TaskController
 Dim bf As BarFetcher
 Dim specifier As BarDataSpecifier
 
@@ -644,18 +657,89 @@ End Sub
 
 Friend Sub releaseWriter( _
                 ByVal writer As Object)
-Dim i As Long
-Dim obj As Object
 
-For i = mWriters.count To 1 Step -1
-    Set obj = mWriters.item(i)
-    If obj Is writer Then
-        mWriters.remove i
-        Exit Sub
-    End If
-Next
+mWriters.remove CStr(ObjPtr(writer))
+
+'Dim i As Long
+'Dim obj As Object
+'
+'For i = mWriters.count To 1 Step -1
+'    Set obj = mWriters.item(i)
+'    If obj Is writer Then
+'        mWriters.remove i
+'        Exit Sub
+'    End If
+'Next
 
 End Sub
+
+Public Sub WriteBar( _
+                ByVal timestamp As Date, _
+                ByVal barType As Long, _
+                ByVal barLength As Long, _
+                ByVal openPrice As Double, _
+                ByVal highPrice As Double, _
+                ByVal lowPrice As Double, _
+                ByVal closePrice As Double, _
+                ByVal volume As Long, _
+                ByVal tickVolume As Long, _
+                ByVal openInterest As Long)
+Dim lBarWriter As New BarWriter
+
+Dim failpoint As Long
+On Error GoTo Err
+
+lBarWriter.initialise mDB.connectionString, id
+
+lBarWriter.WriteBar timestamp, _
+                    barType, _
+                    barLength, _
+                    openPrice, _
+                    highPrice, _
+                    lowPrice, _
+                    closePrice, _
+                    volume, _
+                    tickVolume, _
+                    openInterest
+
+Exit Sub
+
+Err:
+Err.Raise Err.Number, _
+        ProjectName & "." & ModuleName & ":" & "WriteBar" & "." & failpoint & _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
+        Err.Description
+
+End Sub
+
+Public Function WriteBarAsync( _
+                ByVal timestamp As Date, _
+                ByVal barType As Long, _
+                ByVal barLength As Long, _
+                ByVal openPrice As Double, _
+                ByVal highPrice As Double, _
+                ByVal lowPrice As Double, _
+                ByVal closePrice As Double, _
+                ByVal volume As Long, _
+                ByVal tickVolume As Long, _
+                ByVal openInterest As Long, _
+                Optional ByVal cookie As Variant) As TaskController
+Dim lBarWriter As New BarWriter
+
+lBarWriter.initialise mDB.connectionString, id
+
+Set WriteBarAsync = lBarWriter.WriteBarAsync(timestamp, _
+                                            barType, _
+                                            barLength, _
+                                            openPrice, _
+                                            highPrice, _
+                                            lowPrice, _
+                                            closePrice, _
+                                            volume, _
+                                            tickVolume, _
+                                            openInterest, _
+                                            cookie)
+End Function
 
 '@===============================================================================
 ' Helper Functions

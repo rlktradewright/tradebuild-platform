@@ -72,7 +72,7 @@ Private mCmd As ADODB.Command
 
 Private mConnectionString As String
 
-Private mParent As instrument
+Private mParent As Instrument
 
 Private mAsynchronous As Boolean
 
@@ -95,9 +95,9 @@ Private Sub mConnection_ConnectComplete( _
 
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent ConnectFailed(pError.Number, _
-                            ModuleName & ": connection error " & pError.NativeError & vbCrLf & _
-                            pError.Description & vbCrLf & _
-                            gGenerateErrorMessage(pConnection))
+                            ModuleName & ": connection error " & vbCrLf & _
+                            gGenerateErrorMessage(pError) & _
+                            gGenerateConnectionErrorMessages(pConnection))
     mParent.releaseWriter Me
     Exit Sub
 End If
@@ -122,12 +122,12 @@ Private Sub mConnection_ExecuteComplete( _
                             ByVal pRecordset As ADODB.Recordset, _
                             ByVal pConnection As ADODB.Connection)
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
-    RaiseEvent Error(pError.Number, _
-                    ModuleName & ": execution error " & pError.NativeError & vbCrLf & _
-                    pError.Description & vbCrLf & _
-                    gGenerateErrorMessage(pConnection))
     Debug.Print "BarDataWriter error writing bar data: (" & pError.Number & ") " & pError.Description
-    'connectToDB
+    RaiseEvent Error(pError.Number, _
+                    ModuleName & ": execution error " & vbCrLf & _
+                    gGenerateErrorMessage(pError) & _
+                    gGenerateConnectionErrorMessages(pConnection))
+    mConnection.Close
 Else
     mConnection.Close
     RaiseEvent DataWritten
@@ -146,7 +146,7 @@ End Sub
 Friend Sub initialise( _
                 ByVal connectionString As String, _
                 ByVal instrumentId As Long, _
-                ByVal parent As instrument)
+                ByVal parent As Instrument)
 mConnectionString = connectionString
 mInstrumentID = instrumentId
 Set mParent = parent

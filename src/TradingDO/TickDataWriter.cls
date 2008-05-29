@@ -72,7 +72,7 @@ Private mCmd As ADODB.Command
 
 Private mConnectionString As String
 
-Private mParent As instrument
+Private mParent As Instrument
 
 Private mWriterId As String
 
@@ -97,9 +97,9 @@ Private Sub mConnection_ConnectComplete( _
 
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent ConnectFailed(pError.Number, _
-                            "TickDataAccessor: connection error " & pError.NativeError & vbCrLf & _
-                            pError.Description & vbCrLf & _
-                            gGenerateErrorMessage(pConnection))
+                            "TickDataAccessor: connection error " & vbCrLf & _
+                            gGenerateErrorMessage(pError) & _
+                            gGenerateConnectionErrorMessages(pConnection))
     Debug.Print "Writer " & mWriterId & " error connecting to db: (" & pError.Number & ") " & pError.Description
     mParent.releaseWriter Me
     Exit Sub
@@ -128,11 +128,11 @@ Private Sub mConnection_ExecuteComplete( _
                             ByVal pConnection As ADODB.Connection)
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent Error(pError.Number, _
-                    "TickDataWriter: execution error " & pError.NativeError & vbCrLf & _
-                    pError.Description & vbCrLf & _
-                    gGenerateErrorMessage(pConnection))
+                    "TickDataWriter: execution error " & vbCrLf & _
+                    gGenerateErrorMessage(pError) & _
+                    gGenerateConnectionErrorMessages(pConnection))
     Debug.Print "TickDataWriter " & mWriterId & " error writing tick data: (" & pError.Number & ") " & pError.Description
-    'connectToDB
+    mConnection.Close
 Else
     mConnection.Close
     Debug.Print "Writer " & mWriterId & " data written"
@@ -162,7 +162,7 @@ End Sub
 Friend Sub initialise( _
                 ByVal connectionString As String, _
                 ByVal instrumentId As Long, _
-                ByVal parent As instrument, _
+                ByVal parent As Instrument, _
                 ByVal writerId As String)
 mConnectionString = connectionString
 mInstrumentID = instrumentId

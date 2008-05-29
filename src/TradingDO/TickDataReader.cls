@@ -96,9 +96,9 @@ Private Sub mConnection_ConnectComplete( _
 
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent ConnectFailed(pError.Number, _
-                            ModuleName & ": connection error " & pError.NativeError & vbCrLf & _
-                            pError.Description & vbCrLf & _
-                            gGenerateErrorMessage(pConnection))
+                            ModuleName & ": connection error " & vbCrLf & _
+                            gGenerateErrorMessage(pError) & _
+                            gGenerateConnectionErrorMessages(pConnection))
     Exit Sub
 End If
 
@@ -118,9 +118,9 @@ Private Sub mConnection_ExecuteComplete( _
 mFetchInProgress = False
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent Error(pError.Number, _
-                    ModuleName & ": fetch error " & pError.NativeError & vbCrLf & _
-                    pError.Description & vbCrLf & _
-                    gGenerateErrorMessage(mConnection))
+                    ModuleName & ": fetch error " & vbCrLf & _
+                    gGenerateErrorMessage(pError) & _
+                    gGenerateConnectionErrorMessages(mConnection))
     mConnection.Close
 End If
 End Sub
@@ -136,11 +136,13 @@ Private Sub mRsTick_FetchComplete( _
 mFetchInProgress = False
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     RaiseEvent Error(pError.Number, _
-                    ModuleName & ": fetch error " & pError.NativeError & vbCrLf & _
-                    pError.Description & vbCrLf & _
-                    gGenerateErrorMessage(mConnection))
+                    ModuleName & ": fetch error " & vbCrLf & _
+                    gGenerateErrorMessage(pError) & _
+                    gGenerateConnectionErrorMessages(mConnection))
     Exit Sub
 End If
+mRsTick.ActiveConnection = Nothing
+mConnection.Close
 RaiseEvent DataFetched
 End Sub
 
@@ -194,9 +196,7 @@ Public Function ReadData( _
 If mFetchInProgress Then Exit Function
 
 If mRsTick.EOF Then
-    Set mRsTick.ActiveConnection = Nothing
     Set mRsTick = Nothing
-    mConnection.Close
     Set mConnection = Nothing
     Exit Function
 End If

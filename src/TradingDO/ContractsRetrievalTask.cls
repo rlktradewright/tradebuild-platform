@@ -53,15 +53,10 @@ Private mDB                                 As TradingDB
 
 Private mBuilder                            As ContractsBuilder
 
-Private mServiceConsumer                    As IContractInfoServiceConsumer
-Private mCommonServiceConsumer              As ICommonServiceConsumer
+Private WithEvents mFetchInstrumentsTC      As TaskController
+Attribute mFetchInstrumentsTC.VB_VarHelpID = -1
 
-Private WithEvents mFetchSummariesTC        As TaskController
-Attribute mFetchSummariesTC.VB_VarHelpID = -1
-Private WithEvents mFetchInstrumentTC       As TaskController
-Attribute mFetchInstrumentTC.VB_VarHelpID = -1
-
-Private mSummariesEnumerator                As Enumerator
+Private mInstrEnumerator                    As Enumerator
 
 Private mHandle                             As Long
 
@@ -74,13 +69,23 @@ Private mHandle                             As Long
 '@================================================================================
 
 Private Sub Task_cancel()
-If Not mFetchSummariesTC Is Nothing Then mFetchSummariesTC.cancelTask
+If Not mFetchInstrumentsTC Is Nothing Then mFetchInstrumentsTC.cancelTask
 End Sub
 
 Private Sub Task_run()
-Dim fieldNames() As String
-Set mFetchSummariesTC = mDB.InstrumentFactory.loadSummariesBySpecAsync(fieldNames, mBuilder.Contracts.ContractSpecifier)
-mTaskContext.sleep -1
+Dim instrument As BusinessDataObject
+
+If mInstrEnumerator Is Nothing Then
+    Set mFetchInstrumentsTC = mDB.InstrumentFactory.queryObjectsBySpecAsync(mBuilder.Contracts.ContractSpecifier)
+    mTaskContext.sleep -1
+Else
+    If Not mInstrEnumerator.moveNext Then
+        mTaskContext.finish mBuilder.Contracts, False
+    Else
+        Set instrument = mInstrEnumerator.current
+        mBuilder.AddContract gContractFromInstrument(instrument)
+    End If
+End If
 End Sub
 
 Private Property Let Task_TaskContext( _
@@ -93,45 +98,22 @@ Task_taskName = mTaskContext.name
 End Property
 
 '@================================================================================
-' mFetchInstrumentTC Event Handlers
+' mFetchInstrumentsTC Event Handlers
 '@================================================================================
 
-Private Sub mFetchInstrumentTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
-Dim instrument As instrument
-Dim lContract As Contract
-
-End Sub
-
-'@================================================================================
-' mFetchSummariesTC Event Handlers
-'@================================================================================
-
-Private Sub mFetchSummariesTC_Completed( _
-                ByRef ev As TWUtilities30.TaskCompletionEvent)
-Dim instrumentSummaries As DataObjectSummaries
-Dim instrumentSummary As DataObjectSummary
+Private Sub mFetchInstrumentsTC_Completed( _
+                ev As TWUtilities30.TaskCompletionEvent)
+Dim instruments As DataObjects
 
 If ev.cancelled Then
+    mTaskContext.finish Empty, True
 ElseIf ev.errorNumber <> 0 Then
-    mCommonServiceConsumer.ServiceProviderError ev.errorNumber, ev.errorMessage, mHandle
+    mTaskContext.Error ev.errorNumber, ev.errorMessage, ev.errorSource
 Else
-    Set instrumentSummaries = ev.result
-    Set mSummariesEnumerator = instrumentSummaries.Enumerator
+    Set instruments = ev.result
+    Set mInstrEnumerator = instruments.Enumerator
     
-    If Not fetchNextInstrument(instrumentSummary.id) Then mTaskContext.finish Empty, False
-    mSummariesEnumerator.moveNext
-    
-    
-    For Each instrumentSummary In instrumentSummaries
-        Set instrument = mDB.InstrumentFactory.loadByID(instrumentSummary.id)
-        
-        Set lContract = ContractFromInstrument(instrument)
-        
-        mRequests(mFirstRequestID).AddContract lContract
-    Next
-    
-    mContractInfoServiceConsumer.LoadComplete mHandle, mRequests(mFirstRequestID)
-    
+    mTaskContext.continue
 End If
 End Sub
 
@@ -145,15 +127,9 @@ End Sub
 
 Friend Sub initialise( _
                 ByVal db As TradingDB, _
-                ByVal builder As ContractsBuilder, _
-                ByVal serviceConsumer As IContractInfoServiceConsumer, _
-                ByVal CommonServiceConsumer As ICommonServiceConsumer, _
-                ByVal handle As Long)
+                ByVal specifier As ContractSpecifier)
 Set mDB = db
-Set mBuilder = builder
-Set mServiceConsumer = serviceConsumer
-Set mCommonServiceConsumer = CommonServiceConsumer
-mHandle = handle
+Set mBuilder = CreateContractsBuilder(specifier)
 End Sub
 
 '@================================================================================

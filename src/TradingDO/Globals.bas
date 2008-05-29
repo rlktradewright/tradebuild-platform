@@ -159,20 +159,26 @@ Public gLogger                                  As Logger
 ' Methods
 '@================================================================================
 
-Public Function gGenerateErrorMessage( _
+Public Function gGenerateConnectionErrorMessages( _
                 ByVal pConnection As ADODB.Connection) As String
-Dim Err As ADODB.Error
+Dim lError As ADODB.Error
 Dim errMsg As String
 
-For Each Err In pConnection.Errors
+For Each lError In pConnection.Errors
     errMsg = "--------------------" & vbCrLf & _
-            "Error " & Err.Number & ": " & Err.Description & vbCrLf & _
-            "    Source: " & Err.Source & vbCrLf & _
-            "    SQL state: " & Err.SQLState & vbCrLf & _
-            "    Native error: " & Err.NativeError & vbCrLf
+            gGenerateErrorMessage(lError)
 Next
 pConnection.Errors.Clear
-gGenerateErrorMessage = errMsg
+gGenerateConnectionErrorMessages = errMsg
+End Function
+
+Public Function gGenerateErrorMessage( _
+                ByVal pError As ADODB.Error)
+gGenerateErrorMessage = _
+        "Error " & pError.Number & ": " & pError.Description & vbCrLf & _
+        "    Source: " & pError.Source & vbCrLf & _
+        "    SQL state: " & pError.SQLState & vbCrLf & _
+        "    Native error: " & pError.NativeError & vbCrLf
 End Function
 
 Public Function gCategoryFromSecType( _
@@ -308,41 +314,43 @@ End Select
 End Function
 
 Public Function gContractFromInstrument( _
-                ByVal instrument As instrument) As Contract
+                ByVal Instrument As Instrument) As Contract
 Dim lContractBuilder As ContractBuilder
 Dim contractSpec As ContractSpecifier
 Dim localSymbol As InstrumentLocalSymbol
-Dim providerIDs As Parameters
+Dim providerIDs As TWUtilities30.Parameters
 
-Set contractSpec = CreateContractSpecifier(instrument.shortName, _
-                                        instrument.symbol, _
-                                        instrument.exchangeName, _
-                                        instrument.secType, _
-                                        instrument.currencyCode, _
-                                        IIf(instrument.expiryDate = 0, "", format(instrument.expiryDate, "yyyymmdd")), _
-                                        instrument.strikePrice, _
-                                        instrument.optionRight)
+Set contractSpec = CreateContractSpecifier(Instrument.shortName, _
+                                        Instrument.symbol, _
+                                        Instrument.exchangeName, _
+                                        Instrument.secType, _
+                                        Instrument.currencyCode, _
+                                        IIf(Instrument.expiryDate = 0, "", format(Instrument.expiryDate, "yyyymmdd")), _
+                                        Instrument.strikePrice, _
+                                        Instrument.optionRight)
 
 Set lContractBuilder = CreateContractBuilder(contractSpec)
 With lContractBuilder
-    .daysBeforeExpiryToSwitch = instrument.daysBeforeExpiryToSwitch
-    .Description = instrument.name
-    .expiryDate = instrument.expiryDate
-    .tickSize = instrument.tickSize
-    .multiplier = instrument.tickValue / instrument.tickSize
-    .TimeZone = GetTimeZone(instrument.timeZoneCanonicalName)
+    .daysBeforeExpiryToSwitch = Instrument.daysBeforeExpiryToSwitch
+    .Description = Instrument.name
+    .expiryDate = Instrument.expiryDate
+    .tickSize = Instrument.tickSize
+    .multiplier = Instrument.tickValue / Instrument.tickSize
+    .TimeZone = GetTimeZone(Instrument.timeZoneCanonicalName)
     
-    If instrument.localSymbols.count > 0 Then
+    .sessionEndTime = Instrument.sessionEndTime
+    .sessionStartTime = Instrument.sessionStartTime
+
+If False Then 'fix this up using hierarchical recordsets !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    If Instrument.localSymbols.count > 0 Then
         Set providerIDs = New TWUtilities30.Parameters
 
-        For Each localSymbol In instrument.localSymbols
+        For Each localSymbol In Instrument.localSymbols
             providerIDs.setParameterValue localSymbol.providerKey, localSymbol.localSymbol
         Next
         .providerIDs = providerIDs
     End If
-    
-    .sessionEndTime = instrument.sessionEndTime
-    .sessionStartTime = instrument.sessionStartTime
+End If
     
 End With
 Set gContractFromInstrument = lContractBuilder.Contract

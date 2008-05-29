@@ -194,14 +194,6 @@ End Select
                 
 End Function
 
-'Public Function InstrumentCategoryFromString( _
-'                ByVal value As String) As InstrumentCategories
-'InstrumentCategoryFromString = gCategoryFromString(value)
-'End Function
-'
-'Public Function InstrumentCategoryToString(ByVal value As InstrumentCategories) As String
-'InstrumentCategoryToString = gCategoryToString(value)
-'End Function
 '@================================================================================
 ' Helper Functions
 '@================================================================================

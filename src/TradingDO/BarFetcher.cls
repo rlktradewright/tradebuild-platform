@@ -138,7 +138,6 @@ Case Fetching
 Case ProcessingBars
     
     If mTaskContext.cancelPending Then
-        releaseConnection
         mTaskContext.finish Empty, True
         Exit Sub
     End If
@@ -153,7 +152,6 @@ Case ProcessingBars
 Case ProcessingTicks
     
     If mTaskContext.cancelPending Then
-        releaseConnection
         mTaskContext.finish Empty, True
         Exit Sub
     End If
@@ -170,6 +168,7 @@ Case ProcessingTicks
                 mAsyncState = Fetching
                 mTaskContext.sleep -1   ' wait for more ticks to be fetched
             Else
+                mConnection.Close
                 mTaskContext.finish mFetchBarsBuilder.Bars, False
             End If
         Else
@@ -211,6 +210,7 @@ Else
         fetchMoreTicks
         mAsyncState = Fetching
     Else
+        mConnection.Close
         mTaskContext.finish mFetchBarsBuilder.Bars, False
     End If
 End If
@@ -224,20 +224,20 @@ Private Sub mConnection_ConnectComplete( _
                 ByVal pError As ADODB.Error, _
                 adStatus As ADODB.EventStatusEnum, _
                 ByVal pConnection As ADODB.Connection)
+Dim s As String
 
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
+    s = "Connection error " & vbCrLf & _
+        gGenerateErrorMessage(pError) & _
+        gGenerateConnectionErrorMessages(pConnection)
+
     If mAsynchronous Then
+        mTaskContext.Error pError.Number, _
+                            ProjectName & "." & ModuleName & ":" & "mConnection_ConnectComplete" & vbCrLf & s
+    Else
         Err.Raise pError.Number, _
                     ProjectName & "." & ModuleName & ":" & "mConnection_ConnectComplete", _
-                    "Connection error " & pError.NativeError & vbCrLf & _
-                    pError.Description & vbCrLf & _
-                    gGenerateErrorMessage(pConnection)
-    Else
-        mTaskContext.Error pError.Number, _
-                            ProjectName & "." & ModuleName & ":" & "mConnection_ConnectComplete", _
-                            "Connection error " & pError.NativeError & vbCrLf & _
-                            pError.Description & vbCrLf & _
-                            gGenerateErrorMessage(pConnection)
+                    s
     End If
     Exit Sub
 End If
@@ -263,20 +263,21 @@ Private Sub mConnection_ExecuteComplete( _
                 ByVal pCommand As ADODB.Command, _
                 ByVal pRecordset As ADODB.Recordset, _
                 ByVal pConnection As ADODB.Connection)
+Dim s As String
+
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
+    s = "Fetch error " & vbCrLf & _
+        gGenerateErrorMessage(pError) & _
+        gGenerateConnectionErrorMessages(pConnection)
+        
+    mConnection.Close
     If mAsynchronous Then
+        mTaskContext.Error pError.Number, _
+                            ProjectName & "." & ModuleName & ":" & "mConnection_ExecuteComplete" & vbCrLf & s
+    Else
         Err.Raise pError.Number, _
                 ProjectName & "." & ModuleName & ":" & "mConnection_ExecuteComplete", _
-                "Fetch error " & pError.NativeError & vbCrLf & _
-                pError.Description & vbCrLf & _
-                gGenerateErrorMessage(pConnection)
-        Exit Sub
-    Else
-        mTaskContext.Error pError.Number, _
-                            ProjectName & "." & ModuleName & ":" & "mConnection_ExecuteComplete", _
-                            "Connection error " & pError.NativeError & vbCrLf & _
-                            pError.Description & vbCrLf & _
-                            gGenerateErrorMessage(pConnection)
+                s
     End If
     Exit Sub
 End If
@@ -290,23 +291,25 @@ Private Sub mRs_FetchComplete( _
                 ByVal pError As ADODB.Error, _
                 adStatus As ADODB.EventStatusEnum, _
                 ByVal pRecordset As ADODB.Recordset)
+Dim s As String
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
+    s = "Fetch error " & vbCrLf & _
+        gGenerateErrorMessage(pError) & _
+        gGenerateConnectionErrorMessages(mConnection)
+    
+    mConnection.Close
     If mAsynchronous Then
+        mTaskContext.Error pError.Number, _
+                            ProjectName & "." & ModuleName & ":" & "mConnection_FetchComplete" & vbCrLf & s
+    Else
         Err.Raise pError.Number, _
                 ProjectName & "." & ModuleName & ":" & "mConnection_FetchComplete", _
-                "Fetch error " & pError.NativeError & vbCrLf & _
-                pError.Description & vbCrLf & _
-                gGenerateErrorMessage(mConnection)
-    Else
-        mTaskContext.Error pError.Number, _
-                            ProjectName & "." & ModuleName & ":" & "mConnection_FetchComplete", _
-                            "Fetch error " & pError.NativeError & vbCrLf & _
-                            pError.Description & vbCrLf & _
-                            gGenerateErrorMessage(mConnection)
+                s
     End If
     Exit Sub
 End If
 
+mRs.ActiveConnection = Nothing
 If mAsynchronous Then
     If mRequestTicks Then
         If noTicks Then
@@ -315,11 +318,11 @@ If mAsynchronous Then
             Else
                 mTaskContext.finish mFetchBarsBuilder.Bars, False
             End If
-            releaseConnection
         Else
             mAsyncState = ProcessingTicks
         End If
     Else
+        mConnection.Close
         If Not mRs.BOF Then
             mRs.MoveLast    ' because the stored procedure returns them in reverse order
         End If
@@ -346,8 +349,8 @@ End Sub
 ' Methods
 '@================================================================================
 
-Friend Function FetchBars( _
-                        ByVal specifier As BarDataSpecifier) As Bars
+Friend Function fetchBars( _
+                ByVal specifier As BarDataSpecifier) As Bars
 
 mAsynchronous = False
 Set mSpecifier = specifier
@@ -365,7 +368,7 @@ If Not mRequestTicks Then
                 mFromDate, _
                 mToDate
                 
-    Set FetchBars = processBars
+    Set fetchBars = processBars
 Else
     
     doFetchTicks mFromDate, mToDate
@@ -385,16 +388,17 @@ Else
             End If
         Loop
         
-        Set FetchBars = mFetchBarsBuilder.Bars
+        Set fetchBars = mFetchBarsBuilder.Bars
     End If
 End If
 
-releaseConnection
-                        
+mConnection.Close
+
 End Function
 
 Friend Function fetchbarsAsync( _
-                        ByVal specifier As BarDataSpecifier) As TaskController
+                ByVal specifier As BarDataSpecifier, _
+                Optional ByVal cookie As Variant) As TaskController
 mAsyncState = Started
 
 mAsynchronous = True
@@ -402,12 +406,12 @@ Set mSpecifier = specifier
 
 createNewCustomSession
 
-Set fetchbarsAsync = StartTask(Me, PriorityNormal)
+Set fetchbarsAsync = StartTask(Me, PriorityNormal, , cookie)
 End Function
 
 Friend Sub initialise( _
                 ByVal db As TradingDB, _
-                ByVal pInstrument As instrument)
+                ByVal pInstrument As Instrument)
 Set mDB = db
 Set mInstrumentRef = CreateWeakReference(pInstrument)
 
@@ -753,7 +757,7 @@ Else
 End If
 End Sub
 
-Private Function getInstrument() As instrument
+Private Function getInstrument() As Instrument
 Set getInstrument = mInstrumentRef.Target
 End Function
 
@@ -845,15 +849,15 @@ Private Sub processTickData()
 Dim val As SValue
 Dim tdd As TickDataDecoder
 Dim tick As GenericTick
-Dim data() As Byte
+Dim Data() As Byte
 
 If Not filterByTime(mRs("datetime")) Then Exit Sub
     
-data = mRs("data")
+Data = mRs("data")
 Set tdd = CreateTickDecoder(mRs("datetime"), _
                             getInstrument.tickSize, _
                             mRs("baseprice"), _
-                            data, _
+                            Data, _
                             mRs("version"))
 Do While tdd.getNextTick(tick)
     val.timestamp = tick.timestamp
@@ -897,12 +901,6 @@ Do While Not mRs.EOF
     processTickData
     mRs.moveNext
 Loop
-End Sub
-
-Private Sub releaseConnection()
-
-Set mRs.ActiveConnection = Nothing
-mConnection.Close
 End Sub
 
 Private Function tickVolume() As Long

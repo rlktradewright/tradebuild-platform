@@ -8,7 +8,7 @@ BEGIN
 END
 Attribute VB_Name = "BarWriter"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = True
+Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -30,19 +30,21 @@ Option Explicit
 ' Interfaces
 '@===============================================================================
 
+Implements Task
+
 '@===============================================================================
 ' Events
 '@===============================================================================
 
-Event ConnectFailed( _
-                ByVal errorCode As Long, _
-                ByVal errorDesc As String)
-
-Event DataWritten()
-
-Event Error( _
-                ByVal errorCode As Long, _
-                ByVal errorDesc As String)
+'Event ConnectFailed( _
+'                ByVal errorCode As Long, _
+'                ByVal errorDesc As String)
+'
+'Event DataWritten()
+'
+'Event Error( _
+'                ByVal errorCode As Long, _
+'                ByVal errorDesc As String)
 
 '@===============================================================================
 ' Constants
@@ -72,66 +74,106 @@ Private mCmd                                    As ADODB.Command
 
 Private mConnectionString                       As String
 
-Private mParent                                 As Instrument
-
 Private mAsynchronous                           As Boolean
+
+Private mTaskContext                            As TaskContext
+
+Private mTimestamp                              As Date
+Private mBarType                                As Long
+Private mBarLength                              As Long
+Private mOpenPrice                              As Double
+Private mHighPrice                              As Double
+Private mLowPrice                               As Double
+Private mClosePrice                             As Double
+Private mVolume                                 As Long
+Private mTickVolume                             As Long
+Private mOpenInterest                           As Long
 
 '@===============================================================================
 ' Class Event Handlers
 '@===============================================================================
 
 '@===============================================================================
-' XXXX Interface Members
+' Task Interface Members
 '@===============================================================================
+
+Private Sub Task_cancel()
+If Not mCmd Is Nothing Then
+    mCmd.cancel
+    mConnection.Close
+ElseIf Not mConnection Is Nothing Then
+    mConnection.cancel
+    mConnection.Close
+End If
+mTaskContext.finish Empty, True
+End Sub
+
+Private Sub Task_run()
+connectToDB
+mTaskContext.sleep -1
+End Sub
+
+Private Property Let Task_TaskContext(ByVal value As TWUtilities30.TaskContext)
+Set mTaskContext = value
+End Property
+
+Private Property Get Task_taskName() As String
+Task_taskName = mTaskContext.name
+End Property
 
 '@===============================================================================
 ' mConnection Event Handlers
 '@===============================================================================
 
 Private Sub mConnection_ConnectComplete( _
-                            ByVal pError As ADODB.Error, _
-                            adStatus As ADODB.EventStatusEnum, _
-                            ByVal pConnection As ADODB.Connection)
+                ByVal pError As ADODB.Error, _
+                adStatus As ADODB.EventStatusEnum, _
+                ByVal pConnection As ADODB.Connection)
 
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
-    RaiseEvent ConnectFailed(pError.Number, _
-                            ModuleName & ": connection error " & vbCrLf & _
+    If mAsynchronous Then
+        mTaskContext.Error pError.Number, _
+                            "Connection error " & vbCrLf & _
                             gGenerateErrorMessage(pError) & _
-                            gGenerateConnectionErrorMessages(pConnection))
-    mParent.releaseWriter Me
-    Exit Sub
+                            gGenerateConnectionErrorMessages(pConnection)
+        Exit Sub
+    Else
+        Err.Raise pError.Number, _
+                    ProjectName & "." & ModuleName & ":" & "mConnection_ConnectComplete", _
+                    "Connection error " & vbCrLf & _
+                    gGenerateErrorMessage(pError) & _
+                    gGenerateConnectionErrorMessages(pConnection)
+    End If
 End If
 
-Set mCmd.ActiveConnection = mConnection
-If mAsynchronous Then
-    mCmd.Execute , _
-                , _
-                ExecuteOptionEnum.adAsyncExecute + ExecuteOptionEnum.adExecuteNoRecords
-Else
-    mCmd.Execute , _
-                , _
-                ExecuteOptionEnum.adExecuteNoRecords
-End If
+If mAsynchronous Then doWriteBar
 End Sub
 
 Private Sub mConnection_ExecuteComplete( _
-                            ByVal RecordsAffected As Long, _
-                            ByVal pError As ADODB.Error, _
-                            adStatus As ADODB.EventStatusEnum, _
-                            ByVal pCommand As ADODB.Command, _
-                            ByVal pRecordset As ADODB.Recordset, _
-                            ByVal pConnection As ADODB.Connection)
+                ByVal RecordsAffected As Long, _
+                ByVal pError As ADODB.Error, _
+                adStatus As ADODB.EventStatusEnum, _
+                ByVal pCommand As ADODB.Command, _
+                ByVal pRecordset As ADODB.Recordset, _
+                ByVal pConnection As ADODB.Connection)
+Dim s As String
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
-    Debug.Print "BarDataWriter error writing bar data: (" & pError.Number & ") " & pError.Description
-    RaiseEvent Error(pError.Number, _
-                    ModuleName & ": execution error " & vbCrLf & _
-                    gGenerateErrorMessage(pError) & _
-                    gGenerateConnectionErrorMessages(pConnection))
+    s = "Execution error " & vbCrLf & _
+        gGenerateErrorMessage(pError) & _
+        gGenerateConnectionErrorMessages(pConnection)
+    
     mConnection.Close
+    If mAsynchronous Then
+        mTaskContext.Error pError.Number, ProjectName & "." & ModuleName & ":" & "mConnection_ExecuteComplete" & vbCrLf & s
+        Exit Sub
+    Else
+        Err.Raise pError.Number, _
+                    ProjectName & "." & ModuleName & ":" & "mConnection_ExecuteComplete", _
+                    s
+    End If
 Else
     mConnection.Close
-    RaiseEvent DataWritten
-    mParent.releaseWriter Me
+    If mAsynchronous Then mTaskContext.finish 0, False
 End If
 End Sub
 
@@ -145,29 +187,88 @@ End Sub
 
 Friend Sub initialise( _
                 ByVal connectionString As String, _
-                ByVal instrumentId As Long, _
-                ByVal parent As Instrument)
+                ByVal instrumentId As Long)
 mConnectionString = connectionString
 mInstrumentID = instrumentId
-Set mParent = parent
 End Sub
 
-Public Sub WriteBar( _
-                        ByVal timestamp As Date, _
-                        ByVal barType As Long, _
-                        ByVal barLength As Long, _
-                        ByVal openPrice As Double, _
-                        ByVal highPrice As Double, _
-                        ByVal lowPrice As Double, _
-                        ByVal closePrice As Double, _
-                        ByVal volume As Long, _
-                        ByVal tickVolume As Long, _
-                        ByVal openInterest As Long, _
-                        ByVal asynchronous As Boolean)
+Friend Sub WriteBar( _
+                ByVal timestamp As Date, _
+                ByVal barType As Long, _
+                ByVal barLength As Long, _
+                ByVal openPrice As Double, _
+                ByVal highPrice As Double, _
+                ByVal lowPrice As Double, _
+                ByVal closePrice As Double, _
+                ByVal volume As Long, _
+                ByVal tickVolume As Long, _
+                ByVal openInterest As Long)
+
+mAsynchronous = True
+mTimestamp = timestamp
+mBarType = barType
+mBarLength = barLength
+mOpenPrice = openPrice
+mHighPrice = highPrice
+mLowPrice = lowPrice
+mClosePrice = closePrice
+mVolume = volume
+mTickVolume = tickVolume
+mOpenInterest = openInterest
+
+connectToDB
+
+doWriteBar
+
+End Sub
+
+Friend Function WriteBarAsync( _
+                ByVal timestamp As Date, _
+                ByVal barType As Long, _
+                ByVal barLength As Long, _
+                ByVal openPrice As Double, _
+                ByVal highPrice As Double, _
+                ByVal lowPrice As Double, _
+                ByVal closePrice As Double, _
+                ByVal volume As Long, _
+                ByVal tickVolume As Long, _
+                ByVal openInterest As Long, _
+                ByVal cookie As Variant) As TaskController
+
+mAsynchronous = True
+mTimestamp = timestamp
+mBarType = barType
+mBarLength = barLength
+mOpenPrice = openPrice
+mHighPrice = highPrice
+mLowPrice = lowPrice
+mClosePrice = closePrice
+mVolume = volume
+mTickVolume = tickVolume
+mOpenInterest = openInterest
+
+Set WriteBarAsync = StartTask(Me, PriorityNormal, , cookie)
+
+End Function
+
+'@===============================================================================
+' Helper Functions
+'@===============================================================================
+
+Private Sub connectToDB()
+If Not mConnection Is Nothing Then mConnection.Close
+Set mConnection = New ADODB.Connection
+mConnection.CursorLocation = CursorLocationEnum.adUseClient
+If mAsynchronous Then
+    mConnection.Open mConnectionString, , , ConnectOptionEnum.adAsyncConnect
+Else
+    mConnection.Open mConnectionString
+End If
+End Sub
+
+Private Sub doWriteBar()
 
 Dim param As ADODB.Parameter
-
-mAsynchronous = asynchronous
 
 Set mCmd = New ADODB.Command
 mCmd.CommandType = adCmdStoredProc
@@ -187,7 +288,7 @@ Set param = mCmd.CreateParameter(, _
                             DataTypeEnum.adInteger, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
-                            barType)
+                            mBarType)
 mCmd.Parameters.append param
 
 ' @BarLength
@@ -195,7 +296,7 @@ Set param = mCmd.CreateParameter(, _
                             DataTypeEnum.adInteger, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
-                            barLength)
+                            mBarLength)
 mCmd.Parameters.append param
 
 ' @DateAndTime
@@ -203,7 +304,7 @@ Set param = mCmd.CreateParameter(, _
                             DataTypeEnum.adDBTimeStamp, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
-                            timestamp)
+                            mTimestamp)
 mCmd.Parameters.append param
 
 ' @OpenPrice
@@ -211,7 +312,7 @@ Set param = mCmd.CreateParameter(, _
                             DataTypeEnum.adDouble, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
-                            openPrice)
+                            mOpenPrice)
 mCmd.Parameters.append param
 
 ' @HighPrice
@@ -219,7 +320,7 @@ Set param = mCmd.CreateParameter(, _
                             DataTypeEnum.adDouble, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
-                            highPrice)
+                            mHighPrice)
 mCmd.Parameters.append param
 
 ' @LowPrice
@@ -227,7 +328,7 @@ Set param = mCmd.CreateParameter(, _
                             DataTypeEnum.adDouble, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
-                            lowPrice)
+                            mLowPrice)
 mCmd.Parameters.append param
 
 ' @ClosePrice
@@ -235,7 +336,7 @@ Set param = mCmd.CreateParameter(, _
                             DataTypeEnum.adDouble, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
-                            closePrice)
+                            mClosePrice)
 mCmd.Parameters.append param
 
 ' @Volume
@@ -243,7 +344,7 @@ Set param = mCmd.CreateParameter(, _
                             DataTypeEnum.adInteger, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
-                            volume)
+                            mVolume)
 mCmd.Parameters.append param
 
 ' @TickVolume
@@ -251,7 +352,7 @@ Set param = mCmd.CreateParameter(, _
                             DataTypeEnum.adInteger, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
-                            tickVolume)
+                            mTickVolume)
 mCmd.Parameters.append param
 
 ' @OpenInterest
@@ -259,28 +360,18 @@ Set param = mCmd.CreateParameter(, _
                             DataTypeEnum.adInteger, _
                             ParameterDirectionEnum.adParamInput, _
                             , _
-                            openInterest)
+                            mOpenInterest)
 mCmd.Parameters.append param
 
-connectToDB mAsynchronous
-' note that the ConnectComplete event fires regardless of whether the
-' connection is obtained synchronously or asynchronously, and we
-' execute the command when the event fires
-End Sub
-
-'@===============================================================================
-' Helper Functions
-'@===============================================================================
-
-Private Sub connectToDB( _
-                ByVal asynchronous As Boolean)
-If Not mConnection Is Nothing Then mConnection.Close
-Set mConnection = New ADODB.Connection
-mConnection.CursorLocation = CursorLocationEnum.adUseClient
-If asynchronous Then
-    mConnection.Open mConnectionString, , , ConnectOptionEnum.adAsyncConnect
+Set mCmd.ActiveConnection = mConnection
+If mAsynchronous Then
+    mCmd.Execute , _
+                , _
+                ExecuteOptionEnum.adAsyncExecute + ExecuteOptionEnum.adExecuteNoRecords
 Else
-    mConnection.Open mConnectionString
+    mCmd.Execute , _
+                , _
+                ExecuteOptionEnum.adExecuteNoRecords
 End If
 End Sub
 
