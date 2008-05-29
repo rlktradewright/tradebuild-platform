@@ -11,7 +11,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
-                           Option Explicit
+Option Explicit
 
 '@===============================================================================
 ' Description
@@ -32,6 +32,7 @@ Attribute VB_Exposed = True
 
 Implements ICommonServiceProvider
 Implements IContractInfoServiceProvider
+Implements TaskCompletionListener
 
 '@===============================================================================
 ' Events
@@ -41,10 +42,8 @@ Implements IContractInfoServiceProvider
 ' Constants
 '@===============================================================================
 
-Private Const ProjectName As String = "TBInfoBase26"
-Private Const ModuleName As String = "ContractInfoSrvcProvider"
-
-Private Const MaxQueuedRequests As Long = 100
+Private Const ProjectName                       As String = "TBInfoBase26"
+Private Const ModuleName                        As String = "ContractInfoSrvcProvider"
 
 '@===============================================================================
 ' Enums
@@ -58,32 +57,24 @@ Private Const MaxQueuedRequests As Long = 100
 ' Member variables
 '@===============================================================================
 
-Private WithEvents mTradingDB       As TradingDB
+Private mTradingDB                              As TradingDB
 Attribute mTradingDB.VB_VarHelpID = -1
-Private mConnectionString           As String
+Private mConnectionString                       As String
 
-Private mCommonServiceConsumer As ICommonServiceConsumer
-Private mHandle As Long
-Private mContractInfoServiceConsumer As IContractInfoServiceConsumer
+Private mCommonServiceConsumer                  As ICommonServiceConsumer
+Private mHandle                                 As Long
+Private mContractInfoServiceConsumer            As IContractInfoServiceConsumer
 
-Private mRequests(MaxQueuedRequests - 1) As ContractsBuilder
-Private mFirstRequestID As Long
-Private mNextRequestID As Long
-Private mRequestsOutstanding As Long
+Private mRequests                               As Collection
 
-Private mName As String
+Private mName                                   As String
 
-Private WithEvents mTimer As IntervalTimer
-Attribute mTimer.VB_VarHelpID = -1
-
-Private mInstrumentFactory As InstrumentFactory
-
-Private mDatabaseType As DatabaseTypes
-Private mDatabaseName As String
-Private mServer As String
-Private mUserName As String
-Private mPassword As String
-Private mRole As String
+Private mDatabaseType                           As DatabaseTypes
+Private mDatabaseName                           As String
+Private mServer                                 As String
+Private mUserName                               As String
+Private mPassword                               As String
+Private mRole                                   As String
 
 '@===============================================================================
 ' Class Event Handlers
@@ -91,7 +82,6 @@ Private mRole As String
 
 Private Sub Class_Initialize()
 mName = ContractInfoSPName
-Set mTimer = CreateIntervalTimer(1)
 
 mDatabaseType = DbSQLServer2005
 mDatabaseName = "Trading"
@@ -99,6 +89,8 @@ mServer = "localhost"
 mUserName = ""
 mPassword = ""
 mRole = "PRIMARY"
+
+Set mRequests = New Collection
 End Sub
 
 '@===============================================================================
@@ -160,13 +152,10 @@ For Each param In params
     End Select
 Next
 
-If mRole = "PRIMARY" Then
-    mCommonServiceConsumer.RegisterServiceProvider handle, _
-                                            ServiceProviderTypes.ContractInfo
-Else
-    mCommonServiceConsumer.RegisterServiceProvider handle, _
-                                            ServiceProviderTypes.SecondaryContractInfo
-End If
+registerSP
+
+createDatabase
+
 End Sub
 
 Private Property Let ICommonServiceProvider_Name(ByVal RHS As String)
@@ -192,21 +181,13 @@ End Property
 
 Private Sub IContractInfoServiceProvider_RequestContractDetails( _
                             ByVal pContractsBuilder As ContractsBuilder)
+Dim tc As TaskController
+Set tc = mTradingDB.loadContractsAsync(pContractsBuilder.Contracts.ContractSpecifier)
 
-If mNextRequestID = mFirstRequestID And mRequestsOutstanding > 0 Then
-    pContractsBuilder.unableToLoad "Too many contract details requests queued", _
-                                    mName
-End If
+tc.addTaskCompletionListener Me
 
-Set mRequests(mNextRequestID) = pContractsBuilder
+mRequests.Add pContractsBuilder, tc.taskName
 
-If mRequestsOutstanding = 0 Then
-    ' no requests currently queued so start the timer
-    mTimer.StartTimer
-End If
-
-mNextRequestID = (mNextRequestID + 1) Mod MaxQueuedRequests
-mRequestsOutstanding = mRequestsOutstanding + 1
 End Sub
 
 Private Sub IContractInfoServiceProvider_StoreContractDetails( _
@@ -224,60 +205,31 @@ IContractInfoServiceProvider_Supports = supportedCapabilities And capabilities
 End Function
 
 '@===============================================================================
-' mTimer Event Handlers
+' TaskCompletionListener Interface Members
 '@===============================================================================
 
-Private Sub mTimer_TimerExpired()
-Dim instrumentSummaries As DataObjectSummaries
-Dim instrumentSummary As DataObjectSummary
-Dim instrument As instrument
+Private Sub TaskCompletionListener_taskCompleted( _
+                ByRef ev As TWUtilities30.TaskCompletionEvent)
+Dim lBuilder As ContractsBuilder
+Dim lContracts As Contracts
 Dim lContract As Contract
-Dim fieldNames() As String
 
-Dim failpoint As Long
-On Error GoTo Err
-
-If mTradingDB Is Nothing Then
-    If mConnectionString <> "" Then
-        Set mTradingDB = CreateTradingDB(mConnectionString)
+If ev.cancelled Then
+ElseIf ev.errorNumber <> 0 Then
+    mCommonServiceConsumer.ServiceProviderError ev.errorNumber, ev.errorMessage, mHandle
+Else
+    Set lBuilder = mRequests(ev.taskName)
+    mRequests.Remove ev.taskName
+    If IsEmpty(ev.result) Then
+        mContractInfoServiceConsumer.LoadComplete mHandle, lBuilder
     Else
-        Set mTradingDB = CreateTradingDB(GenerateConnectionString(mDatabaseType, _
-                                                                mServer, _
-                                                                mDatabaseName, _
-                                                                mUserName, _
-                                                                mPassword))
+        Set lContracts = ev.result
+        For Each lContract In lContracts
+            lBuilder.AddContract lContract
+        Next
+        mContractInfoServiceConsumer.LoadComplete mHandle, lBuilder
     End If
 End If
-
-Set mInstrumentFactory = mTradingDB.InstrumentFactory
-
-Set instrumentSummaries = mInstrumentFactory.loadSummariesBySpec( _
-                                        fieldNames, _
-                                        mRequests(mFirstRequestID).Contracts.ContractSpecifier)
-
-For Each instrumentSummary In instrumentSummaries
-    Set instrument = mInstrumentFactory.loadByID(instrumentSummary.id)
-    
-    Set lContract = ContractFromInstrument(instrument)
-    
-    mRequests(mFirstRequestID).AddContract lContract
-Next
-
-mContractInfoServiceConsumer.LoadComplete mHandle, mRequests(mFirstRequestID)
-
-mRequestsOutstanding = mRequestsOutstanding - 1
-mFirstRequestID = (mFirstRequestID + 1) Mod MaxQueuedRequests
-If mRequestsOutstanding <> 0 Then mTimer.StartTimer
-
-Exit Sub
-
-Err:
-
-mCommonServiceConsumer.FatalServiceProviderError Err.Number, _
-                ProjectName & "." & ModuleName & ":" & "mTimer_TimerExpired" & "." & failpoint & _
-                IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-                Err.Description, _
-                mHandle
 End Sub
 
 '@===============================================================================
@@ -330,6 +282,18 @@ End Property
 ' Helper Functions
 '@===============================================================================
 
+Private Sub createDatabase()
+If mConnectionString <> "" Then
+    Set mTradingDB = CreateTradingDB(mConnectionString)
+Else
+    Set mTradingDB = CreateTradingDB(GenerateConnectionString(mDatabaseType, _
+                                                            mServer, _
+                                                            mDatabaseName, _
+                                                            mUserName, _
+                                                            mPassword))
+End If
+End Sub
+
 Private Sub handleFatalError( _
                 ByVal Number As Long, _
                 ByVal Source As String, _
@@ -339,4 +303,13 @@ mCommonServiceConsumer.FatalServiceProviderError Number, Source, Description, mH
 Set mCommonServiceConsumer = Nothing
 End Sub
 
+Private Sub registerSP()
+If mRole = "PRIMARY" Then
+    mCommonServiceConsumer.RegisterServiceProvider mHandle, _
+                                            ServiceProviderTypes.ContractInfo
+Else
+    mCommonServiceConsumer.RegisterServiceProvider mHandle, _
+                                            ServiceProviderTypes.SecondaryContractInfo
+End If
+End Sub
 

@@ -76,7 +76,7 @@ Private mReplayProgressEventFrequency As Long
 
 Private mContract                   As Contract
 Private mContractSpecifier          As ContractSpecifier
-Private mInstrument                 As instrument
+Private mInstrument                 As Instrument
 Attribute mInstrument.VB_VarHelpID = -1
 Private WithEvents mTickReader      As TickDataReader
 Attribute mTickReader.VB_VarHelpID = -1

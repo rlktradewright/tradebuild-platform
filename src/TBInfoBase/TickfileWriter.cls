@@ -82,13 +82,16 @@ Private mTotalBytes                 As Long
 Private mTickSize                   As Double
 Private mOpeningTimestamp           As Date   ' timestamp at start of minute period
 
-Private mInstrument                 As instrument
+Private mInstrument                 As Instrument
 Private mUseSynchronousWrites       As Boolean
 
 Private WithEvents mWriteTimer      As IntervalTimer
 Attribute mWriteTimer.VB_VarHelpID = -1
 
 Private mDataAdded                  As Boolean
+
+Private WithEvents mInstrumentTC    As TaskController
+Attribute mInstrumentTC.VB_VarHelpID = -1
 
 '@===============================================================================
 ' Class Event Handlers
@@ -122,23 +125,13 @@ Set ITickfileWriter_Contract = mContract
 End Property
 
 Private Property Let ITickfileWriter_Contract(ByVal RHS As Contract)
-Dim lInstrumentFactory As InstrumentFactory
 
 On Error GoTo Err
 If Not RHS Is Nothing Then
     Set mContract = RHS
 End If
 
-Set lInstrumentFactory = mTradingDB.InstrumentFactory
-Set mInstrument = lInstrumentFactory.loadBySpecifier(mContract.specifier)
-
-'?????????????????????????????????????????????????????
-' consider inserting this instrument into the database
-' if it doesn't exist
-' ????????????????????????????????????????????????????
-    
-Debug.Assert Not mInstrument Is Nothing
-
+Set mInstrumentTC = mTradingDB.InstrumentFactory.loadBySpecifierAsync(mContract.specifier)
 mTickSize = mContract.ticksize
 
 Exit Property
@@ -313,6 +306,27 @@ handleFatalError Err.Number, _
 End Sub
 
 '@===============================================================================
+' mInstrumentTC Event Handlers
+'@===============================================================================
+
+Private Sub mInstrumentTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+If ev.cancelled Then
+ElseIf ev.errorNumber <> 0 Then
+    mServiceConsumer.NotifyEvent StandardSPEventCodes.TFContractSpecifierInvalid, _
+                            ev.errorNumber & ": " & ev.errorMessage, _
+                            mTickfileServiceProvider.handle
+ElseIf IsEmpty(ev.result) Then
+    mServiceConsumer.NotifyEvent StandardSPEventCodes.TFContractSpecifierInvalid, _
+                            "Specified instrument does not exist: " & mContract.specifier.toString, _
+                            mTickfileServiceProvider.handle
+Else
+    Set mInstrument = ev.result
+    mServiceConsumer.Ready = True
+End If
+
+End Sub
+
+'@===============================================================================
 ' mTickWriter Event Handlers
 '@===============================================================================
 
@@ -371,7 +385,6 @@ mServiceConsumer.NotifyEvent StandardSPEventCodes.TFConnectedToDataSource, _
                         "Connected to data source", _
                         mTickfileServiceProvider.handle
 
-mServiceConsumer.Ready = True
 mServiceConsumer.OutputTickfileCreated mConnectionString
 Exit Sub
 Err:

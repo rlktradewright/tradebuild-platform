@@ -31,6 +31,7 @@ Option Explicit
 '@===============================================================================
 
 Implements IBarDataWriter
+Implements TaskCompletionListener
 
 '@===============================================================================
 ' Events
@@ -74,16 +75,17 @@ Private mServiceConsumer            As IBarDataOutputServiceConsumer
 Private mServiceProviderName        As String
 
 Private mContractSpec               As ContractSpecifier
-Private WithEvents mBarWriter       As BarDataWriter
-Attribute mBarWriter.VB_VarHelpID = -1
 
 Private mPath                       As String
 
-Private mInstrument                 As instrument
+Private mInstrument                 As Instrument
 
 Private mTimeframeTable(3)          As TimeframeEntry
 
-Private mUseSynchronousWrites As Boolean
+Private mUseSynchronousWrites       As Boolean
+
+Private WithEvents mInstrumentTC    As TaskController
+Attribute mInstrumentTC.VB_VarHelpID = -1
 
 '@===============================================================================
 ' Class Event Handlers
@@ -133,24 +135,35 @@ Private Sub IBarDataWriter_WriteBar( _
                 ByVal barLength As Long, _
                 ByVal barUnit As TimePeriodUnits)
 Dim index As Long
+Dim tc As TaskController
 
 On Error GoTo Err
 
-Set mBarWriter = mInstrument.CreateBarDataWriter
-
 With data
-    mBarWriter.WriteBar .timestamp, _
-                        barType, _
-                        barLength, _
-                        .openValue, _
-                        .highValue, _
-                        .lowValue, _
-                        .closeValue, _
-                        .Volume, _
-                        .tickVolume, _
-                        0, _
-                        Not mUseSynchronousWrites
-    
+    If mUseSynchronousWrites Then
+        mInstrument.WriteBar .timestamp, _
+                            barType, _
+                            barLength, _
+                            .openValue, _
+                            .highValue, _
+                            .lowValue, _
+                            .closeValue, _
+                            .Volume, _
+                            .tickVolume, _
+                            .OpenInterest
+    Else
+        Set tc = mInstrument.WriteBarAsync(.timestamp, _
+                                            barType, _
+                                            barLength, _
+                                            .openValue, _
+                                            .highValue, _
+                                            .lowValue, _
+                                            .closeValue, _
+                                            .Volume, _
+                                            .tickVolume, _
+                                            .OpenInterest)
+        tc.addTaskCompletionListener Me
+    End If
     For index = 0 To UBound(mTimeframeTable)
         If mTimeframeTable(index).timeframe.length = barLength Then
             With mTimeframeTable(index)
@@ -168,37 +181,43 @@ End With
 
 Exit Sub
 Err:
-handleFatalError Err.Number, _
-                ProjectName & "." & ModuleName & "::" & "IBarDataWriter_WriteBar", _
-                Err.Description
+mCommonServiceConsumer.ServiceProviderError Err.Number, _
+                                            Err.Description, _
+                                            mHistDataServiceProvider.handle
 End Sub
 
 '@===============================================================================
-' mBarWriter Event Handlers
+' TaskCompletionListener Interface Members
 '@===============================================================================
 
-Private Sub mBarWriter_ConnectFailed(ByVal errorCode As Long, ByVal errorDesc As String)
-On Error GoTo Err
-mServiceConsumer.NotifyEvent StandardSPEventCodes.HDCantConnectDataSource, _
-                        "error " & errorCode & ": " & errorDesc, _
-                        mHistDataServiceProvider.handle
-Exit Sub
-Err:
-handleFatalError Err.Number, _
-                ProjectName & "." & ModuleName & "::" & "mBarWriter_ConnectFailed", _
-                Err.Description
+Private Sub TaskCompletionListener_taskCompleted( _
+                ev As TWUtilities30.TaskCompletionEvent)
+If ev.errorNumber <> 0 Then
+    mCommonServiceConsumer.ServiceProviderError ev.errorNumber, _
+                                        ev.errorMessage, _
+                                        mHistDataServiceProvider.handle
+End If
 End Sub
 
-Private Sub mBarWriter_Error(ByVal errorCode As Long, ByVal errorDesc As String)
-On Error GoTo Err
-mCommonServiceConsumer.ServiceProviderError errorCode, _
-                                    errorDesc, _
-                                    mHistDataServiceProvider.handle
-Exit Sub
-Err:
-handleFatalError Err.Number, _
-                ProjectName & "." & ModuleName & "::" & "mBarWriter_Error", _
-                Err.Description
+'@===============================================================================
+' mInstrumentTC Event Handlers
+'@===============================================================================
+
+Private Sub mInstrumentTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+If ev.cancelled Then
+ElseIf ev.errorNumber <> 0 Then
+    mServiceConsumer.NotifyEvent HDRequestInvalid, _
+                                "Error " & ev.errorNumber & ": " & ev.errorMessage, _
+                                mHistDataServiceProvider.handle
+ElseIf IsEmpty(ev.result) Then
+    mServiceConsumer.NotifyEvent HDRequestInvalid, _
+                                "Error: specified instrument does not exist", _
+                                mHistDataServiceProvider.handle
+Else
+    Set mInstrument = ev.result
+    mServiceConsumer.Ready
+    mServiceConsumer.OutputBarfileCreated mConnectionString
+End If
 End Sub
 
 '@===============================================================================
@@ -207,6 +226,9 @@ End Sub
 
 Private Sub mTradingDB_ConnectFailed(ByVal errorCode As Long, ByVal errorDesc As String)
 On Error GoTo Err
+mServiceConsumer.NotifyEvent StandardSPEventCodes.HDCantConnectDataSource, _
+                        "error " & errorCode & ": " & errorDesc, _
+                        mHistDataServiceProvider.handle
 mServiceConsumer.NotReady
 Exit Sub
 Err:
@@ -229,10 +251,7 @@ For i = 0 To UBound(mTimeframeTable)
                                         mTimeframeTable(i).saveIntervalSeconds
 Next
 
-mServiceConsumer.Ready
-mServiceConsumer.OutputBarfileCreated mConnectionString
-
-getInstrument
+Set mInstrumentTC = mTradingDB.InstrumentFactory.loadBySpecifierAsync(mContractSpec)
 
 Exit Sub
 Err:
@@ -271,7 +290,6 @@ Next
 gLogger.Log LogLevelNormal, _
             s, _
             Me
-Set mBarWriter = Nothing
 Set mServiceConsumer = Nothing
 End Sub
 
@@ -301,16 +319,6 @@ End Sub
 '@===============================================================================
 ' Helper Functions
 '@===============================================================================
-
-Friend Sub getInstrument()
-Dim lInstrumentFactory As InstrumentFactory
-
-Set lInstrumentFactory = mTradingDB.InstrumentFactory
-
-Set mInstrument = lInstrumentFactory.loadBySpecifier(mContractSpec)
-Debug.Assert Not mInstrument Is Nothing
-
-End Sub
 
 Private Sub handleFatalError( _
                 ByVal Number As Long, _
