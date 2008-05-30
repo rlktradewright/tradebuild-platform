@@ -65,6 +65,9 @@ Private mTaskContext                        As TaskContext
 
 Private mEnumerator                         As Enumerator
 
+Private WithEvents mTicker                  As Ticker
+Attribute mTicker.VB_VarHelpID = -1
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -107,8 +110,8 @@ lTicker.outputTickfilePath = mOutputTickfilePath
 
 lTicker.StartTickerFromContract lContract
 
-mTaskContext.sleep 20   ' delay a short time to avoid using too many connections
-                        ' where the database is involved
+mTaskContext.sleep -1   ' delay until the ticker is started to avoid using too
+                        ' many connections where the database is involved
 
 End Sub
 
@@ -155,6 +158,29 @@ Private Sub mContracts_TryLater( _
                 ByVal reason As String, _
                 ByVal serviceProviderName As String)
 ' don't know what we can do to handle this - should log it perhaps?
+End Sub
+
+'@================================================================================
+' mTicker Event Handlers
+'@================================================================================
+
+Private Sub mTicker_stateChange(ev As TWUtilities30.StateChangeEvent)
+Select Case ev.State
+Case TickerStateCreated
+
+Case TickerStateStarting
+
+Case TickerStateRunning
+    mTaskContext.continue
+Case TickerStatePaused
+
+Case TickerStateClosing
+
+Case TickerStateStopped
+    mTaskContext.continue
+Case TickerStateReady
+
+End Select
 End Sub
 
 '@================================================================================
