@@ -24,6 +24,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements Task
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -59,6 +61,10 @@ Private mDOMEventsRequired                  As DOMEvents
 Private mOutputTickfileFormat               As String
 Private mOutputTickfilePath                 As String
 
+Private mTaskContext                        As TaskContext
+
+Private mEnumerator                         As Enumerator
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -68,20 +74,29 @@ Set mSelfRef = Me
 End Sub
 
 '@================================================================================
-' XXXX Interface Members
+' Task Interface Members
 '@================================================================================
 
-'@================================================================================
-' mContracts Event Handlers
-'@================================================================================
+Private Sub Task_cancel()
 
-Private Sub mContracts_CollectionChanged( _
-                ev As TWUtilities30.CollectionChangeEvent)
+End Sub
+
+Private Sub Task_run()
 Dim lContract As Contract
 Dim lTicker As Ticker
 
-Set lContract = ev.affectedItem
+If mTaskContext.CancelPending Then
+    mTaskContext.finish Empty, True
+    Exit Sub
+End If
 
+If Not mEnumerator.moveNext Then
+    mTaskContext.finish Empty, False
+    Exit Sub
+End If
+
+Set lContract = mEnumerator.current
+    
 'check contract is still current
 If lContract.expiryDate <> 0 And lContract.expiryDate < Date Then Exit Sub
 
@@ -91,6 +106,26 @@ lTicker.outputTickfileFormat = mOutputTickfileFormat
 lTicker.outputTickfilePath = mOutputTickfilePath
 
 lTicker.StartTickerFromContract lContract
+
+mTaskContext.sleep 20   ' delay a short time to avoid using too many connections
+                        ' where the database is involved
+
+End Sub
+
+Private Property Let Task_TaskContext(ByVal value As TWUtilities30.TaskContext)
+Set mTaskContext = value
+End Property
+
+Private Property Get Task_taskName() As String
+
+End Property
+
+'@================================================================================
+' mContracts Event Handlers
+'@================================================================================
+
+Private Sub mContracts_CollectionChanged( _
+                ev As TWUtilities30.CollectionChangeEvent)
 End Sub
 
 Private Sub mContracts_ContractSpecifierInvalid( _
@@ -104,7 +139,10 @@ tckrs.notify ev
 End Sub
 
 Private Sub mContracts_NoMoreContractDetails()
-' all tickers have been started so let ourself die
+Set mEnumerator = mContracts.Enumerator
+StartTask Me, PriorityNormal
+
+' now we are a task so no need for the self-ref
 Set mSelfRef = Nothing
 End Sub
 
@@ -152,3 +190,4 @@ End Sub
 Private Function tckrs() As Tickers
 Set tckrs = mTickersRef.Target
 End Function
+
