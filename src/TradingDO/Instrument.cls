@@ -200,7 +200,7 @@ End If
 End Property
 
 Public Property Get daysBeforeExpiryToSwitch() As Long
-daysBeforeExpiryToSwitch = mRs("daysBeforeExpiryToSwitch")
+daysBeforeExpiryToSwitch = Nz(mRs("daysBeforeExpiryToSwitch"), 0)
 End Property
 
 Public Property Get ErrorList() As ErrorList
