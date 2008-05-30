@@ -94,6 +94,8 @@ Set mAllOrders = New Collection
 Set mTimerList = GetGlobalTimerList
 
 mNextBrokerOrderId = 1
+
+Randomize
 End Sub
 
 Private Sub Class_Terminate()
@@ -349,7 +351,7 @@ If Not specifier.Equals(mMarketTable(marketIndex).Contract.specifier) Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             "TradeBuild26.AdvancedOrderSimulator::placeOrder", _
             "Incorrect contract in order " & pOrder.id & ": " & _
-            specifier.ToString
+            specifier.toString
 End If
 
 On Error Resume Next

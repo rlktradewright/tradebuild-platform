@@ -55,10 +55,9 @@ Private mServiceProviderWriterReady As Boolean
 
 Private mPendingWrites As Collection
 
-Private WithEvents mTimer As IntervalTimer
-Attribute mTimer.VB_VarHelpID = -1
+'Private WithEvents mTimer As IntervalTimer
 
-Private mSelfRef As TickfileWriter
+'Private mSelfRef As TickfileWriter
 
 '@================================================================================
 ' Class Event Handlers
@@ -76,14 +75,14 @@ End Sub
 ' xxxx Interface Members
 '@================================================================================
 
-'@================================================================================
-' mTimer Event Handlers
-'@================================================================================
-
-Private Sub mTimer_TimerExpired()
-Set mWriter = Nothing
-Set mSelfRef = Nothing
-End Sub
+''@================================================================================
+'' mTimer Event Handlers
+''@================================================================================
+'
+'Private Sub mTimer_TimerExpired()
+'Set mWriter = Nothing
+'Set mSelfRef = Nothing
+'End Sub
 
 '@================================================================================
 ' Properties
@@ -161,12 +160,12 @@ Public Sub closeOutputFile()
 Debug.Print "TradeBuild26.TickfileWriter - closing output tickfile"
 mWriter.closeOutputFile
 
-Set mSelfRef = Me   ' to ensure this object is kept alive while
-                    ' the writer closes down (it may be doing
-                    ' asynchronous writes)
-
-Set mTimer = CreateIntervalTimer(60, ExpiryTimeUnitSeconds)
-mTimer.StartTimer
+'Set mSelfRef = Me   ' to ensure this object is kept alive while
+'                    ' the writer closes down (it may be doing
+'                    ' asynchronous writes)
+'
+'Set mTimer = CreateIntervalTimer(60, ExpiryTimeUnitSeconds)
+'mTimer.StartTimer
 End Sub
 
 Friend Sub writeAsk(ByVal timestamp As Date, _

@@ -1129,10 +1129,23 @@ Case TradeBuildSP.StandardSPEventCodes.TFConnectedToDataSource
                     eventMessage
     RaiseEvent Notification(ev)
     mTickers.notify ev
-Case Else
+Case TradeBuildSP.StandardSPEventCodes.TFContractSpecifierInvalid, _
+        TradeBuildSP.StandardSPEventCodes.TFContractDetailsInvalid
+    mTickWriter.closeOutputFile
+    Set mTickWriter = Nothing
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyCantWriteToTickfileDataStore
     ev.eventMessage = "Tickfile data store write fail(" & eventCode & "): " & _
+                    eventMessage
+    RaiseEvent Notification(ev)
+    mTickers.notify ev
+    StopTicker
+Case Else
+    mTickWriter.closeOutputFile
+    Set mTickWriter = Nothing
+    Set ev.source = Me
+    ev.eventCode = ApiNotifyCodes.ApiNotifyCantWriteToTickfileDataStore
+    ev.eventMessage = "Problem with Tickfile data store (" & eventCode & "): " & _
                     eventMessage
     RaiseEvent Notification(ev)
     mTickers.notify ev
@@ -2000,16 +2013,14 @@ Set mContract = Nothing
 'Set mContracts = Nothing
 
 If Not mTickWriter Is Nothing Then
-    If mTickWriter.numberOfPendingWrites = 0 Or _
-        mTickWriter.ServiceProviderWriterReady _
-    Then
+    If mTickWriter.numberOfPendingWrites Then
         mTickWriter.closeOutputFile
         Set mTickWriter = Nothing
     Else
         ' we've finished processing the input data before the service provider
         ' writer is ready - so delay releasing the writer until the
         ' service provider writer has had a chance to finish initialising
-        Set mTickWriterReleaseTimer = CreateIntervalTimer(60, ExpiryTimeUnitSeconds)
+        Set mTickWriterReleaseTimer = CreateIntervalTimer(10, ExpiryTimeUnitSeconds)
         mTickWriterReleaseTimer.StartTimer
         Set mSelfRef = Me   ' ensure this ticker isn't released
     End If

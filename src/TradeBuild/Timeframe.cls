@@ -164,6 +164,7 @@ Private mIsHistorical               As Boolean
 
 Private Sub Class_Initialize()
 Set mStateChangeListeners = New Collection
+Randomize
 End Sub
 
 Private Sub Class_Terminate()
@@ -367,10 +368,10 @@ mCurrTradeBarPrevTickvol = mCurrTradeBar.tickVolume
 
 If mWriteBidAndAskBars Then
     WriteABar mCurrAskBar, BarTypeAsk, 0, mCurrAskBarPrevTickvol
-    mCurrAskBarPrevTickvol = mCurrAskBar.tickVolume
+    If Not mCurrAskBar Is Nothing Then mCurrAskBarPrevTickvol = mCurrAskBar.tickVolume
     
     WriteABar mCurrBidBar, BarTypeBid, 0, mCurrBidBarPrevTickvol
-    mCurrBidBarPrevTickvol = mCurrBidBar.tickVolume
+    If Not mCurrBidBar Is Nothing Then mCurrBidBarPrevTickvol = mCurrBidBar.tickVolume
 End If
 End Sub
 '@================================================================================
