@@ -55,8 +55,8 @@ Private mSelfRef                            As TickersStarter
 Private WithEvents mContracts               As Contracts
 Attribute mContracts.VB_VarHelpID = -1
 
-Private mTickersRef                         As WeakReference
-Private mTickerOptions                      As Long
+Private lTickersRef                         As WeakReference
+Private lTickerOptions                      As Long
 Private mDOMEventsRequired                  As DOMEvents
 Private mOutputTickfileFormat               As String
 Private mOutputTickfilePath                 As String
@@ -64,9 +64,6 @@ Private mOutputTickfilePath                 As String
 Private mTaskContext                        As TaskContext
 
 Private mEnumerator                         As Enumerator
-
-Private WithEvents mTicker                  As Ticker
-Attribute mTicker.VB_VarHelpID = -1
 
 '@================================================================================
 ' Class Event Handlers
@@ -88,6 +85,7 @@ Private Sub Task_run()
 Dim lContract As Contract
 Dim lTicker As Ticker
 
+
 If mTaskContext.CancelPending Then
     mTaskContext.finish Empty, True
     Exit Sub
@@ -103,14 +101,14 @@ Set lContract = mEnumerator.current
 'check contract is still current
 If lContract.expiryDate <> 0 And lContract.expiryDate < Date Then Exit Sub
 
-Set lTicker = tckrs.add(mTickerOptions)
+Set lTicker = tckrs.add(lTickerOptions)
 lTicker.DOMEventsRequired = mDOMEventsRequired
 lTicker.outputTickfileFormat = mOutputTickfileFormat
 lTicker.outputTickfilePath = mOutputTickfilePath
 
 lTicker.StartTickerFromContract lContract
 
-mTaskContext.sleep -1   ' delay until the ticker is started to avoid using too
+mTaskContext.sleep 50   ' delay a short while to avoid using too
                         ' many connections where the database is involved
 
 End Sub
@@ -161,29 +159,6 @@ Private Sub mContracts_TryLater( _
 End Sub
 
 '@================================================================================
-' mTicker Event Handlers
-'@================================================================================
-
-Private Sub mTicker_stateChange(ev As TWUtilities30.StateChangeEvent)
-Select Case ev.State
-Case TickerStateCreated
-
-Case TickerStateStarting
-
-Case TickerStateRunning
-    mTaskContext.continue
-Case TickerStatePaused
-
-Case TickerStateClosing
-
-Case TickerStateStopped
-    mTaskContext.continue
-Case TickerStateReady
-
-End Select
-End Sub
-
-'@================================================================================
 ' Properties
 '@================================================================================
 
@@ -199,8 +174,8 @@ Friend Sub startTickers( _
                 Optional ByVal poutputTickfileFormat As String, _
                 Optional ByVal poutputTickfilePath As String)
                 
-Set mTickersRef = CreateWeakReference(pTickers)
-mTickerOptions = pTickerOptions
+Set lTickersRef = CreateWeakReference(pTickers)
+lTickerOptions = pTickerOptions
 mDOMEventsRequired = pDOMEventsRequired
 mOutputTickfileFormat = poutputTickfileFormat
 mOutputTickfilePath = poutputTickfilePath
@@ -214,6 +189,6 @@ End Sub
 '@================================================================================
 
 Private Function tckrs() As Tickers
-Set tckrs = mTickersRef.Target
+Set tckrs = lTickersRef.Target
 End Function
 
