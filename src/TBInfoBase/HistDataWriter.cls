@@ -218,6 +218,7 @@ Else
     mServiceConsumer.Ready
     mServiceConsumer.OutputBarfileCreated mConnectionString
 End If
+Set mInstrumentTC = Nothing
 End Sub
 
 '@===============================================================================
@@ -279,6 +280,11 @@ End Property
 Friend Sub finish()
 Dim s As String
 Dim i As Long
+
+If Not mInstrumentTC Is Nothing Then
+    mInstrumentTC.cancelTask
+    Set mInstrumentTC = Nothing
+End If
 
 s = mServiceProviderName & " (" & mContractSpec.localSymbol & ")"
 For i = 0 To UBound(mTimeframeTable)

@@ -312,8 +312,8 @@ End Sub
 Private Sub mInstrumentTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
 If ev.cancelled Then
 ElseIf ev.errorNumber <> 0 Then
-    mServiceConsumer.NotifyEvent StandardSPEventCodes.TFContractSpecifierInvalid, _
-                            ev.errorNumber & ": " & ev.errorMessage, _
+    mCommonServiceConsumer.ServiceProviderError ev.errorNumber, _
+                            ev.errorMessage, _
                             mTickfileServiceProvider.handle
 ElseIf IsEmpty(ev.result) Then
     mServiceConsumer.NotifyEvent StandardSPEventCodes.TFContractSpecifierInvalid, _
@@ -324,6 +324,7 @@ Else
     mServiceConsumer.Ready = True
 End If
 
+Set mInstrumentTC = Nothing
 End Sub
 
 '@===============================================================================
@@ -343,6 +344,10 @@ Err:
 handleFatalError Err.Number, _
                 ProjectName & "." & ModuleName & "::" & "mTickWriter_ConnectFailed", _
                 Err.Description
+End Sub
+
+Private Sub mTickWriter_DataWritten()
+Set mTickWriter = Nothing
 End Sub
 
 Private Sub mTickWriter_Error( _
@@ -402,15 +407,22 @@ End Sub
 '@===============================================================================
 
 Friend Sub finish()
+If Not mInstrumentTC Is Nothing Then
+    mInstrumentTC.cancelTask
+    Set mInstrumentTC = Nothing
+End If
+
 writePeriodData
-mWriteTimer.StopTimer
-Set mWriteTimer = Nothing
+
+If Not mWriteTimer Is Nothing Then
+    mWriteTimer.StopTimer
+    Set mWriteTimer = Nothing
+End If
+
 gLogger.Log LogLevelNormal, _
             mServiceProviderName & " (" & mContract.specifier.localSymbol & ")" & vbCrLf & _
             "    Total data written: " & mTotalBytes & " bytes", _
             Me
-' we really ought to get rid of mWriter after a suitable delay, or after we
-' know that all writes have been completed
 
 End Sub
 
