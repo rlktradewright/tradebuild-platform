@@ -2006,14 +2006,13 @@ If mInEventHandler Then
     Exit Sub
 End If
 
-Set mContract = Nothing
-
-' NB: we don't do the following because the app may want to look at the contracts
-' after being notified of a duplicate contract spec
+' NB: we don't do the following because the app may want to look at the contract(s)
+' after being notified of a duplicate contract spec or for some other reason
+'Set mContract = Nothing
 'Set mContracts = Nothing
 
 If Not mTickWriter Is Nothing Then
-    If mTickWriter.numberOfPendingWrites Then
+    If mTickWriter.numberOfPendingWrites = 0 Then
         mTickWriter.closeOutputFile
         Set mTickWriter = Nothing
     Else
