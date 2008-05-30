@@ -63,7 +63,7 @@ Event TryLater( _
 ' Member variables
 '@================================================================================
 
-Private mContracts As Collection
+Private mContracts As EnumerableCollection
 
 Private mContractSpecifier As ContractSpecifier
 
@@ -76,7 +76,7 @@ Private mChangeListeners As Collection
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mContracts = New Collection
+Set mContracts = New EnumerableCollection
 Set mChangeListeners = New Collection
 End Sub
 
@@ -94,6 +94,10 @@ End Property
 
 Public Property Get Count() As Long
 Count = mContracts.Count
+End Property
+
+Public Property Get Enumerator() As Enumerator
+Set Enumerator = mContracts.Enumerator
 End Property
 
 '@================================================================================
@@ -131,7 +135,7 @@ End Sub
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
-Set NewEnum = mContracts.[_NewEnum]
+Set NewEnum = mContracts.Enumerator
 End Function
 
 Friend Sub notify( _
