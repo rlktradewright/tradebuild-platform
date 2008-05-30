@@ -8,7 +8,7 @@ BEGIN
 END
 Attribute VB_Name = "StartTickersTask"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = True
+Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -51,6 +51,17 @@ Private mTaskContext                                    As TaskContext
 
 Private mContractsConfig                                As ConfigItem
 
+Private mTickers                                        As Tickers
+Attribute mTickers.VB_VarHelpID = -1
+
+Private mWriteticks                                     As Boolean
+Private mWritebars                                      As Boolean
+
+Private mOutputFormat                                   As String
+Private mOutputPath                                     As String
+
+Private mEnumerator                                     As Enumerator
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -80,77 +91,80 @@ Dim optRight As OptionRights
 Dim writeBidAskBars As Boolean
 Dim includeMarketDepth As Boolean
 
-Dim failpoint As Integer
-
-
+Dim failpoint As Long
 On Error GoTo Err
 
-For Each contractConfig In mContractsConfig.childItems
+If Not mEnumerator.moveNext Then
+    mTaskContext.finish "Yield count =" & mTaskContext.yieldCount, False
+    Exit Sub
+End If
 
-    failpoint = 100 '=====================================================
+Set contractConfig = mEnumerator.current
 
-    If CBool(contractConfig.getAttribute(AttributeNameEnabled)) Then
+failpoint = 100 '=====================================================
+
+If CBool(contractConfig.getAttribute(AttributeNameEnabled)) Then
+
+    includeMarketDepth = CBool(contractConfig.getDefaultableAttribute(AttributeNameIncludeMktDepth, "False"))
+    writeBidAskBars = CBool(contractConfig.getDefaultableAttribute(AttributeNameBidAskBars, "False"))
+
+    failpoint = 200 '=====================================================
     
-        includeMarketDepth = CBool(contractConfig.getDefaultableAttribute(AttributeNameIncludeMktDepth, "False"))
-        writeBidAskBars = CBool(contractConfig.getDefaultableAttribute(AttributeNameBidAskBars, "False"))
+    Set contractSpecConfig = contractConfig.childItems.Item(ConfigNameContractSpecifier)
+    
+    failpoint = 300 '=====================================================
+    
+    With contractSpecConfig
+        localSymbol = .getDefaultableAttribute(AttributeNameLocalSYmbol, "")
+        symbol = .getDefaultableAttribute(AttributeNameSymbol, "")
+        exchange = .getDefaultableAttribute(AttributeNameExchange, "")
+        sectype = SecTypeFromString(.getDefaultableAttribute(AttributeNameSecType, ""))
+        currencyCode = .getDefaultableAttribute(AttributeNameCurrency, "")
+        expiry = .getDefaultableAttribute(AttributeNameExpiry, "")
+        strikePrice = CDbl("0" & .getDefaultableAttribute(AttributeNameStrikePrice, "0.0"))
+        optRight = OptionRightFromString(.getDefaultableAttribute(AttributeNameRight, ""))
+        
+        Set contractSpec = CreateContractSpecifier(localSymbol, _
+                                                symbol, _
+                                                exchange, _
+                                                sectype, _
+                                                currencyCode, _
+                                                expiry, _
+                                                strikePrice, _
+                                                optRight)
+    End With
+    
+    failpoint = 400 '=====================================================
+    
+    mTickers.startTickers _
+                    IIf(mWritebars, TickerOptions.TickerOptWriteTradeBarData, 0) + _
+                    IIf(mWritebars And writeBidAskBars, _
+                        TickerOptions.TickerOptWriteBidAndAskBarData, 0) + _
+                    IIf(mWritebars, TickerOptions.TickerOptUpdateLatestBar, 0) + _
+                    IIf(mWriteticks, TickerOptions.TickerOptWriteTickData, 0) + _
+                    IIf(mWriteticks And includeMarketDepth, _
+                        TickerOptions.TickerOptIncludeMarketDepthInTickfile, 0), _
+                    contractSpec, _
+                    IIf(mWriteticks And includeMarketDepth, DOMEvents.DOMRawEvents, DOMNoEvents), _
+                    mOutputFormat, _
+                    mOutputPath
+    
+End If
 
-        failpoint = 200 '=====================================================
-        
-        Set contractSpecConfig = contractConfig.childItems.Item(ConfigNameContractSpecifier)
-        
-        failpoint = 300 '=====================================================
-        
-        With contractSpecConfig
-            localSymbol = .getDefaultableAttribute(AttributeNameLocalSYmbol, "")
-            symbol = .getDefaultableAttribute(AttributeNameSymbol, "")
-            exchange = .getDefaultableAttribute(AttributeNameExchange, "")
-            sectype = SecTypeFromString(.getDefaultableAttribute(AttributeNameSecType, ""))
-            currencyCode = .getDefaultableAttribute(AttributeNameCurrency, "")
-            expiry = .getDefaultableAttribute(AttributeNameExpiry, "")
-            strikePrice = CDbl("0" & .getDefaultableAttribute(AttributeNameStrikePrice, "0.0"))
-            optRight = OptionRightFromString(.getDefaultableAttribute(AttributeNameRight, ""))
-            
-            Set contractSpec = CreateContractSpecifier(localSymbol, _
-                                                    symbol, _
-                                                    exchange, _
-                                                    sectype, _
-                                                    currencyCode, _
-                                                    expiry, _
-                                                    strikePrice, _
-                                                    optRight)
-        End With
-        
-        failpoint = 400 '=====================================================
-        
-        mTickers.startTickers _
-                        IIf(mWriteBars, TickerOptions.TickerOptWriteTradeBarData, 0) + _
-                        IIf(mWriteBars And writeBidAskBars, _
-                            TickerOptions.TickerOptWriteBidAndAskBarData, 0) + _
-                        IIf(mWriteBars, TickerOptions.TickerOptUpdateLatestBar, 0) + _
-                        IIf(mWriteTicks, TickerOptions.TickerOptWriteTickData, 0) + _
-                        IIf(mWriteTicks And includeMarketDepth, _
-                            TickerOptions.TickerOptIncludeMarketDepthInTickfile, 0), _
-                        contractSpec, _
-                        IIf(mWriteTicks And includeMarketDepth, DOMEvents.DOMRawEvents, DOMNoEvents), _
-                        mOutputFormat, _
-                        mOutputPath
-        
-    End If
-Next
+mTaskContext.sleep 20   ' to avoid creating too many database connections
 
 Exit Sub
 
 Err:
-MsgBox "Error " & Err.Number & ":" & vbCrLf & _
-        "Failpoint: " & failpoint & vbCrLf & _
-        Err.description & vbCrLf & _
-        Err.Source, , "An error has occurred"
+mTaskContext.Error Err.Number, _
+                    Err.description, _
+                    ProjectName & "." & ModuleName & ":" & "Task_run" & "." & failpoint & _
+                    IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 
 End Sub
 
 Private Property Let Task_TaskContext(ByVal value As TWUtilities30.TaskContext)
 Set mTaskContext = value
-Set mContractsConfig = mTaskContext.Data
 End Property
 
 Private Property Get Task_taskName() As String
@@ -168,6 +182,23 @@ End Property
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Friend Sub initialise( _
+                ByVal pTickers As Tickers, _
+                ByVal contractsConfig As ConfigItem, _
+                ByVal writeBars As Boolean, _
+                ByVal writeTicks As Boolean, _
+                ByVal outputFormat As String, _
+                ByVal outputPath As String)
+Set mTickers = pTickers
+Set mContractsConfig = contractsConfig
+mWritebars = writeBars
+mWriteticks = writeTicks
+mOutputFormat = outputFormat
+mOutputPath = outputPath
+
+Set mEnumerator = mContractsConfig.childItems.Enumerator
+End Sub
 
 '@================================================================================
 ' Helper Functions

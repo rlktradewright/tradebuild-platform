@@ -53,30 +53,7 @@ Event TimeframeAdded( _
 Private Const ProjectName                   As String = "TBDataCollector26"
 Private Const ModuleName                    As String = "TBDataCollector"
 
-Private Const AttributeNameBidAskBars       As String = "WriteBidAndAskBars"
-Private Const AttributeNameCurrency         As String = "Currency"
-Private Const AttributeNameEnabled          As String = "Enabled"
-Private Const AttributeNameExpiry           As String = "Expiry"
-Private Const AttributeNameExchange         As String = "Exchange"
-Private Const AttributeNameIncludeMktDepth  As String = "IncludeMarketDepth"
-Private Const AttributeNameLocalSYmbol      As String = "LocalSymbol"
-Private Const AttributeNameRight            As String = "Right"
-Private Const AttributeNameSecType          As String = "SecType"
-Private Const AttributeNameStrikePrice      As String = "StrikePrice"
-Private Const AttributeNameSymbol           As String = "Symbol"
-Private Const AttributeNameWriteTickData    As String = "WriteTickData"
-Private Const AttributeNameWriteBarData     As String = "WriteBarData"
-
 Private Const CommonStudiesLibProgId        As String = "CmnStudiesLib26.StudyLib"
-
-Private Const ConfigNameCollectionControl   As String = "CollectionControl"
-Private Const ConfigNameContract            As String = "Contract"
-Private Const ConfigNameContracts           As String = "Contracts"
-Private Const ConfigNameContractSpecifier   As String = "ContractSpecifier"
-Private Const ConfigNameServiceProviders    As String = "ServiceProviders"
-Private Const ConfigNameTickDataFormat      As String = "TickDataFormat"
-Private Const ConfigNameTickFilePath        As String = "TickFilePath"
-Private Const ConfigNameTradeBuild          As String = "TradeBuild"
 
 '@================================================================================
 ' Enums
@@ -99,9 +76,9 @@ Private mConfig                                         As ConfigItem
 
 Private mContractsConfig                                As ConfigItem
 
-Private mWriteBars                                      As Boolean
+Private mWritebars                                      As Boolean
 
-Private mWriteTicks                                     As Boolean
+Private mWriteticks                                     As Boolean
 
 Private mSupportedOutputFormats()                       As TickfileFormatSpecifier
 Private mOutputFormat                                   As String
@@ -122,6 +99,9 @@ Private mEndTime                                        As Date
 Private mExitProgramTime                                As Date
 
 Private mLogger                                         As Logger
+
+Private WithEvents mStartTasksTC                        As TaskController
+Attribute mStartTasksTC.VB_VarHelpID = -1
 
 '@================================================================================
 ' Class Event Handlers
@@ -189,6 +169,22 @@ mLogger.Log LogLevelSevere, "Error " & Err.Number & " in " & _
 End Sub
 
 '@================================================================================
+' mStartTasksTC Event Handlers
+'@================================================================================
+
+Private Sub mStartTasksTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+If ev.cancelled Then
+ElseIf ev.errorNumber <> 0 Then
+    mLogger.Log LogLevelSevere, _
+                "Error " & ev.errorNumber & " starting tickers: " & _
+                ev.ErrorMessage & vbCrLf & _
+                ev.errorSource
+Else
+    mLogger.Log LogLevelNormal, "Tickers started: " & CStr(ev.result)
+End If
+End Sub
+
+'@================================================================================
 ' mTickers Event Handlers
 '@================================================================================
 
@@ -226,10 +222,6 @@ If ev.State = TickerStates.TickerStateRunning Then
     RaiseEvent TickerAdded(ev.Source)
 End If
 End Sub
-
-'@================================================================================
-' mTickerStartTimer Event Handlers
-'@================================================================================
 
 '@================================================================================
 ' mTradeBuildAPI Event Handlers
@@ -438,7 +430,7 @@ End Sub
 
 Private Sub processConfig()
 Dim i As Long
-Dim outputformat As String
+Dim outputFormat As String
 Dim ci As ConfigItem
 
 Dim failpoint As Long
@@ -450,8 +442,8 @@ failpoint = 100
 mTradeBuildAPI.ServiceProviders.RemoveAll
 RemoveAllStudyLibraries
 
-mWriteTicks = False
-mWriteBars = False
+mWriteticks = False
+mWritebars = False
 mOutputFormat = ""
 mOutputPath = ""
 
@@ -469,13 +461,13 @@ failpoint = 600
 
 Set ci = mConfig.childItems.Item(ConfigNameCollectionControl)
 
-mWriteTicks = ci.getDefaultableAttribute(AttributeNameWriteTickData, "False")
-mWriteBars = ci.getDefaultableAttribute(AttributeNameWriteBarData, "False")
+mWriteticks = ci.getDefaultableAttribute(AttributeNameWriteTickData, "False")
+mWritebars = ci.getDefaultableAttribute(AttributeNameWriteBarData, "False")
 
 
 failpoint = 700
 
-If mWriteTicks Then
+If mWriteticks Then
     On Error Resume Next
     Set ci = Nothing
     Set ci = mConfig.childItems.Item(ConfigNameTickDataFormat)
@@ -484,9 +476,9 @@ If mWriteTicks Then
     If ci Is Nothing Then
         ' the service provider's default format will be used
     Else
-        outputformat = ci.Value
+        outputFormat = ci.value
         For i = 0 To UBound(mSupportedOutputFormats)
-            If UCase$(outputformat) = UCase$(mSupportedOutputFormats(i).Name) Then
+            If UCase$(outputFormat) = UCase$(mSupportedOutputFormats(i).Name) Then
                 mOutputFormat = mSupportedOutputFormats(i).FormalID
                 Exit For
             End If
@@ -503,7 +495,7 @@ On Error Resume Next
 Set ci = Nothing
 Set ci = mConfig.childItems.Item(ConfigNameTickFilePath)
 On Error GoTo Err
-If Not ci Is Nothing Then mOutputPath = ci.Value
+If Not ci Is Nothing Then mOutputPath = ci.value
 
 failpoint = 700
 
@@ -545,87 +537,14 @@ End If
 End Sub
 
 Private Sub startTickers()
-Dim contractSpec As contractSpecifier
-Dim contractConfig As ConfigItem
-Dim contractSpecConfig As ConfigItem
-
-Dim localSymbol As String
-Dim symbol As String
-Dim exchange As String
-Dim sectype As SecurityTypes
-Dim currencyCode As String
-Dim expiry As String
-Dim strikePrice As Double
-Dim optRight As OptionRights
-
-Dim writeBidAskBars As Boolean
-Dim includeMarketDepth As Boolean
-
-Dim failpoint As Integer
-
-
-On Error GoTo Err
-
-For Each contractConfig In mContractsConfig.childItems
-
-    failpoint = 100 '=====================================================
-
-    If CBool(contractConfig.getAttribute(AttributeNameEnabled)) Then
-    
-        includeMarketDepth = CBool(contractConfig.getDefaultableAttribute(AttributeNameIncludeMktDepth, "False"))
-        writeBidAskBars = CBool(contractConfig.getDefaultableAttribute(AttributeNameBidAskBars, "False"))
-
-        failpoint = 200 '=====================================================
-        
-        Set contractSpecConfig = contractConfig.childItems.Item(ConfigNameContractSpecifier)
-        
-        failpoint = 300 '=====================================================
-        
-        With contractSpecConfig
-            localSymbol = .getDefaultableAttribute(AttributeNameLocalSYmbol, "")
-            symbol = .getDefaultableAttribute(AttributeNameSymbol, "")
-            exchange = .getDefaultableAttribute(AttributeNameExchange, "")
-            sectype = SecTypeFromString(.getDefaultableAttribute(AttributeNameSecType, ""))
-            currencyCode = .getDefaultableAttribute(AttributeNameCurrency, "")
-            expiry = .getDefaultableAttribute(AttributeNameExpiry, "")
-            strikePrice = CDbl("0" & .getDefaultableAttribute(AttributeNameStrikePrice, "0.0"))
-            optRight = OptionRightFromString(.getDefaultableAttribute(AttributeNameRight, ""))
-            
-            Set contractSpec = CreateContractSpecifier(localSymbol, _
-                                                    symbol, _
-                                                    exchange, _
-                                                    sectype, _
-                                                    currencyCode, _
-                                                    expiry, _
-                                                    strikePrice, _
-                                                    optRight)
-        End With
-        
-        failpoint = 400 '=====================================================
-        
-        mTickers.startTickers _
-                        IIf(mWriteBars, TickerOptions.TickerOptWriteTradeBarData, 0) + _
-                        IIf(mWriteBars And writeBidAskBars, _
-                            TickerOptions.TickerOptWriteBidAndAskBarData, 0) + _
-                        IIf(mWriteBars, TickerOptions.TickerOptUpdateLatestBar, 0) + _
-                        IIf(mWriteTicks, TickerOptions.TickerOptWriteTickData, 0) + _
-                        IIf(mWriteTicks And includeMarketDepth, _
-                            TickerOptions.TickerOptIncludeMarketDepthInTickfile, 0), _
-                        contractSpec, _
-                        IIf(mWriteTicks And includeMarketDepth, DOMEvents.DOMRawEvents, DOMNoEvents), _
-                        mOutputFormat, _
-                        mOutputPath
-        
-    End If
-Next
-
-Exit Sub
-
-Err:
-MsgBox "Error " & Err.Number & ":" & vbCrLf & _
-        "Failpoint: " & failpoint & vbCrLf & _
-        Err.description & vbCrLf & _
-        Err.Source, , "An error has occurred"
+Dim stTask As New StartTickersTask
+stTask.initialise mTickers, _
+                mContractsConfig, _
+                mWritebars, _
+                mWriteticks, _
+                mOutputFormat, _
+                mOutputPath
+Set mStartTasksTC = StartTask(stTask, PriorityNormal)
 End Sub
 
 
