@@ -777,7 +777,9 @@ inputValueNames(2) = TickVolumeInputName
 Set mTradeBarsStudy = studyMgr.AddStudy(ConstMomentumBarsStudyName, _
                                         mInputStudy, _
                                         inputValueNames, _
-                                        params)
+                                        params, _
+                                        , _
+                                        IIf(mSaveIntervalSeconds <> 0, 2, 0))
 Set barsStudy = mTradeBarsStudy
 Set mTradeBars = barsStudy.bars
 studyMgr.startStudy mTradeBarsStudy, 0
@@ -786,9 +788,11 @@ If mWriteBidAndAskBars Then
     ReDim inputValueNames(0) As String
     inputValueNames(0) = BidInputName
     Set mBidBarsStudy = studyMgr.AddStudy(ConstMomentumBarsStudyName, _
-                                            mInputStudy, _
-                                            inputValueNames, _
-                                            params)
+                                        mInputStudy, _
+                                        inputValueNames, _
+                                        params, _
+                                        , _
+                                        IIf(mSaveIntervalSeconds <> 0, 2, 0))
     Set barsStudy = mBidBarsStudy
     Set mBidBars = barsStudy.bars
     studyMgr.startStudy mBidBarsStudy, 0
@@ -796,9 +800,11 @@ If mWriteBidAndAskBars Then
     ReDim inputValueNames(0) As String
     inputValueNames(0) = AskInputName
     Set mAskBarsStudy = studyMgr.AddStudy(ConstMomentumBarsStudyName, _
-                                            mInputStudy, _
-                                            inputValueNames, _
-                                            params)
+                                        mInputStudy, _
+                                        inputValueNames, _
+                                        params, _
+                                        , _
+                                        IIf(mSaveIntervalSeconds <> 0, 2, 0))
     Set barsStudy = mAskBarsStudy
     Set mAskBars = barsStudy.bars
     studyMgr.startStudy mAskBarsStudy, 0
@@ -822,7 +828,9 @@ inputValueNames(2) = TickVolumeInputName
 Set mTradeBarsStudy = studyMgr.AddStudy(ConstTimeBarsStudyName, _
                                         mInputStudy, _
                                         inputValueNames, _
-                                        params)
+                                        params, _
+                                        , _
+                                        IIf(mSaveIntervalSeconds <> 0, 2, 0))
 Set barsStudy = mTradeBarsStudy
 Set mTradeBars = barsStudy.bars
 studyMgr.startStudy mTradeBarsStudy, 0
@@ -831,9 +839,11 @@ If mWriteBidAndAskBars Then
     ReDim inputValueNames(0) As String
     inputValueNames(0) = BidInputName
     Set mBidBarsStudy = studyMgr.AddStudy(ConstTimeBarsStudyName, _
-                                            mInputStudy, _
-                                            inputValueNames, _
-                                            params)
+                                        mInputStudy, _
+                                        inputValueNames, _
+                                        params, _
+                                        , _
+                                        IIf(mSaveIntervalSeconds <> 0, 2, 0))
     Set barsStudy = mBidBarsStudy
     Set mBidBars = barsStudy.bars
     studyMgr.startStudy mBidBarsStudy, 0
@@ -841,9 +851,11 @@ If mWriteBidAndAskBars Then
     ReDim inputValueNames(0) As String
     inputValueNames(0) = AskInputName
     Set mAskBarsStudy = studyMgr.AddStudy(ConstTimeBarsStudyName, _
-                                            mInputStudy, _
-                                            inputValueNames, _
-                                            params)
+                                        mInputStudy, _
+                                        inputValueNames, _
+                                        params, _
+                                        , _
+                                        IIf(mSaveIntervalSeconds <> 0, 2, 0))
     Set barsStudy = mAskBarsStudy
     Set mAskBars = barsStudy.bars
     studyMgr.startStudy mAskBarsStudy, 0
@@ -865,7 +877,9 @@ inputValueNames(2) = TickVolumeInputName
 Set mTradeBarsStudy = studyMgr.AddStudy(ConstVolumeBarsStudyName, _
                                         mInputStudy, _
                                         inputValueNames, _
-                                        params)
+                                        params, _
+                                        , _
+                                        IIf(mSaveIntervalSeconds <> 0, 2, 0))
 Set barsStudy = mTradeBarsStudy
 Set mTradeBars = barsStudy.bars
 studyMgr.startStudy mTradeBarsStudy, 0
@@ -874,9 +888,11 @@ If mWriteBidAndAskBars Then
     ReDim inputValueNames(0) As String
     inputValueNames(0) = BidInputName
     Set mBidBarsStudy = studyMgr.AddStudy(ConstVolumeBarsStudyName, _
-                                            mInputStudy, _
-                                            inputValueNames, _
-                                            params)
+                                        mInputStudy, _
+                                        inputValueNames, _
+                                        params, _
+                                        , _
+                                        IIf(mSaveIntervalSeconds <> 0, 2, 0))
     Set barsStudy = mBidBarsStudy
     Set mBidBars = barsStudy.bars
     studyMgr.startStudy mBidBarsStudy, 0
@@ -884,9 +900,11 @@ If mWriteBidAndAskBars Then
     ReDim inputValueNames(0) As String
     inputValueNames(0) = AskInputName
     Set mAskBarsStudy = studyMgr.AddStudy(ConstVolumeBarsStudyName, _
-                                            mInputStudy, _
-                                            inputValueNames, _
-                                            params)
+                                        mInputStudy, _
+                                        inputValueNames, _
+                                        params, _
+                                        , _
+                                        IIf(mSaveIntervalSeconds <> 0, 2, 0))
     Set barsStudy = mAskBarsStudy
     Set mAskBars = barsStudy.bars
     studyMgr.startStudy mAskBarsStudy, 0
