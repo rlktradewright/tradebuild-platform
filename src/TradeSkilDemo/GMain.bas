@@ -49,7 +49,7 @@ Public Sub main()
 Dim lTradeSkilDemo As fTradeSkilDemo
 
 InitialiseTWUtilities
-TWUtilities.DefaultLogLevel = TWUtilities30.LogLevels.LogLevelNormal
+DefaultLogLevel = TWUtilities30.LogLevels.LogLevelNormal
 
 If showCommandLineOptions() Then Exit Sub
 
