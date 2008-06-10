@@ -296,7 +296,7 @@ End If
 
 If Not validInput Then Exit Sub
 
-If (exchange <> "" And exchange <> gInstrumentClass.exchange.name) Or _
+If (exchange <> "" And exchange <> gInstrumentClass.exchangeName) Or _
     (sectype <> SecTypeNone And sectype <> gInstrumentClass.sectype) Or _
     (Not gAllowOverrides And _
         ((currencyCode <> "" And currencyCode <> gInstrumentClass.currencyCode) Or _
