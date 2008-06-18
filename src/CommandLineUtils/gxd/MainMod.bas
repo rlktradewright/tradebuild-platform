@@ -119,7 +119,7 @@ End Sub
 
 Private Sub processexchange( _
                 ByVal ex As Exchange)
-gCon.writeLine ex.Name & "," & ex.timeZoneCanonicalName & ",""" & ex.notes & """"
+gCon.writeLine ex.Name & "," & ex.TimeZoneName & ",""" & ex.notes & """"
 End Sub
 
 Private Sub processInput( _
