@@ -114,6 +114,14 @@ cookie = cookie + 1
 Enumerable_nextItem = True
 End Function
 
+Private Sub Enumerable_remove(cookie As Variant)
+    Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
+            ProjectName & "." & ModuleName & ":" & "Enumerable_remove", _
+            "Remove not supported"
+
+
+End Sub
+
 Private Function Enumerable_skip( _
                 ByVal numToSkip As Long, _
                 cookie As Variant) As Boolean
