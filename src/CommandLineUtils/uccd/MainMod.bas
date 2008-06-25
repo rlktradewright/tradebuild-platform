@@ -323,7 +323,12 @@ If dbtype = DbNone Then
 End If
     
 If setupDb Then
-    Set gDb = CreateTradingDB(GenerateConnectionString(dbtype, server, database, username, password))
+    Set gDb = CreateTradingDB(GenerateConnectionString(dbtype, _
+                                                    server, _
+                                                    database, _
+                                                    username, _
+                                                    password), _
+                            dbtype)
 End If
 
 Exit Function
