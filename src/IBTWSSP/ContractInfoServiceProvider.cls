@@ -104,6 +104,7 @@ checkReleaseTWSAPI
 Exit Sub
 
 err:
+logMessage "IBTWSSP:ContractInfoServiceProvider:ContractDetailsRequester_cancelRequest (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "ContractInfoServiceProvider" & "::" & "ContractDetailsRequester_cancelRequest", _
                 err.Description
@@ -121,6 +122,7 @@ mContractInfoServiceConsumer.LoadComplete mHandle, request.tradeBuildContractsBu
 checkReleaseTWSAPI
 Exit Sub
 err:
+logMessage "IBTWSSP:ContractInfoServiceProvider:ContractDetailsRequester_contractsLoaded (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "ContractInfoServiceProvider" & "::" & "ContractDetailsRequester_contractsLoaded", _
                 err.Description
@@ -138,6 +140,7 @@ checkReleaseTWSAPI
 Exit Sub
 
 err:
+logMessage "IBTWSSP:ContractInfoServiceProvider:ContractDetailsRequester_contractSpecifierInvalid (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "ContractInfoServiceProvider" & "::" & "ContractDetailsRequester_contractSpecifierInvalid", _
                 err.Description
@@ -216,6 +219,7 @@ End Property
 
 Private Sub ICommonServiceProvider_Terminate()
 On Error GoTo err
+logMessage "IBTWSSP:ContractInfoServiceProvider:ICommonServiceProvider_Terminate terminating"
 If Not mTWSAPI Is Nothing Then gReleaseTWSAPIInstance mTWSAPI, True
 Set mTWSAPI = Nothing
 ' do these last because there may be a disconnected event from TWSAPI
@@ -223,6 +227,7 @@ Set mCommonServiceConsumer = Nothing
 Set mContractInfoServiceConsumer = Nothing
 Exit Sub
 err:
+logMessage "IBTWSSP:ContractInfoServiceProvider:ICommonServiceProvider_Terminate (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "ContractInfoServiceProvider" & "::" & "ICommonServiceProvider_Terminate", _
                 err.Description
@@ -250,6 +255,7 @@ mTWSAPI.RequestContract pContractsBuilder.Contracts.ContractSpecifier, _
                         Me
 Exit Sub
 err:
+logMessage "IBTWSSP:ContractInfoServiceProvider:IContractInfoServiceProvider_RequestContractDetails (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "ContractInfoServiceProvider" & "::" & "IContractInfoServiceProvider_RequestContractDetails", _
                 err.Description
@@ -290,6 +296,7 @@ Else
 End If
 Exit Sub
 err:
+logMessage "IBTWSSP:ContractInfoServiceProvider:mTWSAPI_ConnectFailed (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "ContractInfoServiceProvider" & "::" & "mTWSAPI_ConnectFailed", _
                 err.Description
@@ -310,6 +317,7 @@ Else
 End If
 Exit Sub
 err:
+logMessage "IBTWSSP:ContractInfoServiceProvider:mTWSAPI_ConnectionToTWSClosed (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "ContractInfoServiceProvider" & "::" & "mTWSAPI_ConnectionToTWSClosed", _
                 err.Description
@@ -323,6 +331,7 @@ mContractInfoServiceConsumer.NotifyEvent StandardSPEventCodes.CIDisconnectedFrom
                                     mHandle
 Exit Sub
 err:
+logMessage "IBTWSSP:ContractInfoServiceProvider:mTWSAPI_Disconnected (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "ContractInfoServiceProvider" & "::" & "mTWSAPI_Disconnected", _
                 err.Description
@@ -407,5 +416,15 @@ Set mTWSAPI = Nothing
 Set mCommonServiceConsumer = Nothing
 Set mContractInfoServiceConsumer = Nothing
 End Sub
+
+
+Private Sub logMessage( _
+                ByVal message As String, _
+                Optional ByVal logLevel As LogLevels = LogLevelNormal)
+If Not gLogger.isLoggable(logLevel) Then Exit Sub
+gLogger.Log logLevel, _
+            message
+End Sub
+
 
 

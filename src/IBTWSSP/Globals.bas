@@ -35,6 +35,137 @@ Public Const TWSLogLevelWarningString       As String = "Warning"
 ' Enums
 '================================================================================
 
+Public Enum ConnectionStates
+    ConnNotConnected
+    ConnConnecting
+    ConnConnected
+End Enum
+
+Public Enum FADataTypes
+    FAGroups = 1
+    FAProfile
+    FAAccountAliases
+End Enum
+
+Public Enum TWSLogLevels
+    TWSLogLevelSystem = 1
+    TWSLogLevelError
+    TWSLogLevelWarning
+    TWSLogLevelInformation
+    TWSLogLevelDetail
+End Enum
+
+Public Enum TWSSocketInMsgTypes
+    TICK_PRICE = 1
+    TICK_SIZE = 2
+    ORDER_STATUS = 3
+    ERR_MSG = 4
+    OPEN_ORDER = 5
+    ACCT_VALUE = 6
+    PORTFOLIO_VALUE = 7
+    ACCT_UPDATE_TIME = 8
+    NEXT_VALID_ID = 9
+    CONTRACT_DATA = 10
+    EXECUTION_DATA = 11
+    MARKET_DEPTH = 12
+    MARKET_DEPTH_L2 = 13
+    NEWS_BULLETINS = 14
+    MANAGED_ACCTS = 15
+    RECEIVE_FA = 16
+    HISTORICAL_DATA = 17
+    BOND_CONTRACT_DATA = 18
+    SCANNER_PARAMETERS = 19
+    SCANNER_DATA = 20
+    TICK_OPTION_COMPUTATION = 21
+    TICK_GENERIC = 45
+    TICK_STRING = 46
+    TICK_EFP = 47
+    CURRENT_TIME = 49
+    REAL_TIME_BARS = 50
+    MAX_SOCKET_INMSG
+End Enum
+
+Public Enum TWSSocketOutMsgTypes
+    REQ_MKT_DATA = 1
+    CANCEL_MKT_DATA = 2
+    PLACE_ORDER = 3
+    CANCEL_ORDER = 4
+    REQ_OPEN_ORDERS = 5
+    REQ_ACCT_DATA = 6
+    REQ_EXECUTIONS = 7
+    REQ_IDS = 8
+    REQ_CONTRACT_DATA = 9
+    REQ_MKT_DEPTH = 10
+    CANCEL_MKT_DEPTH = 11
+    REQ_NEWS_BULLETINS = 12
+    CANCEL_NEWS_BULLETINS = 13
+    SET_SERVER_LOGLEVEL = 14
+    REQ_AUTO_OPEN_ORDERS = 15
+    REQ_ALL_OPEN_ORDERS = 16
+    REQ_MANAGED_ACCTS = 17
+    REQ_FA = 18
+    REPLACE_FA = 19
+    REQ_HISTORICAL_DATA = 20
+    EXERCISE_OPTIONS = 21
+    REQ_SCANNER_SUBSCRIPTION = 22
+    CANCEL_SCANNER_SUBSCRIPTION = 23
+    REQ_SCANNER_PARAMETERS = 24
+    CANCEL_HISTORICAL_DATA = 25
+    REQ_CURRENT_TIME = 49
+    REQ_REAL_TIME_BARS = 50
+    CANCEL_REAL_TIME_BARS = 51
+End Enum
+
+Public Enum TWSSocketTickTypes
+    TICK_BID_SIZE                   ' 0
+    TICK_BID                        ' 1
+    TICK_ASK                        ' 2
+    TICK_ASK_SIZE                   ' 3
+    TICK_LAST                       ' 4
+    TICK_LAST_SIZE                  ' 5
+    TICK_HIGH                       ' 6
+    TICK_LOW                        ' 7
+    TICK_VOLUME                     ' 8
+    TICK_CLOSE                      ' 9
+    TICK_BID_OPTION                 ' 10
+    TICK_ASK_OPTION                 ' 11
+    TICK_LAST_OPTION                ' 12
+    TICK_MODEL_OPTION               ' 13
+    TICK_OPEN                       ' 14
+    TICK_LOW_13_WEEK                ' 15
+    TICK_HIGH_13_WEEK               ' 16
+    TICK_LOW_26_WEEK                ' 17
+    TICK_HIGH_26_WEEK               ' 18
+    TICK_LOW_52_WEEK                ' 19
+    TICK_HIGH_52_WEEK               ' 20
+    TICK_AVG_VOLUME                 ' 21
+    TICK_OPEN_INTEREST              ' 22
+    TICK_OPTION_HISTORICAL_VOL      ' 23
+    TICK_OPTION_IMPLIED_VOL         ' 24
+    TICK_OPTION_BID_EXCH            ' 25
+    TICK_OPTION_ASK_EXCH            ' 26
+    TICK_OPTION_CALL_OPEN_INTEREST  ' 27
+    TICK_OPTION_PUT_OPEN_INTEREST   ' 28
+    TICK_OPTION_CALL_VOLUME         ' 29
+    TICK_OPTION_PUT_VOLUME          ' 30
+    TICK_INDEX_FUTURE_PREMIUM       ' 31
+    TICK_BID_EXCH                   ' 32
+    TICK_ASK_EXCH                   ' 33
+    TICK_AUCTION_VOLUME             ' 34
+    TICK_AUCTION_PRICE              ' 35
+    TICK_AUCTION_IMBALANCE          ' 36
+    TICK_MARK_PRICE                 ' 37
+    TICK_BID_EFP_COMPUTATION        ' 38
+    TICK_ASK_EFP_COMPUTATION        ' 39
+    TICK_LAST_EFP_COMPUTATION       ' 40
+    TICK_OPEN_EFP_COMPUTATION       ' 41
+    TICK_HIGH_EFP_COMPUTATION       ' 42
+    TICK_LOW_EFP_COMPUTATION        ' 43
+    TICK_CLOSE_EFP_COMPUTATION      ' 44
+    TICK_LAST_TIMESTAMP             ' 45
+    TICK_SHORTABLE                  ' 46
+End Enum
+
 '================================================================================
 ' Types
 '================================================================================

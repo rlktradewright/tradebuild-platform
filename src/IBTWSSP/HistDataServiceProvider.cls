@@ -115,6 +115,7 @@ reader.ServiceProviderName = mName & " (reader)"
 mHistDataReaders.add reader
 Exit Function
 err:
+logMessage "IBTWSSP:HistDataServiceProvider:IBarDataServiceProvider_CreateBarDataReader (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "HistDataServiceProvider" & "::" & "IBarDataServiceProvider_CreateBarDataReader", _
                 err.Description
@@ -122,7 +123,7 @@ End Function
 
 Private Function IBarDataServiceProvider_CreateBarDataWriter( _
                             ByVal serviceConsumer As TradeBuildSP.IBarDataOutputServiceConsumer, _
-                            ByVal contractSpec As ContractSpecifier, _
+                            ByVal pContract As Contract, _
                             Optional ByVal location As String = "" _
                             ) As TradeBuildSP.IBarDataWriter
 
@@ -236,6 +237,7 @@ Set mCommonServiceConsumer = Nothing
 
 Exit Sub
 err:
+logMessage "IBTWSSP:HistDataServiceProvider:ICommonServiceProvider_Terminate (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "HistDataServiceProvider" & "::" & "ICommonServiceProvider_Terminate", _
                 err.Description
@@ -337,6 +339,14 @@ mCommonServiceConsumer.FatalServiceProviderError number, source, Description, mH
 finishReaders
 
 Set mCommonServiceConsumer = Nothing
+End Sub
+
+Private Sub logMessage( _
+                ByVal message As String, _
+                Optional ByVal logLevel As LogLevels = LogLevelNormal)
+If Not gLogger.isLoggable(logLevel) Then Exit Sub
+gLogger.Log logLevel, _
+            message
 End Sub
 
 

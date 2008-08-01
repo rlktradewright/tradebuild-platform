@@ -131,6 +131,7 @@ If mTWSAPI.connectionState = ConnConnected Then
 End If
 Exit Sub
 err:
+logMessage "IBTWSSP:RealtimeDataReader:IRealtimeDataReader_StartData (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "RealtimeDataReader" & "::" & "IRealtimeDataReader_StartData", _
                 err.Description
@@ -149,6 +150,7 @@ mIncludeMarketDepth = True
 mTWSAPI.RequestMarketDepth mTickerId
 Exit Sub
 err:
+logMessage "IBTWSSP:RealtimeDataReader:IRealtimeDataReader_StartMarketDepth (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "RealtimeDataReader" & "::" & "IRealtimeDataReader_StartMarketDepth", _
                 err.Description
@@ -160,6 +162,7 @@ finish
 mRealtimeDataServiceProvider.dataReaderFinished Me
 Exit Sub
 err:
+logMessage "IBTWSSP:RealtimeDataReader:IRealtimeDataReader_StopData (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "RealtimeDataReader" & "::" & "IRealtimeDataReader_StopData", _
                 err.Description
@@ -171,6 +174,7 @@ mIncludeMarketDepth = False
 mTWSAPI.CancelMarketDepth mTickerId
 Exit Sub
 err:
+logMessage "IBTWSSP:RealtimeDataReader:IRealtimeDataReader_StopMarketDepth (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "RealtimeDataReader" & "::" & "IRealtimeDataReader_StopMarketDepth", _
                 err.Description
@@ -202,6 +206,7 @@ Else
 End If
 Exit Sub
 err:
+logMessage "IBTWSSP:RealtimeDataReader:mTWSAPI_Connected (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "RealtimeDataReader" & "::" & "mTWSAPI_Connected", _
                 err.Description
@@ -223,6 +228,7 @@ Else
 End If
 Exit Sub
 err:
+logMessage "IBTWSSP:RealtimeDataReader:mTWSAPI_ConnectFailed (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "RealtimeDataReader" & "::" & "mTWSAPI_ConnectFailed", _
                 err.Description
@@ -243,6 +249,7 @@ Else
 End If
 Exit Sub
 err:
+logMessage "IBTWSSP:RealtimeDataReader:mTWSAPI_ConnectionToTWSClosed (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "RealtimeDataReader" & "::" & "mTWSAPI_ConnectionToTWSClosed", _
                 err.Description
@@ -256,6 +263,7 @@ mServiceConsumer.NotifyEvent StandardSPEventCodes.RTDisconnectedFromDataSource, 
                         mRealtimeDataServiceProvider.handle
 Exit Sub
 err:
+logMessage "IBTWSSP:RealtimeDataReader:mTWSAPI_Disconnected (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "RealtimeDataReader" & "::" & "mTWSAPI_Disconnected", _
                 err.Description

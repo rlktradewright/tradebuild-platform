@@ -176,6 +176,7 @@ End If
 ' need some stuff here to cancel if it's an oca group
 Exit Function
 err:
+logMessage "IBTWSSP:OrderSubmitter:cancelOrderPlex (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "OrderSubmitter" & "::" & "IOrderSubmitter_cancelOrderPlex", _
                 err.Description
@@ -204,6 +205,7 @@ Case Else
 End Select
 Exit Sub
 err:
+logMessage "IBTWSSP:OrderSubmitter:cancelStoporder (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "OrderSubmitter" & "::" & "IOrderSubmitter_cancelStopOrder", _
                 err.Description
@@ -231,6 +233,7 @@ Case Else
 End Select
 Exit Sub
 err:
+logMessage "IBTWSSP:OrderSubmitter:cancelTargetOrder (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "OrderSubmitter" & "::" & "IOrderSubmitter_cancelTargetOrder", _
                 err.Description
@@ -285,6 +288,7 @@ Else
 End If
 Exit Sub
 err:
+logMessage "IBTWSSP:OrderSubmitter:executeOrderPlex (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "OrderSubmitter" & "::" & "IOrderSubmitter_executeOrderPlex", _
                 err.Description
@@ -319,6 +323,7 @@ If closeoutOrderChanged Then
 End If
 Exit Sub
 err:
+logMessage "IBTWSSP:OrderSubmitter:IOrderSubmitter_modifyOrderPlex (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "OrderSubmitter" & "::" & "IOrderSubmitter_modifyOrderPlex", _
                 err.Description
@@ -358,6 +363,7 @@ targetOrder.brokerId = "" ' force a new id to be allocated
 placeOrder targetOrder, True, "0", ocaGroup
 Exit Sub
 err:
+logMessage "IBTWSSP:OrderSubmitter:IOrderSubmitter_resubmitStopAndTargetOrders (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "OrderSubmitter" & "::" & "IOrderSubmitter_resubmitStopAndTargetOrders", _
                 err.Description
@@ -381,6 +387,7 @@ Else
 End If
 Exit Sub
 err:
+logMessage "IBTWSSP:OrderSubmitter:IOrderSubmitter_resubmitStopOrder (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "OrderSubmitter" & "::" & "IOrderSubmitter_resubmitStopOrder", _
                 err.Description
@@ -404,6 +411,7 @@ Else
 End If
 Exit Sub
 err:
+logMessage "IBTWSSP:OrderSubmitter:IOrderSubmitter_resubmitTargetOrder (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "OrderSubmitter" & "::" & "IOrderSubmitter_resubmitTargetOrder", _
                 err.Description
@@ -434,6 +442,7 @@ End If
 mServiceConsumer.NotReady
 Exit Sub
 err:
+logMessage "IBTWSSP:OrderSubmitter:mTWSAPI_ConnectFailed (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "OrderSubmitter" & "::" & "mTWSAPI_ConnectFailed", _
                 err.Description
@@ -447,6 +456,7 @@ mServiceConsumer.NotifyEvent StandardSPEventCodes.LOReConnectingToBroker, _
 mServiceConsumer.NotReady
 Exit Sub
 err:
+logMessage "IBTWSSP:OrderSubmitter:mTWSAPI_ConnectionToIBClosed (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "OrderSubmitter" & "::" & "mTWSAPI_ConnectionToIBClosed", _
                 err.Description
@@ -457,6 +467,7 @@ On Error GoTo err
 If Not mContractWrapper Is Nothing Then mServiceConsumer.Ready
 Exit Sub
 err:
+logMessage "IBTWSSP:OrderSubmitter:mTWSAPI_ConnectionToIBRecovered (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "OrderSubmitter" & "::" & "mTWSAPI_ConnectionToIBRecovered", _
                 err.Description
@@ -483,6 +494,7 @@ mServiceConsumer.NotifyEvent StandardSPEventCodes.LODisconnectedFromBroker, _
                         mOrderSubmissionServiceProvider.handle
 Exit Sub
 err:
+logMessage "IBTWSSP:OrderSubmitter:mTWSAPI_Disconnected (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "OrderSubmitter" & "::" & "mTWSAPI_Disconnected", _
                 err.Description
@@ -623,6 +635,14 @@ mCommonServiceConsumer.FatalServiceProviderError number, _
 
 finish
 mOrderSubmissionServiceProvider.orderSubmitterFinished Me
+End Sub
+
+Private Sub logMessage( _
+                ByVal message As String, _
+                Optional ByVal logLevel As LogLevels = LogLevelNormal)
+If Not gLogger.isLoggable(logLevel) Then Exit Sub
+gLogger.Log logLevel, _
+            message
 End Sub
 
 Private Sub placeOrder( _

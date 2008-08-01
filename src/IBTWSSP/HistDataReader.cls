@@ -114,6 +114,7 @@ On Error GoTo err
 If mRequestId <> -1 Then mTWSAPI.CancelHistoricalData mRequestId
 Exit Sub
 err:
+logMessage "IBTWSSP:HistDataReader:IBarDataReader_CancelFetch (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "HistDataReader" & "::" & "IBarDataReader_CancelFetch", _
                 err.Description
@@ -184,6 +185,7 @@ If mTWSAPI.connectionState = ConnConnected Then
 End If
 Exit Sub
 err:
+logMessage "IBTWSSP:HistDataReader:IBarDataReader_FetchBars (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "HistDataReader" & "::" & "IBarDataReader_FetchBars", _
                 err.Description
@@ -199,6 +201,7 @@ Else
 End If
 Exit Sub
 err:
+logMessage "IBTWSSP:HistDataReader:IBarDataReader_FireNextBar (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "HistDataReader" & "::" & "IBarDataReader_FireNextBar", _
                 err.Description
@@ -216,6 +219,7 @@ mHistDataServiceProvider.dataReaderFinished Me
 
 Exit Sub
 err:
+logMessage "IBTWSSP:HistDataReader:IBarDataReader_ReleaseDataStore (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "HistDataReader" & "::" & "IBarDataReader_ReleaseDataStore", _
                 err.Description
@@ -241,6 +245,7 @@ If mRequestInProgress Then
 End If
 Exit Sub
 err:
+logMessage "IBTWSSP:HistDataReader:mTWSAPI_Connected (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "HistDataReader" & "::" & "mTWSAPI_Connected", _
                 err.Description
@@ -259,6 +264,7 @@ Else
 End If
 Exit Sub
 err:
+logMessage "IBTWSSP:HistDataReader:mTWSAPI_ConnectFailed (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "HistDataReader" & "::" & "mTWSAPI_ConnectFailed", _
                 err.Description
@@ -278,6 +284,7 @@ Else
 End If
 Exit Sub
 err:
+logMessage "IBTWSSP:HistDataReader:mTWSAPI_ConnectionToTWSClosed (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "HistDataReader" & "::" & "mTWSAPI_ConnectionToTWSClosed", _
                 err.Description
@@ -291,6 +298,7 @@ mServiceConsumer.NotifyEvent StandardSPEventCodes.HDDisconnectedFromDataSource, 
                         mHistDataServiceProvider.handle
 Exit Sub
 err:
+logMessage "IBTWSSP:HistDataReader:mTWSAPI_Disconnected (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "HistDataReader" & "::" & "mTWSAPI_Disconnected", _
                 err.Description
@@ -397,6 +405,14 @@ mCommonServiceConsumer.FatalServiceProviderError number, _
 
 finish
 mHistDataServiceProvider.dataReaderFinished Me
+End Sub
+
+Private Sub logMessage( _
+                ByVal message As String, _
+                Optional ByVal logLevel As LogLevels = LogLevelNormal)
+If Not gLogger.isLoggable(logLevel) Then Exit Sub
+gLogger.Log logLevel, _
+            message
 End Sub
 
 Private Sub ProcessBar()

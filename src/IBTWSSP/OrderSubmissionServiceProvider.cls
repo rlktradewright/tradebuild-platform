@@ -158,6 +158,7 @@ finishSubmitters
 Set mCommonServiceConsumer = Nothing
 Exit Sub
 err:
+logMessage "IBTWSSP:OrderSubmissionSrvcProvider:ICommonServiceProvider_Terminate (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "OrderSubmissionServiceProvider" & "::" & "ICommonServiceProvider_Terminate", _
                 err.Description
@@ -193,6 +194,7 @@ OrderSubmitter.start
 Set IOrderSubmissionSrvcProvider_CreateOrderSubmitter = OrderSubmitter
 Exit Function
 err:
+logMessage "IBTWSSP:OrderSubmissionSrvcProvider:IOrderSubmissionSrvcProvider_CreateOrderSubmitter (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "OrderSubmissionServiceProvider" & "::" & "IOrderSubmissionSrvcProvider_CreateOrderSubmitter", _
                 err.Description
@@ -298,6 +300,14 @@ mCommonServiceConsumer.FatalServiceProviderError number, source, Description, mH
 finishSubmitters
 
 Set mCommonServiceConsumer = Nothing
+End Sub
+
+Private Sub logMessage( _
+                ByVal message As String, _
+                Optional ByVal logLevel As LogLevels = LogLevelNormal)
+If Not gLogger.isLoggable(logLevel) Then Exit Sub
+gLogger.Log logLevel, _
+            message
 End Sub
 
 

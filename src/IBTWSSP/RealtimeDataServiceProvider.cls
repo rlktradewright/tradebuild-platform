@@ -159,6 +159,7 @@ finishReaders
 Set mCommonServiceConsumer = Nothing
 Exit Sub
 err:
+logMessage "IBTWSSP:RealtimeDataServiceProvider:ICommonServiceProvider_Terminate (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "RealtimeDataServiceProvider" & "::" & "ICommonServiceProvider_Terminate", _
                 err.Description
@@ -192,6 +193,7 @@ reader.name = mName & " (reader)"
 mRealtimeDataReaders.add reader
 Exit Function
 err:
+logMessage "IBTWSSP:RealtimeDataServiceProvider:IRealtimeDataServiceProvider_CreateRealtimeDataReader (" & err.number & "): " & err.Description, LogLevelSevere
 handleFatalError err.number, _
                 "IBTWSSP" & "." & "RealtimeDataServiceProvider" & "::" & "IRealtimeDataServiceProvider_CreateRealtimeDataReader", _
                 err.Description
@@ -298,6 +300,14 @@ mCommonServiceConsumer.FatalServiceProviderError number, source, Description, mH
 finishReaders
 
 Set mCommonServiceConsumer = Nothing
+End Sub
+
+Private Sub logMessage( _
+                ByVal message As String, _
+                Optional ByVal logLevel As LogLevels = LogLevelNormal)
+If Not gLogger.isLoggable(logLevel) Then Exit Sub
+gLogger.Log logLevel, _
+            message
 End Sub
 
 

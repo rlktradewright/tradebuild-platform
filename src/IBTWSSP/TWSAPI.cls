@@ -43,37 +43,37 @@ Event ConnectionToIBRecovered()
 Event Disconnected(ByVal reason As String)
     ' Raised when we disconnect from TWS
 
-Event FAData( _
-                ByVal DataType As FADataTypes, _
-                ByVal XMLData As String)
-                
-Event managedAccounts( _
-                ByVal accountsList As String)
-
-Event updateAccountTime( _
-                ByVal accountTime As String)
-
-Event updateAccountValue( _
-                ByVal key As String, _
-                ByVal value As String, _
-                ByVal currencyCode As String, _
-                ByVal accountName As String)
-
-Event updateNewsBulletin( _
-                ByVal msgID As Integer, _
-                ByVal msgType As BulletinTypes, _
-                ByVal message As String, _
-                ByVal origExchange As String)
-                
-Event updatePortfolioValue( _
-                ByVal pContractSpecifier As ContractSpecifier, _
-                ByVal position As Long, _
-                ByVal marketPrice As Double, _
-                ByVal marketValue As Double, _
-                ByVal averageCost As Double, _
-                ByVal unrealizedPNL As Double, _
-                ByVal realizedPNL As Double, _
-                ByVal accountName As String)
+'Event FAData( _
+'                ByVal DataType As FADataTypes, _
+'                ByVal XMLData As String)
+'
+'Event managedAccounts( _
+'                ByVal accountsList As String)
+'
+'Event updateAccountTime( _
+'                ByVal accountTime As String)
+'
+'Event updateAccountValue( _
+'                ByVal key As String, _
+'                ByVal value As String, _
+'                ByVal currencyCode As String, _
+'                ByVal accountName As String)
+'
+'Event updateNewsBulletin( _
+'                ByVal msgID As Integer, _
+'                ByVal msgType As BulletinTypes, _
+'                ByVal message As String, _
+'                ByVal origExchange As String)
+'
+'Event updatePortfolioValue( _
+'                ByVal pContractSpecifier As ContractSpecifier, _
+'                ByVal position As Long, _
+'                ByVal marketPrice As Double, _
+'                ByVal marketValue As Double, _
+'                ByVal averageCost As Double, _
+'                ByVal unrealizedPNL As Double, _
+'                ByVal realizedPNL As Double, _
+'                ByVal accountName As String)
 
 
 '================================================================================
@@ -119,7 +119,7 @@ Private Enum IdTypes
 End Enum
 
 Private Enum InternalErrorCodes
-    dataincomplete = vbObjectError + 512
+    DataIncomplete = vbObjectError + 4327   ' let's hope nothing else uses this number!
 End Enum
 
 Private Enum TWSHistDataDateFormats
@@ -239,6 +239,8 @@ Private mPerformanceElapsedTimer As ElapsedTimer
 
 Private mPerformanceLogger As Logger
 Private mSocketLogger As Logger
+
+Private mMessageBuilder As StringBuilder
 
 '================================================================================
 ' External function declarations
@@ -385,7 +387,7 @@ mIndexOut = 0
 mInputIndex = 0
 mCheckPointNumber = 0
 
-logMessage "Connecting to TWS: negotiating versions and client id"
+logMessage "Connecting to TWS: negotiating versions and client id", LogLevelNormal
 addData ClientVersion
 send
 addData mClientID
@@ -400,16 +402,17 @@ End Sub
 Private Sub mSocket_DataArrival( _
                 ByVal bytesTotal As Long)
 Dim bytesReceived As Long
+Static processingMessages As Boolean
+
 On Error GoTo err
 
 mSocket.GetData mSocketInputData, vbArray + vbByte
 bytesReceived = UBound(mSocketInputData) + 1
 'Debug.Print "Received " & bytesReceived & " from socket: " & showBuffer(mSocketInputData, bytesReceived)
 
-If mSocketLogger.isLoggable(LogLevelHighDetail) Then
-    mSocketLogger.Log LogLevels.LogLevelHighDetail, _
-                        showBuffer(mSocketInputData, bytesReceived), _
-                        Me
+If mSocketLogger.isLoggable(LogLevelMediumDetail) Then
+    mSocketLogger.Log LogLevels.LogLevelMediumDetail, _
+                        showBuffer(mSocketInputData, bytesReceived)
 End If
 
 If mIndexIn = mInputIndex Then
@@ -429,7 +432,10 @@ If mIndexIn + bytesReceived > UBound(mBufferIn) + 1 Then
         mInputIndex = 0
         mInputIndexChk = 0
     Else
-        'Debug.Print "Extending buffer by " & IIf(bytesReceived > 1024, bytesReceived, 1024) & " bytes"
+        If mSocketLogger.isLoggable(LogLevelHighDetail) Then
+            mSocketLogger.Log LogLevels.LogLevelHighDetail, _
+                            "Extending socket buffer by " & IIf(bytesReceived > 1024, bytesReceived, 1024) & " bytes"
+        End If
         ReDim Preserve mBufferIn(UBound(mBufferIn) + IIf(bytesReceived > 1024, bytesReceived, 1024)) As Byte
     End If
 End If
@@ -438,7 +444,17 @@ CopyMemory mBufferIn(mIndexIn), mSocketInputData(0), bytesReceived
 mIndexIn = mIndexIn + bytesReceived
 
 If mIndexIn <> mInputIndex Then
-    checkmessages
+    If processingMessages Then
+        ' this is a re-entrant call to DataArrival. We don't want to call checkMessages
+        ' here, because the current call to it will process the data we've just
+        ' added to the buffer
+        mSocketLogger.Log LogLevels.LogLevelDetail, _
+                        "Re-entrant call to mSocket_DataArrival"
+    Else
+        processingMessages = True
+        checkmessages
+        processingMessages = False
+    End If
 End If
 
 Exit Sub
@@ -516,14 +532,16 @@ Case sckAddressNotAvailable, _
         If mConnectionRetryIntervalSecs = 0 Then
             logMessage "Failed to connect to TWS: " & _
                         Description & ": " & _
-                        connectionString
+                        connectionString, _
+                        LogLevelNormal
             
             cancelContractRequests "Failed to connect to TWS"
             RaiseEvent ConnectFailed(Description, False)
         Else
             logMessage "Failed to connect to TWS - retrying: " & _
                         Description & ": " & _
-                        connectionString
+                        connectionString, _
+                        LogLevelNormal
             
             RaiseEvent ConnectFailed(Description, True)
             retryConnection
@@ -531,7 +549,9 @@ Case sckAddressNotAvailable, _
     Else
         logMessage "Socket error " & number & ": " & _
                     Description & ": " & _
-                    connectionString
+                    connectionString, _
+                    LogLevelSevere
+                    
         handleTwsDisconnection
     End If
 'Case sckConnectionReset
@@ -553,7 +573,8 @@ Case Else
     cancelContractRequests "Failed to connect to TWS"
     logMessage "Socket error " & number & ": " & _
                 Description & ": " & _
-                connectionString
+                connectionString, _
+                LogLevelSevere
     RaiseEvent ConnectFailed(Description, False)
 End Select
 
@@ -796,7 +817,7 @@ End If
 createsocket
 
 
-logMessage "Connecting to TWS: " & connectionString
+logMessage "Connecting to TWS: " & connectionString, LogLevelNormal
 mSocket.Connect mServer, mPort
 
 Exit Sub
@@ -819,7 +840,7 @@ mConnectionState = ConnectionStates.ConnNotConnected
 releaseAllTickerTableEntries
 ReleaseSocket
 If forced Then RaiseEvent Disconnected(reason)
-logMessage "Disconnected from: " & connectionString & ": " & reason
+logMessage "IBTWSSP:TwsAPI:disconnect: Disconnected from: " & connectionString & ": " & reason, LogLevelNormal
 Exit Sub
 err:
 handleFatalError err.number, _
@@ -1466,6 +1487,12 @@ End Sub
 Private Sub checkmessages()
 Static msgID As TWSSocketInMsgTypes
 Static version As Long
+Static startIndex As Long
+
+Static prevMsgID As TWSSocketInMsgTypes
+Static prevVersion As Long
+Static prevStartIndex As Long
+
 Static retryCount As Long
 Static eventCount As Long
 Static mElapsedTimer As ElapsedTimer
@@ -1481,7 +1508,8 @@ On Error GoTo err
 If mConnectionState <> ConnectionStates.ConnConnected Then
     ' first data received is plain server version number
     If mCheckPointNumber = 0 Then
-        mServerVersion = getLong
+        createMessageBuilder
+        mServerVersion = getLong("Server version")
         checkpointBuffer
         mCheckPointNumber = 100
         'Debug.Print "Set checkpoint number=" & 100
@@ -1494,31 +1522,40 @@ If mConnectionState <> ConnectionStates.ConnConnected Then
     
     Do While mServerVersion = TWSSocketInMsgTypes.ERR_MSG
         If mCheckPointNumber = 100 Then
-            getLong
+            getLong ("Invalid version")
             checkpointBuffer
             mCheckPointNumber = 101
         End If
         If mCheckPointNumber = 101 Then
-            getString
+            getString "Invalid errormsg"
             checkpointBuffer
             mCheckPointNumber = 102
         End If
+        
+        logSocketMessage
+        createMessageBuilder
+        
         If mCheckPointNumber = 102 Then
-            mServerVersion = getLong
+            mServerVersion = getLong("Server version")
             checkpointBuffer
             mCheckPointNumber = 100
         End If
     Loop
     
+    logSocketMessage
+    createMessageBuilder
+    
     If mCheckPointNumber = 100 Then
-        If mServerVersion >= 20 Then getString  ' TWS time
+        If mServerVersion >= 20 Then getString "TWS time"  ' TWS time
         checkpointBuffer
         mCheckPointNumber = 200
         'Debug.Print "Set checkpoint number=" & 200
     End If
     
+    logSocketMessage
+    
     mConnectionState = ConnectionStates.ConnConnected
-    logMessage "Connection to TWS successful"
+    logMessage "Connection to TWS successful", LogLevelNormal
     
     ' set the log level in TWS
     setTWSLogLevel mTWSLogLevel
@@ -1542,13 +1579,22 @@ End If
 Do While mInputIndex < mIndexIn
     
     If mCheckPointNumber = 1000 Then
-        msgID = getLong
+        Dim tmpStartIndex As Long
+        tmpStartIndex = startIndex
+        startIndex = mInputIndex
+        prevMsgID = msgID
+        
+        createMessageBuilder
+    
+        msgID = getLong("Msg id")
+        prevStartIndex = tmpStartIndex
         checkpointBuffer
         mCheckPointNumber = 1100
         'Debug.Print "Set checkpoint number=" & 1100 & ": msgID=" & msgID
     End If
     If mCheckPointNumber = 1100 Then
-        version = getLong
+        prevVersion = version
+        version = getLong("Version")
         checkpointBuffer
         mCheckPointNumber = 1200
         'Debug.Print "Set checkpoint number=" & 1200 & ": version=" & version
@@ -1620,17 +1666,24 @@ Do While mInputIndex < mIndexIn
     Case TWSSocketInMsgTypes.TICK_STRING
         getTickString version
     Case Else
-        s = "Invalid message code from TWS: msgID=" & msgID & _
-            " version=" & version & vbCrLf & _
+        s = "Invalid message code from TWS: " & vbCrLf & _
+            "msgID=" & msgID & _
+            " version=" & version & _
+            " startindex=" & startIndex & vbCrLf & _
+            "prevMsgID=" & prevMsgID & _
+            " prevVersion=" & prevVersion & _
+            " prevStartindex=" & prevStartIndex & vbCrLf & _
             "mIndexIn=" & mIndexIn & _
             " mInputIndex=" & mInputIndex & vbCrLf & _
             "Buffer contents: " & vbCrLf & _
             formatBuffer
         
         Debug.Print s
+        logMessage s, LogLevelSevere
         gReleaseTWSAPIInstance Me, True
         Exit Sub
     End Select
+    
     retryCount = 0
     
     Dim et As Single
@@ -1645,7 +1698,7 @@ Do While mInputIndex < mIndexIn
     eventCount = eventCount + 1
     
     If mElapsedTimer.ElapsedTimeMicroseconds >= 10000000 Then
-        logMessage "Event rate per second = " & Format(eventCount / 10, "0.0"), LogLevelMediumDetail
+        logMessage "Event rate per second = " & Format(eventCount / 10, "0.0"), LogLevelDetail
         Debug.Print "Event rate per second = " & Format(eventCount / 10, "0.0")
         eventCount = 0
         mElapsedTimer.StartTiming
@@ -1659,7 +1712,13 @@ Loop
 Exit Sub
 
 err:
-If err.number = dataincomplete Then
+Dim errNum As Long
+Dim errDesc As String
+
+errNum = err.number
+errDesc = err.Description
+
+If errNum = DataIncomplete Then
     rollbackBuffer
     retryCount = retryCount + 1
     Debug.Print "Data incomplete count: " & retryCount & "; mCheckPointNumber: " & mCheckPointNumber
@@ -1667,15 +1726,21 @@ If err.number = dataincomplete Then
 End If
 
 s = "msgID=" & msgID & _
-    " version=" & version & vbCrLf & _
+    " version=" & version & _
+    " startindex=" & startIndex & vbCrLf & _
+    "prevMsgID=" & prevMsgID & _
+    " prevVersion=" & prevVersion & _
+    " prevStartindex=" & prevStartIndex & vbCrLf & _
     "mIndexIn=" & mIndexIn & _
     " mInputIndex=" & mInputIndex & vbCrLf & _
     "Buffer contents: " & vbCrLf & _
     formatBuffer
 
-Debug.Print "Error " & err.number & ": " & err.Description & vbCrLf & s
+Debug.Print "Error " & errNum & ": " & errDesc & vbCrLf & s
 
-mCommonServiceConsumer.ServiceProviderError err.number, err.Description, -1
+logMessage "IBTWSSP:TwsAPI:checkMessages Error (" & errNum & "): " & errDesc, LogLevelSevere
+logMessage s, LogLevelDetail
+mCommonServiceConsumer.ServiceProviderError errNum, errDesc, -1
 gReleaseTWSAPIInstance Me, True
 End Sub
 
@@ -1703,6 +1768,14 @@ End If
 Set mSocketLogger = GetLogger("tradebuild.serviceprovider.ibtwssp.socket")
 End Sub
 
+Private Sub createMessageBuilder()
+If mMessageBuilder Is Nothing And _
+    mSocketLogger.isLoggable(LogLevelHighDetail) _
+Then
+    Set mMessageBuilder = CreateStringBuilder
+End If
+End Sub
+
 Private Sub createsocket()
 If mSocket Is Nothing Then
     Set mWinsockForm = New WinsockForm
@@ -1713,7 +1786,7 @@ End Sub
 Private Function expiryToDate( _
                 ByVal expiry As String) As Date
 If Len(expiry) = 8 Then
-    expiryToDate = CDate(Left$(expiry, 4) & "/" & Mid$(expiry, 5, 2) & "/" & right$(expiry, 2))
+    expiryToDate = CDate(Left$(expiry, 4) & "/" & Mid$(expiry, 5, 2) & "/" & Right$(expiry, 2))
 ElseIf Len(expiry) = 6 Then
     expiryToDate = CDate(Left$(expiry, 4) & "/" & Mid$(expiry, 5, 2) & "/" & "01")
 End If
@@ -1727,7 +1800,7 @@ Dim j As Long
 Set s = CreateStringBuilder
 Do While i < mIndexIn
     s.append Format(i, "0000  ")
-    For j = i To i + 50
+    For j = i To i + 49
         If j = mIndexIn Then Exit For
         s.append IIf(mBufferIn(j) <> 0, Chr$(mBufferIn(j)), "_")
     Next
@@ -1984,9 +2057,10 @@ Private Function generateTwsOrderKey( _
 generateTwsOrderKey = clientID & "/" & twsOrderId
 End Function
 
-Private Function getBoolean() As Boolean
+Private Function getBoolean( _
+                ByRef fieldName As String) As Boolean
 Dim s As String
-s = getString
+s = getString(fieldName)
 If s = "1" Then
     getBoolean = True
 Else
@@ -1994,9 +2068,10 @@ Else
 End If
 End Function
 
-Private Function getDouble() As Double
+Private Function getDouble( _
+                ByRef fieldName As String) As Double
 Dim s As String
-s = getString
+s = getString(fieldName)
 If s = "" Then
     getDouble = 0#
 Else
@@ -2004,9 +2079,10 @@ Else
 End If
 End Function
 
-Private Function getInteger() As Integer
+Private Function getInteger( _
+                ByRef fieldName As String) As Integer
 Dim s As String
-s = getString
+s = getString(fieldName)
 If s = "" Then
     getInteger = 0
 Else
@@ -2014,9 +2090,10 @@ Else
 End If
 End Function
 
-Private Function getLong() As Long
+Private Function getLong( _
+                ByRef fieldName As String) As Long
 Dim s As String
-s = getString
+s = getString(fieldName)
 If s = "" Then
     getLong = 0&
 Else
@@ -2024,9 +2101,10 @@ Else
 End If
 End Function
 
-Private Function getSingle() As Single
+Private Function getSingle( _
+                ByRef fieldName As String) As Single
 Dim s As String
-s = getString
+s = getString(fieldName)
 If s = "" Then
     getSingle = 0!
 Else
@@ -2034,7 +2112,8 @@ Else
 End If
 End Function
 
-Private Function getString() As String
+Private Function getString( _
+                ByRef fieldName As String) As String
 Dim s As String
 Dim i As Long
 
@@ -2044,6 +2123,12 @@ For i = mInputIndex To mIndexIn - 1
         'Debug.Print "Got string: mInputIndex=" & mInputIndex & " value=" & s
         mInputIndex = i + 1
         getString = s
+        If Not mMessageBuilder Is Nothing Then
+            mMessageBuilder.append fieldName
+            mMessageBuilder.append "="
+            mMessageBuilder.append s
+            mMessageBuilder.append "; "
+        End If
         Exit Function
     End If
     s = s & Chr$(mBufferIn(i))
@@ -2052,68 +2137,50 @@ Next
 ' we've got to the end of the current data, so raise an error to abort
 ' this attempt to assemble a message
 'Debug.Print "Failed to get string"
-err.Raise dataincomplete
+err.Raise DataIncomplete
 End Function
 
 Private Sub getAccountTime(ByVal version As Long)
-Dim socketdata As TWSSocketMsgAcctUpdateTime
-Dim accountTime As String: accountTime = getString
+Dim accountTime As String: accountTime = getString("Account time")
 
-If mSocketLogger.isLoggable(LogLevelHighDetail) Then
-    socketdata.msgType = TWSSocketInMsgTypes.ACCT_UPDATE_TIME
-    socketdata.accountTime = accountTime
-    socketdata.version = version
-    
-    mSocketLogger.Log LogLevelHighDetail, socketdata, _
-                    Me
-End If
+logSocketMessage
 
 End Sub
 
 Private Sub getAccountValue(ByVal version As Long)
-Dim socketdata As TWSSocketMsgAcctValue
-Dim key As String: key = getString
-Dim val As String: val = getString
-Dim cur As String: cur = getString
-Dim accountName As String: If version >= 2 Then accountName = getString
+Dim key As String: key = getString("Key")
+Dim val As String: val = getString("Value")
+Dim cur As String: cur = getString("Currency")
+Dim accountName As String: If version >= 2 Then accountName = getString("Account name")
 
-If mSocketLogger.isLoggable(LogLevelHighDetail) Then
-    socketdata.msgType = TWSSocketInMsgTypes.ACCT_VALUE
-    socketdata.accountName = accountName
-    socketdata.currencyCode = cur
-    socketdata.key = key
-    socketdata.value = val
-    socketdata.version = version
-    
-    mSocketLogger.Log LogLevelHighDetail, socketdata, _
-                    Me
-End If
-
+logSocketMessage
 End Sub
 
 Private Sub getBondContractData(ByVal version As Long)
 ' not currently supported
-getString 'symbol
-getString 'sectype
-getString 'cusip
-getDouble 'coupon
-getString 'maturity
-getString 'issueDate
-getString 'ratings
-getString 'bondType
-getString 'couponType
-getBoolean 'convertible
-getBoolean 'callable
-getBoolean 'putable
-getString 'descAppend
-getString 'exchange
-getString 'currency
-getString 'marketName
-getString 'tradingClass
-getLong 'conid
-getDouble 'minTick
-getString 'OrderTypes
-getString 'validExchanges
+getString "symbol"
+getString "sectype"
+getString "cusip"
+getDouble "coupon"
+getString "maturity"
+getString "issueDate"
+getString "ratings"
+getString "bondType"
+getString "couponType"
+getBoolean "convertible"
+getBoolean "callable"
+getBoolean "putable"
+getString "descAppend"
+getString "exchange"
+getString "currency"
+getString "marketName"
+getString "tradingClass"
+getLong "conid"
+getDouble "minTick"
+getString "OrderTypes"
+getString "validExchanges"
+
+logSocketMessage
 
 mContractDetailsRequest.requester.contractSpecifierInvalid mContractDetailsRequest, _
                                                     "bonds not yet supported"
@@ -2122,7 +2189,6 @@ mContractDetailsRequest.requester.contractSpecifierInvalid mContractDetailsReque
 End Sub
 
 Private Sub getContractData(ByVal version As Long)
-Dim socketdata As TWSSocketMsgContractData
 Dim lContractWrapper As ContractWrapper
 Dim lContractSpec As ContractSpecifier
 
@@ -2157,21 +2223,21 @@ Dim ignore As Boolean
 
 Set lContractWrapper = New ContractWrapper
 
-symbol = getString
-sectypeStr = getString
+symbol = getString("Symbol")
+sectypeStr = getString("Sec type")
 sectype = secTypeFromString(sectypeStr)
-expiry = getString
-strike = getDouble
-optRightStr = getString
+expiry = getString("Expiry")
+strike = getDouble("Strike")
+optRightStr = getString("Right")
 optRight = optionRightFromString(optRightStr)
-exchange = getString
-currencyCode = getString
-localSymbol = getString
-marketName = getString
-tradingClass = getString
-lContractWrapper.contractId = getLong
-minimumTick = getDouble
-multiplier = getLong
+exchange = getString("Exchange")
+currencyCode = getString("Currency")
+localSymbol = getString("Local symbol")
+marketName = getString("Market name")
+tradingClass = getString("Trading class")
+lContractWrapper.contractId = getLong("Contract id")
+minimumTick = getDouble("Minimum tick")
+multiplier = getLong("Multiplier")
 If multiplier = 0 Then multiplier = 1
     
 If IsValidExchangeCode(exchange) Then
@@ -2188,11 +2254,11 @@ If IsValidExchangeCode(exchange) Then
     Set lContractBuilder = CreateContractBuilder(lContractSpec)
     lContractWrapper.tradeBuildContract = lContractBuilder.Contract
 Else
-    logMessage "Unknown exchange code " & exchange & " received from TWS"
+    logMessage "Unknown exchange code " & exchange & " received from TWS", LogLevelNormal
     ignore = True
 End If
 
-OrderTypes = getString
+OrderTypes = getString("Order types")
 orderTypesStr = Split(OrderTypes, ",")
 
 permittedOrderAttributes = OrderAttributes.OrderAttBlockOrder
@@ -2266,13 +2332,14 @@ For i = 0 To UBound(orderTypesStr)
             "PAON", _
             "RELSTK", _
             "SCALE", _
+            "SCALERST", _
             "SOI", _
             "TIMEPRIO", _
             "VOLAT"
             ' not sure what these signify
         Case Else
             If orderTypesStr(i) <> "" Then
-                logMessage "Unknown order type " & orderTypesStr(i) & " received from TWS"
+                logMessage "Unknown order type " & orderTypesStr(i) & " received from TWS", LogLevelNormal
             End If
         End Select
     End If
@@ -2288,12 +2355,11 @@ lContractWrapper.permittedStopTriggerMethods = TradeBuildSP.StopTriggerMethods.S
                                         TradeBuildSP.StopTriggerMethods.StopTriggerDoubleLast Or _
                                         TradeBuildSP.StopTriggerMethods.StopTriggerLast
 
-validExchanges = getString
+validExchanges = getString("Valid exchanges")
 lValidExchanges = Split(validExchanges, ",")
     
-    
 If version >= 2 Then
-    lContractWrapper.priceMagnifier = getLong
+    lContractWrapper.priceMagnifier = getLong("Price magnifier")
 Else
     If currencyCode = "GBP" Then
         lContractWrapper.priceMagnifier = 100
@@ -2302,12 +2368,14 @@ Else
     End If
 End If
 
+logSocketMessage
+
 If Not ignore Then
     Dim expiryDate As Date
     If expiry <> "" Then
         expiryDate = CDate(Left$(expiry, 4) & "/" & _
                                             Mid$(expiry, 5, 2) & "/" & _
-                                            right$(expiry, 2))
+                                            Right$(expiry, 2))
     End If
     
     lContractBuilder.expiryDate = expiryDate
@@ -2346,34 +2414,9 @@ If Not mFirstContractDetailsReceived Then
     send
 End If
 
-If mSocketLogger.isLoggable(LogLevelHighDetail) Then
-    With lContractWrapper.tradeBuildContract
-        socketdata.msgType = TWSSocketInMsgTypes.CONTRACT_DATA
-        socketdata.contractId = lContractWrapper.contractId
-        socketdata.currencyCode = currencyCode
-        socketdata.exchange = exchange
-        socketdata.expiry = expiry
-        socketdata.localSymbol = localSymbol
-        socketdata.marketName = marketName
-        socketdata.minimumTick = minimumTick
-        socketdata.multiplier = multiplier
-        socketdata.OrderTypes = OrderTypes
-        socketdata.right = optRight
-        socketdata.sectype = sectype
-        socketdata.strike = strike
-        socketdata.symbol = symbol
-        socketdata.tradingClass = tradingClass
-        socketdata.validExchanges = validExchanges
-        socketdata.version = version
-    End With
-    mSocketLogger.Log LogLevelHighDetail, socketdata, _
-                    Me
-End If
-
 End Sub
 
 Private Sub getErrorMsg(ByVal version As Long)
-Dim socketdata As TWSSocketMsgErrMsg
 Dim id As Long
 Dim errorCode As Long
 Dim errorMsg As String
@@ -2386,18 +2429,20 @@ On Error GoTo err
 
 failpoint = 100
 
-id = getLong
+id = getLong("Id")
 Debug.Print "Error id: " & id
 
 failpoint = 200
 
-errorCode = getLong
+errorCode = getLong("Error code")
 Debug.Print "Error code: " & errorCode
 
 failpoint = 300
 
-errorMsg = getString
+errorMsg = getString("Error msg")
 Debug.Print "Error msg: " & errorMsg
+
+logSocketMessage
 
 Select Case errorCode
 Case 101
@@ -2426,7 +2471,7 @@ Case 162    ' historical data request problem
         mHistoricalDataTable(index).nextBarIndex = mHistoricalDataTable(index).bars.firstIndex
         mHistoricalDataTable(index).historicalDataReader.historicalDataAvailable
     Else
-        logMessage "Error " & errorCode & " from TWS: " & errorMsg
+        logMessage "Error " & errorCode & " from TWS: " & errorMsg, LogLevelNormal
         mHistoricalDataTable(index).historicalDataReader.historicalDataRequestFailed errorMsg
         releaseHistoricalDataTableEntry index
     End If
@@ -2435,7 +2480,7 @@ Case 162    ' historical data request problem
 Case 165
     failpoint = 600
 
-    logMessage "Connected to IB Historical Market Data Service"
+    logMessage "Connected to IB Historical Market Data Service", LogLevelNormal
 Case 200    ' security definition not known
     Select Case getIdType(id)
     Case IdTypeNone
@@ -2457,7 +2502,7 @@ Case 200    ' security definition not known
     Case IdTypeHistoricalData
         index = (id - HistoricalDataTickerBase) Mod HistoricalDataTickerIncrement
     
-        logMessage "Error " & errorCode & " from TWS: " & errorMsg
+        logMessage "Error " & errorCode & " from TWS: " & errorMsg, LogLevelNormal
         mHistoricalDataTable(index).historicalDataReader.historicalDataRequestFailed errorMsg
         releaseHistoricalDataTableEntry index
         
@@ -2505,7 +2550,7 @@ Case 321    ' invalid request
             mHistoricalDataTable(index).nextBarIndex = mHistoricalDataTable(index).bars.firstIndex
             mHistoricalDataTable(index).historicalDataReader.historicalDataAvailable
         Else
-            logMessage "Error " & errorCode & " from TWS: " & errorMsg
+            logMessage "Error " & errorCode & " from TWS: " & errorMsg, LogLevelNormal
             mHistoricalDataTable(index).historicalDataReader.historicalDataRequestFailed errorMsg
             releaseHistoricalDataTableEntry index
         End If
@@ -2537,7 +2582,7 @@ Case 1100
 
     ' connectivity between TWS and IB has been lost
     RaiseEvent ConnectionToIBClosed
-    logMessage "Connection to IB has been lost"
+    logMessage "Connection to IB has been lost", LogLevelNormal
     
 Case 1101
     ' connectivity between TWS and IB has been restored, but data has been
@@ -2559,7 +2604,7 @@ Case 1101
 
     RaiseEvent ConnectionToIBRecovered
     
-    logMessage "Connection to IB recovered: market data re-established"
+    logMessage "Connection to IB recovered: market data re-established", LogLevelNormal
     
 Case 1102
     ' connectivity between TWS and IB has been restored without loss of data
@@ -2576,28 +2621,18 @@ Case 1102
 
     RaiseEvent ConnectionToIBRecovered
     
-    logMessage "Connection to IB recovered: no loss of data"
+    logMessage "Connection to IB recovered: no loss of data", LogLevelNormal
     
 Case 2103, 2104, 2105, 2106, 2107, 2108
     failpoint = 1600
 
-    logMessage errorMsg
+    logMessage errorMsg, LogLevelNormal
 Case Else
     failpoint = 1700
 
+    logMessage "IBTWSSP:TwsAPI:getErrorMsg: Error (" & errorCode & ") from TWS: " & errorMsg, LogLevelSevere
     mCommonServiceConsumer.ServiceProviderError errorCode, errorMsg, -1
 End Select
-
-If mSocketLogger.isLoggable(LogLevelHighDetail) Then
-    socketdata.msgType = TWSSocketInMsgTypes.ERR_MSG
-    socketdata.errorCode = errorCode
-    socketdata.errorMsg = errorMsg
-    socketdata.id = id
-    socketdata.version = version
-    
-    mSocketLogger.Log LogLevelHighDetail, socketdata, _
-                    Me
-End If
 
 Exit Sub
 
@@ -2606,7 +2641,6 @@ err.Raise err.number, , "TWSAPI::getErrorMsg(failpoint=" & failpoint & "): " & e
 End Sub
 
 Private Sub getExecutionData(ByVal version As Long)
-Dim socketdata As TWSSocketMsgExecutionData
 Dim timeString  As String
 
 Dim symbol As String
@@ -2619,8 +2653,6 @@ Dim exchange As String
 Dim currencyCode As String
 
 Dim execId As String
-Dim AccountIdentifier  As String
-Dim FillingExchange  As String
 Dim side As String
 Dim Price As Double
 Dim mapEntry As OrderIdMapEntry
@@ -2631,20 +2663,20 @@ Dim lContractSpecifier As ContractSpecifier
 
 Dim exec As Execution
 
-id = getLong
+id = getLong("Id")
 
 On Error Resume Next
 mapEntry = mOrderIDMap(generateTwsOrderKey(id, mClientID))
 On Error GoTo 0
 
-symbol = getString
-sectype = getString
-expiry = getString
-strike = getDouble
-rightString = getString
-exchange = getString
-currencyCode = getString
-localSymbol = getString
+symbol = getString("Symbol")
+sectype = getString("Sec type")
+expiry = getString("Expiry")
+strike = getDouble("Strike")
+rightString = getString("Right")
+exchange = getString("Exchange")
+currencyCode = getString("Currency")
+localSymbol = getString("Local symbol")
 
 Set lContractSpecifier = CreateContractSpecifier(localSymbol, _
                                                 symbol, _
@@ -2658,25 +2690,27 @@ Set lContractSpecifier = CreateContractSpecifier(localSymbol, _
 Set exec.ContractSpecifier = lContractSpecifier
 exec.OrderBrokerId = id
 If Not mapEntry.order Is Nothing Then exec.OrderTradeBuildId = mapEntry.order.tradeBuildId
-exec.execId = getString
-timeString = getString
+exec.execId = getString("Exec id")
+timeString = getString("Exec time")
 exec.time = CDate(Left$(timeString, 4) & "/" & _
                     Mid$(timeString, 5, 2) & "/" & _
                     Mid$(timeString, 7, 2) & " " & _
-                    right$(timeString, 8))
-exec.AccountIdentifier = getString
-exec.FillingExchange = getString
-side = getString
+                    Right$(timeString, 8))
+exec.AccountIdentifier = getString("Account id")
+exec.FillingExchange = getString("Filling exchange")
+side = getString("Side")
 exec.Action = IIf(side = "BUY", OrderActions.ActionBuy, OrderActions.ActionSell)
-exec.Quantity = getLong
-Price = getDouble
+exec.Quantity = getLong("Quantity")
+Price = getDouble("Price")
 exec.Price = adjustPrice(Price, lContractSpecifier)
     
-If version >= 2 Then permId = getLong  ' permId
+If version >= 2 Then permId = getLong("Perm Id")
 
-If version >= 3 Then clientID = getLong  ' clientID
+If version >= 3 Then clientID = getLong("Client id")  ' clientID
    
-If version >= 4 Then exec.IsLiquidation = getBoolean
+If version >= 4 Then exec.IsLiquidation = getBoolean("Is liquidation")
+
+logSocketMessage
 
 Dim existingExec As Execution
 On Error Resume Next
@@ -2712,54 +2746,13 @@ Else
     End If
 End If
 
-If mSocketLogger.isLoggable(LogLevelHighDetail) Then
-    socketdata.msgType = TWSSocketInMsgTypes.EXECUTION_DATA
-    With lContractSpecifier
-        socketdata.currencyCode = .currencyCode
-        socketdata.exchange = .exchange
-        socketdata.expiry = .expiry
-        socketdata.localSymbol = .localSymbol
-        socketdata.right = rightString
-        socketdata.sectype = sectype
-        socketdata.strike = .strike
-        socketdata.symbol = .symbol
-    End With
-    With exec
-        socketdata.accountNumber = .AccountIdentifier
-        socketdata.clientID = clientID
-        socketdata.execExchange = .FillingExchange
-        socketdata.execId = .execId
-        socketdata.orderId = id
-        socketdata.permId = permId
-        socketdata.Price = Price
-        socketdata.Quantity = .Quantity
-        socketdata.side = side
-        socketdata.time = timeString
-    End With
-    socketdata.version = version
-    
-    mSocketLogger.Log LogLevelHighDetail, socketdata, _
-                    Me
-End If
-
 End Sub
 
 Private Sub getFAData(ByVal version As Long)
-Dim socketdata As TWSSocketMsgReceiveFa
-Dim DataType As FADataTypes: DataType = getLong
-Dim XMLData As String: XMLData = getString
+Dim DataType As FADataTypes: DataType = getLong("Data type")
+Dim XMLData As String: XMLData = getString("XML data")
 
-RaiseEvent FAData(DataType, XMLData)
-
-If mSocketLogger.isLoggable(LogLevelHighDetail) Then
-    socketdata.msgType = TWSSocketInMsgTypes.MANAGED_ACCTS
-    socketdata.DataType = DataType
-    socketdata.XMLData = XMLData
-    socketdata.version = version
-    
-    mSocketLogger.Log LogLevelHighDetail, socketdata, _
-                    Me
-End If
+logSocketMessage
 
 End Sub
 
@@ -2786,7 +2779,7 @@ If checkPointNumber = 0 Then
     i = 0
     totalVolume = 0
     
-    requestID = getLong
+    requestID = getLong("Request id")
     index = (requestID - HistoricalDataTickerBase) Mod HistoricalDataTickerIncrement
     reqNo = Int((requestID - HistoricalDataTickerBase) / HistoricalDataTickerIncrement)
     
@@ -2805,7 +2798,7 @@ End If
 
 If checkPointNumber = 100 Then
     If version >= 2 Then
-        getString       ' startDateStr
+        getString ("Start date")      ' startDateStr
     End If
     checkpointBuffer
     checkPointNumber = 110
@@ -2813,14 +2806,14 @@ End If
 
 If checkPointNumber = 110 Then
     If version >= 2 Then
-        getString       ' endDateStr
+        getString ("End date")      ' endDateStr
     End If
     checkpointBuffer
     checkPointNumber = 120
 End If
 
 If checkPointNumber = 120 Then
-    itemCount = getLong
+    itemCount = getLong("Item count")
     Debug.Print "Bars retrieved: " & itemCount
     
     checkpointBuffer
@@ -2830,7 +2823,7 @@ End If
 If checkPointNumber >= 200 Then
     For i = i To itemCount - 1
         If checkPointNumber = 200 Then
-            bardate = getString
+            bardate = getString("Bar date")
             If Len(bardate) = 8 Then
                 timestamp = CDate(Left$(bardate, 4) & "/" & _
                                                 Mid$(bardate, 5, 2) & "/" & _
@@ -2839,7 +2832,7 @@ If checkPointNumber >= 200 Then
                 timestamp = gRoundTimeToSecond(CDate(Left$(bardate, 4) & "/" & _
                                                 Mid$(bardate, 5, 2) & "/" & _
                                                 Mid$(bardate, 7, 2) & " " & _
-                                                right$(bardate, 8)))
+                                                Right$(bardate, 8)))
             End If
             Bar.timestamp = ConvertDateUTCToTZ( _
                                     ConvertDateLocalToUTC(timestamp), _
@@ -2862,44 +2855,44 @@ If checkPointNumber >= 200 Then
             checkPointNumber = 210
         End If
         If checkPointNumber = 210 Then
-            Bar.openValue = getDouble
+            Bar.openValue = getDouble("Open")
             checkpointBuffer
             checkPointNumber = 220
         End If
         If checkPointNumber = 220 Then
-            Bar.highValue = getDouble
+            Bar.highValue = getDouble("High")
             checkpointBuffer
             checkPointNumber = 230
         End If
         If checkPointNumber = 230 Then
-            Bar.lowValue = getDouble
+            Bar.lowValue = getDouble("Low")
             checkpointBuffer
             checkPointNumber = 240
         End If
         If checkPointNumber = 240 Then
-            Bar.closeValue = getDouble
+            Bar.closeValue = getDouble("Close")
             checkpointBuffer
             checkPointNumber = 250
         End If
         If checkPointNumber = 250 Then
-            Bar.volume = getLong
+            Bar.volume = getLong("Volume")
             totalVolume = totalVolume + Bar.volume
             checkpointBuffer
             checkPointNumber = 260
         End If
         If checkPointNumber = 260 Then
-            Bar.WAP = getDouble
+            Bar.WAP = getDouble("WAP")
             checkpointBuffer
             checkPointNumber = 270
         End If
         If checkPointNumber = 270 Then
-            Bar.hasGaps = getBoolean
+            Bar.hasGaps = getBoolean("Has gaps")
             checkpointBuffer
             checkPointNumber = 280
         End If
         If checkPointNumber = 280 Then
             If version >= 3 Then
-                Bar.tickVolume = getLong
+                Bar.tickVolume = getLong("Tick volume")
                 checkpointBuffer
                 checkPointNumber = 280
             End If
@@ -2932,6 +2925,7 @@ If checkPointNumber >= 200 Then
 End If
 checkPointNumber = 0
 
+logSocketMessage
 
 If mHistoricalDataTable(index).cancelling Then Exit Sub
 
@@ -2969,7 +2963,7 @@ If err.number = ErrHistGenerationFailed Then
     Exit Sub
 End If
 
-If err.number <> dataincomplete Then
+If err.number <> DataIncomplete Then
     Stop
     Resume
 End If
@@ -2998,142 +2992,82 @@ End If
 End Function
 
 Private Sub getManagedAccounts(ByVal version As Long)
-Dim socketdata As TWSSocketMsgManagedAccts
-Dim accountsList As String: accountsList = getString
+Dim accountsList As String: accountsList = getString("Accounts list")
 
-RaiseEvent managedAccounts(accountsList)
-
-If mSocketLogger.isLoggable(LogLevelHighDetail) Then
-    socketdata.msgType = TWSSocketInMsgTypes.MANAGED_ACCTS
-    socketdata.accountsList = accountsList
-    socketdata.version = version
-    
-    mSocketLogger.Log LogLevelHighDetail, socketdata, _
-                    Me
-End If
+logSocketMessage
 
 End Sub
 
 Private Sub getMarketDepth(ByVal version As Long)
-Dim socketdata As TWSSocketMsgMarketDepth
-Dim id As Long: id = getLong
-Dim position As Long: position = getLong
-Dim operation As Long: operation = getLong
-Dim side As Long: side = getLong
-Dim Price As Double: Price = getDouble
-Dim size As Long: size = getLong
+Dim id As Long: id = getLong("Id")
+Dim tick As GenericTick
+tick.tickType = TickTypeMarketDepth
+tick.position = getLong("Position")
+tick.operation = getLong("Operation")
+tick.side = getLong("Side")
+tick.Price = getDouble("Price")
+tick.size = getLong("Size")
 
-processMarketDepth id - MarketDepthTickerBase, _
-                position, _
-                operation, _
-                side, _
-                Price, _
-                size
+logSocketMessage
 
-If mSocketLogger.isLoggable(LogLevelHighDetail) Then
-    socketdata.msgType = TWSSocketInMsgTypes.MARKET_DEPTH
-    socketdata.operation = operation
-    socketdata.position = position
-    socketdata.Price = Price
-    socketdata.side = side
-    socketdata.size = size
-    socketdata.tickerid = id
-    socketdata.version = version
+With mTickerTable(id - MarketDepthTickerBase)
     
-    mSocketLogger.Log LogLevelHighDetail, socketdata, _
-                    Me
-End If
+    If Not .inUse Then Exit Sub     ' ticker has been stopped
+    
+    tick.timestamp = ConvertDateUTCToTZ(GetTimestampUTC, .Contract.TimeZone)
+    
+    .dataConsumer.tick tick
+    
+End With
 
 End Sub
 
 Private Sub getMarketDepthL2(ByVal version As Long)
-Dim socketdata As TWSSocketMsgMarketDepthL2
-Dim timestamp As Date
-Dim id As Long: id = getLong
-Dim position As Long: position = getLong
-Dim marketmaker As String: marketmaker = getString
-Dim operation As Long: operation = getLong
-Dim side As Long: side = getLong
-Dim Price As Double: Price = getDouble
-Dim size As Long: size = getLong
+Dim id As Long: id = getLong("Id")
+Dim tick As GenericTick
+tick.tickType = TickTypeMarketDepth
+tick.position = getLong("Position")
+tick.marketmaker = getString("Marketmaker")
+tick.operation = getLong("Operation")
+tick.side = getLong("Side")
+tick.Price = getDouble("Price")
+tick.size = getLong("Size")
+
+logSocketMessage
 
 With mTickerTable(id - MarketDepthTickerBase)
-    If .inUse Then
     
-        timestamp = ConvertDateUTCToTZ(GetTimestampUTC, .Contract.TimeZone)
-        
-        .dataConsumer.UpdateMktDepthL2 timestamp, _
-                        position, _
-                        marketmaker, _
-                        operation, _
-                        side, _
-                        Price, _
-                        size
-                        
-    End If
+    If Not .inUse Then Exit Sub     ' ticker has been stopped
+    
+    tick.timestamp = ConvertDateUTCToTZ(GetTimestampUTC, .Contract.TimeZone)
+    
+    .dataConsumer.tick tick
+    
 End With
-
-If mSocketLogger.isLoggable(LogLevelHighDetail) Then
-    socketdata.msgType = TWSSocketInMsgTypes.MARKET_DEPTH_L2
-    socketdata.marketmaker = marketmaker
-    socketdata.operation = operation
-    socketdata.position = position
-    socketdata.Price = Price
-    socketdata.side = side
-    socketdata.size = size
-    socketdata.tickerid = id
-    socketdata.version = version
-    
-    mSocketLogger.Log LogLevelHighDetail, socketdata, _
-                    Me
-End If
 
 End Sub
 
 Private Sub getNewsBulletins(ByVal version As Long)
-Dim socketdata As TWSSocketMsgNewsBulletins
-Dim msgID As Long: msgID = getLong
-Dim msgType As Long: msgType = getLong
-Dim newsMessage As String: newsMessage = getString
-Dim originatingExch As String: originatingExch = getString
+Dim msgID As Long: msgID = getLong("Id")
+Dim msgType As Long: msgType = getLong("Type")
+Dim newsMessage As String: newsMessage = getString("Message")
+Dim originatingExch As String: originatingExch = getString("Orig exchange")
 
-RaiseEvent updateNewsBulletin(msgID, msgType, newsMessage, originatingExch)
-
-If mSocketLogger.isLoggable(LogLevelHighDetail) Then
-    socketdata.msgType = TWSSocketInMsgTypes.NEWS_BULLETINS
-    socketdata.newsID = msgID
-    socketdata.newsMessage = newsMessage
-    socketdata.newsType = msgType
-    socketdata.originatingExch = originatingExch
-    socketdata.version = version
-    
-    mSocketLogger.Log LogLevelHighDetail, socketdata, _
-                    Me
-End If
+logSocketMessage
 
 End Sub
 
 Private Sub getNextValidId(ByVal version As Long)
-Dim socketdata As TWSSocketMsgNextValidId
 
-mNextOrderID = getLong
+mNextOrderID = getLong("Next id")
 
-If mSocketLogger.isLoggable(LogLevelHighDetail) Then
-    socketdata.msgType = TWSSocketInMsgTypes.NEXT_VALID_ID
-    socketdata.id = mNextOrderID
-    socketdata.version = version
-    
-    mSocketLogger.Log LogLevelHighDetail, socketdata, _
-                    Me
-End If
+logSocketMessage
 
 If mNextOrderID < OrderIdBase Then mNextOrderID = OrderIdBase
 
 End Sub
 
 Private Sub getOpenOrder(ByVal version As Long)
-Dim socketdata As TWSSocketMsgOpenOrder
-'Dim lOrder As Order
 Dim id As Long
 
 Dim symbol As String
@@ -3151,7 +3085,7 @@ Dim timeInForce As String
 
 Dim lContractSpecifier As ContractSpecifier
 
-id = getLong
+id = getLong("Id")
 
 'On Error Resume Next
 'Set lOrder = mAllOrders(CStr(id))
@@ -3166,14 +3100,14 @@ id = getLong
 'End If
 
 ' read contract fields
-symbol = getString
-sectype = getString
-expiry = getString
-strike = getDouble
-rightString = getString
-exchange = getString
-currencyCode = getString
-If version >= 2 Then localSymbol = getString
+symbol = getString("Symbol")
+sectype = getString("Sec type")
+expiry = getString("Expiry")
+strike = getDouble("Strike")
+rightString = getString("Right")
+exchange = getString("Exchange")
+currencyCode = getString("Currency")
+If version >= 2 Then localSymbol = getString("Local symbol")
 
 Set lContractSpecifier = CreateContractSpecifier(localSymbol, _
                                                 symbol, _
@@ -3187,183 +3121,129 @@ Set lContractSpecifier = CreateContractSpecifier(localSymbol, _
 
 ' read order fields
 'With lOrder
-    Action = getString
+    Action = getString("Action")
     '.action = orderActionFromString(action)
-     getLong    ' .quantity
-    orderType = getString
+     getLong "Quantity"   ' .quantity
+    orderType = getString("Order type")
     '.orderType = orderTypeFromString(orderType)
-    getDouble   ' .limitPrice
-    getDouble   ' .auxPrice
-    timeInForce = getString
+    getDouble "Limit price"  ' .limitPrice
+    getDouble "Aux price"   ' .auxPrice
+    timeInForce = getString("Time in force")
     '.timeInForce = orderTIFFromString(timeInForce)
-    getString   ' .ocaGroup
-    getString   ' .account
-    getString   ' .openClose
-    getLong     ' .origin
-    getString   ' .orderRef
-    If version >= 3 Then getLong    ' .clientID
+    getString "OCA group"   ' .ocaGroup
+    getString "Account"   ' .account
+    getString "Open/close"   ' .openClose
+    getLong "Origin"     ' .origin
+    getString "Order ref"  ' .orderRef
+    If version >= 3 Then getLong "Client id"   ' .clientID
     
     If version >= 4 Then
-        getLong     ' .permId =
-        getBoolean  ' .ignoreRTH
-        getBoolean  ' .hidden
-        getDouble   ' .discretionaryAmt
+        getLong "Perm id"    ' .permId =
+        getBoolean "Ignore RTH"  ' .ignoreRTH
+        getBoolean "Hidden" ' .hidden
+        getDouble "Discr amt"  ' .discretionaryAmt
     End If
 
-    If version >= 5 Then getString  ' .goodAfterTime
+    If version >= 5 Then getString "Good after time"  ' .goodAfterTime
     
-    If version >= 6 Then getString  ' .sharesAllocation
+    If version >= 6 Then getString "Shares allocation"  ' .sharesAllocation
     
     If version >= 7 Then
-        getString   ' .FAGroup
-        getString   ' .FAMethod
-        getString   ' .FAPercentage
-        getString   ' .FAProfile
+        getString "FA Group"   ' .FAGroup
+        getString "FA method"  ' .FAMethod
+        getString "FA Percentage"  ' .FAPercentage
+        getString "FA Profile"  ' .FAProfile
     End If
     
-    If version >= 8 Then getString  ' goodTillDate
+    If version >= 8 Then getString "Good till date"  ' goodTillDate
 
     If version >= 9 Then
-        getString           ' rule80A
-        getDouble           ' percentOffset
-        getString           ' settlingFirm
-        getLong             ' shortSaleSlot
-        getString           ' designatedLocation
-        getLong             ' auctionStrategy
-        getDouble           ' startingPrice
-        getDouble           ' stockRefPrice
-        getDouble           ' delta
-        getDouble           ' stockRangeLower
-        getDouble           ' stockRangeUpper
-        getLong             ' displaySize
-        getBoolean          ' rthOnly
-        getBoolean          ' blockOrder
-        getBoolean          ' sweepToFill
-        getBoolean          ' allOrNone
-        getLong             ' minQty
-        getLong             ' ocaType
-        getBoolean          ' eTradeOnly
-        getBoolean          ' firmQuoteOnly
-        getDouble           ' nbboPriceCap
+        getString "Rule80A"          ' rule80A
+        getDouble "Percent Offset"
+        getString "Settling Firm"
+        getLong "shortSaleSlot"
+        getString "designatedLocation"
+        getLong "Auction Strategy"
+        getDouble "starting Price"
+        getDouble "stockRefPrice"
+        getDouble "delta"
+        getDouble "stockRangeLower"
+        getDouble " stockRangeUpper"
+        getLong "displaySize"
+        getBoolean "rthOnly"
+        getBoolean "blockOrder"
+        getBoolean "sweepToFill"
+        getBoolean "allOrNone"
+        getLong "minQty"
+        getLong "ocaType"
+        getBoolean "eTradeOnly"
+        getBoolean "firmQuoteOnly"
+        getDouble "nbboPriceCap"
     End If
 
     If version >= 10 Then
-        getLong             ' parentId
-        getLong             ' triggerMethod
+        getLong "parentId"
+        getLong "triggerMethod"
     End If
 
     If version >= 11 Then
-        getDouble           ' volatility
-        getLong             ' volatilityType
+        getDouble "volatility"
+        getLong "volatilityType"
         If version = 11 Then
-            getLong         ' receivedInt
+            getLong "receivedInt"
         Else ' version 12 and up
-            getString       ' deltaNeutralOrderType
-            getDouble       ' deltaNeutralAuxPrice
+            getString "deltaNeutralOrderType"
+            getDouble "deltaNeutralAuxPrice"
         End If
-        getLong             ' continuousUpdate
+        getLong "continuousUpdate"
         If mServerVersion = 26 Then
-            getDouble       ' stockRangeLower
-            getDouble       ' stockRangeUpper
+            getDouble "stockRangeLower"
+            getDouble "stockRangeUpper"
         End If
-        getLong             ' referencePriceType
+        getLong "referencePriceType"
     End If
     
     If version >= 13 Then
-        getDouble           ' trailStopPrice
+        getDouble "trailStopPrice"
     End If
 
     If version >= 14 Then
-        getDouble           ' basisPoints
-        getLong             ' basisPointsType
-        getString           ' comboLegsDescrip
+        getDouble "basisPoints"
+        getLong "basisPointsType"
+        getString "comboLegsDescrip"
     End If
 'End With
 
-'If mLogLevel >= LogLevelLow Then
-'    mCommonServiceConsumer.NotifyListeners _
-'            "Open order:" & _
-'            " ID: " & lOrder.id & _
-'            "; Act: " & orderActionToString(lOrder.action) & _
-'            "; Qty: " & lOrder.quantity & _
-'            "; Type: " & orderTypeToString(lOrder.orderType) & _
-'            "; Lmt: " & lOrder.limitPrice & _
-'            "; Trig: " & lOrder.auxPrice & _
-'            "; TIF: " & orderTIFToString(lOrder.timeInForce) & _
-'            "; OCA: " & lOrder.ocaGroup, _
-'            timestamp
-'End If
-
-'If mSocketLogger.isLoggable(LogLevelHighDetail) Then
-'    socketdata.msgType = TWSSocketInMsgTypes.OPEN_ORDER
-'    With lContractSpecifier
-'        socketdata.currencyCode = .currencyCode
-'        socketdata.exchange = .exchange
-'        socketdata.expiry = .expiry
-'        socketdata.localSymbol = .localSymbol
-'        socketdata.right = .right
-'        socketdata.sectype = .sectype
-'        socketdata.strike = .strike
-'        socketdata.symbol = .symbol
-'    End With
-'    With lOrder
-'        socketdata.account = .account
-'        socketdata.action = action
-'        socketdata.auxPrice = .auxPrice
-'        socketdata.clientID = .clientID
-'        socketdata.discretionaryAmt = .discretionaryAmt
-'        socketdata.FAGroup = .FAGroup
-'        socketdata.FAMethod = .FAMethod
-'        socketdata.FAPercentage = .FAPercentage
-'        socketdata.FAProfile = .FAProfile
-'        socketdata.goodAfterTime = .goodAfterTime
-'        socketdata.hidden = .hidden
-'        socketdata.ignoreRTH = .ignoreRTH
-'        socketdata.limitPrice = .limitPrice
-'        socketdata.ocaGroup = .ocaGroup
-'        socketdata.openClose = .openClose
-'        socketdata.orderId = id
-'        socketdata.orderRef = .orderRef
-'        socketdata.orderType = orderType
-'        socketdata.origin = .origin
-'        socketdata.permId = .permId
-'        socketdata.quantity = .quantity
-'        socketdata.sharesAllocation = .sharesAllocation
-'        socketdata.timeInForce = timeInForce
-'    End With
-'    socketdata.version = version
-'
-'    msocketlogger.log LogLevelHighDetail, socketdata, _
-'                    timestamp
-'End If
+logSocketMessage
 
 End Sub
 
 Private Sub getOrderStatus(ByVal version As Long)
 Dim mapEntry As OrderIdMapEntry
-Dim socketdata As TWSSocketMsgOrderStatus
 
-Dim id As Long: id = getLong
-Dim statusString As String: statusString = getString
+Dim id As Long: id = getLong("id")
+Dim statusString As String: statusString = getString("Status")
 Dim status As TradeBuildSP.OrderStatuses: status = orderStatusFromString(statusString)
-Dim filled As Long: filled = getLong
-Dim remaining As Long: remaining = getLong
-Dim avgFillPrice As Double:  avgFillPrice = getDouble
+Dim filled As Long: filled = getLong("Filled")
+Dim remaining As Long: remaining = getLong("Remaining")
+Dim avgFillPrice As Double:  avgFillPrice = getDouble("Avg fill price")
 Dim lastFillPrice As Double
 Dim clientID As Long
 Dim permId As Long
 Dim parentId As Long
 Dim whyHeld As String
 
-If version >= 2 Then permId = getLong
+If version >= 2 Then permId = getLong("Perm id")
 
-If version >= 3 Then parentId = getLong
+If version >= 3 Then parentId = getLong("Parent id")
 
-If version >= 4 Then lastFillPrice = getDouble
+If version >= 4 Then lastFillPrice = getDouble("Last fill price")
 
-If version >= 5 Then clientID = getLong
+If version >= 5 Then clientID = getLong("Client id")
 
-If version >= 6 Then whyHeld = getString
+If version >= 6 Then whyHeld = getString("Why held")
+
+logSocketMessage
 
 On Error Resume Next
 mapEntry = mOrderIDMap(generateTwsOrderKey(id, clientID))
@@ -3389,27 +3269,9 @@ Else
     ' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! need to improve this!!!!!!!!!!!!!!!
 End If
 
-If mSocketLogger.isLoggable(LogLevelHighDetail) Then
-    socketdata.msgType = TWSSocketInMsgTypes.ORDER_STATUS
-    socketdata.avgFillPrice = avgFillPrice
-    socketdata.clientID = clientID
-    socketdata.filled = filled
-    socketdata.lastFillPrice = lastFillPrice
-    socketdata.orderId = id
-    socketdata.parentId = parentId
-    socketdata.permId = permId
-    socketdata.remaining = remaining
-    socketdata.status = statusString
-    socketdata.version = version
-    
-    mSocketLogger.Log LogLevelHighDetail, socketdata, _
-                    Me
-End If
-
 End Sub
 
 Private Sub getPortfolioValue(ByVal version As Long)
-Dim socketdata As TWSSocketMsgPortfolioValue
 
 Dim symbol As String
 Dim localSymbol As String
@@ -3422,13 +3284,13 @@ Dim currencyCode As String
 
 Dim lContractSpecifier As ContractSpecifier
 
-symbol = getString
-sectype = getString
-expiry = getString
-strike = getDouble
-rightString = getString
-currencyCode = getString
-If version >= 2 Then localSymbol = getString
+symbol = getString("Symbol")
+sectype = getString("Sec type")
+expiry = getString("Expiry")
+strike = getDouble("Strike")
+rightString = getString("Right")
+currencyCode = getString("Currency")
+If version >= 2 Then localSymbol = getString("Locale symbol")
 
 Set lContractSpecifier = CreateContractSpecifier(localSymbol, _
                                                 symbol, _
@@ -3439,45 +3301,20 @@ Set lContractSpecifier = CreateContractSpecifier(localSymbol, _
                                                 strike, _
                                                 optionRightFromString(rightString))
 
-Dim position As Long: position = getLong
-Dim marketPrice As Double: marketPrice = getDouble
-Dim marketValue As Double: marketValue = getDouble
+Dim position As Long: position = getLong("Position")
+Dim marketPrice As Double: marketPrice = getDouble("Market price")
+Dim marketValue As Double: marketValue = getDouble("Market value")
 Dim averageCost As Double: averageCost = 0#
 Dim unrealizedPNL As Double: unrealizedPNL = 0#
 Dim realizedPNL As Double: realizedPNL = 0#
 If version >= 3 Then
-    averageCost = getDouble
-    unrealizedPNL = getDouble
-    realizedPNL = getDouble
+    averageCost = getDouble("Avg cost")
+    unrealizedPNL = getDouble("Unrealized PNL")
+    realizedPNL = getDouble("Realized PNL")
 End If
-Dim accountName As String: If version >= 4 Then accountName = getString
+Dim accountName As String: If version >= 4 Then accountName = getString("Account name")
                          
-RaiseEvent updatePortfolioValue(lContractSpecifier, position, marketPrice, marketValue, averageCost, unrealizedPNL, realizedPNL, accountName)
-
-If mSocketLogger.isLoggable(LogLevelHighDetail) Then
-    socketdata.msgType = TWSSocketInMsgTypes.PORTFOLIO_VALUE
-    With lContractSpecifier
-        socketdata.currencyCode = .currencyCode
-        socketdata.expiry = .expiry
-        socketdata.localSymbol = .localSymbol
-        socketdata.right = rightString
-        socketdata.sectype = sectype
-        socketdata.strike = .strike
-        socketdata.symbol = .symbol
-    End With
-    socketdata.accountName = accountName
-    socketdata.averageCost = averageCost
-    socketdata.marketPrice = marketPrice
-    socketdata.marketValue = marketValue
-    socketdata.position = position
-    socketdata.realizedPNL = realizedPNL
-    socketdata.unrealizedPNL = unrealizedPNL
-    socketdata.version = version
-    
-    mSocketLogger.Log LogLevelHighDetail, socketdata, _
-                    Me
-End If
-
+logSocketMessage
 End Sub
 
 Private Sub getScannerData(ByVal version As Long)
@@ -3500,20 +3337,20 @@ Dim optRight As OptionRights
 Dim exchange As String
 Dim currencyCode As String
 
-tickerid = getLong
-numberOfElements = getLong
+tickerid = getLong("Id")
+numberOfElements = getLong("Number of elements")
 
 For i = 0 To numberOfElements - 1
-    rank = getLong
+    rank = getLong("Rank")
 
-    symbol = getString
-    sectype = secTypeFromString(getString)
-    expiry = getString
-    strike = getDouble
-    optRight = optionRightFromString(getString)
-    exchange = getString
-    currencyCode = getString
-    localSymbol = getString
+    symbol = getString("Symbol")
+    sectype = secTypeFromString(getString("Sec type"))
+    expiry = getString("Expiry")
+    strike = getDouble("Stirke")
+    optRight = optionRightFromString(getString("Right"))
+    exchange = getString("Exchange")
+    currencyCode = getString("Currency")
+    localSymbol = getString("Local symbol")
     
     Set lContractSpecifier = CreateContractSpecifier(localSymbol, _
                                                     symbol, _
@@ -3524,23 +3361,23 @@ For i = 0 To numberOfElements - 1
                                                     strike, _
                                                     optRight)
     Set lContractBuilder = CreateContractBuilder(lContractSpecifier)
-    getString 'marketName
-    getString 'tradingClass
-    distance = getString
-    benchmark = getString
-    projection = getString
+    getString "marketName"
+    getString "tradingClass"
+    distance = getString("Distance")
+    benchmark = getString("Benchmark")
+    projection = getString("Projection")
 Next
+
+logSocketMessage
 End Sub
 
 Private Sub getScannerParameters(ByVal version As Long)
 Dim xml  As String
-xml = getString
+xml = getString("XML")
 End Sub
 
 Private Sub getTickPrice(ByVal version As Long)
-Dim socketdata As TWSSocketMsgTickPrice
-Dim Price As Double
-Dim size As Long
+Dim tick As GenericTick
 Dim tickType As Long
 Dim tickerid As Long
 Dim canAutoExecute As Boolean
@@ -3550,40 +3387,72 @@ On Error GoTo err
 
 failpoint = 100
 
-tickerid = getLong
+tickerid = getLong("Ticker id")
 
 failpoint = 200
 
-tickType = getLong
+tickType = getLong("Tick type")
 
 failpoint = 300
 
-Price = getDouble
+tick.Price = getDouble("Price")
 
 failpoint = 400
 
 If version = 1 Then Debug.Print "****************** Type 1 tick price message received *********************"
-If version >= 2 Then size = getLong
-If version >= 3 Then canAutoExecute = getBoolean
+If version >= 2 Then tick.size = getLong("Size")
+If version >= 3 Then canAutoExecute = getBoolean("Can autoexecute")
+
+logSocketMessage
 
 failpoint = 500
 
-processTickPrice tickerid Mod IncarnationIncrement, _
-                tickType, _
-                Price, _
-                size
+With mTickerTable(tickerid Mod IncarnationIncrement)
 
-If mSocketLogger.isLoggable(LogLevelHighDetail) Then
-    socketdata.msgType = TWSSocketInMsgTypes.TICK_PRICE
-    socketdata.Price = Price
-    socketdata.size = size
-    socketdata.tickerid = tickerid
-    socketdata.tickType = tickType
-    socketdata.version = version
+    If Not .inUse Then Exit Sub     ' ticker has been stopped
+
+    If tick.Price < (0.5 * .prevTrade) Then
+        Exit Sub        ' ignore invalid prices
+    End If
     
-    mSocketLogger.Log LogLevelHighDetail, socketdata, _
-                    Me
-End If
+    tick.timestamp = ConvertDateUTCToTZ(GetTimestampUTC, .Contract.TimeZone)
+    
+    Select Case tickType
+    Case TICK_BID
+        tick.tickType = TickTypeBid
+        If tick.size = 0 Then tick.size = .prevBidSize
+        .prevBid = tick.Price
+        If tick.size <> 0 Then .prevBidSize = tick.size
+    
+    Case TICK_ASK
+        tick.tickType = TickTypeAsk
+        If tick.size = 0 Then tick.size = .prevAskSize
+        .prevAsk = tick.Price
+        If tick.size <> 0 Then .prevAskSize = tick.size
+    
+    Case TICK_LAST
+        tick.tickType = TickTypeTrade
+        If tick.size = 0 Then tick.size = .prevTradeSize
+        .prevTrade = tick.Price
+        If tick.size <> 0 Then .prevTradeSize = tick.size
+    
+    Case TICK_HIGH
+        tick.tickType = TickTypeHighPrice
+    
+    Case TICK_LOW
+        tick.tickType = TickTypeLowPrice
+    
+    Case TICK_OPEN
+        tick.tickType = TickTypeOpenPrice
+    
+    Case TICK_CLOSE
+        tick.tickType = TickTypeClosePrice
+    
+    End Select
+        
+    .dataConsumer.tick tick
+End With
+
 
 Exit Sub
 
@@ -3592,8 +3461,7 @@ err.Raise err.number, , "TWSAPI::getTickPrice(failpoint=" & failpoint & "): " & 
 End Sub
 
 Private Sub getTickSize(ByVal version As Long)
-Dim socketdata As TWSSocketMsgTickSize
-Dim size As Long
+Dim tick As GenericTick
 Dim tickType As Long
 Dim tickerid As Long
 Dim failpoint As Long
@@ -3602,32 +3470,70 @@ On Error GoTo err
 
 failpoint = 100
 
-tickerid = getLong
+tickerid = getLong("Ticker id")
 
 failpoint = 200
 
-tickType = getLong
+tickType = getLong("Tick type")
 
 failpoint = 300
 
-size = getLong
+tick.size = getLong("Size")
+
+logSocketMessage
 
 failpoint = 400
 
-processTickSize tickerid Mod IncarnationIncrement, _
-                tickType, _
-                size
-
-If mSocketLogger.isLoggable(LogLevelHighDetail) Then
-    socketdata.msgType = TWSSocketInMsgTypes.TICK_PRICE
-    socketdata.size = size
-    socketdata.tickerid = tickerid
-    socketdata.tickType = tickType
-    socketdata.version = version
+With mTickerTable(tickerid Mod IncarnationIncrement)
     
-    mSocketLogger.Log LogLevelHighDetail, socketdata, _
-                    Me
-End If
+    If Not .inUse Then Exit Sub     ' ticker has been stopped
+    
+    tick.timestamp = ConvertDateUTCToTZ(GetTimestampUTC, .Contract.TimeZone)
+    
+    Select Case tickType
+    Case TICK_BID_SIZE
+        tick.tickType = TickTypeBid
+        If tick.size = .prevBidSize Then
+            ' this happens when TWS has sent a tick price including the
+            ' size. It then sends the size again as a ticksize
+            Exit Sub
+        End If
+        
+        tick.Price = .prevBid
+        .prevBidSize = tick.size
+    
+    Case TICK_ASK_SIZE
+        tick.tickType = TickTypeAsk
+        If tick.size = .prevAskSize Then
+            ' this happens when TWS has sent a tick price including the
+            ' size. It then sends the size again as a ticksize
+            Exit Sub
+        End If
+        
+        tick.Price = .prevAsk
+        .prevAskSize = tick.size
+    
+    Case TICK_LAST_SIZE
+        tick.tickType = TickTypeTrade
+        If tick.size = .prevTradeSize Then
+            ' this happens when TWS has sent a tick price including the
+            ' size. It then sends the size again as a ticksize
+            Exit Sub
+        End If
+        
+        tick.Price = .prevTrade
+        .prevTradeSize = tick.size
+    
+    Case TICK_VOLUME
+        tick.tickType = TickTypeVolume
+    
+    Case TICK_OPEN_INTEREST
+        tick.tickType = TickTypeOpenInterest
+    
+    End Select
+
+    .dataConsumer.tick tick
+End With
 
 Exit Sub
 
@@ -3636,15 +3542,19 @@ err.Raise err.number, , "TWSAPI::getTickSize(failpoint=" & failpoint & "): " & e
 End Sub
 
 Private Sub getTickString(ByVal version As Long)
-getLong     ' tickerId
-getLong     ' tickType
-getString   ' value
+getLong "tickerId"
+getLong "tickType"
+getString "value"
+
+logSocketMessage
 End Sub
 
 Private Sub handleFatalError( _
                 ByVal number As Long, _
                 ByVal source As String, _
                 ByVal Description As String)
+logMessage source & " Error (" & number & "): " & Description, LogLevelSevere
+
 mCommonServiceConsumer.FatalServiceProviderError number, source, Description, -1
 
 If mConnectionState = ConnConnected Then gReleaseTWSAPIInstance Me, True
@@ -3655,7 +3565,7 @@ mConnectionState = ConnectionStates.ConnNotConnected
 ReleaseSocket
 If mDisconnectedByApplication Then
     RaiseEvent ConnectionToTWSClosed(False)
-    logMessage "Connection to TWS closed: " & connectionString
+    logMessage "Connection to TWS closed: " & connectionString, LogLevelNormal
 Else
     If mConnectionRetryIntervalSecs = 0 Then
         cancelContractRequests "Lost connection to TWS"
@@ -3666,7 +3576,8 @@ Else
         retryConnection
         RaiseEvent ConnectionToTWSClosed(True)
         logMessage "Connection to TWS closed - reconnecting: " & _
-                    connectionString
+                    connectionString, _
+                    LogLevelNormal
     End If
 End If
 End Sub
@@ -3698,10 +3609,16 @@ End Function
 Private Sub logMessage( _
                 ByVal message As String, _
                 Optional ByVal logLevel As LogLevels = LogLevelNormal)
-If Not gLogger.isLoggable(LogLevelAll) Then Exit Sub
+If Not gLogger.isLoggable(logLevel) Then Exit Sub
 gLogger.Log logLevel, _
-            message, _
-            Me
+            message
+End Sub
+
+Private Sub logSocketMessage()
+If mSocketLogger.isLoggable(LogLevelHighDetail) Then
+    mSocketLogger.Log LogLevelHighDetail, mMessageBuilder.toString
+    Set mMessageBuilder = Nothing
+End If
 End Sub
 
 Private Function optionRightFromString(ByVal value As String) As OptionRights
@@ -3934,47 +3851,6 @@ If permittedHistWeeks = 0 Then err.Raise ErrHistGenerationFailed
 If permittedHistWeeks > desiredBars Then permittedHistWeeks = desiredBars
 End Function
 
-Private Sub ProcessAsk(ByVal timestamp As Date, _
-                            ByVal tickerid As Long, _
-                            ByVal Price As Double, _
-                            ByVal size As Long)
-
-With mTickerTable(tickerid)
-
-    If Not .inUse Then Exit Sub     ' ticker has been stopped
-        
-    .dataConsumer.Ask timestamp, _
-                Price, _
-                size
-End With
-End Sub
-
-Private Sub ProcessBid(ByVal timestamp As Date, _
-                            ByVal tickerid As Long, _
-                            ByVal Price As Double, _
-                            ByVal size As Long)
-With mTickerTable(tickerid)
-
-    If Not .inUse Then Exit Sub     ' ticker has been stopped
-        
-    .dataConsumer.Bid timestamp, _
-                Price, _
-                size
-End With
-End Sub
-
-Private Sub ProcessClose(ByVal timestamp As Date, _
-                            ByVal tickerid As Long, _
-                            ByVal Price As Double)
-
-With mTickerTable(tickerid)
-
-    If Not .inUse Then Exit Sub     ' ticker has been stopped
-    
-    .dataConsumer.PreviousClose timestamp, Price
-End With
-End Sub
-
 Private Sub processContractError(ByVal reason As String)
 Dim failpoint As Long
 
@@ -4005,86 +3881,6 @@ err:
 err.Raise err.number, , "TWSAPI::processContractError(failpoint=" & failpoint & "): " & err.Description
 End Sub
 
-Private Sub ProcessHigh(ByVal timestamp As Date, _
-                            ByVal tickerid As Long, _
-                            ByVal Price As Double)
-
-With mTickerTable(tickerid)
-
-    If Not .inUse Then Exit Sub     ' ticker has been stopped
-
-    .dataConsumer.High timestamp, Price
-    
-End With
-End Sub
-
-Private Sub ProcessLast(ByVal timestamp As Date, _
-                            ByVal tickerid As Long, _
-                            ByVal Price As Double, _
-                            ByVal size As Long)
-
-With mTickerTable(tickerid)
-
-    If Not .inUse Then Exit Sub     ' ticker has been stopped
-        
-    .dataConsumer.Trade timestamp, _
-            Price, _
-            size
-End With
-End Sub
-
-Private Sub ProcessLow(ByVal timestamp As Date, _
-                            ByVal tickerid As Long, _
-                            ByVal Price As Double)
-
-With mTickerTable(tickerid)
-
-    If Not .inUse Then Exit Sub     ' ticker has been stopped
-
-    .dataConsumer.Low timestamp, Price
-
-End With
-End Sub
-
-Private Sub processMarketDepth(ByVal id As Long, _
-                                ByVal position As Long, _
-                                ByVal operation As DOMOperations, _
-                                ByVal side As DOMSides, _
-                                ByVal Price As Double, _
-                                ByVal size As Long)
-
-Dim timestamp As Date
-
-With mTickerTable(id)
-
-    timestamp = ConvertDateUTCToTZ(GetTimestampUTC, .Contract.TimeZone)
-
-    If Not .inUse Then Exit Sub     ' ticker has been stopped
-    
-    .dataConsumer.UpdateMktDepth timestamp, _
-                position, _
-                operation, _
-                side, _
-                Price, _
-                size
-    
-End With
-End Sub
-
-Private Sub processOpenInterest(ByVal timestamp As Date, _
-                            ByVal tickerid As Long, _
-                            ByVal size As Long)
-With mTickerTable(tickerid)
-
-    If Not .inUse Then Exit Sub     ' ticker has been stopped
-
-    If size = 0 Then Exit Sub
-    
-    .dataConsumer.OpenInterest timestamp, _
-                                size
-End With
-End Sub
-
 Private Sub processNextHistDataRequest()
 If mTwsHistDataRequestQueue.size <> 0 Then
     Dim request As TWSHistoricalDataRequestQueueEntry
@@ -4092,145 +3888,6 @@ If mTwsHistDataRequestQueue.size <> 0 Then
     request = mTwsHistDataRequestQueue.removeFromFront
     reqHistoricalData request
 End If
-End Sub
-
-Private Sub processTickPrice(ByVal tickerid As Long, _
-                            ByVal tickType As TWSSocketTickTypes, _
-                            ByVal Price As Double, _
-                            ByVal size As Long)
-Dim timestamp As Date
-
-With mTickerTable(tickerid)
-
-    If Not .inUse Then Exit Sub     ' ticker has been stopped
-
-    If Price < (0.5 * .prevTrade) Then
-        Exit Sub        ' ignore invalid prices
-    End If
-    
-    timestamp = ConvertDateUTCToTZ(GetTimestampUTC, .Contract.TimeZone)
-    
-    Select Case tickType
-    Case TICK_BID
-        size = IIf(size <> 0, size, .prevBidSize)
-        ProcessBid timestamp, _
-                    tickerid, _
-                    Price, _
-                    size
-        .prevBid = Price
-        If size <> 0 Then .prevBidSize = size
-    
-    Case TICK_ASK
-        size = IIf(size <> 0, size, .prevAskSize)
-        ProcessAsk timestamp, _
-                    tickerid, _
-                    Price, _
-                    size
-        
-        .prevAsk = Price
-        If size <> 0 Then .prevAskSize = size
-    
-    Case TICK_LAST
-        size = IIf(size <> 0, size, .prevTradeSize)
-        ProcessLast timestamp, _
-                    tickerid, _
-                    Price, _
-                    size
-        .prevTrade = Price
-        If size <> 0 Then .prevTradeSize = size
-    
-    Case TICK_HIGH
-        ProcessHigh timestamp, _
-                    tickerid, _
-                    Price
-    Case TICK_LOW
-        ProcessLow timestamp, _
-                    tickerid, _
-                    Price
-    Case TICK_CLOSE
-        ProcessClose timestamp, _
-                    tickerid, _
-                    Price
-    End Select
-End With
-
-End Sub
-
-Private Sub processTickSize(ByVal tickerid As Long, _
-                            ByVal tickType As TWSSocketTickTypes, _
-                            ByVal size As Long)
-Dim timestamp As Date
-
-With mTickerTable(tickerid)
-    
-    If Not .inUse Then Exit Sub     ' ticker has been stopped
-    
-    timestamp = ConvertDateUTCToTZ(GetTimestampUTC, .Contract.TimeZone)
-    
-    Select Case tickType
-    Case TICK_BID_SIZE
-        If size = .prevBidSize Then
-            ' this happens when TWS has sent a tick price including the
-            ' size. It then sends the size again as a ticksize
-            Exit Sub
-        End If
-        
-        .prevBidSize = size
-        ProcessBid timestamp, _
-                    tickerid, _
-                    .prevBid, _
-                    size
-    Case TICK_ASK_SIZE
-        If size = .prevAskSize Then
-            ' this happens when TWS has sent a tick price including the
-            ' size. It then sends the size again as a ticksize
-            Exit Sub
-        End If
-        
-        .prevAskSize = size
-        ProcessAsk timestamp, _
-                    tickerid, _
-                    .prevAsk, _
-                    size
-    Case TICK_LAST_SIZE
-        If size = .prevTradeSize Then
-            ' this happens when TWS has sent a tick price including the
-            ' size. It then sends the size again as a ticksize
-            Exit Sub
-        End If
-        
-        .prevTradeSize = size
-        ProcessLast timestamp, _
-                    tickerid, _
-                    .prevTrade, _
-                    size
-    Case TICK_VOLUME
-        processVolume timestamp, _
-                    tickerid, _
-                    size
-        
-    Case TICK_OPEN_INTEREST
-        processOpenInterest timestamp, _
-                    tickerid, _
-                    size
-    End Select
-End With
-
-End Sub
-
-Private Sub processVolume(ByVal timestamp As Date, _
-                            ByVal tickerid As Long, _
-                            ByVal size As Long)
-With mTickerTable(tickerid)
-
-    If Not .inUse Then Exit Sub     ' ticker has been stopped
-
-    If size = 0 Then Exit Sub
-    
-    .dataConsumer.volume timestamp, _
-                size
-    If err.number <> 0 Then Stop
-End With
 End Sub
 
 Private Function queueTWSHistoricalDataRequest(ByRef TwsRequest As TWSHistoricalDataRequestQueueEntry) As String
@@ -4323,7 +3980,7 @@ With ContractSpecifier
     addData secTypeToString(.sectype)
     addData Left$(.expiry, 6)
     addDouble .strike
-    addData optionRightToString(.right)
+    addData optionRightToString(.Right)
     If mServerVersion >= 15 Then addData "" ' multiplier
     addData .exchange
     addData .currencyCode
@@ -4357,7 +4014,7 @@ addData request.Contract.specifier.symbol
 addData secTypeToString(request.Contract.specifier.sectype)
 addData Left$(request.Contract.specifier.expiry, 6)
 addDouble request.Contract.specifier.strike
-addData optionRightToString(request.Contract.specifier.right)
+addData optionRightToString(request.Contract.specifier.Right)
 addData ""      ' >>>>>>>>>>>>>>>>>>>>>>>>>>>>> multiplier ??? why?
 addData request.Contract.specifier.exchange
 addData ""      ' >>>>>>>>>>>>>>>>>>>>>>>>>>>>> primaryExch ??? not in ActiveX interface
@@ -4430,7 +4087,7 @@ With mTickerTable(tickerTableIndex).Contract.specifier
     addData secTypeToString(.sectype)
     addData Left$(.expiry, 6)
     addDouble .strike
-    addData optionRightToString(.right)
+    addData optionRightToString(.Right)
     If mServerVersion >= 15 Then addData "" ' multiplier
     addData .exchange
     If mServerVersion >= 15 Then addData "" ' primary exchange
@@ -4471,7 +4128,7 @@ With contractSpec
     addData secTypeToString(.sectype)
     addData Left$(.expiry, 6)
     addDouble .strike
-    addData optionRightToString(.right)
+    addData optionRightToString(.Right)
     If mServerVersion >= 15 Then addData "" ' multiplier
     addData .exchange
     addData .currencyCode
@@ -4483,12 +4140,16 @@ End Sub
 
 Private Sub resetMarketDepth(ByVal reEstablish As Boolean)
 Dim i As Long
+Dim tick As GenericTick
+
+tick.tickType = TickTypeMarketDepthReset
+
 For i = 0 To UBound(mTickerTable)
     With mTickerTable(i)
         If .receivingMarketDepth Then
+            tick.timestamp = ConvertDateUTCToTZ(GetTimestampUTC, .Contract.TimeZone)
             If reEstablish Then reqMarketDepth i, .Contract.specifier
-            .dataConsumer.resetMarketDepth ConvertDateUTCToTZ(GetTimestampUTC, .Contract.TimeZone), _
-                                            reEstablish
+            .dataConsumer.tick tick
         End If
     End With
 Next
@@ -4571,7 +4232,7 @@ With specifier
     addData secTypeToString(.sectype)
     addData Left$(.expiry, 6)
     addDouble .strike
-    addData optionRightToString(.right)
+    addData optionRightToString(.Right)
     If mServerVersion >= 15 Then addData ""     ' multiplier - this is the number of units of the underlying
                                                 ' delivered per contract - see http://www.interactivebrokers.com/discus/messages/2/27413.html
     addData .exchange
@@ -4613,7 +4274,7 @@ With pOrder
         addData orderStopTriggerMethodToString(.stopTriggerMethod)
         addBoolean .ignoreRegularTradingHours
     End If
-    If mServerVersion >= 7 Then addBoolean .hidden
+    If mServerVersion >= 7 Then addBoolean .Hidden
 End With
 
 ' Send combo legs for BAG requests
