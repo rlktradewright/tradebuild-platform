@@ -157,7 +157,7 @@ Do While inString <> gCon.eofString
         Case RawCommand
             processRawCommand params
         Case Else
-            gCon.writeErrorLine "Invalid command '" & command
+            gCon.writeErrorLine "Invalid command '" & command & "'"
         End Select
     End If
     inString = Trim$(gCon.readLine(":"))

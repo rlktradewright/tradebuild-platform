@@ -100,6 +100,10 @@ Private Sub QuoteListener_previousClose(ev As TradeBuild26.QuoteEvent)
 outputPrice ev, "C"
 End Sub
 
+Private Sub QuoteListener_sessionOpen(ev As TradeBuild26.QuoteEvent)
+outputPrice ev, "O"
+End Sub
+
 Private Sub QuoteListener_trade(ev As TradeBuild26.QuoteEvent)
 outputPriceAndSize ev, "T"
 End Sub

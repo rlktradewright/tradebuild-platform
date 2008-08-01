@@ -2098,7 +2098,7 @@ Case TimePeriodSecond
         mVerticalGridSpacing = 30
     Case 3
         mVerticalGridUnits = TimePeriodSecond
-        mVerticalGridSpacing = 30
+        mVerticalGridSpacing = 20
     Case 4
         mVerticalGridUnits = TimePeriodMinute
         mVerticalGridSpacing = 1
@@ -2107,22 +2107,22 @@ Case TimePeriodSecond
         mVerticalGridSpacing = 1
     Case 6
         mVerticalGridUnits = TimePeriodMinute
-        mVerticalGridSpacing = 1
+        mVerticalGridSpacing = 5
     Case 10
         mVerticalGridUnits = TimePeriodMinute
-        mVerticalGridSpacing = 1
+        mVerticalGridSpacing = 5
     Case 12
         mVerticalGridUnits = TimePeriodMinute
-        mVerticalGridSpacing = 1
+        mVerticalGridSpacing = 5
     Case 15
         mVerticalGridUnits = TimePeriodMinute
-        mVerticalGridSpacing = 1
+        mVerticalGridSpacing = 5
     Case 20
         mVerticalGridUnits = TimePeriodMinute
-        mVerticalGridSpacing = 2
+        mVerticalGridSpacing = 5
     Case 30
         mVerticalGridUnits = TimePeriodMinute
-        mVerticalGridSpacing = 2
+        mVerticalGridSpacing = 5
     Case Else
         mVerticalGridUnits = TimePeriodNone
         mVerticalGridSpacing = 10
@@ -2149,19 +2149,19 @@ Case TimePeriodMinute
         mVerticalGridSpacing = 1
     Case 10
         mVerticalGridUnits = TimePeriodHour
-        mVerticalGridSpacing = 1
+        mVerticalGridSpacing = 2
     Case 12
         mVerticalGridUnits = TimePeriodHour
-        mVerticalGridSpacing = 1
+        mVerticalGridSpacing = 2
     Case 15
         mVerticalGridUnits = TimePeriodHour
-        mVerticalGridSpacing = 1
+        mVerticalGridSpacing = 2
     Case 20
         mVerticalGridUnits = TimePeriodHour
-        mVerticalGridSpacing = 2
+        mVerticalGridSpacing = 4
     Case 30
         mVerticalGridUnits = TimePeriodHour
-        mVerticalGridSpacing = 2
+        mVerticalGridSpacing = 4
     Case Else
         mVerticalGridUnits = TimePeriodNone
         mVerticalGridSpacing = 10
