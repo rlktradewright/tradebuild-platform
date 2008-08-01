@@ -97,9 +97,9 @@ Begin VB.Form fDataCollectorUI
       TabCaption(2)   =   "Configuration"
       TabPicture(2)   =   "fQuoteServerUI.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "ConfigDetailsButton"
+      Tab(2).Control(0)=   "Label4"
       Tab(2).Control(1)=   "ConfigNameText"
-      Tab(2).Control(2)=   "Label4"
+      Tab(2).Control(2)=   "ConfigDetailsButton"
       Tab(2).ControlCount=   3
       Begin VB.CommandButton ConfigDetailsButton 
          Caption         =   "Details..."
@@ -384,8 +384,8 @@ Private mTimerList As TimerList
 
 Private mLastTickTime As Date
 
-Private WithEvents mTimer As IntervalTimer
-Attribute mTimer.VB_VarHelpID = -1
+Private WithEvents mClock As Clock
+Attribute mClock.VB_VarHelpID = -1
 
 Private mTickCount As Long
 
@@ -408,6 +408,9 @@ Private mStartStopTimePanel As Panel
 Private mFormatter As LogFormatter
 
 Private mConfigFilename As String
+
+Private WithEvents mTaskInfoTimer  As IntervalTimer
+Attribute mTaskInfoTimer.VB_VarHelpID = -1
 
 '================================================================================
 ' Form Event Handlers
@@ -527,6 +530,10 @@ Private Sub QuoteListener_previousClose(ev As QuoteEvent)
 processTickEvent ev.Source
 End Sub
 
+Private Sub QuoteListener_sessionOpen(ev As TradeBuild26.QuoteEvent)
+processTickEvent ev.Source
+End Sub
+
 Private Sub QuoteListener_trade(ev As QuoteEvent)
 processTickEvent ev.Source
 End Sub
@@ -618,6 +625,18 @@ End Sub
 
 Private Sub TickerScroll_Change()
 scrollTickers
+End Sub
+
+'================================================================================
+' mClock Event Handlers
+'================================================================================
+
+Private Sub mClock_Tick()
+TicksPerSecText = mTickCount
+TicksPerSecText.Refresh
+mTickCount = 0
+SecsSinceLastTickText = Format(86400 * (GetTimestamp - mLastTickTime), "0")
+SecsSinceLastTickText.Refresh
 End Sub
 
 '================================================================================
@@ -727,17 +746,20 @@ Me.Refresh
 End Sub
 
 '================================================================================
-' mTimer Event Handlers
+' mTaskInfoTimer Event Handlers
 '================================================================================
 
-Private Sub mTimer_TimerExpired()
-Static timerCount As Long
-timerCount = timerCount + 1
-If timerCount Mod 4 = 0 Then
-    TicksPerSecText = mTickCount
-    mTickCount = 0
-End If
-SecsSinceLastTickText = Format(86400 * (GetTimestamp - mLastTickTime), "0")
+Private Sub mTaskInfoTimer_TimerExpired()
+gLogger.Log LogLevelDetail, "Running Tasks ----------------------------------------------" & vbCrLf & _
+                            TaskManager.getRunnableTaskSummary
+gLogger.Log LogLevelDetail, "Processed Tasks --------------------------------------------" & vbCrLf & _
+                            TaskManager.getProcessedTaskSummary
+gLogger.Log LogLevelDetail, "Restartable Tasks ------------------------------------------" & vbCrLf & _
+                            TaskManager.getRestartableTaskSummary
+gLogger.Log LogLevelDetail, "Pending Tasks ----------------------------------------------" & vbCrLf & _
+                            TaskManager.getPendingTaskSummary
+gLogger.Log LogLevelDetail, "Suspended Tasks --------------------------------------------" & vbCrLf & _
+                            TaskManager.getSuspendedTaskSummary
 End Sub
 
 '================================================================================
@@ -810,6 +832,24 @@ For i = 0 To ShortNameText.UBound
     DataLightLabel(i).BackColor = vbButtonFace
 Next
 End Sub
+
+Private Function generateTaskInfo( _
+                ByVal en As Enumerator) As String
+Dim ts As TaskSummary
+Dim s As String
+
+Do While en.moveNext
+    ts = en.current
+    s = s & "Name: " & ts.name & _
+        "; Priority: " & ts.priority & _
+        "; Start time: " & FormatTimestamp(ts.startTime, TimestampDateAndTimeISO8601) & _
+        "; Last run time: " & FormatTimestamp(ts.lastRunTime, TimestampDateAndTimeISO8601) & _
+        "; CPU time: " & Format(ts.totalCPUTime, "0.0") & vbCrLf
+        
+Loop
+    
+generateTaskInfo = s
+End Function
 
 Private Sub hideActivityMonitor()
 ShowHideMonitorButton.Caption = "Show activity monitor"
@@ -906,11 +946,17 @@ StartStopButton.enabled = True
 
 mLastTickTime = GetTimestamp
 
-Set mTimer = CreateIntervalTimer(0, , 250)
-mTimer.StartTimer
+Set mClock = GetClock
+
+If gLogger.isLoggable(LogLevelDetail) Then
+    Set mTaskInfoTimer = CreateIntervalTimer(1000, ExpiryTimeUnitMilliseconds, 5000)
+    mTaskInfoTimer.StartTimer
+End If
 End Sub
 
 Private Sub setStopped()
+If Not mTaskInfoTimer Is Nothing Then mTaskInfoTimer.StopTimer
+
 mCollectingData = False
 StartStopButton.Caption = "Start"
 
@@ -921,7 +967,6 @@ clearTickers
 SecsSinceLastTickText = ""
 TicksPerSecText = ""
 
-mTimer.StopTimer
 End Sub
 
 Private Sub setupTickerScroll()
@@ -990,11 +1035,13 @@ Set mTickers(index).tli = mTimerList.Add(index, 200, ExpiryTimeUnitMilliseconds)
 mTickers(index).tli.addStateChangeListener Me
 
 DataLightLabel(index).BackColor = vbGreen
+DataLightLabel(index).Refresh
 ConnectionStatusText.BackColor = vbGreen
 End Sub
 
 Private Sub switchDataLightOff( _
                 ByVal index As Long)
 DataLightLabel(index).BackColor = vbButtonFace
+DataLightLabel(index).Refresh
 End Sub
 

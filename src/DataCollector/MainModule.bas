@@ -62,6 +62,9 @@ Public Const SwitchConfig                   As String = "config"
 
 Public Const SwitchSetup                    As String = "setup"
 
+Public Const SwitchConcurrency              As String = "concurrency"
+Public Const SwitchQuantum                  As String = "quantum"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -136,6 +139,8 @@ If showHelp Then
 End If
 
 getLog
+
+setTaskParameters
 
 If setup Then
     TerminateTWUtilities
@@ -214,6 +219,7 @@ If getConfigToLoad() Is Nothing Then
     notifyError "No configuration is available"
 Else
     Set mConfig = getConfigToLoad
+    gLogger.Log LogLevelNormal, "Configuration in use: " & mConfig.getAttribute(AttributeNameAppConfigName)
     configure = True
 End If
 
@@ -307,7 +313,7 @@ If configToLoad Is Nothing Then
         Err.Raise ErrorCodes.ErrIllegalArgumentException
     End If
     
-    gLogger.Log twutilities30.LogLevels.LogLevelSevere, "Configuration file: " & getConfigFilename
+    gLogger.Log twutilities30.LogLevels.LogLevelNormal, "Configuration file: " & getConfigFilename
     
     On Error Resume Next
     Set configToLoad = getNamedConfig()
@@ -345,14 +351,14 @@ If mCLParser.Switch("LogLevel") Then DefaultLogLevel = LogLevelFromString(mCLPar
 If logFile = "" Then
     logFile = GetSpecialFolderPath(FolderIdLocalAppdata) & _
                         "\TradeWright\" & _
-                        App.EXEName & _
+                        AppName & _
                         "\v" & _
                         App.Major & "." & App.Minor & _
                         "\log.log"
 End If
 
-Set gLogger = GetLogger("")
-gLogger.addLogListener CreateFileLogListener(logFile, _
+Set gLogger = GetLogger("log")
+GetLogger("").addLogListener CreateFileLogListener(logFile, _
                                         CreateBasicLogFormatter, _
                                         True, _
                                         False)
@@ -399,6 +405,34 @@ gLogger.Log twutilities30.LogLevels.LogLevelSevere, message
 If Not mNoUI Then MsgBox message & vbCrLf & vbCrLf & "The program will close.", vbCritical, "Attention!"
 End Sub
 
+Private Sub setTaskParameters()
+
+RunTasksAtLowerThreadPriority = False
+TaskConcurrency = 20
+TaskQuantumMillisecs = 20
+
+If mCLParser.Switch(SwitchConcurrency) Then
+    If Not IsInteger(mCLParser.SwitchValue(SwitchConcurrency), 2) Then
+        gLogger.Log LogLevels.LogLevelNormal, _
+                    "Argument '" & SwitchConcurrency & ":" & mCLParser.SwitchValue(SwitchConcurrency) & "' is invalid and has been ignored"
+    Else
+        TaskConcurrency = CLng(mCLParser.SwitchValue(SwitchConcurrency))
+    End If
+End If
+gLogger.Log LogLevels.LogLevelNormal, "Task concurrency=" & TaskConcurrency
+
+If mCLParser.Switch(SwitchQuantum) Then
+    If Not IsInteger(mCLParser.SwitchValue(SwitchQuantum), 1) Then
+        gLogger.Log LogLevels.LogLevelNormal, _
+                    "Argument '" & SwitchQuantum & ":" & mCLParser.SwitchValue(SwitchQuantum) & "' is invalid and has been ignored"
+    Else
+        TaskQuantumMillisecs = CLng(mCLParser.SwitchValue(SwitchQuantum))
+    End If
+End If
+gLogger.Log LogLevels.LogLevelNormal, "Task quantum (millisecs)=" & TaskQuantumMillisecs
+
+End Sub
+
 Private Function setup() As Boolean
 If Not mCLParser.Switch(SwitchSetup) Then Exit Function
 showConfig
@@ -409,7 +443,7 @@ Private Sub showConfig()
 Dim f As fConfig
 Set f = New fConfig
 f.initialise getConfigFilename, False
-f.Show vbModal
+f.Show vbModeless
 End Sub
 
 Private Function showHelp() As Boolean
@@ -430,6 +464,9 @@ If mCLParser.Switch("?") Or mCLParser.NumberOfSwitches = 0 Then
             "                [/startAt:[day]hh:mm]" & vbCrLf & _
             "                [/endAt:[day]hh:mm]" & vbCrLf & _
             "                [/loglevel:levelName]" & vbCrLf
+    s = s & _
+            "                [/concurrency:n]" & vbCrLf & _
+            "                [/quantum:n]" & vbCrLf
     s = s & vbCrLf & _
             "  where" & vbCrLf & _
             vbCrLf & _
@@ -446,7 +483,7 @@ If mCLParser.Switch("?") Or mCLParser.NumberOfSwitches = 0 Then
     s = s & vbCrLf & _
             "Example 1:" & vbCrLf & _
             "   datacollector26 /setup" & vbCrLf & _
-            "       runs the data collector configurator, which enables you to define " & vbCrLf & _
+            "       runs the data collector configurer, which enables you to define " & vbCrLf & _
             "       various configurations for use with different data collector " & vbCrLf & _
             "       instances. The default configuration file is used to store this" & vbCrLf & _
             "       information." & vbCrLf & _
