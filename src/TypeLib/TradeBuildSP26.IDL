@@ -19,6 +19,9 @@ library TradeBuildSP
 	// TradeWright Timeframe Utilities
 	importlib("C:\Projects\TradeBuild Platform\TimeframeUtils\TimeframeUtils2-6.dll");
 	
+	// TradeWright Tick Utilities
+	importlib("C:\Projects\TradeBuild Platform\TickUtils\TickUtils26.dll");
+	
     // Forward declare all types defined in this typelib
     interface IBarDataConsumer;
     interface IBarDataInputServiceConsumer;
@@ -90,19 +93,19 @@ library TradeBuildSP
         DOMByPrice = 2
     } DOMEventTypes;
 
-    typedef [uuid(82212E6B-9D9C-4A44-ADB5-5F225CEA50B8), version(1.0)]
-    enum {
-        DOMInsert = 0,
-        DOMUpdate = 1,
-        DOMDelete = 2
-    } DOMOperations;
+    //typedef [uuid(82212E6B-9D9C-4A44-ADB5-5F225CEA50B8), version(1.0)]
+    //enum {
+    //    DOMInsert = 0,
+    //    DOMUpdate = 1,
+    //    DOMDelete = 2
+    //} DOMOperations;
 
-    typedef [uuid(21DC1B1C-E06E-4741-AA29-3510A5DECF4A), version(1.0)]
-    enum {
-        DOMAsk = 0,
-        DOMBid = 1,
-        DOMLast = 2
-    } DOMSides;
+    //typedef [uuid(21DC1B1C-E06E-4741-AA29-3510A5DECF4A), version(1.0)]
+    //enum {
+    //    DOMAsk = 0,
+    //    DOMBid = 1,
+    //    DOMLast = 2
+    //} DOMSides;
 
     typedef [uuid(e0132d3f-a956-484d-a703-062027df9f8d), version(1.0)]
     enum {
@@ -687,7 +690,7 @@ library TradeBuildSP
 
         HRESULT CreateBarDataWriter(
 			[in] IBarDataOutputServiceConsumer* serviceConsumer,
-			[in] ContractSpecifier* contractSpec,
+			[in] Contract* pContract,
             [in, optional, defaultvalue("")] BSTR location, 
             [out, retval] IBarDataWriter** );
 
@@ -781,7 +784,7 @@ library TradeBuildSP
       uuid(4c1da235-2896-45c4-b5d5-f9e87c904056),
       version(1.0),
       nonextensible,
-      helpstring("Specifies the interface to be implemented by Tickfile Writers")
+      helpstring("Specifies the interface to be implemented by Bar Writers")
     ]
     interface IBarDataWriter : IUnknown {
 
@@ -1262,62 +1265,56 @@ interface IOrderPlex : IDispatch {
 
 		// Methods =====================================================
 
-        [helpstring("Notifies an ask value")]
-        HRESULT Ask(
-                        [in] DATE timestamp, 
-                        [in] double price, 
-                        [in] long size);
+		HRESULT Tick(
+			[in, out] GenericTick* tick);
 
-        HRESULT Bid(
-                        [in] DATE timestamp, 
-                        [in] double price, 
-                        [in] long size);
+      //  HRESULT Ask(
+      //                  [in] DATE timestamp, 
+      //                  [in] double price, 
+      //                  [in] long size);
 
-        HRESULT High(
-                        [in] DATE timestamp, 
-                        [in] double price);
+      //  HRESULT Bid(
+      //                  [in] DATE timestamp, 
+      //                  [in] double price, 
+      //                  [in] long size);
 
-        HRESULT Low(
-                        [in] DATE timestamp, 
-                        [in] double price);
+      //  HRESULT High(
+      //                  [in] DATE timestamp, 
+      //                  [in] double price);
 
-        HRESULT OpenInterest(
-                        [in] DATE timestamp, 
-                        [in] long size);
+      //  HRESULT Low(
+      //                  [in] DATE timestamp, 
+      //                  [in] double price);
 
-        HRESULT PreviousClose(
-                        [in] DATE timestamp, 
-                        [in] double price);
+      //  HRESULT OpenInterest(
+      //                  [in] DATE timestamp, 
+      //                  [in] long size);
 
-        HRESULT ResetMarketDepth(
-                        [in] DATE timestamp,
-						[in] VARIANT_BOOL marketDepthReRequested);
+      //  HRESULT PreviousClose(
+      //                  [in] DATE timestamp, 
+      //                  [in] double price);
 
-        HRESULT Trade(
-                        [in] DATE timestamp, 
-                        [in] double price, 
-                        [in] long size);
+      //  HRESULT ResetMarketDepth(
+      //                  [in] DATE timestamp,
+						//[in] VARIANT_BOOL marketDepthReRequested);
 
-        HRESULT UpdateMktDepth(
-                        [in] DATE timestamp, 
-                        [in] long Position, 
-                        [in] DOMOperations operation, 
-                        [in] DOMSides side, 
-                        [in] double price, 
-                        [in] long size);
+      //  HRESULT Trade(
+      //                  [in] DATE timestamp, 
+      //                  [in] double price, 
+      //                  [in] long size);
 
-        HRESULT UpdateMktDepthL2(
-                        [in] DATE timestamp, 
-                        [in] long Position, 
-                        [in] BSTR marketMaker, 
-                        [in] DOMOperations operation, 
-                        [in] DOMSides side, 
-                        [in] double price, 
-                        [in] long size);
+      //  HRESULT MarketDepth(
+      //                  [in] DATE timestamp, 
+      //                  [in] long Position, 
+      //                  [in] BSTR marketMaker, 
+      //                  [in] DOMOperations operation, 
+      //                  [in] DOMSides side, 
+      //                  [in] double price, 
+      //                  [in] long size);
 
-        HRESULT Volume(
-                        [in] DATE timestamp, 
-                        [in] long size);
+      //  HRESULT Volume(
+      //                  [in] DATE timestamp, 
+      //                  [in] long size);
     };
 
     [
@@ -1358,10 +1355,8 @@ interface IOrderPlex : IDispatch {
 
 		// Properties ==================================================
 
-        [propput]
-        HRESULT Ready([in] VARIANT_BOOL );
-
-
+        //[propput]
+        //HRESULT Ready([in] VARIANT_BOOL );
 
 		// Methods =====================================================
 
@@ -1369,6 +1364,10 @@ interface IOrderPlex : IDispatch {
 			[in] StandardSPEventCodes eventCode,
 			[in] BSTR eventMessage,
 			[in] long serviceProviderHandle);
+
+        HRESULT NotReady();
+
+        HRESULT Ready();
 
         HRESULT OutputTickfileCreated(
                         [in] BSTR filename);
@@ -1451,14 +1450,15 @@ interface IOrderPlex : IDispatch {
         HRESULT CreateTickfileReader(
 			[in] IStreamingDataConsumer* dataConsumer,
 			[in] ITickfileInputServiceConsumer* serviceConsumer,
-                        [in] BSTR formatIdentifier, 
+            [in] BSTR formatIdentifier, 
 			[out, retval] ITickfileReader** );
 
         HRESULT CreateTickfileWriter(
 			[in] ITickfileOutputServiceConsumer* serviceConsumer,
-                        [in, optional, defaultvalue("")] BSTR formatIdentifier, 
-                        [in, optional, defaultvalue("")] BSTR location, 
-                        [out, retval] ITickfileWriter** );
+			[in] Contract* pContract,
+            [in, optional, defaultvalue("")] BSTR formatIdentifier, 
+            [in, optional, defaultvalue("")] BSTR location, 
+            [out, retval] ITickfileWriter** );
 
         HRESULT Supports(
                         [in] long capabilities, 
@@ -1535,61 +1535,64 @@ interface IOrderPlex : IDispatch {
 
 		// Properties ==================================================
 
-        [propput]
-        HRESULT Contract([in] Contract* );
+        //[propput]
+        //HRESULT Contract([in] Contract* );
 
-        [propget]
-        HRESULT Contract([out, retval] Contract** );
+        //[propget]
+        //HRESULT Contract([out, retval] Contract** );
 
 		// Methods =====================================================
 
         HRESULT CloseOutputFile();
 
-        HRESULT WriteAsk(
-                        [in] DATE timestamp, 
-                        [in] double price, 
-                        [in] long size);
+		HRESULT WriteTick(
+			[in, out] GenericTick* tick);
 
-        HRESULT WriteBid(
-                        [in] DATE timestamp, 
-                        [in] double price, 
-                        [in] long size);
+        //HRESULT WriteAsk(
+        //                [in] DATE timestamp, 
+        //                [in] double price, 
+        //                [in] long size);
 
-        HRESULT WriteClose(
-                        [in] DATE timestamp, 
-                        [in] double price);
+        //HRESULT WriteBid(
+        //                [in] DATE timestamp, 
+        //                [in] double price, 
+        //                [in] long size);
 
-        HRESULT WriteHigh(
-                        [in] DATE timestamp, 
-                        [in] double price);
+        //HRESULT WriteClose(
+        //                [in] DATE timestamp, 
+        //                [in] double price);
 
-        HRESULT WriteLow(
-                        [in] DATE timestamp, 
-                        [in] double price);
+        //HRESULT WriteHigh(
+        //                [in] DATE timestamp, 
+        //                [in] double price);
 
-        HRESULT WriteMarketDepthData(
-                        [in] DATE timestamp, 
-                        [in] long Position, 
-                        [in] BSTR marketMaker, 
-                        [in] long operation, 
-                        [in] long side, 
-                        [in] double price, 
-                        [in] long size);
+        //HRESULT WriteLow(
+        //                [in] DATE timestamp, 
+        //                [in] double price);
 
-        HRESULT WriteMarketDepthReset([in] DATE timestamp);
+        //HRESULT WriteMarketDepthData(
+        //                [in] DATE timestamp, 
+        //                [in] long Position, 
+        //                [in] BSTR marketMaker, 
+        //                [in] long operation, 
+        //                [in] long side, 
+        //                [in] double price, 
+        //                [in] long size);
 
-        HRESULT WriteTrade(
-                        [in] DATE timestamp, 
-                        [in] double price, 
-                        [in] long size);
+        //HRESULT WriteMarketDepthReset([in] DATE timestamp);
 
-        HRESULT WriteVolume(
-                        [in] DATE timestamp, 
-                        [in] long size);
+        //HRESULT WriteTrade(
+        //                [in] DATE timestamp, 
+        //                [in] double price, 
+        //                [in] long size);
 
-        HRESULT WriteOpenInterest(
-                        [in] DATE timestamp, 
-                        [in] long size);
+        //HRESULT WriteVolume(
+        //                [in] DATE timestamp, 
+        //                [in] long size);
+
+        //HRESULT WriteOpenInterest(
+        //                [in] DATE timestamp, 
+        //                [in] long size);
 
     };
 
