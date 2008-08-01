@@ -83,6 +83,9 @@ End Sub
 Public Sub low(ByRef ev As QuoteEvent)
 End Sub
 
+Public Sub sessionOpen(ByRef ev As QuoteEvent)
+End Sub
+
 Public Sub openInterest(ByRef ev As QuoteEvent)
 End Sub
 

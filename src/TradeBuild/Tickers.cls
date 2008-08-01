@@ -150,20 +150,22 @@ Friend Sub stateChange( _
 RaiseEvent stateChange(ev)
 End Sub
 
-Public Sub startTickers( _
+Public Function startTickers( _
                 ByVal pTickerOptions As Long, _
                 ByVal pContractSpec As contractSpecifier, _
                 Optional ByVal pDOMEventsRequired As DOMEvents, _
                 Optional ByVal poutputTickfileFormat As String, _
-                Optional ByVal poutputTickfilePath As String)
+                Optional ByVal poutputTickfilePath As String) As TaskController
 Dim lTickersStarter As New TickersStarter
-lTickersStarter.startTickers Me, _
+
+lTickersStarter.initialise Me, _
                             pTickerOptions, _
                             pContractSpec, _
                             pDOMEventsRequired, _
                             poutputTickfileFormat, _
                             poutputTickfilePath
-End Sub
+Set startTickers = StartTask(lTickersStarter, PriorityNormal, "StartTickers/" & GenerateTextID)
+End Function
 
 Friend Sub notify(ByRef ev As NotificationEvent)
 RaiseEvent Notification(ev)

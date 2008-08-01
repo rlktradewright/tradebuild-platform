@@ -57,7 +57,9 @@ Private mContractsBuilder                   As ContractsBuilder
 ' DeferredAction Interface Members
 '@================================================================================
 
-Private Sub DeferredAction_run()
+Private Sub DeferredAction_run( _
+                ByVal data As Variant)
+Set mContractsBuilder = data
 gTB.ServiceProviders.loadContracts mContractsBuilder
 End Sub
 
@@ -68,11 +70,6 @@ End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
-
-Friend Sub initialise( _
-                ByVal pContractsBuilder As ContractsBuilder)
-Set mContractsBuilder = pContractsBuilder
-End Sub
 
 '@================================================================================
 ' Methods

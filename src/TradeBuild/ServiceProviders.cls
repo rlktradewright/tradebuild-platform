@@ -372,7 +372,7 @@ End Function
                             
 Friend Function CreateHistoricalDataWriter( _
                 ByVal serviceConsumer As TradeBuildSP.IBarDataOutputServiceConsumer, _
-                ByVal contractSpec As contractSpecifier, _
+                ByVal pContract As Contract, _
                 ByVal historicDataPath As String _
                 ) As HistoricDataWriter
                             
@@ -398,7 +398,7 @@ Next
 If histDataSp Is Nothing Then Exit Function
 
 Set histDataSPWriter = histDataSp.CreateBarDataWriter(serviceConsumer, _
-                                                    contractSpec, _
+                                                    pContract, _
                                                     historicDataPath)
 
 Set histDataWriter = New HistoricDataWriter
@@ -526,9 +526,10 @@ Set CreateTickfileReader = tfReader
 End Function
 
 Friend Function CreateTickfileWriter( _
-            ByVal serviceConsumer As TradeBuildSP.ITickfileOutputServiceConsumer, _
-            ByVal outputTickfileFormatID As String, _
-            ByVal outputTickfilePath As String) As TickfileWriter
+                ByVal serviceConsumer As TradeBuildSP.ITickfileOutputServiceConsumer, _
+                ByVal pContract As Contract, _
+                ByVal outputTickfileFormatID As String, _
+                ByVal outputTickfilePath As String) As TickfileWriter
                             
 Dim tickfileSp As TradeBuildSP.ITickfileServiceProvider
 Dim tickfileSPWriter As TradeBuildSP.ITickfileWriter
@@ -554,6 +555,7 @@ If tickfileSp Is Nothing Then Exit Function
 
 Set tfWriter = New TickfileWriter
 Set tickfileSPWriter = tickfileSp.CreateTickfileWriter(serviceConsumer, _
+                                                    pContract, _
                                                     outputTickfileFormatID, _
                                                     outputTickfilePath)
 
@@ -563,7 +565,8 @@ Set CreateTickfileWriter = tfWriter
 
 End Function
 
-Friend Function IsSupportedHistoricalDataPeriod(ByRef period As TimePeriod) As Boolean
+Friend Function IsSupportedHistoricalDataPeriod( _
+                ByRef period As TimePeriod) As Boolean
 Dim i As Long
 Dim histDataSp As TradeBuildSP.IBarDataServiceProvider
 
@@ -834,20 +837,23 @@ For Each sp In mServiceProviderConfigList.childItems
         On Error GoTo Err
         
         If Not props Is Nothing Then
+            errMess = "property name attribute not specified"
             For Each prop In props.childItems
-                errMess = "property name attribute not specified"
                 propName = prop.getAttribute(AttributeNamePropertyName)
                 propValue = prop.getDefaultableAttribute(AttributeNamePropertyValue, "")
                 params.setParameterValue propName, propValue
             Next
         End If
         
+        errMess = "can't create service provider with progId " & spProgId
         If spProgId = ProgIdTbOrders Then
             ' this is the built-in order simulator
             Set spObj = New OrderSimulatorSP
         Else
             Set spObj = CreateObject(spProgId)
         End If
+        
+        errMess = "can't add service provider " & spName
         spindex = addSP(spObj, params, spName)
         If spindex <> 0 Then Set mServiceProviders(spindex).SpConfig = sp
     End If

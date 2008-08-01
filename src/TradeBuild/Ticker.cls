@@ -17,10 +17,11 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements TradeBuildSP.IBarDataOutputServiceConsumer
-Implements TradeBuildSP.IRealtimeDataInputServiceConsumer
-Implements TradeBuildSP.ITickfileOutputServiceConsumer
-Implements TradeBuildSP.IStreamingDataConsumer
+Implements IBarDataOutputServiceConsumer
+Implements IRealtimeDataInputServiceConsumer
+Implements IStreamingDataConsumer
+Implements ITickfileOutputServiceConsumer
+Implements StateChangeListener
 
 '@================================================================================
 ' Events
@@ -123,6 +124,7 @@ Private mTickers                    As Tickers
 Private mState                      As TickerStates
 
 Private mTimeframes                 As Timeframes
+Private mNumberOfTimeframesLoading  As Long
 
 Private mCurrTickfileIndex          As Long
 
@@ -139,6 +141,8 @@ Private mHighPrice                  As Double
 Private mHighPriceString            As String
 Private mLowPrice                   As Double
 Private mLowPriceString             As String
+Private mOpenPrice                  As Double
+Private mOpenPriceString            As String
 Private mClosePrice                 As Double
 Private mClosePriceString           As String
 Private mVolume                     As Long
@@ -312,6 +316,12 @@ Case HDRetryConnectDataSource
                         eventMessage
     RaiseEvent Notification(ev)
     mTickers.notify ev
+Case HDRequestInvalid
+    ev.eventCode = ApiNotifyCodes.ApiNotifyCantWriteToHistoricDataStore
+    ev.eventMessage = "Historic data store write fail: " & _
+                    eventMessage
+    RaiseEvent Notification(ev)
+    mTickers.notify ev
 Case Else
     gTB.SetServiceProviderError eventCode, _
                         eventMessage, _
@@ -320,7 +330,7 @@ End Select
 End Sub
 
 Private Sub IBarDataOutputServiceConsumer_NotReady()
-mBarWriter.ServiceProviderWriterReady = False
+mBarWriter.ServiceProviderWriterNotReady
 
 fireBarWriterNotify WriterNotifications.WriterNotReady, ""
 
@@ -333,23 +343,30 @@ fireBarWriterNotify WriterNotifications.WriterFileCreated, _
 End Sub
 
 Private Sub IBarDataOutputServiceConsumer_Ready()
-mBarWriter.ServiceProviderWriterReady = True
+mBarWriter.ServiceProviderWriterReady
 
 fireBarWriterNotify WriterNotifications.WriterReady, ""
+
+If readyToReplay Then
+    mTickfileManager.startTicker mContract
+    State = TickerStates.TickerStateRunning
+End If
 
 End Sub
 
 Private Sub IBarDataOutputServiceConsumer_RequiredTimePeriod( _
-                timeframe As TimePeriod, _
+                tp As TimePeriod, _
                 ByVal saveIntervalSeconds As Long)
-
+Dim tf As Timeframe
 If saveIntervalSeconds > 0 And saveIntervalSeconds < 5 Then _
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "TradeBuild26.Ticker::IBarDataOutputServiceConsumer_RequiredTimePeriod", _
             "Save interval cannot be less than 5 seconds"
 
-mTimeframes.addTimeframe timeframe.length, _
-                        timeframe.units, _
+mNumberOfTimeframesLoading = mNumberOfTimeframesLoading + 1
+
+Set tf = mTimeframes.addTimeframe(tp.length, _
+                        tp.units, _
                         "", _
                         IIf(mUpdateLatestBar, 2, 0), _
                         0, _
@@ -358,7 +375,8 @@ mTimeframes.addTimeframe timeframe.length, _
                         False, _
                         mBarWriter, _
                         saveIntervalSeconds, _
-                        mWriteBidAskBarData
+                        mWriteBidAskBarData)
+tf.addStateChangeListener Me
 End Sub
 
 '@================================================================================
@@ -462,14 +480,8 @@ End Sub
 ' TradeBuildSP.IStreamingDataConsumer Interface Members
 '@================================================================================
 
-Private Sub IStreamingDataConsumer_Ask( _
-                            ByVal timestamp As Date, _
-                            ByVal price As Double, _
-                            ByVal size As Long)
-
+Private Sub IStreamingDataConsumer_Tick(Tick As TickUtils26.GenericTick)
 mInEventHandler = True
-
-On Error GoTo Err
 
 mTickNumber = mTickNumber + 1
 If mState <> TickerStates.TickerStateRunning Then
@@ -477,624 +489,50 @@ If mState <> TickerStates.TickerStateRunning Then
     Exit Sub    ' ticker has been stopped
 End If
     
-If mWriteTickData Then mTickWriter.writeAsk timestamp, price, size
-
-' timestamp = convertTime(timestamp)
-    
-setTime timestamp
-
-
-If price < (0.5 * mPrevAsk) Then
-    mInEventHandler = False
-    Exit Sub   ' ignore invalid prices
-End If
-
-If size < 0 Then
-    mInEventHandler = False
-    Exit Sub
-End If
-        
-mAskPrice = price
-mAskPriceString = formatPrice(price)
-mAskSize = size
-
-Dim i As Long
-Dim consumer As TradeBuildSP.IStreamingDataConsumer
-For i = 1 To mDataConsumers.Count
-    Set consumer = mDataConsumers(i)
-    consumer.ask timestamp, price, size
-Next
-
-mStudyManager.notifyInput mAskInputHandle, price, timestamp
-
-fireAsk mAskPrice, mAskPriceString, size, mPrevAsk, mPrevAskSize
-
-If mPrevAsk <> 0 And price > mPrevAsk Then
-    DOMClearCell timestamp, _
-            DOMSides.DOMAsk, _
-            mPrevAsk
-End If
-
-If size <> 0 Then
-    DOMSetCell timestamp, _
-            DOMSides.DOMAsk, _
-            price, _
-            size
-End If
-
-mPrevAsk = price
-mPrevAskSize = mAskSize
-
-mInEventHandler = False
-Exit Sub
-
-Err:
-gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:Ask"
-mInEventHandler = False
-End Sub
-
-
-Private Sub IStreamingDataConsumer_Bid( _
-                            ByVal timestamp As Date, _
-                            ByVal price As Double, _
-                            ByVal size As Long)
-
-mInEventHandler = True
-
-On Error GoTo Err
-
-mTickNumber = mTickNumber + 1
-If mState <> TickerStates.TickerStateRunning Then
-    mInEventHandler = False
-    Exit Sub     ' ticker has been stopped
-End If
-
-If mWriteTickData Then mTickWriter.writeBid timestamp, price, size
-   
-' timestamp = convertTime(timestamp)
-    
-setTime timestamp
-
-If price < (0.5 * mPrevBid) Then
-    mInEventHandler = False
-    Exit Sub   ' ignore invalid prices
-End If
-
-If size < 0 Then
-    mInEventHandler = False
-    Exit Sub
-End If
-        
-mBidPrice = price
-mBidPriceString = formatPrice(price)
-mBidSize = size
-
-Dim i As Long
-Dim consumer As TradeBuildSP.IStreamingDataConsumer
-For i = 1 To mDataConsumers.Count
-    Set consumer = mDataConsumers(i)
-    consumer.bid timestamp, price, size
-Next
-
-mStudyManager.notifyInput mBidInputHandle, price, timestamp
-
-fireBid mBidPrice, mBidPriceString, size, mPrevBid, mPrevBidSize
-
-If mPrevBid <> 0 And price < mPrevBid Then
-    DOMClearCell timestamp, _
-            DOMSides.DOMBid, _
-            mPrevBid
-End If
-
-If size <> 0 Then
-    DOMSetCell timestamp, _
-            DOMSides.DOMBid, _
-            price, _
-            size
-End If
-
-mPrevBid = mBidPrice
-mPrevBidSize = mBidSize
-
-mInEventHandler = False
-Exit Sub
-
-Err:
-gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:Bid"
-mInEventHandler = False
-End Sub
-
-Private Sub IStreamingDataConsumer_High( _
-                            ByVal timestamp As Date, _
-                            ByVal price As Double)
-
-mInEventHandler = True
-
-On Error GoTo Err
-
-mTickNumber = mTickNumber + 1
-If mState <> TickerStates.TickerStateRunning Then
-    mInEventHandler = False
-    Exit Sub    ' ticker has been stopped
-End If
-
-mHighPrice = price
-mHighPriceString = formatPrice(price)
-
-If mWriteTickData Then mTickWriter.writeHigh timestamp, price
-
-' timestamp = convertTime(timestamp)
-    
-setTime timestamp
-
-
-
-Dim i As Long
-Dim consumer As TradeBuildSP.IStreamingDataConsumer
-For i = 1 To mDataConsumers.Count
-    Set consumer = mDataConsumers(i)
-    consumer.high timestamp, price
-Next
-
-fireHigh mHighPrice, mHighPriceString
-
-mInEventHandler = False
-Exit Sub
-
-Err:
-gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:High"
-mInEventHandler = False
-End Sub
-
-Private Sub IStreamingDataConsumer_Low( _
-                            ByVal timestamp As Date, _
-                            ByVal price As Double)
-
-mInEventHandler = True
-
-On Error GoTo Err
-
-mTickNumber = mTickNumber + 1
-If mState <> TickerStates.TickerStateRunning Then
-    mInEventHandler = False
-    Exit Sub    ' ticker has been stopped
-End If
-
-mLowPrice = price
-mLowPriceString = formatPrice(price)
-
-If mWriteTickData Then mTickWriter.writeLow timestamp, price
-
-' timestamp = convertTime(timestamp)
-    
-setTime timestamp
-
-Dim i As Long
-Dim consumer As TradeBuildSP.IStreamingDataConsumer
-For i = 1 To mDataConsumers.Count
-    Set consumer = mDataConsumers(i)
-    consumer.low timestamp, price
-Next
-
-fireLow mLowPrice, mLowPriceString
-
-mInEventHandler = False
-Exit Sub
-
-Err:
-gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:Low"
-mInEventHandler = False
-End Sub
-
-Private Sub IStreamingDataConsumer_OpenInterest( _
-                            ByVal timestamp As Date, _
-                            ByVal size As Long)
-
-mInEventHandler = True
-
-On Error GoTo Err
-
-mTickNumber = mTickNumber + 1
-If mState <> TickerStates.TickerStateRunning Then
-    mInEventHandler = False
-    Exit Sub    ' ticker has been stopped
-End If
-
-mOpenInterest = size
-
-If mWriteTickData Then mTickWriter.writeOpenInterest timestamp, size
-
-' timestamp = convertTime(timestamp)
-    
-setTime timestamp
-
-Dim i As Long
-Dim consumer As TradeBuildSP.IStreamingDataConsumer
-For i = 1 To mDataConsumers.Count
-    Set consumer = mDataConsumers(i)
-    consumer.openInterest timestamp, size
-Next
-
-fireOpenInterest mOpenInterest
-                    
-mPrevOpenInterest = mOpenInterest
-
-mInEventHandler = False
-Exit Sub
-
-Err:
-gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:OpenInterest"
-mInEventHandler = False
-End Sub
-
-Private Sub IStreamingDataConsumer_PreviousClose( _
-                            ByVal timestamp As Date, _
-                            ByVal price As Double)
-
-mInEventHandler = True
-
-On Error GoTo Err
-
-mTickNumber = mTickNumber + 1
-If mState <> TickerStates.TickerStateRunning Then
-    mInEventHandler = False
-    Exit Sub    ' ticker has been stopped
-End If
-    
-mClosePrice = price
-mClosePriceString = formatPrice(price)
-
-If mWriteTickData Then mTickWriter.writeClose timestamp, price
-
-' timestamp = convertTime(timestamp)
-    
-setTime timestamp
-
-Dim i As Long
-Dim consumer As TradeBuildSP.IStreamingDataConsumer
-For i = 1 To mDataConsumers.Count
-    Set consumer = mDataConsumers(i)
-    consumer.previousClose timestamp, price
-Next
-
-firePreviousClose mClosePrice, mClosePriceString
-
-If mTradePrice <> 0 Then
-    mChange = mTradePrice - mClosePrice
-    mChangeString = formatPrice(mChange)
-    mChangePercent = 100 * mChange / mClosePrice
-    firePriceChange mChange, mChangeString, mChangePercent
-End If
-
-mInEventHandler = False
-Exit Sub
-
-Err:
-gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:PreviousClose"
-mInEventHandler = False
-End Sub
-
-Private Sub IStreamingDataConsumer_ResetMarketDepth( _
-                            ByVal timestamp As Date, _
-                            ByVal marketDepthReRequested As Boolean)
-
-mInEventHandler = True
-
-On Error GoTo Err
-
-mTickNumber = mTickNumber + 1
-If mState <> TickerStates.TickerStateRunning Then
-    mInEventHandler = False
-    Exit Sub    ' ticker has been stopped
-End If
-    
-If mWriteTickData Then mTickWriter.writeMarketDepthReset timestamp
-
-' timestamp = convertTime(timestamp)
-    
-setTime timestamp
-
-Dim i As Long
-Dim consumer As TradeBuildSP.IStreamingDataConsumer
-For i = 1 To mDataConsumers.Count
-    Set consumer = mDataConsumers(i)
-    consumer.resetMarketDepth timestamp, marketDepthReRequested
-Next
-
-DOMReset timestamp, marketDepthReRequested
-    
-mInEventHandler = False
-Exit Sub
-
-Err:
-gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:ResetMarketDepth"
-mInEventHandler = False
-End Sub
-
-Private Sub IStreamingDataConsumer_Trade( _
-                            ByVal timestamp As Date, _
-                            ByVal price As Double, _
-                            ByVal size As Long)
-
-mInEventHandler = True
-
-On Error GoTo Err
-
-mTickNumber = mTickNumber + 1
-If mState <> TickerStates.TickerStateRunning Then
-    mInEventHandler = False
-    Exit Sub    ' ticker has been stopped
-End If
-    
-If mWriteTickData Then mTickWriter.writeTrade timestamp, price, size
-
-' timestamp = convertTime(timestamp)
-    
-setTime timestamp
-
-If price < (0.5 * mPrevTrade) Then
-    mInEventHandler = False
-    Exit Sub ' ignore invalid prices
-End If
-
-If size < 0 Then
-    mInEventHandler = False
-    Exit Sub
-End If
-        
-notifyTrade timestamp, price, size
-
-mPrevTrade = price
-mPrevTradeSize = size
-
-mInEventHandler = False
-Exit Sub
-
-Err:
-gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:Trade"
-mInEventHandler = False
-End Sub
-
-Private Sub IStreamingDataConsumer_UpdateMktDepth( _
-                            ByVal timestamp As Date, _
-                            ByVal position As Long, _
-                            ByVal operation As TradeBuildSP.DOMOperations, _
-                            ByVal side As TradeBuildSP.DOMSides, _
-                            ByVal price As Double, _
-                            ByVal size As Long)
-
-mInEventHandler = True
-
-On Error GoTo Err
-
-mTickNumber = mTickNumber + 1
-If mState <> TickerStates.TickerStateRunning Then
-    mInEventHandler = False
-    Exit Sub    ' ticker has been stopped
-End If
-
-If mIncludeMarketDepthInTickfile Then
-    mTickWriter.writeMarketDepthData timestamp, _
-                                    position, _
-                                    "", _
-                                    operation, _
-                                    side, _
-                                    price, _
-                                    size
-End If
-
-' timestamp = convertTime(timestamp)
-    
-setTime timestamp
-
-Dim i As Long
-Dim consumer As TradeBuildSP.IStreamingDataConsumer
-For i = 1 To mDataConsumers.Count
-    Set consumer = mDataConsumers(i)
-    consumer.UpdateMktDepth timestamp, _
-                            position, _
-                            operation, _
-                            side, _
-                            price, _
-                            size
-Next
-
-DOMRawUpdate timestamp, _
-            position, _
-            operation, _
-            side, _
-            price, _
-            size
-
-If side = DOMSides.DOMAsk Then
-    updatePrices timestamp, _
-                mAskPrices, _
-                mMaxAskPricesIndex, _
-                side, _
-                position, _
-                operation, _
-                price, _
-                size, _
-                mPrevBid, _
-                mPrevAsk, _
-                mDOMEventsRequired = DOMProcessedEvents Or mDOMEventsRequired = DOMBothEvents
-Else
-    updatePrices timestamp, _
-                mBidPrices, _
-                mMaxBidPricesIndex, _
-                side, _
-                position, _
-                operation, _
-                price, _
-                size, _
-                mPrevBid, _
-                mPrevAsk, _
-                mDOMEventsRequired = DOMProcessedEvents Or mDOMEventsRequired = DOMBothEvents
-End If
-
-mInEventHandler = False
-Exit Sub
-
-Err:
-gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:UpdateMktDepth"
-mInEventHandler = False
-End Sub
-
-Private Sub IStreamingDataConsumer_UpdateMktDepthL2( _
-                            ByVal timestamp As Date, _
-                            ByVal position As Long, _
-                            ByVal marketMaker As String, _
-                            ByVal operation As TradeBuildSP.DOMOperations, _
-                            ByVal side As TradeBuildSP.DOMSides, _
-                            ByVal price As Double, _
-                            ByVal size As Long)
-
-mInEventHandler = True
-
-On Error GoTo Err
-
-mTickNumber = mTickNumber + 1
-If mState <> TickerStates.TickerStateRunning Then
-    mInEventHandler = False
-    Exit Sub
-End If
-        
-If mIncludeMarketDepthInTickfile Then
-    mTickWriter.writeMarketDepthData timestamp, _
-                                position, _
-                                marketMaker, _
-                                operation, _
-                                side, _
-                                price, _
-                                size
-End If
-
-' timestamp = convertTime(timestamp)
-    
-setTime timestamp
-
-Dim i As Long
-Dim consumer As TradeBuildSP.IStreamingDataConsumer
-For i = 1 To mDataConsumers.Count
-    Set consumer = mDataConsumers(i)
-    consumer.UpdateMktDepthL2 timestamp, _
-                            position, _
-                            marketMaker, _
-                            operation, _
-                            side, _
-                            price, _
-                            size
-Next
-
-DOMRawUpdateL2 timestamp, _
-                position, _
-                marketMaker, _
-                operation, _
-                side, _
-                price, _
-                size
-
-mInEventHandler = False
-Exit Sub
-
-Err:
-gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:UodateMktDepthL2"
-mInEventHandler = False
-End Sub
-
-Private Sub IStreamingDataConsumer_Volume( _
-                            ByVal timestamp As Date, _
-                            ByVal size As Long)
-Dim failpoint As Long
-
-mInEventHandler = True
-
-On Error GoTo Err
-
-mTickNumber = mTickNumber + 1
-If mState <> TickerStates.TickerStateRunning Then
-    mInEventHandler = False
-    Exit Sub    ' ticker has been stopped
-End If
-
-failpoint = 100
-
-setTime timestamp
-
-If size <= 0 Then
-    mInEventHandler = False
-    Exit Sub
-End If
-
-failpoint = 200
-
-mGotFirstVolume = True
-
-If Not mReceivedFirstVolumeInSession Then
-    ' this is the start of a new session, but there may be a volume
-    ' tick including the accumulated volume for the previous session
-    ' before the first true volume tick for the new session
-    If mPrevSessionAccumulatedVolume = 0 Or _
-        size + mVolumeCorrectionIncrement < mPrevSessionAccumulatedVolume _
-    Then
-        ' this is the first true volume tick for the new session
-        mReceivedFirstVolumeInSession = True
-        mVolumeCorrectionIncrement = 0
-    Else
-        ' correct this volume figure
-        size = size - (mPrevSessionAccumulatedVolume - mVolumeCorrectionIncrement)
+Select Case Tick.tickType
+Case TickTypes.TickTypeAsk, _
+        TickTypes.TickTypeBid, _
+        TickTypes.TickTypeClosePrice, _
+        TickTypes.TickTypeHighPrice, _
+        TickTypes.TickTypeLowPrice, _
+        TickTypes.TickTypeMarketDepth, _
+        TickTypes.TickTypeOpenPrice, _
+        TickTypes.TickTypeTrade
+    If Not validPrice(Tick.price) Then
+        mInEventHandler = False
+        Exit Sub   ' ignore invalid prices
     End If
-End If
+End Select
 
-' we write the corrected size to the tickfile rather than the raw size because
-' otherwise replaying from the start of the session gives inflated volume figures
-' if the first tick was subject to correction
-If mWriteTickData Then mTickWriter.writeVolume timestamp, size
+If mWriteTickData Then mTickWriter.writeTick Tick
 
-' note that the previous trade will have notified volume of mAccumulatedVolume
+setTime Tick.timestamp
 
+Select Case Tick.tickType
+Case TickTypes.TickTypeAsk
+    processTickAsk Tick
+Case TickTypes.TickTypeBid
+    processTickBid Tick
+Case TickTypes.TickTypeClosePrice
+    processTickPreviousClose Tick
+Case TickTypes.TickTypeHighPrice
+    processTickHigh Tick
+Case TickTypes.TickTypeLowPrice
+    processTickLow Tick
+Case TickTypes.TickTypeMarketDepth
+    processTickMarketDepth Tick
+Case TickTypes.TickTypeMarketDepthReset
+    processTickResetMarketDepth Tick
+Case TickTypes.TickTypeOpenInterest
+    processTickOpenInterest Tick
+Case TickTypes.TickTypeOpenPrice
+    processTickOpen Tick
+Case TickTypes.TickTypeTrade
+    processTickTrade Tick
+Case TickTypes.TickTypeVolume
+    processTickVolume Tick
+End Select
 
-failpoint = 300
-
-If size + mVolumeCorrectionIncrement < mAccumulatedVolume Then
-
-    failpoint = 400
-
-    If mNoVolumeAdjustments Then
-        notifyVolume timestamp, size
-    Else
-        mVolumeCorrectionIncrement = mAccumulatedVolume - size
-    End If
-
-ElseIf size + mVolumeCorrectionIncrement > mAccumulatedVolume Then
-    If mNoImpliedTrades Or _
-        (size + mVolumeCorrectionIncrement - mAccumulatedVolume) <> mPrevTradeSize _
-    Then
-
-        failpoint = 500
-
-        mAccumulatedVolume = size + mVolumeCorrectionIncrement
-        notifyVolume timestamp, mAccumulatedVolume
-    Else
-
-        failpoint = 600
-
-        notifyTrade timestamp, _
-                    mPrevTrade, _
-                    size + mVolumeCorrectionIncrement - mAccumulatedVolume
-    End If
-
-Else
-    'nothing to do
-End If
-
-mPrevVolume = mVolume
-
-mInEventHandler = False
-Exit Sub
-
-Err:
-gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "IStreamingDataConsumer:Volume:" & failpoint
 mInEventHandler = False
 End Sub
 
@@ -1160,6 +598,23 @@ gTB.NotifyFatalError Err.number, Err.Description, ModuleName & "ITickfileOutputS
 mInEventHandler = False
 End Sub
 
+Private Sub ITickfileOutputServiceConsumer_NotReady()
+
+mInEventHandler = True
+
+On Error GoTo Err
+
+mTickWriter.ServiceProviderWriterNotReady
+fireTickfileWriterNotify WriterNotReady, ""
+
+mInEventHandler = False
+Exit Sub
+
+Err:
+gTB.NotifyFatalError Err.number, Err.Description, ModuleName & "ITickfileOutputServiceConsumer_NotReady"
+mInEventHandler = False
+End Sub
+
 Private Sub ITickfileOutputServiceConsumer_OutputTickfileCreated( _
                             ByVal filename As String)
 
@@ -1179,13 +634,12 @@ gTB.NotifyFatalError Err.number, Err.Description, ModuleName & "ITickfileOutputS
 mInEventHandler = False
 End Sub
 
-Private Property Let ITickfileOutputServiceConsumer_Ready(ByVal RHS As Boolean)
-
+Private Sub ITickfileOutputServiceConsumer_Ready()
 mInEventHandler = True
 
 On Error GoTo Err
 
-mTickWriter.ServiceProviderWriterReady = RHS
+mTickWriter.ServiceProviderWriterReady
 If mState = TickerStates.TickerStateStopped Then
     ' the ticker is being closed before the tickfile writer has notified that it
     ' is ready
@@ -1198,24 +652,46 @@ If mState = TickerStates.TickerStateStopped Then
     End If
 End If
 
-fireTickfileWriterNotify IIf(RHS, _
-                            WriterNotifications.WriterReady, _
-                            WriterNotifications.WriterNotReady), _
-                        ""
+fireTickfileWriterNotify WriterReady, ""
+
+If readyToReplay Then
+    mTickfileManager.startTicker mContract
+    State = TickerStates.TickerStateRunning
+End If
 
 mInEventHandler = False
-Exit Property
+Exit Sub
 
 Err:
 gTB.NotifyFatalError Err.number, Err.Description, ModuleName & "ITickfileOutputServiceConsumer_Ready"
 mInEventHandler = False
-End Property
+End Sub
+
+'@================================================================================
+' StateChangeListener Interface Members
+'@================================================================================
+
+Private Sub StateChangeListener_Change( _
+                ev As TWUtilities30.StateChangeEvent)
+If TypeOf ev.source Is Timeframe Then
+    If ev.State = TimeframeStates.TimeframeStateLoaded Then
+        If Not mState = TickerStateRunning Then
+            mNumberOfTimeframesLoading = mNumberOfTimeframesLoading - 1
+            If readyToReplay Then
+                State = TickerStates.TickerStateRunning
+                mTickfileManager.startTicker mContract
+            End If
+        End If
+    End If
+End If
+End Sub
 
 '@================================================================================
 ' mContracts Event Handlers
 '@================================================================================
 
-Private Sub mContracts_ContractSpecifierInvalid(ByVal reason As String)
+Private Sub mContracts_ContractSpecifierInvalid( _
+                ByVal reason As String)
 Dim ev As NotificationEvent
 
 If State <> TickerStateStarting Then Exit Sub
@@ -1659,7 +1135,7 @@ Set processedMarketDepth.source = Me
 For i = 0 To mMaxBidPricesIndex
     If mBidPrices(i).size <> 0 Then
         processedMarketDepth.price = mBidPrices(i).price
-        processedMarketDepth.side = DOMBid
+        processedMarketDepth.type = DOMUpdateBid
         processedMarketDepth.size = mBidPrices(i).size
         value.setMarketDepthCell processedMarketDepth
     End If
@@ -1668,7 +1144,7 @@ Next
 For i = 0 To mMaxBidPricesIndex
     If mAskPrices(i).size <> 0 Then
         processedMarketDepth.price = mAskPrices(i).price
-        processedMarketDepth.side = DOMAsk
+        processedMarketDepth.type = DOMUpdateAsk
         processedMarketDepth.size = mAskPrices(i).size
         value.setMarketDepthCell processedMarketDepth
     End If
@@ -1703,6 +1179,11 @@ If State = TickerStateRunning Or State = TickerStatePaused Then
     quote.priceString = mLowPriceString
     quote.size = 0
     value.low quote
+    
+    quote.price = mOpenPrice
+    quote.priceString = mOpenPriceString
+    quote.size = 0
+    value.sessionOpen quote
     
     quote.price = 0
     quote.priceString = ""
@@ -1980,7 +1461,7 @@ Else
 End If
 End Sub
 
-Public Sub StartTicker(ByVal pContractSpecifier As contractSpecifier)
+Public Sub startTicker(ByVal pContractSpecifier As contractSpecifier)
 
 If mState <> TickerStates.TickerStateCreated Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                         "TradeBuild26.Ticker::StartTicker", _
@@ -2132,8 +1613,9 @@ End Function
 Private Sub createBarWriter()
 Dim ev As NotificationEvent
 
+gTraceLogger.Log LogLevelDetail, "Ticker: creating bar writer for " & mContract.specifier.localSymbol
 Set mBarWriter = gTB.ServiceProviders.CreateHistoricalDataWriter(Me, _
-                            mContract.specifier, _
+                            mContract, _
                             "")
 If mBarWriter Is Nothing Then
     Set ev.source = Me
@@ -2149,12 +1631,11 @@ Private Sub CreateOutputTickfile()
 Dim ev As NotificationEvent
 
 Set mTickWriter = gTB.ServiceProviders.CreateTickfileWriter(Me, _
+                                                        mContract, _
                                                         mOutputTickfileFormat, _
                                                         mOutputTickfilePath)
 
-If Not mTickWriter Is Nothing Then
-    mTickWriter.Contract = mContract
-Else
+If mTickWriter Is Nothing Then
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNOtifyTickfileFormatNotSupported
     ev.eventMessage = "Can't create output tickfile in this format"
@@ -2166,7 +1647,7 @@ End Sub
 
 Private Sub DOMClearCell( _
                 ByVal timestamp As Date, _
-                ByVal side As DOMSides, _
+                ByVal side As DOMUpdateTypes, _
                 ByVal price As Double)
 
 If mDOMEventsRequired = DOMNoEvents Or mDOMEventsRequired = DOMRawEvents Then Exit Sub
@@ -2180,26 +1661,6 @@ End Sub
 Private Sub DOMRawUpdate( _
                         ByVal timestamp As Date, _
                         ByVal position As Long, _
-                        ByVal operation As DOMOperations, _
-                        ByVal side As DOMSides, _
-                        ByVal price As Double, _
-                        ByVal size As Long)
-If mDOMEventsRequired = DOMRawEvents Or _
-    mDOMEventsRequired = DOMBothEvents _
-Then
-    updateMarketDepth timestamp, _
-                                position, _
-                                operation, _
-                                side, _
-                                price, _
-                                size
-End If
-
-End Sub
-
-Private Sub DOMRawUpdateL2( _
-                        ByVal timestamp As Date, _
-                        ByVal position As Long, _
                         ByVal marketMaker As String, _
                         ByVal operation As DOMOperations, _
                         ByVal side As DOMSides, _
@@ -2208,7 +1669,7 @@ Private Sub DOMRawUpdateL2( _
 If mDOMEventsRequired = DOMRawEvents Or _
     mDOMEventsRequired = DOMBothEvents _
 Then
-    UpdateMarketDepthL2 timestamp, _
+    updateMarketDepth timestamp, _
                                 position, _
                                 marketMaker, _
                                 operation, _
@@ -2220,8 +1681,7 @@ End If
 End Sub
 
 Private Sub DOMReset( _
-                ByVal timestamp As Date, _
-                ByVal marketDepthReRequested As Boolean)
+                ByVal timestamp As Date)
 
 
 If mDOMEventsRequired = DOMNoEvents Then Exit Sub
@@ -2234,7 +1694,7 @@ End Sub
                 
 Private Sub DOMSetCell( _
                 ByVal timestamp As Date, _
-                ByVal side As DOMSides, _
+                ByVal side As DOMUpdateTypes, _
                 ByVal price As Double, _
                 ByVal size As Long)
 
@@ -2362,6 +1822,23 @@ Next
 RaiseEvent low(quote)
 End Sub
 
+Private Sub fireOpen( _
+                ByVal price As Double, _
+                ByVal priceString As String)
+Dim listener As QuoteListener
+Dim i As Long
+Dim quote As QuoteEvent
+Set quote.source = Me
+quote.price = price
+quote.priceString = priceString
+quote.size = 0
+For i = 1 To mQuoteListeners.Count
+    Set listener = mQuoteListeners(i)
+    listener.sessionOpen quote
+Next
+RaiseEvent low(quote)
+End Sub
+
 Private Sub fireOpenInterest( _
                 ByVal size As Long)
 Dim listener As QuoteListener
@@ -2434,7 +1911,7 @@ Next
 End Sub
 
 Private Sub fireSetMarketDepthCell( _
-                ByVal side As DOMSides, _
+                ByVal updateType As DOMUpdateTypes, _
                 ByVal price As Double, _
                 ByVal size As Long)
 Dim listener As MarketDepthListener
@@ -2442,7 +1919,7 @@ Dim i As Long
 Dim processedMarketDepth As MarketDepthEvent
 Set processedMarketDepth.source = Me
 processedMarketDepth.price = price
-processedMarketDepth.side = side
+processedMarketDepth.type = updateType
 processedMarketDepth.size = size
 For i = 1 To mMarketDepthListeners.Count
     Set listener = mMarketDepthListeners(i)
@@ -2579,22 +2056,13 @@ Dim i As Long
 For i = 0 To UBound(prices)
     If prices(i).size <> 0 Then
         
-        If prices(i).marketMaker = "" Then
-            updateMarketDepth timestamp, _
-                        i, _
-                        DOMOperations.DOMInsert, _
-                        side, _
-                        prices(i).price, _
-                        prices(i).size
-        Else
-            UpdateMarketDepthL2 timestamp, _
-                        i, _
-                        prices(i).marketMaker, _
-                        DOMOperations.DOMInsert, _
-                        side, _
-                        prices(i).price, _
-                        prices(i).size
-        End If
+        updateMarketDepth timestamp, _
+                    i, _
+                    prices(i).marketMaker, _
+                    DOMOperations.DOMInsert, _
+                    side, _
+                    prices(i).price, _
+                    prices(i).size
         
         DOMSetCell timestamp, _
                 side, _
@@ -2606,24 +2074,23 @@ Next
 End Sub
 
 Private Sub notifyTrade( _
-                            ByVal timestamp As Date, _
-                            ByVal price As Double, _
-                            ByVal size As Long)
+                pTick As GenericTick)
+Dim volTick As GenericTick
 
-mTradePrice = price
-mTradePriceString = formatPrice(price)
-mTradeSize = size
+mTradePrice = pTick.price
+mTradePriceString = formatPrice(pTick.price)
+mTradeSize = pTick.size
 
 Dim i As Long
 Dim consumer As TradeBuildSP.IStreamingDataConsumer
 For i = 1 To mDataConsumers.Count
     Set consumer = mDataConsumers(i)
-    consumer.trade timestamp, price, size
+    consumer.Tick pTick
 Next
 
-mStudyManager.notifyInput mTradeInputHandle, price, timestamp
+mStudyManager.notifyInput mTradeInputHandle, mTradePrice, pTick.timestamp
 
-fireTrade mTradePrice, mTradePriceString, size, mPrevTrade, mPrevTradeSize
+fireTrade mTradePrice, mTradePriceString, mTradeSize, mPrevTrade, mPrevTradeSize
 
 If mClosePrice <> 0 Then
     mChange = mTradePrice - mClosePrice
@@ -2632,38 +2099,43 @@ If mClosePrice <> 0 Then
     firePriceChange mChange, mChangeString, mChangePercent
 End If
 
-If mPrevTrade <> 0 And price <> mPrevTrade Then
+If mPrevTrade <> 0 And mTradePrice <> mPrevTrade Then
     DOMClearCell timestamp, _
-            DOMSides.DOMLast, _
+            DOMUpdateTypes.DOMUpdateLast, _
             mPrevTrade
 End If
 
-If size <> 0 Then
+If mTradeSize <> 0 Then
     DOMSetCell timestamp, _
-            DOMSides.DOMLast, _
-            price, _
-            size
+            DOMUpdateTypes.DOMUpdateLast, _
+            mTradePrice, _
+            mTradeSize
 End If
 
 If Not mNoVolumeAdjustments And mGotFirstVolume Then
-    mAccumulatedVolume = mAccumulatedVolume + size
-    notifyVolume timestamp, mAccumulatedVolume
+    mAccumulatedVolume = mAccumulatedVolume + mTradeSize
+    volTick.tickType = TickTypeVolume
+    volTick.size = mAccumulatedVolume
+    volTick.timestamp = pTick.timestamp
+    notifyVolume volTick
 End If
 End Sub
 
-Private Sub notifyVolume(ByVal timestamp As Date, ByVal size As Long)
-mVolume = size
+Private Sub notifyVolume( _
+                pTick As GenericTick)
+
+mVolume = pTick.size
 
 Dim i As Long
 Dim consumer As TradeBuildSP.IStreamingDataConsumer
 For i = 1 To mDataConsumers.Count
     Set consumer = mDataConsumers(i)
-    consumer.volume timestamp, size
+    consumer.Tick pTick
 Next
 
-mStudyManager.notifyInput mVolumeInputHandle, size, timestamp
+mStudyManager.notifyInput mVolumeInputHandle, mVolume, pTick.timestamp
 
-fireVolume size
+fireVolume mVolume
 End Sub
 
 Private Sub prepare()
@@ -2746,8 +2218,10 @@ ElseIf mReplayingTickfile Then
                                     ""))
     prepare
     State = TickerStateReady
-    mTickfileManager.Contract = mContract
-    State = TickerStates.TickerStateRunning
+    If readyToReplay Then
+        State = TickerStates.TickerStateRunning
+        mTickfileManager.startTicker mContract
+    End If
 Else
     Set mClock = GetClock(IIf(mUseExchangeTimeZone, mContract.TimeZone.standardName, ""))
     
@@ -2779,6 +2253,456 @@ Else
     End If
 End If
 End Sub
+
+Private Sub processTickAsk( _
+                            pTick As GenericTick)
+On Error GoTo Err
+
+If pTick.price < (0.5 * mPrevAsk) Then
+    mInEventHandler = False
+    Exit Sub   ' ignore invalid prices
+End If
+
+If pTick.size < 0 Then
+    mInEventHandler = False
+    Exit Sub
+End If
+        
+mAskPrice = pTick.price
+mAskPriceString = formatPrice(mAskPrice)
+mAskSize = pTick.size
+
+Dim i As Long
+Dim consumer As TradeBuildSP.IStreamingDataConsumer
+For i = 1 To mDataConsumers.Count
+    Set consumer = mDataConsumers(i)
+    consumer.Tick pTick
+Next
+
+mStudyManager.notifyInput mAskInputHandle, mAskPrice, pTick.timestamp
+
+fireAsk mAskPrice, mAskPriceString, mAskSize, mPrevAsk, mPrevAskSize
+
+If mPrevAsk <> 0 And mAskPrice > mPrevAsk Then
+    DOMClearCell timestamp, _
+            DOMUpdateTypes.DOMUpdateAsk, _
+            mPrevAsk
+End If
+
+If mAskSize <> 0 Then
+    DOMSetCell timestamp, _
+            DOMUpdateTypes.DOMUpdateAsk, _
+            mAskPrice, _
+            mAskSize
+End If
+
+mPrevAsk = mAskPrice
+mPrevAskSize = mAskSize
+
+mInEventHandler = False
+Exit Sub
+
+Err:
+gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "processTickAsk"
+mInEventHandler = False
+End Sub
+
+
+Private Sub processTickBid( _
+                            pTick As GenericTick)
+
+On Error GoTo Err
+
+If pTick.price < (0.5 * mPrevBid) Then
+    mInEventHandler = False
+    Exit Sub   ' ignore invalid prices
+End If
+
+If pTick.size < 0 Then
+    mInEventHandler = False
+    Exit Sub
+End If
+        
+mBidPrice = pTick.price
+mBidPriceString = formatPrice(mBidPrice)
+mBidSize = pTick.size
+
+Dim i As Long
+Dim consumer As TradeBuildSP.IStreamingDataConsumer
+For i = 1 To mDataConsumers.Count
+    Set consumer = mDataConsumers(i)
+    consumer.Tick pTick
+Next
+
+mStudyManager.notifyInput mBidInputHandle, mBidPrice, pTick.timestamp
+
+fireBid mBidPrice, mBidPriceString, mBidSize, mPrevBid, mPrevBidSize
+
+If mPrevBid <> 0 And mBidPrice < mPrevBid Then
+    DOMClearCell timestamp, _
+            DOMUpdateTypes.DOMUpdateBid, _
+            mPrevBid
+End If
+
+If mBidSize <> 0 Then
+    DOMSetCell timestamp, _
+            DOMUpdateTypes.DOMUpdateBid, _
+            mBidPrice, _
+            mBidSize
+End If
+
+mPrevBid = mBidPrice
+mPrevBidSize = mBidSize
+
+mInEventHandler = False
+Exit Sub
+
+Err:
+gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "processTickBid"
+mInEventHandler = False
+End Sub
+
+Private Sub processTickHigh( _
+                            pTick As GenericTick)
+
+On Error GoTo Err
+
+Dim i As Long
+Dim consumer As TradeBuildSP.IStreamingDataConsumer
+For i = 1 To mDataConsumers.Count
+    Set consumer = mDataConsumers(i)
+    consumer.Tick pTick
+Next
+
+mHighPrice = pTick.price
+mHighPriceString = formatPrice(mHighPrice)
+
+fireHigh mHighPrice, mHighPriceString
+
+mInEventHandler = False
+Exit Sub
+
+Err:
+gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "processTickHigh"
+mInEventHandler = False
+End Sub
+
+Private Sub processTickLow( _
+                            pTick As GenericTick)
+
+On Error GoTo Err
+
+Dim i As Long
+Dim consumer As TradeBuildSP.IStreamingDataConsumer
+For i = 1 To mDataConsumers.Count
+    Set consumer = mDataConsumers(i)
+    consumer.Tick pTick
+Next
+
+mLowPrice = pTick.price
+mLowPriceString = formatPrice(mLowPrice)
+
+fireLow mLowPrice, mLowPriceString
+
+mInEventHandler = False
+Exit Sub
+
+Err:
+gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "processTickLow"
+mInEventHandler = False
+End Sub
+
+Private Sub processTickMarketDepth( _
+                            pTick As GenericTick)
+
+On Error GoTo Err
+
+Dim i As Long
+Dim consumer As TradeBuildSP.IStreamingDataConsumer
+For i = 1 To mDataConsumers.Count
+    Set consumer = mDataConsumers(i)
+    consumer.Tick pTick
+Next
+
+DOMRawUpdate timestamp, _
+                pTick.position, _
+                pTick.marketMaker, _
+                pTick.operation, _
+                pTick.side, _
+                pTick.price, _
+                pTick.size
+
+If pTick.side = DOMSides.DOMAsk Then
+    updatePrices timestamp, _
+                mAskPrices, _
+                mMaxAskPricesIndex, _
+                pTick.side, _
+                pTick.position, _
+                pTick.operation, _
+                pTick.price, _
+                pTick.size, _
+                mPrevBid, _
+                mPrevAsk, _
+                mDOMEventsRequired = DOMProcessedEvents Or mDOMEventsRequired = DOMBothEvents
+Else
+    updatePrices timestamp, _
+                mBidPrices, _
+                mMaxBidPricesIndex, _
+                pTick.side, _
+                pTick.position, _
+                pTick.operation, _
+                pTick.price, _
+                pTick.size, _
+                mPrevBid, _
+                mPrevAsk, _
+                mDOMEventsRequired = DOMProcessedEvents Or mDOMEventsRequired = DOMBothEvents
+End If
+
+mInEventHandler = False
+Exit Sub
+
+Err:
+gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "processTickMarketDepth"
+mInEventHandler = False
+End Sub
+
+Private Sub processTickOpen( _
+                pTick As GenericTick)
+
+On Error GoTo Err
+
+Dim i As Long
+Dim consumer As TradeBuildSP.IStreamingDataConsumer
+For i = 1 To mDataConsumers.Count
+    Set consumer = mDataConsumers(i)
+    consumer.Tick pTick
+Next
+
+mOpenPrice = pTick.price
+mOpenPriceString = formatPrice(mOpenPrice)
+
+fireOpen mOpenPrice, mOpenPriceString
+
+mInEventHandler = False
+Exit Sub
+
+Err:
+gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "processTickOpen"
+mInEventHandler = False
+End Sub
+
+Private Sub processTickOpenInterest( _
+                            pTick As GenericTick)
+
+On Error GoTo Err
+
+Dim i As Long
+Dim consumer As TradeBuildSP.IStreamingDataConsumer
+For i = 1 To mDataConsumers.Count
+    Set consumer = mDataConsumers(i)
+    consumer.Tick pTick
+Next
+
+fireOpenInterest mOpenInterest
+                    
+mPrevOpenInterest = mOpenInterest
+
+mInEventHandler = False
+Exit Sub
+
+Err:
+gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "processTickOpenInterest"
+mInEventHandler = False
+End Sub
+
+Private Sub processTickPreviousClose( _
+                            pTick As GenericTick)
+
+On Error GoTo Err
+
+Dim i As Long
+Dim consumer As TradeBuildSP.IStreamingDataConsumer
+For i = 1 To mDataConsumers.Count
+    Set consumer = mDataConsumers(i)
+    consumer.Tick pTick
+Next
+
+mClosePrice = pTick.price
+mClosePriceString = formatPrice(mClosePrice)
+
+firePreviousClose mClosePrice, mClosePriceString
+
+If mTradePrice <> 0 Then
+    mChange = mTradePrice - mClosePrice
+    mChangeString = formatPrice(mChange)
+    mChangePercent = 100 * mChange / mClosePrice
+    firePriceChange mChange, mChangeString, mChangePercent
+End If
+
+mInEventHandler = False
+Exit Sub
+
+Err:
+gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "processTickPreviousClose"
+mInEventHandler = False
+End Sub
+
+Private Sub processTickResetMarketDepth( _
+                            pTick As GenericTick)
+
+On Error GoTo Err
+
+Dim i As Long
+Dim consumer As TradeBuildSP.IStreamingDataConsumer
+For i = 1 To mDataConsumers.Count
+    Set consumer = mDataConsumers(i)
+    consumer.Tick pTick
+Next
+
+DOMReset timestamp
+    
+mInEventHandler = False
+Exit Sub
+
+Err:
+gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "processTickResetMarketDepth"
+mInEventHandler = False
+End Sub
+
+Private Sub processTickTrade( _
+                            pTick As GenericTick)
+
+On Error GoTo Err
+
+If pTick.price < (0.5 * mPrevTrade) Then
+    mInEventHandler = False
+    Exit Sub ' ignore invalid prices
+End If
+
+If pTick.size < 0 Then
+    mInEventHandler = False
+    Exit Sub
+End If
+        
+notifyTrade pTick
+
+mPrevTrade = mTradePrice
+mPrevTradeSize = mTradeSize
+
+mInEventHandler = False
+Exit Sub
+
+Err:
+gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "processTickTrade"
+mInEventHandler = False
+End Sub
+
+Private Sub processTickVolume( _
+                            pTick As GenericTick)
+Dim failpoint As Long
+
+On Error GoTo Err
+
+If pTick.size <= 0 Then
+    mInEventHandler = False
+    Exit Sub
+End If
+
+failpoint = 200
+
+mGotFirstVolume = True
+
+If Not mReceivedFirstVolumeInSession Then
+    ' this is the start of a new session, but there may be a volume
+    ' tick including the accumulated volume for the previous session
+    ' before the first true volume tick for the new session
+    If mPrevSessionAccumulatedVolume = 0 Or _
+        pTick.size + mVolumeCorrectionIncrement < mPrevSessionAccumulatedVolume _
+    Then
+        ' this is the first true volume tick for the new session
+        mReceivedFirstVolumeInSession = True
+        mVolumeCorrectionIncrement = 0
+    Else
+        ' correct this volume figure
+        pTick.size = pTick.size - (mPrevSessionAccumulatedVolume - mVolumeCorrectionIncrement)
+    End If
+End If
+
+' we write the corrected size to the tickfile rather than the raw size because
+' otherwise replaying from the start of the session gives inflated volume figures
+' if the first tick was subject to correction
+If mWriteTickData Then mTickWriter.writeTick pTick
+
+' note that the previous trade will have notified volume of mAccumulatedVolume
+
+
+failpoint = 300
+
+If pTick.size + mVolumeCorrectionIncrement < mAccumulatedVolume Then
+
+    failpoint = 400
+
+    If mNoVolumeAdjustments Then
+        notifyVolume pTick
+    Else
+        mVolumeCorrectionIncrement = mAccumulatedVolume - pTick.size
+    End If
+
+ElseIf pTick.size + mVolumeCorrectionIncrement > mAccumulatedVolume Then
+    If mNoImpliedTrades Or _
+        (pTick.size + mVolumeCorrectionIncrement - mAccumulatedVolume) <> mPrevTradeSize _
+    Then
+
+        failpoint = 500
+
+        mAccumulatedVolume = pTick.size + mVolumeCorrectionIncrement
+        
+        Dim adjustedTick As GenericTick
+        adjustedTick.tickType = TickTypeVolume
+        adjustedTick.timestamp = pTick.timestamp
+        adjustedTick.size = mAccumulatedVolume
+        notifyVolume adjustedTick
+    Else
+
+        failpoint = 600
+
+        Dim impliedTick As GenericTick
+        impliedTick.tickType = TickTypeTrade
+        impliedTick.timestamp = pTick.timestamp
+        impliedTick.price = mPrevTrade
+        impliedTick.size = pTick.size + mVolumeCorrectionIncrement - mAccumulatedVolume
+        notifyTrade impliedTick
+    End If
+
+Else
+    'nothing to do
+End If
+
+mPrevVolume = mVolume
+
+mInEventHandler = False
+Exit Sub
+
+Err:
+gTB.NotifyFatalError Err.number, Err.Description, ModuleName & ":" & "processTickVolume:" & failpoint
+mInEventHandler = False
+End Sub
+
+Private Function readyToReplay() As Boolean
+If Not mReplayingTickfile Then Exit Function
+
+If Not mBarWriter Is Nothing Then
+    If Not mBarWriter.ready Then Exit Function
+End If
+
+If Not mTickWriter Is Nothing Then
+    If Not mTickWriter.ready Then Exit Function
+End If
+
+If mNumberOfTimeframesLoading <> 0 Then Exit Function
+
+readyToReplay = True
+End Function
 
 Private Sub setTime( _
                 ByVal pTime As Date)
@@ -2855,24 +2779,6 @@ End If
 End Sub
 
 Private Sub updateMarketDepth( _
-                ByVal timestamp As Date, _
-                ByVal position As Long, _
-                ByVal operation As DOMOperations, _
-                ByVal side As DOMSides, _
-                ByVal price As Double, _
-                ByVal size As Long)
-
-setTime timestamp
-
-fireUpdateMarketDepth position, _
-                        "", _
-                        operation, _
-                        side, _
-                        price, _
-                        size
-End Sub
-                
-Private Sub UpdateMarketDepthL2( _
                 ByVal timestamp As Date, _
                 ByVal position As Long, _
                 ByVal marketMaker As String, _
@@ -3012,5 +2918,10 @@ End Select
 
 End Sub
 
-
+Private Function validPrice( _
+                ByVal price As Double) As Boolean
+                
+If price >= 0 And price / mTickSize <= 32767 Then validPrice = True
+End Function
+                
 

@@ -103,7 +103,7 @@ Private mFirstActivePlexTableIndex As Long
 Private mLastActivePlexTableIndex As Long
 
 Private mSettlingOrderContext As OrderContext
-Private mSettlingOrderPlex As orderPlex
+Private mSettlingOrderPlex As OrderPlex
 Private mSettlingHandle As Long
 
 Private mClosing As Boolean
@@ -409,6 +409,10 @@ Private Sub QuoteListener_openInterest(ev As QuoteEvent)
 End Sub
 
 Private Sub QuoteListener_PreviousClose(ev As QuoteEvent)
+
+End Sub
+
+Private Sub QuoteListener_sessionOpen(ev As QuoteEvent)
 
 End Sub
 

@@ -75,22 +75,9 @@ End Sub
 ' xxxx Interface Members
 '@================================================================================
 
-''@================================================================================
-'' mTimer Event Handlers
-''@================================================================================
-'
-'Private Sub mTimer_TimerExpired()
-'Set mWriter = Nothing
-'Set mSelfRef = Nothing
-'End Sub
-
 '@================================================================================
 ' Properties
 '@================================================================================
-
-Friend Property Let Contract(ByVal value As Contract)
-mWriter.Contract = value
-End Property
 
 Friend Property Get numberOfPendingWrites() As Long
 numberOfPendingWrites = mPendingWrites.Count
@@ -100,56 +87,8 @@ Friend Property Let ServiceProviderWriter(ByVal value As TradeBuildSP.ITickfileW
 Set mWriter = value
 End Property
 
-Friend Property Let ServiceProviderWriterReady(ByVal value As Boolean)
-Dim item As Variant
-Dim pendingWrite As Tick
-
-mServiceProviderWriterReady = value
-
-If Not mServiceProviderWriterReady Then Exit Property
-
-If mPendingWrites.Count <> 0 Then
-    For Each item In mPendingWrites
-        pendingWrite = item
-        With pendingWrite
-            Select Case .TickType
-            Case TickTypes.TickTypeBid
-                mWriter.writeBid .timestamp, .TickPrice, .TickSize
-            Case TickTypes.TickTypeAsk
-                mWriter.writeAsk .timestamp, .TickPrice, .TickSize
-            Case TickTypes.TickTypeLast
-                mWriter.writeTrade .timestamp, .TickPrice, .TickSize
-            Case TickTypes.TickTypeHigh
-                mWriter.writeHigh .timestamp, .TickPrice
-            Case TickTypes.TickTypeLow
-                mWriter.writeLow .timestamp, .TickPrice
-            Case TickTypes.TickTypePrevClose
-                mWriter.writeClose .timestamp, .TickPrice
-            Case TickTypes.TickTypeVolume
-                mWriter.writeVolume .timestamp, .TickSize
-            Case TickTypes.TickTypeOpenInterest
-                mWriter.writeOpenInterest .timestamp, .TickSize
-            Case TickTypes.TickTypeMarketDepth
-                mWriter.writeMarketDepthData .timestamp, _
-                            .MDPosition, _
-                            .MDMarketMaker, _
-                            .MDOperation, _
-                            .MDSide, _
-                            .TickPrice, _
-                            .TickSize
-            Case TickTypes.TickTypeMarketDepthReset
-                mWriter.writeMarketDepthReset .timestamp
-            End Select
-        End With
-    Next
-End If
-
-Set mPendingWrites = Nothing
-Set mPendingWrites = New Collection
-End Property
-
-Friend Property Get ServiceProviderWriterReady() As Boolean
-ServiceProviderWriterReady = mServiceProviderWriterReady
+Friend Property Get ready() As Boolean
+ready = mServiceProviderWriterReady
 End Property
 
 '@================================================================================
@@ -159,195 +98,33 @@ End Property
 Public Sub closeOutputFile()
 Debug.Print "TradeBuild26.TickfileWriter - closing output tickfile"
 mWriter.closeOutputFile
-
-'Set mSelfRef = Me   ' to ensure this object is kept alive while
-'                    ' the writer closes down (it may be doing
-'                    ' asynchronous writes)
-'
-'Set mTimer = CreateIntervalTimer(60, ExpiryTimeUnitSeconds)
-'mTimer.StartTimer
 End Sub
 
-Friend Sub writeAsk(ByVal timestamp As Date, _
-                    ByVal price As Double, _
-                    ByVal size As Long)
-Dim pendingTick As Tick
-If Not mServiceProviderWriterReady Then
-    With pendingTick
-        .TickType = TickTypes.TickTypeAsk
-        .timestamp = timestamp
-        .TickPrice = price
-        .TickSize = size
-    End With
-    mPendingWrites.add pendingTick
-Else
-    mWriter.writeAsk timestamp, price, size
-End If
+Friend Sub ServiceProviderWriterNotReady()
+mServiceProviderWriterReady = False
 End Sub
 
+Friend Sub ServiceProviderWriterReady()
+Dim item As Variant
+Dim pendingTick As GenericTick
 
-Friend Sub writeBid(ByVal timestamp As Date, _
-                    ByVal price As Double, _
-                    ByVal size As Long)
-Dim pendingTick As Tick
-If Not mServiceProviderWriterReady Then
-    With pendingTick
-        .TickType = TickTypes.TickTypeBid
-        .timestamp = timestamp
-        .TickPrice = price
-        .TickSize = size
-    End With
-    mPendingWrites.add pendingTick
-Else
-    mWriter.writeBid timestamp, price, size
-End If
+mServiceProviderWriterReady = True
+
+For Each item In mPendingWrites
+    pendingTick = item
+    mWriter.writeTick pendingTick
+Next
+
+Set mPendingWrites = New Collection
 End Sub
 
-Friend Sub writeClose(ByVal timestamp As Date, _
-                    ByVal price As Double)
-Dim pendingTick As Tick
+Friend Sub writeTick( _
+                pTick As GenericTick)
 If Not mServiceProviderWriterReady Then
-    With pendingTick
-        .TickType = TickTypes.TickTypePrevClose
-        .timestamp = timestamp
-        .TickPrice = price
-    End With
-    mPendingWrites.add pendingTick
+    mPendingWrites.add pTick
 Else
-    mWriter.writeClose timestamp, price
+    mWriter.writeTick pTick
 End If
-End Sub
-
-Friend Sub writeHigh(ByVal timestamp As Date, _
-                    ByVal price As Double)
-Dim pendingTick As Tick
-If Not mServiceProviderWriterReady Then
-    With pendingTick
-        .TickType = TickTypes.TickTypeHigh
-        .timestamp = timestamp
-        .TickPrice = price
-    End With
-    mPendingWrites.add pendingTick
-Else
-    mWriter.writeHigh timestamp, price
-End If
-End Sub
-
-Friend Sub writeLow(ByVal timestamp As Date, _
-                    ByVal price As Double)
-Dim pendingTick As Tick
-If Not mServiceProviderWriterReady Then
-    With pendingTick
-        .TickType = TickTypes.TickTypeLow
-        .timestamp = timestamp
-        .TickPrice = price
-    End With
-    mPendingWrites.add pendingTick
-Else
-    mWriter.writeLow timestamp, price
-End If
-End Sub
-
-Friend Sub writeMarketDepthData( _
-                        ByVal timestamp As Date, _
-                        ByVal position As Long, _
-                        ByVal marketMaker As String, _
-                        ByVal operation As Long, _
-                        ByVal side As Long, _
-                        ByVal price As Double, _
-                        ByVal size As Long)
-
-Dim pendingTick As Tick
-If Not mServiceProviderWriterReady Then
-    With pendingTick
-        .TickType = TickTypes.TickTypeMarketDepth
-        .MDPosition = position
-        .MDMarketMaker = marketMaker
-        .MDOperation = operation
-        .MDSide = side
-        .timestamp = timestamp
-        .TickPrice = price
-        .TickSize = size
-    End With
-    mPendingWrites.add pendingTick
-Else
-    mWriter.writeMarketDepthData timestamp, _
-            position, _
-            marketMaker, _
-            operation, _
-            side, _
-            price, _
-            size
-End If
-End Sub
-
-Friend Sub writeMarketDepthReset( _
-                        ByVal timestamp As Date)
-                        
-Dim pendingTick As Tick
-If Not mServiceProviderWriterReady Then
-    With pendingTick
-        .TickType = TickTypes.TickTypeMarketDepthReset
-        .timestamp = timestamp
-    End With
-    mPendingWrites.add pendingTick
-Else
-    mWriter.writeMarketDepthReset timestamp
-End If
-End Sub
-                        
-Friend Sub writeOpenInterest(ByVal timestamp As Date, _
-                    ByVal size As Long)
-Dim pendingTick As Tick
-If Not mServiceProviderWriterReady Then
-    With pendingTick
-        .TickType = TickTypes.TickTypeOpenInterest
-        .timestamp = timestamp
-        .TickSize = size
-    End With
-    mPendingWrites.add pendingTick
-Else
-    mWriter.writeOpenInterest timestamp, size
-End If
-End Sub
-
-Friend Sub writeTrade(ByVal timestamp As Date, _
-                    ByVal price As Double, _
-                    ByVal size As Long)
-Dim pendingTick As Tick
-If Not mServiceProviderWriterReady Then
-    With pendingTick
-        .TickType = TickTypes.TickTypeLast
-        .timestamp = timestamp
-        .TickPrice = price
-        .TickSize = size
-    End With
-    mPendingWrites.add pendingTick
-Else
-    mWriter.writeTrade timestamp, price, size
-End If
-End Sub
-
-Friend Sub writeVolume(ByVal timestamp As Date, _
-                    ByVal size As Long)
-Dim pendingTick As Tick
-
-On Error GoTo Err
-If Not mServiceProviderWriterReady Then
-    With pendingTick
-        .TickType = TickTypes.TickTypeVolume
-        .timestamp = timestamp
-        .TickSize = size
-    End With
-    mPendingWrites.add pendingTick
-Else
-    mWriter.writeVolume timestamp, size
-End If
-
-Exit Sub
-
-Err:
-Stop
 End Sub
 
 '@================================================================================

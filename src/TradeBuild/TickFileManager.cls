@@ -249,6 +249,8 @@ Private Sub ITickfileInputServiceConsumer_ReplayProgress( _
                             ByVal eventsPlayed As Long, _
                             ByVal percentComplete As Single)
 mEventsPlayed = eventsPlayed
+
+If percentComplete > 100 Then percentComplete = 100
 mPercentComplete = percentComplete
 mReader.percentComplete = percentComplete
 If mReplaySpeed <> 0 And mReplayProgressEventFrequency > 0 Then
@@ -271,14 +273,6 @@ End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
-
-Friend Property Let Contract(ByVal value As Contract)
-Set mContract = value
-If Not mReader Is Nothing Then
-    mReader.Contract = mContract
-    playOrNot mTickfileSpecifiers(mCurrTickfileIndex), mReader.TickfileSizeBytes
-End If
-End Property
 
 Public Property Let defaultContract(ByVal value As Contract)
 Set mDefaultContract = value
@@ -485,6 +479,14 @@ If Not mReplayInProgress Then
     mReplayInProgress = True
 End If
 StartNextTickfile
+End Sub
+
+Friend Sub startTicker(ByVal value As Contract)
+Set mContract = value
+If Not mReader Is Nothing Then
+    mReader.Contract = mContract
+    playOrNot mTickfileSpecifiers(mCurrTickfileIndex), mReader.TickfileSizeBytes
+End If
 End Sub
 
 Public Sub stopReplay()

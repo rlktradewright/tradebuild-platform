@@ -261,14 +261,14 @@ If completeSessionsOnly Then
                                         "-" & _
                                         FormatDateTime(tfs.ToDate, vbGeneralDate) & _
                                         " " & _
-                                        Replace(currContract.specifier.ToString, vbCrLf, "; ")
+                                        Replace(currContract.specifier.toString, vbCrLf, "; ")
         Else
             tfs.FromDate = currSessionStart
             tfs.EntireSession = True
             tfs.filename = "Session " & _
                             FormatDateTime(DateValue(currSessionStart), vbShortDate) & _
                             " " & _
-                            Replace(currContract.specifier.ToString, vbCrLf, "; ")
+                            Replace(currContract.specifier.toString, vbCrLf, "; ")
             
         End If
         
@@ -336,7 +336,7 @@ Else
                         tfs.filename = FormatDateTime(tfs.FromDate, vbGeneralDate) & _
                                                     "-" & _
                                                     FormatDateTime(tfs.ToDate, vbGeneralDate) & " " & _
-                                                    Replace(currContract.specifier.ToString, vbCrLf, "; ")
+                                                    Replace(currContract.specifier.toString, vbCrLf, "; ")
                         
                         Set currContract = aContract
                         
@@ -366,7 +366,7 @@ Else
     tfs.filename = FormatDateTime(tfs.FromDate, vbGeneralDate) & _
                                 "-" & _
                                 FormatDateTime(tfs.ToDate, vbGeneralDate) & " " & _
-                                Replace(currContract.specifier.ToString, vbCrLf, "; ")
+                                Replace(currContract.specifier.toString, vbCrLf, "; ")
 
 End If
 
@@ -391,12 +391,9 @@ End Function
 Public Function loadContracts( _
                 ByVal pContractSpec As contractSpecifier) As Contracts
 Dim lContractsBuilder As ContractsBuilder
-Dim cla As ContractLoadAction
 Set lContractsBuilder = CreateContractsBuilder(pContractSpec)
 Set loadContracts = lContractsBuilder.Contracts
-Set cla = New ContractLoadAction
-cla.initialise lContractsBuilder
-DeferAction cla
+DeferAction New ContractLoadAction, lContractsBuilder
 End Function
 
 Friend Sub NotifyFatalError( _

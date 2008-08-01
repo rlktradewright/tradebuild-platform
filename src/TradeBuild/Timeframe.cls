@@ -30,10 +30,11 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements StateChangeListener
-Implements StudyUtils26.StudyValueListener
-Implements TradeBuildSP.IBarDataInputServiceConsumer
-Implements TradeBuildSP.IBarDataConsumer
+Implements DeferredAction
+Implements IBarDataConsumer
+Implements IBarDataInputServiceConsumer
+Implements StudyValueListener
+Implements Task
 
 '@================================================================================
 ' Events
@@ -145,18 +146,15 @@ Attribute mWriteTimer.VB_VarHelpID = -1
 
 Private mTimerList                  As TimerList
 
-Private WithEvents mHistoricBarTimer As IntervalTimer
-Attribute mHistoricBarTimer.VB_VarHelpID = -1
-Private mElapsedTimer               As ElapsedTimer
-Private mHistReceivingSynchronously As Boolean
 Private mHistoricBar                As TimeframeUtils26.Bar
 Private mHistoricBarPending         As Boolean
-Private mHistoricBarRequested       As Boolean
 
 Private mFromTime                   As Date
 Private mToTime                     As Date
 
 Private mIsHistorical               As Boolean
+
+Private mTaskContext                As TaskContext
 
 '@================================================================================
 ' Class Event Handlers
@@ -168,13 +166,25 @@ Randomize
 End Sub
 
 Private Sub Class_Terminate()
-Debug.Print "Timeframe terminated: " & mKey
+Debug.Print "Timeframe terminated: " & getName
+End Sub
+
+'@================================================================================
+' DeferredAction Interface Members
+'@================================================================================
+
+Private Sub DeferredAction_run(ByVal data As Variant)
+Dim bar2Write As BarToWrite
+
+bar2Write = data
+
+WriteBar bar2Write.theBar, bar2Write.barType, bar2Write.volume
+
 End Sub
 
 '@================================================================================
 ' IBarDataConsumer Interface Members
 '@================================================================================
-
 
 Private Sub IBarDataConsumer_Bar( _
                 ByVal data As Bar, _
@@ -183,15 +193,10 @@ Private Sub IBarDataConsumer_Bar( _
 Dim failpoint As Long
 On Error GoTo Err
 
-mHistoricBarRequested = False
 mHistoricBarPending = True
 Set mHistoricBar = data
-If Not mHistReceivingSynchronously Then
-    ' We use the timer with a very short delay: this is to prevent
-    ' calling back into the Service Provider for the next bar
-    ' before it has completed the function that provided the bar.
-    mHistoricBarTimer.StartTimer
-End If
+
+If mTaskContext.State = TaskStateSuspended Then mTaskContext.continue
 
 Exit Sub
 
@@ -208,9 +213,12 @@ End Sub
 '@================================================================================
 
 Private Sub IBarDataInputServiceConsumer_BarDataComplete()
-Debug.Print "Timeframe bars loaded: " & mKey
+Debug.Print "Timeframe bars loaded: " & getName
 'Debug.Print "Volume: " & mAccumulatedVolume & " at " & mHistoricBar.timestamp
-mHistoricBarTimer.StopTimer
+
+mTaskContext.finish Empty, False
+
+'mHistoricBarTimer.StopTimer
 mHistoricDataLoaded = True
 mBarReader.ReleaseDataStore
 Set mBarReader = Nothing
@@ -237,14 +245,15 @@ Select Case eventCode
 Case HDConnectedToDataSource
     RaiseEvent Notification(ev)
 Case Else
-    Debug.Print "Timeframe bars loaded with errors: " & mKey
+    Debug.Print "Timeframe bars loaded with errors: " & getName
+    
+    mTaskContext.finish Empty, False
     
     StartStudies
     RaiseEvent Notification(ev)
     fireStateChange TimeframeStateLoaded
     RaiseEvent BarsLoaded
     
-    mHistoricBarTimer.StopTimer
     mHistoricDataLoaded = True
     mBarReader.ReleaseDataStore
     
@@ -266,7 +275,8 @@ Private Sub IBarDataInputServiceConsumer_Ready()
 Dim failpoint As Long
 On Error GoTo Err
 
-mHistoricBarTimer.StartTimer
+'mHistoricBarTimer.StartTimer
+mTaskContext.continue
 
 Exit Sub
 
@@ -275,22 +285,6 @@ Err.Raise Err.number, _
         ProjectName & "." & ModuleName & ":" & "IBarDataInputServiceConsumer_Ready" & "." & failpoint & _
         IIf(Err.source <> "", vbCrLf & Err.source, ""), _
         Err.Description
-
-End Sub
-
-'@================================================================================
-' StateChangeListener Interface Members
-'@================================================================================
-
-Private Sub StateChangeListener_Change( _
-                ev As StateChangeEvent)
-Dim tli As TimerListItem
-Dim bar2Write As BarToWrite
-
-Set tli = ev.source
-bar2Write = tli.data
-
-WriteBar bar2Write.theBar, bar2Write.barType, bar2Write.volume
 
 End Sub
 
@@ -336,12 +330,57 @@ End If
 End Sub
 
 '@================================================================================
-' mHistoricBarTimer Event Handlers
+' Task Interface Members
 '@================================================================================
 
-Private Sub mHistoricBarTimer_TimerExpired()
-FetchHistoricBars
+Private Sub Task_cancel()
+
 End Sub
+
+Private Sub Task_run()
+Dim failpoint As Long
+
+On Error GoTo Err
+
+If mBarReader Is Nothing Then
+    setupBarReader
+    mTaskContext.suspend -1
+    Exit Sub
+End If
+
+If Not mHistoricBarPending Then
+    mBarReader.FireNextBar
+    If Not mHistoricBarPending Then
+        ' the bar has not been fired synchronously, so wait for it
+        mTaskContext.suspend -1
+        Exit Sub
+    End If
+End If
+
+ProcessHistoricBar
+
+Exit Sub
+
+Err:
+gLogLogger.Log LogLevelSevere, _
+                "Error " & Err.number & " at " & _
+                ProjectName & "." & ModuleName & ":" & "Task_run" & "." & failpoint & _
+                IIf(Err.source <> "", vbCrLf & Err.source, "") & vbCrLf & _
+                Err.Description
+mTaskContext.Error Err.number, _
+                    Err.Description & " at " & _
+                    ProjectName & "." & ModuleName & ":" & "Task_run" & "." & failpoint & _
+                    IIf(Err.source <> "", vbCrLf & Err.source, "")
+
+End Sub
+
+Private Property Let Task_TaskContext(ByVal RHS As TWUtilities30.TaskContext)
+Set mTaskContext = RHS
+End Property
+
+Private Property Get Task_taskName() As String
+Task_taskName = mTaskContext.name
+End Property
 
 '@================================================================================
 ' mSession Event Handlers
@@ -411,7 +450,7 @@ Friend Property Let Contract(ByVal value As Contract)
 
 Set mContract = value
 
-mInputStudy.name = mContract.specifier.localSymbol & mKey & "(historical data)"
+mInputStudy.name = getName & " (historical data)"
 studyMgr.setInputTicksize mBidInputHandle, mContract.TickSize
 studyMgr.setInputTicksize mAskInputHandle, mContract.TickSize
 studyMgr.setInputTicksize mTradeInputHandle, mContract.TickSize
@@ -537,11 +576,6 @@ End Sub
 '@================================================================================
 
 Private Sub Clear()
-If Not mHistoricBarTimer Is Nothing Then
-    mHistoricBarTimer.StopTimer
-    Set mHistoricBarTimer = Nothing
-    Set mElapsedTimer = Nothing
-End If
 
 If Not mWriteTimer Is Nothing Then
     mWriteTimer.StopTimer
@@ -559,118 +593,41 @@ If Not mBarWriter Is Nothing Then
 End If
 
 If Not mBarReader Is Nothing Then
+    mBarReader.CancelFetch
     mBarReader.ReleaseDataStore
     Set mBarReader = Nothing
+    mTaskContext.finish Empty, True
 End If
 
 End Sub
 
-Private Sub FetchHistoricBars()
-Dim barSpecifier As New BarDataSpecifier
-Dim ev As NotificationEvent
-Dim failpoint As Long
-On Error GoTo Err
-
-If mBarReader Is Nothing Then
-    fireStateChange TimeframeStateLoading
-    If mNumberOfBarsToFetch = 0 Then
-        mHistoricDataLoaded = True
-        StartStudies
-        fireStateChange TimeframeStateLoaded
-        RaiseEvent BarsLoaded
-        Exit Sub
-    End If
-    
-    Set mBarReader = gTB.ServiceProviders.CreateHistoricalDataReader( _
-                                Me, _
-                                Me)
-                                
-    If mBarReader Is Nothing Then
-        mHistoricDataLoaded = True
-        StartStudies
-        Set ev.source = Me
-        ev.eventCode = ApiNotifyCodes.ApiNotifyNoHistoricDataSource
-        ev.eventMessage = "Can't create historic data reader"
-        RaiseEvent Notification(ev)
-        fireStateChange TimeframeStateLoaded
-        RaiseEvent BarsLoaded
-    Else
-        barSpecifier.barLength = mBarLength
-        barSpecifier.barLengthUnits = mBarUnit
-        barSpecifier.barType = BarTypes.BarTypeTrade
-        barSpecifier.Contract = mContract
-        barSpecifier.FromDate = mFromTime
-        If mIsHistorical Then
-            barSpecifier.ToDate = mToTime
-        Else
-            If mExcludeCurrentBar Then
-                barSpecifier.ToDate = mSession.BarStartTime(tickr.timestamp, _
-                                            mBarLength, _
-                                            mBarUnit)
-            Else
-                ' ensure we get the latest bar
-                barSpecifier.ToDate = mSession.BarEndTime(tickr.timestamp, _
-                                            mBarLength, _
-                                            mBarUnit)
-            End If
-        End If
-        barSpecifier.maxNumberOfBars = mNumberOfBarsToFetch
-        Debug.Print "Fetching bars:" & vbCrLf & _
-                    barSpecifier.toString
-        mBarReader.FetchBars barSpecifier
-    End If
-    
-    ' other bar types ????????????????????????????????????????
-
-    Exit Sub
+Private Function getName() As String
+If mContract Is Nothing Then
+    getName = "????/" & mKey
+Else
+    getName = mContract.specifier.localSymbol & "/" & mKey
 End If
-
-If Not mHistoricBarPending Then
-    mHistReceivingSynchronously = True
-    mHistoricBarRequested = True
-    mBarReader.FireNextBar
-    mHistReceivingSynchronously = False
-    If Not mHistoricBarPending Then Exit Sub
-End If
-
-mElapsedTimer.StartTiming
-
-Do While mHistoricBarPending And _
-    (Not mBarReader Is Nothing) And _
-    (Not mHistoricDataLoaded) And _
-    mElapsedTimer.ElapsedTimeMicroseconds / 1000 <= MultiTaskingTimeQuantumMillisecs
-    
-    ProcessHistoricBar
-
-    mHistReceivingSynchronously = True
-    mHistoricBarRequested = True
-    mBarReader.FireNextBar
-    mHistReceivingSynchronously = False
-
-Loop
-
-If Not mHistoricDataLoaded And _
-    Not mBarReader Is Nothing _
-Then
-    ' schedule the next processing quantum
-    mHistoricBarTimer.StartTimer
-End If
-
-Exit Sub
-
-Err:
-Err.Raise Err.number, _
-        ProjectName & "." & ModuleName & ":" & "FetchHistoricBars" & "." & failpoint & _
-        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
-        Err.Description
-
-
-End Sub
+End Function
 
 Private Sub fireStateChange(ByVal newState As TimeframeStates)
 Dim listener As StateChangeListener
 Dim i As Long
 Dim ev As StateChangeEvent
+Dim s As String
+
+If gLogLogger.isLoggable(LogLevelDetail) Then
+    s = "Timeframe (" & getName & ") "
+    Select Case newState
+    Case TimeframeStateCreated
+        s = s & "created"
+    Case TimeframeStateLoading
+        s = s & "loading"
+    Case TimeframeStateLoaded
+        s = s & "loaded " & mTradeBars.Count & " bars"
+    End Select
+    gLogLogger.Log LogLevelDetail, s
+End If
+
 Set ev.source = Me
 ev.State = newState
 For i = 1 To mStateChangeListeners.Count
@@ -686,7 +643,7 @@ mHistoricBarPending = False
 
 With mHistoricBar
 
-    Debug.Print "Historic bar (" & mKey & ") " & FormatTimestamp(.timestamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & .openValue & " " & .highValue & " " & .lowValue & " " & .closeValue & " " & .volume & " " & .tickVolume
+    Debug.Print "Historic bar (" & getName & ") " & FormatTimestamp(.timestamp, TimestampDateAndTimeISO8601 + TimestampNoMillisecs) & .openValue & " " & .highValue & " " & .lowValue & " " & .closeValue & " " & .volume & " " & .tickVolume
     studyMgr.notifyInput mTradeInputHandle, .openValue, .timestamp
     
     If Not firstVolumeSent Then
@@ -731,6 +688,66 @@ With mHistoricBar
     mAccumulatedVolume = mAccumulatedVolume + .volume
         
 End With
+End Sub
+
+Private Sub setupBarReader()
+Dim barSpecifier As New BarDataSpecifier
+Dim ev As NotificationEvent
+    
+fireStateChange TimeframeStateLoading
+If mNumberOfBarsToFetch = 0 Then
+    mHistoricDataLoaded = True
+    StartStudies
+    fireStateChange TimeframeStateLoaded
+    RaiseEvent BarsLoaded
+    mTaskContext.finish 0, False
+    Exit Sub
+End If
+
+Set mBarReader = gTB.ServiceProviders.CreateHistoricalDataReader( _
+                            Me, _
+                            Me)
+                            
+If mBarReader Is Nothing Then
+    mHistoricDataLoaded = True
+    StartStudies
+    Set ev.source = Me
+    ev.eventCode = ApiNotifyCodes.ApiNotifyNoHistoricDataSource
+    ev.eventMessage = "Timeframe: Can't create historic data reader (" & getName & ")"
+    gLogLogger.Log LogLevelWarning, ev.eventMessage
+    RaiseEvent Notification(ev)
+    fireStateChange TimeframeStateLoaded
+    RaiseEvent BarsLoaded
+    mTaskContext.finish 0, False
+    Exit Sub
+End If
+
+barSpecifier.barLength = mBarLength
+barSpecifier.barLengthUnits = mBarUnit
+barSpecifier.barType = BarTypes.BarTypeTrade
+barSpecifier.Contract = mContract
+barSpecifier.FromDate = mFromTime
+If mIsHistorical Then
+    barSpecifier.ToDate = mToTime
+Else
+    If mExcludeCurrentBar Then
+        barSpecifier.ToDate = mSession.BarStartTime(tickr.timestamp, _
+                                    mBarLength, _
+                                    mBarUnit)
+    Else
+        ' ensure we get the latest bar
+        barSpecifier.ToDate = mSession.BarEndTime(tickr.timestamp, _
+                                    mBarLength, _
+                                    mBarUnit)
+    End If
+End If
+barSpecifier.maxNumberOfBars = mNumberOfBarsToFetch
+Debug.Print "Fetching bars:" & vbCrLf & _
+            barSpecifier.toString
+mBarReader.FetchBars barSpecifier
+
+' other bar types ????????????????????????????????????????
+
 End Sub
 
 Private Sub setupBarStudies()
@@ -918,10 +935,10 @@ Dim sourceName As String
 Dim TickSize As Double
 
 If mContract Is Nothing Then
-    sourceName = generateGUIDString
+    sourceName = GenerateGUIDString
     TickSize = 0
 Else
-    sourceName = mContract.specifier.toString & mKey & "(historical data)"
+    sourceName = getName & " (historical data)"
     TickSize = mContract.TickSize
 End If
 
@@ -963,9 +980,11 @@ Private Sub startHistDataFetch()
 ' ensure that fetching the historical data occurs after the current call has completed,
 ' since this is within the Timeframes.add call, otherwise the caller may miss the
 ' BarsLoaded event.
-Set mHistoricBarTimer = CreateIntervalTimer(1)
-Set mElapsedTimer = New ElapsedTimer
-mHistoricBarTimer.StartTimer
+'Set mHistoricBarTimer = CreateIntervalTimer(1)
+'Set mElapsedTimer = New ElapsedTimer
+'mHistoricBarTimer.StartTimer
+
+StartTask Me, PriorityNormal, "Timeframe (" & getName & "): start bar fetch"
 End Sub
 
 Private Sub StartStudies()
@@ -1035,9 +1054,10 @@ Then
         Set bar2Write.theBar = theBar
         bar2Write.barType = barType
         bar2Write.volume = volume
-        mTimerList.add(bar2Write, _
-                        Rnd * 1000 * mSaveIntervalSeconds + 1, _
-                        ExpiryTimeUnitMilliseconds).addStateChangeListener Me
+        DeferAction Me, _
+                    bar2Write, _
+                    Rnd * 1000 * mSaveIntervalSeconds + 1, _
+                    ExpiryTimeUnitMilliseconds
     End If
 End If
 End Sub

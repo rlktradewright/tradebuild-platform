@@ -289,6 +289,10 @@ Private Sub QuoteListener_PreviousClose(ev As QuoteEvent)
 
 End Sub
 
+Private Sub QuoteListener_sessionOpen(ev As QuoteEvent)
+
+End Sub
+
 Private Sub QuoteListener_trade(ev As QuoteEvent)
 Dim cancelPriceHit As Boolean
 

@@ -61,7 +61,7 @@ End Type
 Private mWriter As TradeBuildSP.IBarDataWriter
 Private mServiceProviderWriterReady As Boolean
 
-Private mPendingWrites As Queue
+Private mPendingWrites As Collection
 
 Private WithEvents mTimer As IntervalTimer
 Attribute mTimer.VB_VarHelpID = -1
@@ -72,8 +72,7 @@ Private mSelfRef As HistoricDataWriter
 '@================================================================================
 
 Private Sub Class_Initialize()
-Set mPendingWrites = New Queue
-mPendingWrites.initialCapacity = 20
+Set mPendingWrites = New Collection
 End Sub
 
 '@================================================================================
@@ -97,22 +96,8 @@ Friend Property Let ServiceProviderWriter(ByVal value As TradeBuildSP.IBarDataWr
 Set mWriter = value
 End Property
 
-Friend Property Let ServiceProviderWriterReady(ByVal value As Boolean)
-Dim pendingWrite As PendingBarWrite
-
-mServiceProviderWriterReady = value
-
-If Not mServiceProviderWriterReady Then Exit Property
-    
-Do While mPendingWrites.size <> 0
-    pendingWrite = mPendingWrites.removeFromFront
-    WriteBar pendingWrite.Bar, _
-            pendingWrite.barType, _
-            pendingWrite.volume, _
-            pendingWrite.barLength, _
-            pendingWrite.barUnit
-Loop
-
+Friend Property Get ready() As Boolean
+ready = mServiceProviderWriterReady
 End Property
 
 '@================================================================================
@@ -125,6 +110,28 @@ mWriter.ReleaseDataStore
 Set mSelfRef = Me
 Set mTimer = CreateIntervalTimer(60, ExpiryTimeUnitMilliseconds)
 mTimer.StartTimer
+End Sub
+
+Friend Sub ServiceProviderWriterNotReady()
+mServiceProviderWriterReady = False
+End Sub
+
+Friend Sub ServiceProviderWriterReady()
+Dim item As Variant
+Dim pendingWrite As PendingBarWrite
+
+mServiceProviderWriterReady = True
+
+For Each item In mPendingWrites
+    pendingWrite = item
+    WriteBar pendingWrite.Bar, _
+            pendingWrite.barType, _
+            pendingWrite.volume, _
+            pendingWrite.barLength, _
+            pendingWrite.barUnit
+Next
+
+Set mPendingWrites = New Collection
 End Sub
 
 Friend Sub WriteBar( _

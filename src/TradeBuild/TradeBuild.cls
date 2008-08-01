@@ -95,6 +95,9 @@ Public Enum ApiNotifyCodes
     
     ApiNotifyContractDoesNotExist
     
+    ApiNotifyCantWriteToHistoricDataStore
+    
+    ApiNotifyTryLater
 End Enum
 
 Public Enum BulletinTypes
@@ -117,17 +120,17 @@ Public Enum DOMEvents
     DOMBothEvents
 End Enum
 
-Public Enum DOMOperations
-    DOMInsert
-    DOMUpdate
-    DOMDelete
-    DOMResetDisplay
-End Enum
-
-Public Enum DOMSides
-    DOMAsk
-    DOMBid
-    DOMLast
+'Public Enum DOMOperations
+'    DOMInsert
+'    DOMUpdate
+'    DOMDelete
+'    DOMResetDisplay
+'End Enum
+'
+Public Enum DOMUpdateTypes
+    DOMUpdateAsk
+    DOMUpdateBid
+    DOMUpdateLast
 End Enum
 
 Public Enum EntryOrderTypes
@@ -354,19 +357,19 @@ Public Enum TickfileFormatType
     StreamBased = TradeBuildSP.TickfileFormatTypes.StreamBased
 End Enum
 
-Public Enum TickTypes
-    TickTypeBid = &H1&
-    TickTypeAsk = &H2&
-    TickTypeLast = &H4&
-    TickTypeHigh = &H8&
-    TickTypeLow = &H10&
-    TickTypePrevClose = &H20&
-    TickTypeVolume = &H40&
-    TickTypeOpenInterest = &H80&
-    TickTypeMarketDepth = &H100&
-    TickTypeMarketDepthL2 = &H200&
-    TickTypeMarketDepthReset = &H400&
-End Enum
+'Public Enum TickTypes
+'    TickTypeBid = &H1&
+'    TickTypeAsk = &H2&
+'    TickTypeLast = &H4&
+'    TickTypeHigh = &H8&
+'    TickTypeLow = &H10&
+'    TickTypePrevClose = &H20&
+'    TickTypeVolume = &H40&
+'    TickTypeOpenInterest = &H80&
+'    TickTypeMarketDepth = &H100&
+'    TickTypeMarketDepthL2 = &H200&
+'    TickTypeMarketDepthReset = &H400&
+'End Enum
 
 Public Enum TimeframeStates
     TimeframeStateCreated
@@ -413,7 +416,7 @@ End Type
 
 Public Type MarketDepthEvent
     source          As Object
-    side            As DOMSides
+    type            As DOMUpdateTypes
     price           As Double
     size            As Long
 End Type
@@ -437,16 +440,16 @@ Public Type RawMarketDepthEvent
     size            As Long
 End Type
 
-Public Type Tick
-    timestamp       As Date
-    TickType        As TickTypes
-    TickPrice       As Double
-    TickSize        As Long
-    MDPosition      As Long
-    MDMarketMaker   As String
-    MDOperation     As Long
-    MDSide          As Long
-End Type
+'Public Type Tick
+'    timestamp       As Date
+'    TickType        As TickTypes
+'    TickPrice       As Double
+'    TickSize        As Long
+'    MDPosition      As Long
+'    MDMarketMaker   As String
+'    MDOperation     As Long
+'    MDSide          As Long
+'End Type
 
 Public Type TickfileFormatSpecifier
     FormatType      As TickfileFormatType

@@ -341,59 +341,35 @@ End Sub
 ' IStreamingDataConsumer Interface Members
 '@================================================================================
 
-Private Sub IStreamingDataConsumer_Ask(ByVal timestamp As Date, ByVal price As Double, ByVal size As Long)
-mFirstAskReceived = True
-If mFirstBidReceived And Not mReadyNotified Then
-    mReadyNotified = True
-    mServiceConsumer.Ready
-End If
-    
-mSimulator.ask timestamp, mMarketIndex, price
-End Sub
-
-Private Sub IStreamingDataConsumer_Bid(ByVal timestamp As Date, ByVal price As Double, ByVal size As Long)
-mFirstBidReceived = True
-If mFirstAskReceived And Not mReadyNotified Then
-    mReadyNotified = True
-    mServiceConsumer.Ready
-End If
-    
-mSimulator.bid timestamp, mMarketIndex, price
-End Sub
-
-Private Sub IStreamingDataConsumer_High(ByVal timestamp As Date, ByVal price As Double)
-
-End Sub
-
-Private Sub IStreamingDataConsumer_Low(ByVal timestamp As Date, ByVal price As Double)
-
-End Sub
-
-Private Sub IStreamingDataConsumer_OpenInterest(ByVal timestamp As Date, ByVal size As Long)
-
-End Sub
-
-Private Sub IStreamingDataConsumer_PreviousClose(ByVal timestamp As Date, ByVal price As Double)
-
-End Sub
-
-Private Sub IStreamingDataConsumer_ResetMarketDepth(ByVal timestamp As Date, ByVal marketDepthReRequested As Boolean)
-
-End Sub
-
-Private Sub IStreamingDataConsumer_Trade(ByVal timestamp As Date, ByVal price As Double, ByVal size As Long)
-mSimulator.trade timestamp, mMarketIndex, price
-End Sub
-
-Private Sub IStreamingDataConsumer_UpdateMktDepth(ByVal timestamp As Date, ByVal position As Long, ByVal operation As TradeBuildSP.DOMOperations, ByVal side As TradeBuildSP.DOMSides, ByVal price As Double, ByVal size As Long)
-
-End Sub
-
-Private Sub IStreamingDataConsumer_UpdateMktDepthL2(ByVal timestamp As Date, ByVal position As Long, ByVal marketMaker As String, ByVal operation As TradeBuildSP.DOMOperations, ByVal side As TradeBuildSP.DOMSides, ByVal price As Double, ByVal size As Long)
-
-End Sub
-
-Private Sub IStreamingDataConsumer_Volume(ByVal timestamp As Date, ByVal size As Long)
+Private Sub IStreamingDataConsumer_Tick(Tick As TickUtils26.GenericTick)
+Select Case Tick.TickType
+Case TickTypes.TickTypeAsk
+    mFirstAskReceived = True
+    If mFirstBidReceived And Not mReadyNotified Then
+        mReadyNotified = True
+        mServiceConsumer.Ready
+    End If
+        
+    mSimulator.ask Tick.timestamp, mMarketIndex, Tick.price
+Case TickTypes.TickTypeBid
+    mFirstBidReceived = True
+    If mFirstAskReceived And Not mReadyNotified Then
+        mReadyNotified = True
+        mServiceConsumer.Ready
+    End If
+        
+    mSimulator.bid Tick.timestamp, mMarketIndex, Tick.price
+Case TickTypes.TickTypeClosePrice
+Case TickTypes.TickTypeHighPrice
+Case TickTypes.TickTypeLowPrice
+Case TickTypes.TickTypeMarketDepth
+Case TickTypes.TickTypeMarketDepthReset
+Case TickTypes.TickTypeOpenInterest
+Case TickTypes.TickTypeOpenPrice
+Case TickTypes.TickTypeTrade
+    mSimulator.trade Tick.timestamp, mMarketIndex, Tick.price
+Case TickTypes.TickTypeVolume
+End Select
 
 End Sub
 

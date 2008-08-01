@@ -49,8 +49,7 @@ Private Const ModuleName                    As String = "TickersStarter"
 ' Member variables
 '@================================================================================
 
-' need this to keep alive - nothing else has a reference to me
-Private mSelfRef                            As TickersStarter
+Private mContractSpec                       As contractSpecifier
 
 Private WithEvents mContracts               As Contracts
 Attribute mContracts.VB_VarHelpID = -1
@@ -69,10 +68,6 @@ Private mEnumerator                         As Enumerator
 ' Class Event Handlers
 '@================================================================================
 
-Private Sub Class_Initialize()
-Set mSelfRef = Me
-End Sub
-
 '@================================================================================
 ' Task Interface Members
 '@================================================================================
@@ -85,9 +80,14 @@ Private Sub Task_run()
 Dim lContract As Contract
 Dim lTicker As Ticker
 
-
 If mTaskContext.CancelPending Then
     mTaskContext.finish Empty, True
+    Exit Sub
+End If
+
+If mContracts Is Nothing Then
+    Set mContracts = gTB.loadContracts(mContractSpec)
+    mTaskContext.suspend -1
     Exit Sub
 End If
 
@@ -108,8 +108,7 @@ lTicker.outputTickfilePath = mOutputTickfilePath
 
 lTicker.StartTickerFromContract lContract
 
-mTaskContext.sleep 50   ' delay a short while to avoid using too
-                        ' many connections where the database is involved
+mTaskContext.suspend 100
 
 End Sub
 
@@ -137,25 +136,23 @@ Set ev.source = mContracts.contractSpecifier
 ev.eventCode = ApiNotifyCodes.ApiNotifyContractSpecifierInvalid
 ev.eventMessage = reason & ": " & mContracts.contractSpecifier.toString
 tckrs.notify ev
+mTaskContext.Error ApiNotifyCodes.ApiNotifyContractSpecifierInvalid, ev.eventMessage
 End Sub
 
 Private Sub mContracts_NoMoreContractDetails()
 Set mEnumerator = mContracts.Enumerator
-StartTask Me, PriorityNormal
-
-' now we are a task so no need for the self-ref
-Set mSelfRef = Nothing
+mTaskContext.continue
 End Sub
 
 Private Sub mContracts_Notification( _
                 ev As TWUtilities30.NotificationEvent)
-' don't know what we can do to handle this - should log it perhaps?
+mTaskContext.Error ev.eventCode, ev.eventMessage
 End Sub
 
 Private Sub mContracts_TryLater( _
                 ByVal reason As String, _
                 ByVal serviceProviderName As String)
-' don't know what we can do to handle this - should log it perhaps?
+mTaskContext.Error ApiNotifyCodes.ApiNotifyTryLater, reason
 End Sub
 
 '@================================================================================
@@ -166,7 +163,7 @@ End Sub
 ' Methods
 '@================================================================================
 
-Friend Sub startTickers( _
+Friend Sub initialise( _
                 ByVal pTickers As Tickers, _
                 ByVal pTickerOptions As Long, _
                 ByVal pContractSpec As contractSpecifier, _
@@ -176,11 +173,10 @@ Friend Sub startTickers( _
                 
 Set lTickersRef = CreateWeakReference(pTickers)
 lTickerOptions = pTickerOptions
+Set mContractSpec = pContractSpec
 mDOMEventsRequired = pDOMEventsRequired
 mOutputTickfileFormat = poutputTickfileFormat
 mOutputTickfilePath = poutputTickfilePath
-
-Set mContracts = gTB.loadContracts(pContractSpec)
 
 End Sub
 
