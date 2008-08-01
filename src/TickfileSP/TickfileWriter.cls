@@ -30,6 +30,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
+Implements DeferredAction
 Implements ITickfileWriter
 
 '================================================================================
@@ -52,6 +53,7 @@ Implements ITickfileWriter
 ' Member variables
 '================================================================================
 
+Private mServiceProviderName As String
 Private mTickfileServiceProvider As TickfileServiceProvider
 
 Private mCommonServiceConsumer As ICommonServiceConsumer
@@ -84,6 +86,14 @@ Debug.Print "TickfileSP.TickfileWriter terminated"
 End Sub
 
 '================================================================================
+' DeferredAction Interface Members
+'================================================================================
+
+Private Sub DeferredAction_run(ByVal data As Variant)
+mServiceConsumer.Ready
+End Sub
+
+'================================================================================
 ' ITickfileWriter Interface Members
 '================================================================================
 
@@ -98,178 +108,69 @@ handleFatalError Err.Number, _
                 Err.Description
 End Sub
 
-Private Property Get ITickfileWriter_Contract() As Contract
-Set ITickfileWriter_Contract = mContract
-End Property
-
-Private Property Let ITickfileWriter_Contract(ByVal RHS As Contract)
-If Not RHS Is Nothing Then
-    Set mContract = RHS
-End If
-mServiceConsumer.Ready = True
-End Property
-
-Private Sub ITickfileWriter_WriteAsk(ByVal timestamp As Date, ByVal price As Double, ByVal size As Long)
+Private Sub ITickfileWriter_WriteTick(tick As TickUtils26.GenericTick)
 On Error GoTo Err
-writeTickData timestamp, TICK_ASK, price, size
-Exit Sub
-Err:
-handleFatalError Err.Number, _
-                "TickfileSP" & "." & "TickfileWriter" & "::" & "ITickfileWriter_WriteAsk", _
-                Err.Description
-End Sub
 
-Private Sub ITickfileWriter_writeBid(ByVal timestamp As Date, ByVal price As Double, ByVal size As Long)
-On Error GoTo Err
-writeTickData timestamp, TICK_BID, price, size
-Exit Sub
-Err:
-handleFatalError Err.Number, _
-                "TickfileSP" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeBid", _
-                Err.Description
-End Sub
-
-Private Sub ITickfileWriter_writeClose(ByVal timestamp As Date, ByVal price As Double)
-On Error GoTo Err
-writeTickData timestamp, TICK_CLOSE, price
-Exit Sub
-Err:
-handleFatalError Err.Number, _
-                "TickfileSP" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeClose", _
-                Err.Description
-End Sub
-
-Private Sub ITickfileWriter_writeHigh(ByVal timestamp As Date, ByVal price As Double)
-On Error GoTo Err
-writeTickData timestamp, TICK_HIGH, price
-Exit Sub
-Err:
-handleFatalError Err.Number, _
-                "TickfileSP" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeHigh", _
-                Err.Description
-End Sub
-
-Private Sub ITickfileWriter_writeLow(ByVal timestamp As Date, ByVal price As Double)
-writeTickData timestamp, TICK_LOW, price
-End Sub
-
-Private Sub ITickfileWriter_writeMarketDepthData(ByVal timestamp As Date, ByVal Position As Long, ByVal marketMaker As String, ByVal operation As Long, ByVal side As Long, ByVal price As Double, ByVal size As Long)
-On Error GoTo Err
-Select Case mTickfileFormat
-Case TickfileFormats.TickfileTradeBuild
-    If mTsOut Is Nothing Then createTradeBuildTickFile timestamp
+Select Case tick.tickType
+Case TickTypes.TickTypeAsk
+    writeTickData tick.timestamp, TICK_ASK, tick.price, tick.size
+Case TickTypes.TickTypeBid
+    writeTickData tick.timestamp, TICK_BID, tick.price, tick.size
+Case TickTypes.TickTypeClosePrice
+    writeTickData tick.timestamp, TICK_CLOSE, tick.price
+Case TickTypes.TickTypeHighPrice
+    writeTickData tick.timestamp, TICK_HIGH, tick.price
+Case TickTypes.TickTypeLowPrice
+    writeTickData tick.timestamp, TICK_LOW, tick.price
+Case TickTypes.TickTypeMarketDepth
+    Select Case mTickfileFormat
+    Case TickfileFormats.TickfileTradeBuild
+        If mTsOut Is Nothing Then createTradeBuildTickFile tick.timestamp
+        
+        writeTickfileLine CDbl(tick.timestamp) & "," & _
+                    FormatTimestamp(tick.timestamp, TimestampFormats.TimestampTimeOnly) & "," & _
+                    TICK_MARKET_DEPTH & "," & _
+                    tick.Position & "," & _
+                    tick.marketMaker & "," & _
+                    tick.operation & "," & _
+                    tick.side & "," & _
+                    format(tick.price, "Fixed") & "," & _
+                    tick.size
+    Case TickfileFormats.TickfileCrescendo
+        ' Crescendo can't handle market depth in tickfiles
+    End Select
+Case TickTypes.TickTypeMarketDepthReset
+    Select Case mTickfileFormat
+    Case TickfileFormats.TickfileTradeBuild
+        If mTsOut Is Nothing Then createTradeBuildTickFile tick.timestamp
+        
+        writeTickfileLine CDbl(tick.timestamp) & "," & _
+                    FormatTimestamp(tick.timestamp, TimestampFormats.TimestampTimeOnly) & "," & _
+                    TICK_MARKET_DEPTH_RESET
     
-    writeTickfileLine CDbl(timestamp) & "," & _
-                FormatTimestamp(timestamp, TimestampFormats.TimestampTimeOnly) & "," & _
-                TICK_MARKET_DEPTH & "," & _
-                Position & "," & _
-                marketMaker & "," & _
-                operation & "," & _
-                side & "," & _
-                format(price, "Fixed") & "," & _
-                size
-Case TickfileFormats.TickfileCrescendo
-    ' Crescendo can't handle market depth in tickfiles
+    Case TickfileFormats.TickfileCrescendo
+        ' Crescendo can't handle market depth in tickfiles
+    End Select
+Case TickTypes.TickTypeOpenInterest
+    writeTickData tick.timestamp, TICK_OPEN_INTEREST, , tick.size
+Case TickTypes.TickTypeOpenPrice
+    writeTickData tick.timestamp, TICK_OPEN, tick.price
+Case TickTypes.TickTypeTrade
+    writeTickData tick.timestamp, TICK_TRADE, tick.price, tick.size
+Case TickTypes.TickTypeVolume
+    writeTickData tick.timestamp, TICK_VOLUME, , tick.size
 End Select
+
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                "TickfileSP" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeMarketDepthData", _
-                Err.Description
-End Sub
-
-Private Sub ITickfileWriter_writeMarketDepthReset(ByVal timestamp As Date)
-On Error GoTo Err
-Select Case mTickfileFormat
-Case TickfileFormats.TickfileTradeBuild
-    If mTsOut Is Nothing Then createTradeBuildTickFile timestamp
-    
-    writeTickfileLine CDbl(timestamp) & "," & _
-                FormatTimestamp(timestamp, TimestampFormats.TimestampTimeOnly) & "," & _
-                TICK_MARKET_DEPTH_RESET
-
-Case TickfileFormats.TickfileCrescendo
-    ' Crescendo can't handle market depth in tickfiles
-End Select
-Exit Sub
-Err:
-handleFatalError Err.Number, _
-                "TickfileSP" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeMarketDepthReset", _
-                Err.Description
-End Sub
-
-Private Sub ITickfileWriter_WriteOpenInterest(ByVal timestamp As Date, ByVal size As Long)
-On Error GoTo Err
-writeTickData timestamp, TICK_OPEN_INTEREST, , size
-Exit Sub
-Err:
-handleFatalError Err.Number, _
-                "TickfileSP" & "." & "TickfileWriter" & "::" & "ITickfileWriter_WriteOpenInterest", _
-                Err.Description
-End Sub
-
-Private Sub ITickfileWriter_writeTrade(ByVal timestamp As Date, ByVal price As Double, ByVal size As Long)
-On Error GoTo Err
-writeTickData timestamp, TICK_TRADE, price, size
-Exit Sub
-Err:
-handleFatalError Err.Number, _
-                "TickfileSP" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeTrade", _
-                Err.Description
-End Sub
-
-Private Sub ITickfileWriter_writeVolume(ByVal timestamp As Date, ByVal size As Long)
-On Error GoTo Err
-writeTickData timestamp, TICK_VOLUME, , size
-Exit Sub
-Err:
-handleFatalError Err.Number, _
-                "TickfileSP" & "." & "TickfileWriter" & "::" & "ITickfileWriter_writeVolume", _
+                "TickfileSP" & "." & "TickfileWriter" & "::" & "ITickfileWriter_WriteTick", _
                 Err.Description
 End Sub
 
 '================================================================================
 ' Properties
 '================================================================================
-
-Friend Property Let commonServiceConsumer(ByVal RHS As TradeBuildSP.ICommonServiceConsumer)
-Set mCommonServiceConsumer = RHS
-End Property
-
-Friend Property Let path(ByVal value As String)
-If value = "" Then Exit Property
-mPath = value
-If Right$(mPath, 1) <> "\" Then mPath = mPath & "\"
-End Property
-
-Friend Property Let tickerid(ByVal value As Long)
-mTickerID = value
-End Property
-
-Friend Property Get TickfileFormat() As TickfileFormats
-TickfileFormat = mTickfileFormat
-End Property
-
-Friend Property Let TickfileFormat(ByVal value As TickfileFormats)
-mTickfileFormat = value
-End Property
-
-Friend Property Let TickfileOutputServiceConsumer(ByVal RHS As ITickfileOutputServiceConsumer)
-Set mServiceConsumer = RHS
-End Property
-
-Friend Property Let TickfileServiceProvider( _
-                ByVal value As TickfileServiceProvider)
-Set mTickfileServiceProvider = value
-End Property
-
-Friend Property Get TickFileVersion() As TickFileVersions
-TickFileVersion = mTickFileVersion
-End Property
-
-Friend Property Let TickFileVersion(ByVal value As TickFileVersions)
-mTickFileVersion = value
-End Property
 
 '================================================================================
 ' Methods
@@ -279,9 +180,38 @@ Friend Sub finish()
 If Not mTsOut Is Nothing Then
     mTsOut.Close
     Set mTsOut = Nothing
-    logMessage "Closed tickfile: " & mBytesWritten & "bytes written"
+    logMessage mServiceProviderName & " (" & mContract.specifier.localSymbol & ")" & vbCrLf & _
+                "    Closed tickfile: " & mBytesWritten & "bytes written"
 End If
 Set mServiceConsumer = Nothing
+End Sub
+
+Friend Sub initialise( _
+                ByVal Name As String, _
+                ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
+                ByVal tickfileOutputServiceConsumer As TradeBuildSP.ITickfileOutputServiceConsumer, _
+                ByVal TickfileServiceProvider As TradeBuildSP.ITickfileServiceProvider, _
+                ByVal pContract As Contract, _
+                ByVal format As TickfileFormats, _
+                ByVal version As TickFileVersions, _
+                ByVal path As String)
+
+mServiceProviderName = Name
+Set mCommonServiceConsumer = CommonServiceConsumer
+Set mServiceConsumer = tickfileOutputServiceConsumer
+Set mTickfileServiceProvider = TickfileServiceProvider
+                
+Set mContract = pContract
+
+mTickfileFormat = format
+mTickFileVersion = version
+
+If path <> "" Then
+    mPath = path
+    If Right$(mPath, 1) <> "\" Then mPath = mPath & "\"
+End If
+
+DeferAction Me
 End Sub
 
 '================================================================================
@@ -383,6 +313,8 @@ Private Sub handleFatalError( _
                 ByVal Number As Long, _
                 ByVal Source As String, _
                 ByVal Description As String)
+gLogger.Log LogLevelSevere, Source & ": error (" & Number & "): " & Description
+
 mCommonServiceConsumer.FatalServiceProviderError Number, _
                             Source, _
                             Description, _
@@ -406,7 +338,7 @@ Private Sub writeTickData( _
                         ByVal tickType As String, _
                         Optional ByVal price As Double = -1#, _
                         Optional ByVal size As Long = -1&)
-Dim crescendoTickType As TickTypes
+Dim crescendoTickType As FileTickTypes
 Static priceFormatString As String
 
 
@@ -430,19 +362,19 @@ Case TickfileFormats.TickfileCrescendo
     If mTsOut Is Nothing Then createCrescendoTickfile timestamp
     Select Case tickType
     Case TICK_BID
-        crescendoTickType = TickTypes.Bid
+        crescendoTickType = FileTickTypes.Bid
     Case TICK_ASK
-        crescendoTickType = TickTypes.Ask
+        crescendoTickType = FileTickTypes.Ask
     Case TICK_TRADE
-        crescendoTickType = TickTypes.Last
+        crescendoTickType = FileTickTypes.Last
     Case TICK_HIGH
-        crescendoTickType = TickTypes.High
+        crescendoTickType = FileTickTypes.High
     Case TICK_LOW
-        crescendoTickType = TickTypes.Low
+        crescendoTickType = FileTickTypes.Low
     Case TICK_CLOSE
-        crescendoTickType = TickTypes.PrevClose
+        crescendoTickType = FileTickTypes.PrevClose
     Case TICK_VOLUME
-        crescendoTickType = TickTypes.Volume
+        crescendoTickType = FileTickTypes.Volume
     End Select
     writeTickfileLine CDbl(timestamp) & "," & _
                 FormatDateTime(timestamp, vbGeneralDate) & "," & _

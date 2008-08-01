@@ -53,7 +53,7 @@ Private Const NUM_RECORD_TABLE_ENTRIES As Long = 16
 Private Type RecordTableEntry
     processed As Boolean
     timestamp As Date
-    tickType As TickTypes
+    tickType As FileTickTypes
     tickPrice As Double
     TickSize As Long
     MDposition As Long
@@ -153,6 +153,8 @@ End Property
 
 Private Sub ITickfileReader_FireNextTick()
 Dim percentComplete As Single
+Dim pendingTick As GenericTick
+
 On Error GoTo Err
 If mRecordsRead = 0 Then
 ElseIf mRecordsRead Mod mReplayProgressEventFrequency = 0 Then
@@ -164,8 +166,10 @@ ElseIf mRecordsRead Mod mReplayProgressEventFrequency = 0 Then
 End If
 If mPendingImpliedVolumeTick Then
     mPendingImpliedVolumeTick = False
-    mDataConsumer.Volume mCurrentTimestamp, _
-                        mVolume
+    pendingTick.tickType = TickTypeVolume
+    pendingTick.timestamp = mCurrentTimestamp
+    pendingTick.size = mVolume
+    mDataConsumer.tick pendingTick
 Else
     Do While ReadNextTickRecord
         If processTickData Then Exit Do
@@ -234,7 +238,7 @@ End Property
 ' Properties
 '================================================================================
 
-Friend Property Let commonServiceConsumer(ByVal RHS As TradeBuildSP.ICommonServiceConsumer)
+Friend Property Let CommonServiceConsumer(ByVal RHS As TradeBuildSP.ICommonServiceConsumer)
 Set mCommonServiceConsumer = RHS
 End Property
 
@@ -405,7 +409,7 @@ Case TickFileVersions.CrescendoV2
                                     , _
                                     dataFields(TickfileHeaderFieldsV2.expiry))
     
-    FirstTickFileTime = CDate(dataFields(TickfileHeaderFieldsV2.StartTime))
+    FirstTickFileTime = CDate(dataFields(TickfileHeaderFieldsV2.startTime))
     
 '    mServiceConsumer.Notifyevent StandardSPEventCodes.TFNoContractDetails, _
 '                        "Tickfile contains no contract details: " & filename
@@ -422,7 +426,7 @@ Case TickFileVersions.TradeBuildV3, _
                                     , _
                                     dataFields(TickfileHeaderFieldsV3.expiry))
     
-    FirstTickFileTime = CDate(dataFields(TickfileHeaderFieldsV3.StartTime))
+    FirstTickFileTime = CDate(dataFields(TickfileHeaderFieldsV3.startTime))
     
     ' read the serialised contract details
     inRec = ts.ReadLine
@@ -466,6 +470,8 @@ Private Sub handleFatalError( _
                 ByVal Number As Long, _
                 ByVal Source As String, _
                 ByVal Description As String)
+gLogger.Log LogLevelSevere, Source & ": error (" & Number & "): " & Description
+
 mCommonServiceConsumer.FatalServiceProviderError Number, _
                                 Source, _
                                 Description, _
@@ -486,7 +492,7 @@ With mRecordTable(index)
     .TickSize = 0
     .tickPrice = 0#
     .TickSize = 0
-    .tickType = TickTypes.Unknown
+    .tickType = FileTickTypes.Unknown
     .timestamp = 0
 End With
 End Sub
@@ -519,13 +525,13 @@ If Not (mTickFileVersion = TickFileVersions.CrescendoV1 Or _
     mTickFileVersion = TickFileVersions.CrescendoV2) Then Exit Function
 
 If mRecordTable(recordIndex).tickType <> _
-                    TickTypes.Last Then Exit Function
+                    FileTickTypes.Last Then Exit Function
                     
 lookAheadRecord = recordIndex
 
 If lookAhead(lookAheadRecord) Then
     Select Case mRecordTable(lookAheadRecord).tickType
-    Case TickTypes.AskSize
+    Case FileTickTypes.AskSize
         If mRecordTable(recordIndex).tickPrice = prevTrade And _
             mRecordTable(recordIndex).TickSize = prevTradeSize _
         Then
@@ -536,7 +542,7 @@ If lookAhead(lookAheadRecord) Then
                 isImpliedTrade = True
             End If
         End If
-    Case TickTypes.bidSize
+    Case FileTickTypes.bidSize
         If mRecordTable(recordIndex).tickPrice = prevTrade And _
             mRecordTable(recordIndex).TickSize = prevTradeSize _
         Then
@@ -583,14 +589,12 @@ Dim lookAheadRecord As Long
 If Not (mTickFileVersion = TickFileVersions.CrescendoV1 Or _
     mTickFileVersion = TickFileVersions.CrescendoV2) Then Exit Function
 If mRecordTable(mCurrentRecordTableEntry).tickType <> _
-                    TickTypes.Ask Then Exit Function
+                    FileTickTypes.Ask Then Exit Function
 
 lookAheadRecord = -1
 
 Do While lookAhead(lookAheadRecord)
-    If mRecordTable(lookAheadRecord).tickType = _
-        TickTypes.AskSize _
-    Then
+    If mRecordTable(lookAheadRecord).tickType = FileTickTypes.AskSize Then
         If mRecordTable(lookAheadRecord).timestamp - mRecordTable(mCurrentRecordTableEntry).timestamp < 1.01 / 86400# _
         Then
             lookForAskSize = True
@@ -607,14 +611,12 @@ Dim lookAheadRecord As Long
 If Not (mTickFileVersion = TickFileVersions.CrescendoV1 Or _
     mTickFileVersion = TickFileVersions.CrescendoV2) Then Exit Function
 If mRecordTable(mCurrentRecordTableEntry).tickType <> _
-                    TickTypes.Bid Then Exit Function
+                    FileTickTypes.Bid Then Exit Function
 
 lookAheadRecord = -1
 
 Do While lookAhead(lookAheadRecord)
-    If mRecordTable(lookAheadRecord).tickType = _
-        TickTypes.bidSize _
-    Then
+    If mRecordTable(lookAheadRecord).tickType = FileTickTypes.bidSize Then
         If mRecordTable(lookAheadRecord).timestamp - mRecordTable(mCurrentRecordTableEntry).timestamp < 1.01 / 86400# _
         Then
             lookForBidSize = True
@@ -631,7 +633,7 @@ Dim lookAheadRecord As Long
 If Not (mTickFileVersion = TickFileVersions.CrescendoV1 Or _
     mTickFileVersion = TickFileVersions.CrescendoV2) Then Exit Sub
 If mRecordTable(mCurrentRecordTableEntry).tickType <> _
-                    TickTypes.Last Then Exit Sub
+                    FileTickTypes.Last Then Exit Sub
                     
 If mRecordTable(mCurrentRecordTableEntry).tickPrice = mPrevLast Then
     ' these duplicates only occur when the trade price has changed
@@ -643,13 +645,13 @@ lookAheadRecord = -1
 Do While lookAhead(lookAheadRecord)
         
     If mRecordTable(lookAheadRecord).tickType = _
-        TickTypes.Volume _
+        FileTickTypes.Volume _
     Then
         Exit Sub
     End If
     
     If mRecordTable(lookAheadRecord).tickType = _
-        TickTypes.Last _
+        FileTickTypes.Last _
     Then
         If mRecordTable(lookAheadRecord).tickPrice = _
             mRecordTable(mCurrentRecordTableEntry).tickPrice And _
@@ -671,14 +673,14 @@ Dim lookAheadAnotherRecord As Long
 If Not (mTickFileVersion = TickFileVersions.CrescendoV1 Or _
     mTickFileVersion = TickFileVersions.CrescendoV2) Then Exit Sub
 If mRecordTable(mCurrentRecordTableEntry).tickType <> _
-                    TickTypes.Last Then Exit Sub
+                    FileTickTypes.Last Then Exit Sub
                     
 lookAheadRecord = -1
 
 Do While lookAhead(lookAheadRecord)
 
     Select Case mRecordTable(lookAheadRecord).tickType
-    Case TickTypes.Last
+    Case FileTickTypes.Last
     
         If isImpliedTrade(lookAheadRecord, _
                         mRecordTable(mCurrentRecordTableEntry).tickPrice, _
@@ -694,13 +696,13 @@ Do While lookAhead(lookAheadRecord)
         Then
             lookAheadAnotherRecord = lookAheadRecord
             Do While lookAhead(lookAheadAnotherRecord)
-                If mRecordTable(lookAheadAnotherRecord).tickType <> TickTypes.High And _
-                    mRecordTable(lookAheadAnotherRecord).tickType <> TickTypes.Low And _
-                    mRecordTable(lookAheadAnotherRecord).tickType <> TickTypes.Volume _
+                If mRecordTable(lookAheadAnotherRecord).tickType <> FileTickTypes.High And _
+                    mRecordTable(lookAheadAnotherRecord).tickType <> FileTickTypes.Low And _
+                    mRecordTable(lookAheadAnotherRecord).tickType <> FileTickTypes.Volume _
                 Then
                     Exit Do
                 End If
-                If mRecordTable(lookAheadAnotherRecord).tickType = TickTypes.Volume And _
+                If mRecordTable(lookAheadAnotherRecord).tickType = FileTickTypes.Volume And _
                     mVolume + mRecordTable(lookAheadRecord).TickSize = mRecordTable(lookAheadAnotherRecord).TickSize _
                 Then
                     mRecordTable(mCurrentRecordTableEntry).TickSize = _
@@ -715,7 +717,7 @@ Do While lookAhead(lookAheadRecord)
             mRecordTable(lookAheadRecord).processed = True
         End If
         Exit Sub
-    Case TickTypes.LastSizeCorrection
+    Case FileTickTypes.LastSizeCorrection
         mRecordTable(mCurrentRecordTableEntry).TickSize = _
             mRecordTable(mCurrentRecordTableEntry).TickSize + _
             mRecordTable(lookAheadRecord).TickSize
@@ -728,59 +730,65 @@ Loop
 End Sub
 
 Private Function processTickData() As Boolean
+Dim tick As GenericTick
 
 With mRecordTable(mCurrentRecordTableEntry)
     mCurrentTimestamp = .timestamp
+    tick.marketmaker = .MDMarketMaker
+    tick.operation = .MDOperation
+    tick.position = .MDposition
+    tick.price = .tickPrice
+    tick.side = .MDSide
+    tick.size = .TickSize
+    tick.timestamp = .timestamp
     Select Case .tickType
-    Case TickTypes.Bid
+    Case FileTickTypes.Bid
+        tick.tickType = TickTypeBid
+        If tick.price = 0 Then tick.price = mPrevBid
         If .TickSize = 0 Then
             If Not lookForBidSize Then
-                mDataConsumer.Bid .timestamp, _
-                                .tickPrice, _
-                                mPrevBidSize
+                tick.size = mPrevBidSize
+                mDataConsumer.tick tick
                 processTickData = True
             End If
         Else
-            mDataConsumer.Bid .timestamp, _
-                            .tickPrice, _
-                            .TickSize
+            mDataConsumer.tick tick
             mPrevBidSize = .TickSize
             processTickData = True
         End If
-        mPrevBid = .tickPrice
-    Case TickTypes.bidSize
+        mPrevBid = tick.price
+    Case FileTickTypes.bidSize
+        tick.tickType = TickTypeBid
         If mPrevBid <> 0 Then
-            mDataConsumer.Bid .timestamp, _
-                            mPrevBid, _
-                            .TickSize
+            tick.price = mPrevBid
+            mDataConsumer.tick tick
             mPrevBidSize = .TickSize
             processTickData = True
         End If
-    Case TickTypes.Ask
+    Case FileTickTypes.Ask
+        tick.tickType = TickTypeAsk
+        If tick.price = 0 Then tick.price = mPrevAsk
         If .TickSize = 0 Then
             If Not lookForAskSize Then
-                mDataConsumer.Ask .timestamp, _
-                                .tickPrice, _
-                                mPrevAskSize
+                tick.size = mPrevAskSize
+                mDataConsumer.tick tick
                 processTickData = True
             End If
         Else
-            mDataConsumer.Ask .timestamp, _
-                            .tickPrice, _
-                            .TickSize
+            mDataConsumer.tick tick
             mPrevAskSize = .TickSize
             processTickData = True
         End If
         mPrevAsk = .tickPrice
-    Case TickTypes.AskSize
-            If mPrevAsk <> 0 Then
-            mDataConsumer.Ask .timestamp, _
-                            mPrevAsk, _
-                            .TickSize
+    Case FileTickTypes.AskSize
+        tick.tickType = TickTypeAsk
+        If mPrevAsk <> 0 Then
+            tick.price = mPrevAsk
+            mDataConsumer.tick tick
             mPrevAskSize = .TickSize
             processTickData = True
         End If
-    Case TickTypes.Last
+    Case FileTickTypes.Last
         If isImpliedTrade(mCurrentRecordTableEntry, _
                             mPrevLast, _
                             mPrevLastSize, _
@@ -792,61 +800,52 @@ With mRecordTable(mCurrentRecordTableEntry)
             ' ignore implied trades
         ElseIf .TickSize <> 0 Then
             processLastSizeCorrection
-            mDataConsumer.Trade .timestamp, _
-                                .tickPrice, _
-                                .TickSize
+            tick.tickType = TickTypeTrade
+            tick.size = .TickSize
+            If tick.price = 0 Then tick.price = mPrevLast
+            mDataConsumer.tick tick
             processDuplicateLast
-            mPrevLast = .tickPrice
+            mPrevLast = tick.price
             mPrevLastSize = .TickSize
             mBidAtLastTrade = mPrevBid
             mAskAtLastTrade = mPrevAsk
             processVolume
             processTickData = True
         End If
-    Case TickTypes.lastSize
-    Case TickTypes.High
-        mDataConsumer.High .timestamp, _
-                            .tickPrice
+    Case FileTickTypes.lastSize
+    Case FileTickTypes.High
+        tick.tickType = TickTypeHighPrice
+        mDataConsumer.tick tick
         processTickData = True
-    Case TickTypes.Low
-        mDataConsumer.Low .timestamp, _
-                            .tickPrice
+    Case FileTickTypes.Low
+        tick.tickType = TickTypeLowPrice
+        mDataConsumer.tick tick
         processTickData = True
-    Case TickTypes.PrevClose
-        mDataConsumer.PreviousClose .timestamp, _
-                                    .tickPrice
+    Case FileTickTypes.SessionOpen
+        tick.tickType = TickTypeOpenPrice
+        mDataConsumer.tick tick
         processTickData = True
-    Case TickTypes.Volume
-        mDataConsumer.Volume .timestamp, _
-                            .TickSize
+    Case FileTickTypes.PrevClose
+        tick.tickType = TickTypeClosePrice
+        mDataConsumer.tick tick
+        processTickData = True
+    Case FileTickTypes.Volume
+        tick.tickType = TickTypeVolume
+        mDataConsumer.tick tick
         mVolume = .TickSize
         processTickData = True
-    Case TickTypes.LastSizeCorrection
-    Case TickTypes.marketDepth
-        If .MDMarketMaker = "" Then
-            mDataConsumer.UpdateMktDepth .timestamp, _
-                                        .MDposition, _
-                                        .MDOperation, _
-                                        .MDSide, _
-                                        .tickPrice, _
-                                        .TickSize
-            processTickData = True
-        Else
-            mDataConsumer.UpdateMktDepthL2 .timestamp, _
-                                        .MDposition, _
-                                        .MDMarketMaker, _
-                                        .MDOperation, _
-                                        .MDSide, _
-                                        .tickPrice, _
-                                        .TickSize
-            processTickData = True
-        End If
-    Case TickTypes.MarketDepthReset
-        mDataConsumer.ResetMarketDepth .timestamp, False
+    Case FileTickTypes.LastSizeCorrection
+    Case FileTickTypes.marketDepth
+        tick.tickType = TickTypeMarketDepth
+        mDataConsumer.tick tick
         processTickData = True
-    Case TickTypes.OpenInterest
-        mDataConsumer.OpenInterest .timestamp, _
-                            .TickSize
+    Case FileTickTypes.MarketDepthReset
+        tick.tickType = TickTypeMarketDepthReset
+        mDataConsumer.tick tick
+        processTickData = True
+    Case FileTickTypes.OpenInterest
+        tick.tickType = TickTypeOpenInterest
+        mDataConsumer.tick tick
         processTickData = True
     End Select
     .processed = True
@@ -866,7 +865,7 @@ Private Sub processVolume()
 Dim lookAheadRecord As Long
 
 If mRecordTable(mCurrentRecordTableEntry).tickType <> _
-                    TickTypes.Last Then Exit Sub
+                    FileTickTypes.Last Then Exit Sub
                     
 mVolume = mVolume + mRecordTable(mCurrentRecordTableEntry).TickSize
 
@@ -875,12 +874,12 @@ lookAheadRecord = -1
 Do While lookAhead(lookAheadRecord)
         
     If mRecordTable(lookAheadRecord).tickType = _
-        TickTypes.Volume _
+        FileTickTypes.Volume _
     Then
         Exit Sub
     End If
     If mRecordTable(lookAheadRecord).tickType = _
-        TickTypes.Last _
+        FileTickTypes.Last _
     Then
         Exit Do
     End If
@@ -978,9 +977,9 @@ With mRecordTable(index)
         
         Select Case ticktypeStr
         Case TICK_MARKET_DEPTH_RESET
-            .tickType = TickTypes.MarketDepthReset
+            .tickType = FileTickTypes.MarketDepthReset
         Case TICK_MARKET_DEPTH
-            .tickType = TickTypes.marketDepth
+            .tickType = FileTickTypes.marketDepth
             .MDposition = dataFields(TickfileFieldsV3.MDposition)
             .MDMarketMaker = dataFields(TickfileFieldsV3.MDMarketMaker)
             .MDOperation = dataFields(TickfileFieldsV3.MDOperation)
@@ -988,31 +987,31 @@ With mRecordTable(index)
             .tickPrice = dataFields(TickfileFieldsV3.MDPrice)
             .TickSize = dataFields(TickfileFieldsV3.MDSize)
         Case TICK_BID
-            .tickType = TickTypes.Bid
+            .tickType = FileTickTypes.Bid
             .tickPrice = dataFields(TickfileFieldsV3.tickPrice)
             .TickSize = dataFields(TickfileFieldsV3.TickSize)
         Case TICK_ASK
-            .tickType = TickTypes.Ask
+            .tickType = FileTickTypes.Ask
             .tickPrice = dataFields(TickfileFieldsV3.tickPrice)
             .TickSize = dataFields(TickfileFieldsV3.TickSize)
         Case TICK_TRADE
-            .tickType = TickTypes.Last
+            .tickType = FileTickTypes.Last
             .tickPrice = dataFields(TickfileFieldsV3.tickPrice)
             .TickSize = dataFields(TickfileFieldsV3.TickSize)
         Case TICK_HIGH
-            .tickType = TickTypes.High
+            .tickType = FileTickTypes.High
             .tickPrice = dataFields(TickfileFieldsV3.tickPrice)
         Case TICK_LOW
-            .tickType = TickTypes.Low
+            .tickType = FileTickTypes.Low
             .tickPrice = dataFields(TickfileFieldsV3.tickPrice)
         Case TICK_CLOSE
-            .tickType = TickTypes.PrevClose
+            .tickType = FileTickTypes.PrevClose
             .tickPrice = dataFields(TickfileFieldsV3.tickPrice)
         Case TICK_VOLUME
-            .tickType = TickTypes.Volume
+            .tickType = FileTickTypes.Volume
             .TickSize = dataFields(TickfileFieldsV3.Volume)
         Case TICK_OPEN_INTEREST
-            .tickType = TickTypes.OpenInterest
+            .tickType = FileTickTypes.OpenInterest
             .TickSize = dataFields(TickfileFieldsV3.OpenInterest)
         End Select
     Case TickFileVersions.CrescendoV2
@@ -1021,34 +1020,34 @@ With mRecordTable(index)
         .tickType = dataFields(TickfileFieldsV2.tickType)
         
         Select Case .tickType
-        Case TickTypes.Bid
+        Case FileTickTypes.Bid
             .tickPrice = dataFields(TickfileFieldsV2.tickPrice)
             If dataFields(TickfileFieldsV2.TickSize) <> &H7FFFFFFF Then
                 .TickSize = dataFields(TickfileFieldsV2.TickSize)
             End If
-        Case TickTypes.bidSize
+        Case FileTickTypes.bidSize
             .TickSize = dataFields(TickfileFieldsV2.TickSize)
-        Case TickTypes.Ask
+        Case FileTickTypes.Ask
             .tickPrice = dataFields(TickfileFieldsV2.tickPrice)
             If dataFields(TickfileFieldsV2.TickSize) <> &H7FFFFFFF Then
                 .TickSize = dataFields(TickfileFieldsV2.TickSize)
             End If
-        Case TickTypes.AskSize
+        Case FileTickTypes.AskSize
             .TickSize = dataFields(TickfileFieldsV2.TickSize)
-        Case TickTypes.Last
+        Case FileTickTypes.Last
             .tickPrice = dataFields(TickfileFieldsV2.tickPrice)
             .TickSize = dataFields(TickfileFieldsV2.TickSize)
-        Case TickTypes.lastSize
+        Case FileTickTypes.lastSize
             ' shouldn't ever get this
-        Case TickTypes.High
+        Case FileTickTypes.High
             .tickPrice = dataFields(TickfileFieldsV2.tickPrice)
-        Case TickTypes.Low
+        Case FileTickTypes.Low
             .tickPrice = dataFields(TickfileFieldsV2.tickPrice)
-        Case TickTypes.PrevClose
+        Case FileTickTypes.PrevClose
             .tickPrice = dataFields(TickfileFieldsV2.tickPrice)
-        Case TickTypes.Volume
+        Case FileTickTypes.Volume
             .TickSize = dataFields(TickfileFieldsV2.TickSize)
-        Case TickTypes.LastSizeCorrection
+        Case FileTickTypes.LastSizeCorrection
             .TickSize = dataFields(TickfileFieldsV2.TickSize)
         End Select
     Case TickFileVersions.CrescendoV1
@@ -1057,28 +1056,28 @@ With mRecordTable(index)
         .tickType = dataFields(TickfileFieldsV1.tickType)
         
         Select Case .tickType
-        Case TickTypes.Bid
+        Case FileTickTypes.Bid
             .tickPrice = dataFields(TickfileFieldsV1.tickPrice)
-        Case TickTypes.bidSize
+        Case FileTickTypes.bidSize
             .TickSize = dataFields(TickfileFieldsV1.TickSize)
-        Case TickTypes.Ask
+        Case FileTickTypes.Ask
             .tickPrice = dataFields(TickfileFieldsV1.tickPrice)
-        Case TickTypes.AskSize
+        Case FileTickTypes.AskSize
             .TickSize = dataFields(TickfileFieldsV1.TickSize)
-        Case TickTypes.Last
+        Case FileTickTypes.Last
             .tickPrice = dataFields(TickfileFieldsV1.tickPrice)
             .TickSize = dataFields(TickfileFieldsV1.TickSize)
-        Case TickTypes.lastSize
+        Case FileTickTypes.lastSize
             ' shouldn't ever get this
-        Case TickTypes.High
+        Case FileTickTypes.High
             .tickPrice = dataFields(TickfileFieldsV1.tickPrice)
-        Case TickTypes.Low
+        Case FileTickTypes.Low
             .tickPrice = dataFields(TickfileFieldsV1.tickPrice)
-        Case TickTypes.PrevClose
+        Case FileTickTypes.PrevClose
             .tickPrice = dataFields(TickfileFieldsV1.tickPrice)
-        Case TickTypes.Volume
+        Case FileTickTypes.Volume
             .TickSize = dataFields(TickfileFieldsV1.TickSize)
-        Case TickTypes.LastSizeCorrection
+        Case FileTickTypes.LastSizeCorrection
             .TickSize = dataFields(TickfileFieldsV1.TickSize)
         End Select
     Case TickFileVersions.ESignal
@@ -1093,7 +1092,7 @@ With mRecordTable(index)
         ticktypeStr = dataFields(ESignalTickFileFields.tickType)
         Select Case ticktypeStr
         Case ESIGNAL_TICK_TRADE
-            .tickType = TickTypes.Last
+            .tickType = FileTickTypes.Last
             .tickPrice = dataFields(ESignalTickFileFields.lastPrice)
             .TickSize = dataFields(ESignalTickFileFields.lastSize)
         Case ESIGNAL_TICK_QUOTE
@@ -1106,7 +1105,7 @@ With mRecordTable(index)
             If dataFields(ESignalTickFileFields.bidPrice) <> esPrevBid Or _
                     dataFields(ESignalTickFileFields.bidSize) <> esPrevBidSize _
             Then
-                .tickType = TickTypes.Bid
+                .tickType = FileTickTypes.Bid
                 .tickPrice = dataFields(ESignalTickFileFields.bidPrice)
                 .TickSize = dataFields(ESignalTickFileFields.bidSize)
                 If dataFields(ESignalTickFileFields.AskPrice) <> esPrevAsk Or _
@@ -1117,7 +1116,7 @@ With mRecordTable(index)
                     mNextFreeRecordTableEntry = (mNextFreeRecordTableEntry + 1) Mod NUM_RECORD_TABLE_ENTRIES
                     With mRecordTable(anotherRecord)
                         .timestamp = mRecordTable(index).timestamp
-                        .tickType = TickTypes.Ask
+                        .tickType = FileTickTypes.Ask
                         .tickPrice = dataFields(ESignalTickFileFields.AskPrice)
                         .TickSize = dataFields(ESignalTickFileFields.AskSize)
                     End With
@@ -1126,7 +1125,7 @@ With mRecordTable(index)
                 If dataFields(ESignalTickFileFields.AskPrice) <> esPrevAsk Or _
                         dataFields(ESignalTickFileFields.AskSize) <> esPrevAskSize _
                 Then
-                    .tickType = TickTypes.Ask
+                    .tickType = FileTickTypes.Ask
                     .tickPrice = dataFields(ESignalTickFileFields.AskPrice)
                     .TickSize = dataFields(ESignalTickFileFields.AskSize)
                 End If

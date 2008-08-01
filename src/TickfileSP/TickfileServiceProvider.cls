@@ -105,12 +105,12 @@ ICommonServiceProvider_Details = details
 End Property
 
 Private Sub ICommonServiceProvider_Link( _
-                            ByVal commonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
+                            ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
                             ByVal handle As Long, _
                             ByVal params As Parameters)
 Dim param As Parameter
 
-Set mCommonServiceConsumer = commonServiceConsumer
+Set mCommonServiceConsumer = CommonServiceConsumer
 mHandle = handle
 mCommonServiceConsumer.RegisterServiceProvider mHandle, _
                             ServiceProviderTypes.Tickfile
@@ -172,7 +172,7 @@ mNextReaderID = mNextReaderID + 1
 Set reader = New TickfileReader
 Set ITickfileServiceProvider_CreateTickfileReader = reader
 reader.TickfileServiceProvider = Me
-reader.commonServiceConsumer = mCommonServiceConsumer
+reader.CommonServiceConsumer = mCommonServiceConsumer
 reader.TickfileInputServiceConsumer = serviceConsumer
 reader.StreamingDataConsumer = dataConsumer
 mTickfileDataReaders.Add reader
@@ -185,6 +185,7 @@ End Function
 
 Private Function ITickfileServiceProvider_CreateTickfileWriter( _
                             ByVal serviceConsumer As TradeBuildSP.ITickfileOutputServiceConsumer, _
+                            ByVal pContract As Contract, _
                             Optional ByVal FormatIdentifier As String = "", _
                             Optional ByVal location As String = "") As TradeBuildSP.ITickfileWriter
 Dim formatId As TickfileFormats
@@ -201,16 +202,14 @@ End If
 
 Set writer = New TickfileWriter
 Set ITickfileServiceProvider_CreateTickfileWriter = writer
-writer.TickfileServiceProvider = Me
-writer.TickfileFormat = formatId
-writer.TickFileVersion = formatVersion
-If location = "" Then
-    If mTickfilePath <> "" Then writer.path = mTickfilePath
-Else
-    writer.path = location
-End If
-writer.commonServiceConsumer = mCommonServiceConsumer
-writer.TickfileOutputServiceConsumer = serviceConsumer
+writer.initialise mName & " (writer)", _
+                    mCommonServiceConsumer, _
+                    serviceConsumer, _
+                    Me, _
+                    pContract, _
+                    formatId, _
+                    formatVersion, _
+                    IIf(location <> "", location, mTickfilePath)
 mTickfileDataWriters.Add writer
 Exit Function
 Err:
@@ -342,6 +341,8 @@ Private Sub handleFatalError( _
                 ByVal Number As Long, _
                 ByVal Source As String, _
                 ByVal Description As String)
+gLogger.Log LogLevelSevere, Source & ": error (" & Number & "): " & Description
+
 mCommonServiceConsumer.FatalServiceProviderError Number, Source, Description, mHandle
 
 finishReaders

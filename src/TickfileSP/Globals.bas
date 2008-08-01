@@ -23,6 +23,7 @@ Public Const TICK_HIGH As String = "H"
 Public Const TICK_LOW As String = "L"
 Public Const TICK_CLOSE As String = "C"
 Public Const TICK_VOLUME As String = "V"
+Public Const TICK_OPEN As String = "O"
 Public Const TICK_OPEN_INTEREST As String = "I"
 Public Const TICK_MARKET_DEPTH As String = "D"
 Public Const TICK_MARKET_DEPTH_RESET As String = "R"
@@ -96,7 +97,7 @@ Public Enum TickfileHeaderFieldsV2
     exchange
     symbol
     expiry
-    StartTime
+    startTime
 End Enum
 
 Public Enum TickfileHeaderFieldsV3
@@ -105,7 +106,7 @@ Public Enum TickfileHeaderFieldsV3
     exchange
     symbol
     expiry
-    StartTime
+    startTime
 End Enum
 
 Public Enum TickFileVersions
@@ -119,7 +120,7 @@ Public Enum TickFileVersions
     DefaultVersion = TradeBuildV5
 End Enum
 
-Public Enum TickTypes
+Public Enum FileTickTypes
     Bid = 1
     bidSize
     Ask
@@ -134,6 +135,7 @@ Public Enum TickTypes
     marketDepth
     MarketDepthReset
     OpenInterest
+    SessionOpen
     Unknown = -1
 End Enum
 

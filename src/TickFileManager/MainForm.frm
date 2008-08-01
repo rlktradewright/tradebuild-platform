@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#75.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#88.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form MainForm 
    Caption         =   "TradeBuild Tickfile Manager Version 2.6"
    ClientHeight    =   7875
@@ -49,34 +49,26 @@ Begin VB.Form MainForm
       TabCaption(1)   =   "Tickfile selection"
       TabPicture(1)   =   "MainForm.frx":001C
       Tab(1).ControlEnabled=   0   'False
-      Tab(1).Control(0)=   "ReplayProgressLabel"
-      Tab(1).Control(0).Enabled=   0   'False
-      Tab(1).Control(1)=   "ReplayContractLabel"
-      Tab(1).Control(1).Enabled=   0   'False
-      Tab(1).Control(2)=   "ReplayProgressBar"
-      Tab(1).Control(2).Enabled=   0   'False
-      Tab(1).Control(3)=   "ConvertButton"
+      Tab(1).Control(0)=   "Frame4"
+      Tab(1).Control(1)=   "SelectTickfilesButton"
+      Tab(1).Control(2)=   "ClearTickfileListButton"
+      Tab(1).Control(3)=   "TickfileList"
       Tab(1).Control(3).Enabled=   0   'False
       Tab(1).Control(4)=   "StopButton"
-      Tab(1).Control(4).Enabled=   0   'False
-      Tab(1).Control(5)=   "TickfileList"
-      Tab(1).Control(5).Enabled=   0   'False
-      Tab(1).Control(6)=   "ClearTickfileListButton"
-      Tab(1).Control(6).Enabled=   0   'False
-      Tab(1).Control(7)=   "SelectTickfilesButton"
-      Tab(1).Control(7).Enabled=   0   'False
-      Tab(1).Control(8)=   "Frame4"
-      Tab(1).Control(8).Enabled=   0   'False
+      Tab(1).Control(5)=   "ConvertButton"
+      Tab(1).Control(6)=   "ReplayProgressBar"
+      Tab(1).Control(7)=   "ReplayContractLabel"
+      Tab(1).Control(8)=   "ReplayProgressLabel"
       Tab(1).ControlCount=   9
       TabCaption(2)   =   "Contract details"
       TabPicture(2)   =   "MainForm.frx":0038
       Tab(2).ControlEnabled=   0   'False
-      Tab(2).Control(0)=   "Label11"
-      Tab(2).Control(1)=   "ContractDetailsText"
-      Tab(2).Control(1).Enabled=   0   'False
+      Tab(2).Control(0)=   "ContractSpecBuilder1"
+      Tab(2).Control(1)=   "Frame2"
       Tab(2).Control(2)=   "GetContractButton"
-      Tab(2).Control(3)=   "Frame2"
-      Tab(2).Control(4)=   "ContractSpecBuilder1"
+      Tab(2).Control(3)=   "ContractDetailsText"
+      Tab(2).Control(3).Enabled=   0   'False
+      Tab(2).Control(4)=   "Label11"
       Tab(2).ControlCount=   5
       Begin TradeBuildUI26.ContractSpecBuilder ContractSpecBuilder1 
          Height          =   2895
@@ -111,6 +103,14 @@ Begin VB.Form MainForm
             TabIndex        =   81
             Top             =   240
             Width           =   3255
+            Begin VB.CheckBox AsyncWritesCheck 
+               Caption         =   "Use asynchronous writes"
+               Height          =   195
+               Left            =   360
+               TabIndex        =   97
+               Top             =   4680
+               Width           =   2655
+            End
             Begin VB.TextBox ContractPasswordText 
                Enabled         =   0   'False
                Height          =   285
@@ -119,7 +119,7 @@ Begin VB.Form MainForm
                PasswordChar    =   "*"
                TabIndex        =   17
                ToolTipText     =   "Port for connecting to QuoteTracker"
-               Top             =   2280
+               Top             =   2160
                Width           =   1815
             End
             Begin VB.TextBox ContractUsernameText 
@@ -128,7 +128,7 @@ Begin VB.Form MainForm
                Left            =   1200
                TabIndex        =   16
                ToolTipText     =   "Port for connecting to QuoteTracker"
-               Top             =   1920
+               Top             =   1800
                Width           =   1815
             End
             Begin VB.ComboBox ContractDbTypeCombo 
@@ -136,7 +136,7 @@ Begin VB.Form MainForm
                Height          =   315
                Left            =   1200
                TabIndex        =   14
-               Top             =   1200
+               Top             =   1080
                Width           =   1815
             End
             Begin VB.TextBox ContractServerText 
@@ -145,7 +145,7 @@ Begin VB.Form MainForm
                Left            =   1200
                TabIndex        =   13
                ToolTipText     =   "Name or address of computer hosting QuoteTracker"
-               Top             =   840
+               Top             =   720
                Width           =   1815
             End
             Begin VB.TextBox ContractDatabaseText 
@@ -154,7 +154,7 @@ Begin VB.Form MainForm
                Left            =   1200
                TabIndex        =   15
                ToolTipText     =   "Port for connecting to QuoteTracker"
-               Top             =   1560
+               Top             =   1440
                Width           =   1815
             End
             Begin VB.OptionButton FileOutputOption 
@@ -162,16 +162,16 @@ Begin VB.Form MainForm
                Height          =   255
                Left            =   120
                TabIndex        =   12
-               Top             =   120
+               Top             =   0
                Value           =   -1  'True
                Width           =   2295
             End
             Begin VB.OptionButton DatabaseOutputOption 
-               Caption         =   "Output to database"
+               Caption         =   "Output to this database:"
                Height          =   255
                Left            =   120
                TabIndex        =   18
-               Top             =   2760
+               Top             =   2520
                Width           =   2295
             End
             Begin VB.TextBox DatabaseOutText 
@@ -180,7 +180,7 @@ Begin VB.Form MainForm
                Left            =   1200
                TabIndex        =   21
                ToolTipText     =   "Port for connecting to QuoteTracker"
-               Top             =   3840
+               Top             =   3600
                Width           =   1815
             End
             Begin VB.TextBox DbOutServerText 
@@ -189,7 +189,7 @@ Begin VB.Form MainForm
                Left            =   1200
                TabIndex        =   19
                ToolTipText     =   "Name or address of computer hosting QuoteTracker"
-               Top             =   3120
+               Top             =   2880
                Width           =   1815
             End
             Begin VB.ComboBox DbOutTypeCombo 
@@ -197,7 +197,7 @@ Begin VB.Form MainForm
                Height          =   315
                Left            =   1200
                TabIndex        =   20
-               Top             =   3480
+               Top             =   3240
                Width           =   1815
             End
             Begin VB.TextBox UsernameOutText 
@@ -206,7 +206,7 @@ Begin VB.Form MainForm
                Left            =   1200
                TabIndex        =   22
                ToolTipText     =   "Port for connecting to QuoteTracker"
-               Top             =   4200
+               Top             =   3960
                Width           =   1815
             End
             Begin VB.TextBox PasswordOutText 
@@ -217,15 +217,15 @@ Begin VB.Form MainForm
                PasswordChar    =   "*"
                TabIndex        =   23
                ToolTipText     =   "Port for connecting to QuoteTracker"
-               Top             =   4560
+               Top             =   4320
                Width           =   1815
             End
             Begin VB.Label Label7 
-               Caption         =   "Contract database:"
+               Caption         =   "Contract details from this database:"
                Height          =   255
                Left            =   360
                TabIndex        =   96
-               Top             =   480
+               Top             =   360
                Width           =   2535
             End
             Begin VB.Label Label6 
@@ -233,7 +233,7 @@ Begin VB.Form MainForm
                Height          =   255
                Left            =   360
                TabIndex        =   95
-               Top             =   2280
+               Top             =   2160
                Width           =   975
             End
             Begin VB.Label Label5 
@@ -241,7 +241,7 @@ Begin VB.Form MainForm
                Height          =   255
                Left            =   360
                TabIndex        =   94
-               Top             =   1920
+               Top             =   1800
                Width           =   975
             End
             Begin VB.Label Label4 
@@ -249,7 +249,7 @@ Begin VB.Form MainForm
                Height          =   255
                Left            =   360
                TabIndex        =   93
-               Top             =   1200
+               Top             =   1080
                Width           =   975
             End
             Begin VB.Label Label3 
@@ -257,7 +257,7 @@ Begin VB.Form MainForm
                Height          =   255
                Left            =   360
                TabIndex        =   92
-               Top             =   840
+               Top             =   720
                Width           =   975
             End
             Begin VB.Label Label2 
@@ -265,7 +265,7 @@ Begin VB.Form MainForm
                Height          =   255
                Left            =   360
                TabIndex        =   91
-               Top             =   1560
+               Top             =   1440
                Width           =   975
             End
             Begin VB.Label Label29 
@@ -273,7 +273,7 @@ Begin VB.Form MainForm
                Height          =   255
                Left            =   360
                TabIndex        =   86
-               Top             =   3840
+               Top             =   3600
                Width           =   975
             End
             Begin VB.Label Label28 
@@ -281,7 +281,7 @@ Begin VB.Form MainForm
                Height          =   255
                Left            =   360
                TabIndex        =   85
-               Top             =   3120
+               Top             =   2880
                Width           =   975
             End
             Begin VB.Label Label27 
@@ -289,7 +289,7 @@ Begin VB.Form MainForm
                Height          =   255
                Left            =   360
                TabIndex        =   84
-               Top             =   3480
+               Top             =   3240
                Width           =   975
             End
             Begin VB.Label Label26 
@@ -297,7 +297,7 @@ Begin VB.Form MainForm
                Height          =   255
                Left            =   360
                TabIndex        =   83
-               Top             =   4200
+               Top             =   3960
                Width           =   975
             End
             Begin VB.Label Label25 
@@ -305,7 +305,7 @@ Begin VB.Form MainForm
                Height          =   255
                Left            =   360
                TabIndex        =   82
-               Top             =   4560
+               Top             =   4320
                Width           =   975
             End
          End
@@ -334,7 +334,7 @@ Begin VB.Form MainForm
                PasswordChar    =   "*"
                TabIndex        =   7
                ToolTipText     =   "Port for connecting to QuoteTracker"
-               Top             =   2280
+               Top             =   2160
                Width           =   1815
             End
             Begin VB.TextBox UsernameInText 
@@ -343,7 +343,7 @@ Begin VB.Form MainForm
                Left            =   1200
                TabIndex        =   6
                ToolTipText     =   "Port for connecting to QuoteTracker"
-               Top             =   1920
+               Top             =   1800
                Width           =   1815
             End
             Begin VB.ComboBox DbInTypeCombo 
@@ -351,7 +351,7 @@ Begin VB.Form MainForm
                Height          =   315
                Left            =   1200
                TabIndex        =   4
-               Top             =   1200
+               Top             =   1080
                Width           =   1815
             End
             Begin VB.TextBox DbInServerText 
@@ -360,7 +360,7 @@ Begin VB.Form MainForm
                Left            =   1200
                TabIndex        =   3
                ToolTipText     =   "Name or address of computer hosting QuoteTracker"
-               Top             =   840
+               Top             =   720
                Width           =   1815
             End
             Begin VB.TextBox DatabaseInText 
@@ -369,7 +369,7 @@ Begin VB.Form MainForm
                Left            =   1200
                TabIndex        =   5
                ToolTipText     =   "Port for connecting to QuoteTracker"
-               Top             =   1560
+               Top             =   1440
                Width           =   1815
             End
             Begin VB.TextBox QTServerText 
@@ -378,7 +378,7 @@ Begin VB.Form MainForm
                Left            =   1200
                TabIndex        =   9
                ToolTipText     =   "Name or address of computer hosting QuoteTracker"
-               Top             =   3120
+               Top             =   3000
                Width           =   1815
             End
             Begin VB.TextBox QTPortText 
@@ -387,23 +387,23 @@ Begin VB.Form MainForm
                Left            =   1200
                TabIndex        =   10
                ToolTipText     =   "Port for connecting to QuoteTracker"
-               Top             =   3480
+               Top             =   3360
                Width           =   1815
             End
             Begin VB.OptionButton QtInputOption 
-               Caption         =   "Input from QuoteTracker"
+               Caption         =   "Input from QuoteTracker:"
                Height          =   255
                Left            =   120
                TabIndex        =   8
-               Top             =   2760
+               Top             =   2640
                Width           =   2295
             End
             Begin VB.OptionButton DatabaseInputOption 
-               Caption         =   "Input from database"
+               Caption         =   "Input from this database:"
                Height          =   255
                Left            =   120
                TabIndex        =   2
-               Top             =   480
+               Top             =   360
                Width           =   2295
             End
             Begin VB.OptionButton FileInputOption 
@@ -411,7 +411,7 @@ Begin VB.Form MainForm
                Height          =   255
                Left            =   120
                TabIndex        =   1
-               Top             =   120
+               Top             =   0
                Value           =   -1  'True
                Width           =   2295
             End
@@ -420,7 +420,7 @@ Begin VB.Form MainForm
                Height          =   255
                Left            =   360
                TabIndex        =   80
-               Top             =   2280
+               Top             =   2160
                Width           =   975
             End
             Begin VB.Label Label23 
@@ -428,7 +428,7 @@ Begin VB.Form MainForm
                Height          =   255
                Left            =   360
                TabIndex        =   79
-               Top             =   1920
+               Top             =   1800
                Width           =   975
             End
             Begin VB.Label Label22 
@@ -436,7 +436,7 @@ Begin VB.Form MainForm
                Height          =   255
                Left            =   360
                TabIndex        =   78
-               Top             =   1200
+               Top             =   1080
                Width           =   975
             End
             Begin VB.Label Label19 
@@ -444,7 +444,7 @@ Begin VB.Form MainForm
                Height          =   255
                Left            =   360
                TabIndex        =   77
-               Top             =   840
+               Top             =   720
                Width           =   975
             End
             Begin VB.Label Label13 
@@ -452,7 +452,7 @@ Begin VB.Form MainForm
                Height          =   255
                Left            =   360
                TabIndex        =   76
-               Top             =   1560
+               Top             =   1440
                Width           =   975
             End
             Begin VB.Label Label14 
@@ -460,7 +460,7 @@ Begin VB.Form MainForm
                Height          =   255
                Left            =   360
                TabIndex        =   75
-               Top             =   3120
+               Top             =   3000
                Width           =   975
             End
             Begin VB.Label Label15 
@@ -468,7 +468,7 @@ Begin VB.Form MainForm
                Height          =   255
                Left            =   360
                TabIndex        =   74
-               Top             =   3480
+               Top             =   3360
                Width           =   975
             End
          End
@@ -1048,7 +1048,6 @@ Private mInFormatValue As String
 Private mTickfiles As TickFileSpecifiers
 Private mTickfilesSelected As Boolean
 
-Private mLogger As Logger
 Private mLogFormatter As LogFormatter
 
 
@@ -1061,6 +1060,10 @@ On Error GoTo err
 InitCommonControls
 
 InitialiseTWUtilities
+
+TaskQuantumMillisecs = 200
+TaskConcurrency = 100
+RunTasksAtLowerThreadPriority = False
 
 mMonths(1) = "Jan"
 mMonths(2) = "Feb"
@@ -1085,11 +1088,6 @@ handleFatalError err.Number, _
 End Sub
 
 Private Sub Form_Load()
-
-Set mLogger = GetLogger("")
-mLogger.logLevel = LogLevelNormal
-Set mLogFormatter = CreateBasicLogFormatter(TimestampTimeOnlyISO8601)
-mLogger.addLogListener Me
 
 On Error Resume Next
 Set mTradeBuildAPI = TradeBuildAPI
@@ -1594,7 +1592,13 @@ End Sub
 
 Private Sub mTradeBuildAPI_Notification( _
                 ev As NotificationEvent)
-writeStatusMessage "Notify " & ev.eventCode & ": " & ev.eventMessage
+Dim spe As ServiceProviderError
+If ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
+    Set spe = mTradeBuildAPI.GetServiceProviderError
+    writeStatusMessage "Service provider error in " & spe.serviceProviderName & ": error " & spe.errorCode & ": " & spe.message
+Else
+    writeStatusMessage "Notify " & ev.eventCode & ": " & ev.eventMessage
+End If
 End Sub
 
 '================================================================================
@@ -1777,6 +1781,8 @@ Dim commaPosn As Long
 Dim contractSpec As contractSpecifier
 Dim i As Long
 Dim j As Long
+Dim listener As LogListener
+
 
 Set mArguments = CreateCommandLineParser(Command)
 
@@ -1808,6 +1814,26 @@ If mArguments.Switch("?") Then
     ProcessCommandLineArgs = False
     Exit Function
 End If
+
+If mArguments.Switch("LogLevel") Then DefaultLogLevel = LogLevelFromString(mArguments.SwitchValue("LogLevel"))
+
+Set mLogFormatter = CreateBasicLogFormatter(TimestampTimeOnlyISO8601)
+gLogger.addLogListener Me
+
+Dim logFilename As String
+logFilename = GetSpecialFolderPath(FolderIdLocalAppdata) & _
+                                    "\TradeWright\" & _
+                                    AppName & _
+                                    "\v" & _
+                                    App.Major & "." & App.Minor & _
+                                    "\log.txt"
+Set listener = CreateFileLogListener(logFilename, _
+                                    CreateBasicLogFormatter, _
+                                    True, _
+                                    False)
+' ensure log entries of all infotypes get written to the log file
+GetLogger("").addLogListener listener
+writeStatusMessage "Log file: " & logFilename
 
 If mArguments.Switch("noui") Then
     mNoUI = True
@@ -2029,17 +2055,9 @@ DbInTypeCombo.AddItem DatabaseTypeToString(DbMySQL5)
 DbOutTypeCombo.AddItem DatabaseTypeToString(DbMySQL5)
 ContractDbTypeCombo.AddItem DatabaseTypeToString(DbMySQL5)
 
-DbInTypeCombo.AddItem DatabaseTypeToString(DbSQLServer2000)
-DbOutTypeCombo.AddItem DatabaseTypeToString(DbSQLServer2000)
-ContractDbTypeCombo.AddItem DatabaseTypeToString(DbSQLServer2000)
-
-DbInTypeCombo.AddItem DatabaseTypeToString(DbSQLServer2005)
-DbOutTypeCombo.AddItem DatabaseTypeToString(DbSQLServer2005)
-ContractDbTypeCombo.AddItem DatabaseTypeToString(DbSQLServer2005)
-
-DbInTypeCombo.AddItem DatabaseTypeToString(DbSQLServer7)
-DbOutTypeCombo.AddItem DatabaseTypeToString(DbSQLServer7)
-ContractDbTypeCombo.AddItem DatabaseTypeToString(DbSQLServer7)
+DbInTypeCombo.AddItem DatabaseTypeToString(DbSQLServer)
+DbOutTypeCombo.AddItem DatabaseTypeToString(DbSQLServer)
+ContractDbTypeCombo.AddItem DatabaseTypeToString(DbSQLServer)
 
 DbInTypeCombo.ListIndex = 0
 DbOutTypeCombo.ListIndex = 0
@@ -2118,14 +2136,14 @@ Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             ";Server=" & Replace(DbOutServerText, "\", "\\") & _
                             ";User name=" & UsernameOutText & _
                             ";Password=" & PasswordOutText & _
-                            ";Use Synchronous Writes=Yes", _
+                            ";Use Synchronous Writes=" & IIf(AsyncWritesCheck = vbChecked, "No", "Yes"), _
                             "Output bar database", _
                             "Historical bar data output to database")
 On Error GoTo 0
 If Not sp Is Nothing Then
     setupOutBarDatabase = True
 Else
-    writeStatusMessage "Can't configure Historic Data Service Provider"
+    writeStatusMessage "Can't configure Historic Bar Data Service Provider"
 End If
 End Function
 
@@ -2140,7 +2158,7 @@ Set sp = mTradeBuildAPI.ServiceProviders.Add( _
                             ";Server=" & Replace(DbOutServerText, "\", "\\") & _
                             ";User name=" & UsernameOutText & _
                             ";Password=" & PasswordOutText & _
-                            ";Use Synchronous Writes=Yes" & _
+                            ";Use Synchronous Writes=" & IIf(AsyncWritesCheck = vbChecked, "No", "Yes") & _
                             ";Access mode=WriteOnly", _
                             "Output tick database", _
                             "Historical tick data output to database")
@@ -2148,7 +2166,7 @@ On Error GoTo 0
 If Not sp Is Nothing Then
     setupOutTickDatabase = True
 Else
-    writeStatusMessage "Can't configure Output Database Service Provider"
+    writeStatusMessage "Can't configure Historic Tick Data Service Provider"
 End If
 End Function
 
@@ -2318,7 +2336,7 @@ End If
 End Sub
 
 Private Sub writeStatusMessage(message As String)
-mLogger.Log LogLevelNormal, message
+gLogger.Log LogLevelNormal, message
 End Sub
 
 
