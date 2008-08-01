@@ -61,34 +61,23 @@ Private Const ModuleName As String = "TickfileWriter"
 ' Member variables
 '@===============================================================================
 
-Private WithEvents mTradingDB       As TradingDB
+Private mTradingDB                  As TradingDB
 Attribute mTradingDB.VB_VarHelpID = -1
 Private mConnectionString           As String
 
-Private mTickfileServiceProvider    As tickfileServiceProvider
+Private mTickfileServiceProvider    As TickfileServiceProvider
 
 Private mCommonServiceConsumer      As ICommonServiceConsumer
 Private mServiceConsumer            As ITickfileOutputServiceConsumer
 Private mServiceProviderName        As String
 
 Private mContract                   As Contract
-Private WithEvents mTickWriter      As TickDataWriter
+Private WithEvents mTickWriter      As TickWriter
 Attribute mTickWriter.VB_VarHelpID = -1
 
-Private mTde                        As TickDataEncoder
-
-Private mTotalBytes                 As Long
-
 Private mTickSize                   As Double
-Private mOpeningTimestamp           As Date   ' timestamp at start of minute period
 
-Private mInstrument                 As Instrument
 Private mUseSynchronousWrites       As Boolean
-
-Private WithEvents mWriteTimer      As IntervalTimer
-Attribute mWriteTimer.VB_VarHelpID = -1
-
-Private mDataAdded                  As Boolean
 
 Private WithEvents mInstrumentTC    As TaskController
 Attribute mInstrumentTC.VB_VarHelpID = -1
@@ -96,10 +85,6 @@ Attribute mInstrumentTC.VB_VarHelpID = -1
 '@===============================================================================
 ' Class Event Handlers
 '@===============================================================================
-
-Private Sub Class_Initialize()
-Set mWriteTimer = CreateIntervalTimer(5000, ExpiryTimeUnitMilliseconds, 5000, True)
-End Sub
 
 Private Sub Class_Terminate()
 Debug.Print "TBInfoBase.TickfileWriter terminated"
@@ -120,188 +105,13 @@ handleFatalError Err.Number, _
                 Err.Description
 End Sub
 
-Private Property Get ITickfileWriter_Contract() As Contract
-Set ITickfileWriter_Contract = mContract
-End Property
-
-Private Property Let ITickfileWriter_Contract(ByVal RHS As Contract)
-
+Private Sub ITickfileWriter_WriteTick(tick As TickUtils26.GenericTick)
 On Error GoTo Err
-If Not RHS Is Nothing Then
-    Set mContract = RHS
-End If
-
-Set mInstrumentTC = mTradingDB.InstrumentFactory.loadBySpecifierAsync(mContract.specifier)
-mTickSize = mContract.ticksize
-
-Exit Property
-Err:
-handleFatalError Err.Number, _
-                ProjectName & "." & ModuleName & "::" & "ITickfileWriter_Contract", _
-                Err.Description
-
-End Property
-
-Private Property Get ITickfileWriter_FormatIdentifier() As String
-
-End Property
-
-Private Property Get ITickfileWriter_FormatName() As String
-
-End Property
-
-Private Property Get ITickfileWriter_FormatVersion() As Long
-
-End Property
-
-Private Sub ITickfileWriter_WriteAsk( _
-                            ByVal timestamp As Date, _
-                            ByVal price As Double, _
-                            ByVal size As Long)
-On Error GoTo Err
-If price = 0# Then Exit Sub
-checkIfNewPeriod timestamp
-mTde.encodeAsk timestamp, price, size
-mDataAdded = True
+mTickWriter.WriteTick tick
 Exit Sub
 Err:
 handleFatalError Err.Number, _
-                ProjectName & "." & ModuleName & "::" & "ITickfileWriter_WriteAsk", _
-                Err.Description
-End Sub
-
-Private Sub ITickfileWriter_writeBid( _
-                            ByVal timestamp As Date, _
-                            ByVal price As Double, _
-                            ByVal size As Long)
-On Error GoTo Err
-If price = 0# Then Exit Sub
-checkIfNewPeriod timestamp
-mTde.encodeBid timestamp, price, size
-mDataAdded = True
-Exit Sub
-Err:
-handleFatalError Err.Number, _
-                ProjectName & "." & ModuleName & "::" & "ITickfileWriter_writeBid", _
-                Err.Description
-End Sub
-
-Private Sub ITickfileWriter_writeClose( _
-                            ByVal timestamp As Date, _
-                            ByVal price As Double)
-On Error GoTo Err
-If price = 0# Then Exit Sub
-checkIfNewPeriod timestamp
-mTde.encodeClose timestamp, price
-mDataAdded = True
-Exit Sub
-Err:
-handleFatalError Err.Number, _
-                ProjectName & "." & ModuleName & "::" & "ITickfileWriter_writeClose", _
-                Err.Description
-End Sub
-
-Private Sub ITickfileWriter_writeHigh( _
-                            ByVal timestamp As Date, _
-                            ByVal price As Double)
-On Error GoTo Err
-If price = 0# Then Exit Sub
-checkIfNewPeriod timestamp
-mTde.encodeHigh timestamp, price
-mDataAdded = True
-Exit Sub
-Err:
-handleFatalError Err.Number, _
-                ProjectName & "." & ModuleName & "::" & "ITickfileWriter_writeHigh", _
-                Err.Description
-End Sub
-
-Private Sub ITickfileWriter_writeLow( _
-                            ByVal timestamp As Date, _
-                            ByVal price As Double)
-On Error GoTo Err
-If price = 0# Then Exit Sub
-checkIfNewPeriod timestamp
-mTde.encodeLow timestamp, price
-mDataAdded = True
-Exit Sub
-Err:
-handleFatalError Err.Number, _
-                ProjectName & "." & ModuleName & "::" & "ITickfileWriter_writeLow", _
-                Err.Description
-End Sub
-
-Private Sub ITickfileWriter_writeMarketDepthData( _
-                            ByVal timestamp As Date, _
-                            ByVal position As Long, _
-                            ByVal marketmaker As String, _
-                            ByVal operation As Long, _
-                            ByVal side As Long, _
-                            ByVal price As Double, _
-                            ByVal size As Long)
-
-On Error GoTo Err
-If price = 0# Then Exit Sub
-
-checkIfNewPeriod timestamp
-mTde.encodeMarketDepthData timestamp, position, marketmaker, operation, side, price, size
-mDataAdded = True
-
-Exit Sub
-Err:
-handleFatalError Err.Number, _
-                ProjectName & "." & ModuleName & "::" & "ITickfileWriter_writeMarketDepthData", _
-                Err.Description
-End Sub
-
-Private Sub ITickfileWriter_writeMarketDepthReset( _
-                            ByVal timestamp As Date)
-
-On Error GoTo Err
-checkIfNewPeriod timestamp
-mTde.encodeMarketDepthReset timestamp
-mDataAdded = True
-
-Exit Sub
-Err:
-handleFatalError Err.Number, _
-                ProjectName & "." & ModuleName & "::" & "ITickfileWriter_writeMarketDepthReset", _
-                Err.Description
-End Sub
-
-Private Sub ITickfileWriter_WriteOpenInterest(ByVal timestamp As Date, ByVal size As Long)
-On Error GoTo Err
-checkIfNewPeriod timestamp
-mTde.encodeOpenInterest timestamp, size
-mDataAdded = True
-Exit Sub
-Err:
-handleFatalError Err.Number, _
-                ProjectName & "." & ModuleName & "::" & "ITickfileWriter_WriteOpenInterest", _
-                Err.Description
-End Sub
-
-Private Sub ITickfileWriter_writeTrade( _
-                            ByVal timestamp As Date, _
-                            ByVal price As Double, _
-                            ByVal size As Long)
-If price = 0# Then Exit Sub
-checkIfNewPeriod timestamp
-mTde.encodeTrade timestamp, price, size
-mDataAdded = True
-End Sub
-
-Private Sub ITickfileWriter_writeVolume( _
-                            ByVal timestamp As Date, _
-                            ByVal size As Long)
-On Error GoTo Err
-checkIfNewPeriod timestamp
-mTde.encodeVolume timestamp, size
-mDataAdded = True
-Exit Sub
-Err:
-handleFatalError Err.Number, _
-                ProjectName & "." & ModuleName & "::" & "ITickfileWriter_writeVolume", _
+                ProjectName & "." & ModuleName & "::" & "ITickfileWriter_WriteTick", _
                 Err.Description
 End Sub
 
@@ -310,6 +120,7 @@ End Sub
 '@===============================================================================
 
 Private Sub mInstrumentTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Dim lInstrument As Instrument
 If ev.cancelled Then
 ElseIf ev.errorNumber <> 0 Then
     mCommonServiceConsumer.ServiceProviderError ev.errorNumber, _
@@ -320,8 +131,11 @@ ElseIf IsEmpty(ev.result) Then
                             "Specified instrument does not exist: " & mContract.specifier.toString, _
                             mTickfileServiceProvider.handle
 Else
-    Set mInstrument = ev.result
-    mServiceConsumer.Ready = True
+    Set lInstrument = ev.result
+    mTickSize = lInstrument.tickSize
+    Set mTickWriter = lInstrument.createTickWriter(Not mUseSynchronousWrites)
+    mServiceConsumer.OutputTickfileCreated mConnectionString
+    mServiceConsumer.Ready
 End If
 
 Set mInstrumentTC = Nothing
@@ -335,7 +149,7 @@ Private Sub mTickWriter_ConnectFailed( _
                             ByVal errorCode As Long, _
                             ByVal errorDesc As String)
 On Error GoTo Err
-mServiceConsumer.Ready = False
+mServiceConsumer.NotReady
 mServiceConsumer.NotifyEvent StandardSPEventCodes.TFCantConnectDataSource, _
                         "error " & errorCode & ": " & errorDesc, _
                         mTickfileServiceProvider.handle
@@ -344,10 +158,6 @@ Err:
 handleFatalError Err.Number, _
                 ProjectName & "." & ModuleName & "::" & "mTickWriter_ConnectFailed", _
                 Err.Description
-End Sub
-
-Private Sub mTickWriter_DataWritten()
-Set mTickWriter = Nothing
 End Sub
 
 Private Sub mTickWriter_Error( _
@@ -364,40 +174,41 @@ handleFatalError Err.Number, _
                 Err.Description
 End Sub
 
-'@===============================================================================
-' mTradingDB Event Handlers
-'@===============================================================================
+''@===============================================================================
+'' mTradingDB Event Handlers
+''@===============================================================================
+'
+'Private Sub mTradingDB_ConnectFailed( _
+'                ByVal errorCode As Long, _
+'                ByVal errorDesc As String)
+'On Error GoTo Err
+'mServiceConsumer.Ready = False
+'mServiceConsumer.NotifyEvent StandardSPEventCodes.TFCantConnectDataSource, _
+'                        "error " & errorCode & ": " & errorDesc, _
+'                        mTickfileServiceProvider.handle
+'Exit Sub
+'Err:
+'handleFatalError Err.Number, _
+'                ProjectName & "." & ModuleName & "::" & "mTradingDB_ConnectFailed", _
+'                Err.Description
+'End Sub
+'
+'Private Sub mTradingDB_ConnectSucceeded()
+'On Error GoTo Err
+'
+'mServiceConsumer.NotifyEvent StandardSPEventCodes.TFConnectedToDataSource, _
+'                        "Connected to data source", _
+'                        mTickfileServiceProvider.handle
+'
+'mServiceConsumer.OutputTickfileCreated mConnectionString
+'Exit Sub
+'Err:
+'handleFatalError Err.Number, _
+'                ProjectName & "." & ModuleName & "::" & "mTradingDB_ConnectSucceeded", _
+'                Err.Description
+'
+'End Sub
 
-Private Sub mTradingDB_ConnectFailed( _
-                ByVal errorCode As Long, _
-                ByVal errorDesc As String)
-On Error GoTo Err
-mServiceConsumer.Ready = False
-mServiceConsumer.NotifyEvent StandardSPEventCodes.TFCantConnectDataSource, _
-                        "error " & errorCode & ": " & errorDesc, _
-                        mTickfileServiceProvider.handle
-Exit Sub
-Err:
-handleFatalError Err.Number, _
-                ProjectName & "." & ModuleName & "::" & "mTradingDB_ConnectFailed", _
-                Err.Description
-End Sub
-
-Private Sub mTradingDB_ConnectSucceeded()
-On Error GoTo Err
-
-mServiceConsumer.NotifyEvent StandardSPEventCodes.TFConnectedToDataSource, _
-                        "Connected to data source", _
-                        mTickfileServiceProvider.handle
-
-mServiceConsumer.OutputTickfileCreated mConnectionString
-Exit Sub
-Err:
-handleFatalError Err.Number, _
-                ProjectName & "." & ModuleName & "::" & "mTradingDB_ConnectSucceeded", _
-                Err.Description
-
-End Sub
 '@===============================================================================
 ' Properties
 '@===============================================================================
@@ -407,71 +218,72 @@ End Sub
 '@===============================================================================
 
 Friend Sub finish()
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mInstrumentTC Is Nothing Then
     mInstrumentTC.cancelTask
     Set mInstrumentTC = Nothing
 End If
 
-writePeriodData
-
-If Not mWriteTimer Is Nothing Then
-    mWriteTimer.StopTimer
-    Set mWriteTimer = Nothing
+If Not mTickWriter Is Nothing Then
+    mTickWriter.finish
+    
+    gLogger.Log LogLevelNormal, _
+                mServiceProviderName & " (" & mContract.specifier.localSymbol & ")" & vbCrLf & _
+                "    Total data written: " & mTickWriter.bytesWritten & " bytes", _
+                Me
+    Set mTickWriter = Nothing
 End If
+Exit Sub
 
-gLogger.Log LogLevelNormal, _
-            mServiceProviderName & " (" & mContract.specifier.localSymbol & ")" & vbCrLf & _
-            "    Total data written: " & mTotalBytes & " bytes", _
-            Me
+Err:
+gLogger.Log LogLevelSevere, _
+        "Error " & Err.Number & " at " & _
+        ProjectName & "." & ModuleName & ":" & "finish" & "." & failpoint & _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, "") & vbCrLf & _
+        Err.Description
 
 End Sub
 
 Friend Sub initialise( _
                 ByVal Name As String, _
+                ByVal dbType As DatabaseTypes, _
                 ByVal connectionString As String, _
                 ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
                 ByVal tickfileOutputServiceConsumer As TradeBuildSP.ITickfileOutputServiceConsumer, _
-                ByVal tickfileServiceProvider As TradeBuildSP.ITickfileServiceProvider, _
+                ByVal TickfileServiceProvider As TradeBuildSP.ITickfileServiceProvider, _
+                ByVal pContract As Contract, _
                 ByVal useSynchronousWrites As Boolean)
 
 mServiceProviderName = Name
 Set mCommonServiceConsumer = CommonServiceConsumer
 Set mServiceConsumer = tickfileOutputServiceConsumer
-Set mTickfileServiceProvider = tickfileServiceProvider
+Set mTickfileServiceProvider = TickfileServiceProvider
                 
 mUseSynchronousWrites = useSynchronousWrites
 
-mConnectionString = connectionString
-Set mTradingDB = CreateTradingDB(mConnectionString)
+gLogger.Log LogLevelDetail, "TickfileWriter: connecting to database"
 
+mConnectionString = connectionString
+Set mTradingDB = CreateTradingDB(mConnectionString, dbType)
+
+Set mContract = pContract
+
+If gLogger.isLoggable(LogLevelDetail) Then gLogger.Log LogLevelDetail, "TickfileWriter: retrieving instrument object for " & mContract.specifier.toString
+
+Set mInstrumentTC = mTradingDB.InstrumentFactory.loadBySpecifierAsync(mContract.specifier)
 End Sub
 
 '@===============================================================================
 ' Helper Functions
 '@===============================================================================
 
-Private Sub checkIfNewPeriod(ByVal timestamp As Date)
-Dim barTime As Date
-barTime = gTruncateTimeToMinute(timestamp)
-If barTime = mOpeningTimestamp Then Exit Sub
-
-If Not mTde Is Nothing Then
-    writePeriodData
-    mTotalBytes = mTotalBytes + mTde.encodedDataLength
-End If
-
-Set mTde = CreateTickEncoder(barTime, mTickSize)
-mWriteTimer.StopTimer
-mWriteTimer.StartTimer
-
-mOpeningTimestamp = barTime
-
-End Sub
-
 Private Sub handleFatalError( _
                 ByVal Number As Long, _
                 ByVal Source As String, _
                 ByVal Description As String)
+gLogger.Log LogLevelSevere, Source & ": error (" & Number & "): " & Description
 
 mCommonServiceConsumer.FatalServiceProviderError Number, _
                             Source, _
@@ -481,24 +293,3 @@ mCommonServiceConsumer.FatalServiceProviderError Number, _
 mTickfileServiceProvider.dataWriterFinished Me
 End Sub
 
-Private Sub writePeriodData()
-
-If mTde Is Nothing Then Exit Sub
-If Not mDataAdded Then Exit Sub
-
-Set mTickWriter = mInstrument.CreateTickDataWriter
-
-mTickWriter.WriteData mTde.encodingFormatIdentifier, _
-                            mTde.periodStartTime, _
-                            IIf(mTde.basePrice = MaxDouble, 0#, mTde.basePrice), _
-                            mTde.ticksize, _
-                            mTde.encodedData, _
-                            Not mUseSynchronousWrites
-
-mDataAdded = False
-
-End Sub
-
-Private Sub mWriteTimer_TimerExpired()
-writePeriodData
-End Sub

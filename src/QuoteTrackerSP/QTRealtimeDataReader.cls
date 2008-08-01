@@ -265,27 +265,8 @@ Set mContract = Nothing
 End Sub
 
 Friend Sub fireTick( _
-                ByRef pTick As Tick)
-With pTick
-    Select Case .TickType
-    Case TickTypes.bid
-        mDataConsumer.bid .timestamp, .Price, .size
-    Case TickTypes.ask
-        mDataConsumer.ask .timestamp, .Price, .size
-    Case TickTypes.last
-        mDataConsumer.Trade .timestamp, .Price, .size
-    Case TickTypes.volume
-        mDataConsumer.volume .timestamp, .size
-    Case TickTypes.prevClose
-        mDataConsumer.PreviousClose .timestamp, .Price
-    Case TickTypes.high
-        mDataConsumer.high .timestamp, .Price
-    Case TickTypes.low
-        mDataConsumer.low .timestamp, .Price
-    Case TickTypes.openInterest
-        mDataConsumer.openInterest .timestamp, .size
-    End Select
-End With
+                ByRef pTick As GenericTick)
+mDataConsumer.Tick pTick
 End Sub
 
 '================================================================================

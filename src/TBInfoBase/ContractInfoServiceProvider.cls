@@ -186,7 +186,7 @@ Set tc = mTradingDB.loadContractsAsync(pContractsBuilder.Contracts.ContractSpeci
 
 tc.addTaskCompletionListener Me
 
-mRequests.Add pContractsBuilder, tc.taskName
+mRequests.Add pContractsBuilder, tc.TaskName
 
 End Sub
 
@@ -218,8 +218,8 @@ If ev.cancelled Then
 ElseIf ev.errorNumber <> 0 Then
     mCommonServiceConsumer.ServiceProviderError ev.errorNumber, ev.errorMessage, mHandle
 Else
-    Set lBuilder = mRequests(ev.taskName)
-    mRequests.Remove ev.taskName
+    Set lBuilder = mRequests(ev.TaskName)
+    mRequests.Remove ev.TaskName
     If IsEmpty(ev.result) Then
         mContractInfoServiceConsumer.LoadComplete mHandle, lBuilder
     Else
@@ -284,13 +284,14 @@ End Property
 
 Private Sub createDatabase()
 If mConnectionString <> "" Then
-    Set mTradingDB = CreateTradingDB(mConnectionString)
+    Set mTradingDB = CreateTradingDB(mConnectionString, mDatabaseType)
 Else
     Set mTradingDB = CreateTradingDB(GenerateConnectionString(mDatabaseType, _
                                                             mServer, _
                                                             mDatabaseName, _
                                                             mUserName, _
-                                                            mPassword))
+                                                            mPassword), _
+                                    mDatabaseType)
 End If
 End Sub
 
@@ -298,6 +299,8 @@ Private Sub handleFatalError( _
                 ByVal Number As Long, _
                 ByVal Source As String, _
                 ByVal Description As String)
+gLogger.Log LogLevelSevere, Source & ": error (" & Number & "): " & Description
+
 mCommonServiceConsumer.FatalServiceProviderError Number, Source, Description, mHandle
 
 Set mCommonServiceConsumer = Nothing

@@ -151,7 +151,7 @@ If CBool(contractConfig.getAttribute(AttributeNameEnabled)) Then
     
 End If
 
-mTaskContext.sleep 20   ' to avoid creating too many database connections
+mTaskContext.suspend 1000   ' to avoid creating too many database connections
 
 Exit Sub
 

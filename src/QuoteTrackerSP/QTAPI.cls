@@ -1140,10 +1140,17 @@ Dim thisAsk As Double
 Dim thisLast As Double
 Dim thisVolume As Long
 
-Dim bidTick As Tick
-Dim askTick As Tick
-Dim lastTick As Tick
-Dim volumeTick As Tick
+Dim bidTick As GenericTick
+Dim gotBidTick As Boolean
+
+Dim askTick As GenericTick
+Dim gotAskTick As Boolean
+
+Dim lastTick As GenericTick
+Dim gotLastTick As Boolean
+
+Dim volumeTick As GenericTick
+Dim gotVolumeTick As Boolean
 
 Dim index As Long
 
@@ -1183,27 +1190,31 @@ Do
 Loop While bytesProcessed < recordLength
 
 If thisBid <> 0 And thisBid <> mHistoricalTickDataRequestTable(index).prevBid Then
-    bidTick.TickType = TickTypes.bid
+    bidTick.TickType = TickTypes.TickTypeBid
     bidTick.Price = thisBid
     mHistoricalTickDataRequestTable(index).prevBid = thisBid
+    gotBidTick = True
 End If
 
 If thisAsk <> 0 And thisAsk <> mHistoricalTickDataRequestTable(index).prevAsk Then
-    askTick.TickType = TickTypes.ask
+    askTick.TickType = TickTypes.TickTypeAsk
     askTick.Price = thisAsk
     mHistoricalTickDataRequestTable(index).prevAsk = thisAsk
+    gotAskTick = True
 End If
 
 If thisVolume <> 0 And thisVolume <> mHistoricalTickDataRequestTable(index).prevVolume Then
     If thisVolume > mHistoricalTickDataRequestTable(index).prevVolume Then
-        lastTick.TickType = TickTypes.last
+        lastTick.TickType = TickTypes.TickTypeTrade
         lastTick.Price = thisLast
         lastTick.size = thisVolume - mHistoricalTickDataRequestTable(index).prevVolume
+        gotLastTick = True
     End If
 
-    volumeTick.TickType = TickTypes.volume
+    volumeTick.TickType = TickTypes.TickTypeVolume
     volumeTick.size = thisVolume
     mHistoricalTickDataRequestTable(index).prevVolume = thisVolume
+    gotVolumeTick = True
 End If
 
 If mHistoricalTickDataRequestTable(index).cancelling Then Exit Sub
@@ -1216,34 +1227,34 @@ If timestamp >= mHistoricalTickDataRequestTable(index).endTime Then Exit Sub
 If timestamp >= mHistoricalTickDataRequestTable(index).startTime And _
     timestamp < mHistoricalTickDataRequestTable(index).endTime _
 Then
-    If bidTick.TickType <> TickTypes.None Then
+    If gotBidTick Then
         bidTick.timestamp = timestamp
         mHistoricalTickDataRequestTable(index).requester.historicalTick bidTick
     ElseIf Not mHistoricalTickDataRequestTable(index).firstInScopeTickProcessed Then
         If mHistoricalTickDataRequestTable(index).prevBid <> 0# Then
-            bidTick.TickType = TickTypes.bid
+            bidTick.TickType = TickTypes.TickTypeBid
             bidTick.Price = mHistoricalTickDataRequestTable(index).prevBid
             bidTick.timestamp = timestamp
             mHistoricalTickDataRequestTable(index).requester.historicalTick bidTick
         End If
     End If
-    If askTick.TickType <> TickTypes.None Then
+    If gotAskTick Then
         askTick.timestamp = timestamp
         mHistoricalTickDataRequestTable(index).requester.historicalTick askTick
     ElseIf Not mHistoricalTickDataRequestTable(index).firstInScopeTickProcessed Then
         mHistoricalTickDataRequestTable(index).firstInScopeTickProcessed = True
         If mHistoricalTickDataRequestTable(index).prevAsk <> 0# Then
-            askTick.TickType = TickTypes.ask
+            askTick.TickType = TickTypes.TickTypeAsk
             askTick.Price = mHistoricalTickDataRequestTable(index).prevAsk
             askTick.timestamp = timestamp
             mHistoricalTickDataRequestTable(index).requester.historicalTick askTick
         End If
     End If
-    If lastTick.TickType <> TickTypes.None Then
+    If gotLastTick Then
         lastTick.timestamp = timestamp
         mHistoricalTickDataRequestTable(index).requester.historicalTick lastTick
     End If
-    If volumeTick.TickType <> TickTypes.None Then
+    If gotVolumeTick Then
         volumeTick.timestamp = timestamp
         mHistoricalTickDataRequestTable(index).requester.historicalTick volumeTick
     End If
@@ -1264,14 +1275,30 @@ Dim timestamp As Date
 
 Dim symbol As String
 
-Dim bidTick As Tick
-Dim askTick As Tick
-Dim lastTick As Tick
-Dim highTick As Tick
-Dim lowTick As Tick
-Dim prevCloseTick As Tick
-Dim volumeTick As Tick
-Dim openInterestTick As Tick
+Dim bidTick As GenericTick
+Dim gotBidTick As Boolean
+
+Dim askTick As GenericTick
+Dim gotAskTick As Boolean
+
+Dim lastTick As GenericTick
+Dim gotLastTick As Boolean
+
+Dim highTick As GenericTick
+Dim gotHighTick As Boolean
+
+Dim lowTick As GenericTick
+Dim gotLowTick As Boolean
+
+Dim prevCloseTick As GenericTick
+Dim gotPrevCloseTick As Boolean
+
+Dim volumeTick As GenericTick
+Dim gotVolumeTick As Boolean
+
+Dim openInterestTick As GenericTick
+Dim gotOpenInterestTick As Boolean
+
 
 Dim skippedValue As Variant
 
@@ -1292,37 +1319,48 @@ Do
         index = findL1QuoteRequestEntryIndex(symbol)
     Case FieldTypes.BidPrice
         mL1QuotesRequestTable(index).bid = GetFieldValue(fieldID, bytesProcessed)
-        bidTick.TickType = TickTypes.bid
+        bidTick.TickType = TickTypes.TickTypeBid
+        gotBidTick = True
     Case FieldTypes.bidSize
         mL1QuotesRequestTable(index).bidSize = GetFieldValue(fieldID, bytesProcessed)
-        bidTick.TickType = TickTypes.bid
+        bidTick.TickType = TickTypes.TickTypeBid
+        gotBidTick = True
     Case FieldTypes.AskPrice
         mL1QuotesRequestTable(index).ask = GetFieldValue(fieldID, bytesProcessed)
-        askTick.TickType = TickTypes.ask
+        askTick.TickType = TickTypes.TickTypeAsk
+        gotAskTick = True
     Case FieldTypes.askSize
         mL1QuotesRequestTable(index).askSize = GetFieldValue(fieldID, bytesProcessed)
-        askTick.TickType = TickTypes.ask
+        askTick.TickType = TickTypes.TickTypeAsk
+        gotAskTick = True
     Case FieldTypes.LastPrice
         mL1QuotesRequestTable(index).last = GetFieldValue(fieldID, bytesProcessed)
-        lastTick.TickType = TickTypes.last
+        lastTick.TickType = TickTypes.TickTypeTrade
+        gotLastTick = True
     Case FieldTypes.lastSize
         mL1QuotesRequestTable(index).lastSize = GetFieldValue(fieldID, bytesProcessed)
-        lastTick.TickType = TickTypes.last
+        lastTick.TickType = TickTypes.TickTypeTrade
+        gotLastTick = True
     Case FieldTypes.high
         mL1QuotesRequestTable(index).high = GetFieldValue(fieldID, bytesProcessed)
-        highTick.TickType = TickTypes.high
+        highTick.TickType = TickTypes.TickTypeHighPrice
+        gotHighTick = True
     Case FieldTypes.low
         mL1QuotesRequestTable(index).low = GetFieldValue(fieldID, bytesProcessed)
-        lowTick.TickType = TickTypes.low
+        lowTick.TickType = TickTypes.TickTypeLowPrice
+        gotLowTick = True
     Case FieldTypes.prevClose
         mL1QuotesRequestTable(index).prevClose = GetFieldValue(fieldID, bytesProcessed)
-        prevCloseTick.TickType = TickTypes.prevClose
+        prevCloseTick.TickType = TickTypes.TickTypeClosePrice
+        gotPrevCloseTick = True
     Case FieldTypes.volume
         mL1QuotesRequestTable(index).volume = GetFieldValue(fieldID, bytesProcessed)
-        volumeTick.TickType = TickTypes.volume
+        volumeTick.TickType = TickTypes.TickTypeVolume
+        gotVolumeTick = True
     Case FieldTypes.openInterest
         mL1QuotesRequestTable(index).openInterest = GetFieldValue(fieldID, bytesProcessed)
-        openInterestTick.TickType = TickTypes.openInterest
+        openInterestTick.TickType = TickTypes.TickTypeOpenInterest
+        gotOpenInterestTick = True
     Case FieldTypes.timestamp
         Dim timestampString As String
         timestampString = GetFieldValue(fieldID, bytesProcessed)
@@ -1343,45 +1381,45 @@ Loop While bytesProcessed < recordLength
 
 If mL1QuotesRequestTable(index).cancelling Then Exit Sub
 
-If askTick.TickType <> TickTypes.None Then
+If gotAskTick Then
     askTick.timestamp = mL1QuotesRequestTable(index).timestamp
     askTick.Price = mL1QuotesRequestTable(index).ask
     askTick.size = mL1QuotesRequestTable(index).askSize
     mL1QuotesRequestTable(index).requester.fireTick askTick
 End If
-If bidTick.TickType <> TickTypes.None Then
+If gotBidTick Then
     bidTick.timestamp = mL1QuotesRequestTable(index).timestamp
     bidTick.Price = mL1QuotesRequestTable(index).bid
     bidTick.size = mL1QuotesRequestTable(index).bidSize
     mL1QuotesRequestTable(index).requester.fireTick bidTick
 End If
-If lastTick.TickType <> TickTypes.None Then
+If gotLastTick Then
     lastTick.timestamp = mL1QuotesRequestTable(index).timestamp
     lastTick.Price = mL1QuotesRequestTable(index).last
     lastTick.size = mL1QuotesRequestTable(index).lastSize
     mL1QuotesRequestTable(index).requester.fireTick lastTick
 End If
-If highTick.TickType <> TickTypes.None Then
+If gotHighTick Then
     highTick.timestamp = mL1QuotesRequestTable(index).timestamp
     highTick.Price = mL1QuotesRequestTable(index).high
     mL1QuotesRequestTable(index).requester.fireTick highTick
 End If
-If lowTick.TickType <> TickTypes.None Then
+If gotLowTick Then
     lowTick.timestamp = mL1QuotesRequestTable(index).timestamp
     lowTick.Price = mL1QuotesRequestTable(index).low
     mL1QuotesRequestTable(index).requester.fireTick lowTick
 End If
-If prevCloseTick.TickType <> TickTypes.None Then
+If gotPrevCloseTick Then
     prevCloseTick.timestamp = mL1QuotesRequestTable(index).timestamp
     prevCloseTick.Price = mL1QuotesRequestTable(index).prevClose
     mL1QuotesRequestTable(index).requester.fireTick prevCloseTick
 End If
-If volumeTick.TickType <> TickTypes.None Then
+If gotVolumeTick Then
     volumeTick.timestamp = mL1QuotesRequestTable(index).timestamp
     volumeTick.size = mL1QuotesRequestTable(index).volume
     mL1QuotesRequestTable(index).requester.fireTick volumeTick
 End If
-If openInterestTick.TickType <> TickTypes.None Then
+If gotOpenInterestTick Then
     openInterestTick.timestamp = mL1QuotesRequestTable(index).timestamp
     openInterestTick.size = mL1QuotesRequestTable(index).openInterest
     mL1QuotesRequestTable(index).requester.fireTick openInterestTick

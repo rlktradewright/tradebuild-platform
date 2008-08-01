@@ -76,6 +76,7 @@ Private mServer As String
 Private mUserName As String
 Private mPassword As String
 Private mUseSynchronousWrites As Boolean
+Private mUseSynchronousReads As Boolean
 
 '@===============================================================================
 ' Class Event Handlers
@@ -149,6 +150,8 @@ For Each param In params
         username = param.value
     Case UCase$(ParamNamePassword)
         password = param.value
+    Case UCase$(ParamNameUseSynchronousReads)
+        useSynchronousReads = gStringToBool(param.value)
     Case UCase$(ParamNameUseSynchronousWrites)
         useSynchronousWrites = gStringToBool(param.value)
     Case UCase$(ParamNameAccessMode)
@@ -196,9 +199,9 @@ End Sub
 '@===============================================================================
 
 Private Function ITickfileServiceProvider_CreateTickfileReader( _
-                            ByVal DataConsumer As TradeBuildSP.IStreamingDataConsumer, _
-                            ByVal serviceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
-                            ByVal FormatIdentifier As String) As TradeBuildSP.ITickfileReader
+                ByVal DataConsumer As TradeBuildSP.IStreamingDataConsumer, _
+                ByVal serviceConsumer As TradeBuildSP.ITickfileInputServiceConsumer, _
+                ByVal FormatIdentifier As String) As TradeBuildSP.ITickfileReader
 Dim reader As TickfileReader
 Dim connectionString As String
 
@@ -218,12 +221,15 @@ Else
 End If
 
 reader.initialise mName & " (reader)", _
+                    mDatabaseType, _
                     connectionString, _
                     mCommonServiceConsumer, _
                     serviceConsumer, _
                     Me, _
                     DataConsumer, _
-                    getCapabilities
+                    getCapabilities, _
+                    mUseSynchronousReads
+                    
 mTickfileDataReaders.Add reader
 Exit Function
 Err:
@@ -233,9 +239,10 @@ handleFatalError Err.Number, _
 End Function
 
 Private Function ITickfileServiceProvider_CreateTickfileWriter( _
-                            ByVal serviceConsumer As TradeBuildSP.ITickfileOutputServiceConsumer, _
-                            Optional ByVal FormatIdentifier As String = "", _
-                            Optional ByVal location As String = "") As TradeBuildSP.ITickfileWriter
+                ByVal serviceConsumer As TradeBuildSP.ITickfileOutputServiceConsumer, _
+                ByVal pContract As Contract, _
+                Optional ByVal FormatIdentifier As String = "", _
+                Optional ByVal location As String = "") As TradeBuildSP.ITickfileWriter
 Dim writer As TickfileWriter
 Dim connectionString As String
 
@@ -254,10 +261,12 @@ Else
 End If
 
 writer.initialise mName & " (writer)", _
+                mDatabaseType, _
                 connectionString, _
                 mCommonServiceConsumer, _
                 serviceConsumer, _
                 Me, _
+                pContract, _
                 mUseSynchronousWrites
                 
 mTickfileDataWriters.Add writer
@@ -350,6 +359,11 @@ Public Property Let useSynchronousWrites( _
 mUseSynchronousWrites = value
 End Property
 
+Public Property Let useSynchronousReads( _
+                ByVal value As Boolean)
+mUseSynchronousReads = value
+End Property
+
 '@===============================================================================
 ' Methods
 '@===============================================================================
@@ -399,16 +413,22 @@ End Select
 End Function
 
 Private Sub finishReaders()
+Dim i As Long
 Dim reader As TickfileReader
-For Each reader In mTickfileDataReaders
+For i = mTickfileDataReaders.Count To 1 Step -1
+    Set reader = mTickfileDataReaders(i)
     reader.finish
+    mTickfileDataReaders.Remove i
 Next
 End Sub
 
 Private Sub finishWriters()
+Dim i As Long
 Dim writer As TickfileWriter
-For Each writer In mTickfileDataWriters
+For i = mTickfileDataWriters.Count To 1 Step -1
+    Set writer = mTickfileDataWriters(i)
     writer.finish
+    mTickfileDataWriters.Remove i
 Next
 End Sub
 
@@ -416,6 +436,8 @@ Private Sub handleFatalError( _
                 ByVal Number As Long, _
                 ByVal Source As String, _
                 ByVal Description As String)
+gLogger.Log LogLevelSevere, Source & ": error (" & Number & "): " & Description
+
 mCommonServiceConsumer.FatalServiceProviderError Number, Source, Description, mHandle
 
 finishReaders

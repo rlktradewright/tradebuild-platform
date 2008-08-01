@@ -30,17 +30,17 @@ Option Explicit
 ' Enums
 '@================================================================================
 
-Public Enum TickTypes
-    None
-    bid
-    ask
-    last
-    volume
-    prevClose
-    high
-    low
-    openInterest
-End Enum
+'Public Enum TickTypes
+'    None
+'    bid
+'    ask
+'    last
+'    volume
+'    prevClose
+'    high
+'    low
+'    openInterest
+'End Enum
 
 '@================================================================================
 ' Types
@@ -65,12 +65,12 @@ Public Type QTHistoricalDataRequestQueueEntry
     rth                     As Boolean
 End Type
 
-Public Type Tick
-    TickType    As TickTypes
-    timestamp   As Date
-    Price       As Double
-    size        As Long
-End Type
+'Public Type Tick
+'    TickType    As TickTypes
+'    timestamp   As Date
+'    Price       As Double
+'    size        As Long
+'End Type
 
 '@================================================================================
 ' Constants

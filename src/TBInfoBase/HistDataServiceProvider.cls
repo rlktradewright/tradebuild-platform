@@ -110,6 +110,9 @@ Dim reader As HistDataReader
 Dim connectionString As String
 
 On Error GoTo Err
+
+gLogger.Log LogLevelDetail, "HistDataServiceProvider: creating bar data reader"
+
 Set reader = New HistDataReader
 Set IBarDataServiceProvider_CreateBarDataReader = reader
 
@@ -124,13 +127,14 @@ Else
 End If
 
 reader.initialise mName & " (reader)", _
+                mDatabaseType, _
                 connectionString, _
                 mCommonServiceConsumer, _
                 serviceConsumer, _
                 Me, _
                 DataConsumer, _
                 mMode
-mHistDataReaders.Add reader
+mHistDataReaders.Add reader, CStr(ObjPtr(reader))
 Exit Function
 Err:
 handleFatalError Err.Number, _
@@ -140,7 +144,7 @@ End Function
 
 Private Function IBarDataServiceProvider_CreateBarDataWriter( _
                             ByVal serviceConsumer As TradeBuildSP.IBarDataOutputServiceConsumer, _
-                            ByVal contractSpec As ContractSpecifier, _
+                            ByVal pContract As Contract, _
                             Optional ByVal location As String = "" _
                             ) As TradeBuildSP.IBarDataWriter
 
@@ -148,6 +152,9 @@ Dim writer As HistDataWriter
 Dim connectionString As String
 
 On Error GoTo Err
+
+gLogger.Log LogLevelDetail, "HistDataServiceProvider: creating bar data writer"
+
 Set writer = New HistDataWriter
 Set IBarDataServiceProvider_CreateBarDataWriter = writer
 
@@ -162,14 +169,15 @@ Else
 End If
 
 writer.initialise mName & " (writer)", _
+                mDatabaseType, _
                 connectionString, _
                 mCommonServiceConsumer, _
                 serviceConsumer, _
                 Me, _
-                contractSpec, _
+                pContract, _
                 mUseSynchronousWrites
 
-mHistDataWriters.Add writer
+mHistDataWriters.Add writer, CStr(ObjPtr(writer))
 Exit Function
 Err:
 handleFatalError Err.Number, _
@@ -363,30 +371,12 @@ End Property
 
 Friend Sub dataReaderFinished( _
                 ByVal dataReader As HistDataReader)
-Dim i As Long
-Dim reader As HistDataReader
-i = 1
-For Each reader In mHistDataReaders
-    If reader Is dataReader Then
-        mHistDataReaders.Remove i
-        Exit For
-    End If
-    i = i + 1
-Next
+mHistDataReaders.Remove CStr(ObjPtr(dataReader))
 End Sub
 
 Friend Sub dataWriterFinished( _
                 ByVal dataWriter As HistDataWriter)
-Dim i As Long
-Dim writer As HistDataWriter
-i = 1
-For Each writer In mHistDataWriters
-    If writer Is dataWriter Then
-        mHistDataWriters.Remove i
-        Exit For
-    End If
-    i = i + 1
-Next
+mHistDataWriters.Remove CStr(ObjPtr(dataWriter))
 End Sub
 
 '@===============================================================================
@@ -394,16 +384,22 @@ End Sub
 '@===============================================================================
 
 Private Sub finishReaders()
+Dim i As Long
 Dim reader As HistDataReader
-For Each reader In mHistDataReaders
+For i = mHistDataReaders.Count To 1 Step -1
+    Set reader = mHistDataReaders(i)
     reader.finish
+    mHistDataReaders.Remove i
 Next
 End Sub
 
 Private Sub finishWriters()
+Dim i As Long
 Dim writer As HistDataWriter
-For Each writer In mHistDataWriters
+For i = mHistDataWriters.Count To 1 Step -1
+    Set writer = mHistDataWriters(i)
     writer.finish
+    mHistDataWriters.Remove i
 Next
 End Sub
 
@@ -411,6 +407,8 @@ Private Sub handleFatalError( _
                 ByVal Number As Long, _
                 ByVal Source As String, _
                 ByVal Description As String)
+gLogger.Log LogLevelSevere, Source & ": error (" & Number & "): " & Description
+
 mCommonServiceConsumer.FatalServiceProviderError Number, Source, Description, mHandle
 
 finishReaders

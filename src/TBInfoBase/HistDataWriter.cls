@@ -64,7 +64,7 @@ End Type
 ' Member variables
 '@===============================================================================
 
-Private WithEvents mTradingDB       As TradingDB
+Private mTradingDB                  As TradingDB
 Attribute mTradingDB.VB_VarHelpID = -1
 Private mConnectionString           As String
 
@@ -74,7 +74,7 @@ Private mCommonServiceConsumer      As ICommonServiceConsumer
 Private mServiceConsumer            As IBarDataOutputServiceConsumer
 Private mServiceProviderName        As String
 
-Private mContractSpec               As ContractSpecifier
+Private mContract                   As Contract
 
 Private mPath                       As String
 
@@ -115,7 +115,7 @@ End Sub
 '@===============================================================================
 
 Private Property Get IBarDataWriter_ContractSpecifier() As ContractSpecifier
-Set IBarDataWriter_ContractSpecifier = mContractSpec
+Set IBarDataWriter_ContractSpecifier = mContract.specifier
 End Property
 
 Private Sub IBarDataWriter_ReleaseDataStore()
@@ -141,35 +141,35 @@ On Error GoTo Err
 
 With data
     If mUseSynchronousWrites Then
-        mInstrument.WriteBar .timestamp, _
+        mInstrument.WriteBar .TimeStamp, _
                             barType, _
                             barLength, _
                             .openValue, _
                             .highValue, _
                             .lowValue, _
                             .closeValue, _
-                            .Volume, _
+                            .volume, _
                             .tickVolume, _
-                            .OpenInterest
+                            .openInterest
     Else
-        Set tc = mInstrument.WriteBarAsync(.timestamp, _
+        Set tc = mInstrument.WriteBarAsync(.TimeStamp, _
                                             barType, _
                                             barLength, _
                                             .openValue, _
                                             .highValue, _
                                             .lowValue, _
                                             .closeValue, _
-                                            .Volume, _
+                                            .volume, _
                                             .tickVolume, _
-                                            .OpenInterest)
+                                            .openInterest)
         tc.addTaskCompletionListener Me
     End If
     For index = 0 To UBound(mTimeframeTable)
         If mTimeframeTable(index).timeframe.length = barLength Then
             With mTimeframeTable(index)
-                If .prevTimestamp <> data.timestamp Then
+                If .prevTimestamp <> data.TimeStamp Then
                     .barsWritten = .barsWritten + 1
-                    .prevTimestamp = data.timestamp
+                    .prevTimestamp = data.TimeStamp
                 End If
                 .writes = .writes + 1
             End With
@@ -181,6 +181,7 @@ End With
 
 Exit Sub
 Err:
+gLogger.Log LogLevelSevere, ProjectName & ":" & ModuleName & ":IBarDataWriter_WriteBar: error (" & Err.Number & "): " & Err.Description
 mCommonServiceConsumer.ServiceProviderError Err.Number, _
                                             Err.Description, _
                                             mHistDataServiceProvider.handle
@@ -193,6 +194,7 @@ End Sub
 Private Sub TaskCompletionListener_taskCompleted( _
                 ev As TWUtilities30.TaskCompletionEvent)
 If ev.errorNumber <> 0 Then
+    gLogger.Log LogLevelSevere, ProjectName & ":" & ModuleName & ":TaskCompletionListener_taskCompleted: error (" & Err.Number & "): " & Err.Description
     mCommonServiceConsumer.ServiceProviderError ev.errorNumber, _
                                         ev.errorMessage, _
                                         mHistDataServiceProvider.handle
@@ -211,55 +213,61 @@ ElseIf ev.errorNumber <> 0 Then
                                 mHistDataServiceProvider.handle
 ElseIf IsEmpty(ev.result) Then
     mServiceConsumer.NotifyEvent HDRequestInvalid, _
-                                "Error: specified instrument does not exist", _
+                                "Error: specified instrument does not exist: " & mContract.specifier.toString, _
                                 mHistDataServiceProvider.handle
 Else
     Set mInstrument = ev.result
+    
+    requestTimeframes
+    
     mServiceConsumer.Ready
     mServiceConsumer.OutputBarfileCreated mConnectionString
 End If
 Set mInstrumentTC = Nothing
 End Sub
 
-'@===============================================================================
-' mTradingDB Event Handlers
-'@===============================================================================
+''@===============================================================================
+'' mTradingDB Event Handlers
+''@===============================================================================
+'
+'Private Sub mTradingDB_ConnectFailed(ByVal errorCode As Long, ByVal errorDesc As String)
+'On Error GoTo Err
+'mServiceConsumer.NotifyEvent StandardSPEventCodes.HDCantConnectDataSource, _
+'                        "error " & errorCode & ": " & errorDesc, _
+'                        mHistDataServiceProvider.handle
+'mServiceConsumer.NotReady
+'Exit Sub
+'Err:
+'handleFatalError Err.Number, _
+'                ProjectName & "." & ModuleName & "::" & "mTradingDB_ConnectFailed", _
+'                Err.Description
+'End Sub
+'
+'Private Sub mTradingDB_ConnectSucceeded()
+'Dim i As Long
+'
+'On Error GoTo Err
+'
+'mServiceConsumer.NotifyEvent StandardSPEventCodes.HDConnectedToDataSource, _
+'                        "Connected to data source", _
+'                        mHistDataServiceProvider.handle
+'
+'gLogger.Log LogLevelDetail, "HistDataWriter: requesting " & (UBound(mTimeframeTable) + 1) & " timeframes"
+'
+'For i = 0 To UBound(mTimeframeTable)
+'    mServiceConsumer.RequiredTimePeriod mTimeframeTable(i).timeframe, _
+'                                        mTimeframeTable(i).saveIntervalSeconds
+'Next
+'
+'Set mInstrumentTC = mTradingDB.InstrumentFactory.loadBySpecifierAsync(mContractSpec)
+'
+'Exit Sub
+'Err:
+'handleFatalError Err.Number, _
+'                ProjectName & "." & ModuleName & "::" & "mTradingDB_ConnectSucceeded", _
+'                Err.Description
+'End Sub
 
-Private Sub mTradingDB_ConnectFailed(ByVal errorCode As Long, ByVal errorDesc As String)
-On Error GoTo Err
-mServiceConsumer.NotifyEvent StandardSPEventCodes.HDCantConnectDataSource, _
-                        "error " & errorCode & ": " & errorDesc, _
-                        mHistDataServiceProvider.handle
-mServiceConsumer.NotReady
-Exit Sub
-Err:
-handleFatalError Err.Number, _
-                ProjectName & "." & ModuleName & "::" & "mTradingDB_ConnectFailed", _
-                Err.Description
-End Sub
-
-Private Sub mTradingDB_ConnectSucceeded()
-Dim i As Long
-
-On Error GoTo Err
-
-mServiceConsumer.NotifyEvent StandardSPEventCodes.HDConnectedToDataSource, _
-                        "Connected to data source", _
-                        mHistDataServiceProvider.handle
-
-For i = 0 To UBound(mTimeframeTable)
-    mServiceConsumer.RequiredTimePeriod mTimeframeTable(i).timeframe, _
-                                        mTimeframeTable(i).saveIntervalSeconds
-Next
-
-Set mInstrumentTC = mTradingDB.InstrumentFactory.loadBySpecifierAsync(mContractSpec)
-
-Exit Sub
-Err:
-handleFatalError Err.Number, _
-                ProjectName & "." & ModuleName & "::" & "mTradingDB_ConnectSucceeded", _
-                Err.Description
-End Sub
 '@===============================================================================
 ' Properties
 '@===============================================================================
@@ -281,12 +289,15 @@ Friend Sub finish()
 Dim s As String
 Dim i As Long
 
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mInstrumentTC Is Nothing Then
     mInstrumentTC.cancelTask
     Set mInstrumentTC = Nothing
 End If
 
-s = mServiceProviderName & " (" & mContractSpec.localSymbol & ")"
+s = mServiceProviderName & " (" & mContract.specifier.localSymbol & ")"
 For i = 0 To UBound(mTimeframeTable)
     s = s & vbCrLf & "    Total of " & mTimeframeTable(i).barsWritten & " bars (" & _
             TimePeriodToString(mTimeframeTable(i).timeframe) & _
@@ -297,15 +308,26 @@ gLogger.Log LogLevelNormal, _
             s, _
             Me
 Set mServiceConsumer = Nothing
+
+Exit Sub
+
+Err:
+gLogger.Log LogLevelSevere, _
+        "Error " & Err.Number & " at " & _
+        ProjectName & "." & ModuleName & ":" & "finish" & "." & failpoint & _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, "") & vbCrLf & _
+        Err.Description
+
 End Sub
 
 Friend Sub initialise( _
                 ByVal Name As String, _
+                ByVal dbType As DatabaseTypes, _
                 ByVal connectionString As String, _
                 ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
                 ByVal barDataOutputServiceConsumer As TradeBuildSP.IBarDataOutputServiceConsumer, _
                 ByVal HistDataServiceProvider As TradeBuildSP.IBarDataServiceProvider, _
-                ByVal contractSpec As ContractSpecifier, _
+                ByVal pContract As Contract, _
                 ByVal useSynchronousWrites As Boolean)
 mServiceProviderName = Name
 
@@ -314,11 +336,17 @@ Set mServiceConsumer = barDataOutputServiceConsumer
 
 mUseSynchronousWrites = useSynchronousWrites
 
+gLogger.Log LogLevelDetail, "HistDataWriter: connecting to database"
+
 mConnectionString = connectionString
-Set mTradingDB = CreateTradingDB(mConnectionString)
+Set mTradingDB = CreateTradingDB(mConnectionString, dbType)
 
 Set mHistDataServiceProvider = HistDataServiceProvider
-Set mContractSpec = contractSpec
+Set mContract = pContract
+
+If gLogger.isLoggable(LogLevelDetail) Then gLogger.Log LogLevelDetail, "HistDataWriter: retrieving instrument object for " & mContract.specifier.toString
+
+Set mInstrumentTC = mTradingDB.InstrumentFactory.loadBySpecifierAsync(mContract.specifier)
 
 End Sub
 
@@ -330,6 +358,8 @@ Private Sub handleFatalError( _
                 ByVal Number As Long, _
                 ByVal Source As String, _
                 ByVal Description As String)
+gLogger.Log LogLevelSevere, Source & ": error (" & Number & "): " & Description
+
 mCommonServiceConsumer.FatalServiceProviderError Number, _
                             Source, _
                             Description, _
@@ -339,5 +369,15 @@ finish
 mHistDataServiceProvider.dataWriterFinished Me
 End Sub
 
+Private Sub requestTimeframes()
+Dim i As Long
 
+gLogger.Log LogLevelDetail, "HistDataWriter: requesting " & (UBound(mTimeframeTable) + 1) & " timeframes"
+
+For i = 0 To UBound(mTimeframeTable)
+    mServiceConsumer.RequiredTimePeriod mTimeframeTable(i).timeframe, _
+                                        mTimeframeTable(i).saveIntervalSeconds
+Next
+
+End Sub
 

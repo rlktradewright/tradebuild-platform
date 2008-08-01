@@ -201,11 +201,11 @@ If ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToRealtimeDataSource Then
     mLogger.Log LogLevelNormal, "Connected ok to realtime data source"
     RaiseEvent Connected
 ElseIf ev.eventCode = ApiNotifyCodes.ApiNotifyCantConnectRealtimeDataSource Then
-    mLogger.Log LogLevelNormal, "Connect to realtime data source failed: " & ev.eventMessage
+    mLogger.Log LogLevelSevere, "Connect to realtime data source failed: " & ev.eventMessage
     RaiseEvent ConnectFailed(ev.eventMessage)
 ElseIf ev.eventCode = ApiNotifyCodes.ApiNotifyDisconnectedFromRealtimeDataSource Or _
         ev.eventCode = ApiNotifyCodes.ApiNotifyLostConnectionToRealtimeDataSource Then
-    mLogger.Log LogLevelNormal, "Connection to realtime data source closed"
+    mLogger.Log LogLevelNormal, "Connection to realtime data source closed: " & ev.eventMessage
     RaiseEvent ConnectionClosed
 ElseIf ev.eventCode = ApiNotifyCodes.ApiNotifyReconnectingToRealtimeDataSource Then
     mLogger.Log LogLevelNormal, "Reconnecting to realtime data source"
@@ -228,7 +228,7 @@ End Sub
 '@================================================================================
 
 Private Sub mTradeBuildAPI_Error(ev As ErrorEvent)
-mLogger.Log LogLevelNormal, "Error " & ev.errorCode & ": " & ev.ErrorMessage
+mLogger.Log LogLevelSevere, "Error " & ev.errorCode & ": " & ev.ErrorMessage
 RaiseEvent ErrorMessage(ev.errorCode, _
                     ev.ErrorMessage)
 End Sub
@@ -239,7 +239,7 @@ Dim spError As ServiceProviderError
 If ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
     Set spError = mTradeBuildAPI.GetServiceProviderError
     With spError
-        mLogger.Log LogLevelNormal, _
+        mLogger.Log LogLevelSevere, _
                     "Service provider error (" & .serviceProviderName & "): " & .errorCode & ": " & .message
         RaiseEvent ServiceProviderError(.errorCode, _
                                         .serviceProviderName, _
@@ -544,7 +544,7 @@ stTask.initialise mTickers, _
                 mWriteticks, _
                 mOutputFormat, _
                 mOutputPath
-Set mStartTasksTC = StartTask(stTask, PriorityNormal)
+Set mStartTasksTC = StartTask(stTask, PriorityNormal, "StartTickers")
 End Sub
 
 

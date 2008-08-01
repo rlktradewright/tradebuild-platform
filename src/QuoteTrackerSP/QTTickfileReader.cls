@@ -352,7 +352,7 @@ End If
 End Sub
 
 Friend Sub historicalTick( _
-                ByRef pTick As Tick)
+                ByRef pTick As GenericTick)
 mTickQueue.addToEnd pTick
 'If mTickQueue.size Mod 10 = 0 Then
 '    Debug.Print "QTSP.QTTickfileReader: queue length: " & mTickQueue.size
@@ -370,7 +370,7 @@ End Sub
 '================================================================================
 
 Private Sub FireNextTick()
-Dim lTick As Tick
+Dim lTick As GenericTick
 
 If mTickQueue.size = 0 Then
     If mAllTicksReceived Then
@@ -386,34 +386,15 @@ mTickRequestPending = False
 
 lTick = mTickQueue.removeFromFront
 
-With lTick
-    mNumPlayedTicks = mNumPlayedTicks + 1
-    
-    If mNumPlayedTicks Mod mReplayProgressEventFrequency = 0 Then
-        mServiceConsumer.ReplayProgress .timestamp, _
-                                mNumPlayedTicks, _
-                                0#
-    End If
+mNumPlayedTicks = mNumPlayedTicks + 1
 
-    Select Case .TickType
-    Case TickTypes.bid
-        mDataConsumer.bid .timestamp, .Price, .size
-    Case TickTypes.ask
-        mDataConsumer.ask .timestamp, .Price, .size
-    Case TickTypes.last
-        mDataConsumer.Trade .timestamp, .Price, .size
-    Case TickTypes.volume
-        mDataConsumer.volume .timestamp, .size
-    Case TickTypes.prevClose
-        mDataConsumer.PreviousClose .timestamp, .Price
-    Case TickTypes.high
-        mDataConsumer.high .timestamp, .Price
-    Case TickTypes.low
-        mDataConsumer.low .timestamp, .Price
-    Case TickTypes.openInterest
-        mDataConsumer.openInterest .timestamp, .size
-    End Select
-End With
+If mNumPlayedTicks Mod mReplayProgressEventFrequency = 0 Then
+    mServiceConsumer.ReplayProgress lTick.timestamp, _
+                            mNumPlayedTicks, _
+                            0#
+End If
+
+mDataConsumer.Tick lTick
 
 End Sub
 

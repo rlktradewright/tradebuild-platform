@@ -125,7 +125,7 @@ End Function
 
 Private Function IBarDataServiceProvider_CreateBarDataWriter( _
                             ByVal serviceConsumer As TradeBuildSP.IBarDataOutputServiceConsumer, _
-                            ByVal contractSpec As ContractSpecifier, _
+                            ByVal pContract As Contract, _
                             Optional ByVal location As String = "" _
                             ) As TradeBuildSP.IBarDataWriter
 

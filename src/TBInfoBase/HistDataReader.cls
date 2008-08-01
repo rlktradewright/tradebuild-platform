@@ -55,7 +55,7 @@ Private Const ModuleName As String = "HistDataReader"
 ' Member variables
 '@===============================================================================
 
-Private WithEvents mTradingDB       As TradingDB
+Private mTradingDB                  As TradingDB
 Attribute mTradingDB.VB_VarHelpID = -1
 Private mConnectionString           As String
 
@@ -111,6 +111,9 @@ Private Sub IBarDataReader_FetchBars( _
                             ByVal barSpecifier As BarDataSpecifier)
 
 On Error GoTo Err
+
+gLogger.Log LogLevelDetail, "HistDataReader: fetching bars for " & barSpecifier.Contract.specifier.localSymbol
+
 If mRequestInProgress Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "TBInfoBase.HistDataReader::FetchBars", _
                                     "Request already in progress"
@@ -198,16 +201,25 @@ End Function
 Private Sub mBarsTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
 If ev.cancelled Then
 ElseIf ev.errorNumber <> 0 Then
+    gLogger.Log LogLevelNormal, _
+                "HistDataReader failed to retrieve bars for " & mBarDataSpecifier.Contract.specifier.toString & vbCrLf & _
+                "Error " & ev.errorNumber & ": " & ev.errorMessage
     mServiceConsumer.NotifyEvent StandardSPEventCodes.HDRequestFailed, _
                         "Error " & ev.errorNumber & ": " & ev.errorMessage, _
                         mHistDataServiceProvider.handle
 Else
-    If Not mRequestInProgress Then Exit Sub
+    If Not mRequestInProgress Then
+        Set mBarsTC = Nothing
+        Exit Sub
+    End If
+    
     mWaitingForData = False
+    mRequestInProgress = False
     
     Set mBars = ev.result
     Set mEnumerator = mBars.Enumerator
     
+    gLogger.Log LogLevelDetail, "HistDataReader retrieved " & mBars.Count & " bars for " & mBarDataSpecifier.Contract.specifier.toString
     mServiceConsumer.Ready
     
     If mBarRequested Then
@@ -219,25 +231,6 @@ Set mBarsTC = Nothing
 End Sub
 
 '@===============================================================================
-' mTradingDB Event Handlers
-'@===============================================================================
-
-Private Sub mTradingDB_ConnectFailed( _
-                ByVal errorCode As Long, _
-                ByVal errorDesc As String)
-On Error GoTo Err
-mServiceConsumer.NotifyEvent StandardSPEventCodes.HDCantConnectDataSource, _
-                        "error " & errorCode & ": " & errorDesc, _
-                        mHistDataServiceProvider.handle
-
-Exit Sub
-Err:
-handleFatalError Err.Number, _
-                ProjectName & "." & ModuleName & "::" & "mTradingDB_ConnectFailed", _
-                Err.Description
-End Sub
-
-'@===============================================================================
 ' Properties
 '@===============================================================================
 
@@ -246,16 +239,29 @@ End Sub
 '@===============================================================================
 
 Friend Sub finish()
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mBarsTC Is Nothing Then
     mBarsTC.cancelTask
     Set mBarsTC = Nothing
 End If
 Set mServiceConsumer = Nothing
 Set mDataConsumer = Nothing
+
+Exit Sub
+
+Err:
+gLogger.Log LogLevelSevere, _
+        "Error " & Err.Number & " at " & _
+        ProjectName & "." & ModuleName & ":" & "finish" & "." & failpoint & _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, "") & vbCrLf & _
+        Err.Description
 End Sub
 
 Friend Sub initialise( _
                 ByVal Name As String, _
+                ByVal dbType As DatabaseTypes, _
                 ByVal connectionString As String, _
                 ByVal CommonServiceConsumer As TradeBuildSP.ICommonServiceConsumer, _
                 ByVal barDataInputServiceConsumer As TradeBuildSP.IBarDataInputServiceConsumer, _
@@ -271,7 +277,7 @@ Set mDataConsumer = DataConsumer
 mMode = mode
                 
 mConnectionString = connectionString
-Set mTradingDB = CreateTradingDB(mConnectionString)
+Set mTradingDB = CreateTradingDB(mConnectionString, dbType)
 
 End Sub
 
@@ -283,6 +289,8 @@ Private Sub handleFatalError( _
                 ByVal Number As Long, _
                 ByVal Source As String, _
                 ByVal Description As String)
+gLogger.Log LogLevelSevere, Source & ": error (" & Number & "): " & Description
+
 mCommonServiceConsumer.FatalServiceProviderError Number, _
                             Source, _
                             Description, _
@@ -302,44 +310,4 @@ Else
     mServiceConsumer.BarDataComplete
 End If
 End Sub
-
-'Private Function ReadBar( _
-'                ByVal pBar As Bar, _
-'                ByRef barType As Long, _
-'                ByRef barLength As Long) As Boolean
-'Static i As Long
-'
-'If mRequestTicks Then
-'    i = i + 1
-'    If i > mBars.Count Then
-'        Set pBar = Nothing
-'        mServiceConsumer.BarDataComplete
-'        mRequestInProgress = False
-'        ReadBar = False
-'    Else
-'        Set pBar = mBars.Bar(i)
-'        barType = mBarDataSpecifier.barType
-'        barLength = mBarDataSpecifier.barLength
-'        ReadBar = True
-'    End If
-'Else
-'    If Not mBarReader.ReadBar(timestamp, _
-'                            barType, _
-'                            barLength, _
-'                            openPrice, _
-'                            highPrice, _
-'                            lowPrice, _
-'                            closePrice, _
-'                            Volume, _
-'                            tickVolume, _
-'                            OpenInterest) _
-'    Then
-'        mServiceConsumer.BarDataComplete
-'        mRequestInProgress = False
-'        ReadBar = False
-'    Else
-'        ReadBar = True
-'    End If
-'End If
-'End Function
 

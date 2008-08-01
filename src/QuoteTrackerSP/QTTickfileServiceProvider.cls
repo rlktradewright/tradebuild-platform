@@ -192,6 +192,7 @@ End Function
 
 Private Function ITickfileServiceProvider_CreateTickfileWriter( _
                             ByVal serviceConsumer As TradeBuildSP.ITickfileOutputServiceConsumer, _
+                            ByVal pContract As ContractUtils26.Contract, _
                             Optional ByVal FormatIdentifier As String = "", _
                             Optional ByVal location As String = "") As TradeBuildSP.ITickfileWriter
 ' writing not supported

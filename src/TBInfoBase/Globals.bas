@@ -32,6 +32,7 @@ Public Const ParamNameRole              As String = "Role"
 Public Const ParamNameServer            As String = "Server"
 Public Const ParamNameUserName          As String = "User Name"
 Public Const ParamNameUseSynchronousWrites As String = "Use Synchronous Writes"
+Public Const ParamNameUseSynchronousReads As String = "Use Synchronous Reads"
 
 
 '@===============================================================================
@@ -130,10 +131,3 @@ Case Else
 End Select
 End Function
 
-Public Function gTruncateTimeToNextMinute(ByVal timestamp As Date) As Date
-gTruncateTimeToNextMinute = Int((timestamp + OneMinute - OneMicrosecond) / OneMinute) * OneMinute
-End Function
-
-Public Function gTruncateTimeToMinute(ByVal timestamp As Date) As Date
-gTruncateTimeToMinute = Int((timestamp + OneMicrosecond) / OneMinute) * OneMinute
-End Function
