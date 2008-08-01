@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#27.6#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#30.0#0"; "TWControls10.ocx"
 Begin VB.UserControl TickerGrid 
    ClientHeight    =   3600
    ClientLeft      =   0
@@ -79,6 +79,7 @@ Private Enum TickerGridColumns
     ChangePercent
     highPrice
     lowPrice
+    openPrice
     closePrice
     openInterest
     Description
@@ -107,6 +108,7 @@ Private Enum TickerGridColumnWidths
     ChangePercentWidth = 7
     highWidth = 9
     LowWidth = 9
+    OpenWidth = 9
     CloseWidth = 9
     openInterestWidth = 9
     DescriptionWidth = 20
@@ -291,6 +293,12 @@ displayPrice ev, mColumnMap(TickerGridColumns.closePrice)
 
 End Sub
 
+Private Sub QuoteListener_sessionOpen(ev As TradeBuild26.QuoteEvent)
+
+displayPrice ev, mColumnMap(TickerGridColumns.openPrice)
+
+End Sub
+
 Private Sub QuoteListener_trade(ev As QuoteEvent)
 
 displayPrice ev, mColumnMap(TickerGridColumns.trade)
@@ -471,7 +479,7 @@ Case TickerStateRunning
     TickerGrid.Text = lContract.specifier.exchange
     
     TickerGrid.col = mColumnMap(TickerGridColumns.expiry)
-    TickerGrid.Text = lContract.expiryDate
+    TickerGrid.Text = IIf(lContract.expiryDate = 0, "", lContract.expiryDate)
     
     TickerGrid.col = mColumnMap(TickerGridColumns.OptionRight)
     TickerGrid.Text = OptionRightToString(lContract.specifier.Right)
@@ -784,6 +792,7 @@ setupTickerGridColumn 0, TickerGridColumns.Change, TickerGridColumnWidths.Change
 setupTickerGridColumn 0, TickerGridColumns.ChangePercent, TickerGridColumnWidths.ChangePercentWidth, "Chg %", False, TWControls10.AlignmentSettings.TwGridAlignCenterCenter
 setupTickerGridColumn 0, TickerGridColumns.highPrice, TickerGridColumnWidths.highWidth, "High", False, TWControls10.AlignmentSettings.TwGridAlignCenterCenter
 setupTickerGridColumn 0, TickerGridColumns.lowPrice, TickerGridColumnWidths.LowWidth, "Low", False, TWControls10.AlignmentSettings.TwGridAlignCenterCenter
+setupTickerGridColumn 0, TickerGridColumns.openPrice, TickerGridColumnWidths.OpenWidth, "Open", False, TWControls10.AlignmentSettings.TwGridAlignCenterCenter
 setupTickerGridColumn 0, TickerGridColumns.closePrice, TickerGridColumnWidths.CloseWidth, "Close", False, TWControls10.AlignmentSettings.TwGridAlignCenterCenter
 setupTickerGridColumn 0, TickerGridColumns.openInterest, TickerGridColumnWidths.openInterestWidth, "Open interest", False, TWControls10.AlignmentSettings.TwGridAlignCenterCenter
 setupTickerGridColumn 0, TickerGridColumns.Description, TickerGridColumnWidths.DescriptionWidth, "Description", True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter

@@ -1,16 +1,16 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#62.0#0"; "TradeBuildUI2-6.ocx"
-Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#26.0#0"; "StudiesUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#87.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#49.0#0"; "StudiesUI2-6.ocx"
 Begin VB.UserControl ConfigManager 
    BackStyle       =   0  'Transparent
    ClientHeight    =   8325
    ClientLeft      =   0
    ClientTop       =   0
-   ClientWidth     =   13890
+   ClientWidth     =   16170
    DefaultCancel   =   -1  'True
    ScaleHeight     =   8325
-   ScaleWidth      =   13890
+   ScaleWidth      =   16170
    Begin VB.CommandButton DeleteConfigButton 
       Caption         =   "Delete"
       Enabled         =   0   'False
@@ -297,6 +297,11 @@ If nameAlreadyInUse(NewString) Then
 End If
 
 renameCurrentConfig NewString
+
+End Sub
+
+Private Sub ConfigsTV_Collapse( _
+                ByVal Node As MSComctlLib.Node)
 
 End Sub
 

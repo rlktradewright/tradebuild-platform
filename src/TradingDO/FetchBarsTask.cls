@@ -67,9 +67,15 @@ Attribute mInstrumentTaskController.VB_VarHelpID = -1
 Private WithEvents mFetchTaskController      As TaskController
 Attribute mFetchTaskController.VB_VarHelpID = -1
                 
+Private mInstrument                         As instrument
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Terminate()
+Debug.Print "FetchBarsTask terminated"
+End Sub
 
 '@================================================================================
 ' Task Interface Members
@@ -90,8 +96,25 @@ If mTaskContext.cancelPending Then
     Exit Sub
 End If
 
-Set mInstrumentTaskController = mDB.InstrumentFactory.loadBySpecifierAsync(mSpecifier)
-mTaskContext.sleep -1
+If mInstrument Is Nothing Then
+    gLogger.Log LogLevelDetail, "FetchBarsTask started for " & mSpecifier.ToString
+    Set mInstrumentTaskController = mDB.InstrumentFactory.loadBySpecifierAsync( _
+                                            mSpecifier, _
+                                            , _
+                                            "LoadBySpecifier/" & mSpecifier.ToString & "(" & gGetSequenceNumber & ")")
+    mTaskContext.suspend -1
+Else
+    Set mFetchTaskController = mInstrument.fetchbarsAsync(mBarLength, _
+                                                        mBarLengthUnits, _
+                                                        mMaxNumberOfBars, _
+                                                        mFromDate, _
+                                                        mToDate, _
+                                                        mCustomSessionStartTime, _
+                                                        mCustomSessionEndTime, _
+                                                        mIncludeBarsOutsideSession, _
+                                                        mBarType)
+    mTaskContext.suspend -1
+End If
 End Sub
 
 Private Property Let Task_TaskContext(ByVal value As TWUtilities30.TaskContext)
@@ -110,13 +133,17 @@ Private Sub mFetchTaskController_Completed(ev As TWUtilities30.TaskCompletionEve
 If ev.cancelled Then
     mTaskContext.finish Empty, True
 ElseIf ev.errorNumber <> 0 Then
+    gLogger.Log LogLevelDetail, "FetchBarsTask failed for " & mSpecifier.ToString & vbCrLf & _
+                                "Error " & ev.errorNumber & ": " & ev.errorMessage
     mTaskContext.Error ev.errorNumber, ev.errorMessage, ev.errorSource
 ElseIf IsEmpty(ev.result) Then
     mTaskContext.Error ErrorCodes.ErrIllegalStateException, _
                         "No bars returned"
 Else
+    gLogger.Log LogLevelDetail, "FetchBarsTask retrieved bars for " & mSpecifier.ToString
     mTaskContext.finish ev.result, False
 End If
+Set mFetchTaskController = Nothing
 End Sub
 
 '@================================================================================
@@ -124,8 +151,6 @@ End Sub
 '@================================================================================
 
 Private Sub mInstrumentTaskController_Completed(ev As TWUtilities30.TaskCompletionEvent)
-Dim lInstrument As instrument
-
 If ev.cancelled Then
     mTaskContext.finish Empty, True
 ElseIf ev.errorNumber <> 0 Then
@@ -134,17 +159,11 @@ ElseIf IsEmpty(ev.result) Then
     mTaskContext.Error ErrorCodes.ErrIllegalArgumentException, _
                         "Specified object does not exist"
 Else
-    Set lInstrument = ev.result
-    Set mFetchTaskController = lInstrument.fetchbarsAsync(mBarLength, _
-                                                        mBarLengthUnits, _
-                                                        mMaxNumberOfBars, _
-                                                        mFromDate, _
-                                                        mToDate, _
-                                                        mCustomSessionStartTime, _
-                                                        mCustomSessionEndTime, _
-                                                        mIncludeBarsOutsideSession, _
-                                                        mBarType)
+    Set mInstrument = ev.result
+    gLogger.Log LogLevelDetail, "FetchBarsTask retrieved instrument object for " & mSpecifier.ToString
+    mTaskContext.continue
 End If
+Set mInstrumentTaskController = Nothing
 End Sub
 
 '@================================================================================

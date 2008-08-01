@@ -52,7 +52,7 @@ End Property
 Public Property Get gLogFileName() As String
 Static logFileName As String
 If logFileName = "" Then
-    If gCommandLineParser.Switch(SwitchLogFilename) Then gLogFileName = gCommandLineParser.SwitchValue(SwitchLogFilename)
+    If gCommandLineParser.Switch(SwitchLogFilename) Then logFileName = gCommandLineParser.SwitchValue(SwitchLogFilename)
 
     If logFileName = "" Then
         logFileName = GetSpecialFolderPath(FolderIdLocalAppdata) & _

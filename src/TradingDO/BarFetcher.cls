@@ -59,7 +59,7 @@ Private Const ModuleName                    As String = "BarFetcher"
 
 Private mSpecifier                          As BarDataSpecifier
 
-Private mInstrumentRef                      As WeakReference
+Private mInstrument                         As instrument
 
 Private mBarLengthMinutes                   As Long
 Private mNumberOfBars                       As Long
@@ -68,7 +68,9 @@ Private mToDate                             As Date
 
 Private mRequestTicks                       As Boolean
 
-Private WithEvents mConnection              As ADODB.Connection
+Private WithEvents mConnector               As Connector
+Attribute mConnector.VB_VarHelpID = -1
+Private WithEvents mConnection              As ADODB.connection
 Attribute mConnection.VB_VarHelpID = -1
 Private WithEvents mRs                      As ADODB.Recordset
 Attribute mRs.VB_VarHelpID = -1
@@ -103,36 +105,76 @@ Attribute mAppendBarsTaskController.VB_VarHelpID = -1
 ' Class Event Handlers
 '@================================================================================
 
+Private Sub Class_Terminate()
+Debug.Print "BarFetcher terminated"
+End Sub
+
 '@================================================================================
 ' Task Interface Members
 '@================================================================================
 
 Private Sub Task_cancel()
-If Not mRs Is Nothing Then mRs.cancel
+
+If Not mRs Is Nothing Then
+    If mRs.State <> adStateOpen Then mRs.cancel
+End If
+
 If Not mCmd Is Nothing Then mCmd.cancel
-If Not mConnection Is Nothing Then mConnection.cancel
+
+If Not mConnection Is Nothing Then
+    If mConnection.State = adStateOpen Then
+        mConnection.Close
+    Else
+        mConnection.cancel
+    End If
+End If
+
 mTaskContext.finish Empty, True
 End Sub
 
 Private Sub Task_run()
+Static gotFirstTicks As Boolean
 
 Select Case mAsyncState
 Case Started
 
+    gLogger.Log LogLevelDetail, "BarFetcher started for " & mInstrument.shortName
+    
     If mTaskContext.cancelPending Then
         mTaskContext.finish Empty, True
         Exit Sub
     End If
     
+    connectToDB
+    
     generateRequestDetails mSpecifier.fromDate, mSpecifier.toDate
     
-    connectToDB
-    mTaskContext.sleep -1
+    If Not mRequestTicks Then
+        setupFetchBarsCommand mSpecifier.barType, _
+                            mBarLengthMinutes, _
+                            mNumberOfBars, _
+                            mFromDate, _
+                            mToDate
+    Else
+        setupFetchTicksCommand mFromDate, mToDate
+    End If
+    
+    mTaskContext.suspend -1
     
 Case Connecting
+    gLogger.Log LogLevelNormal, mTaskContext.name & ": Task_run invoked in Connecting state"
+    gLogger.Log LogLevelNormal, "Runnable tasks--------------------------------------------"
+    gLogger.Log LogLevelNormal, TaskManager.getRunnableTaskSummary
+    gLogger.Log LogLevelNormal, "Suspended tasks-------------------------------------------"
+    gLogger.Log LogLevelNormal, TaskManager.getSuspendedTaskSummary
     mTaskContext.Error ErrorCodes.ErrIllegalStateException, _
                         "Task_run invoked in Connecting state"
 Case Fetching
+    gLogger.Log LogLevelNormal, mTaskContext.name & ": Task_run invoked in Fetching state"
+    gLogger.Log LogLevelNormal, "Runnable tasks--------------------------------------------"
+    gLogger.Log LogLevelNormal, TaskManager.getRunnableTaskSummary
+    gLogger.Log LogLevelNormal, "Suspended tasks-------------------------------------------"
+    gLogger.Log LogLevelNormal, TaskManager.getSuspendedTaskSummary
     mTaskContext.Error ErrorCodes.ErrIllegalStateException, _
                         "Task_run invoked in Fetching state"
 Case ProcessingBars
@@ -146,6 +188,9 @@ Case ProcessingBars
         If filterByTime(mRs("DateTime")) Then processBar
         mRs.MovePrevious
     Else
+        Debug.Print "BarFetcher: close connection"
+        If mConnection.State = adStateOpen Then mConnection.Close
+        gLogger.Log LogLevelDetail, "BarFetcher fetched " & builder.Bars.count & " bars for " & mInstrument.shortName
         mTaskContext.finish builder.Bars, False
     End If
 
@@ -156,19 +201,22 @@ Case ProcessingTicks
         Exit Sub
     End If
     
-    If Not mRs.EOF Then
+    If Not noTicks Then
         processTickData
-        mRs.moveNext
+        mRs.MoveNext
     Else
     
-        If mFetchBarsBuilder Is Nothing Then
-            Set mFetchBarsBuilder = builder
+        If Not gotFirstTicks Then
+            gotFirstTicks = True
             If needMoreTicks Then
-                fetchMoreTicks
-                mAsyncState = Fetching
-                mTaskContext.sleep -1   ' wait for more ticks to be fetched
+                connectToDB
+                generateNextRequest
+                setupFetchTicksCommand mFromDate, mToDate
+                mTaskContext.suspend -1    ' wait for more ticks to be fetched
             Else
-                mConnection.Close
+                gLogger.Log LogLevelDetail, "BarFetcher fetched " & builder.Bars.count & " bars for " & mInstrument.shortName
+                Debug.Print "BarFetcher: close connection"
+                If mConnection.State = adStateOpen Then mConnection.Close
                 mTaskContext.finish mFetchBarsBuilder.Bars, False
             End If
         Else
@@ -178,7 +226,7 @@ Case ProcessingTicks
             Else
                 Set mAppendBarsTaskController = mFetchBarsBuilder.appendBarsAsync(builder.Bars)
             End If
-            mTaskContext.sleep -1   ' wait for the append to finish
+            mTaskContext.suspend -1    ' wait for the append to finish
         End If
     
     End If
@@ -207,10 +255,13 @@ ElseIf ev.errorNumber <> 0 Then
     mTaskContext.Error ev.errorNumber, ev.errorMessage, ev.errorSource
 Else
     If needMoreTicks Then
-        fetchMoreTicks
+        connectToDB
+        generateNextRequest
+        setupFetchTicksCommand mFromDate, mToDate
         mAsyncState = Fetching
     Else
-        mConnection.Close
+        Debug.Print "BarFetcher: close connection"
+        If mConnection.State = adStateOpen Then mConnection.Close
         mTaskContext.finish mFetchBarsBuilder.Bars, False
     End If
 End If
@@ -220,58 +271,33 @@ End Sub
 ' mConnection Event Handlers
 '@===============================================================================
 
-Private Sub mConnection_ConnectComplete( _
-                ByVal pError As ADODB.Error, _
-                adStatus As ADODB.EventStatusEnum, _
-                ByVal pConnection As ADODB.Connection)
-Dim s As String
-
-If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
-    s = "Connection error " & vbCrLf & _
-        gGenerateErrorMessage(pError) & _
-        gGenerateConnectionErrorMessages(pConnection)
-
-    If mAsynchronous Then
-        mTaskContext.Error pError.Number, _
-                            ProjectName & "." & ModuleName & ":" & "mConnection_ConnectComplete" & vbCrLf & s
-    Else
-        Err.Raise pError.Number, _
-                    ProjectName & "." & ModuleName & ":" & "mConnection_ConnectComplete", _
-                    s
-    End If
-    Exit Sub
-End If
-
-If mAsynchronous Then
-    If Not mRequestTicks Then
-        doFetchBars mSpecifier.barType, _
-                    mBarLengthMinutes, _
-                    mNumberOfBars, _
-                    mFromDate, _
-                    mToDate
-    Else
-        doFetchTicks mFromDate, mToDate
-    End If
-    mAsyncState = Fetching
-End If
-End Sub
-
 Private Sub mConnection_ExecuteComplete( _
                 ByVal RecordsAffected As Long, _
                 ByVal pError As ADODB.Error, _
                 adStatus As ADODB.EventStatusEnum, _
                 ByVal pCommand As ADODB.Command, _
                 ByVal pRecordset As ADODB.Recordset, _
-                ByVal pConnection As ADODB.Connection)
+                ByVal pConnection As ADODB.connection)
 Dim s As String
 
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
+    
+    If pError.Number = 3712 Then
+        ' this error is "Operation has been cancelled by the user"
+        ' This occurs occasionally when running async, but I've no idea why
+        connectToDB
+        Exit Sub
+    End If
+    
     s = "Fetch error " & vbCrLf & _
         gGenerateErrorMessage(pError) & _
         gGenerateConnectionErrorMessages(pConnection)
         
-    mConnection.Close
     If mAsynchronous Then
+        If mConnection.State = adStateOpen Then
+            Debug.Print "BarFetcher: close connection(error)"
+            mConnection.Close
+        End If
         mTaskContext.Error pError.Number, _
                             ProjectName & "." & ModuleName & ":" & "mConnection_ExecuteComplete" & vbCrLf & s
     Else
@@ -284,6 +310,33 @@ End If
 End Sub
 
 '@===============================================================================
+' mConnector Event Handlers
+'@===============================================================================
+
+Private Sub mConnector_Connected( _
+                ByVal pConnection As ADODB.connection)
+Set mConnection = pConnection
+If mAsynchronous Then
+    Execute
+    mAsyncState = Fetching
+End If
+End Sub
+
+Private Sub mConnector_ConnectFailed( _
+                ByVal errorCode As Long, _
+                ByVal errorDesc As String)
+If mAsynchronous Then
+    gLogger.Log LogLevelDetail, "BarFetcher connection error for " & mInstrument.shortName
+    mTaskContext.Error errorCode, _
+                        ProjectName & "." & ModuleName & ":" & "mConnector_ConnectFailed" & vbCrLf & errorDesc
+Else
+    Err.Raise errorCode, _
+                ProjectName & "." & ModuleName & ":" & "mConnector_ConnectFailed", _
+                errorDesc
+End If
+End Sub
+
+'@===============================================================================
 ' mRs Event Handlers
 '@===============================================================================
 
@@ -292,37 +345,41 @@ Private Sub mRs_FetchComplete( _
                 adStatus As ADODB.EventStatusEnum, _
                 ByVal pRecordset As ADODB.Recordset)
 Dim s As String
+Dim failpoint As Long
+On Error GoTo Err
+
 If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
     s = "Fetch error " & vbCrLf & _
         gGenerateErrorMessage(pError) & _
         gGenerateConnectionErrorMessages(mConnection)
     
-    mConnection.Close
+    Debug.Print "BarFetcher: close connection(error)"
+    If mConnection.State = adStateOpen Then mConnection.Close
     If mAsynchronous Then
         mTaskContext.Error pError.Number, _
-                            ProjectName & "." & ModuleName & ":" & "mConnection_FetchComplete" & vbCrLf & s
+                            ProjectName & "." & ModuleName & ":" & "mRs_FetchComplete" & vbCrLf & s
     Else
         Err.Raise pError.Number, _
-                ProjectName & "." & ModuleName & ":" & "mConnection_FetchComplete", _
+                ProjectName & "." & ModuleName & ":" & "mRs_FetchComplete", _
                 s
     End If
     Exit Sub
 End If
 
-mRs.ActiveConnection = Nothing
+'Set mrs.ActiveConnection = Nothing ' ADO docs say this is not allowed for a record set
+                                    ' that uses a command object - but it works most
+                                    ' of the time !
 If mAsynchronous Then
     If mRequestTicks Then
         If noTicks Then
-            If mFetchBarsBuilder Is Nothing Then
-                mTaskContext.finish Empty, False
-            Else
-                mTaskContext.finish mFetchBarsBuilder.Bars, False
-            End If
+            gLogger.Log LogLevelDetail, "BarFetcher fetched " & builder.Bars.count & " bars for " & mInstrument.shortName
+            Debug.Print "BarFetcher: close connection"
+            If mConnection.State = adStateOpen Then mConnection.Close
+            mTaskContext.finish mFetchBarsBuilder.Bars, False
         Else
             mAsyncState = ProcessingTicks
         End If
     Else
-        mConnection.Close
         If Not mRs.BOF Then
             mRs.MoveLast    ' because the stored procedure returns them in reverse order
         End If
@@ -330,6 +387,15 @@ If mAsynchronous Then
     End If
     mTaskContext.continue   ' start calling Task_run again
 End If
+
+Exit Sub
+
+Err:
+mTaskContext.Error Err.Number, _
+        Err.Description, _
+        ProjectName & "." & ModuleName & ":" & "mRs_FetchComplete" & "." & failpoint & _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+
 
 End Sub
 
@@ -361,6 +427,8 @@ generateRequestDetails mSpecifier.fromDate, mSpecifier.toDate
 
 connectToDB
 
+Set mFetchBarsBuilder = builder
+
 If Not mRequestTicks Then
     doFetchBars mSpecifier.barType, _
                 mBarLengthMinutes, _
@@ -375,10 +443,14 @@ Else
     If noTicks Then
     Else
         processTicks
-        Set mFetchBarsBuilder = builder
         
         Do While needMoreTicks
-            fetchMoreTicks
+            generateNextRequest
+            doFetchBars mSpecifier.barType, _
+                        mBarLengthMinutes, _
+                        mNumberOfBars, _
+                        mFromDate, _
+                        mToDate
             processTicks
             If mSpecifier.fromDate = 0 Then
                 builder.appendBars mFetchBarsBuilder.Bars
@@ -388,17 +460,19 @@ Else
             End If
         Loop
         
-        Set fetchBars = mFetchBarsBuilder.Bars
     End If
+    Set fetchBars = mFetchBarsBuilder.Bars
 End If
 
-mConnection.Close
+Debug.Print "BarFetcher: close connection"
+If mConnection.State = adStateOpen Then mConnection.Close
 
 End Function
 
 Friend Function fetchbarsAsync( _
                 ByVal specifier As BarDataSpecifier, _
-                Optional ByVal cookie As Variant) As TaskController
+                ByVal cookie As Variant, _
+                ByVal taskName As String) As TaskController
 mAsyncState = Started
 
 mAsynchronous = True
@@ -406,15 +480,21 @@ Set mSpecifier = specifier
 
 createNewCustomSession
 
-Set fetchbarsAsync = StartTask(Me, PriorityNormal, , cookie)
+Set mFetchBarsBuilder = builder
+
+If taskName = "" Then taskName = "BarFetcher/" & mInstrument.shortName & "(" & mSpecifier.barLength & TimePeriodUnitsToString(mSpecifier.barLengthUnits) & ")" & FormatTimestamp(mFromDate, TimestampNoMillisecs) & "-" & FormatTimestamp(mToDate, TimestampNoMillisecs) & "(" & gGetSequenceNumber & ")"
+
+Set fetchbarsAsync = StartTask(Me, _
+                            PriorityNormal, _
+                            taskName, _
+                            cookie)
 End Function
 
 Friend Sub initialise( _
                 ByVal db As TradingDB, _
-                ByVal pInstrument As Instrument)
+                ByVal pInstrument As instrument)
 Set mDB = db
-Set mInstrumentRef = CreateWeakReference(pInstrument)
-
+Set mInstrument = pInstrument
 createNewSession
 
 End Sub
@@ -427,7 +507,7 @@ Private Function builder() As BarsBuilder
 If mBuilder Is Nothing Then Set mBuilder = CreateBarsBuilder(mSpecifier.barLength, _
                                                             mSpecifier.barLengthUnits, _
                                                             mSession, _
-                                                            getInstrument.tickSize, _
+                                                            mInstrument.tickSize, _
                                                             mSpecifier.maxNumberOfBars)
 Set builder = mBuilder
 End Function
@@ -437,15 +517,10 @@ closeValue = mRs("closeprice")
 End Function
 
 Private Sub connectToDB()
-If Not mConnection Is Nothing Then mConnection.Close
-Set mConnection = New ADODB.Connection
-mConnection.CursorLocation = CursorLocationEnum.adUseClient
-If mAsynchronous Then
-    mConnection.Open mDB.connectionString, , , ConnectOptionEnum.adAsyncConnect
-    mAsyncState = Connecting
-Else
-    mConnection.Open mDB.connectionString
-End If
+Debug.Print "BarFetcher: Connect to DB"
+If mConnector Is Nothing Then Set mConnector = mDB.getConnector(, IIf(mAsynchronous, ConnectOptionEnum.adAsyncConnect, 0))
+mConnector.connect
+If mAsynchronous Then mAsyncState = Connecting
 End Sub
 
 Private Sub createNewCustomSession()
@@ -453,16 +528,16 @@ If mSpecifier.customSessionEndTime <> 0 Or mSpecifier.customSessionStartTime <> 
     Set mCustomSessionBuilder = New SessionBuilder
     mCustomSessionBuilder.sessionStartTime = mSpecifier.customSessionStartTime
     mCustomSessionBuilder.sessionEndTime = mSpecifier.customSessionEndTime
-    mCustomSessionBuilder.TimeZone = GetTimeZone(getInstrument.timeZoneCanonicalName)
+    mCustomSessionBuilder.TimeZone = GetTimeZone(mInstrument.TimeZoneName)
     Set mCustomSession = mCustomSessionBuilder.Session
 End If
 End Sub
 
 Private Sub createNewSession()
 Set mSessionBuilder = New SessionBuilder
-mSessionBuilder.sessionStartTime = getInstrument.sessionStartTime
-mSessionBuilder.sessionEndTime = getInstrument.sessionEndTime
-mSessionBuilder.TimeZone = GetTimeZone(getInstrument.timeZoneCanonicalName)
+mSessionBuilder.sessionStartTime = mInstrument.sessionStartTime
+mSessionBuilder.sessionEndTime = mInstrument.sessionEndTime
+mSessionBuilder.TimeZone = GetTimeZone(mInstrument.TimeZoneName)
 Set mSession = mSessionBuilder.Session
 End Sub
 
@@ -473,136 +548,33 @@ Private Sub doFetchBars( _
                         ByVal fromTime As Date, _
                         ByVal toTime As Date)
 
-Dim param As ADODB.Parameter
-Dim fromLocal As Date
-Dim toLocal As Date
+setupFetchBarsCommand barType, barLength, NumberOfBars, fromTime, toTime
 
-fromTime = gRoundTimeToSecond(fromTime)
-toTime = gRoundTimeToSecond(toTime)
-
-Set mCmd = New ADODB.Command
-mCmd.CommandType = adCmdStoredProc
-
-mCmd.CommandText = "FetchBarData"
-
-' @InstrumentID
-Set param = mCmd.CreateParameter(, _
-                            DataTypeEnum.adInteger, _
-                            ParameterDirectionEnum.adParamInput, _
-                            , _
-                            getInstrument.id)
-mCmd.Parameters.append param
-
-' @BarType
-Set param = mCmd.CreateParameter(, _
-                            DataTypeEnum.adInteger, _
-                            ParameterDirectionEnum.adParamInput, _
-                            , _
-                            barType)
-mCmd.Parameters.append param
-
-' @BarLength
-Set param = mCmd.CreateParameter(, _
-                            DataTypeEnum.adInteger, _
-                            ParameterDirectionEnum.adParamInput, _
-                            , _
-                            barLength)
-mCmd.Parameters.append param
-
-' @NumberRequired
-Set param = mCmd.CreateParameter(, _
-                            DataTypeEnum.adInteger, _
-                            ParameterDirectionEnum.adParamInput, _
-                            , _
-                            NumberOfBars)
-mCmd.Parameters.append param
-
-If fromTime < #1/1/1900# Then fromTime = #1/1/1900# ' don't exceed range of SmallDateTime
-If toTime < #1/1/1900# Then toTime = #1/1/1900# ' don't exceed range of SmallDateTime
-' @From
-Set param = mCmd.CreateParameter(, _
-                            DataTypeEnum.adDBTimeStamp, _
-                            ParameterDirectionEnum.adParamInput, _
-                            , _
-                            fromTime)
-mCmd.Parameters.append param
-
-' @To
-Set param = mCmd.CreateParameter(, _
-                            DataTypeEnum.adDBTimeStamp, _
-                            ParameterDirectionEnum.adParamInput, _
-                            , _
-                            toTime)
-mCmd.Parameters.append param
-
-mCmd.ActiveConnection = mConnection
-
-Set mRs = New ADODB.Recordset
-mRs.LockType = adLockReadOnly
-
-If mAsynchronous Then
-    mRs.Open mCmd, _
-                , _
-                CursorTypeEnum.adOpenForwardOnly, _
-                , _
-                CommandTypeEnum.adCmdStoredProc + _
-                ExecuteOptionEnum.adAsyncFetchNonBlocking + _
-                ExecuteOptionEnum.adAsyncExecute
-Else
-    mRs.Open mCmd, _
-                , _
-                CursorTypeEnum.adOpenForwardOnly, _
-                , _
-                CommandTypeEnum.adCmdStoredProc
-End If
+If Not mAsynchronous Then Execute
 End Sub
 
 Private Sub doFetchTicks( _
                 ByVal fromTime As Date, _
                 ByVal toTime As Date)
-Dim param As ADODB.Parameter
+setupFetchTicksCommand fromTime, toTime
 
-fromTime = gRoundTimeToSecond(fromTime)
-toTime = gRoundTimeToSecond(toTime)
+If Not mAsynchronous Then Execute
+End Sub
 
-Set mCmd = New ADODB.Command
-mCmd.CommandType = adCmdStoredProc
-
-mCmd.CommandText = "FetchTickData"
-
-' @InstrumentID
-Set param = mCmd.CreateParameter(, _
-                            DataTypeEnum.adInteger, _
-                            ParameterDirectionEnum.adParamInput, _
-                            , _
-                            getInstrument.id)
-mCmd.Parameters.append param
-
-' @From
-Set param = mCmd.CreateParameter(, _
-                            DataTypeEnum.adDBTimeStamp, _
-                            ParameterDirectionEnum.adParamInput, _
-                            , _
-                            fromTime)
-mCmd.Parameters.append param
-
-' @To
-Set param = mCmd.CreateParameter(, _
-                            DataTypeEnum.adDBTimeStamp, _
-                            ParameterDirectionEnum.adParamInput, _
-                            , _
-                            toTime)
-mCmd.Parameters.append param
+Private Sub Execute()
+gLogger.Log LogLevelDetail, "BarFetcher initiating fetch for " & mInstrument.shortName
 
 mCmd.ActiveConnection = mConnection
 
 Set mRs = New ADODB.Recordset
 mRs.LockType = adLockReadOnly
+mRs.cursorlocation = adUseClient
 
 If mAsynchronous Then
+    mRs.Properties("Initial Fetch Size") = 0
     mRs.Open mCmd, _
                 , _
-                CursorTypeEnum.adOpenForwardOnly, _
+                CursorTypeEnum.adOpenStatic, _
                 , _
                 CommandTypeEnum.adCmdStoredProc + _
                 ExecuteOptionEnum.adAsyncFetchNonBlocking + _
@@ -614,20 +586,6 @@ Else
                 , _
                 CommandTypeEnum.adCmdStoredProc
 End If
-End Sub
-
-Private Sub fetchMoreTicks()
-If mSpecifier.fromDate = 0 Then
-    generateRequestDetails 0, mFromDate
-Else
-    generateRequestDetails mToDate, 0
-End If
-
-Set mBuilder = Nothing
-mNotifiedFirstVolume = False
-createNewSession
-doFetchTicks mFromDate, mToDate
-
 End Sub
 
 Private Function filterByTime( _
@@ -644,6 +602,18 @@ Then
     filterByTime = True
 End If
 End Function
+
+Private Sub generateNextRequest()
+If mSpecifier.fromDate = 0 Then
+    generateRequestDetails 0, mFromDate
+Else
+    generateRequestDetails mToDate, 0
+End If
+
+Set mBuilder = Nothing
+mNotifiedFirstVolume = False
+createNewSession
+End Sub
 
 Private Sub generateRequestDetails( _
                         ByVal fromDate As Date, _
@@ -696,36 +666,36 @@ Then
     
     If fromDate <> 0 And toDate <> 0 Then
         st = GetSessionTimes(fromDate, _
-                                    getInstrument.sessionStartTime, _
-                                    getInstrument.sessionEndTime)
+                                    mInstrument.sessionStartTime, _
+                                    mInstrument.sessionEndTime)
         mFromDate = st.startTime
         mToDate = toDate
         mNumberOfBars = MaxLong
     ElseIf fromDate <> 0 Then
         st = GetSessionTimes(fromDate, _
-                                    getInstrument.sessionStartTime, _
-                                    getInstrument.sessionEndTime)
+                                    mInstrument.sessionStartTime, _
+                                    mInstrument.sessionEndTime)
         mFromDate = st.startTime
         st = GetOffsetSessionTimes(mFromDate, _
                                     1, _
-                                    getInstrument.sessionStartTime, _
-                                    getInstrument.sessionEndTime)
+                                    mInstrument.sessionStartTime, _
+                                    mInstrument.sessionEndTime)
         mToDate = st.startTime
         mNumberOfBars = MaxLong
     ElseIf toDate <> 0 Then
         mToDate = toDate
         st = GetOffsetSessionTimes(IIf(mToDate = MaxDateValue, Now, mToDate), _
                                     -1, _
-                                    getInstrument.sessionStartTime, _
-                                    getInstrument.sessionEndTime)
+                                    mInstrument.sessionStartTime, _
+                                    mInstrument.sessionEndTime)
         mFromDate = st.startTime
         mNumberOfBars = MaxLong
     Else
         mToDate = Now
         st = GetOffsetSessionTimes(mToDate, _
                                     -1, _
-                                    getInstrument.sessionStartTime, _
-                                    getInstrument.sessionEndTime)
+                                    mInstrument.sessionStartTime, _
+                                    mInstrument.sessionEndTime)
         mFromDate = st.startTime
         mNumberOfBars = MaxLong
     End If
@@ -740,8 +710,8 @@ Else
                                         mSpecifier.barLength, _
                                         mSpecifier.barLengthUnits, _
                                         -1 * mSpecifier.maxNumberOfBars, _
-                                        getInstrument.sessionStartTime, _
-                                        getInstrument.sessionEndTime)
+                                        mInstrument.sessionStartTime, _
+                                        mInstrument.sessionEndTime)
         Else
             mFromDate = fromDate
         End If
@@ -751,15 +721,11 @@ Else
                                     mSpecifier.barLength, _
                                     mSpecifier.barLengthUnits, _
                                     mSpecifier.maxNumberOfBars, _
-                                    getInstrument.sessionStartTime, _
-                                    getInstrument.sessionEndTime)
+                                    mInstrument.sessionStartTime, _
+                                    mInstrument.sessionEndTime)
     End If
 End If
 End Sub
-
-Private Function getInstrument() As Instrument
-Set getInstrument = mInstrumentRef.Target
-End Function
 
 Private Function highValue() As Double
 highValue = mRs("highprice")
@@ -855,7 +821,7 @@ If Not filterByTime(mRs("datetime")) Then Exit Sub
     
 Data = mRs("data")
 Set tdd = CreateTickDecoder(mRs("datetime"), _
-                            getInstrument.tickSize, _
+                            mInstrument.tickSize, _
                             mRs("baseprice"), _
                             Data, _
                             mRs("version"))
@@ -884,12 +850,12 @@ Do While tdd.getNextTick(tick)
                 builder.notifyVolume val
                 mNotifiedFirstVolume = True
             End If
-            val.value = tick.Size + 1
+            val.value = tick.size + 1
             builder.notifyVolume val
         End If
     Case TickTypeOpenInterest
         If mSpecifier.barType = BarTypeTrade Then
-            val.value = tick.Size
+            val.value = tick.size
             builder.notifyOpenInterest val
         End If
     End Select
@@ -899,8 +865,118 @@ End Sub
 Private Sub processTicks()
 Do While Not mRs.EOF
     processTickData
-    mRs.moveNext
+    mRs.MoveNext
 Loop
+End Sub
+
+Private Sub setupFetchBarsCommand( _
+                        ByVal barType As Long, _
+                        ByVal barLength As Long, _
+                        ByVal NumberOfBars As Long, _
+                        ByVal fromTime As Date, _
+                        ByVal toTime As Date)
+
+Dim param As ADODB.Parameter
+Dim fromLocal As Date
+Dim toLocal As Date
+
+fromTime = gRoundTimeToSecond(fromTime)
+toTime = gRoundTimeToSecond(toTime)
+
+Set mCmd = New ADODB.Command
+mCmd.CommandType = adCmdStoredProc
+
+mCmd.CommandText = "FetchBarData"
+
+' @InstrumentID
+Set param = mCmd.CreateParameter(, _
+                            DataTypeEnum.adInteger, _
+                            ParameterDirectionEnum.adParamInput, _
+                            , _
+                            mInstrument.id)
+mCmd.Parameters.Append param
+
+' @BarType
+Set param = mCmd.CreateParameter(, _
+                            DataTypeEnum.adInteger, _
+                            ParameterDirectionEnum.adParamInput, _
+                            , _
+                            barType)
+mCmd.Parameters.Append param
+
+' @BarLength
+Set param = mCmd.CreateParameter(, _
+                            DataTypeEnum.adInteger, _
+                            ParameterDirectionEnum.adParamInput, _
+                            , _
+                            barLength)
+mCmd.Parameters.Append param
+
+' @NumberRequired
+Set param = mCmd.CreateParameter(, _
+                            DataTypeEnum.adInteger, _
+                            ParameterDirectionEnum.adParamInput, _
+                            , _
+                            NumberOfBars)
+mCmd.Parameters.Append param
+
+If fromTime < #1/1/1900# Then fromTime = #1/1/1900# ' don't exceed range of SmallDateTime
+If toTime < #1/1/1900# Then toTime = #1/1/1900# ' don't exceed range of SmallDateTime
+' @From
+Set param = mCmd.CreateParameter(, _
+                            DataTypeEnum.adDBTimeStamp, _
+                            ParameterDirectionEnum.adParamInput, _
+                            , _
+                            fromTime)
+mCmd.Parameters.Append param
+
+' @To
+Set param = mCmd.CreateParameter(, _
+                            DataTypeEnum.adDBTimeStamp, _
+                            ParameterDirectionEnum.adParamInput, _
+                            , _
+                            toTime)
+mCmd.Parameters.Append param
+
+End Sub
+
+Private Sub setupFetchTicksCommand( _
+                ByVal fromTime As Date, _
+                ByVal toTime As Date)
+Dim param As ADODB.Parameter
+
+fromTime = gRoundTimeToSecond(fromTime)
+toTime = gRoundTimeToSecond(toTime)
+
+Set mCmd = New ADODB.Command
+mCmd.CommandType = adCmdStoredProc
+
+mCmd.CommandText = "FetchTickData"
+
+' @InstrumentID
+Set param = mCmd.CreateParameter(, _
+                            DataTypeEnum.adInteger, _
+                            ParameterDirectionEnum.adParamInput, _
+                            , _
+                            mInstrument.id)
+mCmd.Parameters.Append param
+
+' @From
+Set param = mCmd.CreateParameter(, _
+                            DataTypeEnum.adDBTimeStamp, _
+                            ParameterDirectionEnum.adParamInput, _
+                            , _
+                            fromTime)
+mCmd.Parameters.Append param
+
+' @To
+Set param = mCmd.CreateParameter(, _
+                            DataTypeEnum.adDBTimeStamp, _
+                            ParameterDirectionEnum.adParamInput, _
+                            , _
+                            toTime)
+mCmd.Parameters.Append param
+
 End Sub
 
 Private Function tickVolume() As Long

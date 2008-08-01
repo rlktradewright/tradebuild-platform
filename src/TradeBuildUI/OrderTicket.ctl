@@ -891,6 +891,10 @@ Private Sub QuoteListener_previousClose(ev As QuoteEvent)
 
 End Sub
 
+Private Sub QuoteListener_sessionOpen(ev As TradeBuild26.QuoteEvent)
+
+End Sub
+
 Private Sub QuoteListener_trade(ev As QuoteEvent)
 LastText = ev.priceString
 LastSizeText = ev.size

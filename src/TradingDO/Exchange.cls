@@ -49,39 +49,127 @@ Public Event Valid()
 ' Constants
 '@================================================================================
 
-Private Const ProjectName As String = "TradingDO26"
-Private Const ModuleName As String = "Exchange"
+Private Const ProjectName                           As String = "TradingDO26"
+Private Const ModuleName                            As String = "Exchange"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private mDB As TradingDB
+' Generic declarations -----------------------------------------------------------
+Private WithEvents mDataObj                         As AbstractDataObject
+Attribute mDataObj.VB_VarHelpID = -1
 
-Private mConn As ADODB.Connection
+Private mDB                                         As TradingDB
 
-Private mRs As ADODB.Recordset
-Private mNew As Boolean
-
-Private mDeleted As Boolean
-Private mDirty As Boolean
-
-
-Private WithEvents mErrorList As ErrorList
-Attribute mErrorList.VB_VarHelpID = -1
-
-Private mEventRaiser As BusinessObjEventRaiser
-
-Private mMaxNameLength As Long
+' Custom declarations ------------------------------------------------------------
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
-Private Sub Class_Initialize()
-Set mErrorList = New ErrorList
-Set mEventRaiser = New BusinessObjEventRaiser
+'@================================================================================
+' XXXX Interface Members
+'@================================================================================
+
+'@===============================================================================
+' XXXX Event Handlers
+'@===============================================================================
+
+'@================================================================================
+' Properties
+'@================================================================================
+
+Public Property Get name() As String
+name = getName
+End Property
+
+Public Property Let name(ByVal value As String)
+setName value
+End Property
+
+Public Property Get notes() As String
+notes = mDataObj.getColumnValue(ExchangeColumnNotes, "")
+End Property
+
+Public Property Let notes(ByVal val As String)
+mDataObj.columnValue(ExchangeColumnNotes) = val
+End Property
+
+Public Property Let TimeZone( _
+                ByVal value As TimeZone)
+mDataObj.ruleBroken BusRuleExchangeTimezoneValid, value Is Nothing
+
+If Not value Is Nothing Then mDataObj.columnValue(ExchangeColumnTimeZoneID) = value.id
+'If Not mDataObj.IsNew Then
+'    mDataObj.columnValue(ExchangeColumnTimeZoneName) = value.canonicalName
+'End If
+End Property
+
+Public Property Get TimeZone() As TimeZone
+If mDataObj.getColumnValue(ExchangeColumnTimeZoneID, 0) = 0 Then Exit Property
+Set TimeZone = mDB.TimeZoneFactory.loadByID(mDataObj.getColumnValue(ExchangeColumnTimeZoneID, 0))
+End Property
+
+Public Property Let TimeZoneName( _
+                ByVal value As String)
+Dim tz As TimeZone
+Set tz = mDB.TimeZoneFactory.loadByName(value)
+If tz Is Nothing Then
+    mDataObj.ruleBroken BusRuleExchangeTimezoneValid, True
+    If Not mDataObj.IsNew Then
+        ' this column is not available for a new object
+        mDataObj.columnValue(ExchangeColumnTimeZoneName) = Left$(value, mDataObj.columnMaxLength(ExchangeColumnTimeZoneName))
+    End If
+Else
+    TimeZone = tz
+End If
+End Property
+
+Public Property Get TimeZoneName() As String
+If Not mDataObj.IsNew Then
+    TimeZoneName = mDataObj.getColumnValue(ExchangeColumnTimeZoneName, "")
+ElseIf CLng(mDataObj.getColumnValue(ExchangeColumnTimeZoneID, 0)) <> 0 Then
+    TimeZoneName = mDB.TimeZoneFactory.loadByID(mDataObj.getColumnValue(ExchangeColumnTimeZoneID, 0)).name
+End If
+End Property
+
+'@================================================================================
+' Methods
+'@================================================================================
+
+Friend Sub initialise( _
+                ByVal db As TradingDB, _
+                Optional ByVal rs As ADODB.Recordset)
+genericInitialise db, rs
 End Sub
+
+'@================================================================================
+' Helper Functions
+'@================================================================================
+
+Private Function getBusRuleNameValidId() As Long
+getBusRuleNameValidId = BusRuleExchangeNameValid
+End Function
+
+Private Function getFactory() As DataObjectFactory
+Set getFactory = mDB.ExchangeFactory
+End Function
+
+Private Sub setInitialErrors()
+' set errors for fields that are invalid when a new record is created
+' Note that this is done automatically by the AbstractDataObject for
+' the name field
+mDataObj.ruleBroken BusRuleExchangeTimezoneValid, True
+End Sub
+
+
+'@********************************************************************************
+'@********************************************************************************
+' Beyond this point everything is generic
+'@********************************************************************************
+'@********************************************************************************
+
 
 '@================================================================================
 ' BusinessDataObject Interface Members
@@ -100,20 +188,16 @@ Delete
 End Sub
 
 Private Property Get BusinessDataObject_ErrorList() As ErrorList
-Set BusinessDataObject_ErrorList = mErrorList
+Set BusinessDataObject_ErrorList = mDataObj.ErrorList
 End Property
 
 Private Property Get BusinessDataObject_EventSource() As BusinessObjEventSource
-Set BusinessDataObject_EventSource = mEventRaiser.EventSource
+Set BusinessDataObject_EventSource = mDataObj.eventSource
 End Property
 
 Private Property Get BusinessDataObject_ID() As Long
 BusinessDataObject_ID = id
 End Property
-
-Private Sub BusinessDataObject_InitialiseFromRecordset(ByVal rs As ADODB.Recordset)
-initialiseRs rs
-End Sub
 
 Private Property Get BusinessDataObject_IsDeleted() As Boolean
 BusinessDataObject_IsDeleted = IsDeleted
@@ -139,219 +223,102 @@ Private Property Get BusinessDataObject_Name() As String
 BusinessDataObject_Name = name
 End Property
 
-'@===============================================================================
-' mErrorList Event Handlers
-'@===============================================================================
-
-Private Sub mErrorList_ItemAdded( _
-                ByVal item As ErrorItem)
-RaiseEvent Invalid
-mEventRaiser.Invalid
+Private Sub BusinessDataObject_Refresh()
+refresh
 End Sub
 
-Private Sub mErrorList_NoItems()
+'@===============================================================================
+' mDataObj Event Handlers
+'@===============================================================================
+
+Private Sub mDataObj_Clean()
+RaiseEvent Clean
+End Sub
+
+Private Sub mDataObj_Deleted()
+RaiseEvent Deleted
+End Sub
+
+Private Sub mDataObj_Dirty()
+RaiseEvent Dirty
+End Sub
+
+Private Sub mDataObj_Invalid()
+RaiseEvent Invalid
+End Sub
+
+Private Sub mDataObj_Valid()
 RaiseEvent Valid
-mEventRaiser.Valid
 End Sub
 
 '@================================================================================
-' Properties
+' Generic Properties
 '@================================================================================
 
 Public Property Get ErrorList() As ErrorList
-Set ErrorList = mErrorList
+Set ErrorList = mDataObj.ErrorList
 End Property
 
 Public Property Get id() As Long
-id = mRs("ID")
+id = mDataObj.id
 End Property
 
 Public Property Get IsValid() As Boolean
-    IsValid = (mErrorList.count = 0)
+IsValid = mDataObj.IsValid
 End Property
 
-
 Public Property Get IsDeleted() As Boolean
-  IsDeleted = mDeleted
+IsDeleted = mDataObj.IsDeleted
 End Property
 
 Public Property Get IsDirty() As Boolean
-IsDirty = mDirty
+IsDirty = mDataObj.IsDirty
 End Property
 
 Public Property Get IsNew() As Boolean
-  IsNew = mNew
-End Property
-
-Public Property Get name() As String
-name = Trim$(mRs(ExchangeColumnName))
-End Property
-
-Public Property Let name(ByVal value As String)
-value = Trim$(value)
-ruleBroken BusRuleExchangeNameValid, _
-    Len(value) = 0 Or Len(value) > mMaxNameLength
-mRs("NAME") = Left$(value, mMaxNameLength)
-Dirty
-End Property
-
-Public Property Get notes() As String
-notes = Nz(mRs(ExchangeColumnNotes), "")
-End Property
-
-Public Property Let notes(ByVal val As String)
-mRs(ExchangeColumnNotes) = val
-Dirty
-End Property
-
-Public Property Let TimeZone( _
-                ByVal value As TimeZone)
-ruleBroken BusRuleExchangeTimezoneValid, value Is Nothing
-
-If Not value Is Nothing Then mRs("timezoneid") = value.id
-Dirty
-End Property
-
-Public Property Get TimeZone() As TimeZone
-If IsNull(mRs("timezoneid")) Then Exit Property
-Set TimeZone = mDB.TimeZoneFactory.loadByID(CLng(mRs("timezoneid")))
-End Property
-
-Public Property Get timeZoneCanonicalName() As String
-If Not TimeZone Is Nothing Then timeZoneCanonicalName = TimeZone.canonicalName
-End Property
-
-Public Property Let TimeZoneName( _
-                ByVal value As String)
-Dim tz As TimeZone
-Set tz = mDB.TimeZoneFactory.loadByName(value)
-If tz Is Nothing Then
-    ruleBroken BusRuleExchangeTimezoneValid, True
-    Dirty
-Else
-    TimeZone = tz
-End If
-End Property
-
-Public Property Get TimeZoneName() As String
-If TimeZone Is Nothing Then Exit Property
-TimeZoneName = TimeZone.name
+IsNew = mDataObj.IsNew
 End Property
 
 '@================================================================================
-' Methods
+' Generic Methods
 '@================================================================================
 
 Public Sub ApplyEdit()
-If mDeleted Then
-    mRs.Delete
-    save
-    Set mRs = Nothing
-    RaiseEvent Deleted
-    mEventRaiser.Deleted
-ElseIf mDirty Or mNew Then
-    If Not IsValid Then Err.Raise 445
-    save
-    mNew = False
-End If
-Clean
+mDataObj.ApplyEdit
 End Sub
 
 Public Sub CancelEdit()
-mRs.CancelUpdate
-mDeleted = False
-If mRs.EOF Then
-    mRs.AddNew
-    mNew = True
-    setInitialErrors
-End If
-Clean
+mDataObj.CancelEdit
+If mDataObj.IsNew Then setInitialErrors
 End Sub
 
 Public Sub Delete()
-mDeleted = True
+mDataObj.Delete
 End Sub
 
-Friend Sub initialise( _
-                ByVal db As TradingDB, _
+Public Sub genericInitialise( _
+                ByVal db As Variant, _
                 Optional ByVal rs As ADODB.Recordset)
 Set mDB = db
-
-If Not rs Is Nothing Then initialiseRs rs
-End Sub
-
-Friend Sub initialiseRs( _
-                ByVal rs As ADODB.Recordset)
-Set mRs = rs
-
-mMaxNameLength = mRs.Fields(ExchangeColumnName).DefinedSize
-
-If mRs.EOF Then
-    mRs.AddNew
-    mNew = True
-    setInitialErrors
+If Not rs Is Nothing Then
+    Set mDataObj = CreateAbstractDataObject(Me, getBusRuleNameValidId, getFactory, mDB.connectionString)
+    mDataObj.initialiseRs rs
+    If mDataObj.IsNew Then setInitialErrors
 End If
 End Sub
 
-'@================================================================================
-' Helper Functions
-'@================================================================================
-
-Private Sub Clean()
-mDirty = False
-RaiseEvent Clean
-mEventRaiser.Clean
-mErrorList.Clear
-If mNew Then
-    setInitialErrors
-End If
-End Sub
-
-Private Sub Dirty()
-If Not mDirty Then
-    mDirty = True
-    RaiseEvent Dirty
-    mEventRaiser.Dirty
-End If
-End Sub
-
-Private Function ruleBroken( _
-                ByVal ruleId As BusinessRuleIds, _
-                ByVal isBroken As Boolean) As Boolean
-ruleBroken = mErrorList.AssertRule(Not isBroken, ruleId)
+Public Function getName() As String
+getName = mDataObj.name
 End Function
 
-Private Sub save()
-Dim failpoint As Long
-On Error GoTo Err
-
-failpoint = 100
-
-Set mConn = New ADODB.Connection
-mConn.Open mDB.connectionString
-
-failpoint = 200
-
-Set mRs.ActiveConnection = mConn
-mRs.UpdateBatch
-Set mRs.ActiveConnection = Nothing
-mConn.Close
-
-Exit Sub
-
-Err:
-Err.Raise Err.Number, _
-        "TradingDO26" & "." & "Exchange" & "::" & "save" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
+Public Sub refresh()
+mDataObj.refresh
 End Sub
 
-Private Sub setInitialErrors()
-' sets errors for fields that are invalid when a new record is created
-ruleBroken BusRuleExchangeNameValid, True
-ruleBroken BusRuleExchangeTimezoneValid, True
+Public Sub setName(ByVal value As String)
+mDataObj.name = value
 End Sub
+
 
 
 

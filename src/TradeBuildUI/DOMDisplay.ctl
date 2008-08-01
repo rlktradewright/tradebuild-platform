@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#25.0#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#30.0#0"; "TWControls10.ocx"
 Begin VB.UserControl DOMDisplay 
    ClientHeight    =   1725
    ClientLeft      =   0
@@ -195,7 +195,7 @@ If mInitialPrice = 0 Then
     centreRow mInitialPrice
 End If
 
-setDOMCell ev.side, ev.price, ev.size
+setDOMCell ev.Type, ev.price, ev.size
 End Sub
 
 '@================================================================================
@@ -258,13 +258,13 @@ If mInitialPrice <> 0 Then
     setupRows
     
     If mTicker.TradePrice <> 0 Then
-        setDOMCell DOMSides.DOMLast, mTicker.TradePrice, mTicker.TradeSize
+        setDOMCell DOMUpdateTypes.DOMUpdateLast, mTicker.TradePrice, mTicker.TradeSize
     End If
     If mTicker.AskPrice <> 0 Then
-        setDOMCell DOMSides.DOMAsk, mTicker.AskPrice, mTicker.AskSize
+        setDOMCell DOMUpdateTypes.DOMUpdateAsk, mTicker.AskPrice, mTicker.AskSize
     End If
     If mTicker.BidPrice <> 0 Then
-        setDOMCell DOMSides.DOMBid, mTicker.BidPrice, mTicker.bidSize
+        setDOMCell DOMUpdateTypes.DOMUpdateBid, mTicker.BidPrice, mTicker.bidSize
     End If
     
     ' set off a timer before centring the display - otherwise it centres
@@ -349,14 +349,14 @@ End If
 
 End Sub
 
-Private Sub clearDisplay(ByVal side As DOMSides, ByVal price As Double)
+Private Sub clearDisplay(ByVal updateType As DOMUpdateTypes, ByVal price As Double)
 checkEnoughRows price
-Select Case side
-Case DOMSides.DOMAsk
+Select Case updateType
+Case DOMUpdateTypes.DOMUpdateAsk
     setCellContents calcRowNumber(price), DOMColumns.AskSize, ""
-Case DOMSides.DOMBid
+Case DOMUpdateTypes.DOMUpdateBid
     setCellContents calcRowNumber(price), DOMColumns.bidSize, ""
-Case DOMSides.DOMLast
+Case DOMUpdateTypes.DOMUpdateLast
     setCellContents calcRowNumber(price), DOMColumns.LastSize, ""
 End Select
 End Sub
@@ -429,7 +429,7 @@ DOMGrid.Text = value
 End Sub
 
 Private Sub setDOMCell( _
-                ByVal side As DOMSides, _
+                ByVal updateType As DOMUpdateTypes, _
                 ByVal price As Double, _
                 ByVal size As Long)
 If mHalted Then
@@ -437,20 +437,20 @@ If mHalted Then
     RaiseEvent Resumed
 End If
 If size > 0 Then
-    setDisplay side, price, size
+    setDisplay updateType, price, size
 Else
-    clearDisplay side, price
+    clearDisplay updateType, price
 End If
 End Sub
                 
-Private Sub setDisplay(ByVal side As DOMSides, ByVal price As Double, ByVal size As Long)
+Private Sub setDisplay(ByVal updateType As DOMUpdateTypes, ByVal price As Double, ByVal size As Long)
 checkEnoughRows price
-Select Case side
-Case DOMSides.DOMAsk
+Select Case updateType
+Case DOMUpdateTypes.DOMUpdateAsk
     setCellContents calcRowNumber(price), DOMColumns.AskSize, size
-Case DOMSides.DOMBid
+Case DOMUpdateTypes.DOMUpdateBid
     setCellContents calcRowNumber(price), DOMColumns.bidSize, size
-Case DOMSides.DOMLast
+Case DOMUpdateTypes.DOMUpdateLast
     setCellContents calcRowNumber(price), DOMColumns.LastSize, size
     mCurrentLast = price
 End Select

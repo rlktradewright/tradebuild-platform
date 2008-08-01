@@ -95,8 +95,8 @@ Public Enum DatabaseTypes
     DbNone = 0
     DbSQLServer = 1
     DbSQLServer7 = DbSQLServer
-    DbSQLServer2000
-    DbSQLServer2005
+    DbSQLServer2000 = DbSQLServer
+    DbSQLServer2005 = DbSQLServer
     DbMySQL5
 End Enum
 
@@ -136,11 +136,12 @@ Private Const ModuleName As String = "GlobalClass"
 '@================================================================================
 
 Public Function CreateTradingDB( _
-                ByVal connectionString As String) As TradingDB
+                ByVal connectionString As String, _
+                ByVal databaseType As DatabaseTypes) As TradingDB
 
 Set CreateTradingDB = New TradingDB
 
-CreateTradingDB.initialise connectionString
+CreateTradingDB.initialise connectionString, databaseType
 End Function
 
 Public Function ContractFromInstrument( _
@@ -166,24 +167,39 @@ Public Function GenerateConnectionString( _
                 Optional ByVal password As String) As String
 
 Select Case dbType
-Case DbSQLServer, DbSQLServer2005, DbSQLServer2000, DbSQLServer7
-'    GenerateConnectionString = "Provider=SQLNCLI;" & _
-'                        "Server=" & server & _
-'                        ";Database=" & databaseName & _
-'                        IIf(username = "", _
-'                            ";Trusted_Connection=yes", _
-'                            ";Uid=" & username & ";Pwd=" & password) & _
-'                        ";Network Library=DBMSSOCN" & _
-'                        ";Min Pool Size=100" & _
-'                        ";Max Pool Size=500"
-    GenerateConnectionString = "Provider=SQLNCLI" & _
-                        ";Server=" & server & _
-                        ";Database=" & databaseName & _
+Case DbSQLServer7
+    GenerateConnectionString = "Provider=SQLOLEDB" & _
+                        ";Data Source=" & server & _
+                        ";Initial Catalog=" & databaseName & _
                         IIf(username = "", _
-                            ";Trusted_Connection=yes", _
-                            ";Uid=" & username & ";Pwd=" & password)
+                            ";Integrated Security=SSPI", _
+                            ";User Id=" & username & ";Password=" & password)
+Case DbSQLServer2000
+    GenerateConnectionString = "Provider=SQLOLEDB" & _
+                        ";Data Source=" & server & _
+                        ";Initial Catalog=" & databaseName & _
+                        IIf(username = "", _
+                            ";Integrated Security=SSPI", _
+                            ";User Id=" & username & ";Password=" & password)
+Case DbSQLServer2005, DbSQLServer, DbSQLServer7, DbSQLServer2000
+'   NB: we don't use the SQL native Client (SQLNCLI) because it
+'   seems to cause problems on Windows 2000.
+'    GenerateConnectionString = "Provider=SQLNCLI" & _
+'                        ";DataTypeCompatibility=80" & _
+'                        ";Data Source=" & server & _
+'                        ";Initial Catalog=" & databaseName & _
+'                        ";Network Library=DBMSSOCN" & _
+'                        IIf(username = "", _
+'                            ";Integrated Security=SSPI", _
+'                            ";Uid=" & username & ";Pwd=" & password)
+    GenerateConnectionString = "Provider=SQLOLEDB" & _
+                        ";Data Source=" & server & _
+                        ";Initial Catalog=" & databaseName & _
+                        IIf(username = "", _
+                            ";Integrated Security=SSPI", _
+                            ";User Id=" & username & ";Password=" & password)
 Case DbMySQL5
-    GenerateConnectionString = "Driver={MySQL ODBC 3.51 Driver}" & _
+    GenerateConnectionString = "Driver={MySQL ODBC 5.1 Driver}" & _
                         ";Server=" & server & _
                         ";Port=3306" & _
                         ";Database=" & databaseName & _

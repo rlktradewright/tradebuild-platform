@@ -61,23 +61,13 @@ Private Const ModuleName                As String = "Instrument"
 ' Member variables
 '@===============================================================================
 
-Private mDB As TradingDB
+' Generic declarations -----------------------------------------------------------
+Private WithEvents mDataObj                         As AbstractDataObject
+Attribute mDataObj.VB_VarHelpID = -1
 
-Private mConn As ADODB.Connection
+Private mDB                                         As TradingDB
 
-Private mNew As Boolean
-
-Private mDeleted As Boolean
-Private mDirty As Boolean
-
-Private WithEvents mErrorList As ErrorList
-Attribute mErrorList.VB_VarHelpID = -1
-
-Private mRs As ADODB.Recordset
-
-Private mLocalSymbols As InstrumentLocalSymbols
-
-Private mEventRaiser As BusinessObjEventRaiser
+' Custom declarations ------------------------------------------------------------
 
 Private mMaxNameLength As Long
 Private mMaxShortNameLength As Long
@@ -85,187 +75,116 @@ Private mMaxSymbolLength As Long
 Private mMaxOptRightLength As Long
 Private mMaxCurrencyCodeLength As Long
 
-Private mWriters As Collection
-
-Private mWriterCounter As Long
-
-'@===============================================================================
+'@================================================================================
 ' Class Event Handlers
-'@===============================================================================
+'@================================================================================
 
-Private Sub Class_Initialize()
-Set mErrorList = New ErrorList
-Set mEventRaiser = New BusinessObjEventRaiser
-Set mWriters = New Collection
-End Sub
+'@================================================================================
+' XXXX Interface Members
+'@================================================================================
 
-'@===============================================================================
-' BusinessDataObject Interface Members
-'@===============================================================================
+'@================================================================================
+' XXXX Event Handlers
+'@================================================================================
 
-Private Sub BusinessDataObject_ApplyEdit()
-ApplyEdit
-End Sub
-
-Private Sub BusinessDataObject_CancelEdit()
-CancelEdit
-End Sub
-
-Private Sub BusinessDataObject_Delete()
-Delete
-End Sub
-
-Private Property Get BusinessDataObject_ErrorList() As ErrorList
-Set BusinessDataObject_ErrorList = mErrorList
-End Property
-
-Private Property Get BusinessDataObject_EventSource() As BusinessObjEventSource
-Set BusinessDataObject_EventSource = mEventRaiser.EventSource
-End Property
-
-Private Property Get BusinessDataObject_ID() As Long
-BusinessDataObject_ID = id
-End Property
-
-Private Sub BusinessDataObject_InitialiseFromRecordset(ByVal rs As ADODB.Recordset)
-initialiseRs rs
-End Sub
-
-Private Property Get BusinessDataObject_IsDeleted() As Boolean
-BusinessDataObject_IsDeleted = IsDeleted
-End Property
-
-Private Property Get BusinessDataObject_IsDirty() As Boolean
-BusinessDataObject_IsDirty = IsDirty
-End Property
-
-Private Property Get BusinessDataObject_IsNew() As Boolean
-BusinessDataObject_IsNew = IsNew
-End Property
-
-Private Property Get BusinessDataObject_IsValid() As Boolean
-BusinessDataObject_IsValid = IsValid
-End Property
-
-Private Property Let BusinessDataObject_Name(ByVal RHS As String)
-name = RHS
-End Property
-
-Private Property Get BusinessDataObject_Name() As String
-BusinessDataObject_Name = name
-End Property
-
-'@===============================================================================
-' mErrorList Event Handlers
-'@===============================================================================
-
-Private Sub mErrorList_ItemAdded( _
-                ByVal item As ErrorItem)
-RaiseEvent Invalid
-mEventRaiser.Invalid
-End Sub
-
-Private Sub mErrorList_NoItems()
-RaiseEvent Valid
-mEventRaiser.Valid
-End Sub
-
-'@===============================================================================
+'@================================================================================
 ' Properties
-'@===============================================================================
+'@================================================================================
 
 Public Property Let currencyCode( _
                 ByVal value As String)
 value = Trim$(value)
-ruleBroken BusRuleInstrumentCurrencyCodeValid, _
+mDataObj.ruleBroken BusRuleInstrumentCurrencyCodeValid, _
     Len(value) > mMaxCurrencyCodeLength
 If Len(value) = 0 Then
-    mRs(InstrumentColumnCurrency) = Null
+    mDataObj.columnValue(InstrumentColumnCurrency) = Null
 Else
-    ruleBroken BusRuleInstrumentCurrencyCodeValid, _
+    mDataObj.ruleBroken BusRuleInstrumentCurrencyCodeValid, _
         Not IsValidCurrencyCode(value)
-    mRs(InstrumentColumnCurrency) = Left$(value, mMaxCurrencyCodeLength)
+    mDataObj.columnValue(InstrumentColumnCurrency) = Left$(value, mMaxCurrencyCodeLength)
 End If
-Dirty
 End Property
 
 Public Property Get currencyCode() As String
-currencyCode = Trim$(mRs(InstrumentColumnCurrency))
-End Property
-
-Public Property Get currencyCodeInheritedFromClass() As Boolean
-If IsNull(mRs(InstrumentColumnCurrency)) Then
-    currencyCodeInheritedFromClass = True
+If mDataObj.IsNew Then
+    currencyCode = mDataObj.getColumnValue(InstrumentColumnCurrency, "")
+Else
+    currencyCode = mDataObj.getColumnValue(InstrumentColumnCurrencyE, "")
 End If
 End Property
 
-Public Property Get daysBeforeExpiryToSwitch() As Long
-daysBeforeExpiryToSwitch = Nz(mRs("daysBeforeExpiryToSwitch"), 0)
+Public Property Get currencyCodeInheritedFromClass() As Boolean
+currencyCodeInheritedFromClass = (mDataObj.getColumnValue(InstrumentColumnCurrency, "") = "")
 End Property
 
-Public Property Get ErrorList() As ErrorList
-Set ErrorList = mErrorList
+Public Property Get daysBeforeExpiryToSwitch() As Long
+daysBeforeExpiryToSwitch = mDataObj.getColumnValue(InstrumentColumnSwitchDay, 0)
 End Property
 
 Public Property Get exchangeName() As String
-exchangeName = Trim$(mRs(InstrumentColumnExchange))
+If Not mDataObj.IsNew Then
+    exchangeName = mDataObj.getColumnValue(InstrumentColumnExchangeName)
+Else
+    If CLng(mDataObj.getColumnValue(InstrumentColumnInstrumentClassID, 0)) <> 0 Then
+        exchangeName = mDB.InstrumentClassFactory.loadByID( _
+                                    mDataObj.getColumnValue(InstrumentColumnInstrumentClassID)).exchangeName
+    End If
+End If
 End Property
 
 Public Property Get expiryDate() As Date
-expiryDate = Nz(mRs("ExpiryDate"), 0#)
+expiryDate = mDataObj.getColumnValue(InstrumentColumnExpiry, 0#)
 End Property
 
 Public Property Let expiryDate(ByVal value As Date)
-mRs("ExpiryDate") = Int(value)
-Dirty
+mDataObj.columnValue(InstrumentColumnExpiry) = Int(value)
 End Property
 
 Public Property Let expiryDateString(ByVal value As String)
 If IsDate(value) Then
     expiryDate = CDate(value)
 Else
-    ruleBroken BusinessRuleIds.BusRuleInstrumentExpiryDateValid, Not IsDate(value)
-    Dirty
+    mDataObj.ruleBroken BusinessRuleIds.BusRuleInstrumentExpiryDateValid, Not IsDate(value)
+    expiryDate = CDate(0)
 End If
 End Property
 
 Public Property Get hasBarData() As Boolean
-Dim rs As Recordset
-
-Set rs = New Recordset
-rs.Open "select count(*) from perioddata where instrumentid=" & id, mDB.connectionString, adOpenForwardOnly
-If rs.Fields(0).value <> 0 Then hasBarData = True
-rs.Close
+If mDataObj.IsNew Then
+    hasBarData = False
+Else
+    hasBarData = CBool(mDataObj.getColumnValue(InstrumentColumnHasBarData, 0))
+End If
 End Property
 
 Public Property Get hasTickData() As Boolean
-Dim rs As Recordset
-
-Set rs = New Recordset
-rs.Open "select count(*) as count from instrumentdata where instrumentid=" & id, mDB.connectionString, adOpenForwardOnly
-If rs.Fields(0).value <> 0 Then hasTickData = True
-rs.Close
-End Property
-
-Public Property Get id() As Long
-id = mRs("ID")
+If mDataObj.IsNew Then
+    hasTickData = False
+Else
+    hasTickData = CBool(mDataObj.getColumnValue(InstrumentColumnHasTickData, 0))
+End If
 End Property
 
 Public Property Let InstrumentClass( _
                 ByVal value As InstrumentClass)
-ruleBroken BusRuleInstrumentInstrumentClassValid, value Is Nothing
-If Not value Is Nothing Then
-    mRs("instrumentclassid") = value.id
+Dim instrmnt As instrument
+If mDataObj.ruleBroken(BusRuleInstrumentInstrumentClassValid, value Is Nothing) Then Exit Property
+
+If name <> "" Then
+    Set instrmnt = mDB.InstrumentFactory.loadByName(value.exchangeName & "/" & _
+                                                    value.name & "/" & _
+                                                    name)
+    If Not instrmnt Is Nothing Then mDataObj.ruleBroken getBusRuleNameValidId, instrmnt.id <> id
 End If
-Dirty
+mDataObj.columnValue(InstrumentColumnInstrumentClassID) = value.id
 End Property
 
 Public Property Get InstrumentClass() As InstrumentClass
-Set InstrumentClass = mDB.InstrumentClassFactory.loadByID(mRs("instrumentclassid"))
+Set InstrumentClass = mDB.InstrumentClassFactory.loadByID(mDataObj.getColumnValue(InstrumentColumnInstrumentClassID, 0))
 End Property
 
 Public Property Get InstrumentClassId() As Long
-InstrumentClassId = mRs("instrumentclassid")
+InstrumentClassId = mDataObj.getColumnValue(InstrumentColumnInstrumentClassID, 0)
 End Property
 
 Public Property Let instrumentClassName( _
@@ -274,142 +193,145 @@ InstrumentClass = mDB.InstrumentClassFactory.loadByName(value)
 End Property
 
 Public Property Get instrumentClassName() As String
-instrumentClassName = Trim$(mRs("instrumentclassname"))
-End Property
+If Not mDataObj.IsNew Then
+    instrumentClassName = mDataObj.getColumnValue(InstrumentColumnInstrumentClassName)
+Else
+    If CLng(mDataObj.getColumnValue(InstrumentColumnInstrumentClassID, 0)) <> 0 Then
+        instrumentClassName = mDB.InstrumentClassFactory.loadByID( _
+                                    mDataObj.getColumnValue(InstrumentColumnInstrumentClassID)).name
+    End If
+End If
 
-Public Property Get IsDeleted() As Boolean
-IsDeleted = mDeleted
-End Property
-
-Public Property Get IsDirty() As Boolean
-IsDirty = mDirty
-End Property
-
-Public Property Get IsNew() As Boolean
-IsNew = mNew
-End Property
-
-Public Property Get IsValid() As Boolean
-IsValid = (mErrorList.count = 0)
 End Property
 
 Public Property Get localSymbols() As InstrumentLocalSymbols
-If mLocalSymbols Is Nothing Then
-    Set mLocalSymbols = New InstrumentLocalSymbols
-    mLocalSymbols.connectionString = mDB.connectionString
-    mLocalSymbols.load id
-End If
-Set localSymbols = mLocalSymbols
+'If mLocalSymbols Is Nothing Then
+'    Set mLocalSymbols = New InstrumentLocalSymbols
+'    mLocalSymbols.connectionString = mDB.connectionString
+'    mLocalSymbols.load id
+'End If
+'Set localSymbols = mLocalSymbols
 End Property
 
-Public Property Get month() As String
-month = format(expiryDate, "yyyymm")
-End Property
+'Public Property Get month() As String
+'month = format(expiryDate, "yyyymm")
+'End Property
 
 Public Property Get name() As String
-name = Trim$(mRs("NAME"))
+name = getName
 End Property
 
 Public Property Let name(ByVal value As String)
+' overrides generic property
 value = Trim$(value)
-ruleBroken BusRuleInstrumentNameValid, _
-    Len(value) = 0 Or Len(value) > mMaxNameLength
-mRs("NAME") = Left$(value, mMaxNameLength)
-Dirty
+If value = getName Then Exit Property
+If Not mDataObj.ruleBroken(getBusRuleNameValidId, _
+                            Len(value) = 0 Or _
+                            Len(value) > mDataObj.columnMaxLength(GenericColumnName)) Then
+    If instrumentClassName = "" Then
+        mDataObj.columnValue(GenericColumnName) = Left$(value, mDataObj.columnMaxLength(GenericColumnName))
+    ElseIf Not mDataObj.ruleBroken(getBusRuleNameValidId, _
+                                    Not mDB.InstrumentFactory.loadByName(exchangeName & "/" & instrumentClassName & "/" & name) Is Nothing) Then
+        mDataObj.columnValue(GenericColumnName) = Left$(value, mDataObj.columnMaxLength(GenericColumnName))
+    End If
+End If
+
 End Property
 
 Public Property Get notes() As String
-notes = Nz(mRs("notes"), "")
+notes = mDataObj.getColumnValue(InstrumentColumnNotes, "")
 End Property
 
 Public Property Let notes(ByVal val As String)
-mRs("notes") = val
-Dirty
+mDataObj.columnValue(InstrumentColumnNotes) = val
 End Property
 
 Public Property Get optionRight() As OptionRights
-optionRight = OptionRightFromString(Nz(mRs("optRight"), ""))
+optionRight = OptionRightFromString(mDataObj.getColumnValue(InstrumentColumnOptionRight, ""))
 End Property
 
 Public Property Let optionRight(ByVal value As OptionRights)
 validateOptionRight value
-mRs("optRight") = Left$(OptionRightToString(value), mMaxOptRightLength)
-Dirty
+mDataObj.columnValue(InstrumentColumnOptionRight) = Left$(OptionRightToString(value), mMaxOptRightLength)
 End Property
 
 Public Property Get secType() As SecurityTypes
-secType = gCategoryToSecType(mRs("instrumentcategoryid"))
+secType = gCategoryToSecType(mDataObj.getColumnValue(InstrumentColumnInstrumentCategoryId))
 End Property
 
 Public Property Get sessionEndTime() As Date
-sessionEndTime = mRs("sessionEndTime")
+If Not mDataObj.IsNew Then
+    sessionEndTime = mDataObj.getColumnValue(InstrumentColumnSessionEndTime, 0)
+End If
 End Property
 
 Public Property Get sessionStartTime() As Date
-sessionStartTime = mRs("sessionstartTime")
+If Not mDataObj.IsNew Then
+    sessionStartTime = mDataObj.getColumnValue(InstrumentColumnSessionStartTime)
+End If
 End Property
 
 Public Property Get shortName() As String
-shortName = Trim$(mRs("SHORTNAME"))
+shortName = mDataObj.getColumnValue(InstrumentColumnShortName, "")
 End Property
 
 Public Property Let shortName(ByVal value As String)
 value = Trim$(value)
-ruleBroken BusRuleInstrumentShortNameValid, _
+mDataObj.ruleBroken BusRuleInstrumentShortNameValid, _
     Len(value) = 0 Or Len(value) > mMaxShortNameLength
-mRs("SHORTNAME") = Left$(value, mMaxShortNameLength)
-Dirty
+mDataObj.columnValue(InstrumentColumnShortName) = Left$(value, mMaxShortNameLength)
 End Property
 
 Public Property Get strikePrice() As Double
-strikePrice = Nz(mRs("strikePrice"), 0#)
+strikePrice = mDataObj.getColumnValue(InstrumentColumnStrikePrice, 0#)
 End Property
 
 Public Property Let strikePrice(ByVal value As Double)
 validateStrikePrice value
-mRs("strikePrice") = value
-Dirty
+mDataObj.columnValue(InstrumentColumnStrikePrice) = value
 End Property
 
 Public Property Let strikePriceString(ByVal value As String)
 If IsNumeric(value) Then
     strikePrice = CDbl(value)
 Else
-    ruleBroken BusRuleInstrumentStrikePriceValid, IsNumeric(value)
-    Dirty
+    mDataObj.ruleBroken BusRuleInstrumentStrikePriceValid, Not IsNumeric(value)
+    strikePrice = 999.999
 End If
 End Property
 
 Public Property Let symbol(ByVal value As String)
 value = Trim$(value)
-ruleBroken BusRuleInstrumentSymbolValid, _
-    Len(value) = 0 Or Len(value) > mMaxSymbolLength
-mRs("SYMBOL") = Left$(value, mMaxSymbolLength)
-Dirty
+mDataObj.ruleBroken BusRuleInstrumentSymbolValid, _
+                    Len(value) = 0 Or Len(value) > mMaxSymbolLength
+mDataObj.columnValue(InstrumentColumnSymbol) = Left$(value, mMaxSymbolLength)
 End Property
 
 Public Property Get symbol() As String
-symbol = Trim$(mRs("Symbol"))
+symbol = mDataObj.getColumnValue(InstrumentColumnSymbol, "")
 End Property
 
 Public Property Let tickSize( _
                 ByVal value As Double)
-ruleBroken BusRuleInstrumentTickSizeValid, _
-    value < 0
+mDataObj.ruleBroken BusRuleInstrumentTickSizeValid, _
+                    value < 0
 If value = 0 Then
-    mRs("TickSize") = Null
+    mDataObj.columnValue(InstrumentColumnTickSize) = Null
 Else
-    mRs("TickSize") = value
+    mDataObj.columnValue(InstrumentColumnTickSize) = value
 End If
-Dirty
 End Property
 
 Public Property Get tickSize() As Double
-tickSize = mRs(InstrumentColumnTickSize)
+If mDataObj.IsNew Then
+    tickSize = mDataObj.getColumnValue(InstrumentColumnTickSize, 0)
+Else
+    tickSize = mDataObj.getColumnValue(InstrumentColumnTickSizeE)
+End If
 End Property
 
 Public Property Get tickSizeInheritedFromClass() As Boolean
-If IsNull(mRs(InstrumentColumnTickSize)) Then
+If mDataObj.getColumnValue(InstrumentColumnTickSize, 0) = 0 Then
     tickSizeInheritedFromClass = True
 End If
 End Property
@@ -418,9 +340,8 @@ Public Property Let tickSizeString( _
                 ByVal value As String)
 If value = "" Then
     tickSize = 0#
-ElseIf Not IsNumeric(value) Then
-    ruleBroken BusRuleInstrumentTickSizeValid, True
-    Dirty
+ElseIf Not mDataObj.ruleBroken(BusRuleInstrumentTickSizeValid, Not IsNumeric(value)) Then
+    tickSize = 999.999
 Else
     tickSize = CDbl(value)
 End If
@@ -428,22 +349,24 @@ End Property
 
 Public Property Let tickValue( _
                 ByVal value As Double)
-ruleBroken BusRuleInstrumentTickValueValid, _
-    value < 0
+mDataObj.ruleBroken BusRuleInstrumentTickValueValid, value < 0
 If value = 0 Then
-    mRs("TickValue") = Null
+    mDataObj.columnValue(InstrumentColumnTickValue) = Null
 Else
-    mRs("TickValue") = value
+    mDataObj.columnValue(InstrumentColumnTickValue) = value
 End If
-Dirty
 End Property
 
 Public Property Get tickValue() As Double
-tickValue = mRs(InstrumentColumnTickValue)
+If mDataObj.IsNew Then
+    tickValue = mDataObj.getColumnValue(InstrumentColumnTickValue, 0)
+Else
+    tickValue = mDataObj.getColumnValue(InstrumentColumnTickValueE)
+End If
 End Property
 
 Public Property Get tickValueInheritedFromClass() As Boolean
-If IsNull(mRs(InstrumentColumnTickValue)) Then
+If mDataObj.getColumnValue(InstrumentColumnTickValue, 0) = 0 Then
     tickValueInheritedFromClass = True
 End If
 End Property
@@ -452,78 +375,37 @@ Public Property Let tickValueString( _
                 ByVal value As String)
 If value = "" Then
     tickValue = 0#
-ElseIf Not IsNumeric(value) Then
-    ruleBroken BusRuleInstrumentTickValueValid, True
-    Dirty
+ElseIf Not mDataObj.ruleBroken(BusRuleInstrumentTickValueValid, Not IsNumeric(value)) Then
+    tickValue = 999.999
 Else
     tickValue = CDbl(value)
 End If
 End Property
 
-Public Property Get timeZoneCanonicalName() As String
-timeZoneCanonicalName = Trim$(mRs(InstrumentColumnTimeZone))
-End Property
-
 Public Property Get TimeZoneName() As String
-TimeZoneName = Trim$(mRs("TimeZoneName"))
+If mDataObj.IsNew Then
+    TimeZoneName = ""
+Else
+    TimeZoneName = mDataObj.getColumnValue(InstrumentColumnTimeZoneName)
+End If
 End Property
 
-'@===============================================================================
+'@================================================================================
 ' Methods
-'@===============================================================================
+'@================================================================================
 
-Public Sub ApplyEdit()
-If mDeleted Then
-    mRs.Delete
-    save
-    Set mRs = Nothing
-    RaiseEvent Deleted
-    mEventRaiser.Deleted
-ElseIf mDirty Or mNew Then
-    If Not IsValid Then Err.Raise 445
-    save
-    mNew = False
-End If
-Clean
-End Sub
-
-Public Sub CancelEdit()
-mRs.CancelUpdate
-mDeleted = False
-If mRs.EOF Then
-    mRs.AddNew
-    mNew = True
-    setInitialErrors
-End If
-Clean
-End Sub
-
-Public Function CreateBarDataReader() As BarDataReader
-Set CreateBarDataReader = New BarDataReader
-CreateBarDataReader.initialise mDB.connectionString, id, timeZoneCanonicalName
+Public Function createTickStream( _
+                ByVal fromDate As Date, _
+                ByVal toDate As Date) As TickStream
+Set createTickStream = New TickStream
+createTickStream.initialise mDB, id, fromDate, toDate
 End Function
 
-Public Function CreateBarDataWriter() As BarDataWriter
-Set CreateBarDataWriter = New BarDataWriter
-CreateBarDataWriter.initialise mDB.connectionString, id, Me
-mWriters.add CreateBarDataWriter, CStr(ObjPtr(CreateBarDataWriter))
+Public Function createTickWriter( _
+                ByVal useAsynchronousWrites As Boolean) As TickWriter
+Set createTickWriter = New TickWriter
+createTickWriter.initialise mDB, Me, useAsynchronousWrites
 End Function
-
-Public Function CreateTickDataReader() As TickDataReader
-Set CreateTickDataReader = New TickDataReader
-CreateTickDataReader.initialise mDB.connectionString, id, timeZoneCanonicalName
-End Function
-
-Public Function CreateTickDataWriter() As TickDataWriter
-Set CreateTickDataWriter = New TickDataWriter
-mWriterCounter = mWriterCounter + 1
-CreateTickDataWriter.initialise mDB.connectionString, id, Me, shortName & "/" & mWriterCounter
-mWriters.add CreateTickDataWriter, CStr(ObjPtr(CreateTickDataWriter))
-End Function
-
-Public Sub Delete()
-mDeleted = True
-End Sub
 
 Public Function fetchBars( _
                 ByVal barLength As Long, _
@@ -593,7 +475,8 @@ Public Function fetchbarsAsync( _
                 Optional ByVal customSessionEndTime As Date, _
                 Optional ByVal includeBarsOutsideSession As Boolean, _
                 Optional ByVal barType As BarTypes = BarTypeTrade, _
-                Optional ByVal cookie As Variant) As TaskController
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TaskController
 Dim bf As BarFetcher
 Dim specifier As BarDataSpecifier
 
@@ -626,50 +509,20 @@ specifier.setCustomSessionTimes customSessionStartTime, customSessionEndTime
 Set bf = New BarFetcher
 bf.initialise mDB, Me
 
-Set fetchbarsAsync = bf.fetchbarsAsync(specifier)
+Set fetchbarsAsync = bf.fetchbarsAsync(specifier, cookie, taskName)
 Set bf = Nothing
 End Function
 
 Friend Sub initialise( _
                 ByVal db As TradingDB, _
                 Optional ByVal rs As ADODB.Recordset)
-Set mDB = db
+genericInitialise db, rs
 
-If Not rs Is Nothing Then initialiseRs rs
-End Sub
-
-Friend Sub initialiseRs( _
-                ByVal rs As ADODB.Recordset)
-Set mRs = rs
-
-mMaxNameLength = mRs.Fields(InstrumentColumnName).DefinedSize
-mMaxShortNameLength = mRs.Fields(InstrumentColumnShortName).DefinedSize
-mMaxSymbolLength = mRs.Fields(InstrumentColumnSymbol).DefinedSize
-mMaxOptRightLength = mRs.Fields(InstrumentColumnOptionRight).DefinedSize
-mMaxCurrencyCodeLength = mRs.Fields(InstrumentColumnCurrency).DefinedSize
-
-If mRs.EOF Then
-    mRs.AddNew
-    mNew = True
-    setInitialErrors
-End If
-End Sub
-
-Friend Sub releaseWriter( _
-                ByVal writer As Object)
-
-mWriters.remove CStr(ObjPtr(writer))
-
-'Dim i As Long
-'Dim obj As Object
-'
-'For i = mWriters.count To 1 Step -1
-'    Set obj = mWriters.item(i)
-'    If obj Is writer Then
-'        mWriters.remove i
-'        Exit Sub
-'    End If
-'Next
+mMaxNameLength = mDataObj.columnMaxLength(InstrumentColumnName)
+mMaxShortNameLength = mDataObj.columnMaxLength(InstrumentColumnShortName)
+mMaxSymbolLength = mDataObj.columnMaxLength(InstrumentColumnSymbol)
+mMaxOptRightLength = mDataObj.columnMaxLength(InstrumentColumnOptionRight)
+mMaxCurrencyCodeLength = mDataObj.columnMaxLength(InstrumentColumnCurrency)
 
 End Sub
 
@@ -689,7 +542,7 @@ Dim lBarWriter As New BarWriter
 Dim failpoint As Long
 On Error GoTo Err
 
-lBarWriter.initialise mDB.connectionString, id
+lBarWriter.initialise mDB, id, shortName
 
 lBarWriter.WriteBar timestamp, _
                     barType, _
@@ -723,10 +576,11 @@ Public Function WriteBarAsync( _
                 ByVal volume As Long, _
                 ByVal tickVolume As Long, _
                 ByVal openInterest As Long, _
-                Optional ByVal cookie As Variant) As TaskController
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TaskController
 Dim lBarWriter As New BarWriter
 
-lBarWriter.initialise mDB.connectionString, id
+lBarWriter.initialise mDB, id, shortName
 
 Set WriteBarAsync = lBarWriter.WriteBarAsync(timestamp, _
                                             barType, _
@@ -738,68 +592,28 @@ Set WriteBarAsync = lBarWriter.WriteBarAsync(timestamp, _
                                             volume, _
                                             tickVolume, _
                                             openInterest, _
-                                            cookie)
+                                            cookie, _
+                                            taskName)
 End Function
 
-'@===============================================================================
+'@================================================================================
 ' Helper Functions
-'@===============================================================================
+'@================================================================================
 
-Private Sub Clean()
-mDirty = False
-RaiseEvent Clean
-mEventRaiser.Clean
-mErrorList.Clear
-If mNew Then
-    setInitialErrors
-End If
-End Sub
-
-Private Sub Dirty()
-If Not mDirty Then
-    mDirty = True
-    RaiseEvent Dirty
-    mEventRaiser.Dirty
-End If
-End Sub
-
-Private Function ruleBroken( _
-                ByVal ruleId As BusinessRuleIds, _
-                ByVal isBroken As Boolean) As Boolean
-ruleBroken = mErrorList.AssertRule(Not isBroken, ruleId)
+Private Function getBusRuleNameValidId() As Long
+getBusRuleNameValidId = BusRuleInstrumentNameValid
 End Function
 
-Private Sub save()
-Dim failpoint As Long
-On Error GoTo Err
-
-failpoint = 100
-
-Set mConn = New ADODB.Connection
-mConn.Open mDB.connectionString
-
-failpoint = 200
-
-Set mRs.ActiveConnection = mConn
-mRs.UpdateBatch
-Set mRs.ActiveConnection = Nothing
-mConn.Close
-
-Exit Sub
-
-Err:
-Err.Raise Err.Number, _
-        "TradingDO26" & "." & "Instrument" & "::" & "save" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
-
-End Sub
+Private Function getFactory() As DataObjectFactory
+Set getFactory = mDB.InstrumentFactory
+End Function
 
 Private Sub setInitialErrors()
-' sets errors for fields that are invalid when a new record is created
-ruleBroken BusRuleInstrumentNameValid, True
-ruleBroken BusRuleInstrumentShortNameValid, True
-ruleBroken BusRuleInstrumentSymbolValid, True
+' set errors for fields that are invalid when a new record is created
+' Note that this is done automatically by the AbstractDataObject for
+' the name field
+mDataObj.ruleBroken BusRuleInstrumentShortNameValid, True
+mDataObj.ruleBroken BusRuleInstrumentSymbolValid, True
 End Sub
 
 Private Sub validateOptionRight( _
@@ -810,25 +624,189 @@ Case OptNone
 Case OptCall
 Case OptPut
 Case Else
-    ruleBroken BusRuleInstrumentOptionRightvalid, True
+    mDataObj.ruleBroken BusRuleInstrumentOptionRightvalid, True
     Exit Sub
 End Select
 
-ruleBroken BusRuleInstrumentOptionRightvalid, _
-    ((secType = SecTypeOption Or _
-        secType = SecTypeFuturesOption) And _
-    value = OptNone)
+mDataObj.ruleBroken BusRuleInstrumentOptionRightvalid, _
+                    ((secType = SecTypeOption Or _
+                        secType = SecTypeFuturesOption) And _
+                    value = OptNone)
 
 End Sub
 
 Private Sub validateStrikePrice( _
                 ByVal value As Double)
-ruleBroken BusRuleInstrumentStrikePriceValid, _
-    (secType = SecTypeOption Or _
-        secType = SecTypeFuturesOption) And _
-    value <= 0
+mDataObj.ruleBroken BusRuleInstrumentStrikePriceValid, _
+                    (secType = SecTypeOption Or _
+                        secType = SecTypeFuturesOption) And _
+                    value <= 0
 
 End Sub
+
+
+
+
+'@********************************************************************************
+'@********************************************************************************
+' Beyond this point everything is generic
+'@********************************************************************************
+'@********************************************************************************
+
+
+'@================================================================================
+' BusinessDataObject Interface Members
+'@================================================================================
+
+Private Sub BusinessDataObject_ApplyEdit()
+ApplyEdit
+End Sub
+
+Private Sub BusinessDataObject_CancelEdit()
+CancelEdit
+End Sub
+
+Private Sub BusinessDataObject_Delete()
+Delete
+End Sub
+
+Private Property Get BusinessDataObject_ErrorList() As ErrorList
+Set BusinessDataObject_ErrorList = mDataObj.ErrorList
+End Property
+
+Private Property Get BusinessDataObject_EventSource() As BusinessObjEventSource
+Set BusinessDataObject_EventSource = mDataObj.eventSource
+End Property
+
+Private Property Get BusinessDataObject_ID() As Long
+BusinessDataObject_ID = id
+End Property
+
+Private Property Get BusinessDataObject_IsDeleted() As Boolean
+BusinessDataObject_IsDeleted = IsDeleted
+End Property
+
+Private Property Get BusinessDataObject_IsDirty() As Boolean
+BusinessDataObject_IsDirty = IsDirty
+End Property
+
+Private Property Get BusinessDataObject_IsNew() As Boolean
+BusinessDataObject_IsNew = IsNew
+End Property
+
+Private Property Get BusinessDataObject_IsValid() As Boolean
+BusinessDataObject_IsValid = IsValid
+End Property
+
+Private Property Let BusinessDataObject_Name(ByVal RHS As String)
+name = RHS
+End Property
+
+Private Property Get BusinessDataObject_Name() As String
+BusinessDataObject_Name = name
+End Property
+
+Private Sub BusinessDataObject_Refresh()
+refresh
+End Sub
+
+'@===============================================================================
+' mDataObj Event Handlers
+'@===============================================================================
+
+Private Sub mDataObj_Clean()
+RaiseEvent Clean
+End Sub
+
+Private Sub mDataObj_Deleted()
+RaiseEvent Deleted
+End Sub
+
+Private Sub mDataObj_Dirty()
+RaiseEvent Dirty
+End Sub
+
+Private Sub mDataObj_Invalid()
+RaiseEvent Invalid
+End Sub
+
+Private Sub mDataObj_Valid()
+RaiseEvent Valid
+End Sub
+
+'@================================================================================
+' Generic Properties
+'@================================================================================
+
+Public Property Get ErrorList() As ErrorList
+Set ErrorList = mDataObj.ErrorList
+End Property
+
+Public Property Get id() As Long
+id = mDataObj.id
+End Property
+
+Public Property Get IsValid() As Boolean
+IsValid = mDataObj.IsValid
+End Property
+
+Public Property Get IsDeleted() As Boolean
+IsDeleted = mDataObj.IsDeleted
+End Property
+
+Public Property Get IsDirty() As Boolean
+IsDirty = mDataObj.IsDirty
+End Property
+
+Public Property Get IsNew() As Boolean
+IsNew = mDataObj.IsNew
+End Property
+
+'@================================================================================
+' Generic Methods
+'@================================================================================
+
+Public Sub ApplyEdit()
+mDataObj.ApplyEdit
+End Sub
+
+Public Sub CancelEdit()
+mDataObj.CancelEdit
+If mDataObj.IsNew Then setInitialErrors
+End Sub
+
+Public Sub Delete()
+mDataObj.Delete
+End Sub
+
+Public Sub genericInitialise( _
+                ByVal db As Variant, _
+                Optional ByVal rs As ADODB.Recordset)
+Set mDB = db
+If Not rs Is Nothing Then
+    Set mDataObj = CreateAbstractDataObject(Me, getBusRuleNameValidId, getFactory, mDB.connectionString)
+    mDataObj.initialiseRs rs
+    If mDataObj.IsNew Then setInitialErrors
+End If
+End Sub
+
+Public Function getName() As String
+getName = mDataObj.name
+End Function
+
+Public Sub refresh()
+mDataObj.refresh
+End Sub
+
+Public Sub setName(ByVal value As String)
+mDataObj.name = value
+End Sub
+
+
+
+
+
+
 
 
 

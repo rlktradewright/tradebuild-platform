@@ -62,6 +62,10 @@ Private mBaseFactory As AbstractDOFactory
 ' DataObjectFactory Interface Members
 '@================================================================================
 
+Private Sub DataObjectFactory_delete(ByVal id As Long)
+mBaseFactory.Delete id
+End Sub
+
 Private Property Get DataObjectFactory_fieldSpecifiers() As BusObjUtils10.fieldSpecifiers
 Set DataObjectFactory_fieldSpecifiers = fieldSpecifiers
 End Property
@@ -73,8 +77,9 @@ End Function
 
 Private Function DataObjectFactory_loadByIDAsync( _
                 ByVal id As Long, _
-                Optional ByVal cookie As Variant) As TWUtilities30.TaskController
-Set DataObjectFactory_loadByIDAsync = loadByIDAsync(id, cookie)
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TWUtilities30.TaskController
+Set DataObjectFactory_loadByIDAsync = loadByIDAsync(id, cookie, taskName)
 End Function
 
 Private Function DataObjectFactory_loadByName( _
@@ -84,8 +89,9 @@ End Function
 
 Private Function DataObjectFactory_loadByNameAsync( _
                 ByVal pName As String, _
-                Optional ByVal cookie As Variant) As TWUtilities30.TaskController
-Set DataObjectFactory_loadByNameAsync = loadByNameAsync(pName, cookie)
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TWUtilities30.TaskController
+Set DataObjectFactory_loadByNameAsync = loadByNameAsync(pName, cookie, taskName)
 End Function
 
 Private Function DataObjectFactory_loadByQuery( _
@@ -95,8 +101,9 @@ End Function
 
 Private Function DataObjectFactory_loadByQueryAsync( _
                 ByVal whereCondition As String, _
-                Optional ByVal cookie As Variant) As TWUtilities30.TaskController
-Set DataObjectFactory_loadByQueryAsync = loadByQueryAsync(whereCondition, cookie)
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TWUtilities30.TaskController
+Set DataObjectFactory_loadByQueryAsync = loadByQueryAsync(whereCondition, cookie, taskName)
 End Function
 
 Private Function DataObjectFactory_makeNew() As BusinessDataObject
@@ -104,13 +111,14 @@ Set DataObjectFactory_makeNew = makeNew
 End Function
 
 Private Function DataObjectFactory_makeNewAsync( _
-                Optional ByVal cookie As Variant) As TWUtilities30.TaskController
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TWUtilities30.TaskController
 Set DataObjectFactory_makeNewAsync = makeNewAsync(cookie)
 End Function
 
 Private Function DataObjectFactory_makeNewFromRecordset( _
                 ByVal rs As ADODB.Recordset) As BusObjUtils10.BusinessDataObject
-Dim obj As New Instrument
+Dim obj As New instrument
 Set DataObjectFactory_makeNewFromRecordset = obj
 obj.initialise mDB, rs
 End Function
@@ -124,8 +132,9 @@ End Function
 Private Function DataObjectFactory_queryAsync( _
                 ByVal whereCondition As String, _
                 fieldNames() As String, _
-                Optional ByVal cookie As Variant) As TWUtilities30.TaskController
-Set DataObjectFactory_queryAsync = queryAsync(whereCondition, fieldNames, cookie)
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TWUtilities30.TaskController
+Set DataObjectFactory_queryAsync = queryAsync(whereCondition, fieldNames, cookie, taskName)
 End Function
 
 Private Function DataObjectFactory_queryObjects( _
@@ -135,9 +144,15 @@ End Function
 
 Private Function DataObjectFactory_queryObjectsAsync( _
                 ByVal whereCondition As String, _
-                Optional ByVal cookie As Variant) As TWUtilities30.TaskController
-Set DataObjectFactory_queryObjectsAsync = queryObjectsAsync(whereCondition, cookie)
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TWUtilities30.TaskController
+Set DataObjectFactory_queryObjectsAsync = queryObjectsAsync(whereCondition, cookie, taskName)
 End Function
+
+Private Sub DataObjectFactory_refresh( _
+                ByVal dataObj As BusObjUtils10.BusinessDataObject)
+refresh dataObj
+End Sub
 
 Private Function DataObjectFactory_search( _
                 ByVal criterion As String, _
@@ -148,8 +163,9 @@ End Function
 Private Function DataObjectFactory_searchAsync( _
                 ByVal criterion As String, _
                 fieldNames() As String, _
-                Optional ByVal cookie As Variant) As TWUtilities30.TaskController
-Set DataObjectFactory_searchAsync = searchAsync(criterion, fieldNames, cookie)
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TWUtilities30.TaskController
+Set DataObjectFactory_searchAsync = searchAsync(criterion, fieldNames, cookie, taskName)
 End Function
 
 Private Function DataObjectFactory_searchObjects( _
@@ -159,8 +175,9 @@ End Function
 
 Private Function DataObjectFactory_searchObjectsAsync( _
                 ByVal criterion As String, _
-                Optional ByVal cookie As Variant) As TWUtilities30.TaskController
-Set DataObjectFactory_searchObjectsAsync = searchObjectsAsync(criterion, cookie)
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TWUtilities30.TaskController
+Set DataObjectFactory_searchObjectsAsync = searchObjectsAsync(criterion, cookie, taskName)
 End Function
 
 '@================================================================================
@@ -184,11 +201,11 @@ Friend Sub initialise( _
 
 Set mDB = db
 
-Set mBaseFactory = CreateAbstractDOFactory(Me, mDB.connectionString, "vinstrumentdetails", "vinstrumentdetails")
+Set mBaseFactory = CreateAbstractDOFactory(Me, mDB.connectionString, "instrument", "vinstrumentdetails")
 
 mBaseFactory.addField FieldNameName, InstrumentColumnName, FieldWidthInstrument, FieldAlignInstrument, True
 mBaseFactory.addField FieldNameShortName, InstrumentColumnShortName, FieldWidthShortName, FieldAlignShortName, True
-mBaseFactory.addField FieldNameExchange, InstrumentColumnExchange, FieldWidthExchange, FieldAlignExchange, False
+mBaseFactory.addField FieldNameExchange, InstrumentColumnExchangeName, FieldWidthExchange, FieldAlignExchange, False
 mBaseFactory.addField FieldNameSymbol, InstrumentColumnSymbol, FieldWidthSymbol, FieldAlignSymbol, True
 mBaseFactory.addField FieldNameSecType, InstrumentColumnSecType, FieldWidthSecType, FieldAlignSecType, False
 mBaseFactory.addField FieldNameExpiry, InstrumentColumnExpiry, FieldWidthExpiry, FieldAlignExpiry, True
@@ -199,20 +216,20 @@ mBaseFactory.addField FieldNameTickSize, InstrumentColumnTickSize, FieldWidthTic
 mBaseFactory.addField FieldNameTickValue, InstrumentColumnTickValue, FieldWidthTickValue, FieldAlignTickValue, False
 mBaseFactory.addField FieldNameSessionStartTime, InstrumentColumnSessionStartTime, FieldWidthSessionStartTime, FieldAlignSessionStartTime, False
 mBaseFactory.addField FieldNameSessionEndTime, InstrumentColumnSessionEndTime, FieldWidthSessionEndTime, FieldAlignSessionEndTime, False
-mBaseFactory.addField FieldNameTimeZone, InstrumentColumnTimeZone, FieldWidthTimeZone, FieldAlignTimeZone, False
+mBaseFactory.addField FieldNameTimeZone, InstrumentColumnTimeZoneName, FieldWidthTimeZone, FieldAlignTimeZone, False
 mBaseFactory.addField FieldNameNotes, InstrumentColumnNotes, FieldWidthNotes, FieldAlignNotes, True
 
 End Sub
 
 Public Function loadByID( _
-                ByVal id As Long) As Instrument
+                ByVal id As Long) As instrument
 Dim failpoint As Long
 On Error GoTo Err
 
 Dim rs As Recordset
 Set rs = mBaseFactory.loadByID(id)
 If Not rs Is Nothing Then
-    Set loadByID = New Instrument
+    Set loadByID = New instrument
     loadByID.initialise mDB, rs
 End If
 
@@ -228,11 +245,12 @@ End Function
 
 Public Function loadByIDAsync( _
                 ByVal id As Long, _
-                Optional ByVal cookie As Variant) As TaskController
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TaskController
 Dim failpoint As Long
 On Error GoTo Err
 
-Set loadByIDAsync = mBaseFactory.loadByIDAsync(id, cookie)
+Set loadByIDAsync = mBaseFactory.loadByIDAsync(id, cookie, taskName)
 
 Exit Function
 
@@ -245,7 +263,7 @@ Err.Raise Err.Number, _
 End Function
 
 Public Function loadByName( _
-                ByVal pName As String) As Instrument
+                ByVal pName As String) As instrument
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -253,7 +271,7 @@ Dim rs As Recordset
 
 Set rs = mBaseFactory.loadByQuery(getNameWhereCondition(Trim$(pName)))
 If Not rs Is Nothing Then
-    Set loadByName = New Instrument
+    Set loadByName = New instrument
     loadByName.initialise mDB, rs
 End If
 
@@ -269,11 +287,12 @@ End Function
 
 Public Function loadByNameAsync( _
                 ByVal pName As String, _
-                Optional ByVal cookie As Variant) As TaskController
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TaskController
 Dim failpoint As Long
 On Error GoTo Err
 
-Set loadByNameAsync = mBaseFactory.loadByQueryAsync(getNameWhereCondition(Trim$(pName)), cookie)
+Set loadByNameAsync = mBaseFactory.loadByQueryAsync(getNameWhereCondition(Trim$(pName)), cookie, taskName)
 
 Exit Function
 
@@ -286,14 +305,14 @@ Err.Raise Err.Number, _
 End Function
 
 Public Function loadByQuery( _
-                ByVal whereCondition As String) As Instrument
+                ByVal whereCondition As String) As instrument
 Dim failpoint As Long
 On Error GoTo Err
 
 Dim rs As Recordset
 Set rs = mBaseFactory.loadByQuery(whereCondition)
 If Not rs Is Nothing Then
-    Set loadByQuery = New Instrument
+    Set loadByQuery = New instrument
     loadByQuery.initialise mDB, rs
 End If
 
@@ -309,11 +328,12 @@ End Function
 
 Public Function loadByQueryAsync( _
                 ByVal whereCondition As String, _
-                Optional ByVal cookie As Variant) As TaskController
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TaskController
 Dim failpoint As Long
 On Error GoTo Err
 
-Set loadByQueryAsync = mBaseFactory.loadByQueryAsync(whereCondition, cookie)
+Set loadByQueryAsync = mBaseFactory.loadByQueryAsync(whereCondition, cookie, taskName)
 
 Exit Function
 
@@ -326,7 +346,7 @@ Err.Raise Err.Number, _
 End Function
 
 Public Function loadBySpecifier( _
-                ByVal contractSpec As ContractSpecifier) As Instrument
+                ByVal contractSpec As ContractSpecifier) As instrument
 
 Dim failpoint As Long
 On Error GoTo Err
@@ -341,7 +361,7 @@ If summs.count <> 1 Then Exit Function
 
 Set rs = mBaseFactory.loadByID(summs(1).id)
 If Not rs Is Nothing Then
-    Set loadBySpecifier = New Instrument
+    Set loadBySpecifier = New instrument
     loadBySpecifier.initialise mDB, rs
 End If
 
@@ -357,11 +377,12 @@ End Function
 
 Public Function loadBySpecifierAsync( _
                 ByVal contractSpec As ContractSpecifier, _
-                Optional ByVal cookie As Variant) As TaskController
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TaskController
 Dim failpoint As Long
 On Error GoTo Err
 
-Set loadBySpecifierAsync = mBaseFactory.loadByQueryAsync(conditionStringFromSpec(contractSpec), cookie)
+Set loadBySpecifierAsync = mBaseFactory.loadByQueryAsync(conditionStringFromSpec(contractSpec), cookie, taskName)
 
 Exit Function
 
@@ -382,7 +403,7 @@ Dim cond As New SimpleConditionBuilder
 Dim failpoint As Long
 On Error GoTo Err
 
-cond.addTerm InstrumentColumnExchange, CondOpEqual, exchangeName
+cond.addTerm InstrumentColumnExchangeName, CondOpEqual, exchangeName
 cond.addTerm InstrumentColumnInstrumentClassName, CondOpEqual, instrumentClassName, LogicalOpAND
 Set loadSummariesByClass = mBaseFactory.query(cond.conditionString, fieldNames)
 
@@ -400,15 +421,16 @@ Public Function loadSummariesByClassAsync( _
                 ByRef fieldNames() As String, _
                 ByVal exchangeName As String, _
                 ByVal instrumentClassName As String, _
-                Optional ByVal cookie As Variant) As TaskController
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TaskController
 Dim cond As New SimpleConditionBuilder
 
 Dim failpoint As Long
 On Error GoTo Err
 
-cond.addTerm InstrumentColumnExchange, CondOpEqual, exchangeName
+cond.addTerm InstrumentColumnExchangeName, CondOpEqual, exchangeName
 cond.addTerm InstrumentColumnInstrumentClassName, CondOpEqual, instrumentClassName, LogicalOpAND
-Set loadSummariesByClassAsync = mBaseFactory.queryAsync(cond.conditionString, fieldNames, cookie)
+Set loadSummariesByClassAsync = mBaseFactory.queryAsync(cond.conditionString, fieldNames, cookie, taskName)
 
 Exit Function
 
@@ -442,12 +464,13 @@ End Function
 Public Function loadSummariesBySpecAsync( _
                 ByRef fieldNames() As String, _
                 ByVal contractSpec As ContractSpecifier, _
-                Optional ByVal cookie As Variant) As TaskController
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TaskController
 
 Dim failpoint As Long
 On Error GoTo Err
 
-Set loadSummariesBySpecAsync = mBaseFactory.queryAsync(conditionStringFromSpec(contractSpec), fieldNames, cookie)
+Set loadSummariesBySpecAsync = mBaseFactory.queryAsync(conditionStringFromSpec(contractSpec), fieldNames, cookie, taskName)
 
 Exit Function
 
@@ -459,12 +482,12 @@ Err.Raise Err.Number, _
 
 End Function
 
-Public Function makeNew() As Instrument
+Public Function makeNew() As instrument
 
 Dim failpoint As Long
 On Error GoTo Err
 
-Set makeNew = New Instrument
+Set makeNew = New instrument
 makeNew.initialise mDB, mBaseFactory.makeNew
 
 Exit Function
@@ -478,12 +501,13 @@ Err.Raise Err.Number, _
 End Function
 
 Public Function makeNewAsync( _
-                Optional ByVal cookie As Variant) As TaskController
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TaskController
 
 Dim failpoint As Long
 On Error GoTo Err
 
-Set makeNewAsync = mBaseFactory.makeNewAsync(cookie)
+Set makeNewAsync = mBaseFactory.makeNewAsync(cookie, taskName)
 
 Exit Function
 
@@ -516,11 +540,12 @@ End Function
 Public Function queryAsync( _
                 ByVal whereCondition As String, _
                 ByRef fieldNames() As String, _
-                Optional ByVal cookie As Variant) As TaskController
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TaskController
 Dim failpoint As Long
 On Error GoTo Err
 
-Set queryAsync = mBaseFactory.queryAsync(whereCondition, fieldNames, cookie)
+Set queryAsync = mBaseFactory.queryAsync(whereCondition, fieldNames, cookie, taskName)
 
 Exit Function
 
@@ -551,11 +576,12 @@ End Function
 
 Public Function queryObjectsAsync( _
                 ByVal whereCondition As String, _
-                Optional ByVal cookie As Variant) As TaskController
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TaskController
 Dim failpoint As Long
 On Error GoTo Err
 
-Set queryObjectsAsync = mBaseFactory.queryObjectsAsync(whereCondition, cookie)
+Set queryObjectsAsync = mBaseFactory.queryObjectsAsync(whereCondition, cookie, taskName)
 
 Exit Function
 
@@ -586,11 +612,12 @@ End Function
 
 Public Function queryObjectsBySpecAsync( _
                 ByVal contractSpec As ContractSpecifier, _
-                Optional ByVal cookie As Variant) As TaskController
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TaskController
 Dim failpoint As Long
 On Error GoTo Err
 
-Set queryObjectsBySpecAsync = mBaseFactory.queryObjectsAsync(conditionStringFromSpec(contractSpec), cookie)
+Set queryObjectsBySpecAsync = mBaseFactory.queryObjectsAsync(conditionStringFromSpec(contractSpec), cookie, taskName)
 
 Exit Function
 
@@ -620,14 +647,36 @@ Err.Raise Err.Number, _
 
 End Function
 
-Public Function searchAsync( _
-                ByVal criterion As String, _
-                ByRef fieldNames() As String, _
-                Optional ByVal cookie As Variant) As TaskController
+Friend Sub refresh( _
+                ByVal pInstrument As instrument)
 Dim failpoint As Long
 On Error GoTo Err
 
-Set searchAsync = mBaseFactory.searchAsync(criterion, fieldNames, cookie)
+Dim rs As Recordset
+Set rs = mBaseFactory.loadByID(pInstrument.id)
+If Not rs Is Nothing Then
+    pInstrument.initialise mDB, rs
+End If
+
+Exit Sub
+
+Err:
+Err.Raise Err.Number, _
+        ProjectName & "." & ModuleName & ":" & "reFresh" & "." & failpoint & _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
+        Err.Description
+
+End Sub
+
+Public Function searchAsync( _
+                ByVal criterion As String, _
+                ByRef fieldNames() As String, _
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TaskController
+Dim failpoint As Long
+On Error GoTo Err
+
+Set searchAsync = mBaseFactory.searchAsync(criterion, fieldNames, cookie, taskName)
 
 Exit Function
 
@@ -658,11 +707,12 @@ End Function
 
 Public Function searchObjectsAsync( _
                 ByVal criterion As String, _
-                Optional ByVal cookie As Variant) As TaskController
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TaskController
 Dim failpoint As Long
 On Error GoTo Err
 
-Set searchObjectsAsync = mBaseFactory.searchObjectsAsync(criterion, cookie)
+Set searchObjectsAsync = mBaseFactory.searchObjectsAsync(criterion, cookie, taskName)
 
 Exit Function
 
@@ -699,9 +749,9 @@ Dim cond As New SimpleConditionBuilder
 With contractSpec
     addTerm cond, InstrumentColumnShortName, CondOpEqual, .localSymbol
     addTerm cond, InstrumentColumnSymbol, CondOpEqual, .symbol
-    addTerm cond, InstrumentColumnExchange, CondOpEqual, .Exchange
+    addTerm cond, InstrumentColumnExchangeName, CondOpEqual, .Exchange
     addTerm cond, InstrumentColumnSecType, CondOpEqual, gCategoryToString(gCategoryFromSecType(.secType))
-    addTerm cond, InstrumentColumnCurrency, CondOpEqual, .currencyCode
+    addTerm cond, InstrumentColumnCurrencyE, CondOpEqual, .currencyCode
     
     Select Case .secType
     Case SecTypeFuture

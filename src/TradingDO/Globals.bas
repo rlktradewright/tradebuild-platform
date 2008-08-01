@@ -29,12 +29,18 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName As String = "TradingDO26"
-Private Const ModuleName As String = "Globals"
+Private Const ProjectName                       As String = "TradingDO26"
+Private Const ModuleName                        As String = "Globals"
 
-Public Const ExchangeColumnName                 As String = "NAME"
+Public Const ConnectCompletionTimeoutMillisecs  As Long = 2000
+
+Public Const GenericColumnId                    As String = "ID"
+Public Const GenericColumnName                  As String = "NAME"
+
+Public Const ExchangeColumnName                 As String = GenericColumnName
 Public Const ExchangeColumnNotes                As String = "NOTES"
-Public Const ExchangeColumnTimeZone             As String = "TIMEZONE"
+Public Const ExchangeColumnTimeZoneName         As String = "TIMEZONENAME"
+Public Const ExchangeColumnTimeZoneID           As String = "TIMEZONEID"
 
 Public Const FieldAlignCurrency                 As Long = FieldAlignments.FieldAlignLeft
 Public Const FieldAlignExchange                 As Long = FieldAlignments.FieldAlignLeft
@@ -93,12 +99,17 @@ Public Const FieldWidthTimeZone                 As Long = 150
 Public Const InfoTypeTradingDO                  As String = "tradebuild.tradingdo"
 
 Public Const InstrumentColumnCurrency           As String = "CURRENCY"
-Public Const InstrumentColumnExchange           As String = "EXCHANGE"
+Public Const InstrumentColumnCurrencyE          As String = "EFFECTIVECURRENCY"
+Public Const InstrumentColumnExchangeName       As String = "EXCHANGE"
 Public Const InstrumentColumnExpiry             As String = "EXPIRYDATE"
 Public Const InstrumentColumnExpiryMonth        As String = "EXPIRYMONTH"
+Public Const InstrumentColumnHasBarData         As String = "HASBARDATA"
+Public Const InstrumentColumnHasTickData        As String = "HASTICKDATA"
+Public Const InstrumentColumnId                 As String = "ID"
+Public Const InstrumentColumnInstrumentCategoryId   As String = "INSTRUMENTCATEGORYID"
 Public Const InstrumentColumnInstrumentClassName    As String = "INSTRUMENTCLASSNAME"
 Public Const InstrumentColumnInstrumentClassID  As String = "INSTRUMENTCLASSID"
-Public Const InstrumentColumnName               As String = "NAME"
+Public Const InstrumentColumnName               As String = GenericColumnName
 Public Const InstrumentColumnNotes              As String = "NOTES"
 Public Const InstrumentColumnOptionRight        As String = "OPTRIGHT"
 Public Const InstrumentColumnSecType            As String = "CATEGORY"
@@ -107,29 +118,37 @@ Public Const InstrumentColumnSessionStartTime   As String = "SESSIONSTARTTIME"
 Public Const InstrumentColumnShortName          As String = "SHORTNAME"
 Public Const InstrumentColumnStrikePrice        As String = "STRIKEPRICE"
 Public Const InstrumentColumnSymbol             As String = "SYMBOL"
+Public Const InstrumentColumnSwitchDay          As String = "DAYSBEFOREEXPIRYTOSWITCH"
 Public Const InstrumentColumnTickSize           As String = "TICKSIZE"
+Public Const InstrumentColumnTickSizeE          As String = "EFFECTIVETICKSIZE"
 Public Const InstrumentColumnTickValue          As String = "TICKVALUE"
-Public Const InstrumentColumnTimeZone           As String = "CANONICALTIMEZONENAME"
+Public Const InstrumentColumnTickValueE         As String = "EFFECTIVETICKVALUE"
+Public Const InstrumentColumnTimeZoneName       As String = "TIMEZONENAME"
 
 Public Const InstrumentClassColumnId            As String = "ID"
 Public Const InstrumentClassColumnCurrency      As String = "CURRENCY"
 Public Const InstrumentClassColumnExchange      As String = "EXCHANGE"
 Public Const InstrumentClassColumnExchangeID    As String = "EXCHANGEID"
-Public Const InstrumentClassColumnName          As String = "NAME"
+Public Const InstrumentClassColumnName          As String = GenericColumnName
 Public Const InstrumentClassColumnNotes         As String = "NOTES"
 Public Const InstrumentClassColumnSecType       As String = "CATEGORY"
+Public Const InstrumentClassColumnSecTypeId     As String = "INSTRUMENTCATEGORYID"
 Public Const InstrumentClassColumnSessionEndTime    As String = "SESSIONENDTIME"
 Public Const InstrumentClassColumnSessionStartTime  As String = "SESSIONSTARTTIME"
 Public Const InstrumentClassColumnSwitchDays    As String = "DAYSBEFOREEXPIRYTOSWITCH"
 Public Const InstrumentClassColumnTickSize      As String = "TICKSIZE"
 Public Const InstrumentClassColumnTickValue     As String = "TICKVALUE"
-Public Const InstrumentClassColumnTimeZone      As String = "CANONICALTIMEZONENAME"
+Public Const InstrumentClassColumnTimeZone      As String = "TIMEZONENAME"
 
 Public Const MaxDateValue                       As Date = 2958465 ' 31 Dec 9999
 Public Const MaxLong                            As Long = &H7FFFFFFF
 
+Public Const OneMicrosecond                     As Double = 1# / 86400000000#
+Public Const OneMinute                          As Double = 1# / 1440#
+
+Public Const TimeZoneColumnCanonicalId          As String = "CANONICALID"
 Public Const TimeZoneColumnCanonicalName        As String = "CANONICALNAME"
-Public Const TimeZoneColumnName                 As String = "NAME"
+Public Const TimeZoneColumnName                 As String = GenericColumnName
 
 '@================================================================================
 ' Member variables
@@ -160,7 +179,7 @@ Public gLogger                                  As Logger
 '@================================================================================
 
 Public Function gGenerateConnectionErrorMessages( _
-                ByVal pConnection As ADODB.Connection) As String
+                ByVal pConnection As ADODB.connection) As String
 Dim lError As ADODB.Error
 Dim errMsg As String
 
@@ -314,38 +333,38 @@ End Select
 End Function
 
 Public Function gContractFromInstrument( _
-                ByVal Instrument As Instrument) As Contract
+                ByVal instrument As instrument) As Contract
 Dim lContractBuilder As ContractBuilder
 Dim contractSpec As ContractSpecifier
 Dim localSymbol As InstrumentLocalSymbol
 Dim providerIDs As TWUtilities30.Parameters
 
-Set contractSpec = CreateContractSpecifier(Instrument.shortName, _
-                                        Instrument.symbol, _
-                                        Instrument.exchangeName, _
-                                        Instrument.secType, _
-                                        Instrument.currencyCode, _
-                                        IIf(Instrument.expiryDate = 0, "", format(Instrument.expiryDate, "yyyymmdd")), _
-                                        Instrument.strikePrice, _
-                                        Instrument.optionRight)
+Set contractSpec = CreateContractSpecifier(instrument.shortName, _
+                                        instrument.symbol, _
+                                        instrument.exchangeName, _
+                                        instrument.secType, _
+                                        instrument.currencyCode, _
+                                        IIf(instrument.expiryDate = 0, "", format(instrument.expiryDate, "yyyymmdd")), _
+                                        instrument.strikePrice, _
+                                        instrument.optionRight)
 
 Set lContractBuilder = CreateContractBuilder(contractSpec)
 With lContractBuilder
-    .daysBeforeExpiryToSwitch = Instrument.daysBeforeExpiryToSwitch
-    .Description = Instrument.name
-    .expiryDate = Instrument.expiryDate
-    .tickSize = Instrument.tickSize
-    .multiplier = Instrument.tickValue / Instrument.tickSize
-    .TimeZone = GetTimeZone(Instrument.timeZoneCanonicalName)
+    .daysBeforeExpiryToSwitch = instrument.daysBeforeExpiryToSwitch
+    .Description = instrument.name
+    .expiryDate = instrument.expiryDate
+    .tickSize = instrument.tickSize
+    .multiplier = instrument.tickValue / instrument.tickSize
+    .TimeZone = GetTimeZone(instrument.TimeZoneName)
     
-    .sessionEndTime = Instrument.sessionEndTime
-    .sessionStartTime = Instrument.sessionStartTime
+    .sessionEndTime = instrument.sessionEndTime
+    .sessionStartTime = instrument.sessionStartTime
 
 If False Then 'fix this up using hierarchical recordsets !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    If Instrument.localSymbols.count > 0 Then
+    If instrument.localSymbols.count > 0 Then
         Set providerIDs = New TWUtilities30.Parameters
 
-        For Each localSymbol In Instrument.localSymbols
+        For Each localSymbol In instrument.localSymbols
             providerIDs.setParameterValue localSymbol.providerKey, localSymbol.localSymbol
         Next
         .providerIDs = providerIDs
@@ -356,11 +375,23 @@ End With
 Set gContractFromInstrument = lContractBuilder.Contract
 End Function
 
-
+Public Function gGetSequenceNumber() As Long
+Static seq As Long
+seq = seq + 1
+gGetSequenceNumber = seq
+End Function
 
 Public Function gRoundTimeToSecond( _
                 ByVal timestamp As Date) As Date
 gRoundTimeToSecond = Int((timestamp + (499 / 86400000)) * 86400) / 86400 + 1 / 86400000000#
+End Function
+
+Public Function gTruncateTimeToNextMinute(ByVal timestamp As Date) As Date
+gTruncateTimeToNextMinute = Int((timestamp + OneMinute - OneMicrosecond) / OneMinute) * OneMinute
+End Function
+
+Public Function gTruncateTimeToMinute(ByVal timestamp As Date) As Date
+gTruncateTimeToMinute = Int((timestamp + OneMicrosecond) / OneMinute) * OneMinute
 End Function
 
 '@================================================================================

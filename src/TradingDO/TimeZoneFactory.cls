@@ -62,6 +62,10 @@ Private mBaseFactory As AbstractDOFactory
 ' DataObjectFactory Interface Members
 '@================================================================================
 
+Private Sub DataObjectFactory_delete(ByVal id As Long)
+mBaseFactory.Delete id
+End Sub
+
 Private Property Get DataObjectFactory_fieldSpecifiers() As BusObjUtils10.fieldSpecifiers
 Set DataObjectFactory_fieldSpecifiers = fieldSpecifiers
 End Property
@@ -73,8 +77,9 @@ End Function
 
 Private Function DataObjectFactory_loadByIDAsync( _
                 ByVal id As Long, _
-                Optional ByVal cookie As Variant) As TWUtilities30.TaskController
-Set DataObjectFactory_loadByIDAsync = loadByIDAsync(id, cookie)
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TWUtilities30.TaskController
+Set DataObjectFactory_loadByIDAsync = loadByIDAsync(id, cookie, taskName)
 End Function
 
 Private Function DataObjectFactory_loadByName( _
@@ -84,8 +89,9 @@ End Function
 
 Private Function DataObjectFactory_loadByNameAsync( _
                 ByVal pName As String, _
-                Optional ByVal cookie As Variant) As TWUtilities30.TaskController
-Set DataObjectFactory_loadByNameAsync = loadByNameAsync(pName, cookie)
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TWUtilities30.TaskController
+Set DataObjectFactory_loadByNameAsync = loadByNameAsync(pName, cookie, taskName)
 End Function
 
 Private Function DataObjectFactory_loadByQuery( _
@@ -95,8 +101,9 @@ End Function
 
 Private Function DataObjectFactory_loadByQueryAsync( _
                 ByVal whereCondition As String, _
-                Optional ByVal cookie As Variant) As TWUtilities30.TaskController
-Set DataObjectFactory_loadByQueryAsync = loadByQueryAsync(whereCondition, cookie)
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TWUtilities30.TaskController
+Set DataObjectFactory_loadByQueryAsync = loadByQueryAsync(whereCondition, cookie, taskName)
 End Function
 
 Private Function DataObjectFactory_makeNew() As BusinessDataObject
@@ -104,7 +111,8 @@ Set DataObjectFactory_makeNew = makeNew
 End Function
 
 Private Function DataObjectFactory_makeNewAsync( _
-                Optional ByVal cookie As Variant) As TWUtilities30.TaskController
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TWUtilities30.TaskController
 Set DataObjectFactory_makeNewAsync = makeNewAsync(cookie)
 End Function
 
@@ -124,8 +132,9 @@ End Function
 Private Function DataObjectFactory_queryAsync( _
                 ByVal whereCondition As String, _
                 fieldNames() As String, _
-                Optional ByVal cookie As Variant) As TWUtilities30.TaskController
-Set DataObjectFactory_queryAsync = queryAsync(whereCondition, fieldNames, cookie)
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TWUtilities30.TaskController
+Set DataObjectFactory_queryAsync = queryAsync(whereCondition, fieldNames, cookie, taskName)
 End Function
 
 Private Function DataObjectFactory_queryObjects( _
@@ -135,9 +144,15 @@ End Function
 
 Private Function DataObjectFactory_queryObjectsAsync( _
                 ByVal whereCondition As String, _
-                Optional ByVal cookie As Variant) As TWUtilities30.TaskController
-Set DataObjectFactory_queryObjectsAsync = queryObjectsAsync(whereCondition, cookie)
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TWUtilities30.TaskController
+Set DataObjectFactory_queryObjectsAsync = queryObjectsAsync(whereCondition, cookie, taskName)
 End Function
+
+Private Sub DataObjectFactory_refresh( _
+                ByVal dataObj As BusObjUtils10.BusinessDataObject)
+refresh dataObj
+End Sub
 
 Private Function DataObjectFactory_search( _
                 ByVal criterion As String, _
@@ -148,8 +163,9 @@ End Function
 Private Function DataObjectFactory_searchAsync( _
                 ByVal criterion As String, _
                 fieldNames() As String, _
-                Optional ByVal cookie As Variant) As TWUtilities30.TaskController
-Set DataObjectFactory_searchAsync = searchAsync(criterion, fieldNames, cookie)
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TWUtilities30.TaskController
+Set DataObjectFactory_searchAsync = searchAsync(criterion, fieldNames, cookie, taskName)
 End Function
 
 Private Function DataObjectFactory_searchObjects( _
@@ -159,8 +175,9 @@ End Function
 
 Private Function DataObjectFactory_searchObjectsAsync( _
                 ByVal criterion As String, _
-                Optional ByVal cookie As Variant) As TWUtilities30.TaskController
-Set DataObjectFactory_searchObjectsAsync = searchObjectsAsync(criterion, cookie)
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TWUtilities30.TaskController
+Set DataObjectFactory_searchObjectsAsync = searchObjectsAsync(criterion, cookie, taskName)
 End Function
 
 '@================================================================================
@@ -214,11 +231,12 @@ End Function
 
 Public Function loadByIDAsync( _
                 ByVal id As Long, _
-                Optional ByVal cookie As Variant) As TaskController
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TaskController
 Dim failpoint As Long
 On Error GoTo Err
 
-Set loadByIDAsync = mBaseFactory.loadByIDAsync(id, cookie)
+Set loadByIDAsync = mBaseFactory.loadByIDAsync(id, cookie, taskName)
 
 Exit Function
 
@@ -255,11 +273,12 @@ End Function
 
 Public Function loadByNameAsync( _
                 ByVal pName As String, _
-                Optional ByVal cookie As Variant) As TaskController
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TaskController
 Dim failpoint As Long
 On Error GoTo Err
 
-Set loadByNameAsync = mBaseFactory.loadByNameAsync(Trim$(pName), cookie)
+Set loadByNameAsync = mBaseFactory.loadByNameAsync(Trim$(pName), cookie, taskName)
 
 Exit Function
 
@@ -295,11 +314,12 @@ End Function
 
 Public Function loadByQueryAsync( _
                 ByVal whereCondition As String, _
-                Optional ByVal cookie As Variant) As TaskController
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TaskController
 Dim failpoint As Long
 On Error GoTo Err
 
-Set loadByQueryAsync = mBaseFactory.loadByQueryAsync(whereCondition, cookie)
+Set loadByQueryAsync = mBaseFactory.loadByQueryAsync(whereCondition, cookie, taskName)
 
 Exit Function
 
@@ -329,12 +349,13 @@ Err.Raise Err.Number, _
 End Function
 
 Public Function makeNewAsync( _
-                Optional ByVal cookie As Variant) As TaskController
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TaskController
 
 Dim failpoint As Long
 On Error GoTo Err
 
-Set makeNewAsync = mBaseFactory.makeNewAsync(cookie)
+Set makeNewAsync = mBaseFactory.makeNewAsync(cookie, taskName)
 
 Exit Function
 
@@ -367,11 +388,12 @@ End Function
 Public Function queryAsync( _
                 ByVal whereCondition As String, _
                 ByRef fieldNames() As String, _
-                Optional ByVal cookie As Variant) As TaskController
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TaskController
 Dim failpoint As Long
 On Error GoTo Err
 
-Set queryAsync = mBaseFactory.queryAsync(whereCondition, fieldNames, cookie)
+Set queryAsync = mBaseFactory.queryAsync(whereCondition, fieldNames, cookie, taskName)
 
 Exit Function
 
@@ -402,11 +424,12 @@ End Function
 
 Public Function queryObjectsAsync( _
                 ByVal whereCondition As String, _
-                Optional ByVal cookie As Variant) As TaskController
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TaskController
 Dim failpoint As Long
 On Error GoTo Err
 
-Set queryObjectsAsync = mBaseFactory.queryObjectsAsync(whereCondition, cookie)
+Set queryObjectsAsync = mBaseFactory.queryObjectsAsync(whereCondition, cookie, taskName)
 
 Exit Function
 
@@ -417,6 +440,28 @@ Err.Raise Err.Number, _
         Err.Description
 
 End Function
+
+Friend Sub refresh( _
+                ByVal pTimezone As TimeZone)
+Dim failpoint As Long
+On Error GoTo Err
+
+Dim rs As Recordset
+
+Set rs = mBaseFactory.loadByID(pTimezone.id)
+If Not rs Is Nothing Then
+    pTimezone.initialise mDB, rs
+End If
+
+Exit Sub
+
+Err:
+Err.Raise Err.Number, _
+        ProjectName & "." & ModuleName & ":" & "refresh" & "." & failpoint & _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
+        Err.Description
+
+End Sub
 
 Public Function search( _
                 ByVal criterion As String, _
@@ -439,11 +484,12 @@ End Function
 Public Function searchAsync( _
                 ByVal criterion As String, _
                 ByRef fieldNames() As String, _
-                Optional ByVal cookie As Variant) As TaskController
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TaskController
 Dim failpoint As Long
 On Error GoTo Err
 
-Set searchAsync = mBaseFactory.searchAsync(criterion, fieldNames, cookie)
+Set searchAsync = mBaseFactory.searchAsync(criterion, fieldNames, cookie, taskName)
 
 Exit Function
 
@@ -474,11 +520,12 @@ End Function
 
 Public Function searchObjectsAsync( _
                 ByVal criterion As String, _
-                Optional ByVal cookie As Variant) As TaskController
+                Optional ByVal cookie As Variant, _
+                Optional ByVal taskName As String) As TaskController
 Dim failpoint As Long
 On Error GoTo Err
 
-Set searchObjectsAsync = mBaseFactory.searchObjectsAsync(criterion, cookie)
+Set searchObjectsAsync = mBaseFactory.searchObjectsAsync(criterion, cookie, taskName)
 
 Exit Function
 

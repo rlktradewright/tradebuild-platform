@@ -64,6 +64,10 @@ Private mHandle                             As Long
 ' Class Event Handlers
 '@================================================================================
 
+Private Sub Class_Terminate()
+Debug.Print "ContractsRetrievalTask terminated"
+End Sub
+
 '@================================================================================
 ' Task Interface Members
 '@================================================================================
@@ -76,10 +80,13 @@ Private Sub Task_run()
 Dim instrument As BusinessDataObject
 
 If mInstrEnumerator Is Nothing Then
-    Set mFetchInstrumentsTC = mDB.InstrumentFactory.queryObjectsBySpecAsync(mBuilder.Contracts.ContractSpecifier)
-    mTaskContext.sleep -1
+    Set mFetchInstrumentsTC = mDB.InstrumentFactory.queryObjectsBySpecAsync( _
+                                                mBuilder.Contracts.ContractSpecifier, _
+                                                , _
+                                                "LoadBySpecifier/" & mBuilder.Contracts.ContractSpecifier.ToString & "(" & gGetSequenceNumber & ")")
+    mTaskContext.suspend -1
 Else
-    If Not mInstrEnumerator.moveNext Then
+    If Not mInstrEnumerator.MoveNext Then
         mTaskContext.finish mBuilder.Contracts, False
     Else
         Set instrument = mInstrEnumerator.current
