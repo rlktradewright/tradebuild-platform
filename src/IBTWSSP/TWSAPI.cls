@@ -3984,10 +3984,14 @@ With ContractSpecifier
     If mServerVersion >= 15 Then addData "" ' multiplier
     addData .exchange
     addData .currencyCode
-    If expiryToDate(.expiry) < Now Then
-        addData ""
-    Else
+    If (.sectype = SecTypeFuture Or _
+        .sectype = SecTypeFuturesOption Or _
+        .sectype = SecTypeOption) And _
+        expiryToDate(.expiry) >= Now _
+    Then
         addData .localSymbol
+    Else
+        addData ""
     End If
     If mServerVersion >= 31 Then
         If .sectype = SecTypeCash Or .sectype = SecTypeIndex Or .sectype = SecTypeStock Then
