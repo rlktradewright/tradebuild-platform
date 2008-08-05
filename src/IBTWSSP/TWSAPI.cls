@@ -3988,7 +3988,7 @@ With ContractSpecifier
         .sectype = SecTypeFuturesOption Or _
         .sectype = SecTypeOption) _
     Then
-        If expiryToDate(.expiry) >= Now Or .expiry = 0 Then
+        If expiryToDate(.expiry) >= Now Or .expiry = "" Then
             addData .localSymbol
         Else
             addData ""
