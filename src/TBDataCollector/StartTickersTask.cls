@@ -147,7 +147,8 @@ If CBool(contractConfig.getAttribute(AttributeNameEnabled)) Then
                     contractSpec, _
                     IIf(mWriteticks And includeMarketDepth, DOMEvents.DOMRawEvents, DOMNoEvents), _
                     mOutputFormat, _
-                    mOutputPath
+                    mOutputPath, _
+                    100
     
 End If
 
