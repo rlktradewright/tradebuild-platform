@@ -882,9 +882,9 @@ handleFatalError err.number, _
 
 End Sub
                     
-Public Function ReadHistoricalBar( _
+Friend Function ReadHistoricalBar( _
                         ByVal requestHandle As Long, _
-                        ByVal pBar As Bar, _
+                        ByRef pBar As Bar, _
                         ByRef barLength As Long, _
                         ByRef barUnit As TimePeriodUnits) As Boolean
 

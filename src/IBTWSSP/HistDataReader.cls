@@ -30,7 +30,8 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements TradeBuildSP.IBarDataReader
+Implements DeferredAction
+Implements IBarDataReader
 
 '================================================================================
 ' Events
@@ -98,6 +99,14 @@ End Sub
 Private Sub Class_Terminate()
 finish
 Debug.Print "IBTWSSP.HistDataReader terminated"
+End Sub
+
+'================================================================================
+' DeferredAction Interface Members
+'================================================================================
+
+Private Sub DeferredAction_run(ByVal data As Variant)
+mServiceConsumer.Ready
 End Sub
 
 '================================================================================
@@ -173,8 +182,8 @@ If mTWSAPI Is Nothing Then
 End If
 
 If mTWSAPI.connectionState = ConnConnected Then
-    mServiceConsumer.Ready
     mRequestId = mTWSAPI.RequestHistoricalData(mBarDataSpecifier, Me)
+    DeferAction Me
     
     If mRequestId = -1 Then
         ' the request couldn't be serviced
