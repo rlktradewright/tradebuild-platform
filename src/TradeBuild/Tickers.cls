@@ -32,6 +32,9 @@ Event stateChange(ByRef ev As StateChangeEvent)
 ' Constants
 '@================================================================================
 
+Private Const ProjectName                   As String = "TradeBuild26"
+Private Const ModuleName                    As String = "Tickers"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -92,7 +95,7 @@ End Property
 Public Function add( _
                 ByVal pTickerOptions As Long, _
                 Optional ByVal key As String) As Ticker
-If key = "" Then key = generateGUIDString
+If key = "" Then key = GenerateGUIDString
 Set add = New Ticker
 add.key = key
 add.initialise AllocateTickerHandle, _
@@ -124,7 +127,7 @@ Public Sub remove(ByVal pTicker As Ticker)
 Dim i As Long
 
 If pTicker.State <> TickerStates.TickerStateClosing Then
-    pTicker.StopTicker
+    pTicker.stopTicker
     Exit Sub
 End If
     
@@ -155,16 +158,59 @@ Public Function startTickers( _
                 ByVal pContractSpec As contractSpecifier, _
                 Optional ByVal pDOMEventsRequired As DOMEvents, _
                 Optional ByVal poutputTickfileFormat As String, _
-                Optional ByVal poutputTickfilePath As String) As TaskController
+                Optional ByVal poutputTickfilePath As String, _
+                Optional ByVal interval As Long = 50) As TaskController
 Dim lTickersStarter As New TickersStarter
+
+Dim failpoint As Long
+On Error GoTo Err
 
 lTickersStarter.initialise Me, _
                             pTickerOptions, _
-                            pContractSpec, _
                             pDOMEventsRequired, _
                             poutputTickfileFormat, _
-                            poutputTickfilePath
-Set startTickers = StartTask(lTickersStarter, PriorityNormal, "StartTickers/" & GenerateTextID)
+                            poutputTickfilePath, _
+                            interval
+Set startTickers = StartTask(lTickersStarter, PriorityNormal, "StartTickers/" & GenerateTextID, , pContractSpec)
+
+Exit Function
+
+Err:
+Err.Raise Err.number, _
+        ProjectName & "." & ModuleName & ":" & "startTickers" & "." & failpoint & _
+        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
+        Err.Description
+
+End Function
+
+Public Function startTickersFromContracts( _
+                ByVal pTickerOptions As Long, _
+                ByVal pContracts As Contracts, _
+                Optional ByVal pDOMEventsRequired As DOMEvents, _
+                Optional ByVal poutputTickfileFormat As String, _
+                Optional ByVal poutputTickfilePath As String, _
+                Optional ByVal interval As Long = 50) As TaskController
+Dim lTickersStarter As New TickersStarter
+
+Dim failpoint As Long
+On Error GoTo Err
+
+lTickersStarter.initialise Me, _
+                            pTickerOptions, _
+                            pDOMEventsRequired, _
+                            poutputTickfileFormat, _
+                            poutputTickfilePath, _
+                            interval
+Set startTickersFromContracts = StartTask(lTickersStarter, PriorityNormal, "StartTickersFromContracts/" & GenerateTextID, , pContracts)
+
+Exit Function
+
+Err:
+Err.Raise Err.number, _
+        ProjectName & "." & ModuleName & ":" & "startTickersFromContracts" & "." & failpoint & _
+        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
+        Err.Description
+
 End Function
 
 Friend Sub notify(ByRef ev As NotificationEvent)

@@ -401,7 +401,7 @@ Case TradeBuildSP.StandardSPEventCodes.RTCantConnectDataSource
                     eventMessage
     RaiseEvent Notification(ev)
     mTickers.notify ev
-    StopTicker
+    stopTicker
 Case TradeBuildSP.StandardSPEventCodes.RTConnectedToDataSource
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToRealtimeDataSource
@@ -416,7 +416,7 @@ Case TradeBuildSP.StandardSPEventCodes.RTDisconnectedFromDataSource
                     eventMessage
     RaiseEvent Notification(ev)
     mTickers.notify ev
-    StopTicker
+    stopTicker
 Case TradeBuildSP.StandardSPEventCodes.RTLostConnectionToDataSource
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyLostConnectionToRealtimeDataSource
@@ -424,7 +424,7 @@ Case TradeBuildSP.StandardSPEventCodes.RTLostConnectionToDataSource
                     eventMessage
     RaiseEvent Notification(ev)
     mTickers.notify ev
-    StopTicker
+    stopTicker
 Case TradeBuildSP.StandardSPEventCodes.RTRetryConnectDataSource
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyReconnectingToRealtimeDataSource
@@ -439,7 +439,7 @@ Case TradeBuildSP.StandardSPEventCodes.RTRequestFailed
                     eventMessage
     RaiseEvent Notification(ev)
     mTickers.notify ev
-    StopTicker
+    stopTicker
 Case TradeBuildSP.StandardSPEventCodes.RTMarketDepthRequestFailed
     MarketDepthNotAvailable eventMessage
 Case TradeBuildSP.StandardSPEventCodes.RTReConnectingDataSource
@@ -456,7 +456,7 @@ Case TradeBuildSP.StandardSPEventCodes.RTRequestInvalid
                     eventMessage
     RaiseEvent Notification(ev)
     mTickers.notify ev
-    StopTicker
+    stopTicker
 Case Else
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyNonSpecificNotification
@@ -464,7 +464,7 @@ Case Else
                     eventMessage
     RaiseEvent Notification(ev)
     mTickers.notify ev
-    StopTicker
+    stopTicker
 End Select
 
 mInEventHandler = False
@@ -559,7 +559,7 @@ Case TradeBuildSP.StandardSPEventCodes.TFCantConnectDataSource
                     eventMessage
     RaiseEvent Notification(ev)
     mTickers.notify ev
-    StopTicker
+    stopTicker
 Case TradeBuildSP.StandardSPEventCodes.TFConnectedToDataSource
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToTickfileDataSource
@@ -577,7 +577,7 @@ Case TradeBuildSP.StandardSPEventCodes.TFContractSpecifierInvalid, _
                     eventMessage
     RaiseEvent Notification(ev)
     mTickers.notify ev
-    StopTicker
+    stopTicker
 Case Else
     mTickWriter.closeOutputFile
     Set mTickWriter = Nothing
@@ -587,7 +587,7 @@ Case Else
                     eventMessage
     RaiseEvent Notification(ev)
     mTickers.notify ev
-    StopTicker
+    stopTicker
 End Select
 
 mInEventHandler = False
@@ -703,7 +703,7 @@ ev.eventCode = ApiNotifyCodes.ApiNotifyContractSpecifierInvalid
 ev.eventMessage = reason
 RaiseEvent Notification(ev)
 mTickers.notify ev
-StopTicker
+stopTicker
 mInEventHandler = False
 End Sub
 
@@ -720,7 +720,7 @@ If mContracts.Count = 0 Then
     ev.eventMessage = "No such contract exists: " & mContracts.contractSpecifier.toString
     RaiseEvent Notification(ev)
     mTickers.notify ev
-    StopTicker
+    stopTicker
     mInEventHandler = False
     Exit Sub
 End If
@@ -731,7 +731,7 @@ If mContracts.Count <> 1 Then
     ev.eventMessage = "Ambiguous contract specification: " & mContracts.contractSpecifier.toString
     RaiseEvent Notification(ev)
     mTickers.notify ev
-    StopTicker
+    stopTicker
     mInEventHandler = False
     Exit Sub
 End If
@@ -777,7 +777,7 @@ End Sub
 
 Private Sub mStopTickerTimer_TimerExpired()
 Set mStopTickerTimer = Nothing
-StopTicker
+stopTicker
 End Sub
 
 '@================================================================================
@@ -1114,7 +1114,7 @@ Friend Sub addDataConsumer( _
                 ByVal consumer As TradeBuildSP.IStreamingDataConsumer, _
                 ByVal includeMarketDepth As Boolean)
 mDataConsumers.add consumer
-If includeMarketDepth Then RequestMarketDepth DOMBothEvents, False
+If includeMarketDepth Then requestMarketDepth DOMBothEvents, False
 End Sub
 
 Public Sub addPriceChangeListener( _
@@ -1397,7 +1397,7 @@ Friend Sub removeTimer(ByVal theTimer As TimerListItem)
 mTimerList.remove theTimer
 End Sub
 
-Public Sub RequestMarketDepth(ByVal DOMEventsRequired As DOMEvents, _
+Public Sub requestMarketDepth(ByVal DOMEventsRequired As DOMEvents, _
                             ByVal writeToTickFile As Boolean)
 
 If mState = TickerStates.TickerStateClosing Then Exit Sub
@@ -1473,12 +1473,18 @@ Set mContracts = gTB.loadContracts(pContractSpecifier)
 
 End Sub
 
-Friend Sub StartTickerFromContract(ByVal pContract As Contract)
+Public Sub startTickerFromContract(ByVal pContract As Contract)
+
+If mState <> TickerStates.TickerStateCreated Then Err.Raise ErrorCodes.ErrIllegalStateException, _
+                        "TradeBuild26.Ticker::StartTickerFromContract", _
+                        "Ticker is already in use"
+
+State = TickerStateStarting
 Set mContract = pContract
 processContract
 End Sub
 
-Public Sub StopTicker()
+Public Sub stopTicker()
 If mState = TickerStates.TickerStateStopped Or mState = TickerStates.TickerStateClosing Then Exit Sub
 
 If mInEventHandler Then
@@ -2231,7 +2237,7 @@ Else
         ev.eventMessage = "Contract has expired: " & mContracts.contractSpecifier.toString
         RaiseEvent Notification(ev)
         mTickers.notify ev
-        StopTicker
+        stopTicker
         mInEventHandler = False
         Exit Sub
     End If
@@ -2249,7 +2255,7 @@ Else
         ev.eventMessage = "Can't create realtime data reader"
         RaiseEvent Notification(ev)
         mTickers.notify ev
-        StopTicker
+        stopTicker
     End If
 End If
 End Sub

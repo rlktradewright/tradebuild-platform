@@ -64,6 +64,8 @@ Private mTaskContext                        As TaskContext
 
 Private mEnumerator                         As Enumerator
 
+Private mInterval                           As Long
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -91,6 +93,8 @@ If mContracts Is Nothing Then
     Exit Sub
 End If
 
+If mEnumerator Is Nothing Then Set mEnumerator = mContracts.Enumerator
+
 If Not mEnumerator.moveNext Then
     mTaskContext.finish Empty, False
     Exit Sub
@@ -106,14 +110,35 @@ lTicker.DOMEventsRequired = mDOMEventsRequired
 lTicker.outputTickfileFormat = mOutputTickfileFormat
 lTicker.outputTickfilePath = mOutputTickfilePath
 
-lTicker.StartTickerFromContract lContract
+lTicker.startTickerFromContract lContract
 
-mTaskContext.suspend 100
+mTaskContext.suspend mInterval
 
 End Sub
 
 Private Property Let Task_TaskContext(ByVal value As TWUtilities30.TaskContext)
+Dim obj As Object
+
 Set mTaskContext = value
+
+If IsObject(mTaskContext.data) Then
+    Set obj = mTaskContext.data
+Else
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "Task_TaskContext", _
+            "Supplied data is not a contractSpecifier or contracts object"
+End If
+
+If TypeOf obj Is contractSpecifier Then
+    Set mContractSpec = obj
+ElseIf TypeOf obj Is Contracts Then
+    Set mContracts = obj
+Else
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "Task_TaskContext", _
+            "Supplied data is not a contractSpecifier or contracts object"
+End If
+
 End Property
 
 Private Property Get Task_taskName() As String
@@ -140,7 +165,6 @@ mTaskContext.Error ApiNotifyCodes.ApiNotifyContractSpecifierInvalid, ev.eventMes
 End Sub
 
 Private Sub mContracts_NoMoreContractDetails()
-Set mEnumerator = mContracts.Enumerator
 mTaskContext.continue
 End Sub
 
@@ -166,18 +190,24 @@ End Sub
 Friend Sub initialise( _
                 ByVal pTickers As Tickers, _
                 ByVal pTickerOptions As Long, _
-                ByVal pContractSpec As contractSpecifier, _
-                Optional ByVal pDOMEventsRequired As DOMEvents, _
-                Optional ByVal poutputTickfileFormat As String, _
-                Optional ByVal poutputTickfilePath As String)
+                ByVal pDOMEventsRequired As DOMEvents, _
+                ByVal poutputTickfileFormat As String, _
+                ByVal poutputTickfilePath As String, _
+                ByVal interval As Long)
                 
 Set lTickersRef = CreateWeakReference(pTickers)
 lTickerOptions = pTickerOptions
-Set mContractSpec = pContractSpec
 mDOMEventsRequired = pDOMEventsRequired
 mOutputTickfileFormat = poutputTickfileFormat
 mOutputTickfilePath = poutputTickfilePath
 
+If interval < 0 Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "initialise", _
+            "Interval cannot be negative"
+End If
+
+mInterval = interval
 End Sub
 
 '@================================================================================
