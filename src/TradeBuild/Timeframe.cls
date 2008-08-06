@@ -147,7 +147,6 @@ Attribute mWriteTimer.VB_VarHelpID = -1
 Private mTimerList                  As TimerList
 
 Private mHistoricBar                As TimeframeUtils26.Bar
-Private mHistoricBarPending         As Boolean
 
 Private mFromTime                   As Date
 Private mToTime                     As Date
@@ -193,7 +192,6 @@ Private Sub IBarDataConsumer_Bar( _
 Dim failpoint As Long
 On Error GoTo Err
 
-mHistoricBarPending = True
 Set mHistoricBar = data
 
 If mTaskContext.State = TaskStateSuspended Then mTaskContext.continue
@@ -342,20 +340,28 @@ Dim failpoint As Long
 
 On Error GoTo Err
 
+failpoint = 100
+
 If mBarReader Is Nothing Then
     setupBarReader
     mTaskContext.suspend -1
     Exit Sub
 End If
 
-If Not mHistoricBarPending Then
+
+failpoint = 200
+
+If mHistoricBar Is Nothing Then
     mBarReader.FireNextBar
-    If Not mHistoricBarPending Then
+    If mHistoricBar Is Nothing Then
         ' the bar has not been fired synchronously, so wait for it
         mTaskContext.suspend -1
         Exit Sub
     End If
 End If
+
+
+failpoint = 300
 
 ProcessHistoricBar
 
@@ -639,7 +645,6 @@ End Sub
 
 Private Sub ProcessHistoricBar()
 Static firstVolumeSent As Boolean
-mHistoricBarPending = False
 
 With mHistoricBar
 
@@ -688,6 +693,9 @@ With mHistoricBar
     mAccumulatedVolume = mAccumulatedVolume + .volume
         
 End With
+
+Set mHistoricBar = Nothing
+
 End Sub
 
 Private Sub setupBarReader()
