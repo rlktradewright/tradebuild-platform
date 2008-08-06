@@ -49,7 +49,6 @@ Public Sub main()
 Dim lTradeSkilDemo As fTradeSkilDemo
 
 InitialiseTWUtilities
-DefaultLogLevel = TWUtilities30.LogLevels.LogLevelNormal
 
 If showCommandLineOptions() Then Exit Sub
 
@@ -73,14 +72,18 @@ Dim listener As LogListener
 
 On Error GoTo Err
 
-If gCommandLineParser.Switch(SwitchLogLevel) Then DefaultLogLevel = LogLevelFromString(gCommandLineParser.SwitchValue(SwitchLogLevel))
+If gCommandLineParser.Switch(SwitchLogLevel) Then
+    DefaultLogLevel = LogLevelFromString(gCommandLineParser.SwitchValue(SwitchLogLevel))
+Else
+    DefaultLogLevel = TWUtilities30.LogLevels.LogLevelNormal
+End If
 
 Set listener = CreateFileLogListener(gLogFileName, _
                                         CreateBasicLogFormatter, _
                                         True, _
                                         False)
 ' ensure log entries of all infotypes get written to the log file
-gLogger.addLogListener listener
+GetLogger("").addLogListener listener
 
 getLog = True
 Exit Function
