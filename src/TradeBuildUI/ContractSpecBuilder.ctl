@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#27.6#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#30.0#0"; "TWControls10.ocx"
 Begin VB.UserControl ContractSpecBuilder 
    ClientHeight    =   2835
    ClientLeft      =   0
@@ -212,7 +212,7 @@ Option Explicit
 '@================================================================================
 
 Event NotReady()
-Event ready()
+Event Ready()
 
 '@================================================================================
 ' Constants
@@ -497,8 +497,8 @@ Public Property Get foreColor() As OLE_COLOR
 foreColor = LocalSymbolText.foreColor
 End Property
 
-Public Property Get ready() As Boolean
-ready = mReady
+Public Property Get isReady() As Boolean
+isReady = mReady
 End Property
 
 '@================================================================================
@@ -576,7 +576,7 @@ Then
 End If
 
 mReady = True
-RaiseEvent ready
+RaiseEvent Ready
 
 End Sub
 

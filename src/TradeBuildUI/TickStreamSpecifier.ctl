@@ -250,7 +250,7 @@ Option Explicit
 '@================================================================================
 
 Event NotReady()
-Event ready()
+Event Ready()
 Event TickStreamsSpecified(ByVal pTickfileSpecifiers As TickfileSpecifiers)
 
 '@================================================================================
@@ -449,7 +449,7 @@ Private Function checkOk() As Boolean
 
 If FormatCombo.ListCount = 0 Then Exit Function
 
-If Not ContractSpecBuilder1.ready Then Exit Function
+If Not ContractSpecBuilder1.isReady Then Exit Function
 
 If Not IsDate(FromDateText.Text) Then Exit Function
 If CompleteSessionCheck.value = vbUnchecked And Not IsDate(ToDateText.Text) Then Exit Function
@@ -473,7 +473,7 @@ End Function
 
 Private Sub checkReady()
 If checkOk Then
-    RaiseEvent ready
+    RaiseEvent Ready
 Else
     RaiseEvent NotReady
 End If
