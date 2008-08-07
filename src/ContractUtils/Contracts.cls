@@ -105,7 +105,10 @@ End Property
 '@================================================================================
 
 Friend Sub Add(ByVal pContract As Contract)
-mContracts.Add pContract, pContract.specifier.key
+' we no longer use the following statement because some IB contracts have identical
+' specifiers and differ only in the tick size, eg for symb=ES, sectyp=STK, exchg=SMART, curr=EUR
+'mContracts.Add pContract, pContract.specifier.key
+mContracts.Add pContract
 fireChange CollItemAdded, pContract
 End Sub
 
