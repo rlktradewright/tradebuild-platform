@@ -418,7 +418,7 @@ Next
 ' add the study config to the list if it hasn't already been added
 mStudyConfigurations.add studyConfig
 
-If taskCompletionsIndex > 0 Then setupStudyValueListeners = taskCompletions
+setupStudyValueListeners = taskCompletions
 End Function
 
 Public Function startStudy( _
