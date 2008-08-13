@@ -40,9 +40,8 @@ Implements TaskCompletionListener
 ' Constants
 '@================================================================================
 
-'Private Const TaskTypeStartStudy As Long = 1
-'Private Const TaskTypeReplayBars As Long = 2
-'Private Const TaskTypeAddValueListener As Long = 3
+Private Const ProjectName                As String = "ChartUtils26"
+Private Const ModuleName                As String = "ChartManager"
 
 '@================================================================================
 ' Enums
@@ -130,6 +129,8 @@ Public Property Get regionNames() As String()
 Dim names() As String
 Dim re As RegionEntry
 Dim i As Long
+
+If mRegions.count = 0 Then Exit Property
 
 ReDim names(mRegions.count - 1) As String
 
@@ -230,7 +231,7 @@ End Sub
 Public Sub finish()
 Dim studyConfig As StudyConfiguration
 
-On Error GoTo err
+On Error GoTo Err
 
 mChartController.clearChart
 
@@ -242,7 +243,7 @@ Set mStudyConfigurations = Nothing
 
 Exit Sub
 
-err:
+Err:
 'ignore any errors
 End Sub
 
@@ -356,7 +357,7 @@ Dim studyConfig As StudyConfiguration
 Dim studyValueConfig As StudyValueConfiguration
 Dim source As InputStudy
 
-On Error GoTo err
+On Error GoTo Err
 
 inputDescr = mStudyManager.getInputDescriptor(inputHandle)
 Set source = inputDescr.source
@@ -381,13 +382,13 @@ Set studyValueConfig = studyConfig.studyValueConfigurations.add(inputDescr.input
 studyValueConfig.chartRegionName = chartRegionName
 Exit Sub
 
-err:
-If err.Number = VBErrorCodes.VbErrSubscriptOutOfRange Then
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+Err:
+If Err.Number = VBErrorCodes.VbErrSubscriptOutOfRange Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "ChartSupport" & "." & "ChartManager" & ":" & "setInputRegion", _
             "inputHandle argument invalid"
 End If
-err.Raise err.Number
+Err.Raise Err.Number
 End Sub
 
 Public Function setupStudyValueListeners( _
@@ -398,15 +399,33 @@ Dim taskCompletions() As TaskController
 Dim taskCompletionsIndex As Long
 Dim tc As TaskController
 
+Dim failpoint As Long
+
+On Error GoTo Err
+
+GetLogger("").Log LogLevelNormal, "Exit StudyManager:setupStudyValueListeners"
+
+failpoint = 100
+
 If mBaseStudy Is Nothing Then Set mBaseStudy = studyConfig.study
+
+failpoint = 200
 
 Set studyValueDefs = studyConfig.study.StudyDefinition.StudyValueDefinitions
 
+failpoint = 300
+
 For Each studyValueConfig In studyConfig.studyValueConfigurations
     If studyValueConfig.includeInChart Then
+
+        failpoint = 400
+
         Set tc = includeStudyValueInChart(studyConfig, _
                                 studyValueConfig, _
                                 studyValueDefs.item(studyValueConfig.valueName))
+
+        failpoint = 500
+
         If Not tc Is Nothing Then
             ReDim Preserve taskCompletions(taskCompletionsIndex) As TaskController
             Set taskCompletions(taskCompletionsIndex) = tc
@@ -415,10 +434,27 @@ For Each studyValueConfig In studyConfig.studyValueConfigurations
     End If
 Next
 
+failpoint = 600
+
 ' add the study config to the list if it hasn't already been added
 mStudyConfigurations.add studyConfig
 
+failpoint = 600
+
+
+GetLogger("").Log LogLevelNormal, "Exit StudyManager:setupStudyValueListeners"
+
+failpoint = 700
+
 setupStudyValueListeners = taskCompletions
+
+Exit Function
+
+Err:
+GetLogger("").Log LogLevelSevere, _
+                "Error " & Err.Number & ": " & Err.Description & " at " & _
+                ProjectName & "." & ModuleName & ":" & "setupStudyValueListeners." & failpoint
+    
 End Function
 
 Public Function startStudy( _
