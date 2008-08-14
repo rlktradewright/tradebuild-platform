@@ -485,7 +485,7 @@ Then
 End If
 
 mCurrentText.position = mRegion.newPoint( _
-                                chartMgr.getPeriod(ev.sVal.BarStartTime), _
+                                chartMgr.getPeriod(ev.sVal.BarStartTime).periodNumber, _
                                 0, CoordsCounterDistance, CoordsRelative)
 mCurrentText.Text = ev.sVal.value
 If mConditionalActionsIndex >= 0 Then processConditionalActions ev.sVal.timestamp
@@ -505,7 +505,7 @@ End If
 
 Set studyText = ev.sVal.value
 mCurrentText.position = mRegion.newPoint( _
-                                chartMgr.getPeriod(studyText.position.x), _
+                                chartMgr.getPeriod(studyText.position.x).periodNumber, _
                                 studyText.position.y)
 mCurrentText.offset = mTextOffset
 mCurrentText.Text = studyText.Text
