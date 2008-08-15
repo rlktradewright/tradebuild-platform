@@ -12,13 +12,13 @@ Begin VB.UserControl Chart
    ScaleHeight     =   7575
    ScaleWidth      =   10665
    Begin MSComCtl2.FlatScrollBar HScroll 
-      Height          =   375
+      Height          =   255
       Left            =   0
       TabIndex        =   5
-      Top             =   3840
+      Top             =   3960
       Width           =   7455
       _ExtentX        =   13150
-      _ExtentY        =   661
+      _ExtentY        =   450
       _Version        =   393216
       Appearance      =   2
       Arrows          =   65536
@@ -584,8 +584,11 @@ End Type
 ' Constants
 '================================================================================
 
-Private Const HorizScrollBarHeight As Long = 255
-Private Const ToolbarBarHeight As Long = 330
+Private Const ProjectName                As String = "ChartSkil26"
+Private Const ModuleName                As String = "Chart"
+
+'Private Const HorizScrollBarHeight As Long = 255
+'Private Const ToolbarBarHeight As Long = 330
 
 Private Const PropNameAllowHorizontalMouseScrolling     As String = "AllowHorizontalMouseScrolling"
 Private Const PropNameAllowVerticalMouseScrolling       As String = "AllowVerticalMouseScrolling"
@@ -911,12 +914,29 @@ End Sub
 
 Private Sub UserControl_Resize()
 Static resizeCount As Long
+Dim failpoint As Long
+On Error GoTo Err
+
+gLogger.Log LogLevelDetail, "ChartSkil: UserControl_Resize: enter"
 resizeCount = resizeCount + 1
 'debug.print "Control_resize: count = " & resizeCount
 Resize (UserControl.width <> mPrevWidth), (UserControl.height <> mPrevHeight)
 mPrevHeight = UserControl.height
 mPrevWidth = UserControl.width
 'debug.print "Exit Control_resize"
+
+gLogger.Log LogLevelDetail, "ChartSkil: UserControl_Resize: exit"
+Exit Sub
+
+Err:
+gLogger.Log LogLevelSevere, "Error at: " & ProjectName & "." & ModuleName & ":" & "UserControl_Resize" & "." & failpoint & _
+                            IIf(Err.Source <> "", vbCrLf & Err.Source, "") & vbCrLf & _
+                            Err.Description
+Err.Raise Err.Number, _
+        ProjectName & "." & ModuleName & ":" & "UserControl_Resize" & "." & failpoint & _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
+        Err.Description
+
 End Sub
 
 Private Sub UserControl_Terminate()
@@ -1557,10 +1577,10 @@ End Property
 Public Property Let showHorizontalScrollBar(ByVal val As Boolean)
 mShowHorizontalScrollBar = val
 If mShowHorizontalScrollBar Then
-    HScroll.height = HorizScrollBarHeight
+    'HScroll.height = HorizScrollBarHeight
     HScroll.visible = True
 Else
-    HScroll.height = 0
+    'HScroll.height = 0
     HScroll.visible = False
 End If
 Resize False, True
@@ -1574,10 +1594,8 @@ End Property
 Public Property Let showToolbar(ByVal val As Boolean)
 mShowToolbar = val
 If mShowToolbar Then
-    Toolbar1.height = ToolbarBarHeight
     Toolbar1.visible = True
 Else
-    Toolbar1.height = 0
     Toolbar1.visible = False
 End If
 Resize False, True
@@ -2019,7 +2037,7 @@ End Sub
 Private Function calcAvailableHeight() As Long
 calcAvailableHeight = XAxisPicture.top - _
                     mNumRegionsInUse * RegionDividerPicture(0).height - _
-                    Toolbar1.height
+                    IIf(mShowToolbar, Toolbar1.height, 0)
 If calcAvailableHeight < 0 Then calcAvailableHeight = 0
 End Function
 
@@ -2312,7 +2330,7 @@ If Not firstInitialisationDone Then
     mPointerDiscColor = PropDfltPointerDiscColor
     mShowHorizontalScrollBar = PropDfltShowHorizontalScrollBar
     mShowToolbar = PropDfltShowToolbar
-    HScroll.height = HorizScrollBarHeight
+    'HScroll.height = HorizScrollBarHeight
     HScroll.visible = mShowHorizontalScrollBar
     mVerticalGridSpacing = PropDfltVerticalGridSpacing
     mVerticalGridUnits = PropDfltVerticalGridUnits
@@ -2440,6 +2458,13 @@ End Sub
 Private Sub Resize( _
     ByVal resizeWidth As Boolean, _
     ByVal resizeHeight As Boolean)
+Dim failpoint As Long
+On Error GoTo Err
+
+failpoint = 100
+
+gLogger.Log LogLevelDetail, "ChartSkil: Resize: enter"
+
 mNotFirstMouseMove = False
 If resizeWidth Then
     HScroll.width = UserControl.width
@@ -2447,12 +2472,29 @@ If resizeWidth Then
     Toolbar1.width = UserControl.width
     resizeX
 End If
+
+failpoint = 200
+
 If resizeHeight Then
-    HScroll.top = UserControl.height - HScroll.height
+    HScroll.top = UserControl.height - IIf(mShowHorizontalScrollBar, HScroll.height, 0)
     XAxisPicture.top = HScroll.top - XAxisPicture.height
     sizeRegions
 End If
 paintAll
+
+gLogger.Log LogLevelDetail, "ChartSkil: Resize: exit"
+
+Exit Sub
+
+Err:
+gLogger.Log LogLevelSevere, "Error at: " & ProjectName & "." & ModuleName & ":" & "Resize" & "." & failpoint & _
+                            IIf(Err.Source <> "", vbCrLf & Err.Source, "") & vbCrLf & _
+                            Err.Description
+Err.Raise Err.Number, _
+        ProjectName & "." & ModuleName & ":" & "Resize" & "." & failpoint & _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
+        Err.Description
+
 End Sub
 
 Private Sub resizeX()
@@ -2460,21 +2502,44 @@ Dim newScaleWidth As Single
 Dim i As Long
 Dim region As ChartRegion
 
+Dim failpoint As Long
+On Error GoTo Err
+
+
+failpoint = 100
+
+If gLogger.isLoggable(LogLevelMediumDetail) Then gLogger.Log LogLevelMediumDetail, ProjectName & "." & ModuleName & ":resizeX Enter"
+
+
+failpoint = 200
+
 newScaleWidth = CSng(XAxisPicture.width) / CSng(mTwipsPerBar) - 0.5!
 mScaleLeft = mYAxisPosition + _
             (mYAxisWidthCm * TwipsPerCm / XAxisPicture.width * newScaleWidth) - _
             newScaleWidth
 
+
+failpoint = 300
+
 mScaleWidth = newScaleWidth
+
+
+failpoint = 400
 
 For i = 0 To ChartRegionPicture.UBound
     YAxisPicture(i).left = UserControl.width - YAxisPicture(i).width
     ChartRegionPicture(i).width = YAxisPicture(i).left
 Next
 
+
+failpoint = 500
+
 For i = 0 To RegionDividerPicture.UBound
     RegionDividerPicture(i).width = UserControl.width
 Next
+
+
+failpoint = 600
 
 For i = 0 To mRegionsIndex
     If Not mRegions(i).region Is Nothing Then
@@ -2482,11 +2547,31 @@ For i = 0 To mRegionsIndex
         region.periodsInView mScaleLeft, mYAxisPosition - 1
     End If
 Next
+
+failpoint = 700
+
 If Not mXAxisRegion Is Nothing Then
     mXAxisRegion.periodsInView mScaleLeft, mScaleLeft + mScaleWidth
 End If
 
+
+failpoint = 800
+
 setHorizontalScrollBar
+
+If gLogger.isLoggable(LogLevelMediumDetail) Then gLogger.Log LogLevelMediumDetail, ProjectName & "." & ModuleName & ":resizeX Exit"
+
+Exit Sub
+
+Err:
+gLogger.Log LogLevelSevere, "Error at: " & ProjectName & "." & ModuleName & ":" & "resizeX" & "." & failpoint & _
+                            IIf(Err.Source <> "", vbCrLf & Err.Source, "") & vbCrLf & _
+                            Err.Description
+Err.Raise Err.Number, _
+        ProjectName & "." & ModuleName & ":" & "resizeX" & "." & failpoint & _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
+        Err.Description
+
 End Sub
 
 Private Sub setHorizontalScrollBar()
@@ -2544,6 +2629,13 @@ Dim availableHeight As Long     ' the space available for the region picture box
                                 ' excluding the divider pictures
 Dim numRegionsSized As Long
 Dim heightReductionFactor As Double
+Dim failpoint As Long
+On Error GoTo Err
+
+If gLogger.isLoggable(LogLevelMediumDetail) Then gLogger.Log LogLevelMediumDetail, ProjectName & "." & ModuleName & ":sizeRegions Enter"
+
+
+failpoint = 100
 
 availableSpacePercent = 100
 nonFixedAvailableSpacePercent = 100
@@ -2567,6 +2659,9 @@ If availableSpacePercent < 0 And mUserResizingRegions Then
     sizeRegions = False
     Exit Function
 End If
+
+
+failpoint = 200
 
 heightReductionFactor = 1
 Do While availableSpacePercent < 0
@@ -2603,9 +2698,13 @@ Do While availableSpacePercent < 0
     If totalMinimumPercents > 100 Then
         ' can't possibly fit this all in!
         sizeRegions = False
+        If gLogger.isLoggable(LogLevelMediumDetail) Then gLogger.Log LogLevelMediumDetail, ProjectName & "." & ModuleName & ":sizeRegions Exit"
         Exit Function
     End If
 Loop
+
+
+failpoint = 300
 
 If numAvailableSpaceRegions = 0 Then
     ' we must adjust the percentages on the other regions so they
@@ -2619,12 +2718,18 @@ End If
 availableHeight = calcAvailableHeight
 
 ' first set heights for fixed height regions
+
+failpoint = 400
+
 For i = 0 To mRegionsIndex
     If Not mRegions(i).useAvailableSpace Then
         mRegions(i).actualHeight = mRegions(i).percentheight * availableHeight / 100
         Debug.Assert mRegions(i).actualHeight >= 0
     End If
 Next
+
+
+failpoint = 500
 
 ' now set heights for 'available space' regions with a minimum height
 ' that needs to be respected
@@ -2645,6 +2750,9 @@ For i = 0 To mRegionsIndex
     End If
 Next
 
+
+failpoint = 600
+
 ' finally set heights for all other 'available space' regions
 For i = 0 To mRegionsIndex
     If mRegions(i).useAvailableSpace And _
@@ -2655,9 +2763,12 @@ For i = 0 To mRegionsIndex
     End If
 Next
 
+
+failpoint = 700
+
 ' Now actually set the heights and positions for the picture boxes
 
-top = Toolbar1.height
+top = IIf(mShowToolbar, Toolbar1.height, 0)
     
 For i = 0 To mRegionsIndex
     If Not mRegions(i).region Is Nothing Then
@@ -2691,6 +2802,20 @@ For i = 0 To mRegionsIndex
 Next
 
 sizeRegions = True
+
+If gLogger.isLoggable(LogLevelMediumDetail) Then gLogger.Log LogLevelMediumDetail, ProjectName & "." & ModuleName & ":sizeRegions Exit"
+
+Exit Function
+
+Err:
+gLogger.Log LogLevelSevere, "Error at: " & ProjectName & "." & ModuleName & ":" & "sizeRegions" & "." & failpoint & _
+                            IIf(Err.Source <> "", vbCrLf & Err.Source, "") & vbCrLf & _
+                            Err.Description
+Err.Raise Err.Number, _
+        ProjectName & "." & ModuleName & ":" & "sizeRegions" & "." & failpoint & _
+        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
+        Err.Description
+
 End Function
 
 Private Sub zoom(ByRef rect As TRectangle)

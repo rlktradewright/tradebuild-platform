@@ -58,9 +58,16 @@ Public Const ToolbarCommandThinnerBars As String = "thinnerbars"
 ' Member variables
 '================================================================================
 
+Private mLogger As Logger
+
 '================================================================================
 ' Properties
 '================================================================================
+
+Public Property Get gLogger() As Logger
+If mLogger Is Nothing Then Set mLogger = GetLogger("log.chartskil")
+Set gLogger = mLogger
+End Property
 
 '================================================================================
 ' Methods

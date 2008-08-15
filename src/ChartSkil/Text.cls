@@ -490,11 +490,13 @@ Public Property Let position(ByVal value As Point)
 If value Is Nothing Then
     undraw
     Set mPosition = Nothing
+    mBoundingRect.isValid = False
     mBlank = True
     Exit Property
 ElseIf Not value.isAssigned Then
     undraw
     Set mPosition = Nothing
+    mBoundingRect.isValid = False
     mBlank = True
     Exit Property
 ElseIf Not mPosition Is Nothing Then
@@ -624,6 +626,11 @@ Dim YLineThickness As Double
 
 'If mText = "Volume" Then Stop
 'If mHandle = 520 Then Stop
+
+If mPosition Is Nothing Then
+    mBoundingRect.isValid = False
+    Exit Sub
+End If
 
 If Not mPosition.isAssigned Then
     mBoundingRect.isValid = False
