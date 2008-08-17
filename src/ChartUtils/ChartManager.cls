@@ -509,7 +509,7 @@ If findRegion Is Nothing Then
         Set regionStyle = mChartController.defaultRegionStyle
         regionStyle.gridlineSpacingY = 0.8
         regionStyle.hasGrid = True
-        Set findRegion = mChartController.addChartRegion(20, , regionStyle, regionName)
+        Set findRegion = mChartController.addChartRegion(20, , regionStyle, , regionName)
         findRegion.setTitle title, vbBlue, Nothing
     End If
     Set re.region = findRegion
