@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#16.1#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#45.0#0"; "ChartSkil2-6.ocx"
 Begin VB.UserControl TradeBuildChart 
    ClientHeight    =   4965
    ClientLeft      =   0
@@ -771,7 +771,7 @@ End Sub
 '@================================================================================
 
 Private Function createBarsStudyConfig() As StudyConfiguration
-Dim lStudy As study
+Dim lStudy As Study
 Dim studyDef As StudyDefinition
 ReDim inputValueNames(1) As String
 Dim params As New Parameters
@@ -784,7 +784,7 @@ Set createBarsStudyConfig = New StudyConfiguration
 createBarsStudyConfig.underlyingStudy = mTicker.InputStudy
 
 Set lStudy = mTimeframe.tradeStudy
-createBarsStudyConfig.study = mTimeframe.tradeStudy
+createBarsStudyConfig.Study = mTimeframe.tradeStudy
 Set studyDef = lStudy.StudyDefinition
 
 createBarsStudyConfig.chartRegionName = RegionNamePrice
@@ -849,7 +849,7 @@ Else
     regionStyle.gridlineSpacingY = 2
 End If
 
-Set mPriceRegion = mChartController.addChartRegion(100, 25, regionStyle, RegionNamePrice)
+Set mPriceRegion = mChartController.addChartRegion(100, 25, regionStyle, , RegionNamePrice)
 
 If Not mVolumeRegionStyle Is Nothing Then
     Set regionStyle = mVolumeRegionStyle
@@ -860,7 +860,7 @@ Else
     regionStyle.integerYScale = True
 End If
 
-Set mVolumeRegion = mChartController.addChartRegion(20, , regionStyle, RegionNameVolume)
+Set mVolumeRegion = mChartController.addChartRegion(20, , regionStyle, , RegionNameVolume)
 
 Chart1.suppressDrawing = False
 
