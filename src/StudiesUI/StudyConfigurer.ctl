@@ -769,8 +769,8 @@ studyConfig.name = mStudyname
 studyConfig.StudyLibraryName = mStudyLibraryName
 If Not BaseStudiesCombo.SelectedItem Is Nothing Then
     For Each scfg In mConfiguredStudies
-        If scfg.study.id = BaseStudiesCombo.SelectedItem.Tag Then
-            studyConfig.underlyingStudy = scfg.study
+        If scfg.Study.id = BaseStudiesCombo.SelectedItem.Tag Then
+            studyConfig.underlyingStudy = scfg.Study
             Exit For
         End If
     Next
@@ -861,7 +861,7 @@ For i = 0 To ValueNameLabel.UBound
             End Select
         Case PointDisplayModePoint
             dpStyle.displayMode = DataPointDisplayModes.DataPointDisplayModePoint
-            Select Case StyleCombo(0).SelectedItem.text
+            Select Case StyleCombo(i).SelectedItem.text
             Case PointStyleRound
                 dpStyle.pointStyle = PointRound
             Case PointStyleSquare
@@ -883,7 +883,7 @@ For i = 0 To ValueNameLabel.UBound
             End Select
         Case PointDisplayModeHistogram
             dpStyle.displayMode = DataPointDisplayModes.DataPointDisplayModeHistogram
-            Select Case StyleCombo(0).SelectedItem.text
+            Select Case StyleCombo(i).SelectedItem.text
             Case HistogramStyleNarrow
                 dpStyle.histBarWidth = HistogramWidthNarrow
             Case HistogramStyleMedium
@@ -891,7 +891,7 @@ For i = 0 To ValueNameLabel.UBound
             Case HistogramStyleWide
                 dpStyle.histBarWidth = HistogramWidthWide
             Case CustomStyle
-                dpStyle.histBarWidth = CSng(StyleCombo(0).SelectedItem.Tag)
+                dpStyle.histBarWidth = CSng(StyleCombo(i).SelectedItem.Tag)
             End Select
         End Select
         
@@ -977,7 +977,7 @@ For i = 0 To ValueNameLabel.UBound
             brStyle.displayMode = BarDisplayModes.BarDisplayModeLine
         End Select
         
-        Select Case StyleCombo(0).SelectedItem.text
+        Select Case StyleCombo(i).SelectedItem.text
         Case BarStyleNarrow
             brStyle.barWidth = BarWidthNarrow
         Case BarStyleMedium
@@ -985,7 +985,7 @@ For i = 0 To ValueNameLabel.UBound
         Case BarStyleWide
             brStyle.barWidth = BarWidthWide
         Case CustomStyle
-            brStyle.barWidth = CSng(StyleCombo(0).SelectedItem.Tag)
+            brStyle.barWidth = CSng(StyleCombo(i).SelectedItem.Tag)
         End Select
         
         studyValueconfig.barStyle = brStyle
@@ -1303,7 +1303,7 @@ Dim selIndex As Long
 If mConfiguredStudies Is Nothing Then Exit Sub
 
 Set item = BaseStudiesCombo.SelectedItem
-Set studyValueDefs = mConfiguredStudies.item(item.Key).study.StudyDefinition.studyValueDefinitions
+Set studyValueDefs = mConfiguredStudies.item(item.Key).Study.StudyDefinition.studyValueDefinitions
 Set inputDef = mStudyDefinition.studyInputDefinitions.item(Index + 1)
 
 InputValueCombo(Index).ComboItems.clear
@@ -1950,12 +1950,12 @@ Dim item As ComboItem
 BaseStudiesCombo.ComboItems.clear
 If mConfiguredStudies Is Nothing Then Exit Sub
 For Each studyConfig In mConfiguredStudies
-    If Not TypeOf studyConfig.study Is InputStudy Or _
+    If Not TypeOf studyConfig.Study Is InputStudy Or _
         Not mStudyDefinition.needsBars _
     Then
-        If studiesCompatible(studyConfig.study.StudyDefinition, mStudyDefinition) Then
-            Set item = BaseStudiesCombo.ComboItems.Add(, studyConfig.instanceFullyQualifiedName, studyConfig.study.instanceName)
-            item.Tag = studyConfig.study.id
+        If studiesCompatible(studyConfig.Study.StudyDefinition, mStudyDefinition) Then
+            Set item = BaseStudiesCombo.ComboItems.Add(, studyConfig.instanceFullyQualifiedName, studyConfig.Study.instanceName)
+            item.Tag = studyConfig.Study.id
         End If
     End If
 Next
