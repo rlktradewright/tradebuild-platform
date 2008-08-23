@@ -159,8 +159,7 @@ For Each param In params
     Select Case UCase$(param.name)
     Case UCase$(StochParamKPeriods)
         mKPeriods = param.value
-        Set mBarsBuilder = CreateBarsBuilder(0, _
-                                    TimePeriodNone, _
+        Set mBarsBuilder = CreateBarsBuilder(GetTimePeriod(0, TimePeriodNone), _
                                     mSession, _
                                     0, _
                                     mKPeriods + 1)

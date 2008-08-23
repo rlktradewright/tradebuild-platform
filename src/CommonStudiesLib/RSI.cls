@@ -117,8 +117,7 @@ Set mRsiCache = mStudyFoundation.FindValueCache(RsiValueRsi)
 
 ' create the Bars object. We only need it to cache the latest bar, so
 ' set the numberOfValuesToCache argument to 1
-Set mBarsBuilder = CreateBarsBuilder(0, _
-                                TimePeriodNone, _
+Set mBarsBuilder = CreateBarsBuilder(GetTimePeriod(0, TimePeriodNone), _
                                 mSession, _
                                 0, _
                                 1)

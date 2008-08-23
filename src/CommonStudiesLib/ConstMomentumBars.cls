@@ -222,8 +222,7 @@ For Each param In params
     End Select
 Next
 
-Set mBarsBuilder = CreateBarsBuilder(mMovementPerBar, _
-                                    TimePeriodTickMovement, _
+Set mBarsBuilder = CreateBarsBuilder(GetTimePeriod(mMovementPerBar, TimePeriodTickMovement), _
                                     mSession, _
                                     mPriceTickSize, _
                                     mNumberOfValuesToCache)

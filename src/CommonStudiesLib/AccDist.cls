@@ -77,7 +77,7 @@ Debug.Print "Accumulation/Distribution terminated"
 End Sub
 
 '@================================================================================
-' Custom methods that must be impleemented
+' Custom methods that must be implemented
 '@================================================================================
 
 Private Sub customInitialise( _
@@ -92,8 +92,7 @@ Set mSession = pSession
 
 customProcessParameters Parameters
 Set mAccDistCache = mStudyFoundation.FindValueCache(AccDistValueAccDist)
-Set mBarsBuilder = CreateBarsBuilder(0, _
-                        TimePeriodNone, _
+Set mBarsBuilder = CreateBarsBuilder(GetTimePeriod(0, TimePeriodNone), _
                         mSession, _
                         0, _
                         1)

@@ -63,9 +63,7 @@ Private mStudyFoundation As StudyFoundation
 Private mSession As session
 Attribute mSession.VB_VarHelpID = -1
 
-Private mBarLength As Long
-
-Private mTimeUnits As TimePeriodUnits
+Private mBarTimePeriod As TimePeriod
 
 Private mBarsBuilder As BarsBuilder
 Private WithEvents mBars As Bars
@@ -214,18 +212,19 @@ End Function
 
 Private Sub customProcessParameters(ByVal params As Parameters)
 Dim param As Parameter
+Dim barLength As Long
+Dim timeUnits As TimePeriodUnits
 
 For Each param In params
     Select Case UCase$(param.name)
     Case UCase$(ConstTimeBarsParamBarLength)
-        mBarLength = param.value
+        barLength = param.value
     Case UCase$(ConstTimeBarsParamTimeUnits)
-        mTimeUnits = TimePeriodUnitsFromString(param.value)
+        timeUnits = TimePeriodUnitsFromString(param.value)
     End Select
 Next
 
-Set mBarsBuilder = CreateBarsBuilder(mBarLength, _
-                                    mTimeUnits, _
+Set mBarsBuilder = CreateBarsBuilder(GetTimePeriod(barLength, timeUnits), _
                                     mSession, _
                                     mPriceTickSize, _
                                     mNumberOfValuesToCache)

@@ -229,8 +229,7 @@ For Each param In params
     End Select
 Next
 
-Set mBarsBuilder = CreateBarsBuilder(mVolumePerBar, _
-                                    TimePeriodVolume, _
+Set mBarsBuilder = CreateBarsBuilder(GetTimePeriod(mVolumePerBar, TimePeriodVolume), _
                                     mSession, _
                                     mPriceTickSize, _
                                     mNumberOfValuesToCache)
