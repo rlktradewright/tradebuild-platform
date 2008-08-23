@@ -166,7 +166,7 @@ mSessionOnly = sessionOnly
 End Sub
 
 Friend Sub stopData()
-mTicker.StopTicker
+mTicker.stopTicker
 End Sub
 
 
@@ -178,8 +178,7 @@ Private Sub loaddata()
 
 mPriceFormatString = mTicker.Contract.priceFormatString
 
-Set mTimeframe = mTicker.Timeframes.addHistorical(mBarLength, _
-                                        mBarUnits, _
+Set mTimeframe = mTicker.Timeframes.addHistorical(GetTimePeriod(mBarLength, mBarUnits), _
                                         "", _
                                         mNumber, _
                                         mFromDate, _

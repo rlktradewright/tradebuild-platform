@@ -18,6 +18,7 @@ Option Explicit
 '================================================================================
 
 Implements ChartSkilTypes.IGraphicObjectSeries
+Implements Task
 
 '================================================================================
 ' Events
@@ -45,6 +46,8 @@ Private mLayer As Long
 Private mEventProxy As ChartRegionEventProxy
 
 Private mStyle As linestyle
+
+Private mTaskContext As TaskContext
 
 '================================================================================
 ' Enums
@@ -82,6 +85,34 @@ End Function
 Private Sub IGraphicObjectSeries_remove(ByVal index As Long)
 mLines.remove index
 End Sub
+
+'================================================================================
+' Task Interface Members
+'================================================================================
+
+Private Sub Task_cancel()
+
+End Sub
+
+Private Sub Task_run()
+Dim j As Long
+
+Do While mLines.count <> 0
+    mLines.remove mLines.count
+    j = j + 1
+    If j = 100 Then Exit Sub
+Loop
+
+mTaskContext.finish 0, False
+End Sub
+
+Private Property Let Task_TaskContext(ByVal RHS As TWUtilities30.TaskContext)
+Set mTaskContext = RHS
+End Property
+
+Private Property Get Task_TaskName() As String
+Task_TaskName = mTaskContext.name
+End Property
 
 '================================================================================
 ' xxxx Event Handlers
@@ -534,7 +565,7 @@ mName = name
 Set mEventProxy = eventProxy
 mLayer = layer
 Set mCanvas = canvas
-Set mStyle = style.clone    ' style cannot be shared between BarSeries
+Set mStyle = style.clone    ' style cannot be shared between LineSeries
 End Sub
 
 Public Function item(ByVal index As Variant) As ChartSkil26.Line
@@ -548,7 +579,7 @@ Attribute NewEnum.VB_UserMemId = -4
 End Function
 
 Friend Sub removeAll()
-Set mLines = New Collection
+StartTask Me, PriorityLow
 End Sub
 
 '================================================================================

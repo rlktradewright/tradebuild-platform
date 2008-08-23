@@ -356,6 +356,10 @@ Private Property Get IGraphicObject_scaleDependent() As Boolean
 IGraphicObject_scaleDependent = fixedX Or fixedY
 End Property
 
+Private Property Get IGraphicObject_timestamp() As Date
+IGraphicObject_timestamp = 0
+End Property
+
 Private Sub IGraphicObject_undraw( _
                 ByRef area As TRectangle, _
                 ByVal hdc As Long)

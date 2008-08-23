@@ -107,8 +107,7 @@ Set addPeriod = New period
 mCurrentPeriodNumber = mCurrentPeriodNumber + 1
 addPeriod.periodNumber = mCurrentPeriodNumber
 periodStart = BarStartTime(timestamp, _
-                            mController.periodLength, _
-                            mController.periodUnits, _
+                            mController.barTimePeriod, _
                             mController.sessionStartTime)
 addPeriod.timestamp = periodStart
 mPeriods.add addPeriod, generateKey(periodStart, duplicateNumber)
@@ -145,8 +144,7 @@ If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                               "Periods object is finished"
 If VarType(index) = vbDate Then
     Set item = mPeriods.item(generateKey(BarStartTime(index, _
-                                                    mController.periodLength, _
-                                                    mController.periodUnits, _
+                                                    mController.barTimePeriod, _
                                                     mController.sessionStartTime), _
                                         0))
 Else
@@ -161,8 +159,7 @@ If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                               "ChartSkil" & "." & "Periods" & ":" & "item", _
                               "Periods object is finished"
 Set itemDup = mPeriods.item(generateKey(BarStartTime(index, _
-                                                mController.periodLength, _
-                                                mController.periodUnits, _
+                                                mController.barTimePeriod, _
                                                 mController.sessionStartTime), _
                                     duplicateNumber))
 End Function
@@ -180,8 +177,7 @@ If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                               "Periods object is finished"
 If VarType(index) = vbDate Then
     mPeriods.remove generateKey(BarStartTime(index, _
-                                            mController.periodLength, _
-                                            mController.periodUnits, _
+                                            mController.barTimePeriod, _
                                             mController.sessionStartTime), _
                                 0)
 Else
@@ -196,8 +192,7 @@ If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                               "ChartSkil" & "." & "Periods" & ":" & "remove", _
                               "Periods object is finished"
 mPeriods.remove generateKey(BarStartTime(index, _
-                                        mController.periodLength, _
-                                        mController.periodUnits, _
+                                        mController.barTimePeriod, _
                                         mController.sessionStartTime), _
                             duplicateNumber)
 End Sub

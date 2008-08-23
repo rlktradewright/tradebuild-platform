@@ -39,6 +39,8 @@ Private mCanvas As canvas
 Private mLayer As Long
 Private mHandle As Long
 
+Private mTimestamp As Date
+
 Private mLocalStyle As BarStyle
 Private mBaseStyle As BarStyle
 
@@ -180,6 +182,10 @@ End Property
 
 Private Property Get IGraphicObject_scaleDependent() As Boolean
 IGraphicObject_scaleDependent = False
+End Property
+
+Private Property Get IGraphicObject_timestamp() As Date
+IGraphicObject_timestamp = mTimestamp
 End Property
 
 Private Sub IGraphicObject_undraw( _
@@ -437,12 +443,14 @@ End Property
 '================================================================================
 
 Friend Sub initialise( _
+                ByVal timestamp As Date, _
                 ByVal key As String, _
                 ByVal eventProxy As ChartRegionEventProxy, _
                 ByVal layer As Long, _
                 ByVal canvas As canvas, _
                 ByVal baseStyle As BarStyle, _
                 ByVal localStyle As BarStyle)
+mTimestamp = timestamp
 mKey = key
 Set mEventProxy = eventProxy
 mLayer = layer

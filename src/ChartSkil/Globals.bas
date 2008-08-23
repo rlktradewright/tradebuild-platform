@@ -81,7 +81,7 @@ Public Function gCalculateX( _
 Dim lPeriod As period
 Dim periodEndtime As Date
 
-Select Case pController.periodUnits
+Select Case pController.barTimePeriod.units
 Case TimePeriodNone, _
         TimePeriodSecond, _
         TimePeriodMinute, _
@@ -107,8 +107,7 @@ Case TimePeriodNone, _
     End If
     
     periodEndtime = BarEndTime(lPeriod.timestamp, _
-                            pController.periodLength, _
-                            pController.periodUnits, _
+                            pController.barTimePeriod, _
                             pController.sessionStartTime)
     gCalculateX = lPeriod.periodNumber + (timestamp - lPeriod.timestamp) / (periodEndtime - lPeriod.timestamp)
     
@@ -128,6 +127,107 @@ Case TimePeriodVolume, TimePeriodTickVolume, TimePeriodTickMovement
     End If
 End Select
 
+End Function
+
+Public Function gCreateBarStyle() As BarStyle
+Set gCreateBarStyle = New BarStyle
+With gCreateBarStyle
+    .tailThickness = 2
+    .outlineThickness = 1
+    .upColor = &H1D9311
+    .downColor = &H43FC2
+    .displayMode = BarDisplayModeBar
+    .solidUpBody = True
+    .barThickness = 2
+    .barWidth = 0.6
+    .barColor = -1
+End With
+End Function
+
+Public Function gCreateDataPointStyle() As DataPointStyle
+Set gCreateDataPointStyle = New DataPointStyle
+With gCreateDataPointStyle
+    .lineThickness = 1
+    .Color = vbBlack
+    .linestyle = LineStyles.LineSolid
+    .pointStyle = PointRound
+    .displayMode = DataPointDisplayModes.DataPointDisplayModeLine
+    .histBarWidth = 0.6
+    .includeInAutoscale = True
+End With
+End Function
+
+Public Function gCreateChartRegionStyle() As ChartRegionStyle
+Set gCreateChartRegionStyle = New ChartRegionStyle
+With gCreateChartRegionStyle
+    .autoscale = True
+    .backColor = vbWhite
+    .gridColor = &HC0C0C0
+    .gridlineSpacingY = 1.8
+    .gridTextColor = vbBlack
+    .hasGrid = True
+    .integerYScale = False
+    .hasGridText = False
+    .pointerStyle = PointerStyles.PointerCrosshairs
+    .minimumHeight = 0
+    .YScaleQuantum = 0
+End With
+End Function
+
+Public Function gCreateLineStyle() As linestyle
+Set gCreateLineStyle = New linestyle
+With gCreateLineStyle
+    .Color = vbBlack
+    .thickness = 1
+    .linestyle = LineStyles.LineSolid
+    .extendBefore = False
+    .extendAfter = False
+    .arrowStartStyle = ArrowStyles.ArrowNone
+    .arrowStartLength = 10
+    .arrowStartWidth = 10
+    .arrowStartColor = vbBlack
+    .arrowStartFillColor = vbBlack
+    .arrowStartfillstyle = FillStyles.FillSolid
+    .arrowEndStyle = ArrowStyles.ArrowNone
+    .arrowEndLength = 10
+    .arrowEndWidth = 10
+    .arrowEndColor = vbBlack
+    .arrowEndFillColor = vbBlack
+    .arrowEndFillStyle = FillStyles.FillSolid
+    .fixedX = False
+    .fixedY = False
+    .includeInAutoscale = False
+    .extended = False
+End With
+End Function
+
+Public Function gCreateTextStyle() As TextStyle
+Dim aFont As StdFont
+
+Set aFont = New StdFont
+aFont.Bold = False
+aFont.Italic = False
+aFont.name = "Arial"
+aFont.Size = 8
+aFont.Strikethrough = False
+aFont.Underline = False
+
+Set gCreateTextStyle = New TextStyle
+With gCreateTextStyle
+    .font = aFont
+    .Color = vbBlack
+    .box = False
+    .boxColor = vbBlack
+    .boxStyle = LineStyles.LineSolid
+    .boxThickness = 1
+    .boxFillColor = vbWhite
+    .boxFillStyle = FillStyles.FillSolid
+    .align = TextAlignModes.AlignBottomRight
+    .includeInAutoscale = False
+    .extended = False
+    .paddingX = 1#
+    .paddingY = 0.5
+End With
 End Function
 
 Public Function gIsValidColor( _

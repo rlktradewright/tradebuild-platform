@@ -86,6 +86,15 @@ Public Property Let autoscroll(ByVal value As Boolean)
 chartObj.autoscroll = value
 End Property
 
+Public Property Let barTimePeriod( _
+                ByVal value As TimePeriod)
+chartObj.barTimePeriod = value
+End Property
+
+Public Property Get barTimePeriod() As TimePeriod
+Set barTimePeriod = chartObj.barTimePeriod
+End Property
+
 Friend Property Let Chart( _
                 ByVal value As Chart)
 Set mChartRef = CreateWeakReference(value)
@@ -172,6 +181,14 @@ Public Property Let defaultTextStyle(ByVal value As TextStyle)
 chartObj.defaultTextStyle = value
 End Property
 
+Public Property Get defaultYAxisStyle() As ChartRegionStyle
+Set defaultYAxisStyle = chartObj.defaultYAxisStyle
+End Property
+
+Public Property Let defaultYAxisStyle(ByVal value As ChartRegionStyle)
+chartObj.defaultYAxisStyle = value
+End Property
+
 Public Property Get firstVisiblePeriod() As Long
 firstVisiblePeriod = chartObj.firstVisiblePeriod
 End Property
@@ -188,16 +205,8 @@ Public Property Let lastVisiblePeriod(ByVal value As Long)
 chartObj.lastVisiblePeriod = value
 End Property
 
-Public Property Get periodLength() As Long
-periodLength = chartObj.periodLength
-End Property
-
 Public Property Get Periods() As Periods
 Set Periods = chartObj.Periods
-End Property
-
-Public Property Get periodUnits() As TimePeriodUnits
-periodUnits = chartObj.periodUnits
 End Property
 
 Public Property Let pointerStyle(ByVal value As PointerStyles)
@@ -272,6 +281,19 @@ Public Property Let twipsPerBar(ByVal val As Long)
 chartObj.twipsPerBar = val
 End Property
 
+Public Property Let verticalGridTimePeriod( _
+                ByVal value As TimePeriod)
+chartObj.verticalGridTimePeriod = value
+End Property
+
+Public Property Get verticalGridTimePeriod() As TimePeriod
+Set verticalGridTimePeriod = chartObj.verticalGridTimePeriod
+End Property
+
+Public Property Get XAxisRegion() As ChartRegion
+Set XAxisRegion = chartObj.XAxisRegion
+End Property
+
 Public Property Get YAxisPosition() As Long
 YAxisPosition = chartObj.YAxisPosition
 End Property
@@ -291,8 +313,9 @@ End Property
 Public Function addChartRegion(ByVal percentheight As Double, _
                     Optional ByVal minimumPercentHeight As Double, _
                     Optional ByVal style As ChartRegionStyle, _
+                    Optional ByVal yAxisStyle As ChartRegionStyle, _
                     Optional ByVal name As String) As ChartRegion
-Set addChartRegion = chartObj.addChartRegion(percentheight, minimumPercentHeight, style, name)
+Set addChartRegion = chartObj.addChartRegion(percentheight, minimumPercentHeight, style, yAxisStyle, name)
 End Function
 
 Public Function addPeriod(ByVal timestamp As Date) As period
@@ -347,18 +370,6 @@ End Sub
 
 Public Sub scrollX(ByVal value As Long)
 chartObj.scrollX value
-End Sub
-
-Public Sub setPeriodParameters( _
-                ByVal periodLength As Long, _
-                ByVal periodUnits As TimePeriodUnits)
-chartObj.setPeriodParameters periodLength, periodUnits
-End Sub
-
-Public Sub setVerticalGridParameters( _
-                ByVal verticalGridSpacing As Long, _
-                ByVal verticalGridUnits As TimePeriodUnits)
-chartObj.setVerticalGridParameters verticalGridSpacing, verticalGridUnits
 End Sub
 
 '================================================================================

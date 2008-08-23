@@ -18,6 +18,7 @@ Option Explicit
 '================================================================================
 
 Implements ChartSkilTypes.IGraphicObjectSeries
+Implements Task
 
 '================================================================================
 ' Events
@@ -52,6 +53,8 @@ Private mStyle              As DataPointStyle
 Private mName               As String
 
 Private mPrevDataPoint      As DataPoint
+
+Private mTaskContext As TaskContext
 
 '================================================================================
 ' Enums
@@ -89,6 +92,34 @@ End Function
 Private Sub IGraphicObjectSeries_remove(ByVal index As Long)
 mDataPoints.remove index
 End Sub
+
+'================================================================================
+' Task Interface Members
+'================================================================================
+
+Private Sub Task_cancel()
+
+End Sub
+
+Private Sub Task_run()
+Dim j As Long
+
+Do While mDataPoints.count <> 0
+    mDataPoints.remove mDataPoints.count
+    j = j + 1
+    If j = 100 Then Exit Sub
+Loop
+
+mTaskContext.finish 0, False
+End Sub
+
+Private Property Let Task_TaskContext(ByVal RHS As TWUtilities30.TaskContext)
+Set mTaskContext = RHS
+End Property
+
+Private Property Get Task_TaskName() As String
+Task_TaskName = mTaskContext.name
+End Property
 
 '================================================================================
 ' xxxx Event Handlers
@@ -320,7 +351,7 @@ add.x = gCalculateX(timestamp, mController, False, duplicateCount)
 If key = "" Then
     key = GenerateGUIDString
 End If
-add.initialise key, mEventProxy, mLayer, mCanvas, mStyle, localStyle
+add.initialise timestamp, key, mEventProxy, mLayer, mCanvas, mStyle, localStyle
 
 add.prevDataPoint = mPrevDataPoint
 mDataPoints.add add, key
@@ -355,7 +386,7 @@ Set item = mDataPoints(index)
 End Function
 
 Friend Sub removeAll()
-Set mDataPoints = New Collection
+StartTask Me, PriorityLow
 End Sub
 
 Public Function NewEnum() As IUnknown

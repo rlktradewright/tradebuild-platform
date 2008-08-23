@@ -227,6 +227,26 @@ Private Const ModuleName                    As String = "ChartSkil"
 ' Methods
 '@================================================================================
 
+Public Function CreateBarStyle() As BarStyle
+Set CreateBarStyle = gCreateBarStyle
+End Function
+
+Public Function CreateDataPointStyle() As DataPointStyle
+Set CreateDataPointStyle = gCreateDataPointStyle
+End Function
+
+Public Function CreateLineStyle() As linestyle
+Set CreateLineStyle = gCreateLineStyle
+End Function
+
+Public Function CreateChartRegionStyle() As ChartRegionStyle
+Set CreateChartRegionStyle = gCreateChartRegionStyle
+End Function
+
+Public Function CreateTextStyle() As TextStyle
+Set CreateTextStyle = gCreateTextStyle
+End Function
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================

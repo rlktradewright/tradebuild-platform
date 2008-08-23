@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#18.0#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#47.1#0"; "ChartSkil2-6.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo Version 2.5"
    ClientHeight    =   8355
@@ -226,7 +226,7 @@ Private mMACDRegion As ChartRegion          ' the region of the chart that displ
 
 Private mBarSeries As BarSeries             ' used to define properties for all the
                                             ' bars
-Private mBar As chartskil26.Bar             ' an individual bar
+Private mBar As ChartSkil26.Bar             ' an individual bar
 Private mBarTime                            ' the bar start time for mBar
 Private mBarLabelSeries As TextSeries       ' used to define properties for text
                                             ' labels displaying to bar number
@@ -271,9 +271,9 @@ Private mCumVolume As Long                  ' the cumulative volume
 
 Private mSwingLineSeries As LineSeries      ' used to define properties for the swing
                                             ' lines
-Private mSwingLine As chartskil26.Line        ' the current swing line
-Private mPrevSwingLine As chartskil26.Line    ' the previous swing line
-Private mNewSwingLine As chartskil26.Line     ' potential new swing line
+Private mSwingLine As ChartSkil26.Line        ' the current swing line
+Private mPrevSwingLine As ChartSkil26.Line    ' the previous swing line
+Private mNewSwingLine As ChartSkil26.Line     ' potential new swing line
 Private mSwingAmountTicks As Double         ' the minimum price movement in ticks to
                                             ' establish a new swing
 Private mSwingingUp As Boolean              ' indicates whether price is swinging up
@@ -343,6 +343,50 @@ If Not mTickSimulator Is Nothing Then mTickSimulator.StopSimulation
 
 Chart1.clearChart   ' clear the current chart
 
+Set mPriceRegion = Nothing
+Set mVolumeRegion = Nothing
+Set mMACDRegion = Nothing
+
+Set mBarSeries = Nothing
+Set mBar = Nothing
+Set mBarLabelSeries = Nothing
+Set mBarText = Nothing
+
+Set mMovAvg1Series = Nothing
+Set mMovAvg1Point = Nothing
+Set mMA1 = Nothing
+
+Set mMovAvg2Series = Nothing
+Set mMovAvg2Point = Nothing
+Set mMA2 = Nothing
+
+Set mMovAvg3Series = Nothing
+Set mMovAvg3Point = Nothing
+Set mMa3 = Nothing
+
+Set mMACDSeries = Nothing
+Set mMACDPoint = Nothing
+Set mMACDSignalSeries = Nothing
+Set mMACDSignalPoint = Nothing
+Set mMACDHistSeries = Nothing
+Set mMACDHistPoint = Nothing
+Set mMACD = Nothing
+
+Set mVolumeSeries = Nothing
+Set mVolume = Nothing
+
+Set mSwingLineSeries = Nothing
+Set mSwingLine = Nothing
+Set mPrevSwingLine = Nothing
+Set mNewSwingLine = Nothing
+
+mClockTimer.StopTimer
+Set mClockText = Nothing
+
+Set mTickSimulator = Nothing
+
+Set mTickCountText = Nothing
+                                            
 initialise          ' reset the basic properties of the chart
 
 LoadButton.Enabled = True
@@ -352,7 +396,7 @@ Private Sub LoadButton_Click()
 Dim aFont As StdFont
 Dim btn As Button
 Dim startText As Text
-Dim extendedLine As chartskil26.Line
+Dim extendedLine As ChartSkil26.Line
 Dim lBarStyle As BarStyle
 Dim lDataPointStyle As DataPointStyle
 Dim lLineStyle As LineStyle
@@ -362,7 +406,7 @@ LoadButton.Enabled = False  ' prevent the user pressing load again until the cha
 
 mTickSize = TickSizeText.Text
 mBarLength = BarLengthText.Text
-Chart1.setPeriodParameters mBarLength, TimePeriodMinute
+Chart1.barTimePeriod = GetTimePeriod(mBarLength, TimePeriodMinute)
 
 ' Set up the region of the chart that will display the price bars. You can have as
 ' many regions as you like on a chart. They are arranged vertically, and the parameter
@@ -698,7 +742,7 @@ Static barnum As Long
 
 barnum = barnum + 1
 
-bartime = BarStartTime(timestamp, BarLengthText, TimePeriodMinute, SessionStartTimeText)
+bartime = BarStartTime(timestamp, GetTimePeriod(BarLengthText, TimePeriodMinute), SessionStartTimeText)
 
 mElapsedTimer.StartTiming
 
@@ -752,7 +796,7 @@ Private Sub mTickSimulator_TickPrice( _
                 ByVal price As Double)
 Dim bartime As Date
 
-bartime = BarStartTime(timestamp, BarLengthText, TimePeriodMinute, SessionStartTimeText)
+bartime = BarStartTime(timestamp, GetTimePeriod(BarLengthText, TimePeriodMinute), SessionStartTimeText)
 
 If bartime <> mBarTime Then
     mBarTime = bartime
@@ -867,7 +911,8 @@ Set regionStyle = Chart1.defaultRegionStyle
 regionStyle.autoscale = True        ' indicates that by default, each chart region will
                                     ' automatically adjust its vertical scaling to ensure
                                     ' that all relevant data is visible
-regionStyle.BackColor = vbWhite     ' sets the default background color for all regions
+regionStyle.BackColor = RGB(251, 250, 235)
+                                    ' sets the default background color for all regions
                                     ' of the chart - but each separate region can
                                     ' have its own background color
 regionStyle.gridColor = &HC0C0C0    ' sets the colour of the gridlines
@@ -879,6 +924,16 @@ regionStyle.pointerStyle = PointerCrosshairs
 
 ' now apply these settings
 Chart1.defaultRegionStyle = regionStyle
+
+' now set the style for the X axis
+Set regionStyle = Chart1.XAxisRegion.Style
+regionStyle.BackColor = RGB(230, 236, 207)
+Chart1.XAxisRegion.Style = regionStyle
+
+' now set the style for Y axes
+Set regionStyle = Chart1.defaultYAxisStyle
+regionStyle.BackColor = RGB(234, 246, 254)
+Chart1.defaultYAxisStyle = regionStyle
 
 ' create the moving average objects
 Set mMA1 = New ExponentialMovingAverage

@@ -201,7 +201,7 @@ Do While barcount < numberOfBars
     End If
 Loop
 
-Set mTimer = CreateIntervalTimer(5, ExpiryTimeUnitSeconds, 5000, True)
+Set mTimer = CreateIntervalTimer(2, ExpiryTimeUnitSeconds, 2000, True)
 mTimer.StartTimer
 
 End Sub

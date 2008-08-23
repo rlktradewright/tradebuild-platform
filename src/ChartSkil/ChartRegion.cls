@@ -14,12 +14,42 @@ Attribute VB_Exposed = True
 Option Explicit
 
 '================================================================================
+' Interfaces
+'================================================================================
+
+Implements Task
+
+'================================================================================
 ' Events
 '================================================================================
+
+Event AutoscaleChanged()
+
+Event Click()
+
+Event DblCLick()
+
+Event MouseDown(Button As Integer, _
+                Shift As Integer, _
+                x As Single, _
+                y As Single)
+                
+Event MouseMove(Button As Integer, _
+                Shift As Integer, _
+                x As Single, _
+                y As Single)
+                
+Event MouseUp(Button As Integer, _
+                Shift As Integer, _
+                x As Single, _
+                y As Single)
 
 '================================================================================
 ' Constants
 '================================================================================
+
+Private Const ProjectName                As String = "ChartSkil26"
+Private Const ModuleName                As String = "ChartRegion"
 
 '================================================================================
 ' Types
@@ -71,6 +101,9 @@ Private mController As ChartController
 
 Private mName As String
 Private mRegionNumber As Long
+
+Private mIsXAxisRegion As Boolean
+Private mIsYAxisRegion As Boolean
 
 Private mStyle As ChartRegionStyle
 
@@ -147,8 +180,7 @@ Private mHideGrid As Boolean
 
 
 Private mSessionOffsetMinutes As Date
-Private mVerticalGridSpacing As Long
-Private mVerticalGridUnits As TimePeriodUnits
+Private mVerticalGridTimePeriod As TimePeriod
 
 Private mAutoscale As Boolean
 Private mMinimumHeight As Double
@@ -198,6 +230,11 @@ Private mDefaultLineStyle As linestyle
 
 Private mElapsedTimer As ElapsedTimer
 
+Private mTaskContext As TaskContext
+
+Private mCurrX As Single
+Private mCurrY As Single
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -212,8 +249,8 @@ Dim i As Long
 Set mCanvas = New canvas
 mNextLayer = LayerNumbers.LayerLowestUser
 
-ReDim mPeriodTable(200) As PeriodTableEntry
-ReDim mGraphicObjects(500) As GraphicObjectTableEntry
+ReDim mPeriodTable(255) As PeriodTableEntry
+ReDim mGraphicObjects(1023) As GraphicObjectTableEntry
 
 mFirstInScopeIndex = allocateGraphicObjectTableEntry
 mLastInScopeIndex = allocateGraphicObjectTableEntry
@@ -245,6 +282,39 @@ End Sub
 Private Sub Class_Terminate()
 Debug.Print "ChartRegion terminated"
 End Sub
+
+'================================================================================
+' Task Interface Members
+'================================================================================
+
+Private Sub Task_cancel()
+
+End Sub
+
+Private Sub Task_run()
+Static i As Long
+Dim j As Long
+
+Do While i < mNextGraphicObjectIndex
+    If Not mGraphicObjects(i).graphObj Is Nothing Then Set mGraphicObjects(i).graphObj = Nothing
+    i = i + 1
+    j = j + 1
+    If j = 100 Then Exit Sub
+Loop
+
+Erase mGraphicObjects
+
+mTaskContext.finish 0, False
+
+End Sub
+
+Private Property Let Task_TaskContext(ByVal RHS As TWUtilities30.TaskContext)
+Set mTaskContext = RHS
+End Property
+
+Private Property Get Task_TaskName() As String
+Task_TaskName = mTaskContext.name
+End Property
 
 '================================================================================
 ' mEventProxy Event Handlers
@@ -496,6 +566,12 @@ autoscale = mAutoscale
 End Property
 
 Public Property Let autoscale(ByVal value As Boolean)
+If mIsXAxisRegion Or mIsYAxisRegion Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
+            "Cannot set autoscalefor an axis region"
+End If
+
 mAutoscale = value
 If Not mToolbar Is Nothing Then
     mToolbar.Buttons("autoscale").Enabled = IIf(mAutoscale, False, True)
@@ -507,6 +583,7 @@ If Not mSuppressDrawing Then
         paintRegion
     End If
 End If
+RaiseEvent AutoscaleChanged
 End Property
 
 'Friend Property Get barWidth() As Single
@@ -618,6 +695,10 @@ Public Property Let defaultTextStyle(ByVal value As TextStyle)
 Set mDefaultTextStyle = value.clone
 End Property
 
+Public Property Get firstBarSeries() As BarSeries
+Set firstBarSeries = mFirstBarSeries
+End Property
+
 Public Property Get gridColor() As Long
 gridColor = mGridColor
 End Property
@@ -631,6 +712,12 @@ gridlineSpacingY = mGridlineSpacingY
 End Property
 
 Public Property Let gridlineSpacingY(ByVal value As Double)
+If mIsXAxisRegion Or mIsYAxisRegion Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
+            "Cannot set gridline spacing for an axis region"
+End If
+
 mGridlineSpacingY = value
 Debug.Print "Region " & mName & ": GridlineSpacingY=" & mGridlineSpacingY
 End Property
@@ -682,9 +769,11 @@ mhasGridText = val
 If mhasGridText Then
     Set mXGridTexts = Me.addTextSeries(LayerNumbers.LayerGridText)
     mXGridTexts.align = AlignBottomCentre
-    mXGridTexts.box = True
-    mXGridTexts.boxFillColor = mBackColor
-    mXGridTexts.boxStyle = LineInvisible
+    If Not mIsXAxisRegion Then
+        mXGridTexts.box = True
+        mXGridTexts.boxFillColor = mBackColor
+        mXGridTexts.boxStyle = LineInvisible
+    End If
     mXGridTexts.extended = True
     mXGridTexts.Color = mGridTextColor
     Set aFont = New StdFont
@@ -696,8 +785,10 @@ If mhasGridText Then
 
     Set mXGridTextsCoarse = Me.addTextSeries(LayerNumbers.LayerGridText)
     mXGridTextsCoarse.align = AlignTopCentre
-    mXGridTextsCoarse.box = True
-    mXGridTextsCoarse.boxFillColor = mBackColor
+    If Not mIsXAxisRegion Then
+        mXGridTextsCoarse.box = True
+        mXGridTextsCoarse.boxFillColor = mBackColor
+    End If
     mXGridTextsCoarse.boxStyle = LineInvisible
     mXGridTextsCoarse.extended = True
     mXGridTextsCoarse.Color = mGridTextColor
@@ -713,7 +804,29 @@ End If
 End Property
 
 Public Property Let integerYScale(ByVal value As Boolean)
+If mIsXAxisRegion Or mIsYAxisRegion Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
+            "Cannot set integerYScale for an axis region"
+End If
+
 mIntegerYScale = value
+End Property
+
+Friend Property Let isXAxisRegion(ByVal value As Boolean)
+mIsXAxisRegion = value
+End Property
+
+Public Property Get isXAxisRegion() As Boolean
+isXAxisRegion = mIsXAxisRegion
+End Property
+
+Friend Property Let isYAxisRegion(ByVal value As Boolean)
+mIsYAxisRegion = value
+End Property
+
+Public Property Get isYAxisRegion() As Boolean
+isYAxisRegion = mIsYAxisRegion
 End Property
 
 Public Property Get minimumHeight() As Double
@@ -721,6 +834,12 @@ minimumHeight = mMinimumHeight
 End Property
 
 Public Property Let minimumHeight(ByVal value As Double)
+If mIsXAxisRegion Or mIsYAxisRegion Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
+            "Cannot set minimumHeight for an axis region"
+End If
+
 mMinimumHeight = value
 End Property
 
@@ -730,6 +849,10 @@ End Property
 
 Friend Property Let minimumPercentHeight(ByVal value As Double)
 mMinimumPercentHeight = value
+End Property
+
+Public Property Get mousePosition() As Point
+Set mousePosition = newPoint(mCurrX, mCurrY)
 End Property
 
 Public Property Get name() As String
@@ -753,6 +876,12 @@ PointerCrosshairsColor = mPointerCrosshairsColor
 End Property
 
 Public Property Let PointerCrosshairsColor(ByVal value As Long)
+If mIsXAxisRegion Or mIsYAxisRegion Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
+            "Cannot set PointerCrossHairsColor for an axis region"
+End If
+
 mPointerCrosshairsColor = value
 End Property
 
@@ -761,6 +890,12 @@ PointerDiscColor = mPointerDiscColor
 End Property
 
 Public Property Let PointerDiscColor(ByVal value As Long)
+If mIsXAxisRegion Or mIsYAxisRegion Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
+            "Cannot set PointerDiscColor for an axis region"
+End If
+
 mPointerDiscColor = value
 End Property
 
@@ -769,6 +904,12 @@ pointerStyle = mPointerStyle
 End Property
 
 Public Property Let pointerStyle(ByVal value As PointerStyles)
+If mIsXAxisRegion Or mIsYAxisRegion Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
+            "Cannot set PointerStyle for an axis region"
+End If
+
 
 If mPointerStyle = value Then Exit Property
 
@@ -851,7 +992,7 @@ Public Property Get regionNumber() As Long
 regionNumber = mRegionNumber
 End Property
 
-Public Property Let regionNumber(ByVal val As Long)
+Friend Property Let regionNumber(ByVal val As Long)
 mRegionNumber = val
 End Property
 
@@ -906,14 +1047,16 @@ Dim lSuppress As Boolean
 lSuppress = mSuppressDrawing
 mSuppressDrawing = True
 
-If value.autoscale <> mAutoscale Then autoscale = value.autoscale
 If value.backColor <> mBackColor Then regionBackColor = value.backColor
 If value.gridColor <> mGridColor Then gridColor = value.gridColor
-If value.gridlineSpacingY <> mGridlineSpacingY Then gridlineSpacingY = value.gridlineSpacingY
 If value.gridTextColor <> mGridTextColor Then gridTextColor = value.gridTextColor
-If value.integerYScale <> mIntegerYScale Then integerYScale = value.integerYScale
-If value.minimumHeight <> mMinimumHeight Then minimumHeight = value.minimumHeight
-If value.pointerStyle <> mPointerStyle Then pointerStyle = value.pointerStyle
+If Not mIsXAxisRegion And Not mIsYAxisRegion Then
+    If value.autoscale <> mAutoscale Then autoscale = value.autoscale
+    If value.gridlineSpacingY <> mGridlineSpacingY Then gridlineSpacingY = value.gridlineSpacingY
+    If value.integerYScale <> mIntegerYScale Then integerYScale = value.integerYScale
+    If value.minimumHeight <> mMinimumHeight Then minimumHeight = value.minimumHeight
+    If value.pointerStyle <> mPointerStyle Then pointerStyle = value.pointerStyle
+End If
 If value.hasGrid <> mhasGrid Then hasGrid = value.hasGrid
 If value.hasGridText <> mhasGridText Then hasGridText = value.hasGridText
 If value.YScaleQuantum <> mYScaleQuantum Then YScaleQuantum = value.YScaleQuantum
@@ -960,12 +1103,8 @@ Next
 
 End Property
 
-Friend Property Let verticalGridSpacing(ByVal value As Long)
-mVerticalGridSpacing = value
-End Property
-
-Friend Property Let verticalGridUnits(ByVal value As TimePeriodUnits)
-mVerticalGridUnits = value
+Friend Property Let verticalGridTimePeriod(ByVal value As TimePeriod)
+Set mVerticalGridTimePeriod = value
 End Property
 
 Public Property Get YAxisPosition() As Long
@@ -976,10 +1115,9 @@ Friend Property Let YAxisRegion(ByVal value As ChartRegion)
 Dim aFont As StdFont
 
 Set mYAxisRegion = value
-mYAxisRegion.regionBackColor = regionBackColor
-mYAxisRegion.hasGrid = False
+'mYAxisRegion.regionBackColor = regionBackColor
+'mYAxisRegion.hasGrid = False
 mYAxisRegion.periodsInView 0, 99
-mYAxisRegion.pointerStyle = PointerNone
 mYAxisRegion.suppressDrawing = mSuppressDrawing
 
 mYAxisRegion.defaultTextStyle = mDefaultTextStyle
@@ -1012,7 +1150,18 @@ mYGridTexts.font = aFont
 
 End Property
 
+Public Property Get YAxisRegion() As ChartRegion
+Set YAxisRegion = mYAxisRegion
+End Property
+
+
 Public Property Let YScaleQuantum(ByVal value As Double)
+If mIsXAxisRegion Or mIsYAxisRegion Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
+            "Cannot set YScaleQuantum for an axis region"
+End If
+
 mYScaleQuantum = value
 End Property
 
@@ -1087,7 +1236,7 @@ End Function
 
 Friend Sub addPeriod(ByVal periodNumber As Long, _
                     ByVal timestamp As Date)
-addNewPeriod periodNumber
+addNewPeriod (periodNumber)
 setVerticalGridLine timestamp, periodNumber
 End Sub
 
@@ -1158,19 +1307,20 @@ For i = mTextSeriesCol.count To 1 Step -1
     mTextSeriesCol.remove i
 Next
 
-Erase mGraphicObjects
-' now notify each object in the graphic object table that it's finished with
-'For i = mFirstGraphicObjectIndex To mNextGraphicObjectIndex - 1
-'    If Not mGraphicObjects(i).graphobj Is Nothing Then
-'        mGraphicObjects(i).graphobj.finish
-'    End If
-'    Set mGraphicObjects(i).graphobj = Nothing
-'Next
+StartTask Me, PriorityLow
 
 ' now clear the YAxis region (if there is one)
 If Not mYAxisRegion Is Nothing Then
     mYAxisRegion.clearRegion
 End If
+End Sub
+
+Friend Sub Click()
+RaiseEvent Click
+End Sub
+
+Friend Sub DblCLick()
+RaiseEvent DblCLick
 End Sub
 
 Public Sub displayGrid()
@@ -1180,18 +1330,7 @@ mHideGrid = False
 paintRegion
 End Sub
 
-Public Sub hideGrid()
-If mHideGrid Then Exit Sub
-
-mHideGrid = True
-paintRegion
-End Sub
-
-Public Function isGridHidden() As Boolean
-isGridHidden = mHideGrid
-End Function
-
-Friend Sub MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal x As Single, ByVal y As Single)
+Friend Sub drawCursor(ByVal Button As Integer, ByVal Shift As Integer, ByVal x As Single, ByVal y As Single)
 Dim yVal As Single
 If y = MinusInfinitySingle Then
     yVal = mCanvas.top + 2 * mCanvas.height  ' make sure the pointer isn't visible
@@ -1212,6 +1351,41 @@ Case PointerDisc
     drawPointer x, yVal
 End Select
 
+End Sub
+
+Public Sub hideGrid()
+If mHideGrid Then Exit Sub
+
+mHideGrid = True
+paintRegion
+End Sub
+
+Public Function isGridHidden() As Boolean
+isGridHidden = mHideGrid
+End Function
+
+Friend Sub MouseDown(Button As Integer, _
+                Shift As Integer, _
+                x As Single, _
+                y As Single)
+mCurrX = x
+mCurrY = y
+RaiseEvent MouseDown(Button, Shift, x, y)
+End Sub
+                
+Friend Sub MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal x As Single, ByVal y As Single)
+mCurrX = x
+mCurrY = y
+RaiseEvent MouseMove(Button, Shift, x, y)
+End Sub
+
+Friend Sub MouseUp(Button As Integer, _
+                Shift As Integer, _
+                x As Single, _
+                y As Single)
+mCurrX = x
+mCurrY = y
+RaiseEvent MouseUp(Button, Shift, x, y)
 End Sub
 
 Public Function newDimension(ByVal x As Double, _
@@ -1413,23 +1587,123 @@ End If
 End Sub
 
 Public Sub removeBarSeries( _
-                ByVal pBarSeries As BarSeries)
-removeGraphicObjectSeries pBarSeries
+                ByVal nameOrObject As Variant)
+Dim series As BarSeries
+Dim i As Long
+Dim seriesInCol As BarSeries
+If IsObject(nameOrObject) Then
+    Set series = nameOrObject
+    removeGraphicObjectSeries series
+    For i = 1 To mBarSeriesCol.count
+        Set seriesInCol = mBarSeriesCol(i)
+        If series Is seriesInCol Then
+            mBarSeriesCol.remove i
+            Exit Sub
+        End If
+    Next
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "removeBarSeries", _
+            "No such bar series in this ChartRegion"
+ElseIf VarType(nameOrObject) = vbString Then
+    Set series = mBarSeriesCol(nameOrObject)
+    removeGraphicObjectSeries series
+    mBarSeriesCol.remove nameOrObject
+Else
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "removeBarSeries", _
+            "Argument must be a BarSeries object or a BarSeries name"
+
+End If
 End Sub
 
 Public Sub removeDataPointSeries( _
-                ByVal pDataPointSeries As DataPointSeries)
-removeGraphicObjectSeries pDataPointSeries
+                ByVal nameOrObject As Variant)
+Dim series As DataPointSeries
+Dim i As Long
+Dim seriesInCol As DataPointSeries
+If IsObject(nameOrObject) Then
+    Set series = nameOrObject
+    removeGraphicObjectSeries series
+    For i = 1 To mDataPointSeriesCol.count
+        Set seriesInCol = mDataPointSeriesCol(i)
+        If series Is seriesInCol Then
+            mDataPointSeriesCol.remove i
+            Exit Sub
+        End If
+    Next
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "removeDataPointSeries", _
+            "No such bar series in this ChartRegion"
+ElseIf VarType(nameOrObject) = vbString Then
+    Set series = mDataPointSeriesCol(nameOrObject)
+    removeGraphicObjectSeries series
+    mDataPointSeriesCol.remove nameOrObject
+Else
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "removeDataPointSeries", _
+            "Argument must be a DataPointSeries object or a DataPointSeries name"
+
+End If
 End Sub
 
 Public Sub removeLineSeries( _
-                ByVal pLineSeries As LineSeries)
-removeGraphicObjectSeries pLineSeries
+                ByVal nameOrObject As Variant)
+Dim series As LineSeries
+Dim i As Long
+Dim seriesInCol As LineSeries
+If IsObject(nameOrObject) Then
+    Set series = nameOrObject
+    removeGraphicObjectSeries series
+    For i = 1 To mLineSeriesCol.count
+        Set seriesInCol = mLineSeriesCol(i)
+        If series Is seriesInCol Then
+            mLineSeriesCol.remove i
+            Exit Sub
+        End If
+    Next
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "removeLineSeries", _
+            "No such bar series in this ChartRegion"
+ElseIf VarType(nameOrObject) = vbString Then
+    Set series = mLineSeriesCol(nameOrObject)
+    removeGraphicObjectSeries series
+    mLineSeriesCol.remove nameOrObject
+Else
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "removeLineSeries", _
+            "Argument must be a LineSeries object or a LineSeries name"
+
+End If
 End Sub
 
 Public Sub removeTextSeries( _
-                ByVal pTextSeries As TextSeries)
-removeGraphicObjectSeries pTextSeries
+                ByVal nameOrObject As Variant)
+Dim series As TextSeries
+Dim i As Long
+Dim seriesInCol As TextSeries
+If IsObject(nameOrObject) Then
+    Set series = nameOrObject
+    removeGraphicObjectSeries series
+    For i = 1 To mTextSeriesCol.count
+        Set seriesInCol = mTextSeriesCol(i)
+        If series Is seriesInCol Then
+            mTextSeriesCol.remove i
+            Exit Sub
+        End If
+    Next
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "removeTextSeries", _
+            "No such bar series in this ChartRegion"
+ElseIf VarType(nameOrObject) = vbString Then
+    Set series = mTextSeriesCol(nameOrObject)
+    removeGraphicObjectSeries series
+    mTextSeriesCol.remove nameOrObject
+Else
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "removeTextSeries", _
+            "Argument must be a TextSeries object or a TextSeries name"
+
+End If
 End Sub
 
 Friend Sub resizedY()
@@ -1442,6 +1716,12 @@ If Not mYAxisRegion Is Nothing Then mYAxisRegion.resizedY
 End Sub
 
 Public Sub scaleUp(ByVal factor As Single)
+If mIsXAxisRegion Or mIsYAxisRegion Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
+            "Cannot scale an axis region"
+End If
+
 autoscale = False
 With mCanvas
     setVerticalScale .bottom + factor * .height / 2, _
@@ -1494,6 +1774,12 @@ End Sub
 Public Sub setTitle(ByVal val As String, _
                         ByVal Color As Long, _
                         ByVal font As StdFont)
+If mIsXAxisRegion Or mIsYAxisRegion Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
+            "Cannot set a title for an axis region"
+End If
+
 If mTitle Is Nothing Then
     Set mTitle = addText(LayerTitle)
 End If
@@ -1517,6 +1803,19 @@ End Sub
 Public Sub setVerticalScale(ByVal lowValue As Single, _
                             ByVal highValue As Single)
 
+If mIsXAxisRegion Or mIsYAxisRegion Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
+            "Cannot set the scale for an axis region"
+End If
+
+setVerticalScaleInternal lowValue, highValue
+
+End Sub
+
+Friend Sub setVerticalScaleInternal(ByVal lowValue As Single, _
+                            ByVal highValue As Single)
+
 If mAutoscale Then
     calculateInscopeGaugeDependentObjects
     Exit Sub
@@ -1530,16 +1829,28 @@ If Not mSuppressDrawing Then
     paintRegion
 End If
 If Not mYAxisRegion Is Nothing Then
-    mYAxisRegion.setVerticalScale lowValue, highValue
+    mYAxisRegion.setVerticalScaleInternal lowValue, highValue
 End If
 End Sub
 
 Public Sub scrollVertical(ByVal amount As Single)
+If mIsXAxisRegion Or mIsYAxisRegion Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
+            "Cannot scroll an axis region"
+End If
+
 autoscale = False
 setVerticalScale mCanvas.bottom + amount, mCanvas.top + amount
 End Sub
 
 Public Sub scrollVerticalProportion(ByVal proportion As Single)
+If mIsXAxisRegion Or mIsYAxisRegion Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
+            "Cannot scroll an axis region"
+End If
+
 autoscale = False
 setVerticalScale mCanvas.bottom + proportion * mCanvas.height, _
                 mCanvas.top + proportion * mCanvas.height
@@ -1572,7 +1883,8 @@ With mGraphicObjects(index)
 End With
 End Sub
 
-Private Sub addEntryToPeriodList(ByVal index As Long)
+Private Sub addEntryToPeriodList( _
+                ByVal index As Long)
 Dim lastindex As Long
 Dim newPeriodNumber As Long
 
@@ -1583,10 +1895,13 @@ If newPeriodNumber <> mGraphicObjects(index).periodNumber Then
     End If
     If newPeriodNumber < 1 Then Exit Sub
     
-    ' NB: the following call to addNewPeriod must not be within a With block
-    ' that refers to mGraphicObjects, because is rare circumstances it can
-    ' cause mGraphicObjects to be ReDim'd which causes an error 10
-    addNewPeriod newPeriodNumber  ' in case the period hasn't been added yet
+    If mGraphicObjects(index).graphObj.timestamp <> 0 Then
+        ' NB: the following call to addPeriod must not be within a 'With' block
+        ' that refers to mGraphicObjects, because in rare circumstances it can
+        ' cause mGraphicObjects to be ReDim'd which causes an error 10
+        addPeriod newPeriodNumber, _
+                mGraphicObjects(index).graphObj.timestamp ' in case the period hasn't been added yet
+    End If
     
     lastindex = mPeriodTable(newPeriodNumber).lastindex
     With mGraphicObjects(index)
@@ -2364,21 +2679,6 @@ Next
 
 End Sub
 
-Private Sub removeGraphicObjectSeries( _
-                ByVal pSeries As IGraphicObjectSeries)
-Dim graphObj As IGraphicObject
-Dim i As Long
-
-For i = pSeries.count To 1 Step -1
-    Set graphObj = pSeries.item(i)
-    removeGraphicObject graphObj
-    graphObj.finish
-    pSeries.remove i
-Next
-pSeries.finish
-End Sub
-
-
 Private Sub removeEntryFromExtendedList(ByVal index As Long)
 With mGraphicObjects(index)
     If .nextExtendedIndex = 0 Then Exit Sub
@@ -2446,6 +2746,21 @@ Set mGraphicObjects(handle).graphObj = Nothing
 graphObj.handle = -1
 
 End Sub
+
+Private Sub removeGraphicObjectSeries( _
+                ByVal pSeries As IGraphicObjectSeries)
+Dim graphObj As IGraphicObject
+Dim i As Long
+
+For i = pSeries.count To 1 Step -1
+    Set graphObj = pSeries.item(i)
+    removeGraphicObject graphObj
+    graphObj.finish
+    pSeries.remove i
+Next
+pSeries.finish
+End Sub
+
 
 Private Sub setHorizontalGridLines()
 Dim y As Double
@@ -2519,11 +2834,9 @@ Dim gridLineTime As Date
 Dim mins As Long
 Dim secs As Long
 
-Debug.Assert mVerticalGridSpacing <> 0
-
-If mVerticalGridUnits = TimePeriodNone Then
-    ' just draw a vertical gridline every mVerticalGridSpacing bars
-    If periodNumber Mod mVerticalGridSpacing = 1 Then
+If mVerticalGridTimePeriod Is Nothing Then
+    ' just draw a vertical gridline every 10 bars
+    If periodNumber Mod 10 = 1 Then
         addVerticalGridLine periodNumber, _
                     Format(timestamp, "yyyymmddhhnnss"), _
                     FormatDateTime(timestamp, vbShortTime), _
@@ -2533,9 +2846,9 @@ If mVerticalGridUnits = TimePeriodNone Then
     Exit Sub
 End If
 
-gridLineTime = BarStartTime(timestamp, mVerticalGridSpacing, mVerticalGridUnits)
+gridLineTime = BarStartTime(timestamp, mVerticalGridTimePeriod)
     
-Select Case mVerticalGridUnits
+Select Case mVerticalGridTimePeriod.units
 Case TimePeriodSecond
     addVerticalGridLine periodNumber, _
                     Format(gridLineTime, "yyyymmddhhnnss"), _
@@ -2579,7 +2892,7 @@ Case TimePeriodYear
                     "$", _
                     ""
 Case TimePeriodVolume, TimePeriodTickVolume, TimePeriodTickMovement
-    If periodNumber Mod mVerticalGridSpacing = 1 Then
+    If periodNumber Mod 10 = 1 Then
         addVerticalGridLine periodNumber, _
                         Format(gridLineTime, "yyyymmddhhnnss"), _
                         FormatDateTime(gridLineTime, vbLongTime), _
