@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#45.0#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#47.0#0"; "ChartSkil2-6.ocx"
 Begin VB.UserControl TradeBuildChart 
    ClientHeight    =   4965
    ClientLeft      =   0
@@ -10,13 +10,13 @@ Begin VB.UserControl TradeBuildChart
    ToolboxBitmap   =   "TradeBuildChart.ctx":0000
    Begin ChartSkil26.Chart Chart1 
       Align           =   1  'Align Top
-      Height          =   4575
+      Height          =   4935
       Left            =   0
       TabIndex        =   0
       Top             =   0
       Width           =   7275
       _ExtentX        =   12832
-      _ExtentY        =   8070
+      _ExtentY        =   8705
    End
 End
 Attribute VB_Name = "TradeBuildChart"
@@ -132,8 +132,7 @@ Private mMinimumTicksHeight As Long
 
 Private mContract As Contract
 
-Private mPeriodLength As Long
-Private mPeriodUnits As TimePeriodUnits
+Private mBarTimePeriod As TimePeriod
 
 Private mPriceRegion As ChartRegion
 Private mPriceRegionStyle As ChartRegionStyle
@@ -592,23 +591,11 @@ Chart1.showToolbar = val
 End Property
 
 Public Property Get timeframeCaption() As String
+timeframeCaption = mBarTimePeriod.toString
+End Property
 
-Select Case mPeriodUnits
-Case TimePeriodUnits.TimePeriodSecond
-    timeframeCaption = IIf(mPeriodLength = 1, "1 Sec", mPeriodLength & " Secs")
-Case TimePeriodUnits.TimePeriodMinute
-    timeframeCaption = IIf(mPeriodLength = 1, "1 Min", mPeriodLength & " Mins")
-Case TimePeriodUnits.TimePeriodHour
-    timeframeCaption = IIf(mPeriodLength = 1, "1 Hour", mPeriodLength & " Hrs")
-Case TimePeriodUnits.TimePeriodDay
-    timeframeCaption = IIf(mPeriodLength = 1, "Daily", mPeriodLength & " Days")
-Case TimePeriodUnits.TimePeriodWeek
-    timeframeCaption = IIf(mPeriodLength = 1, "Weekly", mPeriodLength & " Wks")
-Case TimePeriodUnits.TimePeriodMonth
-    timeframeCaption = IIf(mPeriodLength = 1, "Monthly", mPeriodLength & " Mths")
-Case TimePeriodUnits.TimePeriodYear
-    timeframeCaption = IIf(mPeriodLength = 1, "Yearly", mPeriodLength & " Yrs")
-End Select
+Public Property Get timeframeShortCaption() As String
+timeframeShortCaption = mBarTimePeriod.toShortString
 End Property
 
 Public Property Get timeframe() As timeframe
@@ -680,12 +667,11 @@ Public Sub showChart( _
                 ByVal initialNumberOfBars As Long, _
                 ByVal includeBarsOutsideSession As Boolean, _
                 ByVal minimumTicksHeight As Long, _
-                ByVal periodlength As Long, _
-                ByVal periodUnits As TimePeriodUnits, _
+                ByVal barTimePeriod As TimePeriod, _
                 Optional ByVal priceRegionStyle As ChartRegionStyle, _
                 Optional ByVal volumeRegionStyle As ChartRegionStyle)
 
-Select Case periodUnits
+Select Case barTimePeriod.units
 Case TimePeriodSecond, _
         TimePeriodMinute, _
         TimePeriodHour, _
@@ -706,8 +692,7 @@ Set mTicker = pTicker
 mInitialNumberOfBars = initialNumberOfBars
 mIncludeBarsOutsideSession = includeBarsOutsideSession
 mMinimumTicksHeight = minimumTicksHeight
-mPeriodLength = periodlength
-mPeriodUnits = periodUnits
+Set mBarTimePeriod = barTimePeriod
 Set mPriceRegionStyle = priceRegionStyle
 Set mVolumeRegionStyle = volumeRegionStyle
 
@@ -725,12 +710,11 @@ Public Sub showHistoricChart( _
                 ByVal toTime As Date, _
                 ByVal includeBarsOutsideSession As Boolean, _
                 ByVal minimumTicksHeight As Long, _
-                ByVal periodlength As Long, _
-                ByVal periodUnits As TimePeriodUnits, _
+                ByVal barTimePeriod As TimePeriod, _
                 Optional ByVal priceRegionStyle As ChartRegionStyle, _
                 Optional ByVal volumeRegionStyle As ChartRegionStyle)
 
-Select Case periodUnits
+Select Case barTimePeriod.units
 Case TimePeriodSecond, _
         TimePeriodMinute, _
         TimePeriodHour, _
@@ -754,8 +738,7 @@ mFromTime = fromTime
 mToTime = toTime
 mIncludeBarsOutsideSession = includeBarsOutsideSession
 mMinimumTicksHeight = minimumTicksHeight
-mPeriodLength = periodlength
-mPeriodUnits = periodUnits
+Set mBarTimePeriod = barTimePeriod
 Set mPriceRegionStyle = priceRegionStyle
 Set mVolumeRegionStyle = volumeRegionStyle
 
@@ -792,8 +775,8 @@ inputValueNames(0) = mTicker.InputNameTrade
 inputValueNames(1) = mTicker.InputNameVolume
 createBarsStudyConfig.inputValueNames = inputValueNames
 createBarsStudyConfig.name = studyDef.name
-params.setParameterValue "Bar length", mPeriodLength
-params.setParameterValue "Time units", TimePeriodUnitsToString(mPeriodUnits)
+params.setParameterValue "Bar length", mBarTimePeriod.length
+params.setParameterValue "Time units", TimePeriodUnitsToString(mBarTimePeriod.units)
 createBarsStudyConfig.Parameters = params
 'createBarsStudyConfig.studyDefinition = studyDef
 
@@ -872,7 +855,7 @@ Set mContract = mTicker.Contract
 
 Chart1.suppressDrawing = True
 
-Chart1.setPeriodParameters mPeriodLength, mPeriodUnits
+Chart1.barTimePeriod = mBarTimePeriod
 
 Chart1.sessionStartTime = mContract.sessionStartTime
 Chart1.sessionEndTime = mContract.sessionEndTime
@@ -895,16 +878,14 @@ Chart1.suppressDrawing = False
 Set mTimeframes = mTicker.Timeframes
 
 If mIsHistoricChart Then
-    Set mTimeframe = mTimeframes.addHistorical(mPeriodLength, _
-                                mPeriodUnits, _
+    Set mTimeframe = mTimeframes.addHistorical(mBarTimePeriod, _
                                 "", _
                                 mInitialNumberOfBars, _
                                 mFromTime, _
                                 mToTime, _
                                 mIncludeBarsOutsideSession)
 Else
-    Set mTimeframe = mTimeframes.add(mPeriodLength, _
-                                mPeriodUnits, _
+    Set mTimeframe = mTimeframes.add(mBarTimePeriod, _
                                 "", _
                                 mInitialNumberOfBars, _
                                 mIncludeBarsOutsideSession, _

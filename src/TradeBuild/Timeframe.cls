@@ -126,8 +126,7 @@ Attribute mSession.VB_VarHelpID = -1
 
 Private mStateChangeListeners       As Collection
 
-Private mBarUnit                    As TimePeriodUnits
-Private mBarLength                  As Long
+Private mBarTimePeriod              As TimePeriod
 
 Private mSaveIntervalSeconds        As Long
 Private mNumberOfBarsToFetch        As Long
@@ -187,8 +186,7 @@ End Sub
 
 Private Sub IBarDataConsumer_Bar( _
                 ByVal data As Bar, _
-                ByVal barLength As Long, _
-                ByVal barUnit As TimePeriodUnits)
+                ByVal barTimePeriod As TimePeriod)
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -431,12 +429,8 @@ Public Property Get askStudy() As BarStudy
 Set askStudy = mAskBarsStudy
 End Property
 
-Public Property Get barLength() As Long
-barLength = mBarLength
-End Property
-
-Public Property Get barUnit() As Long
-barUnit = mBarUnit
+Public Property Get barTimePeriod() As TimePeriod
+Set barTimePeriod = mBarTimePeriod
 End Property
 
 Public Property Get bidBars() As bars
@@ -503,8 +497,7 @@ Friend Sub initialise( _
                 ByVal pContract As Contract, _
                 ByVal key As String, _
                 ByVal pTicker As Ticker, _
-                ByVal TimePeriod As Long, _
-                ByVal timePeriodUnit As TimePeriodUnits, _
+                ByVal barTimePeriod As TimePeriod, _
                 ByVal numberOfBarsToFetch As Long, _
                 ByVal fromTime As Date, _
                 ByVal toTime As Date, _
@@ -516,7 +509,7 @@ Friend Sub initialise( _
 
 If Not pTicker.replayingTickfile Then
     mSaveIntervalSeconds = saveIntervalSeconds
-    Set mTimerList = GetGlobalTimerList
+    'Set mTimerList = GetGlobalTimerList
 End If
 
 Set mContract = pContract
@@ -524,8 +517,7 @@ mKey = key
 Set mTickerRef = CreateWeakReference(pTicker)
 Set mStudyManagerRef = CreateWeakReference(pTicker.studyManager)
 
-mBarLength = TimePeriod
-mBarUnit = timePeriodUnit
+Set mBarTimePeriod = barTimePeriod
 
 mWriteBidAndAskBars = writeBidAndAskBars
 
@@ -730,8 +722,7 @@ If mBarReader Is Nothing Then
     Exit Sub
 End If
 
-barSpecifier.barLength = mBarLength
-barSpecifier.barLengthUnits = mBarUnit
+barSpecifier.barTimePeriod = mBarTimePeriod
 barSpecifier.barType = BarTypes.BarTypeTrade
 barSpecifier.Contract = mContract
 barSpecifier.FromDate = mFromTime
@@ -740,13 +731,11 @@ If mIsHistorical Then
 Else
     If mExcludeCurrentBar Then
         barSpecifier.ToDate = mSession.BarStartTime(tickr.timestamp, _
-                                    mBarLength, _
-                                    mBarUnit)
+                                    mBarTimePeriod)
     Else
         ' ensure we get the latest bar
         barSpecifier.ToDate = mSession.BarEndTime(tickr.timestamp, _
-                                    mBarLength, _
-                                    mBarUnit)
+                                    mBarTimePeriod)
     End If
 End If
 barSpecifier.maxNumberOfBars = mNumberOfBarsToFetch
@@ -762,7 +751,7 @@ Private Sub setupBarStudies()
 
 setupInputStudies
 
-Select Case mBarUnit
+Select Case mBarTimePeriod.units
 Case TimePeriodSecond, _
         TimePeriodMinute, _
         TimePeriodHour, _
@@ -793,7 +782,7 @@ Private Sub setupConstantMomentumBarsStudies()
 Dim params As New parameters
 Dim barsStudy As BarStudy
 
-params.setParameterValue ConstMomentumBarsParamTicksPerBar, mBarLength
+params.setParameterValue ConstMomentumBarsParamTicksPerBar, mBarTimePeriod.length
 
 ReDim inputValueNames(2) As String
 inputValueNames(0) = TradeInputName
@@ -842,9 +831,9 @@ Private Sub setupConstantTimeBarsStudies()
 Dim params As New parameters
 Dim barsStudy As BarStudy
 
-params.setParameterValue ConstTimeBarsParamBarLength, mBarLength
+params.setParameterValue ConstTimeBarsParamBarLength, mBarTimePeriod.length
 params.setParameterValue ConstTimeBarsParamTimeUnits, _
-                        TimePeriodUnitsToString(mBarUnit)
+                        TimePeriodUnitsToString(mBarTimePeriod.units)
 
 ReDim inputValueNames(2) As String
 inputValueNames(0) = TradeInputName
@@ -893,7 +882,7 @@ Private Sub setupConstantVolumeBarsStudies()
 Dim params As New parameters
 Dim barsStudy As BarStudy
 
-params.setParameterValue ConstTimeBarsParamVolPerBar, mBarLength
+params.setParameterValue ConstTimeBarsParamVolPerBar, mBarTimePeriod.length
 
 ReDim inputValueNames(2) As String
 inputValueNames(0) = TradeInputName
@@ -1080,7 +1069,7 @@ Private Sub WriteBar( _
 If mBarWriter Is Nothing Then Exit Sub
 
 Debug.Print FormatDateTime(Now, vbLongTime) & "  " & mContract.specifier.localSymbol & _
-            " Write " & mBarLength & TimePeriodUnitsToString(mBarUnit) & _
+            " Write " & mBarTimePeriod.toString & _
             " type " & barType & " bar " & theBar.barNumber & _
             " (" & FormatDateTime(theBar.timestamp, vbLongTime) & _
             "): open=" & theBar.openValue & _
@@ -1088,7 +1077,7 @@ Debug.Print FormatDateTime(Now, vbLongTime) & "  " & mContract.specifier.localSy
             "; low=" & theBar.lowValue & _
             "; close=" & theBar.closeValue & _
             "; vol=" & volume
-mBarWriter.WriteBar theBar, barType, volume, mBarLength, mBarUnit
+mBarWriter.WriteBar theBar, barType, volume, mBarTimePeriod
 End Sub
 
 

@@ -118,7 +118,7 @@ If mRequestInProgress Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "TBInfoBase.HistDataReader::FetchBars", _
                                     "Request already in progress"
 
-Select Case barSpecifier.barLengthUnits
+Select Case barSpecifier.barTimePeriod.units
 Case TimePeriodSecond, _
     TimePeriodMinute, _
     TimePeriodHour, _
@@ -142,8 +142,7 @@ Set mBarDataSpecifier = barSpecifier
 Set mContract = mBarDataSpecifier.Contract
 
 Set mBarsTC = mTradingDB.fetchbarsAsync(mBarDataSpecifier.Contract.specifier, _
-                                        mBarDataSpecifier.barLength, _
-                                        mBarDataSpecifier.barLengthUnits, _
+                                        mBarDataSpecifier.barTimePeriod, _
                                         mBarDataSpecifier.maxNumberOfBars, _
                                         mBarDataSpecifier.FromDate, _
                                         mBarDataSpecifier.ToDate, _
@@ -305,7 +304,7 @@ Dim lBar As Bar
 
 If mEnumerator.moveNext Then
     Set lBar = mEnumerator.current
-    mDataConsumer.Bar lBar, mBarDataSpecifier.barLength, mBarDataSpecifier.barLengthUnits
+    mDataConsumer.Bar lBar, mBarDataSpecifier.barTimePeriod
 Else
     mServiceConsumer.BarDataComplete
 End If

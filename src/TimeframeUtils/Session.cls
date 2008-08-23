@@ -148,16 +148,14 @@ End Property
 
 Public Function BarEndTime( _
                 ByVal timestamp As Date, _
-                ByVal barLength As Long, _
-                ByVal units As TimePeriodUnits) As Date
-BarEndTime = gBarEndTime(timestamp, barLength, units, mSessionStartTime, mSessionStartTime)
+                ByVal barTimePeriod As TimePeriod) As Date
+BarEndTime = gBarEndTime(timestamp, barTimePeriod, mSessionStartTime, mSessionStartTime)
 End Function
 
 Public Function BarStartTime( _
                 ByVal timestamp As Date, _
-                ByVal barLength As Long, _
-                ByVal units As TimePeriodUnits) As Date
-BarStartTime = gBarStartTime(timestamp, barLength, units, mSessionStartTime)
+                ByVal barTimePeriod As TimePeriod) As Date
+BarStartTime = gBarStartTime(timestamp, barTimePeriod, mSessionStartTime)
 End Function
 
 Public Function GetSessionTimes( _
@@ -190,21 +188,18 @@ End If
 End Function
 
 Public Function NumberOfBarsInSession( _
-                ByVal barLength As Long, _
-                ByVal units As TimePeriodUnits) As Long
-NumberOfBarsInSession = gCalcNumberOfBarsInSession(barLength, units, mSessionStartTime, mSessionEndTime)
+                ByVal barTimePeriod As TimePeriod) As Long
+NumberOfBarsInSession = gCalcNumberOfBarsInSession(barTimePeriod, mSessionStartTime, mSessionEndTime)
 End Function
 
 
 Public Function OffsetBarStartTime( _
                 ByVal timestamp As Date, _
-                ByVal barLength As Long, _
-                ByVal units As TimePeriodUnits, _
+                ByVal barTimePeriod As TimePeriod, _
                 ByVal offset As Long) As Date
 OffsetBarStartTime = gCalcOffsetBarStartTime( _
                                     timestamp, _
-                                    barLength, _
-                                    units, _
+                                    barTimePeriod, _
                                     offset, _
                                     mSessionStartTime, _
                                     mSessionEndTime)

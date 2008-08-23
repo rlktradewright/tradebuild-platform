@@ -133,7 +133,7 @@ Private Function IBarDataServiceProvider_CreateBarDataWriter( _
 End Function
 
 Private Function IBarDataServiceProvider_IsSupportedTimePeriod( _
-                period As TimePeriod) As Boolean
+                ByVal period As TimePeriod) As Boolean
 Select Case period.units
 Case TimePeriodMinute, _
     TimePeriodHour, _
@@ -148,15 +148,15 @@ End Function
 Private Property Get IBarDataServiceProvider_SupportedTimePeriods() As TimePeriod()
 Dim ar(5) As TimePeriod
 
-ar(0).units = TimePeriodMinute
-ar(1).units = TimePeriodHour
-ar(2).units = TimePeriodDay
-ar(3).units = TimePeriodWeek
-ar(4).units = TimePeriodMonth
-ar(5).units = TimePeriodYear
-'ar(6).units = TimePeriodTickMovement
-'ar(7).units = TimePeriodTickVolume
-'ar(8).units = TimePeriodVolume
+Set ar(0) = GetTimePeriod(MaxLong, TimePeriodMinute)
+Set ar(1) = GetTimePeriod(MaxLong, TimePeriodHour)
+Set ar(2) = GetTimePeriod(MaxLong, TimePeriodDay)
+Set ar(3) = GetTimePeriod(MaxLong, TimePeriodWeek)
+Set ar(4) = GetTimePeriod(MaxLong, TimePeriodMonth)
+Set ar(5) = GetTimePeriod(MaxLong, TimePeriodYear)
+'Set ar(6)= gettimeperiod(maxLong,TimePeriodTickMovement)
+'Set ar(7)= gettimeperiod(maxLong,TimePeriodTickVolume)
+'Set ar(8)= gettimeperiod(maxLong,TimePeriodVolume)
 End Property
 
 Private Function IBarDataServiceProvider_Supports( _

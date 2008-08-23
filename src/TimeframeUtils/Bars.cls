@@ -70,8 +70,7 @@ Private mBarsCache                  As ValueCache
 Private mCurrentBar                 As Bar
 Private mCurrentBarNumber           As Long
 
-Private mBarLength                  As Long
-Private mTimeUnits                  As TimePeriodUnits
+Private mBarTimePeriod              As TimePeriod
 
 Private mChangeListeners            As Collection
 
@@ -157,8 +156,8 @@ Public Property Get Bar(Optional ByVal ref As Long) As Bar
 Set Bar = mBarsCache.getValue(ref)
 End Property
 
-Public Property Get barLength() As Long
-barLength = mBarLength
+Public Property Get barTimePeriod() As TimePeriod
+Set barTimePeriod = mBarTimePeriod
 End Property
 
 Friend Property Get barsCache() As ValueCache
@@ -412,10 +411,6 @@ Public Property Get tickVolume(Optional ByVal ref As Long) As Long
 tickVolume = Bar(ref).tickVolume
 End Property
 
-Public Property Get timeUnits() As TimePeriodUnits
-timeUnits = mTimeUnits
-End Property
-
 Public Property Get up(Optional ByVal ref As Long) As Boolean
 up = Bar(ref).IsUpBar
 End Property
@@ -483,11 +478,9 @@ count = mBarsCache.count
 End Function
 
 Friend Sub initialise( _
-                ByVal barLength As Long, _
-                ByVal timeUnits As TimePeriodUnits, _
+                ByVal barTimePeriod As TimePeriod, _
                 ByVal numberOfBarsToCache As Long)
-mBarLength = barLength
-mTimeUnits = timeUnits
+Set mBarTimePeriod = barTimePeriod
 Set mBarsCache = New ValueCache
 mBarsCache.initialise numberOfBarsToCache, "Bar"
 End Sub

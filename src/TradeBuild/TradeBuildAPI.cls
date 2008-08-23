@@ -380,11 +380,7 @@ Set GetServiceProviderError = mServiceProviderError
 End Function
 
 Public Function IsSupportedHistoricalDataPeriod( _
-                ByVal periodLength As Long, _
-                ByVal periodUnits As TimePeriodUnits) As Boolean
-Dim period As TimePeriod
-period.length = periodLength
-period.units = periodUnits
+                ByVal period As TimePeriod) As Boolean
 IsSupportedHistoricalDataPeriod = mServiceProviders.IsSupportedHistoricalDataPeriod(period)
 End Function
 

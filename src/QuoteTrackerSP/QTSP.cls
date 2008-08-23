@@ -60,8 +60,7 @@ Public Type QTHistoricalDataRequestQueueEntry
     startDateTime           As Date
     endDateTime             As Date
     includeBarsOutsideSession   As Boolean
-    barLength               As Long
-    barUnits                As TimePeriodUnits
+    barTimePeriod           As TimePeriod
     rth                     As Boolean
 End Type
 

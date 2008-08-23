@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#67.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#100.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fChart2 
    ClientHeight    =   6780
    ClientLeft      =   60
@@ -88,8 +88,7 @@ Attribute mTicker.VB_VarHelpID = -1
 
 Private mSymbol As String
 
-Private mPeriodlength As Long
-Private mPeriodUnits As TimePeriodUnits
+Private mBarTimePeriod As TimePeriod
 
 Private mCurrentBid As String
 Private mCurrentAsk As String
@@ -108,7 +107,7 @@ Private mIsHistorical As Boolean
 Private Sub Form_Activate()
 gSyncStudyPicker TradeBuildChart1.ChartManager, _
                 "Study picker for " & mSymbol & _
-                " (" & mPeriodlength & " " & TimePeriodUnitsToString(mPeriodUnits) & ")"
+                " (" & mBarTimePeriod.toString & ")"
 End Sub
 
 Private Sub Form_Load()
@@ -131,7 +130,7 @@ End If
 End Sub
 
 Private Sub Form_Unload(cancel As Integer)
-If mIsHistorical Then mTicker.StopTicker
+If mIsHistorical Then mTicker.stopTicker
 Set mTicker = Nothing
 gUnsyncStudyPicker
 TradeBuildChart1.finish
@@ -146,7 +145,7 @@ Select Case Button.Key
 Case "studies"
     gShowStudyPicker TradeBuildChart1.ChartManager, _
                     mSymbol & _
-                    " (" & mPeriodlength & " " & TimePeriodUnitsToString(mPeriodUnits) & ")"
+                    " (" & mBarTimePeriod.toString & ")"
 End Select
 End Sub
 
@@ -210,8 +209,7 @@ Friend Sub showChart( _
                 ByVal initialNumberOfBars As Long, _
                 ByVal includeBarsOutsideSession As Boolean, _
                 ByVal minimumTicksHeight As Long, _
-                ByVal periodlength As Long, _
-                ByVal periodUnits As TimePeriodUnits)
+                ByVal barTimePeriod As TimePeriod)
 
 mIsHistorical = False
 
@@ -225,15 +223,13 @@ mCurrentHigh = mTicker.highPriceString
 mCurrentLow = mTicker.lowPriceString
 mPreviousClose = mTicker.closePriceString
 
-mPeriodlength = periodlength
-mPeriodUnits = periodUnits
+Set mBarTimePeriod = barTimePeriod
 
 TradeBuildChart1.showChart mTicker, _
                         initialNumberOfBars, _
                         includeBarsOutsideSession, _
                         minimumTicksHeight, _
-                        periodlength, _
-                        periodUnits
+                        barTimePeriod
 
 setCaption
 
@@ -246,15 +242,13 @@ Friend Sub showHistoricalChart( _
                 ByVal toDate As Date, _
                 ByVal includeBarsOutsideSession As Boolean, _
                 ByVal minimumTicksHeight As Long, _
-                ByVal periodlength As Long, _
-                ByVal periodUnits As TimePeriodUnits)
+                ByVal barTimePeriod As TimePeriod)
 
 mIsHistorical = True
 
 Set mTicker = pTicker
 
-mPeriodlength = periodlength
-mPeriodUnits = periodUnits
+Set mBarTimePeriod = barTimePeriod
 
 TradeBuildChart1.showHistoricChart mTicker, _
                         initialNumberOfBars, _
@@ -262,8 +256,7 @@ TradeBuildChart1.showHistoricChart mTicker, _
                         toDate, _
                         includeBarsOutsideSession, _
                         minimumTicksHeight, _
-                        mPeriodlength, _
-                        mPeriodUnits
+                        barTimePeriod
 
 End Sub
 
@@ -275,7 +268,7 @@ Private Sub setCaption()
 Dim s As String
 
 s = mSymbol & _
-    " (" & mPeriodlength & " " & TimePeriodUnitsToString(mPeriodUnits) & ")"
+    " (" & mBarTimePeriod.toString & ")"
     
 If mIsHistorical Then
     s = s & _

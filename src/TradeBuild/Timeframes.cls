@@ -52,10 +52,9 @@ Private Const ModuleName As String = "Timeframes"
 '@================================================================================
 
 Private Type TimeframeTableEntry
-    TimePeriod              As Long
-    timePeriodUnit          As TimePeriodUnits
+    barTimePeriod           As TimePeriod
     key                     As String
-    theTimeFrame            As timeframe
+    theTimeFrame            As Timeframe
     numberOfBarsToFetch     As Long
     fromTime                As Date
     toTime                  As Date
@@ -127,14 +126,13 @@ End Property
 '@================================================================================
 
 Public Function add( _
-                ByVal TimePeriod As Long, _
-                ByVal timePeriodUnit As TimePeriodUnits, _
+                ByVal barTimePeriod As TimePeriod, _
                 ByRef key As String, _
                 ByVal numberOfBarsToFetch As Long, _
                 Optional ByVal includeBarsOutsideSession As Boolean, _
-                Optional ByVal excludeCurrentbar As Boolean) As timeframe
+                Optional ByVal excludeCurrentbar As Boolean) As Timeframe
 
-Select Case timePeriodUnit
+Select Case barTimePeriod.units
 Case TimePeriodSecond, _
         TimePeriodMinute, _
         TimePeriodHour, _
@@ -150,8 +148,7 @@ Case Else
                 "Time period units not supported"
 End Select
 
-Set add = addTimeframe(TimePeriod, _
-                    timePeriodUnit, _
+Set add = addTimeframe(barTimePeriod, _
                     key, _
                     numberOfBarsToFetch, _
                     0, _
@@ -194,15 +191,14 @@ End Sub
 '
 '@/
 Public Function addHistorical( _
-                ByVal TimePeriod As Long, _
-                ByVal timePeriodUnit As TimePeriodUnits, _
+                ByVal barTimePeriod As TimePeriod, _
                 ByRef key As String, _
                 ByVal numberOfBarsToFetch As Long, _
                 Optional ByVal fromTime As Date, _
                 Optional ByVal toTime As Date, _
-                Optional ByVal includeBarsOutsideSession As Boolean) As timeframe
+                Optional ByVal includeBarsOutsideSession As Boolean) As Timeframe
 
-Select Case timePeriodUnit
+Select Case barTimePeriod.units
 Case TimePeriodSecond, _
         TimePeriodMinute, _
         TimePeriodHour, _
@@ -225,8 +221,7 @@ If fromTime > toTime Then
             "fromTime must be earlier than toTime"
 End If
 
-Set addHistorical = addTimeframe(TimePeriod, _
-                    timePeriodUnit, _
+Set addHistorical = addTimeframe(barTimePeriod, _
                     key, _
                     numberOfBarsToFetch, _
                     fromTime, _
@@ -240,8 +235,7 @@ Set addHistorical = addTimeframe(TimePeriod, _
 End Function
 
 Friend Function addTimeframe( _
-                ByVal TimePeriod As Long, _
-                ByVal timePeriodUnit As TimePeriodUnits, _
+                ByVal barTimePeriod As TimePeriod, _
                 ByRef key As String, _
                 ByVal numberOfBarsToFetch As Long, _
                 ByVal fromTime As Date, _
@@ -250,13 +244,12 @@ Friend Function addTimeframe( _
                 ByVal excludeCurrentbar As Boolean, _
                 ByVal barWriter As HistoricDataWriter, _
                 ByVal saveIntervalSeconds As Long, _
-                ByVal writeBidAndAskBars As Boolean) As timeframe
+                ByVal writeBidAndAskBars As Boolean) As Timeframe
 
 Dim tte As TimeframeTableEntry
 Dim timeframeIndex As Long
 
-timeframeIndex = getTimeframeIndex(TimePeriod, _
-                                timePeriodUnit, _
+timeframeIndex = getTimeframeIndex(barTimePeriod, _
                                 numberOfBarsToFetch, _
                                 fromTime, _
                                 toTime, _
@@ -268,10 +261,9 @@ If timeframeIndex >= 0 Then
     Exit Function
 End If
 
-Set addTimeframe = New timeframe
+Set addTimeframe = New Timeframe
 Set tte.theTimeFrame = addTimeframe
-tte.TimePeriod = TimePeriod
-tte.timePeriodUnit = timePeriodUnit
+Set tte.barTimePeriod = barTimePeriod
 tte.numberOfBarsToFetch = numberOfBarsToFetch
 tte.fromTime = fromTime
 tte.toTime = toTime
@@ -282,8 +274,7 @@ tte.saveIntervalSeconds = saveIntervalSeconds
 If key <> "" Then
     tte.key = key
 Else
-    tte.key = generateKey(TimePeriod, _
-                        timePeriodUnit, _
+    tte.key = generateKey(barTimePeriod, _
                         numberOfBarsToFetch, _
                         fromTime, _
                         toTime, _
@@ -295,8 +286,7 @@ End If
 tte.theTimeFrame.initialise mContract, _
                             tte.key, _
                             mTicker, _
-                            TimePeriod, _
-                            timePeriodUnit, _
+                            barTimePeriod, _
                             numberOfBarsToFetch, _
                             fromTime, _
                             toTime, _
@@ -320,7 +310,7 @@ RemoveAll
 Set mTicker = Nothing
 End Sub
 
-Public Function item(key As String) As timeframe
+Public Function item(key As String) As Timeframe
 Dim i As Long
 
 For i = 0 To mNextTimeframeTableIndex - 1
@@ -369,13 +359,12 @@ Private Sub clearTimeframeTableEntry(ByVal index As Long)
 mTimeframeTable(index).key = ""
 mTimeframeTable(index).numberOfBarsToFetch = 0
 Set mTimeframeTable(index).theTimeFrame = Nothing
-mTimeframeTable(index).TimePeriod = 0
-mTimeframeTable(index).timePeriodUnit = 0
+Set mTimeframeTable(index).barTimePeriod = Nothing
 End Sub
 
 Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
-                ByVal affectedObject As timeframe)
+                ByVal affectedObject As Timeframe)
 Dim listener As CollectionChangeListener
 Dim i As Long
 Dim ev As CollectionChangeEvent
@@ -390,8 +379,7 @@ RaiseEvent CollectionChanged(ev)
 End Sub
 
 Private Function generateKey( _
-                ByVal TimePeriod As Long, _
-                ByVal timePeriodUnit As TimePeriodUnits, _
+                ByVal barTimePeriod As TimePeriod, _
                 ByVal numberOfBarsToFetch As Long, _
                 ByVal fromTime As Date, _
                 ByVal toTime As Date, _
@@ -399,8 +387,7 @@ Private Function generateKey( _
                 ByVal excludeCurrentbar As Boolean, _
                 ByVal saveIntervalSeconds As Long, _
                 ByVal writeBidAndAskBars As Boolean) As String
-generateKey = TimePeriod & _
-            TimePeriodUnitsToString(timePeriodUnit) & _
+generateKey = barTimePeriod.toString & _
             "(" & numberOfBarsToFetch & _
             IIf(fromTime <> 0, "," & Format(fromTime, "yyyymmddhhnnss"), "") & _
             IIf(toTime <> 0, "," & Format(toTime, "yyyymmddhhnnss"), "") & _
@@ -413,8 +400,7 @@ generateKey = TimePeriod & _
 End Function
 
 Private Function getTimeframeIndex( _
-                ByVal TimePeriod As Long, _
-                ByVal timePeriodUnit As TimePeriodUnits, _
+                ByVal barTimePeriod As TimePeriod, _
                 ByVal numberOfBarsToFetch As Long, _
                 ByVal fromTime As Date, _
                 ByVal toTime As Date, _
@@ -425,8 +411,7 @@ Dim i As Long
 
 getTimeframeIndex = -1
 For i = 0 To mNextTimeframeTableIndex - 1
-    If mTimeframeTable(i).TimePeriod = TimePeriod And _
-        mTimeframeTable(i).timePeriodUnit = timePeriodUnit And _
+    If mTimeframeTable(i).barTimePeriod Is barTimePeriod And _
         mTimeframeTable(i).includeBarsOutsideSession = includeBarsOutsideSession And _
         mTimeframeTable(i).numberOfBarsToFetch = numberOfBarsToFetch And _
         mTimeframeTable(i).fromTime = fromTime And _

@@ -12,6 +12,8 @@ Public Const TIME_ZONE_ID_UNKNOWN  As Long = 0
 Public Const TIME_ZONE_ID_STANDARD As Long = 1
 Public Const TIME_ZONE_ID_DAYLIGHT As Long = 2
 
+Public Const MaxLong    As Long = &H7FFFFFFF
+
 Public Const OneMinute As Double = 1 / 1440
 
 Public Const ParamNameServer As String = "Server"

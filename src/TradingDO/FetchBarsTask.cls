@@ -50,8 +50,7 @@ Private Const ModuleName                    As String = "FetchBarsTask"
 Private mDB                                 As TradingDB
 
 Private mSpecifier                          As ContractSpecifier
-Private mBarLength                          As Long
-Private mBarLengthUnits                     As TimePeriodUnits
+Private mbarTimePeriod                      As TimePeriod
 Private mMaxNumberOfBars                    As Long
 Private mFromDate                           As Date
 Private mToDate                             As Date
@@ -104,8 +103,7 @@ If mInstrument Is Nothing Then
                                             "LoadBySpecifier/" & mSpecifier.ToString & "(" & gGetSequenceNumber & ")")
     mTaskContext.suspend -1
 Else
-    Set mFetchTaskController = mInstrument.fetchbarsAsync(mBarLength, _
-                                                        mBarLengthUnits, _
+    Set mFetchTaskController = mInstrument.fetchbarsAsync(mbarTimePeriod, _
                                                         mMaxNumberOfBars, _
                                                         mFromDate, _
                                                         mToDate, _
@@ -177,8 +175,7 @@ End Sub
 Friend Sub initialise( _
                 ByVal db As TradingDB, _
                 ByVal specifier As ContractSpecifier, _
-                ByVal barLength As Long, _
-                ByVal barLengthUnits As TimePeriodUnits, _
+                ByVal barTimePeriod As TimePeriod, _
                 ByVal maxNumberOfBars As Long, _
                 Optional ByVal fromDate As Date, _
                 Optional ByVal toDate As Date, _
@@ -188,8 +185,7 @@ Friend Sub initialise( _
                 Optional ByVal barType As BarTypes = BarTypeTrade)
 Set mDB = db
 Set mSpecifier = specifier
-mBarLength = barLength
-mBarLengthUnits = barLengthUnits
+Set mbarTimePeriod = barTimePeriod
 mMaxNumberOfBars = maxNumberOfBars
 mFromDate = fromDate
 mToDate = toDate

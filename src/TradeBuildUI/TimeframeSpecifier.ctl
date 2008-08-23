@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#27.5#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#30.0#0"; "TWControls10.ocx"
 Begin VB.UserControl TimeframeSpecifier 
    ClientHeight    =   690
    ClientLeft      =   0
@@ -109,7 +109,7 @@ Private Const PropDfltForeColor                         As Long = vbWindowText
 ' Member variables
 '@================================================================================
 
-Private mDefaultUnits As TimePeriodUnits
+Private mDefaultTimePeriod As TimePeriod
 
 '@================================================================================
 ' Class Event Handlers
@@ -124,8 +124,7 @@ On Error Resume Next
 
 UserControl.backColor = UserControl.Ambient.backColor
 UserControl.foreColor = UserControl.Ambient.foreColor
-DefaultLength = PropDfltDefaultLength
-DefaultUnits = PropDfltDefaultUnits
+defaultTimePeriod = GetTimePeriod(PropDfltDefaultLength, PropDfltDefaultUnits)
 Enabled = PropDfltEnabled
 End Sub
 
@@ -136,15 +135,10 @@ On Error Resume Next
 UserControl.backColor = UserControl.Ambient.backColor
 UserControl.foreColor = UserControl.Ambient.foreColor
 
-DefaultLength = PropBag.ReadProperty(PropNameDefaultLength, PropDfltDefaultLength)
+defaultTimePeriod = GetTimePeriod(PropBag.ReadProperty(PropNameDefaultLength, PropDfltDefaultLength), _
+                                    PropBag.ReadProperty(PropNameDefaultUnits, PropDfltDefaultUnits))
 If Err.Number <> 0 Then
-    DefaultLength = PropDfltDefaultLength
-    Err.clear
-End If
-
-DefaultUnits = PropBag.ReadProperty(PropNameDefaultUnits, PropDfltDefaultUnits)
-If Err.Number <> 0 Then
-    DefaultUnits = PropDfltDefaultUnits
+    defaultTimePeriod = GetTimePeriod(PropDfltDefaultLength, PropDfltDefaultUnits)
     Err.clear
 End If
 
@@ -177,8 +171,8 @@ End Sub
 
 Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
 PropBag.WriteProperty PropNameBackColor, backColor, PropDfltBackColor
-PropBag.WriteProperty PropNameDefaultLength, DefaultLength, PropDfltDefaultLength
-PropBag.WriteProperty PropNameDefaultUnits, DefaultUnits, PropDfltDefaultUnits
+PropBag.WriteProperty PropNameDefaultLength, defaultTimePeriod.length, PropDfltDefaultLength
+PropBag.WriteProperty PropNameDefaultUnits, defaultTimePeriod.units, PropDfltDefaultUnits
 PropBag.WriteProperty PropNameEnabled, Enabled, PropDfltEnabled
 PropBag.WriteProperty PropNameForeColor, foreColor, PropDfltForeColor
 End Sub
@@ -239,27 +233,19 @@ Public Property Get backColor() As OLE_COLOR
 backColor = TimeframeUnitsCombo.backColor
 End Property
 
-Public Property Let DefaultLength( _
-                ByVal value As Long)
-If value <= 0 Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "DefaultLength", _
-            "Value must be greater than zero"
-End If
-TimeframeLengthText = value
-End Property
-
 Public Property Get DefaultLength() As Long
 DefaultLength = TimeframeLengthText
 End Property
 
-Public Property Let DefaultUnits( _
-                ByVal value As TimePeriodUnits)
-mDefaultUnits = value
+Public Property Let defaultTimePeriod( _
+                ByVal value As TimePeriod)
+Set mDefaultTimePeriod = value
+TimeframeLengthText = value.length
+setUnitsSelection value.units
 End Property
 
-Public Property Get DefaultUnits() As TimePeriodUnits
-DefaultUnits = mDefaultUnits
+Public Property Get defaultTimePeriod() As TimePeriod
+Set defaultTimePeriod = mDefaultTimePeriod
 End Property
 
 Public Property Get Enabled() As Boolean
@@ -287,14 +273,11 @@ Public Property Get isTimeframeValid() As Boolean
 
 If TimeframeLengthText = "" Then Exit Function
 
-If TradeBuildAPI.IsSupportedHistoricalDataPeriod(CLng(TimeframeLengthText), _
-                                        TimePeriodUnitsFromString(TimeframeUnitsCombo.Text)) Then isTimeframeValid = True
+If TradeBuildAPI.IsSupportedHistoricalDataPeriod(timeframeDesignator) Then isTimeframeValid = True
 End Property
 
 Public Property Get timeframeDesignator() As TimePeriod
-
-timeframeDesignator.length = TimeframeLengthText
-timeframeDesignator.units = TimePeriodUnitsFromString(TimeframeUnitsCombo.selectedItem.Text)
+Set timeframeDesignator = GetTimePeriod(CLng(TimeframeLengthText), TimePeriodUnitsFromString(TimeframeUnitsCombo.selectedItem.Text))
 End Property
 
 '@================================================================================
@@ -302,11 +285,8 @@ End Property
 '@================================================================================
 
 Public Sub initialise( _
-                ByVal length As Long, _
-                ByVal units As TimePeriodUnits)
-TimeframeLengthText = length
-mDefaultUnits = units
-setUnitsSelection mDefaultUnits
+                ByVal pTimePeriod As TimePeriod)
+defaultTimePeriod = pTimePeriod
 End Sub
 
 '@================================================================================
@@ -317,12 +297,12 @@ Private Sub addItem( _
                 ByVal value As TimePeriodUnits)
 Dim s As String
 s = TimePeriodUnitsToString(value)
-If TradeBuildAPI.IsSupportedHistoricalDataPeriod(0, value) Then TimeframeUnitsCombo.ComboItems.add , s, s
+If TradeBuildAPI.IsSupportedHistoricalDataPeriod(GetTimePeriod(1, value)) Then TimeframeUnitsCombo.ComboItems.add , s, s
 End Sub
 
 Private Function setUnitsSelection( _
                 ByVal value As TimePeriodUnits) As Boolean
-If TradeBuildAPI.IsSupportedHistoricalDataPeriod(0, value) Then
+If TradeBuildAPI.IsSupportedHistoricalDataPeriod(GetTimePeriod(1, value)) Then
     TimeframeUnitsCombo.ComboItems.item(TimePeriodUnitsToString(value)).Selected = True
     setUnitsSelection = True
 End If
@@ -339,14 +319,14 @@ addItem TimePeriodYear
 addItem TimePeriodVolume
 addItem TimePeriodTickVolume
 addItem TimePeriodTickMovement
-If setUnitsSelection(mDefaultUnits) Then
-ElseIf setUnitsSelection(TimePeriodMinute) Then
-ElseIf setUnitsSelection(TimePeriodHour) Then
-ElseIf setUnitsSelection(TimePeriodDay) Then
-ElseIf setUnitsSelection(TimePeriodWeek) Then
-ElseIf setUnitsSelection(TimePeriodMonth) Then
-Else
-    setUnitsSelection (TimePeriodYear)
-End If
+'If setUnitsSelection(mDefaultUnits) Then
+'ElseIf setUnitsSelection(TimePeriodMinute) Then
+'ElseIf setUnitsSelection(TimePeriodHour) Then
+'ElseIf setUnitsSelection(TimePeriodDay) Then
+'ElseIf setUnitsSelection(TimePeriodWeek) Then
+'ElseIf setUnitsSelection(TimePeriodMonth) Then
+'Else
+'    setUnitsSelection (TimePeriodYear)
+'End If
 
 End Sub

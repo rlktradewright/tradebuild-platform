@@ -482,7 +482,7 @@ createNewCustomSession
 
 Set mFetchBarsBuilder = builder
 
-If taskName = "" Then taskName = "BarFetcher/" & mInstrument.shortName & "(" & mSpecifier.barLength & TimePeriodUnitsToString(mSpecifier.barLengthUnits) & ")" & FormatTimestamp(mFromDate, TimestampNoMillisecs) & "-" & FormatTimestamp(mToDate, TimestampNoMillisecs) & "(" & gGetSequenceNumber & ")"
+If taskName = "" Then taskName = "BarFetcher/" & mInstrument.shortName & "(" & mSpecifier.barTimePeriod.ToString & ")" & FormatTimestamp(mFromDate, TimestampNoMillisecs) & "-" & FormatTimestamp(mToDate, TimestampNoMillisecs) & "(" & gGetSequenceNumber & ")"
 
 Set fetchbarsAsync = StartTask(Me, _
                             PriorityNormal, _
@@ -504,8 +504,7 @@ End Sub
 '@================================================================================
 
 Private Function builder() As BarsBuilder
-If mBuilder Is Nothing Then Set mBuilder = CreateBarsBuilder(mSpecifier.barLength, _
-                                                            mSpecifier.barLengthUnits, _
+If mBuilder Is Nothing Then Set mBuilder = CreateBarsBuilder(mSpecifier.barTimePeriod, _
                                                             mSession, _
                                                             mInstrument.tickSize, _
                                                             mSpecifier.maxNumberOfBars)
@@ -620,38 +619,38 @@ Private Sub generateRequestDetails( _
                         ByVal toDate As Date)
 Dim st As SessionTimes
 
-Select Case mSpecifier.barLengthUnits
+Select Case mSpecifier.barTimePeriod.units
 Case TimePeriodUnits.TimePeriodDay
     mBarLengthMinutes = 60
-    mNumberOfBars = mSpecifier.maxNumberOfBars * 24 * mSpecifier.barLength
+    mNumberOfBars = mSpecifier.maxNumberOfBars * 24 * mSpecifier.barTimePeriod.length
 Case TimePeriodUnits.TimePeriodHour
     mBarLengthMinutes = 60
-    mNumberOfBars = mSpecifier.maxNumberOfBars * mSpecifier.barLength
+    mNumberOfBars = mSpecifier.maxNumberOfBars * mSpecifier.barTimePeriod.length
 Case TimePeriodUnits.TimePeriodMinute
-    If (mSpecifier.barLength Mod 60) = 0 Then
+    If (mSpecifier.barTimePeriod.length Mod 60) = 0 Then
         mBarLengthMinutes = 60
-        mNumberOfBars = mSpecifier.maxNumberOfBars * (mSpecifier.barLength / 60)
-    ElseIf (mSpecifier.barLength Mod 15) = 0 Then
+        mNumberOfBars = mSpecifier.maxNumberOfBars * (mSpecifier.barTimePeriod.length / 60)
+    ElseIf (mSpecifier.barTimePeriod.length Mod 15) = 0 Then
         mBarLengthMinutes = 15
-        mNumberOfBars = mSpecifier.maxNumberOfBars * (mSpecifier.barLength / 15)
-    ElseIf (mSpecifier.barLength Mod 5) = 0 Then
+        mNumberOfBars = mSpecifier.maxNumberOfBars * (mSpecifier.barTimePeriod.length / 15)
+    ElseIf (mSpecifier.barTimePeriod.length Mod 5) = 0 Then
         mBarLengthMinutes = 5
-        mNumberOfBars = mSpecifier.maxNumberOfBars * (mSpecifier.barLength / 5)
+        mNumberOfBars = mSpecifier.maxNumberOfBars * (mSpecifier.barTimePeriod.length / 5)
     Else
         mBarLengthMinutes = 1
-        mNumberOfBars = mSpecifier.maxNumberOfBars * mSpecifier.barLength
+        mNumberOfBars = mSpecifier.maxNumberOfBars * mSpecifier.barTimePeriod.length
     End If
 Case TimePeriodUnits.TimePeriodMonth
     mBarLengthMinutes = 60
-    mNumberOfBars = mSpecifier.maxNumberOfBars * 24 * 22 * mSpecifier.barLength
+    mNumberOfBars = mSpecifier.maxNumberOfBars * 24 * 22 * mSpecifier.barTimePeriod.length
 Case TimePeriodUnits.TimePeriodSecond
     mRequestTicks = True
 Case TimePeriodUnits.TimePeriodWeek
     mBarLengthMinutes = 60
-    mNumberOfBars = mSpecifier.maxNumberOfBars * 24 * 5 * mSpecifier.barLength
+    mNumberOfBars = mSpecifier.maxNumberOfBars * 24 * 5 * mSpecifier.barTimePeriod.length
 Case TimePeriodUnits.TimePeriodYear
     mBarLengthMinutes = 60
-    mNumberOfBars = mSpecifier.maxNumberOfBars * 24 * 260 * mSpecifier.barLength
+    mNumberOfBars = mSpecifier.maxNumberOfBars * 24 * 260 * mSpecifier.barTimePeriod.length
 Case TimePeriodUnits.TimePeriodVolume, _
         TimePeriodUnits.TimePeriodTickMovement, _
         TimePeriodUnits.TimePeriodTickVolume
@@ -659,9 +658,9 @@ Case TimePeriodUnits.TimePeriodVolume, _
 End Select
 
 
-If mSpecifier.barLengthUnits = TimePeriodVolume Or _
-    mSpecifier.barLengthUnits = TimePeriodTickMovement Or _
-    mSpecifier.barLengthUnits = TimePeriodTickVolume _
+If mSpecifier.barTimePeriod.units = TimePeriodVolume Or _
+    mSpecifier.barTimePeriod.units = TimePeriodTickMovement Or _
+    mSpecifier.barTimePeriod.units = TimePeriodTickVolume _
 Then
     
     If fromDate <> 0 And toDate <> 0 Then
@@ -707,8 +706,7 @@ Else
             ' calculate the earliest possible date for the supplied number of bars (assuming
             ' there are no gaps in the data)
             mFromDate = OffsetBarStartTime(IIf(mToDate = MaxDateValue, Now, mToDate), _
-                                        mSpecifier.barLength, _
-                                        mSpecifier.barLengthUnits, _
+                                        mSpecifier.barTimePeriod, _
                                         -1 * mSpecifier.maxNumberOfBars, _
                                         mInstrument.sessionStartTime, _
                                         mInstrument.sessionEndTime)
@@ -718,8 +716,7 @@ Else
     Else
         mFromDate = fromDate
         mToDate = OffsetBarStartTime(fromDate, _
-                                    mSpecifier.barLength, _
-                                    mSpecifier.barLengthUnits, _
+                                    mSpecifier.barTimePeriod, _
                                     mSpecifier.maxNumberOfBars, _
                                     mInstrument.sessionStartTime, _
                                     mInstrument.sessionEndTime)

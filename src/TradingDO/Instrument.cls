@@ -408,8 +408,7 @@ createTickWriter.initialise mDB, Me, useAsynchronousWrites
 End Function
 
 Public Function fetchBars( _
-                ByVal barLength As Long, _
-                ByVal barLengthUnits As TimePeriodUnits, _
+                ByVal barTimePeriod As TimePeriod, _
                 ByVal maxNumberOfBars As Long, _
                 Optional ByVal fromDate As Date, _
                 Optional ByVal toDate As Date = MaxDateValue, _
@@ -423,7 +422,7 @@ Dim specifier As BarDataSpecifier
 Dim failpoint As Long
 On Error GoTo Err
 
-Select Case barLengthUnits
+Select Case barTimePeriod.units
 Case TimePeriodSecond, _
     TimePeriodMinute, _
     TimePeriodHour, _
@@ -440,8 +439,7 @@ Case Else
 End Select
 
 Set specifier = New BarDataSpecifier
-specifier.barLength = barLength
-specifier.barLengthUnits = barLengthUnits
+specifier.barTimePeriod = barTimePeriod
 specifier.barType = barType
 specifier.fromDate = fromDate
 specifier.includeBarsOutsideSession = includeBarsOutsideSession
@@ -466,8 +464,7 @@ Err.Raise Err.Number, _
 End Function
 
 Public Function fetchbarsAsync( _
-                ByVal barLength As Long, _
-                ByVal barLengthUnits As TimePeriodUnits, _
+                ByVal barTimePeriod As TimePeriod, _
                 ByVal maxNumberOfBars As Long, _
                 Optional ByVal fromDate As Date, _
                 Optional ByVal toDate As Date = MaxDateValue, _
@@ -480,7 +477,7 @@ Public Function fetchbarsAsync( _
 Dim bf As BarFetcher
 Dim specifier As BarDataSpecifier
 
-Select Case barLengthUnits
+Select Case barTimePeriod.units
 Case TimePeriodSecond, _
     TimePeriodMinute, _
     TimePeriodHour, _
@@ -497,8 +494,7 @@ Case Else
 End Select
 
 Set specifier = New BarDataSpecifier
-specifier.barLength = barLength
-specifier.barLengthUnits = barLengthUnits
+specifier.barTimePeriod = barTimePeriod
 specifier.barType = barType
 specifier.fromDate = fromDate
 specifier.includeBarsOutsideSession = includeBarsOutsideSession

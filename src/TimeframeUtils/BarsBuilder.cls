@@ -53,8 +53,7 @@ Private mCurrentBarNumber                   As Long
 Private WithEvents mSession                 As Session
 Attribute mSession.VB_VarHelpID = -1
 
-Private mBarLength                          As Long
-Private mTimeUnits                          As TimePeriodUnits
+Private mBarTimePeriod                      As TimePeriod
 
 Private mTicksize                           As Double
 Private mMaxBarRange                        As Double
@@ -168,20 +167,18 @@ mCurrentBar.incrementTickVolume increment
 End Sub
 
 Friend Sub initialise( _
-                ByVal barLength As Long, _
-                ByVal timeUnits As TimePeriodUnits, _
+                ByVal barTimePeriod As TimePeriod, _
                 ByVal pSession As Session, _
                 ByVal tickSize As Double, _
                 ByVal numberOfBarsToCache As Long)
                
-mBarLength = barLength
-mTimeUnits = timeUnits
+Set mBarTimePeriod = barTimePeriod
 Set mSession = pSession
 mTicksize = tickSize
-If mTimeUnits = TimePeriodTickMovement Then mMaxBarRange = mBarLength * mTicksize
+If barTimePeriod.units = TimePeriodTickMovement Then mMaxBarRange = barTimePeriod.length * mTicksize
 
 Set mBars = New Bars
-mBars.initialise mBarLength, mTimeUnits, numberOfBarsToCache
+mBars.initialise barTimePeriod, numberOfBarsToCache
 
 Set mVolParser = New VolumeParser
 mVolParser.initialise mSession
@@ -196,7 +193,7 @@ Dim oiIncrement As Long
 
 If IsEmpty(oi.value) Then Exit Sub
 
-If mBarLength = 0 Then
+If mBarTimePeriod.length = 0 Then
     ' the caller will supply bar numbers
     If mCurrentBar Is Nothing Then
         ' a bar with no price causes all sorts of problems so do nothing
@@ -224,7 +221,7 @@ Public Sub notifyValue( _
 
 If IsEmpty(value.value) Then Exit Sub
 
-If mBarLength = 0 Then
+If mBarTimePeriod.length = 0 Then
     ' the caller will supply bar numbers
     If newBar(value.barNumber) Then
         createNewBar value.BarStartTime, value.value, 0, 0
@@ -233,9 +230,9 @@ If mBarLength = 0 Then
     End If
 ElseIf mCurrentBar Is Nothing Then
     createNewBar value.timestamp, value.value, 0, 0
-ElseIf mTimeUnits = TimePeriodVolume Then
+ElseIf mBarTimePeriod.units = TimePeriodVolume Then
     mCurrentBar.notifyValue value.value
-ElseIf mTimeUnits = TimePeriodTickMovement Then
+ElseIf mBarTimePeriod.units = TimePeriodTickMovement Then
     If (value.value - mCurrentBar.lowValue) > mMaxBarRange Then
         Dim newHigh As Double
         newHigh = mCurrentBar.lowValue + mMaxBarRange
@@ -266,8 +263,8 @@ ElseIf mTimeUnits = TimePeriodTickMovement Then
         
     End If
     mCurrentBar.notifyValue value.value
-ElseIf mTimeUnits = TimePeriodTickVolume Then
-    If mCurrentBar.tickVolume >= mBarLength Then
+ElseIf mBarTimePeriod.units = TimePeriodTickVolume Then
+    If mCurrentBar.tickVolume >= mBarTimePeriod.length Then
         createNewBar value.timestamp, value.value, 0, 0
     End If
 ElseIf value.timestamp >= mBarEndTime Then
@@ -284,7 +281,7 @@ Dim volIncrement As Long
 
 If IsEmpty(vol.value) Then Exit Sub
 
-If mBarLength = 0 Then
+If mBarTimePeriod.length = 0 Then
     ' the caller will supply bar numbers
     If mCurrentBar Is Nothing Then
         ' a bar with no price causes all sorts of problems so do nothing
@@ -295,7 +292,7 @@ If mBarLength = 0 Then
     Else
         mCurrentBar.notifyVolume mCurrentBar.volume + mVolParser.notify(vol.value)
     End If
-ElseIf mTimeUnits = TimePeriodVolume Then
+ElseIf mBarTimePeriod.units = TimePeriodVolume Then
     
     volIncrement = mVolParser.notify(vol.value)
     
@@ -304,16 +301,16 @@ ElseIf mTimeUnits = TimePeriodVolume Then
         Exit Sub
     End If
     
-    If volIncrement + mCurrentBar.volume >= mBarLength Then
+    If volIncrement + mCurrentBar.volume >= mBarTimePeriod.length Then
         
-        volIncrement = volIncrement - (mBarLength - mCurrentBar.volume)
-        mCurrentBar.notifyVolume mBarLength
+        volIncrement = volIncrement - (mBarTimePeriod.length - mCurrentBar.volume)
+        mCurrentBar.notifyVolume mBarTimePeriod.length
         
         ' need to create one or more new bars
         
-        Do While volIncrement >= mBarLength
-            createNewBar vol.timestamp, mCurrentBar.closeValue, mBarLength, 0
-            volIncrement = volIncrement - mBarLength
+        Do While volIncrement >= mBarTimePeriod.length
+            createNewBar vol.timestamp, mCurrentBar.closeValue, mBarTimePeriod.length, 0
+            volIncrement = volIncrement - mBarTimePeriod.length
         Loop
         
         If volIncrement > 0 Then
@@ -362,15 +359,13 @@ Private Sub createNewBar( _
                 ByVal initialOpenInterest As Long)
 
 Set mCurrentBar = New Bar
-If mBarLength = 0 Then
+If mBarTimePeriod.length = 0 Then
     mCurrentBar.timestamp = timestamp
 Else
     mBarEndTime = mSession.BarEndTime(timestamp, _
-                                mBarLength, _
-                                mTimeUnits)
+                                mBarTimePeriod)
     mCurrentBar.timestamp = mSession.BarStartTime(timestamp, _
-                                    mBarLength, _
-                                    mTimeUnits)
+                                    mBarTimePeriod)
     mCurrentBarNumber = mCurrentBarNumber + 1
 End If
 mCurrentBar.barNumber = mCurrentBarNumber

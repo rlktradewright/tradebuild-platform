@@ -141,6 +141,11 @@ library ChartSkilTypes
         ]
         HRESULT scaleDependent([out, retval] VARIANT_BOOL* );
 
+        [propget, 
+         helpstring("Returns the date/time to which this object is anchored")
+        ]
+        HRESULT timestamp([out, retval] DATE* );
+
         [propput, 
          helpstring("Indicates whether the graphic object is currently visible")]
         HRESULT visible([in] VARIANT_BOOL visible );

@@ -355,7 +355,7 @@ End If
 End Sub
 
 Private Sub IBarDataOutputServiceConsumer_RequiredTimePeriod( _
-                tp As TimePeriod, _
+                ByVal tp As TimePeriod, _
                 ByVal saveIntervalSeconds As Long)
 Dim tf As Timeframe
 If saveIntervalSeconds > 0 And saveIntervalSeconds < 5 Then _
@@ -365,8 +365,7 @@ If saveIntervalSeconds > 0 And saveIntervalSeconds < 5 Then _
 
 mNumberOfTimeframesLoading = mNumberOfTimeframesLoading + 1
 
-Set tf = mTimeframes.addTimeframe(tp.length, _
-                        tp.units, _
+Set tf = mTimeframes.addTimeframe(tp, _
                         "", _
                         IIf(mUpdateLatestBar, 2, 0), _
                         0, _

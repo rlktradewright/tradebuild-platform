@@ -130,8 +130,7 @@ End Property
 
 Public Function fetchBars( _
                 ByVal specifier As ContractSpecifier, _
-                ByVal barLength As Long, _
-                ByVal barLengthUnits As TimePeriodUnits, _
+                ByVal barTimePeriod As TimePeriod, _
                 ByVal maxNumberOfBars As Long, _
                 Optional ByVal fromDate As Date, _
                 Optional ByVal toDate As Date = MaxDateValue, _
@@ -151,8 +150,7 @@ If lInstrument Is Nothing Then
             "The specified contract is not known"
 End If
 
-Set fetchBars = lInstrument.fetchBars(barLength, _
-                barLengthUnits, _
+Set fetchBars = lInstrument.fetchBars(barTimePeriod, _
                 maxNumberOfBars, _
                 fromDate, _
                 toDate, _
@@ -172,8 +170,7 @@ End Function
 
 Public Function fetchbarsAsync( _
                 ByVal specifier As ContractSpecifier, _
-                ByVal barLength As Long, _
-                ByVal barLengthUnits As TimePeriodUnits, _
+                ByVal barTimePeriod As TimePeriod, _
                 ByVal maxNumberOfBars As Long, _
                 Optional ByVal fromDate As Date, _
                 Optional ByVal toDate As Date = MaxDateValue, _
@@ -189,8 +186,7 @@ On Error GoTo Err
 
 fbt.initialise Me, _
                 specifier, _
-                barLength, _
-                barLengthUnits, _
+                barTimePeriod, _
                 maxNumberOfBars, _
                 fromDate, _
                 toDate, _
@@ -199,7 +195,7 @@ fbt.initialise Me, _
                 includeBarsOutsideSession, _
                 barType
                 
-If taskName = "" Then taskName = "FetchBarsAsync/" & specifier.localSymbol & "(" & barLength & TimePeriodUnitsToString(barLengthUnits) & ")" & FormatTimestamp(fromDate, TimestampNoMillisecs) & "-" & FormatTimestamp(toDate, TimestampNoMillisecs) & "(" & gGetSequenceNumber & ")"
+If taskName = "" Then taskName = "FetchBarsAsync/" & specifier.localSymbol & "(" & barTimePeriod.ToString & ")" & FormatTimestamp(fromDate, TimestampNoMillisecs) & "-" & FormatTimestamp(toDate, TimestampNoMillisecs) & "(" & gGetSequenceNumber & ")"
 Set fetchbarsAsync = StartTask(fbt, _
                             PriorityNormal, _
                             taskName, _

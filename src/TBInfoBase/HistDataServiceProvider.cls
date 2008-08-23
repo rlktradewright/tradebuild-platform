@@ -186,7 +186,7 @@ handleFatalError Err.Number, _
 End Function
 
 Private Function IBarDataServiceProvider_IsSupportedTimePeriod( _
-                period As TimePeriod) As Boolean
+                ByVal period As TimePeriod) As Boolean
 Select Case period.units
 Case TimePeriodMinute, _
     TimePeriodHour, _
@@ -206,16 +206,16 @@ End Function
 Private Property Get IBarDataServiceProvider_SupportedTimePeriods() As TimePeriod()
 Dim ar(8) As TimePeriod
 
-ar(0).units = TimePeriodSecond
-ar(1).units = TimePeriodMinute
-ar(2).units = TimePeriodHour
-ar(3).units = TimePeriodDay
-ar(4).units = TimePeriodWeek
-ar(5).units = TimePeriodMonth
-ar(6).units = TimePeriodYear
-ar(7).units = TimePeriodVolume
-ar(8).units = TimePeriodTickMovement
-'ar(9).units = TimePeriodTickVolume
+Set ar(0) = GetTimePeriod(MaxLong, TimePeriodSecond)
+Set ar(1) = GetTimePeriod(MaxLong, TimePeriodMinute)
+Set ar(2) = GetTimePeriod(MaxLong, TimePeriodHour)
+Set ar(3) = GetTimePeriod(MaxLong, TimePeriodDay)
+Set ar(4) = GetTimePeriod(MaxLong, TimePeriodWeek)
+Set ar(5) = GetTimePeriod(MaxLong, TimePeriodMonth)
+Set ar(6) = GetTimePeriod(MaxLong, TimePeriodYear)
+Set ar(7) = GetTimePeriod(MaxLong, TimePeriodVolume)
+Set ar(8) = GetTimePeriod(MaxLong, TimePeriodTickMovement)
+'set ar(9)=gettimeperiod(maxlong,TimePeriodTickVolume)
 End Property
 
 Private Function IBarDataServiceProvider_Supports( _

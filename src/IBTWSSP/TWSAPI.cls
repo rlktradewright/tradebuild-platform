@@ -80,6 +80,9 @@ Event Disconnected(ByVal reason As String)
 ' Constants
 '================================================================================
 
+Private Const ProjectName                As String = "IBTWSSP26"
+Private Const ModuleName                As String = "TWSAPI"
+
 Private Const ClientVersion As Long = 32
 
 Private Const ErrHistGenerationFailed = vbObjectError
@@ -885,8 +888,7 @@ End Sub
 Friend Function ReadHistoricalBar( _
                         ByVal requestHandle As Long, _
                         ByRef pBar As Bar, _
-                        ByRef barLength As Long, _
-                        ByRef barUnit As TimePeriodUnits) As Boolean
+                        ByRef barTimePeriod As TimePeriod) As Boolean
 
 Dim Bar As HistoricBar
 
@@ -897,8 +899,7 @@ With mHistoricalDataTable(requestHandle)
     Else
         ReadHistoricalBar = True
         Bar = .bars.itemAt(.nextBarIndex)
-        barLength = .barSpecifier.barLength
-        barUnit = .barSpecifier.barLengthUnits
+        Set barTimePeriod = .barSpecifier.barTimePeriod
         With Bar
             Set pBar = CreateBar(.timestamp, _
                             .openValue, _
@@ -1231,62 +1232,61 @@ End If
 
 ' now adjust the bar specifier to indicate the number of bars of
 ' appropriate length supported by IB
-Select Case barSpecifier.barLengthUnits
+Select Case barSpecifier.barTimePeriod.units
 Case TimePeriodUnits.TimePeriodDay
     ignoreTimestamps = True
-    If barSpecifier.barLength > 1 Then
-        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barLength
-        barSpecifier.barLength = 1
+    If barSpecifier.barTimePeriod.length > 1 Then
+        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barTimePeriod.length
+        barSpecifier.barTimePeriod = GetTimePeriod(1, barSpecifier.barTimePeriod.units)
     End If
 Case TimePeriodUnits.TimePeriodHour
-    If barSpecifier.barLength > 1 Then
-        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barLength
-        barSpecifier.barLength = 1
+    If barSpecifier.barTimePeriod.length > 1 Then
+        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barTimePeriod.length
+        barSpecifier.barTimePeriod = GetTimePeriod(1, barSpecifier.barTimePeriod.units)
     End If
 Case TimePeriodUnits.TimePeriodMinute
-    If barSpecifier.barLength Mod 30 = 0 Then
-        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barLength / 30)
-        barSpecifier.barLength = 30
-    ElseIf barSpecifier.barLength Mod 15 = 0 Then
-        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barLength / 15)
-        barSpecifier.barLength = 15
-    ElseIf barSpecifier.barLength Mod 5 = 0 Then
-        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barLength / 5)
-        barSpecifier.barLength = 5
-    ElseIf barSpecifier.barLength Mod 2 = 0 Then
-        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barLength / 2)
-        barSpecifier.barLength = 2
-    ElseIf barSpecifier.barLength > 1 Then
-        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barLength
-        barSpecifier.barLength = 1
+    If barSpecifier.barTimePeriod.length Mod 30 = 0 Then
+        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barTimePeriod.length / 30)
+        barSpecifier.barTimePeriod = GetTimePeriod(30, barSpecifier.barTimePeriod.units)
+    ElseIf barSpecifier.barTimePeriod.length Mod 15 = 0 Then
+        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barTimePeriod.length / 15)
+        barSpecifier.barTimePeriod = GetTimePeriod(15, barSpecifier.barTimePeriod.units)
+    ElseIf barSpecifier.barTimePeriod.length Mod 5 = 0 Then
+        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barTimePeriod.length / 5)
+        barSpecifier.barTimePeriod = GetTimePeriod(5, barSpecifier.barTimePeriod.units)
+    ElseIf barSpecifier.barTimePeriod.length Mod 2 = 0 Then
+        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barTimePeriod.length / 2)
+        barSpecifier.barTimePeriod = GetTimePeriod(2, barSpecifier.barTimePeriod.units)
+    ElseIf barSpecifier.barTimePeriod.length > 1 Then
+        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barTimePeriod.length
+        barSpecifier.barTimePeriod = GetTimePeriod(1, barSpecifier.barTimePeriod.units)
     End If
 Case TimePeriodUnits.TimePeriodMonth
     ignoreTimestamps = True
-    barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barLength
-    barSpecifier.barLength = 1
+    barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barTimePeriod.length
+    barSpecifier.barTimePeriod = GetTimePeriod(1, barSpecifier.barTimePeriod.units)
 Case TimePeriodUnits.TimePeriodSecond
-    If barSpecifier.barLength Mod 30 = 0 Then
-        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barLength / 30)
-        barSpecifier.barLength = 30
-    ElseIf barSpecifier.barLength Mod 15 = 0 Then
-        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barLength / 15)
-        barSpecifier.barLength = 15
-    ElseIf barSpecifier.barLength Mod 5 = 0 Then
-        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barLength / 5)
-        barSpecifier.barLength = 5
-    ElseIf barSpecifier.barLength > 1 Then
-        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barLength
-        barSpecifier.barLength = 1
+    If barSpecifier.barTimePeriod.length Mod 30 = 0 Then
+        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barTimePeriod.length / 30)
+        barSpecifier.barTimePeriod = GetTimePeriod(30, barSpecifier.barTimePeriod.units)
+    ElseIf barSpecifier.barTimePeriod.length Mod 15 = 0 Then
+        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barTimePeriod.length / 15)
+        barSpecifier.barTimePeriod = GetTimePeriod(15, barSpecifier.barTimePeriod.units)
+    ElseIf barSpecifier.barTimePeriod.length Mod 5 = 0 Then
+        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * (barSpecifier.barTimePeriod.length / 5)
+        barSpecifier.barTimePeriod = GetTimePeriod(5, barSpecifier.barTimePeriod.units)
+    ElseIf barSpecifier.barTimePeriod.length > 1 Then
+        barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barTimePeriod.length
+        barSpecifier.barTimePeriod = GetTimePeriod(1, barSpecifier.barTimePeriod.units)
     End If
 Case TimePeriodUnits.TimePeriodWeek
     ignoreTimestamps = True
-    barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barLength
-    barSpecifier.barLength = 1
+    barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barTimePeriod.length
+    barSpecifier.barTimePeriod = GetTimePeriod(1, barSpecifier.barTimePeriod.units)
 Case TimePeriodUnits.TimePeriodYear
     ignoreTimestamps = True
-    barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barLength * NumMonthsInYear
-    barSpecifier.barLength = 1
-    barSpecifier.barLengthUnits = TimePeriodMonth
+    barSpecifier.maxNumberOfBars = barSpecifier.maxNumberOfBars * barSpecifier.barTimePeriod.length * NumMonthsInYear
+    barSpecifier.barTimePeriod = GetTimePeriod(1, TimePeriodMonth)
 Case TimePeriodUnits.TimePeriodVolume, TimePeriodUnits.TimePeriodTickMovement
     ' nothing to do
 Case Else
@@ -1873,7 +1873,7 @@ If mServerVersion >= 20 Then
     
     With mHistoricalDataTable(index).barSpecifier
         
-        Select Case .barLengthUnits
+        Select Case .barTimePeriod.units
         Case TimePeriodUnits.TimePeriodDay
             TwsRequest.barSizeSetting = "1 day"
             If .maxNumberOfBars >= NumDaysInYear Then
@@ -1893,8 +1893,7 @@ If mServerVersion >= 20 Then
             TwsRequest.barSizeSetting = "1 hour"
             
             numBarsInsession = mHistoricalDataTable(index).Session.NumberOfBarsInSession( _
-                                                                    .barLength, _
-                                                                    .barLengthUnits)
+                                                                    .barTimePeriod)
             
             If .maxNumberOfBars <= 24 Then
                 TwsRequest.duration = permittedHistSeconds(.ToDate, .maxNumberOfBars * 3600) & " S"
@@ -1906,10 +1905,9 @@ If mServerVersion >= 20 Then
         Case TimePeriodUnits.TimePeriodMinute
             
             numBarsInsession = mHistoricalDataTable(index).Session.NumberOfBarsInSession( _
-                                                                    .barLength, _
-                                                                    .barLengthUnits)
+                                                                    .barTimePeriod)
             
-            Select Case .barLength
+            Select Case .barTimePeriod.units
             Case 1
                 TwsRequest.barSizeSetting = "1 min"
                 If .maxNumberOfBars <= 1440 Then
@@ -1980,10 +1978,9 @@ If mServerVersion >= 20 Then
         Case TimePeriodUnits.TimePeriodSecond
             
             numBarsInsession = mHistoricalDataTable(index).Session.NumberOfBarsInSession( _
-                                                                    .barLength, _
-                                                                    .barLengthUnits)
+                                                                    .barTimePeriod)
             
-            Select Case .barLength
+            Select Case .barTimePeriod.units
             Case 1
                 
                 If .maxNumberOfBars <= 2000 Then
@@ -2772,6 +2769,7 @@ Dim bardate As String
 Dim timestamp As Date
 
 Dim failpoint As Long
+
 On Error GoTo err
 
 If checkPointNumber = 0 Then
@@ -2842,12 +2840,12 @@ If checkPointNumber >= 200 Then
             End If
             
             If i = 0 Then
-                If mHistoricalDataTable(index).barSpecifier.barLengthUnits = TimePeriodVolume Or _
-                    mHistoricalDataTable(index).barSpecifier.barLengthUnits = TimePeriodTickMovement _
+                If mHistoricalDataTable(index).barSpecifier.barTimePeriod.units = TimePeriodVolume Or _
+                    mHistoricalDataTable(index).barSpecifier.barTimePeriod.units = TimePeriodTickMovement _
                 Then
-                    mHistoricalDataTable(index).barSpecifier.ToDate = mHistoricalDataTable(index).Session.OffsetBarStartTime(timestamp, 15, TimePeriodSecond, -1)
+                    mHistoricalDataTable(index).barSpecifier.ToDate = mHistoricalDataTable(index).Session.OffsetBarStartTime(timestamp, GetTimePeriod(15, TimePeriodSecond), -1)
                 Else
-                    mHistoricalDataTable(index).barSpecifier.ToDate = mHistoricalDataTable(index).Session.OffsetBarStartTime(timestamp, mHistoricalDataTable(index).barSpecifier.barLength, mHistoricalDataTable(index).barSpecifier.barLengthUnits, -1)
+                    mHistoricalDataTable(index).barSpecifier.ToDate = mHistoricalDataTable(index).Session.OffsetBarStartTime(timestamp, mHistoricalDataTable(index).barSpecifier.barTimePeriod, -1)
                 End If
             End If
             
@@ -2934,17 +2932,25 @@ mHistoricalDataTable(index).requestKeys(reqNo) = ""
 mConcurrentHistDataRequests = mConcurrentHistDataRequests - 1
 processNextHistDataRequest
 
-If mHistoricalDataTable(index).barSpecifier.barLengthUnits = TimePeriodVolume Then
-    mHistoricalDataTable(index).barSpecifier.maxNumberOfBars = mHistoricalDataTable(index).barSpecifier.maxNumberOfBars - Int(totalVolume / mHistoricalDataTable(index).barSpecifier.barLength)
+failpoint = 500
+
+If mHistoricalDataTable(index).barSpecifier.barTimePeriod.units = TimePeriodVolume Then
+    mHistoricalDataTable(index).barSpecifier.maxNumberOfBars = mHistoricalDataTable(index).barSpecifier.maxNumberOfBars - Int(totalVolume / mHistoricalDataTable(index).barSpecifier.barTimePeriod.length)
 Else
     mHistoricalDataTable(index).barSpecifier.maxNumberOfBars = mHistoricalDataTable(index).barSpecifier.maxNumberOfBars - itemCount
 End If
 If mHistoricalDataTable(index).barSpecifier.maxNumberOfBars <= 0 Then
+    
+    failpoint = 600
+    
     Debug.Print "Historical data retrieved: bars in list: " & mHistoricalDataTable(index).bars.size
     mHistoricalDataTable(index).dataRetrievedFromTWS = True
     mHistoricalDataTable(index).nextBarIndex = mHistoricalDataTable(index).bars.firstIndex
     mHistoricalDataTable(index).historicalDataReader.historicalDataAvailable
 Else
+    
+    failpoint = 700
+    
     ' request the next lot of bars
     generateTwsHistoricalDataRequest index
 End If
@@ -2964,12 +2970,13 @@ If err.number = ErrHistGenerationFailed Then
 End If
 
 If err.number <> DataIncomplete Then
-    Stop
-    Resume
+    gLogger.Log LogLevelSevere, "Error at: " & ProjectName & "." & ModuleName & ":" & "getHistoricalData" & "." & IIf(failpoint <> 0, failpoint, checkPointNumber) & _
+                                IIf(err.source <> "", vbCrLf & err.source, "") & vbCrLf & _
+                                err.Description
 End If
 
 err.Raise err.number, _
-        "IBTWSSP" & "." & "TWSAPI" & "::" & "getHistoricalData" & "." & failpoint & _
+        ProjectName & "." & ModuleName & ":" & "getHistoricalData" & "." & failpoint & _
         IIf(err.source <> "", vbCrLf & err.source, ""), _
         err.Description
 
@@ -3882,12 +3889,24 @@ err.Raise err.number, , "TWSAPI::processContractError(failpoint=" & failpoint & 
 End Sub
 
 Private Sub processNextHistDataRequest()
+Dim failpoint As Long
+On Error GoTo err
+
 If mTwsHistDataRequestQueue.size <> 0 Then
     Dim request As TWSHistoricalDataRequestQueueEntry
     Dim requestKey As String
     request = mTwsHistDataRequestQueue.removeFromFront
     reqHistoricalData request
 End If
+
+Exit Sub
+
+err:
+err.Raise err.number, _
+        ProjectName & "." & ModuleName & ":" & "processNextHistDataRequest" & "." & failpoint & _
+        IIf(err.source <> "", vbCrLf & err.source, ""), _
+        err.Description
+
 End Sub
 
 Private Function queueTWSHistoricalDataRequest(ByRef TwsRequest As TWSHistoricalDataRequestQueueEntry) As String

@@ -49,6 +49,17 @@ Public Const TimePeriodNameVolumeIncrement As String = "Volume"
 Public Const TimePeriodNameTickVolumeIncrement As String = "Tick Volume"
 Public Const TimePeriodNameTickIncrement As String = "Ticks Movement"
 
+Public Const TimePeriodShortNameSeconds As String = "s"
+Public Const TimePeriodShortNameMinutes As String = "m"
+Public Const TimePeriodShortNameHours As String = "h"
+Public Const TimePeriodShortNameDays As String = "D"
+Public Const TimePeriodShortNameWeeks As String = "W"
+Public Const TimePeriodShortNameMonths As String = "M"
+Public Const TimePeriodShortNameYears As String = "Y"
+Public Const TimePeriodShortNameVolumeIncrement As String = "V"
+Public Const TimePeriodShortNameTickVolumeIncrement As String = "TV"
+Public Const TimePeriodShortNameTickIncrement As String = "T"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -87,31 +98,29 @@ Public Const TimePeriodNameTickIncrement As String = "Ticks Movement"
 
 Public Function gBarEndTime( _
                 ByVal timestamp As Date, _
-                ByVal barLength As Long, _
-                ByVal units As TimePeriodUnits, _
+                ByVal barTimePeriod As TimePeriod, _
                 ByVal sessionStartTime As Date, _
                 ByVal sessionEndTime As Date) As Date
 Dim startTime As Date
 startTime = gBarStartTime( _
                 timestamp, _
-                barLength, _
-                units, _
+                barTimePeriod, _
                 sessionStartTime)
-Select Case units
+Select Case barTimePeriod.units
 Case TimePeriodSecond
-    gBarEndTime = startTime + (barLength / 86400) - OneMicroSecond
+    gBarEndTime = startTime + (barTimePeriod.length / 86400) - OneMicroSecond
 Case TimePeriodMinute
-    gBarEndTime = startTime + (barLength / 1440) - OneMicroSecond
+    gBarEndTime = startTime + (barTimePeriod.length / 1440) - OneMicroSecond
 Case TimePeriodHour
-    gBarEndTime = startTime + (barLength / 24) - OneMicroSecond
+    gBarEndTime = startTime + (barTimePeriod.length / 24) - OneMicroSecond
 Case TimePeriodDay
-    gBarEndTime = gCalcWorkingDayDate(gCalcWorkingDayNumber(startTime) + barLength, startTime)
+    gBarEndTime = gCalcWorkingDayDate(gCalcWorkingDayNumber(startTime) + barTimePeriod.length, startTime)
 Case TimePeriodWeek
-    gBarEndTime = startTime + 7 * barLength
+    gBarEndTime = startTime + 7 * barTimePeriod.length
 Case TimePeriodMonth
-    gBarEndTime = DateAdd("m", barLength, startTime)
+    gBarEndTime = DateAdd("m", barTimePeriod.length, startTime)
 Case TimePeriodYear
-    gBarEndTime = DateAdd("yyyy", barLength, startTime)
+    gBarEndTime = DateAdd("yyyy", barTimePeriod.length, startTime)
 Case TimePeriodVolume, _
         TimePeriodTickVolume, _
         TimePeriodTickMovement
@@ -130,8 +139,7 @@ End Function
 
 Public Function gBarStartTime( _
                 ByVal timestamp As Date, _
-                ByVal barLength As Long, _
-                ByVal units As TimePeriodUnits, _
+                ByVal barTimePeriod As TimePeriod, _
                 ByVal sessionStartTime As Date) As Date
 
 ' minutes from midnight to start of sesssion
@@ -148,7 +156,7 @@ theDate = Int(CDbl(timestamp))
 ' the nearest second
 theTime = CDbl(timestamp + OneMicroSecond) - theDate
 
-Select Case units
+Select Case barTimePeriod.units
 Case TimePeriodSecond
     theTimeSecs = Fix(theTime * 86400) ' seconds since midnight
     If theTimeSecs < sessionOffset * 60 Then
@@ -156,7 +164,7 @@ Case TimePeriodSecond
         theTimeSecs = theTimeSecs + 86400
     End If
     gBarStartTime = theDate + _
-                (barLength * Int((theTimeSecs - sessionOffset * 60) / barLength) + _
+                (barTimePeriod.length * Int((theTimeSecs - sessionOffset * 60) / barTimePeriod.length) + _
                     sessionOffset * 60) / 86400
 Case TimePeriodMinute
     theTimeMins = Fix(theTime * 1440) ' minutes since midnight
@@ -165,7 +173,7 @@ Case TimePeriodMinute
         theTimeMins = theTimeMins + 1440
     End If
     gBarStartTime = theDate + _
-                (barLength * Int((theTimeMins - sessionOffset) / barLength) + _
+                (barTimePeriod.length * Int((theTimeMins - sessionOffset) / barTimePeriod.length) + _
                     sessionOffset) / 1440
 Case TimePeriodHour
     theTimeMins = Fix(theTime * 1440) ' minutes since midnight
@@ -174,7 +182,7 @@ Case TimePeriodHour
         theTimeMins = theTimeMins + 1440
     End If
     gBarStartTime = theDate + _
-                (60 * barLength * Int((theTimeMins - sessionOffset) / (60 * barLength)) + _
+                (60 * barTimePeriod.length * Int((theTimeMins - sessionOffset) / (60 * barTimePeriod.length)) + _
                     sessionOffset) / 1440
 Case TimePeriodDay
     Dim workingDayNum As Long
@@ -182,12 +190,12 @@ Case TimePeriodDay
         theDate = theDate - 1
     End If
     
-    If barLength = 1 Then
+    If barTimePeriod.length = 1 Then
         gBarStartTime = theDate + sessionStartTime
     Else
         workingDayNum = gCalcWorkingDayNumber(theDate)
         
-        gBarStartTime = gCalcWorkingDayDate(1 + barLength * Int((workingDayNum - 1) / barLength), _
+        gBarStartTime = gCalcWorkingDayDate(1 + barTimePeriod.length * Int((workingDayNum - 1) / barTimePeriod.length), _
                                         theDate) + sessionStartTime
     End If
 Case TimePeriodWeek
@@ -198,17 +206,17 @@ Case TimePeriodWeek
         ' this must be part of the final week of the previous year
         theDate = DateAdd("yyyy", -1, theDate)
     End If
-    gBarStartTime = gCalcWeekStartDate(1 + barLength * Int((weekNum - 1) / barLength), _
+    gBarStartTime = gCalcWeekStartDate(1 + barTimePeriod.length * Int((weekNum - 1) / barTimePeriod.length), _
                                     theDate) + sessionStartTime
 
 Case TimePeriodMonth
     Dim monthNum As Long
     
     monthNum = Month(theDate)
-    gBarStartTime = gCalcMonthStartDate(1 + barLength * Int((monthNum - 1) / barLength), _
+    gBarStartTime = gCalcMonthStartDate(1 + barTimePeriod.length * Int((monthNum - 1) / barTimePeriod.length), _
                                     theDate) + sessionStartTime
 Case TimePeriodYear
-    gBarStartTime = DateSerial(1900 + barLength * Int((Year(theDate) - 1900) / barLength), 1, 1)
+    gBarStartTime = DateSerial(1900 + barTimePeriod.length * Int((Year(theDate) - 1900) / barTimePeriod.length), 1, 1)
 Case TimePeriodVolume, _
         TimePeriodTickVolume, _
         TimePeriodTickMovement
@@ -218,17 +226,16 @@ End Select
 End Function
 
 Public Function gCalcBarLength( _
-                ByVal length As Long, _
-                ByVal units As TimePeriodUnits) As Date
-Select Case units
+                ByVal barTimePeriod As TimePeriod) As Date
+Select Case barTimePeriod.units
 Case TimePeriodSecond
-    gCalcBarLength = length * OneSecond
+    gCalcBarLength = barTimePeriod.length * OneSecond
 Case TimePeriodMinute
-    gCalcBarLength = length * OneMinute
+    gCalcBarLength = barTimePeriod.length * OneMinute
 Case TimePeriodHour
-    gCalcBarLength = length * OneHour
+    gCalcBarLength = barTimePeriod.length * OneHour
 Case TimePeriodDay
-    gCalcBarLength = length
+    gCalcBarLength = barTimePeriod.length
 End Select
 End Function
 
@@ -243,22 +250,20 @@ End Function
 
 
 Public Function gCalcNumberOfBarsInSession( _
-                ByVal barLength As Long, _
-                ByVal units As TimePeriodUnits, _
+                ByVal barTimePeriod As TimePeriod, _
                 ByVal sessionStartTime As Date, _
                 ByVal sessionEndTime As Date) As Long
 
 If sessionEndTime > sessionStartTime Then
-    gCalcNumberOfBarsInSession = -Int(-(sessionEndTime - sessionStartTime) / gCalcBarLength(barLength, units))
+    gCalcNumberOfBarsInSession = -Int(-(sessionEndTime - sessionStartTime) / gCalcBarLength(barTimePeriod))
 Else
-    gCalcNumberOfBarsInSession = -Int(-(1 + sessionEndTime - sessionStartTime) / gCalcBarLength(barLength, units))
+    gCalcNumberOfBarsInSession = -Int(-(1 + sessionEndTime - sessionStartTime) / gCalcBarLength(barTimePeriod))
 End If
 End Function
 
 Public Function gCalcOffsetBarStartTime( _
                 ByVal timestamp As Date, _
-                ByVal barLength As Long, _
-                ByVal units As TimePeriodUnits, _
+                ByVal barTimePeriod As TimePeriod, _
                 ByVal offset As Long, _
                 ByVal sessionStartTime As Date, _
                 ByVal sessionEndTime As Date) As Date
@@ -273,45 +278,45 @@ Dim i As Long
 Dim barLengthDays As Date
 Dim numBarsInSession As Long
 
-Select Case units
+Select Case barTimePeriod.units
 Case TimePeriodSecond
 Case TimePeriodMinute
 Case TimePeriodHour
 Case TimePeriodDay
     gCalcOffsetBarStartTime = calcOffsetDailyBarStartTime( _
                                                     timestamp, _
-                                                    barLength, _
+                                                    barTimePeriod.length, _
                                                     offset, _
                                                     sessionStartTime)
     Exit Function
 Case TimePeriodWeek
     gCalcOffsetBarStartTime = calcOffsetWeeklyBarStartTime( _
                                                     timestamp, _
-                                                    barLength, _
+                                                    barTimePeriod.length, _
                                                     offset, _
                                                     sessionStartTime)
     Exit Function
 Case TimePeriodMonth
     gCalcOffsetBarStartTime = calcOffsetMonthlyBarStartTime( _
                                                     timestamp, _
-                                                    barLength, _
+                                                    barTimePeriod.length, _
                                                     offset, _
                                                     sessionStartTime)
     Exit Function
 Case TimePeriodYear
     gCalcOffsetBarStartTime = calcOffsetYearlyBarStartTime( _
                                                     timestamp, _
-                                                    barLength, _
+                                                    barTimePeriod.length, _
                                                     offset, _
                                                     sessionStartTime)
     Exit Function
 End Select
 
-barLengthDays = gCalcBarLength(barLength, units) + OneMicroSecond
+barLengthDays = gCalcBarLength(barTimePeriod) + OneMicroSecond
 
-numBarsInSession = gCalcNumberOfBarsInSession(barLength, units, sessionStartTime, sessionEndTime)
+numBarsInSession = gCalcNumberOfBarsInSession(barTimePeriod, sessionStartTime, sessionEndTime)
 
-datumBarStart = gBarStartTime(timestamp, barLength, units, sessionStartTime)
+datumBarStart = gBarStartTime(timestamp, barTimePeriod, sessionStartTime)
 
 gCalcSessionTimes timestamp, _
                     sessionStartTime, _
@@ -396,8 +401,7 @@ Else
 End If
 
 gCalcOffsetBarStartTime = gBarStartTime(proposedStart, _
-                                        barLength, _
-                                        units, _
+                                        barTimePeriod, _
                                         sessionStartTime)
 
 
@@ -605,7 +609,7 @@ Case UCase$(TimePeriodNameVolumeIncrement), "VOL", "V"
     gTimePeriodUnitsFromString = TimePeriodVolume
 Case UCase$(TimePeriodNameTickVolumeIncrement), "TICKVOL", "TICK VOL", "TICKVOLUME", "TV"
     gTimePeriodUnitsFromString = TimePeriodTickVolume
-Case UCase$(TimePeriodNameTickIncrement), "TICK", "TICKS", "TCK", "TCKS", "TM", "TICKSMOVEMENT", "TICKMOVEMENT"
+Case UCase$(TimePeriodNameTickIncrement), "TICK", "TICKS", "TCK", "TCKS", "T", "TM", "TICKSMOVEMENT", "TICKMOVEMENT"
     gTimePeriodUnitsFromString = TimePeriodTickMovement
 Case Else
     gTimePeriodUnitsFromString = TimePeriodNone
@@ -639,6 +643,33 @@ Case TimePeriodTickMovement
 End Select
 End Function
 
+Public Function gTimePeriodUnitsToShortString( _
+                timeUnits As TimePeriodUnits) As String
+
+Select Case timeUnits
+Case TimePeriodSecond
+    gTimePeriodUnitsToShortString = TimePeriodShortNameSeconds
+Case TimePeriodMinute
+    gTimePeriodUnitsToShortString = TimePeriodShortNameMinutes
+Case TimePeriodHour
+    gTimePeriodUnitsToShortString = TimePeriodShortNameHours
+Case TimePeriodDay
+    gTimePeriodUnitsToShortString = TimePeriodShortNameDays
+Case TimePeriodWeek
+    gTimePeriodUnitsToShortString = TimePeriodShortNameWeeks
+Case TimePeriodMonth
+    gTimePeriodUnitsToShortString = TimePeriodShortNameMonths
+Case TimePeriodYear
+    gTimePeriodUnitsToShortString = TimePeriodShortNameYears
+Case TimePeriodVolume
+    gTimePeriodUnitsToShortString = TimePeriodShortNameVolumeIncrement
+Case TimePeriodTickVolume
+    gTimePeriodUnitsToShortString = TimePeriodShortNameTickVolumeIncrement
+Case TimePeriodTickMovement
+    gTimePeriodUnitsToShortString = TimePeriodShortNameTickIncrement
+End Select
+End Function
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
@@ -651,7 +682,7 @@ Private Function calcOffsetDailyBarStartTime( _
 Dim datumBarStart As Date
 Dim targetWorkingDayNum As Long
 
-datumBarStart = gBarStartTime(timestamp, barLength, TimePeriodDay, sessionStartTime)
+datumBarStart = gBarStartTime(timestamp, gGetTimePeriod(barLength, TimePeriodDay), sessionStartTime)
 
 targetWorkingDayNum = gCalcWorkingDayNumber(datumBarStart) + offset * barLength
 
@@ -665,7 +696,7 @@ Private Function calcOffsetMonthlyBarStartTime( _
                 ByVal sessionStartTime As Date) As Date
 Dim datumBarStart As Date
 
-datumBarStart = gBarStartTime(timestamp, barLength, TimePeriodMonth, sessionStartTime)
+datumBarStart = gBarStartTime(timestamp, gGetTimePeriod(barLength, TimePeriodMonth), sessionStartTime)
 
 calcOffsetMonthlyBarStartTime = DateAdd("m", offset * barLength, datumBarStart)
 End Function
@@ -682,7 +713,7 @@ Dim yearEnd As Date
 Dim yearEndWeekNumber As Long
 Dim proposedWeekNumber As Long
 
-datumBarStart = gBarStartTime(timestamp, barLength, TimePeriodWeek, sessionStartTime)
+datumBarStart = gBarStartTime(timestamp, gGetTimePeriod(barLength, TimePeriodWeek), sessionStartTime)
 datumWeekNumber = DatePart("ww", datumBarStart, vbMonday, vbFirstFullWeek)
 
 yearStart = DateAdd("d", 1 - DatePart("y", datumBarStart), datumBarStart)
@@ -697,7 +728,7 @@ Do While proposedWeekNumber < 1 Or proposedWeekNumber > yearEndWeekNumber
         yearEnd = yearStart - 1
         yearStart = DateAdd("yyyy", -1, yearStart)
         yearEndWeekNumber = DatePart("ww", yearEnd, vbMonday, vbFirstFullWeek)
-        datumBarStart = gBarStartTime(yearEnd, barLength, TimePeriodWeek, sessionStartTime)
+        datumBarStart = gBarStartTime(yearEnd, gGetTimePeriod(barLength, TimePeriodWeek), sessionStartTime)
         datumWeekNumber = DatePart("ww", datumBarStart, vbMonday, vbFirstFullWeek)
         
         proposedWeekNumber = datumWeekNumber + offset * barLength
@@ -728,7 +759,7 @@ Private Function calcOffsetYearlyBarStartTime( _
                 ByVal sessionStartTime As Date) As Date
 Dim datumBarStart As Date
 
-datumBarStart = gBarStartTime(timestamp, barLength, TimePeriodYear, sessionStartTime)
+datumBarStart = gBarStartTime(timestamp, gGetTimePeriod(barLength, TimePeriodYear), sessionStartTime)
 
 calcOffsetYearlyBarStartTime = DateAdd("yyyy", offset * barLength, datumBarStart)
 End Function

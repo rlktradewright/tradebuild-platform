@@ -48,8 +48,7 @@ Private Const ModuleName                    As String = "BarDataSpecifier"
 ' Member variables
 '@================================================================================
 
-Private mBarLength As Long
-Private mBarLengthUnits As TimePeriodUnits
+Private mBarTimePeriod As TimePeriod
 Private mBartype As BarTypes
 Private mContract As Contract
 Private mFromDate As Date
@@ -71,20 +70,12 @@ Private mIncludeBarsOutsideSession As Boolean
 ' Properties
 '@================================================================================
 
-Public Property Let barLength(ByVal value As Long)
-mBarLength = value
+Public Property Let barTimePeriod(ByVal value As TimePeriod)
+Set mBarTimePeriod = value
 End Property
 
-Public Property Get barLength() As Long
-barLength = mBarLength
-End Property
-
-Public Property Let barLengthUnits(ByVal value As TimePeriodUnits)
-mBarLengthUnits = value
-End Property
-
-Public Property Get barLengthUnits() As TimePeriodUnits
-barLengthUnits = mBarLengthUnits
+Public Property Get barTimePeriod() As TimePeriod
+Set barTimePeriod = mBarTimePeriod
 End Property
 
 Public Property Let barType(ByVal value As BarTypes)
@@ -159,11 +150,10 @@ End Sub
 
 Public Function toString() As String
 toString = _
-    "    Max bars:       " & mMaxNumberOfBars & vbCrLf & _
-    "    Bar length:     " & mBarLength & vbCrLf & _
-    "    Bar units:      " & gTimePeriodUnitsToString(mBarLengthUnits) & vbCrLf & _
-    "    From:           " & FormatTimestamp(mFromDate, TimestampDateAndTimeISO8601) & vbCrLf & _
-    "    To:             " & FormatTimestamp(mToDate, TimestampDateAndTimeISO8601) & vbCrLf & _
+    "    Max bars:        " & mMaxNumberOfBars & vbCrLf & _
+    "    Bar time period: " & mBarTimePeriod.toString & vbCrLf & _
+    "    From:            " & FormatTimestamp(mFromDate, TimestampDateAndTimeISO8601) & vbCrLf & _
+    "    To:              " & FormatTimestamp(mToDate, TimestampDateAndTimeISO8601) & vbCrLf & _
     IIf(mCustomSessionStartTime <> 0 And customSessionEndTime <> 0, _
         "    Session start:   " & FormatTimestamp(mCustomSessionStartTime, TimestampDateAndTimeISO8601) & vbCrLf & _
         "    Session end:     " & FormatTimestamp(mCustomSessionEndTime, TimestampDateAndTimeISO8601), _

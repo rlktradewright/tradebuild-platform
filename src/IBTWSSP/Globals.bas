@@ -5,6 +5,7 @@ Option Explicit
 ' Constants
 '================================================================================
 
+Public Const MaxLong As Long = &H7FFFFFFF
 Public Const OneMicrosecond As Double = 1# / 86400000000#
 Public Const OneMinute As Double = 1# / 1440#
 Public Const OneSecond As Double = 1# / 86400#

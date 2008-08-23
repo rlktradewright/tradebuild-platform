@@ -2,8 +2,8 @@ VERSION 5.00
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "msflxgrd.ocx"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
-Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#55.0#0"; "StudiesUI2-6.ocx"
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#46.0#0"; "ChartSkil2-6.ocx"
+Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#57.0#0"; "StudiesUI2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#47.0#0"; "ChartSkil2-6.ocx"
 Begin VB.Form StudyTestForm 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeBuild Study Test Harness v2.6"
@@ -832,7 +832,7 @@ pChartManager.clearChart
 pChartManager.chartController.chartBackColor = vbWhite
 pChartManager.chartController.pointerStyle = PointerCrosshairs
 pChartManager.chartController.showHorizontalScrollBar = True
-pChartManager.chartController.setPeriodParameters mPeriodLength, mPeriodUnits
+pChartManager.chartController.barTimePeriod = gettimeperiod(mPeriodLength, mPeriodUnits)
 
 Set priceRegion = pChartManager.chartController.addChartRegion(100, 25, , , PriceRegionName)
 priceRegion.gridlineSpacingY = 2
@@ -984,7 +984,7 @@ Dim lStudyValue As SValue
 Dim i As Long
 Dim j As Long
 Dim lLine As StudyLine
-Dim lBar As Bar
+Dim lBar As timeframeutils26.Bar
 Dim lText As StudyText
 
 For i = 1 To studyConfig.StudyValueConfigurations.Count

@@ -115,10 +115,10 @@ Public Type SessionTimes
     endTime         As Date
 End Type
 
-Public Type TimePeriod
-    length          As Long
-    units           As TimePeriodUnits
-End Type
+'Public Type TimePeriod
+'    length          As Long
+'    units           As TimePeriodUnits
+'End Type
 
 '@================================================================================
 ' Member variables
@@ -146,21 +146,18 @@ End Type
 
 Public Function BarEndTime( _
                 ByVal timestamp As Date, _
-                ByVal barLength As Long, _
-                ByVal units As TimePeriodUnits, _
+                ByVal barTimePeriod As TimePeriod, _
                 Optional ByVal sessionStartTime As Date, _
                 Optional ByVal sessionEndTime As Date) As Date
 BarEndTime = gBarEndTime(timestamp, _
-                            barLength, _
-                            units, _
+                            barTimePeriod, _
                             gNormaliseTime(sessionStartTime), _
                             gNormaliseTime(sessionEndTime))
 End Function
 
 Public Function barLength( _
-                ByVal length As Long, _
-                ByVal units As TimePeriodUnits) As Date
-Select Case units
+                ByVal barTimePeriod As TimePeriod) As Date
+Select Case barTimePeriod.units
 Case TimePeriodSecond
 Case TimePeriodMinute
 Case TimePeriodHour
@@ -170,17 +167,15 @@ Case Else
             ProjectName & "." & ModuleName & ":" & "barLength", _
             "Can't calculate bar length for this time unit"
 End Select
-barLength = gCalcBarLength(length, units)
+barLength = gCalcBarLength(barTimePeriod)
 End Function
 
 Public Function BarStartTime( _
                 ByVal timestamp As Date, _
-                ByVal barLength As Long, _
-                ByVal units As TimePeriodUnits, _
+                ByVal barTimePeriod As TimePeriod, _
                 Optional ByVal sessionStartTime As Date) As Date
 BarStartTime = gBarStartTime(timestamp, _
-                            barLength, _
-                            units, _
+                            barTimePeriod, _
                             gNormaliseTime(sessionStartTime))
 End Function
 
@@ -205,15 +200,36 @@ CreateBar.initialise timestamp, _
 End Function
 
 Public Function CreateBarsBuilder( _
-                ByVal barLength As Long, _
-                ByVal timeUnits As TimePeriodUnits, _
+                ByVal barTimePeriod As TimePeriod, _
                 Optional ByVal pSession As Session, _
                 Optional ByVal tickSize As Double, _
                 Optional ByVal numberOfBarsToCache As Long) As BarsBuilder
 Set CreateBarsBuilder = New BarsBuilder
-CreateBarsBuilder.initialise barLength, _
-                            timeUnits, _
+CreateBarsBuilder.initialise barTimePeriod, _
                             pSession, tickSize, numberOfBarsToCache
+End Function
+
+Public Function GetTimePeriod( _
+                ByVal length As Long, _
+                ByVal units As TimePeriodUnits) As TimePeriod
+
+Dim failpoint As Long
+On Error GoTo Err
+
+Set GetTimePeriod = gGetTimePeriod(length, units)
+
+Exit Function
+
+Err:
+GetLogger("").Log LogLevelSevere, "Error at: " & ProjectName & "." & ModuleName & ":" & "GetTimePeriod" & "." & failpoint & _
+                            IIf(Err.source <> "", vbCrLf & Err.source, "") & vbCrLf & _
+                            Err.Description
+Err.Raise Err.Number, _
+        ProjectName & "." & ModuleName & ":" & "GetTimePeriod" & "." & failpoint & _
+        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
+        Err.Description
+
+
 End Function
 
 Public Function CreateValueCache( _
@@ -265,11 +281,10 @@ End Function
 
 
 Public Function NumberOfBarsInSession( _
-                ByVal barLength As Long, _
-                ByVal units As TimePeriodUnits, _
+                ByVal barTimePeriod As TimePeriod, _
                 ByVal sessionStartTime As Date, _
                 ByVal sessionEndTime As Date) As Long
-Select Case units
+Select Case barTimePeriod.units
 Case TimePeriodSecond
 Case TimePeriodMinute
 Case TimePeriodHour
@@ -280,28 +295,25 @@ Case Else
 End Select
 
 NumberOfBarsInSession = gCalcNumberOfBarsInSession( _
-                                                barLength, _
-                                                units, _
+                                                barTimePeriod, _
                                                 gNormaliseTime(sessionStartTime), _
                                                 gNormaliseTime(sessionEndTime))
 End Function
 
 Public Function OffsetBarStartTime( _
                 ByVal timestamp As Date, _
-                ByVal barLength As Long, _
-                ByVal units As TimePeriodUnits, _
+                ByVal barTimePeriod As TimePeriod, _
                 ByVal offset As Long, _
                 Optional ByVal sessionStartTime As Date, _
                 Optional ByVal sessionEndTime As Date) As Date
-If units = TimePeriodNone Then
+If barTimePeriod.units = TimePeriodNone Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "OffsetBarStartTime", _
             "Invalid time units argument"
 End If
 OffsetBarStartTime = gCalcOffsetBarStartTime( _
                                                 timestamp, _
-                                                barLength, _
-                                                units, _
+                                                barTimePeriod, _
                                                 offset, _
                                                 gNormaliseTime(sessionStartTime), _
                                                 gNormaliseTime(sessionEndTime))
@@ -314,20 +326,15 @@ Dim i As Long
 Dim failpoint As Long
 On Error GoTo Err
 
+value = Trim$(value)
+
 i = 1
 Do While IsNumeric(Mid$(value, i, 1))
     i = i + 1
 Loop
 
-If i = 1 Then
-    TimePeriodFromString.length = 1
-Else
-    TimePeriodFromString.length = CLng(Left$(value, i - 1))
-End If
-
-TimePeriodFromString.units = TimePeriodUnitsFromString( _
-                                        Trim$(Right$(value, Len(value) - i + 1)))
-
+Set TimePeriodFromString = gGetTimePeriod(IIf(i = 1, 1, CLng(Left$(value, i - 1))), _
+                                        TimePeriodUnitsFromString(Trim$(Right$(value, Len(value) - i + 1))))
 Exit Function
 
 Err:
@@ -339,137 +346,19 @@ Err.Raise Err.Number, _
 
 End Function
 
-Public Function TimePeriodToString( _
-                tp As TimePeriod) As String
-Dim tokens(1) As String
-
-Dim failpoint As Long
-On Error GoTo Err
-
-tokens(0) = tp.length
-
-Select Case tp.units
-Case TimePeriodSecond
-    If tp.length = 1 Then
-        tokens(1) = TimePeriodNameSecond
-    Else
-        tokens(1) = TimePeriodNameSeconds
-    End If
-Case TimePeriodMinute
-    If tp.length = 1 Then
-        tokens(1) = TimePeriodNameMinute
-    Else
-        tokens(1) = TimePeriodNameMinutes
-    End If
-Case TimePeriodHour
-    If tp.length = 1 Then
-        TimePeriodToString = TimePeriodNameHour
-        Exit Function
-    Else
-        tokens(1) = TimePeriodNameHours
-    End If
-Case TimePeriodDay
-    If tp.length = 1 Then
-        TimePeriodToString = TimePeriodNameDay
-        Exit Function
-    Else
-        tokens(1) = TimePeriodNameDays
-    End If
-Case TimePeriodWeek
-    If tp.length = 1 Then
-        TimePeriodToString = TimePeriodNameWeek
-        Exit Function
-    Else
-        tokens(1) = TimePeriodNameWeeks
-    End If
-Case TimePeriodMonth
-    If tp.length = 1 Then
-        TimePeriodToString = TimePeriodNameMonth
-        Exit Function
-    Else
-        tokens(1) = TimePeriodNameMonths
-    End If
-Case TimePeriodYear
-    If tp.length = 1 Then
-        TimePeriodToString = TimePeriodNameYear
-        Exit Function
-    Else
-        tokens(1) = TimePeriodNameYears
-    End If
-Case TimePeriodVolume
-    tokens(1) = TimePeriodNameVolumeIncrement
-Case TimePeriodTickVolume
-    tokens(1) = TimePeriodNameTickVolumeIncrement
-Case TimePeriodTickMovement
-    tokens(1) = TimePeriodNameTickIncrement
-End Select
-
-TimePeriodToString = Join(tokens, " ")
-
-Exit Function
-
-Err:
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "TimePeriodToString" & "." & failpoint & _
-        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
-        Err.Description
-
-End Function
-
 Public Function TimePeriodUnitsFromString( _
                 timeUnits As String) As TimePeriodUnits
-
-Select Case UCase$(timeUnits)
-Case UCase$(TimePeriodNameSecond), UCase$(TimePeriodNameSeconds), "SEC", "SECS", "S"
-    TimePeriodUnitsFromString = TimePeriodSecond
-Case UCase$(TimePeriodNameMinute), UCase$(TimePeriodNameMinutes), "MIN", "MINS", "M"
-    TimePeriodUnitsFromString = TimePeriodMinute
-Case UCase$(TimePeriodNameHour), UCase$(TimePeriodNameHours), "HR", "HRS", "H"
-    TimePeriodUnitsFromString = TimePeriodHour
-Case UCase$(TimePeriodNameDay), UCase$(TimePeriodNameDays), "D", "DY", "DYS"
-    TimePeriodUnitsFromString = TimePeriodDay
-Case UCase$(TimePeriodNameWeek), UCase$(TimePeriodNameWeeks), "W", "WK", "WKS"
-    TimePeriodUnitsFromString = TimePeriodWeek
-Case UCase$(TimePeriodNameMonth), UCase$(TimePeriodNameMonths), "MTH", "MNTH", "MTHS", "MNTHS", "MM"
-    TimePeriodUnitsFromString = TimePeriodMonth
-Case UCase$(TimePeriodNameYear), UCase$(TimePeriodNameYears), "YR", "YRS", "Y", "YY", "YS"
-    TimePeriodUnitsFromString = TimePeriodYear
-Case UCase$(TimePeriodNameVolumeIncrement), "VOL", "V"
-    TimePeriodUnitsFromString = TimePeriodVolume
-Case UCase$(TimePeriodNameTickVolumeIncrement), "TICKVOL", "TICK VOL", "TICKVOLUME", "TV"
-    TimePeriodUnitsFromString = TimePeriodTickVolume
-Case UCase$(TimePeriodNameTickIncrement), "TICK", "TICKS", "TCK", "TCKS", "TM", "TICKSMOVEMENT", "TICKMOVEMENT"
-    TimePeriodUnitsFromString = TimePeriodTickMovement
-Case Else
-    TimePeriodUnitsFromString = TimePeriodNone
-End Select
+TimePeriodUnitsFromString = gTimePeriodUnitsFromString(timeUnits)
 End Function
 
 Public Function TimePeriodUnitsToString( _
                 timeUnits As TimePeriodUnits) As String
+TimePeriodUnitsToString = gTimePeriodUnitsToString(timeUnits)
+End Function
 
-Select Case timeUnits
-Case TimePeriodSecond
-    TimePeriodUnitsToString = TimePeriodNameSeconds
-Case TimePeriodMinute
-    TimePeriodUnitsToString = TimePeriodNameMinutes
-Case TimePeriodHour
-    TimePeriodUnitsToString = TimePeriodNameHours
-Case TimePeriodDay
-    TimePeriodUnitsToString = TimePeriodNameDays
-Case TimePeriodWeek
-    TimePeriodUnitsToString = TimePeriodNameWeeks
-Case TimePeriodMonth
-    TimePeriodUnitsToString = TimePeriodNameMonths
-Case TimePeriodYear
-    TimePeriodUnitsToString = TimePeriodNameYears
-Case TimePeriodVolume
-    TimePeriodUnitsToString = TimePeriodNameVolumeIncrement
-Case TimePeriodTickVolume
-    TimePeriodUnitsToString = TimePeriodNameTickVolumeIncrement
-Case TimePeriodTickMovement
-    TimePeriodUnitsToString = TimePeriodNameTickIncrement
-End Select
+Public Function TimePeriodUnitsToShortString( _
+                timeUnits As TimePeriodUnits) As String
+TimePeriodUnitsToShortString = gTimePeriodUnitsToShortString(timeUnits)
 End Function
 
 Public Function WeekStartDate( _

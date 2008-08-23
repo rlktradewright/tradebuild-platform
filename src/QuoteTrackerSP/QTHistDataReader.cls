@@ -126,7 +126,7 @@ If mRequestInProgress Then err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "IBTWSSP.HistDataReader::FetchBars", _
                                     "Request already in progress"
 
-Select Case barSpecifier.barLengthUnits
+Select Case barSpecifier.barTimePeriod.units
 Case TimePeriodMinute, _
     TimePeriodHour, _
     TimePeriodDay, _
@@ -386,18 +386,17 @@ End Sub
 
 Private Sub ProcessBar()
 Dim lBar As Bar
-Dim barLength As Long
-Dim barUnits As TimePeriodUnits
+Dim barTimePeriod As TimePeriod
 
 With lBar
-    If Not mQTAPI.readHistoricalBar(mRequestId, lBar, barLength, barUnits) Then
+    If Not mQTAPI.readHistoricalBar(mRequestId, lBar, barTimePeriod) Then
         mServiceConsumer.BarDataComplete
         mRequestInProgress = False
         mRequestId = -1
         Exit Sub
     End If
 End With
-mDataConsumer.Bar lBar, barLength, barUnits
+mDataConsumer.Bar lBar, barTimePeriod
 End Sub
 
 

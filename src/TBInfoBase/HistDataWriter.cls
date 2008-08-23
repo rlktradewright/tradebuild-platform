@@ -92,20 +92,16 @@ Attribute mInstrumentTC.VB_VarHelpID = -1
 '@===============================================================================
 
 Private Sub Class_Initialize()
-mTimeframeTable(0).timeframe.length = 1
-mTimeframeTable(0).timeframe.units = TimePeriodMinute
+Set mTimeframeTable(0).timeframe = GetTimePeriod(1, TimePeriodMinute)
 mTimeframeTable(0).saveIntervalSeconds = 5
 
-mTimeframeTable(1).timeframe.length = 5
-mTimeframeTable(1).timeframe.units = TimePeriodMinute
+Set mTimeframeTable(1).timeframe = GetTimePeriod(5, TimePeriodMinute)
 mTimeframeTable(1).saveIntervalSeconds = 5
 
-mTimeframeTable(2).timeframe.length = 15
-mTimeframeTable(2).timeframe.units = TimePeriodMinute
+Set mTimeframeTable(2).timeframe = GetTimePeriod(15, TimePeriodMinute)
 mTimeframeTable(2).saveIntervalSeconds = 5
 
-mTimeframeTable(3).timeframe.length = 60
-mTimeframeTable(3).timeframe.units = TimePeriodMinute
+Set mTimeframeTable(3).timeframe = GetTimePeriod(60, TimePeriodMinute)
 mTimeframeTable(3).saveIntervalSeconds = 5
 
 End Sub
@@ -132,8 +128,7 @@ End Sub
 Private Sub IBarDataWriter_WriteBar( _
                 ByVal data As Bar, _
                 ByVal barType As BarTypes, _
-                ByVal barLength As Long, _
-                ByVal barUnit As TimePeriodUnits)
+                ByVal barTimePeriod As TimePeriod)
 Dim index As Long
 Dim tc As TaskController
 
@@ -143,7 +138,7 @@ With data
     If mUseSynchronousWrites Then
         mInstrument.WriteBar .TimeStamp, _
                             barType, _
-                            barLength, _
+                            barTimePeriod.length, _
                             .openValue, _
                             .highValue, _
                             .lowValue, _
@@ -154,7 +149,7 @@ With data
     Else
         Set tc = mInstrument.WriteBarAsync(.TimeStamp, _
                                             barType, _
-                                            barLength, _
+                                            barTimePeriod.length, _
                                             .openValue, _
                                             .highValue, _
                                             .lowValue, _
@@ -165,7 +160,7 @@ With data
         tc.addTaskCompletionListener Me
     End If
     For index = 0 To UBound(mTimeframeTable)
-        If mTimeframeTable(index).timeframe.length = barLength Then
+        If mTimeframeTable(index).timeframe.length = barTimePeriod.length Then
             With mTimeframeTable(index)
                 If .prevTimestamp <> data.TimeStamp Then
                     .barsWritten = .barsWritten + 1
@@ -300,7 +295,7 @@ End If
 s = mServiceProviderName & " (" & mContract.specifier.localSymbol & ")"
 For i = 0 To UBound(mTimeframeTable)
     s = s & vbCrLf & "    Total of " & mTimeframeTable(i).barsWritten & " bars (" & _
-            TimePeriodToString(mTimeframeTable(i).timeframe) & _
+            mTimeframeTable(i).timeframe.toString & _
             ") written in " & _
             mTimeframeTable(i).writes & " database writes"
 Next
