@@ -322,6 +322,7 @@ End Function
 Public Function TimePeriodFromString( _
                 ByVal value As String) As TimePeriod
 Dim i As Long
+Dim length As Long
 
 Dim failpoint As Long
 On Error GoTo Err
@@ -333,7 +334,13 @@ Do While IsNumeric(Mid$(value, i, 1))
     i = i + 1
 Loop
 
-Set TimePeriodFromString = gGetTimePeriod(IIf(i = 1, 1, CLng(Left$(value, i - 1))), _
+If i = 1 Then
+    length = 1
+Else
+    length = CLng(Left$(value, i - 1))
+End If
+    
+Set TimePeriodFromString = gGetTimePeriod(length, _
                                         TimePeriodUnitsFromString(Trim$(Right$(value, Len(value) - i + 1))))
 Exit Function
 
