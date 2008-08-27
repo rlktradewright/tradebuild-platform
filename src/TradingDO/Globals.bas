@@ -178,28 +178,6 @@ Public gLogger                                  As Logger
 ' Methods
 '@================================================================================
 
-Public Function gGenerateConnectionErrorMessages( _
-                ByVal pConnection As ADODB.connection) As String
-Dim lError As ADODB.Error
-Dim errMsg As String
-
-For Each lError In pConnection.Errors
-    errMsg = "--------------------" & vbCrLf & _
-            gGenerateErrorMessage(lError)
-Next
-pConnection.Errors.Clear
-gGenerateConnectionErrorMessages = errMsg
-End Function
-
-Public Function gGenerateErrorMessage( _
-                ByVal pError As ADODB.Error)
-gGenerateErrorMessage = _
-        "Error " & pError.Number & ": " & pError.Description & vbCrLf & _
-        "    Source: " & pError.Source & vbCrLf & _
-        "    SQL state: " & pError.SQLState & vbCrLf & _
-        "    Native error: " & pError.NativeError & vbCrLf
-End Function
-
 Public Function gCategoryFromSecType( _
                 ByVal value As SecurityTypes) As InstrumentCategories
 Select Case value
@@ -301,37 +279,6 @@ Resume
 End Function
 
 
-Public Function gDatabaseTypeFromString( _
-                ByVal value As String) As DatabaseTypes
-value = Trim$(value)
-Select Case UCase$(value)
-Case "SQLSERVER", _
-        "SQL SERVER", _
-        "SQLSERVER7", _
-        "SQL SERVER 7", _
-        "SQLSERVER2000", _
-        "SQL SERVER 2000", _
-        "SQLSERVER2005", _
-        "SQL SERVER 2005"
-    gDatabaseTypeFromString = DbSQLServer
-Case "MYSQL5", "MYSQL 5", "MYSQL"
-    gDatabaseTypeFromString = DbMySQL5
-End Select
-End Function
-
-Public Function gDatabaseTypeToString( _
-                ByVal value As DatabaseTypes) As String
-Select Case value
-Case DbSQLServer, _
-        DbSQLServer7, _
-        DbSQLServer2000, _
-        DbSQLServer2005
-    gDatabaseTypeToString = "SQL Server"
-Case DbMySQL5
-    gDatabaseTypeToString = "MySQL 5"
-End Select
-End Function
-
 Public Function gContractFromInstrument( _
                 ByVal instrument As instrument) As Contract
 Dim lContractBuilder As ContractBuilder
@@ -375,10 +322,69 @@ End With
 Set gContractFromInstrument = lContractBuilder.Contract
 End Function
 
+Public Function gDatabaseTypeFromString( _
+                ByVal value As String) As DatabaseTypes
+value = Trim$(value)
+Select Case UCase$(value)
+Case "SQLSERVER", _
+        "SQL SERVER", _
+        "SQLSERVER7", _
+        "SQL SERVER 7", _
+        "SQLSERVER2000", _
+        "SQL SERVER 2000", _
+        "SQLSERVER2005", _
+        "SQL SERVER 2005"
+    gDatabaseTypeFromString = DbSQLServer
+Case "MYSQL5", "MYSQL 5", "MYSQL"
+    gDatabaseTypeFromString = DbMySQL5
+End Select
+End Function
+
+Public Function gDatabaseTypeToString( _
+                ByVal value As DatabaseTypes) As String
+Select Case value
+Case DbSQLServer, _
+        DbSQLServer7, _
+        DbSQLServer2000, _
+        DbSQLServer2005
+    gDatabaseTypeToString = "SQL Server"
+Case DbMySQL5
+    gDatabaseTypeToString = "MySQL 5"
+End Select
+End Function
+
+Public Function gGenerateConnectionErrorMessages( _
+                ByVal pConnection As ADODB.connection) As String
+Dim lError As ADODB.Error
+Dim errMsg As String
+
+For Each lError In pConnection.Errors
+    errMsg = "--------------------" & vbCrLf & _
+            gGenerateErrorMessage(lError)
+Next
+pConnection.Errors.Clear
+gGenerateConnectionErrorMessages = errMsg
+End Function
+
+Public Function gGenerateErrorMessage( _
+                ByVal pError As ADODB.Error)
+gGenerateErrorMessage = _
+        "Error " & pError.Number & ": " & pError.Description & vbCrLf & _
+        "    Source: " & pError.Source & vbCrLf & _
+        "    SQL state: " & pError.SQLState & vbCrLf & _
+        "    Native error: " & pError.NativeError & vbCrLf
+End Function
+
 Public Function gGetSequenceNumber() As Long
 Static seq As Long
 seq = seq + 1
 gGetSequenceNumber = seq
+End Function
+
+Public Function gIsStateSet( _
+                ByVal value As Long, _
+                ByVal stateToTest As ADODB.ObjectStateEnum) As Boolean
+gIsStateSet = ((value And stateToTest) = stateToTest)
 End Function
 
 Public Function gRoundTimeToSecond( _

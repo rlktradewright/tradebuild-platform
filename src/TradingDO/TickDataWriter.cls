@@ -104,7 +104,7 @@ If Not mCmd Is Nothing Then
     mCmd.cancel
     mConnection.Close
 ElseIf Not mConnection Is Nothing Then
-    If mConnection.State = adStateOpen Then
+    If gIsStateSet(mConnection.State, adStateOpen) Then
         mConnection.Close
     Else
         mConnection.cancel
@@ -164,7 +164,7 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
                 gGenerateConnectionErrorMessages(pConnection)
     gLogger.Log LogLevelNormal, taskName & ": " & errorMsg
     
-    If mConnection.State = adStateOpen Then
+    If gIsStateSet(mConnection.State, adStateOpen) Then
         Debug.Print "TickDataWriter: close connection(error)"
         mConnection.Close
     End If
@@ -178,10 +178,10 @@ Else
     
     ' The following statement has been commented out because it causes a failure on Vista
     ' when running synchronously
-    'If mConnection.State = adStateOpen Then mConnection.Close
+    'if gisstateset(mConnection.State,adStateOpen) Then mConnection.Close
     
     If mAsynchronous Then
-        If mConnection.State = adStateOpen Then mConnection.Close
+        If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
         mTaskContext.finish 0, False
     Else
         RaiseEvent DataWritten
@@ -248,7 +248,7 @@ mData = Data
 
 connectToDB
 DoWriteTickData
-If mConnection.State = adStateOpen Then mConnection.Close
+If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
 End Sub
 
 Friend Function WriteDataAsync( _

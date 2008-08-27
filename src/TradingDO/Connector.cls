@@ -73,7 +73,7 @@ Private mOptions                            As ConnectOptionEnum
 
 Private Sub Class_Terminate()
 If Not mConnection Is Nothing Then
-    If mConnection.State = adStateOpen Then
+    If gIsStateSet(mConnection.State, adStateOpen) Then
         mConnection.Close
     Else
         mConnection.cancel
@@ -120,7 +120,7 @@ End Sub
 Private Sub mConnectionTimer_TimerExpired()
 Debug.Print "BarWriter: Connect timed out - reconnecting"
 gLogger.Log LogLevelDetail, "Connector: connect timed out - reconnecting"
-If mConnection.State = adStateOpen Then
+If gIsStateSet(mConnection.State, adStateOpen) Then
     mConnection.Close
 Else
     mConnection.cancel
@@ -165,7 +165,7 @@ End Sub
 
 Private Sub connectToDB()
 If Not mConnection Is Nothing Then
-    If mConnection.State = adStateOpen Then
+    If gIsStateSet(mConnection.State, adStateOpen) Then
         mConnection.Close
     Else
         mConnection.cancel

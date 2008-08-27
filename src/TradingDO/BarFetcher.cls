@@ -116,13 +116,13 @@ End Sub
 Private Sub Task_cancel()
 
 If Not mRs Is Nothing Then
-    If mRs.State <> adStateOpen Then mRs.cancel
+    If Not gIsStateSet(mRs.State, adStateOpen) Then mRs.cancel
 End If
 
 If Not mCmd Is Nothing Then mCmd.cancel
 
 If Not mConnection Is Nothing Then
-    If mConnection.State = adStateOpen Then
+    If gIsStateSet(mConnection.State, adStateOpen) Then
         mConnection.Close
     Else
         mConnection.cancel
@@ -189,7 +189,7 @@ Case ProcessingBars
         mRs.MovePrevious
     Else
         Debug.Print "BarFetcher: close connection"
-        If mConnection.State = adStateOpen Then mConnection.Close
+        If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
         gLogger.Log LogLevelDetail, "BarFetcher fetched " & builder.Bars.count & " bars for " & mInstrument.shortName
         mTaskContext.finish builder.Bars, False
     End If
@@ -216,7 +216,7 @@ Case ProcessingTicks
             Else
                 gLogger.Log LogLevelDetail, "BarFetcher fetched " & builder.Bars.count & " bars for " & mInstrument.shortName
                 Debug.Print "BarFetcher: close connection"
-                If mConnection.State = adStateOpen Then mConnection.Close
+                If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
                 mTaskContext.finish mFetchBarsBuilder.Bars, False
             End If
         Else
@@ -261,7 +261,7 @@ Else
         mAsyncState = Fetching
     Else
         Debug.Print "BarFetcher: close connection"
-        If mConnection.State = adStateOpen Then mConnection.Close
+        If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
         mTaskContext.finish mFetchBarsBuilder.Bars, False
     End If
 End If
@@ -294,7 +294,7 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
         gGenerateConnectionErrorMessages(pConnection)
         
     If mAsynchronous Then
-        If mConnection.State = adStateOpen Then
+        If gIsStateSet(mConnection.State, adStateOpen) Then
             Debug.Print "BarFetcher: close connection(error)"
             mConnection.Close
         End If
@@ -354,7 +354,7 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
         gGenerateConnectionErrorMessages(mConnection)
     
     Debug.Print "BarFetcher: close connection(error)"
-    If mConnection.State = adStateOpen Then mConnection.Close
+    If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
     If mAsynchronous Then
         mTaskContext.Error pError.Number, _
                             ProjectName & "." & ModuleName & ":" & "mRs_FetchComplete" & vbCrLf & s
@@ -374,7 +374,7 @@ If mAsynchronous Then
         If noTicks Then
             gLogger.Log LogLevelDetail, "BarFetcher fetched " & builder.Bars.count & " bars for " & mInstrument.shortName
             Debug.Print "BarFetcher: close connection"
-            If mConnection.State = adStateOpen Then mConnection.Close
+            If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
             mTaskContext.finish mFetchBarsBuilder.Bars, False
         Else
             mAsyncState = ProcessingTicks
@@ -465,7 +465,7 @@ Else
 End If
 
 Debug.Print "BarFetcher: close connection"
-If mConnection.State = adStateOpen Then mConnection.Close
+If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
 
 End Function
 

@@ -98,8 +98,12 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
                     gGenerateErrorMessage(pError) & _
                     gGenerateConnectionErrorMessages(mConnection))
     If mAsynchronous Then
-        If mConnection.State = adStateOpen Then mConnection.Close
+        If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
     End If
+Else
+    Set mRs.ActiveConnection = Nothing
+    If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
+    
 End If
 End Sub
 
@@ -134,10 +138,8 @@ If adStatus = EventStatusEnum.adStatusErrorsOccurred Then
                     gGenerateConnectionErrorMessages(mConnection))
     Exit Sub
 End If
-Set mRs.ActiveConnection = Nothing
-If mConnection.State = adStateOpen Then mConnection.Close
-mFetchComplete = True
 
+mFetchComplete = True
 Debug.Print "Fetch complete"
 
 If Not mAsynchronous Then
@@ -146,6 +148,7 @@ ElseIf mWaitingForData Then
     mWaitingForData = False
     RaiseEvent DataAvailable
 End If
+    
 End Sub
 
 Private Sub mRs_FetchProgress( _
@@ -156,6 +159,7 @@ Private Sub mRs_FetchProgress( _
 
 Debug.Print "Fetch progress=" & Progress & "; max=" & MaxProgress
 If Not mAsynchronous Then Exit Sub
+
 If mWaitingForData Then
     mWaitingForData = False
     RaiseEvent DataAvailable
@@ -176,7 +180,7 @@ End Property
 
 Public Sub cancel()
 If Not mRs Is Nothing Then
-    If mRs.State = adStateOpen Then
+    If gIsStateSet(mRs.State, adStateOpen) Then
         mRs.Close
     Else
         mRs.cancel
@@ -185,7 +189,7 @@ If Not mRs Is Nothing Then
 End If
 
 If Not mConnection Is Nothing Then
-    If mConnection.State = adStateOpen Then
+    If gIsStateSet(mConnection.State, adStateOpen) Then
         mConnection.Close
     Else
         mConnection.cancel
@@ -202,7 +206,7 @@ If mRs Is Nothing Then
     If Not mAsynchronous Then
         Err.Raise ErrorCodes.ErrIllegalStateException, _
                 ProjectName & "." & ModuleName & ":" & "getNextTick", _
-                "Must call startStream befoe calling getNextTick"
+                "Must call startStream before calling getNextTick"
     End If
     
     Debug.Print "getNextTick: no recordset"
@@ -239,7 +243,7 @@ Set mConnector = mDB.getConnector(, IIf(mAsynchronous, ConnectOptionEnum.adAsync
 mConnector.connect
 If Not mAsynchronous Then
     doFetchTicks
-    If mConnection.State = adStateOpen Then mConnection.Close
+    If gIsStateSet(mConnection.State, adStateOpen) Then mConnection.Close
 End If
 End Sub
 
@@ -322,7 +326,9 @@ End Sub
 Private Function getNextDecoder() As Boolean
 Set mDecoder = Nothing
 
-If mRs.State <> adStateOpen Then
+If Not gIsStateSet(mRs.State, adStateOpen) Then
+    gLogger.Log LogLevelDetail, ProjectName & "." & ModuleName & ":getNextDecoder: recordset state is " & mRs.State
+    Debug.Print "Recordset state is " & mRs.State
     mWaitingForData = True
 ElseIf mRs.EOF Then
     If Not mFetchComplete Then
