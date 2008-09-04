@@ -2318,6 +2318,7 @@ For i = 0 To UBound(orderTypesStr)
             "BASKET", _
             "COND", _
             "CONDORDER", _
+            "CONSCOST", _
             "DEACTEOD", _
             "FOK", _
             "HPENNY", _
@@ -2327,6 +2328,8 @@ For i = 0 To UBound(orderTypesStr)
             "OPG", _
             "OPGREROUT", _
             "PAON", _
+            "PEGMID", _
+            "PREOPGRTH", _
             "RELSTK", _
             "SCALE", _
             "SCALERST", _
