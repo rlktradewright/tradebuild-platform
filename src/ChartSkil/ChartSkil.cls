@@ -103,9 +103,9 @@ End Enum
 Public Enum LayerNumbers
     LayerBackground = MinLayer
     LayerGrid = MinLayer + 5
-    LayerGridText = LayerGrid + 1
+    LayerGridText = LayerGrid + 3
     LayerLowestUser = MinLayer + 10
-    LayerHIghestUser = MaxLayer - 10
+    LayerHighestUser = MaxLayer - 10
     LayerDefaultLines
     LayerDefaultTexts
     LayerTitle = MaxLayer - 5

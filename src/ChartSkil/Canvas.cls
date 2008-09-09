@@ -191,6 +191,10 @@ If Not mBoundary.isValid Then Exit Property
 setScale
 End Property
 
+Public Property Get right() As Single
+right = mBoundary.right
+End Property
+
 Friend Property Let surface(ByRef value As PictureBox)
 Set mSurface = value
 End Property

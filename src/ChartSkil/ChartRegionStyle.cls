@@ -33,6 +33,9 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ProjectName                As String = "ChartSkil26"
+Private Const ModuleName                As String = "ChartRegionStyle"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -56,6 +59,9 @@ Private mIntegerYScale As Boolean
 Private mYScaleQuantum As Double
 Private mGridlineSpacingY As Double
 Private mMinimumHeight As Double
+Private mSnapCursorToTickBoundaries As Boolean
+
+Private mBackGradientFillColors() As OLE_COLOR
 
 '@================================================================================
 ' Class Event Handlers
@@ -87,6 +93,38 @@ End Property
 
 Public Property Let backColor(ByVal val As Long)
 mBackColor = val
+End Property
+
+Public Property Get backGradientFillColors() As OLE_COLOR()
+backGradientFillColors = mBackGradientFillColors
+End Property
+
+Public Property Let backGradientFillColors(ByRef value() As OLE_COLOR)
+Dim numColors As Long
+
+numColors = -1
+On Error Resume Next
+numColors = UBound(value)
+On Error GoTo 0
+
+If numColors = -1 Then
+    Erase mBackGradientFillColors
+    Exit Property
+End If
+
+If numColors < 2 Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "BackGradientFillColors", _
+            "At least two background gradient fill colors must be supplied"
+End If
+
+If numColors > 5 Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "BackGradientFillColors", _
+            "At most 5 background gradient fill colors can be supplied"
+End If
+
+mBackGradientFillColors = value
 End Property
 
 Public Property Get gridColor() As Long
@@ -153,6 +191,14 @@ Public Property Let pointerStyle(ByVal value As PointerStyles)
 mPointerStyle = value
 End Property
 
+Public Property Let snapCursorToTickBoundaries(ByVal value As Boolean)
+mSnapCursorToTickBoundaries = value
+End Property
+
+Public Property Get snapCursorToTickBoundaries() As Boolean
+snapCursorToTickBoundaries = mSnapCursorToTickBoundaries
+End Property
+
 Public Property Get YScaleQuantum() As Double
 YScaleQuantum = mYScaleQuantum
 End Property
@@ -169,6 +215,7 @@ Public Function clone() As ChartRegionStyle
 Set clone = New ChartRegionStyle
 clone.autoscale = mAutoscale
 clone.backColor = mBackColor
+clone.backGradientFillColors = mBackGradientFillColors
 clone.gridColor = mGridColor
 clone.gridlineSpacingY = mGridlineSpacingY
 clone.gridTextColor = mGridTextColor
@@ -177,6 +224,7 @@ clone.minimumHeight = mMinimumHeight
 clone.pointerStyle = mPointerStyle
 clone.hasGrid = mhasGrid
 clone.hasGridText = mhasGridText
+clone.snapCursorToTickBoundaries = mSnapCursorToTickBoundaries
 clone.YScaleQuantum = mYScaleQuantum
 End Function
 

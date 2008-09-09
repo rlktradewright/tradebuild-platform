@@ -206,7 +206,7 @@ Begin VB.UserControl Chart
    Begin VB.PictureBox YAxisPicture 
       Appearance      =   0  'Flat
       AutoRedraw      =   -1  'True
-      BackColor       =   &H80000005&
+      BackColor       =   &H00FFFFFF&
       BorderStyle     =   0  'None
       ForeColor       =   &H80000008&
       Height          =   615
@@ -222,7 +222,7 @@ Begin VB.UserControl Chart
    Begin VB.PictureBox XAxisPicture 
       Appearance      =   0  'Flat
       AutoRedraw      =   -1  'True
-      BackColor       =   &H80000005&
+      BackColor       =   &H00FFFFFF&
       BorderStyle     =   0  'None
       ForeColor       =   &H80000008&
       Height          =   375
@@ -236,7 +236,7 @@ Begin VB.UserControl Chart
    Begin VB.PictureBox ChartRegionPicture 
       Appearance      =   0  'Flat
       AutoRedraw      =   -1  'True
-      BackColor       =   &H80000005&
+      BackColor       =   &H00FFFFFF&
       BorderStyle     =   0  'None
       ForeColor       =   &H80000008&
       Height          =   615
@@ -989,11 +989,23 @@ Private Sub ChartRegionPicture_MouseDown( _
                             Shift As Integer, _
                             x As Single, _
                             y As Single)
+Dim region As ChartRegion
+
+Set region = mRegions(2 * index - 1).region
+
+If (region.snapCursorToTickBoundaries And Not CBool((Shift And vbCtrlMask))) Or _
+    (Not region.snapCursorToTickBoundaries And CBool((Shift And vbCtrlMask))) _
+Then
+    Dim YScaleQuantum As Double
+    YScaleQuantum = region.YScaleQuantum
+    If YScaleQuantum <> 0 Then y = YScaleQuantum * Int(y / YScaleQuantum)
+End If
+
 If Button = vbLeftButton Then mLeftDragging = True
 mLeftDragStartPosnX = Int(x)
 mLeftDragStartPosnY = y
 
-mRegions(2 * index - 1).region.MouseDown Button, Shift, x, y
+region.MouseDown Button, Shift, x, y
 End Sub
 
 Private Sub ChartRegionPicture_MouseMove(index As Integer, _
@@ -1033,7 +1045,15 @@ Else
             Set region = mRegions(i).region
             If i = (2 * index - 1) Then
                 'debug.print "Mousemove: index=" & index & " region=" & i & " x=" & x & " y=" & y
+                If (region.snapCursorToTickBoundaries And Not CBool((Shift And vbCtrlMask))) Or _
+                    (Not region.snapCursorToTickBoundaries And CBool((Shift And vbCtrlMask))) _
+                Then
+                    Dim YScaleQuantum As Double
+                    YScaleQuantum = region.YScaleQuantum
+                    If YScaleQuantum <> 0 Then y = YScaleQuantum * Int(y / YScaleQuantum)
+                End If
                 region.drawCursor Button, Shift, x, y
+                
             Else
                 'debug.print "Mousemove: index=" & index & " region=" & i & " x=" & x & " y=" & MinusInfinitySingle
                 region.drawCursor Button, Shift, x, MinusInfinitySingle
@@ -1052,9 +1072,21 @@ Private Sub ChartRegionPicture_MouseUp( _
                             Shift As Integer, _
                             x As Single, _
                             y As Single)
+Dim region As ChartRegion
+
+Set region = mRegions(2 * index - 1).region
+
+If (region.snapCursorToTickBoundaries And Not CBool((Shift And vbCtrlMask))) Or _
+    (Not region.snapCursorToTickBoundaries And CBool((Shift And vbCtrlMask))) _
+Then
+    Dim YScaleQuantum As Double
+    YScaleQuantum = region.YScaleQuantum
+    If YScaleQuantum <> 0 Then y = YScaleQuantum * Int(y / YScaleQuantum)
+End If
+
 If Button = vbLeftButton Then mLeftDragging = False
 
-mRegions(2 * index - 1).region.MouseUp Button, Shift, x, y
+region.MouseUp Button, Shift, x, y
 End Sub
 
 '================================================================================
@@ -2248,7 +2280,7 @@ Case TimePeriodMinute
     Case 12
         Set mVerticalGridTimePeriod = GetTimePeriod(2, TimePeriodHour)
     Case 15
-        Set mVerticalGridTimePeriod = GetTimePeriod(1, TimePeriodHour)
+        Set mVerticalGridTimePeriod = GetTimePeriod(2, TimePeriodHour)
     Case 20
         Set mVerticalGridTimePeriod = GetTimePeriod(4, TimePeriodHour)
     Case 30
@@ -2517,8 +2549,10 @@ mScaleWidth = newScaleWidth
 failpoint = 400
 
 For i = 0 To ChartRegionPicture.UBound
-    YAxisPicture(i).left = UserControl.width - YAxisPicture(i).width
-    ChartRegionPicture(i).width = YAxisPicture(i).left
+    If (UserControl.width - YAxisPicture(i).width) > 0 Then
+        YAxisPicture(i).left = UserControl.width - YAxisPicture(i).width
+        ChartRegionPicture(i).width = YAxisPicture(i).left
+    End If
 Next
 
 
@@ -2565,18 +2599,64 @@ Err.Raise Err.Number, _
 End Sub
 
 Private Sub setHorizontalScrollBar()
+Dim failpoint As Long
+Dim hscrollVal As Integer
+On Error GoTo Err
+
 If mPeriods.currentPeriodNumber + chartWidth - 1 > 32767 Then
+
+    failpoint = 100
+
     HScroll.Max = 32767
+ElseIf mPeriods.currentPeriodNumber + chartWidth - 1 < 1 Then
+
+    failpoint = 200
+
+    HScroll.Max = 1
 Else
+
+    failpoint = 300
+    
     HScroll.Max = mPeriods.currentPeriodNumber + chartWidth - 1
 End If
 HScroll.Min = 0
 
-' NB the following calculation has to be done using doubles as for very large charts it can cause an overflow using longs
-HScroll.value = Round(CDbl(HScroll.Max) * CDbl(lastVisiblePeriod) / CDbl((mPeriods.currentPeriodNumber + chartWidth - 1)))
+
+failpoint = 400
+
+' NB the following calculation has to be done using doubles as for very large charts it can cause an overflow using integers
+hscrollVal = Round(CDbl(HScroll.Max) * CDbl(lastVisiblePeriod) / CDbl((mPeriods.currentPeriodNumber + chartWidth - 1)))
+If hscrollVal > HScroll.Max Then
+    HScroll.value = HScroll.Max
+ElseIf hscrollVal < HScroll.Min Then
+    HScroll.value = HScroll.Min
+Else
+    HScroll.value = Round(CDbl(HScroll.Max) * CDbl(lastVisiblePeriod) / CDbl((mPeriods.currentPeriodNumber + chartWidth - 1)))
+End If
+
+failpoint = 500
 
 HScroll.SmallChange = 1
-HScroll.LargeChange = chartWidth - 1
+If (chartWidth - 1) < 1 Then
+    HScroll.LargeChange = 1
+Else
+    HScroll.LargeChange = chartWidth - 1
+End If
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = Err.Source
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error at: " & ProjectName & "." & ModuleName & ":" & "setHorizontalScrollBar" & "." & failpoint & _
+                            IIf(errSource <> "", vbCrLf & errSource, "") & vbCrLf & _
+                            errDescription
+Err.Raise errNumber, _
+        ProjectName & "." & ModuleName & ":" & "mTimer_TimerExpired" & "." & failpoint & _
+        IIf(errSource <> "", vbCrLf & errSource, ""), _
+        errDescription
+
 End Sub
 
 Private Sub setSession( _

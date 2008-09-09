@@ -45,11 +45,19 @@ Event MouseUp(Button As Integer, _
                 y As Single)
 
 '================================================================================
+' Enums
+'================================================================================
+
+'================================================================================
 ' Constants
 '================================================================================
 
 Private Const ProjectName                As String = "ChartSkil26"
 Private Const ModuleName                As String = "ChartRegion"
+
+Private Const GRADIENT_FILL_RECT_H As Long = 0
+Private Const GRADIENT_FILL_RECT_V As Long = 1
+Private Const GRADIENT_FILL_TRIANGLE  As Long = 2
 
 '================================================================================
 ' Types
@@ -59,6 +67,17 @@ Private Type PeriodTableEntry
     firstIndex                  As Long
     lastindex                   As Long
     backColor                   As Long
+End Type
+
+Private Type GRADIENT_RECT
+    upperLeft                   As Long
+    lowerRight                  As Long
+End Type
+
+Private Type GRADIENT_TRIANGLE
+    vertex1   As Long
+    vertex2   As Long
+    vertex3   As Long
 End Type
 
 Private Type GraphicObjectTableEntry
@@ -87,11 +106,45 @@ Private Type GraphicObjectTableEntry
     nextVisibleIndex    As Long
 End Type
 
+Private Type TRIVERTEX
+  x         As Long
+  y         As Long
+  Filler1   As Byte
+  Red       As Byte
+  Filler2   As Byte
+  Green     As Byte
+  Filler3   As Byte
+  Blue      As Byte
+  Filler4   As Byte
+  Alpha     As Byte
+End Type
+
 Private Type VisibleTableEntry
     firstIndex          As Long
     lastindex           As Long
 End Type
 
+'================================================================================
+' External FUnction Declarations
+'================================================================================
+
+Private Declare Function CreateRectRgn Lib "gdi32" ( _
+                ByVal x1 As Long, _
+                ByVal y1 As Long, _
+                ByVal x2 As Long, _
+                ByVal y2 As Long) As Long
+
+Private Declare Sub GradientFill Lib "msimg32" ( _
+                ByVal hdc As Long, _
+                ByVal pVertices As Long, _
+                ByVal numVertices As Long, _
+                ByVal pMesh As Long, _
+                ByVal numMesh As Long, _
+                ByVal dwMode As Long)
+
+Private Declare Function SelectClipRgn Lib "gdi32" ( _
+                ByVal hdc As Long, _
+                ByVal hRgn As Long) As Long
 
 '================================================================================
 ' Member variables
@@ -141,7 +194,7 @@ Private mDefaultTextSeries As TextSeries
 Private mDefaultLineSeries As LineSeries
 
 'Private mSurface As PictureBox
-Private mCanvas As canvas
+Private mCanvas As Canvas
 Private mSuppressDrawing As Boolean
 
 Private WithEvents mToolbar As toolbar
@@ -205,6 +258,13 @@ Private mGridTextColor As Long
 Private mhasGrid As Boolean
 Private mShowPerformanceText As Boolean
 
+Private mGradientFill As Boolean
+Private mGradientFillMode As Long
+Private mBackGradientFillColors() As Long
+Private mVertices() As TRIVERTEX
+Private mMeshTriangle() As GRADIENT_TRIANGLE
+Private mMeshRect() As GRADIENT_RECT
+
 Private mPointerStyle As PointerStyles
 Private mPointerCrosshairsColor As Long
 Private mPointerDiscColor As Long
@@ -235,9 +295,7 @@ Private mTaskContext As TaskContext
 Private mCurrX As Single
 Private mCurrY As Single
 
-'================================================================================
-' Enums
-'================================================================================
+Private mSnapCursorToTickBoundaries As Boolean
 
 '================================================================================
 ' Class Event Handlers
@@ -246,7 +304,7 @@ Private mCurrY As Single
 Private Sub Class_Initialize()
 Dim i As Long
 
-Set mCanvas = New canvas
+Set mCanvas = New Canvas
 mNextLayer = LayerNumbers.LayerLowestUser
 
 ReDim mPeriodTable(255) As PeriodTableEntry
@@ -952,9 +1010,43 @@ End Property
 
 Public Property Let regionBackColor(ByVal val As Long)
 mBackColor = val
-If Not mYAxisRegion Is Nothing Then
-    mYAxisRegion.regionBackColor = val
+'If Not mYAxisRegion Is Nothing Then
+'    mYAxisRegion.regionBackColor = val
+'End If
+End Property
+
+Public Property Get regionBackGradientFillColors() As OLE_COLOR()
+regionBackGradientFillColors = mBackGradientFillColors
+End Property
+
+Public Property Let regionBackGradientFillColors(ByRef value() As OLE_COLOR)
+Dim numColors As Long
+
+On Error Resume Next
+numColors = UBound(value) + 1
+On Error GoTo 0
+
+If numColors = 0 Then
+    Erase mBackGradientFillColors
+    mGradientFill = False
+    Exit Property
 End If
+
+If numColors < 2 Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "regionBackGradientFillColors", _
+            "At least 2 background gradient fill colors must be supplied"
+End If
+
+If numColors > 5 Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "regionBackGradientFillColors", _
+            "At most 5 background gradient fill colors can be supplied"
+End If
+
+mBackGradientFillColors = value
+mGradientFill = True
+
 End Property
 
 Public Property Get regionBottom() As Single
@@ -1036,6 +1128,20 @@ Else
 End If
 End Property
 
+Public Property Let snapCursorToTickBoundaries(ByVal value As Boolean)
+If mIsXAxisRegion Or mIsYAxisRegion Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
+            "Cannot snapCursorToTickBoundaries for an axis region"
+End If
+
+mSnapCursorToTickBoundaries = value
+End Property
+
+Public Property Get snapCursorToTickBoundaries() As Boolean
+snapCursorToTickBoundaries = mSnapCursorToTickBoundaries
+End Property
+
 Public Property Get style() As ChartRegionStyle
 Set style = mStyle.clone
 End Property
@@ -1048,6 +1154,7 @@ lSuppress = mSuppressDrawing
 mSuppressDrawing = True
 
 If value.backColor <> mBackColor Then regionBackColor = value.backColor
+regionBackGradientFillColors = value.backGradientFillColors
 If value.gridColor <> mGridColor Then gridColor = value.gridColor
 If value.gridTextColor <> mGridTextColor Then gridTextColor = value.gridTextColor
 If Not mIsXAxisRegion And Not mIsYAxisRegion Then
@@ -1056,6 +1163,7 @@ If Not mIsXAxisRegion And Not mIsYAxisRegion Then
     If value.integerYScale <> mIntegerYScale Then integerYScale = value.integerYScale
     If value.minimumHeight <> mMinimumHeight Then minimumHeight = value.minimumHeight
     If value.pointerStyle <> mPointerStyle Then pointerStyle = value.pointerStyle
+    If value.snapCursorToTickBoundaries <> mSnapCursorToTickBoundaries Then snapCursorToTickBoundaries = value.snapCursorToTickBoundaries
 End If
 If value.hasGrid <> mhasGrid Then hasGrid = value.hasGrid
 If value.hasGridText <> mhasGridText Then hasGridText = value.hasGridText
@@ -1136,11 +1244,16 @@ aFont.Underline = False
 aFont.Bold = False
 mYPositionText.font = aFont
 
-Set mYGridTexts = mYAxisRegion.addTextSeries(LayerNumbers.LayerGrid)
+Set mYGridTexts = mYAxisRegion.addTextSeries(LayerNumbers.LayerGridText)
 mYGridTexts.includeInAutoscale = False
 mYGridTexts.align = AlignCentreLeft
 mYGridTexts.Color = mGridTextColor
-mYGridTexts.box = False
+mYGridTexts.box = True
+mYGridTexts.boxFillColor = mYAxisRegion.regionBackColor
+mYGridTexts.boxStyle = LineInvisible
+mYGridTexts.boxColor = mYAxisRegion.regionBackColor
+mYGridTexts.paddingX = 0
+mYGridTexts.paddingY = 0
 Set aFont = New StdFont
 aFont.name = "Arial"
 aFont.Size = 8
@@ -1154,7 +1267,6 @@ Public Property Get YAxisRegion() As ChartRegion
 Set YAxisRegion = mYAxisRegion
 End Property
 
-
 Public Property Let YScaleQuantum(ByVal value As Double)
 If mIsXAxisRegion Or mIsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
@@ -1163,6 +1275,10 @@ If mIsXAxisRegion Or mIsYAxisRegion Then
 End If
 
 mYScaleQuantum = value
+End Property
+
+Public Property Get YScaleQuantum() As Double
+YScaleQuantum = mYScaleQuantum
 End Property
 
 '================================================================================
@@ -1420,7 +1536,27 @@ With mCanvas
 If mShowPerformanceText Then mElapsedTimer.StartTiming
 
 .clear
-.backColor = regionBackColor
+
+If mGradientFill Then
+    calculateGradientFillParameters
+    If mGradientFillMode = GRADIENT_FILL_TRIANGLE Then
+        GradientFill .hdc, _
+                    VarPtr(mVertices(0)), _
+                    UBound(mVertices) + 1, _
+                    VarPtr(mMeshTriangle(0)), _
+                    UBound(mMeshTriangle) + 1, _
+                    GRADIENT_FILL_TRIANGLE
+    Else
+        GradientFill .hdc, _
+                    VarPtr(mVertices(0)), _
+                    UBound(mVertices) + 1, _
+                    VarPtr(mMeshRect(0)), _
+                    UBound(mMeshRect) + 1, _
+                    GRADIENT_FILL_RECT_H
+    End If
+Else
+    .backColor = regionBackColor
+End If
 
 For i = IIf(mMinInViewPeriod < 0, 0, mMinInViewPeriod) To IIf(mMaxPeriodNumber < mMaxInViewPeriod, mMaxPeriodNumber, mMaxInViewPeriod)
     If mPeriodTable(i).backColor <> 0 Then
@@ -2079,6 +2215,54 @@ End Function
 'End Function
 '
 
+Private Sub calculateGradientFillParameters()
+Select Case UBound(mBackGradientFillColors)
+Case 1
+    ReDim mVertices(1) As TRIVERTEX
+    ReDim mMeshRect(0) As GRADIENT_RECT
+    setVertex 0, mCanvas.left, mCanvas.top, 0
+    setVertex 1, mCanvas.right + 1, mCanvas.bottom, 1
+    setMeshRect 0, 0, 1
+    mGradientFillMode = GRADIENT_FILL_RECT_H
+Case 2
+    ReDim mVertices(4) As TRIVERTEX
+    ReDim mMeshTriangle(3) As GRADIENT_TRIANGLE
+    setVertex 0, mCanvas.left, mCanvas.top, 0
+    setVertex 1, mCanvas.right, mCanvas.top, 1
+    setVertex 2, (mCanvas.left + mCanvas.right + 1) / 2, (mCanvas.top + mCanvas.bottom) / 2, 2
+    setVertex 3, mCanvas.right + 1, mCanvas.bottom, 1
+    setVertex 4, mCanvas.left, mCanvas.bottom, 0
+    setMeshTriangle 0, 0, 1, 2
+    setMeshTriangle 1, 1, 3, 2
+    setMeshTriangle 2, 3, 4, 2
+    setMeshTriangle 3, 4, 0, 2
+    mGradientFillMode = GRADIENT_FILL_TRIANGLE
+Case 3
+    ReDim mVertices(3) As TRIVERTEX
+    ReDim mMeshTriangle(1) As GRADIENT_TRIANGLE
+    setVertex 0, mCanvas.left, mCanvas.top, 0
+    setVertex 1, mCanvas.right + 1, mCanvas.top, 1
+    setVertex 2, mCanvas.right + 1, mCanvas.bottom, 2
+    setVertex 3, mCanvas.left, mCanvas.bottom, 3
+    setMeshTriangle 0, 0, 1, 2
+    setMeshTriangle 1, 2, 3, 0
+    mGradientFillMode = GRADIENT_FILL_TRIANGLE
+Case 4
+    ReDim mVertices(4) As TRIVERTEX
+    ReDim mMeshTriangle(3) As GRADIENT_TRIANGLE
+    setVertex 0, mCanvas.left, mCanvas.top, 0
+    setVertex 1, mCanvas.right + 1, mCanvas.top, 1
+    setVertex 2, mCanvas.right + 1, mCanvas.bottom, 2
+    setVertex 3, mCanvas.left, mCanvas.bottom, 3
+    setVertex 4, (mCanvas.left + mCanvas.right + 1) / 2, (mCanvas.top + mCanvas.bottom) / 2, 4
+    setMeshTriangle 0, 0, 1, 4
+    setMeshTriangle 1, 1, 2, 4
+    setMeshTriangle 2, 2, 3, 4
+    setMeshTriangle 3, 3, 0, 4
+    mGradientFillMode = GRADIENT_FILL_TRIANGLE
+End Select
+End Sub
+
 Private Function calculateInscopeGaugeDependentObjects()
 Dim index As Long
 index = mGraphicObjects(mFirstInScopeIndex).nextInScopeIndex
@@ -2396,7 +2580,7 @@ With mCanvas
 End With
 
 If Not mYAxisRegion Is Nothing Then
-    mYPositionText.position = mYAxisRegion.newPoint(5, y, CoordsLogical, CoordsLogical)
+    mYPositionText.position = mYAxisRegion.newPoint(15, y, CoordsLogical, CoordsLogical)
     mYPositionText.text = generateYAxisCursorPositionText(y)
 End If
 End Sub
@@ -2421,7 +2605,7 @@ With mCanvas
 End With
 
 If Not mYAxisRegion Is Nothing Then
-    mYPositionText.position = mYAxisRegion.newPoint(5, y, CoordsLogical, CoordsLogical)
+    mYPositionText.position = mYAxisRegion.newPoint(15, y, CoordsLogical, CoordsLogical)
     mYPositionText.text = generateYAxisCursorPositionText(y)
 End If
 End Sub
@@ -2446,7 +2630,7 @@ End Function
 Private Function getLayer(Optional ByVal layer As Long = -1) As Long
 If layer = -1 Then
     getLayer = mNextLayer
-    If mNextLayer <> LayerNumbers.LayerHIghestUser Then
+    If mNextLayer <> LayerNumbers.LayerHighestUser Then
         mNextLayer = mNextLayer + 1
     End If
 Else
@@ -2817,7 +3001,7 @@ Do While y < mCanvas.top
     Else
         aText.text = Format(y, mYScaleFormatStr)
     End If
-    aText.position = mYAxisRegion.newPoint(1, y, CoordsLogical, CoordsLogical)
+    aText.position = mYAxisRegion.newPoint(15, y, CoordsLogical, CoordsLogical)
     y = y + mScaleGridSpacingY
 Loop
 For i = i + 1 To mYGridTexts.count
@@ -2825,6 +3009,37 @@ For i = i + 1 To mYGridTexts.count
     aText.text = ""
 Next
 'mSuppressDrawing = currSuppress
+End Sub
+
+Private Sub setMeshRect( _
+                ByVal index As Long, _
+                ByVal upperLeft As Long, _
+                ByVal lowerRight As Long)
+mMeshRect(index).lowerRight = lowerRight
+mMeshRect(index).upperLeft = upperLeft
+End Sub
+
+Private Sub setMeshTriangle( _
+                ByVal index As Long, _
+                ByVal vertex1 As Long, _
+                ByVal vertex2 As Long, _
+                ByVal vertex3 As Long)
+mMeshTriangle(index).vertex1 = vertex1
+mMeshTriangle(index).vertex2 = vertex2
+mMeshTriangle(index).vertex3 = vertex3
+End Sub
+
+Private Sub setVertex( _
+                ByRef index As Long, _
+                ByVal x As Single, _
+                ByVal y As Single, _
+                ByVal colorIndex As Long)
+mVertices(index).x = mCanvas.convertLogicalToPixelsX(x - mCanvas.left)
+mVertices(index).y = mCanvas.convertLogicalToPixelsY(mCanvas.top - y)
+mVertices(index).Red = mBackGradientFillColors(colorIndex) And &HFF&
+mVertices(index).Green = (mBackGradientFillColors(colorIndex) And &HFF00&) / &H100&
+mVertices(index).Blue = (mBackGradientFillColors(colorIndex) And &HFF0000) / &H10000
+mVertices(index).Alpha = 0
 End Sub
 
 Private Sub setVerticalGridLine(ByVal timestamp As Date, _
