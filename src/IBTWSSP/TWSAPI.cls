@@ -2322,6 +2322,7 @@ For i = 0 To UBound(orderTypesStr)
             "DEACTEOD", _
             "FOK", _
             "HPENNY", _
+            "LARGE", _
             "LTH", _
             "NONALGO", _
             "OCA", _
