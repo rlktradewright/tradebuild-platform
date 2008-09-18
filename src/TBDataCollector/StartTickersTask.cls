@@ -136,6 +136,8 @@ If CBool(contractConfig.getAttribute(AttributeNameEnabled)) Then
     
     failpoint = 400 '=====================================================
     
+    gLogger.Log LogLevelNormal, mTaskContext.Name & ": starting tickers for: " & contractSpec.toString
+    
     mTickers.startTickers _
                     IIf(mWritebars, TickerOptions.TickerOptWriteTradeBarData, 0) + _
                     IIf(mWritebars And writeBidAskBars, _

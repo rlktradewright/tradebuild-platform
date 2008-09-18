@@ -98,8 +98,6 @@ Private mStartTime                                      As Date
 Private mEndTime                                        As Date
 Private mExitProgramTime                                As Date
 
-Private mLogger                                         As Logger
-
 Private WithEvents mStartTasksTC                        As TaskController
 Attribute mStartTasksTC.VB_VarHelpID = -1
 
@@ -110,8 +108,6 @@ Attribute mStartTasksTC.VB_VarHelpID = -1
 Private Sub Class_Initialize()
 
 InitialiseTWUtilities
-
-Set mLogger = GetLogger("")
 
 Set mTradeBuildAPI = TradeBuildAPI
 Set mTickers = mTradeBuildAPI.Tickers
@@ -162,7 +158,7 @@ startCollection
 Exit Sub
 
 Err:
-mLogger.Log LogLevelSevere, "Error " & Err.Number & " in " & _
+gLogger.Log LogLevelSevere, "Error " & Err.Number & " in " & _
         ProjectName & "." & ModuleName & ":" & "startCollection" & vbCrLf & _
         IIf(Err.Source <> "", vbCrLf & Err.Source, "") & _
         Err.description
@@ -175,12 +171,12 @@ End Sub
 Private Sub mStartTasksTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
 If ev.cancelled Then
 ElseIf ev.errorNumber <> 0 Then
-    mLogger.Log LogLevelSevere, _
+    gLogger.Log LogLevelSevere, _
                 "Error " & ev.errorNumber & " starting tickers: " & _
                 ev.ErrorMessage & vbCrLf & _
                 ev.errorSource
 Else
-    mLogger.Log LogLevelNormal, "Tickers started: " & CStr(ev.result)
+    gLogger.Log LogLevelNormal, "Tickers started: " & CStr(ev.result)
 End If
 End Sub
 
@@ -198,20 +194,20 @@ End Sub
 
 Private Sub mTickers_Notification(ev As NotificationEvent)
 If ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToRealtimeDataSource Then
-    mLogger.Log LogLevelNormal, "Connected ok to realtime data source"
+    gLogger.Log LogLevelNormal, "Connected ok to realtime data source"
     RaiseEvent Connected
 ElseIf ev.eventCode = ApiNotifyCodes.ApiNotifyCantConnectRealtimeDataSource Then
-    mLogger.Log LogLevelSevere, "Connect to realtime data source failed: " & ev.eventMessage
+    gLogger.Log LogLevelSevere, "Connect to realtime data source failed: " & ev.eventMessage
     RaiseEvent ConnectFailed(ev.eventMessage)
 ElseIf ev.eventCode = ApiNotifyCodes.ApiNotifyDisconnectedFromRealtimeDataSource Or _
         ev.eventCode = ApiNotifyCodes.ApiNotifyLostConnectionToRealtimeDataSource Then
-    mLogger.Log LogLevelNormal, "Connection to realtime data source closed: " & ev.eventMessage
+    gLogger.Log LogLevelNormal, "Connection to realtime data source closed: " & ev.eventMessage
     RaiseEvent ConnectionClosed
 ElseIf ev.eventCode = ApiNotifyCodes.ApiNotifyReconnectingToRealtimeDataSource Then
-    mLogger.Log LogLevelNormal, "Reconnecting to realtime data source"
+    gLogger.Log LogLevelNormal, "Reconnecting to realtime data source"
     RaiseEvent Reconnecting
 Else
-    mLogger.Log LogLevelNormal, "Notification " & ev.eventCode & ": " & ev.eventMessage
+    gLogger.Log LogLevelNormal, "Notification " & ev.eventCode & ": " & ev.eventMessage
     RaiseEvent NotifyMessage(ev.eventCode, _
                             ev.eventMessage)
 End If
@@ -228,7 +224,7 @@ End Sub
 '@================================================================================
 
 Private Sub mTradeBuildAPI_Error(ev As ErrorEvent)
-mLogger.Log LogLevelSevere, "Error " & ev.errorCode & ": " & ev.ErrorMessage
+gLogger.Log LogLevelSevere, "Error " & ev.errorCode & ": " & ev.ErrorMessage
 RaiseEvent ErrorMessage(ev.errorCode, _
                     ev.ErrorMessage)
 End Sub
@@ -239,14 +235,14 @@ Dim spError As ServiceProviderError
 If ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError Then
     Set spError = mTradeBuildAPI.GetServiceProviderError
     With spError
-        mLogger.Log LogLevelSevere, _
+        gLogger.Log LogLevelSevere, _
                     "Service provider error (" & .serviceProviderName & "): " & .errorCode & ": " & .message
         RaiseEvent ServiceProviderError(.errorCode, _
                                         .serviceProviderName, _
                                         .message)
     End With
 Else
-    mLogger.Log LogLevelNormal, "Notification " & ev.eventCode & ": " & ev.eventMessage
+    gLogger.Log LogLevelNormal, "Notification " & ev.eventCode & ": " & ev.eventMessage
     RaiseEvent NotifyMessage(ev.eventCode, _
                         ev.eventMessage)
 End If
@@ -327,7 +323,7 @@ End If
 
 startTickers
 
-mLogger.Log LogLevelNormal, "Data collection started"
+gLogger.Log LogLevelNormal, "Data collection started"
 RaiseEvent CollectionStarted
 
 Exit Sub
@@ -343,9 +339,9 @@ Public Sub stopCollection()
 Dim lTicker As ticker
 Dim startTime As Date
 
-mLogger.Log LogLevelNormal, "Data collection stopped"
+gLogger.Log LogLevelNormal, "Data collection stopped"
 For Each lTicker In mTradeBuildAPI.Tickers
-    lTicker.StopTicker
+    lTicker.stopTicker
 Next
 
 If Not mEndCollectionTimer Is Nothing Then

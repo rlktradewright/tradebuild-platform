@@ -56,6 +56,8 @@ Public Const ConfigNameTradeBuild           As String = "TradeBuild"
 ' Member variables
 '@================================================================================
 
+Private mLogger                             As Logger
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -72,9 +74,17 @@ Public Const ConfigNameTradeBuild           As String = "TradeBuild"
 ' Properties
 '@================================================================================
 
+Public Property Get gLogger() As Logger
+Set gLogger = mLogger
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Sub main()
+Set mLogger = GetLogger("")
+End Sub
 
 '@================================================================================
 ' Helper Functions
