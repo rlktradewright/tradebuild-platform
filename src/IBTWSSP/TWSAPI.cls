@@ -1907,7 +1907,7 @@ If mServerVersion >= 20 Then
             numBarsInsession = mHistoricalDataTable(index).Session.NumberOfBarsInSession( _
                                                                     .barTimePeriod)
             
-            Select Case .barTimePeriod.units
+            Select Case .barTimePeriod.length
             Case 1
                 TwsRequest.barSizeSetting = "1 min"
                 If .maxNumberOfBars <= 1440 Then
@@ -1980,7 +1980,7 @@ If mServerVersion >= 20 Then
             numBarsInsession = mHistoricalDataTable(index).Session.NumberOfBarsInSession( _
                                                                     .barTimePeriod)
             
-            Select Case .barTimePeriod.units
+            Select Case .barTimePeriod.length
             Case 1
                 
                 If .maxNumberOfBars <= 2000 Then

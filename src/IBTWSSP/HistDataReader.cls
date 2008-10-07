@@ -120,7 +120,7 @@ End Property
 
 Private Sub IBarDataReader_CancelFetch()
 On Error GoTo err
-If mRequestId <> -1 Then mTWSAPI.CancelHistoricalData mRequestId
+If mRequestId <> -1 And Not mTWSAPI Is Nothing Then mTWSAPI.CancelHistoricalData mRequestId
 Exit Sub
 err:
 logMessage "IBTWSSP:HistDataReader:IBarDataReader_CancelFetch (" & err.number & "): " & err.Description, LogLevelSevere

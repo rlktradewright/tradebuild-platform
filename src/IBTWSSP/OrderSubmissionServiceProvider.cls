@@ -154,6 +154,7 @@ End Property
 
 Private Sub ICommonServiceProvider_Terminate()
 On Error GoTo err
+logMessage "IBTWSSP:OrderSubmissionSrvcProvider:ICommonServiceProvider_Terminate terminating"
 finishSubmitters
 Set mCommonServiceConsumer = Nothing
 Exit Sub

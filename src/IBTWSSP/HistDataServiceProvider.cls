@@ -232,6 +232,7 @@ Private Sub ICommonServiceProvider_Terminate()
 
 On Error GoTo err
 
+logMessage "IBTWSSP:HistDataServiceProvider:ICommonServiceProvider_Terminate terminating"
 finishReaders
 Set mCommonServiceConsumer = Nothing
 

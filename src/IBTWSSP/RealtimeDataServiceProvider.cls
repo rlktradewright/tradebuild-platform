@@ -155,6 +155,7 @@ End Property
 
 Private Sub ICommonServiceProvider_Terminate()
 On Error GoTo err
+logMessage "IBTWSSP:RealtimeDataServiceProvider:ICommonServiceProvider_Terminate terminating"
 finishReaders
 Set mCommonServiceConsumer = Nothing
 Exit Sub
@@ -178,7 +179,7 @@ Dim reader As RealtimeDataReader
 On Error GoTo err
 Set reader = New RealtimeDataReader
 Set IRealtimeDataServiceProvider_CreateRealtimeDataReader = reader
-reader.realtimeDataServiceProvider = Me
+reader.RealtimeDataServiceProvider = Me
 reader.commonServiceConsumer = mCommonServiceConsumer
 reader.realtimeDataInputServiceConsumer = serviceConsumer
 reader.streamingDataConsumer = dataConsumer
