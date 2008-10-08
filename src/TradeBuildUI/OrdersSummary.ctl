@@ -107,6 +107,9 @@ Event SelectionChanged()
 ' Constants
 '@================================================================================
 
+Private Const ProjectName                As String = "TradeBuildUI26"
+Private Const ModuleName                As String = "OrdersSummary"
+
 Private Const RowDataOrderPlexBase As Long = &H100
 Private Const RowDataPositionManagerBase As Long = &H1000000
 
@@ -249,6 +252,8 @@ Private mDigitWidth As Single
 
 Private mMonitoredWorkspaces As Collection
 
+Private mSimulated As Boolean
+
 '@================================================================================
 ' User Control Event Handlers
 '@================================================================================
@@ -273,6 +278,14 @@ mMaxPositionManagerGridMappingTableIndex = -1
 
 End Sub
 
+Private Sub UserControl_InitProperties()
+mSimulated = False
+End Sub
+
+Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
+Simulated = PropBag.ReadProperty("simulated", False)
+End Sub
+
 Private Sub UserControl_Resize()
 OrderPlexGrid.Width = UserControl.Width
 OrderPlexGrid.Height = UserControl.Height
@@ -280,6 +293,10 @@ End Sub
 
 Private Sub UserControl_Terminate()
 Debug.Print "OrdersSummary control terminated"
+End Sub
+
+Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
+PropBag.WriteProperty "simulated", mSimulated, False
 End Sub
 
 '@================================================================================
@@ -402,8 +419,13 @@ ElseIf TypeOf ev.affectedItem Is ticker Then
     
     Select Case ev.changeType
     Case CollItemAdded
-        lTicker.PositionManager.addChangeListener Me
-        lTicker.PositionManager.addProfitListener Me
+        If mSimulated Then
+            lTicker.PositionManagerSimulated.addChangeListener Me
+            lTicker.PositionManagerSimulated.addProfitListener Me
+        Else
+            lTicker.PositionManager.addChangeListener Me
+            lTicker.PositionManager.addProfitListener Me
+        End If
     Case CollItemRemoved
         ' nothing to do here as the ticker has already
         ' tidied everything up
@@ -534,10 +556,10 @@ Else
                         selectedOrder.isAttributeModifiable(OrderAttributeIds.OrderAttQuantity)) _
                     Then
                         OrderPlexGrid.col = OrderPlexGrid.MouseCol
-                        EditText.Move OrderPlexGrid.Left + OrderPlexGrid.CellLeft + 8, _
-                                    OrderPlexGrid.Top + OrderPlexGrid.CellTop + 8, _
-                                    OrderPlexGrid.CellWidth - 16, _
-                                    OrderPlexGrid.CellHeight - 16
+                        EditText.Move OrderPlexGrid.Left + OrderPlexGrid.cellLeft + 8, _
+                                    OrderPlexGrid.Top + OrderPlexGrid.celltop + 8, _
+                                    OrderPlexGrid.cellWidth - 16, _
+                                    OrderPlexGrid.cellHeight - 16
                         EditText.Text = OrderPlexGrid.Text
                         EditText.SelStart = 0
                         EditText.SelLength = Len(EditText.Text)
@@ -559,10 +581,10 @@ End Sub
 
 Private Sub OrderPlexGrid_Scroll()
 If EditText.Visible Then
-    EditText.Move OrderPlexGrid.Left + OrderPlexGrid.CellLeft + 8, _
-                OrderPlexGrid.Top + OrderPlexGrid.CellTop + 8, _
-                OrderPlexGrid.CellWidth - 16, _
-                OrderPlexGrid.CellHeight - 16
+    EditText.Move OrderPlexGrid.Left + OrderPlexGrid.cellLeft + 8, _
+                OrderPlexGrid.Top + OrderPlexGrid.celltop + 8, _
+                OrderPlexGrid.cellWidth - 16, _
+                OrderPlexGrid.cellHeight - 16
 End If
 End Sub
 
@@ -587,6 +609,21 @@ End Property
 
 Public Property Get selectedOrderIndex() As Long
 selectedOrderIndex = mSelectedOrderIndex
+End Property
+
+Public Property Let Simulated(ByVal value As Boolean)
+If mMonitoredWorkspaces.count > 0 Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "simulated", _
+            "Property must be set before any workspaces are monitored"
+End If
+
+mSimulated = value
+PropertyChanged "simulated"
+End Property
+
+Public Property Get Simulated() As Boolean
+Simulated = mSimulated
 End Property
 
 '@================================================================================
@@ -624,7 +661,11 @@ End Sub
 Public Sub monitorWorkspace( _
                 ByVal pWorkspace As WorkSpace)
 pWorkspace.Tickers.addCollectionChangeListener Me
-pWorkspace.OrderPlexes.addCollectionChangeListener Me
+If mSimulated Then
+    pWorkspace.orderPlexesSimulated.addCollectionChangeListener Me
+Else
+    pWorkspace.OrderPlexes.addCollectionChangeListener Me
+End If
 mMonitoredWorkspaces.add pWorkspace
 End Sub
                 
@@ -818,9 +859,9 @@ OrderPlexGrid.row = rowIndex
 OrderPlexGrid.col = colIndex
 OrderPlexGrid.Text = Format(profit, "0.00")
 If profit >= 0 Then
-    OrderPlexGrid.CellForeColor = PositiveProfitColor
+    OrderPlexGrid.CellForeColor = CPositiveProfitColor
 Else
-    OrderPlexGrid.CellForeColor = NegativeProfitColor
+    OrderPlexGrid.CellForeColor = CNegativeProfitColor
 End If
 End Sub
 Private Sub expandOrContract()

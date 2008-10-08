@@ -22,7 +22,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
-    Option Explicit
+Option Explicit
 
 '@================================================================================
 ' Description
@@ -41,14 +41,24 @@ Implements PriceChangeListener
 ' Events
 '@================================================================================
 
-Event Click()
+Event Click() 'MappingInfo=TickerGrid,TickerGrid,-1,Click
+Event ColMoved(ByVal fromCol As Long, ByVal toCol As Long) 'MappingInfo=TickerGrid,TickerGrid,-1,ColMoved
+Event ColMoving(ByVal fromCol As Long, ByVal toCol As Long, Cancel As Boolean) 'MappingInfo=TickerGrid,TickerGrid,-1,ColMoving
+Event MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single) 'MappingInfo=TickerGrid,TickerGrid,-1,MouseUp
+Event MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single) 'MappingInfo=TickerGrid,TickerGrid,-1,MouseMove
+Event MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single) 'MappingInfo=TickerGrid,TickerGrid,-1,MouseDown
+Event RowMoved(ByVal fromRow As Long, ByVal toRow As Long) 'MappingInfo=TickerGrid,TickerGrid,-1,RowMoved
+Event RowMoving(ByVal fromRow As Long, ByVal toRow As Long, Cancel As Boolean) 'MappingInfo=TickerGrid,TickerGrid,-1,RowMoving
+Event KeyUp(KeyCode As Integer, Shift As Integer) 'MappingInfo=TickerGrid,TickerGrid,-1,KeyUp
+Event KeyPress(KeyAscii As Integer) 'MappingInfo=TickerGrid,TickerGrid,-1,KeyPress
+Event KeyDown(KeyCode As Integer, Shift As Integer) 'MappingInfo=TickerGrid,TickerGrid,-1,KeyDown
+Event DblClick() 'MappingInfo=TickerGrid,TickerGrid,-1,DblClick
+
+Event TickerStarted(ByVal row As Long)
 
 '@================================================================================
 ' Constants
 '@================================================================================
-
-Private Const CellBackColorOdd As Long = &HF8F8F8
-Private Const CellBackColorEven As Long = &HEEEEEE
 
 Private Const GridRowsInitial As Long = 25
 Private Const GridRowsIncrement As Long = 25
@@ -191,6 +201,14 @@ Private mColumnMap() As Long
 
 Private mFirstSelected As Long
 
+Private mPositiveChangeBackColor As OLE_COLOR
+Private mPositiveChangeForeColor As OLE_COLOR
+Private mNegativeChangeBackColor As OLE_COLOR
+Private mNegativeChangeForeColor As OLE_COLOR
+
+Private mIncreasedValueColor As OLE_COLOR
+Private mDecreasedValueColor As OLE_COLOR
+
 '@================================================================================
 ' Form Event Handlers
 '@================================================================================
@@ -209,6 +227,30 @@ mLetterWidth = UserControl.TextWidth(widthString) / Len(widthString)
 widthString = ".0123456789"
 mDigitWidth = UserControl.TextWidth(widthString) / Len(widthString)
 
+End Sub
+
+Private Sub UserControl_InitProperties()
+PositiveChangeBackColor = CPositiveChangeBackColor
+PositiveChangeForeColor = CPositiveChangeForeColor
+NegativeChangeBackColor = CNegativeChangeBackColor
+NegativeChangeForeColor = CNegativeChangeForeColor
+IncreasedValueColor = CIncreasedValueColor
+DecreasedValueColor = CDecreasedValueColor
+RowBackColorEven = CRowBackColorEven
+RowBackColorOdd = CRowBackColorOdd
+AllowUserReordering = TwGridReorderBoth
+TickerGrid.AllowBigSelection = True
+AllowUserResizing = TwGridResizeBoth
+RowSizingMode = TwGridRowSizeAll
+FillStyle = TwGridFillRepeat
+FocusRect = TwGridFocusNone
+HighLight = TwGridHighlightNever
+    
+Cols = 2
+Rows = GridRowsInitial
+FixedRows = 1
+FixedCols = 1
+
 setupDefaultTickerGrid
 
 End Sub
@@ -218,6 +260,78 @@ TickerGrid.Left = 0
 TickerGrid.Top = 0
 TickerGrid.Width = UserControl.Width
 TickerGrid.Height = UserControl.Height
+End Sub
+
+'Load property values from storage
+Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
+Dim index As Integer
+
+PositiveChangeBackColor = PropBag.ReadProperty("PositiveChangeBackColor", CPositiveChangeBackColor)
+PositiveChangeForeColor = PropBag.ReadProperty("PositiveChangeForeColor", CPositiveChangeForeColor)
+NegativeChangeBackColor = PropBag.ReadProperty("NegativeChangeBackColor", CNegativeChangeBackColor)
+NegativeChangeForeColor = PropBag.ReadProperty("NegativeChangeForeColor", CNegativeChangeForeColor)
+IncreasedValueColor = PropBag.ReadProperty("IncreasedValueColor", CIncreasedValueColor)
+DecreasedValueColor = PropBag.ReadProperty("DecreasedValueColor", CDecreasedValueColor)
+    
+TickerGrid.AllowUserResizing = PropBag.ReadProperty("AllowUserResizing", TwGridResizeBoth)
+TickerGrid.AllowUserReordering = PropBag.ReadProperty("AllowUserReordering", TwGridReorderBoth)
+TickerGrid.BackColorSel = PropBag.ReadProperty("BackColorSel", -2147483635)
+TickerGrid.BackColorFixed = PropBag.ReadProperty("BackColorFixed", -2147483633)
+TickerGrid.BackColorBkg = PropBag.ReadProperty("BackColorBkg", -2147483636)
+TickerGrid.backColor = PropBag.ReadProperty("BackColor", &H80000005)
+TickerGrid.SelectionMode = PropBag.ReadProperty("SelectionMode", 2)
+TickerGrid.ScrollBars = PropBag.ReadProperty("ScrollBars", 3)
+TickerGrid.RowSizingMode = PropBag.ReadProperty("RowSizingMode", TwGridRowSizeAll)
+TickerGrid.Rows = PropBag.ReadProperty("Rows", 2)
+TickerGrid.RowHeightMin = PropBag.ReadProperty("RowHeightMin", 0)
+TickerGrid.RowBackColorOdd = PropBag.ReadProperty("RowBackColorOdd", CRowBackColorOdd)
+TickerGrid.RowBackColorEven = PropBag.ReadProperty("RowBackColorEven", CRowBackColorEven)
+TickerGrid.HighLight = PropBag.ReadProperty("HighLight", TwGridHighlightNever)
+TickerGrid.GridLineWidth = PropBag.ReadProperty("GridLineWidth", 1)
+TickerGrid.GridColorFixed = PropBag.ReadProperty("GridColorFixed", 12632256)
+TickerGrid.GridColor = PropBag.ReadProperty("GridColor", -2147483631)
+TickerGrid.ForeColorSel = PropBag.ReadProperty("ForeColorSel", -2147483634)
+TickerGrid.ForeColorFixed = PropBag.ReadProperty("ForeColorFixed", -2147483630)
+TickerGrid.foreColor = PropBag.ReadProperty("ForeColor", &H80000008)
+TickerGrid.FocusRect = PropBag.ReadProperty("FocusRect", TwGridFocusNone)
+TickerGrid.FixedRows = PropBag.ReadProperty("FixedRows", 1)
+TickerGrid.FixedCols = PropBag.ReadProperty("FixedCols", 1)
+TickerGrid.FillStyle = PropBag.ReadProperty("FillStyle", TwGridFillRepeat)
+TickerGrid.Cols = PropBag.ReadProperty("Cols", 2)
+
+setupDefaultTickerGrid
+
+End Sub
+
+'Write property values to storage
+Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
+Dim index As Integer
+
+    Call PropBag.WriteProperty("AllowUserResizing", TickerGrid.AllowUserResizing, 3)
+    Call PropBag.WriteProperty("AllowUserReordering", TickerGrid.AllowUserReordering, 0)
+    Call PropBag.WriteProperty("BackColorSel", TickerGrid.BackColorSel, -2147483635)
+    Call PropBag.WriteProperty("BackColorFixed", TickerGrid.BackColorFixed, -2147483633)
+    Call PropBag.WriteProperty("BackColorBkg", TickerGrid.BackColorBkg, -2147483636)
+    Call PropBag.WriteProperty("BackColor", TickerGrid.backColor, &H80000005)
+    Call PropBag.WriteProperty("SelectionMode", TickerGrid.SelectionMode, 2)
+    Call PropBag.WriteProperty("ScrollBars", TickerGrid.ScrollBars, 3)
+    Call PropBag.WriteProperty("RowSizingMode", TickerGrid.RowSizingMode, 0)
+    Call PropBag.WriteProperty("Rows", TickerGrid.Rows, 2)
+    Call PropBag.WriteProperty("RowHeightMin", TickerGrid.RowHeightMin, 0)
+    Call PropBag.WriteProperty("RowBackColorOdd", TickerGrid.RowBackColorOdd, 0)
+    Call PropBag.WriteProperty("RowBackColorEven", TickerGrid.RowBackColorEven, 0)
+    Call PropBag.WriteProperty("HighLight", TickerGrid.HighLight, 1)
+    Call PropBag.WriteProperty("GridLineWidth", TickerGrid.GridLineWidth, 1)
+    Call PropBag.WriteProperty("GridColorFixed", TickerGrid.GridColorFixed, 12632256)
+    Call PropBag.WriteProperty("GridColor", TickerGrid.GridColor, -2147483631)
+    Call PropBag.WriteProperty("ForeColorSel", TickerGrid.ForeColorSel, -2147483634)
+    Call PropBag.WriteProperty("ForeColorFixed", TickerGrid.ForeColorFixed, -2147483630)
+    Call PropBag.WriteProperty("ForeColor", TickerGrid.foreColor, &H80000008)
+    Call PropBag.WriteProperty("FocusRect", TickerGrid.FocusRect, 1)
+    Call PropBag.WriteProperty("FixedRows", TickerGrid.FixedRows, 1)
+    Call PropBag.WriteProperty("FixedCols", TickerGrid.FixedCols, 1)
+    Call PropBag.WriteProperty("FillStyle", TickerGrid.FillStyle, 0)
+    Call PropBag.WriteProperty("Cols", TickerGrid.Cols, 2)
 End Sub
 
 '@================================================================================
@@ -232,21 +346,23 @@ TickerGrid.row = mTickerTable(getTickerIndexFromHandle(lTicker.handle)).tickerGr
 TickerGrid.col = mColumnMap(TickerGridColumns.Change)
 TickerGrid.Text = ev.ChangeString
 If ev.Change >= 0 Then
-    TickerGrid.CellBackColor = PositiveChangeBackColor
+    TickerGrid.CellBackColor = mPositiveChangeBackColor
+    TickerGrid.CellForeColor = mPositiveChangeForeColor
 Else
-    TickerGrid.CellBackColor = NegativeChangebackColor
+    TickerGrid.CellBackColor = mNegativeChangeBackColor
+    TickerGrid.CellForeColor = mNegativeChangeForeColor
 End If
-TickerGrid.CellForeColor = vbWhite
 incrementEventCount
 
 TickerGrid.col = mColumnMap(TickerGridColumns.ChangePercent)
 TickerGrid.Text = Format(ev.ChangePercent, "0.0")
 If ev.ChangePercent >= 0 Then
-    TickerGrid.CellBackColor = PositiveChangeBackColor
+    TickerGrid.CellBackColor = mPositiveChangeBackColor
+    TickerGrid.CellForeColor = mPositiveChangeForeColor
 Else
-    TickerGrid.CellBackColor = NegativeChangebackColor
+    TickerGrid.CellBackColor = mNegativeChangeBackColor
+    TickerGrid.CellForeColor = mNegativeChangeForeColor
 End If
-TickerGrid.CellForeColor = vbWhite
 
 incrementEventCount
 End Sub
@@ -331,6 +447,11 @@ Else
     Next
 End If
 
+RaiseEvent ColMoved(fromCol, toCol)
+End Sub
+
+Private Sub TickerGrid_ColMoving(ByVal fromCol As Long, ByVal toCol As Long, Cancel As Boolean)
+    RaiseEvent ColMoving(fromCol, toCol, Cancel)
 End Sub
 
 Private Sub TickerGrid_Click()
@@ -349,13 +470,13 @@ If col = 1 And colSel = TickerGrid.Cols - 1 Then
         ' the user has clicked on the top left cell so select all rows
         ' regardless of whether ctrl is down
         deselectSelectedTickers
-        
+
         selectAllTickers
-        
+
     Else
         If Not mControlDown Then
             deselectSelectedTickers
-            selectRow row
+            selectTicker row
         Else
             toggleRowSelection row
         End If
@@ -367,24 +488,46 @@ End If
 RaiseEvent Click
 End Sub
 
+Private Sub TickerGrid_DblClick()
+    RaiseEvent DblClick
+End Sub
+
+Private Sub TickerGrid_KeyDown(KeyCode As Integer, Shift As Integer)
+    RaiseEvent KeyDown(KeyCode, Shift)
+End Sub
+
+Private Sub TickerGrid_KeyPress(KeyAscii As Integer)
+    RaiseEvent KeyPress(KeyAscii)
+End Sub
+
+Private Sub TickerGrid_KeyUp(KeyCode As Integer, Shift As Integer)
+    RaiseEvent KeyUp(KeyCode, Shift)
+End Sub
+
 Private Sub TickerGrid_MouseDown( _
                 Button As Integer, _
                 Shift As Integer, _
-                x As Single, _
-                y As Single)
+                X As Single, _
+                Y As Single)
 mShiftDown = (Shift And KeyDownShift)
 mControlDown = (Shift And KeyDownCtrl)
 mAltDown = (Shift And KeyDownAlt)
+RaiseEvent MouseDown(Button, Shift, X, Y)
+End Sub
+
+Private Sub TickerGrid_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+    RaiseEvent MouseMove(Button, Shift, X, Y)
 End Sub
 
 Private Sub TickerGrid_MouseUp( _
                 Button As Integer, _
                 Shift As Integer, _
-                x As Single, _
-                y As Single)
+                X As Single, _
+                Y As Single)
 mShiftDown = (Shift And KeyDownShift)
 mControlDown = (Shift And KeyDownCtrl)
 mAltDown = (Shift And KeyDownAlt)
+RaiseEvent MouseUp(Button, Shift, X, Y)
 End Sub
 
 Private Sub TickerGrid_RowMoved( _
@@ -402,6 +545,7 @@ Else
     Next
 End If
 
+RaiseEvent RowMoved(fromRow, toRow)
 End Sub
 
 Private Sub TickerGrid_RowMoving( _
@@ -409,6 +553,7 @@ Private Sub TickerGrid_RowMoving( _
                 ByVal toRow As Long, _
                 Cancel As Boolean)
 If toRow > mNextGridRowIndex Then Cancel = True
+RaiseEvent RowMoving(fromRow, toRow, Cancel)
 End Sub
 
 '@================================================================================
@@ -496,12 +641,14 @@ Case TickerStateRunning
     TickerGrid.col = mColumnMap(TickerGridColumns.TickerName)
     TickerGrid.Text = lContract.specifier.localSymbol
     
+    RaiseEvent TickerStarted(mTickerTable(index).tickerGridRow)
+    
 Case TickerStatePaused
 
 Case TickerStateClosing
 
 Case TickerStateStopped
-    ' if the ticker was stopped by the application via a call to Ticker.topTicker (rather
+    ' if the ticker was stopped by the application via a call to Ticker.stopTicker (rather
     ' tha via this control), the entry will still be in the grid so remove it
     If Not mTickerTable(index).theTicker Is Nothing Then
         removeTicker index
@@ -513,15 +660,674 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get selectedTickers() As selectedTickers
+Public Property Let PositiveChangeBackColor(ByVal value As OLE_COLOR)
+mPositiveChangeBackColor = value
+PropertyChanged "PositiveChangeBackColor"
+End Property
+
+Public Property Get PositiveChangeBackColor() As OLE_COLOR
+PositiveChangeBackColor = mPositiveChangeBackColor
+End Property
+
+Public Property Let PositiveChangeForeColor(ByVal value As OLE_COLOR)
+mPositiveChangeForeColor = value
+PropertyChanged "PositiveChangeForeColor"
+End Property
+
+Public Property Get PositiveChangeForeColor() As OLE_COLOR
+PositiveChangeForeColor = mPositiveChangeForeColor
+End Property
+
+Public Property Let NegativeChangeBackColor(ByVal value As OLE_COLOR)
+mNegativeChangeBackColor = value
+PropertyChanged "NegativeChangeBackColor"
+End Property
+
+Public Property Get NegativeChangeBackColor() As OLE_COLOR
+NegativeChangeBackColor = mNegativeChangeBackColor
+End Property
+
+Public Property Let NegativeChangeForeColor(ByVal value As OLE_COLOR)
+mNegativeChangeForeColor = value
+PropertyChanged "NegativeChangeForeColor"
+End Property
+
+Public Property Get NegativeChangeForeColor() As OLE_COLOR
+NegativeChangeForeColor = mNegativeChangeForeColor
+End Property
+
+Public Property Let IncreasedValueColor(ByVal value As OLE_COLOR)
+mIncreasedValueColor = value
+PropertyChanged "IncreasedValueColor"
+End Property
+
+Public Property Get IncreasedValueColor() As OLE_COLOR
+IncreasedValueColor = mIncreasedValueColor
+End Property
+
+Public Property Let DecreasedValueColor(ByVal value As OLE_COLOR)
+mDecreasedValueColor = value
+PropertyChanged "DecreasedValueColor"
+End Property
+
+Public Property Get DecreasedValueColor() As OLE_COLOR
+DecreasedValueColor = mDecreasedValueColor
+End Property
+
+Public Property Get AllowUserResizing() As AllowUserResizeSettings
+    AllowUserResizing = TickerGrid.AllowUserResizing
+End Property
+
+Public Property Let AllowUserResizing(ByVal New_AllowUserResizing As AllowUserResizeSettings)
+    TickerGrid.AllowUserResizing = New_AllowUserResizing
+    PropertyChanged "AllowUserResizing"
+End Property
+
+Public Property Get AllowUserReordering() As AllowUserReorderSettings
+    AllowUserReordering = TickerGrid.AllowUserReordering
+End Property
+
+Public Property Let AllowUserReordering(ByVal New_AllowUserReordering As AllowUserReorderSettings)
+    TickerGrid.AllowUserReordering = New_AllowUserReordering
+    PropertyChanged "AllowUserReordering"
+End Property
+
+Public Property Get BackColorSel() As OLE_COLOR
+    BackColorSel = TickerGrid.BackColorSel
+End Property
+
+Public Property Let BackColorSel(ByVal New_BackColorSel As OLE_COLOR)
+    TickerGrid.BackColorSel = New_BackColorSel
+    PropertyChanged "BackColorSel"
+End Property
+
+Public Property Get BackColorFixed() As OLE_COLOR
+    BackColorFixed = TickerGrid.BackColorFixed
+End Property
+
+Public Property Let BackColorFixed(ByVal New_BackColorFixed As OLE_COLOR)
+    TickerGrid.BackColorFixed = New_BackColorFixed
+    PropertyChanged "BackColorFixed"
+End Property
+
+Public Property Get BackColorBkg() As OLE_COLOR
+    BackColorBkg = TickerGrid.BackColorBkg
+End Property
+
+Public Property Let BackColorBkg(ByVal New_BackColorBkg As OLE_COLOR)
+    TickerGrid.BackColorBkg = New_BackColorBkg
+    PropertyChanged "BackColorBkg"
+End Property
+
+Public Property Get backColor() As OLE_COLOR
+    backColor = TickerGrid.backColor
+End Property
+
+Public Property Let backColor(ByVal New_BackColor As OLE_COLOR)
+    TickerGrid.backColor = New_BackColor
+    PropertyChanged "BackColor"
+End Property
+
+Public Property Get TopRow() As Long
+    TopRow = TickerGrid.TopRow
+End Property
+
+Public Property Let TopRow(ByVal New_TopRow As Long)
+    TickerGrid.TopRow = New_TopRow
+    PropertyChanged "TopRow"
+End Property
+
+Public Property Get TextStyleFixed() As TextStyleSettings
+    TextStyleFixed = TickerGrid.TextStyleFixed
+End Property
+
+Public Property Let TextStyleFixed(ByVal New_TextStyleFixed As TextStyleSettings)
+    TickerGrid.TextStyleFixed = New_TextStyleFixed
+    PropertyChanged "TextStyleFixed"
+End Property
+
+Public Property Get TextStyle() As TextStyleSettings
+    TextStyle = TickerGrid.TextStyle
+End Property
+
+Public Property Let TextStyle(ByVal New_TextStyle As TextStyleSettings)
+    TickerGrid.TextStyle = New_TextStyle
+    PropertyChanged "TextStyle"
+End Property
+
+Public Property Get TextMatrix(ByVal row As Long, ByVal col As Long) As String
+    TextMatrix = TickerGrid.TextMatrix(row, col)
+End Property
+
+Public Property Let TextMatrix(ByVal row As Long, ByVal col As Long, ByVal New_TextMatrix As String)
+    TickerGrid.TextMatrix(row, col) = New_TextMatrix
+    PropertyChanged "TextMatrix"
+End Property
+
+Public Property Get TextArray(ByVal index As Long) As String
+    TextArray = TickerGrid.TextArray(index)
+End Property
+
+Public Property Let TextArray(ByVal index As Long, ByVal New_TextArray As String)
+    TickerGrid.TextArray(index) = New_TextArray
+    PropertyChanged "TextArray"
+End Property
+
+Public Property Get Text() As String
+    Text = TickerGrid.Text
+End Property
+
+Public Property Let Text(ByVal New_Text As String)
+    TickerGrid.Text = New_Text
+    PropertyChanged "Text"
+End Property
+
+Public Property Get SelectionMode() As SelectionModeSettings
+    SelectionMode = TickerGrid.SelectionMode
+End Property
+
+Public Property Let SelectionMode(ByVal New_SelectionMode As SelectionModeSettings)
+    TickerGrid.SelectionMode = New_SelectionMode
+    PropertyChanged "SelectionMode"
+End Property
+
+Public Property Get ScrollBars() As ScrollBarsSettings
+    ScrollBars = TickerGrid.ScrollBars
+End Property
+
+Public Property Let ScrollBars(ByVal New_ScrollBars As ScrollBarsSettings)
+    TickerGrid.ScrollBars = New_ScrollBars
+    PropertyChanged "ScrollBars"
+End Property
+
+Public Property Get RowSizingMode() As RowSizingSettings
+    RowSizingMode = TickerGrid.RowSizingMode
+End Property
+
+Public Property Let RowSizingMode(ByVal New_RowSizingMode As RowSizingSettings)
+    TickerGrid.RowSizingMode = New_RowSizingMode
+    PropertyChanged "RowSizingMode"
+End Property
+
+Public Property Get rowSel() As Long
+    rowSel = TickerGrid.rowSel
+End Property
+
+Public Property Let rowSel(ByVal New_RowSel As Long)
+    TickerGrid.rowSel = New_RowSel
+    PropertyChanged "RowSel"
+End Property
+
+Public Property Get Rows() As Long
+    Rows = TickerGrid.Rows
+End Property
+
+Public Property Let Rows(ByVal New_Rows As Long)
+    TickerGrid.Rows = New_Rows
+    PropertyChanged "Rows"
+End Property
+
+Public Property Let RowPosition(ByVal index As Long, ByVal New_RowPosition As Long)
+    TickerGrid.RowPosition(index) = New_RowPosition
+    PropertyChanged "RowPosition"
+End Property
+
+Public Property Get RowPos(ByVal index As Long) As Long
+    RowPos = TickerGrid.RowPos(index)
+End Property
+
+Public Property Get RowIsVisible(ByVal index As Long) As Boolean
+    RowIsVisible = TickerGrid.RowIsVisible(index)
+End Property
+
+Public Property Get RowHeightMin() As Long
+    RowHeightMin = TickerGrid.RowHeightMin
+End Property
+
+Public Property Let RowHeightMin(ByVal New_RowHeightMin As Long)
+    TickerGrid.RowHeightMin = New_RowHeightMin
+    PropertyChanged "RowHeightMin"
+End Property
+
+Public Property Get rowHeight(ByVal index As Long) As Long
+    rowHeight = TickerGrid.rowHeight(index)
+End Property
+
+Public Property Let rowHeight(ByVal index As Long, ByVal New_rowHeight As Long)
+    TickerGrid.rowHeight(index) = New_rowHeight
+    PropertyChanged "rowHeight"
+End Property
+
+Public Property Get rowdata(ByVal index As Long) As Long
+    rowdata = TickerGrid.rowdata(index)
+End Property
+
+Public Property Let rowdata(ByVal index As Long, ByVal New_RowData As Long)
+    TickerGrid.rowdata(index) = New_RowData
+    PropertyChanged "RowData"
+End Property
+
+Public Property Get RowBackColorOdd() As OLE_COLOR
+    RowBackColorOdd = TickerGrid.RowBackColorOdd
+End Property
+
+Public Property Let RowBackColorOdd(ByVal New_RowBackColorOdd As OLE_COLOR)
+    TickerGrid.RowBackColorOdd = New_RowBackColorOdd
+    PropertyChanged "RowBackColorOdd"
+End Property
+
+Public Property Get RowBackColorEven() As OLE_COLOR
+    RowBackColorEven = TickerGrid.RowBackColorEven
+End Property
+
+Public Property Let RowBackColorEven(ByVal New_RowBackColorEven As OLE_COLOR)
+    TickerGrid.RowBackColorEven = New_RowBackColorEven
+    PropertyChanged "RowBackColorEven"
+End Property
+
+Public Property Get row() As Long
+    row = TickerGrid.row
+End Property
+
+Public Property Let row(ByVal New_row As Long)
+    TickerGrid.row = New_row
+    PropertyChanged "row"
+End Property
+
+Public Property Get Redraw() As Boolean
+    Redraw = TickerGrid.Redraw
+End Property
+
+Public Property Let Redraw(ByVal New_Redraw As Boolean)
+    TickerGrid.Redraw = New_Redraw
+    PropertyChanged "Redraw"
+End Property
+
+Public Property Get MouseRow() As Long
+    MouseRow = TickerGrid.MouseRow
+End Property
+
+Public Property Get MouseCol() As Long
+    MouseCol = TickerGrid.MouseCol
+End Property
+
+Public Property Get LeftCol() As Long
+    LeftCol = TickerGrid.LeftCol
+End Property
+
+Public Property Let LeftCol(ByVal New_LeftCol As Long)
+    TickerGrid.LeftCol = New_LeftCol
+    PropertyChanged "LeftCol"
+End Property
+
+Public Property Get hWnd() As Long
+    hWnd = TickerGrid.hWnd
+End Property
+
+Public Property Get HighLight() As HighLightSettings
+    HighLight = TickerGrid.HighLight
+End Property
+
+Public Property Let HighLight(ByVal New_HighLight As HighLightSettings)
+    TickerGrid.HighLight = New_HighLight
+    PropertyChanged "HighLight"
+End Property
+
+Public Property Get GridLineWidth() As Long
+    GridLineWidth = TickerGrid.GridLineWidth
+End Property
+
+Public Property Let GridLineWidth(ByVal New_GridLineWidth As Long)
+    TickerGrid.GridLineWidth = New_GridLineWidth
+    PropertyChanged "GridLineWidth"
+End Property
+
+Public Property Get GridLinesFixed() As GridLineSettings
+    GridLinesFixed = TickerGrid.GridLinesFixed
+End Property
+
+Public Property Let GridLinesFixed(ByVal New_GridLinesFixed As GridLineSettings)
+    TickerGrid.GridLinesFixed = New_GridLinesFixed
+    PropertyChanged "GridLinesFixed"
+End Property
+
+Public Property Get GridLines() As GridLineSettings
+    GridLines = TickerGrid.GridLines
+End Property
+
+Public Property Let GridLines(ByVal New_GridLines As GridLineSettings)
+    TickerGrid.GridLines = New_GridLines
+    PropertyChanged "GridLines"
+End Property
+
+Public Property Get GridColorFixed() As OLE_COLOR
+    GridColorFixed = TickerGrid.GridColorFixed
+End Property
+
+Public Property Let GridColorFixed(ByVal New_GridColorFixed As OLE_COLOR)
+    TickerGrid.GridColorFixed = New_GridColorFixed
+    PropertyChanged "GridColorFixed"
+End Property
+
+Public Property Get GridColor() As OLE_COLOR
+    GridColor = TickerGrid.GridColor
+End Property
+
+Public Property Let GridColor(ByVal New_GridColor As OLE_COLOR)
+    TickerGrid.GridColor = New_GridColor
+    PropertyChanged "GridColor"
+End Property
+
+Public Function getRowFromY(ByVal Y As Long) As Long
+    getRowFromY = TickerGrid.getRowFromY(Y)
+End Function
+
+Public Function getColFromX(ByVal X As Long) As Long
+    getColFromX = TickerGrid.getColFromX(X)
+End Function
+
+Public Property Get FormatString() As String
+    FormatString = TickerGrid.FormatString
+End Property
+
+Public Property Let FormatString(ByVal New_FormatString As String)
+    TickerGrid.FormatString = New_FormatString
+    PropertyChanged "FormatString"
+End Property
+
+Public Property Get ForeColorSel() As OLE_COLOR
+    ForeColorSel = TickerGrid.ForeColorSel
+End Property
+
+Public Property Let ForeColorSel(ByVal New_ForeColorSel As OLE_COLOR)
+    TickerGrid.ForeColorSel = New_ForeColorSel
+    PropertyChanged "ForeColorSel"
+End Property
+
+Public Property Get ForeColorFixed() As OLE_COLOR
+    ForeColorFixed = TickerGrid.ForeColorFixed
+End Property
+
+Public Property Let ForeColorFixed(ByVal New_ForeColorFixed As OLE_COLOR)
+    TickerGrid.ForeColorFixed = New_ForeColorFixed
+    PropertyChanged "ForeColorFixed"
+End Property
+
+Public Property Get foreColor() As OLE_COLOR
+    foreColor = TickerGrid.foreColor
+End Property
+
+Public Property Let foreColor(ByVal New_ForeColor As OLE_COLOR)
+    TickerGrid.foreColor = New_ForeColor
+    PropertyChanged "ForeColor"
+End Property
+
+Public Property Get FontWidthFixed() As Single
+    FontWidthFixed = TickerGrid.FontWidthFixed
+End Property
+
+Public Property Let FontWidthFixed(ByVal New_FontWidthFixed As Single)
+    TickerGrid.FontWidthFixed = New_FontWidthFixed
+    PropertyChanged "FontWidthFixed"
+End Property
+
+Public Property Get FontWidth() As Single
+    FontWidth = TickerGrid.FontWidth
+End Property
+
+Public Property Let FontWidth(ByVal New_FontWidth As Single)
+    TickerGrid.FontWidth = New_FontWidth
+    PropertyChanged "FontWidth"
+End Property
+
+Public Property Get FontFixed() As Font
+    Set FontFixed = TickerGrid.FontFixed
+End Property
+
+Public Property Get Font() As Font
+    Set Font = TickerGrid.Font
+End Property
+
+Public Property Get FocusRect() As FocusRectSettings
+    FocusRect = TickerGrid.FocusRect
+End Property
+
+Public Property Let FocusRect(ByVal New_FocusRect As FocusRectSettings)
+    TickerGrid.FocusRect = New_FocusRect
+    PropertyChanged "FocusRect"
+End Property
+
+Public Property Get FixedRows() As Long
+    FixedRows = TickerGrid.FixedRows
+End Property
+
+Public Property Let FixedRows(ByVal New_FixedRows As Long)
+    TickerGrid.FixedRows = New_FixedRows
+    PropertyChanged "FixedRows"
+End Property
+
+Public Property Get FixedCols() As Long
+    FixedCols = TickerGrid.FixedCols
+End Property
+
+Public Property Let FixedCols(ByVal New_FixedCols As Long)
+    TickerGrid.FixedCols = New_FixedCols
+    PropertyChanged "FixedCols"
+End Property
+
+Public Property Get FillStyle() As FillStyleSettings
+    FillStyle = TickerGrid.FillStyle
+End Property
+
+Public Property Let FillStyle(ByVal New_FillStyle As FillStyleSettings)
+    TickerGrid.FillStyle = New_FillStyle
+    PropertyChanged "FillStyle"
+End Property
+
+Public Property Get colWidth(ByVal index As Long) As Long
+    colWidth = TickerGrid.colWidth(index)
+End Property
+
+Public Property Let colWidth(ByVal index As Long, ByVal New_colWidth As Long)
+    TickerGrid.colWidth(index) = New_colWidth
+    PropertyChanged "colWidth"
+End Property
+
+Public Property Get colSel() As Long
+    colSel = TickerGrid.colSel
+End Property
+
+Public Property Let colSel(ByVal New_ColSel As Long)
+    TickerGrid.colSel = New_ColSel
+    PropertyChanged "ColSel"
+End Property
+
+Public Property Get Cols() As Long
+    Cols = TickerGrid.Cols
+End Property
+
+Public Property Let Cols(ByVal New_Cols As Long)
+    TickerGrid.Cols = New_Cols
+    PropertyChanged "Cols"
+End Property
+
+Public Property Let ColPosition(ByVal index As Long, ByVal New_ColPosition As Long)
+    TickerGrid.ColPosition(index) = New_ColPosition
+    PropertyChanged "ColPosition"
+End Property
+
+Public Property Get ColPos(ByVal index As Long) As Long
+    ColPos = TickerGrid.ColPos(index)
+End Property
+
+Public Property Get ColIsVisible(ByVal index As Long) As Boolean
+    ColIsVisible = TickerGrid.ColIsVisible(index)
+End Property
+
+Public Property Get ColData(ByVal index As Long) As Long
+    ColData = TickerGrid.ColData(index)
+End Property
+
+Public Property Let ColData(ByVal index As Long, ByVal New_ColData As Long)
+    TickerGrid.ColData(index) = New_ColData
+    PropertyChanged "ColData"
+End Property
+
+Public Property Get ColAlignmentFixed(ByVal index As Long) As AlignmentSettings
+    ColAlignmentFixed = TickerGrid.ColAlignmentFixed(index)
+End Property
+
+Public Property Let ColAlignmentFixed(ByVal index As Long, ByVal New_ColAlignmentFixed As AlignmentSettings)
+    TickerGrid.ColAlignmentFixed(index) = New_ColAlignmentFixed
+    PropertyChanged "ColAlignmentFixed"
+End Property
+
+Public Property Get ColAlignment(ByVal index As Long) As AlignmentSettings
+    ColAlignment = TickerGrid.ColAlignment(index)
+End Property
+
+Public Property Let ColAlignment(ByVal index As Long, ByVal New_ColAlignment As AlignmentSettings)
+    TickerGrid.ColAlignment(index) = New_ColAlignment
+    PropertyChanged "ColAlignment"
+End Property
+
+Public Property Get col() As Long
+    col = TickerGrid.col
+End Property
+
+Public Property Let col(ByVal New_col As Long)
+    TickerGrid.col = New_col
+    PropertyChanged "col"
+End Property
+
+Public Property Get cellWidth() As Long
+    cellWidth = TickerGrid.cellWidth
+End Property
+
+Public Property Get celltop() As Long
+    celltop = TickerGrid.celltop
+End Property
+
+Public Property Get CellTextStyle() As TextStyleSettings
+    CellTextStyle = TickerGrid.CellTextStyle
+End Property
+
+Public Property Let CellTextStyle(ByVal New_CellTextStyle As TextStyleSettings)
+    TickerGrid.CellTextStyle = New_CellTextStyle
+    PropertyChanged "CellTextStyle"
+End Property
+
+Public Property Get CellPictureAlignment() As AlignmentSettings
+    CellPictureAlignment = TickerGrid.CellPictureAlignment
+End Property
+
+Public Property Let CellPictureAlignment(ByVal New_CellPictureAlignment As AlignmentSettings)
+    TickerGrid.CellPictureAlignment = New_CellPictureAlignment
+    PropertyChanged "CellPictureAlignment"
+End Property
+
+Public Property Get CellPicture() As Picture
+    Set CellPicture = TickerGrid.CellPicture
+End Property
+
+Public Property Get cellLeft() As Long
+    cellLeft = TickerGrid.cellLeft
+End Property
+
+Public Property Get cellHeight() As Long
+    cellHeight = TickerGrid.cellHeight
+End Property
+
+Public Property Get CellForeColor() As OLE_COLOR
+    CellForeColor = TickerGrid.CellForeColor
+End Property
+
+Public Property Let CellForeColor(ByVal New_CellForeColor As OLE_COLOR)
+    TickerGrid.CellForeColor = New_CellForeColor
+    PropertyChanged "CellForeColor"
+End Property
+
+Public Property Get CellFontUnderline() As Boolean
+    CellFontUnderline = TickerGrid.CellFontUnderline
+End Property
+
+Public Property Let CellFontUnderline(ByVal New_CellFontUnderline As Boolean)
+    TickerGrid.CellFontUnderline = New_CellFontUnderline
+    PropertyChanged "CellFontUnderline"
+End Property
+
+Public Property Get CellFontStrikeThrough() As Boolean
+    CellFontStrikeThrough = TickerGrid.CellFontStrikeThrough
+End Property
+
+Public Property Let CellFontStrikeThrough(ByVal New_CellFontStrikeThrough As Boolean)
+    TickerGrid.CellFontStrikeThrough = New_CellFontStrikeThrough
+    PropertyChanged "CellFontStrikeThrough"
+End Property
+
+Public Property Get CellFontSize() As Single
+    CellFontSize = TickerGrid.CellFontSize
+End Property
+
+Public Property Let CellFontSize(ByVal New_CellFontSize As Single)
+    TickerGrid.CellFontSize = New_CellFontSize
+    PropertyChanged "CellFontSize"
+End Property
+
+Public Property Get CellFontName() As String
+    CellFontName = TickerGrid.CellFontName
+End Property
+
+Public Property Let CellFontName(ByVal New_CellFontName As String)
+    TickerGrid.CellFontName = New_CellFontName
+    PropertyChanged "CellFontName"
+End Property
+
+Public Property Get CellFontItalic() As Boolean
+    CellFontItalic = TickerGrid.CellFontItalic
+End Property
+
+Public Property Let CellFontItalic(ByVal New_CellFontItalic As Boolean)
+    TickerGrid.CellFontItalic = New_CellFontItalic
+    PropertyChanged "CellFontItalic"
+End Property
+
+Public Property Get CellFontBold() As Boolean
+    CellFontBold = TickerGrid.CellFontBold
+End Property
+
+Public Property Let CellFontBold(ByVal New_CellFontBold As Boolean)
+    TickerGrid.CellFontBold = New_CellFontBold
+    PropertyChanged "CellFontBold"
+End Property
+
+Public Property Get CellBackColor() As OLE_COLOR
+    CellBackColor = TickerGrid.CellBackColor
+End Property
+
+Public Property Let CellBackColor(ByVal New_CellBackColor As OLE_COLOR)
+    TickerGrid.CellBackColor = New_CellBackColor
+    PropertyChanged "CellBackColor"
+End Property
+
+Public Property Get CellAlignment() As AlignmentSettings
+    CellAlignment = TickerGrid.CellAlignment
+End Property
+
+Public Property Let CellAlignment(ByVal New_CellAlignment As AlignmentSettings)
+    TickerGrid.CellAlignment = New_CellAlignment
+    PropertyChanged "CellAlignment"
+End Property
+
+Public Property Get SelectedTickers() As SelectedTickers
 Dim index As Long
 
-Set selectedTickers = New selectedTickers
+Set SelectedTickers = New SelectedTickers
 
 index = mFirstSelected
 
 Do While index <> 0
-    selectedTickers.add mTickerTable(index).theTicker
+    SelectedTickers.add mTickerTable(index).theTicker
     index = mTickerTable(index).nextSelected
 Loop
 
@@ -537,6 +1343,25 @@ Do While mFirstSelected <> 0
 Loop
 End Sub
 
+Public Sub deselectTicker( _
+                ByVal index As Long)
+If isTickerSelected(index) Then
+    mTickerTable(mTickerTable(index).nextSelected).prevSelected = mTickerTable(index).prevSelected
+    If mTickerTable(index).prevSelected = -1 Then
+        mFirstSelected = mTickerTable(index).nextSelected
+    Else
+        mTickerTable(mTickerTable(index).prevSelected).nextSelected = mTickerTable(index).nextSelected
+    End If
+    mTickerTable(index).nextSelected = -1
+    mTickerTable(index).prevSelected = -1
+    highlightRow mTickerTable(index).tickerGridRow
+End If
+End Sub
+
+'Public Sub ExtendSelection(ByVal row As Long, ByVal col As Long)
+'    TickerGrid.ExtendSelection row, col
+'End Sub
+
 Public Sub finish()
 On Error GoTo Err
 stopAllTickers
@@ -546,6 +1371,10 @@ If Not mCountTimer Is Nothing Then mCountTimer.StopTimer
 Exit Sub
 Err:
 'ignore any errors
+End Sub
+
+Public Sub InvertCellColors()
+TickerGrid.InvertCellColors
 End Sub
 
 Public Sub monitorWorkspace( _
@@ -561,12 +1390,27 @@ Set mCountTimer = CreateIntervalTimer(10, ExpiryTimeUnitSeconds, 10000)
 mCountTimer.StartTimer
 
 End Sub
-                
+
 Public Sub selectAllTickers()
 Dim i As Long
 For i = 1 To mNextGridRowIndex - 1
-    selectRow i
+    selectTicker i
 Next
+End Sub
+
+Public Sub selectTicker( _
+                ByVal row As Long)
+If Not mTickerTable(row).theTicker Is Nothing Then
+    mTickerTable(row).nextSelected = mFirstSelected
+    mTickerTable(row).prevSelected = -1
+    mTickerTable(mFirstSelected).prevSelected = row
+    mFirstSelected = row
+    highlightRow mTickerTable(row).tickerGridRow
+End If
+End Sub
+
+Public Sub setCellAlignment(ByVal row As Long, ByVal col As Long, pAlign As AlignmentSettings)
+TickerGrid.setCellAlignment row, col, pAlign
 End Sub
 
 Public Sub stopAllTickers()
@@ -600,25 +1444,10 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub deselectRow( _
-                ByVal row As Long)
-deselectTicker TickerGrid.rowdata(row)
-End Sub
-
-Private Sub deselectTicker( _
-                ByVal index As Long)
-If isTickerSelected(index) Then
-    mTickerTable(mTickerTable(index).nextSelected).prevSelected = mTickerTable(index).prevSelected
-    If mTickerTable(index).prevSelected = -1 Then
-        mFirstSelected = mTickerTable(index).nextSelected
-    Else
-        mTickerTable(mTickerTable(index).prevSelected).nextSelected = mTickerTable(index).nextSelected
-    End If
-    mTickerTable(index).nextSelected = -1
-    mTickerTable(index).prevSelected = -1
-    highlightRow mTickerTable(index).tickerGridRow
-End If
-End Sub
+'Private Sub deselectRow( _
+'                ByVal row As Long)
+'deselectTicker TickerGrid.rowdata(row)
+'End Sub
 
 Private Sub displayPrice( _
                 ev As QuoteEvent, _
@@ -629,9 +1458,9 @@ TickerGrid.row = mTickerTable(getTickerIndexFromHandle(lTicker.handle)).tickerGr
 TickerGrid.col = col
 TickerGrid.Text = ev.priceString
 If ev.priceChange = ValueChangeUp Then
-    TickerGrid.CellForeColor = IncreasedValueColor
+    TickerGrid.CellForeColor = mIncreasedValueColor
 ElseIf ev.priceChange = ValueChangeDown Then
-    TickerGrid.CellForeColor = DecreasedValueColor
+    TickerGrid.CellForeColor = mDecreasedValueColor
 End If
 
 incrementEventCount
@@ -646,9 +1475,9 @@ TickerGrid.row = mTickerTable(getTickerIndexFromHandle(lTicker.handle)).tickerGr
 TickerGrid.col = col
 TickerGrid.Text = ev.size
 If ev.sizeChange = ValueChangeUp Then
-    TickerGrid.CellForeColor = IncreasedValueColor
+    TickerGrid.CellForeColor = mIncreasedValueColor
 ElseIf ev.sizeChange = ValueChangeDown Then
-    TickerGrid.CellForeColor = DecreasedValueColor
+    TickerGrid.CellForeColor = mDecreasedValueColor
 End If
 
 incrementEventCount
@@ -734,21 +1563,10 @@ Next
 
 End Sub
 
-Private Sub selectRow( _
-                ByVal row As Long)
-selectTicker TickerGrid.rowdata(row)
-End Sub
-
-Private Sub selectTicker( _
-                ByVal index As Long)
-If Not mTickerTable(index).theTicker Is Nothing Then
-    mTickerTable(index).nextSelected = mFirstSelected
-    mTickerTable(index).prevSelected = -1
-    mTickerTable(mFirstSelected).prevSelected = index
-    mFirstSelected = index
-    highlightRow mTickerTable(index).tickerGridRow
-End If
-End Sub
+'Private Sub SelectRow( _
+'                ByVal row As Long)
+'selectTicker TickerGrid.rowdata(row)
+'End Sub
 
 Private Sub setupColumnMap( _
                     ByVal maxIndex As Long)
@@ -761,22 +1579,22 @@ End Sub
 
 Private Sub setupDefaultTickerGrid()
 
-With TickerGrid
-    .RowBackColorEven = CellBackColorEven
-    .RowBackColorOdd = CellBackColorOdd
-    .AllowUserReordering = TwGridReorderBoth
-    .AllowBigSelection = True
-    .AllowUserResizing = TwGridResizeBoth
-    .RowSizingMode = TwGridRowSizeAll
-    .FillStyle = TwGridFillRepeat
-    .FocusRect = TwGridFocusNone
-    .HighLight = TwGridHighlightNever
-    
-    .Cols = 2
-    .Rows = GridRowsInitial
-    .FixedRows = 1
-    .FixedCols = 1
-End With
+'With TickerGrid
+'    .RowBackColorEven = CellBackColorEven
+'    .RowBackColorOdd = CellBackColorOdd
+'    .AllowUserReordering = TwGridReorderBoth
+'    .AllowBigSelection = True
+'    .AllowUserResizing = TwGridResizeBoth
+'    .RowSizingMode = TwGridRowSizeAll
+'    .FillStyle = TwGridFillRepeat
+'    .FocusRect = TwGridFocusNone
+'    .HighLight = TwGridHighlightNever
+'
+'    .Cols = 2
+'    .Rows = GridRowsInitial
+'    .FixedRows = 1
+'    .FixedCols = 1
+'End With
     
 setupTickerGridColumn 0, TickerGridColumns.Selector, TickerGridColumnWidths.SelectorWidth, "", True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
 setupTickerGridColumn 0, TickerGridColumns.TickerName, TickerGridColumnWidths.NameWidth, "Name", True, TWControls10.AlignmentSettings.TwGridAlignLeftCenter
@@ -809,8 +1627,8 @@ End Sub
 
 Private Sub setupSummaryTickerGrid()
 With TickerGrid
-    .RowBackColorEven = CellBackColorEven
-    .RowBackColorOdd = CellBackColorOdd
+    .RowBackColorEven = CRowBackColorEven
+    .RowBackColorOdd = CRowBackColorOdd
     .AllowUserReordering = TwGridReorderBoth
     .AllowBigSelection = True
     .AllowUserResizing = TwGridResizeBoth
@@ -875,7 +1693,7 @@ With TickerGrid
     .TextMatrix(rowNumber, columnNumber) = columnHeader
 End With
 End Sub
-                
+
 Private Sub stopTicker( _
                 ByVal index As Long)
 Dim lTicker As ticker
@@ -892,11 +1710,9 @@ End Sub
 Private Sub toggleRowSelection( _
                 ByVal row As Long)
 If isRowSelected(row) Then
-    deselectRow row
+    deselectTicker row
 Else
-    selectRow row
+    selectTicker row
 End If
 End Sub
-                
-
 

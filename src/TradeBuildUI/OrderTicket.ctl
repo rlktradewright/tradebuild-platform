@@ -1817,7 +1817,7 @@ End Sub
 '
 ' @param pOrder     the <code>order</code> whose attributes are to be set
 ' @param orderIndex the index of the order page whose fields are the source of
-'                   the attriburte values
+'                   the attribute values
 '
 '*/
 Private Sub setOrderAttributes( _
@@ -2100,7 +2100,7 @@ reset
 mTicker.addQuoteListener Me
 showTickerValues
 
-If mOrderContext.simulated Then
+If mOrderContext.IsSimulated Then
     OrderSimulationLabel.caption = "Orders are simulated"
 Else
     OrderSimulationLabel.caption = "Orders are LIVE !!"

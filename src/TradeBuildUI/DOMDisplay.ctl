@@ -9,9 +9,9 @@ Begin VB.UserControl DOMDisplay
    ScaleWidth      =   3795
    Begin TWControls10.TWGrid DOMGrid 
       Height          =   1455
-      Left            =   240
+      Left            =   0
       TabIndex        =   0
-      Top             =   120
+      Top             =   0
       Width           =   3015
       _ExtentX        =   5318
       _ExtentY        =   2566
@@ -108,6 +108,9 @@ Attribute mCentreTimer.VB_VarHelpID = -1
 
 Private mIsVisible As Boolean
 
+Private WithEvents mResizeTimer As IntervalTimer
+Attribute mResizeTimer.VB_VarHelpID = -1
+
 '@================================================================================
 ' Form Event Handlers
 '@================================================================================
@@ -126,7 +129,7 @@ DOMGrid.BackColorFixed = vbButtonFace
 DOMGrid.BackColorSel = GridColours.BGDefault
 DOMGrid.backColor = GridColours.BGDefault
 DOMGrid.ForeColorSel = DOMGrid.foreColor
-DOMGrid.Rows = 50
+DOMGrid.Rows = 200
 DOMGrid.Cols = 5
 DOMGrid.FixedCols = 0
 DOMGrid.FixedRows = 1
@@ -155,10 +158,18 @@ setCellContents 0, DOMColumns.PriceRight, "Price"
 DOMGrid.colWidth(DOMColumns.PriceRight) = 24 * DOMGrid.Width / 100
 DOMGrid.ColAlignment(DOMColumns.PriceRight) = TWControls10.AlignmentSettings.TwGridAlignLeftCenter
 
+Set mResizeTimer = CreateIntervalTimer(200, ExpiryTimeUnitMilliseconds)
 End Sub
 
 Private Sub UserControl_Resize()
-resize
+Static firstResizeDone As Boolean
+If Not firstResizeDone Then
+    resize
+    firstResizeDone = True
+Else
+    mResizeTimer.StopTimer
+    mResizeTimer.StartTimer
+End If
 End Sub
 
 Private Sub UserControl_Show()
@@ -205,6 +216,15 @@ End Sub
 Private Sub mCentreTimer_TimerExpired()
 If mInitialPrice <> 0 Then centreRow mInitialPrice
 Set mCentreTimer = Nothing
+End Sub
+
+'@================================================================================
+' mResizeTimer Event Handlers
+'@================================================================================
+
+Private Sub mResizeTimer_TimerExpired()
+Debug.Print "Resize timer expired"
+resize
 End Sub
 
 '@================================================================================
@@ -275,13 +295,17 @@ End If
 
 mTicker.addMarketDepthListener Me
 
-mTicker.RequestMarketDepth DOMEvents.DOMProcessedEvents, False
+mTicker.requestMarketDepth DOMEvents.DOMProcessedEvents, False
 
 End Property
 
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub centre()
+centreRow mCurrentLast
+End Sub
 
 Public Sub finish()
 On Error GoTo Err
@@ -298,13 +322,12 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-
 Private Function calcRowNumber(ByVal price As Double) As Long
 calcRowNumber = ((mCeilingPrice - price) / mPriceIncrement) + 1
 End Function
 
 Private Sub centreRow(ByVal price As Double)
-DOMGrid.TopRow = calcRowNumber(price) - Int(mNumberOfVisibleRows / 2)
+DOMGrid.TopRow = calcRowNumber(IIf(price <> 0, price, (mCeilingPrice + mBasePrice) / 2)) - Int(mNumberOfVisibleRows / 2)
 End Sub
 
 Private Sub checkEnoughRows(ByVal price As Double)
@@ -326,7 +349,7 @@ If (price - mBasePrice) / mPriceIncrement <= 5 Then
         mBasePrice = rowprice
     Loop Until (price - mBasePrice) / mPriceIncrement > 5
     
-    centreRow IIf(mCurrentLast <> 0, mCurrentLast, (mCeilingPrice + mBasePrice) / 2)
+    centreRow mCurrentLast
     DOMGrid.Redraw = True
 End If
 
@@ -337,13 +360,13 @@ If (mCeilingPrice - price) / mPriceIncrement <= 5 Then
         For i = 1 To Int(mNumberOfVisibleRows / 2)
             rowprice = mCeilingPrice + (i * mPriceIncrement)
             DOMGrid.addItem "", 1
-            setCellContents DOMGrid.Rows - 1, DOMColumns.PriceLeft, mTicker.formatPrice(rowprice)
-            setCellContents DOMGrid.Rows - 1, DOMColumns.PriceRight, mTicker.formatPrice(rowprice)
+            setCellContents 1, DOMColumns.PriceLeft, mTicker.formatPrice(rowprice)
+            setCellContents 1, DOMColumns.PriceRight, mTicker.formatPrice(rowprice)
         Next
         mCeilingPrice = rowprice
     Loop Until (mCeilingPrice - price) / mPriceIncrement > 5
 
-    centreRow IIf(mCurrentLast <> 0, mCurrentLast, (mCeilingPrice + mBasePrice) / 2)
+    centreRow mCurrentLast
     DOMGrid.Redraw = True
 End If
 
@@ -379,21 +402,35 @@ RaiseEvent Halted
 End Sub
 
 Private Sub resize()
+Static prevWidth As Long
+Static prevHeight As Long
+
 Dim i As Long
 Dim colWidth As Long
 
-DOMGrid.Left = 0
-DOMGrid.Top = 0
-DOMGrid.Width = UserControl.Width
-DOMGrid.Height = UserControl.Height
+If UserControl.Width = prevWidth And UserControl.Height = prevHeight Then Exit Sub
 
-mNumberOfVisibleRows = Int(DOMGrid.Height / DOMGrid.rowHeight(1)) - 1
+DOMGrid.Redraw = False
 
-colWidth = (UserControl.ScaleWidth - ScrollbarWidth) / DOMGrid.Cols
-For i = 0 To DOMGrid.Cols - 2
-    DOMGrid.colWidth(i) = colWidth
-Next
-DOMGrid.colWidth(DOMGrid.Cols - 1) = UserControl.ScaleWidth - ScrollbarWidth - (DOMGrid.Cols - 1) * colWidth
+If UserControl.Width <> prevWidth Then
+    prevWidth = UserControl.Width
+    DOMGrid.Width = UserControl.Width
+    colWidth = (UserControl.ScaleWidth - ScrollbarWidth) / DOMGrid.Cols
+    For i = 0 To DOMGrid.Cols - 2
+        DOMGrid.colWidth(i) = colWidth
+    Next
+    DOMGrid.colWidth(DOMGrid.Cols - 1) = UserControl.ScaleWidth - ScrollbarWidth - (DOMGrid.Cols - 1) * colWidth
+End If
+
+If UserControl.Height <> prevHeight Then
+    prevHeight = UserControl.Height
+    DOMGrid.Height = UserControl.Height
+
+    mNumberOfVisibleRows = Int(DOMGrid.Height / DOMGrid.rowHeight(1)) - 1
+End If
+
+DOMGrid.Redraw = True
+
 End Sub
 
 Private Sub setCellContents(ByVal row As Long, ByVal col As Long, ByVal value As String)

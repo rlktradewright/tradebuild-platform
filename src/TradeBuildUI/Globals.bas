@@ -35,14 +35,19 @@ Public Const TaskTypeAddValueListener As Long = 3
 
 Public Const ErroredFieldColor As Long = &HD0CAFA
 
-Public Const PositiveChangeBackColor As Long = &HB7E43
-Public Const NegativeChangebackColor As Long = &H4444EB
+Public Const CPositiveChangeBackColor As Long = &HB7E43
+Public Const CPositiveChangeForeColor As Long = &HFFFFFF
+Public Const CNegativeChangeBackColor As Long = &H4444EB
+Public Const CNegativeChangeForeColor As Long = &HFFFFFF
 
-Public Const PositiveProfitColor As Long = &HB7E43
-Public Const NegativeProfitColor As Long = &H4444EB
+Public Const CPositiveProfitColor As Long = &HB7E43
+Public Const CNegativeProfitColor As Long = &H4444EB
 
-Public Const IncreasedValueColor As Long = &HB7E43
-Public Const DecreasedValueColor As Long = &H4444EB
+Public Const CIncreasedValueColor As Long = &HB7E43
+Public Const CDecreasedValueColor As Long = &H4444EB
+
+Public Const CRowBackColorOdd As Long = &HF8F8F8
+Public Const CRowBackColorEven As Long = &HEEEEEE
 
 '@================================================================================
 ' Enums
