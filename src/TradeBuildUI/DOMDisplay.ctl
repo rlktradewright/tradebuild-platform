@@ -414,12 +414,12 @@ DOMGrid.Redraw = False
 
 If UserControl.Width <> prevWidth Then
     prevWidth = UserControl.Width
-    DOMGrid.Width = UserControl.Width
     colWidth = (UserControl.ScaleWidth - ScrollbarWidth) / DOMGrid.Cols
     For i = 0 To DOMGrid.Cols - 2
         DOMGrid.colWidth(i) = colWidth
     Next
     DOMGrid.colWidth(DOMGrid.Cols - 1) = UserControl.ScaleWidth - ScrollbarWidth - (DOMGrid.Cols - 1) * colWidth
+    DOMGrid.Width = UserControl.Width
 End If
 
 If UserControl.Height <> prevHeight Then
