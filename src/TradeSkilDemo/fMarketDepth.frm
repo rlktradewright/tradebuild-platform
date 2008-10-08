@@ -1,22 +1,30 @@
 VERSION 5.00
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#2.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#111.1#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fMarketDepth 
    Caption         =   "Market Depth"
-   ClientHeight    =   3270
+   ClientHeight    =   3630
    ClientLeft      =   375
    ClientTop       =   510
    ClientWidth     =   4335
    LinkTopic       =   "Form1"
-   ScaleHeight     =   3270
+   ScaleHeight     =   3630
    ScaleWidth      =   4335
+   Begin VB.CommandButton CentreButton 
+      Caption         =   "Centre"
+      Height          =   375
+      Left            =   1440
+      TabIndex        =   1
+      Top             =   0
+      Width           =   1215
+   End
    Begin TradeBuildUI26.DOMDisplay DOMDisplay1 
-      Height          =   3015
-      Left            =   120
+      Height          =   3255
+      Left            =   0
       TabIndex        =   0
-      Top             =   120
-      Width           =   4095
-      _ExtentX        =   7223
-      _ExtentY        =   5318
+      Top             =   375
+      Width           =   4335
+      _ExtentX        =   7646
+      _ExtentY        =   5741
    End
 End
 Attribute VB_Name = "fMarketDepth"
@@ -80,8 +88,13 @@ End Sub
 Private Sub Form_Resize()
 If Me.ScaleWidth = 0 And _
     Me.ScaleHeight = 0 Then Exit Sub
-DOMDisplay1.Left = 0
-DOMDisplay1.Top = 0
+
+If Me.ScaleWidth / 2 - CentreButton.Width / 2 > 0 Then
+    CentreButton.Left = Me.ScaleWidth / 2 - CentreButton.Width / 2
+Else
+    CentreButton.Left = 0
+End If
+
 DOMDisplay1.Width = Me.ScaleWidth
 DOMDisplay1.Height = Me.ScaleHeight
 End Sub
@@ -98,6 +111,10 @@ End Sub
 '================================================================================
 ' Form Control Event Handlers
 '================================================================================
+
+Private Sub CentreButton_Click()
+DOMDisplay1.centre
+End Sub
 
 Private Sub DOMDisplay1_Halted()
 Me.caption = "Market depth data halted"
@@ -130,7 +147,7 @@ Set mTicker = value
 mCaption = "Market depth for " & _
             mTicker.Contract.specifier.localSymbol & _
             " on " & _
-            mTicker.Contract.specifier.exchange
+            mTicker.Contract.specifier.Exchange
 Me.caption = mCaption
 DOMDisplay1.Ticker = mTicker
 End Property
