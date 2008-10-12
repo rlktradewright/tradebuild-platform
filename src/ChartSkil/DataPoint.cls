@@ -13,19 +13,30 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
-'================================================================================
+'@================================================================================
 ' Interfaces
-'================================================================================
+'@================================================================================
 
 Implements IGraphicObject
 
-'================================================================================
+'@================================================================================
 ' Events
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
+' Enums
+'@================================================================================
+
+'@================================================================================
 ' Types
-'================================================================================
+'@================================================================================
+
+'@================================================================================
+' Constants
+'@================================================================================
+
+Private Const ProjectName                As String = "ChartSkil26"
+Private Const ModuleName                As String = "DataPoint"
 
 '================================================================================
 ' Member variables and constants
@@ -104,6 +115,9 @@ Static prevGaugeY As Double
 Static prevRect As TRectangle
 Dim canvasChanges As Long
 
+Dim failpoint As Long
+On Error GoTo Err
+
 canvasChanges = mCanvas.compareTo(prevGaugeX, prevGaugeY, prevRect)
 If (canvasChanges And CanvasComparisonCodes.GaugeChangedX) Or _
     (canvasChanges And CanvasComparisonCodes.GaugeChangedY) _
@@ -116,6 +130,17 @@ prevGaugeY = mCanvas.gaugeY
 prevRect = mCanvas.boundary
 
 IGraphicObject_boundingRectangle = mBoundingRect
+
+Exit Property
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_boundingRectangle" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Property
 
 Private Function IGraphicObject_boundingRectanglesAt(ByVal periodNumber As Long) As ChartSkilTypes.TRectangle()
@@ -192,7 +217,21 @@ End Property
 Private Sub IGraphicObject_undraw( _
                 ByRef area As TRectangle, _
                 ByVal hdc As Long)
+Dim failpoint As Long
+On Error GoTo Err
+
 undraw
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_undraw" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Sub
 
 Private Property Let IGraphicObject_visible(ByVal value As Boolean)
@@ -253,7 +292,7 @@ End Property
 
 Public Property Get displayMode() As DataPointDisplayModes
 displayMode = mBaseStyle.displayMode
-If Not mLocalStyle Is Nothing Then displayMode = mBaseStyle.displayMode
+If Not mLocalStyle Is Nothing Then displayMode = mLocalStyle.displayMode
 If mIsSetDisplayMode Then displayMode = mDisplayMode
 End Property
 
@@ -565,45 +604,45 @@ If Not mVisible Then Exit Sub
 
 If displayMode = 0 Then Exit Sub
 
-mCanvas.setPenAttributes Color, _
-                        lineThickness, _
-                        linestyle, _
-                        DrawModes.DrawModeCopyPen
-
-If displayMode = DataPointDisplayModes.DataPointDisplayModeHistogram Then
-    mCanvas.setBrushAttributes Color, FillStyles.FillSolid
-    mCanvas.drawRectangle mX - histBarWidth / 2, 0, mX + histBarWidth / 2, mDataValue
-ElseIf drawAsPoint Then
-    If pointStyle = PointRound Then
-        mCanvas.drawPoint mX, mDataValue
-    Else
-        Dim thicknessScaleX As Double
-        Dim thicknessScaleY As Double
-        
-        thicknessScaleX = mCanvas.convertPixelsToLogicalX(lineThickness)
-        thicknessScaleY = mCanvas.convertPixelsToLogicalY(lineThickness)
-        mCanvas.setPenAttributes Color, _
-                                1, _
-                                LineInsideSolid, _
-                                DrawModes.DrawModeCopyPen
-        mCanvas.setBrushAttributes Color, FillSolid
-        mCanvas.drawRectangle mX - thicknessScaleX / 2, _
-                                mDataValue - thicknessScaleY / 2, _
-                                mX + thicknessScaleX / 2, _
-                                mDataValue + thicknessScaleY / 2
+With mCanvas
+    .setPenAttributes Color, _
+                            lineThickness, _
+                            linestyle, _
+                            DrawModes.DrawModeCopyPen
+    
+    If displayMode = DataPointDisplayModes.DataPointDisplayModeHistogram Then
+        .setBrushAttributes Color, FillStyles.FillSolid
+        .drawRectangle .newPoint(mX - histBarWidth / 2, 0), .newPoint(mX + histBarWidth / 2, mDataValue)
+    ElseIf drawAsPoint Then
+        If pointStyle = PointRound Then
+            .drawPoint .newPoint(mX, mDataValue)
+        Else
+            Dim thicknessScaleX As Double
+            Dim thicknessScaleY As Double
+            
+            thicknessScaleX = .convertPixelsToLogicalX(lineThickness)
+            thicknessScaleY = .convertPixelsToLogicalY(lineThickness)
+            .setPenAttributes Color, _
+                                    1, _
+                                    LineInsideSolid, _
+                                    DrawModes.DrawModeCopyPen
+            .setBrushAttributes Color, FillSolid
+            .drawRectangle .newPoint(mX - thicknessScaleX / 2, mDataValue - thicknessScaleY / 2), _
+                            .newPoint(mX + thicknessScaleX / 2, mDataValue + thicknessScaleY / 2)
+        End If
+    ElseIf displayMode = DataPointDisplayModes.DataPointDisplayModeLine Then
+        .drawLine .newPoint(mPrevDataPoint.x, mPrevDataPoint.dataValue), .newPoint(mX, mDataValue)
+    ElseIf displayMode = DataPointDisplayModes.DataPointDisplayModeStep Then
+        .drawLine .newPoint(mPrevDataPoint.x, mPrevDataPoint.dataValue), .newPoint(mX - 0.5, mPrevDataPoint.dataValue)
+        .drawLine .newPoint(mX - 0.5, mPrevDataPoint.dataValue), .newPoint(mX - 0.5, mDataValue)
+        .drawLine .newPoint(mX - 0.5, mDataValue), .newPoint(mX, mDataValue)
     End If
-ElseIf displayMode = DataPointDisplayModes.DataPointDisplayModeLine Then
-    mCanvas.drawLine mPrevDataPoint.x, mPrevDataPoint.dataValue, mX, mDataValue
-ElseIf displayMode = DataPointDisplayModes.DataPointDisplayModeStep Then
-    mCanvas.drawLine mPrevDataPoint.x, mPrevDataPoint.dataValue, mX - 0.5, mPrevDataPoint.dataValue
-    mCanvas.drawLine mX - 0.5, mPrevDataPoint.dataValue, mX - 0.5, mDataValue
-    mCanvas.drawLine mX - 0.5, mDataValue, mX, mDataValue
-End If
+End With
 End Sub
 
 Private Sub undraw()
 If Not mVisible Then Exit Sub
-drawPoint mCanvas.backColor
+'drawPoint mCanvas.backColor
 mEventProxy.objectUndrawn mHandle, mBoundingRect
 End Sub
 

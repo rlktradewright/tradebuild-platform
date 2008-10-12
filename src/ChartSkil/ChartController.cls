@@ -28,6 +28,9 @@ Option Explicit
 '================================================================================
 
 Event ChartCleared()
+Event KeyDown(KeyCode As Integer, Shift As Integer)
+Event KeyPress(KeyAscii As Integer)
+Event KeyUp(KeyCode As Integer, Shift As Integer)
 Event RegionsChanged(ev As CollectionChangeEvent)
 Event PeriodsChanged(ev As CollectionChangeEvent)
 
@@ -332,6 +335,18 @@ End Sub
 
 Friend Sub fireChartCleared()
 RaiseEvent ChartCleared
+End Sub
+
+Friend Sub fireKeyDown(KeyCode As Integer, Shift As Integer)
+RaiseEvent KeyDown(KeyCode, Shift)
+End Sub
+
+Friend Sub fireKeyPress(KeyAscii As Integer)
+RaiseEvent KeyPress(KeyAscii)
+End Sub
+
+Friend Sub fireKeyUp(KeyCode As Integer, Shift As Integer)
+RaiseEvent KeyUp(KeyCode, Shift)
 End Sub
 
 Friend Sub fireRegionsChanged(ev As CollectionChangeEvent)

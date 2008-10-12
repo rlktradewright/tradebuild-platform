@@ -13,15 +13,30 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
 
+'@================================================================================
+' Interfaces
+'@================================================================================
+
 Implements IGraphicObject
 
-'================================================================================
+'@================================================================================
 ' Events
-'================================================================================
+'@================================================================================
 
-'================================================================================
+'@================================================================================
+' Enums
+'@================================================================================
+
+'@================================================================================
 ' Types
-'================================================================================
+'@================================================================================
+
+'@================================================================================
+' Constants
+'@================================================================================
+
+Private Const ProjectName                As String = "ChartSkil26"
+Private Const ModuleName                As String = "Text"
 
 '================================================================================
 ' Member variables and constants
@@ -125,6 +140,9 @@ Static prevGaugeY As Double
 Static prevRect As TRectangle
 Dim canvasChanges As Long
 
+Dim failpoint As Long
+On Error GoTo Err
+
 canvasChanges = mCanvas.compareTo(prevGaugeX, prevGaugeY, prevRect)
 If (canvasChanges And CanvasComparisonCodes.GaugeChangedX) Or _
     (canvasChanges And CanvasComparisonCodes.GaugeChangedY) _
@@ -145,6 +163,17 @@ prevGaugeY = mCanvas.gaugeY
 prevRect = mCanvas.boundary
 
 IGraphicObject_boundingRectangle = mBoundingRect
+
+Exit Property
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_boundingRectangle" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Property
 
 Private Function IGraphicObject_boundingRectanglesAt(ByVal periodNumber As Long) As ChartSkilTypes.TRectangle()
@@ -152,13 +181,12 @@ Private Function IGraphicObject_boundingRectanglesAt(ByVal periodNumber As Long)
 End Function
 
 Private Property Get IGraphicObject_capabilities() As Long
-IGraphicObject_capabilities = capabilities.blockUndraw
+IGraphicObject_capabilities = capabilities.BlockUndraw
 End Property
 
 Private Sub IGraphicObject_draw( _
                 ByRef areas() As TRectangle, _
                 ByVal hdc As Long)
-'If mText = "Started here" Then Stop
 draw
 End Sub
 
@@ -227,7 +255,21 @@ End Property
 Private Sub IGraphicObject_undraw( _
                 ByRef area As TRectangle, _
                 ByVal hdc As Long)
+Dim failpoint As Long
+On Error GoTo Err
+
 undraw
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_undraw" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Sub
 
 Private Property Let IGraphicObject_visible(ByVal value As Boolean)
@@ -241,7 +283,7 @@ End Property
 
 Public Property Get align() As TextAlignModes
 align = mBaseStyle.align
-If Not mLocalStyle Is Nothing Then align = mBaseStyle.align
+If Not mLocalStyle Is Nothing Then align = mLocalStyle.align
 If mIsSetAlign Then align = mAlign
 End Property
 
@@ -255,7 +297,7 @@ End Property
 
 Public Property Get box() As Boolean
 box = mBaseStyle.box
-If Not mLocalStyle Is Nothing Then box = mBaseStyle.box
+If Not mLocalStyle Is Nothing Then box = mLocalStyle.box
 If mIsSetBox Then box = mBox
 End Property
 
@@ -269,7 +311,7 @@ End Property
 
 Public Property Get boxColor() As Long
 boxColor = mBaseStyle.boxColor
-If Not mLocalStyle Is Nothing Then boxColor = mBaseStyle.boxColor
+If Not mLocalStyle Is Nothing Then boxColor = mLocalStyle.boxColor
 If mIsSetBoxColor Then boxColor = mBoxColor
 End Property
 
@@ -282,7 +324,7 @@ End Property
 
 Public Property Get boxFillColor() As Long
 boxFillColor = mBaseStyle.boxFillColor
-If Not mLocalStyle Is Nothing Then boxFillColor = mBaseStyle.boxFillColor
+If Not mLocalStyle Is Nothing Then boxFillColor = mLocalStyle.boxFillColor
 If mIsSetBoxFillColor Then boxFillColor = mBoxFillColor
 End Property
 
@@ -295,7 +337,7 @@ End Property
 
 Public Property Get boxFillStyle() As FillStyles
 boxFillStyle = mBaseStyle.boxFillStyle
-If Not mLocalStyle Is Nothing Then boxFillStyle = mBaseStyle.boxFillStyle
+If Not mLocalStyle Is Nothing Then boxFillStyle = mLocalStyle.boxFillStyle
 If mIsSetBoxFillStyle Then boxFillStyle = mBoxFillStyle
 End Property
 
@@ -309,7 +351,7 @@ End Property
 
 Public Property Get boxStyle() As LineStyles
 boxStyle = mBaseStyle.boxStyle
-If Not mLocalStyle Is Nothing Then boxStyle = mBaseStyle.boxStyle
+If Not mLocalStyle Is Nothing Then boxStyle = mLocalStyle.boxStyle
 If mIsSetBoxStyle Then boxStyle = mBoxStyle
 End Property
 
@@ -323,7 +365,7 @@ End Property
 
 Public Property Get boxThickness() As Long
 boxThickness = mBaseStyle.boxThickness
-If Not mLocalStyle Is Nothing Then boxThickness = mBaseStyle.boxThickness
+If Not mLocalStyle Is Nothing Then boxThickness = mLocalStyle.boxThickness
 If mIsSetBoxThickness Then boxThickness = mBoxThickness
 End Property
 
@@ -337,7 +379,7 @@ End Property
 
 Public Property Get Color() As Long
 Color = mBaseStyle.Color
-If Not mLocalStyle Is Nothing Then Color = mBaseStyle.Color
+If Not mLocalStyle Is Nothing Then Color = mLocalStyle.Color
 If mIsSetColor Then Color = mColor
 End Property
 
@@ -350,7 +392,7 @@ End Property
 
 Friend Property Get extended() As Boolean
 extended = mBaseStyle.extended
-If Not mLocalStyle Is Nothing Then extended = mBaseStyle.extended
+If Not mLocalStyle Is Nothing Then extended = mLocalStyle.extended
 If mIsSetExtended Then extended = mExtended
 End Property
 
@@ -364,7 +406,7 @@ End Property
 
 Public Property Get fixedX() As Boolean
 fixedX = mBaseStyle.fixedX
-If Not mLocalStyle Is Nothing Then fixedX = mBaseStyle.fixedX
+If Not mLocalStyle Is Nothing Then fixedX = mLocalStyle.fixedX
 If mIsSetFixedX Then fixedX = mFixedX
 End Property
 
@@ -379,7 +421,7 @@ End Property
 
 Public Property Get fixedY() As Boolean
 fixedY = mBaseStyle.fixedY
-If Not mLocalStyle Is Nothing Then fixedY = mBaseStyle.fixedY
+If Not mLocalStyle Is Nothing Then fixedY = mLocalStyle.fixedY
 If mIsSetFixedY Then fixedY = mFixedY
 End Property
 
@@ -393,17 +435,29 @@ update
 End Property
 
 Public Property Get font() As StdFont
-Set font = mBaseStyle.font
-If Not mLocalStyle Is Nothing Then Set font = mBaseStyle.font
-If mIsSetFont Then Set font = mFont
+If mIsSetFont Then
+    Set font = gCloneFont(mFont)
+ElseIf Not mLocalStyle Is Nothing Then
+    Set font = gCloneFont(mBaseStyle.font)
+Else
+    Set font = gCloneFont(mBaseStyle.font)
+End If
 End Property
 
 Public Property Let font(ByVal value As StdFont)
-If value Is Nothing Then Exit Property
-undraw
-Set mFont = value
-mIsSetFont = True
-update
+If value Is Nothing Then
+    If mIsSetFont Then
+        undraw
+        Set mFont = Nothing
+        mIsSetFont = False
+        update
+    End If
+Else
+    undraw
+    Set mFont = gCloneFont(value)
+    mIsSetFont = True
+    update
+End If
 End Property
 
 Friend Property Get handle() As Long
@@ -412,7 +466,7 @@ End Property
 
 Public Property Get includeInAutoscale() As Boolean
 includeInAutoscale = mBaseStyle.includeInAutoscale
-If Not mLocalStyle Is Nothing Then includeInAutoscale = mBaseStyle.includeInAutoscale
+If Not mLocalStyle Is Nothing Then includeInAutoscale = mLocalStyle.includeInAutoscale
 If mIsSetIncludeInAutoscale Then includeInAutoscale = mIncludeInAutoscale
 End Property
 
@@ -468,7 +522,7 @@ End Property
 
 Public Property Get paddingX() As Double
 paddingX = mBaseStyle.paddingX
-If Not mLocalStyle Is Nothing Then paddingX = mBaseStyle.paddingX
+If Not mLocalStyle Is Nothing Then paddingX = mLocalStyle.paddingX
 If mIsSetPaddingX Then paddingX = mPaddingX
 End Property
 
@@ -482,7 +536,7 @@ End Property
 
 Public Property Get paddingY() As Double
 paddingY = mBaseStyle.paddingY
-If Not mLocalStyle Is Nothing Then paddingY = mBaseStyle.paddingY
+If Not mLocalStyle Is Nothing Then paddingY = mLocalStyle.paddingY
 If mIsSetPaddingY Then paddingY = mPaddingY
 End Property
 
@@ -557,6 +611,9 @@ End Property
 '================================================================================
 
 Friend Sub draw()
+Dim failpoint As Long
+On Error GoTo Err
+
 If mBlank Then Exit Sub
 If Not mVisible Then Exit Sub
 If Not mPosition.isAssigned Then Exit Sub
@@ -569,13 +626,24 @@ With mCanvas
                         boxStyle, _
                         DrawModes.DrawModeCopyPen
         .setBrushAttributes boxFillColor, boxFillStyle
-        .drawRectangle mBoxRect.left, mBoxRect.bottom, mBoxRect.right, mBoxRect.top
+        .drawRectangle .newPoint(mBoxRect.left, mBoxRect.bottom), .newPoint(mBoxRect.right, mBoxRect.top)
     End If
     
     .setTextAttributes Color, font, True
 '    If mText = "Volume" Then Stop
-    .drawText mText, mTextRect.left, mTextRect.top
+    .drawText mText, .newPoint(mTextRect.left, mTextRect.top)
 End With
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "draw" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
     
 End Sub
 
@@ -587,6 +655,9 @@ Friend Sub initialise( _
                 ByVal baseStyle As TextStyle, _
                 ByVal localStyle As TextStyle)
                 
+Dim failpoint As Long
+On Error GoTo Err
+
 mKey = key
 Set mEventProxy = eventProxy
 mLayer = layer
@@ -594,6 +665,17 @@ Set mCanvas = canvas
 Set mBaseStyle = baseStyle
 If Not localStyle Is Nothing Then Set mLocalStyle = localStyle.clone ' local style cannot be shared
 calcCurrentBoundingRect
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "initialise" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Sub
 
 '================================================================================
@@ -864,14 +946,14 @@ If Not mVisible Then Exit Sub
 If Not mPosition.isAssigned Then Exit Sub
 mDrawn = True
 
-With mCanvas
-    .setPenAttributes .backColor, _
-                    1, _
-                    LineStyles.LineInsideSolid, _
-                    DrawModes.DrawModeCopyPen
-    .setBrushAttributes .backColor, FillStyles.FillSolid
-    .drawRectangle mBoundingRect.left, mBoundingRect.bottom, mBoundingRect.right, mBoundingRect.top
-End With
+'With mCanvas
+'    .setPenAttributes .backColor, _
+'                    1, _
+'                    LineStyles.LineInsideSolid, _
+'                    DrawModes.DrawModeCopyPen
+'    .setBrushAttributes .backColor, FillStyles.FillSolid
+'    .drawRectangle mBoundingRect.left, mBoundingRect.bottom, mBoundingRect.right, mBoundingRect.top
+'End With
 mEventProxy.objectUndrawn mHandle, mBoundingRect
 
 End Sub

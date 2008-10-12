@@ -170,11 +170,11 @@ fixedY = mFixedY
 End Property
 
 Public Property Let font(ByVal value As StdFont)
-Set mFont = value
+Set mFont = gCloneFont(value)
 End Property
 
 Public Property Get font() As StdFont
-Set font = mFont
+Set font = gCloneFont(mFont)
 End Property
 
 Public Property Let includeInAutoscale(ByVal value As Boolean)

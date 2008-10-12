@@ -17,6 +17,7 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
+Implements DeferredAction
 Implements Task
 
 '================================================================================
@@ -26,27 +27,41 @@ Implements Task
 Event AutoscaleChanged()
 
 Event Click()
+Attribute Click.VB_UserMemId = -600
 
 Event DblCLick()
+Attribute DblCLick.VB_UserMemId = -601
 
 Event MouseDown(Button As Integer, _
                 Shift As Integer, _
                 x As Single, _
                 y As Single)
+Attribute MouseDown.VB_UserMemId = -605
                 
 Event MouseMove(Button As Integer, _
                 Shift As Integer, _
                 x As Single, _
                 y As Single)
+Attribute MouseMove.VB_UserMemId = -606
                 
 Event MouseUp(Button As Integer, _
                 Shift As Integer, _
                 x As Single, _
                 y As Single)
+Attribute MouseUp.VB_UserMemId = -607
 
 '================================================================================
 ' Enums
 '================================================================================
+
+Private Enum DeferredPaintActions
+    DeferredPaintRepaintNone
+    DeferredPaintRepaintChangedAreas
+    DeferredPaintRepaintRegion
+    DeferredPaintChangeGaugeandRepaint
+    DeferredPaintScaleAndRepaint
+    DeferredPaintCalculateAndRepaint
+End Enum
 
 '================================================================================
 ' Constants
@@ -54,10 +69,6 @@ Event MouseUp(Button As Integer, _
 
 Private Const ProjectName                As String = "ChartSkil26"
 Private Const ModuleName                As String = "ChartRegion"
-
-Private Const GRADIENT_FILL_RECT_H As Long = 0
-Private Const GRADIENT_FILL_RECT_V As Long = 1
-Private Const GRADIENT_FILL_TRIANGLE  As Long = 2
 
 '================================================================================
 ' Types
@@ -67,17 +78,6 @@ Private Type PeriodTableEntry
     firstIndex                  As Long
     lastindex                   As Long
     backColor                   As Long
-End Type
-
-Private Type GRADIENT_RECT
-    upperLeft                   As Long
-    lowerRight                  As Long
-End Type
-
-Private Type GRADIENT_TRIANGLE
-    vertex1   As Long
-    vertex2   As Long
-    vertex3   As Long
 End Type
 
 Private Type GraphicObjectTableEntry
@@ -106,17 +106,9 @@ Private Type GraphicObjectTableEntry
     nextVisibleIndex    As Long
 End Type
 
-Private Type TRIVERTEX
-  x         As Long
-  y         As Long
-  Filler1   As Byte
-  Red       As Byte
-  Filler2   As Byte
-  Green     As Byte
-  Filler3   As Byte
-  Blue      As Byte
-  Filler4   As Byte
-  Alpha     As Byte
+Private Type RedrawObjectsTableEntry
+    graphObj            As IGraphicObject
+    areaToRedraw        As TRectangle
 End Type
 
 Private Type VisibleTableEntry
@@ -125,32 +117,12 @@ Private Type VisibleTableEntry
 End Type
 
 '================================================================================
-' External FUnction Declarations
-'================================================================================
-
-Private Declare Function CreateRectRgn Lib "gdi32" ( _
-                ByVal x1 As Long, _
-                ByVal y1 As Long, _
-                ByVal x2 As Long, _
-                ByVal y2 As Long) As Long
-
-Private Declare Sub GradientFill Lib "msimg32" ( _
-                ByVal hdc As Long, _
-                ByVal pVertices As Long, _
-                ByVal numVertices As Long, _
-                ByVal pMesh As Long, _
-                ByVal numMesh As Long, _
-                ByVal dwMode As Long)
-
-Private Declare Function SelectClipRgn Lib "gdi32" ( _
-                ByVal hdc As Long, _
-                ByVal hRgn As Long) As Long
-
-'================================================================================
 ' Member variables
 '================================================================================
 
 Private mController As ChartController
+
+Private mCleared As Boolean
 
 Private mName As String
 Private mRegionNumber As Long
@@ -193,8 +165,7 @@ Private mFirstBarSeries As BarSeries
 Private mDefaultTextSeries As TextSeries
 Private mDefaultLineSeries As LineSeries
 
-'Private mSurface As PictureBox
-Private mCanvas As Canvas
+Private mCanvas As canvas
 Private mSuppressDrawing As Boolean
 
 Private WithEvents mToolbar As toolbar
@@ -252,18 +223,10 @@ Private mYScaleFormatStr As String
 Private mYScaleSubFormatStr As String
 Private mGridTextHeight As Double
 
-Private mBackColor As Long
 Private mGridColor As Long
 Private mGridTextColor As Long
 Private mhasGrid As Boolean
 Private mShowPerformanceText As Boolean
-
-Private mGradientFill As Boolean
-Private mGradientFillMode As Long
-Private mBackGradientFillColors() As Long
-Private mVertices() As TRIVERTEX
-Private mMeshTriangle() As GRADIENT_TRIANGLE
-Private mMeshRect() As GRADIENT_RECT
 
 Private mPointerStyle As PointerStyles
 Private mPointerCrosshairsColor As Long
@@ -297,6 +260,17 @@ Private mCurrY As Single
 
 Private mSnapCursorToTickBoundaries As Boolean
 
+Private mUseDeferredPainting As Boolean
+Private mDeferredPaintPending As Boolean
+
+Private mDeferredPaintAction As DeferredPaintActions
+
+Private mUndrawnAreas() As TRectangle
+Private mUndrawnAreasIndex As Long
+
+Private mRedrawObjects() As RedrawObjectsTableEntry
+Private mRedrawObjectsIndex As Long
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
@@ -304,7 +278,9 @@ Private mSnapCursorToTickBoundaries As Boolean
 Private Sub Class_Initialize()
 Dim i As Long
 
-Set mCanvas = New Canvas
+mUseDeferredPainting = True
+deferredPaint DeferredPaintRepaintNone
+
 mNextLayer = LayerNumbers.LayerLowestUser
 
 ReDim mPeriodTable(255) As PeriodTableEntry
@@ -339,6 +315,73 @@ End Sub
 
 Private Sub Class_Terminate()
 Debug.Print "ChartRegion terminated"
+End Sub
+
+'================================================================================
+' DeferredAction Interface Members
+'================================================================================
+
+Private Sub DeferredAction_run(ByVal data As Variant)
+Dim et As New ElapsedTimer
+Dim i As Long
+
+Dim failpoint As Long
+On Error GoTo Err
+
+If mCleared Then Exit Sub
+
+et.StartTiming
+
+Select Case mDeferredPaintAction
+Case DeferredPaintRepaintNone
+
+Case DeferredPaintRepaintChangedAreas
+    
+    For i = 0 To mUndrawnAreasIndex
+        undrawArea mUndrawnAreas(i)
+    Next
+    
+    For i = 0 To mRedrawObjectsIndex
+        redrawObject mRedrawObjects(i).graphObj, mRedrawObjects(i).areaToRedraw
+    Next
+Case DeferredPaintRepaintRegion
+    paint
+Case DeferredPaintChangeGaugeandRepaint
+    calculateInscopeGaugeDependentObjects
+    paint
+    If Not mYAxisRegion Is Nothing Then mYAxisRegion.resizedY
+Case DeferredPaintScaleAndRepaint
+    calculateVerticalBounds
+    determineVisibleObjects
+    paint
+    If Not mYAxisRegion Is Nothing Then
+        mYAxisRegion.setVerticalScaleInternal mCanvas.bottom, mCanvas.top
+    End If
+Case DeferredPaintCalculateAndRepaint
+    determineInScopeObjects
+    If mAutoscale Then
+        calculateVerticalBounds
+    End If
+    determineVisibleObjects
+    paint
+    If Not mYAxisRegion Is Nothing Then
+        mYAxisRegion.setVerticalScaleInternal mCanvas.bottom, mCanvas.top
+    End If
+End Select
+
+Debug.Print "Deferred paint: " & et.ElapsedTimeMicroseconds
+
+deferredPaint DeferredPaintRepaintNone
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "DeferredAction_run" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
 End Sub
 
 '================================================================================
@@ -381,7 +424,21 @@ End Property
 Private Sub mEventProxy_addGraphicObject( _
                 ByVal graphObj As IGraphicObject, _
                 ByVal seriesId As Long)
+Dim failpoint As Long
+On Error GoTo Err
+
 addGraphicObject graphObj, seriesId
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "mEventProxy_addGraphicObject" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Sub
 
 Private Sub mEventProxy_objectChanged( _
@@ -392,6 +449,10 @@ Dim index As Long
 Dim overlaps() As TRectangle
 Dim redrawArea As TRectangle
 
+Dim failpoint As Long
+On Error GoTo Err
+
+' the following is to prevent lines from going past the rightmost period of the chart
 redrawArea = rectIntersection(areaToRedraw, mCanvas.boundary)
 
 With mGraphicObjects(handle)
@@ -435,107 +496,148 @@ If graphicObjectIsInScope(handle) Then
     If graphicObjectIsVisible(handle) Then
         addEntryToVisibleList handle
     End If
+Else
+    Exit Sub
 End If
     
+If mSuppressDrawing Then Exit Sub
+
 If Not mGraphicObjects(handle).boundingRect.isValid Then Exit Sub
+If mGraphicObjects(handle).noDraw Then Exit Sub
 
 With mGraphicObjects(handle)
     ' check if the vertical bounds have changed, and redraw if so
-    If mAutoscale And Not mSuppressDrawing Then
-        If .includeInAutoscale Then
-            If .boundingRect.top >= mCanvas.boundary.top Or .boundingRect.bottom <= (mCanvas.boundary.bottom) Then
+    If mAutoscale And .includeInAutoscale Then
+        If .boundingRect.top >= mCanvas.boundary.top Or .boundingRect.bottom <= (mCanvas.boundary.bottom) Then
+            If mUseDeferredPainting Then
+                deferredPaint DeferredPaintScaleAndRepaint
+            Else
                 calculateVerticalBounds
                 determineVisibleObjects
-                paintRegion
-                Exit Sub
+                paint
             End If
+            Exit Sub
         End If
     End If
     
     ' now redraw the changed object
-    If Not mSuppressDrawing And Not .noDraw Then
-        If graphicObjectIsInScope(handle) Then
-            addEntryToInScopeList handle
-            If graphicObjectIsVisible(handle) Then
-                addEntryToVisibleList handle
-            Else
-                Exit Sub
+
+    If redrawArea.isValid Then
+        
+        If mUseDeferredPainting Then
+            mRedrawObjectsIndex = mRedrawObjectsIndex + 1
+            If mRedrawObjectsIndex > UBound(mRedrawObjects) Then
+                ReDim Preserve mRedrawObjects(2 * (UBound(mRedrawObjects) + 1) - 1) As RedrawObjectsTableEntry
             End If
-        End If
-    
-        If redrawArea.isValid Then
-            Dim drawAreas(0) As TRectangle
-            drawAreas(0) = redrawArea
-            .graphObj.draw drawAreas, mCanvas.hdc
+            Set mRedrawObjects(mRedrawObjectsIndex).graphObj = .graphObj
+            mRedrawObjects(mRedrawObjectsIndex).areaToRedraw = areaToRedraw
+            deferredPaint DeferredPaintRepaintChangedAreas
+        Else
+            redrawObject .graphObj, areaToRedraw
         End If
     End If
-    
-    ' now redraw any overlapping objects in higher layers than the changed object
-    If Not mSuppressDrawing And Not .noDraw And redrawArea.isValid Then
-        For layer = .layer + 1 To MaxLayer
-            index = mGraphicObjects(mVisibleTable(layer).firstIndex).nextVisibleIndex
-            Do While index <> mVisibleTable(layer).lastindex
-                With mGraphicObjects(index)
-                    If index <> handle Then
-                        If getObjectOverlaps(handle, index, redrawArea, True, True, overlaps) <> 0 Then
-                            .graphObj.draw overlaps, mCanvas.hdc
-                        End If
-                    End If
-                    index = .nextVisibleIndex
-                End With
-            Loop
-        Next
-    End If
+        
 End With
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "mEventProxy_objectChanged" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 
 End Sub
 
 Private Sub mEventProxy_objectUndrawn(ByVal handle As Long, undrawnArea As ChartSkilTypes.TRectangle)
-Dim layer As Long
-Dim index As Long
-Dim overlaps() As TRectangle
-Dim blockUndraw As Boolean
 
-With mGraphicObjects(handle)
-    blockUndraw = .capabilities And capabilities.blockUndraw
-    ' redraw objects in the undrawn area, preserving layering
-    If Not mSuppressDrawing And undrawnArea.isValid Then
-        For layer = MinLayer To MaxLayer
-            index = mGraphicObjects(mVisibleTable(layer).firstIndex).nextVisibleIndex
-            Do While index <> mVisibleTable(layer).lastindex
-                With mGraphicObjects(index)
-                    If index <> handle Then
-                        If getObjectOverlaps(handle, index, undrawnArea, Not blockUndraw, True, overlaps) <> 0 Then
-                            .graphObj.draw overlaps, mCanvas.hdc
-                        End If
-                    End If
-                    index = .nextVisibleIndex
-                End With
-            Loop
+Dim failpoint As Long
+On Error GoTo Err
+
+failpoint = 100
+
+If Not mSuppressDrawing And undrawnArea.isValid Then
+    If mUseDeferredPainting Then
+        Dim i As Long
+        Dim handled As Boolean
+        For i = 0 To mUndrawnAreasIndex
+            If rectOverlaps(undrawnArea, mUndrawnAreas(i)) Then
+                 mUndrawnAreas(i) = rectUnion(undrawnArea, mUndrawnAreas(i))
+                 handled = True
+            End If
         Next
+        If Not handled Then
+            mUndrawnAreasIndex = mUndrawnAreasIndex + 1
+            If mUndrawnAreasIndex > UBound(mUndrawnAreas) Then
+                ReDim Preserve mUndrawnAreas(2 * (UBound(mUndrawnAreas) + 1) - 1) As TRectangle
+            End If
+            mUndrawnAreas(mUndrawnAreasIndex) = undrawnArea
+        End If
+        deferredPaint DeferredPaintRepaintChangedAreas
+    Else
+        undrawArea undrawnArea
     End If
-End With
+End If
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "mEventProxy_objectUndrawn" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Sub
 
 Private Sub mEventProxy_paintRegion( _
                 ByVal recalculate As Boolean)
 
+Dim failpoint As Long
+On Error GoTo Err
+
 If mSuppressDrawing Then Exit Sub
 
-If recalculate Then
-    determineInScopeObjects
-    If mAutoscale Then
-        calculateVerticalBounds
+If mUseDeferredPainting Then
+    If recalculate Then
+        deferredPaint DeferredPaintCalculateAndRepaint
+    Else
+        deferredPaint DeferredPaintRepaintRegion
     End If
-    determineVisibleObjects
+Else
+    If recalculate Then
+        determineInScopeObjects
+        If mAutoscale Then
+            calculateVerticalBounds
+        End If
+        determineVisibleObjects
+    End If
+    paint
 End If
-paintRegion
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "mEventProxy_paintRegion" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Sub
 
 Private Sub mEventProxy_recalcBoundary( _
                 ByVal seriesId As Long)
 Dim i As Long
 Dim index As Long
+
+Dim failpoint As Long
+On Error GoTo Err
 
 For i = MinLayer To MaxLayer
     index = mGraphicObjects(mVisibleTable(i).firstIndex).nextVisibleIndex
@@ -553,6 +655,17 @@ For i = MinLayer To MaxLayer
         End With
     Loop
 Next
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "mEventProxy_recalcBoundary" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Sub
 
 '================================================================================
@@ -560,6 +673,9 @@ End Sub
 '================================================================================
 
 Private Sub mToolbar_ButtonClick(ByVal Button As MSComctlLib.Button)
+
+Dim failpoint As Long
+On Error GoTo Err
 
 Select Case Button.key
 Case ToolbarCommandShowBars
@@ -613,6 +729,17 @@ Case ToolbarCommandAutoScale
     autoscale = True
 End Select
 
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "mToolbar_ButtonClick" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
+
 End Sub
 
 '================================================================================
@@ -626,8 +753,8 @@ End Property
 Public Property Let autoscale(ByVal value As Boolean)
 If mIsXAxisRegion Or mIsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
-            "Cannot set autoscalefor an axis region"
+            ProjectName & "." & ModuleName & ":" & "autoScale", _
+            "Cannot set autoscale for an axis region"
 End If
 
 mAutoscale = value
@@ -636,77 +763,22 @@ If Not mToolbar Is Nothing Then
 End If
 If Not mSuppressDrawing Then
     If mAutoscale Then
-        calculateVerticalBounds
-        determineVisibleObjects
-        paintRegion
+        If mUseDeferredPainting Then
+            deferredPaint DeferredPaintScaleAndRepaint
+        Else
+            calculateVerticalBounds
+            determineVisibleObjects
+            paint
+        End If
     End If
 End If
 RaiseEvent AutoscaleChanged
 End Property
 
-'Friend Property Get barWidth() As Single
-'barWidth = mBarWidth
-'End Property
-'
-'Friend Property Let barWidth(ByVal value As Single)
-'mBarWidth = value
-'End Property
-'
-'Public Property Get barDisplayMode() As BarDisplayModes
-'barDisplayMode = mDisplayMode
-'End Property
-'
-'Public Property Let barDisplayMode(ByVal value As BarDisplayModes)
-'mDisplayMode = value
-'End Property
-'
-'Public Property Get barDownColor() As Long
-'barDownColor = mBarDownColor
-'End Property
-'
-'Public Property Let barDownColor(ByVal value As Long)
-'mBarDownColor = value
-'End Property
-'
-'Public Property Get barOutlineThickness() As Long
-'barOutlineThickness = mBarOutlineThickness
-'End Property
-'
-'Public Property Let barOutlineThickness(ByVal value As Long)
-'mBarOutlineThickness = value
-'End Property
-'
-'Public Property Get barSolidUpBody() As Boolean
-'barSolidUpBody = mBarSolidUpBody
-'End Property
-'
-'Public Property Let barSolidUpBody(ByVal value As Boolean)
-'mBarSolidUpBody = value
-'End Property
-'
-'Public Property Get barTailThickness() As Long
-'barTailThickness = mBarTailThickness
-'End Property
-'
-'Public Property Let barTailThickness(ByVal value As Long)
-'mBarTailThickness = value
-'End Property
-'
-'Public Property Get barThickness() As Long
-'barThickness = mBarThickness
-'End Property
-'
-'Public Property Let barThickness(ByVal value As Long)
-'mBarThickness = value
-'End Property
-'
-'Public Property Get barUpColor() As Long
-'barUpColor = mBarUpColor
-'End Property
-'
-'Public Property Let barUpColor(ByVal value As Long)
-'mBarUpColor = value
-'End Property
+Friend Property Let canvas( _
+                ByVal value As canvas)
+Set mCanvas = value
+End Property
 
 Friend Property Let controller( _
                 ByVal value As ChartController)
@@ -772,7 +844,7 @@ End Property
 Public Property Let gridlineSpacingY(ByVal value As Double)
 If mIsXAxisRegion Or mIsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
+            ProjectName & "." & ModuleName & ":" & "gridlineSpacingY", _
             "Cannot set gridline spacing for an axis region"
 End If
 
@@ -829,7 +901,7 @@ If mhasGridText Then
     mXGridTexts.align = AlignBottomCentre
     If Not mIsXAxisRegion Then
         mXGridTexts.box = True
-        mXGridTexts.boxFillColor = mBackColor
+        mXGridTexts.boxFillColor = regionBackColor
         mXGridTexts.boxStyle = LineInvisible
     End If
     mXGridTexts.extended = True
@@ -845,7 +917,7 @@ If mhasGridText Then
     mXGridTextsCoarse.align = AlignTopCentre
     If Not mIsXAxisRegion Then
         mXGridTextsCoarse.box = True
-        mXGridTextsCoarse.boxFillColor = mBackColor
+        mXGridTextsCoarse.boxFillColor = regionBackColor
     End If
     mXGridTextsCoarse.boxStyle = LineInvisible
     mXGridTextsCoarse.extended = True
@@ -864,7 +936,7 @@ End Property
 Public Property Let integerYScale(ByVal value As Boolean)
 If mIsXAxisRegion Or mIsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
+            ProjectName & "." & ModuleName & ":" & "integerYScale", _
             "Cannot set integerYScale for an axis region"
 End If
 
@@ -894,7 +966,7 @@ End Property
 Public Property Let minimumHeight(ByVal value As Double)
 If mIsXAxisRegion Or mIsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
+            ProjectName & "." & ModuleName & ":" & "minimumHeight", _
             "Cannot set minimumHeight for an axis region"
 End If
 
@@ -936,7 +1008,7 @@ End Property
 Public Property Let PointerCrosshairsColor(ByVal value As Long)
 If mIsXAxisRegion Or mIsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
+            ProjectName & "." & ModuleName & ":" & "PointerCrosshairsColor", _
             "Cannot set PointerCrossHairsColor for an axis region"
 End If
 
@@ -950,7 +1022,7 @@ End Property
 Public Property Let PointerDiscColor(ByVal value As Long)
 If mIsXAxisRegion Or mIsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
+            ProjectName & "." & ModuleName & ":" & "PointerDiscColor", _
             "Cannot set PointerDiscColor for an axis region"
 End If
 
@@ -964,7 +1036,7 @@ End Property
 Public Property Let pointerStyle(ByVal value As PointerStyles)
 If mIsXAxisRegion Or mIsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
+            ProjectName & "." & ModuleName & ":" & "pointerStyle", _
             "Cannot set PointerStyle for an axis region"
 End If
 
@@ -1005,48 +1077,21 @@ End Select
 End Property
 
 Public Property Get regionBackColor() As Long
-regionBackColor = mBackColor
+regionBackColor = mCanvas.backColor
 End Property
 
-Public Property Let regionBackColor(ByVal val As Long)
-mBackColor = val
-'If Not mYAxisRegion Is Nothing Then
-'    mYAxisRegion.regionBackColor = val
-'End If
+Public Property Let regionBackColor(ByVal value As Long)
+mCanvas.backColor = value
 End Property
 
-Public Property Get regionBackGradientFillColors() As OLE_COLOR()
-regionBackGradientFillColors = mBackGradientFillColors
+Public Property Get regionBackGradientFillColors() As Long()
+regionBackGradientFillColors = mCanvas.gradientFillColors
 End Property
 
-Public Property Let regionBackGradientFillColors(ByRef value() As OLE_COLOR)
-Dim numColors As Long
-
-On Error Resume Next
-numColors = UBound(value) + 1
-On Error GoTo 0
-
-If numColors = 0 Then
-    Erase mBackGradientFillColors
-    mGradientFill = False
-    Exit Property
-End If
-
-If numColors < 2 Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "regionBackGradientFillColors", _
-            "At least 2 background gradient fill colors must be supplied"
-End If
-
-If numColors > 5 Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "regionBackGradientFillColors", _
-            "At most 5 background gradient fill colors can be supplied"
-End If
-
-mBackGradientFillColors = value
-mGradientFill = True
-
+Public Property Let regionBackGradientFillColors(ByRef value() As Long)
+Dim ar() As Long
+ar = value
+mCanvas.gradientFillColors = ar
 End Property
 
 Public Property Get regionBottom() As Single
@@ -1131,7 +1176,7 @@ End Property
 Public Property Let snapCursorToTickBoundaries(ByVal value As Boolean)
 If mIsXAxisRegion Or mIsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
+            ProjectName & "." & ModuleName & ":" & "snapCursorToTickBoundaries", _
             "Cannot snapCursorToTickBoundaries for an axis region"
 End If
 
@@ -1153,7 +1198,7 @@ Dim lSuppress As Boolean
 lSuppress = mSuppressDrawing
 mSuppressDrawing = True
 
-If value.backColor <> mBackColor Then regionBackColor = value.backColor
+'regionBackColor = value.backColor
 regionBackGradientFillColors = value.backGradientFillColors
 If value.gridColor <> mGridColor Then gridColor = value.gridColor
 If value.gridTextColor <> mGridTextColor Then gridTextColor = value.gridTextColor
@@ -1177,20 +1222,20 @@ Friend Property Let suppressDrawing(ByVal val As Boolean)
 If mSuppressDrawing = val Then Exit Property
 mSuppressDrawing = val
 If Not mSuppressDrawing Then
-    determineInScopeObjects
-    If mAutoscale Then
-        calculateVerticalBounds
+    If mUseDeferredPainting Then
+        deferredPaint DeferredPaintCalculateAndRepaint
+    Else
+        determineInScopeObjects
+        If mAutoscale Then
+            calculateVerticalBounds
+        End If
+        determineVisibleObjects
+        paint
     End If
-    determineVisibleObjects
-    paintRegion
 End If
 If Not mYAxisRegion Is Nothing Then
     mYAxisRegion.suppressDrawing = val
 End If
-End Property
-
-Friend Property Let surface(ByVal value As PictureBox)
-mCanvas.surface = value
 End Property
 
 Public Property Get title() As String
@@ -1232,11 +1277,11 @@ mYAxisRegion.defaultTextStyle = mDefaultTextStyle
 
 Set mYPositionText = mYAxisRegion.addText(LayerNumbers.LayerPointer)
 mYPositionText.align = AlignCentreLeft
-mYPositionText.Color = vbWhite Xor mBackColor
+mYPositionText.Color = vbBlack  ' vbWhite Xor mBackColor
 mYPositionText.box = True
-mYPositionText.boxFillColor = mBackColor
+mYPositionText.boxFillColor = vbWhite   'mBackColor
 mYPositionText.boxStyle = LineSolid
-mYPositionText.boxColor = vbWhite Xor mBackColor
+mYPositionText.boxColor = vbBlack   ' vbWhite Xor mBackColor
 Set aFont = New StdFont
 aFont.name = "Arial"
 aFont.Size = 8
@@ -1270,7 +1315,7 @@ End Property
 Public Property Let YScaleQuantum(ByVal value As Double)
 If mIsXAxisRegion Or mIsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
+            ProjectName & "." & ModuleName & ":" & "YScaleQuantum", _
             "Cannot set YScaleQuantum for an axis region"
 End If
 
@@ -1290,6 +1335,9 @@ Public Function addBarSeries( _
                 Optional ByVal name As String, _
                 Optional ByVal style As BarStyle) As BarSeries
 Static seriesNumber As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 Set addBarSeries = New BarSeries
 If mFirstBarSeries Is Nothing Then Set mFirstBarSeries = addBarSeries
 If name = "" Then
@@ -1303,6 +1351,17 @@ addBarSeries.initialise name, _
                         getLayer(layer), _
                         mCanvas, _
                         IIf(style Is Nothing, mDefaultBarStyle, style)
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "addBarSeries" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Function
 
 Public Function addDataPointSeries( _
@@ -1310,6 +1369,9 @@ Public Function addDataPointSeries( _
                 Optional ByVal name As String, _
                 Optional ByVal style As DataPointStyle) As DataPointSeries
 Static seriesNumber As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 Set addDataPointSeries = New DataPointSeries
 If name = "" Then
     seriesNumber = seriesNumber + 1
@@ -1322,14 +1384,40 @@ addDataPointSeries.initialise name, _
                         getLayer(layer), _
                         mCanvas, _
                         IIf(style Is Nothing, mDefaultDataPointStyle, style)
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "addDataPointSeries" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Function
 
 Public Function addLine(Optional ByVal layer As Long = -1) As ChartSkil26.Line
+Dim failpoint As Long
+On Error GoTo Err
+
 If mDefaultLineSeries Is Nothing Then
     Set mDefaultLineSeries = addLineSeries(LayerDefaultLines)
+    mDefaultLineSeries.style = mDefaultLineStyle
 End If
 Set addLine = mDefaultLineSeries.add
 If layer <> -1 Then addLine.layer = layer
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "addLine" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Function
 
 Public Function addLineSeries( _
@@ -1337,6 +1425,9 @@ Public Function addLineSeries( _
                 Optional ByVal name As String, _
                 Optional ByVal style As linestyle) As LineSeries
 Static seriesNumber As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 Set addLineSeries = New LineSeries
 If name = "" Then
     seriesNumber = seriesNumber + 1
@@ -1348,20 +1439,60 @@ addLineSeries.initialise name, _
                         getLayer(layer), _
                         mCanvas, _
                         IIf(style Is Nothing, mDefaultLineStyle, style)
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "addLineSeries" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Function
 
 Friend Sub addPeriod(ByVal periodNumber As Long, _
                     ByVal timestamp As Date)
+Dim failpoint As Long
+On Error GoTo Err
+
 addNewPeriod (periodNumber)
 setVerticalGridLine timestamp, periodNumber
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "addPeriod" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Sub
 
 Public Function addText(Optional ByVal layer As Long = -1) As text
+Dim failpoint As Long
+On Error GoTo Err
+
 If mDefaultTextSeries Is Nothing Then
     Set mDefaultTextSeries = addTextSeries(LayerDefaultTexts)
+    mDefaultTextSeries.style = mDefaultTextStyle
 End If
 Set addText = mDefaultTextSeries.add
 If layer <> -1 Then addText.layer = layer
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "addText" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Function
 
 Public Function addTextSeries( _
@@ -1369,6 +1500,9 @@ Public Function addTextSeries( _
                 Optional ByVal name As String, _
                 Optional ByVal style As TextStyle) As TextSeries
 Static seriesNumber As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 Set addTextSeries = New TextSeries
 If name = "" Then
     seriesNumber = seriesNumber + 1
@@ -1380,13 +1514,26 @@ addTextSeries.initialise name, _
                         getLayer(layer), _
                         mCanvas, _
                         IIf(style Is Nothing, mDefaultTextStyle, style)
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "addTextSeries" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Function
 
 Friend Sub clearRegion()
 Dim i As Long
 
-If Not mSuppressDrawing Then mCanvas.clear
-mCanvas.surface = Nothing
+Dim failpoint As Long
+On Error GoTo Err
+
+mCleared = True
 
 Set mToolbar = Nothing
 
@@ -1425,10 +1572,21 @@ Next
 
 StartTask Me, PriorityLow
 
-' now clear the YAxis region (if there is one)
-If Not mYAxisRegion Is Nothing Then
-    mYAxisRegion.clearRegion
-End If
+'' now clear the YAxis region (if there is one)
+'If Not mYAxisRegion Is Nothing Then
+'    mYAxisRegion.clearRegion
+'End If
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "clearRegion" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Sub
 
 Friend Sub Click()
@@ -1440,14 +1598,35 @@ RaiseEvent DblCLick
 End Sub
 
 Public Sub displayGrid()
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mHideGrid Then Exit Sub
 
 mHideGrid = False
-paintRegion
+If mUseDeferredPainting Then
+    deferredPaint DeferredPaintRepaintRegion
+Else
+    paint
+End If
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "displayGrid" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Sub
 
 Friend Sub drawCursor(ByVal Button As Integer, ByVal Shift As Integer, ByVal x As Single, ByVal y As Single)
-Dim yVal As Single
+        Dim yVal As Single
+Dim failpoint As Long
+On Error GoTo Err
+
 If y = MinusInfinitySingle Then
     yVal = mCanvas.top + 2 * mCanvas.height  ' make sure the pointer isn't visible
 Else
@@ -1467,13 +1646,42 @@ Case PointerDisc
     drawPointer x, yVal
 End Select
 
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "drawCursor" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
+
 End Sub
 
 Public Sub hideGrid()
+Dim failpoint As Long
+On Error GoTo Err
+
 If mHideGrid Then Exit Sub
 
 mHideGrid = True
-paintRegion
+If mUseDeferredPainting Then
+    deferredPaint DeferredPaintRepaintRegion
+Else
+    paint
+End If
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "hideGrid" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Sub
 
 Public Function isGridHidden() As Boolean
@@ -1506,200 +1714,50 @@ End Sub
 
 Public Function newDimension(ByVal x As Double, _
                         ByVal y As Double) As Dimension
+Dim failpoint As Long
+On Error GoTo Err
+
 Set newDimension = mCanvas.newDimension(x, y)
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "newDimension" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Function
 
 Public Function newPoint(ByVal x As Double, _
                         ByVal y As Double, _
                         Optional ByVal coordSystemX As CoordinateSystems = CoordsLogical, _
                         Optional ByVal coordSystemY As CoordinateSystems = CoordinateSystems.CoordsLogical) As Point
+Dim failpoint As Long
+On Error GoTo Err
+
 Set newPoint = mCanvas.newPoint(x, y, coordSystemX, coordSystemY)
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "newPoint" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Function
 
 Friend Sub paintRegion()
-Dim numGridDivisions As Double
-Dim gridSpacing As Double
-Dim i As Long
-Dim z As Double
-Dim perfFont As StdFont
-Dim counter As Long
-Dim index As Long
-
-If mSuppressDrawing Then Exit Sub
-
-Static repaintCount As Long
-repaintCount = repaintCount + 1
-'debug.print "repaint count = " & repaintCount
-
-With mCanvas
-
-If mShowPerformanceText Then mElapsedTimer.StartTiming
-
-.clear
-
-If mGradientFill Then
-    calculateGradientFillParameters
-    If mGradientFillMode = GRADIENT_FILL_TRIANGLE Then
-        GradientFill .hdc, _
-                    VarPtr(mVertices(0)), _
-                    UBound(mVertices) + 1, _
-                    VarPtr(mMeshTriangle(0)), _
-                    UBound(mMeshTriangle) + 1, _
-                    GRADIENT_FILL_TRIANGLE
-    Else
-        GradientFill .hdc, _
-                    VarPtr(mVertices(0)), _
-                    UBound(mVertices) + 1, _
-                    VarPtr(mMeshRect(0)), _
-                    UBound(mMeshRect) + 1, _
-                    GRADIENT_FILL_RECT_H
-    End If
+If mUseDeferredPainting Then
+    deferredPaint DeferredPaintRepaintRegion
 Else
-    .backColor = regionBackColor
+    paint
 End If
-
-For i = IIf(mMinInViewPeriod < 0, 0, mMinInViewPeriod) To IIf(mMaxPeriodNumber < mMaxInViewPeriod, mMaxPeriodNumber, mMaxInViewPeriod)
-    If mPeriodTable(i).backColor <> 0 Then
-        .setPenAttributes mPeriodTable(i).backColor, 1, LineInsideSolid, DrawModeCopyPen
-        .setBrushAttributes mPeriodTable(i).backColor, FillSolid
-        .drawRectangle i - 0.5, .bottom, i + 0.5, .top
-    End If
-Next
-
-'Dim gridTimer As New ElapsedTimer
-'gridTimer.StartTiming
-
-numGridDivisions = .heightCm / mGridlineSpacingY
-gridSpacing = .height / numGridDivisions
-
-mGridTextHeight = .TextHeight("123")
-
-Dim log10 As Double
-Dim logSpacing As Double
-Dim exp As Long
-Dim mantissa As Double
-
-If mhasGrid And Not mHideGrid Then
-    log10 = Log(10#)
-    logSpacing = Log(gridSpacing) / log10
-    
-    exp = Fix(logSpacing)
-    mantissa = Abs(logSpacing) - Abs(exp)
-    
-    If logSpacing < 0 Then
-        exp = exp - 1
-        mantissa = 1 - mantissa
-    End If
-    
-    If mYScaleQuantum = 0.03125 And _
-        exp < 0 _
-    Then
-        ' tick size is 1/32, which influences where we put the horizontal grid lines
-        If exp >= -1 Then
-            If mantissa >= Log(5) / log10 Then
-                mScaleGridSpacingY = 16 * 0.03125
-            ElseIf mantissa >= Log(2.5) / log10 Then
-                mScaleGridSpacingY = 8 * 0.03125
-            ElseIf mantissa >= Log(1.25) / log10 Then
-                mScaleGridSpacingY = 4 * 0.03125
-            ElseIf mantissa >= Log(0.625) / log10 Then
-                mScaleGridSpacingY = 2 * 0.03125
-            Else
-                mScaleGridSpacingY = 0.03125
-            End If
-        Else
-            mScaleGridSpacingY = 0.03125
-        End If
-    Else
-        If mantissa >= Log(5) / log10 Then
-            mScaleGridSpacingY = 5 * 10 ^ exp
-        ElseIf mantissa >= Log(2.5) / log10 Then
-            mScaleGridSpacingY = 2.5 * 10 ^ exp
-        ElseIf mantissa >= Log(2#) / log10 Then
-            mScaleGridSpacingY = 2# * 10 ^ exp
-        Else
-            mScaleGridSpacingY = 10 ^ exp
-        End If
-    End If
-    If mIntegerYScale Then
-            mYScaleFormatStr = "0"
-            mYScaleSubFormatStr = "0"
-    Else
-        If mScaleGridSpacingY < 1 Then
-            mYScaleFormatStr = "0." & String(Abs(exp) + 1, "0")
-            mYScaleSubFormatStr = "0." & String(Abs(exp) + 2, "0")
-        Else
-            mYScaleFormatStr = "0.0"
-            mYScaleSubFormatStr = "0.00"
-        End If
-    End If
-End If
-
-If mhasGrid And Not mHideGrid Then
-    setHorizontalGridLines
-End If
-
-setHorizontalGridTexts
-
-'Debug.Print "Grid generation " & gridTimer.ElapsedTimeMicroseconds / 1000 & " millisecs"
-
-For i = MinLayer To MaxLayer
-    index = mGraphicObjects(mVisibleTable(i).firstIndex).nextVisibleIndex
-    Do While index <> mVisibleTable(i).lastindex
-        With mGraphicObjects(index)
-            Dim drawAreas(0) As TRectangle
-            drawAreas(0) = rectIntersection(.boundingRect, mCanvas.boundary)
-            .graphObj.draw drawAreas, mCanvas.hdc
-            index = .nextVisibleIndex
-            counter = counter + 1
-        End With
-    Loop
-Next
-
-Select Case mPointerStyle
-Case PointerNone
-
-Case PointerCrosshairs
-    drawCrosshairs mPrevCursorX, mPrevCursorY
-Case PointerDisc
-    drawPointer mPrevCursorX, mPrevCursorY
-End Select
-
-If mShowPerformanceText Then
-    If mPerfText Is Nothing Then
-        Set perfFont = New StdFont
-        perfFont.name = "Lucida Console"
-        perfFont.Size = 8
-        perfFont.Underline = False
-        perfFont.Bold = False
-        Set mPerfText = addText()
-        mPerfText.Color = vbActiveTitleBarText
-        mPerfText.font = perfFont
-        mPerfText.box = True
-        mPerfText.boxColor = vbBlack
-        mPerfText.boxStyle = LineStyles.LineInsideSolid
-        mPerfText.boxThickness = 1
-        mPerfText.boxFillColor = vbActiveTitleBar
-        mPerfText.boxFillStyle = FillStyles.FillSolid
-        mPerfText.position = newPoint(5, 2, CoordsRelative, CoordsRelative)
-        mPerfText.fixedX = True
-        mPerfText.fixedY = True
-        mPerfText.align = TextAlignModes.AlignBottomLeft
-        mPerfText.includeInAutoscale = False
-        mPerfText.paddingX = 0.5
-        mPerfText.layer = LayerTitle
-        
-    End If
-    mPerfText.text = Format(mElapsedTimer.ElapsedTimeMicroseconds / 1000, "0.0") & "ms" & vbCrLf & _
-                    counter & " visible objects" & vbCrLf & _
-                    mNextGraphicObjectIndex & " total objects"
-    ' need to force the text to draw now
-    mPerfText.draw
-End If
-
-End With
-
-mDrawn = True
 
 If Not mYAxisRegion Is Nothing Then mYAxisRegion.paintRegion
 End Sub
@@ -1707,6 +1765,9 @@ End Sub
 Friend Sub periodsInView( _
                 ByVal minValue As Single, _
                 ByVal maxValue As Single)
+Dim failpoint As Long
+On Error GoTo Err
+
 mMinInViewPeriod = minValue
 mMaxInViewPeriod = maxValue
 mYAxisPosition = maxValue + 1
@@ -1714,12 +1775,28 @@ mCanvas.left = minValue
 mCanvas.right = maxValue '+ 0.5
 
 If Not mSuppressDrawing Then
-    determineInScopeObjects
-    If mAutoscale Then
-        calculateVerticalBounds
+    If mUseDeferredPainting Then
+        deferredPaint DeferredPaintCalculateAndRepaint
+    Else
+        determineInScopeObjects
+        If mAutoscale Then
+            calculateVerticalBounds
+        End If
+        determineVisibleObjects
+        paint
+        If Not mYAxisRegion Is Nothing Then mYAxisRegion.paintRegion
     End If
-    determineVisibleObjects
 End If
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "periodsInView" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Sub
 
 Public Sub removeBarSeries( _
@@ -1727,6 +1804,9 @@ Public Sub removeBarSeries( _
 Dim series As BarSeries
 Dim i As Long
 Dim seriesInCol As BarSeries
+Dim failpoint As Long
+On Error GoTo Err
+
 If IsObject(nameOrObject) Then
     Set series = nameOrObject
     removeGraphicObjectSeries series
@@ -1750,6 +1830,17 @@ Else
             "Argument must be a BarSeries object or a BarSeries name"
 
 End If
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "removeBarSeries" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Sub
 
 Public Sub removeDataPointSeries( _
@@ -1757,6 +1848,9 @@ Public Sub removeDataPointSeries( _
 Dim series As DataPointSeries
 Dim i As Long
 Dim seriesInCol As DataPointSeries
+Dim failpoint As Long
+On Error GoTo Err
+
 If IsObject(nameOrObject) Then
     Set series = nameOrObject
     removeGraphicObjectSeries series
@@ -1780,6 +1874,17 @@ Else
             "Argument must be a DataPointSeries object or a DataPointSeries name"
 
 End If
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "removeDataPointSeries" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Sub
 
 Public Sub removeLineSeries( _
@@ -1787,6 +1892,9 @@ Public Sub removeLineSeries( _
 Dim series As LineSeries
 Dim i As Long
 Dim seriesInCol As LineSeries
+Dim failpoint As Long
+On Error GoTo Err
+
 If IsObject(nameOrObject) Then
     Set series = nameOrObject
     removeGraphicObjectSeries series
@@ -1810,6 +1918,17 @@ Else
             "Argument must be a LineSeries object or a LineSeries name"
 
 End If
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "removeLineSeries" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Sub
 
 Public Sub removeTextSeries( _
@@ -1817,6 +1936,9 @@ Public Sub removeTextSeries( _
 Dim series As TextSeries
 Dim i As Long
 Dim seriesInCol As TextSeries
+Dim failpoint As Long
+On Error GoTo Err
+
 If IsObject(nameOrObject) Then
     Set series = nameOrObject
     removeGraphicObjectSeries series
@@ -1840,29 +1962,124 @@ Else
             "Argument must be a TextSeries object or a TextSeries name"
 
 End If
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "removeTextSeries" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Sub
 
 Friend Sub resizedY()
 ' notifies the region that the physical height of the canvas has changed.
 ' This means the Y gauge will have changed, so we need to recalculate
 ' the position of any in-scope gauge-dependent objects.
+Dim failpoint As Long
+On Error GoTo Err
+
 mCanvas.resizedY
-calculateInscopeGaugeDependentObjects
-If Not mYAxisRegion Is Nothing Then mYAxisRegion.resizedY
+
+If mUseDeferredPainting Then
+    deferredPaint DeferredPaintChangeGaugeandRepaint
+Else
+    calculateInscopeGaugeDependentObjects
+    paint
+    If Not mYAxisRegion Is Nothing Then mYAxisRegion.resizedY
+End If
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "resizedY" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Sub
 
 Public Sub scaleUp(ByVal factor As Single)
+Dim failpoint As Long
+On Error GoTo Err
+
 If mIsXAxisRegion Or mIsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
+            ProjectName & "." & ModuleName & ":" & "scaleUp", _
             "Cannot scale an axis region"
 End If
 
-autoscale = False
 With mCanvas
     setVerticalScale .bottom + factor * .height / 2, _
                                 .top - factor * .height / 2
 End With
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "scaleUp" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
+End Sub
+
+Public Sub scrollVertical(ByVal amount As Single)
+Dim failpoint As Long
+On Error GoTo Err
+
+If mIsXAxisRegion Or mIsYAxisRegion Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & "scrollVertical", _
+            "Cannot scroll an axis region"
+End If
+
+autoscale = False
+setVerticalScale mCanvas.bottom + amount, mCanvas.top + amount
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "scrollVertical" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
+End Sub
+
+Public Sub scrollVerticalProportion(ByVal proportion As Single)
+Dim failpoint As Long
+On Error GoTo Err
+
+If mIsXAxisRegion Or mIsYAxisRegion Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & "scrollVerticalProportion", _
+            "Cannot scroll an axis region"
+End If
+
+autoscale = False
+setVerticalScale mCanvas.bottom + proportion * mCanvas.height, _
+                mCanvas.top + proportion * mCanvas.height
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "scrollVerticalProportion" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Sub
 
 Public Sub setPeriodBackgroundColor( _
@@ -1872,6 +2089,9 @@ Dim layer As Long
 Dim index As Long
 Dim periodrect As TRectangle
 Dim redrawAreas(0) As TRectangle
+
+Dim failpoint As Long
+On Error GoTo Err
 
 mPeriodTable(periodNumber).backColor = Color
 
@@ -1883,7 +2103,7 @@ If Color = 0 Then Exit Sub
 With mCanvas
     .setPenAttributes Color, 1, LineInsideSolid, DrawModeCopyPen
     .setBrushAttributes Color, FillSolid
-    .drawRectangle periodNumber - 0.5, .bottom, periodNumber + 0.5, .top
+    .drawRectangle .newPoint(periodNumber - 0.5, .bottom), .newPoint(periodNumber + 0.5, .top)
 
     
     periodrect.left = periodNumber - 0.5
@@ -1905,14 +2125,28 @@ With mCanvas
         Loop
     Next
 End With
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "setPeriodBackgroundColor" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Sub
 
 Public Sub setTitle(ByVal val As String, _
                         ByVal Color As Long, _
                         ByVal font As StdFont)
+Dim failpoint As Long
+On Error GoTo Err
+
 If mIsXAxisRegion Or mIsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
+            ProjectName & "." & ModuleName & ":" & "setTitle", _
             "Cannot set a title for an axis region"
 End If
 
@@ -1934,10 +2168,24 @@ mTitle.align = TextAlignModes.AlignTopLeft
 mTitle.includeInAutoscale = False
 mTitle.paddingX = 0.5
 mTitle.text = val
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "setTitle" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 End Sub
 
 Public Sub setVerticalScale(ByVal lowValue As Single, _
                             ByVal highValue As Single)
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If mIsXAxisRegion Or mIsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
@@ -1945,51 +2193,53 @@ If mIsXAxisRegion Or mIsYAxisRegion Then
             "Cannot set the scale for an axis region"
 End If
 
+autoscale = False
+
 setVerticalScaleInternal lowValue, highValue
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "setVerticalScale" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+
 
 End Sub
 
 Friend Sub setVerticalScaleInternal(ByVal lowValue As Single, _
                             ByVal highValue As Single)
 
-If mAutoscale Then
-    calculateInscopeGaugeDependentObjects
-    Exit Sub
-End If
+Dim failpoint As Long
+On Error GoTo Err
 
 mCanvas.top = highValue
 mCanvas.bottom = lowValue
 
 If Not mSuppressDrawing Then
-    determineVisibleObjects
-    paintRegion
+    If mUseDeferredPainting Then
+        deferredPaint DeferredPaintCalculateAndRepaint
+    Else
+        determineVisibleObjects
+        paint
+    End If
 End If
 If Not mYAxisRegion Is Nothing Then
     mYAxisRegion.setVerticalScaleInternal lowValue, highValue
 End If
-End Sub
 
-Public Sub scrollVertical(ByVal amount As Single)
-If mIsXAxisRegion Or mIsYAxisRegion Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
-            "Cannot scroll an axis region"
-End If
+Exit Sub
 
-autoscale = False
-setVerticalScale mCanvas.bottom + amount, mCanvas.top + amount
-End Sub
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "setVerticalScaleInternal" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 
-Public Sub scrollVerticalProportion(ByVal proportion As Single)
-If mIsXAxisRegion Or mIsYAxisRegion Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
-            "Cannot scroll an axis region"
-End If
-
-autoscale = False
-setVerticalScale mCanvas.bottom + proportion * mCanvas.height, _
-                mCanvas.top + proportion * mCanvas.height
 End Sub
 
 '================================================================================
@@ -2143,21 +2393,21 @@ If mhasGrid Then
     On Error GoTo 0
     If vGridLine Is Nothing Then
         Set vGridLine = mXGridLines.add(key)
-        vGridLine.point1 = newPoint(periodNumber - 0.5, _
+        vGridLine.setPosition newPoint(periodNumber - 0.5, _
                                     0, _
                                     CoordsLogical, _
-                                    CoordsRelative)
-        vGridLine.point2 = newPoint(periodNumber - 0.5, _
+                                    CoordsRelative), _
+                                newPoint(periodNumber - 0.5, _
                                     100, _
                                     CoordsLogical, _
                                     CoordsRelative)
     Else
         If vGridLine.point1.XLogical > periodNumber Then
-            vGridLine.point1 = newPoint(periodNumber - 0.5, _
+            vGridLine.setPosition newPoint(periodNumber - 0.5, _
                                         0, _
                                         CoordsLogical, _
-                                        CoordsRelative)
-            vGridLine.point2 = newPoint(periodNumber - 0.5, _
+                                        CoordsRelative), _
+                                    newPoint(periodNumber - 0.5, _
                                         100, _
                                         CoordsLogical, _
                                         CoordsRelative)
@@ -2205,63 +2455,6 @@ If mNextGraphicObjectIndex > UBound(mGraphicObjects) Then
 End If
 mNextGraphicObjectIndex = mNextGraphicObjectIndex + 1
 End Function
-
-'Private Function calculateGaugeX() As Double
-'calculateGaugeX = (mSurface.ScaleWidth / mSurface.Width) * Screen.TwipsPerPixelX
-'End Function
-'
-'Private Function calculateGaugeY() As Double
-'calculateGaugeY = -(mSurface.ScaleHeight / mSurface.height) * Screen.TwipsPerPixelY
-'End Function
-'
-
-Private Sub calculateGradientFillParameters()
-Select Case UBound(mBackGradientFillColors)
-Case 1
-    ReDim mVertices(1) As TRIVERTEX
-    ReDim mMeshRect(0) As GRADIENT_RECT
-    setVertex 0, mCanvas.left, mCanvas.top, 0
-    setVertex 1, mCanvas.right + 1, mCanvas.bottom, 1
-    setMeshRect 0, 0, 1
-    mGradientFillMode = GRADIENT_FILL_RECT_H
-Case 2
-    ReDim mVertices(4) As TRIVERTEX
-    ReDim mMeshTriangle(3) As GRADIENT_TRIANGLE
-    setVertex 0, mCanvas.left, mCanvas.top, 0
-    setVertex 1, mCanvas.right, mCanvas.top, 1
-    setVertex 2, (mCanvas.left + mCanvas.right + 1) / 2, (mCanvas.top + mCanvas.bottom) / 2, 2
-    setVertex 3, mCanvas.right + 1, mCanvas.bottom, 1
-    setVertex 4, mCanvas.left, mCanvas.bottom, 0
-    setMeshTriangle 0, 0, 1, 2
-    setMeshTriangle 1, 1, 3, 2
-    setMeshTriangle 2, 3, 4, 2
-    setMeshTriangle 3, 4, 0, 2
-    mGradientFillMode = GRADIENT_FILL_TRIANGLE
-Case 3
-    ReDim mVertices(3) As TRIVERTEX
-    ReDim mMeshTriangle(1) As GRADIENT_TRIANGLE
-    setVertex 0, mCanvas.left, mCanvas.top, 0
-    setVertex 1, mCanvas.right + 1, mCanvas.top, 1
-    setVertex 2, mCanvas.right + 1, mCanvas.bottom, 2
-    setVertex 3, mCanvas.left, mCanvas.bottom, 3
-    setMeshTriangle 0, 0, 1, 2
-    setMeshTriangle 1, 2, 3, 0
-    mGradientFillMode = GRADIENT_FILL_TRIANGLE
-Case 4
-    ReDim mVertices(4) As TRIVERTEX
-    ReDim mMeshTriangle(3) As GRADIENT_TRIANGLE
-    setVertex 0, mCanvas.left, mCanvas.top, 0
-    setVertex 1, mCanvas.right + 1, mCanvas.top, 1
-    setVertex 2, mCanvas.right + 1, mCanvas.bottom, 2
-    setVertex 3, mCanvas.left, mCanvas.bottom, 3
-    setVertex 4, (mCanvas.left + mCanvas.right + 1) / 2, (mCanvas.top + mCanvas.bottom) / 2, 4
-    setMeshTriangle 0, 0, 1, 4
-    setMeshTriangle 1, 1, 2, 4
-    setMeshTriangle 2, 2, 3, 4
-    setMeshTriangle 3, 3, 0, 4
-    mGradientFillMode = GRADIENT_FILL_TRIANGLE
-End Select
-End Sub
 
 Private Function calculateInscopeGaugeDependentObjects()
 Dim index As Long
@@ -2478,6 +2671,45 @@ Next
 initialiseVisibleObjectList
 End Sub
 
+Private Sub deferredPaint(ByVal action As DeferredPaintActions)
+If action = DeferredPaintRepaintNone Then
+    mDeferredPaintAction = DeferredPaintRepaintNone
+    mDeferredPaintPending = False
+    ReDim mUndrawnAreas(3) As TRectangle
+    mUndrawnAreasIndex = -1
+    ReDim mRedrawObjects(3) As RedrawObjectsTableEntry
+    mRedrawObjectsIndex = -1
+Else
+    Select Case mDeferredPaintAction
+    Case DeferredPaintRepaintNone
+        mDeferredPaintAction = action
+    Case DeferredPaintRepaintChangedAreas
+        If action = DeferredPaintRepaintRegion Or _
+            action = DeferredPaintChangeGaugeandRepaint Or _
+            action = DeferredPaintScaleAndRepaint Or _
+            action = DeferredPaintCalculateAndRepaint _
+        Then mDeferredPaintAction = action
+    Case DeferredPaintRepaintRegion
+        If action = DeferredPaintChangeGaugeandRepaint Or _
+            action = DeferredPaintScaleAndRepaint Or _
+            action = DeferredPaintCalculateAndRepaint _
+        Then mDeferredPaintAction = action
+    Case DeferredPaintChangeGaugeandRepaint
+        If action = DeferredPaintScaleAndRepaint Or _
+            action = DeferredPaintCalculateAndRepaint _
+        Then mDeferredPaintAction = action
+    Case DeferredPaintScaleAndRepaint
+        If action = DeferredPaintCalculateAndRepaint Then mDeferredPaintAction = action
+    Case DeferredPaintCalculateAndRepaint
+        
+    End Select
+    If Not mDeferredPaintPending Then
+        mDeferredPaintPending = True
+        DeferAction Me, mRegionNumber, 20, ExpiryTimeUnitMilliseconds
+    End If
+End If
+End Sub
+
 Private Sub determineInScopeObjects()
 Dim i As Long
 Dim index As Long
@@ -2571,9 +2803,9 @@ With mCanvas
                         1, _
                         LineStyles.LineSolid, _
                         DrawModes.DrawModeXorPen
-    .drawLine .left, y, YAxisPosition, y
+    .drawLine .newPoint(.left, y), .newPoint(YAxisPosition, y)
     lineX = Round(x)
-    .drawLine lineX, .bottom, lineX, .top
+    .drawLine .newPoint(lineX, .bottom), .newPoint(lineX, .top)
     mPrevCursorX = x
     mPrevCursorY = y
     
@@ -2583,6 +2815,17 @@ If Not mYAxisRegion Is Nothing Then
     mYPositionText.position = mYAxisRegion.newPoint(15, y, CoordsLogical, CoordsLogical)
     mYPositionText.text = generateYAxisCursorPositionText(y)
 End If
+End Sub
+
+Private Sub drawObject( _
+                ByVal graphObj As IGraphicObject, _
+                ByRef areaToRedraw As TRectangle)
+Dim drawAreas(0) As TRectangle
+drawAreas(0) = mCanvas.boundary
+
+mCanvas.setClippingRegion areaToRedraw
+graphObj.draw drawAreas, mCanvas.hdc
+mCanvas.clearClippingRegion
 End Sub
 
 Private Sub drawPointer(ByVal x As Single, ByVal y As Single)
@@ -2598,7 +2841,7 @@ With mCanvas
                         DrawModes.DrawModeXorPen
     .setBrushAttributes mPointerDiscColor Xor .backColor, FillStyles.FillSolid
     lineX = Round(x)
-    .drawCircle lineX, y, .newDimension(0.8, 0.8).XLogical
+    .drawCircle .newPoint(lineX, y), .newDimension(0.8, 0.8).XLogical
     mPrevCursorX = x
     mPrevCursorY = y
     
@@ -2804,10 +3047,9 @@ With mGraphicObjects(index)
     If Not .boundingRect.isValid Then Exit Function
     If .extendedObject Then
         graphicObjectIsInScope = intOverlaps(rectGetXInterval(mCanvas.boundary), rectGetXInterval(.boundingRect))
-    ElseIf .periodNumber >= mMinInViewPeriod And _
-            .periodNumber <= mMaxInViewPeriod _
-    Then
-        graphicObjectIsInScope = True
+    Else
+        graphicObjectIsInScope = (.periodNumber >= mMinInViewPeriod And _
+                                .periodNumber <= mMaxInViewPeriod)
     End If
 End With
 End Function
@@ -2861,6 +3103,286 @@ For i = MinLayer To MaxLayer
     mGraphicObjects(mVisibleTable(i).lastindex).prevVisibleIndex = mVisibleTable(i).firstIndex
 Next
 
+End Sub
+
+Private Sub paint()
+Dim numGridDivisions As Double
+Dim gridSpacing As Double
+Dim i As Long
+Dim z As Double
+Dim perfFont As StdFont
+Dim counter As Long
+Dim index As Long
+
+Dim failpoint As Long
+On Error GoTo Err
+
+Static repaintCount As Long
+repaintCount = repaintCount + 1
+Debug.Print "Region " & regionNumber & " repaint count = " & repaintCount
+
+With mCanvas
+
+If mShowPerformanceText Then mElapsedTimer.StartTiming
+
+For i = IIf(mMinInViewPeriod < 0, 0, mMinInViewPeriod) To IIf(mMaxPeriodNumber < mMaxInViewPeriod, mMaxPeriodNumber, mMaxInViewPeriod)
+    If mPeriodTable(i).backColor <> 0 Then
+        .setPenAttributes mPeriodTable(i).backColor, 1, LineInsideSolid, DrawModeCopyPen
+        .setBrushAttributes mPeriodTable(i).backColor, FillSolid
+        .drawRectangle .newPoint(i - 0.5, .bottom), .newPoint(i + 0.5, .top)
+    End If
+Next
+
+numGridDivisions = .heightCm / mGridlineSpacingY
+gridSpacing = .height / numGridDivisions
+
+mGridTextHeight = .TextHeight("123")
+
+Dim log10 As Double
+Dim logSpacing As Double
+Dim exp As Long
+Dim mantissa As Double
+
+If mhasGrid And Not mHideGrid Then
+    log10 = Log(10#)
+    logSpacing = Log(gridSpacing) / log10
+    
+    exp = Fix(logSpacing)
+    mantissa = Abs(logSpacing) - Abs(exp)
+    
+    If logSpacing < 0 Then
+        exp = exp - 1
+        mantissa = 1 - mantissa
+    End If
+    
+    If mYScaleQuantum = 0.03125 And _
+        exp < 0 _
+    Then
+        ' tick size is 1/32, which influences where we put the horizontal grid lines
+        If exp >= -1 Then
+            If mantissa >= Log(5) / log10 Then
+                mScaleGridSpacingY = 16 * 0.03125
+            ElseIf mantissa >= Log(2.5) / log10 Then
+                mScaleGridSpacingY = 8 * 0.03125
+            ElseIf mantissa >= Log(1.25) / log10 Then
+                mScaleGridSpacingY = 4 * 0.03125
+            ElseIf mantissa >= Log(0.625) / log10 Then
+                mScaleGridSpacingY = 2 * 0.03125
+            Else
+                mScaleGridSpacingY = 0.03125
+            End If
+        Else
+            mScaleGridSpacingY = 0.03125
+        End If
+    Else
+        If mantissa >= Log(5) / log10 Then
+            mScaleGridSpacingY = 5 * 10 ^ exp
+        ElseIf mantissa >= Log(2.5) / log10 Then
+            mScaleGridSpacingY = 2.5 * 10 ^ exp
+        ElseIf mantissa >= Log(2#) / log10 Then
+            mScaleGridSpacingY = 2# * 10 ^ exp
+        Else
+            mScaleGridSpacingY = 10 ^ exp
+        End If
+    End If
+    If mIntegerYScale Then
+            mYScaleFormatStr = "0"
+            mYScaleSubFormatStr = "0"
+    Else
+        If mScaleGridSpacingY < 1 Then
+            mYScaleFormatStr = "0." & String(Abs(exp) + 1, "0")
+            mYScaleSubFormatStr = "0." & String(Abs(exp) + 2, "0")
+        Else
+            mYScaleFormatStr = "0.0"
+            mYScaleSubFormatStr = "0.00"
+        End If
+    End If
+End If
+
+mCanvas.paintBackground
+
+If mhasGrid And Not mHideGrid Then
+    paintHorizontalGridLines
+End If
+
+setHorizontalGridTexts
+
+For i = MinLayer To MaxLayer
+    index = mGraphicObjects(mVisibleTable(i).firstIndex).nextVisibleIndex
+    Do While index <> mVisibleTable(i).lastindex
+        With mGraphicObjects(index)
+            Dim drawAreas(0) As TRectangle
+            drawAreas(0) = rectIntersection(.boundingRect, mCanvas.boundary)
+            .graphObj.draw drawAreas, mCanvas.hdc
+            index = .nextVisibleIndex
+            counter = counter + 1
+        End With
+    Loop
+Next
+
+redrawCursor
+
+If mShowPerformanceText Then
+    If mPerfText Is Nothing Then
+        Set perfFont = New StdFont
+        perfFont.name = "Lucida Console"
+        perfFont.Size = 8
+        perfFont.Underline = False
+        perfFont.Bold = False
+        Set mPerfText = addText()
+        mPerfText.Color = vbActiveTitleBarText
+        mPerfText.font = perfFont
+        mPerfText.box = True
+        mPerfText.boxColor = vbBlack
+        mPerfText.boxStyle = LineStyles.LineInsideSolid
+        mPerfText.boxThickness = 1
+        mPerfText.boxFillColor = vbActiveTitleBar
+        mPerfText.boxFillStyle = FillStyles.FillSolid
+        mPerfText.position = newPoint(5, 2, CoordsRelative, CoordsRelative)
+        mPerfText.fixedX = True
+        mPerfText.fixedY = True
+        mPerfText.align = TextAlignModes.AlignBottomLeft
+        mPerfText.includeInAutoscale = False
+        mPerfText.paddingX = 0.5
+        mPerfText.layer = LayerTitle
+        
+    End If
+    mPerfText.text = Format(mElapsedTimer.ElapsedTimeMicroseconds / 1000, "0.0") & "ms" & vbCrLf & _
+                    counter & " visible objects" & vbCrLf & _
+                    mNextGraphicObjectIndex & " total objects"
+    ' need to force the text to draw now
+    mPerfText.draw
+End If
+
+End With
+
+mDrawn = True
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "paint" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+End Sub
+
+Private Sub paintHorizontalGridLines()
+Dim y As Double
+Dim i As Long
+Dim aLine As ChartSkil26.Line
+
+If mYGridLines Is Nothing Then Exit Sub
+
+y = Int(mCanvas.bottom / mScaleGridSpacingY) * mScaleGridSpacingY
+Do While y < mCanvas.top
+    i = i + 1
+    If i > mYGridLines.count Then
+        Set aLine = mYGridLines.add
+    Else
+        Set aLine = mYGridLines.item(i)
+    End If
+    aLine.setPosition Me.newPoint(0, y, CoordsRelative, CoordsLogical), _
+                        Me.newPoint(100, y, CoordsRelative, CoordsLogical)
+    mGraphicObjects(aLine.handle).boundingRect = mGraphicObjects(aLine.handle).graphObj.boundingRectangle(False, _
+                                                                            False, _
+                                                                            False, _
+                                                                            mCanvas.gaugeX, _
+                                                                            mCanvas.gaugeY, _
+                                                                            mCanvas.boundary)
+    addEntryToVisibleList aLine.handle
+    y = y + mScaleGridSpacingY
+    drawObject aLine, mCanvas.boundary
+Loop
+For i = i + 1 To mYGridLines.count
+    Set aLine = mYGridLines.item(i)
+    aLine.setPosition Me.newPoint(-1000, 0, CoordsLogical, CoordsLogical), _
+                        Me.newPoint(-1000, 0, CoordsLogical, CoordsLogical)
+    removeEntryFromVisibleList aLine.handle
+Next
+End Sub
+
+Private Sub redrawArea(areaToRedraw As ChartSkilTypes.TRectangle, ByVal startLayer As Long)
+Dim layer As Long
+Dim index As Long
+
+Dim failpoint As Long
+On Error GoTo Err
+
+failpoint = 100
+
+' redraw objects in the undrawn area, preserving layering
+If Not mSuppressDrawing And areaToRedraw.isValid Then
+    
+    failpoint = 200
+
+    mCanvas.setClippingRegion areaToRedraw
+    
+    failpoint = 300
+    
+    For layer = startLayer To MaxLayer
+        
+        failpoint = 400
+        
+        index = mGraphicObjects(mVisibleTable(layer).firstIndex).nextVisibleIndex
+        Do While index <> mVisibleTable(layer).lastindex
+            With mGraphicObjects(index)
+                
+                failpoint = 500
+                
+                If rectOverlaps(.boundingRect, areaToRedraw) Then
+                    
+                    failpoint = 600
+                    
+                    Dim rects(0) As TRectangle
+                    rects(0) = mCanvas.boundary
+                    .graphObj.draw rects, mCanvas.hdc
+                End If
+                index = .nextVisibleIndex
+            End With
+        Loop
+    Next
+    
+    
+    failpoint = 700
+    
+    redrawCursor
+    
+    failpoint = 800
+    
+    mCanvas.clearClippingRegion
+    
+End If
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "redrawArea" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+End Sub
+
+Private Sub redrawCursor()
+Select Case mPointerStyle
+Case PointerNone
+
+Case PointerCrosshairs
+    drawCrosshairs mPrevCursorX, mPrevCursorY
+Case PointerDisc
+    drawPointer mPrevCursorX, mPrevCursorY
+End Select
+End Sub
+
+Private Sub redrawObject( _
+                ByVal graphObj As IGraphicObject, _
+                ByRef areaToRedraw As TRectangle)
+unDrawCursor areaToRedraw
+drawObject graphObj, areaToRedraw
+redrawArea areaToRedraw, graphObj.layer + 1
 End Sub
 
 Private Sub removeEntryFromExtendedList(ByVal index As Long)
@@ -2945,48 +3467,13 @@ Next
 pSeries.finish
 End Sub
 
-
-Private Sub setHorizontalGridLines()
-Dim y As Double
-Dim i As Long
-Dim aLine As ChartSkil26.Line
-Dim currSuppress As Boolean
-
-If mYGridLines Is Nothing Then Exit Sub
-
-currSuppress = mSuppressDrawing
-mSuppressDrawing = True
-y = Int(mCanvas.bottom / mScaleGridSpacingY) * mScaleGridSpacingY
-Do While y < mCanvas.top
-    i = i + 1
-    If i > mYGridLines.count Then
-        Set aLine = mYGridLines.add
-    Else
-        Set aLine = mYGridLines.item(i)
-    End If
-    aLine.point1 = Me.newPoint(0, y, CoordsRelative, CoordsLogical)
-    aLine.point2 = Me.newPoint(100, y, CoordsRelative, CoordsLogical)
-    addEntryToVisibleList aLine.handle
-    y = y + mScaleGridSpacingY
-Loop
-For i = i + 1 To mYGridLines.count
-    Set aLine = mYGridLines.item(i)
-    aLine.point1 = Me.newPoint(-1000, 0, CoordsLogical, CoordsLogical)
-    aLine.point2 = Me.newPoint(-1000, 0, CoordsLogical, CoordsLogical)
-Next
-mSuppressDrawing = currSuppress
-End Sub
-
 Private Sub setHorizontalGridTexts()
 Dim y As Double
 Dim i As Long
 Dim aText As text
-'Dim currSuppress As Boolean
 
 If mYGridTexts Is Nothing Then Exit Sub
 
-'currSuppress = mSuppressDrawing
-'mSuppressDrawing = True
 y = Int(mCanvas.bottom / mScaleGridSpacingY) * mScaleGridSpacingY
 Do While y < mCanvas.top
     i = i + 1
@@ -3008,38 +3495,6 @@ For i = i + 1 To mYGridTexts.count
     Set aText = mYGridTexts.item(i)
     aText.text = ""
 Next
-'mSuppressDrawing = currSuppress
-End Sub
-
-Private Sub setMeshRect( _
-                ByVal index As Long, _
-                ByVal upperLeft As Long, _
-                ByVal lowerRight As Long)
-mMeshRect(index).lowerRight = lowerRight
-mMeshRect(index).upperLeft = upperLeft
-End Sub
-
-Private Sub setMeshTriangle( _
-                ByVal index As Long, _
-                ByVal vertex1 As Long, _
-                ByVal vertex2 As Long, _
-                ByVal vertex3 As Long)
-mMeshTriangle(index).vertex1 = vertex1
-mMeshTriangle(index).vertex2 = vertex2
-mMeshTriangle(index).vertex3 = vertex3
-End Sub
-
-Private Sub setVertex( _
-                ByRef index As Long, _
-                ByVal x As Single, _
-                ByVal y As Single, _
-                ByVal colorIndex As Long)
-mVertices(index).x = mCanvas.convertLogicalToPixelsX(x - mCanvas.left)
-mVertices(index).y = mCanvas.convertLogicalToPixelsY(mCanvas.top - y)
-mVertices(index).Red = mBackGradientFillColors(colorIndex) And &HFF&
-mVertices(index).Green = (mBackGradientFillColors(colorIndex) And &HFF00&) / &H100&
-mVertices(index).Blue = (mBackGradientFillColors(colorIndex) And &HFF0000) / &H10000
-mVertices(index).Alpha = 0
 End Sub
 
 Private Sub setVerticalGridLine(ByVal timestamp As Date, _
@@ -3117,6 +3572,52 @@ Case TimePeriodVolume, TimePeriodTickVolume, TimePeriodTickMovement
 End Select
 End Sub
 
+Private Sub undrawArea(undrawnArea As ChartSkilTypes.TRectangle)
+
+Dim failpoint As Long
+On Error GoTo Err
+
+failpoint = 100
+
+' redraw objects in the undrawn area, preserving layering
+If Not mSuppressDrawing And undrawnArea.isValid Then
+    
+    failpoint = 200
+
+    mCanvas.setClippingRegion undrawnArea
+    mCanvas.paintBackground
+    mCanvas.clearClippingRegion
+    
+    failpoint = 400
+    
+    redrawArea undrawnArea, MinLayer
+    
+End If
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "undrawArea" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+End Sub
+
+Private Sub unDrawCursor( _
+                ByRef areaToRedraw As TRectangle)
+mCanvas.setClippingRegion areaToRedraw
+Select Case mPointerStyle
+Case PointerNone
+
+Case PointerCrosshairs
+    undrawCrosshairs
+Case PointerDisc
+    undrawPointer
+End Select
+mCanvas.clearClippingRegion
+End Sub
+
 Private Sub undrawCrosshairs()
 Dim nearestGridLine As Single
 Dim nextNearestGridLine As Single
@@ -3129,9 +3630,9 @@ With mCanvas
                         1, _
                         LineStyles.LineSolid, _
                         DrawModes.DrawModeXorPen
-    .drawLine .left, mPrevCursorY, YAxisPosition, mPrevCursorY
+    .drawLine .newPoint(.left, mPrevCursorY), .newPoint(YAxisPosition, mPrevCursorY)
     prevLineX = Round(mPrevCursorX)
-    .drawLine prevLineX, .bottom, prevLineX, .top
+    .drawLine .newPoint(prevLineX, .bottom), .newPoint(prevLineX, .top)
 End With
 
 End Sub
@@ -3150,7 +3651,7 @@ With mCanvas
                         DrawModes.DrawModeXorPen
     .setBrushAttributes mPointerDiscColor Xor .backColor, FillStyles.FillSolid
     prevLineX = Round(mPrevCursorX)
-    .drawCircle prevLineX, mPrevCursorY, .newDimension(0.8, 0.8).XLogical
+    .drawCircle .newPoint(prevLineX, mPrevCursorY), .newDimension(0.8, 0.8).XLogical
 End With
 
 End Sub

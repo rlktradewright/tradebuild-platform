@@ -1,5 +1,4 @@
 VERSION 5.00
-Object = "{86CF1D34-0C5F-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCT2.OCX"
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
 Begin VB.UserControl Chart 
    Alignable       =   -1  'True
@@ -9,20 +8,15 @@ Begin VB.UserControl Chart
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   10665
+   KeyPreview      =   -1  'True
    ScaleHeight     =   7575
    ScaleWidth      =   10665
-   Begin MSComCtl2.FlatScrollBar HScroll 
+   Begin VB.HScrollBar HScroll 
       Height          =   255
       Left            =   0
       TabIndex        =   5
-      Top             =   3960
+      Top             =   4320
       Width           =   7455
-      _ExtentX        =   13150
-      _ExtentY        =   450
-      _Version        =   393216
-      Appearance      =   2
-      Arrows          =   65536
-      Orientation     =   1245185
    End
    Begin MSComctlLib.ImageList ImageList4 
       Left            =   600
@@ -565,6 +559,16 @@ Option Explicit
 ' Events
 '================================================================================
 
+Event ChartCleared()
+Event KeyDown(KeyCode As Integer, Shift As Integer)
+Attribute KeyDown.VB_UserMemId = -602
+Event KeyPress(KeyAscii As Integer)
+Attribute KeyPress.VB_UserMemId = -603
+Event KeyUp(KeyCode As Integer, Shift As Integer)
+Attribute KeyUp.VB_UserMemId = -604
+Event RegionsChanged(ev As CollectionChangeEvent)
+Event PeriodsChanged(ev As CollectionChangeEvent)
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -704,7 +708,6 @@ Private mPointerStyle As PointerStyles
 Private mPointerCrosshairsColor As Long
 Private mPointerDiscColor As Long
 
-Private mNotFirstMouseMove As Boolean
 Private mPrevCursorX As Single
 Private mPrevCursorY As Single
 
@@ -739,18 +742,34 @@ Private mDefaultBarDisplayMode As BarDisplayModes
 '================================================================================
 
 Private Sub UserControl_Initialize()
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mController = New ChartController
 mController.Chart = Me
 initialise
 createXAxisRegion
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "UserControl_Initialize" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+
 End Sub
 
-Private Sub UserControl_Paint()
-Static paintcount As Long
-paintcount = paintcount + 1
-Debug.Print "Control_paint" & paintcount
-mPainted = True
-paintAll
+Private Sub UserControl_KeyDown(KeyCode As Integer, Shift As Integer)
+RaiseEvent KeyDown(KeyCode, Shift)
+End Sub
+
+Private Sub UserControl_KeyPress(KeyAscii As Integer)
+RaiseEvent KeyPress(KeyAscii)
+End Sub
+
+Private Sub UserControl_KeyUp(KeyCode As Integer, Shift As Integer)
+RaiseEvent KeyUp(KeyCode, Shift)
 End Sub
 
 Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
@@ -913,28 +932,26 @@ End Sub
 
 Private Sub UserControl_Resize()
 Static resizeCount As Long
+
 Dim failpoint As Long
 On Error GoTo Err
 
-gLogger.Log LogLevelDetail, "ChartSkil: UserControl_Resize: enter"
+'gLogger.Log LogLevelDetail, "ChartSkil: UserControl_Resize: enter"
 resizeCount = resizeCount + 1
-'debug.print "Control_resize: count = " & resizeCount
+
 Resize (UserControl.width <> mPrevWidth), (UserControl.height <> mPrevHeight)
 mPrevHeight = UserControl.height
 mPrevWidth = UserControl.width
-'debug.print "Exit Control_resize"
 
-gLogger.Log LogLevelDetail, "ChartSkil: UserControl_Resize: exit"
+'gLogger.Log LogLevelDetail, "ChartSkil: UserControl_Resize: exit"
+
 Exit Sub
 
 Err:
-gLogger.Log LogLevelSevere, "Error at: " & ProjectName & "." & ModuleName & ":" & "UserControl_Resize" & "." & failpoint & _
-                            IIf(Err.Source <> "", vbCrLf & Err.Source, "") & vbCrLf & _
-                            Err.Description
-Err.Raise Err.Number, _
-        ProjectName & "." & ModuleName & ":" & "UserControl_Resize" & "." & failpoint & _
-        IIf(Err.Source <> "", vbCrLf & Err.Source, ""), _
-        Err.Description
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "UserControl_Resize" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 
 End Sub
 
@@ -976,11 +993,33 @@ End Sub
 '================================================================================
 
 Private Sub ChartRegionPicture_Click(index As Integer)
+Dim failpoint As Long
+On Error GoTo Err
+
 mRegions(2 * index - 1).region.Click
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ChartRegionPicture_Click" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 Private Sub ChartRegionPicture_DblClick(index As Integer)
+Dim failpoint As Long
+On Error GoTo Err
+
 mRegions(2 * index - 1).region.DblCLick
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ChartRegionPicture_DblClick" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 Private Sub ChartRegionPicture_MouseDown( _
@@ -990,6 +1029,10 @@ Private Sub ChartRegionPicture_MouseDown( _
                             x As Single, _
                             y As Single)
 Dim region As ChartRegion
+
+Dim failpoint As Long
+
+On Error GoTo Err
 
 Set region = mRegions(2 * index - 1).region
 
@@ -1006,6 +1049,14 @@ mLeftDragStartPosnX = Int(x)
 mLeftDragStartPosnY = y
 
 region.MouseDown Button, Shift, x, y
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ChartRegionPicture_MouseDown" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 Private Sub ChartRegionPicture_MouseMove(index As Integer, _
@@ -1016,6 +1067,9 @@ Private Sub ChartRegionPicture_MouseMove(index As Integer, _
 
 Dim region As ChartRegion
 Dim i As Long
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If mLeftDragging = True Then
     If mAllowHorizontalMouseScrolling Then
@@ -1050,7 +1104,7 @@ Else
                 Then
                     Dim YScaleQuantum As Double
                     YScaleQuantum = region.YScaleQuantum
-                    If YScaleQuantum <> 0 Then y = YScaleQuantum * Int(y / YScaleQuantum)
+                    If YScaleQuantum <> 0 Then y = YScaleQuantum * Int((y + YScaleQuantum / 10000) / YScaleQuantum)
                 End If
                 region.drawCursor Button, Shift, x, y
                 
@@ -1064,6 +1118,14 @@ Else
 End If
 
 mRegions(2 * index - 1).region.MouseMove Button, Shift, x, y
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ChartRegionPicture_MouseMove" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 Private Sub ChartRegionPicture_MouseUp( _
@@ -1073,6 +1135,9 @@ Private Sub ChartRegionPicture_MouseUp( _
                             x As Single, _
                             y As Single)
 Dim region As ChartRegion
+
+Dim failpoint As Long
+On Error GoTo Err
 
 Set region = mRegions(2 * index - 1).region
 
@@ -1087,6 +1152,14 @@ End If
 If Button = vbLeftButton Then mLeftDragging = False
 
 region.MouseUp Button, Shift, x, y
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ChartRegionPicture_MouseUp" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 '================================================================================
@@ -1094,7 +1167,18 @@ End Sub
 '================================================================================
 
 Private Sub HScroll_Change()
+Dim failpoint As Long
+On Error GoTo Err
+
 lastVisiblePeriod = Round((CLng(HScroll.value) - CLng(HScroll.Min)) / (CLng(HScroll.Max) - CLng(HScroll.Min)) * (mPeriods.currentPeriodNumber + chartWidth - 1))
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "HScroll_Change" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 '================================================================================
@@ -1107,11 +1191,22 @@ Private Sub RegionDividerPicture_MouseDown( _
                             Shift As Integer, _
                             x As Single, _
                             y As Single)
+Dim failpoint As Long
+On Error GoTo Err
+
 If index = mRegionsIndex + 1 Then Exit Sub
 If Button = vbLeftButton Then mLeftDragging = True
 mLeftDragStartPosnX = Int(x)
 mLeftDragStartPosnY = y
 mUserResizingRegions = True
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "RegionDividerPicture_MouseDown" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 Private Sub RegionDividerPicture_MouseMove( _
@@ -1125,6 +1220,9 @@ Dim currRegion As Long
 Dim newHeight As Long
 Dim prevPercentHeight As Double
 Dim i As Long
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If index = mRegionsIndex + 1 Then Exit Sub
 If Not mLeftDragging Then Exit Sub
@@ -1162,11 +1260,19 @@ Else
 End If
 
 If sizeRegions Then
-    paintAll
+    'paintAll
 Else
     ' the regions couldn't be resized so reset the region's percent height
     mRegions(currRegion).percentheight = prevPercentHeight
 End If
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "RegionDividerPicture_MouseMove" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 Private Sub RegionDividerPicture_MouseUp( _
@@ -1175,9 +1281,20 @@ Private Sub RegionDividerPicture_MouseUp( _
                             Shift As Integer, _
                             x As Single, _
                             y As Single)
+Dim failpoint As Long
+On Error GoTo Err
+
 If index = mRegionsIndex + 1 Then Exit Sub
 If Button = vbLeftButton Then mLeftDragging = False
 mUserResizingRegions = False
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "RegionDividerPicture_MouseUp" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 '================================================================================
@@ -1185,6 +1302,9 @@ End Sub
 '================================================================================
 
 Private Sub Toolbar1_ButtonClick(ByVal Button As MSComctlLib.Button)
+
+Dim failpoint As Long
+On Error GoTo Err
 
 Select Case Button.key
 Case ToolbarCommandAutoScroll
@@ -1211,6 +1331,14 @@ Case ToolbarCommandScrollEnd
     lastVisiblePeriod = currentPeriodNumber
 End Select
 
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "Toolbar1_ButtonClick" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+
 End Sub
 
 '================================================================================
@@ -1218,23 +1346,78 @@ End Sub
 '================================================================================
 
 Private Sub XAxisPicture_Click()
+Dim failpoint As Long
+On Error GoTo Err
+
 mRegions(0).region.Click
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "XAxisPicture_Click" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 Private Sub XAxisPicture_DblClick()
+Dim failpoint As Long
+On Error GoTo Err
+
 mRegions(0).region.DblCLick
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "XAxisPicture_DblClick" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 Private Sub XAxisPicture_MouseDown(Button As Integer, Shift As Integer, x As Single, y As Single)
+Dim failpoint As Long
+On Error GoTo Err
+
 mRegions(0).region.MouseDown Button, Shift, x, y
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "XAxisPicture_MouseDown" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 Private Sub XAxisPicture_MouseMove(Button As Integer, Shift As Integer, x As Single, y As Single)
+Dim failpoint As Long
+On Error GoTo Err
+
 mRegions(0).region.MouseMove Button, Shift, x, y
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "XAxisPicture_MouseMove" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 Private Sub XAxisPicture_MouseUp(Button As Integer, Shift As Integer, x As Single, y As Single)
+Dim failpoint As Long
+On Error GoTo Err
+
 mRegions(0).region.MouseUp Button, Shift, x, y
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "XAxisPicture_MouseUp" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 '================================================================================
@@ -1242,23 +1425,78 @@ End Sub
 '================================================================================
 
 Private Sub YAxisPicture_Click(index As Integer)
+Dim failpoint As Long
+On Error GoTo Err
+
 mRegions(2 * index).region.Click
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "YAxisPicture_Click" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 Private Sub YAxisPicture_DblClick(index As Integer)
+Dim failpoint As Long
+On Error GoTo Err
+
 mRegions(2 * index).region.DblCLick
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "YAxisPicture_DblClick" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 Private Sub YAxisPicture_MouseDown(index As Integer, Button As Integer, Shift As Integer, x As Single, y As Single)
+Dim failpoint As Long
+On Error GoTo Err
+
 mRegions(2 * index).region.MouseDown Button, Shift, x, y
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "YAxisPicture_MouseDown" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 Private Sub YAxisPicture_MouseMove(index As Integer, Button As Integer, Shift As Integer, x As Single, y As Single)
+Dim failpoint As Long
+On Error GoTo Err
+
 mRegions(2 * index).region.MouseMove Button, Shift, x, y
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "YAxisPicture_MouseMove" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 Private Sub YAxisPicture_MouseUp(index As Integer, Button As Integer, Shift As Integer, x As Single, y As Single)
+Dim failpoint As Long
+On Error GoTo Err
+
 mRegions(2 * index).region.MouseUp Button, Shift, x, y
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "YAxisPicture_MouseUp" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 '================================================================================
@@ -1285,6 +1523,7 @@ If mAutoscroll Then scrollX 1
 Set ev.affectedItem = period
 ev.changeType = CollItemAdded
 Set ev.Source = mPeriods
+RaiseEvent PeriodsChanged(ev)
 mController.firePeriodsChanged ev
 End Sub
 
@@ -1773,7 +2012,7 @@ Public Property Let twipsPerBar(ByVal val As Long)
 mTwipsPerBar = val
 resizeX
 setHorizontalScrollBar
-paintAll
+'paintAll
 End Property
 
 Public Property Set verticalGridTimePeriod( _
@@ -1895,7 +2134,7 @@ YAxisPicture(controlIndex).width = UserControl.ScaleWidth - YAxisPicture(YAxisPi
 YAxisPicture(controlIndex).visible = True
 
 addChartRegion.controller = controller
-addChartRegion.surface = ChartRegionPicture(controlIndex)
+addChartRegion.canvas = createCanvas(ChartRegionPicture(controlIndex))
 addChartRegion.suppressDrawing = (mSuppressDrawingCount > 0)
 addChartRegion.currentTool = mCurrentTool
 addChartRegion.minimumPercentHeight = minimumPercentHeight
@@ -1930,8 +2169,14 @@ End If
 Load RegionDividerPicture(controlIndex)
 RegionDividerPicture(controlIndex).visible = True
 
+mRegionsIndex = mRegionsIndex + 1
+If mRegionsIndex > UBound(mRegions) Then
+    ReDim Preserve mRegions(2 * (UBound(mRegions) + 1) - 1) As RegionTableEntry
+End If
+
 Set YAxisRegion = New ChartRegion
-YAxisRegion.surface = YAxisPicture(controlIndex)
+YAxisRegion.canvas = createCanvas(YAxisPicture(controlIndex))
+YAxisRegion.regionNumber = mRegionsIndex
 YAxisRegion.regionBottom = 0
 YAxisRegion.regionTop = 1
 YAxisRegion.isYAxisRegion = True
@@ -1942,10 +2187,6 @@ YAxisRegion.defaultTextStyle = mDefaultTextStyle
 YAxisRegion.style = yAxisStyle
 addChartRegion.YAxisRegion = YAxisRegion
 
-mRegionsIndex = mRegionsIndex + 1
-If mRegionsIndex > UBound(mRegions) Then
-    ReDim Preserve mRegions(2 * (UBound(mRegions) + 1) - 1) As RegionTableEntry
-End If
 Set mRegions(mRegionsIndex).region = YAxisRegion
 
 mNumRegionsInUse = mNumRegionsInUse + 1
@@ -1953,6 +2194,7 @@ mNumRegionsInUse = mNumRegionsInUse + 1
 If sizeRegions Then
     Set ev.affectedItem = addChartRegion
     ev.changeType = CollItemAdded
+    RaiseEvent RegionsChanged(ev)
     mController.fireRegionsChanged ev
     
 '    ' now add all the current periods to ensure the grid lines are properly set up
@@ -1989,9 +2231,8 @@ For i = 1 To mRegionsIndex Step 2
     controlIndex = 1 + (i - 1) / 2
     If Not mRegions(i).region Is Nothing Then
         mRegions(i).region.clearRegion
-        ChartRegionPicture(controlIndex).Cls
+        mRegions(i + 1).region.clearRegion
         ChartRegionPicture(controlIndex).visible = False
-        YAxisPicture(controlIndex).Cls
         YAxisPicture(controlIndex).visible = False
         If i <> mRegionsIndex Then _
                 RegionDividerPicture(controlIndex).visible = False
@@ -2001,6 +2242,7 @@ Next
 Erase mRegions
 
 If Not mXAxisRegion Is Nothing Then mXAxisRegion.clearRegion
+XAxisPicture.Cls
 Set mXAxisRegion = Nothing
 mPeriods.finish
 Set mPeriods = Nothing
@@ -2023,6 +2265,7 @@ createXAxisRegion
 resizeX
 'Resize False
 
+RaiseEvent ChartCleared
 mController.fireChartCleared
 Debug.Print "Chart cleared"
 End Function
@@ -2096,7 +2339,7 @@ Dim ev As CollectionChangeEvent
 
 If region.isXAxisRegion Or region.isYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
-            ProjectName & "." & ModuleName & ":" & "setVerticalScale", _
+            ProjectName & "." & ModuleName & ":" & "removeChartRegion", _
             "Cannot remove an axis region"
 End If
 
@@ -2106,7 +2349,7 @@ For i = 1 To mRegionsIndex Step 2
         Set mRegions(i).region = Nothing
         mRegions(i + 1).region.clearRegion
         Set mRegions(i + 1).region = Nothing
-        RegionDividerPicture(i).visible = False
+        RegionDividerPicture(1 + (i - 1) / 2).visible = False
         Exit For
     End If
 Next
@@ -2114,7 +2357,7 @@ Next
 mNumRegionsInUse = mNumRegionsInUse - 1
 
 sizeRegions
-paintAll
+'paintAll
 
 ev.changeType = CollItemRemoved
 Set ev.affectedItem = region
@@ -2125,10 +2368,6 @@ Public Sub scrollX(ByVal value As Long)
 Dim region As ChartRegion
 Dim i As Long
 If value = 0 Then Exit Sub
-
-If lastVisiblePeriod <> mPeriods.currentPeriodNumber Then
-'   Stop
-End If
 
 If (lastVisiblePeriod + value) > _
         (mPeriods.currentPeriodNumber + chartWidth - 1) Then
@@ -2156,7 +2395,7 @@ Next
 If mXAxisRegion Is Nothing Then createXAxisRegion
 mXAxisRegion.periodsInView mScaleLeft, mScaleLeft + mScaleWidth
 setHorizontalScrollBar
-paintAll
+'paintAll
 End Sub
 
 '================================================================================
@@ -2308,6 +2547,12 @@ End Select
   
 End Sub
 
+Private Function createCanvas( _
+                ByVal surface As PictureBox) As canvas
+Set createCanvas = New canvas
+createCanvas.surface = surface
+End Function
+
 Private Sub createXAxisRegion()
 Dim aFont As StdFont
 Dim style As ChartRegionStyle
@@ -2318,7 +2563,7 @@ mXAxisRegion.isXAxisRegion = True
 Set mRegions(0).region = mXAxisRegion
 
 mXAxisRegion.controller = controller
-mXAxisRegion.surface = XAxisPicture
+mXAxisRegion.canvas = createCanvas(XAxisPicture)
 mXAxisRegion.verticalGridTimePeriod = mVerticalGridTimePeriod
 mXAxisRegion.regionBottom = 0
 mXAxisRegion.regionTop = 1
@@ -2339,9 +2584,9 @@ Set mXCursorText = mXAxisRegion.addText(LayerNumbers.LayerPointer)
 mXCursorText.align = AlignTopCentre
 mXCursorText.Color = vbWhite Xor mDefaultRegionStyle.backColor
 mXCursorText.box = True
-mXCursorText.boxFillColor = mDefaultRegionStyle.backColor
+mXCursorText.boxFillColor = vbWhite
 mXCursorText.boxStyle = LineSolid
-mXCursorText.boxColor = vbWhite Xor mDefaultRegionStyle.backColor
+mXCursorText.boxColor = vbBlack
 Set aFont = New StdFont
 aFont.name = "Arial"
 aFont.Size = 8
@@ -2395,6 +2640,12 @@ End Sub
 Private Sub initialise()
 Static firstInitialisationDone As Boolean
 Dim i As Long
+Dim btn As Button
+
+For Each btn In Toolbar1.Buttons
+    btn.value = tbrUnpressed
+    btn.Enabled = False
+Next
 
 mPrevHeight = UserControl.height
 
@@ -2409,6 +2660,9 @@ mPeriods.controller = controller
 mBarTimePeriodSet = False
 
 If Not firstInitialisationDone Then
+    
+    firstInitialisationDone = True
+    
     ' these values are only set once when the control initialises
     ' if the chart is subsequently cleared, any values set by the
     ' application remain in force
@@ -2439,21 +2693,23 @@ If Not firstInitialisationDone Then
     mTwipsPerBar = PropDfltTwipsPerBar
     mYAxisWidthCm = PropDfltYAxisWidthCm
 
-    mYAxisPosition = 1
-    mScaleLeft = 0
-    mScaleWidth = 0
-
     mAllowHorizontalMouseScrolling = PropDfltAllowHorizontalMouseScrolling
     mAllowVerticalMouseScrolling = PropDfltAllowVerticalMouseScrolling
 
 End If
 
+mYAxisPosition = 1
+mScaleWidth = CSng(XAxisPicture.width) / CSng(mTwipsPerBar) - 0.5!
+mScaleLeft = mYAxisPosition + _
+            (mYAxisWidthCm * TwipsPerCm / XAxisPicture.width * mScaleWidth) - _
+            mScaleWidth
 mScaleHeight = -100
 mScaleTop = 100
+
+HScroll.value = 0
 'resizeX
 
 
-firstInitialisationDone = True
 End Sub
 
 Private Sub paintAll()
@@ -2462,14 +2718,10 @@ Dim i As Long
 
 If mSuppressDrawingCount > 0 Then Exit Sub
 
-mNotFirstMouseMove = False
-
 For i = 1 To mRegionsIndex Step 2
     If Not mRegions(i).region Is Nothing Then
-        If Not mRegions(i).region Is Nothing Then
-            Set region = mRegions(i).region
-            region.paintRegion
-        End If
+        Set region = mRegions(i).region
+        region.paintRegion
     End If
 Next
 If mXAxisRegion Is Nothing Then createXAxisRegion
@@ -2487,7 +2739,6 @@ failpoint = 100
 
 gLogger.Log LogLevelDetail, "ChartSkil: Resize: enter"
 
-mNotFirstMouseMove = False
 If resizeWidth Then
     HScroll.width = UserControl.width
     XAxisPicture.width = UserControl.width
@@ -2502,7 +2753,7 @@ If resizeHeight Then
     XAxisPicture.top = HScroll.top - XAxisPicture.height
     sizeRegions
 End If
-paintAll
+'paintAll
 
 gLogger.Log LogLevelDetail, "ChartSkil: Resize: exit"
 
@@ -2700,7 +2951,7 @@ Dim heightReductionFactor As Double
 Dim failpoint As Long
 On Error GoTo Err
 
-If gLogger.isLoggable(LogLevelMediumDetail) Then gLogger.Log LogLevelMediumDetail, ProjectName & "." & ModuleName & ":sizeRegions Enter"
+If gLogger.isLoggable(LogLevelHighDetail) Then gLogger.Log LogLevelHighDetail, ProjectName & "." & ModuleName & ":sizeRegions Enter"
 
 
 failpoint = 100
@@ -2852,7 +3103,6 @@ For i = 1 To mRegionsIndex Step 2
             aRegion.resizedY
         End If
         top = top + mRegions(i).actualHeight
-        'aRegion.resizedY
         numRegionsSized = numRegionsSized + 1
         If Not suppressDrawing Then
             RegionDividerPicture(controlIndex).top = top
@@ -2874,7 +3124,7 @@ Next
 
 sizeRegions = True
 
-If gLogger.isLoggable(LogLevelMediumDetail) Then gLogger.Log LogLevelMediumDetail, ProjectName & "." & ModuleName & ":sizeRegions Exit"
+If gLogger.isLoggable(LogLevelHighDetail) Then gLogger.Log LogLevelHighDetail, ProjectName & "." & ModuleName & ":sizeRegions Exit"
 
 Exit Function
 

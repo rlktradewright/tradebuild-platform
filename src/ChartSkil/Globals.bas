@@ -19,7 +19,7 @@ Public Const MaxSystemColor As Long = &H80000018
 
 Public Const GridlineSpacingCm As Double = 2.5
 
-Public Const TwipsPerCm As Long = 1440 / 2.54
+Public Const TwipsPerCm As Double = 1440 / 2.54
 
 Public Const ToolbarCommandAutoScale As String = "autoscale"
 Public Const ToolbarCommandAutoScroll As String = "autoscroll"
@@ -129,10 +129,26 @@ End Select
 
 End Function
 
+Public Function gCloneFont( _
+                ByVal aFont As StdFont) As StdFont
+Set gCloneFont = New StdFont
+With gCloneFont
+    .Bold = aFont.Bold
+    .Charset = aFont.Charset
+    .Italic = aFont.Italic
+    .name = aFont.name
+    .Size = aFont.Size
+    .Strikethrough = aFont.Strikethrough
+    .Underline = aFont.Underline
+    .Weight = aFont.Weight
+End With
+End Function
+
 Public Function gCreateBarStyle() As BarStyle
 Set gCreateBarStyle = New BarStyle
 With gCreateBarStyle
-    .tailThickness = 2
+    .includeInAutoscale = True
+    .tailThickness = 1
     .outlineThickness = 1
     .upColor = &H1D9311
     .downColor = &H43FC2
@@ -154,6 +170,8 @@ With gCreateDataPointStyle
     .displayMode = DataPointDisplayModes.DataPointDisplayModeLine
     .histBarWidth = 0.6
     .includeInAutoscale = True
+    .downColor = -1
+    .upColor = -1
 End With
 End Function
 

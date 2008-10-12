@@ -51,7 +51,6 @@ Private Const ModuleName                As String = "ChartRegionStyle"
 Private mGridColor As Long
 Private mGridTextColor  As Long
 Private mPointerStyle As PointerStyles
-Private mBackColor As Long
 Private mhasGrid As Boolean
 Private mhasGridText As Boolean
 Private mAutoscale As Boolean
@@ -61,7 +60,7 @@ Private mGridlineSpacingY As Double
 Private mMinimumHeight As Double
 Private mSnapCursorToTickBoundaries As Boolean
 
-Private mBackGradientFillColors() As OLE_COLOR
+Private mBackGradientFillColors() As Long
 
 '@================================================================================
 ' Class Event Handlers
@@ -88,40 +87,40 @@ mAutoscale = value
 End Property
 
 Public Property Get backColor() As Long
-backColor = mBackColor
+backColor = mBackGradientFillColors(0)
 End Property
 
-Public Property Let backColor(ByVal val As Long)
-mBackColor = val
+Public Property Let backColor(ByVal value As Long)
+ReDim mBackGradientFillColors(0) As Long
+mBackGradientFillColors(0) = value
 End Property
 
-Public Property Get backGradientFillColors() As OLE_COLOR()
+Public Property Get backGradientFillColors() As Long()
 backGradientFillColors = mBackGradientFillColors
 End Property
 
-Public Property Let backGradientFillColors(ByRef value() As OLE_COLOR)
+Public Property Let backGradientFillColors(ByRef value() As Long)
 Dim numColors As Long
 
-numColors = -1
 On Error Resume Next
-numColors = UBound(value)
+numColors = UBound(value) + 1
 On Error GoTo 0
 
-If numColors = -1 Then
+If numColors = 0 Then
     Erase mBackGradientFillColors
     Exit Property
 End If
 
-If numColors < 2 Then
+If numColors < 1 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "BackGradientFillColors", _
-            "At least two background gradient fill colors must be supplied"
+            "At least 1 background gradient fill color must be supplied"
 End If
 
 If numColors > 5 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "BackGradientFillColors", _
-            "At most 5 background gradient fill colors can be supplied"
+            "At most 5 background gradient fill colors may be supplied"
 End If
 
 mBackGradientFillColors = value
@@ -214,7 +213,6 @@ End Property
 Public Function clone() As ChartRegionStyle
 Set clone = New ChartRegionStyle
 clone.autoscale = mAutoscale
-clone.backColor = mBackColor
 clone.backGradientFillColors = mBackGradientFillColors
 clone.gridColor = mGridColor
 clone.gridlineSpacingY = mGridlineSpacingY

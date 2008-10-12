@@ -267,7 +267,7 @@ Set font = mStyle.font
 End Property
 
 Public Property Let font(ByVal value As StdFont)
-If mStyle.font = value Then Exit Property
+'If mStyle.font is value Then Exit Property
 mStyle.font = value
 If mTexts.count <> 0 Then
     mEventProxy.recalcBoundary mSeriesId
