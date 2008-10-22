@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#47.0#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#62.0#0"; "ChartSkil2-6.ocx"
 Begin VB.UserControl TradeBuildChart 
    ClientHeight    =   4965
    ClientLeft      =   0
@@ -78,9 +78,9 @@ Private Const PropNameDfltRegnStyleGridlineSpacingY     As String = "DfltRegnSty
 Private Const PropNameDfltRegnStyleGridTextColor        As String = "DfltRegnStyleGridTextColor"
 Private Const PropNameDfltRegnStyleHasGrid              As String = "DfltRegnStyleHasGrid"
 Private Const PropNameDfltRegnStyleHasGridtext          As String = "DfltRegnStyleHasGridtext"
-Private Const PropNameDfltRegnStylePointerStyle         As String = "DfltRegnStylePointerStyle"
 Private Const PropNamePointerDiscColor                  As String = "PointerDiscColor"
 Private Const PropNamePointerCrosshairsColor            As String = "PointerCrosshairsColor"
+Private Const PropNamePointerStyle                      As String = "PointerStyle"
 Private Const PropNameShowHorizontalScrollBar           As String = "ShowHorizontalScrollBar"
 Private Const PropNameShowToolbar                       As String = "ShowToobar"
 Private Const PropNameTwipsPerBar                       As String = "TwipsPerBar"
@@ -98,9 +98,9 @@ Private Const PropDfltDfltRegnStyleGridlineSpacingY     As Double = 1.8
 Private Const PropDfltDfltRegnStyleGridTextColor        As Long = vbBlack
 Private Const PropDfltDfltRegnStyleHasGrid              As Boolean = True
 Private Const PropDfltDfltRegnStyleHasGridtext          As Boolean = False
-Private Const PropDfltDfltRegnStylePointerStyle         As Long = PointerStyles.PointerCrosshairs
 Private Const PropDfltPointerDiscColor                  As Long = &H89FFFF
 Private Const PropDfltPointerCrosshairsColor            As Long = &HC1DFE
+Private Const PropDfltPointerStyle                      As Long = PointerStyles.PointerCrosshairs
 Private Const PropDfltShowHorizontalScrollBar           As Boolean = True
 Private Const PropDfltShowToolbar                       As Boolean = True
 Private Const PropDfltTwipsPerBar                       As Long = 150
@@ -177,7 +177,7 @@ RegionDefaultGridlineSpacingY = PropDfltDfltRegnStyleGridlineSpacingY
 RegionDefaultGridTextColor = PropDfltDfltRegnStyleGridTextColor
 RegionDefaultHasGrid = PropDfltDfltRegnStyleHasGrid
 RegionDefaultHasGridText = PropDfltDfltRegnStyleHasGridtext
-RegionDefaultPointerStyle = PropDfltDfltRegnStylePointerStyle
+PointerStyle = PropDfltPointerStyle
 PointerCrosshairsColor = PropDfltPointerCrosshairsColor
 PointerDiscColor = PropDfltPointerDiscColor
 showHorizontalScrollBar = PropDfltShowHorizontalScrollBar
@@ -264,9 +264,9 @@ If Err.Number <> 0 Then
     Err.clear
 End If
 
-RegionDefaultPointerStyle = PropBag.ReadProperty(PropNameDfltRegnStylePointerStyle, PropDfltDfltRegnStylePointerStyle)
+PointerStyle = PropBag.ReadProperty(PropNamePointerStyle, PropDfltPointerStyle)
 If Err.Number <> 0 Then
-    RegionDefaultPointerStyle = PropDfltDfltRegnStylePointerStyle
+    PointerStyle = PropDfltPointerStyle
     Err.clear
 End If
 
@@ -333,7 +333,7 @@ PropBag.WriteProperty PropNameDfltRegnStyleGridlineSpacingY, RegionDefaultGridli
 PropBag.WriteProperty PropNameDfltRegnStyleGridTextColor, RegionDefaultGridTextColor, PropDfltDfltRegnStyleGridTextColor
 PropBag.WriteProperty PropNameDfltRegnStyleHasGrid, RegionDefaultHasGrid, PropDfltDfltRegnStyleHasGrid
 PropBag.WriteProperty PropNameDfltRegnStyleHasGridtext, RegionDefaultHasGridText, PropDfltDfltRegnStyleHasGridtext
-PropBag.WriteProperty PropNameDfltRegnStylePointerStyle, RegionDefaultPointerStyle, PropDfltDfltRegnStylePointerStyle
+PropBag.WriteProperty PropNamePointerStyle, PointerStyle, PropDfltPointerStyle
 PropBag.WriteProperty PropNamePointerCrosshairsColor, PointerCrosshairsColor, PropDfltPointerCrosshairsColor
 PropBag.WriteProperty PropNamePointerDiscColor, PointerDiscColor, PropDfltPointerDiscColor
 PropBag.WriteProperty PropNameShowHorizontalScrollBar, showHorizontalScrollBar, PropDfltShowHorizontalScrollBar
@@ -380,7 +380,7 @@ End Sub
 Private Sub mTimeframe_BarsLoaded()
 Dim stateEv As StateChangeEvent
 
-Chart1.suppressDrawing = False
+Chart1.SuppressDrawing = False
 
 mHistDataLoaded = True
 
@@ -483,6 +483,14 @@ Public Property Let PointerDiscColor(ByVal value As OLE_COLOR)
 Chart1.PointerDiscColor = value
 End Property
 
+Public Property Get PointerStyle() As PointerStyles
+PointerStyle = Chart1.PointerStyle
+End Property
+
+Public Property Let PointerStyle(ByVal value As PointerStyles)
+Chart1.PointerStyle = value
+End Property
+
 Public Property Get priceRegion() As ChartRegion
 Set priceRegion = mPriceRegion
 End Property
@@ -557,15 +565,6 @@ End Property
 
 Public Property Let RegionDefaultHasGridText(ByVal val As Boolean)
 Chart1.RegionDefaultHasGridText = val
-End Property
-
-Public Property Get RegionDefaultPointerStyle() As PointerStyles
-Attribute RegionDefaultPointerStyle.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-RegionDefaultPointerStyle = Chart1.RegionDefaultPointerStyle
-End Property
-
-Public Property Let RegionDefaultPointerStyle(ByVal value As PointerStyles)
-Chart1.RegionDefaultPointerStyle = value
 End Property
 
 Public Property Get regionNames() As String()
@@ -805,7 +804,7 @@ studyValueConfig.includeInChart = True
 If Not mVolumeStyle Is Nothing Then
     Set volumeStyle = mVolumeStyle
 Else
-    Set volumeStyle = Chart1.defaultDataPointStyle
+    Set volumeStyle = Chart1.DefaultDataPointStyle
     volumeStyle.upColor = vbGreen
     volumeStyle.downColor = vbRed
     volumeStyle.displayMode = DataPointDisplayModeHistogram
@@ -821,31 +820,31 @@ Dim regionStyle As ChartRegionStyle
 
 Set mChartController = Chart1.controller
 
-Chart1.suppressDrawing = True
+Chart1.SuppressDrawing = True
 
 Chart1.clearChart
 
 If Not mPriceRegionStyle Is Nothing Then
     Set regionStyle = mPriceRegionStyle
 Else
-    Set regionStyle = Chart1.defaultRegionStyle
-    regionStyle.gridlineSpacingY = 2
+    Set regionStyle = Chart1.DefaultRegionStyle
+    regionStyle.GridlineSpacingY = 2
 End If
 
-Set mPriceRegion = mChartController.addChartRegion(100, 25, regionStyle, , RegionNamePrice)
+Set mPriceRegion = mChartController.AddChartRegion(100, 25, regionStyle, , RegionNamePrice)
 
 If Not mVolumeRegionStyle Is Nothing Then
     Set regionStyle = mVolumeRegionStyle
 Else
-    Set regionStyle = Chart1.defaultRegionStyle
-    regionStyle.gridlineSpacingY = 0.8
-    regionStyle.minimumHeight = 10
-    regionStyle.integerYScale = True
+    Set regionStyle = Chart1.DefaultRegionStyle
+    regionStyle.GridlineSpacingY = 0.8
+    regionStyle.MinimumHeight = 10
+    regionStyle.IntegerYScale = True
 End If
 
-Set mVolumeRegion = mChartController.addChartRegion(20, , regionStyle, , RegionNameVolume)
+Set mVolumeRegion = mChartController.AddChartRegion(20, , regionStyle, , RegionNameVolume)
 
-Chart1.suppressDrawing = False
+Chart1.SuppressDrawing = False
 
 End Sub
 
@@ -853,7 +852,7 @@ Private Sub loadchart()
 
 Set mContract = mTicker.Contract
 
-Chart1.suppressDrawing = True
+Chart1.SuppressDrawing = True
 
 Chart1.barTimePeriod = mBarTimePeriod
 
@@ -862,18 +861,18 @@ Chart1.sessionEndTime = mContract.sessionEndTime
 
 mPriceRegion.YScaleQuantum = mContract.ticksize
 If mMinimumTicksHeight * mContract.ticksize <> 0 Then
-    mPriceRegion.minimumHeight = mMinimumTicksHeight * mContract.ticksize
+    mPriceRegion.MinimumHeight = mMinimumTicksHeight * mContract.ticksize
 End If
 
-mPriceRegion.setTitle mContract.specifier.localSymbol & _
+mPriceRegion.Title.Text = mContract.specifier.localSymbol & _
                 " (" & mContract.specifier.exchange & ") " & _
-                timeframeCaption, _
-                vbBlue, _
-                Nothing
+                timeframeCaption
+mPriceRegion.Title.Color = vbBlue
 
-mVolumeRegion.setTitle "Volume", vbBlue, Nothing
+mVolumeRegion.Title.Text = "Volume"
+mVolumeRegion.Title.Color = vbBlue
 
-Chart1.suppressDrawing = False
+Chart1.SuppressDrawing = False
 
 Set mTimeframes = mTicker.Timeframes
 
@@ -892,8 +891,10 @@ Else
                                 IIf(mTicker.replayingTickfile, True, False))
 End If
 
-If Not mTimeframe.historicDataLoaded Then
-    Chart1.suppressDrawing = True
+If mTimeframe.historicDataLoaded Then
+    mHistDataLoaded = True
+Else
+    Chart1.SuppressDrawing = True
 End If
 
 showStudies
