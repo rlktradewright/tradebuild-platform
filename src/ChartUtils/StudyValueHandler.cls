@@ -207,19 +207,19 @@ End Sub
 Public Sub finish( _
                 ByVal removeSeries As Boolean)
 If Not mDataSeries Is Nothing Then
-    If removeSeries Then mRegion.removeDataPointSeries mDataSeries
+    If removeSeries Then mRegion.RemoveGraphicObjectSeries mDataSeries
     Set mDataSeries = Nothing
 End If
 If Not mBarSeries Is Nothing Then
-    If removeSeries Then mRegion.removeBarSeries mBarSeries
+    If removeSeries Then mRegion.RemoveGraphicObjectSeries mBarSeries
     Set mBarSeries = Nothing
 End If
 If Not mLineSeries Is Nothing Then
-    If removeSeries Then mRegion.removeLineSeries mLineSeries
+    If removeSeries Then mRegion.RemoveGraphicObjectSeries mLineSeries
     Set mLineSeries = Nothing
 End If
 If Not mTextSeries Is Nothing Then
-    If removeSeries Then mRegion.removeTextSeries mTextSeries
+    If removeSeries Then mRegion.RemoveGraphicObjectSeries mTextSeries
     Set mTextSeries = Nothing
 End If
 End Sub
@@ -239,8 +239,8 @@ mUpdatePerTick = updatePerTick
 If Not IsEmpty(studyValueDef.maximumValue) Or _
     Not IsEmpty(studyValueDef.minimumValue) _
 Then
-    region.autoscale = False
-    region.setVerticalScale CSng(studyValueDef.minimumValue), _
+    region.Autoscale = False
+    region.SetVerticalScale CSng(studyValueDef.minimumValue), _
                             CSng(studyValueDef.maximumValue)
 End If
 
@@ -412,7 +412,7 @@ If pConditionalAction.not Then conditionSatisfied = (Not conditionSatisfied)
 If conditionSatisfied Then
     Select Case pConditionalAction.action
     Case StudyRenderingActions.SRActSetPeriodBackgroundColor
-        mRegion.setPeriodBackgroundColor chartMgr.getPeriod(timestamp).periodNumber, CLng(pConditionalAction.actionValue)
+        mRegion.SetPeriodBackgroundColor chartMgr.getPeriod(timestamp).periodNumber, CLng(pConditionalAction.actionValue)
     Case StudyRenderingActions.SRActSetValueColor
         mCurrentDataPoint.upColor = CLng(pConditionalAction.actionValue)
         mCurrentDataPoint.downColor = CLng(pConditionalAction.actionValue)
@@ -515,30 +515,26 @@ End Sub
 
 Private Sub setupBarSeries( _
                 ByVal studyValueConfig As StudyValueConfiguration)
-Set mBarSeries = mRegion.addBarSeries(studyValueConfig.layer, _
-                                        , _
-                                        studyValueConfig.barStyle)
+Set mBarSeries = mRegion.AddGraphicObjectSeries(New BarSeries, studyValueConfig.layer)
+mBarSeries.style = studyValueConfig.barStyle
 End Sub
 
 Private Sub setupDataSeries( _
                 ByVal studyValueConfig As StudyValueConfiguration)
-Set mDataSeries = mRegion.addDataPointSeries(studyValueConfig.layer, _
-                                            , _
-                                            studyValueConfig.dataPointStyle)
+Set mDataSeries = mRegion.AddGraphicObjectSeries(New DataPointSeries, studyValueConfig.layer)
+mDataSeries.style = studyValueConfig.dataPointStyle
 End Sub
 
 Private Sub setupLineSeries( _
                 ByVal studyValueConfig As StudyValueConfiguration)
-Set mLineSeries = mRegion.addLineSeries(studyValueConfig.layer, _
-                                        , _
-                                        studyValueConfig.lineStyle)
+Set mLineSeries = mRegion.AddGraphicObjectSeries(New LineSeries, studyValueConfig.layer)
+mLineSeries.style = studyValueConfig.lineStyle
 End Sub
 
 Private Sub setupTextSeries( _
                 ByVal studyValueConfig As StudyValueConfiguration)
-Set mTextSeries = mRegion.addTextSeries(studyValueConfig.layer, _
-                                        , _
-                                        studyValueConfig.textStyle)
+Set mTextSeries = mRegion.AddGraphicObjectSeries(New TextSeries, studyValueConfig.layer)
+mTextSeries.style = studyValueConfig.textStyle
 Set mTextOffset = studyValueConfig.offset
 End Sub
 

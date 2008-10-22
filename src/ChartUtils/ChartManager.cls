@@ -98,7 +98,7 @@ If ev.errorNumber <> 0 Then
     Debug.Print "Task: " & ev.taskName; "; Error: " & ev.errorNumber; "; Message: "; ev.errorMessage
 End If
 
-mChartController.suppressDrawing = False
+mChartController.SuppressDrawing = False
 
 End Sub
 
@@ -203,7 +203,7 @@ If Not noStudyValueListeners Then
 End If
 
 If studyConfig.studyHorizontalRules.count > 0 Then
-    Set horizRulesLineSeries = region.addLineSeries(LayerNumbers.LayerGrid + 1)
+    Set horizRulesLineSeries = region.AddGraphicObjectSeries(New LineSeries, LayerNumbers.LayerGrid + 1)
     horizRulesLineSeries.extended = True
     horizRulesLineSeries.extendAfter = True
     horizRulesLineSeries.extendBefore = True
@@ -265,7 +265,7 @@ On Error GoTo 0
 
 If getPeriod Is Nothing Then
     Set getPeriod = mPeriods.add(pTimestamp)
-    mChartController.scrollX 1
+    mChartController.ScrollX 1
 End If
 Set sPeriod = getPeriod
 sTimestamp = pTimestamp
@@ -311,14 +311,14 @@ Dim regionName As String
 Dim re As RegionEntry
 Dim region As ChartRegion
 
-mChartController.suppressDrawing = True
+mChartController.SuppressDrawing = True
 For Each svh In studyConfig.studyValueHandlers
     studyConfig.study.removeStudyValueListener svh
     regionName = svh.region.name
     re = mRegions(regionName)
     If re.usageCount = 1 Then
         svh.finish False
-        mChartController.removeChartRegion re.region
+        mChartController.RemoveChartRegion re.region
         mRegions.remove regionName
     Else
         svh.finish True
@@ -336,17 +336,17 @@ If Not horizRulesLineSeries Is Nothing Then
     On Error GoTo 0
     If Not re.region Is Nothing Then
         Set region = re.region
-        region.removeLineSeries horizRulesLineSeries
+        region.RemoveGraphicObjectSeries horizRulesLineSeries
     End If
 End If
-mChartController.suppressDrawing = False
+mChartController.SuppressDrawing = False
 mStudyConfigurations.remove studyConfig
 End Function
 
 Public Sub scrollToTime(ByVal pTime As Date)
 Dim periodNumber As Long
 periodNumber = mPeriods(pTime).periodNumber
-mChartController.lastVisiblePeriod = periodNumber + Int((mChartController.lastVisiblePeriod - mChartController.firstVisiblePeriod) / 2) - 1
+mChartController.LastVisiblePeriod = periodNumber + Int((mChartController.LastVisiblePeriod - mChartController.FirstVisiblePeriod) / 2) - 1
 End Sub
 
 Public Sub setInputRegion( _
@@ -466,7 +466,7 @@ If lTaskCompletion Is Nothing Then Exit Function
 
 Set startStudy = lTaskCompletion
 lTaskCompletion.addTaskCompletionListener Me
-mChartController.suppressDrawing = True
+mChartController.SuppressDrawing = True
 End Function
 
 '@================================================================================
@@ -504,13 +504,14 @@ On Error GoTo 0
 Set findRegion = re.region
 
 If findRegion Is Nothing Then
-    Set findRegion = mChartController.getChartRegion(regionName)
+    Set findRegion = mChartController.GetChartRegion(regionName)
     If findRegion Is Nothing Then
-        Set regionStyle = mChartController.defaultRegionStyle
-        regionStyle.gridlineSpacingY = 0.8
-        regionStyle.hasGrid = True
-        Set findRegion = mChartController.addChartRegion(20, , regionStyle, , regionName)
-        findRegion.setTitle title, vbBlue, Nothing
+        Set regionStyle = mChartController.DefaultRegionStyle
+        regionStyle.GridlineSpacingY = 0.8
+        regionStyle.HasGrid = True
+        Set findRegion = mChartController.AddChartRegion(20, , regionStyle, , regionName)
+        findRegion.title.Text = title
+        findRegion.title.color = vbBlue
     End If
     Set re.region = findRegion
     If incrementUsageCount Then re.usageCount = 1
@@ -562,7 +563,7 @@ Set lTaskCompletion = study.addStudyValueListener( _
 If Not lTaskCompletion Is Nothing Then
     'mOutstandingTasks = mOutstandingTasks + 1
     lTaskCompletion.addTaskCompletionListener Me
-    mChartController.suppressDrawing = True
+    mChartController.SuppressDrawing = True
 End If
 Set includeStudyValueInChart = lTaskCompletion
 End Function
