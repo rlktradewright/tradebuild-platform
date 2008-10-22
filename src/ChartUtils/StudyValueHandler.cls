@@ -516,25 +516,25 @@ End Sub
 Private Sub setupBarSeries( _
                 ByVal studyValueConfig As StudyValueConfiguration)
 Set mBarSeries = mRegion.AddGraphicObjectSeries(New BarSeries, studyValueConfig.layer)
-mBarSeries.style = studyValueConfig.barStyle
+If Not studyValueConfig.barStyle Is Nothing Then mBarSeries.style = studyValueConfig.barStyle
 End Sub
 
 Private Sub setupDataSeries( _
                 ByVal studyValueConfig As StudyValueConfiguration)
 Set mDataSeries = mRegion.AddGraphicObjectSeries(New DataPointSeries, studyValueConfig.layer)
-mDataSeries.style = studyValueConfig.dataPointStyle
+If Not studyValueConfig.dataPointStyle Is Nothing Then mDataSeries.style = studyValueConfig.dataPointStyle
 End Sub
 
 Private Sub setupLineSeries( _
                 ByVal studyValueConfig As StudyValueConfiguration)
 Set mLineSeries = mRegion.AddGraphicObjectSeries(New LineSeries, studyValueConfig.layer)
-mLineSeries.style = studyValueConfig.lineStyle
+If Not studyValueConfig.lineStyle Is Nothing Then mLineSeries.style = studyValueConfig.lineStyle
 End Sub
 
 Private Sub setupTextSeries( _
                 ByVal studyValueConfig As StudyValueConfiguration)
 Set mTextSeries = mRegion.AddGraphicObjectSeries(New TextSeries, studyValueConfig.layer)
-mTextSeries.style = studyValueConfig.textStyle
+If Not studyValueConfig.textStyle Is Nothing Then mTextSeries.style = studyValueConfig.textStyle
 Set mTextOffset = studyValueConfig.offset
 End Sub
 
