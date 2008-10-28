@@ -56,6 +56,12 @@ Public Enum CanvasComparisonCodes
     BoundsChangedY = 16
 End Enum
 
+Public Enum GraphicObjectCapabilities
+    ComplexBounding = 1
+    PartialRedraw = 2
+    BlockUndraw = 4
+End Enum
+
 Public Enum CoordinateSystems
     CoordsLogical = 0
     CoordsRelative
@@ -101,15 +107,19 @@ Public Enum FillStyles
 End Enum
 
 Public Enum LayerNumbers
+    LayerMin = MinLayer
     LayerBackground = MinLayer
     LayerGrid = MinLayer + 5
     LayerGridText = LayerGrid + 3
     LayerLowestUser = MinLayer + 10
-    LayerHighestUser = MaxLayer - 10
+    LayerDefaultBars
+    LayerDefaultDataPoints
     LayerDefaultLines
     LayerDefaultTexts
+    LayerHighestUser = MaxLayer - 10
     LayerTitle = MaxLayer - 5
-    LayerPointer = MaxLayer
+    LayerPointer = MaxLayer - 2
+    LayerMax = MaxLayer
 End Enum
 
 Public Enum LineStyles
@@ -126,6 +136,7 @@ Public Enum PointerStyles
     PointerNone
     PointerCrosshairs
     PointerDisc
+    PointerTool
 End Enum
 
 Public Enum PointStyles
@@ -154,24 +165,24 @@ Public Enum TextAlignModes
     AlignBoxBottomRight
 End Enum
 
-Public Enum ToolTypes
-    ToolPointer
-    ToolLine
-    ToolLineExtended
-    ToolLineRay
-    ToolLineHorizontal
-    ToolLineVertical
-    ToolFibonacciRetracement
-    ToolFibonacciExtension
-    ToolFibonacciCircle
-    ToolFibonacciTime
-    ToolRegressionChannel
-    ToolRegressionEnvelope
-    ToolText
-    ToolPitchfork
-    ToolCircle
-    ToolRectangle
-End Enum
+'Public Enum ToolTypes
+'    ToolPointer
+'    ToolLine
+'    ToolLineExtended
+'    ToolLineRay
+'    ToolLineHorizontal
+'    ToolLineVertical
+'    ToolFibonacciRetracement
+'    ToolFibonacciExtension
+'    ToolFibonacciCircle
+'    ToolFibonacciTime
+'    ToolRegressionChannel
+'    ToolRegressionEnvelope
+'    ToolText
+'    ToolPitchfork
+'    ToolCircle
+'    ToolRectangle
+'End Enum
 
 Public Enum Verticals
     VerticalNot
@@ -194,6 +205,14 @@ Public Type TInterval
     isValid         As Boolean
     startValue      As Double
     endValue        As Double
+End Type
+
+Public Type TRectangle
+    Bottom          As Double
+    Left            As Double
+    Right           As Double
+    Top             As Double
+    isValid         As Boolean
 End Type
 
 '@================================================================================
@@ -235,7 +254,7 @@ Public Function CreateDataPointStyle() As DataPointStyle
 Set CreateDataPointStyle = gCreateDataPointStyle
 End Function
 
-Public Function CreateLineStyle() As linestyle
+Public Function CreateLineStyle() As LineStyle
 Set CreateLineStyle = gCreateLineStyle
 End Function
 

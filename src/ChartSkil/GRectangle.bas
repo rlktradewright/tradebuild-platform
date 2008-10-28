@@ -61,9 +61,16 @@ Private Const ModuleName                    As String = "GRectangle"
 ' use of
 '================================================================================
 
+Public Function IntContains( _
+                ByRef pInt As TInterval, _
+                ByVal x As Double) As Boolean
+If Not pInt.isValid Then Exit Function
+IntContains = (x >= pInt.startValue) And (x <= pInt.endValue)
+End Function
+
 Public Function intIntersection( _
-                        ByRef int1 As TInterval, _
-                        ByRef int2 As TInterval) As TInterval
+                ByRef int1 As TInterval, _
+                ByRef int2 As TInterval) As TInterval
 Dim startValue1 As Double
 Dim endValue1 As Double
 Dim startValue2 As Double
@@ -102,8 +109,9 @@ With intIntersection
 End With
 End Function
 
-Public Function intOverlaps(ByRef int1 As TInterval, _
-                        ByRef int2 As TInterval) As Boolean
+Public Function intOverlaps( _
+                ByRef int1 As TInterval, _
+                ByRef int2 As TInterval) As Boolean
                         
 intOverlaps = True
 
@@ -119,9 +127,21 @@ End If
 intOverlaps = False
 End Function
 
+Public Function RectContains( _
+                ByRef rect As TRectangle, _
+                ByVal x As Double, _
+                ByVal y As Double) As Boolean
+If Not rect.isValid Then Exit Function
+If x < rect.left Then Exit Function
+If x > rect.right Then Exit Function
+If y < rect.bottom Then Exit Function
+If y > rect.top Then Exit Function
+RectContains = True
+End Function
+
 Public Function rectEquals( _
-                        ByRef rect1 As TRectangle, _
-                        ByRef rect2 As TRectangle) As Boolean
+                ByRef rect1 As TRectangle, _
+                ByRef rect2 As TRectangle) As Boolean
 With rect1
     If Not .isValid Or Not rect2.isValid Then Exit Function
     If .bottom <> rect2.bottom Then Exit Function
@@ -132,7 +152,8 @@ End With
 rectEquals = True
 End Function
 
-Public Sub rectInitialise(ByRef rect As TRectangle)
+Public Sub rectInitialise( _
+                ByRef rect As TRectangle)
 With rect
     .isValid = False
     .left = PlusInfinityDouble
@@ -143,8 +164,8 @@ End With
 End Sub
 
 Public Function rectIntersection( _
-                        ByRef rect1 As TRectangle, _
-                        ByRef rect2 As TRectangle) As TRectangle
+                ByRef rect1 As TRectangle, _
+                ByRef rect2 As TRectangle) As TRectangle
 Dim xInt As TInterval
 Dim yint As TInterval
 xInt = intIntersection(rectGetXInterval(rect1), rectGetXInterval(rect2))
@@ -160,26 +181,27 @@ End Function
 
 
 Public Function rectOverlaps( _
-                        ByRef rect1 As TRectangle, _
-                        ByRef rect2 As TRectangle) As Boolean
+                ByRef rect1 As TRectangle, _
+                ByRef rect2 As TRectangle) As Boolean
 rectOverlaps = intOverlaps(rectGetXInterval(rect1), rectGetXInterval(rect2)) And _
             intOverlaps(rectGetYInterval(rect1), rectGetYInterval(rect2))
             
 End Function
 
 Public Function rectXIntersection( _
-                        ByRef rect1 As TRectangle, _
-                        ByRef rect2 As TRectangle) As TInterval
+                ByRef rect1 As TRectangle, _
+                ByRef rect2 As TRectangle) As TInterval
 rectXIntersection = intIntersection(rectGetXInterval(rect1), rectGetXInterval(rect2))
 End Function
 
 Public Function rectYIntersection( _
-                        ByRef rect1 As TRectangle, _
-                        ByRef rect2 As TRectangle) As TInterval
+                ByRef rect1 As TRectangle, _
+                ByRef rect2 As TRectangle) As TInterval
 rectYIntersection = intIntersection(rectGetYInterval(rect1), rectGetYInterval(rect2))
 End Function
 
-Public Function rectGetXInterval(ByRef rect As TRectangle) As TInterval
+Public Function rectGetXInterval( _
+                ByRef rect As TRectangle) As TInterval
 With rectGetXInterval
 .startValue = rect.left
 .endValue = rect.right
@@ -187,7 +209,8 @@ With rectGetXInterval
 End With
 End Function
 
-Public Function rectGetYInterval(ByRef rect As TRectangle) As TInterval
+Public Function rectGetYInterval( _
+                ByRef rect As TRectangle) As TInterval
 With rectGetYInterval
     .startValue = rect.bottom
     .endValue = rect.top
@@ -195,7 +218,9 @@ With rectGetYInterval
 End With
 End Function
 
-Public Sub rectSetXInterval(ByRef rect As TRectangle, ByRef interval As TInterval)
+Public Sub rectSetXInterval( _
+                ByRef rect As TRectangle, _
+                ByRef interval As TInterval)
 With rect
     .left = interval.startValue
     .right = interval.endValue
@@ -203,7 +228,9 @@ With rect
 End With
 End Sub
 
-Public Sub rectSetYInterval(ByRef rect As TRectangle, ByRef interval As TInterval)
+Public Sub rectSetYInterval( _
+                ByRef rect As TRectangle, _
+                ByRef interval As TInterval)
 With rect
     .bottom = interval.startValue
     .top = interval.endValue
@@ -211,7 +238,9 @@ With rect
 End With
 End Sub
 
-Public Function rectUnion(ByRef rect1 As TRectangle, ByRef rect2 As TRectangle) As TRectangle
+Public Function rectUnion( _
+                ByRef rect1 As TRectangle, _
+                ByRef rect2 As TRectangle) As TRectangle
 If Not (rect1.isValid And rect2.isValid) Then
     If rect1.isValid Then
         rectUnion = rect1
@@ -248,7 +277,8 @@ With rectUnion
 End With
 End Function
 
-Public Sub rectValidate(ByRef rect As TRectangle)
+Public Sub rectValidate( _
+                ByRef rect As TRectangle)
 With rect
     If .left <= .right And .bottom <= .top Then
         .isValid = True

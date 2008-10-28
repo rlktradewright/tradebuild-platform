@@ -33,6 +33,7 @@ Event KeyPress(KeyAscii As Integer)
 Event KeyUp(KeyCode As Integer, Shift As Integer)
 Event RegionsChanged(ev As CollectionChangeEvent)
 Event PeriodsChanged(ev As CollectionChangeEvent)
+Event RegionSelected(ByVal region As ChartRegion)
 
 '================================================================================
 ' Constants
@@ -65,37 +66,37 @@ Attribute mChartRef.VB_VarHelpID = -1
 ' Properties
 '================================================================================
 
-Public Property Get allowHorizontalMouseScrolling() As Boolean
-allowHorizontalMouseScrolling = chartObj.allowHorizontalMouseScrolling
+Public Property Get AllowHorizontalMouseScrolling() As Boolean
+AllowHorizontalMouseScrolling = chartObj.AllowHorizontalMouseScrolling
 End Property
 
-Public Property Let allowHorizontalMouseScrolling(ByVal value As Boolean)
-chartObj.allowHorizontalMouseScrolling = value
+Public Property Let AllowHorizontalMouseScrolling(ByVal value As Boolean)
+chartObj.AllowHorizontalMouseScrolling = value
 End Property
 
-Public Property Get allowVerticalMouseScrolling() As Boolean
-allowVerticalMouseScrolling = chartObj.allowVerticalMouseScrolling
+Public Property Get AllowVerticalMouseScrolling() As Boolean
+AllowVerticalMouseScrolling = chartObj.AllowVerticalMouseScrolling
 End Property
 
-Public Property Let allowVerticalMouseScrolling(ByVal value As Boolean)
-chartObj.allowVerticalMouseScrolling = value
+Public Property Let AllowVerticalMouseScrolling(ByVal value As Boolean)
+chartObj.AllowVerticalMouseScrolling = value
 End Property
 
-Public Property Get autoscroll() As Boolean
-autoscroll = chartObj.autoscroll
+Public Property Get Autoscroll() As Boolean
+Autoscroll = chartObj.Autoscroll
 End Property
 
-Public Property Let autoscroll(ByVal value As Boolean)
-chartObj.autoscroll = value
+Public Property Let Autoscroll(ByVal value As Boolean)
+chartObj.Autoscroll = value
 End Property
 
-Public Property Let barTimePeriod( _
+Public Property Let BarTimePeriod( _
                 ByVal value As TimePeriod)
-chartObj.barTimePeriod = value
+chartObj.BarTimePeriod = value
 End Property
 
-Public Property Get barTimePeriod() As TimePeriod
-Set barTimePeriod = chartObj.barTimePeriod
+Public Property Get BarTimePeriod() As TimePeriod
+Set BarTimePeriod = chartObj.BarTimePeriod
 End Property
 
 Friend Property Let Chart( _
@@ -103,117 +104,117 @@ Friend Property Let Chart( _
 Set mChartRef = CreateWeakReference(value)
 End Property
 
-Public Property Get chartBackColor() As OLE_COLOR
-chartBackColor = chartObj.chartBackColor
+Public Property Get ChartBackColor() As OLE_COLOR
+ChartBackColor = chartObj.ChartBackColor
 End Property
 
-Public Property Let chartBackColor(ByVal val As OLE_COLOR)
-chartObj.chartBackColor = val
+Public Property Let ChartBackColor(ByVal val As OLE_COLOR)
+chartObj.ChartBackColor = val
 End Property
 
-Public Property Get chartLeft() As Single
-chartLeft = chartObj.chartLeft
+Public Property Get ChartLeft() As Single
+ChartLeft = chartObj.ChartLeft
 End Property
 
-Public Property Get chartWidth() As Single
-chartWidth = chartObj.chartWidth
+Public Property Get ChartWidth() As Single
+ChartWidth = chartObj.ChartWidth
 End Property
 
 Public Property Get currentPeriodNumber() As Long
 currentPeriodNumber = chartObj.currentPeriodNumber
 End Property
 
-Public Property Get currentSessionEndTime() As Date
-currentSessionEndTime = chartObj.currentSessionEndTime
+Public Property Get CurrentSessionEndTime() As Date
+CurrentSessionEndTime = chartObj.CurrentSessionEndTime
 End Property
 
-Public Property Get currentSessionStartTime() As Date
-currentSessionStartTime = chartObj.currentSessionStartTime
+Public Property Get CurrentSessionStartTime() As Date
+CurrentSessionStartTime = chartObj.CurrentSessionStartTime
 End Property
 
-Public Property Get defaultBarDisplayMode() As BarDisplayModes
-defaultBarDisplayMode = chartObj.defaultBarDisplayMode
+Public Property Get DefaultBarDisplayMode() As BarDisplayModes
+DefaultBarDisplayMode = chartObj.DefaultBarDisplayMode
 End Property
 
-Public Property Let defaultBarDisplayMode( _
+Public Property Let DefaultBarDisplayMode( _
                 ByVal value As BarDisplayModes)
-chartObj.defaultBarDisplayMode = value
+chartObj.DefaultBarDisplayMode = value
 End Property
 
-Public Property Get defaultBarStyle() As BarStyle
-Set defaultBarStyle = chartObj.defaultBarStyle
+Public Property Get DefaultBarStyle() As BarStyle
+Set DefaultBarStyle = chartObj.DefaultBarStyle
 End Property
 
-Public Property Let defaultBarStyle( _
+Public Property Let DefaultBarStyle( _
                 ByVal value As BarStyle)
-chartObj.defaultRegionStyle = value
+chartObj.DefaultRegionStyle = value
 End Property
 
-Public Property Get defaultDataPointStyle() As DataPointStyle
-Set defaultDataPointStyle = chartObj.defaultDataPointStyle
+Public Property Get DefaultDataPointStyle() As DataPointStyle
+Set DefaultDataPointStyle = chartObj.DefaultDataPointStyle
 End Property
 
-Public Property Let defaultDataPointStyle( _
+Public Property Let DefaultDataPointStyle( _
                 ByVal value As DataPointStyle)
-chartObj.defaultDataPointStyle = value
+chartObj.DefaultDataPointStyle = value
 End Property
 
-Public Property Get defaultLineStyle() As linestyle
-Set defaultLineStyle = chartObj.defaultLineStyle
+Public Property Get DefaultLineStyle() As linestyle
+Set DefaultLineStyle = chartObj.DefaultLineStyle
 End Property
 
-Public Property Let defaultLineStyle( _
+Public Property Let DefaultLineStyle( _
                 ByVal value As linestyle)
-chartObj.defaultLineStyle = value
+chartObj.DefaultLineStyle = value
 End Property
 
-Public Property Get defaultRegionStyle() As ChartRegionStyle
-Set defaultRegionStyle = chartObj.defaultRegionStyle
+Public Property Get DefaultRegionStyle() As ChartRegionStyle
+Set DefaultRegionStyle = chartObj.DefaultRegionStyle
 End Property
 
-Public Property Let defaultRegionStyle( _
+Public Property Let DefaultRegionStyle( _
                 ByVal value As ChartRegionStyle)
-chartObj.defaultRegionStyle = value
+chartObj.DefaultRegionStyle = value
 End Property
 
-Public Property Get defaultTextStyle() As TextStyle
-Set defaultTextStyle = chartObj.defaultTextStyle
+Public Property Get DefaultTextStyle() As TextStyle
+Set DefaultTextStyle = chartObj.DefaultTextStyle
 End Property
 
-Public Property Let defaultTextStyle(ByVal value As TextStyle)
-chartObj.defaultTextStyle = value
+Public Property Let DefaultTextStyle(ByVal value As TextStyle)
+chartObj.DefaultTextStyle = value
 End Property
 
-Public Property Get defaultYAxisStyle() As ChartRegionStyle
-Set defaultYAxisStyle = chartObj.defaultYAxisStyle
+Public Property Get DefaultYAxisStyle() As ChartRegionStyle
+Set DefaultYAxisStyle = chartObj.DefaultYAxisStyle
 End Property
 
-Public Property Let defaultYAxisStyle(ByVal value As ChartRegionStyle)
-chartObj.defaultYAxisStyle = value
+Public Property Let DefaultYAxisStyle(ByVal value As ChartRegionStyle)
+chartObj.DefaultYAxisStyle = value
 End Property
 
-Public Property Get firstVisiblePeriod() As Long
-firstVisiblePeriod = chartObj.firstVisiblePeriod
+Public Property Get FirstVisiblePeriod() As Long
+FirstVisiblePeriod = chartObj.FirstVisiblePeriod
 End Property
 
-Public Property Let firstVisiblePeriod(ByVal value As Long)
-chartObj.firstVisiblePeriod = value
+Public Property Let FirstVisiblePeriod(ByVal value As Long)
+chartObj.FirstVisiblePeriod = value
 End Property
 
-Public Property Get lastVisiblePeriod() As Long
-lastVisiblePeriod = chartObj.lastVisiblePeriod
+Public Property Get LastVisiblePeriod() As Long
+LastVisiblePeriod = chartObj.LastVisiblePeriod
 End Property
 
-Public Property Let lastVisiblePeriod(ByVal value As Long)
-chartObj.lastVisiblePeriod = value
+Public Property Let LastVisiblePeriod(ByVal value As Long)
+chartObj.LastVisiblePeriod = value
 End Property
 
 Public Property Get Periods() As Periods
 Set Periods = chartObj.Periods
 End Property
 
-Public Property Let pointerStyle(ByVal value As PointerStyles)
-chartObj.pointerStyle = value
+Public Property Let PointerStyle(ByVal value As PointerStyles)
+chartObj.PointerStyle = value
 End Property
 
 Public Property Get PointerCrosshairsColor() As Long
@@ -232,65 +233,65 @@ Public Property Let PointerDiscColor(ByVal value As Long)
 chartObj.PointerDiscColor = value
 End Property
 
-Public Property Get pointerStyle() As PointerStyles
-pointerStyle = chartObj.pointerStyle
+Public Property Get PointerStyle() As PointerStyles
+PointerStyle = chartObj.PointerStyle
 End Property
 
-Public Property Get sessionEndTime() As Date
-sessionEndTime = chartObj.sessionEndTime
+Public Property Get SessionEndTime() As Date
+SessionEndTime = chartObj.SessionEndTime
 End Property
 
-Public Property Let sessionEndTime(ByVal val As Date)
-chartObj.sessionEndTime = val
+Public Property Let SessionEndTime(ByVal val As Date)
+chartObj.SessionEndTime = val
 End Property
 
-Public Property Get sessionStartTime() As Date
-sessionStartTime = chartObj.sessionStartTime
+Public Property Get SessionStartTime() As Date
+SessionStartTime = chartObj.SessionStartTime
 End Property
 
-Public Property Let sessionStartTime(ByVal val As Date)
-chartObj.sessionStartTime = val
+Public Property Let SessionStartTime(ByVal val As Date)
+chartObj.SessionStartTime = val
 End Property
 
-Public Property Get showHorizontalScrollBar() As Boolean
-showHorizontalScrollBar = chartObj.showHorizontalScrollBar
+Public Property Get ShowHorizontalScrollBar() As Boolean
+ShowHorizontalScrollBar = chartObj.ShowHorizontalScrollBar
 End Property
 
-Public Property Let showHorizontalScrollBar(ByVal val As Boolean)
-chartObj.showHorizontalScrollBar = val
+Public Property Let ShowHorizontalScrollBar(ByVal val As Boolean)
+chartObj.ShowHorizontalScrollBar = val
 End Property
 
-Public Property Get showToolbar() As Boolean
-showToolbar = chartObj.showToolbar
+Public Property Get ShowToolbar() As Boolean
+ShowToolbar = chartObj.ShowToolbar
 End Property
 
-Public Property Let showToolbar(ByVal val As Boolean)
-chartObj.showToolbar = val
+Public Property Let ShowToolbar(ByVal val As Boolean)
+chartObj.ShowToolbar = val
 End Property
 
-Public Property Get suppressDrawing() As Boolean
-suppressDrawing = chartObj.suppressDrawing
+Public Property Get SuppressDrawing() As Boolean
+SuppressDrawing = chartObj.SuppressDrawing
 End Property
 
-Public Property Let suppressDrawing(ByVal val As Boolean)
-chartObj.suppressDrawing = val
+Public Property Let SuppressDrawing(ByVal val As Boolean)
+chartObj.SuppressDrawing = val
 End Property
 
-Public Property Get twipsPerBar() As Long
-twipsPerBar = chartObj.twipsPerBar
+Public Property Get TwipsPerBar() As Long
+TwipsPerBar = chartObj.TwipsPerBar
 End Property
 
-Public Property Let twipsPerBar(ByVal val As Long)
-chartObj.twipsPerBar = val
+Public Property Let TwipsPerBar(ByVal val As Long)
+chartObj.TwipsPerBar = val
 End Property
 
-Public Property Let verticalGridTimePeriod( _
+Public Property Let VerticalGridTimePeriod( _
                 ByVal value As TimePeriod)
-chartObj.verticalGridTimePeriod = value
+chartObj.VerticalGridTimePeriod = value
 End Property
 
-Public Property Get verticalGridTimePeriod() As TimePeriod
-Set verticalGridTimePeriod = chartObj.verticalGridTimePeriod
+Public Property Get VerticalGridTimePeriod() As TimePeriod
+Set VerticalGridTimePeriod = chartObj.VerticalGridTimePeriod
 End Property
 
 Public Property Get XAxisRegion() As ChartRegion
@@ -313,24 +314,24 @@ End Property
 ' Methods
 '================================================================================
 
-Public Function addChartRegion(ByVal percentheight As Double, _
+Public Function AddChartRegion(ByVal percentheight As Double, _
                     Optional ByVal minimumPercentHeight As Double, _
                     Optional ByVal style As ChartRegionStyle, _
                     Optional ByVal yAxisStyle As ChartRegionStyle, _
                     Optional ByVal name As String) As ChartRegion
-Set addChartRegion = chartObj.addChartRegion(percentheight, minimumPercentHeight, style, yAxisStyle, name)
+Set AddChartRegion = chartObj.AddChartRegion(percentheight, minimumPercentHeight, style, yAxisStyle, name)
 End Function
 
 Public Function addPeriod(ByVal timestamp As Date) As period
 Set addPeriod = chartObj.addPeriod(timestamp)
 End Function
 
-Public Sub clearChart()
-chartObj.clearChart
+Public Sub ClearChart()
+chartObj.ClearChart
 End Sub
 
-Public Sub displayGrid()
-chartObj.displayGrid
+Public Sub DisplayGrid()
+chartObj.DisplayGrid
 End Sub
 
 Friend Sub fireChartCleared()
@@ -357,34 +358,34 @@ Friend Sub firePeriodsChanged(ev As CollectionChangeEvent)
 RaiseEvent PeriodsChanged(ev)
 End Sub
 
-Public Function getChartRegion( _
+Friend Sub fireRegionSelected(ByVal region As ChartRegion)
+RaiseEvent RegionSelected(region)
+End Sub
+
+Public Function GetChartRegion( _
                 ByVal name As String) As ChartRegion
-Set getChartRegion = chartObj.getChartRegion(name)
+Set GetChartRegion = chartObj.GetChartRegion(name)
 End Function
 
-Public Sub hideGrid()
-chartObj.hideGrid
+Public Sub HideGrid()
+chartObj.HideGrid
 End Sub
 
-Public Function isGridHidden() As Boolean
-isGridHidden = chartObj.isGridHidden
+Public Function IsGridHidden() As Boolean
+IsGridHidden = chartObj.IsGridHidden
 End Function
 
-Public Function isTimeInSession(ByVal timestamp As Date) As Boolean
-isTimeInSession = chartObj.isTimeInSession(timestamp)
+Public Function IsTimeInSession(ByVal timestamp As Date) As Boolean
+IsTimeInSession = chartObj.IsTimeInSession(timestamp)
 End Function
 
-Public Sub refresh()
-chartObj.refresh
-End Sub
-
-Public Sub removeChartRegion( _
+Public Sub RemoveChartRegion( _
                     ByVal region As ChartRegion)
-chartObj.removeChartRegion region
+chartObj.RemoveChartRegion region
 End Sub
 
-Public Sub scrollX(ByVal value As Long)
-chartObj.scrollX value
+Public Sub ScrollX(ByVal value As Long)
+chartObj.ScrollX value
 End Sub
 
 '================================================================================

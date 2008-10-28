@@ -50,9 +50,13 @@ Private Const ModuleName                As String = "ChartRegionStyle"
 
 Private mGridColor As Long
 Private mGridTextColor  As Long
-Private mPointerStyle As PointerStyles
-Private mhasGrid As Boolean
-Private mhasGridText As Boolean
+'Private mPointerStyle As PointerStyles
+
+' indicates whether there is a grid, not whether it
+' is currently visible
+Private mHasGrid As Boolean
+Private mHasGridText As Boolean
+
 Private mAutoscale As Boolean
 Private mIntegerYScale As Boolean
 Private mYScaleQuantum As Double
@@ -66,6 +70,21 @@ Private mBackGradientFillColors() As Long
 ' Class Event Handlers
 '@================================================================================
 
+Private Sub Class_Initialize()
+mGridColor = vbBlack
+mGridTextColor = vbBlack
+mHasGrid = False
+mHasGridText = False
+mAutoscale = False
+mIntegerYScale = False
+mYScaleQuantum = 1
+mGridlineSpacingY = 1
+mMinimumHeight = 1
+mSnapCursorToTickBoundaries = False
+ReDim mBackGradientFillColors(0) As Long
+mBackGradientFillColors(0) = vbBlack
+End Sub
+
 '@================================================================================
 ' XXXX Interface Members
 '@================================================================================
@@ -78,28 +97,28 @@ Private mBackGradientFillColors() As Long
 ' Properties
 '@================================================================================
 
-Public Property Get autoscale() As Boolean
-autoscale = mAutoscale
+Public Property Get Autoscale() As Boolean
+Autoscale = mAutoscale
 End Property
 
-Public Property Let autoscale(ByVal value As Boolean)
+Public Property Let Autoscale(ByVal value As Boolean)
 mAutoscale = value
 End Property
 
-Public Property Get backColor() As Long
-backColor = mBackGradientFillColors(0)
+Public Property Get BackColor() As Long
+BackColor = mBackGradientFillColors(0)
 End Property
 
-Public Property Let backColor(ByVal value As Long)
+Public Property Let BackColor(ByVal value As Long)
 ReDim mBackGradientFillColors(0) As Long
 mBackGradientFillColors(0) = value
 End Property
 
-Public Property Get backGradientFillColors() As Long()
-backGradientFillColors = mBackGradientFillColors
+Public Property Get BackGradientFillColors() As Long()
+BackGradientFillColors = mBackGradientFillColors
 End Property
 
-Public Property Let backGradientFillColors(ByRef value() As Long)
+Public Property Let BackGradientFillColors(ByRef value() As Long)
 Dim numColors As Long
 
 On Error Resume Next
@@ -126,76 +145,76 @@ End If
 mBackGradientFillColors = value
 End Property
 
-Public Property Get gridColor() As Long
-gridColor = mGridColor
+Public Property Get GridColor() As Long
+GridColor = mGridColor
 End Property
 
-Public Property Let gridColor(ByVal val As Long)
+Public Property Let GridColor(ByVal val As Long)
 mGridColor = val
 End Property
 
-Public Property Get gridlineSpacingY() As Double
-gridlineSpacingY = mGridlineSpacingY
+Public Property Get GridlineSpacingY() As Double
+GridlineSpacingY = mGridlineSpacingY
 End Property
 
-Public Property Let gridlineSpacingY(ByVal value As Double)
+Public Property Let GridlineSpacingY(ByVal value As Double)
 mGridlineSpacingY = value
 End Property
 
-Public Property Get gridTextColor() As Long
-gridTextColor = mGridTextColor
+Public Property Get GridTextColor() As Long
+GridTextColor = mGridTextColor
 End Property
 
-Public Property Let gridTextColor(ByVal val As Long)
+Public Property Let GridTextColor(ByVal val As Long)
 mGridTextColor = val
 End Property
 
-Public Property Get hasGrid() As Boolean
-hasGrid = mhasGrid
+Public Property Get HasGrid() As Boolean
+HasGrid = mHasGrid
 End Property
 
-Public Property Let hasGrid(ByVal val As Boolean)
-mhasGrid = val
+Public Property Let HasGrid(ByVal val As Boolean)
+mHasGrid = val
 End Property
 
-Public Property Get hasGridText() As Boolean
-hasGridText = mhasGridText
+Public Property Get HasGridText() As Boolean
+HasGridText = mHasGridText
 End Property
 
-Public Property Let hasGridText(ByVal val As Boolean)
-mhasGridText = val
+Public Property Let HasGridText(ByVal val As Boolean)
+mHasGridText = val
 End Property
 
-Public Property Get integerYScale() As Boolean
-integerYScale = mIntegerYScale
+Public Property Get IntegerYScale() As Boolean
+IntegerYScale = mIntegerYScale
 End Property
 
-Public Property Let integerYScale(ByVal value As Boolean)
+Public Property Let IntegerYScale(ByVal value As Boolean)
 mIntegerYScale = value
 End Property
 
-Public Property Get minimumHeight() As Double
-minimumHeight = mMinimumHeight
+Public Property Get MinimumHeight() As Double
+MinimumHeight = mMinimumHeight
 End Property
 
-Public Property Let minimumHeight(ByVal value As Double)
+Public Property Let MinimumHeight(ByVal value As Double)
 mMinimumHeight = value
 End Property
 
-Public Property Get pointerStyle() As PointerStyles
-pointerStyle = mPointerStyle
-End Property
+'Public Property Get PointerStyle() As PointerStyles
+'PointerStyle = mPointerStyle
+'End Property
+'
+'Public Property Let PointerStyle(ByVal value As PointerStyles)
+'mPointerStyle = value
+'End Property
 
-Public Property Let pointerStyle(ByVal value As PointerStyles)
-mPointerStyle = value
-End Property
-
-Public Property Let snapCursorToTickBoundaries(ByVal value As Boolean)
+Public Property Let SnapCursorToTickBoundaries(ByVal value As Boolean)
 mSnapCursorToTickBoundaries = value
 End Property
 
-Public Property Get snapCursorToTickBoundaries() As Boolean
-snapCursorToTickBoundaries = mSnapCursorToTickBoundaries
+Public Property Get SnapCursorToTickBoundaries() As Boolean
+SnapCursorToTickBoundaries = mSnapCursorToTickBoundaries
 End Property
 
 Public Property Get YScaleQuantum() As Double
@@ -212,17 +231,16 @@ End Property
 
 Public Function clone() As ChartRegionStyle
 Set clone = New ChartRegionStyle
-clone.autoscale = mAutoscale
-clone.backGradientFillColors = mBackGradientFillColors
-clone.gridColor = mGridColor
-clone.gridlineSpacingY = mGridlineSpacingY
-clone.gridTextColor = mGridTextColor
-clone.integerYScale = mIntegerYScale
-clone.minimumHeight = mMinimumHeight
-clone.pointerStyle = mPointerStyle
-clone.hasGrid = mhasGrid
-clone.hasGridText = mhasGridText
-clone.snapCursorToTickBoundaries = mSnapCursorToTickBoundaries
+clone.Autoscale = mAutoscale
+clone.BackGradientFillColors = mBackGradientFillColors
+clone.GridColor = mGridColor
+clone.GridlineSpacingY = mGridlineSpacingY
+clone.GridTextColor = mGridTextColor
+clone.IntegerYScale = mIntegerYScale
+clone.MinimumHeight = mMinimumHeight
+clone.HasGrid = mHasGrid
+clone.HasGridText = mHasGridText
+clone.SnapCursorToTickBoundaries = mSnapCursorToTickBoundaries
 clone.YScaleQuantum = mYScaleQuantum
 End Function
 

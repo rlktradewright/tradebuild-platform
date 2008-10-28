@@ -8,7 +8,7 @@ BEGIN
 END
 Attribute VB_Name = "TextSeries"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -17,12 +17,19 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements ChartSkilTypes.IGraphicObjectSeries
-Implements Task
+Implements IGraphicObjectSeries
 
 '================================================================================
 ' Events
 '================================================================================
+
+Event Click()
+
+Event DblCLick()
+
+Event StyleChanged()
+
+Event SelectionStateChanged()
 
 '================================================================================
 ' Types
@@ -32,18 +39,25 @@ Implements Task
 ' Member variables and constants
 '================================================================================
 
-Private mSeriesId As Long
+Private Const ProjectName                As String = "ChartSkil26"
+Private Const ModuleName                As String = "TextSeries"
+
+Private mSeriesID As Long
+
+Private mIsSelectable As Boolean
+Private mIsSelected As Boolean
 
 Private mFinished As Boolean
 
 Private mTexts As Collection
 
-Private mCanvas As canvas
+Private mCanvas As Canvas
 Private mLayer As Long
 
-Private mEventProxy As ChartRegionEventProxy
+Private mGOSP As GraphObjServiceProvider
 
 Private mStyle As TextStyle
+Private mInhibitChangeEvent As Boolean
 
 Private mName As String
 
@@ -59,59 +73,85 @@ Private mTaskContext As TaskContext
 
 Private Sub Class_Initialize()
 Set mTexts = New Collection
-mSeriesId = GenerateID
 End Sub
 
 '================================================================================
 ' IGraphicObjectSeries Interface Members
 '================================================================================
 
+Private Property Let IGraphicObjectSeries_Canvas(ByVal value As Canvas)
+Set mCanvas = value
+End Property
+
+Private Sub IGraphicObjectSeries_Click()
+RaiseEvent Click
+End Sub
+
+Private Sub IGraphicObjectSeries_DblCLick()
+RaiseEvent DblCLick
+End Sub
+
 Private Property Get IGraphicObjectSeries_count() As Long
-IGraphicObjectSeries_count = mTexts.count
+IGraphicObjectSeries_count = mTexts.Count
 End Property
 
 Private Sub IGraphicObjectSeries_finish()
 mFinished = True
 End Sub
 
-Private Function IGraphicObjectSeries_item(ByVal index As Long) As ChartSkilTypes.IGraphicObject
-Set IGraphicObjectSeries_item = mTexts.item(index)
-End Function
-
-Private Function IGraphicObjectSeries_NewEnum() As Object
-Set IGraphicObjectSeries_NewEnum = NewEnum
-End Function
-
-Private Sub IGraphicObjectSeries_remove(ByVal index As Long)
-mTexts.remove index
+Private Sub IGraphicObjectSeries_Initialise( _
+                ByVal name As String, _
+                ByVal Canvas As Canvas, _
+                ByVal Layer As LayerNumbers, _
+                ByVal controller As ChartController, _
+                ByVal seriesId As Long, _
+                ByVal GOSP As GraphObjServiceProvider)
+mName = name
+mSeriesID = seriesId
+Set mGOSP = GOSP
+mLayer = Layer
+Set mCanvas = Canvas
+If mStyle Is Nothing Then Set mStyle = controller.DefaultTextStyle.clone
 End Sub
 
-'================================================================================
-' Task Interface Members
-'================================================================================
-
-Private Sub Task_cancel()
-
-End Sub
-
-Private Sub Task_run()
-Dim j As Long
-
-Do While mTexts.count <> 0
-    mTexts.remove mTexts.count
-    j = j + 1
-    If j = 100 Then Exit Sub
-Loop
-
-mTaskContext.finish 0, False
-End Sub
-
-Private Property Let Task_TaskContext(ByVal RHS As TWUtilities30.TaskContext)
-Set mTaskContext = RHS
+Private Property Get IGraphicObjectSeries_IsSelectable() As Boolean
+IGraphicObjectSeries_IsSelectable = mIsSelectable
 End Property
 
-Private Property Get Task_TaskName() As String
-Task_TaskName = mTaskContext.name
+Private Function IGraphicObjectSeries_item(ByVal index As Long) As IGraphicObject
+Set IGraphicObjectSeries_item = mTexts.Item(index)
+End Function
+
+Private Property Get IGraphicObjectSeries_name() As String
+IGraphicObjectSeries_name = mName
+End Property
+
+Public Sub IGraphicObjectSeries_Remove(ByVal index As Long)
+mTexts.Remove index
+End Sub
+
+Private Sub IGraphicObjectSeries_RemoveObject(ByVal value As IGraphicObject)
+Dim lText As ChartSkil26.text
+
+On Error Resume Next
+Set lText = value
+
+mTexts.Remove lText.Key
+End Sub
+
+Private Property Let IGraphicObjectSeries_Selected(ByVal RHS As Boolean)
+If RHS <> mIsSelected Then
+    mIsSelected = RHS
+    RaiseEvent SelectionStateChanged
+End If
+End Property
+
+Private Property Get IGraphicObjectSeries_Selected() As Boolean
+IGraphicObjectSeries_Selected = mIsSelected
+End Property
+
+Private Property Get IGraphicObjectSeries_SeriesID() As Long
+IGraphicObjectSeries_SeriesID = mSeriesID
 End Property
 
 '================================================================================
@@ -129,10 +169,11 @@ End Property
 Public Property Let align(ByVal value As TextAlignModes)
 If mStyle.align = value Then Exit Property
 mStyle.align = value
-If mTexts.count <> 0 Then
-    mEventProxy.recalcBoundary mSeriesId
-    mEventProxy.paintRegion False
+If mTexts.Count <> 0 Then
+    mGOSP.RecalcBoundary mSeriesID
+    mGOSP.PaintRegion False
 End If
+fireStyleChanged
 End Property
 
 Friend Property Get box() As Boolean
@@ -142,10 +183,11 @@ End Property
 Public Property Let box(ByVal value As Boolean)
 If mStyle.box = value Then Exit Property
 mStyle.box = value
-If mTexts.count <> 0 Then
-    mEventProxy.recalcBoundary mSeriesId
-    mEventProxy.paintRegion False
+If mTexts.Count <> 0 Then
+    mGOSP.RecalcBoundary mSeriesID
+    mGOSP.PaintRegion False
 End If
+fireStyleChanged
 End Property
 
 Public Property Get boxColor() As Long
@@ -155,9 +197,10 @@ End Property
 Public Property Let boxColor(ByVal value As Long)
 If mStyle.boxColor = value Then Exit Property
 mStyle.boxColor = value
-If mTexts.count <> 0 Then
-    mEventProxy.paintRegion False
+If mTexts.Count <> 0 Then
+    mGOSP.PaintRegion False
 End If
+fireStyleChanged
 End Property
 
 Friend Property Get boxFillColor() As Long
@@ -167,9 +210,10 @@ End Property
 Public Property Let boxFillColor(ByVal value As Long)
 If mStyle.boxFillColor = value Then Exit Property
 mStyle.boxFillColor = value
-If mTexts.count <> 0 Then
-    mEventProxy.paintRegion False
+If mTexts.Count <> 0 Then
+    mGOSP.PaintRegion False
 End If
+fireStyleChanged
 End Property
 
 Public Property Get boxFillStyle() As FillStyles
@@ -179,9 +223,10 @@ End Property
 Public Property Let boxFillStyle(ByVal value As FillStyles)
 If mStyle.boxFillStyle = value Then Exit Property
 mStyle.boxFillStyle = value
-If mTexts.count <> 0 Then
-    mEventProxy.paintRegion False
+If mTexts.Count <> 0 Then
+    mGOSP.PaintRegion False
 End If
+fireStyleChanged
 End Property
 
 Public Property Get boxStyle() As LineStyles
@@ -191,10 +236,11 @@ End Property
 Public Property Let boxStyle(ByVal value As LineStyles)
 If mStyle.boxStyle = value Then Exit Property
 mStyle.boxStyle = value
-If mTexts.count <> 0 Then
-    mEventProxy.recalcBoundary mSeriesId
-    mEventProxy.paintRegion False
+If mTexts.Count <> 0 Then
+    mGOSP.RecalcBoundary mSeriesID
+    mGOSP.PaintRegion False
 End If
+fireStyleChanged
 End Property
 
 Public Property Get boxThickness() As Long
@@ -204,10 +250,11 @@ End Property
 Public Property Let boxThickness(ByVal value As Long)
 If mStyle.boxThickness = value Then Exit Property
 mStyle.boxThickness = value
-If mTexts.count <> 0 Then
-    mEventProxy.recalcBoundary mSeriesId
-    mEventProxy.paintRegion False
+If mTexts.Count <> 0 Then
+    mGOSP.RecalcBoundary mSeriesID
+    mGOSP.PaintRegion False
 End If
+fireStyleChanged
 End Property
 
 Public Property Get Color() As Long
@@ -217,13 +264,14 @@ End Property
 Public Property Let Color(ByVal value As Long)
 If mStyle.Color = value Then Exit Property
 mStyle.Color = value
-If mTexts.count <> 0 Then
-    mEventProxy.paintRegion False
+If mTexts.Count <> 0 Then
+    mGOSP.PaintRegion False
 End If
+fireStyleChanged
 End Property
 
-Public Property Get count() As Long
-count = mTexts.count
+Public Property Get Count() As Long
+Count = mTexts.Count
 End Property
 
 Friend Property Get extended() As Boolean
@@ -233,9 +281,10 @@ End Property
 Public Property Let extended(ByVal value As Boolean)
 If mStyle.extended = value Then Exit Property
 mStyle.extended = value
-If mTexts.count <> 0 Then
-    mEventProxy.paintRegion False
+If mTexts.Count <> 0 Then
+    mGOSP.PaintRegion False
 End If
+fireStyleChanged
 End Property
 
 Friend Property Get fixedX() As Boolean
@@ -245,9 +294,10 @@ End Property
 Public Property Let fixedX(ByVal value As Boolean)
 If mStyle.fixedX = value Then Exit Property
 mStyle.fixedX = value
-If mTexts.count <> 0 Then
-    mEventProxy.paintRegion False
+If mTexts.Count <> 0 Then
+    mGOSP.PaintRegion False
 End If
+fireStyleChanged
 End Property
 
 Friend Property Get fixedY() As Boolean
@@ -257,9 +307,10 @@ End Property
 Public Property Let fixedY(ByVal value As Boolean)
 If mStyle.fixedY = value Then Exit Property
 mStyle.fixedY = value
-If mTexts.count <> 0 Then
-    mEventProxy.paintRegion False
+If mTexts.Count <> 0 Then
+    mGOSP.PaintRegion False
 End If
+fireStyleChanged
 End Property
 
 Public Property Get font() As StdFont
@@ -269,10 +320,11 @@ End Property
 Public Property Let font(ByVal value As StdFont)
 'If mStyle.font is value Then Exit Property
 mStyle.font = value
-If mTexts.count <> 0 Then
-    mEventProxy.recalcBoundary mSeriesId
-    mEventProxy.paintRegion False
+If mTexts.Count <> 0 Then
+    mGOSP.RecalcBoundary mSeriesID
+    mGOSP.PaintRegion False
 End If
+fireStyleChanged
 End Property
 
 Friend Property Get includeInAutoscale() As Boolean
@@ -282,18 +334,31 @@ End Property
 Public Property Let includeInAutoscale(ByVal value As Boolean)
 If mStyle.includeInAutoscale = value Then Exit Property
 mStyle.includeInAutoscale = value
-If mTexts.count <> 0 Then
-    mEventProxy.recalcBoundary mSeriesId
-    mEventProxy.paintRegion True
+If mTexts.Count <> 0 Then
+    mGOSP.RecalcBoundary mSeriesID
+    mGOSP.PaintRegion True
 End If
+fireStyleChanged
 End Property
 
-Friend Property Let layer(ByVal value As Long)
+Public Property Let IsSelectable(ByVal value As Boolean)
+mIsSelectable = value
+End Property
+
+Public Property Get IsSelectable() As Boolean
+IsSelectable = mIsSelectable
+End Property
+
+Public Property Get IsSelected() As Boolean
+IsSelected = mIsSelected
+End Property
+
+Friend Property Let Layer(ByVal value As Long)
 mLayer = value
 End Property
 
-Public Property Get layer() As Long
-layer = mLayer
+Public Property Get Layer() As Long
+Layer = mLayer
 End Property
 
 Public Property Get paddingX() As Double
@@ -303,10 +368,11 @@ End Property
 Public Property Let paddingX(ByVal value As Double)
 If mStyle.paddingX = value Then Exit Property
 mStyle.paddingX = value
-If mTexts.count <> 0 Then
-    mEventProxy.recalcBoundary mSeriesId
-    mEventProxy.paintRegion False
+If mTexts.Count <> 0 Then
+    mGOSP.RecalcBoundary mSeriesID
+    mGOSP.PaintRegion False
 End If
+fireStyleChanged
 End Property
 
 Public Property Get paddingY() As Double
@@ -316,10 +382,11 @@ End Property
 Public Property Let paddingY(ByVal value As Double)
 If mStyle.paddingY = value Then Exit Property
 mStyle.paddingY = value
-If mTexts.count <> 0 Then
-    mEventProxy.recalcBoundary mSeriesId
-    mEventProxy.paintRegion False
+If mTexts.Count <> 0 Then
+    mGOSP.RecalcBoundary mSeriesID
+    mGOSP.PaintRegion False
 End If
+fireStyleChanged
 End Property
 
 Public Property Get style() As TextStyle
@@ -330,6 +397,17 @@ Public Property Let style(ByVal value As TextStyle)
 Dim somethingChanged As Boolean
 Dim recalcBoundaries As Boolean
 Dim recalcRegion As Boolean
+
+Dim failpoint As Long
+On Error GoTo Err
+
+If value Is Nothing Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "style", _
+            "Style is null reference"
+End If
+
+mInhibitChangeEvent = True
 
 If value.align <> mStyle.align Then
     mStyle.align = value.align
@@ -401,53 +479,60 @@ If value.paddingY <> mStyle.paddingY Then
     recalcBoundaries = True
 End If
 
+mInhibitChangeEvent = False
+
 If somethingChanged Then
-    If recalcBoundaries Then If mTexts.count <> 0 Then mEventProxy.recalcBoundary mSeriesId
-    If mTexts.count <> 0 Then mEventProxy.paintRegion recalcRegion
+    If recalcBoundaries Then If mTexts.Count <> 0 Then mGOSP.RecalcBoundary mSeriesID
+    If mTexts.Count <> 0 Then mGOSP.PaintRegion recalcRegion
+    fireStyleChanged
 End If
+
+Exit Property
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "style" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Property
 
 '================================================================================
 ' Methods
 '================================================================================
 
-Public Function add( _
-                Optional ByVal key As String, _
-                Optional ByVal localStyle As TextStyle) As text
+Public Function Add( _
+                Optional ByVal Key As String, _
+                Optional ByVal LocalStyle As TextStyle, _
+                Optional ByVal IsSelectable As Boolean) As text
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                             "ChartSkil26.TextSeries::add", _
                             "Text series is finished"
-Set add = New text
-If key = "" Then
-    key = GenerateGUIDString
+Set Add = New text
+If Key = "" Then
+    Key = GenerateGUIDString
 End If
-add.initialise key, mEventProxy, mLayer, mCanvas, mStyle, localStyle
+Add.initialise mSeriesID, Key, mGOSP, mLayer, mCanvas, mStyle, LocalStyle, IsSelectable
 
-mTexts.add add, key
-mEventProxy.addGraphicObject add, mSeriesId
+mTexts.Add Add, Key
+mGOSP.AddGraphicObject Add, mSeriesID
 End Function
 
-Friend Sub finish()
+Friend Sub Finish()
 mFinished = True
 Set mCanvas = Nothing
 End Sub
 
 Friend Sub initialise( _
                 ByVal name As String, _
-                ByVal eventProxy As ChartRegionEventProxy, _
-                ByVal layer As Long, _
-                ByVal canvas As canvas, _
                 ByVal style As TextStyle)
 mName = name
-Set mEventProxy = eventProxy
-mLayer = layer
-Set mCanvas = canvas
 Set mStyle = style.clone    ' style cannot be shared between TextSeries
 End Sub
 
-Public Function item(ByVal index As Variant) As text
-Attribute item.VB_UserMemId = 0
-Set item = mTexts(index)
+Public Function Item(ByVal index As Variant) As text
+Attribute Item.VB_UserMemId = 0
+Set Item = mTexts(index)
 End Function
 
 Public Function NewEnum() As IUnknown
@@ -456,12 +541,26 @@ Attribute NewEnum.VB_MemberFlags = "40"
    Set NewEnum = mTexts.[_NewEnum]
 End Function
 
-Friend Sub removeAll()
+Friend Sub RemoveAll()
 StartTask Me, PriorityLow
+End Sub
+
+Public Sub RemoveObject(ByVal value As ChartSkil26.text)
+On Error GoTo Err
+mTexts.Remove value.Key
+mGOSP.RemoveObject value.Handle
+
+Exit Sub
+
+Err:
 End Sub
 
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub fireStyleChanged()
+If Not mInhibitChangeEvent Then RaiseEvent StyleChanged
+End Sub
 
 

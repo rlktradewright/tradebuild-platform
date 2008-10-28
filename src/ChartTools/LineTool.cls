@@ -22,6 +22,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements IChartTool
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -45,28 +47,138 @@ Private Const ModuleName                    As String = "LineTool"
 ' Member variables
 '@================================================================================
 
+Private mAbstractTool                       As AbstractChartTool
+
+Private mRegion                             As ChartRegion
+
+Private WithEvents mLine                    As ChartSkil26.Line
+Attribute mLine.VB_VarHelpID = -1
+
+Private mLineStyle                          As lineStyle
+
+Private mStartPoint1                        As ChartSkil26.Point
+Private mStartPoint2                        As ChartSkil26.Point
+
+Private mLayer                              As LayerNumbers
+
+Private mPrevX                              As Double
+Private mPrevY                              As Double
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 '@================================================================================
-' XXXX Interface Members
+' IChartTool Interface Members
 '@================================================================================
 
+Private Sub IChartTool_Create(ByVal X As Double, ByVal Y As Double)
+If mLayer <> -1 Then
+    Set mLine = mRegion.AddLine(mLayer, True)
+Else
+    Set mLine = mRegion.AddLine(, True)
+    mLayer = mLine.layer
+End If
+mLine.layer = LayerNumbers.LayerMax
+mLine.LocalStyle = mLineStyle
+mLine.SetPosition mRegion.newPoint(X, Y), mRegion.newPoint(X, Y)
+mAbstractTool.AddSelectableObject mLine
+End Sub
+
+Private Sub IChartTool_Delete()
+mRegion.RemoveGraphicObject mLine
+End Sub
+
+Private Sub IChartTool_Deselected()
+
+End Sub
+
+Private Sub IChartTool_EndResize()
+mLine.layer = mLayer
+Set mStartPoint1 = Nothing
+Set mStartPoint2 = Nothing
+End Sub
+
+Private Sub IChartTool_Move(ByVal X As Double, ByVal Y As Double)
+mLine.Point1 = mRegion.newPoint(mLine.Point1.X + X - mPrevX, mLine.Point1.Y + Y - mPrevY)
+mLine.Point2 = mRegion.newPoint(mLine.Point2.X + X - mPrevX, mLine.Point2.Y + Y - mPrevY)
+mPrevX = X
+mPrevY = Y
+End Sub
+
+Private Sub IChartTool_MoveResize(ByVal selHandleIndex As Long, ByVal X As Double, ByVal Y As Double)
+If selHandleIndex = 1 Then
+    mLine.Point1 = mRegion.newPoint(X, Y)
+Else
+    mLine.Point2 = mRegion.newPoint(X, Y)
+End If
+
+End Sub
+
+Private Property Let IChartTool_Region(ByVal RHS As ChartSkil26.ChartRegion)
+Set mRegion = RHS
+If mLineStyle Is Nothing Then
+    Set mLineStyle = mRegion.DefaultLineStyle
+    mLineStyle.extended = True
+    mLineStyle.includeInAutoscale = False
+End If
+End Property
+
+Private Sub IChartTool_ResizeCreate(ByVal X As Double, ByVal Y As Double)
+mLine.Point2 = mRegion.newPoint(X, Y)
+End Sub
+
+Private Sub IChartTool_StartResize(ByVal selHandle As SelectionHandle, ByVal X As Single, ByVal Y As Single)
+mPrevX = X
+mPrevY = Y
+
+Set mStartPoint1 = mLine.Point1
+Set mStartPoint2 = mLine.Point2
+
+mLine.layer = LayerNumbers.LayerMax
+End Sub
+
+Private Sub IChartTool_Undo()
+mLine.SetPosition mStartPoint1, mStartPoint2
+mLine.layer = mLayer
+Set mStartPoint1 = Nothing
+Set mStartPoint2 = Nothing
+End Sub
+
 '@================================================================================
-' XXXX Event Handlers
+' mLine Event Handlers
 '@================================================================================
+
+Private Sub mLine_SelectionStateChanged()
+If mLine.IsSelected Then
+    mAbstractTool.SetSelected
+    mAbstractTool.AddSelectionHandle mLine.Point1.X, mLine.Point1.Y
+    mAbstractTool.AddSelectionHandle mLine.Point2.X, mLine.Point2.Y
+End If
+End Sub
 
 '@================================================================================
 ' Properties
 '@================================================================================
 
+Public Property Get Region() As ChartRegion
+Set Region = mRegion
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
+Friend Sub Initialise( _
+                ByVal controller As chartController, _
+                ByVal pLineStyle As lineStyle, _
+                ByVal layer As Long)
+Set mLineStyle = pLineStyle
+mLayer = layer
+Set mAbstractTool = CreateAbstractChartTool(controller, Me)
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
-
 

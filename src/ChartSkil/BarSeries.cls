@@ -8,7 +8,7 @@ BEGIN
 END
 Attribute VB_Name = "BarSeries"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -17,12 +17,19 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements ChartSkilTypes.IGraphicObjectSeries
-Implements Task
+Implements IGraphicObjectSeries
 
 '================================================================================
 ' Events
 '================================================================================
+
+Event Click()
+
+Event DblCLick()
+
+Event StyleChanged()
+
+Event SelectionStateChanged()
 
 '================================================================================
 ' Types
@@ -32,23 +39,28 @@ Implements Task
 ' Member variables and constants
 '================================================================================
 
+Private Const ProjectName                As String = "ChartSkil26"
+Private Const ModuleName                As String = "BarSeries"
+
 Private mController As ChartController
-Private mSeriesId As Long
+Private mSeriesID As Long
+
+Private mIsSelectable As Boolean
+Private mIsSelected As Boolean
 
 Private mFinished As Boolean
 
 Private mBars As Collection
 
-Private mCanvas As canvas
+Private mCanvas As Canvas
 Private mLayer As Long
 
-Private mEventProxy As ChartRegionEventProxy
+Private mGOSP As GraphObjServiceProvider
 
 Private mStyle As BarStyle
+Private mInhibitChangeEvent As Boolean
 
 Private mName As String
-
-Private mTaskContext As TaskContext
 
 '================================================================================
 ' Enums
@@ -60,59 +72,86 @@ Private mTaskContext As TaskContext
 
 Private Sub Class_Initialize()
 Set mBars = New Collection
-mSeriesId = GenerateID
 End Sub
 
 '================================================================================
 ' IGraphicObjectSeries Interface Members
 '================================================================================
 
+Private Property Let IGraphicObjectSeries_Canvas(ByVal value As Canvas)
+Set mCanvas = value
+End Property
+
+Private Sub IGraphicObjectSeries_Click()
+RaiseEvent Click
+End Sub
+
+Private Sub IGraphicObjectSeries_DblCLick()
+RaiseEvent DblCLick
+End Sub
+
 Private Property Get IGraphicObjectSeries_count() As Long
-IGraphicObjectSeries_count = mBars.count
+IGraphicObjectSeries_count = mBars.Count
 End Property
 
 Private Sub IGraphicObjectSeries_finish()
 mFinished = True
 End Sub
 
-Private Function IGraphicObjectSeries_item(ByVal index As Long) As ChartSkilTypes.IGraphicObject
-Set IGraphicObjectSeries_item = mBars.item(index)
-End Function
-
-Private Function IGraphicObjectSeries_NewEnum() As Object
-Set IGraphicObjectSeries_NewEnum = NewEnum
-End Function
-
-Private Sub IGraphicObjectSeries_remove(ByVal index As Long)
-mBars.remove index
+Private Sub IGraphicObjectSeries_Initialise( _
+                ByVal name As String, _
+                ByVal Canvas As Canvas, _
+                ByVal Layer As LayerNumbers, _
+                ByVal controller As ChartController, _
+                ByVal seriesId As Long, _
+                ByVal GOSP As GraphObjServiceProvider)
+mName = name
+mSeriesID = seriesId
+Set mGOSP = GOSP
+mLayer = Layer
+Set mCanvas = Canvas
+Set mController = controller
+If mStyle Is Nothing Then Set mStyle = controller.DefaultBarStyle.clone
 End Sub
 
-'================================================================================
-' Task Interface Members
-'================================================================================
-
-Private Sub Task_cancel()
-
-End Sub
-
-Private Sub Task_run()
-Dim j As Long
-
-Do While mBars.count <> 0
-    mBars.remove mBars.count
-    j = j + 1
-    If j = 100 Then Exit Sub
-Loop
-
-mTaskContext.finish 0, False
-End Sub
-
-Private Property Let Task_TaskContext(ByVal RHS As TWUtilities30.TaskContext)
-Set mTaskContext = RHS
+Private Property Get IGraphicObjectSeries_IsSelectable() As Boolean
+IGraphicObjectSeries_IsSelectable = mIsSelectable
 End Property
 
-Private Property Get Task_TaskName() As String
-Task_TaskName = mTaskContext.name
+Private Function IGraphicObjectSeries_item(ByVal index As Long) As IGraphicObject
+Set IGraphicObjectSeries_item = mBars.Item(index)
+End Function
+
+Private Property Get IGraphicObjectSeries_name() As String
+IGraphicObjectSeries_name = mName
+End Property
+
+Public Sub IGraphicObjectSeries_Remove(ByVal index As Long)
+mBars.Remove index
+End Sub
+
+Private Sub IGraphicObjectSeries_RemoveObject(ByVal value As IGraphicObject)
+Dim lBar As ChartSkil26.Bar
+
+On Error Resume Next
+Set lBar = value
+
+mBars.Remove lBar.Key
+End Sub
+
+Private Property Let IGraphicObjectSeries_Selected(ByVal RHS As Boolean)
+If RHS <> mIsSelected Then
+    mIsSelected = RHS
+    RaiseEvent SelectionStateChanged
+End If
+End Property
+
+Private Property Get IGraphicObjectSeries_Selected() As Boolean
+IGraphicObjectSeries_Selected = mIsSelected
+End Property
+
+Private Property Get IGraphicObjectSeries_SeriesID() As Long
+IGraphicObjectSeries_SeriesID = mSeriesID
 End Property
 
 '================================================================================
@@ -126,7 +165,8 @@ End Property
 Public Property Let barColor(ByVal value As Long)
 If mStyle.barColor = value Then Exit Property
 mStyle.barColor = value
-If mBars.count <> 0 Then mEventProxy.paintRegion False
+If mBars.Count <> 0 Then mGOSP.PaintRegion False
+fireStyleChanged
 End Property
 
 Public Property Get barThickness() As Long
@@ -136,7 +176,8 @@ End Property
 Public Property Let barThickness(ByVal value As Long)
 If mStyle.barThickness = value Then Exit Property
 mStyle.barThickness = value
-If mBars.count <> 0 Then mEventProxy.paintRegion False
+If mBars.Count <> 0 Then mGOSP.PaintRegion False
+fireStyleChanged
 End Property
 
 Public Property Get barWidth() As Single
@@ -146,14 +187,15 @@ End Property
 Public Property Let barWidth(ByVal value As Single)
 If mStyle.barWidth = value Then Exit Property
 mStyle.barWidth = value
-If mBars.count <> 0 Then
-    mEventProxy.recalcBoundary mSeriesId
-    mEventProxy.paintRegion False
+If mBars.Count <> 0 Then
+    mGOSP.RecalcBoundary mSeriesID
+    mGOSP.PaintRegion False
 End If
+fireStyleChanged
 End Property
 
-Public Property Get count() As Long
-count = mBars.count
+Public Property Get Count() As Long
+Count = mBars.Count
 End Property
 
 Public Property Get displayMode() As BarDisplayModes
@@ -163,10 +205,11 @@ End Property
 Public Property Let displayMode(ByVal value As BarDisplayModes)
 If mStyle.displayMode = value Then Exit Property
 mStyle.displayMode = value
-If mBars.count <> 0 Then
-    mEventProxy.recalcBoundary mSeriesId
-    mEventProxy.paintRegion False
+If mBars.Count <> 0 Then
+    mGOSP.RecalcBoundary mSeriesID
+    mGOSP.PaintRegion False
 End If
+fireStyleChanged
 End Property
 
 Public Property Get downColor() As Long
@@ -176,7 +219,8 @@ End Property
 Public Property Let downColor(ByVal value As Long)
 If mStyle.downColor = value Then Exit Property
 mStyle.downColor = value
-If mBars.count <> 0 Then mEventProxy.paintRegion False
+If mBars.Count <> 0 Then mGOSP.PaintRegion False
+fireStyleChanged
 End Property
 
 Friend Property Get includeInAutoscale() As Boolean
@@ -186,13 +230,26 @@ End Property
 Public Property Let includeInAutoscale(ByVal value As Boolean)
 If mStyle.includeInAutoscale = value Then Exit Property
 mStyle.includeInAutoscale = value
-If mBars.count <> 0 Then
-    mEventProxy.paintRegion True
+If mBars.Count <> 0 Then
+    mGOSP.PaintRegion True
 End If
+fireStyleChanged
 End Property
 
-Public Property Get layer() As Long
-layer = mLayer
+Public Property Let IsSelectable(ByVal value As Boolean)
+mIsSelectable = value
+End Property
+
+Public Property Get IsSelectable() As Boolean
+IsSelectable = mIsSelectable
+End Property
+
+Public Property Get IsSelected() As Boolean
+IsSelected = mIsSelected
+End Property
+
+Public Property Get Layer() As Long
+Layer = mLayer
 End Property
 
 Public Property Get name() As String
@@ -210,7 +267,8 @@ End Property
 Public Property Let outlineThickness(ByVal value As Long)
 If mStyle.outlineThickness = value Then Exit Property
 mStyle.outlineThickness = value
-If mBars.count <> 0 Then mEventProxy.paintRegion False
+If mBars.Count <> 0 Then mGOSP.PaintRegion False
+fireStyleChanged
 End Property
 
 Public Property Get solidUpBody() As Boolean
@@ -220,7 +278,8 @@ End Property
 Public Property Let solidUpBody(ByVal value As Boolean)
 If mStyle.solidUpBody = value Then Exit Property
 mStyle.solidUpBody = value
-If mBars.count <> 0 Then mEventProxy.paintRegion False
+If mBars.Count <> 0 Then mGOSP.PaintRegion False
+fireStyleChanged
 End Property
 
 Public Property Get style() As BarStyle
@@ -230,6 +289,17 @@ End Property
 Public Property Let style( _
                 ByVal value As BarStyle)
 Dim somethingChanged As Boolean
+
+Dim failpoint As Long
+On Error GoTo Err
+
+If value Is Nothing Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "style", _
+            "Style is null reference"
+End If
+
+mInhibitChangeEvent = True
 
 If value.barColor <> mStyle.barColor Then
     somethingChanged = True
@@ -242,7 +312,7 @@ End If
 If value.barWidth <> mStyle.barWidth Then
     somethingChanged = True
     mStyle.barWidth = value.barWidth
-    If mBars.count <> 0 Then mEventProxy.recalcBoundary mSeriesId
+    If mBars.Count <> 0 Then mGOSP.RecalcBoundary mSeriesID
 End If
 If value.displayMode <> mStyle.displayMode Then
     somethingChanged = True
@@ -269,9 +339,22 @@ If value.upColor <> mStyle.upColor Then
     mStyle.upColor = value.upColor
 End If
 
+mInhibitChangeEvent = False
+
 If somethingChanged Then
-    If mBars.count <> 0 Then mEventProxy.paintRegion False
+    If mBars.Count <> 0 Then mGOSP.PaintRegion False
+    fireStyleChanged
 End If
+
+Exit Property
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "style" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
 End Property
 
 Public Property Get tailThickness() As Long
@@ -281,7 +364,8 @@ End Property
 Public Property Let tailThickness(ByVal value As Long)
 If mStyle.tailThickness = value Then Exit Property
 mStyle.tailThickness = value
-If mBars.count <> 0 Then mEventProxy.paintRegion False
+If mBars.Count <> 0 Then mGOSP.PaintRegion False
+fireStyleChanged
 End Property
 
 Public Property Get upColor() As Long
@@ -291,59 +375,63 @@ End Property
 Public Property Let upColor(ByVal value As Long)
 If mStyle.upColor = value Then Exit Property
 mStyle.upColor = value
-If mBars.count <> 0 Then mEventProxy.paintRegion False
+If mBars.Count <> 0 Then mGOSP.PaintRegion False
+fireStyleChanged
 End Property
 
 '================================================================================
 ' Methods
 '================================================================================
 
-Public Function add( _
+Public Function Add( _
                 ByVal timestamp As Date, _
-                Optional ByVal key As String, _
-                Optional ByVal localStyle As BarStyle) As Bar
+                Optional ByVal Key As String, _
+                Optional ByVal LocalStyle As BarStyle, _
+                Optional ByVal IsSelectable As Boolean) As Bar
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                             "ChartSkil26.BarSeries::add", _
                             "Bar series is finished"
 
-Set add = New Bar
+Set Add = New Bar
 
-add.x = gCalculateX(timestamp, mController, True)
-If key = "" Then
-    key = GenerateGUIDString
+Add.x = gCalculateX(timestamp, mController, True)
+If Key = "" Then
+    Key = GenerateGUIDString
 End If
-add.initialise timestamp, key, mEventProxy, mLayer, mCanvas, mStyle, localStyle
+Add.initialise mSeriesID, timestamp, Key, mGOSP, mLayer, mCanvas, mStyle, LocalStyle, IsSelectable
 
-mBars.add add, key
-mEventProxy.addGraphicObject add, mSeriesId
+mBars.Add Add, Key
+mGOSP.AddGraphicObject Add, mSeriesID
 End Function
 
-Friend Sub finish()
+Friend Sub Finish()
 mFinished = True
 Set mCanvas = Nothing
 End Sub
 
 Friend Sub initialise( _
                 ByVal name As String, _
-                ByVal controller As ChartController, _
-                ByVal eventProxy As ChartRegionEventProxy, _
-                ByVal layer As Long, _
-                ByVal canvas As canvas, _
                 ByVal style As BarStyle)
 mName = name
-Set mController = controller
-Set mEventProxy = eventProxy
-mLayer = layer
-Set mCanvas = canvas
 Set mStyle = style.clone    ' style cannot be shared between BarSeries
 End Sub
 
-Public Function item(ByVal index As Variant) As Bar
-Set item = mBars(index)
+Public Function Item(ByVal index As Variant) As Bar
+Set Item = mBars(index)
 End Function
 
-Friend Sub removeAll()
+Public Sub RemoveObject(ByVal value As ChartSkil26.Bar)
+On Error GoTo Err
+mBars.Remove value.Key
+mGOSP.RemoveObject value.Handle
+
+Exit Sub
+
+Err:
+End Sub
+
+Friend Sub RemoveAll()
 StartTask Me, PriorityLow
 End Sub
 
@@ -357,4 +445,7 @@ End Function
 ' Helper Functions
 '================================================================================
 
+Private Sub fireStyleChanged()
+If Not mInhibitChangeEvent Then RaiseEvent StyleChanged
+End Sub
 

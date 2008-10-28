@@ -23,6 +23,12 @@ Implements IGraphicObject
 ' Events
 '@================================================================================
 
+Event Click()
+
+Event DblCLick()
+
+Event SelectionStateChanged()
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -42,9 +48,13 @@ Private Const ModuleName                As String = "Bar"
 ' Member variables
 '================================================================================
 
-Private mCanvas As canvas
+Private mCanvas As Canvas
 Private mLayer As Long
 Private mHandle As Long
+
+Private mIsSelectable As Boolean
+Private mIsSelected As Boolean
+Private mSeriesID As Long
 
 Private mTimestamp As Date
 
@@ -76,7 +86,7 @@ Private mBarWidth As Single
 Private mInScope As Boolean
 Private mVisible As Boolean
 
-Private mEventProxy As ChartRegionEventProxy
+Private mGOSP As GraphObjServiceProvider
 
 Private mBoundingRect As TRectangle
 
@@ -118,13 +128,7 @@ End Sub
 ' IGraphicObject Members
 '================================================================================
 
-Private Property Get IGraphicObject_boundingRectangle( _
-                        ByVal xBoundsChanged As Boolean, _
-                        ByVal yBoundsChanged As Boolean, _
-                        ByVal gaugeChanged As Boolean, _
-                        ByVal gaugeX As Double, _
-                        ByVal gaugeY As Double, _
-                        ByRef regionRect As TRectangle) As ChartSkilTypes.TRectangle
+Private Property Get IGraphicObject_boundingRectangle() As TRectangle
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -144,23 +148,30 @@ Err.Raise errNumber, errSource, errDescription
 
 End Property
 
-Private Function IGraphicObject_boundingRectanglesAt(ByVal periodNumber As Long) As ChartSkilTypes.TRectangle()
+Private Property Get IGraphicObject_BoundingRectanglesAt(ByVal PeriodNumber As Long) As TRectangle()
 '
-End Function
-
-Private Property Get IGraphicObject_capabilities() As Long
-IGraphicObject_capabilities = capabilities.PartialRedraw
 End Property
 
+Private Property Get IGraphicObject_capabilities() As GraphicObjectCapabilities
+IGraphicObject_capabilities = GraphicObjectCapabilities.PartialRedraw
+End Property
+
+Private Sub IGraphicObject_Click()
+RaiseEvent Click
+End Sub
+
+Private Sub IGraphicObject_DblCLick()
+RaiseEvent DblCLick
+End Sub
+
 Private Sub IGraphicObject_draw( _
-                ByRef areas() As TRectangle, _
-                ByVal hdc As Long)
+                ByRef areas() As TRectangle)
 Dim i As Long
 Dim failpoint As Long
 On Error GoTo Err
 
 For i = 0 To UBound(areas)
-    draw areas(i)
+    Draw areas(i)
 Next
 
 Exit Sub
@@ -191,6 +202,10 @@ Private Property Get IGraphicObject_handle() As Long
 IGraphicObject_handle = mHandle
 End Property
 
+Private Function IGraphicObject_HitTest(ByVal x As Double, ByVal y As Double) As Boolean
+IGraphicObject_HitTest = RectContains(mBoundingRect, x, y)
+End Function
+
 Private Property Let IGraphicObject_handle(ByVal value As Long)
 mHandle = value
 End Property
@@ -203,8 +218,12 @@ Private Property Let IGraphicObject_inScope(ByVal value As Boolean)
 mInScope = value
 End Property
 
+Private Property Get IGraphicObject_IsSelectable() As Boolean
+IGraphicObject_IsSelectable = mIsSelectable
+End Property
+
 Private Property Get IGraphicObject_layer() As Long
-IGraphicObject_layer = layer
+IGraphicObject_layer = Layer
 End Property
 
 Private Property Get IGraphicObject_noDraw() As Boolean
@@ -219,29 +238,45 @@ Private Property Get IGraphicObject_scaleDependent() As Boolean
 IGraphicObject_scaleDependent = False
 End Property
 
+Private Property Let IGraphicObject_Selected(ByVal RHS As Boolean)
+If RHS = mIsSelected Then
+Else
+    mIsSelected = RHS
+    RaiseEvent SelectionStateChanged
+End If
+End Property
+
+Private Property Get IGraphicObject_Selected() As Boolean
+IGraphicObject_Selected = mIsSelected
+End Property
+
+Private Property Get IGraphicObject_SeriesID() As Long
+IGraphicObject_SeriesID = mSeriesID
+End Property
+
 Private Property Get IGraphicObject_timestamp() As Date
 IGraphicObject_timestamp = mTimestamp
 End Property
 
-Private Sub IGraphicObject_undraw( _
-                ByRef area As TRectangle, _
-                ByVal hdc As Long)
-Dim failpoint As Long
-On Error GoTo Err
-
-undraw area
-
-Exit Sub
-
-Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_undraw" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
-Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
-End Sub
+'Private Sub IGraphicObject_undraw( _
+'                ByRef area As TRectangle, _
+'                ByVal hdc As Long)
+'Dim failpoint As Long
+'On Error GoTo Err
+'
+'undraw area
+'
+'Exit Sub
+'
+'Err:
+'Dim errNumber As Long: errNumber = Err.Number
+'Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_undraw" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+'Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+'Err.Raise errNumber, errSource, errDescription
+'
+'
+'End Sub
 
 Private Property Let IGraphicObject_visible(ByVal value As Boolean)
 mVisible = value
@@ -264,7 +299,7 @@ If Not gIsValidColor(value) And value <> -1 Then _
 If mBarColor = value And mIsSetBarColor Then Exit Property
 mBarColor = value
 mIsSetBarColor = True
-mEventProxy.objectChanged mHandle, mBoundingRect
+mGOSP.ObjectChanged mHandle, mBoundingRect
 End Property
 
 Public Property Get barColor() As Long
@@ -278,7 +313,7 @@ If mBarThickness = value And mIsSetBarThickness Then Exit Property
 undraw mBoundingRect
 mBarThickness = value
 mIsSetBarThickness = True
-mEventProxy.objectChanged mHandle, mBoundingRect
+mGOSP.ObjectChanged mHandle, mBoundingRect
 End Property
 
 Public Property Get barThickness() As Long
@@ -294,7 +329,7 @@ mBarWidth = value
 mIsSetBarWidth = True
 setBarSemiWidth
 calcBoundingRect
-mEventProxy.objectChanged mHandle, mBoundingRect
+mGOSP.ObjectChanged mHandle, mBoundingRect
 End Property
 
 Public Property Get barWidth() As Single
@@ -318,7 +353,7 @@ mDisplayMode = value
 mIsSetDisplayMode = True
 setBarSemiWidth
 calcBoundingRect
-mEventProxy.objectChanged mHandle, mBoundingRect
+mGOSP.ObjectChanged mHandle, mBoundingRect
 End Property
 
 Public Property Get displayMode() As BarDisplayModes
@@ -340,7 +375,7 @@ If Not gIsValidColor(value) And value <> -1 Then _
 If mDownColor = value And mIsSetDownColor Then Exit Property
 mDownColor = value
 mIsSetDownColor = True
-mEventProxy.objectChanged mHandle, mBoundingRect
+mGOSP.ObjectChanged mHandle, mBoundingRect
 End Property
 
 Public Property Get downColor() As Long
@@ -350,8 +385,8 @@ If mIsSetDownColor Then downColor = mDownColor
 If downColor = -1 Then downColor = upColor
 End Property
 
-Friend Property Get handle() As Long
-handle = mHandle
+Friend Property Get Handle() As Long
+Handle = mHandle
 End Property
 
 Public Property Get highPrice() As Double
@@ -363,7 +398,7 @@ If mIncludeInAutoscale = value And mIsSetIncludeInAutoscale Then Exit Property
 If Not value Then undraw mBoundingRect
 mIncludeInAutoscale = value
 mIsSetIncludeInAutoscale = True
-mEventProxy.objectChanged mHandle, mBoundingRect
+mGOSP.ObjectChanged mHandle, mBoundingRect
 End Property
 
 Public Property Get includeInAutoscale() As Boolean
@@ -372,28 +407,37 @@ If Not mLocalStyle Is Nothing Then includeInAutoscale = mLocalStyle.includeInAut
 If mIsSetIncludeInAutoscale Then includeInAutoscale = mIncludeInAutoscale
 End Property
 
-Public Property Get inScope() As Boolean
-inScope = mInScope
+Public Property Get InScope() As Boolean
+InScope = mInScope
 End Property
 
-Public Property Get key() As String
-key = mKey
+Public Property Get IsSelectable() As Boolean
+IsSelectable = mIsSelectable
 End Property
 
-Public Property Let layer(ByVal value As Long)
+Public Property Get IsSelected() As Boolean
+IsSelected = mIsSelected
+End Property
+
+Public Property Get Key() As String
+Key = mKey
+End Property
+
+Public Property Let Layer(ByVal value As Long)
+If mLayer = value Then Exit Property
 mLayer = value
-mEventProxy.objectChanged mHandle, mBoundingRect
+mGOSP.ObjectChanged mHandle, mBoundingRect
 End Property
 
-Public Property Get layer() As Long
-layer = mLayer
+Public Property Get Layer() As Long
+Layer = mLayer
 End Property
 
-Public Property Get localStyle() As BarStyle
-Set localStyle = mLocalStyle.clone
+Public Property Get LocalStyle() As BarStyle
+Set LocalStyle = mLocalStyle.clone
 End Property
 
-Public Property Let localStyle( _
+Public Property Let LocalStyle( _
                 ByVal value As BarStyle)
 
 undraw mBoundingRect
@@ -401,7 +445,7 @@ undraw mBoundingRect
 Set mLocalStyle = value.clone
 setBarSemiWidth
 calcBoundingRect
-mEventProxy.objectChanged mHandle, mBoundingRect
+mGOSP.ObjectChanged mHandle, mBoundingRect
 End Property
 
 Public Property Get lowPrice() As Double
@@ -416,7 +460,7 @@ Public Property Let outlineThickness(ByVal value As Long)
 If mOutlineThickness = value And mIsSetOutlineThickness Then Exit Property
 mOutlineThickness = value
 mIsSetOutlineThickness = True
-mEventProxy.objectChanged mHandle, mBoundingRect
+mGOSP.ObjectChanged mHandle, mBoundingRect
 End Property
 
 Public Property Get outlineThickness() As Long
@@ -429,7 +473,7 @@ Public Property Let solidUpBody(ByVal value As Boolean)
 If mSolidUpBody = value And mIsSetSolidUpBody Then Exit Property
 mSolidUpBody = value
 mIsSetSolidUpBody = True
-mEventProxy.objectChanged mHandle, mBoundingRect
+mGOSP.ObjectChanged mHandle, mBoundingRect
 End Property
 
 Public Property Get solidUpBody() As Boolean
@@ -443,7 +487,7 @@ If mTailThickness = value And mIsSetTailThickness Then Exit Property
 undraw mBoundingRect
 mTailThickness = value
 mIsSetTailThickness = True
-mEventProxy.objectChanged mHandle, mBoundingRect
+mGOSP.ObjectChanged mHandle, mBoundingRect
 End Property
 
 Public Property Get tailThickness() As Long
@@ -465,7 +509,7 @@ If Not gIsValidColor(value) And value <> -1 Then _
 If mUpColor = value And mIsSetUpColor Then Exit Property
 mUpColor = value
 mIsSetUpColor = True
-mEventProxy.objectChanged mHandle, mBoundingRect
+mGOSP.ObjectChanged mHandle, mBoundingRect
 End Property
 
 Public Property Get upColor() As Long
@@ -474,8 +518,8 @@ If Not mLocalStyle Is Nothing Then upColor = mLocalStyle.upColor
 If mIsSetUpColor Then upColor = mUpColor
 End Property
 
-Public Property Get visible() As Boolean
-visible = mVisible
+Public Property Get Visible() As Boolean
+Visible = mVisible
 End Property
 
 Friend Property Let x(ByVal value As Double)
@@ -492,20 +536,25 @@ End Property
 '================================================================================
 
 Friend Sub initialise( _
+                ByVal seriesId As Long, _
                 ByVal timestamp As Date, _
-                ByVal key As String, _
-                ByVal eventProxy As ChartRegionEventProxy, _
-                ByVal layer As Long, _
-                ByVal canvas As canvas, _
+                ByVal Key As String, _
+                ByVal GOSP As GraphObjServiceProvider, _
+                ByVal Layer As Long, _
+                ByVal Canvas As Canvas, _
                 ByVal baseStyle As BarStyle, _
-                ByVal localStyle As BarStyle)
+                ByVal LocalStyle As BarStyle, _
+                Optional ByVal IsSelectable As Boolean)
+mSeriesID = seriesId
 mTimestamp = timestamp
-mKey = key
-Set mEventProxy = eventProxy
-mLayer = layer
-Set mCanvas = canvas
+mKey = Key
+Set mGOSP = GOSP
+mLayer = Layer
+Set mCanvas = Canvas
 Set mBaseStyle = baseStyle
-If Not localStyle Is Nothing Then Set mLocalStyle = localStyle.clone ' local style cannot be shared
+If Not LocalStyle Is Nothing Then Set mLocalStyle = LocalStyle.clone ' local style cannot be shared
+mIsSelectable = IsSelectable
+
 setBarSemiWidth
 calcBoundingRect
 End Sub
@@ -530,7 +579,7 @@ mIsSetBarWidth = False
 
 setBarSemiWidth
 calcBoundingRect
-mEventProxy.objectChanged mHandle, mBoundingRect
+mGOSP.ObjectChanged mHandle, mBoundingRect
 
 Exit Sub
 
@@ -555,7 +604,7 @@ mBoundingRect.bottom = mLow
 mBoundingRect.top = mHigh
 End Sub
 
-Private Sub draw(ByRef area As TRectangle)
+Private Sub Draw(ByRef area As TRectangle)
 If Not area.isValid Then
     drawBar IIf(upBar, upColor, downColor), _
             IIf(barColor <> -1, barColor, IIf(upBar, upColor, downColor))
@@ -671,7 +720,7 @@ Dim lOutlineThickness As Long
 lOutlineThickness = IIf(outlineThickness = 0, 1, outlineThickness)
 
 If upBar And Not solidUpBody Then
-    mCanvas.setBrushAttributes mCanvas.backColor, FillStyles.FillSolid
+    mCanvas.setBrushAttributes mCanvas.BackColor, FillStyles.FillSolid
     barOutlineScaleX = mCanvas.convertPixelsToLogicalX(lOutlineThickness - 1)
     barOutlineScaleY = mCanvas.convertPixelsToLogicalY(lOutlineThickness - 1)
     
@@ -686,7 +735,7 @@ If upBar And Not solidUpBody Then
     Else
         
         ' first blank out the area
-        mCanvas.setPenAttributes mCanvas.backColor, _
+        mCanvas.setPenAttributes mCanvas.BackColor, _
                                 1, _
                                 LineStyles.LineInsideSolid, _
                                 DrawModes.DrawModeCopyPen
@@ -950,21 +999,17 @@ End If
 mBoundingRect.isValid = True
 mClose = Price
 
-mEventProxy.objectChanged mHandle, mBoundingRect
+mGOSP.ObjectChanged mHandle, mBoundingRect
+'mGOSP.ObjectChanged mHandle, clearRect
 
-'If mHigh >= mSurface.ScaleTop Or mLow <= (mSurface.ScaleTop + mSurface.ScaleHeight) Then
-'    mEventProxy.boundsExceeded
-'End If
 End Sub
 
 Private Sub undraw(ByRef area As TRectangle)
 If Not mVisible Then Exit Sub
 If Not area.isValid Then
-    'drawBar mCanvas.backColor, mCanvas.backColor
-    mEventProxy.objectUndrawn mHandle, mBoundingRect
+    mGOSP.ObjectUndrawn mHandle, mBoundingRect
 Else
-    'drawPartialBar area, mCanvas.backColor, mCanvas.backColor, mCanvas.backColor
-    mEventProxy.objectUndrawn mHandle, area
+    mGOSP.ObjectUndrawn mHandle, area
 End If
 End Sub
 

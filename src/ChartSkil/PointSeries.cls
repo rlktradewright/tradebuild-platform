@@ -8,7 +8,7 @@ BEGIN
 END
 Attribute VB_Name = "DataPointSeries"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -17,12 +17,19 @@ Option Explicit
 ' Interfaces
 '================================================================================
 
-Implements ChartSkilTypes.IGraphicObjectSeries
-Implements Task
+Implements IGraphicObjectSeries
 
 '================================================================================
 ' Events
 '================================================================================
+
+Event Click()
+
+Event DblCLick()
+
+Event StyleChanged()
+
+Event SelectionStateChanged()
 
 '================================================================================
 ' Types
@@ -36,25 +43,30 @@ Implements Task
 ' Member variables
 '================================================================================
 
+Private Const ProjectName                As String = "ChartSkil26"
+Private Const ModuleName                As String = "DataPointSeries"
+
 Private mController         As ChartController
-Private mSeriesId           As Long
+Private mSeriesID           As Long
+
+Private mIsSelectable As Boolean
+Private mIsSelected As Boolean
 
 Private mFinished           As Boolean
 
 Private mDataPoints         As Collection
 
-Private mCanvas             As canvas
+Private mCanvas             As Canvas
 Private mLayer              As Long
 
-Private mEventProxy         As ChartRegionEventProxy
+Private mGOSP               As GraphObjServiceProvider
 
 Private mStyle              As DataPointStyle
+Private mInhibitChangeEvent As Boolean
 
 Private mName               As String
 
 Private mPrevDataPoint      As DataPoint
-
-Private mTaskContext As TaskContext
 
 '================================================================================
 ' Enums
@@ -66,59 +78,86 @@ Private mTaskContext As TaskContext
 
 Private Sub Class_Initialize()
 Set mDataPoints = New Collection
-mSeriesId = GenerateID
 End Sub
 
 '================================================================================
 ' IGraphicObjectSeries Interface Members
 '================================================================================
 
+Private Property Let IGraphicObjectSeries_Canvas(ByVal value As Canvas)
+Set mCanvas = value
+End Property
+
+Private Sub IGraphicObjectSeries_Click()
+RaiseEvent Click
+End Sub
+
+Private Sub IGraphicObjectSeries_DblCLick()
+RaiseEvent DblCLick
+End Sub
+
 Private Property Get IGraphicObjectSeries_count() As Long
-IGraphicObjectSeries_count = mDataPoints.count
+IGraphicObjectSeries_count = mDataPoints.Count
 End Property
 
 Private Sub IGraphicObjectSeries_finish()
 mFinished = True
 End Sub
 
-Private Function IGraphicObjectSeries_item(ByVal index As Long) As ChartSkilTypes.IGraphicObject
-Set IGraphicObjectSeries_item = mDataPoints.item(index)
-End Function
-
-Private Function IGraphicObjectSeries_NewEnum() As Object
-Set IGraphicObjectSeries_NewEnum = NewEnum
-End Function
-
-Private Sub IGraphicObjectSeries_remove(ByVal index As Long)
-mDataPoints.remove index
+Private Sub IGraphicObjectSeries_Initialise( _
+                ByVal name As String, _
+                ByVal Canvas As Canvas, _
+                ByVal Layer As LayerNumbers, _
+                ByVal controller As ChartController, _
+                ByVal seriesId As Long, _
+                ByVal GOSP As GraphObjServiceProvider)
+mName = name
+mSeriesID = seriesId
+Set mGOSP = GOSP
+mLayer = Layer
+Set mCanvas = Canvas
+Set mController = controller
+If mStyle Is Nothing Then Set mStyle = controller.DefaultDataPointStyle.clone
 End Sub
 
-'================================================================================
-' Task Interface Members
-'================================================================================
-
-Private Sub Task_cancel()
-
-End Sub
-
-Private Sub Task_run()
-Dim j As Long
-
-Do While mDataPoints.count <> 0
-    mDataPoints.remove mDataPoints.count
-    j = j + 1
-    If j = 100 Then Exit Sub
-Loop
-
-mTaskContext.finish 0, False
-End Sub
-
-Private Property Let Task_TaskContext(ByVal RHS As TWUtilities30.TaskContext)
-Set mTaskContext = RHS
+Private Property Get IGraphicObjectSeries_IsSelectable() As Boolean
+IGraphicObjectSeries_IsSelectable = mIsSelectable
 End Property
 
-Private Property Get Task_TaskName() As String
-Task_TaskName = mTaskContext.name
+Private Function IGraphicObjectSeries_item(ByVal index As Long) As IGraphicObject
+Set IGraphicObjectSeries_item = mDataPoints.Item(index)
+End Function
+
+Private Property Get IGraphicObjectSeries_name() As String
+IGraphicObjectSeries_name = mName
+End Property
+
+Public Sub IGraphicObjectSeries_Remove(ByVal index As Long)
+mDataPoints.Remove index
+End Sub
+
+Private Sub IGraphicObjectSeries_RemoveObject(ByVal value As IGraphicObject)
+Dim dp As ChartSkil26.DataPoint
+
+On Error Resume Next
+Set dp = value
+
+mDataPoints.Remove dp.Key
+End Sub
+
+Private Property Let IGraphicObjectSeries_Selected(ByVal RHS As Boolean)
+If RHS <> mIsSelected Then
+    mIsSelected = RHS
+    RaiseEvent SelectionStateChanged
+End If
+End Property
+
+Private Property Get IGraphicObjectSeries_Selected() As Boolean
+IGraphicObjectSeries_Selected = mIsSelected
+End Property
+
+Private Property Get IGraphicObjectSeries_SeriesID() As Long
+IGraphicObjectSeries_SeriesID = mSeriesID
 End Property
 
 '================================================================================
@@ -140,13 +179,14 @@ If Not gIsValidColor(value) Then _
             "Value is not a valid color"
 If mStyle.Color = value Then Exit Property
 mStyle.Color = value
-If mDataPoints.count <> 0 Then
-    mEventProxy.paintRegion False
+If mDataPoints.Count <> 0 Then
+    mGOSP.PaintRegion False
 End If
+fireStyleChanged
 End Property
 
-Public Property Get count() As Long
-count = mDataPoints.count
+Public Property Get Count() As Long
+Count = mDataPoints.Count
 End Property
 
 Public Property Get displayMode() As DataPointDisplayModes
@@ -156,10 +196,11 @@ End Property
 Public Property Let displayMode(ByVal value As DataPointDisplayModes)
 If mStyle.displayMode = value Then Exit Property
 mStyle.displayMode = value
-If mDataPoints.count <> 0 Then
-    mEventProxy.recalcBoundary mSeriesId
-    mEventProxy.paintRegion True
+If mDataPoints.Count <> 0 Then
+    mGOSP.RecalcBoundary mSeriesID
+    mGOSP.PaintRegion True
 End If
+fireStyleChanged
 End Property
 
 Public Property Get downColor() As Long
@@ -173,9 +214,10 @@ If Not gIsValidColor(value) And value <> -1 Then _
             "Value is not a valid color or -1"
 If mStyle.downColor = value Then Exit Property
 mStyle.downColor = value
-If mDataPoints.count <> 0 Then
-    mEventProxy.paintRegion False
+If mDataPoints.Count <> 0 Then
+    mGOSP.PaintRegion False
 End If
+fireStyleChanged
 End Property
 
 Public Property Get histBarWidth() As Single
@@ -189,10 +231,11 @@ If value <= 0 Or value > 1 Then _
             "histBarWidth must be greater than zero but not greater than 1"
 If mStyle.histBarWidth = value Then Exit Property
 mStyle.histBarWidth = value
-If mDataPoints.count <> 0 Then
-    mEventProxy.recalcBoundary mSeriesId
-    mEventProxy.paintRegion False
+If mDataPoints.Count <> 0 Then
+    mGOSP.RecalcBoundary mSeriesID
+    mGOSP.PaintRegion False
 End If
+fireStyleChanged
 End Property
 
 Friend Property Get includeInAutoscale() As Boolean
@@ -202,13 +245,26 @@ End Property
 Public Property Let includeInAutoscale(ByVal value As Boolean)
 If mStyle.includeInAutoscale = value Then Exit Property
 mStyle.includeInAutoscale = value
-If mDataPoints.count <> 0 Then
-    mEventProxy.paintRegion True
+If mDataPoints.Count <> 0 Then
+    mGOSP.PaintRegion True
 End If
+fireStyleChanged
 End Property
 
-Public Property Get layer() As Long
-layer = mLayer
+Public Property Let IsSelectable(ByVal value As Boolean)
+mIsSelectable = value
+End Property
+
+Public Property Get IsSelectable() As Boolean
+IsSelectable = mIsSelectable
+End Property
+
+Public Property Get IsSelected() As Boolean
+IsSelected = mIsSelected
+End Property
+
+Public Property Get Layer() As Long
+Layer = mLayer
 End Property
 
 Public Property Get linestyle() As LineStyles
@@ -218,9 +274,10 @@ End Property
 Public Property Let linestyle(ByVal value As LineStyles)
 If mStyle.linestyle = value Then Exit Property
 mStyle.linestyle = value
-If mDataPoints.count <> 0 Then
-    mEventProxy.paintRegion False
+If mDataPoints.Count <> 0 Then
+    mGOSP.PaintRegion False
 End If
+fireStyleChanged
 End Property
 
 Public Property Get lineThickness() As Long
@@ -230,10 +287,11 @@ End Property
 Public Property Let lineThickness(ByVal value As Long)
 If mStyle.lineThickness = value Then Exit Property
 mStyle.lineThickness = value
-If mDataPoints.count <> 0 Then
-    mEventProxy.recalcBoundary mSeriesId
-    mEventProxy.paintRegion True
+If mDataPoints.Count <> 0 Then
+    mGOSP.RecalcBoundary mSeriesID
+    mGOSP.PaintRegion True
 End If
+fireStyleChanged
 End Property
 
 Public Property Get name() As String
@@ -251,9 +309,10 @@ End Property
 Public Property Let pointStyle(ByVal value As PointStyles)
 If mStyle.pointStyle = value Then Exit Property
 mStyle.pointStyle = value
-If mDataPoints.count <> 0 Then
-    mEventProxy.paintRegion False
+If mDataPoints.Count <> 0 Then
+    mGOSP.PaintRegion False
 End If
+fireStyleChanged
 End Property
 
 Public Property Get style() As DataPointStyle
@@ -265,6 +324,17 @@ Public Property Let style( _
 Dim somethingChanged As Boolean
 Dim recalcBoundaries As Boolean
 Dim recalcRegion As Boolean
+
+Dim failpoint As Long
+On Error GoTo Err
+
+If value Is Nothing Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "style", _
+            "Style is null reference"
+End If
+
+mInhibitChangeEvent = True
 
 If value.displayMode <> mStyle.displayMode Then
     somethingChanged = True
@@ -299,10 +369,22 @@ If value.upColor <> mStyle.upColor Then
     mStyle.upColor = value.upColor
 End If
 
+mInhibitChangeEvent = False
+
 If somethingChanged Then
-    If recalcBoundaries Then If mDataPoints.count <> 0 Then mEventProxy.recalcBoundary mSeriesId
-    If mDataPoints.count <> 0 Then mEventProxy.paintRegion recalcRegion
+    If recalcBoundaries Then If mDataPoints.Count <> 0 Then mGOSP.RecalcBoundary mSeriesID
+    If mDataPoints.Count <> 0 Then mGOSP.PaintRegion recalcRegion
+    fireStyleChanged
 End If
+
+Exit Property
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "style" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Property
 
 Public Property Get upColor() As Long
@@ -316,20 +398,22 @@ If Not gIsValidColor(value) Then _
             "Value is not a valid color"
 If mStyle.upColor = value Then Exit Property
 mStyle.upColor = value
-If mDataPoints.count <> 0 Then
-    mEventProxy.recalcBoundary mSeriesId
-    mEventProxy.paintRegion False
+If mDataPoints.Count <> 0 Then
+    mGOSP.RecalcBoundary mSeriesID
+    mGOSP.PaintRegion False
 End If
+fireStyleChanged
 End Property
 
 '================================================================================
 ' Methods
 '================================================================================
 
-Public Function add( _
+Public Function Add( _
                 ByVal timestamp As Date, _
-                Optional ByVal key As String, _
-                Optional ByVal localStyle As DataPointStyle) As DataPoint
+                Optional ByVal Key As String, _
+                Optional ByVal LocalStyle As DataPointStyle, _
+                Optional ByVal IsSelectable As Boolean) As DataPoint
 Static duplicateCount As Long       ' counts the number of successive adds with
                                     ' the same timestamp
 Static prevTimestamp As Date
@@ -346,47 +430,49 @@ If Not mPrevDataPoint Is Nothing Then
     End If
 End If
 
-Set add = New DataPoint
-add.x = gCalculateX(timestamp, mController, False, duplicateCount)
-If key = "" Then
-    key = GenerateGUIDString
+Set Add = New DataPoint
+If CDbl(timestamp) <> 0 Then Add.x = gCalculateX(timestamp, mController, False, duplicateCount)
+If Key = "" Then
+    Key = GenerateGUIDString
 End If
-add.initialise timestamp, key, mEventProxy, mLayer, mCanvas, mStyle, localStyle
+Add.initialise mSeriesID, timestamp, Key, mGOSP, mLayer, mCanvas, mStyle, LocalStyle, IsSelectable
 
-add.prevDataPoint = mPrevDataPoint
-mDataPoints.add add, key
-Set mPrevDataPoint = add
+Add.prevDataPoint = mPrevDataPoint
+mDataPoints.Add Add, Key
+Set mPrevDataPoint = Add
 prevTimestamp = timestamp
-mEventProxy.addGraphicObject add, mSeriesId
+mGOSP.AddGraphicObject Add, mSeriesID
 End Function
 
-Friend Sub finish()
+Friend Sub Finish()
 mFinished = True
 Set mCanvas = Nothing
 End Sub
 
 Friend Sub initialise( _
                 ByVal name As String, _
-                ByVal controller As ChartController, _
-                ByVal eventProxy As ChartRegionEventProxy, _
-                ByVal layer As Long, _
-                ByVal canvas As canvas, _
                 ByVal style As DataPointStyle)
 mName = name
-Set mController = controller
-Set mEventProxy = eventProxy
-mLayer = layer
-Set mCanvas = canvas
 Set mStyle = style.clone    ' style cannot be shared between DataPointSeries
 End Sub
 
-Public Function item(ByVal index As Variant) As DataPoint
-Attribute item.VB_UserMemId = 0
-Set item = mDataPoints(index)
+Public Function Item(ByVal index As Variant) As DataPoint
+Attribute Item.VB_UserMemId = 0
+Set Item = mDataPoints(index)
 End Function
 
-Friend Sub removeAll()
+Friend Sub RemoveAll()
 StartTask Me, PriorityLow
+End Sub
+
+Public Sub RemoveObject(ByVal value As ChartSkil26.DataPoint)
+On Error GoTo Err
+mDataPoints.Remove value.Key
+mGOSP.RemoveObject value.Handle
+
+Exit Sub
+
+Err:
 End Sub
 
 Public Function NewEnum() As IUnknown
@@ -399,5 +485,8 @@ End Function
 ' Helper Functions
 '================================================================================
 
+Private Sub fireStyleChanged()
+If Not mInhibitChangeEvent Then RaiseEvent StyleChanged
+End Sub
 
 

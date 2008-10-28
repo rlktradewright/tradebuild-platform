@@ -23,6 +23,12 @@ Implements IGraphicObject
 ' Events
 '@================================================================================
 
+Event Click()
+
+Event DblCLick()
+
+Event SelectionStateChanged()
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -42,9 +48,13 @@ Private Const ModuleName                    As String = "Line"
 ' Member variables
 '================================================================================
 
-Private mCanvas  As canvas
+Private mCanvas  As Canvas
 Private mLayer As Long
 Private mHandle As Long
+
+Private mIsSelectable As Boolean
+Private mIsSelected As Boolean
+Private mSeriesID As Long
 
 Private mLocalStyle As linestyle
 Private mBaseStyle As linestyle
@@ -52,7 +62,7 @@ Private mBaseStyle As linestyle
 Private mInScope As Boolean
 Private mVisible As Boolean
 
-Private mEventProxy As ChartRegionEventProxy
+Private mGOSP As GraphObjServiceProvider
 
 Private mBoundingRect As TRectangle
 Private mStartArrowRect As TRectangle
@@ -157,13 +167,7 @@ End Sub
 ' IGraphicObject Event Handlers
 '================================================================================
 
-Private Property Get IGraphicObject_boundingRectangle( _
-                        ByVal xBoundsChanged As Boolean, _
-                        ByVal yBoundsChanged As Boolean, _
-                        ByVal gaugeChanged As Boolean, _
-                        ByVal gaugeX As Double, _
-                        ByVal gaugeY As Double, _
-                        ByRef regionRect As TRectangle) As ChartSkilTypes.TRectangle
+Private Property Get IGraphicObject_boundingRectangle() As TRectangle
 
 Dim canvasChanges As Long
 
@@ -200,18 +204,18 @@ Err.Raise errNumber, errSource, errDescription
 
 End Property
 
-Private Function IGraphicObject_boundingRectanglesAt(ByVal periodNumber As Long) As ChartSkilTypes.TRectangle()
+Private Property Get IGraphicObject_BoundingRectanglesAt(ByVal PeriodNumber As Long) As TRectangle()
 Dim periodrect As TRectangle
 Dim rects() As TRectangle
 
 Dim failpoint As Long
 On Error GoTo Err
 
-If mBlank Then Exit Function
+If mBlank Then Exit Property
 
 With periodrect
-    .left = periodNumber
-    .right = periodNumber + 1
+    .left = PeriodNumber
+    .right = PeriodNumber + 1
     .bottom = mRegionRect.bottom
     .top = mRegionRect.top
     .isValid = True
@@ -228,45 +232,45 @@ If mVertical <> VerticalNot Then
         rects(0) = vertRect
     End If
 Else
-    If periodNumber = Int(mRegionRect.right) Or _
-        (Not mLeftToRight And periodNumber = mPoint2.x And Not extendAfter) Or _
-        (Not mLeftToRight And periodNumber = mPoint1.x And Not extendBefore) _
+    If PeriodNumber = Int(mRegionRect.right) Or _
+        (Not mLeftToRight And PeriodNumber = mPoint2.x And Not extendAfter) Or _
+        (Not mLeftToRight And PeriodNumber = mPoint1.x And Not extendBefore) _
     Then
-        If thickness <= 1 Then Exit Function
+        If thickness <= 1 Then Exit Property
     End If
     
     ReDim rects(0) As TRectangle
     
     With rects(0)
-        .left = periodNumber
+        .left = PeriodNumber
         If mLeftToRight Then
-            If periodNumber < mPoint1.x And _
+            If PeriodNumber < mPoint1.x And _
                 Not extendBefore _
             Then
                 .left = mPoint1.x - 1
             End If
         Else
-            If periodNumber < mPoint2.x And _
+            If PeriodNumber < mPoint2.x And _
                 Not extendAfter _
             Then
                 .left = mPoint2.x - 1
             End If
         End If
         If mLeftToRight Then
-            If (Not extendAfter And periodNumber = mPoint2.x) Or _
-                periodNumber = Int(mRegionRect.right) _
+            If (Not extendAfter And PeriodNumber = mPoint2.x) Or _
+                PeriodNumber = Int(mRegionRect.right) _
             Then
                 .right = .left
             Else
-                .right = periodNumber + 1
+                .right = PeriodNumber + 1
             End If
         Else
-            If (Not extendBefore And periodNumber = mPoint1.x) Or _
-                periodNumber = Int(mRegionRect.right) _
+            If (Not extendBefore And PeriodNumber = mPoint1.x) Or _
+                PeriodNumber = Int(mRegionRect.right) _
             Then
                 .right = .left
             Else
-                .right = periodNumber + 1
+                .right = PeriodNumber + 1
             End If
         End If
         
@@ -278,16 +282,16 @@ Else
             .bottom = mA * .right + mB - mThicknessOffsetY
         End If
         If mLeftToRight Then
-            If (Not extendBefore And periodNumber = mPoint1.x) Then .left = .left - mThicknessOffsetX
-            If (Not extendAfter And periodNumber = mPoint2.x) Or _
-                periodNumber = Int(mRegionRect.right) _
+            If (Not extendBefore And PeriodNumber = mPoint1.x) Then .left = .left - mThicknessOffsetX
+            If (Not extendAfter And PeriodNumber = mPoint2.x) Or _
+                PeriodNumber = Int(mRegionRect.right) _
             Then
                 .right = .right + mThicknessOffsetX
             End If
         Else
-            If (Not extendAfter And periodNumber = mPoint2.x) Then .left = .left - mThicknessOffsetX
-            If (Not extendBefore And periodNumber = mPoint1.x) Or _
-                periodNumber = Int(mRegionRect.right) _
+            If (Not extendAfter And PeriodNumber = mPoint2.x) Then .left = .left - mThicknessOffsetX
+            If (Not extendBefore And PeriodNumber = mPoint1.x) Or _
+                PeriodNumber = Int(mRegionRect.right) _
             Then
                 .right = .right + mThicknessOffsetX
             End If
@@ -306,9 +310,9 @@ If Not arrowStartStyle = ArrowNone Then
         rects(0) = rectUnion(rects(0), mStartArrowRect)
     End If
 End If
-IGraphicObject_boundingRectanglesAt = rects
+IGraphicObject_BoundingRectanglesAt = rects
 
-Exit Function
+Exit Property
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
@@ -318,17 +322,24 @@ gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrL
 Err.Raise errNumber, errSource, errDescription
 
 
-End Function
-
-Private Property Get IGraphicObject_capabilities() As Long
-'IGraphicObject_capabilities = capabilities.ComplexBounding Or _
-'                            capabilities.PartialRedraw
-IGraphicObject_capabilities = capabilities.PartialRedraw
 End Property
 
+Private Property Get IGraphicObject_capabilities() As GraphicObjectCapabilities
+'IGraphicObject_capabilities = GraphicObjectCapabilities.ComplexBounding Or _
+'                            GraphicObjectCapabilities.PartialRedraw
+IGraphicObject_capabilities = GraphicObjectCapabilities.PartialRedraw
+End Property
+
+Private Sub IGraphicObject_Click()
+RaiseEvent Click
+End Sub
+
+Private Sub IGraphicObject_DblCLick()
+RaiseEvent DblCLick
+End Sub
+
 Private Sub IGraphicObject_draw( _
-                ByRef areas() As TRectangle, _
-                ByVal hdc As Long)
+                ByRef areas() As TRectangle)
 Dim i As Long
 Dim j As Long
 Dim areasToRedraw() As TRectangle
@@ -350,7 +361,7 @@ For i = 1 To UBound(areas)
 Next
 
 For i = j To 0 Step -1
-    draw areasToRedraw(i), undraw:=False
+    Draw areasToRedraw(i), undraw:=False
 Next
 
 Exit Sub
@@ -384,16 +395,43 @@ Private Property Get IGraphicObject_handle() As Long
 IGraphicObject_handle = mHandle
 End Property
 
+Private Function IGraphicObject_HitTest(ByVal x As Double, ByVal y As Double) As Boolean
+Dim lineX As Double
+Dim lineY As Double
+Dim hitTestRect As TRectangle
+
+hitTestRect = mBoundingRect
+hitTestRect.left = hitTestRect.left - mCanvas.convertPixelsToLogicalX(HitTestTolerancePixels)
+hitTestRect.right = hitTestRect.right + mCanvas.convertPixelsToLogicalX(HitTestTolerancePixels)
+hitTestRect.bottom = hitTestRect.bottom - mCanvas.convertPixelsToLogicalY(HitTestTolerancePixels)
+hitTestRect.top = hitTestRect.top + mCanvas.convertPixelsToLogicalY(HitTestTolerancePixels)
+
+If Not RectContains(hitTestRect, x, y) Then Exit Function
+
+If mA <= 1 Then
+    lineY = mA * x + mB
+    If Abs(y - lineY) <= mCanvas.convertPixelsToLogicalY(HitTestTolerancePixels) Then IGraphicObject_HitTest = True
+Else
+    lineX = (y - mB) / mA
+    If Abs(x - lineX) <= mCanvas.convertPixelsToLogicalX(HitTestTolerancePixels) Then IGraphicObject_HitTest = True
+End If
+
+End Function
+
 Private Property Get IGraphicObject_includeInAutoscale() As Boolean
-IGraphicObject_includeInAutoscale = includeInAutoscale
+IGraphicObject_includeInAutoscale = IncludeInAutoscale
 End Property
 
 Private Property Let IGraphicObject_inScope(ByVal value As Boolean)
 mInScope = value
 End Property
 
+Private Property Get IGraphicObject_IsSelectable() As Boolean
+IGraphicObject_IsSelectable = mIsSelectable
+End Property
+
 Private Property Get IGraphicObject_layer() As Long
-IGraphicObject_layer = layer
+IGraphicObject_layer = Layer
 End Property
 
 Private Property Get IGraphicObject_noDraw() As Boolean
@@ -412,29 +450,45 @@ Private Property Get IGraphicObject_scaleDependent() As Boolean
 IGraphicObject_scaleDependent = fixedX Or fixedY
 End Property
 
+Private Property Let IGraphicObject_Selected(ByVal RHS As Boolean)
+If RHS = mIsSelected Then
+Else
+    mIsSelected = RHS
+    RaiseEvent SelectionStateChanged
+End If
+End Property
+
+Private Property Get IGraphicObject_Selected() As Boolean
+IGraphicObject_Selected = mIsSelected
+End Property
+
+Private Property Get IGraphicObject_SeriesID() As Long
+IGraphicObject_SeriesID = mSeriesID
+End Property
+
 Private Property Get IGraphicObject_timestamp() As Date
 IGraphicObject_timestamp = 0
 End Property
 
-Private Sub IGraphicObject_undraw( _
-                ByRef area As TRectangle, _
-                ByVal hdc As Long)
-Dim failpoint As Long
-On Error GoTo Err
-
-undraw
-
-Exit Sub
-
-Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_undraw" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
-Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
-End Sub
+'Private Sub IGraphicObject_undraw( _
+'                ByRef area As TRectangle, _
+'                ByVal hdc As Long)
+'Dim failpoint As Long
+'On Error GoTo Err
+'
+'undraw
+'
+'Exit Sub
+'
+'Err:
+'Dim errNumber As Long: errNumber = Err.Number
+'Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_undraw" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+'Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+'Err.Raise errNumber, errSource, errDescription
+'
+'
+'End Sub
 
 Private Property Let IGraphicObject_visible(ByVal value As Boolean)
 mVisible = value
@@ -624,8 +678,8 @@ mIsSetColor = True
 update
 End Property
 
-Public Property Get direction() As Quadrants
-direction = mDirection
+Public Property Get Direction() As Quadrants
+Direction = mDirection
 End Property
 
 Friend Property Get extended() As Boolean
@@ -700,28 +754,28 @@ If mFixedY Then convertPositionY
 update
 End Property
 
-Friend Property Get handle() As Long
-handle = mHandle
+Friend Property Get Handle() As Long
+Handle = mHandle
 End Property
 
-Public Property Get hidden() As Boolean
-hidden = mHidden
+Public Property Get Hidden() As Boolean
+Hidden = mHidden
 End Property
 
-Public Property Let hidden(ByVal value As Boolean)
+Public Property Let Hidden(ByVal value As Boolean)
 If mHidden = value Then Exit Property
 If value Then undraw
 mHidden = value
 update
 End Property
 
-Public Property Get includeInAutoscale() As Boolean
-includeInAutoscale = mBaseStyle.includeInAutoscale
-If Not mLocalStyle Is Nothing Then includeInAutoscale = mLocalStyle.includeInAutoscale
-If mIsSetIncludeInAutoscale Then includeInAutoscale = mIncludeInAutoscale
+Public Property Get IncludeInAutoscale() As Boolean
+IncludeInAutoscale = mBaseStyle.IncludeInAutoscale
+If Not mLocalStyle Is Nothing Then IncludeInAutoscale = mLocalStyle.IncludeInAutoscale
+If mIsSetIncludeInAutoscale Then IncludeInAutoscale = mIncludeInAutoscale
 End Property
 
-Public Property Let includeInAutoscale(ByVal value As Boolean)
+Public Property Let IncludeInAutoscale(ByVal value As Boolean)
 If mIncludeInAutoscale = value And mIsSetIncludeInAutoscale Then Exit Property
 If Not value Then undraw
 mIncludeInAutoscale = value
@@ -729,20 +783,30 @@ mIsSetIncludeInAutoscale = True
 update
 End Property
 
-Public Property Get inScope() As Boolean
-inScope = mInScope
+Public Property Get InScope() As Boolean
+InScope = mInScope
+End Property
+
+Public Property Get IsSelectable() As Boolean
+IsSelectable = mIsSelectable
+End Property
+
+Public Property Get IsSelected() As Boolean
+IsSelected = mIsSelected
 End Property
 
 Public Property Get key() As String
 key = mKey
 End Property
 
-Friend Property Let layer(ByVal value As Long)
+Public Property Let Layer(ByVal value As Long)
+If mLayer = value Then Exit Property
 mLayer = value
+update
 End Property
 
-Public Property Get layer() As Long
-layer = mLayer
+Public Property Get Layer() As Long
+Layer = mLayer
 End Property
 
 Public Property Get linestyle() As LineStyles
@@ -759,27 +823,27 @@ mIsSetLineStyle = True
 update
 End Property
 
-Public Property Get localStyle() As BarStyle
+Public Property Get localStyle() As linestyle
 Set localStyle = mLocalStyle.clone
 End Property
 
 Public Property Let localStyle( _
-                ByVal value As BarStyle)
+                ByVal value As linestyle)
 
 undraw
 Set mLocalStyle = value.clone
 calcEndArrowConstants
 calcStartArrowConstants
 calcCurrentBoundingRect
-mEventProxy.objectChanged mHandle, mBoundingRect
+mGOSP.ObjectChanged mHandle, mBoundingRect
 
 End Property
 
-Public Property Get point1() As Point
-Set point1 = mPoint1
+Public Property Get Point1() As Point
+Set Point1 = mPoint1
 End Property
 
-Public Property Let point1(ByVal value As Point)
+Public Property Let Point1(ByVal value As Point)
 If value Is Nothing Then
     undraw
     Set mPoint1 = Nothing
@@ -806,11 +870,11 @@ update
 
 End Property
 
-Public Property Get point2() As Point
-Set point2 = mPoint2
+Public Property Get Point2() As Point
+Set Point2 = mPoint2
 End Property
 
-Public Property Let point2(ByVal value As Point)
+Public Property Let Point2(ByVal value As Point)
 If value Is Nothing Then
     undraw
     Set mPoint2 = Nothing
@@ -851,12 +915,12 @@ mIsSetThickness = True
 update
 End Property
 
-Public Property Get vertical() As Verticals
-vertical = mVertical
+Public Property Get Vertical() As Verticals
+Vertical = mVertical
 End Property
 
-Public Property Get visible() As Boolean
-visible = mVisible
+Public Property Get Visible() As Boolean
+Visible = mVisible
 End Property
 
 '================================================================================
@@ -864,52 +928,57 @@ End Property
 '================================================================================
 
 Friend Sub initialise( _
+                ByVal seriesId As Long, _
                 ByVal key As String, _
-                ByVal eventProxy As ChartRegionEventProxy, _
-                ByVal layer As Long, _
-                ByVal canvas As canvas, _
+                ByVal GOSP As GraphObjServiceProvider, _
+                ByVal Layer As Long, _
+                ByVal Canvas As Canvas, _
                 ByVal baseStyle As linestyle, _
-                ByVal localStyle As linestyle)
+                ByVal localStyle As linestyle, _
+                Optional ByVal IsSelectable As Boolean)
                 
+mSeriesID = seriesId
 mKey = key
-Set mEventProxy = eventProxy
-mLayer = layer
-Set mCanvas = canvas
+Set mGOSP = GOSP
+mLayer = Layer
+Set mCanvas = Canvas
 Set mBaseStyle = baseStyle
 If Not localStyle Is Nothing Then Set mLocalStyle = localStyle.clone ' local style cannot be shared
+mIsSelectable = IsSelectable
+
 calcCurrentBoundingRect
 End Sub
 
-Public Sub setPosition( _
-                ByVal point1 As Point, _
-                ByVal point2 As Point)
+Public Sub SetPosition( _
+                ByVal Point1 As Point, _
+                ByVal Point2 As Point)
 Dim failpoint As Long
 On Error GoTo Err
 
-If point1 Is Nothing Or point2 Is Nothing Then
+If Point1 Is Nothing Or Point2 Is Nothing Then
 
     failpoint = 100
 
     undraw
-    Set mPoint1 = point1
-    Set mPoint2 = point2
+    Set mPoint1 = Point1
+    Set mPoint2 = Point2
     mBlank = True
     Exit Sub
-ElseIf (Not point1.isAssigned) Then
+ElseIf (Not Point1.isAssigned) Then
 
     failpoint = 200
 
     undraw
     Set mPoint1 = Nothing
-    Set mPoint2 = point2
+    Set mPoint2 = Point2
     mBlank = True
     Exit Sub
-ElseIf (Not point2.isAssigned) Then
+ElseIf (Not Point2.isAssigned) Then
 
     failpoint = 300
 
     undraw
-    Set mPoint1 = point1
+    Set mPoint1 = Point1
     Set mPoint2 = Nothing
     mBlank = True
     Exit Sub
@@ -917,14 +986,14 @@ ElseIf (Not mPoint1 Is Nothing) And (Not mPoint2 Is Nothing) Then
 
     failpoint = 400
     
-    If point1.equals(mPoint1) And point2.equals(mPoint2) Then Exit Sub
+    If Point1.equals(mPoint1) And Point2.equals(mPoint2) Then Exit Sub
 End If
 
 failpoint = 500
 
 undraw
-Set mPoint1 = point1
-Set mPoint2 = point2
+Set mPoint1 = Point1
+Set mPoint2 = Point2
 
 failpoint = 600
 
@@ -1343,7 +1412,7 @@ Else
 End If
 End Sub
 
-Private Sub draw(ByRef area As TRectangle, ByVal undraw As Boolean)
+Private Sub Draw(ByRef area As TRectangle, ByVal undraw As Boolean)
 Dim right As Double
 Dim left As Double
 Dim bottom As Double
@@ -1370,12 +1439,12 @@ End If
 failpoint = 100
 
 If thickness = 1 Then
-    mCanvas.setPenAttributes IIf(undraw, mCanvas.backColor, Color), _
+    mCanvas.setPenAttributes IIf(undraw, mCanvas.BackColor, Color), _
                             thickness, _
                             linestyle, _
                             DrawModes.DrawModeCopyPen
 Else
-    mCanvas.setPenAttributes IIf(undraw, mCanvas.backColor, Color), _
+    mCanvas.setPenAttributes IIf(undraw, mCanvas.BackColor, Color), _
                             thickness, _
                             LineStyles.LineSolid, _
                             DrawModes.DrawModeCopyPen
@@ -1677,7 +1746,7 @@ Select Case arrowEndStyle
 Case ArrowNone
 
 Case ArrowSingleOpen
-    mCanvas.setPenAttributes IIf(undraw, mCanvas.backColor, arrowEndColor), _
+    mCanvas.setPenAttributes IIf(undraw, mCanvas.BackColor, arrowEndColor), _
                             thickness, _
                             LineStyles.LineSolid, _
                             DrawModes.DrawModeCopyPen
@@ -1687,13 +1756,13 @@ Case ArrowSingleOpen
 Case ArrowDoubleOpen
 
 Case ArrowClosed
-    mCanvas.setPenAttributes IIf(undraw, mCanvas.backColor, arrowEndColor), _
+    mCanvas.setPenAttributes IIf(undraw, mCanvas.BackColor, arrowEndColor), _
                             1, _
                             LineStyles.LineSolid, _
                             DrawModes.DrawModeCopyPen
     
     With mCanvas
-        .setBrushAttributes IIf(undraw, .backColor, arrowEndFillColor), arrowEndFillStyle
+        .setBrushAttributes IIf(undraw, .BackColor, arrowEndFillColor), arrowEndFillStyle
         
         Set vertices(0) = .newPoint(x, y)
         Set vertices(1) = .newPoint(x + mEndArrowX1Offset, _
@@ -1732,7 +1801,7 @@ Select Case arrowStartStyle
 Case ArrowNone
 
 Case ArrowSingleOpen
-    mCanvas.setPenAttributes IIf(undraw, mCanvas.backColor, arrowStartColor), _
+    mCanvas.setPenAttributes IIf(undraw, mCanvas.BackColor, arrowStartColor), _
                             thickness, _
                             LineStyles.LineSolid, _
                             DrawModes.DrawModeCopyPen
@@ -1742,13 +1811,13 @@ Case ArrowSingleOpen
 Case ArrowDoubleOpen
 
 Case ArrowClosed
-    mCanvas.setPenAttributes IIf(undraw, mCanvas.backColor, arrowStartColor), _
+    mCanvas.setPenAttributes IIf(undraw, mCanvas.BackColor, arrowStartColor), _
                             1, _
                             LineStyles.LineSolid, _
                             DrawModes.DrawModeCopyPen
     
     With mCanvas
-        .setBrushAttributes IIf(undraw, .backColor, arrowStartFillColor), arrowStartfillstyle
+        .setBrushAttributes IIf(undraw, .BackColor, arrowStartFillColor), arrowStartfillstyle
         
         Set vertices(0) = .newPoint(x, y)
         Set vertices(1) = .newPoint(x + mStartArrowX1Offset, _
@@ -1827,7 +1896,7 @@ Private Sub undraw()
 
 If Not mVisible Then Exit Sub
 'draw rectIntersection(mBoundingRect, mRegionRect), True
-mEventProxy.objectUndrawn mHandle, mBoundingRect
+mGOSP.ObjectUndrawn mHandle, mBoundingRect
 Exit Sub
 
 End Sub
@@ -1841,10 +1910,10 @@ calcConstants
 calcEndArrowConstants
 calcStartArrowConstants
 calcCurrentBoundingRect
-mEventProxy.objectChanged mHandle, mBoundingRect
+mGOSP.ObjectChanged mHandle, mBoundingRect
 'If mIncludeInAutoscale And mBoundingRect.isvalid Then
 '    If mBoundingRect.top >= mSurface.ScaleTop Or mBoundingRect.bottom <= (mSurface.ScaleTop + mSurface.ScaleHeight) Then
-'        mEventProxy.boundsExceeded
+'        mGOSP.boundsExceeded
 '    End If
 'End If
 End Sub

@@ -23,6 +23,12 @@ Implements IGraphicObject
 ' Events
 '@================================================================================
 
+Event Click()
+
+Event DblCLick()
+
+Event SelectionStateChanged()
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -42,9 +48,14 @@ Private Const ModuleName                As String = "Text"
 ' Member variables and constants
 '================================================================================
 
-Private mCanvas As canvas
+Private mCanvas As Canvas
 Private mLayer As Long
 Private mHandle As Long
+
+Private mIsSelectable As Boolean
+Private mIsSeriesSelectable As Boolean
+Private mIsSelected As Boolean
+Private mSeriesID As Long
 
 Private mLocalStyle As TextStyle
 Private mBaseStyle As TextStyle
@@ -52,7 +63,7 @@ Private mBaseStyle As TextStyle
 Private mInScope As Boolean
 Private mVisible As Boolean
 
-Private mEventProxy As ChartRegionEventProxy
+Private mGOSP As GraphObjServiceProvider
 
 Private mNoDraw As Boolean
 
@@ -128,13 +139,7 @@ End Sub
 ' IGraphicObject Event Handlers
 '================================================================================
 
-Private Property Get IGraphicObject_boundingRectangle( _
-                        ByVal xBoundsChanged As Boolean, _
-                        ByVal yBoundsChanged As Boolean, _
-                        ByVal gaugeChanged As Boolean, _
-                        ByVal gaugeX As Double, _
-                        ByVal gaugeY As Double, _
-                        ByRef regionRect As TRectangle) As ChartSkilTypes.TRectangle
+Private Property Get IGraphicObject_boundingRectangle() As TRectangle
 Static prevGaugeX As Double
 Static prevGaugeY As Double
 Static prevRect As TRectangle
@@ -176,18 +181,25 @@ Err.Raise errNumber, errSource, errDescription
 
 End Property
 
-Private Function IGraphicObject_boundingRectanglesAt(ByVal periodNumber As Long) As ChartSkilTypes.TRectangle()
+Private Property Get IGraphicObject_BoundingRectanglesAt(ByVal PeriodNumber As Long) As TRectangle()
 '
-End Function
-
-Private Property Get IGraphicObject_capabilities() As Long
-IGraphicObject_capabilities = capabilities.BlockUndraw
 End Property
 
+Private Property Get IGraphicObject_capabilities() As GraphicObjectCapabilities
+IGraphicObject_capabilities = GraphicObjectCapabilities.BlockUndraw
+End Property
+
+Private Sub IGraphicObject_Click()
+RaiseEvent Click
+End Sub
+
+Private Sub IGraphicObject_DblCLick()
+RaiseEvent DblCLick
+End Sub
+
 Private Sub IGraphicObject_draw( _
-                ByRef areas() As TRectangle, _
-                ByVal hdc As Long)
-draw
+                ByRef areas() As TRectangle)
+Draw
 End Sub
 
 Private Property Get IGraphicObject_extendedObject() As Boolean
@@ -210,16 +222,28 @@ Private Property Get IGraphicObject_handle() As Long
 IGraphicObject_handle = mHandle
 End Property
 
+Private Function IGraphicObject_HitTest(ByVal x As Double, ByVal y As Double) As Boolean
+IGraphicObject_HitTest = RectContains(mBoundingRect, x, y)
+End Function
+
 Private Property Get IGraphicObject_includeInAutoscale() As Boolean
-IGraphicObject_includeInAutoscale = includeInAutoscale
+IGraphicObject_includeInAutoscale = IncludeInAutoscale
 End Property
 
 Private Property Let IGraphicObject_inScope(ByVal value As Boolean)
 mInScope = value
 End Property
 
+Private Property Get IGraphicObject_IsSelectable() As Boolean
+IGraphicObject_IsSelectable = mIsSelectable
+End Property
+
+Private Property Get IGraphicObject_IsSeriesSelectable() As Boolean
+IGraphicObject_IsSeriesSelectable = mIsSeriesSelectable
+End Property
+
 Private Property Get IGraphicObject_layer() As Long
-IGraphicObject_layer = layer
+IGraphicObject_layer = Layer
 End Property
 
 Private Property Get IGraphicObject_noDraw() As Boolean
@@ -248,29 +272,45 @@ Private Property Get IGraphicObject_scaleDependent() As Boolean
 IGraphicObject_scaleDependent = fixedX Or fixedY
 End Property
 
+Private Property Let IGraphicObject_Selected(ByVal RHS As Boolean)
+If RHS = mIsSelected Then
+Else
+    mIsSelected = RHS
+    RaiseEvent SelectionStateChanged
+End If
+End Property
+
+Private Property Get IGraphicObject_Selected() As Boolean
+IGraphicObject_Selected = mIsSelected
+End Property
+
+Private Property Get IGraphicObject_SeriesID() As Long
+IGraphicObject_SeriesID = mSeriesID
+End Property
+
 Private Property Get IGraphicObject_timestamp() As Date
 IGraphicObject_timestamp = 0
 End Property
 
-Private Sub IGraphicObject_undraw( _
-                ByRef area As TRectangle, _
-                ByVal hdc As Long)
-Dim failpoint As Long
-On Error GoTo Err
-
-undraw
-
-Exit Sub
-
-Err:
-Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_undraw" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
-Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
-Err.Raise errNumber, errSource, errDescription
-
-
-End Sub
+'Private Sub IGraphicObject_undraw( _
+'                ByRef area As TRectangle, _
+'                ByVal hdc As Long)
+'Dim failpoint As Long
+'On Error GoTo Err
+'
+'undraw
+'
+'Exit Sub
+'
+'Err:
+'Dim errNumber As Long: errNumber = Err.Number
+'Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_undraw" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+'Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+'Err.Raise errNumber, errSource, errDescription
+'
+'
+'End Sub
 
 Private Property Let IGraphicObject_visible(ByVal value As Boolean)
 mVisible = value
@@ -460,17 +500,17 @@ Else
 End If
 End Property
 
-Friend Property Get handle() As Long
-handle = mHandle
+Friend Property Get Handle() As Long
+Handle = mHandle
 End Property
 
-Public Property Get includeInAutoscale() As Boolean
-includeInAutoscale = mBaseStyle.includeInAutoscale
-If Not mLocalStyle Is Nothing Then includeInAutoscale = mLocalStyle.includeInAutoscale
-If mIsSetIncludeInAutoscale Then includeInAutoscale = mIncludeInAutoscale
+Public Property Get IncludeInAutoscale() As Boolean
+IncludeInAutoscale = mBaseStyle.IncludeInAutoscale
+If Not mLocalStyle Is Nothing Then IncludeInAutoscale = mLocalStyle.IncludeInAutoscale
+If mIsSetIncludeInAutoscale Then IncludeInAutoscale = mIncludeInAutoscale
 End Property
 
-Public Property Let includeInAutoscale(ByVal value As Boolean)
+Public Property Let IncludeInAutoscale(ByVal value As Boolean)
 If mIncludeInAutoscale = value And mIsSetIncludeInAutoscale Then Exit Property
 If Not value Then undraw
 mIncludeInAutoscale = value
@@ -478,23 +518,34 @@ mIsSetIncludeInAutoscale = True
 update
 End Property
 
-Public Property Get inScope() As Boolean
-inScope = mInScope
+Public Property Get InScope() As Boolean
+InScope = mInScope
+End Property
+
+Public Property Get IsSelectable() As Boolean
+IsSelectable = mIsSelectable
+End Property
+
+Public Property Get IsSelected() As Boolean
+IsSelected = mIsSelected
+End Property
+
+Public Property Get IsSeriesSelectable() As Boolean
+IsSeriesSelectable = mIsSeriesSelectable
 End Property
 
 Public Property Get key() As String
 key = mKey
 End Property
 
-Friend Property Let layer(ByVal value As Long)
+Public Property Let Layer(ByVal value As Long)
 If mLayer = value Then Exit Property
-undraw
 mLayer = value
 update
 End Property
 
-Public Property Get layer() As Long
-layer = mLayer
+Public Property Get Layer() As Long
+Layer = mLayer
 End Property
 
 Public Property Get localStyle() As TextStyle
@@ -508,7 +559,7 @@ undraw
 
 Set mLocalStyle = value.clone
 calcCurrentBoundingRect
-mEventProxy.objectChanged mHandle, mBoundingRect
+mGOSP.ObjectChanged mHandle, mBoundingRect
 
 End Property
 
@@ -602,15 +653,15 @@ Public Property Get text() As String
 text = mText
 End Property
 
-Public Property Get visible() As Boolean
-visible = mVisible
+Public Property Get Visible() As Boolean
+Visible = mVisible
 End Property
 
 '================================================================================
 ' Methods
 '================================================================================
 
-Friend Sub draw()
+Friend Sub Draw()
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -648,22 +699,29 @@ Err.Raise errNumber, errSource, errDescription
 End Sub
 
 Friend Sub initialise( _
+                ByVal seriesId As Long, _
                 ByVal key As String, _
-                ByVal eventProxy As ChartRegionEventProxy, _
-                ByVal layer As Long, _
-                ByVal canvas As canvas, _
+                ByVal GOSP As GraphObjServiceProvider, _
+                ByVal Layer As Long, _
+                ByVal Canvas As Canvas, _
                 ByVal baseStyle As TextStyle, _
-                ByVal localStyle As TextStyle)
+                ByVal localStyle As TextStyle, _
+                Optional ByVal IsSelectable As Boolean, _
+                Optional ByVal IsSeriesSelectable As Boolean)
                 
 Dim failpoint As Long
 On Error GoTo Err
 
+mSeriesID = seriesId
 mKey = key
-Set mEventProxy = eventProxy
-mLayer = layer
-Set mCanvas = canvas
+Set mGOSP = GOSP
+mLayer = Layer
+Set mCanvas = Canvas
 Set mBaseStyle = baseStyle
 If Not localStyle Is Nothing Then Set mLocalStyle = localStyle.clone ' local style cannot be shared
+mIsSelectable = IsSelectable
+mIsSeriesSelectable = IsSeriesSelectable
+
 calcCurrentBoundingRect
 
 Exit Sub
@@ -954,7 +1012,7 @@ mDrawn = True
 '    .setBrushAttributes .backColor, FillStyles.FillSolid
 '    .drawRectangle mBoundingRect.left, mBoundingRect.bottom, mBoundingRect.right, mBoundingRect.top
 'End With
-mEventProxy.objectUndrawn mHandle, mBoundingRect
+mGOSP.ObjectUndrawn mHandle, mBoundingRect
 
 End Sub
 
@@ -965,5 +1023,5 @@ If mHandle = 0 Then
 End If
 calcRawBoundingRect
 calcCurrentBoundingRect
-mEventProxy.objectChanged mHandle, mBoundingRect
+mGOSP.ObjectChanged mHandle, mBoundingRect
 End Sub

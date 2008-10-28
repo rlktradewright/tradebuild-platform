@@ -6,7 +6,7 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "ChartRegionEventProxy"
+Attribute VB_Name = "GraphObjServiceProvider"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -17,24 +17,6 @@ Option Explicit
 ' Events
 '================================================================================
 
-Event addGraphicObject( _
-                ByVal graphObj As IGraphicObject, _
-                ByVal seriesId As Long)
-
-Event objectChanged( _
-                ByVal handle As Long, _
-                ByRef areaToRedraw As TRectangle)
-
-Event objectUndrawn( _
-                ByVal handle As Long, _
-                ByRef undrawnArea As TRectangle)
-
-Event paintRegion( _
-                ByVal recalculate As Boolean)
-
-Event recalcBoundary( _
-                ByVal seriesId As Long)
-
 '================================================================================
 ' Types
 '================================================================================
@@ -42,6 +24,8 @@ Event recalcBoundary( _
 '================================================================================
 ' Member variables and constants
 '================================================================================
+
+Private mRegion As ChartRegion
 
 '================================================================================
 ' Enums
@@ -59,34 +43,44 @@ Event recalcBoundary( _
 ' Properties
 '================================================================================
 
+Friend Property Let Region( _
+                ByVal value As ChartRegion)
+Set mRegion = value
+End Property
+
 '================================================================================
 ' Methods
 '================================================================================
 
-Friend Sub addGraphicObject( _
+Friend Sub AddGraphicObject( _
                 ByVal graphObj As IGraphicObject, _
                 ByVal seriesId As Long)
-RaiseEvent addGraphicObject(graphObj, seriesId)
+mRegion.GOSP_AddGraphicObject graphObj, seriesId
 End Sub
 
-Friend Sub objectChanged(ByVal handle As Long, _
-                    ByRef areaToRedraw As TRectangle)
-RaiseEvent objectChanged(handle, areaToRedraw)
+Friend Sub ObjectChanged(ByVal Handle As Long, _
+                ByRef areaToRedraw As TRectangle)
+mRegion.GOSP_ObjectChanged Handle, areaToRedraw
 End Sub
 
-Friend Sub objectUndrawn(ByVal handle As Long, _
-                    ByRef undrawnArea As TRectangle)
-RaiseEvent objectUndrawn(handle, undrawnArea)
+Friend Sub ObjectUndrawn(ByVal Handle As Long, _
+                ByRef undrawnArea As TRectangle)
+mRegion.GOSP_ObjectUndrawn Handle, undrawnArea
 End Sub
 
-Friend Sub paintRegion( _
+Friend Sub PaintRegion( _
                 ByVal recalculate As Boolean)
-RaiseEvent paintRegion(recalculate)
+mRegion.GOSP_PaintRegion recalculate
 End Sub
 
-Friend Sub recalcBoundary( _
+Friend Sub RecalcBoundary( _
                 ByVal seriesId As Long)
-RaiseEvent recalcBoundary(seriesId)
+mRegion.GOSP_RecalcBoundary seriesId
+End Sub
+
+Friend Sub RemoveObject( _
+                ByVal Handle As Long)
+mRegion.GOSP_RemoveObject Handle
 End Sub
 
 '================================================================================
