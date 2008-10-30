@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#100.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#114.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fChart2 
    ClientHeight    =   6780
    ClientLeft      =   60
@@ -35,11 +35,21 @@ Begin VB.Form fChart2
       Style           =   1
       _Version        =   393216
       BeginProperty Buttons {66833FE8-8583-11D1-B16A-00C0F0283628} 
-         NumButtons      =   1
+         NumButtons      =   3
          BeginProperty Button1 {66833FEA-8583-11D1-B16A-00C0F0283628} 
             Caption         =   "Studies"
             Key             =   "studies"
             Object.ToolTipText     =   "Manage the studies displayed on the chart"
+         EndProperty
+         BeginProperty Button2 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Caption         =   "Lines"
+            Key             =   "lines"
+            Object.ToolTipText     =   "Draw lines"
+         EndProperty
+         BeginProperty Button3 {66833FEA-8583-11D1-B16A-00C0F0283628} 
+            Caption         =   "Fib"
+            Key             =   "fib"
+            Object.ToolTipText     =   "Draw Fibonacci retracement lines"
          EndProperty
       EndProperty
    End
@@ -100,6 +110,8 @@ Private mPreviousClose As String
 
 Private mIsHistorical As Boolean
 
+Private mCurrentTool As IChartTool
+
 '================================================================================
 ' Class Event Handlers
 '================================================================================
@@ -146,6 +158,10 @@ Case "studies"
     gShowStudyPicker TradeBuildChart1.ChartManager, _
                     mSymbol & _
                     " (" & mBarTimePeriod.toString & ")"
+Case "lines"
+    createLineChartTool
+Case "fib"
+    createFibChartTool
 End Select
 End Sub
 
@@ -263,6 +279,54 @@ End Sub
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub createFibChartTool()
+Dim ls As lineStyle
+Dim tool As FibRetracementTool
+Dim lineSpecs(4) As FibLineSpecifier
+
+Set ls = TradeBuildChart1.chartController.DefaultLineStyle
+ls.extended = True
+ls.IncludeInAutoscale = False
+
+ls.Color = vbBlack
+Set lineSpecs(0).Style = ls.Clone
+lineSpecs(0).Percentage = 0
+
+ls.Color = vbRed
+Set lineSpecs(1).Style = ls.Clone
+lineSpecs(1).Percentage = 100
+
+ls.Color = &H8000&   ' dark green
+Set lineSpecs(2).Style = ls.Clone
+lineSpecs(2).Percentage = 50
+
+ls.Color = vbBlue
+Set lineSpecs(3).Style = ls.Clone
+lineSpecs(3).Percentage = 38.2
+
+ls.Color = vbMagenta
+Set lineSpecs(4).Style = ls.Clone
+lineSpecs(4).Percentage = 61.8
+
+Set tool = CreateFibRetracementTool(TradeBuildChart1.chartController, lineSpecs, LayerNumbers.LayerHighestUser)
+Set mCurrentTool = tool
+TradeBuildChart1.SetFocus
+End Sub
+
+Private Sub createLineChartTool()
+Dim tool As LineTool
+Dim ls As lineStyle
+
+Set ls = TradeBuildChart1.chartController.DefaultLineStyle
+ls.extended = True
+ls.extendAfter = True
+ls.IncludeInAutoscale = False
+
+Set tool = createLineTool(TradeBuildChart1.chartController, ls, LayerBackground)
+Set mCurrentTool = tool
+TradeBuildChart1.SetFocus
+End Sub
 
 Private Sub setCaption()
 Dim s As String
