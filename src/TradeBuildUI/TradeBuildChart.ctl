@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#62.0#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#71.1#0"; "ChartSkil2-6.ocx"
 Begin VB.UserControl TradeBuildChart 
    ClientHeight    =   4965
    ClientLeft      =   0
@@ -695,7 +695,7 @@ Set mBarTimePeriod = barTimePeriod
 Set mPriceRegionStyle = priceRegionStyle
 Set mVolumeRegionStyle = volumeRegionStyle
 
-Set mChartManager = createChartManager(mTicker.StudyManager, Chart1.controller)
+Set mChartManager = CreateChartManager(mTicker.StudyManager, Chart1.controller)
 
 If mTicker.state = TickerStateRunning Then
     loadchart
@@ -741,7 +741,7 @@ Set mBarTimePeriod = barTimePeriod
 Set mPriceRegionStyle = priceRegionStyle
 Set mVolumeRegionStyle = volumeRegionStyle
 
-Set mChartManager = createChartManager(mTicker.StudyManager, Chart1.controller)
+Set mChartManager = CreateChartManager(mTicker.StudyManager, Chart1.controller)
 
 If mTicker.state = TickerStateReady Then
     loadchart
@@ -783,19 +783,14 @@ Set studyValueConfig = createBarsStudyConfig.StudyValueConfigurations.add("Bar")
 studyValueConfig.chartRegionName = RegionNamePrice
 studyValueConfig.includeInChart = True
 studyValueConfig.layer = 200
-'If Not mBarsStyle Is Nothing Then
-'    Set barsStyle = mBarsStyle
-'Else
-'    Set barsStyle = Chart1.defaultBarStyle
-'    barsStyle.outlineThickness = 1
-'    barsStyle.barThickness = 2
-'    barsStyle.barWidth = 0.6
-'    barsStyle.displayMode = BarDisplayModeCandlestick
-'    barsStyle.downColor = &H43FC2
-'    barsStyle.solidUpBody = True
-'    barsStyle.tailThickness = 2
-'    barsStyle.upColor = &H1D9311
-'End If
+
+If Not mBarsStyle Is Nothing Then
+    mBarsStyle = mBarsStyle
+Else
+    mBarsStyle = mPriceRegion.DefaultBarStyle
+    mBarsStyle.displayMode = BarDisplayModes.BarDisplayModeCandlestick
+    mBarsStyle.solidUpBody = False
+End If
 studyValueConfig.barStyle = mBarsStyle
 
 Set studyValueConfig = createBarsStudyConfig.StudyValueConfigurations.add("Volume")
@@ -809,7 +804,7 @@ Else
     volumeStyle.downColor = vbRed
     volumeStyle.displayMode = DataPointDisplayModeHistogram
     volumeStyle.histBarWidth = 0.5
-    volumeStyle.includeInAutoscale = True
+    volumeStyle.IncludeInAutoscale = True
     volumeStyle.lineThickness = 1
 End If
 studyValueConfig.dataPointStyle = volumeStyle
