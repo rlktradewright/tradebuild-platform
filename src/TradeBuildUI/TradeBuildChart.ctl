@@ -785,9 +785,9 @@ studyValueConfig.includeInChart = True
 studyValueConfig.layer = 200
 
 If Not mBarsStyle Is Nothing Then
-    mBarsStyle = mBarsStyle
+    Set mBarsStyle = mBarsStyle
 Else
-    mBarsStyle = mPriceRegion.DefaultBarStyle
+    Set mBarsStyle = mPriceRegion.DefaultBarStyle
     mBarsStyle.displayMode = BarDisplayModes.BarDisplayModeCandlestick
     mBarsStyle.solidUpBody = False
 End If
