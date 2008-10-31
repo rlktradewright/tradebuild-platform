@@ -5,6 +5,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Public Const ConstMomentumBarsInputOpenInterest As String = "Open interest"
 Public Const ConstMomentumBarsInputPrice As String = "Price"
 Public Const ConstMomentumBarsInputTotalVolume As String = "Total volume"
 Public Const ConstMomentumBarsInputTickVolume As String = "Tick volume"
@@ -74,80 +75,90 @@ If mStudyDefinition Is Nothing Then
                         "are determined."
     mStudyDefinition.defaultRegion = StudyDefaultRegions.DefaultRegionCustom
     
-    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstMomentumBarsInputPrice)
+    Set inputDef = mStudyDefinition.studyInputDefinitions.Add(ConstMomentumBarsInputPrice)
     inputDef.inputType = InputTypeReal
     inputDef.Description = "Price"
     
-    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstMomentumBarsInputTotalVolume)
+    Set inputDef = mStudyDefinition.studyInputDefinitions.Add(ConstMomentumBarsInputTotalVolume)
     inputDef.inputType = InputTypeInteger
     inputDef.Description = "Accumulated volume"
     
-    Set inputDef = mStudyDefinition.StudyInputDefinitions.Add(ConstMomentumBarsInputTickVolume)
+    Set inputDef = mStudyDefinition.studyInputDefinitions.Add(ConstMomentumBarsInputTickVolume)
     inputDef.inputType = InputTypeInteger
     inputDef.Description = "Tick volume"
     
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(ConstMomentumBarsValueBar)
+    Set inputDef = mStudyDefinition.studyInputDefinitions.Add(ConstMomentumBarsInputOpenInterest)
+    inputDef.inputType = InputTypeInteger
+    inputDef.Description = "Open interest"
+    
+    Set valueDef = mStudyDefinition.studyValueDefinitions.Add(ConstMomentumBarsValueBar)
     valueDef.Description = "The constant momentum bars"
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueMode = ValueModeBar
     valueDef.valueType = ValueTypeReal
     
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueOpen)
+    Set valueDef = mStudyDefinition.studyValueDefinitions.Add(BarValueOpen)
     valueDef.Description = "Bar open value"
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueMode = ValueModeNone
     valueDef.valueType = ValueTypeReal
     
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueHigh)
+    Set valueDef = mStudyDefinition.studyValueDefinitions.Add(BarValueHigh)
     valueDef.Description = "Bar high value"
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueMode = ValueModeNone
     valueDef.valueType = ValueTypeReal
     
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueLow)
+    Set valueDef = mStudyDefinition.studyValueDefinitions.Add(BarValueLow)
     valueDef.Description = "Bar low value"
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueMode = ValueModeNone
     valueDef.valueType = ValueTypeReal
     
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueClose)
+    Set valueDef = mStudyDefinition.studyValueDefinitions.Add(BarValueClose)
     valueDef.Description = "Bar close value"
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.isDefault = True
     valueDef.valueMode = ValueModeNone
     valueDef.valueType = ValueTypeReal
     
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueVolume)
+    Set valueDef = mStudyDefinition.studyValueDefinitions.Add(BarValueVolume)
     valueDef.Description = "Bar volume"
     valueDef.defaultRegion = DefaultRegionCustom
     valueDef.valueMode = ValueModeNone
     valueDef.valueType = ValueTypeInteger
     
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueTickVolume)
+    Set valueDef = mStudyDefinition.studyValueDefinitions.Add(BarValueTickVolume)
     valueDef.Description = "Bar tick volume"
     valueDef.defaultRegion = DefaultRegionCustom
     valueDef.valueMode = ValueModeNone
     valueDef.valueType = ValueTypeInteger
     
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueHL2)
+    Set valueDef = mStudyDefinition.studyValueDefinitions.Add(BarValueOpenInterest)
+    valueDef.Description = "Bar open interest"
+    valueDef.defaultRegion = DefaultRegionCustom
+    valueDef.valueMode = ValueModeNone
+    valueDef.valueType = ValueTypeInteger
+    
+    Set valueDef = mStudyDefinition.studyValueDefinitions.Add(BarValueHL2)
     valueDef.Description = "Bar H+L/2 value"
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueMode = ValueModeNone
     valueDef.valueType = ValueTypeReal
     
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueHLC3)
+    Set valueDef = mStudyDefinition.studyValueDefinitions.Add(BarValueHLC3)
     valueDef.Description = "Bar H+L+C/3 value"
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueMode = ValueModeNone
     valueDef.valueType = ValueTypeReal
     
-    Set valueDef = mStudyDefinition.StudyValueDefinitions.Add(BarValueOHLC4)
+    Set valueDef = mStudyDefinition.studyValueDefinitions.Add(BarValueOHLC4)
     valueDef.Description = "Bar O+H+L+C/4 value"
     valueDef.defaultRegion = DefaultRegionNone
     valueDef.valueMode = ValueModeNone
     valueDef.valueType = ValueTypeReal
     
-    Set paramDef = mStudyDefinition.StudyParameterDefinitions.Add(ConstMomentumBarsParamTicksPerBar)
+    Set paramDef = mStudyDefinition.studyParameterDefinitions.Add(ConstMomentumBarsParamTicksPerBar)
     paramDef.Description = "The number of ticks movement in each constant momentum bar"
     paramDef.parameterType = ParameterTypeInteger
 

@@ -62,7 +62,7 @@ Private Const NoPrice                   As Double = MaxDouble
 Private mStudyFoundation As StudyFoundation
 '--------------------------------------------------------
 
-Private WithEvents mSession As session
+Private WithEvents mSession As Session
 Attribute mSession.VB_VarHelpID = -1
 
 Private mVolumePerBar As Long
@@ -111,7 +111,7 @@ End Property
 
 Private Sub BarStudy_switchUnderlyingStudy( _
                 ByVal newUnderlyingStudy As InputStudy)
-Set mSession = newUnderlyingStudy.session
+Set mSession = newUnderlyingStudy.Session
 mBarsBuilder.changeSession mSession
 End Sub
 
@@ -137,7 +137,7 @@ Private Sub customInitialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As session)
+                ByVal pSession As Session)
 
 Set mSession = pSession
 
@@ -199,7 +199,7 @@ ElseIf ev.valueName = ConstMomentumBarsInputTotalVolume Then
 ElseIf ev.valueName = ConstMomentumBarsInputTickVolume Then
     mBarsBuilder.incrementTickVolume ev.sVal.value
     notifyBarValues ev.sVal.timestamp
-ElseIf ev.valueName = ConstTimeBarsInputOpenInterest Then
+ElseIf ev.valueName = ConstVolBarsInputOpenInterest Then
     mBarsBuilder.notifyOpenInterest ev.sVal
     notifyBarValues ev.sVal.timestamp
 Else
@@ -420,7 +420,7 @@ Private Sub Study_initialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As session)
+                ByVal pSession As Session)
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
                             id, _
