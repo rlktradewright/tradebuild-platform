@@ -78,6 +78,7 @@ Loop
 
 mGraphObjSeries.Finish
 
+mTaskContext.Finish Empty, False
 End Sub
 
 Private Property Let Task_TaskContext(ByVal value As TWUtilities30.TaskContext)

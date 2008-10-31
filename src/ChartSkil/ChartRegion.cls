@@ -345,7 +345,7 @@ Case DeferredPaintScaleAndRepaint
     determineVisibleObjects
     paint
     If Not mYAxisRegion Is Nothing Then
-        mYAxisRegion.SetVerticalScaleInternal mCanvas.bottom, mCanvas.top
+        mYAxisRegion.SetVerticalScaleInternal mCanvas.Bottom, mCanvas.Top
     End If
 Case DeferredPaintCalculateAndRepaint
     determineInScopeObjects
@@ -355,7 +355,7 @@ Case DeferredPaintCalculateAndRepaint
     determineVisibleObjects
     paint
     If Not mYAxisRegion Is Nothing Then
-        mYAxisRegion.SetVerticalScaleInternal mCanvas.bottom, mCanvas.top
+        mYAxisRegion.SetVerticalScaleInternal mCanvas.Bottom, mCanvas.Top
     End If
 End Select
 
@@ -499,7 +499,7 @@ If mGraphicObjects(Handle).NoDraw Then Exit Sub
 With mGraphicObjects(Handle)
     ' check if the vertical bounds have changed, and redraw if so
     If Autoscale And .includeInAutoscale Then
-        If .boundingRect.top >= mCanvas.boundary.top Or .boundingRect.bottom <= (mCanvas.boundary.bottom) Then
+        If .boundingRect.Top >= mCanvas.boundary.Top Or .boundingRect.Bottom <= (mCanvas.boundary.Bottom) Then
             If mUseDeferredPainting Then
                 deferredPaint DeferredPaintScaleAndRepaint
             Else
@@ -771,14 +771,14 @@ mStyle.BackGradientFillColors = ar
 mCanvas.gradientFillColors = ar
 End Property
 
-Public Property Get bottom() As Double
-bottom = mCanvas.boundary.bottom
+Public Property Get Bottom() As Double
+Bottom = mCanvas.boundary.Bottom
 End Property
 
-Friend Property Let bottom(ByVal value As Double)
-mCanvas.bottom = value
+Friend Property Let Bottom(ByVal value As Double)
+mCanvas.Bottom = value
 If Not mYAxisRegion Is Nothing Then
-    mYAxisRegion.bottom = value
+    mYAxisRegion.Bottom = value
 End If
 End Property
 
@@ -967,12 +967,12 @@ Public Property Get IsYAxisRegion() As Boolean
 IsYAxisRegion = mIsYAxisRegion
 End Property
 
-Public Property Get left() As Double
-left = mCanvas.left
+Public Property Get Left() As Double
+Left = mCanvas.Left
 End Property
 
-Friend Property Let left(ByVal value As Double)
-mCanvas.left = value
+Friend Property Let Left(ByVal value As Double)
+mCanvas.Left = value
 End Property
 
 Public Property Get MinimumHeight() As Double
@@ -1251,14 +1251,14 @@ mToolbar.Buttons("showline").Enabled = False
 
 End Property
 
-Public Property Get top() As Double
-top = mCanvas.top
+Public Property Get Top() As Double
+Top = mCanvas.Top
 End Property
 
-Friend Property Let top(ByVal value As Double)
-mCanvas.top = value
+Friend Property Let Top(ByVal value As Double)
+mCanvas.Top = value
 If Not mYAxisRegion Is Nothing Then
-    mYAxisRegion.top = value
+    mYAxisRegion.Top = value
 End If
 End Property
 
@@ -1514,8 +1514,10 @@ Set mToolbar = Nothing
 ' now remove all graphic object references from the various collections
 Dim graphObjSeries As IGraphicObjectSeries
 For i = 0 To mGraphObjSeriesIndex - 1
-    mGraphObjSeriesTable(i).Finish
-    Set mGraphObjSeriesTable(i) = Nothing
+    If Not mGraphObjSeriesTable(i) Is Nothing Then
+        mGraphObjSeriesTable(i).Finish
+        Set mGraphObjSeriesTable(i) = Nothing
+    End If
 Next
 Erase mGraphObjSeriesTable
 ReDim mGraphObjSeriesTable(3) As IGraphicObjectSeries
@@ -1585,7 +1587,7 @@ Dim failpoint As Long
 On Error GoTo Err
 
 If y = MinusInfinitySingle Then
-    yVal = mCanvas.top + 2 * mCanvas.height  ' make sure the pointer isn't visible
+    yVal = mCanvas.Top + 2 * mCanvas.height  ' make sure the pointer isn't visible
 Else
     yVal = y
 End If
@@ -1742,8 +1744,8 @@ On Error GoTo Err
 mMinInViewPeriod = minValue
 mMaxInViewPeriod = maxValue
 mYAxisPosition = maxValue + 1
-mCanvas.left = minValue
-mCanvas.right = maxValue '+ 0.5
+mCanvas.Left = minValue
+mCanvas.Right = maxValue '+ 0.5
 
 If Not mSuppressDrawing Then
     If mUseDeferredPainting Then
@@ -1811,8 +1813,10 @@ End Sub
 
 Public Sub RemoveGraphicObjectSeries( _
                 ByVal pSeries As IGraphicObjectSeries)
+Dim t As New GraphObjSeriesRemovalTask
+t.initialise pSeries, Me
+StartTask t, PriorityLow
 Set mGraphObjSeriesTable(pSeries.seriesId) = Nothing
-StartTask New GraphObjSeriesRemovalTask, PriorityLow, , , pSeries
 End Sub
 
 Friend Sub resizedY()
@@ -1855,8 +1859,8 @@ If mIsXAxisRegion Or mIsYAxisRegion Then
 End If
 
 With mCanvas
-    SetVerticalScale .bottom + factor * .height / 2, _
-                                .top - factor * .height / 2
+    SetVerticalScale .Bottom + factor * .height / 2, _
+                                .Top - factor * .height / 2
 End With
 
 Exit Sub
@@ -1882,7 +1886,7 @@ If mIsXAxisRegion Or mIsYAxisRegion Then
 End If
 
 Autoscale = False
-SetVerticalScale mCanvas.bottom + amount, mCanvas.top + amount
+SetVerticalScale mCanvas.Bottom + amount, mCanvas.Top + amount
 
 Exit Sub
 
@@ -1907,8 +1911,8 @@ If mIsXAxisRegion Or mIsYAxisRegion Then
 End If
 
 Autoscale = False
-SetVerticalScale mCanvas.bottom + proportion * mCanvas.height, _
-                mCanvas.top + proportion * mCanvas.height
+SetVerticalScale mCanvas.Bottom + proportion * mCanvas.height, _
+                mCanvas.Top + proportion * mCanvas.height
 
 Exit Sub
 
@@ -1943,13 +1947,13 @@ If Color = 0 Then Exit Sub
 With mCanvas
     .setPenAttributes Color, 1, LineInsideSolid, DrawModeCopyPen
     .setBrushAttributes Color, FillSolid
-    .drawRectangle .newPoint(PeriodNumber - 0.5, .bottom), .newPoint(PeriodNumber + 0.5, .top)
+    .drawRectangle .newPoint(PeriodNumber - 0.5, .Bottom), .newPoint(PeriodNumber + 0.5, .Top)
 
     
-    periodrect.left = PeriodNumber - 0.5
-    periodrect.right = PeriodNumber + 0.5
-    periodrect.bottom = .bottom
-    periodrect.top = .top
+    periodrect.Left = PeriodNumber - 0.5
+    periodrect.Right = PeriodNumber + 0.5
+    periodrect.Bottom = .Bottom
+    periodrect.Top = .Top
     periodrect.isValid = True
     
     For Layer = MinLayer To MaxLayer
@@ -2105,8 +2109,8 @@ Friend Sub SetVerticalScaleInternal(ByVal lowValue As Single, _
 Dim failpoint As Long
 On Error GoTo Err
 
-mCanvas.top = highValue
-mCanvas.bottom = lowValue
+mCanvas.Top = highValue
+mCanvas.Bottom = lowValue
 
 If Not mSuppressDrawing Then
     If mUseDeferredPainting Then
@@ -2395,18 +2399,18 @@ With mGraphicObjects(index)
             On Error GoTo 0
             If numrects >= 0 Then
                 For k = 0 To numrects
-                    If rects(k).top > high Then
-                        high = rects(k).top
+                    If rects(k).Top > high Then
+                        high = rects(k).Top
                     End If
-                    If rects(k).bottom < low Then
-                        low = rects(k).bottom
+                    If rects(k).Bottom < low Then
+                        low = rects(k).Bottom
                     End If
                 Next
             End If
         Next
     Else
-        high = .boundingRect.top
-        low = .boundingRect.bottom
+        high = .boundingRect.Top
+        low = .boundingRect.Bottom
     End If
 End With
 End Sub
@@ -2462,23 +2466,23 @@ With mCanvas
         ' so leave default scale
     ElseIf MinimumHeight <> 0 Then
         If scaleMax - scaleMin < MinimumHeight Then
-            .top = (scaleMax + scaleMin) / 2 + MinimumHeight / 2
-            .bottom = .top - MinimumHeight
+            .Top = (scaleMax + scaleMin) / 2 + MinimumHeight / 2
+            .Bottom = .Top - MinimumHeight
         Else
-            .top = scaleMax + (scaleMax - scaleMin) * 0.025
-            .bottom = scaleMin - (scaleMax - scaleMin) * 0.025
+            .Top = scaleMax + (scaleMax - scaleMin) * 0.025
+            .Bottom = scaleMin - (scaleMax - scaleMin) * 0.025
         End If
     Else
         If scaleMin = scaleMax Then
             scaleMax = scaleMax * 1.001
             scaleMin = scaleMax * 0.998
         End If
-        .top = scaleMax + (scaleMax - scaleMin) * 0.025
-        .bottom = scaleMin - (scaleMax - scaleMin) * 0.025
+        .Top = scaleMax + (scaleMax - scaleMin) * 0.025
+        .Bottom = scaleMin - (scaleMax - scaleMin) * 0.025
     End If
     If Not mYAxisRegion Is Nothing Then
-        mYAxisRegion.top = .top
-        mYAxisRegion.bottom = .bottom
+        mYAxisRegion.Top = .Top
+        mYAxisRegion.Bottom = .Bottom
     End If
 End With
 
@@ -2515,11 +2519,11 @@ Do While index <> mLastInScopeIndex
 Loop
 
 With mCanvas
-    .top = scaleMax + (scaleMax - scaleMin) * 0.025
-    .bottom = scaleMin - (scaleMax - scaleMin) * 0.025
+    .Top = scaleMax + (scaleMax - scaleMin) * 0.025
+    .Bottom = scaleMin - (scaleMax - scaleMin) * 0.025
     If Not mYAxisRegion Is Nothing Then
-        mYAxisRegion.top = .top
-        mYAxisRegion.bottom = .bottom
+        mYAxisRegion.Top = .Top
+        mYAxisRegion.Bottom = .Bottom
     End If
 End With
 End Sub
@@ -2722,9 +2726,9 @@ With mCanvas
                         1, _
                         LineStyles.LineSolid, _
                         DrawModes.DrawModeXorPen
-    .drawLine .newPoint(.left, y), .newPoint(YAxisPosition, y)
+    .drawLine .newPoint(.Left, y), .newPoint(YAxisPosition, y)
     lineX = Round(x)
-    .drawLine .newPoint(lineX, .bottom), .newPoint(lineX, .top)
+    .drawLine .newPoint(lineX, .Bottom), .newPoint(lineX, .Top)
     mPrevCursorX = x
     mPrevCursorY = y
     
@@ -3124,7 +3128,7 @@ For i = IIf(mMinInViewPeriod < 0, 0, mMinInViewPeriod) To IIf(mMaxPeriodNumber <
     If mPeriodTable(i).BackColor <> 0 Then
         .setPenAttributes mPeriodTable(i).BackColor, 1, LineInsideSolid, DrawModeCopyPen
         .setBrushAttributes mPeriodTable(i).BackColor, FillSolid
-        .drawRectangle .newPoint(i - 0.5, .bottom), .newPoint(i + 0.5, .top)
+        .drawRectangle .newPoint(i - 0.5, .Bottom), .newPoint(i + 0.5, .Top)
     End If
 Next
 
@@ -3271,8 +3275,8 @@ Dim aLine As ChartSkil26.Line
 
 If mYGridLines Is Nothing Then Exit Sub
 
-y = Int(mCanvas.bottom / mScaleGridSpacingY) * mScaleGridSpacingY
-Do While y < mCanvas.top
+y = Int(mCanvas.Bottom / mScaleGridSpacingY) * mScaleGridSpacingY
+Do While y < mCanvas.Top
     i = i + 1
     If i > mYGridLines.Count Then
         Set aLine = mYGridLines.Add
@@ -3465,8 +3469,8 @@ Dim aText As text
 
 If mYGridTexts Is Nothing Then Exit Sub
 
-y = Int(mCanvas.bottom / mScaleGridSpacingY) * mScaleGridSpacingY
-Do While y < mCanvas.top
+y = Int(mCanvas.Bottom / mScaleGridSpacingY) * mScaleGridSpacingY
+Do While y < mCanvas.Top
     i = i + 1
     If i > mYGridTexts.Count Then
         Set aText = mYGridTexts.Add
@@ -3732,9 +3736,9 @@ With mCanvas
                         1, _
                         LineStyles.LineSolid, _
                         DrawModes.DrawModeXorPen
-    .drawLine .newPoint(.left, mPrevCursorY), .newPoint(YAxisPosition, mPrevCursorY)
+    .drawLine .newPoint(.Left, mPrevCursorY), .newPoint(YAxisPosition, mPrevCursorY)
     prevLineX = Round(mPrevCursorX)
-    .drawLine .newPoint(prevLineX, .bottom), .newPoint(prevLineX, .top)
+    .drawLine .newPoint(prevLineX, .Bottom), .newPoint(prevLineX, .Top)
 End With
 
 End Sub
