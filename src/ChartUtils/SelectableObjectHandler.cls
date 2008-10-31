@@ -49,7 +49,7 @@ Private mObj                                As IGraphicObject
 
 Private mIndex                              As Long
 
-Private mAbstractTool                       As AbstractChartTool
+Private mAbstractToolRef                    As WeakReference
 
 '@================================================================================
 ' Class Event Handlers
@@ -75,7 +75,7 @@ Private Sub Initialise( _
                 ByVal abstractTool As AbstractChartTool, _
                 ByVal selHandle As DataPoint, _
                 ByVal index As Long)
-Set mAbstractTool = abstractTool
+Set mAbstractToolRef = CreateWeakReference(abstractTool)
 Set mSelHandle = selHandle
 mIndex = index
 End Sub
