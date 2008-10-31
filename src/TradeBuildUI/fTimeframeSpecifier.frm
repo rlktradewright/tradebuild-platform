@@ -96,7 +96,7 @@ TimeframeSpecifier1.SetFocus
 End Sub
 
 Private Sub Form_Load()
-If TimeframeSpecifier1.isTimeframeValid Then OkButton.Enabled = True
+If TimeframeSpecifier1.isTimeframeValid Then OKButton.Enabled = True
 End Sub
 
 '@================================================================================
@@ -129,14 +129,12 @@ cancelled = mCancelled
 End Property
 
 Friend Property Get timeframeDesignator() As TimePeriod
-Dim tp As TimePeriod
 If mCancelled Then
         Err.Raise ErrorCodes.ErrIllegalStateException, _
                 ProjectName & "." & ModuleName & ":" & "timeframeDesignator", _
                 "Cancelled by user"
 End If
-tp = TimeframeSpecifier1.timeframeDesignator
-timeframeDesignator = tp
+Set timeframeDesignator = TimeframeSpecifier1.timeframeDesignator
 End Property
 
 '@================================================================================
@@ -150,8 +148,8 @@ End Property
 
 Private Sub TimeframeSpecifier1_Change()
 If TimeframeSpecifier1.isTimeframeValid Then
-    OkButton.Enabled = True
+    OKButton.Enabled = True
 Else
-    OkButton.Enabled = False
+    OKButton.Enabled = False
 End If
 End Sub

@@ -147,7 +147,7 @@ If TimeframeCombo.Text = TimeframeCustom Then
     End If
     mSpecifier.Show vbModal
     If Not mSpecifier.cancelled Then
-        tp = mSpecifier.timeframeDesignator
+        Set tp = mSpecifier.timeframeDesignator
         selectComboEntry tp
         RaiseEvent Click
     Else
@@ -292,7 +292,7 @@ s = pTimePeriod.toString
 If TradeBuildAPI.IsSupportedHistoricalDataPeriod(pTimePeriod) Then
     For i = 2 To TimeframeCombo.ComboItems.count
         Dim currTp As TimePeriod
-        currTp = TimePeriodFromString(TimeframeCombo.ComboItems(i).Text)
+        Set currTp = TimePeriodFromString(TimeframeCombo.ComboItems(i).Text)
         If currTp.units = pTimePeriod.units Then unitFound = True
         If currTp.units = pTimePeriod.units And currTp.length >= pTimePeriod.length Then Exit For
         If unitFound And currTp.units <> pTimePeriod.units Then Exit For
