@@ -11,6 +11,18 @@ Begin VB.UserControl Chart
    KeyPreview      =   -1  'True
    ScaleHeight     =   7575
    ScaleWidth      =   10665
+   Begin VB.PictureBox BlankPicture 
+      AutoSize        =   -1  'True
+      Height          =   540
+      Left            =   2280
+      Picture         =   "ChartArea.ctx":0000
+      ScaleHeight     =   480
+      ScaleWidth      =   480
+      TabIndex        =   6
+      Top             =   840
+      Visible         =   0   'False
+      Width           =   540
+   End
    Begin VB.HScrollBar HScroll 
       Height          =   255
       Left            =   0
@@ -31,71 +43,71 @@ Begin VB.UserControl Chart
       BeginProperty Images {2C247F25-8591-11D1-B16A-00C0F0283628} 
          NumListImages   =   17
          BeginProperty ListImage1 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":0000
+            Picture         =   "ChartArea.ctx":0442
             Key             =   ""
          EndProperty
          BeginProperty ListImage2 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":0452
+            Picture         =   "ChartArea.ctx":0894
             Key             =   ""
          EndProperty
          BeginProperty ListImage3 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":08A4
+            Picture         =   "ChartArea.ctx":0CE6
             Key             =   ""
          EndProperty
          BeginProperty ListImage4 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":0CF6
+            Picture         =   "ChartArea.ctx":1138
             Key             =   ""
          EndProperty
          BeginProperty ListImage5 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":1148
+            Picture         =   "ChartArea.ctx":158A
             Key             =   ""
          EndProperty
          BeginProperty ListImage6 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":159A
+            Picture         =   "ChartArea.ctx":19DC
             Key             =   ""
          EndProperty
          BeginProperty ListImage7 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":19EC
+            Picture         =   "ChartArea.ctx":1E2E
             Key             =   ""
          EndProperty
          BeginProperty ListImage8 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":1E3E
+            Picture         =   "ChartArea.ctx":2280
             Key             =   ""
          EndProperty
          BeginProperty ListImage9 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":2290
+            Picture         =   "ChartArea.ctx":26D2
             Key             =   ""
          EndProperty
          BeginProperty ListImage10 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":26E2
+            Picture         =   "ChartArea.ctx":2B24
             Key             =   ""
          EndProperty
          BeginProperty ListImage11 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":2B34
+            Picture         =   "ChartArea.ctx":2F76
             Key             =   ""
          EndProperty
          BeginProperty ListImage12 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":2F86
+            Picture         =   "ChartArea.ctx":33C8
             Key             =   ""
          EndProperty
          BeginProperty ListImage13 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":33D8
+            Picture         =   "ChartArea.ctx":381A
             Key             =   ""
          EndProperty
          BeginProperty ListImage14 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":382A
+            Picture         =   "ChartArea.ctx":3C6C
             Key             =   ""
          EndProperty
          BeginProperty ListImage15 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":3C7C
+            Picture         =   "ChartArea.ctx":40BE
             Key             =   ""
          EndProperty
          BeginProperty ListImage16 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":40CE
+            Picture         =   "ChartArea.ctx":4510
             Key             =   ""
          EndProperty
          BeginProperty ListImage17 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":4520
+            Picture         =   "ChartArea.ctx":4962
             Key             =   ""
          EndProperty
       EndProperty
@@ -113,71 +125,71 @@ Begin VB.UserControl Chart
       BeginProperty Images {2C247F25-8591-11D1-B16A-00C0F0283628} 
          NumListImages   =   17
          BeginProperty ListImage1 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":4972
+            Picture         =   "ChartArea.ctx":4DB4
             Key             =   ""
          EndProperty
          BeginProperty ListImage2 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":4DC4
+            Picture         =   "ChartArea.ctx":5206
             Key             =   ""
          EndProperty
          BeginProperty ListImage3 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":5216
+            Picture         =   "ChartArea.ctx":5658
             Key             =   ""
          EndProperty
          BeginProperty ListImage4 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":5668
+            Picture         =   "ChartArea.ctx":5AAA
             Key             =   ""
          EndProperty
          BeginProperty ListImage5 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":5ABA
+            Picture         =   "ChartArea.ctx":5EFC
             Key             =   ""
          EndProperty
          BeginProperty ListImage6 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":5F0C
+            Picture         =   "ChartArea.ctx":634E
             Key             =   ""
          EndProperty
          BeginProperty ListImage7 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":635E
+            Picture         =   "ChartArea.ctx":67A0
             Key             =   ""
          EndProperty
          BeginProperty ListImage8 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":67B0
+            Picture         =   "ChartArea.ctx":6BF2
             Key             =   ""
          EndProperty
          BeginProperty ListImage9 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":6C02
+            Picture         =   "ChartArea.ctx":7044
             Key             =   ""
          EndProperty
          BeginProperty ListImage10 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":7054
+            Picture         =   "ChartArea.ctx":7496
             Key             =   ""
          EndProperty
          BeginProperty ListImage11 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":74A6
+            Picture         =   "ChartArea.ctx":78E8
             Key             =   ""
          EndProperty
          BeginProperty ListImage12 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":78F8
+            Picture         =   "ChartArea.ctx":7D3A
             Key             =   ""
          EndProperty
          BeginProperty ListImage13 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":7D4A
+            Picture         =   "ChartArea.ctx":818C
             Key             =   ""
          EndProperty
          BeginProperty ListImage14 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":819C
+            Picture         =   "ChartArea.ctx":85DE
             Key             =   ""
          EndProperty
          BeginProperty ListImage15 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":85EE
+            Picture         =   "ChartArea.ctx":8A30
             Key             =   ""
          EndProperty
          BeginProperty ListImage16 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":8A40
+            Picture         =   "ChartArea.ctx":8E82
             Key             =   ""
          EndProperty
          BeginProperty ListImage17 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":8E92
+            Picture         =   "ChartArea.ctx":92D4
             Key             =   ""
          EndProperty
       EndProperty
@@ -236,7 +248,7 @@ Begin VB.UserControl Chart
       Height          =   615
       Index           =   0
       Left            =   0
-      MouseIcon       =   "ChartArea.ctx":92E4
+      MouseIcon       =   "ChartArea.ctx":9726
       MousePointer    =   99  'Custom
       ScaleHeight     =   615
       ScaleWidth      =   8415
@@ -258,71 +270,71 @@ Begin VB.UserControl Chart
       BeginProperty Images {2C247F25-8591-11D1-B16A-00C0F0283628} 
          NumListImages   =   17
          BeginProperty ListImage1 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":9726
+            Picture         =   "ChartArea.ctx":9B68
             Key             =   "showbars"
          EndProperty
          BeginProperty ListImage2 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":9A40
+            Picture         =   "ChartArea.ctx":9E82
             Key             =   "showcandlesticks"
          EndProperty
          BeginProperty ListImage3 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":9D5A
+            Picture         =   "ChartArea.ctx":A19C
             Key             =   "showline"
          EndProperty
          BeginProperty ListImage4 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":A074
+            Picture         =   "ChartArea.ctx":A4B6
             Key             =   "showcrosshair"
          EndProperty
          BeginProperty ListImage5 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":A38E
+            Picture         =   "ChartArea.ctx":A7D0
             Key             =   "showdisccursor"
          EndProperty
          BeginProperty ListImage6 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":A6A8
+            Picture         =   "ChartArea.ctx":AAEA
             Key             =   "thinnerbars"
          EndProperty
          BeginProperty ListImage7 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":A9C2
+            Picture         =   "ChartArea.ctx":AE04
             Key             =   "thickerbars"
          EndProperty
          BeginProperty ListImage8 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":ACDC
+            Picture         =   "ChartArea.ctx":B11E
             Key             =   "narrower"
          EndProperty
          BeginProperty ListImage9 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":B12E
+            Picture         =   "ChartArea.ctx":B570
             Key             =   "wider"
          EndProperty
          BeginProperty ListImage10 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":B448
+            Picture         =   "ChartArea.ctx":B88A
             Key             =   "scaledown"
          EndProperty
          BeginProperty ListImage11 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":B762
+            Picture         =   "ChartArea.ctx":BBA4
             Key             =   "scaleup"
          EndProperty
          BeginProperty ListImage12 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":BA7C
+            Picture         =   "ChartArea.ctx":BEBE
             Key             =   "scrolldown"
          EndProperty
          BeginProperty ListImage13 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":BD96
+            Picture         =   "ChartArea.ctx":C1D8
             Key             =   "scrollup"
          EndProperty
          BeginProperty ListImage14 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":C0B0
+            Picture         =   "ChartArea.ctx":C4F2
             Key             =   "scrollleft"
          EndProperty
          BeginProperty ListImage15 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":C3CA
+            Picture         =   "ChartArea.ctx":C80C
             Key             =   "scrollright"
          EndProperty
          BeginProperty ListImage16 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":C6E4
+            Picture         =   "ChartArea.ctx":CB26
             Key             =   "scrollend"
          EndProperty
          BeginProperty ListImage17 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":C9FE
+            Picture         =   "ChartArea.ctx":CE40
             Key             =   ""
          EndProperty
       EndProperty
@@ -340,71 +352,71 @@ Begin VB.UserControl Chart
       BeginProperty Images {2C247F25-8591-11D1-B16A-00C0F0283628} 
          NumListImages   =   17
          BeginProperty ListImage1 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":CD18
+            Picture         =   "ChartArea.ctx":D15A
             Key             =   ""
          EndProperty
          BeginProperty ListImage2 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":D032
+            Picture         =   "ChartArea.ctx":D474
             Key             =   ""
          EndProperty
          BeginProperty ListImage3 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":D34C
+            Picture         =   "ChartArea.ctx":D78E
             Key             =   ""
          EndProperty
          BeginProperty ListImage4 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":D666
+            Picture         =   "ChartArea.ctx":DAA8
             Key             =   ""
          EndProperty
          BeginProperty ListImage5 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":D980
+            Picture         =   "ChartArea.ctx":DDC2
             Key             =   ""
          EndProperty
          BeginProperty ListImage6 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":DC9A
+            Picture         =   "ChartArea.ctx":E0DC
             Key             =   ""
          EndProperty
          BeginProperty ListImage7 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":DFB4
+            Picture         =   "ChartArea.ctx":E3F6
             Key             =   ""
          EndProperty
          BeginProperty ListImage8 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":E2CE
+            Picture         =   "ChartArea.ctx":E710
             Key             =   ""
          EndProperty
          BeginProperty ListImage9 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":E720
+            Picture         =   "ChartArea.ctx":EB62
             Key             =   ""
          EndProperty
          BeginProperty ListImage10 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":EB72
+            Picture         =   "ChartArea.ctx":EFB4
             Key             =   ""
          EndProperty
          BeginProperty ListImage11 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":EE8C
+            Picture         =   "ChartArea.ctx":F2CE
             Key             =   ""
          EndProperty
          BeginProperty ListImage12 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":F1A6
+            Picture         =   "ChartArea.ctx":F5E8
             Key             =   ""
          EndProperty
          BeginProperty ListImage13 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":F4C0
+            Picture         =   "ChartArea.ctx":F902
             Key             =   ""
          EndProperty
          BeginProperty ListImage14 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":F7DA
+            Picture         =   "ChartArea.ctx":FC1C
             Key             =   ""
          EndProperty
          BeginProperty ListImage15 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":FAF4
+            Picture         =   "ChartArea.ctx":FF36
             Key             =   ""
          EndProperty
          BeginProperty ListImage16 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":FE0E
+            Picture         =   "ChartArea.ctx":10250
             Key             =   ""
          EndProperty
          BeginProperty ListImage17 {2C247F27-8591-11D1-B16A-00C0F0283628} 
-            Picture         =   "ChartArea.ctx":10128
+            Picture         =   "ChartArea.ctx":1056A
             Key             =   ""
          EndProperty
       EndProperty
@@ -562,11 +574,11 @@ Option Explicit
 '================================================================================
 
 Event ChartCleared()
-Event KeyDown(KeyCode As Integer, shift As Integer)
+Event KeyDown(KeyCode As Integer, Shift As Integer)
 Attribute KeyDown.VB_UserMemId = -602
 Event KeyPress(KeyAscii As Integer)
 Attribute KeyPress.VB_UserMemId = -603
-Event KeyUp(KeyCode As Integer, shift As Integer)
+Event KeyUp(KeyCode As Integer, Shift As Integer)
 Attribute KeyUp.VB_UserMemId = -604
 Event RegionsChanged(ev As CollectionChangeEvent)
 Event PeriodsChanged(ev As CollectionChangeEvent)
@@ -707,7 +719,9 @@ Private mVerticalGridTimePeriodSet As Boolean
 ' is currently visible
 Private mHideGrid As Boolean
 
+Private mPointerMode As PointerModes
 Private mPointerStyle As PointerStyles
+Private mPointerIcon As IPictureDisp
 Private mPointerCrosshairsColor As Long
 Private mPointerDiscColor As Long
 
@@ -748,6 +762,8 @@ Private Sub UserControl_Initialize()
 Dim failpoint As Long
 On Error GoTo Err
 
+Set gBlankMouseIcon = BlankPicture.Picture
+
 Set mController = New ChartController
 mController.Chart = Me
 initialise
@@ -763,9 +779,9 @@ gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrL
 
 End Sub
 
-Private Sub UserControl_KeyDown(KeyCode As Integer, shift As Integer)
-RaiseEvent KeyDown(KeyCode, shift)
-mController.fireKeyDown KeyCode, shift
+Private Sub UserControl_KeyDown(KeyCode As Integer, Shift As Integer)
+RaiseEvent KeyDown(KeyCode, Shift)
+mController.fireKeyDown KeyCode, Shift
 End Sub
 
 Private Sub UserControl_KeyPress(KeyAscii As Integer)
@@ -773,9 +789,9 @@ RaiseEvent KeyPress(KeyAscii)
 mController.fireKeyPress KeyAscii
 End Sub
 
-Private Sub UserControl_KeyUp(KeyCode As Integer, shift As Integer)
-RaiseEvent KeyUp(KeyCode, shift)
-mController.fireKeyUp KeyCode, shift
+Private Sub UserControl_KeyUp(KeyCode As Integer, Shift As Integer)
+RaiseEvent KeyUp(KeyCode, Shift)
+mController.fireKeyUp KeyCode, Shift
 End Sub
 
 Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
@@ -1003,7 +1019,6 @@ Dim Region As ChartRegion
 Dim failpoint As Long
 On Error GoTo Err
 
-
 Set Region = mRegions(2 * index - 1).Region
 Region.Click
 
@@ -1034,7 +1049,7 @@ End Sub
 Private Sub ChartRegionPicture_MouseDown( _
                             index As Integer, _
                             button As Integer, _
-                            shift As Integer, _
+                            Shift As Integer, _
                             x As Single, _
                             y As Single)
 Dim Region As ChartRegion
@@ -1053,20 +1068,24 @@ If CBool(button And MouseButtonConstants.vbLeftButton) Then mMouseScrollingInPro
 RaiseEvent RegionSelected(Region)
 mController.fireRegionSelected Region
 
-If (Region.SnapCursorToTickBoundaries And Not CBool((shift And vbCtrlMask))) Or _
-    (Not Region.SnapCursorToTickBoundaries And CBool((shift And vbCtrlMask))) _
+If (mPointerMode = PointerModeDefault And _
+        ((Region.SnapCursorToTickBoundaries And Not CBool(Shift And vbCtrlMask)) Or _
+        (Not Region.SnapCursorToTickBoundaries And CBool(Shift And vbCtrlMask)))) Or _
+    (mPointerMode = PointerModeTool And CBool(Shift And vbCtrlMask)) _
 Then
     Dim YScaleQuantum As Double
     YScaleQuantum = Region.YScaleQuantum
     If YScaleQuantum <> 0 Then y = YScaleQuantum * Int((y + YScaleQuantum / 10000) / YScaleQuantum)
 End If
 
-If mAllowHorizontalMouseScrolling Or mAllowVerticalMouseScrolling Then
+If mPointerMode = PointerModeDefault And _
+    (mAllowHorizontalMouseScrolling Or mAllowVerticalMouseScrolling) _
+Then
     mLeftDragStartPosnX = Int(x)
     mLeftDragStartPosnY = y
 End If
 
-Region.MouseDown button, shift, Round(x), y
+Region.MouseDown button, Shift, Round(x), y
 
 Exit Sub
 
@@ -1079,7 +1098,7 @@ End Sub
 
 Private Sub ChartRegionPicture_MouseMove(index As Integer, _
                                 button As Integer, _
-                                shift As Integer, _
+                                Shift As Integer, _
                                 x As Single, _
                                 y As Single)
 
@@ -1087,19 +1106,20 @@ Dim failpoint As Long
 On Error GoTo Err
 
 If CBool(button And MouseButtonConstants.vbLeftButton) Then
-    If (mAllowHorizontalMouseScrolling Or mAllowVerticalMouseScrolling) And _
+    If mPointerMode = PointerModeDefault And _
+        (mAllowHorizontalMouseScrolling Or mAllowVerticalMouseScrolling) And _
         mMouseScrollingInProgress _
     Then
-        mouseScroll index, button, shift, x, y
+        mouseScroll index, button, Shift, x, y
     Else
         mMouseScrollingInProgress = False
-        mouseMove index, button, shift, x, y
+        mouseMove index, button, Shift, x, y
     End If
 Else
-    mouseMove index, button, shift, x, y
+    mouseMove index, button, Shift, x, y
 End If
 
-mRegions(2 * index - 1).Region.mouseMove button, shift, Round(x), y
+mRegions(2 * index - 1).Region.mouseMove button, Shift, Round(x), y
 
 Exit Sub
 
@@ -1113,7 +1133,7 @@ End Sub
 Private Sub ChartRegionPicture_MouseUp( _
                             index As Integer, _
                             button As Integer, _
-                            shift As Integer, _
+                            Shift As Integer, _
                             x As Single, _
                             y As Single)
 Dim Region As ChartRegion
@@ -1125,15 +1145,17 @@ mMouseScrollingInProgress = False
 
 Set Region = mRegions(2 * index - 1).Region
 
-If (Region.SnapCursorToTickBoundaries And Not CBool((shift And vbCtrlMask))) Or _
-    (Not Region.SnapCursorToTickBoundaries And CBool((shift And vbCtrlMask))) _
+If (mPointerMode = PointerModeDefault And _
+        ((Region.SnapCursorToTickBoundaries And Not CBool(Shift And vbCtrlMask)) Or _
+        (Not Region.SnapCursorToTickBoundaries And CBool(Shift And vbCtrlMask)))) Or _
+    (mPointerMode = PointerModeTool And CBool(Shift And vbCtrlMask)) _
 Then
     Dim YScaleQuantum As Double
     YScaleQuantum = Region.YScaleQuantum
     If YScaleQuantum <> 0 Then y = YScaleQuantum * Int(y / YScaleQuantum)
 End If
 
-Region.MouseUp button, shift, Round(x), y
+Region.MouseUp button, Shift, Round(x), y
 
 Exit Sub
 
@@ -1170,7 +1192,7 @@ End Sub
 Private Sub RegionDividerPicture_MouseDown( _
                             index As Integer, _
                             button As Integer, _
-                            shift As Integer, _
+                            Shift As Integer, _
                             x As Single, _
                             y As Single)
 Dim failpoint As Long
@@ -1194,7 +1216,7 @@ End Sub
 Private Sub RegionDividerPicture_MouseMove( _
                             index As Integer, _
                             button As Integer, _
-                            shift As Integer, _
+                            Shift As Integer, _
                             x As Single, _
                             y As Single)
 Dim vertChange As Long
@@ -1260,7 +1282,7 @@ End Sub
 Private Sub RegionDividerPicture_MouseUp( _
                             index As Integer, _
                             button As Integer, _
-                            shift As Integer, _
+                            Shift As Integer, _
                             x As Single, _
                             y As Single)
 Dim failpoint As Long
@@ -1356,11 +1378,11 @@ Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
-Private Sub XAxisPicture_MouseDown(button As Integer, shift As Integer, x As Single, y As Single)
+Private Sub XAxisPicture_MouseDown(button As Integer, Shift As Integer, x As Single, y As Single)
 Dim failpoint As Long
 On Error GoTo Err
 
-mRegions(0).Region.MouseDown button, shift, x, y
+mRegions(0).Region.MouseDown button, Shift, x, y
 
 Exit Sub
 
@@ -1371,11 +1393,11 @@ Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
-Private Sub XAxisPicture_MouseMove(button As Integer, shift As Integer, x As Single, y As Single)
+Private Sub XAxisPicture_MouseMove(button As Integer, Shift As Integer, x As Single, y As Single)
 Dim failpoint As Long
 On Error GoTo Err
 
-mRegions(0).Region.mouseMove button, shift, x, y
+mRegions(0).Region.mouseMove button, Shift, x, y
 
 Exit Sub
 
@@ -1386,11 +1408,11 @@ Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
-Private Sub XAxisPicture_MouseUp(button As Integer, shift As Integer, x As Single, y As Single)
+Private Sub XAxisPicture_MouseUp(button As Integer, Shift As Integer, x As Single, y As Single)
 Dim failpoint As Long
 On Error GoTo Err
 
-mRegions(0).Region.MouseUp button, shift, x, y
+mRegions(0).Region.MouseUp button, Shift, x, y
 
 Exit Sub
 
@@ -1435,11 +1457,11 @@ Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
-Private Sub YAxisPicture_MouseDown(index As Integer, button As Integer, shift As Integer, x As Single, y As Single)
+Private Sub YAxisPicture_MouseDown(index As Integer, button As Integer, Shift As Integer, x As Single, y As Single)
 Dim failpoint As Long
 On Error GoTo Err
 
-mRegions(2 * index).Region.MouseDown button, shift, x, y
+mRegions(2 * index).Region.MouseDown button, Shift, x, y
 
 Exit Sub
 
@@ -1450,11 +1472,11 @@ Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
-Private Sub YAxisPicture_MouseMove(index As Integer, button As Integer, shift As Integer, x As Single, y As Single)
+Private Sub YAxisPicture_MouseMove(index As Integer, button As Integer, Shift As Integer, x As Single, y As Single)
 Dim failpoint As Long
 On Error GoTo Err
 
-mRegions(2 * index).Region.mouseMove button, shift, x, y
+mRegions(2 * index).Region.mouseMove button, Shift, x, y
 
 Exit Sub
 
@@ -1465,11 +1487,11 @@ Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
-Private Sub YAxisPicture_MouseUp(index As Integer, button As Integer, shift As Integer, x As Single, y As Single)
+Private Sub YAxisPicture_MouseUp(index As Integer, button As Integer, Shift As Integer, x As Single, y As Single)
 Dim failpoint As Long
 On Error GoTo Err
 
-mRegions(2 * index).Region.MouseUp button, shift, x, y
+mRegions(2 * index).Region.MouseUp button, Shift, x, y
 
 Exit Sub
 
@@ -1489,6 +1511,9 @@ Dim i As Long
 Dim Region As ChartRegion
 Dim ev As CollectionChangeEvent
 
+Dim failpoint As Long
+On Error GoTo Err
+
 For i = 1 To mRegionsIndex Step 2
     If Not mRegions(i).Region Is Nothing Then
         Set Region = mRegions(i).Region
@@ -1506,6 +1531,14 @@ ev.changeType = CollItemAdded
 Set ev.Source = mPeriods
 RaiseEvent PeriodsChanged(ev)
 mController.firePeriodsChanged ev
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "mPeriods_PeriodAdded" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 '================================================================================
@@ -1781,6 +1814,32 @@ For i = 1 To mRegionsIndex Step 2
 Next
 End Property
 
+Public Property Get PointerIcon() As IPictureDisp
+Set PointerIcon = mPointerIcon
+End Property
+
+Public Property Let PointerIcon(ByVal value As IPictureDisp)
+Dim i As Long
+Dim Region As ChartRegion
+
+If value Is Nothing Then Exit Property
+If value Is mPointerIcon Then Exit Property
+
+Set mPointerIcon = value
+
+If mPointerMode = PointerModeDefault Then
+    If mPointerStyle = PointerCustom Then
+        For i = 1 To mRegionsIndex Step 2
+            If Not mRegions(i).Region Is Nothing Then
+                Set Region = mRegions(i).Region
+                Region.PointerIcon = value
+                Region.PointerStyle = PointerCustom
+            End If
+        Next
+    End If
+End If
+End Property
+
 Public Property Get PointerStyle() As PointerStyles
 Attribute PointerStyle.VB_ProcData.VB_Invoke_Property = ";Appearance"
 PointerStyle = mPointerStyle
@@ -1789,13 +1848,25 @@ End Property
 Public Property Let PointerStyle(ByVal value As PointerStyles)
 Dim i As Long
 Dim Region As ChartRegion
+
+If value = mPointerStyle Then Exit Property
+
 mPointerStyle = value
-For i = 1 To mRegionsIndex Step 2
-    If Not mRegions(i).Region Is Nothing Then
-        Set Region = mRegions(i).Region
-        Region.PointerStyle = value
-    End If
-Next
+
+If mPointerStyle = PointerCustom And mPointerIcon Is Nothing Then
+    ' we'll notify the region when an icon is supplied
+    Exit Property
+End If
+
+If mPointerMode = PointerModeDefault Then
+    For i = 1 To mRegionsIndex Step 2
+        If Not mRegions(i).Region Is Nothing Then
+            Set Region = mRegions(i).Region
+            If mPointerStyle = PointerCustom Then Region.PointerIcon = mPointerIcon
+            Region.PointerStyle = mPointerStyle
+        End If
+    Next
+End If
 End Property
 
 Public Property Get RegionDefaultAutoscale() As Boolean
@@ -2299,6 +2370,9 @@ Public Sub RemoveChartRegion( _
 Dim i As Long
 Dim ev As CollectionChangeEvent
 
+Dim failpoint As Long
+On Error GoTo Err
+
 If Region.IsXAxisRegion Or Region.IsYAxisRegion Then
     Err.Raise ErrorCodes.ErrIllegalStateException, _
             ProjectName & "." & ModuleName & ":" & "removeChartRegion", _
@@ -2319,16 +2393,27 @@ Next
 mNumRegionsInUse = mNumRegionsInUse - 1
 
 sizeRegions
-'paintAll
 
 ev.changeType = CollItemRemoved
 Set ev.affectedItem = Region
 mController.fireRegionsChanged ev
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "RemoveChartRegion" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Sub
 
 Public Sub ScrollX(ByVal value As Long)
 Dim Region As ChartRegion
 Dim i As Long
+Dim failpoint As Long
+On Error GoTo Err
+
 If value = 0 Then Exit Sub
 
 If (LastVisiblePeriod + value) > _
@@ -2357,7 +2442,77 @@ Next
 If mXAxisRegion Is Nothing Then createXAxisRegion
 mXAxisRegion.PeriodsInView mScaleLeft, mScaleLeft + mScaleWidth
 setHorizontalScrollBar
-'paintAll
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ScrollX" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+End Sub
+
+Public Sub SetPointerModeDefault()
+Dim i As Long
+Dim Region As ChartRegion
+Dim failpoint As Long
+On Error GoTo Err
+
+mPointerMode = PointerModeDefault
+For i = 1 To mRegionsIndex Step 2
+    If Not mRegions(i).Region Is Nothing Then
+        Set Region = mRegions(i).Region
+        Region.SetPointerModeDefault
+    End If
+Next
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "SetPointerModeDefault" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+End Sub
+
+Public Sub SetPointerModeTool( _
+                Optional ByVal toolPointerStyle As PointerStyles = PointerTool, _
+                Optional ByVal icon As IPictureDisp)
+Dim i As Long
+Dim Region As ChartRegion
+Dim failpoint As Long
+On Error GoTo Err
+
+mPointerMode = PointerModeTool
+
+Select Case toolPointerStyle
+Case PointerNone
+Case PointerCrosshairs
+Case PointerDisc
+Case PointerTool
+Case PointerCustom
+Case Else
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "SetPointerModeTool", _
+            "toolPointerStyle must be a member of the PointerStyles enum"
+End Select
+For i = 1 To mRegionsIndex Step 2
+    If Not mRegions(i).Region Is Nothing Then
+        Set Region = mRegions(i).Region
+        Region.SetPointerModeTool toolPointerStyle, icon
+    End If
+Next
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "SetPointerModeTool" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Sub
 
 '================================================================================
@@ -2550,7 +2705,7 @@ mXCursorText.boxStyle = LineSolid
 mXCursorText.boxColor = vbBlack
 Set aFont = New StdFont
 aFont.name = "Arial"
-aFont.Size = 8
+aFont.size = 8
 aFont.Underline = False
 aFont.Bold = False
 mXCursorText.font = aFont
@@ -2676,7 +2831,7 @@ End Sub
 Private Sub mouseMove( _
                 ByVal index As Long, _
                 ByVal button As Long, _
-                ByVal shift As Long, _
+                ByVal Shift As Long, _
                 ByRef x As Single, _
                 ByRef y As Single)
 Dim i As Long
@@ -2687,18 +2842,20 @@ For i = 1 To mRegionsIndex Step 2
         Set Region = mRegions(i).Region
         If i = (2 * index - 1) Then
             'debug.print "Mousemove: index=" & index & " region=" & i & " x=" & x & " y=" & y
-            If (Region.SnapCursorToTickBoundaries And Not CBool((shift And vbCtrlMask))) Or _
-                (Not Region.SnapCursorToTickBoundaries And CBool((shift And vbCtrlMask))) _
+            If (mPointerMode = PointerModeDefault And _
+                    ((Region.SnapCursorToTickBoundaries And Not CBool(Shift And vbCtrlMask)) Or _
+                    (Not Region.SnapCursorToTickBoundaries And CBool(Shift And vbCtrlMask)))) Or _
+                (mPointerMode = PointerModeTool And CBool(Shift And vbCtrlMask)) _
             Then
                 Dim YScaleQuantum As Double
                 YScaleQuantum = Region.YScaleQuantum
                 If YScaleQuantum <> 0 Then y = YScaleQuantum * Int((y + YScaleQuantum / 10000) / YScaleQuantum)
             End If
-            Region.DrawCursor button, shift, x, y
+            Region.DrawCursor button, Shift, x, y
             
         Else
             'debug.print "Mousemove: index=" & index & " region=" & i & " x=" & x & " y=" & MinusInfinitySingle
-            Region.DrawCursor button, shift, x, MinusInfinitySingle
+            Region.DrawCursor button, Shift, x, MinusInfinitySingle
         End If
     End If
 Next
@@ -2708,7 +2865,7 @@ End Sub
 Private Sub mouseScroll( _
                 ByVal index As Long, _
                 ByVal button As Long, _
-                ByVal shift As Long, _
+                ByVal Shift As Long, _
                 ByRef x As Single, _
                 ByRef y As Single)
 

@@ -33,7 +33,7 @@ Event KeyPress(KeyAscii As Integer)
 Event KeyUp(KeyCode As Integer, Shift As Integer)
 Event RegionsChanged(ev As CollectionChangeEvent)
 Event PeriodsChanged(ev As CollectionChangeEvent)
-Event RegionSelected(ByVal region As ChartRegion)
+Event RegionSelected(ByVal Region As ChartRegion)
 
 '================================================================================
 ' Constants
@@ -213,10 +213,6 @@ Public Property Get Periods() As Periods
 Set Periods = chartObj.Periods
 End Property
 
-Public Property Let PointerStyle(ByVal value As PointerStyles)
-chartObj.PointerStyle = value
-End Property
-
 Public Property Get PointerCrosshairsColor() As Long
 PointerCrosshairsColor = chartObj.PointerCrosshairsColor
 End Property
@@ -233,8 +229,20 @@ Public Property Let PointerDiscColor(ByVal value As Long)
 chartObj.PointerDiscColor = value
 End Property
 
+Public Property Get PointerIcon() As IPictureDisp
+Set PointerIcon = chartObj.PointerIcon
+End Property
+
+Public Property Let PointerIcon(ByVal value As IPictureDisp)
+chartObj.PointerIcon = value
+End Property
+
 Public Property Get PointerStyle() As PointerStyles
 PointerStyle = chartObj.PointerStyle
+End Property
+
+Public Property Let PointerStyle(ByVal value As PointerStyles)
+chartObj.PointerStyle = value
 End Property
 
 Public Property Get SessionEndTime() As Date
@@ -358,8 +366,8 @@ Friend Sub firePeriodsChanged(ev As CollectionChangeEvent)
 RaiseEvent PeriodsChanged(ev)
 End Sub
 
-Friend Sub fireRegionSelected(ByVal region As ChartRegion)
-RaiseEvent RegionSelected(region)
+Friend Sub fireRegionSelected(ByVal Region As ChartRegion)
+RaiseEvent RegionSelected(Region)
 End Sub
 
 Public Function GetChartRegion( _
@@ -380,12 +388,22 @@ IsTimeInSession = chartObj.IsTimeInSession(timestamp)
 End Function
 
 Public Sub RemoveChartRegion( _
-                    ByVal region As ChartRegion)
-chartObj.RemoveChartRegion region
+                    ByVal Region As ChartRegion)
+chartObj.RemoveChartRegion Region
 End Sub
 
 Public Sub ScrollX(ByVal value As Long)
 chartObj.ScrollX value
+End Sub
+
+Public Sub SetPointerModeDefault()
+chartObj.SetPointerModeDefault
+End Sub
+
+Public Sub SetPointerModeTool( _
+                Optional ByVal toolPointerStyle As PointerStyles = PointerTool, _
+                Optional ByVal icon As IPictureDisp)
+chartObj.SetPointerModeTool toolPointerStyle, icon
 End Sub
 
 '================================================================================

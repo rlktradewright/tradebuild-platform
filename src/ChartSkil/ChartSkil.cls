@@ -137,6 +137,7 @@ Public Enum PointerStyles
     PointerCrosshairs
     PointerDisc
     PointerTool
+    PointerCustom
 End Enum
 
 Public Enum PointStyles
@@ -254,7 +255,7 @@ Public Function CreateDataPointStyle() As DataPointStyle
 Set CreateDataPointStyle = gCreateDataPointStyle
 End Function
 
-Public Function CreateLineStyle() As LineStyle
+Public Function CreateLineStyle() As linestyle
 Set CreateLineStyle = gCreateLineStyle
 End Function
 

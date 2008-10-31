@@ -33,19 +33,19 @@ Event DblCLick()
 Attribute DblCLick.VB_UserMemId = -601
 
 Event MouseDown(button As Integer, _
-                shift As Integer, _
+                Shift As Integer, _
                 x As Single, _
                 y As Single)
 Attribute MouseDown.VB_UserMemId = -605
                 
 Event mouseMove(button As Integer, _
-                shift As Integer, _
+                Shift As Integer, _
                 x As Single, _
                 y As Single)
 Attribute mouseMove.VB_UserMemId = -606
                 
 Event MouseUp(button As Integer, _
-                shift As Integer, _
+                Shift As Integer, _
                 x As Single, _
                 y As Single)
 Attribute MouseUp.VB_UserMemId = -607
@@ -199,7 +199,11 @@ Private mXGridLines As LineSeries
 ' hidden
 Private mHideGrid As Boolean
 
+Private mPointerMode As PointerModes
 Private mPointerStyle As PointerStyles
+Private mPointerIcon As IPictureDisp
+Private mPointerToolStyle As PointerStyles
+Private mPointerToolIcon As IPictureDisp
 
 Private mSessionOffsetMinutes As Date
 Private mVerticalGridTimePeriod As TimePeriod
@@ -1041,6 +1045,18 @@ End If
 mPointerDiscColor = value
 End Property
 
+Public Property Get PointerIcon() As IPictureDisp
+Set PointerIcon = mPointerIcon
+End Property
+
+Public Property Let PointerIcon(ByVal value As IPictureDisp)
+
+If value Is Nothing Then Exit Property
+If value Is mPointerIcon Then Exit Property
+
+Set mPointerIcon = value
+End Property
+
 Public Property Get PointerStyle() As PointerStyles
 PointerStyle = mPointerStyle
 End Property
@@ -1055,6 +1071,11 @@ End If
 
 If mPointerStyle = value Then Exit Property
 
+If mPointerMode = PointerModeTool Then
+    mPointerStyle = value
+    Exit Property
+End If
+
 If Not mDrawn Then
     mPointerStyle = value
     Exit Property
@@ -1068,23 +1089,28 @@ Case PointerCrosshairs
 Case PointerDisc
     undrawDiscPointer
 Case PointerTool
-    undrawPointer
+    undrawToolPointer
+Case PointerCustom
+    undrawCustomPointer
 End Select
 
 mPointerStyle = value
 
 Select Case mPointerStyle
 Case PointerNone
-
+    mCanvas.MouseIcon = gBlankMouseIcon
 Case PointerCrosshairs
-    'mCanvas.MousePointer = vbDefault
+    mCanvas.MouseIcon = gBlankMouseIcon
     drawCrosshairsPointer mPrevCursorX, mPrevCursorY
 Case PointerDisc
-    'mCanvas.MousePointer = vbCrosshair
+    mCanvas.MouseIcon = gBlankMouseIcon
     drawDiscPointer mPrevCursorX, mPrevCursorY
 Case PointerTool
-    'mCanvas.MousePointer = vbCrosshair
-    drawPointer mPrevCursorX, mPrevCursorY
+    mCanvas.MouseIcon = gBlankMouseIcon
+    drawToolPointer mPrevCursorX, mPrevCursorY
+Case PointerCustom
+    mCanvas.MouseIcon = mPointerIcon
+    drawCustomPointer mPrevCursorX, mPrevCursorY
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             "ChartSkil26.ChartRegion::(let)pointerStyle", _
@@ -1553,7 +1579,7 @@ Err.Raise errNumber, errSource, errDescription
 
 End Sub
 
-Friend Sub DrawCursor(ByVal button As Integer, ByVal shift As Integer, ByVal x As Single, ByVal y As Single)
+Friend Sub DrawCursor(ByVal button As Integer, ByVal Shift As Integer, ByVal x As Single, ByVal y As Single)
         Dim yVal As Single
 Dim failpoint As Long
 On Error GoTo Err
@@ -1566,7 +1592,11 @@ End If
 
 If Round(x) >= YAxisPosition Then Exit Sub
 
-Select Case mPointerStyle
+Dim lPointerStyle As PointerStyles
+
+lPointerStyle = IIf(mPointerMode = PointerModeDefault, mPointerStyle, mPointerToolStyle)
+
+Select Case lPointerStyle
 Case PointerNone
 
 Case PointerCrosshairs
@@ -1576,8 +1606,10 @@ Case PointerDisc
     undrawDiscPointer
     drawDiscPointer x, yVal
 Case PointerTool
-    undrawPointer
-    drawPointer x, yVal
+    undrawToolPointer
+    drawToolPointer x, yVal
+Case PointerCustom
+    drawCustomPointer x, yVal
 End Select
 
 Exit Sub
@@ -1627,28 +1659,28 @@ IsGridHidden = mHideGrid
 End Function
 
 Friend Sub MouseDown(button As Integer, _
-                shift As Integer, _
+                Shift As Integer, _
                 x As Single, _
                 y As Single)
 mCurrX = x
 mCurrY = y
 setSelectedObjectOrSeries
-RaiseEvent MouseDown(button, shift, x, y)
+RaiseEvent MouseDown(button, Shift, x, y)
 End Sub
                 
-Friend Sub mouseMove(ByVal button As Integer, ByVal shift As Integer, ByVal x As Single, ByVal y As Single)
+Friend Sub mouseMove(ByVal button As Integer, ByVal Shift As Integer, ByVal x As Single, ByVal y As Single)
 mCurrX = x
 mCurrY = y
-RaiseEvent mouseMove(button, shift, x, y)
+RaiseEvent mouseMove(button, Shift, x, y)
 End Sub
 
 Friend Sub MouseUp(button As Integer, _
-                shift As Integer, _
+                Shift As Integer, _
                 x As Single, _
                 y As Single)
 mCurrX = x
 mCurrY = y
-RaiseEvent MouseUp(button, shift, x, y)
+RaiseEvent MouseUp(button, Shift, x, y)
 End Sub
 
 Public Function newDimension(ByVal x As Double, _
@@ -1946,6 +1978,98 @@ Err.Raise errNumber, errSource, errDescription
 
 End Sub
 
+Friend Sub SetPointerModeDefault()
+If mPointerMode = PointerModeDefault Then Exit Sub
+
+mPointerMode = PointerModeDefault
+
+Select Case mPointerToolStyle
+Case PointerNone
+
+Case PointerCrosshairs
+    undrawCrosshairsPointer
+Case PointerDisc
+    undrawDiscPointer
+Case PointerTool
+    undrawToolPointer
+Case PointerCustom
+    undrawCustomPointer
+End Select
+
+Select Case mPointerStyle
+Case PointerNone
+    mCanvas.MouseIcon = gBlankMouseIcon
+Case PointerCrosshairs
+    mCanvas.MouseIcon = gBlankMouseIcon
+    drawCrosshairsPointer mPrevCursorX, mPrevCursorY
+Case PointerDisc
+    mCanvas.MouseIcon = gBlankMouseIcon
+    drawDiscPointer mPrevCursorX, mPrevCursorY
+Case PointerTool
+    mCanvas.MouseIcon = gBlankMouseIcon
+    drawToolPointer mPrevCursorX, mPrevCursorY
+Case PointerCustom
+    mCanvas.MouseIcon = mPointerIcon
+    drawCustomPointer mPrevCursorX, mPrevCursorY
+End Select
+
+End Sub
+
+Friend Sub SetPointerModeTool( _
+                ByVal toolPointerStyle As PointerStyles, _
+                ByVal icon As IPictureDisp)
+
+If mPointerMode <> PointerModeTool Then
+    Select Case mPointerStyle
+    Case PointerNone
+    
+    Case PointerCrosshairs
+        undrawCrosshairsPointer
+    Case PointerDisc
+        undrawDiscPointer
+    Case PointerTool
+        undrawToolPointer
+    Case PointerCustom
+        undrawCustomPointer
+    End Select
+Else
+    Select Case mPointerToolStyle
+    Case PointerNone
+    
+    Case PointerCrosshairs
+        undrawCrosshairsPointer
+    Case PointerDisc
+        undrawDiscPointer
+    Case PointerTool
+        undrawToolPointer
+    Case PointerCustom
+        undrawCustomPointer
+    End Select
+End If
+
+mPointerMode = PointerModeTool
+mPointerToolStyle = toolPointerStyle
+Set mPointerToolIcon = icon
+
+Select Case mPointerToolStyle
+Case PointerNone
+    mCanvas.MouseIcon = gBlankMouseIcon
+Case PointerCrosshairs
+    mCanvas.MouseIcon = gBlankMouseIcon
+    drawCrosshairsPointer mPrevCursorX, mPrevCursorY
+Case PointerDisc
+    mCanvas.MouseIcon = gBlankMouseIcon
+    drawDiscPointer mPrevCursorX, mPrevCursorY
+Case PointerTool
+    mCanvas.MouseIcon = gBlankMouseIcon
+    drawToolPointer mPrevCursorX, mPrevCursorY
+Case PointerCustom
+    mCanvas.MouseIcon = mPointerToolIcon
+    drawCustomPointer mPrevCursorX, mPrevCursorY
+End Select
+
+End Sub
+
 Public Sub SetVerticalScale(ByVal lowValue As Single, _
                             ByVal highValue As Single)
 
@@ -2210,12 +2334,16 @@ End If
 End Sub
 
 Private Function allocateGraphicObjectTableEntry() As Long
+On Error GoTo Err
 allocateGraphicObjectTableEntry = mNextGraphicObjectIndex
 
 If mNextGraphicObjectIndex > UBound(mGraphicObjects) Then
     ReDim Preserve mGraphicObjects(UBound(mGraphicObjects) + 500) As GraphicObjectTableEntry
 End If
 mNextGraphicObjectIndex = mNextGraphicObjectIndex + 1
+Exit Function
+Err:
+Stop
 End Function
 
 Private Function calculateInscopeGaugeDependentObjects()
@@ -2608,6 +2736,21 @@ If Not mYAxisRegion Is Nothing Then
 End If
 End Sub
 
+Private Sub drawCustomPointer(ByVal x As Single, ByVal y As Single)
+Dim lineX As Single
+Dim size As Dimension
+
+If mSuppressDrawing Then Exit Sub
+
+mPrevCursorX = x
+mPrevCursorY = y
+    
+If Not mYAxisRegion Is Nothing Then
+    mYPositionText.position = mYAxisRegion.newPoint(15, y, CoordsLogical, CoordsLogical)
+    mYPositionText.text = generateYAxisCursorPositionText(y)
+End If
+End Sub
+
 Private Sub drawDiscPointer(ByVal x As Single, ByVal y As Single)
 Dim lineX As Single
 Dim size As Dimension
@@ -2644,7 +2787,7 @@ If Not mYAxisRegion Is Nothing Then
 End If
 End Sub
 
-Private Sub drawPointer(ByVal x As Single, ByVal y As Single)
+Private Sub drawToolPointer(ByVal x As Single, ByVal y As Single)
 Dim lineX As Single
 Dim size As Dimension
 
@@ -2925,14 +3068,14 @@ End Sub
 
 Private Sub initialisePeriodTableEntry( _
                 ByVal index As Long)
-With mPeriodTable(index)
-    If .firstIndex = 0 Then
-        .firstIndex = allocateGraphicObjectTableEntry
-        .lastindex = allocateGraphicObjectTableEntry
-        mGraphicObjects(.firstIndex).nextPeriodIndex = .lastindex
-        mGraphicObjects(.lastindex).prevPeriodIndex = .firstIndex
+'With mPeriodTable(index)
+    If mPeriodTable(index).firstIndex = 0 Then
+        mPeriodTable(index).firstIndex = allocateGraphicObjectTableEntry
+        mPeriodTable(index).lastindex = allocateGraphicObjectTableEntry
+        mGraphicObjects(mPeriodTable(index).firstIndex).nextPeriodIndex = mPeriodTable(index).lastindex
+        mGraphicObjects(mPeriodTable(index).lastindex).prevPeriodIndex = mPeriodTable(index).firstIndex
     End If
-End With
+'End With
 End Sub
 
 Private Sub initialiseVisibleObjectList()
@@ -3214,7 +3357,11 @@ Err.Raise errNumber, errSource, errDescription
 End Sub
 
 Private Sub redrawCursor()
-Select Case mPointerStyle
+Dim lPointerStyle As PointerStyles
+
+lPointerStyle = IIf(mPointerMode = PointerModeDefault, mPointerStyle, mPointerToolStyle)
+
+Select Case lPointerStyle
 Case PointerNone
 
 Case PointerCrosshairs
@@ -3222,7 +3369,9 @@ Case PointerCrosshairs
 Case PointerDisc
     drawDiscPointer mPrevCursorX, mPrevCursorY
 Case PointerTool
-    drawPointer mPrevCursorX, mPrevCursorY
+    drawToolPointer mPrevCursorX, mPrevCursorY
+Case PointerCustom
+    drawCustomPointer mPrevCursorX, mPrevCursorY
 End Select
 End Sub
 
@@ -3380,14 +3529,9 @@ If newSelectedObject Is Nothing Then
         Set mSelectedObject = Nothing
     End If
 Else
-    ' we notify the new selection first to allow chart tools to
-    ' respond properly to selection of selection handles (if we
-    ' deselected the existing object first, the tool might destroy
-    ' the selection handles before it was notified that one was
-    ' selected)
-    selectObjectOrSeries newSelectedObject
     deSelectObjectOrSeries mSelectedObject
     Set mSelectedObject = newSelectedObject
+    selectObjectOrSeries newSelectedObject
 End If
 End Sub
 
@@ -3557,8 +3701,13 @@ End Sub
 
 Private Sub unDrawCursor( _
                 ByRef areaToRedraw As TRectangle)
+Dim lPointerStyle As PointerStyles
+
+lPointerStyle = IIf(mPointerMode = PointerModeDefault, mPointerStyle, mPointerToolStyle)
+
 mCanvas.setClippingRegion areaToRedraw
-Select Case mPointerStyle
+
+Select Case lPointerStyle
 Case PointerNone
 
 Case PointerCrosshairs
@@ -3566,7 +3715,9 @@ Case PointerCrosshairs
 Case PointerDisc
     undrawDiscPointer
 Case PointerTool
-    undrawPointer
+    undrawToolPointer
+Case PointerCustom
+    undrawCustomPointer
 End Select
 mCanvas.clearClippingRegion
 End Sub
@@ -3585,6 +3736,12 @@ With mCanvas
     prevLineX = Round(mPrevCursorX)
     .drawLine .newPoint(prevLineX, .bottom), .newPoint(prevLineX, .top)
 End With
+
+End Sub
+
+Private Sub undrawCustomPointer()
+
+' nothing to do
 
 End Sub
 
@@ -3615,7 +3772,7 @@ End With
 
 End Sub
 
-Private Sub undrawPointer()
+Private Sub undrawToolPointer()
 Dim size As Dimension
 Dim prevLineX As Single
 

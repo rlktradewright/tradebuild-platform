@@ -57,6 +57,11 @@ Public Enum LayerNumberRange
     MaxLayer = 255
 End Enum
 
+Public Enum PointerModes
+    PointerModeDefault
+    PointerModeTool
+End Enum
+
 '================================================================================
 ' Types
 '================================================================================
@@ -68,6 +73,8 @@ End Enum
 Private mLogger As Logger
 
 Private mIsInDev As Boolean
+
+Public gBlankMouseIcon As IPictureDisp
 
 '================================================================================
 ' Properties
@@ -122,7 +129,7 @@ Case TimePeriodNone, _
     periodEndtime = BarEndTime(lPeriod.timestamp, _
                             pController.BarTimePeriod, _
                             pController.SessionStartTime)
-    gCalculateX = lPeriod.periodNumber + (timestamp - lPeriod.timestamp) / (periodEndtime - lPeriod.timestamp)
+    gCalculateX = lPeriod.PeriodNumber + (timestamp - lPeriod.timestamp) / (periodEndtime - lPeriod.timestamp)
     
 Case TimePeriodVolume, TimePeriodTickVolume, TimePeriodTickMovement
     If Not forceNewPeriod Then
@@ -133,10 +140,10 @@ Case TimePeriodVolume, TimePeriodTickVolume, TimePeriodTickMovement
         If lPeriod Is Nothing Then
             Set lPeriod = pController.Periods.addPeriod(timestamp, True)
         End If
-        gCalculateX = lPeriod.periodNumber
+        gCalculateX = lPeriod.PeriodNumber
     Else
         Set lPeriod = pController.Periods.addPeriod(timestamp, True)
-        gCalculateX = lPeriod.periodNumber
+        gCalculateX = lPeriod.PeriodNumber
     End If
 End Select
 
@@ -150,7 +157,7 @@ With gCloneFont
     .Charset = aFont.Charset
     .Italic = aFont.Italic
     .name = aFont.name
-    .Size = aFont.Size
+    .size = aFont.size
     .Strikethrough = aFont.Strikethrough
     .Underline = aFont.Underline
     .Weight = aFont.Weight
@@ -239,7 +246,7 @@ Set aFont = New StdFont
 aFont.Bold = False
 aFont.Italic = False
 aFont.name = "Arial"
-aFont.Size = 8
+aFont.size = 8
 aFont.Strikethrough = False
 aFont.Underline = False
 

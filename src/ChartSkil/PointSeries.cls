@@ -336,6 +336,10 @@ End If
 
 mInhibitChangeEvent = True
 
+If value.Color <> mStyle.Color Then
+    somethingChanged = True
+    mStyle.Color = value.Color
+End If
 If value.displayMode <> mStyle.displayMode Then
     somethingChanged = True
     mStyle.displayMode = value.displayMode

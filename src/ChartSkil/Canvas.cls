@@ -305,6 +305,10 @@ Else
 End If
 End Property
 
+Friend Property Let MouseIcon(ByVal value As IPictureDisp)
+mSurface.MouseIcon = value
+End Property
+
 Friend Property Let MousePointer(ByVal value As VBRUN.MousePointerConstants)
 mSurface.MousePointer = value
 End Property
@@ -1129,7 +1133,7 @@ Dim failpoint As Long
 On Error GoTo Err
 
 Set newDimension = New Dimension
-newDimension.canvas = Me
+newDimension.Canvas = Me
 newDimension.x = x
 newDimension.y = y
 
@@ -1153,7 +1157,7 @@ Dim failpoint As Long
 On Error GoTo Err
 
 Set newPoint = New Point
-newPoint.canvas = Me
+newPoint.Canvas = Me
 newPoint.x = x
 newPoint.y = y
 newPoint.CoordinateSystemX = coordSystemX
@@ -1408,11 +1412,11 @@ End Sub
 Private Sub setfont()
 If Not mTextFont Is Nothing Then
     With mSurface.font
-        If mTextFont.Size < 8 Then .Size = mTextFont.Size
+        If mTextFont.size < 8 Then .size = mTextFont.size
        .name = mTextFont.name
        .Bold = mTextFont.Bold
        .Italic = mTextFont.Italic
-       .Size = mTextFont.Size
+       .size = mTextFont.size
        .Charset = mTextFont.Charset
        .Strikethrough = mTextFont.Strikethrough
        .Underline = mTextFont.Underline
