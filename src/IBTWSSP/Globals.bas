@@ -558,10 +558,10 @@ If getRandomClientId <> 0 Then
     Exit Function   ' clientId already exists for this designator
 End If
 
-getRandomClientId = Rnd * (&H7FFFFFFF - &H7000000) + &H7000000
+getRandomClientId = Rnd * (&H7FFFFFFF - &H70000000) + &H70000000
 
 Do While clientIdAlreadyInUse(getRandomClientId)
-    getRandomClientId = Rnd * (&H7FFFFFFF - &H7000000) + &H7000000
+    getRandomClientId = Rnd * (&H7FFFFFFF - &H70000000) + &H70000000
 Loop
 
 mRandomClientIds.add getRandomClientId, CStr(designator)

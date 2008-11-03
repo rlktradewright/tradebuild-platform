@@ -2722,6 +2722,9 @@ If err.number = 0 Then
 Else
     On Error GoTo 0
     If Not mapEntry.OrderSubmitter Is Nothing Then
+        Dim qtyRemaining As Long
+        qtyRemaining = mapEntry.order.quantityRemaining
+        
         mapEntry.OrderSubmitter.executionDetails lContractSpecifier, _
                                                     exec.AccountIdentifier, _
                                                     exec.Action, _
@@ -2733,11 +2736,12 @@ Else
                                                     exec.Price, _
                                                     exec.Quantity, _
                                                     exec.time
+        
         ' notify a status update - this is in case this execution occurred during a period when
         ' TWS had lost its connection to the IB servers and this exec details is being notified
         ' in response to the reqExecutions call made when the connection is recovered. In these
         ' circumstances TWS will not itself issue an orderStatus.
-        If exec.Quantity >= mapEntry.order.quantityRemaining Then
+        If exec.Quantity >= qtyRemaining Then
             mapEntry.OrderSubmitter.updateStatus mapEntry.order.tradeBuildId, _
                                                 OrderStatuses.OrderStatusFilled
         Else
