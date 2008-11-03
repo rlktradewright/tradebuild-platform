@@ -100,42 +100,64 @@ Private mPrevY                              As Double
 ' IChartTool Interface Members
 '@================================================================================
 
-Private Sub IChartTool_Create(ByVal X As Double, ByVal Y As Double)
-Dim aFont As StdFont
-Dim tStyle As textStyle
-
-Set mControlPoint1 = mRegion.newPoint(X, Y)
-Set mControlPoint2 = mRegion.newPoint(X, Y)
-
-Set mLineSeries = mRegion.AddGraphicObjectSeries(New LineSeries, mLayer)
-If mLayer = -1 Then
-    mLayer = mLineSeries.layer    ' get the layer allocated
+Private Sub IChartTool_Click(ByVal X As Double, ByVal Y As Double)
+If mLineSeries Is Nothing Then
+    Dim aFont As StdFont
+    Dim tStyle As textStyle
+    
+    Set mControlPoint1 = mRegion.newPoint(X, Y)
+    Set mControlPoint2 = mRegion.newPoint(X, Y)
+    
+    Set mLineSeries = mRegion.AddGraphicObjectSeries(New LineSeries, mLayer)
+    If mLayer = -1 Then
+        mLayer = mLineSeries.layer    ' get the layer allocated
+    End If
+    
+    Set mTextSeries = mRegion.AddGraphicObjectSeries(New TextSeries, mLayer)
+    Set tStyle = mRegion.DefaultTextStyle
+    Set aFont = tStyle.Font
+    aFont.Size = 8
+    tStyle.Font = aFont
+    tStyle.box = False
+    tStyle.Align = AlignBoxCentreLeft
+    mTextSeries.Style = tStyle
+    
+    Set mLine1 = addRetracementLine(0, X, Y)
+    
+    If UBound(mLineSpecs) >= 1 Then Set mLine2 = addRetracementLine(1, X, Y)
+    
+    If UBound(mLineSpecs) >= 2 Then Set mLine3 = addRetracementLine(2, X, Y)
+    
+    If UBound(mLineSpecs) >= 3 Then Set mLine4 = addRetracementLine(3, X, Y)
+    
+    If UBound(mLineSpecs) >= 4 Then Set mLine5 = addRetracementLine(4, X, Y)
+    
+    If UBound(mLineSpecs) >= 5 Then Set mLine6 = addRetracementLine(5, X, Y)
+    
+    If UBound(mLineSpecs) >= 6 Then Set mLine7 = addRetracementLine(6, X, Y)
+    
+    If UBound(mLineSpecs) >= 7 Then Set mLine8 = addRetracementLine(7, X, Y)
+    
+Else
+    Dim ln As ChartSkil26.Line
+    For Each ln In mLineSeries
+        ln.layer = mLayer
+    Next
+    Dim txt As ChartSkil26.Text
+    For Each txt In mTextSeries
+        txt.layer = mLayer
+    Next
+    Set mStartPoint1 = Nothing
+    Set mStartPoint2 = Nothing
+    mAbstractTool.finish
 End If
+End Sub
 
-Set mTextSeries = mRegion.AddGraphicObjectSeries(New TextSeries, mLayer)
-Set tStyle = mRegion.DefaultTextStyle
-Set aFont = tStyle.Font
-aFont.Size = 8
-tStyle.Font = aFont
-tStyle.box = False
-tStyle.Align = AlignBoxCentreLeft
-mTextSeries.Style = tStyle
+Private Sub IChartTool_Create(ByVal X As Double, ByVal Y As Double)
 
-Set mLine1 = addRetracementLine(0, X, Y)
+End Sub
 
-If UBound(mLineSpecs) >= 1 Then Set mLine2 = addRetracementLine(1, X, Y)
-
-If UBound(mLineSpecs) >= 2 Then Set mLine3 = addRetracementLine(2, X, Y)
-
-If UBound(mLineSpecs) >= 3 Then Set mLine4 = addRetracementLine(3, X, Y)
-
-If UBound(mLineSpecs) >= 4 Then Set mLine5 = addRetracementLine(4, X, Y)
-
-If UBound(mLineSpecs) >= 5 Then Set mLine6 = addRetracementLine(5, X, Y)
-
-If UBound(mLineSpecs) >= 6 Then Set mLine7 = addRetracementLine(6, X, Y)
-
-If UBound(mLineSpecs) >= 7 Then Set mLine8 = addRetracementLine(7, X, Y)
+Private Sub IChartTool_DblClick()
 
 End Sub
 
@@ -157,16 +179,7 @@ Private Sub IChartTool_Deselected()
 End Sub
 
 Private Sub IChartTool_EndResize()
-Dim ln As ChartSkil26.Line
-For Each ln In mLineSeries
-    ln.layer = mLayer
-Next
-Dim txt As ChartSkil26.Text
-For Each txt In mTextSeries
-    txt.layer = mLayer
-Next
-Set mStartPoint1 = Nothing
-Set mStartPoint2 = Nothing
+
 End Sub
 
 Private Sub IChartTool_Move(ByVal X As Double, ByVal Y As Double)
@@ -240,6 +253,8 @@ Dim txt As Text
 Dim i As Long
 Dim retr As Double
 
+If mLineSeries Is Nothing Then Exit Sub
+
 Set mControlPoint2 = mRegion.newPoint(X, Y)
 
 For i = 1 To mLineSeries.Count
@@ -254,21 +269,15 @@ Next
 
 End Sub
 
-Private Sub IChartTool_StartResize(ByVal selHandle As SelectionHandle, ByVal X As Single, ByVal Y As Single)
+Private Sub IChartTool_StartMove(ByVal X As Single, ByVal Y As Single)
 mPrevX = X
 mPrevY = Y
 
-Set mStartPoint1 = mControlPoint1
-Set mStartPoint2 = mControlPoint2
+startMove
+End Sub
 
-Dim ln As ChartSkil26.Line
-For Each ln In mLineSeries
-    ln.layer = LayerNumbers.LayerMax
-Next
-Dim txt As ChartSkil26.Text
-For Each txt In mTextSeries
-    txt.layer = LayerNumbers.LayerMax
-Next
+Private Sub IChartTool_StartResize(ByVal selHandleIndex As Long, ByVal X As Single, ByVal Y As Single)
+startMove
 End Sub
 
 Private Sub IChartTool_Undo()
@@ -375,11 +384,25 @@ Set addRetracementLine = ln
 End Function
 
 Private Sub notifySelected()
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mAbstractTool.IsSelected Then
-    mAbstractTool.SetSelected
-    mAbstractTool.AddSelectionHandle mControlPoint1.X, mControlPoint1.Y
-    mAbstractTool.AddSelectionHandle mControlPoint2.X, mControlPoint2.Y
+    If mAbstractTool.SetSelected Then
+        mAbstractTool.AddSelectionHandle mControlPoint1.X, mControlPoint1.Y
+        mAbstractTool.AddSelectionHandle mControlPoint2.X, mControlPoint2.Y
+    Else
+        mRegion.ClearSelection
+    End If
 End If
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "notifySelected" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 Private Sub SetText( _
@@ -388,3 +411,16 @@ Private Sub SetText( _
 txt.Text = mLineSpecs(index - 1).Percentage & "% (" & mRegion.FormatYValue(txt.position.Y) & ")"
 End Sub
 
+Private Sub startMove()
+Set mStartPoint1 = mControlPoint1
+Set mStartPoint2 = mControlPoint2
+
+Dim ln As ChartSkil26.Line
+For Each ln In mLineSeries
+    ln.layer = LayerNumbers.LayerMax
+Next
+Dim txt As ChartSkil26.Text
+For Each txt In mTextSeries
+    txt.layer = LayerNumbers.LayerMax
+Next
+End Sub

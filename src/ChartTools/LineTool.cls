@@ -72,17 +72,32 @@ Private mPrevY                              As Double
 ' IChartTool Interface Members
 '@================================================================================
 
-Private Sub IChartTool_Create(ByVal X As Double, ByVal Y As Double)
-If mLayer <> -1 Then
-    Set mLine = mRegion.AddLine(mLayer, True)
+Private Sub IChartTool_Click(ByVal X As Double, ByVal Y As Double)
+If mLine Is Nothing Then
+    If mLayer <> -1 Then
+        Set mLine = mRegion.AddLine(mLayer, True)
+    Else
+        Set mLine = mRegion.AddLine(, True)
+        mLayer = mLine.layer
+    End If
+    mLine.layer = LayerNumbers.LayerMax
+    mLine.LocalStyle = mLineStyle
+    mLine.SetPosition mRegion.newPoint(X, Y), mRegion.newPoint(X, Y)
+    mAbstractTool.AddSelectableObject mLine
 Else
-    Set mLine = mRegion.AddLine(, True)
-    mLayer = mLine.layer
+    mLine.layer = mLayer
+    Set mStartPoint1 = Nothing
+    Set mStartPoint2 = Nothing
+    mAbstractTool.finish
 End If
-mLine.layer = LayerNumbers.LayerMax
-mLine.LocalStyle = mLineStyle
-mLine.SetPosition mRegion.newPoint(X, Y), mRegion.newPoint(X, Y)
-mAbstractTool.AddSelectableObject mLine
+End Sub
+
+Private Sub IChartTool_Create(ByVal X As Double, ByVal Y As Double)
+
+End Sub
+
+Private Sub IChartTool_DblClick()
+
 End Sub
 
 Private Sub IChartTool_Delete()
@@ -94,9 +109,7 @@ Private Sub IChartTool_Deselected()
 End Sub
 
 Private Sub IChartTool_EndResize()
-mLine.layer = mLayer
-Set mStartPoint1 = Nothing
-Set mStartPoint2 = Nothing
+
 End Sub
 
 Private Sub IChartTool_Move(ByVal X As Double, ByVal Y As Double)
@@ -125,12 +138,21 @@ End If
 End Property
 
 Private Sub IChartTool_ResizeCreate(ByVal X As Double, ByVal Y As Double)
-mLine.Point2 = mRegion.newPoint(X, Y)
+If Not mLine Is Nothing Then mLine.Point2 = mRegion.newPoint(X, Y)
 End Sub
 
-Private Sub IChartTool_StartResize(ByVal selHandle As SelectionHandle, ByVal X As Single, ByVal Y As Single)
+Private Sub IChartTool_StartMove(ByVal X As Single, ByVal Y As Single)
 mPrevX = X
 mPrevY = Y
+
+Set mStartPoint1 = mLine.Point1
+Set mStartPoint2 = mLine.Point2
+
+mLine.layer = LayerNumbers.LayerMax
+End Sub
+
+Private Sub IChartTool_StartResize(ByVal selHandleIndex As Long, ByVal X As Single, ByVal Y As Single)
+If mLine Is Nothing Then Exit Sub
 
 Set mStartPoint1 = mLine.Point1
 Set mStartPoint2 = mLine.Point2
@@ -150,11 +172,27 @@ End Sub
 '@================================================================================
 
 Private Sub mLine_SelectionStateChanged()
+Dim failpoint As Long
+On Error GoTo Err
+
 If mLine.IsSelected Then
-    mAbstractTool.SetSelected
-    mAbstractTool.AddSelectionHandle mLine.Point1.X, mLine.Point1.Y
-    mAbstractTool.AddSelectionHandle mLine.Point2.X, mLine.Point2.Y
+    If Not mAbstractTool.IsSelected Then
+        If mAbstractTool.SetSelected Then
+            mAbstractTool.AddSelectionHandle mLine.Point1.X, mLine.Point1.Y
+            mAbstractTool.AddSelectionHandle mLine.Point2.X, mLine.Point2.Y
+        Else
+            mRegion.ClearSelection
+        End If
+    End If
 End If
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "mLine_SelectionStateChanged" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 '@================================================================================
