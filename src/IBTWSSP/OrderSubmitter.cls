@@ -475,6 +475,7 @@ End Sub
 
 Private Sub mTWSAPI_ConnectionToTWSClosed( _
                 ByVal reconnecting As Boolean)
+On Error GoTo err
 If Not reconnecting Then
     mServiceConsumer.NotifyEvent StandardSPEventCodes.LOLostConnectionToBroker, _
                             "Lost connection to TWS", _
@@ -485,6 +486,12 @@ Else
                             mOrderSubmissionServiceProvider.handle
 End If
 mServiceConsumer.NotReady
+Exit Sub
+err:
+logMessage "IBTWSSP:OrderSubmitter:mTWSAPI_ConnectionToTWSClosed (" & err.number & "): " & err.Description, LogLevelSevere
+handleFatalError err.number, _
+                "IBTWSSP" & "." & "OrderSubmitter" & "::" & "mTWSAPI_ConnectionToTWSClosed", _
+                err.Description
 End Sub
 
 Private Sub mTWSAPI_Disconnected(ByVal reason As String)
