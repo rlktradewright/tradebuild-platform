@@ -306,8 +306,24 @@ Public Property Get XAxisRegion() As ChartRegion
 Set XAxisRegion = chartObj.XAxisRegion
 End Property
 
+Public Property Get XAxisVisible() As Boolean
+XAxisVisible = chartObj.XAxisVisible
+End Property
+
+Public Property Let XAxisVisible(ByVal value As Boolean)
+chartObj.XAxisVisible = value
+End Property
+
 Public Property Get YAxisPosition() As Long
 YAxisPosition = chartObj.YAxisPosition
+End Property
+
+Public Property Get YAxisVisible() As Boolean
+YAxisVisible = chartObj.YAxisVisible
+End Property
+
+Public Property Let YAxisVisible(ByVal value As Boolean)
+chartObj.YAxisVisible = value
 End Property
 
 Public Property Get YAxisWidthCm() As Single

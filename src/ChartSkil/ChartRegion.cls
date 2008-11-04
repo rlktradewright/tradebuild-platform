@@ -1745,7 +1745,7 @@ mMinInViewPeriod = minValue
 mMaxInViewPeriod = maxValue
 mYAxisPosition = maxValue + 1
 mCanvas.Left = minValue
-mCanvas.Right = maxValue '+ 0.5
+mCanvas.right = maxValue '+ 0.5
 
 If Not mSuppressDrawing Then
     If mUseDeferredPainting Then
@@ -1783,36 +1783,74 @@ Friend Sub RemoveGraphicObjectEx( _
                 ByVal removeFromSeries As Boolean)
 Dim Handle As Long
 
+Dim failpoint As Long
+On Error GoTo Err
+
+failpoint = 100
+
 Handle = graphObj.Handle
 
+failpoint = 200
+
 If Not mSelectedObject Is Nothing Then
-    If graphObj Is mSelectedObject Then deSelectObjectOrSeries graphObj
+    If graphObj Is mSelectedObject Then ClearSelection
 End If
+
+failpoint = 300
 
 If undraw Then undrawArea mGraphicObjects(Handle).boundingRect
 
 If Not mGraphicObjects(Handle).ExtendedObject Then
+
+    failpoint = 400
+
     removeEntryFromPeriodList Handle
 Else
+
+    failpoint = 500
+
     removeEntryFromExtendedList Handle
 End If
 
 If graphicObjectIsInScope(Handle) Then
+
+failpoint = 600
+    
     removeEntryFromInScopeList Handle
     If graphicObjectIsVisible(Handle) Then
+
+        failpoint = 700
+
         removeEntryFromVisibleList Handle
     End If
 End If
+
+failpoint = 800
 
 If removeFromSeries Then mGraphObjSeriesTable(mGraphicObjects(Handle).seriesId).RemoveObject graphObj
 
 Set mGraphicObjects(Handle).graphObj = Nothing
 graphObj.Handle = -1
 
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "RemoveGraphicObjectEx" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
 End Sub
 
 Public Sub RemoveGraphicObjectSeries( _
                 ByVal pSeries As IGraphicObjectSeries)
+If pSeries Is Nothing Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "RemoveGraphicObjectSeries", _
+            "The supplied argument is Nothing"
+End If
+
 Dim t As New GraphObjSeriesRemovalTask
 t.initialise pSeries, Me
 StartTask t, PriorityLow
@@ -1951,7 +1989,7 @@ With mCanvas
 
     
     periodrect.Left = PeriodNumber - 0.5
-    periodrect.Right = PeriodNumber + 0.5
+    periodrect.right = PeriodNumber + 0.5
     periodrect.Bottom = .Bottom
     periodrect.Top = .Top
     periodrect.isValid = True

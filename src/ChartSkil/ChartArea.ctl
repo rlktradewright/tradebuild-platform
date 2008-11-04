@@ -634,6 +634,8 @@ Private Const PropNameShowToolbar                       As String = "ShowToobar"
 Private Const PropNameTwipsPerBar                       As String = "TwipsPerBar"
 Private Const PropNameVerticalGridSpacing               As String = "VerticalGridSpacing"
 Private Const PropNameVerticalGridUnits                 As String = "VerticalGridUnits"
+Private Const PropNameXAxisVisible                      As String = "XAxisVisible"
+Private Const PropNameYAxisVisible                      As String = "YAxisVisible"
 Private Const PropNameYAxisWidthCm                      As String = "YAxisWidthCm"
 
 Private Const PropDfltAllowHorizontalMouseScrolling     As Boolean = True
@@ -661,6 +663,8 @@ Private Const PropDfltShowToolbar                       As Boolean = True
 Private Const PropDfltTwipsPerBar                       As Long = 150
 Private Const PropDfltVerticalGridSpacing               As Long = 1
 Private Const PropDfltVerticalGridUnits                 As Long = TimePeriodHour
+Private Const PropDfltXAxisVisible                      As Boolean = True
+Private Const PropDfltYAxisVisible                      As Boolean = True
 Private Const PropDfltYAxisWidthCm                      As Single = 1.3
 
 '================================================================================
@@ -695,11 +699,13 @@ Private mPrevWidth As Single
 
 Private mTwipsPerBar As Long
 
+Private mXAxisVisible  As Boolean
 Private mXAxisRegion As ChartRegion
 Private mXCursorText As text
 
 Private mYAxisPosition As Long
 Private mYAxisWidthCm As Single
+Private mYAxisVisible  As Boolean
 
 Private mSessionStartTime As Date
 Private mSessionEndTime As Date
@@ -816,9 +822,9 @@ If Err.Number <> 0 Then
     Err.clear
 End If
 
-UserControl.BackColor = PropBag.ReadProperty(PropNameChartBackColor, PropDfltChartBackColor)
+UserControl.backColor = PropBag.ReadProperty(PropNameChartBackColor, PropDfltChartBackColor)
 If Err.Number <> 0 Then
-    UserControl.BackColor = PropDfltChartBackColor
+    UserControl.backColor = PropDfltChartBackColor
     Err.clear
 End If
 
@@ -828,9 +834,9 @@ If Err.Number <> 0 Then
     Err.clear
 End If
 
-mXAxisRegion.BackColor = PropBag.ReadProperty(PropNameChartBackColor, PropDfltChartBackColor)
+mXAxisRegion.backColor = PropBag.ReadProperty(PropNameChartBackColor, PropDfltChartBackColor)
 If Err.Number <> 0 Then
-    mXAxisRegion.BackColor = PropDfltChartBackColor
+    mXAxisRegion.backColor = PropDfltChartBackColor
     Err.clear
 End If
 
@@ -944,9 +950,21 @@ If Err.Number <> 0 Then
     Err.clear
 End If
 
+XAxisVisible = PropBag.ReadProperty(PropNameXAxisVisible, PropDfltXAxisVisible)
+If Err.Number <> 0 Then
+    XAxisVisible = PropDfltXAxisVisible
+    Err.clear
+End If
+
 YAxisWidthCm = PropBag.ReadProperty(PropNameYAxisWidthCm, PropDfltYAxisWidthCm)
 If Err.Number <> 0 Then
     YAxisWidthCm = PropDfltYAxisWidthCm
+    Err.clear
+End If
+
+YAxisVisible = PropBag.ReadProperty(PropNameYAxisVisible, PropDfltYAxisVisible)
+If Err.Number <> 0 Then
+    YAxisVisible = PropDfltYAxisVisible
     Err.clear
 End If
 
@@ -985,10 +1003,10 @@ Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
 PropBag.WriteProperty PropNameAllowHorizontalMouseScrolling, AllowHorizontalMouseScrolling, PropDfltAllowHorizontalMouseScrolling
 PropBag.WriteProperty PropNameAllowVerticalMouseScrolling, AllowVerticalMouseScrolling, PropDfltAllowVerticalMouseScrolling
 PropBag.WriteProperty PropNameAutoscroll, Autoscroll, PropDfltAutoscroll
-PropBag.WriteProperty PropNameChartBackColor, UserControl.BackColor, PropDfltChartBackColor
+PropBag.WriteProperty PropNameChartBackColor, UserControl.backColor, PropDfltChartBackColor
 PropBag.WriteProperty PropNameDefaultBarDisplayMode, mDefaultBarDisplayMode, PropDfltDefaultBarDisplayMode
 PropBag.WriteProperty PropNameDefaultRegionAutoscale, mDefaultRegionStyle.Autoscale, PropDfltDefaultRegionAutoscale
-PropBag.WriteProperty PropNameDefaultRegionBackColor, mDefaultRegionStyle.BackColor, PropDfltDefaultRegionBackColor
+PropBag.WriteProperty PropNameDefaultRegionBackColor, mDefaultRegionStyle.backColor, PropDfltDefaultRegionBackColor
 PropBag.WriteProperty PropNameDefaultRegionGridColor, mDefaultRegionStyle.GridColor, PropDfltDefaultRegionGridColor
 PropBag.WriteProperty PropNameDefaultRegionGridlineSpacingY, mDefaultRegionStyle.GridlineSpacingY, PropDfltDefaultRegionGridlineSpacingY
 PropBag.WriteProperty PropNameDefaultRegionGridTextColor, mDefaultRegionStyle.GridTextColor, PropDfltDefaultRegionGridTextColor
@@ -1007,6 +1025,8 @@ PropBag.WriteProperty PropNameShowToolbar, ShowToolbar, PropDfltShowToolbar
 PropBag.WriteProperty PropNameTwipsPerBar, TwipsPerBar, PropDfltTwipsPerBar
 PropBag.WriteProperty PropNameVerticalGridSpacing, mVerticalGridTimePeriod.length, PropDfltVerticalGridSpacing
 PropBag.WriteProperty PropNameVerticalGridUnits, mVerticalGridTimePeriod.units, PropDfltVerticalGridUnits
+PropBag.WriteProperty PropNameXAxisVisible, XAxisVisible, PropDfltXAxisVisible
+PropBag.WriteProperty PropNameYAxisVisible, YAxisVisible, PropDfltYAxisVisible
 PropBag.WriteProperty PropNameYAxisWidthCm, YAxisWidthCm, PropDfltYAxisWidthCm
 End Sub
 
@@ -1617,22 +1637,22 @@ End Property
 
 Public Property Get ChartBackColor() As OLE_COLOR
 Attribute ChartBackColor.VB_ProcData.VB_Invoke_Property = ";Appearance"
-ChartBackColor = mDefaultRegionStyle.BackColor
+ChartBackColor = mDefaultRegionStyle.backColor
 End Property
 
 Public Property Let ChartBackColor(ByVal val As OLE_COLOR)
 Dim i As Long
 
-If mDefaultRegionStyle.BackColor = val Then Exit Property
+If mDefaultRegionStyle.backColor = val Then Exit Property
 
-UserControl.BackColor = val
+UserControl.backColor = val
 
-mDefaultRegionStyle.BackColor = val
-mXAxisRegion.BackColor = val
+mDefaultRegionStyle.backColor = val
+mXAxisRegion.backColor = val
 
 For i = 1 To mRegionsIndex Step 2
     If Not mRegions(i).Region Is Nothing Then
-        mRegions(i).Region.BackColor = val
+        mRegions(i).Region.backColor = val
     End If
 Next
 paintAll
@@ -1880,11 +1900,11 @@ End Property
 
 Public Property Get RegionDefaultBackColor() As OLE_COLOR
 Attribute RegionDefaultBackColor.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-RegionDefaultBackColor = mDefaultRegionStyle.BackColor
+RegionDefaultBackColor = mDefaultRegionStyle.backColor
 End Property
 
 Public Property Let RegionDefaultBackColor(ByVal val As OLE_COLOR)
-mDefaultRegionStyle.BackColor = val
+mDefaultRegionStyle.backColor = val
 End Property
 
 Public Property Get RegionDefaultGridColor() As OLE_COLOR
@@ -2095,16 +2115,38 @@ Public Property Get XAxisRegion() As ChartRegion
 Set XAxisRegion = mXAxisRegion
 End Property
 
+Public Property Get XAxisVisible() As Boolean
+XAxisVisible = mXAxisVisible
+End Property
+
+Public Property Let XAxisVisible(ByVal value As Boolean)
+mXAxisVisible = value
+End Property
+
 Public Property Get YAxisPosition() As Long
 YAxisPosition = mYAxisPosition
 End Property
 
+Public Property Get YAxisVisible() As Boolean
+Attribute YAxisVisible.VB_ProcData.VB_Invoke_Property = ";Appearance"
+YAxisVisible = mYAxisVisible
+End Property
+
+Public Property Let YAxisVisible(ByVal value As Boolean)
+mYAxisVisible = value
+End Property
+
 Public Property Get YAxisWidthCm() As Single
-Attribute YAxisWidthCm.VB_ProcData.VB_Invoke_Property = ";Appearance"
 YAxisWidthCm = mYAxisWidthCm
 End Property
 
 Public Property Let YAxisWidthCm(ByVal value As Single)
+If value <> 0 Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "YAxisWidthCm", _
+            "Y axis width must be greater than 0"
+End If
+
 mYAxisWidthCm = value
 End Property
 
@@ -2150,8 +2192,10 @@ AddChartRegion.controller = controller
 
 Load ChartRegionPicture(controlIndex)
 ChartRegionPicture(controlIndex).align = vbAlignNone
+'ChartRegionPicture(controlIndex).width = _
+'    UserControl.ScaleWidth * (mYAxisPosition - ChartLeft) / XAxisPicture.ScaleWidth
 ChartRegionPicture(controlIndex).width = _
-    UserControl.ScaleWidth * (mYAxisPosition - ChartLeft) / XAxisPicture.ScaleWidth
+    IIf(mYAxisVisible, UserControl.ScaleWidth - mYAxisWidthCm * TwipsPerCm, UserControl.ScaleWidth)
 ChartRegionPicture(controlIndex).Visible = True
 
 AddChartRegion.Canvas = createCanvas(ChartRegionPicture(controlIndex))
@@ -2215,8 +2259,9 @@ YAxisRegion.controller = controller
 Load YAxisPicture(controlIndex)
 YAxisPicture(controlIndex).align = vbAlignNone
 YAxisPicture(controlIndex).left = ChartRegionPicture(controlIndex).width
-YAxisPicture(controlIndex).width = UserControl.ScaleWidth - YAxisPicture(YAxisPicture.UBound).left
-YAxisPicture(controlIndex).Visible = True
+'YAxisPicture(controlIndex).width = UserControl.ScaleWidth - YAxisPicture(YAxisPicture.UBound).Left
+YAxisPicture(controlIndex).width = mYAxisWidthCm * TwipsPerCm
+YAxisPicture(controlIndex).Visible = mYAxisVisible
 
 YAxisRegion.Canvas = createCanvas(YAxisPicture(controlIndex))
 
@@ -2258,6 +2303,12 @@ End Function
 
 Public Function addPeriod(ByVal timestamp As Date) As period
 Set addPeriod = mPeriods.addPeriod(timestamp)
+End Function
+
+Private Function calcScaleLeft() As Single
+calcScaleLeft = mYAxisPosition + _
+            IIf(mYAxisVisible, mYAxisWidthCm * TwipsPerCm / XAxisPicture.width * mScaleWidth, 0) - _
+            mScaleWidth
 End Function
 
 Public Function ClearChart()
@@ -2424,9 +2475,7 @@ ElseIf (LastVisiblePeriod + value) < 1 Then
 End If
 
 mYAxisPosition = mYAxisPosition + value
-mScaleLeft = mYAxisPosition + _
-            (mYAxisWidthCm * TwipsPerCm / XAxisPicture.width * mScaleWidth) - _
-            mScaleWidth
+mScaleLeft = calcScaleLeft
 XAxisPicture.ScaleLeft = mScaleLeft
 
 If mSuppressDrawingCount > 0 Then Exit Sub
@@ -2520,7 +2569,7 @@ End Sub
 '================================================================================
 
 Private Function calcAvailableHeight() As Long
-calcAvailableHeight = XAxisPicture.top - _
+calcAvailableHeight = IIf(mXAxisVisible, XAxisPicture.top, UserControl.ScaleHeight) - _
                     mNumRegionsInUse * RegionDividerPicture(0).height - _
                     IIf(mShowToolbar, Toolbar1.height, 0)
 If calcAvailableHeight < 0 Then calcAvailableHeight = 0
@@ -2698,7 +2747,7 @@ mXAxisRegion.style = style
 
 Set mXCursorText = mXAxisRegion.AddText(LayerNumbers.LayerPointer)
 mXCursorText.align = AlignTopCentre
-mXCursorText.Color = vbWhite Xor mDefaultRegionStyle.BackColor
+mXCursorText.Color = vbWhite Xor mDefaultRegionStyle.backColor
 mXCursorText.box = True
 mXCursorText.boxFillColor = vbWhite
 mXCursorText.boxStyle = LineSolid
@@ -2709,6 +2758,8 @@ aFont.size = 8
 aFont.Underline = False
 aFont.Bold = False
 mXCursorText.font = aFont
+
+XAxisPicture.Visible = mXAxisVisible
 
 End Sub
 
@@ -2807,7 +2858,10 @@ If Not firstInitialisationDone Then
     mDefaultYAxisStyle.HasGrid = False
     
     mTwipsPerBar = PropDfltTwipsPerBar
+    
+    mXAxisVisible = PropDfltXAxisVisible
     mYAxisWidthCm = PropDfltYAxisWidthCm
+    mYAxisVisible = PropDfltYAxisVisible
 
     mAllowHorizontalMouseScrolling = PropDfltAllowHorizontalMouseScrolling
     mAllowVerticalMouseScrolling = PropDfltAllowVerticalMouseScrolling
@@ -2816,9 +2870,7 @@ End If
 
 mYAxisPosition = 1
 mScaleWidth = CSng(XAxisPicture.width) / CSng(mTwipsPerBar) - 0.5!
-mScaleLeft = mYAxisPosition + _
-            (mYAxisWidthCm * TwipsPerCm / XAxisPicture.width * mScaleWidth) - _
-            mScaleWidth
+mScaleLeft = calcScaleLeft
 mScaleHeight = -100
 mScaleTop = 100
 
@@ -2930,7 +2982,8 @@ failpoint = 200
 
 If resizeHeight Then
     HScroll.top = UserControl.height - IIf(mShowHorizontalScrollBar, HScroll.height, 0)
-    XAxisPicture.top = HScroll.top - XAxisPicture.height
+    XAxisPicture.top = HScroll.top - IIf(mXAxisVisible, XAxisPicture.height, 0)
+    XAxisPicture.Visible = mXAxisVisible
     sizeRegions
 End If
 'paintAll
@@ -2951,7 +3004,6 @@ Err.Raise Err.Number, _
 End Sub
 
 Private Sub resizeX()
-Dim newScaleWidth As Single
 Dim i As Long
 Dim Region As ChartRegion
 
@@ -2966,22 +3018,15 @@ If gLogger.isLoggable(LogLevelMediumDetail) Then gLogger.Log LogLevelMediumDetai
 
 failpoint = 200
 
-newScaleWidth = CSng(XAxisPicture.width) / CSng(mTwipsPerBar) - 0.5!
-mScaleLeft = mYAxisPosition + _
-            (mYAxisWidthCm * TwipsPerCm / XAxisPicture.width * newScaleWidth) - _
-            newScaleWidth
-
-
-failpoint = 300
-
-mScaleWidth = newScaleWidth
+mScaleWidth = CSng(XAxisPicture.width) / CSng(mTwipsPerBar) - 0.5!
+mScaleLeft = calcScaleLeft
 
 
 failpoint = 400
 
 For i = 0 To ChartRegionPicture.UBound
     If (UserControl.width - YAxisPicture(i).width) > 0 Then
-        YAxisPicture(i).left = UserControl.width - YAxisPicture(i).width
+        YAxisPicture(i).left = UserControl.width - IIf(mYAxisVisible, YAxisPicture(i).width, 0)
         ChartRegionPicture(i).width = YAxisPicture(i).left
     End If
 Next
