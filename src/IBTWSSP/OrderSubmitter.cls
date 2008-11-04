@@ -124,7 +124,7 @@ Dim entryOrder As TradeBuildSP.IOrder
 Dim stopOrder As TradeBuildSP.IOrder
 Dim targetOrder As TradeBuildSP.IOrder
 
-On Error GoTo err
+On Error GoTo Err
 Set entryOrder = pOrderPlex.entryOrder
 Select Case entryOrder.status
 Case TradeBuildSP.OrderStatuses.OrderStatusCreated, _
@@ -175,20 +175,20 @@ End If
     
 ' need some stuff here to cancel if it's an oca group
 Exit Function
-err:
-logMessage "IBTWSSP:OrderSubmitter:cancelOrderPlex (" & err.number & "): " & err.Description, LogLevelSevere
-handleFatalError err.number, _
+Err:
+logMessage "IBTWSSP:OrderSubmitter:cancelOrderPlex (" & Err.number & "): " & Err.Description, LogLevelSevere
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "OrderSubmitter" & "::" & "IOrderSubmitter_cancelOrderPlex", _
-                err.Description
+                Err.Description
 
 End Function
 
 Private Sub IOrderSubmitter_cancelStopOrder(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
 Dim stopOrder As TradeBuildSP.IOrder
 
-On Error GoTo err
+On Error GoTo Err
 Set stopOrder = pOrderPlex.stopOrder
-If stopOrder Is Nothing Then err.Raise ErrorCodes.ErrIllegalStateException, _
+If stopOrder Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "IBTWSSP.OrderSubmitter::cancelStopOrder", _
                                     "Order plex " & pOrderPlex.key & " has no stop order"
 
@@ -197,26 +197,26 @@ Case TradeBuildSP.OrderStatuses.OrderStatusCreated, _
     TradeBuildSP.OrderStatuses.OrderStatusFilled, _
     TradeBuildSP.OrderStatuses.OrderStatusCancelling, _
     TradeBuildSP.OrderStatuses.OrderStatusCancelled
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "IBTWSSP.OrderSubmitter::cancelStopOrder", _
                                     "Stop order state invalid for cancellation"
 Case Else
     mTWSAPI.cancelOrder stopOrder.brokerId
 End Select
 Exit Sub
-err:
-logMessage "IBTWSSP:OrderSubmitter:cancelStoporder (" & err.number & "): " & err.Description, LogLevelSevere
-handleFatalError err.number, _
+Err:
+logMessage "IBTWSSP:OrderSubmitter:cancelStoporder (" & Err.number & "): " & Err.Description, LogLevelSevere
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "OrderSubmitter" & "::" & "IOrderSubmitter_cancelStopOrder", _
-                err.Description
+                Err.Description
 End Sub
 
 Private Sub IOrderSubmitter_cancelTargetOrder(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
 Dim targetOrder As TradeBuildSP.IOrder
 
-On Error GoTo err
+On Error GoTo Err
 Set targetOrder = pOrderPlex.targetOrder
-If targetOrder Is Nothing Then err.Raise ErrorCodes.ErrIllegalStateException, _
+If targetOrder Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "IBTWSSP.OrderSubmitter::cancelTargetOrder", _
                                     "Order plex " & pOrderPlex.key & " has no target order"
 
@@ -225,18 +225,18 @@ Select Case targetOrder.status
 Case TradeBuildSP.OrderStatuses.OrderStatusCreated, _
     TradeBuildSP.OrderStatuses.OrderStatusCancelling, _
     TradeBuildSP.OrderStatuses.OrderStatusCancelled
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                                     "IBTWSSP.OrderSubmitter::cancelTargetOrder", _
                                     "Target order state invalid for cancellation"
 Case Else
     mTWSAPI.cancelOrder targetOrder.brokerId
 End Select
 Exit Sub
-err:
-logMessage "IBTWSSP:OrderSubmitter:cancelTargetOrder (" & err.number & "): " & err.Description, LogLevelSevere
-handleFatalError err.number, _
+Err:
+logMessage "IBTWSSP:OrderSubmitter:cancelTargetOrder (" & Err.number & "): " & Err.Description, LogLevelSevere
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "OrderSubmitter" & "::" & "IOrderSubmitter_cancelTargetOrder", _
-                err.Description
+                Err.Description
 End Sub
 
 Private Property Let IOrderSubmitter_clockRate(ByVal RHS As Single)
@@ -249,7 +249,7 @@ Dim stopOrder As TradeBuildSP.IOrder
 Dim targetOrder As TradeBuildSP.IOrder
 Dim transmit As Boolean
 
-On Error GoTo err
+On Error GoTo Err
 Set entryOrder = pOrderPlex.entryOrder
 Set stopOrder = pOrderPlex.stopOrder
 Set targetOrder = pOrderPlex.targetOrder
@@ -287,11 +287,11 @@ Else
     ' treat the other orders as an OCA group - still to be implemented
 End If
 Exit Sub
-err:
-logMessage "IBTWSSP:OrderSubmitter:executeOrderPlex (" & err.number & "): " & err.Description, LogLevelSevere
-handleFatalError err.number, _
+Err:
+logMessage "IBTWSSP:OrderSubmitter:executeOrderPlex (" & Err.number & "): " & Err.Description, LogLevelSevere
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "OrderSubmitter" & "::" & "IOrderSubmitter_executeOrderPlex", _
-                err.Description
+                Err.Description
 End Sub
 
 Private Sub IOrderSubmitter_finish()
@@ -308,7 +308,7 @@ Private Sub IOrderSubmitter_modifyOrderPlex( _
                 ByVal targetOrderChanged As Boolean, _
                 ByVal closeoutOrderChanged As Boolean)
 
-On Error GoTo err
+On Error GoTo Err
 If entryOrderChanged Then
     placeOrder pOrderPlex.entryOrder, True, "0", ""
 End If
@@ -322,11 +322,11 @@ If closeoutOrderChanged Then
     placeOrder pOrderPlex.closeoutOrder, True, "0", ""
 End If
 Exit Sub
-err:
-logMessage "IBTWSSP:OrderSubmitter:IOrderSubmitter_modifyOrderPlex (" & err.number & "): " & err.Description, LogLevelSevere
-handleFatalError err.number, _
+Err:
+logMessage "IBTWSSP:OrderSubmitter:IOrderSubmitter_modifyOrderPlex (" & Err.number & "): " & Err.Description, LogLevelSevere
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "OrderSubmitter" & "::" & "IOrderSubmitter_modifyOrderPlex", _
-                err.Description
+                Err.Description
     
 End Sub
 
@@ -351,7 +351,7 @@ Dim stopOrder As TradeBuildSP.IOrder
 Dim targetOrder As TradeBuildSP.IOrder
 Dim ocaGroup As String
 
-On Error GoTo err
+On Error GoTo Err
 ocaGroup = generateGUIDString
 
 Set stopOrder = pOrderPlex.stopOrder
@@ -362,11 +362,11 @@ Set targetOrder = pOrderPlex.targetOrder
 targetOrder.brokerId = "" ' force a new id to be allocated
 placeOrder targetOrder, True, "0", ocaGroup
 Exit Sub
-err:
-logMessage "IBTWSSP:OrderSubmitter:IOrderSubmitter_resubmitStopAndTargetOrders (" & err.number & "): " & err.Description, LogLevelSevere
-handleFatalError err.number, _
+Err:
+logMessage "IBTWSSP:OrderSubmitter:IOrderSubmitter_resubmitStopAndTargetOrders (" & Err.number & "): " & Err.Description, LogLevelSevere
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "OrderSubmitter" & "::" & "IOrderSubmitter_resubmitStopAndTargetOrders", _
-                err.Description
+                Err.Description
 End Sub
 
 Private Sub IOrderSubmitter_resubmitStopOrder(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
@@ -374,7 +374,7 @@ Dim stopOrder As TradeBuildSP.IOrder
 Dim targetOrder As TradeBuildSP.IOrder
 Dim ocaGroup As String
 
-On Error GoTo err
+On Error GoTo Err
 Set stopOrder = pOrderPlex.stopOrder
 Set targetOrder = pOrderPlex.targetOrder
 stopOrder.brokerId = ""     ' force a new id to be allocated
@@ -386,11 +386,11 @@ Else
     placeOrder targetOrder, True, "0", ocaGroup
 End If
 Exit Sub
-err:
-logMessage "IBTWSSP:OrderSubmitter:IOrderSubmitter_resubmitStopOrder (" & err.number & "): " & err.Description, LogLevelSevere
-handleFatalError err.number, _
+Err:
+logMessage "IBTWSSP:OrderSubmitter:IOrderSubmitter_resubmitStopOrder (" & Err.number & "): " & Err.Description, LogLevelSevere
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "OrderSubmitter" & "::" & "IOrderSubmitter_resubmitStopOrder", _
-                err.Description
+                Err.Description
 End Sub
 
 Private Sub IOrderSubmitter_resubmitTargetOrder(ByVal pOrderPlex As TradeBuildSP.IOrderPlex)
@@ -398,7 +398,7 @@ Dim stopOrder As TradeBuildSP.IOrder
 Dim targetOrder As TradeBuildSP.IOrder
 Dim ocaGroup As String
 
-On Error GoTo err
+On Error GoTo Err
 Set stopOrder = pOrderPlex.stopOrder
 Set targetOrder = pOrderPlex.targetOrder
 targetOrder.brokerId = ""   ' force a new id to be allocated
@@ -410,11 +410,11 @@ Else
     placeOrder targetOrder, True, "0", ocaGroup
 End If
 Exit Sub
-err:
-logMessage "IBTWSSP:OrderSubmitter:IOrderSubmitter_resubmitTargetOrder (" & err.number & "): " & err.Description, LogLevelSevere
-handleFatalError err.number, _
+Err:
+logMessage "IBTWSSP:OrderSubmitter:IOrderSubmitter_resubmitTargetOrder (" & Err.number & "): " & Err.Description, LogLevelSevere
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "OrderSubmitter" & "::" & "IOrderSubmitter_resubmitTargetOrder", _
-                err.Description
+                Err.Description
 End Sub
 
 '================================================================================
@@ -422,14 +422,24 @@ End Sub
 '================================================================================
 
 Private Sub mTWSAPI_Connected()
+On Error GoTo Err
+
 mServiceConsumer.NotifyEvent StandardSPEventCodes.LOConnectedToBroker, _
                         "Connected to " & mTWSAPI.connectionString, _
                         mOrderSubmissionServiceProvider.handle
 If Not mContractWrapper Is Nothing Then mServiceConsumer.Ready
+
+Exit Sub
+
+Err:
+logMessage "IBTWSSP:OrderSubmitter:mTWSAPI_Connected (" & Err.number & "): " & Err.Description, LogLevelSevere
+handleFatalError Err.number, _
+                "IBTWSSP" & "." & "OrderSubmitter" & "::" & "mTWSAPI_Connected", _
+                Err.Description
 End Sub
 
 Private Sub mTWSAPI_ConnectFailed(ByVal Description As String, ByVal retrying As Boolean)
-On Error GoTo err
+On Error GoTo Err
 If Not retrying Then
     mServiceConsumer.NotifyEvent StandardSPEventCodes.LOCantConnectToBroker, _
                             Description, _
@@ -441,41 +451,41 @@ Else
 End If
 mServiceConsumer.NotReady
 Exit Sub
-err:
-logMessage "IBTWSSP:OrderSubmitter:mTWSAPI_ConnectFailed (" & err.number & "): " & err.Description, LogLevelSevere
-handleFatalError err.number, _
+Err:
+logMessage "IBTWSSP:OrderSubmitter:mTWSAPI_ConnectFailed (" & Err.number & "): " & Err.Description, LogLevelSevere
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "OrderSubmitter" & "::" & "mTWSAPI_ConnectFailed", _
-                err.Description
+                Err.Description
 End Sub
 
 Private Sub mTWSAPI_ConnectionToIBClosed()
-On Error GoTo err
+On Error GoTo Err
 mServiceConsumer.NotifyEvent StandardSPEventCodes.LOReConnectingToBroker, _
                         "Lost connection from TWS to IB servers", _
                         mOrderSubmissionServiceProvider.handle
 mServiceConsumer.NotReady
 Exit Sub
-err:
-logMessage "IBTWSSP:OrderSubmitter:mTWSAPI_ConnectionToIBClosed (" & err.number & "): " & err.Description, LogLevelSevere
-handleFatalError err.number, _
+Err:
+logMessage "IBTWSSP:OrderSubmitter:mTWSAPI_ConnectionToIBClosed (" & Err.number & "): " & Err.Description, LogLevelSevere
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "OrderSubmitter" & "::" & "mTWSAPI_ConnectionToIBClosed", _
-                err.Description
+                Err.Description
 End Sub
 
 Private Sub mTWSAPI_ConnectionToIBRecovered()
-On Error GoTo err
+On Error GoTo Err
 If Not mContractWrapper Is Nothing Then mServiceConsumer.Ready
 Exit Sub
-err:
-logMessage "IBTWSSP:OrderSubmitter:mTWSAPI_ConnectionToIBRecovered (" & err.number & "): " & err.Description, LogLevelSevere
-handleFatalError err.number, _
+Err:
+logMessage "IBTWSSP:OrderSubmitter:mTWSAPI_ConnectionToIBRecovered (" & Err.number & "): " & Err.Description, LogLevelSevere
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "OrderSubmitter" & "::" & "mTWSAPI_ConnectionToIBRecovered", _
-                err.Description
+                Err.Description
 End Sub
 
 Private Sub mTWSAPI_ConnectionToTWSClosed( _
                 ByVal reconnecting As Boolean)
-On Error GoTo err
+On Error GoTo Err
 If Not reconnecting Then
     mServiceConsumer.NotifyEvent StandardSPEventCodes.LOLostConnectionToBroker, _
                             "Lost connection to TWS", _
@@ -487,24 +497,24 @@ Else
 End If
 mServiceConsumer.NotReady
 Exit Sub
-err:
-logMessage "IBTWSSP:OrderSubmitter:mTWSAPI_ConnectionToTWSClosed (" & err.number & "): " & err.Description, LogLevelSevere
-handleFatalError err.number, _
+Err:
+logMessage "IBTWSSP:OrderSubmitter:mTWSAPI_ConnectionToTWSClosed (" & Err.number & "): " & Err.Description, LogLevelSevere
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "OrderSubmitter" & "::" & "mTWSAPI_ConnectionToTWSClosed", _
-                err.Description
+                Err.Description
 End Sub
 
 Private Sub mTWSAPI_Disconnected(ByVal reason As String)
-On Error GoTo err
+On Error GoTo Err
 mServiceConsumer.NotifyEvent StandardSPEventCodes.LODisconnectedFromBroker, _
                         reason, _
                         mOrderSubmissionServiceProvider.handle
 Exit Sub
-err:
-logMessage "IBTWSSP:OrderSubmitter:mTWSAPI_Disconnected (" & err.number & "): " & err.Description, LogLevelSevere
-handleFatalError err.number, _
+Err:
+logMessage "IBTWSSP:OrderSubmitter:mTWSAPI_Disconnected (" & Err.number & "): " & Err.Description, LogLevelSevere
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "OrderSubmitter" & "::" & "mTWSAPI_Disconnected", _
-                err.Description
+                Err.Description
 End Sub
 '================================================================================
 ' Properties

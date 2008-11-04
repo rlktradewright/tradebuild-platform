@@ -301,13 +301,13 @@ End Sub
 '================================================================================
 
 Private Sub mConnectionTimer_TimerExpired()
-On Error GoTo err
+On Error GoTo Err
 Connect
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "mConnectionTimer_TimerExpired", _
-                err.Description
+                Err.Description
 End Sub
 
 '================================================================================
@@ -317,6 +317,9 @@ End Sub
 Private Sub mPerformanceTimerPeriod_TimerExpired()
 Dim i As Long
 Dim s As String
+
+On Error GoTo Err
+
 For i = 0 To TWSSocketInMsgTypes.MAX_SOCKET_INMSG
     With mPerformanceStats(i)
         .lastPeriodCount = .lastPeriodCount + .lastSecondCount
@@ -350,10 +353,19 @@ For i = 0 To TWSSocketInMsgTypes.MAX_SOCKET_INMSG
         .lastSecondTime = 0
     End With
 Next
+Exit Sub
+
+Err:
+handleFatalError Err.number, _
+                "IBTWSSP" & "." & "TWSAPI" & "::" & "mPerformanceTimerPeriod_TimerExpired", _
+                Err.Description
 End Sub
 
 Private Sub mPerformanceTimerSecond_TimerExpired()
 Dim i As Long
+
+On Error GoTo Err
+
 For i = 0 To TWSSocketInMsgTypes.MAX_SOCKET_INMSG
     With mPerformanceStats(i)
         .lastPeriodCount = .lastPeriodCount + .lastSecondCount
@@ -364,6 +376,12 @@ For i = 0 To TWSSocketInMsgTypes.MAX_SOCKET_INMSG
         .lastSecondTime = 0
     End With
 Next
+Exit Sub
+
+Err:
+handleFatalError Err.number, _
+                "IBTWSSP" & "." & "TWSAPI" & "::" & "mPerformanceTimerSecond_TimerExpired", _
+                Err.Description
 End Sub
 
 '================================================================================
@@ -371,17 +389,17 @@ End Sub
 '================================================================================
 
 Private Sub mSocket_Close()
-On Error GoTo err
+On Error GoTo Err
 handleTwsDisconnection
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "mSocket_Close", _
-                err.Description
+                Err.Description
 End Sub
 
 Private Sub mSocket_Connect()
-On Error GoTo err
+On Error GoTo Err
 mConnectionState = ConnectionStates.ConnConnecting
 RaiseEvent Connecting
 
@@ -396,10 +414,10 @@ send
 addData mClientID
 send
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "mSocket_Connect", _
-                err.Description
+                Err.Description
 End Sub
 
 Private Sub mSocket_DataArrival( _
@@ -407,7 +425,7 @@ Private Sub mSocket_DataArrival( _
 Dim bytesReceived As Long
 Static processingMessages As Boolean
 
-On Error GoTo err
+On Error GoTo Err
 
 mSocket.GetData mSocketInputData, vbArray + vbByte
 bytesReceived = UBound(mSocketInputData) + 1
@@ -461,10 +479,10 @@ If mIndexIn <> mInputIndex Then
 End If
 
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "mSocket_DataArrival", _
-                err.Description
+                Err.Description
 
 End Sub
 
@@ -477,7 +495,7 @@ Private Sub mSocket_Error(ByVal number As Integer, _
                         CancelDisplay As Boolean)
 Dim errorNum As MSWinsockLib.ErrorConstants
 
-On Error GoTo err
+On Error GoTo Err
 errorNum = number
 Select Case errorNum
 'Case sckInvalidPropertyValue
@@ -582,10 +600,10 @@ Case Else
 End Select
 
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "mSocket_Error", _
-                err.Description
+                Err.Description
 
 End Sub
 
@@ -656,7 +674,7 @@ Friend Sub CancelHistoricalData(ByVal requestHandle As Long)
 Dim i As Long
 Dim key As String
 
-On Error GoTo err
+On Error GoTo Err
 If Not mHistoricalDataTable(requestHandle).dataRetrievedFromTWS Then
     ' all data has already been got from TWS
     
@@ -680,10 +698,10 @@ Else
                 On Error Resume Next
                 mTwsHistDataRequestQueue.remove key
                 On Error GoTo 0
-                If err.number = 0 Then
+                If Err.number = 0 Then
                     ' request was still in queue - no further action required
-                ElseIf err.number <> ErrorCodes.ErrIllegalArgumentException Then
-                    err.Raise err.number
+                ElseIf Err.number <> ErrorCodes.ErrIllegalArgumentException Then
+                    Err.Raise Err.number
                 Else
                     ' request is with TWS so cancel it
                     
@@ -720,35 +738,35 @@ End If
 
 
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "CancelHistoricalData", _
-                err.Description
+                Err.Description
         
 End Sub
 
 Friend Sub CancelMarketData(ByVal tickerid As Long)
-On Error GoTo err
+On Error GoTo Err
 cancelMarketDataEx tickerid, True
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "CancelMarketData", _
-                err.Description
+                Err.Description
 End Sub
 
 Friend Sub CancelMarketDepth(ByVal tickerid As Long)
-On Error GoTo err
+On Error GoTo Err
 If mConnectionState <> ConnectionStates.ConnConnected Then Exit Sub
 
 Const version = 1
 
 With mTickerTable(tickerid)
-    If Not .inUse Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    If Not .inUse Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                     "IBTWSSP.TWSAPI::cancelMarketDepth", _
                                     "Invalid ticker id " & tickerid
     If Not .receivingMarketDepth Then
-        err.Raise ErrorCodes.ErrIllegalStateException, _
+        Err.Raise ErrorCodes.ErrIllegalStateException, _
                     "IBTWSSP.TWSAPI::cancelMarketDepth", _
                     "Ticker id " & tickerid & " not currently receiving market depth"
     End If
@@ -760,16 +778,16 @@ addData version
 addData MarketDepthTickerBase + tickerid
 send
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "CancelMarketDepth", _
-                err.Description
+                Err.Description
 
 End Sub
 
 Friend Sub cancelNewsBulletins()
 
-On Error GoTo err
+On Error GoTo Err
 If mConnectionState <> ConnectionStates.ConnConnected Then Exit Sub
 
 Const version = 1
@@ -778,17 +796,17 @@ addData CANCEL_NEWS_BULLETINS
 addData version
 send
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "cancelNewsBulletins", _
-                err.Description
+                Err.Description
 End Sub
 
 Friend Sub cancelOrder(ByVal orderId As Long)
 
-On Error GoTo err
+On Error GoTo Err
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::cancelOrder", _
                 "Not connected"
 End If
@@ -799,20 +817,20 @@ addData version
 addData orderId
 send
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "cancelOrder", _
-                err.Description
+                Err.Description
 
 End Sub
 
 Friend Sub Connect()
 
-On Error GoTo err
+On Error GoTo Err
 mDisconnectedByApplication = False
 
 If mConnectionState <> ConnectionStates.ConnNotConnected Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::connect", _
                 "Already connected"
 End If
@@ -824,16 +842,16 @@ logMessage "Connecting to TWS: " & connectionString, LogLevelNormal
 mSocket.Connect mServer, mPort
 
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "Connect", _
-                err.Description
+                Err.Description
 End Sub
 
 Friend Sub disconnect( _
                 ByVal reason As String, _
                 ByVal forced As Boolean)
-On Error GoTo err
+On Error GoTo Err
 
 If mConnectionState = ConnectionStates.ConnNotConnected Then Exit Sub
 
@@ -845,10 +863,10 @@ ReleaseSocket
 If forced Then RaiseEvent Disconnected(reason)
 logMessage "IBTWSSP:TwsAPI:disconnect: Disconnected from: " & connectionString & ": " & reason, LogLevelNormal
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "disconnect", _
-                err.Description
+                Err.Description
 End Sub
 
 Friend Sub placeOrder( _
@@ -861,9 +879,9 @@ Friend Sub placeOrder( _
 
 Dim mapEntry As OrderIdMapEntry
 
-On Error GoTo err
+On Error GoTo Err
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::placeOrder", _
                 "Already connected"
 End If
@@ -878,10 +896,10 @@ End If
 
 sendOrder pOrder, transmit, parentId, ocaGroup, routingHint
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "placeOrder", _
-                err.Description
+                Err.Description
 
 End Sub
                     
@@ -892,7 +910,7 @@ Friend Function ReadHistoricalBar( _
 
 Dim Bar As HistoricBar
 
-On Error GoTo err
+On Error GoTo Err
 With mHistoricalDataTable(requestHandle)
     If .nextBarIndex = -1 Then
         releaseHistoricalDataTableEntry requestHandle
@@ -913,19 +931,19 @@ With mHistoricalDataTable(requestHandle)
     End If
 End With
 Exit Function
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "ReadHistoricalBar", _
-                err.Description
+                Err.Description
 
 End Function
 
 Friend Sub ReplaceFA(ByVal DataType As FADataTypes, ByVal xml As String)
 
 
-On Error GoTo err
+On Error GoTo Err
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::ReplaceFA", _
                 "Already connected"
 End If
@@ -933,7 +951,7 @@ End If
 Const version = 1
 
 If mServerVersion < 13 Then
-    err.Raise ErrorCodes.ErrUnsupportedOperationException, _
+    Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
                 "IBTWSSP.TWSAPI::ReplaceFA", _
                 "Server version does not support ReplaceFA"
 End If
@@ -945,17 +963,17 @@ addData xml
 
 send
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "ReplaceFA", _
-                err.Description
+                Err.Description
 End Sub
 
 Friend Sub requestAccountUpdates(ByVal subscribe As Boolean, ByVal acctCode As String)
 
-On Error GoTo err
+On Error GoTo Err
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::requestAccountUpdates", _
                 "Already connected"
 End If
@@ -970,17 +988,17 @@ If mServerVersion >= 9 Then addData acctCode
 
 send
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "requestAccountUpdates", _
-                err.Description
+                Err.Description
 End Sub
 
 Friend Sub requestAllOpenOrders()
 
-On Error GoTo err
+On Error GoTo Err
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::requestAllOpenOrders", _
                 "Not connected"
 End If
@@ -992,17 +1010,17 @@ addData REQ_ALL_OPEN_ORDERS
 addData version
 send
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "requestAllOpenOrders", _
-                err.Description
+                Err.Description
 End Sub
 
 Friend Sub requestAutoOpenOrders(ByVal autoBind As Boolean)
 
-On Error GoTo err
+On Error GoTo Err
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::requestAutoOpenOrders", _
                 "Not connected"
 End If
@@ -1014,10 +1032,10 @@ addData version
 addBoolean autoBind
 send
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "requestAutoOpenOrders", _
-                err.Description
+                Err.Description
 End Sub
 
 Friend Sub RequestContract( _
@@ -1027,7 +1045,7 @@ Friend Sub RequestContract( _
 
 Dim requestQueueEntry As TWSContractDetailsRequestQueueEntry
 
-On Error GoTo err
+On Error GoTo Err
 Set requestQueueEntry.contractSpec = contractSpec
 Set requestQueueEntry.tradeBuildContractsBuilder = pContractsBuilder
 Set requestQueueEntry.requester = requester
@@ -1056,18 +1074,18 @@ mTwsContractDetailsRequestQueue.addToEnd requestQueueEntry
 
 submitNextContractDetailsRequest
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "RequestContract", _
-                err.Description
+                Err.Description
 End Sub
 
 Friend Sub RequestExecutions(ByVal filter As ExecutionFilter)
 Dim theFilter As ExecutionFilter
 
-On Error GoTo err
+On Error GoTo Err
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::RequestExecutions", _
                 "Not connected"
 End If
@@ -1097,17 +1115,17 @@ End If
 
 send
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "RequestExecutions", _
-                err.Description
+                Err.Description
 End Sub
 
 Friend Sub requestFA(ByVal DataType As FADataTypes)
 
-On Error GoTo err
+On Error GoTo Err
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::requestFA", _
                 "Not connected"
 End If
@@ -1115,7 +1133,7 @@ End If
 Const version = 1
 
 If mServerVersion < 13 Then
-    err.Raise ErrorCodes.ErrUnsupportedOperationException, _
+    Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
                 "IBTWSSP.TWSAPI::requestFA", _
                 "Server version does not support requestFA"
 End If
@@ -1126,17 +1144,17 @@ addData DataType
 
 send
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "requestFA", _
-                err.Description
+                Err.Description
 End Sub
 
 Friend Sub requestManagedAccounts()
 
-On Error GoTo err
+On Error GoTo Err
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::requestManagedAccounts", _
                 "Not connected"
 End If
@@ -1147,10 +1165,10 @@ addData REQ_MANAGED_ACCTS
 addData version
 send
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "requestManagedAccounts", _
-                err.Description
+                Err.Description
 End Sub
 
 Friend Function RequestMarketData(ByVal pContract As Contract, _
@@ -1160,9 +1178,9 @@ Friend Function RequestMarketData(ByVal pContract As Contract, _
 
 Dim lTickerID As Long
 
-On Error GoTo err
+On Error GoTo Err
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::RequestMarketDataEx", _
                 "Not connected"
 End If
@@ -1178,32 +1196,32 @@ If includeMarketDepth Then
     reqMarketDepth lTickerID, pContract.specifier
 End If
 Exit Function
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "RequestMarketData", _
-                err.Description
+                Err.Description
 
 End Function
 
 Friend Sub RequestMarketDepth(ByVal pTickerID As Long)
                             
-On Error GoTo err
+On Error GoTo Err
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::RequestMarketDepth", _
                 "Not connected"
 End If
 
 With mTickerTable(pTickerID)
-    If .Contract Is Nothing Then err.Raise ErrorCodes.ErrIllegalArgumentException, "IBTWSSP.TWSAPI::requestMarketDepth", "Invalid ticker id: " & pTickerID
+    If .Contract Is Nothing Then Err.Raise ErrorCodes.ErrIllegalArgumentException, "IBTWSSP.TWSAPI::requestMarketDepth", "Invalid ticker id: " & pTickerID
     .receivingMarketDepth = True
     reqMarketDepth pTickerID, .Contract.specifier
 End With
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "RequestMarketDepth", _
-                err.Description
+                Err.Description
 
 End Sub
 
@@ -1215,17 +1233,17 @@ Dim requestID As Long
 Dim i As Long
 Dim ignoreTimestamps As Boolean
 
-On Error GoTo err
+On Error GoTo Err
 requestID = -1
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::RequestHistoricalData", _
                 "Not connected"
 End If
 
 If mServerVersion < 16 Then
-    err.Raise ErrorCodes.ErrUnsupportedOperationException, _
+    Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
                 "IBTWSSP.TWSAPI::RequestHistoricalData", _
                 "Server version does not support historical data retrieval"
 End If
@@ -1329,24 +1347,24 @@ mHistoricalDataTable(requestID).bars.initialCapacity = IIf(barSpecifier.maxNumbe
 generateTwsHistoricalDataRequest requestID
 RequestHistoricalData = requestID
 Exit Function
-err:
+Err:
 
-If err.number = ErrHistGenerationFailed Then
+If Err.number = ErrHistGenerationFailed Then
     releaseHistoricalDataTableEntry requestID
     RequestHistoricalData = -1
     Exit Function
 End If
     
-handleFatalError err.number, _
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "RequestHistoricalData", _
-                err.Description
+                Err.Description
 End Function
 
 Friend Sub RequestNewsBulletins(allMsgs As Boolean)
 
-On Error GoTo err
+On Error GoTo Err
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::RequestNewsBulletins", _
                 "Not connected"
 End If
@@ -1358,17 +1376,17 @@ addData version
 addData allMsgs
 send
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "RequestNewsBulletins", _
-                err.Description
+                Err.Description
 End Sub
 
 Friend Sub RequestOpenOrders()
 
-On Error GoTo err
+On Error GoTo Err
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::RequestOpenOrders", _
                 "Not connected"
 End If
@@ -1379,10 +1397,10 @@ addData REQ_OPEN_ORDERS
 addData version
 send
 Exit Sub
-err:
-handleFatalError err.number, _
+Err:
+handleFatalError Err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "RequestOpenOrders", _
-                err.Description
+                Err.Description
 End Sub
 
 '================================================================================
@@ -1459,7 +1477,7 @@ Dim id As Long
 Const version = 2
 
 If Not mTickerTable(tickerid).inUse Then
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
     "IBTWSSP.TWSAPI::CancelMarketDataEx", _
     "Invalid ticker id " & tickerid
 End If
@@ -1503,7 +1521,7 @@ If mElapsedTimer Is Nothing Then
     mElapsedTimer.StartTiming
 End If
 
-On Error GoTo err
+On Error GoTo Err
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
     ' first data received is plain server version number
@@ -1711,12 +1729,12 @@ Loop
 
 Exit Sub
 
-err:
+Err:
 Dim errNum As Long
 Dim errDesc As String
 
-errNum = err.number
-errDesc = err.Description
+errNum = Err.number
+errDesc = Err.Description
 
 If errNum = DataIncomplete Then
     rollbackBuffer
@@ -2134,7 +2152,7 @@ Next
 ' we've got to the end of the current data, so raise an error to abort
 ' this attempt to assemble a message
 'Debug.Print "Failed to get string"
-err.Raise DataIncomplete
+Err.Raise DataIncomplete
 End Function
 
 Private Sub getAccountTime(ByVal version As Long)
@@ -2426,7 +2444,7 @@ Dim index As Long
 Dim mapEntry As OrderIdMapEntry
 Dim failpoint As Long
 
-On Error GoTo err
+On Error GoTo Err
 
 failpoint = 100
 
@@ -2637,8 +2655,8 @@ End Select
 
 Exit Sub
 
-err:
-err.Raise err.number, , "TWSAPI::getErrorMsg(failpoint=" & failpoint & "): " & err.Description
+Err:
+Err.Raise Err.number, , "TWSAPI::getErrorMsg(failpoint=" & failpoint & "): " & Err.Description
 End Sub
 
 Private Sub getExecutionData(ByVal version As Long)
@@ -2716,7 +2734,7 @@ logSocketMessage
 Dim existingExec As Execution
 On Error Resume Next
 existingExec = mExecutions(execId)
-If err.number = 0 Then
+If Err.number = 0 Then
     ' we've had this execution before so nothing to do
     On Error GoTo 0
 Else
@@ -2778,7 +2796,7 @@ Dim timestamp As Date
 
 Dim failpoint As Long
 
-On Error GoTo err
+On Error GoTo Err
 
 If checkPointNumber = 0 Then
     hint = 0
@@ -2966,9 +2984,9 @@ End If
 
 Exit Sub
 
-err:
+Err:
 
-If err.number = ErrHistGenerationFailed Then
+If Err.number = ErrHistGenerationFailed Then
     mHistoricalDataTable(index).barSpecifier.maxNumberOfBars = 0
     Debug.Print "Historical data retrieved: bars in list: " & mHistoricalDataTable(index).bars.size
     mHistoricalDataTable(index).dataRetrievedFromTWS = True
@@ -2977,16 +2995,16 @@ If err.number = ErrHistGenerationFailed Then
     Exit Sub
 End If
 
-If err.number <> DataIncomplete Then
+If Err.number <> DataIncomplete Then
     gLogger.Log LogLevelSevere, "Error at: " & ProjectName & "." & ModuleName & ":" & "getHistoricalData" & "." & IIf(failpoint <> 0, failpoint, checkPointNumber) & _
-                                IIf(err.source <> "", vbCrLf & err.source, "") & vbCrLf & _
-                                err.Description
+                                IIf(Err.source <> "", vbCrLf & Err.source, "") & vbCrLf & _
+                                Err.Description
 End If
 
-err.Raise err.number, _
+Err.Raise Err.number, _
         ProjectName & "." & ModuleName & ":" & "getHistoricalData" & "." & failpoint & _
-        IIf(err.source <> "", vbCrLf & err.source, ""), _
-        err.Description
+        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
+        Err.Description
 
 
 End Sub
@@ -3398,7 +3416,7 @@ Dim tickerid As Long
 Dim canAutoExecute As Boolean
 Dim failpoint As Long
 
-On Error GoTo err
+On Error GoTo Err
 
 failpoint = 100
 
@@ -3471,8 +3489,8 @@ End With
 
 Exit Sub
 
-err:
-err.Raise err.number, , "TWSAPI::getTickPrice(failpoint=" & failpoint & "): " & err.Description
+Err:
+Err.Raise Err.number, , "TWSAPI::getTickPrice(failpoint=" & failpoint & "): " & Err.Description
 End Sub
 
 Private Sub getTickSize(ByVal version As Long)
@@ -3481,7 +3499,7 @@ Dim tickType As Long
 Dim tickerid As Long
 Dim failpoint As Long
 
-On Error GoTo err
+On Error GoTo Err
 
 failpoint = 100
 
@@ -3552,8 +3570,8 @@ End With
 
 Exit Sub
 
-err:
-err.Raise err.number, , "TWSAPI::getTickSize(failpoint=" & failpoint & "): " & err.Description
+Err:
+Err.Raise Err.number, , "TWSAPI::getTickSize(failpoint=" & failpoint & "): " & Err.Description
 End Sub
 
 Private Sub getTickString(ByVal version As Long)
@@ -3828,7 +3846,7 @@ Case TradeBuildSP.OrderTypes.OrderTypeLimitOnOpen
 Case TradeBuildSP.OrderTypes.OrderTypePeggedToPrimary
     orderTypeToString = "PEGPRI"
 Case Else
-    err.Raise ErrorCodes.ErrIllegalArgumentException
+    Err.Raise ErrorCodes.ErrIllegalArgumentException
 End Select
 End Function
 
@@ -3836,7 +3854,7 @@ Private Function permittedHistDays( _
                 ByVal reqEndDate As Date, _
                 ByVal desiredBars As Long) As Long
 permittedHistDays = DateDiff("d", DateAdd("yyyy", -1, Now), reqEndDate)
-If permittedHistDays = 0 Then err.Raise ErrHistGenerationFailed
+If permittedHistDays = 0 Then Err.Raise ErrHistGenerationFailed
 If permittedHistDays > desiredBars Then permittedHistDays = desiredBars
 End Function
 
@@ -3844,7 +3862,7 @@ Private Function permittedHistMonths( _
                 ByVal reqEndDate As Date, _
                 ByVal desiredBars As Long) As Long
 permittedHistMonths = DateDiff("m", DateAdd("m", 1, DateAdd("yyyy", -1, Now)), reqEndDate)
-If permittedHistMonths = 0 Then err.Raise ErrHistGenerationFailed
+If permittedHistMonths = 0 Then Err.Raise ErrHistGenerationFailed
 If permittedHistMonths > desiredBars Then permittedHistMonths = desiredBars
 End Function
 
@@ -3854,7 +3872,7 @@ Private Function permittedHistSeconds( _
 ' the 86398 should really be 86400 but allows for clocks not being
 ' properly synchronised
 permittedHistSeconds = DateDiff("s", DateAdd("yyyy", -1, Now), reqEndDate) + 86398
-If permittedHistSeconds = 0 Then err.Raise ErrHistGenerationFailed
+If permittedHistSeconds = 0 Then Err.Raise ErrHistGenerationFailed
 If permittedHistSeconds > desiredBars Then permittedHistSeconds = desiredBars
 End Function
 
@@ -3862,14 +3880,14 @@ Private Function permittedHistWeeks( _
                 ByVal reqEndDate As Date, _
                 ByVal desiredBars As Long) As Long
 permittedHistWeeks = DateDiff("w", DateAdd("w", 1, DateAdd("yyyy", -1, Now)), reqEndDate)
-If permittedHistWeeks = 0 Then err.Raise ErrHistGenerationFailed
+If permittedHistWeeks = 0 Then Err.Raise ErrHistGenerationFailed
 If permittedHistWeeks > desiredBars Then permittedHistWeeks = desiredBars
 End Function
 
 Private Sub processContractError(ByVal reason As String)
 Dim failpoint As Long
 
-On Error GoTo err
+On Error GoTo Err
 
 If mContractDetailsRequest.contractWrappers.Count > 0 Then
     ' we are processing the forced invalid contract details request
@@ -3892,13 +3910,13 @@ submitNextContractDetailsRequest
 
 Exit Sub
 
-err:
-err.Raise err.number, , "TWSAPI::processContractError(failpoint=" & failpoint & "): " & err.Description
+Err:
+Err.Raise Err.number, , "TWSAPI::processContractError(failpoint=" & failpoint & "): " & Err.Description
 End Sub
 
 Private Sub processNextHistDataRequest()
 Dim failpoint As Long
-On Error GoTo err
+On Error GoTo Err
 
 If mTwsHistDataRequestQueue.size <> 0 Then
     Dim request As TWSHistoricalDataRequestQueueEntry
@@ -3909,11 +3927,11 @@ End If
 
 Exit Sub
 
-err:
-err.Raise err.number, _
+Err:
+Err.Raise Err.number, _
         ProjectName & "." & ModuleName & ":" & "processNextHistDataRequest" & "." & failpoint & _
-        IIf(err.source <> "", vbCrLf & err.source, ""), _
-        err.Description
+        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
+        Err.Description
 
 End Sub
 
@@ -4416,7 +4434,7 @@ End Sub
 Private Sub setTWSLogLevel(logLevel As TWSLogLevels)
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    err.Raise ErrorCodes.ErrIllegalStateException, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::SetServerLogLevel", _
                 "Not connected"
 End If
@@ -4446,7 +4464,7 @@ End Function
 Private Sub submitNextContractDetailsRequest()
 Dim failpoint As Long
 
-On Error GoTo err
+On Error GoTo Err
 
 If Not mConnectionState = ConnConnected Then Exit Sub
 If Not mContractDetailsRequest.contractSpec Is Nothing Then Exit Sub
@@ -4455,8 +4473,8 @@ If mTwsContractDetailsRequestQueue.size = 0 Then Exit Sub
 failpoint = 100
 On Error Resume Next
 mContractDetailsRequest = mTwsContractDetailsRequestQueue.removeFromFront
-If err.number <> 0 Then Stop
-On Error GoTo err
+If Err.number <> 0 Then Stop
+On Error GoTo Err
 
 failpoint = 200
 Set mContractDetailsRequest.contractWrappers = New Collection
@@ -4464,8 +4482,8 @@ reqContract
 
 Exit Sub
 
-err:
-err.Raise err.number, , "TWSAPI::submitNextContractDetailsRequest(failpoint=" & failpoint & "): " & err.Description
+Err:
+Err.Raise Err.number, , "TWSAPI::submitNextContractDetailsRequest(failpoint=" & failpoint & "): " & Err.Description
 End Sub
 
 
