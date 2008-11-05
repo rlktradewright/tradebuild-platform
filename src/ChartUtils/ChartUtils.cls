@@ -68,11 +68,19 @@ End Type
 ' Methods
 '@================================================================================
 
-Public Function createChartManager( _
+Public Function CreateAbstractChartTool( _
+                ByVal controller As chartController, _
+                ByVal tool As IChartTool, _
+                Optional ByVal pointerIcon As IPictureDisp) As AbstractChartTool
+Set CreateAbstractChartTool = New AbstractChartTool
+CreateAbstractChartTool.Initialise controller, tool, pointerIcon
+End Function
+
+Public Function CreateChartManager( _
                 ByVal studyManager As studyManager, _
                 ByVal chartController As chartController) As ChartManager
-Set createChartManager = New ChartManager
-createChartManager.initialise studyManager, chartController
+Set CreateChartManager = New ChartManager
+CreateChartManager.Initialise studyManager, chartController
 End Function
 
 '@================================================================================

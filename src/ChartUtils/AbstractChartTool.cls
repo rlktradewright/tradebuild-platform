@@ -52,8 +52,9 @@ Private Const ModuleName                    As String = "AbstractChartTool"
 ' Member variables
 '@================================================================================
 
-Private WithEvents mController              As ChartController
-Attribute mController.VB_VarHelpID = -1
+Private WithEvents mControllerEV            As chartController
+Attribute mControllerEV.VB_VarHelpID = -1
+Private mController                         As chartController
 
 Private mRegion                             As ChartRegion
 Private WithEvents mRegionEV                As ChartRegion
@@ -62,12 +63,7 @@ Attribute mRegionEV.VB_VarHelpID = -1
 Private mSelectionHandleSeries              As DataPointSeries
 Private mSelectionHandles                   As Collection
 
-Private mSelectableObjects                 As Collection
-
-Private mPrevPointerStyle                   As PointerStyles
-Private mPrevAllowHorizScroll               As Boolean
-Private mPrevAllowVertScroll                As Boolean
-Private mPrevSnapCursor                     As Boolean
+Private mSelectableObjects                  As Collection
 
 Private mSelMode                            As SelectionModes
 
@@ -79,7 +75,9 @@ Private mLayer                              As LayerNumbers
 Private mToolRef                            As WeakReference
 Private mTool                               As IChartTool
 
-Private mMoving                             As Boolean
+Private mToolInControl                      As Boolean
+
+Private mPointerIcon                        As IPictureDisp
 
 '@================================================================================
 ' Class Event Handlers
@@ -93,53 +91,36 @@ Private mMoving                             As Boolean
 ' mController Event Handlers
 '@================================================================================
 
-Private Sub mController_KeyDown(KeyCode As Integer, Shift As Integer)
+Private Sub mControllerEV_KeyDown(KeyCode As Integer, Shift As Integer)
 
 Select Case KeyCode
 Case vbKeyDelete
-    If mSelMode = SelectionModeNone Or mSelMode = SelectionModeCreate Then Exit Sub
-    mTool.Delete
-    Delete
-    KeyCode = 0
-Case vbKeyEscape
-    Select Case mSelMode
-    Case SelectionModeNone
-        restoreControllerSettings
-    Case SelectionModeCreate
+    If IsSelected Then
         mTool.Delete
         Delete
         KeyCode = 0
-    Case Else
-        If mMoving Then
-            mTool.Undo
-            Undo
-'            Deselected
-'            mRegion.ClearSelection
-        End If
-        mMoving = False
-    End Select
+    End If
+Case vbKeyEscape
+    If Undo Then KeyCode = 0
 End Select
 End Sub
 
-Private Sub mController_RegionSelected(ByVal Region As ChartSkil26.ChartRegion)
+Private Sub mControllerEV_RegionSelected(ByVal region As ChartSkil26.ChartRegion)
 If mRegion Is Nothing Then
     
     Set mTool = mToolRef.Target ' convert to a strong ref for efficiency, now that we know
                                 ' that this tool object is actually being used. This will also
                                 ' keep both objects alive
-    Set mRegion = Region
-    Set mRegionEV = Region
-    mTool.Region = Region
+    Set mRegion = region
+    Set mRegionEV = region
+    mTool.region = region
 
-    mPrevSnapCursor = mRegion.SnapCursorToTickBoundaries
-    mRegion.SnapCursorToTickBoundaries = False
-        
     Set mSelectionHandleSeries = mRegion.AddGraphicObjectSeries(New DataPointSeries, LayerNumbers.LayerMax)
     mSelectionHandleSeries.includeInAutoscale = False
     mSelectionHandleSeries.displayMode = DataPointDisplayModePoint
     mSelectionHandleSeries.pointStyle = PointSquare
     mSelectionHandleSeries.lineThickness = 5
-    mSelectionHandleSeries.Color = vbBlack
+    mSelectionHandleSeries.color = vbBlack
     
     Set mSelectionHandles = New Collection
     
@@ -150,6 +131,10 @@ End Sub
 ' mRegionEV Event Handlers
 '@================================================================================
 
+Private Sub mRegionEV_DblCLick()
+mTool.DblClick
+End Sub
+
 Private Sub mRegionEV_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
 Dim obj As IGraphicObject
 
@@ -158,40 +143,40 @@ Debug.Print "x=" & X & " y=" & Y
 mPrevX = X
 mPrevY = Y
 
-If mSelectableObjects.Count = 0 Then
-    ' the user must be creating
-    mTool.Create X, Y
+Select Case mSelMode
+Case SelectionModeNone
+    mToolInControl = True
     mSelMode = SelectionModeCreate
-Else
-    For Each obj In mSelectableObjects
-        If obj.Selected Then Exit For
-    Next
-
-    If obj Is Nothing Then
-        ' the user has deselected
-        Deselected
-        mTool.Deselected
-    Else
-        Dim i As Long
-        Dim selHandle As SelectionHandle
-        Dim graphObj As IGraphicObject
-        
-        For i = 1 To mSelectionHandles.Count
-            Set selHandle = mSelectionHandles(i)
-            selHandle.StartMove
-            
-            Set graphObj = selHandle.DataPoint
-            If graphObj.HitTest(X, Y) Then
-                mSelMode = SelectionModes.SelectionModeSelectionHandle1 + i - 1
-            End If
+    mTool.Create X, Y
+Case SelectionModeCreate
+    
+Case SelectionModeTool
+    If Not mToolInControl Then
+        For Each obj In mSelectableObjects
+            If obj.Selected Then Exit For
         Next
-        
-        mTool.StartResize selHandle, X, Y
-        
-        mMoving = True
-        saveRegionSettings
+    
+        If obj Is Nothing Then
+            ' the user has deselected
+            Deselected
+            mTool.Deselected
+        Else
+            
+            mToolInControl = True
+            mController.SetPointerModeTool
+            
+            StartMove
+            If SelectionHandleHit(X, Y) Then
+                mTool.StartResize mSelMode - SelectionModes.SelectionModeSelectionHandle1 + 1, X, Y
+            Else
+                mTool.StartMove X, Y
+            End If
+            
+        End If
     End If
-End If
+Case Else
+
+End Select
 
 End Sub
 
@@ -199,52 +184,43 @@ Private Sub mRegionEV_MouseMove(Button As Integer, Shift As Integer, X As Single
 
 Dim selHandle As SelectionHandle
 
-If Not CBool(Button And MouseButtonConstants.vbLeftButton) Then Exit Sub
+'If Not CBool(Button And MouseButtonConstants.vbLeftButton) Then Exit Sub
+If Not mToolInControl Then Exit Sub
 
 Debug.Print "x=" & X & " y=" & Y
 
 Select Case mSelMode
-
 Case SelectionModeNone
+
 Case SelectionModeCreate
     mTool.ResizeCreate X, Y
 Case SelectionModeTool
-    If mMoving Then
-        mTool.Move X, Y
-        
-        For Each selHandle In mSelectionHandles
-            selHandle.X = selHandle.X + X - mPrevX
-            selHandle.Y = selHandle.Y + Y - mPrevY
-        Next
-        
-        mPrevX = X
-        mPrevY = Y
-    End If
+    mTool.Move X, Y
+    
+    For Each selHandle In mSelectionHandles
+        selHandle.X = selHandle.X + X - mPrevX
+        selHandle.Y = selHandle.Y + Y - mPrevY
+    Next
+    
+    mPrevX = X
+    mPrevY = Y
 Case Else
-    If mMoving Then
-        Set selHandle = mSelectionHandles(mSelMode - SelectionModes.SelectionModeSelectionHandle1 + 1)
-        mTool.MoveResize mSelMode - SelectionModes.SelectionModeSelectionHandle1 + 1, X, Y
-        selHandle.X = X
-        selHandle.Y = Y
-    End If
+    Set selHandle = mSelectionHandles(mSelMode - SelectionModes.SelectionModeSelectionHandle1 + 1)
+    mTool.MoveResize mSelMode - SelectionModes.SelectionModeSelectionHandle1 + 1, _
+                    IIf(selHandle.AllowXMove, X, selHandle.X), _
+                    IIf(selHandle.AllowYMove, Y, selHandle.Y)
+    If selHandle.AllowXMove Then selHandle.X = X
+    If selHandle.AllowYMove Then selHandle.Y = Y
 End Select
 End Sub
 
-Private Sub mRegionEV_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
-Select Case mSelMode
-Case SelectionModeNone
+Private Sub mRegionEV_MouseUp( _
+                Button As Integer, _
+                Shift As Integer, _
+                X As Single, _
+                Y As Single)
 
-Case SelectionModeCreate
-    Set mRegionEV = Nothing
-    restoreControllerSettings
-Case SelectionModeTool
-    restoreRegionSettings
-Case Else
-    mSelMode = SelectionModeTool
-    restoreRegionSettings
-End Select
-mTool.EndResize
-mMoving = False
+mTool.Click X, Y
 End Sub
 
 '@================================================================================
@@ -268,35 +244,74 @@ End Property
 
 Public Sub AddSelectableObject( _
                 ByVal obj As IGraphicObject)
-mSelectableObjects.Add obj
+mSelectableObjects.add obj
 End Sub
 
 Public Sub AddSelectionHandle( _
                 ByVal X As Double, _
-                ByVal Y As Double)
+                ByVal Y As Double, _
+                Optional ByVal AllowXMove As Boolean = True, _
+                Optional ByVal AllowYMove As Boolean = True)
 Dim dp As DataPoint
 Dim selHandle As New SelectionHandle
 
-Set dp = mSelectionHandleSeries.Add(CDate(0))
+Set dp = mSelectionHandleSeries.add(CDate(0))
 dp.X = X
 dp.dataValue = Y
-selHandle.Initialise dp
-mSelectionHandles.Add selHandle
+selHandle.initialise dp, AllowXMove, AllowYMove
+mSelectionHandles.add selHandle
 End Sub
 
-Friend Sub Initialise( _
-                ByVal controller As ChartController, _
-                ByVal tool As IChartTool)
+Public Sub finish()
+
+mToolInControl = False
+
+Select Case mSelMode
+Case SelectionModeNone
+
+Case SelectionModeCreate
+    mSelMode = SelectionModeNone
+    Set mRegionEV = Nothing
+    Set mControllerEV = Nothing
+Case SelectionModeTool
+
+Case Else
+    mSelMode = SelectionModeTool
+End Select
+mController.SetPointerModeDefault
+mTool.EndResize
+End Sub
+
+Friend Sub initialise( _
+                ByVal controller As chartController, _
+                ByVal tool As IChartTool, _
+                ByVal pointerIcon As IPictureDisp)
 Set mController = controller
+Set mControllerEV = controller
 Set mToolRef = CreateWeakReference(tool)
+Set mPointerIcon = pointerIcon
 Set mSelectableObjects = New Collection
-saveControllerSettings
+mController.SetPointerModeTool
 End Sub
 
-Public Sub SetSelected()
-mSelMode = SelectionModeTool
-Set mRegionEV = mRegion
+Public Sub MoveSelectionHandle( _
+                ByVal index As Long, _
+                ByVal X As Double, _
+                ByVal Y As Double)
+Dim selHandle As SelectionHandle
+Set selHandle = mSelectionHandles.item(index)
+selHandle.X = Round(X)
+selHandle.Y = Y
 End Sub
+
+Public Function SetSelected() As Boolean
+If Not mSelMode = SelectionModeCreate Then
+    mSelMode = SelectionModeTool
+    Set mRegionEV = mRegion
+    Set mControllerEV = mController
+    SetSelected = True
+End If
+End Function
 
 '@================================================================================
 ' Helper Functions
@@ -309,9 +324,10 @@ For Each selHandle In mSelectionHandles
 Next
 mRegion.RemoveGraphicObjectSeries mSelectionHandleSeries
 Set mSelectableObjects = Nothing
-restoreRegionSettings
+mController.SetPointerModeDefault
 Set mTool = Nothing
 Set mRegionEV = Nothing
+Set mControllerEV = Nothing
 End Sub
 
 Private Sub Deselected()
@@ -322,47 +338,66 @@ For Each selHandle In mSelectionHandles
 Next
 Set mSelectionHandles = New Collection
 Set mRegionEV = Nothing
+Set mControllerEV = Nothing
 End Sub
 
-Private Sub restoreControllerSettings()
-mController.PointerStyle = mPrevPointerStyle
-mController.AllowHorizontalMouseScrolling = mPrevAllowHorizScroll
-mController.AllowVerticalMouseScrolling = mPrevAllowVertScroll
-mRegion.SnapCursorToTickBoundaries = mPrevSnapCursor
-End Sub
-
-Private Sub restoreRegionSettings()
-mRegion.PointerStyle = mPrevPointerStyle
-mController.AllowHorizontalMouseScrolling = mPrevAllowHorizScroll
-mController.AllowVerticalMouseScrolling = mPrevAllowVertScroll
-mRegion.SnapCursorToTickBoundaries = mPrevSnapCursor
-End Sub
-
-Private Sub saveControllerSettings()
-mPrevPointerStyle = mController.PointerStyle
-mController.PointerStyle = PointerStyles.PointerTool
-mPrevAllowHorizScroll = mController.AllowHorizontalMouseScrolling
-mPrevAllowVertScroll = mController.AllowVerticalMouseScrolling
-mController.AllowHorizontalMouseScrolling = False
-mController.AllowVerticalMouseScrolling = False
-End Sub
-
-Private Sub saveRegionSettings()
-mPrevPointerStyle = mRegion.PointerStyle
-mRegion.PointerStyle = PointerStyles.PointerTool
-mPrevAllowHorizScroll = mController.AllowHorizontalMouseScrolling
-mPrevAllowVertScroll = mController.AllowVerticalMouseScrolling
-mPrevSnapCursor = mRegion.SnapCursorToTickBoundaries
-mController.AllowHorizontalMouseScrolling = False
-mController.AllowVerticalMouseScrolling = False
-mRegion.SnapCursorToTickBoundaries = False
-End Sub
-
-Private Sub Undo()
+Private Function SelectionHandleHit( _
+                ByVal X As Double, _
+                ByVal Y As Double) As Boolean
+Dim i As Long
 Dim selHandle As SelectionHandle
-For Each selHandle In mSelectionHandles
-    selHandle.undoMove
+Dim graphObj As IGraphicObject
+
+For i = 1 To mSelectionHandles.count
+    Set selHandle = mSelectionHandles(i)
+    
+    Set graphObj = selHandle.DataPoint
+    If graphObj.HitTest(X, Y) Then
+        mSelMode = SelectionModes.SelectionModeSelectionHandle1 + i - 1
+        SelectionHandleHit = True
+    End If
 Next
-restoreRegionSettings
+End Function
+
+Private Sub StartMove()
+Dim selHandle As SelectionHandle
+
+For Each selHandle In mSelectionHandles
+    selHandle.StartMove
+Next
 End Sub
+
+Private Function Undo() As Boolean
+Dim selHandle As SelectionHandle
+
+Select Case mSelMode
+Case SelectionModeNone
+    mController.SetPointerModeDefault
+    Undo = True
+Case SelectionModeCreate
+    mTool.Delete
+    Delete
+    Undo = True
+Case SelectionModeTool
+    If mToolInControl Then
+        mToolInControl = False
+        mTool.Undo
+        For Each selHandle In mSelectionHandles
+            selHandle.undoMove
+        Next
+        Undo = True
+    End If
+Case Else
+    If mToolInControl Then
+        mToolInControl = False
+        mTool.Undo
+        For Each selHandle In mSelectionHandles
+            selHandle.undoMove
+        Next
+        Undo = True
+    End If
+End Select
+
+mController.SetPointerModeDefault
+End Function
 

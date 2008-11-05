@@ -52,6 +52,9 @@ Private mGraphObj                           As IGraphicObject
 Private mStartX                             As Double
 Private mStartY                             As Double
 
+Private mAllowXMove                         As Boolean
+Private mAllowYMove                         As Boolean
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -67,6 +70,14 @@ Private mStartY                             As Double
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Friend Property Get AllowXMove() As Boolean
+AllowXMove = mAllowXMove
+End Property
+
+Friend Property Get AllowYMove() As Boolean
+AllowYMove = mAllowYMove
+End Property
 
 Friend Property Get DataPoint() As DataPoint
 Set DataPoint = mdp
@@ -100,9 +111,13 @@ HitTest = mGraphObj.HitTest(X, Y)
 End Function
 
 Friend Sub Initialise( _
-                ByVal dp As DataPoint)
+                ByVal dp As DataPoint, _
+                ByVal AllowXMove As Boolean, _
+                ByVal AllowYMove As Boolean)
 Set mdp = dp
 Set mGraphObj = dp
+mAllowXMove = AllowXMove
+mAllowYMove = AllowYMove
 End Sub
 
 Friend Sub StartMove()

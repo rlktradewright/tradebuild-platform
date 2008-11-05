@@ -70,9 +70,19 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Sub Click( _
+                ByVal X As Double, _
+                ByVal Y As Double)
+
+End Sub
+
 Public Sub Create( _
                 ByVal X As Double, _
                 ByVal Y As Double)
+
+End Sub
+
+Public Sub DblClick()
 
 End Sub
 
@@ -107,8 +117,14 @@ Public Sub ResizeCreate( _
 
 End Sub
 
+Public Sub StartMove( _
+                ByVal X As Single, _
+                ByVal Y As Single)
+
+End Sub
+
 Public Sub StartResize( _
-                ByVal selHandle As SelectionHandle, _
+                ByVal selHandleIndex As Long, _
                 ByVal X As Single, _
                 ByVal Y As Single)
 
