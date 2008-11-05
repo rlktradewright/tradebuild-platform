@@ -38,7 +38,7 @@ Implements IChartTool
 
 Public Type FibLineSpecifier
     Percentage          As Single
-    Style               As lineStyle
+    Style               As LineStyle
 End Type
 
 '@================================================================================
@@ -82,7 +82,7 @@ Private mTextSeries                         As TextSeries
 Private mControlPoint1                      As Point
 Private mControlPoint2                      As Point
 
-Private mLineStyle                          As lineStyle
+Private mLineStyle                          As LineStyle
 
 Private mStartPoint1                        As ChartSkil26.Point
 Private mStartPoint2                        As ChartSkil26.Point
@@ -103,7 +103,7 @@ Private mPrevY                              As Double
 Private Sub IChartTool_Click(ByVal X As Double, ByVal Y As Double)
 If mLineSeries Is Nothing Then
     Dim aFont As StdFont
-    Dim tStyle As textStyle
+    Dim tStyle As TextStyle
     
     Set mControlPoint1 = mRegion.newPoint(X, Y)
     Set mControlPoint2 = mRegion.newPoint(X, Y)
@@ -196,7 +196,7 @@ Dim txt As ChartSkil26.Text
 Dim i As Long
 For i = 1 To mTextSeries.Count
     Set txt = mTextSeries(i)
-    txt.position = mRegion.newPoint(txt.position.X + X - mPrevX, txt.position.Y + Y - mPrevY)
+    txt.Position = mRegion.newPoint(txt.Position.X + X - mPrevX, txt.Position.Y + Y - mPrevY)
     SetText txt, i
 Next
 mPrevX = X
@@ -204,35 +204,27 @@ mPrevY = Y
 End Sub
 
 Private Sub IChartTool_MoveResize(ByVal selHandleIndex As Long, ByVal X As Double, ByVal Y As Double)
-Dim ln As ChartSkil26.Line
-Dim txt As Text
-Dim i As Long
-Dim retr As Double
-
 If selHandleIndex = 1 Then
     Set mControlPoint1 = mRegion.newPoint(X, Y)
-    For i = 1 To mLineSeries.Count
-        Set ln = mLineSeries(i)
-        retr = mControlPoint2.Y - (mControlPoint2.Y - mControlPoint1.Y) * mLineSpecs(i - 1).Percentage / 100
-        ln.Point1 = mRegion.newPoint(X, retr)
-        ln.Point2 = mRegion.newPoint(mControlPoint2.X, retr)
-        Set txt = mTextSeries(i)
-        txt.position = ln.Point2
-        SetText txt, i
-    Next
+ElseIf selHandleIndex = 2 Then
+    Set mControlPoint1 = mRegion.newPoint(mControlPoint1.X, Y)
+ElseIf selHandleIndex = 3 Then
+    Set mControlPoint1 = mRegion.newPoint(mControlPoint1.X, Y)
+    Set mControlPoint2 = mRegion.newPoint(X, mControlPoint2.Y)
+ElseIf selHandleIndex = 4 Then
+    Set mControlPoint1 = mRegion.newPoint(X, mControlPoint1.Y)
+ElseIf selHandleIndex = 5 Then
+    Set mControlPoint2 = mRegion.newPoint(X, mControlPoint2.Y)
+ElseIf selHandleIndex = 6 Then
+    Set mControlPoint1 = mRegion.newPoint(X, mControlPoint1.Y)
+    Set mControlPoint2 = mRegion.newPoint(mControlPoint2.X, Y)
+ElseIf selHandleIndex = 7 Then
+    Set mControlPoint2 = mRegion.newPoint(mControlPoint2.X, Y)
 Else
     Set mControlPoint2 = mRegion.newPoint(X, Y)
-    For i = 1 To mLineSeries.Count
-        Set ln = mLineSeries(i)
-        retr = mControlPoint2.Y - (mControlPoint2.Y - mControlPoint1.Y) * mLineSpecs(i - 1).Percentage / 100
-        ln.Point1 = mRegion.newPoint(mControlPoint1.X, retr)
-        ln.Point2 = mRegion.newPoint(X, retr)
-        Set txt = mTextSeries(i)
-        txt.position = ln.Point2
-        SetText txt, i
-    Next
 End If
-
+drawLines
+moveSelectionhandles
 End Sub
 
 Private Property Let IChartTool_Region(ByVal RHS As ChartSkil26.ChartRegion)
@@ -263,7 +255,7 @@ For i = 1 To mLineSeries.Count
     ln.Point1 = mRegion.newPoint(mControlPoint1.X, retr)
     ln.Point2 = mRegion.newPoint(X, retr)
     Set txt = mTextSeries(i)
-    txt.position = ln.Point2
+    txt.Position = ln.Point2
     SetText txt, i
 Next
 
@@ -296,7 +288,7 @@ For i = 1 To mLineSeries.Count
     ln.Point2 = mRegion.newPoint(mControlPoint2.X, retr)
     ln.layer = mLayer
     Set txt = mTextSeries(i)
-    txt.position = ln.Point2
+    txt.Position = ln.Point2
     SetText txt, i
     txt.layer = mLayer
 Next
@@ -350,7 +342,7 @@ End Sub
 '@================================================================================
 
 Friend Sub Initialise( _
-                ByVal controller As chartController, _
+                ByVal controller As ChartController, _
                 ByRef pLineSpecs() As FibLineSpecifier, _
                 ByVal layer As Long)
 mLineSpecs = pLineSpecs
@@ -376,12 +368,55 @@ mAbstractTool.AddSelectableObject ln
 
 Set txt = mTextSeries.Add
 txt.Color = mLineSpecs(index).Style.Color
-txt.position = mRegion.newPoint(X, Y)
+txt.Position = mRegion.newPoint(X, Y)
 txt.offset = mRegion.newDimension(0.2, 0)
 txt.Text = mLineSpecs(index).Percentage & "%"
 
 Set addRetracementLine = ln
 End Function
+
+Private Sub createSelectionhandles()
+mAbstractTool.AddSelectionHandle mControlPoint1.X, mControlPoint1.Y, True, True
+mAbstractTool.AddSelectionHandle (mControlPoint1.X + mControlPoint2.X) / 2, mControlPoint1.Y, False, True
+mAbstractTool.AddSelectionHandle mControlPoint2.X, mControlPoint1.Y, True, True
+
+mAbstractTool.AddSelectionHandle mControlPoint1.X, (mControlPoint1.Y + mControlPoint2.Y) / 2, True, False
+mAbstractTool.AddSelectionHandle mControlPoint2.X, (mControlPoint1.Y + mControlPoint2.Y) / 2, True, False
+
+mAbstractTool.AddSelectionHandle mControlPoint1.X, mControlPoint2.Y, True, True
+mAbstractTool.AddSelectionHandle (mControlPoint1.X + mControlPoint2.X) / 2, mControlPoint2.Y, False, True
+mAbstractTool.AddSelectionHandle mControlPoint2.X, mControlPoint2.Y, True, True
+End Sub
+
+Private Sub drawLines()
+Dim i As Long
+Dim ln As ChartSkil26.Line
+Dim txt As ChartSkil26.Text
+Dim retr As Double
+
+For i = 1 To mLineSeries.Count
+    Set ln = mLineSeries(i)
+    retr = mControlPoint2.Y - (mControlPoint2.Y - mControlPoint1.Y) * mLineSpecs(i - 1).Percentage / 100
+    ln.Point1 = mRegion.newPoint(mControlPoint1.X, retr)
+    ln.Point2 = mRegion.newPoint(mControlPoint2.X, retr)
+    Set txt = mTextSeries(i)
+    txt.Position = ln.Point2
+    SetText txt, i
+Next
+End Sub
+
+Private Sub moveSelectionhandles()
+mAbstractTool.MoveSelectionHandle 1, mControlPoint1.X, mControlPoint1.Y
+mAbstractTool.MoveSelectionHandle 2, (mControlPoint1.X + mControlPoint2.X) / 2, mControlPoint1.Y
+mAbstractTool.MoveSelectionHandle 3, mControlPoint2.X, mControlPoint1.Y
+
+mAbstractTool.MoveSelectionHandle 4, mControlPoint1.X, (mControlPoint1.Y + mControlPoint2.Y) / 2
+mAbstractTool.MoveSelectionHandle 5, mControlPoint2.X, (mControlPoint1.Y + mControlPoint2.Y) / 2
+
+mAbstractTool.MoveSelectionHandle 6, mControlPoint1.X, mControlPoint2.Y
+mAbstractTool.MoveSelectionHandle 7, (mControlPoint1.X + mControlPoint2.X) / 2, mControlPoint2.Y
+mAbstractTool.MoveSelectionHandle 8, mControlPoint2.X, mControlPoint2.Y
+End Sub
 
 Private Sub notifySelected()
 Dim failpoint As Long
@@ -389,8 +424,7 @@ On Error GoTo Err
 
 If Not mAbstractTool.IsSelected Then
     If mAbstractTool.SetSelected Then
-        mAbstractTool.AddSelectionHandle mControlPoint1.X, mControlPoint1.Y
-        mAbstractTool.AddSelectionHandle mControlPoint2.X, mControlPoint2.Y
+        createSelectionhandles
     Else
         mRegion.ClearSelection
     End If
@@ -408,7 +442,7 @@ End Sub
 Private Sub SetText( _
                 ByVal txt As Text, _
                 ByVal index As Long)
-txt.Text = mLineSpecs(index - 1).Percentage & "% (" & mRegion.FormatYValue(txt.position.Y) & ")"
+txt.Text = mLineSpecs(index - 1).Percentage & "% (" & mRegion.FormatYValue(txt.Position.Y) & ")"
 End Sub
 
 Private Sub startMove()
