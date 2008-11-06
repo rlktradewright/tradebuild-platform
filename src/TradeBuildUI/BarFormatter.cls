@@ -65,6 +65,14 @@ Private Const ModuleName                    As String = "BarFormatter"
 ' Methods
 '@================================================================================
 
+Sub Initialise(ByVal pBars As TimeframeUtils26.bars)
+
+End Sub
+
+Sub FormatBar(ByVal sourceBar As TimeframeUtils26.Bar, ByVal chartBar As ChartSkil26.Bar)
+
+End Sub
+
 '@================================================================================
 ' Helper Functions
 '@================================================================================
