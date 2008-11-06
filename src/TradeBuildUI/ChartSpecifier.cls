@@ -45,6 +45,18 @@ Private Const ModuleName                    As String = "ChartSpecifier"
 ' Member variables
 '@================================================================================
 
+Private mTimeframe                          As TimePeriod
+Private mInitialNumberOfBars                As Integer
+Private mIncludeBarsOutsideSession          As Boolean
+Private mMinimumTicksHeight                 As Integer
+Private mDefaultRegionStyle                 As ChartRegionStyle
+Private mDefaultYAxisRegionStyle            As ChartRegionStyle
+Private mXAxisRegionStyle                   As ChartRegionStyle
+Private mVolumeRegionStyle                  As ChartRegionStyle
+Private mBarsStyle                          As barStyle
+Private mVolumeStyle                        As dataPointStyle
+
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -61,148 +73,99 @@ Private Const ModuleName                    As String = "ChartSpecifier"
 ' Properties
 '@================================================================================
 
+Public Property Get BarsStyle() As barStyle
+Set BarsStyle = mBarsStyle
+End Property
+
+Public Property Get DefaultRegionStyle() As ChartRegionStyle
+Set DefaultRegionStyle = mDefaultRegionStyle
+End Property
+
+Public Property Get DefaultYAxisRegionStyle() As ChartRegionStyle
+Set DefaultYAxisRegionStyle = mDefaultYAxisRegionStyle
+End Property
+
+Public Property Get InitialNumberOfBars() As Integer
+InitialNumberOfBars = mInitialNumberOfBars
+End Property
+
+Public Property Get IncludeBarsOutsideSession() As Boolean
+IncludeBarsOutsideSession = mIncludeBarsOutsideSession
+End Property
+
+Public Property Get MinimumTicksHeight() As Integer
+MinimumTicksHeight = mMinimumTicksHeight
+End Property
+
+Public Property Get timeframe() As TimePeriod
+Set timeframe = mTimeframe
+End Property
+
+Friend Property Let timeframe(ByVal value As TimePeriod)
+Set mTimeframe = value
+End Property
+
+Public Property Get VolumeRegionStyle() As ChartRegionStyle
+Set VolumeRegionStyle = mVolumeRegionStyle
+End Property
+
+Public Property Get VolumeStyle() As dataPointStyle
+Set VolumeStyle = mVolumeStyle
+End Property
+
+Public Property Get XAxisRegionStyle() As ChartRegionStyle
+Set XAxisRegionStyle = mXAxisRegionStyle
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Friend Sub Initialise( _
+                ByVal timeframe As TimePeriod, _
+                ByVal InitialNumberOfBars As Integer, _
+                ByVal IncludeBarsOutsideSession As Boolean, _
+                ByVal MinimumTicksHeight As Integer, _
+                ByVal DefaultRegionStyle As ChartRegionStyle, _
+                ByVal VolumeRegionStyle As ChartRegionStyle, _
+                ByVal XAxisRegionStyle As ChartRegionStyle, _
+                ByVal DefaultYAxisRegionStyle As ChartRegionStyle, _
+                ByVal pBarsStyle As barStyle, _
+                ByVal VolumeStyle As dataPointStyle)
+Set mTimeframe = timeframe
+validateTimeFrame (timeframe)
+mInitialNumberOfBars = InitialNumberOfBars
+mIncludeBarsOutsideSession = IncludeBarsOutsideSession
+mMinimumTicksHeight = MinimumTicksHeight
+Set mDefaultRegionStyle = DefaultRegionStyle
+Set mVolumeRegionStyle = VolumeRegionStyle
+Set mXAxisRegionStyle = XAxisRegionStyle
+Set mDefaultYAxisRegionStyle = DefaultYAxisRegionStyle
+Set mBarsStyle = pBarsStyle
+Set mVolumeStyle = VolumeStyle
+End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Imports ChartSkil26
-Imports TimeframeUtils26
-Imports TradeBuild26
+Private Sub validateTimeFrame(ByVal tf As TimePeriod)
 
-Public Class ChartSpecifier
+Select Case tf.units
+Case TimePeriodUnits.TimePeriodSecond, _
+        TimePeriodUnits.TimePeriodMinute, _
+        TimePeriodUnits.TimePeriodHour, _
+        TimePeriodUnits.TimePeriodDay, _
+        TimePeriodUnits.TimePeriodWeek, _
+        TimePeriodUnits.TimePeriodMonth, _
+        TimePeriodUnits.TimePeriodYear, _
+        TimePeriodUnits.TimePeriodVolume, _
+        TimePeriodUnits.TimePeriodTickMovement
+Case Else
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "validateTimeFrame", _
+            "Time period units not supported"
+End Select
 
-    Private mTimeframe As TimePeriod
-    Private mInitialNumberOfBars As Integer = 200
-    Private mIncludeBarsOutsideSession As Boolean = False
-    Private mMinimumTicksHeight As Integer = 20
-    Private mDefaultRegionStyle As ChartRegionStyle
-    Private mDefaultYAxisRegionStyle As ChartRegionStyle
-    Private mXAxisRegionStyle As ChartRegionStyle
-    Private mVolumeRegionStyle As ChartRegionStyle
-
-    Public Sub New(ByVal timeframe As TimePeriod, _
-                   ByVal initialNumberOfBars As Integer, _
-                   ByVal includeBarsOutsideSession As Boolean, _
-                   ByVal minimumTicksHeight As Integer, _
-                   ByVal defaultRegionStyle As ChartRegionStyle, _
-                   ByVal volumeRegionstyle As ChartRegionStyle, _
-                   ByVal xAxisRegionStyle As ChartRegionStyle, _
-                   ByVal defaultYAxisRegionStyle As ChartRegionStyle)
-        mTimeframe = timeframe
-        validateTimeFrame (timeframe)
-        mInitialNumberOfBars = initialNumberOfBars
-        mIncludeBarsOutsideSession = includeBarsOutsideSession
-        mMinimumTicksHeight = minimumTicksHeight
-        mDefaultRegionStyle = DefaultRegionStyle
-        mVolumeRegionStyle = volumeRegionStyle
-        mXAxisRegionStyle = xAxisRegionStyle
-        mDefaultYAxisRegionStyle = defaultYAxisRegionStyle
-    End Sub
-
-    Public Sub New(ByVal timeframe As TimePeriod)
-        mTimeframe = timeframe
-        validateTimeFrame (timeframe)
-    End Sub
-
-    Public Sub New(ByVal timeframe As TimePeriod, _
-                   ByVal initialNumberOfBars As Integer)
-        mTimeframe = timeframe
-        validateTimeFrame (timeframe)
-        mInitialNumberOfBars = initialNumberOfBars
-    End Sub
-
-    Public Sub New(ByVal timeframe As TimePeriod, _
-                   ByVal initialNumberOfBars As Integer, _
-                   ByVal includeBarsOutsideSession As Boolean)
-        mTimeframe = timeframe
-        validateTimeFrame (timeframe)
-        mInitialNumberOfBars = initialNumberOfBars
-        mIncludeBarsOutsideSession = includeBarsOutsideSession
-    End Sub
-
-    Public Sub New(ByVal timeframe As TimePeriod, _
-                   ByVal initialNumberOfBars As Integer, _
-                   ByVal includeBarsOutsideSession As Boolean, _
-                   ByVal minimumTicksHeight As Integer)
-        mTimeframe = timeframe
-        validateTimeFrame (timeframe)
-        mInitialNumberOfBars = initialNumberOfBars
-        mIncludeBarsOutsideSession = includeBarsOutsideSession
-        mMinimumTicksHeight = minimumTicksHeight
-    End Sub
-
-    Public ReadOnly Property defaultRegionStyle() As ChartRegionStyle
-        Get
-            Return mDefaultRegionStyle
-        End Get
-    End Property
-
-    Public ReadOnly Property defaultYAxisRegionStyle() As ChartRegionStyle
-        Get
-            Return mDefaultYAxisRegionStyle
-        End Get
-    End Property
-
-    Public ReadOnly Property initialNumberOfBars() As Integer
-        Get
-            Return mInitialNumberOfBars
-        End Get
-    End Property
-
-    Public ReadOnly Property includeBarsOutsideSession() As Boolean
-        Get
-            Return mIncludeBarsOutsideSession
-        End Get
-    End Property
-
-    Public ReadOnly Property minimumTicksHeight() As Integer
-        Get
-            Return mMinimumTicksHeight
-        End Get
-    End Property
-
-    Public Property timeframe() As TimePeriod
-        Get
-            Return mTimeframe
-        End Get
-        Friend Set(ByVal value As TimePeriod)
-            mTimeframe = value
-        End Set
-    End Property
-
-    Public ReadOnly Property volumeRegionStyle() As ChartRegionStyle
-        Get
-            Return mVolumeRegionStyle
-        End Get
-    End Property
-
-    Public ReadOnly Property xAxisRegionStyle() As ChartRegionStyle
-        Get
-            Return mXAxisRegionStyle
-        End Get
-    End Property
-
-    Private Sub validateTimeFrame(ByVal tf As TimePeriod)
-
-        Select Case tf.units
-            Case TimePeriodUnits.TimePeriodSecond, _
-                    TimePeriodUnits.TimePeriodMinute, _
-                    TimePeriodUnits.TimePeriodHour, _
-                    TimePeriodUnits.TimePeriodDay, _
-                    TimePeriodUnits.TimePeriodWeek, _
-                    TimePeriodUnits.TimePeriodMonth, _
-                    TimePeriodUnits.TimePeriodYear, _
-                    TimePeriodUnits.TimePeriodVolume, _
-                    TimePeriodUnits.TimePeriodTickMovement
-            Case Else
-                Throw New ArgumentException("Time period units not supported")
-        End Select
-
-    End Sub
-
-End Class
+End Sub
 
