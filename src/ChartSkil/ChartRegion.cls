@@ -1744,7 +1744,7 @@ mMinInViewPeriod = minValue
 mMaxInViewPeriod = maxValue
 mYAxisPosition = maxValue + 1
 mCanvas.Left = minValue
-mCanvas.right = maxValue '+ 0.5
+mCanvas.Right = maxValue '+ 0.5
 
 If Not mSuppressDrawing Then
     If mUseDeferredPainting Then
@@ -1988,7 +1988,7 @@ With mCanvas
 
     
     periodrect.Left = PeriodNumber - 0.5
-    periodrect.right = PeriodNumber + 0.5
+    periodrect.Right = PeriodNumber + 0.5
     periodrect.Bottom = .Bottom
     periodrect.Top = .Top
     periodrect.isValid = True
@@ -3536,6 +3536,7 @@ Dim i As Long
 Dim index As Long
 Dim currObjStillSelectable As Boolean
 Dim newSelectedObject As IGraphicObject
+Dim found As Boolean
 
 If mSelectedObject Is Nothing Then
     startLayer = MaxLayer
@@ -3554,7 +3555,12 @@ For i = MinLayer To MaxLayer
                         currObjStillSelectable = True
                     Else
                         Set newSelectedObject = .graphObj
-                        Exit For    ' we've found an object/series to select
+                        ' we've found an object/series to select
+                        
+                        ' NB we can't use Exit For because, because we are
+                        ' within a With statement, and it causes the table lock
+                        ' not to be released - see http://support.microsoft.com/kb/187553
+                        GoTo ExitFor
                         
                     End If
                 End If
@@ -3563,6 +3569,8 @@ For i = MinLayer To MaxLayer
         End With
     Loop
 Next
+
+ExitFor:
 
 If newSelectedObject Is Nothing Then
     If Not currObjStillSelectable Then
