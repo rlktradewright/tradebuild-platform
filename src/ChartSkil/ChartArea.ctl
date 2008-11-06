@@ -2489,7 +2489,7 @@ For i = 1 To mRegionsIndex Step 2
     End If
 Next
 If mXAxisRegion Is Nothing Then createXAxisRegion
-mXAxisRegion.PeriodsInView mScaleLeft, mScaleLeft + mScaleWidth
+mXAxisRegion.PeriodsInView mScaleLeft, mScaleLeft + mScaleWidth - 1
 setHorizontalScrollBar
 
 Exit Sub
@@ -3018,7 +3018,8 @@ If gLogger.isLoggable(LogLevelMediumDetail) Then gLogger.Log LogLevelMediumDetai
 
 failpoint = 200
 
-mScaleWidth = CSng(XAxisPicture.width) / CSng(mTwipsPerBar) - 0.5!
+'mScaleWidth = CSng(XAxisPicture.width) / CSng(mTwipsPerBar) - 0.5!
+mScaleWidth = CSng(XAxisPicture.width) / CSng(mTwipsPerBar)
 mScaleLeft = calcScaleLeft
 
 
@@ -3051,7 +3052,7 @@ Next
 failpoint = 700
 
 If Not mXAxisRegion Is Nothing Then
-    mXAxisRegion.PeriodsInView mScaleLeft, mScaleLeft + mScaleWidth
+    mXAxisRegion.PeriodsInView mScaleLeft, mScaleLeft + mScaleWidth - 1
 End If
 
 

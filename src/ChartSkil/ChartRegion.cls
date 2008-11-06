@@ -1278,10 +1278,9 @@ Friend Property Let YAxisRegion(ByVal value As ChartRegion)
 Dim aFont As StdFont
 
 Set mYAxisRegion = value
-'mYAxisRegion.regionBackColor = regionBackColor
-'mYAxisRegion.hasGrid = False
-mYAxisRegion.PeriodsInView 0, 99
+
 mYAxisRegion.SuppressDrawing = mSuppressDrawing
+mYAxisRegion.PeriodsInView 0, 99
 
 mYAxisRegion.DefaultTextStyle = mDefaultTextStyle
 
