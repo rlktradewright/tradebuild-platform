@@ -121,6 +121,10 @@ End Sub
 ' Properties
 '@================================================================================
 
+Public Property Get BaseStudy() As study
+Set BaseStudy = mBaseStudy
+End Property
+
 Public Property Get chartController() As chartController
 Set chartController = mChartController
 End Property
@@ -212,8 +216,8 @@ If studyConfig.studyHorizontalRules.count > 0 Then
         horizRulesLineSeries.lineStyle = studyHorizRule.style
         horizRulesLineSeries.thickness = studyHorizRule.thickness
         Set line = horizRulesLineSeries.add
-        line.point1 = region.newPoint(0, studyHorizRule.y, CoordsRelative, CoordsLogical)
-        line.point2 = region.newPoint(100, studyHorizRule.y, CoordsRelative, CoordsLogical)
+        line.point1 = region.newPoint(0, studyHorizRule.Y, CoordsRelative, CoordsLogical)
+        line.point2 = region.newPoint(100, studyHorizRule.Y, CoordsRelative, CoordsLogical)
     Next
     studyConfig.horizontalRulesLineSeries = horizRulesLineSeries
 End If

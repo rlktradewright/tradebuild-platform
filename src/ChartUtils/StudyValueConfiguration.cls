@@ -62,6 +62,8 @@ Private mChartRegionName As String
 Private mLayer As Long
 Private mOffset As Dimension
 
+Private mBarFormatter As BarFormatter
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -83,6 +85,14 @@ End Sub
 ' Properties
 '@================================================================================
 
+Public Property Let BarFormatter(ByVal value As BarFormatter)
+Set mBarFormatter = value
+End Property
+
+Public Property Get BarFormatter() As BarFormatter
+Set BarFormatter = mBarFormatter
+End Property
+    
 Public Property Let barStyle(ByVal value As barStyle)
 Set mBarStyle = value
 End Property
