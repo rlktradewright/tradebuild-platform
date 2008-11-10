@@ -52,6 +52,8 @@ Implements Study
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "RSI"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -132,6 +134,9 @@ Dim lossesAvg As SValue
 Dim RSI As Variant
 Dim evMa As StudyValueEvent
 
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mStudyFoundation.isNewBar Then
     ' if this input value is the same as the previous one in this bar, no
     ' need to do anything as it won't change the study value
@@ -182,6 +187,15 @@ Else
 End If
 
 notifyValue RSI, RsiValueRsi, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customNotify" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Sub
 
 Private Function customNumberOfBarsRequired() As Long
@@ -193,6 +207,9 @@ Dim param As Parameter
 
 ' NB: the For Each construct cannot be used with objects of the
 ' IParameters class
+
+Dim failpoint As Long
+On Error GoTo Err
 
 For Each param In params
     Select Case UCase$(param.name)
@@ -211,6 +228,15 @@ Set mMaGains = gCreateMA(mMovingAverageType, _
 Set mMaLosses = gCreateMA(mMovingAverageType, _
                         mPeriods, _
                         1)
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customProcessParameters" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 
 End Sub
 

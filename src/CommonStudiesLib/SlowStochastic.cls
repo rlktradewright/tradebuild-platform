@@ -34,6 +34,8 @@ Implements Study
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "SlowStochastic"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -107,6 +109,9 @@ Dim param As Parameter
 Dim lparams As Parameters
 Dim valueNames(0) As String
 
+Dim failpoint As Long
+On Error GoTo Err
+
 For Each param In params
     Select Case UCase$(param.name)
     Case UCase$(SStochParamKPeriods)
@@ -136,6 +141,15 @@ mStochStudy.initialise GenerateGUIDString, _
                         Nothing
 
 mStochStudy.addStudyValueListener Me, StochValueD, 1
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customProcessParameters" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 
 End Sub
 

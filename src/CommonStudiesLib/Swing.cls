@@ -33,6 +33,8 @@ Implements Study
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "Swing"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -136,6 +138,9 @@ Private Sub customNotify( _
 Static sPrevVal As Variant
 Dim prevSwingHigh As SwingPoint
 Dim prevSwingLow As SwingPoint
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If IsEmpty(ev.sVal.value) Then Exit Sub
 
@@ -424,6 +429,15 @@ If ev.sVal.value <= mLowAfterHighPoint.value Then
     mLowAfterHighPoint.barNumber = ev.sVal.barNumber
     mLowAfterHighPoint.barStartTime = ev.sVal.barStartTime
 End If
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customNotify" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Sub
 
 Private Function customNumberOfBarsRequired() As Long
@@ -433,6 +447,9 @@ End Function
 Private Sub customProcessParameters(ByVal params As Parameters)
 Dim param As Parameter
 
+Dim failpoint As Long
+On Error GoTo Err
+
 For Each param In params
     Select Case UCase$(param.name)
     Case UCase$(SwingParamMinimumSwingTicks)
@@ -441,6 +458,15 @@ For Each param In params
         mIncludeImplicitSwingPoints = IIf((UCase$(param.value) = "Y") Or (UCase$(param.value) = "YES") Or (UCase$(param.value) = "T") Or (UCase$(param.value) = "TRUE") Or (UCase$(param.value) = "1"), True, False)
     End Select
 Next
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customProcessParameters" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 
 End Sub
 

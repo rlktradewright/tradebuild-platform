@@ -33,6 +33,8 @@ Implements Study
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "ParabolicStop"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -97,6 +99,9 @@ Dim newValue As Double
 Dim evOut As StudyValueEvent
 Static accelAdjustedThisbar As Boolean
 Static sPrevVal As Variant
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If IsEmpty(ev.sVal.value) Then Exit Sub
 
@@ -190,6 +195,15 @@ evOut.sVal.value = mCurrentStop
 evOut.valueName = PsValuePs
 mStudyFoundation.notifyValue evOut
 
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customNotify" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
 End Sub
 
 Private Function customNumberOfBarsRequired() As Long
@@ -198,6 +212,9 @@ End Function
 
 Private Sub customProcessParameters(ByVal params As Parameters)
 Dim param As Parameter
+
+Dim failpoint As Long
+On Error GoTo Err
 
 For Each param In params
     Select Case UCase$(param.name)
@@ -209,6 +226,15 @@ For Each param In params
         mMaxFactor = param.value
     End Select
 Next
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customProcessParameters" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 
 End Sub
 

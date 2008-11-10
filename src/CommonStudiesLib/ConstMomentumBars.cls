@@ -41,7 +41,6 @@ Implements BarStudy
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                As String = "CmnStudiesLib26"
 Private Const ModuleName                As String = "ConstMomentumBars"
 
 '@================================================================================
@@ -60,7 +59,7 @@ Private Const ModuleName                As String = "ConstMomentumBars"
 Private mStudyFoundation As StudyFoundation
 '--------------------------------------------------------
 
-Private mSession As Session
+Private mSession As session
 Attribute mSession.VB_VarHelpID = -1
 
 Private mMovementPerBar As Long
@@ -109,7 +108,7 @@ End Property
 
 Private Sub BarStudy_switchUnderlyingStudy( _
                 ByVal newUnderlyingStudy As InputStudy)
-Set mSession = newUnderlyingStudy.Session
+Set mSession = newUnderlyingStudy.session
 mBarsBuilder.changeSession mSession
 End Sub
 
@@ -135,7 +134,7 @@ Private Sub customInitialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As Session)
+                ByVal pSession As session)
 
 Set mSession = pSession
 
@@ -148,6 +147,9 @@ Private Function customGetStudyValue( _
                 ByVal ref As Long) As SValue
 Dim bar As bar
 Dim sv As SValue
+
+Dim failpoint As Long
+On Error GoTo Err
 
 Set bar = mBars.bar(ref)
 
@@ -181,10 +183,22 @@ Case UCase$(BarValueOHLC4)
 End Select
 
 customGetStudyValue = sv
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customGetStudyValue" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Function
 
 Private Sub customNotify( _
                 ev As StudyValueEvent)
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If IsEmpty(ev.sVal.value) Then Exit Sub
 
@@ -206,6 +220,15 @@ Else
             "Invalid input value name: " & ev.valueName
 End If
 
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customNotify" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
 End Sub
 
 Private Function customNumberOfBarsRequired() As Long
@@ -214,6 +237,9 @@ End Function
 
 Private Sub customProcessParameters(ByVal params As Parameters)
 Dim param As Parameter
+
+Dim failpoint As Long
+On Error GoTo Err
 
 For Each param In params
     Select Case UCase$(param.name)
@@ -227,6 +253,15 @@ Set mBarsBuilder = CreateBarsBuilder(GetTimePeriod(mMovementPerBar, TimePeriodTi
                                     mPriceTickSize, _
                                     mNumberOfValuesToCache)
 Set mBars = mBarsBuilder.Bars
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customProcessParameters" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Sub
 
 Private Function customStudyDefinition() As StudyDefinition
@@ -412,7 +447,7 @@ Private Sub Study_initialise( _
                 ByVal numberOfValuesToCache As Long, _
                 ByRef inputValueNames() As String, _
                 ByVal underlyingStudy As Study, _
-                ByVal pSession As Session)
+                ByVal pSession As session)
 Set mStudyFoundation = New StudyFoundation
 mStudyFoundation.initialise Me, _
                             id, _

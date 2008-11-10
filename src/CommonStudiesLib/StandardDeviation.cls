@@ -33,6 +33,8 @@ Implements Study
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "StandardDeviation"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -92,6 +94,9 @@ Static sPrevVal As Variant
 Dim newValue As Double
 Dim valueToRemove As Double
 
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mStudyFoundation.isNewBar Then
     If ev.sVal.value = sPrevVal Then Exit Sub
 End If
@@ -146,6 +151,15 @@ Else
 End If
             
 notifyValue mSD, SDValueStandardDeviation, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customNotify" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Sub
 
 Private Function customNumberOfBarsRequired() As Long
@@ -155,6 +169,9 @@ End Function
 Private Sub customProcessParameters(ByVal params As Parameters)
 Dim param As Parameter
 
+Dim failpoint As Long
+On Error GoTo Err
+
 For Each param In params
     Select Case UCase$(param.name)
     Case UCase$(SDParamPeriods)
@@ -162,6 +179,15 @@ For Each param In params
         Set mInputValueCache = CreateValueCache(mPeriods, "")
     End Select
 Next
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customProcessParameters" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 
 End Sub
 

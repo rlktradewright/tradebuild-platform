@@ -33,6 +33,8 @@ Implements Study
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "BollingerBands"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -106,6 +108,9 @@ Private Sub customNotify( _
 Static sPrevVal As Variant
 Dim ma As Variant
 
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mStudyFoundation.isNewBar Then
     If ev.sVal.value = sPrevVal Then Exit Sub
 End If
@@ -121,6 +126,15 @@ notifyValue ma, BBValueCentre, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.bar
 notifyValue ma + mDevs * mSD.SD.value, BBValueTop, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
 notifyValue ma - mDevs * mSD.SD.value, BBValueBottom, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
 notifyValue 2 * mDevs * mSD.SD.value, BBValueSpread, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customNotify" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Sub
 
 Private Function customNumberOfBarsRequired() As Long
@@ -135,6 +149,9 @@ Dim lparams As Parameters
 Dim maType As String
 Dim lStudy As Study
 Dim valueNames(0) As String
+
+Dim failpoint As Long
+On Error GoTo Err
 
 valueNames(0) = "in"
 
@@ -168,6 +185,15 @@ lStudy.initialise GenerateGUIDString, _
                     valueNames, _
                     Nothing, _
                     Nothing
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customProcessParameters" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Sub
 
 Private Function customStudyDefinition() As StudyDefinition

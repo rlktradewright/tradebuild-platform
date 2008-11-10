@@ -34,6 +34,8 @@ Implements Study
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "ForceIndex"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -104,6 +106,9 @@ Dim lForceIndexLong As Variant  ' the long-smoothed force index value
 Dim maEv As StudyValueEvent ' event structure for notifying values to the
                             ' moving average objects
 
+Dim failpoint As Long
+On Error GoTo Err
+
 If mStudyFoundation.isNewBar Then
     mPrevBarClose = sPrevInputVal
 End If
@@ -167,6 +172,15 @@ notifyValue lForceIndex, FiValueForceIndex, ev.sVal.barNumber, ev.sVal.timestamp
 notifyValue lForceIndexShort, FiValueForceIndexShort, ev.sVal.barNumber, ev.sVal.timestamp
 notifyValue lForceIndexLong, FiValueForceIndexLong, ev.sVal.barNumber, ev.sVal.timestamp
 
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customNotify" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
 End Sub
 
 ' Called by the infrastructure so that it can determine how many historical
@@ -180,6 +194,9 @@ End Function
 Private Sub customProcessParameters(ByVal params As Parameters)
 Dim param As Parameter
 
+Dim failpoint As Long
+On Error GoTo Err
+
 For Each param In params
     Select Case UCase$(param.name)
     Case UCase$(FiParamShortPeriods)
@@ -192,6 +209,15 @@ For Each param In params
                             1)
     End Select
 Next
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customProcessParameters" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 
 End Sub
 

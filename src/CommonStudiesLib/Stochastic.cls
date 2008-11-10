@@ -33,6 +33,8 @@ Implements Study
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "Stochastic"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -86,11 +88,23 @@ Private Sub customInitialise( _
                 ByVal underlyingStudy As Study, _
                 ByVal pSession As session)
 
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mSession = pSession
 
 customProcessParameters Parameters
 Set mKCache = mStudyFoundation.FindValueCache(StochValueK)
 Set mDCache = mStudyFoundation.FindValueCache(StochValueD)
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customInitialise" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Sub
 
 Private Sub customNotify( _
@@ -99,6 +113,9 @@ Static hh As Variant
 Static ll As Variant
 Static sPrevVal As Variant
 Dim newEv As StudyValueEvent
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If Not mStudyFoundation.isNewBar Then
     If ev.sVal.value = sPrevVal Then Exit Sub
@@ -146,6 +163,15 @@ mStudyFoundation.notifyValue newEv
 newEv.sVal.value = mD
 newEv.valueName = StochValueD
 mStudyFoundation.notifyValue newEv
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customNotify" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Sub
 
 Private Function customNumberOfBarsRequired() As Long
@@ -154,6 +180,9 @@ End Function
 
 Private Sub customProcessParameters(ByVal params As Parameters)
 Dim param As Parameter
+
+Dim failpoint As Long
+On Error GoTo Err
 
 For Each param In params
     Select Case UCase$(param.name)
@@ -172,6 +201,15 @@ For Each param In params
         Set mMASmoothingStudy = mMASmoothing
     End Select
 Next
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customProcessParameters" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 
 End Sub
 

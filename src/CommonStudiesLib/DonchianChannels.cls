@@ -40,6 +40,8 @@ Implements Study
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "DonchianChannels"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -103,6 +105,9 @@ Static sPrevVal As Variant
 Static numValues As Long
 Dim i As Long
 
+Dim failpoint As Long
+On Error GoTo Err
+
 If IsEmpty(ev.sVal.value) Then Exit Sub
 
 If Not mStudyFoundation.isNewBar Then
@@ -163,6 +168,15 @@ If ev.sVal.value < mLower Then
     mLowerCache.updateValue mLower, ev.sVal.barNumber, ev.sVal.timestamp
     notifyValue mLower, DoncValueLower, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
 End If
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customNotify" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
         
 End Sub
 
@@ -173,6 +187,9 @@ End Function
 Private Sub customProcessParameters(ByVal params As Parameters)
 Dim param As Parameter
 
+Dim failpoint As Long
+On Error GoTo Err
+
 For Each param In params
     Select Case UCase$(param.name)
     Case UCase$(DoncParamPeriods)
@@ -181,6 +198,15 @@ For Each param In params
         Set mLowcache = CreateValueCache(mPeriods, "lows")
     End Select
 Next
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customProcessParameters" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 
 End Sub
 

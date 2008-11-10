@@ -40,6 +40,8 @@ Implements Study
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "MACD"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -134,6 +136,9 @@ Dim prevMACD As Variant
 Dim prevMACDHist As Variant
 Dim evOut As StudyValueEvent
 
+Dim failpoint As Long
+On Error GoTo Err
+
 prevMACD = mMACD
 prevMACDHist = mMACDHist
 
@@ -221,6 +226,15 @@ If mStudyFoundation.isNewBar Then
     notifyValue mStrength, MACDValueStrength, evOut
     notifyValue mStrengthCount, MACDValueStrengthCount, evOut
 End If
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customNotify" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Sub
 
 Private Function customNumberOfBarsRequired() As Long
@@ -233,6 +247,9 @@ End Function
 
 Private Sub customProcessParameters(ByVal params As Parameters)
 Dim param As Parameter
+
+Dim failpoint As Long
+On Error GoTo Err
 
 For Each param In params
     Select Case UCase$(param.name)
@@ -258,6 +275,15 @@ Set mMALongStudy = gCreateMA(mMAType, _
 Set mMASignalStudy = gCreateMA(mMAType, _
                     mSmoothingPeriods, _
                     1)
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customProcessParameters" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 
 End Sub
 

@@ -27,6 +27,8 @@ Implements Study
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "ATR"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -92,6 +94,9 @@ Dim evMa As StudyValueEvent
 Dim evOut As StudyValueEvent
 Static sPrevVal As Variant
 
+Dim failpoint As Long
+On Error GoTo Err
+
 If Not mStudyFoundation.isNewBar Then
     If ev.sVal.value = sPrevVal Then Exit Sub
 End If
@@ -141,6 +146,15 @@ evOut.sVal.timestamp = ev.sVal.timestamp
 evOut.sVal.value = mATR
 evOut.valueName = AtrValueATR
 mStudyFoundation.notifyValue evOut
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customNotify" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Sub
 
 Private Function customNumberOfBarsRequired() As Long
@@ -150,6 +164,9 @@ End Function
 Private Sub customProcessParameters(ByVal params As Parameters)
 Dim param As Parameter
 Dim maType As String
+
+Dim failpoint As Long
+On Error GoTo Err
 
 For Each param In params
     Select Case UCase$(param.name)
@@ -163,6 +180,15 @@ Next
 Set mMAStudy = gCreateMA(maType, _
                     mPeriods, _
                     1)
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customProcessParameters" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Sub
 
 Private Function customStudyDefinition() As StudyDefinition
