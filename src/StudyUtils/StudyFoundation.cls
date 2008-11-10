@@ -96,17 +96,15 @@ End Sub
 
 Private Sub TaskCompletionListener_taskCompleted( _
                 ev As TaskCompletionEvent)
-Dim task As ValueReplayTask
-Set task = ev.source
-Select Case task.discriminator
+Dim tc As TaskController
+Dim result As ValueReplayResult
+Set result = ev.result
+Set tc = ev.source
+Select Case CLng(tc.cookie)
 Case TaskDiscriminators.TaskAddStudy
-    Dim targetStudy As study
-    Set targetStudy = task.target
-    mStudies.add targetStudy, task.valueNames
+    mStudies.add result.target, result.valueNames
 Case TaskDiscriminators.TaskAddStudyValueListener
-    Dim targetListener As StudyValueListener
-    Set targetListener = task.target
-    mListeners.add targetListener, task.valueName
+    mListeners.add result.target, result.valueName
 End Select
 End Sub
 
@@ -190,7 +188,7 @@ If TypeOf study Is BarStudy Then
     
     ReDim replayValueNames(UBound(valueNames)) As String
     ReDim replayNotifyNames(UBound(valueNames)) As String
-    Set inputDefs = study.StudyDefinition.studyInputDefinitions
+    Set inputDefs = studyToAdd.StudyDefinition.studyInputDefinitions
     
     For i = 0 To UBound(valueNames)
         If UCase$(valueNames(i)) = UCase$(lBarStudy.closeValueName) Then
@@ -277,8 +275,8 @@ If mReplayUsingStudyValues Then
                             numberOfValuesToReplay, _
                             valNames, _
                             notifyNames, _
-                            TaskDiscriminators.TaskAddStudyValueListener
-    Set addStudyValueListener = StartTask(replayTask, PriorityNormal, taskName, taskData)
+                            0
+    Set addStudyValueListener = StartTask(replayTask, PriorityNormal, taskName, TaskDiscriminators.TaskAddStudyValueListener, taskData)
     addStudyValueListener.addTaskCompletionListener Me
 Else
     Set addStudyValueListener = replayCacheValues(FindValueCache(valueName), _
@@ -344,7 +342,7 @@ Public Sub notifyInput( _
 If ev.sVal.barNumber <> mBarNumber Then
     mBarNumber = ev.sVal.barNumber
     mLocalBarNumber = mLocalBarNumber + 1
-    mBarStartTime = ev.sVal.barStartTime
+    mBarStartTime = ev.sVal.BarStartTime
     mIsNewBar = True
 Else
     mIsNewBar = False
@@ -353,7 +351,7 @@ End Sub
                 
 Public Sub NotifyValue( _
                 ByRef ev As StudyValueEvent)
-If ev.sVal.barStartTime = 0 Then ev.sVal.barStartTime = mBarStartTime
+If ev.sVal.BarStartTime = 0 Then ev.sVal.BarStartTime = mBarStartTime
 mStudies.notify ev
 mListeners.notify ev
 End Sub
@@ -444,8 +442,8 @@ Else
                             numberOfValuesToReplay, _
                             valueNames, _
                             notifyNames, _
-                            TaskDiscriminators.TaskAddStudy
-    Set addStudyHelper = StartTask(replayTask, PriorityNormal, taskName, taskData)
+                            0
+    Set addStudyHelper = StartTask(replayTask, PriorityNormal, taskName, TaskDiscriminators.TaskAddStudy, taskData)
     addStudyHelper.addTaskCompletionListener Me
     
 End If
@@ -508,12 +506,13 @@ replayTask.initialise cache, _
                     target, _
                     sourceStudy, _
                     numberOfValuesToReplay, _
-                    discriminator
+                    0
 
 Set replayCacheValues = StartTask( _
                                 replayTask, _
                                 PriorityNormal, _
                                 IIf(taskName <> "", taskName, GenerateGUIDString), _
+                                discriminator, _
                                 taskData)
 End Function
 

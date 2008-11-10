@@ -30,7 +30,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements task
+Implements Task
 Implements ValueReplayTask
 
 '@================================================================================
@@ -62,7 +62,10 @@ Private mTargetStudy As study
 Private mStudyToNotify As study
 Private mTargetListener As StudyValueListener
 Private mSourceStudy As study
-Private mDiscriminator As Long
+
+' The following no longer used as the cookie argument to startTask is used instead
+'Private mDiscriminator As Long
+
 Private mValueCache As valueCache
 
 Private mFirstValueNumber As Long
@@ -76,6 +79,8 @@ Private mNotifyNames(0) As String
 
 Private mSessionBuilder As SessionBuilder
 
+Private mResult As ValueReplayResult
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -85,7 +90,8 @@ Private mSessionBuilder As SessionBuilder
 '@================================================================================
 
 Private Property Get ValueReplayTask_discriminator() As Long
-ValueReplayTask_discriminator = mDiscriminator
+'ValueReplayTask_discriminator = mDiscriminator
+ValueReplayTask_discriminator = 0
 End Property
 
 Private Property Get ValueReplayTask_notifyName() As String
@@ -134,14 +140,14 @@ Dim valueEntry As SValue
 
 If mValueCache.count = 0 Then
     mTaskContext.progress 100
-    mTaskContext.finish 0, False
+    mTaskContext.finish mResult, False
     Set mTaskContext = Nothing
     Exit Sub
 End If
 
 If mTaskContext.cancelPending Then
     mTaskContext.progress 100 * mValuesNotified / (mSourceStudy.numberOfCachedValues - mFirstValueNumber + 1)
-    mTaskContext.finish 0, True
+    mTaskContext.finish mResult, True
     Set mTaskContext = Nothing
     Exit Sub
 End If
@@ -173,7 +179,7 @@ End If
 If mNextValueNumber > mValueCache.count Then
     Debug.Print "Cache for " & mValueName & " replayed " & mValuesNotified & " values"
     mTaskContext.progress 100
-    mTaskContext.finish 0, False
+    mTaskContext.finish mResult, False
     Set mTaskContext = Nothing
 End If
 
@@ -192,7 +198,8 @@ End Property
 '@================================================================================
 
 Public Property Get discriminator() As Long
-discriminator = mDiscriminator
+'discriminator = mDiscriminator
+discriminator = 0
 End Property
 
 Public Property Get notifyName() As String
@@ -237,7 +244,10 @@ Set mTarget = target
 Set mSourceStudy = sourceStudy
 mValueName = valueCache.valueName
 mValueNames(0) = mValueName
-mDiscriminator = discriminator
+'mDiscriminator = discriminator
+
+Set mResult = New ValueReplayResult
+mResult.initialise target, sourceStudy, valueNames, notifyNames
 
 If TypeOf target Is study Then
     mTargetIsStudy = True

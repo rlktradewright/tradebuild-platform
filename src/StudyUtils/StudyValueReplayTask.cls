@@ -30,7 +30,7 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
-Implements task
+Implements Task
 Implements ValueReplayTask
 
 '@================================================================================
@@ -62,7 +62,9 @@ Private mTargetStudy As study
 Private mStudyToNotify As study
 Private mTargetListener As StudyValueListener
 Private mSourceStudy As study
-Private mDiscriminator As Long
+
+' The following no longer used as the cookie argument to startTask is used instead
+'Private mDiscriminator As Long
 
 Private mFirstValueNumber As Long
 Private mNextValueNumber As Long
@@ -78,6 +80,8 @@ Private mReplayNotifyNames() As String
 
 Private mSessionBuilder As SessionBuilder
 
+Private mResult As ValueReplayResult
+
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
@@ -87,7 +91,8 @@ Private mSessionBuilder As SessionBuilder
 '@================================================================================
 
 Private Property Get ValueReplayTask_discriminator() As Long
-ValueReplayTask_discriminator = mDiscriminator
+'ValueReplayTask_discriminator = mDiscriminator
+ValueReplayTask_discriminator = 0
 End Property
 
 Private Property Get ValueReplayTask_notifyName() As String
@@ -142,14 +147,14 @@ failpoint = 100
 
 If mSourceStudy.numberOfCachedValues = 0 Then
     mTaskContext.progress 100
-    mTaskContext.finish 0, False
+    mTaskContext.finish mResult, False
     Set mTaskContext = Nothing
     Exit Sub
 End If
 
 If mTaskContext.cancelPending Then
     mTaskContext.progress 100 * mValuesNotified / (mSourceStudy.numberOfCachedValues - mFirstValueNumber + 1)
-    mTaskContext.finish 0, True
+    mTaskContext.finish mResult, True
     Set mTaskContext = Nothing
     Exit Sub
 End If
@@ -196,7 +201,7 @@ If mNextValueNumber > mSourceStudy.numberOfCachedValues Then
                 " replayed " & mValuesNotified & _
                 " values for " & Join(mReplayValueNames(), ",")
     mTaskContext.progress 100
-    mTaskContext.finish 0, False
+    mTaskContext.finish mResult, False
     Set mTaskContext = Nothing
 End If
 
@@ -224,7 +229,8 @@ End Property
 '@================================================================================
 
 Public Property Get discriminator() As Long
-discriminator = mDiscriminator
+'discriminator = mDiscriminator
+discriminator = 0
 End Property
 
 Public Property Get notifyName() As String
@@ -275,7 +281,10 @@ mValueNames = valueNames
 mValueName = mValueNames(0)
 mNotifyNames = notifyNames
 mNotifyName = mNotifyNames(0)
-mDiscriminator = discriminator
+'mDiscriminator = discriminator
+
+Set mResult = New ValueReplayResult
+mResult.initialise target, sourceStudy, valueNames, notifyNames
 
 If TypeOf target Is study Then
     mTargetIsStudy = True

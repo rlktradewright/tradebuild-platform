@@ -152,13 +152,13 @@ End Sub
 
 Private Sub TaskCompletionListener_taskCompleted( _
                 ev As TaskCompletionEvent)
-Dim task As ValueReplayTask
-Set task = ev.source
-Select Case task.discriminator
+Dim tc As TaskController
+Dim result As ValueReplayResult
+Set result = ev.result
+Set tc = ev.source
+Select Case CLng(tc.cookie)
 Case TaskDiscriminators.TaskAddStudy
-    Dim targetStudy As study
-    Set targetStudy = task.target
-    linkSession targetStudy
+    linkSession result.target
 Case TaskDiscriminators.TaskAddStudyValueListener
 End Select
 End Sub

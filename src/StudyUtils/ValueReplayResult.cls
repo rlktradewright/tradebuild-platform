@@ -84,10 +84,6 @@ Public Property Get target() As Object
 Set target = mTarget
 End Property
 
-Public Property Get taskName() As String
-taskName = mtaskName
-End Property
-
 ' the same as ValueNames(0) for user convenience
 Public Property Get valueName() As String
 valueName = mValueName

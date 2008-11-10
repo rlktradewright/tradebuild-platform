@@ -40,6 +40,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "StudyDefinition"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -203,6 +205,9 @@ Dim newSVDs As studyValueDefinitions
 Dim newSVD As StudyValueDefinition
 Dim svd As StudyValueDefinition
 
+Dim failpoint As Long
+On Error GoTo Err
+
 Set clone = New StudyDefinition
 clone.defaultRegion = mDefaultRegion
 clone.description = mDescription
@@ -238,6 +243,15 @@ For Each svd In mStudyValueDefinitions
     newSVD.valueMode = svd.valueMode
     newSVD.valueType = svd.valueType
 Next
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "clone" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.description
+'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 
 End Function
 
