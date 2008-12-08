@@ -293,7 +293,7 @@ End If
 
 studyEntry.studyName = name
 studyEntry.libName = libraryName
-Set lStudy = mStudyLibraryManager.createStudy(name, libraryName)
+Set lStudy = mStudyLibraryManager.CreateStudy(name, libraryName)
 
 If lStudy Is Nothing Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                                 "StudyUtils25.StudyManager::AddStudy", _
@@ -324,7 +324,7 @@ Set inStudy = se.study
 
 Set studyEntry.inpStudy = inStudy
 
-'we give the new study it's own session that will be used while replaying
+'we give the new study its own session that will be used while replaying
 ' historical data. When that is complete and startStudy is called, we'll
 ' link that session object to the relevant input study object
 Set studyEntry.sessionBldr = New SessionBuilder
