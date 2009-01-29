@@ -6,11 +6,11 @@ BEGIN
   DataSourceBehavior  = 0  'vbNone
   MTSTransactionMode  = 0  'NotAnMTSObject
 END
-Attribute VB_Name = "ConfigurationSectionPath"
+Attribute VB_Name = "ConfigurationPath"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = True
+Attribute VB_Exposed = False
 Option Explicit
 
 ''
@@ -47,10 +47,13 @@ Private Const ModuleName                            As String = "SectionPathPars
 Private mPath                                       As String
 
 Private mParsed                                     As Boolean
-Private mComponents()                               As String
+
+Private mRelative                                   As Boolean
 
 Private mParentPath                                 As String
-Private mRelative                                   As Boolean
+Private mTailPath                                   As String
+Private mTailName                                   As String
+Private mInstanceQualifier                          As String
 
 '@================================================================================
 ' Class Event Handlers
@@ -68,19 +71,35 @@ Private mRelative                                   As Boolean
 ' Properties
 '@================================================================================
 
-Public Property Get LastPathComponent() As String
-If Not mParsed Then parse
-LastPathComponent = mComponents(UBound(mComponents))
+Friend Property Get InstanceQualifier() As String
+InstanceQualifier = mInstanceQualifier
 End Property
 
-Public Property Get PathComponents() As String()
-If Not mParsed Then parse
-PathComponents = mComponents
+Friend Property Get path() As String
+path = mPath
 End Property
 
-Public Property Get ParentPath() As String
+Friend Property Get ParentPath() As String
 If Not mParsed Then parse
 ParentPath = mParentPath
+End Property
+
+Friend Property Get TailName() As String
+If Not mParsed Then parse
+TailName = mTailName
+End Property
+
+''
+' Returns the final element of the configuration path.
+'
+' @remarks
+'   For a an attribute- or value path, the prefixing "&" or "." character is included.
+' @return
+'   The final element of the configuration path.
+'@/
+Friend Property Get TailPath() As String
+If Not mParsed Then parse
+TailPath = mTailPath
 End Property
 
 '@================================================================================
@@ -90,7 +109,7 @@ End Property
 Friend Sub Initialise( _
                 ByVal path As String)
 mPath = path
-If IsValidPropertyPath Then
+If IsValidValuePath Then
 ElseIf IsValidAttributePath Then
 ElseIf IsValidSectionPath Then
 Else
@@ -100,32 +119,36 @@ Else
 End If
 End Sub
 
-Public Function IsRelative() As Boolean
+Friend Function IsRelative() As Boolean
+If Not mParsed Then parse
 IsRelative = mRelative
 End Function
 
-Public Function IsValidAttributePath() As Boolean
+Friend Function IsValidAttributePath() As Boolean
 Static isValid As Variant
 If IsEmpty(isValid) Then
-    gRegExp.Pattern = "^(/?[a-zA-Z0-9]+(\([a-zA-Z0-9]+\))?)+&[a-zA-Z0-9]+$"
+    gRegExp.Global = True
+    gRegExp.Pattern = "^/?([a-zA-Z0-9]\w*(\([a-zA-Z0-9](\w|\s)*\))?(/[a-zA-Z0-9]\w*(\([a-zA-Z0-9](\w|\s)*\))?)*)?\&[a-zA-Z0-9]\w*$"
     isValid = gRegExp.Test(mPath)
 End If
 IsValidAttributePath = isValid
 End Function
 
-Public Function IsValidPropertyPath() As Boolean
+Friend Function IsValidValuePath() As Boolean
 Static isValid As Variant
 If IsEmpty(isValid) Then
-    gRegExp.Pattern = "^(/?[a-zA-Z0-9]+(\([a-zA-Z0-9]+\))?)+.[a-zA-Z0-9]+$"
+    gRegExp.Global = True
+    gRegExp.Pattern = "^/?([a-zA-Z0-9]\w*(\([a-zA-Z0-9](\w|\s)*\))?(/[a-zA-Z0-9]\w*(\([a-zA-Z0-9](\w|\s)*\))?)*)?\.[a-zA-Z0-9]\w*(\([a-zA-Z0-9](\w|\s)*\))?$"
     isValid = gRegExp.Test(mPath)
 End If
-IsValidPropertyPath = isValid
+IsValidValuePath = isValid
 End Function
 
-Public Function IsValidSectionPath() As Boolean
+Friend Function IsValidSectionPath() As Boolean
 Static isValid As Variant
 If IsEmpty(isValid) Then
-    gRegExp.Pattern = "^(/?([a-zA-Z0-9])+(\([a-zA-Z0-9]+\))?)+$"
+    gRegExp.Global = True
+    gRegExp.Pattern = "^/?[a-zA-Z0-9]\w*(\([a-zA-Z0-9](\w|\s)*\))?(/[a-zA-Z0-9]\w*(\([a-zA-Z0-9](\w|\s)*\))?)*$"
     isValid = gRegExp.Test(mPath)
 End If
 IsValidSectionPath = isValid
@@ -142,18 +165,40 @@ Dim i As Long
 
 If Not mParsed Then
     mRelative = (Left$(mPath, 1) <> SectionPathSeparator)
-    gRegExp.Pattern = "[a-zA-Z0-9]+(\([a-zA-Z0-9]+\))?"
+    gRegExp.Pattern = "[a-zA-Z0-9]\w*(\([a-zA-Z0-9](\w|\s)*\))?"
     gRegExp.Global = True
     Set matches = gRegExp.Execute(mPath)
     
-    ReDim mComponents(matches.Count - 1) As String
-    If Not mRelative Then mParentPath = SectionPathSeparator
-    For i = 0 To UBound(mComponents)
+    If Not mRelative And matches.Count > 1 Then mParentPath = SectionPathSeparator
+    For i = 0 To matches.Count - 1
         Set lMatch = matches(i)
-        mComponents(i) = lMatch.value
-        If i <> UBound(mComponents) Then mParentPath = mParentPath & IIf(i <> 0, SectionPathSeparator, "") & lMatch.value
+        If i = matches.Count - 1 Then
+            mTailPath = lMatch.value
+        Else
+            mParentPath = mParentPath & IIf(i <> 0, SectionPathSeparator, "") & lMatch.value
+        End If
     Next
     mParsed = True
+
+    If IsValidSectionPath Then
+        gRegExp.Pattern = "([^\(]+)?"
+        Set matches = gRegExp.Execute(mTailPath)
+        Set lMatch = matches(0)
+        mTailName = lMatch.value
+        
+        gRegExp.Pattern = "(\([a-zA-Z0-9](\w|\s)*\))"
+        Set matches = gRegExp.Execute(mTailPath)
+        If matches.Count = 1 Then
+            Set lMatch = matches(0)
+            mInstanceQualifier = Mid$(lMatch.value, 2, Len(lMatch.value) - 2)
+        End If
+    ElseIf IsValidAttributePath Then
+        mTailName = mTailPath
+        mTailPath = AttributeNameSeparator & mTailPath
+    Else
+        mTailName = mTailPath
+        mTailPath = ValueNameSeparator & mTailPath
+    End If
 End If
 
 End Sub
