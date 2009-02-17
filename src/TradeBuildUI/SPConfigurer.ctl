@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDATGRD.OCX"
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#27.6#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#30.0#0"; "TWControls10.ocx"
 Begin VB.UserControl SPConfigurer 
    ClientHeight    =   12750
    ClientLeft      =   0
@@ -683,17 +683,8 @@ Private Const AttributeNameServiceProviderEnabled As String = "Enabled"
 Private Const AttributeNameServiceProviderName As String = "Name"
 Private Const AttributeNameServiceProviderProgId As String = "ProgId"
 
-Private Const CategoryRealtimeData          As String = "Realtime data"
-Private Const CategoryPrimaryContractData   As String = "Primary contract data"
-Private Const CategorySecondaryContractData As String = "Secondary contract data"
-Private Const CategoryHistoricalDataInput   As String = "Historical bar data retrieval"
-Private Const CategoryHistoricalDataOutput  As String = "Historical bar data storage"
-Private Const CategoryBroker                As String = "Broker"
-Private Const CategoryTickfileInput         As String = "Tickfile replay"
-Private Const CategoryTickfileOutput        As String = "Tickfile storage"
-
-Private Const ConfigNameProperties          As String = "Properties"
 Private Const ConfigNameProperty            As String = "Property"
+Private Const ConfigNameProperties          As String = "Properties"
 Private Const ConfigNameServiceProvider     As String = "ServiceProvider"
 Private Const ConfigNameServiceProviders    As String = "ServiceProviders"
 
@@ -727,22 +718,6 @@ Private Const PropertyNameTwsKeepConnection As String = "Keep Connection"
 Private Const PropertyNameTwsConnectionRetryInterval    As String = "Connection Retry Interval Secs"
 Private Const PropertyNameTwsProviderKey    As String = "Provider Key"
 Private Const PropertyNameTwsLogLevel       As String = "TWS Log Level"
-
-Private Const ProgIdQtBarData               As String = "QTSP26.QTHistDataServiceProvider"
-Private Const ProgIdQtRealtimeData          As String = "QTSP26.QTRealtimeDataServiceProvider"
-Private Const ProgIdQtTickData              As String = "QTSP26.QTTickfileServiceProvider"
-
-Private Const ProgIdTbBarData               As String = "TBInfoBase26.HistDataServiceProvider"
-Private Const ProgIdTbContractData          As String = "TBInfoBase26.ContractInfoSrvcProvider"
-Private Const ProgIdTbOrders                As String = "TB26.OrderSubmissionSrvcProvider"
-Private Const ProgIdTbTickData              As String = "TBInfoBase26.TickfileServiceProvider"
-
-Private Const ProgIdFileTickData            As String = "TickfileSP26.TickfileServiceProvider"
-
-Private Const ProgIdTwsBarData              As String = "IBTWSSP26.HistDataServiceProvider"
-Private Const ProgIdTwsContractData         As String = "IBTWSSP26.ContractInfoServiceProvider"
-Private Const ProgIdTwsOrders               As String = "IBTWSSP26.OrderSubmissionSrvcProvider"
-Private Const ProgIdTwsRealtimeData         As String = "IBTWSSP26.RealtimeDataServiceProvider"
 
 Private Const RolePrimary                   As String = "Primary"
 Private Const RoleSecondary                 As String = "Secondary"
@@ -796,6 +771,8 @@ Private mPermittedSPs               As Long
 Private mCustomParams               As Parameters
 
 Private mReadOnly                   As Boolean
+
+Private mSPs           As ServiceProviders
 
 '@================================================================================
 ' Class Event Handlers
@@ -892,21 +869,23 @@ hideSpOptions
 mCurrCategory = CategoryList.Text
 
 Select Case mCurrCategory
-Case CategoryRealtimeData
+Case mSPs.SPNameRealtimeData
     setupRealtimeDataSP
-Case CategoryPrimaryContractData
+Case mSPs.SPNamePrimaryContractData
     setupPrimaryContractDataSP
-Case CategorySecondaryContractData
+Case mSPs.SPNameSecondryContractData
     setupSecondaryContractDataSP
-Case CategoryHistoricalDataInput
+Case mSPs.SPNameHistoricalDataInput
     setupHistoricalDataInputSP
-Case CategoryHistoricalDataOutput
+Case mSPs.SPNameHistoricalDataOutput
     setupHistoricalDataOutputSP
-Case CategoryBroker
-    setupBrokerSP
-Case CategoryTickfileInput
+Case mSPs.SPNameBrokerLive
+    setupBrokerLiveSP
+Case mSPs.SPNameBrokerSimulated
+    setupBrokerSimulatedSP
+Case mSPs.SPNameTickfileInput
     setupTickfileInputSP
-Case CategoryTickfileOutput
+Case mSPs.SPNameTickfileOutput
     setupTickfileOutputSP
 End Select
 
@@ -1084,10 +1063,12 @@ enableApplyButton False
 enableCancelButton False
 End Sub
 
-Public Sub initialise( _
+Public Sub Initialise( _
                 ByVal configdata As ConfigItem, _
-                ByVal permittedSPs As PermittedServiceProviders, _
+                ByVal permittedSPs As ServiceProviderRoles, _
                 Optional ByVal readonly As Boolean)
+Set mSPs = TradeBuildAPI.ServiceProviders
+
 mReadOnly = readonly
 
 checkForOutstandingUpdates
@@ -1111,100 +1092,6 @@ End If
 loadConfig configdata
 
 If mReadOnly Then disableControls
-End Sub
-
-Public Sub setDefaultServiceProviders( _
-                ByVal configdata As ConfigItem, _
-                ByVal permittedSPs As Long)
-Dim currSPsList As ConfigItem
-Dim currSP As ConfigItem
-Dim currProps As ConfigItem
-
-On Error Resume Next
-Set currSPsList = configdata.childItems.item(ConfigNameServiceProviders)
-On Error GoTo 0
-
-If Not currSPsList Is Nothing Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "setDefaultServiceProviders", _
-            "Service provider list is not empty"
-End If
-
-Set currSPsList = configdata.childItems.addItem(ConfigNameServiceProviders)
-
-If permittedSPs And PermittedServiceProviders.SPRealtimeData Then
-    Set currSP = currSPsList.childItems.addItem(ConfigNameServiceProvider)
-    currSP.setAttribute AttributeNameServiceProviderName, CategoryRealtimeData
-    currSP.setAttribute AttributeNameServiceProviderEnabled, "True"
-    currSP.setAttribute AttributeNameServiceProviderProgId, ProgIdTwsRealtimeData
-
-    Set currProps = currSP.childItems.addItem(ConfigNameProperties)
-    setProperty currProps, PropertyNameTwsServer, ""
-    setProperty currProps, PropertyNameTwsPort, 7496
-    setProperty currProps, PropertyNameTwsClientId, -1
-End If
-If permittedSPs And PermittedServiceProviders.SPPrimaryContractData Then
-    Set currSP = currSPsList.childItems.addItem(ConfigNameServiceProvider)
-    currSP.setAttribute AttributeNameServiceProviderName, CategoryPrimaryContractData
-    currSP.setAttribute AttributeNameServiceProviderEnabled, "True"
-    currSP.setAttribute AttributeNameServiceProviderProgId, ProgIdTwsContractData
-
-    Set currProps = currSP.childItems.addItem(ConfigNameProperties)
-    setProperty currProps, PropertyNameTwsServer, ""
-    setProperty currProps, PropertyNameTwsPort, 7496
-    setProperty currProps, PropertyNameTwsClientId, -1
-End If
-If permittedSPs And PermittedServiceProviders.SPSecondaryContractData Then
-    Set currSP = currSPsList.childItems.addItem(ConfigNameServiceProvider)
-    currSP.setAttribute AttributeNameServiceProviderName, CategorySecondaryContractData
-    currSP.setAttribute AttributeNameServiceProviderEnabled, "True"
-    currSP.setAttribute AttributeNameServiceProviderProgId, ProgIdTwsContractData
-
-    Set currProps = mCurrSP.childItems.addItem(ConfigNameProperties)
-    setProperty currProps, PropertyNameTwsServer, ""
-    setProperty currProps, PropertyNameTwsPort, 7496
-    setProperty currProps, PropertyNameTwsClientId, -1
-End If
-If permittedSPs And PermittedServiceProviders.SPHistoricalDataInput Then
-    Set currSP = currSPsList.childItems.addItem(ConfigNameServiceProvider)
-    currSP.setAttribute AttributeNameServiceProviderName, CategoryHistoricalDataInput
-    currSP.setAttribute AttributeNameServiceProviderEnabled, "True"
-    currSP.setAttribute AttributeNameServiceProviderProgId, ProgIdTwsBarData
-
-    Set currProps = currSP.childItems.addItem(ConfigNameProperties)
-    setProperty currProps, PropertyNameTwsServer, ""
-    setProperty currProps, PropertyNameTwsPort, 7496
-    setProperty currProps, PropertyNameTwsClientId, -1
-End If
-If permittedSPs And PermittedServiceProviders.SPHistoricalDataOutput Then
-    ' no sensible default for this
-End If
-If permittedSPs And PermittedServiceProviders.SPBroker Then
-    Set currSP = currSPsList.childItems.addItem(ConfigNameServiceProvider)
-    currSP.setAttribute AttributeNameServiceProviderName, CategoryBroker
-    currSP.setAttribute AttributeNameServiceProviderEnabled, "True"
-    currSP.setAttribute AttributeNameServiceProviderProgId, ProgIdTbOrders
-
-    Set currProps = currSP.childItems.addItem(ConfigNameProperties)
-End If
-If permittedSPs And PermittedServiceProviders.SPTickfileInput Then
-    Set currSP = currSPsList.childItems.addItem(ConfigNameServiceProvider)
-    currSP.setAttribute AttributeNameServiceProviderName, CategoryTickfileInput
-    currSP.setAttribute AttributeNameServiceProviderEnabled, "True"
-    currSP.setAttribute AttributeNameServiceProviderProgId, ProgIdFileTickData
-
-    Set currProps = currSP.childItems.addItem(ConfigNameProperties)
-    setProperty currProps, PropertyNameTbAccessMode, AccessModeReadOnly
-End If
-If permittedSPs And PermittedServiceProviders.SPTickfileOutput Then
-    Set currSP = currSPsList.childItems.addItem(ConfigNameServiceProvider)
-    currSP.setAttribute AttributeNameServiceProviderName, CategoryTickfileOutput
-    currSP.setAttribute AttributeNameServiceProviderEnabled, "True"
-    currSP.setAttribute AttributeNameServiceProviderProgId, ProgIdFileTickData
-
-    Set currProps = currSP.childItems.addItem(ConfigNameProperties)
-    setProperty currProps, PropertyNameTbAccessMode, AccessModeWriteOnly
-End If
 End Sub
 
 '@================================================================================
@@ -1245,23 +1132,23 @@ setProperty mCurrProps, PropertyNameTbDbName, DbDatabaseText
 setProperty mCurrProps, PropertyNameTbUserName, DbUsernameText
 setProperty mCurrProps, PropertyNameTbPassword, DbPasswordText
 
-If mCurrCategory = CategoryHistoricalDataInput Or _
-    mCurrCategory = CategoryTickfileInput _
+If mCurrCategory = mSPs.SPNameHistoricalDataInput Or _
+    mCurrCategory = mSPs.SPNameTickfileInput _
 Then
     setProperty mCurrProps, PropertyNameTbAccessMode, AccessModeReadOnly
 End If
 
-If mCurrCategory = CategoryHistoricalDataOutput Or _
-    mCurrCategory = CategoryTickfileOutput _
+If mCurrCategory = mSPs.SPNameHistoricalDataOutput Or _
+    mCurrCategory = mSPs.SPNameTickfileOutput _
 Then
     setProperty mCurrProps, PropertyNameTbAccessMode, AccessModeWriteOnly
 End If
 
-If mCurrCategory = CategoryPrimaryContractData Then
+If mCurrCategory = mSPs.SPNamePrimaryContractData Then
     setProperty mCurrProps, PropertyNameTbRole, RolePrimary
 End If
 
-If mCurrCategory = CategorySecondaryContractData Then
+If mCurrCategory = mSPs.SPNameSecondryContractData Then
     setProperty mCurrProps, PropertyNameTbRole, RoleSecondary
 End If
 End Sub
@@ -1320,10 +1207,10 @@ If TfEnabledCheck = vbChecked Then
 Else
     mCurrSP.setAttribute AttributeNameServiceProviderEnabled, "False"
 End If
-If mCurrCategory = CategoryTickfileInput Then
+If mCurrCategory = mSPs.SPNameTickfileInput Then
     setProperty mCurrProps, PropertyNameTfAccessMode, AccessModeReadOnly
 End If
-If mCurrCategory = CategoryTickfileOutput Then
+If mCurrCategory = mSPs.SPNameTickfileOutput Then
     setProperty mCurrProps, PropertyNameTfAccessMode, AccessModeWriteOnly
     setProperty mCurrProps, PropertyNameTfTickfilePath, TickfilePathText
 End If
@@ -1347,11 +1234,11 @@ setProperty mCurrProps, PropertyNameTwsProviderKey, TwsProviderKeyText
 setProperty mCurrProps, PropertyNameTwsConnectionRetryInterval, TwsConnectRetryIntervalText
 setProperty mCurrProps, PropertyNameTwsLogLevel, TwsLogLevelCombo
 
-If mCurrCategory = CategoryPrimaryContractData Then
+If mCurrCategory = mSPs.SPNamePrimaryContractData Then
     setProperty mCurrProps, PropertyNameTbRole, RolePrimary
 End If
 
-If mCurrCategory = CategorySecondaryContractData Then
+If mCurrCategory = mSPs.SPNameSecondryContractData Then
     setProperty mCurrProps, PropertyNameTbRole, RoleSecondary
 End If
 End Sub
@@ -1507,29 +1394,32 @@ On Error GoTo 0
 
 CategoryList.clear
 
-If mPermittedSPs And PermittedServiceProviders.SPRealtimeData Then
-    CategoryList.addItem CategoryRealtimeData
+If mPermittedSPs And ServiceProviderRoles.SPRealtimeData Then
+    CategoryList.addItem mSPs.SPNameRealtimeData
 End If
-If mPermittedSPs And PermittedServiceProviders.SPPrimaryContractData Then
-    CategoryList.addItem CategoryPrimaryContractData
+If mPermittedSPs And ServiceProviderRoles.SPPrimaryContractData Then
+    CategoryList.addItem mSPs.SPNamePrimaryContractData
 End If
-If mPermittedSPs And PermittedServiceProviders.SPSecondaryContractData Then
-    CategoryList.addItem CategorySecondaryContractData
+If mPermittedSPs And ServiceProviderRoles.SPSecondaryContractData Then
+    CategoryList.addItem mSPs.SPNameSecondryContractData
 End If
-If mPermittedSPs And PermittedServiceProviders.SPHistoricalDataInput Then
-    CategoryList.addItem CategoryHistoricalDataInput
+If mPermittedSPs And ServiceProviderRoles.SPHistoricalDataInput Then
+    CategoryList.addItem mSPs.SPNameHistoricalDataInput
 End If
-If mPermittedSPs And PermittedServiceProviders.SPHistoricalDataOutput Then
-    CategoryList.addItem CategoryHistoricalDataOutput
+If mPermittedSPs And ServiceProviderRoles.SPHistoricalDataOutput Then
+    CategoryList.addItem mSPs.SPNameHistoricalDataOutput
 End If
-If mPermittedSPs And PermittedServiceProviders.SPBroker Then
-    CategoryList.addItem CategoryBroker
+If mPermittedSPs And ServiceProviderRoles.SPBrokerLive Then
+    CategoryList.addItem mSPs.SPNameBrokerLive
 End If
-If mPermittedSPs And PermittedServiceProviders.SPTickfileInput Then
-    CategoryList.addItem CategoryTickfileInput
+If mPermittedSPs And ServiceProviderRoles.SPBrokerSimulated Then
+    CategoryList.addItem mSPs.SPNameBrokerSimulated
 End If
-If mPermittedSPs And PermittedServiceProviders.SPTickfileOutput Then
-    CategoryList.addItem CategoryTickfileOutput
+If mPermittedSPs And ServiceProviderRoles.SPTickfileInput Then
+    CategoryList.addItem mSPs.SPNameTickfileInput
+End If
+If mPermittedSPs And ServiceProviderRoles.SPTickfileOutput Then
+    CategoryList.addItem mSPs.SPNameTickfileOutput
 End If
 
 If CategoryList.ListCount > 0 Then CategoryList.ListIndex = 0
@@ -1542,77 +1432,82 @@ Dim progId As String
 If CategoryList.ListIndex = -1 Then Exit Sub
 
 Select Case mCurrCategory
-Case CategoryRealtimeData
+Case mSPs.SPNameRealtimeData
     Select Case OptionCombo.Text
     Case SpOptionQtRealtimeData
-        progId = ProgIdQtRealtimeData
+        progId = mSPs.SPProgIdQtRealtimeData
     Case SpOptionTwsRealtimeData
-        progId = ProgIdTwsRealtimeData
+        progId = mSPs.SPProgIdTwsRealtimeData
     Case SpOptionCustomRealtimeData
         progId = ProgIdText
     End Select
-Case CategoryPrimaryContractData
+Case mSPs.SPNamePrimaryContractData
     Select Case OptionCombo.Text
     Case SpOptionTbContractData
-        progId = ProgIdTbContractData
+        progId = mSPs.SPProgIdTbContractData
     Case SpOptionTwsContractData
-        progId = ProgIdTwsContractData
+        progId = mSPs.SPProgIdTwsContractData
     Case SpOptionCustomContractData
         progId = ProgIdText
     End Select
-Case CategorySecondaryContractData
+Case mSPs.SPNameSecondryContractData
     Select Case OptionCombo.Text
     Case SpOptionTbContractData
-        progId = ProgIdTbContractData
+        progId = mSPs.SPProgIdTbContractData
     Case SpOptionTwsContractData
-        progId = ProgIdTwsContractData
+        progId = mSPs.SPProgIdTwsContractData
     Case SpOptionCustomContractData
         progId = ProgIdText
     End Select
-Case CategoryHistoricalDataInput
+Case mSPs.SPNameHistoricalDataInput
     Select Case OptionCombo.Text
     Case SpOptionQtBarData
-        progId = ProgIdQtBarData
+        progId = mSPs.SPProgIdQtBarData
     Case SpOptionTbBarData
-        progId = ProgIdTbBarData
+        progId = mSPs.SPProgIdTbBarData
     Case SpOptionTwsBarData
-        progId = ProgIdTwsBarData
+        progId = mSPs.SPProgIdTwsBarData
     Case SpOptionCustomBarData
         progId = ProgIdText
     End Select
-Case CategoryHistoricalDataOutput
+Case mSPs.SPNameHistoricalDataOutput
     Select Case OptionCombo.Text
     Case SpOptionTbBarData
-        progId = ProgIdTbBarData
+        progId = mSPs.SPProgIdTbBarData
     Case SpOptionCustomBarData
         progId = ProgIdText
     End Select
-Case CategoryBroker
+Case mSPs.SPNameBrokerLive
     Select Case OptionCombo.Text
-    Case SpOptionTbOrders
-        progId = ProgIdTbOrders
     Case SpOptionTwsOrders
-        progId = ProgIdTwsOrders
+        progId = mSPs.SPProgIdTwsOrders
     Case SpOptionCustomOrders
         progId = ProgIdText
     End Select
-Case CategoryTickfileInput
+Case mSPs.SPNameBrokerSimulated
+    Select Case OptionCombo.Text
+    Case SpOptionTbOrders
+        progId = mSPs.SPProgIdTbOrders
+    Case SpOptionCustomOrders
+        progId = ProgIdText
+    End Select
+Case mSPs.SPNameTickfileInput
     Select Case OptionCombo.Text
     Case SpOptionTbTickData
-        progId = ProgIdTbTickData
+        progId = mSPs.SPProgIdTbTickData
     Case SpOptionQtTickData
-        progId = ProgIdQtTickData
+        progId = mSPs.SPProgIdQtTickData
     Case SpOptionFileTickData
-        progId = ProgIdFileTickData
+        progId = mSPs.SPProgIdFileTickData
     Case SpOptionCustomTickData
         progId = ProgIdText
     End Select
-Case CategoryTickfileOutput
+Case mSPs.SPNameTickfileOutput
     Select Case OptionCombo.Text
     Case SpOptionTbTickData
-        progId = ProgIdTbTickData
+        progId = mSPs.SPProgIdTbTickData
     Case SpOptionFileTickData
-        progId = ProgIdFileTickData
+        progId = mSPs.SPProgIdFileTickData
     Case SpOptionCustomTickData
         progId = ProgIdText
     End Select
@@ -1638,19 +1533,18 @@ BrEnabledCheck.value = vbUnchecked
 BrEnabledCheck.value = IIf(mCurrSP.getAttribute(AttributeNameServiceProviderEnabled) = "True", vbChecked, vbUnchecked)
 End Sub
 
-Private Sub setupBrokerSP()
+Private Sub setupBrokerLiveSP()
 Dim progId As String
     
-CategoryLabel = "Broker options"
+CategoryLabel = "Broker options (live orders)"
 OptionLabel = "Select broker"
 OptionCombo.ComboItems.clear
 OptionCombo.ComboItems.add , , SpOptionNotConfigured
-OptionCombo.ComboItems.add , , SpOptionTbOrders
 OptionCombo.ComboItems.add , , SpOptionTwsOrders
 OptionCombo.ComboItems.add , , SpOptionCustomOrders
 
 On Error Resume Next
-findSp CategoryBroker
+findSp mSPs.SPNameBrokerLive
 progId = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo 0
 
@@ -1660,14 +1554,43 @@ If mCurrSP Is Nothing Then
 End If
 
 Select Case progId
-Case ProgIdTbOrders
-    OptionCombo.Text = SpOptionTbOrders
-    
-    setupBrProperties
-Case ProgIdTwsOrders
+Case mSPs.SPProgIdTwsOrders
     OptionCombo.Text = SpOptionTwsOrders
     
     setupTwsProperties
+Case Else
+    OptionCombo.Text = SpOptionCustomOrders
+    
+    setupCustomProperties
+End Select
+
+End Sub
+
+Private Sub setupBrokerSimulatedSP()
+Dim progId As String
+    
+CategoryLabel = "Broker options (simulated orders)"
+OptionLabel = "Select broker"
+OptionCombo.ComboItems.clear
+OptionCombo.ComboItems.add , , SpOptionNotConfigured
+OptionCombo.ComboItems.add , , SpOptionTbOrders
+OptionCombo.ComboItems.add , , SpOptionCustomOrders
+
+On Error Resume Next
+findSp mSPs.SPNameBrokerSimulated
+progId = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
+On Error GoTo 0
+
+If mCurrSP Is Nothing Then
+    OptionCombo.Text = SpOptionNotConfigured
+    Exit Sub
+End If
+
+Select Case progId
+Case mSPs.SPProgIdTbOrders
+    OptionCombo.Text = SpOptionTbOrders
+    
+    setupBrProperties
 Case Else
     OptionCombo.Text = SpOptionCustomOrders
     
@@ -1732,7 +1655,7 @@ OptionCombo.ComboItems.add , , SpOptionTwsBarData
 OptionCombo.ComboItems.add , , SpOptionCustomBarData
 
 On Error Resume Next
-findSp CategoryHistoricalDataInput
+findSp mSPs.SPNameHistoricalDataInput
 progId = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo 0
 
@@ -1742,15 +1665,15 @@ If mCurrSP Is Nothing Then
 End If
 
 Select Case progId
-Case ProgIdTwsBarData
+Case mSPs.SPProgIdTwsBarData
     OptionCombo.Text = SpOptionTwsBarData
     
     setupTwsProperties
-Case ProgIdTbBarData
+Case mSPs.SPProgIdTbBarData
     OptionCombo.Text = SpOptionTbBarData
     
     setupDbProperties
-Case ProgIdQtBarData
+Case mSPs.SPProgIdQtBarData
     OptionCombo.Text = SpOptionQtBarData
     
     setupQtProperties
@@ -1774,7 +1697,7 @@ OptionCombo.ComboItems.add , , SpOptionTwsBarData
 OptionCombo.ComboItems.add , , SpOptionCustomBarData
 
 On Error Resume Next
-findSp CategoryHistoricalDataOutput
+findSp mSPs.SPNameHistoricalDataOutput
 progId = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo 0
 
@@ -1784,7 +1707,7 @@ If mCurrSP Is Nothing Then
 End If
 
 Select Case progId
-Case ProgIdTbBarData
+Case mSPs.SPProgIdTbBarData
     OptionCombo.Text = SpOptionTbBarData
     
     setupDbProperties
@@ -1808,7 +1731,7 @@ OptionCombo.ComboItems.add , , SpOptionTwsContractData
 OptionCombo.ComboItems.add , , SpOptionCustomContractData
 
 On Error Resume Next
-findSp CategoryPrimaryContractData
+findSp mSPs.SPNamePrimaryContractData
 progId = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo 0
 
@@ -1818,11 +1741,11 @@ If mCurrSP Is Nothing Then
 End If
 
 Select Case progId
-Case ProgIdTwsContractData
+Case mSPs.SPProgIdTwsContractData
     OptionCombo.Text = SpOptionTwsContractData
     
     setupTwsProperties
-Case ProgIdTbContractData
+Case mSPs.SPProgIdTbContractData
     OptionCombo.Text = SpOptionTbContractData
     
     setupDbProperties
@@ -1846,7 +1769,7 @@ OptionCombo.ComboItems.add , , SpOptionTwsRealtimeData
 OptionCombo.ComboItems.add , , SpOptionCustomRealtimeData
 
 On Error Resume Next
-findSp CategoryRealtimeData
+findSp mSPs.SPNameRealtimeData
 progId = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo 0
 
@@ -1856,11 +1779,11 @@ If mCurrSP Is Nothing Then
 End If
 
 Select Case progId
-Case ProgIdTwsRealtimeData
+Case mSPs.SPProgIdTwsRealtimeData
     OptionCombo.Text = SpOptionTwsRealtimeData
     
     setupTwsProperties
-Case ProgIdQtRealtimeData
+Case mSPs.SPProgIdQtRealtimeData
     OptionCombo.Text = SpOptionQtRealtimeData
 
     setupQtProperties
@@ -1895,7 +1818,7 @@ OptionCombo.ComboItems.add , , SpOptionTwsContractData
 OptionCombo.ComboItems.add , , SpOptionCustomContractData
 
 On Error Resume Next
-findSp CategorySecondaryContractData
+findSp mSPs.SPNameSecondryContractData
 progId = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo 0
 
@@ -1905,11 +1828,11 @@ If mCurrSP Is Nothing Then
 End If
 
 Select Case progId
-Case ProgIdTwsContractData
+Case mSPs.SPProgIdTwsContractData
     OptionCombo.Text = SpOptionTwsContractData
     
     setupTwsProperties
-Case ProgIdTbContractData
+Case mSPs.SPProgIdTbContractData
     OptionCombo.Text = SpOptionTbContractData
     
     setupDbProperties
@@ -1942,7 +1865,7 @@ OptionCombo.ComboItems.add , , SpOptionQtTickData
 OptionCombo.ComboItems.add , , SpOptionCustomTickData
 
 On Error Resume Next
-findSp CategoryTickfileInput
+findSp mSPs.SPNameTickfileInput
 progId = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo 0
 
@@ -1952,15 +1875,15 @@ If mCurrSP Is Nothing Then
 End If
 
 Select Case progId
-Case ProgIdTbTickData
+Case mSPs.SPProgIdTbTickData
     OptionCombo.Text = SpOptionTbTickData
     
     setupDbProperties
-Case ProgIdFileTickData
+Case mSPs.SPProgIdFileTickData
     OptionCombo.Text = SpOptionFileTickData
     
     setupTfProperties
-Case ProgIdQtTickData
+Case mSPs.SPProgIdQtTickData
     OptionCombo.Text = SpOptionQtTickData
 
     setupQtProperties
@@ -1984,7 +1907,7 @@ OptionCombo.ComboItems.add , , SpOptionFileTickData
 OptionCombo.ComboItems.add , , SpOptionCustomTickData
 
 On Error Resume Next
-findSp CategoryTickfileOutput
+findSp mSPs.SPNameTickfileOutput
 progId = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo 0
 
@@ -1994,11 +1917,11 @@ If mCurrSP Is Nothing Then
 End If
 
 Select Case progId
-Case ProgIdTbTickData
+Case mSPs.SPProgIdTbTickData
     OptionCombo.Text = SpOptionTbTickData
     
     setupDbProperties
-Case ProgIdFileTickData
+Case mSPs.SPProgIdFileTickData
     OptionCombo.Text = SpOptionFileTickData
     
     setupTfProperties
@@ -2037,7 +1960,7 @@ End Sub
 
 Private Sub showSpOptions()
 Select Case mCurrCategory
-Case CategoryRealtimeData
+Case mSPs.SPNameRealtimeData
     Select Case OptionCombo.Text
     Case SpOptionQtRealtimeData
         Set mCurrOptionsPic = QtOptionsPicture
@@ -2046,7 +1969,7 @@ Case CategoryRealtimeData
     Case SpOptionCustomRealtimeData
         Set mCurrOptionsPic = CustomOptionsPicture
     End Select
-Case CategoryPrimaryContractData
+Case mSPs.SPNamePrimaryContractData
     Select Case OptionCombo.Text
     Case SpOptionTbContractData
         Set mCurrOptionsPic = DbOptionsPicture
@@ -2055,7 +1978,7 @@ Case CategoryPrimaryContractData
     Case SpOptionCustomContractData
         Set mCurrOptionsPic = CustomOptionsPicture
     End Select
-Case CategorySecondaryContractData
+Case mSPs.SPNameSecondryContractData
     Select Case OptionCombo.Text
     Case SpOptionTbContractData
         Set mCurrOptionsPic = DbOptionsPicture
@@ -2064,7 +1987,7 @@ Case CategorySecondaryContractData
     Case SpOptionCustomContractData
         Set mCurrOptionsPic = CustomOptionsPicture
     End Select
-Case CategoryHistoricalDataInput
+Case mSPs.SPNameHistoricalDataInput
     Select Case OptionCombo.Text
     Case SpOptionTbBarData
         Set mCurrOptionsPic = DbOptionsPicture
@@ -2075,23 +1998,28 @@ Case CategoryHistoricalDataInput
     Case SpOptionCustomBarData
         Set mCurrOptionsPic = CustomOptionsPicture
     End Select
-Case CategoryHistoricalDataOutput
+Case mSPs.SPNameHistoricalDataOutput
     Select Case OptionCombo.Text
     Case SpOptionTbBarData
         Set mCurrOptionsPic = DbOptionsPicture
     Case SpOptionCustomBarData
         Set mCurrOptionsPic = CustomOptionsPicture
     End Select
-Case CategoryBroker
+Case mSPs.SPNameBrokerLive
     Select Case OptionCombo.Text
     Case SpOptionTwsOrders
         Set mCurrOptionsPic = TwsOptionsPicture
+    Case SpOptionCustomOrders
+        Set mCurrOptionsPic = CustomOptionsPicture
+    End Select
+Case mSPs.SPNameBrokerSimulated
+    Select Case OptionCombo.Text
     Case SpOptionTbOrders
         Set mCurrOptionsPic = BrOptionsPicture
     Case SpOptionCustomOrders
         Set mCurrOptionsPic = CustomOptionsPicture
     End Select
-Case CategoryTickfileInput
+Case mSPs.SPNameTickfileInput
     Select Case OptionCombo.Text
     Case SpOptionTbTickData
         Set mCurrOptionsPic = DbOptionsPicture
@@ -2104,7 +2032,7 @@ Case CategoryTickfileInput
     Case SpOptionCustomTickData
         Set mCurrOptionsPic = CustomOptionsPicture
     End Select
-Case CategoryTickfileOutput
+Case mSPs.SPNameTickfileOutput
     Select Case OptionCombo.Text
     Case SpOptionTbTickData
         Set mCurrOptionsPic = DbOptionsPicture

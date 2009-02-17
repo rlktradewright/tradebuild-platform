@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDATGRD.OCX"
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#30.0#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#34.0#0"; "TWControls10.ocx"
 Begin VB.UserControl SPConfigurer1 
    ClientHeight    =   12750
    ClientLeft      =   0
@@ -677,8 +677,8 @@ Private Const AccessModeReadOnly            As String = "Read only"
 Private Const AccessModeWriteOnly           As String = "Write only"
 Private Const AccessModeReadWrite           As String = "Read write"
 
-Private Const AttributeNamePropertyName     As String = "Name"
-Private Const AttributeNamePropertyValue    As String = "Value"
+'Private Const AttributeNamePropertyName     As String = "Name"
+'Private Const AttributeNamePropertyValue    As String = "Value"
 Private Const AttributeNameServiceProviderEnabled As String = "Enabled"
 Private Const AttributeNameServiceProviderName As String = "Name"
 Private Const AttributeNameServiceProviderProgId As String = "ProgId"
@@ -758,15 +758,13 @@ Private Const TWSLogLevelWarning            As String = "Warning"
 
 Private mCurrOptionsPic             As PictureBox
 
-Private mConfig                     As ConfigItem
+Private mConfig                     As ConfigurationSection
 
-Private mCurrSPsList                As ConfigItem
-Private mCurrSP                     As ConfigItem
-Private mCurrProps                  As ConfigItem
+Private mCurrSPsList                As ConfigurationSection
+Private mCurrSP                     As ConfigurationSection
+Private mCurrProps                  As ConfigurationSection
 Private mCurrCategory               As String
 Private mCurrSpOption               As String
-
-Private mPermittedSPs               As Long
 
 Private mCustomParams               As Parameters
 
@@ -1064,8 +1062,7 @@ enableCancelButton False
 End Sub
 
 Public Sub Initialise( _
-                ByVal configdata As ConfigItem, _
-                ByVal permittedSPs As ServiceProviderRoles, _
+                ByVal configdata As ConfigurationSection, _
                 Optional ByVal readonly As Boolean)
 Set mSPs = TradeBuildAPI.ServiceProviders
 
@@ -1255,21 +1252,20 @@ End If
 End Sub
 
 Private Sub clearProperties()
-mCurrProps.childItems.clear
+mCurrProps.RemoveAllChildren
 End Sub
 
 Private Sub createNewSp()
 If mCurrSPsList Is Nothing Then
-    Set mCurrSPsList = mConfig.childItems.addItem(ConfigNameServiceProviders)
+    Set mCurrSPsList = mConfig.AddConfigurationSection(ConfigNameServiceProviders)
 End If
 
-Set mCurrSP = mCurrSPsList.childItems.addItem(ConfigNameServiceProvider)
-mCurrSP.setAttribute AttributeNameServiceProviderName, mCurrCategory
-Set mCurrProps = mCurrSP.childItems.addItem(ConfigNameProperties)
+Set mCurrSP = mCurrSPsList.AddConfigurationSection(ConfigNameServiceProvider & "(" & mCurrCategory & ")")
+Set mCurrProps = mCurrSP.AddConfigurationSection(ConfigNameProperties)
 End Sub
 
 Private Sub deleteSp()
-mCurrSPsList.childItems.remove mCurrSP
+mCurrSPsList.RemoveConfigurationSection ConfigNameServiceProvider & "(" & mCurrSP.InstanceQualifier & ")"
 Set mCurrSP = Nothing
 Set mCurrProps = Nothing
 End Sub
@@ -1303,42 +1299,39 @@ Else
 End If
 End Sub
 
-Private Function findProperty( _
-                ByVal name As String) As ConfigItem
-Dim prop As ConfigItem
-name = UCase$(name)
-For Each prop In mCurrProps.childItems
-    If UCase$(prop.getAttribute(AttributeNamePropertyName)) = name Then
-        Set findProperty = prop
-        Exit Function
-    End If
-Next
-End Function
+'Private Function findProperty( _
+'                ByVal name As String) As ConfigurationSection
+'Dim prop As ConfigurationSection
+'
+'name = UCase$(name)
+'For Each prop In mCurrProps.childItems
+'    If UCase$(prop.getAttribute(AttributeNamePropertyName)) = name Then
+'        Set findProperty = prop
+'        Exit Function
+'    End If
+'Next
+'End Function
 
 Private Function findSp( _
                 ByVal name As String) As Boolean
-Dim sp As ConfigItem
+Dim sp As ConfigurationSection
 Set mCurrSP = Nothing
 Set mCurrProps = Nothing
 mCurrSpOption = ""
 
 If mCurrSPsList Is Nothing Then Exit Function
 
-name = UCase$(name)
-For Each sp In mCurrSPsList.childItems
-    If UCase$(sp.getAttribute(AttributeNameServiceProviderName)) = name Then
-        Set mCurrSP = sp
-        Set mCurrProps = mCurrSP.childItems.item(ConfigNameProperties)
-        findSp = True
-        Exit Function
-    End If
-Next
+Set mCurrSP = mCurrSPsList.GetConfigurationSection(ConfigNameServiceProvider & "(" & name & ")")
+If Not mCurrSP Is Nothing Then
+    Set mCurrProps = mCurrSP.GetConfigurationSection(ConfigNameProperties)
+    findSp = True
+End If
 End Function
 
-Private Function getPropertyValue( _
+Private Function getProperty( _
                 ByVal name As String) As String
 On Error Resume Next
-getPropertyValue = findProperty(name).getAttribute(AttributeNamePropertyValue)
+getProperty = mCurrProps.GetSetting("." & ConfigNameProperty & "(" & name & ")")
 End Function
 
 Private Sub hideSpOptions()
@@ -1384,12 +1377,12 @@ End If
 End Function
 
 Private Sub loadConfig( _
-                ByVal configdata As ConfigItem)
+                ByVal configdata As ConfigurationSection)
                 
 Set mConfig = configdata
 
 On Error Resume Next
-Set mCurrSPsList = mConfig.childItems.item(ConfigNameServiceProviders)
+Set mCurrSPsList = mConfig.GetConfigurationSection(ConfigNameServiceProviders)
 On Error GoTo 0
 
 CategoryList.clear
@@ -1518,13 +1511,10 @@ mCurrSP.setAttribute AttributeNameServiceProviderProgId, progId
 End Sub
 
 Private Sub setProperty( _
-                ByVal props As ConfigItem, _
+                ByVal props As ConfigurationSection, _
                 ByVal name As String, _
                 ByVal value As String)
-Dim prop As ConfigItem
-Set prop = props.childItems.addItem(ConfigNameProperty)
-prop.setAttribute AttributeNamePropertyName, name
-prop.setAttribute AttributeNamePropertyValue, value
+props.SetSetting "." & ConfigNameProperty & "(" & name & ")", value
 End Sub
 
 Private Sub setupBrProperties()
@@ -1545,7 +1535,7 @@ OptionCombo.ComboItems.add , , SpOptionCustomOrders
 
 On Error Resume Next
 findSp mSPs.SPNameBrokerLive
-progId = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
+progId = mCurrSP.getAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo 0
 
 If mCurrSP Is Nothing Then
@@ -1578,7 +1568,7 @@ OptionCombo.ComboItems.add , , SpOptionCustomOrders
 
 On Error Resume Next
 findSp mSPs.SPNameBrokerSimulated
-progId = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
+progId = mCurrSP.getAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo 0
 
 If mCurrSP Is Nothing Then
@@ -1600,20 +1590,20 @@ End Select
 End Sub
 
 Private Sub setupCustomProperties()
-Dim prop As ConfigItem
+Dim prop As ConfigurationSection
 Dim da As DataAdapter
 
 On Error Resume Next
-CustomEnabledCheck.value = IIf(mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
-ProgIdText = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
+CustomEnabledCheck.value = IIf(mCurrSP.getAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
+ProgIdText = mCurrSP.getAttribute(AttributeNameServiceProviderProgId, "")
 
 mCustomParams.removeCollectionChangeListener Me
 
 Set mCustomParams = New Parameters
 
-For Each prop In mCurrProps.childItems
-    mCustomParams.setParameterValue prop.getAttribute(AttributeNamePropertyName), _
-                                    prop.getAttribute(AttributeNamePropertyValue)
+For Each prop In mCurrProps
+    mCustomParams.setParameterValue prop.InstanceQualifier, _
+                                    prop.value
 Next
 
 On Error GoTo 0
@@ -1634,12 +1624,12 @@ DbTypeCombo = ""
 DbDatabaseText = ""
 DbUsernameText = ""
 DbPasswordText = ""
-DbEnabledCheck.value = IIf(mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
-DbServerText = getPropertyValue(PropertyNameTbServer)
-DbTypeCombo = getPropertyValue(PropertyNameTbDbType)
-DbDatabaseText = getPropertyValue(PropertyNameTbDbName)
-DbUsernameText = getPropertyValue(PropertyNameTbUserName)
-DbPasswordText = getPropertyValue(PropertyNameTbPassword)
+DbEnabledCheck.value = IIf(mCurrSP.getAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
+DbServerText = getProperty(PropertyNameTbServer)
+DbTypeCombo = getProperty(PropertyNameTbDbType)
+DbDatabaseText = getProperty(PropertyNameTbDbName)
+DbUsernameText = getProperty(PropertyNameTbUserName)
+DbPasswordText = getProperty(PropertyNameTbPassword)
 End Sub
 
 Private Sub setupHistoricalDataInputSP()
@@ -1656,7 +1646,7 @@ OptionCombo.ComboItems.add , , SpOptionCustomBarData
 
 On Error Resume Next
 findSp mSPs.SPNameHistoricalDataInput
-progId = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
+progId = mCurrSP.getAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo 0
 
 If mCurrSP Is Nothing Then
@@ -1698,7 +1688,7 @@ OptionCombo.ComboItems.add , , SpOptionCustomBarData
 
 On Error Resume Next
 findSp mSPs.SPNameHistoricalDataOutput
-progId = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
+progId = mCurrSP.getAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo 0
 
 If mCurrSP Is Nothing Then
@@ -1732,7 +1722,7 @@ OptionCombo.ComboItems.add , , SpOptionCustomContractData
 
 On Error Resume Next
 findSp mSPs.SPNamePrimaryContractData
-progId = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
+progId = mCurrSP.getAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo 0
 
 If mCurrSP Is Nothing Then
@@ -1770,7 +1760,7 @@ OptionCombo.ComboItems.add , , SpOptionCustomRealtimeData
 
 On Error Resume Next
 findSp mSPs.SPNameRealtimeData
-progId = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
+progId = mCurrSP.getAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo 0
 
 If mCurrSP Is Nothing Then
@@ -1797,13 +1787,13 @@ End Sub
 
 Private Sub setupQtProperties()
 On Error Resume Next
-QtEnabledCheck.value = IIf(mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
-QtKeepConnectionCheck.value = IIf(getPropertyValue(PropertyNameQtKeepConnection) = "True", vbChecked, vbUnchecked)
-QtServerText = getPropertyValue(PropertyNameQtServer)
-QtPortText = getPropertyValue(PropertyNameQtPort)
-QtPasswordText = getPropertyValue(PropertyNameQtPassword)
-QtProviderKeyText = getPropertyValue(PropertyNameQtProviderKey)
-QtConnectRetryIntervalText = getPropertyValue(PropertyNameQtConnectionRetryInterval)
+QtEnabledCheck.value = IIf(mCurrSP.getAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
+QtKeepConnectionCheck.value = IIf(getProperty(PropertyNameQtKeepConnection) = "True", vbChecked, vbUnchecked)
+QtServerText = getProperty(PropertyNameQtServer)
+QtPortText = getProperty(PropertyNameQtPort)
+QtPasswordText = getProperty(PropertyNameQtPassword)
+QtProviderKeyText = getProperty(PropertyNameQtProviderKey)
+QtConnectRetryIntervalText = getProperty(PropertyNameQtConnectionRetryInterval)
 End Sub
 
 Private Sub setupSecondaryContractDataSP()
@@ -1819,7 +1809,7 @@ OptionCombo.ComboItems.add , , SpOptionCustomContractData
 
 On Error Resume Next
 findSp mSPs.SPNameSecondryContractData
-progId = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
+progId = mCurrSP.getAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo 0
 
 If mCurrSP Is Nothing Then
@@ -1848,8 +1838,8 @@ Private Sub setupTfProperties()
 On Error Resume Next
 TfEnabledCheck.value = vbUnchecked
 TickfilePathText.Text = ""
-TfEnabledCheck.value = IIf(mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
-TickfilePathText.Text = getPropertyValue(PropertyNameTfTickfilePath)
+TfEnabledCheck.value = IIf(mCurrSP.getAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
+TickfilePathText.Text = getProperty(PropertyNameTfTickfilePath)
 End Sub
 
 Private Sub setupTickfileInputSP()
@@ -1866,7 +1856,7 @@ OptionCombo.ComboItems.add , , SpOptionCustomTickData
 
 On Error Resume Next
 findSp mSPs.SPNameTickfileInput
-progId = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
+progId = mCurrSP.getAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo 0
 
 If mCurrSP Is Nothing Then
@@ -1908,7 +1898,7 @@ OptionCombo.ComboItems.add , , SpOptionCustomTickData
 
 On Error Resume Next
 findSp mSPs.SPNameTickfileOutput
-progId = mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderProgId, "")
+progId = mCurrSP.getAttribute(AttributeNameServiceProviderProgId, "")
 On Error GoTo 0
 
 If mCurrSP Is Nothing Then
@@ -1943,18 +1933,18 @@ TWSPortText = ""
 TWSClientIdText = ""
 TwsProviderKeyText = ""
 TwsConnectRetryIntervalText = ""
-TwsEnabledCheck.value = IIf(mCurrSP.getDefaultableAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
-TwsKeepConnectionCheck.value = IIf(getPropertyValue(PropertyNameTwsKeepConnection) = "True", vbChecked, vbUnchecked)
-TWSServerText = getPropertyValue(PropertyNameTwsServer)
-TWSPortText = getPropertyValue(PropertyNameTwsPort)
-TWSClientIdText = getPropertyValue(PropertyNameTwsClientId)
-TwsProviderKeyText = getPropertyValue(PropertyNameTwsProviderKey)
-TwsConnectRetryIntervalText = getPropertyValue(PropertyNameTwsConnectionRetryInterval)
-twsLogLevel = getPropertyValue(PropertyNameTwsLogLevel)
+TwsEnabledCheck.value = IIf(mCurrSP.getAttribute(AttributeNameServiceProviderEnabled, "False") = "True", vbChecked, vbUnchecked)
+TwsKeepConnectionCheck.value = IIf(getProperty(PropertyNameTwsKeepConnection) = "True", vbChecked, vbUnchecked)
+TWSServerText = getProperty(PropertyNameTwsServer)
+TWSPortText = getProperty(PropertyNameTwsPort)
+TWSClientIdText = getProperty(PropertyNameTwsClientId)
+TwsProviderKeyText = getProperty(PropertyNameTwsProviderKey)
+TwsConnectRetryIntervalText = getProperty(PropertyNameTwsConnectionRetryInterval)
+twsLogLevel = getProperty(PropertyNameTwsLogLevel)
 If twsLogLevel = "" Then
     TwsLogLevelCombo.Text = TWSLogLevelSystem
 Else
-    TwsLogLevelCombo.Text = getPropertyValue(PropertyNameTwsLogLevel)
+    TwsLogLevelCombo.Text = getProperty(PropertyNameTwsLogLevel)
 End If
 End Sub
 

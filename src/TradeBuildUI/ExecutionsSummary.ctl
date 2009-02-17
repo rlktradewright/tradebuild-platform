@@ -56,6 +56,8 @@ Implements CollectionChangeListener
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "ExecutionsSummary"
+
 ' Percentage widths of the Open Orders columns
 Private Const ExecutionsExecIdWidth = 25
 Private Const ExecutionsOrderIDWidth = 10
@@ -87,7 +89,8 @@ End Enum
 ' Member variables
 '@================================================================================
 
-Private mMonitoredWorkspaces As Collection
+Private mMonitoredWorkspaces            As Collection
+Private mSimulated                      As Boolean
 
 '@================================================================================
 ' UserControl Event Handlers
@@ -194,6 +197,21 @@ End Sub
 ' Properties
 '@================================================================================
 
+Public Property Let Simulated(ByVal value As Boolean)
+If mMonitoredWorkspaces.count > 0 Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "simulated", _
+            "Property must be set before any workspaces are monitored"
+End If
+
+mSimulated = value
+PropertyChanged "simulated"
+End Property
+
+Public Property Get Simulated() As Boolean
+Simulated = mSimulated
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -212,6 +230,8 @@ For i = mMonitoredWorkspaces.count To 1 Step -1
     lWorkspace.Executions.removeCollectionChangeListener Me
     mMonitoredWorkspaces.remove i
 Next
+
+clear
 Exit Sub
 Err:
 'ignore any errors
@@ -219,7 +239,11 @@ End Sub
 
 Public Sub monitorWorkspace( _
                 ByVal pWorkspace As WorkSpace)
-pWorkspace.Executions.addCollectionChangeListener Me
+If mSimulated Then
+    pWorkspace.ExecutionsSimulated.addCollectionChangeListener Me
+Else
+    pWorkspace.Executions.addCollectionChangeListener Me
+End If
 mMonitoredWorkspaces.add pWorkspace
 End Sub
                 

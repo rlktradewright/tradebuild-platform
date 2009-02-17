@@ -19,6 +19,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Public Const ProjectName                        As String = "TradeBuildUI26"
+
 Public Const MinDouble As Double = -(2 - 2 ^ -52) * 2 ^ 1023
 Public Const MaxDouble As Double = (2 - 2 ^ -52) * 2 ^ 1023
 
@@ -83,6 +85,18 @@ Private mDefaultStudyConfigurations As Collection
 ' Properties
 '@================================================================================
 
+Public Property Get gErrorLogger() As Logger
+Static lLogger As Logger
+If lLogger Is Nothing Then Set lLogger = GetLogger("error")
+Set gErrorLogger = lLogger
+End Property
+
+Public Property Get gLogger() As Logger
+Static lLogger As Logger
+If lLogger Is Nothing Then Set lLogger = GetLogger("log")
+Set gLogger = lLogger
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -94,27 +108,27 @@ If (KeyAscii < 48 Or KeyAscii > 57) Then
 End If
 End Sub
 
-Public Function isPrice( _
-                ByVal value As String, _
-                ByVal ticksize As Double) As Boolean
-Dim theVal As Double
-
-On Error GoTo Err
-
-If IsNumeric(value) Then
-    theVal = value
-    If theVal > 0 And _
-        Int(theVal / ticksize) * ticksize = theVal _
-    Then
-        isPrice = True
-    End If
-End If
-
-Exit Function
-
-Err:
-If Err.Number <> VBErrorCodes.VbErrOverflow Then Err.Raise Err.Number
-End Function
+'Public Function isPrice( _
+'                ByVal value As String, _
+'                ByVal ticksize As Double) As Boolean
+'Dim theVal As Double
+'
+'On Error GoTo Err
+'
+'If IsNumeric(value) Then
+'    theVal = value
+'    If theVal > 0 And _
+'        Int((theVal + 0.99999999 * ticksize) / ticksize) * ticksize = theVal _
+'    Then
+'        isPrice = True
+'    End If
+'End If
+'
+'Exit Function
+'
+'Err:
+'If Err.Number <> VBErrorCodes.VbErrOverflow Then Err.Raise Err.Number
+'End Function
 
 Public Function loadDefaultStudyConfiguration( _
                 ByVal name As String, _

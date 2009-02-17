@@ -342,7 +342,7 @@ Private Sub PriceChangeListener_Change(ev As PriceChangeEvent)
 Dim lTicker As ticker
 Set lTicker = ev.Source
 
-TickerGrid.row = mTickerTable(getTickerIndexFromHandle(lTicker.handle)).tickerGridRow
+TickerGrid.row = getTickerGridRow(lTicker)
 TickerGrid.col = mColumnMap(TickerGridColumns.Change)
 TickerGrid.Text = ev.ChangeString
 If ev.Change >= 0 Then
@@ -552,8 +552,11 @@ Private Sub TickerGrid_RowMoving( _
                 ByVal fromRow As Long, _
                 ByVal toRow As Long, _
                 Cancel As Boolean)
-If toRow > mNextGridRowIndex Then Cancel = True
-RaiseEvent RowMoving(fromRow, toRow, Cancel)
+If toRow > mNextGridRowIndex Then
+    Cancel = True
+Else
+    RaiseEvent RowMoving(fromRow, toRow, Cancel)
+End If
 End Sub
 
 '@================================================================================
@@ -578,9 +581,9 @@ Dim lContract As Contract
 Set lTicker = ev.Source
 If lTicker.isHistorical Then Exit Sub
 
-index = getTickerIndexFromHandle(lTicker.handle)
+index = getTickerIndex(lTicker)
     
-Select Case ev.state
+Select Case ev.State
 Case TickerStateCreated
 
 Case TickerStateStarting
@@ -1400,12 +1403,14 @@ End Sub
 
 Public Sub selectTicker( _
                 ByVal row As Long)
-If Not mTickerTable(row).theTicker Is Nothing Then
-    mTickerTable(row).nextSelected = mFirstSelected
-    mTickerTable(row).prevSelected = -1
-    mTickerTable(mFirstSelected).prevSelected = row
-    mFirstSelected = row
-    highlightRow mTickerTable(row).tickerGridRow
+Dim index As Long
+index = TickerGrid.rowdata(row)
+If Not mTickerTable(index).theTicker Is Nothing Then
+    mTickerTable(index).nextSelected = mFirstSelected
+    mTickerTable(index).prevSelected = -1
+    mTickerTable(mFirstSelected).prevSelected = index
+    mFirstSelected = index
+    highlightRow row
 End If
 End Sub
 
@@ -1454,7 +1459,7 @@ Private Sub displayPrice( _
                 ByVal col As Long)
 Dim lTicker As ticker
 Set lTicker = ev.Source
-TickerGrid.row = mTickerTable(getTickerIndexFromHandle(lTicker.handle)).tickerGridRow
+TickerGrid.row = getTickerGridRow(lTicker)
 TickerGrid.col = col
 TickerGrid.Text = ev.priceString
 If ev.priceChange = ValueChangeUp Then
@@ -1471,7 +1476,7 @@ Private Sub displaySize( _
                 ByVal col As Long)
 Dim lTicker As ticker
 Set lTicker = ev.Source
-TickerGrid.row = mTickerTable(getTickerIndexFromHandle(lTicker.handle)).tickerGridRow
+TickerGrid.row = getTickerGridRow(lTicker)
 TickerGrid.col = col
 TickerGrid.Text = ev.size
 If ev.sizeChange = ValueChangeUp Then
@@ -1483,11 +1488,16 @@ End If
 incrementEventCount
 End Sub
 
-Private Function getTickerIndexFromHandle( _
-                ByVal handle As Long) As Long
+Private Function getTickerGridRow( _
+                ByVal pTicker As ticker) As Long
+getTickerGridRow = mTickerTable(getTickerIndex(pTicker)).tickerGridRow
+End Function
+
+Private Function getTickerIndex( _
+                ByVal pTicker As ticker) As Long
 ' allow for the fact that the first tickertable entry is not used - it is the
 ' terminator of the selected entries chain
-getTickerIndexFromHandle = handle + 1
+getTickerIndex = pTicker.Handle + 1
 End Function
 
 Private Sub incrementEventCount()

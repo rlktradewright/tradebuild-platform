@@ -30,29 +30,37 @@ Option Explicit
 ' Enums
 '@================================================================================
 
-Public Enum PermittedServiceProviders
-    SPRealtimeData = 1
-    SPPrimaryContractData = 2
-    SPSecondaryContractData = 4
-    SPHistoricalDataInput = 8
-    SPHistoricalDataOutput = &H10
-    SPBroker = &H20
-    SPTickfileInput = &H40
-    SPTickfileOutput = &H80
-End Enum
-
 Public Enum ChartStates
     ''
-    ' The chart is ready to have studies added to it
+    ' No chart has yet been started, or a chart has been cleared
+    '
+    '@/
+    ChartStateBlank
+
+    ''
+    ' The chart has been created, but the ticker has not yet become ready
+    '
+    '@/
+    ChartStateCreated
+
+    ''
+    ' The ticker is now ready and historical data has been requested
     '
     '@/
     ChartStateInitialised
-    
+
     ''
     ' All historic data has been added to the chart
     '
     '@/
     ChartStateLoaded
+End Enum
+
+Public Enum MultiChartChangeTypes
+    MultiChartSelectionChanged
+    MultiChartAdd
+    MultiChartRemove
+    MultiChartTimeframeChanged
 End Enum
 
 '@================================================================================
@@ -98,6 +106,9 @@ Dim lTickfileOrganiser As fTickfileOrganiser
 Dim lLogger As Logger
 
 
+Dim failpoint As Long
+On Error GoTo Err
+
 Set lLogger = GetLogger("diag.tradebuild.tradebuildui")
 lLogger.Log LogLevelMediumDetail, "SelectTickfiles"
 
@@ -119,6 +130,15 @@ lLogger.Log LogLevelMediumDetail, "Tickfile organiser form closed"
 userCancelled = lTickfileOrganiser.cancelled
 
 Set SelectTickfiles = lTickfileOrganiser.TickfileSpecifiers
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "SelectTickfiles" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 
 End Function
 

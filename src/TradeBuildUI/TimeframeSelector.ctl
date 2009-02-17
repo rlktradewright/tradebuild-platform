@@ -175,6 +175,17 @@ Public Property Get backColor() As OLE_COLOR
 backColor = TimeframeCombo.backColor
 End Property
 
+Public Property Get Enabled() As Boolean
+Attribute Enabled.VB_UserMemId = -514
+Enabled = UserControl.Enabled
+End Property
+
+Public Property Let Enabled( _
+                ByVal value As Boolean)
+UserControl.Enabled = value
+PropertyChanged "Enabled"
+End Property
+
 Public Property Let foreColor( _
                 ByVal value As OLE_COLOR)
 TimeframeCombo.foreColor = value
@@ -211,7 +222,7 @@ Public Sub appendEntry( _
 addComboEntry pTimePeriod
 End Sub
 
-Public Sub initialise()
+Public Sub Initialise()
 TimeframeCombo.ComboItems.clear
 TimeframeCombo.ComboItems.add , TimeframeCustom, TimeframeCustom
 addComboEntry GetTimePeriod(5, TimePeriodSecond)

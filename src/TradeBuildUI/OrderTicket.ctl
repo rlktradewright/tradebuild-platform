@@ -7,11 +7,19 @@ Begin VB.UserControl OrderTicket
    ClientWidth     =   8730
    ScaleHeight     =   6195
    ScaleWidth      =   8730
+   Begin VB.CheckBox SimulateOrdersCheck 
+      Caption         =   "Simulate orders"
+      Height          =   195
+      Left            =   3480
+      TabIndex        =   73
+      Top             =   120
+      Width           =   1455
+   End
    Begin VB.Frame Frame2 
       Caption         =   "Ticker"
       Height          =   1815
       Left            =   240
-      TabIndex        =   53
+      TabIndex        =   52
       Top             =   3840
       Width           =   3015
       Begin VB.PictureBox Picture3 
@@ -20,7 +28,7 @@ Begin VB.UserControl OrderTicket
          Left            =   105
          ScaleHeight     =   1455
          ScaleWidth      =   2655
-         TabIndex        =   54
+         TabIndex        =   53
          Top             =   240
          Width           =   2655
          Begin VB.TextBox VolumeText 
@@ -28,7 +36,7 @@ Begin VB.UserControl OrderTicket
             Height          =   255
             Left            =   720
             Locked          =   -1  'True
-            TabIndex        =   63
+            TabIndex        =   62
             TabStop         =   0   'False
             Top             =   720
             Width           =   855
@@ -38,7 +46,7 @@ Begin VB.UserControl OrderTicket
             Height          =   255
             Left            =   720
             Locked          =   -1  'True
-            TabIndex        =   62
+            TabIndex        =   61
             TabStop         =   0   'False
             Top             =   960
             Width           =   855
@@ -48,7 +56,7 @@ Begin VB.UserControl OrderTicket
             Height          =   255
             Left            =   720
             Locked          =   -1  'True
-            TabIndex        =   61
+            TabIndex        =   60
             TabStop         =   0   'False
             Top             =   1200
             Width           =   855
@@ -58,7 +66,7 @@ Begin VB.UserControl OrderTicket
             Height          =   255
             Left            =   1920
             Locked          =   -1  'True
-            TabIndex        =   60
+            TabIndex        =   59
             TabStop         =   0   'False
             Top             =   240
             Width           =   735
@@ -68,7 +76,7 @@ Begin VB.UserControl OrderTicket
             Height          =   255
             Left            =   1920
             Locked          =   -1  'True
-            TabIndex        =   59
+            TabIndex        =   58
             TabStop         =   0   'False
             Top             =   0
             Width           =   735
@@ -78,7 +86,7 @@ Begin VB.UserControl OrderTicket
             Height          =   255
             Left            =   1920
             Locked          =   -1  'True
-            TabIndex        =   58
+            TabIndex        =   57
             TabStop         =   0   'False
             Top             =   480
             Width           =   735
@@ -88,7 +96,7 @@ Begin VB.UserControl OrderTicket
             Height          =   255
             Left            =   720
             Locked          =   -1  'True
-            TabIndex        =   57
+            TabIndex        =   56
             TabStop         =   0   'False
             Top             =   480
             Width           =   855
@@ -98,7 +106,7 @@ Begin VB.UserControl OrderTicket
             Height          =   255
             Left            =   720
             Locked          =   -1  'True
-            TabIndex        =   56
+            TabIndex        =   55
             TabStop         =   0   'False
             Top             =   240
             Width           =   855
@@ -108,7 +116,7 @@ Begin VB.UserControl OrderTicket
             Height          =   255
             Left            =   720
             Locked          =   -1  'True
-            TabIndex        =   55
+            TabIndex        =   54
             TabStop         =   0   'False
             Top             =   0
             Width           =   855
@@ -117,7 +125,7 @@ Begin VB.UserControl OrderTicket
             Caption         =   "Bid"
             Height          =   255
             Left            =   120
-            TabIndex        =   69
+            TabIndex        =   68
             Top             =   480
             Width           =   855
          End
@@ -125,7 +133,7 @@ Begin VB.UserControl OrderTicket
             Caption         =   "Ask"
             Height          =   255
             Left            =   120
-            TabIndex        =   68
+            TabIndex        =   67
             Top             =   0
             Width           =   855
          End
@@ -133,7 +141,7 @@ Begin VB.UserControl OrderTicket
             Caption         =   "Last"
             Height          =   255
             Left            =   120
-            TabIndex        =   67
+            TabIndex        =   66
             Top             =   240
             Width           =   855
          End
@@ -141,7 +149,7 @@ Begin VB.UserControl OrderTicket
             Caption         =   "Volume"
             Height          =   255
             Left            =   120
-            TabIndex        =   66
+            TabIndex        =   65
             Top             =   720
             Width           =   735
          End
@@ -149,7 +157,7 @@ Begin VB.UserControl OrderTicket
             Caption         =   "High"
             Height          =   255
             Left            =   120
-            TabIndex        =   65
+            TabIndex        =   64
             Top             =   960
             Width           =   855
          End
@@ -157,7 +165,7 @@ Begin VB.UserControl OrderTicket
             Caption         =   "Low"
             Height          =   255
             Left            =   120
-            TabIndex        =   64
+            TabIndex        =   63
             Top             =   1200
             Width           =   855
          End
@@ -167,7 +175,7 @@ Begin VB.UserControl OrderTicket
       Caption         =   "&Undo"
       Height          =   495
       Left            =   7560
-      TabIndex        =   31
+      TabIndex        =   30
       Top             =   5160
       Visible         =   0   'False
       Width           =   1095
@@ -176,7 +184,7 @@ Begin VB.UserControl OrderTicket
       Caption         =   "Order"
       Height          =   2895
       Left            =   240
-      TabIndex        =   42
+      TabIndex        =   41
       Top             =   840
       Width           =   3015
       Begin VB.PictureBox Picture2 
@@ -185,18 +193,9 @@ Begin VB.UserControl OrderTicket
          Left            =   105
          ScaleHeight     =   2535
          ScaleWidth      =   2895
-         TabIndex        =   43
+         TabIndex        =   42
          Top             =   240
          Width           =   2895
-         Begin VB.CheckBox IgnoreRthCheck 
-            Caption         =   "Ignore RTH"
-            Height          =   255
-            Index           =   0
-            Left            =   1800
-            TabIndex        =   7
-            Top             =   2160
-            Width           =   1095
-         End
          Begin VB.TextBox StopPriceText 
             Alignment       =   1  'Right Justify
             Height          =   285
@@ -222,7 +221,7 @@ Begin VB.UserControl OrderTicket
             Index           =   0
             Left            =   1800
             Locked          =   -1  'True
-            TabIndex        =   45
+            TabIndex        =   44
             TabStop         =   0   'False
             Top             =   1800
             Width           =   855
@@ -233,7 +232,7 @@ Begin VB.UserControl OrderTicket
             Index           =   0
             Left            =   240
             Locked          =   -1  'True
-            TabIndex        =   44
+            TabIndex        =   43
             TabStop         =   0   'False
             Top             =   0
             Width           =   2415
@@ -282,7 +281,7 @@ Begin VB.UserControl OrderTicket
             Caption         =   "Offset (ticks)"
             Height          =   255
             Left            =   0
-            TabIndex        =   52
+            TabIndex        =   51
             Top             =   1800
             Width           =   975
          End
@@ -290,7 +289,7 @@ Begin VB.UserControl OrderTicket
             Caption         =   "Id"
             Height          =   255
             Left            =   0
-            TabIndex        =   51
+            TabIndex        =   50
             Top             =   0
             Width           =   255
          End
@@ -298,7 +297,7 @@ Begin VB.UserControl OrderTicket
             Caption         =   "Stop price"
             Height          =   255
             Left            =   0
-            TabIndex        =   50
+            TabIndex        =   49
             Top             =   2160
             Width           =   855
          End
@@ -306,7 +305,7 @@ Begin VB.UserControl OrderTicket
             Caption         =   "Price"
             Height          =   255
             Left            =   0
-            TabIndex        =   49
+            TabIndex        =   48
             Top             =   1440
             Width           =   855
          End
@@ -314,7 +313,7 @@ Begin VB.UserControl OrderTicket
             Caption         =   "Type"
             Height          =   255
             Left            =   0
-            TabIndex        =   48
+            TabIndex        =   47
             Top             =   1080
             Width           =   855
          End
@@ -322,7 +321,7 @@ Begin VB.UserControl OrderTicket
             Caption         =   "Quantity"
             Height          =   255
             Left            =   0
-            TabIndex        =   47
+            TabIndex        =   46
             Top             =   720
             Width           =   855
          End
@@ -330,7 +329,7 @@ Begin VB.UserControl OrderTicket
             Caption         =   "Action"
             Height          =   255
             Left            =   0
-            TabIndex        =   46
+            TabIndex        =   45
             Top             =   360
             Width           =   855
          End
@@ -340,7 +339,7 @@ Begin VB.UserControl OrderTicket
       Caption         =   "Options"
       Height          =   4815
       Left            =   3360
-      TabIndex        =   32
+      TabIndex        =   31
       Top             =   840
       Width           =   3975
       Begin VB.PictureBox Picture1 
@@ -349,32 +348,32 @@ Begin VB.UserControl OrderTicket
          Left            =   120
          ScaleHeight     =   4455
          ScaleWidth      =   3735
-         TabIndex        =   33
+         TabIndex        =   32
          Top             =   240
          Width           =   3735
+         Begin VB.CheckBox IgnoreRthCheck 
+            Caption         =   "Ignore RTH"
+            Height          =   255
+            Index           =   0
+            Left            =   2640
+            TabIndex        =   8
+            Top             =   0
+            Width           =   1095
+         End
          Begin VB.TextBox OrderRefText 
             Height          =   285
             Index           =   0
             Left            =   1200
-            TabIndex        =   10
+            TabIndex        =   9
             Top             =   360
             Width           =   2535
-         End
-         Begin VB.CheckBox RthOnlyCheck 
-            Caption         =   "RTH only"
-            Height          =   255
-            Index           =   0
-            Left            =   2520
-            TabIndex        =   9
-            Top             =   0
-            Width           =   1335
          End
          Begin VB.CheckBox OverrideCheck 
             Caption         =   "Override"
             Height          =   255
             Index           =   0
             Left            =   2400
-            TabIndex        =   24
+            TabIndex        =   23
             Top             =   3000
             Width           =   1335
          End
@@ -382,7 +381,7 @@ Begin VB.UserControl OrderTicket
             Height          =   285
             Index           =   0
             Left            =   2760
-            TabIndex        =   16
+            TabIndex        =   15
             Top             =   1440
             Width           =   975
          End
@@ -391,7 +390,7 @@ Begin VB.UserControl OrderTicket
             Height          =   255
             Index           =   0
             Left            =   2400
-            TabIndex        =   22
+            TabIndex        =   21
             Top             =   2760
             Width           =   1335
          End
@@ -400,7 +399,7 @@ Begin VB.UserControl OrderTicket
             Height          =   255
             Index           =   0
             Left            =   1200
-            TabIndex        =   21
+            TabIndex        =   20
             Top             =   2760
             Width           =   1215
          End
@@ -409,7 +408,7 @@ Begin VB.UserControl OrderTicket
             Height          =   255
             Index           =   0
             Left            =   1200
-            TabIndex        =   19
+            TabIndex        =   18
             Top             =   2520
             Width           =   1095
          End
@@ -417,7 +416,7 @@ Begin VB.UserControl OrderTicket
             Height          =   285
             Index           =   0
             Left            =   2760
-            TabIndex        =   14
+            TabIndex        =   13
             Top             =   1080
             Width           =   975
          End
@@ -425,7 +424,7 @@ Begin VB.UserControl OrderTicket
             Height          =   285
             Index           =   0
             Left            =   2760
-            TabIndex        =   12
+            TabIndex        =   11
             Top             =   720
             Width           =   975
          End
@@ -433,7 +432,7 @@ Begin VB.UserControl OrderTicket
             Height          =   285
             Index           =   0
             Left            =   1200
-            TabIndex        =   13
+            TabIndex        =   12
             Top             =   1080
             Width           =   1575
          End
@@ -441,7 +440,7 @@ Begin VB.UserControl OrderTicket
             Height          =   285
             Index           =   0
             Left            =   1200
-            TabIndex        =   11
+            TabIndex        =   10
             Top             =   720
             Width           =   1575
          End
@@ -449,7 +448,7 @@ Begin VB.UserControl OrderTicket
             Height          =   285
             Index           =   0
             Left            =   1200
-            TabIndex        =   17
+            TabIndex        =   16
             Top             =   1800
             Width           =   735
          End
@@ -458,7 +457,7 @@ Begin VB.UserControl OrderTicket
             Height          =   255
             Index           =   0
             Left            =   1200
-            TabIndex        =   23
+            TabIndex        =   22
             Top             =   3000
             Width           =   855
          End
@@ -469,7 +468,7 @@ Begin VB.UserControl OrderTicket
             Left            =   1200
             List            =   "OrderTicket.ctx":000A
             Style           =   2  'Dropdown List
-            TabIndex        =   18
+            TabIndex        =   17
             Top             =   2160
             Width           =   2535
          End
@@ -477,7 +476,7 @@ Begin VB.UserControl OrderTicket
             Height          =   285
             Index           =   0
             Left            =   1200
-            TabIndex        =   15
+            TabIndex        =   14
             Top             =   1440
             Width           =   735
          End
@@ -486,7 +485,7 @@ Begin VB.UserControl OrderTicket
             Height          =   255
             Index           =   0
             Left            =   1200
-            TabIndex        =   25
+            TabIndex        =   24
             Top             =   3240
             Width           =   1215
          End
@@ -495,7 +494,7 @@ Begin VB.UserControl OrderTicket
             Height          =   255
             Index           =   0
             Left            =   2400
-            TabIndex        =   20
+            TabIndex        =   19
             Top             =   2520
             Width           =   1095
          End
@@ -506,7 +505,7 @@ Begin VB.UserControl OrderTicket
             Left            =   1200
             List            =   "OrderTicket.ctx":000E
             Style           =   2  'Dropdown List
-            TabIndex        =   8
+            TabIndex        =   7
             Top             =   0
             Width           =   1215
          End
@@ -515,7 +514,7 @@ Begin VB.UserControl OrderTicket
             Caption         =   "Min qty"
             Height          =   375
             Left            =   2040
-            TabIndex        =   41
+            TabIndex        =   40
             Top             =   1440
             Width           =   615
          End
@@ -523,7 +522,7 @@ Begin VB.UserControl OrderTicket
             Caption         =   "Good till date"
             Height          =   255
             Left            =   0
-            TabIndex        =   40
+            TabIndex        =   39
             Top             =   1080
             Width           =   1095
          End
@@ -531,7 +530,7 @@ Begin VB.UserControl OrderTicket
             Caption         =   "Good after time"
             Height          =   255
             Left            =   0
-            TabIndex        =   39
+            TabIndex        =   38
             Top             =   720
             Width           =   1095
          End
@@ -539,7 +538,7 @@ Begin VB.UserControl OrderTicket
             Caption         =   "Discr amount"
             Height          =   255
             Left            =   0
-            TabIndex        =   38
+            TabIndex        =   37
             Top             =   1800
             Width           =   1095
          End
@@ -547,7 +546,7 @@ Begin VB.UserControl OrderTicket
             Caption         =   "Trigger method"
             Height          =   255
             Left            =   0
-            TabIndex        =   37
+            TabIndex        =   36
             Top             =   2160
             Width           =   1095
          End
@@ -555,7 +554,7 @@ Begin VB.UserControl OrderTicket
             Caption         =   "Display size"
             Height          =   255
             Left            =   0
-            TabIndex        =   36
+            TabIndex        =   35
             Top             =   1440
             Width           =   855
          End
@@ -563,7 +562,7 @@ Begin VB.UserControl OrderTicket
             Caption         =   "Order ref"
             Height          =   255
             Left            =   0
-            TabIndex        =   35
+            TabIndex        =   34
             Top             =   360
             Width           =   855
          End
@@ -571,7 +570,7 @@ Begin VB.UserControl OrderTicket
             Caption         =   "TIF"
             Height          =   255
             Left            =   0
-            TabIndex        =   34
+            TabIndex        =   33
             Top             =   0
             Width           =   855
          End
@@ -591,7 +590,7 @@ Begin VB.UserControl OrderTicket
       Caption         =   "&Place orders"
       Height          =   495
       Left            =   7560
-      TabIndex        =   26
+      TabIndex        =   25
       Top             =   840
       Width           =   1095
    End
@@ -599,7 +598,7 @@ Begin VB.UserControl OrderTicket
       Caption         =   "&Reset"
       Height          =   495
       Left            =   7560
-      TabIndex        =   29
+      TabIndex        =   28
       Top             =   2640
       Width           =   1095
    End
@@ -607,7 +606,7 @@ Begin VB.UserControl OrderTicket
       Caption         =   "Complete &order"
       Height          =   495
       Left            =   7560
-      TabIndex        =   27
+      TabIndex        =   26
       Top             =   1440
       Visible         =   0   'False
       Width           =   1095
@@ -616,7 +615,7 @@ Begin VB.UserControl OrderTicket
       Caption         =   "&Modify"
       Height          =   495
       Left            =   7560
-      TabIndex        =   30
+      TabIndex        =   29
       Top             =   4200
       Visible         =   0   'False
       Width           =   1095
@@ -625,7 +624,7 @@ Begin VB.UserControl OrderTicket
       Caption         =   "&Cancel"
       Height          =   495
       Left            =   7560
-      TabIndex        =   28
+      TabIndex        =   27
       Top             =   2040
       Visible         =   0   'False
       Width           =   1095
@@ -633,7 +632,7 @@ Begin VB.UserControl OrderTicket
    Begin MSComctlLib.TabStrip BracketTabStrip 
       Height          =   5280
       Left            =   120
-      TabIndex        =   70
+      TabIndex        =   69
       Top             =   480
       Visible         =   0   'False
       Width           =   7335
@@ -672,7 +671,7 @@ Begin VB.UserControl OrderTicket
       EndProperty
       Height          =   495
       Left            =   5040
-      TabIndex        =   73
+      TabIndex        =   72
       Top             =   120
       Width           =   3615
    End
@@ -681,7 +680,7 @@ Begin VB.UserControl OrderTicket
       Caption         =   "Order scheme"
       Height          =   255
       Left            =   240
-      TabIndex        =   72
+      TabIndex        =   71
       Top             =   120
       Width           =   1215
    End
@@ -700,9 +699,9 @@ Begin VB.UserControl OrderTicket
       ForeColor       =   &H00000080&
       Height          =   375
       Left            =   120
-      TabIndex        =   71
+      TabIndex        =   70
       Top             =   5760
-      Width           =   7335
+      Width           =   6615
    End
 End
 Attribute VB_Name = "OrderTicket"
@@ -743,11 +742,16 @@ Event CaptionChanged(ByVal caption As String)
 ' Constants
 '@================================================================================
 
+Private Const NotReadyMessage                   As String = "Not ready for placing orders"
+
+Private Const OrdersLiveMessage                 As String = "Orders are LIVE !!"
+Private Const OrdersSimulatedMessage            As String = "Orders are simulated"
+
 '@================================================================================
 ' Enums
 '@================================================================================
 
-Private Enum BracketIndices
+Private Enum BracketIndexes
     BracketEntryOrder
     BracketStopOrder
     BracketTargetOrder
@@ -773,21 +777,21 @@ End Enum
 ' Member variables
 '@================================================================================
 
-Private WithEvents mTicker As ticker
+Private WithEvents mTicker                              As ticker
 Attribute mTicker.VB_VarHelpID = -1
-Private WithEvents mOrderContext As OrderContext
+Private WithEvents mOrderContext                        As OrderContext
 Attribute mOrderContext.VB_VarHelpID = -1
 
-Private mTickSize As Double
+Private mContract                                       As Contract
 
-Private mOrderAction As OrderActions
+Private mOrderAction                                    As OrderActions
 
-Private WithEvents mOrderPlex As OrderPlex
+Private WithEvents mOrderPlex                           As OrderPlex
 Attribute mOrderPlex.VB_VarHelpID = -1
 
-Private mCurrentBrackerOrderIndex As BracketIndices
+Private mCurrentBrackerOrderIndex                       As BracketIndexes
 
-Private mInvalidControls(2) As Control
+Private mInvalidControls(2)                             As Control
 
 '@================================================================================
 ' Form Event Handlers
@@ -801,12 +805,12 @@ Private Sub UserControl_Initialize()
 
 setupOrderSchemeCombo
 
-loadOrderFields BracketIndices.BracketStopOrder
-loadOrderFields BracketIndices.BracketTargetOrder
+loadOrderFields BracketIndexes.BracketStopOrder
+loadOrderFields BracketIndexes.BracketTargetOrder
 
-setupActionCombo BracketIndices.BracketEntryOrder
-setupActionCombo BracketIndices.BracketStopOrder
-setupActionCombo BracketIndices.BracketTargetOrder
+setupActionCombo BracketIndexes.BracketEntryOrder
+setupActionCombo BracketIndexes.BracketStopOrder
+setupActionCombo BracketIndexes.BracketTargetOrder
 
 End Sub
 
@@ -840,11 +844,11 @@ Case OrderPlexChangeTypes.OrderPlexSelfCancelled
     reset
     clearOrderPlex
 Case OrderPlexChangeTypes.OrderPlexEntryOrderChanged
-    setOrderFieldValues op.entryOrder, BracketIndices.BracketEntryOrder
+    setOrderFieldValues op.entryOrder, BracketIndexes.BracketEntryOrder
 Case OrderPlexChangeTypes.OrderPlexStopOrderChanged
-    setOrderFieldValues op.stopOrder, BracketIndices.BracketStopOrder
+    setOrderFieldValues op.stopOrder, BracketIndexes.BracketStopOrder
 Case OrderPlexChangeTypes.OrderPlexTargetOrderChanged
-    setOrderFieldValues op.targetOrder, BracketIndices.BracketTargetOrder
+    setOrderFieldValues op.targetOrder, BracketIndexes.BracketTargetOrder
 Case OrderPlexChangeTypes.OrderPlexCloseoutOrderCreated
 Case OrderPlexChangeTypes.OrderPlexCloseoutOrderChanged
 Case OrderPlexChangeTypes.OrderPlexProfitThresholdExceeded
@@ -862,17 +866,13 @@ End Sub
 Private Sub QuoteListener_ask(ev As QuoteEvent)
 AskText = ev.priceString
 AskSizeText = ev.size
-setPriceField BracketIndices.BracketEntryOrder
-setPriceField BracketIndices.BracketStopOrder
-setPriceField BracketIndices.BracketTargetOrder
+setPriceFields
 End Sub
 
 Private Sub QuoteListener_bid(ev As QuoteEvent)
 BidText = ev.priceString
 BidSizeText = ev.size
-setPriceField BracketIndices.BracketEntryOrder
-setPriceField BracketIndices.BracketStopOrder
-setPriceField BracketIndices.BracketTargetOrder
+setPriceFields
 End Sub
 
 Private Sub QuoteListener_high(ev As QuoteEvent)
@@ -898,9 +898,7 @@ End Sub
 Private Sub QuoteListener_trade(ev As QuoteEvent)
 LastText = ev.priceString
 LastSizeText = ev.size
-setPriceField BracketIndices.BracketEntryOrder
-setPriceField BracketIndices.BracketStopOrder
-setPriceField BracketIndices.BracketTargetOrder
+setPriceFields
 End Sub
 
 Private Sub QuoteListener_volume(ev As QuoteEvent)
@@ -950,21 +948,21 @@ End Sub
 
 Private Sub ModifyButton_Click()
 If Not isValidOrder(BracketEntryOrder) Then Exit Sub
-setOrderAttributes mOrderPlex.entryOrder, BracketIndices.BracketEntryOrder
+setOrderAttributes mOrderPlex.entryOrder, BracketIndexes.BracketEntryOrder
 If Not mOrderPlex.stopOrder Is Nothing Then
     If Not isValidOrder(BracketStopOrder) Then Exit Sub
-    setOrderAttributes mOrderPlex.stopOrder, BracketIndices.BracketStopOrder
+    setOrderAttributes mOrderPlex.stopOrder, BracketIndexes.BracketStopOrder
 End If
 If Not mOrderPlex.targetOrder Is Nothing Then
     If Not isValidOrder(BracketTargetOrder) Then Exit Sub
-    setOrderAttributes mOrderPlex.targetOrder, BracketIndices.BracketTargetOrder
+    setOrderAttributes mOrderPlex.targetOrder, BracketIndexes.BracketTargetOrder
 End If
 mOrderPlex.Update
 End Sub
 
 Private Sub OffsetText_Change(index As Integer)
 If IsNumeric(OffsetText(index)) Then
-    OffsetValueText(index) = OffsetText(index) * mTickSize
+    OffsetValueText(index) = OffsetText(index) * mContract.tickSize
 Else
     OffsetValueText(index) = ""
 End If
@@ -982,13 +980,13 @@ Select Case comboItemData(OrderSchemeCombo)
 Case OrderSchemes.SimpleOrder
     If Not isValidOrder(BracketEntryOrder) Then Exit Sub
     
-    If comboItemData(ActionCombo(BracketIndices.BracketEntryOrder)) = OrderActions.ActionBuy Then
-        Set op = mTicker.defaultOrderContext.CreateBuyOrderPlex( _
-                                    QuantityText(BracketIndices.BracketEntryOrder), _
-                                    comboItemData(TypeCombo(BracketIndices.BracketEntryOrder)), _
-                                    IIf(PriceText(BracketIndices.BracketEntryOrder) = "", 0, PriceText(BracketIndices.BracketEntryOrder)), _
-                                    IIf(OffsetText(BracketIndices.BracketEntryOrder) = "", 0, OffsetText(BracketIndices.BracketEntryOrder)), _
-                                    IIf(StopPriceText(BracketIndices.BracketEntryOrder) = "", 0, StopPriceText(BracketIndices.BracketEntryOrder)), _
+    If comboItemData(ActionCombo(BracketIndexes.BracketEntryOrder)) = OrderActions.ActionBuy Then
+        Set op = mOrderContext.CreateBuyOrderPlex( _
+                                    QuantityText(BracketIndexes.BracketEntryOrder), _
+                                    comboItemData(TypeCombo(BracketIndexes.BracketEntryOrder)), _
+                                    getPrice(PriceText(BracketIndexes.BracketEntryOrder)), _
+                                    IIf(OffsetText(BracketIndexes.BracketEntryOrder) = "", 0, OffsetText(BracketIndexes.BracketEntryOrder)), _
+                                    getPrice(StopPriceText(BracketIndexes.BracketEntryOrder)), _
                                     StopOrderTypes.StopOrderTypeNone, _
                                     0, _
                                     0, _
@@ -998,12 +996,12 @@ Case OrderSchemes.SimpleOrder
                                     0, _
                                     0)
     Else
-        Set op = mTicker.defaultOrderContext.CreateSellOrderPlex( _
-                                    QuantityText(BracketIndices.BracketEntryOrder), _
-                                    comboItemData(TypeCombo(BracketIndices.BracketEntryOrder)), _
-                                    IIf(PriceText(BracketIndices.BracketEntryOrder) = "", 0, PriceText(BracketIndices.BracketEntryOrder)), _
-                                    IIf(OffsetText(BracketIndices.BracketEntryOrder) = "", 0, OffsetText(BracketIndices.BracketEntryOrder)), _
-                                    IIf(StopPriceText(BracketIndices.BracketEntryOrder) = "", 0, StopPriceText(BracketIndices.BracketEntryOrder)), _
+        Set op = mOrderContext.CreateSellOrderPlex( _
+                                    QuantityText(BracketIndexes.BracketEntryOrder), _
+                                    comboItemData(TypeCombo(BracketIndexes.BracketEntryOrder)), _
+                                    getPrice(PriceText(BracketIndexes.BracketEntryOrder)), _
+                                    IIf(OffsetText(BracketIndexes.BracketEntryOrder) = "", 0, OffsetText(BracketIndexes.BracketEntryOrder)), _
+                                    getPrice(StopPriceText(BracketIndexes.BracketEntryOrder)), _
                                     StopOrderTypes.StopOrderTypeNone, _
                                     0, _
                                     0, _
@@ -1015,53 +1013,53 @@ Case OrderSchemes.SimpleOrder
         
     End If
     
-    setOrderAttributes op.entryOrder, BracketIndices.BracketEntryOrder
-    mTicker.defaultOrderContext.executeOrderPlex op
+    setOrderAttributes op.entryOrder, BracketIndexes.BracketEntryOrder
+    mOrderContext.executeOrderPlex op
 Case OrderSchemes.Bracketorder
     If Not isValidOrder(BracketEntryOrder) Then Exit Sub
     If Not isValidOrder(BracketStopOrder) Then Exit Sub
     If Not isValidOrder(BracketTargetOrder) Then Exit Sub
     
-    If comboItemData(ActionCombo(BracketIndices.BracketEntryOrder)) = OrderActions.ActionBuy Then
-        Set op = mTicker.defaultOrderContext.CreateBuyOrderPlex( _
-                                    QuantityText(BracketIndices.BracketEntryOrder), _
-                                    comboItemData(TypeCombo(BracketIndices.BracketEntryOrder)), _
-                                    IIf(PriceText(BracketIndices.BracketEntryOrder) = "", 0, PriceText(BracketIndices.BracketEntryOrder)), _
-                                    IIf(OffsetText(BracketIndices.BracketEntryOrder) = "", 0, OffsetText(BracketIndices.BracketEntryOrder)), _
-                                    IIf(StopPriceText(BracketIndices.BracketEntryOrder) = "", 0, StopPriceText(BracketIndices.BracketEntryOrder)), _
-                                    comboItemData(TypeCombo(BracketIndices.BracketStopOrder)), _
-                                    IIf(StopPriceText(BracketIndices.BracketStopOrder) = "", 0, StopPriceText(BracketIndices.BracketStopOrder)), _
-                                    IIf(OffsetText(BracketIndices.BracketStopOrder) = "", 0, OffsetText(BracketIndices.BracketStopOrder)), _
-                                    IIf(PriceText(BracketIndices.BracketStopOrder) = "", 0, PriceText(BracketIndices.BracketStopOrder)), _
-                                    comboItemData(TypeCombo(BracketIndices.BracketTargetOrder)), _
-                                    IIf(PriceText(BracketIndices.BracketTargetOrder) = "", 0, PriceText(BracketIndices.BracketTargetOrder)), _
-                                    IIf(OffsetText(BracketIndices.BracketTargetOrder) = "", 0, OffsetText(BracketIndices.BracketTargetOrder)), _
-                                    IIf(StopPriceText(BracketIndices.BracketTargetOrder) = "", 0, StopPriceText(BracketIndices.BracketTargetOrder)))
+    If comboItemData(ActionCombo(BracketIndexes.BracketEntryOrder)) = OrderActions.ActionBuy Then
+        Set op = mOrderContext.CreateBuyOrderPlex( _
+                                    QuantityText(BracketIndexes.BracketEntryOrder), _
+                                    comboItemData(TypeCombo(BracketIndexes.BracketEntryOrder)), _
+                                    getPrice(PriceText(BracketIndexes.BracketEntryOrder)), _
+                                    IIf(OffsetText(BracketIndexes.BracketEntryOrder) = "", 0, OffsetText(BracketIndexes.BracketEntryOrder)), _
+                                    getPrice(StopPriceText(BracketIndexes.BracketEntryOrder)), _
+                                    comboItemData(TypeCombo(BracketIndexes.BracketStopOrder)), _
+                                    getPrice(StopPriceText(BracketIndexes.BracketStopOrder)), _
+                                    IIf(OffsetText(BracketIndexes.BracketStopOrder) = "", 0, OffsetText(BracketIndexes.BracketStopOrder)), _
+                                    getPrice(PriceText(BracketIndexes.BracketStopOrder)), _
+                                    comboItemData(TypeCombo(BracketIndexes.BracketTargetOrder)), _
+                                    getPrice(PriceText(BracketIndexes.BracketTargetOrder)), _
+                                    IIf(OffsetText(BracketIndexes.BracketTargetOrder) = "", 0, OffsetText(BracketIndexes.BracketTargetOrder)), _
+                                    getPrice(StopPriceText(BracketIndexes.BracketTargetOrder)))
     Else
-        Set op = mTicker.defaultOrderContext.CreateSellOrderPlex( _
-                                    QuantityText(BracketIndices.BracketEntryOrder), _
-                                    comboItemData(TypeCombo(BracketIndices.BracketEntryOrder)), _
-                                    IIf(PriceText(BracketIndices.BracketEntryOrder) = "", 0, PriceText(BracketIndices.BracketEntryOrder)), _
-                                    IIf(OffsetText(BracketIndices.BracketEntryOrder) = "", 0, OffsetText(BracketIndices.BracketEntryOrder)), _
-                                    IIf(StopPriceText(BracketIndices.BracketEntryOrder) = "", 0, StopPriceText(BracketIndices.BracketEntryOrder)), _
-                                    comboItemData(TypeCombo(BracketIndices.BracketStopOrder)), _
-                                    IIf(StopPriceText(BracketIndices.BracketStopOrder) = "", 0, StopPriceText(BracketIndices.BracketStopOrder)), _
-                                    IIf(OffsetText(BracketIndices.BracketStopOrder) = "", 0, OffsetText(BracketIndices.BracketStopOrder)), _
-                                    IIf(PriceText(BracketIndices.BracketStopOrder) = "", 0, PriceText(BracketIndices.BracketStopOrder)), _
-                                    comboItemData(TypeCombo(BracketIndices.BracketTargetOrder)), _
-                                    IIf(PriceText(BracketIndices.BracketTargetOrder) = "", 0, PriceText(BracketIndices.BracketTargetOrder)), _
-                                    IIf(OffsetText(BracketIndices.BracketTargetOrder) = "", 0, OffsetText(BracketIndices.BracketTargetOrder)), _
-                                    IIf(StopPriceText(BracketIndices.BracketTargetOrder) = "", 0, StopPriceText(BracketIndices.BracketTargetOrder)))
+        Set op = mOrderContext.CreateSellOrderPlex( _
+                                    QuantityText(BracketIndexes.BracketEntryOrder), _
+                                    comboItemData(TypeCombo(BracketIndexes.BracketEntryOrder)), _
+                                    getPrice(PriceText(BracketIndexes.BracketEntryOrder)), _
+                                    IIf(OffsetText(BracketIndexes.BracketEntryOrder) = "", 0, OffsetText(BracketIndexes.BracketEntryOrder)), _
+                                    getPrice(StopPriceText(BracketIndexes.BracketEntryOrder)), _
+                                    comboItemData(TypeCombo(BracketIndexes.BracketStopOrder)), _
+                                    getPrice(StopPriceText(BracketIndexes.BracketStopOrder)), _
+                                    IIf(OffsetText(BracketIndexes.BracketStopOrder) = "", 0, OffsetText(BracketIndexes.BracketStopOrder)), _
+                                    getPrice(PriceText(BracketIndexes.BracketStopOrder)), _
+                                    comboItemData(TypeCombo(BracketIndexes.BracketTargetOrder)), _
+                                    getPrice(PriceText(BracketIndexes.BracketTargetOrder)), _
+                                    IIf(OffsetText(BracketIndexes.BracketTargetOrder) = "", 0, OffsetText(BracketIndexes.BracketTargetOrder)), _
+                                    getPrice(StopPriceText(BracketIndexes.BracketTargetOrder)))
     End If
     
-    setOrderAttributes op.entryOrder, BracketIndices.BracketEntryOrder
+    setOrderAttributes op.entryOrder, BracketIndexes.BracketEntryOrder
     If Not op.stopOrder Is Nothing Then
-        setOrderAttributes op.stopOrder, BracketIndices.BracketStopOrder
+        setOrderAttributes op.stopOrder, BracketIndexes.BracketStopOrder
     End If
     If Not op.targetOrder Is Nothing Then
-        setOrderAttributes op.targetOrder, BracketIndices.BracketTargetOrder
+        setOrderAttributes op.targetOrder, BracketIndexes.BracketTargetOrder
     End If
-    mTicker.defaultOrderContext.executeOrderPlex op
+    mOrderContext.executeOrderPlex op
 Case OrderSchemes.OCAOrder
     ' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 End Select
@@ -1073,10 +1071,17 @@ Private Sub PriceText_Validate( _
                 Cancel As Boolean)
 Dim price As Double
 
+' allow blank price to prevent user irritation if they place the caret
+' in the price field when the order type is limit, and then decide they
+' want to change the order type - if space is not allowed then they
+' would have to enter a valid price before being able to get to the order
+' type combo
+If PriceText(index) = "" Then Exit Sub
+
 If (comboItemData(ActionCombo(index)) = OrderActions.ActionNone And _
         PriceText(index) <> "" _
     ) Or _
-    Not mTicker.parsePrice(PriceText(index), price) _
+    Not mContract.parsePrice(PriceText(index), price) _
 Then
     Cancel = True
     Exit Sub
@@ -1084,11 +1089,11 @@ End If
 
 If Not mOrderPlex Is Nothing Then
     Select Case index
-    Case BracketIndices.BracketEntryOrder
+    Case BracketIndexes.BracketEntryOrder
         mOrderPlex.newEntryPrice = price
-    Case BracketIndices.BracketStopOrder
+    Case BracketIndexes.BracketStopOrder
         mOrderPlex.newStopPrice = price
-    Case BracketIndices.BracketTargetOrder
+    Case BracketIndexes.BracketTargetOrder
         mOrderPlex.newTargetPrice = price
     End Select
 End If
@@ -1098,6 +1103,7 @@ Private Sub QuantityText_Validate( _
                 index As Integer, _
                 Cancel As Boolean)
 Dim quantity As Long
+Dim max As Long
 
 If comboItemData(ActionCombo(index)) <> OrderActions.ActionNone And _
     Not IsNumeric(QuantityText(index)) _
@@ -1106,17 +1112,29 @@ Then
     Exit Sub
 End If
 
+Select Case mContract.specifier.sectype
+Case SecTypeStock
+    max = 100000
+Case SecTypeFuture
+    max = 100
+Case SecTypeOption
+    max = 100
+Case SecTypeFuturesOption
+    max = 100
+Case SecTypeCash
+    max = 10000000
+Case SecTypeCombo
+    max = 100
+Case SecTypeIndex
+    max = 0
+End Select
+
+If Not IsInteger(QuantityText(index), 1, max) Then
+    Cancel = True
+    Exit Sub
+End If
+
 quantity = CLng(QuantityText(index))
-
-If CDbl(QuantityText(index)) - quantity <> 0 Then
-    Cancel = True
-    Exit Sub
-End If
-
-If quantity < 0 Then
-    Cancel = True
-    Exit Sub
-End If
 
 If mOrderPlex Is Nothing Then
     If quantity = 0 Then
@@ -1124,12 +1142,20 @@ If mOrderPlex Is Nothing Then
         Exit Sub
     End If
     
-    If index = BracketIndices.BracketEntryOrder And _
-        comboItemData(OrderSchemeCombo) = OrderSchemes.Bracketorder _
-    Then
-        QuantityText(BracketIndices.BracketStopOrder) = quantity
-        QuantityText(BracketIndices.BracketTargetOrder) = quantity
+    If comboItemData(OrderSchemeCombo) = OrderSchemes.Bracketorder Then
+        Select Case index
+        Case BracketIndexes.BracketEntryOrder
+            QuantityText(BracketIndexes.BracketStopOrder) = quantity
+            QuantityText(BracketIndexes.BracketTargetOrder) = quantity
+        Case BracketIndexes.BracketStopOrder
+            QuantityText(BracketIndexes.BracketEntryOrder) = quantity
+            QuantityText(BracketIndexes.BracketTargetOrder) = quantity
+        Case BracketIndexes.BracketTargetOrder
+            QuantityText(BracketIndexes.BracketEntryOrder) = quantity
+            QuantityText(BracketIndexes.BracketStopOrder) = quantity
+        End Select
     End If
+    
 Else
     mOrderPlex.newQuantity = quantity
 End If
@@ -1138,6 +1164,15 @@ End Sub
 Private Sub ResetButton_Click()
 clearOrderPlex
 reset
+End Sub
+
+Private Sub SimulateOrdersCheck_Click()
+If SimulateOrdersCheck.value = vbUnchecked Then
+    Set mOrderContext = mTicker.defaultOrderContext
+Else
+    Set mOrderContext = mTicker.defaultOrderContextSimulated
+End If
+setupTicker
 End Sub
 
 Private Sub StopPriceText_Validate( _
@@ -1156,11 +1191,11 @@ End If
 
 If Not mOrderPlex Is Nothing Then
     Select Case index
-    Case BracketIndices.BracketEntryOrder
+    Case BracketIndexes.BracketEntryOrder
         mOrderPlex.newEntryTriggerPrice = price
-    Case BracketIndices.BracketStopOrder
+    Case BracketIndexes.BracketStopOrder
         mOrderPlex.newStopTriggerPrice = price
-    Case BracketIndices.BracketTargetOrder
+    Case BracketIndexes.BracketTargetOrder
         mOrderPlex.newTargetTriggerPrice = price
     End Select
 End If
@@ -1180,7 +1215,7 @@ End Sub
 '@================================================================================
 
 Private Sub mOrderContext_NotReady()
-disableAll
+disableAll NotReadyMessage
 End Sub
 
 Private Sub mOrderContext_Ready()
@@ -1193,15 +1228,15 @@ End Sub
 '@================================================================================
 
 Private Sub mOrderPlex_EntryOrderFilled()
-disableOrderFields BracketIndices.BracketEntryOrder
+disableOrderFields BracketIndexes.BracketEntryOrder
 End Sub
 
 Private Sub mOrderPlex_StopOrderFilled()
-disableOrderFields BracketIndices.BracketStopOrder
+disableOrderFields BracketIndexes.BracketStopOrder
 End Sub
 
 Private Sub mOrderPlex_TargetOrderFilled()
-disableOrderFields BracketIndices.BracketTargetOrder
+disableOrderFields BracketIndexes.BracketTargetOrder
 End Sub
 
 '@================================================================================
@@ -1210,7 +1245,7 @@ End Sub
 
 Private Sub mTicker_StateChange(ev As StateChangeEvent)
 
-Select Case ev.state
+Select Case ev.State
 Case TickerStateCreated
 
 Case TickerStateStarting
@@ -1222,7 +1257,7 @@ Case TickerStatePaused
 Case TickerStateClosing
 
 Case TickerStateStopped
-    disableAll
+    disableAll "Ticker has been stopped"
     Set mOrderContext = Nothing
     Set mTicker = Nothing
 End Select
@@ -1232,6 +1267,17 @@ End Sub
 ' Properties
 '@================================================================================
 
+Public Property Get Enabled() As Boolean
+Attribute Enabled.VB_UserMemId = -514
+Enabled = UserControl.Enabled
+End Property
+
+Public Property Let Enabled( _
+                ByVal value As Boolean)
+UserControl.Enabled = value
+PropertyChanged "Enabled"
+End Property
+
 Public Property Let ticker(ByVal value As ticker)
 
 If value Is mTicker Then Exit Property
@@ -1239,12 +1285,15 @@ If value Is mTicker Then Exit Property
 If Not mTicker Is Nothing Then mTicker.removeQuoteListener Me
 
 Set mTicker = value
-Set mOrderContext = mTicker.defaultOrderContext
-
+If mTicker.ordersAreLive Then
+    Set mOrderContext = mTicker.defaultOrderContext
+Else
+    Set mOrderContext = mTicker.defaultOrderContextSimulated
+End If
 If mOrderContext.isReady Then
     setupTicker
 Else
-    disableAll
+    disableAll NotReadyMessage
 End If
 
 End Property
@@ -1277,6 +1326,9 @@ clearOrderPlex
 
 Set mOrderPlex = value
 ticker = mOrderPlex.ticker
+
+SimulateOrdersCheck.Enabled = False     ' can't allow the simulation mode to be changed
+
 Set entryOrder = mOrderPlex.entryOrder
 Set stopOrder = mOrderPlex.stopOrder
 Set targetOrder = mOrderPlex.targetOrder
@@ -1312,9 +1364,9 @@ Else
     End If
 End If
 
-setOrderFieldValues entryOrder, BracketIndices.BracketEntryOrder
-setOrderFieldValues stopOrder, BracketIndices.BracketStopOrder
-setOrderFieldValues targetOrder, BracketIndices.BracketTargetOrder
+setOrderFieldValues entryOrder, BracketIndexes.BracketEntryOrder
+setOrderFieldValues stopOrder, BracketIndexes.BracketStopOrder
+setOrderFieldValues targetOrder, BracketIndexes.BracketTargetOrder
 
 ModifyButton.Move PlaceOrdersButton.Left, PlaceOrdersButton.Top
 ModifyButton.Visible = True
@@ -1332,7 +1384,7 @@ CompleteOrdersButton.Visible = False
 
 ResetButton.Visible = True
 
-mOrderPlex.addChangeListener Me
+mOrderPlex.AddChangeListener Me
 End Sub
 
 '@================================================================================
@@ -1351,7 +1403,23 @@ Private Sub clearOrderFields(ByVal index As Long)
 enableOrderFields index
 OrderIDText(index) = ""
 ActionCombo(index).ListIndex = 0
-QuantityText(index) = 1
+Select Case mContract.specifier.sectype
+Case SecTypeStock
+    QuantityText(index) = 100
+Case SecTypeFuture
+    QuantityText(index) = 1
+Case SecTypeOption
+    QuantityText(index) = 1
+Case SecTypeFuturesOption
+    QuantityText(index) = 1
+Case SecTypeCash
+    QuantityText(index) = 25000
+Case SecTypeCombo
+    QuantityText(index) = 1
+Case SecTypeIndex
+    QuantityText(index) = 0
+End Select
+
 ' don't set TypeCombo(Index) as it will affect other fields and there
 ' is no sensible value to set it to
 PriceText(index) = ""
@@ -1360,7 +1428,6 @@ OffsetText(index) = ""
 TIFCombo(index).ListIndex = 0
 TriggerMethodCombo(index).ListIndex = 0
 IgnoreRthCheck(index) = vbUnchecked
-RthOnlyCheck(index) = vbUnchecked
 OrderRefText(index) = ""
 AllOrNoneCheck(index) = vbUnchecked
 BlockOrderCheck(index) = vbUnchecked
@@ -1380,7 +1447,7 @@ End Sub
 
 Private Sub clearOrderPlex()
 If Not mOrderPlex Is Nothing Then
-    mOrderPlex.removeChangeListener Me
+    mOrderPlex.RemoveChangeListener Me
     Set mOrderPlex = Nothing
 End If
 End Sub
@@ -1392,7 +1459,7 @@ End Function
 Private Sub configureOrderFields( _
                 ByVal orderIndex As Long)
 Select Case orderIndex
-Case BracketIndices.BracketEntryOrder
+Case BracketIndexes.BracketEntryOrder
     Select Case comboItemData(TypeCombo(orderIndex))
     Case EntryOrderTypeMarket
         disableControl PriceText(orderIndex)
@@ -1451,7 +1518,7 @@ Case BracketIndices.BracketEntryOrder
         enableControl StopPriceText(orderIndex)
         disableControl OffsetText(orderIndex)
     End Select
-Case BracketIndices.BracketStopOrder
+Case BracketIndexes.BracketStopOrder
     Select Case comboItemData(TypeCombo(orderIndex))
     Case StopOrderTypeNone
         disableControl PriceText(orderIndex)
@@ -1482,7 +1549,7 @@ Case BracketIndices.BracketStopOrder
         disableControl StopPriceText(orderIndex)
         enableControl OffsetText(orderIndex)
     End Select
-Case BracketIndices.BracketTargetOrder
+Case BracketIndexes.BracketTargetOrder
     Select Case comboItemData(TypeCombo(orderIndex))
     Case TargetOrderTypeNone
         disableControl PriceText(orderIndex)
@@ -1520,7 +1587,8 @@ Case BracketIndices.BracketTargetOrder
 End Select
 End Sub
 
-Private Sub disableAll()
+Private Sub disableAll( _
+                ByVal message As String)
 OrderSchemeCombo.Enabled = False
 
 PlaceOrdersButton.Enabled = False
@@ -1529,9 +1597,9 @@ ResetButton.Enabled = False
 ModifyButton.Enabled = False
 UndoButton.Enabled = False
 
-disableOrderFields BracketIndices.BracketEntryOrder
-disableOrderFields BracketIndices.BracketStopOrder
-disableOrderFields BracketIndices.BracketTargetOrder
+disableOrderFields BracketIndexes.BracketEntryOrder
+disableOrderFields BracketIndexes.BracketStopOrder
+disableOrderFields BracketIndexes.BracketTargetOrder
 
 SymbolLabel.caption = ""
 AskText = ""
@@ -1544,7 +1612,7 @@ VolumeText = ""
 HighText = ""
 LowText = ""
 
-OrderSimulationLabel = ""
+OrderSimulationLabel = message
 End Sub
 
 Private Sub disableControl(ByVal field As Control)
@@ -1564,7 +1632,6 @@ disableControl OffsetText(index)
 disableControl StopPriceText(index)
 disableControl IgnoreRthCheck(index)
 disableControl TIFCombo(index)
-disableControl RthOnlyCheck(index)
 disableControl OrderRefText(index)
 disableControl AllOrNoneCheck(index)
 disableControl BlockOrderCheck(index)
@@ -1600,7 +1667,6 @@ enableControl OffsetText(index)
 enableControl StopPriceText(index)
 enableControl IgnoreRthCheck(index)
 enableControl TIFCombo(index)
-enableControl RthOnlyCheck(index)
 enableControl OrderRefText(index)
 enableControl AllOrNoneCheck(index)
 enableControl BlockOrderCheck(index)
@@ -1619,9 +1685,22 @@ enableControl GoodTillDateText(index)
 enableControl GoodTillDateTZText(index)
 End Sub
 
+Private Function getPrice( _
+                ByVal priceString As String) As Double
+Dim price As Double
+mContract.parsePrice priceString, price
+getPrice = price
+End Function
+
 Private Function isOrderModifiable(ByVal pOrder As Order) As Boolean
 If pOrder Is Nothing Then Exit Function
 isOrderModifiable = pOrder.isModifiable
+End Function
+
+Private Function isPrice( _
+                ByVal priceString As String) As Boolean
+Dim price As Double
+isPrice = mContract.parsePrice(priceString, price)
 End Function
 
 Private Function isValidOrder( _
@@ -1643,16 +1722,16 @@ Case BracketEntryOrder
     Case EntryOrderTypeMarket, EntryOrderTypeMarketOnOpen, EntryOrderTypeMarketOnClose
         ' other field values don't matter
     Case EntryOrderTypeMarketIfTouched, EntryOrderTypeStop
-        If Not isPrice(StopPriceText(index), mTickSize) Then setInvalidControl StopPriceText(index), index: Exit Function
+        If Not isPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
     Case EntryOrderTypeMarketToLimit, EntryOrderTypeLimit, EntryOrderTypeLimitOnOpen, EntryOrderTypeLimitOnClose
-        If Not isPrice(PriceText(index), mTickSize) Then setInvalidControl PriceText(index), index: Exit Function
+        If Not isPrice(PriceText(index)) Then setInvalidControl PriceText(index), index: Exit Function
     Case EntryOrderTypeBid, EntryOrderTypeAsk, EntryOrderTypeLast
         If OffsetText(index) <> "" Then
             If Not IsInteger(OffsetText(index), -100, 100) Then setInvalidControl OffsetText(index), index: Exit Function
         End If
     Case EntryOrderTypeLimitIfTouched, EntryOrderTypeStopLimit
-        If Not isPrice(StopPriceText(index), mTickSize) Then setInvalidControl StopPriceText(index), index: Exit Function
-        If Not isPrice(PriceText(index), mTickSize) Then setInvalidControl PriceText(index), index: Exit Function
+        If Not isPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
+        If Not isPrice(PriceText(index)) Then setInvalidControl PriceText(index), index: Exit Function
     End Select
 Case BracketStopOrder
     If comboItemData(TypeCombo(index)) = StopOrderTypeNone Then
@@ -1664,10 +1743,10 @@ Case BracketStopOrder
     
     Select Case comboItemData(TypeCombo(index))
     Case StopOrderTypeStop
-        If Not isPrice(StopPriceText(index), mTickSize) Then setInvalidControl StopPriceText(index), index: Exit Function
+        If Not isPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
     Case StopOrderTypeStopLimit
-        If Not isPrice(StopPriceText(index), mTickSize) Then setInvalidControl StopPriceText(index), index: Exit Function
-        If Not isPrice(PriceText(index), mTickSize) Then setInvalidControl PriceText(index), index: Exit Function
+        If Not isPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
+        If Not isPrice(PriceText(index)) Then setInvalidControl PriceText(index), index: Exit Function
     Case StopOrderTypeBid, StopOrderTypeAsk, StopOrderTypeLast, StopOrderTypeAuto
         If OffsetText(index) <> "" Then
             If Not IsInteger(OffsetText(index), -100, 100) Then setInvalidControl OffsetText(index), index: Exit Function
@@ -1683,12 +1762,12 @@ Case BracketTargetOrder
     
     Select Case comboItemData(TypeCombo(index))
     Case TargetOrderTypeLimit
-        If Not isPrice(PriceText(index), mTickSize) Then setInvalidControl PriceText(index), index: Exit Function
+        If Not isPrice(PriceText(index)) Then setInvalidControl PriceText(index), index: Exit Function
     Case TargetOrderTypeLimitIfTouched
-        If Not isPrice(StopPriceText(index), mTickSize) Then setInvalidControl StopPriceText(index), index: Exit Function
-        If Not isPrice(PriceText(index), mTickSize) Then setInvalidControl PriceText(index), index: Exit Function
+        If Not isPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
+        If Not isPrice(PriceText(index)) Then setInvalidControl PriceText(index), index: Exit Function
     Case TargetOrderTypeMarketIfTouched
-        If Not isPrice(StopPriceText(index), mTickSize) Then setInvalidControl StopPriceText(index), index: Exit Function
+        If Not isPrice(StopPriceText(index)) Then setInvalidControl StopPriceText(index), index: Exit Function
     Case TargetOrderTypeBid, TargetOrderTypeAsk, TargetOrderTypeLast, TargetOrderTypeAuto
         If OffsetText(index) <> "" Then
             If Not IsInteger(OffsetText(index), -100, 100) Then setInvalidControl OffsetText(index), index: Exit Function
@@ -1705,7 +1784,7 @@ If MinQuantityText(index) <> "" Then
 End If
 
 If DiscrAmountText(index) <> "" Then
-    If Not isPrice(DiscrAmountText(index), mTickSize) Then setInvalidControl DiscrAmountText(index), index: Exit Function
+    If Not isPrice(DiscrAmountText(index)) Then setInvalidControl DiscrAmountText(index), index: Exit Function
 End If
 
 isValidOrder = True
@@ -1722,7 +1801,6 @@ load IgnoreRthCheck(index)
 load OffsetText(index)
 load OffsetValueText(index)
 load TIFCombo(index)
-load RthOnlyCheck(index)
 load OrderRefText(index)
 load AllOrNoneCheck(index)
 load BlockOrderCheck(index)
@@ -1742,32 +1820,39 @@ load GoodTillDateTZText(index)
 End Sub
 
 Private Sub reset()
-clearOrderFields BracketIndices.BracketEntryOrder
-clearOrderFields BracketIndices.BracketStopOrder
-clearOrderFields BracketIndices.BracketTargetOrder
+clearOrderFields BracketIndexes.BracketEntryOrder
+clearOrderFields BracketIndexes.BracketStopOrder
+clearOrderFields BracketIndexes.BracketTargetOrder
+
+If mTicker.ordersAreLive Then
+    SimulateOrdersCheck.Enabled = True
+Else
+    SimulateOrdersCheck.value = vbChecked
+    SimulateOrdersCheck.Enabled = False
+End If
 
 OrderSchemeCombo.Enabled = True
 selectComboEntry OrderSchemeCombo, OrderSchemes.Bracketorder
 setOrderScheme OrderSchemes.Bracketorder
 
-selectComboEntry ActionCombo(BracketIndices.BracketEntryOrder), _
+selectComboEntry ActionCombo(BracketIndexes.BracketEntryOrder), _
                 OrderActions.ActionBuy
-setAction BracketIndices.BracketEntryOrder
+setAction BracketIndexes.BracketEntryOrder
 
-selectComboEntry TypeCombo(BracketIndices.BracketEntryOrder), _
+selectComboEntry TypeCombo(BracketIndexes.BracketEntryOrder), _
                 EntryOrderTypes.EntryOrderTypeLimit
-setOrderFieldsEnabling BracketIndices.BracketEntryOrder, Nothing
-configureOrderFields BracketIndices.BracketEntryOrder
+setOrderFieldsEnabling BracketIndexes.BracketEntryOrder, Nothing
+configureOrderFields BracketIndexes.BracketEntryOrder
 
-selectComboEntry TypeCombo(BracketIndices.BracketStopOrder), _
-                StopOrderTypes.StopOrderTypeNone
-setOrderFieldsEnabling BracketIndices.BracketStopOrder, Nothing
-configureOrderFields BracketIndices.BracketStopOrder
+selectComboEntry TypeCombo(BracketIndexes.BracketStopOrder), _
+                StopOrderTypes.StopOrderTypeStop
+setOrderFieldsEnabling BracketIndexes.BracketStopOrder, Nothing
+configureOrderFields BracketIndexes.BracketStopOrder
 
-selectComboEntry TypeCombo(BracketIndices.BracketTargetOrder), _
+selectComboEntry TypeCombo(BracketIndexes.BracketTargetOrder), _
                 TargetOrderTypes.TargetOrderTypeNone
-setOrderFieldsEnabling BracketIndices.BracketTargetOrder, Nothing
-configureOrderFields BracketIndices.BracketTargetOrder
+setOrderFieldsEnabling BracketIndexes.BracketTargetOrder, Nothing
+configureOrderFields BracketIndexes.BracketTargetOrder
 
 BracketTabStrip.Tabs(BracketTabs.TabEntryOrder).Selected = True
 
@@ -1790,17 +1875,17 @@ Private Sub setAction( _
                 ByVal index As Long)
 mOrderAction = comboItemData(ActionCombo(index))
 If comboItemData(OrderSchemeCombo) = OrderSchemes.Bracketorder And _
-    index = BracketIndices.BracketEntryOrder _
+    index = BracketIndexes.BracketEntryOrder _
 Then
     If comboItemData(ActionCombo(index)) = OrderActions.ActionSell Then
-        selectComboEntry ActionCombo(BracketIndices.BracketStopOrder), OrderActions.ActionBuy
-        selectComboEntry ActionCombo(BracketIndices.BracketTargetOrder), OrderActions.ActionBuy
+        selectComboEntry ActionCombo(BracketIndexes.BracketStopOrder), OrderActions.ActionBuy
+        selectComboEntry ActionCombo(BracketIndexes.BracketTargetOrder), OrderActions.ActionBuy
     Else
-        selectComboEntry ActionCombo(BracketIndices.BracketStopOrder), OrderActions.ActionSell
-        selectComboEntry ActionCombo(BracketIndices.BracketTargetOrder), OrderActions.ActionSell
+        selectComboEntry ActionCombo(BracketIndexes.BracketStopOrder), OrderActions.ActionSell
+        selectComboEntry ActionCombo(BracketIndexes.BracketTargetOrder), OrderActions.ActionSell
     End If
-    disableControl ActionCombo(BracketIndices.BracketStopOrder)
-    disableControl ActionCombo(BracketIndices.BracketTargetOrder)
+    disableControl ActionCombo(BracketIndexes.BracketStopOrder)
+    disableControl ActionCombo(BracketIndexes.BracketTargetOrder)
 End If
 End Sub
 
@@ -1827,7 +1912,7 @@ Private Sub setOrderAttributes( _
 With pOrder
     If pOrder.isAttributeModifiable(OrderAttAllOrNone) Then .allOrNone = (AllOrNoneCheck(orderIndex) = vbChecked)
     If pOrder.isAttributeModifiable(OrderAttBlockOrder) Then .blockOrder = (BlockOrderCheck(orderIndex) = vbChecked)
-    If pOrder.isAttributeModifiable(OrderAttDiscretionaryAmount) Then .discretionaryAmount = DiscrAmountText(orderIndex)
+    If pOrder.isAttributeModifiable(OrderAttDiscretionaryAmount) Then .discretionaryAmount = IIf(DiscrAmountText(orderIndex) = "", 0, DiscrAmountText(orderIndex))
     If pOrder.isAttributeModifiable(OrderAttDisplaySize) Then .displaySize = IIf(DisplaySizeText(orderIndex) = "", 0, DisplaySizeText(orderIndex))
     If pOrder.isAttributeModifiable(OrderAttETradeOnly) Then .eTradeOnly = (ETradeOnlyCheck(orderIndex) = vbChecked)
     If pOrder.isAttributeModifiable(OrderAttFirmQuoteOnly) Then .firmQuoteOnly = (FirmQuoteOnlyCheck(orderIndex) = vbChecked)
@@ -1843,7 +1928,6 @@ With pOrder
     If pOrder.isAttributeModifiable(OrderAttOriginatorRef) Then .originatorRef = OrderRefText(orderIndex)
     If pOrder.isAttributeModifiable(OrderAttOverrideConstraints) Then .overrideConstraints = (OverrideCheck(orderIndex) = vbChecked)
     If pOrder.isAttributeModifiable(OrderAttQuantity) Then .quantity = QuantityText(orderIndex)
-    If pOrder.isAttributeModifiable(OrderAttRTHOnly) Then .regularTradingHoursOnly = (RthOnlyCheck(orderIndex) = vbChecked)
     If pOrder.isAttributeModifiable(OrderAttStopTriggerMethod) Then .StopTriggerMethod = comboItemData(TriggerMethodCombo(orderIndex))
     If pOrder.isAttributeModifiable(OrderAttSweepToFill) Then .SweepToFill = (SweepToFillCheck(orderIndex) = vbChecked)
     If pOrder.isAttributeModifiable(OrderAttTimeInForce) Then .timeInForce = comboItemData(TIFCombo(orderIndex))
@@ -1871,7 +1955,6 @@ With pOrder
     StopPriceText(orderIndex) = IIf(.triggerPrice <> 0, .triggerPrice, "")
     IgnoreRthCheck(orderIndex) = IIf(.ignoreRegularTradingHours, vbChecked, vbUnchecked)
     TIFCombo(orderIndex) = OrderTIFToString(.timeInForce)
-    RthOnlyCheck(orderIndex) = IIf(.regularTradingHoursOnly, vbChecked, vbUnchecked)
     OrderRefText(orderIndex) = .originatorRef
     AllOrNoneCheck(orderIndex) = IIf(.allOrNone, vbChecked, vbUnchecked)
     BlockOrderCheck(orderIndex) = IIf(.blockOrder, vbChecked, vbUnchecked)
@@ -1927,7 +2010,6 @@ setOrderFieldEnabling PriceText(index), OrderAttLimitPrice, pOrder
 setOrderFieldEnabling StopPriceText(index), OrderAttTriggerPrice, pOrder
 setOrderFieldEnabling IgnoreRthCheck(index), OrderAttIgnoreRTH, pOrder
 setOrderFieldEnabling TIFCombo(index), OrderAttTimeInForce, pOrder
-setOrderFieldEnabling RthOnlyCheck(index), OrderAttRTHOnly, pOrder
 setOrderFieldEnabling OrderRefText(index), OrderAttOriginatorRef, pOrder
 setOrderFieldEnabling AllOrNoneCheck(index), OrderAttAllOrNone, pOrder
 setOrderFieldEnabling BlockOrderCheck(index), OrderAttBlockOrder, pOrder
@@ -1967,7 +2049,7 @@ Case OrderSchemes.SimpleOrder
     UndoButton.Visible = False
     ResetButton.Enabled = True
     ResetButton.Enabled = True
-    showOrderFields BracketIndices.BracketEntryOrder
+    showOrderFields BracketIndexes.BracketEntryOrder
     
 Case OrderSchemes.Bracketorder
     RaiseEvent CaptionChanged("Create a bracket order")
@@ -1998,7 +2080,7 @@ Dim basePrice As Double
 Dim offset As Double
 
 Select Case index
-Case BracketIndices.BracketEntryOrder
+Case BracketIndexes.BracketEntryOrder
     Select Case comboItemData(TypeCombo(index))
     Case EntryOrderTypeBid
         basePrice = mTicker.BidPrice
@@ -2009,7 +2091,7 @@ Case BracketIndices.BracketEntryOrder
     Case Else
         Exit Sub
     End Select
-Case BracketIndices.BracketStopOrder
+Case BracketIndexes.BracketStopOrder
     Select Case comboItemData(TypeCombo(index))
     Case StopOrderTypeBid
         basePrice = mTicker.BidPrice
@@ -2022,7 +2104,7 @@ Case BracketIndices.BracketStopOrder
     Case Else
         Exit Sub
     End Select
-Case BracketIndices.BracketTargetOrder
+Case BracketIndexes.BracketTargetOrder
     Select Case comboItemData(TypeCombo(index))
     Case TargetOrderTypeBid
         basePrice = mTicker.BidPrice
@@ -2038,15 +2120,21 @@ Case BracketIndices.BracketTargetOrder
 End Select
 
 If IsNumeric(OffsetText(index)) Then
-    offset = OffsetText(index) * mTickSize
+    offset = OffsetText(index) * mContract.tickSize
 End If
 
 PriceText(index) = mTicker.formatPrice(basePrice + offset)
 End Sub
 
+Private Sub setPriceFields()
+setPriceField BracketIndexes.BracketEntryOrder
+setPriceField BracketIndexes.BracketStopOrder
+setPriceField BracketIndexes.BracketTargetOrder
+End Sub
+
 Private Sub setupActionCombo(ByVal index As Long)
 ActionCombo(index).clear
-If index <> BracketIndices.BracketEntryOrder Then
+If index <> BracketIndexes.BracketEntryOrder Then
     addItemToCombo ActionCombo(index), _
                 OrderActionToString(OrderActions.ActionNone), _
                 OrderActions.ActionNone
@@ -2077,33 +2165,34 @@ OrderSchemeCombo.ListIndex = 0
 End Sub
 
 Private Sub setupTicker()
-mTickSize = mTicker.Contract.ticksize
+Set mContract = mTicker.Contract
 
-SymbolLabel.caption = mTicker.Contract.specifier.localSymbol & _
+SymbolLabel.caption = mContract.specifier.localSymbol & _
                         " on " & _
-                        mTicker.Contract.specifier.exchange
+                        mContract.specifier.exchange
                         
-setupTifCombo BracketIndices.BracketEntryOrder
-setupTifCombo BracketIndices.BracketStopOrder
-setupTifCombo BracketIndices.BracketTargetOrder
+setupTifCombo BracketIndexes.BracketEntryOrder
+setupTifCombo BracketIndexes.BracketStopOrder
+setupTifCombo BracketIndexes.BracketTargetOrder
 
-setupTriggerMethodCombo BracketIndices.BracketEntryOrder
-setupTriggerMethodCombo BracketIndices.BracketStopOrder
-setupTriggerMethodCombo BracketIndices.BracketTargetOrder
+setupTriggerMethodCombo BracketIndexes.BracketEntryOrder
+setupTriggerMethodCombo BracketIndexes.BracketStopOrder
+setupTriggerMethodCombo BracketIndexes.BracketTargetOrder
 
-setupTypeCombo BracketIndices.BracketEntryOrder
-setupTypeCombo BracketIndices.BracketStopOrder
-setupTypeCombo BracketIndices.BracketTargetOrder
+setupTypeCombo BracketIndexes.BracketEntryOrder
+setupTypeCombo BracketIndexes.BracketStopOrder
+setupTypeCombo BracketIndexes.BracketTargetOrder
 
 reset
 
+mTicker.removeQuoteListener Me
 mTicker.addQuoteListener Me
 showTickerValues
 
 If mOrderContext.IsSimulated Then
-    OrderSimulationLabel.caption = "Orders are simulated"
+    OrderSimulationLabel.caption = OrdersSimulatedMessage
 Else
-    OrderSimulationLabel.caption = "Orders are LIVE !!"
+    OrderSimulationLabel.caption = OrdersLiveMessage
 End If
 
 End Sub
@@ -2151,6 +2240,11 @@ If permittedTriggers And StopTriggerMethods.StopTriggerLast Then
                 OrderStopTriggerMethodToString(StopTriggerMethods.StopTriggerLast), _
                 StopTriggerMethods.StopTriggerLast
 End If
+If permittedTriggers And StopTriggerMethods.StopTriggerBidAsk Then
+    addItemToCombo TriggerMethodCombo(index), _
+                OrderStopTriggerMethodToString(StopTriggerMethods.StopTriggerBidAsk), _
+                StopTriggerMethods.StopTriggerBidAsk
+End If
 If permittedTriggers And StopTriggerMethods.StopTriggerDoubleBidAsk Then
     addItemToCombo TriggerMethodCombo(index), _
                 OrderStopTriggerMethodToString(StopTriggerMethods.StopTriggerDoubleBidAsk), _
@@ -2160,6 +2254,16 @@ If permittedTriggers And StopTriggerMethods.StopTriggerDoubleLast Then
     addItemToCombo TriggerMethodCombo(index), _
                 OrderStopTriggerMethodToString(StopTriggerMethods.StopTriggerDoubleLast), _
                 StopTriggerMethods.StopTriggerDoubleLast
+End If
+If permittedTriggers And StopTriggerMethods.StopTriggerLastOrBidAsk Then
+    addItemToCombo TriggerMethodCombo(index), _
+                OrderStopTriggerMethodToString(StopTriggerMethods.StopTriggerLastOrBidAsk), _
+                StopTriggerMethods.StopTriggerLastOrBidAsk
+End If
+If permittedTriggers And StopTriggerMethods.StopTriggerMidPoint Then
+    addItemToCombo TriggerMethodCombo(index), _
+                OrderStopTriggerMethodToString(StopTriggerMethods.StopTriggerMidPoint), _
+                StopTriggerMethods.StopTriggerMidPoint
 End If
 
 TriggerMethodCombo(index).ListIndex = 0
@@ -2172,7 +2276,7 @@ permittedOrderTypes = mOrderContext.permittedOrderTypes
 
 TypeCombo(index).clear
 
-If index = BracketIndices.BracketEntryOrder Then
+If index = BracketIndexes.BracketEntryOrder Then
     If permittedOrderTypes And OrderTypes.OrderTypeLimit Then
         addItemToCombo TypeCombo(index), _
                     EntryOrderTypeToString(EntryOrderTypes.EntryOrderTypeLimit), _
@@ -2239,7 +2343,7 @@ If index = BracketIndices.BracketEntryOrder Then
                     EntryOrderTypeToString(EntryOrderTypes.EntryOrderTypeMarketToLimit), _
                     EntryOrderTypes.EntryOrderTypeMarketToLimit
     End If
-ElseIf index = BracketIndices.BracketStopOrder Then
+ElseIf index = BracketIndexes.BracketStopOrder Then
     addItemToCombo TypeCombo(index), _
                 StopOrderTypeToString(StopOrderTypes.StopOrderTypeNone), _
                 StopOrderTypes.StopOrderTypeNone
@@ -2269,7 +2373,7 @@ ElseIf index = BracketIndices.BracketStopOrder Then
                     StopOrderTypeToString(StopOrderTypes.StopOrderTypeAuto), _
                     StopOrderTypes.StopOrderTypeAuto
     End If
-ElseIf index = BracketIndices.BracketTargetOrder Then
+ElseIf index = BracketIndexes.BracketTargetOrder Then
     addItemToCombo TypeCombo(index), _
                 TargetOrderTypeToString(TargetOrderTypes.TargetOrderTypeNone), _
                 TargetOrderTypes.TargetOrderTypeNone
@@ -2316,7 +2420,6 @@ For i = 0 To ActionCombo.count - 1
         StopPriceText(i).Visible = True
         IgnoreRthCheck(i).Visible = True
         TIFCombo(i).Visible = True
-        RthOnlyCheck(i).Visible = True
         OrderRefText(i).Visible = True
         AllOrNoneCheck(i).Visible = True
         BlockOrderCheck(i).Visible = True
@@ -2344,7 +2447,6 @@ For i = 0 To ActionCombo.count - 1
         StopPriceText(i).Visible = False
         IgnoreRthCheck(i).Visible = False
         TIFCombo(i).Visible = False
-        RthOnlyCheck(i).Visible = False
         OrderRefText(i).Visible = False
         AllOrNoneCheck(i).Visible = False
         BlockOrderCheck(i).Visible = False
@@ -2375,6 +2477,7 @@ LastSizeText.Text = mTicker.TradeSize
 VolumeText.Text = mTicker.volume
 HighText.Text = mTicker.highPriceString
 LowText.Text = mTicker.lowPriceString
+setPriceFields
 End Sub
 
 
