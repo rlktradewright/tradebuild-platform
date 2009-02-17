@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{CDE57A40-8B86-11D0-B3C6-00A0C90AEA82}#1.0#0"; "MSDATGRD.OCX"
 Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#34.0#0"; "TWControls10.ocx"
-Begin VB.UserControl SPConfigurer1 
+Begin VB.UserControl SPConfigurer 
    ClientHeight    =   12750
    ClientLeft      =   0
    ClientTop       =   0
@@ -26,7 +26,7 @@ Begin VB.UserControl SPConfigurer1
          Italic          =   0   'False
          Strikethrough   =   0   'False
       EndProperty
-      MouseIcon       =   "SPConfigurer1.ctx":0000
+      MouseIcon       =   "SPConfigurer.ctx":0000
       Text            =   ""
    End
    Begin VB.PictureBox CustomOptionsPicture 
@@ -351,7 +351,7 @@ Begin VB.UserControl SPConfigurer1
             Italic          =   0   'False
             Strikethrough   =   0   'False
          EndProperty
-         MouseIcon       =   "SPConfigurer1.ctx":001C
+         MouseIcon       =   "SPConfigurer.ctx":001C
          Text            =   ""
       End
       Begin VB.CheckBox DbEnabledCheck 
@@ -460,7 +460,7 @@ Begin VB.UserControl SPConfigurer1
             Italic          =   0   'False
             Strikethrough   =   0   'False
          EndProperty
-         MouseIcon       =   "SPConfigurer1.ctx":0038
+         MouseIcon       =   "SPConfigurer.ctx":0038
          Text            =   ""
       End
       Begin VB.CheckBox TwsKeepConnectionCheck 
@@ -569,9 +569,9 @@ Begin VB.UserControl SPConfigurer1
    End
    Begin VB.ListBox CategoryList 
       Height          =   3765
-      ItemData        =   "SPConfigurer1.ctx":0054
+      ItemData        =   "SPConfigurer.ctx":0054
       Left            =   120
-      List            =   "SPConfigurer1.ctx":0056
+      List            =   "SPConfigurer.ctx":0056
       TabIndex        =   30
       Top             =   120
       Width           =   2055
@@ -636,7 +636,7 @@ Begin VB.UserControl SPConfigurer1
       Width           =   5055
    End
 End
-Attribute VB_Name = "SPConfigurer1"
+Attribute VB_Name = "SPConfigurer"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
