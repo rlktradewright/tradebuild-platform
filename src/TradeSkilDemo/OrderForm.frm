@@ -1,6 +1,6 @@
 VERSION 5.00
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#48.0#0"; "TradeBuildUI2-6.ocx"
-Begin VB.Form OrderForm 
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#158.0#0"; "TradeBuildUI2-6.ocx"
+Begin VB.Form fOrderTicket 
    BorderStyle     =   1  'Fixed Single
    ClientHeight    =   6135
    ClientLeft      =   45
@@ -20,7 +20,7 @@ Begin VB.Form OrderForm
       _ExtentY        =   10821
    End
 End
-Attribute VB_Name = "OrderForm"
+Attribute VB_Name = "fOrderTicket"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
@@ -76,9 +76,13 @@ End Sub
 
 Private Sub Form_Load()
 
-Me.Left = 0
-Me.Top = Screen.Height - Me.Height
+Me.left = CLng(gAppInstanceConfig.GetSetting(ConfigSettingNameOrderTicketLeft, 0)) * Screen.TwipsPerPixelX
+Me.Top = CLng(gAppInstanceConfig.GetSetting(ConfigSettingNameOrderTicketTop, (Screen.Height - Me.Height) / Screen.TwipsPerPixelY)) * Screen.TwipsPerPixelY
 
+End Sub
+
+Private Sub Form_QueryUnload(cancel As Integer, UnloadMode As Integer)
+updateInstanceSettings
 End Sub
 
 Private Sub Form_Terminate()
@@ -119,4 +123,12 @@ End Sub
 '================================================================================
 ' Helper Functions
 '================================================================================
+
+Private Sub updateInstanceSettings()
+If Not gAppInstanceConfig Is Nothing Then
+    gAppInstanceConfig.AddPrivateConfigurationSection ConfigSectionOrderTicket
+    gAppInstanceConfig.SetSetting ConfigSettingNameOrderTicketLeft, Me.left / Screen.TwipsPerPixelX
+    gAppInstanceConfig.SetSetting ConfigSettingNameOrderTicketTop, Me.Top / Screen.TwipsPerPixelY
+End If
+End Sub
 
