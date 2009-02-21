@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#62.3#0"; "ChartSkil2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#77.0#0"; "ChartSkil2-6.ocx"
 Begin VB.Form ChartForm 
    Caption         =   "ChartSkil Demo Version 2.5"
    ClientHeight    =   8355
@@ -18,6 +18,8 @@ Begin VB.Form ChartForm
       Width           =   12120
       _ExtentX        =   21378
       _ExtentY        =   11880
+      ChartBackColor  =   6566450
+      PointerStyle    =   0
    End
    Begin VB.PictureBox BasePicture 
       Appearance      =   0  'Flat
@@ -47,20 +49,28 @@ Begin VB.Form ChartForm
             TabIndex        =   19
             Top             =   240
             Width           =   1935
+            Begin VB.CommandButton SelectButton 
+               Caption         =   "Select"
+               Height          =   255
+               Left            =   0
+               TabIndex        =   22
+               Top             =   120
+               Width           =   855
+            End
             Begin VB.CommandButton LineButton 
                Caption         =   "Line"
-               Height          =   375
+               Height          =   255
                Left            =   0
                TabIndex        =   21
-               Top             =   0
+               Top             =   360
                Width           =   855
             End
             Begin VB.CommandButton FibRetracementButton 
                Caption         =   "Fib retr"
-               Height          =   375
-               Left            =   960
+               Height          =   255
+               Left            =   0
                TabIndex        =   20
-               Top             =   0
+               Top             =   600
                Width           =   855
             End
          End
@@ -381,6 +391,14 @@ End Sub
 ' Control Event Handlers
 '================================================================================
 
+Private Sub Chart1_PointerModeChanged()
+If Chart1.PointerMode = PointerModeDefault Then
+    SelectButton.Caption = "Select"
+ElseIf Chart1.PointerMode = PointerModeSelection Then
+    SelectButton.Caption = "Cursor"
+End If
+End Sub
+
 Private Sub ClearButton_Click()
 If Not mClockTimer Is Nothing Then mClockTimer.StopTimer
 If Not mTickSimulator Is Nothing Then mTickSimulator.StopSimulation
@@ -432,6 +450,13 @@ Set mClockText = Nothing
 Set mTickSimulator = Nothing
 
 Set mTickCountText = Nothing
+
+Set mPriceLine = Nothing
+Set mPriceText = Nothing
+
+Set mCurrentTool = Nothing
+
+mBarTime = 0
                                             
 initialise          ' reset the basic properties of the chart
 
@@ -469,6 +494,7 @@ lineSpecs(4).Percentage = 61.8
 
 Set tool = CreateFibRetracementTool(Chart1.controller, lineSpecs, LayerNumbers.LayerHighestUser)
 Set mCurrentTool = tool
+Chart1.SetFocus
 End Sub
 
 Private Sub LineButton_Click()
@@ -482,6 +508,18 @@ ls.includeInAutoscale = False
 
 Set tool = CreateLineTool(Chart1.controller, ls, LayerBackground)
 Set mCurrentTool = tool
+Chart1.SetFocus
+End Sub
+
+Private Sub SelectButton_Click()
+If Chart1.PointerMode <> PointerModeSelection Then
+    Chart1.SetPointerModeSelection
+    SelectButton.Caption = "Cursor"
+Else
+    Chart1.SetPointerModeDefault
+    SelectButton.Caption = "Select"
+End If
+Chart1.SetFocus
 End Sub
 
 Private Sub LoadButton_Click()
@@ -519,13 +557,6 @@ Set mPriceRegion = Chart1.AddChartRegion(100, 25)
                                         ' 25 percent of the chart by resizing other
                                         ' regions
                 
-gradientFillColors(0) = RGB(230, 223, 130)
-gradientFillColors(1) = RGB(251, 250, 235)
-mPriceRegion.BackGradientFillColors = gradientFillColors
-                                    ' sets the default background color for all regions
-                                    ' of the chart - but each separate region can
-                                    ' have its own background color
-                
 mPriceRegion.YScaleQuantum = mTickSize  ' the region needs to know this so that vertical
                                         ' cursor movements can snap to tick boundaries
                                         ' when required
@@ -561,6 +592,8 @@ With lBarStyle
                                         ' draw this bar series as bars not candlesticks
     .solidUpBody = False                ' draw up candlesticks with open bodies
                                         ' (ignored if displaying as bars)
+    .upColor = &H1D9311
+    .downColor = &H43FC2
 End With
 Set mBarSeries = mPriceRegion.AddGraphicObjectSeries(New BarSeries)
 mBarSeries.Style = lBarStyle
@@ -824,9 +857,20 @@ extendedLine.extendAfter = True         ' make it extend forever beyond its seco
 extendedLine.extendBefore = True        ' make it extend forever before its first point
 extendedLine.extended = True            ' make sure it's visible even if its first point isn't
                                         ' in view
-extendedLine.Point1 = mPriceRegion.newPoint(mPeriod.periodNumber - 40, mBarSeries.Item(mPeriod.periodNumber - 40).highPrice + 20 * mTickSize)
+Dim x As Long
+If InitialNumBarsText > 40 Then
+    x = mPeriod.periodNumber - 40
+Else
+    x = 1
+End If
+extendedLine.Point1 = mPriceRegion.newPoint(x, mBarSeries.Item(x).highPrice + 20 * mTickSize)
                                         ' let its 1st point be 20 ticks above the high 40 bars ago
-extendedLine.Point2 = mPriceRegion.newPoint(mPeriod.periodNumber - 5, mBarSeries.Item(mPeriod.periodNumber - 5).highPrice)
+If InitialNumBarsText > 5 Then
+    x = mPeriod.periodNumber - 5
+Else
+    x = 1
+End If
+extendedLine.Point2 = mPriceRegion.newPoint(x, mBarSeries.Item(x).highPrice)
                                         ' let its 2nd point be the high 5 bars ago
 
 ' Now tell the chart to draw itself. Note that this makes it draw every visible object.
@@ -884,9 +928,6 @@ Private Sub mTickSimulator_HistoricalBar( _
                 ByVal closePrice As Double, _
                 ByVal volume As Long)
 Dim bartime As Date
-Static barnum As Long
-
-barnum = barnum + 1
 
 bartime = BarStartTime(timestamp, GetTimePeriod(BarLengthText, TimePeriodMinute), SessionStartTimeText)
 
@@ -938,7 +979,7 @@ mCumVolume = mCumVolume + volume
 mVolume.datavalue = volume
 mPrevBarVolume = volume
 
-Debug.Print "Time to add bar " & barnum & ": " & mElapsedTimer.ElapsedTimeMicroseconds & " microsecs"
+Debug.Print "Time to add hist bar: " & mElapsedTimer.ElapsedTimeMicroseconds & " microsecs"
 
 setNewStudyPeriod bartime
 
@@ -961,7 +1002,7 @@ If bartime <> mBarTime Then
     mBarTime = bartime
     mElapsedTimer.StartTiming
     Set mBar = mBarSeries.Add(bartime)
-    Debug.Print "Time for add bar: " & mElapsedTimer.ElapsedTimeMicroseconds & " microsecs"
+    Debug.Print "Time to add bar: " & mElapsedTimer.ElapsedTimeMicroseconds & " microsecs"
     Set mPeriod = Chart1.periods.Item(bartime)
     
     mPrevBarVolume = mVolume.datavalue
@@ -1072,6 +1113,12 @@ Chart1.PointerStyle = PointerCrosshairs
 
 ' set some default properties of the chart regions
 
+' set the background colour of the chart area when the chart is cleared
+ReDim gradientFillColors(1) As Long
+gradientFillColors(0) = RGB(255, 128, 128)
+gradientFillColors(1) = RGB(255, 255, 255)
+Chart1.controller.ChartBackGradientFillColors = gradientFillColors
+
 ' first get the built-in defaults - we modify those that
 ' we want to change
 Set regionStyle = Chart1.DefaultRegionStyle
@@ -1079,7 +1126,6 @@ Set regionStyle = Chart1.DefaultRegionStyle
 regionStyle.Autoscale = True        ' indicates that by default, each chart region will
                                     ' automatically adjust its vertical scaling to ensure
                                     ' that all relevant data is visible
-'regionStyle.BackColor = RGB(251, 250, 235)
 ReDim gradientFillColors(1) As Long
 gradientFillColors(0) = RGB(230, 223, 130)
 gradientFillColors(1) = RGB(251, 250, 235)
@@ -1096,7 +1142,6 @@ Chart1.DefaultRegionStyle = regionStyle
 
 ' now set the style for the X axis
 Set regionStyle = Chart1.XAxisRegion.Style
-'regionStyle.BackColor = RGB(230, 236, 207)
 gradientFillColors(0) = RGB(230, 236, 207)
 gradientFillColors(1) = RGB(222, 236, 215)
 regionStyle.BackGradientFillColors = gradientFillColors
@@ -1104,7 +1149,6 @@ Chart1.XAxisRegion.Style = regionStyle
 
 ' now set the style for Y axes
 Set regionStyle = Chart1.DefaultYAxisStyle
-'regionStyle.BackColor = RGB(234, 246, 254)
 gradientFillColors(0) = RGB(234, 246, 254)
 gradientFillColors(1) = RGB(226, 246, 255)
 regionStyle.BackGradientFillColors = gradientFillColors
