@@ -150,10 +150,10 @@ mSessionBuilder.setSessionCurrentTime ev.sVal.timestamp
 evOut = ev
 
 If mUseLocalTimeForStudies Then
-    evOut.sVal.timestamp = ConvertDateUTCToLocal(ConvertDateTzToUTC(ev.sVal.timestamp, mExchangeTimeZone))
+    evOut.sVal.timestamp = ConvertDateTzToLocal(ev.sVal.timestamp, mExchangeTimeZone)
 End If
 
-evOut.sVal.barStartTime = 0  ' a higher level study must generate this
+evOut.sVal.BarStartTime = 0  ' a higher level study must generate this
 mStudies.notify evOut
 mListeners.notify evOut
 End Sub

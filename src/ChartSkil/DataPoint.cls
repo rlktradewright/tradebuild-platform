@@ -110,6 +110,10 @@ mBlank = True
 mBoundingRect.isValid = False
 End Sub
 
+Private Sub Class_Terminate()
+Debug.Print "DataPoint terminated"
+End Sub
+
 '================================================================================
 ' IGraphicObject Members
 '================================================================================
@@ -139,7 +143,7 @@ Exit Property
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_boundingRectangle" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_boundingRectangle" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -147,7 +151,7 @@ Err.Raise errNumber, errSource, errDescription
 
 End Property
 
-Private Property Get IGraphicObject_BoundingRectanglesAt(ByVal PeriodNumber As Long) As TRectangle()
+Private Property Get IGraphicObject_BoundingRectanglesAt(ByVal periodNumber As Long) As TRectangle()
 '
 End Property
 
@@ -198,11 +202,11 @@ IGraphicObject_handle = mHandle
 End Property
 
 Private Function IGraphicObject_HitTest(ByVal x As Double, ByVal y As Double) As Boolean
-IGraphicObject_HitTest = RectContains(mBoundingRect, x, y)
+IGraphicObject_HitTest = RectContainsPoint(mBoundingRect, x, y)
 End Function
 
 Private Property Get IGraphicObject_includeInAutoscale() As Boolean
-IGraphicObject_includeInAutoscale = IncludeInAutoscale
+IGraphicObject_includeInAutoscale = includeInAutoscale
 End Property
 
 Private Property Let IGraphicObject_inScope(ByVal value As Boolean)
@@ -261,7 +265,7 @@ End Property
 '
 'Err:
 'Dim errNumber As Long: errNumber = Err.Number
-'Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_undraw" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+'Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_undraw" & "." & failpoint & IIf(err.Source <> "", vbCrLf & err.Source, "")
 'Dim errDescription As String: errDescription = Err.Description
 'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 'Err.Raise errNumber, errSource, errDescription
@@ -373,7 +377,7 @@ If Not mLocalStyle Is Nothing Then histBarWidth = mLocalStyle.histBarWidth
 If mIsSetHistBarWidth Then histBarWidth = mHistBarWidth
 End Property
 
-Public Property Let IncludeInAutoscale(ByVal value As Boolean)
+Public Property Let includeInAutoscale(ByVal value As Boolean)
 If mIncludeInAutoscale = value And mIsSetIncludeInAutoscale Then Exit Property
 If Not value Then undraw
 mIncludeInAutoscale = value
@@ -381,26 +385,26 @@ mIsSetIncludeInAutoscale = True
 mGOSP.ObjectChanged mHandle, mBoundingRect
 End Property
 
-Public Property Get IncludeInAutoscale() As Boolean
-IncludeInAutoscale = mBaseStyle.IncludeInAutoscale
-If Not mLocalStyle Is Nothing Then IncludeInAutoscale = mLocalStyle.IncludeInAutoscale
-If mIsSetIncludeInAutoscale Then IncludeInAutoscale = mIncludeInAutoscale
+Public Property Get includeInAutoscale() As Boolean
+includeInAutoscale = mBaseStyle.includeInAutoscale
+If Not mLocalStyle Is Nothing Then includeInAutoscale = mLocalStyle.includeInAutoscale
+If mIsSetIncludeInAutoscale Then includeInAutoscale = mIncludeInAutoscale
 End Property
 
 Public Property Get InScope() As Boolean
 InScope = mInScope
 End Property
 
-Public Property Get IsSelectable() As Boolean
-IsSelectable = mIsSelectable
+Public Property Get isSelectable() As Boolean
+isSelectable = mIsSelectable
 End Property
 
 Public Property Get IsSelected() As Boolean
 IsSelected = mIsSelected
 End Property
 
-Public Property Get key() As String
-key = mKey
+Public Property Get Key() As String
+Key = mKey
 End Property
 
 Public Property Let Layer(ByVal value As Long)
@@ -441,11 +445,11 @@ If Not mLocalStyle Is Nothing Then lineThickness = mLocalStyle.lineThickness
 If mIsSetLineThickness Then lineThickness = mLineThickness
 End Property
 
-Public Property Get localStyle() As DataPointStyle
-Set localStyle = mLocalStyle.clone
+Public Property Get LocalStyle() As DataPointStyle
+Set LocalStyle = mLocalStyle.clone
 End Property
 
-Public Property Let localStyle( _
+Public Property Let LocalStyle( _
                 ByVal value As DataPointStyle)
 
 undraw
@@ -519,23 +523,23 @@ End Property
 Friend Sub initialise( _
                 ByVal seriesId As Long, _
                 ByVal timestamp As Date, _
-                ByVal key As String, _
+                ByVal Key As String, _
                 ByVal GOSP As GraphObjServiceProvider, _
                 ByVal Layer As Long, _
                 ByVal Canvas As Canvas, _
                 ByVal baseStyle As DataPointStyle, _
-                ByVal localStyle As DataPointStyle, _
-                Optional ByVal IsSelectable As Boolean)
+                ByVal LocalStyle As DataPointStyle, _
+                Optional ByVal isSelectable As Boolean)
                 
 mSeriesID = seriesId
 mTimestamp = timestamp
-mKey = key
+mKey = Key
 Set mGOSP = GOSP
 mLayer = Layer
 Set mCanvas = Canvas
 Set mBaseStyle = baseStyle
-If Not localStyle Is Nothing Then Set mLocalStyle = localStyle.clone ' local style cannot be shared
-mIsSelectable = IsSelectable
+If Not LocalStyle Is Nothing Then Set mLocalStyle = LocalStyle.clone ' local style cannot be shared
+mIsSelectable = isSelectable
 
 calcBoundingRect
 End Sub

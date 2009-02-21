@@ -72,9 +72,11 @@ Attribute mTradeBuildAPI.VB_VarHelpID = -1
 Private WithEvents mTickers                             As Tickers
 Attribute mTickers.VB_VarHelpID = -1
 
-Private mConfig                                         As ConfigItem
+Private mConfigFile                                     As ConfigurationFile
+Private mConfig                                         As ConfigurationSection
+Private mConfigName                                     As String
 
-Private mContractsConfig                                As ConfigItem
+Private mContractsConfig                                As ConfigurationSection
 
 Private mWritebars                                      As Boolean
 
@@ -269,7 +271,8 @@ End Property
 '@================================================================================
 
 Friend Sub initialise( _
-                ByVal config As ConfigItem, _
+                ByVal pConfigFile As ConfigurationFile, _
+                ByVal configName As String, _
                 ByVal startTimeDescriptor As String, _
                 ByVal endTimeDescriptor As String, _
                 ByVal exitTimeDescriptor As String)
@@ -277,7 +280,17 @@ Friend Sub initialise( _
 Dim failpoint As Long
 On Error GoTo Err
 
-Set mConfig = config
+failpoint = 50
+
+Set mConfigFile = pConfigFile
+mConfigName = configName
+Set mConfig = GetAppInstanceConfig(mConfigFile, configName)
+
+If mConfig Is Nothing Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "initialise", _
+            "Specified instance config does not exist"
+End If
 
 failpoint = 100
 determineProcessingTimes startTimeDescriptor, _
@@ -372,32 +385,44 @@ On Error Resume Next
 
 If descriptor = "" Then Exit Function
 
-If Len(descriptor) <> 8 Then
+descriptor = UCase$(Trim$(descriptor))
+
+If Len(descriptor) <> 8 And Len(descriptor) <> 5 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "calcTimeFromDescriptor", _
-            "Format for descriptor is dddhh:mm"
+            "Format for descriptor is dddhh:mm or hh:mm"
 End If
 
-Select Case UCase$(Left$(Trim$(descriptor), 3))
-Case "SUN"
-    day = vbSunday
-Case "MON"
-    day = vbMonday
-Case "TUE"
-    day = vbTuesday
-Case "WED"
-    day = vbWednesday
-Case "THU"
-    day = vbThursday
-Case "FRI"
-    day = vbFriday
-Case "SAT"
-    day = vbSaturday
-Case Else
+If Len(descriptor) = 8 Then
+    Select Case Left$(descriptor, 3)
+    Case "SUN"
+        day = vbSunday
+    Case "MON"
+        day = vbMonday
+    Case "TUE"
+        day = vbTuesday
+    Case "WED"
+        day = vbWednesday
+    Case "THU"
+        day = vbThursday
+    Case "FRI"
+        day = vbFriday
+    Case "SAT"
+        day = vbSaturday
+    Case Else
+        Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                ProjectName & "." & ModuleName & ":" & "calcTimeFromDescriptor", _
+                "First three bytes of descriptor must be a valid day code"
+    End Select
+Else
+    day = -1
+End If
+
+If Not IsDate(Right$(descriptor, 5)) Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "calcTimeFromDescriptor", _
-            "First three bytes of descriptor must be a valid day code"
-End Select
+            "Last five bytes must be hh:mm"
+End If
 
 theTime = CDate(Right$(descriptor, 5))
 
@@ -407,7 +432,11 @@ If theTime >= 1 Then
             "Last five bytes must be hh:mm"
 End If
 
-calcTimeFromDescriptor = Int(Now + day - Weekday(Now)) + theTime
+If day = -1 Then
+    calcTimeFromDescriptor = Int(Now) + theTime
+Else
+    calcTimeFromDescriptor = Int(Now + day - Weekday(Now)) + theTime
+End If
 If calcTimeFromDescriptor <= Now Then calcTimeFromDescriptor = calcTimeFromDescriptor + 7
 End Function
 
@@ -427,7 +456,7 @@ End Sub
 Private Sub processConfig()
 Dim i As Long
 Dim outputFormat As String
-Dim ci As ConfigItem
+Dim cs As ConfigurationSection
 
 Dim failpoint As Long
 On Error GoTo Err
@@ -445,36 +474,30 @@ mOutputPath = ""
 
 failpoint = 200
 
-mTradeBuildAPI.ServiceProviders.loadServiceProviderConfiguration mConfig.childItems.Item(ConfigNameTradeBuild)
+ConfigureTradeBuild mConfigFile, mConfig.InstanceQualifier
 
 failpoint = 500
 
-AddStudyLibrary CommonStudiesLibProgId, True
+AddStudyLibrary CommonStudiesLibProgId, True, "Built-in"
 
 mSupportedOutputFormats = mTradeBuildAPI.SupportedOutputTickfileFormats
 
 failpoint = 600
 
-Set ci = mConfig.childItems.Item(ConfigNameCollectionControl)
-
-mWriteticks = ci.getDefaultableAttribute(AttributeNameWriteTickData, "False")
-mWritebars = ci.getDefaultableAttribute(AttributeNameWriteBarData, "False")
+mWriteticks = mConfig.GetSetting(ConfigSettingWriteTickData, "False")
+mWritebars = mConfig.GetSetting(ConfigSettingWriteBarData, "False")
 
 
 failpoint = 700
 
 If mWriteticks Then
-    On Error Resume Next
-    Set ci = Nothing
-    Set ci = mConfig.childItems.Item(ConfigNameTickDataFormat)
-    On Error GoTo Err
+    outputFormat = UCase$(mConfig.GetSetting(ConfigSettingWriteTickDataFormat))
     
-    If ci Is Nothing Then
+    If outputFormat = "" Then
         ' the service provider's default format will be used
     Else
-        outputFormat = ci.value
         For i = 0 To UBound(mSupportedOutputFormats)
-            If UCase$(outputFormat) = UCase$(mSupportedOutputFormats(i).Name) Then
+            If outputFormat = UCase$(mSupportedOutputFormats(i).Name) Then
                 mOutputFormat = mSupportedOutputFormats(i).FormalID
                 Exit For
             End If
@@ -487,15 +510,11 @@ If mWriteticks Then
     End If
 End If
 
-On Error Resume Next
-Set ci = Nothing
-Set ci = mConfig.childItems.Item(ConfigNameTickFilePath)
-On Error GoTo Err
-If Not ci Is Nothing Then mOutputPath = ci.value
+mOutputPath = mConfig.GetSetting(ConfigSettingWriteTickDataPath)
 
 failpoint = 700
 
-Set mContractsConfig = mConfig.childItems.Item(ConfigNameContracts)
+Set mContractsConfig = mConfig.GetConfigurationSection(ConfigSectionContracts)
 Exit Sub
 
 Err:

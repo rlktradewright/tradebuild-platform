@@ -225,28 +225,31 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "StudiesUI26"
-Private Const ModuleName                    As String = "StudyLibConfigurer"
+Private Const ProjectName                       As String = "StudiesUI26"
+Private Const ModuleName                        As String = "StudyLibConfigurer"
 
 Private Const AttributeNameStudyLibraryBuiltIn  As String = "BuiltIn"
 Private Const AttributeNameStudyLibraryEnabled  As String = "Enabled"
-Private Const AttributeNameStudyLibraryName     As String = "Name"
 Private Const AttributeNameStudyLibraryProgId   As String = "ProgId"
 
-Private Const ConfigNameStudyLibrary        As String = "StudyLibrary"
-Private Const ConfigNameStudyLibraries      As String = "StudyLibraries"
+Private Const ConfigNameStudyLibrary            As String = "StudyLibrary"
+Private Const ConfigNameStudyLibraries          As String = "StudyLibraries"
 
-Private Const NewStudyLibraryName           As String = "New study library"
-Private Const BuiltInStudyLibraryName       As String = "Built-in"
+Private Const DefaultAppConfigName              As String = "Default config"
+
+Private Const NewStudyLibraryName               As String = "New study library"
+Private Const BuiltInStudyLibraryName           As String = "Built-in"
+
+Private Const StudyLibrariesRenderer             As String = "$StudyLibraries"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
 
-Private mConfig                     As ConfigItem
+Private mConfig                     As ConfigurationSection
 
-Private mCurrSLsList                As ConfigItem
-Private mCurrSL                     As ConfigItem
+Private mCurrSLsList                As ConfigurationSection
+Private mCurrSL                     As ConfigurationSection
 Private mCurrSLIndex                As Long
 
 Private mNames                      As Collection
@@ -262,6 +265,7 @@ Private mReadOnly                   As Boolean
 Private Sub UserControl_Initialize()
 UserControl.Width = OutlineBox.Width
 UserControl.Height = OutlineBox.Height
+disableFields
 End Sub
 
 Private Sub UserControl_LostFocus()
@@ -289,6 +293,9 @@ Dim i As Long
 checkForOutstandingUpdates
 clearSelection
 
+Set mCurrSL = Nothing
+mCurrSLIndex = -1
+
 If hasBuiltIn Then
     newName = NewStudyLibraryName
     nameStub = NewStudyLibraryName
@@ -302,18 +309,36 @@ Do While invalidName(newName)
     newName = nameStub & CLng(i)
 Loop
 
-mNames.Add newName, newName
-StudyLibList.AddItem newName
-StudyLibList.selected(StudyLibList.ListCount - 1) = True
+clearFields
+enableFields
+
+EnabledCheck = vbChecked
+NameText = newName
+If InStr(1, NameText, BuiltInStudyLibraryName) <> 0 Then
+    BuiltInOpt = True
+Else
+    CustomOpt = True
+End If
+ProgIdText = ""
+
 End Sub
 
 Private Sub ApplyButton_Click()
-applyProperties
-mNames.Remove StudyLibList.List(mCurrSLIndex)
-mNames.Add NameText, NameText
-StudyLibList.List(mCurrSLIndex) = NameText
-enableApplyButton False
-enableCancelButton False
+If applyProperties Then
+    If mCurrSLIndex >= 0 Then
+        mNames.Remove StudyLibList.List(mCurrSLIndex)
+        mNames.Add NameText, NameText
+        StudyLibList.List(mCurrSLIndex) = NameText
+        enableApplyButton False
+        enableCancelButton False
+    Else
+        mNames.Add NameText, NameText
+        StudyLibList.AddItem NameText
+        enableApplyButton False
+        enableCancelButton False
+        StudyLibList.selected(StudyLibList.ListCount - 1) = True
+    End If
+End If
 End Sub
 
 Private Sub BuiltInOpt_Click()
@@ -347,25 +372,19 @@ End Sub
 Private Sub DownButton_Click()
 Dim s As String
 Dim i As Long
-Dim targetSL As ConfigItem
-Dim thisSL As ConfigItem
+Dim thisSL As ConfigurationSection
 
 For i = StudyLibList.ListCount - 2 To 0 Step -1
     If StudyLibList.selected(i) And Not StudyLibList.selected(i + 1) Then
         
         Set thisSL = findSL(StudyLibList.List(i))
-        If i < StudyLibList.ListCount - 2 Then
-            Set targetSL = findSL(StudyLibList.List(i + 2))
+        If thisSL.MoveDown Then
+            s = StudyLibList.List(i)
+            StudyLibList.RemoveItem i
+            StudyLibList.AddItem s, i + 1
+            If i = mCurrSLIndex Then mCurrSLIndex = mCurrSLIndex + 1
+            StudyLibList.selected(i + 1) = True
         End If
-        If Not thisSL Is Nothing Then
-            mCurrSLsList.childItems.moveItemBefore thisSL, targetSL
-        End If
-        
-        s = StudyLibList.List(i)
-        StudyLibList.RemoveItem i
-        StudyLibList.AddItem s, i + 1
-        If i = mCurrSLIndex Then mCurrSLIndex = mCurrSLIndex + 1
-        StudyLibList.selected(i + 1) = True
     End If
 Next
 
@@ -382,9 +401,6 @@ Private Sub NameText_Change()
 If mNoCheck Then Exit Sub
 enableApplyButton isValidFields
 enableCancelButton True
-'mNames.Remove StudyLibList.List(mCurrSLIndex)
-'mNames.Add NameText, NameText
-'StudyLibList.List(mCurrSLIndex) = NameText
 End Sub
 
 Private Sub ProgIdText_Change()
@@ -396,21 +412,26 @@ End Sub
 Private Sub RemoveButton_Click()
 Dim s As String
 Dim i As Long
-Dim sl As ConfigItem
+Dim sl As ConfigurationSection
 
 clearFields
+disableFields
 enableApplyButton False
 enableCancelButton False
 For i = StudyLibList.ListCount - 1 To 0 Step -1
     If StudyLibList.selected(i) Then
         s = StudyLibList.List(i)
         StudyLibList.RemoveItem i
+        mNames.Remove s
         Set sl = findSL(s)
         If Not sl Is Nothing Then
-            mCurrSLsList.childItems.Remove sl
+            mCurrSLsList.RemoveConfigurationSection ConfigNameStudyLibrary & "(" & sl.InstanceQualifier & ")"
         End If
     End If
 Next
+Set mCurrSL = Nothing
+mCurrSLIndex = -1
+
 DownButton.Enabled = False
 UpButton.Enabled = False
 RemoveButton.Enabled = False
@@ -425,6 +446,7 @@ setRemoveButton
 If StudyLibList.SelCount > 1 Then
     checkForOutstandingUpdates
     clearFields
+    disableFields
     Set mCurrSL = Nothing
     mCurrSLIndex = -1
     Exit Sub
@@ -434,61 +456,47 @@ If StudyLibList.ListIndex = mCurrSLIndex Then Exit Sub
 
 checkForOutstandingUpdates
 clearFields
+enableFields
 
 Set mCurrSL = Nothing
 mCurrSLIndex = -1
 Set mCurrSL = findSL(StudyLibList)
 mCurrSLIndex = StudyLibList.ListIndex
 
-If mCurrSL Is Nothing Then
-    ' must be a new entry
-    EnabledCheck = vbChecked
-    NameText = StudyLibList
-    If InStr(1, NameText, BuiltInStudyLibraryName) <> 0 Then
-        BuiltInOpt = True
-    Else
-        CustomOpt = True
-    End If
-    ProgIdText = ""
+mNoCheck = True
+EnabledCheck = IIf(mCurrSL.getAttribute(AttributeNameStudyLibraryEnabled) = "True", vbChecked, vbUnchecked)
+NameText = mCurrSL.InstanceQualifier
+If mCurrSL.getAttribute(AttributeNameStudyLibraryBuiltIn) = "True" Then
+    BuiltInOpt = True
+    On Error Resume Next
+    ' preserve whatever is in the config
+    ProgIdText = mCurrSL.getAttribute(AttributeNameStudyLibraryProgId)
+    On Error GoTo 0
 Else
-    mNoCheck = True
-    EnabledCheck = IIf(mCurrSL.getAttribute(AttributeNameStudyLibraryEnabled) = "True", vbChecked, vbUnchecked)
-    NameText = mCurrSL.getAttribute(AttributeNameStudyLibraryName)
-    If mCurrSL.getAttribute(AttributeNameStudyLibraryBuiltIn) = "True" Then
-        BuiltInOpt = True
-        On Error Resume Next
-        ' preserve whatever is in the config
-        ProgIdText = mCurrSL.getAttribute(AttributeNameStudyLibraryProgId)
-        On Error GoTo 0
-    Else
-        CustomOpt = True
-        ProgIdText = mCurrSL.getAttribute(AttributeNameStudyLibraryProgId)
-    End If
-    mNoCheck = False
+    CustomOpt = True
+    ProgIdText = mCurrSL.getAttribute(AttributeNameStudyLibraryProgId)
 End If
+mNoCheck = False
 
 End Sub
 
 Private Sub UpButton_Click()
 Dim s As String
 Dim i As Long
-Dim targetSL As ConfigItem
-Dim thisSL As ConfigItem
+Dim thisSL As ConfigurationSection
 
 For i = 1 To StudyLibList.ListCount - 1
     If StudyLibList.selected(i) And Not StudyLibList.selected(i - 1) Then
         
         Set thisSL = findSL(StudyLibList.List(i))
-        Set targetSL = findSL(StudyLibList.List(i - 1))
-        If Not thisSL Is Nothing And Not targetSL Is Nothing Then
-            mCurrSLsList.childItems.moveItemBefore thisSL, targetSL
+        If thisSL.MoveUp Then
+            s = StudyLibList.List(i)
+            StudyLibList.RemoveItem i
+            StudyLibList.AddItem s, i - 1
+            If i = mCurrSLIndex Then mCurrSLIndex = mCurrSLIndex - 1
+            StudyLibList.selected(i - 1) = True
+    
         End If
-        
-        s = StudyLibList.List(i)
-        StudyLibList.RemoveItem i
-        StudyLibList.AddItem s, i - 1
-        If i = mCurrSLIndex Then mCurrSLIndex = mCurrSLIndex - 1
-        StudyLibList.selected(i - 1) = True
     End If
 Next
 
@@ -511,14 +519,16 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Sub applyChanges()
-applyProperties
-enableApplyButton False
-enableCancelButton False
-End Sub
+Public Function applyChanges() As Boolean
+If applyProperties Then
+    enableApplyButton False
+    enableCancelButton False
+    applyChanges = True
+End If
+End Function
 
 Public Sub initialise( _
-                ByVal configdata As ConfigItem, _
+                ByVal configdata As ConfigurationSection, _
                 Optional ByVal readOnly As Boolean)
 mReadOnly = readOnly
 checkForOutstandingUpdates
@@ -530,50 +540,26 @@ loadConfig configdata
 If mReadOnly Then disableControls
 End Sub
 
-Public Sub setDefaultStudyLibrary( _
-                ByVal configdata As ConfigItem)
-Dim currSLsList As ConfigItem
-Dim currSL As ConfigItem
-
-On Error Resume Next
-Set currSLsList = configdata.childItems.item(ConfigNameStudyLibraries)
-On Error GoTo 0
-
-If Not currSLsList Is Nothing Then
-    err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "setDefaultStudyLibrary", _
-            "Study libraries list is not empty"
-End If
-
-Set currSLsList = configdata.childItems.AddItem(ConfigNameStudyLibraries)
-
-Set currSL = currSLsList.childItems.AddItem(ConfigNameStudyLibrary)
-
-currSL.setAttribute AttributeNameStudyLibraryEnabled, "True"
-currSL.setAttribute AttributeNameStudyLibraryName, BuiltInStudyLibraryName
-currSL.setAttribute AttributeNameStudyLibraryBuiltIn, "True"
-End Sub
-
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Sub applyProperties()
+Private Function applyProperties() As Boolean
+Dim failpoint As Long
+On Error GoTo Err
+
 If mCurrSL Is Nothing Then
-    Dim targetSL As ConfigItem
-    
     If mCurrSLsList Is Nothing Then
-        Set mCurrSLsList = mConfig.childItems.AddItem(ConfigNameStudyLibraries)
+        Set mCurrSLsList = mConfig.AddConfigurationSection(ConfigNameStudyLibraries, , StudyLibrariesRenderer)
     End If
     
-    If mCurrSLIndex <> StudyLibList.ListCount - 1 Then
-        Set targetSL = findSL(StudyLibList.List(mCurrSLIndex + 1))
-    End If
-    Set mCurrSL = mCurrSLsList.childItems.insertItemBefore(ConfigNameStudyLibrary, , , targetSL)
+    Set mCurrSL = mCurrSLsList.AddConfigurationSection(ConfigNameStudyLibrary & "(" & NameText & ")")
 End If
 
+If mCurrSL.InstanceQualifier <> NameText Then
+    mCurrSL.InstanceQualifier = NameText
+End If
 mCurrSL.setAttribute AttributeNameStudyLibraryEnabled, IIf(EnabledCheck = vbChecked, "True", "False")
-mCurrSL.setAttribute AttributeNameStudyLibraryName, NameText
 If BuiltInOpt Then
     mCurrSL.setAttribute AttributeNameStudyLibraryBuiltIn, "True"
     If ProgIdText <> "" Then mCurrSL.setAttribute AttributeNameStudyLibraryProgId, ProgIdText
@@ -581,7 +567,22 @@ Else
     mCurrSL.setAttribute AttributeNameStudyLibraryBuiltIn, "False"
     mCurrSL.setAttribute AttributeNameStudyLibraryProgId, ProgIdText
 End If
-End Sub
+
+applyProperties = True
+
+Exit Function
+
+Err:
+If Err.Number = ErrorCodes.ErrIllegalArgumentException Then
+    MsgBox "Invalid study library name", vbExclamation, "Attention!"
+    Exit Function
+End If
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "applyProperties" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+End Function
 
 Private Sub checkForOutstandingUpdates()
 If ApplyButton.Enabled Then
@@ -618,6 +619,13 @@ CancelButton.Enabled = False
 ApplyButton.Enabled = False
 End Sub
 
+Private Sub disableFields()
+EnabledCheck.Enabled = False
+NameText.Enabled = False
+BuiltInOpt.Enabled = False
+CustomOpt.Enabled = False
+ProgIdText.Enabled = False
+End Sub
 
 Private Sub enableApplyButton( _
                 ByVal enable As Boolean)
@@ -643,22 +651,24 @@ Else
 End If
 End Sub
 
+Private Sub enableFields()
+EnabledCheck.Enabled = True
+NameText.Enabled = True
+BuiltInOpt.Enabled = True
+CustomOpt.Enabled = True
+ProgIdText.Enabled = True
+End Sub
+
 Private Function findSL( _
-                ByVal name As String) As ConfigItem
-Dim sl As ConfigItem
-On Error Resume Next
-For Each sl In mCurrSLsList.childItems
-    If sl.getAttribute(AttributeNameStudyLibraryName) = name Then
-        Set findSL = sl
-        Exit Function
-    End If
-Next
+                ByVal name As String) As ConfigurationSection
+If mCurrSLsList Is Nothing Then Exit Function
+Set findSL = mCurrSLsList.GetConfigurationSection(ConfigNameStudyLibrary & "(" & name & ")")
 End Function
 
 Private Function hasBuiltIn() As Boolean
-Dim sl As ConfigItem
+Dim sl As ConfigurationSection
 If mCurrSLsList Is Nothing Then Exit Function
-For Each sl In mCurrSLsList.childItems
+For Each sl In mCurrSLsList
     If sl.getAttribute(AttributeNameStudyLibraryBuiltIn) = "True" Then
         hasBuiltIn = True
         Exit Function
@@ -669,51 +679,57 @@ End Function
 Private Function invalidName(ByVal name As String) As Boolean
 Dim s As String
 
-If name = "" Then Exit Function
+If name = "" Then
+    invalidName = True
+    Exit Function
+End If
 
-On Error GoTo err
+On Error GoTo Err
 s = mNames(name)
 
-If name = StudyLibList.List(mCurrSLIndex) Then
+If StudyLibList.ListCount = 0 Then
+    invalidName = True
+ElseIf name = StudyLibList.List(mCurrSLIndex) Then
+    invalidName = False
 Else
     invalidName = True
 End If
 
 Exit Function
 
-err:
+Err:
 
 End Function
 
 Private Function isValidFields() As Boolean
 On Error Resume Next
 If invalidName(NameText) Then
-ElseIf CustomOpt And ProgIdText = "" Then
-ElseIf CustomOpt And InStr(1, ProgIdText, ".") < 2 Then
-ElseIf CustomOpt And InStr(1, ProgIdText, ".") = Len(ProgIdText) Then
-ElseIf CustomOpt And Len(ProgIdText) > 39 Then
+ElseIf Not CustomOpt Then
+    isValidFields = True
+ElseIf ProgIdText = "" Then
+ElseIf InStr(1, ProgIdText, ".") < 2 Then
+ElseIf InStr(1, ProgIdText, ".") = Len(ProgIdText) Then
+ElseIf Len(ProgIdText) > 39 Then
 Else
     isValidFields = True
 End If
 End Function
 
 Private Sub loadConfig( _
-                ByVal configdata As ConfigItem)
+                ByVal configdata As ConfigurationSection)
                 
-Dim sl As ConfigItem
+Dim sl As ConfigurationSection
 
 Set mConfig = configdata
 
-On Error Resume Next
-Set mCurrSLsList = mConfig.childItems.item(ConfigNameStudyLibraries)
-On Error GoTo 0
+Set mCurrSLsList = mConfig.GetConfigurationSection(ConfigNameStudyLibraries)
 
 StudyLibList.clear
 
 If Not mCurrSLsList Is Nothing Then
-    For Each sl In mCurrSLsList.childItems
+    For Each sl In mCurrSLsList
         Dim slname As String
-        slname = sl.getAttribute(AttributeNameStudyLibraryName)
+        slname = sl.InstanceQualifier
         StudyLibList.AddItem slname
         mNames.Add slname, slname
     Next

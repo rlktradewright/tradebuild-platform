@@ -83,6 +83,8 @@ Public Enum TWSSocketInMsgTypes
     TICK_EFP = 47
     CURRENT_TIME = 49
     REAL_TIME_BARS = 50
+    FUNDAMENTAL_DATA = 51
+    CONTRACT_DATA_END = 52
     MAX_SOCKET_INMSG
 End Enum
 
@@ -212,7 +214,7 @@ Set mCommonServiceConsumer = RHS
 End Property
 
 Public Property Get gLogger() As Logger
-If mLogger Is Nothing Then Set mLogger = GetLogger("log.serviceprovider.ibtwssp")
+If mLogger Is Nothing Then Set mLogger = GetLogger("tradebuild.log.serviceprovider.ibtwssp")
 Set gLogger = mLogger
 End Property
 
@@ -397,7 +399,7 @@ Dim i As Long
 For i = 0 To mTWSAPITableNextIndex - 1
     mTWSAPITable(i).usageCount = 0
     If Not mTWSAPITable(i).TWSAPI Is Nothing Then
-        mTWSAPITable(i).TWSAPI.disconnect "release all", False
+        mTWSAPITable(i).TWSAPI.disconnect "release all", True
         Set mTWSAPITable(i).TWSAPI = Nothing
     End If
     mTWSAPITable(i).clientID = 0
@@ -420,7 +422,8 @@ For i = 0 To mTWSAPITableNextIndex - 1
     If mTWSAPITable(i).TWSAPI Is instance Then
         mTWSAPITable(i).usageCount = mTWSAPITable(i).usageCount - 1
         If (mTWSAPITable(i).usageCount = 0 And _
-                (Not mTWSAPITable(i).keepConnection)) Or _
+                (Not mTWSAPITable(i).keepConnection Or _
+                mTWSAPITable(i).TWSAPI.connectionState <> ConnConnected)) Or _
             forceDisconnect _
         Then
             If mTWSAPITable(i).TWSAPI.connectionState <> ConnNotConnected Then
@@ -574,4 +577,132 @@ gRoundTimeToSecond = Int((timestamp + (499 / 86400000)) * 86400) / 86400 + 1 / 8
 End Function
 
 
+Public Function gInputMessageIdToString( _
+                ByVal msgId As TWSSocketInMsgTypes) As String
+Select Case msgId
+Case TICK_PRICE
+    gInputMessageIdToString = "TICK_PRICE"
+Case TICK_SIZE
+    gInputMessageIdToString = "TICK_SIZE"
+Case ORDER_STATUS
+    gInputMessageIdToString = "ORDER_STATUS"
+Case ERR_MSG
+    gInputMessageIdToString = "ERR_MSG"
+Case OPEN_ORDER
+    gInputMessageIdToString = "OPEN_ORDER"
+Case ACCT_VALUE
+    gInputMessageIdToString = "ACCT_VALUE"
+Case PORTFOLIO_VALUE
+    gInputMessageIdToString = "PORTFOLIO_VALUE"
+Case ACCT_UPDATE_TIME
+    gInputMessageIdToString = "ACCT_UPDATE_TIME"
+Case NEXT_VALID_ID
+    gInputMessageIdToString = "NEXT_VALID_ID"
+Case CONTRACT_DATA
+    gInputMessageIdToString = "CONTRACT_DATA"
+Case EXECUTION_DATA
+    gInputMessageIdToString = "EXECUTION_DATA"
+Case MARKET_DEPTH
+    gInputMessageIdToString = "MARKET_DEPTH"
+Case MARKET_DEPTH_L2
+    gInputMessageIdToString = "MARKET_DEPTH_L2"
+Case NEWS_BULLETINS
+    gInputMessageIdToString = "NEWS_BULLETINS"
+Case MANAGED_ACCTS
+    gInputMessageIdToString = "MANAGED_ACCTS"
+Case RECEIVE_FA
+    gInputMessageIdToString = "RECEIVE_FA"
+Case HISTORICAL_DATA
+    gInputMessageIdToString = "HISTORICAL_DATA"
+Case BOND_CONTRACT_DATA
+    gInputMessageIdToString = "BOND_CONTRACT_DATA"
+Case SCANNER_PARAMETERS
+    gInputMessageIdToString = "SCANNER_PARAMETERS"
+Case SCANNER_DATA
+    gInputMessageIdToString = "SCANNER_DATA"
+Case TICK_OPTION_COMPUTATION
+    gInputMessageIdToString = "TICK_OPTION_COMPUTATION"
+Case TICK_GENERIC
+    gInputMessageIdToString = "TICK_GENERIC"
+Case TICK_STRING
+    gInputMessageIdToString = "TICK_STRING"
+Case TICK_EFP
+    gInputMessageIdToString = "TICK_EFP"
+Case CURRENT_TIME
+    gInputMessageIdToString = "CURRENT_TIME"
+Case REAL_TIME_BARS
+    gInputMessageIdToString = "REAL_TIME_BARS"
+Case FUNDAMENTAL_DATA
+    gInputMessageIdToString = "FUNDAMENTAL_DATA"
+Case CONTRACT_DATA_END
+    gInputMessageIdToString = "CONTRACT_DATA_END"
+Case Else
+    gInputMessageIdToString = "?????"
+End Select
+                
+End Function
+
+Public Function gOutputMessageIdToString( _
+                ByVal msgId As TWSSocketOutMsgTypes) As String
+Select Case msgId
+Case REQ_MKT_DATA
+    gOutputMessageIdToString = "REQ_MKT_DATA"
+Case CANCEL_MKT_DATA
+    gOutputMessageIdToString = "CANCEL_MKT_DATA"
+Case PLACE_ORDER
+    gOutputMessageIdToString = "PLACE_ORDER"
+Case CANCEL_ORDER
+    gOutputMessageIdToString = "CANCEL_ORDER"
+Case REQ_OPEN_ORDERS
+    gOutputMessageIdToString = "REQ_OPEN_ORDERS"
+Case REQ_ACCT_DATA
+    gOutputMessageIdToString = "REQ_ACCT_DATA"
+Case REQ_EXECUTIONS
+    gOutputMessageIdToString = "REQ_EXECUTIONS"
+Case REQ_IDS
+    gOutputMessageIdToString = "REQ_IDS"
+Case REQ_CONTRACT_DATA
+    gOutputMessageIdToString = "REQ_CONTRACT_DATA"
+Case REQ_MKT_DEPTH
+    gOutputMessageIdToString = "REQ_MKT_DEPTH"
+Case CANCEL_MKT_DEPTH
+    gOutputMessageIdToString = "CANCEL_MKT_DEPTH"
+Case REQ_NEWS_BULLETINS
+    gOutputMessageIdToString = "REQ_NEWS_BULLETINS"
+Case CANCEL_NEWS_BULLETINS
+    gOutputMessageIdToString = "CANCEL_NEWS_BULLETINS"
+Case SET_SERVER_LOGLEVEL
+    gOutputMessageIdToString = "SET_SERVER_LOGLEVEL"
+Case REQ_AUTO_OPEN_ORDERS
+    gOutputMessageIdToString = "REQ_AUTO_OPEN_ORDERS"
+Case REQ_ALL_OPEN_ORDERS
+    gOutputMessageIdToString = "REQ_ALL_OPEN_ORDERS"
+Case REQ_MANAGED_ACCTS
+    gOutputMessageIdToString = "REQ_MANAGED_ACCTS"
+Case REQ_FA
+    gOutputMessageIdToString = "REQ_FA"
+Case REPLACE_FA
+    gOutputMessageIdToString = "REPLACE_FA"
+Case REQ_HISTORICAL_DATA
+    gOutputMessageIdToString = "REQ_HISTORICAL_DATA"
+Case EXERCISE_OPTIONS
+    gOutputMessageIdToString = "EXERCISE_OPTIONS"
+Case REQ_SCANNER_SUBSCRIPTION
+    gOutputMessageIdToString = "REQ_SCANNER_SUBSCRIPTION"
+Case CANCEL_SCANNER_SUBSCRIPTION
+    gOutputMessageIdToString = "CANCEL_SCANNER_SUBSCRIPTION"
+Case REQ_SCANNER_PARAMETERS
+    gOutputMessageIdToString = "REQ_SCANNER_PARAMETERS"
+Case CANCEL_HISTORICAL_DATA
+    gOutputMessageIdToString = "CANCEL_HISTORICAL_DATA"
+Case REQ_CURRENT_TIME
+    gOutputMessageIdToString = "REQ_CURRENT_TIME"
+Case REQ_REAL_TIME_BARS
+    gOutputMessageIdToString = "REQ_REAL_TIME_BARS"
+Case CANCEL_REAL_TIME_BARS
+    gOutputMessageIdToString = "CANCEL_REAL_TIME_BARS"
+Case Else
+    gOutputMessageIdToString = "?????"
+End Select
+End Function
 

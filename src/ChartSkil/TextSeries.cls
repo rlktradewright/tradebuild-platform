@@ -75,6 +75,10 @@ Private Sub Class_Initialize()
 Set mTexts = New Collection
 End Sub
 
+Private Sub Class_Terminate()
+Debug.Print "TextSeries terminated"
+End Sub
+
 '================================================================================
 ' IGraphicObjectSeries Interface Members
 '================================================================================
@@ -97,6 +101,8 @@ End Property
 
 Private Sub IGraphicObjectSeries_finish()
 mFinished = True
+Set mGOSP = Nothing
+Set mCanvas = Nothing
 End Sub
 
 Private Sub IGraphicObjectSeries_Initialise( _
@@ -341,12 +347,12 @@ End If
 fireStyleChanged
 End Property
 
-Public Property Let IsSelectable(ByVal value As Boolean)
+Public Property Let isSelectable(ByVal value As Boolean)
 mIsSelectable = value
 End Property
 
-Public Property Get IsSelectable() As Boolean
-IsSelectable = mIsSelectable
+Public Property Get isSelectable() As Boolean
+isSelectable = mIsSelectable
 End Property
 
 Public Property Get IsSelected() As Boolean
@@ -491,7 +497,7 @@ Exit Property
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "style" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "style" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -501,21 +507,21 @@ End Property
 ' Methods
 '================================================================================
 
-Public Function Add( _
+Public Function add( _
                 Optional ByVal Key As String, _
                 Optional ByVal LocalStyle As TextStyle, _
-                Optional ByVal IsSelectable As Boolean) As text
+                Optional ByVal isSelectable As Boolean) As text
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                             "ChartSkil26.TextSeries::add", _
                             "Text series is finished"
-Set Add = New text
+Set add = New text
 If Key = "" Then
     Key = GenerateGUIDString
 End If
-Add.initialise mSeriesID, Key, mGOSP, mLayer, mCanvas, mStyle, LocalStyle, IsSelectable
+add.initialise mSeriesID, Key, mGOSP, mLayer, mCanvas, mStyle, LocalStyle, isSelectable
 
-mTexts.Add Add, Key
-mGOSP.AddGraphicObject Add, mSeriesID
+mTexts.add add, Key
+mGOSP.AddGraphicObject add, mSeriesID
 End Function
 
 Friend Sub Finish()
@@ -540,10 +546,6 @@ Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
    Set NewEnum = mTexts.[_NewEnum]
 End Function
-
-Friend Sub RemoveAll()
-StartTask Me, PriorityLow
-End Sub
 
 Public Sub RemoveObject(ByVal value As ChartSkil26.text)
 On Error GoTo Err

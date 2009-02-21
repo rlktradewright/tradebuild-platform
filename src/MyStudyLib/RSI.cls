@@ -52,6 +52,8 @@ Implements study
 ' Constants
 '================================================================================
 
+Private Const ModuleName                As String = "RSI"
+
 '================================================================================
 ' Enums
 '================================================================================
@@ -70,7 +72,7 @@ Private mStudyFoundation As StudyFoundation
 
 
 Private mSession As session
-Private mRsiCache As StudyValueCache
+Private mRsiCache As ValueCache
 
 Private mPeriods As Long
 Private mMovingAverageType As String
@@ -84,8 +86,10 @@ Private mMaGains As study
 Private mMaLosses As study
 
 ' it's easy to calculate the open and close for each bar ourselves, but we'll
-' illustrate the use of the Bars class provided by StudiesSupport which
-' will do this for us.
+' illustrate the use of the Bars class provided by Timeframe Utilities which
+' will do this for us. Note that you actually construct a Bars object using
+' a BarsBuilder object.
+Private mBarsBuilder As BarsBuilder
 Private mBars As Bars
 
 '================================================================================
@@ -116,41 +120,44 @@ Set mRsiCache = mStudyFoundation.FindValueCache(RsiValueRsi)
 
 ' create the Bars object. We only need it to cache the latest bar, so
 ' set the numberOfValuesToCache argument to 1
-Set mBars = CreateBars(0, _
-                                TimePeriodNone, _
+Set mBarsBuilder = CreateBarsBuilder(GetTimePeriod(0, TimePeriodNone), _
                                 mSession, _
+                                0, _
                                 1)
-
+Set mBars = mBarsBuilder.Bars
 End Sub
 
 Private Sub customNotify( _
                 ev As StudyValueEvent)
 Static sPrevVal As Variant
-Dim gainsAvg As StudyValue
-Dim lossesAvg As StudyValue
+Dim gainsAvg As SValue
+Dim lossesAvg As SValue
 Dim rsi As Variant
 Dim evMa As StudyValueEvent
+
+Dim failpoint As Long
+On Error GoTo Err
 
 If Not mStudyFoundation.isNewBar Then
     ' if this input value is the same as the previous one in this bar, no
     ' need to do anything as it won't change the study value
-    If ev.value = sPrevVal Then Exit Sub
+    If ev.sVal.value = sPrevVal Then Exit Sub
 End If
-sPrevVal = ev.value
+sPrevVal = ev.sVal.value
 
 ' update the bars
-mBars.Notify ev
+mBarsBuilder.notifyValue ev.sVal
 
 ' pass the loss and gain values for the current bar to the relevant moving
 ' average object
 
 evMa = ev
-evMa.value = mBars.gain(0)  ' NB: parameter value of 0 means current bar,
+evMa.sVal.value = mBars.gain(0)  ' NB: parameter value of 0 means current bar,
                             ' -1 is previous bar etc
-mMaGains.Notify evMa        ' update the gains moving average
+mMaGains.notify evMa        ' update the gains moving average
 
-evMa.value = mBars.loss(0)
-mMaLosses.Notify evMa        ' update the losses moving average
+evMa.sVal.value = mBars.loss(0)
+mMaLosses.notify evMa        ' update the losses moving average
 
 ' now get the updated gain and loss moving averages. Note that we don't actually
 ' need to know the name of the moving average study values, because we can use
@@ -175,12 +182,21 @@ Else
 End If
 
 If mStudyFoundation.isNewBar Then
-    mRsiCache.addValue rsi, ev.barNumber, ev.timestamp, ev.barStartTime
+    mRsiCache.addValue rsi, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
 Else
-    mRsiCache.updateValue rsi, ev.barNumber, ev.timestamp
+    mRsiCache.updateValue rsi, ev.sVal.barNumber, ev.sVal.timestamp
 End If
 
-notifyValue rsi, RsiValueRsi, ev.barNumber, ev.timestamp, ev.barStartTime
+notifyValue rsi, RsiValueRsi, ev.sVal.barNumber, ev.sVal.timestamp, ev.sVal.barStartTime
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customNotify" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Sub
 
 Private Function customNumberOfBarsRequired() As Long
@@ -193,17 +209,17 @@ Dim param As Parameter
 ' NB: the For Each construct cannot be used with objects of the
 ' Parameters class
 
-Set param = params.getFirstParameter
+Dim failpoint As Long
+On Error GoTo Err
 
-Do While Not param Is Nothing
+For Each param In params
     Select Case UCase$(param.name)
     Case UCase$(RsiParamPeriods)
         mPeriods = param.value
     Case UCase$(RsiParamMovingAverageType)
         mMovingAverageType = param.value
     End Select
-    Set param = params.getNextParameter
-Loop
+Next
 
 ' Now we know what we need to create the two moving average study objects. Note
 ' that we only need these studies to cache the latest moving average value.
@@ -213,6 +229,15 @@ Set mMaGains = gCreateMA(mMovingAverageType, _
 Set mMaLosses = gCreateMA(mMovingAverageType, _
                         mPeriods, _
                         1)
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customProcessParameters" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 
 End Sub
 
@@ -244,12 +269,12 @@ Private Sub notifyValue( _
                 ByVal timestamp As Date)
 Dim ev As StudyValueEvent
 If Not IsEmpty(value) Then
-    ev.value = value
+    ev.sVal.value = value
     ev.valueName = valueName
     Set ev.Source = Me
-    ev.barNumber = barNumber
-    ev.barStartTime = barStartTime
-    ev.timestamp = timestamp
+    ev.sVal.barNumber = barNumber
+    ev.sVal.barStartTime = barStartTime
+    ev.sVal.timestamp = timestamp
     mStudyFoundation.notifyValue ev
 End If
 End Sub
@@ -270,7 +295,7 @@ Private Function Study_addStudy( _
                 ByRef valueNames() As String, _
                 ByVal numUnderlyingValuesToUse As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As Tasks.TaskCompletion
+                Optional ByVal taskData As Variant) As TaskController
 
 Set Study_addStudy = mStudyFoundation.addStudy( _
                             study, _
@@ -285,7 +310,7 @@ Private Function Study_addStudyValueListener( _
                 ByVal valueName As String, _
                 ByVal numberOfValuesToReplay As Long, _
                 Optional ByVal taskName As String, _
-                Optional ByVal taskData As Variant) As Tasks.TaskCompletion
+                Optional ByVal taskData As Variant) As TaskController
 Set Study_addStudyValueListener = mStudyFoundation.addStudyValueListener( _
                             listener, _
                             valueName, _
@@ -300,7 +325,7 @@ End Property
 
 Private Function Study_getStudyValue( _
                 ByVal valueName As String, _
-                ByVal ref As Long) As StudyValue
+                ByVal ref As Long) As SValue
 Study_getStudyValue = mStudyFoundation.getStudyValue(valueName, ref)
 End Function
 
@@ -347,7 +372,7 @@ End Property
 
 Private Sub Study_Notify( _
                 ev As StudyValueEvent)
-mStudyFoundation.NotifyInput ev
+mStudyFoundation.notifyInput ev
 customNotify ev
 End Sub
 

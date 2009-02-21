@@ -45,14 +45,17 @@ Private Const ModuleName                    As String = "TradeBuildAPI"
 ' Member variables
 '@================================================================================
 
-Private mServiceProviderError As ServiceProviderError
+Private mServiceProviderError           As ServiceProviderError
 
-Private mServiceProviders As ServiceProviders
+Private mServiceProviders               As ServiceProviders
 
-Private mWorkSpaces As WorkSpaces
-Private mDefaultWorkSpace As WorkSpace
-Private mTickers As Tickers
-Private mExecutions As executions
+Private mWorkSpaces                     As WorkSpaces
+Private mDefaultWorkSpace               As WorkSpace
+Private mTickers                        As Tickers
+Private mExecutions                     As executions
+
+Private WithEvents mClosePositionsTC    As TaskController
+Attribute mClosePositionsTC.VB_VarHelpID = -1
 
 '@================================================================================
 ' Class Event Handlers
@@ -78,8 +81,24 @@ Debug.Print "TradeBuildAPI terminated"
 End Sub
 
 '@================================================================================
+' mClosePositionsTC Event Handlers
+'@================================================================================
+
+Private Sub mClosePositionsTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+Set mClosePositionsTC = Nothing
+End Sub
+
+'@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Get AllOrdersSimulated() As Boolean
+AllOrdersSimulated = (Not mServiceProviders.IsLiveOrderSubmitterConfigured)
+End Property
+
+Public Property Get ClosingPositions() As Boolean
+ClosingPositions = Not (mClosePositionsTC Is Nothing)
+End Property
 
 Public Property Get defaultWorkSpace() As WorkSpace
 Set defaultWorkSpace = mDefaultWorkSpace
@@ -87,6 +106,21 @@ End Property
 
 Public Property Get executions() As executions
 Set executions = mExecutions
+End Property
+
+Public Property Let PermittedServiceProviderRoles( _
+                ByVal value As ServiceProviderRoles)
+If mServiceProviders.IsAnyServiceProviderConfigured Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & "PermittedServiceProviderRoles", _
+            "Service providers are already configured"
+End If
+
+mServiceProviders.PermittedServiceProviderRoles = value
+End Property
+
+Public Property Get PermittedServiceProviderRoles() As ServiceProviderRoles
+PermittedServiceProviderRoles = mServiceProviders.PermittedServiceProviderRoles
 End Property
 
 Public Property Get ServiceProviders() As ServiceProviders
@@ -116,6 +150,39 @@ End Property
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Function CloseAllPositions( _
+                Optional ByVal types As PositionTypes = PositionTypeAll, _
+                Optional ByVal flags As ClosePositionFlags = ClosePositionCancelOrders Or ClosePositionWaitForCancel) As TaskController
+If Not mClosePositionsTC Is Nothing Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & "CloseAllPositions", _
+            "Positions are already being closed"
+End If
+
+Dim t As New ClosePositionsTask
+t.initialise types, flags
+Set mClosePositionsTC = StartTask(t, PriorityHigh)
+Set CloseAllPositions = mClosePositionsTC
+End Function
+
+Public Sub ConfigureDefaults( _
+                Optional ByVal twsServer As String, _
+                Optional ByVal twsPort As Long = 7496, _
+                Optional ByVal clientId As Long = -1, _
+                Optional ByVal connectionRetryIntervalSecs As Long = 60, _
+                Optional ByVal twsLogLevel As String = "ERROR", _
+                Optional ByVal tickfilesPath As String)
+mServiceProviders.ConfigureDefaultServiceProviders twsServer, _
+                                                    twsPort, _
+                                                    clientId, _
+                                                    connectionRetryIntervalSecs, _
+                                                    twsLogLevel, _
+                                                    tickfilesPath
+
+AddStudyLibrary "CmnStudiesLib26.StudyLib", True, "Built-in"
+
+End Sub
 
 Public Function GenerateTickfileSpecifiers( _
                 ByVal pContracts As Contracts, _
@@ -389,8 +456,15 @@ Public Function loadContracts( _
 Dim lContractsBuilder As ContractsBuilder
 Set lContractsBuilder = CreateContractsBuilder(pContractSpec)
 Set loadContracts = lContractsBuilder.Contracts
+gLogLogger.Log LogLevelDetail, "Deferring contract load for " & pContractSpec.toString
 DeferAction New ContractLoadAction, lContractsBuilder
 End Function
+
+Friend Sub notify(ByRef ev As NotificationEvent)
+gLogLogger.Log LogLevels.LogLevelNormal, _
+                "Notification (" & gApiNotifyCodeToString(ev.eventCode) & "): " & ev.eventMessage
+RaiseEvent Notification(ev)
+End Sub
 
 Friend Sub NotifyFatalError( _
                 ByVal errorCode As Long, _
@@ -406,12 +480,18 @@ gLogLogger.Log LogLevelSevere, "Fatal error " & errorCode & ": " & _
 ' kill all the service providers
 mServiceProviders.RemoveAll
 
-' give the application a chance to handle this
+' calling END in a dll is not allowed, so we must expect the application to
+' do this. (Note that it is not feasible to exit back to the caller of this
+' procedure because another error of some sort will almost certainly occur.)
 
 Set ev.source = Me
 ev.errorCode = errorCode
 ev.errorMessage = errorMessage & "( occurred in " & source & ")"
-RaiseEvent Error(ev)
+Do
+    ' do this in a loop because we can't go anywhere else!
+    RaiseEvent Error(ev)
+    Wait 5000
+Loop
 
 End Sub
 
@@ -428,46 +508,46 @@ Case VTDebug
     gDebugLogger.Log LogLevelNormal, value, source
 Case VTProfitProfile
     gProfitProfileLogger.Log LogLevelNormal, value, source
-Case VTDummyProfitProfile
-    gDummyProfitProfileLogger.Log LogLevelNormal, value, source
+Case VTSimulatedProfitProfile
+    gProfitProfileLoggerSimulated.Log LogLevelNormal, value, source
 Case VTMoneyManagement
     gMoneyManagementLogger.Log LogLevelNormal, value, source
 Case VTOrderPlexProfileStruct
     gOrderPlexProfileStructLogger.Log LogLevelNormal, value, source
-Case VTDummyOrderPlexProfileStruct
-    gDummyOrderPlexProfileStructLogger.Log LogLevelNormal, value, source
+Case VTSimulatedOrderPlexProfileStruct
+    gOrderPlexProfileStructLoggerSimulated.Log LogLevelNormal, value, source
 Case VTOrderPlexProfileString
     gOrderPlexProfileStringLogger.Log LogLevelNormal, value, source
-Case VTDummyOrderPlexProfileString
-    gDummyOrderPlexProfileStringLogger.Log LogLevelNormal, value, source
+Case VTSimulatedOrderPlexProfileString
+    gOrderPlexProfileStringLoggerSimulated.Log LogLevelNormal, value, source
 Case VTOrder
     gOrderLogger.Log LogLevelNormal, value, source
-Case VTDummyOrder
-    gDummyOrderLogger.Log LogLevelNormal, value, source
+Case VTSimulatedOrder
+    gOrderLoggerSimulated.Log LogLevelNormal, value, source
 Case VTPosition
     gPositionLogger.Log LogLevelNormal, value, source
-Case VTDummyPosition
-    gDummyPositionLogger.Log LogLevelNormal, value, source
+Case VTSimulatedPosition
+    gPositionLoggerSimulated.Log LogLevelNormal, value, source
 Case VTTradeProfile
     gTradeProfileLogger.Log LogLevelNormal, value, source
-Case VTDummyTradeProfile
-    gDummyTradeProfileLogger.Log LogLevelNormal, value, source
+Case VTSimulatedTradeProfile
+    gTradeProfileLoggerSimulated.Log LogLevelNormal, value, source
 Case VTProfit
     gProfitLogger.Log LogLevelNormal, value, source
-Case VTDummyProfit
-    gDummyProfitLogger.Log LogLevelNormal, value, source
+Case VTSimulatedProfit
+    gProfitLoggerSimulated.Log LogLevelNormal, value, source
 Case VTDrawdown
-    gDrawdownlogger.Log LogLevelNormal, value, source
-Case VTDummyDrawdown
-    gDummyDrawdownlogger.Log LogLevelNormal, value, source
+    gDrawdownLogger.Log LogLevelNormal, value, source
+Case VTSimulatedDrawdown
+    gDrawdownLoggerSimulated.Log LogLevelNormal, value, source
 Case VTMaxProfit
-    gMaxProfitlogger.Log LogLevelNormal, value, source
-Case VTDummyMaxProfit
-    gDummyMaxProfitlogger.Log LogLevelNormal, value, source
+    gMaxProfitLogger.Log LogLevelNormal, value, source
+Case VTSimulatedMaxProfit
+    gMaxProfitLoggerSimulated.Log LogLevelNormal, value, source
 Case VTOrderDetail
-    gOrderDetaillogger.Log LogLevelNormal, value, source
-Case VTOrderDetailDummy
-    gDummyOrderDetailLogger.Log LogLevelNormal, value, source
+    gOrderDetailLogger.Log LogLevelNormal, value, source
+Case VTOrderDetailSimulated
+    gOrderDetailLoggerSimulated.Log LogLevelNormal, value, source
 End Select
 End Sub
                             
@@ -486,7 +566,7 @@ mServiceProviderError.timestamp = GetTimestamp
 Set ev.source = Me
 ev.eventCode = ApiNotifyCodes.ApiNotifyServiceProviderError
 ev.eventMessage = "A Service Provider error has occurred"
-RaiseEvent Notification(ev)
+notify ev
                     
 End Sub
 
@@ -505,6 +585,5 @@ lContractBuilder.sessionEndTime = sessionEndTime
 lContractBuilder.sessionStartTime = sessionStartTime
 Set editContractSessionTimes = lContractBuilder.Contract
 End Function
-
 
 

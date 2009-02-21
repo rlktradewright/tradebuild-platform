@@ -22,6 +22,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements DeferredAction
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -49,8 +51,18 @@ Private Const ModuleName                    As String = "DeferredCancelStatus"
 '@================================================================================
 
 '@================================================================================
-' XXXX Interface Members
+' DeferredAction Interface Members
 '@================================================================================
+
+Private Sub DeferredAction_run(ByVal data As Variant)
+Dim mapEntry As OrderIdMapEntry
+mapEntry = data
+If mapEntry.order.status <> OrderStatusCancelled And _
+    mapEntry.order.status <> OrderStatusFilled _
+Then
+    mapEntry.OrderSubmitter.updateStatus mapEntry.order.tradeBuildId, OrderStatusCancelled
+End If
+End Sub
 
 '@================================================================================
 ' XXXX Event Handlers

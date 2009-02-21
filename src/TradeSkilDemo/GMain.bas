@@ -18,12 +18,65 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TradeSkilDemo26"
-Private Const ModuleName                    As String = "GMain"
+Public Const ProjectName                            As String = "TradeSkilDemo26"
+Private Const ModuleName                            As String = "GMain"
+
+Public Const AppName                                As String = "TradeSkil Demo Edition"
+
+Public Const ConfigFileVersion                      As String = "1.1"
+
+Public Const ConfigSectionConfigEditor              As String = "ConfigEditor"
+Public Const ConfigSectionMainForm                  As String = "MainForm"
+Public Const ConfigSectionOrderTicket               As String = "OrderTicket"
+
+Public Const ConfigSettingNameConfigEditorLeft      As String = ConfigSectionConfigEditor & ".Left"
+Public Const ConfigSettingNameConfigEditorTop       As String = ConfigSectionConfigEditor & ".Top"
+
+Public Const ConfigSettingNameMainFormControlsHidden   As String = ConfigSectionMainForm & ".ControlsHidden"
+Public Const ConfigSettingNameMainFormFeaturesHidden   As String = ConfigSectionMainForm & ".FeaturesHidden"
+Public Const ConfigSettingNameMainFormHeight        As String = ConfigSectionMainForm & ".Height"
+Public Const ConfigSettingNameMainFormLeft          As String = ConfigSectionMainForm & ".Left"
+Public Const ConfigSettingNameMainFormTop           As String = ConfigSectionMainForm & ".Top"
+Public Const ConfigSettingNameMainFormWidth         As String = ConfigSectionMainForm & ".Width"
+Public Const ConfigSettingNameMainFormWindowstate   As String = ConfigSectionMainForm & ".Windowstate"
+
+Public Const ConfigSettingNameOrderTicketLeft       As String = ConfigSectionOrderTicket & ".Left"
+Public Const ConfigSettingNameOrderTicketTop        As String = ConfigSectionOrderTicket & ".Top"
+
+Private Const DefaultAppInstanceConfigName          As String = "Default Config"
+
+Public Const LB_SETHORZEXTENT                       As Long = &H194
+
+' the SSTAB control subtracts this amount from the Left property of controls
+' that are not on the active tab to ensure they aren't visible
+Public Const SSTabInactiveControlAdjustment         As Long = 75000
+
+' command line switch indicating which configuration to load
+' when the programs starts (if not specified, the default configuration
+' is loaded)
+Public Const SwitchConfig                           As String = "config"
+
+' command line switch specifying the log filename
+Public Const SwitchLogFilename                      As String = "log"
+
+' command line switch specifying the loglevel
+Public Const SwitchLogLevel                         As String = "loglevel"
+
+Public Const WindowStateMaximized                   As String = "Maximized"
+Public Const WindowStateMinimized                   As String = "Minimized"
+Public Const WindowStateNormal                      As String = "Normal"
 
 '@================================================================================
 ' Member variables
 '@================================================================================
+
+Public gConfigFile                                  As ConfigurationFile
+Public gAppInstanceConfig                           As ConfigurationSection
+
+Private mStudyPickerForm                            As fStudyPicker
+Private mMainForm                                   As fTradeSkilDemo
+
+Private mEditConfig                                 As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -41,31 +94,294 @@ Private Const ModuleName                    As String = "GMain"
 ' Properties
 '@================================================================================
 
+Public Property Get gAppTitle() As String
+gAppTitle = AppName & _
+                " v" & _
+                App.Major & "." & App.Minor
+End Property
+
+Public Property Get gCommandLineParser() As CommandLineParser
+Static clp As CommandLineParser
+If clp Is Nothing Then Set clp = CreateCommandLineParser(Command)
+Set gCommandLineParser = clp
+End Property
+
+Public Property Get gAppSettingsFolder() As String
+gAppSettingsFolder = GetSpecialFolderPath(FolderIdLocalAppdata) & _
+                    "\TradeWright\" & _
+                    gAppTitle
+End Property
+
+Public Property Get gLogFileName() As String
+Static logFileName As String
+If logFileName = "" Then
+    If gCommandLineParser.Switch(SwitchLogFilename) Then logFileName = gCommandLineParser.SwitchValue(SwitchLogFilename)
+
+    If logFileName = "" Then
+        logFileName = gAppSettingsFolder & "\log.txt"
+    End If
+End If
+gLogFileName = logFileName
+End Property
+
+Public Property Get gLogger() As Logger
+Static lLogger As Logger
+If lLogger Is Nothing Then Set lLogger = GetLogger("log")
+Set gLogger = lLogger
+End Property
+
+Public Property Get gMainForm() As fTradeSkilDemo
+Set gMainForm = mMainForm
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
 
-Public Sub main()
-Dim lTradeSkilDemo As fTradeSkilDemo
+Public Sub gHandleFatalError(ByVal errNum As Long, _
+                            ByVal Description As String, _
+                            ByVal source As String)
+gLogger.Log LogLevelSevere, _
+        "Error number: " & errNum & vbCrLf & _
+        "Description: " & Description & vbCrLf & _
+        "Source: fTradeSkilDemo::" & source
+
+MsgBox "A fatal error has occurred. The program will close when you click the OK button." & vbCrLf & _
+        "Please email the log file located at" & vbCrLf & vbCrLf & _
+        "     " & gLogFileName & vbCrLf & vbCrLf & _
+        "to support@tradewright.com", _
+        vbCritical, _
+        "Fatal error"
+
+gUnloadMainForm
+
+' TradeBuild requires us to end the program without exiting from this event handler
+End
+
+End Sub
+
+Public Sub gShowStudyPicker( _
+                ByVal chartMgr As ChartManager, _
+                ByVal title As String)
+If mStudyPickerForm Is Nothing Then Set mStudyPickerForm = New fStudyPicker
+mStudyPickerForm.initialise chartMgr, title
+mStudyPickerForm.Show vbModeless
+End Sub
+
+Public Sub gSyncStudyPicker( _
+                ByVal chartMgr As ChartManager, _
+                ByVal title As String)
+If mStudyPickerForm Is Nothing Then Exit Sub
+mStudyPickerForm.initialise chartMgr, title
+End Sub
+
+Public Sub gUnloadMainForm()
+If Not mMainForm Is Nothing Then
+    gLogger.Log LogLevelNormal, "Unloading main form"
+    Unload mMainForm
+    Set mMainForm = Nothing
+End If
+End Sub
+
+Public Sub gUnsyncStudyPicker()
+If mStudyPickerForm Is Nothing Then Exit Sub
+mStudyPickerForm.initialise Nothing, "Study picker"
+End Sub
+
+Public Sub Main()
+
+Dim failpoint As Long
+
+On Error GoTo Err
+
+
+failpoint = 100
 
 InitialiseTWUtilities
 
 If showCommandLineOptions() Then Exit Sub
 
+
+failpoint = 200
+
 If Not getLog() Then Exit Sub
 
-Set lTradeSkilDemo = New fTradeSkilDemo
-If lTradeSkilDemo.configure Then
-    lTradeSkilDemo.Show vbModeless
+failpoint = 300
+
+TradeBuildAPI.PermittedServiceProviderRoles = ServiceProviderRoles.SPRealtimeData Or _
+                                                ServiceProviderRoles.SPPrimaryContractData Or _
+                                                ServiceProviderRoles.SPSecondaryContractData Or _
+                                                ServiceProviderRoles.SPBrokerLive Or _
+                                                ServiceProviderRoles.SPBrokerSimulated Or _
+                                                ServiceProviderRoles.SPHistoricalDataInput Or _
+                                                ServiceProviderRoles.SPTickfileInput
+
+If Not getConfigFile Then
+    gLogger.Log LogLevelNormal, "Program exiting at user request"
+    TerminateTWUtilities
+ElseIf Not getConfig Then
+    gLogger.Log LogLevelNormal, "Program exiting at user request"
+    TerminateTWUtilities
+ElseIf Not Configure Then
+    gLogger.Log LogLevelNormal, "Program exiting at user request"
+    TerminateTWUtilities
 Else
-    Unload lTradeSkilDemo
+    loadMainForm mEditConfig
 End If
 
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "main" & "." & failpoint & IIf(Err.source <> "", vbCrLf & Err.source, "")
+Dim errDescription As String: errDescription = Err.Description
+gHandleFatalError errNumber, errDescription, errSource
+TerminateTWUtilities
 End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Function Configure() As Boolean
+Dim userResponse As Long
+
+If ConfigureTradeBuild(gConfigFile, gAppInstanceConfig.InstanceQualifier) Then
+    Configure = True
+Else
+    userResponse = MsgBox("The configuration cannot be loaded. Would you like to " & vbCrLf & _
+            "manually correct the configuration?" & vbCrLf & vbCrLf & _
+            "Click Yes to manually correct the configuration." & vbCrLf & vbCrLf & _
+            "Click No to proceed with a new default configuration." & _
+            "The default configuration will connect to TWS running on the " & vbCrLf & _
+            "same computer. It will obtain contract data and historical data " & vbCrLf & _
+            "from TWS, and will simulate any orders placed." & vbCrLf & vbCrLf & _
+            "You may amend the default configuration by going to the " & vbCrLf & _
+            "Configuration tab when the program has started." & vbCrLf & vbCrLf & _
+            "Click Cancel to exit the program.", _
+            vbYesNoCancel Or vbQuestion, _
+            "Attention!")
+    If userResponse = vbYes Then
+        mEditConfig = True
+        Configure = True
+    ElseIf userResponse = vbNo Then
+        gLogger.Log LogLevelNormal, "Creating a new default app instance configuration"
+        Set gAppInstanceConfig = AddAppInstanceConfig(gConfigFile, _
+                            DefaultAppInstanceConfigName, _
+                            includeDefaultStudyLibrary:=True, _
+                            setAsDefault:=True)
+        Configure = True
+    Else
+        Configure = False
+    End If
+End If
+End Function
+
+Private Function getConfig() As Boolean
+Dim configName As String
+
+If gCommandLineParser.Switch(SwitchConfig) Then configName = gCommandLineParser.SwitchValue(SwitchConfig)
+
+If configName = "" Then
+    gLogger.Log LogLevelDetail, "Named config not specified - trying default config"
+    configName = "(Default)"
+    Set gAppInstanceConfig = GetDefaultAppInstanceConfig(gConfigFile)
+    If gAppInstanceConfig Is Nothing Then
+        gLogger.Log LogLevelDetail, "No default config defined"
+    Else
+        gLogger.Log LogLevelDetail, "Using default config: " & gAppInstanceConfig.InstanceQualifier
+    End If
+Else
+    gLogger.Log LogLevelDetail, "Getting config with name '" & configName & "'"
+    Set gAppInstanceConfig = GetAppInstanceConfig(gConfigFile, configName)
+    If gAppInstanceConfig Is Nothing Then
+        gLogger.Log LogLevelDetail, "Config '" & configName & "' not found"
+    Else
+        gLogger.Log LogLevelDetail, "Config '" & configName & "' located"
+    End If
+End If
+
+If gAppInstanceConfig Is Nothing Then
+    MsgBox "The required configuration does not exist: " & _
+            configName & "." & vbCrLf & vbCrLf & _
+            "The program will close.", _
+            vbCritical, _
+            "Error"
+    getConfig = False
+Else
+    getConfig = True
+End If
+
+End Function
+
+Private Function getConfigFile() As Boolean
+Dim userResponse As Long
+Dim baseConfigFile As TWUtilities30.configFile
+
+On Error Resume Next
+Set baseConfigFile = LoadXMLConfigurationFile(getConfigFilename)
+On Error GoTo Err
+
+If baseConfigFile Is Nothing Then
+    userResponse = MsgBox("The configuration file does not exist." & vbCrLf & vbCrLf & _
+            "Would you like to proceed with a default configuration?" & vbCrLf & vbCrLf & _
+            "The default configuration will connect to TWS running on the " & vbCrLf & _
+            "same computer. It will obtain contract data and historical data " & vbCrLf & _
+            "from TWS, and will simulate any orders placed." & vbCrLf & vbCrLf & _
+            "You may amend the default configuration by going to the " & vbCrLf & _
+            "Configuration tab when the program starts and using the " & vbCrLf & _
+            "Configuration Editor." & vbCrLf & vbCrLf & _
+            "Click Yes to continue with the default configuration." & vbCrLf & vbCrLf & _
+            "Click No to exit the program", _
+            vbYesNo Or vbQuestion, _
+            "Attention!")
+    If userResponse = vbYes Then
+        gLogger.Log LogLevelNormal, "Creating a new default configuration file"
+        Set baseConfigFile = CreateXMLConfigurationFile(App.ProductName, ConfigFileVersion)
+        Set gConfigFile = CreateConfigurationFile(baseConfigFile, getConfigFilename)
+        InitialiseConfigFile gConfigFile
+        AddAppInstanceConfig gConfigFile, _
+                            DefaultAppInstanceConfigName, _
+                            includeDefaultStudyLibrary:=True, _
+                            setAsDefault:=True
+                            
+    Else
+        getConfigFile = False
+        Exit Function
+    End If
+Else
+    Set gConfigFile = CreateConfigurationFile(baseConfigFile, _
+                                            getConfigFilename)
+    If gConfigFile.applicationName <> App.ProductName Or _
+        gConfigFile.fileVersion <> ConfigFileVersion Or _
+        Not IsValidConfigurationFile(gConfigFile) _
+    Then
+        gLogger.Log LogLevelNormal, _
+                    "The configuration file is not the correct format for this program." & vbCrLf & vbCrLf & _
+                    "The program will close."
+        getConfigFile = False
+        Exit Function
+    End If
+
+End If
+
+getConfigFile = True
+
+Exit Function
+
+Err:
+gLogger.Log LogLevelNormal, "The configuration file format is not correct for this program."
+MsgBox "The configuration file is not the correct format for this program" & vbCrLf & vbCrLf & _
+        "The program will close."
+End Function
+
+Private Function getConfigFilename() As String
+
+getConfigFilename = gCommandLineParser.Arg(0)
+If getConfigFilename = "" Then
+    getConfigFilename = gAppSettingsFolder & "\settings.xml"
+End If
+End Function
 
 Private Function getLog() As Boolean
 Dim listener As LogListener
@@ -96,6 +412,14 @@ Else
     Err.Raise Err.Number    ' unknown error so re-raise it
 End If
 End Function
+
+Private Sub loadMainForm( _
+                ByVal showConfigEditor As Boolean)
+gLogger.Log LogLevelNormal, "Loading main form"
+If mMainForm Is Nothing Then Set mMainForm = New fTradeSkilDemo
+mMainForm.Show
+mMainForm.initialise showConfigEditor
+End Sub
 
 Private Function showCommandLineOptions() As Boolean
 

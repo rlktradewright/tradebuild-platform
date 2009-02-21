@@ -34,6 +34,9 @@ Option Explicit
 ' Events
 '@================================================================================
 
+Event Changed( _
+                ByRef ev As ChangeEvent)
+
 '@================================================================================
 ' Constants
 '@================================================================================
@@ -222,6 +225,7 @@ End Property
 Friend Sub incrementTickVolume( _
                 ByVal increment As Long)
 mTickVolume = mTickVolume + increment
+fireChange BarTickVolumeChanged
 End Sub
 
 Friend Sub initialise( _
@@ -251,6 +255,11 @@ If mVolume <> 0 Then mVolumeChanged = True
 
 If mOpenInterest <> 0 Then mOpenInterestChanged = True
 If mTickVolume <> 0 Then mTickVolumeChanged = True
+
+fireChange BarPriceChanged
+If mVolume <> 0 Then fireChange BarVolumeChanged
+If mOpenInterest <> 0 Then fireChange BarOpenInterestChanged
+If mTickVolume <> 0 Then fireChange BarTickVolumeChanged
 End Sub
 
 Friend Sub notifyOpenInterest( _
@@ -261,7 +270,7 @@ clean
 mOpenInterest = openInterest
 mBarChanged = True
 mOpenInterestChanged = True
-
+fireChange BarOpenInterestChanged
 End Sub
 
 Friend Sub notifyValue(ByVal value As Double)
@@ -291,7 +300,9 @@ If value <> mClose Then
     mBarChanged = True
     mCloseChanged = True
 End If
+
 mTickVolume = mTickVolume + 1
+If mBarChanged Then fireChange BarPriceChanged
 End Sub
 
 Friend Sub notifyVolume( _
@@ -302,7 +313,7 @@ clean
 mVolume = volume
 mBarChanged = True
 mVolumeChanged = True
-
+fireChange BarVolumeChanged
 End Sub
 
 Public Sub resetChangeIndicators()
@@ -321,6 +332,15 @@ mLowChanged = False
 mCloseChanged = False
 mVolumeChanged = False
 mOpenInterestChanged = False
+End Sub
+
+Private Sub fireChange( _
+                ByVal changeType As BarChangeTypes)
+Dim ev As ChangeEvent
+
+Set ev.source = Me
+ev.changeType = changeType
+RaiseEvent Changed(ev)
 End Sub
 
 

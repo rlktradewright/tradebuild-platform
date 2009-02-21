@@ -49,7 +49,7 @@ Private Const ModuleName                    As String = "StartTickersTask"
 
 Private mTaskContext                                    As TaskContext
 
-Private mContractsConfig                                As ConfigItem
+Private mContractsConfig                                As ConfigurationSection
 
 Private mTickers                                        As Tickers
 Attribute mTickers.VB_VarHelpID = -1
@@ -61,6 +61,9 @@ Private mOutputFormat                                   As String
 Private mOutputPath                                     As String
 
 Private mEnumerator                                     As Enumerator
+
+Private WithEvents mTickersTC                           As TaskController
+Attribute mTickersTC.VB_VarHelpID = -1
 
 '@================================================================================
 ' Class Event Handlers
@@ -76,8 +79,8 @@ End Sub
 
 Private Sub Task_run()
 Dim contractSpec As contractSpecifier
-Dim contractConfig As ConfigItem
-Dim contractSpecConfig As ConfigItem
+Dim contractConfig As ConfigurationSection
+Dim contractSpecConfig As ConfigurationSection
 
 Dim localSymbol As String
 Dim symbol As String
@@ -105,24 +108,20 @@ failpoint = 100 '=====================================================
 
 If CBool(contractConfig.getAttribute(AttributeNameEnabled)) Then
 
-    includeMarketDepth = CBool(contractConfig.getDefaultableAttribute(AttributeNameIncludeMktDepth, "False"))
-    writeBidAskBars = CBool(contractConfig.getDefaultableAttribute(AttributeNameBidAskBars, "False"))
+    includeMarketDepth = CBool(contractConfig.getAttribute(AttributeNameIncludeMktDepth, "False"))
+    writeBidAskBars = CBool(contractConfig.getAttribute(AttributeNameBidAskBars, "False"))
 
     failpoint = 200 '=====================================================
     
-    Set contractSpecConfig = contractConfig.childItems.Item(ConfigNameContractSpecifier)
-    
-    failpoint = 300 '=====================================================
-    
-    With contractSpecConfig
-        localSymbol = .getDefaultableAttribute(AttributeNameLocalSYmbol, "")
-        symbol = .getDefaultableAttribute(AttributeNameSymbol, "")
-        exchange = .getDefaultableAttribute(AttributeNameExchange, "")
-        sectype = SecTypeFromString(.getDefaultableAttribute(AttributeNameSecType, ""))
-        currencyCode = .getDefaultableAttribute(AttributeNameCurrency, "")
-        expiry = .getDefaultableAttribute(AttributeNameExpiry, "")
-        strikePrice = CDbl("0" & .getDefaultableAttribute(AttributeNameStrikePrice, "0.0"))
-        optRight = OptionRightFromString(.getDefaultableAttribute(AttributeNameRight, ""))
+    With contractConfig
+        localSymbol = .GetSetting(ConfigSettingContractSpecLocalSYmbol, "")
+        symbol = .GetSetting(ConfigSettingContractSpecSymbol, "")
+        exchange = .GetSetting(ConfigSettingContractSpecExchange, "")
+        sectype = SecTypeFromString(.GetSetting(ConfigSettingContractSpecSecType, ""))
+        currencyCode = .GetSetting(ConfigSettingContractSpecCurrency, "")
+        expiry = .GetSetting(ConfigSettingContractSpecExpiry, "")
+        strikePrice = CDbl("0" & .GetSetting(ConfigSettingContractSpecStrikePrice, "0.0"))
+        optRight = OptionRightFromString(.GetSetting(ConfigSettingContractSpecRight, ""))
         
         Set contractSpec = CreateContractSpecifier(localSymbol, _
                                                 symbol, _
@@ -138,7 +137,9 @@ If CBool(contractConfig.getAttribute(AttributeNameEnabled)) Then
     
     gLogger.Log LogLevelNormal, mTaskContext.Name & ": starting tickers for: " & contractSpec.toString
     
-    mTickers.startTickers _
+    Set mTickersTC = mTickers.startTickers( _
+                    TickerOptions.TickerOptNoImpliedTrades + _
+                    TickerOptions.TickerOptNoVolumeAdjustments + _
                     IIf(mWritebars, TickerOptions.TickerOptWriteTradeBarData, 0) + _
                     IIf(mWritebars And writeBidAskBars, _
                         TickerOptions.TickerOptWriteBidAndAskBarData, 0) + _
@@ -150,11 +151,11 @@ If CBool(contractConfig.getAttribute(AttributeNameEnabled)) Then
                     IIf(mWriteticks And includeMarketDepth, DOMEvents.DOMRawEvents, DOMNoEvents), _
                     mOutputFormat, _
                     mOutputPath, _
-                    100
+                    1000)
     
 End If
 
-mTaskContext.suspend 1000   ' to avoid creating too many database connections
+mTaskContext.suspend -1 ' wait till this set of tickers is started to avoid creating too many database connections
 
 Exit Sub
 
@@ -175,8 +176,13 @@ Task_taskName = mTaskContext.Name
 End Property
 
 '@================================================================================
-' XXXX Event Handlers
+' mTickersTC Event Handlers
 '@================================================================================
+
+Private Sub mTickersTC_Completed(ev As TWUtilities30.TaskCompletionEvent)
+If ev.errorNumber <> 0 Then gLogger.Log LogLevelSevere, "Error " & ev.errorNumber & " starting tickers: " & ev.ErrorMessage
+mTaskContext.continue
+End Sub
 
 '@================================================================================
 ' Properties
@@ -188,7 +194,7 @@ End Property
 
 Friend Sub initialise( _
                 ByVal pTickers As Tickers, _
-                ByVal contractsConfig As ConfigItem, _
+                ByVal contractsConfig As ConfigurationSection, _
                 ByVal writeBars As Boolean, _
                 ByVal writeTicks As Boolean, _
                 ByVal outputFormat As String, _
@@ -200,7 +206,7 @@ mWriteticks = writeTicks
 mOutputFormat = outputFormat
 mOutputPath = outputPath
 
-Set mEnumerator = mContractsConfig.childItems.Enumerator
+Set mEnumerator = mContractsConfig.ChildEnumerator
 End Sub
 
 '@================================================================================

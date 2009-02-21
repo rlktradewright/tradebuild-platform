@@ -127,16 +127,28 @@ End If
 intOverlaps = False
 End Function
 
-Public Function RectContains( _
+Public Function RectContainsPoint( _
                 ByRef rect As TRectangle, _
                 ByVal x As Double, _
                 ByVal y As Double) As Boolean
 If Not rect.isValid Then Exit Function
-If x < rect.left Then Exit Function
+If x < rect.Left Then Exit Function
 If x > rect.right Then Exit Function
-If y < rect.bottom Then Exit Function
-If y > rect.top Then Exit Function
-RectContains = True
+If y < rect.Bottom Then Exit Function
+If y > rect.Top Then Exit Function
+RectContainsPoint = True
+End Function
+
+Public Function RectContainsRect( _
+                ByRef rect1 As TRectangle, _
+                ByRef rect2 As TRectangle) As Boolean
+If Not rect1.isValid Then Exit Function
+If Not rect2.isValid Then Exit Function
+If rect2.Left < rect1.Left Then Exit Function
+If rect2.right > rect1.right Then Exit Function
+If rect2.Bottom < rect1.Bottom Then Exit Function
+If rect2.Top > rect1.Top Then Exit Function
+RectContainsRect = True
 End Function
 
 Public Function rectEquals( _
@@ -144,9 +156,9 @@ Public Function rectEquals( _
                 ByRef rect2 As TRectangle) As Boolean
 With rect1
     If Not .isValid Or Not rect2.isValid Then Exit Function
-    If .bottom <> rect2.bottom Then Exit Function
-    If .left <> rect2.left Then Exit Function
-    If .top <> rect2.top Then Exit Function
+    If .Bottom <> rect2.Bottom Then Exit Function
+    If .Left <> rect2.Left Then Exit Function
+    If .Top <> rect2.Top Then Exit Function
     If .right <> rect2.right Then Exit Function
 End With
 rectEquals = True
@@ -156,10 +168,10 @@ Public Sub rectInitialise( _
                 ByRef rect As TRectangle)
 With rect
     .isValid = False
-    .left = PlusInfinityDouble
+    .Left = PlusInfinityDouble
     .right = MinusInfinityDouble
-    .bottom = PlusInfinityDouble
-    .top = MinusInfinityDouble
+    .Bottom = PlusInfinityDouble
+    .Top = MinusInfinityDouble
 End With
 End Sub
 
@@ -171,10 +183,10 @@ Dim yint As TInterval
 xInt = intIntersection(rectGetXInterval(rect1), rectGetXInterval(rect2))
 yint = intIntersection(rectGetYInterval(rect1), rectGetYInterval(rect2))
 With rectIntersection
-    .left = xInt.startValue
+    .Left = xInt.startValue
     .right = xInt.endValue
-    .bottom = yint.startValue
-    .top = yint.endValue
+    .Bottom = yint.startValue
+    .Top = yint.endValue
     If xInt.isValid And yint.isValid Then .isValid = True
 End With
 End Function
@@ -203,7 +215,7 @@ End Function
 Public Function rectGetXInterval( _
                 ByRef rect As TRectangle) As TInterval
 With rectGetXInterval
-.startValue = rect.left
+.startValue = rect.Left
 .endValue = rect.right
 .isValid = rect.isValid
 End With
@@ -212,8 +224,8 @@ End Function
 Public Function rectGetYInterval( _
                 ByRef rect As TRectangle) As TInterval
 With rectGetYInterval
-    .startValue = rect.bottom
-    .endValue = rect.top
+    .startValue = rect.Bottom
+    .endValue = rect.Top
     .isValid = rect.isValid
 End With
 End Function
@@ -222,7 +234,7 @@ Public Sub rectSetXInterval( _
                 ByRef rect As TRectangle, _
                 ByRef interval As TInterval)
 With rect
-    .left = interval.startValue
+    .Left = interval.startValue
     .right = interval.endValue
     .isValid = interval.isValid
 End With
@@ -232,8 +244,8 @@ Public Sub rectSetYInterval( _
                 ByRef rect As TRectangle, _
                 ByRef interval As TInterval)
 With rect
-    .bottom = interval.startValue
-    .top = interval.endValue
+    .Bottom = interval.startValue
+    .Top = interval.endValue
     .isValid = interval.isValid
 End With
 End Sub
@@ -253,20 +265,20 @@ End If
 With rectUnion
     .isValid = False
     
-    If rect1.left < rect2.left Then
-        .left = rect1.left
+    If rect1.Left < rect2.Left Then
+        .Left = rect1.Left
     Else
-        .left = rect2.left
+        .Left = rect2.Left
     End If
-    If rect1.bottom < rect2.bottom Then
-        .bottom = rect1.bottom
+    If rect1.Bottom < rect2.Bottom Then
+        .Bottom = rect1.Bottom
     Else
-        .bottom = rect2.bottom
+        .Bottom = rect2.Bottom
     End If
-    If rect1.top > rect2.top Then
-        .top = rect1.top
+    If rect1.Top > rect2.Top Then
+        .Top = rect1.Top
     Else
-        .top = rect2.top
+        .Top = rect2.Top
     End If
     If rect1.right > rect2.right Then
         .right = rect1.right
@@ -280,7 +292,7 @@ End Function
 Public Sub rectValidate( _
                 ByRef rect As TRectangle)
 With rect
-    If .left <= .right And .bottom <= .top Then
+    If .Left <= .right And .Bottom <= .Top Then
         .isValid = True
     Else
         .isValid = False

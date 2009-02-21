@@ -29,11 +29,6 @@ Option Explicit
 ' Events
 '@================================================================================
 
-'Event ConnectSucceeded()
-'Event ConnectFailed( _
-'                ByVal errorCode As Long, _
-'                ByVal errorDesc As String)
-
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -282,8 +277,6 @@ Friend Sub initialise( _
                 ByVal dbType As DatabaseTypes)
 mConnectionString = connectionString
 mDatabaseType = dbType
-
-Set gLogger = GetLogger(InfoTypeTradingDO)
 
 Set mExchangeFactory = New ExchangeFactory
 mExchangeFactory.initialise Me

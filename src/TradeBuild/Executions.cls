@@ -34,6 +34,9 @@ Event CollectionChanged( _
 ' Constants
 '@================================================================================
 
+Private Const ProjectName                As String = "TradeBuild26"
+Private Const ModuleName                As String = "Executions"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -92,6 +95,17 @@ Public Sub addCollectionChangeListener( _
 mChangeListeners.add value
 End Sub
 
+Friend Sub change(pExecution As Execution)
+Dim exec As Execution
+Set exec = mExecutions.item(pExecution.execId)
+If Not exec Is pExecution Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "change", _
+            "Changed item is not a member of the collection"
+End If
+fireChange CollItemChanged, pExecution
+End Sub
+
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
@@ -113,14 +127,12 @@ Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
                 ByVal affectedObject As Execution)
 Dim listener As CollectionChangeListener
-Dim i As Long
 Dim ev As CollectionChangeEvent
 Set ev.source = Me
 ev.changeType = changeType
 Set ev.affectedItem = affectedObject
-For i = 1 To mChangeListeners.Count
-    Set listener = mChangeListeners(i)
-    listener.Change ev
+For Each listener In mChangeListeners
+    listener.change ev
 Next
 RaiseEvent CollectionChanged(ev)
 End Sub

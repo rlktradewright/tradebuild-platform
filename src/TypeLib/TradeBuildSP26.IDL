@@ -34,6 +34,7 @@ library TradeBuildSP
     interface IContractInfoServiceConsumer;
     interface IContractInfoServiceProvider;
     interface IOrder;
+    interface IOrderReport;
     interface IOrderPlex;
     interface IOrderSubmissionSrvcConsumer;
     interface IOrderSubmissionSrvcProvider;
@@ -357,7 +358,10 @@ library TradeBuildSP
         StopTriggerDefault = 1,
         StopTriggerDoubleBidAsk = 2,
 		StopTriggerLast = 4,
-		StopTriggerDoubleLast = 8
+		StopTriggerDoubleLast = 8,
+		StopTriggerBidAsk = 16,
+		StopTriggerLastOrBidAsk = 32,
+		StopTriggerMidPoint=64
     } StopTriggerMethods;
 
     typedef [uuid(b1aef3b7-a908-448e-a827-4ab8454f67b4), 
@@ -793,6 +797,9 @@ library TradeBuildSP
         HRESULT overrideConstraints([out, retval] VARIANT_BOOL* );
 
         [propget]
+        HRESULT providerProperties([out,retval] Parameters** );
+
+        [propget]
         HRESULT quantity([out, retval] long* );
 
         [propget]
@@ -802,15 +809,12 @@ library TradeBuildSP
         HRESULT quantityRemaining([out, retval] long* );
 
         [propget]
-        HRESULT regularTradingHoursOnly([out, retval] VARIANT_BOOL* );
-
-        [propget]
         HRESULT settlingFirm([out, retval] BSTR* );
 
         [propget]
         HRESULT status([out, retval] OrderStatuses* );
 
-	[propget]
+		[propget]
         HRESULT stopTriggerMethod([out, retval] StopTriggerMethods* );
 
         [propget]
@@ -864,6 +868,206 @@ interface IOrderPlex : IDispatch {
 
     };
 
+ 	[
+      uuid(58e09650-1764-492b-8734-953c9ad09689),
+      version(1.0),
+      nonextensible,
+      helpstring("Defines the interface to be implemented by OrderReport classes")
+    ]
+    interface IOrderReport : IUnknown {
+
+	// Properties ==================================================
+
+        [propget]
+        HRESULT action([out, retval] OrderActions* );
+
+        [propput]
+        HRESULT action([in] OrderActions );
+
+        [propget]
+        HRESULT allOrNone([out, retval] VARIANT_BOOL* );
+
+        [propput]
+        HRESULT allOrNone([in] VARIANT_BOOL );
+
+        [propget]
+        HRESULT blockOrder([out, retval] VARIANT_BOOL* );
+
+        [propput]
+        HRESULT blockOrder([in] VARIANT_BOOL );
+
+        [propget]
+        HRESULT brokerId([out, retval] BSTR* );
+
+        [propput]
+        HRESULT brokerId([in] BSTR );
+
+        [propget]
+        HRESULT ContractSpecifier([out, retval] ContractSpecifier** );
+
+        [propput]
+        HRESULT ContractSpecifier([in] ContractSpecifier* );
+
+        [propget]
+        HRESULT displaySize([out, retval] long* );
+
+        [propput]
+        HRESULT displaySize([in] long );
+
+        [propget]
+        HRESULT discretionaryAmount([out, retval] double* );
+
+        [propput]
+        HRESULT discretionaryAmount([in] double );
+
+        [propget]
+        HRESULT eTradeOnly([out, retval] VARIANT_BOOL* );
+
+        [propput]
+        HRESULT eTradeOnly([in] VARIANT_BOOL );
+
+        [propget]
+        HRESULT firmQuoteOnly([out, retval] VARIANT_BOOL* );
+
+        [propput]
+        HRESULT firmQuoteOnly([in] VARIANT_BOOL );
+
+        [propget]
+        HRESULT goodAfterTime([out, retval] DATE* );
+
+        [propput]
+        HRESULT goodAfterTime([in] DATE );
+
+        [propget]
+        HRESULT goodAfterTimeTZ([out, retval] BSTR* );
+
+        [propput]
+        HRESULT goodAfterTimeTZ([in] BSTR );
+
+        [propget]
+        HRESULT goodTillDate([out, retval] DATE* );
+
+        [propput]
+        HRESULT goodTillDate([in] DATE );
+
+        [propget]
+        HRESULT goodTillDateTZ([out, retval] BSTR* );
+
+        [propput]
+        HRESULT goodTillDateTZ([in] BSTR );
+
+        [propget]
+        HRESULT hidden([out, retval] VARIANT_BOOL* );
+
+        [propput]
+        HRESULT hidden([in] VARIANT_BOOL );
+
+        [propget]
+        HRESULT ignoreRegularTradingHours([out, retval] VARIANT_BOOL* );
+
+        [propput]
+        HRESULT ignoreRegularTradingHours([in] VARIANT_BOOL );
+
+        [propget]
+        HRESULT limitPrice([out, retval] double* );
+
+        [propput]
+        HRESULT limitPrice([in] double );
+
+        [propget]
+        HRESULT minimumQuantity([out, retval] long* );
+
+        [propput]
+        HRESULT minimumQuantity([in] long );
+
+        [propget]
+        HRESULT NbboPriceCap([out, retval] double* );
+
+        [propput]
+        HRESULT NbboPriceCap([in] double );
+
+        [propget]
+        HRESULT originatorRef([out, retval] BSTR* );
+
+        [propput]
+        HRESULT originatorRef([in] BSTR );
+
+        [propget]
+        HRESULT orderType([out, retval] OrderTypes* );
+
+        [propput]
+        HRESULT orderType([in] OrderTypes );
+
+        [propget]
+        HRESULT origin([out, retval] OrderOrigins* );
+
+        [propput]
+        HRESULT origin([in] OrderOrigins );
+
+        [propget]
+        HRESULT overrideConstraints([out, retval] VARIANT_BOOL* );
+
+        [propput]
+        HRESULT overrideConstraints([in] VARIANT_BOOL );
+
+        [propget]
+        HRESULT providerProperties([out,retval] Parameters** );
+
+        [propput]
+        HRESULT providerProperties([in] Parameters* );
+
+        [propget]
+        HRESULT quantity([out, retval] long* );
+
+        [propput]
+        HRESULT quantity([in] long );
+
+        [propget]
+        HRESULT settlingFirm([out, retval] BSTR* );
+
+        [propput]
+        HRESULT settlingFirm([in] BSTR );
+
+        [propget]
+        HRESULT status([out, retval] OrderStatuses* );
+
+        [propput]
+        HRESULT status([in] OrderStatuses );
+
+		[propget]
+        HRESULT stopTriggerMethod([out, retval] StopTriggerMethods* );
+
+		[propput]
+        HRESULT stopTriggerMethod([in] StopTriggerMethods );
+
+        [propget]
+        HRESULT sweepToFill([out, retval] VARIANT_BOOL* );
+
+        [propput]
+        HRESULT sweepToFill([in] VARIANT_BOOL );
+
+        [propget]
+        HRESULT timeInForce([out, retval] OrderTifs* );
+
+        [propput]
+        HRESULT timeInForce([in] OrderTifs );
+
+        [propget]
+        HRESULT tradeBuildId([out, retval] BSTR* );
+
+        [propput]
+        HRESULT tradeBuildId([in] BSTR );
+
+        [propget]
+        HRESULT triggerPrice([out, retval] double* );
+
+        [propput]
+        HRESULT triggerPrice([in] double );
+
+	// Methods =====================================================
+
+    };
+
     [
       uuid(19cc1663-8606-49c7-ba8b-9ecdce6dedc0),
       version(1.0),
@@ -874,14 +1078,15 @@ interface IOrderPlex : IDispatch {
 
 	// Methods =====================================================
 
-	HRESULT cancelTickData([in] IStreamingDataConsumer* consumer);
+	HRESULT CancelTickData(
+		[in] IStreamingDataConsumer* consumer);
 
 	HResult NotifyEvent(
-			[in] StandardSPEventCodes eventCode,
-			[in] BSTR eventMessage,
-			[in] long serviceProviderHandle);
+		[in] StandardSPEventCodes eventCode,
+		[in] BSTR eventMessage,
+		[in] long serviceProviderHandle);
 
-	HRESULT executionDetails(
+	HRESULT ExecutionDetails(
 		[in] ContractSpecifier* pContractSpecifier, 
 		[in] BSTR accountIdentifier,
 		[in] OrderActions action,
@@ -894,24 +1099,27 @@ interface IOrderPlex : IDispatch {
 		[in] long quantity,
 		[in] DATE fillTime);
 
-	HRESULT notReady();
+	HRESULT NotReady();
 
-	HRESULT orderStatus(
+	HRESULT OrderReport(
+		[in] IOrderReport* OrderReport );
+
+	HRESULT OrderStatus(
 		[in] BSTR orderId, 
 		[in] OrderStatuses status);
 
-	HRESULT preFill(
+	HRESULT PreFill(
 		[in] BSTR orderId, 
 		[in, out] double* fillPrice, 
 		[in, out] long* fillSize);
 
-	HRESULT ready();
+	HRESULT Ready();
 
-	HRESULT rejectOrder(
+	HRESULT RejectOrder(
 		[in] BSTR orderId, 
 		[in] BSTR reason);
 
-	HRESULT requestTickData(
+	HRESULT RequestTickData(
 		[in] IStreamingDataConsumer* consumer, 
 		[in] VARIANT_BOOL includeMarketDepth);
 

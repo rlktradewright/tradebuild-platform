@@ -93,7 +93,7 @@ End Property
 '@================================================================================
 
 Public Function add( _
-                ByVal pTickerOptions As Long, _
+                ByVal pTickerOptions As TickerOptions, _
                 Optional ByVal key As String) As Ticker
 If key = "" Then key = GenerateGUIDString
 Set add = New Ticker
@@ -171,7 +171,7 @@ lTickersStarter.initialise Me, _
                             poutputTickfileFormat, _
                             poutputTickfilePath, _
                             interval
-Set startTickers = StartTask(lTickersStarter, PriorityNormal, "StartTickers/" & GenerateTextID, , pContractSpec)
+Set startTickers = StartTask(lTickersStarter, PriorityNormal, "StartTickers/" & pContractSpec.toString, , pContractSpec)
 
 Exit Function
 
@@ -213,8 +213,9 @@ Err.Raise Err.number, _
 
 End Function
 
-Friend Sub notify(ByRef ev As NotificationEvent)
+Friend Sub Notify(ByRef ev As NotificationEvent)
 RaiseEvent Notification(ev)
+gTB.Notify ev
 End Sub
 
 '@================================================================================
@@ -246,13 +247,11 @@ Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
                 ByVal affectedObject As Ticker)
 Dim listener As CollectionChangeListener
-Dim i As Long
 Dim ev As CollectionChangeEvent
 Set ev.source = Me
 ev.changeType = changeType
 Set ev.affectedItem = affectedObject
-For i = 1 To mChangeListeners.Count
-    Set listener = mChangeListeners(i)
+For Each listener In mChangeListeners
     listener.Change ev
 Next
 RaiseEvent CollectionChanged(ev)

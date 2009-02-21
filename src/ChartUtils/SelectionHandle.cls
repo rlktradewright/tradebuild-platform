@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "ChartTools26"
+
 Private Const ModuleName                    As String = "SelectionHandle"
 
 '@================================================================================

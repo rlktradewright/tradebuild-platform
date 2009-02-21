@@ -111,10 +111,11 @@ Public gLibraryManager As StudyLibraryManager
 ' Properties
 '@================================================================================
 
-'Public Property Let commonServiceConsumer( _
-'                ByVal value As ICommonServiceConsumer)
-'Set mCommonServiceConsumer = value
-'End Property
+Public Property Get gLogger() As Logger
+Static lLogger As Logger
+If lLogger Is Nothing Then Set lLogger = GetLogger("log")
+Set gLogger = lLogger
+End Property
 
 '@================================================================================
 ' Methods

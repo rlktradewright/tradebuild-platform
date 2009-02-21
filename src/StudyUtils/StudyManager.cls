@@ -293,7 +293,7 @@ End If
 
 studyEntry.studyName = name
 studyEntry.libName = libraryName
-Set lStudy = mStudyLibraryManager.CreateStudy(name, libraryName)
+Set lStudy = mStudyLibraryManager.createStudy(name, libraryName)
 
 If lStudy Is Nothing Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                                 "StudyUtils25.StudyManager::AddStudy", _
@@ -374,6 +374,7 @@ Public Sub notifyInput( _
                 ByVal inputValue As Variant, _
                 ByVal timestamp As Date)
 Dim ev As StudyValueEvent
+
 ev.sVal.timestamp = timestamp
 ev.sVal.value = inputValue
 ev.valueName = mInputs(inputHandle).inputName

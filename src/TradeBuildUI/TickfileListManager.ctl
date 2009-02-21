@@ -131,6 +131,8 @@ Private mMinHeight As Long
 
 Private Sub UserControl_Initialize()
 
+SendMessage TickFileList.hWnd, LB_SETHORZEXTENT, 2000, 0
+
 mMinHeight = 2 * ((UpButton.Height + _
                         105 + _
                         DownButton.Height + _

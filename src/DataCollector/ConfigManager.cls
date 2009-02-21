@@ -48,6 +48,11 @@ Event SelectedItemChanged()
 Private Const ProjectName                   As String = "TradeSkilDemo26"
 Private Const ModuleName                    As String = "ConfigManager"
 
+Private Const ConfigNameAppConfig           As String = "AppConfig"
+Private Const ConfigNameAppConfigs          As String = "AppConfigs"
+
+Private Const DefaultAppInstanceConfigName          As String = "Default Config"
+
 Private Const NewConfigNameStub             As String = "New config"
 
 '@================================================================================
@@ -55,13 +60,12 @@ Private Const NewConfigNameStub             As String = "New config"
 '@================================================================================
 
 Private mConfigFilename                     As String
-Private mConfigFile                         As ConfigFile
-Private mAppConfigs                         As ConfigItem
+Private mConfigFile                         As ConfigurationFile
+Private mAppConfigs                         As ConfigurationSection
 
-Private mCurrAppConfig                      As ConfigItem
+Private mCurrAppConfig                      As ConfigurationSection
 
-Private mDefaultAppConfig                   As ConfigItem
-Private mDefaultConfigNode                  As Node
+Private mDefaultAppConfig                   As ConfigurationSection
 
 Private mConfigNames                        As Collection
 
@@ -78,7 +82,7 @@ End Sub
 '@================================================================================
 
 Private Sub ChangeListener_Change( _
-                ev As twutilities30.ChangeEvent)
+                ev As TWUtilities30.ChangeEvent)
 If ev.Source Is mConfigFile Then
     Select Case ev.changeType
     Case ConfigChangeTypes.ConfigClean
@@ -98,26 +102,30 @@ End Sub
 '@================================================================================
 
 Public Property Get appConfig( _
-                ByVal name As String) As ConfigItem
+                ByVal name As String) As ConfigurationSection
 Set appConfig = findConfig(name)
+End Property
+
+Public Property Get ConfigurationFile() As ConfigurationFile
+Set ConfigurationFile = mConfigFile
 End Property
 
 Public Property Get Dirty() As Boolean
 If Not mConfigFile Is Nothing Then Dirty = mConfigFile.Dirty
 End Property
 
-Public Property Get currentAppConfig() As ConfigItem
+Public Property Get currentAppConfig() As ConfigurationSection
 Set currentAppConfig = mCurrAppConfig
 End Property
 
-Public Property Get defaultAppConfig() As ConfigItem
+Public Property Get defaultAppConfig() As ConfigurationSection
 Set defaultAppConfig = mDefaultAppConfig
 End Property
 
-Public Property Get firstAppConfig() As ConfigItem
-Dim appConfig As ConfigItem
+Public Property Get firstAppConfig() As ConfigurationSection
+Dim appConfig As ConfigurationSection
 
-For Each appConfig In mAppConfigs.childItems
+For Each appConfig In mAppConfigs
     Exit For
 Next
 
@@ -134,7 +142,7 @@ Set mCurrAppConfig = Nothing
 End Sub
 
 Public Function addNew( _
-                Optional ByVal configName As String) As ConfigItem
+                Optional ByVal configName As String) As ConfigurationSection
 Dim i As Long
 
 If configName = "" Then
@@ -145,41 +153,49 @@ If configName = "" Then
     Loop
 End If
 
-Set mCurrAppConfig = mAppConfigs.childItems.AddItem(ConfigNameAppConfig)
-mCurrAppConfig.setAttribute AttributeNameAppConfigName, configName
-mCurrAppConfig.setAttribute AttributeNameAppConfigDefault, "False"
-mCurrAppConfig.childItems.AddItem ConfigNameTradeBuild
-mCurrAppConfig.childItems.AddItem ConfigNameCollectionControl
-mCurrAppConfig.childItems.AddItem ConfigNameContracts
+Set mCurrAppConfig = AddAppInstanceConfig(mConfigFile, _
+                                    configName, _
+                                    True)
+mCurrAppConfig.addConfigurationSection ConfigSectionCollectionControl
+mCurrAppConfig.addConfigurationSection ConfigSectionContracts
 
 Set addNew = mCurrAppConfig
 End Function
 
 Public Sub deleteCurrent()
-mAppConfigs.childItems.Remove mCurrAppConfig
+RemoveAppInstanceConfig mConfigFile, mCurrAppConfig.InstanceQualifier
 If mCurrAppConfig Is mDefaultAppConfig Then Set mDefaultAppConfig = Nothing
-mConfigNames.Remove mCurrAppConfig.getAttribute(AttributeNameAppConfigName)
+mConfigNames.Remove mCurrAppConfig.InstanceQualifier
 Set mCurrAppConfig = Nothing
 End Sub
 
 Public Function initialise( _
                 ByVal configFilename As String) As Boolean
-Dim appConfig As ConfigItem
-Dim isDefault As Boolean
-Dim index As Long
-Dim newnode As Node
+Dim baseConfigFile As TWUtilities30.ConfigFile
+Dim appConfig As ConfigurationSection
 
 mConfigFilename = configFilename
 
 On Error Resume Next
-Set mConfigFile = LoadXMLConfigurationFile(mConfigFilename)
+Set baseConfigFile = LoadXMLConfigurationFile(mConfigFilename)
 On Error GoTo 0
-If mConfigFile Is Nothing Then
+If baseConfigFile Is Nothing Then
     gLogger.Log LogLevelNormal, "No configuration exists - creating skeleton configuration file"
-    Set mConfigFile = CreateXMLConfigurationFile(AppName, ConfigFileVersion)
+    Set baseConfigFile = CreateXMLConfigurationFile(App.ProductName, ConfigFileVersion)
+    Set mConfigFile = CreateConfigurationFile(baseConfigFile, mConfigFilename)
+    InitialiseConfigFile mConfigFile
+    Set appConfig = AddAppInstanceConfig(mConfigFile, _
+                        DefaultAppInstanceConfigName, _
+                        includeDefaultStudyLibrary:=False, _
+                        setAsDefault:=True)
+    appConfig.addConfigurationSection ConfigSectionCollectionControl
+    appConfig.addConfigurationSection ConfigSectionContracts
 Else
-    If mConfigFile.applicationName <> AppName Or _
-        mConfigFile.applicationVersion <> ConfigFileVersion _
+    Set mConfigFile = CreateConfigurationFile(baseConfigFile, _
+                                            mConfigFilename)
+    If mConfigFile.applicationName <> App.ProductName Or _
+        mConfigFile.fileVersion <> ConfigFileVersion Or _
+        Not IsValidConfigurationFile(mConfigFile) _
     Then
         gLogger.Log LogLevelNormal, "The configuration file is not the correct format for this program"
         Exit Function
@@ -188,22 +204,12 @@ End If
 
 mConfigFile.addChangeListener Me
 
-On Error Resume Next
-Set mAppConfigs = mConfigFile.rootItem.childItems.Item(ConfigNameAppConfigs)
-On Error GoTo 0
+Set mAppConfigs = mConfigFile.GetConfigurationSection("/" & ConfigNameAppConfigs)
 
-If mAppConfigs Is Nothing Then
-    Set mAppConfigs = mConfigFile.rootItem.childItems.AddItem(ConfigNameAppConfigs)
-End If
+Set mDefaultAppConfig = GetDefaultAppInstanceConfig(mConfigFile)
 
-For Each appConfig In mAppConfigs.childItems
-    mConfigNames.Add appConfig.getAttribute(AttributeNameAppConfigName), appConfig.getAttribute(AttributeNameAppConfigName)
-    isDefault = False
-    On Error Resume Next
-    isDefault = (UCase$(appConfig.getAttribute(AttributeNameAppConfigDefault)) = "TRUE")
-    On Error GoTo 0
-    If isDefault Then Set mDefaultAppConfig = appConfig
-    index = index + 1
+For Each appConfig In mAppConfigs
+    mConfigNames.Add appConfig.InstanceQualifier, appConfig.InstanceQualifier
 Next
 
 initialise = True
@@ -212,19 +218,19 @@ End Function
 Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
 Attribute NewEnum.VB_MemberFlags = "40"
-Set NewEnum = mAppConfigs.childItems.NewEnum
+Set NewEnum = mAppConfigs.NewEnum
 End Function
 
 Public Function renameCurrent( _
                 ByVal newName As String) As Boolean
 If newName = "" Then Exit Function
 
-If newName = mCurrAppConfig.getAttribute(AttributeNameAppConfigName) Then Exit Function
+If newName = mCurrAppConfig.InstanceQualifier Then Exit Function
 
 If nameAlreadyInUse(newName) Then Exit Function
 
-mConfigNames.Remove mCurrAppConfig.getAttribute(AttributeNameAppConfigName)
-mCurrAppConfig.setAttribute AttributeNameAppConfigName, newName
+mConfigNames.Remove mCurrAppConfig.InstanceQualifier
+mCurrAppConfig.InstanceQualifier = newName
 mConfigNames.Add newName, newName
 renameCurrent = True
 End Function
@@ -238,20 +244,17 @@ mConfigFile.save mConfigFilename
 End Sub
 
 Public Sub setCurrent( _
-                ByVal ci As ConfigItem)
-Set mCurrAppConfig = ci
+                ByVal cs As ConfigurationSection)
+Set mCurrAppConfig = cs
 End Sub
 
 Public Sub toggleDefaultConfig()
 If mCurrAppConfig Is mDefaultAppConfig Then
-    mCurrAppConfig.setAttribute AttributeNameAppConfigDefault, "False"
+    UnsetDefaultAppInstanceConfig mConfigFile
     Set mDefaultAppConfig = Nothing
 Else
-    If Not mDefaultAppConfig Is Nothing Then
-        mDefaultAppConfig.setAttribute AttributeNameAppConfigDefault, "False"
-    End If
+    SetDefaultAppInstanceConfig mConfigFile, mCurrAppConfig.InstanceQualifier
     
-    mCurrAppConfig.setAttribute AttributeNameAppConfigDefault, "True"
     Set mDefaultAppConfig = mCurrAppConfig
 End If
 End Sub
@@ -261,16 +264,8 @@ End Sub
 '@================================================================================
 
 Private Function findConfig( _
-                ByVal name As String) As ConfigItem
-Dim appConfig As ConfigItem
-
-For Each appConfig In mAppConfigs.childItems
-    If UCase$(appConfig.getAttribute(AttributeNameAppConfigName)) = UCase$(name) Then
-        Set findConfig = appConfig
-        Exit Function
-    End If
-Next
-
+                ByVal name As String) As ConfigurationSection
+Set findConfig = mAppConfigs.GetConfigurationSection(ConfigNameAppConfig & "(" & name & ")")
 End Function
 
 Private Function nameAlreadyInUse( _

@@ -121,7 +121,7 @@ End Select
 End Function
 
 Private Sub StudyLibrary_initialise( _
-                ByVal libManager As StudyUtils25.StudyLibraryManager, _
+                ByVal libManager As StudyLibraryManager, _
                 ByVal handle As Long)
 Set gLibraryManager = libManager
 mHandle = handle

@@ -73,6 +73,10 @@ Private Sub Class_Initialize()
 Set mLines = New Collection
 End Sub
 
+Private Sub Class_Terminate()
+Debug.Print "LineSeries terminated"
+End Sub
+
 '================================================================================
 ' IGraphicObjectSeries Interface Members
 '================================================================================
@@ -95,6 +99,8 @@ End Property
 
 Private Sub IGraphicObjectSeries_finish()
 mFinished = True
+Set mGOSP = Nothing
+Set mCanvas = Nothing
 End Sub
 
 Private Sub IGraphicObjectSeries_Initialise( _
@@ -427,12 +433,12 @@ End If
 fireStyleChanged
 End Property
 
-Public Property Let IsSelectable(ByVal value As Boolean)
+Public Property Let isSelectable(ByVal value As Boolean)
 mIsSelectable = value
 End Property
 
-Public Property Get IsSelectable() As Boolean
-IsSelectable = mIsSelectable
+Public Property Get isSelectable() As Boolean
+isSelectable = mIsSelectable
 End Property
 
 Public Property Get IsSelected() As Boolean
@@ -600,7 +606,7 @@ Exit Property
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "style" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "style" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -624,21 +630,21 @@ End Property
 ' Methods
 '================================================================================
 
-Public Function Add( _
+Public Function add( _
                 Optional ByVal Key As String, _
                 Optional ByVal LocalStyle As linestyle, _
-                Optional ByVal IsSelectable As Boolean) As ChartSkil26.Line
+                Optional ByVal isSelectable As Boolean) As ChartSkil26.Line
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                             "ChartSkil26.LineSeries::add", _
                             "Line series is finished"
-Set Add = New ChartSkil26.Line
+Set add = New ChartSkil26.Line
 If Key = "" Then
     Key = GenerateGUIDString
 End If
-Add.initialise mSeriesID, Key, mGOSP, mLayer, mCanvas, mStyle, LocalStyle, IsSelectable
+add.initialise mSeriesID, Key, mGOSP, mLayer, mCanvas, mStyle, LocalStyle, isSelectable
 
-mLines.Add Add, Key
-mGOSP.AddGraphicObject Add, mSeriesID
+mLines.add add, Key
+mGOSP.AddGraphicObject add, mSeriesID
 End Function
 
 Friend Sub Finish()
@@ -662,10 +668,6 @@ Public Function NewEnum() As IUnknown
 Attribute NewEnum.VB_UserMemId = -4
    Set NewEnum = mLines.[_NewEnum]
 End Function
-
-Friend Sub RemoveAll()
-StartTask Me, PriorityLow
-End Sub
 
 Public Sub RemoveObject(ByVal value As ChartSkil26.Line)
 On Error GoTo Err

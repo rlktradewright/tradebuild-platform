@@ -121,6 +121,9 @@ Private Sub ICommonServiceProvider_Link( _
                 ByVal params As Parameters)
 Dim param As Parameter
 
+Dim failpoint As Long
+On Error GoTo Err
+
 Set mCommonServiceConsumer = CommonServiceConsumer
 mHandle = handle
 
@@ -155,6 +158,15 @@ Next
 registerSP
 
 createDatabase
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ICommonServiceProvider_Link" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 
 End Sub
 
@@ -283,6 +295,9 @@ End Property
 '@===============================================================================
 
 Private Sub createDatabase()
+Dim failpoint As Long
+On Error GoTo Err
+
 If mConnectionString <> "" Then
     Set mTradingDB = CreateTradingDB(mConnectionString, mDatabaseType)
 Else
@@ -293,6 +308,15 @@ Else
                                                             mPassword), _
                                     mDatabaseType)
 End If
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "createDatabase" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Sub
 
 Private Sub handleFatalError( _
@@ -307,6 +331,9 @@ Set mCommonServiceConsumer = Nothing
 End Sub
 
 Private Sub registerSP()
+Dim failpoint As Long
+On Error GoTo Err
+
 If mRole = "PRIMARY" Then
     mCommonServiceConsumer.RegisterServiceProvider mHandle, _
                                             ServiceProviderTypes.ContractInfo
@@ -314,5 +341,14 @@ Else
     mCommonServiceConsumer.RegisterServiceProvider mHandle, _
                                             ServiceProviderTypes.SecondaryContractInfo
 End If
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "registerSP" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Sub
 

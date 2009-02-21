@@ -21,49 +21,49 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Public Const AppName                        As String = "TradeBuild Data Collector"
+Public Const AppName                                    As String = "TradeBuild Data Collector"
 
-Public Const AttributeNameAppConfigDefault As String = "Default"
-Public Const AttributeNameAppConfigName    As String = "Name"
-Public Const AttributeNameBidAskBars       As String = "WriteBidAndAskBars"
-Public Const AttributeNameCurrency         As String = "Currency"
-Public Const AttributeNameEnabled          As String = "Enabled"
-Public Const AttributeNameExpiry           As String = "Expiry"
-Public Const AttributeNameExchange         As String = "Exchange"
-Public Const AttributeNameIncludeMktDepth  As String = "IncludeMarketDepth"
-Public Const AttributeNameLocalSYmbol      As String = "LocalSymbol"
-Public Const AttributeNameRight            As String = "Right"
-Public Const AttributeNameSecType          As String = "SecType"
-Public Const AttributeNameStrikePrice      As String = "StrikePrice"
-Public Const AttributeNameSymbol           As String = "Symbol"
+Public Const AttributeNameBidAskBars                    As String = "WriteBidAndAskBars"
+Public Const AttributeNameEnabled                       As String = "Enabled"
+Public Const AttributeNameIncludeMktDepth               As String = "IncludeMarketDepth"
 
-Public Const AttributeNameWriteTickData    As String = "WriteTickData"
-Public Const AttributeNameWriteBarData     As String = "WriteBarData"
+Public Const ConfigSectionCollectionControl             As String = "CollectionControl"
+Public Const ConfigSectionContract                      As String = "Contract"
+Public Const ConfigSectionContracts                     As String = "Contracts"
+Public Const ConfigSectionContractspecifier             As String = "ContractSpecifier"
+Public Const ConfigSectionTickdata                      As String = "TickData"
 
+Public Const ConfigSettingContractSpecCurrency          As String = ConfigSectionContractspecifier & "&Currency"
+Public Const ConfigSettingContractSpecExpiry            As String = ConfigSectionContractspecifier & "&Expiry"
+Public Const ConfigSettingContractSpecExchange          As String = ConfigSectionContractspecifier & "&Exchange"
+Public Const ConfigSettingContractSpecLocalSYmbol       As String = ConfigSectionContractspecifier & "&LocalSymbol"
+Public Const ConfigSettingContractSpecRight             As String = ConfigSectionContractspecifier & "&Right"
+Public Const ConfigSettingContractSpecSecType           As String = ConfigSectionContractspecifier & "&SecType"
+Public Const ConfigSettingContractSpecStrikePrice       As String = ConfigSectionContractspecifier & "&StrikePrice"
+Public Const ConfigSettingContractSpecSymbol            As String = ConfigSectionContractspecifier & "&Symbol"
 
-Public Const ConfigFileVersion             As String = "1.0"
+Public Const ConfigFileVersion                          As String = "1.0"
 
-Public Const ConfigNameAppConfig           As String = "AppConfig"
-Public Const ConfigNameAppConfigs          As String = "AppConfigs"
-Public Const ConfigNameTradeBuild          As String = "TradeBuild"
-Public Const ConfigNameCollectionControl   As String = "CollectionControl"
-Public Const ConfigNameContract            As String = "Contract"
-Public Const ConfigNameContracts           As String = "Contracts"
-Public Const ConfigNameContractSpecifier   As String = "ContractSpecifier"
+Public Const ConfigNodeContractSpecs                    As String = "Contract Specifications"
+Public Const ConfigNodeServiceProviders                 As String = "Service Providers"
+Public Const ConfigNodeParameters                       As String = "Parameters"
 
-Public Const ConfigNodeContractSpecs       As String = "Contract Specifications"
-Public Const ConfigNodeServiceProviders    As String = "Service Providers"
-Public Const ConfigNodeParameters          As String = "Parameters"
+Public Const ConfigSettingWriteBarData                  As String = ConfigSectionCollectionControl & ".WriteBarData"
+Public Const ConfigSettingWriteTickData                 As String = ConfigSectionCollectionControl & ".WriteTickData"
+Public Const ConfigSettingWriteTickDataFormat           As String = ConfigSectionTickdata & ".Format"
+Public Const ConfigSettingWriteTickDataPath             As String = ConfigSectionTickdata & ".Path"
+
 
 ' command line switch indicating which configuration to load
 ' when the programs starts (if not specified, the default configuration
 ' is loaded)
-Public Const SwitchConfig                   As String = "config"
+Public Const SwitchConfig                               As String = "config"
 
-Public Const SwitchSetup                    As String = "setup"
+Public Const SwitchLogFilename                          As String = "log"
+Public Const SwitchSetup                                As String = "setup"
 
-Public Const SwitchConcurrency              As String = "concurrency"
-Public Const SwitchQuantum                  As String = "quantum"
+Public Const SwitchConcurrency                          As String = "concurrency"
+Public Const SwitchQuantum                              As String = "quantum"
 
 '@================================================================================
 ' Enums
@@ -78,29 +78,29 @@ Public Const SwitchQuantum                  As String = "quantum"
 ' Member variables
 '@================================================================================
 
-Public gStop As Boolean
+Public gStop                                            As Boolean
 
-Public gLogger As Logger
+Public gLogger                                          As Logger
 
-Private mCLParser As CommandLineParser
-Private mForm As fDataCollectorUI
+Private mCLParser                                       As CommandLineParser
+Private mForm                                           As fDataCollectorUI
 
-Private mConfig As ConfigItem
+Private mConfig                                         As ConfigurationSection
 
-Private mNoAutoStart As Boolean
-Private mNoUI As Boolean
-Private mLeftOffset As Long
-Private mRightOffset As Long
-Private mPosX As Single
-Private mPosY As Single
+Private mNoAutoStart                                    As Boolean
+Private mNoUI                                           As Boolean
+Private mLeftOffset                                     As Long
+Private mRightOffset                                    As Long
+Private mPosX                                           As Single
+Private mPosY                                           As Single
 
-Private mDataCollector As dataCollector
+Private mDataCollector                                  As dataCollector
 
-Private mStartTimeDescriptor As String
-Private mEndTimeDescriptor As String
-Private mExitTimeDescriptor As String
+Private mStartTimeDescriptor                            As String
+Private mEndTimeDescriptor                              As String
+Private mExitTimeDescriptor                             As String
 
-Private mConfigManager As ConfigManager
+Private mConfigManager                                  As ConfigManager
 
 '@================================================================================
 ' Class Event Handlers
@@ -117,6 +117,26 @@ Private mConfigManager As ConfigManager
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Get AppTitle() As String
+AppTitle = AppName & _
+                " v" & _
+                App.Major & "." & App.Minor
+End Property
+
+Public Property Get AppSettingsFolder() As String
+AppSettingsFolder = GetSpecialFolderPath(FolderIdLocalAppdata) & _
+                    "\TradeWright\" & _
+                    AppTitle
+End Property
+
+Public Property Get LogFileName() As String
+If mCLParser.Switch(SwitchLogFilename) Then LogFileName = mCLParser.SwitchValue(SwitchLogFilename)
+
+If LogFileName = "" Then
+    LogFileName = AppSettingsFolder & "\log.txt"
+End If
+End Property
 
 '@================================================================================
 ' Methods
@@ -142,6 +162,17 @@ getLog
 
 setTaskParameters
 
+TradeBuildAPI.PermittedServiceProviderRoles = ServiceProviderRoles.SPRealtimeData Or _
+                                                ServiceProviderRoles.SPPrimaryContractData Or _
+                                                ServiceProviderRoles.SPHistoricalDataInput Or _
+                                                ServiceProviderRoles.SPHistoricalDataOutput Or _
+                                                ServiceProviderRoles.SPTickfileOutput
+
+If Not getConfig Then
+    TerminateTWUtilities
+    Exit Sub
+End If
+
 If setup Then
     TerminateTWUtilities
     Exit Sub
@@ -164,7 +195,8 @@ mNoAutoStart = getNoAutostart
 If mNoUI Then
     
     gLogger.Log LogLevelNormal, "Creating data collector object"
-    Set mDataCollector = CreateDataCollector(mConfig, _
+    Set mDataCollector = CreateDataCollector(mConfigManager.ConfigurationFile, _
+                                            mConfig.InstanceQualifier, _
                                             mStartTimeDescriptor, _
                                             mEndTimeDescriptor, _
                                             mExitTimeDescriptor)
@@ -184,7 +216,8 @@ If mNoUI Then
     
 Else
     gLogger.Log LogLevelNormal, "Creating data collector object"
-    Set mDataCollector = CreateDataCollector(mConfig, _
+    Set mDataCollector = CreateDataCollector(mConfigManager.ConfigurationFile, _
+                                            mConfig.InstanceQualifier, _
                                             IIf(mNoAutoStart, "", mStartTimeDescriptor), _
                                             mEndTimeDescriptor, _
                                             mExitTimeDescriptor)
@@ -219,7 +252,7 @@ If getConfigToLoad() Is Nothing Then
     notifyError "No configuration is available"
 Else
     Set mConfig = getConfigToLoad
-    gLogger.Log LogLevelNormal, "Configuration in use: " & mConfig.getAttribute(AttributeNameAppConfigName)
+    gLogger.Log LogLevelNormal, "Configuration in use: " & mConfig.InstanceQualifier
     configure = True
 End If
 
@@ -266,7 +299,7 @@ End If
 gLogger.Log LogLevelNormal, "Form position: " & mPosX & "," & mPosY
 
 createForm.initialise mDataCollector, _
-                getConfigFilename, _
+                mConfigManager, _
                 getConfigName, _
                 getNoAutostart, _
                 CBool(mCLParser.Switch("showMonitor"))
@@ -277,22 +310,24 @@ createForm.Top = mPosY * createForm.Height
 createForm.Visible = True
 End Function
 
-Private Function getConfigFilename() As String
-Static fn As String
-
-If fn = "" Then
-    
-    fn = mCLParser.Arg(0)
-    If fn = "" Then
-        fn = GetSpecialFolderPath(FolderIdLocalAppdata) & _
-                                "\TradeWright\" & _
-                                AppName & _
-                                "\v" & _
-                                App.Major & "." & App.Minor & _
-                                "\settings.xml"
-    End If
+Private Function getConfig() As Boolean
+Set mConfigManager = New ConfigManager
+If mConfigManager.initialise(getConfigFilename) Then
+    gLogger.Log TWUtilities30.LogLevels.LogLevelNormal, "Configuration file: " & getConfigFilename
+    getConfig = True
+Else
+    notifyError "The configuration file (" & _
+                    getConfigFilename & _
+                    ") is not the correct format for this program"
 End If
-getConfigFilename = fn
+
+End Function
+
+Private Function getConfigFilename() As String
+getConfigFilename = mCLParser.Arg(0)
+If getConfigFilename = "" Then
+    getConfigFilename = AppSettingsFolder & "\settings.xml"
+End If
 End Function
 
 Private Function getConfigName() As String
@@ -301,20 +336,10 @@ If mCLParser.Switch(SwitchConfig) Then
 End If
 End Function
 
-Private Function getConfigToLoad() As ConfigItem
-Static configToLoad As ConfigItem
+Private Function getConfigToLoad() As ConfigurationSection
+Static configToLoad As ConfigurationSection
 
 If configToLoad Is Nothing Then
-    Set mConfigManager = New ConfigManager
-    If Not mConfigManager.initialise(getConfigFilename) Then
-        notifyError "The configuration file (" & _
-                        getConfigFilename & _
-                        ") is not the correct format for this program"
-        Err.Raise ErrorCodes.ErrIllegalArgumentException
-    End If
-    
-    gLogger.Log twutilities30.LogLevels.LogLevelNormal, "Configuration file: " & getConfigFilename
-    
     On Error Resume Next
     Set configToLoad = getNamedConfig()
     If Err.Number <> 0 Then Exit Function
@@ -341,32 +366,20 @@ gLogger.Log LogLevelNormal, "Exit at: " & getExitTimeDescriptor
 End Function
 
 Private Sub getLog()
-Dim logFile As String
-
-If mCLParser.Switch("Log") Then logFile = mCLParser.SwitchValue("log")
 
 If mCLParser.Switch("LogLevel") Then DefaultLogLevel = LogLevelFromString(mCLParser.SwitchValue("LogLevel"))
 
 
-If logFile = "" Then
-    logFile = GetSpecialFolderPath(FolderIdLocalAppdata) & _
-                        "\TradeWright\" & _
-                        AppName & _
-                        "\v" & _
-                        App.Major & "." & App.Minor & _
-                        "\log.log"
-End If
-
 Set gLogger = GetLogger("log")
-GetLogger("").addLogListener CreateFileLogListener(logFile, _
+GetLogger("").addLogListener CreateFileLogListener(LogFileName, _
                                         CreateBasicLogFormatter, _
                                         True, _
                                         False)
-gLogger.Log LogLevelNormal, "Log file: " & logFile
+gLogger.Log LogLevelNormal, "Log file: " & LogFileName
 gLogger.Log LogLevelNormal, "Log level: " & LogLevelToString(DefaultLogLevel)
 End Sub
 
-Private Function getNamedConfig() As ConfigItem
+Private Function getNamedConfig() As ConfigurationSection
 If getConfigName <> "" Then
     Set getNamedConfig = mConfigManager.appConfig(getConfigName)
     If getNamedConfig Is Nothing Then
@@ -401,7 +414,7 @@ End Function
 
 Private Sub notifyError( _
                 ByVal message As String)
-gLogger.Log twutilities30.LogLevels.LogLevelSevere, message
+gLogger.Log TWUtilities30.LogLevels.LogLevelSevere, message
 If Not mNoUI Then MsgBox message & vbCrLf & vbCrLf & "The program will close.", vbCritical, "Attention!"
 End Sub
 
@@ -442,8 +455,8 @@ End Function
 Private Sub showConfig()
 Dim f As fConfig
 Set f = New fConfig
-f.initialise getConfigFilename, False
-f.Show vbModeless
+f.initialise mConfigManager, False
+f.Show vbModal
 End Sub
 
 Private Function showHelp() As Boolean

@@ -1,7 +1,7 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#87.0#0"; "TradeBuildUI2-6.ocx"
-Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#49.0#0"; "StudiesUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#158.0#0"; "TradeBuildUI2-6.ocx"
+Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#98.0#0"; "StudiesUI2-6.ocx"
 Begin VB.UserControl ConfigManager 
    BackStyle       =   0  'Transparent
    ClientHeight    =   8325
@@ -11,6 +11,15 @@ Begin VB.UserControl ConfigManager
    DefaultCancel   =   -1  'True
    ScaleHeight     =   8325
    ScaleWidth      =   16170
+   Begin TradeBuildUI26.SPConfigurer SPConfigurer1 
+      Height          =   4005
+      Left            =   120
+      TabIndex        =   8
+      Top             =   4320
+      Width           =   7500
+      _ExtentX        =   13229
+      _ExtentY        =   7064
+   End
    Begin VB.CommandButton DeleteConfigButton 
       Caption         =   "Delete"
       Enabled         =   0   'False
@@ -61,16 +70,6 @@ Begin VB.UserControl ConfigManager
       Style           =   7
       Appearance      =   0
    End
-   Begin TradeBuildUI26.SPConfigurer SPConfigurer1 
-      Height          =   3975
-      Left            =   120
-      TabIndex        =   5
-      Top             =   4320
-      Visible         =   0   'False
-      Width           =   7500
-      _ExtentX        =   13229
-      _ExtentY        =   7064
-   End
    Begin VB.Line Line4 
       Visible         =   0   'False
       X1              =   11640
@@ -90,7 +89,7 @@ Begin VB.UserControl ConfigManager
       ForeColor       =   &H000000FF&
       Height          =   735
       Left            =   10560
-      TabIndex        =   8
+      TabIndex        =   7
       Top             =   2640
       Visible         =   0   'False
       Width           =   2775
@@ -107,7 +106,7 @@ Begin VB.UserControl ConfigManager
       ForeColor       =   &H000000FF&
       Height          =   615
       Left            =   5520
-      TabIndex        =   7
+      TabIndex        =   6
       Top             =   1080
       Visible         =   0   'False
       Width           =   2775
@@ -124,7 +123,7 @@ Begin VB.UserControl ConfigManager
       ForeColor       =   &H000000FF&
       Height          =   495
       Left            =   10320
-      TabIndex        =   6
+      TabIndex        =   5
       Top             =   120
       Visible         =   0   'False
       Width           =   2775
@@ -209,13 +208,7 @@ Event SelectedItemChanged()
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TradeSkilDemo26"
 Private Const ModuleName                    As String = "ConfigManager"
-
-Private Const AttributeNameAppConfigName    As String = "Name"
-Private Const AttributeNameAppConfigDefault As String = "Default"
-
-Private Const ConfigFileVersion             As String = "1.0"
 
 Private Const ConfigNameAppConfig           As String = "AppConfig"
 Private Const ConfigNameAppConfigs          As String = "AppConfigs"
@@ -230,16 +223,15 @@ Private Const NewConfigNameStub             As String = "New config"
 ' Member variables
 '@================================================================================
 
-Private mConfigFilename                     As String
-Private mConfigFile                         As ConfigFile
-Private mAppConfigs                         As ConfigItem
+Private mConfigFile                         As ConfigurationFile
+Private mAppConfigs                         As ConfigurationSection
 
-Private mCurrAppConfig                      As ConfigItem
+Private mCurrAppConfig                      As ConfigurationSection
 Private mCurrConfigNode                     As Node
 
-Private mSelectedAppConfig                  As ConfigItem
+Private mSelectedAppConfig                  As ConfigurationSection
 
-Private mDefaultAppConfig                   As ConfigItem
+Private mDefaultAppConfig                   As ConfigurationSection
 Private mDefaultConfigNode                  As Node
 
 Private mConfigNames                        As Collection
@@ -410,14 +402,14 @@ If Not mConfigFile Is Nothing Then dirty = mConfigFile.dirty
 End Property
 
 Public Property Get appConfig( _
-                ByVal name As String) As ConfigItem
+                ByVal name As String) As ConfigurationSection
 Set appConfig = findConfig(name)
 End Property
 
-Public Property Get firstAppConfig() As ConfigItem
-Dim appConfig As ConfigItem
+Public Property Get firstAppConfig() As ConfigurationSection
+Dim appConfig As ConfigurationSection
 
-For Each appConfig In mAppConfigs.childItems
+For Each appConfig In mAppConfigs
     Exit For
 Next
 
@@ -425,7 +417,7 @@ Set firstAppConfig = appConfig
 
 End Property
 
-Public Property Get selectedAppConfig() As ConfigItem
+Public Property Get selectedAppConfig() As ConfigurationSection
 Set selectedAppConfig = mSelectedAppConfig
 End Property
 
@@ -445,24 +437,10 @@ End Sub
 
 Public Sub createNewAppConfig( _
                 ByVal configName As String, _
-                ByVal includeDefaultServiceProviders As Boolean, _
                 ByVal includeDefaultStudyLibrary As Boolean)
-Set mCurrAppConfig = mAppConfigs.childItems.AddItem(ConfigNameAppConfig)
-mCurrAppConfig.setAttribute AttributeNameAppConfigName, configName
-mCurrAppConfig.setAttribute AttributeNameAppConfigDefault, "False"
-mCurrAppConfig.childItems.AddItem ConfigNameTradeBuild
-
-If includeDefaultServiceProviders Then
-    SPConfigurer1.setDefaultServiceProviders mCurrAppConfig.childItems.Item(ConfigNameTradeBuild), _
-                                            PermittedServiceProviders.SPBroker Or _
-                                            PermittedServiceProviders.SPHistoricalDataInput Or _
-                                            PermittedServiceProviders.SPPrimaryContractData Or _
-                                            PermittedServiceProviders.SPRealtimeData Or _
-                                            PermittedServiceProviders.SPTickfileInput
-End If
-If includeDefaultStudyLibrary Then
-    StudyLibConfigurer1.setDefaultStudyLibrary mCurrAppConfig.childItems.Item(ConfigNameTradeBuild)
-End If
+Set mCurrAppConfig = AddAppInstanceConfig(mConfigFile, _
+                                    configName, _
+                                    includeDefaultStudyLibrary)
 
 Set mCurrConfigNode = addConfigNode(mCurrAppConfig)
 mCurrConfigNode.Expanded = True
@@ -471,49 +449,44 @@ ConfigsTV_NodeClick ConfigsTV.SelectedItem
 End Sub
 
 Public Function initialise( _
-                ByVal configFilename As String, _
-                ByVal applicationName As String) As Boolean
-Dim appConfig As ConfigItem
-Dim isDefault As Boolean
+                ByVal configFile As ConfigurationFile, _
+                ByVal applicationName As String, _
+                ByVal expectedConfigFileVersion) As Boolean
+Dim appConfig As ConfigurationSection
 Dim index As Long
 Dim newnode As Node
 
-mConfigFilename = configFilename
+gLogger.Log LogLevelDetail, "Initialising ConfigManager"
 
-On Error Resume Next
-Set mConfigFile = LoadXMLConfigurationFile(mConfigFilename)
-On Error GoTo 0
-If mConfigFile Is Nothing Then
-    gLogger.Log LogLevelNormal, "No configuration exists - creating skeleton configuration file"
-    Set mConfigFile = CreateXMLConfigurationFile(applicationName, ConfigFileVersion)
-Else
-    If mConfigFile.applicationName <> applicationName Or _
-        mConfigFile.applicationVersion <> ConfigFileVersion _
-    Then
-        gLogger.Log LogLevelNormal, "The configuration file is not the correct format for this program"
-        Exit Function
-    End If
+Set mConfigFile = configFile
+    
+If mConfigFile.applicationName <> applicationName Or _
+    mConfigFile.fileVersion <> expectedConfigFileVersion Or _
+    Not IsValidConfigurationFile(mConfigFile) _
+Then
+    gLogger.Log LogLevelNormal, "The configuration file is not the correct format for this program"
+    Exit Function
 End If
-
+    
 mConfigFile.addChangeListener Me
 
-On Error Resume Next
-Set mAppConfigs = mConfigFile.rootItem.childItems.Item(ConfigNameAppConfigs)
-On Error GoTo 0
-
-If mAppConfigs Is Nothing Then
-    Set mAppConfigs = mConfigFile.rootItem.childItems.AddItem(ConfigNameAppConfigs)
+If mConfigFile.dirty Then
+    SaveConfigButton.Enabled = True
+    SaveConfigMenu.Enabled = True
 End If
 
-For Each appConfig In mAppConfigs.childItems
-    isDefault = False
-    On Error Resume Next
-    isDefault = (UCase$(appConfig.getAttribute(AttributeNameAppConfigDefault)) = "TRUE")
-    On Error GoTo 0
+gLogger.Log LogLevelDetail, "Locating config definitions in config file"
+
+Set mAppConfigs = mConfigFile.GetConfigurationSection("/" & ConfigNameAppConfigs)
+
+gLogger.Log LogLevelDetail, "Loading config definitions into ConfigManager control"
+
+Set mDefaultAppConfig = GetDefaultAppInstanceConfig(mConfigFile)
+
+For Each appConfig In mAppConfigs
     Set newnode = addConfigNode(appConfig)
-    If isDefault Then
+    If appConfig Is mDefaultAppConfig Then
         newnode.Bold = True
-        Set mDefaultAppConfig = appConfig
         Set mDefaultConfigNode = newnode
     End If
     index = index + 1
@@ -526,14 +499,12 @@ ElseIf ConfigsTV.Nodes.Count > 0 Then
 End If
 If Not ConfigsTV.SelectedItem Is Nothing Then ConfigsTV_NodeClick ConfigsTV.SelectedItem
 initialise = True
+gLogger.Log LogLevelDetail, "ConfigManager initialised ok"
 End Function
 
 Public Sub saveConfigFile( _
                 Optional ByVal filename As String)
-If filename <> "" Then
-    mConfigFilename = filename
-End If
-mConfigFile.save mConfigFilename
+mConfigFile.save filename
 End Sub
 
 '@================================================================================
@@ -541,9 +512,9 @@ End Sub
 '@================================================================================
 
 Private Function addConfigNode( _
-                ByVal appConfig As ConfigItem) As Node
+                ByVal appConfig As ConfigurationSection) As Node
 Dim name As String
-name = appConfig.getAttribute(AttributeNameAppConfigName)
+name = appConfig.InstanceQualifier
 Set addConfigNode = ConfigsTV.Nodes.Add(, , name, name)
 Set addConfigNode.Tag = appConfig
 mConfigNames.Add name, name
@@ -556,7 +527,7 @@ If MsgBox("Do you want to delete this configuration?" & vbCrLf & _
         "If you click Yes, all data for this configuration will be removed from the configuration file", _
         vbYesNo Or vbQuestion, _
         "Attention!") = vbYes Then
-    mAppConfigs.childItems.Remove mCurrAppConfig
+    RemoveAppInstanceConfig mConfigFile, mCurrAppConfig.InstanceQualifier
     ConfigsTV.Nodes.Remove ConfigsTV.SelectedItem.index
     If mCurrAppConfig Is mDefaultAppConfig Then Set mDefaultAppConfig = Nothing
     Set mCurrAppConfig = Nothing
@@ -567,16 +538,8 @@ End If
 End Sub
 
 Private Function findConfig( _
-                ByVal name As String) As ConfigItem
-Dim appConfig As ConfigItem
-
-For Each appConfig In mAppConfigs.childItems
-    If UCase$(appConfig.getAttribute(AttributeNameAppConfigName)) = UCase$(name) Then
-        Set findConfig = appConfig
-        Exit Function
-    End If
-Next
-
+                ByVal name As String) As ConfigurationSection
+Set findConfig = mAppConfigs.GetConfigurationSection(ConfigNameAppConfig & "(" & name & ")")
 End Function
 
 Private Sub hideConfigControls()
@@ -600,18 +563,18 @@ Do While nameAlreadyInUse(name)
     i = i + 1
     name = NewConfigNameStub & i
 Loop
-createNewAppConfig name, False, False
+createNewAppConfig name, False
 End Sub
 
 Private Sub renameCurrentConfig( _
                 ByVal newName As String)
-mConfigNames.Remove mCurrAppConfig.getAttribute(AttributeNameAppConfigName)
-mCurrAppConfig.setAttribute AttributeNameAppConfigName, newName
+mConfigNames.Remove mCurrAppConfig.InstanceQualifier
+mCurrAppConfig.InstanceQualifier = newName
 mConfigNames.Add newName, newName
 End Sub
 
 Private Sub setCurrentConfig( _
-                ByVal ci As ConfigItem, _
+                ByVal ci As ConfigurationSection, _
                 ByVal lNode As Node)
 Set mCurrAppConfig = ci
 Set mCurrConfigNode = lNode
@@ -623,39 +586,31 @@ End Sub
 
 Private Sub showServiceProviderConfigDetails()
 hideConfigControls
-SPConfigurer1.Left = Box1.Left
+SPConfigurer1.left = Box1.left
 SPConfigurer1.Top = Box1.Top
 SPConfigurer1.Visible = True
-SPConfigurer1.initialise mCurrAppConfig.childItems.Item(ConfigNameTradeBuild), _
-                                        PermittedServiceProviders.SPRealtimeData Or _
-                                        PermittedServiceProviders.SPPrimaryContractData Or _
-                                        PermittedServiceProviders.SPSecondaryContractData Or _
-                                        PermittedServiceProviders.SPBroker Or _
-                                        PermittedServiceProviders.SPHistoricalDataInput Or _
-                                        PermittedServiceProviders.SPTickfileInput
+SPConfigurer1.initialise mCurrAppConfig.GetConfigurationSection(ConfigNameTradeBuild), _
+                        False
 End Sub
 
 Private Sub showStudyLibraryConfigDetails()
 hideConfigControls
-StudyLibConfigurer1.Left = Box1.Left
+StudyLibConfigurer1.left = Box1.left
 StudyLibConfigurer1.Top = Box1.Top
 StudyLibConfigurer1.Visible = True
-StudyLibConfigurer1.initialise mCurrAppConfig.childItems.Item(ConfigNameTradeBuild)
+StudyLibConfigurer1.initialise mCurrAppConfig.GetConfigurationSection(ConfigNameTradeBuild)
 End Sub
 
 Private Sub toggleDefaultConfig()
 If mCurrAppConfig Is mDefaultAppConfig Then
-    mCurrAppConfig.setAttribute AttributeNameAppConfigDefault, "False"
+    UnsetDefaultAppInstanceConfig mConfigFile
     mDefaultConfigNode.Bold = False
     Set mDefaultAppConfig = Nothing
     Set mDefaultConfigNode = Nothing
 Else
-    If Not mDefaultAppConfig Is Nothing Then
-        mDefaultAppConfig.setAttribute AttributeNameAppConfigDefault, "False"
-        mDefaultConfigNode.Bold = False
-    End If
+    If Not mDefaultAppConfig Is Nothing Then mDefaultConfigNode.Bold = False
+    SetDefaultAppInstanceConfig mConfigFile, mCurrAppConfig.InstanceQualifier
     
-    mCurrAppConfig.setAttribute AttributeNameAppConfigDefault, "True"
     Set mDefaultAppConfig = mCurrAppConfig
     Set mDefaultConfigNode = mCurrConfigNode
     mDefaultConfigNode.Bold = True

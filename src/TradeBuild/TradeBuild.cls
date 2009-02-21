@@ -106,6 +106,17 @@ Public Enum BulletinTypes
     BulletinExchangeAvailable
 End Enum
 
+Public Enum PositionTypes
+    PositionTypeLive = 1
+    PositionTypeSimulated = 2
+    PositionTypeAll = 3
+End Enum
+
+Public Enum ClosePositionFlags
+    ClosePositionCancelOrders = 1
+    ClosePositionWaitForCancel = 2
+End Enum
+
 Public Enum ConnectionStates
     ConnNotConnected
     ConnConnecting
@@ -120,13 +131,6 @@ Public Enum DOMEvents
     DOMBothEvents
 End Enum
 
-'Public Enum DOMOperations
-'    DOMInsert
-'    DOMUpdate
-'    DOMDelete
-'    DOMResetDisplay
-'End Enum
-'
 Public Enum DOMUpdateTypes
     DOMUpdateAsk
     DOMUpdateBid
@@ -188,7 +192,7 @@ Public Enum OrderAttributeIds
     OrderAttDiscretionaryAmount = &H100&
     OrderAttGoodAfterTime = &H200&
     OrderAttGoodTillDate = &H400&
-    OrderAttRTHOnly = &H800&
+    'OrderAttRTHOnly = &H800&
     OrderAttRule80A = &H1000&
     OrderAttSettlingFirm = &H2000&
     OrderAttAllOrNone = &H4000&
@@ -236,7 +240,7 @@ End Enum
 
 Public Enum OrderStatuses
     OrderStatusCreated
-    OrderStatusRejected
+    OrderStatusRejected         ' by the broker
     OrderStatusPendingSubmit
     OrderStatusPreSubmitted
     OrderStatusSubmitted
@@ -281,6 +285,8 @@ End Enum
 
 Public Enum PositionManagerChangeTypes
     PositionSizeChanged
+    ProviderReadinessChanged
+    PositionClosed
 End Enum
 
 Public Enum ProfitTypes
@@ -301,6 +307,18 @@ Public Enum ReplayContinueModes
     ReplayCancelAllFiles
 End Enum
 
+Public Enum ServiceProviderRoles
+    SPRealtimeData = 1
+    SPPrimaryContractData = 2
+    SPSecondaryContractData = 4
+    SPHistoricalDataInput = 8
+    SPHistoricalDataOutput = &H10
+    SPBrokerSimulated = &H20
+    SPTickfileInput = &H40
+    SPTickfileOutput = &H80
+    SPBrokerLive = &H100
+End Enum
+
 Public Enum StopOrderTypes
     StopOrderTypeNone = 2000
     StopOrderTypeStop
@@ -317,6 +335,9 @@ Public Enum StopTriggerMethods
     StopTriggerDoubleBidAsk = 2
     StopTriggerLast = 4
     StopTriggerDoubleLast = 8
+    StopTriggerBidAsk = 16
+    StopTriggerLastOrBidAsk = 32
+    StopTriggerMidPoint = 64
 End Enum
 
 Public Enum TargetOrderTypes
@@ -330,6 +351,52 @@ Public Enum TargetOrderTypes
     TargetOrderTypeAuto
 End Enum
 
+''
+' Members of this enum govern the operation of a <code>Ticker</code> object.
+'
+' @param TickerOptOrdersAreLive
+'   Orders placed via this ticker are to be passed to the live order submission
+'   service provider (if one has been configured).
+' @param TickerOptUseExchangeTimeZone
+'   Timestamps for ticks received via this ticker are to be expressed in the
+'   timezone of the relevant exchange, rather than the computer&39;s local
+'   timezone. Note that this only has effect when the contract service provider
+'   supplies exchange timezone information (the IB contract service provider does not).
+' @param TickerOptWriteTickData
+'   Indicates that tick data for this ticker (excluding market depth data) is to
+'   be written to a tickfile. Note that the nature of this tickfile is governed by
+'   the currently configured Tickfile Service Provider.
+' @param TickerOptWriteTradeBarData
+'   Indicates that bar data for trades notified via this ticker is to
+'   be written to a historical data store. Note that the nature of this data store, and
+'   the timeframes of the bars recorded, is governed by the currently configured
+'   Historical Data Service Provider.
+' @param TickerOptWriteBidAndAskBarData
+'   Indicates that bar data for bids and asks notified via this ticker is to
+'   be written to a historical data store. Note that the nature of this data store, and
+'   the timeframes of the bars recorded, is governed by the currently configured
+'   Historical Data Service Provider.
+' @param TickerOptUpdateLatestBar
+'   Indicates that where the latest bar written to the historical data store is still
+'   open (ie the end of the bar has not yet been reached), then the data from this ticker
+'   is to be used to update that bar. If not set, the previously recorded data for that bar
+'   is overwritten. This value is ignored if <code>TickerOptWriteTradeBarData</code> and
+'   <code>TickerOptWriteBidAndAskBarData</code> are not set.
+' @param TickerOptIncludeMarketDepthInTickfile
+'   Indicates that market depth data is to be included in the tickfile. This value is
+'   ignored if <code>TickerOptWriteTickData</code> is not set.
+' @param TickerOptNoImpliedTrades
+'   If set, the ticker does not attempt to deduce the existence of unreported trades
+'   which may be indicated by the ticker data received from the data source. For example,
+'   if volume is incremented by an amount equal to the last reported trade, but no
+'   trade is reported, then an implied trade exists - setting this option prevents
+'   that implied trade being notified.
+' @param TickerOptNoVolumeAdjustments
+'   If set, the ticker reports all volume ticks exactly as received from the data source.
+'   Otherwise, the ticker may adjust volume figures to ensure that volume notified by the
+'   ticker is always increasing (this adjustment is to eliminate the backward movement in
+'   total volume that occurs sometimes with some data sources).
+'@/
 Public Enum TickerOptions
     TickerOptOrdersAreLive = 1
     TickerOptUseExchangeTimeZone = 2
@@ -357,20 +424,6 @@ Public Enum TickfileFormatType
     StreamBased = TradeBuildSP.TickfileFormatTypes.StreamBased
 End Enum
 
-'Public Enum TickTypes
-'    TickTypeBid = &H1&
-'    TickTypeAsk = &H2&
-'    TickTypeLast = &H4&
-'    TickTypeHigh = &H8&
-'    TickTypeLow = &H10&
-'    TickTypePrevClose = &H20&
-'    TickTypeVolume = &H40&
-'    TickTypeOpenInterest = &H80&
-'    TickTypeMarketDepth = &H100&
-'    TickTypeMarketDepthL2 = &H200&
-'    TickTypeMarketDepthReset = &H400&
-'End Enum
-
 Public Enum TimeframeStates
     TimeframeStateCreated
     TimeframeStateLoading
@@ -393,6 +446,11 @@ End Enum
 '@================================================================================
 ' Types
 '@================================================================================
+
+Public Type ClosePositionsResult
+    numberOfPositionsClosed     As Long
+    numberOfPositionsNotClosed  As Long
+End Type
 
 Public Type InfoEvent
     source          As Object
@@ -489,6 +547,11 @@ End Sub
 ' Properties
 '@================================================================================
 
+Public Property Get TradeBuildAPI() As TradeBuildAPI
+If gTB Is Nothing Then Set gTB = New TradeBuildAPI
+Set TradeBuildAPI = gTB
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -537,6 +600,9 @@ Public Function OrderActionToString( _
 OrderActionToString = gOrderActionToString(value)
 End Function
 
+Public Function OrderAttributeToString(ByVal value As OrderAttributes) As String
+OrderAttributeToString = gOrderAttributeToString(value)
+End Function
 Public Function OrderStatusToString( _
                 ByVal value As OrderStatuses) As String
 OrderStatusToString = gOrderStatusToString(value)
@@ -597,11 +663,6 @@ Public Function TickfileSpecifierToString( _
                 ByVal TickfileSpec As TickfileSpecifier) As String
 TickfileSpecifierToString = gTickfileSpecifierToString(TickfileSpec)
 End Function
-
-Public Property Get TradeBuildAPI() As TradeBuildAPI
-If gTB Is Nothing Then Set gTB = New TradeBuildAPI
-Set TradeBuildAPI = gTB
-End Property
 
 '@================================================================================
 ' Helper Functions

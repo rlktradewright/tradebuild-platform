@@ -74,6 +74,10 @@ Private Sub Class_Initialize()
 Set mBars = New Collection
 End Sub
 
+Private Sub Class_Terminate()
+Debug.Print "BarSeries terminated"
+End Sub
+
 '================================================================================
 ' IGraphicObjectSeries Interface Members
 '================================================================================
@@ -96,6 +100,9 @@ End Property
 
 Private Sub IGraphicObjectSeries_finish()
 mFinished = True
+Set mController = Nothing
+Set mGOSP = Nothing
+Set mCanvas = Nothing
 End Sub
 
 Private Sub IGraphicObjectSeries_Initialise( _
@@ -161,6 +168,10 @@ End Property
 '================================================================================
 ' Properties
 '================================================================================
+
+Public Property Get barColor() As Long
+barColor = mStyle.barColor
+End Property
 
 Public Property Let barColor(ByVal value As Long)
 If mStyle.barColor = value Then Exit Property
@@ -236,12 +247,12 @@ End If
 fireStyleChanged
 End Property
 
-Public Property Let IsSelectable(ByVal value As Boolean)
+Public Property Let isSelectable(ByVal value As Boolean)
 mIsSelectable = value
 End Property
 
-Public Property Get IsSelectable() As Boolean
-IsSelectable = mIsSelectable
+Public Property Get isSelectable() As Boolean
+isSelectable = mIsSelectable
 End Property
 
 Public Property Get IsSelected() As Boolean
@@ -350,7 +361,7 @@ Exit Property
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "style" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "style" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -383,26 +394,26 @@ End Property
 ' Methods
 '================================================================================
 
-Public Function Add( _
+Public Function add( _
                 ByVal timestamp As Date, _
                 Optional ByVal Key As String, _
                 Optional ByVal LocalStyle As BarStyle, _
-                Optional ByVal IsSelectable As Boolean) As Bar
+                Optional ByVal isSelectable As Boolean) As Bar
 
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                             "ChartSkil26.BarSeries::add", _
                             "Bar series is finished"
 
-Set Add = New Bar
+Set add = New Bar
 
-Add.x = gCalculateX(timestamp, mController, True)
+add.x = gCalculateX(timestamp, mController, True)
 If Key = "" Then
     Key = GenerateGUIDString
 End If
-Add.initialise mSeriesID, timestamp, Key, mGOSP, mLayer, mCanvas, mStyle, LocalStyle, IsSelectable
+add.initialise mSeriesID, timestamp, Key, mGOSP, mLayer, mCanvas, mStyle, LocalStyle, isSelectable
 
-mBars.Add Add, Key
-mGOSP.AddGraphicObject Add, mSeriesID
+mBars.add add, Key
+mGOSP.AddGraphicObject add, mSeriesID
 End Function
 
 Friend Sub Finish()
@@ -429,10 +440,6 @@ mGOSP.RemoveObject value.Handle
 Exit Sub
 
 Err:
-End Sub
-
-Friend Sub RemoveAll()
-StartTask Me, PriorityLow
 End Sub
 
 Public Function NewEnum() As IUnknown

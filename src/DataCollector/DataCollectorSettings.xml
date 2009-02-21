@@ -82,7 +82,7 @@
     <CollectionControl    WriteTickData="True" WriteBarData="True" />
     <TickDataFormat >
       <!--Set to: "TradeBuild SQLDB" (for database output)
-        "TradeBuild V4" (for file output)
+        "TradeBuild V5" (for file output)
       -->TradeBuild SQLDB</TickDataFormat>
     <TickfilePath >
       <!--If no value is specified, tick files will be placed in a folder tree 
@@ -93,7 +93,7 @@ database.
     </TickfilePath>
     <Contracts>
       <Contract  Enabled="True" WriteBidAndAskBars="False">
-        <ContractSpecifier  LocalSymbol="" Symbol="ES" SecType="FUT" Expiry="200803" Exchange="globex" Currency="" StrikePrice="" Right="" />
+        <ContractSpecifier  LocalSymbol="" Symbol="ES" SecType="FUT" Expiry="200806" Exchange="globex" Currency="" StrikePrice="" Right="" />
       </Contract>
 <!--
       <Contract  Enabled="True" WriteBidAndAskBars="False">

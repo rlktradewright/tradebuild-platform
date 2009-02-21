@@ -342,12 +342,12 @@ End Sub
 '@================================================================================
 
 Private Sub IStreamingDataConsumer_Tick(Tick As TickUtils26.GenericTick)
-Select Case Tick.TickType
+Select Case Tick.tickType
 Case TickTypes.TickTypeAsk
     mFirstAskReceived = True
     If mFirstBidReceived And Not mReadyNotified Then
         mReadyNotified = True
-        mServiceConsumer.Ready
+        mServiceConsumer.ready
     End If
         
     mSimulator.ask Tick.timestamp, mMarketIndex, Tick.price
@@ -355,7 +355,7 @@ Case TickTypes.TickTypeBid
     mFirstBidReceived = True
     If mFirstAskReceived And Not mReadyNotified Then
         mReadyNotified = True
-        mServiceConsumer.Ready
+        mServiceConsumer.ready
     End If
         
     mSimulator.bid Tick.timestamp, mMarketIndex, Tick.price
@@ -387,7 +387,7 @@ End Property
 
 Friend Property Let serviceConsumer(ByVal value As TradeBuildSP.IOrderSubmissionSrvcConsumer)
 Set mServiceConsumer = value
-mServiceConsumer.requestTickData Me, False
+mServiceConsumer.RequestTickData Me, False
 End Property
 
 Friend Property Let simulator(ByVal value As AdvancedOrderSimulator)
@@ -410,5 +410,6 @@ Private Sub placeOrder( _
                 ByVal ocaGroup As String, _
                 ByVal transmit As Boolean)
 mSimulator.placeOrder pOrder, parentId, ocaGroup, mMarketIndex, transmit
+If pOrder.status = OrderStatusCreated Then mServiceConsumer.OrderStatus pOrder.id, OrderStatusPendingSubmit
 End Sub
 

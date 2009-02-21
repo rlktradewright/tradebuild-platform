@@ -220,7 +220,7 @@ For Each hr In mStudyHorizontalRules
     newHr.color = hr.color
     newHr.style = hr.style
     newHr.thickness = hr.thickness
-    newHr.y = hr.y
+    newHr.Y = hr.Y
 Next
 
 clone.study = mStudy
@@ -239,6 +239,7 @@ For Each svc In mStudyValueConfigurations
     newSvc.includeInChart = svc.includeInChart
     newSvc.layer = svc.layer
     newSvc.lineStyle = svc.lineStyle
+    newSvc.SetBarFormatterFactory svc.BarFormatterFactory, svc.Bars
     newSvc.textStyle = svc.textStyle
 Next
 

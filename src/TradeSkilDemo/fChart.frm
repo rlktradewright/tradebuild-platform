@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#131.1#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#139.0#0"; "TradeBuildUI2-6.ocx"
 Object = "{38911DA0-E448-11D0-84A3-00DD01104159}#1.1#0"; "COMCT332.OCX"
 Begin VB.Form fChart 
    ClientHeight    =   6780
@@ -64,13 +64,15 @@ Begin VB.Form fChart
          _ExtentY        =   582
          ButtonWidth     =   609
          ButtonHeight    =   582
+         AllowCustomize  =   0   'False
+         Wrappable       =   0   'False
          Style           =   1
          _Version        =   393216
          BeginProperty Buttons {66833FE8-8583-11D1-B16A-00C0F0283628} 
             NumButtons      =   1
             BeginProperty Button1 {66833FEA-8583-11D1-B16A-00C0F0283628} 
                Key             =   "timeframe"
-               Object.ToolTipText     =   "Change the timeframe"
+               Object.ToolTipText     =   "Change the timeframe for the current chart"
                Style           =   4
                Object.Width           =   1700
             EndProperty
@@ -79,6 +81,7 @@ Begin VB.Form fChart
             Height          =   330
             Left            =   0
             TabIndex        =   3
+            ToolTipText     =   "Change the timeframe for the current chart"
             Top             =   0
             Width           =   1695
             _ExtentX        =   2990
@@ -157,7 +160,7 @@ Option Explicit
 ' Constants
 '================================================================================
 
-Private Const ModuleName                        As String = "fChart3"
+Private Const ModuleName                        As String = "fChart"
 
 Private Const ChartToolsCommandStudies          As String = "studies"
 Private Const ChartToolsCommandSelection        As String = "selection"
@@ -214,6 +217,7 @@ Resize
 End Sub
 
 Private Sub Form_Unload(cancel As Integer)
+MultiChart1.Clear
 If mIsHistorical Then mTicker.stopTicker
 Set mTicker = Nothing
 gUnsyncStudyPicker
@@ -224,6 +228,9 @@ End Sub
 '================================================================================
 
 Private Sub ChartToolsToolbar_ButtonClick(ByVal Button As MSComctlLib.Button)
+
+If MultiChart1.Count = 0 Then Exit Sub
+
 Select Case Button.Key
 Case ChartToolsCommandStudies
     gShowStudyPicker MultiChart1.ChartManager, _
@@ -247,16 +254,30 @@ Dim changeType As MultiChartChangeTypes
 changeType = ev.changeType
 Select Case changeType
 Case MultiChartSelectionChanged
-    If MultiChart1.Count > 0 Then Set mController = MultiChart1.chartController
-    setSelectionButton
-    syncStudyPicker
+    If MultiChart1.Count > 0 Then
+        ChartToolsToolbar.Enabled = True
+        TimeframeSelector1.Enabled = True
+        Set mController = MultiChart1.chartController
+        setCaption
+        setSelectionButton
+        setTimeframeSelector
+        syncStudyPicker
+    Else
+        setCaption
+        ChartToolsToolbar.Enabled = False
+        TimeframeSelector1.Enabled = False
+        Set mController = Nothing
+    End If
+    Set mCurrentTool = Nothing
 Case MultiChartAdd
 
 Case MultiChartRemove
     gUnsyncStudyPicker
 Case MultiChartTimeframeChanged
     If MultiChart1.Count > 0 Then Set mController = MultiChart1.chartController
+    setCaption
     setSelectionButton
+    setTimeframeSelector
     syncStudyPicker
 End Select
 End Sub
@@ -349,7 +370,7 @@ mPreviousClose = mTicker.closePriceString
 
 TimeframeSelector1.selectTimeframe chartspec.Timeframe
 
-MultiChart1.initialise mTicker, chartspec
+MultiChart1.initialise mTicker, chartspec, , , New DunniganFactory
 MultiChart1.Add chartspec.Timeframe
 
 ChartNavToolbar1.initialise , MultiChart1
@@ -369,11 +390,10 @@ Set mTicker = pTicker
 
 TimeframeSelector1.selectTimeframe chartspec.Timeframe
 
-MultiChart1.initialise mTicker, chartspec, fromtime, totime
+MultiChart1.initialise mTicker, chartspec, fromtime, totime, New DunniganFactory
 MultiChart1.Add chartspec.Timeframe
 
 ChartNavToolbar1.initialise , MultiChart1
-
 setCaption
 End Sub
 
@@ -383,7 +403,6 @@ End Sub
 
 Private Sub createFibChartTool()
 Dim ls As lineStyle
-Dim tool As FibRetracementTool
 Dim lineSpecs(4) As FibLineSpecifier
 
 Set ls = mController.DefaultLineStyle
@@ -410,13 +429,11 @@ ls.Color = vbMagenta
 Set lineSpecs(4).Style = ls.Clone
 lineSpecs(4).Percentage = 61.8
 
-Set tool = CreateFibRetracementTool(mController, lineSpecs, LayerNumbers.LayerHighestUser)
-Set mCurrentTool = tool
+Set mCurrentTool = CreateFibRetracementTool(mController, lineSpecs, LayerNumbers.LayerHighestUser)
 MultiChart1.SetFocus
 End Sub
 
 Private Sub createLineChartTool()
-Dim tool As LineTool
 Dim ls As lineStyle
 
 Set ls = mController.DefaultLineStyle
@@ -424,8 +441,7 @@ ls.extended = True
 ls.extendAfter = True
 ls.includeInAutoscale = False
 
-Set tool = CreateLineTool(mController, ls, LayerBackground)
-Set mCurrentTool = tool
+Set mCurrentTool = CreateLineTool(mController, ls, LayerBackground)
 MultiChart1.SetFocus
 End Sub
 
@@ -442,8 +458,11 @@ End Sub
 Private Sub setCaption()
 Dim s As String
 
-s = mSymbol & _
-    IIf(MultiChart1.Count = 0, "", " (" & MultiChart1.timePeriod.toString & ")")
+If MultiChart1.Count = 0 Then
+    s = mSymbol
+Else
+    s = mSymbol & " (" & MultiChart1.timePeriod.toString & ")"
+End If
     
 If mIsHistorical Then
     s = s & _
@@ -477,6 +496,10 @@ If mController.PointerMode = PointerModeSelection Then
 Else
     ChartToolsToolbar.buttons("selection").value = tbrUnpressed
 End If
+End Sub
+
+Private Sub setTimeframeSelector()
+If MultiChart1.Count > 0 Then TimeframeSelector1.selectTimeframe MultiChart1.Object.Chart.timePeriod
 End Sub
 
 Private Sub syncStudyPicker()

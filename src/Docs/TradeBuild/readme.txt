@@ -195,19 +195,87 @@ For technical support, email me at:
 Appendix A  TradeBuild Version History
 ======================================
 
-Version 2.6.0.16  Released ?? May 2007
+Version 2.6.0.??  Released ?? June 2007
 
 	NB: this version is not binary compatible with previous
 	versions. All client applications will need to be recompiled.
 
-	Enhancement: the TradeWright Interval Timer Utilities Version 2
-	component has been enhanced to make more efficient use of Windows
-	Multimedia Timers, which are limited to 16 per process. As a result 
-	IntervalTimer objects are not quite as accurate as before 
-	because they are now implemented on top of the timerlist mechanism
-	which has additional overheads. Applications that need accuracy
-	better than about 5 milliseconds should use the new 
-	BaseIntervalTimer object instead (which uses a dedicated timer).
+	Enhancement: the DataCollector program has been enhanced in the 
+	following ways:
+	
+	- it can collect data for any number of instruments;
+
+	- information regarding the service providers to use and  the 
+	instruments to collect data for is contained in an XML configuration 
+	file;
+
+	- both tick and bar data can be collected simultaneously if the 
+	appropriate service providers are configured;
+
+	- it can be run with no visible user interface.
+
+	Enhancement: the Ticker class's writeToTickfile property has been
+	removed.
+
+	Enhancement: the first argument to the Tickers class's 'add' method 
+	now has a new meaning. It is now a Long value which is interpreted
+	as a bitmap specifiying options for the ticker to be created. These
+	option values are taken from the new TickerOptions enum
+	
+	replaced by a writeTickData method and a writingTickData read-only
+	property. This is for consistency with the new writeBarData
+	method and the corresponding writingBidAskBarData and 
+	writingTradeBarData read-only properties. These methods can only 
+	be called before startTicker is called.
+
+	Enhancement: the TradeWright TradeBuild IB TWS Service Provider v2.6
+	component now interprets a clientId parameter value less than 0 to 
+	mean 'unspecified', in which case a random clientId is generated in 
+	the range 1879048192 to 2147483647. Passing the same negative value 
+	to more than one service provider in one process results in the same 
+	random clientId being used by all of them.
+
+	Enhancement: the TradeWright Utility Services component has the 
+	following additional classes:
+
+	
+
+	Enhancement: the Interval Timer utilities formerly in the TradeWright 
+	Interval Timer Utilities component (and now integrated into the 
+	TradeWright Utility Services component) have been enhanced to make 
+	more efficient use of Windows Multimedia Timers, which are limited 
+	to 16 per process. As a result, IntervalTimer objects are not quite 
+	as accurate as before because they are now implemented on top of the 
+	TimerList mechanism which has additional overheads. Applications that 
+	need accuracy better than about 2 milliseconds should use the new 
+	BaseIntervalTimer object instead (which uses a dedicated timer). Note 
+	the following additional changes:
+
+		- the CreateTimerList global method has been removed
+
+		- there is a new GetGlobalTimerList method. This returns a 
+		process-wide TimerList. Note that the ItemExpired event is 
+		not raised by the global TimerList
+
+		- there is a new CreatePrivateTimerList global method. This
+		should only be used when there is some reason why using the
+		global TimerList is not viable, because each private TimerList
+		uses a dedicated multimedia timer (which are limited by 
+		Windows to 16 per process)
+
+		- there are two new global methods, Wait and WaitUntilTime,
+		which pause execution until the specified time has elapsed.
+		Any events raised during the wait are handled normally. When
+		the wait completes, execution continues at the following line
+		of code
+
+		- the TimerListItem object has new AddStatusChangeListener
+		and RemoveStatusChangeListener methods that can be used to
+		receive notifications of changes in TimerListItem status (ie
+		expiration and cancellation)
+
+		- the TimerListItem's Expired event has been replaced by a
+		StatusChange event
 
 	Enhancement: the global AddStudyLibrary method (in the TradeWright 
 	Study Utilities v2.6 component) has a new signature. This change 
@@ -215,8 +283,16 @@ Version 2.6.0.16  Released ?? May 2007
 	information about configured study libraries in the configuration
 	file.
 
+	Enhancement: the TradeWright Interval Timer Utilities, TradeWright 
+	Task Services and TradeWright Weak Reference Services components 
+	have been integrated into the TradeWright Utility Services 
+	component. Classes and interfaces are unchanged except as mentioned 
+	elsewhere in these notes. Applications should be modified to remove 
+	references to the old components, which are not supported for use 
+	with TradeBuild	2.6 and later versions. 
+
 	Enhancement: the add method in the ServiceProviders class has a
-	different signature. This reflects that fact that parameters 
+	different signature. This reflects the fact that parameters 
 	to service provider objects are now passed in the form of a 
 	Parameters2.parameters object, rather than being set directly. This
 	change is necessary to ensure that TradeBuild can store the correct

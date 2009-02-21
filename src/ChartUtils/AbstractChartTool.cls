@@ -45,7 +45,7 @@ End Enum
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "ChartTools26"
+
 Private Const ModuleName                    As String = "AbstractChartTool"
 
 '@================================================================================
@@ -105,15 +105,22 @@ Case vbKeyEscape
 End Select
 End Sub
 
-Private Sub mControllerEV_RegionSelected(ByVal region As ChartSkil26.ChartRegion)
+Private Sub mControllerEV_PointerModeChanged()
+If mController.PointerMode = PointerModeDefault Then
+    Deselected
+    mTool.Deselected
+End If
+End Sub
+
+Private Sub mControllerEV_RegionSelected(ByVal Region As ChartSkil26.ChartRegion)
 If mRegion Is Nothing Then
     
     Set mTool = mToolRef.Target ' convert to a strong ref for efficiency, now that we know
                                 ' that this tool object is actually being used. This will also
                                 ' keep both objects alive
-    Set mRegion = region
-    Set mRegionEV = region
-    mTool.region = region
+    Set mRegion = Region
+    Set mRegionEV = Region
+    mTool.Region = Region
 
     Set mSelectionHandleSeries = mRegion.AddGraphicObjectSeries(New DataPointSeries, LayerNumbers.LayerMax)
     mSelectionHandleSeries.includeInAutoscale = False
@@ -258,7 +265,7 @@ Dim selHandle As New SelectionHandle
 Set dp = mSelectionHandleSeries.add(CDate(0))
 dp.X = X
 dp.dataValue = Y
-selHandle.initialise dp, AllowXMove, AllowYMove
+selHandle.Initialise dp, AllowXMove, AllowYMove
 mSelectionHandles.add selHandle
 End Sub
 
@@ -278,11 +285,12 @@ Case SelectionModeTool
 Case Else
     mSelMode = SelectionModeTool
 End Select
-mController.SetPointerModeDefault
+
+mController.SetPointerModeSelection
 mTool.EndResize
 End Sub
 
-Friend Sub initialise( _
+Friend Sub Initialise( _
                 ByVal controller As chartController, _
                 ByVal tool As IChartTool, _
                 ByVal pointerIcon As IPictureDisp)
@@ -324,7 +332,7 @@ For Each selHandle In mSelectionHandles
 Next
 mRegion.RemoveGraphicObjectSeries mSelectionHandleSeries
 Set mSelectableObjects = Nothing
-mController.SetPointerModeDefault
+mController.SetPointerModeSelection
 Set mTool = Nothing
 Set mRegionEV = Nothing
 Set mControllerEV = Nothing
@@ -398,6 +406,5 @@ Case Else
     End If
 End Select
 
-mController.SetPointerModeDefault
 End Function
 

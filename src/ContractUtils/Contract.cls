@@ -279,6 +279,37 @@ End With
 
 End Sub
 
+Public Function IsValidPrice( _
+                ByVal price As Double, _
+                ByVal prevValidPrice As Double) As Boolean
+If prevValidPrice = 0 Then
+    If Abs(price) / mTickSize > 262143 Then Exit Function
+    If mSpecifier.sectype = SecTypeIndex Then
+        ' don't do this check for indexes because some of them, such as TICK-NYSE, can have both
+        ' positive, zero and negative values
+    Else
+        If price <= 0 Then Exit Function
+        If price / mTickSize < 1 Then Exit Function ' catch occasional very small prices from IB
+    End If
+Else
+    If Abs(prevValidPrice - price) / mTickSize > 32767 Then Exit Function
+    If mSpecifier.sectype = SecTypeIndex Then
+        ' don't do this check for indexes because some of them, such as TICK-NYSE, can have both
+        ' positive and negative values - moreover the value can change dramatically from one
+        ' tick to the next
+    Else
+        If price <= 0 Then Exit Function
+        If price / mTickSize < 1 Then Exit Function ' catch occasional very small prices from IB
+        If price < (0.5 * prevValidPrice) Or price > (1.5 * prevValidPrice) Then Exit Function
+    End If
+    
+End If
+
+IsValidPrice = True
+End Function
+                
+
+
 Public Function parsePrice( _
                 ByVal priceString As String, _
                 ByRef price As Double) As Boolean
@@ -306,7 +337,7 @@ End If
 
 If price <= 0 Then Exit Function
 
-If (price - mTickSize * Int(price / mTickSize)) <> 0 Then Exit Function
+If Abs(price - mTickSize * Int((price + mTickSize / 1000) / mTickSize)) > (mTickSize / 1000) Then Exit Function
     
 parsePrice = True
 End Function

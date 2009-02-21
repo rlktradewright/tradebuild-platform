@@ -163,6 +163,10 @@ mEndArrowRect.isValid = False
 mRegionRect.isValid = False
 End Sub
 
+Private Sub Class_Terminate()
+Debug.Print "Line terminated"
+End Sub
+
 '================================================================================
 ' IGraphicObject Event Handlers
 '================================================================================
@@ -197,14 +201,14 @@ Exit Property
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_boundingRectangle" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_boundingRectangle" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 End Property
 
-Private Property Get IGraphicObject_BoundingRectanglesAt(ByVal PeriodNumber As Long) As TRectangle()
+Private Property Get IGraphicObject_BoundingRectanglesAt(ByVal periodNumber As Long) As TRectangle()
 Dim periodrect As TRectangle
 Dim rects() As TRectangle
 
@@ -214,8 +218,8 @@ On Error GoTo Err
 If mBlank Then Exit Property
 
 With periodrect
-    .left = PeriodNumber
-    .right = PeriodNumber + 1
+    .left = periodNumber
+    .right = periodNumber + 1
     .bottom = mRegionRect.bottom
     .top = mRegionRect.top
     .isValid = True
@@ -232,9 +236,9 @@ If mVertical <> VerticalNot Then
         rects(0) = vertRect
     End If
 Else
-    If PeriodNumber = Int(mRegionRect.right) Or _
-        (Not mLeftToRight And PeriodNumber = mPoint2.x And Not extendAfter) Or _
-        (Not mLeftToRight And PeriodNumber = mPoint1.x And Not extendBefore) _
+    If periodNumber = Int(mRegionRect.right) Or _
+        (Not mLeftToRight And periodNumber = mPoint2.x And Not extendAfter) Or _
+        (Not mLeftToRight And periodNumber = mPoint1.x And Not extendBefore) _
     Then
         If thickness <= 1 Then Exit Property
     End If
@@ -242,35 +246,35 @@ Else
     ReDim rects(0) As TRectangle
     
     With rects(0)
-        .left = PeriodNumber
+        .left = periodNumber
         If mLeftToRight Then
-            If PeriodNumber < mPoint1.x And _
+            If periodNumber < mPoint1.x And _
                 Not extendBefore _
             Then
                 .left = mPoint1.x - 1
             End If
         Else
-            If PeriodNumber < mPoint2.x And _
+            If periodNumber < mPoint2.x And _
                 Not extendAfter _
             Then
                 .left = mPoint2.x - 1
             End If
         End If
         If mLeftToRight Then
-            If (Not extendAfter And PeriodNumber = mPoint2.x) Or _
-                PeriodNumber = Int(mRegionRect.right) _
+            If (Not extendAfter And periodNumber = mPoint2.x) Or _
+                periodNumber = Int(mRegionRect.right) _
             Then
                 .right = .left
             Else
-                .right = PeriodNumber + 1
+                .right = periodNumber + 1
             End If
         Else
-            If (Not extendBefore And PeriodNumber = mPoint1.x) Or _
-                PeriodNumber = Int(mRegionRect.right) _
+            If (Not extendBefore And periodNumber = mPoint1.x) Or _
+                periodNumber = Int(mRegionRect.right) _
             Then
                 .right = .left
             Else
-                .right = PeriodNumber + 1
+                .right = periodNumber + 1
             End If
         End If
         
@@ -282,16 +286,16 @@ Else
             .bottom = mA * .right + mB - mThicknessOffsetY
         End If
         If mLeftToRight Then
-            If (Not extendBefore And PeriodNumber = mPoint1.x) Then .left = .left - mThicknessOffsetX
-            If (Not extendAfter And PeriodNumber = mPoint2.x) Or _
-                PeriodNumber = Int(mRegionRect.right) _
+            If (Not extendBefore And periodNumber = mPoint1.x) Then .left = .left - mThicknessOffsetX
+            If (Not extendAfter And periodNumber = mPoint2.x) Or _
+                periodNumber = Int(mRegionRect.right) _
             Then
                 .right = .right + mThicknessOffsetX
             End If
         Else
-            If (Not extendAfter And PeriodNumber = mPoint2.x) Then .left = .left - mThicknessOffsetX
-            If (Not extendBefore And PeriodNumber = mPoint1.x) Or _
-                PeriodNumber = Int(mRegionRect.right) _
+            If (Not extendAfter And periodNumber = mPoint2.x) Then .left = .left - mThicknessOffsetX
+            If (Not extendBefore And periodNumber = mPoint1.x) Or _
+                periodNumber = Int(mRegionRect.right) _
             Then
                 .right = .right + mThicknessOffsetX
             End If
@@ -316,7 +320,7 @@ Exit Property
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_boundingRectanglesAt" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_boundingRectanglesAt" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -368,7 +372,7 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_draw" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_draw" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -406,7 +410,7 @@ hitTestRect.right = hitTestRect.right + mCanvas.convertPixelsToLogicalX(HitTestT
 hitTestRect.bottom = hitTestRect.bottom - mCanvas.convertPixelsToLogicalY(HitTestTolerancePixels)
 hitTestRect.top = hitTestRect.top + mCanvas.convertPixelsToLogicalY(HitTestTolerancePixels)
 
-If Not RectContains(hitTestRect, x, y) Then Exit Function
+If Not RectContainsPoint(hitTestRect, x, y) Then Exit Function
 
 If mA <= 1 Then
     lineY = mA * x + mB
@@ -419,7 +423,7 @@ End If
 End Function
 
 Private Property Get IGraphicObject_includeInAutoscale() As Boolean
-IGraphicObject_includeInAutoscale = IncludeInAutoscale
+IGraphicObject_includeInAutoscale = includeInAutoscale
 End Property
 
 Private Property Let IGraphicObject_inScope(ByVal value As Boolean)
@@ -482,7 +486,7 @@ End Property
 '
 'Err:
 'Dim errNumber As Long: errNumber = Err.Number
-'Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_undraw" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+'Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_undraw" & "." & failpoint & IIf(err.Source <> "", vbCrLf & err.Source, "")
 'Dim errDescription As String: errDescription = Err.Description
 'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 'Err.Raise errNumber, errSource, errDescription
@@ -769,13 +773,13 @@ mHidden = value
 update
 End Property
 
-Public Property Get IncludeInAutoscale() As Boolean
-IncludeInAutoscale = mBaseStyle.IncludeInAutoscale
-If Not mLocalStyle Is Nothing Then IncludeInAutoscale = mLocalStyle.IncludeInAutoscale
-If mIsSetIncludeInAutoscale Then IncludeInAutoscale = mIncludeInAutoscale
+Public Property Get includeInAutoscale() As Boolean
+includeInAutoscale = mBaseStyle.includeInAutoscale
+If Not mLocalStyle Is Nothing Then includeInAutoscale = mLocalStyle.includeInAutoscale
+If mIsSetIncludeInAutoscale Then includeInAutoscale = mIncludeInAutoscale
 End Property
 
-Public Property Let IncludeInAutoscale(ByVal value As Boolean)
+Public Property Let includeInAutoscale(ByVal value As Boolean)
 If mIncludeInAutoscale = value And mIsSetIncludeInAutoscale Then Exit Property
 If Not value Then undraw
 mIncludeInAutoscale = value
@@ -787,16 +791,16 @@ Public Property Get InScope() As Boolean
 InScope = mInScope
 End Property
 
-Public Property Get IsSelectable() As Boolean
-IsSelectable = mIsSelectable
+Public Property Get isSelectable() As Boolean
+isSelectable = mIsSelectable
 End Property
 
 Public Property Get IsSelected() As Boolean
 IsSelected = mIsSelected
 End Property
 
-Public Property Get key() As String
-key = mKey
+Public Property Get Key() As String
+Key = mKey
 End Property
 
 Public Property Let Layer(ByVal value As Long)
@@ -823,11 +827,11 @@ mIsSetLineStyle = True
 update
 End Property
 
-Public Property Get localStyle() As linestyle
-Set localStyle = mLocalStyle.clone
+Public Property Get LocalStyle() As linestyle
+Set LocalStyle = mLocalStyle.clone
 End Property
 
-Public Property Let localStyle( _
+Public Property Let LocalStyle( _
                 ByVal value As linestyle)
 
 undraw
@@ -929,22 +933,22 @@ End Property
 
 Friend Sub initialise( _
                 ByVal seriesId As Long, _
-                ByVal key As String, _
+                ByVal Key As String, _
                 ByVal GOSP As GraphObjServiceProvider, _
                 ByVal Layer As Long, _
                 ByVal Canvas As Canvas, _
                 ByVal baseStyle As linestyle, _
-                ByVal localStyle As linestyle, _
-                Optional ByVal IsSelectable As Boolean)
+                ByVal LocalStyle As linestyle, _
+                Optional ByVal isSelectable As Boolean)
                 
 mSeriesID = seriesId
-mKey = key
+mKey = Key
 Set mGOSP = GOSP
 mLayer = Layer
 Set mCanvas = Canvas
 Set mBaseStyle = baseStyle
-If Not localStyle Is Nothing Then Set mLocalStyle = localStyle.clone ' local style cannot be shared
-mIsSelectable = IsSelectable
+If Not LocalStyle Is Nothing Then Set mLocalStyle = LocalStyle.clone ' local style cannot be shared
+mIsSelectable = isSelectable
 
 calcCurrentBoundingRect
 End Sub
@@ -1013,7 +1017,7 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "setPosition" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "setPosition" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -1721,7 +1725,7 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "draw" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "draw" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription

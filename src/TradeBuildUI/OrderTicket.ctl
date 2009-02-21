@@ -32,9 +32,9 @@ Begin VB.UserControl OrderTicket
          Top             =   240
          Width           =   2655
          Begin VB.TextBox VolumeText 
-            Alignment       =   2  'Center
+            Alignment       =   1  'Right Justify
             Height          =   255
-            Left            =   720
+            Left            =   960
             Locked          =   -1  'True
             TabIndex        =   62
             TabStop         =   0   'False
@@ -42,9 +42,9 @@ Begin VB.UserControl OrderTicket
             Width           =   855
          End
          Begin VB.TextBox HighText 
-            Alignment       =   2  'Center
+            Alignment       =   1  'Right Justify
             Height          =   255
-            Left            =   720
+            Left            =   960
             Locked          =   -1  'True
             TabIndex        =   61
             TabStop         =   0   'False
@@ -52,9 +52,9 @@ Begin VB.UserControl OrderTicket
             Width           =   855
          End
          Begin VB.TextBox LowText 
-            Alignment       =   2  'Center
+            Alignment       =   1  'Right Justify
             Height          =   255
-            Left            =   720
+            Left            =   960
             Locked          =   -1  'True
             TabIndex        =   60
             TabStop         =   0   'False
@@ -62,7 +62,7 @@ Begin VB.UserControl OrderTicket
             Width           =   855
          End
          Begin VB.TextBox LastSizeText 
-            Alignment       =   2  'Center
+            Alignment       =   1  'Right Justify
             Height          =   255
             Left            =   1920
             Locked          =   -1  'True
@@ -72,7 +72,7 @@ Begin VB.UserControl OrderTicket
             Width           =   735
          End
          Begin VB.TextBox AskSizeText 
-            Alignment       =   2  'Center
+            Alignment       =   1  'Right Justify
             Height          =   255
             Left            =   1920
             Locked          =   -1  'True
@@ -82,7 +82,7 @@ Begin VB.UserControl OrderTicket
             Width           =   735
          End
          Begin VB.TextBox BidSizeText 
-            Alignment       =   2  'Center
+            Alignment       =   1  'Right Justify
             Height          =   255
             Left            =   1920
             Locked          =   -1  'True
@@ -92,9 +92,9 @@ Begin VB.UserControl OrderTicket
             Width           =   735
          End
          Begin VB.TextBox BidText 
-            Alignment       =   2  'Center
+            Alignment       =   1  'Right Justify
             Height          =   255
-            Left            =   720
+            Left            =   960
             Locked          =   -1  'True
             TabIndex        =   56
             TabStop         =   0   'False
@@ -102,9 +102,9 @@ Begin VB.UserControl OrderTicket
             Width           =   855
          End
          Begin VB.TextBox LastText 
-            Alignment       =   2  'Center
+            Alignment       =   1  'Right Justify
             Height          =   255
-            Left            =   720
+            Left            =   960
             Locked          =   -1  'True
             TabIndex        =   55
             TabStop         =   0   'False
@@ -112,9 +112,9 @@ Begin VB.UserControl OrderTicket
             Width           =   855
          End
          Begin VB.TextBox AskText 
-            Alignment       =   2  'Center
+            Alignment       =   1  'Right Justify
             Height          =   255
-            Left            =   720
+            Left            =   960
             Locked          =   -1  'True
             TabIndex        =   54
             TabStop         =   0   'False
@@ -200,7 +200,7 @@ Begin VB.UserControl OrderTicket
             Alignment       =   1  'Right Justify
             Height          =   285
             Index           =   0
-            Left            =   840
+            Left            =   960
             TabIndex        =   6
             Top             =   2160
             Width           =   855
@@ -212,14 +212,14 @@ Begin VB.UserControl OrderTicket
             Left            =   960
             TabIndex        =   5
             Top             =   1800
-            Width           =   735
+            Width           =   855
          End
          Begin VB.TextBox OffsetValueText 
             Alignment       =   1  'Right Justify
             BackColor       =   &H8000000F&
             Height          =   285
             Index           =   0
-            Left            =   1800
+            Left            =   1920
             Locked          =   -1  'True
             TabIndex        =   44
             TabStop         =   0   'False
@@ -235,13 +235,13 @@ Begin VB.UserControl OrderTicket
             TabIndex        =   43
             TabStop         =   0   'False
             Top             =   0
-            Width           =   2415
+            Width           =   2535
          End
          Begin VB.TextBox PriceText 
             Alignment       =   1  'Right Justify
             Height          =   285
             Index           =   0
-            Left            =   840
+            Left            =   960
             TabIndex        =   4
             Top             =   1440
             Width           =   855
@@ -250,7 +250,7 @@ Begin VB.UserControl OrderTicket
             Height          =   315
             Index           =   0
             ItemData        =   "OrderTicket.ctx":0000
-            Left            =   840
+            Left            =   960
             List            =   "OrderTicket.ctx":0002
             Style           =   2  'Dropdown List
             TabIndex        =   3
@@ -261,7 +261,7 @@ Begin VB.UserControl OrderTicket
             Alignment       =   1  'Right Justify
             Height          =   255
             Index           =   0
-            Left            =   840
+            Left            =   960
             TabIndex        =   2
             Top             =   720
             Width           =   855
@@ -270,7 +270,7 @@ Begin VB.UserControl OrderTicket
             Height          =   315
             Index           =   0
             ItemData        =   "OrderTicket.ctx":0004
-            Left            =   840
+            Left            =   960
             List            =   "OrderTicket.ctx":0006
             Style           =   2  'Dropdown List
             TabIndex        =   1
@@ -591,7 +591,7 @@ Begin VB.UserControl OrderTicket
       Height          =   495
       Left            =   7560
       TabIndex        =   25
-      Top             =   840
+      Top             =   960
       Width           =   1095
    End
    Begin VB.CommandButton ResetButton 
@@ -599,7 +599,7 @@ Begin VB.UserControl OrderTicket
       Height          =   495
       Left            =   7560
       TabIndex        =   28
-      Top             =   2640
+      Top             =   2760
       Width           =   1095
    End
    Begin VB.CommandButton CompleteOrdersButton 
@@ -607,7 +607,7 @@ Begin VB.UserControl OrderTicket
       Height          =   495
       Left            =   7560
       TabIndex        =   26
-      Top             =   1440
+      Top             =   1560
       Visible         =   0   'False
       Width           =   1095
    End
@@ -625,7 +625,7 @@ Begin VB.UserControl OrderTicket
       Height          =   495
       Left            =   7560
       TabIndex        =   27
-      Top             =   2040
+      Top             =   2160
       Visible         =   0   'False
       Width           =   1095
    End
@@ -701,7 +701,7 @@ Begin VB.UserControl OrderTicket
       Left            =   120
       TabIndex        =   70
       Top             =   5760
-      Width           =   6615
+      Width           =   7335
    End
 End
 Attribute VB_Name = "OrderTicket"
@@ -2040,7 +2040,7 @@ Private Sub setOrderScheme( _
                 ByVal pOrderScheme As OrderSchemes)
 Select Case pOrderScheme
 Case OrderSchemes.SimpleOrder
-    RaiseEvent CaptionChanged("Create a single order")
+    RaiseEvent CaptionChanged("Create a simple order")
     BracketTabStrip.Visible = False
     PlaceOrdersButton.Enabled = True
     PlaceOrdersButton.Visible = True

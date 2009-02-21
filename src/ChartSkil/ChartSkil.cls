@@ -132,12 +132,20 @@ Public Enum LineStyles
     LineInsideSolid = vbInsideSolid
 End Enum
 
+Public Enum PointerModes
+    PointerModeDefault
+    PointerModeTool
+    PointerModeSelection
+End Enum
+
 Public Enum PointerStyles
     PointerNone
     PointerCrosshairs
     PointerDisc
     PointerTool
     PointerCustom
+    PointerSelection
+    PointerWindowsDefault
 End Enum
 
 Public Enum PointStyles
@@ -209,10 +217,10 @@ Public Type TInterval
 End Type
 
 Public Type TRectangle
-    Bottom          As Double
-    Left            As Double
-    Right           As Double
-    Top             As Double
+    bottom          As Double
+    left            As Double
+    right           As Double
+    top             As Double
     isValid         As Boolean
 End Type
 

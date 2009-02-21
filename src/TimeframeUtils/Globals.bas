@@ -92,6 +92,12 @@ Public Const TimePeriodShortNameTickIncrement As String = "T"
 ' Properties
 '@================================================================================
 
+Public Property Get gLogger() As Logger
+Static lLogger As Logger
+If lLogger Is Nothing Then Set lLogger = GetLogger("log")
+Set gLogger = lLogger
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================

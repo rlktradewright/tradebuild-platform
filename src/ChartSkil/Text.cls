@@ -135,6 +135,10 @@ mTextRect.isValid = False
 mBoxRect.isValid = False
 End Sub
 
+Private Sub Class_Terminate()
+Debug.Print "Text terminated"
+End Sub
+
 '================================================================================
 ' IGraphicObject Event Handlers
 '================================================================================
@@ -173,7 +177,7 @@ Exit Property
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_boundingRectangle" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_boundingRectangle" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -181,7 +185,7 @@ Err.Raise errNumber, errSource, errDescription
 
 End Property
 
-Private Property Get IGraphicObject_BoundingRectanglesAt(ByVal PeriodNumber As Long) As TRectangle()
+Private Property Get IGraphicObject_BoundingRectanglesAt(ByVal periodNumber As Long) As TRectangle()
 '
 End Property
 
@@ -223,11 +227,11 @@ IGraphicObject_handle = mHandle
 End Property
 
 Private Function IGraphicObject_HitTest(ByVal x As Double, ByVal y As Double) As Boolean
-IGraphicObject_HitTest = RectContains(mBoundingRect, x, y)
+IGraphicObject_HitTest = RectContainsPoint(mBoundingRect, x, y)
 End Function
 
 Private Property Get IGraphicObject_includeInAutoscale() As Boolean
-IGraphicObject_includeInAutoscale = IncludeInAutoscale
+IGraphicObject_includeInAutoscale = includeInAutoscale
 End Property
 
 Private Property Let IGraphicObject_inScope(ByVal value As Boolean)
@@ -304,7 +308,7 @@ End Property
 '
 'Err:
 'Dim errNumber As Long: errNumber = Err.Number
-'Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_undraw" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+'Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_undraw" & "." & failpoint & IIf(err.Source <> "", vbCrLf & err.Source, "")
 'Dim errDescription As String: errDescription = Err.Description
 'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 'Err.Raise errNumber, errSource, errDescription
@@ -504,13 +508,13 @@ Friend Property Get Handle() As Long
 Handle = mHandle
 End Property
 
-Public Property Get IncludeInAutoscale() As Boolean
-IncludeInAutoscale = mBaseStyle.IncludeInAutoscale
-If Not mLocalStyle Is Nothing Then IncludeInAutoscale = mLocalStyle.IncludeInAutoscale
-If mIsSetIncludeInAutoscale Then IncludeInAutoscale = mIncludeInAutoscale
+Public Property Get includeInAutoscale() As Boolean
+includeInAutoscale = mBaseStyle.includeInAutoscale
+If Not mLocalStyle Is Nothing Then includeInAutoscale = mLocalStyle.includeInAutoscale
+If mIsSetIncludeInAutoscale Then includeInAutoscale = mIncludeInAutoscale
 End Property
 
-Public Property Let IncludeInAutoscale(ByVal value As Boolean)
+Public Property Let includeInAutoscale(ByVal value As Boolean)
 If mIncludeInAutoscale = value And mIsSetIncludeInAutoscale Then Exit Property
 If Not value Then undraw
 mIncludeInAutoscale = value
@@ -522,8 +526,8 @@ Public Property Get InScope() As Boolean
 InScope = mInScope
 End Property
 
-Public Property Get IsSelectable() As Boolean
-IsSelectable = mIsSelectable
+Public Property Get isSelectable() As Boolean
+isSelectable = mIsSelectable
 End Property
 
 Public Property Get IsSelected() As Boolean
@@ -534,8 +538,8 @@ Public Property Get IsSeriesSelectable() As Boolean
 IsSeriesSelectable = mIsSeriesSelectable
 End Property
 
-Public Property Get key() As String
-key = mKey
+Public Property Get Key() As String
+Key = mKey
 End Property
 
 Public Property Let Layer(ByVal value As Long)
@@ -548,11 +552,11 @@ Public Property Get Layer() As Long
 Layer = mLayer
 End Property
 
-Public Property Get localStyle() As TextStyle
-Set localStyle = mLocalStyle.clone
+Public Property Get LocalStyle() As TextStyle
+Set LocalStyle = mLocalStyle.clone
 End Property
 
-Public Property Let localStyle( _
+Public Property Let LocalStyle( _
                 ByVal value As TextStyle)
 
 undraw
@@ -681,7 +685,6 @@ With mCanvas
     End If
     
     .setTextAttributes Color, font, True
-'    If mText = "Volume" Then Stop
     .drawText mText, .newPoint(mTextRect.left, mTextRect.top)
 End With
 
@@ -689,7 +692,7 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "draw" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "draw" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -700,26 +703,26 @@ End Sub
 
 Friend Sub initialise( _
                 ByVal seriesId As Long, _
-                ByVal key As String, _
+                ByVal Key As String, _
                 ByVal GOSP As GraphObjServiceProvider, _
                 ByVal Layer As Long, _
                 ByVal Canvas As Canvas, _
                 ByVal baseStyle As TextStyle, _
-                ByVal localStyle As TextStyle, _
-                Optional ByVal IsSelectable As Boolean, _
+                ByVal LocalStyle As TextStyle, _
+                Optional ByVal isSelectable As Boolean, _
                 Optional ByVal IsSeriesSelectable As Boolean)
                 
 Dim failpoint As Long
 On Error GoTo Err
 
 mSeriesID = seriesId
-mKey = key
+mKey = Key
 Set mGOSP = GOSP
 mLayer = Layer
 Set mCanvas = Canvas
 Set mBaseStyle = baseStyle
-If Not localStyle Is Nothing Then Set mLocalStyle = localStyle.clone ' local style cannot be shared
-mIsSelectable = IsSelectable
+If Not LocalStyle Is Nothing Then Set mLocalStyle = LocalStyle.clone ' local style cannot be shared
+mIsSelectable = isSelectable
 mIsSeriesSelectable = IsSeriesSelectable
 
 calcCurrentBoundingRect
@@ -728,7 +731,7 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "initialise" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "initialise" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -767,9 +770,6 @@ Dim XIncrement As Double
 Dim YIncrement As Double
 Dim XLineThickness As Double
 Dim YLineThickness As Double
-
-'If mText = "Volume" Then Stop
-'If mHandle = 520 Then Stop
 
 If mPosition Is Nothing Then
     mBoundingRect.isValid = False

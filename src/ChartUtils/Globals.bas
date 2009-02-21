@@ -19,6 +19,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Public Const ProjectName                   As String = "ChartTools26"
+
 Public Const MinDouble As Double = -(2 - 2 ^ -52) * 2 ^ 1023
 Public Const MaxDouble As Double = (2 - 2 ^ -52) * 2 ^ 1023
 

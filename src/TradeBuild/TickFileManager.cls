@@ -135,59 +135,69 @@ Case TradeBuildSP.StandardSPEventCodes.TFConnectedToDataSource
     ev.eventMessage = "Connected to tickfile: " & _
                     gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex))
     RaiseEvent Notification(ev)
+    gTB.Notify ev
 Case TradeBuildSP.StandardSPEventCodes.TFTickfileDoesntExist
     ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileEmpty
     ev.eventMessage = "Empty tickfile: " & _
                     gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex))
     RaiseEvent Notification(ev)
+    gTB.Notify ev
     SkipTickfile
 Case TradeBuildSP.StandardSPEventCodes.TFTickfileEmpty
     ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileEmpty
     ev.eventMessage = "Empty tickfile: " & _
                     gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex))
     RaiseEvent Notification(ev)
+    gTB.Notify ev
     SkipTickfile
 Case TradeBuildSP.StandardSPEventCodes.TFTickfileInvalid
     ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileInvalid
     ev.eventMessage = "Not a valid tickfile: " & _
                     gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex))
     RaiseEvent Notification(ev)
+    gTB.Notify ev
     SkipTickfile
 Case TradeBuildSP.StandardSPEventCodes.TFTickfileVersionNotSupported
     ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileVersionNotSupported
     ev.eventMessage = "Tickfile version not supported: " & _
                     gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex))
     RaiseEvent Notification(ev)
+    gTB.Notify ev
     SkipTickfile
 Case TradeBuildSP.StandardSPEventCodes.TFContractDetailsInvalid
     ev.eventCode = ApiNotifyCodes.ApiNotifyContractDetailsInvalid
     ev.eventMessage = "Tickfile contains invalid contract details: " & _
                     gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex))
     RaiseEvent Notification(ev)
+    gTB.Notify ev
     SkipTickfile
 Case TradeBuildSP.StandardSPEventCodes.TFNoContractDetails
     ev.eventCode = ApiNotifyCodes.ApiNotifyNoContractDetails
     ev.eventMessage = "Tickfile contains no contract details: " & _
                     gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex))
     RaiseEvent Notification(ev)
+    gTB.Notify ev
     SkipTickfile
 Case TradeBuildSP.StandardSPEventCodes.TFDataSourceNotResponding
     ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileDataSourceNotResponding
     ev.eventMessage = "Tickfile data source not responding: " & _
                     gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex))
     RaiseEvent Notification(ev)
+    gTB.Notify ev
     FinishTickfile
 Case TradeBuildSP.StandardSPEventCodes.TFCantConnectDataSource
     ev.eventCode = ApiNotifyCodes.ApiNotifyTickfileDataSourceNotResponding
     ev.eventMessage = "Can't connect to tickfile data source: " & _
                     gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex))
     RaiseEvent Notification(ev)
+    gTB.Notify ev
     FinishTickfile
 Case TradeBuildSP.StandardSPEventCodes.TFRetryConnectDataSource
     ev.eventCode = ApiNotifyCodes.ApiNotifyRetryingConnectionToTickfileDataSource
     ev.eventMessage = "Retrying connection to tickfile data source: " & _
                     gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex))
     RaiseEvent Notification(ev)
+    gTB.Notify ev
     ' don't need to move on to next tickfile - the user can do
     ' that if they want to, or they can fix the reason for
     ' failing to connect (eg start the data source software)
@@ -196,6 +206,7 @@ Case TradeBuildSP.StandardSPEventCodes.TFContractSpecifierInvalid
     ev.eventMessage = "The specified contract does not exist: " & _
                     gTickfileSpecifierToString(mTickfileSpecifiers(mCurrTickfileIndex))
     RaiseEvent Notification(ev)
+    gTB.Notify ev
     Set mReader = Nothing
 Case Else
     gTB.SetServiceProviderError eventCode, _
@@ -229,6 +240,7 @@ Else
     ev.eventMessage = "Contract details must be supplied for tickfile: " & _
                     gTickfileSpecifierToString(tfSpec)
     RaiseEvent Notification(ev)
+    gTB.Notify ev
     Set mReader = Nothing
     Exit Sub
 End If
@@ -241,7 +253,7 @@ End Sub
 Private Sub ITickfileInputServiceConsumer_TickfileReplayComplete()
 RaiseEvent TickfileCompleted(mCurrTickfileIndex, _
                             mTickfileSpecifiers(mCurrTickfileIndex).filename)
-mTicker.StopTicker
+mTicker.stopTicker
 End Sub
 
 Private Sub ITickfileInputServiceConsumer_ReplayProgress( _
@@ -450,7 +462,7 @@ If mTicker Is Nothing Or mReader Is Nothing Then
 End If
 RaiseEvent TickfileCompleted(mCurrTickfileIndex, _
                             mTickfileSpecifiers.item(mCurrTickfileIndex).filename)
-mTicker.StopTicker
+mTicker.stopTicker
 End Sub
 
 Friend Sub StartNextTickfile()
@@ -495,7 +507,7 @@ mReplayInProgress = False
 RaiseEvent TickfileCompleted(mCurrTickfileIndex, _
                             mTickfileSpecifiers.item(mCurrTickfileIndex).filename)
 mCurrTickfileIndex = mTickfileSpecifiers.Count + 1
-mTicker.StopTicker
+mTicker.stopTicker
 RaiseEvent ReplayCompleted
 End Sub
 

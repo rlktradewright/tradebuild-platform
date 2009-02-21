@@ -140,7 +140,7 @@ ReDim names(mRegions.count - 1) As String
 
 For i = 1 To mRegions.count
     re = mRegions(i)
-    names(i - 1) = re.region.name
+    names(i - 1) = re.Region.name
 Next
 regionNames = names
 End Property
@@ -176,7 +176,7 @@ Public Function addStudy( _
                 ByVal studyConfig As StudyConfiguration, _
                 Optional noStudyValueListeners As Boolean) As study
 Dim study As study
-Dim region As ChartRegion
+Dim Region As ChartRegion
 Dim studyHorizRule As StudyHorizontalRule
 Dim horizRulesLineSeries As LineSeries
 Dim line As ChartSkil26.line
@@ -200,14 +200,14 @@ studyConfig.study = study
 
 determineDefaultRegionName studyConfig
 
-Set region = findRegion(studyConfig.chartRegionName, study.instanceName, False)
+Set Region = findRegion(studyConfig.chartRegionName, study.instanceName, False)
     
 If Not noStudyValueListeners Then
     setupStudyValueListeners studyConfig
 End If
 
 If studyConfig.studyHorizontalRules.count > 0 Then
-    Set horizRulesLineSeries = region.AddGraphicObjectSeries(New LineSeries, LayerNumbers.LayerGrid + 1)
+    Set horizRulesLineSeries = Region.AddGraphicObjectSeries(New LineSeries, LayerNumbers.LayerGrid + 1)
     horizRulesLineSeries.extended = True
     horizRulesLineSeries.extendAfter = True
     horizRulesLineSeries.extendBefore = True
@@ -216,8 +216,8 @@ If studyConfig.studyHorizontalRules.count > 0 Then
         horizRulesLineSeries.lineStyle = studyHorizRule.style
         horizRulesLineSeries.thickness = studyHorizRule.thickness
         Set line = horizRulesLineSeries.add
-        line.point1 = region.newPoint(0, studyHorizRule.Y, CoordsRelative, CoordsLogical)
-        line.point2 = region.newPoint(100, studyHorizRule.Y, CoordsRelative, CoordsLogical)
+        line.point1 = Region.newPoint(0, studyHorizRule.Y, CoordsRelative, CoordsLogical)
+        line.point2 = Region.newPoint(100, studyHorizRule.Y, CoordsRelative, CoordsLogical)
     Next
     studyConfig.horizontalRulesLineSeries = horizRulesLineSeries
 End If
@@ -243,7 +243,7 @@ For Each studyConfig In mStudyConfigurations
     studyConfig.finish
 Next
 
-Set mStudyConfigurations = Nothing
+Set mStudyConfigurations = New StudyConfigurations
 
 Exit Sub
 
@@ -291,7 +291,7 @@ Case SpecialValues.SVPreviousClosePrice
 End Select
 End Function
 
-Friend Sub initialise( _
+Friend Sub Initialise( _
                 ByVal pStudyManager As studyManager, _
                 ByVal pChartController As chartController)
 Set mStudyManager = pStudyManager
@@ -313,16 +313,16 @@ Dim svh As StudyValueHandler
 Dim horizRulesLineSeries As LineSeries
 Dim regionName As String
 Dim re As RegionEntry
-Dim region As ChartRegion
+Dim Region As ChartRegion
 
 mChartController.SuppressDrawing = True
 For Each svh In studyConfig.studyValueHandlers
     studyConfig.study.removeStudyValueListener svh
-    regionName = svh.region.name
+    regionName = svh.Region.name
     re = mRegions(regionName)
     If re.usageCount = 1 Then
         svh.finish False
-        mChartController.RemoveChartRegion re.region
+        mChartController.RemoveChartRegion re.Region
         mRegions.remove regionName
     Else
         svh.finish True
@@ -334,13 +334,13 @@ Next
 
 Set horizRulesLineSeries = studyConfig.horizontalRulesLineSeries
 If Not horizRulesLineSeries Is Nothing Then
-    Set re.region = Nothing
+    Set re.Region = Nothing
     On Error Resume Next
     re = mRegions(studyConfig.chartRegionName)
     On Error GoTo 0
-    If Not re.region Is Nothing Then
-        Set region = re.region
-        region.RemoveGraphicObjectSeries horizRulesLineSeries
+    If Not re.Region Is Nothing Then
+        Set Region = re.Region
+        Region.RemoveGraphicObjectSeries horizRulesLineSeries
     End If
 End If
 mChartController.SuppressDrawing = False
@@ -407,8 +407,6 @@ Dim failpoint As Long
 
 On Error GoTo Err
 
-GetLogger("").Log LogLevelNormal, "Exit StudyManager:setupStudyValueListeners"
-
 failpoint = 100
 
 If mBaseStudy Is Nothing Then Set mBaseStudy = studyConfig.study
@@ -444,11 +442,6 @@ failpoint = 600
 mStudyConfigurations.add studyConfig
 
 failpoint = 600
-
-
-GetLogger("").Log LogLevelNormal, "Exit StudyManager:setupStudyValueListeners"
-
-failpoint = 700
 
 setupStudyValueListeners = taskCompletions
 
@@ -505,7 +498,7 @@ On Error Resume Next
 re = mRegions(regionName)
 On Error GoTo 0
 
-Set findRegion = re.region
+Set findRegion = re.Region
 
 If findRegion Is Nothing Then
     Set findRegion = mChartController.GetChartRegion(regionName)
@@ -517,7 +510,7 @@ If findRegion Is Nothing Then
         findRegion.title.Text = title
         findRegion.title.color = vbBlue
     End If
-    Set re.region = findRegion
+    Set re.Region = findRegion
     If incrementUsageCount Then re.usageCount = 1
     mRegions.add re, regionName
 ElseIf incrementUsageCount Then
@@ -534,7 +527,7 @@ Private Function includeStudyValueInChart( _
 
 Dim lStudyValueHandler As StudyValueHandler
 Dim study As study
-Dim region As ChartRegion
+Dim Region As ChartRegion
 Dim regionName As String
 Dim lTaskCompletion As TaskController
 
@@ -549,10 +542,10 @@ Else
     regionName = studyValueConfig.chartRegionName
 End If
 
-Set region = findRegion(regionName, study.instanceName, True)
+Set Region = findRegion(regionName, study.instanceName, True)
 
 Set lStudyValueHandler = studyConfig.studyValueHandlers.add(Me, _
-                                        region, _
+                                        Region, _
                                         studyValueConfig, _
                                         studyValueDef, _
                                         mUpdatePerTick)

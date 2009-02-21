@@ -37,7 +37,7 @@ Private mX As Double
 Private mXAssigned As Boolean
 Private mY As Double
 Private mYAssigned As Boolean
-Private mCanvas As canvas
+Private mCanvas As Canvas
 
 '================================================================================
 ' Class Event Handlers
@@ -51,11 +51,11 @@ Private mCanvas As canvas
 ' Properties
 '================================================================================
 
-Friend Property Get canvas() As canvas
-Set canvas = mCanvas
+Friend Property Get Canvas() As Canvas
+Set Canvas = mCanvas
 End Property
 
-Friend Property Let canvas(ByVal value As canvas)
+Friend Property Let Canvas(ByVal value As Canvas)
 Set mCanvas = value
 End Property
 
@@ -80,7 +80,7 @@ mX = value
 mXAssigned = True
 End Property
 
-Friend Property Get XLogical() As Double
+Public Property Get XLogical() As Double
 XLogical = mCanvas.convertDistanceToLogicalX(mX) - mCanvas.boundary.left
 End Property
 
@@ -93,7 +93,7 @@ mY = value
 mYAssigned = True
 End Property
 
-Friend Property Get YLogical() As Double
+Public Property Get YLogical() As Double
 YLogical = mCanvas.convertDistanceToLogicalY(mY) - mCanvas.boundary.bottom
 End Property
 
@@ -105,7 +105,7 @@ Public Function equals(ByVal aDim As Dimension) As Boolean
 If aDim Is Nothing Then Exit Function
 If aDim Is Me Then Exit Function
 With aDim
-    If Not .canvas Is mCanvas Then Exit Function
+    If Not .Canvas Is mCanvas Then Exit Function
     If .isAssignedX <> mXAssigned Then Exit Function
     If .isAssignedY <> mYAssigned Then Exit Function
     If .x <> mX Then Exit Function

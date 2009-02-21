@@ -38,6 +38,14 @@ Private Const ModuleName                As String = "GlobalsClass"
 ' Enums
 '@================================================================================
 
+Public Enum BarChangeTypes
+    BarPriceChanged
+    BarVolumeChanged
+    BarOpenInterestChanged
+    BarTickVolumeChanged    ' only fired when tickvolume is specifically incremented
+                            ' BarPriceChanged implicitly includes BarTickVolumeChanged
+End Enum
+
 Public Enum BarTypes
         BarTypeTrade = 0
         BarTypeBid = 1
@@ -221,7 +229,7 @@ Set GetTimePeriod = gGetTimePeriod(length, units)
 Exit Function
 
 Err:
-GetLogger("").Log LogLevelSevere, "Error at: " & ProjectName & "." & ModuleName & ":" & "GetTimePeriod" & "." & failpoint & _
+gLogger.Log LogLevelSevere, "Error at: " & ProjectName & "." & ModuleName & ":" & "GetTimePeriod" & "." & failpoint & _
                             IIf(Err.source <> "", vbCrLf & Err.source, "") & vbCrLf & _
                             Err.Description
 Err.Raise Err.Number, _

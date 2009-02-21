@@ -55,6 +55,8 @@ Private mXAxisRegionStyle                   As ChartRegionStyle
 Private mVolumeRegionStyle                  As ChartRegionStyle
 Private mBarsStyle                          As barStyle
 Private mVolumeStyle                        As dataPointStyle
+Private mTwipsPerBar                        As Long
+Private mChartBackGradientFillColors()      As Long
 
 
 '@================================================================================
@@ -75,6 +77,25 @@ Private mVolumeStyle                        As dataPointStyle
 
 Public Property Get BarsStyle() As barStyle
 Set BarsStyle = mBarsStyle
+End Property
+
+Public Property Get ChartBackColor() As Long
+ChartBackColor = mChartBackGradientFillColors(0)
+End Property
+
+Public Property Let ChartBackColor(ByVal value As Long)
+ReDim mChartBackGradientFillColors(1) As Long
+mChartBackGradientFillColors(0) = value
+End Property
+
+Public Property Get ChartBackGradientFillColors() As Long()
+ChartBackGradientFillColors = mChartBackGradientFillColors
+End Property
+
+Public Property Let ChartBackGradientFillColors(ByRef value() As Long)
+Dim ar() As Long
+ar = value
+mChartBackGradientFillColors = ar
 End Property
 
 Public Property Get DefaultRegionStyle() As ChartRegionStyle
@@ -101,8 +122,16 @@ Public Property Get timeframe() As TimePeriod
 Set timeframe = mTimeframe
 End Property
 
-Friend Property Let timeframe(ByVal value As TimePeriod)
+Public Property Let timeframe(ByVal value As TimePeriod)
 Set mTimeframe = value
+End Property
+
+Public Property Get TwipsPerBar() As Long
+TwipsPerBar = mTwipsPerBar
+End Property
+
+Public Property Let TwipsPerBar(ByVal value As Long)
+mTwipsPerBar = value
 End Property
 
 Public Property Get VolumeRegionStyle() As ChartRegionStyle
@@ -121,6 +150,22 @@ End Property
 ' Methods
 '@================================================================================
 
+Public Function Clone() As ChartSpecifier
+Set Clone = New ChartSpecifier
+Clone.Initialise mTimeframe, _
+                mInitialNumberOfBars, _
+                mIncludeBarsOutsideSession, _
+                mMinimumTicksHeight, _
+                mDefaultRegionStyle, _
+                mVolumeRegionStyle, _
+                mXAxisRegionStyle, _
+                mDefaultYAxisRegionStyle, _
+                mBarsStyle, _
+                mVolumeStyle
+Clone.ChartBackGradientFillColors = mChartBackGradientFillColors
+Clone.TwipsPerBar = mTwipsPerBar
+End Function
+
 Friend Sub Initialise( _
                 ByVal timeframe As TimePeriod, _
                 ByVal InitialNumberOfBars As Integer, _
@@ -133,16 +178,20 @@ Friend Sub Initialise( _
                 ByVal pBarsStyle As barStyle, _
                 ByVal VolumeStyle As dataPointStyle)
 Set mTimeframe = timeframe
-validateTimeFrame (timeframe)
+validateTimeFrame timeframe
 mInitialNumberOfBars = InitialNumberOfBars
 mIncludeBarsOutsideSession = IncludeBarsOutsideSession
 mMinimumTicksHeight = MinimumTicksHeight
-Set mDefaultRegionStyle = DefaultRegionStyle
-Set mVolumeRegionStyle = VolumeRegionStyle
-Set mXAxisRegionStyle = XAxisRegionStyle
-Set mDefaultYAxisRegionStyle = DefaultYAxisRegionStyle
-Set mBarsStyle = pBarsStyle
-Set mVolumeStyle = VolumeStyle
+Set mDefaultRegionStyle = DefaultRegionStyle.Clone
+Set mVolumeRegionStyle = VolumeRegionStyle.Clone
+Set mXAxisRegionStyle = XAxisRegionStyle.Clone
+Set mDefaultYAxisRegionStyle = DefaultYAxisRegionStyle.Clone
+Set mBarsStyle = pBarsStyle.Clone
+Set mVolumeStyle = VolumeStyle.Clone
+
+ReDim mChartBackGradientFillColors(1) As Long
+mChartBackGradientFillColors(0) = &H643232
+mChartBackGradientFillColors(1) = &HF0F0F0
 End Sub
 
 '@================================================================================

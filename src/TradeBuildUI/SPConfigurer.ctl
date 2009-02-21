@@ -1069,7 +1069,6 @@ Set mSPs = TradeBuildAPI.ServiceProviders
 mReadOnly = readonly
 
 checkForOutstandingUpdates
-mPermittedSPs = permittedSPs
 
 Set mCurrSPsList = Nothing
 Set mCurrSP = Nothing
@@ -1387,31 +1386,31 @@ On Error GoTo 0
 
 CategoryList.clear
 
-If mPermittedSPs And ServiceProviderRoles.SPRealtimeData Then
+If mSPs.PermittedServiceProviderRoles And ServiceProviderRoles.SPRealtimeData Then
     CategoryList.addItem mSPs.SPNameRealtimeData
 End If
-If mPermittedSPs And ServiceProviderRoles.SPPrimaryContractData Then
+If mSPs.PermittedServiceProviderRoles And ServiceProviderRoles.SPPrimaryContractData Then
     CategoryList.addItem mSPs.SPNamePrimaryContractData
 End If
-If mPermittedSPs And ServiceProviderRoles.SPSecondaryContractData Then
+If mSPs.PermittedServiceProviderRoles And ServiceProviderRoles.SPSecondaryContractData Then
     CategoryList.addItem mSPs.SPNameSecondryContractData
 End If
-If mPermittedSPs And ServiceProviderRoles.SPHistoricalDataInput Then
+If mSPs.PermittedServiceProviderRoles And ServiceProviderRoles.SPHistoricalDataInput Then
     CategoryList.addItem mSPs.SPNameHistoricalDataInput
 End If
-If mPermittedSPs And ServiceProviderRoles.SPHistoricalDataOutput Then
+If mSPs.PermittedServiceProviderRoles And ServiceProviderRoles.SPHistoricalDataOutput Then
     CategoryList.addItem mSPs.SPNameHistoricalDataOutput
 End If
-If mPermittedSPs And ServiceProviderRoles.SPBrokerLive Then
+If mSPs.PermittedServiceProviderRoles And ServiceProviderRoles.SPBrokerLive Then
     CategoryList.addItem mSPs.SPNameBrokerLive
 End If
-If mPermittedSPs And ServiceProviderRoles.SPBrokerSimulated Then
+If mSPs.PermittedServiceProviderRoles And ServiceProviderRoles.SPBrokerSimulated Then
     CategoryList.addItem mSPs.SPNameBrokerSimulated
 End If
-If mPermittedSPs And ServiceProviderRoles.SPTickfileInput Then
+If mSPs.PermittedServiceProviderRoles And ServiceProviderRoles.SPTickfileInput Then
     CategoryList.addItem mSPs.SPNameTickfileInput
 End If
-If mPermittedSPs And ServiceProviderRoles.SPTickfileOutput Then
+If mSPs.PermittedServiceProviderRoles And ServiceProviderRoles.SPTickfileOutput Then
     CategoryList.addItem mSPs.SPNameTickfileOutput
 End If
 

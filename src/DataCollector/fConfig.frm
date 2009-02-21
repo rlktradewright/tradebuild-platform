@@ -101,10 +101,10 @@ End Sub
 '@================================================================================
 
 Public Function initialise( _
-                ByVal configFilename As String, _
+                ByVal pconfigManager As ConfigManager, _
                 ByVal readonly As Boolean) As Boolean
 setCaption readonly
-ConfigViewer1.initialise configFilename, readonly
+ConfigViewer1.initialise pconfigManager, readonly
 End Function
 
 '@================================================================================

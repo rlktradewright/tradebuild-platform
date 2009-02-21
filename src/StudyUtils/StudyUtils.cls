@@ -67,6 +67,10 @@ End Type
 ' Properties
 '@================================================================================
 
+Public Property Get BuiltInStudyLibraryName() As String
+BuiltInStudyLibraryName = BuiltInStudyLibName
+End Property
+
 '@================================================================================
 ' Methods
 '@================================================================================
@@ -79,6 +83,7 @@ Public Function AddStudyLibrary( _
 Dim failpoint As Long
 On Error GoTo Err
 
+If name = "" Then name = GenerateGUIDString
 Set AddStudyLibrary = Globals.StudyLibraryManager.AddStudyLibrary( _
                                 progId, _
                                 enabled, _
@@ -90,7 +95,7 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "AddStudyLibrary" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
 Dim errDescription As String: errDescription = Err.description
-'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Function
 
@@ -106,7 +111,7 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "AvailableStudies" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
 Dim errDescription As String: errDescription = Err.description
-'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Function
 
@@ -132,7 +137,7 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "CreateCacheReplayTask" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
 Dim errDescription As String: errDescription = Err.description
-'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Function
 
@@ -152,7 +157,7 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "CreateStudyPoint" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
 Dim errDescription As String: errDescription = Err.description
-'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Function
 
@@ -176,7 +181,7 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "GetStudyDefaultParameters" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
 Dim errDescription As String: errDescription = Err.description
-'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Function
 
@@ -194,12 +199,12 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "GetStudyDefinition" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
 Dim errDescription As String: errDescription = Err.description
-'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Function
 
 Public Sub LoadStudyLibraryConfiguration( _
-                ByVal config As ConfigItem)
+                ByVal config As ConfigurationSection)
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -211,7 +216,7 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "LoadStudyLibraryConfiguration" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
 Dim errDescription As String: errDescription = Err.description
-'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Sub
 
@@ -232,7 +237,7 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "RemoveStudyLibrary" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
 Dim errDescription As String: errDescription = Err.description
-'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Sub
 
@@ -248,8 +253,31 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "RemoveAllStudyLibraries" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
 Dim errDescription As String: errDescription = Err.description
-'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
+End Sub
+
+Public Sub SetDefaultStudyLibraryConfig( _
+                ByVal configdata As ConfigurationSection)
+Dim currSLsList As ConfigurationSection
+Dim currSL As ConfigurationSection
+
+On Error Resume Next
+Set currSLsList = configdata.GetConfigurationSection(ConfigNameStudyLibraries)
+On Error GoTo 0
+
+If Not currSLsList Is Nothing Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "setDefaultStudyLibrary", _
+            "Study libraries list is not empty"
+End If
+
+Set currSLsList = configdata.AddConfigurationSection(ConfigNameStudyLibraries, , StudyLibrariesRenderer)
+
+Set currSL = currSLsList.AddConfigurationSection(ConfigNameStudyLibrary & "(" & BuiltInStudyLibraryName & ")")
+
+currSL.setAttribute AttributeNameEnabled, "True"
+currSL.setAttribute AttributeNameStudyLibraryBuiltIn, "True"
 End Sub
 
 Public Function SetStudyDefaultParameters( _
@@ -270,7 +298,7 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "SetStudyDefaultParameters" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
 Dim errDescription As String: errDescription = Err.description
-'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Function
 

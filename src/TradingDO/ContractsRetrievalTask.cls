@@ -79,6 +79,9 @@ End Sub
 Private Sub Task_run()
 Dim instrument As BusinessDataObject
 
+Dim failpoint As Long
+On Error GoTo Err
+
 If mInstrEnumerator Is Nothing Then
     Set mFetchInstrumentsTC = mDB.InstrumentFactory.queryObjectsBySpecAsync( _
                                                 mBuilder.Contracts.ContractSpecifier, _
@@ -93,6 +96,30 @@ Else
         mBuilder.AddContract gContractFromInstrument(instrument)
     End If
 End If
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "Task_run" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errDescription As String: errDescription = Err.Description
+If errNumber = 3265 Then
+    ' This error is 'Item cannot be found in the collection corresponding
+    ' to the requested name or ordinal'. It occurs the first time this object
+    ' runs after the database has not been used for some time (hours?). The
+    ' instrument objects are correctly constructed, but when the first one is
+    ' accessed (in gContractFromInstrument) the recordset has mysteriously been closed
+    '
+    ' So just try it again!
+    
+    gLogger.Log LogLevelNormal, "ContractsRetrievalTask restarted after receiving the following error:" & vbCrLf & _
+                                "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+    Set mInstrEnumerator = Nothing
+    Exit Sub
+End If
+    
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Sub
 
 Private Property Let Task_TaskContext( _

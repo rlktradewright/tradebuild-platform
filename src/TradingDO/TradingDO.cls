@@ -139,9 +139,21 @@ Public Function CreateTradingDB( _
                 ByVal connectionString As String, _
                 ByVal databaseType As DatabaseTypes) As TradingDB
 
+Dim failpoint As Long
+On Error GoTo Err
+
 Set CreateTradingDB = New TradingDB
 
 CreateTradingDB.initialise connectionString, databaseType
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "CreateTradingDB" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Function
 
 Public Function ContractFromInstrument( _

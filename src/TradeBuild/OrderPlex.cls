@@ -30,6 +30,8 @@ Implements TradeBuildSP.IOrderPlex
 ' Events
 '@================================================================================
 
+Event Change(ByRef ev As ChangeEvent)
+Event stateChange(ByRef ef As StateChangeEvent)
 Event ChangesCancelled()
 Event Clean()
 Event Dirty()
@@ -52,27 +54,12 @@ Event DrawdownThresholdExceeded()
 ' Constants
 '@================================================================================
 
+Private Const ProjectName                As String = "TradeBuild26"
+Private Const ModuleName                As String = "OrderPlex"
+
 '@================================================================================
 ' Enums
 '@================================================================================
-
-Private Enum ErrCodes
-    ErrNotImplemented = vbObjectError + 513
-    errCloseoutIncomplete
-    errPriceChangeNotAllowedForOrderType
-    errTriggerPriceChangeNotAllowedForOrderType
-    errOffsetChangeNotAllowedForOrderType
-    errCantChangeFilledOrder
-    errNoStopOrder
-    errNoTargetOrder
-    errCantChangeUnplacedOrder
-    errCantChangeSubmittedOrder
-    errInvalidActionReturnedFromStateEngine
-    errActionNotAllowedInThisState
-    errWidenStopNotAllowed
-    errCantChangeStopForOrderType
-    errCantChangeTargetForOrderType
-End Enum
 
 Public Enum OrderPlexStateCodes
     
@@ -92,9 +79,18 @@ Public Enum OrderPlexStateCodes
     ' orders and no net size - note that this may require a closeout
     ' order to be placed to negate any existing size.)
     OrderPlexStateClosingOut
-    
+        
     ' This state indicates that all orders have been completed.
     OrderPlexStateClosed
+
+    ' This state indicates that a cancellation notification for either
+    ' the stop order or the target order, when both exis, has been received.
+    ' We don't know whether the order was cancelled because the user/broker
+    ' cancelled it, or because the other order was filled. So in this
+    ' state we wait for the other order to be either cancelled or
+    ' filled or for a timeout to elapse.
+    OrderPlexStateAwaitingOtherOrderCancel
+    
 End Enum
 
 '@================================================================================
@@ -166,12 +162,7 @@ Private mNewTargetOffset As Long
 Private mNewTargetTriggerPrice As Double
 Private mNewTargetQuantity As Long
 
-Private mDummy As Boolean
-    ' if set, this is a dummy orderplex, which means that it will be handled by
-    ' the simulator like any other order, but its size will be considered 0. It
-    ' will not be submitted as a real order
-
-Private mSimulated As Boolean
+Private mIsSimulated As Boolean
 
 Private mValueFactor As Double
 Private mProfit As Currency
@@ -182,6 +173,7 @@ Private mLossNotificationThreshold As Currency
 Private mDrawdownNotificationThreshold As Currency
 
 Private mChangeListeners As Collection
+Private mStateChangeListeners As Collection
 
 Private mCreationTime As Date
 
@@ -194,6 +186,11 @@ Private mDirty As Boolean
 Private mOrders As Collection
 
 Private mOrderSubmitter As TradeBuildSP.IOrderSubmitter
+
+Private mPreventUnprotectedPosition As Boolean
+
+Private WithEvents mStateTimeoutTimer As IntervalTimer
+Attribute mStateTimeoutTimer.VB_VarHelpID = -1
 
 '@================================================================================
 ' Class Event Handlers
@@ -218,6 +215,7 @@ mIndexApplication = GOrderPlex.gNextApplicationIndex
 Set mOrders = New Collection
 
 Set mChangeListeners = New Collection
+Set mStateChangeListeners = New Collection
 
 Set mProfitListeners = New Collection
 
@@ -322,7 +320,7 @@ End If
 If cancelPriceHit Then
     gTB.notifyListeners _
                         "Cancel price hit (" & mTicker.TradePrice & ")", _
-                        IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
+                        IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
                         Me
     Cancel
     fireChange OrderPlexSelfCancelled
@@ -338,38 +336,12 @@ End Sub
 ' mCloseoutOrder Event Handlers
 '@================================================================================
 
-Private Sub mCloseoutOrder_StatusChanged()
-fireChange OrderPlexCloseoutOrderChanged
-Select Case mCloseoutOrder.status
-    Case OrderStatuses.OrderStatusFilled
-        gTB.notifyListeners _
-                            "Closeout order completed (" & _
-                            mCloseoutOrder.id & "): " & _
-                            gOrderActionToString(mCloseoutOrder.action) & " " & mCloseoutOrder.quantityFilled & " at " & _
-                            mCloseoutOrder.averagePrice, _
-                            IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
-                            Me
-                            
-        checkAllOrdersComplete
-        
-        If size <> 0 Then Err.Raise errCloseoutIncomplete, "OrderPlex::mCloseoutOrder_StatusChanged", "Closeout incomplete: size remaining is " & size
-        
-    Case OrderStatuses.OrderStatusPendingSubmit
-    Case OrderStatuses.OrderStatusCancelling
-    Case OrderStatuses.OrderStatusPreSubmitted
-    Case OrderStatuses.OrderStatusSubmitted
-    Case OrderStatuses.OrderStatusCancelled
-        gTB.notifyListeners _
-                            "Closeout order cancelled (" & _
-                            mCloseoutOrder.id & ")", _
-                            IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
-                            Me
-End Select
-End Sub
-
 Private Sub mCloseoutOrder_Fill(ByVal quantityFilled As Long, _
                                         ByVal fillPrice As Double)
 Dim thisSize As Long
+
+Dim failpoint As Long
+On Error GoTo Err
 
 calcProfitLoss fillPrice
 
@@ -381,12 +353,72 @@ gTB.notifyListeners _
                     mCloseoutOrder.id & "): " & _
                     gOrderActionToString(mCloseoutOrder.action) & " " & quantityFilled & " at " & _
                     fillPrice, _
-                    IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
+                    IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
                     Me
 
 mPositionManager.notifyExecution thisSize, fillPrice, mHandle, True
 
 RaiseEvent CloseoutOrderPartiallyFilled
+
+Exit Sub
+
+Err:
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    ModuleName & ":" & "mCloseoutOrder_Fill" & "." & failpoint & _
+                    IIf(Err.source <> "", vbCrLf & Err.source, "") & vbCrLf & _
+                    Err.Description
+End Sub
+
+Private Sub mCloseoutOrder_PropertyChanged()
+fireChange OrderPlexCloseoutOrderChanged
+End Sub
+
+Private Sub mCloseoutOrder_StatusChanged()
+Dim failpoint As Long
+On Error GoTo Err
+
+fireChange OrderPlexCloseoutOrderChanged
+Select Case mCloseoutOrder.status
+    Case OrderStatuses.OrderStatusFilled
+        gTB.notifyListeners _
+                            "Closeout order completed (" & _
+                            mCloseoutOrder.id & "): " & _
+                            gOrderActionToString(mCloseoutOrder.action) & " " & mCloseoutOrder.quantityFilled & " at " & _
+                            mCloseoutOrder.averagePrice, _
+                            IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
+                            Me
+                            
+        checkAllOrdersComplete
+        
+        If size <> 0 Then Err.Raise ErrorCodes.ErrIllegalStateException, "OrderPlex::mCloseoutOrder_StatusChanged", "Closeout incomplete: size remaining is " & size
+        
+    Case OrderStatuses.OrderStatusPendingSubmit
+    Case OrderStatuses.OrderStatusCancelling
+    Case OrderStatuses.OrderStatusPreSubmitted
+    Case OrderStatuses.OrderStatusSubmitted
+    Case OrderStatuses.OrderStatusCancelled
+        gTB.notifyListeners _
+                            "Closeout order cancelled (" & _
+                            mCloseoutOrder.id & ")", _
+                            IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
+                            Me
+    Case OrderStatuses.OrderStatusRejected
+        gTB.notifyListeners _
+                            "Closeout order rejected (" & _
+                            mCloseoutOrder.id & ")", _
+                            IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
+                            Me
+End Select
+
+Exit Sub
+
+Err:
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    ModuleName & ":" & "mCloseoutOrder_StatusChanged" & "." & failpoint & _
+                    IIf(Err.source <> "", vbCrLf & Err.source, "") & vbCrLf & _
+                    Err.Description
 End Sub
 
 '@================================================================================
@@ -401,6 +433,9 @@ Private Sub mEntryOrder_Fill(ByVal quantityFilled As Long, _
                                         ByVal fillPrice As Double)
 Dim thisSize As Long
 Dim risk As Currency
+
+Dim failpoint As Long
+On Error GoTo Err
 
 fireChange OrderPlexEntryOrderChanged
 
@@ -417,7 +452,7 @@ gTB.notifyListeners _
                     mEntryOrder.id & "): " & _
                     gOrderActionToString(mEntryOrder.action) & " " & quantityFilled & " at " & _
                     fillPrice, _
-                    IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
+                    IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
                     Me
 
 If mHandle < 0 And Not mStopOrder Is Nothing Then
@@ -464,10 +499,26 @@ End If
 
 RaiseEvent EntryOrderPartiallyFilled
 
-handleStimulus STIM_ENTRY_ORDER_FILL
+handleStimulus StateTransitionStimuli.StimEntryOrderFill
+
+Exit Sub
+
+Err:
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    ModuleName & ":" & "mEntryOrder_Fill" & "." & failpoint & _
+                    IIf(Err.source <> "", vbCrLf & Err.source, "") & vbCrLf & _
+                    Err.Description
+End Sub
+
+Private Sub mEntryOrder_PropertyChanged()
+fireChange OrderPlexEntryOrderChanged
 End Sub
 
 Private Sub mEntryOrder_StatusChanged()
+Dim failpoint As Long
+On Error GoTo Err
+
 fireChange OrderPlexEntryOrderChanged
 Select Case mEntryOrder.status
     Case OrderStatuses.OrderStatusFilled
@@ -478,7 +529,7 @@ Select Case mEntryOrder.status
                             mEntryOrder.id & "): " & _
                             gOrderActionToString(mEntryOrder.action) & " " & mEntryOrder.quantityFilled & " at " & _
                             mEntryOrder.averagePrice, _
-                            IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
+                            IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
                             Me
         
         RaiseEvent EntryOrderFilled
@@ -499,11 +550,37 @@ Select Case mEntryOrder.status
         gTB.notifyListeners _
                             "Entry order cancelled (" & _
                             mEntryOrder.id & ") ", _
-                            IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
+                            IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
                             Me
-        handleStimulus STIM_ENTRY_ORDER_CANCELLED
+        handleStimulus StateTransitionStimuli.StimEntryOrderCancelled
+        checkAllOrdersComplete
+    Case OrderStatuses.OrderStatusRejected
+        mEntryOrderFinished = True
+        gTB.notifyListeners _
+                            "Entry order rejected (" & _
+                            mEntryOrder.id & ") ", _
+                            IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
+                            Me
+        handleStimulus StateTransitionStimuli.StimEntryOrderCancelled
         checkAllOrdersComplete
 End Select
+
+Exit Sub
+
+Err:
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    ModuleName & ":" & "mEntryOrder_StatusChanged" & "." & failpoint & _
+                    IIf(Err.source <> "", vbCrLf & Err.source, "") & vbCrLf & _
+                    Err.Description
+End Sub
+
+'@================================================================================
+' mStateTimeoutTimer Event Handlers
+'@================================================================================
+
+Private Sub mStateTimeoutTimer_TimerExpired()
+handleStimulus StateTransitionStimuli.StimTimeoutExpired
 End Sub
 
 '@================================================================================
@@ -518,6 +595,9 @@ Private Sub mStopOrder_Fill(ByVal quantityFilled As Long, _
                                         ByVal fillPrice As Double)
 Dim thisSize As Long
 
+Dim failpoint As Long
+On Error GoTo Err
+
 calcProfitLoss fillPrice
 
 fireChange OrderPlexStopOrderChanged
@@ -529,7 +609,7 @@ gTB.notifyListeners _
                         mStopOrder.id & "): " & _
                         gOrderActionToString(mStopOrder.action) & " " & quantityFilled & " at " & _
                         fillPrice, _
-                        IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
+                        IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
                         Me
 
 mPositionManager.notifyExecution thisSize, fillPrice, mHandle, False
@@ -543,9 +623,25 @@ If Not mTargetOrder Is Nothing Then
 End If
 
 RaiseEvent StopOrderPartiallyFilled
+
+Exit Sub
+
+Err:
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    ModuleName & ":" & "mStopOrder_Fill" & "." & failpoint & _
+                    IIf(Err.source <> "", vbCrLf & Err.source, "") & vbCrLf & _
+                    Err.Description
+End Sub
+
+Private Sub mStopOrder_PropertyChanged()
+fireChange OrderPlexStopOrderChanged
 End Sub
 
 Private Sub mStopOrder_StatusChanged()
+Dim failpoint As Long
+On Error GoTo Err
+
 fireChange OrderPlexStopOrderChanged
 Select Case mStopOrder.status
     Case OrderStatuses.OrderStatusFilled
@@ -554,7 +650,7 @@ Select Case mStopOrder.status
                             mStopOrder.id & "): " & _
                             gOrderActionToString(mStopOrder.action) & " " & mStopOrder.quantityFilled & " at " & _
                             mStopOrder.averagePrice, _
-                            IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
+                            IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
                             Me
         
         RaiseEvent StopOrderFilled
@@ -571,12 +667,31 @@ Select Case mStopOrder.status
         gTB.notifyListeners _
                             "Stop order cancelled (" & _
                             mStopOrder.id & ")", _
-                            IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
+                            IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
                             Me
-        mStateEngine.setConditions COND_STOP_ORDER_CANCELLED
-        handleStimulus STIM_STOP_ORDER_CANCELLED
+        mStateEngine.setConditions Conditions.CondStopOrderCancelled
+        handleStimulus StateTransitionStimuli.StimStopOrderCancelled
+        checkAllOrdersComplete
+    Case OrderStatuses.OrderStatusRejected
+        mStopOrderFinished = True
+        gTB.notifyListeners _
+                            "Stop order rejected (" & _
+                            mStopOrder.id & ")", _
+                            IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
+                            Me
+        mStateEngine.setConditions Conditions.CondStopOrderCancelled
+        handleStimulus StateTransitionStimuli.StimStopOrderCancelled
         checkAllOrdersComplete
 End Select
+
+Exit Sub
+
+Err:
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    ModuleName & ":" & "mStopOrder_StatusChanged" & "." & failpoint & _
+                    IIf(Err.source <> "", vbCrLf & Err.source, "") & vbCrLf & _
+                    Err.Description
 End Sub
 
 '@================================================================================
@@ -591,6 +706,9 @@ Private Sub mTargetOrder_Fill(ByVal quantityFilled As Long, _
                                         ByVal fillPrice As Double)
 Dim thisSize As Long
 
+Dim failpoint As Long
+On Error GoTo Err
+
 calcProfitLoss fillPrice
 
 fireChange OrderPlexTargetOrderChanged
@@ -601,7 +719,7 @@ gTB.notifyListeners _
                         mTargetOrder.id & "): " & _
                         gOrderActionToString(mTargetOrder.action) & " " & quantityFilled & " at " & _
                         fillPrice, _
-                        IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
+                        IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
                         Me
 
 mPositionManager.notifyExecution thisSize, fillPrice, mHandle, False
@@ -615,9 +733,25 @@ If Not mStopOrder Is Nothing Then
 End If
 
 RaiseEvent TargetOrderPartiallyFilled
+
+Exit Sub
+
+Err:
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    ModuleName & ":" & "mTargetOrder_Fill" & "." & failpoint & _
+                    IIf(Err.source <> "", vbCrLf & Err.source, "") & vbCrLf & _
+                    Err.Description
+End Sub
+
+Private Sub mTargetOrder_PropertyChanged()
+fireChange OrderPlexTargetOrderChanged
 End Sub
 
 Private Sub mTargetOrder_StatusChanged()
+Dim failpoint As Long
+On Error GoTo Err
+
 fireChange OrderPlexTargetOrderChanged
 Select Case mTargetOrder.status
     Case OrderStatuses.OrderStatusFilled
@@ -626,7 +760,7 @@ Select Case mTargetOrder.status
                             mTargetOrder.id & "): " & _
                             gOrderActionToString(mTargetOrder.action) & " " & mTargetOrder.quantityFilled & " at " & _
                             mTargetOrder.averagePrice, _
-                            IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
+                            IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
                             Me
         
         RaiseEvent TargetOrderFilled
@@ -634,7 +768,6 @@ Select Case mTargetOrder.status
         mTargetOrderFinished = True
         checkAllOrdersComplete
     
-    Case OrderStatuses.OrderStatusPendingSubmit
     Case OrderStatuses.OrderStatusCancelling
     Case OrderStatuses.OrderStatusPendingSubmit
     Case OrderStatuses.OrderStatusSubmitted
@@ -643,13 +776,32 @@ Select Case mTargetOrder.status
         gTB.notifyListeners _
                             "Target order cancelled (" & _
                             mTargetOrder.id & ")", _
-                            IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
+                            IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
                             Me
-        mStateEngine.setConditions COND_TARGET_ORDER_CANCELLED
-        handleStimulus STIM_TARGET_ORDER_CANCELLED
+        mStateEngine.setConditions Conditions.CondTargetOrderCancelled
+        handleStimulus StateTransitionStimuli.StimTargetOrderCancelled
+        checkAllOrdersComplete
+    Case OrderStatuses.OrderStatusRejected
+        mTargetOrderFinished = True
+        gTB.notifyListeners _
+                            "Target order rejected (" & _
+                            mTargetOrder.id & ")", _
+                            IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
+                            Me
+        mStateEngine.setConditions Conditions.CondTargetOrderCancelled
+        handleStimulus StateTransitionStimuli.StimTargetOrderCancelled
         checkAllOrdersComplete
     
 End Select
+
+Exit Sub
+
+Err:
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    ModuleName & ":" & "mTargetOrder_StatusChanged" & "." & failpoint & _
+                    IIf(Err.source <> "", vbCrLf & Err.source, "") & vbCrLf & _
+                    Err.Description
 End Sub
 
 '@================================================================================
@@ -657,14 +809,26 @@ End Sub
 '@================================================================================
 
 Private Sub mTimerEntry_Expired()
+Dim failpoint As Long
+On Error GoTo Err
+
 gTB.notifyListeners _
                     "Cancel time expired (" & mTicker.TradePrice & ")", _
-                    IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
+                    IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
                     Me
 Cancel
 fireChange OrderPlexSelfCancelled
 RaiseEvent SelfCancelled
 cancelAfter = 0
+
+Exit Sub
+
+Err:
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    ModuleName & ":" & "mTimerEntry_Expired" & "." & failpoint & _
+                    IIf(Err.source <> "", vbCrLf & Err.source, "") & vbCrLf & _
+                    Err.Description
 End Sub
 
 '@================================================================================
@@ -712,14 +876,6 @@ Public Property Let drawdownNotificationThreshold(ByVal value As Currency)
 mDrawdownNotificationThreshold = value
 End Property
 
-Friend Property Let dummy(ByVal value As Boolean)
-mDummy = value
-End Property
-
-Public Property Get dummy() As Boolean
-dummy = mDummy
-End Property
-
 Public Property Get entryOrder() As order
 Set entryOrder = mEntryOrder
 End Property
@@ -744,6 +900,18 @@ Public Property Get indexApplication() As Long
 indexApplication = mIndexApplication
 End Property
 
+Public Property Get IsRiskUnlimited() As Boolean
+IsRiskUnlimited = (risk = MaxCurrency)
+End Property
+
+Friend Property Let IsSimulated(ByVal value As Boolean)
+mIsSimulated = value
+End Property
+
+Public Property Get IsSimulated() As Boolean
+IsSimulated = mIsSimulated
+End Property
+
 Friend Property Let key(ByVal value As String)
 mKey = value
 End Property
@@ -766,12 +934,12 @@ Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Property
 Case OrderPlexStateCodes.OrderPlexStateSubmitted
 Case Else
-    Err.Raise errActionNotAllowedInThisState, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "OrderPlex::(let)newEntryPrice", _
                 "Action not allowed in state " & mStateEngine.State
 End Select
 
-If mEntryOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise errCantChangeFilledOrder, _
+If mEntryOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                                 "OrderPlex::(let)newEntryPrice", _
                                                 "Can't change entry price - order " & entryOrder.id & " already filled"
 
@@ -781,7 +949,7 @@ Select Case mEntryOrder.orderType
         OrderTypes.OrderTypeAutoStop, _
         OrderTypes.OrderTypeAutoLimit, _
         OrderTypes.OrderTypeStop
-        Err.Raise errPriceChangeNotAllowedForOrderType, _
+        Err.Raise ErrorCodes.ErrIllegalStateException, _
                     "OrderPlex::(let)newEntryPrice", _
                     "Can't change entry price for order type " & gOrderTypeToString(mEntryOrder.orderType)
 End Select
@@ -800,12 +968,12 @@ Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Property
 Case OrderPlexStateCodes.OrderPlexStateSubmitted
 Case Else
-    Err.Raise errActionNotAllowedInThisState, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "OrderPlex::(let)newEntryTriggerPrice", _
                 "Action not allowed in state " & mStateEngine.State
 End Select
 
-If mEntryOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise errCantChangeFilledOrder, _
+If mEntryOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                                 "OrderPlex::(let)newEntryTriggerPrice", _
                                                 "Can't change entry trigger price - order " & entryOrder.id & " already filled"
 
@@ -814,7 +982,7 @@ Select Case mEntryOrder.orderType
         OrderTypes.OrderTypeLimit, _
         OrderTypes.OrderTypeTrail, _
         OrderTypes.OrderTypeAutoLimit
-        Err.Raise errTriggerPriceChangeNotAllowedForOrderType, _
+        Err.Raise ErrorCodes.ErrIllegalStateException, _
                     "OrderPlex::(let)newEntryTriggerPrice", _
                     "Can't change trigger price for order type " & gOrderTypeToString(mEntryOrder.orderType)
 End Select
@@ -891,12 +1059,12 @@ Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Property
 Case OrderPlexStateCodes.OrderPlexStateSubmitted
 Case Else
-    Err.Raise errActionNotAllowedInThisState, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "OrderPlex::(let)newQuantity", _
                 "Action not allowed in state " & mStateEngine.State
 End Select
 
-If mEntryOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise errCantChangeFilledOrder, _
+If mEntryOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                                 "OrderPlex::(let)newQuantity", _
                                                 "Can't change quantity - order " & entryOrder.id & " already filled"
 
@@ -912,22 +1080,22 @@ Public Property Let newStopOffset(ByVal value As Long)
 Select Case mStateEngine.State
 Case OrderPlexStateCodes.OrderPlexStateSubmitted
 Case Else
-    Err.Raise errActionNotAllowedInThisState, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "OrderPlex::(let)newStopOffset", _
                 "Action not allowed in state " & mStateEngine.State
 End Select
 
-If mStopOrder Is Nothing Then Err.Raise errNoStopOrder, _
+If mStopOrder Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                         "OrderPlex::(let)newStopOffset", _
                                         "No stop order exists"
 
 If Not mStopOrder.orderType = OrderTypes.OrderTypeAutoStop Then
-        Err.Raise errOffsetChangeNotAllowedForOrderType, _
+        Err.Raise ErrorCodes.ErrIllegalStateException, _
                     "OrderPlex::(let)newStopOffset", _
                     "Can't change offset for order type " & gOrderTypeToString(mEntryOrder.orderType)
 End If
 
-If mStopOrder.status <> OrderStatuses.OrderStatusCreated Then Err.Raise errCantChangeUnplacedOrder, _
+If mStopOrder.status <> OrderStatuses.OrderStatusCreated Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                         "OrderPlex::(let)newStopOffset", _
                                         "Can't change stop offset - order " & mStopOrder.id & " already placed"
 
@@ -945,21 +1113,21 @@ Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Property
 Case OrderPlexStateCodes.OrderPlexStateSubmitted
 Case Else
-    Err.Raise errActionNotAllowedInThisState, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "OrderPlex::(let)newStopPrice", _
                 "Action not allowed in state " & mStateEngine.State
 End Select
 
-If mStopOrder Is Nothing Then Err.Raise errNoStopOrder, _
+If mStopOrder Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                         "OrderPlex::(let)newStopPrice", _
                                         "No stop order exists"
 
 Select Case mStopOrder.orderType
 Case OrderTypes.OrderTypeStopLimit
 Case Else
-    Err.Raise errTriggerPriceChangeNotAllowedForOrderType, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "OrderPlex::(let)newStopPrice", _
-                "Can't change trigger price for order type " & gOrderTypeToString(mEntryOrder.orderType)
+                "Can't change price for order type " & gOrderTypeToString(mStopOrder.orderType)
 End Select
 
 If value <> mStopOrder.limitPrice Then
@@ -976,12 +1144,12 @@ Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Property
 Case OrderPlexStateCodes.OrderPlexStateSubmitted
 Case Else
-    Err.Raise errActionNotAllowedInThisState, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "OrderPlex::(let)newStopQuantity", _
                 "Action not allowed in state " & mStateEngine.State
 End Select
 
-If mStopOrder Is Nothing Then Err.Raise errNoStopOrder, _
+If mStopOrder Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                         "OrderPlex::(let)newStopQuantity", _
                                         "No stop order exists"
 
@@ -999,12 +1167,12 @@ Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Property
 Case OrderPlexStateCodes.OrderPlexStateSubmitted
 Case Else
-    Err.Raise errActionNotAllowedInThisState, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "OrderPlex::(let)newStopTriggerPrice", _
                 "Action not allowed in state " & mStateEngine.State
 End Select
 
-If mStopOrder Is Nothing Then Err.Raise errNoStopOrder, _
+If mStopOrder Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                         "OrderPlex::(let)newStopTriggerPrice", _
                                         "No stop order exists"
 
@@ -1012,9 +1180,9 @@ Select Case mStopOrder.orderType
     Case OrderTypes.OrderTypeStop, _
         OrderTypes.OrderTypeStopLimit
     Case Else
-        Err.Raise errTriggerPriceChangeNotAllowedForOrderType, _
+        Err.Raise ErrorCodes.ErrIllegalStateException, _
                     "OrderPlex::(let)newStopTriggerPrice", _
-                    "Can't change trigger price for order type " & gOrderTypeToString(mEntryOrder.orderType)
+                    "Can't change trigger price for order type " & gOrderTypeToString(mStopOrder.orderType)
 End Select
 
 If value <> mStopOrder.triggerPrice Then
@@ -1031,12 +1199,12 @@ Case OrderPlexStateCodes.OrderPlexStateSubmitted
 Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Property
 Case Else
-    Err.Raise errActionNotAllowedInThisState, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "OrderPlex::(let)newTargetPrice", _
                 "Action not allowed in state " & mStateEngine.State
 End Select
 
-If mTargetOrder Is Nothing Then Err.Raise errNoTargetOrder, _
+If mTargetOrder Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                         "OrderPlex::(let)newTargetPrice", _
                                         "No target order exists"
 
@@ -1044,9 +1212,9 @@ Select Case mTargetOrder.orderType
 Case OrderTypes.OrderTypeLimitIfTouched, _
     OrderTypes.OrderTypeLimit
 Case Else
-    Err.Raise errTriggerPriceChangeNotAllowedForOrderType, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "OrderPlex::(let)newTargetPrice", _
-                "Can't change price for order type " & gOrderTypeToString(mEntryOrder.orderType)
+                "Can't change price for order type " & gOrderTypeToString(mTargetOrder.orderType)
 End Select
 
 If value <> mTargetOrder.limitPrice Then
@@ -1061,24 +1229,24 @@ Public Property Let newTargetOffset(ByVal value As Long)
 Select Case mStateEngine.State
 Case OrderPlexStateCodes.OrderPlexStateSubmitted
 Case Else
-    Err.Raise errActionNotAllowedInThisState, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "OrderPlex::(let)newTargetOffset", _
                 "Action not allowed in state " & mStateEngine.State
 End Select
 
-If mTargetOrder Is Nothing Then Err.Raise errNoTargetOrder, _
+If mTargetOrder Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                         "OrderPlex::(let)newTargetOffset", _
                                         "No target order exists"
 
 If Not mTargetOrder.orderType = OrderTypes.OrderTypeAutoLimit Then
-        Err.Raise errOffsetChangeNotAllowedForOrderType, _
+        Err.Raise ErrorCodes.ErrIllegalStateException, _
                     "OrderPlex::(let)newTargetOffset", _
-                    "Can't change offset for order type " & gOrderTypeToString(mEntryOrder.orderType)
+                    "Can't change offset for order type " & gOrderTypeToString(mTargetOrder.orderType)
 End If
 
-If mTargetOrder.status <> OrderStatuses.OrderStatusCreated Then Err.Raise errCantChangeUnplacedOrder, _
+If mTargetOrder.status <> OrderStatuses.OrderStatusCreated Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                         "OrderPlex::(let)newTargetOffset", _
-                                        "Can't change target offset - order " & targetOrder.id & " already placed"
+                                        "Can't change target offset - order " & mTargetOrder.id & " already placed"
 
 If value <> mTargetOrder.offset Then
     mNewTargetOffset = value
@@ -1094,12 +1262,12 @@ Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Property
 Case OrderPlexStateCodes.OrderPlexStateSubmitted
 Case Else
-    Err.Raise errActionNotAllowedInThisState, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "OrderPlex::(let)newTargetQuantity", _
                 "Action not allowed in state " & mStateEngine.State
 End Select
 
-If mStopOrder Is Nothing Then Err.Raise errNoTargetOrder, _
+If mStopOrder Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                         "OrderPlex::(let)newTargetQuantity", _
                                         "No target order exists"
 
@@ -1117,12 +1285,12 @@ Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Property
 Case OrderPlexStateCodes.OrderPlexStateSubmitted
 Case Else
-    Err.Raise errActionNotAllowedInThisState, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "OrderPlex::(let)newTargetTriggerPrice", _
                 "Action not allowed in state " & mStateEngine.State
 End Select
 
-If mTargetOrder Is Nothing Then Err.Raise errNoStopOrder, _
+If mTargetOrder Is Nothing Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                         "OrderPlex::(let)newTargetTriggerPrice", _
                                         "No target order exists"
 
@@ -1130,9 +1298,9 @@ Select Case mTargetOrder.orderType
 Case OrderTypes.OrderTypeLimitIfTouched, _
     OrderTypes.OrderTypeMarketIfTouched
 Case Else
-    Err.Raise errTriggerPriceChangeNotAllowedForOrderType, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "OrderPlex::(let)newTargetTriggerPrice", _
-                "Can't change trigger price for order type " & gOrderTypeToString(mEntryOrder.orderType)
+                "Can't change trigger price for order type " & gOrderTypeToString(mTargetOrder.orderType)
 End Select
 
 If value <> mTargetOrder.triggerPrice Then
@@ -1146,11 +1314,15 @@ End Property
 Public Property Get pendingSize() As Long
 If mEntryOrder Is Nothing Then pendingSize = 0: Exit Property
 If mStateEngine.State = OrderPlexStateCodes.OrderPlexStateClosed Then pendingSize = 0: Exit Property
-pendingSize = IIf(longPosition, mEntryOrder.quantity, -mEntryOrder.quantity)
+pendingSize = IIf(longPosition, mEntryOrder.quantityRemaining, -mEntryOrder.quantityRemaining)
 End Property
 
 Public Property Get order(ByVal index As Long) As order
 Set order = mOrders(index)
+End Property
+
+Public Property Get OrderContext() As OrderContext
+Set OrderContext = mOrderContext
 End Property
 
 Friend Property Let OrderContext(ByVal value As OrderContext)
@@ -1166,8 +1338,34 @@ Public Property Get numberOfOrders() As Long
 numberOfOrders = mOrders.Count
 End Property
 
+Public Property Get PositionManager() As PositionManager
+Set PositionManager = mPositionManager
+End Property
+
 Friend Property Let PositionManager(ByVal value As PositionManager)
 Set mPositionManager = value
+End Property
+
+Public Property Let PreventUnprotectedPosition( _
+                ByVal value As Boolean)
+If State <> OrderPlexStateCreated And _
+    mStopOrder Is Nothing _
+Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & "PreventUnprotectedPosition", _
+            "No stop loss order exists"
+End If
+
+mPreventUnprotectedPosition = value
+If mPreventUnprotectedPosition Then
+    mStateEngine.setConditions Conditions.CondProtected
+Else
+    mStateEngine.clearConditions Conditions.CondProtected
+End If
+End Property
+
+Public Property Get PreventUnprotectedPosition() As Boolean
+PreventUnprotectedPosition = mPreventUnprotectedPosition
 End Property
 
 Public Property Let profitNotificationThreshold(ByVal value As Currency)
@@ -1179,7 +1377,10 @@ Dim stopTotalPrice As Double
 Dim pendingTotalPrice As Double
 Dim filledTotalPrice As Double
 
-If mStopOrder Is Nothing Then Exit Property
+If mStopOrder Is Nothing Then
+    risk = MaxCurrency
+    Exit Property
+End If
 
 If mStateEngine.State = OrderPlexStateCodes.OrderPlexStateClosed Then Exit Property
 
@@ -1191,12 +1392,36 @@ If mStopOrder.status = OrderStatuses.OrderStatusFilled Then Exit Property
 filledTotalPrice = mEntryOrder.quantityFilled * mEntryOrder.averagePrice
 Select Case entryOrder.orderType
     Case OrderTypes.OrderTypeMarket
-        pendingTotalPrice = mEntryOrder.quantity * _
+        pendingTotalPrice = mEntryOrder.quantityRemaining * _
                 IIf(longPosition, mTicker.AskPrice, mTicker.BidPrice)
-    Case OrderTypes.OrderTypeLimit, OrderTypes.OrderTypeStopLimit
-        pendingTotalPrice = mEntryOrder.quantity * mEntryOrder.limitPrice
+    Case OrderTypes.OrderTypeLimit, _
+            OrderTypes.OrderTypeStopLimit, _
+            OrderTypeLimitIfTouched, _
+            OrderTypeMarketIfTouched
+        pendingTotalPrice = mEntryOrder.quantityRemaining * mEntryOrder.limitPrice
     Case OrderTypes.OrderTypeStop
-        pendingTotalPrice = mEntryOrder.quantity * mEntryOrder.triggerPrice
+        pendingTotalPrice = mEntryOrder.quantityRemaining * mEntryOrder.triggerPrice
+    
+    
+' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+' need to work out what to do with the rest of these
+' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    Case OrderTypeMarketOnClose
+    Case OrderTypeLimitOnClose
+    Case OrderTypePeggedToMarket
+    Case OrderTypeRelative
+    Case OrderTypeVWAP
+    Case OrderTypeMarketToLimit
+    Case OrderTypeQuote
+    Case OrderTypeAutoStop
+    Case OrderTypeAutoLimit
+    Case OrderTypeAdjust
+    Case OrderTypeAlert
+    Case OrderTypeTrailLimit
+    Case OrderTypeMarketWithProtection
+    Case OrderTypeMarketOnOpen
+    Case OrderTypeLimitOnOpen
+    Case OrderTypePeggedToPrimary
 End Select
 stopTotalPrice = mStopOrder.triggerPrice * _
                         (mEntryOrder.quantity + mEntryOrder.quantityFilled)
@@ -1211,14 +1436,6 @@ End Property
 Friend Property Let scalingStrategy( _
                 ByVal value As PositionManagementStrategy)
 Set mScalingStrategy = value
-End Property
-
-Friend Property Let simulated(ByVal value As Boolean)
-mSimulated = value
-End Property
-
-Public Property Get simulated() As Boolean
-simulated = mSimulated
 End Property
 
 Public Property Get size() As Long
@@ -1292,6 +1509,10 @@ ev.changeType = OrderPlexChangeTypes.OrderPlexCreated
 value.Change ev
 End Sub
 
+Public Sub addStateChangeListener(ByVal value As StateChangeListener)
+mStateChangeListeners.add value
+End Sub
+
 Public Sub addProfitListener(ByVal value As ProfitListener)
 mProfitListeners.add value
 End Sub
@@ -1302,7 +1523,7 @@ gTB.notifyListeners _
                             "Adjust stop: (" & mTicker.TradePrice & ") " & _
                             " stop " & stopPrice & _
                             ", quantity " & quantity, _
-                            IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
+                            IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
                             Me
 
 newStopTriggerPrice = stopPrice
@@ -1317,7 +1538,7 @@ gTB.notifyListeners _
                             "Adjust target: (" & mTicker.TradePrice & ") " & _
                             " target " & targetPrice & _
                             ", quantity " & quantity, _
-                            IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
+                            IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
                             Me
 
 newTargetPrice = targetPrice
@@ -1329,11 +1550,11 @@ End Sub
 Public Function Cancel(Optional ByVal evenIfFilled As Boolean = False) As Boolean
 
 If evenIfFilled Then
-    mStateEngine.clearConditions COND_NO_FILL_CANCELLATION
-    Cancel = doActions(mStateEngine.notifyStimulus(STIM_CANCEL_EVEN_IF_FILL))
+    mStateEngine.clearConditions Conditions.CondNoFillCancellation
+    Cancel = handleStimulus(StateTransitionStimuli.StimCancelEvenIfFill)
 Else
-    mStateEngine.setConditions COND_NO_FILL_CANCELLATION
-    Cancel = doActions(mStateEngine.notifyStimulus(STIM_CANCEL_IF_NO_FILL))
+    mStateEngine.setConditions Conditions.CondNoFillCancellation
+    Cancel = handleStimulus(StateTransitionStimuli.StimCancelIfNoFill)
 End If
 End Function
 
@@ -1391,17 +1612,17 @@ End Sub
 Public Sub CloseOut(ByVal method As String)
 
 If UCase(method) <> "MKT" Then
-    Err.Raise ErrNotImplemented, "OrderPlex::closeout", "method " & method & " not implemented"
+    Err.Raise ErrorCodes.ErrUnsupportedOperationException, "OrderPlex::closeout", "method " & method & " not implemented"
 End If
 
 gTB.notifyListeners _
                     "Closing out: (" & mTicker.TradePrice & ") " & _
                     "size " & size & _
                     ", pending size " & pendingSize, _
-                    IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
+                    IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
                     Me
 
-handleStimulus STIM_CLOSEOUT
+handleStimulus StateTransitionStimuli.StimCloseout
 
 End Sub
 
@@ -1431,8 +1652,8 @@ If Not mStopOrder Is Nothing Then _
 Set mStopOrder = mOrderContext.newOrder
 
 Set createStopOrder = mStopOrder
-mStateEngine.setConditions COND_STOP_ORDER_EXISTS
-mStateEngine.clearConditions COND_STOP_ORDER_CANCELLED
+mStateEngine.setConditions Conditions.CondStopOrderExists
+mStateEngine.clearConditions Conditions.CondStopOrderCancelled
 
 If Not mEntryOrder Is Nothing Then
     mOrders.add mStopOrder, , , 1
@@ -1452,8 +1673,8 @@ If Not mTargetOrder Is Nothing Then _
 Set mTargetOrder = mOrderContext.newOrder
 
 Set createTargetOrder = mTargetOrder
-mStateEngine.setConditions COND_TARGET_ORDER_EXISTS
-mStateEngine.clearConditions COND_TARGET_ORDER_CANCELLED
+mStateEngine.setConditions Conditions.CondTargetOrderExists
+mStateEngine.clearConditions Conditions.CondTargetOrderCancelled
 
 If mEntryOrder Is Nothing And _
     mStopOrder Is Nothing _
@@ -1469,9 +1690,15 @@ End If
 End Function
 
 Friend Sub execute(Optional ByVal cancelPrice As Double = 0)
+If mPreventUnprotectedPosition And mStopOrder Is Nothing Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & "execute", _
+            "No stop loss order exists"
+End If
+
 mCancelPrice = cancelPrice
 fireChange OrderPlexChangeTypes.OrderPlexCreated
-handleStimulus STIM_EXECUTE
+handleStimulus StateTransitionStimuli.StimExecute
 End Sub
 
 Friend Sub finish()
@@ -1495,6 +1722,13 @@ For i = mChangeListeners.Count To 1 Step -1
 Next
 End Sub
 
+Public Sub removeStateChangeListener(ByVal value As StateChangeListener)
+Dim i As Long
+For i = mStateChangeListeners.Count To 1 Step -1
+    If mStateChangeListeners.item(i) Is value Then mStateChangeListeners.remove i
+Next
+End Sub
+
 Public Sub removeProfitListener(ByVal value As ProfitListener)
 Dim i As Long
 For i = mProfitListeners.Count To 1 Step -1
@@ -1513,7 +1747,7 @@ Case OrderPlexStateCodes.OrderPlexStateSubmitted
 Case OrderPlexStateCodes.OrderPlexStateCancelling
     Exit Sub
 Case Else
-    Err.Raise errActionNotAllowedInThisState, _
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "OrderPlex::update", _
                 "Action not allowed in state " & mStateEngine.State
 End Select
@@ -1647,10 +1881,14 @@ If mOrderSubmitter.cancelOrderPlex(Me) Then
                     entryOrder.id & _
                     IIf(stopOrderID <> "", ", " & stopOrderID, ", ") & _
                     IIf(targetOrderID <> "", ", " & targetOrderID, ", "), _
-                    IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
+                    IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
                     Me
 End If
 
+End Function
+
+Private Function cancelStateTimeout()
+mStateTimeoutTimer.StopTimer
 End Function
 
 Private Function cancelStopOrder()
@@ -1665,7 +1903,7 @@ Case Else
     gTB.notifyListeners _
                 "Cancel order: (" & mTicker.TradePrice & ") " & _
                 mStopOrder.id, _
-                IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
+                IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
                 Me
     mOrderSubmitter.cancelStopOrder Me
 End Select
@@ -1683,7 +1921,7 @@ Case Else
     gTB.notifyListeners _
                 "Cancel order: (" & mTicker.TradePrice & ") " & _
                 mTargetOrder.id, _
-                IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
+                IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
                 Me
     mOrderSubmitter.cancelTargetOrder Me
 End Select
@@ -1695,7 +1933,7 @@ If mEntryOrderFinished And _
     mStopOrderFinished And _
     mTargetOrderFinished _
 Then
-    handleStimulus STIM_ALL_ORDERS_COMPLETE
+    handleStimulus StateTransitionStimuli.StimAllOrdersComplete
 End If
 
 End Sub
@@ -1709,7 +1947,7 @@ If Not mEntryOrder Is Nothing Then
     If mNewQuantity >= 0 And _
         mNewQuantity <> mEntryOrder.quantity _
     Then
-        If mEntryOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise errCantChangeFilledOrder, _
+        If mEntryOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                                         "OrderPlex::update", _
                                                         "Can't change size - order " & entryOrder.id & " already filled"
         mEntryOrder.quantity = mNewQuantity
@@ -1720,7 +1958,7 @@ If Not mEntryOrder Is Nothing Then
     If mNewEntryPrice >= 0 And _
         mNewEntryPrice <> mEntryOrder.limitPrice _
     Then
-        If mEntryOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise errCantChangeFilledOrder, _
+        If mEntryOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                                         "OrderPlex::update", _
                                                         "Can't change price - order " & mEntryOrder.id & " already filled"
         mEntryOrder.limitPrice = mNewEntryPrice
@@ -1731,7 +1969,7 @@ If Not mEntryOrder Is Nothing Then
     If mNewEntryTriggerPrice >= 0 And _
         mNewEntryTriggerPrice <> mEntryOrder.triggerPrice _
     Then
-        If mEntryOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise errCantChangeFilledOrder, _
+        If mEntryOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                                         "OrderPlex::update", _
                                                         "Can't change trigger price - order " & mEntryOrder.id & " already filled"
         mEntryOrder.triggerPrice = mNewEntryTriggerPrice
@@ -1745,10 +1983,10 @@ If Not mStopOrder Is Nothing Then
     If mNewStopPrice >= 0 And _
         mNewStopPrice <> mStopOrder.limitPrice _
     Then
-        If mStopOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise errCantChangeFilledOrder, _
+        If mStopOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                                         "OrderPlex::update", _
                                                         "Can't change trigger price - order " & mStopOrder.id & " already filled"
-        If mStopOrder.status = OrderStatuses.OrderStatusSubmitted Then Err.Raise errCantChangeSubmittedOrder, _
+        If mStopOrder.status = OrderStatuses.OrderStatusSubmitted Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                                         "OrderPlex::update", _
                                                         "Can't change price - order " & mStopOrder.id & " already submitted"
         mStopOrder.limitPrice = mNewStopPrice
@@ -1759,7 +1997,7 @@ If Not mStopOrder Is Nothing Then
     If mNewStopOffset <> DummyOffset And _
         mNewStopOffset <> mStopOrder.offset _
     Then
-        If mStopOrder.status <> OrderStatuses.OrderStatusCreated Then Err.Raise errCantChangeUnplacedOrder, _
+        If mStopOrder.status <> OrderStatuses.OrderStatusCreated Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                                             "OrderPlex::update", _
                                                             "Can't change stop offset - order " & mStopOrder.id & " already placed"
         mStopOrder.offset = mNewStopOffset
@@ -1769,7 +2007,7 @@ If Not mStopOrder Is Nothing Then
     If mNewStopQuantity >= 0 And _
         mNewStopQuantity <> mStopOrder.quantity _
     Then
-        If mStopOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise errCantChangeUnplacedOrder, _
+        If mStopOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                                             "OrderPlex::update", _
                                                             "Can't change stop quantity - order " & mStopOrder.id & " already placed"
         mStopOrder.quantity = mNewStopQuantity
@@ -1779,7 +2017,7 @@ If Not mStopOrder Is Nothing Then
     If mNewStopTriggerPrice >= 0 And _
         mNewStopTriggerPrice <> mStopOrder.triggerPrice _
     Then
-        If mStopOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise errCantChangeFilledOrder, _
+        If mStopOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                                         "OrderPlex::update", _
                                                         "Can't change trigger price - order " & mEntryOrder.id & " already filled"
         mStopOrder.triggerPrice = mNewStopTriggerPrice
@@ -1793,7 +2031,7 @@ If Not mTargetOrder Is Nothing Then
     If mNewTargetPrice >= 0 And _
         mNewTargetPrice <> mTargetOrder.limitPrice _
     Then
-        If mTargetOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise errCantChangeFilledOrder, _
+        If mTargetOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                                         "OrderPlex::update", _
                                                         "Can't change price - order " & mTargetOrder.id & " already filled"
         mTargetOrder.limitPrice = mNewTargetPrice
@@ -1804,7 +2042,7 @@ If Not mTargetOrder Is Nothing Then
     If mNewTargetOffset <> DummyOffset And _
         mNewTargetOffset <> mTargetOrder.offset _
     Then
-        If mTargetOrder.status <> OrderStatuses.OrderStatusCreated Then Err.Raise errCantChangeUnplacedOrder, _
+        If mTargetOrder.status <> OrderStatuses.OrderStatusCreated Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                                             "OrderPlex::update", _
                                                             "Can't change target offset - order " & targetOrder.id & " already placed"
         mTargetOrder.offset = mNewTargetOffset
@@ -1814,7 +2052,7 @@ If Not mTargetOrder Is Nothing Then
     If mNewTargetQuantity >= 0 And _
         mNewTargetQuantity <> mTargetOrder.quantity _
     Then
-        If mTargetOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise errCantChangeUnplacedOrder, _
+        If mTargetOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                                             "OrderPlex::update", _
                                                             "Can't change target quantity - order " & mTargetOrder.id & " already placed"
         mTargetOrder.quantity = mNewTargetQuantity
@@ -1824,7 +2062,7 @@ If Not mTargetOrder Is Nothing Then
     If mNewTargetTriggerPrice >= 0 And _
         mNewTargetTriggerPrice <> mTargetOrder.triggerPrice _
     Then
-        If mTargetOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise errCantChangeFilledOrder, _
+        If mTargetOrder.status = OrderStatuses.OrderStatusFilled Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                                                         "OrderPlex::update", _
                                                         "Can't change trigger price - order " & mEntryOrder.id & " already filled"
         mTargetOrder.triggerPrice = mNewTargetTriggerPrice
@@ -1844,34 +2082,38 @@ Set mExitStrategy = Nothing
 If size = 0 Then mTicker.removeQuoteListener Me
 End Function
 
-Private Function doActions(ByRef Actions() As Long) As Variant
+Private Function doActions(ByRef pActions() As Long) As Variant
 Dim action As Variant
 
-For Each action In Actions
+For Each action In pActions
     Select Case CLng(action)
     Case SpecialActions.NoAction
-    Case ACT_PLACE_ORDERS
+    Case Actions.ActPlaceOrders
         doActions = placeOrders
-    Case ACT_CANCEL_ORDERS
+    Case Actions.ActCancelOrders
         doActions = cancelOrders
-    Case ACT_CANCEL_STOP_ORDER
+    Case Actions.ActCancelStopOrder
         doActions = cancelStopOrder
-    Case ACT_CANCEL_TARGET_ORDER
+    Case Actions.ActCancelTargetOrder
         doActions = cancelTargetOrder
-    Case ACT_RESUBMIT_STOP_ORDER
+    Case Actions.ActResubmitStopOrder
         doActions = resubmitStopOrder
-    Case ACT_RESUBMIT_TARGET_ORDER
+    Case Actions.ActResubmitTargetOrder
         doActions = resubmitTargetOrder
-    Case ACT_RESUBMIT_STOP_AND_TARGET_ORDERS
+    Case Actions.ActResubmitStopAndTargetOrders
         doActions = resubmitStopAndTargetOrders
-    Case ACT_PLACE_CLOSEOUT_ORDER
+    Case Actions.ActPlaceCloseoutOrder
         doActions = placeCloseoutOrder
-    Case ACT_COMPLETION_ACTIONS
+    Case Actions.ActCompletionActions
         doActions = completionActions
-    Case ACT_ALARM
+    Case Actions.ActAlarm
         ' need to put something in here
+    Case Actions.ActSetTimeout
+        doActions = setStateTimeout
+    Case Actions.ActCancelTimeout
+        doActions = cancelStateTimeout
     Case Else
-        Err.Raise errInvalidActionReturnedFromStateEngine, _
+        Err.Raise ErrorCodes.ErrIllegalStateException, _
                     "OrderPlex::doActions", _
                     "Invalid action " & action
     End Select
@@ -1881,39 +2123,51 @@ End Function
 Private Sub fireChange( _
                 ByVal changeType As OrderPlexChangeTypes)
 Dim listener As ChangeListener
-Dim i As Long
-Dim Change As ChangeEvent
-Set Change.source = Me
-Change.changeType = changeType
-For i = 1 To mChangeListeners.Count
-    Set listener = mChangeListeners(i)
-    listener.Change Change
+Dim ev As ChangeEvent
+Set ev.source = Me
+ev.changeType = changeType
+For Each listener In mChangeListeners
+    listener.Change ev
 Next
+RaiseEvent Change(ev)
+End Sub
+
+Private Sub fireStateChange( _
+                ByVal State As OrderPlexStateCodes)
+Dim listener As StateChangeListener
+Dim ev As StateChangeEvent
+Set ev.source = Me
+ev.State = State
+For Each listener In mStateChangeListeners
+    listener.Change ev
+Next
+RaiseEvent stateChange(ev)
 End Sub
 
 Private Sub fireProfit( _
                 ByVal profitAmount As Double, _
                 ByVal profitType As ProfitTypes)
 Dim listener As ProfitListener
-Dim i As Long
 Dim profit As ProfitEvent
 Set profit.source = Me
 profit.profitAmount = profitAmount
 profit.profitType = profitType
 profit.currencyCode = mcurrencyCode
-For i = 1 To mProfitListeners.Count
-    Set listener = mProfitListeners(i)
+For Each listener In mProfitListeners
     listener.profitAmount profit
 Next
 End Sub
 
-Private Sub handleStimulus(ByVal stimulus As StateTransitionStimuli)
+Private Function handleStimulus(ByVal stimulus As StateTransitionStimuli) As Variant
 Dim currState As OrderPlexStateCodes
 
 currState = mStateEngine.State
-doActions mStateEngine.notifyStimulus(stimulus)
-If mStateEngine.State <> currState Then fireChange OrderPlexChangeTypes.OrderPlexStateChanged
-End Sub
+handleStimulus = doActions(mStateEngine.notifyStimulus(stimulus))
+If mStateEngine.State <> currState Then
+    fireChange OrderPlexChangeTypes.OrderPlexStateChanged
+    fireStateChange mStateEngine.State
+End If
+End Function
 
 Private Function placeCloseoutOrder()
 ' place an order to closeout the filled part
@@ -1978,9 +2232,9 @@ mOrderSubmitter.resubmitStopOrder Me
 gTB.notifyListeners _
             "Resubmit stop order: (" & mTicker.TradePrice & ") id " & mStopOrder.id & _
             "new broker id " & mStopOrder.brokerId, _
-            IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
+            IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
             Me
-mStateEngine.clearConditions COND_STOP_ORDER_CANCELLED
+mStateEngine.clearConditions Conditions.CondStopOrderCancelled
 mStopOrderFinished = False
 End Function
 
@@ -1989,16 +2243,16 @@ mOrderSubmitter.resubmitStopAndTargetOrders Me
 gTB.notifyListeners _
             "Resubmit stop order: (" & mTicker.TradePrice & ") id " & mStopOrder.id & _
             " new broker id " & mStopOrder.brokerId, _
-            IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
+            IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
             Me
 gTB.notifyListeners _
             "Resubmit target order: (" & mTicker.TradePrice & ") id " & mTargetOrder.id & _
             " new broker id " & mTargetOrder.brokerId, _
-            IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
+            IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
             Me
-mStateEngine.clearConditions COND_STOP_ORDER_CANCELLED
+mStateEngine.clearConditions Conditions.CondStopOrderCancelled
 mStopOrderFinished = False
-mStateEngine.clearConditions COND_TARGET_ORDER_CANCELLED
+mStateEngine.clearConditions Conditions.CondTargetOrderCancelled
 mTargetOrderFinished = False
 
 End Function
@@ -2008,9 +2262,9 @@ mOrderSubmitter.resubmitTargetOrder Me
 gTB.notifyListeners _
             "Resubmit target order: (" & mTicker.TradePrice & ") id " & mTargetOrder.id & _
             " new broker id " & mTargetOrder.brokerId, _
-            IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
+            IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
             Me
-mStateEngine.clearConditions COND_TARGET_ORDER_CANCELLED
+mStateEngine.clearConditions Conditions.CondTargetOrderCancelled
 mTargetOrderFinished = False
 End Function
 
@@ -2030,12 +2284,15 @@ End Sub
 Private Sub setSize(ByVal value As Long)
 mSize = value
 If mSize <> 0 Then
-    mStateEngine.setConditions COND_SIZE_NON_ZERO
+    mStateEngine.setConditions Conditions.CondSizeNonZero
 Else
-    mStateEngine.clearConditions COND_SIZE_NON_ZERO
+    mStateEngine.clearConditions Conditions.CondSizeNonZero
 End If
 fireChange OrderPlexChangeTypes.OrderPlexSizeChanged
 End Sub
 
-
+Private Function setStateTimeout()
+Set mStateTimeoutTimer = CreateIntervalTimer(1000)
+mStateTimeoutTimer.StartTimer
+End Function
 

@@ -2,8 +2,8 @@ VERSION 5.00
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "msflxgrd.ocx"
 Object = "{BDC217C8-ED16-11CD-956C-0000C04E4C0A}#1.1#0"; "TABCTL32.OCX"
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
-Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#57.0#0"; "StudiesUI2-6.ocx"
-Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#47.0#0"; "ChartSkil2-6.ocx"
+Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#65.0#0"; "StudiesUI2-6.ocx"
+Object = "{74951842-2BEF-4829-A34F-DC7795A37167}#62.0#0"; "ChartSkil2-6.ocx"
 Begin VB.Form StudyTestForm 
    BorderStyle     =   1  'Fixed Single
    Caption         =   "TradeBuild Study Test Harness v2.6"
@@ -586,7 +586,7 @@ StudyConfigurer1.initialise Chart1.controller, _
 when = "setting up the Study Value grid"
 setupStudyValueGridColumns testStudyConfig
 
-mChartManager.chartController.suppressDrawing = True
+mChartManager.chartController.SuppressDrawing = True
 For i = 1 To TestDataGrid.Rows
     TestDataGrid.row = i
     TestDataGrid.Col = TestDataGridColumns.timestamp
@@ -662,7 +662,7 @@ For i = 1 To TestDataGrid.Rows
     processStudyValues testStudy, testStudyConfig, i, when
 Next
 
-mChartManager.chartController.suppressDrawing = False
+mChartManager.chartController.SuppressDrawing = False
 
 setTestDataGridRowBackColors 1
 
@@ -672,8 +672,8 @@ Exit Sub
 err:
 setTestDataGridRowBackColors 1
 
-Do Until Not Chart1.suppressDrawing
-    Chart1.suppressDrawing = False
+Do Until Not Chart1.SuppressDrawing
+    Chart1.SuppressDrawing = False
 Loop
 
 MsgBox "Error " & err.Number & _
@@ -740,7 +740,7 @@ Set studyValueConfig = createBarsStudyConfig.StudyValueConfigurations.Add("Bar")
 studyValueConfig.chartRegionName = PriceRegionName
 studyValueConfig.includeInChart = True
 studyValueConfig.layer = 200
-Set barsStyle = Chart1.defaultBarStyle
+Set barsStyle = Chart1.DefaultBarStyle
 barsStyle.outlineThickness = 1
 barsStyle.barThickness = 2
 barsStyle.barWidth = 0.6
@@ -754,7 +754,7 @@ studyValueConfig.barStyle = barsStyle
 Set studyValueConfig = createBarsStudyConfig.StudyValueConfigurations.Add("Volume")
 studyValueConfig.chartRegionName = VolumeRegionName
 studyValueConfig.includeInChart = True
-Set volumeStyle = Chart1.defaultDataPointStyle
+Set volumeStyle = Chart1.DefaultDataPointStyle
 volumeStyle.downColor = vbRed
 volumeStyle.upColor = vbGreen
 volumeStyle.displayMode = DataPointDisplayModeHistogram
@@ -826,27 +826,29 @@ Dim priceRegion As ChartRegion
 Dim volumeRegion As ChartRegion
 
 
-pChartManager.chartController.suppressDrawing = True
+pChartManager.chartController.SuppressDrawing = True
 
 pChartManager.clearChart
-pChartManager.chartController.chartBackColor = vbWhite
-pChartManager.chartController.pointerStyle = PointerCrosshairs
-pChartManager.chartController.showHorizontalScrollBar = True
-pChartManager.chartController.barTimePeriod = gettimeperiod(mPeriodLength, mPeriodUnits)
+pChartManager.chartController.ChartBackColor = vbWhite
+pChartManager.chartController.PointerStyle = PointerCrosshairs
+pChartManager.chartController.ShowHorizontalScrollBar = True
+pChartManager.chartController.barTimePeriod = GetTimePeriod(mPeriodLength, mPeriodUnits)
 
-Set priceRegion = pChartManager.chartController.addChartRegion(100, 25, , , PriceRegionName)
-priceRegion.gridlineSpacingY = 2
-priceRegion.hasGrid = True
-priceRegion.setTitle TestDataFilenameText, vbBlue, Nothing
+Set priceRegion = pChartManager.chartController.AddChartRegion(100, 25, , , PriceRegionName)
+priceRegion.GridlineSpacingY = 2
+priceRegion.HasGrid = True
+priceRegion.Title.Text = TestDataFilenameText
+priceRegion.Title.Color = vbBlue
 
-Set volumeRegion = pChartManager.chartController.addChartRegion(20, , , , VolumeRegionName)
-volumeRegion.gridlineSpacingY = 0.8
-volumeRegion.minimumHeight = 10
-volumeRegion.integerYScale = True
-volumeRegion.hasGrid = True
-volumeRegion.setTitle "Volume", vbBlue, Nothing
+Set volumeRegion = pChartManager.chartController.AddChartRegion(20, , , , VolumeRegionName)
+volumeRegion.GridlineSpacingY = 0.8
+volumeRegion.MinimumHeight = 10
+volumeRegion.IntegerYScale = True
+volumeRegion.HasGrid = True
+volumeRegion.Title.Text = "Volume"
+volumeRegion.Title.Color = vbBlue
 
-pChartManager.chartController.suppressDrawing = False
+pChartManager.chartController.SuppressDrawing = False
 
 End Sub
 
@@ -882,7 +884,7 @@ setupInitialStudies
 Set fso = New FileSystemObject
 Set ts = fso.OpenTextFile(TestDataFilenameText, ForReading)
 
-Chart1.suppressDrawing = True
+Chart1.SuppressDrawing = True
 
 Set analyzer = New DataAnalyzer
 
@@ -950,7 +952,7 @@ Loop
 
 TestDataGrid.Redraw = True
 setTestDataGridRowBackColors 1
-Chart1.suppressDrawing = False
+Chart1.SuppressDrawing = False
 
 analyzer.analyze
 MinimumPriceTickText = Format(analyzer.minimumDifference, "0.00000")
@@ -965,7 +967,7 @@ Exit Sub
 err:
 TestDataGrid.Redraw = True
 setTestDataGridRowBackColors 1
-Chart1.suppressDrawing = False
+Chart1.SuppressDrawing = False
 
 Screen.MousePointer = MousePointerConstants.vbDefault
 

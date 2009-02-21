@@ -89,6 +89,7 @@ End If
 
 If mContracts Is Nothing Then
     Set mContracts = gTB.loadContracts(mContractSpec)
+    gLogLogger.Log LogLevelDetail, mTaskContext.name & " waiting for contracts to be loaded"
     mTaskContext.suspend -1
     Exit Sub
 End If
@@ -96,6 +97,7 @@ End If
 If mEnumerator Is Nothing Then Set mEnumerator = mContracts.Enumerator
 
 If Not mEnumerator.moveNext Then
+    gLogLogger.Log LogLevelDetail, mTaskContext.name & " all contracts processed"
     mTaskContext.finish Empty, False
     Exit Sub
 End If
@@ -103,13 +105,17 @@ End If
 Set lContract = mEnumerator.current
     
 'check contract is still current
-If lContract.expiryDate <> 0 And lContract.expiryDate < Date Then Exit Sub
+If lContract.expiryDate <> 0 And lContract.expiryDate < Date Then
+    gLogLogger.Log LogLevelDetail, mTaskContext.name & " expired contract ignored: " & lContract.specifier.toString
+    Exit Sub
+End If
 
 Set lTicker = tckrs.add(lTickerOptions)
 lTicker.DOMEventsRequired = mDOMEventsRequired
 lTicker.outputTickfileFormat = mOutputTickfileFormat
 lTicker.outputTickfilePath = mOutputTickfilePath
 
+gLogLogger.Log LogLevelDetail, mTaskContext.name & " starting ticker: " & lContract.specifier.toString
 lTicker.startTickerFromContract lContract
 
 mTaskContext.suspend mInterval
@@ -142,7 +148,7 @@ End If
 End Property
 
 Private Property Get Task_taskName() As String
-
+Task_taskName = mTaskContext.name
 End Property
 
 '@================================================================================
@@ -157,14 +163,28 @@ Private Sub mContracts_ContractSpecifierInvalid( _
                 ByVal reason As String)
 Dim ev As NotificationEvent
 
+Dim failpoint As Long
+On Error GoTo Err
+
 Set ev.source = mContracts.contractSpecifier
 ev.eventCode = ApiNotifyCodes.ApiNotifyContractSpecifierInvalid
 ev.eventMessage = reason & ": " & mContracts.contractSpecifier.toString
+gLogLogger.Log LogLevelDetail, mTaskContext.name & " invalid contract specifier: " & reason
 tckrs.notify ev
 mTaskContext.Error ApiNotifyCodes.ApiNotifyContractSpecifierInvalid, ev.eventMessage
+
+Exit Sub
+
+Err:
+gTB.NotifyFatalError Err.number, _
+                    Err.Description, _
+                    ModuleName & ":" & "mContracts_ContractSpecifierInvalid" & "." & failpoint & _
+                    IIf(Err.source <> "", vbCrLf & Err.source, "") & vbCrLf & _
+                    Err.Description
 End Sub
 
 Private Sub mContracts_NoMoreContractDetails()
+gLogLogger.Log LogLevelDetail, mTaskContext.name & " contracts are loaded"
 mTaskContext.continue
 End Sub
 

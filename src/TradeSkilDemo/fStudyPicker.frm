@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#23.3#0"; "StudiesUI2-6.ocx"
+Object = "{6F9EA9CF-F55B-4AFA-8431-9ECC5BED8D43}#76.0#0"; "StudiesUI2-6.ocx"
 Begin VB.Form fStudyPicker 
    BorderStyle     =   3  'Fixed Dialog
    Caption         =   "Form1"
@@ -56,7 +56,6 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TradeSkilDemo26"
 Private Const ModuleName                    As String = "fStudyPicker"
 
 '@================================================================================
@@ -84,7 +83,7 @@ Private Const ModuleName                    As String = "fStudyPicker"
 '@================================================================================
 
 Friend Sub initialise( _
-                ByVal pChartManager As chartManager, _
+                ByVal pChartManager As ChartManager, _
                 ByVal title As String)
 StudyPicker1.initialise pChartManager
 Me.caption = title

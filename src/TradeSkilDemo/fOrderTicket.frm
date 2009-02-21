@@ -85,13 +85,8 @@ Private Sub Form_QueryUnload(cancel As Integer, UnloadMode As Integer)
 updateInstanceSettings
 End Sub
 
-Private Sub Form_Terminate()
-Debug.Print "OrderForm terminated"
-End Sub
-
 Private Sub Form_Unload(cancel As Integer)
 OrderTicket1.finish
-Debug.Print "OrderForm unloaded"
 End Sub
 
 '================================================================================

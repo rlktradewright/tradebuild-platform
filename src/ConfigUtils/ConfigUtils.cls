@@ -41,15 +41,16 @@ Option Explicit
 Private Const ProjectName                           As String = "ConfigUtils26"
 Private Const ModuleName                            As String = "ConfigUtils"
 
-Private Const AttributeNameAppConfigDefault          As String = "Default"
+Private Const AttributeNameAppInstanceConfigDefault As String = "Default"
 
-Private Const ConfigNameAppConfig                    As String = "AppConfig"
-Private Const ConfigNameAppConfigs                   As String = "AppConfigs"
-Private Const ConfigNameTradeBuild                   As String = "TradeBuild"
+Private Const AttributeValueTrue                    As String = "True"
+Private Const AttributeValueFalse                   As String = "False"
 
-Private Const ConfigSectionPathSeparator             As String = "/"
+Private Const ConfigNameAppConfig                   As String = "AppConfig"
+Private Const ConfigNameAppConfigs                  As String = "AppConfigs"
+Private Const ConfigNameTradeBuild                  As String = "TradeBuild"
 
-Private Const DefaultAppConfigName                  As String = "Default config"
+Private Const ConfigSectionPathSeparator            As String = "/"
 
 '@================================================================================
 ' Member variables
@@ -75,36 +76,111 @@ Private Const DefaultAppConfigName                  As String = "Default config"
 ' Methods
 '@================================================================================
 
-Public Function CreateNewTBAppConfig( _
+Public Function AddAppInstanceConfig( _
                 ByVal pConfigFile As ConfigurationFile, _
                 ByVal name As String, _
-                ByVal permittedServiceProviders As ServiceProviderRoles, _
-                ByVal includeDefaultStudyLibrary As Boolean) As ConfigurationSection
-Set CreateNewTBAppConfig = createNewAppConfig(pConfigFile, _
-                                            name, _
-                                            permittedServiceProviders, _
-                                            includeDefaultStudyLibrary)
-End Function
-
-Public Function CreateTradeBuildConfig( _
-                ByVal pConfigFile As ConfigFile, _
-                ByVal filename As String, _
-                ByVal permittedServiceProviders As ServiceProviderRoles, _
-                ByVal includeDefaultStudyLibrary As Boolean) As ConfigurationFile
+                ByVal includeDefaultStudyLibrary As Boolean, _
+                Optional ByVal setAsDefault As Boolean = False) As ConfigurationSection
 Dim failpoint As Long
 On Error GoTo Err
 
-Set CreateTradeBuildConfig = CreateConfigurationFile(pConfigFile, _
-                                    filename)
+Set AddAppInstanceConfig = addNewAppConfig(pConfigFile, _
+                                            name, _
+                                            includeDefaultStudyLibrary, _
+                                            setAsDefault)
 
-GetLogger("configutils.log").Log LogLevelDetail, "Creating app configs section in config file"
-CreateTradeBuildConfig.AddConfigurationSection (ConfigSectionPathSeparator & ConfigNameAppConfigs)
+Exit Function
 
-GetLogger("configutils.log").Log LogLevelDetail, "Creating default app config in config file"
-createNewAppConfig CreateTradeBuildConfig, _
-                DefaultAppConfigName, _
-                permittedServiceProviders, _
-                includeDefaultStudyLibrary
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "AddAppInstanceConfig" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errDescription As String: errDescription = Err.Description
+log "Error " & errNumber & ": " & errDescription & vbCrLf & errSource, LogLevelSevere
+Err.Raise errNumber, errSource, errDescription
+End Function
+
+Public Function ConfigureTradeBuild( _
+                ByVal pConfigFile As ConfigurationFile, _
+                ByVal appInstanceConfigName As String) As Boolean
+Dim config As ConfigurationSection
+
+Set config = GetAppInstanceConfig(pConfigFile, appInstanceConfigName)
+If config Is Nothing Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "ConfigureTradeBuild", _
+            "App instance config does not exist"
+End If
+
+removeServiceProviders
+
+log "Configuring TradeBuild using config: " & config.InstanceQualifier, LogLevelNormal
+
+ConfigureTradeBuild = True
+If Not setupServiceProviders(config) Then
+    log "Failed loading service providers from configuration: " & config.InstanceQualifier, LogLevelNormal
+    ConfigureTradeBuild = False
+End If
+If Not setupStudyLibraries(config) Then
+    log "Failed loading study libraries from configuration: " & config.InstanceQualifier, LogLevelNormal
+    ConfigureTradeBuild = False
+End If
+
+If ConfigureTradeBuild Then
+    log "Loaded configuration: " & config.InstanceQualifier, LogLevelNormal
+Else
+    log "Failed to load configuration: " & config.InstanceQualifier, LogLevelNormal
+End If
+End Function
+
+Public Function GetAppInstanceConfig( _
+                ByVal pConfigFile As ConfigurationFile, _
+                ByVal name As String) As ConfigurationSection
+Dim failpoint As Long
+On Error GoTo Err
+
+Set GetAppInstanceConfig = pConfigFile.GetConfigurationSection(generateSectionPath(name))
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "GetAppInstanceConfig" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errDescription As String: errDescription = Err.Description
+log "Error " & errNumber & ": " & errDescription & vbCrLf & errSource, LogLevelSevere
+Err.Raise errNumber, errSource, errDescription
+End Function
+
+Public Function GetDefaultAppInstanceConfig( _
+                ByVal pConfigFile As ConfigurationFile) As ConfigurationSection
+Dim sections As ConfigurationSection
+Dim section As ConfigurationSection
+
+Set sections = getAppInstanceConfigsSection(pConfigFile)
+For Each section In sections
+    If CBool(section.getAttribute(AttributeNameAppInstanceConfigDefault, AttributeValueFalse)) Then
+        Set GetDefaultAppInstanceConfig = section
+        Exit Function
+    End If
+Next
+
+End Function
+
+Public Function InitialiseConfigFile( _
+                ByVal pConfigFile As ConfigurationFile) As ConfigurationFile
+Dim sections As ConfigurationSection
+Dim failpoint As Long
+On Error GoTo Err
+
+Set sections = getAppInstanceConfigsSection(pConfigFile)
+If Not sections Is Nothing Then
+    log "Removing existing app instance configs section from config file"
+    pConfigFile.RemoveConfigurationSection getAppInstanceConfigsPath
+End If
+
+log "Creating app instance configs section in config file"
+pConfigFile.AddConfigurationSection ConfigSectionPathSeparator & ConfigNameAppConfigs
+
+Set InitialiseConfigFile = pConfigFile
 
 Exit Function
 
@@ -112,35 +188,201 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "CreateConfigurationFile" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-GetLogger("configutils.log").Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+log "Error " & errNumber & ": " & errDescription & vbCrLf & errSource, LogLevelSevere
 Err.Raise errNumber, errSource, errDescription
 End Function
+
+Public Function IsValidConfigurationFile( _
+                ByVal pConfigFile As ConfigurationFile) As Boolean
+If getAppInstanceConfigsSection(pConfigFile) Is Nothing Then
+    IsValidConfigurationFile = False
+Else
+    IsValidConfigurationFile = True
+End If
+End Function
+
+Public Sub RemoveAppInstanceConfig( _
+                ByVal pConfigFile As ConfigurationFile, _
+                ByVal name As String)
+Dim failpoint As Long
+On Error GoTo Err
+
+pConfigFile.RemoveConfigurationSection generateSectionPath(name)
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "RemoveAppInstanceConfig" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errDescription As String: errDescription = Err.Description
+log "Error " & errNumber & ": " & errDescription & vbCrLf & errSource, LogLevelSevere
+Err.Raise errNumber, errSource, errDescription
+End Sub
+
+Public Function SetDefaultAppInstanceConfig( _
+                ByVal pConfigFile As ConfigurationFile, _
+                ByVal name As String) As ConfigurationSection
+
+Dim failpoint As Long
+On Error GoTo Err
+
+checkValidConfigurationFile pConfigFile
+
+Set SetDefaultAppInstanceConfig = GetAppInstanceConfig(pConfigFile, _
+                                                    name)
+If SetDefaultAppInstanceConfig Is Nothing Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "SetDefaultAppInstanceConfig", _
+            "Specified app instance config does not exist"
+End If
+                                            
+setDefault pConfigFile, SetDefaultAppInstanceConfig
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "SetDefaultAppInstanceConfig" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errDescription As String: errDescription = Err.Description
+log "Error " & errNumber & ": " & errDescription & vbCrLf & errSource, LogLevelSevere
+Err.Raise errNumber, errSource, errDescription
+End Function
+
+Public Sub UnsetDefaultAppInstanceConfig( _
+                ByVal pConfigFile As ConfigurationFile)
+Dim defaultConfig As ConfigurationSection
+Set defaultConfig = GetDefaultAppInstanceConfig(pConfigFile)
+If Not defaultConfig Is Nothing Then defaultConfig.setAttribute AttributeNameAppInstanceConfigDefault, AttributeValueFalse
+End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Function createNewAppConfig( _
+Private Function addNewAppConfig( _
                 ByVal pConfigFile As ConfigurationFile, _
                 ByVal newAppConfigName As String, _
-                ByVal permittedServiceProviders As ServiceProviderRoles, _
-                ByVal includeDefaultStudyLibrary As Boolean) As ConfigurationSection
+                ByVal includeDefaultStudyLibrary As Boolean, _
+                ByVal setAsDefault As Boolean) As ConfigurationSection
 Dim newAppConfigSection As ConfigurationSection
 Dim newAppTradeBuildSection As ConfigurationSection
 
-Set newAppConfigSection = pConfigFile.AddConfigurationSection(ConfigSectionPathSeparator & ConfigNameAppConfigs & ConfigSectionPathSeparator & ConfigNameAppConfig & "(" & newAppConfigName & ")")
-newAppConfigSection.SetAttribute AttributeNameAppConfigDefault, "False"
+checkValidConfigurationFile pConfigFile
+
+If Not GetAppInstanceConfig(pConfigFile, newAppConfigName) Is Nothing Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "addNewAppConfig", _
+            "App instance config already exists"
+End If
+
+Set newAppConfigSection = pConfigFile.AddConfigurationSection(generateSectionPath(newAppConfigName))
+If setAsDefault Then setDefault pConfigFile, newAppConfigSection
 
 Set newAppTradeBuildSection = newAppConfigSection.AddConfigurationSection(ConfigNameTradeBuild)
-TradeBuildAPI.ServiceProviders.SetDefaultSPConfig newAppTradeBuildSection, _
-                                                permittedServiceProviders
+TradeBuildAPI.ServiceProviders.SetDefaultSPConfig newAppTradeBuildSection
 
 If includeDefaultStudyLibrary Then
     SetDefaultStudyLibraryConfig newAppTradeBuildSection
 End If
 
-Set createNewAppConfig = newAppConfigSection
+Set addNewAppConfig = newAppConfigSection
 
 End Function
 
+Private Sub checkValidConfigurationFile( _
+                ByVal pConfigFile As ConfigurationFile)
+If Not IsValidConfigurationFile(pConfigFile) Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+            ProjectName & "." & ModuleName & ":" & "checkValidConfigurationFile", _
+            "Configuration file has not been correctly intialised"
+End If
+End Sub
+
+Private Function generateSectionPath( _
+                ByVal name As String) As String
+generateSectionPath = ConfigSectionPathSeparator & ConfigNameAppConfigs & ConfigSectionPathSeparator & ConfigNameAppConfig & "(" & name & ")"
+End Function
+
+Private Function getAppInstanceConfigsPath() As String
+getAppInstanceConfigsPath = ConfigSectionPathSeparator & ConfigNameAppConfigs
+End Function
+
+Private Function getAppInstanceConfigsSection( _
+                ByVal pConfigFile As ConfigurationFile) As ConfigurationSection
+Set getAppInstanceConfigsSection = pConfigFile.GetConfigurationSection(getAppInstanceConfigsPath)
+End Function
+
+Private Sub log( _
+                ByVal message As String, _
+                Optional ByVal level As LogLevels = LogLevelDetail)
+Static lLogger As Logger
+If lLogger Is Nothing Then Set lLogger = GetLogger("configutils.log")
+
+lLogger.log level, message
+
+End Sub
+
+Private Sub removeServiceProviders()
+If Not TradeBuildAPI Is Nothing Then TradeBuildAPI.ServiceProviders.RemoveAll
+RemoveAllStudyLibraries
+End Sub
+
+Private Function setupServiceProviders( _
+                ByVal config As ConfigurationSection) As Boolean
+Dim tradebuildEntry As ConfigurationSection
+
+Set tradebuildEntry = config.GetConfigurationSection(ConfigNameTradeBuild)
+
+If tradebuildEntry Is Nothing Then
+    log "No service providers defined in this configuration", LogLevelNormal
+    setupServiceProviders = False
+Else
+    On Error GoTo Err
+    TradeBuildAPI.ServiceProviders.LoadServiceProviderConfiguration tradebuildEntry
+    setupServiceProviders = True
+End If
+
+Exit Function
+
+Err:
+log "Service provider configuration failed: " & Err.Description, LogLevelNormal
+setupServiceProviders = False
+End Function
+
+Private Function setupStudyLibraries( _
+                ByVal config As ConfigurationSection) As Boolean
+Dim tradebuildEntry As ConfigurationSection
+
+Set tradebuildEntry = config.GetConfigurationSection(ConfigNameTradeBuild)
+
+If tradebuildEntry Is Nothing Then
+    log "No study libraries defined in this configuration", LogLevelNormal
+    setupStudyLibraries = False
+Else
+    LoadStudyLibraryConfiguration tradebuildEntry
+    setupStudyLibraries = True
+End If
+
+End Function
+
+Private Sub setDefault( _
+                ByVal pConfigFile As ConfigurationFile, _
+                ByVal targetSection As ConfigurationSection)
+Dim sections As ConfigurationSection
+Dim section As ConfigurationSection
+
+Set sections = getAppInstanceConfigsSection(pConfigFile)
+For Each section In sections
+    If section Is targetSection Then
+        If Not CBool(section.getAttribute(AttributeNameAppInstanceConfigDefault, AttributeValueFalse)) Then
+            section.setAttribute AttributeNameAppInstanceConfigDefault, AttributeValueTrue
+        End If
+    Else
+        If CBool(section.getAttribute(AttributeNameAppInstanceConfigDefault, AttributeValueFalse)) Then
+            section.setAttribute AttributeNameAppInstanceConfigDefault, AttributeValueFalse
+        End If
+    End If
+Next
+
+End Sub
 

@@ -43,39 +43,6 @@ Event ConnectionToIBRecovered()
 Event Disconnected(ByVal reason As String)
     ' Raised when we disconnect from TWS
 
-'Event FAData( _
-'                ByVal DataType As FADataTypes, _
-'                ByVal XMLData As String)
-'
-'Event managedAccounts( _
-'                ByVal accountsList As String)
-'
-'Event updateAccountTime( _
-'                ByVal accountTime As String)
-'
-'Event updateAccountValue( _
-'                ByVal key As String, _
-'                ByVal value As String, _
-'                ByVal currencyCode As String, _
-'                ByVal accountName As String)
-'
-'Event updateNewsBulletin( _
-'                ByVal msgID As Integer, _
-'                ByVal msgType As BulletinTypes, _
-'                ByVal message As String, _
-'                ByVal origExchange As String)
-'
-'Event updatePortfolioValue( _
-'                ByVal pContractSpecifier As ContractSpecifier, _
-'                ByVal position As Long, _
-'                ByVal marketPrice As Double, _
-'                ByVal marketValue As Double, _
-'                ByVal averageCost As Double, _
-'                ByVal unrealizedPNL As Double, _
-'                ByVal realizedPNL As Double, _
-'                ByVal accountName As String)
-
-
 '================================================================================
 ' Constants
 '================================================================================
@@ -83,25 +50,40 @@ Event Disconnected(ByVal reason As String)
 Private Const ProjectName                As String = "IBTWSSP26"
 Private Const ModuleName                As String = "TWSAPI"
 
-Private Const ClientVersion As Long = 32
+Private Const ClientVersion As Long = 38
+Private Const ReqdServerVersion As Long = 38
+
+Private Const ContractDataReqIdBase As Long = &H1000000
 
 Private Const ErrHistGenerationFailed = vbObjectError
 
-Private Const HistoricalDataTickerBase As Long = &H410000
-Private Const HistoricalDataTickerIncrement As Long = &H100
+Private Const HistoricalDataReqIdBase As Long = &H410000
+Private Const HistoricalDataReqIdIncrement As Long = &H100
 
 Private Const IncarnationIncrement As Long = &H1000&
 
-Private Const MarketDepthTickerBase As Long = &H400000
+Private Const MarketDepthReqIdBase As Long = &H400000
 
 Private Const MaxConcurrentHistDataRequests As Long = 50 ' limit imposed by IB
+
+Private Const MIN_SERVER_VER_REAL_TIME_BARS As Long = 34
+Private Const MIN_SERVER_VER_SCALE_ORDERS As Long = 35
+Private Const MIN_SERVER_VER_SNAPSHOT_MKT_DATA As Long = 35
+Private Const MIN_SERVER_VER_SSHORT_COMBO_LEGS As Long = 35
+Private Const MIN_SERVER_VER_WHAT_IF_ORDERS As Long = 36
+Private Const MIN_SERVER_VER_CONTRACT_CONID As Long = 37
+Private Const MIN_SERVER_VER_PTA_ORDERS As Long = 39
+Private Const MIN_SERVER_VER_FUNDAMENTAL_DATA As Long = 40
+Private Const MIN_SERVER_VER_UNDER_COMP As Long = 40
+Private Const MIN_SERVER_VER_CONTRACT_DATA_CHAIN As Long = 40
+Private Const MIN_SERVER_VER_SCALE_ORDERS2 As Long = 40
 
 Private Const NumDaysInWeek As Long = 5
 Private Const NumDaysInMonth  As Long = 22
 Private Const NumDaysInYear As Long = 260
 Private Const NumMonthsInYear As Long = 12
 
-Private Const OrderIdBase As Long = &H800000
+Private Const OrderIdBase As Long = &H10000000
 
 Private Const TWSWhatToShowAsk As String = "ASK"
 Private Const TWSWhatToShowBid As String = "BID"
@@ -119,6 +101,7 @@ Private Enum IdTypes
     IdTypeMarketDepth
     IdTypeHistoricalData
     IdTypeOrder
+    IdTypeContractData
 End Enum
 
 Private Enum InternalErrorCodes
@@ -173,6 +156,10 @@ Private Type TickerTableEntry
     prevAskSize             As Long
     prevTrade               As Double
     prevTradeSize           As Long
+    prevOpen                As Double
+    prevHigh                As Double
+    prevLow                 As Double
+    prevClose               As Double
     inUse                   As Boolean
     receivingMarketDepth    As Boolean
     dataConsumer            As IStreamingDataConsumer
@@ -243,7 +230,9 @@ Private mPerformanceElapsedTimer As ElapsedTimer
 Private mPerformanceLogger As Logger
 Private mSocketLogger As Logger
 
-Private mMessageBuilder As StringBuilder
+Private mInMessageBuilder As StringBuilder
+
+Private mOutMessageBuilder As StringBuilder
 
 '================================================================================
 ' External function declarations
@@ -301,13 +290,13 @@ End Sub
 '================================================================================
 
 Private Sub mConnectionTimer_TimerExpired()
-On Error GoTo Err
+On Error GoTo err
 Connect
 Exit Sub
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "mConnectionTimer_TimerExpired", _
-                Err.Description
+                err.Description
 End Sub
 
 '================================================================================
@@ -318,7 +307,7 @@ Private Sub mPerformanceTimerPeriod_TimerExpired()
 Dim i As Long
 Dim s As String
 
-On Error GoTo Err
+On Error GoTo err
 
 For i = 0 To TWSSocketInMsgTypes.MAX_SOCKET_INMSG
     With mPerformanceStats(i)
@@ -355,16 +344,16 @@ For i = 0 To TWSSocketInMsgTypes.MAX_SOCKET_INMSG
 Next
 Exit Sub
 
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "mPerformanceTimerPeriod_TimerExpired", _
-                Err.Description
+                err.Description
 End Sub
 
 Private Sub mPerformanceTimerSecond_TimerExpired()
 Dim i As Long
 
-On Error GoTo Err
+On Error GoTo err
 
 For i = 0 To TWSSocketInMsgTypes.MAX_SOCKET_INMSG
     With mPerformanceStats(i)
@@ -378,10 +367,10 @@ For i = 0 To TWSSocketInMsgTypes.MAX_SOCKET_INMSG
 Next
 Exit Sub
 
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "mPerformanceTimerSecond_TimerExpired", _
-                Err.Description
+                err.Description
 End Sub
 
 '================================================================================
@@ -389,17 +378,17 @@ End Sub
 '================================================================================
 
 Private Sub mSocket_Close()
-On Error GoTo Err
+On Error GoTo err
 handleTwsDisconnection
 Exit Sub
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "mSocket_Close", _
-                Err.Description
+                err.Description
 End Sub
 
 Private Sub mSocket_Connect()
-On Error GoTo Err
+On Error GoTo err
 mConnectionState = ConnectionStates.ConnConnecting
 RaiseEvent Connecting
 
@@ -409,15 +398,15 @@ mInputIndex = 0
 mCheckPointNumber = 0
 
 logMessage "Connecting to TWS: negotiating versions and client id", LogLevelNormal
-addData ClientVersion
+addData ClientVersion, "Client version"
 send
-addData mClientID
+addData mClientID, "Client id"
 send
 Exit Sub
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "mSocket_Connect", _
-                Err.Description
+                err.Description
 End Sub
 
 Private Sub mSocket_DataArrival( _
@@ -425,7 +414,7 @@ Private Sub mSocket_DataArrival( _
 Dim bytesReceived As Long
 Static processingMessages As Boolean
 
-On Error GoTo Err
+On Error GoTo err
 
 mSocket.GetData mSocketInputData, vbArray + vbByte
 bytesReceived = UBound(mSocketInputData) + 1
@@ -433,7 +422,7 @@ bytesReceived = UBound(mSocketInputData) + 1
 
 If mSocketLogger.isLoggable(LogLevelMediumDetail) Then
     mSocketLogger.Log LogLevels.LogLevelMediumDetail, _
-                        showBuffer(mSocketInputData, bytesReceived)
+                        showBuffer("In buf: ", mSocketInputData)
 End If
 
 If mIndexIn = mInputIndex Then
@@ -479,10 +468,10 @@ If mIndexIn <> mInputIndex Then
 End If
 
 Exit Sub
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "mSocket_DataArrival", _
-                Err.Description
+                err.Description
 
 End Sub
 
@@ -495,7 +484,7 @@ Private Sub mSocket_Error(ByVal number As Integer, _
                         CancelDisplay As Boolean)
 Dim errorNum As MSWinsockLib.ErrorConstants
 
-On Error GoTo Err
+On Error GoTo err
 errorNum = number
 Select Case errorNum
 'Case sckInvalidPropertyValue
@@ -559,7 +548,7 @@ Case sckAddressNotAvailable, _
             cancelContractRequests "Failed to connect to TWS"
             RaiseEvent ConnectFailed(Description, False)
         Else
-            logMessage "Failed to connect to TWS - retrying: " & _
+            logMessage "Failed to connect to TWS - retrying in " & mConnectionRetryIntervalSecs & " seconds: " & _
                         Description & ": " & _
                         connectionString, _
                         LogLevelNormal
@@ -600,10 +589,10 @@ Case Else
 End Select
 
 Exit Sub
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "mSocket_Error", _
-                Err.Description
+                err.Description
 
 End Sub
 
@@ -630,16 +619,12 @@ End Property
 
 Friend Property Get connectionString() As String
 connectionString = "server=" & mServer & _
-                        "; port=" & mPort & _
-                        "; client Id=" & mClientID
+                        " port=" & mPort & _
+                        " client Id=" & mClientID
 End Property
 
 Friend Property Get contractDetailsRequestQueueLength() As Long
 contractDetailsRequestQueueLength = mTwsContractDetailsRequestQueue.size
-End Property
-
-Friend Property Get InBuffer() As String
-InBuffer = showBuffer(mBufferIn, mIndexIn - 1)
 End Property
 
 Friend Property Get initialOrderId() As Long
@@ -674,7 +659,7 @@ Friend Sub CancelHistoricalData(ByVal requestHandle As Long)
 Dim i As Long
 Dim key As String
 
-On Error GoTo Err
+On Error GoTo err
 If Not mHistoricalDataTable(requestHandle).dataRetrievedFromTWS Then
     ' all data has already been got from TWS
     
@@ -698,19 +683,19 @@ Else
                 On Error Resume Next
                 mTwsHistDataRequestQueue.remove key
                 On Error GoTo 0
-                If Err.number = 0 Then
+                If err.number = 0 Then
                     ' request was still in queue - no further action required
-                ElseIf Err.number <> ErrorCodes.ErrIllegalArgumentException Then
-                    Err.Raise Err.number
+                ElseIf err.number <> ErrorCodes.ErrIllegalArgumentException Then
+                    err.Raise err.number
                 Else
                     ' request is with TWS so cancel it
                     
                     If mConnectionState = ConnConnected Then
                         Const version As Long = 1
                 
-                        addData CANCEL_HISTORICAL_DATA
-                        addData version
-                        addData requestHandle + HistoricalDataTickerBase + i * HistoricalDataTickerIncrement
+                        addMsgId CANCEL_HISTORICAL_DATA
+                        addData version, "Version"
+                        addData requestHandle + HistoricalDataReqIdBase + i * HistoricalDataReqIdIncrement, "Request id"
                         send
                     End If
                     
@@ -738,99 +723,99 @@ End If
 
 
 Exit Sub
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "CancelHistoricalData", _
-                Err.Description
+                err.Description
         
 End Sub
 
-Friend Sub CancelMarketData(ByVal tickerid As Long)
-On Error GoTo Err
-cancelMarketDataEx tickerid, True
+Friend Sub CancelMarketData(ByVal tickerId As Long)
+On Error GoTo err
+cancelMarketDataEx tickerId, True
 Exit Sub
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "CancelMarketData", _
-                Err.Description
+                err.Description
 End Sub
 
-Friend Sub CancelMarketDepth(ByVal tickerid As Long)
-On Error GoTo Err
+Friend Sub CancelMarketDepth(ByVal tickerId As Long)
+On Error GoTo err
 If mConnectionState <> ConnectionStates.ConnConnected Then Exit Sub
 
 Const version = 1
 
-With mTickerTable(tickerid)
-    If Not .inUse Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+With mTickerTable(tickerId)
+    If Not .inUse Then err.Raise ErrorCodes.ErrIllegalArgumentException, _
                                     "IBTWSSP.TWSAPI::cancelMarketDepth", _
-                                    "Invalid ticker id " & tickerid
+                                    "Invalid ticker id " & tickerId
     If Not .receivingMarketDepth Then
-        Err.Raise ErrorCodes.ErrIllegalStateException, _
+        err.Raise ErrorCodes.ErrIllegalStateException, _
                     "IBTWSSP.TWSAPI::cancelMarketDepth", _
-                    "Ticker id " & tickerid & " not currently receiving market depth"
+                    "Ticker id " & tickerId & " not currently receiving market depth"
     End If
-    mTickerTable(tickerid).receivingMarketDepth = False
+    mTickerTable(tickerId).receivingMarketDepth = False
 End With
 
-addData CANCEL_MKT_DEPTH
-addData version
-addData MarketDepthTickerBase + tickerid
+addMsgId CANCEL_MKT_DEPTH
+addData version, "Version"
+addData MarketDepthReqIdBase + tickerId, "Ticker id"
 send
 Exit Sub
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "CancelMarketDepth", _
-                Err.Description
+                err.Description
 
 End Sub
 
 Friend Sub cancelNewsBulletins()
 
-On Error GoTo Err
+On Error GoTo err
 If mConnectionState <> ConnectionStates.ConnConnected Then Exit Sub
 
 Const version = 1
 
-addData CANCEL_NEWS_BULLETINS
-addData version
+addMsgId CANCEL_NEWS_BULLETINS
+addData version, "Version"
 send
 Exit Sub
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "cancelNewsBulletins", _
-                Err.Description
+                err.Description
 End Sub
 
 Friend Sub cancelOrder(ByVal orderId As Long)
 
-On Error GoTo Err
+On Error GoTo err
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::cancelOrder", _
                 "Not connected"
 End If
 
 Const version = 1
-addData CANCEL_ORDER
-addData version
-addData orderId
-send
+addMsgId CANCEL_ORDER
+addData version, "Version"
+addData orderId, "Order id"
+send True
 Exit Sub
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "cancelOrder", _
-                Err.Description
+                err.Description
 
 End Sub
 
 Friend Sub Connect()
 
-On Error GoTo Err
+On Error GoTo err
 mDisconnectedByApplication = False
 
 If mConnectionState <> ConnectionStates.ConnNotConnected Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::connect", _
                 "Already connected"
 End If
@@ -842,16 +827,16 @@ logMessage "Connecting to TWS: " & connectionString, LogLevelNormal
 mSocket.Connect mServer, mPort
 
 Exit Sub
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "Connect", _
-                Err.Description
+                err.Description
 End Sub
 
 Friend Sub disconnect( _
                 ByVal reason As String, _
                 ByVal forced As Boolean)
-On Error GoTo Err
+On Error GoTo err
 
 If mConnectionState = ConnectionStates.ConnNotConnected Then Exit Sub
 
@@ -863,10 +848,10 @@ ReleaseSocket
 If forced Then RaiseEvent Disconnected(reason)
 logMessage "IBTWSSP:TwsAPI:disconnect: Disconnected from: " & connectionString & ": " & reason, LogLevelNormal
 Exit Sub
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "disconnect", _
-                Err.Description
+                err.Description
 End Sub
 
 Friend Sub placeOrder( _
@@ -879,9 +864,9 @@ Friend Sub placeOrder( _
 
 Dim mapEntry As OrderIdMapEntry
 
-On Error GoTo Err
+On Error GoTo err
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::placeOrder", _
                 "Already connected"
 End If
@@ -896,10 +881,10 @@ End If
 
 sendOrder pOrder, transmit, parentId, ocaGroup, routingHint
 Exit Sub
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "placeOrder", _
-                Err.Description
+                err.Description
 
 End Sub
                     
@@ -910,7 +895,7 @@ Friend Function ReadHistoricalBar( _
 
 Dim Bar As HistoricBar
 
-On Error GoTo Err
+On Error GoTo err
 With mHistoricalDataTable(requestHandle)
     If .nextBarIndex = -1 Then
         releaseHistoricalDataTableEntry requestHandle
@@ -931,19 +916,19 @@ With mHistoricalDataTable(requestHandle)
     End If
 End With
 Exit Function
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "ReadHistoricalBar", _
-                Err.Description
+                err.Description
 
 End Function
 
 Friend Sub ReplaceFA(ByVal DataType As FADataTypes, ByVal xml As String)
 
 
-On Error GoTo Err
+On Error GoTo err
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::ReplaceFA", _
                 "Already connected"
 End If
@@ -951,54 +936,54 @@ End If
 Const version = 1
 
 If mServerVersion < 13 Then
-    Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
+    err.Raise ErrorCodes.ErrUnsupportedOperationException, _
                 "IBTWSSP.TWSAPI::ReplaceFA", _
                 "Server version does not support ReplaceFA"
 End If
 
-addData REPLACE_FA
-addData version
-addData DataType
-addData xml
+addMsgId REPLACE_FA
+addData version, "Version"
+addData DataType, "Data type"
+addData xml, "XML"
 
 send
 Exit Sub
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "ReplaceFA", _
-                Err.Description
+                err.Description
 End Sub
 
 Friend Sub requestAccountUpdates(ByVal subscribe As Boolean, ByVal acctCode As String)
 
-On Error GoTo Err
+On Error GoTo err
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::requestAccountUpdates", _
                 "Already connected"
 End If
 
 Const version = 2
 
-addData REQ_ACCT_DATA
-addData version
-addBoolean subscribe
+addMsgId REQ_ACCT_DATA
+addData version, "Version"
+addBoolean subscribe, "Subscribe"
 
-If mServerVersion >= 9 Then addData acctCode
+If mServerVersion >= 9 Then addData acctCode, "Account code"
 
 send
 Exit Sub
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "requestAccountUpdates", _
-                Err.Description
+                err.Description
 End Sub
 
 Friend Sub requestAllOpenOrders()
 
-On Error GoTo Err
+On Error GoTo err
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::requestAllOpenOrders", _
                 "Not connected"
 End If
@@ -1006,36 +991,36 @@ End If
 
 Const version = 1
 
-addData REQ_ALL_OPEN_ORDERS
-addData version
+addMsgId REQ_ALL_OPEN_ORDERS
+addData version, "Version"
 send
 Exit Sub
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "requestAllOpenOrders", _
-                Err.Description
+                err.Description
 End Sub
 
 Friend Sub requestAutoOpenOrders(ByVal autoBind As Boolean)
 
-On Error GoTo Err
+On Error GoTo err
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::requestAutoOpenOrders", _
                 "Not connected"
 End If
 
 Const version = 1
 
-addData REQ_AUTO_OPEN_ORDERS
-addData version
-addBoolean autoBind
+addMsgId REQ_AUTO_OPEN_ORDERS
+addData version, "Version"
+addBoolean autoBind, "Autobind"
 send
 Exit Sub
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "requestAutoOpenOrders", _
-                Err.Description
+                err.Description
 End Sub
 
 Friend Sub RequestContract( _
@@ -1045,7 +1030,7 @@ Friend Sub RequestContract( _
 
 Dim requestQueueEntry As TWSContractDetailsRequestQueueEntry
 
-On Error GoTo Err
+On Error GoTo err
 Set requestQueueEntry.contractSpec = contractSpec
 Set requestQueueEntry.tradeBuildContractsBuilder = pContractsBuilder
 Set requestQueueEntry.requester = requester
@@ -1074,26 +1059,26 @@ mTwsContractDetailsRequestQueue.addToEnd requestQueueEntry
 
 submitNextContractDetailsRequest
 Exit Sub
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "RequestContract", _
-                Err.Description
+                err.Description
 End Sub
 
 Friend Sub RequestExecutions(ByVal filter As ExecutionFilter)
 Dim theFilter As ExecutionFilter
 
-On Error GoTo Err
+On Error GoTo err
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::RequestExecutions", _
                 "Not connected"
 End If
 
 Const version = 2
 
-addData REQ_EXECUTIONS
-addData version
+addMsgId REQ_EXECUTIONS
+addData version, "Version"
 
 If mServerVersion >= 9 Then
     If filter Is Nothing Then
@@ -1103,29 +1088,29 @@ If mServerVersion >= 9 Then
     End If
     
     With theFilter
-        addData .clientID
-        addData .accountCode
-        addData IIf(CLng(.time) <> 0, Format(.time, "yyyymmdd-hh\:nn\:ss"), "")
-        addData .symbol
-        addData secTypeToString(.sectype)
-        addData .exchange
-        addData orderActionToString(.Action)
+        addData .clientID, "Client id"
+        addData .accountCode, "Account code"
+        addData IIf(CLng(.time) <> 0, Format(.time, "yyyymmdd-hh\:nn\:ss"), ""), "Fill time"
+        addData .symbol, "Symbol"
+        addData secTypeToString(.sectype), "Sec type"
+        addData .exchange, "Exchange"
+        addData orderActionToString(.Action), "Action"
     End With
 End If
 
 send
 Exit Sub
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "RequestExecutions", _
-                Err.Description
+                err.Description
 End Sub
 
 Friend Sub requestFA(ByVal DataType As FADataTypes)
 
-On Error GoTo Err
+On Error GoTo err
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::requestFA", _
                 "Not connected"
 End If
@@ -1133,42 +1118,42 @@ End If
 Const version = 1
 
 If mServerVersion < 13 Then
-    Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
+    err.Raise ErrorCodes.ErrUnsupportedOperationException, _
                 "IBTWSSP.TWSAPI::requestFA", _
                 "Server version does not support requestFA"
 End If
 
-addData REQ_FA
-addData version
-addData DataType
+addMsgId REQ_FA
+addData version, "Version"
+addData DataType, "Data type"
 
 send
 Exit Sub
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "requestFA", _
-                Err.Description
+                err.Description
 End Sub
 
 Friend Sub requestManagedAccounts()
 
-On Error GoTo Err
+On Error GoTo err
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::requestManagedAccounts", _
                 "Not connected"
 End If
 
 Const version = 1
 
-addData REQ_MANAGED_ACCTS
-addData version
+addMsgId REQ_MANAGED_ACCTS
+addData version, "Version"
 send
 Exit Sub
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "requestManagedAccounts", _
-                Err.Description
+                err.Description
 End Sub
 
 Friend Function RequestMarketData(ByVal pContract As Contract, _
@@ -1178,9 +1163,9 @@ Friend Function RequestMarketData(ByVal pContract As Contract, _
 
 Dim lTickerID As Long
 
-On Error GoTo Err
+On Error GoTo err
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::RequestMarketDataEx", _
                 "Not connected"
 End If
@@ -1196,32 +1181,32 @@ If includeMarketDepth Then
     reqMarketDepth lTickerID, pContract.specifier
 End If
 Exit Function
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "RequestMarketData", _
-                Err.Description
+                err.Description
 
 End Function
 
 Friend Sub RequestMarketDepth(ByVal pTickerID As Long)
                             
-On Error GoTo Err
+On Error GoTo err
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::RequestMarketDepth", _
                 "Not connected"
 End If
 
 With mTickerTable(pTickerID)
-    If .Contract Is Nothing Then Err.Raise ErrorCodes.ErrIllegalArgumentException, "IBTWSSP.TWSAPI::requestMarketDepth", "Invalid ticker id: " & pTickerID
+    If .Contract Is Nothing Then err.Raise ErrorCodes.ErrIllegalArgumentException, "IBTWSSP.TWSAPI::requestMarketDepth", "Invalid ticker id: " & pTickerID
     .receivingMarketDepth = True
     reqMarketDepth pTickerID, .Contract.specifier
 End With
 Exit Sub
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "RequestMarketDepth", _
-                Err.Description
+                err.Description
 
 End Sub
 
@@ -1233,17 +1218,17 @@ Dim requestID As Long
 Dim i As Long
 Dim ignoreTimestamps As Boolean
 
-On Error GoTo Err
+On Error GoTo err
 requestID = -1
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::RequestHistoricalData", _
                 "Not connected"
 End If
 
 If mServerVersion < 16 Then
-    Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
+    err.Raise ErrorCodes.ErrUnsupportedOperationException, _
                 "IBTWSSP.TWSAPI::RequestHistoricalData", _
                 "Server version does not support historical data retrieval"
 End If
@@ -1336,9 +1321,6 @@ mHistoricalDataTable(requestID).SessionBuilder.sessionEndTime = barSpecifier.Con
 Set mHistoricalDataTable(requestID).Session = mHistoricalDataTable(requestID).SessionBuilder.Session
 mHistoricalDataTable(requestID).nextBarIndex = 0
 mHistoricalDataTable(requestID).barType = barSpecifier.barType
-'mHistoricalDataTable(requestid).barLength = barLength( _
-'                                            barSpecifier.barLength, _
-'                                            barSpecifier.BarLengthUnits)
 mHistoricalDataTable(requestID).nextBarIndex = -1
 Set mHistoricalDataTable(requestID).historicalDataReader = historicalDataReader
 Set mHistoricalDataTable(requestID).bars = New LinkedList
@@ -1347,68 +1329,70 @@ mHistoricalDataTable(requestID).bars.initialCapacity = IIf(barSpecifier.maxNumbe
 generateTwsHistoricalDataRequest requestID
 RequestHistoricalData = requestID
 Exit Function
-Err:
+err:
 
-If Err.number = ErrHistGenerationFailed Then
+If err.number = ErrHistGenerationFailed Then
     releaseHistoricalDataTableEntry requestID
     RequestHistoricalData = -1
     Exit Function
 End If
     
-handleFatalError Err.number, _
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "RequestHistoricalData", _
-                Err.Description
+                err.Description
 End Function
 
 Friend Sub RequestNewsBulletins(allMsgs As Boolean)
 
-On Error GoTo Err
+On Error GoTo err
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::RequestNewsBulletins", _
                 "Not connected"
 End If
 
 Const version = 1
 
-addData REQ_NEWS_BULLETINS
-addData version
-addData allMsgs
+addMsgId REQ_NEWS_BULLETINS
+addData version, "Version"
+addData allMsgs, "All messages"
 send
 Exit Sub
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "RequestNewsBulletins", _
-                Err.Description
+                err.Description
 End Sub
 
 Friend Sub RequestOpenOrders()
 
-On Error GoTo Err
+On Error GoTo err
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::RequestOpenOrders", _
                 "Not connected"
 End If
 
 Const version = 1
 
-addData REQ_OPEN_ORDERS
-addData version
+addMsgId REQ_OPEN_ORDERS
+addData version, "Version"
 send
 Exit Sub
-Err:
-handleFatalError Err.number, _
+err:
+handleFatalError err.number, _
                 "IBTWSSP" & "." & "TWSAPI" & "::" & "RequestOpenOrders", _
-                Err.Description
+                err.Description
 End Sub
 
 '================================================================================
 ' Helper Functions
 '================================================================================
 
-Private Sub addBoolean(ByVal val As Boolean)
-addData IIf(val, 1, 0)
+Private Sub addBoolean( _
+                ByVal val As Boolean, _
+                ByRef fieldName As String)
+addData IIf(val, 1, 0), fieldName
 End Sub
 
 Private Sub addByte(ByVal value As Integer)
@@ -1419,8 +1403,20 @@ mBufferOut(mIndexOut) = value
 mIndexOut = mIndexOut + 1
 End Sub
 
-Private Sub addData(ByVal data As String)
+Private Sub addData( _
+                ByVal data As String, _
+                ByRef fieldName As String)
 Dim i As Long
+
+If mOutMessageBuilder Is Nothing Then
+    Set mOutMessageBuilder = CreateStringBuilder
+    mOutMessageBuilder.append "OUT: "
+End If
+
+mOutMessageBuilder.append fieldName
+mOutMessageBuilder.append "="
+mOutMessageBuilder.append data
+mOutMessageBuilder.append " "
 
 For i = 1 To Len(data)
     addByte Asc(Mid$(data, i, 1))
@@ -1428,8 +1424,10 @@ Next
 addByte 0
 End Sub
 
-Private Sub addDouble(ByVal data As String)
-addData DoubleToString(data)
+Private Sub addDouble( _
+                ByVal data As String, _
+                ByRef fieldName As String)
+addData DoubleToString(data), fieldName
 End Sub
 
 Private Function adjustPrice( _
@@ -1443,6 +1441,11 @@ Else
     adjustPrice = Price
 End If
 End Function
+
+Private Sub addMsgId( _
+                ByVal id As TWSSocketOutMsgTypes)
+addData id, "Msg Id (" & gOutputMessageIdToString(id) & ")"
+End Sub
 
 Private Function AllocateTickerTableEntry(ByVal pDataConsumer As IStreamingDataConsumer) As Long
 Dim i As Long
@@ -1459,8 +1462,6 @@ Next
 If AllocateTickerTableEntry = -1 Then
     AllocateTickerTableEntry = UBound(mTickerTable) + 1
     ReDim Preserve mTickerTable(2 * (UBound(mTickerTable) + 1) - 1) As TickerTableEntry
-'    mOrderSimulator.MaxTickers = UBound(mTickerTable) + 1
-'    mTickers.MaxTickers = UBound(mTickerTable) + 1
 End If
 
 mTickerTable(AllocateTickerTableEntry).inUse = True
@@ -1468,7 +1469,7 @@ Set mTickerTable(AllocateTickerTableEntry).dataConsumer = pDataConsumer
 
 End Function
 
-Private Sub cancelMarketDataEx(ByVal tickerid As Long, _
+Private Sub cancelMarketDataEx(ByVal tickerId As Long, _
                 ByVal releaseEntry As Boolean)
 
 If mConnectionState <> ConnectionStates.ConnConnected Then Exit Sub
@@ -1476,21 +1477,21 @@ If mConnectionState <> ConnectionStates.ConnConnected Then Exit Sub
 Dim id As Long
 Const version = 2
 
-If Not mTickerTable(tickerid).inUse Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+If Not mTickerTable(tickerId).inUse Then
+    err.Raise ErrorCodes.ErrIllegalArgumentException, _
     "IBTWSSP.TWSAPI::CancelMarketDataEx", _
-    "Invalid ticker id " & tickerid
+    "Invalid ticker id " & tickerId
 End If
 
-id = tickerid + mTickerTable(tickerid).incarnation
+id = tickerId + mTickerTable(tickerId).incarnation
 
-If mTickerTable(tickerid).receivingMarketDepth Then CancelMarketDepth tickerid
+If mTickerTable(tickerId).receivingMarketDepth Then CancelMarketDepth tickerId
 
-If releaseEntry Then releaseTickerTableEntry tickerid
+If releaseEntry Then releaseTickerTableEntry tickerId
 
-addData CANCEL_MKT_DATA
-addData version
-addData id
+addMsgId CANCEL_MKT_DATA
+addData version, "Version"
+addData id, "Ticker id"
 send
 
 End Sub
@@ -1503,7 +1504,7 @@ Do While mTwsContractDetailsRequestQueue.size <> 0
 Loop
 End Sub
 Private Sub checkmessages()
-Static msgID As TWSSocketInMsgTypes
+Static msgId As TWSSocketInMsgTypes
 Static version As Long
 Static startIndex As Long
 
@@ -1521,12 +1522,12 @@ If mElapsedTimer Is Nothing Then
     mElapsedTimer.StartTiming
 End If
 
-On Error GoTo Err
+On Error GoTo err
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
     ' first data received is plain server version number
     If mCheckPointNumber = 0 Then
-        createMessageBuilder
+        createInMessageBuilder
         mServerVersion = getLong("Server version")
         checkpointBuffer
         mCheckPointNumber = 100
@@ -1550,8 +1551,8 @@ If mConnectionState <> ConnectionStates.ConnConnected Then
             mCheckPointNumber = 102
         End If
         
-        logSocketMessage
-        createMessageBuilder
+        logSocketInputMessage
+        createInMessageBuilder
         
         If mCheckPointNumber = 102 Then
             mServerVersion = getLong("Server version")
@@ -1560,17 +1561,25 @@ If mConnectionState <> ConnectionStates.ConnConnected Then
         End If
     Loop
     
-    logSocketMessage
-    createMessageBuilder
+    logSocketInputMessage
+    createInMessageBuilder
     
     If mCheckPointNumber = 100 Then
-        If mServerVersion >= 20 Then getString "TWS time"  ' TWS time
+        If mServerVersion >= 20 Then
+            logMessage "TWS time at connection: " & getString("TWS time")
+        End If
         checkpointBuffer
         mCheckPointNumber = 200
         'Debug.Print "Set checkpoint number=" & 200
     End If
     
-    logSocketMessage
+    If mServerVersion < ReqdServerVersion Then
+        handleFatalError 0, _
+                        ProjectName & "." & ModuleName & ":checkmessages", _
+                        "TWS is out of date and needs to be upgrade to at least version 884"
+    End If
+    
+    logSocketInputMessage
     
     mConnectionState = ConnectionStates.ConnConnected
     logMessage "Connection to TWS successful", LogLevelNormal
@@ -1600,11 +1609,15 @@ Do While mInputIndex < mIndexIn
         Dim tmpStartIndex As Long
         tmpStartIndex = startIndex
         startIndex = mInputIndex
-        prevMsgID = msgID
+        prevMsgID = msgId
         
-        createMessageBuilder
+        createInMessageBuilder
     
-        msgID = getLong("Msg id")
+        msgId = getLong("Msg id")
+        mInMessageBuilder.append "("
+        mInMessageBuilder.append gInputMessageIdToString(msgId)
+        mInMessageBuilder.append ") "
+        
         prevStartIndex = tmpStartIndex
         checkpointBuffer
         mCheckPointNumber = 1100
@@ -1620,7 +1633,7 @@ Do While mInputIndex < mIndexIn
     
     mPerformanceElapsedTimer.StartTiming
     
-    Select Case msgID
+    Select Case msgId
     Case TWSSocketInMsgTypes.TICK_PRICE
         'Debug.Print "getTickPrice"
         getTickPrice version
@@ -1683,9 +1696,13 @@ Do While mInputIndex < mIndexIn
         getScannerData version
     Case TWSSocketInMsgTypes.TICK_STRING
         getTickString version
+    Case TWSSocketInMsgTypes.TICK_GENERIC
+        getTickGeneric version
+    Case TWSSocketInMsgTypes.CONTRACT_DATA_END
+        getContractEnd version
     Case Else
         s = "Invalid message code from TWS: " & vbCrLf & _
-            "msgID=" & msgID & _
+            "msgID=" & msgId & _
             " version=" & version & _
             " startindex=" & startIndex & vbCrLf & _
             "prevMsgID=" & prevMsgID & _
@@ -1706,7 +1723,7 @@ Do While mInputIndex < mIndexIn
     
     Dim et As Single
     et = mPerformanceElapsedTimer.ElapsedTimeMicroseconds
-    With mPerformanceStats(msgID)
+    With mPerformanceStats(msgId)
         .lastSecondCount = .lastSecondCount + 1
         .lastSecondTime = .lastSecondTime + et
         If et > .longestTime Then .longestTime = et
@@ -1724,26 +1741,26 @@ Do While mInputIndex < mIndexIn
     
     checkpointBuffer
     mCheckPointNumber = 1000
-    'Debug.Print "Set checkpoint number=" & 1000 & "; minputindex=" & mInputIndex
+    'Debug.Print "Set checkpoint number=" & 1000 & " minputindex=" & mInputIndex
 Loop
 
 Exit Sub
 
-Err:
+err:
 Dim errNum As Long
 Dim errDesc As String
 
-errNum = Err.number
-errDesc = Err.Description
+errNum = err.number
+errDesc = err.Description
 
 If errNum = DataIncomplete Then
     rollbackBuffer
     retryCount = retryCount + 1
-    Debug.Print "Data incomplete count: " & retryCount & "; mCheckPointNumber: " & mCheckPointNumber
+    Debug.Print "Data incomplete count: " & retryCount & " mCheckPointNumber: " & mCheckPointNumber
     Exit Sub
 End If
 
-s = "msgID=" & msgID & _
+s = "msgID=" & msgId & _
     " version=" & version & _
     " startindex=" & startIndex & vbCrLf & _
     "prevMsgID=" & prevMsgID & _
@@ -1758,7 +1775,7 @@ Debug.Print "Error " & errNum & ": " & errDesc & vbCrLf & s
 
 logMessage "IBTWSSP:TwsAPI:checkMessages Error (" & errNum & "): " & errDesc, LogLevelSevere
 logMessage s, LogLevelDetail
-mCommonServiceConsumer.ServiceProviderError errNum, errDesc, -1
+mCommonServiceConsumer.FatalServiceProviderError errNum, "IBTWSSP:TwsAPI:checkMessages", errDesc, -1
 gReleaseTWSAPIInstance Me, True
 End Sub
 
@@ -1779,26 +1796,24 @@ If gLogger.isLoggable(LogLevelMediumDetail) Then
         mPerformanceTimerSecond.StartTimer
         mPerformanceTimerPeriod.StartTimer
         
-        Set mPerformanceLogger = GetLogger("tradebuild.serviceprovider.ibtwssp.performance")
+        Set mPerformanceLogger = GetLogger("tradebuild.log.serviceprovider.ibtwssp.performance")
     End If
 End If
 
-Set mSocketLogger = GetLogger("tradebuild.serviceprovider.ibtwssp.socket")
+Set mSocketLogger = GetLogger("tradebuild.log.serviceprovider.ibtwssp.socket")
 End Sub
 
-Private Sub createMessageBuilder()
-If mMessageBuilder Is Nothing And _
-    mSocketLogger.isLoggable(LogLevelHighDetail) _
-Then
-    Set mMessageBuilder = CreateStringBuilder
+Private Sub createInMessageBuilder()
+'If mInMessageBuilder Is Nothing And mSocketLogger.isLoggable(LogLevelHighDetail) then
+If mInMessageBuilder Is Nothing Then
+    Set mInMessageBuilder = CreateStringBuilder
+    mInMessageBuilder.append "IN: "
 End If
 End Sub
 
 Private Sub createsocket()
-If mSocket Is Nothing Then
-    Set mWinsockForm = New WinsockForm
-    Set mSocket = mWinsockForm.Winsock1
-End If
+If mWinsockForm Is Nothing Then Set mWinsockForm = New WinsockForm
+Set mSocket = mWinsockForm.Winsock1
 End Sub
 
 Private Function expiryToDate( _
@@ -1838,7 +1853,7 @@ Dim numBarsInsession As Long
 reqNum = mHistoricalDataTable(index).numberOfTwsRequests + 1
 mHistoricalDataTable(index).numberOfTwsRequests = reqNum
 
-TwsRequest.id = index + HistoricalDataTickerBase + (mHistoricalDataTable(index).numberOfTwsRequests - 1) * HistoricalDataTickerIncrement
+TwsRequest.id = index + HistoricalDataReqIdBase + (mHistoricalDataTable(index).numberOfTwsRequests - 1) * HistoricalDataReqIdIncrement
 
 ReDim mHistoricalDataTable(index).requestKeys(reqNum - 1) As String
 
@@ -2138,11 +2153,11 @@ For i = mInputIndex To mIndexIn - 1
         'Debug.Print "Got string: mInputIndex=" & mInputIndex & " value=" & s
         mInputIndex = i + 1
         getString = s
-        If Not mMessageBuilder Is Nothing Then
-            mMessageBuilder.append fieldName
-            mMessageBuilder.append "="
-            mMessageBuilder.append s
-            mMessageBuilder.append "; "
+        If Not mInMessageBuilder Is Nothing Then
+            mInMessageBuilder.append fieldName
+            mInMessageBuilder.append "="
+            mInMessageBuilder.append s
+            mInMessageBuilder.append " "
         End If
         Exit Function
     End If
@@ -2152,13 +2167,27 @@ Next
 ' we've got to the end of the current data, so raise an error to abort
 ' this attempt to assemble a message
 'Debug.Print "Failed to get string"
-Err.Raise DataIncomplete
+err.Raise DataIncomplete
 End Function
 
 Private Sub getAccountTime(ByVal version As Long)
 Dim accountTime As String: accountTime = getString("Account time")
 
-logSocketMessage
+Dim failpoint As Long
+On Error GoTo err
+
+logSocketInputMessage
+
+Exit Sub
+
+err:
+If err.number = DataIncomplete Then err.Raise DataIncomplete
+logSocketInputMessage True
+Dim errNumber As Long: errNumber = err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "getAccountTime" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+err.Raise errNumber, errSource, errDescription
 
 End Sub
 
@@ -2168,11 +2197,29 @@ Dim val As String: val = getString("Value")
 Dim cur As String: cur = getString("Currency")
 Dim accountName As String: If version >= 2 Then accountName = getString("Account name")
 
-logSocketMessage
+Dim failpoint As Long
+On Error GoTo err
+
+logSocketInputMessage
+
+Exit Sub
+
+err:
+If err.number = DataIncomplete Then err.Raise DataIncomplete
+logSocketInputMessage True
+Dim errNumber As Long: errNumber = err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "getAccountValue" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+err.Raise errNumber, errSource, errDescription
 End Sub
 
 Private Sub getBondContractData(ByVal version As Long)
 ' not currently supported
+Dim failpoint As Long
+On Error GoTo err
+
+If (version >= 3) Then getLong "Req Id"
 getString "symbol"
 getString "sectype"
 getString "cusip"
@@ -2194,18 +2241,37 @@ getLong "conid"
 getDouble "minTick"
 getString "OrderTypes"
 getString "validExchanges"
+If (version >= 2) Then
+    getString "Next Option Date"
+    getString "Next Option Type"
+    getBoolean "Next Option Partial"
+    getString "Notes"
+End If
 
-logSocketMessage
+logSocketInputMessage
 
 mContractDetailsRequest.requester.contractSpecifierInvalid mContractDetailsRequest, _
                                                     "bonds not yet supported"
                                                     
+
+Exit Sub
+
+err:
+If err.number = DataIncomplete Then err.Raise DataIncomplete
+logSocketInputMessage True
+Dim errNumber As Long: errNumber = err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "getBondContractData" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+err.Raise errNumber, errSource, errDescription
 
 End Sub
 
 Private Sub getContractData(ByVal version As Long)
 Dim lContractWrapper As ContractWrapper
 Dim lContractSpec As ContractSpecifier
+
+Dim reqId As Long
 
 Dim symbol As String
 Dim localSymbol As String
@@ -2235,6 +2301,11 @@ Dim permittedOrderAttributes As Long
 Dim i As Long
 
 Dim ignore As Boolean
+
+Dim failpoint As Long
+On Error GoTo err
+
+If (version >= 3) Then reqId = getLong("Req Id")
 
 Set lContractWrapper = New ContractWrapper
 
@@ -2337,12 +2408,14 @@ For i = 0 To UBound(orderTypesStr)
             "COND", _
             "CONDORDER", _
             "CONSCOST", _
+            "DARKPOLL", _
+            "DEACT", _
             "DEACTEOD", _
             "FOK", _
             "HPENNY", _
             "LARGE", _
-            "LTH", _
-            "NONALGO", _
+            "LTH"
+        Case "NONALGO", _
             "OCA", _
             "OPG", _
             "OPGREROUT", _
@@ -2350,8 +2423,10 @@ For i = 0 To UBound(orderTypesStr)
             "PEGMID", _
             "PREOPGRTH", _
             "RELSTK", _
+            "RTHIGNOPG", _
             "SCALE", _
             "SCALERST", _
+            "SMARTSTG", _
             "SOI", _
             "TIMEPRIO", _
             "VOLAT"
@@ -2369,10 +2444,13 @@ lContractWrapper.permittedOrderTypes = permittedOrderTypes
 
 lContractWrapper.permittedOrderTifs = permittedOrderTifs
 
-lContractWrapper.permittedStopTriggerMethods = TradeBuildSP.StopTriggerMethods.StopTriggerDefault Or _
+lContractWrapper.permittedStopTriggerMethods = TradeBuildSP.StopTriggerMethods.StopTriggerBidAsk Or _
+                                        TradeBuildSP.StopTriggerMethods.StopTriggerDefault Or _
                                         TradeBuildSP.StopTriggerMethods.StopTriggerDoubleBidAsk Or _
                                         TradeBuildSP.StopTriggerMethods.StopTriggerDoubleLast Or _
-                                        TradeBuildSP.StopTriggerMethods.StopTriggerLast
+                                        TradeBuildSP.StopTriggerMethods.StopTriggerLast Or _
+                                        TradeBuildSP.StopTriggerMethods.StopTriggerLastOrBidAsk Or _
+                                        TradeBuildSP.StopTriggerMethods.StopTriggerMidPoint
 
 validExchanges = getString("Valid exchanges")
 lValidExchanges = Split(validExchanges, ",")
@@ -2387,7 +2465,7 @@ Else
     End If
 End If
 
-logSocketMessage
+logSocketInputMessage
 
 If Not ignore Then
     Dim expiryDate As Date
@@ -2411,28 +2489,71 @@ If Not ignore Then
     mContractDetailsRequest.contractWrappers.add lContractWrapper
 End If
 
-If Not mFirstContractDetailsReceived Then
-    mFirstContractDetailsReceived = True
-    
-    ' now send a reqContract that will give a 'no such security
-    ' exists' error. This error will act as a delimiter for all
-    ' the contract details returned by the orginal request. Note that
-    ' tests indicate that contract details for different reqContracts
-    ' are not interleaved
-    
-    addData REQ_CONTRACT_DATA
-    addData 1   ' version
-    addData "ES"
-    addData "FUT"
-    addData "200501"
-    addData "0"
-    addData ""
-    addData "LIFFE"
-    addData "GBP"
-    addData ""
-    send
+If mServerVersion < MIN_SERVER_VER_CONTRACT_DATA_CHAIN Then
+    If Not mFirstContractDetailsReceived Then
+        mFirstContractDetailsReceived = True
+        
+        ' now send a reqContract that will give a 'no such security
+        ' exists' error. This error will act as a delimiter for all
+        ' the contract details returned by the orginal request. Note that
+        ' tests indicate that contract details for different reqContracts
+        ' are not interleaved
+        
+        addMsgId REQ_CONTRACT_DATA
+        addData 1, "Version"
+        addData "ES", "Symbol"
+        addData "FUT", "Sec type"
+        addData "200501", "Expiry"
+        addData "0", "Strike"
+        addData "", "Right"
+        addData "LIFFE", "Exchange"
+        addData "GBP", "Currency"
+        addData "", "Local symbol"
+        send
+    End If
 End If
 
+Exit Sub
+
+err:
+If err.number = DataIncomplete Then err.Raise DataIncomplete
+logSocketInputMessage True
+Dim errNumber As Long: errNumber = err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "getContractData" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+err.Raise errNumber, errSource, errDescription
+End Sub
+
+Private Sub getContractEnd(ByVal version As Long)
+Dim reqId As Long
+Dim failpoint As Long
+On Error GoTo err
+
+reqId = getLong("Req Id")
+
+logSocketInputMessage
+
+mContractDetailsRequest.requester.contractsLoaded mContractDetailsRequest
+
+Set mContractDetailsRequest.contractSpec = Nothing
+Set mContractDetailsRequest.contractWrappers = Nothing
+Set mContractDetailsRequest.tradeBuildContractsBuilder = Nothing
+Set mContractDetailsRequest.requester = Nothing
+mFirstContractDetailsReceived = False
+
+submitNextContractDetailsRequest
+
+Exit Sub
+
+err:
+If err.number = DataIncomplete Then err.Raise DataIncomplete
+logSocketInputMessage True
+Dim errNumber As Long: errNumber = err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "getContractEnd" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+err.Raise errNumber, errSource, errDescription
 End Sub
 
 Private Sub getErrorMsg(ByVal version As Long)
@@ -2442,9 +2563,9 @@ Dim errorMsg As String
 Dim execFilter As ExecutionFilter
 Dim index As Long
 Dim mapEntry As OrderIdMapEntry
-Dim failpoint As Long
 
-On Error GoTo Err
+Dim failpoint As Long
+On Error GoTo err
 
 failpoint = 100
 
@@ -2461,7 +2582,7 @@ failpoint = 300
 errorMsg = getString("Error msg")
 Debug.Print "Error msg: " & errorMsg
 
-logSocketMessage
+logSocketInputMessage True
 
 Select Case errorCode
 Case 101
@@ -2471,7 +2592,7 @@ Case 101
 Case 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, _
     121, 125, 126, 127, 128, 129, 130, 132, 137, 140, 141, 144, _
     152, 153, 154, 157, 160, 201, 312, 313, 314, 315, 325, 328, _
-    334, 337, 339, 343
+    334, 337, 338, 339, 343, 355, 361, 382, 383, 388, 391
     
     failpoint = 400
 
@@ -2482,7 +2603,7 @@ Case 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, _
 Case 162    ' historical data request problem
     failpoint = 500
 
-    index = (id - HistoricalDataTickerBase) Mod HistoricalDataTickerIncrement
+    index = (id - HistoricalDataReqIdBase) Mod HistoricalDataReqIdIncrement
 
     If mHistoricalDataTable(index).bars.size <> 0 Then
         Debug.Print "Historical data retrieved: bars in list: " & mHistoricalDataTable(index).bars.size
@@ -2499,10 +2620,10 @@ Case 162    ' historical data request problem
 Case 165
     failpoint = 600
 
-    logMessage "Connected to IB Historical Market Data Service", LogLevelNormal
+    logMessage "Connected to IB Historical Market Data Service - " & errorMsg, LogLevelNormal
 Case 200    ' security definition not known
     Select Case getIdType(id)
-    Case IdTypeNone
+    Case IdTypeNone, IdTypeContractData
         ' this must relate to a RequestContract
         failpoint = 750
 
@@ -2517,9 +2638,13 @@ Case 200    ' security definition not known
         mTickerTable(id Mod IncarnationIncrement).dataReader.marketDataRequestFailed errorMsg
         releaseTickerTableEntry (id Mod IncarnationIncrement)
     Case IdTypeMarketDepth
-        mTickerTable(id - MarketDepthTickerBase).dataReader.marketDepthRequestFailed errorMsg
+        failpoint = 710
+
+        mTickerTable(id - MarketDepthReqIdBase).dataReader.marketDepthRequestFailed errorMsg
     Case IdTypeHistoricalData
-        index = (id - HistoricalDataTickerBase) Mod HistoricalDataTickerIncrement
+        failpoint = 720
+
+        index = (id - HistoricalDataReqIdBase) Mod HistoricalDataReqIdIncrement
     
         logMessage "Error " & errorCode & " from TWS: " & errorMsg, LogLevelNormal
         mHistoricalDataTable(index).historicalDataReader.historicalDataRequestFailed errorMsg
@@ -2527,24 +2652,44 @@ Case 200    ' security definition not known
         
         processNextHistDataRequest
     Case IdTypeOrder
+        failpoint = 730
+
+        On Error Resume Next
         mapEntry = mOrderIDMap(generateTwsOrderKey(id, mClientID))
+        On Error GoTo 0
+        If Not mapEntry.order Is Nothing Then
+            mapEntry.OrderSubmitter.updateStatus mapEntry.order.tradeBuildId, _
+                                                OrderStatuses.OrderStatusRejected
+            mapEntry.OrderSubmitter.invalidOrder mapEntry.order.tradeBuildId, errorMsg
+        End If
+    End Select
+Case 201
+    failpoint = 750
+
+    On Error Resume Next
+    mapEntry = mOrderIDMap(generateTwsOrderKey(id, mClientID))
+    On Error GoTo 0
+    If Not mapEntry.order Is Nothing Then
         mapEntry.OrderSubmitter.updateStatus mapEntry.order.tradeBuildId, _
                                             OrderStatuses.OrderStatusRejected
-        mapEntry.OrderSubmitter.invalidOrder mapEntry.order.tradeBuildId, errorMsg
-    End Select
-    
+        mOrderIDMap.remove generateTwsOrderKey(id, mClientID)
+    End If
 Case 202
     failpoint = 800
 
+    On Error Resume Next
     mapEntry = mOrderIDMap(generateTwsOrderKey(id, mClientID))
-    mapEntry.OrderSubmitter.updateStatus mapEntry.order.tradeBuildId, _
-                                        OrderStatuses.OrderStatusCancelled
-    mOrderIDMap.remove generateTwsOrderKey(id, mClientID)
+    On Error GoTo 0
+    If Not mapEntry.order Is Nothing Then
+        mapEntry.OrderSubmitter.updateStatus mapEntry.order.tradeBuildId, _
+                                            OrderStatuses.OrderStatusCancelled
+        mOrderIDMap.remove generateTwsOrderKey(id, mClientID)
+    End If
 Case 309
     ' max market depth requests exceeded
     failpoint = 900
 
-    mTickerTable(id - MarketDepthTickerBase).dataReader.marketDepthRequestFailed "Max market depth requests exceeded"
+    mTickerTable(id - MarketDepthReqIdBase).dataReader.marketDepthRequestFailed "Max market depth requests exceeded"
 Case 316
     failpoint = 1000
 
@@ -2561,7 +2706,7 @@ Case 321    ' invalid request
     Case IdTypeRealtimeData
     Case IdTypeMarketDepth
     Case IdTypeHistoricalData
-        index = (id - HistoricalDataTickerBase) Mod HistoricalDataTickerIncrement
+        index = (id - HistoricalDataReqIdBase) Mod HistoricalDataReqIdIncrement
     
         If mHistoricalDataTable(index).bars.size <> 0 Then
             Debug.Print "Historical data retrieved: bars in list: " & mHistoricalDataTable(index).bars.size
@@ -2655,8 +2800,14 @@ End Select
 
 Exit Sub
 
-Err:
-Err.Raise Err.number, , "TWSAPI::getErrorMsg(failpoint=" & failpoint & "): " & Err.Description
+err:
+If err.number = DataIncomplete Then err.Raise DataIncomplete
+logSocketInputMessage True
+Dim errNumber As Long: errNumber = err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "getErrorMsg" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+err.Raise errNumber, errSource, errDescription
 End Sub
 
 Private Sub getExecutionData(ByVal version As Long)
@@ -2682,12 +2833,16 @@ Dim lContractSpecifier As ContractSpecifier
 
 Dim exec As Execution
 
+Dim failpoint As Long
+On Error GoTo err
+
 id = getLong("Id")
 
 On Error Resume Next
 mapEntry = mOrderIDMap(generateTwsOrderKey(id, mClientID))
 On Error GoTo 0
 
+If (version >= 5) Then getLong "Con Id"
 symbol = getString("Symbol")
 sectype = getString("Sec type")
 expiry = getString("Expiry")
@@ -2718,7 +2873,7 @@ exec.time = CDate(Left$(timeString, 4) & "/" & _
 exec.AccountIdentifier = getString("Account id")
 exec.FillingExchange = getString("Filling exchange")
 side = getString("Side")
-exec.Action = IIf(side = "BUY", OrderActions.ActionBuy, OrderActions.ActionSell)
+exec.Action = IIf(UCase$(side) = "BOT", OrderActions.ActionBuy, OrderActions.ActionSell)
 exec.Quantity = getLong("Quantity")
 Price = getDouble("Price")
 exec.Price = adjustPrice(Price, lContractSpecifier)
@@ -2729,12 +2884,17 @@ If version >= 3 Then clientID = getLong("Client id")  ' clientID
    
 If version >= 4 Then exec.IsLiquidation = getBoolean("Is liquidation")
 
-logSocketMessage
+If (version >= 6) Then
+    getLong "Cum Qty"
+    getDouble "Avg Price"
+End If
+
+logSocketInputMessage True
 
 Dim existingExec As Execution
 On Error Resume Next
 existingExec = mExecutions(execId)
-If Err.number = 0 Then
+If err.number = 0 Then
     ' we've had this execution before so nothing to do
     On Error GoTo 0
 Else
@@ -2769,13 +2929,38 @@ Else
     End If
 End If
 
+Exit Sub
+
+err:
+If err.number = DataIncomplete Then err.Raise DataIncomplete
+logSocketInputMessage True
+Dim errNumber As Long: errNumber = err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "getExecutionData" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+err.Raise errNumber, errSource, errDescription
+
 End Sub
 
 Private Sub getFAData(ByVal version As Long)
 Dim DataType As FADataTypes: DataType = getLong("Data type")
 Dim XMLData As String: XMLData = getString("XML data")
 
-logSocketMessage
+Dim failpoint As Long
+On Error GoTo err
+
+logSocketInputMessage
+
+Exit Sub
+
+err:
+If err.number = DataIncomplete Then err.Raise DataIncomplete
+logSocketInputMessage True
+Dim errNumber As Long: errNumber = err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "getFAData" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+err.Raise errNumber, errSource, errDescription
 
 End Sub
 
@@ -2796,7 +2981,7 @@ Dim timestamp As Date
 
 Dim failpoint As Long
 
-On Error GoTo Err
+On Error GoTo err
 
 If checkPointNumber = 0 Then
     hint = 0
@@ -2804,8 +2989,8 @@ If checkPointNumber = 0 Then
     totalVolume = 0
     
     requestID = getLong("Request id")
-    index = (requestID - HistoricalDataTickerBase) Mod HistoricalDataTickerIncrement
-    reqNo = Int((requestID - HistoricalDataTickerBase) / HistoricalDataTickerIncrement)
+    index = (requestID - HistoricalDataReqIdBase) Mod HistoricalDataReqIdIncrement
+    reqNo = Int((requestID - HistoricalDataReqIdBase) / HistoricalDataReqIdIncrement)
     
     If mHistoricalDataTable(index).barSpecifier.customSessionStartTime <> 0 Or _
         mHistoricalDataTable(index).barSpecifier.customSessionEndTime <> 0 _
@@ -2949,7 +3134,7 @@ If checkPointNumber >= 200 Then
 End If
 checkPointNumber = 0
 
-logSocketMessage
+logSocketInputMessage
 
 If mHistoricalDataTable(index).cancelling Then Exit Sub
 
@@ -2984,9 +3169,8 @@ End If
 
 Exit Sub
 
-Err:
-
-If Err.number = ErrHistGenerationFailed Then
+err:
+If err.number = ErrHistGenerationFailed Then
     mHistoricalDataTable(index).barSpecifier.maxNumberOfBars = 0
     Debug.Print "Historical data retrieved: bars in list: " & mHistoricalDataTable(index).bars.size
     mHistoricalDataTable(index).dataRetrievedFromTWS = True
@@ -2995,17 +3179,13 @@ If Err.number = ErrHistGenerationFailed Then
     Exit Sub
 End If
 
-If Err.number <> DataIncomplete Then
-    gLogger.Log LogLevelSevere, "Error at: " & ProjectName & "." & ModuleName & ":" & "getHistoricalData" & "." & IIf(failpoint <> 0, failpoint, checkPointNumber) & _
-                                IIf(Err.source <> "", vbCrLf & Err.source, "") & vbCrLf & _
-                                Err.Description
-End If
-
-Err.Raise Err.number, _
-        ProjectName & "." & ModuleName & ":" & "getHistoricalData" & "." & failpoint & _
-        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
-        Err.Description
-
+If err.number = DataIncomplete Then err.Raise DataIncomplete
+logSocketInputMessage True
+Dim errNumber As Long: errNumber = err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "getHistoricalData" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+err.Raise errNumber, errSource, errDescription
 
 End Sub
 
@@ -3013,9 +3193,11 @@ Private Function getIdType( _
                 ByVal id As Long) As IdTypes
 If id >= OrderIdBase Then
     getIdType = IdTypeOrder
-ElseIf id >= HistoricalDataTickerBase Then
+ElseIf id >= ContractDataReqIdBase Then
+    getIdType = IdTypeContractData
+ElseIf id >= HistoricalDataReqIdBase Then
     getIdType = IdTypeHistoricalData
-ElseIf id >= MarketDepthTickerBase Then
+ElseIf id >= MarketDepthReqIdBase Then
     getIdType = IdTypeMarketDepth
 ElseIf id >= 0 Then
     getIdType = IdTypeRealtimeData
@@ -3027,23 +3209,40 @@ End Function
 Private Sub getManagedAccounts(ByVal version As Long)
 Dim accountsList As String: accountsList = getString("Accounts list")
 
-logSocketMessage
+Dim failpoint As Long
+On Error GoTo err
+
+logSocketInputMessage
+
+Exit Sub
+
+err:
+If err.number = DataIncomplete Then err.Raise DataIncomplete
+logSocketInputMessage True
+Dim errNumber As Long: errNumber = err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "getManagedAccounts" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+err.Raise errNumber, errSource, errDescription
 
 End Sub
 
 Private Sub getMarketDepth(ByVal version As Long)
 Dim id As Long: id = getLong("Id")
 Dim tick As GenericTick
-tick.tickType = TickTypeMarketDepth
+Dim failpoint As Long
+On Error GoTo err
+
+tick.ticktype = TickTypeMarketDepth
 tick.position = getLong("Position")
 tick.operation = getLong("Operation")
 tick.side = getLong("Side")
 tick.Price = getDouble("Price")
 tick.size = getLong("Size")
 
-logSocketMessage
+logSocketInputMessage
 
-With mTickerTable(id - MarketDepthTickerBase)
+With mTickerTable(id - MarketDepthReqIdBase)
     
     If Not .inUse Then Exit Sub     ' ticker has been stopped
     
@@ -3053,12 +3252,26 @@ With mTickerTable(id - MarketDepthTickerBase)
     
 End With
 
+Exit Sub
+
+err:
+If err.number = DataIncomplete Then err.Raise DataIncomplete
+logSocketInputMessage True
+Dim errNumber As Long: errNumber = err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "getMarketDepth" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+err.Raise errNumber, errSource, errDescription
+
 End Sub
 
 Private Sub getMarketDepthL2(ByVal version As Long)
 Dim id As Long: id = getLong("Id")
 Dim tick As GenericTick
-tick.tickType = TickTypeMarketDepth
+Dim failpoint As Long
+On Error GoTo err
+
+tick.ticktype = TickTypeMarketDepth
 tick.position = getLong("Position")
 tick.marketmaker = getString("Marketmaker")
 tick.operation = getLong("Operation")
@@ -3066,9 +3279,9 @@ tick.side = getLong("Side")
 tick.Price = getDouble("Price")
 tick.size = getLong("Size")
 
-logSocketMessage
+logSocketInputMessage
 
-With mTickerTable(id - MarketDepthTickerBase)
+With mTickerTable(id - MarketDepthReqIdBase)
     
     If Not .inUse Then Exit Sub     ' ticker has been stopped
     
@@ -3078,30 +3291,72 @@ With mTickerTable(id - MarketDepthTickerBase)
     
 End With
 
+Exit Sub
+
+err:
+If err.number = DataIncomplete Then err.Raise DataIncomplete
+logSocketInputMessage True
+Dim errNumber As Long: errNumber = err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "getMarketDepthL2" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+err.Raise errNumber, errSource, errDescription
+
 End Sub
 
 Private Sub getNewsBulletins(ByVal version As Long)
-Dim msgID As Long: msgID = getLong("Id")
+Dim msgId As Long: msgId = getLong("Id")
 Dim msgType As Long: msgType = getLong("Type")
 Dim newsMessage As String: newsMessage = getString("Message")
 Dim originatingExch As String: originatingExch = getString("Orig exchange")
 
-logSocketMessage
+Dim failpoint As Long
+On Error GoTo err
+
+logSocketInputMessage
+
+Exit Sub
+
+err:
+If err.number = DataIncomplete Then err.Raise DataIncomplete
+logSocketInputMessage True
+Dim errNumber As Long: errNumber = err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "getNewsBulletins" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+err.Raise errNumber, errSource, errDescription
 
 End Sub
 
 Private Sub getNextValidId(ByVal version As Long)
 
+Dim failpoint As Long
+On Error GoTo err
+
 mNextOrderID = getLong("Next id")
 
-logSocketMessage
+logSocketInputMessage
 
 If mNextOrderID < OrderIdBase Then mNextOrderID = OrderIdBase
+
+Exit Sub
+
+err:
+If err.number = DataIncomplete Then err.Raise DataIncomplete
+logSocketInputMessage True
+Dim errNumber As Long: errNumber = err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "getNextValidId" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+err.Raise errNumber, errSource, errDescription
 
 End Sub
 
 Private Sub getOpenOrder(ByVal version As Long)
+Dim mapEntry As OrderIdMapEntry
+
 Dim id As Long
+Dim clientID As Long
 
 Dim symbol As String
 Dim localSymbol As String
@@ -3112,27 +3367,21 @@ Dim rightString As String
 Dim exchange As String
 Dim currencyCode As String
 
-Dim Action As String
-Dim orderType As String
-Dim timeInForce As String
+Dim dateString As String
 
 Dim lContractSpecifier As ContractSpecifier
 
+Dim lOrderReport As IOrderReport
+
+Dim failpoint As Long
+On Error GoTo err
+
+Set lOrderReport = New orderReport
+
 id = getLong("Id")
 
-'On Error Resume Next
-'Set lOrder = mAllOrders(CStr(id))
-'On Error GoTo 0
-'
-'If lOrder Is Nothing Then
-'    ' this must be an open order from the previous API session, but
-'    ' for which we haven't yet had the openOrder notification
-    'Set lOrder = New Order
-    'lOrder.id = id
-'    mAllOrders.add lOrder, CStr(id)
-'End If
-
 ' read contract fields
+If version >= 17 Then setproperty lOrderReport.providerProperties, "conId"
 symbol = getString("Symbol")
 sectype = getString("Sec type")
 expiry = getString("Expiry")
@@ -3153,101 +3402,178 @@ Set lContractSpecifier = CreateContractSpecifier(localSymbol, _
 
 
 ' read order fields
-'With lOrder
-    Action = getString("Action")
-    '.action = orderActionFromString(action)
-     getLong "Quantity"   ' .quantity
-    orderType = getString("Order type")
-    '.orderType = orderTypeFromString(orderType)
-    getDouble "Limit price"  ' .limitPrice
-    getDouble "Aux price"   ' .auxPrice
-    timeInForce = getString("Time in force")
-    '.timeInForce = orderTIFFromString(timeInForce)
-    getString "OCA group"   ' .ocaGroup
-    getString "Account"   ' .account
-    getString "Open/close"   ' .openClose
-    getLong "Origin"     ' .origin
-    getString "Order ref"  ' .orderRef
-    If version >= 3 Then getLong "Client id"   ' .clientID
+With lOrderReport
+    .brokerId = id
+    .ContractSpecifier = lContractSpecifier
+    .Action = orderActionFromString(getString("Action"))
+    .Quantity = getLong("Quantity")
+    .orderType = orderTypeFromString(getString("Order type"))
+    .limitPrice = getDouble("Limit price")
+    .triggerPrice = getDouble("Aux price")
+    .timeInForce = orderTIFFromString(getString("Time in force"))
+    setproperty .providerProperties, "OCA group"
+    setproperty .providerProperties, "Account"   ' .account
+    setproperty .providerProperties, "Open/close"   ' .openClose
+    .origin = getLong("Origin")
+    .originatorRef = getString("Order ref")
+    If version >= 3 Then clientID = getLong("Client id")
     
     If version >= 4 Then
-        getLong "Perm id"    ' .permId =
-        getBoolean "Ignore RTH"  ' .ignoreRTH
-        getBoolean "Hidden" ' .hidden
-        getDouble "Discr amt"  ' .discretionaryAmt
+        setproperty .providerProperties, "Perm id"    ' .permId =
+        .ignoreRegularTradingHours = getBoolean("Outside RTH")
+        .Hidden = getBoolean("Hidden")
+        .discretionaryAmount = getDouble("Discr amt")
     End If
 
-    If version >= 5 Then getString "Good after time"  ' .goodAfterTime
+    If version >= 5 Then
+        dateString = getString("Good after time")
+        If dateString <> "" Then .goodAfterTime = CDate(Left$(dateString, 4) & "/" & _
+                                                        Mid$(dateString, 5, 2) & "/" & _
+                                                        Mid$(dateString, 7, 2) & " " & _
+                                                        Right$(dateString, 8))
+    End If
     
-    If version >= 6 Then getString "Shares allocation"  ' .sharesAllocation
+    If version >= 6 Then setproperty .providerProperties, "Shares allocation"  ' .sharesAllocation
     
     If version >= 7 Then
-        getString "FA Group"   ' .FAGroup
-        getString "FA method"  ' .FAMethod
-        getString "FA Percentage"  ' .FAPercentage
-        getString "FA Profile"  ' .FAProfile
+        setproperty .providerProperties, "FA Group"   ' .FAGroup
+        setproperty .providerProperties, "FA method"  ' .FAMethod
+        setproperty .providerProperties, "FA Percentage"  ' .FAPercentage
+        setproperty .providerProperties, "FA Profile"  ' .FAProfile
     End If
     
-    If version >= 8 Then getString "Good till date"  ' goodTillDate
-
+    If version >= 8 Then
+        dateString = getString("Good till date")
+        If dateString <> "" Then .goodTillDate = CDate(Left$(dateString, 4) & "/" & _
+                                                        Mid$(dateString, 5, 2) & "/" & _
+                                                        Mid$(dateString, 7, 2) & " " & _
+                                                        Right$(dateString, 8))
+    End If
+    
     If version >= 9 Then
-        getString "Rule80A"          ' rule80A
-        getDouble "Percent Offset"
-        getString "Settling Firm"
-        getLong "shortSaleSlot"
-        getString "designatedLocation"
-        getLong "Auction Strategy"
-        getDouble "starting Price"
-        getDouble "stockRefPrice"
-        getDouble "delta"
-        getDouble "stockRangeLower"
-        getDouble " stockRangeUpper"
-        getLong "displaySize"
-        getBoolean "rthOnly"
-        getBoolean "blockOrder"
-        getBoolean "sweepToFill"
-        getBoolean "allOrNone"
-        getLong "minQty"
-        getLong "ocaType"
-        getBoolean "eTradeOnly"
-        getBoolean "firmQuoteOnly"
-        getDouble "nbboPriceCap"
+        setproperty .providerProperties, "Rule80A"          ' rule80A
+        setproperty .providerProperties, "Percent Offset"
+        .settlingFirm = getString("Settling Firm")
+        setproperty .providerProperties, "shortSaleSlot"
+        setproperty .providerProperties, "designatedLocation"
+        setproperty .providerProperties, "Auction Strategy"
+        setproperty .providerProperties, "starting Price"
+        setproperty .providerProperties, "stockRefPrice"
+        setproperty .providerProperties, "delta"
+        setproperty .providerProperties, "stockRangeLower"
+        setproperty .providerProperties, "stockRangeUpper"
+        .displaySize = getLong("displaySize")
+        'setproperty .providerProperties, "rthOnly"
+        .blockOrder = getBoolean("blockOrder")
+        .sweepToFill = getBoolean("sweepToFill")
+        .allOrNone = getBoolean("allOrNone")
+        .minimumQuantity = getLong("minQty")
+        setproperty .providerProperties, "ocaType"
+        .eTradeOnly = getBoolean("eTradeOnly")
+        .firmQuoteOnly = getBoolean("firmQuoteOnly")
+        .NbboPriceCap = getDouble("nbboPriceCap")
     End If
 
     If version >= 10 Then
-        getLong "parentId"
-        getLong "triggerMethod"
+        setproperty .providerProperties, "parentId"
+        .stopTriggerMethod = orderStopTriggerMethodFromString(getString("triggerMethod"))
     End If
 
     If version >= 11 Then
-        getDouble "volatility"
-        getLong "volatilityType"
+        setproperty .providerProperties, "volatility"
+        setproperty .providerProperties, "volatilityType"
         If version = 11 Then
-            getLong "receivedInt"
+            setproperty .providerProperties, "receivedInt"
         Else ' version 12 and up
-            getString "deltaNeutralOrderType"
-            getDouble "deltaNeutralAuxPrice"
+            setproperty .providerProperties, "deltaNeutralOrderType"
+            setproperty .providerProperties, "deltaNeutralAuxPrice"
         End If
-        getLong "continuousUpdate"
+        setproperty .providerProperties, "continuousUpdate"
         If mServerVersion = 26 Then
-            getDouble "stockRangeLower"
-            getDouble "stockRangeUpper"
+            setproperty .providerProperties, "stockRangeLower"
+            setproperty .providerProperties, "stockRangeUpper"
         End If
-        getLong "referencePriceType"
+        setproperty .providerProperties, "referencePriceType"
     End If
     
     If version >= 13 Then
-        getDouble "trailStopPrice"
+        setproperty .providerProperties, "trailStopPrice"
     End If
 
     If version >= 14 Then
-        getDouble "basisPoints"
-        getLong "basisPointsType"
-        getString "comboLegsDescrip"
+        setproperty .providerProperties, "basisPoints"
+        setproperty .providerProperties, "basisPointsType"
+        setproperty .providerProperties, "comboLegsDescrip"
     End If
-'End With
 
-logSocketMessage
+    If (version >= 15) Then
+        If (version >= 20) Then
+            setproperty .providerProperties, "Scale Init Level Size"
+            setproperty .providerProperties, "Scale Subs Level Size"
+        Else
+            setproperty .providerProperties, "Scale Init Level Size"
+        End If
+        setproperty .providerProperties, "Scale Price Increment"
+    End If
+    
+    If (version >= 19) Then
+        setproperty .providerProperties, "Clearing Account"
+        setproperty .providerProperties, "Clearing Intent"
+    End If
+    
+    If (version >= 20) Then
+        setproperty .providerProperties, "UnderComp"
+        If CBool(.providerProperties.getParameterValue("UnderComp")) Then
+            'UnderComp underComp = new UnderComp()
+            setproperty .providerProperties, "UnderComp ConId"
+            setproperty .providerProperties, "UnderComp Delta"
+            setproperty .providerProperties, "UnderComp Price"
+            'Contract.underComp = underComp
+        End If
+    End If
+    
+    If (version >= 16) Then
+
+        setproperty .providerProperties, "What If"
+
+        .status = orderStatusFromString(getString("Status"))
+        setproperty .providerProperties, "Init Margin"
+        setproperty .providerProperties, "Maint Margin"
+        setproperty .providerProperties, "Equity With Loan"
+        setproperty .providerProperties, "Commission"
+        setproperty .providerProperties, "Min Commission"
+        setproperty .providerProperties, "Max Commission"
+        setproperty .providerProperties, "Commission Currency"
+        setproperty .providerProperties, "Warning Text"
+    End If
+End With
+
+logSocketInputMessage True
+
+On Error Resume Next
+mapEntry = mOrderIDMap(generateTwsOrderKey(id, clientID))
+On Error GoTo 0
+If Not mapEntry.order Is Nothing Then
+    lOrderReport.tradeBuildId = mapEntry.order.tradeBuildId
+    mapEntry.OrderSubmitter.orderReport lOrderReport
+Else
+    ' this must be an open order from the previous API session, or this is
+    ' a duplicate openOrder message for an order that has already finished
+    '
+    ' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! need to improve this!!!!!!!!!!!!!!!
+End If
+
+
+Exit Sub
+
+err:
+If err.number = DataIncomplete Then err.Raise DataIncomplete
+logSocketInputMessage True
+Dim errNumber As Long: errNumber = err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "getOpenOrder" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+err.Raise errNumber, errSource, errDescription
 
 End Sub
 
@@ -3266,6 +3592,9 @@ Dim permId As Long
 Dim parentId As Long
 Dim whyHeld As String
 
+Dim failpoint As Long
+On Error GoTo err
+
 If version >= 2 Then permId = getLong("Perm id")
 
 If version >= 3 Then parentId = getLong("Parent id")
@@ -3276,7 +3605,7 @@ If version >= 5 Then clientID = getLong("Client id")
 
 If version >= 6 Then whyHeld = getString("Why held")
 
-logSocketMessage
+logSocketInputMessage True
 
 On Error Resume Next
 mapEntry = mOrderIDMap(generateTwsOrderKey(id, clientID))
@@ -3287,6 +3616,15 @@ If Not mapEntry.order Is Nothing Then
     
     mapEntry.OrderSubmitter.updateStatus mapEntry.order.tradeBuildId, _
                             status
+    If status = OrderStatusCancelling And parentId <> 0 Then
+        ' for some reason IB never sends a cancelled status when a target order
+        ' is cancelled after the entry order has been filled. It just sits there at
+        ' 'cancelling' status until TWS is closed (note that it doesn't reappear if
+        ' TWS is restarted, so it must have been cancelled).
+        ' So we'll treat it as cancelled if we haven't received a fill in say 500 millisecs
+        DeferAction New DeferredCancelStatus, mapEntry, 500
+    End If
+    
     If status = OrderStatusCancelled Or status = OrderStatusFilled Then
         mOrderIDMap.remove generateTwsOrderKey(id, clientID)
     End If
@@ -3299,8 +3637,21 @@ Else
     ' or it's a cancelled status for an order which has already been
     ' notified as cancelled because of an error 202
     '
+    ' or it's a duplicate orderStatus message for an order that has already finished
+    '
     ' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! need to improve this!!!!!!!!!!!!!!!
 End If
+
+Exit Sub
+
+err:
+If err.number = DataIncomplete Then err.Raise DataIncomplete
+logSocketInputMessage True
+Dim errNumber As Long: errNumber = err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "getOrderStatus" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+err.Raise errNumber, errSource, errDescription
 
 End Sub
 
@@ -3316,6 +3667,9 @@ Dim exchange As String
 Dim currencyCode As String
 
 Dim lContractSpecifier As ContractSpecifier
+
+Dim failpoint As Long
+On Error GoTo err
 
 symbol = getString("Symbol")
 sectype = getString("Sec type")
@@ -3346,14 +3700,26 @@ If version >= 3 Then
     realizedPNL = getDouble("Realized PNL")
 End If
 Dim accountName As String: If version >= 4 Then accountName = getString("Account name")
-                         
-logSocketMessage
+If version = 6 And mServerVersion = 39 Then getString "Primary exchange"
+
+logSocketInputMessage
+
+Exit Sub
+
+err:
+If err.number = DataIncomplete Then err.Raise DataIncomplete
+logSocketInputMessage True
+Dim errNumber As Long: errNumber = err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "getPortfolioValue" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+err.Raise errNumber, errSource, errDescription
 End Sub
 
 Private Sub getScannerData(ByVal version As Long)
 Dim lContractSpecifier As ContractSpecifier
 Dim lContractBuilder As ContractBuilder
-Dim tickerid As Long
+Dim tickerId As Long
 Dim numberOfElements As Long
 Dim rank As Long
 Dim distance As String
@@ -3370,12 +3736,17 @@ Dim optRight As OptionRights
 Dim exchange As String
 Dim currencyCode As String
 
-tickerid = getLong("Id")
+Dim failpoint As Long
+On Error GoTo err
+
+tickerId = getLong("Id")
 numberOfElements = getLong("Number of elements")
 
 For i = 0 To numberOfElements - 1
     rank = getLong("Rank")
 
+    If (version >= 3) Then getLong "ConId"
+    
     symbol = getString("Symbol")
     sectype = secTypeFromString(getString("Sec type"))
     expiry = getString("Expiry")
@@ -3399,32 +3770,87 @@ For i = 0 To numberOfElements - 1
     distance = getString("Distance")
     benchmark = getString("Benchmark")
     projection = getString("Projection")
+    If (version >= 2) Then getString "Legs Str "
 Next
 
-logSocketMessage
+logSocketInputMessage
+
+Exit Sub
+
+err:
+If err.number = DataIncomplete Then err.Raise DataIncomplete
+logSocketInputMessage True
+Dim errNumber As Long: errNumber = err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "getScannerData" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+err.Raise errNumber, errSource, errDescription
 End Sub
 
 Private Sub getScannerParameters(ByVal version As Long)
 Dim xml  As String
+Dim failpoint As Long
+On Error GoTo err
+
 xml = getString("XML")
+
+Exit Sub
+
+err:
+If err.number = DataIncomplete Then err.Raise DataIncomplete
+logSocketInputMessage True
+Dim errNumber As Long: errNumber = err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "getScannerParameters" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+err.Raise errNumber, errSource, errDescription
+End Sub
+
+Private Sub getTickGeneric(ByVal version As Long)
+Dim tickerId As Long
+Dim ticktype As TWSSocketTickTypes
+Dim value As Double
+
+Dim failpoint As Long
+On Error GoTo err
+
+tickerId = getLong("tickerId")
+ticktype = getLong("tickType")
+value = getDouble("value")
+
+logSocketInputMessage
+
+Exit Sub
+
+err:
+If err.number = DataIncomplete Then err.Raise DataIncomplete
+logSocketInputMessage True
+Dim errNumber As Long: errNumber = err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "getTickGeneric" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+err.Raise errNumber, errSource, errDescription
+
 End Sub
 
 Private Sub getTickPrice(ByVal version As Long)
 Dim tick As GenericTick
-Dim tickType As Long
-Dim tickerid As Long
+Dim ticktype As Long
+Dim tickerId As Long
 Dim canAutoExecute As Boolean
-Dim failpoint As Long
 
-On Error GoTo Err
+Dim failpoint As Long
+On Error GoTo err
+
+On Error GoTo err
 
 failpoint = 100
 
-tickerid = getLong("Ticker id")
+tickerId = getLong("Ticker id")
 
 failpoint = 200
 
-tickType = getLong("Tick type")
+ticktype = getLong("Tick type")
 
 failpoint = 300
 
@@ -3436,50 +3862,88 @@ If version = 1 Then Debug.Print "****************** Type 1 tick price message re
 If version >= 2 Then tick.size = getLong("Size")
 If version >= 3 Then canAutoExecute = getBoolean("Can autoexecute")
 
-logSocketMessage
+logSocketInputMessage
 
 failpoint = 500
 
-With mTickerTable(tickerid Mod IncarnationIncrement)
+With mTickerTable(tickerId Mod IncarnationIncrement)
 
     If Not .inUse Then Exit Sub     ' ticker has been stopped
 
-    If tick.Price < (0.5 * .prevTrade) Then
-        Exit Sub        ' ignore invalid prices
-    End If
-    
     tick.timestamp = ConvertDateUTCToTZ(GetTimestampUTC, .Contract.TimeZone)
     
-    Select Case tickType
+    Select Case ticktype
     Case TICK_BID
-        tick.tickType = TickTypeBid
+        If Not .Contract.IsValidPrice(tick.Price, .prevBid) Then
+            gLogger.Log LogLevels.LogLevelNormal, "Invalid bid price rejected: " & _
+                            "price=" & tick.Price & _
+                            "; contract=" & .Contract.specifier.toString
+            Exit Sub
+        End If
+        tick.ticktype = TickTypeBid
         If tick.size = 0 Then tick.size = .prevBidSize
         .prevBid = tick.Price
         If tick.size <> 0 Then .prevBidSize = tick.size
     
     Case TICK_ASK
-        tick.tickType = TickTypeAsk
+        If Not .Contract.IsValidPrice(tick.Price, .prevAsk) Then
+            gLogger.Log LogLevels.LogLevelNormal, "Invalid ask price rejected: " & _
+                            "price=" & tick.Price & _
+                            "; contract=" & .Contract.specifier.toString
+            Exit Sub
+        End If
+        tick.ticktype = TickTypeAsk
         If tick.size = 0 Then tick.size = .prevAskSize
         .prevAsk = tick.Price
         If tick.size <> 0 Then .prevAskSize = tick.size
     
     Case TICK_LAST
-        tick.tickType = TickTypeTrade
+        If Not .Contract.IsValidPrice(tick.Price, .prevTrade) Then
+            gLogger.Log LogLevels.LogLevelNormal, "Invalid trade price rejected: " & _
+                            "price=" & tick.Price & _
+                            "; contract=" & .Contract.specifier.toString
+            Exit Sub
+        End If
+        tick.ticktype = TickTypeTrade
         If tick.size = 0 Then tick.size = .prevTradeSize
         .prevTrade = tick.Price
         If tick.size <> 0 Then .prevTradeSize = tick.size
     
     Case TICK_HIGH
-        tick.tickType = TickTypeHighPrice
+        If Not .Contract.IsValidPrice(tick.Price, .prevHigh) Then
+            gLogger.Log LogLevels.LogLevelNormal, "Invalid high price rejected: " & _
+                            "price=" & tick.Price & _
+                            "; contract=" & .Contract.specifier.toString
+            Exit Sub
+        End If
+        tick.ticktype = TickTypeHighPrice
     
     Case TICK_LOW
-        tick.tickType = TickTypeLowPrice
+        If Not .Contract.IsValidPrice(tick.Price, .prevLow) Then
+            gLogger.Log LogLevels.LogLevelNormal, "Invalid low price rejected: " & _
+                            "price=" & tick.Price & _
+                            "; contract=" & .Contract.specifier.toString
+            Exit Sub
+        End If
+        tick.ticktype = TickTypeLowPrice
     
     Case TICK_OPEN
-        tick.tickType = TickTypeOpenPrice
+        If Not .Contract.IsValidPrice(tick.Price, .prevOpen) Then
+            gLogger.Log LogLevels.LogLevelNormal, "Invalid open price rejected: " & _
+                            "price=" & tick.Price & _
+                            "; contract=" & .Contract.specifier.toString
+            Exit Sub
+        End If
+        tick.ticktype = TickTypeOpenPrice
     
     Case TICK_CLOSE
-        tick.tickType = TickTypeClosePrice
+        If Not .Contract.IsValidPrice(tick.Price, .prevClose) Then
+            gLogger.Log LogLevels.LogLevelNormal, "Invalid close price rejected: " & _
+                            "price=" & tick.Price & _
+                            "; contract=" & .Contract.specifier.toString
+            Exit Sub
+        End If
+        tick.ticktype = TickTypeClosePrice
     
     End Select
         
@@ -3489,43 +3953,51 @@ End With
 
 Exit Sub
 
-Err:
-Err.Raise Err.number, , "TWSAPI::getTickPrice(failpoint=" & failpoint & "): " & Err.Description
+err:
+If err.number = DataIncomplete Then err.Raise DataIncomplete
+logSocketInputMessage True
+Dim errNumber As Long: errNumber = err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "getTickPrice" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+err.Raise errNumber, errSource, errDescription
 End Sub
 
 Private Sub getTickSize(ByVal version As Long)
 Dim tick As GenericTick
-Dim tickType As Long
-Dim tickerid As Long
-Dim failpoint As Long
+Dim ticktype As Long
+Dim tickerId As Long
 
-On Error GoTo Err
+Dim failpoint As Long
+On Error GoTo err
+
+On Error GoTo err
 
 failpoint = 100
 
-tickerid = getLong("Ticker id")
+tickerId = getLong("Ticker id")
 
 failpoint = 200
 
-tickType = getLong("Tick type")
+ticktype = getLong("Tick type")
 
 failpoint = 300
 
 tick.size = getLong("Size")
 
-logSocketMessage
+logSocketInputMessage
 
 failpoint = 400
 
-With mTickerTable(tickerid Mod IncarnationIncrement)
+With mTickerTable(tickerId Mod IncarnationIncrement)
     
     If Not .inUse Then Exit Sub     ' ticker has been stopped
     
     tick.timestamp = ConvertDateUTCToTZ(GetTimestampUTC, .Contract.TimeZone)
     
-    Select Case tickType
+    Select Case ticktype
     Case TICK_BID_SIZE
-        tick.tickType = TickTypeBid
+        tick.ticktype = TickTypeBid
         If tick.size = .prevBidSize Then
             ' this happens when TWS has sent a tick price including the
             ' size. It then sends the size again as a ticksize
@@ -3536,7 +4008,7 @@ With mTickerTable(tickerid Mod IncarnationIncrement)
         .prevBidSize = tick.size
     
     Case TICK_ASK_SIZE
-        tick.tickType = TickTypeAsk
+        tick.ticktype = TickTypeAsk
         If tick.size = .prevAskSize Then
             ' this happens when TWS has sent a tick price including the
             ' size. It then sends the size again as a ticksize
@@ -3547,7 +4019,7 @@ With mTickerTable(tickerid Mod IncarnationIncrement)
         .prevAskSize = tick.size
     
     Case TICK_LAST_SIZE
-        tick.tickType = TickTypeTrade
+        tick.ticktype = TickTypeTrade
         If tick.size = .prevTradeSize Then
             ' this happens when TWS has sent a tick price including the
             ' size. It then sends the size again as a ticksize
@@ -3558,10 +4030,10 @@ With mTickerTable(tickerid Mod IncarnationIncrement)
         .prevTradeSize = tick.size
     
     Case TICK_VOLUME
-        tick.tickType = TickTypeVolume
+        tick.ticktype = TickTypeVolume
     
     Case TICK_OPEN_INTEREST
-        tick.tickType = TickTypeOpenInterest
+        tick.ticktype = TickTypeOpenInterest
     
     End Select
 
@@ -3570,16 +4042,36 @@ End With
 
 Exit Sub
 
-Err:
-Err.Raise Err.number, , "TWSAPI::getTickSize(failpoint=" & failpoint & "): " & Err.Description
+err:
+If err.number = DataIncomplete Then err.Raise DataIncomplete
+logSocketInputMessage True
+Dim errNumber As Long: errNumber = err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "getTickSize" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+err.Raise errNumber, errSource, errDescription
 End Sub
 
 Private Sub getTickString(ByVal version As Long)
+Dim failpoint As Long
+On Error GoTo err
+
 getLong "tickerId"
 getLong "tickType"
 getString "value"
 
-logSocketMessage
+logSocketInputMessage
+
+Exit Sub
+
+err:
+If err.number = DataIncomplete Then err.Raise DataIncomplete
+logSocketInputMessage True
+Dim errNumber As Long: errNumber = err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "getTickString" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errDescription As String: errDescription = err.Description
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+err.Raise errNumber, errSource, errDescription
 End Sub
 
 Private Sub handleFatalError( _
@@ -3644,14 +4136,32 @@ Private Sub logMessage( _
                 Optional ByVal logLevel As LogLevels = LogLevelNormal)
 If Not gLogger.isLoggable(logLevel) Then Exit Sub
 gLogger.Log logLevel, _
-            message
+            ProjectName & "." & ModuleName & ": " & message
 End Sub
 
-Private Sub logSocketMessage()
-If mSocketLogger.isLoggable(LogLevelHighDetail) Then
-    mSocketLogger.Log LogLevelHighDetail, mMessageBuilder.toString
-    Set mMessageBuilder = Nothing
+Private Sub logSocketInputMessage(Optional ByVal ignoreLogLevel As Boolean)
+Static prevMessageBuilder As StringBuilder
+If ignoreLogLevel Then
+    If Not mInMessageBuilder Is Nothing Then
+        mSocketLogger.Log LogLevelNormal, mInMessageBuilder.toString
+    ElseIf Not prevMessageBuilder Is Nothing Then
+        mSocketLogger.Log LogLevelNormal, prevMessageBuilder.toString
+        Set prevMessageBuilder = Nothing
+    End If
+ElseIf mSocketLogger.isLoggable(LogLevelHighDetail) Then
+    mSocketLogger.Log LogLevelHighDetail, mInMessageBuilder.toString
+    Set prevMessageBuilder = mInMessageBuilder
 End If
+Set mInMessageBuilder = Nothing
+End Sub
+
+Private Sub logSocketOutputMessage(Optional ByVal ignoreLogLevel As Boolean)
+If ignoreLogLevel Then
+    mSocketLogger.Log LogLevelNormal, mOutMessageBuilder.toString
+ElseIf mSocketLogger.isLoggable(LogLevelHighDetail) Then
+    mSocketLogger.Log LogLevelHighDetail, mOutMessageBuilder.toString
+End If
+Set mOutMessageBuilder = Nothing
 End Sub
 
 Private Function optionRightFromString(ByVal value As String) As OptionRights
@@ -3696,7 +4206,7 @@ Private Function orderStatusFromString(ByVal value As String) As OrderStatuses
 Select Case UCase$(value)
 Case "CREATED"
     orderStatusFromString = OrderStatusCreated
-Case "REJECTED"
+Case "REJECTED", "INACTIVE"
     orderStatusFromString = OrderStatusRejected
 Case "PENDINGSUBMIT"
     orderStatusFromString = OrderStatusPendingSubmit
@@ -3713,8 +4223,29 @@ Case "FILLED"
 End Select
 End Function
 
+Private Function orderStopTriggerMethodFromString(ByVal value As String) As StopTriggerMethods
+Select Case value
+Case "0"
+    orderStopTriggerMethodFromString = StopTriggerMethods.StopTriggerDefault
+Case "1"
+    orderStopTriggerMethodFromString = StopTriggerMethods.StopTriggerDoubleBidAsk
+Case "2"
+    orderStopTriggerMethodFromString = StopTriggerMethods.StopTriggerLast
+Case "3"
+    orderStopTriggerMethodFromString = StopTriggerMethods.StopTriggerDoubleLast
+Case "4"
+    orderStopTriggerMethodFromString = StopTriggerMethods.StopTriggerBidAsk
+Case "7"
+    orderStopTriggerMethodFromString = StopTriggerMethods.StopTriggerLastOrBidAsk
+Case "8"
+    orderStopTriggerMethodFromString = StopTriggerMethods.StopTriggerMidPoint
+End Select
+End Function
+
 Private Function orderStopTriggerMethodToString(ByVal value As StopTriggerMethods) As String
 Select Case value
+Case StopTriggerMethods.StopTriggerBidAsk
+    orderStopTriggerMethodToString = "1"
 Case StopTriggerMethods.StopTriggerDefault
     orderStopTriggerMethodToString = "0"
 Case StopTriggerMethods.StopTriggerDoubleBidAsk
@@ -3723,6 +4254,10 @@ Case StopTriggerMethods.StopTriggerDoubleLast
     orderStopTriggerMethodToString = "3"
 Case StopTriggerMethods.StopTriggerLast
     orderStopTriggerMethodToString = "2"
+Case StopTriggerMethods.StopTriggerLastOrBidAsk
+    orderStopTriggerMethodToString = "7"
+Case StopTriggerMethods.StopTriggerMidPoint
+    orderStopTriggerMethodToString = "8"
 End Select
 End Function
 
@@ -3846,7 +4381,7 @@ Case TradeBuildSP.OrderTypes.OrderTypeLimitOnOpen
 Case TradeBuildSP.OrderTypes.OrderTypePeggedToPrimary
     orderTypeToString = "PEGPRI"
 Case Else
-    Err.Raise ErrorCodes.ErrIllegalArgumentException
+    err.Raise ErrorCodes.ErrIllegalArgumentException
 End Select
 End Function
 
@@ -3854,7 +4389,7 @@ Private Function permittedHistDays( _
                 ByVal reqEndDate As Date, _
                 ByVal desiredBars As Long) As Long
 permittedHistDays = DateDiff("d", DateAdd("yyyy", -1, Now), reqEndDate)
-If permittedHistDays = 0 Then Err.Raise ErrHistGenerationFailed
+If permittedHistDays = 0 Then err.Raise ErrHistGenerationFailed
 If permittedHistDays > desiredBars Then permittedHistDays = desiredBars
 End Function
 
@@ -3862,7 +4397,7 @@ Private Function permittedHistMonths( _
                 ByVal reqEndDate As Date, _
                 ByVal desiredBars As Long) As Long
 permittedHistMonths = DateDiff("m", DateAdd("m", 1, DateAdd("yyyy", -1, Now)), reqEndDate)
-If permittedHistMonths = 0 Then Err.Raise ErrHistGenerationFailed
+If permittedHistMonths = 0 Then err.Raise ErrHistGenerationFailed
 If permittedHistMonths > desiredBars Then permittedHistMonths = desiredBars
 End Function
 
@@ -3872,7 +4407,7 @@ Private Function permittedHistSeconds( _
 ' the 86398 should really be 86400 but allows for clocks not being
 ' properly synchronised
 permittedHistSeconds = DateDiff("s", DateAdd("yyyy", -1, Now), reqEndDate) + 86398
-If permittedHistSeconds = 0 Then Err.Raise ErrHistGenerationFailed
+If permittedHistSeconds = 0 Then err.Raise ErrHistGenerationFailed
 If permittedHistSeconds > desiredBars Then permittedHistSeconds = desiredBars
 End Function
 
@@ -3880,14 +4415,14 @@ Private Function permittedHistWeeks( _
                 ByVal reqEndDate As Date, _
                 ByVal desiredBars As Long) As Long
 permittedHistWeeks = DateDiff("w", DateAdd("w", 1, DateAdd("yyyy", -1, Now)), reqEndDate)
-If permittedHistWeeks = 0 Then Err.Raise ErrHistGenerationFailed
+If permittedHistWeeks = 0 Then err.Raise ErrHistGenerationFailed
 If permittedHistWeeks > desiredBars Then permittedHistWeeks = desiredBars
 End Function
 
 Private Sub processContractError(ByVal reason As String)
 Dim failpoint As Long
 
-On Error GoTo Err
+On Error GoTo err
 
 If mContractDetailsRequest.contractWrappers.Count > 0 Then
     ' we are processing the forced invalid contract details request
@@ -3910,13 +4445,13 @@ submitNextContractDetailsRequest
 
 Exit Sub
 
-Err:
-Err.Raise Err.number, , "TWSAPI::processContractError(failpoint=" & failpoint & "): " & Err.Description
+err:
+err.Raise err.number, , "TWSAPI::processContractError(failpoint=" & failpoint & "): " & err.Description
 End Sub
 
 Private Sub processNextHistDataRequest()
 Dim failpoint As Long
-On Error GoTo Err
+On Error GoTo err
 
 If mTwsHistDataRequestQueue.size <> 0 Then
     Dim request As TWSHistoricalDataRequestQueueEntry
@@ -3927,11 +4462,11 @@ End If
 
 Exit Sub
 
-Err:
-Err.Raise Err.number, _
+err:
+err.Raise err.number, _
         ProjectName & "." & ModuleName & ":" & "processNextHistDataRequest" & "." & failpoint & _
-        IIf(Err.source <> "", vbCrLf & Err.source, ""), _
-        Err.Description
+        IIf(err.source <> "", vbCrLf & err.source, ""), _
+        err.Description
 
 End Sub
 
@@ -3989,8 +4524,8 @@ If Not mSocket Is Nothing Then
 End If
 End Sub
 
-Private Sub releaseTickerTableEntry(ByVal tickerid As Long)
-With mTickerTable(tickerid)
+Private Sub releaseTickerTableEntry(ByVal tickerId As Long)
+With mTickerTable(tickerId)
     .inUse = False
     .incarnation = .incarnation + IncarnationIncrement
     Set .Contract = Nothing
@@ -4007,7 +4542,7 @@ End With
 End Sub
 
 Private Sub reqContract()
-
+Static reqId As Long
 Dim ContractSpecifier As ContractSpecifier
 Set ContractSpecifier = mContractDetailsRequest.contractSpec
 
@@ -4016,36 +4551,43 @@ If ContractSpecifier.exchange <> "" And Not IsValidExchangeCode(ContractSpecifie
     Exit Sub
 End If
 
-Const version = 3
+Const version = 5
 
-addData REQ_CONTRACT_DATA
-addData version
+addMsgId REQ_CONTRACT_DATA
+addData version, "Version"
+
+If mServerVersion >= MIN_SERVER_VER_CONTRACT_DATA_CHAIN Then
+    reqId = reqId + 1
+    addData ContractDataReqIdBase + reqId, "Request id"
+End If
+
 With ContractSpecifier
-    addData .symbol
-    addData secTypeToString(.sectype)
-    addData Left$(.expiry, 6)
-    addDouble .strike
-    addData optionRightToString(.Right)
-    If mServerVersion >= 15 Then addData "" ' multiplier
-    addData .exchange
-    addData .currencyCode
+    If mServerVersion >= MIN_SERVER_VER_CONTRACT_CONID Then addData 0, "Contract id"
+    addData .symbol, "Symbol"
+    addData secTypeToString(.sectype), "Sec type"
+    addData Left$(.expiry, 6), "Expiry"
+    addDouble .strike, "Strike"
+    addData optionRightToString(.Right), "Right"
+    If mServerVersion >= 15 Then addData "", "Multiplier"
+    addData .exchange, "Exchange"
+    addData .currencyCode, "Currency"
     If (.sectype = SecTypeFuture Or _
         .sectype = SecTypeFuturesOption Or _
         .sectype = SecTypeOption) _
     Then
         If expiryToDate(.expiry) >= Now Or .expiry = "" Then
-            addData .localSymbol
+            addData .localSymbol, "Local symbol"
         Else
-            addData ""
+            addData "", "Local Symbol"
         End If
     Else
-        addData .localSymbol
+        addData .localSymbol, "Local Symbol"
     End If
     If mServerVersion >= 31 Then
         If .sectype = SecTypeCash Or .sectype = SecTypeIndex Or .sectype = SecTypeStock Then
-            addData 0  ' can't include expired for non-expiring contracts
+            addData 0, "Include expired" ' can't include expired for non-expiring contracts
         Else
-            addData 1  ' include expired
+            addData 1, "Include expired"
         End If
     End If
 End With
@@ -4054,59 +4596,59 @@ End Sub
 
 Private Sub reqHistoricalData( _
                 request As TWSHistoricalDataRequestQueueEntry)
-Debug.Print "ReqHistData from TWS: barsize=" & request.barSizeSetting & "; duration=" & request.duration
+Debug.Print "ReqHistData from TWS: barsize=" & request.barSizeSetting & " duration=" & request.duration
 Const version = 4
 
 If mConnectionState <> ConnectionStates.ConnConnected Then Exit Sub
 
-addData REQ_HISTORICAL_DATA
-addData version
-addData request.id
-addData request.Contract.specifier.symbol
-addData secTypeToString(request.Contract.specifier.sectype)
-addData Left$(request.Contract.specifier.expiry, 6)
-addDouble request.Contract.specifier.strike
-addData optionRightToString(request.Contract.specifier.Right)
-addData ""      ' >>>>>>>>>>>>>>>>>>>>>>>>>>>>> multiplier ??? why?
-addData request.Contract.specifier.exchange
-addData ""      ' >>>>>>>>>>>>>>>>>>>>>>>>>>>>> primaryExch ??? not in ActiveX interface
-addData request.Contract.specifier.currencyCode
+addMsgId REQ_HISTORICAL_DATA
+addData version, "Version"
+addData request.id, "Request id"
+addData request.Contract.specifier.symbol, "Symbol"
+addData secTypeToString(request.Contract.specifier.sectype), "Sec type"
+addData Left$(request.Contract.specifier.expiry, 6), "Expiry"
+addDouble request.Contract.specifier.strike, "Strike"
+addData optionRightToString(request.Contract.specifier.Right), "Right"
+addData "", "Multiplier"     ' >>>>>>>>>>>>>>>>>>>>>>>>>>>>> multiplier ??? why?
+addData request.Contract.specifier.exchange, "Exchange"
+addData "", "Primary exchange"
+addData request.Contract.specifier.currencyCode, "Currency"
 If expiryToDate(request.Contract.specifier.expiry) < Now Then
-    addData ""
+    addData "", "Local symbol"
 Else
-    addData request.Contract.specifier.localSymbol
+    addData request.Contract.specifier.localSymbol, "Local symbol"
 End If
 If mServerVersion >= 31 Then
     If request.Contract.specifier.sectype = SecTypeCash Or _
         request.Contract.specifier.sectype = SecTypeIndex Or _
         request.Contract.specifier.sectype = SecTypeStock _
     Then
-        addData 0  ' can't include expired for non-expiring contracts
+        addData 0, "Include expired" ' can't include expired for non-expiring contracts
     Else
-        addData 1  ' include expired
+        addData 1, "Include expired"
     End If
 End If
 If mServerVersion >= 20 Then
-    addData request.endDateTime
-    addData request.barSizeSetting
+    addData request.endDateTime, "End date"
+    addData request.barSizeSetting, "Bar size"
 End If
 
 ' durationStr
 
-addData request.duration
+addData request.duration, "Duration"
 
 ' useRTH
-addData 0
+addData 0, "Use RTH"
 
-addData request.whatToShow
+addData request.whatToShow, "What to show"
 
 ' formatDate
 If mServerVersion > 16 Then
-    addData TWSHistDataDateFormats.DateFormatString
+    addData TWSHistDataDateFormats.DateFormatString, "Date format"
 End If
 
 If request.Contract.specifier.ComboLegs Is Nothing Then
-    addData 0
+    addData 0, "Combo legs count"
 Else
     ' not supported
     
@@ -4129,22 +4671,22 @@ End Sub
 
 Private Sub reqMarketData(ByVal tickerTableIndex As Long)
 
-Const version = 6
+Const version = 8
 
-addData REQ_MKT_DATA
-addData version
-addData tickerTableIndex + mTickerTable(tickerTableIndex).incarnation
+addMsgId REQ_MKT_DATA
+addData version, "Version"
+addData tickerTableIndex + mTickerTable(tickerTableIndex).incarnation, "Ticker id"
 With mTickerTable(tickerTableIndex).Contract.specifier
-    addData .symbol
-    addData secTypeToString(.sectype)
-    addData Left$(.expiry, 6)
-    addDouble .strike
-    addData optionRightToString(.Right)
-    If mServerVersion >= 15 Then addData "" ' multiplier
-    addData .exchange
-    If mServerVersion >= 15 Then addData "" ' primary exchange
-    addData .currencyCode
-    If mServerVersion >= 2 Then addData .localSymbol
+    addData .symbol, "Symbol"
+    addData secTypeToString(.sectype), "Sec type"
+    addData Left$(.expiry, 6), "Expiry"
+    addDouble .strike, "Strike"
+    addData optionRightToString(.Right), "Right"
+    If mServerVersion >= 15 Then addData "", "Multiplier"
+    addData .exchange, "Exchange"
+    If mServerVersion >= 15 Then addData "", "Primary exchange"
+    addData .currencyCode, "Currency"
+    If mServerVersion >= 2 Then addData .localSymbol, "Local symbol"
     ' Add combo legs for BAG requests
     If mServerVersion >= 8 And .sectype = SecurityTypes.SecTypeCombo Then
         ' not currently aupported
@@ -4160,32 +4702,48 @@ With mTickerTable(tickerTableIndex).Contract.specifier
 '            End With
 '        Next
     End If
-    If mServerVersion >= 31 Then addData "" ' generic tick list
+    
+    If (mServerVersion >= MIN_SERVER_VER_UNDER_COMP) Then
+        ' not currently aupported
+'       if (contract.m_underComp != null) then
+'           UnderComp underComp = contract.m_underComp;
+'           send( true);
+'           send( underComp.m_conId);
+'           send( underComp.m_delta);
+'           send( underComp.m_price);
+'       else then
+           addBoolean False, "Under comp"
+'       End If
+    End If
+    
+    If mServerVersion >= 31 Then addData "", "Generic tick list"
+            
+    If mServerVersion >= MIN_SERVER_VER_SNAPSHOT_MKT_DATA Then addBoolean False, "Snapshot"
     
     send
 End With
 
 End Sub
 
-Private Sub reqMarketDepth(ByVal tickerid As Long, _
+Private Sub reqMarketDepth(ByVal tickerId As Long, _
                         ByVal contractSpec As ContractSpecifier)
 
 Const version = 3
 
-addData REQ_MKT_DEPTH
-addData version
-addData tickerid + MarketDepthTickerBase
+addMsgId REQ_MKT_DEPTH
+addData version, "Version"
+addData tickerId + MarketDepthReqIdBase, "Request id"
 With contractSpec
-    addData .symbol
-    addData secTypeToString(.sectype)
-    addData Left$(.expiry, 6)
-    addDouble .strike
-    addData optionRightToString(.Right)
-    If mServerVersion >= 15 Then addData "" ' multiplier
-    addData .exchange
-    addData .currencyCode
-    addData .localSymbol
-    If mServerVersion >= 19 Then addData 20 ' number of rows
+    addData .symbol, "Symbol"
+    addData secTypeToString(.sectype), "Sec type"
+    addData Left$(.expiry, 6), "Expiry"
+    addDouble .strike, "Strike"
+    addData optionRightToString(.Right), "Right"
+    If mServerVersion >= 15 Then addData "", "Multiplier"
+    addData .exchange, "Exchange"
+    addData .currencyCode, "Currency"
+    addData .localSymbol, "Local symbol"
+    If mServerVersion >= 19 Then addData 20, "Num rows"
 End With
 send
 End Sub
@@ -4194,7 +4752,7 @@ Private Sub resetMarketDepth(ByVal reEstablish As Boolean)
 Dim i As Long
 Dim tick As GenericTick
 
-tick.tickType = TickTypeMarketDepthReset
+tick.ticktype = TickTypeMarketDepthReset
 
 For i = 0 To UBound(mTickerTable)
     With mTickerTable(i)
@@ -4255,8 +4813,14 @@ Case SecTypeIndex
 End Select
 End Function
 
-Private Sub send()
+Private Sub send(Optional ByVal ignoreLogLevel As Boolean)
+logSocketOutputMessage ignoreLogLevel
+
 ReDim Preserve mBufferOut(mIndexOut - 1) As Byte
+If mSocketLogger.isLoggable(LogLevelMediumDetail) Then
+    mSocketLogger.Log LogLevels.LogLevelMediumDetail, _
+                        showBuffer("Out buf: ", mBufferOut)
+End If
 mSocket.SendData mBufferOut
 ReDim mBufferOut(15) As Byte
 mIndexOut = 0
@@ -4273,60 +4837,64 @@ Dim specifier As ContractSpecifier
 
 Set specifier = pOrder.Contract.specifier
 
-Const version = 21
-addData PLACE_ORDER
-addData version
-addData pOrder.brokerId
+Const version = 26
+addMsgId PLACE_ORDER
+addData version, "Version"
+addData pOrder.brokerId, "Order id"
 
 ' send contract fields
 With specifier
-    addData .symbol
-    addData secTypeToString(.sectype)
-    addData Left$(.expiry, 6)
-    addDouble .strike
-    addData optionRightToString(.Right)
-    If mServerVersion >= 15 Then addData ""     ' multiplier - this is the number of units of the underlying
-                                                ' delivered per contract - see http://www.interactivebrokers.com/discus/messages/2/27413.html
-    addData .exchange
-    If mServerVersion >= 14 Then addData routingHint     ' aka primaryExchange in TWS - only relevant when
+    addData .symbol, "Symbol"
+    addData secTypeToString(.sectype), "Sectype"
+    addData Left$(.expiry, 6), "Expiry"
+    addDouble .strike, "Strike"
+    addData optionRightToString(.Right), "Right"
+    If mServerVersion >= 15 Then addData "", "Multiplier"   ' multiplier - this is the number of units of the underlying
+                                                            ' delivered per contract - see http://www.interactivebrokers.com/discus/messages/2/27413.html
+    addData .exchange, "Exchange"
+    If mServerVersion >= 14 Then addData routingHint, "Primary exchange"    ' aka primaryExchange in TWS - only relevant when
                                                         ' exchange is SMART and there are SMART routers in more
                                                         ' than one country (eg try IBM in TWS)
-    addData .currencyCode
-    If mServerVersion >= 2 Then addData .localSymbol
+    addData .currencyCode, "Currency"
+    If mServerVersion >= 2 Then addData .localSymbol, "Local symbol"
 End With
 
 With pOrder
     ' send main order fields
-    addData orderActionToString(.Action)
-    addData .Quantity
-    addData orderTypeToString(.orderType)
+    addData orderActionToString(.Action), "Action"
+    addData .Quantity, "Quantity"
+    addData orderTypeToString(.orderType), "Order type"
     If mServerVersion <= 10 And _
         (UCase$(specifier.exchange) = "LIFFE" Or _
         UCase$(specifier.exchange) = "LSE") _
     Then
-        addDouble .limitPrice / 100
-        addDouble .triggerPrice / 100
+        addDouble .limitPrice / 100, "Price"
+        addDouble .triggerPrice / 100, "Aux price"
     Else
-        addDouble .limitPrice
-        addDouble .triggerPrice
+        addDouble .limitPrice, "Price"
+        addDouble .triggerPrice, "Aux price"
     End If
     ' send extended order fields
-    addData orderTIFToString(.timeInForce)
-    addData ocaGroup              ' ocaGroup
-    addData ""              ' account
-    addData ""              ' openClose
-    addData .origin     ' origin
-    addData .originatorRef
-    addBoolean transmit
-    If mServerVersion >= 4 Then addData parentId
+    addData orderTIFToString(.timeInForce), "TIF"
+    addData ocaGroup, "Oca Group"
+    addData "", "Account"
+    addData "", "OpenClose"
+    addData .origin, "Origin"
+    addData .originatorRef, "Originator ref"
+    addBoolean transmit, "Transmit"
+    If mServerVersion >= 4 Then addData parentId, "Parent id"
     If mServerVersion >= 5 Then
-        addBoolean .blockOrder
-        addBoolean .sweepToFill
-        addData .displaySize
-        addData orderStopTriggerMethodToString(.stopTriggerMethod)
-        addBoolean .ignoreRegularTradingHours
+        addBoolean .blockOrder, "Block order"
+        addBoolean .sweepToFill, "Sweep to fil"
+        addData .displaySize, "Display size"
+        addData orderStopTriggerMethodToString(.stopTriggerMethod), "Stop trigger method"
+        If mServerVersion < 38 Then
+            addBoolean False, "Ignore RTH"
+        Else
+            addBoolean .ignoreRegularTradingHours, "Ignore RTH"
+        End If
     End If
-    If mServerVersion >= 7 Then addBoolean .Hidden
+    If mServerVersion >= 7 Then addBoolean .Hidden, "Hidden"
 End With
 
 ' Send combo legs for BAG requests
@@ -4351,120 +4919,168 @@ If mServerVersion >= 8 And specifier.sectype = SecurityTypes.SecTypeCombo Then
 End If
 
 With pOrder
-    If mServerVersion >= 9 Then addData ""          ' sharesAllocation (deprecated)
+    If mServerVersion >= 9 Then addData "", "Shares Allocation"
     
-    If mServerVersion >= 10 Then addData .discretionaryAmount
+    If mServerVersion >= 10 Then addData .discretionaryAmount, "Discretionary amount"
     
     If mServerVersion >= 11 Then
         If .goodAfterTime = 0 Then
-            addData ""
+            addData "", "Good after time"
         Else
-            addData Format(.goodAfterTime, "yyyymmdd hh\:nn\:ss ") & .goodAfterTimeTZ
+            addData Format(.goodAfterTime, "yyyymmdd hh\:nn\:ss ") & .goodAfterTimeTZ, "Good after time"
         End If
     End If
     
     If mServerVersion >= 12 Then
         If .goodTillDate = 0 Then
-            addData ""
+            addData "", "Good till date"
         Else
-            addData Format(.goodTillDate, "yyyymmdd hh\:nn\:ss ") & .goodTillDateTZ
+            addData Format(.goodTillDate, "yyyymmdd hh\:nn\:ss ") & .goodTillDateTZ, "Good till date"
         End If
     End If
     
     If mServerVersion >= 13 Then
-        addData ""      ' FAGroup
-        addData ""      ' FAMethod
-        addData ""      ' FAPercentage
-        addData ""      ' FAProfile
+        addData "", "FAGroup"
+        addData "", "FAMethod"
+        addData "", "FAPercentage"
+        addData "", "FAProfile"
     End If
     
     If mServerVersion >= 18 Then 'institutional short sale slot fields.
-        addData 0       ' shortSaleSlot - 0 only for retail, 1 or 2 only for institution.
-        addData ""      ' designatedLocation - only populate when shortSaleSlot = 2.
+        addData 0, " Short Sale Slot"           ' 0 only for retail, 1 or 2 only for institution.
+        addData "", "Designated Location"       ' only populate when shortSaleSlot = 2.
     End If
     
     If mServerVersion >= 19 Then
-        addData 0           ' ocaType
-        addBoolean .regularTradingHoursOnly
-        addBoolean False    ' rule80A
-        addData .settlingFirm
-        addBoolean .allOrNone
-        addData .minimumQuantity
-        addData ""          ' percentOffset
-        addBoolean .eTradeOnly
-        addBoolean .firmQuoteOnly
-        addData .NbboPriceCap
-        addData ""          ' auctionStrategy
-        addData ""          ' startingPrice
-        addData ""          ' stockRefPrice
-        addData ""          ' delta
-        addData ""          ' stockRangeLower
-        addData ""          ' stockRangeUpper
+        addData 0, "Oca type"
+        If mServerVersion < 38 Then
+            addBoolean False, "RTH only" ' (now combined with ignoreRTH)
+        End If
+        addBoolean False, "Rule 80A"
+        addData .settlingFirm, "Settling firm"
+        addBoolean .allOrNone, "All or none"
+        addData .minimumQuantity, "Minimum quantity"
+        addData "", "Percent Offset"
+        addBoolean .eTradeOnly, "E-trade only"
+        addBoolean .firmQuoteOnly, "Firm quote only"
+        addData .NbboPriceCap, "NBBO price cap"
+        addData "", "Auction strategy"
+        addData "", "Starting price"
+        addData "", "Stock ref price"
+        addData "", "Delta"
+        addData "", "Stock range lower"
+        addData "", "Stock range upper"
     End If
     
-    If mServerVersion >= 22 Then addBoolean .overrideConstraints
+    If mServerVersion >= 22 Then addBoolean .overrideConstraints, "Override constraints"
 
     If mServerVersion >= 26 Then ' Volatility orders
-        addData ""          ' volatility
-        addData ""          ' volatilityType);
+        addData "", "Volatility"
+        addData "", "Volatility type"
         If mServerVersion < 28 Then
-            addData "0"     ' send( order.m_deltaNeutralOrderType.equalsIgnoreCase("MKT"));
+            addData "0", "Delta neutral order type"
         Else
-            addData ""          ' deltaNeutralOrderType);
-            addData ""          ' deltaNeutralAuxPrice
+            addData "", "Delta neutral order type)"
+            addData "", "Delta neutral aux price"
         End If
         
-        addData 0          ' continuousUpdate
+        addData 0, "Continuous update"
         
         If mServerVersion = 26 Then
             ' Volatility orders had specific watermark price attribs in server version 26
-            addData ""          ' stockRangeLower
-            addData ""          ' stockRangeUpper
+            addData "", "Stock range lower"
+            addData "", "Stock range upper"
         End If
         
-        addData ""          ' referencePriceType
+        addData "", "Reference price type"
     End If
     
-    If mServerVersion >= 30 Then addData 0 ' TRAIL_STOP_LIMIT stop price
+    If mServerVersion >= 30 Then addData 0, "TRAIL_STOP_LIMIT stop price"
+
+    If (mServerVersion >= MIN_SERVER_VER_SCALE_ORDERS) Then
+        If (mServerVersion >= MIN_SERVER_VER_SCALE_ORDERS2) Then
+            addData "", "ScaleInitLevelSize"
+            addData "", "ScaleSubsLevelSize"
+        
+        Else
+            addData "", "ScaleInitLevelSize"
+            addData "", "ScaleSubsLevelSize"
+            
+        End If
+        addData "", "ScalePriceIncrement"
+    End If
+    
+    If (mServerVersion >= MIN_SERVER_VER_PTA_ORDERS) Then
+        addData "", "Clearing account"
+        addData "", "Clearing intent"
+    End If
+
+    If (mServerVersion >= MIN_SERVER_VER_UNDER_COMP) Then
+'        if (contract.m_underComp != null) then
+'            underComp underComp = Contract.m_underComp
+'            send (True)
+'            send (underComp.m_conId)
+'            send (underComp.m_delta)
+'            send (underComp.m_price)
+'
+'        Else
+            addBoolean False, "under comp"
+'        End If
+    End If
+
+    If (mServerVersion >= MIN_SERVER_VER_WHAT_IF_ORDERS) Then
+        addBoolean False, "WhatIf"
+    End If
 End With
 
-send
+send True
+End Sub
+
+Private Sub setproperty( _
+                ByVal props As Parameters, _
+                ByVal propName As String)
+props.setParameterValue propName, getString(propName)
 End Sub
                     
 Private Sub setTWSLogLevel(logLevel As TWSLogLevels)
 
 If mConnectionState <> ConnectionStates.ConnConnected Then
-    Err.Raise ErrorCodes.ErrIllegalStateException, _
+    err.Raise ErrorCodes.ErrIllegalStateException, _
                 "IBTWSSP.TWSAPI::SetServerLogLevel", _
                 "Not connected"
 End If
 
 Const version = 1
 
-addData SET_SERVER_LOGLEVEL
-addData version
-addData logLevel
+addMsgId SET_SERVER_LOGLEVEL
+addData version, "Version"
+addData logLevel, "Loglevel"
 send
 End Sub
 
 Private Function showBuffer( _
-                ByRef buffer() As Byte, _
-                ByVal length As Long) As String
-Dim i As Long
-Dim char As Byte
+                ByRef header As String, _
+                ByRef buffer() As Byte) As String
+showBuffer = header & Replace(StrConv(buffer, vbUnicode), Chr$(0), "_")
 
-showBuffer = String(UBound(buffer) + 1, "_")
-
-For i = 0 To length - 1
-    char = buffer(i)
-    If char <> 0 Then Mid$(showBuffer, i + 1, 1) = Chr$(char)
-Next
+'Dim i As Long
+'Dim char As Byte
+'
+'showBuffer = String(Len(header) + UBound(buffer) + 1, "_")
+'
+'For i = 0 To Len(header) - 1
+'    Mid$(showBuffer, i + 1, 1) = Mid$(header, i + 1, 1)
+'Next
+'For i = 0 To length - 1
+'    char = buffer(i)
+'    If char <> 0 Then Mid$(showBuffer, Len(header) + i, 1) = Chr$(char)
+'Next
 End Function
 
 Private Sub submitNextContractDetailsRequest()
 Dim failpoint As Long
 
-On Error GoTo Err
+On Error GoTo err
 
 If Not mConnectionState = ConnConnected Then Exit Sub
 If Not mContractDetailsRequest.contractSpec Is Nothing Then Exit Sub
@@ -4473,8 +5089,8 @@ If mTwsContractDetailsRequestQueue.size = 0 Then Exit Sub
 failpoint = 100
 On Error Resume Next
 mContractDetailsRequest = mTwsContractDetailsRequestQueue.removeFromFront
-If Err.number <> 0 Then Stop
-On Error GoTo Err
+If err.number <> 0 Then Stop
+On Error GoTo err
 
 failpoint = 200
 Set mContractDetailsRequest.contractWrappers = New Collection
@@ -4482,8 +5098,8 @@ reqContract
 
 Exit Sub
 
-Err:
-Err.Raise Err.number, , "TWSAPI::submitNextContractDetailsRequest(failpoint=" & failpoint & "): " & Err.Description
+err:
+err.Raise err.number, , "TWSAPI::submitNextContractDetailsRequest(failpoint=" & failpoint & "): " & err.Description
 End Sub
 
 

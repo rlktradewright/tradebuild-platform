@@ -38,6 +38,8 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "StudyValueConfiguration"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -62,7 +64,8 @@ Private mChartRegionName As String
 Private mLayer As Long
 Private mOffset As Dimension
 
-Private mBarFormatter As BarFormatter
+Private mBarFormatterFactory As BarFormatterFactory
+Private mBars As Bars
 
 '@================================================================================
 ' Class Event Handlers
@@ -85,12 +88,12 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Let BarFormatter(ByVal value As BarFormatter)
-Set mBarFormatter = value
+Public Property Get BarFormatterFactory() As BarFormatterFactory
+Set BarFormatterFactory = mBarFormatterFactory
 End Property
 
-Public Property Get BarFormatter() As BarFormatter
-Set BarFormatter = mBarFormatter
+Public Property Get Bars() As Bars
+Set Bars = mBars
 End Property
     
 Public Property Let barStyle(ByVal value As barStyle)
@@ -168,6 +171,16 @@ End Property
 '@================================================================================
 ' Methods
 '@================================================================================
+
+Public Sub SetBarFormatterFactory(ByVal formatterFactory As BarFormatterFactory, ByVal Bars As Bars)
+If Not formatterFactory Is Nothing And Bars Is Nothing Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            ProjectName & "." & ModuleName & ":" & "SetBarFormatterFactory", _
+            "A Bars object must be supplied"
+End If
+Set mBarFormatterFactory = formatterFactory
+Set mBars = Bars
+End Sub
 
 '@================================================================================
 ' Helper Functions

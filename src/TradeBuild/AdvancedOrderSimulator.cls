@@ -330,21 +330,23 @@ Dim lOrder As SimulatorOrder
 Dim specifier As contractSpecifier
 Dim pendingOrder As SimulatorOrder
 
+If marketIndex < 0 Or marketIndex > UBound(mMarketTable) Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+            "TradeBuild26.AdvancedOrderSimulator::placeOrder", _
+            "Invalid marketIndex " & marketIndex & " in order " & pOrder.id
+End If
+
 Select Case pOrder.orderType
 Case OrderTypes.OrderTypeMarket, _
     OrderTypes.OrderTypeLimit, _
     OrderTypes.OrderTypeStop, _
     OrderTypes.OrderTypeStopLimit
 Case Else
-    setRejectOrder pOrder, "Order type " & pOrder.orderType & " not supported by simulator"
+    setRejectOrder pOrder, _
+                    "Order type " & pOrder.orderType & " not supported by simulator", _
+                    marketIndex
     Exit Sub
 End Select
-
-If marketIndex < 0 Or marketIndex > UBound(mMarketTable) Then
-    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "TradeBuild26.AdvancedOrderSimulator::placeOrder", _
-            "Invalid marketIndex " & marketIndex & " in order " & pOrder.id
-End If
 
 Set specifier = pOrder.Contract.specifier
 If Not specifier.Equals(mMarketTable(marketIndex).Contract.specifier) Then
@@ -582,7 +584,7 @@ With mMarketTable(pOrder.marketIndex)
             Case OrderTypes.OrderTypeLimit, OrderTypes.OrderTypeMarket
                 If mMarketTable(pOrder.marketIndex).simulateExchangeDelays Then
                     pOrder.order.status = OrderStatuses.OrderStatusSubmitted
-                    mMarketTable(pOrder.marketIndex).serviceConsumer.orderStatus pOrder.order.id, _
+                    mMarketTable(pOrder.marketIndex).serviceConsumer.OrderStatus pOrder.order.id, _
                                             pOrder.order.status
                     mTimerList.add(pOrder, _
                                     delay, _
@@ -590,7 +592,7 @@ With mMarketTable(pOrder.marketIndex)
                 Else
                     pOrder.order.status = OrderStatuses.OrderStatusSubmitted
                     pOrder.atExchange = True
-                    mMarketTable(pOrder.marketIndex).serviceConsumer.orderStatus pOrder.order.id, _
+                    mMarketTable(pOrder.marketIndex).serviceConsumer.OrderStatus pOrder.order.id, _
                                             pOrder.order.status
                 End If
             Case Else
@@ -767,7 +769,7 @@ If pOrder.order.status = OrderStatuses.OrderStatusCancelled Then Exit Sub
 Select Case pOrder.order.status
 Case OrderStatuses.OrderStatusSubmitted, OrderStatuses.OrderStatusPreSubmitted
     pOrder.order.status = OrderStatuses.OrderStatusCancelling
-    mMarketTable(pOrder.marketIndex).serviceConsumer.orderStatus pOrder.order.id, _
+    mMarketTable(pOrder.marketIndex).serviceConsumer.OrderStatus pOrder.order.id, _
                             OrderStatuses.OrderStatusCancelling
     If mMarketTable(pOrder.marketIndex).simulateExchangeDelays Then
         mTimerList.add(pOrder, _
@@ -779,7 +781,7 @@ Case OrderStatuses.OrderStatusCreated, _
         OrderStatuses.OrderStatusPendingSubmit, _
         OrderStatuses.OrderStatusRejected
     pOrder.order.status = OrderStatuses.OrderStatusCancelled
-    mMarketTable(pOrder.marketIndex).serviceConsumer.orderStatus pOrder.order.id, _
+    mMarketTable(pOrder.marketIndex).serviceConsumer.OrderStatus pOrder.order.id, _
                             OrderStatuses.OrderStatusCancelled
     mMarketTable(pOrder.marketIndex).activeOrders.remove pOrder.order.id
 End Select
@@ -832,7 +834,7 @@ Mid(execId, 18, 6) = ".01.01"
 'exec.action = pOrder.order.action
 'exec.time = mMarketTable(pOrder.marketIndex).Clock.timestamp
 
-mMarketTable(pOrder.marketIndex).serviceConsumer.preFill pOrder.order.id, _
+mMarketTable(pOrder.marketIndex).serviceConsumer.PreFill pOrder.order.id, _
                     lFillPrice, _
                     lFillSize
                     
@@ -846,7 +848,7 @@ If lFillPrice = 0 Then lFillPrice = fillPrice
 pOrder.order.quantityRemaining = pOrder.order.quantityRemaining - lFillSize
 If pOrder.order.quantityRemaining = 0 Then pOrder.order.status = OrderStatuses.OrderStatusFilled
 
-mMarketTable(pOrder.marketIndex).serviceConsumer.executionDetails _
+mMarketTable(pOrder.marketIndex).serviceConsumer.ExecutionDetails _
                         lContractSpecifier, _
                         "", _
                         pOrder.order.action, _
@@ -858,7 +860,7 @@ mMarketTable(pOrder.marketIndex).serviceConsumer.executionDetails _
                         lFillPrice, lFillSize, _
                         mMarketTable(pOrder.marketIndex).Clock.timestamp
 
-mMarketTable(pOrder.marketIndex).serviceConsumer.orderStatus pOrder.order.id, _
+mMarketTable(pOrder.marketIndex).serviceConsumer.OrderStatus pOrder.order.id, _
                         pOrder.order.status
 
 handleRelatedOrders pOrder
@@ -916,9 +918,10 @@ End Sub
 '                        order.clientId)
 'End Sub
 
-Private Sub setRejectOrder(ByVal pOrder As SimulatorOrder, _
-                            reason As String)
-mMarketTable(pOrder.marketIndex).serviceConsumer.rejectOrder pOrder.order.id, _
+Private Sub setRejectOrder(ByVal pOrder As order, _
+                            reason As String, _
+                            ByVal marketIndex As Long)
+mMarketTable(marketIndex).serviceConsumer.RejectOrder pOrder.id, _
                                         "Order rejected - reason: " & reason
 End Sub
 
@@ -931,7 +934,7 @@ Case OrderTypes.OrderTypeLimit, OrderTypes.OrderTypeMarket
             ' this is an attached order. Set the status to pending submit and
             ' then move it on at the next tick
             pOrder.order.status = OrderStatuses.OrderStatusPendingSubmit
-            mMarketTable(pOrder.marketIndex).serviceConsumer.orderStatus pOrder.order.id, _
+            mMarketTable(pOrder.marketIndex).serviceConsumer.OrderStatus pOrder.order.id, _
                                     pOrder.order.status
         Else
             ' this is a parent order, a free standing order, or part of an oca group.
@@ -939,14 +942,14 @@ Case OrderTypes.OrderTypeLimit, OrderTypes.OrderTypeMarket
             ' using exchange submission delay
             If mMarketTable(pOrder.marketIndex).simulateExchangeDelays Then
                 pOrder.order.status = OrderStatuses.OrderStatusSubmitted
-                mMarketTable(pOrder.marketIndex).serviceConsumer.orderStatus pOrder.order.id, _
+                mMarketTable(pOrder.marketIndex).serviceConsumer.OrderStatus pOrder.order.id, _
                                         pOrder.order.status
                 mTimerList.add(pOrder, _
                                 delay, _
                                 expiryTimeUnits.ExpiryTimeUnitMilliseconds).addStateChangeListener Me
             Else
                 pOrder.order.status = OrderStatuses.OrderStatusPendingSubmit
-                mMarketTable(pOrder.marketIndex).serviceConsumer.orderStatus pOrder.order.id, _
+                mMarketTable(pOrder.marketIndex).serviceConsumer.OrderStatus pOrder.order.id, _
                                         pOrder.order.status
             End If
         End If
@@ -955,12 +958,12 @@ Case OrderTypes.OrderTypeLimit, OrderTypes.OrderTypeMarket
             ' this is an attached order. Set the status to presubmitted
             ' then move it on at the next tick
             pOrder.order.status = OrderStatuses.OrderStatusPreSubmitted
-            mMarketTable(pOrder.marketIndex).serviceConsumer.orderStatus pOrder.order.id, _
+            mMarketTable(pOrder.marketIndex).serviceConsumer.OrderStatus pOrder.order.id, _
                                     pOrder.order.status
         Else
             pOrder.order.status = OrderStatuses.OrderStatusSubmitted
             pOrder.atExchange = True
-            mMarketTable(pOrder.marketIndex).serviceConsumer.orderStatus pOrder.order.id, _
+            mMarketTable(pOrder.marketIndex).serviceConsumer.OrderStatus pOrder.order.id, _
                                     pOrder.order.status
         End If
     Case Else
@@ -974,18 +977,18 @@ Case OrderTypes.OrderTypeStop, OrderTypes.OrderTypeStopLimit
         ' in all cases, we want the order to move to pending submit on this
         ' tick, and to presubmitted on the next
         pOrder.order.status = OrderStatuses.OrderStatusPendingSubmit
-        mMarketTable(pOrder.marketIndex).serviceConsumer.orderStatus pOrder.order.id, _
+        mMarketTable(pOrder.marketIndex).serviceConsumer.OrderStatus pOrder.order.id, _
                                 pOrder.order.status
     Case OrderStatuses.OrderStatusPendingSubmit
         pOrder.order.status = OrderStatuses.OrderStatusPreSubmitted
-        mMarketTable(pOrder.marketIndex).serviceConsumer.orderStatus pOrder.order.id, _
+        mMarketTable(pOrder.marketIndex).serviceConsumer.OrderStatus pOrder.order.id, _
                                 pOrder.order.status
     Case OrderStatuses.OrderStatusPreSubmitted
         ' this case occurs when the condition for the order to be triggered
         ' has been reached
         If mMarketTable(pOrder.marketIndex).simulateExchangeDelays Then
             pOrder.order.status = OrderStatuses.OrderStatusSubmitted
-            mMarketTable(pOrder.marketIndex).serviceConsumer.orderStatus pOrder.order.id, _
+            mMarketTable(pOrder.marketIndex).serviceConsumer.OrderStatus pOrder.order.id, _
                                     pOrder.order.status
             mTimerList.add(pOrder, _
                             delay, _
@@ -993,7 +996,7 @@ Case OrderTypes.OrderTypeStop, OrderTypes.OrderTypeStopLimit
         Else
             pOrder.order.status = OrderStatuses.OrderStatusSubmitted
             pOrder.atExchange = True
-            mMarketTable(pOrder.marketIndex).serviceConsumer.orderStatus pOrder.order.id, _
+            mMarketTable(pOrder.marketIndex).serviceConsumer.OrderStatus pOrder.order.id, _
                                     pOrder.order.status
         End If
     Case Else
@@ -1008,7 +1011,7 @@ Case Else
                 "Order type " & pOrder.order.orderType & " invalid for submission"
 End Select
 
-mMarketTable(pOrder.marketIndex).serviceConsumer.orderStatus pOrder.order.id, _
+mMarketTable(pOrder.marketIndex).serviceConsumer.OrderStatus pOrder.order.id, _
                         pOrder.order.status
 
 End Sub

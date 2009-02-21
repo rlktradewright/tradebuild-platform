@@ -54,6 +54,7 @@ Private mPrice          As Double
 Private mOrderBrokerId  As String
 Private mOrderTradeBuildId  As String
 Private mIsLiquidation  As Boolean
+Private mIsSimulated          As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -89,6 +90,14 @@ End Property
 
 Public Property Get contractSpecifier() As contractSpecifier
 Set contractSpecifier = mContractSpecifier
+End Property
+
+Friend Property Let IsSimulated(ByVal RHS As Boolean)
+mIsSimulated = RHS
+End Property
+
+Public Property Get IsSimulated() As Boolean
+IsSimulated = mIsSimulated
 End Property
 
 Friend Property Let execId(ByVal RHS As String)

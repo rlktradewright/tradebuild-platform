@@ -35,6 +35,10 @@ Private mRegion As ChartRegion
 ' Class Event Handlers
 '================================================================================
 
+Private Sub Class_Terminate()
+Debug.Print "GraphObjServiceProvider terminated"
+End Sub
+
 '================================================================================
 ' xxxx Event Handlers
 '================================================================================

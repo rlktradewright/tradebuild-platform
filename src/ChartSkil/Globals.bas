@@ -57,11 +57,6 @@ Public Enum LayerNumberRange
     MaxLayer = 255
 End Enum
 
-Public Enum PointerModes
-    PointerModeDefault
-    PointerModeTool
-End Enum
-
 '================================================================================
 ' Types
 '================================================================================
@@ -74,7 +69,8 @@ Private mLogger As Logger
 
 Private mIsInDev As Boolean
 
-Public gBlankMouseIcon As IPictureDisp
+Public gBlankCursor As IPictureDisp
+Public gSelectorCursor As IPictureDisp
 
 '================================================================================
 ' Properties
@@ -85,7 +81,7 @@ gIsInDev = mIsInDev
 End Property
 
 Public Property Get gLogger() As Logger
-If mLogger Is Nothing Then Set mLogger = GetLogger("log.chartskil")
+If mLogger Is Nothing Then Set mLogger = GetLogger("chartskil.log")
 Set gLogger = mLogger
 End Property
 
@@ -170,10 +166,12 @@ With gCreateBarStyle
     .includeInAutoscale = True
     .tailThickness = 1
     .outlineThickness = 1
-    .upColor = &H1D9311
-    .downColor = &H43FC2
+    '.upColor = &H1D9311
+    '.downColor = &H43FC2
+    .upColor = vbBlack
+    .downColor = vbBlack
     .displayMode = BarDisplayModeBar
-    .solidUpBody = True
+    .solidUpBody = False
     .barThickness = 2
     .barWidth = 0.6
     .barColor = -1

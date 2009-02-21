@@ -31,10 +31,11 @@ Implements TradeBuildSP.IOrder
 
 Event Clean()
 Event Dirty()
-Event StatusChanged()
-Event fill( _
+Event Fill( _
                 ByVal quantityFilled As Long, _
                 ByVal fillPrice As Double)
+Event PropertyChanged()
+Event StatusChanged()
 
 '@================================================================================
 ' Constants
@@ -52,58 +53,56 @@ Event fill( _
 ' Member variables
 '@================================================================================
 
-Private mTicker         As Ticker
-Private mContract       As Contract
-Private mOrderContext   As OrderContext
+Private mTicker                     As Ticker
+Private mContract                   As Contract
+Private mOrderContext               As OrderContext
 
-Private mIsDirty        As Boolean
+Private mIsDirty                    As Boolean
 
-Private mDummy          As Boolean
+Private mIsSimulated                As Boolean
 
-Private mStatus         As OrderStatuses
-Private mIdentifier     As String
+Private mStatus                     As OrderStatuses
+Private mIdentifier                 As String
 
-Private mSimulated      As Boolean
+Private mFillTime                   As Date
 
-Private mFillTime       As Date
-
-Private mBrokerId       As String
+Private mBrokerId                   As String
     
-Private mAction         As OrderActions
-Private mQuantity       As Long
-Private mQuantityFilled As Long
-Private mQuantityRemaining As Long
-Private mAveragePrice   As Double
-Private mLastFillPrice  As Double
-Private mOrderType      As OrderTypes
-Private mLimitPrice     As Double
-Private mTriggerPrice   As Double
-Private mOffset         As Long
+Private mAction                     As OrderActions
+Private mQuantity                   As Long
+Private mQuantityFilled             As Long
+Private mQuantityRemaining          As Long
+Private mAveragePrice               As Double
+Private mLastFillPrice              As Double
+Private mOrderType                  As OrderTypes
+Private mLimitPrice                 As Double
+Private mTriggerPrice               As Double
+Private mOffset                     As Long
 
-Private mTimeInForce    As OrderTifs
-Private mOrigin         As OrderOrigins
-Private mOriginatorRef  As String
-Private mBlockOrder     As Boolean
-Private mSweepToFill    As Boolean
-Private mDisplaySize    As Long
-Private mStopTriggerMethod  As StopTriggerMethods
-Private mIgnoreRegularTradingHours      As Boolean
-Private mRegularTradingHoursOnly      As Boolean
-Private mHidden         As Boolean
-Private mDiscretionaryAmount As Double
-Private mGoodAfterTime  As Date
-Private mGoodAfterTimeTZ    As String
-Private mGoodTillDate   As Date
-Private mGoodTillDateTZ As String
+Private mTimeInForce                As OrderTifs
+Private mOrigin                     As OrderOrigins
+Private mOriginatorRef              As String
+Private mProviderProperties         As parameters
+Private mBlockOrder                 As Boolean
+Private mSweepToFill                As Boolean
+Private mDisplaySize                As Long
+Private mStopTriggerMethod          As StopTriggerMethods
+Private mIgnoreRegularTradingHours  As Boolean
+Private mHidden                     As Boolean
+Private mDiscretionaryAmount        As Double
+Private mGoodAfterTime              As Date
+Private mGoodAfterTimeTZ            As String
+Private mGoodTillDate               As Date
+Private mGoodTillDateTZ             As String
     
-Private mSettlingFirm   As String
-Private mAllOrNone As Boolean
-Private mMinimumQuantity As Long
-Private mPercentOffset As Double
-Private mETradeOnly As Boolean
-Private mFirmQuoteOnly  As Boolean
-Private mNBBOPriceCap As Double
-Private mOverrideConstraints  As Boolean
+Private mSettlingFirm               As String
+Private mAllOrNone                  As Boolean
+Private mMinimumQuantity            As Long
+Private mPercentOffset              As Double
+Private mETradeOnly                 As Boolean
+Private mFirmQuoteOnly              As Boolean
+Private mNBBOPriceCap               As Double
+Private mOverrideConstraints        As Boolean
     
 '@================================================================================
 ' Class Event Handlers
@@ -114,6 +113,8 @@ mStatus = OrderStatuses.OrderStatusCreated
 mAction = ActionBuy
 mOrderType = OrderTypeNone
 mTimeInForce = TIFDay
+
+Set mProviderProperties = New parameters
 End Sub
 
 '@================================================================================
@@ -212,6 +213,10 @@ Private Property Get IOrder_overrideConstraints() As Boolean
 IOrder_overrideConstraints = mOverrideConstraints
 End Property
 
+Private Property Get IOrder_providerProperties() As TWUtilities30.parameters
+Set IOrder_providerProperties = mProviderProperties
+End Property
+
 Private Property Get IOrder_quantity() As Long
 IOrder_quantity = mQuantity
 End Property
@@ -222,10 +227,6 @@ End Property
 
 Private Property Get IOrder_quantityRemaining() As Long
 IOrder_quantityRemaining = mQuantityRemaining
-End Property
-
-Private Property Get IOrder_regularTradingHoursOnly() As Boolean
-IOrder_regularTradingHoursOnly = mRegularTradingHoursOnly
 End Property
 
 Private Property Get IOrder_settlingFirm() As String
@@ -273,7 +274,7 @@ action = mAction
 End Property
 
 Public Property Let allOrNone(ByVal value As Boolean)
-checkAttributeModificationPermitted (TradeBuild26.OrderAttributeIds.OrderAttAllOrNone)
+checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttAllOrNone
 If value = mAllOrNone Then Exit Property
 setDirty
 mAllOrNone = value
@@ -292,7 +293,7 @@ averagePrice = mAveragePrice
 End Property
 
 Public Property Let blockOrder(value As Boolean)
-checkAttributeModificationPermitted (TradeBuild26.OrderAttributeIds.OrderAttBlockOrder)
+checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttBlockOrder
 If value = mBlockOrder Then Exit Property
 setDirty
 mBlockOrder = value
@@ -315,7 +316,7 @@ Set Contract = mContract
 End Property
 
 Public Property Let displaySize(ByVal value As Long)
-checkAttributeModificationPermitted (TradeBuild26.OrderAttributeIds.OrderAttDisplaySize)
+checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttDisplaySize
 If value = mDisplaySize Then Exit Property
 setDirty
 mDisplaySize = value
@@ -326,7 +327,7 @@ displaySize = mDisplaySize
 End Property
 
 Public Property Let discretionaryAmount(ByVal value As Double)
-checkAttributeModificationPermitted (TradeBuild26.OrderAttributeIds.OrderAttDiscretionaryAmount)
+checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttDiscretionaryAmount
 If value = mDiscretionaryAmount Then Exit Property
 setDirty
 mDiscretionaryAmount = value
@@ -336,16 +337,8 @@ Public Property Get discretionaryAmount() As Double
 discretionaryAmount = mDiscretionaryAmount
 End Property
 
-Friend Property Let dummy(ByVal value As Boolean)
-mDummy = value
-End Property
-
-Public Property Get dummy() As Boolean
-dummy = mDummy
-End Property
-
 Public Property Let eTradeOnly(ByVal value As Boolean)
-checkAttributeModificationPermitted (TradeBuild26.OrderAttributeIds.OrderAttETradeOnly)
+checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttETradeOnly
 If value = mETradeOnly Then Exit Property
 setDirty
 mETradeOnly = value
@@ -364,7 +357,7 @@ fillTime = mFillTime
 End Property
 
 Public Property Let firmQuoteOnly(ByVal value As Boolean)
-checkAttributeModificationPermitted (TradeBuild26.OrderAttributeIds.OrderAttFirmQuoteOnly)
+checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttFirmQuoteOnly
 If value = mFirmQuoteOnly Then Exit Property
 setDirty
 mFirmQuoteOnly = value
@@ -375,7 +368,7 @@ firmQuoteOnly = mFirmQuoteOnly
 End Property
 
 Public Property Let goodAfterTime(ByVal value As Date)
-checkAttributeModificationPermitted (TradeBuild26.OrderAttributeIds.OrderAttGoodAfterTime)
+checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttGoodAfterTime
 If value = mGoodAfterTime Then Exit Property
 setDirty
 mGoodAfterTime = value
@@ -386,7 +379,7 @@ goodAfterTime = mGoodAfterTime
 End Property
 
 Public Property Let goodAfterTimeTZ(ByVal value As String)
-checkAttributeModificationPermitted (TradeBuild26.OrderAttributeIds.OrderAttGoodAfterTimeTZ)
+checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttGoodAfterTimeTZ
 If value = mGoodAfterTimeTZ Then Exit Property
 setDirty
 mGoodAfterTimeTZ = value
@@ -397,7 +390,7 @@ goodAfterTimeTZ = mGoodAfterTimeTZ
 End Property
 
 Public Property Let goodTillDate(ByVal value As Date)
-checkAttributeModificationPermitted (TradeBuild26.OrderAttributeIds.OrderAttGoodTillDate)
+checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttGoodTillDate
 If value = mGoodTillDate Then Exit Property
 setDirty
 mGoodTillDate = value
@@ -408,7 +401,7 @@ goodTillDate = mGoodTillDate
 End Property
 
 Public Property Let goodTillDateTZ(ByVal value As String)
-checkAttributeModificationPermitted (TradeBuild26.OrderAttributeIds.OrderAttGoodTillDateTZ)
+checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttGoodTillDateTZ
 If value = mGoodTillDateTZ Then Exit Property
 setDirty
 mGoodTillDateTZ = value
@@ -419,7 +412,7 @@ goodTillDateTZ = mGoodTillDateTZ
 End Property
 
 Public Property Let hidden(value As Boolean)
-checkAttributeModificationPermitted (TradeBuild26.OrderAttributeIds.OrderAttHidden)
+checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttHidden
 If value = mHidden Then Exit Property
 setDirty
 mHidden = value
@@ -438,7 +431,7 @@ id = mIdentifier
 End Property
 
 Public Property Let ignoreRegularTradingHours(value As Boolean)
-checkAttributeModificationPermitted (TradeBuild26.OrderAttributeIds.OrderAttIgnoreRTH)
+checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttIgnoreRTH
 If value = mIgnoreRegularTradingHours Then Exit Property
 setDirty
 mIgnoreRegularTradingHours = value
@@ -450,6 +443,14 @@ End Property
 
 Public Property Get isDirty() As Boolean
 isDirty = mIsDirty
+End Property
+
+Friend Property Let IsSimulated(ByVal value As Boolean)
+mIsSimulated = value
+End Property
+
+Public Property Get IsSimulated() As Boolean
+IsSimulated = mIsSimulated
 End Property
 
 Friend Property Let lastFillPrice(ByVal value As Double)
@@ -469,7 +470,7 @@ limitPrice = mLimitPrice
 End Property
 
 Public Property Let minimumQuantity(ByVal value As Long)
-checkAttributeModificationPermitted (TradeBuild26.OrderAttributeIds.OrderAttMinimumQuantity)
+checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttMinimumQuantity
 If value = mMinimumQuantity Then Exit Property
 setDirty
 mMinimumQuantity = value
@@ -480,7 +481,7 @@ minimumQuantity = mMinimumQuantity
 End Property
 
 Public Property Let NbboPriceCap(ByVal value As Double)
-checkAttributeModificationPermitted (TradeBuild26.OrderAttributeIds.OrderAttNBBOPriceCap)
+checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttNBBOPriceCap
 If value = mNBBOPriceCap Then Exit Property
 setDirty
 mNBBOPriceCap = value
@@ -507,8 +508,8 @@ Set OrderContext = mOrderContext
 End Property
 
 Friend Property Let orderType(ByVal value As OrderTypes)
-checkAttributeModificationPermitted (TradeBuild26.OrderAttributeIds.OrderAttOrderType)
-If Not mOrderContext.isOrderTypeValueSupported(value) Then attributeValueNotSupported
+checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttOrderType
+If Not mOrderContext.isOrderTypeValueSupported(value) Then attributeValueNotSupported TradeBuild26.OrderAttributeIds.OrderAttOrderType, value
 If value = mOrderType Then Exit Property
 setDirty
 mOrderType = value
@@ -519,7 +520,7 @@ orderType = mOrderType
 End Property
 
 Public Property Let origin(ByVal value As OrderOrigins)
-checkAttributeModificationPermitted (TradeBuild26.OrderAttributeIds.OrderAttOrigin)
+checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttOrigin
 If value = mOrigin Then Exit Property
 setDirty
 mOrigin = value
@@ -530,7 +531,7 @@ origin = mOrigin
 End Property
 
 Public Property Let originatorRef(ByVal value As String)
-checkAttributeModificationPermitted (TradeBuild26.OrderAttributeIds.OrderAttOriginatorRef)
+checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttOriginatorRef
 If value = mOriginatorRef Then Exit Property
 setDirty
 mOriginatorRef = value
@@ -541,7 +542,7 @@ originatorRef = mOriginatorRef
 End Property
 
 Public Property Let overrideConstraints(ByVal value As Boolean)
-checkAttributeModificationPermitted (TradeBuild26.OrderAttributeIds.OrderAttOverrideConstraints)
+checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttOverrideConstraints
 If value = mOverrideConstraints Then Exit Property
 setDirty
 mOverrideConstraints = value
@@ -552,7 +553,7 @@ overrideConstraints = mOverrideConstraints
 End Property
 
 Public Property Let percentOffset(ByVal value As Double)
-checkAttributeModificationPermitted (TradeBuild26.OrderAttributeIds.OrderAttPercentOffset)
+checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttPercentOffset
 If value = mPercentOffset Then Exit Property
 setDirty
 mPercentOffset = value
@@ -562,8 +563,17 @@ Public Property Get percentOffset() As Double
 percentOffset = mPercentOffset
 End Property
 
+Friend Property Let providerProperties( _
+                ByVal value As TWUtilities30.parameters)
+Set mProviderProperties = value
+End Property
+
+Public Property Get providerProperties() As TWUtilities30.parameters
+Set providerProperties = mProviderProperties
+End Property
+
 Public Property Let quantity(ByVal value As Long)
-checkAttributeModificationPermitted (TradeBuild26.OrderAttributeIds.OrderAttQuantity)
+checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttQuantity
 If value = mQuantity Then Exit Property
 mQuantity = value
 setDirty
@@ -590,19 +600,8 @@ Public Property Get quantityRemaining() As Long
 quantityRemaining = mQuantityRemaining
 End Property
 
-Public Property Let regularTradingHoursOnly(value As Boolean)
-checkAttributeModificationPermitted (TradeBuild26.OrderAttributeIds.OrderAttRTHOnly)
-If value = mRegularTradingHoursOnly Then Exit Property
-setDirty
-mRegularTradingHoursOnly = value
-End Property
-
-Public Property Get regularTradingHoursOnly() As Boolean
-regularTradingHoursOnly = mRegularTradingHoursOnly
-End Property
-
 Public Property Let settlingFirm(value As String)
-checkAttributeModificationPermitted (TradeBuild26.OrderAttributeIds.OrderAttSettlingFirm)
+checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttSettlingFirm
 If value = mSettlingFirm Then Exit Property
 setDirty
 mSettlingFirm = value
@@ -610,14 +609,6 @@ End Property
 
 Public Property Get settlingFirm() As String
 settlingFirm = mSettlingFirm
-End Property
-
-Friend Property Let simulated(ByVal value As Boolean)
-mSimulated = value
-End Property
-
-Public Property Get simulated() As Boolean
-simulated = mSimulated
 End Property
 
 Friend Property Let status(value As OrderStatuses)
@@ -629,8 +620,8 @@ status = mStatus
 End Property
 
 Public Property Let StopTriggerMethod(ByVal value As StopTriggerMethods)
-checkAttributeModificationPermitted (TradeBuild26.OrderAttributeIds.OrderAttStopTriggerMethod)
-If Not mOrderContext.isStopTriggerMethodValueSupported(value) Then attributeValueNotSupported
+checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttStopTriggerMethod
+If Not mOrderContext.isStopTriggerMethodValueSupported(value) Then attributeValueNotSupported TradeBuild26.OrderAttributeIds.OrderAttStopTriggerMethod, value
 If value = mStopTriggerMethod Then Exit Property
 setDirty
 mStopTriggerMethod = value
@@ -641,7 +632,7 @@ StopTriggerMethod = mStopTriggerMethod
 End Property
 
 Public Property Let SweepToFill(value As Boolean)
-checkAttributeModificationPermitted (TradeBuild26.OrderAttributeIds.OrderAttSweepToFill)
+checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttSweepToFill
 If value = mSweepToFill Then Exit Property
 setDirty
 mSweepToFill = value
@@ -661,8 +652,8 @@ Set Ticker = mTicker
 End Property
 
 Public Property Let timeInForce(ByVal value As OrderTifs)
-checkAttributeModificationPermitted (TradeBuild26.OrderAttributeIds.OrderAttTimeInForce)
-If Not mOrderContext.isOrderTifValueSupported(value) Then attributeValueNotSupported
+checkAttributeModificationPermitted TradeBuild26.OrderAttributeIds.OrderAttTimeInForce
+If Not mOrderContext.isOrderTifValueSupported(value) Then attributeValueNotSupported TradeBuild26.OrderAttributeIds.OrderAttTimeInForce, value
 If value = mTimeInForce Then Exit Property
 setDirty
 mTimeInForce = value
@@ -684,8 +675,8 @@ End Property
 ' Methods
 '@================================================================================
 
-Public Function clone() As Order
-Set clone = New Order
+Public Function clone() As order
+Set clone = New order
 syncToMe clone
 End Function
 
@@ -698,7 +689,7 @@ End Function
 Friend Sub notifyFill( _
                 ByVal exec As Execution)
 
-If Not mDummy Then gTB.notifyListeners _
+If Not mIsSimulated Then gTB.notifyListeners _
                         mContract.specifier.exchange & "," & _
                         mContract.specifier.symbol & "," & _
                         mContract.specifier.expiry & "," & _
@@ -708,7 +699,7 @@ If Not mDummy Then gTB.notifyListeners _
                         exec.time & "," & _
                         exec.orderTradeBuildId & "," & _
                         exec.orderBrokerId, _
-                        IIf(mDummy, TradeBuildListenValueTypes.VTOrderDetailDummy, TradeBuildListenValueTypes.VTOrderDetail), _
+                        IIf(mIsSimulated, TradeBuildListenValueTypes.VTOrderDetailSimulated, TradeBuildListenValueTypes.VTOrderDetail), _
                         Me
 
 mAveragePrice = (mQuantityFilled * mAveragePrice + exec.quantity * exec.price) / (mQuantityFilled + exec.quantity)
@@ -716,7 +707,7 @@ mQuantityFilled = mQuantityFilled + exec.quantity
 mQuantityRemaining = mQuantityRemaining - exec.quantity
 mLastFillPrice = exec.price
 mFillTime = exec.time
-RaiseEvent fill(exec.quantity, exec.price)
+RaiseEvent Fill(exec.quantity, exec.price)
 
 End Sub
 
@@ -885,7 +876,7 @@ End Sub
 '
 ' @param  targetOrder the <code>order</code> that must be made identical
 '@/
-Friend Sub syncToMe(ByVal targetOrder As Order)
+Friend Sub syncToMe(ByVal targetOrder As order)
 With targetOrder
     .OrderContext = mOrderContext   ' set this first because others depend on it
     .status = mStatus               ' ditto
@@ -897,7 +888,7 @@ With targetOrder
     .brokerId = mBrokerId
     If isAttributeModifiable(OrderAttributeIds.OrderAttDiscretionaryAmount) Then .discretionaryAmount = mDiscretionaryAmount
     If isAttributeModifiable(OrderAttributeIds.OrderAttDisplaySize) Then .displaySize = mDisplaySize
-    .dummy = mDummy
+    .IsSimulated = mIsSimulated
     If isAttributeModifiable(OrderAttributeIds.OrderAttETradeOnly) Then .eTradeOnly = mETradeOnly
     .fillTime = mFillTime
     If isAttributeModifiable(OrderAttributeIds.OrderAttFirmQuoteOnly) Then .firmQuoteOnly = mFirmQuoteOnly
@@ -920,9 +911,7 @@ With targetOrder
     If isAttributeModifiable(OrderAttributeIds.OrderAttPercentOffset) Then .percentOffset = mPercentOffset
     If isAttributeModifiable(OrderAttributeIds.OrderAttQuantity) Then .quantity = mQuantity
     .quantityFilled = mQuantityFilled
-    If isAttributeModifiable(OrderAttributeIds.OrderAttRTHOnly) Then .regularTradingHoursOnly = mRegularTradingHoursOnly
     If isAttributeModifiable(OrderAttributeIds.OrderAttSettlingFirm) Then .settlingFirm = mSettlingFirm
-    .simulated = mSimulated
     If isAttributeModifiable(OrderAttributeIds.OrderAttStopTriggerMethod) And _
         mStopTriggerMethod <> StopTriggerMethods.StopTriggerNone Then .StopTriggerMethod = mStopTriggerMethod
     If isAttributeModifiable(OrderAttributeIds.OrderAttSweepToFill) Then .SweepToFill = mSweepToFill
@@ -930,6 +919,44 @@ With targetOrder
     If isAttributeModifiable(OrderAttributeIds.OrderAttTimeInForce) Then .timeInForce = mTimeInForce
     If isAttributeModifiable(OrderAttributeIds.OrderAttTriggerPrice) Then .triggerPrice = mTriggerPrice
 End With
+End Sub
+
+Friend Sub SyncToOrderReport( _
+                ByVal OrderReport As IOrderReport)
+Dim changed As Boolean
+
+With OrderReport
+    If .action <> mAction Then mAction = .action: changed = True
+    If .allOrNone <> mAllOrNone Then mAllOrNone = .allOrNone: changed = True
+    If .blockOrder <> mBlockOrder Then mBlockOrder = .blockOrder: changed = True
+    If .discretionaryAmount <> mDiscretionaryAmount Then mDiscretionaryAmount = .discretionaryAmount: changed = True
+    If .displaySize <> mDisplaySize Then mDisplaySize = .displaySize: changed = True
+    If .eTradeOnly <> mETradeOnly Then mETradeOnly = .eTradeOnly: changed = True
+    If .firmQuoteOnly <> mFirmQuoteOnly Then mFirmQuoteOnly = .firmQuoteOnly: changed = True
+    If .goodAfterTime <> mGoodAfterTime Then mGoodAfterTime = .goodAfterTime: changed = True
+    If .goodAfterTimeTZ <> mGoodAfterTimeTZ Then mGoodAfterTimeTZ = .goodAfterTimeTZ: changed = True
+    If .goodTillDate <> mGoodTillDate Then mGoodTillDate = .goodTillDate: changed = True
+    If .goodTillDateTZ <> mGoodTillDateTZ Then mGoodTillDateTZ = .goodTillDateTZ: changed = True
+    If .hidden <> mHidden Then mHidden = .hidden: changed = True
+    If .ignoreRegularTradingHours <> mIgnoreRegularTradingHours Then mIgnoreRegularTradingHours = .ignoreRegularTradingHours: changed = True
+    If .limitPrice <> mLimitPrice Then mLimitPrice = .limitPrice: changed = True
+    If .minimumQuantity <> mMinimumQuantity Then mMinimumQuantity = .minimumQuantity: changed = True
+    If .NbboPriceCap <> mNBBOPriceCap Then mNBBOPriceCap = .NbboPriceCap: changed = True
+    If .orderType <> mOrderType Then mOrderType = .orderType: changed = True
+    If .origin <> mOrigin Then mOrigin = .origin: changed = True
+    If .originatorRef <> mOriginatorRef Then mOriginatorRef = .originatorRef: changed = True
+    If .overrideConstraints <> mOverrideConstraints Then mOverrideConstraints = .overrideConstraints: changed = True
+    Set mProviderProperties = .providerProperties
+    If .quantity <> mQuantity Then mQuantity = .quantity: changed = True
+    If .settlingFirm <> mSettlingFirm Then mSettlingFirm = .settlingFirm: changed = True
+    If .StopTriggerMethod <> mStopTriggerMethod Then mStopTriggerMethod = .StopTriggerMethod: changed = True
+    If .SweepToFill <> mSweepToFill Then mSweepToFill = .SweepToFill: changed = True
+    If .timeInForce <> mTimeInForce Then mTimeInForce = .timeInForce: changed = True
+    If .tradeBuildId <> mIdentifier Then mIdentifier = .tradeBuildId: changed = True
+    If .triggerPrice <> mTriggerPrice Then mTriggerPrice = .triggerPrice: changed = True
+End With
+
+If changed Then RaiseEvent PropertyChanged
 End Sub
 
 ''
@@ -951,21 +978,21 @@ End Sub
 ' Helper Functions
 '@================================================================================
 
-Private Sub attributeNotModifiable()
-Err.Raise ErrorCodes.ErrIllegalStateException, _
-            "TradeBuild26.Order", _
-            "This attribute is not currently modifiable"
-End Sub
-
-Private Sub attributeValueNotSupported()
+Private Sub attributeValueNotSupported( _
+                ByVal pAttribute As OrderAttributeIds, _
+                ByVal value As Variant)
 Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "TradeBuild26.Order", _
-            "This attribute value not supported by service provider"
+            , _
+            "Value " & CStr(value) & " for attribute " & gOrderAttributeToString(pAttribute) & " is not supported by the service provider"
 End Sub
 
 Private Sub checkAttributeModificationPermitted( _
                 ByVal attributeId As OrderAttributeIds)
-If Not isAttributeModifiable(attributeId) Then attributeNotModifiable
+If Not isAttributeModifiable(attributeId) Then
+    Err.Raise ErrorCodes.ErrIllegalStateException, _
+                "TradeBuild26.Order", _
+                "The " & gOrderAttributeToString(attributeId) & " attribute is not currently modifiable"
+End If
 End Sub
 
 ''

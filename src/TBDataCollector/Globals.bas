@@ -26,31 +26,34 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TBDataCollector26"
-Private Const ModuleName                    As String = "Globals"
+Private Const ProjectName                               As String = "TBDataCollector26"
+Private Const ModuleName                                As String = "Globals"
 
-Public Const AttributeNameBidAskBars        As String = "WriteBidAndAskBars"
-Public Const AttributeNameCurrency          As String = "Currency"
-Public Const AttributeNameEnabled           As String = "Enabled"
-Public Const AttributeNameExpiry            As String = "Expiry"
-Public Const AttributeNameExchange          As String = "Exchange"
-Public Const AttributeNameIncludeMktDepth   As String = "IncludeMarketDepth"
-Public Const AttributeNameLocalSYmbol       As String = "LocalSymbol"
-Public Const AttributeNameRight             As String = "Right"
-Public Const AttributeNameSecType           As String = "SecType"
-Public Const AttributeNameStrikePrice       As String = "StrikePrice"
-Public Const AttributeNameSymbol            As String = "Symbol"
-Public Const AttributeNameWriteTickData     As String = "WriteTickData"
-Public Const AttributeNameWriteBarData      As String = "WriteBarData"
+Public Const AttributeNameBidAskBars                    As String = "WriteBidAndAskBars"
+Public Const AttributeNameEnabled                       As String = "Enabled"
+Public Const AttributeNameIncludeMktDepth               As String = "IncludeMarketDepth"
 
-Public Const ConfigNameCollectionControl    As String = "CollectionControl"
-Public Const ConfigNameContract             As String = "Contract"
-Public Const ConfigNameContracts            As String = "Contracts"
-Public Const ConfigNameContractSpecifier    As String = "ContractSpecifier"
-Public Const ConfigNameServiceProviders     As String = "ServiceProviders"
-Public Const ConfigNameTickDataFormat       As String = "TickDataFormat"
-Public Const ConfigNameTickFilePath         As String = "TickFilePath"
-Public Const ConfigNameTradeBuild           As String = "TradeBuild"
+Public Const ConfigSectionCollectionControl             As String = "CollectionControl"
+Public Const ConfigSectionContract                      As String = "Contract"
+Public Const ConfigSectionContracts                     As String = "Contracts"
+Public Const ConfigSectionContractspecifier             As String = "ContractSpecifier"
+Public Const ConfigSectionTickdata                      As String = "TickData"
+
+Public Const ConfigSettingContractSpecCurrency          As String = ConfigSectionContractspecifier & "&Currency"
+Public Const ConfigSettingContractSpecExpiry            As String = ConfigSectionContractspecifier & "&Expiry"
+Public Const ConfigSettingContractSpecExchange          As String = ConfigSectionContractspecifier & "&Exchange"
+Public Const ConfigSettingContractSpecLocalSYmbol       As String = ConfigSectionContractspecifier & "&LocalSymbol"
+Public Const ConfigSettingContractSpecRight             As String = ConfigSectionContractspecifier & "&Right"
+Public Const ConfigSettingContractSpecSecType           As String = ConfigSectionContractspecifier & "&SecType"
+Public Const ConfigSettingContractSpecStrikePrice       As String = ConfigSectionContractspecifier & "&StrikePrice"
+Public Const ConfigSettingContractSpecSymbol            As String = ConfigSectionContractspecifier & "&Symbol"
+
+Public Const ConfigFileVersion                          As String = "1.0"
+
+Public Const ConfigSettingWriteBarData                  As String = ConfigSectionCollectionControl & ".WriteBarData"
+Public Const ConfigSettingWriteTickData                 As String = ConfigSectionCollectionControl & ".WriteTickData"
+Public Const ConfigSettingWriteTickDataFormat           As String = ConfigSectionTickdata & ".Format"
+Public Const ConfigSettingWriteTickDataPath             As String = ConfigSectionTickdata & ".Path"
 
 '@================================================================================
 ' Member variables

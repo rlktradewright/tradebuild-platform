@@ -156,7 +156,7 @@ Public Const TimeZoneColumnName                 As String = GenericColumnName
 
 Private mSqlBadWords()                          As Variant
 
-Public gLogger                                  As Logger
+Private mLogger                                 As Logger
 
 '@================================================================================
 ' Class Event Handlers
@@ -173,6 +173,11 @@ Public gLogger                                  As Logger
 '@================================================================================
 ' Properties
 '@================================================================================
+
+Public Property Get gLogger() As Logger
+If mLogger Is Nothing Then Set mLogger = GetLogger(InfoTypeTradingDO)
+Set gLogger = mLogger
+End Property
 
 '@================================================================================
 ' Methods

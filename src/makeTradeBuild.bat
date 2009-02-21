@@ -1,30 +1,47 @@
 cd typelib
 midl /mktyplib203 chartskiltypes26.idl
-pause
+rem pause
 regtlib chartskiltypes26.tlb
-pause
-midl /mktyplib203 tradebuildsp26.idl
-pause
-regtlib tradebuildsp26.tlb
-pause
+rem pause
 cd ..
-vb6 /m TradingDO\TradingDO.vbp
-pause
+
+vb6 /m ContractUtils\ContractUtils.vbp
+rem pause
 vb6 /m TimeframeUtils\TimeframeUtils.vbp
-pause
+rem pause
+vb6 /m TickUtils\TickUtils.vbp
+rem pause
 vb6 /m StudyUtils\StudyUtils.vbp
-pause
-vb6 /m CommonStudiesLib\CommonStudiesLib.vbp
-pause
-vb6 /m TradeBuild\TradeBuild.vbp
-pause
+rem pause
+
 vb6 /m ChartSkil\ChartSkil.vbp
-pause
+rem pause
 vb6 /m ChartUtils\ChartUtils.vbp
-pause
+rem pause
 vb6 /m StudiesUI\StudiesUI.vbp
-pause
+rem pause
+vb6 /m ChartTools\ChartTools.vbp
+rem pause
+
+
+vb6 /m TradingDO\TradingDO.vbp
+rem pause
+
+vb6 /m CommonStudiesLib\CommonStudiesLib.vbp
+rem pause
+
+cd typelib
+midl /mktyplib203 tradebuildsp26.idl
+rem pause
+regtlib tradebuildsp26.tlb
+rem pause
+cd ..
+vb6 /m TradeBuild\TradeBuild.vbp
+rem pause
+vb6 /m ConfigUtils\ConfigUtils.vbp
+rem pause
 vb6 /m TradeBuildUI\TradeBuildUI.vbp
-pause
+rem pause
+
 vb6 /m TBDataCollector\TBDataCollector.vbp
-pause
+rem pause

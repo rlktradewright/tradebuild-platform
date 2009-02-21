@@ -5,6 +5,8 @@ Option Explicit
 ' Constants
 '================================================================================
 
+Public Const ProjectName                    As String = "MyStudyLib26"
+
 Public Const MaxDouble As Double = (2 - 2 ^ -52) * 2 ^ 1023
 Public Const MinDouble As Double = -(2 - 2 ^ -52) * 2 ^ 1023
 
@@ -62,6 +64,12 @@ Public gLibraryManager As StudyLibraryManager
 '================================================================================
 ' Properties
 '================================================================================
+
+Public Property Get gLogger() As Logger
+Static lLogger As Logger
+If lLogger Is Nothing Then Set lLogger = GetLogger("log")
+Set gLogger = lLogger
+End Property
 
 '================================================================================
 ' Methods

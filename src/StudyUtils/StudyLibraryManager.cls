@@ -49,16 +49,6 @@ Event StudyLibraryError( _
 Private Const ProjectName As String = "StudyUtils26"
 Private Const ModuleName As String = "StudyLibraryManager"
 
-Private Const AttributeNameEnabled As String = "Enabled"
-Private Const AttributeNameStudyLibraryBuiltIn As String = "BuiltIn"
-Private Const AttributeNameStudyLibraryName As String = "Name"
-Private Const AttributeNameStudyLibraryProgId As String = "ProgId"
-
-Private Const BuiltInStudyLibProgId As String = "CmnStudiesLib26.StudyLib"
-
-Private Const ConfigNameStudyLibraries As String = "StudyLibraries"
-Private Const ConfigNameStudyLibrary As String = "StudyLibrary"
-
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -84,8 +74,8 @@ End Type
 Private mStudyLibraries() As LibraryTableEntry
 Private mMaxLibIndex As Long
 
-Private mConfig As ConfigItem
-Private mStudyLibs As ConfigItem
+Private mConfig As ConfigurationSection
+Private mStudyLibs As ConfigurationSection
 
 '@================================================================================
 ' Class Event Handlers
@@ -203,16 +193,15 @@ Friend Sub addConfigEntry( _
                 ByVal enabled As Boolean, _
                 ByVal name As String _
                 )
-Dim sl As ConfigItem
+Dim sl As ConfigurationSection
 
 If mConfig Is Nothing Then Exit Sub
 
 If mStudyLibs Is Nothing Then
-    Set mStudyLibs = mConfig.childItems.AddItem(ConfigNameStudyLibraries)
+    Set mStudyLibs = mConfig.AddConfigurationSection(ConfigNameStudyLibraries, , StudyLibrariesRenderer)
 End If
 
-Set sl = mStudyLibs.childItems.AddItem(ConfigNameStudyLibrary)
-sl.setAttribute AttributeNameStudyLibraryName, name
+Set sl = mStudyLibs.AddConfigurationSection(ConfigNameStudyLibrary & "(" & name & ")")
 sl.setAttribute AttributeNameEnabled, enabled
 sl.setAttribute AttributeNameStudyLibraryProgId, progId
 End Sub
@@ -226,7 +215,7 @@ Friend Function AddStudyLibrary( _
 If enabled Then
     Set AddStudyLibrary = add(CreateObject(progId), name)
 End If
-Globals.StudyLibraryManager.addConfigEntry progId, enabled, name
+addConfigEntry progId, enabled, name
 End Function
 
 Public Function createStudy( _
@@ -299,12 +288,12 @@ Next
 End Function
 
 Friend Sub LoadStudyLibraryConfiguration( _
-                ByVal config As ConfigItem)
+                ByVal config As ConfigurationSection)
 
 Set mConfig = config
 
 On Error Resume Next
-Set mStudyLibs = mConfig.childItems.Item(ConfigNameStudyLibraries)
+Set mStudyLibs = mConfig.GetConfigurationSection(ConfigNameStudyLibraries)
 On Error GoTo 0
 
 If Not mStudyLibs Is Nothing Then
@@ -313,18 +302,18 @@ End If
 End Sub
 
 Private Sub loadStudyLibs()
-Dim sl As ConfigItem
+Dim sl As ConfigurationSection
 Dim slName As String
 Dim slProgId As String
 Dim slObj As StudyLibrary
 Dim slEnabled As String
 
-For Each sl In mStudyLibs.childItems
+For Each sl In mStudyLibs
     On Error Resume Next
     slEnabled = sl.getAttribute(AttributeNameEnabled)
     If slEnabled = "" Then slEnabled = "True"
     If CBool(slEnabled) Then
-        slName = sl.getAttribute(AttributeNameStudyLibraryName)
+        slName = sl.InstanceQualifier
         
         If sl.getAttribute(AttributeNameStudyLibraryBuiltIn) = "True" Then
             slProgId = BuiltInStudyLibProgId
@@ -357,6 +346,9 @@ For i = 0 To mMaxLibIndex
     If mStudyLibraries(i).libObject Is lib Then
         lib.terminate
         Set mStudyLibraries(i).libObject = Nothing
+        If Not mConfig Is Nothing Then
+            mStudyLibs.RemoveConfigurationSection (ConfigNameStudyLibrary & "(" & mStudyLibraries(i).name & ")")
+        End If
         mStudyLibraries(i).name = ""
         Exit For
     End If
@@ -372,6 +364,9 @@ For i = 0 To mMaxLibIndex
         Set lib = mStudyLibraries(i).libObject
         lib.terminate
         Set mStudyLibraries(i).libObject = Nothing
+        If Not mConfig Is Nothing Then
+            mStudyLibs.RemoveConfigurationSection (ConfigNameStudyLibrary & "(" & mStudyLibraries(i).name & ")")
+        End If
         mStudyLibraries(i).name = ""
     End If
 Next

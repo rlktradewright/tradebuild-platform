@@ -147,6 +147,7 @@ Set mDB = db
 Set mInstrument = pInstrument
 mTickSize = mInstrument.tickSize
 mUseAsynchronousWrites = useAsynchronousWrites
+startWriteTimer
 End Sub
 
 Public Sub finish()

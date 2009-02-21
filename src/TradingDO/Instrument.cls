@@ -167,7 +167,7 @@ End Property
 
 Public Property Let InstrumentClass( _
                 ByVal value As InstrumentClass)
-Dim instrmnt As instrument
+Dim instrmnt As Instrument
 If mDataObj.ruleBroken(BusRuleInstrumentInstrumentClassValid, value Is Nothing) Then Exit Property
 
 If name <> "" Then
@@ -512,6 +512,7 @@ End Function
 Friend Sub initialise( _
                 ByVal db As TradingDB, _
                 Optional ByVal rs As ADODB.Recordset)
+
 genericInitialise db, rs
 
 mMaxNameLength = mDataObj.columnMaxLength(InstrumentColumnName)
@@ -671,7 +672,7 @@ Set BusinessDataObject_ErrorList = mDataObj.ErrorList
 End Property
 
 Private Property Get BusinessDataObject_EventSource() As BusinessObjEventSource
-Set BusinessDataObject_EventSource = mDataObj.eventSource
+Set BusinessDataObject_EventSource = mDataObj.EventSource
 End Property
 
 Private Property Get BusinessDataObject_ID() As Long

@@ -60,6 +60,7 @@ Private mContractsBuilder                   As ContractsBuilder
 Private Sub DeferredAction_run( _
                 ByVal data As Variant)
 Set mContractsBuilder = data
+gLogLogger.Log LogLevelDetail, "Loading contracts for " & mContractsBuilder.Contracts.contractSpecifier.toString
 gTB.ServiceProviders.loadContracts mContractsBuilder
 End Sub
 

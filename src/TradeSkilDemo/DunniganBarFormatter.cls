@@ -22,6 +22,8 @@ Option Explicit
 ' Interfaces
 '@================================================================================
 
+Implements BarFormatter
+
 '@================================================================================
 ' Events
 '@================================================================================
@@ -44,13 +46,48 @@ Private Const ModuleName                    As String = "DunniganBarFormatter"
 ' Member variables
 '@================================================================================
 
+Private mBars As TimeframeUtils26.bars
+ 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 '@================================================================================
-' XXXX Interface Members
+' BarFormatter Interface Members
 '@================================================================================
+
+Private Sub BarFormatter_FormatBar( _
+                ByVal sourceBar As TimeframeUtils26.Bar, _
+                ByVal chartBar As ChartSkil26.Bar)
+
+If mBars.Count < 2 Then Exit Sub
+
+If sourceBar.highValue > mBars.Bar(-1).highValue And _
+    sourceBar.lowValue >= mBars.Bar(-1).lowValue _
+Then
+    chartBar.barColor = &H1D9311
+    chartBar.upColor = &H1D9311
+    chartBar.downColor = &H1D9311
+ElseIf sourceBar.highValue <= mBars.Bar(-1).highValue And _
+    sourceBar.lowValue < mBars.Bar(-1).lowValue _
+Then
+    chartBar.barColor = &H43FC2
+    chartBar.upColor = &H43FC2
+    chartBar.downColor = &H43FC2
+ElseIf sourceBar.highValue <= mBars.Bar(-1).highValue And _
+    sourceBar.lowValue >= mBars.Bar(-1).lowValue _
+Then
+    chartBar.barColor = vbMagenta
+    chartBar.upColor = vbMagenta
+    chartBar.downColor = vbMagenta
+ElseIf sourceBar.highValue >= mBars.Bar(-1).highValue And _
+    sourceBar.lowValue <= mBars.Bar(-1).lowValue _
+Then
+    chartBar.barColor = vbBlue
+    chartBar.upColor = vbBlue
+    chartBar.downColor = vbBlue
+End If
+End Sub
 
 '@================================================================================
 ' XXXX Event Handlers
@@ -60,6 +97,10 @@ Private Const ModuleName                    As String = "DunniganBarFormatter"
 ' Properties
 '@================================================================================
 
+Friend Property Let bars(ByVal value As TimeframeUtils26.bars)
+Set mBars = value
+End Property
+ 
 '@================================================================================
 ' Methods
 '@================================================================================

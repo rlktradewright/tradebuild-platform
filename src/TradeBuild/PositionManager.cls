@@ -42,6 +42,8 @@ Event ProviderNotReady()
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                As String = "PositionManager"
+
 '@================================================================================
 ' Enums
 '@================================================================================
@@ -84,14 +86,15 @@ End Type
 ' Member variables
 '@================================================================================
 
-Private mIndexApplication
+Private mIndexApplication As Long
+
+Private mProviderIsReady As Boolean
 
 Private mTicker As Ticker
 
 Private mOrders As Orders
 
-Private mDummy As Boolean
-Private mSimulated As Boolean
+Private mIsSimulated As Boolean
 
 Private mOrderContexts As OrderContexts
 Private mMoneyManager As MoneyManager
@@ -102,14 +105,15 @@ Private mNextPlexTableIndex As Long
 Private mFirstActivePlexTableIndex As Long
 Private mLastActivePlexTableIndex As Long
 
-Private mSettlingOrderContext As OrderContext
-Private mSettlingOrderPlex As OrderPlex
+Private mBalancingOrderContext As OrderContext
+Private mBalancingOrderPlex As orderPlex
 Private mSettlingHandle As Long
 
-Private mClosing As Boolean
+Private mClosingPosition As Boolean
     ' indicates that all OrderContexts are being closed, either as a result of
     ' a call to the closePosition functions, or because money management
     ' has told us to do so
+
 Private mEndSession As Boolean
     ' indicates that money management has told us to end the session. Note
     ' that this can happen whilst there are still some OrderContexts in progress,
@@ -167,6 +171,7 @@ Set mOrders = New Orders
 
 Set mOrderContexts = New OrderContexts
 mOrderContexts.PositionManager = Me
+Set mBalancingOrderContext = mOrderContexts.add("$balancing")
 
 Set mStudies = New Studies
 
@@ -180,7 +185,6 @@ mPlexTable(mLastActivePlexTableIndex).PrevActiveIndex = mFirstActivePlexTableInd
 Set mProfitListeners = New Collection
 Set mChangeListeners = New Collection
 
-mSimulated = True
 End Sub
 
 Private Sub Class_Terminate()
@@ -210,10 +214,11 @@ Private Sub IOrderSubmissionSrvcConsumer_executionDetails( _
                 ByVal fillTime As Date)
 Dim lExec As Execution
 Dim lOrder As order
+Dim isNew As Boolean
 
-If mDummy Then
+If mIsSimulated Then
     On Error Resume Next
-    Set lExec = mTicker.dummyExecutions.item(execId)
+    Set lExec = mTicker.ExecutionsSimulated.item(execId)
     On Error GoTo 0
 Else
     On Error Resume Next
@@ -223,31 +228,41 @@ End If
 
 If lExec Is Nothing Then
     Set lExec = New Execution
-    With lExec
-        .accountIdentifier = accountIdentifier
-        .action = action
-        .contractSpecifier = pContractSpecifier
-        .execId = execId
-        .fillingExchange = fillingExchange
-        .isLiquidation = isLiquidation
-        .orderBrokerId = orderBrokerId
-        .orderTradeBuildId = orderTradeBuildId
-        .price = price
-        .quantity = quantity
-        .time = fillTime
-    End With
+    lExec.execId = execId
+    isNew = True
+Else
+    ' we've already had this notification
 End If
 
-If mDummy Then
-    mTicker.dummyExecutions.add lExec
+With lExec
+    .accountIdentifier = accountIdentifier
+    .action = action
+    .contractSpecifier = pContractSpecifier
+    If mIsSimulated Then .IsSimulated = True
+    .fillingExchange = fillingExchange
+    .isLiquidation = isLiquidation
+    .orderBrokerId = orderBrokerId
+    .orderTradeBuildId = orderTradeBuildId
+    .price = price
+    .quantity = quantity
+    .time = fillTime
+End With
+
+If isNew Then
+    If mIsSimulated Then
+        mTicker.ExecutionsSimulated.add lExec
+    Else
+        mTicker.executions.add lExec
+    End If
     Set lOrder = mOrders.item(lExec.orderTradeBuildId)
     lOrder.notifyFill lExec
 Else
-    mTicker.executions.add lExec
-    Set lOrder = mOrders.item(lExec.orderTradeBuildId)
-    lOrder.notifyFill lExec
+    If mIsSimulated Then
+        mTicker.ExecutionsSimulated.Change lExec
+    Else
+        mTicker.executions.Change lExec
+    End If
 End If
-
 End Sub
 
 Private Sub IOrderSubmissionSrvcConsumer_NotifyEvent( _
@@ -261,57 +276,90 @@ Case LOConnectedToBroker
     ev.eventCode = ApiNotifyCodes.ApiNotifyConnectedToBroker
     ev.eventMessage = eventMessage
     RaiseEvent Notification(ev)
+    gTB.notify ev
 Case LOCantConnectToBroker
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyCantConnectToBroker
     ev.eventMessage = eventMessage
     RaiseEvent Notification(ev)
+    gTB.notify ev
 Case LORetryConnectToBroker
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyRetryConnectToBroker
     ev.eventMessage = eventMessage
     RaiseEvent Notification(ev)
+    gTB.notify ev
 Case LOLostConnectionToBroker
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyLostConnectionToBroker
     ev.eventMessage = eventMessage
     RaiseEvent Notification(ev)
+    gTB.notify ev
 Case LOReConnectingToBroker
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyReConnectingToBroker
     ev.eventMessage = eventMessage
     RaiseEvent Notification(ev)
+    gTB.notify ev
 Case LOUnknownContract
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyContractSpecifierInvalid
     ev.eventMessage = eventMessage
     RaiseEvent Notification(ev)
+    gTB.notify ev
 Case LOInvalidOrder
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyInvalidOrder
     ev.eventMessage = eventMessage
     RaiseEvent Notification(ev)
+    gTB.notify ev
 Case LONotUniqueContract
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyContractSpecifierAmbiguous
     ev.eventMessage = eventMessage
     RaiseEvent Notification(ev)
+    gTB.notify ev
 Case LOInsufficientFunds
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyInsufficientFunds
     ev.eventMessage = eventMessage
     RaiseEvent Notification(ev)
+    gTB.notify ev
 Case LODisconnectedFromBroker
     Set ev.source = Me
     ev.eventCode = ApiNotifyCodes.ApiNotifyDisconnectedFromBroker
     ev.eventMessage = eventMessage
     RaiseEvent Notification(ev)
+    gTB.notify ev
 End Select
 End Sub
 
 Private Sub IOrderSubmissionSrvcConsumer_notReady()
+mProviderIsReady = False
 mOrderContexts.ProviderReady = False
+mClosingPosition = False
+fireChange ProviderReadinessChanged
 RaiseEvent ProviderNotReady
+End Sub
+
+Private Sub IOrderSubmissionSrvcConsumer_OrderReport(ByVal OrderReport As TradeBuildSP.IOrderReport)
+Dim lOrder As order
+Dim different As Boolean
+
+Dim failpoint As Long
+On Error GoTo Err
+
+mOrders(OrderReport.tradeBuildId).SyncToOrderReport OrderReport
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IOrderSubmissionSrvcConsumer_OrderReport" & "." & failpoint & IIf(Err.source <> "", vbCrLf & Err.source, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
 End Sub
 
 Private Sub IOrderSubmissionSrvcConsumer_orderStatus( _
@@ -330,7 +378,9 @@ Private Sub IOrderSubmissionSrvcConsumer_preFill( _
 End Sub
 
 Private Sub IOrderSubmissionSrvcConsumer_ready()
+mProviderIsReady = True
 mOrderContexts.ProviderReady = True
+fireChange ProviderReadinessChanged
 RaiseEvent ProviderReady
 End Sub
 
@@ -467,13 +517,21 @@ Public Property Get drawdownThisTrade() As Currency
 drawdownThisTrade = mMaxProfitThisTrade - mProfitThisTrade
 End Property
 
-Friend Property Let dummy(ByVal value As Boolean)
-mDummy = value
-mOrderContexts.dummy = value
-End Property
-
 Public Property Get indexApplication() As Long
 indexApplication = mIndexApplication
+End Property
+
+Public Property Get IsRiskUnlimited() As Boolean
+IsRiskUnlimited = (risk = MaxCurrency)
+End Property
+
+Friend Property Let IsSimulated(ByVal value As Boolean)
+mIsSimulated = value
+mOrderContexts.IsSimulated = value
+End Property
+
+Public Property Get IsSimulated() As Boolean
+IsSimulated = mIsSimulated
 End Property
 
 Friend Property Let MoneyManager( _
@@ -527,24 +585,25 @@ Public Property Get profitThisTrade() As Currency
 profitThisTrade = mProfitThisTrade
 End Property
 
+Public Property Get providerIsReady() As Boolean
+providerIsReady = mProviderIsReady
+End Property
+
 Public Property Get risk() As Currency
 Dim OrderContext As OrderContext
 Dim totRisk As Currency
+Dim ocRisk As Currency
 
 For Each OrderContext In mOrderContexts
-    totRisk = totRisk + OrderContext.risk
+    ocRisk = OrderContext.risk
+    If ocRisk = MaxCurrency Then
+        totRisk = MaxCurrency
+        Exit For
+    End If
+    totRisk = totRisk + ocRisk
 Next
 
 risk = totRisk
-End Property
-
-Friend Property Let simulated(ByVal value As Boolean)
-mSimulated = value
-mOrderContexts.simulated = value
-End Property
-
-Public Property Get simulated() As Boolean
-simulated = mSimulated
 End Property
 
 Friend Property Let Ticker(ByVal value As Ticker)
@@ -591,7 +650,7 @@ Friend Function allowOrder(ByVal orderLong As Boolean, _
                             ByVal newRisk As Currency, _
                             ByRef message As String) As Boolean
 
-If mClosing Then
+If mClosingPosition Then
     allowOrder = False
     message = "Closing positions"
     Exit Function
@@ -615,48 +674,32 @@ Else
 End If
 End Function
 
-Public Sub closePositions()
-Dim OrderContext As OrderContext
+Public Sub closePositions( _
+                Optional ByVal flags As ClosePositionFlags = ClosePositionCancelOrders Or ClosePositionWaitForCancel)
+Dim lOrderContext As OrderContext
+Dim cancellingOrders As Boolean
 
-If mClosing Then Exit Sub
+If mClosingPosition Then Exit Sub
 
-' first need to tell each OrderContext to cancel any outstanding stuff
-For Each OrderContext In mOrderContexts
-    If OrderContext.Cancel Then
-        mClosing = True
-        mOrderContexts.enabled = False
-    End If
-Next
-
-If mClosing Then
-Else
-    If positionSize <> 0 Then
-        
-        gTB.notifyListeners _
-                "Close positions: (" & mTicker.TradePriceString & ") at market", _
-                IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
-                Me
-        
-        Set mSettlingOrderContext = mOrderContexts.add("$settling")
-        If mSettlingOrderContext.isOrderTifValueSupported(TIFDay) Then mSettlingOrderContext.timeInForce = TIFDay
-        Set mSettlingOrderPlex = mSettlingOrderContext.CreateOrderPlex( _
-                            IIf(positionSize < 0, ActionBuy, ActionSell), _
-                            Abs(positionSize), _
-                            EntryOrderTypes.EntryOrderTypeMarket, _
-                            0, _
-                            0, _
-                            0, _
-                            StopOrderTypes.StopOrderTypeNone, _
-                            0, _
-                            0, _
-                            0, _
-                            TargetOrderTypes.TargetOrderTypeNone, _
-                            0, _
-                            0, _
-                            0)
-        mSettlingOrderContext.executeOrderPlex mSettlingOrderPlex
-    End If
+If positionSize = 0 And pendingPositionSize = 0 Then
+    fireChange PositionClosed
+    Exit Sub
 End If
+
+mClosingPosition = True
+If (flags And ClosePositionCancelOrders) = ClosePositionCancelOrders Then
+    ' first need to tell each OrderContext to cancel any outstanding stuff
+    For Each lOrderContext In mOrderContexts
+        If lOrderContext.Cancel And (flags And ClosePositionWaitForCancel) Then
+            cancellingOrders = True
+        End If
+    Next
+End If
+
+mOrderContexts.enabled = False  ' prevent any further orders being placed
+                                ' while the position is being closed
+
+If Not cancellingOrders And positionSize <> 0 Then placeBalancingOrder
 
 End Sub
 
@@ -668,8 +711,8 @@ gTB.notifyListeners mProfitProfileBarStartTime & "," & _
                 mProfitProfileBarHigh & "," & _
                 mProfitProfileBarLow & "," & _
                 mProfitProfileBarClose, _
-                IIf(mDummy, _
-                    TradeBuildListenValueTypes.VTDummyProfitProfile, _
+                IIf(mIsSimulated, _
+                    TradeBuildListenValueTypes.VTSimulatedProfitProfile, _
                     TradeBuildListenValueTypes.VTProfitProfile), _
                 Me
 gTB.notifyListeners timestamp & "," & _
@@ -678,8 +721,8 @@ gTB.notifyListeners timestamp & "," & _
                 mProfit & "," & _
                 mProfit & "," & _
                 mProfit, _
-                IIf(mDummy, _
-                    TradeBuildListenValueTypes.VTDummyProfitProfile, _
+                IIf(mIsSimulated, _
+                    TradeBuildListenValueTypes.VTSimulatedProfitProfile, _
                     TradeBuildListenValueTypes.VTProfitProfile), _
                 Me
 End Sub
@@ -692,8 +735,8 @@ mOrderContexts.finish
 
 Set mOrderContexts = Nothing
 Set mMoneyManager = Nothing
-Set mSettlingOrderContext = Nothing
-Set mSettlingOrderPlex = Nothing
+Set mBalancingOrderContext = Nothing
+Set mBalancingOrderPlex = Nothing
 
 If Not mOrderSubmitter Is Nothing Then mOrderSubmitter.finish
 Set mOrderSubmitter = Nothing
@@ -713,7 +756,7 @@ If mQuantityOutstanding <> 0 Then
     'we need to notify the position change before the profit
     gTB.notifyListeners _
                     mQuantityOutstanding, _
-                    IIf(mDummy, TradeBuildListenValueTypes.VTDummyPosition, TradeBuildListenValueTypes.VTPosition), _
+                    IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedPosition, TradeBuildListenValueTypes.VTPosition), _
                     Me
 
     If mQuantityOutstanding < 0 Then
@@ -731,7 +774,7 @@ Else
     
     gTB.notifyListeners _
                     mQuantityOutstanding, _
-                    IIf(mDummy, TradeBuildListenValueTypes.VTDummyPosition, TradeBuildListenValueTypes.VTPosition), _
+                    IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedPosition, TradeBuildListenValueTypes.VTPosition), _
                     Me
     gTB.notifyListeners _
                     mTradeStartTime & "," & _
@@ -739,7 +782,7 @@ Else
                     mProfitThisTrade & "," & _
                     mMaxProfitThisTrade & "," & _
                     mMinProfitThisTrade, _
-                    IIf(mDummy, TradeBuildListenValueTypes.VTDummyTradeProfile, TradeBuildListenValueTypes.VTTradeProfile), _
+                    IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedTradeProfile, TradeBuildListenValueTypes.VTTradeProfile), _
                     Me
     mProfitLastTrade = mProfitThisTrade
     mDrawdownLastTrade = mMaxProfitThisTrade - mProfitThisTrade
@@ -801,7 +844,7 @@ Dim OrderContext As OrderContext
 Dim size As Long
 
 
-If Not mClosing Then
+If Not mClosingPosition Then
     For Each OrderContext In mOrderContexts
         If Not OrderContext.Complete Then Exit Sub
     Next
@@ -812,105 +855,78 @@ If Not mClosing Then
                         TradeBuildListenValueTypes.VTMoneyManagement, _
                         Me
     End If
-    Exit Sub
-End If
-
-If Not mSettlingOrderContext Is Nothing Then
-    If pOrderContext Is mSettlingOrderContext Then
-        'should now be net flat
-        Set mSettlingOrderContext = Nothing
-        mClosing = False
-        mOrderContexts.enabled = True
+ElseIf pOrderContext Is mBalancingOrderContext Then
+    'should now be net flat
+    mOrderContexts.enabled = True
+    
+    ' now need to adjust the other orderPlex table
+    ' entries' profit figure to take account of the
+    ' settling order
+    
+    Dim i As Long
+    Dim settlingPrice As Double
+    
+    ' first remove the settling entry from the plex table
+    With mPlexTable(mSettlingHandle)
+        mPlexTable(.PrevActiveIndex).NextActiveIndex = .NextActiveIndex
+        mPlexTable(.NextActiveIndex).PrevActiveIndex = .PrevActiveIndex
+    End With
+    
+    settlingPrice = mPlexTable(mSettlingHandle).TotalEntryPrice / mPlexTable(mSettlingHandle).QuantityOutstanding
+    i = mPlexTable(mFirstActivePlexTableIndex).NextActiveIndex
+    Do While i <> mLastActivePlexTableIndex
+        With mPlexTable(i)
+            .endTime = mTicker.timestamp
+            .ExitPrice = settlingPrice
+            .closedOut = True
+            .TotalEntryPrice = .TotalEntryPrice - (settlingPrice * .QuantityOutstanding)
+            .QuantityOutstanding = 0
+            calcPlexProfit i
+            notifyPlexProfileListeners i
         
-        ' now need to adjust the other orderPlex table
-        ' entries' profit figure to take account of the
-        ' settling order
-        
-        Dim i As Long
-        Dim settlingPrice As Double
-        
-        ' first remove the settling entry from the plex table
-        With mPlexTable(mSettlingHandle)
+            i = .NextActiveIndex
+            
+            ' remove the current entry from the plex table
             mPlexTable(.PrevActiveIndex).NextActiveIndex = .NextActiveIndex
             mPlexTable(.NextActiveIndex).PrevActiveIndex = .PrevActiveIndex
-        End With
-        
-        settlingPrice = mPlexTable(mSettlingHandle).TotalEntryPrice / mPlexTable(mSettlingHandle).QuantityOutstanding
-        i = mPlexTable(mFirstActivePlexTableIndex).NextActiveIndex
-        Do While i <> mLastActivePlexTableIndex
-            With mPlexTable(i)
-                .endTime = mTicker.timestamp
-                .ExitPrice = settlingPrice
-                .closedOut = True
-                .TotalEntryPrice = .TotalEntryPrice - (settlingPrice * .QuantityOutstanding)
-                .QuantityOutstanding = 0
-                calcPlexProfit i
-                notifyPlexProfileListeners i
             
-                i = .NextActiveIndex
-                
-                ' remove the current entry from the plex table
-                mPlexTable(.PrevActiveIndex).NextActiveIndex = .NextActiveIndex
-                mPlexTable(.NextActiveIndex).PrevActiveIndex = .PrevActiveIndex
-                
-            End With
-        Loop
-        
-        
-        
-        If mEndSession Then
-            gTB.notifyListeners "Ending session", _
-                                TradeBuildListenValueTypes.VTMoneyManagement, _
-                                Me
-        End If
-        Exit Sub
-    End If
-End If
-
-For Each OrderContext In mOrderContexts
-    If Not OrderContext.Complete Then Exit Sub
-    size = size + OrderContext.size
-Next
-
-' If we get here, all OrderContexts must be complete.
-
-' Now, if there is a net position, need to close it out
-
-If size = 0 Then
-    mClosing = False
-    mOrderContexts.enabled = True
+        End With
+    Loop
+    
+    
+    
     If mEndSession Then
         gTB.notifyListeners "Ending session", _
                             TradeBuildListenValueTypes.VTMoneyManagement, _
                             Me
     End If
+    
+    mClosingPosition = False
+    fireChange PositionClosed
+
 Else
     
-    gTB.notifyListeners _
-            "Close positions: (" & mTicker.TradePriceString & ") at market", _
-            IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
-            Me
+    For Each OrderContext In mOrderContexts
+        If Not OrderContext.Complete Then Exit Sub
+        size = size + OrderContext.size
+    Next
     
-    Set mSettlingOrderContext = mOrderContexts.add("$settling")
-    If mSettlingOrderContext.isOrderTifValueSupported(TIFDay) Then mSettlingOrderContext.timeInForce = TIFDay
-    Set mSettlingOrderPlex = mSettlingOrderContext.CreateOrderPlex( _
-                                IIf(positionSize < 0, ActionBuy, ActionSell), _
-                                Abs(positionSize), _
-                                EntryOrderTypes.EntryOrderTypeMarket, _
-                                0, _
-                                0, _
-                                0, _
-                                StopOrderTypes.StopOrderTypeNone, _
-                                0, _
-                                0, _
-                                0, _
-                                TargetOrderTypes.TargetOrderTypeNone, _
-                                0, _
-                                0, _
-                                0)
-    mSettlingOrderContext.executeOrderPlex mSettlingOrderPlex
+    ' If we get here, all OrderContexts must be complete.
+    
+    ' Now, if there is a net position, need to close it out
+    
+    If size = 0 Then
+        If mEndSession Then
+            gTB.notifyListeners "Ending session", _
+                                TradeBuildListenValueTypes.VTMoneyManagement, _
+                                Me
+        End If
+        mClosingPosition = False
+        fireChange PositionClosed
+    Else
+        placeBalancingOrder
+    End If
 End If
-
 End Sub
 
 Friend Function registerPlex(ByVal key As String, _
@@ -932,8 +948,8 @@ With mPlexTable(registerPlex)
     mPlexTable(.PrevActiveIndex).NextActiveIndex = registerPlex
     mPlexTable(mLastActivePlexTableIndex).PrevActiveIndex = registerPlex
 End With
-If Not mSettlingOrderPlex Is Nothing Then
-    If key = mSettlingOrderPlex.key Then
+If Not mBalancingOrderPlex Is Nothing Then
+    If key = mBalancingOrderPlex.key Then
         mSettlingHandle = registerPlex
     End If
 End If
@@ -1043,10 +1059,10 @@ If profit <> mProfit Then
     mStudies.notify ev
     
     gTB.notifyListeners mProfit, _
-                    IIf(mDummy, TradeBuildListenValueTypes.VTDummyProfit, TradeBuildListenValueTypes.VTProfit), _
+                    IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedProfit, TradeBuildListenValueTypes.VTProfit), _
                     Me
     gTB.notifyListeners mMaxProfit - mProfit, _
-                    IIf(mDummy, TradeBuildListenValueTypes.VTDummyDrawdown, TradeBuildListenValueTypes.VTDrawdown), _
+                    IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedDrawdown, TradeBuildListenValueTypes.VTDrawdown), _
                     Me
 End If
 
@@ -1054,7 +1070,7 @@ If mProfit > mMaxProfit Then
     mMaxProfit = mProfit
     fireProfit mMaxProfit, ProfitTypes.ProfitTypeSessionMaxProfit
     gTB.notifyListeners mMaxProfit, _
-                        IIf(mDummy, TradeBuildListenValueTypes.VTDummyMaxProfit, TradeBuildListenValueTypes.VTMaxProfit), _
+                        IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedMaxProfit, TradeBuildListenValueTypes.VTMaxProfit), _
                         Me
 ElseIf mProfit < mMaxProfit Then
     mDrawdown = mMaxProfit - mProfit
@@ -1087,7 +1103,7 @@ Then
                         mProfitProfileBarHigh & "," & _
                         mProfitProfileBarLow & "," & _
                         mProfitProfileBarClose, _
-                        IIf(mDummy, TradeBuildListenValueTypes.VTDummyProfitProfile, TradeBuildListenValueTypes.VTProfitProfile), _
+                        IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedProfitProfile, TradeBuildListenValueTypes.VTProfitProfile), _
                         Me
     mProfitProfileBarStartTime = mTicker.timestamp
     mProfitProfileBarNumber = mProfitProfileBarNumber + 1
@@ -1108,7 +1124,7 @@ Private Sub checkCloseall()
 Dim msg As String
 Dim endSession As Boolean
 
-If mDummy Then Exit Sub
+If mIsSimulated Then Exit Sub
 
 If Not mMoneyManager Is Nothing Then
     If mMoneyManager.closeAll(mProfit, _
@@ -1119,14 +1135,14 @@ If Not mMoneyManager Is Nothing Then
                                 msg, _
                                 endSession) _
     Then
-        If Not mClosing Then
+        If Not mClosingPosition Then
             gTB.notifyListeners "Close all positions: " & msg, _
                             TradeBuildListenValueTypes.VTMoneyManagement, _
                             Me
             closePositions
         End If
     Else
-        If endSession And Not mClosing Then
+        If endSession And Not mClosingPosition Then
             If Not mEndSession Then
                 mEndSession = True
                 gTB.notifyListeners "Ending session: " & msg, _
@@ -1141,12 +1157,10 @@ End Sub
 Private Sub fireChange( _
                 ByVal changeType As PositionManagerChangeTypes)
 Dim listener As ChangeListener
-Dim i As Long
 Dim Change As ChangeEvent
 Set Change.source = Me
 Change.changeType = changeType
-For i = 1 To mChangeListeners.Count
-    Set listener = mChangeListeners(i)
+For Each listener In mChangeListeners
     listener.Change Change
 Next
 End Sub
@@ -1155,14 +1169,12 @@ Private Sub fireProfit( _
                 ByVal profitAmount As Double, _
                 ByVal profitType As ProfitTypes)
 Dim listener As ProfitListener
-Dim i As Long
 Dim profit As ProfitEvent
 Set profit.source = Me
 profit.profitAmount = profitAmount
 profit.profitType = profitType
 profit.currencyCode = mcurrencyCode
-For i = 1 To mProfitListeners.Count
-    Set listener = mProfitListeners(i)
+For Each listener In mProfitListeners
     listener.profitAmount profit
 Next
 End Sub
@@ -1172,8 +1184,8 @@ Dim data As Variant
 data = mPlexTable(index)
 gTB.notifyListeners _
                 data, _
-                IIf(mDummy, _
-                    TradeBuildListenValueTypes.VTDummyOrderPlexProfileStruct, _
+                IIf(mIsSimulated, _
+                    TradeBuildListenValueTypes.VTSimulatedOrderPlexProfileStruct, _
                     TradeBuildListenValueTypes.VTOrderPlexProfileStruct), _
                 Me
 
@@ -1196,12 +1208,36 @@ With mPlexTable(index)
                 .MaxLoss & "," & _
                 .risk & "," & _
                 .QuantityOutstanding, _
-                IIf(mDummy, _
-                    TradeBuildListenValueTypes.VTDummyOrderPlexProfileString, _
+                IIf(mIsSimulated, _
+                    TradeBuildListenValueTypes.VTSimulatedOrderPlexProfileString, _
                     TradeBuildListenValueTypes.VTOrderPlexProfileString), _
                 Me
 End With
 End Sub
 
+Private Sub placeBalancingOrder()
+gTB.notifyListeners _
+        "Close positions: (" & mTicker.TradePriceString & ") at market", _
+        IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
+        Me
 
+mBalancingOrderContext.enabled = True
+If mBalancingOrderContext.isOrderTifValueSupported(TIFDay) Then mBalancingOrderContext.timeInForce = TIFDay
+Set mBalancingOrderPlex = mBalancingOrderContext.CreateOrderPlex( _
+                            IIf(positionSize < 0, ActionBuy, ActionSell), _
+                            Abs(positionSize), _
+                            EntryOrderTypes.EntryOrderTypeMarket, _
+                            0, _
+                            0, _
+                            0, _
+                            StopOrderTypes.StopOrderTypeNone, _
+                            0, _
+                            0, _
+                            0, _
+                            TargetOrderTypes.TargetOrderTypeNone, _
+                            0, _
+                            0, _
+                            0)
+mBalancingOrderContext.executeOrderPlex mBalancingOrderPlex
+End Sub
 

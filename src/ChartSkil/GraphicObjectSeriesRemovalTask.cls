@@ -47,14 +47,20 @@ Private Const ModuleName                    As String = "GraphicObjectSeriesRemo
 ' Member variables
 '@================================================================================
 
-Private mTaskContext As TaskContext
+Private mTaskContext                        As TaskContext
 
-Private mGraphObjSeries As IGraphicObjectSeries
-Private mRegion As ChartRegion
+Private mGraphObjSeries                     As IGraphicObjectSeries
+Private mRegion                             As ChartRegion
+
+Private mRemoveObjectsFromRegion             As Boolean
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
+
+Private Sub Class_Terminate()
+Debug.Print "GraphObjSeriesRemovalTask terminated"
+End Sub
 
 '@================================================================================
 ' Task Interface Members
@@ -77,20 +83,24 @@ Do While mGraphObjSeries.Count <> 0
 
     failpoint = 200
 
-    Set graphObj = mGraphObjSeries.Item(mGraphObjSeries.Count)
+    Set graphObj = mGraphObjSeries.Item(1)
     
     failpoint = 300
     
-    mRegion.RemoveGraphicObjectEx graphObj, False, False
+    If mRemoveObjectsFromRegion Then mRegion.RemoveGraphicObjectEx graphObj, False, False
     
     failpoint = 400
     
-    mGraphObjSeries.Remove mGraphObjSeries.Count
+    mGraphObjSeries.Remove 1
     i = i + 1
-    If i = 100 Then Exit Sub
+    If i = 100 Then
+        Exit Sub
+    End If
 Loop
 
 mGraphObjSeries.Finish
+Set mGraphObjSeries = Nothing
+Set mRegion = Nothing
 
 failpoint = 500
 
@@ -100,7 +110,7 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "Task_run" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "Task_run" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -128,9 +138,11 @@ End Property
 
 Friend Sub initialise( _
                 ByVal graphObjSeries As IGraphicObjectSeries, _
-                ByVal Region As ChartRegion)
+                ByVal Region As ChartRegion, _
+                ByVal removeObjectsFromRegion As Boolean)
 Set mGraphObjSeries = graphObjSeries
 Set mRegion = Region
+mRemoveObjectsFromRegion = removeObjectsFromRegion
 End Sub
 
 '@================================================================================

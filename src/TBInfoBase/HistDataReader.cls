@@ -87,6 +87,10 @@ Private mMode                       As AccessModes
 ' Class Event Handlers
 '@===============================================================================
 
+Private Sub Class_Terminate()
+Debug.Print "HistDataReader terminated"
+End Sub
+
 '@===============================================================================
 ' IBarDataReader Interface Members
 '@===============================================================================

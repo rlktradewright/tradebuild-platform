@@ -55,8 +55,10 @@ Private Const ModuleName                    As String = "DunniganFactory"
 '@================================================================================
 
 Private Function BarFormatterFactory_CreateBarFormatter( _
-                ByVal pBars As TimeframeUtils26.Bars) As ChartUtils26.BarFormatter
-
+                ByVal pBars As TimeframeUtils26.bars) As ChartUtils26.BarFormatter
+Dim bf As New DunniganBarFormatter
+bf.bars = pBars
+Set BarFormatterFactory_CreateBarFormatter = bf
 End Function
 
 '@================================================================================

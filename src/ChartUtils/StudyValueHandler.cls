@@ -182,8 +182,8 @@ End Sub
 ' Properties
 '@================================================================================
 
-Public Property Get region() As ChartRegion
-Set region = mRegion
+Public Property Get Region() As ChartRegion
+Set Region = mRegion
 End Property
 
 Public Property Let updatePerTick(ByVal value As Boolean)
@@ -226,23 +226,23 @@ If Not mTextSeries Is Nothing Then
 End If
 End Sub
 
-Friend Sub initialise( _
+Friend Sub Initialise( _
                 ByVal chartMgr As ChartManager, _
-                ByVal region As ChartRegion, _
+                ByVal Region As ChartRegion, _
                 ByVal studyValueConfig As StudyValueConfiguration, _
                 ByVal studyValueDef As StudyValueDefinition, _
                 ByVal updatePerTick As Boolean)
 
 Set mChartManagerRef = CreateWeakReference(chartMgr)
-Set mRegion = region
+Set mRegion = Region
                 
 mUpdatePerTick = updatePerTick
 
 If Not IsEmpty(studyValueDef.maximumValue) Or _
     Not IsEmpty(studyValueDef.minimumValue) _
 Then
-    region.Autoscale = False
-    region.SetVerticalScale CSng(studyValueDef.minimumValue), _
+    Region.Autoscale = False
+    Region.SetVerticalScale CSng(studyValueDef.minimumValue), _
                             CSng(studyValueDef.maximumValue)
 End If
 
@@ -467,10 +467,10 @@ Then
 End If
 
 Set studyLine = ev.sVal.value
-mCurrentLine.point1 = mRegion.newPoint( _
+mCurrentLine.SetPosition mRegion.newPoint( _
                                 chartMgr.getPeriod(studyLine.point1.X).periodNumber, _
-                                studyLine.point1.Y)
-mCurrentLine.point2 = mRegion.newPoint( _
+                                studyLine.point1.Y), _
+                        mRegion.newPoint( _
                                 chartMgr.getPeriod(studyLine.point2.X).periodNumber, _
                                 studyLine.point2.Y)
 If mConditionalActionsIndex >= 0 Then processConditionalActions ev.sVal.timestamp
@@ -520,11 +520,8 @@ Private Sub setupBarSeries( _
                 ByVal studyValueConfig As StudyValueConfiguration)
 Set mBarSeries = mRegion.AddGraphicObjectSeries(New BarSeries, studyValueConfig.layer)
 If Not studyValueConfig.barStyle Is Nothing Then mBarSeries.style = studyValueConfig.barStyle
-If Not studyValueConfig.BarFormatter Is Nothing Then
-    Dim barStudy As StudyUtils26.barStudy
-    Set barStudy = chartMgr.baseStudy
-    Set mBarFormatter = studyValueConfig.BarFormatter
-    mBarFormatter.initialise barStudy.bars
+If Not studyValueConfig.BarFormatterFactory Is Nothing Then
+    Set mBarFormatter = studyValueConfig.BarFormatterFactory.CreateBarFormatter(studyValueConfig.Bars)
 End If
 End Sub
 

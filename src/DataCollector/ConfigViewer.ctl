@@ -1,6 +1,6 @@
 VERSION 5.00
 Object = "{831FDD16-0C5C-11D2-A9FC-0000F8754DA1}#2.0#0"; "MSCOMCTL.OCX"
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#62.2#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#158.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.UserControl ConfigViewer 
    BackStyle       =   0  'Transparent
    ClientHeight    =   13740
@@ -231,12 +231,12 @@ Event SelectedItemChanged()
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "TradeSkilDemo26"
+Private Const ProjectName                   As String = "DataCollector26"
 Private Const ModuleName                    As String = "ConfigViewer"
 
+Private Const ConfigFileVersion             As String = "1.1"
 
-
-Private Const ConfigFileVersion             As String = "1.0"
+Private Const ConfigNameTradeBuild          As String = "TradeBuild"
 
 '@================================================================================
 ' Member variables
@@ -247,7 +247,7 @@ Attribute mConfigManager.VB_VarHelpID = -1
 
 Private mCurrConfigNode                     As Node
 
-Private mSelectedAppConfig                  As ConfigItem
+Private mSelectedAppConfig                  As ConfigurationSection
 
 Private mReadOnly                           As Boolean
 
@@ -367,17 +367,13 @@ toggleDefaultConfig
 End Sub
 
 Private Sub WriteBarDataCheck_Click()
-Dim ci As ConfigItem
 If mReadOnly Then Exit Sub
-Set ci = mConfigManager.currentAppConfig.childItems.Item(ConfigNameCollectionControl)
-ci.setAttribute AttributeNameWriteBarData, CStr(WriteBarDataCheck.value = vbChecked)
+mConfigManager.currentAppConfig.SetSetting ConfigSettingWriteBarData, CStr(WriteBarDataCheck.value = vbChecked)
 End Sub
 
 Private Sub WriteTickDataCheck_Click()
-Dim ci As ConfigItem
 If mReadOnly Then Exit Sub
-Set ci = mConfigManager.currentAppConfig.childItems.Item(ConfigNameCollectionControl)
-ci.setAttribute AttributeNameWriteTickData, CStr(WriteTickDataCheck.value = vbChecked)
+mConfigManager.currentAppConfig.SetSetting ConfigSettingWriteTickData, CStr(WriteTickDataCheck.value = vbChecked)
 End Sub
 
 '@================================================================================
@@ -409,15 +405,15 @@ Dirty = mConfigManager.Dirty
 End Property
 
 Public Property Get appConfig( _
-                ByVal name As String) As ConfigItem
+                ByVal name As String) As ConfigurationSection
 Set appConfig = mConfigManager.appConfig(name)
 End Property
 
-Public Property Get firstAppConfig() As ConfigItem
+Public Property Get firstAppConfig() As ConfigurationSection
 Set firstAppConfig = mConfigManager.firstAppConfig
 End Property
 
-Public Property Get selectedAppConfig() As ConfigItem
+Public Property Get selectedAppConfig() As ConfigurationSection
 Set selectedAppConfig = mConfigManager.currentAppConfig
 End Property
 
@@ -442,16 +438,15 @@ ConfigsTV_NodeClick ConfigsTV.SelectedItem
 End Sub
 
 Public Function initialise( _
-                ByVal configFilename As String, _
+                ByVal pConfigManager As ConfigManager, _
                 ByVal readonly As Boolean) As Boolean
-Dim appConfig As ConfigItem
+Dim appConfig As ConfigurationSection
 Dim index As Long
 Dim newnode As Node
 
 mReadOnly = readonly
 
-Set mConfigManager = New ConfigManager
-If Not mConfigManager.initialise(configFilename) Then Exit Function
+Set mConfigManager = pConfigManager
 
 For Each appConfig In mConfigManager
     Set newnode = addConfigNode(appConfig)
@@ -483,9 +478,9 @@ End Sub
 '@================================================================================
 
 Private Function addConfigNode( _
-                ByVal appConfig As ConfigItem) As Node
+                ByVal appConfig As ConfigurationSection) As Node
 Dim name As String
-name = appConfig.getAttribute(AttributeNameAppConfigName)
+name = appConfig.InstanceQualifier
 Set addConfigNode = ConfigsTV.Nodes.Add(, , name, name)
 Set addConfigNode.Tag = appConfig
 ConfigsTV.Nodes.Add addConfigNode, tvwChild, , ConfigNodeServiceProviders
@@ -518,9 +513,9 @@ ContractsConfigurer1.Visible = False
 End Sub
 
 Private Sub setCurrentConfig( _
-                ByVal ci As ConfigItem, _
+                ByVal cs As ConfigurationSection, _
                 ByVal lNode As Node)
-mConfigManager.setCurrent ci
+mConfigManager.setCurrent cs
 Set mCurrConfigNode = lNode
 
 hideConfigControls
@@ -531,7 +526,7 @@ Private Sub showContractSpecsConfigDetails()
 
 hideConfigControls
 
-ContractsConfigurer1.initialise mConfigManager.currentAppConfig.childItems.Item(ConfigNameContracts), _
+ContractsConfigurer1.initialise mConfigManager.currentAppConfig.GetConfigurationSection(ConfigSectionContracts), _
                                 mReadOnly
 
 ContractsConfigurer1.Left = Box1.Left
@@ -540,14 +535,10 @@ ContractsConfigurer1.Visible = True
 End Sub
 
 Private Sub showParametersConfigDetails()
-Dim ci As ConfigItem
-
 hideConfigControls
 
-Set ci = mConfigManager.currentAppConfig.childItems.Item(ConfigNameCollectionControl)
-
-WriteBarDataCheck.value = IIf(ci.getDefaultableAttribute(AttributeNameWriteBarData, "False") = "True", vbChecked, vbUnchecked)
-WriteTickDataCheck.value = IIf(ci.getDefaultableAttribute(AttributeNameWriteTickData, "False") = "True", vbChecked, vbUnchecked)
+WriteBarDataCheck.value = IIf(mConfigManager.currentAppConfig.GetSetting(ConfigSettingWriteBarData, "False") = "True", vbChecked, vbUnchecked)
+WriteTickDataCheck.value = IIf(mConfigManager.currentAppConfig.GetSetting(ConfigSettingWriteBarData, "False") = "True", vbChecked, vbUnchecked)
 
 ParametersPicture.Left = Box1.Left
 ParametersPicture.Top = Box1.Top
@@ -558,12 +549,7 @@ Private Sub showServiceProviderConfigDetails()
 hideConfigControls
 SPConfigurer1.Left = Box1.Left
 SPConfigurer1.Top = Box1.Top
-SPConfigurer1.initialise mConfigManager.currentAppConfig.childItems.Item(ConfigNameTradeBuild), _
-                                        PermittedServiceProviders.SPRealtimeData Or _
-                                        PermittedServiceProviders.SPPrimaryContractData Or _
-                                        PermittedServiceProviders.SPHistoricalDataInput Or _
-                                        PermittedServiceProviders.SPHistoricalDataOutput Or _
-                                        PermittedServiceProviders.SPTickfileOutput, _
+SPConfigurer1.initialise mConfigManager.currentAppConfig.GetConfigurationSection(ConfigNameTradeBuild), _
                                         mReadOnly
 SPConfigurer1.Visible = True
 End Sub

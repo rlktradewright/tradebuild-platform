@@ -110,11 +110,11 @@ Public Property Get fromDate() As Date
 fromDate = mFromDate
 End Property
 
-Public Property Let includeBarsOutsideSession(ByVal value As Long)
+Public Property Let includeBarsOutsideSession(ByVal value As Boolean)
 mIncludeBarsOutsideSession = value
 End Property
 
-Public Property Get includeBarsOutsideSession() As Long
+Public Property Get includeBarsOutsideSession() As Boolean
 includeBarsOutsideSession = mIncludeBarsOutsideSession
 End Property
 

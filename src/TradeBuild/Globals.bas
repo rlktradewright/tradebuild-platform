@@ -12,6 +12,7 @@ Public Const NoValidID                      As Long = -1
 
 Public Const DefaultStudyValue              As String = "$default"
 
+Public Const MaxCurrency                    As Currency = 922337203685477.5807@
 Public Const MinDouble                      As Double = -(2 - 2 ^ -52) * 2 ^ 1023
 Public Const MaxDouble                      As Double = (2 - 2 ^ -52) * 2 ^ 1023
 
@@ -22,6 +23,7 @@ Public Const MultiTaskingTimeQuantumMillisecs As Long = 20
 
 Public Const BidInputName                   As String = "Bid"
 Public Const AskInputName                   As String = "Ask"
+Public Const OpenInterestInputName          As String = "Open interest"
 Public Const TradeInputName                 As String = "Trade"
 Public Const TickVolumeInputName            As String = "Tick volume"
 Public Const VolumeInputName                As String = "Total volume"
@@ -68,26 +70,26 @@ Public Enum TradeBuildListenValueTypes
     VTDebug
 
     VTProfitProfile
-    VTDummyProfitProfile
+    VTSimulatedProfitProfile
     VTMoneyManagement
     VTOrderPlexProfileStruct
-    VTDummyOrderPlexProfileStruct
+    VTSimulatedOrderPlexProfileStruct
     VTOrderPlexProfileString
-    VTDummyOrderPlexProfileString
+    VTSimulatedOrderPlexProfileString
     VTOrder
-    VTDummyOrder
+    VTSimulatedOrder
     VTPosition
-    VTDummyPosition
+    VTSimulatedPosition
     VTTradeProfile
-    VTDummyTradeProfile
+    VTSimulatedTradeProfile
     VTProfit
-    VTDummyProfit
+    VTSimulatedProfit
     VTDrawdown
-    VTDummyDrawdown
+    VTSimulatedDrawdown
     VTMaxProfit
-    VTDummyMaxProfit
+    VTSimulatedMaxProfit
     VTOrderDetail
-    VTOrderDetailDummy
+    VTOrderDetailSimulated
         
 End Enum
 
@@ -114,49 +116,134 @@ Private mDebugLogger As Logger
 
 Private mProfitProfileLogger As Logger
 
-Private mDummyProfitProfileLogger As Logger
+Private mProfitProfileLoggerSimulated As Logger
 
 Private mMoneyManagementLogger As Logger
 
 Private mOrderPlexProfileStructLogger As Logger
 
-Private mDummyOrderPlexProfileStructLogger As Logger
+Private mOrderPlexProfileStructLoggerSimulated As Logger
 
 Private mOrderPlexProfileStringLogger As Logger
 
-Private mDummyOrderPlexProfileStringLogger As Logger
+Private mOrderPlexProfileStringLoggerSimulated As Logger
 
 Private mOrderLogger As Logger
 
-Private mDummyOrderLogger As Logger
+Private mOrderLoggerSimulated As Logger
 
 Private mPositionLogger As Logger
 
-Private mDummyPositionLogger As Logger
+Private mPositionLoggerSimulated As Logger
 
 Private mTradeProfileLogger As Logger
 
-Private mDummyTradeProfileLogger As Logger
+Private mTradeProfileLoggerSimulated As Logger
 
 Private mProfitLogger As Logger
 
-Private mDummyProfitLogger As Logger
+Private mProfitLoggerSimulated As Logger
 
-Private mDrawdownlogger  As Logger
+Private mDrawdownLogger  As Logger
 
-Private mDummyDrawdownlogger As Logger
+Private mDrawdownLoggerSimulated As Logger
 
-Private mMaxProfitlogger As Logger
+Private mMaxProfitLogger As Logger
 
-Private mDummyMaxProfitlogger As Logger
+Private mMaxProfitLoggerSimulated As Logger
 
-Private mOrderDetaillogger As Logger
+Private mOrderDetailLogger As Logger
 
-Private mDummyOrderDetaillogger As Logger
+Private mOrderDetailLoggerSimulated As Logger
 
 '@================================================================================
 ' Procedures
 '@================================================================================
+
+Public Function gApiNotifyCodeToString(value As ApiNotifyCodes) As String
+Select Case value
+Case ApiNotifyServiceProviderError
+    gApiNotifyCodeToString = "ApiNotifyServiceProviderError"
+Case ApiNotifyTickfileEmpty
+    gApiNotifyCodeToString = "ApiNotifyTickfileEmpty"
+Case ApiNotifyTickfileInvalid
+    gApiNotifyCodeToString = "ApiNotifyTickfileInvalid"
+Case ApiNotifyTickfileVersionNotSupported
+    gApiNotifyCodeToString = "ApiNotifyTickfileVersionNotSupported"
+Case ApiNotifyContractDetailsInvalid
+    gApiNotifyCodeToString = "ApiNotifyContractDetailsInvalid"
+Case ApiNotifyNoContractDetails
+    gApiNotifyCodeToString = "ApiNotifyNoContractDetails"
+Case ApiNotifyTickfileDataSourceNotResponding
+    gApiNotifyCodeToString = "ApiNotifyTickfileDataSourceNotResponding"
+Case ApiNotifyCantWriteToTickfileDataStore
+    gApiNotifyCodeToString = "ApiNotifyCantWriteToTickfileDataStore"
+Case ApiNotifyRetryingConnectionToTickfileDataSource
+    gApiNotifyCodeToString = "ApiNotifyRetryingConnectionToTickfileDataSource"
+Case ApiNotifyConnectedToTickfileDataSource
+    gApiNotifyCodeToString = "ApiNotifyConnectedToTickfileDataSource"
+Case ApiNotifyNoHistoricDataSource
+    gApiNotifyCodeToString = "ApiNotifyNoHistoricDataSource"
+Case ApiNotifyCantConnectHistoricDataSource
+    gApiNotifyCodeToString = "ApiNotifyCantConnectHistoricDataSource"
+Case ApiNotifyConnectedToHistoricDataSource
+    gApiNotifyCodeToString = "ApiNotifyConnectedToHistoricDataSource"
+Case ApiNotifyRetryingConnectionToHistoricDataSource
+    gApiNotifyCodeToString = "ApiNotifyRetryingConnectionToHistoricDataSource"
+Case ApiNotifyContractSpecifierAmbiguous
+    gApiNotifyCodeToString = "ApiNotifyContractSpecifierAmbiguous"
+Case ApiNotifyContractSpecifierInvalid
+    gApiNotifyCodeToString = "ApiNotifyContractSpecifierInvalid"
+Case ApiNotifyMarketDepthNotAvailable
+    gApiNotifyCodeToString = "ApiNotifyMarketDepthNotAvailable"
+Case ApiNotifyInvalidRequest
+    gApiNotifyCodeToString = "ApiNotifyInvalidRequest"
+Case ApiNotifyFatalError
+    gApiNotifyCodeToString = "ApiNotifyFatalError"
+Case ApiNotifyCantConnectRealtimeDataSource
+    gApiNotifyCodeToString = "ApiNotifyCantConnectRealtimeDataSource"
+Case ApiNotifyConnectedToRealtimeDataSource
+    gApiNotifyCodeToString = "ApiNotifyConnectedToRealtimeDataSource"
+Case ApiNotifyLostConnectionToRealtimeDataSource
+    gApiNotifyCodeToString = "ApiNotifyLostConnectionToRealtimeDataSource"
+Case ApiNotifyNoRealtimeDataSource
+    gApiNotifyCodeToString = "ApiNotifyNoRealtimeDataSource"
+Case ApiNotifyReconnectingToRealtimeDataSource
+    gApiNotifyCodeToString = "ApiNotifyReconnectingToRealtimeDataSource"
+Case ApiNotifyDisconnectedFromRealtimeDataSource
+    gApiNotifyCodeToString = "ApiNotifyDisconnectedFromRealtimeDataSource"
+Case ApiNotifyRealtimeDataRequestFailed
+    gApiNotifyCodeToString = "ApiNotifyRealtimeDataRequestFailed"
+Case ApiNotifyCantConnectToBroker
+    gApiNotifyCodeToString = "ApiNotifyCantConnectToBroker"
+Case ApiNotifyConnectedToBroker
+    gApiNotifyCodeToString = "ApiNotifyConnectedToBroker"
+Case ApiNotifyRetryConnectToBroker
+    gApiNotifyCodeToString = "ApiNotifyRetryConnectToBroker"
+Case ApiNotifyLostConnectionToBroker
+    gApiNotifyCodeToString = "ApiNotifyLostConnectionToBroker"
+Case ApiNotifyReConnectingToBroker
+    gApiNotifyCodeToString = "ApiNotifyReConnectingToBroker"
+Case ApiNotifyInvalidOrder
+    gApiNotifyCodeToString = "ApiNotifyInvalidOrder"
+Case ApiNotifyInsufficientFunds
+    gApiNotifyCodeToString = "ApiNotifyInsufficientFunds"
+Case ApiNotifyDisconnectedFromBroker
+    gApiNotifyCodeToString = "ApiNotifyDisconnectedFromBroker"
+Case ApiNotifyNonSpecificNotification
+    gApiNotifyCodeToString = "ApiNotifyNonSpecificNotification"
+Case ApiNotifyContractExpired
+    gApiNotifyCodeToString = "ApiNotifyContractExpired"
+Case ApiNOtifyTickfileFormatNotSupported
+    gApiNotifyCodeToString = "ApiNOtifyTickfileFormatNotSupported"
+Case ApiNotifyContractDoesNotExist
+    gApiNotifyCodeToString = "ApiNotifyContractDoesNotExist"
+Case ApiNotifyCantWriteToHistoricDataStore
+    gApiNotifyCodeToString = "ApiNotifyCantWriteToHistoricDataStore"
+Case ApiNotifyTryLater
+    gApiNotifyCodeToString = "ApiNotifyTryLater"
+End Select
+End Function
 
 ''
 ' Converts a member of the EntryOrderTypes enumeration to the equivalent OrderTypes value.
@@ -312,6 +399,73 @@ Case ActionSell
 End Select
 End Function
 
+Public Function gOrderAttributeToString(ByVal value As OrderAttributes) As String
+Select Case value
+    Case OrderAttOpenClose
+        gOrderAttributeToString = "OpenClose"
+    Case OrderAttOrigin
+        gOrderAttributeToString = "Origin"
+    Case OrderAttOriginatorRef
+        gOrderAttributeToString = "OriginatorRef"
+    Case OrderAttBlockOrder
+        gOrderAttributeToString = "BlockOrder"
+    Case OrderAttSweepToFill
+        gOrderAttributeToString = "SweepToFill"
+    Case OrderAttDisplaySize
+        gOrderAttributeToString = "DisplaySize"
+    Case OrderAttIgnoreRTH
+        gOrderAttributeToString = "IgnoreRTH"
+    Case OrderAttHidden
+        gOrderAttributeToString = "Hidden"
+    Case OrderAttDiscretionaryAmount
+        gOrderAttributeToString = "DiscretionaryAmount"
+    Case OrderAttGoodAfterTime
+        gOrderAttributeToString = "GoodAfterTime"
+    Case OrderAttGoodTillDate
+        gOrderAttributeToString = "GoodTillDate"
+    Case OrderAttRTHOnly
+        gOrderAttributeToString = "RTHOnly"
+    Case OrderAttRule80A
+        gOrderAttributeToString = "Rule80A"
+    Case OrderAttSettlingFirm
+        gOrderAttributeToString = "SettlingFirm"
+    Case OrderAttAllOrNone
+        gOrderAttributeToString = "AllOrNone"
+    Case OrderAttMinimumQuantity
+        gOrderAttributeToString = "MinimumQuantity"
+    Case OrderAttPercentOffset
+        gOrderAttributeToString = "PercentOffset"
+    Case OrderAttETradeOnly
+        gOrderAttributeToString = "ETradeOnly"
+    Case OrderAttFirmQuoteOnly
+        gOrderAttributeToString = "FirmQuoteOnly"
+    Case OrderAttNBBOPriceCap
+        gOrderAttributeToString = "NBBOPriceCap"
+    Case OrderAttOverrideConstraints
+        gOrderAttributeToString = "OverrideConstraints"
+    Case OrderAttAction
+        gOrderAttributeToString = "Action"
+    Case OrderAttLimitPrice
+        gOrderAttributeToString = "LimitPrice"
+    Case OrderAttOrderType
+        gOrderAttributeToString = "OrderType"
+    Case OrderAttQuantity
+        gOrderAttributeToString = "Quantity"
+    Case OrderAttTimeInForce
+        gOrderAttributeToString = "TimeInForce"
+    Case OrderAttTriggerPrice
+        gOrderAttributeToString = "TriggerPrice"
+    Case OrderAttGoodAfterTimeTZ
+        gOrderAttributeToString = "GoodAfterTimeTZ"
+    Case OrderAttGoodTillDateTZ
+        gOrderAttributeToString = "GoodTillDateTZ"
+    Case OrderAttStopTriggerMethod
+        gOrderAttributeToString = "StopTriggerMethod"
+    Case Else
+        gOrderAttributeToString = "***Unknown order attribute***"
+End Select
+End Function
+
 Public Function gOrderStatusToString(ByVal value As OrderStatuses) As String
 Select Case UCase$(value)
 Case OrderStatusCreated
@@ -333,6 +487,8 @@ End Function
 
 Public Function gOrderStopTriggerMethodToString(ByVal value As StopTriggerMethods) As String
 Select Case value
+Case StopTriggerMethods.StopTriggerBidAsk
+    gOrderStopTriggerMethodToString = "Bid/ask"
 Case StopTriggerMethods.StopTriggerDefault
     gOrderStopTriggerMethodToString = "Default"
 Case StopTriggerMethods.StopTriggerDoubleBidAsk
@@ -341,6 +497,10 @@ Case StopTriggerMethods.StopTriggerDoubleLast
     gOrderStopTriggerMethodToString = "Double last"
 Case StopTriggerMethods.StopTriggerLast
     gOrderStopTriggerMethodToString = "Last"
+Case StopTriggerMethods.StopTriggerLastOrBidAsk
+    gOrderStopTriggerMethodToString = "Last or bid/ask"
+Case StopTriggerMethods.StopTriggerMidPoint
+    gOrderStopTriggerMethodToString = "Mid-point"
 End Select
 End Function
 
@@ -422,13 +582,13 @@ Case StopOrderTypeStop
 Case StopOrderTypeStopLimit
     gStopOrderTypeToOrderType = OrderTypeStopLimit
 Case StopOrderTypeBid
-    gStopOrderTypeToOrderType = OrderTypeLimit
+    gStopOrderTypeToOrderType = OrderTypeStop
 Case StopOrderTypeAsk
-    gStopOrderTypeToOrderType = OrderTypeLimit
+    gStopOrderTypeToOrderType = OrderTypeStop
 Case StopOrderTypeLast
-    gStopOrderTypeToOrderType = OrderTypeLimit
+    gStopOrderTypeToOrderType = OrderTypeStop
 Case StopOrderTypeAuto
-    gStopOrderTypeToOrderType = OrderTypeAutoLimit
+    gStopOrderTypeToOrderType = OrderTypeAutoStop
 Case Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                 "TradeBuild26.Module1::gStopOrderTypeToOrderType", _
@@ -513,7 +673,7 @@ If tfSpec.filename <> "" Then
     gTickfileSpecifierToString = tfSpec.filename
 Else
     gTickfileSpecifierToString = "Contract: " & _
-                                Replace(tfSpec.Contract.specifier.ToString, vbCrLf, "; ") & _
+                                Replace(tfSpec.Contract.specifier.toString, vbCrLf, "; ") & _
                             ": From: " & FormatDateTime(tfSpec.FromDate, vbGeneralDate) & _
                             " To: " & FormatDateTime(tfSpec.ToDate, vbGeneralDate)
 End If
@@ -521,28 +681,28 @@ End Function
 
 Public Property Get gLogLogger() As Logger
 If mLogLogger Is Nothing Then
-    Set mLogLogger = GetLogger("log")
+    Set mLogLogger = GetLogger("tradebuild.log")
 End If
 Set gLogLogger = mLogLogger
 End Property
 
 Public Property Get gSpLogLogger() As Logger
 If mSpLogLogger Is Nothing Then
-    Set mSpLogLogger = GetLogger("log.serviceprovider")
+    Set mSpLogLogger = GetLogger("tradebuild.log.serviceprovider")
 End If
 Set gSpLogLogger = mSpLogLogger
 End Property
 
 Public Property Get gTraceLogger() As Logger
 If mTraceLogger Is Nothing Then
-    Set mTraceLogger = GetLogger("trace")
+    Set mTraceLogger = GetLogger("tradebuild.trace")
 End If
 Set gTraceLogger = mTraceLogger
 End Property
 
 Public Property Get gDebugLogger() As Logger
 If mDebugLogger Is Nothing Then
-    Set mDebugLogger = GetLogger("debug")
+    Set mDebugLogger = GetLogger("tradebuild.debug")
 End If
 Set gDebugLogger = mDebugLogger
 End Property
@@ -550,15 +710,17 @@ End Property
 Public Property Get gProfitProfileLogger() As Logger
 If mProfitProfileLogger Is Nothing Then
     Set mProfitProfileLogger = GetLogger("tradebuild.ProfitProfile")
+    mProfitProfileLogger.logToParent = False
 End If
 Set gProfitProfileLogger = mProfitProfileLogger
 End Property
 
-Public Property Get gDummyProfitProfileLogger() As Logger
-If mDummyProfitProfileLogger Is Nothing Then
-    Set mDummyProfitProfileLogger = GetLogger("tradebuild.dummyProfitProfile")
+Public Property Get gProfitProfileLoggerSimulated() As Logger
+If mProfitProfileLoggerSimulated Is Nothing Then
+    Set mProfitProfileLoggerSimulated = GetLogger("tradebuild.ProfitProfileSimulated")
+    mProfitProfileLoggerSimulated.logToParent = False
 End If
-Set gDummyProfitProfileLogger = mDummyProfitProfileLogger
+Set gProfitProfileLoggerSimulated = mProfitProfileLoggerSimulated
 End Property
 
 Public Property Get gMoneyManagementLogger() As Logger
@@ -570,30 +732,34 @@ End Property
 
 Public Property Get gOrderPlexProfileStructLogger() As Logger
 If mOrderPlexProfileStructLogger Is Nothing Then
-    Set mOrderPlexProfileStructLogger = GetLogger("tradebuild.gOrderPlexProfileStruct")
+    Set mOrderPlexProfileStructLogger = GetLogger("tradebuild.OrderPlexProfileStruct")
+    mOrderPlexProfileStructLogger.logToParent = False
 End If
 Set gOrderPlexProfileStructLogger = mOrderPlexProfileStructLogger
 End Property
 
-Public Property Get gDummyOrderPlexProfileStructLogger() As Logger
-If mDummyOrderPlexProfileStructLogger Is Nothing Then
-    Set mDummyOrderPlexProfileStructLogger = GetLogger("tradebuild.DummyOrderPlexProfileStruct")
+Public Property Get gOrderPlexProfileStructLoggerSimulated() As Logger
+If mOrderPlexProfileStructLoggerSimulated Is Nothing Then
+    Set mOrderPlexProfileStructLoggerSimulated = GetLogger("tradebuild.SimulatedOrderPlexProfileStructSimulated")
+    mOrderPlexProfileStructLoggerSimulated.logToParent = False
 End If
-Set gDummyOrderPlexProfileStructLogger = mDummyOrderPlexProfileStructLogger
+Set gOrderPlexProfileStructLoggerSimulated = mOrderPlexProfileStructLoggerSimulated
 End Property
 
 Public Property Get gOrderPlexProfileStringLogger() As Logger
 If mOrderPlexProfileStringLogger Is Nothing Then
     Set mOrderPlexProfileStringLogger = GetLogger("tradebuild.OrderPlexProfileString")
+    mOrderPlexProfileStringLogger.logToParent = False
 End If
 Set gOrderPlexProfileStringLogger = mOrderPlexProfileStringLogger
 End Property
 
-Public Property Get gDummyOrderPlexProfileStringLogger() As Logger
-If mDummyOrderPlexProfileStringLogger Is Nothing Then
-    Set mDummyOrderPlexProfileStringLogger = GetLogger("tradebuild.DummyOrderPlexProfileString")
+Public Property Get gOrderPlexProfileStringLoggerSimulated() As Logger
+If mOrderPlexProfileStringLoggerSimulated Is Nothing Then
+    Set mOrderPlexProfileStringLoggerSimulated = GetLogger("tradebuild.OrderPlexProfileStringSimulated")
+    mOrderPlexProfileStringLoggerSimulated.logToParent = False
 End If
-Set gDummyOrderPlexProfileStringLogger = mDummyOrderPlexProfileStringLogger
+Set gOrderPlexProfileStringLoggerSimulated = mOrderPlexProfileStringLoggerSimulated
 End Property
 
 Public Property Get gOrderLogger() As Logger
@@ -603,94 +769,106 @@ End If
 Set gOrderLogger = mOrderLogger
 End Property
 
-Public Property Get gDummyOrderLogger() As Logger
-If mDummyOrderLogger Is Nothing Then
-    Set mDummyOrderLogger = GetLogger("tradebuild.dummyorder")
+Public Property Get gOrderLoggerSimulated() As Logger
+If mOrderLoggerSimulated Is Nothing Then
+    Set mOrderLoggerSimulated = GetLogger("tradebuild.orderSimulated")
 End If
-Set gDummyOrderLogger = mDummyOrderLogger
+Set gOrderLoggerSimulated = mOrderLoggerSimulated
 End Property
 
 Public Property Get gPositionLogger() As Logger
 If mPositionLogger Is Nothing Then
     Set mPositionLogger = GetLogger("tradebuild.position")
+    mPositionLogger.logToParent = False
 End If
 Set gPositionLogger = mPositionLogger
 End Property
 
-Public Property Get gDummyPositionLogger() As Logger
-If mDummyPositionLogger Is Nothing Then
-    Set mDummyPositionLogger = GetLogger("tradebuild.dummyposition")
+Public Property Get gPositionLoggerSimulated() As Logger
+If mPositionLoggerSimulated Is Nothing Then
+    Set mPositionLoggerSimulated = GetLogger("tradebuild.positionSimulated")
+    mPositionLoggerSimulated.logToParent = False
 End If
-Set gDummyPositionLogger = mDummyPositionLogger
+Set gPositionLoggerSimulated = mPositionLoggerSimulated
 End Property
 
 Public Property Get gTradeProfileLogger() As Logger
 If mTradeProfileLogger Is Nothing Then
     Set mTradeProfileLogger = GetLogger("tradebuild.TradeProfile")
+    mTradeProfileLogger.logToParent = False
 End If
 Set gTradeProfileLogger = mTradeProfileLogger
 End Property
 
-Public Property Get gDummyTradeProfileLogger() As Logger
-If mDummyTradeProfileLogger Is Nothing Then
-    Set mDummyTradeProfileLogger = GetLogger("tradebuild.dummyTradeProfile")
+Public Property Get gTradeProfileLoggerSimulated() As Logger
+If mTradeProfileLoggerSimulated Is Nothing Then
+    Set mTradeProfileLoggerSimulated = GetLogger("tradebuild.TradeProfileSimulated")
+    mTradeProfileLoggerSimulated.logToParent = False
 End If
-Set gDummyTradeProfileLogger = mDummyTradeProfileLogger
+Set gTradeProfileLoggerSimulated = mTradeProfileLoggerSimulated
 End Property
 
 Public Property Get gProfitLogger() As Logger
 If mProfitLogger Is Nothing Then
     Set mProfitLogger = GetLogger("tradebuild.profit")
+    mProfitLogger.logToParent = False
 End If
 Set gProfitLogger = mProfitLogger
 End Property
 
-Public Property Get gDummyProfitLogger() As Logger
-If mDummyProfitLogger Is Nothing Then
-    Set mDummyProfitLogger = GetLogger("tradebuild.dummyprofit")
+Public Property Get gProfitLoggerSimulated() As Logger
+If mProfitLoggerSimulated Is Nothing Then
+    Set mProfitLoggerSimulated = GetLogger("tradebuild.profitSimulated")
+    mProfitLoggerSimulated.logToParent = False
 End If
-Set gDummyProfitLogger = mDummyProfitLogger
+Set gProfitLoggerSimulated = mProfitLoggerSimulated
 End Property
 
-Public Property Get gDrawdownlogger() As Logger
-If mDrawdownlogger Is Nothing Then
-    Set mDrawdownlogger = GetLogger("tradebuild.drawdown")
+Public Property Get gDrawdownLogger() As Logger
+If mDrawdownLogger Is Nothing Then
+    Set mDrawdownLogger = GetLogger("tradebuild.drawdown")
+    mDrawdownLogger.logToParent = False
 End If
-Set gDrawdownlogger = mDrawdownlogger
+Set gDrawdownLogger = mDrawdownLogger
 End Property
 
-Public Property Get gDummyDrawdownlogger() As Logger
-If mDummyDrawdownlogger Is Nothing Then
-    Set mDummyDrawdownlogger = GetLogger("tradebuild.dummydrawdown")
+Public Property Get gDrawdownLoggerSimulated() As Logger
+If mDrawdownLoggerSimulated Is Nothing Then
+    Set mDrawdownLoggerSimulated = GetLogger("tradebuild.drawdownSimulated")
+    mDrawdownLoggerSimulated.logToParent = False
 End If
-Set gDummyDrawdownlogger = mDummyDrawdownlogger
+Set gDrawdownLoggerSimulated = mDrawdownLoggerSimulated
 End Property
 
-Public Property Get gMaxProfitlogger() As Logger
-If mMaxProfitlogger Is Nothing Then
-    Set mMaxProfitlogger = GetLogger("tradebuild.MaxProfit")
+Public Property Get gMaxProfitLogger() As Logger
+If mMaxProfitLogger Is Nothing Then
+    Set mMaxProfitLogger = GetLogger("tradebuild.MaxProfit")
+    mMaxProfitLogger.logToParent = False
 End If
-Set gMaxProfitlogger = mMaxProfitlogger
+Set gMaxProfitLogger = mMaxProfitLogger
 End Property
 
-Public Property Get gDummyMaxProfitlogger() As Logger
-If mDummyMaxProfitlogger Is Nothing Then
-    Set mDummyMaxProfitlogger = GetLogger("tradebuild.DummyMaxProfit")
+Public Property Get gMaxProfitLoggerSimulated() As Logger
+If mMaxProfitLoggerSimulated Is Nothing Then
+    Set mMaxProfitLoggerSimulated = GetLogger("tradebuild.MaxProfitSimulated")
+    mMaxProfitLoggerSimulated.logToParent = False
 End If
-Set gDummyMaxProfitlogger = mDummyMaxProfitlogger
+Set gMaxProfitLoggerSimulated = mMaxProfitLoggerSimulated
 End Property
 
-Public Property Get gOrderDetaillogger() As Logger
-If mOrderDetaillogger Is Nothing Then
-    Set mOrderDetaillogger = GetLogger("tradebuild.orderdetail")
+Public Property Get gOrderDetailLogger() As Logger
+If mOrderDetailLogger Is Nothing Then
+    Set mOrderDetailLogger = GetLogger("tradebuild.orderdetail")
+    mOrderDetailLogger.logToParent = False
 End If
-Set gOrderDetaillogger = mOrderDetaillogger
+Set gOrderDetailLogger = mOrderDetailLogger
 End Property
 
-Public Property Get gDummyOrderDetailLogger() As Logger
-If mDummyOrderDetaillogger Is Nothing Then
-    Set mDummyOrderDetaillogger = GetLogger("tradebuild.dummyorderdetail")
+Public Property Get gOrderDetailLoggerSimulated() As Logger
+If mOrderDetailLoggerSimulated Is Nothing Then
+    Set mOrderDetailLoggerSimulated = GetLogger("tradebuild.orderdetailSimulated")
+    mOrderDetailLoggerSimulated.logToParent = False
 End If
-Set gDummyOrderDetailLogger = mDummyOrderDetaillogger
+Set gOrderDetailLoggerSimulated = mOrderDetailLoggerSimulated
 End Property
 

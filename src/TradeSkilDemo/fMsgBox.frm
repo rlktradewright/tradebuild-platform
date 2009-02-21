@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#27.0#0"; "TWControls10.ocx"
+Object = "{7837218F-7821-47AD-98B6-A35D4D3C0C38}#30.0#0"; "TWControls10.ocx"
 Begin VB.Form fMsgBox 
    BorderStyle     =   3  'Fixed Dialog
    Caption         =   "Form1"
@@ -59,7 +59,6 @@ Event Result( _
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "ModelessMsgBoxTester"
 Private Const ModuleName                    As String = "fMsgBox"
 
 '@================================================================================

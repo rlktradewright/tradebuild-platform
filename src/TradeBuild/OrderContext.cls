@@ -27,12 +27,14 @@ Option Explicit
 ' Events
 '@================================================================================
 
-Event Ready()
+Event ready()
 Event NotReady()
 
 '@================================================================================
 ' Constants
 '@================================================================================
+
+Private Const ModuleName                As String = "OrderContext"
 
 '@================================================================================
 ' Enums
@@ -53,9 +55,7 @@ Private mPositionManager As PositionManager
 
 Private mTickSize As Double
 
-Private mDummy As Boolean
-
-Private mSimulated As Boolean
+Private mIsSimulated As Boolean
 
 Private mActiveOrderPlexes As orderPlexes
     ' this contains all order plexes for which one or more orders are
@@ -75,6 +75,7 @@ Private mPermittedOrderTifs As Long
 Private mPermittedOrderTypes As Long
 Private mPermittedStopTriggerMethods As Long
 
+Private mEnabled As Boolean
 Private mIsReady As Boolean
 
 Private mOrigin As OrderOrigins
@@ -88,7 +89,6 @@ Private mGoodAfterTime As Date
 Private mGoodAfterTimeTZ    As String
 Private mGoodTillDate   As Date
 Private mGoodTillDateTZ As String
-Private mRegularTradingHoursOnly As Boolean
 'Private mRule80A               ' not implemented
 Private mSettlingFirm As String
 Private mAllOrNone As Boolean
@@ -104,6 +104,8 @@ Private mQuantity As Long
 Private mTimeInForce As OrderTifs
 Private mTriggerPrice As Double
 Private mStopTriggerMethod As StopTriggerMethods
+
+Private mPreventUnprotectedPositions As Boolean
 
 '@================================================================================
 ' Class Event Handlers
@@ -143,7 +145,7 @@ Next
 End Property
 
 Public Property Let allOrNone(ByVal value As Boolean)
-If Not isAttributeSupported(OrderAttributeIds.OrderAttAllOrNone) Then attributeNotSupported
+checkAttributeSupported OrderAttributeIds.OrderAttAllOrNone
 mAllOrNone = value
 End Property
 
@@ -152,7 +154,7 @@ allOrNone = mAllOrNone
 End Property
 
 Public Property Let blockOrder(ByVal value As Boolean)
-If Not isAttributeSupported(OrderAttributeIds.OrderAttBlockOrder) Then attributeNotSupported
+checkAttributeSupported OrderAttributeIds.OrderAttBlockOrder
 mBlockOrder = value
 End Property
 
@@ -167,7 +169,7 @@ End Property
 Public Property Get Complete() As Boolean
 Dim op As orderPlex
 For Each op In mActiveOrderPlexes
-    If Not op.dummy Then Complete = False: Exit Property
+    If Not op.IsSimulated Then Complete = False: Exit Property
 Next
 Complete = True
 End Property
@@ -177,7 +179,7 @@ CompletedSize = mCompletedSize
 End Property
 
 Public Property Let displaySize(ByVal value As Long)
-If Not isAttributeSupported(OrderAttributeIds.OrderAttDisplaySize) Then attributeNotSupported
+checkAttributeSupported OrderAttributeIds.OrderAttDisplaySize
 mDisplaySize = value
 End Property
 
@@ -185,16 +187,13 @@ Public Property Get displaySize() As Long
 displaySize = mDisplaySize
 End Property
 
-Friend Property Let dummy(ByVal value As Boolean)
-mDummy = value
-End Property
-
-Friend Property Get dummy() As Boolean
-dummy = mDummy
+Friend Property Let enabled(ByVal value As Boolean)
+mEnabled = value
+checkReady
 End Property
 
 Public Property Let eTradeOnly(ByVal value As Boolean)
-If Not isAttributeSupported(OrderAttributeIds.OrderAttETradeOnly) Then attributeNotSupported
+checkAttributeSupported OrderAttributeIds.OrderAttETradeOnly
 mETradeOnly = value
 End Property
 
@@ -203,7 +202,7 @@ eTradeOnly = mETradeOnly
 End Property
 
 Public Property Let firmQuoteOnly(ByVal value As Boolean)
-If Not isAttributeSupported(OrderAttributeIds.OrderAttFirmQuoteOnly) Then attributeNotSupported
+checkAttributeSupported OrderAttributeIds.OrderAttFirmQuoteOnly
 mFirmQuoteOnly = value
 End Property
 
@@ -212,7 +211,7 @@ firmQuoteOnly = mFirmQuoteOnly
 End Property
 
 Public Property Let goodAfterTime(ByVal value As Date)
-If Not isAttributeSupported(OrderAttributeIds.OrderAttGoodAfterTime) Then attributeNotSupported
+checkAttributeSupported OrderAttributeIds.OrderAttGoodAfterTime
 mGoodAfterTime = value
 End Property
 
@@ -221,7 +220,7 @@ goodAfterTime = mGoodAfterTime
 End Property
 
 Public Property Let goodAfterTimeTZ(ByVal value As String)
-If Not isAttributeSupported(OrderAttributeIds.OrderAttGoodAfterTimeTZ) Then attributeNotSupported
+checkAttributeSupported OrderAttributeIds.OrderAttGoodAfterTimeTZ
 mGoodAfterTimeTZ = value
 End Property
 
@@ -230,7 +229,7 @@ goodAfterTimeTZ = mGoodAfterTimeTZ
 End Property
 
 Public Property Let goodTillDate(ByVal value As Date)
-If Not isAttributeSupported(OrderAttributeIds.OrderAttGoodTillDate) Then attributeNotSupported
+checkAttributeSupported OrderAttributeIds.OrderAttGoodTillDate
 mGoodTillDate = value
 End Property
 
@@ -239,7 +238,7 @@ goodTillDate = mGoodTillDate
 End Property
 
 Public Property Let goodTillDateTZ(ByVal value As String)
-If Not isAttributeSupported(OrderAttributeIds.OrderAttGoodTillDateTZ) Then attributeNotSupported
+checkAttributeSupported OrderAttributeIds.OrderAttGoodTillDateTZ
 mGoodTillDateTZ = value
 End Property
 
@@ -248,7 +247,7 @@ goodTillDateTZ = mGoodTillDateTZ
 End Property
 
 Public Property Let hidden(ByVal value As Boolean)
-If Not isAttributeSupported(OrderAttributeIds.OrderAttHidden) Then attributeNotSupported
+checkAttributeSupported OrderAttributeIds.OrderAttHidden
 mHidden = value
 End Property
 
@@ -257,7 +256,7 @@ hidden = mHidden
 End Property
 
 Public Property Let ignoreRegularTradingHours(ByVal value As Boolean)
-If Not isAttributeSupported(OrderAttributeIds.OrderAttIgnoreRTH) Then attributeNotSupported
+checkAttributeSupported OrderAttributeIds.OrderAttIgnoreRTH
 mIgnoreRegularTradingHours = value
 End Property
 
@@ -267,23 +266,23 @@ End Property
 
 Friend Property Let isReady(ByVal value As Boolean)
 mIsReady = value
-If mIsReady Then
-    mPermittedOrderAttributes = mOrderSubmitter.permittedOrderAttributes
-    mPermittedOrderTifs = mOrderSubmitter.permittedOrderTifs
-    mPermittedOrderTypes = mOrderSubmitter.permittedOrderTypes
-    mPermittedStopTriggerMethods = mOrderSubmitter.permittedStopTriggerMethods
-    RaiseEvent Ready
-Else
-    RaiseEvent NotReady
-End If
+checkReady
 End Property
 
 Public Property Get isReady() As Boolean
-isReady = mIsReady
+isReady = (mIsReady And mEnabled)
+End Property
+
+Friend Property Let IsSimulated(ByVal value As Boolean)
+mIsSimulated = value
+End Property
+
+Public Property Get IsSimulated() As Boolean
+IsSimulated = mIsSimulated
 End Property
 
 Public Property Let limitPrice(ByVal value As Double)
-If Not isAttributeSupported(OrderAttributeIds.OrderAttLimitPrice) Then attributeNotSupported
+checkAttributeSupported OrderAttributeIds.OrderAttLimitPrice
 mLimitPrice = value
 End Property
 
@@ -292,7 +291,7 @@ limitPrice = mLimitPrice
 End Property
 
 Public Property Let minimumQuantity(ByVal value As Long)
-If Not isAttributeSupported(OrderAttributeIds.OrderAttMinimumQuantity) Then attributeNotSupported
+checkAttributeSupported OrderAttributeIds.OrderAttMinimumQuantity
 mMinimumQuantity = value
 End Property
 
@@ -309,7 +308,7 @@ name = mName
 End Property
 
 Public Property Let NbboPriceCap(ByVal value As Double)
-If Not isAttributeSupported(OrderAttributeIds.OrderAttNBBOPriceCap) Then attributeNotSupported
+checkAttributeSupported OrderAttributeIds.OrderAttNBBOPriceCap
 mNBBOPriceCap = value
 End Property
 
@@ -318,8 +317,8 @@ NbboPriceCap = mNBBOPriceCap
 End Property
 
 Public Property Let orderType(ByVal value As OrderTypes)
-If Not isAttributeSupported(OrderAttributeIds.OrderAttOrderType) Then attributeNotSupported
-If Not isOrderTypeValueSupported(value) Then attributeValueNotSupported
+checkAttributeSupported OrderAttributeIds.OrderAttOrderType
+If Not isOrderTypeValueSupported(value) Then attributeValueNotSupported OrderAttributeIds.OrderAttOrderType, value
 mOrderType = value
 End Property
 
@@ -328,7 +327,7 @@ orderType = mOrderType
 End Property
 
 Public Property Let origin(ByVal value As OrderOrigins)
-If Not isAttributeSupported(OrderAttributeIds.OrderAttOrigin) Then attributeNotSupported
+checkAttributeSupported OrderAttributeIds.OrderAttOrigin
 mOrigin = value
 End Property
 
@@ -342,7 +341,7 @@ Set mOrderSubmitter = value
 End Property
 
 Public Property Let overrideConstraints(ByVal value As Boolean)
-If Not isAttributeSupported(OrderAttributeIds.OrderAttOverrideConstraints) Then attributeNotSupported
+checkAttributeSupported OrderAttributeIds.OrderAttOverrideConstraints
 mOverrideConstraints = value
 End Property
 
@@ -358,7 +357,7 @@ Next
 End Property
 
 Public Property Let percentOffset(ByVal value As Double)
-If Not isAttributeSupported(OrderAttributeIds.OrderAttPercentOffset) Then attributeNotSupported
+checkAttributeSupported OrderAttributeIds.OrderAttPercentOffset
 mPercentOffset = value
 End Property
 
@@ -382,8 +381,17 @@ Friend Property Let PositionManager(ByVal value As PositionManager)
 Set mPositionManager = value
 End Property
 
+Public Property Let PreventUnprotectedPositions( _
+                ByVal value As Boolean)
+mPreventUnprotectedPositions = value
+End Property
+
+Public Property Get PreventUnprotectedPositions() As Boolean
+PreventUnprotectedPositions = mPreventUnprotectedPositions
+End Property
+
 Public Property Let quantity(ByVal value As Long)
-If Not isAttributeSupported(OrderAttributeIds.OrderAttQuantity) Then attributeNotSupported
+checkAttributeSupported OrderAttributeIds.OrderAttQuantity
 mQuantity = value
 End Property
 
@@ -398,30 +406,13 @@ For Each orderPlex In mActiveOrderPlexes
 Next
 End Property
 
-Public Property Let regularTradingHoursOnly(ByVal value As Boolean)
-If Not isAttributeSupported(OrderAttributeIds.OrderAttRTHOnly) Then attributeNotSupported
-mRegularTradingHoursOnly = value
-End Property
-
-Public Property Get regularTradingHoursOnly() As Boolean
-regularTradingHoursOnly = mRegularTradingHoursOnly
-End Property
-
 Public Property Let settlingFirm(ByVal value As String)
-If Not isAttributeSupported(OrderAttributeIds.OrderAttSettlingFirm) Then attributeNotSupported
+checkAttributeSupported OrderAttributeIds.OrderAttSettlingFirm
 mSettlingFirm = value
 End Property
 
 Public Property Get settlingFirm() As String
 settlingFirm = mSettlingFirm
-End Property
-
-Friend Property Let simulated(ByVal value As Boolean)
-mSimulated = value
-End Property
-
-Public Property Get simulated() As Boolean
-simulated = mSimulated
 End Property
 
 Public Property Get size() As Long
@@ -435,8 +426,8 @@ Next
 End Property
 
 Public Property Let StopTriggerMethod(ByVal value As StopTriggerMethods)
-If Not isAttributeSupported(OrderAttributeIds.OrderAttStopTriggerMethod) Then attributeNotSupported
-If Not isStopTriggerMethodValueSupported(value) Then attributeValueNotSupported
+checkAttributeSupported OrderAttributeIds.OrderAttStopTriggerMethod
+If Not isStopTriggerMethodValueSupported(value) Then attributeValueNotSupported OrderAttributeIds.OrderAttStopTriggerMethod, value
 mStopTriggerMethod = value
 End Property
 
@@ -445,7 +436,7 @@ StopTriggerMethod = mStopTriggerMethod
 End Property
 
 Public Property Let SweepToFill(ByVal value As Boolean)
-If Not isAttributeSupported(OrderAttributeIds.OrderAttSweepToFill) Then attributeNotSupported
+checkAttributeSupported OrderAttributeIds.OrderAttSweepToFill
 mSweepToFill = value
 End Property
 
@@ -464,8 +455,8 @@ Set Ticker = mTicker
 End Property
 
 Public Property Let timeInForce(ByVal value As OrderTifs)
-If Not isAttributeSupported(OrderAttributeIds.OrderAttTimeInForce) Then attributeNotSupported
-If Not isOrderTifValueSupported(value) Then attributeValueNotSupported
+checkAttributeSupported OrderAttributeIds.OrderAttTimeInForce
+If Not isOrderTifValueSupported(value) Then attributeValueNotSupported OrderAttributeIds.OrderAttTimeInForce, value
 mTimeInForce = value
 End Property
 
@@ -474,7 +465,7 @@ timeInForce = mTimeInForce
 End Property
 
 Public Property Let triggerPrice(ByVal value As Double)
-If Not isAttributeSupported(OrderAttributeIds.OrderAttTriggerPrice) Then attributeNotSupported
+checkAttributeSupported OrderAttributeIds.OrderAttTriggerPrice
 mTriggerPrice = value
 End Property
 
@@ -581,6 +572,9 @@ Public Function Buy(ByRef number As Long, _
                     Optional ByVal exitStrategy As PositionManagementStrategy, _
                     Optional ByVal scalingStrategy As PositionManagementStrategy) As orderPlex
 
+Dim failpoint As Long
+On Error GoTo Err
+
 Select Case entryTIF
 Case TIFDay
 Case TIFGoodTillCancelled
@@ -627,23 +621,56 @@ Set Buy = CreateOrderPlex(OrderActions.ActionBuy, _
                                 targetTriggerPrice)
                                 
 executeOrderPlex Buy, True, cancelPrice, stopStrategy, exitStrategy, scalingStrategy
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "Buy" & "." & failpoint & IIf(Err.source <> "", vbCrLf & Err.source, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Function
 
 Public Function Cancel() As Boolean
 Dim orderPlex As orderPlex
 
+Dim failpoint As Long
+On Error GoTo Err
+
 For Each orderPlex In mActiveOrderPlexes
     If orderPlex.Cancel(evenIfFilled:=True) Then Cancel = True
 Next
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "Cancel" & "." & failpoint & IIf(Err.source <> "", vbCrLf & Err.source, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 
 End Function
 
 Public Function CancelPending() As Boolean
 Dim orderPlex As orderPlex
 
+Dim failpoint As Long
+On Error GoTo Err
+
 For Each orderPlex In mActiveOrderPlexes
     If orderPlex.Cancel(evenIfFilled:=False) Then CancelPending = True
 Next
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "CancelPending" & "." & failpoint & IIf(Err.source <> "", vbCrLf & Err.source, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 
 End Function
 
@@ -670,6 +697,9 @@ Public Function CreateBuyOrderPlex( _
                 ByVal targetPrice As Double, _
                 ByVal targetOffset As Long, _
                 ByVal targetTriggerPrice As Double) As orderPlex
+Dim failpoint As Long
+On Error GoTo Err
+
 Set CreateBuyOrderPlex = CreateOrderPlex(OrderActions.ActionBuy, _
                                         number, _
                                         EntryOrderType, _
@@ -684,6 +714,15 @@ Set CreateBuyOrderPlex = CreateOrderPlex(OrderActions.ActionBuy, _
                                         targetPrice, _
                                         targetOffset, _
                                         targetTriggerPrice)
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "CreateBuyOrderPlex" & "." & failpoint & IIf(Err.source <> "", vbCrLf & Err.source, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Function
 
 Friend Function CreateOrderPlex(ByVal action As OrderActions, _
@@ -710,7 +749,7 @@ Dim lTriggerPrice As Double
 Dim lStopPrice As Double
 Dim lTargetPrice As Double
 
-If Not mIsReady Then Err.Raise ErrorCodes.ErrIllegalStateException, _
+If Not isReady Then Err.Raise ErrorCodes.ErrIllegalStateException, _
                             "OrderContext::CreateOrderPlex", _
                             "The service provider is not ready"
 
@@ -774,8 +813,8 @@ orderPlex.key = nextPlexKey
 orderPlex.PositionManager = mPositionManager
 orderPlex.Ticker = mTicker
 orderPlex.orderSubmitter = mOrderSubmitter
-orderPlex.dummy = mDummy
-orderPlex.simulated = mSimulated
+orderPlex.IsSimulated = mIsSimulated
+orderPlex.PreventUnprotectedPosition = mPreventUnprotectedPositions
 
 Set entryOrder = orderPlex.createEntryOrder
 entryOrder.action = action
@@ -919,10 +958,6 @@ If TargetOrderType <> TargetOrderTypeNone Then
     Case TargetOrderTypeLast
         targetOrder.limitPrice = mTicker.TradePrice + targetOffset * mTickSize
     Case TargetOrderTypeAuto
-        If targetPrice <> 0 Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-                                    "OrderContext::CreateOrderPlex", _
-                                    "The target price must be zero for this order type"
-        
         targetOrder.offset = targetOffset
     End Select
 
@@ -942,7 +977,7 @@ gTB.notifyListeners _
             IIf(lTriggerPrice <> 0, "(" & lTriggerPrice & ")", "") & _
             ", stop " & IIf(StopOrderType = StopOrderTypeAuto, "AUTO(" & stopOffset * mTickSize & ")", lStopPrice) & _
             ", target " & IIf(TargetOrderType = TargetOrderTypeAuto, "AUTO(" & targetOffset * mTickSize & ")", lTargetPrice), _
-            IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
+            IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
             Me
 
 End Function
@@ -961,6 +996,9 @@ Public Function CreateSellOrderPlex( _
                 ByVal targetPrice As Double, _
                 ByVal targetOffset As Long, _
                 ByVal targetTriggerPrice As Double) As orderPlex
+Dim failpoint As Long
+On Error GoTo Err
+
 Set CreateSellOrderPlex = CreateOrderPlex(OrderActions.ActionSell, _
                                     number, _
                                     EntryOrderType, _
@@ -975,6 +1013,15 @@ Set CreateSellOrderPlex = CreateOrderPlex(OrderActions.ActionSell, _
                                     targetPrice, _
                                     targetOffset, _
                                     targetTriggerPrice)
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "CreateSellOrderPlex" & "." & failpoint & IIf(Err.source <> "", vbCrLf & Err.source, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Function
 
 Public Sub executeOrderPlex(ByVal orderPlex As orderPlex, _
@@ -988,11 +1035,14 @@ Dim msg As String
 Dim origQuantity As Long
 Dim newQuantity As Long
 
+Dim failpoint As Long
+On Error GoTo Err
+
 If orderPlex Is Nothing Then Err.Raise ErrorCodes.ErrIllegalArgumentException, _
                             "OrderContext::executeOrderPlex", _
                             "No order plex supplied"
 
-If checkMoneyManagement And Not mDummy Then
+If checkMoneyManagement And Not mIsSimulated Then
     origQuantity = orderPlex.entryOrder.quantity
     newQuantity = origQuantity
     If Not mPositionManager.allowOrder( _
@@ -1036,11 +1086,20 @@ End If
 gTB.notifyListeners _
             "Execute order plex: (" & mTicker.TradePrice & ") " & _
             orderPlex.key, _
-            IIf(mDummy, TradeBuildListenValueTypes.VTDummyOrder, TradeBuildListenValueTypes.VTOrder), _
+            IIf(mIsSimulated, TradeBuildListenValueTypes.VTSimulatedOrder, TradeBuildListenValueTypes.VTOrder), _
             Me
 
 mActiveOrderPlexes.add orderPlex
 orderPlex.execute cancelPrice
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "executeOrderPlex" & "." & failpoint & IIf(Err.source <> "", vbCrLf & Err.source, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 
 End Sub
 
@@ -1078,7 +1137,13 @@ End Function
 
 Public Function isOrderTypeValueSupported( _
                 ByVal value As OrderTypes) As Boolean
-isOrderTypeValueSupported = (mPermittedOrderTypes And value)
+If value = OrderTypeAutoLimit Or _
+    value = OrderTypeAutoStop _
+Then
+    isOrderTypeValueSupported = True
+Else
+    isOrderTypeValueSupported = (mPermittedOrderTypes And value)
+End If
 End Function
 
 Public Function isStopTriggerMethodValueSupported( _
@@ -1090,9 +1155,8 @@ Friend Function newOrder() As order
 Dim lOrder As order
 Set lOrder = New order
 With lOrder
-    .id = generateGUIDString
-    .dummy = mDummy
-    .simulated = mSimulated
+    .id = GenerateGUIDString
+    .IsSimulated = mIsSimulated
     .OrderContext = Me
     .Ticker = mTicker
     If isAttributeSupported(OrderAttributeIds.OrderAttAllOrNone) Then .allOrNone = mAllOrNone
@@ -1117,9 +1181,8 @@ With lOrder
     If isAttributeSupported(OrderAttributeIds.OrderAttOverrideConstraints) Then .overrideConstraints = mOverrideConstraints
     If isAttributeSupported(OrderAttributeIds.OrderAttPercentOffset) Then .percentOffset = mPercentOffset
     If isAttributeSupported(OrderAttributeIds.OrderAttQuantity) Then .quantity = mQuantity
-    If isAttributeSupported(OrderAttributeIds.OrderAttRTHOnly) Then .regularTradingHoursOnly = mRegularTradingHoursOnly
     If isAttributeSupported(OrderAttributeIds.OrderAttSettlingFirm) Then .settlingFirm = mSettlingFirm
-    .simulated = mSimulated
+    
     If mStopTriggerMethod <> StopTriggerMethods.StopTriggerNone Then
         If isAttributeSupported(OrderAttributeIds.OrderAttStopTriggerMethod) Then .StopTriggerMethod = mStopTriggerMethod
     End If
@@ -1169,6 +1232,9 @@ Public Function Sell(ByRef number As Long, _
                     Optional ByVal exitStrategy As PositionManagementStrategy, _
                     Optional ByVal scalingStrategy As PositionManagementStrategy) As orderPlex
 
+Dim failpoint As Long
+On Error GoTo Err
+
 Select Case entryTIF
 Case TIFDay
 Case TIFGoodTillCancelled
@@ -1214,22 +1280,48 @@ Set Sell = CreateOrderPlex(OrderActions.ActionSell, _
                                 targetOffset, _
                                 targetTriggerPrice)
 executeOrderPlex Sell, True, cancelPrice, stopStrategy, exitStrategy, scalingStrategy
+
+Exit Function
+
+Err:
+Dim errNumber As Long: errNumber = Err.number
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "Sell" & "." & failpoint & IIf(Err.source <> "", vbCrLf & Err.source, "")
+Dim errDescription As String: errDescription = Err.Description
+gLogLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
 End Function
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
 
-Private Sub attributeNotSupported()
+Private Sub attributeValueNotSupported( _
+                ByVal pAttribute As OrderAttributeIds, _
+                ByVal value As Variant)
 Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "OrderContext", _
-            "This attribute not supported by service provider"
+            , _
+            "Value " & CStr(value) & " for attribute " & gOrderAttributeToString(pAttribute) & " is not supported by the service provider"
 End Sub
 
-Private Sub attributeValueNotSupported()
-Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            "OrderContext", _
-            "This attribute value not supported by service provider"
+Private Sub checkAttributeSupported( _
+                ByVal pAttribute As OrderAttributeIds)
+If Not isAttributeSupported(pAttribute) Then
+    Err.Raise ErrorCodes.ErrIllegalArgumentException, _
+                , _
+                "The " & gOrderAttributeToString(pAttribute) & " attribute is not supported by the service provider"
+End If
+End Sub
+
+Private Sub checkReady()
+If isReady Then
+    mPermittedOrderAttributes = mOrderSubmitter.permittedOrderAttributes
+    mPermittedOrderTifs = mOrderSubmitter.permittedOrderTifs
+    mPermittedOrderTypes = mOrderSubmitter.permittedOrderTypes
+    mPermittedStopTriggerMethods = mOrderSubmitter.permittedStopTriggerMethods
+    RaiseEvent ready
+Else
+    RaiseEvent NotReady
+End If
 End Sub
 
 Private Function nextPlexKey() As String

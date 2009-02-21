@@ -67,12 +67,14 @@ Private mBarTimePeriod As TimePeriod
 Private mBarsBuilder As BarsBuilder
 Private WithEvents mBars As Bars
 Attribute mBars.VB_VarHelpID = -1
-Private mBar As bar
+Private WithEvents mBar As bar
 
 Private mNumberOfValuesToCache As Long
 
 Private mPriceTickSize As Double
 Private mVolumeTickSize As Double
+
+Private mTimestamp As Date
 
 '@================================================================================
 ' Class Event Handlers
@@ -110,6 +112,14 @@ Private Sub BarStudy_switchUnderlyingStudy( _
                 ByVal newUnderlyingStudy As InputStudy)
 Set mSession = newUnderlyingStudy.session
 mBarsBuilder.changeSession mSession
+End Sub
+
+'@================================================================================
+' mBars Event Handlers
+'@================================================================================
+
+Private Sub mBar_Changed(ev As TWUtilities30.ChangeEvent)
+notifyBarValues
 End Sub
 
 '@================================================================================
@@ -188,7 +198,7 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customGetStudyValue" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
 Dim errDescription As String: errDescription = Err.Description
-'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Function
 
@@ -200,18 +210,16 @@ On Error GoTo Err
 
 If IsEmpty(ev.sVal.value) Then Exit Sub
 
+mTimestamp = ev.sVal.timestamp
+
 If ev.valueName = ConstTimeBarsInputPrice Then
     mBarsBuilder.notifyValue ev.sVal
-    notifyBarValues ev.sVal.timestamp
 ElseIf ev.valueName = ConstTimeBarsInputTotalVolume Then
     mBarsBuilder.notifyVolume ev.sVal
-    notifyBarValues ev.sVal.timestamp
 ElseIf ev.valueName = ConstTimeBarsInputTickVolume Then
     mBarsBuilder.incrementTickVolume ev.sVal.value
-    notifyBarValues ev.sVal.timestamp
 ElseIf ev.valueName = ConstTimeBarsInputOpenInterest Then
     mBarsBuilder.notifyOpenInterest ev.sVal
-    notifyBarValues ev.sVal.timestamp
 Else
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "customNotify", _
@@ -224,7 +232,7 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customNotify" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
 Dim errDescription As String: errDescription = Err.Description
-'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 End Sub
@@ -262,7 +270,7 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "customProcessParameters" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
 Dim errDescription As String: errDescription = Err.Description
-'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Sub
 
@@ -286,16 +294,15 @@ End Property
 ' Helper Functions
 '@================================================================================
 
-Private Sub notifyBarValues( _
-                ByVal timestamp As Date)
+Private Sub notifyBarValues()
 Dim evOut As StudyValueEvent
 
 If mBar Is Nothing Then Exit Sub
 
-evOut.sVal.barNumber = mBars.currentBarNumber
+evOut.sVal.barNumber = mBar.barNumber
 evOut.sVal.barStartTime = mBar.timestamp
 Set evOut.Source = Me
-evOut.sVal.timestamp = timestamp
+evOut.sVal.timestamp = mTimestamp
 
 If mBar.barChanged Then
     Set evOut.sVal.value = mBar

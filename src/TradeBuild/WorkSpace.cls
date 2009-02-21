@@ -56,7 +56,9 @@ Private mName                       As String
 
 Private mTickers                    As Tickers
 Private mOrderPlexes                As orderPlexes
+Private mOrderPlexesSimulated       As orderPlexes
 Private mExecutions                 As executions
+Private mExecutionsSimulated        As executions
 
 '@================================================================================
 ' Class Event Handlers
@@ -66,7 +68,9 @@ Private Sub Class_Initialize()
 Set mTickers = New Tickers
 mTickers.addCollectionChangeListener Me
 Set mOrderPlexes = New orderPlexes
+Set mOrderPlexesSimulated = New orderPlexes
 Set mExecutions = New executions
+Set mExecutionsSimulated = New executions
 End Sub
 
 Private Sub Class_Terminate()
@@ -84,7 +88,9 @@ If TypeOf ev.affectedItem Is Ticker Then
     Select Case ev.changeType
     Case CollectionChangeTypes.CollItemAdded
         lTicker.PositionManager.OrderContexts.addCollectionChangeListener Me
+        lTicker.PositionManagerSimulated.OrderContexts.addCollectionChangeListener Me
         lTicker.executions.addCollectionChangeListener Me
+        lTicker.ExecutionsSimulated.addCollectionChangeListener Me
     Case CollectionChangeTypes.CollItemRemoved
         ' no need to do anything here
     End Select
@@ -102,7 +108,11 @@ ElseIf TypeOf ev.affectedItem Is orderPlex Then
     Set lOrderPlex = ev.affectedItem
     Select Case ev.changeType
     Case CollectionChangeTypes.CollItemAdded
-        mOrderPlexes.add lOrderPlex
+        If lOrderPlex.IsSimulated Then
+            mOrderPlexesSimulated.add lOrderPlex
+        Else
+            mOrderPlexes.add lOrderPlex
+        End If
     Case CollectionChangeTypes.CollItemRemoved
         ' do nothing here because we don't care whether the order plex
         ' is active or not
@@ -112,7 +122,11 @@ ElseIf TypeOf ev.affectedItem Is Execution Then
     Set lExec = ev.affectedItem
     Select Case ev.changeType
     Case CollectionChangeTypes.CollItemAdded
-        mExecutions.add lExec
+        If lExec.IsSimulated Then
+            mExecutionsSimulated.add lExec
+        Else
+            mExecutions.add lExec
+        End If
     Case CollectionChangeTypes.CollItemRemoved
         ' should never happen
         gTB.NotifyFatalError ErrorCodes.ErrUnsupportedOperationException, _
@@ -134,6 +148,10 @@ Public Property Get executions() As executions
 Set executions = mExecutions
 End Property
 
+Public Property Get ExecutionsSimulated() As executions
+Set ExecutionsSimulated = mExecutionsSimulated
+End Property
+
 Public Property Let name(ByVal value As String)
 mName = value
 End Property
@@ -144,6 +162,10 @@ End Property
 
 Public Property Get orderPlexes() As orderPlexes
 Set orderPlexes = mOrderPlexes
+End Property
+
+Public Property Get orderPlexesSimulated() As orderPlexes
+Set orderPlexesSimulated = mOrderPlexesSimulated
 End Property
 
 Public Property Get Tickers() As Tickers

@@ -31,6 +31,7 @@ Event ChartCleared()
 Event KeyDown(KeyCode As Integer, Shift As Integer)
 Event KeyPress(KeyAscii As Integer)
 Event KeyUp(KeyCode As Integer, Shift As Integer)
+Event PointerModeChanged()
 Event RegionsChanged(ev As CollectionChangeEvent)
 Event PeriodsChanged(ev As CollectionChangeEvent)
 Event RegionSelected(ByVal Region As ChartRegion)
@@ -110,6 +111,16 @@ End Property
 
 Public Property Let ChartBackColor(ByVal val As OLE_COLOR)
 chartObj.ChartBackColor = val
+End Property
+
+Public Property Get ChartBackGradientFillColors() As Long()
+ChartBackGradientFillColors = chartObj.ChartBackGradientFillColors
+End Property
+
+Public Property Let ChartBackGradientFillColors(ByRef value() As Long)
+Dim ar() As Long
+ar = value
+chartObj.ChartBackGradientFillColors = ar
 End Property
 
 Public Property Get ChartLeft() As Single
@@ -235,6 +246,10 @@ End Property
 
 Public Property Let PointerIcon(ByVal value As IPictureDisp)
 chartObj.PointerIcon = value
+End Property
+
+Public Property Get PointerMode() As PointerModes
+PointerMode = chartObj.PointerMode
 End Property
 
 Public Property Get PointerStyle() As PointerStyles
@@ -374,6 +389,10 @@ Friend Sub fireKeyUp(KeyCode As Integer, Shift As Integer)
 RaiseEvent KeyUp(KeyCode, Shift)
 End Sub
 
+Friend Sub firePointerModeChanged()
+RaiseEvent PointerModeChanged
+End Sub
+
 Friend Sub fireRegionsChanged(ev As CollectionChangeEvent)
 RaiseEvent RegionsChanged(ev)
 End Sub
@@ -414,6 +433,10 @@ End Sub
 
 Public Sub SetPointerModeDefault()
 chartObj.SetPointerModeDefault
+End Sub
+
+Public Sub SetPointerModeSelection()
+chartObj.SetPointerModeSelection
 End Sub
 
 Public Sub SetPointerModeTool( _

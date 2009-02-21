@@ -80,6 +80,10 @@ Private Sub Class_Initialize()
 Set mDataPoints = New Collection
 End Sub
 
+Private Sub Class_Terminate()
+Debug.Print "DataPointSeries terminated"
+End Sub
+
 '================================================================================
 ' IGraphicObjectSeries Interface Members
 '================================================================================
@@ -102,6 +106,9 @@ End Property
 
 Private Sub IGraphicObjectSeries_finish()
 mFinished = True
+Set mController = Nothing
+Set mGOSP = Nothing
+Set mCanvas = Nothing
 End Sub
 
 Private Sub IGraphicObjectSeries_Initialise( _
@@ -251,12 +258,12 @@ End If
 fireStyleChanged
 End Property
 
-Public Property Let IsSelectable(ByVal value As Boolean)
+Public Property Let isSelectable(ByVal value As Boolean)
 mIsSelectable = value
 End Property
 
-Public Property Get IsSelectable() As Boolean
-IsSelectable = mIsSelectable
+Public Property Get isSelectable() As Boolean
+isSelectable = mIsSelectable
 End Property
 
 Public Property Get IsSelected() As Boolean
@@ -385,7 +392,7 @@ Exit Property
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "style" & "." & failpoint & IIf(errSource <> "", vbCrLf & errSource, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "style" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
 gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
@@ -413,11 +420,11 @@ End Property
 ' Methods
 '================================================================================
 
-Public Function Add( _
+Public Function add( _
                 ByVal timestamp As Date, _
                 Optional ByVal Key As String, _
                 Optional ByVal LocalStyle As DataPointStyle, _
-                Optional ByVal IsSelectable As Boolean) As DataPoint
+                Optional ByVal isSelectable As Boolean) As DataPoint
 Static duplicateCount As Long       ' counts the number of successive adds with
                                     ' the same timestamp
 Static prevTimestamp As Date
@@ -434,18 +441,18 @@ If Not mPrevDataPoint Is Nothing Then
     End If
 End If
 
-Set Add = New DataPoint
-If CDbl(timestamp) <> 0 Then Add.x = gCalculateX(timestamp, mController, False, duplicateCount)
+Set add = New DataPoint
+If CDbl(timestamp) <> 0 Then add.x = gCalculateX(timestamp, mController, False, duplicateCount)
 If Key = "" Then
     Key = GenerateGUIDString
 End If
-Add.initialise mSeriesID, timestamp, Key, mGOSP, mLayer, mCanvas, mStyle, LocalStyle, IsSelectable
+add.initialise mSeriesID, timestamp, Key, mGOSP, mLayer, mCanvas, mStyle, LocalStyle, isSelectable
 
-Add.prevDataPoint = mPrevDataPoint
-mDataPoints.Add Add, Key
-Set mPrevDataPoint = Add
+add.prevDataPoint = mPrevDataPoint
+mDataPoints.add add, Key
+Set mPrevDataPoint = add
 prevTimestamp = timestamp
-mGOSP.AddGraphicObject Add, mSeriesID
+mGOSP.AddGraphicObject add, mSeriesID
 End Function
 
 Friend Sub Finish()
@@ -464,10 +471,6 @@ Public Function Item(ByVal index As Variant) As DataPoint
 Attribute Item.VB_UserMemId = 0
 Set Item = mDataPoints(index)
 End Function
-
-Friend Sub RemoveAll()
-StartTask Me, PriorityLow
-End Sub
 
 Public Sub RemoveObject(ByVal value As ChartSkil26.DataPoint)
 On Error GoTo Err

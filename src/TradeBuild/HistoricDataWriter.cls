@@ -50,7 +50,6 @@ Public Type PendingBarWrite
     barType         As BarTypes
     barTimePeriod   As TimePeriod
     Bar             As Bar
-    volume          As Long
 End Type
 
 '@================================================================================
@@ -125,7 +124,6 @@ For Each item In mPendingWrites
     pendingWrite = item
     WriteBar pendingWrite.Bar, _
             pendingWrite.barType, _
-            pendingWrite.volume, _
             pendingWrite.barTimePeriod
 Next
 
@@ -135,7 +133,6 @@ End Sub
 Friend Sub WriteBar( _
                 ByVal theBar As Bar, _
                 ByVal barType As BarTypes, _
-                ByVal volume As Long, _
                 ByVal barTimePeriod As TimePeriod)
 Dim pendingWrite As PendingBarWrite
 
@@ -143,7 +140,6 @@ If Not mServiceProviderWriterReady Then
     pendingWrite.barType = barType
     Set pendingWrite.barTimePeriod = barTimePeriod
     Set pendingWrite.Bar = theBar
-    pendingWrite.volume = volume
     mPendingWrites.addToEnd pendingWrite
 Else
     mWriter.WriteBar theBar, barType, barTimePeriod

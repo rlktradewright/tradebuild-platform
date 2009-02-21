@@ -123,13 +123,11 @@ Private Sub fireChange( _
                 ByVal changeType As CollectionChangeTypes, _
                 ByVal affectedObject As order)
 Dim listener As CollectionChangeListener
-Dim i As Long
 Dim ev As CollectionChangeEvent
 Set ev.source = Me
 ev.changeType = changeType
 Set ev.affectedItem = affectedObject
-For i = 1 To mChangeListeners.Count
-    Set listener = mChangeListeners(i)
+For Each listener In mChangeListeners
     listener.Change ev
 Next
 RaiseEvent CollectionChanged(ev)

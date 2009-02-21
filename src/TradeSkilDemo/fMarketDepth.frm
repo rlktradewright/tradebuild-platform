@@ -1,5 +1,5 @@
 VERSION 5.00
-Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#111.1#0"; "TradeBuildUI2-6.ocx"
+Object = "{793BAAB8-EDA6-4810-B906-E319136FDF31}#158.0#0"; "TradeBuildUI2-6.ocx"
 Begin VB.Form fMarketDepth 
    Caption         =   "Market Depth"
    ClientHeight    =   3630
@@ -80,7 +80,7 @@ End Sub
 
 Private Sub Form_Load()
 
-Me.Left = Screen.Width - Me.Width
+Me.left = Screen.Width - Me.Width
 Me.Top = Screen.Height - Me.Height
 
 End Sub
@@ -90,13 +90,13 @@ If Me.ScaleWidth = 0 And _
     Me.ScaleHeight = 0 Then Exit Sub
 
 If Me.ScaleWidth / 2 - CentreButton.Width / 2 > 0 Then
-    CentreButton.Left = Me.ScaleWidth / 2 - CentreButton.Width / 2
+    CentreButton.left = Me.ScaleWidth / 2 - CentreButton.Width / 2
 Else
-    CentreButton.Left = 0
+    CentreButton.left = 0
 End If
 
 DOMDisplay1.Width = Me.ScaleWidth
-DOMDisplay1.Height = Me.ScaleHeight
+DOMDisplay1.Height = Me.ScaleHeight - DOMDisplay1.Top
 End Sub
 
 Private Sub Form_Terminate()
