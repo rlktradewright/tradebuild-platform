@@ -143,67 +143,6 @@ Public Property Get CurrentSessionStartTime() As Date
 CurrentSessionStartTime = chartObj.CurrentSessionStartTime
 End Property
 
-Public Property Get DefaultBarDisplayMode() As BarDisplayModes
-DefaultBarDisplayMode = chartObj.DefaultBarDisplayMode
-End Property
-
-Public Property Let DefaultBarDisplayMode( _
-                ByVal value As BarDisplayModes)
-chartObj.DefaultBarDisplayMode = value
-End Property
-
-Public Property Get DefaultBarStyle() As BarStyle
-Set DefaultBarStyle = chartObj.DefaultBarStyle
-End Property
-
-Public Property Let DefaultBarStyle( _
-                ByVal value As BarStyle)
-chartObj.DefaultRegionStyle = value
-End Property
-
-Public Property Get DefaultDataPointStyle() As DataPointStyle
-Set DefaultDataPointStyle = chartObj.DefaultDataPointStyle
-End Property
-
-Public Property Let DefaultDataPointStyle( _
-                ByVal value As DataPointStyle)
-chartObj.DefaultDataPointStyle = value
-End Property
-
-Public Property Get DefaultLineStyle() As linestyle
-Set DefaultLineStyle = chartObj.DefaultLineStyle
-End Property
-
-Public Property Let DefaultLineStyle( _
-                ByVal value As linestyle)
-chartObj.DefaultLineStyle = value
-End Property
-
-Public Property Get DefaultRegionStyle() As ChartRegionStyle
-Set DefaultRegionStyle = chartObj.DefaultRegionStyle
-End Property
-
-Public Property Let DefaultRegionStyle( _
-                ByVal value As ChartRegionStyle)
-chartObj.DefaultRegionStyle = value
-End Property
-
-Public Property Get DefaultTextStyle() As TextStyle
-Set DefaultTextStyle = chartObj.DefaultTextStyle
-End Property
-
-Public Property Let DefaultTextStyle(ByVal value As TextStyle)
-chartObj.DefaultTextStyle = value
-End Property
-
-Public Property Get DefaultYAxisStyle() As ChartRegionStyle
-Set DefaultYAxisStyle = chartObj.DefaultYAxisStyle
-End Property
-
-Public Property Let DefaultYAxisStyle(ByVal value As ChartRegionStyle)
-chartObj.DefaultYAxisStyle = value
-End Property
-
 Public Property Get FirstVisiblePeriod() As Long
 FirstVisiblePeriod = chartObj.FirstVisiblePeriod
 End Property
@@ -361,8 +300,8 @@ Public Function AddChartRegion(ByVal percentheight As Double, _
 Set AddChartRegion = chartObj.AddChartRegion(percentheight, minimumPercentHeight, style, yAxisStyle, name)
 End Function
 
-Public Function addPeriod(ByVal timestamp As Date) As period
-Set addPeriod = chartObj.addPeriod(timestamp)
+Public Function addPeriod(ByVal Timestamp As Date) As period
+Set addPeriod = chartObj.addPeriod(Timestamp)
 End Function
 
 Public Sub ClearChart()
@@ -418,8 +357,8 @@ Public Function IsGridHidden() As Boolean
 IsGridHidden = chartObj.IsGridHidden
 End Function
 
-Public Function IsTimeInSession(ByVal timestamp As Date) As Boolean
-IsTimeInSession = chartObj.IsTimeInSession(timestamp)
+Public Function IsTimeInSession(ByVal Timestamp As Date) As Boolean
+IsTimeInSession = chartObj.IsTimeInSession(Timestamp)
 End Function
 
 Public Sub RemoveChartRegion( _
