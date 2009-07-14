@@ -5,6 +5,8 @@ Option Explicit
 ' Constants
 '================================================================================
 
+Public Const ProjectName                As String = "ChartSkil26"
+
 Public Const Pi As Double = 3.14159265358979
 
 Public Const MinusInfinityDouble As Double = -(2 - 2 ^ -52) * 2 ^ 1023
@@ -24,7 +26,7 @@ Public Const HitTestTolerancePixels As Long = 3
 Public Const TwipsPerCm As Double = 1440 / 2.54
 
 Public Const ToolbarCommandAutoScale As String = "autoscale"
-Public Const ToolbarCommandAutoScroll As String = "autoscroll"
+Public Const ToolbarCommandAutoscroll As String = "autoscroll"
 
 Public Const ToolbarCommandIncreaseSpacing As String = "increasespacing"
 Public Const ToolbarCommandReduceSpacing As String = "reducespacing"
@@ -52,6 +54,19 @@ Public Const ToolbarCommandThinnerBars As String = "thinnerbars"
 ' Enums
 '================================================================================
 
+Public Enum DataPointPropertyOverrideFlags
+    DataPointIsSetLineThickness = 1
+    DataPointIsSetColor = 2
+    DataPointIsSetUpColor = 4
+    DataPointIsSetDownColor = 8
+    DataPointIsSetLineStyle = &H10&
+    DataPointIsSetPointStyle = &H20&
+    DataPointIsSetDisplayMode = &H40&
+    DataPointIsSetHistBarWidth = &H80&
+    DataPointIsSetIncludeInAutoscale = &H100&
+    DataPointIsSetLayer = &H200&
+End Enum
+
 Public Enum LayerNumberRange
     MinLayer = 0
     MaxLayer = 255
@@ -64,8 +79,6 @@ End Enum
 '================================================================================
 ' Member variables
 '================================================================================
-
-Private mLogger As Logger
 
 Private mIsInDev As Boolean
 
@@ -80,190 +93,35 @@ Public Property Get gIsInDev() As Boolean
 gIsInDev = mIsInDev
 End Property
 
+Public Property Get gErrorLogger() As Logger
+Static lLogger As Logger
+If lLogger Is Nothing Then Set lLogger = GetLogger("error")
+Set gErrorLogger = lLogger
+End Property
+
 Public Property Get gLogger() As Logger
-If mLogger Is Nothing Then Set mLogger = GetLogger("chartskil.log")
-Set gLogger = mLogger
+Static lLogger As Logger
+If lLogger Is Nothing Then Set lLogger = GetLogger("chartskil.log")
+Set gLogger = lLogger
 End Property
 
 '================================================================================
 ' Methods
 '================================================================================
 
-Public Function gCalculateX( _
-                ByVal timestamp As Date, _
-                ByVal pController As ChartController, _
-                Optional ByVal forceNewPeriod As Boolean, _
-                Optional ByVal duplicateNumber As Long) As Double
-Dim lPeriod As period
-Dim periodEndtime As Date
-
-Select Case pController.BarTimePeriod.units
-Case TimePeriodNone, _
-        TimePeriodSecond, _
-        TimePeriodMinute, _
-        TimePeriodHour, _
-        TimePeriodDay, _
-        TimePeriodWeek, _
-        TimePeriodMonth, _
-        TimePeriodYear
-    
-    On Error Resume Next
-    Set lPeriod = pController.Periods.Item(timestamp)
-    On Error GoTo 0
-    
-    If lPeriod Is Nothing Then
-        If pController.Periods.Count = 0 Then
-            Set lPeriod = pController.Periods.addPeriod(timestamp)
-        ElseIf timestamp < pController.Periods.Item(1).timestamp Then
-            Set lPeriod = pController.Periods.Item(1)
-            timestamp = lPeriod.timestamp
-        Else
-            Set lPeriod = pController.Periods.addPeriod(timestamp)
-        End If
-    End If
-    
-    periodEndtime = BarEndTime(lPeriod.timestamp, _
-                            pController.BarTimePeriod, _
-                            pController.SessionStartTime)
-    gCalculateX = lPeriod.PeriodNumber + (timestamp - lPeriod.timestamp) / (periodEndtime - lPeriod.timestamp)
-    
-Case TimePeriodVolume, TimePeriodTickVolume, TimePeriodTickMovement
-    If Not forceNewPeriod Then
-        On Error Resume Next
-        Set lPeriod = pController.Periods.itemDup(timestamp, duplicateNumber)
-        On Error GoTo 0
-        
-        If lPeriod Is Nothing Then
-            Set lPeriod = pController.Periods.addPeriod(timestamp, True)
-        End If
-        gCalculateX = lPeriod.PeriodNumber
-    Else
-        Set lPeriod = pController.Periods.addPeriod(timestamp, True)
-        gCalculateX = lPeriod.PeriodNumber
-    End If
-End Select
-
-End Function
-
 Public Function gCloneFont( _
-                ByVal aFont As StdFont) As StdFont
-Set gCloneFont = New StdFont
-With gCloneFont
-    .Bold = aFont.Bold
-    .Charset = aFont.Charset
-    .Italic = aFont.Italic
-    .name = aFont.name
-    .size = aFont.size
-    .Strikethrough = aFont.Strikethrough
-    .Underline = aFont.Underline
-    .Weight = aFont.Weight
-End With
-End Function
-
-Public Function gCreateBarStyle() As BarStyle
-Set gCreateBarStyle = New BarStyle
-With gCreateBarStyle
-    .includeInAutoscale = True
-    .tailThickness = 1
-    .outlineThickness = 1
-    '.upColor = &H1D9311
-    '.downColor = &H43FC2
-    .upColor = vbBlack
-    .downColor = vbBlack
-    .displayMode = BarDisplayModeBar
-    .solidUpBody = False
-    .barThickness = 2
-    .barWidth = 0.6
-    .barColor = -1
-End With
-End Function
-
-Public Function gCreateDataPointStyle() As DataPointStyle
-Set gCreateDataPointStyle = New DataPointStyle
-With gCreateDataPointStyle
-    .lineThickness = 1
-    .Color = vbBlack
-    .linestyle = LineStyles.LineSolid
-    .pointStyle = PointRound
-    .displayMode = DataPointDisplayModes.DataPointDisplayModeLine
-    .histBarWidth = 0.6
-    .includeInAutoscale = True
-    .downColor = -1
-    .upColor = -1
-End With
-End Function
-
-Public Function gCreateChartRegionStyle() As ChartRegionStyle
-Set gCreateChartRegionStyle = New ChartRegionStyle
-With gCreateChartRegionStyle
-    .Autoscale = True
-    .BackColor = vbWhite
-    .GridColor = &HC0C0C0
-    .GridlineSpacingY = GridlineSpacingCm
-    .GridTextColor = vbBlack
-    .HasGrid = True
-    .IntegerYScale = False
-    .HasGridText = False
-    '.pointerStyle = PointerStyles.PointerCrosshairs
-    .MinimumHeight = 0
-    .YScaleQuantum = 0
-End With
-End Function
-
-Public Function gCreateLineStyle() As linestyle
-Set gCreateLineStyle = New linestyle
-With gCreateLineStyle
-    .Color = vbBlack
-    .thickness = 1
-    .linestyle = LineStyles.LineSolid
-    .extendBefore = False
-    .extendAfter = False
-    .arrowStartStyle = ArrowStyles.ArrowNone
-    .arrowStartLength = 10
-    .arrowStartWidth = 10
-    .arrowStartColor = vbBlack
-    .arrowStartFillColor = vbBlack
-    .arrowStartfillstyle = FillStyles.FillSolid
-    .arrowEndStyle = ArrowStyles.ArrowNone
-    .arrowEndLength = 10
-    .arrowEndWidth = 10
-    .arrowEndColor = vbBlack
-    .arrowEndFillColor = vbBlack
-    .arrowEndFillStyle = FillStyles.FillSolid
-    .fixedX = False
-    .fixedY = False
-    .includeInAutoscale = False
-    .extended = False
-End With
-End Function
-
-Public Function gCreateTextStyle() As TextStyle
+                ByVal pFont As StdFont) As StdFont
 Dim aFont As StdFont
-
 Set aFont = New StdFont
-aFont.Bold = False
-aFont.Italic = False
-aFont.name = "Arial"
-aFont.size = 8
-aFont.Strikethrough = False
-aFont.Underline = False
-
-Set gCreateTextStyle = New TextStyle
-With gCreateTextStyle
-    .font = aFont
-    .Color = vbBlack
-    .box = False
-    .boxColor = vbBlack
-    .boxStyle = LineStyles.LineSolid
-    .boxThickness = 1
-    .boxFillColor = vbWhite
-    .boxFillStyle = FillStyles.FillSolid
-    .align = TextAlignModes.AlignBottomRight
-    .includeInAutoscale = False
-    .extended = False
-    .paddingX = 1#
-    .paddingY = 0.5
-End With
+aFont.Bold = pFont.Bold
+aFont.Charset = pFont.Charset
+aFont.Italic = pFont.Italic
+aFont.Name = pFont.Name
+aFont.size = pFont.size
+aFont.Strikethrough = pFont.Strikethrough
+aFont.Underline = pFont.Underline
+aFont.Weight = pFont.Weight
+Set gCloneFont = aFont
 End Function
 
 Public Function gIsValidColor( _

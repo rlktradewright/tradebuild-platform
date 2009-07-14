@@ -63,24 +63,24 @@ Friend Property Let Canvas(ByVal value As Canvas)
 Set mCanvas = value
 End Property
 
-Public Property Get isAssigned() As Boolean
-isAssigned = (mXAssigned And mYAssigned)
+Public Property Get IsAssigned() As Boolean
+IsAssigned = (mXAssigned And mYAssigned)
 End Property
 
-Friend Property Get isAssignedX() As Boolean
-isAssignedX = mXAssigned
+Friend Property Get IsAssignedX() As Boolean
+IsAssignedX = mXAssigned
 End Property
 
-Friend Property Get isAssignedY() As Boolean
-isAssignedY = mYAssigned
+Friend Property Get IsAssignedY() As Boolean
+IsAssignedY = mYAssigned
 End Property
 
-Friend Property Get isCoordinateSystemAssignedX() As Boolean
-isCoordinateSystemAssignedX = mCoordSystemXAssigned
+Friend Property Get IsCoordinateSystemAssignedX() As Boolean
+IsCoordinateSystemAssignedX = mCoordSystemXAssigned
 End Property
 
-Friend Property Get isCoordinateSystemAssignedY() As Boolean
-isCoordinateSystemAssignedY = mCoordSystemYAssigned
+Friend Property Get IsCoordinateSystemAssignedY() As Boolean
+IsCoordinateSystemAssignedY = mCoordSystemYAssigned
 End Property
 
 Public Property Get CoordinateSystemX() As CoordinateSystems
@@ -99,35 +99,35 @@ If mCoordSystemX = value Then Exit Property
 Select Case mCoordSystemX
 Case CoordsLogical
     If value = CoordsCounterDistance Then
-        mX = mCanvas.convertLogicalToCounterDistanceX(mX)
+        mX = mCanvas.ConvertLogicalToCounterDistanceX(mX)
     ElseIf value = CoordsDistance Then
-        mX = mCanvas.convertLogicalToDistanceX(mX)
+        mX = mCanvas.ConvertLogicalToDistanceX(mX)
     ElseIf value = CoordsRelative Then
-        mX = mCanvas.convertLogicalToRelativeX(mX)
+        mX = mCanvas.ConvertLogicalToRelativeX(mX)
     End If
 Case CoordsRelative
     If value = CoordsLogical Then
         mX = XLogical
     ElseIf value = CoordsCounterDistance Then
-        mX = mCanvas.convertRelativeToCounterDistanceX(mX)
+        mX = mCanvas.ConvertRelativeToCounterDistanceX(mX)
     ElseIf value = CoordsDistance Then
-        mX = mCanvas.convertRelativeToDistanceX(mX)
+        mX = mCanvas.ConvertRelativeToDistanceX(mX)
     End If
 Case CoordsDistance
     If value = CoordsLogical Then
         mX = XLogical
     ElseIf value = CoordsCounterDistance Then
-        mX = mCanvas.convertDistanceToCounterDistanceX(mX)
+        mX = mCanvas.ConvertDistanceToCounterDistanceX(mX)
     ElseIf value = CoordsRelative Then
-        mX = mCanvas.convertDistanceToRelativeX(mX)
+        mX = mCanvas.ConvertDistanceToRelativeX(mX)
     End If
 Case CoordsCounterDistance
     If value = CoordsLogical Then
         mX = XLogical
     ElseIf value = CoordsDistance Then
-        mX = mCanvas.convertCounterDistanceToDistanceX(mX)
+        mX = mCanvas.ConvertCounterDistanceToDistanceX(mX)
     ElseIf value = CoordsRelative Then
-        mX = mCanvas.convertCounterDistanceToRelativeX(mX)
+        mX = mCanvas.ConvertCounterDistanceToRelativeX(mX)
     End If
 End Select
 mCoordSystemX = value
@@ -149,45 +149,45 @@ If mCoordSystemY = value Then Exit Property
 Select Case mCoordSystemY
 Case CoordsLogical
     If value = CoordsCounterDistance Then
-        mY = mCanvas.convertLogicalToCounterDistanceY(mY)
+        mY = mCanvas.ConvertLogicalToCounterDistanceY(mY)
     ElseIf value = CoordsDistance Then
-        mY = mCanvas.convertLogicalToDistanceY(mY)
+        mY = mCanvas.ConvertLogicalToDistanceY(mY)
     ElseIf value = CoordsRelative Then
-        mY = mCanvas.convertLogicalToRelativeY(mY)
+        mY = mCanvas.ConvertLogicalToRelativeY(mY)
     End If
 Case CoordsRelative
     If value = CoordsLogical Then
         mY = YLogical
     ElseIf value = CoordsCounterDistance Then
-        mY = mCanvas.convertRelativeToCounterDistanceY(mY)
+        mY = mCanvas.ConvertRelativeToCounterDistanceY(mY)
     ElseIf value = CoordsDistance Then
-        mY = mCanvas.convertRelativeToDistanceY(mY)
+        mY = mCanvas.ConvertRelativeToDistanceY(mY)
     End If
 Case CoordsDistance
     If value = CoordsLogical Then
         mY = YLogical
     ElseIf value = CoordsCounterDistance Then
-        mY = mCanvas.convertDistanceToCounterDistanceY(mY)
+        mY = mCanvas.ConvertDistanceToCounterDistanceY(mY)
     ElseIf value = CoordsRelative Then
-        mY = mCanvas.convertDistanceToRelativeY(mY)
+        mY = mCanvas.ConvertDistanceToRelativeY(mY)
     End If
 Case CoordsCounterDistance
     If value = CoordsLogical Then
         mY = YLogical
     ElseIf value = CoordsDistance Then
-        mY = mCanvas.convertCounterDistanceToDistanceY(mY)
+        mY = mCanvas.ConvertCounterDistanceToDistanceY(mY)
     ElseIf value = CoordsRelative Then
-        mY = mCanvas.convertCounterDistanceToRelativeY(mY)
+        mY = mCanvas.ConvertCounterDistanceToRelativeY(mY)
     End If
 End Select
 mCoordSystemY = value
 End Property
 
-Public Property Get x() As Double
-x = mX
+Public Property Get X() As Double
+X = mX
 End Property
 
-Friend Property Let x(ByVal value As Double)
+Friend Property Let X(ByVal value As Double)
 mX = value
 mXAssigned = True
 End Property
@@ -197,19 +197,19 @@ Select Case mCoordSystemX
 Case CoordsLogical
     XLogical = mX
 Case CoordsRelative
-    XLogical = mCanvas.convertRelativeToLogicalX(mX)
+    XLogical = mCanvas.ConvertRelativeToLogicalX(mX)
 Case CoordsDistance
-    XLogical = mCanvas.convertDistanceToLogicalX(mX)
+    XLogical = mCanvas.ConvertDistanceToLogicalX(mX)
 Case CoordsCounterDistance
-    XLogical = mCanvas.convertCounterDistanceToLogicalY(mX)
+    XLogical = mCanvas.ConvertCounterDistanceToLogicalY(mX)
 End Select
 End Property
 
-Public Property Get y() As Double
-y = mY
+Public Property Get Y() As Double
+Y = mY
 End Property
 
-Friend Property Let y(ByVal value As Double)
+Friend Property Let Y(ByVal value As Double)
 mY = value
 mYAssigned = True
 End Property
@@ -219,11 +219,11 @@ Select Case mCoordSystemY
 Case CoordsLogical
     YLogical = mY
 Case CoordsRelative
-    YLogical = mCanvas.convertRelativeToLogicalY(mY)
+    YLogical = mCanvas.ConvertRelativeToLogicalY(mY)
 Case CoordsDistance
-    YLogical = mCanvas.convertDistanceToLogicalY(mY)
+    YLogical = mCanvas.ConvertDistanceToLogicalY(mY)
 Case CoordsCounterDistance
-    YLogical = mCanvas.convertCounterDistanceToLogicalY(mY)
+    YLogical = mCanvas.ConvertCounterDistanceToLogicalY(mY)
 End Select
 End Property
 
@@ -231,21 +231,21 @@ End Property
 ' Methods
 '================================================================================
 
-Public Function equals(ByVal aPoint As Point) As Boolean
+Public Function Equals(ByVal aPoint As Point) As Boolean
 If aPoint Is Nothing Then Exit Function
 If aPoint Is Me Then Exit Function
 With aPoint
     If Not .Canvas Is mCanvas Then Exit Function
-    If .isCoordinateSystemAssignedX <> mCoordSystemXAssigned Then Exit Function
-    If .isCoordinateSystemAssignedY <> mCoordSystemYAssigned Then Exit Function
+    If .IsCoordinateSystemAssignedX <> mCoordSystemXAssigned Then Exit Function
+    If .IsCoordinateSystemAssignedY <> mCoordSystemYAssigned Then Exit Function
     If .CoordinateSystemX <> mCoordSystemX Then Exit Function
     If .CoordinateSystemY <> mCoordSystemY Then Exit Function
-    If .isAssignedX <> mXAssigned Then Exit Function
-    If .isAssignedY <> mYAssigned Then Exit Function
-    If .x <> mX Then Exit Function
-    If .y <> mY Then Exit Function
+    If .IsAssignedX <> mXAssigned Then Exit Function
+    If .IsAssignedY <> mYAssigned Then Exit Function
+    If .X <> mX Then Exit Function
+    If .Y <> mY Then Exit Function
 End With
-equals = True
+Equals = True
 End Function
 
 '================================================================================

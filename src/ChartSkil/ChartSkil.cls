@@ -65,8 +65,8 @@ End Enum
 Public Enum CoordinateSystems
     CoordsLogical = 0
     CoordsRelative
-    CoordsDistance        ' Measured from left or bottom of region
-    CoordsCounterDistance ' Measured from right or top of region
+    CoordsDistance        ' Measured from Left or Bottom of region
+    CoordsCounterDistance ' Measured from Right or Top of region
 End Enum
 
 Public Enum DataPointDisplayModes
@@ -112,10 +112,10 @@ Public Enum LayerNumbers
     LayerGrid = MinLayer + 5
     LayerGridText = LayerGrid + 3
     LayerLowestUser = MinLayer + 10
-    LayerDefaultBars
-    LayerDefaultDataPoints
-    LayerDefaultLines
-    LayerDefaultTexts
+'    LayerDefaultBars
+'    LayerDefaultDataPoints
+'    LayerDefaultLines
+'    LayerDefaultTexts
     LayerHighestUser = MaxLayer - 10
     LayerTitle = MaxLayer - 5
     LayerPointer = MaxLayer - 2
@@ -217,10 +217,10 @@ Public Type TInterval
 End Type
 
 Public Type TRectangle
-    bottom          As Double
-    left            As Double
-    right           As Double
-    top             As Double
+    Bottom          As Double
+    Left            As Double
+    Right           As Double
+    Top             As Double
     isValid         As Boolean
 End Type
 
@@ -228,7 +228,6 @@ End Type
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "ChartSkil26"
 Private Const ModuleName                    As String = "ChartSkil"
 
 '@================================================================================
@@ -254,26 +253,6 @@ Private Const ModuleName                    As String = "ChartSkil"
 '@================================================================================
 ' Methods
 '@================================================================================
-
-Public Function CreateBarStyle() As BarStyle
-Set CreateBarStyle = gCreateBarStyle
-End Function
-
-Public Function CreateDataPointStyle() As DataPointStyle
-Set CreateDataPointStyle = gCreateDataPointStyle
-End Function
-
-Public Function CreateLineStyle() As linestyle
-Set CreateLineStyle = gCreateLineStyle
-End Function
-
-Public Function CreateChartRegionStyle() As ChartRegionStyle
-Set CreateChartRegionStyle = gCreateChartRegionStyle
-End Function
-
-Public Function CreateTextStyle() As TextStyle
-Set CreateTextStyle = gCreateTextStyle
-End Function
 
 '@================================================================================
 ' Helper Functions

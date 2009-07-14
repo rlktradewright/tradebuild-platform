@@ -58,8 +58,8 @@ End Property
 
 Friend Sub AddGraphicObject( _
                 ByVal graphObj As IGraphicObject, _
-                ByVal seriesId As Long)
-mRegion.GOSP_AddGraphicObject graphObj, seriesId
+                ByVal SeriesID As Long)
+mRegion.GOSP_AddGraphicObject graphObj, SeriesID
 End Sub
 
 Friend Sub ObjectChanged(ByVal Handle As Long, _
@@ -78,8 +78,8 @@ mRegion.GOSP_PaintRegion recalculate
 End Sub
 
 Friend Sub RecalcBoundary( _
-                ByVal seriesId As Long)
-mRegion.GOSP_RecalcBoundary seriesId
+                ByVal SeriesID As Long)
+mRegion.GOSP_RecalcBoundary SeriesID
 End Sub
 
 Friend Sub RemoveObject( _

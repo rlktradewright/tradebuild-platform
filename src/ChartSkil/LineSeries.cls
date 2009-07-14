@@ -27,20 +27,46 @@ Event Click()
 
 Event DblCLick()
 
-Event StyleChanged()
-
 Event SelectionStateChanged()
+
+'================================================================================
+' Enums
+'================================================================================
+
+Private Enum PropertyOverrideFlags
+    ColorIsSet = 1
+    ThicknessIsSet = 2
+    LineStyleIsSet = 4
+    ExtendBeforeIsSet = 8
+    ExtendAfterIsSet = &H10&
+    ArrowStartStyleIsSet = &H20&
+    ArrowStartLengthIsSet = &H40&
+    ArrowStartWidthIsSet = &H80&
+    ArrowStartColorIsSet = &H100&
+    ArrowStartFillColorIsSet = &H200&
+    ArrowStartFillStyleIsSet = &H400&
+    ArrowEndStyleIsSet = &H800&
+    ArrowEndLengthIsSet = &H1000&
+    ArrowEndWidthIsSet = &H2000&
+    ArrowEndColorIsSet = &H4000&
+    ArrowEndFillColorIsSet = &H8000&
+    ArrowEndFillStyleIsSet = &H10000
+End Enum
 
 '================================================================================
 ' Types
 '================================================================================
 
 '================================================================================
-' Member variables and constants
+' Constants
 '================================================================================
 
-Private Const ProjectName                As String = "ChartSkil26"
+
 Private Const ModuleName                As String = "LineSeries"
+
+'================================================================================
+' Member variables
+'================================================================================
 
 Private mName As String
 Private mSeriesID As Long
@@ -58,12 +84,34 @@ Private mLayer As Long
 
 Private mGOSP As GraphObjServiceProvider
 
-Private mStyle As linestyle
-Private mInhibitChangeEvent As Boolean
+Private WithEvents mStyle As LineStyle
+Attribute mStyle.VB_VarHelpID = -1
 
-'================================================================================
-' Enums
-'================================================================================
+Private mFixedX As Boolean
+Private mFixedY As Boolean
+Private mIncludeInAutoscale As Boolean
+Private mExtended As Boolean
+
+' these fields override corresponding items in the Style
+Private mColor As Long
+Private mThickness As Long
+Private mLineStyle As LineStyles
+Private mExtendBefore As Boolean
+Private mExtendAfter As Boolean
+Private mArrowStartStyle As ArrowStyles
+Private mArrowStartLength As Long
+Private mArrowStartWidth As Long
+Private mArrowStartColor As Long
+Private mArrowStartFillColor As Long
+Private mArrowStartfillStyle As FillStyles
+Private mArrowEndStyle As ArrowStyles
+Private mArrowEndLength As Long
+Private mArrowEndWidth As Long
+Private mArrowEndColor As Long
+Private mArrowEndFillColor As Long
+Private mArrowEndFillStyle As FillStyles
+
+Private mPropertyOverrideFlags As PropertyOverrideFlags
 
 '================================================================================
 ' Class Event Handlers
@@ -71,6 +119,8 @@ Private mInhibitChangeEvent As Boolean
 
 Private Sub Class_Initialize()
 Set mLines = New Collection
+Set mStyle = New LineStyle
+
 End Sub
 
 Private Sub Class_Terminate()
@@ -104,18 +154,17 @@ Set mCanvas = Nothing
 End Sub
 
 Private Sub IGraphicObjectSeries_Initialise( _
-                ByVal name As String, _
+                ByVal Name As String, _
                 ByVal Canvas As Canvas, _
                 ByVal Layer As LayerNumbers, _
-                ByVal controller As ChartController, _
-                ByVal seriesId As Long, _
+                ByVal pChart As Chart, _
+                ByVal SeriesID As Long, _
                 ByVal GOSP As GraphObjServiceProvider)
-mName = name
-mSeriesID = seriesId
+mName = Name
+mSeriesID = SeriesID
 Set mGOSP = GOSP
 mLayer = Layer
 Set mCanvas = Canvas
-If mStyle Is Nothing Then Set mStyle = controller.DefaultLineStyle.clone
 End Sub
 
 Private Property Get IGraphicObjectSeries_IsSelectable() As Boolean
@@ -126,8 +175,8 @@ Private Function IGraphicObjectSeries_item(ByVal index As Long) As IGraphicObjec
 Set IGraphicObjectSeries_item = mLines.Item(index)
 End Function
 
-Private Property Get IGraphicObjectSeries_name() As String
-IGraphicObjectSeries_name = mName
+Private Property Get IGraphicObjectSeries_Name() As String
+IGraphicObjectSeries_Name = mName
 End Property
 
 Public Sub IGraphicObjectSeries_Remove(ByVal index As Long)
@@ -159,329 +208,339 @@ IGraphicObjectSeries_SeriesID = mSeriesID
 End Property
 
 '================================================================================
-' xxxx Event Handlers
+' mStyle Event Handlers
 '================================================================================
+
+Private Sub mStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEvent)
+Dim failpoint As Long
+On Error GoTo Err
+
+Select Case UCase$(ev.PropertyName)
+Case UCase$("ArrowEndColor")
+    repaintRegion False
+Case UCase$("ArrowEndFillColor")
+    repaintRegion False
+Case UCase$("ArrowEndFillStyle")
+    repaintRegion False
+Case UCase$("ArrowEndLength")
+    repaintRegion True
+Case UCase$("ArrowEndStyle")
+    repaintRegion True
+Case UCase$("ArrowEndWidth")
+    repaintRegion True
+Case UCase$("ArrowStartColor")
+    repaintRegion False
+Case UCase$("ArrowStartFillColor")
+    repaintRegion False
+Case UCase$("ArrowStartfillStyle")
+    repaintRegion False
+Case UCase$("ArrowStartLength")
+    repaintRegion True
+Case UCase$("ArrowStartStyle")
+    repaintRegion True
+Case UCase$("ArrowStartWidth")
+    repaintRegion True
+Case UCase$("Color")
+    repaintRegion False
+Case UCase$("ExtendAfter")
+    repaintRegion True
+Case UCase$("ExtendBefore")
+    repaintRegion True
+Case UCase$("LineStyle")
+    repaintRegion False
+Case UCase$("Thickness")
+    repaintRegion True
+Case Else
+    Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
+            ProjectName & "." & ModuleName & ":" & "mStyle_PropertyChanged", _
+            "Unhandled property change"
+End Select
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "mStyle_PropertyChanged" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+Err.Raise errNumber, errSource, errDescription
+
+End Sub
 
 '================================================================================
 ' Properties
 '================================================================================
 
-Public Property Get arrowEndColor() As Long
-arrowEndColor = mStyle.arrowEndColor
+Public Property Get ArrowEndColor() As OLE_COLOR
+ArrowEndColor = mStyle.ArrowEndColor
+If isPropertyOverrideFlagSet(ArrowEndColorIsSet) Then ArrowEndColor = mArrowEndColor
 End Property
 
-Public Property Let arrowEndColor(ByVal value As Long)
-If mStyle.arrowEndColor = value Then Exit Property
-mStyle.arrowEndColor = value
-If mLines.Count <> 0 Then
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let ArrowEndColor(ByVal value As OLE_COLOR)
+If mArrowEndColor = value And isPropertyOverrideFlagSet(ArrowEndColorIsSet) Then Exit Property
+mArrowEndColor = value
+setPropertyOverrideFlag ArrowEndColorIsSet
+repaintRegion False
 End Property
 
-Public Property Get arrowEndFillColor() As Long
-arrowEndFillColor = mStyle.arrowEndFillColor
+Public Property Get ArrowEndFillColor() As OLE_COLOR
+ArrowEndFillColor = mStyle.ArrowEndFillColor
+If isPropertyOverrideFlagSet(ArrowEndFillColorIsSet) Then ArrowEndFillColor = mArrowEndFillColor
 End Property
 
-Public Property Let arrowEndFillColor(ByVal value As Long)
-If mStyle.arrowEndFillColor = value Then Exit Property
-mStyle.arrowEndFillColor = value
-If mLines.Count <> 0 Then
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let ArrowEndFillColor(ByVal value As OLE_COLOR)
+If mArrowEndFillColor = value And isPropertyOverrideFlagSet(ArrowEndFillColorIsSet) Then Exit Property
+mArrowEndFillColor = value
+setPropertyOverrideFlag ArrowEndFillColorIsSet
+repaintRegion False
 End Property
 
-Public Property Get arrowEndFillStyle() As FillStyles
-arrowEndFillStyle = mStyle.arrowEndFillStyle
+Public Property Get ArrowEndFillStyle() As FillStyles
+ArrowEndFillStyle = mStyle.ArrowEndFillStyle
+If isPropertyOverrideFlagSet(ArrowEndFillStyleIsSet) Then ArrowEndFillStyle = mArrowEndFillStyle
 End Property
 
-Public Property Let arrowEndFillStyle(ByVal value As FillStyles)
-If mStyle.arrowEndFillStyle = value Then Exit Property
-mStyle.arrowEndFillStyle = value
-If mLines.Count <> 0 Then
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let ArrowEndFillStyle(ByVal value As FillStyles)
+If mArrowEndFillStyle = value And isPropertyOverrideFlagSet(ArrowEndFillStyleIsSet) Then Exit Property
+mArrowEndFillStyle = value
+setPropertyOverrideFlag ArrowEndFillStyleIsSet
+repaintRegion False
 End Property
 
-Public Property Get arrowEndLength() As Long
-arrowEndLength = mStyle.arrowEndLength
+Public Property Get ArrowEndLength() As Long
+ArrowEndLength = mStyle.ArrowEndLength
+If isPropertyOverrideFlagSet(ArrowEndLengthIsSet) Then ArrowEndLength = mArrowEndLength
 End Property
 
-Public Property Let arrowEndLength(ByVal value As Long)
-If mStyle.arrowEndLength = value Then Exit Property
-mStyle.arrowEndLength = value
-If mLines.Count <> 0 Then
-    mGOSP.RecalcBoundary mSeriesID
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let ArrowEndLength(ByVal value As Long)
+If mArrowEndLength = value And isPropertyOverrideFlagSet(ArrowEndLengthIsSet) Then Exit Property
+mArrowEndLength = value
+setPropertyOverrideFlag ArrowEndLengthIsSet
+repaintRegion True
 End Property
 
-Public Property Get arrowEndStyle() As ArrowStyles
-arrowEndStyle = mStyle.arrowEndStyle
+Public Property Get ArrowEndStyle() As ArrowStyles
+ArrowEndStyle = mStyle.ArrowEndStyle
+If isPropertyOverrideFlagSet(ArrowEndStyleIsSet) Then ArrowEndStyle = mArrowEndStyle
 End Property
 
-Public Property Let arrowEndStyle(ByVal value As ArrowStyles)
-If mStyle.arrowEndStyle = value Then Exit Property
-mStyle.arrowEndStyle = value
-If mLines.Count <> 0 Then
-    mGOSP.RecalcBoundary mSeriesID
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let ArrowEndStyle(ByVal value As ArrowStyles)
+If mArrowEndStyle = value And isPropertyOverrideFlagSet(ArrowEndStyleIsSet) Then Exit Property
+mArrowEndStyle = value
+setPropertyOverrideFlag ArrowEndStyleIsSet
+repaintRegion True
 End Property
 
-Public Property Get arrowEndWidth() As Long
-arrowEndWidth = mStyle.arrowEndWidth
+Public Property Get ArrowEndWidth() As Long
+ArrowEndWidth = mStyle.ArrowEndWidth
+If isPropertyOverrideFlagSet(ArrowEndWidthIsSet) Then ArrowEndWidth = mArrowEndWidth
 End Property
 
-Public Property Let arrowEndWidth(ByVal value As Long)
-If mStyle.arrowEndWidth = value Then Exit Property
-mStyle.arrowEndWidth = value
-If mLines.Count <> 0 Then
-    mGOSP.RecalcBoundary mSeriesID
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let ArrowEndWidth(ByVal value As Long)
+If mArrowEndWidth = value And isPropertyOverrideFlagSet(ArrowEndWidthIsSet) Then Exit Property
+mArrowEndWidth = value
+setPropertyOverrideFlag ArrowEndWidthIsSet
+repaintRegion True
 End Property
 
-Public Property Get arrowStartColor() As Long
-arrowStartColor = mStyle.arrowStartColor
+Public Property Get ArrowStartColor() As OLE_COLOR
+ArrowStartColor = mStyle.ArrowStartColor
+If isPropertyOverrideFlagSet(ArrowStartColorIsSet) Then ArrowStartColor = mArrowStartColor
 End Property
 
-Public Property Let arrowStartColor(ByVal value As Long)
-If mStyle.arrowStartColor = value Then Exit Property
-mStyle.arrowStartColor = value
-If mLines.Count <> 0 Then
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let ArrowStartColor(ByVal value As OLE_COLOR)
+If mArrowStartColor = value And isPropertyOverrideFlagSet(ArrowStartColorIsSet) Then Exit Property
+mArrowStartColor = value
+setPropertyOverrideFlag ArrowStartColorIsSet
+repaintRegion False
 End Property
 
-Public Property Get arrowStartFillColor() As Long
-arrowStartFillColor = mStyle.arrowStartFillColor
+Public Property Get ArrowStartFillColor() As OLE_COLOR
+ArrowStartFillColor = mStyle.ArrowStartFillColor
+If isPropertyOverrideFlagSet(ArrowStartFillColorIsSet) Then ArrowStartFillColor = mArrowStartFillColor
 End Property
 
-Public Property Let arrowStartFillColor(ByVal value As Long)
-If mStyle.arrowStartFillColor = value Then Exit Property
-mStyle.arrowStartFillColor = value
-If mLines.Count <> 0 Then
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let ArrowStartFillColor(ByVal value As OLE_COLOR)
+If mArrowStartFillColor = value And isPropertyOverrideFlagSet(ArrowStartFillColorIsSet) Then Exit Property
+mArrowStartFillColor = value
+setPropertyOverrideFlag ArrowStartFillColorIsSet
+repaintRegion False
 End Property
 
-Public Property Get arrowStartfillstyle() As FillStyles
-arrowStartfillstyle = arrowStartfillstyle
+Public Property Get ArrowStartFillStyle() As FillStyles
+ArrowStartFillStyle = mStyle.ArrowStartFillStyle
+If isPropertyOverrideFlagSet(ArrowStartFillStyleIsSet) Then ArrowStartFillStyle = mArrowStartfillStyle
 End Property
 
-Public Property Let arrowStartfillstyle(ByVal value As FillStyles)
-If mStyle.arrowStartfillstyle = value Then Exit Property
-mStyle.arrowStartfillstyle = value
-If mLines.Count <> 0 Then
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let ArrowStartFillStyle(ByVal value As FillStyles)
+If mArrowStartfillStyle = value And isPropertyOverrideFlagSet(ArrowStartFillStyleIsSet) Then Exit Property
+mArrowStartfillStyle = value
+setPropertyOverrideFlag ArrowStartFillStyleIsSet
+repaintRegion False
 End Property
 
-Public Property Get arrowStartLength() As Long
-arrowStartLength = mStyle.arrowStartLength
+Public Property Get ArrowStartLength() As Long
+ArrowStartLength = mStyle.ArrowStartLength
+If isPropertyOverrideFlagSet(ArrowStartLengthIsSet) Then ArrowStartLength = mArrowStartLength
 End Property
 
-Public Property Let arrowStartLength(ByVal value As Long)
-If mStyle.arrowStartLength = value Then Exit Property
-mStyle.arrowStartLength = value
-If mLines.Count <> 0 Then
-    mGOSP.RecalcBoundary mSeriesID
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let ArrowStartLength(ByVal value As Long)
+If mArrowStartLength = value And isPropertyOverrideFlagSet(ArrowStartLengthIsSet) Then Exit Property
+mArrowStartLength = value
+setPropertyOverrideFlag ArrowStartLengthIsSet
+repaintRegion True
 End Property
 
-Public Property Get arrowStartStyle() As ArrowStyles
-arrowStartStyle = mStyle.arrowStartStyle
+Public Property Get ArrowStartStyle() As ArrowStyles
+ArrowStartStyle = mStyle.ArrowStartStyle
+If isPropertyOverrideFlagSet(ArrowStartStyleIsSet) Then ArrowStartStyle = mArrowStartStyle
 End Property
 
-Public Property Let arrowStartStyle(ByVal value As ArrowStyles)
-If mStyle.arrowStartStyle = value Then Exit Property
-mStyle.arrowStartStyle = value
-If mLines.Count <> 0 Then
-    mGOSP.RecalcBoundary mSeriesID
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let ArrowStartStyle(ByVal value As ArrowStyles)
+If mArrowStartStyle = value And isPropertyOverrideFlagSet(ArrowStartStyleIsSet) Then Exit Property
+mArrowStartStyle = value
+setPropertyOverrideFlag ArrowStartStyleIsSet
+repaintRegion True
 End Property
 
-Public Property Get arrowStartWidth() As Long
-arrowStartWidth = mStyle.arrowStartWidth
+Public Property Get ArrowStartWidth() As Long
+ArrowStartWidth = mStyle.ArrowStartWidth
+If isPropertyOverrideFlagSet(ArrowStartWidthIsSet) Then ArrowStartWidth = mArrowStartWidth
 End Property
 
-Public Property Let arrowStartWidth(ByVal value As Long)
-If mStyle.arrowStartWidth = value Then Exit Property
-mStyle.arrowStartWidth = value
-If mLines.Count <> 0 Then
-    mGOSP.RecalcBoundary mSeriesID
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let ArrowStartWidth(ByVal value As Long)
+If mArrowStartWidth = value And isPropertyOverrideFlagSet(ArrowStartWidthIsSet) Then Exit Property
+mArrowStartWidth = value
+setPropertyOverrideFlag ArrowStartWidthIsSet
+repaintRegion True
 End Property
 
 Friend Property Let Canvas(ByVal value As Canvas)
 Set mCanvas = value
 End Property
 
-Public Property Get Color() As Long
+Public Property Get Color() As OLE_COLOR
 Color = mStyle.Color
+If isPropertyOverrideFlagSet(ColorIsSet) Then Color = mColor
 End Property
 
-Public Property Let Color(ByVal value As Long)
-If mStyle.Color = value Then Exit Property
-mStyle.Color = value
-If mLines.Count <> 0 Then
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let Color(ByVal value As OLE_COLOR)
+If mColor = value And isPropertyOverrideFlagSet(ColorIsSet) Then Exit Property
+mColor = value
+setPropertyOverrideFlag ColorIsSet
+repaintRegion False
 End Property
 
 Public Property Get Count() As Long
 Count = mLines.Count
 End Property
 
-Friend Property Get extended() As Boolean
-extended = mStyle.extended
+Public Property Get Extended() As Boolean
+Extended = mExtended
 End Property
 
-Public Property Let extended(ByVal value As Boolean)
-If mStyle.extended = value Then Exit Property
-mStyle.extended = value
-If mLines.Count <> 0 Then
-    mGOSP.RecalcBoundary mSeriesID
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let Extended(ByVal value As Boolean)
+If mExtended = value Then Exit Property
+mExtended = value
+repaintRegion True
 End Property
 
-Public Property Get extendAfter() As Boolean
-extendAfter = mStyle.extendAfter
+Public Property Get ExtendAfter() As Boolean
+ExtendAfter = mStyle.ExtendAfter
+If isPropertyOverrideFlagSet(ExtendAfterIsSet) Then ExtendAfter = mExtendAfter
 End Property
 
-Public Property Let extendAfter(ByVal value As Boolean)
-If mStyle.extendAfter = value Then Exit Property
-mStyle.extendAfter = value
-If mLines.Count <> 0 Then
-    mGOSP.RecalcBoundary mSeriesID
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let ExtendAfter(ByVal value As Boolean)
+If mExtendAfter = value And isPropertyOverrideFlagSet(ExtendAfterIsSet) Then Exit Property
+mExtendAfter = value
+setPropertyOverrideFlag ExtendAfterIsSet
+repaintRegion True
 End Property
 
-Public Property Get extendBefore() As Boolean
-extendBefore = mStyle.extendBefore
+Public Property Get ExtendBefore() As Boolean
+ExtendBefore = mStyle.ExtendBefore
+If isPropertyOverrideFlagSet(ExtendBeforeIsSet) Then ExtendBefore = mExtendBefore
 End Property
 
-Public Property Let extendBefore(ByVal value As Boolean)
-If mStyle.extendBefore = value Then Exit Property
-mStyle.extendBefore = value
-If mLines.Count <> 0 Then
-    mGOSP.RecalcBoundary mSeriesID
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let ExtendBefore(ByVal value As Boolean)
+If mExtendBefore = value And isPropertyOverrideFlagSet(ExtendBeforeIsSet) Then Exit Property
+mExtendBefore = value
+setPropertyOverrideFlag ExtendBeforeIsSet
+repaintRegion True
 End Property
 
-Friend Property Get fixedX() As Boolean
-fixedX = mStyle.fixedX
+Public Property Get FixedX() As Boolean
+FixedX = mFixedX
 End Property
 
-Public Property Let fixedX(ByVal value As Boolean)
-If mStyle.fixedX = value Then Exit Property
-mStyle.fixedX = value
-If mLines.Count <> 0 Then
-    mGOSP.RecalcBoundary mSeriesID
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let FixedX(ByVal value As Boolean)
+If mFixedX = value Then Exit Property
+mFixedX = value
+repaintRegion True
 End Property
 
-Friend Property Get fixedY() As Boolean
-fixedY = mStyle.fixedY
+Public Property Get FixedY() As Boolean
+FixedY = mFixedY
 End Property
 
-Public Property Let fixedY(ByVal value As Boolean)
-If mStyle.fixedY = value Then Exit Property
-mStyle.fixedY = value
-If mLines.Count <> 0 Then
-    mGOSP.RecalcBoundary mSeriesID
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let FixedY(ByVal value As Boolean)
+If mFixedY = value Then Exit Property
+mFixedY = value
+repaintRegion True
 End Property
 
-Public Property Get includeInAutoscale() As Boolean
-includeInAutoscale = mStyle.includeInAutoscale
+Friend Property Get Id() As Long
+Id = mSeriesID
 End Property
 
-Public Property Let includeInAutoscale(ByVal value As Boolean)
-If mStyle.includeInAutoscale = value Then Exit Property
-mStyle.includeInAutoscale = value
-If mLines.Count <> 0 Then
-    mGOSP.RecalcBoundary mSeriesID
-    mGOSP.PaintRegion True
-End If
-fireStyleChanged
+Public Property Get IncludeInAutoscale() As Boolean
+IncludeInAutoscale = mIncludeInAutoscale
 End Property
 
-Public Property Let isSelectable(ByVal value As Boolean)
+Public Property Let IncludeInAutoscale(ByVal value As Boolean)
+If mIncludeInAutoscale = value Then Exit Property
+mIncludeInAutoscale = value
+repaintRegion True
+End Property
+
+Public Property Let IsSelectable(ByVal value As Boolean)
 mIsSelectable = value
 End Property
 
-Public Property Get isSelectable() As Boolean
-isSelectable = mIsSelectable
+Public Property Get IsSelectable() As Boolean
+IsSelectable = mIsSelectable
 End Property
 
 Public Property Get IsSelected() As Boolean
 IsSelected = mIsSelected
 End Property
 
-'Public Property Get keepInView() As Boolean
-'keepInView = mStyle.KeepInView
-'End Property
-
-'Public Property Let keepInView(ByVal value As Boolean)
-'If mStyle.KeepInView = value Then Exit Property
-'undraw
-'mStyle.KeepInView = value
-'update
-'End Property
-
-Public Property Let Layer(ByVal value As Long)
+Public Property Let Layer(ByVal value As LayerNumbers)
 mLayer = value
+repaintRegion False
 End Property
 
-Public Property Get Layer() As Long
+Public Property Get Layer() As LayerNumbers
 Layer = mLayer
 End Property
 
-Public Property Get linestyle() As LineStyles
-linestyle = mStyle.linestyle
+Public Property Get LineStyle() As LineStyles
+LineStyle = mStyle.LineStyle
+If isPropertyOverrideFlagSet(LineStyleIsSet) Then LineStyle = mLineStyle
 End Property
 
-Public Property Let linestyle(ByVal value As LineStyles)
-If mStyle.linestyle = value Then Exit Property
-mStyle.linestyle = value
-If mLines.Count <> 0 Then
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let LineStyle(ByVal value As LineStyles)
+If mLineStyle = value And isPropertyOverrideFlagSet(LineStyleIsSet) Then Exit Property
+mLineStyle = value
+setPropertyOverrideFlag LineStyleIsSet
+repaintRegion False
 End Property
 
-Public Property Get style() As linestyle
-Set style = mStyle.clone
+Public Property Get Style() As LineStyle
+Set Style = mStyle
 End Property
 
-Public Property Let style(ByVal value As linestyle)
+Public Property Let Style(ByVal value As LineStyle)
 Dim somethingChanged As Boolean
 Dim recalcBoundaries As Boolean
 Dim recalcRegion As Boolean
@@ -491,172 +550,63 @@ On Error GoTo Err
 
 If value Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "style", _
+            ProjectName & "." & ModuleName & ":" & "Style", _
             "Style is null reference"
 End If
 
-mInhibitChangeEvent = True
-
-If value.arrowEndColor <> mStyle.arrowEndColor Then
-    mStyle.arrowEndColor = value.arrowEndColor
-    somethingChanged = True
-End If
-If value.arrowEndFillColor <> mStyle.arrowEndFillColor Then
-    mStyle.arrowEndFillColor = value.arrowEndFillColor
-    somethingChanged = True
-End If
-If value.arrowEndFillStyle <> mStyle.arrowEndFillStyle Then
-    mStyle.arrowEndFillStyle = value.arrowEndFillStyle
-    somethingChanged = True
-End If
-If value.arrowEndLength <> mStyle.arrowEndLength Then
-    mStyle.arrowEndLength = value.arrowEndLength
-    somethingChanged = True
-    recalcBoundaries = True
-End If
-If value.arrowEndStyle <> mStyle.arrowEndStyle Then
-    mStyle.arrowEndStyle = value.arrowEndStyle
-    somethingChanged = True
-End If
-If value.arrowEndWidth <> mStyle.arrowEndWidth Then
-    mStyle.arrowEndWidth = value.arrowEndWidth
-    somethingChanged = True
-    recalcBoundaries = True
-End If
-If value.arrowStartColor <> mStyle.arrowStartColor Then
-    mStyle.arrowStartColor = value.arrowStartColor
-    somethingChanged = True
-End If
-If value.arrowStartFillColor <> mStyle.arrowStartFillColor Then
-    mStyle.arrowStartFillColor = value.arrowStartFillColor
-    somethingChanged = True
-End If
-If value.arrowStartfillstyle <> mStyle.arrowStartfillstyle Then
-    mStyle.arrowStartfillstyle = value.arrowStartfillstyle
-    somethingChanged = True
-End If
-If value.arrowStartLength <> mStyle.arrowStartLength Then
-    mStyle.arrowStartLength = value.arrowStartLength
-    somethingChanged = True
-    recalcBoundaries = True
-End If
-If value.arrowStartStyle <> mStyle.arrowStartStyle Then
-    mStyle.arrowStartStyle = value.arrowStartStyle
-    somethingChanged = True
-End If
-If value.arrowStartWidth <> mStyle.arrowStartWidth Then
-    mStyle.arrowStartWidth = value.arrowStartWidth
-    somethingChanged = True
-    recalcBoundaries = True
-End If
-If value.Color <> mStyle.Color Then
-    mStyle.Color = value.Color
-    somethingChanged = True
-End If
-If value.extendAfter <> mStyle.extendAfter Then
-    mStyle.extendAfter = value.extendAfter
-    somethingChanged = True
-    recalcBoundaries = True
-End If
-If value.extendBefore <> mStyle.extendBefore Then
-    mStyle.extendBefore = value.extendBefore
-    somethingChanged = True
-    recalcBoundaries = True
-End If
-If value.extended <> mStyle.extended Then
-    mStyle.extended = value.extended
-    somethingChanged = True
-    recalcBoundaries = True
-End If
-If value.fixedX <> mStyle.fixedX Then
-    mStyle.fixedX = value.fixedX
-    somethingChanged = True
-    recalcBoundaries = True
-End If
-If value.fixedY <> mStyle.fixedY Then
-    mStyle.fixedY = value.fixedY
-    somethingChanged = True
-    recalcBoundaries = True
-End If
-If value.includeInAutoscale <> mStyle.includeInAutoscale Then
-    mStyle.includeInAutoscale = value.includeInAutoscale
-    somethingChanged = True
-    recalcBoundaries = True
-    recalcRegion = True
-End If
-If value.linestyle <> mStyle.linestyle Then
-    mStyle.linestyle = value.linestyle
-    somethingChanged = True
-End If
-If value.thickness <> mStyle.thickness Then
-    mStyle.thickness = value.thickness
-    somethingChanged = True
-    recalcBoundaries = True
-End If
-
-mInhibitChangeEvent = False
-
-If somethingChanged Then
-    If recalcBoundaries Then If mLines.Count <> 0 Then mGOSP.RecalcBoundary mSeriesID
-    If mLines.Count <> 0 Then mGOSP.PaintRegion recalcRegion
-    fireStyleChanged
-End If
+Set mStyle = value
+repaintRegion True
 
 Exit Property
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "style" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "Style" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Property
 
-Public Property Get thickness() As Long
-thickness = mStyle.thickness
+Public Property Get Thickness() As Long
+Thickness = mStyle.Thickness
+If isPropertyOverrideFlagSet(ThicknessIsSet) Then Thickness = mThickness
 End Property
 
-Public Property Let thickness(ByVal value As Long)
-If mStyle.thickness = value Then Exit Property
-mStyle.thickness = value
-If mLines.Count <> 0 Then
-    mGOSP.RecalcBoundary mSeriesID
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let Thickness(ByVal value As Long)
+If mThickness = value And isPropertyOverrideFlagSet(ThicknessIsSet) Then Exit Property
+mThickness = value
+setPropertyOverrideFlag ThicknessIsSet
+repaintRegion True
 End Property
 
 '================================================================================
 ' Methods
 '================================================================================
 
-Public Function add( _
+Public Function Add( _
                 Optional ByVal Key As String, _
-                Optional ByVal LocalStyle As linestyle, _
-                Optional ByVal isSelectable As Boolean) As ChartSkil26.Line
+                Optional ByVal LocalStyle As LineStyle) As ChartSkil26.Line
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                            "ChartSkil26.LineSeries::add", _
+                            "ChartSkil26.LineSeries::Add", _
                             "Line series is finished"
-Set add = New ChartSkil26.Line
+Set Add = New ChartSkil26.Line
 If Key = "" Then
     Key = GenerateGUIDString
 End If
-add.initialise mSeriesID, Key, mGOSP, mLayer, mCanvas, mStyle, LocalStyle, isSelectable
+Add.Initialise Me, Key, mGOSP, mCanvas, LocalStyle
 
-mLines.add add, Key
-mGOSP.AddGraphicObject add, mSeriesID
+mLines.Add Add, Key
+mGOSP.AddGraphicObject Add, mSeriesID
 End Function
+
+Public Sub ClearOverrides()
+mPropertyOverrideFlags = 0
+repaintRegion True
+End Sub
 
 Friend Sub Finish()
 mFinished = True
 Set mCanvas = Nothing
-End Sub
-
-Friend Sub initialise( _
-                ByVal name As String, _
-                ByVal style As linestyle)
-mName = name
-Set mStyle = style.clone    ' style cannot be shared between LineSeries
 End Sub
 
 Public Function Item(ByVal index As Variant) As ChartSkil26.Line
@@ -683,8 +633,32 @@ End Sub
 ' Helper Functions
 '================================================================================
 
-Private Sub fireStyleChanged()
-If Not mInhibitChangeEvent Then RaiseEvent StyleChanged
+Private Sub clearPropertyOverrideFlag( _
+                ByVal flag As PropertyOverrideFlags)
+mPropertyOverrideFlags = gClearFlag(mPropertyOverrideFlags, flag)
 End Sub
+
+Private Function isPropertyOverrideFlagSet( _
+                ByVal flag As PropertyOverrideFlags) As Boolean
+isPropertyOverrideFlagSet = gIsFlagSet(mPropertyOverrideFlags, flag)
+End Function
+
+Private Sub repaintRegion( _
+                ByVal recalcBoundaries As Boolean)
+If mLines.Count <> 0 Then
+    If recalcBoundaries Then
+        mGOSP.RecalcBoundary mSeriesID
+        mGOSP.PaintRegion True
+    Else
+        mGOSP.PaintRegion False
+    End If
+End If
+End Sub
+
+Private Sub setPropertyOverrideFlag( _
+                ByVal flag As PropertyOverrideFlags)
+mPropertyOverrideFlags = gSetFlag(mPropertyOverrideFlags, flag)
+End Sub
+
 
 

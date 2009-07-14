@@ -8,7 +8,7 @@ BEGIN
 END
 Attribute VB_Name = "ChartRegionStyle"
 Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
+Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = True
 Option Explicit
@@ -29,12 +29,30 @@ Option Explicit
 ' Events
 '@================================================================================
 
+Event PropertyChanged( _
+                ByRef ev As PropertyChangedEvent)
+                
 '@================================================================================
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                As String = "ChartSkil26"
+
 Private Const ModuleName                As String = "ChartRegionStyle"
+
+Private Const ConfigSectionGridlineStyle                As String = "GridlineStyle"
+Private Const ConfigSectionGridTextStyle                As String = "GridTextStyle"
+Private Const ConfigSectionYAxisTextStyle               As String = "YAxisTextStyle"
+Private Const ConfigSectionYCursorTextStyle             As String = "YCursorTextStyle"
+
+Private Const ConfigSettingHasGrid                      As String = "&HasGrid"
+Private Const ConfigSettingHasGridText                  As String = "&HasGridText"
+Private Const ConfigSettingAutoscaling                    As String = "&Autoscaling"
+Private Const ConfigSettingIntegerYScale                As String = "&IntegerYScale"
+Private Const ConfigSettingYScaleQuantum                As String = "&YScaleQuantum"
+Private Const ConfigSettingGridlineSpacingY             As String = "&GridlineSpacingY"
+Private Const ConfigSettingMinimumHeight                As String = "&MinimumHeight"
+Private Const ConfigSettingCursorSnapsToTickBoundaries   As String = "&CursorSnapsToTickBoundaries"
+Private Const ConfigSettingBackGradientFillColors       As String = "&BackGradientFillColors"
 
 '@================================================================================
 ' Enums
@@ -48,41 +66,53 @@ Private Const ModuleName                As String = "ChartRegionStyle"
 ' Member variables
 '@================================================================================
 
-Private mGridColor As Long
-Private mGridTextColor  As Long
-'Private mPointerStyle As PointerStyles
+Private mConfig As ConfigurationSection
 
 ' indicates whether there is a grid, not whether it
-' is currently visible
+' is currently visible. Visibility is controlled through
+' the GridLineStyle's Thickness property.
 Private mHasGrid As Boolean
 Private mHasGridText As Boolean
 
-Private mAutoscale As Boolean
+Private mAutoscaling As Boolean
 Private mIntegerYScale As Boolean
 Private mYScaleQuantum As Double
 Private mGridlineSpacingY As Double
 Private mMinimumHeight As Double
-Private mSnapCursorToTickBoundaries As Boolean
+Private mCursorSnapsToTickBoundaries As Boolean
 
 Private mBackGradientFillColors() As Long
+
+Private WithEvents mGridLineStyle As LineStyle
+Attribute mGridLineStyle.VB_VarHelpID = -1
+Private WithEvents mGridTextStyle As TextStyle
+Attribute mGridTextStyle.VB_VarHelpID = -1
+Private WithEvents mYAxisTextStyle As TextStyle
+Attribute mYAxisTextStyle.VB_VarHelpID = -1
+Private WithEvents mYCursorTextStyle As TextStyle
+Attribute mYCursorTextStyle.VB_VarHelpID = -1
 
 '@================================================================================
 ' Class Event Handlers
 '@================================================================================
 
 Private Sub Class_Initialize()
-mGridColor = vbBlack
-mGridTextColor = vbBlack
-mHasGrid = False
+setInitialGridLineStyle
+setInitialGridTextStyle
+setInitialYAxisTextStyle
+setInitialYCursorTextStyle
+
+mHasGrid = True
 mHasGridText = False
-mAutoscale = False
+mAutoscaling = True
 mIntegerYScale = False
 mYScaleQuantum = 1
-mGridlineSpacingY = 1
-mMinimumHeight = 1
-mSnapCursorToTickBoundaries = False
-ReDim mBackGradientFillColors(0) As Long
-mBackGradientFillColors(0) = vbBlack
+mGridlineSpacingY = 1.8
+mMinimumHeight = 0
+mCursorSnapsToTickBoundaries = True
+ReDim mBackGradientFillColors(1) As Long
+mBackGradientFillColors(0) = &H82DFE6    ' RGB(230, 223, 130)
+mBackGradientFillColors(1) = &HEBFAFB    ' RGB(251, 250, 235)
 End Sub
 
 '@================================================================================
@@ -90,28 +120,59 @@ End Sub
 '@================================================================================
 
 '@================================================================================
-' XXXX Event Handlers
+' mGridLineStyle Event Handlers
 '@================================================================================
 
+Private Sub mGridLineStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEvent)
+firePropertyChanged "GridLineStyle"
+End Sub
+
+'@================================================================================
+' mGridTextStyle Event Handlers
+'@================================================================================
+
+Private Sub mGridTextStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEvent)
+firePropertyChanged "GridTextStyle"
+End Sub
+
+'@================================================================================
+' mYAxisTextStyle Event Handlers
+'@================================================================================
+
+Private Sub mYAxisTextStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEvent)
+firePropertyChanged "YAxisTextStyle"
+End Sub
+
+'@================================================================================
+' mYCursorTextStyle Event Handlers
+'@================================================================================
+
+Private Sub mYCursorTextStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEvent)
+firePropertyChanged "YCursorTextStyle"
+End Sub
 '@================================================================================
 ' Properties
 '@================================================================================
 
-Public Property Get Autoscale() As Boolean
-Autoscale = mAutoscale
+Public Property Get Autoscaling() As Boolean
+Autoscaling = mAutoscaling
 End Property
 
-Public Property Let Autoscale(ByVal value As Boolean)
-mAutoscale = value
+Public Property Let Autoscaling(ByVal value As Boolean)
+mAutoscaling = value
+If Not mConfig Is Nothing Then mConfig.SetBooleanSetting ConfigSettingAutoscaling, mAutoscaling
+firePropertyChanged "Autoscaling"
 End Property
 
-Public Property Get BackColor() As Long
+Public Property Get BackColor() As OLE_COLOR
 BackColor = mBackGradientFillColors(0)
 End Property
 
-Public Property Let BackColor(ByVal value As Long)
+Public Property Let BackColor(ByVal value As OLE_COLOR)
 ReDim mBackGradientFillColors(0) As Long
 mBackGradientFillColors(0) = value
+If Not mConfig Is Nothing Then setBackGradientFillColorsConfig
+firePropertyChanged "BackColor"
 End Property
 
 Public Property Get BackGradientFillColors() As Long()
@@ -143,14 +204,37 @@ If numColors > 5 Then
 End If
 
 mBackGradientFillColors = value
+
+If Not mConfig Is Nothing Then setBackGradientFillColorsConfig
+
+firePropertyChanged "BackGradientFillColors"
 End Property
 
-Public Property Get GridColor() As Long
-GridColor = mGridColor
-End Property
+Public Property Let ConfigurationSection( _
+                ByVal value As ConfigurationSection)
 
-Public Property Let GridColor(ByVal val As Long)
-mGridColor = val
+If mConfig Is Nothing Then
+    RemoveFromConfig
+    Set mConfig = Nothing
+    Exit Property
+End If
+
+Set mConfig = value
+
+mGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionGridlineStyle)
+mGridTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionGridTextStyle)
+mYAxisTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionYAxisTextStyle)
+mYCursorTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionYCursorTextStyle)
+mConfig.SetSetting ConfigSettingHasGrid, mHasGrid
+mConfig.SetSetting ConfigSettingHasGridText, mHasGridText
+mConfig.SetSetting ConfigSettingAutoscaling, mAutoscaling
+mConfig.SetSetting ConfigSettingIntegerYScale, mIntegerYScale
+mConfig.SetSetting ConfigSettingYScaleQuantum, mYScaleQuantum
+mConfig.SetSetting ConfigSettingGridlineSpacingY, mGridlineSpacingY
+mConfig.SetSetting ConfigSettingMinimumHeight, mMinimumHeight
+mConfig.SetSetting ConfigSettingCursorSnapsToTickBoundaries, mCursorSnapsToTickBoundaries
+
+setBackGradientFillColorsConfig
 End Property
 
 Public Property Get GridlineSpacingY() As Double
@@ -159,14 +243,28 @@ End Property
 
 Public Property Let GridlineSpacingY(ByVal value As Double)
 mGridlineSpacingY = value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingGridlineSpacingY, mGridlineSpacingY
+firePropertyChanged "GridlineSpacingY"
 End Property
 
-Public Property Get GridTextColor() As Long
-GridTextColor = mGridTextColor
+Public Property Get GridLineStyle() As LineStyle
+Set GridLineStyle = mGridLineStyle
 End Property
 
-Public Property Let GridTextColor(ByVal val As Long)
-mGridTextColor = val
+Public Property Let GridLineStyle(ByVal value As LineStyle)
+Set mGridLineStyle = value
+If Not mConfig Is Nothing Then mGridLineStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionGridlineStyle)
+firePropertyChanged "GridLineStyle"
+End Property
+
+Public Property Get GridTextStyle() As TextStyle
+Set GridTextStyle = mGridTextStyle
+End Property
+
+Public Property Let GridTextStyle(ByVal value As TextStyle)
+Set mGridTextStyle = value
+If Not mConfig Is Nothing Then mGridTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionGridTextStyle)
+firePropertyChanged "GridTextStyle"
 End Property
 
 Public Property Get HasGrid() As Boolean
@@ -175,6 +273,8 @@ End Property
 
 Public Property Let HasGrid(ByVal val As Boolean)
 mHasGrid = val
+If Not mConfig Is Nothing Then mConfig.SetBooleanSetting ConfigSettingHasGrid, mHasGrid
+firePropertyChanged "HasGrid"
 End Property
 
 Public Property Get HasGridText() As Boolean
@@ -183,6 +283,8 @@ End Property
 
 Public Property Let HasGridText(ByVal val As Boolean)
 mHasGridText = val
+If Not mConfig Is Nothing Then mConfig.SetBooleanSetting ConfigSettingHasGridText, mHasGridText
+firePropertyChanged "HasGridText"
 End Property
 
 Public Property Get IntegerYScale() As Boolean
@@ -191,6 +293,8 @@ End Property
 
 Public Property Let IntegerYScale(ByVal value As Boolean)
 mIntegerYScale = value
+If Not mConfig Is Nothing Then mConfig.SetBooleanSetting ConfigSettingIntegerYScale, mIntegerYScale
+firePropertyChanged "IntegerYScale"
 End Property
 
 Public Property Get MinimumHeight() As Double
@@ -199,22 +303,38 @@ End Property
 
 Public Property Let MinimumHeight(ByVal value As Double)
 mMinimumHeight = value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingMinimumHeight, mMinimumHeight
+firePropertyChanged "MinimumHeight"
 End Property
 
-'Public Property Get PointerStyle() As PointerStyles
-'PointerStyle = mPointerStyle
-'End Property
-'
-'Public Property Let PointerStyle(ByVal value As PointerStyles)
-'mPointerStyle = value
-'End Property
-
-Public Property Let SnapCursorToTickBoundaries(ByVal value As Boolean)
-mSnapCursorToTickBoundaries = value
+Public Property Let CursorSnapsToTickBoundaries(ByVal value As Boolean)
+mCursorSnapsToTickBoundaries = value
+If Not mConfig Is Nothing Then mConfig.SetBooleanSetting ConfigSettingCursorSnapsToTickBoundaries, mCursorSnapsToTickBoundaries
+firePropertyChanged "CursorSnapsToTickBoundaries"
 End Property
 
-Public Property Get SnapCursorToTickBoundaries() As Boolean
-SnapCursorToTickBoundaries = mSnapCursorToTickBoundaries
+Public Property Get CursorSnapsToTickBoundaries() As Boolean
+CursorSnapsToTickBoundaries = mCursorSnapsToTickBoundaries
+End Property
+
+Public Property Get YAxisTextStyle() As TextStyle
+Set YAxisTextStyle = mYAxisTextStyle
+End Property
+
+Public Property Let YAxisTextStyle(ByVal value As TextStyle)
+Set mYAxisTextStyle = value
+If Not mConfig Is Nothing Then mYAxisTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionYAxisTextStyle)
+firePropertyChanged "YAxisTextStyle"
+End Property
+
+Public Property Get YCursorTextStyle() As TextStyle
+Set YCursorTextStyle = mYCursorTextStyle
+End Property
+
+Public Property Let YCursorTextStyle(ByVal value As TextStyle)
+Set mYCursorTextStyle = value
+If Not mConfig Is Nothing Then mYCursorTextStyle.ConfigurationSection = mConfig.AddConfigurationSection(ConfigSectionYCursorTextStyle)
+firePropertyChanged "YCursorTextStyle"
 End Property
 
 Public Property Get YScaleQuantum() As Double
@@ -223,6 +343,8 @@ End Property
 
 Public Property Let YScaleQuantum(ByVal value As Double)
 mYScaleQuantum = value
+If Not mConfig Is Nothing Then mConfig.SetSetting ConfigSettingYScaleQuantum, mYScaleQuantum
+firePropertyChanged "YScaleQuantum"
 End Property
 
 '@================================================================================
@@ -231,21 +353,142 @@ End Property
 
 Public Function clone() As ChartRegionStyle
 Set clone = New ChartRegionStyle
-clone.Autoscale = mAutoscale
+clone.Autoscaling = mAutoscaling
 clone.BackGradientFillColors = mBackGradientFillColors
-clone.GridColor = mGridColor
 clone.GridlineSpacingY = mGridlineSpacingY
-clone.GridTextColor = mGridTextColor
+clone.GridLineStyle = mGridLineStyle.clone
+clone.GridTextStyle = mGridTextStyle
 clone.IntegerYScale = mIntegerYScale
 clone.MinimumHeight = mMinimumHeight
 clone.HasGrid = mHasGrid
 clone.HasGridText = mHasGridText
-clone.SnapCursorToTickBoundaries = mSnapCursorToTickBoundaries
+clone.CursorSnapsToTickBoundaries = mCursorSnapsToTickBoundaries
+clone.YAxisTextStyle = mYAxisTextStyle
+clone.YCursorTextStyle = mYCursorTextStyle
 clone.YScaleQuantum = mYScaleQuantum
 End Function
+
+Public Sub LoadFromConfig( _
+                ByVal config As ConfigurationSection)
+Dim ar() As String
+Dim i As Long
+
+Set mConfig = config
+
+Set mGridLineStyle = New LineStyle
+mGridLineStyle.LoadFromConfig mConfig.AddConfigurationSection(ConfigSectionGridlineStyle)
+
+Set mGridTextStyle = New TextStyle
+mGridTextStyle.LoadFromConfig mConfig.AddConfigurationSection(ConfigSectionGridTextStyle)
+
+Set mYAxisTextStyle = New TextStyle
+mYAxisTextStyle.LoadFromConfig mConfig.AddConfigurationSection(ConfigSectionYAxisTextStyle)
+
+Set mYCursorTextStyle = New TextStyle
+mYCursorTextStyle.LoadFromConfig mConfig.AddConfigurationSection(ConfigSectionYCursorTextStyle)
+
+mHasGrid = mConfig.GetSetting(ConfigSettingHasGrid)
+mHasGridText = mConfig.GetSetting(ConfigSettingHasGridText)
+mAutoscaling = mConfig.GetSetting(ConfigSettingAutoscaling)
+mIntegerYScale = mConfig.GetSetting(ConfigSettingIntegerYScale)
+mYScaleQuantum = mConfig.GetSetting(ConfigSettingYScaleQuantum)
+mGridlineSpacingY = mConfig.GetSetting(ConfigSettingGridlineSpacingY)
+mMinimumHeight = mConfig.GetSetting(ConfigSettingMinimumHeight)
+mCursorSnapsToTickBoundaries = mConfig.GetSetting(ConfigSettingCursorSnapsToTickBoundaries)
+
+ar = Split(mConfig.GetSetting(ConfigSettingBackGradientFillColors), ",")
+ReDim mBackGradientFillColors(UBound(ar())) As Long
+For i = 0 To UBound(ar())
+    mBackGradientFillColors(i) = CLng(ar(i))
+Next
+                
+End Sub
+
+Public Sub RemoveFromConfig()
+If Not mConfig Is Nothing Then mConfig.Remove
+End Sub
 
 '@================================================================================
 ' Helper Functions
 '@================================================================================
+
+Private Sub firePropertyChanged( _
+                ByVal Name As String)
+Dim ev As PropertyChangedEvent
+
+Set ev.Source = Me
+ev.PropertyName = Name
+RaiseEvent PropertyChanged(ev)
+End Sub
+
+Private Sub setBackGradientFillColorsConfig()
+Dim i As Long
+Dim s As String
+For i = 0 To UBound(mBackGradientFillColors)
+    If i <> 0 Then s = s & ","
+    s = s & CStr(mBackGradientFillColors(i))
+Next
+mConfig.SetSetting ConfigSettingBackGradientFillColors, s
+End Sub
+
+Private Sub setInitialGridLineStyle()
+Set mGridLineStyle = New LineStyle
+End Sub
+
+Private Sub setInitialGridTextStyle()
+Dim aFont As StdFont
+
+Set mGridTextStyle = New TextStyle
+mGridTextStyle.Box = False
+mGridTextStyle.Color = vbBlack
+    
+Set aFont = New StdFont
+aFont.Italic = False
+aFont.Name = "Arial"
+aFont.size = 8
+aFont.Underline = False
+aFont.Bold = False
+mGridTextStyle.Font = aFont
+
+End Sub
+
+Private Sub setInitialYAxisTextStyle()
+Dim aFont As StdFont
+
+Set mYAxisTextStyle = New TextStyle
+mYAxisTextStyle.Color = vbBlack
+    
+Set aFont = New StdFont
+aFont.Italic = False
+aFont.Name = "Arial"
+aFont.size = 8
+aFont.Underline = False
+aFont.Bold = False
+mYAxisTextStyle.Font = aFont
+
+End Sub
+
+Private Sub setInitialYCursorTextStyle()
+Dim aFont As StdFont
+
+Set mYCursorTextStyle = New TextStyle
+mYCursorTextStyle.Box = True
+mYCursorTextStyle.BoxColor = vbBlack
+mYCursorTextStyle.BoxFillColor = vbWhite
+mYCursorTextStyle.BoxFillStyle = FillSolid
+mYCursorTextStyle.BoxThickness = 1
+mYCursorTextStyle.Color = vbBlack
+mYCursorTextStyle.PaddingX = 0
+mYCursorTextStyle.PaddingY = 0
+    
+Set aFont = New StdFont
+aFont.Italic = False
+aFont.Name = "Arial"
+aFont.size = 8
+aFont.Underline = False
+aFont.Bold = False
+mYCursorTextStyle.Font = aFont
+
+End Sub
 
 

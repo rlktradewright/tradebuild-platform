@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "ChartSkil26"
+
 Private Const ModuleName                    As String = "IGraphicObjectSeries"
 
 '@================================================================================
@@ -65,11 +65,11 @@ Public Property Get Count() As Long
 
 End Property
 
-Public Property Get isSelectable() As Boolean
+Public Property Get IsSelectable() As Boolean
 
 End Property
 
-Public Property Get name() As String
+Public Property Get Name() As String
 
 End Property
 
@@ -81,7 +81,7 @@ Public Property Get Selected() As Boolean
 
 End Property
 
-Public Property Get seriesId() As Long
+Public Property Get SeriesID() As Long
 
 End Property
 
@@ -101,12 +101,12 @@ Public Sub Finish()
 
 End Sub
 
-Public Sub initialise( _
-                ByVal name As String, _
+Public Sub Initialise( _
+                ByVal Name As String, _
                 ByVal Canvas As Canvas, _
                 ByVal Layer As LayerNumbers, _
-                ByVal controller As ChartController, _
-                ByVal seriesId As Long, _
+                ByVal pChart As Chart, _
+                ByVal SeriesID As Long, _
                 ByVal GOSP As GraphObjServiceProvider)
 
 End Sub

@@ -40,7 +40,7 @@ Implements Task
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "ChartSkil26"
+
 Private Const ModuleName                    As String = "GraphicObjectSeriesRemovalTask"
 
 '@================================================================================
@@ -112,7 +112,7 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "Task_run" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Sub
 
@@ -121,7 +121,7 @@ Set mTaskContext = value
 End Property
 
 Private Property Get Task_TaskName() As String
-Task_TaskName = mTaskContext.name
+Task_TaskName = mTaskContext.Name
 End Property
 
 '@================================================================================
@@ -136,7 +136,7 @@ End Property
 ' Methods
 '@================================================================================
 
-Friend Sub initialise( _
+Friend Sub Initialise( _
                 ByVal graphObjSeries As IGraphicObjectSeries, _
                 ByVal Region As ChartRegion, _
                 ByVal removeObjectsFromRegion As Boolean)

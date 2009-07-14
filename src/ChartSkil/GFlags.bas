@@ -73,7 +73,7 @@ End Function
 Public Function gSetFlag( _
                 ByVal flags As Long, _
                 ByVal flag As Long) As Long
-gSetFlag = mFlags Or flag
+gSetFlag = flags Or flag
 End Function
 
 '@================================================================================

@@ -27,20 +27,41 @@ Event Click()
 
 Event DblCLick()
 
-Event StyleChanged()
-
 Event SelectionStateChanged()
+
+'================================================================================
+' Enums
+'================================================================================
+
+Private Enum PropertyOverrideFlags
+    ColorIsSet = 1
+    BoxIsSet = 2
+    BoxColorIsSet = 4
+    BoxStyleIsSet = 8
+    BoxThicknessIsSet = &H10&
+    BoxFillColorIsSet = &H20&
+    BoxFillStyleIsSet = &H40&
+    AlignIsSet = &H80&
+    PaddingXIsSet = &H100&
+    PaddingYIsSet = &H200&
+    FontIsSet = &H400&
+    BoxFillWithBackGroundColorIsSet = &H800&
+End Enum
 
 '================================================================================
 ' Types
 '================================================================================
 
 '================================================================================
-' Member variables and constants
+' Constants
 '================================================================================
 
-Private Const ProjectName                As String = "ChartSkil26"
+
 Private Const ModuleName                As String = "TextSeries"
+
+'================================================================================
+' Member variables
+'================================================================================
 
 Private mSeriesID As Long
 
@@ -56,16 +77,34 @@ Private mLayer As Long
 
 Private mGOSP As GraphObjServiceProvider
 
-Private mStyle As TextStyle
-Private mInhibitChangeEvent As Boolean
+Private WithEvents mStyle As TextStyle
+Attribute mStyle.VB_VarHelpID = -1
+
+Private mFixedX As Boolean
+Private mFixedY As Boolean
+Private mIncludeInAutoscale As Boolean
+Private mExtended As Boolean
 
 Private mName As String
 
 Private mTaskContext As TaskContext
 
-'================================================================================
-' Enums
-'================================================================================
+' these fields override corresponding items in the Style
+Private mColor As Long
+Private mBox As Boolean
+Private mBoxColor As Long
+Private mBoxStyle As LineStyles
+Private mBoxThickness As Long
+Private mBoxFillColor As Long
+Private mBoxFillWithBackgroundColor As Boolean
+Private mBoxFillStyle As FillStyles
+Private mAlign As TextAlignModes
+Private mPaddingX As Double
+Private mPaddingY As Double
+Private WithEvents mFont As StdFont
+Attribute mFont.VB_VarHelpID = -1
+
+Private mPropertyOverrideFlags As DataPointPropertyOverrideFlags
 
 '================================================================================
 ' Class Event Handlers
@@ -73,6 +112,8 @@ Private mTaskContext As TaskContext
 
 Private Sub Class_Initialize()
 Set mTexts = New Collection
+Set mStyle = New TextStyle
+
 End Sub
 
 Private Sub Class_Terminate()
@@ -106,18 +147,17 @@ Set mCanvas = Nothing
 End Sub
 
 Private Sub IGraphicObjectSeries_Initialise( _
-                ByVal name As String, _
+                ByVal Name As String, _
                 ByVal Canvas As Canvas, _
                 ByVal Layer As LayerNumbers, _
-                ByVal controller As ChartController, _
-                ByVal seriesId As Long, _
+                ByVal pChart As Chart, _
+                ByVal SeriesID As Long, _
                 ByVal GOSP As GraphObjServiceProvider)
-mName = name
-mSeriesID = seriesId
+mName = Name
+mSeriesID = SeriesID
 Set mGOSP = GOSP
 mLayer = Layer
 Set mCanvas = Canvas
-If mStyle Is Nothing Then Set mStyle = controller.DefaultTextStyle.clone
 End Sub
 
 Private Property Get IGraphicObjectSeries_IsSelectable() As Boolean
@@ -128,8 +168,8 @@ Private Function IGraphicObjectSeries_item(ByVal index As Long) As IGraphicObjec
 Set IGraphicObjectSeries_item = mTexts.Item(index)
 End Function
 
-Private Property Get IGraphicObjectSeries_name() As String
-IGraphicObjectSeries_name = mName
+Private Property Get IGraphicObjectSeries_Name() As String
+IGraphicObjectSeries_Name = mName
 End Property
 
 Public Sub IGraphicObjectSeries_Remove(ByVal index As Long)
@@ -137,7 +177,7 @@ mTexts.Remove index
 End Sub
 
 Private Sub IGraphicObjectSeries_RemoveObject(ByVal value As IGraphicObject)
-Dim lText As ChartSkil26.text
+Dim lText As ChartSkil26.Text
 
 On Error Resume Next
 Set lText = value
@@ -161,345 +201,296 @@ IGraphicObjectSeries_SeriesID = mSeriesID
 End Property
 
 '================================================================================
-' xxxx Event Handlers
+' mStyle Event Handlers
 '================================================================================
+
+Private Sub mStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEvent)
+Dim failpoint As Long
+On Error GoTo Err
+
+Select Case UCase$(ev.PropertyName)
+Case UCase$("align")
+    repaintRegion True
+Case UCase$("box")
+    repaintRegion True
+Case UCase$("boxColor")
+    repaintRegion False
+Case UCase$("boxFillColor")
+    repaintRegion False
+Case UCase$("boxFillStyle")
+    repaintRegion False
+Case UCase$("boxStyle")
+    repaintRegion True
+Case UCase$("boxThickness")
+    repaintRegion True
+Case UCase$("color")
+    repaintRegion False
+Case UCase$("Font")
+    repaintRegion True
+Case UCase$("paddingX")
+    repaintRegion True
+Case UCase$("paddingY")
+    repaintRegion True
+Case Else
+    Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
+            ProjectName & "." & ModuleName & ":" & "mStyle_PropertyChanged", _
+            "Unhandled property change"
+End Select
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "mStyle_PropertyChanged" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+End Sub
 
 '================================================================================
 ' Properties
 '================================================================================
 
-Public Property Get align() As TextAlignModes
-align = mStyle.align
+Public Property Get Align() As TextAlignModes
+Align = mStyle.Align
+If isPropertyOverrideFlagSet(AlignIsSet) Then Align = mAlign
 End Property
 
-Public Property Let align(ByVal value As TextAlignModes)
-If mStyle.align = value Then Exit Property
-mStyle.align = value
-If mTexts.Count <> 0 Then
-    mGOSP.RecalcBoundary mSeriesID
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let Align(ByVal value As TextAlignModes)
+If mAlign = value And isPropertyOverrideFlagSet(AlignIsSet) Then Exit Property
+mAlign = value
+setPropertyOverrideFlag AlignIsSet
+repaintRegion True
 End Property
 
-Friend Property Get box() As Boolean
-box = mStyle.box
+Public Property Get Box() As Boolean
+Box = mStyle.Box
+If isPropertyOverrideFlagSet(BoxIsSet) Then Box = mBox
 End Property
 
-Public Property Let box(ByVal value As Boolean)
-If mStyle.box = value Then Exit Property
-mStyle.box = value
-If mTexts.Count <> 0 Then
-    mGOSP.RecalcBoundary mSeriesID
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let Box(ByVal value As Boolean)
+If mBox = value And isPropertyOverrideFlagSet(BoxIsSet) Then Exit Property
+mBox = value
+setPropertyOverrideFlag BoxIsSet
+repaintRegion True
 End Property
 
-Public Property Get boxColor() As Long
-boxColor = mStyle.boxColor
+Public Property Get BoxColor() As OLE_COLOR
+BoxColor = mStyle.BoxColor
+If isPropertyOverrideFlagSet(BoxColorIsSet) Then BoxColor = mBoxColor
 End Property
 
-Public Property Let boxColor(ByVal value As Long)
-If mStyle.boxColor = value Then Exit Property
-mStyle.boxColor = value
-If mTexts.Count <> 0 Then
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let BoxColor(ByVal value As OLE_COLOR)
+If mBoxColor = value And isPropertyOverrideFlagSet(BoxColorIsSet) Then Exit Property
+mBoxColor = value
+setPropertyOverrideFlag BoxColorIsSet
+repaintRegion False
 End Property
 
-Friend Property Get boxFillColor() As Long
-boxFillColor = mStyle.boxFillColor
+Public Property Get BoxFillColor() As OLE_COLOR
+BoxFillColor = mStyle.BoxFillColor
+If isPropertyOverrideFlagSet(BoxFillColorIsSet) Then BoxFillColor = mBoxFillColor
 End Property
 
-Public Property Let boxFillColor(ByVal value As Long)
-If mStyle.boxFillColor = value Then Exit Property
-mStyle.boxFillColor = value
-If mTexts.Count <> 0 Then
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let BoxFillColor(ByVal value As OLE_COLOR)
+If mBoxFillColor = value And isPropertyOverrideFlagSet(BoxFillColorIsSet) Then Exit Property
+mBoxFillColor = value
+setPropertyOverrideFlag BoxFillColorIsSet
+repaintRegion False
 End Property
 
-Public Property Get boxFillStyle() As FillStyles
-boxFillStyle = mStyle.boxFillStyle
+Public Property Get BoxFillStyle() As FillStyles
+BoxFillStyle = mStyle.BoxFillStyle
+If isPropertyOverrideFlagSet(BoxFillStyleIsSet) Then BoxFillStyle = mBoxFillStyle
 End Property
 
-Public Property Let boxFillStyle(ByVal value As FillStyles)
-If mStyle.boxFillStyle = value Then Exit Property
-mStyle.boxFillStyle = value
-If mTexts.Count <> 0 Then
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let BoxFillStyle(ByVal value As FillStyles)
+If mBoxFillStyle = value And isPropertyOverrideFlagSet(BoxFillStyleIsSet) Then Exit Property
+mBoxFillStyle = value
+setPropertyOverrideFlag BoxFillStyleIsSet
+repaintRegion False
 End Property
 
-Public Property Get boxStyle() As LineStyles
-boxStyle = mStyle.boxStyle
+Public Property Get BoxStyle() As LineStyles
+BoxStyle = mStyle.BoxStyle
+If isPropertyOverrideFlagSet(BoxStyleIsSet) Then BoxStyle = mBoxStyle
 End Property
 
-Public Property Let boxStyle(ByVal value As LineStyles)
-If mStyle.boxStyle = value Then Exit Property
-mStyle.boxStyle = value
-If mTexts.Count <> 0 Then
-    mGOSP.RecalcBoundary mSeriesID
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let BoxStyle(ByVal value As LineStyles)
+If mBoxStyle = value And isPropertyOverrideFlagSet(BoxStyleIsSet) Then Exit Property
+mBoxStyle = value
+setPropertyOverrideFlag BoxStyleIsSet
+repaintRegion True
 End Property
 
-Public Property Get boxThickness() As Long
-boxThickness = mStyle.boxThickness
+Public Property Get BoxThickness() As Long
+BoxThickness = mStyle.BoxThickness
+If isPropertyOverrideFlagSet(BoxThicknessIsSet) Then BoxThickness = mBoxThickness
 End Property
 
-Public Property Let boxThickness(ByVal value As Long)
-If mStyle.boxThickness = value Then Exit Property
-mStyle.boxThickness = value
-If mTexts.Count <> 0 Then
-    mGOSP.RecalcBoundary mSeriesID
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let BoxThickness(ByVal value As Long)
+If mBoxThickness = value And isPropertyOverrideFlagSet(BoxThicknessIsSet) Then Exit Property
+mBoxThickness = value
+setPropertyOverrideFlag BoxThicknessIsSet
+repaintRegion True
 End Property
 
-Public Property Get Color() As Long
+Public Property Get BoxFillWithBackgroundColor() As Boolean
+BoxFillWithBackgroundColor = mStyle.BoxFillWithBackgroundColor
+If isPropertyOverrideFlagSet(BoxFillWithBackGroundColorIsSet) Then BoxFillWithBackgroundColor = mBoxFillWithBackgroundColor
+End Property
+
+Public Property Let BoxFillWithBackgroundColor(ByVal value As Boolean)
+If mBoxFillWithBackgroundColor = value And isPropertyOverrideFlagSet(BoxFillWithBackGroundColorIsSet) Then Exit Property
+mBoxFillWithBackgroundColor = value
+setPropertyOverrideFlag BoxFillWithBackGroundColorIsSet
+repaintRegion False
+End Property
+
+Public Property Get Color() As OLE_COLOR
 Color = mStyle.Color
+If isPropertyOverrideFlagSet(ColorIsSet) Then Color = mColor
 End Property
 
-Public Property Let Color(ByVal value As Long)
-If mStyle.Color = value Then Exit Property
-mStyle.Color = value
-If mTexts.Count <> 0 Then
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let Color(ByVal value As OLE_COLOR)
+If mColor = value And isPropertyOverrideFlagSet(ColorIsSet) Then Exit Property
+mColor = value
+setPropertyOverrideFlag ColorIsSet
+repaintRegion False
 End Property
 
 Public Property Get Count() As Long
 Count = mTexts.Count
 End Property
 
-Friend Property Get extended() As Boolean
-extended = mStyle.extended
+Public Property Get Extended() As Boolean
+Extended = mExtended
 End Property
 
-Public Property Let extended(ByVal value As Boolean)
-If mStyle.extended = value Then Exit Property
-mStyle.extended = value
-If mTexts.Count <> 0 Then
-    mGOSP.PaintRegion False
+Public Property Let Extended(ByVal value As Boolean)
+If mExtended = value Then Exit Property
+mExtended = value
+repaintRegion True
+End Property
+
+Public Property Get FixedX() As Boolean
+FixedX = mFixedX
+End Property
+
+Public Property Let FixedX(ByVal value As Boolean)
+If mFixedX = value Then Exit Property
+mFixedX = value
+repaintRegion True
+End Property
+
+Public Property Get FixedY() As Boolean
+FixedY = mFixedY
+End Property
+
+Public Property Let FixedY(ByVal value As Boolean)
+If mFixedY = value Then Exit Property
+mFixedY = value
+repaintRegion True
+End Property
+
+Public Property Get Font() As StdFont
+Set Font = mStyle.Font
+If isPropertyOverrideFlagSet(FontIsSet) Then Set Font = mFont
+End Property
+
+Public Property Let Font(ByVal value As StdFont)
+If mFont Is value And isPropertyOverrideFlagSet(FontIsSet) Then Exit Property
+Set mFont = value
+If mFont Is Nothing Then
+    clearPropertyOverrideFlag FontIsSet
+Else
+    setPropertyOverrideFlag FontIsSet
 End If
-fireStyleChanged
+repaintRegion True
 End Property
 
-Friend Property Get fixedX() As Boolean
-fixedX = mStyle.fixedX
+Friend Property Get Id() As Long
+Id = mSeriesID
 End Property
 
-Public Property Let fixedX(ByVal value As Boolean)
-If mStyle.fixedX = value Then Exit Property
-mStyle.fixedX = value
-If mTexts.Count <> 0 Then
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Get IncludeInAutoscale() As Boolean
+IncludeInAutoscale = mIncludeInAutoscale
 End Property
 
-Friend Property Get fixedY() As Boolean
-fixedY = mStyle.fixedY
+Public Property Let IncludeInAutoscale(ByVal value As Boolean)
+If mIncludeInAutoscale = value Then Exit Property
+mIncludeInAutoscale = value
+repaintRegion True
 End Property
 
-Public Property Let fixedY(ByVal value As Boolean)
-If mStyle.fixedY = value Then Exit Property
-mStyle.fixedY = value
-If mTexts.Count <> 0 Then
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
-End Property
-
-Public Property Get font() As StdFont
-Set font = mStyle.font
-End Property
-
-Public Property Let font(ByVal value As StdFont)
-'If mStyle.font is value Then Exit Property
-mStyle.font = value
-If mTexts.Count <> 0 Then
-    mGOSP.RecalcBoundary mSeriesID
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
-End Property
-
-Friend Property Get includeInAutoscale() As Boolean
-includeInAutoscale = mStyle.includeInAutoscale
-End Property
-
-Public Property Let includeInAutoscale(ByVal value As Boolean)
-If mStyle.includeInAutoscale = value Then Exit Property
-mStyle.includeInAutoscale = value
-If mTexts.Count <> 0 Then
-    mGOSP.RecalcBoundary mSeriesID
-    mGOSP.PaintRegion True
-End If
-fireStyleChanged
-End Property
-
-Public Property Let isSelectable(ByVal value As Boolean)
+Public Property Let IsSelectable(ByVal value As Boolean)
 mIsSelectable = value
 End Property
 
-Public Property Get isSelectable() As Boolean
-isSelectable = mIsSelectable
+Public Property Get IsSelectable() As Boolean
+IsSelectable = mIsSelectable
 End Property
 
 Public Property Get IsSelected() As Boolean
 IsSelected = mIsSelected
 End Property
 
-Friend Property Let Layer(ByVal value As Long)
+Public Property Let Layer(ByVal value As LayerNumbers)
 mLayer = value
+repaintRegion False
 End Property
 
-Public Property Get Layer() As Long
+Public Property Get Layer() As LayerNumbers
 Layer = mLayer
 End Property
 
-Public Property Get paddingX() As Double
-paddingX = mStyle.paddingX
+Public Property Get PaddingX() As Double
+PaddingX = mStyle.PaddingX
+If isPropertyOverrideFlagSet(PaddingXIsSet) Then PaddingX = mPaddingX
 End Property
 
-Public Property Let paddingX(ByVal value As Double)
-If mStyle.paddingX = value Then Exit Property
-mStyle.paddingX = value
-If mTexts.Count <> 0 Then
-    mGOSP.RecalcBoundary mSeriesID
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let PaddingX(ByVal value As Double)
+If mPaddingX = value And isPropertyOverrideFlagSet(PaddingXIsSet) Then Exit Property
+mPaddingX = value
+setPropertyOverrideFlag PaddingXIsSet
+repaintRegion True
 End Property
 
-Public Property Get paddingY() As Double
-paddingY = mStyle.paddingY
+Public Property Get PaddingY() As Double
+PaddingY = mStyle.PaddingY
+If isPropertyOverrideFlagSet(PaddingYIsSet) Then PaddingY = mPaddingY
 End Property
 
-Public Property Let paddingY(ByVal value As Double)
-If mStyle.paddingY = value Then Exit Property
-mStyle.paddingY = value
-If mTexts.Count <> 0 Then
-    mGOSP.RecalcBoundary mSeriesID
-    mGOSP.PaintRegion False
-End If
-fireStyleChanged
+Public Property Let PaddingY(ByVal value As Double)
+If mPaddingY = value And isPropertyOverrideFlagSet(PaddingYIsSet) Then Exit Property
+mPaddingY = value
+setPropertyOverrideFlag PaddingYIsSet
+repaintRegion True
 End Property
 
-Public Property Get style() As TextStyle
-Set style = mStyle.clone
+Public Property Get Style() As TextStyle
+Set Style = mStyle
 End Property
 
-Public Property Let style(ByVal value As TextStyle)
-Dim somethingChanged As Boolean
-Dim recalcBoundaries As Boolean
-Dim recalcRegion As Boolean
-
+Public Property Let Style(ByVal value As TextStyle)
 Dim failpoint As Long
 On Error GoTo Err
 
 If value Is Nothing Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "style", _
+            ProjectName & "." & ModuleName & ":" & "Style", _
             "Style is null reference"
 End If
 
-mInhibitChangeEvent = True
-
-If value.align <> mStyle.align Then
-    mStyle.align = value.align
-    somethingChanged = True
-    recalcBoundaries = True
-End If
-If value.box <> mStyle.box Then
-    mStyle.box = value.box
-    somethingChanged = True
-    recalcBoundaries = True
-End If
-If value.boxColor <> mStyle.boxColor Then
-    mStyle.boxColor = value.boxColor
-    somethingChanged = True
-End If
-If value.boxFillColor <> mStyle.boxFillColor Then
-    mStyle.boxFillColor = value.boxFillColor
-    somethingChanged = True
-End If
-If value.boxFillStyle <> mStyle.boxFillStyle Then
-    mStyle.boxFillStyle = value.boxFillStyle
-    somethingChanged = True
-End If
-If value.boxStyle <> mStyle.boxStyle Then
-    mStyle.boxStyle = value.boxStyle
-    somethingChanged = True
-    recalcBoundaries = True
-End If
-If value.boxThickness <> mStyle.boxThickness Then
-    mStyle.boxThickness = value.boxThickness
-    somethingChanged = True
-    recalcBoundaries = True
-End If
-If value.Color <> mStyle.Color Then
-    mStyle.Color = value.Color
-    somethingChanged = True
-End If
-If value.extended <> mStyle.extended Then
-    mStyle.extended = value.extended
-    somethingChanged = True
-End If
-If value.fixedX <> mStyle.fixedX Then
-    mStyle.fixedX = value.fixedX
-    somethingChanged = True
-End If
-If value.fixedY <> mStyle.fixedY Then
-    mStyle.fixedY = value.fixedY
-    somethingChanged = True
-End If
-If Not value.font Is mStyle.font Then
-    mStyle.font = value.font
-    somethingChanged = True
-    recalcBoundaries = True
-End If
-If value.includeInAutoscale <> mStyle.includeInAutoscale Then
-    mStyle.includeInAutoscale = value.includeInAutoscale
-    somethingChanged = True
-    recalcBoundaries = True
-    recalcRegion = True
-End If
-If value.paddingX <> mStyle.paddingX Then
-    mStyle.paddingX = value.paddingX
-    somethingChanged = True
-    recalcBoundaries = True
-End If
-If value.paddingY <> mStyle.paddingY Then
-    mStyle.paddingY = value.paddingY
-    somethingChanged = True
-    recalcBoundaries = True
-End If
-
-mInhibitChangeEvent = False
-
-If somethingChanged Then
-    If recalcBoundaries Then If mTexts.Count <> 0 Then mGOSP.RecalcBoundary mSeriesID
-    If mTexts.Count <> 0 Then mGOSP.PaintRegion recalcRegion
-    fireStyleChanged
-End If
+Set mStyle = value
+repaintRegion True
 
 Exit Property
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "style" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "Style" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Property
 
@@ -507,36 +498,33 @@ End Property
 ' Methods
 '================================================================================
 
-Public Function add( _
-                Optional ByVal Key As String, _
-                Optional ByVal LocalStyle As TextStyle, _
-                Optional ByVal isSelectable As Boolean) As text
+Public Function Add( _
+                Optional ByVal pKey As String, _
+                Optional ByVal pLocalStyle As TextStyle) As Text
 If mFinished Then Err.Raise ErrorCodes.ErrIllegalStateException, _
-                            "ChartSkil26.TextSeries::add", _
+                            "ChartSkil26.TextSeries::Add", _
                             "Text series is finished"
-Set add = New text
-If Key = "" Then
-    Key = GenerateGUIDString
-End If
-add.initialise mSeriesID, Key, mGOSP, mLayer, mCanvas, mStyle, LocalStyle, isSelectable
 
-mTexts.add add, Key
-mGOSP.AddGraphicObject add, mSeriesID
+If pKey = "" Then pKey = GenerateGUIDString
+
+Set Add = New Text
+Add.Initialise Me, pKey, mGOSP, mCanvas, pLocalStyle
+
+mTexts.Add Add, pKey
+mGOSP.AddGraphicObject Add, mSeriesID
 End Function
+
+Public Sub ClearOverrides()
+mPropertyOverrideFlags = 0
+repaintRegion True
+End Sub
 
 Friend Sub Finish()
 mFinished = True
 Set mCanvas = Nothing
 End Sub
 
-Friend Sub initialise( _
-                ByVal name As String, _
-                ByVal style As TextStyle)
-mName = name
-Set mStyle = style.clone    ' style cannot be shared between TextSeries
-End Sub
-
-Public Function Item(ByVal index As Variant) As text
+Public Function Item(ByVal index As Variant) As Text
 Attribute Item.VB_UserMemId = 0
 Set Item = mTexts(index)
 End Function
@@ -547,7 +535,7 @@ Attribute NewEnum.VB_MemberFlags = "40"
    Set NewEnum = mTexts.[_NewEnum]
 End Function
 
-Public Sub RemoveObject(ByVal value As ChartSkil26.text)
+Public Sub RemoveObject(ByVal value As ChartSkil26.Text)
 On Error GoTo Err
 mTexts.Remove value.Key
 mGOSP.RemoveObject value.Handle
@@ -561,8 +549,32 @@ End Sub
 ' Helper Functions
 '================================================================================
 
-Private Sub fireStyleChanged()
-If Not mInhibitChangeEvent Then RaiseEvent StyleChanged
+Private Sub clearPropertyOverrideFlag( _
+                ByVal flag As PropertyOverrideFlags)
+mPropertyOverrideFlags = gClearFlag(mPropertyOverrideFlags, flag)
 End Sub
+
+Private Function isPropertyOverrideFlagSet( _
+                ByVal flag As PropertyOverrideFlags) As Boolean
+isPropertyOverrideFlagSet = gIsFlagSet(mPropertyOverrideFlags, flag)
+End Function
+
+Private Sub repaintRegion( _
+                ByVal recalcBoundaries As Boolean)
+If mTexts.Count <> 0 Then
+    If recalcBoundaries Then
+        mGOSP.RecalcBoundary mSeriesID
+        mGOSP.PaintRegion True
+    Else
+        mGOSP.PaintRegion False
+    End If
+End If
+End Sub
+
+Private Sub setPropertyOverrideFlag( _
+                ByVal flag As PropertyOverrideFlags)
+mPropertyOverrideFlags = gSetFlag(mPropertyOverrideFlags, flag)
+End Sub
+
 
 

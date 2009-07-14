@@ -59,59 +59,59 @@ Friend Property Let Canvas(ByVal value As Canvas)
 Set mCanvas = value
 End Property
 
-Public Property Get isAssigned() As Boolean
-isAssigned = (mXAssigned And mYAssigned)
+Public Property Get IsAssigned() As Boolean
+IsAssigned = (mXAssigned And mYAssigned)
 End Property
 
-Friend Property Get isAssignedX() As Boolean
-isAssignedX = mXAssigned
+Friend Property Get IsAssignedX() As Boolean
+IsAssignedX = mXAssigned
 End Property
 
-Friend Property Get isAssignedY() As Boolean
-isAssignedY = mYAssigned
+Friend Property Get IsAssignedY() As Boolean
+IsAssignedY = mYAssigned
 End Property
 
-Public Property Get x() As Double
-x = mX
+Public Property Get X() As Double
+X = mX
 End Property
 
-Friend Property Let x(ByVal value As Double)
+Friend Property Let X(ByVal value As Double)
 mX = value
 mXAssigned = True
 End Property
 
 Public Property Get XLogical() As Double
-XLogical = mCanvas.convertDistanceToLogicalX(mX) - mCanvas.boundary.left
+XLogical = mCanvas.ConvertDistanceToLogicalX(mX) - mCanvas.Boundary.Left
 End Property
 
-Public Property Get y() As Double
-y = mY
+Public Property Get Y() As Double
+Y = mY
 End Property
 
-Friend Property Let y(ByVal value As Double)
+Friend Property Let Y(ByVal value As Double)
 mY = value
 mYAssigned = True
 End Property
 
 Public Property Get YLogical() As Double
-YLogical = mCanvas.convertDistanceToLogicalY(mY) - mCanvas.boundary.bottom
+YLogical = mCanvas.ConvertDistanceToLogicalY(mY) - mCanvas.Boundary.Bottom
 End Property
 
 '================================================================================
 ' Methods
 '================================================================================
 
-Public Function equals(ByVal aDim As Dimension) As Boolean
+Public Function Equals(ByVal aDim As Dimension) As Boolean
 If aDim Is Nothing Then Exit Function
 If aDim Is Me Then Exit Function
 With aDim
     If Not .Canvas Is mCanvas Then Exit Function
-    If .isAssignedX <> mXAssigned Then Exit Function
-    If .isAssignedY <> mYAssigned Then Exit Function
-    If .x <> mX Then Exit Function
-    If .y <> mY Then Exit Function
+    If .IsAssignedX <> mXAssigned Then Exit Function
+    If .IsAssignedY <> mYAssigned Then Exit Function
+    If .X <> mX Then Exit Function
+    If .Y <> mY Then Exit Function
 End With
-equals = True
+Equals = True
 End Function
 
 '================================================================================

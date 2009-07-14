@@ -26,7 +26,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "ChartSkil26"
+
 Private Const ModuleName                    As String = "GRectangle"
 
 '@================================================================================
@@ -63,9 +63,9 @@ Private Const ModuleName                    As String = "GRectangle"
 
 Public Function IntContains( _
                 ByRef pInt As TInterval, _
-                ByVal x As Double) As Boolean
+                ByVal X As Double) As Boolean
 If Not pInt.isValid Then Exit Function
-IntContains = (x >= pInt.startValue) And (x <= pInt.endValue)
+IntContains = (X >= pInt.startValue) And (X <= pInt.endValue)
 End Function
 
 Public Function intIntersection( _
@@ -129,13 +129,13 @@ End Function
 
 Public Function RectContainsPoint( _
                 ByRef rect As TRectangle, _
-                ByVal x As Double, _
-                ByVal y As Double) As Boolean
+                ByVal X As Double, _
+                ByVal Y As Double) As Boolean
 If Not rect.isValid Then Exit Function
-If x < rect.Left Then Exit Function
-If x > rect.right Then Exit Function
-If y < rect.Bottom Then Exit Function
-If y > rect.Top Then Exit Function
+If X < rect.Left Then Exit Function
+If X > rect.Right Then Exit Function
+If Y < rect.Bottom Then Exit Function
+If Y > rect.Top Then Exit Function
 RectContainsPoint = True
 End Function
 
@@ -145,7 +145,7 @@ Public Function RectContainsRect( _
 If Not rect1.isValid Then Exit Function
 If Not rect2.isValid Then Exit Function
 If rect2.Left < rect1.Left Then Exit Function
-If rect2.right > rect1.right Then Exit Function
+If rect2.Right > rect1.Right Then Exit Function
 If rect2.Bottom < rect1.Bottom Then Exit Function
 If rect2.Top > rect1.Top Then Exit Function
 RectContainsRect = True
@@ -159,7 +159,7 @@ With rect1
     If .Bottom <> rect2.Bottom Then Exit Function
     If .Left <> rect2.Left Then Exit Function
     If .Top <> rect2.Top Then Exit Function
-    If .right <> rect2.right Then Exit Function
+    If .Right <> rect2.Right Then Exit Function
 End With
 rectEquals = True
 End Function
@@ -169,7 +169,7 @@ Public Sub rectInitialise( _
 With rect
     .isValid = False
     .Left = PlusInfinityDouble
-    .right = MinusInfinityDouble
+    .Right = MinusInfinityDouble
     .Bottom = PlusInfinityDouble
     .Top = MinusInfinityDouble
 End With
@@ -184,7 +184,7 @@ xInt = intIntersection(rectGetXInterval(rect1), rectGetXInterval(rect2))
 yint = intIntersection(rectGetYInterval(rect1), rectGetYInterval(rect2))
 With rectIntersection
     .Left = xInt.startValue
-    .right = xInt.endValue
+    .Right = xInt.endValue
     .Bottom = yint.startValue
     .Top = yint.endValue
     If xInt.isValid And yint.isValid Then .isValid = True
@@ -216,7 +216,7 @@ Public Function rectGetXInterval( _
                 ByRef rect As TRectangle) As TInterval
 With rectGetXInterval
 .startValue = rect.Left
-.endValue = rect.right
+.endValue = rect.Right
 .isValid = rect.isValid
 End With
 End Function
@@ -235,7 +235,7 @@ Public Sub rectSetXInterval( _
                 ByRef interval As TInterval)
 With rect
     .Left = interval.startValue
-    .right = interval.endValue
+    .Right = interval.endValue
     .isValid = interval.isValid
 End With
 End Sub
@@ -280,22 +280,23 @@ With rectUnion
     Else
         .Top = rect2.Top
     End If
-    If rect1.right > rect2.right Then
-        .right = rect1.right
+    If rect1.Right > rect2.Right Then
+        .Right = rect1.Right
     Else
-        .right = rect2.right
+        .Right = rect2.Right
     End If
     .isValid = True
 End With
 End Function
 
 Public Sub rectValidate( _
-                ByRef rect As TRectangle)
+                ByRef rect As TRectangle, _
+                Optional allowZeroDimensions As Boolean = False)
 With rect
-    If .Left <= .right And .Bottom <= .Top Then
-        .isValid = True
+    If allowZeroDimensions Then
+        If .Left <= .Right And .Bottom <= .Top Then .isValid = True
     Else
-        .isValid = False
+        If .Left < .Right And .Bottom < .Top Then .isValid = True
     End If
 End With
 End Sub

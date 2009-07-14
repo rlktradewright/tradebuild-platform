@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '================================================================================
 
-Private Const ProjectName                As String = "ChartSkil26"
+
 Private Const ModuleName                As String = "Canvas"
 
 Private Const GRADIENT_FILL_RECT_H As Long = 0
@@ -69,20 +69,20 @@ Private Type GRADIENT_TRIANGLE
 End Type
 
 Private Type POINTAPI
-        x As Long
-        y As Long
+        X As Long
+        Y As Long
 End Type
 
 Private Type rect
-    left                As Long
-    top                 As Long
-    right               As Long
-    bottom              As Long
+    Left                As Long
+    Top                 As Long
+    Right               As Long
+    Bottom              As Long
 End Type
 
 Private Type TRIVERTEX
-  x         As Long
-  y         As Long
+  X         As Long
+  Y         As Long
   Filler1   As Byte
   Red       As Byte
   Filler2   As Byte
@@ -110,19 +110,19 @@ Private Declare Function DeleteObject Lib "gdi32" ( _
                 ByVal hObject As Long) As Long
 
 Private Declare Function FillRect Lib "user32" ( _
-                ByVal hdc As Long, _
+                ByVal Hdc As Long, _
                 lpRect As rect, _
                 ByVal hBrush As Long) As Long
 
 Private Declare Function GetBkColor Lib "gdi32" ( _
-                ByVal hdc As Long) As Long
+                ByVal Hdc As Long) As Long
                 
 Private Declare Function GetClipRgn Lib "gdi32" ( _
-                ByVal hdc As Long, _
+                ByVal Hdc As Long, _
                 ByVal hRgn As Long) As Long
                 
 Private Declare Sub GradientFill Lib "msimg32" ( _
-                ByVal hdc As Long, _
+                ByVal Hdc As Long, _
                 ByVal pVertices As Long, _
                 ByVal numVertices As Long, _
                 ByVal pMesh As Long, _
@@ -130,12 +130,12 @@ Private Declare Sub GradientFill Lib "msimg32" ( _
                 ByVal dwMode As Long)
 
 Private Declare Function Polygon Lib "gdi32" ( _
-                ByVal hdc As Long, _
+                ByVal Hdc As Long, _
                 lpPoint As POINTAPI, _
                 ByVal nCount As Long) As Long
 
 Private Declare Function SelectClipRgn Lib "gdi32" ( _
-                ByVal hdc As Long, _
+                ByVal Hdc As Long, _
                 ByVal hRgn As Long) As Long
 
 '================================================================================
@@ -157,7 +157,7 @@ Private mPenMode As DrawModes
 Private mBrushColor As Long
 Private mBrushStyle As FillStyles
 
-' text attributes
+' Text attributes
 Private mTextColor As Long
 Private mTextFont As StdFont
 Private mTextTransparent As Boolean
@@ -190,51 +190,45 @@ End Sub
 ' Properties
 '================================================================================
 
-Friend Property Let BackColor(ByVal value As Long)
+Friend Property Let BackColor(ByVal value As OLE_COLOR)
 ReDim mBackGradientFillColors(0) As Long
 mBackGradientFillColors(0) = value
 calculateGradientFillParameters
 End Property
 
-Public Property Get BackColor() As Long
+Public Property Get BackColor() As OLE_COLOR
 BackColor = mBackGradientFillColors(0)
 End Property
 
-Friend Property Let bottom(ByVal value As Single)
-mBoundary.bottom = value
-rectValidate mBoundary
+Friend Property Let Bottom(ByVal value As Double)
+mBoundary.Bottom = value
+checkValidDimensions
 If Not mBoundary.isValid Then Exit Property
 
 setScale
 End Property
 
-Public Property Get bottom() As Single
-If mBoundary.bottom = PlusInfinityDouble Then
-    bottom = PlusInfinitySingle
-ElseIf mBoundary.bottom = MinusInfinityDouble Then
-    bottom = MinusInfinitySingle
-Else
-    bottom = mBoundary.bottom
-End If
+Public Property Get Bottom() As Double
+Bottom = mBoundary.Bottom
 End Property
 
-Public Property Get boundary() As TRectangle
-boundary = mBoundary
+Public Property Get Boundary() As TRectangle
+Boundary = mBoundary
 End Property
 
-Public Property Get gaugeX() As Double
-gaugeX = mGaugeX
+Public Property Get GaugeX() As Double
+GaugeX = mGaugeX
 End Property
 
-Public Property Get gaugeY() As Double
-gaugeY = mGaugeY
+Public Property Get GaugeY() As Double
+GaugeY = mGaugeY
 End Property
 
-Public Property Get gradientFillColors() As Long()
-gradientFillColors = mBackGradientFillColors
+Public Property Get GradientFillColors() As Long()
+GradientFillColors = mBackGradientFillColors
 End Property
 
-Friend Property Let gradientFillColors(ByRef value() As Long)
+Friend Property Let GradientFillColors(ByRef value() As Long)
 Dim numColors As Long
 
 On Error Resume Next
@@ -248,13 +242,13 @@ End If
 
 If numColors < 1 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "gradientFillColors", _
+            ProjectName & "." & ModuleName & ":" & "GradientFillColors", _
             "At least 1 background gradient fill color must be supplied"
 End If
 
 If numColors > 5 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
-            ProjectName & "." & ModuleName & ":" & "gradientFillColors", _
+            ProjectName & "." & ModuleName & ":" & "GradientFillColors", _
             "At most 5 background gradient fill colors may be supplied"
 End If
 
@@ -263,46 +257,40 @@ mBackGradientFillColors = value
 calculateGradientFillParameters
 End Property
 
-Public Property Get hdc() As Long
-hdc = mSurface.hdc
+Public Property Get Hdc() As Long
+Hdc = mSurface.Hdc
 End Property
 
-Friend Property Let height(ByVal value As Single)
-mBoundary.bottom = mBoundary.top - value
-rectValidate mBoundary
+Friend Property Let Height(ByVal value As Double)
+mBoundary.Bottom = mBoundary.Top - value
+checkValidDimensions
 If Not mBoundary.isValid Then Exit Property
 setScale
 End Property
 
-Public Property Get height() As Single
-If mBoundary.top = PlusInfinityDouble Or mBoundary.bottom = PlusInfinityDouble Then
-    height = PlusInfinitySingle
-ElseIf mBoundary.top = MinusInfinityDouble Or mBoundary.bottom = MinusInfinityDouble Then
-    height = MinusInfinitySingle
+Public Property Get Height() As Double
+If mBoundary.Top = PlusInfinityDouble Or mBoundary.Bottom = PlusInfinityDouble Then
+    Height = PlusInfinityDouble
+ElseIf mBoundary.Top = MinusInfinityDouble Or mBoundary.Bottom = MinusInfinityDouble Then
+    Height = PlusInfinityDouble
 Else
-    height = mBoundary.top - mBoundary.bottom
+    Height = mBoundary.Top - mBoundary.Bottom
 End If
 End Property
 
-Public Property Get heightCm() As Single
-heightCm = mSurface.height / TwipsPerCm
+Public Property Get HeightCm() As Double
+HeightCm = mSurface.Height / TwipsPerCm
 End Property
 
-Friend Property Let left(ByVal value As Single)
-mBoundary.left = value
-rectValidate mBoundary
+Friend Property Let Left(ByVal value As Double)
+mBoundary.Left = value
+checkValidDimensions
 If Not mBoundary.isValid Then Exit Property
 setScale
 End Property
 
-Public Property Get left() As Single
-If mBoundary.left = PlusInfinityDouble Then
-    left = PlusInfinitySingle
-ElseIf mBoundary.left = MinusInfinityDouble Then
-    left = MinusInfinitySingle
-Else
-    left = mBoundary.left
-End If
+Public Property Get Left() As Double
+Left = mBoundary.Left
 End Property
 
 Friend Property Let MouseIcon(ByVal value As IPictureDisp)
@@ -318,84 +306,72 @@ MousePointer = mSurface.MousePointer
 End Property
 
 Friend Sub resizedY()
-' notifies that the physical height of the surface has changed.
+' notifies that the physical Height of the Surface has changed.
 If Not mBoundary.isValid Then Exit Sub
-mSurface.ScaleTop = mBoundary.top
+mSurface.ScaleTop = mBoundary.Top
 setScale
 End Sub
 
-Friend Property Let right(ByVal value As Single)
-mBoundary.right = value
-rectValidate mBoundary
+Friend Property Let Right(ByVal value As Double)
+mBoundary.Right = value
+checkValidDimensions
 If Not mBoundary.isValid Then Exit Property
 setScale
 End Property
 
-Public Property Get right() As Single
-If mBoundary.right = PlusInfinityDouble Then
-    right = PlusInfinitySingle
-ElseIf mBoundary.right = MinusInfinityDouble Then
-    right = MinusInfinitySingle
-Else
-    right = mBoundary.right
-End If
+Public Property Get Right() As Double
+Right = mBoundary.Right
 End Property
 
-Friend Property Let surface(ByRef value As PictureBox)
+Friend Property Let Surface(ByRef value As PictureBox)
 rectInitialise mBoundary
 Set mSurface = value
 ReDim mBackGradientFillColors(0) As Long
 mBackGradientFillColors(0) = vbWhite
-left = 0
-right = 1
-bottom = 0
-top = 1
+Left = 0
+Right = 1
+Bottom = 0
+Top = 1
 End Property
 
-Friend Property Let top(ByVal value As Single)
-mBoundary.top = value
-rectValidate mBoundary
+Friend Property Let Top(ByVal value As Double)
+mBoundary.Top = value
+checkValidDimensions
 If Not mBoundary.isValid Then Exit Property
 setScale
 End Property
 
-Public Property Get top() As Single
-If mBoundary.top = PlusInfinityDouble Then
-    top = PlusInfinitySingle
-ElseIf mBoundary.top = MinusInfinityDouble Then
-    top = MinusInfinitySingle
+Public Property Get Top() As Double
+Top = mBoundary.Top
+End Property
+
+Public Property Get Width() As Double
+If mBoundary.Right = PlusInfinityDouble Or mBoundary.Left = PlusInfinityDouble Then
+    Width = PlusInfinitySingle
+ElseIf mBoundary.Right = MinusInfinityDouble Or mBoundary.Left = MinusInfinityDouble Then
+    Width = PlusInfinitySingle
 Else
-    top = mBoundary.top
+    Width = mBoundary.Right - mBoundary.Left
 End If
 End Property
 
-Public Property Get width() As Single
-If mBoundary.right = PlusInfinityDouble Or mBoundary.left = PlusInfinityDouble Then
-    width = PlusInfinitySingle
-ElseIf mBoundary.right = MinusInfinityDouble Or mBoundary.left = MinusInfinityDouble Then
-    width = MinusInfinitySingle
-Else
-    width = mBoundary.right - mBoundary.left
-End If
-End Property
-
-Friend Property Let width(ByVal value As Single)
-mBoundary.left = mBoundary.right - value
-rectValidate mBoundary
+Friend Property Let Width(ByVal value As Double)
+mBoundary.Left = mBoundary.Right - value
+checkValidDimensions
 If Not mBoundary.isValid Then Exit Property
-mSurface.ScaleLeft = mBoundary.left
+mSurface.ScaleLeft = mBoundary.Left
 setScale
 End Property
 
-Public Property Get widthCm() As Single
-widthCm = mSurface.width / TwipsPerCm
+Public Property Get WidthCm() As Double
+WidthCm = mSurface.Width / TwipsPerCm
 End Property
 
 '================================================================================
 ' Methods
 '================================================================================
 
-Friend Sub clear()
+Friend Sub Clear()
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -405,579 +381,579 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "clear" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "Clear" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Sub
 
-Friend Sub clearClippingRegion()
+Friend Sub ClearClippingRegion()
 Dim failpoint As Long
 On Error GoTo Err
 
-SelectClipRgn mSurface.hdc, 0
+SelectClipRgn mSurface.Hdc, 0
 DeleteObject mClipRegion
 
 Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "clearClippingRegion" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ClearClippingRegion" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Sub
 
-Friend Function compareTo( _
-                ByVal gaugeX As Double, _
-                ByVal gaugeY As Double, _
+Friend Function CompareTo( _
+                ByVal GaugeX As Double, _
+                ByVal GaugeY As Double, _
                 ByRef rect As TRectangle) As Long
 Dim failpoint As Long
 On Error GoTo Err
 
 If Not rect.isValid Or Not mBoundary.isValid Then
-    compareTo = CanvasComparisonCodes.CantCompare
+    CompareTo = CanvasComparisonCodes.CantCompare
     Exit Function
 End If
-If gaugeX <> mGaugeX Then
-    compareTo = CanvasComparisonCodes.GaugeChangedX
+If GaugeX <> mGaugeX Then
+    CompareTo = CanvasComparisonCodes.GaugeChangedX
 End If
-If gaugeY <> mGaugeY Then
-    compareTo = compareTo Or CanvasComparisonCodes.GaugeChangedY
+If GaugeY <> mGaugeY Then
+    CompareTo = CompareTo Or CanvasComparisonCodes.GaugeChangedY
 End If
-If rect.left <> mBoundary.left Or _
-    rect.right <> mBoundary.right _
+If rect.Left <> mBoundary.Left Or _
+    rect.Right <> mBoundary.Right _
 Then
-    compareTo = compareTo Or CanvasComparisonCodes.BoundsChangedX
+    CompareTo = CompareTo Or CanvasComparisonCodes.BoundsChangedX
 End If
-If rect.bottom <> mBoundary.bottom Or _
-    rect.top <> mBoundary.top _
+If rect.Bottom <> mBoundary.Bottom Or _
+    rect.Top <> mBoundary.Top _
 Then
-    compareTo = compareTo Or CanvasComparisonCodes.BoundsChangedY
+    CompareTo = CompareTo Or CanvasComparisonCodes.BoundsChangedY
 End If
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "compareTo" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "CompareTo" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 
 End Function
 
-Public Function convertCounterDistanceToDistanceX(ByVal value As Double) As Double
+Public Function ConvertCounterDistanceToDistanceX(ByVal value As Double) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
-convertCounterDistanceToDistanceX = CDbl(mSurface.width) / TwipsPerCm - value
+ConvertCounterDistanceToDistanceX = CDbl(mSurface.Width) / TwipsPerCm - value
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertCounterDistanceToDistanceX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertCounterDistanceToDistanceX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function convertCounterDistanceToDistanceY(ByVal value As Double) As Double
+Public Function ConvertCounterDistanceToDistanceY(ByVal value As Double) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
-convertCounterDistanceToDistanceY = CDbl(mSurface.height) / TwipsPerCm - value    ' ((100 - 100 * value * TwipsPerCm / mSurface.height) * mSurface.height) * 100 / TwipsPerCm
+ConvertCounterDistanceToDistanceY = CDbl(mSurface.Height) / TwipsPerCm - value    ' ((100 - 100 * value * TwipsPerCm / mSurface.Height) * mSurface.Height) * 100 / TwipsPerCm
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertCounterDistanceToDistanceY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertCounterDistanceToDistanceY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function convertCounterDistanceToLogicalX(ByVal value As Double) As Double
+Public Function ConvertCounterDistanceToLogicalX(ByVal value As Double) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
-convertCounterDistanceToLogicalX = mBoundary.right - ((value * TwipsPerCm) / CDbl(mSurface.width) * (mBoundary.right - mBoundary.left))
+ConvertCounterDistanceToLogicalX = mBoundary.Right - ((value * TwipsPerCm) / CDbl(mSurface.Width) * (mBoundary.Right - mBoundary.Left))
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertCounterDistanceToLogicalX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertCounterDistanceToLogicalX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function convertCounterDistanceToLogicalY(ByVal value As Double) As Double
+Public Function ConvertCounterDistanceToLogicalY(ByVal value As Double) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
-convertCounterDistanceToLogicalY = mBoundary.top - ((value * TwipsPerCm) / CDbl(mSurface.height) * (mBoundary.top - mBoundary.bottom))
+ConvertCounterDistanceToLogicalY = mBoundary.Top - ((value * TwipsPerCm) / CDbl(mSurface.Height) * (mBoundary.Top - mBoundary.Bottom))
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertCounterDistanceToLogicalY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertCounterDistanceToLogicalY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function convertCounterDistanceToRelativeX(ByVal value As Double) As Double
+Public Function ConvertCounterDistanceToRelativeX(ByVal value As Double) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
-convertCounterDistanceToRelativeX = 100# - 100# * value * TwipsPerCm / CDbl(mSurface.width)
+ConvertCounterDistanceToRelativeX = 100# - 100# * value * TwipsPerCm / CDbl(mSurface.Width)
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertCounterDistanceToRelativeX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertCounterDistanceToRelativeX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function convertCounterDistanceToRelativeY(ByVal value As Double) As Double
+Public Function ConvertCounterDistanceToRelativeY(ByVal value As Double) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
-convertCounterDistanceToRelativeY = 100# - 100# * value * TwipsPerCm / CDbl(mSurface.height)
+ConvertCounterDistanceToRelativeY = 100# - 100# * value * TwipsPerCm / CDbl(mSurface.Height)
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertCounterDistanceToRelativeY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertCounterDistanceToRelativeY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function convertDistanceToLogicalX(ByVal value As Double) As Double
+Public Function ConvertDistanceToLogicalX(ByVal value As Double) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
-convertDistanceToLogicalX = mBoundary.left + (value * TwipsPerCm) / CDbl(mSurface.width) * (mBoundary.right - mBoundary.left)
+ConvertDistanceToLogicalX = mBoundary.Left + (value * TwipsPerCm) / CDbl(mSurface.Width) * (mBoundary.Right - mBoundary.Left)
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertDistanceToLogicalX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertDistanceToLogicalX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function convertDistanceToLogicalY(ByVal value As Double) As Double
+Public Function ConvertDistanceToLogicalY(ByVal value As Double) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
-convertDistanceToLogicalY = mBoundary.bottom + (value * TwipsPerCm) / CDbl(mSurface.height) * (mBoundary.top - mBoundary.bottom)
+ConvertDistanceToLogicalY = mBoundary.Bottom + (value * TwipsPerCm) / CDbl(mSurface.Height) * (mBoundary.Top - mBoundary.Bottom)
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertDistanceToLogicalY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertDistanceToLogicalY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function convertDistanceToCounterDistanceX(ByVal value As Double) As Double
+Public Function ConvertDistanceToCounterDistanceX(ByVal value As Double) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
-convertDistanceToCounterDistanceX = CDbl(mSurface.width) / TwipsPerCm - value
+ConvertDistanceToCounterDistanceX = CDbl(mSurface.Width) / TwipsPerCm - value
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertDistanceToCounterDistanceX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertDistanceToCounterDistanceX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function convertDistanceToCounterDistanceY(ByVal value As Double) As Double
+Public Function ConvertDistanceToCounterDistanceY(ByVal value As Double) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
-convertDistanceToCounterDistanceY = CDbl(mSurface.height) / TwipsPerCm - value
+ConvertDistanceToCounterDistanceY = CDbl(mSurface.Height) / TwipsPerCm - value
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertDistanceToCounterDistanceY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertDistanceToCounterDistanceY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function convertDistanceToRelativeX(ByVal value As Double) As Double
+Public Function ConvertDistanceToRelativeX(ByVal value As Double) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
-convertDistanceToRelativeX = 100# * value * TwipsPerCm / CDbl(mSurface.width)
+ConvertDistanceToRelativeX = 100# * value * TwipsPerCm / CDbl(mSurface.Width)
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertDistanceToRelativeX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertDistanceToRelativeX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function convertDistanceToRelativeY(ByVal value As Double) As Double
+Public Function ConvertDistanceToRelativeY(ByVal value As Double) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
-convertDistanceToRelativeY = 100# * value * TwipsPerCm / CDbl(mSurface.height)
+ConvertDistanceToRelativeY = 100# * value * TwipsPerCm / CDbl(mSurface.Height)
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertDistanceToRelativeY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertDistanceToRelativeY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function convertLogicalToCounterDistanceX(ByVal value As Single)
+Public Function ConvertLogicalToCounterDistanceX(ByVal value As Double) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
-convertLogicalToCounterDistanceX = (mBoundary.right - value) / (mBoundary.right - mBoundary.left) * mSurface.width / TwipsPerCm
+ConvertLogicalToCounterDistanceX = (mBoundary.Right - value) / (mBoundary.Right - mBoundary.Left) * mSurface.Width / TwipsPerCm
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertLogicalToCounterDistanceX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertLogicalToCounterDistanceX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function convertLogicalToCounterDistanceY(ByVal value As Double) As Double
+Public Function ConvertLogicalToCounterDistanceY(ByVal value As Double) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
-convertLogicalToCounterDistanceY = (mBoundary.top - value) / (mBoundary.top - mBoundary.bottom) * CDbl(mSurface.height) / TwipsPerCm
+ConvertLogicalToCounterDistanceY = (mBoundary.Top - value) / (mBoundary.Top - mBoundary.Bottom) * CDbl(mSurface.Height) / TwipsPerCm
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertLogicalToCounterDistanceY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertLogicalToCounterDistanceY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function convertLogicalToDistanceX(ByVal value As Double) As Double
+Public Function ConvertLogicalToDistanceX(ByVal value As Double) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
-convertLogicalToDistanceX = (value - mBoundary.left) / (mBoundary.right - mBoundary.left) * CDbl(mSurface.width) / TwipsPerCm
+ConvertLogicalToDistanceX = (value - mBoundary.Left) / (mBoundary.Right - mBoundary.Left) * CDbl(mSurface.Width) / TwipsPerCm
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertLogicalToDistanceX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertLogicalToDistanceX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function convertLogicalToDistanceY(ByVal value As Double) As Double
+Public Function ConvertLogicalToDistanceY(ByVal value As Double) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
-convertLogicalToDistanceY = (value - mBoundary.bottom) / (mBoundary.top - mBoundary.bottom) * CDbl(mSurface.height) / TwipsPerCm
+ConvertLogicalToDistanceY = (value - mBoundary.Bottom) / (mBoundary.Top - mBoundary.Bottom) * CDbl(mSurface.Height) / TwipsPerCm
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertLogicalToDistanceY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertLogicalToDistanceY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function convertLogicalToPixelsX(ByVal value As Double) As Long
+Public Function ConvertLogicalToPixelsX(ByVal value As Double) As Long
 Dim failpoint As Long
 On Error GoTo Err
 
-convertLogicalToPixelsX = mSurface.ScaleX(value, vbUser, vbPixels)
+ConvertLogicalToPixelsX = mSurface.ScaleX(value, vbUser, vbPixels)
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertLogicalToPixelsX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertLogicalToPixelsX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function convertLogicalToPixelsY(ByVal value As Double) As Long
+Public Function ConvertLogicalToPixelsY(ByVal value As Double) As Long
 Dim failpoint As Long
 On Error GoTo Err
 
-convertLogicalToPixelsY = -mSurface.ScaleY(value, vbUser, vbPixels)
+ConvertLogicalToPixelsY = -mSurface.ScaleY(value, vbUser, vbPixels)
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertLogicalToPixelsY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertLogicalToPixelsY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function convertLogicalToRelativeX(ByVal value As Double) As Double
+Public Function ConvertLogicalToRelativeX(ByVal value As Double) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
-convertLogicalToRelativeX = (value - mBoundary.left) / (mBoundary.right - mBoundary.left) * 100#
+ConvertLogicalToRelativeX = (value - mBoundary.Left) / (mBoundary.Right - mBoundary.Left) * 100#
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertLogicalToRelativeX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertLogicalToRelativeX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function convertLogicalToRelativeY(ByVal value As Double) As Double
+Public Function ConvertLogicalToRelativeY(ByVal value As Double) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
-convertLogicalToRelativeY = (value - mBoundary.bottom) / (mBoundary.top - mBoundary.bottom) * 100#
+ConvertLogicalToRelativeY = (value - mBoundary.Bottom) / (mBoundary.Top - mBoundary.Bottom) * 100#
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertLogicalToRelativeY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertLogicalToRelativeY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function convertPixelsToLogicalX(ByVal value As Long) As Double
+Public Function ConvertPixelsToLogicalX(ByVal value As Long) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
-convertPixelsToLogicalX = CDbl(value) * mGaugeX
+ConvertPixelsToLogicalX = CDbl(value) * mGaugeX
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertPixelsToLogicalX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertPixelsToLogicalX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function convertPixelsToLogicalY(ByVal value As Long) As Double
+Public Function ConvertPixelsToLogicalY(ByVal value As Long) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
-convertPixelsToLogicalY = CDbl(value) * mGaugeY
+ConvertPixelsToLogicalY = CDbl(value) * mGaugeY
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertPixelsToLogicalY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertPixelsToLogicalY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function convertRelativeToLogicalX(ByVal value As Double) As Double
+Public Function ConvertRelativeToLogicalX(ByVal value As Double) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
-convertRelativeToLogicalX = mBoundary.left + (value * (mBoundary.right - mBoundary.left) / 100#)
+ConvertRelativeToLogicalX = mBoundary.Left + (value * (mBoundary.Right - mBoundary.Left) / 100#)
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertRelativeToLogicalX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertRelativeToLogicalX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function convertRelativeToLogicalY(ByVal value As Double) As Double
+Public Function ConvertRelativeToLogicalY(ByVal value As Double) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
-convertRelativeToLogicalY = mBoundary.bottom + (value * (mBoundary.top - mBoundary.bottom) / 100#)
+ConvertRelativeToLogicalY = mBoundary.Bottom + (value * (mBoundary.Top - mBoundary.Bottom) / 100#)
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertRelativeToLogicalY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertRelativeToLogicalY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function convertRelativeToCounterDistanceX(ByVal value As Double) As Double
+Public Function ConvertRelativeToCounterDistanceX(ByVal value As Double) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
-convertRelativeToCounterDistanceX = ((100# - value) * CDbl(mSurface.width)) / 100# / TwipsPerCm
+ConvertRelativeToCounterDistanceX = ((100# - value) * CDbl(mSurface.Width)) / 100# / TwipsPerCm
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertRelativeToCounterDistanceX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertRelativeToCounterDistanceX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function convertRelativeToCounterDistanceY(ByVal value As Double) As Double
+Public Function ConvertRelativeToCounterDistanceY(ByVal value As Double) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
-convertRelativeToCounterDistanceY = ((100# - value) * CDbl(mSurface.height)) / 100# / TwipsPerCm
+ConvertRelativeToCounterDistanceY = ((100# - value) * CDbl(mSurface.Height)) / 100# / TwipsPerCm
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertRelativeToCounterDistanceY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertRelativeToCounterDistanceY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function convertRelativeToDistanceX(ByVal value As Double) As Double
+Public Function ConvertRelativeToDistanceX(ByVal value As Double) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
-convertRelativeToDistanceX = (value * CDbl(mSurface.width)) / 100# / TwipsPerCm
+ConvertRelativeToDistanceX = (value * CDbl(mSurface.Width)) / 100# / TwipsPerCm
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertRelativeToDistanceX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertRelativeToDistanceX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function convertRelativeToDistanceY(ByVal value As Double) As Double
+Public Function ConvertRelativeToDistanceY(ByVal value As Double) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
-convertRelativeToDistanceY = (value * CDbl(mSurface.height)) * 100# / TwipsPerCm
+ConvertRelativeToDistanceY = (value * CDbl(mSurface.Height)) * 100# / TwipsPerCm
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "convertRelativeToDistanceY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ConvertRelativeToDistanceY" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Sub drawCircle( _
+Public Sub DrawCircle( _
                 ByVal centre As Point, _
                 ByVal radius As Double)
 Dim failpoint As Long
@@ -991,15 +967,15 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "drawCircle" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "DrawCircle" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Sub
 
-Public Sub drawLine( _
+Public Sub DrawLine( _
                 ByVal startPoint As Point, _
                 ByVal endPoint As Point)
 Dim failpoint As Long
@@ -1012,15 +988,15 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "drawLine" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "DrawLine" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Sub
 
-Public Sub drawPoint( _
+Public Sub DrawPoint( _
                 ByVal p As Point)
 Dim failpoint As Long
 On Error GoTo Err
@@ -1032,15 +1008,15 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "drawPoint" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "DrawPoint" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Sub
 
-Public Sub drawPolygon( _
+Public Sub DrawPolygon( _
                 ByRef points() As Point)
 Dim apiPoints() As POINTAPI
 Dim failpoint As Long
@@ -1050,27 +1026,27 @@ ReDim apiPoints(UBound(points)) As POINTAPI
 Dim i As Long
 
 For i = 0 To UBound(points)
-    apiPoints(i).x = convertLogicalToPixelsX(points(i).XLogical - mBoundary.left)
-    apiPoints(i).y = convertLogicalToPixelsY(mBoundary.top - points(i).YLogical)
+    apiPoints(i).X = ConvertLogicalToPixelsX(points(i).XLogical - mBoundary.Left)
+    apiPoints(i).Y = ConvertLogicalToPixelsY(mBoundary.Top - points(i).YLogical)
 Next
 
 applyPenSettings
 applyFillSettings
-Polygon mSurface.hdc, apiPoints(0), UBound(apiPoints) + 1
+Polygon mSurface.Hdc, apiPoints(0), UBound(apiPoints) + 1
 
 Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "drawPolygon" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "DrawPolygon" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Sub
 
-Public Sub drawRectangle( _
+Public Sub DrawRectangle( _
                 ByVal p1 As Point, _
                 ByVal p2 As Point)
 Dim failpoint As Long
@@ -1084,16 +1060,16 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "drawRectangle" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "DrawRectangle" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Sub
 
-Public Sub drawText( _
-                ByVal text As String, _
+Public Sub DrawText( _
+                ByVal Text As String, _
                 ByVal location As Point)
 Dim prevFont As StdFont
 Dim textLines() As String
@@ -1108,7 +1084,7 @@ mSurface.FontTransparent = mTextTransparent
 mSurface.CurrentX = location.XLogical
 mSurface.CurrentY = location.YLogical
 mSurface.ForeColor = mTextColor
-textLines = Split(text, vbCrLf)
+textLines = Split(Text, vbCrLf)
 For i = 0 To UBound(textLines)
     mSurface.Print textLines(i)
     mSurface.CurrentX = location.XLogical
@@ -1118,77 +1094,77 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "drawText" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "DrawText" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 
 End Sub
 
-Public Function newDimension(ByVal x As Double, _
-                        ByVal y As Double) As Dimension
+Public Function NewDimension(ByVal X As Double, _
+                        ByVal Y As Double) As Dimension
 Dim failpoint As Long
 On Error GoTo Err
 
-Set newDimension = New Dimension
-newDimension.Canvas = Me
-newDimension.x = x
-newDimension.y = y
+Set NewDimension = New Dimension
+NewDimension.Canvas = Me
+NewDimension.X = X
+NewDimension.Y = Y
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "newDimension" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "NewDimension" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function newPoint(ByVal x As Double, _
-                        ByVal y As Double, _
+Public Function NewPoint(ByVal X As Double, _
+                        ByVal Y As Double, _
                         Optional ByVal coordSystemX As CoordinateSystems = CoordsLogical, _
                         Optional ByVal coordSystemY As CoordinateSystems = CoordsLogical) As Point
 Dim failpoint As Long
 On Error GoTo Err
 
-Set newPoint = New Point
-newPoint.Canvas = Me
-newPoint.x = x
-newPoint.y = y
-newPoint.CoordinateSystemX = coordSystemX
-newPoint.CoordinateSystemY = coordSystemY
+Set NewPoint = New Point
+NewPoint.Canvas = Me
+NewPoint.X = X
+NewPoint.Y = Y
+NewPoint.CoordinateSystemX = coordSystemX
+NewPoint.CoordinateSystemY = coordSystemY
 
 Exit Function
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "newPoint" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "NewPoint" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Sub paintBackground()
+Public Sub PaintBackground()
 Dim failpoint As Long
 On Error GoTo Err
 
 'mSurface.Visible = True
 If mGradientFillMode = GRADIENT_FILL_TRIANGLE Then
-    GradientFill mSurface.hdc, _
+    GradientFill mSurface.Hdc, _
                 VarPtr(mVertices(0)), _
                 UBound(mVertices) + 1, _
                 VarPtr(mMeshTriangle(0)), _
                 UBound(mMeshTriangle) + 1, _
                 GRADIENT_FILL_TRIANGLE
 Else
-    GradientFill mSurface.hdc, _
+    GradientFill mSurface.Hdc, _
                 VarPtr(mVertices(0)), _
                 UBound(mVertices) + 1, _
                 VarPtr(mMeshRect(0)), _
@@ -1200,108 +1176,114 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "paintBackground" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "PaintBackground" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Sub
 
-Public Sub setBrushAttributes( _
+Public Sub SetBrushAttributes( _
                 ByVal Color As Long, _
-                ByVal style As FillStyles)
+                ByVal Style As FillStyles)
 Dim failpoint As Long
 On Error GoTo Err
 
 mBrushColor = Color
-mBrushStyle = style
+mBrushStyle = Style
 
 Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "setBrushAttributes" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "SetBrushAttributes" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Sub
 
-Friend Sub setClippingRegion( _
+Friend Sub SetClippingRegion( _
                 ByRef clipArea As TRectangle)
 Dim res As Long
 Dim failpoint As Long
 On Error GoTo Err
 
-mClipRegion = CreateRectRgn(Int(convertLogicalToPixelsX(clipArea.left - left)), _
-                        Int(convertLogicalToPixelsY(top - clipArea.top)), _
-                        Int(convertLogicalToPixelsX(clipArea.right - left) + 0.99999) + 1, _
-                        Int(convertLogicalToPixelsY(top - clipArea.bottom) + 0.99999) + 1)
-res = SelectClipRgn(mSurface.hdc, mClipRegion)
+mClipRegion = CreateRectRgn(Int(ConvertLogicalToPixelsX(clipArea.Left - Left)), _
+                        Int(ConvertLogicalToPixelsY(Top - clipArea.Top)), _
+                        Int(ConvertLogicalToPixelsX(clipArea.Right - Left) + 0.99999) + 1, _
+                        Int(ConvertLogicalToPixelsY(Top - clipArea.Bottom) + 0.99999) + 1)
+If mClipRegion = 0 Then
+    Err.Raise ErrorCodes.ErrRuntimeException, _
+            ProjectName & "." & ModuleName & ":" & "SetClippingRegion", _
+            "Failed to create GDI region"
+End If
+
+res = SelectClipRgn(mSurface.Hdc, mClipRegion)
 
 Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "setClippingRegion" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "SetClippingRegion" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Sub
 
-Public Sub setPenAttributes( _
+Public Sub SetPenAttributes( _
                 ByVal Color As Long, _
-                ByVal width As Long, _
-                ByVal style As LineStyles, _
+                ByVal Width As Long, _
+                ByVal Style As LineStyles, _
                 ByVal mode As DrawModes)
 Dim failpoint As Long
 On Error GoTo Err
 
 mPenColor = Color
-mPenWidth = width
-mPenStyle = style
+mPenWidth = Width
+mPenStyle = Style
 mPenMode = mode
 
 Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "setPenAttributes" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "SetPenAttributes" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Sub
 
-Public Sub setTextAttributes( _
+Public Sub SetTextAttributes( _
                 ByVal Color As Long, _
-                ByVal font As StdFont, _
+                ByVal Font As StdFont, _
                 ByVal transparent As Boolean)
 Dim failpoint As Long
 On Error GoTo Err
 
 mTextColor = Color
-Set mTextFont = font
+Set mTextFont = Font
 mTextTransparent = transparent
 
 Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "setTextAttributes" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "SetTextAttributes" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Sub
 
-Public Function TextHeight(ByVal value As String) As Single
+Public Function TextHeight(ByVal value As String) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -1314,13 +1296,13 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "TextHeight" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Function
 
-Public Function TextWidth(ByVal value As String) As Single
+Public Function TextWidth(ByVal value As String) As Double
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -1333,7 +1315,7 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "TextWidth" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
@@ -1365,25 +1347,25 @@ Select Case UBound(mBackGradientFillColors)
 Case 0
     ReDim mVertices(1) As TRIVERTEX
     ReDim mMeshRect(0) As GRADIENT_RECT
-    setVertex 0, left, top, 0
-    setVertex 1, right + 1, bottom, 0
+    setVertex 0, Left, Top, 0
+    setVertex 1, Right + 1, Bottom, 0
     setMeshRect 0, 0, 1
     mGradientFillMode = GRADIENT_FILL_RECT_H
 Case 1
     ReDim mVertices(1) As TRIVERTEX
     ReDim mMeshRect(0) As GRADIENT_RECT
-    setVertex 0, left, top, 0
-    setVertex 1, right + 1, bottom, 1
+    setVertex 0, Left, Top, 0
+    setVertex 1, Right + 1, Bottom, 1
     setMeshRect 0, 0, 1
     mGradientFillMode = GRADIENT_FILL_RECT_H
 Case 2
     ReDim mVertices(4) As TRIVERTEX
     ReDim mMeshTriangle(3) As GRADIENT_TRIANGLE
-    setVertex 0, left, top, 0
-    setVertex 1, right, top, 1
-    setVertex 2, (left + right + 1) / 2, (top + bottom) / 2, 2
-    setVertex 3, right + 1, bottom, 1
-    setVertex 4, left, bottom, 0
+    setVertex 0, Left, Top, 0
+    setVertex 1, Right, Top, 1
+    setVertex 2, (Left + Right + 1) / 2, (Top + Bottom) / 2, 2
+    setVertex 3, Right + 1, Bottom, 1
+    setVertex 4, Left, Bottom, 0
     setMeshTriangle 0, 0, 1, 2
     setMeshTriangle 1, 1, 3, 2
     setMeshTriangle 2, 3, 4, 2
@@ -1392,21 +1374,21 @@ Case 2
 Case 3
     ReDim mVertices(3) As TRIVERTEX
     ReDim mMeshTriangle(1) As GRADIENT_TRIANGLE
-    setVertex 0, left, top, 0
-    setVertex 1, right + 1, top, 1
-    setVertex 2, right + 1, bottom, 2
-    setVertex 3, left, bottom, 3
+    setVertex 0, Left, Top, 0
+    setVertex 1, Right + 1, Top, 1
+    setVertex 2, Right + 1, Bottom, 2
+    setVertex 3, Left, Bottom, 3
     setMeshTriangle 0, 0, 1, 2
     setMeshTriangle 1, 2, 3, 0
     mGradientFillMode = GRADIENT_FILL_TRIANGLE
 Case 4
     ReDim mVertices(4) As TRIVERTEX
     ReDim mMeshTriangle(3) As GRADIENT_TRIANGLE
-    setVertex 0, left, top, 0
-    setVertex 1, right + 1, top, 1
-    setVertex 2, right + 1, bottom, 2
-    setVertex 3, left, bottom, 3
-    setVertex 4, (left + right + 1) / 2, (top + bottom) / 2, 4
+    setVertex 0, Left, Top, 0
+    setVertex 1, Right + 1, Top, 1
+    setVertex 2, Right + 1, Bottom, 2
+    setVertex 3, Left, Bottom, 3
+    setVertex 4, (Left + Right + 1) / 2, (Top + Bottom) / 2, 4
     setMeshTriangle 0, 0, 1, 4
     setMeshTriangle 1, 1, 2, 4
     setMeshTriangle 2, 2, 3, 4
@@ -1415,11 +1397,32 @@ Case 4
 End Select
 End Sub
 
+Public Sub checkValidDimensions()
+Dim midPoint As Double
+Dim newRange As Double
+
+rectValidate mBoundary
+If mBoundary.isValid Then
+    Do While CSng(mBoundary.Top) - CSng(mBoundary.Bottom) = 0
+        midPoint = mBoundary.Top - mBoundary.Bottom
+        newRange = 10 * mBoundary.Top - 0.1 * mBoundary.Bottom
+        mBoundary.Top = midPoint + newRange / 2
+        mBoundary.Bottom = midPoint - newRange / 2
+    Loop
+    Do While CSng(mBoundary.Right) - CSng(mBoundary.Left) = 0
+        midPoint = mBoundary.Right - mBoundary.Left
+        newRange = 10 * mBoundary.Right - 0.1 * mBoundary.Left
+        mBoundary.Top = midPoint + newRange / 2
+        mBoundary.Bottom = midPoint - newRange / 2
+    Loop
+End If
+End Sub
+
 Private Sub setfont()
 If Not mTextFont Is Nothing Then
-    With mSurface.font
+    With mSurface.Font
         If mTextFont.size < 8 Then .size = mTextFont.size
-       .name = mTextFont.name
+       .Name = mTextFont.Name
        .Bold = mTextFont.Bold
        .Italic = mTextFont.Italic
        .size = mTextFont.size
@@ -1451,14 +1454,14 @@ End Sub
 
 Private Sub setScale()
 If mSurface Is Nothing Then Exit Sub
-mSurface.ScaleHeight = mBoundary.bottom - mBoundary.top
-mSurface.ScaleWidth = mBoundary.right - mBoundary.left + 1
-mSurface.ScaleTop = mBoundary.top
-mSurface.ScaleLeft = mBoundary.left
+mSurface.ScaleHeight = mBoundary.Bottom - mBoundary.Top
+mSurface.ScaleWidth = mBoundary.Right - mBoundary.Left + 1
+mSurface.ScaleTop = mBoundary.Top
+mSurface.ScaleLeft = mBoundary.Left
 mGaugeX = mSurface.ScaleWidth / mSurface.ScaleX(mSurface.ScaleWidth, ScaleModeConstants.vbUser, ScaleModeConstants.vbPixels)
-'mGaugeX = (CDbl(mSurface.ScaleWidth) * CDbl(Screen.TwipsPerPixelX)) / CDbl(mSurface.width)
+'mGaugeX = (CDbl(mSurface.ScaleWidth) * CDbl(Screen.TwipsPerPixelX)) / CDbl(mSurface.Width)
 mGaugeY = -mSurface.ScaleHeight / mSurface.ScaleY(mSurface.ScaleHeight, ScaleModeConstants.vbUser, ScaleModeConstants.vbPixels)
-'mGaugeY = -(CDbl(mSurface.ScaleHeight) * CDbl(Screen.TwipsPerPixelY)) / CDbl(mSurface.height)
+'mGaugeY = -(CDbl(mSurface.ScaleHeight) * CDbl(Screen.TwipsPerPixelY)) / CDbl(mSurface.Height)
 
 calculateGradientFillParameters
 
@@ -1466,11 +1469,11 @@ End Sub
 
 Private Sub setVertex( _
                 ByRef index As Long, _
-                ByVal x As Single, _
-                ByVal y As Single, _
+                ByVal X As Double, _
+                ByVal Y As Double, _
                 ByVal colorIndex As Long)
-mVertices(index).x = convertLogicalToPixelsX(x - left)
-mVertices(index).y = convertLogicalToPixelsY(top - y)
+mVertices(index).X = ConvertLogicalToPixelsX(X - Left)
+mVertices(index).Y = ConvertLogicalToPixelsY(Top - Y)
 mVertices(index).Red = mBackGradientFillColors(colorIndex) And &HFF&
 mVertices(index).Green = (mBackGradientFillColors(colorIndex) And &HFF00&) / &H100&
 mVertices(index).Blue = (mBackGradientFillColors(colorIndex) And &HFF0000) / &H10000

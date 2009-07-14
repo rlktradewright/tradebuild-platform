@@ -41,24 +41,24 @@ Event SelectionStateChanged()
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                As String = "ChartSkil26"
+
 Private Const ModuleName                As String = "Text"
 
 '================================================================================
 ' Member variables and constants
 '================================================================================
 
+Private mSeries As TextSeries
+
 Private mCanvas As Canvas
 Private mLayer As Long
 Private mHandle As Long
 
 Private mIsSelectable As Boolean
-Private mIsSeriesSelectable As Boolean
 Private mIsSelected As Boolean
-Private mSeriesID As Long
 
-Private mLocalStyle As TextStyle
-Private mBaseStyle As TextStyle
+Private WithEvents mLocalStyle As TextStyle
+Attribute mLocalStyle.VB_VarHelpID = -1
 
 Private mInScope As Boolean
 Private mVisible As Boolean
@@ -72,8 +72,8 @@ Private mText As String
 Private mRawBoundingRect As TRectangle
 Private mBoundingRect As TRectangle ' the rectangle that surrounds the box (if
                                 ' any - including the thickness of the lines) or
-                                ' the text if no box
-Private mTextRect As TRectangle ' the rectangle containing the text
+                                ' the Text if no box
+Private mTextRect As TRectangle ' the rectangle containing the Text
 Private mBoxRect As TRectangle  ' the rectangle used to draw the box
 
 Private mIsSetFont As Boolean
@@ -84,13 +84,15 @@ Private mIsSetBoxStyle As Boolean
 Private mIsSetBoxThickness As Boolean
 Private mIsSetBoxFillColor As Boolean
 Private mIsSetBoxFillStyle As Boolean
+Private mIsSetBoxFillWithBackgroundColor As Boolean
 Private mIsSetAlign As Boolean
+Private mIsSetPaddingX As Boolean
+Private mIsSetPaddingY As Boolean
 Private mIsSetFixedX As Boolean
 Private mIsSetFixedY As Boolean
 Private mIsSetIncludeInAutoscale As Boolean
 Private mIsSetExtended As Boolean
-Private mIsSetPaddingX As Boolean
-Private mIsSetPaddingY As Boolean
+Private mIsSetLayer As Boolean
 
 Private mFont As StdFont
 Private mColor As Long
@@ -100,6 +102,7 @@ Private mBoxStyle As LineStyles
 Private mBoxThickness As Long
 Private mBoxFillColor As Long
 Private mBoxFillStyle As FillStyles
+Private mBoxFillWithBackgroundColor As Boolean
 Private mAlign As TextAlignModes
 Private mFixedX As Boolean
 Private mFixedY As Boolean
@@ -109,7 +112,6 @@ Private mPaddingX As Double
 Private mPaddingY As Double
 
 Private mBlank As Boolean
-Private mDrawn As Boolean
 
 Private mPosition As Point
 Private mOffset As Dimension
@@ -152,7 +154,7 @@ Dim canvasChanges As Long
 Dim failpoint As Long
 On Error GoTo Err
 
-canvasChanges = mCanvas.compareTo(prevGaugeX, prevGaugeY, prevRect)
+canvasChanges = mCanvas.CompareTo(prevGaugeX, prevGaugeY, prevRect)
 If (canvasChanges And CanvasComparisonCodes.GaugeChangedX) Or _
     (canvasChanges And CanvasComparisonCodes.GaugeChangedY) _
 Then
@@ -167,9 +169,9 @@ Then
     calcCurrentBoundingRect
 End If
 
-prevGaugeX = mCanvas.gaugeX
-prevGaugeY = mCanvas.gaugeY
-prevRect = mCanvas.boundary
+prevGaugeX = mCanvas.GaugeX
+prevGaugeY = mCanvas.GaugeY
+prevRect = mCanvas.Boundary
 
 IGraphicObject_boundingRectangle = mBoundingRect
 
@@ -179,13 +181,13 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_boundingRectangle" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
 End Property
 
-Private Property Get IGraphicObject_BoundingRectanglesAt(ByVal periodNumber As Long) As TRectangle()
+Private Property Get IGraphicObject_BoundingRectanglesAt(ByVal PeriodNumber As Long) As TRectangle()
 '
 End Property
 
@@ -207,7 +209,7 @@ Draw
 End Sub
 
 Private Property Get IGraphicObject_extendedObject() As Boolean
-IGraphicObject_extendedObject = extended Or fixedX
+IGraphicObject_extendedObject = Extended Or FixedX
 End Property
 
 Private Sub IGraphicObject_finish()
@@ -226,12 +228,12 @@ Private Property Get IGraphicObject_handle() As Long
 IGraphicObject_handle = mHandle
 End Property
 
-Private Function IGraphicObject_HitTest(ByVal x As Double, ByVal y As Double) As Boolean
-IGraphicObject_HitTest = RectContainsPoint(mBoundingRect, x, y)
+Private Function IGraphicObject_HitTest(ByVal X As Double, ByVal Y As Double) As Boolean
+IGraphicObject_HitTest = RectContainsPoint(mBoundingRect, X, Y)
 End Function
 
-Private Property Get IGraphicObject_includeInAutoscale() As Boolean
-IGraphicObject_includeInAutoscale = includeInAutoscale
+Private Property Get IGraphicObject_IncludeInAutoscale() As Boolean
+IGraphicObject_IncludeInAutoscale = IncludeInAutoscale
 End Property
 
 Private Property Let IGraphicObject_inScope(ByVal value As Boolean)
@@ -242,10 +244,6 @@ Private Property Get IGraphicObject_IsSelectable() As Boolean
 IGraphicObject_IsSelectable = mIsSelectable
 End Property
 
-Private Property Get IGraphicObject_IsSeriesSelectable() As Boolean
-IGraphicObject_IsSeriesSelectable = mIsSeriesSelectable
-End Property
-
 Private Property Get IGraphicObject_layer() As Long
 IGraphicObject_layer = Layer
 End Property
@@ -254,26 +252,26 @@ Private Property Get IGraphicObject_noDraw() As Boolean
 IGraphicObject_noDraw = mBlank Or mNoDraw
 End Property
 
-Private Property Get IGraphicObject_periodNumber() As Long
-If extended Or Not mBoundingRect.isValid Then
-    IGraphicObject_periodNumber = -1
+Private Property Get IGraphicObject_PeriodNumber() As Long
+If Extended Or Not mBoundingRect.isValid Then
+    IGraphicObject_PeriodNumber = -1
 Else
-    Select Case align
+    Select Case Align
     Case AlignTopLeft, AlignCentreLeft, AlignBottomLeft, _
             AlignBoxTopLeft, AlignBoxCentreLeft, AlignBoxBottomLeft
-        IGraphicObject_periodNumber = Int(mBoundingRect.left + 0.5)
+        IGraphicObject_PeriodNumber = Int(mBoundingRect.Left + 0.5)
     Case AlignTopCentre, AlignCentreCentre, AlignBottomCentre, _
             AlignBoxTopCentre, AlignBoxCentreCentre, AlignBoxBottomCentre
-        IGraphicObject_periodNumber = Int((mBoundingRect.left + mBoundingRect.right) / 2 + 0.5)
+        IGraphicObject_PeriodNumber = Int((mBoundingRect.Left + mBoundingRect.Right) / 2 + 0.5)
     Case AlignTopRight, AlignCentreRight, AlignBottomRight, _
             AlignBoxTopRight, AlignBoxCentreRight, AlignBoxBottomRight
-        IGraphicObject_periodNumber = Int(mBoundingRect.right + 0.5)
+        IGraphicObject_PeriodNumber = Int(mBoundingRect.Right + 0.5)
     End Select
 End If
 End Property
 
 Private Property Get IGraphicObject_scaleDependent() As Boolean
-IGraphicObject_scaleDependent = fixedX Or fixedY
+IGraphicObject_scaleDependent = FixedX Or FixedY
 End Property
 
 Private Property Let IGraphicObject_Selected(ByVal RHS As Boolean)
@@ -289,16 +287,16 @@ IGraphicObject_Selected = mIsSelected
 End Property
 
 Private Property Get IGraphicObject_SeriesID() As Long
-IGraphicObject_SeriesID = mSeriesID
+IGraphicObject_SeriesID = mSeries.Id
 End Property
 
-Private Property Get IGraphicObject_timestamp() As Date
-IGraphicObject_timestamp = 0
+Private Property Get IGraphicObject_Timestamp() As Date
+IGraphicObject_Timestamp = 0
 End Property
 
 'Private Sub IGraphicObject_undraw( _
 '                ByRef area As TRectangle, _
-'                ByVal hdc As Long)
+'                ByVal Hdc As Long)
 'Dim failpoint As Long
 'On Error GoTo Err
 '
@@ -310,7 +308,7 @@ End Property
 'Dim errNumber As Long: errNumber = Err.Number
 'Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "IGraphicObject_undraw" & "." & failpoint & IIf(err.Source <> "", vbCrLf & err.Source, "")
 'Dim errDescription As String: errDescription = Err.Description
-'gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+'gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 'Err.Raise errNumber, errSource, errDescription
 '
 '
@@ -320,279 +318,313 @@ Private Property Let IGraphicObject_visible(ByVal value As Boolean)
 mVisible = value
 End Property
 
+'================================================================================
+' mLocalStyle Event Handlers
+'================================================================================
+
+Private Sub mLocalStyle_PropertyChanged(ev As TWUtilities30.PropertyChangedEvent)
+Dim failpoint As Long
+On Error GoTo Err
+
+Select Case UCase$(ev.PropertyName)
+Case UCase$("align")
+    initiateRedraw True, True
+Case UCase$("box")
+    initiateRedraw True, True
+Case UCase$("boxColor")
+    initiateRedraw False, False
+Case UCase$("boxFillColor")
+    initiateRedraw False, False
+Case UCase$("boxFillStyle")
+    initiateRedraw True, False
+Case UCase$("boxStyle")
+    initiateRedraw True, True
+Case UCase$("boxThickness")
+    initiateRedraw True, True
+Case UCase$("color")
+    initiateRedraw False, False
+Case UCase$("Font")
+    initiateRedraw True, True
+Case UCase$("paddingX")
+    initiateRedraw True, True
+Case UCase$("paddingY")
+    initiateRedraw True, True
+Case Else
+    Err.Raise ErrorCodes.ErrUnsupportedOperationException, _
+            ProjectName & "." & ModuleName & ":" & "mStyle_PropertyChanged", _
+            "Unhandled property change"
+End Select
+
+Exit Sub
+
+Err:
+Dim errNumber As Long: errNumber = Err.Number
+Dim errSource As String: errSource = IIf(Err.Source <> "", Err.Source & vbCrLf, "") & ProjectName & "." & ModuleName & ":" & "mLocalStyle_PropertyChanged" & "." & failpoint
+Dim errDescription As String: errDescription = Err.Description
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+End Sub
 
 '================================================================================
 ' Properties
 '================================================================================
 
-Public Property Get align() As TextAlignModes
-align = mBaseStyle.align
-If Not mLocalStyle Is Nothing Then align = mLocalStyle.align
-If mIsSetAlign Then align = mAlign
+Public Property Get Align() As TextAlignModes
+Align = mSeries.Align
+If Not mLocalStyle Is Nothing Then Align = mLocalStyle.Align
+If mIsSetAlign Then Align = mAlign
 End Property
 
-Public Property Let align(ByVal value As TextAlignModes)
+Public Property Let Align(ByVal value As TextAlignModes)
 If mAlign = value And mIsSetAlign Then Exit Property
-undraw
 mAlign = value
 mIsSetAlign = True
-update
+initiateRedraw True, True
 End Property
 
-Public Property Get box() As Boolean
-box = mBaseStyle.box
-If Not mLocalStyle Is Nothing Then box = mLocalStyle.box
-If mIsSetBox Then box = mBox
+Public Property Get Box() As Boolean
+Box = mSeries.Box
+If Not mLocalStyle Is Nothing Then Box = mLocalStyle.Box
+If mIsSetBox Then Box = mBox
 End Property
 
-Public Property Let box(ByVal value As Boolean)
+Public Property Let Box(ByVal value As Boolean)
 If mBox = value And mIsSetBox Then Exit Property
-undraw
 mBox = value
 mIsSetBox = True
-update
+initiateRedraw True, True
 End Property
 
-Public Property Get boxColor() As Long
-boxColor = mBaseStyle.boxColor
-If Not mLocalStyle Is Nothing Then boxColor = mLocalStyle.boxColor
-If mIsSetBoxColor Then boxColor = mBoxColor
+Public Property Get BoxColor() As OLE_COLOR
+BoxColor = mSeries.BoxColor
+If Not mLocalStyle Is Nothing Then BoxColor = mLocalStyle.BoxColor
+If mIsSetBoxColor Then BoxColor = mBoxColor
 End Property
 
-Public Property Let boxColor(ByVal value As Long)
+Public Property Let BoxColor(ByVal value As OLE_COLOR)
 If mBoxColor = value And mIsSetBoxColor Then Exit Property
 mBoxColor = value
 mIsSetBoxColor = True
-update
+initiateRedraw False, False
 End Property
 
-Public Property Get boxFillColor() As Long
-boxFillColor = mBaseStyle.boxFillColor
-If Not mLocalStyle Is Nothing Then boxFillColor = mLocalStyle.boxFillColor
-If mIsSetBoxFillColor Then boxFillColor = mBoxFillColor
+Public Property Get BoxFillColor() As OLE_COLOR
+BoxFillColor = mSeries.BoxFillColor
+If Not mLocalStyle Is Nothing Then BoxFillColor = mLocalStyle.BoxFillColor
+If mIsSetBoxFillColor Then BoxFillColor = mBoxFillColor
 End Property
 
-Public Property Let boxFillColor(ByVal value As Long)
+Public Property Let BoxFillColor(ByVal value As OLE_COLOR)
 If mBoxFillColor = value And mIsSetBoxFillColor Then Exit Property
 mBoxFillColor = value
 mIsSetBoxFillColor = True
-update
+initiateRedraw False, False
 End Property
 
-Public Property Get boxFillStyle() As FillStyles
-boxFillStyle = mBaseStyle.boxFillStyle
-If Not mLocalStyle Is Nothing Then boxFillStyle = mLocalStyle.boxFillStyle
-If mIsSetBoxFillStyle Then boxFillStyle = mBoxFillStyle
+Public Property Get BoxFillStyle() As FillStyles
+BoxFillStyle = mSeries.BoxFillStyle
+If Not mLocalStyle Is Nothing Then BoxFillStyle = mLocalStyle.BoxFillStyle
+If mIsSetBoxFillStyle Then BoxFillStyle = mBoxFillStyle
 End Property
 
-Public Property Let boxFillStyle(ByVal value As FillStyles)
+Public Property Let BoxFillStyle(ByVal value As FillStyles)
 If mBoxFillStyle = value And mIsSetBoxFillStyle Then Exit Property
-undraw
 mBoxFillStyle = value
 mIsSetBoxFillStyle = True
-update
+initiateRedraw True, False
 End Property
 
-Public Property Get boxStyle() As LineStyles
-boxStyle = mBaseStyle.boxStyle
-If Not mLocalStyle Is Nothing Then boxStyle = mLocalStyle.boxStyle
-If mIsSetBoxStyle Then boxStyle = mBoxStyle
+Public Property Get BoxFillWithBackgroundColor() As Boolean
+BoxFillWithBackgroundColor = mSeries.BoxFillWithBackgroundColor
+If Not mLocalStyle Is Nothing Then BoxFillWithBackgroundColor = mLocalStyle.BoxFillWithBackgroundColor
+If mIsSetBoxFillWithBackgroundColor Then BoxFillWithBackgroundColor = mBoxFillWithBackgroundColor
 End Property
 
-Public Property Let boxStyle(ByVal value As LineStyles)
+Public Property Let BoxFillWithBackgroundColor(ByVal value As Boolean)
+If mBoxFillWithBackgroundColor = value And mIsSetBoxFillWithBackgroundColor Then Exit Property
+mBoxFillWithBackgroundColor = value
+mIsSetBoxFillWithBackgroundColor = True
+initiateRedraw True, True
+End Property
+
+Public Property Get BoxStyle() As LineStyles
+BoxStyle = mSeries.BoxStyle
+If Not mLocalStyle Is Nothing Then BoxStyle = mLocalStyle.BoxStyle
+If mIsSetBoxStyle Then BoxStyle = mBoxStyle
+End Property
+
+Public Property Let BoxStyle(ByVal value As LineStyles)
 If mBoxStyle = value And mIsSetBoxStyle Then Exit Property
-undraw
 mBoxStyle = value
 mIsSetBoxStyle = True
-update
+initiateRedraw True, True
 End Property
 
-Public Property Get boxThickness() As Long
-boxThickness = mBaseStyle.boxThickness
-If Not mLocalStyle Is Nothing Then boxThickness = mLocalStyle.boxThickness
-If mIsSetBoxThickness Then boxThickness = mBoxThickness
+Public Property Get BoxThickness() As Long
+BoxThickness = mSeries.BoxThickness
+If Not mLocalStyle Is Nothing Then BoxThickness = mLocalStyle.BoxThickness
+If mIsSetBoxThickness Then BoxThickness = mBoxThickness
 End Property
 
-Public Property Let boxThickness(ByVal value As Long)
+Public Property Let BoxThickness(ByVal value As Long)
 If mBoxThickness = value And mIsSetBoxThickness Then Exit Property
-undraw
 mBoxThickness = value
 mIsSetBoxThickness = True
-update
+initiateRedraw True, True
 End Property
 
-Public Property Get Color() As Long
-Color = mBaseStyle.Color
+Public Property Get Color() As OLE_COLOR
+Color = mSeries.Color
 If Not mLocalStyle Is Nothing Then Color = mLocalStyle.Color
 If mIsSetColor Then Color = mColor
 End Property
 
-Public Property Let Color(ByVal value As Long)
+Public Property Let Color(ByVal value As OLE_COLOR)
 If mColor = value And mIsSetColor Then Exit Property
 mColor = value
 mIsSetColor = True
-update
+initiateRedraw False, False
 End Property
 
-Friend Property Get extended() As Boolean
-extended = mBaseStyle.extended
-If Not mLocalStyle Is Nothing Then extended = mLocalStyle.extended
-If mIsSetExtended Then extended = mExtended
+Public Property Get Extended() As Boolean
+Extended = mSeries.Extended
+If mIsSetExtended Then Extended = mExtended
 End Property
 
-Public Property Let extended(ByVal value As Boolean)
+Public Property Let Extended(ByVal value As Boolean)
 If mExtended = value And mIsSetExtended Then Exit Property
-undraw
 mExtended = value
 mIsSetExtended = True
-update
+initiateRedraw True, True
 End Property
 
-Public Property Get fixedX() As Boolean
-fixedX = mBaseStyle.fixedX
-If Not mLocalStyle Is Nothing Then fixedX = mLocalStyle.fixedX
-If mIsSetFixedX Then fixedX = mFixedX
+Public Property Get FixedX() As Boolean
+FixedX = mSeries.FixedX
+If mIsSetFixedX Then FixedX = mFixedX
 End Property
 
-Public Property Let fixedX(ByVal value As Boolean)
+Public Property Let FixedX(ByVal value As Boolean)
 If mFixedX = value And mIsSetFixedX Then Exit Property
-undraw
 mFixedX = value
 mIsSetFixedX = True
-convertPositionX
-update
+ConvertPositionX
+initiateRedraw True, True
 End Property
 
-Public Property Get fixedY() As Boolean
-fixedY = mBaseStyle.fixedY
-If Not mLocalStyle Is Nothing Then fixedY = mLocalStyle.fixedY
-If mIsSetFixedY Then fixedY = mFixedY
+Public Property Get FixedY() As Boolean
+FixedY = mSeries.FixedY
+If mIsSetFixedY Then FixedY = mFixedY
 End Property
 
-Public Property Let fixedY(ByVal value As Boolean)
+Public Property Let FixedY(ByVal value As Boolean)
 If mFixedY = value And mIsSetFixedY Then Exit Property
-undraw
 mFixedY = value
 mIsSetFixedY = True
-convertPositionY
-update
+ConvertPositionY
+initiateRedraw True, True
 End Property
 
-Public Property Get font() As StdFont
+Public Property Get Font() As StdFont
 If mIsSetFont Then
-    Set font = gCloneFont(mFont)
+    Set Font = mFont
 ElseIf Not mLocalStyle Is Nothing Then
-    Set font = gCloneFont(mBaseStyle.font)
+    Set Font = mLocalStyle.Font
 Else
-    Set font = gCloneFont(mBaseStyle.font)
+    Set Font = mSeries.Font
 End If
 End Property
 
-Public Property Let font(ByVal value As StdFont)
-If value Is Nothing Then
-    If mIsSetFont Then
-        undraw
-        Set mFont = Nothing
-        mIsSetFont = False
-        update
-    End If
+Public Property Let Font(ByVal value As StdFont)
+Set mFont = value
+If mFont Is Nothing Then
+    mIsSetFont = False
 Else
-    undraw
-    Set mFont = gCloneFont(value)
     mIsSetFont = True
-    update
 End If
+initiateRedraw True, True
 End Property
 
 Friend Property Get Handle() As Long
 Handle = mHandle
 End Property
 
-Public Property Get includeInAutoscale() As Boolean
-includeInAutoscale = mBaseStyle.includeInAutoscale
-If Not mLocalStyle Is Nothing Then includeInAutoscale = mLocalStyle.includeInAutoscale
-If mIsSetIncludeInAutoscale Then includeInAutoscale = mIncludeInAutoscale
+Public Property Get IncludeInAutoscale() As Boolean
+IncludeInAutoscale = mSeries.IncludeInAutoscale
+If mIsSetIncludeInAutoscale Then IncludeInAutoscale = mIncludeInAutoscale
 End Property
 
-Public Property Let includeInAutoscale(ByVal value As Boolean)
+Public Property Let IncludeInAutoscale(ByVal value As Boolean)
 If mIncludeInAutoscale = value And mIsSetIncludeInAutoscale Then Exit Property
-If Not value Then undraw
 mIncludeInAutoscale = value
 mIsSetIncludeInAutoscale = True
-update
+initiateRedraw False, False
 End Property
 
 Public Property Get InScope() As Boolean
 InScope = mInScope
 End Property
 
-Public Property Get isSelectable() As Boolean
-isSelectable = mIsSelectable
+Public Property Let IsSelectable(ByVal value As Boolean)
+mIsSelectable = value
+End Property
+
+Public Property Get IsSelectable() As Boolean
+IsSelectable = mIsSelectable
 End Property
 
 Public Property Get IsSelected() As Boolean
 IsSelected = mIsSelected
 End Property
 
-Public Property Get IsSeriesSelectable() As Boolean
-IsSeriesSelectable = mIsSeriesSelectable
-End Property
-
 Public Property Get Key() As String
 Key = mKey
 End Property
 
-Public Property Let Layer(ByVal value As Long)
-If mLayer = value Then Exit Property
+Public Property Let Layer(ByVal value As LayerNumbers)
+If mLayer = value And mIsSetLayer Then Exit Property
 mLayer = value
-update
+mIsSetLayer = True
+initiateRedraw False, False
 End Property
 
-Public Property Get Layer() As Long
-Layer = mLayer
+Public Property Get Layer() As LayerNumbers
+Layer = mSeries.Layer
+If mIsSetLayer Then Layer = mLayer
 End Property
 
 Public Property Get LocalStyle() As TextStyle
-Set LocalStyle = mLocalStyle.clone
+Set LocalStyle = mLocalStyle
 End Property
 
 Public Property Let LocalStyle( _
                 ByVal value As TextStyle)
-
-undraw
-
-Set mLocalStyle = value.clone
-calcCurrentBoundingRect
-mGOSP.ObjectChanged mHandle, mBoundingRect
-
+Set mLocalStyle = value
+initiateRedraw True, True
 End Property
 
-Public Property Let paddingX(ByVal value As Double)
+Public Property Let PaddingX(ByVal value As Double)
 If mPaddingX = value And mIsSetPaddingX Then Exit Property
-undraw
 mPaddingX = value
 mIsSetPaddingX = True
-update
+initiateRedraw True, True
 End Property
 
-Public Property Get paddingX() As Double
-paddingX = mBaseStyle.paddingX
-If Not mLocalStyle Is Nothing Then paddingX = mLocalStyle.paddingX
-If mIsSetPaddingX Then paddingX = mPaddingX
+Public Property Get PaddingX() As Double
+PaddingX = mSeries.PaddingX
+If Not mLocalStyle Is Nothing Then PaddingX = mLocalStyle.PaddingX
+If mIsSetPaddingX Then PaddingX = mPaddingX
 End Property
 
-Public Property Let paddingY(ByVal value As Double)
+Public Property Let PaddingY(ByVal value As Double)
 If mPaddingY = value And mIsSetPaddingY Then Exit Property
-undraw
 mPaddingY = value
 mIsSetPaddingY = True
-update
+initiateRedraw True, True
 End Property
 
-Public Property Get paddingY() As Double
-paddingY = mBaseStyle.paddingY
-If Not mLocalStyle Is Nothing Then paddingY = mLocalStyle.paddingY
-If mIsSetPaddingY Then paddingY = mPaddingY
+Public Property Get PaddingY() As Double
+PaddingY = mSeries.PaddingY
+If Not mLocalStyle Is Nothing Then PaddingY = mLocalStyle.PaddingY
+If mIsSetPaddingY Then PaddingY = mPaddingY
 End Property
 
 Public Property Get position() As Point
@@ -601,60 +633,55 @@ End Property
 
 Public Property Let position(ByVal value As Point)
 If value Is Nothing Then
-    undraw
     Set mPosition = Nothing
     mBoundingRect.isValid = False
     mBlank = True
+    initiateRedraw True, True
     Exit Property
-ElseIf Not value.isAssigned Then
-    undraw
+ElseIf Not value.IsAssigned Then
     Set mPosition = Nothing
     mBoundingRect.isValid = False
     mBlank = True
+    initiateRedraw True, True
     Exit Property
 ElseIf Not mPosition Is Nothing Then
-    If value.equals(mPosition) Then Exit Property
+    If value.Equals(mPosition) Then Exit Property
 End If
-undraw
+
 Set mPosition = value
 If mText <> "" Then mBlank = False
-If mPosition.CoordinateSystemX <> CoordsLogical Then fixedX = True
-If mPosition.CoordinateSystemY <> CoordsLogical Then fixedY = True
-convertPosition
-update
+If mPosition.CoordinateSystemX <> CoordsLogical Then FixedX = True
+If mPosition.CoordinateSystemY <> CoordsLogical Then FixedY = True
+ConvertPosition
+initiateRedraw True, True
 End Property
 
-Public Property Get offset() As Dimension
-Set offset = mOffset
+Public Property Get Offset() As Dimension
+Set Offset = mOffset
 End Property
 
-Public Property Let offset(ByVal value As Dimension)
+Public Property Let Offset(ByVal value As Dimension)
 If value Is Nothing Then
-    undraw
     Set mOffset = Nothing
-ElseIf Not value.isAssigned Then
-    undraw
+ElseIf Not value.IsAssigned Then
     Set mOffset = Nothing
 ElseIf Not mOffset Is Nothing Then
-    If value.equals(mOffset) Then Exit Property
+    If value.Equals(mOffset) Then Exit Property
 Else
-    undraw
     Set mOffset = value
 End If
-update
+initiateRedraw True, True
 End Property
 
-Public Property Let text(value As String)
+Public Property Let Text(value As String)
 If value = mText Then Exit Property
-undraw  ' remove current text
 mText = value
 mBlank = (value = "" Or mPosition Is Nothing)
-
-update
+initiateRedraw True, True
 End Property
 
-Public Property Get text() As String
-text = mText
+Public Property Get Text() As String
+Text = mText
 End Property
 
 Public Property Get Visible() As Boolean
@@ -669,24 +696,9 @@ Friend Sub Draw()
 Dim failpoint As Long
 On Error GoTo Err
 
-If mBlank Then Exit Sub
-If Not mVisible Then Exit Sub
-If Not mPosition.isAssigned Then Exit Sub
-mDrawn = True
-
-With mCanvas
-    If box Then
-        .setPenAttributes boxColor, _
-                        boxThickness, _
-                        boxStyle, _
-                        DrawModes.DrawModeCopyPen
-        .setBrushAttributes boxFillColor, boxFillStyle
-        .drawRectangle .newPoint(mBoxRect.left, mBoxRect.bottom), .newPoint(mBoxRect.right, mBoxRect.top)
-    End If
-    
-    .setTextAttributes Color, font, True
-    .drawText mText, .newPoint(mTextRect.left, mTextRect.top)
-End With
+If Not canBeDrawn Then Exit Sub
+If Box Then drawBox
+DrawText
 
 Exit Sub
 
@@ -694,36 +706,28 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "draw" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
     
 End Sub
 
-Friend Sub initialise( _
-                ByVal seriesId As Long, _
+Friend Sub Initialise( _
+                ByVal series As TextSeries, _
                 ByVal Key As String, _
                 ByVal GOSP As GraphObjServiceProvider, _
-                ByVal Layer As Long, _
                 ByVal Canvas As Canvas, _
-                ByVal baseStyle As TextStyle, _
-                ByVal LocalStyle As TextStyle, _
-                Optional ByVal isSelectable As Boolean, _
-                Optional ByVal IsSeriesSelectable As Boolean)
+                ByVal LocalStyle As TextStyle)
                 
 Dim failpoint As Long
 On Error GoTo Err
 
-mSeriesID = seriesId
+Set mSeries = series
 mKey = Key
 Set mGOSP = GOSP
-mLayer = Layer
 Set mCanvas = Canvas
-Set mBaseStyle = baseStyle
-If Not LocalStyle Is Nothing Then Set mLocalStyle = LocalStyle.clone ' local style cannot be shared
-mIsSelectable = isSelectable
-mIsSeriesSelectable = IsSeriesSelectable
+Set mLocalStyle = LocalStyle
 
 calcCurrentBoundingRect
 
@@ -731,9 +735,9 @@ Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
-Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "initialise" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
+Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "Initialise" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 
@@ -750,12 +754,12 @@ Private Sub calcRawBoundingRect()
 ' subject to change
 If mText = "" Then Exit Sub
 
-mCanvas.setTextAttributes Color, font, True
+mCanvas.SetTextAttributes Color, Font, True
 With mRawBoundingRect
-    .left = 0
-    .right = mCanvas.TextWidth(mText)
-    .bottom = 0
-    .top = mCanvas.TextHeight(mText)
+    .Left = 0
+    .Right = mCanvas.TextWidth(mText)
+    .Bottom = 0
+    .Top = mCanvas.TextHeight(mText)
     .isValid = True
 End With
 
@@ -776,41 +780,41 @@ If mPosition Is Nothing Then
     Exit Sub
 End If
 
-If Not mPosition.isAssigned Then
+If Not mPosition.IsAssigned Then
     mBoundingRect.isValid = False
     Exit Sub
 End If
 
 With mTextRect
-    .left = mPosition.XLogical
-    .right = .left + mRawBoundingRect.right
-    .top = mPosition.YLogical
-    .bottom = .top - mRawBoundingRect.top
+    .Left = mPosition.XLogical
+    .Right = .Left + mRawBoundingRect.Right
+    .Top = mPosition.YLogical
+    .Bottom = .Top - mRawBoundingRect.Top
     
-    ' now add the offset if any
+    ' now Add the Offset if any
     
     If Not mOffset Is Nothing Then
         xOffset = mOffset.XLogical
         yOffset = mOffset.YLogical
-        .left = .left + xOffset
-        .right = .right + xOffset
-        .bottom = .bottom + yOffset
-        .top = .top + yOffset
+        .Left = .Left + xOffset
+        .Right = .Right + xOffset
+        .Bottom = .Bottom + yOffset
+        .Top = .Top + yOffset
     End If
 End With
 
-If box Then
-    ' make the inside of the box 1mm wider and taller than the text, plus the thickness of the lines
+If Box Then
+    ' make the inside of the box 1mm wider and taller than the Text, plus the thickness of the lines
     
     Dim padding As Dimension
-    Set padding = mCanvas.newDimension((mPaddingX + 0.5) / 10, (IIf(mPaddingY > 0.5, mPaddingY - 0.5, 0)) / 10)
+    Set padding = mCanvas.NewDimension((mPaddingX + 0.5) / 10, (IIf(mPaddingY > 0.5, mPaddingY - 0.5, 0)) / 10)
     XIncrement = padding.XLogical
     YIncrement = padding.YLogical
     
-    If boxThickness > 1 Then
-        XLineThickness = mCanvas.convertPixelsToLogicalX(mBoxThickness - 1)
-        YLineThickness = mCanvas.convertPixelsToLogicalY(mBoxThickness - 1)
-        If boxStyle = LineInsideSolid Then
+    If BoxThickness > 1 Then
+        XLineThickness = mCanvas.ConvertPixelsToLogicalX(mBoxThickness - 1)
+        YLineThickness = mCanvas.ConvertPixelsToLogicalY(mBoxThickness - 1)
+        If BoxStyle = LineInsideSolid Then
             XIncrement = XIncrement + XLineThickness
             YIncrement = YIncrement + YLineThickness
         Else
@@ -820,140 +824,140 @@ If box Then
     End If
     
     With mBoxRect
-        .left = mTextRect.left - XIncrement
-        .right = mTextRect.right + XIncrement
-        .bottom = mTextRect.bottom - YIncrement
-        .top = mTextRect.top + YIncrement
+        .Left = mTextRect.Left - XIncrement
+        .Right = mTextRect.Right + XIncrement
+        .Bottom = mTextRect.Bottom - YIncrement
+        .Top = mTextRect.Top + YIncrement
     End With
     
-    If boxThickness > 1 And boxStyle <> LineInsideSolid Then
+    If BoxThickness > 1 And BoxStyle <> LineInsideSolid Then
         With mBoundingRect
-            .left = mBoxRect.left - XLineThickness / 2
-            .right = mBoxRect.right + XLineThickness / 2
-            .bottom = mBoxRect.bottom - YLineThickness / 2
-            .top = mBoxRect.top + YLineThickness / 2
+            .Left = mBoxRect.Left - XLineThickness / 2
+            .Right = mBoxRect.Right + XLineThickness / 2
+            .Bottom = mBoxRect.Bottom - YLineThickness / 2
+            .Top = mBoxRect.Top + YLineThickness / 2
         End With
     Else
         mBoundingRect = mBoxRect
     End If
     ' now adjust the rectangle to take account of alignment
 
-    Select Case align
+    Select Case Align
     Case AlignTopLeft
         xshift = 0
         yshift = 0
     Case AlignCentreLeft
         xshift = 0
-        yshift = (mTextRect.top - mTextRect.bottom) / 2
+        yshift = (mTextRect.Top - mTextRect.Bottom) / 2
     Case AlignBottomLeft
         xshift = 0
-        yshift = mTextRect.top - mTextRect.bottom
+        yshift = mTextRect.Top - mTextRect.Bottom
     Case AlignTopCentre
-        xshift = (mTextRect.left - mTextRect.right) / 2
+        xshift = (mTextRect.Left - mTextRect.Right) / 2
         yshift = 0
     Case AlignCentreCentre
-        xshift = (mTextRect.left - mTextRect.right) / 2
-        yshift = (mTextRect.top - mTextRect.bottom) / 2
+        xshift = (mTextRect.Left - mTextRect.Right) / 2
+        yshift = (mTextRect.Top - mTextRect.Bottom) / 2
     Case AlignBottomCentre
-        xshift = (mTextRect.left - mTextRect.right) / 2
-        yshift = mTextRect.top - mTextRect.bottom
+        xshift = (mTextRect.Left - mTextRect.Right) / 2
+        yshift = mTextRect.Top - mTextRect.Bottom
     Case AlignTopRight
-        xshift = mTextRect.left - mTextRect.right
+        xshift = mTextRect.Left - mTextRect.Right
         yshift = 0
     Case AlignCentreRight
-        xshift = mTextRect.left - mTextRect.right
-        yshift = (mTextRect.top - mTextRect.bottom) / 2
+        xshift = mTextRect.Left - mTextRect.Right
+        yshift = (mTextRect.Top - mTextRect.Bottom) / 2
     Case AlignBottomRight
-        xshift = mTextRect.left - mTextRect.right
-        yshift = mTextRect.top - mTextRect.bottom
+        xshift = mTextRect.Left - mTextRect.Right
+        yshift = mTextRect.Top - mTextRect.Bottom
     Case AlignBoxTopLeft
-        xshift = mTextRect.left - mBoundingRect.left
-        yshift = mTextRect.top - mBoundingRect.top
+        xshift = mTextRect.Left - mBoundingRect.Left
+        yshift = mTextRect.Top - mBoundingRect.Top
     Case AlignBoxCentreLeft
-        xshift = mTextRect.left - mBoundingRect.left
-        yshift = (mTextRect.top - mTextRect.bottom) / 2
+        xshift = mTextRect.Left - mBoundingRect.Left
+        yshift = (mTextRect.Top - mTextRect.Bottom) / 2
     Case AlignBoxBottomLeft
-        xshift = mTextRect.left - mBoundingRect.left
-        yshift = mTextRect.top - mTextRect.bottom + mTextRect.top - mBoundingRect.top
+        xshift = mTextRect.Left - mBoundingRect.Left
+        yshift = mTextRect.Top - mTextRect.Bottom + mTextRect.Top - mBoundingRect.Top
     Case AlignBoxTopCentre
-        xshift = (mTextRect.left - mTextRect.right) / 2
-        yshift = mTextRect.top - mBoundingRect.top
+        xshift = (mTextRect.Left - mTextRect.Right) / 2
+        yshift = mTextRect.Top - mBoundingRect.Top
     Case AlignBoxCentreCentre
-        xshift = (mTextRect.left - mTextRect.right) / 2
-        yshift = (mTextRect.top - mTextRect.bottom) / 2
+        xshift = (mTextRect.Left - mTextRect.Right) / 2
+        yshift = (mTextRect.Top - mTextRect.Bottom) / 2
     Case AlignBoxBottomCentre
-        xshift = (mTextRect.left - mTextRect.right) / 2
-        yshift = mTextRect.top - mTextRect.bottom + mTextRect.top - mBoundingRect.top
+        xshift = (mTextRect.Left - mTextRect.Right) / 2
+        yshift = mTextRect.Top - mTextRect.Bottom + mTextRect.Top - mBoundingRect.Top
     Case AlignBoxTopRight
-        xshift = mTextRect.left - mTextRect.right - (mBoundingRect.right - mTextRect.right)
-        yshift = mTextRect.top - mBoundingRect.top
+        xshift = mTextRect.Left - mTextRect.Right - (mBoundingRect.Right - mTextRect.Right)
+        yshift = mTextRect.Top - mBoundingRect.Top
     Case AlignBoxCentreRight
-        xshift = mTextRect.left - mTextRect.right - (mBoundingRect.right - mTextRect.right)
-        yshift = (mTextRect.top - mTextRect.bottom) / 2
+        xshift = mTextRect.Left - mTextRect.Right - (mBoundingRect.Right - mTextRect.Right)
+        yshift = (mTextRect.Top - mTextRect.Bottom) / 2
     Case AlignBoxBottomRight
-        xshift = mTextRect.left - mTextRect.right - (mBoundingRect.right - mTextRect.right)
-        yshift = mTextRect.top - mTextRect.bottom + mTextRect.top - mBoundingRect.top
+        xshift = mTextRect.Left - mTextRect.Right - (mBoundingRect.Right - mTextRect.Right)
+        yshift = mTextRect.Top - mTextRect.Bottom + mTextRect.Top - mBoundingRect.Top
     End Select
 
     With mTextRect
-        .left = .left + xshift
-        .right = .right + xshift
-        .bottom = .bottom + yshift
-        .top = .top + yshift
+        .Left = .Left + xshift
+        .Right = .Right + xshift
+        .Bottom = .Bottom + yshift
+        .Top = .Top + yshift
     End With
 
     With mBoxRect
-        .left = .left + xshift
-        .right = .right + xshift
-        .bottom = .bottom + yshift
-        .top = .top + yshift
+        .Left = .Left + xshift
+        .Right = .Right + xshift
+        .Bottom = .Bottom + yshift
+        .Top = .Top + yshift
     End With
 
     With mBoundingRect
-        .left = .left + xshift
-        .right = .right + xshift
-        .bottom = .bottom + yshift
-        .top = .top + yshift
+        .Left = .Left + xshift
+        .Right = .Right + xshift
+        .Bottom = .Bottom + yshift
+        .Top = .Top + yshift
     End With
 
 Else
     ' now adjust the rectangle to take account of alignment
     
     With mTextRect
-        Select Case align
+        Select Case Align
         Case AlignTopLeft, AlignBoxTopLeft
             xshift = 0
             yshift = 0
         Case AlignCentreLeft, AlignBoxCentreLeft
             xshift = 0
-            yshift = (.top - .bottom) / 2
+            yshift = (.Top - .Bottom) / 2
         Case AlignBottomLeft, AlignBoxBottomLeft
             xshift = 0
-            yshift = .top - .bottom
+            yshift = .Top - .Bottom
         Case AlignTopCentre, AlignBoxTopCentre
-            xshift = (.left - .right) / 2
+            xshift = (.Left - .Right) / 2
             yshift = 0
         Case AlignCentreCentre, AlignBoxCentreCentre
-            xshift = (.left - .right) / 2
-            yshift = (.top - .bottom) / 2
+            xshift = (.Left - .Right) / 2
+            yshift = (.Top - .Bottom) / 2
         Case AlignBottomCentre, AlignBoxBottomCentre
-            xshift = (.left - .right) / 2
-            yshift = .top - .bottom
+            xshift = (.Left - .Right) / 2
+            yshift = .Top - .Bottom
         Case AlignTopRight, AlignBoxTopRight
-            xshift = .left - .right
+            xshift = .Left - .Right
             yshift = 0
         Case AlignCentreRight, AlignBoxCentreRight
-            xshift = .left - .right
-            yshift = (.top - .bottom) / 2
+            xshift = .Left - .Right
+            yshift = (.Top - .Bottom) / 2
         Case AlignBottomRight, AlignBoxBottomRight
-            xshift = .left - .right
-            yshift = .top - .bottom
+            xshift = .Left - .Right
+            yshift = .Top - .Bottom
         End Select
     
-        .left = .left + xshift
-        .right = .right + xshift
-        .bottom = .bottom + yshift
-        .top = .top + yshift
+        .Left = .Left + xshift
+        .Right = .Right + xshift
+        .Bottom = .Bottom + yshift
+        .Top = .Top + yshift
     End With
     
     mBoxRect = mTextRect
@@ -966,14 +970,21 @@ mBoundingRect.isValid = True
 
 End Sub
 
-Private Sub convertPosition()
-convertPositionX
-convertPositionY
+Private Function canBeDrawn() As Boolean
+If mBlank Then Exit Function
+If Not mVisible Then Exit Function
+If Not mPosition.IsAssigned Then Exit Function
+canBeDrawn = True
+End Function
+
+Private Sub ConvertPosition()
+ConvertPositionX
+ConvertPositionY
 End Sub
 
-Private Sub convertPositionX()
+Private Sub ConvertPositionX()
 If mPosition Is Nothing Then Exit Sub
-If fixedX Then
+If FixedX Then
     If mPosition.CoordinateSystemX = CoordsLogical Then
         mPosition.CoordinateSystemX = CoordsDistance
     End If
@@ -984,9 +995,9 @@ Else
 End If
 End Sub
 
-Private Sub convertPositionY()
+Private Sub ConvertPositionY()
 If mPosition Is Nothing Then Exit Sub
-If fixedY Then
+If FixedY Then
     If mPosition.CoordinateSystemY = CoordsLogical Then
         mPosition.CoordinateSystemY = CoordsDistance
     End If
@@ -997,31 +1008,56 @@ Else
 End If
 End Sub
 
-Private Sub undraw()
-
-If mBlank Then Exit Sub
-If Not mVisible Then Exit Sub
-If Not mPosition.isAssigned Then Exit Sub
-mDrawn = True
-
-'With mCanvas
-'    .setPenAttributes .backColor, _
-'                    1, _
-'                    LineStyles.LineInsideSolid, _
-'                    DrawModes.DrawModeCopyPen
-'    .setBrushAttributes .backColor, FillStyles.FillSolid
-'    .drawRectangle mBoundingRect.left, mBoundingRect.bottom, mBoundingRect.right, mBoundingRect.top
-'End With
-mGOSP.ObjectUndrawn mHandle, mBoundingRect
-
+Private Sub drawBox()
+If BoxFillWithBackgroundColor Then
+    drawBoxWithBackgroundFillColor
+Else
+    drawBoxWithSpecifiedFillStyle BoxFillStyle
+End If
 End Sub
 
-Private Sub update()
+Private Sub drawBoxWithSpecifiedFillStyle( _
+                ByVal pFillStyle As FillStyles)
+With mCanvas
+    .SetPenAttributes BoxColor, _
+                    BoxThickness, _
+                    BoxStyle, _
+                    DrawModes.DrawModeCopyPen
+    .SetBrushAttributes BoxFillColor, pFillStyle
+    .DrawRectangle .NewPoint(mBoxRect.Left, mBoxRect.Bottom), .NewPoint(mBoxRect.Right, mBoxRect.Top)
+End With
+End Sub
+
+Private Sub drawBoxWithBackgroundFillColor()
+With mCanvas
+    .PaintBackground
+    drawBoxWithSpecifiedFillStyle FillTransparent
+End With
+End Sub
+
+Private Sub DrawText()
+With mCanvas
+    .SetTextAttributes Color, Font, True
+    .DrawText mText, .NewPoint(mTextRect.Left, mTextRect.Top)
+End With
+End Sub
+
+Private Sub initiateRedraw( _
+                ByVal undrawCurrentImage As Boolean, _
+                ByVal recalcBoundaries As Boolean)
 If mHandle = 0 Then
     ' haven't yet been added to chart region
     Exit Sub
 End If
-calcRawBoundingRect
-calcCurrentBoundingRect
+If undrawCurrentImage Then undraw
+If recalcBoundaries Then
+    calcRawBoundingRect
+    calcCurrentBoundingRect
+End If
 mGOSP.ObjectChanged mHandle, mBoundingRect
 End Sub
+
+Private Sub undraw()
+If canBeDrawn Then mGOSP.ObjectUndrawn mHandle, mBoundingRect
+End Sub
+

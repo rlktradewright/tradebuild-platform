@@ -44,19 +44,19 @@ Private mTimestamp As Date
 ' Properties
 '================================================================================
 
-Public Property Get periodNumber() As Long
-periodNumber = mPeriodNumber
+Public Property Get PeriodNumber() As Long
+PeriodNumber = mPeriodNumber
 End Property
 
-Friend Property Let periodNumber(ByVal value As Long)
+Friend Property Let PeriodNumber(ByVal value As Long)
 mPeriodNumber = value
 End Property
 
-Public Property Get timestamp() As Date
-timestamp = mTimestamp
+Public Property Get Timestamp() As Date
+Timestamp = mTimestamp
 End Property
 
-Friend Property Let timestamp(ByVal value As Date)
+Friend Property Let Timestamp(ByVal value As Date)
 mTimestamp = value
 End Property
 

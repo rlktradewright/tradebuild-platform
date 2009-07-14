@@ -38,7 +38,7 @@ Option Explicit
 ' Constants
 '@================================================================================
 
-Private Const ProjectName                   As String = "ChartSkil26"
+
 Private Const ModuleName                    As String = "IGraphicObject"
 
 '@================================================================================
@@ -126,7 +126,7 @@ Public Property Get Selected() As Boolean
 
 End Property
 
-Public Property Get seriesID() As Long
+Public Property Get SeriesID() As Long
 
 End Property
 
@@ -160,8 +160,8 @@ Public Sub Finish()
 End Sub
 
 Public Function HitTest( _
-                ByVal x As Double, _
-                ByVal y As Double) As Boolean
+                ByVal X As Double, _
+                ByVal Y As Double) As Boolean
                 
 End Function
 

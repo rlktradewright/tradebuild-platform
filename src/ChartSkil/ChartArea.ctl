@@ -592,6 +592,24 @@ Event KeyPress(KeyAscii As Integer)
 Attribute KeyPress.VB_UserMemId = -603
 Event KeyUp(KeyCode As Integer, Shift As Integer)
 Attribute KeyUp.VB_UserMemId = -604
+Event MouseDown(Button As Integer, _
+                Shift As Integer, _
+                X As Single, _
+                Y As Single)
+Attribute MouseDown.VB_UserMemId = -605
+                
+Event mouseMove(Button As Integer, _
+                Shift As Integer, _
+                X As Single, _
+                Y As Single)
+Attribute mouseMove.VB_UserMemId = -606
+                
+Event MouseUp(Button As Integer, _
+                Shift As Integer, _
+                X As Single, _
+                Y As Single)
+Attribute MouseUp.VB_UserMemId = -607
+
 Event PointerModeChanged()
 Event RegionsChanged(ev As CollectionChangeEvent)
 Event PeriodsChanged(ev As CollectionChangeEvent)
@@ -607,7 +625,7 @@ Event RegionSelected(ByVal Region As ChartRegion)
 
 Private Type RegionTableEntry
     Region              As ChartRegion
-    percentheight       As Double
+    PercentHeight       As Double
     actualHeight        As Long
     useAvailableSpace   As Boolean
 End Type
@@ -616,34 +634,20 @@ End Type
 ' Constants
 '================================================================================
 
-Private Const ProjectName                As String = "ChartSkil26"
-Private Const ModuleName                As String = "Chart"
 
-'Private Const HorizScrollBarHeight As Long = 255
-'Private Const ToolbarBarHeight As Long = 330
+Private Const ModuleName                                As String = "Chart"
 
-Private Const PropNameAllowHorizontalMouseScrolling     As String = "AllowHorizontalMouseScrolling"
-Private Const PropNameAllowVerticalMouseScrolling       As String = "AllowVerticalMouseScrolling"
-Private Const PropNameAutoscroll                        As String = "Autoscroll"
+Private Const PropNameHorizontalMouseScrollingAllowed     As String = "HorizontalMouseScrollingAllowed"
+Private Const PropNameVerticalMouseScrollingAllowed       As String = "VerticalMouseScrollingAllowed"
+Private Const PropNameAutoscrolling                        As String = "Autoscrolling"
 Private Const PropNameChartBackColor                    As String = "ChartBackColor"
-Private Const PropNameDefaultBarDisplayMode             As String = "DefaultBarDisplayMode"
-Private Const PropNameDefaultRegionAutoscale            As String = "DefaultRegionAutoscale"
-Private Const PropNameDefaultRegionBackColor            As String = "DefaultRegionBackColor"
-Private Const PropNameDefaultRegionGridColor            As String = "DefaultRegionGridColor"
-Private Const PropNameDefaultRegionGridlineSpacingY     As String = "DefaultRegionGridlineSpacingY"
-Private Const PropNameDefaultRegionGridTextColor        As String = "DefaultRegionGridTextColor"
-Private Const PropNameDefaultRegionHasGrid              As String = "DefaultRegionHasGrid"
-Private Const PropNameDefaultRegionHasGridtext          As String = "DefaultRegionHasGridtext"
-Private Const PropNameDefaultRegionIntegerYScale        As String = "DefaultRegionIntegerYScale"
-Private Const PropNameDefaultRegionMinimumHeight        As String = "DefaultRegionMinimumHeight"
-Private Const PropNameDefaultRegionYScaleQuantum        As String = "DefaultRegionYScaleQuantum"
 Private Const PropNamePeriodLength                      As String = "PeriodLength"
 Private Const PropNamePeriodUnits                       As String = "PeriodUnits"
 Private Const PropNamePointerDiscColor                  As String = "PointerDiscColor"
 Private Const PropNamePointerCrosshairsColor            As String = "PointerCrosshairsColor"
 Private Const PropNamePointerStyle                      As String = "PointerStyle"
-Private Const PropNameShowHorizontalScrollBar           As String = "ShowHorizontalScrollBar"
-Private Const PropNameShowToolbar                       As String = "ShowToobar"
+Private Const PropNameHorizontalScrollBarVisible           As String = "HorizontalScrollBarVisible"
+Private Const PropNameToolbarVisible                       As String = "ShowToobar"
 Private Const PropNameTwipsPerBar                       As String = "TwipsPerBar"
 Private Const PropNameVerticalGridSpacing               As String = "VerticalGridSpacing"
 Private Const PropNameVerticalGridUnits                 As String = "VerticalGridUnits"
@@ -651,28 +655,17 @@ Private Const PropNameXAxisVisible                      As String = "XAxisVisibl
 Private Const PropNameYAxisVisible                      As String = "YAxisVisible"
 Private Const PropNameYAxisWidthCm                      As String = "YAxisWidthCm"
 
-Private Const PropDfltAllowHorizontalMouseScrolling     As Boolean = True
-Private Const PropDfltAllowVerticalMouseScrolling       As Boolean = True
-Private Const PropDfltAutoscroll                        As Boolean = True
+Private Const PropDfltHorizontalMouseScrollingAllowed     As Boolean = True
+Private Const PropDfltVerticalMouseScrollingAllowed       As Boolean = True
+Private Const PropDfltAutoscrolling                        As Boolean = True
 Private Const PropDfltChartBackColor                    As Long = &H643232
-Private Const PropDfltDefaultBarDisplayMode             As Long = BarDisplayModes.BarDisplayModeBar
-Private Const PropDfltDefaultRegionAutoscale            As Boolean = True
-Private Const PropDfltDefaultRegionBackColor            As Long = vbWhite
-Private Const PropDfltDefaultRegionGridColor            As Long = &HC0C0C0
-Private Const PropDfltDefaultRegionGridlineSpacingY     As Double = 1.8
-Private Const PropDfltDefaultRegionGridTextColor        As Long = vbBlack
-Private Const PropDfltDefaultRegionHasGrid              As Boolean = True
-Private Const PropDfltDefaultRegionHasGridtext          As Boolean = False
-Private Const PropDfltDefaultRegionIntegerYScale        As Boolean = False
-Private Const PropDfltDefaultRegionMinimumHeight        As Double = 0
-Private Const PropDfltDefaultRegionYScaleQuantum        As Double = 0#
 Private Const PropDfltPeriodLength                      As Long = 5
 Private Const PropDfltPeriodUnits                       As Long = TimePeriodMinute
 Private Const PropDfltPointerDiscColor                  As Long = &H89FFFF
 Private Const PropDfltPointerCrosshairsColor            As Long = &HC1DFE
 Private Const PropDfltPointerStyle                      As Long = PointerStyles.PointerCrosshairs
-Private Const PropDfltShowHorizontalScrollBar           As Boolean = True
-Private Const PropDfltShowToolbar                       As Boolean = True
+Private Const PropDfltHorizontalScrollBarVisible           As Boolean = True
+Private Const PropDfltToolbarVisible                       As Boolean = True
 Private Const PropDfltTwipsPerBar                       As Long = 150
 Private Const PropDfltVerticalGridSpacing               As Long = 1
 Private Const PropDfltVerticalGridUnits                 As Long = TimePeriodHour
@@ -684,19 +677,9 @@ Private Const PropDfltYAxisWidthCm                      As Single = 1.3
 ' Member variables
 '================================================================================
 
-Private mController As ChartController
-
 Private mRegions() As RegionTableEntry
 Private mRegionsIndex As Long
 Private mNumRegionsInUse As Long
-
-Private mDefaultRegionStyle As ChartRegionStyle
-Private mDefaultBarStyle As BarStyle
-Private mDefaultDataPointStyle As DataPointStyle
-Private mDefaultLineStyle As linestyle
-Private mDefaultTextStyle As TextStyle
-
-Private mDefaultYAxisStyle As ChartRegionStyle
 
 Private WithEvents mPeriods As Periods
 Attribute mPeriods.VB_VarHelpID = -1
@@ -713,7 +696,7 @@ Private mTwipsPerBar As Long
 
 Private mXAxisVisible  As Boolean
 Private mXAxisRegion As ChartRegion
-Private mXCursorText As text
+Private mXCursorText As Text
 
 Private mYAxisPosition As Long
 Private mYAxisWidthCm As Single
@@ -756,21 +739,19 @@ Private mLeftDragStartPosnY As Single
 
 Private mUserResizingRegions As Boolean
 
-Private mAllowHorizontalMouseScrolling As Boolean
-Private mAllowVerticalMouseScrolling As Boolean
+Private mHorizontalMouseScrollingAllowed As Boolean
+Private mVerticalMouseScrollingAllowed As Boolean
 
 Private mMouseScrollingInProgress As Boolean
 
-Private mShowHorizontalScrollBar As Boolean
-Private mShowToolbar As Boolean
+Private mHorizontalScrollBarVisible As Boolean
+Private mToolbarVisible As Boolean
 
 Private mRegionHeightReductionFactor As Double
 
 Private mReferenceTime As Date
 
-Private mAutoscroll As Boolean
-
-Private mDefaultBarDisplayMode As BarDisplayModes
+Private mAutoscrolling As Boolean
 
 Private mBackGroundCanvas As Canvas
 Private mChartBackGradientFillColors() As Long
@@ -790,12 +771,10 @@ ReDim mChartBackGradientFillColors(0) As Long
 mChartBackGradientFillColors(0) = PropDfltChartBackColor
 
 Set mBackGroundCanvas = New Canvas
-mBackGroundCanvas.surface = ChartRegionPicture(0)
+mBackGroundCanvas.Surface = ChartRegionPicture(0)
 mBackGroundCanvas.MousePointer = vbDefault
 
-Set mController = New ChartController
-mController.Chart = Me
-initialise
+Initialise
 createXAxisRegion
 
 Exit Sub
@@ -804,187 +783,159 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "UserControl_Initialize" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+
+End Sub
+
+Private Sub UserControl_InitProperties()
+On Error Resume Next
+
+HorizontalMouseScrollingAllowed = PropDfltHorizontalMouseScrollingAllowed
+VerticalMouseScrollingAllowed = PropDfltVerticalMouseScrollingAllowed
+Autoscrolling = PropDfltAutoscrolling
+'mXAxisRegion.BackColor = PropDfltChartBackColor
+PointerCrosshairsColor = PropDfltPointerCrosshairsColor
+PointerDiscColor = PropDfltPointerDiscColor
+PointerStyle = PropDfltPointerStyle
+HorizontalScrollBarVisible = PropDfltHorizontalScrollBarVisible
+ToolbarVisible = PropDfltToolbarVisible
+TwipsPerBar = PropDfltTwipsPerBar
+'Set mVerticalGridTimePeriod = GetTimePeriod(PropDfltVerticalGridSpacing, PropDfltVerticalGridUnits)
+XAxisVisible = PropDfltXAxisVisible
+YAxisWidthCm = PropDfltYAxisWidthCm
+YAxisVisible = PropDfltYAxisVisible
 
 End Sub
 
 Private Sub UserControl_KeyDown(KeyCode As Integer, Shift As Integer)
 RaiseEvent KeyDown(KeyCode, Shift)
-mController.fireKeyDown KeyCode, Shift
 End Sub
 
 Private Sub UserControl_KeyPress(KeyAscii As Integer)
 RaiseEvent KeyPress(KeyAscii)
-mController.fireKeyPress KeyAscii
 End Sub
 
 Private Sub UserControl_KeyUp(KeyCode As Integer, Shift As Integer)
 RaiseEvent KeyUp(KeyCode, Shift)
-mController.fireKeyUp KeyCode, Shift
+End Sub
+
+Private Sub UserControl_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
+RaiseEvent MouseDown(Button, _
+                    Shift, _
+                    ScaleX(X, vbTwips, vbContainerPosition), _
+                    ScaleY(Y, vbTwips, vbContainerPosition))
+End Sub
+
+Private Sub UserControl_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+RaiseEvent mouseMove(Button, _
+                    Shift, _
+                    ScaleX(X, vbTwips, vbContainerPosition), _
+                    ScaleY(Y, vbTwips, vbContainerPosition))
+End Sub
+
+Private Sub UserControl_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
+RaiseEvent MouseUp(Button, _
+                    Shift, _
+                    ScaleX(X, vbTwips, vbContainerPosition), _
+                    ScaleY(Y, vbTwips, vbContainerPosition))
 End Sub
 
 Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
 
 On Error Resume Next
 
-AllowHorizontalMouseScrolling = PropBag.ReadProperty(PropNameAllowHorizontalMouseScrolling, PropDfltAllowHorizontalMouseScrolling)
+HorizontalMouseScrollingAllowed = PropBag.ReadProperty(PropNameHorizontalMouseScrollingAllowed, PropDfltHorizontalMouseScrollingAllowed)
 If Err.Number <> 0 Then
-    AllowHorizontalMouseScrolling = PropDfltAllowHorizontalMouseScrolling
-    Err.clear
+    HorizontalMouseScrollingAllowed = PropDfltHorizontalMouseScrollingAllowed
+    Err.Clear
 End If
 
-AllowVerticalMouseScrolling = PropBag.ReadProperty(PropNameAllowVerticalMouseScrolling, PropDfltAllowVerticalMouseScrolling)
+VerticalMouseScrollingAllowed = PropBag.ReadProperty(PropNameVerticalMouseScrollingAllowed, PropDfltVerticalMouseScrollingAllowed)
 If Err.Number <> 0 Then
-    AllowVerticalMouseScrolling = PropDfltAllowVerticalMouseScrolling
-    Err.clear
+    VerticalMouseScrollingAllowed = PropDfltVerticalMouseScrollingAllowed
+    Err.Clear
 End If
 
-Autoscroll = PropBag.ReadProperty(PropNameAutoscroll, PropDfltAutoscroll)
+Autoscrolling = PropBag.ReadProperty(PropNameAutoscrolling, PropDfltAutoscrolling)
 If Err.Number <> 0 Then
-    Autoscroll = PropDfltAutoscroll
-    Err.clear
+    Autoscrolling = PropDfltAutoscrolling
+    Err.Clear
 End If
 
 ChartBackColor = PropBag.ReadProperty(PropNameChartBackColor, PropDfltChartBackColor)
 If Err.Number <> 0 Then
-    DefaultBarDisplayMode = PropDfltDefaultBarDisplayMode
-    Err.clear
-End If
-
-DefaultBarDisplayMode = PropBag.ReadProperty(PropNameDefaultBarDisplayMode, PropDfltDefaultBarDisplayMode)
-If Err.Number <> 0 Then
-    DefaultBarDisplayMode = PropDfltDefaultBarDisplayMode
-    Err.clear
+    ChartBackColor = PropDfltChartBackColor
+    Err.Clear
 End If
 
 mXAxisRegion.BackColor = PropBag.ReadProperty(PropNameChartBackColor, PropDfltChartBackColor)
 If Err.Number <> 0 Then
     mXAxisRegion.BackColor = PropDfltChartBackColor
-    Err.clear
-End If
-
-mDefaultRegionStyle.Autoscale = PropBag.ReadProperty(PropNameDefaultRegionAutoscale, PropDfltDefaultRegionAutoscale)
-If Err.Number <> 0 Then
-    RegionDefaultAutoscale = PropDfltDefaultRegionAutoscale
-    Err.clear
-End If
-
-RegionDefaultBackColor = PropBag.ReadProperty(PropNameDefaultRegionBackColor, PropDfltDefaultRegionBackColor)
-If Err.Number <> 0 Then
-    RegionDefaultBackColor = PropDfltDefaultRegionBackColor
-    Err.clear
-End If
-
-RegionDefaultGridColor = PropBag.ReadProperty(PropNameDefaultRegionGridColor, PropDfltDefaultRegionGridColor)
-If Err.Number <> 0 Then
-    RegionDefaultGridColor = PropDfltDefaultRegionGridColor
-    Err.clear
-End If
-
-RegionDefaultGridlineSpacingY = PropBag.ReadProperty(PropNameDefaultRegionGridlineSpacingY, PropDfltDefaultRegionGridlineSpacingY)
-If Err.Number <> 0 Then
-    RegionDefaultGridlineSpacingY = PropDfltDefaultRegionGridlineSpacingY
-    Err.clear
-End If
-
-RegionDefaultGridTextColor = PropBag.ReadProperty(PropNameDefaultRegionGridTextColor, PropDfltDefaultRegionGridTextColor)
-If Err.Number <> 0 Then
-    RegionDefaultGridTextColor = PropDfltDefaultRegionGridTextColor
-    Err.clear
-End If
-
-RegionDefaultHasGrid = PropBag.ReadProperty(PropNameDefaultRegionHasGrid, PropDfltDefaultRegionHasGrid)
-If Err.Number <> 0 Then
-    RegionDefaultHasGrid = PropDfltDefaultRegionHasGrid
-    Err.clear
-End If
-
-RegionDefaultHasGridText = PropBag.ReadProperty(PropNameDefaultRegionHasGridtext, PropDfltDefaultRegionHasGridtext)
-If Err.Number <> 0 Then
-    RegionDefaultHasGridText = PropDfltDefaultRegionHasGridtext
-    Err.clear
-End If
-
-RegionDefaultIntegerYScale = PropBag.ReadProperty(PropNameDefaultRegionIntegerYScale, PropDfltDefaultRegionIntegerYScale)
-If Err.Number <> 0 Then
-    RegionDefaultIntegerYScale = PropDfltDefaultRegionIntegerYScale
-    Err.clear
-End If
-
-RegionDefaultMinimumHeight = PropBag.ReadProperty(PropNameDefaultRegionMinimumHeight, PropDfltDefaultRegionMinimumHeight)
-If Err.Number <> 0 Then
-    RegionDefaultMinimumHeight = PropDfltDefaultRegionMinimumHeight
-    Err.clear
-End If
-
-RegionDefaultYScaleQuantum = PropBag.ReadProperty(PropNameDefaultRegionYScaleQuantum, PropDfltDefaultRegionYScaleQuantum)
-If Err.Number <> 0 Then
-    RegionDefaultYScaleQuantum = PropDfltDefaultRegionYScaleQuantum
-    Err.clear
+    Err.Clear
 End If
 
 PointerCrosshairsColor = PropBag.ReadProperty(PropNamePointerCrosshairsColor, PropDfltPointerCrosshairsColor)
 If Err.Number <> 0 Then
     PointerCrosshairsColor = PropDfltPointerCrosshairsColor
-    Err.clear
+    Err.Clear
 End If
 
 PointerDiscColor = PropBag.ReadProperty(PropNamePointerDiscColor, PropDfltPointerDiscColor)
 If Err.Number <> 0 Then
     PointerDiscColor = PropDfltPointerDiscColor
-    Err.clear
+    Err.Clear
 End If
 
 PointerStyle = PropBag.ReadProperty(PropNamePointerStyle, PropDfltPointerStyle)
 If Err.Number <> 0 Then
     PointerStyle = PropDfltPointerStyle
-    Err.clear
+    Err.Clear
 End If
 
-ShowHorizontalScrollBar = PropBag.ReadProperty(PropNameShowHorizontalScrollBar, PropDfltShowHorizontalScrollBar)
+HorizontalScrollBarVisible = PropBag.ReadProperty(PropNameHorizontalScrollBarVisible, PropDfltHorizontalScrollBarVisible)
 If Err.Number <> 0 Then
-    ShowHorizontalScrollBar = PropDfltShowHorizontalScrollBar
-    Err.clear
+    HorizontalScrollBarVisible = PropDfltHorizontalScrollBarVisible
+    Err.Clear
 End If
 
-ShowToolbar = PropBag.ReadProperty(PropNameShowToolbar, PropDfltShowToolbar)
+ToolbarVisible = PropBag.ReadProperty(PropNameToolbarVisible, PropDfltToolbarVisible)
 If Err.Number <> 0 Then
-    ShowToolbar = PropDfltShowToolbar
-    Err.clear
+    ToolbarVisible = PropDfltToolbarVisible
+    Err.Clear
 End If
 
 TwipsPerBar = PropBag.ReadProperty(PropNameTwipsPerBar, PropDfltTwipsPerBar)
 If Err.Number <> 0 Then
     TwipsPerBar = PropDfltTwipsPerBar
-    Err.clear
+    Err.Clear
 End If
 
 Set mVerticalGridTimePeriod = GetTimePeriod(PropBag.ReadProperty(PropNameVerticalGridSpacing, PropDfltVerticalGridSpacing), _
                         PropBag.ReadProperty(PropNameVerticalGridUnits, PropDfltVerticalGridUnits))
 If Err.Number <> 0 Then
     Set mVerticalGridTimePeriod = GetTimePeriod(PropDfltVerticalGridSpacing, PropDfltVerticalGridUnits)
-    Err.clear
+    Err.Clear
 End If
 
 XAxisVisible = PropBag.ReadProperty(PropNameXAxisVisible, PropDfltXAxisVisible)
 If Err.Number <> 0 Then
     XAxisVisible = PropDfltXAxisVisible
-    Err.clear
+    Err.Clear
 End If
 
 YAxisWidthCm = PropBag.ReadProperty(PropNameYAxisWidthCm, PropDfltYAxisWidthCm)
 If Err.Number <> 0 Then
     YAxisWidthCm = PropDfltYAxisWidthCm
-    Err.clear
+    Err.Clear
 End If
 
 YAxisVisible = PropBag.ReadProperty(PropNameYAxisVisible, PropDfltYAxisVisible)
 If Err.Number <> 0 Then
     YAxisVisible = PropDfltYAxisVisible
-    Err.clear
+    Err.Clear
 End If
 
-initialise
+Initialise
 
 End Sub
 
@@ -997,9 +948,9 @@ On Error GoTo Err
 'gLogger.Log LogLevelDetail, "ChartSkil: UserControl_Resize: enter"
 resizeCount = resizeCount + 1
 
-Resize (UserControl.width <> mPrevWidth), (UserControl.height <> mPrevHeight)
-mPrevHeight = UserControl.height
-mPrevWidth = UserControl.width
+Resize (UserControl.Width <> mPrevWidth), (UserControl.Height <> mPrevHeight)
+mPrevHeight = UserControl.Height
+mPrevWidth = UserControl.Width
 
 'gLogger.Log LogLevelDetail, "ChartSkil: UserControl_Resize: exit"
 
@@ -1009,7 +960,7 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "UserControl_Resize" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 
 End Sub
 
@@ -1018,30 +969,19 @@ Debug.Print "ChartSkil Usercontrol terminated"
 End Sub
 
 Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
-PropBag.WriteProperty PropNameAllowHorizontalMouseScrolling, AllowHorizontalMouseScrolling, PropDfltAllowHorizontalMouseScrolling
-PropBag.WriteProperty PropNameAllowVerticalMouseScrolling, AllowVerticalMouseScrolling, PropDfltAllowVerticalMouseScrolling
-PropBag.WriteProperty PropNameAutoscroll, Autoscroll, PropDfltAutoscroll
+PropBag.WriteProperty PropNameHorizontalMouseScrollingAllowed, HorizontalMouseScrollingAllowed, PropDfltHorizontalMouseScrollingAllowed
+PropBag.WriteProperty PropNameVerticalMouseScrollingAllowed, VerticalMouseScrollingAllowed, PropDfltVerticalMouseScrollingAllowed
+PropBag.WriteProperty PropNameAutoscrolling, Autoscrolling, PropDfltAutoscrolling
 If UBound(mChartBackGradientFillColors) = 0 Then
     PropBag.WriteProperty PropNameChartBackColor, mChartBackGradientFillColors(0)
 End If
-PropBag.WriteProperty PropNameDefaultBarDisplayMode, mDefaultBarDisplayMode, PropDfltDefaultBarDisplayMode
-PropBag.WriteProperty PropNameDefaultRegionAutoscale, mDefaultRegionStyle.Autoscale, PropDfltDefaultRegionAutoscale
-PropBag.WriteProperty PropNameDefaultRegionBackColor, mDefaultRegionStyle.BackColor, PropDfltDefaultRegionBackColor
-PropBag.WriteProperty PropNameDefaultRegionGridColor, mDefaultRegionStyle.GridColor, PropDfltDefaultRegionGridColor
-PropBag.WriteProperty PropNameDefaultRegionGridlineSpacingY, mDefaultRegionStyle.GridlineSpacingY, PropDfltDefaultRegionGridlineSpacingY
-PropBag.WriteProperty PropNameDefaultRegionGridTextColor, mDefaultRegionStyle.GridTextColor, PropDfltDefaultRegionGridTextColor
-PropBag.WriteProperty PropNameDefaultRegionHasGrid, mDefaultRegionStyle.HasGrid, PropDfltDefaultRegionHasGrid
-PropBag.WriteProperty PropNameDefaultRegionHasGridtext, mDefaultRegionStyle.HasGridText, PropDfltDefaultRegionHasGridtext
-PropBag.WriteProperty PropNameDefaultRegionIntegerYScale, mDefaultRegionStyle.IntegerYScale, PropDfltDefaultRegionIntegerYScale
-PropBag.WriteProperty PropNameDefaultRegionMinimumHeight, mDefaultRegionStyle.MinimumHeight, PropDfltDefaultRegionMinimumHeight
-PropBag.WriteProperty PropNameDefaultRegionYScaleQuantum, mDefaultRegionStyle.YScaleQuantum, PropDfltDefaultRegionYScaleQuantum
 PropBag.WriteProperty PropNamePeriodLength, mBarTimePeriod.length, PropDfltPeriodLength
 PropBag.WriteProperty PropNamePeriodUnits, mBarTimePeriod.units, PropDfltPeriodUnits
 PropBag.WriteProperty PropNamePointerCrosshairsColor, PointerCrosshairsColor, PropDfltPointerCrosshairsColor
 PropBag.WriteProperty PropNamePointerDiscColor, PointerDiscColor, PropDfltPointerDiscColor
 PropBag.WriteProperty PropNamePointerStyle, mPointerStyle, PropDfltPointerStyle
-PropBag.WriteProperty PropNameShowHorizontalScrollBar, ShowHorizontalScrollBar, PropDfltShowHorizontalScrollBar
-PropBag.WriteProperty PropNameShowToolbar, ShowToolbar, PropDfltShowToolbar
+PropBag.WriteProperty PropNameHorizontalScrollBarVisible, HorizontalScrollBarVisible, PropDfltHorizontalScrollBarVisible
+PropBag.WriteProperty PropNameToolbarVisible, ToolbarVisible, PropDfltToolbarVisible
 PropBag.WriteProperty PropNameTwipsPerBar, TwipsPerBar, PropDfltTwipsPerBar
 PropBag.WriteProperty PropNameVerticalGridSpacing, mVerticalGridTimePeriod.length, PropDfltVerticalGridSpacing
 PropBag.WriteProperty PropNameVerticalGridUnits, mVerticalGridTimePeriod.units, PropDfltVerticalGridUnits
@@ -1070,7 +1010,7 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ChartRegionPicture_Click" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 Private Sub ChartRegionPicture_DblClick(index As Integer)
@@ -1087,15 +1027,15 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ChartRegionPicture_DblClick" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 Private Sub ChartRegionPicture_MouseDown( _
                             index As Integer, _
-                            button As Integer, _
+                            Button As Integer, _
                             Shift As Integer, _
-                            x As Single, _
-                            y As Single)
+                            X As Single, _
+                            Y As Single)
 Dim Region As ChartRegion
 
 Dim failpoint As Long
@@ -1107,83 +1047,89 @@ If index = 0 Then Exit Sub
 Set Region = mRegions(2 * index - 1).Region
 
 
-If CBool(button And MouseButtonConstants.vbLeftButton) Then mMouseScrollingInProgress = True
+If CBool(Button And MouseButtonConstants.vbLeftButton) Then mMouseScrollingInProgress = True
 
 ' we notify the region selection first so that the application has a chance to
 ' turn off scrolling and snapping before getting the MouseDown event
 RaiseEvent RegionSelected(Region)
-mController.fireRegionSelected Region
 
 If (mPointerMode = PointerModeDefault And _
-        ((Region.SnapCursorToTickBoundaries And Not CBool(Shift And vbCtrlMask)) Or _
-        (Not Region.SnapCursorToTickBoundaries And CBool(Shift And vbCtrlMask)))) Or _
+        ((Region.CursorSnapsToTickBoundaries And Not CBool(Shift And vbCtrlMask)) Or _
+        (Not Region.CursorSnapsToTickBoundaries And CBool(Shift And vbCtrlMask)))) Or _
     (mPointerMode = PointerModeTool And CBool(Shift And vbCtrlMask)) _
 Then
     Dim YScaleQuantum As Double
     YScaleQuantum = Region.YScaleQuantum
-    If YScaleQuantum <> 0 Then y = YScaleQuantum * Int((y + YScaleQuantum / 10000) / YScaleQuantum)
+    If YScaleQuantum <> 0 Then Y = YScaleQuantum * Int((Y + YScaleQuantum / 10000) / YScaleQuantum)
 End If
 
 If mPointerMode = PointerModeDefault And _
-    (mAllowHorizontalMouseScrolling Or mAllowVerticalMouseScrolling) _
+    (mHorizontalMouseScrollingAllowed Or mVerticalMouseScrollingAllowed) _
 Then
-    mLeftDragStartPosnX = Int(x)
-    mLeftDragStartPosnY = y
+    mLeftDragStartPosnX = Int(X)
+    mLeftDragStartPosnY = Y
 End If
 
-Region.MouseDown button, Shift, Round(x), y
-
+Region.MouseDown Button, Shift, Round(X), Y
+RaiseEvent MouseDown(Button, _
+                    Shift, _
+                    ScaleX(ChartRegionPicture(index).Left + ChartRegionPicture(index).ScaleX(X, ChartRegionPicture(index).ScaleMode, vbTwips), vbTwips, vbContainerPosition), _
+                    ScaleY(ChartRegionPicture(index).Top + ChartRegionPicture(index).ScaleY(Y, ChartRegionPicture(index).ScaleMode, vbTwips), vbTwips, vbContainerPosition))
 Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ChartRegionPicture_MouseDown" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 Private Sub ChartRegionPicture_MouseMove(index As Integer, _
-                                button As Integer, _
+                                Button As Integer, _
                                 Shift As Integer, _
-                                x As Single, _
-                                y As Single)
+                                X As Single, _
+                                Y As Single)
 
 Dim failpoint As Long
 On Error GoTo Err
 
 If index = 0 Then Exit Sub
 
-If CBool(button And MouseButtonConstants.vbLeftButton) Then
+If CBool(Button And MouseButtonConstants.vbLeftButton) Then
     If mPointerMode = PointerModeDefault And _
-        (mAllowHorizontalMouseScrolling Or mAllowVerticalMouseScrolling) And _
+        (mHorizontalMouseScrollingAllowed Or mVerticalMouseScrollingAllowed) And _
         mMouseScrollingInProgress _
     Then
-        mouseScroll index, button, Shift, x, y
+        mouseScroll index, Button, Shift, X, Y
     Else
         mMouseScrollingInProgress = False
-        mouseMove index, button, Shift, x, y
+        mouseMove index, Button, Shift, X, Y
     End If
 Else
-    mouseMove index, button, Shift, x, y
+    mouseMove index, Button, Shift, X, Y
 End If
 
-mRegions(2 * index - 1).Region.mouseMove button, Shift, Round(x), y
+mRegions(2 * index - 1).Region.mouseMove Button, Shift, Round(X), Y
 
+RaiseEvent mouseMove(Button, _
+                    Shift, _
+                    ScaleX(ChartRegionPicture(index).Left + ChartRegionPicture(index).ScaleX(X, ChartRegionPicture(index).ScaleMode, vbTwips), vbTwips, vbContainerPosition), _
+                    ScaleY(ChartRegionPicture(index).Top + ChartRegionPicture(index).ScaleY(Y, ChartRegionPicture(index).ScaleMode, vbTwips), vbTwips, vbContainerPosition))
 Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ChartRegionPicture_MouseMove" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 Private Sub ChartRegionPicture_MouseUp( _
                             index As Integer, _
-                            button As Integer, _
+                            Button As Integer, _
                             Shift As Integer, _
-                            x As Single, _
-                            y As Single)
+                            X As Single, _
+                            Y As Single)
 Dim Region As ChartRegion
 
 Dim failpoint As Long
@@ -1196,24 +1142,28 @@ mMouseScrollingInProgress = False
 Set Region = mRegions(2 * index - 1).Region
 
 If (mPointerMode = PointerModeDefault And _
-        ((Region.SnapCursorToTickBoundaries And Not CBool(Shift And vbCtrlMask)) Or _
-        (Not Region.SnapCursorToTickBoundaries And CBool(Shift And vbCtrlMask)))) Or _
+        ((Region.CursorSnapsToTickBoundaries And Not CBool(Shift And vbCtrlMask)) Or _
+        (Not Region.CursorSnapsToTickBoundaries And CBool(Shift And vbCtrlMask)))) Or _
     (mPointerMode = PointerModeTool And CBool(Shift And vbCtrlMask)) _
 Then
     Dim YScaleQuantum As Double
     YScaleQuantum = Region.YScaleQuantum
-    If YScaleQuantum <> 0 Then y = YScaleQuantum * Int(y / YScaleQuantum)
+    If YScaleQuantum <> 0 Then Y = YScaleQuantum * Int(Y / YScaleQuantum)
 End If
 
-Region.MouseUp button, Shift, Round(x), y
+Region.MouseUp Button, Shift, Round(X), Y
 
+RaiseEvent MouseUp(Button, _
+                    Shift, _
+                    ScaleX(ChartRegionPicture(index).Left + ChartRegionPicture(index).ScaleX(X, ChartRegionPicture(index).ScaleMode, vbTwips), vbTwips, vbContainerPosition), _
+                    ScaleY(ChartRegionPicture(index).Top + ChartRegionPicture(index).ScaleY(Y, ChartRegionPicture(index).ScaleMode, vbTwips), vbTwips, vbContainerPosition))
 Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ChartRegionPicture_MouseUp" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 '================================================================================
@@ -1224,7 +1174,7 @@ Private Sub HScroll_Change()
 Dim failpoint As Long
 On Error GoTo Err
 
-LastVisiblePeriod = Round((CLng(HScroll.value) - CLng(HScroll.Min)) / (CLng(HScroll.Max) - CLng(HScroll.Min)) * (mPeriods.currentPeriodNumber + ChartWidth - 1))
+LastVisiblePeriod = Round((CLng(HScroll.value) - CLng(HScroll.Min)) / (CLng(HScroll.Max) - CLng(HScroll.Min)) * (mPeriods.CurrentPeriodNumber + ChartWidth - 1))
 
 Exit Sub
 
@@ -1232,7 +1182,7 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "HScroll_Change" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 '================================================================================
@@ -1241,34 +1191,38 @@ End Sub
 
 Private Sub RegionDividerPicture_MouseDown( _
                             index As Integer, _
-                            button As Integer, _
+                            Button As Integer, _
                             Shift As Integer, _
-                            x As Single, _
-                            y As Single)
+                            X As Single, _
+                            Y As Single)
 Dim failpoint As Long
 On Error GoTo Err
 
 If index = mRegionsIndex + 1 Then Exit Sub
-If CBool(button And MouseButtonConstants.vbLeftButton) Then
-    mLeftDragStartPosnX = Int(x)
-    mLeftDragStartPosnY = y
+If CBool(Button And MouseButtonConstants.vbLeftButton) Then
+    mLeftDragStartPosnX = Int(X)
+    mLeftDragStartPosnY = Y
     mUserResizingRegions = True
 End If
+RaiseEvent MouseDown(Button, _
+                    Shift, _
+                    ScaleX(RegionDividerPicture(index).Left + RegionDividerPicture(index).ScaleX(X, RegionDividerPicture(index).ScaleMode, vbTwips), vbTwips, vbContainerPosition), _
+                    ScaleY(RegionDividerPicture(index).Top + RegionDividerPicture(index).ScaleY(Y, RegionDividerPicture(index).ScaleMode, vbTwips), vbTwips, vbContainerPosition))
 Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "RegionDividerPicture_MouseDown" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 Private Sub RegionDividerPicture_MouseMove( _
                             index As Integer, _
-                            button As Integer, _
+                            Button As Integer, _
                             Shift As Integer, _
-                            x As Single, _
-                            y As Single)
+                            X As Single, _
+                            Y As Single)
 Dim vertChange As Long
 Dim currRegion As Long
 Dim newHeight As Long
@@ -1279,8 +1233,8 @@ Dim failpoint As Long
 On Error GoTo Err
 
 If index = mRegionsIndex + 1 Then Exit Sub
-If Not CBool(button And MouseButtonConstants.vbLeftButton) Then Exit Sub
-If y = mLeftDragStartPosnY Then Exit Sub
+If Not CBool(Button And MouseButtonConstants.vbLeftButton) Then Exit Sub
+If Y = mLeftDragStartPosnY Then Exit Sub
 
 ' we resize the next region below the divider that has not
 ' been removed
@@ -1291,77 +1245,85 @@ For i = 2 * index + 1 To mRegionsIndex Step 2
     End If
 Next
 
-vertChange = mLeftDragStartPosnY - y
+vertChange = mLeftDragStartPosnY - Y
 newHeight = mRegions(currRegion).actualHeight + vertChange
 If newHeight < 0 Then newHeight = 0
 
 ' the region table indicates the requested percentage used by each region
-' and the actual height allocation. We need to work out the new percentage
+' and the actual Height allocation. We need to work out the new percentage
 ' for the region to be resized.
 
-'prevPercentHeight = mRegions(currRegion).region.percentheight
+'prevPercentHeight = mRegions(currRegion).region.PercentHeight
 
-prevPercentHeight = mRegions(currRegion).percentheight
+prevPercentHeight = mRegions(currRegion).PercentHeight
 If Not mRegions(currRegion).useAvailableSpace Then
-    'mRegions(currRegion).region.percentheight = prevPercentHeight * newHeight / mRegions(currRegion).actualHeight
-    mRegions(currRegion).percentheight = 100 * newHeight / calcAvailableHeight
-    'mRegions(currRegion).percentheight = prevPercentHeight * newHeight / mRegions(currRegion).actualHeight
+    'mRegions(currRegion).region.PercentHeight = prevPercentHeight * newHeight / mRegions(currRegion).actualHeight
+    mRegions(currRegion).PercentHeight = 100 * newHeight / calcAvailableHeight
+    'mRegions(currRegion).PercentHeight = prevPercentHeight * newHeight / mRegions(currRegion).actualHeight
 Else
     ' this is a 'use available space' region that's being resized. Now change
     ' it to use a specific percentage
-    mRegions(currRegion).Region.percentheight = 100 * newHeight / calcAvailableHeight
-    mRegions(currRegion).percentheight = mRegions(currRegion).Region.percentheight
+    mRegions(currRegion).Region.PercentHeight = 100 * newHeight / calcAvailableHeight
+    mRegions(currRegion).PercentHeight = mRegions(currRegion).Region.PercentHeight
 End If
 
 If sizeRegions Then
     'paintAll
 Else
-    ' the regions couldn't be resized so reset the region's percent height
-    mRegions(currRegion).percentheight = prevPercentHeight
+    ' the regions couldn't be resized so reset the region's percent Height
+    mRegions(currRegion).PercentHeight = prevPercentHeight
 End If
 
+RaiseEvent mouseMove(Button, _
+                    Shift, _
+                    ScaleX(RegionDividerPicture(index).Left + RegionDividerPicture(index).ScaleX(X, RegionDividerPicture(index).ScaleMode, vbTwips), vbTwips, vbContainerPosition), _
+                    ScaleY(RegionDividerPicture(index).Top + RegionDividerPicture(index).ScaleY(Y, RegionDividerPicture(index).ScaleMode, vbTwips), vbTwips, vbContainerPosition))
 Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "RegionDividerPicture_MouseMove" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 Private Sub RegionDividerPicture_MouseUp( _
                             index As Integer, _
-                            button As Integer, _
+                            Button As Integer, _
                             Shift As Integer, _
-                            x As Single, _
-                            y As Single)
+                            X As Single, _
+                            Y As Single)
 Dim failpoint As Long
 On Error GoTo Err
 
 If index = mRegionsIndex + 1 Then Exit Sub
 mUserResizingRegions = False
 
+RaiseEvent MouseUp(Button, _
+                    Shift, _
+                    ScaleX(RegionDividerPicture(index).Left + RegionDividerPicture(index).ScaleX(X, RegionDividerPicture(index).ScaleMode, vbTwips), vbTwips, vbContainerPosition), _
+                    ScaleY(RegionDividerPicture(index).Top + RegionDividerPicture(index).ScaleY(Y, RegionDividerPicture(index).ScaleMode, vbTwips), vbTwips, vbContainerPosition))
 Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "RegionDividerPicture_MouseUp" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 '================================================================================
 ' Toolbar1 Event Handlers
 '================================================================================
 
-Private Sub Toolbar1_ButtonClick(ByVal button As MSComctlLib.button)
+Private Sub Toolbar1_ButtonClick(ByVal Button As MSComctlLib.Button)
 
 Dim failpoint As Long
 On Error GoTo Err
 
-Select Case button.Key
-Case ToolbarCommandAutoScroll
-    mAutoscroll = Not mAutoscroll
+Select Case Button.Key
+Case ToolbarCommandAutoscroll
+    mAutoscrolling = Not mAutoscrolling
 Case ToolbarCommandShowCrosshair
     PointerStyle = PointerCrosshairs
 Case ToolbarCommandShowDiscCursor
@@ -1371,7 +1333,7 @@ Case ToolbarCommandReduceSpacing
         TwipsPerBar = TwipsPerBar - 25
     End If
     If TwipsPerBar < 50 Then
-        button.Enabled = False
+        Button.Enabled = False
     End If
 Case ToolbarCommandIncreaseSpacing
     TwipsPerBar = TwipsPerBar + 25
@@ -1381,7 +1343,7 @@ Case ToolbarCommandScrollLeft
 Case ToolbarCommandScrollRight
     ScrollX ChartWidth * 0.2
 Case ToolbarCommandScrollEnd
-    LastVisiblePeriod = currentPeriodNumber
+    LastVisiblePeriod = CurrentPeriodNumber
 End Select
 
 Exit Sub
@@ -1390,7 +1352,7 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "Toolbar1_ButtonClick" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 
 End Sub
 
@@ -1410,7 +1372,7 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "XAxisPicture_Click" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 Private Sub XAxisPicture_DblClick()
@@ -1425,52 +1387,64 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "XAxisPicture_DblClick" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
-Private Sub XAxisPicture_MouseDown(button As Integer, Shift As Integer, x As Single, y As Single)
+Private Sub XAxisPicture_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
 Dim failpoint As Long
 On Error GoTo Err
 
-mXAxisRegion.MouseDown button, Shift, x, y
+mXAxisRegion.MouseDown Button, Shift, X, Y
 
+RaiseEvent MouseDown(Button, _
+                    Shift, _
+                    ScaleX(XAxisPicture.Left + XAxisPicture.ScaleX(X, XAxisPicture.ScaleMode, vbTwips), vbTwips, vbContainerPosition), _
+                    ScaleY(XAxisPicture.Top + XAxisPicture.ScaleY(Y, XAxisPicture.ScaleMode, vbTwips), vbTwips, vbContainerPosition))
 Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "XAxisPicture_MouseDown" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
-Private Sub XAxisPicture_MouseMove(button As Integer, Shift As Integer, x As Single, y As Single)
+Private Sub XAxisPicture_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
 Dim failpoint As Long
 On Error GoTo Err
 
-mXAxisRegion.mouseMove button, Shift, x, y
+mXAxisRegion.mouseMove Button, Shift, X, Y
 
+RaiseEvent mouseMove(Button, _
+                    Shift, _
+                    ScaleX(XAxisPicture.Left + XAxisPicture.ScaleX(X, XAxisPicture.ScaleMode, vbTwips), vbTwips, vbContainerPosition), _
+                    ScaleY(XAxisPicture.Top + XAxisPicture.ScaleY(Y, XAxisPicture.ScaleMode, vbTwips), vbTwips, vbContainerPosition))
 Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "XAxisPicture_MouseMove" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
-Private Sub XAxisPicture_MouseUp(button As Integer, Shift As Integer, x As Single, y As Single)
+Private Sub XAxisPicture_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
 Dim failpoint As Long
 On Error GoTo Err
 
-mXAxisRegion.MouseUp button, Shift, x, y
+mXAxisRegion.MouseUp Button, Shift, X, Y
 
+RaiseEvent MouseUp(Button, _
+                    Shift, _
+                    ScaleX(XAxisPicture.Left + XAxisPicture.ScaleX(X, XAxisPicture.ScaleMode, vbTwips), vbTwips, vbContainerPosition), _
+                    ScaleY(XAxisPicture.Top + XAxisPicture.ScaleY(Y, XAxisPicture.ScaleMode, vbTwips), vbTwips, vbContainerPosition))
 Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "XAxisPicture_MouseUp" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 '================================================================================
@@ -1489,7 +1463,7 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "YAxisPicture_Click" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 Private Sub YAxisPicture_DblClick(index As Integer)
@@ -1504,59 +1478,71 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "YAxisPicture_DblClick" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
-Private Sub YAxisPicture_MouseDown(index As Integer, button As Integer, Shift As Integer, x As Single, y As Single)
+Private Sub YAxisPicture_MouseDown(index As Integer, Button As Integer, Shift As Integer, X As Single, Y As Single)
 Dim failpoint As Long
 On Error GoTo Err
 
-mRegions(2 * index).Region.MouseDown button, Shift, x, y
+mRegions(2 * index).Region.MouseDown Button, Shift, X, Y
 
+RaiseEvent MouseDown(Button, _
+                    Shift, _
+                    ScaleX(YAxisPicture(index).Left + YAxisPicture(index).ScaleX(X, YAxisPicture(index).ScaleMode, vbTwips), vbTwips, vbContainerPosition), _
+                    ScaleY(YAxisPicture(index).Top + YAxisPicture(index).ScaleY(Y, YAxisPicture(index).ScaleMode, vbTwips), vbTwips, vbContainerPosition))
 Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "YAxisPicture_MouseDown" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
-Private Sub YAxisPicture_MouseMove(index As Integer, button As Integer, Shift As Integer, x As Single, y As Single)
+Private Sub YAxisPicture_MouseMove(index As Integer, Button As Integer, Shift As Integer, X As Single, Y As Single)
 Dim failpoint As Long
 On Error GoTo Err
 
-mRegions(2 * index).Region.mouseMove button, Shift, x, y
+mRegions(2 * index).Region.mouseMove Button, Shift, X, Y
 
+RaiseEvent mouseMove(Button, _
+                    Shift, _
+                    ScaleX(YAxisPicture(index).Left + YAxisPicture(index).ScaleX(X, YAxisPicture(index).ScaleMode, vbTwips), vbTwips, vbContainerPosition), _
+                    ScaleY(YAxisPicture(index).Top + YAxisPicture(index).ScaleY(Y, YAxisPicture(index).ScaleMode, vbTwips), vbTwips, vbContainerPosition))
 Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "YAxisPicture_MouseMove" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
-Private Sub YAxisPicture_MouseUp(index As Integer, button As Integer, Shift As Integer, x As Single, y As Single)
+Private Sub YAxisPicture_MouseUp(index As Integer, Button As Integer, Shift As Integer, X As Single, Y As Single)
 Dim failpoint As Long
 On Error GoTo Err
 
-mRegions(2 * index).Region.MouseUp button, Shift, x, y
+mRegions(2 * index).Region.MouseUp Button, Shift, X, Y
 
+RaiseEvent MouseUp(Button, _
+                    Shift, _
+                    ScaleX(YAxisPicture(index).Left + YAxisPicture(index).ScaleX(X, YAxisPicture(index).ScaleMode, vbTwips), vbTwips, vbContainerPosition), _
+                    ScaleY(YAxisPicture(index).Top + YAxisPicture(index).ScaleY(Y, YAxisPicture(index).ScaleMode, vbTwips), vbTwips, vbContainerPosition))
 Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "YAxisPicture_MouseUp" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 '================================================================================
 ' mPeriods Event Handlers
 '================================================================================
 
-Private Sub mPeriods_PeriodAdded(ByVal period As period)
+Private Sub mPeriods_PeriodAdded(ByVal Period As Period)
 Dim i As Long
 Dim Region As ChartRegion
 Dim ev As CollectionChangeEvent
@@ -1567,20 +1553,19 @@ On Error GoTo Err
 For i = 1 To mRegionsIndex Step 2
     If Not mRegions(i).Region Is Nothing Then
         Set Region = mRegions(i).Region
-        Region.addPeriod period.PeriodNumber, period.timestamp
+        Region.addPeriod Period.PeriodNumber, Period.Timestamp
     End If
 Next
 If mXAxisRegion Is Nothing Then createXAxisRegion
-mXAxisRegion.addPeriod period.PeriodNumber, period.timestamp
+mXAxisRegion.addPeriod Period.PeriodNumber, Period.Timestamp
 If mSuppressDrawingCount = 0 Then setHorizontalScrollBar
-setSession period.timestamp
-If mAutoscroll Then ScrollX 1
+setSession Period.Timestamp
+If mAutoscrolling Then ScrollX 1
 
-Set ev.affectedItem = period
+Set ev.affectedItem = Period
 ev.changeType = CollItemAdded
 Set ev.Source = mPeriods
 RaiseEvent PeriodsChanged(ev)
-mController.firePeriodsChanged ev
 
 Exit Sub
 
@@ -1588,41 +1573,12 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "mPeriods_PeriodAdded" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 End Sub
 
 '================================================================================
 ' Properties
 '================================================================================
-
-Public Property Get AllowHorizontalMouseScrolling() As Boolean
-Attribute AllowHorizontalMouseScrolling.VB_ProcData.VB_Invoke_Property = ";Behavior"
-AllowHorizontalMouseScrolling = mAllowHorizontalMouseScrolling
-End Property
-
-Public Property Let AllowHorizontalMouseScrolling(ByVal value As Boolean)
-mAllowHorizontalMouseScrolling = value
-PropertyChanged "allowHorizontalMouseScrolling"
-End Property
-
-Public Property Get AllowVerticalMouseScrolling() As Boolean
-Attribute AllowVerticalMouseScrolling.VB_ProcData.VB_Invoke_Property = ";Behavior"
-AllowVerticalMouseScrolling = mAllowVerticalMouseScrolling
-End Property
-
-Public Property Let AllowVerticalMouseScrolling(ByVal value As Boolean)
-mAllowVerticalMouseScrolling = value
-PropertyChanged "allowVerticalMouseScrolling"
-End Property
-
-Public Property Get Autoscroll() As Boolean
-Attribute Autoscroll.VB_ProcData.VB_Invoke_Property = ";Behavior"
-Autoscroll = mAutoscroll
-End Property
-
-Public Property Let Autoscroll(ByVal value As Boolean)
-mAutoscroll = value
-End Property
 
 Public Property Let BarTimePeriod( _
                 ByVal value As TimePeriod)
@@ -1662,7 +1618,17 @@ setRegionPeriodAndVerticalGridParameters
 End Property
 
 Public Property Get BarTimePeriod() As TimePeriod
+Attribute BarTimePeriod.VB_MemberFlags = "400"
 Set BarTimePeriod = mBarTimePeriod
+End Property
+
+Public Property Get Autoscrolling() As Boolean
+Autoscrolling = mAutoscrolling
+End Property
+
+Public Property Let Autoscrolling(ByVal value As Boolean)
+mAutoscrolling = value
+PropertyChanged PropNameAutoscrolling
 End Property
 
 Public Property Get ChartBackColor() As OLE_COLOR
@@ -1674,9 +1640,11 @@ Public Property Let ChartBackColor(ByVal value As OLE_COLOR)
 ReDim mChartBackGradientFillColors(0) As Long
 mChartBackGradientFillColors(0) = value
 resizeBackground
+PropertyChanged PropNameChartBackColor
 End Property
 
 Public Property Get ChartBackGradientFillColors() As Long()
+Attribute ChartBackGradientFillColors.VB_ProcData.VB_Invoke_Property = ";Appearance"
 ChartBackGradientFillColors = mChartBackGradientFillColors
 End Property
 
@@ -1685,94 +1653,36 @@ Dim ar() As Long
 ar = value
 mChartBackGradientFillColors = ar
 resizeBackground
-End Property
-
-Public Property Get controller() As ChartController
-Set controller = mController
+PropertyChanged PropNameChartBackColor
 End Property
 
 Public Property Get ChartLeft() As Double
+Attribute ChartLeft.VB_MemberFlags = "400"
 ChartLeft = mScaleLeft
 End Property
 
 Public Property Get ChartWidth() As Double
+Attribute ChartWidth.VB_MemberFlags = "400"
 ChartWidth = YAxisPosition - mScaleLeft
 End Property
 
-Public Property Get currentPeriodNumber() As Long
-currentPeriodNumber = mPeriods.currentPeriodNumber
+Public Property Get CurrentPeriodNumber() As Long
+Attribute CurrentPeriodNumber.VB_MemberFlags = "400"
+CurrentPeriodNumber = mPeriods.CurrentPeriodNumber
 End Property
 
 Public Property Get CurrentSessionEndTime() As Date
+Attribute CurrentSessionEndTime.VB_MemberFlags = "400"
 CurrentSessionEndTime = mCurrentSessionEndTime
 End Property
 
 Public Property Get CurrentSessionStartTime() As Date
+Attribute CurrentSessionStartTime.VB_MemberFlags = "400"
 CurrentSessionStartTime = mCurrentSessionStartTime
 End Property
 
-Public Property Get DefaultBarDisplayMode() As BarDisplayModes
-DefaultBarDisplayMode = mDefaultBarDisplayMode
-End Property
-
-Public Property Let DefaultBarDisplayMode( _
-                ByVal value As BarDisplayModes)
-mDefaultBarDisplayMode = value
-End Property
-
-Public Property Get DefaultBarStyle() As BarStyle
-Set DefaultBarStyle = mDefaultBarStyle.clone
-End Property
-
-Public Property Let DefaultBarStyle( _
-                ByVal value As BarStyle)
-Set mDefaultBarStyle = value.clone
-End Property
-
-Public Property Get DefaultDataPointStyle() As DataPointStyle
-Set DefaultDataPointStyle = mDefaultDataPointStyle.clone
-End Property
-
-Public Property Let DefaultDataPointStyle( _
-                ByVal value As DataPointStyle)
-Set mDefaultDataPointStyle = value.clone
-End Property
-
-Public Property Get DefaultLineStyle() As linestyle
-Set DefaultLineStyle = mDefaultLineStyle.clone
-End Property
-
-Public Property Let DefaultLineStyle( _
-                ByVal value As linestyle)
-Set mDefaultLineStyle = value.clone
-End Property
-
-Public Property Get DefaultRegionStyle() As ChartRegionStyle
-Set DefaultRegionStyle = mDefaultRegionStyle.clone
-End Property
-
-Public Property Let DefaultRegionStyle( _
-                ByVal value As ChartRegionStyle)
-Set mDefaultRegionStyle = value.clone
-End Property
-
-Public Property Get DefaultTextStyle() As TextStyle
-Set DefaultTextStyle = mDefaultTextStyle.clone
-End Property
-
-Public Property Let DefaultTextStyle(ByVal value As TextStyle)
-Set mDefaultTextStyle = value.clone
-End Property
-
-Public Property Get DefaultYAxisStyle() As ChartRegionStyle
-Set DefaultYAxisStyle = mDefaultYAxisStyle.clone
-End Property
-
-Public Property Let DefaultYAxisStyle(ByVal value As ChartRegionStyle)
-Set mDefaultYAxisStyle = value.clone
-End Property
-
 Public Property Get FirstVisiblePeriod() As Long
+Attribute FirstVisiblePeriod.VB_MemberFlags = "400"
 FirstVisiblePeriod = mScaleLeft
 End Property
 
@@ -1780,7 +1690,40 @@ Public Property Let FirstVisiblePeriod(ByVal value As Long)
 ScrollX value - mScaleLeft + 1
 End Property
 
+Public Property Get HorizontalMouseScrollingAllowed() As Boolean
+HorizontalMouseScrollingAllowed = mHorizontalMouseScrollingAllowed
+End Property
+
+Public Property Let HorizontalMouseScrollingAllowed(ByVal value As Boolean)
+mHorizontalMouseScrollingAllowed = value
+PropertyChanged PropNameHorizontalMouseScrollingAllowed
+End Property
+
+Public Property Get HorizontalScrollBarVisible() As Boolean
+HorizontalScrollBarVisible = mHorizontalScrollBarVisible
+PropertyChanged PropNameHorizontalScrollBarVisible
+End Property
+
+Public Property Let HorizontalScrollBarVisible(ByVal val As Boolean)
+mHorizontalScrollBarVisible = val
+If mHorizontalScrollBarVisible Then
+    HScroll.Visible = True
+Else
+    HScroll.Visible = False
+End If
+Resize False, True
+End Property
+
+Public Property Get IsDrawingEnabled() As Boolean
+IsDrawingEnabled = (mSuppressDrawingCount > 0)
+End Property
+
+Public Property Get IsGridHidden() As Boolean
+IsGridHidden = mHideGrid
+End Property
+
 Public Property Get LastVisiblePeriod() As Long
+Attribute LastVisiblePeriod.VB_MemberFlags = "400"
 LastVisiblePeriod = mYAxisPosition - 1
 End Property
 
@@ -1789,6 +1732,7 @@ ScrollX value - mYAxisPosition + 1
 End Property
 
 Public Property Get Periods() As Periods
+Attribute Periods.VB_MemberFlags = "400"
 Set Periods = mPeriods
 End Property
 
@@ -1807,6 +1751,7 @@ For i = 1 To mRegionsIndex Step 2
         Region.PointerCrosshairsColor = value
     End If
 Next
+PropertyChanged PropNamePointerCrosshairsColor
 End Property
 
 Public Property Get PointerDiscColor() As OLE_COLOR
@@ -1824,9 +1769,11 @@ For i = 1 To mRegionsIndex Step 2
         Region.PointerDiscColor = value
     End If
 Next
+PropertyChanged PropNamePointerDiscColor
 End Property
 
 Public Property Get PointerIcon() As IPictureDisp
+Attribute PointerIcon.VB_MemberFlags = "400"
 Set PointerIcon = mPointerIcon
 End Property
 
@@ -1851,6 +1798,7 @@ End If
 End Property
 
 Public Property Get PointerMode() As PointerModes
+Attribute PointerMode.VB_MemberFlags = "400"
 PointerMode = mPointerMode
 End Property
 
@@ -1879,100 +1827,11 @@ For i = 1 To mRegionsIndex Step 2
         Region.PointerStyle = mPointerStyle
     End If
 Next
-End Property
-
-Public Property Get RegionDefaultAutoscale() As Boolean
-Attribute RegionDefaultAutoscale.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-RegionDefaultAutoscale = mDefaultRegionStyle.Autoscale
-End Property
-
-Public Property Let RegionDefaultAutoscale(ByVal value As Boolean)
-mDefaultRegionStyle.Autoscale = value
-End Property
-
-Public Property Get RegionDefaultBackColor() As OLE_COLOR
-Attribute RegionDefaultBackColor.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-RegionDefaultBackColor = mDefaultRegionStyle.BackColor
-End Property
-
-Public Property Let RegionDefaultBackColor(ByVal val As OLE_COLOR)
-mDefaultRegionStyle.BackColor = val
-End Property
-
-Public Property Get RegionDefaultGridColor() As OLE_COLOR
-Attribute RegionDefaultGridColor.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-RegionDefaultGridColor = mDefaultRegionStyle.GridColor
-End Property
-
-Public Property Let RegionDefaultGridColor(ByVal val As OLE_COLOR)
-mDefaultRegionStyle.GridColor = val
-End Property
-
-Public Property Get RegionDefaultGridlineSpacingY() As Double
-Attribute RegionDefaultGridlineSpacingY.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-RegionDefaultGridlineSpacingY = mDefaultRegionStyle.GridlineSpacingY
-End Property
-
-Public Property Let RegionDefaultGridlineSpacingY(ByVal value As Double)
-mDefaultRegionStyle.GridlineSpacingY = value
-End Property
-
-Public Property Get RegionDefaultGridTextColor() As OLE_COLOR
-Attribute RegionDefaultGridTextColor.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-RegionDefaultGridTextColor = mDefaultRegionStyle.GridTextColor
-End Property
-
-Public Property Let RegionDefaultGridTextColor(ByVal val As OLE_COLOR)
-mDefaultRegionStyle.GridTextColor = val
-End Property
-
-Public Property Get RegionDefaultHasGrid() As Boolean
-Attribute RegionDefaultHasGrid.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-RegionDefaultHasGrid = mDefaultRegionStyle.HasGrid
-End Property
-
-Public Property Let RegionDefaultHasGrid(ByVal val As Boolean)
-mDefaultRegionStyle.HasGrid = val
-End Property
-
-Public Property Get RegionDefaultHasGridText() As Boolean
-Attribute RegionDefaultHasGridText.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-RegionDefaultHasGridText = mDefaultRegionStyle.HasGridText
-End Property
-
-Public Property Let RegionDefaultHasGridText(ByVal val As Boolean)
-mDefaultRegionStyle.HasGridText = val
-End Property
-
-Public Property Get RegionDefaultIntegerYScale() As Boolean
-Attribute RegionDefaultIntegerYScale.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-RegionDefaultIntegerYScale = mDefaultRegionStyle.IntegerYScale
-End Property
-
-Public Property Let RegionDefaultIntegerYScale(ByVal value As Boolean)
-mDefaultRegionStyle.IntegerYScale = value
-End Property
-
-Public Property Get RegionDefaultMinimumHeight() As Double
-Attribute RegionDefaultMinimumHeight.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-RegionDefaultMinimumHeight = mDefaultRegionStyle.MinimumHeight
-End Property
-
-Public Property Let RegionDefaultMinimumHeight(ByVal value As Double)
-mDefaultRegionStyle.MinimumHeight = value
-End Property
-
-Public Property Get RegionDefaultYScaleQuantum() As Double
-Attribute RegionDefaultYScaleQuantum.VB_ProcData.VB_Invoke_Property = ";Region Defaults"
-RegionDefaultYScaleQuantum = mDefaultRegionStyle.YScaleQuantum
-End Property
-
-Public Property Let RegionDefaultYScaleQuantum(ByVal value As Double)
-mDefaultRegionStyle.YScaleQuantum = value
+PropertyChanged PropNamePointerStyle
 End Property
 
 Public Property Get SessionEndTime() As Date
-Attribute SessionEndTime.VB_ProcData.VB_Invoke_Property = ";Behavior"
+Attribute SessionEndTime.VB_MemberFlags = "400"
 SessionEndTime = mSessionEndTime
 End Property
 
@@ -1985,7 +1844,7 @@ mSessionEndTime = val
 End Property
 
 Public Property Get SessionStartTime() As Date
-Attribute SessionStartTime.VB_ProcData.VB_Invoke_Property = ";Behavior"
+Attribute SessionStartTime.VB_MemberFlags = "400"
 SessionStartTime = mSessionStartTime
 End Property
 
@@ -1997,75 +1856,29 @@ If CDbl(val) >= 1 Then _
 mSessionStartTime = val
 End Property
 
-Public Property Get ShowHorizontalScrollBar() As Boolean
-Attribute ShowHorizontalScrollBar.VB_ProcData.VB_Invoke_Property = ";Appearance"
-ShowHorizontalScrollBar = mShowHorizontalScrollBar
+Public Property Get ToolbarVisible() As Boolean
+Attribute ToolbarVisible.VB_ProcData.VB_Invoke_Property = ";Appearance"
+ToolbarVisible = mToolbarVisible
 End Property
 
-Public Property Let ShowHorizontalScrollBar(ByVal val As Boolean)
-mShowHorizontalScrollBar = val
-If mShowHorizontalScrollBar Then
-    HScroll.Visible = True
-Else
-    HScroll.Visible = False
-End If
-Resize False, True
-End Property
-
-Public Property Get ShowToolbar() As Boolean
-Attribute ShowToolbar.VB_ProcData.VB_Invoke_Property = ";Appearance"
-ShowToolbar = mShowToolbar
-End Property
-
-Public Property Let ShowToolbar(ByVal val As Boolean)
-mShowToolbar = val
-If mShowToolbar Then
+Public Property Let ToolbarVisible(ByVal val As Boolean)
+mToolbarVisible = val
+If mToolbarVisible Then
     Toolbar1.Visible = True
 Else
     Toolbar1.Visible = False
 End If
 Resize False, True
-End Property
-
-Public Property Get SuppressDrawing() As Boolean
-SuppressDrawing = (mSuppressDrawingCount > 0)
-End Property
-
-Public Property Let SuppressDrawing(ByVal val As Boolean)
-Dim i As Long
-Dim Region As ChartRegion
-If val Then
-    mSuppressDrawingCount = mSuppressDrawingCount + 1
-Else
-    If mSuppressDrawingCount > 0 Then
-        mSuppressDrawingCount = mSuppressDrawingCount - 1
-    End If
-End If
-
-If mSuppressDrawingCount = 0 Then
-    Resize True, True
-End If
-
-For i = 1 To mRegionsIndex Step 2
-    If Not mRegions(i).Region Is Nothing Then
-        Set Region = mRegions(i).Region
-        Region.SuppressDrawing = (mSuppressDrawingCount > 0)
-    End If
-Next
-If mXAxisRegion Is Nothing Then createXAxisRegion
-mXAxisRegion.SuppressDrawing = (mSuppressDrawingCount > 0)
-End Property
-
-Public Property Get TwipsPerBar() As Long
-Attribute TwipsPerBar.VB_ProcData.VB_Invoke_Property = ";Appearance"
-TwipsPerBar = mTwipsPerBar
+PropertyChanged PropNameToolbarVisible
 End Property
 
 Public Property Let TwipsPerBar(ByVal val As Long)
+Attribute TwipsPerBar.VB_ProcData.VB_Invoke_PropertyPut = ";Appearance"
 mTwipsPerBar = val
 resizeX
 setHorizontalScrollBar
 'paintAll
+PropertyChanged PropNameTwipsPerBar
 End Property
 
 Public Property Set VerticalGridTimePeriod( _
@@ -2100,22 +1913,46 @@ setRegionPeriodAndVerticalGridParameters
 End Property
 
 Public Property Get VerticalGridTimePeriod() As TimePeriod
+Attribute VerticalGridTimePeriod.VB_MemberFlags = "400"
 Set VerticalGridTimePeriod = mVerticalGridTimePeriod
 End Property
 
+Public Property Get VerticalMouseScrollingAllowed() As Boolean
+VerticalMouseScrollingAllowed = mVerticalMouseScrollingAllowed
+End Property
+
+Public Property Let VerticalMouseScrollingAllowed(ByVal value As Boolean)
+mVerticalMouseScrollingAllowed = value
+PropertyChanged PropNameVerticalMouseScrollingAllowed
+End Property
+
 Public Property Get XAxisRegion() As ChartRegion
+Attribute XAxisRegion.VB_MemberFlags = "400"
 Set XAxisRegion = mXAxisRegion
 End Property
 
 Public Property Get XAxisVisible() As Boolean
+Attribute XAxisVisible.VB_ProcData.VB_Invoke_Property = ";Appearance"
 XAxisVisible = mXAxisVisible
 End Property
 
 Public Property Let XAxisVisible(ByVal value As Boolean)
 mXAxisVisible = value
+sizeRegions
+XAxisPicture.Visible = mXAxisVisible
+PropertyChanged PropNameXAxisVisible
+End Property
+
+Public Property Let XCursorTextStyle(ByVal value As TextStyle)
+mXCursorText.LocalStyle = value
+End Property
+
+Public Property Get XCursorTextStyle() As TextStyle
+Set XCursorTextStyle = mXCursorText.LocalStyle
 End Property
 
 Public Property Get YAxisPosition() As Long
+Attribute YAxisPosition.VB_MemberFlags = "400"
 YAxisPosition = mYAxisPosition
 End Property
 
@@ -2126,9 +1963,12 @@ End Property
 
 Public Property Let YAxisVisible(ByVal value As Boolean)
 mYAxisVisible = value
+resizeX
+PropertyChanged PropNameYAxisVisible
 End Property
 
 Public Property Get YAxisWidthCm() As Single
+Attribute YAxisWidthCm.VB_ProcData.VB_Invoke_Property = ";Appearance"
 YAxisWidthCm = mYAxisWidthCm
 End Property
 
@@ -2136,44 +1976,47 @@ Public Property Let YAxisWidthCm(ByVal value As Single)
 If value <= 0 Then
     Err.Raise ErrorCodes.ErrIllegalArgumentException, _
             ProjectName & "." & ModuleName & ":" & "YAxisWidthCm", _
-            "Y axis width must be greater than 0"
+            "Y axis Width must be greater than 0"
 End If
 
 mYAxisWidthCm = value
+resizeX
+PropertyChanged PropNameYAxisWidthCm
 End Property
 
 '================================================================================
 ' Methods
 '================================================================================
 
-Public Function AddChartRegion(ByVal percentheight As Double, _
-                    Optional ByVal minimumPercentHeight As Double, _
-                    Optional ByVal style As ChartRegionStyle, _
+Public Function AddChartRegion(ByVal PercentHeight As Double, _
+                    Optional ByVal MinimumPercentHeight As Double, _
+                    Optional ByVal Style As ChartRegionStyle, _
                     Optional ByVal yAxisStyle As ChartRegionStyle, _
-                    Optional ByVal name As String) As ChartRegion
+                    Optional ByVal Name As String) As ChartRegion
+
 Dim ev As CollectionChangeEvent
 Dim var As Variant
-Dim p As period
+Dim p As Period
 Dim controlIndex As Long
+Dim YAxisRegion As ChartRegion
+Dim btn As Button
+
 
 '
-' NB: percentHeight=100 means the region will use whatever space
+' NB: PercentHeight=100 means the region will use whatever space
 ' is available
 '
 
-Dim YAxisRegion As ChartRegion
-Dim btn As button
-
-If name <> "" Then
-    If Not GetChartRegion(name) Is Nothing Then
+If Name <> "" Then
+    If Not GetChartRegion(Name) Is Nothing Then
         Err.Raise ErrorCodes.ErrIllegalStateException, _
                 "ChartSkil26.Chart::addChartRegion", _
-                "Region " & name & " already exists"
+                "Region " & Name & " already exists"
     End If
 End If
 
-If style Is Nothing Then Set style = mDefaultRegionStyle
-If yAxisStyle Is Nothing Then Set yAxisStyle = mDefaultYAxisStyle
+If Style Is Nothing Then Set Style = getDefaultDataRegionStyle
+If yAxisStyle Is Nothing Then Set yAxisStyle = getDefaultYAxisRegionStyle
 
 mRegionsIndex = mRegionsIndex + 1
 controlIndex = 1 + (mRegionsIndex - 1) / 2
@@ -2182,25 +2025,21 @@ Set AddChartRegion = New ChartRegion
 
 Load ChartRegionPicture(controlIndex)
 ChartRegionPicture(controlIndex).Visible = True
-ChartRegionPicture(controlIndex).align = vbAlignNone
-'ChartRegionPicture(controlIndex).width = _
+ChartRegionPicture(controlIndex).Align = vbAlignNone
+'ChartRegionPicture(controlIndex).Width = _
 '    UserControl.ScaleWidth * (mYAxisPosition - ChartLeft) / XAxisPicture.ScaleWidth
-ChartRegionPicture(controlIndex).width = _
+ChartRegionPicture(controlIndex).Width = _
     IIf(mYAxisVisible, UserControl.ScaleWidth - mYAxisWidthCm * TwipsPerCm, UserControl.ScaleWidth)
 ChartRegionPicture(controlIndex).ZOrder 1
 
-AddChartRegion.initialise name, _
-                        controller, _
-                        createCanvas(ChartRegionPicture(controlIndex)), _
-                        mDefaultBarStyle, _
-                        mDefaultDataPointStyle, _
-                        mDefaultLineStyle, _
-                        mDefaultTextStyle
+AddChartRegion.Initialise Name, _
+                        Me, _
+                        createCanvas(ChartRegionPicture(controlIndex))
 
-AddChartRegion.SuppressDrawing = (mSuppressDrawingCount > 0)
+AddChartRegion.IsDrawingEnabled = (mSuppressDrawingCount > 0)
 'addChartRegion.currentTool = mCurrentTool
-AddChartRegion.minimumPercentHeight = minimumPercentHeight
-AddChartRegion.percentheight = percentheight
+AddChartRegion.MinimumPercentHeight = MinimumPercentHeight
+AddChartRegion.PercentHeight = PercentHeight
 AddChartRegion.PointerStyle = mPointerStyle
 AddChartRegion.PointerIcon = mPointerIcon
 AddChartRegion.PointerCrosshairsColor = mPointerCrosshairsColor
@@ -2213,15 +2052,15 @@ Case PointerModeTool
 Case PointerModeSelection
     AddChartRegion.SetPointerModeSelection
 End Select
-AddChartRegion.left = mScaleLeft
+AddChartRegion.Left = mScaleLeft
 AddChartRegion.RegionNumber = mRegionsIndex
-AddChartRegion.bottom = 0
-AddChartRegion.top = 1
+AddChartRegion.Bottom = 0
+AddChartRegion.Top = 1
 AddChartRegion.PeriodsInView mScaleLeft, mYAxisPosition - 1
 AddChartRegion.VerticalGridTimePeriod = mVerticalGridTimePeriod
 AddChartRegion.SessionStartTime = mSessionStartTime
 
-AddChartRegion.style = style
+AddChartRegion.Style = Style
 
 If mHideGrid Then AddChartRegion.HideGrid
 
@@ -2241,8 +2080,8 @@ If mRegionsIndex = 1 Then
 End If
 
 Set mRegions(mRegionsIndex).Region = AddChartRegion
-If percentheight <> 100 Then
-    mRegions(mRegionsIndex).percentheight = mRegionHeightReductionFactor * percentheight
+If PercentHeight <> 100 Then
+    mRegions(mRegionsIndex).PercentHeight = mRegionHeightReductionFactor * PercentHeight
 Else
     mRegions(mRegionsIndex).useAvailableSpace = True
 End If
@@ -2258,25 +2097,19 @@ End If
 Set YAxisRegion = New ChartRegion
 
 Load YAxisPicture(controlIndex)
-YAxisPicture(controlIndex).align = vbAlignNone
-YAxisPicture(controlIndex).left = ChartRegionPicture(controlIndex).width
-'YAxisPicture(controlIndex).width = UserControl.ScaleWidth - YAxisPicture(YAxisPicture.UBound).Left
-YAxisPicture(controlIndex).width = mYAxisWidthCm * TwipsPerCm
+YAxisPicture(controlIndex).Align = vbAlignNone
+YAxisPicture(controlIndex).Left = ChartRegionPicture(controlIndex).Width
+'YAxisPicture(controlIndex).Width = UserControl.ScaleWidth - YAxisPicture(YAxisPicture.UBound).Left
+YAxisPicture(controlIndex).Width = mYAxisWidthCm * TwipsPerCm
 YAxisPicture(controlIndex).Visible = mYAxisVisible
 
-YAxisRegion.initialise "", _
-                    controller, _
-                    createCanvas(YAxisPicture(controlIndex)), _
-                    mDefaultBarStyle, _
-                    mDefaultDataPointStyle, _
-                    mDefaultLineStyle, _
-                    mDefaultTextStyle
+YAxisRegion.Initialise "", _
+                    Me, _
+                    createCanvas(YAxisPicture(controlIndex))
 
 YAxisRegion.RegionNumber = mRegionsIndex
-YAxisRegion.bottom = 0
-YAxisRegion.top = 1
 YAxisRegion.IsYAxisRegion = True
-YAxisRegion.style = yAxisStyle
+YAxisRegion.Style = yAxisStyle
 AddChartRegion.YAxisRegion = YAxisRegion
 
 Set mRegions(mRegionsIndex).Region = YAxisRegion
@@ -2288,12 +2121,11 @@ If sizeRegions Then
     Set ev.affectedItem = AddChartRegion
     ev.changeType = CollItemAdded
     RaiseEvent RegionsChanged(ev)
-    mController.fireRegionsChanged ev
 Else
     ' can't fit this all in! So remove the added region,
     Set AddChartRegion = Nothing
     Set mRegions(mRegionsIndex).Region = Nothing
-    mRegions(mRegionsIndex).percentheight = 0
+    mRegions(mRegionsIndex).PercentHeight = 0
     mRegions(mRegionsIndex).actualHeight = 0
     mRegions(mRegionsIndex).useAvailableSpace = False
     Unload ChartRegionPicture(controlIndex)
@@ -2305,13 +2137,13 @@ End If
 
 End Function
 
-Public Function addPeriod(ByVal timestamp As Date) As period
-Set addPeriod = mPeriods.addPeriod(timestamp)
+Public Function addPeriod(ByVal Timestamp As Date) As Period
+Set addPeriod = mPeriods.addPeriod(Timestamp)
 End Function
 
 Private Function calcScaleLeft() As Single
 calcScaleLeft = mYAxisPosition + _
-            IIf(mYAxisVisible, mYAxisWidthCm * TwipsPerCm / XAxisPicture.width * mScaleWidth, 0) - _
+            IIf(mYAxisVisible, mYAxisWidthCm * TwipsPerCm / XAxisPicture.Width * mScaleWidth, 0) - _
             mScaleWidth
 End Function
 
@@ -2354,7 +2186,7 @@ For i = 1 To RegionDividerPicture.UBound
     Unload RegionDividerPicture(i)
 Next
 
-initialise
+Initialise
 mYAxisPosition = 1
 createXAxisRegion
 resizeBackground
@@ -2362,38 +2194,85 @@ resizeX
 'Resize False
 
 RaiseEvent ChartCleared
-mController.fireChartCleared
 Debug.Print "Chart cleared"
 End Function
 
-Public Sub DisplayGrid()
-Dim i As Long
-Dim Region As ChartRegion
-
-If Not mHideGrid Then Exit Sub
-
-mHideGrid = False
-For i = 1 To mRegionsIndex Step 2
-    If Not mRegions(i).Region Is Nothing Then
-        Set Region = mRegions(i).Region
-        Region.DisplayGrid
-    End If
-Next
+Public Sub DisableDrawing()
+SuppressDrawing True
 End Sub
 
-Public Function GetChartRegion(ByVal name As String) As ChartRegion
+Public Sub EnableDrawing()
+SuppressDrawing False
+End Sub
+
+Public Function GetChartRegion(ByVal Name As String) As ChartRegion
 Dim i As Long
 
-name = UCase$(name)
+Name = UCase$(Name)
 For i = 1 To mRegionsIndex Step 2
     If Not mRegions(i).Region Is Nothing Then
-        If UCase$(mRegions(i).Region.name) = name Then
+        If UCase$(mRegions(i).Region.Name) = Name Then
             Set GetChartRegion = mRegions(i).Region
             Exit Function
         End If
     End If
 Next
                     
+End Function
+
+Public Function GetXFromTimestamp( _
+                ByVal Timestamp As Date, _
+                Optional ByVal forceNewPeriod As Boolean, _
+                Optional ByVal duplicateNumber As Long) As Double
+Dim lPeriod As Period
+Dim periodEndtime As Date
+
+Select Case BarTimePeriod.units
+Case TimePeriodNone, _
+        TimePeriodSecond, _
+        TimePeriodMinute, _
+        TimePeriodHour, _
+        TimePeriodDay, _
+        TimePeriodWeek, _
+        TimePeriodMonth, _
+        TimePeriodYear
+    
+    On Error Resume Next
+    Set lPeriod = mPeriods.Item(Timestamp)
+    On Error GoTo 0
+    
+    If lPeriod Is Nothing Then
+        If mPeriods.Count = 0 Then
+            Set lPeriod = mPeriods.addPeriod(Timestamp)
+        ElseIf Timestamp < mPeriods.Item(1).Timestamp Then
+            Set lPeriod = mPeriods.Item(1)
+            Timestamp = lPeriod.Timestamp
+        Else
+            Set lPeriod = mPeriods.addPeriod(Timestamp)
+        End If
+    End If
+    
+    periodEndtime = BarEndTime(lPeriod.Timestamp, _
+                            BarTimePeriod, _
+                            SessionStartTime)
+    GetXFromTimestamp = lPeriod.PeriodNumber + (Timestamp - lPeriod.Timestamp) / (periodEndtime - lPeriod.Timestamp)
+    
+Case TimePeriodVolume, TimePeriodTickVolume, TimePeriodTickMovement
+    If Not forceNewPeriod Then
+        On Error Resume Next
+        Set lPeriod = mPeriods.ItemDup(Timestamp, duplicateNumber)
+        On Error GoTo 0
+        
+        If lPeriod Is Nothing Then
+            Set lPeriod = mPeriods.addPeriod(Timestamp, True)
+        End If
+        GetXFromTimestamp = lPeriod.PeriodNumber
+    Else
+        Set lPeriod = mPeriods.addPeriod(Timestamp, True)
+        GetXFromTimestamp = lPeriod.PeriodNumber
+    End If
+End Select
+
 End Function
 
 Public Sub HideGrid()
@@ -2411,14 +2290,10 @@ For i = 1 To mRegionsIndex Step 2
 Next
 End Sub
 
-Public Function IsGridHidden() As Boolean
-IsGridHidden = mHideGrid
-End Function
+Public Function IsTimeInSession(ByVal Timestamp As Date) As Boolean
 
-Public Function IsTimeInSession(ByVal timestamp As Date) As Boolean
-
-If timestamp >= mCurrentSessionStartTime And _
-    timestamp < mCurrentSessionEndTime _
+If Timestamp >= mCurrentSessionStartTime And _
+    Timestamp < mCurrentSessionEndTime _
 Then
     IsTimeInSession = True
 End If
@@ -2455,7 +2330,6 @@ sizeRegions
 
 ev.changeType = CollItemRemoved
 Set ev.affectedItem = Region
-mController.fireRegionsChanged ev
 
 Exit Sub
 
@@ -2463,7 +2337,7 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "RemoveChartRegion" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Sub
 
@@ -2476,8 +2350,8 @@ On Error GoTo Err
 If value = 0 Then Exit Sub
 
 If (LastVisiblePeriod + value) > _
-        (mPeriods.currentPeriodNumber + ChartWidth - 1) Then
-    value = mPeriods.currentPeriodNumber + ChartWidth - 1 - LastVisiblePeriod
+        (mPeriods.CurrentPeriodNumber + ChartWidth - 1) Then
+    value = mPeriods.CurrentPeriodNumber + ChartWidth - 1 - LastVisiblePeriod
 ElseIf (LastVisiblePeriod + value) < 1 Then
     value = 1 - LastVisiblePeriod
 End If
@@ -2506,7 +2380,7 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "ScrollX" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Sub
 
@@ -2525,14 +2399,13 @@ For i = 1 To mRegionsIndex Step 2
 Next
 
 RaiseEvent PointerModeChanged
-mController.firePointerModeChanged
 Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "SetPointerModeDefault" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 End Sub
 
@@ -2553,14 +2426,13 @@ For i = 1 To mRegionsIndex Step 2
 Next
 
 RaiseEvent PointerModeChanged
-mController.firePointerModeChanged
 Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "SetPointerModeSelection" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
 
 End Sub
@@ -2596,15 +2468,29 @@ For i = 1 To mRegionsIndex Step 2
 Next
 
 RaiseEvent PointerModeChanged
-mController.firePointerModeChanged
 Exit Sub
 
 Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = ProjectName & "." & ModuleName & ":" & "SetPointerModeTool" & "." & failpoint & IIf(Err.Source <> "", vbCrLf & Err.Source, "")
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
+gErrorLogger.Log LogLevelSevere, "Error " & errNumber & ": " & errDescription & vbCrLf & errSource
 Err.Raise errNumber, errSource, errDescription
+End Sub
+
+Public Sub ShowGrid()
+Dim i As Long
+Dim Region As ChartRegion
+
+If Not mHideGrid Then Exit Sub
+
+mHideGrid = False
+For i = 1 To mRegionsIndex Step 2
+    If Not mRegions(i).Region Is Nothing Then
+        Set Region = mRegions(i).Region
+        Region.ShowGrid
+    End If
+Next
 End Sub
 
 '================================================================================
@@ -2612,13 +2498,13 @@ End Sub
 '================================================================================
 
 Private Function calcAvailableHeight() As Long
-calcAvailableHeight = IIf(mXAxisVisible, XAxisPicture.top, UserControl.ScaleHeight) - _
-                    mNumRegionsInUse * RegionDividerPicture(0).height - _
-                    IIf(mShowToolbar, Toolbar1.height, 0)
+calcAvailableHeight = IIf(mXAxisVisible, XAxisPicture.Top, UserControl.ScaleHeight) - _
+                    mNumRegionsInUse * RegionDividerPicture(0).Height - _
+                    IIf(mToolbarVisible, Toolbar1.Height, 0)
 If calcAvailableHeight < 0 Then calcAvailableHeight = 0
 End Function
 
-Private Sub CalcSessionTimes(ByVal timestamp As Date, _
+Private Sub CalcSessionTimes(ByVal Timestamp As Date, _
                             ByRef SessionStartTime As Date, _
                             ByRef SessionEndTime As Date)
 Dim i As Long
@@ -2626,18 +2512,18 @@ Dim i As Long
 i = -1
 Do
     i = i + 1
-Loop Until calcSessionTimesHelper(timestamp + i, SessionStartTime, SessionEndTime)
+Loop Until calcSessionTimesHelper(Timestamp + i, SessionStartTime, SessionEndTime)
 End Sub
 
-Friend Function calcSessionTimesHelper(ByVal timestamp As Date, _
+Friend Function calcSessionTimesHelper(ByVal Timestamp As Date, _
                             ByRef SessionStartTime As Date, _
                             ByRef SessionEndTime As Date) As Boolean
 Dim referenceDate As Date
 Dim referenceTime As Date
 Dim weekday As Long
 
-referenceDate = DateValue(timestamp)
-referenceTime = TimeValue(timestamp)
+referenceDate = DateValue(Timestamp)
+referenceTime = TimeValue(Timestamp)
 
 If mSessionStartTime < mSessionEndTime Then
     ' session doesn't span midnight
@@ -2757,77 +2643,70 @@ End Select
 End Sub
 
 Private Function createCanvas( _
-                ByVal surface As PictureBox) As Canvas
+                ByVal Surface As PictureBox) As Canvas
 Set createCanvas = New Canvas
-createCanvas.surface = surface
+createCanvas.Surface = Surface
 End Function
 
 Private Sub createXAxisRegion()
 Dim aFont As StdFont
-Dim style As ChartRegionStyle
 Dim lCanvas As Canvas
 
 Set mXAxisRegion = New ChartRegion
 
 'Set mRegions(0).Region = mXAxisRegion
 Set lCanvas = createCanvas(XAxisPicture)
-mXAxisRegion.initialise "", _
-                    controller, _
-                    lCanvas, _
-                    mDefaultBarStyle, _
-                    mDefaultDataPointStyle, _
-                    mDefaultLineStyle, _
-                    mDefaultTextStyle
+mXAxisRegion.Initialise "", _
+                    Me, _
+                    lCanvas
                         
 mXAxisRegion.IsXAxisRegion = True
 mXAxisRegion.VerticalGridTimePeriod = mVerticalGridTimePeriod
-mXAxisRegion.bottom = 0
-mXAxisRegion.top = 1
+mXAxisRegion.Bottom = 0
+mXAxisRegion.Top = 1
 mXAxisRegion.SessionStartTime = mSessionStartTime
-
-Set style = mDefaultRegionStyle.clone
-style.BackGradientFillColors = mChartBackGradientFillColors
-style.HasGrid = False
-style.HasGridText = True
-mXAxisRegion.style = style
+mXAxisRegion.HasGrid = False
+mXAxisRegion.HasGridText = True
 
 Set mXCursorText = mXAxisRegion.AddText(LayerNumbers.LayerPointer)
-mXCursorText.align = AlignTopCentre
-mXCursorText.Color = vbBlack ' vbWhite Xor mDefaultRegionStyle.BackColor
-mXCursorText.box = True
-mXCursorText.boxFillColor = vbWhite
-mXCursorText.boxStyle = LineSolid
-mXCursorText.boxColor = vbBlack
+mXCursorText.Align = AlignTopCentre
+
+Dim txtStyle As New TextStyle
+txtStyle.Color = vbBlack
+txtStyle.Box = True
+txtStyle.BoxFillColor = vbWhite
+txtStyle.BoxStyle = LineSolid
+txtStyle.BoxColor = vbBlack
 Set aFont = New StdFont
-aFont.name = "Arial"
+aFont.Name = "Arial"
 aFont.size = 8
 aFont.Underline = False
 aFont.Bold = False
-mXCursorText.font = aFont
-
+txtStyle.Font = aFont
+mXCursorText.LocalStyle = txtStyle
 End Sub
 
-Private Sub displayXAxisLabel(ByVal x As Single, ByVal y As Single)
-Dim thisPeriod As period
+Private Sub displayXAxisLabel(ByVal X As Single, ByVal Y As Single)
+Dim thisPeriod As Period
 Dim PeriodNumber As Long
 Dim prevPeriodNumber As Long
-Dim prevPeriod As period
+Dim prevPeriod As Period
 
 If mXAxisRegion Is Nothing Then createXAxisRegion
 
-If Round(x) >= mYAxisPosition Then Exit Sub
+If Round(X) >= mYAxisPosition Then Exit Sub
 If mPeriods.Count = 0 Then Exit Sub
 
 On Error Resume Next
-PeriodNumber = Round(x)
+PeriodNumber = Round(X)
 Set thisPeriod = mPeriods(PeriodNumber)
 On Error GoTo 0
 If thisPeriod Is Nothing Then
-    mXCursorText.text = ""
+    mXCursorText.Text = ""
     Exit Sub
 End If
 
-mXCursorText.position = mXAxisRegion.newPoint( _
+mXCursorText.position = mXAxisRegion.NewPoint( _
                             PeriodNumber, _
                             0, _
                             CoordsLogical, _
@@ -2835,30 +2714,42 @@ mXCursorText.position = mXAxisRegion.newPoint( _
 
 Select Case mBarTimePeriod.units
 Case TimePeriodNone, TimePeriodMinute, TimePeriodHour
-    mXCursorText.text = FormatDateTime(thisPeriod.timestamp, vbShortDate) & _
+    mXCursorText.Text = FormatDateTime(thisPeriod.Timestamp, vbShortDate) & _
                         " " & _
-                        FormatDateTime(thisPeriod.timestamp, vbShortTime)
+                        FormatDateTime(thisPeriod.Timestamp, vbShortTime)
 Case TimePeriodSecond, TimePeriodVolume, TimePeriodTickVolume, TimePeriodTickMovement
-    mXCursorText.text = FormatDateTime(thisPeriod.timestamp, vbShortDate) & _
+    mXCursorText.Text = FormatDateTime(thisPeriod.Timestamp, vbShortDate) & _
                         " " & _
-                        FormatDateTime(thisPeriod.timestamp, vbLongTime)
+                        FormatDateTime(thisPeriod.Timestamp, vbLongTime)
 Case Else
-    mXCursorText.text = FormatDateTime(thisPeriod.timestamp, vbShortDate)
+    mXCursorText.Text = FormatDateTime(thisPeriod.Timestamp, vbShortDate)
 End Select
 
 End Sub
 
-Private Sub initialise()
+Private Function getDefaultDataRegionStyle() As ChartRegionStyle
+Static defaultDataRegionStyle As ChartRegionStyle
+If defaultDataRegionStyle Is Nothing Then Set defaultDataRegionStyle = New ChartRegionStyle
+Set getDefaultDataRegionStyle = defaultDataRegionStyle
+End Function
+
+Private Function getDefaultYAxisRegionStyle() As ChartRegionStyle
+Static defaultYAxisRegionStyle As ChartRegionStyle
+If defaultYAxisRegionStyle Is Nothing Then Set defaultYAxisRegionStyle = New ChartRegionStyle
+Set getDefaultYAxisRegionStyle = defaultYAxisRegionStyle
+End Function
+
+Private Sub Initialise()
 Static firstInitialisationDone As Boolean
 Dim i As Long
-Dim btn As button
+Dim btn As Button
 
 For Each btn In Toolbar1.Buttons
     btn.value = tbrUnpressed
     btn.Enabled = False
 Next
 
-mPrevHeight = UserControl.height
+mPrevHeight = UserControl.Height
 
 ReDim mRegions(3) As RegionTableEntry
 mRegionsIndex = 0
@@ -2866,7 +2757,7 @@ mNumRegionsInUse = 0
 mRegionHeightReductionFactor = 1
 
 Set mPeriods = New Periods
-mPeriods.controller = controller
+mPeriods.Chart = Me
 
 mBarTimePeriodSet = False
 
@@ -2878,29 +2769,16 @@ If Not firstInitialisationDone Then
     ' if the chart is subsequently cleared, any values set by the
     ' application remain in force
     
-    mAutoscroll = PropDfltAutoscroll
+    mAutoscrolling = PropDfltAutoscrolling
     Set mBarTimePeriod = GetTimePeriod(PropDfltPeriodLength, PropDfltPeriodUnits)
     mPointerCrosshairsColor = PropDfltPointerCrosshairsColor
     mPointerDiscColor = PropDfltPointerDiscColor
-    mShowHorizontalScrollBar = PropDfltShowHorizontalScrollBar
-    mShowToolbar = PropDfltShowToolbar
-    'HScroll.height = HorizScrollBarHeight
-    HScroll.Visible = mShowHorizontalScrollBar
+    mHorizontalScrollBarVisible = PropDfltHorizontalScrollBarVisible
+    mToolbarVisible = PropDfltToolbarVisible
+    'HScroll.Height = HorizScrollBarHeight
+    HScroll.Visible = mHorizontalScrollBarVisible
     Set mVerticalGridTimePeriod = GetTimePeriod(PropDfltVerticalGridSpacing, PropDfltVerticalGridUnits)
     mVerticalGridTimePeriodSet = False
-    
-    Set mDefaultRegionStyle = gCreateChartRegionStyle
-    
-    Set mDefaultBarStyle = gCreateBarStyle
-    
-    Set mDefaultDataPointStyle = gCreateDataPointStyle
-    
-    Set mDefaultLineStyle = gCreateLineStyle
-    
-    Set mDefaultTextStyle = gCreateTextStyle
-    
-    Set mDefaultYAxisStyle = gCreateChartRegionStyle
-    mDefaultYAxisStyle.HasGrid = False
     
     mTwipsPerBar = PropDfltTwipsPerBar
     
@@ -2908,15 +2786,15 @@ If Not firstInitialisationDone Then
     mYAxisWidthCm = PropDfltYAxisWidthCm
     mYAxisVisible = PropDfltYAxisVisible
 
-    mAllowHorizontalMouseScrolling = PropDfltAllowHorizontalMouseScrolling
-    mAllowVerticalMouseScrolling = PropDfltAllowVerticalMouseScrolling
+    mHorizontalMouseScrollingAllowed = PropDfltHorizontalMouseScrollingAllowed
+    mVerticalMouseScrollingAllowed = PropDfltVerticalMouseScrollingAllowed
 
 End If
 
 mPointerMode = PointerModes.PointerModeDefault
 
 mYAxisPosition = 1
-mScaleWidth = CSng(XAxisPicture.width) / CSng(mTwipsPerBar) - 0.5!
+mScaleWidth = CSng(XAxisPicture.Width) / CSng(mTwipsPerBar) - 0.5!
 mScaleLeft = calcScaleLeft
 mScaleHeight = -100
 mScaleTop = 100
@@ -2930,10 +2808,10 @@ End Sub
 
 Private Sub mouseMove( _
                 ByVal index As Long, _
-                ByVal button As Long, _
+                ByVal Button As Long, _
                 ByVal Shift As Long, _
-                ByRef x As Single, _
-                ByRef y As Single)
+                ByRef X As Single, _
+                ByRef Y As Single)
 Dim i As Long
 Dim Region As ChartRegion
 
@@ -2941,51 +2819,51 @@ For i = 1 To mRegionsIndex Step 2
     If Not mRegions(i).Region Is Nothing Then
         Set Region = mRegions(i).Region
         If i = (2 * index - 1) Then
-            'debug.print "Mousemove: index=" & index & " region=" & i & " x=" & x & " y=" & y
+            'debug.print "Mousemove: index=" & index & " region=" & i & " x=" & X & " y=" & Y
             If (mPointerMode = PointerModeDefault And _
-                    ((Region.SnapCursorToTickBoundaries And Not CBool(Shift And vbCtrlMask)) Or _
-                    (Not Region.SnapCursorToTickBoundaries And CBool(Shift And vbCtrlMask)))) Or _
+                    ((Region.CursorSnapsToTickBoundaries And Not CBool(Shift And vbCtrlMask)) Or _
+                    (Not Region.CursorSnapsToTickBoundaries And CBool(Shift And vbCtrlMask)))) Or _
                 (mPointerMode = PointerModeTool And CBool(Shift And vbCtrlMask)) _
             Then
                 Dim YScaleQuantum As Double
                 YScaleQuantum = Region.YScaleQuantum
-                If YScaleQuantum <> 0 Then y = YScaleQuantum * Int((y + YScaleQuantum / 10000) / YScaleQuantum)
+                If YScaleQuantum <> 0 Then Y = YScaleQuantum * Int((Y + YScaleQuantum / 10000) / YScaleQuantum)
             End If
-            Region.DrawCursor button, Shift, x, y
+            Region.DrawCursor Button, Shift, X, Y
             
         Else
-            'debug.print "Mousemove: index=" & index & " region=" & i & " x=" & x & " y=" & MinusInfinitySingle
-            Region.DrawCursor button, Shift, x, MinusInfinitySingle
+            'debug.print "Mousemove: index=" & index & " region=" & i & " x=" & X & " y=" & MinusInfinitySingle
+            Region.DrawCursor Button, Shift, X, MinusInfinitySingle
         End If
     End If
 Next
-displayXAxisLabel Round(x), 100
+displayXAxisLabel Round(X), 100
 End Sub
 
 Private Sub mouseScroll( _
                 ByVal index As Long, _
-                ByVal button As Long, _
+                ByVal Button As Long, _
                 ByVal Shift As Long, _
-                ByRef x As Single, _
-                ByRef y As Single)
+                ByRef X As Single, _
+                ByRef Y As Single)
 
-If mAllowHorizontalMouseScrolling Then
+If mHorizontalMouseScrollingAllowed Then
     ' the chart needs to be scrolled so that current mouse position
     ' is the value contained in mLeftDragStartPosnX
-    If mLeftDragStartPosnX <> Int(x) Then
-        If (LastVisiblePeriod + mLeftDragStartPosnX - Int(x)) <= _
-                (mPeriods.currentPeriodNumber + ChartWidth - 1) And _
-            (LastVisiblePeriod + mLeftDragStartPosnX - Int(x)) >= 1 _
+    If mLeftDragStartPosnX <> Int(X) Then
+        If (LastVisiblePeriod + mLeftDragStartPosnX - Int(X)) <= _
+                (mPeriods.CurrentPeriodNumber + ChartWidth - 1) And _
+            (LastVisiblePeriod + mLeftDragStartPosnX - Int(X)) >= 1 _
         Then
-            ScrollX mLeftDragStartPosnX - Int(x)
+            ScrollX mLeftDragStartPosnX - Int(X)
         End If
     End If
 End If
-If mAllowVerticalMouseScrolling Then
-    If mLeftDragStartPosnY <> y Then
+If mVerticalMouseScrollingAllowed Then
+    If mLeftDragStartPosnY <> Y Then
         With mRegions(2 * index - 1).Region
-            If Not .Autoscale Then
-                .ScrollVertical mLeftDragStartPosnY - y
+            If Not .Autoscaling Then
+                .ScrollVertical mLeftDragStartPosnY - Y
             End If
         End With
     End If
@@ -3022,17 +2900,17 @@ failpoint = 100
 resizeBackground
 
 If resizeWidth Then
-    HScroll.width = UserControl.width
-    XAxisPicture.width = UserControl.width
-    Toolbar1.width = UserControl.width
+    HScroll.Width = UserControl.Width
+    XAxisPicture.Width = UserControl.Width
+    Toolbar1.Width = UserControl.Width
     resizeX
 End If
 
 failpoint = 200
 
 If resizeHeight Then
-    HScroll.top = UserControl.height - IIf(mShowHorizontalScrollBar, HScroll.height, 0)
-    XAxisPicture.top = HScroll.top - IIf(mXAxisVisible, XAxisPicture.height, 0)
+    HScroll.Top = UserControl.Height - IIf(mHorizontalScrollBarVisible, HScroll.Height, 0)
+    XAxisPicture.Top = HScroll.Top - IIf(mXAxisVisible, XAxisPicture.Height, 0)
     sizeRegions
 End If
 'paintAll
@@ -3042,7 +2920,7 @@ End If
 Exit Sub
 
 Err:
-gLogger.Log LogLevelSevere, "Error at: " & ProjectName & "." & ModuleName & ":" & "Resize" & "." & failpoint & _
+gErrorLogger.Log LogLevelSevere, "Error at: " & ProjectName & "." & ModuleName & ":" & "Resize" & "." & failpoint & _
                             IIf(Err.Source <> "", vbCrLf & Err.Source, "") & vbCrLf & _
                             Err.Description
 Err.Raise Err.Number, _
@@ -3056,13 +2934,13 @@ Private Sub resizeBackground()
 If mNumRegionsInUse > 0 Then Exit Sub
 XAxisPicture.Visible = False
 ChartRegionPicture(0).Visible = False
-ChartRegionPicture(0).Move 0, 0, UserControl.width, UserControl.height
-mBackGroundCanvas.gradientFillColors = mChartBackGradientFillColors
-mBackGroundCanvas.left = 0
-mBackGroundCanvas.right = 1
-mBackGroundCanvas.bottom = 0
-mBackGroundCanvas.top = 1
-mBackGroundCanvas.paintBackground
+ChartRegionPicture(0).Move 0, 0, UserControl.Width, UserControl.Height
+mBackGroundCanvas.GradientFillColors = mChartBackGradientFillColors
+mBackGroundCanvas.Left = 0
+mBackGroundCanvas.Right = 1
+mBackGroundCanvas.Bottom = 0
+mBackGroundCanvas.Top = 1
+mBackGroundCanvas.PaintBackground
 mBackGroundCanvas.ZOrder 1
 ChartRegionPicture(0).Visible = True
 End Sub
@@ -3077,22 +2955,22 @@ On Error GoTo Err
 
 failpoint = 100
 
-If gLogger.isLoggable(LogLevelMediumDetail) Then gLogger.Log LogLevelMediumDetail, ProjectName & "." & ModuleName & ":resizeX Enter"
+'If gLogger.isLoggable(LogLevelMediumDetail) Then gLogger.Log LogLevelMediumDetail, ProjectName & "." & ModuleName & ":resizeX Enter"
 
 
 failpoint = 200
 
-'mScaleWidth = CSng(XAxisPicture.width) / CSng(mTwipsPerBar) - 0.5!
-mScaleWidth = CSng(XAxisPicture.width) / CSng(mTwipsPerBar)
+'mScaleWidth = CSng(XAxisPicture.Width) / CSng(mTwipsPerBar) - 0.5!
+mScaleWidth = CSng(XAxisPicture.Width) / CSng(mTwipsPerBar)
 mScaleLeft = calcScaleLeft
 
 
 failpoint = 400
 
 For i = 1 To ChartRegionPicture.UBound
-    If (UserControl.width - YAxisPicture(i).width) > 0 Then
-        YAxisPicture(i).left = UserControl.width - IIf(mYAxisVisible, YAxisPicture(i).width, 0)
-        ChartRegionPicture(i).width = YAxisPicture(i).left
+    If (UserControl.Width - YAxisPicture(i).Width) > 0 Then
+        YAxisPicture(i).Left = UserControl.Width - IIf(mYAxisVisible, YAxisPicture(i).Width, 0)
+        ChartRegionPicture(i).Width = YAxisPicture(i).Left
     End If
 Next
 
@@ -3100,7 +2978,7 @@ Next
 failpoint = 500
 
 For i = 0 To RegionDividerPicture.UBound
-    RegionDividerPicture(i).width = UserControl.width
+    RegionDividerPicture(i).Width = UserControl.Width
 Next
 
 
@@ -3124,12 +3002,12 @@ failpoint = 800
 
 setHorizontalScrollBar
 
-If gLogger.isLoggable(LogLevelMediumDetail) Then gLogger.Log LogLevelMediumDetail, ProjectName & "." & ModuleName & ":resizeX Exit"
+'If gLogger.isLoggable(LogLevelMediumDetail) Then gLogger.Log LogLevelMediumDetail, ProjectName & "." & ModuleName & ":resizeX Exit"
 
 Exit Sub
 
 Err:
-gLogger.Log LogLevelSevere, "Error at: " & ProjectName & "." & ModuleName & ":" & "resizeX" & "." & failpoint & _
+gErrorLogger.Log LogLevelSevere, "Error at: " & ProjectName & "." & ModuleName & ":" & "resizeX" & "." & failpoint & _
                             IIf(Err.Source <> "", vbCrLf & Err.Source, "") & vbCrLf & _
                             Err.Description
 Err.Raise Err.Number, _
@@ -3144,12 +3022,12 @@ Dim failpoint As Long
 Dim hscrollVal As Integer
 On Error GoTo Err
 
-If mPeriods.currentPeriodNumber + ChartWidth - 1 > 32767 Then
+If mPeriods.CurrentPeriodNumber + ChartWidth - 1 > 32767 Then
 
     failpoint = 100
 
     HScroll.Max = 32767
-ElseIf mPeriods.currentPeriodNumber + ChartWidth - 1 < 1 Then
+ElseIf mPeriods.CurrentPeriodNumber + ChartWidth - 1 < 1 Then
 
     failpoint = 200
 
@@ -3158,7 +3036,7 @@ Else
 
     failpoint = 300
     
-    HScroll.Max = mPeriods.currentPeriodNumber + ChartWidth - 1
+    HScroll.Max = mPeriods.CurrentPeriodNumber + ChartWidth - 1
 End If
 HScroll.Min = 0
 
@@ -3166,13 +3044,13 @@ HScroll.Min = 0
 failpoint = 400
 
 ' NB the following calculation has to be done using doubles as for very large charts it can cause an overflow using integers
-hscrollVal = Round(CDbl(HScroll.Max) * CDbl(LastVisiblePeriod) / CDbl((mPeriods.currentPeriodNumber + ChartWidth - 1)))
+hscrollVal = Round(CDbl(HScroll.Max) * CDbl(LastVisiblePeriod) / CDbl((mPeriods.CurrentPeriodNumber + ChartWidth - 1)))
 If hscrollVal > HScroll.Max Then
     HScroll.value = HScroll.Max
 ElseIf hscrollVal < HScroll.Min Then
     HScroll.value = HScroll.Min
 Else
-    HScroll.value = Round(CDbl(HScroll.Max) * CDbl(LastVisiblePeriod) / CDbl((mPeriods.currentPeriodNumber + ChartWidth - 1)))
+    HScroll.value = Round(CDbl(HScroll.Max) * CDbl(LastVisiblePeriod) / CDbl((mPeriods.CurrentPeriodNumber + ChartWidth - 1)))
 End If
 
 failpoint = 500
@@ -3190,7 +3068,7 @@ Err:
 Dim errNumber As Long: errNumber = Err.Number
 Dim errSource As String: errSource = Err.Source
 Dim errDescription As String: errDescription = Err.Description
-gLogger.Log LogLevelSevere, "Error at: " & ProjectName & "." & ModuleName & ":" & "setHorizontalScrollBar" & "." & failpoint & _
+gErrorLogger.Log LogLevelSevere, "Error at: " & ProjectName & "." & ModuleName & ":" & "setHorizontalScrollBar" & "." & failpoint & _
                             IIf(Err.Source <> "", vbCrLf & Err.Source, "") & vbCrLf & _
                             errDescription
 Err.Raise errNumber, _
@@ -3201,12 +3079,12 @@ Err.Raise errNumber, _
 End Sub
 
 Private Sub setSession( _
-                ByVal timestamp As Date)
-If timestamp >= mCurrentSessionEndTime Or _
-    timestamp < mReferenceTime _
+                ByVal Timestamp As Date)
+If Timestamp >= mCurrentSessionEndTime Or _
+    Timestamp < mReferenceTime _
 Then
-    mReferenceTime = timestamp
-    CalcSessionTimes timestamp, mCurrentSessionStartTime, mCurrentSessionEndTime
+    mReferenceTime = Timestamp
+    CalcSessionTimes Timestamp, mCurrentSessionStartTime, mCurrentSessionEndTime
 End If
 End Sub
 
@@ -3224,11 +3102,11 @@ End Sub
 
 Private Function sizeRegions() As Boolean
 '
-' NB: percentHeight=100 means the region will use whatever space
+' NB: PercentHeight=100 means the region will use whatever space
 ' is available
 '
 Dim i As Long
-Dim top As Long
+Dim Top As Long
 Dim aRegion As ChartRegion
 Dim numAvailableSpaceRegions As Long
 Dim totalMinimumPercents As Double
@@ -3237,7 +3115,7 @@ Dim availableSpacePercent As Double
 Dim availableHeight As Long     ' the space available for the region picture boxes
                                 ' excluding the divider pictures
 Dim numRegionsSized As Long
-Dim heightReductionFactor As Double
+Dim HeightReductionFactor As Double
 Dim failpoint As Long
 On Error GoTo Err
 
@@ -3251,13 +3129,13 @@ nonFixedAvailableSpacePercent = 100
 For i = 1 To mRegionsIndex Step 2
     If Not mRegions(i).Region Is Nothing Then
         Set aRegion = mRegions(i).Region
-'        mRegions(i).percentheight = aRegion.percentheight
+'        mRegions(i).PercentHeight = aRegion.PercentHeight
         If Not mRegions(i).useAvailableSpace Then
-            availableSpacePercent = availableSpacePercent - mRegions(i).percentheight
-            nonFixedAvailableSpacePercent = nonFixedAvailableSpacePercent - mRegions(i).percentheight
+            availableSpacePercent = availableSpacePercent - mRegions(i).PercentHeight
+            nonFixedAvailableSpacePercent = nonFixedAvailableSpacePercent - mRegions(i).PercentHeight
         Else
-            If aRegion.minimumPercentHeight <> 0 Then
-                availableSpacePercent = availableSpacePercent - aRegion.minimumPercentHeight
+            If aRegion.MinimumPercentHeight <> 0 Then
+                availableSpacePercent = availableSpacePercent - aRegion.MinimumPercentHeight
             End If
             numAvailableSpaceRegions = numAvailableSpaceRegions + 1
         End If
@@ -3272,34 +3150,34 @@ End If
 
 failpoint = 200
 
-heightReductionFactor = 1
+HeightReductionFactor = 1
 Do While availableSpacePercent < 0
     availableSpacePercent = 100
     nonFixedAvailableSpacePercent = 100
     mRegionHeightReductionFactor = mRegionHeightReductionFactor * 0.95
-    heightReductionFactor = heightReductionFactor * 0.95
+    HeightReductionFactor = HeightReductionFactor * 0.95
     For i = 1 To mRegionsIndex Step 2
         If Not mRegions(i).Region Is Nothing Then
             Set aRegion = mRegions(i).Region
             If Not mRegions(i).useAvailableSpace Then
-                If aRegion.minimumPercentHeight <> 0 Then
-                    If mRegions(i).percentheight * mRegionHeightReductionFactor >= _
-                        aRegion.minimumPercentHeight _
+                If aRegion.MinimumPercentHeight <> 0 Then
+                    If mRegions(i).PercentHeight * mRegionHeightReductionFactor >= _
+                        aRegion.MinimumPercentHeight _
                     Then
-                        mRegions(i).percentheight = mRegions(i).percentheight * mRegionHeightReductionFactor
+                        mRegions(i).PercentHeight = mRegions(i).PercentHeight * mRegionHeightReductionFactor
                     Else
-                        mRegions(i).percentheight = aRegion.minimumPercentHeight
+                        mRegions(i).PercentHeight = aRegion.MinimumPercentHeight
                     End If
-                    totalMinimumPercents = totalMinimumPercents + aRegion.minimumPercentHeight
+                    totalMinimumPercents = totalMinimumPercents + aRegion.MinimumPercentHeight
                 Else
-                    mRegions(i).percentheight = mRegions(i).percentheight * mRegionHeightReductionFactor
+                    mRegions(i).PercentHeight = mRegions(i).PercentHeight * mRegionHeightReductionFactor
                 End If
-                availableSpacePercent = availableSpacePercent - mRegions(i).percentheight
-                nonFixedAvailableSpacePercent = nonFixedAvailableSpacePercent - mRegions(i).percentheight
+                availableSpacePercent = availableSpacePercent - mRegions(i).PercentHeight
+                nonFixedAvailableSpacePercent = nonFixedAvailableSpacePercent - mRegions(i).PercentHeight
             Else
-                If aRegion.minimumPercentHeight <> 0 Then
-                    availableSpacePercent = availableSpacePercent - aRegion.minimumPercentHeight
-                    totalMinimumPercents = totalMinimumPercents + aRegion.minimumPercentHeight
+                If aRegion.MinimumPercentHeight <> 0 Then
+                    availableSpacePercent = availableSpacePercent - aRegion.MinimumPercentHeight
+                    totalMinimumPercents = totalMinimumPercents + aRegion.MinimumPercentHeight
                 End If
             End If
         End If
@@ -3307,7 +3185,7 @@ Do While availableSpacePercent < 0
     If totalMinimumPercents > 100 Then
         ' can't possibly fit this all in!
         sizeRegions = False
-        If gLogger.isLoggable(LogLevelMediumDetail) Then gLogger.Log LogLevelMediumDetail, ProjectName & "." & ModuleName & ":sizeRegions Exit"
+        'If gLogger.isLoggable(LogLevelMediumDetail) Then gLogger.Log LogLevelMediumDetail, ProjectName & "." & ModuleName & ":sizeRegions Exit"
         Exit Function
     End If
 Loop
@@ -3319,20 +3197,20 @@ If numAvailableSpaceRegions = 0 Then
     ' we must adjust the percentages on the other regions so they
     ' total 100.
     For i = 1 To mRegionsIndex Step 2
-        mRegions(i).percentheight = 100 * mRegions(i).percentheight / (100 - nonFixedAvailableSpacePercent)
+        mRegions(i).PercentHeight = 100 * mRegions(i).PercentHeight / (100 - nonFixedAvailableSpacePercent)
     Next
 End If
 
-' calculate the actual available height to put these regions in
+' calculate the actual available Height to put these regions in
 availableHeight = calcAvailableHeight
 
-' first set heights for fixed height regions
+' first set Heights for fixed Height regions
 
 failpoint = 400
 
 For i = 1 To mRegionsIndex Step 2
     If Not mRegions(i).useAvailableSpace Then
-        mRegions(i).actualHeight = mRegions(i).percentheight * availableHeight / 100
+        mRegions(i).actualHeight = mRegions(i).PercentHeight * availableHeight / 100
         Debug.Assert mRegions(i).actualHeight >= 0
     End If
 Next
@@ -3340,18 +3218,18 @@ Next
 
 failpoint = 500
 
-' now set heights for 'available space' regions with a minimum height
+' now set Heights for 'available space' regions with a minimum Height
 ' that needs to be respected
 For i = 1 To mRegionsIndex Step 2
     If Not mRegions(i).Region Is Nothing Then
         Set aRegion = mRegions(i).Region
         If mRegions(i).useAvailableSpace Then
             mRegions(i).actualHeight = 0
-            If aRegion.minimumPercentHeight <> 0 Then
-                If (nonFixedAvailableSpacePercent / numAvailableSpaceRegions) < aRegion.minimumPercentHeight Then
-                    mRegions(i).actualHeight = aRegion.minimumPercentHeight * availableHeight / 100
+            If aRegion.MinimumPercentHeight <> 0 Then
+                If (nonFixedAvailableSpacePercent / numAvailableSpaceRegions) < aRegion.MinimumPercentHeight Then
+                    mRegions(i).actualHeight = aRegion.MinimumPercentHeight * availableHeight / 100
                     Debug.Assert mRegions(i).actualHeight >= 0
-                    nonFixedAvailableSpacePercent = nonFixedAvailableSpacePercent - aRegion.minimumPercentHeight
+                    nonFixedAvailableSpacePercent = nonFixedAvailableSpacePercent - aRegion.MinimumPercentHeight
                     numAvailableSpaceRegions = numAvailableSpaceRegions - 1
                 End If
             End If
@@ -3362,7 +3240,7 @@ Next
 
 failpoint = 600
 
-' finally set heights for all other 'available space' regions
+' finally set Heights for all other 'available space' regions
 For i = 1 To mRegionsIndex Step 2
     If mRegions(i).useAvailableSpace And _
         mRegions(i).actualHeight = 0 _
@@ -3375,9 +3253,9 @@ Next
 
 failpoint = 700
 
-' Now actually set the heights and positions for the picture boxes
+' Now actually set the Heights and positions for the picture boxes
 
-top = IIf(mShowToolbar, Toolbar1.height, 0)
+Top = IIf(mToolbarVisible, Toolbar1.Height, 0)
 
 Dim controlIndex As Long
     
@@ -3385,17 +3263,17 @@ For i = 1 To mRegionsIndex Step 2
     controlIndex = 1 + (i - 1) / 2
     If Not mRegions(i).Region Is Nothing Then
         Set aRegion = mRegions(i).Region
-        If Not SuppressDrawing Then
-            ChartRegionPicture(controlIndex).height = mRegions(i).actualHeight
-            YAxisPicture(controlIndex).height = mRegions(i).actualHeight
-            ChartRegionPicture(controlIndex).top = top
-            YAxisPicture(controlIndex).top = top
+        If Not IsDrawingEnabled Then
+            ChartRegionPicture(controlIndex).Height = mRegions(i).actualHeight
+            YAxisPicture(controlIndex).Height = mRegions(i).actualHeight
+            ChartRegionPicture(controlIndex).Top = Top
+            YAxisPicture(controlIndex).Top = Top
             aRegion.resizedY
         End If
-        top = top + mRegions(i).actualHeight
+        Top = Top + mRegions(i).actualHeight
         numRegionsSized = numRegionsSized + 1
-        If Not SuppressDrawing Then
-            RegionDividerPicture(controlIndex).top = top
+        If Not IsDrawingEnabled Then
+            RegionDividerPicture(controlIndex).Top = Top
             RegionDividerPicture(controlIndex).Visible = True
         End If
         If numRegionsSized <> mNumRegionsInUse Then
@@ -3403,9 +3281,9 @@ For i = 1 To mRegionsIndex Step 2
         Else
             RegionDividerPicture(controlIndex).MousePointer = MousePointerConstants.vbDefault
         End If
-        top = top + RegionDividerPicture(controlIndex).height
+        Top = Top + RegionDividerPicture(controlIndex).Height
     Else
-        If Not SuppressDrawing Then
+        If Not IsDrawingEnabled Then
             ChartRegionPicture(controlIndex).Visible = False
             YAxisPicture(controlIndex).Visible = False
             RegionDividerPicture(controlIndex).Visible = False
@@ -3420,7 +3298,7 @@ sizeRegions = True
 Exit Function
 
 Err:
-gLogger.Log LogLevelSevere, "Error at: " & ProjectName & "." & ModuleName & ":" & "sizeRegions" & "." & failpoint & _
+gErrorLogger.Log LogLevelSevere, "Error at: " & ProjectName & "." & ModuleName & ":" & "sizeRegions" & "." & failpoint & _
                             IIf(Err.Source <> "", vbCrLf & Err.Source, "") & vbCrLf & _
                             Err.Description
 Err.Raise Err.Number, _
@@ -3429,6 +3307,35 @@ Err.Raise Err.Number, _
         Err.Description
 
 End Function
+
+Private Sub SuppressDrawing(ByVal suppress As Boolean)
+Dim i As Long
+Dim Region As ChartRegion
+If suppress Then
+    mSuppressDrawingCount = mSuppressDrawingCount + 1
+Else
+    If mSuppressDrawingCount > 0 Then
+        mSuppressDrawingCount = mSuppressDrawingCount - 1
+    End If
+End If
+
+If mSuppressDrawingCount = 0 Then
+    Resize True, True
+End If
+
+For i = 1 To mRegionsIndex Step 2
+    If Not mRegions(i).Region Is Nothing Then
+        Set Region = mRegions(i).Region
+        Region.IsDrawingEnabled = (mSuppressDrawingCount > 0)
+    End If
+Next
+If mXAxisRegion Is Nothing Then createXAxisRegion
+mXAxisRegion.IsDrawingEnabled = (mSuppressDrawingCount > 0)
+End Sub
+
+Public Property Get TwipsPerBar() As Long
+TwipsPerBar = mTwipsPerBar
+End Property
 
 Private Sub zoom(ByRef rect As TRectangle)
 
