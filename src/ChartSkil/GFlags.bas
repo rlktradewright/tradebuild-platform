@@ -1,16 +1,4 @@
-VERSION 1.0 CLASS
-BEGIN
-  MultiUse = -1  'True
-  Persistable = 0  'NotPersistable
-  DataBindingBehavior = 0  'vbNone
-  DataSourceBehavior  = 0  'vbNone
-  MTSTransactionMode  = 0  'NotAnMTSObject
-END
-Attribute VB_Name = "Flags"
-Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
-Attribute VB_PredeclaredId = False
-Attribute VB_Exposed = False
+Attribute VB_Name = "GFlags"
 Option Explicit
 
 ''
@@ -38,11 +26,11 @@ Option Explicit
 ' Constants
 '@================================================================================
 
+Private Const ModuleName                            As String = "GFlags"
+
 '@================================================================================
 ' Member variables
 '@================================================================================
-
-Private mFlags                                      As Long
 
 '@================================================================================
 ' Class Event Handlers
@@ -64,33 +52,29 @@ Private mFlags                                      As Long
 ' Methods
 '@================================================================================
 
-Public Sub ClearAllFlags()
-mFlags = 0
-End Sub
-
-Public Sub ClearFlag( _
-                ByVal flag As Long)
-mFlags = mFlags And (Not flag)
-End Sub
-
-Public Sub FlipFlag( _
-                ByVal flag As Long)
-mFlags = mFlags Xor flag
-End Sub
-
-Public Function IsFlagSet( _
-                ByVal flag As Long) As Boolean
-IsFlagSet = CBool((mFlags And flag) <> 0)
+Public Function gClearFlag( _
+                ByVal flags As Long, _
+                ByVal flag As Long) As Long
+gClearFlag = flags And (Not flag)
 End Function
 
-Public Sub SetAllFLags()
-mFlags = -1
-End Sub
+Public Function gFlipFlag( _
+                ByVal flags As Long, _
+                ByVal flag As Long) As Long
+gFlipFlag = flags Xor flag
+End Function
 
-Public Sub SetFlag( _
-                ByVal flag As Long)
-mFlags = mFlags Or flag
-End Sub
+Public Function gIsFlagSet( _
+                ByVal flags As Long, _
+                ByVal flag As Long) As Boolean
+gIsFlagSet = CBool((flags And flag) <> 0)
+End Function
+
+Public Function gSetFlag( _
+                ByVal flags As Long, _
+                ByVal flag As Long) As Long
+gSetFlag = mFlags Or flag
+End Function
 
 '@================================================================================
 ' Helper Functions
